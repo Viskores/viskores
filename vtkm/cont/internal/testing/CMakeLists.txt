@@ -18,21 +18,10 @@
 ##  this software.
 ##============================================================================
 
-include_directories(${Boost_INCLUDE_DIRS})
 
-set(headers
-  Types.h
-  TypeTraits.h
-  VectorTraits.h
+set(unit_tests
+  UnitTestArrayManagerExecutionShareWithControl.cxx
+  UnitTestArrayPortalFromIterators.cxx
+  # UnitTestIteratorFromArrayPortal.cxx
   )
-
-vtkm_declare_headers(${headers})
-
-#-----------------------------------------------------------------------------
-#first add all the components vtkm that are shared between control and exec
-add_subdirectory(testing)
-add_subdirectory(internal)
-
-#-----------------------------------------------------------------------------
-#add the control and exec folders
-add_subdirectory(cont)
+vtkm_unit_tests(SOURCES ${unit_tests})

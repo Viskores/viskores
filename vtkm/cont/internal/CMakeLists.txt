@@ -18,21 +18,21 @@
 ##  this software.
 ##============================================================================
 
-include_directories(${Boost_INCLUDE_DIRS})
-
 set(headers
-  Types.h
-  TypeTraits.h
-  VectorTraits.h
+  ArrayHandleExecutionManager.h
+  ArrayManagerExecution.h
+  ArrayManagerExecutionSerial.h
+  ArrayManagerExecutionShareWithControl.h
+  ArrayPortalFromIterators.h
+  ArrayPortalShrink.h
+  ArrayTransfer.h
   )
 
 vtkm_declare_headers(${headers})
 
-#-----------------------------------------------------------------------------
-#first add all the components vtkm that are shared between control and exec
-add_subdirectory(testing)
-add_subdirectory(internal)
+# These source files are actually compiled in the parent directory.
+# They are in a separate directory to highlight which objects are
+# internal and which are part of the external interface.
+#add_custom_target(vtkmContInternal ALL DEPENDS vtkmCont)
 
-#-----------------------------------------------------------------------------
-#add the control and exec folders
-add_subdirectory(cont)
+add_subdirectory(testing)

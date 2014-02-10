@@ -21,18 +21,26 @@
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(headers
-  Types.h
-  TypeTraits.h
-  VectorTraits.h
+  ArrayContainerControl.h
+  ArrayContainerControlBasic.h
+  ArrayContainerControlImplicit.h
+  ArrayHandle.h
+  ArrayPortal.h
+  Assert.h
+  Error.h
+  ErrorControl.h
+  ErrorControlAssert.h
+  ErrorControlBadValue.h
+  ErrorControlInternal.h
+  ErrorControlOutOfMemory.h
+  ErrorExecution.h
   )
 
-vtkm_declare_headers(${headers})
-
 #-----------------------------------------------------------------------------
-#first add all the components vtkm that are shared between control and exec
-add_subdirectory(testing)
 add_subdirectory(internal)
 
+vtkm_declare_headers(${impl_headers} ${headers})
+
+
 #-----------------------------------------------------------------------------
-#add the control and exec folders
-add_subdirectory(cont)
+add_subdirectory(testing)
