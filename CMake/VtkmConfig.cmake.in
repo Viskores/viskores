@@ -1,0 +1,40 @@
+##============================================================================
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##  Copyright 2014 Sandia Corporation.
+##  Copyright 2014 UT-Battelle, LLC.
+##  Copyright 2014. Los Alamos National Security
+##
+##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+##  the U.S. Government retains certain rights in this software.
+##
+##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+##  Laboratory (LANL), the U.S. Government retains certain rights in
+##  this software.
+##============================================================================
+
+# This file should be installed in the include directory.
+# Find the root directory.
+get_filename_component(_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+get_filename_component(_install_dir "${_dir}/.." ABSOLUTE)
+
+# The VTKm include file directories.
+set(VTKm_INCLUDE_DIRS "@VTKm_INCLUDE_DIRS_CONFIG@")
+
+# The VTKm version number
+set(VTKm_MAJOR_VERSION "@VTKm_MAJOR_VERSION@")
+set(VTKm_MINOR_VERSION "@VTKm_MINOR_VERSION@")
+set(VTKm_PATCH_VERSION "@VTKm_PATCH_VERSION@")
+
+set(VTKm_REQUIRED_BOOST_VERSION "@VTKm_REQUIRED_BOOST_VERSION@")
+
+set(VTKm_CMAKE_MODULE_PATH "@VTKm_CMAKE_MODULE_PATH_CONFIG@")
+
+# VTKm requires some CMake Find modules not included with CMake, so
+# include the CMake modules distributed with VTKm.
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
