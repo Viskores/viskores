@@ -33,30 +33,33 @@ struct TemplatedTests
   typedef T ValueType;
   typedef typename vtkm::VectorTraits<ValueType>::ComponentType ComponentType;
 
-  ValueType ExpectedValue(vtkm::Id index, ComponentType value) {
+  ValueType ExpectedValue(vtkm::Id index, ComponentType value)
+  {
     return ValueType(index + value);
   }
 
   template<class IteratorType>
-  void FillIterator(IteratorType begin, IteratorType end, ComponentType value) {
+  void FillIterator(IteratorType begin, IteratorType end, ComponentType value)
+  {
     vtkm::Id index = 0;
     for (IteratorType iter = begin; iter != end; iter++)
-      {
+    {
       *iter = ExpectedValue(index, value);
       index++;
-      }
+    }
   }
 
   template<class IteratorType>
   bool CheckIterator(IteratorType begin,
                      IteratorType end,
-                     ComponentType value) {
+                     ComponentType value)
+  {
     vtkm::Id index = 0;
     for (IteratorType iter = begin; iter != end; iter++)
-      {
-      if (*iter != ExpectedValue(index, value)) return false;
+    {
+      if (*iter != ExpectedValue(index, value)) { return false; }
       index++;
-      }
+    }
     return true;
   }
 
@@ -68,47 +71,47 @@ struct TemplatedTests
     FillIterator(array, array+ARRAY_SIZE, ORIGINAL_VALUE);
 
     ::vtkm::cont::internal::ArrayPortalFromIterators<ValueType *>
-        portal(array, array+ARRAY_SIZE);
+    portal(array, array+ARRAY_SIZE);
     ::vtkm::cont::internal::ArrayPortalFromIterators<const ValueType *>
-        const_portal(array, array+ARRAY_SIZE);
+    const_portal(array, array+ARRAY_SIZE);
 
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE,
-                    "Portal array size wrong.");
+                     "Portal array size wrong.");
     VTKM_TEST_ASSERT(const_portal.GetNumberOfValues() == ARRAY_SIZE,
-                    "Const portal array size wrong.");
+                     "Const portal array size wrong.");
 
     std::cout << "  Check inital value." << std::endl;
     VTKM_TEST_ASSERT(CheckIterator(portal.GetIteratorBegin(),
-                                  portal.GetIteratorEnd(),
-                                  ORIGINAL_VALUE),
-                    "Portal iterator has bad value.");
+                                   portal.GetIteratorEnd(),
+                                   ORIGINAL_VALUE),
+                     "Portal iterator has bad value.");
     VTKM_TEST_ASSERT(CheckIterator(const_portal.GetIteratorBegin(),
-                                  const_portal.GetIteratorEnd(),
-                                  ORIGINAL_VALUE),
-                    "Const portal iterator has bad value.");
+                                   const_portal.GetIteratorEnd(),
+                                   ORIGINAL_VALUE),
+                     "Const portal iterator has bad value.");
 
     static const ComponentType SET_VALUE = 562;
 
     std::cout << "  Check get/set methods." << std::endl;
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
-      {
+    {
       VTKM_TEST_ASSERT(portal.Get(index)
-                      == ExpectedValue(index, ORIGINAL_VALUE),
-                      "Bad portal value.");
+                       == ExpectedValue(index, ORIGINAL_VALUE),
+                       "Bad portal value.");
       VTKM_TEST_ASSERT(const_portal.Get(index)
-                      == ExpectedValue(index, ORIGINAL_VALUE),
-                      "Bad const portal value.");
+                       == ExpectedValue(index, ORIGINAL_VALUE),
+                       "Bad const portal value.");
 
       portal.Set(index, ExpectedValue(index, SET_VALUE));
-      }
+    }
 
     std::cout << "  Make sure set has correct value." << std::endl;
     VTKM_TEST_ASSERT(CheckIterator(portal.GetIteratorBegin(),
-                                  portal.GetIteratorEnd(),
-                                  SET_VALUE),
-                    "Portal iterator has bad value.");
+                                   portal.GetIteratorEnd(),
+                                   SET_VALUE),
+                     "Portal iterator has bad value.");
     VTKM_TEST_ASSERT(CheckIterator(array, array+ARRAY_SIZE, SET_VALUE),
-                    "Array has bad value.");
+                     "Array has bad value.");
   }
 };
 

@@ -61,17 +61,20 @@ public:
   {  }
 
   VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfValues() const {
+  vtkm::Id GetNumberOfValues() const
+  {
     return std::distance(this->BeginIterator, this->EndIterator);
   }
 
   VTKM_CONT_EXPORT
-  ValueType Get(vtkm::Id index) const {
+  ValueType Get(vtkm::Id index) const
+  {
     return *this->IteratorAt(index);
   }
 
   VTKM_CONT_EXPORT
-  void Set(vtkm::Id index, ValueType value) const {
+  void Set(vtkm::Id index, ValueType value) const
+  {
     *this->IteratorAt(index) = value;
   }
 
@@ -86,7 +89,8 @@ private:
   IteratorType EndIterator;
 
   VTKM_CONT_EXPORT
-  IteratorType IteratorAt(vtkm::Id index) const {
+  IteratorType IteratorAt(vtkm::Id index) const
+  {
     VTKM_ASSERT_CONT(index >= 0);
     VTKM_ASSERT_CONT(index < this->GetNumberOfValues());
 

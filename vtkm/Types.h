@@ -79,8 +79,7 @@
  *
  */
 
-namespace vtkm
-{
+namespace vtkm {
 //*****************************************************************************
 // Typedefs for basic types.
 //*****************************************************************************
@@ -179,7 +178,8 @@ struct assign_scalar_to_vector<2>
   VTKM_EXEC_CONT_EXPORT
   void operator()(VectorType &dest, const ComponentType &src)
   {
-    dest[0] = src; dest[1] = src;
+    dest[0] = src;
+    dest[1] = src;
   }
 };
 
@@ -190,7 +190,9 @@ struct assign_scalar_to_vector<3>
   VTKM_EXEC_CONT_EXPORT
   void operator()(VectorType &dest, const ComponentType &src)
   {
-    dest[0] = src; dest[1] = src; dest[2] = src;
+    dest[0] = src;
+    dest[1] = src;
+    dest[2] = src;
   }
 };
 
@@ -221,7 +223,8 @@ struct copy_vector<2>
   template<typename T1, typename T2>
   VTKM_EXEC_CONT_EXPORT void operator()(T1 &dest, const T2 &src)
   {
-    dest[0] = src[0]; dest[1] = src[1];
+    dest[0] = src[0];
+    dest[1] = src[1];
   }
 };
 
@@ -231,7 +234,9 @@ struct copy_vector<3>
   template<typename T1, typename T2>
   VTKM_EXEC_CONT_EXPORT void operator()(T1 &dest, const T2 &src)
   {
-    dest[0] = src[0]; dest[1] = src[1]; dest[2] = src[2];
+    dest[0] = src[0];
+    dest[1] = src[1];
+    dest[2] = src[2];
   }
 };
 
@@ -270,49 +275,52 @@ typedef float Scalar __attribute__ ((aligned(VTKM_SIZE_SCALAR)));
 
 /// Tuple corresponds to a Size-tuple of type T
 template<typename T, int Size>
-class Tuple {
+class Tuple
+{
 public:
   typedef T ComponentType;
   static const int NUM_COMPONENTS=Size;
 
-  VTKM_EXEC_CONT_EXPORT Tuple(){}
+  VTKM_EXEC_CONT_EXPORT Tuple() {}
   VTKM_EXEC_CONT_EXPORT explicit Tuple(const ComponentType& value)
+  {
+    for(int i=0; i < NUM_COMPONENTS; ++i)
     {
-    for(int i=0; i < NUM_COMPONENTS;++i)
-      {
       this->Components[i]=value;
-      }
     }
+  }
   VTKM_EXEC_CONT_EXPORT explicit Tuple(const ComponentType* values)
+  {
+    for(int i=0; i < NUM_COMPONENTS; ++i)
     {
-    for(int i=0; i < NUM_COMPONENTS;++i)
-      {
       this->Components[i]=values[i];
-      }
     }
+  }
   VTKM_EXEC_CONT_EXPORT
   Tuple(const Tuple<ComponentType, Size> &src)
   {
     for (int i = 0; i < NUM_COMPONENTS; i++)
-      {
+    {
       this->Components[i] = src[i];
-      }
+    }
   }
 
   VTKM_EXEC_CONT_EXPORT
   Tuple<ComponentType, Size> &operator=(const Tuple<ComponentType, Size> &src)
   {
     for (int i = 0; i < NUM_COMPONENTS; i++)
-      {
+    {
       this->Components[i] = src[i];
-      }
+    }
     return *this;
   }
 
-  VTKM_EXEC_CONT_EXPORT const ComponentType &operator[](int idx) const {
+  VTKM_EXEC_CONT_EXPORT const ComponentType &operator[](int idx) const
+  {
     return this->Components[idx];
   }
-  VTKM_EXEC_CONT_EXPORT ComponentType &operator[](int idx) {
+  VTKM_EXEC_CONT_EXPORT ComponentType &operator[](int idx)
+  {
     return this->Components[idx];
   }
 
@@ -321,9 +329,9 @@ public:
   {
     bool same = true;
     for (int componentIndex=0; componentIndex<NUM_COMPONENTS; componentIndex++)
-      {
+    {
       same &= (this->Components[componentIndex] == other[componentIndex]);
-      }
+    }
     return same;
   }
 
@@ -331,14 +339,14 @@ public:
   bool operator<(const Tuple<T,NUM_COMPONENTS> &other) const
   {
     for(vtkm::Id i=0; i < NUM_COMPONENTS; ++i)
-      {
+    {
       //ignore equals as that represents check next value
       if(this->Components[i] < other[i])
-        return true;
+      { return true; }
       else if(other[i] < this->Components[i])
-        return false;
-      } //if all same we are not less
-      return false;
+      { return false; }
+    } //if all same we are not less
+    return false;
   }
 
   VTKM_EXEC_CONT_EXPORT
@@ -355,12 +363,13 @@ protected:
 // Specializations for common tuple sizes (with special names).
 
 template<typename T>
-class Tuple<T,2>{
+class Tuple<T,2>
+{
 public:
   typedef T ComponentType;
   static const int NUM_COMPONENTS = 2;
 
-  VTKM_EXEC_CONT_EXPORT Tuple(){}
+  VTKM_EXEC_CONT_EXPORT Tuple() {}
   VTKM_EXEC_CONT_EXPORT explicit Tuple(const ComponentType& value)
   {
     internal::assign_scalar_to_vector<NUM_COMPONENTS>()(this->Components,value);
@@ -369,7 +378,8 @@ public:
   {
     internal::copy_vector<NUM_COMPONENTS>()(this->Components, values);
   }
-  VTKM_EXEC_CONT_EXPORT Tuple(ComponentType x, ComponentType y) {
+  VTKM_EXEC_CONT_EXPORT Tuple(ComponentType x, ComponentType y)
+  {
     this->Components[0] = x;
     this->Components[1] = y;
   }
@@ -387,10 +397,12 @@ public:
     return *this;
   }
 
-  VTKM_EXEC_CONT_EXPORT const ComponentType &operator[](int idx) const {
+  VTKM_EXEC_CONT_EXPORT const ComponentType &operator[](int idx) const
+  {
     return this->Components[idx];
   }
-  VTKM_EXEC_CONT_EXPORT ComponentType &operator[](int idx) {
+  VTKM_EXEC_CONT_EXPORT ComponentType &operator[](int idx)
+  {
     return this->Components[idx];
   }
 
@@ -408,9 +420,9 @@ public:
   VTKM_EXEC_CONT_EXPORT
   bool operator<(const Tuple<T,NUM_COMPONENTS> &other) const
   {
-  return( (this->Components[0] < other[0])  ||
-         (!(other[0] < this->Components[0]) && (this->Components[1] < other[1]))
-        );
+    return( (this->Components[0] < other[0])  ||
+            (!(other[0] < this->Components[0]) && (this->Components[1] < other[1]))
+          );
   }
 
 protected:
@@ -426,12 +438,13 @@ typedef vtkm::Tuple<vtkm::Scalar,2>
 typedef vtkm::Tuple<vtkm::Id,2> Id2 __attribute__ ((aligned(VTKM_SIZE_ID)));
 
 template<typename T>
-class Tuple<T,3>{
+class Tuple<T,3>
+{
 public:
   typedef T ComponentType;
   static const int NUM_COMPONENTS = 3;
 
-  VTKM_EXEC_CONT_EXPORT Tuple(){}
+  VTKM_EXEC_CONT_EXPORT Tuple() {}
   VTKM_EXEC_CONT_EXPORT explicit Tuple(const ComponentType& value)
   {
     internal::assign_scalar_to_vector<NUM_COMPONENTS>()(this->Components,value);
@@ -441,7 +454,8 @@ public:
     internal::copy_vector<NUM_COMPONENTS>()(this->Components, values);
   }
   VTKM_EXEC_CONT_EXPORT
-  Tuple(ComponentType x, ComponentType y, ComponentType z) {
+  Tuple(ComponentType x, ComponentType y, ComponentType z)
+  {
     this->Components[0] = x;
     this->Components[1] = y;
     this->Components[2] = z;
@@ -460,10 +474,12 @@ public:
     return *this;
   }
 
-  VTKM_EXEC_CONT_EXPORT const ComponentType &operator[](int idx) const {
+  VTKM_EXEC_CONT_EXPORT const ComponentType &operator[](int idx) const
+  {
     return this->Components[idx];
   }
-  VTKM_EXEC_CONT_EXPORT ComponentType &operator[](int idx) {
+  VTKM_EXEC_CONT_EXPORT ComponentType &operator[](int idx)
+  {
     return this->Components[idx];
   }
 
@@ -481,12 +497,12 @@ public:
   VTKM_EXEC_CONT_EXPORT
   bool operator<(const Tuple<T,NUM_COMPONENTS> &other) const
   {
-  return((this->Components[0] < other[0])    ||
-         ( !(other[0] < this->Components[0]) &&
-          (this->Components[1] < other[1]))  ||
-         ( !(other[0] < this->Components[0]) &&
-           !(other[1] < this->Components[1]) &&
-            (this->Components[2] < other[2]) ) );
+    return((this->Components[0] < other[0])    ||
+           ( !(other[0] < this->Components[0]) &&
+             (this->Components[1] < other[1]))  ||
+           ( !(other[0] < this->Components[0]) &&
+             !(other[1] < this->Components[1]) &&
+             (this->Components[2] < other[2]) ) );
   }
 
 protected:
@@ -498,12 +514,13 @@ typedef vtkm::Tuple<vtkm::Scalar,3>
     Vector3 __attribute__ ((aligned(VTKM_SIZE_SCALAR)));
 
 template<typename T>
-class Tuple<T,4>{
+class Tuple<T,4>
+{
 public:
   typedef T ComponentType;
   static const int NUM_COMPONENTS = 4;
 
-  VTKM_EXEC_CONT_EXPORT Tuple(){}
+  VTKM_EXEC_CONT_EXPORT Tuple() {}
   VTKM_EXEC_CONT_EXPORT explicit Tuple(const ComponentType& value)
   {
     internal::assign_scalar_to_vector<NUM_COMPONENTS>()(this->Components,value);
@@ -513,7 +530,8 @@ public:
     internal::copy_vector<NUM_COMPONENTS>()(this->Components, values);
   }
   VTKM_EXEC_CONT_EXPORT
-  Tuple(ComponentType x, ComponentType y, ComponentType z, ComponentType w) {
+  Tuple(ComponentType x, ComponentType y, ComponentType z, ComponentType w)
+  {
     this->Components[0] = x;
     this->Components[1] = y;
     this->Components[2] = z;
@@ -533,10 +551,12 @@ public:
     return *this;
   }
 
-  VTKM_EXEC_CONT_EXPORT const ComponentType &operator[](int idx) const {
+  VTKM_EXEC_CONT_EXPORT const ComponentType &operator[](int idx) const
+  {
     return this->Components[idx];
   }
-  VTKM_EXEC_CONT_EXPORT ComponentType &operator[](int idx) {
+  VTKM_EXEC_CONT_EXPORT ComponentType &operator[](int idx)
+  {
     return this->Components[idx];
   }
 
@@ -554,16 +574,16 @@ public:
   VTKM_EXEC_CONT_EXPORT
   bool operator<(const Tuple<T,NUM_COMPONENTS> &other) const
   {
-  return((this->Components[0] < other[0])       ||
-         ( !(other[0] < this->Components[0])    &&
-               this->Components[1] < other[1])  ||
-         ( !(other[0] < this->Components[0])    &&
-           !(other[1] < this->Components[1])    &&
-           (this->Components[2] < other[2]) )   ||
-         ( !(other[0] < this->Components[0])    &&
-           !(other[1] < this->Components[1])    &&
-           !(other[2] < this->Components[2])    &&
-           (this->Components[3] < other[3])) );
+    return((this->Components[0] < other[0])       ||
+           ( !(other[0] < this->Components[0])    &&
+             this->Components[1] < other[1])  ||
+           ( !(other[0] < this->Components[0])    &&
+             !(other[1] < this->Components[1])    &&
+             (this->Components[2] < other[2]) )   ||
+           ( !(other[0] < this->Components[0])    &&
+             !(other[1] < this->Components[1])    &&
+             !(other[2] < this->Components[2])    &&
+             (this->Components[3] < other[3])) );
   }
 
 protected:
@@ -611,13 +631,13 @@ VTKM_EXEC_CONT_EXPORT vtkm::Id3 make_Id3(vtkm::Id x, vtkm::Id y, vtkm::Id z)
 
 template<typename T, int Size>
 VTKM_EXEC_CONT_EXPORT T dot(const vtkm::Tuple<T,Size> &a,
-                           const vtkm::Tuple<T,Size> &b)
+                            const vtkm::Tuple<T,Size> &b)
 {
   T result = a[0]*b[0];
   for (int componentIndex = 1; componentIndex < Size; componentIndex++)
-    {
+  {
     result += a[componentIndex]*b[componentIndex];
-    }
+  }
   return result;
 }
 
@@ -639,9 +659,9 @@ VTKM_EXEC_CONT_EXPORT vtkm::Tuple<T,Size> operator+(const vtkm::Tuple<T,Size> &a
 {
   vtkm::Tuple<T,Size> result;
   for (int componentIndex = 0; componentIndex < Size; componentIndex++)
-    {
+  {
     result[componentIndex] = a[componentIndex] + b[componentIndex];
-    }
+  }
   return result;
 }
 template<typename T, int Size>
@@ -650,9 +670,9 @@ VTKM_EXEC_CONT_EXPORT vtkm::Tuple<T,Size> operator-(const vtkm::Tuple<T,Size> &a
 {
   vtkm::Tuple<T,Size> result;
   for (int componentIndex = 0; componentIndex < Size; componentIndex++)
-    {
+  {
     result[componentIndex] = a[componentIndex] - b[componentIndex];
-    }
+  }
   return result;
 }
 template<typename T, int Size>
@@ -661,9 +681,9 @@ VTKM_EXEC_CONT_EXPORT vtkm::Tuple<T,Size> operator*(const vtkm::Tuple<T,Size> &a
 {
   vtkm::Tuple<T,Size> result;
   for (int componentIndex = 0; componentIndex < Size; componentIndex++)
-    {
+  {
     result[componentIndex] = a[componentIndex] * b[componentIndex];
-    }
+  }
   return result;
 }
 template<typename T, int Size>
@@ -672,9 +692,9 @@ VTKM_EXEC_CONT_EXPORT vtkm::Tuple<T,Size> operator/(const vtkm::Tuple<T,Size> &a
 {
   vtkm::Tuple<T,Size> result;
   for (int componentIndex = 0; componentIndex < Size; componentIndex++)
-    {
+  {
     result[componentIndex] = a[componentIndex] / b[componentIndex];
-    }
+  }
   return result;
 }
 
@@ -684,9 +704,9 @@ VTKM_EXEC_CONT_EXPORT vtkm::Tuple<Ta,Size> operator*(const vtkm::Tuple<Ta,Size> 
 {
   vtkm::Tuple<Ta,Size> result;
   for (int componentIndex = 0; componentIndex < Size; componentIndex++)
-    {
+  {
     result[componentIndex] = a[componentIndex] * b;
-    }
+  }
   return result;
 }
 template<typename Ta, typename Tb, int Size>
@@ -695,9 +715,9 @@ VTKM_EXEC_CONT_EXPORT vtkm::Tuple<Tb,Size> operator*(const Ta &a,
 {
   vtkm::Tuple<Tb,Size> result;
   for (int componentIndex = 0; componentIndex < Size; componentIndex++)
-    {
+  {
     result[componentIndex] = a * b[componentIndex];
-    }
+  }
   return result;
 }
 

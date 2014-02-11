@@ -38,14 +38,14 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalCounting() :
-  StartingValue(),
-  NumberOfValues(0)
+    StartingValue(),
+    NumberOfValues(0)
   {  }
 
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalCounting(ValueType startingValue, vtkm::Id numValues) :
-  StartingValue(startingValue),
-  NumberOfValues(numValues)
+    StartingValue(startingValue),
+    NumberOfValues(numValues)
   {  }
 
   template<typename OtherValueType>
@@ -58,7 +58,7 @@ public:
   template<typename OtherValueType>
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalCounting<ValueType> &operator=(
-      const ArrayPortalCounting<OtherValueType> &src)
+    const ArrayPortalCounting<OtherValueType> &src)
   {
     this->StartingValue = src.StartingValue;
     this->NumberOfValues = src.NumberOfValues;

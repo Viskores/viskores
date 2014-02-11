@@ -40,13 +40,13 @@ namespace {
 void TestTypeSizes()
 {
   VTKM_TEST_ASSERT(VTKM_SIZE_ID == EXPECTED_SIZE,
-                  "VTKM_SIZE_ID an unexpected size.");
+                   "VTKM_SIZE_ID an unexpected size.");
   VTKM_TEST_ASSERT(sizeof(vtkm::Id) == EXPECTED_SIZE,
-                  "vtkm::Id an unexpected size.");
+                   "vtkm::Id an unexpected size.");
   VTKM_TEST_ASSERT(VTKM_SIZE_SCALAR == EXPECTED_SIZE,
-                  "VTKM_SIZE_SCALAR an unexpected size.");
+                   "VTKM_SIZE_SCALAR an unexpected size.");
   VTKM_TEST_ASSERT(sizeof(vtkm::Scalar) == EXPECTED_SIZE,
-                  "vtkm::Scalar an unexpected size.");
+                   "vtkm::Scalar an unexpected size.");
 }
 
 }

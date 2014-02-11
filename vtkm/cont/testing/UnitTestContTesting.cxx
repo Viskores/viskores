@@ -54,18 +54,18 @@ int UnitTestContTesting(int, char *[])
 {
   std::cout << "-------\nThis call should fail." << std::endl;
   if (vtkm::cont::testing::Testing::Run(TestFail) == 0)
-    {
+  {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
-    }
+  }
   std::cout << "-------\nThis call should fail." << std::endl;
   if (vtkm::cont::testing::Testing::Run(BadTestAssert) == 0)
-    {
+  {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
-    }
+  }
 
-//VTKM_ASSERT_CONT only is a valid call when you are building with debug
+  //VTKM_ASSERT_CONT only is a valid call when you are building with debug
 #ifndef NDEBUG
   int expectedResult=0;
 #else
@@ -74,10 +74,10 @@ int UnitTestContTesting(int, char *[])
 
   std::cout << "-------\nThis call should fail on debug builds." << std::endl;
   if (vtkm::cont::testing::Testing::Run(BadAssert) == expectedResult)
-    {
+  {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
-    }
+  }
 
   std::cout << "-------\nThis call should pass." << std::endl;
   // This is what your main function typically looks like.

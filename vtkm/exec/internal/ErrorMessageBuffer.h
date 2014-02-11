@@ -60,10 +60,10 @@ public:
 
     // Safely copy message into array.
     for (vtkm::Id index = 0; index < this->MessageBufferSize; index++)
-      {
+    {
       this->MessageBuffer[index] = message[index];
       if (message[index] == '\0') { break; }
-      }
+    }
 
     // Make sure message is null terminated.
     this->MessageBuffer[this->MessageBufferSize-1] = '\0';
@@ -72,14 +72,14 @@ public:
   VTKM_EXEC_CONT_EXPORT bool IsErrorRaised() const
   {
     if (this->MessageBufferSize > 0)
-      {
+    {
       return (this->MessageBuffer[0] != '\0');
-      }
+    }
     else
-      {
+    {
       // If there is no buffer set, then always report an error.
       return true;
-      }
+    }
   }
 
 private:

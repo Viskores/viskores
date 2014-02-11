@@ -43,9 +43,9 @@ void GoodAssert()
 void TestTestEqual()
 {
   VTKM_TEST_ASSERT(test_equal(vtkm::Scalar(2.0), vtkm::Scalar(1.9999999)),
-                  "These should be close enough.");
+                   "These should be close enough.");
   VTKM_TEST_ASSERT(!test_equal(vtkm::Scalar(2.0), vtkm::Scalar(1.999)),
-                  "These should not be close enough.");
+                   "These should not be close enough.");
 }
 
 // All tests that should not raise a failure.
@@ -61,16 +61,16 @@ int UnitTestTesting(int, char *[])
 {
   std::cout << "This call should fail." << std::endl;
   if (vtkm::testing::Testing::Run(Fail) == 0)
-    {
+  {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
-    }
+  }
   std::cout << "This call should fail." << std::endl;
   if (vtkm::testing::Testing::Run(BadAssert) == 0)
-    {
+  {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
-    }
+  }
 
   std::cout << "This call should pass." << std::endl;
   // This is what your main function typically looks like.

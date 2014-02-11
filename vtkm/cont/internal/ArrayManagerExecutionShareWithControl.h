@@ -56,7 +56,8 @@ public:
 
   /// Returns the size of the saved portal.
   ///
-  VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const {
+  VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const
+  {
     VTKM_ASSERT_CONT(this->ConstPortalValid);
     return this->ConstPortal.GetNumberOfValues();
   }
@@ -106,7 +107,7 @@ public:
   {
     VTKM_ASSERT_CONT(this->ConstPortalValid);
     VTKM_ASSERT_CONT(controlArray.GetPortalConst().GetIteratorBegin() ==
-                    this->ConstPortal.GetIteratorBegin());
+                     this->ConstPortal.GetIteratorBegin());
     controlArray.Shrink(this->ConstPortal.GetNumberOfValues());
   }
 
@@ -130,9 +131,9 @@ public:
     this->ConstPortal.Shrink(numberOfValues);
 
     if (this->PortalValid)
-      {
+    {
       this->Portal.Shrink(numberOfValues);
-      }
+    }
   }
 
   /// Returns the portal previously saved from an \c ArrayContainerControl.

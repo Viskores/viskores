@@ -29,8 +29,7 @@
 
 #include <algorithm>
 
-namespace
-{
+namespace {
 const vtkm::Id ARRAY_SIZE = 10;
 
 vtkm::Scalar TestValue(vtkm::Id index)
@@ -43,10 +42,10 @@ bool CheckValues(IteratorType begin, IteratorType end)
 {
   vtkm::Id index = 0;
   for (IteratorType iter = begin; iter != end; iter++)
-    {
-    if (!test_equal(*iter, TestValue(index))) return false;
+  {
+    if (!test_equal(*iter, TestValue(index))) { return false; }
     index++;
-    }
+  }
   return true;
 }
 
@@ -62,9 +61,9 @@ void TestArrayHandle()
   std::cout << "Create array handle." << std::endl;
   vtkm::Scalar array[ARRAY_SIZE];
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
-    {
+  {
     array[index] = TestValue(index);
-    }
+  }
 
   vtkm::cont::ArrayHandle<vtkm::Scalar>::PortalControl arrayPortal(
         &array[0], &array[ARRAY_SIZE]);
@@ -73,11 +72,11 @@ void TestArrayHandle()
       arrayHandle(arrayPortal);
 
   VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
-                  "ArrayHandle has wrong number of entries.");
+                   "ArrayHandle has wrong number of entries.");
 
   std::cout << "Check basic array." << std::endl;
   VTKM_TEST_ASSERT(CheckValues(arrayHandle),
-                  "Array values not set correctly.");
+                   "Array values not set correctly.");
 
   std::cout << "Check out execution array behavior." << std::endl;
   {
@@ -86,73 +85,73 @@ void TestArrayHandle()
       executionPortal;
   executionPortal =
       arrayHandle.PrepareForInput(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  VTKM_TEST_ASSERT(CheckValues(executionPortal.GetIteratorBegin(),
-                              executionPortal.GetIteratorEnd()),
-                  "Array not copied to execution correctly.");
+    VTKM_TEST_ASSERT(CheckValues(executionPortal.GetIteratorBegin(),
+                                 executionPortal.GetIteratorEnd()),
+                     "Array not copied to execution correctly.");
   }
 
   {
-  bool gotException = false;
-  try
+    bool gotException = false;
+    try
     {
-    arrayHandle.PrepareForInPlace(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+      arrayHandle.PrepareForInPlace(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     }
-  catch (vtkm::cont::Error &error)
+    catch (vtkm::cont::Error &error)
     {
-    std::cout << "Got expected error: " << error.GetMessage() << std::endl;
-    gotException = true;
+      std::cout << "Got expected error: " << error.GetMessage() << std::endl;
+      gotException = true;
     }
-  VTKM_TEST_ASSERT(gotException,
-                  "PrepareForInPlace did not fail for const array.");
+    VTKM_TEST_ASSERT(gotException,
+                     "PrepareForInPlace did not fail for const array.");
   }
 
   {
-  vtkm::cont::ArrayHandle<vtkm::Scalar>::
-      ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal executionPortal;
-  executionPortal =
+    vtkm::cont::ArrayHandle<vtkm::Scalar>::
+    ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal executionPortal;
+    executionPortal =
       arrayHandle.PrepareForOutput(ARRAY_SIZE*2,
                                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  vtkm::Id index = 0;
-  for (vtkm::Scalar *iter = executionPortal.GetIteratorBegin();
-       iter != executionPortal.GetIteratorEnd();
-       iter++)
+    vtkm::Id index = 0;
+    for (vtkm::Scalar *iter = executionPortal.GetIteratorBegin();
+         iter != executionPortal.GetIteratorEnd();
+         iter++)
     {
-    *iter = TestValue(index);
-    index++;
+      *iter = TestValue(index);
+      index++;
     }
   }
   VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE*2,
-                  "Array not allocated correctly.");
+                   "Array not allocated correctly.");
   VTKM_TEST_ASSERT(CheckValues(arrayHandle),
-                  "Array values not retrieved from execution.");
+                   "Array values not retrieved from execution.");
 
   std::cout << "Try shrinking the array." << std::endl;
   arrayHandle.Shrink(ARRAY_SIZE);
   VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
-                  "Array size did not shrink correctly.");
+                   "Array size did not shrink correctly.");
   VTKM_TEST_ASSERT(CheckValues(arrayHandle),
-                  "Array values not retrieved from execution.");
+                   "Array values not retrieved from execution.");
 
   std::cout << "Try in place operation." << std::endl;
   {
-  vtkm::cont::ArrayHandle<vtkm::Scalar>::
-      ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal executionPortal;
-  executionPortal =
+    vtkm::cont::ArrayHandle<vtkm::Scalar>::
+    ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal executionPortal;
+    executionPortal =
       arrayHandle.PrepareForInPlace(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  for (vtkm::Scalar *iter = executionPortal.GetIteratorBegin();
-       iter != executionPortal.GetIteratorEnd();
-       iter++)
+    for (vtkm::Scalar *iter = executionPortal.GetIteratorBegin();
+         iter != executionPortal.GetIteratorEnd();
+         iter++)
     {
-    *iter += 1;
+      *iter += 1;
     }
   }
   vtkm::cont::ArrayHandle<vtkm::Scalar>::PortalConstControl controlPortal =
       arrayHandle.GetPortalConstControl();
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
-    {
+  {
     VTKM_TEST_ASSERT(test_equal(controlPortal.Get(index), TestValue(index) + 1),
-                    "Did not get result from in place operation.");
-    }
+                     "Did not get result from in place operation.");
+  }
 }
 
 }

@@ -35,30 +35,33 @@ struct TemplatedTests
   typedef T ValueType;
   typedef typename vtkm::VectorTraits<ValueType>::ComponentType ComponentType;
 
-  ValueType ExpectedValue(vtkm::Id index, ComponentType value) {
+  ValueType ExpectedValue(vtkm::Id index, ComponentType value)
+  {
     return ValueType(index + value);
   }
 
   template<class IteratorType>
-  void FillIterator(IteratorType begin, IteratorType end, ComponentType value) {
+  void FillIterator(IteratorType begin, IteratorType end, ComponentType value)
+  {
     vtkm::Id index = 0;
     for (IteratorType iter = begin; iter != end; iter++)
-      {
+    {
       *iter = ExpectedValue(index, value);
       index++;
-      }
+    }
   }
 
   template<class IteratorType>
   bool CheckIterator(IteratorType begin,
                      IteratorType end,
-                     ComponentType value) {
+                     ComponentType value)
+  {
     vtkm::Id index = 0;
     for (IteratorType iter = begin; iter != end; iter++)
-      {
-      if (ValueType(*iter) != ExpectedValue(index, value)) return false;
+    {
+      if (ValueType(*iter) != ExpectedValue(index, value)) { return false; }
       index++;
-      }
+    }
     return true;
   }
 
@@ -72,29 +75,29 @@ struct TemplatedTests
     IteratorType begin = vtkm::cont::internal::make_IteratorBegin(portal);
     IteratorType end = vtkm::cont::internal::make_IteratorEnd(portal);
     VTKM_TEST_ASSERT(std::distance(begin, end) == ARRAY_SIZE,
-                    "Distance between begin and end incorrect.");
+                     "Distance between begin and end incorrect.");
 
     std::cout << "    Check forward iteration." << std::endl;
     VTKM_TEST_ASSERT(CheckIterator(begin, end, ORIGINAL_VALUE()),
-                    "Forward iteration wrong");
+                     "Forward iteration wrong");
 
     std::cout << "    Check backward iteration." << std::endl;
     IteratorType middle = end;
     for (vtkm::Id index = portal.GetNumberOfValues()-1; index >= 0; index--)
-      {
+    {
       middle--;
       ValueType value = *middle;
       VTKM_TEST_ASSERT(value == ExpectedValue(index, ORIGINAL_VALUE()),
-                      "Backward iteration wrong");
-      }
+                       "Backward iteration wrong");
+    }
 
     std::cout << "    Check advance" << std::endl;
     middle = begin + ARRAY_SIZE/2;
     VTKM_TEST_ASSERT(std::distance(begin, middle) == ARRAY_SIZE/2,
-                    "Bad distance to middle.");
+                     "Bad distance to middle.");
     VTKM_TEST_ASSERT(
-          ValueType(*middle) == ExpectedValue(ARRAY_SIZE/2, ORIGINAL_VALUE()),
-          "Bad value at middle.");
+      ValueType(*middle) == ExpectedValue(ARRAY_SIZE/2, ORIGINAL_VALUE()),
+      "Bad value at middle.");
   }
 
   template<class ArrayPortalType>
@@ -112,9 +115,9 @@ struct TemplatedTests
 
     std::cout << "    Check values in portal." << std::endl;
     VTKM_TEST_ASSERT(CheckIterator(portal.GetIteratorBegin(),
-                                  portal.GetIteratorEnd(),
-                                  WRITE_VALUE),
-                    "Did not get correct values when writing to iterator.");
+                                   portal.GetIteratorEnd(),
+                                   WRITE_VALUE),
+                     "Did not get correct values when writing to iterator.");
   }
 
   void operator()()

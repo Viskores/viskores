@@ -73,53 +73,53 @@ public:
   void ReleaseResources()
   {
     if (this->NumberOfValues > 0)
-      {
+    {
       VTKM_ASSERT_CONT(this->Array != NULL);
       AllocatorType allocator;
       allocator.deallocate(this->Array, this->AllocatedSize);
       this->Array = NULL;
       this->NumberOfValues = 0;
       this->AllocatedSize = 0;
-      }
+    }
     else
-      {
+    {
       VTKM_ASSERT_CONT(this->Array == NULL);
-      }
+    }
   }
 
   void Allocate(vtkm::Id numberOfValues)
   {
     if (numberOfValues <= this->AllocatedSize)
-      {
+    {
       this->NumberOfValues = numberOfValues;
       return;
-      }
+    }
 
     this->ReleaseResources();
     try
-      {
+    {
       if (numberOfValues > 0)
-        {
+      {
         AllocatorType allocator;
         this->Array = allocator.allocate(numberOfValues);
         this->AllocatedSize  = numberOfValues;
         this->NumberOfValues = numberOfValues;
-        }
+      }
       else
-        {
+      {
         // ReleaseResources should have already set AllocatedSize to 0.
         VTKM_ASSERT_CONT(this->AllocatedSize == 0);
-        }
       }
+    }
     catch (std::bad_alloc err)
-      {
+    {
       // Make sureour state is OK.
       this->Array = NULL;
       this->NumberOfValues = 0;
       this->AllocatedSize = 0;
       throw vtkm::cont::ErrorControlOutOfMemory(
-            "Could not allocate basic control array.");
-      }
+        "Could not allocate basic control array.");
+    }
   }
 
   vtkm::Id GetNumberOfValues() const
@@ -130,10 +130,10 @@ public:
   void Shrink(vtkm::Id numberOfValues)
   {
     if (numberOfValues > this->GetNumberOfValues())
-      {
+    {
       throw vtkm::cont::ErrorControlBadValue(
-            "Shrink method cannot be used to grow array.");
-      }
+        "Shrink method cannot be used to grow array.");
+    }
 
     this->NumberOfValues = numberOfValues;
   }

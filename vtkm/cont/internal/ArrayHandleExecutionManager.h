@@ -40,7 +40,8 @@ private:
 
 public:
   template <typename DeviceAdapter>
-  struct ExecutionTypes {
+  struct ExecutionTypes
+  {
   private:
     typedef vtkm::cont::internal::ArrayTransfer<T,Container,DeviceAdapter>
         ArrayTransferType;
@@ -158,17 +159,17 @@ public:
   bool IsDeviceAdapter(DeviceAdapter) const
   {
     return this->IsDeviceAdapterImpl(
-          vtkm::cont::internal::DeviceAdapterTraits<DeviceAdapter>::GetId());
+             vtkm::cont::internal::DeviceAdapterTraits<DeviceAdapter>::GetId());
   }
 
 protected:
   virtual void GetPortalExecutionImpl(void *portalExecution) = 0;
 
   virtual void GetPortalConstExecutionImpl(
-      void *portalConstExecution) const = 0;
+    void *portalConstExecution) const = 0;
 
   virtual bool IsDeviceAdapterImpl(
-      const vtkm::cont::internal::DeviceAdapterId &id) const = 0;
+    const vtkm::cont::internal::DeviceAdapterId &id) const = 0;
 
 private:
   template<typename DeviceAdapter>
@@ -176,9 +177,9 @@ private:
   void VerifyDeviceAdapter(DeviceAdapter device) const
   {
     if (!this->IsDeviceAdapter(device))
-      {
+    {
       throw vtkm::cont::ErrorControlInternal("Device Adapter Mismatch");
-      }
+    }
   }
 };
 
@@ -193,7 +194,7 @@ template<typename T,
          typename Container,
          typename DeviceAdapter>
 class ArrayHandleExecutionManager
-    : public ArrayHandleExecutionManagerBase<T, Container>
+  : public ArrayHandleExecutionManagerBase<T, Container>
 {
   typedef ArrayHandleExecutionManagerBase<T, Container> Superclass;
   typedef vtkm::cont::internal::ArrayTransfer<T,Container,DeviceAdapter>

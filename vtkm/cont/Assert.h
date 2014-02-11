@@ -44,18 +44,18 @@ namespace vtkm {
 namespace cont {
 
 VTKM_CONT_EXPORT void Assert(bool condition,
-                            const std::string &file,
-                            vtkm::Id line,
-                            const std::string &message)
+                             const std::string &file,
+                             vtkm::Id line,
+                             const std::string &message)
 {
   if (condition)
-    {
+  {
     // Do nothing.
-    }
+  }
   else
-    {
+  {
     throw vtkm::cont::ErrorControlAssert(file, line, message);
-    }
+  }
 }
 
 }

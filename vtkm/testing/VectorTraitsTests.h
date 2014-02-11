@@ -48,7 +48,7 @@ inline void CompareDimensionalityTags(vtkm::TypeTraitsVectorTag,
 /// the Tuple class.
 template <class T>
 static void TestVectorTypeImpl(
-    const typename boost::remove_const<T>::type &vector)
+  const typename boost::remove_const<T>::type &vector)
 {
   typedef typename vtkm::VectorTraits<T> Traits;
   typedef typename Traits::ComponentType ComponentType;
@@ -56,48 +56,48 @@ static void TestVectorTypeImpl(
   typedef typename boost::remove_const<T>::type NonConstT;
 
   {
-  NonConstT result;
-  const ComponentType multiplier = 4;
-  for (int i = 0; i < NUM_COMPONENTS; i++)
+    NonConstT result;
+    const ComponentType multiplier = 4;
+    for (int i = 0; i < NUM_COMPONENTS; i++)
     {
-    Traits::SetComponent(result, i, multiplier*Traits::GetComponent(vector, i));
+      Traits::SetComponent(result, i, multiplier*Traits::GetComponent(vector, i));
     }
-  VTKM_TEST_ASSERT(test_equal(Traits::ToTuple(result),
-                             multiplier*Traits::ToTuple(vector)),
-                  "Got bad result for scalar multiple");
+    VTKM_TEST_ASSERT(test_equal(Traits::ToTuple(result),
+                                multiplier*Traits::ToTuple(vector)),
+                     "Got bad result for scalar multiple");
   }
 
   {
-  NonConstT result;
-  const ComponentType multiplier = 7;
-  for (int i = 0; i < NUM_COMPONENTS; i++)
+    NonConstT result;
+    const ComponentType multiplier = 7;
+    for (int i = 0; i < NUM_COMPONENTS; i++)
     {
-    Traits::GetComponent(result, i)
+      Traits::GetComponent(result, i)
         = multiplier * Traits::GetComponent(vector, i);
     }
-  VTKM_TEST_ASSERT(test_equal(Traits::ToTuple(result),
-                             multiplier*Traits::ToTuple(vector)),
-                  "Got bad result for scalar multiple");
+    VTKM_TEST_ASSERT(test_equal(Traits::ToTuple(result),
+                                multiplier*Traits::ToTuple(vector)),
+                     "Got bad result for scalar multiple");
   }
 
   {
-  ComponentType result = 0;
-  for (int i = 0; i < NUM_COMPONENTS; i++)
+    ComponentType result = 0;
+    for (int i = 0; i < NUM_COMPONENTS; i++)
     {
-    ComponentType component
+      ComponentType component
         = Traits::GetComponent(vector, i);
-    result += component * component;
+      result += component * component;
     }
-  VTKM_TEST_ASSERT(
-        test_equal(result,
-                   vtkm::dot(Traits::ToTuple(vector), Traits::ToTuple(vector))),
-        "Got bad result for dot product");
+    VTKM_TEST_ASSERT(
+      test_equal(result,
+                 vtkm::dot(Traits::ToTuple(vector), Traits::ToTuple(vector))),
+      "Got bad result for dot product");
   }
 
   // This will fail to compile if the tags are wrong.
   detail::CompareDimensionalityTags(
-        typename vtkm::TypeTraits<T>::DimensionalityTag(),
-        typename vtkm::VectorTraits<T>::HasMultipleComponents());
+    typename vtkm::TypeTraits<T>::DimensionalityTag(),
+    typename vtkm::VectorTraits<T>::HasMultipleComponents());
 }
 
 inline void CheckVectorComponentsTag(vtkm::VectorTraitsTagMultipleComponents)
@@ -117,7 +117,7 @@ inline void TestVectorComponentsTag()
   // This will fail to compile if the tag is wrong
   // (i.e. not vtkm::VectorTraitsTagMultipleComponents)
   detail::CheckVectorComponentsTag(
-        typename vtkm::VectorTraits<T>::HasMultipleComponents());
+    typename vtkm::VectorTraits<T>::HasMultipleComponents());
 }
 
 namespace detail {
@@ -148,7 +148,7 @@ inline void TestScalarComponentsTag()
   // This will fail to compile if the tag is wrong
   // (i.e. not vtkm::VectorTraitsTagSingleComponent)
   detail::CheckScalarComponentsTag(
-        typename vtkm::VectorTraits<T>::HasMultipleComponents());
+    typename vtkm::VectorTraits<T>::HasMultipleComponents());
 }
 
 }

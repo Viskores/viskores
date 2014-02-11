@@ -28,8 +28,7 @@
 
 #include <vtkm/VectorTraits.h>
 
-namespace
-{
+namespace {
 
 template <typename T>
 struct TestImplicitContainer
@@ -52,16 +51,18 @@ struct TestImplicitContainer
   VTKM_EXEC_CONT_EXPORT
   ValueType Get(vtkm::Id vtkmNotUsed(index)) const
   {
-  return Temp;
+    return Temp;
   }
 
   VTKM_CONT_EXPORT
-  IteratorType GetIteratorBegin() const {
+  IteratorType GetIteratorBegin() const
+  {
     return IteratorType(*this);
   }
 
   VTKM_CONT_EXPORT
-  IteratorType GetIteratorEnd() const {
+  IteratorType GetIteratorEnd() const
+  {
     return IteratorType(*this, this->GetNumberOfValues());
   }
 
@@ -86,45 +87,49 @@ struct TemplatedTests
   {
     ArrayContainerType arrayContainer;
 
-    try{ arrayContainer.GetNumberOfValues();
+    try
+    {
+      arrayContainer.GetNumberOfValues();
       VTKM_TEST_ASSERT(false == true,
-                      "Implicit Container GetNumberOfValues method didn't throw error.");
-      }
-    catch(vtkm::cont::ErrorControlBadValue e){}
-
-    try{ arrayContainer.Allocate(ARRAY_SIZE);
-      VTKM_TEST_ASSERT(false == true,
-                    "Implicit Container Allocate method didn't throw error.");
-      }
-    catch(vtkm::cont::ErrorControlBadValue e){}
+                       "Implicit Container GetNumberOfValues method didn't throw error.");
+    }
+    catch(vtkm::cont::ErrorControlBadValue e) {}
 
     try
-      {
+    {
+      arrayContainer.Allocate(ARRAY_SIZE);
+      VTKM_TEST_ASSERT(false == true,
+                       "Implicit Container Allocate method didn't throw error.");
+    }
+    catch(vtkm::cont::ErrorControlBadValue e) {}
+
+    try
+    {
       arrayContainer.Shrink(ARRAY_SIZE);
       VTKM_TEST_ASSERT(true==false,
-                      "Array shrink do a larger size was possible. This can't be allowed.");
-      }
-    catch(vtkm::cont::ErrorControlBadValue){}
+                       "Array shrink do a larger size was possible. This can't be allowed.");
+    }
+    catch(vtkm::cont::ErrorControlBadValue) {}
 
     try
-      {
+    {
       arrayContainer.ReleaseResources();
       VTKM_TEST_ASSERT(true==false,
-                      "Can't Release an implicit array");
-      }
-    catch(vtkm::cont::ErrorControlBadValue){}
+                       "Can't Release an implicit array");
+    }
+    catch(vtkm::cont::ErrorControlBadValue) {}
   }
 
   void BasicAccess()
-    {
+  {
     TestImplicitContainer<T> portal;
     vtkm::cont::ArrayHandle<T,ContainerTagType> implictHandle(portal);
     VTKM_TEST_ASSERT(implictHandle.GetNumberOfValues() == 1,
-                    "handle should have size 1");
+                     "handle should have size 1");
     VTKM_TEST_ASSERT(implictHandle.GetPortalConstControl().Get(0) == T(1),
-                    "portals first values should be 1");
+                     "portals first values should be 1");
     ;
-    }
+  }
 
   void operator()()
   {

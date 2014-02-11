@@ -51,9 +51,9 @@ struct TemplatedTests
   bool CheckArray(IteratorType begin, IteratorType end, ValueType value)
   {
     for (IteratorType iter = begin; iter != end; iter++)
-      {
-      if (!test_equal(*iter, value)) return false;
-      }
+    {
+      if (!test_equal(*iter, value)) { return false; }
+    }
     return true;
   }
 
@@ -87,7 +87,7 @@ struct TemplatedTests
     executionArray.CopyInto(copyBack.begin());
 
     VTKM_TEST_ASSERT(CheckArray(copyBack.begin(), copyBack.end(), INPUT_VALUE),
-                    "Did not get correct array back.");
+                     "Did not get correct array back.");
   }
 
   void InPlaceData()
@@ -117,7 +117,7 @@ struct TemplatedTests
     executionArray.CopyInto(copyBack.begin());
 
     VTKM_TEST_ASSERT(CheckArray(copyBack.begin(), copyBack.end(), INPUT_VALUE),
-                    "Did not get correct array back.");
+                     "Did not get correct array back.");
   }
 
   void OutputData()
@@ -137,15 +137,16 @@ struct TemplatedTests
     executionArray.CopyInto(copyBack.begin());
 
     VTKM_TEST_ASSERT(CheckArray(copyBack.begin(), copyBack.end(), OUTPUT_VALUE),
-                    "Did not get correct array back.");
+                     "Did not get correct array back.");
 
     executionArray.RetrieveOutputData(controlArray);
 
     VTKM_TEST_ASSERT(CheckContainer(controlArray, OUTPUT_VALUE),
-                    "Did not get the right value in the control container.");
+                     "Did not get the right value in the control container.");
   }
 
-  void operator()() {
+  void operator()()
+  {
 
     InputData();
     InPlaceData();

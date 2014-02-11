@@ -32,7 +32,8 @@ namespace internal {
 namespace detail {
 
 template<class ArrayPortalType>
-struct IteratorFromArrayPortalValue {
+struct IteratorFromArrayPortalValue
+{
   typedef typename ArrayPortalType::ValueType ValueType;
 
   VTKM_CONT_EXPORT
@@ -52,20 +53,22 @@ struct IteratorFromArrayPortalValue {
 
   VTKM_CONT_EXPORT
   IteratorFromArrayPortalValue<ArrayPortalType> &operator=(
-      const IteratorFromArrayPortalValue<ArrayPortalType> &rhs)
+    const IteratorFromArrayPortalValue<ArrayPortalType> &rhs)
   {
     this->Portal.Set(this->Index, rhs.Portal.Get(rhs.Index));
     return *this;
   }
 
   VTKM_CONT_EXPORT
-  ValueType operator=(ValueType value) {
+  ValueType operator=(ValueType value)
+  {
     this->Portal.Set(this->Index, value);
     return value;
   }
 
   VTKM_CONT_EXPORT
-  operator ValueType(void) const {
+  operator ValueType(void) const
+  {
     return this->Portal.Get(this->Index);
   }
 
@@ -96,8 +99,8 @@ public:
   detail::IteratorFromArrayPortalValue<ArrayPortalType>
   operator[](int idx) const
   {
-  return detail::IteratorFromArrayPortalValue<ArrayPortalType>(this->Portal,
-                                                               idx);
+    return detail::IteratorFromArrayPortalValue<ArrayPortalType>(this->Portal,
+           idx);
   }
 
 private:
@@ -108,13 +111,15 @@ private:
   friend class boost::iterator_core_access;
 
   VTKM_CONT_EXPORT
-  detail::IteratorFromArrayPortalValue<ArrayPortalType> dereference() const {
+  detail::IteratorFromArrayPortalValue<ArrayPortalType> dereference() const
+  {
     return detail::IteratorFromArrayPortalValue<ArrayPortalType>(this->Portal,
-                                                                 this->Index);
+           this->Index);
   }
 
   VTKM_CONT_EXPORT
-  bool equal(const IteratorFromArrayPortal<ArrayPortalType> &other) const {
+  bool equal(const IteratorFromArrayPortal<ArrayPortalType> &other) const
+  {
     // Technically, we should probably check that the portals are the same,
     // but the portal interface does not specify an equal operator.  It is
     // by its nature undefined what happens when comparing iterators from
@@ -123,21 +128,24 @@ private:
   }
 
   VTKM_CONT_EXPORT
-  void increment() {
+  void increment()
+  {
     this->Index++;
     VTKM_ASSERT_CONT(this->Index >= 0);
     VTKM_ASSERT_CONT(this->Index <= this->Portal.GetNumberOfValues());
   }
 
   VTKM_CONT_EXPORT
-  void decrement() {
+  void decrement()
+  {
     this->Index--;
     VTKM_ASSERT_CONT(this->Index >= 0);
     VTKM_ASSERT_CONT(this->Index <= this->Portal.GetNumberOfValues());
   }
 
   VTKM_CONT_EXPORT
-  void advance(vtkm::Id delta) {
+  void advance(vtkm::Id delta)
+  {
     this->Index += delta;
     VTKM_ASSERT_CONT(this->Index >= 0);
     VTKM_ASSERT_CONT(this->Index <= this->Portal.GetNumberOfValues());
@@ -145,7 +153,8 @@ private:
 
   VTKM_CONT_EXPORT
   vtkm::Id
-  distance_to(const IteratorFromArrayPortal<ArrayPortalType> &other) const {
+  distance_to(const IteratorFromArrayPortal<ArrayPortalType> &other) const
+  {
     // Technically, we should probably check that the portals are the same,
     // but the portal interface does not specify an equal operator.  It is
     // by its nature undefined what happens when comparing iterators from
@@ -156,28 +165,28 @@ private:
 
 template<class ArrayPortalType>
 IteratorFromArrayPortal<ArrayPortalType> make_IteratorBegin(
-    const ArrayPortalType &portal)
+  const ArrayPortalType &portal)
 {
   return IteratorFromArrayPortal<ArrayPortalType>(portal, 0);
 }
 
 template<class ArrayPortalType>
 IteratorFromArrayPortal<ArrayPortalType> make_IteratorEnd(
-    const ArrayPortalType &portal)
+  const ArrayPortalType &portal)
 {
   return IteratorFromArrayPortal<ArrayPortalType>(portal,
-                                                  portal.GetNumberOfValues());
+         portal.GetNumberOfValues());
 }
 
 
 //implementat a custom swap function, since the std::swap won't work
 //since we return RValues instead of Lvalues
 template<typename T>
-  void swap( vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> a,
-             vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> b)
-  {
-    a.Swap(b);
-  }
+void swap( vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> a,
+           vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> b)
+{
+  a.Swap(b);
+}
 
 
 }

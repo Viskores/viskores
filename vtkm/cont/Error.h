@@ -40,7 +40,8 @@ protected:
   Error() { }
   Error(const std::string message) : Message(message) { }
 
-  void SetMessage(const std::string &message) {
+  void SetMessage(const std::string &message)
+  {
     this->Message = message;
   }
 

@@ -28,15 +28,16 @@ static const vtkm::Id VectorInit[MAX_VECTOR_SIZE] = { 42, 54, 67, 12, 78 };
 
 struct TestVectorTypeFunctor
 {
-  template <typename T> void operator()(const T&) const {
+  template <typename T> void operator()(const T&) const
+  {
     typedef vtkm::VectorTraits<T> Traits;
     VTKM_TEST_ASSERT(Traits::NUM_COMPONENTS <= MAX_VECTOR_SIZE,
-                    "Need to update test for larger vectors.");
+                     "Need to update test for larger vectors.");
     T vector;
     for (int index = 0; index < Traits::NUM_COMPONENTS; index++)
-      {
+    {
       Traits::SetComponent(vector, index, VectorInit[index]);
-      }
+    }
     vtkm::testing::TestVectorType(vector);
   }
 };

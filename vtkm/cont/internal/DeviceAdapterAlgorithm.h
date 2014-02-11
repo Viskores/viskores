@@ -152,7 +152,7 @@ struct DeviceAdapterAlgorithm
   ///
   template<class Functor>
   VTKM_CONT_EXPORT static void Schedule(Functor functor,
-                                       vtkm::Id numInstances);
+                                        vtkm::Id numInstances);
 
   /// \brief Schedule many instances of a function to run on concurrent threads.
   ///
@@ -178,7 +178,7 @@ struct DeviceAdapterAlgorithm
   ///
   template<class Functor, class IndiceType>
   VTKM_CONT_EXPORT static void Schedule(Functor functor,
-                                       vtkm::Id3 rangeMax);
+                                        vtkm::Id3 rangeMax);
 
   /// \brief Unstable ascending sort of input array.
   ///
@@ -355,7 +355,8 @@ public:
 
     return elapsedTime;
   }
-  struct TimeStamp {
+  struct TimeStamp
+  {
     vtkm::internal::Int64Type Seconds;
     vtkm::internal::Int64Type Microseconds;
   };
