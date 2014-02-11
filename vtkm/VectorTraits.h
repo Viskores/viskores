@@ -38,12 +38,14 @@ struct VectorTraitsTagSingleComponent { };
 namespace internal {
 
 template<int numComponents>
-struct VectorTraitsMultipleComponentChooser {
+struct VectorTraitsMultipleComponentChooser
+{
   typedef VectorTraitsTagMultipleComponents Type;
 };
 
 template<>
-struct VectorTraitsMultipleComponentChooser<1> {
+struct VectorTraitsMultipleComponentChooser<1>
+{
   typedef VectorTraitsTagSingleComponent Type;
 };
 

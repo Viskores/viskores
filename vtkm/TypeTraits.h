@@ -57,7 +57,8 @@ template<typename T> struct TypeTraits;
 /// override behavior of called functions.
 ///
 template<typename T>
-class TypeTraits {
+class TypeTraits
+{
   typedef int tag_type; // Shut up, test compile.
 public:
 
@@ -82,16 +83,16 @@ struct TypeTraits<const T> : TypeTraits<T>
 {  };
 
 #define VTKM_BASIC_REAL_TYPE(T) \
-template<> struct TypeTraits<T> { \
-  typedef TypeTraitsRealTag NumericTag; \
-  typedef TypeTraitsScalarTag DimensionalityTag; \
-}
+  template<> struct TypeTraits<T> { \
+    typedef TypeTraitsRealTag NumericTag; \
+    typedef TypeTraitsScalarTag DimensionalityTag; \
+  }
 
 #define VTKM_BASIC_INTEGER_TYPE(T) \
-template<> struct TypeTraits<T> { \
-  typedef TypeTraitsIntegerTag NumericTag; \
-  typedef TypeTraitsScalarTag DimensionalityTag; \
-}
+  template<> struct TypeTraits<T> { \
+    typedef TypeTraitsIntegerTag NumericTag; \
+    typedef TypeTraitsScalarTag DimensionalityTag; \
+  }
 
 /// Traits for basic C++ types.
 ///
@@ -118,10 +119,10 @@ VTKM_BASIC_INTEGER_TYPE(unsigned long long);
 #undef VTKM_BASIC_INTEGER_TYPE
 
 #define VTKM_VECTOR_TYPE(T, NTag) \
-template<> struct TypeTraits<T> { \
-  typedef NTag NumericTag; \
-  typedef TypeTraitsVectorTag DimensionalityTag; \
-}
+  template<> struct TypeTraits<T> { \
+    typedef NTag NumericTag; \
+    typedef TypeTraitsVectorTag DimensionalityTag; \
+  }
 
 /// Traits for vector types.
 ///
@@ -135,7 +136,8 @@ VTKM_VECTOR_TYPE(vtkm::Vector4, TypeTraitsRealTag);
 
 /// Traits for tuples.
 ///
-template<typename T, int Size> struct TypeTraits<vtkm::Tuple<T, Size> > {
+template<typename T, int Size> struct TypeTraits<vtkm::Tuple<T, Size> >
+{
   typedef typename TypeTraits<T>::NumericTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;
 };

@@ -125,7 +125,7 @@ private:
 public:
   template<class Functor>
   VTKM_CONT_EXPORT static void Schedule(Functor functor,
-                                       vtkm::Id numInstances)
+                                        vtkm::Id numInstances)
   {
     const vtkm::Id MESSAGE_SIZE = 1024;
     char errorString[MESSAGE_SIZE];
@@ -143,9 +143,9 @@ public:
           kernel);
 
     if (errorMessage.IsErrorRaised())
-      {
+    {
       throw vtkm::cont::ErrorExecution(errorString);
-      }
+    }
   }
 
   template<class FunctorType>
@@ -168,7 +168,7 @@ public:
 
   template<typename T, class Container, class Compare>
   VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Container>& values,
-                                   Compare comp)
+                                    Compare comp)
   {
     typedef typename vtkm::cont::ArrayHandle<T,Container>
         ::template ExecutionTypes<Device>::Portal PortalType;

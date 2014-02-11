@@ -44,7 +44,8 @@ namespace cont {
 /// and environment do not share memory. This is wasteful and should be fixed.
 ///
 template<class ArrayPortalType>
-struct ArrayContainerControlTagImplicit {
+struct ArrayContainerControlTagImplicit
+{
   typedef ArrayPortalType PortalType;
 };
 
@@ -61,16 +62,19 @@ public:
 
   // This is meant to be invalid. Because implicit arrays are read only, you
   // should only be able to use the const version.
-  struct PortalType {
+  struct PortalType
+  {
     typedef void *ValueType;
     typedef void *IteratorType;
   };
 
   // All these methods do nothing but raise errors.
-  PortalType GetPortal() {
+  PortalType GetPortal()
+  {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
   }
-  PortalConstType GetPortalConst() const {
+  PortalConstType GetPortalConst() const
+  {
     // This does not work because the ArrayHandle holds the constant
     // ArrayPortal, not the container.
     throw vtkm::cont::ErrorControlBadValue(
@@ -78,7 +82,8 @@ public:
           "Perhaps you did not set the ArrayPortal when "
           "constructing the ArrayHandle.");
   }
-  vtkm::Id GetNumberOfValues() const {
+  vtkm::Id GetNumberOfValues() const
+  {
     // This does not work because the ArrayHandle holds the constant
     // ArrayPortal, not the container.
     throw vtkm::cont::ErrorControlBadValue(
@@ -86,13 +91,16 @@ public:
           "Perhaps you did not set the ArrayPortal when "
           "constructing the ArrayHandle.");
   }
-  void Allocate(vtkm::Id vtkmNotUsed(numberOfValues)) {
+  void Allocate(vtkm::Id vtkmNotUsed(numberOfValues))
+  {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
   }
-  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
+  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
+  {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
   }
-  void ReleaseResources() {
+  void ReleaseResources()
+  {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
   }
 };
@@ -117,17 +125,20 @@ public:
 
   ArrayTransfer() : PortalValid(false) {  }
 
-  VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const {
+  VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const
+  {
     VTKM_ASSERT_CONT(this->PortalValid);
     return this->Portal.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT void LoadDataForInput(PortalConstControl portal) {
+  VTKM_CONT_EXPORT void LoadDataForInput(PortalConstControl portal)
+  {
     this->Portal = portal;
     this->PortalValid = true;
   }
 
-  VTKM_CONT_EXPORT void LoadDataForInput(const ContainerType &controlArray) {
+  VTKM_CONT_EXPORT void LoadDataForInput(const ContainerType &controlArray)
+  {
     this->LoadDataForInput(controlArray.GetPortalConst());
   }
 

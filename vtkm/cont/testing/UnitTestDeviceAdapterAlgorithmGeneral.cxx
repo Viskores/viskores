@@ -57,14 +57,14 @@ public:
 
   template<class Functor>
   VTKM_CONT_EXPORT static void Schedule(Functor functor,
-                                       vtkm::Id numInstances)
+                                        vtkm::Id numInstances)
   {
     Algorithm::Schedule(functor, numInstances);
   }
 
   template<class Functor>
   VTKM_CONT_EXPORT static void Schedule(Functor functor,
-                                       vtkm::Id3 rangeMax)
+                                        vtkm::Id3 rangeMax)
   {
     Algorithm::Schedule(functor, rangeMax);
   }

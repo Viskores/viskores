@@ -48,7 +48,7 @@ public:
   {  }
 
   VTKM_CONT_EXPORT ArrayPortalShrink(const DelegatePortalType &delegatePortal,
-                                    vtkm::Id numberOfValues)
+                                     vtkm::Id numberOfValues)
     : DelegatePortal(delegatePortal), NumberOfValues(numberOfValues)
   {
     VTKM_ASSERT_CONT(numberOfValues <= delegatePortal.GetNumberOfValues());
@@ -69,26 +69,30 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_CONT_EXPORT
-  ValueType Get(vtkm::Id index) const {
+  ValueType Get(vtkm::Id index) const
+  {
     VTKM_ASSERT_CONT(index >= 0);
     VTKM_ASSERT_CONT(index < this->GetNumberOfValues());
     return this->DelegatePortal.Get(index);
   }
 
   VTKM_CONT_EXPORT
-  void Set(vtkm::Id index, ValueType value) const {
+  void Set(vtkm::Id index, ValueType value) const
+  {
     VTKM_ASSERT_CONT(index >= 0);
     VTKM_ASSERT_CONT(index < this->GetNumberOfValues());
     this->DelegatePortal.Set(index, value);
   }
 
   VTKM_CONT_EXPORT
-  IteratorType GetIteratorBegin() const {
+  IteratorType GetIteratorBegin() const
+  {
     return this->DelegatePortal.GetIteratorBegin();
   }
 
   VTKM_CONT_EXPORT
-  IteratorType GetIteratorEnd() const {
+  IteratorType GetIteratorEnd() const
+  {
     IteratorType iterator = this->DelegatePortal.GetIteratorBegin();
     std::advance(iterator, this->GetNumberOfValues());
     return iterator;
@@ -98,7 +102,8 @@ public:
   /// (exposed) array.
   ///
   VTKM_CONT_EXPORT
-  void Shrink(vtkm::Id numberOfValues) {
+  void Shrink(vtkm::Id numberOfValues)
+  {
     VTKM_ASSERT_CONT(numberOfValues < this->GetNumberOfValues());
     this->NumberOfValues = numberOfValues;
   }

@@ -25,8 +25,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/VectorTraits.h>
 
-namespace
-{
+namespace {
 
 const vtkm::Id ARRAY_SIZE = 10;
 
@@ -44,9 +43,9 @@ struct TemplatedTests
     for (IteratorType iter = array.GetPortal().GetIteratorBegin();
          iter != array.GetPortal().GetIteratorEnd();
          iter ++)
-      {
+    {
       *iter = value;
-      }
+    }
   }
 
   bool CheckContainer(ArrayContainerType &array, ValueType value)
@@ -54,13 +53,14 @@ struct TemplatedTests
     for (IteratorType iter = array.GetPortal().GetIteratorBegin();
          iter != array.GetPortal().GetIteratorEnd();
          iter ++)
-      {
-      if (!test_equal(*iter, value)) return false;
-      }
+    {
+      if (!test_equal(*iter, value)) { return false; }
+    }
     return true;
   }
 
-  typename vtkm::VectorTraits<ValueType>::ComponentType STOLEN_ARRAY_VALUE() {
+  typename vtkm::VectorTraits<ValueType>::ComponentType STOLEN_ARRAY_VALUE()
+  {
     return 4529;
   }
 
@@ -78,11 +78,11 @@ struct TemplatedTests
     SetContainer(stealMyArray, stolenArrayValue);
 
     VTKM_TEST_ASSERT(stealMyArray.GetNumberOfValues() == ARRAY_SIZE,
-                    "Array not properly allocated.");
+                     "Array not properly allocated.");
     // This call steals the array and prevents deallocation.
     stolenArray = stealMyArray.StealArray();
     VTKM_TEST_ASSERT(stealMyArray.GetNumberOfValues() == 0,
-                    "StealArray did not let go of array.");
+                     "StealArray did not let go of array.");
 
     return stolenArray;
   }
@@ -91,10 +91,10 @@ struct TemplatedTests
     ValueType stolenArrayValue = ValueType(STOLEN_ARRAY_VALUE());
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
-      {
+    {
       VTKM_TEST_ASSERT(test_equal(stolenArray[index], stolenArrayValue),
-                      "Stolen array did not retain values.");
-      }
+                       "Stolen array did not retain values.");
+    }
     delete[] stolenArray;
   }
 
@@ -102,36 +102,36 @@ struct TemplatedTests
   {
     ArrayContainerType arrayContainer;
     VTKM_TEST_ASSERT(arrayContainer.GetNumberOfValues() == 0,
-                    "New array container not zero sized.");
+                     "New array container not zero sized.");
 
     arrayContainer.Allocate(ARRAY_SIZE);
     VTKM_TEST_ASSERT(arrayContainer.GetNumberOfValues() == ARRAY_SIZE,
-                    "Array not properly allocated.");
+                     "Array not properly allocated.");
 
     const ValueType BASIC_ALLOC_VALUE = ValueType(548);
     SetContainer(arrayContainer, BASIC_ALLOC_VALUE);
     VTKM_TEST_ASSERT(CheckContainer(arrayContainer, BASIC_ALLOC_VALUE),
-                    "Array not holding value.");
+                     "Array not holding value.");
 
     arrayContainer.Allocate(ARRAY_SIZE * 2);
     VTKM_TEST_ASSERT(arrayContainer.GetNumberOfValues() == ARRAY_SIZE * 2,
-                    "Array not reallocated correctly.");
+                     "Array not reallocated correctly.");
 
     arrayContainer.Shrink(ARRAY_SIZE);
     VTKM_TEST_ASSERT(arrayContainer.GetNumberOfValues() == ARRAY_SIZE,
-                    "Array Shrnk failed to resize.");
+                     "Array Shrnk failed to resize.");
 
     arrayContainer.ReleaseResources();
     VTKM_TEST_ASSERT(arrayContainer.GetNumberOfValues() == 0,
-                    "Array not released correctly.");
+                     "Array not released correctly.");
 
     try
-      {
+    {
       arrayContainer.Shrink(ARRAY_SIZE);
       VTKM_TEST_ASSERT(true==false,
-                      "Array shrink do a larger size was possible. This can't be allowed.");
-      }
-    catch(vtkm::cont::ErrorControlBadValue){}
+                       "Array shrink do a larger size was possible. This can't be allowed.");
+    }
+    catch(vtkm::cont::ErrorControlBadValue) {}
   }
 
   void operator()()

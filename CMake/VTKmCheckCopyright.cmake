@@ -45,7 +45,7 @@ if (NOT VTKm_SOURCE_DIR)
   message(SEND_ERROR "VTKm_SOURCE_DIR not defined.")
 endif (NOT VTKm_SOURCE_DIR)
 
-set(copyright_file ${VTKm_SOURCE_DIR}/CMake/VTKMCopyrightStatement.txt)
+set(copyright_file ${VTKm_SOURCE_DIR}/CMake/VTKmCopyrightStatement.txt)
 
 if (NOT EXISTS ${copyright_file})
   message(SEND_ERROR "Cannot find VTKMCopyrightStatement.txt.")

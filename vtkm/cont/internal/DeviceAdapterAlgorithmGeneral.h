@@ -29,8 +29,7 @@
 
 #include <algorithm>
 
-namespace
-{
+namespace {
 /// Predicate that takes a single argument \c x, and returns
 /// True if it isn't the identity of the Type \p T.
 template<typename T>
@@ -132,7 +131,8 @@ private:
   // Copy
 private:
   template<class InputPortalType, class OutputPortalType>
-  struct CopyKernel {
+  struct CopyKernel
+  {
     InputPortalType InputPortal;
     OutputPortalType OutputPortal;
     vtkm::Id InputOffset;
@@ -150,10 +150,11 @@ private:
     {  }
 
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id index) const {
+    void operator()(vtkm::Id index) const
+    {
       this->OutputPortal.Set(
-            index + this->OutputOffset,
-            this->InputPortal.Get(index + this->InputOffset));
+        index + this->OutputOffset,
+        this->InputPortal.Get(index + this->InputOffset));
     }
 
     VTKM_CONT_EXPORT
@@ -164,7 +165,7 @@ private:
 public:
   template<typename T, class CIn, class COut>
   VTKM_CONT_EXPORT static void Copy(const vtkm::cont::ArrayHandle<T, CIn> &input,
-                                   vtkm::cont::ArrayHandle<T, COut> &output)
+                                    vtkm::cont::ArrayHandle<T, COut> &output)
   {
     vtkm::Id arraySize = input.GetNumberOfValues();
 
@@ -181,7 +182,8 @@ public:
   // Lower Bounds
 private:
   template<class InputPortalType,class ValuesPortalType,class OutputPortalType>
-  struct LowerBoundsKernel {
+  struct LowerBoundsKernel
+  {
     InputPortalType InputPortal;
     ValuesPortalType ValuesPortal;
     OutputPortalType OutputPortal;
@@ -195,7 +197,8 @@ private:
         OutputPortal(outputPortal) {  }
 
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id index) const {
+    void operator()(vtkm::Id index) const
+    {
       // This method assumes that (1) InputPortalType can return working
       // iterators in the execution environment and that (2) methods not
       // specified with VTKM_EXEC_EXPORT (such as the STL algorithms) can be
@@ -220,7 +223,8 @@ private:
   };
 
   template<class InputPortalType,class ValuesPortalType,class OutputPortalType,class Compare>
-  struct LowerBoundsComparisonKernel {
+  struct LowerBoundsComparisonKernel
+  {
     InputPortalType InputPortal;
     ValuesPortalType ValuesPortal;
     OutputPortalType OutputPortal;
@@ -228,16 +232,17 @@ private:
 
     VTKM_CONT_EXPORT
     LowerBoundsComparisonKernel(InputPortalType inputPortal,
-                      ValuesPortalType valuesPortal,
-                      OutputPortalType outputPortal,
-                      Compare comp)
+                                ValuesPortalType valuesPortal,
+                                OutputPortalType outputPortal,
+                                Compare comp)
       : InputPortal(inputPortal),
         ValuesPortal(valuesPortal),
         OutputPortal(outputPortal),
         CompareFunctor(comp) {  }
 
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id index) const {
+    void operator()(vtkm::Id index) const
+    {
       // This method assumes that (1) InputPortalType can return working
       // iterators in the execution environment and that (2) methods not
       // specified with VTKM_EXEC_EXPORT (such as the STL algorithms) can be
@@ -356,9 +361,9 @@ public:
 
     vtkm::Id numValues = inclusiveScan.GetNumberOfValues();
     if (numValues < 1)
-      {
+    {
       return result;
-      }
+    }
 
     typedef typename TempArrayType::template ExecutionTypes<DeviceAdapterTag>
         ::PortalConst SrcPortalType;
@@ -411,11 +416,11 @@ private:
       vtkm::Id rightIndex = leftIndex + this->Distance;
 
       if (rightIndex < this->Portal.GetNumberOfValues())
-        {
+      {
         ValueType leftValue = this->Portal.Get(leftIndex);
         ValueType rightValue = this->Portal.Get(rightIndex);
         this->Portal.Set(rightIndex, leftValue+rightValue);
-        }
+      }
     }
   };
 
@@ -433,25 +438,25 @@ public:
 
     vtkm::Id numValues = output.GetNumberOfValues();
     if (numValues < 1)
-      {
+    {
       return 0;
-      }
+    }
 
     PortalType portal = output.PrepareForInPlace(DeviceAdapterTag());
 
     vtkm::Id stride;
     for (stride = 2; stride-1 < numValues; stride *= 2)
-      {
+    {
       ScanKernel<PortalType> kernel(portal, stride, stride/2 - 1);
       DerivedAlgorithm::Schedule(kernel, numValues/stride);
-      }
+    }
 
     // Do reverse operation on odd indices. Start at stride we were just at.
     for (stride /= 2; stride > 1; stride /= 2)
-      {
+    {
       ScanKernel<PortalType> kernel(portal, stride, stride - 1);
       DerivedAlgorithm::Schedule(kernel, numValues/stride);
-      }
+    }
 
     return GetExecutionValue(output, numValues-1);
   }
@@ -473,7 +478,8 @@ private:
       : Portal(portal), Compare(compare), GroupSize(groupSize) {  }
 
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id index) const {
+    void operator()(vtkm::Id index) const
+    {
       typedef typename PortalType::ValueType ValueType;
 
       vtkm::Id groupIndex = index%this->GroupSize;
@@ -484,15 +490,15 @@ private:
       vtkm::Id highIndex = lowIndex + this->GroupSize;
 
       if (highIndex < this->Portal.GetNumberOfValues())
-        {
+      {
         ValueType lowValue = this->Portal.Get(lowIndex);
         ValueType highValue = this->Portal.Get(highIndex);
         if (this->Compare(highValue, lowValue))
-          {
+        {
           this->Portal.Set(highIndex, lowValue);
           this->Portal.Set(lowIndex, highValue);
-          }
         }
+      }
     }
   };
 
@@ -510,7 +516,8 @@ private:
       : Portal(portal), Compare(compare), GroupSize(groupSize) {  }
 
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id index) const {
+    void operator()(vtkm::Id index) const
+    {
       typedef typename PortalType::ValueType ValueType;
 
       vtkm::Id groupIndex = index%this->GroupSize;
@@ -521,15 +528,15 @@ private:
       vtkm::Id highIndex = blockIndex*blockSize + (blockSize - groupIndex - 1);
 
       if (highIndex < this->Portal.GetNumberOfValues())
-        {
+      {
         ValueType lowValue = this->Portal.Get(lowIndex);
         ValueType highValue = this->Portal.Get(highIndex);
         if (this->Compare(highValue, lowValue))
-          {
+        {
           this->Portal.Set(highIndex, lowValue);
           this->Portal.Set(lowIndex, highValue);
-          }
         }
+      }
     }
   };
 
@@ -569,15 +576,15 @@ public:
     for (vtkm::Id crossoverSize = 1;
          crossoverSize < numValues;
          crossoverSize *= 2)
-      {
+    {
       DerivedAlgorithm::Schedule(CrossoverKernel(portal,compare,crossoverSize),
                                  numThreads);
       for (vtkm::Id mergeSize = crossoverSize/2; mergeSize > 0; mergeSize /= 2)
-        {
+      {
         DerivedAlgorithm::Schedule(MergeKernel(portal,compare,mergeSize),
                                    numThreads);
-        }
       }
+    }
   }
 
   template<typename T, class Container>
@@ -642,14 +649,14 @@ private:
       typedef typename StencilPortalType::ValueType StencilValueType;
       StencilValueType stencilValue = this->StencilPortal.Get(index);
       if (not_default_constructor<StencilValueType>()(stencilValue))
-        {
+      {
         vtkm::Id outputIndex = this->IndexPortal.Get(index);
 
         typedef typename OutputPortalType::ValueType OutputValueType;
         OutputValueType value = this->InputPortal.Get(index);
 
         this->OutputPortal.Set(outputIndex, value);
-        }
+      }
     }
 
     VTKM_CONT_EXPORT
@@ -729,7 +736,8 @@ public:
   // Unique
 private:
   template<class InputPortalType, class StencilPortalType>
-  struct ClassifyUniqueKernel {
+  struct ClassifyUniqueKernel
+  {
     InputPortalType InputPortal;
     StencilPortalType StencilPortal;
 
@@ -739,19 +747,20 @@ private:
       : InputPortal(inputPortal), StencilPortal(stencilPortal) {  }
 
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id index) const {
+    void operator()(vtkm::Id index) const
+    {
       typedef typename StencilPortalType::ValueType ValueType;
       if (index == 0)
-        {
+      {
         // Always copy first value.
         this->StencilPortal.Set(index, ValueType(1));
-        }
+      }
       else
-        {
+      {
         ValueType flag = ValueType(this->InputPortal.Get(index-1)
                                    != this->InputPortal.Get(index));
         this->StencilPortal.Set(index, flag);
-        }
+      }
     }
 
     VTKM_CONT_EXPORT
@@ -760,35 +769,37 @@ private:
   };
 
   template<class InputPortalType, class StencilPortalType, class Compare>
-  struct ClassifyUniqueComparisonKernel {
+  struct ClassifyUniqueComparisonKernel
+  {
     InputPortalType InputPortal;
     StencilPortalType StencilPortal;
     Compare CompareFunctor;
 
     VTKM_CONT_EXPORT
     ClassifyUniqueComparisonKernel(InputPortalType inputPortal,
-                         StencilPortalType stencilPortal,
-                         Compare comp):
+                                   StencilPortalType stencilPortal,
+                                   Compare comp):
       InputPortal(inputPortal),
       StencilPortal(stencilPortal),
       CompareFunctor(comp) {  }
 
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id index) const {
+    void operator()(vtkm::Id index) const
+    {
       typedef typename StencilPortalType::ValueType ValueType;
       if (index == 0)
-        {
+      {
         // Always copy first value.
         this->StencilPortal.Set(index, ValueType(1));
-        }
+      }
       else
-        {
+      {
         //comparison predicate returns true when they match
         const bool same = !(this->CompareFunctor(this->InputPortal.Get(index-1),
                                                  this->InputPortal.Get(index)));
         ValueType flag = ValueType(same);
         this->StencilPortal.Set(index, flag);
-        }
+      }
     }
 
     VTKM_CONT_EXPORT
@@ -850,7 +861,8 @@ public:
   // Upper bounds
 private:
   template<class InputPortalType,class ValuesPortalType,class OutputPortalType>
-  struct UpperBoundsKernel {
+  struct UpperBoundsKernel
+  {
     InputPortalType InputPortal;
     ValuesPortalType ValuesPortal;
     OutputPortalType OutputPortal;
@@ -864,7 +876,8 @@ private:
         OutputPortal(outputPortal) {  }
 
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id index) const {
+    void operator()(vtkm::Id index) const
+    {
       // This method assumes that (1) InputPortalType can return working
       // iterators in the execution environment and that (2) methods not
       // specified with VTKM_EXEC_EXPORT (such as the STL algorithms) can be
@@ -890,7 +903,8 @@ private:
 
 
   template<class InputPortalType,class ValuesPortalType,class OutputPortalType,class Compare>
-  struct UpperBoundsKernelComparisonKernel {
+  struct UpperBoundsKernelComparisonKernel
+  {
     InputPortalType InputPortal;
     ValuesPortalType ValuesPortal;
     OutputPortalType OutputPortal;
@@ -898,16 +912,17 @@ private:
 
     VTKM_CONT_EXPORT
     UpperBoundsKernelComparisonKernel(InputPortalType inputPortal,
-                      ValuesPortalType valuesPortal,
-                      OutputPortalType outputPortal,
-                      Compare comp)
+                                      ValuesPortalType valuesPortal,
+                                      OutputPortalType outputPortal,
+                                      Compare comp)
       : InputPortal(inputPortal),
         ValuesPortal(valuesPortal),
         OutputPortal(outputPortal),
         CompareFunctor(comp) {  }
 
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id index) const {
+    void operator()(vtkm::Id index) const
+    {
       // This method assumes that (1) InputPortalType can return working
       // iterators in the execution environment and that (2) methods not
       // specified with VTKM_EXEC_EXPORT (such as the STL algorithms) can be

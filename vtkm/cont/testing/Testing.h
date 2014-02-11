@@ -35,27 +35,27 @@ public:
   static VTKM_CONT_EXPORT int Run(Func function)
   {
     try
-      {
+    {
       function();
-      }
+    }
     catch (vtkm::testing::Testing::TestFailure error)
-      {
+    {
       std::cout << "***** Test failed @ "
                 << error.GetFile() << ":" << error.GetLine() << std::endl
                 << error.GetMessage() << std::endl;
       return 1;
-      }
+    }
     catch (vtkm::cont::Error error)
-      {
+    {
       std::cout << "***** Uncaught VTKm exception thrown." << std::endl
                 << error.GetMessage() << std::endl;
       return 1;
-      }
+    }
     catch (...)
-      {
+    {
       std::cout << "***** Unidentified exception thrown." << std::endl;
       return 1;
-      }
+    }
     return 0;
   }
 };

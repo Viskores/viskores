@@ -68,14 +68,14 @@ public:
   {
   public:
     VTKM_CONT_EXPORT TestFailure(const std::string &file,
-                                vtkm::Id line,
-                                const std::string &message)
+                                 vtkm::Id line,
+                                 const std::string &message)
       : File(file), Line(line), Message(message) { }
 
     VTKM_CONT_EXPORT TestFailure(const std::string &file,
-                                vtkm::Id line,
-                                const std::string &message,
-                                const std::string &condition)
+                                 vtkm::Id line,
+                                 const std::string &message,
+                                 const std::string &condition)
       : File(file), Line(line)
     {
       this->Message.append(message);
@@ -86,7 +86,8 @@ public:
 
     VTKM_CONT_EXPORT const std::string &GetFile() const { return this->File; }
     VTKM_CONT_EXPORT vtkm::Id GetLine() const { return this->Line; }
-    VTKM_CONT_EXPORT const std::string &GetMessage() const {
+    VTKM_CONT_EXPORT const std::string &GetMessage() const
+    {
       return this->Message;
     }
   private:
@@ -96,19 +97,19 @@ public:
   };
 
   static VTKM_CONT_EXPORT void Assert(bool condition,
-                                     const std::string &file,
-                                     vtkm::Id line,
-                                     const std::string &message,
-                                     const std::string &conditionString)
+                                      const std::string &file,
+                                      vtkm::Id line,
+                                      const std::string &message,
+                                      const std::string &conditionString)
   {
     if (condition)
-      {
+    {
       // Do nothing.
-      }
+    }
     else
-      {
+    {
       throw TestFailure(file, line, message, conditionString);
-      }
+    }
   }
 
 #ifndef VTKM_TESTING_IN_CONT
@@ -143,89 +144,104 @@ public:
   static VTKM_CONT_EXPORT int Run(Func function)
   {
     try
-      {
+    {
       function();
-      }
+    }
     catch (TestFailure error)
-      {
+    {
       std::cout << "***** Test failed @ "
                 << error.GetFile() << ":" << error.GetLine() << std::endl
                 << error.GetMessage() << std::endl;
       return 1;
-      }
+    }
     catch (...)
-      {
+    {
       std::cout << "***** Unidentified exception thrown." << std::endl;
       return 1;
-      }
+    }
     return 0;
   }
 #endif
 
   /// Check functors to be used with the TryAllTypes method.
   ///
-  struct TypeCheckAlwaysTrue {
+  struct TypeCheckAlwaysTrue
+  {
     template <typename T, class Functor>
     void operator()(T t, Functor function) const { function(t); }
   };
-  struct TypeCheckInteger {
+  struct TypeCheckInteger
+  {
     template <typename T, class Functor>
-    void operator()(T t, Functor function) const {
+    void operator()(T t, Functor function) const
+    {
       this->DoInteger(typename vtkm::TypeTraits<T>::NumericTag(), t, function);
     }
   private:
     template <class Tag, typename T, class Functor>
     void DoInteger(Tag, T, const Functor&) const {  }
     template <typename T, class Functor>
-    void DoInteger(vtkm::TypeTraitsIntegerTag, T t, Functor function) const {
+    void DoInteger(vtkm::TypeTraitsIntegerTag, T t, Functor function) const
+    {
       function(t);
     }
   };
-  struct TypeCheckReal {
+  struct TypeCheckReal
+  {
     template <typename T, class Functor>
-    void operator()(T t, Functor function) const {
+    void operator()(T t, Functor function) const
+    {
       this->DoReal(typename vtkm::TypeTraits<T>::NumericTag(), t, function);
     }
   private:
     template <class Tag, typename T, class Functor>
     void DoReal(Tag, T, const Functor&) const {  }
     template <typename T, class Functor>
-    void DoReal(vtkm::TypeTraitsRealTag, T t, Functor function) const {
+    void DoReal(vtkm::TypeTraitsRealTag, T t, Functor function) const
+    {
       function(t);
     }
   };
-  struct TypeCheckScalar {
+  struct TypeCheckScalar
+  {
     template <typename T, class Functor>
-    void operator()(T t, Functor func) const {
+    void operator()(T t, Functor func) const
+    {
       this->DoScalar(typename vtkm::TypeTraits<T>::DimensionalityTag(), t, func);
     }
   private:
     template <class Tag, typename T, class Functor>
     void DoScalar(Tag, const T &, const Functor &) const {  }
     template <typename T, class Functor>
-    void DoScalar(vtkm::TypeTraitsScalarTag, T t, Functor function) const {
+    void DoScalar(vtkm::TypeTraitsScalarTag, T t, Functor function) const
+    {
       function(t);
     }
   };
-  struct TypeCheckVector {
+  struct TypeCheckVector
+  {
     template <typename T, class Functor>
-    void operator()(T t, Functor func) const {
+    void operator()(T t, Functor func) const
+    {
       this->DoVector(typename vtkm::TypeTraits<T>::DimensionalityTag(), t, func);
     }
   private:
     template <class Tag, typename T, class Functor>
     void DoVector(Tag, const T &, const Functor &) const {  }
     template <typename T, class Functor>
-    void DoVector(vtkm::TypeTraitsVectorTag, T t, Functor function) const {
+    void DoVector(vtkm::TypeTraitsVectorTag, T t, Functor function) const
+    {
       function(t);
     }
   };
 
   template<class FunctionType>
-  struct InternalPrintOnInvoke {
+  struct InternalPrintOnInvoke
+  {
     InternalPrintOnInvoke(FunctionType function, std::string toprint)
       : Function(function), ToPrint(toprint) { }
-    template <typename T> void operator()(T t) {
+    template <typename T> void operator()(T t)
+    {
       std::cout << this->ToPrint << std::endl;
       this->Function(t);
     }
@@ -288,27 +304,27 @@ VTKM_EXEC_CONT_EXPORT bool test_equal(VectorType vector1,
 {
   typedef typename vtkm::VectorTraits<VectorType> Traits;
   for (int component = 0; component < Traits::NUM_COMPONENTS; component++)
-    {
+  {
     vtkm::Scalar value1 = Traits::GetComponent(vector1, component);
     vtkm::Scalar value2 = Traits::GetComponent(vector2, component);
     if ((fabs(value1) < 2*tolerance) && (fabs(value2) < 2*tolerance))
-      {
+    {
       continue;
-      }
+    }
     vtkm::Scalar ratio = value1/value2;
     if ((ratio > vtkm::Scalar(1.0) - tolerance)
         && (ratio < vtkm::Scalar(1.0) + tolerance))
-      {
+    {
       // This component is OK. The condition is checked in this way to
       // correctly handle non-finites that fail all comparisons. Thus, if a
       // non-finite is encountered, this condition will fail and false will be
       // returned.
-      }
-    else
-      {
-      return false;
-      }
     }
+    else
+    {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -320,9 +336,9 @@ std::ostream &operator<<(std::ostream &stream, const vtkm::Tuple<T,Size> &tuple)
 {
   stream << "[";
   for (int component = 0; component < Size-1; component++)
-    {
+  {
     stream << tuple[component] << ",";
-    }
+  }
   return stream << tuple[Size-1] << "]";
 }
 

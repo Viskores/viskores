@@ -36,19 +36,19 @@ struct CountByTwo
   explicit CountByTwo(T t): Value(t) {}
 
   bool operator==(const T& other) const
-    { return Value == other; }
+  { return Value == other; }
 
   bool operator==(const CountByTwo<T>& other) const
-    { return Value == other.Value; }
+  { return Value == other.Value; }
 
   CountByTwo<T> operator+(vtkm::Id count) const
   { return CountByTwo<T>(Value+(count*2)); }
 
   CountByTwo<T>& operator++()
-    { ++Value; ++Value; return *this; }
+  { ++Value; ++Value; return *this; }
 
   friend std::ostream& operator<< (std::ostream& os, const CountByTwo<T>& obj)
-    { os << obj.Value; return os; }
+  { os << obj.Value; return os; }
   T Value;
 };
 
@@ -60,40 +60,40 @@ struct TemplatedTests
   typedef vtkm::cont::ArrayHandleCounting<ValueType> ArrayHandleType;
 
   typedef vtkm::cont::ArrayHandle<ValueType,
-    typename vtkm::cont::internal::ArrayHandleCountingTraits<ValueType>::Tag>
-  ArrayHandleType2;
+          typename vtkm::cont::internal::ArrayHandleCountingTraits<ValueType>::Tag>
+          ArrayHandleType2;
 
   typedef typename ArrayHandleType::PortalConstControl PortalType;
 
   void operator()( const ValueType startingValue )
   {
-  ArrayHandleType arrayConst(startingValue, ARRAY_SIZE);
+    ArrayHandleType arrayConst(startingValue, ARRAY_SIZE);
 
-  ArrayHandleType arrayMake = vtkm::cont::make_ArrayHandleCounting(startingValue,ARRAY_SIZE);
+    ArrayHandleType arrayMake = vtkm::cont::make_ArrayHandleCounting(startingValue,ARRAY_SIZE);
 
-  ArrayHandleType2 arrayHandle =
+    ArrayHandleType2 arrayHandle =
       ArrayHandleType2(PortalType(startingValue, ARRAY_SIZE));
 
-  VTKM_TEST_ASSERT(arrayConst.GetNumberOfValues() == ARRAY_SIZE,
-                  "Counting array using constructor has wrong size.");
+    VTKM_TEST_ASSERT(arrayConst.GetNumberOfValues() == ARRAY_SIZE,
+                     "Counting array using constructor has wrong size.");
 
-  VTKM_TEST_ASSERT(arrayMake.GetNumberOfValues() == ARRAY_SIZE,
-                  "Counting array using make has wrong size.");
+    VTKM_TEST_ASSERT(arrayMake.GetNumberOfValues() == ARRAY_SIZE,
+                     "Counting array using make has wrong size.");
 
-  VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
-                "Counting array using raw array handle + tag has wrong size.");
+    VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
+                     "Counting array using raw array handle + tag has wrong size.");
 
-  ValueType properValue = startingValue;
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+    ValueType properValue = startingValue;
+    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-    VTKM_TEST_ASSERT(arrayConst.GetPortalConstControl().Get(index) == properValue,
-                    "Counting array using constructor has unexpected value.");
-    VTKM_TEST_ASSERT(arrayMake.GetPortalConstControl().Get(index) == properValue,
-                    "Counting array using make has unexpected value.");
+      VTKM_TEST_ASSERT(arrayConst.GetPortalConstControl().Get(index) == properValue,
+                       "Counting array using constructor has unexpected value.");
+      VTKM_TEST_ASSERT(arrayMake.GetPortalConstControl().Get(index) == properValue,
+                       "Counting array using make has unexpected value.");
 
-    VTKM_TEST_ASSERT(arrayHandle.GetPortalConstControl().Get(index) == properValue,
-                  "Counting array using raw array handle + tag has unexpected value.");
-    ++properValue;
+      VTKM_TEST_ASSERT(arrayHandle.GetPortalConstControl().Get(index) == properValue,
+                       "Counting array using raw array handle + tag has unexpected value.");
+      ++properValue;
     }
   }
 };
