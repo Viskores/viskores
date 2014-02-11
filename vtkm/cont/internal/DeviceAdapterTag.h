@@ -91,6 +91,11 @@ struct DeviceAdapterTagCheck
 #include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
 #define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagSerial
 
+#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_ERROR
+
+#include <vtkm/cont/internal/DeviceAdapterError.h>
+#define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagError
+
 #elif (VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_UNDEFINED) || !defined(VTKM_DEVICE_ADAPTER)
 
 #ifndef VTKM_DEFAULT_DEVICE_ADAPTER_TAG

@@ -26,6 +26,13 @@ set(headers
   ArrayPortalFromIterators.h
   ArrayPortalShrink.h
   ArrayTransfer.h
+  DeviceAdapterAlgorithm.h
+  DeviceAdapterAlgorithmGeneral.h
+  DeviceAdapterAlgorithmSerial.h
+  DeviceAdapterError.h
+  DeviceAdapterTag.h
+  DeviceAdapterTagSerial.h
+  IteratorFromArrayPortal.h
   )
 
 vtkm_declare_headers(${headers})
