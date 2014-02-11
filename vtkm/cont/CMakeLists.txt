@@ -27,6 +27,8 @@ set(headers
   ArrayHandle.h
   ArrayPortal.h
   Assert.h
+  DeviceAdapter.h
+  DeviceAdapterSerial.h
   Error.h
   ErrorControl.h
   ErrorControlAssert.h

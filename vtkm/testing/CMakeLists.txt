@@ -29,6 +29,7 @@ set(unit_tests
   UnitTestTesting.cxx
   UnitTestTypes.cxx
   UnitTestTypeTraits.cxx
+  UnitTestVectorTraits.cxx
   )
 
 VTKM_unit_tests(SOURCES ${unit_tests})

@@ -22,6 +22,6 @@
 set(unit_tests
   UnitTestArrayManagerExecutionShareWithControl.cxx
   UnitTestArrayPortalFromIterators.cxx
-  # UnitTestIteratorFromArrayPortal.cxx
+  UnitTestIteratorFromArrayPortal.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests})

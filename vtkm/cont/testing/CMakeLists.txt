@@ -20,6 +20,7 @@
 
 set(headers
   Testing.h
+  TestingDeviceAdapter.h
   )
 
 vtkm_declare_headers(${headers})
@@ -28,7 +29,11 @@ set(unit_tests
   UnitTestArrayContainerControlBasic.cxx
   UnitTestArrayContainerControlImplicit.cxx
   UnitTestArrayHandle.cxx
+  UnitTestArrayHandleCounting.cxx
   UnitTestContTesting.cxx
+  UnitTestDeviceAdapterAlgorithmDependency.cxx
+  UnitTestDeviceAdapterAlgorithmGeneral.cxx
+  UnitTestDeviceAdapterSerial.cxx
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})
