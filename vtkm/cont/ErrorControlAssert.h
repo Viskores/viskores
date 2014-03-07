@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_ErrorControlAssert_h
-#define vtkm_cont_ErrorControlAssert_h
+#ifndef vtk_m_cont_ErrorControlAssert_h
+#define vtk_m_cont_ErrorControlAssert_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ErrorControl.h>

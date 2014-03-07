@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_internal__ExportMacros_h
-#define vtkm_internal__ExportMacros_h
+#ifndef vtk_m_internal__ExportMacros_h
+#define vtk_m_internal__ExportMacros_h
 
 /*!
   * Export macros for various parts of the VTKm library.

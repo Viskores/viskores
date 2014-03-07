@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_ArrayHandle_h
-#define vtkm_cont_ArrayHandle_h
+#ifndef vtk_m_cont_ArrayHandle_h
+#define vtk_m_cont_ArrayHandle_h
 
 #include <vtkm/Types.h>
 
@@ -60,6 +60,7 @@ namespace internal { class ArrayHandleAccess; }
 /// each copy holds a reference to the same array.  These copies are reference
 /// counted so that when all copies of the \c ArrayHandle are destroyed, any
 /// allocated memory is released.
+///
 ///
 template<
     typename T,

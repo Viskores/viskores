@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_testing_Testing_h
-#define vtkm_testing_Testing_h
+#ifndef vtk_m_testing_Testing_h
+#define vtk_m_testing_Testing_h
 
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
@@ -34,7 +34,7 @@
 // control environment have more possible exceptions.) This is not guaranteed
 // to work. To make it more likely, place the Testing.h include last.
 #ifdef vtkm_cont_Error_h
-#ifndef vtkm_cont_testing_Testing_h
+#ifndef vtk_m_cont_testing_Testing_h
 #error Use vtkm::cont::testing::Testing instead of vtkm::testing::Testing.
 #else
 #define VTKM_TESTING_IN_CONT

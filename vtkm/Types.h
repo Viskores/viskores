@@ -17,8 +17,9 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_Types_h
-#define vtkm_Types_h
+#ifndef vtk_m_Types_h
+#define vtk_m_Types_h
+
 
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>

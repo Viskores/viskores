@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_internal_DeviceAdapterAlgorithmSerial_h
-#define vtkm_cont_internal_DeviceAdapterAlgorithmSerial_h
+#ifndef vtk_m_cont_internal_DeviceAdapterAlgorithmSerial_h
+#define vtk_m_cont_internal_DeviceAdapterAlgorithmSerial_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorExecution.h>

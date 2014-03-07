@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_DeviceAdapter_h
-#define vtkm_cont_DeviceAdapter_h
+#ifndef vtk_m_cont_DeviceAdapter_h
+#define vtk_m_cont_DeviceAdapter_h
 
 // These are listed in non-alphabetical order because this is the conceptual
 // order in which the sub-files are loaded.  (But the compile should still

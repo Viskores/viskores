@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_internal_ArrayTransfer_h
-#define vtkm_cont_internal_ArrayTransfer_h
+#ifndef vtk_m_cont_internal_ArrayTransfer_h
+#define vtk_m_cont_internal_ArrayTransfer_h
 
 #include <vtkm/cont/ArrayContainerControl.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>

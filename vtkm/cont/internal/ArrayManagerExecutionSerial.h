@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_internal_ArrayManagerExecutionSerial_h
-#define vtkm_cont_internal_ArrayManagerExecutionSerial_h
+#ifndef vtk_m_cont_internal_ArrayManagerExecutionSerial_h
+#define vtk_m_cont_internal_ArrayManagerExecutionSerial_h
 
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/internal/ArrayManagerExecutionShareWithControl.h>
