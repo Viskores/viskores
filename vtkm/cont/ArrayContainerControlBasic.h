@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont__ArrayContainerControlBasic_h
-#define vtkm_cont__ArrayContainerControlBasic_h
+#ifndef vtk_m_cont__ArrayContainerControlBasic_h
+#define vtk_m_cont__ArrayContainerControlBasic_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayContainerControl.h>

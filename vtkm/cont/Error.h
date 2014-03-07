@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_Error_h
-#define vtkm_cont_Error_h
+#ifndef vtk_m_cont_Error_h
+#define vtk_m_cont_Error_h
 
 // Note that this class and (most likely) all of its subclasses are not
 // templated.  If there is any reason to create a VTKm control library,

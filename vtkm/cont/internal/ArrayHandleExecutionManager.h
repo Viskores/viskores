@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_exec_ArrayHandleExecutionManager_h
-#define vtkm_cont_exec_ArrayHandleExecutionManager_h
+#ifndef vtk_m_cont_exec_ArrayHandleExecutionManager_h
+#define vtk_m_cont_exec_ArrayHandleExecutionManager_h
 
 #include <vtkm/cont/ArrayContainerControl.h>
 #include <vtkm/cont/ErrorControlInternal.h>

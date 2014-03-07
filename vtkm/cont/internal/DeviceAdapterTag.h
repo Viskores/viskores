@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_internal_DeviceAdapterTag_h
-#define vtkm_cont_internal_DeviceAdapterTag_h
+#ifndef vtk_m_cont_internal_DeviceAdapterTag_h
+#define vtk_m_cont_internal_DeviceAdapterTag_h
 
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>

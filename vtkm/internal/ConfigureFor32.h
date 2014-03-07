@@ -26,8 +26,8 @@
 # error Incorrect header order. Include this header before any other VTKm headers.
 #endif
 
-#ifndef vtkm_internal_Configure32_h
-#define vtkm_internal_Configure32_h
+#ifndef vtk_m_internal_Configure32_h
+#define vtk_m_internal_Configure32_h
 
 #define VTKM_NO_DOUBLE_PRECISION
 #define VTKM_NO_64BIT_IDS

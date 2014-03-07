@@ -31,16 +31,19 @@ The statement should have the following form:
 
 + The CopyrightStatement checks all files for a similar statement. The test will print out a suggested text that can be copied and pasted to any file that has a missing copyright statement (with appropriate replacement of comment prefix). Exceptions to this copyright statement (for example, third-party files with different but compatible statements) can be added to LICENSE.txt.
 
-+ All include files should use include guards. starting right after the copyright statement. The naming convention of the include guard macro is that it should be all in lower case and start with the path name, starting from the top-level source code directory, with non alphanumeric characters, such as / and . replaced with underscores. The #endif part of the guard at the bottom of the file should include the guard name in a comment. For example, the vtkm/cont/ArrayHandle.h header contains the guard
++ All include files should use include guards. starting right after the copyright statement. The naming convention of the include guard macro is that it should be all in lower case and start with vtk_m and than continue the path name, starting from the inside the vtkm source code directory, with non alphanumeric characters, such as / and . replaced with underscores. The #endif part of the guard at the bottom of the file should include the guard name in a comment.
+ For example, the vtkm/cont/ArrayHandle.h header contains the guard
 ```cpp
-  #ifndef vtkm_cont_ArrayHandle_h
-  #define vtkm_cont_ArrayHandle_h
+  #ifndef vtk_m_cont_ArrayHandle_h
+  #define vtk_m_cont_ArrayHandle_h
 ```
 at the top and
 ```cpp
-  #endif //vtkm_cont_ArrayHandle_h
+  #endif //vtk_m_cont_ArrayHandle_h
 ```
 at the bottom.
+
+The unique use of vtk_m over vtkm is to allow auto-complete engines the ability to differentiate between the header guards and VTKM_ macros that are used within the code base.
 
 + The VTK-M toolkit has several nested namespaces. The declaration of each namespace should be on its own line, and the code inside the namespace bracket should not be indented. The closing brace at the bottom of the namespace should be documented with a comment identifying the namespace. Namespaces can be grouped as desired. The following is a valid use of namespaces.
 ```cpp
