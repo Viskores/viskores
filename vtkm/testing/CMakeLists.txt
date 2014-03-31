@@ -26,7 +26,9 @@ set(headers
 VTKM_declare_headers(${headers})
 
 set(unit_tests
+  UnitTestListTag.cxx
   UnitTestTesting.cxx
+  UnitTestTypeListTag.cxx
   UnitTestTypes.cxx
   UnitTestTypeTraits.cxx
   UnitTestVectorTraits.cxx
