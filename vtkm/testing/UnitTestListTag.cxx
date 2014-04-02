@@ -31,7 +31,7 @@ namespace {
 template<int N>
 struct TestClass
 {
-  static const int NUMBER = N;
+  enum { NUMBER = N };
 };
 
 struct TestListTag1
