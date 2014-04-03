@@ -21,7 +21,7 @@
 #define vtk_m_ContainerListTag_h
 
 #ifndef VTKM_DEFAULT_CONTAINER_LIST_TAG
-#define VTKM_DEFAULT_CONTAINER_LIST_TAG ::vtkm::cont::ContainerListTagBasic;
+#define VTKM_DEFAULT_CONTAINER_LIST_TAG ::vtkm::cont::ContainerListTagBasic
 #endif
 
 #include <vtkm/ListTag.h>

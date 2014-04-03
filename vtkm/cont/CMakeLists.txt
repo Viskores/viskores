@@ -25,11 +25,13 @@ set(headers
   ArrayContainerControlBasic.h
   ArrayContainerControlImplicit.h
   ArrayHandle.h
+  ArrayHandleCounting.h
   ArrayPortal.h
   Assert.h
   ContainerListTag.h
   DeviceAdapter.h
   DeviceAdapterSerial.h
+  DynamicArrayHandle.h
   Error.h
   ErrorControl.h
   ErrorControlAssert.h

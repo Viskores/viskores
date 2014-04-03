@@ -35,6 +35,7 @@ set(unit_tests
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDeviceAdapterSerial.cxx
+  UnitTestDynamicArrayHandle.cxx
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})

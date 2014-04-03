@@ -33,6 +33,7 @@ set(headers
   DeviceAdapterTag.h
   DeviceAdapterTagSerial.h
   IteratorFromArrayPortal.h
+  SimplePolymorphicContainer.h
   )
 
 vtkm_declare_headers(${headers})

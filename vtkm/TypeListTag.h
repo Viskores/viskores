@@ -21,7 +21,7 @@
 #define vtk_m_TypeListTag_h
 
 #ifndef VTKM_DEFAULT_TYPE_LIST_TAG
-#define VTKM_DEFAULT_TYPE_LIST_TAG ::vtkm::TypeListTagCommon;
+#define VTKM_DEFAULT_TYPE_LIST_TAG ::vtkm::TypeListTagCommon
 #endif
 
 #include <vtkm/ListTag.h>
