@@ -28,6 +28,8 @@
 #define VTKM_ARRAY_CONTAINER_CONTROL VTKM_ARRAY_CONTAINER_CONTROL_BASIC
 #endif
 
+#include <boost/static_assert.hpp>
+
 namespace vtkm {
 namespace cont {
 
@@ -62,13 +64,35 @@ struct ArrayContainerControlTag___ {  };
 
 namespace internal {
 
+struct UndefinedArrayContainerControl {  };
+
+namespace detail {
+
+// This class should never be used. It is used as a placeholder for undefined
+// ArrayContainerControl objects. If you get a compiler error involving this
+// object, then it probably comes from trying to use an ArrayHandle with bad
+// template arguments.
+template<typename T>
+struct UndefinedArrayPortal {
+  BOOST_STATIC_ASSERT(sizeof(T) == -1);
+};
+
+} // namespace detail
+
 /// This templated class must be partially specialized for each
 /// ArrayContainerControlTag created, which will define the implementation for
 /// that tag.
 ///
 template<typename T, class ArrayContainerControlTag>
 class ArrayContainerControl
-#ifdef VTKM_DOXYGEN_ONLY
+#ifndef VTKM_DOXYGEN_ONLY
+    : public vtkm::cont::internal::UndefinedArrayContainerControl
+{
+public:
+  typedef vtkm::cont::internal::detail::UndefinedArrayPortal<T> PortalType;
+  typedef vtkm::cont::internal::detail::UndefinedArrayPortal<T> PortalConstType;
+};
+#else //VTKM_DOXYGEN_ONLY
 {
 public:
 
@@ -133,8 +157,6 @@ public:
   VTKM_CONT_EXPORT
   void ReleaseResources();
 };
-#else // VTKM_DOXYGEN_ONLY
-;
 #endif // VTKM_DOXYGEN_ONLY
 
 } // namespace internal

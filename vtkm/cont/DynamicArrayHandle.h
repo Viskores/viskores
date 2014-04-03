@@ -29,6 +29,7 @@
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 #include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/utility/enable_if.hpp>
 
 namespace vtkm {
 namespace cont {
@@ -174,13 +175,25 @@ struct DynamicArrayHandleTryContainer {
 
   template<typename Container>
   VTKM_CONT_EXPORT
-  void operator()(Container) {
+  typename boost::enable_if<
+    typename vtkm::cont::internal::IsValidArrayHandle<Type,Container>::type
+    >::type
+  operator()(Container) {
     if (!this->FoundCast &&
         this->Array.IsTypeAndContainer(Type(), Container()))
     {
       this->Function(this->Array.CastToArrayHandle(Type(), Container()));
       this->FoundCast = true;
     }
+  }
+
+  template<typename Container>
+  VTKM_CONT_EXPORT
+  typename boost::disable_if<
+    typename vtkm::cont::internal::IsValidArrayHandle<Type,Container>::type
+    >::type
+  operator()(Container) {
+    // This type of array handle cannot exist, so do nothing.
   }
 };
 
