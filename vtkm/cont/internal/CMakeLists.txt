@@ -32,6 +32,7 @@ set(headers
   DeviceAdapterError.h
   DeviceAdapterTag.h
   DeviceAdapterTagSerial.h
+  DynamicTransform.h
   IteratorFromArrayPortal.h
   SimplePolymorphicContainer.h
   )

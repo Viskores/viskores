@@ -583,9 +583,9 @@ public:
   ///   template<typename InputType, typename ContinueFunctor>
   ///   VTKM_CONT_EXPORT
   ///   void operator()(const InputType &input,
-  ///                   const ContinueFunctor &continue) const
+  ///                   const ContinueFunctor &continueFunc) const
   ///   {
-  ///     continue(input);
+  ///     continueFunc(input);
   ///   }
   ///
   ///   template<typename ContinueFunctor>

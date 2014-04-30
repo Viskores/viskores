@@ -26,6 +26,7 @@
 #include <vtkm/cont/ContainerListTag.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 
+#include <vtkm/cont/internal/DynamicTransform.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -247,6 +248,9 @@ class DynamicArrayHandleCast : public vtkm::cont::DynamicArrayHandle
 {
 public:
   VTKM_CONT_EXPORT
+  DynamicArrayHandleCast() : DynamicArrayHandle() {  }
+
+  VTKM_CONT_EXPORT
   DynamicArrayHandleCast(const vtkm::cont::DynamicArrayHandle &array)
     : DynamicArrayHandle(array) {  }
 
@@ -283,6 +287,18 @@ public:
   {
     this->DynamicArrayHandle::CastAndCall(f, TL(), CL());
   }
+};
+
+template<>
+struct DynamicTransformTraits<vtkm::cont::DynamicArrayHandle> {
+  typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
+};
+
+template<typename TypeList, typename ContainerList>
+struct DynamicTransformTraits<
+    vtkm::cont::internal::DynamicArrayHandleCast<TypeList,ContainerList> >
+{
+  typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
 };
 
 } // namespace internal
