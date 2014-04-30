@@ -226,6 +226,7 @@ struct IdentityFunctor {
       const TransformFunctor &transform) \
   { \
     (void)parameters; \
+    (void)transform; \
     result.Value = \
       transform( \
         f(BOOST_PP_ENUM_SHIFTED(NumParamsPlusOne, VTK_M_DO_INVOKE_TPARAM, ))); \
@@ -242,6 +243,7 @@ struct IdentityFunctor {
       const TransformFunctor &transform) \
   { \
     (void)parameters; \
+    (void)transform; \
     f(BOOST_PP_ENUM_SHIFTED(NumParamsPlusOne, VTK_M_DO_INVOKE_TPARAM, )); \
   }
 #define VTK_M_DO_INVOKE_REPEAT(z, NumParams, data) \
@@ -551,7 +553,7 @@ public:
     typename ReplaceType<ParameterIndex, NewType>::type replacedFuncInterface;
     detail::FunctionInterfaceCopyParameters<ParameterIndex-1>::
         Copy(replacedFuncInterface.Parameters, this->Parameters);
-    replacedFuncInterface.SetParameter<ParameterIndex>(newParameter);
+    replacedFuncInterface.template SetParameter<ParameterIndex>(newParameter);
     detail::FunctionInterfaceCopyParameters<ARITY-ParameterIndex,ParameterIndex+1>::
         Copy(replacedFuncInterface.Parameters, this->Parameters);
     return replacedFuncInterface;
