@@ -30,6 +30,7 @@ set(unit_tests
   UnitTestArrayContainerControlImplicit.cxx
   UnitTestArrayHandle.cxx
   UnitTestArrayHandleCounting.cxx
+  UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestContTesting.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx

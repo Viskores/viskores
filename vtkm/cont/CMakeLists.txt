@@ -25,6 +25,8 @@ set(headers
   ArrayContainerControlBasic.h
   ArrayContainerControlImplicit.h
   ArrayHandle.h
+  ArrayHandleCounting.h
+  ArrayHandleUniformPointCoordinates.h
   ArrayPortal.h
   Assert.h
   DeviceAdapter.h
