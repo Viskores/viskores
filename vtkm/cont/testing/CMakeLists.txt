@@ -29,6 +29,7 @@ set(unit_tests
   UnitTestArrayContainerControlBasic.cxx
   UnitTestArrayContainerControlImplicit.cxx
   UnitTestArrayHandle.cxx
+  UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestContTesting.cxx
