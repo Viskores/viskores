@@ -135,10 +135,22 @@ struct GetReferenceFunctor
   const T *operator()(const T &x) const { return &x; }
 };
 
+struct PointerTransform {
+  template<typename T>
+  struct ReturnType {
+    typedef const T *type;
+  };
+
+  template<typename T>
+  const T *operator()(const T &x) const {
+    return &x;
+  }
+};
+
 struct ThreePointerArgFunctor {
   void operator()(const Type1 *a1, const Type2 *a2, const Type3 *a3) const
   {
-    std::cout << "In 3 arg functor." << std::endl;
+    std::cout << "In 3 point arg functor." << std::endl;
 
     VTKM_TEST_ASSERT(*a1 == Arg1, "Arg 1 incorrect.");
     VTKM_TEST_ASSERT(*a2 == Arg2, "Arg 2 incorrect.");
@@ -409,6 +421,35 @@ void TestTransformInvoke()
                    "Got bad result from invoke.");
 }
 
+void TestStaticTransform()
+{
+  std::cout << "Trying static transform." << std::endl;
+  typedef vtkm::internal::FunctionInterface<void(Type1,Type2,Type3)>
+      OriginalType;
+  OriginalType funcInterface =
+      vtkm::internal::make_FunctionInterface<void>(Arg1, Arg2, Arg3);
+
+  std::cout << "Transform with reported type." << std::endl;
+  typedef OriginalType::StaticTransformType<PointerTransform>::type
+      ReportedType;
+  ReportedType funcInterfaceTransform1 =
+      funcInterface.StaticTransformCont(PointerTransform());
+  funcInterfaceTransform1.InvokeCont(ThreePointerArgFunctor());
+  funcInterfaceTransform1 =
+      funcInterface.StaticTransformExec(PointerTransform());
+  funcInterfaceTransform1.InvokeExec(ThreePointerArgFunctor());
+
+  std::cout << "Transform with expected type." << std::endl;
+  typedef vtkm::internal::FunctionInterface<void(Type1*,Type2*,Type3*)>
+      ExpectedType;
+  ReportedType funcInterfaceTransform2 =
+      funcInterface.StaticTransformCont(PointerTransform());
+  funcInterfaceTransform2.InvokeCont(ThreePointerArgFunctor());
+  funcInterfaceTransform2 =
+      funcInterface.StaticTransformExec(PointerTransform());
+  funcInterfaceTransform2.InvokeExec(ThreePointerArgFunctor());
+}
+
 void TestDynamicTransform()
 {
   std::cout << "Trying dynamic transform." << std::endl;
@@ -487,6 +528,7 @@ void TestFunctionInterface()
   TestInvokeResult();
   TestAppend();
   TestTransformInvoke();
+  TestStaticTransform();
   TestDynamicTransform();
   TestInvokeTime();
 }
