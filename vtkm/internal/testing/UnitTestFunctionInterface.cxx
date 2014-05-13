@@ -298,6 +298,14 @@ struct DynamicTransformFinish
   }
 };
 
+struct ForEachFunctor
+{
+  template<typename T>
+  void operator()(T &x) const { x = 2*x; }
+
+  void operator()(std::string &x) const { x.append("*2"); }
+};
+
 void TryFunctionInterface5(
     vtkm::internal::FunctionInterface<void(Type1,Type2,Type3,Type4,Type5)> funcInterface)
 {
@@ -470,6 +478,33 @@ void TestDynamicTransform()
                    "DynamicTransform did not call finish the right number of times.");
 }
 
+void TestForEach()
+{
+  std::cout << "Checking running a function on each parameter." << std::endl;
+  vtkm::internal::FunctionInterface<void(Type1,Type2,Type3,Type4,Type5)>
+      funcInterface = vtkm::internal::make_FunctionInterface<void>(
+        Arg1, Arg2, Arg3, Arg4, Arg5);
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == Arg1, "Arg 1 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == Arg2, "Arg 2 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3, "Arg 3 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == Arg4, "Arg 4 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == Arg5, "Arg 5 incorrect.");
+
+  funcInterface.ForEachCont(ForEachFunctor());
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == 2*Arg1, "Arg 1 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == 2*Arg2, "Arg 2 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3+"*2", "Arg 3 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == 2*Arg4, "Arg 4 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == 2*Arg5, "Arg 5 incorrect.");
+
+  funcInterface.ForEachExec(ForEachFunctor());
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == 4*Arg1, "Arg 1 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == 4*Arg2, "Arg 2 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3+"*2*2", "Arg 3 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == 4*Arg4, "Arg 4 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == 4*Arg5, "Arg 5 incorrect.");
+}
+
 void TestInvokeTime()
 {
   std::cout << "Checking time to call lots of args lots of times." << std::endl;
@@ -530,6 +565,7 @@ void TestFunctionInterface()
   TestTransformInvoke();
   TestStaticTransform();
   TestDynamicTransform();
+  TestForEach();
   TestInvokeTime();
 }
 

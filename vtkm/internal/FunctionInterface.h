@@ -192,11 +192,15 @@ struct IdentityFunctor {
 // definitions of DoInvoke functions for all supported number of arguments.
 // The created functions are conceptually defined as follows:
 //
-// template<typename Function, typename Signature, typename TransformFunctor>
+// template<typename Function,
+//          typename TransformFunctor,
+//          typename P0,
+//          typename P1,
+//          typename P2,...>
 // VTKM_CONT_EXPORT
 // void DoInvokeCont(const Function &f,
-//                   ParameterContainer<Signature> &parameters,
-//                   FunctionInterfaceReturnContainer<R> &result,
+//                   ParameterContainer<P0(P1,P2,...)> &parameters,
+//                   FunctionInterfaceReturnContainer<P0> &result,
 //                   const TransformFunctor &transform)
 // {
 //   result.Value = transform(f(transform(parameters.Parameter1),...));
@@ -356,7 +360,7 @@ struct FunctionInterfaceStaticTransformType;
   VTK_M_DO_STATIC_TRANSFORM_EXPORT \
   void VTK_M_DO_STATIC_TRANSFORM_NAME( \
       const Transform &transform, \
-      ParameterContainer<OriginalP0(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, OriginalP))> &originalParameters, \
+      const ParameterContainer<OriginalP0(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, OriginalP))> &originalParameters, \
       ParameterContainer<TransformedP0(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, TransformedP))> &transformedParameters) \
   { \
     (void)transform; \
@@ -381,11 +385,95 @@ BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
 #undef VTK_M_DO_STATIC_TRANSFORM_EXPORT
 #undef VTK_M_DO_STATIC_TRANSFORM_NAME
 
+#undef VTK_M_DO_STATIC_TRANSFORM_REPEAT
+#undef VTK_M_DO_STATIC_TRANSFORM
+#undef VTK_M_DO_STATIC_TRANSFORM_ASSIGN
+
 template<typename OriginalFunction,
          typename NewFunction,
          typename TransformFunctor,
          typename FinishFunctor>
 class FunctionInterfaceDynamicTransformContContinue;
+
+// The following code uses the Boost preprocessor utilities to create
+// definitions of DoForEach functions for all supported number of arguments.
+// The created functions are conceptually defined as follows:
+//
+// template<typename Functor, typename P0, typename P1, typename P2,...>
+// VTKM_CONT_EXPORT
+// void DoForEachCont(const Functor &f,
+//                    ParameterContainer<P0(P1,P2,...)> &parameters)
+//
+// {
+//   f(parameters.Parameter1);
+//   f(parameters.Parameter2);
+//   ...
+// }
+//
+// We define multiple DoForEachCont and DoForEachExec that do identical things
+// with different exports. It is important to have these separate definitions
+// instead of a single version with VTKM_EXEC_CONT_EXPORT because the functor
+// to be invoked on each parameter may only be viable in one or the other.
+// There are also separate versions that support a const FunctionInterface and
+// a non-const FunctionInterface.
+
+#define VTK_M_DO_FOR_EACH_CALL_PARAM(z, count, data) \
+  BOOST_PP_IF(count, f(BOOST_PP_CAT(parameters.Parameter, count));,)
+
+#define VTK_M_DO_FOR_EACH(NumParamsPlusOne) \
+  template<typename Functor, \
+           BOOST_PP_ENUM_PARAMS(NumParamsPlusOne, typename P)> \
+  VTK_M_DO_FOR_EACH_EXPORT \
+  void VTK_M_DO_FOR_EACH_NAME( \
+      const Functor &f, \
+      VTK_M_DO_FOR_EACH_FI_CONST ParameterContainer<P0(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, P))> &parameters) \
+  { \
+    (void)f; \
+    (void)parameters; \
+    BOOST_PP_REPEAT(NumParamsPlusOne, VTK_M_DO_FOR_EACH_CALL_PARAM,) \
+  }
+#define VTK_M_DO_FOR_EACH_REPEAT(z, NumParams, data) \
+  VTK_M_DO_FOR_EACH(BOOST_PP_INC(NumParams))
+
+#define VTK_M_DO_FOR_EACH_EXPORT VTKM_CONT_EXPORT
+#define VTK_M_DO_FOR_EACH_NAME DoForEachCont
+#define VTK_M_DO_FOR_EACH_FI_CONST const
+BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
+                VTK_M_DO_FOR_EACH_REPEAT,)
+#undef VTK_M_DO_FOR_EACH_FI_CONST
+#undef VTK_M_DO_FOR_EACH_NAME
+#undef VTK_M_DO_FOR_EACH_EXPORT
+
+#define VTK_M_DO_FOR_EACH_EXPORT VTKM_CONT_EXPORT
+#define VTK_M_DO_FOR_EACH_NAME DoForEachCont
+#define VTK_M_DO_FOR_EACH_FI_CONST
+BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
+                VTK_M_DO_FOR_EACH_REPEAT,)
+#undef VTK_M_DO_FOR_EACH_FI_CONST
+#undef VTK_M_DO_FOR_EACH_NAME
+#undef VTK_M_DO_FOR_EACH_EXPORT
+
+#define VTK_M_DO_FOR_EACH_EXPORT VTKM_EXEC_EXPORT
+#define VTK_M_DO_FOR_EACH_NAME DoForEachExec
+#define VTK_M_DO_FOR_EACH_FI_CONST const
+BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
+                VTK_M_DO_FOR_EACH_REPEAT,)
+#undef VTK_M_DO_FOR_EACH_FI_CONST
+#undef VTK_M_DO_FOR_EACH_NAME
+#undef VTK_M_DO_FOR_EACH_EXPORT
+
+#define VTK_M_DO_FOR_EACH_EXPORT VTKM_EXEC_EXPORT
+#define VTK_M_DO_FOR_EACH_NAME DoForEachExec
+#define VTK_M_DO_FOR_EACH_FI_CONST
+BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
+                VTK_M_DO_FOR_EACH_REPEAT,)
+#undef VTK_M_DO_FOR_EACH_FI_CONST
+#undef VTK_M_DO_FOR_EACH_NAME
+#undef VTK_M_DO_FOR_EACH_EXPORT
+
+#undef VTK_M_DO_FOR_EACH_REPEAT
+#undef VTK_M_DO_FOR_EACH
+#undef VTK_M_DO_FOR_EACH_CALL_PARAM
 
 } // namespace detail
 
@@ -461,7 +549,7 @@ public:
   template<int ParameterIndex>
   VTKM_EXEC_CONT_EXPORT
   typename ParameterType<ParameterIndex>::type
-  GetParameter() {
+  GetParameter() const {
     return detail::GetParameter<ParameterIndex>(this->Parameters);
   }
 
@@ -632,7 +720,7 @@ public:
   /// \brief Transforms the \c FunctionInterface based on compile-time
   /// information.
   ///
-  /// The \c StaticTransform method transforms all the parameters of this \c
+  /// The \c StaticTransform methods transform all the parameters of this \c
   /// FunctionInterface to different types and values based on compile-time
   /// information. It operates by accepting a functor that defines a unary
   /// function whose argument is the parameter to transform and the return
@@ -675,7 +763,7 @@ public:
   template<typename Transform>
   VTKM_CONT_EXPORT
   typename StaticTransformType<Transform>::type
-  StaticTransformCont(const Transform &transform)
+  StaticTransformCont(const Transform &transform) const
   {
     typename StaticTransformType<Transform>::type newFuncInterface;
     detail::DoStaticTransformCont(transform,
@@ -686,7 +774,7 @@ public:
   template<typename Transform>
   VTKM_EXEC_EXPORT
   typename StaticTransformType<Transform>::type
-  StaticTransformExec(const Transform &transform)
+  StaticTransformExec(const Transform &transform) const
   {
     typename StaticTransformType<Transform>::type newFuncInterface;
     detail::DoStaticTransformExec(transform,
@@ -767,9 +855,8 @@ public:
   ///
   template<typename TransformFunctor, typename FinishFunctor>
   VTKM_CONT_EXPORT
-  void
-  DynamicTransformCont(const TransformFunctor &transform,
-                       const FinishFunctor &finish) {
+  void DynamicTransformCont(const TransformFunctor &transform,
+                            const FinishFunctor &finish) {
     typedef detail::FunctionInterfaceDynamicTransformContContinue<
         FunctionSignature,
         ResultType(),
@@ -782,6 +869,33 @@ public:
 
     continueFunctor.DoNextTransform(emptyInterface);
     this->Result = emptyInterface.GetReturnValueSafe();
+  }
+
+  /// \brief Applies a function to all the parameters.
+  ///
+  /// The \c ForEach methods take a function and apply that function to each
+  /// of the parameters in the \c FunctionInterface. (Return values are not
+  /// effected.)
+  ///
+  template<typename Functor>
+  VTKM_CONT_EXPORT
+  void ForEachCont(const Functor &f) const {
+    detail::DoForEachCont(f, this->Parameters);
+  }
+  template<typename Functor>
+  VTKM_CONT_EXPORT
+  void ForEachCont(const Functor &f) {
+    detail::DoForEachCont(f, this->Parameters);
+  }
+  template<typename Functor>
+  VTKM_EXEC_EXPORT
+  void ForEachExec(const Functor &f) const {
+    detail::DoForEachExec(f, this->Parameters);
+  }
+  template<typename Functor>
+  VTKM_EXEC_EXPORT
+  void ForEachExec(const Functor &f) {
+    detail::DoForEachExec(f, this->Parameters);
   }
 
 private:
