@@ -22,6 +22,7 @@
 
 #include "vtkm/cont/ArrayHandle.h"
 #include "vtkm/cont/DynamicArrayHandle.h"
+#include "vtkm/cont/DynamicPointCoordinates.h"
 
 #include "vtkm/internal/FunctionInterface.h"
 
@@ -72,7 +73,8 @@ struct FunctionInterfaceFunctor {
       const vtkm::internal::FunctionInterface<
         void(vtkm::cont::ArrayHandle<vtkm::Scalar>,
              vtkm::cont::ArrayHandle<vtkm::Scalar>,
-             vtkm::cont::ArrayHandle<std::string>)> &) const {
+             vtkm::cont::ArrayHandle<std::string>,
+             vtkm::cont::ArrayHandleUniformPointCoordinates)> &) const {
     std::cout << "    In FunctionInterface<...> functor." << std::endl;
     g_FunctionCalls++;
   }
@@ -107,20 +109,24 @@ void TestFunctionTransform()
 
   vtkm::cont::ArrayHandle<vtkm::Scalar> scalarArray;
   vtkm::cont::ArrayHandle<std::string> stringArray;
+  vtkm::cont::ArrayHandleUniformPointCoordinates pointCoordinatesArray;
 
   std::cout << "  Trying basic functor call w/o transform (make sure it works)."
             << std::endl;
   TRY_TRANSFORM(FunctionInterfaceFunctor()(
-                  vtkm::internal::make_FunctionInterface<void>(scalarArray,
-                                                               scalarArray,
-                                                               stringArray)));
+                  vtkm::internal::make_FunctionInterface<void>(
+                    scalarArray,
+                    scalarArray,
+                    stringArray,
+                    pointCoordinatesArray)));
 
   std::cout << "  Trying dynamic cast" << std::endl;
   TRY_TRANSFORM(
         vtkm::internal::make_FunctionInterface<void>(
           scalarArray,
           vtkm::cont::DynamicArrayHandle(scalarArray),
-          vtkm::cont::DynamicArrayHandle(stringArray).ResetTypeList(TypeListTagString()))
+          vtkm::cont::DynamicArrayHandle(stringArray).ResetTypeList(TypeListTagString()),
+          vtkm::cont::DynamicPointCoordinates(vtkm::cont::PointCoordinatesUniform()))
         .DynamicTransformCont(vtkm::cont::internal::DynamicTransform(),
                               FunctionInterfaceFunctor()));
 }

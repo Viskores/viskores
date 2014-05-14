@@ -109,6 +109,9 @@ void TryList(const vtkm::Tuple<int,N> &expected, ListTag)
 
 void TestLists()
 {
+  std::cout << "ListTagEmpty" << std::endl;
+  TryList(vtkm::Tuple<int,0>(), vtkm::ListTagEmpty());
+
   std::cout << "ListTagBase" << std::endl;
   TryList(vtkm::Tuple<int,1>(11), TestListTag1());
 

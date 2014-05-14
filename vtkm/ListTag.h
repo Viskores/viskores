@@ -26,6 +26,8 @@ namespace vtkm {
 
 namespace detail {
 
+struct ListEmpty { };
+
 template<typename T>
 struct ListBase { };
 
@@ -44,6 +46,12 @@ struct ListJoin { };
 } // namespace detail
 
 template<typename T> struct ListTagBase;
+
+/// A special tag for an empty list.
+///
+struct ListTagEmpty {
+  typedef detail::ListEmpty List;
+};
 
 /// A basic tag for a list of one typename. This struct can be subclassed
 /// and still behave like a list tag.
@@ -89,6 +97,13 @@ VTKM_CONT_EXPORT
 void ListForEach(const Functor &f, ListTag);
 
 namespace detail {
+
+template<typename Functor>
+VTKM_CONT_EXPORT
+void ListForEachImpl(Functor, ListEmpty)
+{
+  // Nothing to do for empty list
+}
 
 template<typename Functor, typename T>
 VTKM_CONT_EXPORT

@@ -34,6 +34,7 @@ set(headers
   DeviceAdapterTagSerial.h
   DynamicTransform.h
   IteratorFromArrayPortal.h
+  PointCoordinatesBase.h
   SimplePolymorphicContainer.h
   )
 

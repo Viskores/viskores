@@ -46,6 +46,33 @@ class DynamicArrayHandleCast;
 
 } // namespace internal
 
+/// \brief Holds an array handle without having to specify template parameters.
+///
+/// \c DynamicArrayHandle holds an \c ArrayHandle object using runtime
+/// polymorphism to manage different value types and storage rather than
+/// compile-time templates. This adds a programming convienience that helps
+/// avoid a proliferation of templates. It also provides the management
+/// necessary to interface VTK-m with data sources where types will not be
+/// known until runtime.
+///
+/// To interface between the runtime polymorphism and the templated algorithms
+/// in VTK-m, \c DynamicArrayHandle contains a method named \c CastAndCall that
+/// will determine the correct type from some known list of types and
+/// containers. This mechanism is used internally by VTK-m's worklet invocation
+/// mechanism to determine the type when running algorithms.
+///
+/// By default, \c DynamicArrayHandle will assume that the value type in the
+/// array matches one of the types specified by \c VTKM_DEFAULT_TYPE_LIST_TAG
+/// and the container matches one of the tags specified by \c
+/// VTKM_DEFAULT_CONTAINER_LIST_TAG. These lists can be changed by using the \c
+/// ResetTypeList and \c ResetContainerList methods, respectively. It is
+/// worthwhile to match these lists closely to the possible types that might be
+/// used. If a type is missing you will get a runtime error. If there are more
+/// types than necessary, then the template mechanism will create a lot of
+/// object code that is never used, and keep in mind that the number of
+/// combinations grows exponentally when using multiple \c DynamicArrayHandle
+/// objects.
+///
 class DynamicArrayHandle
 {
 public:
@@ -86,9 +113,9 @@ public:
       vtkm::cont::ArrayHandle<Type,Container> > *container =
         this->TryCastArrayContainer<Type,Container>();
     if (container == NULL)
-      {
+    {
       throw vtkm::cont::ErrorControlBadValue("Bad cast of dynamic array.");
-      }
+    }
     return container->Item;
   }
 
@@ -237,7 +264,7 @@ void DynamicArrayHandle::CastAndCall(const Functor &f,
   if (!tryType.FoundCast)
   {
     throw vtkm::cont::ErrorControlBadValue(
-          "Could not find appropriate cast in CastAndCall.");
+          "Could not find appropriate cast for array in CastAndCall.");
   }
 }
 

@@ -17,25 +17,36 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_ContainerListTag_h
-#define vtk_m_ContainerListTag_h
+#ifndef vtk_m_cont_PointCoordinatesListTag_h
+#define vtk_m_cont_PointCoordinatesListTag_h
 
-#ifndef VTKM_DEFAULT_CONTAINER_LIST_TAG
-#define VTKM_DEFAULT_CONTAINER_LIST_TAG ::vtkm::cont::ContainerListTagBasic
+#ifndef VTKM_DEFAULT_POINT_COORDINATES_LIST_TAG
+#define VTKM_DEFAULT_POINT_COORDINATES_LIST_TAG \
+  ::vtkm::cont::PointCoordinatesListTagCommon
 #endif
-
 #include <vtkm/ListTag.h>
 
-#include <vtkm/cont/ArrayContainerControl.h>
-#include <vtkm/cont/ArrayContainerControlBasic.h>
+#include <vtkm/cont/PointCoordinatesArray.h>
+#include <vtkm/cont/PointCoordinatesUniform.h>
 
 namespace vtkm {
 namespace cont {
 
-struct ContainerListTagBasic
-    : vtkm::ListTagBase<vtkm::cont::ArrayContainerControlTagBasic> { };
+struct PointCoordinatesListTagArray :
+    vtkm::ListTagBase<vtkm::cont::PointCoordinatesArray> {  };
+struct PointCoordinatesListTagUniform :
+    vtkm::ListTagBase<vtkm::cont::PointCoordinatesUniform> {  };
+
+/// A list of the most commonly used point coordinate types. Includes \c
+/// PointCoordinatesArray.
+///
+struct PointCoordinatesListTagCommon
+    : vtkm::ListTagBase2<
+        vtkm::cont::PointCoordinatesArray,
+        vtkm::cont::PointCoordinatesUniform>
+{  };
 
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_ContainerListTag_h
+#endif //vtk_m_cont_PointCoordinatesListTag_h

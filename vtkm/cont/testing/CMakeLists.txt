@@ -38,6 +38,8 @@ set(unit_tests
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDeviceAdapterSerial.cxx
   UnitTestDynamicArrayHandle.cxx
+  UnitTestDynamicPointCoordinates.cxx
+  UnitTestPointCoordinates.cxx
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})
