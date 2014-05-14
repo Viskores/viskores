@@ -135,10 +135,22 @@ struct GetReferenceFunctor
   const T *operator()(const T &x) const { return &x; }
 };
 
+struct PointerTransform {
+  template<typename T>
+  struct ReturnType {
+    typedef const T *type;
+  };
+
+  template<typename T>
+  const T *operator()(const T &x) const {
+    return &x;
+  }
+};
+
 struct ThreePointerArgFunctor {
   void operator()(const Type1 *a1, const Type2 *a2, const Type3 *a3) const
   {
-    std::cout << "In 3 arg functor." << std::endl;
+    std::cout << "In 3 point arg functor." << std::endl;
 
     VTKM_TEST_ASSERT(*a1 == Arg1, "Arg 1 incorrect.");
     VTKM_TEST_ASSERT(*a2 == Arg2, "Arg 2 incorrect.");
@@ -286,6 +298,14 @@ struct DynamicTransformFinish
   }
 };
 
+struct ForEachFunctor
+{
+  template<typename T>
+  void operator()(T &x) const { x = 2*x; }
+
+  void operator()(std::string &x) const { x.append("*2"); }
+};
+
 void TryFunctionInterface5(
     vtkm::internal::FunctionInterface<void(Type1,Type2,Type3,Type4,Type5)> funcInterface)
 {
@@ -409,6 +429,35 @@ void TestTransformInvoke()
                    "Got bad result from invoke.");
 }
 
+void TestStaticTransform()
+{
+  std::cout << "Trying static transform." << std::endl;
+  typedef vtkm::internal::FunctionInterface<void(Type1,Type2,Type3)>
+      OriginalType;
+  OriginalType funcInterface =
+      vtkm::internal::make_FunctionInterface<void>(Arg1, Arg2, Arg3);
+
+  std::cout << "Transform with reported type." << std::endl;
+  typedef OriginalType::StaticTransformType<PointerTransform>::type
+      ReportedType;
+  ReportedType funcInterfaceTransform1 =
+      funcInterface.StaticTransformCont(PointerTransform());
+  funcInterfaceTransform1.InvokeCont(ThreePointerArgFunctor());
+  funcInterfaceTransform1 =
+      funcInterface.StaticTransformExec(PointerTransform());
+  funcInterfaceTransform1.InvokeExec(ThreePointerArgFunctor());
+
+  std::cout << "Transform with expected type." << std::endl;
+  typedef vtkm::internal::FunctionInterface<void(Type1*,Type2*,Type3*)>
+      ExpectedType;
+  ReportedType funcInterfaceTransform2 =
+      funcInterface.StaticTransformCont(PointerTransform());
+  funcInterfaceTransform2.InvokeCont(ThreePointerArgFunctor());
+  funcInterfaceTransform2 =
+      funcInterface.StaticTransformExec(PointerTransform());
+  funcInterfaceTransform2.InvokeExec(ThreePointerArgFunctor());
+}
+
 void TestDynamicTransform()
 {
   std::cout << "Trying dynamic transform." << std::endl;
@@ -427,6 +476,33 @@ void TestDynamicTransform()
             << std::endl;
   VTKM_TEST_ASSERT(g_DynamicTransformFinishCalls == 4,
                    "DynamicTransform did not call finish the right number of times.");
+}
+
+void TestForEach()
+{
+  std::cout << "Checking running a function on each parameter." << std::endl;
+  vtkm::internal::FunctionInterface<void(Type1,Type2,Type3,Type4,Type5)>
+      funcInterface = vtkm::internal::make_FunctionInterface<void>(
+        Arg1, Arg2, Arg3, Arg4, Arg5);
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == Arg1, "Arg 1 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == Arg2, "Arg 2 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3, "Arg 3 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == Arg4, "Arg 4 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == Arg5, "Arg 5 incorrect.");
+
+  funcInterface.ForEachCont(ForEachFunctor());
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == 2*Arg1, "Arg 1 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == 2*Arg2, "Arg 2 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3+"*2", "Arg 3 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == 2*Arg4, "Arg 4 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == 2*Arg5, "Arg 5 incorrect.");
+
+  funcInterface.ForEachExec(ForEachFunctor());
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == 4*Arg1, "Arg 1 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == 4*Arg2, "Arg 2 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3+"*2*2", "Arg 3 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == 4*Arg4, "Arg 4 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == 4*Arg5, "Arg 5 incorrect.");
 }
 
 void TestInvokeTime()
@@ -487,7 +563,9 @@ void TestFunctionInterface()
   TestInvokeResult();
   TestAppend();
   TestTransformInvoke();
+  TestStaticTransform();
   TestDynamicTransform();
+  TestForEach();
   TestInvokeTime();
 }
 

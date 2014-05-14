@@ -118,11 +118,13 @@ class ArrayHandleCounting
           > Superclass;
 public:
 
+  VTKM_CONT_EXPORT
   ArrayHandleCounting(CountingValueType startingValue, vtkm::Id length)
     :Superclass(typename Superclass::PortalConstControl(startingValue, length))
   {
   }
 
+  VTKM_CONT_EXPORT
   ArrayHandleCounting():Superclass() {}
 };
 

@@ -25,7 +25,9 @@ set(headers
   ArrayContainerControlBasic.h
   ArrayContainerControlImplicit.h
   ArrayHandle.h
+  ArrayHandleCompositeVector.h
   ArrayHandleCounting.h
+  ArrayHandleUniformPointCoordinates.h
   ArrayPortal.h
   Assert.h
   ContainerListTag.h
