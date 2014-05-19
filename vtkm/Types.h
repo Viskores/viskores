@@ -107,16 +107,6 @@ typedef unsigned long long UInt64Type;
 #error Could not find a 64-bit integer.
 #endif
 
-//for windows support we need a macro to wrap the alignment call,
-//since for windows you need declspec(align)
-#ifdef _MSC_VER
-#  define VTKM_ALIGN_BEGIN(size) __declspec(align(size))
-#  define VTKM_ALIGN_END(size)
-#else //we presume clang or gcc
-#  define VTKM_ALIGN_BEGIN(size)
-#  define VTKM_ALIGN_END(size) __attribute__((aligned(size)))
-#endif
-
 //-----------------------------------------------------------------------------
 
 template<int Size>
@@ -441,13 +431,11 @@ protected:
 };
 
 /// Vector2 corresponds to a 2-tuple
-namespace internal
-  { typedef VTKM_ALIGN_BEGIN(VTKM_ALIGNMENT_TWO_SCALAR) vtkm::Tuple<vtkm::Scalar,2> Vector2 VTKM_ALIGN_END(VTKM_ALIGNMENT_TWO_SCALAR); }
-typedef internal::Vector2 Vector2;
+typedef vtkm::Tuple<vtkm::Scalar,2> Vector2;
 
 
 /// Id2 corresponds to a 2-dimensional index
-typedef VTKM_ALIGN_BEGIN(VTKM_SIZE_ID) vtkm::Tuple<vtkm::Id,2> Id2 VTKM_ALIGN_END(VTKM_SIZE_ID);
+typedef vtkm::Tuple<vtkm::Id,2> Id2;
 
 template<typename T>
 class Tuple<T,3>
@@ -522,7 +510,11 @@ protected:
 };
 
 /// Vector3 corresponds to a 3-tuple
-typedef VTKM_ALIGN_BEGIN(VTKM_SIZE_SCALAR) vtkm::Tuple<vtkm::Scalar,3> Vector3 VTKM_ALIGN_END(VTKM_SIZE_SCALAR);
+typedef vtkm::Tuple<vtkm::Scalar,3> Vector3;
+
+/// Id3 corresponds to a 3-dimensional index for 3d arrays.  Note that
+/// the precision of each index may be less than vtkm::Id.
+typedef vtkm::Tuple<vtkm::Id,3> Id3;
 
 template<typename T>
 class Tuple<T,4>
@@ -602,12 +594,8 @@ protected:
 };
 
 /// Vector4 corresponds to a 4-tuple
-typedef VTKM_ALIGN_BEGIN(VTKM_ALIGNMENT_FOUR_SCALAR) vtkm::Tuple<vtkm::Scalar,4> Vector4 VTKM_ALIGN_END(VTKM_ALIGNMENT_FOUR_SCALAR);
+typedef vtkm::Tuple<vtkm::Scalar,4> Vector4;
 
-
-/// Id3 corresponds to a 3-dimensional index for 3d arrays.  Note that
-/// the precision of each index may be less than vtkm::Id.
-typedef VTKM_ALIGN_BEGIN(VTKM_SIZE_ID) vtkm::Tuple<vtkm::Id,3> Id3 VTKM_ALIGN_END(VTKM_SIZE_ID);
 
 /// Initializes and returns a Vector2.
 VTKM_EXEC_CONT_EXPORT vtkm::Vector2 make_Vector2(vtkm::Scalar x,
