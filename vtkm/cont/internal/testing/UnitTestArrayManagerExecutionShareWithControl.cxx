@@ -40,7 +40,7 @@ struct TemplatedTests
   typedef vtkm::cont::internal::ArrayContainerControl<
       T, vtkm::cont::ArrayContainerControlTagBasic> ArrayContainerType;
 
-  void SetContainer(ArrayContainerType &array, ValueType value)
+  void SetContainer(ArrayContainerType &array, const ValueType& value)
   {
     std::fill(array.GetPortal().GetIteratorBegin(),
               array.GetPortal().GetIteratorEnd(),
@@ -48,7 +48,7 @@ struct TemplatedTests
   }
 
   template <class IteratorType>
-  bool CheckArray(IteratorType begin, IteratorType end, ValueType value)
+  bool CheckArray(IteratorType begin, IteratorType end, const ValueType& value)
   {
     for (IteratorType iter = begin; iter != end; iter++)
     {
@@ -57,7 +57,7 @@ struct TemplatedTests
     return true;
   }
 
-  bool CheckContainer(ArrayContainerType &array, ValueType value)
+  bool CheckContainer(ArrayContainerType &array, const ValueType& value)
   {
     return CheckArray(array.GetPortalConst().GetIteratorBegin(),
                       array.GetPortalConst().GetIteratorEnd(),

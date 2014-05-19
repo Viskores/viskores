@@ -73,7 +73,7 @@ public:
   /// arrays, then this method may save the iterators to be returned in the \c
   /// GetPortalConst methods.
   ///
-  virtual void LoadDataForInput(cosnt PortalConstControl& portal) = 0;
+  virtual void LoadDataForInput(const PortalConstControl& portal) = 0;
 
   /// Allocates a large enough array in the execution environment and copies
   /// the given data to that array. The allocated array can later be accessed

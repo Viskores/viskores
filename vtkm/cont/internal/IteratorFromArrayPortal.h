@@ -60,7 +60,7 @@ struct IteratorFromArrayPortalValue
   }
 
   VTKM_CONT_EXPORT
-  ValueType operator=(ValueType value)
+  ValueType operator=(const ValueType& value)
   {
     this->Portal.Set(this->Index, value);
     return value;
