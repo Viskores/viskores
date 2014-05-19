@@ -38,7 +38,7 @@ struct TemplatedTests
   typedef typename ArrayContainerType::PortalType PortalType;
   typedef typename PortalType::IteratorType IteratorType;
 
-  void SetContainer(ArrayContainerType &array, ValueType value)
+  void SetContainer(ArrayContainerType &array, const ValueType& value)
   {
     for (IteratorType iter = array.GetPortal().GetIteratorBegin();
          iter != array.GetPortal().GetIteratorEnd();
@@ -48,7 +48,7 @@ struct TemplatedTests
     }
   }
 
-  bool CheckContainer(ArrayContainerType &array, ValueType value)
+  bool CheckContainer(ArrayContainerType &array, const ValueType& value)
   {
     for (IteratorType iter = array.GetPortal().GetIteratorBegin();
          iter != array.GetPortal().GetIteratorEnd();

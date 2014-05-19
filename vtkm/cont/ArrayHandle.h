@@ -101,7 +101,7 @@ public:
 
   /// Constructs an ArrayHandle pointing to the data in the given array portal.
   ///
-  VTKM_CONT_EXPORT ArrayHandle(PortalConstControl userData)
+  VTKM_CONT_EXPORT ArrayHandle(const PortalConstControl& userData)
     : Internals(new InternalStruct)
   {
     this->Internals->UserPortal = userData;

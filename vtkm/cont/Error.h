@@ -36,6 +36,14 @@ class Error
 public:
   const std::string &GetMessage() const { return this->Message; }
 
+//GetMessage is a macro defined by <windows.h> to redirrect to
+//GetMessageA or W depending on if you are using ansi or unicode.
+//To get around this we make our own A/W variants on windows.
+#ifdef _WIN32
+  const std::string &GetMessageA() const { return this->Message; }
+  const std::string &GetMessageW() const { return this->Message; }
+#endif
+
 protected:
   Error() { }
   Error(const std::string message) : Message(message) { }

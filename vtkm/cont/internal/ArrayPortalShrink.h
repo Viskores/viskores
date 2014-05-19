@@ -77,7 +77,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void Set(vtkm::Id index, ValueType value) const
+  void Set(vtkm::Id index, const ValueType& value) const
   {
     VTKM_ASSERT_CONT(index >= 0);
     VTKM_ASSERT_CONT(index < this->GetNumberOfValues());

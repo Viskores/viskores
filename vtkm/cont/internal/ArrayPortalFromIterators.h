@@ -73,7 +73,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void Set(vtkm::Id index, ValueType value) const
+  void Set(vtkm::Id index, const ValueType& value) const
   {
     *this->IteratorAt(index) = value;
   }
