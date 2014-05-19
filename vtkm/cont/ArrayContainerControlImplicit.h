@@ -131,7 +131,7 @@ public:
     return this->Portal.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT void LoadDataForInput(PortalConstControl portal)
+  VTKM_CONT_EXPORT void LoadDataForInput(const PortalConstControl& portal)
   {
     this->Portal = portal;
     this->PortalValid = true;

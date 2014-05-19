@@ -64,7 +64,7 @@ public:
 
   /// Saves the given iterators to be returned later.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInput(PortalConstType portal)
+  VTKM_CONT_EXPORT void LoadDataForInput(const PortalConstType& portal)
   {
     this->ConstPortal = portal;
     this->ConstPortalValid = true;

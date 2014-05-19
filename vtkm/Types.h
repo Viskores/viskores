@@ -107,6 +107,16 @@ typedef unsigned long long UInt64Type;
 #error Could not find a 64-bit integer.
 #endif
 
+//for windows support we need a macro to wrap the alignment call,
+//since for windows you need declspec(align)
+#ifdef _MSC_VER
+#  define VTKM_ALIGN_BEGIN(size) __declspec(align(size))
+#  define VTKM_ALIGN_END(size)
+#else //we presume clang or gcc
+#  define VTKM_ALIGN_BEGIN(size)
+#  define VTKM_ALIGN_END(size) __attribute__((aligned(size)))
+#endif
+
 //-----------------------------------------------------------------------------
 
 template<int Size>
@@ -249,12 +259,12 @@ struct copy_vector<3>
 #if VTKM_SIZE_ID == 4
 
 /// Represents an ID.
-typedef internal::Int32Type Id __attribute__ ((aligned(VTKM_SIZE_ID)));
+typedef internal::Int32Type Id;
 
 #elif VTKM_SIZE_ID == 8
 
 /// Represents an ID.
-typedef internal::Int64Type Id __attribute__ ((aligned(VTKM_SIZE_ID)));
+typedef internal::Int64Type Id;
 
 #else
 #error Unknown Id Size
@@ -263,12 +273,12 @@ typedef internal::Int64Type Id __attribute__ ((aligned(VTKM_SIZE_ID)));
 #ifdef VTKM_USE_DOUBLE_PRECISION
 
 /// Scalar corresponds to a floating point number.
-typedef double Scalar __attribute__ ((aligned(VTKM_SIZE_SCALAR)));
+typedef double Scalar;
 
 #else //VTKM_USE_DOUBLE_PRECISION
 
 /// Scalar corresponds to a floating point number.
-typedef float Scalar __attribute__ ((aligned(VTKM_SIZE_SCALAR)));
+typedef float Scalar;
 
 #endif //VTKM_USE_DOUBLE_PRECISION
 
@@ -431,12 +441,13 @@ protected:
 };
 
 /// Vector2 corresponds to a 2-tuple
-typedef vtkm::Tuple<vtkm::Scalar,2>
-    Vector2 __attribute__ ((aligned(VTKM_ALIGNMENT_TWO_SCALAR)));
+namespace internal
+  { typedef VTKM_ALIGN_BEGIN(VTKM_ALIGNMENT_TWO_SCALAR) vtkm::Tuple<vtkm::Scalar,2> Vector2 VTKM_ALIGN_END(VTKM_ALIGNMENT_TWO_SCALAR); }
+typedef internal::Vector2 Vector2;
 
 
 /// Id2 corresponds to a 2-dimensional index
-typedef vtkm::Tuple<vtkm::Id,2> Id2 __attribute__ ((aligned(VTKM_SIZE_ID)));
+typedef VTKM_ALIGN_BEGIN(VTKM_SIZE_ID) vtkm::Tuple<vtkm::Id,2> Id2 VTKM_ALIGN_END(VTKM_SIZE_ID);
 
 template<typename T>
 class Tuple<T,3>
@@ -511,8 +522,7 @@ protected:
 };
 
 /// Vector3 corresponds to a 3-tuple
-typedef vtkm::Tuple<vtkm::Scalar,3>
-    Vector3 __attribute__ ((aligned(VTKM_SIZE_SCALAR)));
+typedef VTKM_ALIGN_BEGIN(VTKM_SIZE_SCALAR) vtkm::Tuple<vtkm::Scalar,3> Vector3 VTKM_ALIGN_END(VTKM_SIZE_SCALAR);
 
 template<typename T>
 class Tuple<T,4>
@@ -592,13 +602,12 @@ protected:
 };
 
 /// Vector4 corresponds to a 4-tuple
-typedef vtkm::Tuple<vtkm::Scalar,4>
-    Vector4 __attribute__ ((aligned(VTKM_ALIGNMENT_FOUR_SCALAR)));
+typedef VTKM_ALIGN_BEGIN(VTKM_ALIGNMENT_FOUR_SCALAR) vtkm::Tuple<vtkm::Scalar,4> Vector4 VTKM_ALIGN_END(VTKM_ALIGNMENT_FOUR_SCALAR);
 
 
 /// Id3 corresponds to a 3-dimensional index for 3d arrays.  Note that
 /// the precision of each index may be less than vtkm::Id.
-typedef vtkm::Tuple<vtkm::Id,3> Id3 __attribute__ ((aligned(VTKM_SIZE_ID)));
+typedef VTKM_ALIGN_BEGIN(VTKM_SIZE_ID) vtkm::Tuple<vtkm::Id,3> Id3 VTKM_ALIGN_END(VTKM_SIZE_ID);
 
 /// Initializes and returns a Vector2.
 VTKM_EXEC_CONT_EXPORT vtkm::Vector2 make_Vector2(vtkm::Scalar x,

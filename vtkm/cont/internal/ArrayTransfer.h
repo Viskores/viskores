@@ -82,7 +82,7 @@ public:
   /// arrays, then this method may save the iterators to be returned in the \c
   /// GetPortalConst methods.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInput(PortalConstControl portal)
+  VTKM_CONT_EXPORT void LoadDataForInput(const PortalConstControl& portal)
   {
     this->ArrayManager.LoadDataForInput(portal);
   }

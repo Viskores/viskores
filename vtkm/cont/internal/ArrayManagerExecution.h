@@ -83,7 +83,7 @@ public:
   /// GetPortalConst method.
   ///
   VTKM_CONT_EXPORT void LoadDataForInput(
-      typename ContainerType::PortalConstType portal);
+      const typename ContainerType::PortalConstType& portal);
 
   /// Allocates a large enough array in the execution environment and copies
   /// the given data to that array. The allocated array can later be accessed

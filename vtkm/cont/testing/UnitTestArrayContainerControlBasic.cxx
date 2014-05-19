@@ -48,7 +48,7 @@ struct TemplatedTests
     }
   }
 
-  bool CheckContainer(ArrayContainerType &array, ValueType value)
+  bool CheckContainer(ArrayContainerType &array, const ValueType& value)
   {
     for (IteratorType iter = array.GetPortal().GetIteratorBegin();
          iter != array.GetPortal().GetIteratorEnd();
