@@ -211,8 +211,12 @@
  *
  */
 
-#ifndef OPTIONPARSER_H_
-#define OPTIONPARSER_H_
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
+
+#ifndef vtk_m_testing_OPTIONPARSER_H_
+#define vtk_m_testing_OPTIONPARSER_H_
 
 namespace vtkm {
 namespace testing {
