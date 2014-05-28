@@ -126,6 +126,38 @@ find_package(BoostHeaders ${VTKm_REQUIRED_BOOST_VERSION} REQUIRED)
 # Add subdirectories
 add_subdirectory(vtkm)
 
+# Configuration for build directory.
+set(VTKm_INCLUDE_DIRS_CONFIG "${VTKm_SOURCE_DIR};${VTKm_BINARY_DIR}")
+set(VTKm_CMAKE_MODULE_PATH_CONFIG "${VTKm_SOURCE_DIR}/CMake")
+configure_file(
+  ${VTKm_SOURCE_DIR}/CMake/VTKmConfig.cmake.in
+  ${VTKm_BINARY_DIR}/VTKmConfig.cmake
+  @ONLY IMMEDIATE
+  )
+
+# Configuration for install.
+set(VTKm_INCLUDE_DIRS_CONFIG "\${_install_dir}/${VTKm_INSTALL_INCLUDE_DIR}")
+set(VTKm_CMAKE_MODULE_PATH_CONFIG "\${_install_dir}/${VTKm_INSTALL_CMAKE_MODULE_DIR}")
+configure_file(
+  ${VTKm_SOURCE_DIR}/CMake/VTKmConfig.cmake.in
+  ${VTKm_BINARY_DIR}/VTKmConfig.cmake.install
+  @ONLY IMMEDIATE
+  )
+install(FILES ${VTKm_BINARY_DIR}/VTKmConfig.cmake.install
+  DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
+  RENAME VTKmConfig.cmake
+  )
+
+# Create supplemental version configuration file.
+configure_file(
+  ${VTKm_SOURCE_DIR}/CMake/VTKmConfigVersion.cmake.in
+  ${VTKm_BINARY_DIR}/VTKmConfigVersion.cmake
+  @ONLY
+  )
+install(FILES ${VTKm_BINARY_DIR}/VTKmConfigVersion.cmake
+  DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
+  )
+
 # Install the readme and license files.
 install(FILES ${VTKm_SOURCE_DIR}/README.md
   DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
