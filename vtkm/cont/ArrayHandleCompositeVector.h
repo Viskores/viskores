@@ -609,52 +609,114 @@ public:
   {  }
 };
 
+/// \brief Get the type for an ArrayHandleCompositeVector
+///
+/// The ArrayHandleCompositeVector has a difficult template specification.
+/// Use this helper template to covert a list of array handle types to a
+/// composite vector of these array handles. Here is a simple example.
+///
+/// \code{.cpp}
+/// typedef vtkm::cont::ArrayHandleCompositeVector<
+///     vtkm::cont::ArrayHandle<vtkm::Scalar>,
+///     vtkm::cont::ArrayHandle<vtkm::Scalar> >::type OutArrayType;
+/// OutArrayType outArray = vtkm::cont::make_ArrayHandleCompositeVector(a1,a2);
+/// \endcode
+///
+template<typename ArrayHandleType1,
+         typename ArrayHandleType2 = void,
+         typename ArrayHandleType3 = void,
+         typename ArrayHandleType4 = void>
+struct ArrayHandleCompositeVectorType
+{
+private:
+  typedef typename vtkm::VectorTraits<typename ArrayHandleType1::ValueType>::ComponentType
+      ComponentType;
+  typedef vtkm::Tuple<ComponentType,4> Signature(
+      ArrayHandleType1,ArrayHandleType2,ArrayHandleType3,ArrayHandleType4);
+public:
+  typedef vtkm::cont::ArrayHandleCompositeVector<Signature> type;
+};
+
+template<typename ArrayHandleType1,
+         typename ArrayHandleType2,
+         typename ArrayHandleType3>
+struct ArrayHandleCompositeVectorType<
+    ArrayHandleType1,ArrayHandleType2,ArrayHandleType3>
+{
+private:
+  typedef typename vtkm::VectorTraits<typename ArrayHandleType1::ValueType>::ComponentType
+      ComponentType;
+  typedef vtkm::Tuple<ComponentType,3> Signature(
+      ArrayHandleType1,ArrayHandleType2,ArrayHandleType3);
+public:
+  typedef vtkm::cont::ArrayHandleCompositeVector<Signature> type;
+};
+
+template<typename ArrayHandleType1,
+         typename ArrayHandleType2>
+struct ArrayHandleCompositeVectorType<ArrayHandleType1,ArrayHandleType2>
+{
+private:
+  typedef typename vtkm::VectorTraits<typename ArrayHandleType1::ValueType>::ComponentType
+      ComponentType;
+  typedef vtkm::Tuple<ComponentType,2> Signature(
+      ArrayHandleType1,ArrayHandleType2);
+public:
+  typedef vtkm::cont::ArrayHandleCompositeVector<Signature> type;
+};
+
+template<typename ArrayHandleType1>
+struct ArrayHandleCompositeVectorType<ArrayHandleType1>
+{
+private:
+  typedef typename vtkm::VectorTraits<typename ArrayHandleType1::ValueType>::ComponentType
+      ComponentType;
+  typedef ComponentType Signature(ArrayHandleType1);
+public:
+  typedef vtkm::cont::ArrayHandleCompositeVector<Signature> type;
+};
+
 /// Create a composite vector array from other arrays.
 ///
 template<typename ValueType1, typename Container1>
 VTKM_CONT_EXPORT
-ArrayHandleCompositeVector<
-  typename vtkm::VectorTraits<ValueType1>::ComponentType(
-    vtkm::cont::ArrayHandle<ValueType1,Container1>)>
+typename ArrayHandleCompositeVectorType<
+  vtkm::cont::ArrayHandle<ValueType1,Container1> >::type
 make_ArrayHandleCompositeVector(
     const vtkm::cont::ArrayHandle<ValueType1,Container1> &array1,
     int sourceComponent1)
 {
-  return ArrayHandleCompositeVector<
-      typename vtkm::VectorTraits<ValueType1>::ComponentType(
-        vtkm::cont::ArrayHandle<ValueType1,Container1>)>(array1,
-                                                         sourceComponent1);
+  return typename ArrayHandleCompositeVectorType<
+      vtkm::cont::ArrayHandle<ValueType1,Container1> >::type(array1,
+                                                             sourceComponent1);
 }
 template<typename ValueType1, typename Container1,
          typename ValueType2, typename Container2>
 VTKM_CONT_EXPORT
-ArrayHandleCompositeVector<
-  vtkm::Tuple<typename vtkm::VectorTraits<ValueType1>::ComponentType,2>(
-    vtkm::cont::ArrayHandle<ValueType1,Container1>,
-    vtkm::cont::ArrayHandle<ValueType2,Container2>)>
+typename ArrayHandleCompositeVectorType<
+  vtkm::cont::ArrayHandle<ValueType1,Container1>,
+  vtkm::cont::ArrayHandle<ValueType2,Container2> >::type
 make_ArrayHandleCompositeVector(
     const vtkm::cont::ArrayHandle<ValueType1,Container1> &array1,
     int sourceComponent1,
     const vtkm::cont::ArrayHandle<ValueType2,Container2> &array2,
     int sourceComponent2)
 {
-  return ArrayHandleCompositeVector<
-      vtkm::Tuple<typename vtkm::VectorTraits<ValueType1>::ComponentType,2>(
-        vtkm::cont::ArrayHandle<ValueType1,Container1>,
-        vtkm::cont::ArrayHandle<ValueType2,Container2>)>(array1,
-                                                         sourceComponent1,
-                                                         array2,
-                                                         sourceComponent2);
+  return typename ArrayHandleCompositeVectorType<
+      vtkm::cont::ArrayHandle<ValueType1,Container1>,
+      vtkm::cont::ArrayHandle<ValueType2,Container2> >::type(array1,
+                                                             sourceComponent1,
+                                                             array2,
+                                                             sourceComponent2);
 }
 template<typename ValueType1, typename Container1,
          typename ValueType2, typename Container2,
          typename ValueType3, typename Container3>
 VTKM_CONT_EXPORT
-ArrayHandleCompositeVector<
-  vtkm::Tuple<typename vtkm::VectorTraits<ValueType1>::ComponentType,3>(
-    vtkm::cont::ArrayHandle<ValueType1,Container1>,
-    vtkm::cont::ArrayHandle<ValueType2,Container2>,
-    vtkm::cont::ArrayHandle<ValueType3,Container3>)>
+typename ArrayHandleCompositeVectorType<
+  vtkm::cont::ArrayHandle<ValueType1,Container1>,
+  vtkm::cont::ArrayHandle<ValueType2,Container2>,
+  vtkm::cont::ArrayHandle<ValueType3,Container3> >::type
 make_ArrayHandleCompositeVector(
     const vtkm::cont::ArrayHandle<ValueType1,Container1> &array1,
     int sourceComponent1,
@@ -663,28 +725,26 @@ make_ArrayHandleCompositeVector(
     const vtkm::cont::ArrayHandle<ValueType3,Container3> &array3,
     int sourceComponent3)
 {
-  return ArrayHandleCompositeVector<
-      vtkm::Tuple<typename vtkm::VectorTraits<ValueType1>::ComponentType,3>(
-        vtkm::cont::ArrayHandle<ValueType1,Container1>,
-        vtkm::cont::ArrayHandle<ValueType2,Container2>,
-        vtkm::cont::ArrayHandle<ValueType3,Container3>)>(array1,
-                                                         sourceComponent1,
-                                                         array2,
-                                                         sourceComponent2,
-                                                         array3,
-                                                         sourceComponent3);
+  return typename ArrayHandleCompositeVectorType<
+      vtkm::cont::ArrayHandle<ValueType1,Container1>,
+      vtkm::cont::ArrayHandle<ValueType2,Container2>,
+      vtkm::cont::ArrayHandle<ValueType3,Container3> >::type(array1,
+                                                             sourceComponent1,
+                                                             array2,
+                                                             sourceComponent2,
+                                                             array3,
+                                                             sourceComponent3);
 }
 template<typename ValueType1, typename Container1,
          typename ValueType2, typename Container2,
          typename ValueType3, typename Container3,
          typename ValueType4, typename Container4>
 VTKM_CONT_EXPORT
-ArrayHandleCompositeVector<
-  vtkm::Tuple<typename vtkm::VectorTraits<ValueType1>::ComponentType,4>(
-    vtkm::cont::ArrayHandle<ValueType1,Container1>,
-    vtkm::cont::ArrayHandle<ValueType2,Container2>,
-    vtkm::cont::ArrayHandle<ValueType3,Container3>,
-    vtkm::cont::ArrayHandle<ValueType4,Container4>)>
+typename ArrayHandleCompositeVectorType<
+  vtkm::cont::ArrayHandle<ValueType1,Container1>,
+  vtkm::cont::ArrayHandle<ValueType2,Container2>,
+  vtkm::cont::ArrayHandle<ValueType3,Container3>,
+  vtkm::cont::ArrayHandle<ValueType4,Container4> >::type
 make_ArrayHandleCompositeVector(
     const vtkm::cont::ArrayHandle<ValueType1,Container1> &array1,
     int sourceComponent1,
@@ -695,19 +755,18 @@ make_ArrayHandleCompositeVector(
     const vtkm::cont::ArrayHandle<ValueType4,Container4> &array4,
     int sourceComponent4)
 {
-  return ArrayHandleCompositeVector<
-      vtkm::Tuple<typename vtkm::VectorTraits<ValueType1>::ComponentType,4>(
-        vtkm::cont::ArrayHandle<ValueType1,Container1>,
-        vtkm::cont::ArrayHandle<ValueType2,Container2>,
-        vtkm::cont::ArrayHandle<ValueType3,Container3>,
-        vtkm::cont::ArrayHandle<ValueType4,Container4>)>(array1,
-                                                         sourceComponent1,
-                                                         array2,
-                                                         sourceComponent2,
-                                                         array3,
-                                                         sourceComponent3,
-                                                         array4,
-                                                         sourceComponent4);
+  return typename ArrayHandleCompositeVectorType<
+      vtkm::cont::ArrayHandle<ValueType1,Container1>,
+      vtkm::cont::ArrayHandle<ValueType2,Container2>,
+      vtkm::cont::ArrayHandle<ValueType3,Container3>,
+      vtkm::cont::ArrayHandle<ValueType4,Container4> >::type(array1,
+                                                             sourceComponent1,
+                                                             array2,
+                                                             sourceComponent2,
+                                                             array3,
+                                                             sourceComponent3,
+                                                             array4,
+                                                             sourceComponent4);
 }
 
 }

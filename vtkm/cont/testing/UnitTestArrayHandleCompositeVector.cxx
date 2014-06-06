@@ -124,7 +124,7 @@ void TryScalarArray()
   int inArrayId = 0;
   InArrayType inArray = MakeInputArray<InValueType>(inArrayId);
 
-  typedef vtkm::cont::ArrayHandleCompositeVector<vtkm::Scalar(InArrayType)>
+  typedef typename vtkm::cont::ArrayHandleCompositeVectorType<InArrayType>::type
       OutArrayType;
   for (int inComponentIndex = 0;
        inComponentIndex < inComponents;
