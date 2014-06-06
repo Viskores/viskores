@@ -477,6 +477,140 @@ BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
 
 } // namespace detail
 
+/// \brief Holds parameters and result of a function.
+///
+/// To make VTK-m easier for the end user developer, the
+/// vtkm::cont::Dispatcher*::Invoke() method takes an arbitrary amount of
+/// arguments that get transformed and swizzled into arguments and return value
+/// for a worklet operator. In between these two invocations a complicated
+/// series of transformations and operations can occur.
+///
+/// Supporting arbitrary function and template arguments is difficult and
+/// really requires seperate implementations for ANSI and C++11 versions of
+/// compilers. Thus, variatic template arguments are, at this point in time,
+/// something to be avoided when possible. The intention of \c
+/// FunctionInterface is to collect most of the variatic template code into one
+/// place. The \c FunctionInterface template class takes a function signature,
+/// which can have a variable number of arguments. The \c FunctionInterface
+/// will hold in its state a copy of all input parameters (regardless of number
+/// or type) and the return value if it exists (i.e. non-null) and the function
+/// has been invoked. This means that all arguments can be passed around in a
+/// single object so that objects and functions dealing with these variadic
+/// parameters can be templated on a single type (the type of \c
+/// FunctionInterface).
+///
+/// Note that the indexing of the parameters in a \c FunctionInterface starts
+/// at 1. You can think of the return value being the parameter at index 0,
+/// even if there is no return value. Although this is uncommon in C++, it
+/// matches better the parameter indexing for other classes that deal with
+/// function signatures.
+///
+/// The \c FunctionInterface contains several ways to invoke a functor whose
+/// parameters match those of the parameter pack. This allows you to complete
+/// the transition of calling an arbitrary function (like a worklet).
+///
+/// The following is a rundown of a \c FunctionInterface is created and used.
+/// See the independent documentation for more details.
+///
+/// Use the \c make_FunctionInterface function to create a \c FunctionInterface
+/// and initialize the state of all the parameters. \c make_FunctionInterface
+/// takes a variable number of arguments, one for each parameter. Since the
+/// return type is not specified as an argument, you must always specify it as
+/// a template parameter.
+///
+/// \code{.cpp}
+/// vtkm::internal::FunctionInterface<void(int,double,char)> functionInterface =
+///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
+/// \endcode
+///
+/// The number of parameters can be retrieved either with the constant field
+/// \c ARITY or with the \c GetArity method.
+///
+/// \code{.cpp}
+/// functionInterface.GetArity();
+/// \endcode
+///
+/// You can get a particular parameter using the templated method \c
+/// GetParameter. The template parameter is the index of the parameter
+/// (starting at 1). Note that if the \c FunctionInterface is used in a
+/// templated function or method where the type is not fully resolved, you need
+/// to use the \c template keyword. One of the two forms should work. Try
+/// switching if you get a compiler error.
+///
+/// \code{.cpp}
+/// // Use this form if functionInterface is a fully resolved type.
+/// functionInterface.GetParameter<1>();
+///
+/// // Use this form if functionInterface is partially specified.
+/// functionInterface.template GetParameter<1>();
+/// \endcode
+///
+/// Likewise, there is a \c SetParameter method for changing parameters. The
+/// same rules for indexing and template specification apply.
+///
+/// \code{.cpp}
+/// // Use this form if functionInterface is a fully resolved type.
+/// functionInterface.SetParameter<1>(100);
+///
+/// // Use this form if functionInterface is partially specified.
+/// functionInterface.template SetParameter<1>(100);
+/// \endcode
+///
+/// \c FunctionInterface can invoke a functor of a matching signature using the
+/// parameters stored within. If the functor returns a value, that return value
+/// will be stored in the \c FunctionInterface object for later retrieval.
+/// There are several versions of the invoke method including those for the
+/// control and execution environments as well as methods that allow
+/// transformation of the parameters and return value. See the method document
+/// for more details.
+///
+/// \code{.cpp}
+/// functionInterface.InvokeCont(Functor());
+/// \endcode
+///
+/// Once a functor has been invoked, the return value can be retrieved with the
+/// \c GetReturnValue method. \c GetReturnValue should only be used if the
+/// function signature has a non-void return value. Otherwise calling this
+/// method will result in a compile error.
+///
+/// \code{.cpp}
+/// functionInterface.GetReturnValue();
+/// \endcode
+///
+/// Providing the appropriate template specification to specialize when there
+/// is no return value can be done but can be tricky. To make it easier, \c
+/// FunctionInterface also has a \c GetReturnValueSafe method that provides the
+/// return value wrapped in a \c FunctionInterfaceReturnContainer structure.
+/// This will work regardless of whether the return value exists (although this
+/// container might be empty). Specializing on the type of \c
+/// FunctionInterfaceReturnContainer is much easier.
+///
+/// \code{.cpp}
+/// functionInterface.GetReturnValueSafe();
+/// \endcode
+///
+/// \c FunctionInterface also provides several methods for modifying the
+/// parameters. First, the \c Append method tacks an additional parameter to
+/// the end of the function signature.
+///
+/// \code{.cpp}
+/// functionInterface.Append<std::string>(std::string("New Arg"));
+/// \endcode
+///
+/// Next, the \c Replace method removes a parameter at a particular position
+/// and replaces it with another object of a different type.
+///
+/// \code{.cpp}
+/// functionInterface.Replace<1>(std::string("new first argument"));
+/// \endcode
+///
+/// Finally, there are a couple of ways to replace all of the parameters at
+/// once. The \c StaticTransform methods take a transform functor that modifies
+/// each of the parameters. The \c DynamicTransform methods similarly take a
+/// transform functor, but is called in a different way to defer the type
+/// resolution to run time. See the documentation for each of these methods for
+/// details on how they are used.
+///
 template<typename FunctionSignature>
 class FunctionInterface
 {
@@ -1012,6 +1146,25 @@ private:
 };
 
 } // namespace detail
+
+#ifdef VTKM_DOXYGEN_ONLY
+/// \brief Create a \c FunctionInterface
+///
+/// \c make_FunctionInterface is a function that takes a variable number of
+/// arguments and returns a \c FunctionInterface object containing these
+/// objects. Since the return type for the function signature is not specified,
+/// you must always specify it as a template parameter
+///
+/// \code{.cpp}
+/// vtkm::internal::FunctionInterface<void(int,double,char)> functionInterface =
+///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
+/// \endcode
+///
+template<typename P0, typename... P>
+VTKM_EXEC_CONT_EXPORT
+vtkm::internal::FunctionInterface<P0(P...)>
+make_FunctionInterface(P... parameters);
+#endif //VTKM_DOXYGEN_ONLY
 
 // The following code uses the Boost preprocessor utilities to create
 // definitions of make_FunctionInterface for all supported number of arguments.
