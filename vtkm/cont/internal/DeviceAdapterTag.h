@@ -27,8 +27,8 @@
 
 #include <boost/static_assert.hpp>
 
-#define VTKM_DEVICE_ADAPTER_ERROR     -1
-#define VTKM_DEVICE_ADAPTER_UNDEFINED  0
+#define VTKM_DEVICE_ADAPTER_ERROR     -2
+#define VTKM_DEVICE_ADAPTER_UNDEFINED -1
 #define VTKM_DEVICE_ADAPTER_SERIAL     1
 
 #ifndef VTKM_DEVICE_ADAPTER

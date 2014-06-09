@@ -20,8 +20,8 @@
 #ifndef vtk_m_cont__ArrayContainerControl_h
 #define vtk_m_cont__ArrayContainerControl_h
 
-#define VTKM_ARRAY_CONTAINER_CONTROL_ERROR      -1
-#define VTKM_ARRAY_CONTAINER_CONTROL_UNDEFINED   0
+#define VTKM_ARRAY_CONTAINER_CONTROL_ERROR      -2
+#define VTKM_ARRAY_CONTAINER_CONTROL_UNDEFINED  -1
 #define VTKM_ARRAY_CONTAINER_CONTROL_BASIC       1
 
 #ifndef VTKM_ARRAY_CONTAINER_CONTROL
