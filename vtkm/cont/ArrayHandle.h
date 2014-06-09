@@ -30,16 +30,35 @@
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <boost/concept_check.hpp>
+#include <boost/mpl/not.hpp>
 #include <boost/smart_ptr/scoped_ptr.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/type_traits/is_base_of.hpp>
 
 #include <vector>
 
 namespace vtkm {
 namespace cont {
 
-// Forward declaration
-namespace internal { class ArrayHandleAccess; }
+namespace internal {
+
+/// Checks to see if the given type and container can form a valid array handle
+/// (some containers cannot support all types). This check is compatable with
+/// the Boost meta-template programming library (MPL). It contains a typedef
+/// named type that is either boost::mpl::true_ or boost::mpl::false_. Both of
+/// these have a typedef named value with the respective boolean value.
+///
+template<typename T, typename ArrayContainerControlTag>
+struct IsValidArrayHandle {
+  typedef typename boost::mpl::not_<
+    typename boost::is_base_of<
+      vtkm::cont::internal::UndefinedArrayContainerControl,
+      vtkm::cont::internal::ArrayContainerControl<T,ArrayContainerControlTag>
+      >::type
+    >::type type;
+};
+
+} // namespace internal
 
 /// \brief Manages an array-worth of data.
 ///

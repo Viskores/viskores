@@ -241,6 +241,116 @@ struct copy_vector<3>
   }
 };
 
+template<int Size>
+struct sum_vector
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT
+  typename T::ComponentType operator()(const T &x)
+  {
+    return sum_vector<Size-1>()(x) + x[Size-1];
+  }
+};
+
+template<>
+struct sum_vector<1>
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT
+  typename T::ComponentType operator()(const T &x)
+  {
+    return x[0];
+  }
+};
+
+template<>
+struct sum_vector<2>
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT
+  typename T::ComponentType operator()(const T &x)
+  {
+    return x[0] + x[1];
+  }
+};
+
+template<>
+struct sum_vector<3>
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT
+  typename T::ComponentType operator()(const T &x)
+  {
+    return x[0] + x[1] + x[2];
+  }
+};
+
+template<>
+struct sum_vector<4>
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT
+  typename T::ComponentType operator()(const T &x)
+  {
+    return x[0] + x[1] + x[2] + x[3];
+  }
+};
+
+template<int Size>
+struct product_vector
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT
+  typename T::ComponentType operator()(const T &x)
+  {
+    return product_vector<Size-1>()(x) * x[Size-1];
+  }
+};
+
+template<>
+struct product_vector<1>
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT
+  typename T::ComponentType operator()(const T &x)
+  {
+    return x[0];
+  }
+};
+
+template<>
+struct product_vector<2>
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT
+  typename T::ComponentType operator()(const T &x)
+  {
+    return x[0] * x[1];
+  }
+};
+
+template<>
+struct product_vector<3>
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT
+  typename T::ComponentType operator()(const T &x)
+  {
+    return x[0] * x[1] * x[2];
+  }
+};
+
+template<>
+struct product_vector<4>
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT
+  typename T::ComponentType operator()(const T &x)
+  {
+    return x[0] * x[1] * x[2] * x[3];
+  }
+};
+
 
 } // namespace internal
 

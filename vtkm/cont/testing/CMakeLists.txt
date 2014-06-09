@@ -29,11 +29,17 @@ set(unit_tests
   UnitTestArrayContainerControlBasic.cxx
   UnitTestArrayContainerControlImplicit.cxx
   UnitTestArrayHandle.cxx
+  UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
+  UnitTestArrayHandleUniformPointCoordinates.cxx
+  UnitTestContainerListTag.cxx
   UnitTestContTesting.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDeviceAdapterSerial.cxx
+  UnitTestDynamicArrayHandle.cxx
+  UnitTestDynamicPointCoordinates.cxx
+  UnitTestPointCoordinates.cxx
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})

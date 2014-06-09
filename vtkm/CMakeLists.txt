@@ -21,6 +21,9 @@
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(headers
+  Extent.h
+  ListTag.h
+  TypeListTag.h
   Types.h
   TypeTraits.h
   VectorTraits.h

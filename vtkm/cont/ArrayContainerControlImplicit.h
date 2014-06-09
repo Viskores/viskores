@@ -105,6 +105,28 @@ public:
   }
 };
 
+//// If you are using this specalization of ArrayContainerControl, it means the
+//// type of an ArrayHandle does not match the type of the array portal for the
+//// array portal in an implicit array. Currently this use is invalid, but there
+//// could be a case for implementing casting where appropriate.
+//template<typename T, typename ArrayPortalType>
+//class ArrayContainerControl<T, ArrayContainerControlTagImplicit<ArrayPortalType> >
+//{
+//public:
+//  // This is meant to be invalid because this class should not actually be used.
+//  struct PortalType
+//  {
+//    typedef void *ValueType;
+//    typedef void *IteratorType;
+//  };
+//  // This is meant to be invalid because this class should not actually be used.
+//  struct PortalConstType
+//  {
+//    typedef void *ValueType;
+//    typedef void *IteratorType;
+//  };
+//};
+
 template<typename T, class ArrayPortalType, class DeviceAdapterTag>
 class ArrayTransfer<
     T, ArrayContainerControlTagImplicit<ArrayPortalType>, DeviceAdapterTag>

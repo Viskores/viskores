@@ -22,6 +22,7 @@ set(headers
   ConfigureFor32.h
   ConfigureFor64.h
   ExportMacros.h
+  FunctionInterface.h
   )
 
 vtkm_declare_headers(${headers})

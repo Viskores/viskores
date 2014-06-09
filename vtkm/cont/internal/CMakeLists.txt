@@ -32,7 +32,10 @@ set(headers
   DeviceAdapterError.h
   DeviceAdapterTag.h
   DeviceAdapterTagSerial.h
+  DynamicTransform.h
   IteratorFromArrayPortal.h
+  PointCoordinatesBase.h
+  SimplePolymorphicContainer.h
   )
 
 vtkm_declare_headers(${headers})

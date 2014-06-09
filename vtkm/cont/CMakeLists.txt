@@ -25,10 +25,16 @@ set(headers
   ArrayContainerControlBasic.h
   ArrayContainerControlImplicit.h
   ArrayHandle.h
+  ArrayHandleCompositeVector.h
+  ArrayHandleCounting.h
+  ArrayHandleUniformPointCoordinates.h
   ArrayPortal.h
   Assert.h
+  ContainerListTag.h
   DeviceAdapter.h
   DeviceAdapterSerial.h
+  DynamicArrayHandle.h
+  DynamicPointCoordinates.h
   Error.h
   ErrorControl.h
   ErrorControlAssert.h
@@ -36,6 +42,9 @@ set(headers
   ErrorControlInternal.h
   ErrorControlOutOfMemory.h
   ErrorExecution.h
+  PointCoordinatesArray.h
+  PointCoordinatesListTag.h
+  PointCoordinatesUniform.h
   )
 
 #-----------------------------------------------------------------------------
