@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_exec_internal_ErrorMessageBuffer_h
-#define vtkm_exec_internal_ErrorMessageBuffer_h
+#ifndef vtk_m_exec_internal_ErrorMessageBuffer_h
+#define vtk_m_exec_internal_ErrorMessageBuffer_h
 
 #include <vtkm/Types.h>
 
@@ -91,4 +91,4 @@ private:
 }
 } // namespace vtkm::exec::internal
 
-#endif // vtkm_exec_internal_ErrorMessageBuffer_h
+#endif // vtk_m_exec_internal_ErrorMessageBuffer_h
