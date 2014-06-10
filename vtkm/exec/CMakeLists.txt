@@ -18,25 +18,14 @@
 ##  this software.
 ##============================================================================
 
-include_directories(${Boost_INCLUDE_DIRS})
-
 set(headers
-  Extent.h
-  ListTag.h
-  TypeListTag.h
-  Types.h
-  TypeTraits.h
-  VectorTraits.h
   )
 
-vtkm_declare_headers(${headers})
-
 #-----------------------------------------------------------------------------
-#first add all the components vtkm that are shared between control and exec
-add_subdirectory(testing)
 add_subdirectory(internal)
 
+vtkm_declare_headers(${impl_headers} ${headers})
+
+
 #-----------------------------------------------------------------------------
-#add the control and exec folders
-add_subdirectory(cont)
-add_subdirectory(exec)
+# add_subdirectory(testing)
