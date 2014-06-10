@@ -52,17 +52,17 @@ struct Extent
     this->Max = rhs.Max;
     return *this;
   }
-} __attribute__ ((aligned(VTKM_SIZE_ID)));
+};
 
 /// This is the Extent to use for structured grids with 3 topological
 /// dimensions.
 ///
-typedef vtkm::Extent<3> Extent3 __attribute__ ((aligned(VTKM_SIZE_ID)));
+typedef vtkm::Extent<3> Extent3;
 
 /// This is the Extent to use for structured grids with 2 topological
 /// dimensions.
 ///
-typedef vtkm::Extent<2> Extent2 __attribute__ ((aligned(VTKM_SIZE_ID)));
+typedef vtkm::Extent<2> Extent2;
 
 /// Given an extent, returns the array dimensions for the points.
 ///
