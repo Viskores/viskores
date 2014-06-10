@@ -363,7 +363,7 @@ private:
     vtkm::Scalar inputArray[ARRAY_SIZE*2];
     for (vtkm::Id index = 0; index < ARRAY_SIZE*2; index++)
     {
-      inputArray[index] = index;
+      inputArray[index] = vtkm::Scalar(index);
     }
     ::vtkm::cont::internal::ArrayPortalFromIterators<vtkm::Scalar *>
         inputPortal(inputArray, inputArray+ARRAY_SIZE*2);
@@ -465,7 +465,7 @@ private:
 
       for (vtkm::Id index = 0; index < 1; index++)
       {
-        vtkm::Scalar value = container.GetPortalConst().Get(index);
+        vtkm::Id value = container.GetPortalConst().Get(index);
         VTKM_TEST_ASSERT(value == index + OFFSET,
                          "Got bad value for single value scheduled kernel.");
       }
@@ -505,7 +505,7 @@ private:
       std::cout << "Allocating execution array" << std::endl;
       IdContainer container;
       IdArrayManagerExecution manager;
-      vtkm::Id DIM_SIZE = std::pow(ARRAY_SIZE, 1/3.0f);
+      vtkm::Id DIM_SIZE = vtkm::Id(std::pow(ARRAY_SIZE, 1/3.0f));
       manager.AllocateArrayForOutput(container,
                                      DIM_SIZE * DIM_SIZE * DIM_SIZE);
       vtkm::Id3 maxRange(DIM_SIZE);

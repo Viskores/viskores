@@ -305,8 +305,8 @@ VTKM_EXEC_CONT_EXPORT bool test_equal(VectorType vector1,
   typedef typename vtkm::VectorTraits<VectorType> Traits;
   for (int component = 0; component < Traits::NUM_COMPONENTS; component++)
   {
-    vtkm::Scalar value1 = Traits::GetComponent(vector1, component);
-    vtkm::Scalar value2 = Traits::GetComponent(vector2, component);
+    vtkm::Scalar value1 = vtkm::Scalar(Traits::GetComponent(vector1, component));
+    vtkm::Scalar value2 = vtkm::Scalar(Traits::GetComponent(vector2, component));
     if ((fabs(value1) < 2*tolerance) && (fabs(value2) < 2*tolerance))
     {
       continue;

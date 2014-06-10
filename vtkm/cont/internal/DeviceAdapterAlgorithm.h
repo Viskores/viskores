@@ -352,9 +352,10 @@ public:
     TimeStamp currentTime = this->GetCurrentTime();
 
     vtkm::Scalar elapsedTime;
-    elapsedTime = currentTime.Seconds - this->StartTime.Seconds;
-    elapsedTime += ((currentTime.Microseconds - this->StartTime.Microseconds)
-                    /vtkm::Scalar(1000000));
+    elapsedTime = vtkm::Scalar(currentTime.Seconds - this->StartTime.Seconds);
+    elapsedTime += 
+      (vtkm::Scalar(currentTime.Microseconds - this->StartTime.Microseconds)
+       /vtkm::Scalar(1000000));
 
     return elapsedTime;
   }

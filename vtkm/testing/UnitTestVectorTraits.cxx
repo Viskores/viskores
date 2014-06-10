@@ -31,12 +31,13 @@ struct TestVectorTypeFunctor
   template <typename T> void operator()(const T&) const
   {
     typedef vtkm::VectorTraits<T> Traits;
+    typedef typename Traits::ComponentType ComponentType;
     VTKM_TEST_ASSERT(Traits::NUM_COMPONENTS <= MAX_VECTOR_SIZE,
                      "Need to update test for larger vectors.");
     T vector;
     for (int index = 0; index < Traits::NUM_COMPONENTS; index++)
     {
-      Traits::SetComponent(vector, index, VectorInit[index]);
+      Traits::SetComponent(vector, index, ComponentType(VectorInit[index]));
     }
     vtkm::testing::TestVectorType(vector);
   }

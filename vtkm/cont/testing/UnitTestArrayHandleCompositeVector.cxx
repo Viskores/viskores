@@ -278,9 +278,9 @@ void TestBadArrayLengths() {
   std::cout << "Checking behavior when size of input arrays do not agree."
             << std::endl;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, Container> InArrayType;
-  InArrayType longInArray = MakeInputArray<vtkm::Id>(0);
-  InArrayType shortInArray = MakeInputArray<vtkm::Id>(1);
+  typedef vtkm::cont::ArrayHandle<vtkm::Scalar, Container> InArrayType;
+  InArrayType longInArray = MakeInputArray<vtkm::Scalar>(0);
+  InArrayType shortInArray = MakeInputArray<vtkm::Scalar>(1);
   shortInArray.Shrink(ARRAY_SIZE/2);
 
   try

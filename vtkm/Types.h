@@ -494,18 +494,18 @@ public:
     return *this;
   }
 
-  VTKM_EXEC_CONT_EXPORT ComponentType operator[](int idx) const
+  VTKM_EXEC_CONT_EXPORT ComponentType operator[](int vtkmNotUsed(idx)) const
   {
     return ComponentType();
   }
 
   VTKM_EXEC_CONT_EXPORT
-  bool operator==(const Tuple<T, NUM_COMPONENTS> &other) const
+  bool operator==(const Tuple<T, NUM_COMPONENTS> &vtkmNotUsed(other)) const
   {
     return true;
   }
   VTKM_EXEC_CONT_EXPORT
-    bool operator!=(const Tuple<T, NUM_COMPONENTS> &other) const
+  bool operator!=(const Tuple<T, NUM_COMPONENTS> &vtkmNotUsed(other)) const
   {
       return false;
   }
@@ -535,11 +535,13 @@ public:
     return *this;
   }
 
-  VTKM_EXEC_CONT_EXPORT const ComponentType &operator[](int idx) const
+  VTKM_EXEC_CONT_EXPORT
+  const ComponentType &operator[](int vtkmNotUsed(idx)) const
   {
     return this->Component;
   }
-  VTKM_EXEC_CONT_EXPORT ComponentType &operator[](int idx)
+  VTKM_EXEC_CONT_EXPORT
+  ComponentType &operator[](int vtkmNotUsed(idx))
   {
     return this->Component;
   }
