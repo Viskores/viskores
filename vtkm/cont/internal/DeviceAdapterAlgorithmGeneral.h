@@ -24,8 +24,9 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayContainerControlBasic.h>
 
+#include <vtkm/exec/FunctorBase.h>
+
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
-#include <vtkm/exec/internal/WorkletBase.h>
 
 #include <algorithm>
 
@@ -392,7 +393,7 @@ public:
   // Scan Inclusive
 private:
   template<typename PortalType>
-  struct ScanKernel : vtkm::exec::internal::WorkletBase
+  struct ScanKernel : vtkm::exec::FunctorBase
   {
     PortalType Portal;
     vtkm::Id Stride;
@@ -465,7 +466,7 @@ public:
   // Sort
 private:
   template<typename PortalType, typename CompareType>
-  struct BitonicSortMergeKernel : vtkm::exec::internal::WorkletBase
+  struct BitonicSortMergeKernel : vtkm::exec::FunctorBase
   {
     PortalType Portal;
     CompareType Compare;
@@ -503,7 +504,7 @@ private:
   };
 
   template<typename PortalType, typename CompareType>
-  struct BitonicSortCrossoverKernel : vtkm::exec::internal::WorkletBase
+  struct BitonicSortCrossoverKernel : vtkm::exec::FunctorBase
   {
     PortalType Portal;
     CompareType Compare;
