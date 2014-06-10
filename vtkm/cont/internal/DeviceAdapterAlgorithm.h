@@ -25,7 +25,10 @@
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <sys/timeb.h>
+#include <sys/types.h>
+#else //!_WIN32
 #include <limits.h>
 #include <sys/time.h>
 #include <unistd.h>
