@@ -20,72 +20,14 @@
 
 #include <vtkm/internal/FunctionInterface.h>
 
+#include <vtkm/cont/Timer.h>
+
 #include <vtkm/testing/Testing.h>
 
 #include <sstream>
 #include <string>
 
-#ifndef _WIN32
-#include <limits.h>
-#include <sys/time.h>
-#include <unistd.h>
-#endif
-
 namespace {
-
-// TODO: Once device adapters are implemented and contain timers, this class
-// should be removed and replaced with that. Also remove the inclusion of
-// limits.h, sys/time.h, and unistd.h.
-class Timer
-{
-public:
-  VTKM_CONT_EXPORT Timer()
-  {
-    this->Reset();
-  }
-
-  VTKM_CONT_EXPORT void Reset()
-  {
-    this->StartTime = this->GetCurrentTime();
-  }
-
-  VTKM_CONT_EXPORT vtkm::Scalar GetElapsedTime()
-  {
-    TimeStamp currentTime = this->GetCurrentTime();
-
-    vtkm::Scalar elapsedTime;
-    elapsedTime = currentTime.Seconds - this->StartTime.Seconds;
-    elapsedTime += ((currentTime.Microseconds - this->StartTime.Microseconds)
-                    /vtkm::Scalar(1000000));
-
-    return elapsedTime;
-  }
-
-private:
-  struct TimeStamp {
-    vtkm::internal::Int64Type Seconds;
-    vtkm::internal::Int64Type Microseconds;
-  };
-  TimeStamp StartTime;
-
-  VTKM_CONT_EXPORT
-  TimeStamp GetCurrentTime()
-  {
-    TimeStamp retval;
-#ifdef _WIN32
-    timeb currentTime;
-    ::ftime(&currentTime);
-    retval.Seconds = currentTime.time;
-    retval.Microseconds = 1000*currentTime.millitm;
-#else
-    timeval currentTime;
-    gettimeofday(&currentTime, NULL);
-    retval.Seconds = currentTime.tv_sec;
-    retval.Microseconds = currentTime.tv_usec;
-#endif
-    return retval;
-  }
-};
 
 typedef vtkm::Id Type1;
 const Type1 Arg1 = 1234;
@@ -511,7 +453,7 @@ void TestInvokeTime()
   static vtkm::Id NUM_TRIALS = 50000;
   LotsOfArgsFunctor f;
 
-  Timer timer;
+  vtkm::cont::Timer<> timer;
   for (vtkm::Id trial = 0; trial < NUM_TRIALS; trial++)
   {
     f(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f);
