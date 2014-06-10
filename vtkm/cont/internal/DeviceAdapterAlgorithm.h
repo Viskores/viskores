@@ -25,7 +25,10 @@
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <sys/timeb.h>
+#include <sys/types.h>
+#else //!_WIN32
 #include <limits.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -349,9 +352,10 @@ public:
     TimeStamp currentTime = this->GetCurrentTime();
 
     vtkm::Scalar elapsedTime;
-    elapsedTime = currentTime.Seconds - this->StartTime.Seconds;
-    elapsedTime += ((currentTime.Microseconds - this->StartTime.Microseconds)
-                    /vtkm::Scalar(1000000));
+    elapsedTime = vtkm::Scalar(currentTime.Seconds - this->StartTime.Seconds);
+    elapsedTime += 
+      (vtkm::Scalar(currentTime.Microseconds - this->StartTime.Microseconds)
+       /vtkm::Scalar(1000000));
 
     return elapsedTime;
   }

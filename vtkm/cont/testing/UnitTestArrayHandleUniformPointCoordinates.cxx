@@ -30,7 +30,7 @@ const vtkm::Id3 POINT_DIMS(16, 18,  5);
 const vtkm::Id NUM_POINTS = 1440;
 
 const vtkm::Vector3 ORIGIN(30, -3, -14);
-const vtkm::Vector3 SPACING(10, 1, 0.1);
+const vtkm::Vector3 SPACING(10, 1, 0.1f);
 const vtkm::Vector3 LOWER_LEFT(-20, 5, -10); // MIN_VALUES*SPACING + ORIGIN
 
 void TestArrayHandleUniformPointCoordinates()

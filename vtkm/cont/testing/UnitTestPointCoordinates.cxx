@@ -55,7 +55,9 @@ struct ContainerListTag : vtkm::cont::ContainerListTagBasic {  };
 vtkm::Vector3 TestValue(vtkm::Id index)
 {
   vtkm::Id3 index3d = vtkm::ExtentPointFlatIndexToTopologyIndex(index, EXTENT);
-  return vtkm::Vector3(index3d[0], index3d[1], index3d[2]);
+  return vtkm::Vector3(vtkm::Scalar(index3d[0]),
+                       vtkm::Scalar(index3d[1]),
+                       vtkm::Scalar(index3d[2]));
 }
 
 struct CheckArray

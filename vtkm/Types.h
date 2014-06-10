@@ -471,6 +471,103 @@ protected:
 };
 
 //-----------------------------------------------------------------------------
+// Specializations for small tuples. These are not exactly common but can occur
+// with generalizations. We implement them a bit special.
+
+template<typename T>
+class Tuple<T, 0>
+{
+public:
+  typedef T ComponentType;
+  static const int NUM_COMPONENTS = 1;
+
+  VTKM_EXEC_CONT_EXPORT Tuple() {}
+  VTKM_EXEC_CONT_EXPORT explicit Tuple(const ComponentType&) {  }
+  VTKM_EXEC_CONT_EXPORT explicit Tuple(const ComponentType*) {  }
+  VTKM_EXEC_CONT_EXPORT
+  Tuple(const Tuple<ComponentType, NUM_COMPONENTS> &) {  }
+
+  VTKM_EXEC_CONT_EXPORT
+  Tuple<ComponentType, NUM_COMPONENTS> &
+  operator=(const Tuple<ComponentType, NUM_COMPONENTS> &)
+  {
+    return *this;
+  }
+
+  VTKM_EXEC_CONT_EXPORT ComponentType operator[](int vtkmNotUsed(idx)) const
+  {
+    return ComponentType();
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  bool operator==(const Tuple<T, NUM_COMPONENTS> &vtkmNotUsed(other)) const
+  {
+    return true;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  bool operator!=(const Tuple<T, NUM_COMPONENTS> &vtkmNotUsed(other)) const
+  {
+      return false;
+  }
+};
+
+template<typename T>
+class Tuple<T, 1>
+{
+public:
+  typedef T ComponentType;
+  static const int NUM_COMPONENTS = 1;
+
+  VTKM_EXEC_CONT_EXPORT Tuple() {}
+  VTKM_EXEC_CONT_EXPORT explicit Tuple(const ComponentType& value)
+    : Component(value) {  }
+  VTKM_EXEC_CONT_EXPORT explicit Tuple(const ComponentType* values)
+    : Component(*values) {  }
+  VTKM_EXEC_CONT_EXPORT
+  Tuple(const Tuple<ComponentType, NUM_COMPONENTS> &src)
+    : Component(src.Component) {  }
+
+  VTKM_EXEC_CONT_EXPORT
+  Tuple<ComponentType, NUM_COMPONENTS> &
+  operator=(const Tuple<ComponentType, NUM_COMPONENTS> &src)
+  {
+    this->Component = src.Component;
+    return *this;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  const ComponentType &operator[](int vtkmNotUsed(idx)) const
+  {
+    return this->Component;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  ComponentType &operator[](int vtkmNotUsed(idx))
+  {
+    return this->Component;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  bool operator==(const Tuple<T, NUM_COMPONENTS> &other) const
+  {
+    return this->Component == other.Component;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  bool operator!=(const Tuple<T, NUM_COMPONENTS> &other) const
+  {
+    return !(this->operator==(other));
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  bool operator<(const Tuple<T, NUM_COMPONENTS> &other) const
+  {
+    return this->Component < other.Component;
+  }
+
+protected:
+  ComponentType Component;
+};
+
+//-----------------------------------------------------------------------------
 // Specializations for common tuple sizes (with special names).
 
 template<typename T>

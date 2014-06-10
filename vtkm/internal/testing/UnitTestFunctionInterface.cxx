@@ -39,7 +39,7 @@ typedef std::string Type3;
 const Type3 Arg3("Third argument");
 
 typedef vtkm::Vector3 Type4;
-const Type4 Arg4(1.2, 3.4, 5.6);
+const Type4 Arg4(1.2f, 3.4f, 5.6f);
 
 typedef vtkm::Id3 Type5;
 const Type5 Arg5(4, 5, 6);
