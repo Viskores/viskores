@@ -40,6 +40,7 @@ set(unit_tests
   UnitTestDynamicArrayHandle.cxx
   UnitTestDynamicPointCoordinates.cxx
   UnitTestPointCoordinates.cxx
+  UnitTestTimer.cxx
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})

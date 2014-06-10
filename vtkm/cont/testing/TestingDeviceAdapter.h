@@ -24,6 +24,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorControlOutOfMemory.h>
 #include <vtkm/cont/ErrorExecution.h>
+#include <vtkm/cont/Timer.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/cont/internal/DeviceAdapterError.h>
@@ -418,28 +419,29 @@ private:
 #endif
   }
 
-  //   VTKM_CONT_EXPORT static void TestTimer()
-  //   {
-  //     std::cout << "-------------------------------------------" << std::endl;
-  //     std::cout << "Testing Timer" << std::endl;
+  VTKM_CONT_EXPORT
+  static void TestTimer()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Timer" << std::endl;
 
-  //     vtkm::cont::Timer<DeviceAdapterTag> timer;
+    vtkm::cont::Timer<DeviceAdapterTag> timer;
 
-  // #ifndef _WIN32
-  //     sleep(1);
-  // #else
-  //     Sleep(1000);
-  // #endif
+#ifndef _WIN32
+    sleep(1);
+#else
+    Sleep(1000);
+#endif
 
-  //     vtkm::Scalar elapsedTime = timer.GetElapsedTime();
+    vtkm::Scalar elapsedTime = timer.GetElapsedTime();
 
-  //     std::cout << "Elapsed time: " << elapsedTime << std::endl;
+    std::cout << "Elapsed time: " << elapsedTime << std::endl;
 
-  //     VTKM_TEST_ASSERT(elapsedTime > 0.999,
-  //                     "Timer did not capture full second wait.");
-  //     VTKM_TEST_ASSERT(elapsedTime < 2.0,
-  //                     "Timer counted too far or system really busy.");
-  //   }
+    VTKM_TEST_ASSERT(elapsedTime > 0.999,
+                     "Timer did not capture full second wait.");
+    VTKM_TEST_ASSERT(elapsedTime < 2.0,
+                     "Timer counted too far or system really busy.");
+  }
 
   static VTKM_CONT_EXPORT void TestAlgorithmSchedule()
   {
@@ -1282,7 +1284,7 @@ private:
       std::cout << "Doing DeviceAdapter tests" << std::endl;
       TestArrayManagerExecution();
       TestOutOfMemory();
-      // TestTimer();
+      TestTimer();
 
       TestAlgorithmSchedule();
       TestErrorExecution();

@@ -45,6 +45,7 @@ set(headers
   PointCoordinatesArray.h
   PointCoordinatesListTag.h
   PointCoordinatesUniform.h
+  Timer.h
   )
 
 #-----------------------------------------------------------------------------
