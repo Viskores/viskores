@@ -64,6 +64,13 @@ struct TemplatedTests
                       value);
   }
 
+  bool CheckManager(ArrayManagerType &manager, const ValueType &value)
+  {
+    return CheckArray(manager.GetPortalConst().GetIteratorBegin(),
+                      manager.GetPortalConst().GetIteratorEnd(),
+                      value);
+  }
+
   void InputData()
   {
     const ValueType INPUT_VALUE(4145);
@@ -83,10 +90,7 @@ struct TemplatedTests
           executionArray.GetPortalConst().GetIteratorBegin(),
           "Execution array manager not holding control array iterators.");
 
-    std::vector<ValueType> copyBack(ARRAY_SIZE);
-    executionArray.CopyInto(copyBack.begin());
-
-    VTKM_TEST_ASSERT(CheckArray(copyBack.begin(), copyBack.end(), INPUT_VALUE),
+    VTKM_TEST_ASSERT(CheckManager(executionArray, INPUT_VALUE),
                      "Did not get correct array back.");
   }
 
@@ -113,10 +117,7 @@ struct TemplatedTests
           executionArray.GetPortalConst().GetIteratorBegin(),
           "Execution array manager not holding control array iterators.");
 
-    std::vector<ValueType> copyBack(ARRAY_SIZE);
-    executionArray.CopyInto(copyBack.begin());
-
-    VTKM_TEST_ASSERT(CheckArray(copyBack.begin(), copyBack.end(), INPUT_VALUE),
+    VTKM_TEST_ASSERT(CheckManager(executionArray, INPUT_VALUE),
                      "Did not get correct array back.");
   }
 
@@ -133,10 +134,7 @@ struct TemplatedTests
               executionArray.GetPortal().GetIteratorEnd(),
               OUTPUT_VALUE);
 
-    std::vector<ValueType> copyBack(ARRAY_SIZE);
-    executionArray.CopyInto(copyBack.begin());
-
-    VTKM_TEST_ASSERT(CheckArray(copyBack.begin(), copyBack.end(), OUTPUT_VALUE),
+    VTKM_TEST_ASSERT(CheckManager(executionArray, OUTPUT_VALUE),
                      "Did not get correct array back.");
 
     executionArray.RetrieveOutputData(controlArray);

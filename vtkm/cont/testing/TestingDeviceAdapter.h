@@ -31,9 +31,10 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+#include <algorithm>
+#include <cmath>
 #include <utility>
 #include <vector>
-#include <cmath>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -376,7 +377,9 @@ private:
 
     // Copy array back.
     vtkm::Scalar outputArray[ARRAY_SIZE];
-    inputManager.CopyInto(outputArray);
+    std::copy(inputManager.GetPortalConst().GetIteratorBegin(),
+              inputManager.GetPortalConst().GetIteratorEnd(),
+              outputArray);
 
     // Check array.
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
