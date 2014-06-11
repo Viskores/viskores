@@ -60,4 +60,4 @@ private:
 }
 } // namespace vtkm::cont
 
-#endif //vtkm_cont_Error_h
+#endif //vtk_m_cont_Error_h

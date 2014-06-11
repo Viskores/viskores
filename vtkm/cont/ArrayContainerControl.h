@@ -187,4 +187,4 @@ public:
 
 #endif
 
-#endif //vtkm_cont__ArrayContainerControl_h
+#endif //vtk_m_cont__ArrayContainerControl_h

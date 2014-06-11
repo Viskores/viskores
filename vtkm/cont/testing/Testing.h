@@ -64,4 +64,4 @@ public:
 }
 } // namespace vtkm::cont::testing
 
-#endif //vtkm_cont_internal_Testing_h
+#endif //vtk_m_cont_internal_Testing_h

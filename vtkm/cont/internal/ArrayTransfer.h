@@ -190,4 +190,4 @@ private:
 }
 } // namespace vtkm::cont::internal
 
-#endif //vtkm_cont_internal_ArrayTransfer_h
+#endif //vtk_m_cont_internal_ArrayTransfer_h

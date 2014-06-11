@@ -221,4 +221,4 @@ VTKM_BASIC_TYPE_VECTOR(unsigned long long);
 
 }
 
-#endif //vtkm_VectorTraits_h
+#endif //vtk_m_VectorTraits_h

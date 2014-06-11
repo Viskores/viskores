@@ -556,4 +556,4 @@ make_ArrayHandle(const std::vector<T,Allocator> &array)
 }
 }
 
-#endif //vtkm_cont_ArrayHandle_h
+#endif //vtk_m_cont_ArrayHandle_h

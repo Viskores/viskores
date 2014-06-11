@@ -61,4 +61,4 @@ VTKM_CONT_EXPORT void Assert(bool condition,
 }
 } // namespace vtkm::cont
 
-#endif //vtkm_cont_Assert_h
+#endif //vtk_m_cont_Assert_h

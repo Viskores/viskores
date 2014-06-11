@@ -24,4 +24,4 @@
 
 VTKM_CREATE_DEVICE_ADAPTER(Serial);
 
-#endif //vtkm_cont_internal_DeviceAdapterTagSerial_h
+#endif //vtk_m_cont_internal_DeviceAdapterTagSerial_h

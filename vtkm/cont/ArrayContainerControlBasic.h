@@ -181,4 +181,4 @@ private:
 }
 } // namespace vtkm::cont
 
-#endif //vtkm_cont__ArrayContainerControlBasic_h
+#endif //vtk_m_cont__ArrayContainerControlBasic_h

@@ -1328,4 +1328,4 @@ public:
 }
 } // namespace vtkm::cont::testing
 
-#endif //vtkm_cont_testing_TestingDeviceAdapter_h
+#endif //vtk_m_cont_testing_TestingDeviceAdapter_h

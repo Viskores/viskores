@@ -33,7 +33,7 @@
 // Try to enforce using the correct testing version. (Those that include the
 // control environment have more possible exceptions.) This is not guaranteed
 // to work. To make it more likely, place the Testing.h include last.
-#ifdef vtkm_cont_Error_h
+#ifdef vtk_m_cont_Error_h
 #ifndef vtk_m_cont_testing_Testing_h
 #error Use vtkm::cont::testing::Testing instead of vtkm::testing::Testing.
 #else
@@ -342,4 +342,4 @@ std::ostream &operator<<(std::ostream &stream, const vtkm::Tuple<T,Size> &tuple)
   return stream << tuple[Size-1] << "]";
 }
 
-#endif //vtkm_testing_Testing_h
+#endif //vtk_m_testing_Testing_h

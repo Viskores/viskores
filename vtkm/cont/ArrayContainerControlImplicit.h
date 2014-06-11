@@ -222,4 +222,4 @@ private:
 }
 } // namespace vtkm::cont
 
-#endif //vtkm_cont_ArrayContainerControlImplicit
+#endif //vtk_m_cont_ArrayContainerControlImplicit

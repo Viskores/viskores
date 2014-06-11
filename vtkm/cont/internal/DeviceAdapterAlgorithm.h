@@ -406,4 +406,4 @@ public:
 // #include <vtkm/tbb/cont/internal/DeviceAdapterAlgorithmTBB.h>
 #endif
 
-#endif //vtkm_cont_DeviceAdapterAlgorithm_h
+#endif //vtk_m_cont_DeviceAdapterAlgorithm_h

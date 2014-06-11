@@ -38,4 +38,4 @@ public:
 }
 } // namespace vtkm::cont
 
-#endif //vtkm_cont_ErrorControlOutOfMemory_h
+#endif //vtk_m_cont_ErrorControlOutOfMemory_h
