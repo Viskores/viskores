@@ -75,5 +75,5 @@ void TestLists()
 
 int UnitTestContainerListTag(int, char *[])
 {
-  return vtkm::testing::Testing::Run(TestLists);
+  return vtkm::cont::testing::Testing::Run(TestLists);
 }
