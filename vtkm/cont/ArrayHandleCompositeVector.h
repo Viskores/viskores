@@ -461,14 +461,6 @@ public:
           "Composite vector arrays cannot be used for output.");
   }
 
-  template<typename IteratorTypeControl>
-  VTKM_CONT_EXPORT
-  void CopyInto(IteratorTypeControl vtkmNotUsed(dest)) const
-  {
-    throw vtkm::cont::ErrorControlInternal(
-          "CopyInto not implemented for composite vector arrays.");
-  }
-
   VTKM_CONT_EXPORT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {

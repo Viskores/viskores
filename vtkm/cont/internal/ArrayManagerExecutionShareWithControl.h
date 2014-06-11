@@ -111,18 +111,6 @@ public:
     controlArray.Shrink(this->ConstPortal.GetNumberOfValues());
   }
 
-  /// This methods copies data from the execution array into the given
-  /// iterator.
-  ///
-  template <class IteratorTypeControl>
-  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
-  {
-    VTKM_ASSERT_CONT(this->ConstPortalValid);
-    std::copy(this->ConstPortal.GetIteratorBegin(),
-              this->ConstPortal.GetIteratorEnd(),
-              dest);
-  }
-
   /// Adjusts saved end iterators to resize array.
   ///
   VTKM_CONT_EXPORT void Shrink(vtkm::Id numberOfValues)

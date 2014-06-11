@@ -185,15 +185,6 @@ public:
           "Implicit arrays cannot be used for output.");
   }
 
-  template <class IteratorTypeControl>
-  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
-  {
-    VTKM_ASSERT_CONT(this->PortalValid);
-    std::copy(this->Portal.GetIteratorBegin(),
-              this->Portal.GetIteratorEnd(),
-              dest);
-  }
-
   VTKM_CONT_EXPORT void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays cannot be resized.");
