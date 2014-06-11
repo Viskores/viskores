@@ -53,4 +53,4 @@ private:
 }
 }
 
-#endif //vtkm_cont_ErrorControlAssert_h
+#endif //vtk_m_cont_ErrorControlAssert_h

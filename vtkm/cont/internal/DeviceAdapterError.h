@@ -29,4 +29,4 @@
 ///
 VTKM_CREATE_DEVICE_ADAPTER(Error);
 
-#endif //vtkm_cont_internal_DeviceAdapterError_h
+#endif //vtk_m_cont_internal_DeviceAdapterError_h

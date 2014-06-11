@@ -38,4 +38,4 @@ public:
 }
 } // namespace vtkm::cont
 
-#endif //vtkm_cont_ErrorControlBadValue_h
+#endif //vtk_m_cont_ErrorControlBadValue_h

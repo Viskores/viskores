@@ -169,4 +169,4 @@ public:
 // #include <vtkm/tbb/cont/internal/ArrayManagerExecutionTBB.h>
 #endif
 
-#endif //vtkm_cont_internal_ArrayManagerExecution_h
+#endif //vtk_m_cont_internal_ArrayManagerExecution_h

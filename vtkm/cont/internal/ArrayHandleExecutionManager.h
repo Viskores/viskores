@@ -284,4 +284,4 @@ private:
 }
 } // namespace vtkm::cont::internal
 
-#endif //vtkm_cont_exec_ArrayHandleExecutionManager_h
+#endif //vtk_m_cont_exec_ArrayHandleExecutionManager_h

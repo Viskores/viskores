@@ -75,4 +75,4 @@
 #endif
 #endif
 
-#endif //vtkm_internal__ExportMacros_h
+#endif //vtk_m_internal__ExportMacros_h

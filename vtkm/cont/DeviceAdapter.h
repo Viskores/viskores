@@ -70,4 +70,4 @@ namespace internal {
 } // namespace vtkm::cont
 
 
-#endif //vtkm_cont_DeviceAdapter_h
+#endif //vtk_m_cont_DeviceAdapter_h

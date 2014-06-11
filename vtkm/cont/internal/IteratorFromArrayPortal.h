@@ -193,4 +193,4 @@ void swap( vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> a,
 }
 } // namespace vtkm::cont::internal
 
-#endif //vtkm_cont_internal_IteratorFromArrayPortal_h
+#endif //vtk_m_cont_internal_IteratorFromArrayPortal_h

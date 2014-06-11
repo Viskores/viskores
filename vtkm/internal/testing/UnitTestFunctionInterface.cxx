@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/testing/Testing.h>
+#include <vtkm/cont/testing/Testing.h>
 
 #include <sstream>
 #include <string>
@@ -515,5 +515,5 @@ void TestFunctionInterface()
 
 int UnitTestFunctionInterface(int, char *[])
 {
-  return vtkm::testing::Testing::Run(TestFunctionInterface);
+  return vtkm::cont::testing::Testing::Run(TestFunctionInterface);
 }

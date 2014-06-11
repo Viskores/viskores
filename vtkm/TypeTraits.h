@@ -144,4 +144,4 @@ template<typename T, int Size> struct TypeTraits<vtkm::Tuple<T, Size> >
 
 } // namespace vtkm
 
-#endif //vtkm_TypeTraits_h
+#endif //vtk_m_TypeTraits_h

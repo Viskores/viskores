@@ -109,4 +109,4 @@ struct DeviceAdapterTagCheck
 #endif
 
 
-#endif //vtkm_cont_internal_DeviceAdapterTag_h
+#endif //vtk_m_cont_internal_DeviceAdapterTag_h

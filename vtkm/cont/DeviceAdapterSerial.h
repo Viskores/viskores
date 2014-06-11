@@ -24,4 +24,4 @@
 #include <vtkm/cont/internal/ArrayManagerExecutionSerial.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmSerial.h>
 
-#endif //vtkm_cont_DeviceAdapterSerial_h
+#endif //vtk_m_cont_DeviceAdapterSerial_h

@@ -926,4 +926,4 @@ VTKM_EXEC_CONT_EXPORT vtkm::Tuple<Tb,Size> operator*(const Ta &a,
   return result;
 }
 
-#endif //vtkm_Types_h
+#endif //vtk_m_Types_h
