@@ -87,7 +87,7 @@ public:
   }
 
 private:
-  CountingValueType StartingValue;
+  ValueType StartingValue;
   vtkm::Id NumberOfValues;
 };
 

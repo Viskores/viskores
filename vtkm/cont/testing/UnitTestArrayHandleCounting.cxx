@@ -36,16 +36,19 @@ struct CountByTwo
   explicit CountByTwo(T t): Value(t) {}
 
   bool operator==(const T& other) const
-  { return Value == other; }
+  { return this->Value == other; }
 
   bool operator==(const CountByTwo<T>& other) const
-  { return Value == other.Value; }
+  { return this->Value == other.Value; }
 
   CountByTwo<T> operator+(vtkm::Id count) const
-  { return CountByTwo<T>(Value+(count*2)); }
+  { return CountByTwo<T>(this->Value+(count*2)); }
+
+  CountByTwo<T> operator+(CountByTwo<T> count) const
+  { return CountByTwo<T>(this->Value+(2*count.Value)); }
 
   CountByTwo<T>& operator++()
-  { ++Value; ++Value; return *this; }
+  { ++this->Value; ++this->Value; return *this; }
 
   friend std::ostream& operator<< (std::ostream& os, const CountByTwo<T>& obj)
   { os << obj.Value; return os; }
