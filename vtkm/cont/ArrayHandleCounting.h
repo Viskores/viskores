@@ -69,7 +69,7 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_EXEC_CONT_EXPORT
-  ValueType Get(vtkm::Id index) const { return StartingValue+index; }
+  ValueType Get(vtkm::Id index) const { return StartingValue+ValueType(index); }
 
   typedef vtkm::cont::internal::IteratorFromArrayPortal<
           ArrayPortalCounting < CountingValueType> > IteratorType;
