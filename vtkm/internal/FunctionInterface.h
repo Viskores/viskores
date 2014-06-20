@@ -34,6 +34,7 @@
 #include <boost/mpl/begin.hpp>
 #include <boost/mpl/erase.hpp>
 #include <boost/mpl/insert.hpp>
+#include <boost/mpl/less.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/control/if.hpp>
@@ -46,6 +47,7 @@
 #include <boost/preprocessor/repetition/enum_shifted_params.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
 #include <boost/utility/enable_if.hpp>
+
 
 #define VTKM_MAX_FUNCTION_PARAMETERS 10
 
@@ -620,8 +622,12 @@ class FunctionInterface
 public:
   typedef FunctionSignature Signature;
 
+  // the number of parameters as a boost mpl integral constant
+  typedef boost::function_types::function_arity<FunctionSignature> SignatureArity;
+
   typedef typename boost::function_types::result_type<FunctionSignature>::type
       ResultType;
+
   template<int ParameterIndex>
   struct ParameterType {
     typedef typename boost::mpl::at_c<
@@ -632,8 +638,7 @@ public:
 
   /// The number of parameters in this \c Function Interface.
   ///
-  static const int ARITY =
-      boost::function_types::function_arity<FunctionSignature>::value;
+  static const int ARITY = SignatureArity::value;
 
   /// Returns the number of parameters held in this \c FunctionInterface. The
   /// return value is the same as \c ARITY.
@@ -1111,9 +1116,12 @@ public:
 
   template<typename NextFunction>
   VTKM_CONT_EXPORT
-  typename boost::enable_if_c<
-    vtkm::internal::FunctionInterface<NextFunction>::ARITY
-    < vtkm::internal::FunctionInterface<OriginalFunction>::ARITY>::type
+  typename boost::enable_if<
+        typename boost::mpl::less<
+                  typename vtkm::internal::FunctionInterface<NextFunction>::SignatureArity,
+                  typename vtkm::internal::FunctionInterface<OriginalFunction>::SignatureArity
+                                 >::type
+                           >::type
   DoNextTransform(
       vtkm::internal::FunctionInterface<NextFunction> &nextInterface) const
   {
@@ -1129,9 +1137,12 @@ public:
 
   template<typename NextFunction>
   VTKM_CONT_EXPORT
-  typename boost::disable_if_c<
-    vtkm::internal::FunctionInterface<NextFunction>::ARITY
-    < vtkm::internal::FunctionInterface<OriginalFunction>::ARITY>::type
+  typename boost::disable_if<
+        typename boost::mpl::less<
+                  typename vtkm::internal::FunctionInterface<NextFunction>::SignatureArity,
+                  typename vtkm::internal::FunctionInterface<OriginalFunction>::SignatureArity
+                                 >::type
+                           >::type
   DoNextTransform(
       vtkm::internal::FunctionInterface<NextFunction> &nextInterface) const
   {
