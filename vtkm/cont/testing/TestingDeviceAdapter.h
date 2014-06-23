@@ -20,10 +20,10 @@
 #ifndef vtk_m_cont_testing_TestingDeviceAdapter_h
 #define vtk_m_cont_testing_TestingDeviceAdapter_h
 
-#include <vtkm/cont/ArrayContainerControlBasic.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorControlOutOfMemory.h>
 #include <vtkm/cont/ErrorExecution.h>
+#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithm.h>
 
@@ -114,27 +114,26 @@ template<class DeviceAdapterTag>
 struct TestingDeviceAdapter
 {
 private:
-  typedef vtkm::cont::ArrayContainerControlTagBasic ArrayContainerControlTag;
+  typedef vtkm::cont::StorageTagBasic StorageTag;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, ArrayContainerControlTag>
+  typedef vtkm::cont::ArrayHandle<vtkm::Id, StorageTag>
         IdArrayHandle;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Scalar,ArrayContainerControlTag>
+  typedef vtkm::cont::ArrayHandle<vtkm::Scalar,StorageTag>
       ScalarArrayHandle;
 
   typedef vtkm::cont::internal::ArrayManagerExecution<
-      vtkm::Id, ArrayContainerControlTag, DeviceAdapterTag>
+      vtkm::Id, StorageTag, DeviceAdapterTag>
       IdArrayManagerExecution;
 
-  typedef vtkm::cont::internal::ArrayContainerControl<vtkm::Id,
-                    ArrayContainerControlTag> IdContainer;
+  typedef vtkm::cont::internal::Storage<vtkm::Id, StorageTag> IdStorage;
 
   typedef typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>
       ::Portal IdPortalType;
   typedef typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>
       ::PortalConst IdPortalConstType;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Vector3,ArrayContainerControlTag>
+  typedef vtkm::cont::ArrayHandle<vtkm::Vector3,StorageTag>
       Vector3ArrayHandle;
 
   typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>
@@ -315,21 +314,21 @@ private:
 
   template<typename T>
   static VTKM_CONT_EXPORT
-  vtkm::cont::ArrayHandle<T, ArrayContainerControlTagBasic>
+  vtkm::cont::ArrayHandle<T, StorageTagBasic>
   MakeArrayHandle(const T *array, vtkm::Id length)
   {
     return vtkm::cont::make_ArrayHandle(array,
                                         length,
-                                        ArrayContainerControlTagBasic());
+                                        StorageTagBasic());
   }
 
   template<typename T>
   static VTKM_CONT_EXPORT
-  vtkm::cont::ArrayHandle<T, ArrayContainerControlTagBasic>
+  vtkm::cont::ArrayHandle<T, StorageTagBasic>
   MakeArrayHandle(const std::vector<T>& array)
   {
     return vtkm::cont::make_ArrayHandle(array,
-                                        ArrayContainerControlTagBasic());
+                                        StorageTagBasic());
   }
 
   static VTKM_CONT_EXPORT void TestDeviceAdapterTag()
@@ -357,7 +356,7 @@ private:
     std::cout << "Testing ArrayManagerExecution" << std::endl;
 
     typedef vtkm::cont::internal::ArrayManagerExecution<
-        vtkm::Scalar,ArrayContainerControlTagBasic,DeviceAdapterTag>
+        vtkm::Scalar,StorageTagBasic,DeviceAdapterTag>
         ArrayManagerExecution;
 
     // Create original input array.
@@ -401,10 +400,10 @@ private:
     {
       std::cout << "Do array allocation that should fail." << std::endl;
       vtkm::cont::internal::ArrayManagerExecution<
-          vtkm::Vector4,ArrayContainerControlTagBasic,DeviceAdapterTag>
+          vtkm::Vector4,StorageTagBasic,DeviceAdapterTag>
           bigManager;
-      vtkm::cont::internal::ArrayContainerControl<
-          vtkm::Vector4, ArrayContainerControlTagBasic> supportArray;
+      vtkm::cont::internal::Storage<
+          vtkm::Vector4, StorageTagBasic> supportArray;
       const vtkm::Id bigSize = 0x7FFFFFFFFFFFFFFFLL;
       bigManager.AllocateArrayForOutput(supportArray, bigSize);
       // It does not seem reasonable to get here.  The previous call should fail.
@@ -453,9 +452,9 @@ private:
 
     {
       std::cout << "Allocating execution array" << std::endl;
-      IdContainer container;
+      IdStorage storage;
       IdArrayManagerExecution manager;
-      manager.AllocateArrayForOutput(container, 1);
+      manager.AllocateArrayForOutput(storage, 1);
 
       std::cout << "Running clear." << std::endl;
       Algorithm::Schedule(ClearArrayKernel(manager.GetPortal()), 1);
@@ -464,11 +463,11 @@ private:
       Algorithm::Schedule(AddArrayKernel(manager.GetPortal()), 1);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(container);
+      manager.RetrieveOutputData(storage);
 
       for (vtkm::Id index = 0; index < 1; index++)
       {
-        vtkm::Id value = container.GetPortalConst().Get(index);
+        vtkm::Id value = storage.GetPortalConst().Get(index);
         VTKM_TEST_ASSERT(value == index + OFFSET,
                          "Got bad value for single value scheduled kernel.");
       }
@@ -479,9 +478,9 @@ private:
 
     {
       std::cout << "Allocating execution array" << std::endl;
-      IdContainer container;
+      IdStorage storage;
       IdArrayManagerExecution manager;
-      manager.AllocateArrayForOutput(container, ARRAY_SIZE);
+      manager.AllocateArrayForOutput(storage, ARRAY_SIZE);
 
       std::cout << "Running clear." << std::endl;
       Algorithm::Schedule(ClearArrayKernel(manager.GetPortal()), ARRAY_SIZE);
@@ -490,11 +489,11 @@ private:
       Algorithm::Schedule(AddArrayKernel(manager.GetPortal()), ARRAY_SIZE);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(container);
+      manager.RetrieveOutputData(storage);
 
       for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
       {
-        vtkm::Id value = container.GetPortalConst().Get(index);
+        vtkm::Id value = storage.GetPortalConst().Get(index);
         VTKM_TEST_ASSERT(value == index + OFFSET,
                          "Got bad value for scheduled kernels.");
       }
@@ -506,10 +505,10 @@ private:
 
     {
       std::cout << "Allocating execution array" << std::endl;
-      IdContainer container;
+      IdStorage storage;
       IdArrayManagerExecution manager;
       vtkm::Id DIM_SIZE = vtkm::Id(std::pow(ARRAY_SIZE, 1/3.0f));
-      manager.AllocateArrayForOutput(container,
+      manager.AllocateArrayForOutput(storage,
                                      DIM_SIZE * DIM_SIZE * DIM_SIZE);
       vtkm::Id3 maxRange(DIM_SIZE);
 
@@ -520,12 +519,12 @@ private:
       Algorithm::Schedule(AddArrayKernel(manager.GetPortal()), maxRange);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(container);
+      manager.RetrieveOutputData(storage);
 
       const vtkm::Id maxId = DIM_SIZE * DIM_SIZE * DIM_SIZE;
       for (vtkm::Id index = 0; index < maxId; index++)
       {
-        vtkm::Id value = container.GetPortalConst().Get(index);
+        vtkm::Id value = storage.GetPortalConst().Get(index);
         VTKM_TEST_ASSERT(value == index + OFFSET,
                          "Got bad value for scheduled vtkm::Id3 kernels.");
       }
@@ -1111,7 +1110,7 @@ private:
 
   //   //use a scoped pointer that constructs and fills a grid of the
   //   //right type
-  //   vtkm::cont::testing::TestGrid<GridType,ArrayContainerControlTagBasic>
+  //   vtkm::cont::testing::TestGrid<GridType,StorageTagBasic>
   //       grid(DIM);
 
   //   vtkm::Vector3 trueGradient = vtkm::make_Vector3(1.0, 1.0, 1.0);
@@ -1157,7 +1156,7 @@ private:
   //   std::cout << "-------------------------------------------" << std::endl;
   //   std::cout << "Testing map field worklet error" << std::endl;
 
-  //   vtkm::cont::testing::TestGrid<GridType,ArrayContainerControlTagBasic>
+  //   vtkm::cont::testing::TestGrid<GridType,StorageTagBasic>
   //       grid(DIM);
 
   //   std::cout << "Running field map worklet that errors" << std::endl;
@@ -1201,7 +1200,7 @@ private:
   // template<typename GridType>
   // static VTKM_CONT_EXPORT void TestWorkletMapCellImpl()
   // {
-  //   vtkm::cont::testing::TestGrid<GridType,ArrayContainerControlTagBasic>
+  //   vtkm::cont::testing::TestGrid<GridType,StorageTagBasic>
   //       grid(DIM);
 
   //   vtkm::Vector3 trueGradient = vtkm::make_Vector3(1.0, 1.0, 1.0);
@@ -1247,7 +1246,7 @@ private:
   //   std::cout << "-------------------------------------------" << std::endl;
   //   std::cout << "Testing map cell worklet error" << std::endl;
 
-  //   vtkm::cont::testing::TestGrid<GridType,ArrayContainerControlTagBasic>
+  //   vtkm::cont::testing::TestGrid<GridType,StorageTagBasic>
   //       grid(DIM);
 
   //   std::cout << "Running cell map worklet that errors" << std::endl;
@@ -1306,7 +1305,7 @@ private:
 
       // std::cout << "Doing Worklet tests with all grid type" << std::endl;
       // vtkm::cont::testing::GridTesting::TryAllGridTypes(
-      //       TestWorklets(), ArrayContainerControlTagBasic());
+      //       TestWorklets(), StorageTagBasic());
     }
   };
 

@@ -77,17 +77,15 @@ public:
 
 namespace internal {
 
-template <typename T, class ArrayContainerControlTag>
+template <typename T, class StorageTag>
 class ArrayManagerExecution
-    <T,
-    ArrayContainerControlTag,
-    vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
+    <T, StorageTag, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
     : public vtkm::cont::internal::ArrayManagerExecution
-          <T, ArrayContainerControlTag, vtkm::cont::DeviceAdapterTagSerial>
+          <T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>
 {
 public:
   typedef vtkm::cont::internal::ArrayManagerExecution
-      <T, ArrayContainerControlTag, vtkm::cont::DeviceAdapterTagSerial>
+      <T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>
       Superclass;
   typedef typename Superclass::ValueType ValueType;
   typedef typename Superclass::PortalType PortalType;

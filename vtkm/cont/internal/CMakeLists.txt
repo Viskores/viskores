@@ -36,6 +36,7 @@ set(headers
   IteratorFromArrayPortal.h
   PointCoordinatesBase.h
   SimplePolymorphicContainer.h
+  StorageError.h
   )
 
 vtkm_declare_headers(${headers})

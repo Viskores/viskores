@@ -17,26 +17,25 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_cont_internal_ArrayContainerControlError_h
-#define vtkm_cont_internal_ArrayContainerControlError_h
+#ifndef vtk_m_StorageListTag_h
+#define vtk_m_StorageListTag_h
 
+#ifndef VTKM_DEFAULT_STORAGE_LIST_TAG
+#define VTKM_DEFAULT_STORAGE_LIST_TAG ::vtkm::cont::StorageListTagBasic
+#endif
+
+#include <vtkm/ListTag.h>
+
+#include <vtkm/cont/Storage.h>
+#include <vtkm/cont/StorageBasic.h>
 
 namespace vtkm {
 namespace cont {
-namespace internal {
 
-/// This is an invalid ArrayContainerControl. The point of this class is to
-/// include the header file to make this invalid class the default
-/// ArrayContainerControl. From that point, you have to specify an appropriate
-/// ArrayContainerControl or else get a compile error.
-///
-struct ArrayContainerControlTagError
-{
-  // Not implemented.
-};
+struct StorageListTagBasic
+    : vtkm::ListTagBase<vtkm::cont::StorageTagBasic> { };
 
 }
-}
-} // namespace vtkm::cont::internal
+} // namespace vtkm::cont
 
-#endif //vtkm_cont_internal_ArrayContainerControlError_h
+#endif //vtk_m_StorageListTag_h

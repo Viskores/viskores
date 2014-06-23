@@ -272,28 +272,27 @@ private:
 };
 
 template<typename SignatureWithArrays>
-struct ArrayContainerControlTagCompositeVector {  };
+struct StorageTagCompositeVector {  };
 
 /// A convenience class that provides a typedef to the appropriate tag for
-/// a counting array container.
+/// a composite storage.
 template<typename SignatureWithArrays>
 struct ArrayHandleCompositeVectorTraits
 {
-  typedef vtkm::cont::internal::ArrayContainerControlTagCompositeVector<
-                                                SignatureWithArrays> Tag;
+  typedef vtkm::cont::internal::StorageTagCompositeVector<SignatureWithArrays>
+          Tag;
   typedef typename vtkm::internal::FunctionInterface<SignatureWithArrays>::ResultType
           ValueType;
-  typedef vtkm::cont::internal::ArrayContainerControl<
-          ValueType, Tag> ContainerType;
+  typedef vtkm::cont::internal::Storage<ValueType, Tag> StorageType;
 };
 
 // It may seem weird that this specialization throws an exception for
 // everything, but that is because all the functionality is handled in the
 // ArrayTransfer class.
 template<typename SignatureWithArrays>
-class ArrayContainerControl<
+class Storage<
     typename ArrayHandleCompositeVectorTraits<SignatureWithArrays>::ValueType,
-    vtkm::cont::internal::ArrayContainerControlTagCompositeVector<SignatureWithArrays> >
+    vtkm::cont::internal::StorageTagCompositeVector<SignatureWithArrays> >
 {
   typedef vtkm::internal::FunctionInterface<SignatureWithArrays>
       FunctionInterfaceWithArrays;
@@ -306,11 +305,11 @@ public:
   typedef typename PortalType::ValueType ValueType;
 
   VTKM_CONT_EXPORT
-  ArrayContainerControl() : Valid(false) {  }
+  Storage() : Valid(false) {  }
 
   VTKM_CONT_EXPORT
-  ArrayContainerControl(const FunctionInterfaceWithArrays &arrays,
-                        const ComponentMapType &sourceComponents)
+  Storage(const FunctionInterfaceWithArrays &arrays,
+          const ComponentMapType &sourceComponents)
     : Arrays(arrays), SourceComponents(sourceComponents), Valid(true)
   {
     arrays.ForEachCont(
@@ -347,11 +346,11 @@ public:
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues)) {
     throw vtkm::cont::ErrorControlInternal(
 
-          "The allocate method for the composite vector control array "
-          "container should never have been called. The allocate is generally "
-          "only called by the execution array manager, and the array transfer "
-          "for the transform container should prevent the execution array "
-          "manager from being directly used.");
+          "The allocate method for the composite vector storage should never "
+          "have been called. The allocate is generally only called by the "
+          "execution array manager, and the array transfer for the composite "
+          "storage should prevent the execution array manager from being "
+          "directly used.");
   }
 
   VTKM_CONT_EXPORT
@@ -389,13 +388,13 @@ private:
 template<typename SignatureWithArrays, typename DeviceAdapterTag>
 class ArrayTransfer<
     typename ArrayHandleCompositeVectorTraits<SignatureWithArrays>::ValueType,
-    vtkm::cont::internal::ArrayContainerControlTagCompositeVector<SignatureWithArrays>,
+    vtkm::cont::internal::StorageTagCompositeVector<SignatureWithArrays>,
     DeviceAdapterTag>
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-  typedef typename ArrayHandleCompositeVectorTraits<SignatureWithArrays>::ContainerType
-      ContainerType;
+  typedef typename ArrayHandleCompositeVectorTraits<SignatureWithArrays>::StorageType
+      StorageType;
 
   typedef vtkm::internal::FunctionInterface<SignatureWithArrays>
       FunctionWithArrays;
@@ -409,19 +408,19 @@ public:
       ValueType;
 
   // These are not currently fully implemented.
-  typedef typename ContainerType::PortalType PortalControl;
-  typedef typename ContainerType::PortalConstType PortalConstControl;
+  typedef typename StorageType::PortalType PortalControl;
+  typedef typename StorageType::PortalConstType PortalConstControl;
 
   typedef ArrayPortalCompositeVector<SignatureWithPortals> PortalExecution;
   typedef ArrayPortalCompositeVector<SignatureWithPortals> PortalConstExecution;
 
   VTKM_CONT_EXPORT
-  ArrayTransfer() : ContainerValid(false) {  }
+  ArrayTransfer() : StorageValid(false) {  }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
-    VTKM_ASSERT_CONT(this->ContainerValid);
-    return this->Container.GetNumberOfValues();
+    VTKM_ASSERT_CONT(this->StorageValid);
+    return this->Storage.GetNumberOfValues();
   }
 
   VTKM_CONT_EXPORT
@@ -433,21 +432,21 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(const ContainerType &controlArray)
+  void LoadDataForInput(const StorageType &controlArray)
   {
-    this->Container = controlArray;
-    this->ContainerValid = true;
+    this->Storage = controlArray;
+    this->StorageValid = true;
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInPlace(ContainerType &vtkmNotUsed(controlArray))
+  void LoadDataForInPlace(StorageType &vtkmNotUsed(controlArray))
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Composite vector arrays cannot be used for output or in place.");
   }
 
   VTKM_CONT_EXPORT
-  void AllocateArrayForOutput(ContainerType &vtkmNotUsed(controlArray),
+  void AllocateArrayForOutput(StorageType &vtkmNotUsed(controlArray),
                               vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue(
@@ -455,7 +454,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void RetrieveOutputData(ContainerType &vtkmNotUsed(controlArray)) const
+  void RetrieveOutputData(StorageType &vtkmNotUsed(controlArray)) const
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Composite vector arrays cannot be used for output.");
@@ -478,22 +477,22 @@ public:
   VTKM_CONT_EXPORT
   PortalConstExecution GetPortalConstExecution() const
   {
-    VTKM_ASSERT_CONT(this->ContainerValid);
+    VTKM_ASSERT_CONT(this->StorageValid);
     return
         PortalConstExecution(
-          this->Container.GetArrays().StaticTransformCont(
+          this->Storage.GetArrays().StaticTransformCont(
             detail::CompositeVectorArrayToPortalExec<DeviceAdapterTag>()),
-          this->Container.GetSourceComponents());
+          this->Storage.GetSourceComponents());
   }
 
   VTKM_CONT_EXPORT
   void ReleaseResources() {
-    this->Container.ReleaseResources();
+    this->Storage.ReleaseResources();
   }
 
 private:
-  bool ContainerValid;
-  ContainerType Container;
+  bool StorageValid;
+  StorageType Storage;
 };
 
 } // namespace internal
@@ -514,8 +513,8 @@ class ArrayHandleCompositeVector
         typename internal::ArrayHandleCompositeVectorTraits<Signature>::ValueType,
         typename internal::ArrayHandleCompositeVectorTraits<Signature>::Tag>
 {
-  typedef typename internal::ArrayHandleCompositeVectorTraits<Signature>::ContainerType
-      ArrayContainerControlType;
+  typedef typename internal::ArrayHandleCompositeVectorTraits<Signature>::StorageType
+      StorageType;
   typedef typename internal::ArrayPortalCompositeVectorCont<Signature>::ComponentMapType
       ComponentMapType;
 
@@ -533,7 +532,7 @@ public:
   ArrayHandleCompositeVector(
       const vtkm::internal::FunctionInterface<Signature> &arrays,
       const ComponentMapType &sourceComponents)
-    : Superclass(ArrayContainerControlType(arrays, sourceComponents))
+    : Superclass(StorageType(arrays, sourceComponents))
   {  }
 
   /// Template constructors for passing in types. You'll get weird compile
@@ -544,7 +543,7 @@ public:
   VTKM_CONT_EXPORT
   ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
                              int sourceComponent1)
-    : Superclass(ArrayContainerControlType(
+    : Superclass(StorageType(
                    vtkm::internal::make_FunctionInterface<ValueType>(array1),
                    ComponentMapType(sourceComponent1)))
   {  }
@@ -555,7 +554,7 @@ public:
                              int sourceComponent1,
                              const ArrayHandleType2 &array2,
                              int sourceComponent2)
-    : Superclass(ArrayContainerControlType(
+    : Superclass(StorageType(
                    vtkm::internal::make_FunctionInterface<ValueType>(
                      array1, array2),
                    ComponentMapType(sourceComponent1,
@@ -571,7 +570,7 @@ public:
                              int sourceComponent2,
                              const ArrayHandleType3 &array3,
                              int sourceComponent3)
-    : Superclass(ArrayContainerControlType(
+    : Superclass(StorageType(
                    vtkm::internal::make_FunctionInterface<ValueType>(
                      array1, array2, array3),
                    ComponentMapType(sourceComponent1,
@@ -591,7 +590,7 @@ public:
                              int sourceComponent3,
                              const ArrayHandleType4 &array4,
                              int sourceComponent4)
-    : Superclass(ArrayContainerControlType(
+    : Superclass(StorageType(
                    vtkm::internal::make_FunctionInterface<ValueType>(
                      array1, array2, array3, array4),
                    ComponentMapType(sourceComponent1,
@@ -670,95 +669,95 @@ public:
 
 /// Create a composite vector array from other arrays.
 ///
-template<typename ValueType1, typename Container1>
+template<typename ValueType1, typename Storage1>
 VTKM_CONT_EXPORT
 typename ArrayHandleCompositeVectorType<
-  vtkm::cont::ArrayHandle<ValueType1,Container1> >::type
+  vtkm::cont::ArrayHandle<ValueType1,Storage1> >::type
 make_ArrayHandleCompositeVector(
-    const vtkm::cont::ArrayHandle<ValueType1,Container1> &array1,
+    const vtkm::cont::ArrayHandle<ValueType1,Storage1> &array1,
     int sourceComponent1)
 {
   return typename ArrayHandleCompositeVectorType<
-      vtkm::cont::ArrayHandle<ValueType1,Container1> >::type(array1,
-                                                             sourceComponent1);
+      vtkm::cont::ArrayHandle<ValueType1,Storage1> >::type(array1,
+                                                           sourceComponent1);
 }
-template<typename ValueType1, typename Container1,
-         typename ValueType2, typename Container2>
+template<typename ValueType1, typename Storage1,
+         typename ValueType2, typename Storage2>
 VTKM_CONT_EXPORT
 typename ArrayHandleCompositeVectorType<
-  vtkm::cont::ArrayHandle<ValueType1,Container1>,
-  vtkm::cont::ArrayHandle<ValueType2,Container2> >::type
+  vtkm::cont::ArrayHandle<ValueType1,Storage1>,
+  vtkm::cont::ArrayHandle<ValueType2,Storage2> >::type
 make_ArrayHandleCompositeVector(
-    const vtkm::cont::ArrayHandle<ValueType1,Container1> &array1,
+    const vtkm::cont::ArrayHandle<ValueType1,Storage1> &array1,
     int sourceComponent1,
-    const vtkm::cont::ArrayHandle<ValueType2,Container2> &array2,
+    const vtkm::cont::ArrayHandle<ValueType2,Storage2> &array2,
     int sourceComponent2)
 {
   return typename ArrayHandleCompositeVectorType<
-      vtkm::cont::ArrayHandle<ValueType1,Container1>,
-      vtkm::cont::ArrayHandle<ValueType2,Container2> >::type(array1,
-                                                             sourceComponent1,
-                                                             array2,
-                                                             sourceComponent2);
+      vtkm::cont::ArrayHandle<ValueType1,Storage1>,
+      vtkm::cont::ArrayHandle<ValueType2,Storage2> >::type(array1,
+                                                           sourceComponent1,
+                                                           array2,
+                                                           sourceComponent2);
 }
-template<typename ValueType1, typename Container1,
-         typename ValueType2, typename Container2,
-         typename ValueType3, typename Container3>
+template<typename ValueType1, typename Storage1,
+         typename ValueType2, typename Storage2,
+         typename ValueType3, typename Storage3>
 VTKM_CONT_EXPORT
 typename ArrayHandleCompositeVectorType<
-  vtkm::cont::ArrayHandle<ValueType1,Container1>,
-  vtkm::cont::ArrayHandle<ValueType2,Container2>,
-  vtkm::cont::ArrayHandle<ValueType3,Container3> >::type
+  vtkm::cont::ArrayHandle<ValueType1,Storage1>,
+  vtkm::cont::ArrayHandle<ValueType2,Storage2>,
+  vtkm::cont::ArrayHandle<ValueType3,Storage3> >::type
 make_ArrayHandleCompositeVector(
-    const vtkm::cont::ArrayHandle<ValueType1,Container1> &array1,
+    const vtkm::cont::ArrayHandle<ValueType1,Storage1> &array1,
     int sourceComponent1,
-    const vtkm::cont::ArrayHandle<ValueType2,Container2> &array2,
+    const vtkm::cont::ArrayHandle<ValueType2,Storage2> &array2,
     int sourceComponent2,
-    const vtkm::cont::ArrayHandle<ValueType3,Container3> &array3,
+    const vtkm::cont::ArrayHandle<ValueType3,Storage3> &array3,
     int sourceComponent3)
 {
   return typename ArrayHandleCompositeVectorType<
-      vtkm::cont::ArrayHandle<ValueType1,Container1>,
-      vtkm::cont::ArrayHandle<ValueType2,Container2>,
-      vtkm::cont::ArrayHandle<ValueType3,Container3> >::type(array1,
-                                                             sourceComponent1,
-                                                             array2,
-                                                             sourceComponent2,
-                                                             array3,
-                                                             sourceComponent3);
+      vtkm::cont::ArrayHandle<ValueType1,Storage1>,
+      vtkm::cont::ArrayHandle<ValueType2,Storage2>,
+      vtkm::cont::ArrayHandle<ValueType3,Storage3> >::type(array1,
+                                                           sourceComponent1,
+                                                           array2,
+                                                           sourceComponent2,
+                                                           array3,
+                                                           sourceComponent3);
 }
-template<typename ValueType1, typename Container1,
-         typename ValueType2, typename Container2,
-         typename ValueType3, typename Container3,
-         typename ValueType4, typename Container4>
+template<typename ValueType1, typename Storage1,
+         typename ValueType2, typename Storage2,
+         typename ValueType3, typename Storage3,
+         typename ValueType4, typename Storage4>
 VTKM_CONT_EXPORT
 typename ArrayHandleCompositeVectorType<
-  vtkm::cont::ArrayHandle<ValueType1,Container1>,
-  vtkm::cont::ArrayHandle<ValueType2,Container2>,
-  vtkm::cont::ArrayHandle<ValueType3,Container3>,
-  vtkm::cont::ArrayHandle<ValueType4,Container4> >::type
+  vtkm::cont::ArrayHandle<ValueType1,Storage1>,
+  vtkm::cont::ArrayHandle<ValueType2,Storage2>,
+  vtkm::cont::ArrayHandle<ValueType3,Storage3>,
+  vtkm::cont::ArrayHandle<ValueType4,Storage4> >::type
 make_ArrayHandleCompositeVector(
-    const vtkm::cont::ArrayHandle<ValueType1,Container1> &array1,
+    const vtkm::cont::ArrayHandle<ValueType1,Storage1> &array1,
     int sourceComponent1,
-    const vtkm::cont::ArrayHandle<ValueType2,Container2> &array2,
+    const vtkm::cont::ArrayHandle<ValueType2,Storage2> &array2,
     int sourceComponent2,
-    const vtkm::cont::ArrayHandle<ValueType3,Container3> &array3,
+    const vtkm::cont::ArrayHandle<ValueType3,Storage3> &array3,
     int sourceComponent3,
-    const vtkm::cont::ArrayHandle<ValueType4,Container4> &array4,
+    const vtkm::cont::ArrayHandle<ValueType4,Storage4> &array4,
     int sourceComponent4)
 {
   return typename ArrayHandleCompositeVectorType<
-      vtkm::cont::ArrayHandle<ValueType1,Container1>,
-      vtkm::cont::ArrayHandle<ValueType2,Container2>,
-      vtkm::cont::ArrayHandle<ValueType3,Container3>,
-      vtkm::cont::ArrayHandle<ValueType4,Container4> >::type(array1,
-                                                             sourceComponent1,
-                                                             array2,
-                                                             sourceComponent2,
-                                                             array3,
-                                                             sourceComponent3,
-                                                             array4,
-                                                             sourceComponent4);
+      vtkm::cont::ArrayHandle<ValueType1,Storage1>,
+      vtkm::cont::ArrayHandle<ValueType2,Storage2>,
+      vtkm::cont::ArrayHandle<ValueType3,Storage3>,
+      vtkm::cont::ArrayHandle<ValueType4,Storage4> >::type(array1,
+                                                           sourceComponent1,
+                                                           array2,
+                                                           sourceComponent2,
+                                                           array3,
+                                                           sourceComponent3,
+                                                           array4,
+                                                           sourceComponent4);
 }
 
 }

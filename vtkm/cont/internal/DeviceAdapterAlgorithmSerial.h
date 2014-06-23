@@ -156,21 +156,21 @@ public:
                                      rangeMax[0] * rangeMax[1] * rangeMax[2] );
   }
 
-  template<typename T, class Container>
-  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Container>& values)
+  template<typename T, class Storage>
+  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage>& values)
   {
-    typedef typename vtkm::cont::ArrayHandle<T,Container>
+    typedef typename vtkm::cont::ArrayHandle<T,Storage>
         ::template ExecutionTypes<Device>::Portal PortalType;
 
     PortalType arrayPortal = values.PrepareForInPlace(Device());
     std::sort(arrayPortal.GetIteratorBegin(), arrayPortal.GetIteratorEnd());
   }
 
-  template<typename T, class Container, class Compare>
-  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Container>& values,
+  template<typename T, class Storage, class Compare>
+  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage>& values,
                                     Compare comp)
   {
-    typedef typename vtkm::cont::ArrayHandle<T,Container>
+    typedef typename vtkm::cont::ArrayHandle<T,Storage>
         ::template ExecutionTypes<Device>::Portal PortalType;
 
     PortalType arrayPortal = values.PrepareForInPlace(Device());

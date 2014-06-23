@@ -17,14 +17,15 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ArrayContainerControlImplicit
-#define vtk_m_cont_ArrayContainerControlImplicit
+#ifndef vtk_m_cont_StorageImplicit
+#define vtk_m_cont_StorageImplicit
 
 #include <vtkm/Types.h>
 
-#include <vtkm/cont/ArrayContainerControl.h>
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/Storage.h>
+
 #include <vtkm/cont/internal/ArrayTransfer.h>
 
 namespace vtkm {
@@ -32,19 +33,16 @@ namespace cont {
 
 /// \brief An implementation for read-only implicit arrays.
 ///
-/// It is sometimes the case that you want VTKm to operate on an array of
+/// It is sometimes the case that you want VTK-m to operate on an array of
 /// implicit values. That is, rather than store the data in an actual array, it
-/// is gerenated on the fly by a function. This is handled in VTKm by creating
-/// an ArrayHandle in VTKm with an ArrayContainerControlTagImplicit type of
-/// ArrayContainerControl. This tag itself is templated to specify an
-/// ArrayPortal that generates the desired values. An ArrayHandle created with
-/// this tag will raise an error on any operation that tries to modify it.
-///
-/// \todo The ArrayHandle currently copies the array in cases where the control
-/// and environment do not share memory. This is wasteful and should be fixed.
+/// is gerenated on the fly by a function. This is handled in VTK-m by creating
+/// an ArrayHandle in VTK-m with a StorageTagImplicit type of \c Storage. This
+/// tag itself is templated to specify an ArrayPortal that generates the
+/// desired values. An ArrayHandle created with this tag will raise an error on
+/// any operation that tries to modify it.
 ///
 template<class ArrayPortalType>
-struct ArrayContainerControlTagImplicit
+struct StorageTagImplicit
 {
   typedef ArrayPortalType PortalType;
 };
@@ -52,9 +50,9 @@ struct ArrayContainerControlTagImplicit
 namespace internal {
 
 template<class ArrayPortalType>
-class ArrayContainerControl<
+class Storage<
     typename ArrayPortalType::ValueType,
-    ArrayContainerControlTagImplicit<ArrayPortalType> >
+    StorageTagImplicit<ArrayPortalType> >
 {
 public:
   typedef typename ArrayPortalType::ValueType ValueType;
@@ -76,18 +74,18 @@ public:
   PortalConstType GetPortalConst() const
   {
     // This does not work because the ArrayHandle holds the constant
-    // ArrayPortal, not the container.
+    // ArrayPortal, not the storage.
     throw vtkm::cont::ErrorControlBadValue(
-          "Implicit container does not store array portal.  "
+          "Implicit storage does not store array portal.  "
           "Perhaps you did not set the ArrayPortal when "
           "constructing the ArrayHandle.");
   }
   vtkm::Id GetNumberOfValues() const
   {
     // This does not work because the ArrayHandle holds the constant
-    // ArrayPortal, not the container.
+    // ArrayPortal, not the Storage.
     throw vtkm::cont::ErrorControlBadValue(
-          "Implicit container does not store array portal.  "
+          "Implicit storage does not store array portal.  "
           "Perhaps you did not set the ArrayPortal when "
           "constructing the ArrayHandle.");
   }
@@ -105,43 +103,18 @@ public:
   }
 };
 
-//// If you are using this specalization of ArrayContainerControl, it means the
-//// type of an ArrayHandle does not match the type of the array portal for the
-//// array portal in an implicit array. Currently this use is invalid, but there
-//// could be a case for implementing casting where appropriate.
-//template<typename T, typename ArrayPortalType>
-//class ArrayContainerControl<T, ArrayContainerControlTagImplicit<ArrayPortalType> >
-//{
-//public:
-//  // This is meant to be invalid because this class should not actually be used.
-//  struct PortalType
-//  {
-//    typedef void *ValueType;
-//    typedef void *IteratorType;
-//  };
-//  // This is meant to be invalid because this class should not actually be used.
-//  struct PortalConstType
-//  {
-//    typedef void *ValueType;
-//    typedef void *IteratorType;
-//  };
-//};
-
 template<typename T, class ArrayPortalType, class DeviceAdapterTag>
-class ArrayTransfer<
-    T, ArrayContainerControlTagImplicit<ArrayPortalType>, DeviceAdapterTag>
+class ArrayTransfer<T, StorageTagImplicit<ArrayPortalType>, DeviceAdapterTag>
 {
 private:
-  typedef ArrayContainerControlTagImplicit<ArrayPortalType>
-      ArrayContainerControlTag;
-  typedef vtkm::cont::internal::ArrayContainerControl<T,ArrayContainerControlTag>
-      ContainerType;
+  typedef StorageTagImplicit<ArrayPortalType> StorageTag;
+  typedef vtkm::cont::internal::Storage<T,StorageTag> StorageType;
 
 public:
   typedef T ValueType;
 
-  typedef typename ContainerType::PortalType PortalControl;
-  typedef typename ContainerType::PortalConstType PortalConstControl;
+  typedef typename StorageType::PortalType PortalControl;
+  typedef typename StorageType::PortalConstType PortalConstControl;
   typedef PortalControl PortalExecution;
   typedef PortalConstControl PortalConstExecution;
 
@@ -159,27 +132,27 @@ public:
     this->PortalValid = true;
   }
 
-  VTKM_CONT_EXPORT void LoadDataForInput(const ContainerType &controlArray)
+  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType &controlArray)
   {
     this->LoadDataForInput(controlArray.GetPortalConst());
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInPlace(ContainerType &vtkmNotUsed(controlArray))
+  void LoadDataForInPlace(StorageType &vtkmNotUsed(controlArray))
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Implicit arrays cannot be used for output or in place.");
   }
 
   VTKM_CONT_EXPORT void AllocateArrayForOutput(
-      ContainerType &vtkmNotUsed(controlArray),
+      StorageType &vtkmNotUsed(controlArray),
       vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Implicit arrays cannot be used for output.");
   }
   VTKM_CONT_EXPORT void RetrieveOutputData(
-      ContainerType &vtkmNotUsed(controlArray)) const
+      StorageType &vtkmNotUsed(controlArray)) const
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Implicit arrays cannot be used for output.");
@@ -213,4 +186,4 @@ private:
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_cont_ArrayContainerControlImplicit
+#endif //vtk_m_cont_StorageImplicit

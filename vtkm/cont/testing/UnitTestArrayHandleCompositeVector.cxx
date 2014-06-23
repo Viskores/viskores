@@ -18,17 +18,17 @@
 //  this software.
 //============================================================================
 
-// Make sure ArrayHandleCompositeVector does not rely on default container or
+// Make sure ArrayHandleCompositeVector does not rely on default storage or
 // device adapter.
-#define VTKM_ARRAY_CONTAINER_CONTROL VTKM_ARRAY_CONTAINER_CONTROL_ERROR
+#define VTKM_STORAGE VTKM_STORAGE_ERROR
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 
 #include <vtkm/VectorTraits.h>
 
-#include <vtkm/cont/ArrayContainerControlBasic.h>
 #include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -38,7 +38,7 @@ namespace {
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-typedef vtkm::cont::ArrayContainerControlTagBasic Container;
+typedef vtkm::cont::StorageTagBasic StorageTag;
 
 vtkm::Scalar TestValue(vtkm::Id index, int inComponentIndex, int inArrayId)
 {
@@ -46,7 +46,7 @@ vtkm::Scalar TestValue(vtkm::Id index, int inComponentIndex, int inArrayId)
 }
 
 template<typename ValueType>
-vtkm::cont::ArrayHandle<ValueType, Container>
+vtkm::cont::ArrayHandle<ValueType, StorageTag>
 MakeInputArray(int arrayId)
 {
   typedef vtkm::VectorTraits<ValueType> VTraits;
@@ -66,9 +66,9 @@ MakeInputArray(int arrayId)
   }
 
   // Make an array handle that points to this buffer.
-  typedef vtkm::cont::ArrayHandle<ValueType, Container> ArrayHandleType;
+  typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> ArrayHandleType;
   ArrayHandleType bufferHandle =
-      vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE, Container());
+      vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE, StorageTag());
 
   // When this function returns, the array is going to go out of scope, which
   // will invalidate the array handle we just created. So copy to a new buffer
@@ -87,7 +87,7 @@ void CheckArray(const vtkm::cont::ArrayHandle<ValueType,C> &outArray,
 {
   // ArrayHandleCompositeVector currently does not implement the ability to
   // get to values on the control side, so copy to an array that is accessible.
-  typedef vtkm::cont::ArrayHandle<ValueType, Container> ArrayHandleType;
+  typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> ArrayHandleType;
   ArrayHandleType arrayCopy;
   vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::Copy(
         outArray, arrayCopy);
@@ -120,7 +120,7 @@ void TryScalarArray()
             << inComponents << " components." << std::endl;
 
   typedef vtkm::Tuple<vtkm::Scalar,inComponents> InValueType;
-  typedef vtkm::cont::ArrayHandle<InValueType, Container> InArrayType;
+  typedef vtkm::cont::ArrayHandle<InValueType, StorageTag> InArrayType;
   int inArrayId = 0;
   InArrayType inArray = MakeInputArray<InValueType>(inArrayId);
 
@@ -137,10 +137,10 @@ void TryScalarArray()
 }
 
 template<typename T1, typename T2, typename T3, typename T4>
-void TryVector4(vtkm::cont::ArrayHandle<T1,Container> array1,
-                vtkm::cont::ArrayHandle<T2,Container> array2,
-                vtkm::cont::ArrayHandle<T3,Container> array3,
-                vtkm::cont::ArrayHandle<T4,Container> array4)
+void TryVector4(vtkm::cont::ArrayHandle<T1,StorageTag> array1,
+                vtkm::cont::ArrayHandle<T2,StorageTag> array2,
+                vtkm::cont::ArrayHandle<T3,StorageTag> array3,
+                vtkm::cont::ArrayHandle<T4,StorageTag> array4)
 {
   int arrayIds[4] = {0, 1, 2, 3};
   int inComponents[4];
@@ -176,9 +176,9 @@ void TryVector4(vtkm::cont::ArrayHandle<T1,Container> array1,
 }
 
 template<typename T1, typename T2, typename T3>
-void TryVector3(vtkm::cont::ArrayHandle<T1,Container> array1,
-                vtkm::cont::ArrayHandle<T2,Container> array2,
-                vtkm::cont::ArrayHandle<T3,Container> array3)
+void TryVector3(vtkm::cont::ArrayHandle<T1,StorageTag> array1,
+                vtkm::cont::ArrayHandle<T2,StorageTag> array2,
+                vtkm::cont::ArrayHandle<T3,StorageTag> array3)
 {
   int arrayIds[3] = {0, 1, 2};
   int inComponents[3];
@@ -213,8 +213,8 @@ void TryVector3(vtkm::cont::ArrayHandle<T1,Container> array1,
 }
 
 template<typename T1, typename T2>
-void TryVector2(vtkm::cont::ArrayHandle<T1,Container> array1,
-                vtkm::cont::ArrayHandle<T2,Container> array2)
+void TryVector2(vtkm::cont::ArrayHandle<T1,StorageTag> array1,
+                vtkm::cont::ArrayHandle<T2,StorageTag> array2)
 {
   int arrayIds[2] = {0, 1};
   int inComponents[2];
@@ -243,7 +243,7 @@ void TryVector2(vtkm::cont::ArrayHandle<T1,Container> array1,
 }
 
 template<typename T1>
-void TryVector1(vtkm::cont::ArrayHandle<T1,Container> array1)
+void TryVector1(vtkm::cont::ArrayHandle<T1,StorageTag> array1)
 {
   int arrayIds[1] = {0};
   int inComponents[1];
@@ -278,7 +278,7 @@ void TestBadArrayLengths() {
   std::cout << "Checking behavior when size of input arrays do not agree."
             << std::endl;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Scalar, Container> InArrayType;
+  typedef vtkm::cont::ArrayHandle<vtkm::Scalar, StorageTag> InArrayType;
   InArrayType longInArray = MakeInputArray<vtkm::Scalar>(0);
   InArrayType shortInArray = MakeInputArray<vtkm::Scalar>(1);
   shortInArray.Shrink(ARRAY_SIZE/2);

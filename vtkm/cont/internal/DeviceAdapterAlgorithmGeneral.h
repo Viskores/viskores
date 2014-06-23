@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayContainerControlBasic.h>
+#include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/exec/FunctorBase.h>
 
@@ -111,7 +111,7 @@ private:
                              vtkm::Id index)
   {
     typedef vtkm::cont::ArrayHandle<T,CIn> InputArrayType;
-    typedef vtkm::cont::ArrayHandle<T,vtkm::cont::ArrayContainerControlTagBasic>
+    typedef vtkm::cont::ArrayHandle<T,vtkm::cont::StorageTagBasic>
         OutputArrayType;
 
     OutputArrayType output;
@@ -353,7 +353,7 @@ public:
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
-    typedef vtkm::cont::ArrayHandle<T,vtkm::cont::ArrayContainerControlTagBasic>
+    typedef vtkm::cont::ArrayHandle<T,vtkm::cont::StorageTagBasic>
         TempArrayType;
     typedef vtkm::cont::ArrayHandle<T,COut> OutputArrayType;
 
@@ -553,12 +553,12 @@ private:
   };
 
 public:
-  template<typename T, class Container, class CompareType>
+  template<typename T, class Storage, class CompareType>
   VTKM_CONT_EXPORT static void Sort(
-      vtkm::cont::ArrayHandle<T,Container> &values,
+      vtkm::cont::ArrayHandle<T,Storage> &values,
       CompareType compare)
   {
-    typedef typename vtkm::cont::ArrayHandle<T,Container> ArrayType;
+    typedef typename vtkm::cont::ArrayHandle<T,Storage> ArrayType;
     typedef typename ArrayType::template ExecutionTypes<DeviceAdapterTag>
         ::Portal PortalType;
 
@@ -588,9 +588,9 @@ public:
     }
   }
 
-  template<typename T, class Container>
+  template<typename T, class Storage>
   VTKM_CONT_EXPORT static void Sort(
-      vtkm::cont::ArrayHandle<T,Container> &values)
+      vtkm::cont::ArrayHandle<T,Storage> &values)
   {
     DerivedAlgorithm::Sort(values, DefaultCompareFunctor());
   }
@@ -677,7 +677,7 @@ public:
     vtkm::Id arrayLength = stencil.GetNumberOfValues();
 
     typedef vtkm::cont::ArrayHandle<
-        vtkm::Id, vtkm::cont::ArrayContainerControlTagBasic> IndexArrayType;
+        vtkm::Id, vtkm::cont::StorageTagBasic> IndexArrayType;
     IndexArrayType indices;
 
     typedef typename vtkm::cont::ArrayHandle<U,CStencil>
@@ -809,22 +809,22 @@ private:
   };
 
 public:
-  template<typename T, class Container>
+  template<typename T, class Storage>
   VTKM_CONT_EXPORT static void Unique(
-      vtkm::cont::ArrayHandle<T,Container> &values)
+      vtkm::cont::ArrayHandle<T,Storage> &values)
   {
-    vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::ArrayContainerControlTagBasic>
+    vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>
         stencilArray;
     vtkm::Id inputSize = values.GetNumberOfValues();
 
     ClassifyUniqueKernel<
-        typename vtkm::cont::ArrayHandle<T,Container>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
-        typename vtkm::cont::ArrayHandle<vtkm::Id,vtkm::cont::ArrayContainerControlTagBasic>::template ExecutionTypes<DeviceAdapterTag>::Portal>
+        typename vtkm::cont::ArrayHandle<T,Storage>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
+        typename vtkm::cont::ArrayHandle<vtkm::Id,vtkm::cont::StorageTagBasic>::template ExecutionTypes<DeviceAdapterTag>::Portal>
         classifyKernel(values.PrepareForInput(DeviceAdapterTag()),
                        stencilArray.PrepareForOutput(inputSize, DeviceAdapterTag()));
     DerivedAlgorithm::Schedule(classifyKernel, inputSize);
 
-    vtkm::cont::ArrayHandle<T, vtkm::cont::ArrayContainerControlTagBasic>
+    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
         outputArray;
 
     DerivedAlgorithm::StreamCompact(values, stencilArray, outputArray);
@@ -832,25 +832,25 @@ public:
     DerivedAlgorithm::Copy(outputArray, values);
   }
 
-  template<typename T, class Container, class Compare>
+  template<typename T, class Storage, class Compare>
   VTKM_CONT_EXPORT static void Unique(
-      vtkm::cont::ArrayHandle<T,Container> &values,
+      vtkm::cont::ArrayHandle<T,Storage> &values,
       Compare comp)
   {
-    vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::ArrayContainerControlTagBasic>
+    vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>
         stencilArray;
     vtkm::Id inputSize = values.GetNumberOfValues();
 
     ClassifyUniqueComparisonKernel<
-        typename vtkm::cont::ArrayHandle<T,Container>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
-        typename vtkm::cont::ArrayHandle<vtkm::Id,vtkm::cont::ArrayContainerControlTagBasic>::template ExecutionTypes<DeviceAdapterTag>::Portal,
+        typename vtkm::cont::ArrayHandle<T,Storage>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
+        typename vtkm::cont::ArrayHandle<vtkm::Id,vtkm::cont::StorageTagBasic>::template ExecutionTypes<DeviceAdapterTag>::Portal,
         Compare>
         classifyKernel(values.PrepareForInput(DeviceAdapterTag()),
                        stencilArray.PrepareForOutput(inputSize, DeviceAdapterTag()),
                        comp);
     DerivedAlgorithm::Schedule(classifyKernel, inputSize);
 
-    vtkm::cont::ArrayHandle<T, vtkm::cont::ArrayContainerControlTagBasic>
+    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
         outputArray;
 
     DerivedAlgorithm::StreamCompact(values, stencilArray, outputArray);

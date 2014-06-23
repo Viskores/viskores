@@ -26,13 +26,10 @@ set(headers
 vtkm_declare_headers(${headers})
 
 set(unit_tests
-  UnitTestArrayContainerControlBasic.cxx
-  UnitTestArrayContainerControlImplicit.cxx
   UnitTestArrayHandle.cxx
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
-  UnitTestContainerListTag.cxx
   UnitTestContTesting.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
@@ -40,6 +37,9 @@ set(unit_tests
   UnitTestDynamicArrayHandle.cxx
   UnitTestDynamicPointCoordinates.cxx
   UnitTestPointCoordinates.cxx
+  UnitTestStorageBasic.cxx
+  UnitTestStorageImplicit.cxx
+  UnitTestStorageListTag.cxx
   UnitTestTimer.cxx
   )
 

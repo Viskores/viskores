@@ -20,8 +20,8 @@
 
 #include <vtkm/cont/DynamicPointCoordinates.h>
 
-#include <vtkm/cont/ArrayContainerControlImplicit.h>
-#include <vtkm/cont/ContainerListTag.h>
+#include <vtkm/cont/StorageImplicit.h>
+#include <vtkm/cont/StorageListTag.h>
 
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 
@@ -42,7 +42,7 @@ vtkm::Vector3 TestValue(vtkm::Id index)
 {
   vtkm::Id3 index3d = vtkm::ExtentPointFlatIndexToTopologyIndex(index, EXTENT);
   return vtkm::Vector3(vtkm::Scalar(index3d[0]),
-                       vtkm::Scalar(index3d[1]), 
+                       vtkm::Scalar(index3d[1]),
                        vtkm::Scalar(index3d[2]));
 }
 
@@ -54,13 +54,13 @@ struct CheckArray
     g_CheckArrayInvocations = 0;
   }
 
-  template<typename Container>
+  template<typename Storage>
   void operator()(
-      const vtkm::cont::ArrayHandle<vtkm::Vector3,Container> &array) const
+      const vtkm::cont::ArrayHandle<vtkm::Vector3,Storage> &array) const
   {
     std::cout << "    In CastAndCall functor" << std::endl;
     g_CheckArrayInvocations++;
-    typename vtkm::cont::ArrayHandle<vtkm::Vector3,Container>::PortalConstControl portal =
+    typename vtkm::cont::ArrayHandle<vtkm::Vector3,Storage>::PortalConstControl portal =
         array.GetPortalConstControl();
 
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE,
@@ -100,27 +100,27 @@ struct UnusualPortal
   }
 };
 
-class ArrayHandleWithUnusualContainer
-    : public vtkm::cont::ArrayHandle<vtkm::Vector3, vtkm::cont::ArrayContainerControlTagImplicit<UnusualPortal> >
+class ArrayHandleWithUnusualStorage
+    : public vtkm::cont::ArrayHandle<vtkm::Vector3, vtkm::cont::StorageTagImplicit<UnusualPortal> >
 {
-  typedef vtkm::cont::ArrayHandle<vtkm::Vector3, vtkm::cont::ArrayContainerControlTagImplicit<UnusualPortal> >
+  typedef vtkm::cont::ArrayHandle<vtkm::Vector3, vtkm::cont::StorageTagImplicit<UnusualPortal> >
       Superclass;
 public:
   VTKM_CONT_EXPORT
-  ArrayHandleWithUnusualContainer()
+  ArrayHandleWithUnusualStorage()
     : Superclass(Superclass::PortalConstControl()) {  }
 };
 
-struct ContainerListTagUnusual :
-    vtkm::ListTagBase<ArrayHandleWithUnusualContainer::ArrayContainerControlTag>
+struct StorageListTagUnusual :
+    vtkm::ListTagBase<ArrayHandleWithUnusualStorage::StorageTag>
 {  };
 
 struct PointCoordinatesUnusual : vtkm::cont::internal::PointCoordinatesBase
 {
-  template<typename Functor, typename TypeList, typename ContainerList>
-  void CastAndCall(const Functor &f, TypeList, ContainerList) const
+  template<typename Functor, typename TypeList, typename StorageList>
+  void CastAndCall(const Functor &f, TypeList, StorageList) const
   {
-    f(ArrayHandleWithUnusualContainer());
+    f(ArrayHandleWithUnusualStorage());
   }
 };
 
@@ -129,7 +129,7 @@ struct PointCoordinatesListUnusual
 
 void TryDefaultArray()
 {
-  std::cout << "Trying a basic point coordinates array with a default container."
+  std::cout << "Trying a basic point coordinates array with a default storage."
             << std::endl;
   std::vector<vtkm::Vector3> buffer(ARRAY_SIZE);
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
@@ -147,30 +147,30 @@ void TryDefaultArray()
                    "CastAndCall functor not called expected number of times.");
 }
 
-void TryUnusualContainer()
+void TryUnusualStorage()
 {
-  std::cout << "Trying a basic point coordinates array with an unusual container."
+  std::cout << "Trying a basic point coordinates array with an unusual storage."
                << std::endl;
 
   vtkm::cont::DynamicPointCoordinates pointCoordinates =
       vtkm::cont::DynamicPointCoordinates(
-        vtkm::cont::PointCoordinatesArray(ArrayHandleWithUnusualContainer()));
+        vtkm::cont::PointCoordinatesArray(ArrayHandleWithUnusualStorage()));
 
   std::cout << "  Make sure we get an exception when we can't find the type."
             << std::endl;
   try
   {
     pointCoordinates.CastAndCall(CheckArray());
-    VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized container.");
+    VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized storage.");
   }
   catch (vtkm::cont::ErrorControlBadValue error)
   {
-    std::cout << "  Caught expected exception for unrecognized container: "
+    std::cout << "  Caught expected exception for unrecognized storage: "
               << std::endl << "    " << error.GetMessage() << std::endl;
   }
 
-  std::cout << "  Recast containers and try again." << std::endl;
-  pointCoordinates.ResetContainerList(ContainerListTagUnusual())
+  std::cout << "  Recast storage and try again." << std::endl;
+  pointCoordinates.ResetStorageList(StorageListTagUnusual())
       .CastAndCall(CheckArray());
   VTKM_TEST_ASSERT(g_CheckArrayInvocations == 1,
                    "CastAndCall functor not called expected number of times.");
@@ -202,7 +202,7 @@ void TryUnusualPointCoordinates()
   try
   {
     pointCoordinates.CastAndCall(CheckArray());
-    VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized container.");
+    VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized storage.");
   }
   catch (vtkm::cont::ErrorControlBadValue error)
   {
@@ -210,7 +210,7 @@ void TryUnusualPointCoordinates()
               << std::endl << "    " << error.GetMessage() << std::endl;
   }
 
-  std::cout << "  Recast containers and try again." << std::endl;
+  std::cout << "  Recast storage and try again." << std::endl;
   pointCoordinates.ResetPointCoordinatesList(PointCoordinatesListUnusual())
       .CastAndCall(CheckArray());
   VTKM_TEST_ASSERT(g_CheckArrayInvocations == 1,
@@ -220,7 +220,7 @@ void TryUnusualPointCoordinates()
 void DynamicPointCoordiantesTest()
 {
   TryDefaultArray();
-  TryUnusualContainer();
+  TryUnusualStorage();
   TryUniformPointCoordinates();
   TryUnusualPointCoordinates();
 }

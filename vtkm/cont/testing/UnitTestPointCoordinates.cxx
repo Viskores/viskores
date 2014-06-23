@@ -18,13 +18,13 @@
 //  this software.
 //============================================================================
 
-// Make sure nothing relies on default container or device adapter.
-#define VTKM_ARRAY_CONTAINER_CONTROL VTKM_ARRAY_CONTAINER_CONTROL_ERROR
+// Make sure nothing relies on default storage or device adapter.
+#define VTKM_STORAGE VTKM_STORAGE_ERROR
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
 // Make sure nothing relies on default lists.
 #define VTKM_DEFAULT_TYPE_LIST_TAG ::vtkm::ListTagEmpty
-#define VTKM_DEFAULT_CONTAINER_LIST_TAG ::vtkm::ListTagEmpty
+#define VTKM_DEFAULT_STORAGE_LIST_TAG ::vtkm::ListTagEmpty
 
 #include <vtkm/cont/PointCoordinatesArray.h>
 #include <vtkm/cont/PointCoordinatesUniform.h>
@@ -32,8 +32,8 @@
 #include <vtkm/Extent.h>
 #include <vtkm/TypeListTag.h>
 
-#include <vtkm/cont/ArrayContainerControlBasic.h>
 #include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -48,9 +48,9 @@ const vtkm::Vector3 SPACING = vtkm::Vector3(1, 1, 1);
 const vtkm::Id3 DIMENSION = vtkm::ExtentPointDimensions(EXTENT);
 const vtkm::Id ARRAY_SIZE = DIMENSION[0]*DIMENSION[1]*DIMENSION[2];
 
-typedef vtkm::cont::ArrayContainerControlTagBasic Container;
+typedef vtkm::cont::StorageTagBasic StorageTag;
 
-struct ContainerListTag : vtkm::cont::ContainerListTagBasic {  };
+struct StorageListTag : vtkm::cont::StorageListTagBasic {  };
 
 vtkm::Vector3 TestValue(vtkm::Id index)
 {
@@ -95,8 +95,8 @@ void TestPointCoordinatesArray()
   }
 
   std::cout << "  Creating and checking array handle" << std::endl;
-  vtkm::cont::ArrayHandle<vtkm::Vector3,Container> array =
-      vtkm::cont::make_ArrayHandle(buffer, Container());
+  vtkm::cont::ArrayHandle<vtkm::Vector3,StorageTag> array =
+      vtkm::cont::make_ArrayHandle(buffer, StorageTag());
   CheckArray()(array);
 
   std::cout << "  Creating and checking PointCoordinatesArray" << std::endl;
@@ -105,7 +105,7 @@ void TestPointCoordinatesArray()
   pointCoordinates.CastAndCall(
         CheckArray(),
         vtkm::ListTagEmpty(), // Internally sets to Vector3
-        vtkm::cont::ContainerListTagBasic());
+        vtkm::cont::StorageListTagBasic());
 }
 
 void TestPointCoordinatesUniform()

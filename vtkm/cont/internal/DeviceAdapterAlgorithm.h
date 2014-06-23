@@ -188,18 +188,18 @@ struct DeviceAdapterAlgorithm
   /// Sorts the contents of \c values so that they in ascending value. Doesn't
   /// guarantee stability
   ///
-  template<typename T, class Container>
+  template<typename T, class Storage>
   VTKM_CONT_EXPORT static void Sort(
-      vtkm::cont::ArrayHandle<T,Container,DeviceAdapterTag> &values);
+      vtkm::cont::ArrayHandle<T,Storage,DeviceAdapterTag> &values);
 
   /// \brief Unstable ascending sort of input array.
   ///
   /// Sorts the contents of \c values so that they in ascending value based
   /// on the custom compare functor.
   ///
-  template<typename T, class Container, class Compare>
+  template<typename T, class Storage, class Compare>
   VTKM_CONT_EXPORT static void Sort(
-      vtkm::cont::ArrayHandle<T,Container,DeviceAdapterTag> &values,
+      vtkm::cont::ArrayHandle<T,Storage,DeviceAdapterTag> &values,
       Compare comp);
 
   /// \brief Performs stream compaction to remove unwanted elements in the input array. Output becomes the index values of input that are valid.
@@ -246,9 +246,9 @@ struct DeviceAdapterAlgorithm
   /// duplicate values that aren't adjacent. Note the values array size might
   /// be modified by this operation.
   ///
-  template<typename T, class Container>
+  template<typename T, class Storage>
   VTKM_CONT_EXPORT static void Unique(
-      vtkm::cont::ArrayHandle<T,Container,DeviceAdapterTag>& values);
+      vtkm::cont::ArrayHandle<T,Storage,DeviceAdapterTag>& values);
 
   /// \brief Reduce an array to only the unique values it contains
   ///
@@ -260,9 +260,9 @@ struct DeviceAdapterAlgorithm
   /// Uses the custom binary predicate Comparison to determine if something
   /// is unique. The predicate must return true if the two items are the same.
   ///
-  template<typename T, class Container, class Compare>
+  template<typename T, class Storage, class Compare>
   VTKM_CONT_EXPORT static void Unique(
-      vtkm::cont::ArrayHandle<T,Container,DeviceAdapterTag>& values,
+      vtkm::cont::ArrayHandle<T,Storage,DeviceAdapterTag>& values,
       Compare comp);
 
   /// \brief Output is the last index in input for each item in values that wouldn't alter the ordering of input
@@ -353,7 +353,7 @@ public:
 
     vtkm::Scalar elapsedTime;
     elapsedTime = vtkm::Scalar(currentTime.Seconds - this->StartTime.Seconds);
-    elapsedTime += 
+    elapsedTime +=
       (vtkm::Scalar(currentTime.Microseconds - this->StartTime.Microseconds)
        /vtkm::Scalar(1000000));
 

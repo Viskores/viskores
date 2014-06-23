@@ -17,25 +17,26 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_ContainerListTag_h
-#define vtk_m_ContainerListTag_h
+#ifndef vtkm_cont_internal_StorageError_h
+#define vtkm_cont_internal_StorageError_h
 
-#ifndef VTKM_DEFAULT_CONTAINER_LIST_TAG
-#define VTKM_DEFAULT_CONTAINER_LIST_TAG ::vtkm::cont::ContainerListTagBasic
-#endif
-
-#include <vtkm/ListTag.h>
-
-#include <vtkm/cont/ArrayContainerControl.h>
-#include <vtkm/cont/ArrayContainerControlBasic.h>
 
 namespace vtkm {
 namespace cont {
+namespace internal {
 
-struct ContainerListTagBasic
-    : vtkm::ListTagBase<vtkm::cont::ArrayContainerControlTagBasic> { };
+/// This is an invalid Storage. The point of this class is to include the
+/// header file to make this invalid class the default Storage. From that
+/// point, you have to specify an appropriate Storage or else get a compile
+/// error.
+///
+struct StorageTagError
+{
+  // Not implemented.
+};
 
 }
-} // namespace vtkm::cont
+}
+} // namespace vtkm::cont::internal
 
-#endif //vtk_m_ContainerListTag_h
+#endif //vtkm_cont_internal_StorageError_h

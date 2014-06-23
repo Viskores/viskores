@@ -20,7 +20,8 @@
 
 #include <vtkm/cont/internal/ArrayManagerExecutionShareWithControl.h>
 
-#include <vtkm/cont/ArrayContainerControlBasic.h>
+#include <vtkm/cont/StorageBasic.h>
+
 #include <vtkm/cont/testing/Testing.h>
 
 #include <algorithm>
@@ -33,14 +34,14 @@ const vtkm::Id ARRAY_SIZE = 10;
 template <typename T>
 struct TemplatedTests
 {
-  typedef vtkm::cont::internal::ArrayManagerExecutionShareWithControl
-      <T, vtkm::cont::ArrayContainerControlTagBasic>
+  typedef vtkm::cont::internal::ArrayManagerExecutionShareWithControl<
+        T, vtkm::cont::StorageTagBasic>
       ArrayManagerType;
   typedef typename ArrayManagerType::ValueType ValueType;
-  typedef vtkm::cont::internal::ArrayContainerControl<
-      T, vtkm::cont::ArrayContainerControlTagBasic> ArrayContainerType;
+  typedef vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>
+      StorageType;
 
-  void SetContainer(ArrayContainerType &array, const ValueType& value)
+  void SetStorage(StorageType &array, const ValueType& value)
   {
     std::fill(array.GetPortal().GetIteratorBegin(),
               array.GetPortal().GetIteratorEnd(),
@@ -57,7 +58,7 @@ struct TemplatedTests
     return true;
   }
 
-  bool CheckContainer(ArrayContainerType &array, const ValueType& value)
+  bool CheckStorage(StorageType &array, const ValueType& value)
   {
     return CheckArray(array.GetPortalConst().GetIteratorBegin(),
                       array.GetPortalConst().GetIteratorEnd(),
@@ -75,9 +76,9 @@ struct TemplatedTests
   {
     const ValueType INPUT_VALUE(4145);
 
-    ArrayContainerType controlArray;
+    StorageType controlArray;
     controlArray.Allocate(ARRAY_SIZE);
-    SetContainer(controlArray, INPUT_VALUE);
+    SetStorage(controlArray, INPUT_VALUE);
 
     ArrayManagerType executionArray;
     executionArray.LoadDataForInput(controlArray.GetPortalConst());
@@ -98,9 +99,9 @@ struct TemplatedTests
   {
     const ValueType INPUT_VALUE(2350);
 
-    ArrayContainerType controlArray;
+    StorageType controlArray;
     controlArray.Allocate(ARRAY_SIZE);
-    SetContainer(controlArray, INPUT_VALUE);
+    SetStorage(controlArray, INPUT_VALUE);
 
     ArrayManagerType executionArray;
     executionArray.LoadDataForInPlace(controlArray.GetPortal());
@@ -125,7 +126,7 @@ struct TemplatedTests
   {
     const ValueType OUTPUT_VALUE(6712);
 
-    ArrayContainerType controlArray;
+    StorageType controlArray;
 
     ArrayManagerType executionArray;
     executionArray.AllocateArrayForOutput(controlArray, ARRAY_SIZE);
@@ -139,8 +140,8 @@ struct TemplatedTests
 
     executionArray.RetrieveOutputData(controlArray);
 
-    VTKM_TEST_ASSERT(CheckContainer(controlArray, OUTPUT_VALUE),
-                     "Did not get the right value in the control container.");
+    VTKM_TEST_ASSERT(CheckStorage(controlArray, OUTPUT_VALUE),
+                     "Did not get the right value in the storage.");
   }
 
   void operator()()
