@@ -36,149 +36,14 @@
 #include <boost/mpl/insert.hpp>
 #include <boost/mpl/less.hpp>
 #include <boost/mpl/push_back.hpp>
-#include <boost/preprocessor/cat.hpp>
-#include <boost/preprocessor/control/if.hpp>
-#include <boost/preprocessor/dec.hpp>
-#include <boost/preprocessor/inc.hpp>
-#include <boost/preprocessor/punctuation/comma_if.hpp>
-#include <boost/preprocessor/repetition/enum_params.hpp>
-#include <boost/preprocessor/repetition/enum_shifted.hpp>
-#include <boost/preprocessor/repetition/enum_shifted_binary_params.hpp>
-#include <boost/preprocessor/repetition/enum_shifted_params.hpp>
-#include <boost/preprocessor/repetition/repeat.hpp>
 #include <boost/utility/enable_if.hpp>
 
-
-#define VTKM_MAX_FUNCTION_PARAMETERS 10
+#include <vtkm/internal/FunctionInterfaceDetailPre.h>
 
 namespace vtkm {
 namespace internal {
 
-/// This struct is used internally by FunctionInterface to store the return
-/// value of a function. There is a special implementation for a return type of
-/// void, which stores nothing.
-///
-template<typename T>
-struct FunctionInterfaceReturnContainer {
-  T Value;
-  static const bool VALID = true;
-};
-
-template<>
-struct FunctionInterfaceReturnContainer<void> {
-  // Nothing to store for void return.
-  static const bool VALID = false;
-};
-
 namespace detail {
-
-// If you get a compiler error stating that this class is not specialized, that
-// probably means that you are using FunctionInterface with an unsupported
-// number of arguments.
-template<typename FunctionSignature>
-struct ParameterContainer;
-
-// The following code uses the Boost preprocessor utilities to create
-// definitions of ParameterContainer for all supported number of arguments.
-// The created classes are conceptually defined as follows:
-//
-// template<typename P0, // Return type
-//          typename P1,
-//          typename P2, ...>
-// struct ParameterContainer<P0(P1,P2,...)> {
-//   P1 Parameter1;
-//   P2 Parameter2;
-//   ...
-// };
-//
-// These are defined for 0 to VTKM_MAX_FUNCTION_PARAMETERS parameters.
-
-#define VTK_M_PARAMETER_DEFINITION(z, ParamIndex, data) \
-  BOOST_PP_IF(ParamIndex, \
-              BOOST_PP_CAT(P,ParamIndex) BOOST_PP_CAT(Parameter,ParamIndex);,)
-
-#define VTK_M_PARAMETER_CONTAINER(NumParamsPlusOne) \
-  template<BOOST_PP_ENUM_PARAMS(NumParamsPlusOne, typename P)> \
-  struct ParameterContainer<P0(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, P))> \
-  { \
-    BOOST_PP_REPEAT(NumParamsPlusOne, VTK_M_PARAMETER_DEFINITION,) \
-  };
-
-#define VTK_M_PARAMETER_CONTAINER_REPEAT(z, NumParams, data) \
-  VTK_M_PARAMETER_CONTAINER(BOOST_PP_INC(NumParams))
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_PARAMETER_CONTAINER_REPEAT,)
-
-#undef VTK_M_PARAMETER_CONTAINER_REPEAT
-#undef VTK_M_PARAMETER_CONTAINER
-#undef VTK_M_PARAMETER_DEFINITION
-
-template<int ParameterIndex, typename FunctionSignature>
-struct ParameterContainerAccess;
-
-// The following code uses the Boost preprocessor utilities to create
-// definitions of ParameterContainerAccess for all supported number of
-// arguments. The created class specalizations conceptually create the
-// following interface:
-//
-// template<int ParameterIndex, typename R(P1,P2,...)>
-// struct ParameterContainerAccess
-// {
-//   VTKM_EXEC_CONT_EXPORT
-//   static ParameterType
-//   GetParameter(const ParameterContainer<R(P1,P2,...)> &parameters);
-//
-//   VTKM_EXEC_CONT_EXPORT
-//   static void SetParameter(ParameterContainer<R(P1,P2,...)> &parameters,
-//                            const ParameterType &value);
-// };
-//
-// Here ParameterType is the P# type in the function signature for the given
-// ParameterIndex. It is the same you would get for
-// FunctionInterface::ParameterType.
-
-#define VTK_M_PARAMETER_CONTAINER_ACCESS(ParameterIndex) \
-  template<typename FunctionSignature> \
-  struct ParameterContainerAccess<ParameterIndex, FunctionSignature> { \
-    typedef typename boost::mpl::at_c< \
-        boost::function_types::components<FunctionSignature>, \
-        ParameterIndex>::type ParameterType; \
-    VTKM_EXEC_CONT_EXPORT \
-    static \
-    ParameterType \
-    GetParameter(const ParameterContainer<FunctionSignature> &parameters) { \
-      return parameters.BOOST_PP_CAT(Parameter, ParameterIndex); \
-    } \
-    VTKM_EXEC_CONT_EXPORT \
-    static \
-    void SetParameter(ParameterContainer<FunctionSignature> &parameters, \
-                      const ParameterType &value) { \
-      parameters.BOOST_PP_CAT(Parameter, ParameterIndex) = value; \
-    } \
-  };
-
-#define VTK_M_PARAMETER_CONTAINER_ACCESS_REPEAT(z, i, data) \
-  VTK_M_PARAMETER_CONTAINER_ACCESS(BOOST_PP_INC(i))
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_PARAMETER_CONTAINER_ACCESS_REPEAT,)
-
-#undef VTK_M_PARAMETER_CONTAINER_ACCESS_REPEAT
-#undef VTK_M_PARAMETER_CONTAINER_ACCESS
-
-template<int ParameterIndex, typename FunctionSignature>
-VTKM_EXEC_CONT_EXPORT
-typename ParameterContainerAccess<ParameterIndex,FunctionSignature>::ParameterType
-GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
-  return ParameterContainerAccess<ParameterIndex,FunctionSignature>::GetParameter(parameters);
-}
-
-template<int ParameterIndex, typename FunctionSignature>
-VTKM_EXEC_CONT_EXPORT
-
-void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                  const typename ParameterContainerAccess<ParameterIndex,FunctionSignature>::ParameterType &value) {
-  return ParameterContainerAccess<ParameterIndex,FunctionSignature>::SetParameter(parameters, value);
-}
 
 struct IdentityFunctor {
   template<typename T>
@@ -190,111 +55,20 @@ struct IdentityFunctor {
   const T &operator()(const T &x) const { return x; }
 };
 
-// The following code uses the Boost preprocessor utilities to create
-// definitions of DoInvoke functions for all supported number of arguments.
-// The created functions are conceptually defined as follows:
-//
-// template<typename Function,
-//          typename TransformFunctor,
-//          typename P0,
-//          typename P1,
-//          typename P2,...>
-// VTKM_CONT_EXPORT
-// void DoInvokeCont(const Function &f,
-//                   ParameterContainer<P0(P1,P2,...)> &parameters,
-//                   FunctionInterfaceReturnContainer<P0> &result,
-//                   const TransformFunctor &transform)
-// {
-//   result.Value = transform(f(transform(parameters.Parameter1),...));
-// }
-//
-// We define multiple DoInvokeCont and DoInvokeExec that do identical things
-// with different exports. It is important to have these separate definitions
-// instead of a single version with VTKM_EXEC_CONT_EXPORT because the function
-// to be invoked may only be viable in one or the other. There are also
-// separate versions that support const functions and non-const functions.
-// (However, the structures from the FunctionInterface must always be
-// non-const.) Finally, there is a special version for functions that return
-// void so that the function does not try to invalidly save a void value.
 
-#define VTK_M_DO_INVOKE_TPARAM(z, count, data) \
-  transform(BOOST_PP_CAT(parameters.Parameter, count))
+template<int ParameterIndex, typename FunctionSignature>
+VTKM_EXEC_CONT_EXPORT
+typename ParameterContainerAccess<ParameterIndex,FunctionSignature>::ParameterType
+GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
+  return ParameterContainerAccess<ParameterIndex,FunctionSignature>::GetParameter(parameters);
+}
 
-#define VTK_M_DO_INVOKE(NumParamsPlusOne) \
-  template<typename Function, \
-           typename TransformFunctor, \
-           BOOST_PP_ENUM_PARAMS(NumParamsPlusOne, typename P)> \
-  VTK_M_DO_INVOKE_EXPORT \
-  void VTK_M_DO_INVOKE_NAME( \
-      VTK_M_DO_INVOKE_FUNCTION_CONST Function &f, \
-      ParameterContainer<P0(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, P))> &parameters, \
-      FunctionInterfaceReturnContainer<P0> &result, \
-      const TransformFunctor &transform) \
-  { \
-    (void)parameters; \
-    (void)transform; \
-    result.Value = \
-      transform( \
-        f(BOOST_PP_ENUM_SHIFTED(NumParamsPlusOne, VTK_M_DO_INVOKE_TPARAM, ))); \
-  } \
-  \
-  template<typename Function, \
-           typename TransformFunctor BOOST_PP_COMMA_IF(BOOST_PP_DEC(NumParamsPlusOne)) \
-           BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, typename P)> \
-  VTK_M_DO_INVOKE_EXPORT \
-  void VTK_M_DO_INVOKE_NAME( \
-      VTK_M_DO_INVOKE_FUNCTION_CONST Function &f, \
-      ParameterContainer<void(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, P))> &parameters, \
-      FunctionInterfaceReturnContainer<void> &, \
-      const TransformFunctor &transform) \
-  { \
-    (void)parameters; \
-    (void)transform; \
-    f(BOOST_PP_ENUM_SHIFTED(NumParamsPlusOne, VTK_M_DO_INVOKE_TPARAM, )); \
-  }
-#define VTK_M_DO_INVOKE_REPEAT(z, NumParams, data) \
-  VTK_M_DO_INVOKE(BOOST_PP_INC(NumParams))
-
-#define VTK_M_DO_INVOKE_NAME DoInvokeCont
-#define VTK_M_DO_INVOKE_EXPORT VTKM_CONT_EXPORT
-#define VTK_M_DO_INVOKE_FUNCTION_CONST const
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_DO_INVOKE_REPEAT,)
-#undef VTK_M_DO_INVOKE_NAME
-#undef VTK_M_DO_INVOKE_EXPORT
-#undef VTK_M_DO_INVOKE_FUNCTION_CONST
-
-#define VTK_M_DO_INVOKE_NAME DoInvokeCont
-#define VTK_M_DO_INVOKE_EXPORT VTKM_CONT_EXPORT
-#define VTK_M_DO_INVOKE_FUNCTION_CONST
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_DO_INVOKE_REPEAT,)
-#undef VTK_M_DO_INVOKE_NAME
-#undef VTK_M_DO_INVOKE_EXPORT
-#undef VTK_M_DO_INVOKE_FUNCTION_CONST
-
-#define VTK_M_DO_INVOKE_NAME DoInvokeExec
-#define VTK_M_DO_INVOKE_EXPORT VTKM_EXEC_EXPORT
-#define VTK_M_DO_INVOKE_FUNCTION_CONST const
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_DO_INVOKE_REPEAT,)
-#undef VTK_M_DO_INVOKE_NAME
-#undef VTK_M_DO_INVOKE_EXPORT
-#undef VTK_M_DO_INVOKE_FUNCTION_CONST
-
-#define VTK_M_DO_INVOKE_NAME DoInvokeExec
-#define VTK_M_DO_INVOKE_EXPORT VTKM_EXEC_EXPORT
-#define VTK_M_DO_INVOKE_FUNCTION_CONST
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_DO_INVOKE_REPEAT,)
-#undef VTK_M_DO_INVOKE_NAME
-#undef VTK_M_DO_INVOKE_EXPORT
-#undef VTK_M_DO_INVOKE_FUNCTION_CONST
-
-#undef VTK_M_DO_INVOKE_REPEAT
-#undef VTK_M_DO_INVOKE
-#undef VTK_M_DO_INVOKE_TPARAM
-
+template<int ParameterIndex, typename FunctionSignature>
+VTKM_EXEC_CONT_EXPORT
+void SetParameter(ParameterContainer<FunctionSignature> &parameters,
+                  const typename ParameterContainerAccess<ParameterIndex,FunctionSignature>::ParameterType &value) {
+  return ParameterContainerAccess<ParameterIndex,FunctionSignature>::SetParameter(parameters, value);
+}
 
 // These functions exist to help copy components of a FunctionInterface.
 
@@ -327,155 +101,11 @@ struct FunctionInterfaceCopyParameters<0, ParameterIndex> {
 template<typename OriginalSignature, typename Transform>
 struct FunctionInterfaceStaticTransformType;
 
-// The following code uses the Boost preprocessor utilities to create
-// definitions of DoStaticTransform functions for all supported number of
-// arguments. The created functions are conceptually defined as follows:
-//
-// template<typename Transform,
-//          typename OriginalSignature,
-//          typename TransformedSignature>
-// VTKM_CONT_EXPORT
-// void DoStaticTransformCont(
-//     const Transform &transform,
-//     const ParameterContainer<OriginalSignature> &originalParameters,
-//     ParameterContainer<TransformedSignature> &transformedParameters)
-// {
-//   transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-//   transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-//   ...
-// }
-//
-// We define multiple DoStaticTransformCont and DoStaticTransformExec that do
-// identical things with different exports. It is important to have these
-// separate definitions instead of a single version with VTKM_EXEC_CONT_EXPORT
-// because the transform to be invoked may only be viable in one or the other.
-
-#define VTK_M_DO_STATIC_TRANSFORM_ASSIGN(z, count, data) \
-  BOOST_PP_IF(count, \
-              BOOST_PP_CAT(transformedParameters.Parameter, count) = \
-                transform(BOOST_PP_CAT(originalParameters.Parameter, count));,)
-
-#define VTK_M_DO_STATIC_TRANSFORM(NumParamsPlusOne) \
-  template<typename Transform, \
-           BOOST_PP_ENUM_PARAMS(NumParamsPlusOne, typename OriginalP), \
-           BOOST_PP_ENUM_PARAMS(NumParamsPlusOne, typename TransformedP)> \
-  VTK_M_DO_STATIC_TRANSFORM_EXPORT \
-  void VTK_M_DO_STATIC_TRANSFORM_NAME( \
-      const Transform &transform, \
-      const ParameterContainer<OriginalP0(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, OriginalP))> &originalParameters, \
-      ParameterContainer<TransformedP0(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, TransformedP))> &transformedParameters) \
-  { \
-    (void)transform; \
-    (void)originalParameters; \
-    (void)transformedParameters; \
-    BOOST_PP_REPEAT(NumParamsPlusOne, VTK_M_DO_STATIC_TRANSFORM_ASSIGN,) \
-  }
-#define VTK_M_DO_STATIC_TRANSFORM_REPEAT(z, NumParams, data) \
-  VTK_M_DO_STATIC_TRANSFORM(BOOST_PP_INC(NumParams))
-
-#define VTK_M_DO_STATIC_TRANSFORM_NAME DoStaticTransformCont
-#define VTK_M_DO_STATIC_TRANSFORM_EXPORT VTKM_CONT_EXPORT
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_DO_STATIC_TRANSFORM_REPEAT,)
-#undef VTK_M_DO_STATIC_TRANSFORM_EXPORT
-#undef VTK_M_DO_STATIC_TRANSFORM_NAME
-
-#define VTK_M_DO_STATIC_TRANSFORM_NAME DoStaticTransformExec
-#define VTK_M_DO_STATIC_TRANSFORM_EXPORT VTKM_EXEC_EXPORT
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_DO_STATIC_TRANSFORM_REPEAT,)
-#undef VTK_M_DO_STATIC_TRANSFORM_EXPORT
-#undef VTK_M_DO_STATIC_TRANSFORM_NAME
-
-#undef VTK_M_DO_STATIC_TRANSFORM_REPEAT
-#undef VTK_M_DO_STATIC_TRANSFORM
-#undef VTK_M_DO_STATIC_TRANSFORM_ASSIGN
-
 template<typename OriginalFunction,
          typename NewFunction,
          typename TransformFunctor,
          typename FinishFunctor>
 class FunctionInterfaceDynamicTransformContContinue;
-
-// The following code uses the Boost preprocessor utilities to create
-// definitions of DoForEach functions for all supported number of arguments.
-// The created functions are conceptually defined as follows:
-//
-// template<typename Functor, typename P0, typename P1, typename P2,...>
-// VTKM_CONT_EXPORT
-// void DoForEachCont(const Functor &f,
-//                    ParameterContainer<P0(P1,P2,...)> &parameters)
-//
-// {
-//   f(parameters.Parameter1);
-//   f(parameters.Parameter2);
-//   ...
-// }
-//
-// We define multiple DoForEachCont and DoForEachExec that do identical things
-// with different exports. It is important to have these separate definitions
-// instead of a single version with VTKM_EXEC_CONT_EXPORT because the functor
-// to be invoked on each parameter may only be viable in one or the other.
-// There are also separate versions that support a const FunctionInterface and
-// a non-const FunctionInterface.
-
-#define VTK_M_DO_FOR_EACH_CALL_PARAM(z, count, data) \
-  BOOST_PP_IF(count, f(BOOST_PP_CAT(parameters.Parameter, count));,)
-
-#define VTK_M_DO_FOR_EACH(NumParamsPlusOne) \
-  template<typename Functor, \
-           BOOST_PP_ENUM_PARAMS(NumParamsPlusOne, typename P)> \
-  VTK_M_DO_FOR_EACH_EXPORT \
-  void VTK_M_DO_FOR_EACH_NAME( \
-      const Functor &f, \
-      VTK_M_DO_FOR_EACH_FI_CONST ParameterContainer<P0(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, P))> &parameters) \
-  { \
-    (void)f; \
-    (void)parameters; \
-    BOOST_PP_REPEAT(NumParamsPlusOne, VTK_M_DO_FOR_EACH_CALL_PARAM,) \
-  }
-#define VTK_M_DO_FOR_EACH_REPEAT(z, NumParams, data) \
-  VTK_M_DO_FOR_EACH(BOOST_PP_INC(NumParams))
-
-#define VTK_M_DO_FOR_EACH_EXPORT VTKM_CONT_EXPORT
-#define VTK_M_DO_FOR_EACH_NAME DoForEachCont
-#define VTK_M_DO_FOR_EACH_FI_CONST const
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_DO_FOR_EACH_REPEAT,)
-#undef VTK_M_DO_FOR_EACH_FI_CONST
-#undef VTK_M_DO_FOR_EACH_NAME
-#undef VTK_M_DO_FOR_EACH_EXPORT
-
-#define VTK_M_DO_FOR_EACH_EXPORT VTKM_CONT_EXPORT
-#define VTK_M_DO_FOR_EACH_NAME DoForEachCont
-#define VTK_M_DO_FOR_EACH_FI_CONST
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_DO_FOR_EACH_REPEAT,)
-#undef VTK_M_DO_FOR_EACH_FI_CONST
-#undef VTK_M_DO_FOR_EACH_NAME
-#undef VTK_M_DO_FOR_EACH_EXPORT
-
-#define VTK_M_DO_FOR_EACH_EXPORT VTKM_EXEC_EXPORT
-#define VTK_M_DO_FOR_EACH_NAME DoForEachExec
-#define VTK_M_DO_FOR_EACH_FI_CONST const
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_DO_FOR_EACH_REPEAT,)
-#undef VTK_M_DO_FOR_EACH_FI_CONST
-#undef VTK_M_DO_FOR_EACH_NAME
-#undef VTK_M_DO_FOR_EACH_EXPORT
-
-#define VTK_M_DO_FOR_EACH_EXPORT VTKM_EXEC_EXPORT
-#define VTK_M_DO_FOR_EACH_NAME DoForEachExec
-#define VTK_M_DO_FOR_EACH_FI_CONST
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_DO_FOR_EACH_REPEAT,)
-#undef VTK_M_DO_FOR_EACH_FI_CONST
-#undef VTK_M_DO_FOR_EACH_NAME
-#undef VTK_M_DO_FOR_EACH_EXPORT
-
-#undef VTK_M_DO_FOR_EACH_REPEAT
-#undef VTK_M_DO_FOR_EACH
-#undef VTK_M_DO_FOR_EACH_CALL_PARAM
 
 } // namespace detail
 
@@ -1044,46 +674,6 @@ private:
 
 namespace detail {
 
-// The following code uses the Boost preprocessor utilities to create
-// definitions of FunctionInterfaceStaticTransformType for all supported number
-// of arguments. The created classes are conceptually defined as follows:
-//
-// template<typename Transform,
-//          typename P0, // Return type
-//          typename P1,
-//          typename P2, ...>
-// struct FunctionInterfaceStaticTransformType<P0(P1,P2,...), Transform> {
-//   typedef P0(type)(typename Transform::template ReturnType<P1>::type,
-//                    typename Transform::template ReturnType<P2>::type, ...);
-// };
-
-#define VTK_M_STATIC_TRANSFORM_TPARAM(z, ParamIndex, data) \
-  BOOST_PP_IF( \
-    ParamIndex, \
-    typename Transform::template ReturnType<BOOST_PP_CAT(P,ParamIndex)>::type,)
-
-#define VTK_M_STATIC_TRANSFORM_TYPE(NumParamsPlusOne) \
-  template<typename Transform, \
-           BOOST_PP_ENUM_PARAMS(NumParamsPlusOne, typename P)> \
-  struct FunctionInterfaceStaticTransformType< \
-      P0(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, P)), \
-      Transform> \
-  { \
-    typedef P0(type)( \
-        BOOST_PP_ENUM_SHIFTED(NumParamsPlusOne, VTK_M_STATIC_TRANSFORM_TPARAM,) \
-      ); \
-  };
-#define VTK_M_STATIC_TRANSFORM_TYPE_REPEAT(z, NumParams, data) \
-  VTK_M_STATIC_TRANSFORM_TYPE(BOOST_PP_INC(NumParams))
-
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_STATIC_TRANSFORM_TYPE_REPEAT,)
-
-#undef VTK_M_STATIC_TRANSFORM_TYPE_REPEAT
-#undef VTK_M_STATIC_TRANSFORM_TYPE
-#undef VTK_M_STATIC_TRANSFORM_TPARAM
-
-
 template<typename OriginalFunction,
          typename NewFunction,
          typename TransformFunctor,
@@ -1158,69 +748,9 @@ private:
 
 } // namespace detail
 
-#ifdef VTKM_DOXYGEN_ONLY
-/// \brief Create a \c FunctionInterface
-///
-/// \c make_FunctionInterface is a function that takes a variable number of
-/// arguments and returns a \c FunctionInterface object containing these
-/// objects. Since the return type for the function signature is not specified,
-/// you must always specify it as a template parameter
-///
-/// \code{.cpp}
-/// vtkm::internal::FunctionInterface<void(int,double,char)> functionInterface =
-///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
-/// \endcode
-///
-template<typename P0, typename... P>
-VTKM_EXEC_CONT_EXPORT
-vtkm::internal::FunctionInterface<P0(P...)>
-make_FunctionInterface(P... parameters);
-#endif //VTKM_DOXYGEN_ONLY
-
-// The following code uses the Boost preprocessor utilities to create
-// definitions of make_FunctionInterface for all supported number of arguments.
-// The created functions are conceptually defined as follows:
-//
-// template<typename P0, // Return type
-//          typename P1,
-//          typename P2, ...>
-// VTKM_EXEC_CONT_EXPORT
-// FunctionInterface<P0(P1,P2,...)>
-// make_FunctionInterface(P1 p1, P2 p2,...) {
-//   FunctionInterface<P0(P1,P2,...)> fi;
-//   fi.template SetParameters<1>(p1);
-//   fi.template SetParameters<2>(p2);
-//   ...
-//   return fi;
-// }
-
-#define VTK_M_SET_PARAMETER(z, ParamIndex, data) \
-  BOOST_PP_IF( \
-      ParamIndex, \
-      fi.template SetParameter<ParamIndex>(BOOST_PP_CAT(p, ParamIndex));,)
-
-#define VTK_M_MAKE_FUNCTION_INTERFACE(NumParamsPlusOne) \
-  template<BOOST_PP_ENUM_PARAMS(NumParamsPlusOne, typename P)> \
-  VTKM_EXEC_CONT_EXPORT \
-  FunctionInterface<P0(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, P))> \
-  make_FunctionInterface( \
-      BOOST_PP_ENUM_SHIFTED_BINARY_PARAMS(NumParamsPlusOne, P, p)) \
-  { \
-    FunctionInterface<P0(BOOST_PP_ENUM_SHIFTED_PARAMS(NumParamsPlusOne, P))> fi; \
-    BOOST_PP_REPEAT(NumParamsPlusOne, VTK_M_SET_PARAMETER,) \
-    return fi; \
-  }
-
-#define VTK_M_MAKE_FUNCITON_INTERFACE_REPEAT(z, NumParams, data) \
-  VTK_M_MAKE_FUNCTION_INTERFACE(BOOST_PP_INC(NumParams))
-BOOST_PP_REPEAT(BOOST_PP_INC(VTKM_MAX_FUNCTION_PARAMETERS),
-                VTK_M_MAKE_FUNCITON_INTERFACE_REPEAT,)
-
-#undef VTK_M_MAKE_FUNCITON_INTERFACE_REPEAT
-#undef VTK_M_MAKE_FUNCTION_INTERFACE
-#undef VTK_M_SET_PARAMETER
-
 }
 } // namespace vtkm::internal
+
+#include <vtkm/internal/FunctionInterfaceDetailPost.h>
 
 #endif //vtk_m_cont_internal_FunctionInterface_h
