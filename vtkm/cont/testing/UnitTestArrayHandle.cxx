@@ -20,7 +20,7 @@
 
 //This sets up the ArrayHandle semantics to allocate pointers and share memory
 //between control and execution.
-#define VTKM_ARRAY_CONTAINER_CONTROL VTKM_ARRAY_CONTAINER_CONTROL_BASIC
+#define VTKM_STORAGE VTKM_STORAGE_BASIC
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 
 #include <vtkm/cont/ArrayHandle.h>

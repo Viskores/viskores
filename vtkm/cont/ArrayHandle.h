@@ -22,9 +22,10 @@
 
 #include <vtkm/Types.h>
 
-#include <vtkm/cont/ArrayContainerControl.h>
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/Storage.h>
+
 #include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
 #include <vtkm/cont/internal/ArrayTransfer.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
@@ -42,18 +43,18 @@ namespace cont {
 
 namespace internal {
 
-/// Checks to see if the given type and container can form a valid array handle
-/// (some containers cannot support all types). This check is compatable with
-/// the Boost meta-template programming library (MPL). It contains a typedef
-/// named type that is either boost::mpl::true_ or boost::mpl::false_. Both of
-/// these have a typedef named value with the respective boolean value.
+/// Checks to see if the given type and storage can form a valid array handle
+/// (some storage objects cannot support all types). This check is compatable
+/// with the Boost meta-template programming library (MPL). It contains a
+/// typedef named type that is either boost::mpl::true_ or boost::mpl::false_.
+/// Both of these have a typedef named value with the respective boolean value.
 ///
-template<typename T, typename ArrayContainerControlTag>
+template<typename T, typename StorageTag>
 struct IsValidArrayHandle {
   typedef typename boost::mpl::not_<
     typename boost::is_base_of<
-      vtkm::cont::internal::UndefinedArrayContainerControl,
-      vtkm::cont::internal::ArrayContainerControl<T,ArrayContainerControlTag>
+      vtkm::cont::internal::UndefinedStorage,
+      vtkm::cont::internal::Storage<T,StorageTag>
       >::type
     >::type type;
 };
@@ -83,22 +84,18 @@ struct IsValidArrayHandle {
 ///
 template<
     typename T,
-    typename ArrayContainerControlTag_ = VTKM_DEFAULT_ARRAY_CONTAINER_CONTROL_TAG>
+    typename StorageTag_ = VTKM_DEFAULT_STORAGE_TAG>
 class ArrayHandle
 {
 private:
-  typedef vtkm::cont::internal
-      ::ArrayContainerControl<T,ArrayContainerControlTag_>
-      ArrayContainerControlType;
-  typedef vtkm::cont::internal
-      ::ArrayHandleExecutionManagerBase<T,ArrayContainerControlTag_>
+  typedef vtkm::cont::internal::Storage<T,StorageTag_> StorageType;
+  typedef vtkm::cont::internal::ArrayHandleExecutionManagerBase<T,StorageTag_>
       ExecutionManagerType;
 public:
   typedef T ValueType;
-  typedef ArrayContainerControlTag_ ArrayContainerControlTag;
-  typedef typename ArrayContainerControlType::PortalType PortalControl;
-  typedef typename ArrayContainerControlType::PortalConstType
-      PortalConstControl;
+  typedef StorageTag_ StorageTag;
+  typedef typename StorageType::PortalType PortalControl;
+  typedef typename StorageType::PortalConstType PortalConstControl;
   template <typename DeviceAdapterTag>
   struct ExecutionTypes
   {
@@ -398,11 +395,11 @@ public:
   /// initial state of the control array. When this constructor is used, it
   /// is assumed that the control array is valid.
   ///
-  ArrayHandle(const ArrayContainerControlType &container)
+  ArrayHandle(const StorageType &storage)
     : Internals(new InternalStruct)
   {
     this->Internals->UserPortalValid = false;
-    this->Internals->ControlArray = container;
+    this->Internals->ControlArray = storage;
     this->Internals->ControlArrayValid = true;
     this->Internals->ExecutionArrayValid = false;
   }
@@ -413,12 +410,12 @@ public:
     PortalConstControl UserPortal;
     bool UserPortalValid;
 
-    ArrayContainerControlType ControlArray;
+    StorageType ControlArray;
     bool ControlArrayValid;
 
     boost::scoped_ptr<
       vtkm::cont::internal::ArrayHandleExecutionManagerBase<
-        ValueType,ArrayContainerControlTag> > ExecutionArray;
+        ValueType,StorageTag> > ExecutionArray;
     bool ExecutionArrayValid;
   };
 
@@ -468,7 +465,7 @@ public:
         = const_cast<InternalStruct*>(this->Internals.get());
     internals->ExecutionArray.reset(
           new vtkm::cont::internal::ArrayHandleExecutionManager<
-            T, ArrayContainerControlTag, DeviceAdapterTag>);
+            T, StorageTag, DeviceAdapterTag>);
   }
 
   /// Synchronizes the control array with the execution array. If either the
@@ -502,55 +499,55 @@ public:
   boost::shared_ptr<InternalStruct> Internals;
 };
 
-/// A convenience function for creating an ArrayHandle from a standard C
-/// array.  Unless properly specialized, this only works with container types
-/// that use an array portal that accepts a pair of pointers to signify the
-/// beginning and end of the array.
+/// A convenience function for creating an ArrayHandle from a standard C array.
+/// Unless properly specialized, this only works with storage types that use an
+/// array portal that accepts a pair of pointers to signify the beginning and
+/// end of the array.
 ///
-template<typename T, typename ArrayContainerControlTag>
+template<typename T, typename StorageTag>
 VTKM_CONT_EXPORT
-vtkm::cont::ArrayHandle<T, ArrayContainerControlTag>
+vtkm::cont::ArrayHandle<T, StorageTag>
 make_ArrayHandle(const T *array,
                  vtkm::Id length,
-                 ArrayContainerControlTag)
+                 StorageTag)
 {
-  typedef vtkm::cont::ArrayHandle<T, ArrayContainerControlTag> ArrayHandleType;
+  typedef vtkm::cont::ArrayHandle<T, StorageTag> ArrayHandleType;
   typedef typename ArrayHandleType::PortalConstControl PortalType;
   return ArrayHandleType(PortalType(array, array+length));
 }
 template<typename T>
 VTKM_CONT_EXPORT
-vtkm::cont::ArrayHandle<T, VTKM_DEFAULT_ARRAY_CONTAINER_CONTROL_TAG>
+vtkm::cont::ArrayHandle<T, VTKM_DEFAULT_STORAGE_TAG>
 make_ArrayHandle(const T *array, vtkm::Id length)
 {
   return make_ArrayHandle(array,
                           length,
-                          VTKM_DEFAULT_ARRAY_CONTAINER_CONTROL_TAG());
+                          VTKM_DEFAULT_STORAGE_TAG());
 }
 
 /// A convenience function for creating an ArrayHandle from an std::vector.
-/// Unless properly specialized, this only works with container types that use
-/// an array portal that accepts a pair of pointers to signify the beginning
-/// and end of the array.
+/// Unless properly specialized, this only works with storage types that use an
+/// array portal that accepts a pair of pointers to signify the beginning and
+/// end of the array.
 ///
 template<typename T,
          typename Allocator,
-         typename ArrayContainerControlTag>
+         typename StorageTag>
 VTKM_CONT_EXPORT
-vtkm::cont::ArrayHandle<T, ArrayContainerControlTag>
+vtkm::cont::ArrayHandle<T, StorageTag>
 make_ArrayHandle(const std::vector<T,Allocator> &array,
-                 ArrayContainerControlTag)
+                 StorageTag)
 {
-  typedef vtkm::cont::ArrayHandle<T, ArrayContainerControlTag> ArrayHandleType;
+  typedef vtkm::cont::ArrayHandle<T, StorageTag> ArrayHandleType;
   typedef typename ArrayHandleType::PortalConstControl PortalType;
   return ArrayHandleType(PortalType(&array.front(), &array.back() + 1));
 }
 template<typename T, typename Allocator>
 VTKM_CONT_EXPORT
-vtkm::cont::ArrayHandle<T, VTKM_DEFAULT_ARRAY_CONTAINER_CONTROL_TAG>
+vtkm::cont::ArrayHandle<T, VTKM_DEFAULT_STORAGE_TAG>
 make_ArrayHandle(const std::vector<T,Allocator> &array)
 {
-  return make_ArrayHandle(array, VTKM_DEFAULT_ARRAY_CONTAINER_CONTROL_TAG());
+  return make_ArrayHandle(array, VTKM_DEFAULT_STORAGE_TAG());
 }
 
 }

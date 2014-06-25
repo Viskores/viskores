@@ -49,13 +49,13 @@ public:
     : Array(extent, origin, spacing)
   {  }
 
-  /// In this \c CastAndCall, both \c TypeList and \c ContainerList are
+  /// In this \c CastAndCall, both \c TypeList and \c StorageList are
   /// ignored. All point coordinates are expressed as Vector3, so that must be
   /// how the array is represented.
   ///
-  template<typename Functor, typename TypeList, typename ContainerList>
+  template<typename Functor, typename TypeList, typename StorageList>
   VTKM_CONT_EXPORT
-  void CastAndCall(const Functor &f, TypeList, ContainerList) const
+  void CastAndCall(const Functor &f, TypeList, StorageList) const
   {
     f(this->Array);
   }

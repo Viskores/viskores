@@ -21,7 +21,8 @@
 
 #include <vtkm/cont/DynamicArrayHandle.h>
 
-#include <vtkm/cont/ArrayContainerControlImplicit.h>
+#include <vtkm/cont/StorageImplicit.h>
+
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -85,35 +86,35 @@ struct UnusualPortal
 };
 
 template<typename T>
-class ArrayHandleWithUnusualContainer
-    : public vtkm::cont::ArrayHandle<T, vtkm::cont::ArrayContainerControlTagImplicit<UnusualPortal<T> > >
+class ArrayHandleWithUnusualStorage
+    : public vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagImplicit<UnusualPortal<T> > >
 {
-  typedef vtkm::cont::ArrayHandle<T, vtkm::cont::ArrayContainerControlTagImplicit<UnusualPortal<T> > >
+  typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagImplicit<UnusualPortal<T> > >
       Superclass;
 public:
   VTKM_CONT_EXPORT
-  ArrayHandleWithUnusualContainer()
+  ArrayHandleWithUnusualStorage()
     : Superclass(typename Superclass::PortalConstControl()) {  }
 };
 
-struct ContainerListTagUnusual :
+struct StorageListTagUnusual :
     vtkm::ListTagBase2<
-      ArrayHandleWithUnusualContainer<vtkm::Id>::ArrayContainerControlTag,
-      ArrayHandleWithUnusualContainer<std::string>::ArrayContainerControlTag>
+      ArrayHandleWithUnusualStorage<vtkm::Id>::StorageTag,
+      ArrayHandleWithUnusualStorage<std::string>::StorageTag>
 {  };
 
 bool CheckCalled;
 
 struct CheckFunctor
 {
-  template<typename T, typename Container>
-  void operator()(vtkm::cont::ArrayHandle<T, Container> array) const {
+  template<typename T, typename Storage>
+  void operator()(vtkm::cont::ArrayHandle<T, Storage> array) const {
     CheckCalled = true;
 
     VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE,
                      "Unexpected array size.");
 
-    typename vtkm::cont::ArrayHandle<T,Container>::PortalConstControl portal =
+    typename vtkm::cont::ArrayHandle<T,Storage>::PortalConstControl portal =
         array.GetPortalConstControl();
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
@@ -187,58 +188,58 @@ void TryUnusualType()
   std::cout << "  Found type when type list was reset." << std:: endl;
 }
 
-void TryUnusualContainer()
+void TryUnusualStorage()
 {
   vtkm::cont::DynamicArrayHandle array =
-      ArrayHandleWithUnusualContainer<vtkm::Id>();
+      ArrayHandleWithUnusualStorage<vtkm::Id>();
 
   try
   {
     array.CastAndCall(CheckFunctor());
-    VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized container.");
+    VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized storage.");
   }
   catch (vtkm::cont::ErrorControlBadValue)
   {
-    std::cout << "  Caught exception for unrecognized container." << std::endl;
+    std::cout << "  Caught exception for unrecognized storage." << std::endl;
   }
 
   CheckCalled = false;
-  array.ResetContainerList(ContainerListTagUnusual()).CastAndCall(CheckFunctor());
+  array.ResetStorageList(StorageListTagUnusual()).CastAndCall(CheckFunctor());
   VTKM_TEST_ASSERT(CheckCalled,
                    "The functor was never called (and apparently a bad value exception not thrown).");
-  std::cout << "  Found instance when container list was reset." << std:: endl;
+  std::cout << "  Found instance when storage list was reset." << std:: endl;
 }
 
-void TryUnusualTypeAndContainer()
+void TryUnusualTypeAndStorage()
 {
   vtkm::cont::DynamicArrayHandle array =
-      ArrayHandleWithUnusualContainer<std::string>();
+      ArrayHandleWithUnusualStorage<std::string>();
 
   try
   {
     array.CastAndCall(CheckFunctor());
     VTKM_TEST_FAIL(
-          "CastAndCall failed to error for unrecognized type/container.");
+          "CastAndCall failed to error for unrecognized type/storage.");
   }
   catch (vtkm::cont::ErrorControlBadValue)
   {
-    std::cout << "  Caught exception for unrecognized type/container."
+    std::cout << "  Caught exception for unrecognized type/storage."
               << std::endl;
   }
 
   try
   {
     array.ResetTypeList(TypeListTagString()).CastAndCall(CheckFunctor());
-    VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized container.");
+    VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized storage.");
   }
   catch (vtkm::cont::ErrorControlBadValue)
   {
-    std::cout << "  Caught exception for unrecognized container." << std::endl;
+    std::cout << "  Caught exception for unrecognized storage." << std::endl;
   }
 
   try
   {
-    array.ResetContainerList(ContainerListTagUnusual()).
+    array.ResetStorageList(StorageListTagUnusual()).
         CastAndCall(CheckFunctor());
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized type.");
   }
@@ -250,20 +251,20 @@ void TryUnusualTypeAndContainer()
   CheckCalled = false;
   array
       .ResetTypeList(TypeListTagString())
-      .ResetContainerList(ContainerListTagUnusual())
+      .ResetStorageList(StorageListTagUnusual())
       .CastAndCall(CheckFunctor());
   VTKM_TEST_ASSERT(CheckCalled,
                    "The functor was never called (and apparently a bad value exception not thrown).");
-  std::cout << "  Found instance when type and container lists were reset." << std:: endl;
+  std::cout << "  Found instance when type and storage lists were reset." << std:: endl;
 
   CheckCalled = false;
   array
-      .ResetContainerList(ContainerListTagUnusual())
+      .ResetStorageList(StorageListTagUnusual())
       .ResetTypeList(TypeListTagString())
       .CastAndCall(CheckFunctor());
   VTKM_TEST_ASSERT(CheckCalled,
                    "The functor was never called (and apparently a bad value exception not thrown).");
-  std::cout << "  Found instance when container and type lists were reset." << std:: endl;
+  std::cout << "  Found instance when storage and type lists were reset." << std:: endl;
 }
 
 void TestDynamicArrayHandle()
@@ -279,11 +280,11 @@ void TestDynamicArrayHandle()
   std::cout << "Try unusual type." << std::endl;
   TryUnusualType();
 
-  std::cout << "Try unusual container." << std::endl;
-  TryUnusualContainer();
+  std::cout << "Try unusual storage." << std::endl;
+  TryUnusualStorage();
 
-  std::cout << "Try unusual type in unusual container." << std::endl;
-  TryUnusualTypeAndContainer();
+  std::cout << "Try unusual type in unusual storage." << std::endl;
+  TryUnusualTypeAndStorage();
 }
 
 } // anonymous namespace

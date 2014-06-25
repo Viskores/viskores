@@ -20,8 +20,9 @@
 #ifndef vtk_m_cont_exec_ArrayHandleExecutionManager_h
 #define vtk_m_cont_exec_ArrayHandleExecutionManager_h
 
-#include <vtkm/cont/ArrayContainerControl.h>
 #include <vtkm/cont/ErrorControlInternal.h>
+#include <vtkm/cont/Storage.h>
+
 #include <vtkm/cont/internal/ArrayTransfer.h>
 
 namespace vtkm {
@@ -31,19 +32,18 @@ namespace internal {
 /// The common base for ArrayHandleExecutionManager. This is the interface
 /// used when the type of the device is not known at run time.
 ///
-template<typename T, typename Container>
+template<typename T, typename Storage>
 class ArrayHandleExecutionManagerBase
 {
 private:
-  typedef vtkm::cont::internal::ArrayContainerControl<T,Container>
-      ContainerType;
+  typedef vtkm::cont::internal::Storage<T,Storage> StorageType;
 
 public:
   template <typename DeviceAdapter>
   struct ExecutionTypes
   {
   private:
-    typedef vtkm::cont::internal::ArrayTransfer<T,Container,DeviceAdapter>
+    typedef vtkm::cont::internal::ArrayTransfer<T,Storage,DeviceAdapter>
         ArrayTransferType;
   public:
     typedef typename ArrayTransferType::PortalExecution Portal;
@@ -56,8 +56,8 @@ public:
 
   /// An array portal that can be used in the control environment.
   ///
-  typedef typename ContainerType::PortalType PortalControl;
-  typedef typename ContainerType::PortalConstType PortalConstControl;
+  typedef typename StorageType::PortalType PortalControl;
+  typedef typename StorageType::PortalConstType PortalConstControl;
 
   VTKM_CONT_EXPORT
   virtual ~ArrayHandleExecutionManagerBase() {  }
@@ -81,31 +81,31 @@ public:
   /// arrays, then this method may save the iterators to be returned in the \c
   /// GetPortalConst methods.
   ///
-  virtual void LoadDataForInput(const ContainerType &controlArray) = 0;
+  virtual void LoadDataForInput(const StorageType &controlArray) = 0;
 
   /// Allocates a large enough array in the execution environment and copies
   /// the given data to that array. The allocated array can later be accessed
   /// via the GetPortalExection method. If control and execution share arrays,
-  /// then this method may save the iterators of the container to be returned
+  /// then this method may save the iterators of the storage to be returned
   /// in the \c GetPortal* methods.
   ///
-  virtual void LoadDataForInPlace(ContainerType &controlArray) = 0;
+  virtual void LoadDataForInPlace(StorageType &controlArray) = 0;
 
-  /// Allocates an array in the execution environment of the specified size.
-  /// If control and execution share arrays, then this class can allocate
-  /// data using the given ArrayContainerExecution and remember its iterators
-  /// so that it can be used directly in the execution environment.
+  /// Allocates an array in the execution environment of the specified size. If
+  /// control and execution share arrays, then this class can allocate data
+  /// using the given Storage and remember its iterators so that it can be used
+  /// directly in the execution environment.
   ///
-  virtual void AllocateArrayForOutput(ContainerType &controlArray,
+  virtual void AllocateArrayForOutput(StorageType &controlArray,
                                       vtkm::Id numberOfValues) = 0;
 
-  /// Allocates data in the given ArrayContainerControl and copies data held
+  /// Allocates data in the given Storage and copies data held
   /// in the execution environment (managed by this class) into the control
   /// array. If control and execution share arrays, this can be no operation.
   /// This method should only be called after AllocateArrayForOutput is
   /// called.
   ///
-  virtual void RetrieveOutputData(ContainerType &controlArray) const = 0;
+  virtual void RetrieveOutputData(StorageType &controlArray) const = 0;
 
   /// \brief Reduces the size of the array without changing its values.
   ///
@@ -191,15 +191,15 @@ private:
 /// ArrayHandle to change its device at run time.
 ///
 template<typename T,
-         typename Container,
+         typename Storage,
          typename DeviceAdapter>
 class ArrayHandleExecutionManager
-  : public ArrayHandleExecutionManagerBase<T, Container>
+  : public ArrayHandleExecutionManagerBase<T, Storage>
 {
-  typedef ArrayHandleExecutionManagerBase<T, Container> Superclass;
-  typedef vtkm::cont::internal::ArrayTransfer<T,Container,DeviceAdapter>
+  typedef ArrayHandleExecutionManagerBase<T, Storage> Superclass;
+  typedef vtkm::cont::internal::ArrayTransfer<T,Storage,DeviceAdapter>
       ArrayTransferType;
-  typedef vtkm::cont::internal::ArrayContainerControl<T,Container> ContainerType;
+  typedef vtkm::cont::internal::Storage<T,Storage> StorageType;
 
 public:
   typedef typename ArrayTransferType::PortalControl PortalControl;
@@ -218,25 +218,25 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(const ContainerType &controlArray)
+  void LoadDataForInput(const StorageType &controlArray)
   {
     this->Transfer.LoadDataForInput(controlArray);
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInPlace(ContainerType &controlArray)
+  void LoadDataForInPlace(StorageType &controlArray)
   {
     this->Transfer.LoadDataForInPlace(controlArray);
   }
 
   VTKM_CONT_EXPORT
-  void AllocateArrayForOutput(ContainerType &controlArray, Id numberOfValues)
+  void AllocateArrayForOutput(StorageType &controlArray, Id numberOfValues)
   {
     this->Transfer.AllocateArrayForOutput(controlArray, numberOfValues);
   }
 
   VTKM_CONT_EXPORT
-  void RetrieveOutputData(ContainerType &controlArray) const
+  void RetrieveOutputData(StorageType &controlArray) const
   {
     this->Transfer.RetrieveOutputData(controlArray);
   }

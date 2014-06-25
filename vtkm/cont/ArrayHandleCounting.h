@@ -20,8 +20,9 @@
 #ifndef vtk_m_cont_ArrayHandleCounting_h
 #define vtk_m_cont_ArrayHandleCounting_h
 
-#include <vtkm/cont/ArrayContainerControlImplicit.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/StorageImplicit.h>
+
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 
 namespace vtkm {
@@ -92,11 +93,11 @@ private:
 };
 
 /// A convenience class that provides a typedef to the appropriate tag for
-/// a counting array container.
+/// a counting storage.
 template<typename ConstantValueType>
 struct ArrayHandleCountingTraits
 {
-  typedef vtkm::cont::ArrayContainerControlTagImplicit<
+  typedef vtkm::cont::StorageTagImplicit<
       vtkm::cont::internal::ArrayPortalCounting<ConstantValueType> > Tag;
 };
 

@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_internal_ArrayTransfer_h
 #define vtk_m_cont_internal_ArrayTransfer_h
 
-#include <vtkm/cont/ArrayContainerControl.h>
+#include <vtkm/cont/Storage.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 
 namespace vtkm {
@@ -37,20 +37,19 @@ namespace internal {
 ///
 /// The primary motivation for having a separate class is that the
 /// ArrayManagerExecution is meant to be specialized for each device adapter
-/// whee as the ArrayTransfer is meant to be specialized for each array
-/// container (or specific combination of container and device adapter). Thus,
-/// transfers for most containers will be delegated through the
-/// ArrayManagerExecution, but some containers, like implicit containers, will
-/// be specialized to transfer through a different path.
+/// whereas the ArrayTransfer is meant to be specialized for each storage type
+/// (or specific combination of storage and device adapter). Thus, transfers
+/// for most storage tyeps will be delegated through the ArrayManagerExecution,
+/// but some storage types, like implicit storage, will be specialized to
+/// transfer through a different path.
 ///
-template<typename T, class ArrayContainerControlTag, class DeviceAdapterTag>
+template<typename T, class StorageTag, class DeviceAdapterTag>
 class ArrayTransfer
 {
 private:
-  typedef vtkm::cont::internal::ArrayContainerControl<T,ArrayContainerControlTag>
-      ContainerType;
+  typedef vtkm::cont::internal::Storage<T,StorageTag> StorageType;
   typedef vtkm::cont::internal::ArrayManagerExecution<
-      T,ArrayContainerControlTag,DeviceAdapterTag> ArrayManagerType;
+      T,StorageTag,DeviceAdapterTag> ArrayManagerType;
 
 public:
   /// The type of value held in the array (vtkm::Scalar, vtkm::Vector3, etc.)
@@ -59,8 +58,8 @@ public:
 
   /// An array portal that can be used in the control environment.
   ///
-  typedef typename ContainerType::PortalType PortalControl;
-  typedef typename ContainerType::PortalConstType PortalConstControl;
+  typedef typename StorageType::PortalType PortalControl;
+  typedef typename StorageType::PortalConstType PortalConstControl;
 
   /// An array portal that can be used in the execution environment.
   ///
@@ -93,7 +92,7 @@ public:
   /// arrays, then this method may save the iterators to be returned in the \c
   /// GetPortalConst methods.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInput(const ContainerType &controlArray)
+  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType &controlArray)
   {
     this->ArrayManager.LoadDataForInput(controlArray.GetPortalConst());
   }
@@ -101,32 +100,31 @@ public:
   /// Allocates a large enough array in the execution environment and copies
   /// the given data to that array. The allocated array can later be accessed
   /// via the GetPortalExection method. If control and execution share arrays,
-  /// then this method may save the iterators of the container to be returned
+  /// then this method may save the iterators of the storage to be returned
   /// in the \c GetPortal* methods.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInPlace(ContainerType &controlArray)
+  VTKM_CONT_EXPORT void LoadDataForInPlace(StorageType &controlArray)
   {
     this->ArrayManager.LoadDataForInPlace(controlArray.GetPortal());
   }
 
-  /// Allocates an array in the execution environment of the specified size.
-  /// If control and execution share arrays, then this class can allocate
-  /// data using the given ArrayContainerExecution and remember its iterators
-  /// so that it can be used directly in the execution environment.
+  /// Allocates an array in the execution environment of the specified size. If
+  /// control and execution share arrays, then this class can allocate data
+  /// using the given Storage and remember its iterators so that it can be used
+  /// directly in the execution environment.
   ///
-  VTKM_CONT_EXPORT void AllocateArrayForOutput(ContainerType &controlArray,
-                                              vtkm::Id numberOfValues)
+  VTKM_CONT_EXPORT void AllocateArrayForOutput(StorageType &controlArray,
+                                               vtkm::Id numberOfValues)
   {
     this->ArrayManager.AllocateArrayForOutput(controlArray, numberOfValues);
   }
 
-  /// Allocates data in the given ArrayContainerControl and copies data held
-  /// in the execution environment (managed by this class) into the control
-  /// array. If control and execution share arrays, this can be no operation.
-  /// This method should only be called after AllocateArrayForOutput is
-  /// called.
+  /// Allocates data in the given Storage and copies data held in the execution
+  /// environment (managed by this class) into the control array. If control
+  /// and execution share arrays, this can be no operation. This method should
+  /// only be called after AllocateArrayForOutput is called.
   ///
-  VTKM_CONT_EXPORT void RetrieveOutputData(ContainerType &controlArray) const
+  VTKM_CONT_EXPORT void RetrieveOutputData(StorageType &controlArray) const
   {
     this->ArrayManager.RetrieveOutputData(controlArray);
   }

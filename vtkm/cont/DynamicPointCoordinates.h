@@ -36,12 +36,12 @@ namespace internal {
 
 /// Behaves like (and is interchangable with) a \c DynamicPointCoordinates. The
 /// difference is that the lists of point coordinates, base types, and
-/// containers to try when calling \c CastAndCall is set to the class template
+/// storage to try when calling \c CastAndCall is set to the class template
 /// arguments.
 ///
 template<typename PointCoordinatesList,
          typename TypeList,
-         typename ContainerList>
+         typename StorageList>
 class DynamicPointCoordinatesCast;
 
 } // namespace internal
@@ -67,9 +67,9 @@ class DynamicPointCoordinatesCast;
 ///
 /// Internally, some \c PointCoordinates objects will reference dynamic arrays.
 /// Thus, \c DynamicPointCoordinates also maintains lists of types and
-/// containers that these subarrays might use. These default to \c
-/// VTKM_DEFAULT_TYPE_LIST_TAG and \c VTKM_DEFAULT_CONTAINER_LIST_TAG and can
-/// be changed with the \c ResetTypeList and \c ResetContainerList methods.
+/// storage that these subarrays might use. These default to \c
+/// VTKM_DEFAULT_TYPE_LIST_TAG and \c VTKM_DEFAULT_STORAGE_LIST_TAG and can
+/// be changed with the \c ResetTypeList and \c ResetStorageList methods.
 ///
 class DynamicPointCoordinates
 {
@@ -88,10 +88,10 @@ public:
   /// Special constructor for the common case of using a basic array to store
   /// point coordinates.
   ///
-  template<typename Container>
+  template<typename Storage>
   VTKM_CONT_EXPORT
   DynamicPointCoordinates(
-      const vtkm::cont::ArrayHandle<vtkm::Vector3,Container> &array)
+      const vtkm::cont::ArrayHandle<vtkm::Vector3,Storage> &array)
     : PointCoordinatesContainer(new vtkm::cont::PointCoordinatesArray(array))
   {  }
 
@@ -152,13 +152,13 @@ public:
   internal::DynamicPointCoordinatesCast<
     NewPointCoordinatesList,
     VTKM_DEFAULT_TYPE_LIST_TAG,
-    VTKM_DEFAULT_CONTAINER_LIST_TAG>
+    VTKM_DEFAULT_STORAGE_LIST_TAG>
   ResetPointCoordinatesList(
       NewPointCoordinatesList = NewPointCoordinatesList()) const {
     return internal::DynamicPointCoordinatesCast<
         NewPointCoordinatesList,
         VTKM_DEFAULT_TYPE_LIST_TAG,
-        VTKM_DEFAULT_CONTAINER_LIST_TAG>(*this);
+        VTKM_DEFAULT_STORAGE_LIST_TAG>(*this);
   }
 
   /// Changes the types to try casting to when resolving dynamic arrays within
@@ -173,32 +173,32 @@ public:
   internal::DynamicPointCoordinatesCast<
     VTKM_DEFAULT_POINT_COORDINATES_LIST_TAG,
     NewTypeList,
-    VTKM_DEFAULT_CONTAINER_LIST_TAG>
+    VTKM_DEFAULT_STORAGE_LIST_TAG>
   ResetTypeList(NewTypeList = NewTypeList()) const {
     return internal::DynamicPointCoordinatesCast<
         VTKM_DEFAULT_POINT_COORDINATES_LIST_TAG,
         NewTypeList,
-        VTKM_DEFAULT_CONTAINER_LIST_TAG>(*this);
+        VTKM_DEFAULT_STORAGE_LIST_TAG>(*this);
   }
 
-  /// Changes the array containers to try casting to when resolving dynamic
+  /// Changes the array storage to try casting to when resolving dynamic
   /// arrays within the point coordinates container, which is specified with a
-  /// list tag like those in ContainerListTag.h. Since C++ does not allow you
+  /// list tag like those in StorageListTag.h. Since C++ does not allow you
   /// to actually change the template arguments, this method returns a new
   /// dynamic array object. This method is particularly useful to narrow down
   /// (or expand) the types when using an array of particular constraints.
   ///
-  template<typename NewContainerList>
+  template<typename NewStorageList>
   VTKM_CONT_EXPORT
   internal::DynamicPointCoordinatesCast<
     VTKM_DEFAULT_POINT_COORDINATES_LIST_TAG,
     VTKM_DEFAULT_TYPE_LIST_TAG,
-    NewContainerList>
-  ResetContainerList(NewContainerList = NewContainerList()) const {
+    NewStorageList>
+  ResetStorageList(NewStorageList = NewStorageList()) const {
     return internal::DynamicPointCoordinatesCast<
         VTKM_DEFAULT_POINT_COORDINATES_LIST_TAG,
         VTKM_DEFAULT_TYPE_LIST_TAG,
-        NewContainerList>(*this);
+        NewStorageList>(*this);
   }
 
   /// Attempts to cast the held point coordinates to a specific array
@@ -209,7 +209,7 @@ public:
   ///
   /// The second part then asks the concrete \c PointCoordinates object to cast
   /// and call to a concrete array. This second cast might rely on \c
-  /// VTKM_DEFAULT_TYPE_LIST_TAG and \c VTKM_DEFAULT_CONTAINER_LIST_TAG.
+  /// VTKM_DEFAULT_TYPE_LIST_TAG and \c VTKM_DEFAULT_STORAGE_LIST_TAG.
   ///
   template<typename Functor>
   VTKM_CONT_EXPORT
@@ -218,21 +218,21 @@ public:
     this->CastAndCall(f,
                       VTKM_DEFAULT_POINT_COORDINATES_LIST_TAG(),
                       VTKM_DEFAULT_TYPE_LIST_TAG(),
-                      VTKM_DEFAULT_CONTAINER_LIST_TAG());
+                      VTKM_DEFAULT_STORAGE_LIST_TAG());
   }
 
   /// A version of \c CastAndCall that tries specified lists of point
-  /// coordinates, types, and containers.
+  /// coordinates, types, and storage.
   ///
   template<typename Functor,
            typename PointCoordinatesList,
            typename TypeList,
-           typename ContainerList>
+           typename StorageList>
   VTKM_CONT_EXPORT
   void CastAndCall(const Functor &f,
                    PointCoordinatesList,
                    TypeList,
-                   ContainerList) const;
+                   StorageList) const;
 
 private:
   boost::shared_ptr<vtkm::cont::internal::PointCoordinatesBase>
@@ -250,15 +250,15 @@ private:
 
 namespace detail {
 
-template<typename Functor, typename TypeList, typename ContainerList>
-struct DynamicPointCoordinatesTryContainer
+template<typename Functor, typename TypeList, typename StorageList>
+struct DynamicPointCoordinatesTryStorage
 {
   const DynamicPointCoordinates PointCoordinates;
   const Functor &Function;
   bool FoundCast;
 
   VTKM_CONT_EXPORT
-  DynamicPointCoordinatesTryContainer(
+  DynamicPointCoordinatesTryStorage(
       const DynamicPointCoordinates &pointCoordinates,
       const Functor &f)
     : PointCoordinates(pointCoordinates), Function(f), FoundCast(false)
@@ -272,7 +272,7 @@ struct DynamicPointCoordinatesTryContainer
     {
       PointCoordinatesType pointCoordinates =
           this->PointCoordinates.CastToPointCoordinates(PointCoordinatesType());
-      pointCoordinates.CastAndCall(this->Function, TypeList(), ContainerList());
+      pointCoordinates.CastAndCall(this->Function, TypeList(), StorageList());
       this->FoundCast = true;
     }
   }
@@ -283,15 +283,15 @@ struct DynamicPointCoordinatesTryContainer
 template<typename Functor,
          typename PointCoordinatesList,
          typename TypeList,
-         typename ContainerList>
+         typename StorageList>
 VTKM_CONT_EXPORT
 void DynamicPointCoordinates::CastAndCall(const Functor &f,
                                           PointCoordinatesList,
                                           TypeList,
-                                          ContainerList) const
+                                          StorageList) const
 {
-  typedef detail::DynamicPointCoordinatesTryContainer<
-      Functor, TypeList, ContainerList> TryTypeType;
+  typedef detail::DynamicPointCoordinatesTryStorage<
+      Functor, TypeList, StorageList> TryTypeType;
   TryTypeType tryType = TryTypeType(*this, f);
   vtkm::ListForEach(tryType, PointCoordinatesList());
   if (!tryType.FoundCast)
@@ -305,7 +305,7 @@ namespace internal {
 
 template<typename PointCoordinatesList,
          typename TypeList,
-         typename ContainerList>
+         typename StorageList>
 class DynamicPointCoordinatesCast : public vtkm::cont::DynamicPointCoordinates
 {
 public:
@@ -318,43 +318,43 @@ public:
 
   template<typename SrcPointCoordinatesList,
            typename SrcTypeList,
-           typename SrcContainerList>
+           typename SrcStorageList>
   VTKM_CONT_EXPORT
   DynamicPointCoordinatesCast(
-      const DynamicPointCoordinatesCast<SrcPointCoordinatesList,SrcTypeList,SrcContainerList> &coords)
+      const DynamicPointCoordinatesCast<SrcPointCoordinatesList,SrcTypeList,SrcStorageList> &coords)
     : DynamicPointCoordinates(coords)
   {  }
 
   template<typename NewPointCoordinatesList>
   VTKM_CONT_EXPORT
-  DynamicPointCoordinatesCast<NewPointCoordinatesList,TypeList,ContainerList>
+  DynamicPointCoordinatesCast<NewPointCoordinatesList,TypeList,StorageList>
   ResetPointCoordinatesList(
       NewPointCoordinatesList = NewPointCoordinatesList()) const {
     return DynamicPointCoordinatesCast<
-        NewPointCoordinatesList,TypeList,ContainerList>(*this);
+        NewPointCoordinatesList,TypeList,StorageList>(*this);
   }
 
   template<typename NewTypeList>
   VTKM_CONT_EXPORT
-  DynamicPointCoordinatesCast<PointCoordinatesList,NewTypeList,ContainerList>
+  DynamicPointCoordinatesCast<PointCoordinatesList,NewTypeList,StorageList>
   ResetTypeList(NewTypeList = NewTypeList()) const {
     return DynamicPointCoordinatesCast<
-        PointCoordinatesList,NewTypeList,ContainerList>(*this);
+        PointCoordinatesList,NewTypeList,StorageList>(*this);
   }
 
-  template<typename NewContainerList>
+  template<typename NewStorageList>
   VTKM_CONT_EXPORT
-  DynamicPointCoordinatesCast<PointCoordinatesList,TypeList,NewContainerList>
-  ResetContainerList(NewContainerList = NewContainerList()) const {
+  DynamicPointCoordinatesCast<PointCoordinatesList,TypeList,NewStorageList>
+  ResetStorageList(NewStorageList = NewStorageList()) const {
     return DynamicPointCoordinatesCast<
-        PointCoordinatesList,TypeList,NewContainerList>(*this);
+        PointCoordinatesList,TypeList,NewStorageList>(*this);
   }
 
   template<typename Functor>
   VTKM_CONT_EXPORT
   void CastAndCall(const Functor &f) const
   {
-    this->CastAndCall(f, PointCoordinatesList(), TypeList(), ContainerList());
+    this->CastAndCall(f, PointCoordinatesList(), TypeList(), StorageList());
   }
 
   template<typename Functor, typename PCL, typename TL, typename CL>
@@ -372,10 +372,10 @@ struct DynamicTransformTraits<vtkm::cont::DynamicPointCoordinates> {
 
 template<typename PointCoordinatesList,
          typename TypeList,
-         typename ContainerList>
+         typename StorageList>
 struct DynamicTransformTraits<
     vtkm::cont::internal::DynamicPointCoordinatesCast<
-      PointCoordinatesList,TypeList,ContainerList> >
+      PointCoordinatesList,TypeList,StorageList> >
 {
   typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
 };

@@ -42,7 +42,7 @@ namespace cont {
 /// An ArrayPortal differs from an ArrayHandle in that the ArrayPortal is a
 /// much lighterweight object and that it does not manage things like
 /// allocation and control/execution sharing. An ArrayPortal also differs from
-/// an ArrayContainer in that it does not actually contain the data but rather
+/// a Storage in that it does not actually contain the data but rather
 /// points to it. In this way the ArrayPortal can be copied and passed and
 /// still point to the same data.
 ///

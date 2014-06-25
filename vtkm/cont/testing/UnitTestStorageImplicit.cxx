@@ -18,29 +18,31 @@
 //  this software.
 //============================================================================
 
-#define VTKM_ARRAY_CONTAINER_CONTROL VTKM_ARRAY_CONTAINER_CONTROL_ERROR
+#define VTKM_STORAGE VTKM_STORAGE_ERROR
 
 #include <vtkm/Types.h>
-#include <vtkm/cont/ArrayContainerControlImplicit.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/internal/IteratorFromArrayPortal.h>
-#include <vtkm/cont/testing/Testing.h>
-
 #include <vtkm/VectorTraits.h>
+
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/StorageImplicit.h>
+
+#include <vtkm/cont/internal/IteratorFromArrayPortal.h>
+
+#include <vtkm/cont/testing/Testing.h>
 
 namespace {
 
 template <typename T>
-struct TestImplicitContainer
+struct TestImplicitStorage
 {
   typedef T ValueType;
   ValueType Temp;
   typedef vtkm::cont::internal::IteratorFromArrayPortal<
-      TestImplicitContainer<T> > IteratorType;
+      TestImplicitStorage<T> > IteratorType;
 
 
   VTKM_EXEC_CONT_EXPORT
-  TestImplicitContainer(): Temp(1) {  }
+  TestImplicitStorage(): Temp(1) {  }
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const
@@ -74,38 +76,37 @@ const vtkm::Id ARRAY_SIZE = 1;
 template <typename T>
 struct TemplatedTests
 {
-  typedef vtkm::cont::ArrayContainerControlTagImplicit<
-      TestImplicitContainer<T> > ContainerTagType;
-  typedef vtkm::cont::internal::ArrayContainerControl<
-      T,  ContainerTagType > ArrayContainerType;
+  typedef vtkm::cont::StorageTagImplicit< TestImplicitStorage<T> >
+      StorageTagType;
+  typedef vtkm::cont::internal::Storage< T, StorageTagType > StorageType;
 
-  typedef typename ArrayContainerType::ValueType ValueType;
-  typedef typename ArrayContainerType::PortalType PortalType;
+  typedef typename StorageType::ValueType ValueType;
+  typedef typename StorageType::PortalType PortalType;
   typedef typename PortalType::IteratorType IteratorType;
 
   void BasicAllocation()
   {
-    ArrayContainerType arrayContainer;
+    StorageType arrayStorage;
 
     try
     {
-      arrayContainer.GetNumberOfValues();
+      arrayStorage.GetNumberOfValues();
       VTKM_TEST_ASSERT(false == true,
-                       "Implicit Container GetNumberOfValues method didn't throw error.");
+                       "Implicit Storage GetNumberOfValues method didn't throw error.");
     }
     catch(vtkm::cont::ErrorControlBadValue e) {}
 
     try
     {
-      arrayContainer.Allocate(ARRAY_SIZE);
+      arrayStorage.Allocate(ARRAY_SIZE);
       VTKM_TEST_ASSERT(false == true,
-                       "Implicit Container Allocate method didn't throw error.");
+                       "Implicit Storage Allocate method didn't throw error.");
     }
     catch(vtkm::cont::ErrorControlBadValue e) {}
 
     try
     {
-      arrayContainer.Shrink(ARRAY_SIZE);
+      arrayStorage.Shrink(ARRAY_SIZE);
       VTKM_TEST_ASSERT(true==false,
                        "Array shrink do a larger size was possible. This can't be allowed.");
     }
@@ -113,7 +114,7 @@ struct TemplatedTests
 
     try
     {
-      arrayContainer.ReleaseResources();
+      arrayStorage.ReleaseResources();
       VTKM_TEST_ASSERT(true==false,
                        "Can't Release an implicit array");
     }
@@ -122,8 +123,8 @@ struct TemplatedTests
 
   void BasicAccess()
   {
-    TestImplicitContainer<T> portal;
-    vtkm::cont::ArrayHandle<T,ContainerTagType> implictHandle(portal);
+    TestImplicitStorage<T> portal;
+    vtkm::cont::ArrayHandle<T,StorageTagType> implictHandle(portal);
     VTKM_TEST_ASSERT(implictHandle.GetNumberOfValues() == 1,
                      "handle should have size 1");
     VTKM_TEST_ASSERT(implictHandle.GetPortalConstControl().Get(0) == T(1),
@@ -149,14 +150,14 @@ struct TestFunctor
   }
 };
 
-void TestArrayContainerControlBasic()
+void TestStorageBasic()
 {
   vtkm::testing::Testing::TryAllTypes(TestFunctor());
 }
 
 } // Anonymous namespace
 
-int UnitTestArrayContainerControlImplicit(int, char *[])
+int UnitTestStorageImplicit(int, char *[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayContainerControlBasic);
+  return vtkm::cont::testing::Testing::Run(TestStorageBasic);
 }

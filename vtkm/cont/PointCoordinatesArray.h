@@ -49,20 +49,20 @@ public:
   PointCoordinatesArray(const vtkm::cont::DynamicArrayHandle &array)
     : Array(array) {  }
 
-  template<typename Container>
+  template<typename Storage>
   VTKM_CONT_EXPORT
   PointCoordinatesArray(
-      const vtkm::cont::ArrayHandle<vtkm::Vector3,Container> &array)
+      const vtkm::cont::ArrayHandle<vtkm::Vector3,Storage> &array)
     : Array(array) {  }
 
   /// In this \c CastAndCall, \c TypeList is ignored. All point coordinates are
   /// expressed as Vector3, so that must be how the array is represented.
   ///
-  template<typename Functor, typename TypeList, typename ContainerList>
+  template<typename Functor, typename TypeList, typename StorageList>
   VTKM_CONT_EXPORT
-  void CastAndCall(const Functor &f, TypeList, ContainerList) const
+  void CastAndCall(const Functor &f, TypeList, StorageList) const
   {
-    this->Array.CastAndCall(f, vtkm::TypeListTagVector3(), ContainerList());
+    this->Array.CastAndCall(f, vtkm::TypeListTagVector3(), StorageList());
   }
 
 private:

@@ -18,9 +18,9 @@
 //  this software.
 //============================================================================
 
-#define VTKM_ARRAY_CONTAINER_CONTROL VTKM_ARRAY_CONTAINER_CONTROL_ERROR
+#define VTKM_STORAGE VTKM_STORAGE_ERROR
 
-#include <vtkm/cont/ArrayContainerControlBasic.h>
+#include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/VectorTraits.h>
@@ -32,13 +32,13 @@ const vtkm::Id ARRAY_SIZE = 10;
 template <typename T>
 struct TemplatedTests
 {
-  typedef vtkm::cont::internal::ArrayContainerControl<
-      T, vtkm::cont::ArrayContainerControlTagBasic> ArrayContainerType;
-  typedef typename ArrayContainerType::ValueType ValueType;
-  typedef typename ArrayContainerType::PortalType PortalType;
+  typedef vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>
+      StorageType;
+  typedef typename StorageType::ValueType ValueType;
+  typedef typename StorageType::PortalType PortalType;
   typedef typename PortalType::IteratorType IteratorType;
 
-  void SetContainer(ArrayContainerType &array, const ValueType& value)
+  void SetStorage(StorageType &array, const ValueType& value)
   {
     for (IteratorType iter = array.GetPortal().GetIteratorBegin();
          iter != array.GetPortal().GetIteratorEnd();
@@ -48,7 +48,7 @@ struct TemplatedTests
     }
   }
 
-  bool CheckContainer(ArrayContainerType &array, const ValueType& value)
+  bool CheckStorage(StorageType &array, const ValueType& value)
   {
     for (IteratorType iter = array.GetPortal().GetIteratorBegin();
          iter != array.GetPortal().GetIteratorEnd();
@@ -73,9 +73,9 @@ struct TemplatedTests
 
     ValueType stolenArrayValue = ValueType(STOLEN_ARRAY_VALUE());
 
-    ArrayContainerType stealMyArray;
+    StorageType stealMyArray;
     stealMyArray.Allocate(ARRAY_SIZE);
-    SetContainer(stealMyArray, stolenArrayValue);
+    SetStorage(stealMyArray, stolenArrayValue);
 
     VTKM_TEST_ASSERT(stealMyArray.GetNumberOfValues() == ARRAY_SIZE,
                      "Array not properly allocated.");
@@ -100,34 +100,34 @@ struct TemplatedTests
 
   void BasicAllocation()
   {
-    ArrayContainerType arrayContainer;
-    VTKM_TEST_ASSERT(arrayContainer.GetNumberOfValues() == 0,
-                     "New array container not zero sized.");
+    StorageType arrayStorage;
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == 0,
+                     "New array storage not zero sized.");
 
-    arrayContainer.Allocate(ARRAY_SIZE);
-    VTKM_TEST_ASSERT(arrayContainer.GetNumberOfValues() == ARRAY_SIZE,
+    arrayStorage.Allocate(ARRAY_SIZE);
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == ARRAY_SIZE,
                      "Array not properly allocated.");
 
     const ValueType BASIC_ALLOC_VALUE = ValueType(548);
-    SetContainer(arrayContainer, BASIC_ALLOC_VALUE);
-    VTKM_TEST_ASSERT(CheckContainer(arrayContainer, BASIC_ALLOC_VALUE),
+    SetStorage(arrayStorage, BASIC_ALLOC_VALUE);
+    VTKM_TEST_ASSERT(CheckStorage(arrayStorage, BASIC_ALLOC_VALUE),
                      "Array not holding value.");
 
-    arrayContainer.Allocate(ARRAY_SIZE * 2);
-    VTKM_TEST_ASSERT(arrayContainer.GetNumberOfValues() == ARRAY_SIZE * 2,
+    arrayStorage.Allocate(ARRAY_SIZE * 2);
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == ARRAY_SIZE * 2,
                      "Array not reallocated correctly.");
 
-    arrayContainer.Shrink(ARRAY_SIZE);
-    VTKM_TEST_ASSERT(arrayContainer.GetNumberOfValues() == ARRAY_SIZE,
+    arrayStorage.Shrink(ARRAY_SIZE);
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == ARRAY_SIZE,
                      "Array Shrnk failed to resize.");
 
-    arrayContainer.ReleaseResources();
-    VTKM_TEST_ASSERT(arrayContainer.GetNumberOfValues() == 0,
+    arrayStorage.ReleaseResources();
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == 0,
                      "Array not released correctly.");
 
     try
     {
-      arrayContainer.Shrink(ARRAY_SIZE);
+      arrayStorage.Shrink(ARRAY_SIZE);
       VTKM_TEST_ASSERT(true==false,
                        "Array shrink do a larger size was possible. This can't be allowed.");
     }
@@ -155,14 +155,14 @@ struct TestFunctor
   }
 };
 
-void TestArrayContainerControlBasic()
+void TestStorageBasic()
 {
   vtkm::testing::Testing::TryAllTypes(TestFunctor());
 }
 
 } // Anonymous namespace
 
-int UnitTestArrayContainerControlBasic(int, char *[])
+int UnitTestStorageBasic(int, char *[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayContainerControlBasic);
+  return vtkm::cont::testing::Testing::Run(TestStorageBasic);
 }

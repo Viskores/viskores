@@ -28,15 +28,14 @@ namespace vtkm {
 namespace cont {
 namespace internal {
 
-template <typename T, class ArrayContainerControlTag>
-class ArrayManagerExecution
-    <T, ArrayContainerControlTag, vtkm::cont::DeviceAdapterTagSerial>
+template <typename T, class StorageTag>
+class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>
     : public vtkm::cont::internal::ArrayManagerExecutionShareWithControl
-          <T, ArrayContainerControlTag>
+          <T, StorageTag>
 {
 public:
   typedef vtkm::cont::internal::ArrayManagerExecutionShareWithControl
-      <T, ArrayContainerControlTag> Superclass;
+      <T, StorageTag> Superclass;
   typedef typename Superclass::ValueType ValueType;
   typedef typename Superclass::PortalType PortalType;
   typedef typename Superclass::PortalConstType PortalConstType;

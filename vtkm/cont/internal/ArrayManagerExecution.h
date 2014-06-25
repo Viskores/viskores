@@ -41,17 +41,16 @@ namespace internal {
 /// behaves how you would expect. It allocates/deallocates arrays and copies
 /// data. However, if the control and execution environments share the same
 /// memory space, this class should delegate all its operations to the
-/// ArrayContainerControl. The latter can probably be implemented with a
+/// \c Storage. The latter can probably be implemented with a
 /// trivial subclass of
 /// vtkm::cont::internal::ArrayManagerExecutionShareWithControl.
 ///
-template<typename T, class ArrayContainerControlTag, class DeviceAdapterTag>
+template<typename T, class StorageTag, class DeviceAdapterTag>
 class ArrayManagerExecution
 #ifdef VTKM_DOXYGEN_ONLY
 {
 private:
-  typedef vtkm::cont::internal::ArrayContainerControl<T,ArrayContainerControlTag>
-      ContainerType;
+  typedef vtkm::cont::internal::Storage<T,StorageTag> StorageType;
 
 public:
   /// The type of value held in the array (vtkm::Scalar, vtkm::Vector3, etc.)
@@ -83,31 +82,31 @@ public:
   /// GetPortalConst method.
   ///
   VTKM_CONT_EXPORT void LoadDataForInput(
-      const typename ContainerType::PortalConstType& portal);
+      const typename StorageType::PortalConstType& portal);
 
   /// Allocates a large enough array in the execution environment and copies
   /// the given data to that array. The allocated array can later be accessed
   /// via the GetPortal method. If control and execution share arrays, then
-  /// this method may save the iterators of the container to be returned in the
+  /// this method may save the iterators of the storage to be returned in the
   /// \c GetPortal* methods.
   ///
   VTKM_CONT_EXPORT void LoadDataForInPlace(PortalType portal);
 
   /// Allocates an array in the execution environment of the specified size.
   /// If control and execution share arrays, then this class can allocate
-  /// data using the given ArrayContainerExecution and remember its iterators
+  /// data using the given Storage object and remember its iterators
   /// so that it can be used directly in the execution environment.
   ///
-  VTKM_CONT_EXPORT void AllocateArrayForOutput(ContainerType &controlArray,
-                                              vtkm::Id numberOfValues);
+  VTKM_CONT_EXPORT void AllocateArrayForOutput(StorageType &controlArray,
+                                               vtkm::Id numberOfValues);
 
-  /// Allocates data in the given ArrayContainerControl and copies data held
+  /// Allocates data in the given Storage and copies data held
   /// in the execution environment (managed by this class) into the control
   /// array. If control and execution share arrays, this can be no operation.
   /// This method should only be called after AllocateArrayForOutput is
   /// called.
   ///
-  VTKM_CONT_EXPORT void RetrieveOutputData(ContainerType &controlArray) const;
+  VTKM_CONT_EXPORT void RetrieveOutputData(StorageType &controlArray) const;
 
   /// \brief Reduces the size of the array without changing its values.
   ///

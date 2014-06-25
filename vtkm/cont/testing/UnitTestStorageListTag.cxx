@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/ContainerListTag.h>
+#include <vtkm/cont/StorageListTag.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -30,7 +30,7 @@ enum TypeId {
   BASIC
 };
 
-TypeId GetTypeId(vtkm::cont::ArrayContainerControlTagBasic) { return BASIC; }
+TypeId GetTypeId(vtkm::cont::StorageTagBasic) { return BASIC; }
 
 struct TestFunctor
 {
@@ -67,13 +67,13 @@ void TryList(const vtkm::Tuple<TypeId,N> &expected, ListTag)
 
 void TestLists()
 {
-  std::cout << "ContainerListTagBasic" << std::endl;
-  TryList(vtkm::Tuple<TypeId,1>(BASIC), vtkm::cont::ContainerListTagBasic());
+  std::cout << "StorageListTagBasic" << std::endl;
+  TryList(vtkm::Tuple<TypeId,1>(BASIC), vtkm::cont::StorageListTagBasic());
 }
 
 } // anonymous namespace
 
-int UnitTestContainerListTag(int, char *[])
+int UnitTestStorageListTag(int, char *[])
 {
   return vtkm::cont::testing::Testing::Run(TestLists);
 }

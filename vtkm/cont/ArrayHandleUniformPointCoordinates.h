@@ -22,8 +22,8 @@
 
 #include <vtkm/Extent.h>
 
-#include <vtkm/cont/ArrayContainerControlImplicit.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/StorageImplicit.h>
 
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 
@@ -131,12 +131,12 @@ private:
 class ArrayHandleUniformPointCoordinates
     : public vtkm::cont::ArrayHandle<
         vtkm::Vector3,
-        vtkm::cont::ArrayContainerControlTagImplicit<
+        vtkm::cont::StorageTagImplicit<
           internal::ArrayPortalUniformPointCoordinates> >
 {
   typedef vtkm::cont::ArrayHandle<
     vtkm::Vector3,
-    vtkm::cont::ArrayContainerControlTagImplicit<
+    vtkm::cont::StorageTagImplicit<
       internal::ArrayPortalUniformPointCoordinates> > Superclass;
 
 public:

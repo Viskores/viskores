@@ -23,7 +23,8 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/Assert.h>
-#include <vtkm/cont/ArrayContainerControl.h>
+#include <vtkm/cont/Storage.h>
+
 #include <vtkm/cont/internal/ArrayPortalShrink.h>
 
 #include <algorithm>
@@ -35,21 +36,18 @@ namespace internal {
 /// \c ArrayManagerExecutionShareWithControl provides an implementation for a
 /// \c ArrayManagerExecution class for a device adapter when the execution
 /// and control environments share memory. This class basically defers all its
-/// calls to an \c ArrayContainerControl class and uses the array allocated
-/// there.
+/// calls to a \c Storage class and uses the array allocated there.
 ///
-template<typename T, class ArrayContainerControlTag>
+template<typename T, class StorageTag>
 class ArrayManagerExecutionShareWithControl
 {
 public:
   typedef T ValueType;
-  typedef vtkm::cont::internal
-      ::ArrayContainerControl<ValueType, ArrayContainerControlTag>
-      ContainerType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
   typedef vtkm::cont::internal::ArrayPortalShrink<
-      typename ContainerType::PortalType> PortalType;
+      typename StorageType::PortalType> PortalType;
   typedef vtkm::cont::internal::ArrayPortalShrink<
-      typename ContainerType::PortalConstType> PortalConstType;
+      typename StorageType::PortalConstType> PortalConstType;
 
   VTKM_CONT_EXPORT ArrayManagerExecutionShareWithControl()
     : PortalValid(false), ConstPortalValid(false) { }
@@ -87,8 +85,8 @@ public:
 
   /// Actually just allocates memory in the given \p controlArray.
   ///
-  VTKM_CONT_EXPORT void AllocateArrayForOutput(ContainerType &controlArray,
-                                              vtkm::Id numberOfValues)
+  VTKM_CONT_EXPORT void AllocateArrayForOutput(StorageType &controlArray,
+                                               vtkm::Id numberOfValues)
   {
     controlArray.Allocate(numberOfValues);
 
@@ -103,7 +101,7 @@ public:
   /// this class's iterators should already be written to the given \c
   /// controlArray (under correct operation).
   ///
-  VTKM_CONT_EXPORT void RetrieveOutputData(ContainerType &controlArray) const
+  VTKM_CONT_EXPORT void RetrieveOutputData(StorageType &controlArray) const
   {
     VTKM_ASSERT_CONT(this->ConstPortalValid);
     VTKM_ASSERT_CONT(controlArray.GetPortalConst().GetIteratorBegin() ==
@@ -124,7 +122,7 @@ public:
     }
   }
 
-  /// Returns the portal previously saved from an \c ArrayContainerControl.
+  /// Returns the portal previously saved from a \c Storage.
   ///
   VTKM_CONT_EXPORT PortalType GetPortal()
   {
@@ -147,9 +145,9 @@ public:
 private:
   // Not implemented.
   ArrayManagerExecutionShareWithControl(
-      ArrayManagerExecutionShareWithControl<T, ArrayContainerControlTag> &);
+      ArrayManagerExecutionShareWithControl<T, StorageTag> &);
   void operator=(
-      ArrayManagerExecutionShareWithControl<T, ArrayContainerControlTag> &);
+      ArrayManagerExecutionShareWithControl<T, StorageTag> &);
 
   PortalType Portal;
   bool PortalValid;

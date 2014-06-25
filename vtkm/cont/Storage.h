@@ -17,15 +17,15 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont__ArrayContainerControl_h
-#define vtk_m_cont__ArrayContainerControl_h
+#ifndef vtk_m_cont_Storage_h
+#define vtk_m_cont_Storage_h
 
-#define VTKM_ARRAY_CONTAINER_CONTROL_ERROR      -2
-#define VTKM_ARRAY_CONTAINER_CONTROL_UNDEFINED  -1
-#define VTKM_ARRAY_CONTAINER_CONTROL_BASIC       1
+#define VTKM_STORAGE_ERROR      -2
+#define VTKM_STORAGE_UNDEFINED  -1
+#define VTKM_STORAGE_BASIC       1
 
-#ifndef VTKM_ARRAY_CONTAINER_CONTROL
-#define VTKM_ARRAY_CONTAINER_CONTROL VTKM_ARRAY_CONTAINER_CONTROL_BASIC
+#ifndef VTKM_STORAGE
+#define VTKM_STORAGE VTKM_STORAGE_BASIC
 #endif
 
 #include <boost/static_assert.hpp>
@@ -36,42 +36,40 @@ namespace cont {
 #ifdef VTKM_DOXYGEN_ONLY
 /// \brief A tag specifying client memory allocation.
 ///
-/// An ArrayContainerControl tag specifies how an ArrayHandle allocates and
-/// frees memory. The tag ArrayContainerControlTag___ does not actually exist.
-/// Rather, this documentation is provided to describe how array containers are
-/// specified. Loading the vtkm/cont/ArrayContainerControl.h header will set a
-/// default array container. You can specify the default array container by
-/// first setting the VTKM_ARRAY_CONTAINER_CONTROL macro.  Currently it can only
-/// be set to VTKM_ARRAY_CONTAINER_CONTROL_BASIC.
+/// A Storage tag specifies how an ArrayHandle allocates and frees memory. The
+/// tag StorageTag___ does not actually exist. Rather, this documentation is
+/// provided to describe how array storage objects are specified. Loading the
+/// vtkm/cont/Storage.h header will set a default array storage. You can
+/// specify the default storage by first setting the VTKM_STORAGE macro.
+/// Currently it can only be set to VTKM_STORAGE_BASIC.
 ///
-/// User code external to VTKm is free to make its own ArrayContainerControlTag.
-/// This is a good way to get VTKm to read data directly in and out of arrays
-/// from other libraries. However, care should be taken when creating an
-/// ArrayContainerControl. One particular problem that is likely is a container
-/// that "constructs" all the items in the array. If done incorrectly, then
-/// memory of the array can be incorrectly bound to the wrong process. If you
-/// do provide your own ArrayContainerControlTag, please be diligent in
-/// comparing its performance to the ArrayContainerControlTagBasic.
+/// User code external to VTK-m is free to make its own StorageTag. This is a
+/// good way to get VTK-m to read data directly in and out of arrays from other
+/// libraries. However, care should be taken when creating a Storage. One
+/// particular problem that is likely is a storage that "constructs" all the
+/// items in the array. If done incorrectly, then memory of the array can be
+/// incorrectly bound to the wrong processor. If you do provide your own
+/// StorageTag, please be diligent in comparing its performance to the
+/// StorageTagBasic.
 ///
-/// To implement your own ArrayContainerControlTag, you first must create a tag
-/// class (an empty struct) defining your tag (i.e. struct
-/// ArrayContainerControlTagMyAlloc { };). Then provide a partial template
-/// specialization of vtkm::cont::internal::ArrayContainerControl for your new
-/// tag.
+/// To implement your own StorageTag, you first must create a tag class (an
+/// empty struct) defining your tag (i.e. struct StorageTagMyAlloc { };). Then
+/// provide a partial template specialization of vtkm::cont::internal::Storage
+/// for your new tag.
 ///
-struct ArrayContainerControlTag___ {  };
+struct StorageTag___ {  };
 #endif // VTKM_DOXYGEN_ONLY
 
 namespace internal {
 
-struct UndefinedArrayContainerControl {  };
+struct UndefinedStorage {  };
 
 namespace detail {
 
 // This class should never be used. It is used as a placeholder for undefined
-// ArrayContainerControl objects. If you get a compiler error involving this
-// object, then it probably comes from trying to use an ArrayHandle with bad
-// template arguments.
+// Storage objects. If you get a compiler error involving this object, then it
+// probably comes from trying to use an ArrayHandle with bad template
+// arguments.
 template<typename T>
 struct UndefinedArrayPortal {
   BOOST_STATIC_ASSERT(sizeof(T) == -1);
@@ -79,14 +77,13 @@ struct UndefinedArrayPortal {
 
 } // namespace detail
 
-/// This templated class must be partially specialized for each
-/// ArrayContainerControlTag created, which will define the implementation for
-/// that tag.
+/// This templated class must be partially specialized for each StorageTag
+/// created, which will define the implementation for that tag.
 ///
-template<typename T, class ArrayContainerControlTag>
-class ArrayContainerControl
+template<typename T, class StorageTag>
+class Storage
 #ifndef VTKM_DOXYGEN_ONLY
-    : public vtkm::cont::internal::UndefinedArrayContainerControl
+    : public vtkm::cont::internal::UndefinedStorage
 {
 public:
   typedef vtkm::cont::internal::detail::UndefinedArrayPortal<T> PortalType;
@@ -152,7 +149,7 @@ public:
   ///
   /// After calling this method GetNumberOfValues will return 0 and
   /// GetIteratorBegin and GetIteratorEnd will return the same iterator. The
-  /// resources should also be released when the ArrayContainerControl class is
+  /// resources should also be released when the Storage class is
   /// destroyed.
   VTKM_CONT_EXPORT
   void ReleaseResources();
@@ -164,27 +161,25 @@ public:
 }
 } // namespace vtkm::cont
 
-// This is put at the bottom of the header so that the ArrayContainerControl
-// template is declared before any implementations are called.
+// This is put at the bottom of the header so that the Storage template is
+// declared before any implementations are called.
 
-#if VTKM_ARRAY_CONTAINER_CONTROL == VTKM_ARRAY_CONTAINER_CONTROL_BASIC
+#if VTKM_STORAGE == VTKM_STORAGE_BASIC
 
-#include <vtkm/cont/ArrayContainerControlBasic.h>
-#define VTKM_DEFAULT_ARRAY_CONTAINER_CONTROL_TAG \
-  ::vtkm::cont::ArrayContainerControlTagBasic
+#include <vtkm/cont/StorageBasic.h>
+#define VTKM_DEFAULT_STORAGE_TAG ::vtkm::cont::StorageTagBasic
 
-#elif VTKM_ARRAY_CONTAINER_CONTROL == VTKM_ARRAY_CONTAINER_CONTROL_ERROR
+#elif VTKM_STORAGE == VTKM_STORAGE_ERROR
 
-#include <vtkm/cont/internal/ArrayContainerControlError.h>
-#define VTKM_DEFAULT_ARRAY_CONTAINER_CONTROL_TAG \
-  ::vtkm::cont::internal::ArrayContainerControlTagError
+#include <vtkm/cont/internal/StorageError.h>
+#define VTKM_DEFAULT_STORAGE_TAG ::vtkm::cont::internal::StorageTagError
 
-#elif (VTKM_ARRAY_CONTAINER_CONTROL == VTKM_ARRAY_CONTAINER_CONTROL_UNDEFINED) || !defined(VTKM_ARRAY_CONTAINER_CONTROL)
+#elif (VTKM_STORAGE == VTKM_STORAGE_UNDEFINED) || !defined(VTKM_STORAGE)
 
-#ifndef VTKM_DEFAULT_ARRAY_CONTAINER_CONTROL_TAG
-#warning If array container for control is undefined, VTKM_DEFAULT_ARRAY_CONTAINER_CONTROL_TAG must be defined.
+#ifndef VTKM_DEFAULT_STORAGE_TAG
+#warning If array storage is undefined, VTKM_DEFAULT_STORAGE_TAG must be defined.
 #endif
 
 #endif
 
-#endif //vtk_m_cont__ArrayContainerControl_h
+#endif //vtk_m_cont_Storage_h

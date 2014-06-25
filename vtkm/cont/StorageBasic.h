@@ -17,34 +17,35 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont__ArrayContainerControlBasic_h
-#define vtk_m_cont__ArrayContainerControlBasic_h
+#ifndef vtk_m_cont_StorageBasic_h
+#define vtk_m_cont_StorageBasic_h
 
 #include <vtkm/Types.h>
-#include <vtkm/cont/ArrayContainerControl.h>
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 #include <vtkm/cont/ErrorControlOutOfMemory.h>
+#include <vtkm/cont/Storage.h>
+
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
 namespace vtkm {
 namespace cont {
 
-/// A tag for the basic implementation of an ArrayContainerControl object.
-struct ArrayContainerControlTagBasic {  };
+/// A tag for the basic implementation of a Storage object.
+struct StorageTagBasic {  };
 
 namespace internal {
 
-/// A basic implementation of an ArrayContainerControl object.
+/// A basic implementation of an Storage object.
 ///
-/// \todo This container does \em not construct the values within the array.
+/// \todo This storage does \em not construct the values within the array.
 /// Thus, it is important to not use this class with any type that will fail if
 /// not constructed. These are things like basic types (int, float, etc.) and
 /// the VTKm Tuple classes.  In the future it would be nice to have a compile
 /// time check to enforce this.
 ///
 template <typename ValueT>
-class ArrayContainerControl<ValueT, vtkm::cont::ArrayContainerControlTagBasic>
+class Storage<ValueT, vtkm::cont::StorageTagBasic>
 {
 public:
   typedef ValueT ValueType;
@@ -54,18 +55,18 @@ public:
 private:
   /// The original design of this class provided an allocator as a template
   /// parameters. That messed things up, though, because other templated
-  /// classes assume that the \c ArrayContainerControl has one template
-  /// parameter. There are other ways to allow you to specify the allocator,
-  /// but it is uncertain whether that would ever be useful. So, instead of
-  /// jumping through hoops implementing them, just fix the allocator for now.
+  /// classes assume that the \c Storage has one template parameter. There are
+  /// other ways to allow you to specify the allocator, but it is uncertain
+  /// whether that would ever be useful. So, instead of jumping through hoops
+  /// implementing them, just fix the allocator for now.
   ///
   typedef std::allocator<ValueType> AllocatorType;
 
 public:
 
-  ArrayContainerControl() : Array(NULL), NumberOfValues(0), AllocatedSize(0) { }
+  Storage() : Array(NULL), NumberOfValues(0), AllocatedSize(0) { }
 
-  ~ArrayContainerControl()
+  ~Storage()
   {
     this->ReleaseResources();
   }
@@ -152,10 +153,10 @@ public:
   ///
   /// This method returns the pointer to the array held by this array. It then
   /// clears the internal array pointer to NULL, thereby ensuring that the
-  /// ArrayContainerControl will never deallocate the array. This is
-  /// helpful for taking a reference for an array created internally by VTKm and
-  /// not having to keep a VTKm object around. Obviously the caller becomes
-  /// responsible for destroying the memory.
+  /// Storage will never deallocate the array. This is helpful for taking a
+  /// reference for an array created internally by VTK-m and not having to keep
+  /// a VTK-m object around. Obviously the caller becomes responsible for
+  /// destroying the memory.
   ///
   ValueType *StealArray()
   {
@@ -168,8 +169,8 @@ public:
 
 private:
   // Not implemented.
-  ArrayContainerControl(const ArrayContainerControl<ValueType, ArrayContainerControlTagBasic> &src);
-  void operator=(const ArrayContainerControl<ValueType, ArrayContainerControlTagBasic> &src);
+  Storage(const Storage<ValueType, StorageTagBasic> &src);
+  void operator=(const Storage<ValueType, StorageTagBasic> &src);
 
   ValueType *Array;
   vtkm::Id NumberOfValues;
@@ -181,4 +182,4 @@ private:
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_cont__ArrayContainerControlBasic_h
+#endif //vtk_m_cont_StorageBasic_h
