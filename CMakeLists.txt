@@ -122,6 +122,8 @@ vtkm_install_headers(
 # * Meta programming language
 find_package(BoostHeaders ${VTKm_REQUIRED_BOOST_VERSION} REQUIRED)
 
+find_package(Pyexpander)
+
 #-----------------------------------------------------------------------------
 # Add subdirectories
 add_subdirectory(vtkm)
