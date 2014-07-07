@@ -17,20 +17,21 @@
 ##  Laboratory (LANL), the U.S. Government retains certain rights in
 ##  this software.
 ##============================================================================
+#
+# - Finds the pyexpander macro tool.
+# Use this module by invoking find_package.
+#
+# This module finds the expander.py command distributed with pyexpander.
+# pyexpander can be downloaded from http://pyexpander.sourceforge.net.
+# The following variables are defined:
+#
+# PYEXPANDER_FOUND   - True if pyexpander is found
+# PYEXPANDER_COMMAND - The pyexpander executable
+#
 
-set(headers
-  ConfigureFor32.h
-  ConfigureFor64.h
-  ExportMacros.h
-  FunctionInterface.h
-  FunctionInterfaceDetailPost.h
-  FunctionInterfaceDetailPre.h
-  )
+find_program(PYEXPANDER_COMMAND expander.py)
 
-vtkm_declare_headers(${headers})
+mark_as_advanced(PYEXPANDER_COMMAND)
 
-vtkm_pyexpander_generated_file(FunctionInterfaceDetailPre.h)
-vtkm_pyexpander_generated_file(FunctionInterfaceDetailPost.h)
-
-add_subdirectory(testing)
-
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Pyexpander DEFAULT_MSG PYEXPANDER_COMMAND)

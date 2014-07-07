@@ -131,6 +131,26 @@ function(vtkm_declare_worklets)
   vtkm_declare_headers(${ARGN})
 endfunction(vtkm_declare_worklets)
 
+function(vtkm_pyexpander_generated_file generated_file_name)
+  # If pyexpander is available, add targets to build and check
+  if(PYEXPANDER_FOUND)
+    add_custom_command(
+      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}
+      COMMAND ${CMAKE_COMMAND}
+        -DPYEXPANDER_COMMAND=${PYEXPANDER_COMMAND}
+        -DSOURCE_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}
+        -DGENERATED_FILE=${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}
+        -P ${CMAKE_SOURCE_DIR}/CMake/VTKmCheckPyexpander.cmake
+      MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}.in
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}
+      )
+    add_custom_target(check_${generated_file_name} ALL
+      DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}
+      COMMENT "Checking validity of ${generated_file_name}"
+      )
+  endif()
+endfunction(vtkm_pyexpander_generated_file)
+
 # Declare unit tests, which should be in the same directory as a kit
 # (package, module, whatever you call it).  Usage:
 #
