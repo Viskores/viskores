@@ -298,9 +298,10 @@ public:
 /// variance due to floating point numerical inaccuracies.
 ///
 template<typename VectorType>
-VTKM_EXEC_CONT_EXPORT bool test_equal(VectorType vector1,
-                                      VectorType vector2,
-                                      vtkm::Scalar tolerance = 0.0001)
+VTKM_EXEC_CONT_EXPORT
+bool test_equal(VectorType vector1,
+                VectorType vector2,
+                vtkm::Scalar tolerance = 0.0001)
 {
   typedef typename vtkm::VectorTraits<VectorType> Traits;
   for (int component = 0; component < Traits::NUM_COMPONENTS; component++)
@@ -326,6 +327,15 @@ VTKM_EXEC_CONT_EXPORT bool test_equal(VectorType vector1,
     }
   }
   return true;
+}
+
+/// Special implementation of test_equal for strings, which don't fit a model
+/// of fixed length vectors of numbers.
+///
+VTKM_EXEC_CONT_EXPORT
+bool test_equal(const std::string &string1, const std::string &string2)
+{
+  return string1 == string2;
 }
 
 /// Helper function for printing out vectors during testing.
