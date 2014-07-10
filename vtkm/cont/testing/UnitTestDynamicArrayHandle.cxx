@@ -29,6 +29,7 @@
 
 #include <sstream>
 #include <string>
+#include <typeinfo>
 
 namespace {
 
@@ -110,6 +111,7 @@ struct CheckFunctor
   template<typename T, typename Storage>
   void operator()(vtkm::cont::ArrayHandle<T, Storage> array) const {
     CheckCalled = true;
+    std::cout << "  Checking for type: " << typeid(T).name() << std::endl;
 
     VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE,
                      "Unexpected array size.");
@@ -118,7 +120,7 @@ struct CheckFunctor
         array.GetPortalConstControl();
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      VTKM_TEST_ASSERT(portal.Get(index) == TestValue(index, T()),
+      VTKM_TEST_ASSERT(test_equal(portal.Get(index), TestValue(index, T())),
                        "Got bad value in array. Perhaps a bad cast?");
     }
   }
@@ -270,8 +272,11 @@ void TryUnusualTypeAndStorage()
 void TestDynamicArrayHandle()
 {
   std::cout << "Try common types with default type lists." << std::endl;
+  std::cout << "*** vtkm::Id ***************" << std::endl;
   TryDefaultType(vtkm::Id());
+  std::cout << "*** vtkm::Scalar ***********" << std::endl;
   TryDefaultType(vtkm::Scalar());
+  std::cout << "*** vtkm::Vector3 **********" << std::endl;
   TryDefaultType(vtkm::Vector3());
 
   std::cout << "Try all VTK-m types." << std::endl;
