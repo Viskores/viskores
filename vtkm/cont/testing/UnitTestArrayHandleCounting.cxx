@@ -21,40 +21,53 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/Assert.h>
 
 #include <vtkm/cont/testing/Testing.h>
+
+#include <string>
 
 namespace {
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-//increments by two instead of one wrapper
-template<typename T>
-struct CountByTwo
+// An unusual data type that represents a number with a string of a
+// particular length. This makes sure that the ArrayHandleCounting
+// works correctly with type casts.
+class StringInt
 {
-  CountByTwo(): Value() {}
-  explicit CountByTwo(T t): Value(t) {}
+public:
+  StringInt() {}
+  StringInt(vtkm::Id v)
+  {
+    VTKM_ASSERT_CONT(v >= 0);
+    for (vtkm::Id i = 0; i < v; i++)
+    {
+      ++(*this);
+    }
+  }
 
-  bool operator==(const T& other) const
-  { return this->Value == other; }
+  StringInt operator+(const StringInt &rhs) const
+  {
+    return StringInt(this->Value + rhs.Value);
+  }
 
-  bool operator==(const CountByTwo<T>& other) const
-  { return this->Value == other.Value; }
+  bool operator==(const StringInt &other) const
+  {
+    return this->Value.size() == other.Value.size();
+  }
 
-  CountByTwo<T> operator+(vtkm::Id count) const
-  { return CountByTwo<T>(this->Value+(count*2)); }
+  StringInt &operator++()
+  {
+    this->Value.append(".");
+    return *this;
+  }
 
-  CountByTwo<T> operator+(CountByTwo<T> count) const
-  { return CountByTwo<T>(this->Value+(2*count.Value)); }
+private:
+  StringInt(const std::string &v) : Value(v) { }
 
-  CountByTwo<T>& operator++()
-  { ++this->Value; ++this->Value; return *this; }
-
-  friend std::ostream& operator<< (std::ostream& os, const CountByTwo<T>& obj)
-  { os << obj.Value; return os; }
-  T Value;
+  std::string Value;
 };
-
 
 
 template< typename ValueType>
@@ -115,8 +128,8 @@ void TestArrayHandleCounting()
 {
   TestFunctor()(vtkm::Id(0));
   TestFunctor()(vtkm::Scalar(0));
-  TestFunctor()( CountByTwo<vtkm::Id>(12) );
-  TestFunctor()( CountByTwo<vtkm::Scalar>(1.2f) );
+  TestFunctor()(StringInt(0));
+  TestFunctor()(StringInt(10));
 }
 
 
