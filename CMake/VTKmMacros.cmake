@@ -195,6 +195,13 @@ function(vtkm_unit_tests)
         set_target_properties(${test_prog}
           PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA})
       endif(VTKm_EXTRA_COMPILER_WARNINGS)
+      if(MSVC)
+        # The generated source for the tests can cause a warning with MSVC.
+        # Suppress that warning for that file.
+        # Reported as CMake bug 15066. Should be fixed in CMake 3.1.
+        set_source_files_properties(${test_prog}.cxx
+          PROPERTIES COMPILE_FLAGS "/wd4996")
+      endif()
     endif (VTKm_UT_CUDA)
 
     #do it as a property value so we don't pollute the include_directories
