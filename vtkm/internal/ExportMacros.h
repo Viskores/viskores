@@ -32,6 +32,10 @@
 #define VTKM_OPENMP
 #endif
 
+#ifdef _MSC_VER
+#define VTKM_MSVC
+#endif
+
 #ifdef VTKM_CUDA
 #define VTKM_EXEC_EXPORT inline __device__
 #define VTKM_EXEC_CONT_EXPORT inline __device__ __host__

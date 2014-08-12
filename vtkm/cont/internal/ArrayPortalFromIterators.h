@@ -37,14 +37,13 @@ template<class IteratorT>
 class ArrayPortalFromIterators
 {
 public:
-  typedef IteratorT IteratorType;
-  typedef typename std::iterator_traits<IteratorType>::value_type ValueType;
+  typedef typename std::iterator_traits<IteratorT>::value_type ValueType;
 
   VTKM_CONT_EXPORT ArrayPortalFromIterators() {  }
 
   VTKM_CONT_EXPORT
-  ArrayPortalFromIterators(IteratorType begin, IteratorType end)
-    : BeginIterator(begin), EndIterator(end)
+  ArrayPortalFromIterators(IteratorT begin, IteratorT end)
+    : BeginIterator(begin), NumberOfValues(std::distance(begin, end))
   {
     VTKM_ASSERT_CONT(this->GetNumberOfValues() >= 0);
   }
@@ -56,14 +55,13 @@ public:
   template<class OtherIteratorT>
   VTKM_CONT_EXPORT
   ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT> &src)
-    : BeginIterator(src.GetIteratorBegin()),
-      EndIterator(src.GetIteratorEnd())
+    : BeginIterator(src.GetRawIterator()), NumberOfValues(src.GetNumberOfValues())
   {  }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const
   {
-    return std::distance(this->BeginIterator, this->EndIterator);
+    return this->NumberOfValues;
   }
 
   VTKM_CONT_EXPORT
@@ -78,18 +76,41 @@ public:
     *this->IteratorAt(index) = value;
   }
 
+#ifndef VTKM_MSVC
+  typedef IteratorT IteratorType;
+
   VTKM_CONT_EXPORT
   IteratorType GetIteratorBegin() const { return this->BeginIterator; }
+#else // VTKM_MSVC
+  // The MSVC compiler issues warnings if you use raw pointers with some
+  // operations. To keep the compiler happy (and add some safety checks),
+  // wrap the iterator in a check.
+  typedef stdext::checked_array_iterator<IteratorT> IteratorType;
 
   VTKM_CONT_EXPORT
-  IteratorType GetIteratorEnd() const { return this->EndIterator; }
+  IteratorType GetIteratorBegin() const {
+    return IteratorType(this->BeginIterator, this->GetNumberOfValues());
+  }
+#endif // VTKM_MSVC
+
+  VTKM_CONT_EXPORT
+  IteratorType GetIteratorEnd() const {
+    IteratorType iterator = this->GetIteratorBegin();
+    std::advance(iterator, this->GetNumberOfValues());
+    return iterator;
+  }
+
+  VTKM_CONT_EXPORT
+  IteratorT GetRawIterator() const {
+    return this->BeginIterator;
+  }
 
 private:
-  IteratorType BeginIterator;
-  IteratorType EndIterator;
+  IteratorT BeginIterator;
+  vtkm::Id NumberOfValues;
 
   VTKM_CONT_EXPORT
-  IteratorType IteratorAt(vtkm::Id index) const
+  IteratorT IteratorAt(vtkm::Id index) const
   {
     VTKM_ASSERT_CONT(index >= 0);
     VTKM_ASSERT_CONT(index < this->GetNumberOfValues());

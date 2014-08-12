@@ -106,13 +106,15 @@ void TestArrayHandle()
   }
 
   {
-    vtkm::cont::ArrayHandle<vtkm::Scalar>::
-    ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal executionPortal;
-    executionPortal =
+    typedef vtkm::cont::ArrayHandle<vtkm::Scalar>::
+      ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal
+        ExecutionPortalType;
+    ExecutionPortalType executionPortal =
       arrayHandle.PrepareForOutput(ARRAY_SIZE*2,
                                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     vtkm::Id index = 0;
-    for (vtkm::Scalar *iter = executionPortal.GetIteratorBegin();
+    for (ExecutionPortalType::IteratorType iter =
+           executionPortal.GetIteratorBegin();
          iter != executionPortal.GetIteratorEnd();
          iter++)
     {
@@ -134,11 +136,13 @@ void TestArrayHandle()
 
   std::cout << "Try in place operation." << std::endl;
   {
-    vtkm::cont::ArrayHandle<vtkm::Scalar>::
-    ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal executionPortal;
-    executionPortal =
+    typedef vtkm::cont::ArrayHandle<vtkm::Scalar>::
+      ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal
+      ExecutionPortalType;
+    ExecutionPortalType executionPortal =
       arrayHandle.PrepareForInPlace(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    for (vtkm::Scalar *iter = executionPortal.GetIteratorBegin();
+    for (ExecutionPortalType::IteratorType iter =
+           executionPortal.GetIteratorBegin();
          iter != executionPortal.GetIteratorEnd();
          iter++)
     {
