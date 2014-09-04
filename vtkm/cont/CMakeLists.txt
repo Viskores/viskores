@@ -26,6 +26,7 @@ set(headers
   ArrayHandleCounting.h
   ArrayHandleUniformPointCoordinates.h
   ArrayPortal.h
+  ArrayPortalToIterators.h
   Assert.h
   DeviceAdapter.h
   DeviceAdapterSerial.h
