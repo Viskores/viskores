@@ -254,19 +254,6 @@ public:
     throw vtkm::cont::ErrorControlInternal("Not implemented.");
   }
 
-  // Not a viable type, but there is no implementation.
-  typedef ValueType *IteratorType;
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorBegin() const {
-    throw vtkm::cont::ErrorControlInternal("Not implemented.");
-  }
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorEnd() const {
-    throw vtkm::cont::ErrorControlInternal("Not implemented.");
-  }
-
 private:
   vtkm::Id NumberOfValues;
 };

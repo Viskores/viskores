@@ -78,25 +78,6 @@ public:
   ///
   VTKM_CONT_EXPORT
   void Set(vtkm::Id index, const ValueType &value) const;
-
-  /// An iterator type that can be used as an alternate way to access the data.
-  /// If the container being pointed to has a natural iterator that can be
-  /// used, then use that. Otherwise, use IteratorForArrayPortal. Iterators are
-  /// not necessary for array portals in the execution environment.
-  ///
-  typedef ValueType *IteratorType;
-
-  /// Returns an iterator to the beginning of the array. Iterators are not
-  /// necessary for array portals in the execution environment.
-  ///
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorBegin() const;
-
-  /// Returns an iterator to the end of the array. Iterators are not necessary
-  /// for array portals in the execution environment.
-  ///
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorEnd() const;
 };
 
 #endif // VTKM_DOXYGEN_ONLY

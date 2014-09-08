@@ -20,6 +20,7 @@
 
 #include <vtkm/cont/internal/ArrayManagerExecutionShareWithControl.h>
 
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -43,33 +44,29 @@ struct TemplatedTests
 
   void SetStorage(StorageType &array, const ValueType& value)
   {
-    std::fill(array.GetPortal().GetIteratorBegin(),
-              array.GetPortal().GetIteratorEnd(),
-              value);
+    vtkm::cont::ArrayPortalToIterators<typename StorageType::PortalType>
+        iterators(array.GetPortal());
+    std::fill(iterators.GetBegin(), iterators.GetEnd(), value);
   }
 
-  template <class IteratorType>
-  bool CheckArray(IteratorType begin, IteratorType end, const ValueType& value)
+  template <class PortalType>
+  bool CheckPortal(const PortalType &portal, const ValueType &value)
   {
-    for (IteratorType iter = begin; iter != end; iter++)
+    for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
     {
-      if (!test_equal(*iter, value)) { return false; }
+      if (!test_equal(portal.Get(index), value)) { return false; }
     }
     return true;
   }
 
   bool CheckStorage(StorageType &array, const ValueType& value)
   {
-    return CheckArray(array.GetPortalConst().GetIteratorBegin(),
-                      array.GetPortalConst().GetIteratorEnd(),
-                      value);
+    return CheckPortal(array.GetPortalConst(), value);
   }
 
   bool CheckManager(ArrayManagerType &manager, const ValueType &value)
   {
-    return CheckArray(manager.GetPortalConst().GetIteratorBegin(),
-                      manager.GetPortalConst().GetIteratorEnd(),
-                      value);
+    return CheckPortal(manager.GetPortalConst(), value);
   }
 
   void InputData()
@@ -87,8 +84,8 @@ struct TemplatedTests
     // control array portal in a different array portal, it should still
     // give the same iterator (to avoid any unnecessary indirection).
     VTKM_TEST_ASSERT(
-          controlArray.GetPortalConst().GetIteratorBegin() ==
-          executionArray.GetPortalConst().GetIteratorBegin(),
+          vtkm::cont::ArrayPortalToIteratorBegin(controlArray.GetPortalConst()) ==
+          vtkm::cont::ArrayPortalToIteratorBegin(executionArray.GetPortalConst()),
           "Execution array manager not holding control array iterators.");
 
     VTKM_TEST_ASSERT(CheckManager(executionArray, INPUT_VALUE),
@@ -110,12 +107,12 @@ struct TemplatedTests
     // control array portal in a different array portal, it should still
     // give the same iterator (to avoid any unnecessary indirection).
     VTKM_TEST_ASSERT(
-          controlArray.GetPortal().GetIteratorBegin() ==
-          executionArray.GetPortal().GetIteratorBegin(),
+          vtkm::cont::ArrayPortalToIteratorBegin(controlArray.GetPortal()) ==
+          vtkm::cont::ArrayPortalToIteratorBegin(executionArray.GetPortal()),
           "Execution array manager not holding control array iterators.");
     VTKM_TEST_ASSERT(
-          controlArray.GetPortalConst().GetIteratorBegin() ==
-          executionArray.GetPortalConst().GetIteratorBegin(),
+          vtkm::cont::ArrayPortalToIteratorBegin(controlArray.GetPortalConst()) ==
+          vtkm::cont::ArrayPortalToIteratorBegin(executionArray.GetPortalConst()),
           "Execution array manager not holding control array iterators.");
 
     VTKM_TEST_ASSERT(CheckManager(executionArray, INPUT_VALUE),
@@ -131,9 +128,9 @@ struct TemplatedTests
     ArrayManagerType executionArray;
     executionArray.AllocateArrayForOutput(controlArray, ARRAY_SIZE);
 
-    std::fill(executionArray.GetPortal().GetIteratorBegin(),
-              executionArray.GetPortal().GetIteratorEnd(),
-              OUTPUT_VALUE);
+    vtkm::cont::ArrayPortalToIterators<typename ArrayManagerType::PortalType>
+        iterators(executionArray.GetPortal());
+    std::fill(iterators.GetBegin(), iterators.GetEnd(), OUTPUT_VALUE);
 
     VTKM_TEST_ASSERT(CheckManager(executionArray, OUTPUT_VALUE),
                      "Did not get correct array back.");

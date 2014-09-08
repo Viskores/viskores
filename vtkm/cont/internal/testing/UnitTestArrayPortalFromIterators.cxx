@@ -63,6 +63,13 @@ struct TemplatedTests
     return true;
   }
 
+  template<class PortalType>
+  bool CheckPortal(const PortalType &portal, ComponentType value)
+  {
+    vtkm::cont::ArrayPortalToIterators<PortalType> iterators(portal);
+    return CheckIterator(iterators.GetBegin(), iterators.GetEnd(), value);
+  }
+
   void operator()()
   {
     ValueType array[ARRAY_SIZE];
@@ -71,9 +78,26 @@ struct TemplatedTests
     FillIterator(array, array+ARRAY_SIZE, ORIGINAL_VALUE);
 
     ::vtkm::cont::internal::ArrayPortalFromIterators<ValueType *>
-    portal(array, array+ARRAY_SIZE);
+        portal(array, array+ARRAY_SIZE);
     ::vtkm::cont::internal::ArrayPortalFromIterators<const ValueType *>
-    const_portal(array, array+ARRAY_SIZE);
+        const_portal(array, array+ARRAY_SIZE);
+
+    std::cout << "  Check that ArrayPortalToIterators is not doing indirection."
+              << std::endl;
+    // If you get a compile error here about mismatched types, it might be
+    // that ArrayPortalToIterators is not properly overloaded to return the
+    // original iterator.
+    VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorBegin(portal) == array,
+                     "Begin iterator wrong.");
+    VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(portal) ==
+                     array+ARRAY_SIZE,
+                     "End iterator wrong.");
+    VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorBegin(const_portal) ==
+                     array,
+                     "Begin const iterator wrong.");
+    VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(const_portal) ==
+                     array+ARRAY_SIZE,
+                     "End const iterator wrong.");
 
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE,
                      "Portal array size wrong.");
@@ -81,13 +105,9 @@ struct TemplatedTests
                      "Const portal array size wrong.");
 
     std::cout << "  Check inital value." << std::endl;
-    VTKM_TEST_ASSERT(CheckIterator(portal.GetIteratorBegin(),
-                                   portal.GetIteratorEnd(),
-                                   ORIGINAL_VALUE),
+    VTKM_TEST_ASSERT(CheckPortal(portal, ORIGINAL_VALUE),
                      "Portal iterator has bad value.");
-    VTKM_TEST_ASSERT(CheckIterator(const_portal.GetIteratorBegin(),
-                                   const_portal.GetIteratorEnd(),
-                                   ORIGINAL_VALUE),
+    VTKM_TEST_ASSERT(CheckPortal(const_portal, ORIGINAL_VALUE),
                      "Const portal iterator has bad value.");
 
     static const ComponentType SET_VALUE = 562;
@@ -106,9 +126,7 @@ struct TemplatedTests
     }
 
     std::cout << "  Make sure set has correct value." << std::endl;
-    VTKM_TEST_ASSERT(CheckIterator(portal.GetIteratorBegin(),
-                                   portal.GetIteratorEnd(),
-                                   SET_VALUE),
+    VTKM_TEST_ASSERT(CheckPortal(portal, SET_VALUE),
                      "Portal iterator has bad value.");
     VTKM_TEST_ASSERT(CheckIterator(array, array+ARRAY_SIZE, SET_VALUE),
                      "Array has bad value.");

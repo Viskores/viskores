@@ -147,8 +147,7 @@ public:
 
   /// \brief Frees any resources (i.e. memory) stored in this array.
   ///
-  /// After calling this method GetNumberOfValues will return 0 and
-  /// GetIteratorBegin and GetIteratorEnd will return the same iterator. The
+  /// After calling this method GetNumberOfValues will return 0. The
   /// resources should also be released when the Storage class is
   /// destroyed.
   VTKM_CONT_EXPORT
