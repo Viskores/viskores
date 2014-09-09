@@ -98,14 +98,12 @@ public:
   }
 
   /// This method is a no-op (except for a few checks). Any data written to
-  /// this class's iterators should already be written to the given \c
+  /// this class's portals should already be written to the given \c
   /// controlArray (under correct operation).
   ///
   VTKM_CONT_EXPORT void RetrieveOutputData(StorageType &controlArray) const
   {
     VTKM_ASSERT_CONT(this->ConstPortalValid);
-    VTKM_ASSERT_CONT(controlArray.GetPortalConst().GetIteratorBegin() ==
-                     this->ConstPortal.GetIteratorBegin());
     controlArray.Shrink(this->ConstPortal.GetNumberOfValues());
   }
 

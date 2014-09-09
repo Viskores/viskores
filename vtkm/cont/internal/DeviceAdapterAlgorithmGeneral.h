@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/exec/FunctorBase.h>
@@ -207,14 +208,17 @@ private:
       // necessarily true, but it is true for the current uses of this general
       // function and I don't want to compete with STL if I don't have to.
 
-      typename InputPortalType::IteratorType resultPos =
-          std::lower_bound(this->InputPortal.GetIteratorBegin(),
-                           this->InputPortal.GetIteratorEnd(),
+      typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
+          InputIteratorsType;
+      InputIteratorsType inputIterators(this->InputPortal);
+      typename InputIteratorsType::IteratorType resultPos =
+          std::lower_bound(inputIterators.GetBegin(),
+                           inputIterators.GetEnd(),
                            this->ValuesPortal.Get(index));
 
       vtkm::Id resultIndex =
           static_cast<vtkm::Id>(
-            std::distance(this->InputPortal.GetIteratorBegin(), resultPos));
+            std::distance(inputIterators.GetBegin(), resultPos));
       this->OutputPortal.Set(index, resultIndex);
     }
 
@@ -251,15 +255,18 @@ private:
       // necessarily true, but it is true for the current uses of this general
       // function and I don't want to compete with STL if I don't have to.
 
-      typename InputPortalType::IteratorType resultPos =
-          std::lower_bound(this->InputPortal.GetIteratorBegin(),
-                           this->InputPortal.GetIteratorEnd(),
+      typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
+          InputIteratorsType;
+      InputIteratorsType inputIterators(this->InputPortal);
+      typename InputIteratorsType::IteratorType resultPos =
+          std::lower_bound(inputIterators.GetBegin(),
+                           inputIterators.GetEnd(),
                            this->ValuesPortal.Get(index),
                            this->CompareFunctor);
 
       vtkm::Id resultIndex =
           static_cast<vtkm::Id>(
-            std::distance(this->InputPortal.GetIteratorBegin(), resultPos));
+            std::distance(inputIterators.GetBegin(), resultPos));
       this->OutputPortal.Set(index, resultIndex);
     }
 
@@ -886,14 +893,17 @@ private:
       // necessarily true, but it is true for the current uses of this general
       // function and I don't want to compete with STL if I don't have to.
 
-      typename InputPortalType::IteratorType resultPos =
-          std::upper_bound(this->InputPortal.GetIteratorBegin(),
-                           this->InputPortal.GetIteratorEnd(),
+      typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
+          InputIteratorsType;
+      InputIteratorsType inputIterators(this->InputPortal);
+      typename InputIteratorsType::IteratorType resultPos =
+          std::upper_bound(inputIterators.GetBegin(),
+                           inputIterators.GetEnd(),
                            this->ValuesPortal.Get(index));
 
       vtkm::Id resultIndex =
           static_cast<vtkm::Id>(
-            std::distance(this->InputPortal.GetIteratorBegin(), resultPos));
+            std::distance(inputIterators.GetBegin(), resultPos));
       this->OutputPortal.Set(index, resultIndex);
     }
 
@@ -931,15 +941,18 @@ private:
       // necessarily true, but it is true for the current uses of this general
       // function and I don't want to compete with STL if I don't have to.
 
-      typename InputPortalType::IteratorType resultPos =
-          std::upper_bound(this->InputPortal.GetIteratorBegin(),
-                           this->InputPortal.GetIteratorEnd(),
+      typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
+          InputIteratorsType;
+      InputIteratorsType inputIterators(this->InputPortal);
+      typename InputIteratorsType::IteratorType resultPos =
+          std::upper_bound(inputIterators.GetBegin(),
+                           inputIterators.GetEnd(),
                            this->ValuesPortal.Get(index),
                            this->CompareFunctor);
 
       vtkm::Id resultIndex =
           static_cast<vtkm::Id>(
-            std::distance(this->InputPortal.GetIteratorBegin(), resultPos));
+            std::distance(inputIterators.GetBegin(), resultPos));
       this->OutputPortal.Set(index, resultIndex);
     }
 

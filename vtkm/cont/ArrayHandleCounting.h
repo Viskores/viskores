@@ -23,8 +23,6 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageImplicit.h>
 
-#include <vtkm/cont/internal/IteratorFromArrayPortal.h>
-
 namespace vtkm {
 namespace cont {
 
@@ -71,21 +69,6 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   ValueType Get(vtkm::Id index) const { return StartingValue+ValueType(index); }
-
-  typedef vtkm::cont::internal::IteratorFromArrayPortal<
-          ArrayPortalCounting < CountingValueType> > IteratorType;
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorBegin() const
-  {
-    return IteratorType(*this);
-  }
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorEnd() const
-  {
-    return IteratorType(*this, this->NumberOfValues);
-  }
 
 private:
   ValueType StartingValue;

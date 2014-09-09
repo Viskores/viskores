@@ -65,6 +65,13 @@ struct TemplatedTests
     return true;
   }
 
+  template<class PortalType>
+  bool CheckPortal(const PortalType &portal, const ComponentType &value)
+  {
+    vtkm::cont::ArrayPortalToIterators<PortalType> iterators(portal);
+    return CheckIterator(iterators.GetBegin(), iterators.GetEnd(), value);
+  }
+
   ComponentType ORIGINAL_VALUE() { return 239; }
 
   template<class ArrayPortalType>
@@ -114,9 +121,7 @@ struct TemplatedTests
     FillIterator(begin, end, WRITE_VALUE);
 
     std::cout << "    Check values in portal." << std::endl;
-    VTKM_TEST_ASSERT(CheckIterator(portal.GetIteratorBegin(),
-                                   portal.GetIteratorEnd(),
-                                   WRITE_VALUE),
+    VTKM_TEST_ASSERT(CheckPortal(portal, WRITE_VALUE),
                      "Did not get correct values when writing to iterator.");
   }
 

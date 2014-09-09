@@ -22,6 +22,7 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayPortal.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/Assert.h>
 
 #include <iterator>
@@ -76,30 +77,6 @@ public:
     *this->IteratorAt(index) = value;
   }
 
-#ifndef VTKM_MSVC
-  typedef IteratorT IteratorType;
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorBegin() const { return this->BeginIterator; }
-#else // VTKM_MSVC
-  // The MSVC compiler issues warnings if you use raw pointers with some
-  // operations. To keep the compiler happy (and add some safety checks),
-  // wrap the iterator in a check.
-  typedef stdext::checked_array_iterator<IteratorT> IteratorType;
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorBegin() const {
-    return IteratorType(this->BeginIterator, this->GetNumberOfValues());
-  }
-#endif // VTKM_MSVC
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorEnd() const {
-    IteratorType iterator = this->GetIteratorBegin();
-    std::advance(iterator, this->GetNumberOfValues());
-    return iterator;
-  }
-
   VTKM_CONT_EXPORT
   IteratorT GetRawIterator() const {
     return this->BeginIterator;
@@ -122,5 +99,60 @@ private:
 }
 }
 } // namespace vtkm::cont::internal
+
+namespace vtkm {
+namespace cont {
+
+/// Partial specialization of \c ArrayPortalToIterators for \c
+/// ArrayPortalFromIterators. Returns the original array rather than
+/// the portal wrapped in an \c IteratorFromArrayPortal.
+///
+template<typename _IteratorType>
+class ArrayPortalToIterators<
+    vtkm::cont::internal::ArrayPortalFromIterators<_IteratorType> >
+{
+  typedef vtkm::cont::internal::ArrayPortalFromIterators<_IteratorType>
+      PortalType;
+public:
+#ifndef VTKM_MSVC
+  typedef _IteratorType IteratorType;
+
+  VTKM_CONT_EXPORT
+  ArrayPortalToIterators(const PortalType &portal)
+    : Iterator(portal.GetRawIterator()),
+      NumberOfValues(portal.GetNumberOfValues())
+  {  }
+
+#else // VTKM_MSVC
+  // The MSVC compiler issues warnings if you use raw pointers with some
+  // operations. To keep the compiler happy (and add some safety checks),
+  // wrap the iterator in a check.
+  typedef stdext::checked_array_iterator<_IteratorType> IteratorType;
+
+  VTKM_CONT_EXPORT
+  ArrayPortalToIterators(const PortalType &portal)
+    : Iterator(portal.GetRawIterator(), portal.GetNumberOfValues()),
+      NumberOfValues(portal.GetNumberOfValues())
+  {  }
+
+#endif // VTKM_MSVC
+
+  VTKM_CONT_EXPORT
+  IteratorType GetBegin() const { return this->Iterator; }
+
+  VTKM_CONT_EXPORT
+  IteratorType GetEnd() const {
+    IteratorType iterator = this->Iterator;
+    std::advance(iterator, this->NumberOfValues);
+    return iterator;
+  }
+
+private:
+  IteratorType Iterator;
+  vtkm::Id NumberOfValues;
+};
+
+}
+} // namespace vtkm::cont
 
 #endif //vtk_m_cont_internal_ArrayPortalFromIterators_h

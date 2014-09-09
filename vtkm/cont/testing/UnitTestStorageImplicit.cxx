@@ -37,8 +37,6 @@ struct TestImplicitStorage
 {
   typedef T ValueType;
   ValueType Temp;
-  typedef vtkm::cont::internal::IteratorFromArrayPortal<
-      TestImplicitStorage<T> > IteratorType;
 
 
   VTKM_EXEC_CONT_EXPORT
@@ -54,18 +52,6 @@ struct TestImplicitStorage
   ValueType Get(vtkm::Id vtkmNotUsed(index)) const
   {
     return Temp;
-  }
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorBegin() const
-  {
-    return IteratorType(*this);
-  }
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorEnd() const
-  {
-    return IteratorType(*this, this->GetNumberOfValues());
   }
 
 };

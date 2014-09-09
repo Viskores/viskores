@@ -71,19 +71,6 @@ struct UnusualPortal
 
   VTKM_EXEC_CONT_EXPORT
   ValueType Get(vtkm::Id index) const { return TestValue(index, ValueType()); }
-
-  typedef vtkm::cont::internal::IteratorFromArrayPortal<UnusualPortal<T> >
-      IteratorType;
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorBegin() const {
-    return IteratorType(*this);
-  }
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorEnd() const {
-    return IteratorType(*this, this->GetNumberOfValues());
-  }
 };
 
 template<typename T>

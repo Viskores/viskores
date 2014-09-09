@@ -21,6 +21,7 @@
 #define vtk_m_cont_internal_DeviceAdapterAlgorithmSerial_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
@@ -64,9 +65,9 @@ public:
 
     if (numberOfValues <= 0) { return 0; }
 
-    std::partial_sum(inputPortal.GetIteratorBegin(),
-                     inputPortal.GetIteratorEnd(),
-                     outputPortal.GetIteratorBegin());
+    std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
+                     vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
+                     vtkm::cont::ArrayPortalToIteratorBegin(outputPortal));
 
     // Return the value at the last index in the array, which is the full sum.
     return outputPortal.Get(numberOfValues - 1);
@@ -89,16 +90,16 @@ public:
 
     if (numberOfValues <= 0) { return 0; }
 
-    std::partial_sum(inputPortal.GetIteratorBegin(),
-                     inputPortal.GetIteratorEnd(),
-                     outputPortal.GetIteratorBegin());
+    std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
+                     vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
+                     vtkm::cont::ArrayPortalToIteratorBegin(outputPortal));
 
     T fullSum = outputPortal.Get(numberOfValues - 1);
 
     // Shift right by one
-    std::copy_backward(outputPortal.GetIteratorBegin(),
-                       outputPortal.GetIteratorEnd()-1,
-                       outputPortal.GetIteratorEnd());
+    std::copy_backward(vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
+                       vtkm::cont::ArrayPortalToIteratorEnd(outputPortal)-1,
+                       vtkm::cont::ArrayPortalToIteratorEnd(outputPortal));
     outputPortal.Set(0, 0);
     return fullSum;
   }
@@ -163,7 +164,8 @@ public:
         ::template ExecutionTypes<Device>::Portal PortalType;
 
     PortalType arrayPortal = values.PrepareForInPlace(Device());
-    std::sort(arrayPortal.GetIteratorBegin(), arrayPortal.GetIteratorEnd());
+    vtkm::cont::ArrayPortalToIterators<PortalType> iterators(arrayPortal);
+    std::sort(iterators.GetBegin(), iterators.GetEnd());
   }
 
   template<typename T, class Storage, class Compare>
@@ -174,7 +176,8 @@ public:
         ::template ExecutionTypes<Device>::Portal PortalType;
 
     PortalType arrayPortal = values.PrepareForInPlace(Device());
-    std::sort(arrayPortal.GetIteratorBegin(), arrayPortal.GetIteratorEnd(),comp);
+    vtkm::cont::ArrayPortalToIterators<PortalType> iterators(arrayPortal);
+    std::sort(iterators.GetBegin(), iterators.GetEnd(), comp);
   }
 
   VTKM_CONT_EXPORT static void Synchronize()

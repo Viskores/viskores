@@ -22,7 +22,10 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayPortal.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/Assert.h>
+
+#include <iterator>
 
 namespace vtkm {
 namespace cont {
@@ -38,7 +41,6 @@ public:
   typedef PortalT DelegatePortalType;
 
   typedef typename DelegatePortalType::ValueType ValueType;
-  typedef typename DelegatePortalType::IteratorType IteratorType;
 
   VTKM_CONT_EXPORT ArrayPortalShrink() : NumberOfValues(0) {  }
 
@@ -84,20 +86,6 @@ public:
     this->DelegatePortal.Set(index, value);
   }
 
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorBegin() const
-  {
-    return this->DelegatePortal.GetIteratorBegin();
-  }
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorEnd() const
-  {
-    IteratorType iterator = this->DelegatePortal.GetIteratorBegin();
-    std::advance(iterator, this->GetNumberOfValues());
-    return iterator;
-  }
-
   /// Special method in this ArrayPortal that allows you to shrink the
   /// (exposed) array.
   ///
@@ -122,5 +110,46 @@ private:
 }
 }
 } // namespace vtkm::cont::internal
+
+namespace vtkm {
+namespace cont {
+
+template<typename DelegatePortalType>
+class ArrayPortalToIterators<
+    vtkm::cont::internal::ArrayPortalShrink<DelegatePortalType> >
+{
+  typedef vtkm::cont::internal::ArrayPortalShrink<DelegatePortalType>
+      PortalType;
+  typedef vtkm::cont::ArrayPortalToIterators<DelegatePortalType>
+      DelegateArrayPortalToIterators;
+
+public:
+  VTKM_CONT_EXPORT
+  ArrayPortalToIterators(const PortalType &portal)
+    : DelegateIterators(portal.GetDelegatePortal()),
+      NumberOfValues(portal.GetNumberOfValues())
+  {  }
+
+  typedef typename DelegateArrayPortalToIterators::IteratorType IteratorType;
+
+  VTKM_CONT_EXPORT
+  IteratorType GetBegin() const {
+    return this->DelegateIterators.GetBegin();
+  }
+
+  VTKM_CONT_EXPORT
+  IteratorType GetEnd() const {
+    IteratorType iterator = this->GetBegin();
+    std::advance(iterator, this->NumberOfValues);
+    return iterator;
+  }
+
+private:
+  DelegateArrayPortalToIterators DelegateIterators;
+  vtkm::Id NumberOfValues;
+};
+
+}
+} // namespace vtkm::cont
 
 #endif //vtk_m_cont_internal_ArrayPortalShrink_h

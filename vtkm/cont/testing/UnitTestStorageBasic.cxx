@@ -36,25 +36,22 @@ struct TemplatedTests
       StorageType;
   typedef typename StorageType::ValueType ValueType;
   typedef typename StorageType::PortalType PortalType;
-  typedef typename PortalType::IteratorType IteratorType;
 
   void SetStorage(StorageType &array, const ValueType& value)
   {
-    for (IteratorType iter = array.GetPortal().GetIteratorBegin();
-         iter != array.GetPortal().GetIteratorEnd();
-         iter ++)
+    PortalType portal = array.GetPortal();
+    for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
     {
-      *iter = value;
+      portal.Set(index, value);
     }
   }
 
   bool CheckStorage(StorageType &array, const ValueType& value)
   {
-    for (IteratorType iter = array.GetPortal().GetIteratorBegin();
-         iter != array.GetPortal().GetIteratorEnd();
-         iter ++)
+    PortalType portal = array.GetPortal();
+    for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
     {
-      if (!test_equal(*iter, value)) { return false; }
+      if (!test_equal(portal.Get(index), value)) { return false; }
     }
     return true;
   }

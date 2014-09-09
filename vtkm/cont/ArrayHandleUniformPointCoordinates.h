@@ -25,8 +25,6 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageImplicit.h>
 
-#include <vtkm/cont/internal/IteratorFromArrayPortal.h>
-
 namespace vtkm {
 namespace cont {
 
@@ -91,19 +89,6 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vector3 Get(vtkm::Id3 index) const {
     return this->GetCoordinatesForTopologyIndex(index + this->Extent.Min);
-  }
-
-  typedef vtkm::cont::internal::IteratorFromArrayPortal<
-      ArrayPortalUniformPointCoordinates> IteratorType;
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorBegin() const {
-    return IteratorType(*this);
-  }
-
-  VTKM_CONT_EXPORT
-  IteratorType GetIteratorEnd() const {
-    return IteratorType(*this, this->NumberOfValues);
   }
 
 private:

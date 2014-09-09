@@ -21,6 +21,7 @@
 #define vtk_m_cont_testing_TestingDeviceAdapter_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorControlOutOfMemory.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -376,9 +377,10 @@ private:
 
     // Copy array back.
     vtkm::Scalar outputArray[ARRAY_SIZE];
-    std::copy(inputManager.GetPortalConst().GetIteratorBegin(),
-              inputManager.GetPortalConst().GetIteratorEnd(),
-              outputArray);
+    vtkm::cont::ArrayPortalToIterators<
+        typename ArrayManagerExecution::PortalConstType>
+      iterators(inputManager.GetPortalConst());
+    std::copy(iterators.GetBegin(), iterators.GetEnd(), outputArray);
 
     // Check array.
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
@@ -757,9 +759,10 @@ private:
     VTKM_TEST_ASSERT(handle.GetNumberOfValues() == RANDOMDATA_SIZE,
                      "LowerBounds returned incorrect size");
 
-    std::copy(handle.GetPortalConstControl().GetIteratorBegin(),
-              handle.GetPortalConstControl().GetIteratorEnd(),
-              randomData);
+    std::copy(
+          vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalConstControl()),
+          vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalConstControl()),
+          randomData);
     VTKM_TEST_ASSERT(randomData[0] == 2, "Got bad value - LowerBounds");
     VTKM_TEST_ASSERT(randomData[1] == 3, "Got bad value - LowerBounds");
     VTKM_TEST_ASSERT(randomData[2] == 3, "Got bad value - LowerBounds");
@@ -770,9 +773,10 @@ private:
     VTKM_TEST_ASSERT(handle1.GetNumberOfValues() == RANDOMDATA_SIZE,
                      "UppererBounds returned incorrect size");
 
-    std::copy(handle1.GetPortalConstControl().GetIteratorBegin(),
-              handle1.GetPortalConstControl().GetIteratorEnd(),
-              randomData);
+    std::copy(
+          vtkm::cont::ArrayPortalToIteratorBegin(handle1.GetPortalConstControl()),
+          vtkm::cont::ArrayPortalToIteratorEnd(handle1.GetPortalConstControl()),
+          randomData);
     VTKM_TEST_ASSERT(randomData[0] == 3, "Got bad value - UpperBound");
     VTKM_TEST_ASSERT(randomData[1] == 4, "Got bad value - UpperBound");
     VTKM_TEST_ASSERT(randomData[2] == 4, "Got bad value - UpperBound");
