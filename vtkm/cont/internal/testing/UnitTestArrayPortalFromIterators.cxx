@@ -87,6 +87,7 @@ struct TemplatedTests
     // If you get a compile error here about mismatched types, it might be
     // that ArrayPortalToIterators is not properly overloaded to return the
     // original iterator.
+#ifndef VTKM_MSVC
     VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorBegin(portal) == array,
                      "Begin iterator wrong.");
     VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(portal) ==
@@ -98,6 +99,25 @@ struct TemplatedTests
     VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(const_portal) ==
                      array+ARRAY_SIZE,
                      "End const iterator wrong.");
+#else //VTKM_MSVC
+    // The Microsoft compiler likes to complain about using raw pointers in
+    // generic functions, so we use the non-portable wrapper
+    // stdext::checked_array_iterator instead. In this case, check for that
+    // type. Same comment about mismatched type compiler errors in the comment
+    // above applies here.
+    VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorBegin(portal) ==
+      stdext::checked_array_iterator<ValueType *>(array, ARRAY_SIZE),
+      "Begin iterator wrong.");
+    VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(portal) ==
+      stdext::checked_array_iterator<ValueType *>(array, ARRAY_SIZE) + ARRAY_SIZE,
+      "End iterator wrong.");
+    VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorBegin(const_portal) ==
+      stdext::checked_array_iterator<const ValueType *>(array, ARRAY_SIZE),
+      "Begin const iterator wrong.");
+    VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(const_portal) ==
+      stdext::checked_array_iterator<const ValueType *>(array, ARRAY_SIZE) + ARRAY_SIZE,
+      "End const iterator wrong.");
+#endif // VTKM_MSVC
 
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE,
                      "Portal array size wrong.");
