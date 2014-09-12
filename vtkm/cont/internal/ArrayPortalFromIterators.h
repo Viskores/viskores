@@ -55,8 +55,8 @@ public:
     if (numberOfValues > std::numeric_limits<vtkm::Id>::max())
     {
       throw vtkm::cont::ErrorControlOutOfMemory(
-        "Distance of iterators larger than maximum array size."
-        "To support larger arrays, try 64 bit arrays.");
+        "Distance of iterators larger than maximum array size. "
+        "To support larger arrays, try turning on VTKM_USE_64BIT_IDS.");
     }
 #endif // !VTKM_USE_64BIT_IDS
     this->NumberOfValues = static_cast<vtkm::Id>(numberOfValues);
