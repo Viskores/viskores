@@ -24,8 +24,10 @@
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/Assert.h>
+#include <vtkm/cont/ErrorControlOutOfMemory.h>
 
 #include <iterator>
+#include <limits>
 
 namespace vtkm {
 namespace cont {
@@ -44,9 +46,20 @@ public:
 
   VTKM_CONT_EXPORT
   ArrayPortalFromIterators(IteratorT begin, IteratorT end)
-    : BeginIterator(begin), NumberOfValues(std::distance(begin, end))
+    : BeginIterator(begin)
   {
-    VTKM_ASSERT_CONT(this->GetNumberOfValues() >= 0);
+    typename std::iterator_traits<IteratorT>::difference_type numberOfValues =
+      std::distance(begin, end);
+    VTKM_ASSERT_CONT(numberOfValues >= 0);
+#ifndef VTKM_USE_64BIT_IDS
+    if (numberOfValues > std::numeric_limits<vtkm::Id>::max())
+    {
+      throw vtkm::cont::ErrorControlOutOfMemory(
+        "Distance of iterators larger than maximum array size."
+        "To support larger arrays, try 64 bit arrays.");
+    }
+#endif // !VTKM_USE_64BIT_IDS
+    this->NumberOfValues = static_cast<vtkm::Id>(numberOfValues);
   }
 
   /// Copy constructor for any other ArrayPortalFromIterators with an iterator
