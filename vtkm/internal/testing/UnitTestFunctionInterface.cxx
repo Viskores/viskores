@@ -494,9 +494,26 @@ void TestInvokeTime()
   std::cout << "Pointless result (makeing sure compiler computes it) "
             << f.Field << std::endl;
 
+#if !defined(NDEBUG) && defined(VTKM_MSVC)
+  // We expect function calls through the FunctionInterface class to take
+  // about the same amount of time as calling the function directly. If
+  // optimization is on and functions are properly inlined, this should
+  // certainly be the case. Most compilers are close even in debug mode.
+  // However, some compilers might add extra debug instructions for each
+  // function call, so this might slow things down. Handle that contingency
+  // here with just a warning. (Future builds might need to add more cases
+  // here.)
+  if (invokeCallTime >= 1.05*directCallTime)
+  {
+    std::cout << "WARNING: Function interface took longer than expected."
+              << std::endl
+              << "That should be corrected in release builds." << std::endl;
+  }
+#else
   // Might need to disable this for non-release builds.
   VTKM_TEST_ASSERT(invokeCallTime < 1.05*directCallTime,
                    "Function interface invoke took longer than expected.");
+#endif
 }
 
 void TestFunctionInterface()
