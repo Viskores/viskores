@@ -37,7 +37,7 @@ struct VectorTraitsTagSingleComponent { };
 
 namespace internal {
 
-template<int numComponents>
+template<vtkm::IdComponent numComponents>
 struct VectorTraitsMultipleComponentChooser
 {
   typedef VectorTraitsTagMultipleComponents Type;
@@ -64,7 +64,7 @@ struct VectorTraits
 
   /// Number of components in the vector.
   ///
-  static const int NUM_COMPONENTS = VectorType::NUM_COMPONENTS;
+  static const vtkm::IdComponent NUM_COMPONENTS = VectorType::NUM_COMPONENTS;
 
   /// A tag specifying whether this vector has multiple components (i.e. is a
   /// "real" vector). This tag can be useful for creating specialized functions
@@ -77,15 +77,15 @@ struct VectorTraits
   ///
   VTKM_EXEC_CONT_EXPORT static const ComponentType &GetComponent(
       const typename boost::remove_const<VectorType>::type &vector,
-      int component);
+      vtkm::IdComponent component);
   VTKM_EXEC_CONT_EXPORT static ComponentType &GetComponent(
       typename boost::remove_const<VectorType>::type &vector,
-      int component);
+      vtkm::IdComponent component);
 
   /// Changes the value in a given component of the vector.
   ///
   VTKM_EXEC_CONT_EXPORT static void SetComponent(VectorType &vector,
-                                                int component,
+                                                vtkm::IdComponent component,
                                                 ComponentType value);
 
   /// Converts whatever type this vector is into the standard VTKm Tuple.
@@ -105,7 +105,7 @@ template<typename T>
 struct VectorTraits<const T> : VectorTraits<T>
 {  };
 
-template<typename T, int Size>
+template<typename T, vtkm::IdComponent Size>
 struct VectorTraits<vtkm::Tuple<T,Size> >
 {
   typedef vtkm::Tuple<T,Size> VectorType;
@@ -116,7 +116,7 @@ struct VectorTraits<vtkm::Tuple<T,Size> >
 
   /// Number of components in the vector.
   ///
-  static const int NUM_COMPONENTS = VectorType::NUM_COMPONENTS;
+  static const vtkm::IdComponent NUM_COMPONENTS = VectorType::NUM_COMPONENTS;
 
   /// A tag specifying whether this vector has multiple components (i.e. is a
   /// "real" vector). This tag can be useful for creating specialized functions
@@ -129,19 +129,19 @@ struct VectorTraits<vtkm::Tuple<T,Size> >
   ///
   VTKM_EXEC_CONT_EXPORT
   static const ComponentType &GetComponent(const VectorType &vector,
-                                           int component)
+                                           vtkm::IdComponent component)
   {
     return vector[component];
   }
   VTKM_EXEC_CONT_EXPORT
-  static ComponentType &GetComponent(VectorType &vector, int component) {
+  static ComponentType &GetComponent(VectorType &vector, vtkm::IdComponent component) {
     return vector[component];
   }
 
   /// Changes the value in a given component of the vector.
   ///
   VTKM_EXEC_CONT_EXPORT static void SetComponent(VectorType &vector,
-                                                int component,
+                                                vtkm::IdComponent component,
                                                 ComponentType value) {
     vector[component] = value;
   }
@@ -162,21 +162,21 @@ namespace internal {
 template<typename ScalarType>
 struct VectorTraitsBasic {
   typedef ScalarType ComponentType;
-  static const int NUM_COMPONENTS = 1;
+  static const vtkm::IdComponent NUM_COMPONENTS = 1;
   typedef VectorTraitsTagSingleComponent HasMultipleComponents;
 
   VTKM_EXEC_CONT_EXPORT static const ComponentType &GetComponent(
       const ScalarType &vector,
-      int) {
+      vtkm::IdComponent) {
     return vector;
   }
   VTKM_EXEC_CONT_EXPORT
-  static ComponentType &GetComponent(ScalarType &vector, int) {
+  static ComponentType &GetComponent(ScalarType &vector, vtkm::IdComponent) {
     return vector;
   }
 
   VTKM_EXEC_CONT_EXPORT static void SetComponent(ScalarType &vector,
-                                                int,
+                                                vtkm::IdComponent,
                                                 ComponentType value) {
     vector = value;
   }

@@ -43,10 +43,10 @@ vtkm::Scalar TestValue(vtkm::Id index, vtkm::Scalar) {
   return static_cast<vtkm::Scalar>(index)/100;
 }
 
-template<typename T, int N>
+template<typename T, vtkm::IdComponent N>
 vtkm::Tuple<T,N> TestValue(vtkm::Id index, vtkm::Tuple<T,N>) {
   vtkm::Tuple<T,N> value;
-  for (int i = 0; i < N; i++)
+  for (vtkm::IdComponent i = 0; i < N; i++)
   {
     value[i] = TestValue(index, T()) + (i + 1);
   }

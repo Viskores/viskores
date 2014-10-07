@@ -136,7 +136,8 @@ VTKM_VECTOR_TYPE(vtkm::Vector4, TypeTraitsRealTag);
 
 /// Traits for tuples.
 ///
-template<typename T, int Size> struct TypeTraits<vtkm::Tuple<T, Size> >
+template<typename T, vtkm::IdComponent Size>
+struct TypeTraits<vtkm::Tuple<T, Size> >
 {
   typedef typename TypeTraits<T>::NumericTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;

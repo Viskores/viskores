@@ -304,7 +304,9 @@ bool test_equal(VectorType vector1,
                 vtkm::Scalar tolerance = 0.0001)
 {
   typedef typename vtkm::VectorTraits<VectorType> Traits;
-  for (int component = 0; component < Traits::NUM_COMPONENTS; component++)
+  for (vtkm::IdComponent component = 0;
+       component < Traits::NUM_COMPONENTS;
+       component++)
   {
     vtkm::Scalar value1 = vtkm::Scalar(Traits::GetComponent(vector1, component));
     vtkm::Scalar value2 = vtkm::Scalar(Traits::GetComponent(vector2, component));
@@ -340,12 +342,12 @@ bool test_equal(const std::string &string1, const std::string &string2)
 
 /// Helper function for printing out vectors during testing.
 ///
-template<typename T, int Size>
+template<typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT_EXPORT
 std::ostream &operator<<(std::ostream &stream, const vtkm::Tuple<T,Size> &tuple)
 {
   stream << "[";
-  for (int component = 0; component < Size-1; component++)
+  for (vtkm::IdComponent component = 0; component < Size-1; component++)
   {
     stream << tuple[component] << ",";
   }

@@ -361,8 +361,8 @@ public:
   }
   struct TimeStamp
   {
-    vtkm::internal::Int64Type Seconds;
-    vtkm::internal::Int64Type Microseconds;
+    vtkm::Int64 Seconds;
+    vtkm::Int64 Microseconds;
   };
   TimeStamp StartTime;
 

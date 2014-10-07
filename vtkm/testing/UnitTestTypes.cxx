@@ -44,6 +44,20 @@
 
 namespace {
 
+void CheckTypeSizes()
+{
+  VTKM_TEST_ASSERT(sizeof(vtkm::Int8) == 1, "Int8 wrong size.");
+  VTKM_TEST_ASSERT(sizeof(vtkm::UInt8) == 1, "UInt8 wrong size.");
+  VTKM_TEST_ASSERT(sizeof(vtkm::Int16) == 2, "Int16 wrong size.");
+  VTKM_TEST_ASSERT(sizeof(vtkm::UInt16) == 2, "UInt16 wrong size.");
+  VTKM_TEST_ASSERT(sizeof(vtkm::Int32) == 4, "Int32 wrong size.");
+  VTKM_TEST_ASSERT(sizeof(vtkm::UInt32) == 4, "UInt32 wrong size.");
+  VTKM_TEST_ASSERT(sizeof(vtkm::Int64) == 8, "Int64 wrong size.");
+  VTKM_TEST_ASSERT(sizeof(vtkm::UInt64) == 8, "UInt64 wrong size.");
+  VTKM_TEST_ASSERT(sizeof(vtkm::Float32) == 4, "Float32 wrong size.");
+  VTKM_TEST_ASSERT(sizeof(vtkm::Float64) == 8, "Float32 wrong size.");
+}
+
 //general type test
 template <typename T> void TypeTest()
 {
@@ -51,7 +65,7 @@ template <typename T> void TypeTest()
   T a, b, c;
   typename T::ComponentType s(5);
 
-  for(int i=0; i < T::NUM_COMPONENTS; ++i)
+  for(vtkm::IdComponent i=0; i < T::NUM_COMPONENTS; ++i)
   {
     a[i]=typename T::ComponentType((i+1)*2);
     b[i]=typename T::ComponentType(i+1);
@@ -69,31 +83,31 @@ template <typename T> void TypeTest()
 
   T plus = a + b;
   T correct_plus;
-  for(int i=0; i < T::NUM_COMPONENTS; ++i)
+  for(vtkm::IdComponent i=0; i < T::NUM_COMPONENTS; ++i)
   { correct_plus[i] = a[i] + b[i]; }
   VTKM_TEST_ASSERT(test_equal(plus, correct_plus),"Tuples not added correctly.");
 
   T minus = a - b;
   T correct_minus;
-  for(int i=0; i < T::NUM_COMPONENTS; ++i)
+  for(vtkm::IdComponent i=0; i < T::NUM_COMPONENTS; ++i)
   { correct_minus[i] = a[i] - b[i]; }
   VTKM_TEST_ASSERT(test_equal(minus, correct_minus),"Tuples not subtracted correctly.");
 
 
   T mult = a * b;
   T correct_mult;
-  for(int i=0; i < T::NUM_COMPONENTS; ++i)
+  for(vtkm::IdComponent i=0; i < T::NUM_COMPONENTS; ++i)
   { correct_mult[i] = a[i] * b[i]; }
   VTKM_TEST_ASSERT(test_equal(mult, correct_mult),"Tuples not multiplied correctly.");
 
   T div = a / b;
   T correct_div;
-  for(int i=0; i < T::NUM_COMPONENTS; ++i)
+  for(vtkm::IdComponent i=0; i < T::NUM_COMPONENTS; ++i)
   { correct_div[i] = a[i] / b[i]; }
   VTKM_TEST_ASSERT(test_equal(div,correct_div),"Tuples not divided correctly.");
 
   mult = s * a;
-  for(int i=0; i < T::NUM_COMPONENTS; ++i)
+  for(vtkm::IdComponent i=0; i < T::NUM_COMPONENTS; ++i)
   { correct_mult[i] = s * a[i]; }
   VTKM_TEST_ASSERT(test_equal(mult, correct_mult),
                    "Scalar and Tuple did not multiply correctly.");
@@ -104,7 +118,7 @@ template <typename T> void TypeTest()
 
   typename T::ComponentType d = vtkm::dot(a, b);
   typename T::ComponentType correct_d = 0;
-  for(int i=0; i < T::NUM_COMPONENTS; ++i)
+  for(vtkm::IdComponent i=0; i < T::NUM_COMPONENTS; ++i)
   {correct_d += a[i] * b[i]; }
   VTKM_TEST_ASSERT(test_equal(d, correct_d), "dot(Tuple) wrong");
 
@@ -478,6 +492,8 @@ struct TypeTestFunctor
 
 void TestTypes()
 {
+  CheckTypeSizes();
+
   vtkm::testing::Testing::TryAllTypes(TypeTestFunctor());
 
   //try with some custom tuple types

@@ -40,7 +40,9 @@ const vtkm::Id ARRAY_SIZE = 10;
 
 typedef vtkm::cont::StorageTagBasic StorageTag;
 
-vtkm::Scalar TestValue(vtkm::Id index, int inComponentIndex, int inArrayId)
+vtkm::Scalar TestValue(vtkm::Id index,
+                       vtkm::IdComponent inComponentIndex,
+                       int inArrayId)
 {
   return index + vtkm::Scalar(0.1)*inComponentIndex + vtkm::Scalar(0.01)*inArrayId;
 }
@@ -55,7 +57,7 @@ MakeInputArray(int arrayId)
   ValueType buffer[ARRAY_SIZE];
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    for (int componentIndex = 0;
+    for (vtkm::IdComponent componentIndex = 0;
          componentIndex < VTraits::NUM_COMPONENTS;
          componentIndex++)
     {
@@ -82,7 +84,7 @@ MakeInputArray(int arrayId)
 
 template<typename ValueType, typename C>
 void CheckArray(const vtkm::cont::ArrayHandle<ValueType,C> &outArray,
-                const int *inComponents,
+                const vtkm::IdComponent *inComponents,
                 const int *inArrayIds)
 {
   // ArrayHandleCompositeVector currently does not implement the ability to
@@ -98,7 +100,7 @@ void CheckArray(const vtkm::cont::ArrayHandle<ValueType,C> &outArray,
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
     ValueType retreivedValue = portal.Get(index);
-    for (int componentIndex = 0;
+    for (vtkm::IdComponent componentIndex = 0;
          componentIndex < VTraits::NUM_COMPONENTS;
          componentIndex++)
     {
@@ -113,7 +115,7 @@ void CheckArray(const vtkm::cont::ArrayHandle<ValueType,C> &outArray,
   }
 }
 
-template<int inComponents>
+template<vtkm::IdComponent inComponents>
 void TryScalarArray()
 {
   std::cout << "Creating a scalar array from one of "
@@ -126,7 +128,7 @@ void TryScalarArray()
 
   typedef typename vtkm::cont::ArrayHandleCompositeVectorType<InArrayType>::type
       OutArrayType;
-  for (int inComponentIndex = 0;
+  for (vtkm::IdComponent inComponentIndex = 0;
        inComponentIndex < inComponents;
        inComponentIndex++)
   {
@@ -143,7 +145,7 @@ void TryVector4(vtkm::cont::ArrayHandle<T1,StorageTag> array1,
                 vtkm::cont::ArrayHandle<T4,StorageTag> array4)
 {
   int arrayIds[4] = {0, 1, 2, 3};
-  int inComponents[4];
+  vtkm::IdComponent inComponents[4];
 
   for (inComponents[0] = 0;
        inComponents[0] < vtkm::VectorTraits<T1>::NUM_COMPONENTS;
@@ -181,7 +183,7 @@ void TryVector3(vtkm::cont::ArrayHandle<T1,StorageTag> array1,
                 vtkm::cont::ArrayHandle<T3,StorageTag> array3)
 {
   int arrayIds[3] = {0, 1, 2};
-  int inComponents[3];
+  vtkm::IdComponent inComponents[3];
 
   for (inComponents[0] = 0;
        inComponents[0] < vtkm::VectorTraits<T1>::NUM_COMPONENTS;
@@ -217,7 +219,7 @@ void TryVector2(vtkm::cont::ArrayHandle<T1,StorageTag> array1,
                 vtkm::cont::ArrayHandle<T2,StorageTag> array2)
 {
   int arrayIds[2] = {0, 1};
-  int inComponents[2];
+  vtkm::IdComponent inComponents[2];
 
   for (inComponents[0] = 0;
        inComponents[0] < vtkm::VectorTraits<T1>::NUM_COMPONENTS;
@@ -246,7 +248,7 @@ template<typename T1>
 void TryVector1(vtkm::cont::ArrayHandle<T1,StorageTag> array1)
 {
   int arrayIds[1] = {0};
-  int inComponents[1];
+  vtkm::IdComponent inComponents[1];
 
   for (inComponents[0] = 0;
        inComponents[0] < vtkm::VectorTraits<T1>::NUM_COMPONENTS;

@@ -35,7 +35,7 @@ struct TestVectorTypeFunctor
     VTKM_TEST_ASSERT(Traits::NUM_COMPONENTS <= MAX_VECTOR_SIZE,
                      "Need to update test for larger vectors.");
     T vector;
-    for (int index = 0; index < Traits::NUM_COMPONENTS; index++)
+    for (vtkm::IdComponent index = 0; index < Traits::NUM_COMPONENTS; index++)
     {
       Traits::SetComponent(vector, index, ComponentType(VectorInit[index]));
     }

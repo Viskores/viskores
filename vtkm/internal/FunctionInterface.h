@@ -56,14 +56,14 @@ struct IdentityFunctor {
 };
 
 
-template<int ParameterIndex, typename FunctionSignature>
+template<vtkm::IdComponent ParameterIndex, typename FunctionSignature>
 VTKM_EXEC_CONT_EXPORT
 typename ParameterContainerAccess<ParameterIndex,FunctionSignature>::ParameterType
 GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
   return ParameterContainerAccess<ParameterIndex,FunctionSignature>::GetParameter(parameters);
 }
 
-template<int ParameterIndex, typename FunctionSignature>
+template<vtkm::IdComponent ParameterIndex, typename FunctionSignature>
 VTKM_EXEC_CONT_EXPORT
 void SetParameter(ParameterContainer<FunctionSignature> &parameters,
                   const typename ParameterContainerAccess<ParameterIndex,FunctionSignature>::ParameterType &value) {
@@ -72,7 +72,7 @@ void SetParameter(ParameterContainer<FunctionSignature> &parameters,
 
 // These functions exist to help copy components of a FunctionInterface.
 
-template<int NumToCopy, int ParameterIndex = 1>
+template<vtkm::IdComponent NumToCopy, vtkm::IdComponent ParameterIndex = 1>
 struct FunctionInterfaceCopyParameters {
   template<typename DestSignature, typename SrcSignature>
   static
@@ -86,7 +86,7 @@ struct FunctionInterfaceCopyParameters {
   }
 };
 
-template<int ParameterIndex>
+template<vtkm::IdComponent ParameterIndex>
 struct FunctionInterfaceCopyParameters<0, ParameterIndex> {
   template<typename DestSignature, typename SrcSignature>
   static
@@ -151,7 +151,7 @@ class FunctionInterfaceDynamicTransformContContinue;
 /// a template parameter.
 ///
 /// \code{.cpp}
-/// vtkm::internal::FunctionInterface<void(int,double,char)> functionInterface =
+/// vtkm::internal::FunctionInterface<void(vtkm::IdComponent,double,char)> functionInterface =
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
@@ -258,7 +258,7 @@ public:
   typedef typename boost::function_types::result_type<FunctionSignature>::type
       ResultType;
 
-  template<int ParameterIndex>
+  template<vtkm::IdComponent ParameterIndex>
   struct ParameterType {
     typedef typename boost::mpl::at_c<
         boost::function_types::components<FunctionSignature>,
@@ -268,13 +268,13 @@ public:
 
   /// The number of parameters in this \c Function Interface.
   ///
-  static const int ARITY = SignatureArity::value;
+  static const vtkm::IdComponent ARITY = SignatureArity::value;
 
   /// Returns the number of parameters held in this \c FunctionInterface. The
   /// return value is the same as \c ARITY.
   ///
   VTKM_EXEC_CONT_EXPORT
-  int GetArity() const { return ARITY; }
+  vtkm::IdComponent GetArity() const { return ARITY; }
 
   /// Retrieves the return value from the last invocation called. This method
   /// will result in a compiler error if used with a function having a void
@@ -315,7 +315,7 @@ public:
   /// }
   /// \endcode
   ///
-  template<int ParameterIndex>
+  template<vtkm::IdComponent ParameterIndex>
   VTKM_EXEC_CONT_EXPORT
   typename ParameterType<ParameterIndex>::type
   GetParameter() const {
@@ -328,7 +328,7 @@ public:
   /// template (which is almost always the case), then you will have to use the
   /// template keyword.
   ///
-  template<int ParameterIndex>
+  template<vtkm::IdComponent ParameterIndex>
   VTKM_EXEC_CONT_EXPORT
   void SetParameter(typename ParameterType<ParameterIndex>::type parameter)
   {
@@ -447,7 +447,7 @@ public:
     return appendedFuncInterface;
   }
 
-  template<int ParameterIndex, typename NewType>
+  template<vtkm::IdComponent ParameterIndex, typename NewType>
   class ReplaceType {
     typedef boost::function_types::components<FunctionSignature> ThisFunctionComponents;
     typedef typename boost::mpl::advance_c<typename boost::mpl::begin<ThisFunctionComponents>::type, ParameterIndex>::type ToRemovePos;
@@ -466,7 +466,7 @@ public:
   /// changes. The return type can be determined with the \c ReplaceType
   /// template.
   ///
-  template<int ParameterIndex, typename NewType>
+  template<vtkm::IdComponent ParameterIndex, typename NewType>
   VTKM_EXEC_CONT_EXPORT
   typename ReplaceType<ParameterIndex, NewType>::type
   Replace(NewType newParameter) const {

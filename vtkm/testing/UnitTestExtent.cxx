@@ -24,14 +24,14 @@
 
 namespace {
 
-const int MIN_VALUES[] = { -5,  8, 40, -8, -3 };
-const int MAX_VALUES[] = { 10, 25, 44, -2,  1 };
-const int POINT_DIMS[] = { 16, 18,  5,  7,  5 };
-const int CELL_DIMS[] =  { 15, 17,  4,  6,  4 };
-const int NUM_POINTS[] = { 0, 16, 288, 1440, 10080, 50400 };
-const int NUM_CELLS[] =  { 0, 15, 255, 1020,  6120, 24480 };
+const vtkm::Id MIN_VALUES[] = { -5,  8, 40, -8, -3 };
+const vtkm::Id MAX_VALUES[] = { 10, 25, 44, -2,  1 };
+const vtkm::Id POINT_DIMS[] = { 16, 18,  5,  7,  5 };
+const vtkm::Id CELL_DIMS[] =  { 15, 17,  4,  6,  4 };
+const vtkm::Id NUM_POINTS[] = { 0, 16, 288, 1440, 10080, 50400 };
+const vtkm::Id NUM_CELLS[] =  { 0, 15, 255, 1020,  6120, 24480 };
 
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 void TestDimensions(vtkm::Extent<Dimensions>)
 {
   std::cout << "Testing Dimension sizes for " << Dimensions << " dimensions"
@@ -43,13 +43,13 @@ void TestDimensions(vtkm::Extent<Dimensions>)
   vtkm::Id numPoints;
   vtkm::Id numCells;
 
-  for (int dimIndex = 0; dimIndex < Dimensions; dimIndex++)
+  for (vtkm::IdComponent dimIndex = 0; dimIndex < Dimensions; dimIndex++)
   {
     extent.Min[dimIndex] = 0;  extent.Max[dimIndex] = 10;
   }
   pointDims = vtkm::ExtentPointDimensions(extent);
   cellDims = vtkm::ExtentCellDimensions(extent);
-  for (int dimIndex = 0; dimIndex < Dimensions; dimIndex++)
+  for (vtkm::IdComponent dimIndex = 0; dimIndex < Dimensions; dimIndex++)
   {
     VTKM_TEST_ASSERT(pointDims[dimIndex] == 11,
                      "Got incorrect point dimensions for extent.");
@@ -57,14 +57,14 @@ void TestDimensions(vtkm::Extent<Dimensions>)
                      "Got incorrect point dimensions for extent.");
   }
 
-  for (int dimIndex = 0; dimIndex < Dimensions; dimIndex++)
+  for (vtkm::IdComponent dimIndex = 0; dimIndex < Dimensions; dimIndex++)
   {
     extent.Min[dimIndex] = MIN_VALUES[dimIndex];
     extent.Max[dimIndex] = MAX_VALUES[dimIndex];
   }
   pointDims = vtkm::ExtentPointDimensions(extent);
   cellDims = vtkm::ExtentCellDimensions(extent);
-  for (int dimIndex = 0; dimIndex < Dimensions; dimIndex++)
+  for (vtkm::IdComponent dimIndex = 0; dimIndex < Dimensions; dimIndex++)
   {
     VTKM_TEST_ASSERT(pointDims[dimIndex] == POINT_DIMS[dimIndex],
                      "Got incorrect point dimensions for extent.");
@@ -79,7 +79,7 @@ void TestDimensions(vtkm::Extent<Dimensions>)
                    "Got wrong number of cells.");
 }
 
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 void TryIndexConversion(const vtkm::Extent<Dimensions> &extent)
 {
   typedef vtkm::Tuple<vtkm::Id,Dimensions> IdX;
@@ -94,7 +94,7 @@ void TryIndexConversion(const vtkm::Extent<Dimensions> &extent)
        correctFlatIndex++)
   {
     // Increment topology index
-    for (int dimIndex = 0; dimIndex < Dimensions; dimIndex++)
+    for (vtkm::IdComponent dimIndex = 0; dimIndex < Dimensions; dimIndex++)
     {
       correctTopologyIndex[dimIndex]++;
       if (correctTopologyIndex[dimIndex] <= extent.Max[dimIndex]) { break; }
@@ -124,7 +124,7 @@ void TryIndexConversion(const vtkm::Extent<Dimensions> &extent)
        correctFlatIndex++)
   {
     // Increment topology index
-    for (int dimIndex = 0; dimIndex < Dimensions; dimIndex++)
+    for (vtkm::IdComponent dimIndex = 0; dimIndex < Dimensions; dimIndex++)
     {
       correctTopologyIndex[dimIndex]++;
       if (correctTopologyIndex[dimIndex] < extent.Max[dimIndex]) { break; }
@@ -154,7 +154,7 @@ void TryIndexConversion(const vtkm::Extent<Dimensions> &extent)
                    "Test code error. Indexing problem.");
 }
 
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 void TestIndexConversion(vtkm::Extent<Dimensions>)
 {
   std::cout << "Testing index conversion for " << Dimensions << " dimensions."
@@ -162,13 +162,13 @@ void TestIndexConversion(vtkm::Extent<Dimensions>)
 
   vtkm::Extent<Dimensions> extent;
 
-  for (int dimIndex = 0; dimIndex < Dimensions; dimIndex++)
+  for (vtkm::IdComponent dimIndex = 0; dimIndex < Dimensions; dimIndex++)
   {
     extent.Min[dimIndex] = 0;  extent.Max[dimIndex] = 10;
   }
   TryIndexConversion(extent);
 
-  for (int dimIndex = 0; dimIndex < Dimensions; dimIndex++)
+  for (vtkm::IdComponent dimIndex = 0; dimIndex < Dimensions; dimIndex++)
   {
     extent.Min[dimIndex] = MIN_VALUES[dimIndex];
     extent.Max[dimIndex] = MAX_VALUES[dimIndex];

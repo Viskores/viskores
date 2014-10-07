@@ -80,21 +80,21 @@ struct ConstantFunctor
   }
 };
 
-template<int N>
+template<vtkm::IdComponent N>
 void CheckSame(const vtkm::Tuple<int,N> &expected,
                const std::vector<int> &found)
 {
   VTKM_TEST_ASSERT(static_cast<int>(found.size()) == N,
                    "Got wrong number of items.");
 
-  for (int index = 0; index < N; index++)
+  for (vtkm::IdComponent index = 0; index < N; index++)
   {
     VTKM_TEST_ASSERT(expected[index] == found[index],
                      "Got wrong type.");
   }
 }
 
-template<int N, typename ListTag>
+template<vtkm::IdComponent N, typename ListTag>
 void TryList(const vtkm::Tuple<int,N> &expected, ListTag)
 {
   std::cout << "    Try mutable for each" << std::endl;

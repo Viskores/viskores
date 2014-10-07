@@ -64,9 +64,9 @@ struct SortLess
   VTKM_EXEC_CONT_EXPORT bool compare(const T& a,const T& b,
                                      vtkm::TypeTraitsVectorTag) const
   {
-    enum {SIZE = vtkm::VectorTraits<T>::NUM_COMPONENTS};
+    const vtkm::IdComponent SIZE = vtkm::VectorTraits<T>::NUM_COMPONENTS;
     bool valid = true;
-    for(unsigned int i=0; i < SIZE && valid; ++i)
+    for(vtkm::IdComponent i=0; (i < SIZE) && valid; ++i)
     {
       valid = a[i] < b[i];
     }
@@ -92,9 +92,9 @@ struct SortGreater
   VTKM_EXEC_CONT_EXPORT bool compare(const T& a,const T& b,
                                      vtkm::TypeTraitsVectorTag) const
   {
-    enum {SIZE = vtkm::VectorTraits<T>::NUM_COMPONENTS};
+    const vtkm::IdComponent SIZE = vtkm::VectorTraits<T>::NUM_COMPONENTS;
     bool valid = true;
-    for(unsigned int i=0; i < SIZE && valid; ++i)
+    for(vtkm::IdComponent i=0; (i < SIZE) && valid; ++i)
     {
       valid = a[i] > b[i];
     }
@@ -1029,7 +1029,7 @@ private:
     //ie 1, 3, 6, 10, 15, 21 ...
     vtkm::Id partialSum = 0;
     vtkm::Id triangleNumber = 0;
-    for(unsigned int i=0, pos=1; i < ARRAY_SIZE; ++i, ++pos)
+    for(vtkm::Id i=0, pos=1; i < ARRAY_SIZE; ++i, ++pos)
     {
       const vtkm::Id value = array.GetPortalConstControl().Get(i);
       partialSum += value;
@@ -1062,7 +1062,7 @@ private:
     //ie 0, 1, 3, 6, 10, 15, 21 ...
     vtkm::Id partialSum = 0;
     vtkm::Id triangleNumber = 0;
-    for(unsigned int i=0, pos=0; i < ARRAY_SIZE; ++i, ++pos)
+    for(vtkm::Id i=0, pos=0; i < ARRAY_SIZE; ++i, ++pos)
     {
       const vtkm::Id value = array.GetPortalConstControl().Get(i);
       partialSum += value;

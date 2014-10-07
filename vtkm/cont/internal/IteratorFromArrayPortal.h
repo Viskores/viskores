@@ -97,7 +97,7 @@ public:
 
   VTKM_CONT_EXPORT
   detail::IteratorFromArrayPortalValue<ArrayPortalType>
-  operator[](int idx) const
+  operator[](vtkm::Id idx) const
   {
     return detail::IteratorFromArrayPortalValue<ArrayPortalType>(this->Portal,
            idx);
