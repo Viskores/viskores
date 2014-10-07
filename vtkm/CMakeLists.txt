@@ -26,7 +26,7 @@ set(headers
   TypeListTag.h
   Types.h
   TypeTraits.h
-  VectorTraits.h
+  VecTraits.h
   )
 
 vtkm_declare_headers(${headers})

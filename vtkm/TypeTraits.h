@@ -37,7 +37,7 @@ struct TypeTraitsRealTag {};
 struct TypeTraitsIntegerTag {};
 
 /// Tag used to identify 0 dimensional types (scalars). Scalars can also be
-/// treated like vectors when used with VectorTraits. A TypeTraits class will
+/// treated like vectors when used with VecTraits. A TypeTraits class will
 /// typedef this class to DimensionalityTag.
 ///
 struct TypeTraitsScalarTag {};

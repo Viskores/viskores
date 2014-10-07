@@ -17,10 +17,10 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_testing_VectorTraitsTest_h
-#define vtkm_testing_VectorTraitsTest_h
+#ifndef vtkm_testing_VecTraitsTest_h
+#define vtkm_testing_VecTraitsTest_h
 
-#include <vtkm/VectorTraits.h>
+#include <vtkm/VecTraits.h>
 
 #include <vtkm/TypeTraits.h>
 
@@ -34,12 +34,12 @@ namespace testing {
 namespace detail {
 
 inline void CompareDimensionalityTags(vtkm::TypeTraitsScalarTag,
-                                      vtkm::VectorTraitsTagSingleComponent)
+                                      vtkm::VecTraitsTagSingleComponent)
 {
   // If we are here, everything is fine.
 }
 inline void CompareDimensionalityTags(vtkm::TypeTraitsVectorTag,
-                                      vtkm::VectorTraitsTagMultipleComponents)
+                                      vtkm::VecTraitsTagMultipleComponents)
 {
   // If we are here, everything is fine.
 }
@@ -47,10 +47,10 @@ inline void CompareDimensionalityTags(vtkm::TypeTraitsVectorTag,
 /// Compares some manual arithmetic through type traits to arithmetic with
 /// the Tuple class.
 template <class T>
-static void TestVectorTypeImpl(
+static void TestVecTypeImpl(
   const typename boost::remove_const<T>::type &vector)
 {
-  typedef typename vtkm::VectorTraits<T> Traits;
+  typedef typename vtkm::VecTraits<T> Traits;
   typedef typename Traits::ComponentType ComponentType;
   static const int NUM_COMPONENTS = Traits::NUM_COMPONENTS;
   typedef typename boost::remove_const<T>::type NonConstT;
@@ -97,10 +97,10 @@ static void TestVectorTypeImpl(
   // This will fail to compile if the tags are wrong.
   detail::CompareDimensionalityTags(
     typename vtkm::TypeTraits<T>::DimensionalityTag(),
-    typename vtkm::VectorTraits<T>::HasMultipleComponents());
+    typename vtkm::VecTraits<T>::HasMultipleComponents());
 }
 
-inline void CheckVectorComponentsTag(vtkm::VectorTraitsTagMultipleComponents)
+inline void CheckVecComponentsTag(vtkm::VecTraitsTagMultipleComponents)
 {
   // If we are running here, everything is fine.
 }
@@ -112,17 +112,17 @@ inline void CheckVectorComponentsTag(vtkm::VectorTraitsTagMultipleComponents)
 /// have multiple components.
 ///
 template<class T>
-inline void TestVectorComponentsTag()
+inline void TestVecComponentsTag()
 {
   // This will fail to compile if the tag is wrong
-  // (i.e. not vtkm::VectorTraitsTagMultipleComponents)
-  detail::CheckVectorComponentsTag(
-    typename vtkm::VectorTraits<T>::HasMultipleComponents());
+  // (i.e. not vtkm::VecTraitsTagMultipleComponents)
+  detail::CheckVecComponentsTag(
+    typename vtkm::VecTraits<T>::HasMultipleComponents());
 }
 
 namespace detail {
 
-inline void CheckScalarComponentsTag(vtkm::VectorTraitsTagSingleComponent)
+inline void CheckScalarComponentsTag(vtkm::VecTraitsTagSingleComponent)
 {
   // If we are running here, everything is fine.
 }
@@ -132,10 +132,10 @@ inline void CheckScalarComponentsTag(vtkm::VectorTraitsTagSingleComponent)
 /// Compares some manual arithmetic through type traits to arithmetic with
 /// the Tuple class.
 template <class T>
-static void TestVectorType(const T &vector)
+static void TestVecType(const T &vector)
 {
-  detail::TestVectorTypeImpl<T>(vector);
-  detail::TestVectorTypeImpl<const T>(vector);
+  detail::TestVecTypeImpl<T>(vector);
+  detail::TestVecTypeImpl<const T>(vector);
 }
 
 /// Checks to make sure that the HasMultipleComponents tag is actually for a
@@ -146,12 +146,12 @@ template<class T>
 inline void TestScalarComponentsTag()
 {
   // This will fail to compile if the tag is wrong
-  // (i.e. not vtkm::VectorTraitsTagSingleComponent)
+  // (i.e. not vtkm::VecTraitsTagSingleComponent)
   detail::CheckScalarComponentsTag(
-    typename vtkm::VectorTraits<T>::HasMultipleComponents());
+    typename vtkm::VecTraits<T>::HasMultipleComponents());
 }
 
 }
 } // namespace vtkm::testing
 
-#endif //vtkm_testing_VectorTraitsTest_h
+#endif //vtkm_testing_VecTraitsTest_h

@@ -23,7 +23,7 @@
 #include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/VectorTraits.h>
+#include <vtkm/VecTraits.h>
 
 namespace {
 
@@ -56,7 +56,7 @@ struct TemplatedTests
     return true;
   }
 
-  typename vtkm::VectorTraits<ValueType>::ComponentType STOLEN_ARRAY_VALUE()
+  typename vtkm::VecTraits<ValueType>::ComponentType STOLEN_ARRAY_VALUE()
   {
     return 4529;
   }

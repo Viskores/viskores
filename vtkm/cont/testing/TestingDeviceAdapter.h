@@ -64,7 +64,7 @@ struct SortLess
   VTKM_EXEC_CONT_EXPORT bool compare(const T& a,const T& b,
                                      vtkm::TypeTraitsVectorTag) const
   {
-    const vtkm::IdComponent SIZE = vtkm::VectorTraits<T>::NUM_COMPONENTS;
+    const vtkm::IdComponent SIZE = vtkm::VecTraits<T>::NUM_COMPONENTS;
     bool valid = true;
     for(vtkm::IdComponent i=0; (i < SIZE) && valid; ++i)
     {
@@ -92,7 +92,7 @@ struct SortGreater
   VTKM_EXEC_CONT_EXPORT bool compare(const T& a,const T& b,
                                      vtkm::TypeTraitsVectorTag) const
   {
-    const vtkm::IdComponent SIZE = vtkm::VectorTraits<T>::NUM_COMPONENTS;
+    const vtkm::IdComponent SIZE = vtkm::VecTraits<T>::NUM_COMPONENTS;
     bool valid = true;
     for(vtkm::IdComponent i=0; (i < SIZE) && valid; ++i)
     {

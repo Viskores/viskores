@@ -25,7 +25,7 @@
 
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 
-#include <vtkm/VectorTraits.h>
+#include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/DeviceAdapterSerial.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -51,7 +51,7 @@ template<typename ValueType>
 vtkm::cont::ArrayHandle<ValueType, StorageTag>
 MakeInputArray(int arrayId)
 {
-  typedef vtkm::VectorTraits<ValueType> VTraits;
+  typedef vtkm::VecTraits<ValueType> VTraits;
 
   // Create a buffer with valid test values.
   ValueType buffer[ARRAY_SIZE];
@@ -96,7 +96,7 @@ void CheckArray(const vtkm::cont::ArrayHandle<ValueType,C> &outArray,
 
   typename ArrayHandleType::PortalConstControl portal =
       arrayCopy.GetPortalConstControl();
-  typedef vtkm::VectorTraits<ValueType> VTraits;
+  typedef vtkm::VecTraits<ValueType> VTraits;
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
     ValueType retreivedValue = portal.Get(index);
@@ -148,19 +148,19 @@ void TryVector4(vtkm::cont::ArrayHandle<T1,StorageTag> array1,
   vtkm::IdComponent inComponents[4];
 
   for (inComponents[0] = 0;
-       inComponents[0] < vtkm::VectorTraits<T1>::NUM_COMPONENTS;
+       inComponents[0] < vtkm::VecTraits<T1>::NUM_COMPONENTS;
        inComponents[0]++)
   {
     for (inComponents[1] = 0;
-         inComponents[1] < vtkm::VectorTraits<T2>::NUM_COMPONENTS;
+         inComponents[1] < vtkm::VecTraits<T2>::NUM_COMPONENTS;
          inComponents[1]++)
     {
       for (inComponents[2] = 0;
-           inComponents[2] < vtkm::VectorTraits<T3>::NUM_COMPONENTS;
+           inComponents[2] < vtkm::VecTraits<T3>::NUM_COMPONENTS;
            inComponents[2]++)
       {
         for (inComponents[3] = 0;
-             inComponents[3] < vtkm::VectorTraits<T4>::NUM_COMPONENTS;
+             inComponents[3] < vtkm::VecTraits<T4>::NUM_COMPONENTS;
              inComponents[3]++)
         {
           CheckArray(
@@ -186,15 +186,15 @@ void TryVector3(vtkm::cont::ArrayHandle<T1,StorageTag> array1,
   vtkm::IdComponent inComponents[3];
 
   for (inComponents[0] = 0;
-       inComponents[0] < vtkm::VectorTraits<T1>::NUM_COMPONENTS;
+       inComponents[0] < vtkm::VecTraits<T1>::NUM_COMPONENTS;
        inComponents[0]++)
   {
     for (inComponents[1] = 0;
-         inComponents[1] < vtkm::VectorTraits<T2>::NUM_COMPONENTS;
+         inComponents[1] < vtkm::VecTraits<T2>::NUM_COMPONENTS;
          inComponents[1]++)
     {
       for (inComponents[2] = 0;
-           inComponents[2] < vtkm::VectorTraits<T3>::NUM_COMPONENTS;
+           inComponents[2] < vtkm::VecTraits<T3>::NUM_COMPONENTS;
            inComponents[2]++)
       {
         CheckArray(
@@ -222,11 +222,11 @@ void TryVector2(vtkm::cont::ArrayHandle<T1,StorageTag> array1,
   vtkm::IdComponent inComponents[2];
 
   for (inComponents[0] = 0;
-       inComponents[0] < vtkm::VectorTraits<T1>::NUM_COMPONENTS;
+       inComponents[0] < vtkm::VecTraits<T1>::NUM_COMPONENTS;
        inComponents[0]++)
   {
     for (inComponents[1] = 0;
-         inComponents[1] < vtkm::VectorTraits<T2>::NUM_COMPONENTS;
+         inComponents[1] < vtkm::VecTraits<T2>::NUM_COMPONENTS;
          inComponents[1]++)
     {
       CheckArray(
@@ -251,7 +251,7 @@ void TryVector1(vtkm::cont::ArrayHandle<T1,StorageTag> array1)
   vtkm::IdComponent inComponents[1];
 
   for (inComponents[0] = 0;
-       inComponents[0] < vtkm::VectorTraits<T1>::NUM_COMPONENTS;
+       inComponents[0] < vtkm::VecTraits<T1>::NUM_COMPONENTS;
        inComponents[0]++)
   {
     CheckArray(

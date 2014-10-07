@@ -22,7 +22,7 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
-#include <vtkm/VectorTraits.h>
+#include <vtkm/VecTraits.h>
 
 #include <iostream>
 #include <sstream>
@@ -303,7 +303,7 @@ bool test_equal(VectorType vector1,
                 VectorType vector2,
                 vtkm::Scalar tolerance = 0.0001)
 {
-  typedef typename vtkm::VectorTraits<VectorType> Traits;
+  typedef typename vtkm::VecTraits<VectorType> Traits;
   for (vtkm::IdComponent component = 0;
        component < Traits::NUM_COMPONENTS;
        component++)

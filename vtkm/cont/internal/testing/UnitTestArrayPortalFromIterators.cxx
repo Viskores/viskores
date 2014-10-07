@@ -21,7 +21,7 @@
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/VectorTraits.h>
+#include <vtkm/VecTraits.h>
 
 namespace {
 
@@ -31,7 +31,7 @@ struct TemplatedTests
   static const vtkm::Id ARRAY_SIZE = 10;
 
   typedef T ValueType;
-  typedef typename vtkm::VectorTraits<ValueType>::ComponentType ComponentType;
+  typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
 
   ValueType ExpectedValue(vtkm::Id index, ComponentType value)
   {

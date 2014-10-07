@@ -24,7 +24,7 @@
 #include <vtkm/cont/ErrorControlBadValue.h>
 #include <vtkm/cont/ErrorControlInternal.h>
 
-#include <vtkm/VectorTraits.h>
+#include <vtkm/VecTraits.h>
 
 #include <vtkm/internal/FunctionInterface.h>
 
@@ -41,7 +41,7 @@ template<typename ValueType>
 struct CompositeVectorSwizzleFunctor
 {
   static const vtkm::IdComponent NUM_COMPONENTS =
-      vtkm::VectorTraits<ValueType>::NUM_COMPONENTS;
+      vtkm::VecTraits<ValueType>::NUM_COMPONENTS;
   typedef vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS> ComponentMapType;
 
   // Caution! This is a reference.
@@ -56,24 +56,24 @@ struct CompositeVectorSwizzleFunctor
   VTKM_EXEC_CONT_EXPORT
   ValueType operator()(const T1 &p1) const {
     return ValueType(
-          vtkm::VectorTraits<T1>::GetComponent(p1, this->SourceComponents[0]));
+          vtkm::VecTraits<T1>::GetComponent(p1, this->SourceComponents[0]));
   }
 
   template<typename T1, typename T2>
   VTKM_EXEC_CONT_EXPORT
   ValueType operator()(const T1 &p1, const T2 &p2) const {
     return ValueType(
-          vtkm::VectorTraits<T1>::GetComponent(p1, this->SourceComponents[0]),
-          vtkm::VectorTraits<T2>::GetComponent(p2, this->SourceComponents[1]));
+          vtkm::VecTraits<T1>::GetComponent(p1, this->SourceComponents[0]),
+          vtkm::VecTraits<T2>::GetComponent(p2, this->SourceComponents[1]));
   }
 
   template<typename T1, typename T2, typename T3>
   VTKM_EXEC_CONT_EXPORT
   ValueType operator()(const T1 &p1, const T2 &p2, const T3 &p3) const {
     return ValueType(
-          vtkm::VectorTraits<T1>::GetComponent(p1, this->SourceComponents[0]),
-          vtkm::VectorTraits<T2>::GetComponent(p2, this->SourceComponents[1]),
-          vtkm::VectorTraits<T3>::GetComponent(p3, this->SourceComponents[2]));
+          vtkm::VecTraits<T1>::GetComponent(p1, this->SourceComponents[0]),
+          vtkm::VecTraits<T2>::GetComponent(p2, this->SourceComponents[1]),
+          vtkm::VecTraits<T3>::GetComponent(p3, this->SourceComponents[2]));
   }
 
   template<typename T1, typename T2, typename T3, typename T4>
@@ -83,10 +83,10 @@ struct CompositeVectorSwizzleFunctor
                        const T3 &p3,
                        const T4 &p4) const {
     return ValueType(
-          vtkm::VectorTraits<T1>::GetComponent(p1, this->SourceComponents[0]),
-          vtkm::VectorTraits<T2>::GetComponent(p2, this->SourceComponents[1]),
-          vtkm::VectorTraits<T3>::GetComponent(p3, this->SourceComponents[2]),
-          vtkm::VectorTraits<T4>::GetComponent(p4, this->SourceComponents[3]));
+          vtkm::VecTraits<T1>::GetComponent(p1, this->SourceComponents[0]),
+          vtkm::VecTraits<T2>::GetComponent(p2, this->SourceComponents[1]),
+          vtkm::VecTraits<T3>::GetComponent(p3, this->SourceComponents[2]),
+          vtkm::VecTraits<T4>::GetComponent(p4, this->SourceComponents[3]));
   }
 };
 
@@ -171,7 +171,7 @@ class ArrayPortalCompositeVector
 public:
   typedef typename PortalTypes::ResultType ValueType;
   static const vtkm::IdComponent NUM_COMPONENTS =
-      vtkm::VectorTraits<ValueType>::NUM_COMPONENTS;
+      vtkm::VecTraits<ValueType>::NUM_COMPONENTS;
 
   BOOST_STATIC_ASSERT(NUM_COMPONENTS == PortalTypes::ARITY);
 
@@ -222,7 +222,7 @@ class ArrayPortalCompositeVectorCont
 public:
   typedef typename FunctionInterfaceArrays::ResultType ValueType;
   static const vtkm::IdComponent NUM_COMPONENTS =
-      vtkm::VectorTraits<ValueType>::NUM_COMPONENTS;
+      vtkm::VecTraits<ValueType>::NUM_COMPONENTS;
   typedef vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS> ComponentMapType;
 
   // If you get a compile error here, it means you probably tried to create
@@ -607,7 +607,7 @@ template<typename ArrayHandleType1,
 struct ArrayHandleCompositeVectorType
 {
 private:
-  typedef typename vtkm::VectorTraits<typename ArrayHandleType1::ValueType>::ComponentType
+  typedef typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType
       ComponentType;
   typedef vtkm::Vec<ComponentType,4> Signature(
       ArrayHandleType1,ArrayHandleType2,ArrayHandleType3,ArrayHandleType4);
@@ -622,7 +622,7 @@ struct ArrayHandleCompositeVectorType<
     ArrayHandleType1,ArrayHandleType2,ArrayHandleType3>
 {
 private:
-  typedef typename vtkm::VectorTraits<typename ArrayHandleType1::ValueType>::ComponentType
+  typedef typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType
       ComponentType;
   typedef vtkm::Vec<ComponentType,3> Signature(
       ArrayHandleType1,ArrayHandleType2,ArrayHandleType3);
@@ -635,7 +635,7 @@ template<typename ArrayHandleType1,
 struct ArrayHandleCompositeVectorType<ArrayHandleType1,ArrayHandleType2>
 {
 private:
-  typedef typename vtkm::VectorTraits<typename ArrayHandleType1::ValueType>::ComponentType
+  typedef typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType
       ComponentType;
   typedef vtkm::Vec<ComponentType,2> Signature(
       ArrayHandleType1,ArrayHandleType2);
@@ -647,7 +647,7 @@ template<typename ArrayHandleType1>
 struct ArrayHandleCompositeVectorType<ArrayHandleType1>
 {
 private:
-  typedef typename vtkm::VectorTraits<typename ArrayHandleType1::ValueType>::ComponentType
+  typedef typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType
       ComponentType;
   typedef ComponentType Signature(ArrayHandleType1);
 public:
