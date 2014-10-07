@@ -121,7 +121,7 @@ void TryScalarArray()
   std::cout << "Creating a scalar array from one of "
             << inComponents << " components." << std::endl;
 
-  typedef vtkm::Tuple<vtkm::Scalar,inComponents> InValueType;
+  typedef vtkm::Vec<vtkm::Scalar,inComponents> InValueType;
   typedef vtkm::cont::ArrayHandle<InValueType, StorageTag> InArrayType;
   int inArrayId = 0;
   InArrayType inArray = MakeInputArray<InValueType>(inArrayId);

@@ -344,14 +344,14 @@ bool test_equal(const std::string &string1, const std::string &string2)
 ///
 template<typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT_EXPORT
-std::ostream &operator<<(std::ostream &stream, const vtkm::Tuple<T,Size> &tuple)
+std::ostream &operator<<(std::ostream &stream, const vtkm::Vec<T,Size> &vec)
 {
   stream << "[";
   for (vtkm::IdComponent component = 0; component < Size-1; component++)
   {
-    stream << tuple[component] << ",";
+    stream << vec[component] << ",";
   }
-  return stream << tuple[Size-1] << "]";
+  return stream << vec[Size-1] << "]";
 }
 
 #endif //vtk_m_testing_Testing_h

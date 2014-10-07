@@ -47,8 +47,8 @@ void TestVectorTraits()
 {
   TestVectorTypeFunctor test;
   vtkm::testing::Testing::TryAllTypes(test);
-  std::cout << "vtkm::Tuple<vtkm::Scalar, 5>" << std::endl;
-  test(vtkm::Tuple<vtkm::Scalar,5>());
+  std::cout << "vtkm::Vec<vtkm::Scalar, 5>" << std::endl;
+  test(vtkm::Vec<vtkm::Scalar,5>());
 
   vtkm::testing::TestVectorComponentsTag<vtkm::Id3>();
   vtkm::testing::TestVectorComponentsTag<vtkm::Vector3>();

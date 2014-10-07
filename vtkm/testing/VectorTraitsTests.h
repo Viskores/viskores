@@ -62,8 +62,8 @@ static void TestVectorTypeImpl(
     {
       Traits::SetComponent(result, i, multiplier*Traits::GetComponent(vector, i));
     }
-    VTKM_TEST_ASSERT(test_equal(Traits::ToTuple(result),
-                                multiplier*Traits::ToTuple(vector)),
+    VTKM_TEST_ASSERT(test_equal(Traits::ToVec(result),
+                                multiplier*Traits::ToVec(vector)),
                      "Got bad result for scalar multiple");
   }
 
@@ -75,8 +75,8 @@ static void TestVectorTypeImpl(
       Traits::GetComponent(result, i)
         = multiplier * Traits::GetComponent(vector, i);
     }
-    VTKM_TEST_ASSERT(test_equal(Traits::ToTuple(result),
-                                multiplier*Traits::ToTuple(vector)),
+    VTKM_TEST_ASSERT(test_equal(Traits::ToVec(result),
+                                multiplier*Traits::ToVec(vector)),
                      "Got bad result for scalar multiple");
   }
 
@@ -90,7 +90,7 @@ static void TestVectorTypeImpl(
     }
     VTKM_TEST_ASSERT(
       test_equal(result,
-                 vtkm::dot(Traits::ToTuple(vector), Traits::ToTuple(vector))),
+                 vtkm::dot(Traits::ToVec(vector), Traits::ToVec(vector))),
       "Got bad result for dot product");
   }
 

@@ -38,8 +38,8 @@ void TestDimensions(vtkm::Extent<Dimensions>)
             << std::endl;
 
   vtkm::Extent<Dimensions> extent;
-  vtkm::Tuple<vtkm::Id,Dimensions> pointDims;
-  vtkm::Tuple<vtkm::Id,Dimensions> cellDims;
+  vtkm::Vec<vtkm::Id,Dimensions> pointDims;
+  vtkm::Vec<vtkm::Id,Dimensions> cellDims;
   vtkm::Id numPoints;
   vtkm::Id numCells;
 
@@ -82,7 +82,7 @@ void TestDimensions(vtkm::Extent<Dimensions>)
 template<vtkm::IdComponent Dimensions>
 void TryIndexConversion(const vtkm::Extent<Dimensions> &extent)
 {
-  typedef vtkm::Tuple<vtkm::Id,Dimensions> IdX;
+  typedef vtkm::Vec<vtkm::Id,Dimensions> IdX;
   vtkm::Id lastFlatIndex;
   IdX correctTopologyIndex;
 

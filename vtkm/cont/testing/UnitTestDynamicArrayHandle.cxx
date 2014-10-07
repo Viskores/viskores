@@ -44,8 +44,8 @@ vtkm::Scalar TestValue(vtkm::Id index, vtkm::Scalar) {
 }
 
 template<typename T, vtkm::IdComponent N>
-vtkm::Tuple<T,N> TestValue(vtkm::Id index, vtkm::Tuple<T,N>) {
-  vtkm::Tuple<T,N> value;
+vtkm::Vec<T,N> TestValue(vtkm::Id index, vtkm::Vec<T,N>) {
+  vtkm::Vec<T,N> value;
   for (vtkm::IdComponent i = 0; i < N; i++)
   {
     value[i] = TestValue(index, T()) + (i + 1);

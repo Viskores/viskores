@@ -42,7 +42,7 @@ struct CompositeVectorSwizzleFunctor
 {
   static const vtkm::IdComponent NUM_COMPONENTS =
       vtkm::VectorTraits<ValueType>::NUM_COMPONENTS;
-  typedef vtkm::Tuple<vtkm::IdComponent, NUM_COMPONENTS> ComponentMapType;
+  typedef vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS> ComponentMapType;
 
   // Caution! This is a reference.
   const ComponentMapType &SourceComponents;
@@ -166,7 +166,7 @@ template<typename SignatureWithPortals>
 class ArrayPortalCompositeVector
 {
   typedef vtkm::internal::FunctionInterface<SignatureWithPortals> PortalTypes;
-  typedef vtkm::Tuple<vtkm::IdComponent, PortalTypes::ARITY> ComponentMapType;
+  typedef vtkm::Vec<vtkm::IdComponent, PortalTypes::ARITY> ComponentMapType;
 
 public:
   typedef typename PortalTypes::ResultType ValueType;
@@ -181,7 +181,7 @@ public:
   VTKM_CONT_EXPORT
   ArrayPortalCompositeVector(
       const PortalTypes portals,
-      vtkm::Tuple<vtkm::IdComponent, NUM_COMPONENTS> sourceComponents)
+      vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS> sourceComponents)
     : Portals(portals), SourceComponents(sourceComponents) {  }
 
   VTKM_EXEC_EXPORT
@@ -223,7 +223,7 @@ public:
   typedef typename FunctionInterfaceArrays::ResultType ValueType;
   static const vtkm::IdComponent NUM_COMPONENTS =
       vtkm::VectorTraits<ValueType>::NUM_COMPONENTS;
-  typedef vtkm::Tuple<vtkm::IdComponent, NUM_COMPONENTS> ComponentMapType;
+  typedef vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS> ComponentMapType;
 
   // If you get a compile error here, it means you probably tried to create
   // an ArrayHandleCompositeVector with a return type of a vector with a
@@ -284,7 +284,7 @@ class Storage<
   typedef vtkm::internal::FunctionInterface<SignatureWithArrays>
       FunctionInterfaceWithArrays;
   static const vtkm::IdComponent NUM_COMPONENTS = FunctionInterfaceWithArrays::ARITY;
-  typedef vtkm::Tuple<vtkm::IdComponent, NUM_COMPONENTS> ComponentMapType;
+  typedef vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS> ComponentMapType;
 
 public:
   typedef ArrayPortalCompositeVectorCont<SignatureWithArrays> PortalType;
@@ -609,7 +609,7 @@ struct ArrayHandleCompositeVectorType
 private:
   typedef typename vtkm::VectorTraits<typename ArrayHandleType1::ValueType>::ComponentType
       ComponentType;
-  typedef vtkm::Tuple<ComponentType,4> Signature(
+  typedef vtkm::Vec<ComponentType,4> Signature(
       ArrayHandleType1,ArrayHandleType2,ArrayHandleType3,ArrayHandleType4);
 public:
   typedef vtkm::cont::ArrayHandleCompositeVector<Signature> type;
@@ -624,7 +624,7 @@ struct ArrayHandleCompositeVectorType<
 private:
   typedef typename vtkm::VectorTraits<typename ArrayHandleType1::ValueType>::ComponentType
       ComponentType;
-  typedef vtkm::Tuple<ComponentType,3> Signature(
+  typedef vtkm::Vec<ComponentType,3> Signature(
       ArrayHandleType1,ArrayHandleType2,ArrayHandleType3);
 public:
   typedef vtkm::cont::ArrayHandleCompositeVector<Signature> type;
@@ -637,7 +637,7 @@ struct ArrayHandleCompositeVectorType<ArrayHandleType1,ArrayHandleType2>
 private:
   typedef typename vtkm::VectorTraits<typename ArrayHandleType1::ValueType>::ComponentType
       ComponentType;
-  typedef vtkm::Tuple<ComponentType,2> Signature(
+  typedef vtkm::Vec<ComponentType,2> Signature(
       ArrayHandleType1,ArrayHandleType2);
 public:
   typedef vtkm::cont::ArrayHandleCompositeVector<Signature> type;

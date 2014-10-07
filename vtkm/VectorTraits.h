@@ -88,11 +88,11 @@ struct VectorTraits
                                                 vtkm::IdComponent component,
                                                 ComponentType value);
 
-  /// Converts whatever type this vector is into the standard VTKm Tuple.
+  /// Converts whatever type this vector is into the standard VTK-m Vec.
   ///
   VTKM_EXEC_CONT_EXPORT
-  static vtkm::Tuple<ComponentType,NUM_COMPONENTS>
-  ToTuple(const VectorType &vector);
+  static vtkm::Vec<ComponentType,NUM_COMPONENTS>
+  ToVec(const VectorType &vector);
 };
 #else // VTKM_DOXYGEN_ONLY
     ;
@@ -106,9 +106,9 @@ struct VectorTraits<const T> : VectorTraits<T>
 {  };
 
 template<typename T, vtkm::IdComponent Size>
-struct VectorTraits<vtkm::Tuple<T,Size> >
+struct VectorTraits<vtkm::Vec<T,Size> >
 {
-  typedef vtkm::Tuple<T,Size> VectorType;
+  typedef vtkm::Vec<T,Size> VectorType;
 
   /// Type of the components in the vector.
   ///
@@ -149,8 +149,8 @@ struct VectorTraits<vtkm::Tuple<T,Size> >
   /// Converts whatever type this vector is into the standard VTKm Tuple.
   ///
   VTKM_EXEC_CONT_EXPORT
-  static vtkm::Tuple<ComponentType,NUM_COMPONENTS>
-  ToTuple(const VectorType &vector)
+  static vtkm::Vec<ComponentType,NUM_COMPONENTS>
+  ToVec(const VectorType &vector)
   {
     return vector;
   }
@@ -182,9 +182,9 @@ struct VectorTraitsBasic {
   }
 
   VTKM_EXEC_CONT_EXPORT
-  static vtkm::Tuple<ScalarType,1> ToTuple(const ScalarType &vector)
+  static vtkm::Vec<ScalarType,1> ToVec(const ScalarType &vector)
   {
-    return vtkm::Tuple<ScalarType,1>(vector);
+    return vtkm::Vec<ScalarType,1>(vector);
   }
 };
 }
@@ -192,30 +192,23 @@ struct VectorTraitsBasic {
 #define VTKM_BASIC_TYPE_VECTOR(type) \
   template<> \
   struct VectorTraits<type> \
-      : public vtkm::internal::VectorTraitsBasic<type> { };/* \
+      : public vtkm::internal::VectorTraitsBasic<type> { }/*; \
   template<> \
   struct VectorTraits<const type> \
       : public vtkm::internal::VectorTraitsBasic<type> { }*/
 
 /// Allows you to treat basic types as if they were vectors.
 
-VTKM_BASIC_TYPE_VECTOR(float);
-VTKM_BASIC_TYPE_VECTOR(double);
-VTKM_BASIC_TYPE_VECTOR(char);
-VTKM_BASIC_TYPE_VECTOR(unsigned char);
-VTKM_BASIC_TYPE_VECTOR(short);
-VTKM_BASIC_TYPE_VECTOR(unsigned short);
-VTKM_BASIC_TYPE_VECTOR(int);
-VTKM_BASIC_TYPE_VECTOR(unsigned int);
-#if VTKM_SIZE_LONG == 8
-VTKM_BASIC_TYPE_VECTOR(long);
-VTKM_BASIC_TYPE_VECTOR(unsigned long);
-#elif VTKM_SIZE_LONG_LONG == 8
-VTKM_BASIC_TYPE_VECTOR(long long);
-VTKM_BASIC_TYPE_VECTOR(unsigned long long);
-#else
-#error No implementation for 64-bit vector traits.
-#endif
+VTKM_BASIC_TYPE_VECTOR(vtkm::Float32);
+VTKM_BASIC_TYPE_VECTOR(vtkm::Float64);
+VTKM_BASIC_TYPE_VECTOR(vtkm::Int8);
+VTKM_BASIC_TYPE_VECTOR(vtkm::UInt8);
+VTKM_BASIC_TYPE_VECTOR(vtkm::Int16);
+VTKM_BASIC_TYPE_VECTOR(vtkm::UInt16);
+VTKM_BASIC_TYPE_VECTOR(vtkm::Int32);
+VTKM_BASIC_TYPE_VECTOR(vtkm::UInt32);
+VTKM_BASIC_TYPE_VECTOR(vtkm::Int64);
+VTKM_BASIC_TYPE_VECTOR(vtkm::UInt64);
 
 #undef VTKM_BASIC_TYPE_VECTOR
 

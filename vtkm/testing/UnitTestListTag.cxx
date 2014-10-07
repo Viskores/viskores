@@ -81,7 +81,7 @@ struct ConstantFunctor
 };
 
 template<vtkm::IdComponent N>
-void CheckSame(const vtkm::Tuple<int,N> &expected,
+void CheckSame(const vtkm::Vec<int,N> &expected,
                const std::vector<int> &found)
 {
   VTKM_TEST_ASSERT(static_cast<int>(found.size()) == N,
@@ -95,7 +95,7 @@ void CheckSame(const vtkm::Tuple<int,N> &expected,
 }
 
 template<vtkm::IdComponent N, typename ListTag>
-void TryList(const vtkm::Tuple<int,N> &expected, ListTag)
+void TryList(const vtkm::Vec<int,N> &expected, ListTag)
 {
   std::cout << "    Try mutable for each" << std::endl;
   MutableFunctor functor;
@@ -110,22 +110,22 @@ void TryList(const vtkm::Tuple<int,N> &expected, ListTag)
 void TestLists()
 {
   std::cout << "ListTagEmpty" << std::endl;
-  TryList(vtkm::Tuple<int,0>(), vtkm::ListTagEmpty());
+  TryList(vtkm::Vec<int,0>(), vtkm::ListTagEmpty());
 
   std::cout << "ListTagBase" << std::endl;
-  TryList(vtkm::Tuple<int,1>(11), TestListTag1());
+  TryList(vtkm::Vec<int,1>(11), TestListTag1());
 
   std::cout << "ListTagBase2" << std::endl;
-  TryList(vtkm::Tuple<int,2>(21,22), TestListTag2());
+  TryList(vtkm::Vec<int,2>(21,22), TestListTag2());
 
   std::cout << "ListTagBase3" << std::endl;
-  TryList(vtkm::Tuple<int,3>(31,32,33), TestListTag3());
+  TryList(vtkm::Vec<int,3>(31,32,33), TestListTag3());
 
   std::cout << "ListTagBase4" << std::endl;
-  TryList(vtkm::Tuple<int,4>(41,42,43,44), TestListTag4());
+  TryList(vtkm::Vec<int,4>(41,42,43,44), TestListTag4());
 
   std::cout << "ListTagJoin" << std::endl;
-  TryList(vtkm::Tuple<int,4>(31,32,33,11), TestListTagJoin());
+  TryList(vtkm::Vec<int,4>(31,32,33,11), TestListTagJoin());
 }
 
 } // anonymous namespace

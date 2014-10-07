@@ -497,11 +497,11 @@ void TestTypes()
   vtkm::testing::Testing::TryAllTypes(TypeTestFunctor());
 
   //try with some custom tuple types
-  TypeTestFunctor()( vtkm::Tuple<vtkm::Scalar,6>() );
-  TypeTestFunctor()( vtkm::Tuple<vtkm::Id,4>() );
-  TypeTestFunctor()( vtkm::Tuple<unsigned char,4>() );
-  TypeTestFunctor()( vtkm::Tuple<vtkm::Id,1>() );
-  TypeTestFunctor()( vtkm::Tuple<vtkm::Scalar,1>() );
+  TypeTestFunctor()( vtkm::Vec<vtkm::Scalar,6>() );
+  TypeTestFunctor()( vtkm::Vec<vtkm::Id,4>() );
+  TypeTestFunctor()( vtkm::Vec<unsigned char,4>() );
+  TypeTestFunctor()( vtkm::Vec<vtkm::Id,1>() );
+  TypeTestFunctor()( vtkm::Vec<vtkm::Scalar,1>() );
 }
 
 } // anonymous namespace
