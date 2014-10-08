@@ -24,6 +24,8 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VecTraits.h>
 
+#include <boost/static_assert.hpp>
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -60,6 +62,43 @@
 
 namespace vtkm {
 namespace testing {
+
+// If you get an error about this class definition being incomplete, it means
+// that you tried to get the name of a type that is not specified. You can
+// either not use that type, not try to get the string name, or add it to the
+// list.
+template<typename T>
+struct TypeName;
+
+#define VTK_M_BASIC_TYPE(type) \
+  template<> struct TypeName<type> { \
+    static std::string Name() { return #type; } \
+  } \
+
+VTK_M_BASIC_TYPE(vtkm::Float32);
+VTK_M_BASIC_TYPE(vtkm::Float64);
+VTK_M_BASIC_TYPE(vtkm::Int8);
+VTK_M_BASIC_TYPE(vtkm::UInt8);
+VTK_M_BASIC_TYPE(vtkm::Int16);
+VTK_M_BASIC_TYPE(vtkm::UInt16);
+VTK_M_BASIC_TYPE(vtkm::Int32);
+VTK_M_BASIC_TYPE(vtkm::UInt32);
+VTK_M_BASIC_TYPE(vtkm::Int64);
+VTK_M_BASIC_TYPE(vtkm::UInt64);
+
+template<typename T, vtkm::IdComponent Size>
+struct TypeName<vtkm::Vec<T,Size> >
+{
+  static std::string Name() {
+    std::stringstream stream;
+    stream << "vtkm::Vec< "
+           << TypeName<T>::Name()
+           << ", "
+           << Size
+           << " >";
+    return stream.str();
+  }
+};
 
 struct Testing
 {
@@ -334,7 +373,7 @@ bool test_equal(VectorType vector1,
 /// Special implementation of test_equal for strings, which don't fit a model
 /// of fixed length vectors of numbers.
 ///
-VTKM_EXEC_CONT_EXPORT
+VTKM_CONT_EXPORT
 bool test_equal(const std::string &string1, const std::string &string2)
 {
   return string1 == string2;

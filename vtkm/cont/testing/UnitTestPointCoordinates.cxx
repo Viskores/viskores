@@ -62,12 +62,11 @@ vtkm::Vector3 TestValue(vtkm::Id index)
 
 struct CheckArray
 {
-  template<typename C>
-  void operator()(
-      const vtkm::cont::ArrayHandle<vtkm::Vector3,C> &array) const
+  template<typename ArrayType>
+  void operator()(const ArrayType &array) const
   {
     std::cout << "    In CastAndCall functor" << std::endl;
-    typename vtkm::cont::ArrayHandle<vtkm::Vector3,C>::PortalConstControl portal =
+    typename ArrayType::PortalConstControl portal =
         array.GetPortalConstControl();
 
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE,

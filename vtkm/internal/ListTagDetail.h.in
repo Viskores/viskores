@@ -41,7 +41,7 @@ $# Ignore the following comment. It is meant for the generated file.
 
 #include <vtkm/Types.h>
 
-$py(max_base_list=10)\
+$py(max_base_list=25)\
 #define VTKM_MAX_BASE_LIST $(max_base_list)
 
 $# Python commands used in template expansion.

@@ -29,34 +29,107 @@
 
 namespace vtkm {
 
+/// A list containing the type vtkm::Id.
+///
 struct TypeListTagId : vtkm::ListTagBase<vtkm::Id> { };
-struct TypeListTagId2 : vtkm::ListTagBase<vtkm::Id2> { };
-struct TypeListTagId3 : vtkm::ListTagBase<vtkm::Id3> { };
-struct TypeListTagScalar : vtkm::ListTagBase<vtkm::Scalar> { };
-struct TypeListTagVector2 : vtkm::ListTagBase<vtkm::Vector2> { };
-struct TypeListTagVector3 : vtkm::ListTagBase<vtkm::Vector3> { };
-struct TypeListTagVector4 : vtkm::ListTagBase<vtkm::Vector4> { };
 
+/// A list containing the type vtkm::Id2.
+///
+struct TypeListTagId2 : vtkm::ListTagBase<vtkm::Id2> { };
+
+/// A list containing the type vtkm::Id3.
+///
+struct TypeListTagId3 : vtkm::ListTagBase<vtkm::Id3> { };
+
+/// A list containing types used to index arrays. Contains vtkm::Id, vtkm::Id2,
+/// and vtkm::Id3.
+///
 struct TypeListTagIndex
     : vtkm::ListTagBase<vtkm::Id,vtkm::Id2,vtkm::Id3> { };
 
-struct TypeListTagReal
-    : vtkm::ListTagBase<vtkm::Scalar,vtkm::Vector2,vtkm::Vector3,vtkm::Vector4>
-{ };
+/// A list containing types used for scalar fields. Specifically, contains
+/// floating point numbers of different widths (i.e. vtkm::Float32 and
+/// vtkm::Float64).
+struct TypeListTagScalar : vtkm::ListTagBase<vtkm::Float32,vtkm::Float64> { };
+
+/// A list containing types for values for fields with two dimensional
+/// vectors.
+///
+struct TypeListTagVec2
+    : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32,2>,
+                        vtkm::Vec<vtkm::Float64,2> > { };
+
+/// A list containing types for values for fields with three dimensional
+/// vectors.
+///
+struct TypeListTagVec3
+    : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32,3>,
+                        vtkm::Vec<vtkm::Float64,3> > { };
+
+/// A list containing types for values for fields with four dimensional
+/// vectors.
+///
+struct TypeListTagVec4
+    : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32,4>,
+                        vtkm::Vec<vtkm::Float64,4> > { };
+
+/// A list containing common types for values in fields. Specifically contains
+/// floating point scalars and vectors of size 2, 3, and 4 with floating point
+/// components.
+///
+struct TypeListTagField
+    : vtkm::ListTagBase<vtkm::Float32,
+                        vtkm::Float64,
+                        vtkm::Vec<vtkm::Float32,2>,
+                        vtkm::Vec<vtkm::Float64,2>,
+                        vtkm::Vec<vtkm::Float32,3>,
+                        vtkm::Vec<vtkm::Float64,3>,
+                        vtkm::Vec<vtkm::Float32,4>,
+                        vtkm::Vec<vtkm::Float64,4> >
+{  };
 
 /// A list of all basic types listed in vtkm/Types.h. Does not include all
 /// possible VTK-m types like arbitrarily typed and sized tuples or math
 /// types like matrices.
 ///
 struct TypeListTagAll
-    : vtkm::ListTagJoin<vtkm::TypeListTagIndex, vtkm::TypeListTagReal>
-{ };
+    : vtkm::ListTagBase<vtkm::Int8,
+                        vtkm::UInt8,
+                        vtkm::Int16,
+                        vtkm::UInt16,
+                        vtkm::Int32,
+                        vtkm::UInt32,
+                        vtkm::Int64,
+                        vtkm::UInt64,
+                        vtkm::Float32,
+                        vtkm::Float64,
+                        vtkm::Vec<vtkm::Int8,2>,
+                        vtkm::Vec<vtkm::Int32,2>,
+                        vtkm::Vec<vtkm::Int64,2>,
+                        vtkm::Vec<vtkm::Float32,2>,
+                        vtkm::Vec<vtkm::Float64,2>,
+                        vtkm::Vec<vtkm::Int8,3>,
+                        vtkm::Vec<vtkm::Int32,3>,
+                        vtkm::Vec<vtkm::Int64,3>,
+                        vtkm::Vec<vtkm::Float32,3>,
+                        vtkm::Vec<vtkm::Float64,3>,
+                        vtkm::Vec<vtkm::Int8,4>,
+                        vtkm::Vec<vtkm::Int32,4>,
+                        vtkm::Vec<vtkm::Int64,4>,
+                        vtkm::Vec<vtkm::Float32,4>,
+                        vtkm::Vec<vtkm::Float64,4> >
+{  };
 
 /// A list of the most commonly used types across multiple domains. Includes
-/// Id, Scalar, and Vector3.
+/// integers, floating points, and 3 dimensional vectors of floating points.
 ///
 struct TypeListTagCommon
-    : vtkm::ListTagBase<vtkm::Id, vtkm::Scalar, vtkm::Vector3>
+    : vtkm::ListTagBase<vtkm::Int32,
+                        vtkm::Int64,
+                        vtkm::Float32,
+                        vtkm::Float64,
+                        vtkm::Vec<vtkm::Float32,3>,
+                        vtkm::Vec<vtkm::Float64,3> >
 { };
 
 } // namespace vtkm

@@ -21,6 +21,8 @@
 
 #include <vtkm/cont/DynamicArrayHandle.h>
 
+#include <vtkm/TypeTraits.h>
+
 #include <vtkm/cont/StorageImplicit.h>
 
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
@@ -35,12 +37,22 @@ namespace {
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-vtkm::Id TestValue(vtkm::Id index, vtkm::Id) {
-  return index*100;
+template<typename T>
+T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
+{
+  return T(index*100);
 }
 
-vtkm::Scalar TestValue(vtkm::Id index, vtkm::Scalar) {
-  return static_cast<vtkm::Scalar>(index)/100;
+template<typename T>
+T TestValue(vtkm::Id index, T, vtkm::TypeTraitsRealTag)
+{
+  return T(index)/100;
+}
+
+template<typename T>
+T TestValue(vtkm::Id index, T)
+{
+  return TestValue(index, T(), typename vtkm::TypeTraits<T>::NumericTag());
 }
 
 template<typename T, vtkm::IdComponent N>

@@ -54,13 +54,12 @@ struct CheckArray
     g_CheckArrayInvocations = 0;
   }
 
-  template<typename Storage>
-  void operator()(
-      const vtkm::cont::ArrayHandle<vtkm::Vector3,Storage> &array) const
+  template<typename ArrayType>
+  void operator()(const ArrayType &array) const
   {
     std::cout << "    In CastAndCall functor" << std::endl;
     g_CheckArrayInvocations++;
-    typename vtkm::cont::ArrayHandle<vtkm::Vector3,Storage>::PortalConstControl portal =
+    typename ArrayType::PortalConstControl portal =
         array.GetPortalConstControl();
 
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE,

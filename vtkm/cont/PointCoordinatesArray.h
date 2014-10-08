@@ -62,7 +62,7 @@ public:
   VTKM_CONT_EXPORT
   void CastAndCall(const Functor &f, TypeList, StorageList) const
   {
-    this->Array.CastAndCall(f, vtkm::TypeListTagVector3(), StorageList());
+    this->Array.CastAndCall(f, vtkm::TypeListTagVec3(), StorageList());
   }
 
 private:
