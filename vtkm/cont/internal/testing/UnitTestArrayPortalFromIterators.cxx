@@ -130,7 +130,7 @@ struct TemplatedTests
     VTKM_TEST_ASSERT(CheckPortal(const_portal, ORIGINAL_VALUE),
                      "Const portal iterator has bad value.");
 
-    static const ComponentType SET_VALUE = 562;
+    static const ComponentType SET_VALUE = 62;
 
     std::cout << "  Check get/set methods." << std::endl;
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
@@ -156,7 +156,7 @@ struct TemplatedTests
 struct TestFunctor
 {
   template<typename T>
-  void operator()(T)
+  void operator()(T) const
   {
     TemplatedTests<T> tests;
     tests();

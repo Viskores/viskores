@@ -155,7 +155,7 @@ void TryDefaultType(T)
 struct TryBasicVTKmType
 {
   template<typename T>
-  void operator()(T) {
+  void operator()(T) const {
     CheckCalled = false;
 
     vtkm::cont::DynamicArrayHandle array = CreateDynamicArray(T());

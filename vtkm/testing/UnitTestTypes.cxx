@@ -59,8 +59,11 @@ void CheckTypeSizes()
 }
 
 //general type test
-template <typename T> void TypeTest()
+template<typename ComponentType, vtkm::IdComponent Size>
+void GeneralVecTypeTest(const vtkm::Vec<ComponentType,Size> &)
 {
+  typedef vtkm::Vec<ComponentType,Size> T;
+
   //grab the number of elements of T
   T a, b, c;
   typename T::ComponentType s(5);
@@ -143,38 +146,49 @@ template <typename T> void TypeTest()
   VTKM_TEST_ASSERT( (a != c), "operator != wrong");
 }
 
-template<> void TypeTest<vtkm::Vector2>()
+template<typename ComponentType, vtkm::IdComponent Size>
+void TypeTest(const vtkm::Vec<ComponentType,Size> &)
 {
-  vtkm::Vector2 a = vtkm::make_Vector2(2, 4);
-  vtkm::Vector2 b = vtkm::make_Vector2(1, 2);
-  vtkm::Scalar s = 5;
+  GeneralVecTypeTest(vtkm::Vec<ComponentType,Size>());
+}
 
-  vtkm::Vector2 plus = a + b;
-  VTKM_TEST_ASSERT(test_equal(plus, vtkm::make_Vector2(3, 6)),
+template<typename Scalar>
+void TypeTest(const vtkm::Vec<Scalar,2> &)
+{
+  typedef vtkm::Vec<Scalar,2> Vector;
+
+  GeneralVecTypeTest(Vector());
+
+  Vector a(2, 4);
+  Vector b(1, 2);
+  Scalar s = 5;
+
+  Vector plus = a + b;
+  VTKM_TEST_ASSERT(test_equal(plus, vtkm::make_Vec(3, 6)),
                    "Vectors do not add correctly.");
 
-  vtkm::Vector2 minus = a - b;
-  VTKM_TEST_ASSERT(test_equal(minus, vtkm::make_Vector2(1, 2)),
+  Vector minus = a - b;
+  VTKM_TEST_ASSERT(test_equal(minus, vtkm::make_Vec(1, 2)),
                    "Vectors to not subtract correctly.");
 
-  vtkm::Vector2 mult = a * b;
-  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vector2(2, 8)),
+  Vector mult = a * b;
+  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(2, 8)),
                    "Vectors to not multiply correctly.");
 
-  vtkm::Vector2 div = a / b;
+  Vector div = a / b;
   VTKM_TEST_ASSERT(test_equal(div, vtkm::make_Vector2(2, 2)),
                    "Vectors to not divide correctly.");
 
   mult = s * a;
-  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vector2(10, 20)),
+  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(10, 20)),
                    "Vector and scalar to not multiply correctly.");
 
   mult = a * s;
-  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vector2(10, 20)),
+  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(10, 20)),
                    "Vector and scalar to not multiply correctly.");
 
-  vtkm::Scalar d = vtkm::dot(a, b);
-  VTKM_TEST_ASSERT(test_equal(d, vtkm::Scalar(10)), "dot(Vector2) wrong");
+  Scalar d = vtkm::dot(a, b);
+  VTKM_TEST_ASSERT(test_equal(d, Scalar(10)), "dot(Vector2) wrong");
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
   VTKM_TEST_ASSERT((b < a),  "operator< wrong");
@@ -189,7 +203,7 @@ template<> void TypeTest<vtkm::Vector2>()
   VTKM_TEST_ASSERT(!(a != a), "operator!= wrong");
 
   //test against a tuple that shares some values
-  const vtkm::Vector2 c = vtkm::make_Vector2(2,3);
+  const Vector c(2, 3);
   VTKM_TEST_ASSERT((c < a),  "operator< wrong");
 
   VTKM_TEST_ASSERT( !(c == a), "operator == wrong");
@@ -199,38 +213,43 @@ template<> void TypeTest<vtkm::Vector2>()
   VTKM_TEST_ASSERT( (a != c), "operator != wrong");
 }
 
-template<> void TypeTest<vtkm::Vector3>()
+template<typename Scalar>
+void TypeTest(const vtkm::Vec<Scalar,3> &)
 {
-  vtkm::Vector3 a = vtkm::make_Vector3(2, 4, 6);
-  vtkm::Vector3 b = vtkm::make_Vector3(1, 2, 3);
-  vtkm::Scalar s = 5;
+  typedef vtkm::Vec<Scalar,3> Vector;
 
-  vtkm::Vector3 plus = a + b;
-  VTKM_TEST_ASSERT(test_equal(plus, vtkm::make_Vector3(3, 6, 9)),
+  GeneralVecTypeTest(Vector());
+
+  Vector a(2, 4, 6);
+  Vector b(1, 2, 3);
+  Scalar s = 5;
+
+  Vector plus = a + b;
+  VTKM_TEST_ASSERT(test_equal(plus, vtkm::make_Vec(3, 6, 9)),
                    "Vectors do not add correctly.");
 
-  vtkm::Vector3 minus = a - b;
-  VTKM_TEST_ASSERT(test_equal(minus, vtkm::make_Vector3(1, 2, 3)),
+  Vector minus = a - b;
+  VTKM_TEST_ASSERT(test_equal(minus, vtkm::make_Vec(1, 2, 3)),
                    "Vectors to not subtract correctly.");
 
-  vtkm::Vector3 mult = a * b;
-  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vector3(2, 8, 18)),
+  Vector mult = a * b;
+  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(2, 8, 18)),
                    "Vectors to not multiply correctly.");
 
-  vtkm::Vector3 div = a / b;
-  VTKM_TEST_ASSERT(test_equal(div, vtkm::make_Vector3(2, 2, 2)),
+  Vector div = a / b;
+  VTKM_TEST_ASSERT(test_equal(div, vtkm::make_Vec(2, 2, 2)),
                    "Vectors to not divide correctly.");
 
   mult = s * a;
-  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vector3(10, 20, 30)),
+  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(10, 20, 30)),
                    "Vector and scalar to not multiply correctly.");
 
   mult = a * s;
-  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vector3(10, 20, 30)),
+  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(10, 20, 30)),
                    "Vector and scalar to not multiply correctly.");
 
   vtkm::Scalar d = vtkm::dot(a, b);
-  VTKM_TEST_ASSERT(test_equal(d, vtkm::Scalar(28)), "dot(Vector3) wrong");
+  VTKM_TEST_ASSERT(test_equal(d, Scalar(28)), "dot(Vector3) wrong");
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
   VTKM_TEST_ASSERT((b < a),  "operator< wrong");
@@ -245,7 +264,7 @@ template<> void TypeTest<vtkm::Vector3>()
   VTKM_TEST_ASSERT(!(a != a), "operator!= wrong");
 
   //test against a tuple that shares some values
-  const vtkm::Vector3 c = vtkm::make_Vector3(2,4,5);
+  const Vector c(2,4,5);
   VTKM_TEST_ASSERT((c < a),  "operator< wrong");
 
   VTKM_TEST_ASSERT( !(c == a), "operator == wrong");
@@ -255,34 +274,39 @@ template<> void TypeTest<vtkm::Vector3>()
   VTKM_TEST_ASSERT( (a != c), "operator != wrong");
 }
 
-template<> void TypeTest<vtkm::Vector4>()
+template<typename Scalar>
+void TypeTest(const vtkm::Vec<Scalar,4> &)
 {
-  vtkm::Vector4 a = vtkm::make_Vector4(2, 4, 6, 8);
-  vtkm::Vector4 b = vtkm::make_Vector4(1, 2, 3, 4);
-  vtkm::Scalar s = 5;
+  typedef vtkm::Vec<Scalar,4> Vector;
 
-  vtkm::Vector4 plus = a + b;
-  VTKM_TEST_ASSERT(test_equal(plus, vtkm::make_Vector4(3, 6, 9, 12)),
+  GeneralVecTypeTest(Vector());
+
+  Vector a(2, 4, 6, 8);
+  Vector b(1, 2, 3, 4);
+  Scalar s = 5;
+
+  Vector plus = a + b;
+  VTKM_TEST_ASSERT(test_equal(plus, vtkm::make_Vec(3, 6, 9, 12)),
                    "Vectors do not add correctly.");
 
-  vtkm::Vector4 minus = a - b;
-  VTKM_TEST_ASSERT(test_equal(minus, vtkm::make_Vector4(1, 2, 3, 4)),
+  Vector minus = a - b;
+  VTKM_TEST_ASSERT(test_equal(minus, vtkm::make_Vec(1, 2, 3, 4)),
                    "Vectors to not subtract correctly.");
 
-  vtkm::Vector4 mult = a * b;
-  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vector4(2, 8, 18, 32)),
+  Vector mult = a * b;
+  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(2, 8, 18, 32)),
                    "Vectors to not multiply correctly.");
 
-  vtkm::Vector4 div = a / b;
-  VTKM_TEST_ASSERT(test_equal(div, vtkm::make_Vector4(2, 2, 2, 2)),
+  Vector div = a / b;
+  VTKM_TEST_ASSERT(test_equal(div, vtkm::make_Vec(2, 2, 2, 2)),
                    "Vectors to not divide correctly.");
 
   mult = s * a;
-  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vector4(10, 20, 30, 40)),
+  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(10, 20, 30, 40)),
                    "Vector and scalar to not multiply correctly.");
 
   mult = a * s;
-  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vector4(10, 20, 30, 40)),
+  VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(10, 20, 30, 40)),
                    "Vector and scalar to not multiply correctly.");
 
   vtkm::Scalar d = vtkm::dot(a, b);
@@ -302,7 +326,7 @@ template<> void TypeTest<vtkm::Vector4>()
   VTKM_TEST_ASSERT(!(a != a), "operator!= wrong");
 
   //test against a tuple that shares some values
-  const vtkm::Vector4 c = vtkm::make_Vector4(2,4,6,7);
+  const Vector c(2,4,6,7);
   VTKM_TEST_ASSERT((c < a),  "operator< wrong");
 
   VTKM_TEST_ASSERT( !(c == a), "operator == wrong");
@@ -312,112 +336,31 @@ template<> void TypeTest<vtkm::Vector4>()
   VTKM_TEST_ASSERT( (a != c), "operator != wrong");
 }
 
-template<> void TypeTest<vtkm::Id3>()
+template<typename Scalar>
+void TypeTest(Scalar)
 {
-  vtkm::Id3 a = vtkm::make_Id3(2, 4, 6);
-  vtkm::Id3 b = vtkm::make_Id3(1, 2, 3);
-  vtkm::Id s = 5;
+  Scalar a = 4;
+  Scalar b = 2;
 
-  vtkm::Id3 plus = a + b;
-  if ((plus[0] != 3) || (plus[1] != 6) || (plus[2] != 9))
-  {
-    VTKM_TEST_FAIL("Vectors do not add correctly.");
-  }
-
-  vtkm::Id3 minus = a - b;
-  if ((minus[0] != 1) || (minus[1] != 2) || (minus[2] != 3))
-  {
-    VTKM_TEST_FAIL("Vectors to not subtract correctly.");
-  }
-
-  vtkm::Id3 mult = a * b;
-  if ((mult[0] != 2) || (mult[1] != 8) || (mult[2] != 18))
-  {
-    VTKM_TEST_FAIL("Vectors to not multiply correctly.");
-  }
-
-  vtkm::Id3 div = a / b;
-  if ((div[0] != 2) || (div[1] != 2) || (div[2] != 2))
-  {
-    VTKM_TEST_FAIL("Vectors to not divide correctly.");
-  }
-
-  mult = s * a;
-  if ((mult[0] != 10) || (mult[1] != 20) || (mult[2] != 30))
-  {
-    VTKM_TEST_FAIL("Vector and scalar to not multiply correctly.");
-  }
-
-  mult = a * s;
-  if ((mult[0] != 10) || (mult[1] != 20) || (mult[2] != 30))
-  {
-    VTKM_TEST_FAIL("Vector and scalar to not multiply correctly.");
-  }
-
-  if (vtkm::dot(a, b) != 28)
-  {
-    VTKM_TEST_FAIL("dot(Id3) wrong");
-  }
-
-  VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
-  VTKM_TEST_ASSERT((b < a),  "operator< wrong");
-  VTKM_TEST_ASSERT(!(a < a),  "operator< wrong");
-  VTKM_TEST_ASSERT((a < plus),  "operator< wrong");
-  VTKM_TEST_ASSERT((minus < plus),  "operator< wrong");
-
-  if (a == b)
-  {
-    VTKM_TEST_FAIL("operator== wrong");
-  }
-  if (!(a == a))
-  {
-    VTKM_TEST_FAIL("operator== wrong");
-  }
-
-  if (!(a != b))
-  {
-    VTKM_TEST_FAIL("operator!= wrong");
-  }
-  if (a != a)
-  {
-    VTKM_TEST_FAIL("operator!= wrong");
-  }
-
-  //test against a tuple that shares some values
-  const vtkm::Id3 c = vtkm::make_Id3(2,4,5);
-  VTKM_TEST_ASSERT((c < a),  "operator< wrong");
-
-  if (c == a) { VTKM_TEST_FAIL("operator== wrong"); }
-  if (a == c) { VTKM_TEST_FAIL("operator== wrong"); }
-
-  if (!(c != a)) { VTKM_TEST_FAIL("operator!= wrong"); }
-  if (!(a != c)) { VTKM_TEST_FAIL("operator!= wrong"); }
-}
-
-template<> void TypeTest<vtkm::Scalar>()
-{
-  vtkm::Scalar a = 4;
-  vtkm::Scalar b = 2;
-
-  vtkm::Scalar plus = a + b;
+  Scalar plus = a + b;
   if (plus != 6)
   {
     VTKM_TEST_FAIL("Scalars do not add correctly.");
   }
 
-  vtkm::Scalar minus = a - b;
+  Scalar minus = a - b;
   if (minus != 2)
   {
     VTKM_TEST_FAIL("Scalars to not subtract correctly.");
   }
 
-  vtkm::Scalar mult = a * b;
+  Scalar mult = a * b;
   if (mult != 8)
   {
     VTKM_TEST_FAIL("Scalars to not multiply correctly.");
   }
 
-  vtkm::Scalar div = a / b;
+  Scalar div = a / b;
   if (div != 2)
   {
     VTKM_TEST_FAIL("Scalars to not divide correctly.");
@@ -438,55 +381,11 @@ template<> void TypeTest<vtkm::Scalar>()
   }
 }
 
-template<> void TypeTest<vtkm::Id>()
-{
-  vtkm::Id a = 4;
-  vtkm::Id b = 2;
-
-  vtkm::Id plus = a + b;
-  if (plus != 6)
-  {
-    VTKM_TEST_FAIL("Scalars do not add correctly.");
-  }
-
-  vtkm::Id minus = a - b;
-  if (minus != 2)
-  {
-    VTKM_TEST_FAIL("Scalars to not subtract correctly.");
-  }
-
-  vtkm::Id mult = a * b;
-  if (mult != 8)
-  {
-    VTKM_TEST_FAIL("Scalars to not multiply correctly.");
-  }
-
-  vtkm::Id div = a / b;
-  if (div != 2)
-  {
-    VTKM_TEST_FAIL("Scalars to not divide correctly.");
-  }
-
-  if (a == b)
-  {
-    VTKM_TEST_FAIL("operator== wrong");
-  }
-  if (!(a != b))
-  {
-    VTKM_TEST_FAIL("operator!= wrong");
-  }
-
-  if (vtkm::dot(a, b) != 8)
-  {
-    VTKM_TEST_FAIL("dot(Id) wrong");
-  }
-}
-
 struct TypeTestFunctor
 {
   template <typename T> void operator()(const T&) const
   {
-    TypeTest<T>();
+    TypeTest(T());
   }
 };
 

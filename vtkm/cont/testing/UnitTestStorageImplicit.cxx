@@ -128,7 +128,7 @@ struct TemplatedTests
 struct TestFunctor
 {
   template <typename T>
-  void operator()(T)
+  void operator()(T) const
   {
     TemplatedTests<T> tests;
     tests();

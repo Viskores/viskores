@@ -115,7 +115,7 @@ struct TemplatedTests
     IteratorType begin = vtkm::cont::internal::make_IteratorBegin(portal);
     IteratorType end = vtkm::cont::internal::make_IteratorEnd(portal);
 
-    static const ComponentType WRITE_VALUE = 873;
+    static const ComponentType WRITE_VALUE = 73;
 
     std::cout << "    Write values to iterator." << std::endl;
     FillIterator(begin, end, WRITE_VALUE);
@@ -150,7 +150,7 @@ struct TemplatedTests
 struct TestFunctor
 {
   template<typename T>
-  void operator()(T)
+  void operator()(T) const
   {
     TemplatedTests<T> tests;
     tests();

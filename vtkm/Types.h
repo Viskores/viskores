@@ -1135,6 +1135,33 @@ VTKM_EXEC_CONT_EXPORT vtkm::Id3 make_Id3(vtkm::Id x, vtkm::Id y, vtkm::Id z)
   return vtkm::Id3(x, y, z);
 }
 
+/// Initializes and returns a Vec of length 2.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> make_Vec(const T &x, const T &y)
+{
+  return vtkm::Vec<T,2>(x, y);
+}
+
+/// Initializes and returns a Vec of length 3.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> make_Vec(const T &x, const T &y, const T &z)
+{
+  return vtkm::Vec<T,3>(x, y, z);
+}
+
+/// Initializes and returns a Vec of length 4.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> make_Vec(const T &x, const T &y, const T &z, const T &w)
+{
+  return vtkm::Vec<T,4>(x, y, z, w);
+}
+
 template<typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT_EXPORT
 T dot(const vtkm::Vec<T,Size> &a, const vtkm::Vec<T,Size> &b)
@@ -1171,9 +1198,13 @@ T dot(const vtkm::Vec<T,4> &a, const vtkm::Vec<T,4> &b)
 #define VTK_M_SCALAR_DOT(type) \
   VTKM_EXEC_CONT_EXPORT type dot(type a, type b) { return a * b; }
 VTK_M_SCALAR_DOT(vtkm::Int8)
+VTK_M_SCALAR_DOT(vtkm::UInt8)
 VTK_M_SCALAR_DOT(vtkm::Int16)
+VTK_M_SCALAR_DOT(vtkm::UInt16)
 VTK_M_SCALAR_DOT(vtkm::Int32)
+VTK_M_SCALAR_DOT(vtkm::UInt32)
 VTK_M_SCALAR_DOT(vtkm::Int64)
+VTK_M_SCALAR_DOT(vtkm::UInt64)
 VTK_M_SCALAR_DOT(vtkm::Float32)
 VTK_M_SCALAR_DOT(vtkm::Float64)
 

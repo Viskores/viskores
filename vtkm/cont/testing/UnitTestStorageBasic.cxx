@@ -58,7 +58,7 @@ struct TemplatedTests
 
   typename vtkm::VecTraits<ValueType>::ComponentType STOLEN_ARRAY_VALUE()
   {
-    return 4529;
+    return 29;
   }
 
   /// Returned value should later be passed to StealArray2.  It is best to
@@ -105,7 +105,7 @@ struct TemplatedTests
     VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == ARRAY_SIZE,
                      "Array not properly allocated.");
 
-    const ValueType BASIC_ALLOC_VALUE = ValueType(548);
+    const ValueType BASIC_ALLOC_VALUE = ValueType(48);
     SetStorage(arrayStorage, BASIC_ALLOC_VALUE);
     VTKM_TEST_ASSERT(CheckStorage(arrayStorage, BASIC_ALLOC_VALUE),
                      "Array not holding value.");
@@ -144,7 +144,7 @@ struct TemplatedTests
 struct TestFunctor
 {
   template <typename T>
-  void operator()(T)
+  void operator()(T) const
   {
     TemplatedTests<T> tests;
     tests();

@@ -119,7 +119,7 @@ struct TemplatedTests
     typedef ReadOnlyArrayPortal ArrayPortalType;
     typedef vtkm::cont::ArrayPortalToIterators<ArrayPortalType> GetIteratorsType;
 
-    static const ComponentType READ_VALUE = 23900;
+    static const ComponentType READ_VALUE = 23;
     ArrayPortalType portal(READ_VALUE);
 
     std::cout << "  Testing read-only iterators with ArrayPortalToIterators."
@@ -139,7 +139,7 @@ struct TemplatedTests
     typedef WriteOnlyArrayPortal ArrayPortalType;
     typedef vtkm::cont::ArrayPortalToIterators<ArrayPortalType> GetIteratorsType;
 
-    static const  ComponentType WRITE_VALUE = 63400;
+    static const  ComponentType WRITE_VALUE = 63;
     ArrayPortalType portal(WRITE_VALUE);
 
     std::cout << "  Testing write-only iterators with ArrayPortalToIterators."
@@ -164,7 +164,7 @@ struct TemplatedTests
 struct TestFunctor
 {
   template<typename T>
-  void operator()(T)
+  void operator()(T) const
   {
     TemplatedTests<T> tests;
     tests();
