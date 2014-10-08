@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_internal_FunctionInterface_h
-#define vtk_m_cont_internal_FunctionInterface_h
+#ifndef vtk_m_internal_FunctionInterface_h
+#define vtk_m_internal_FunctionInterface_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
@@ -753,4 +753,4 @@ private:
 
 #include <vtkm/internal/FunctionInterfaceDetailPost.h>
 
-#endif //vtk_m_cont_internal_FunctionInterface_h
+#endif //vtk_m_internal_FunctionInterface_h
