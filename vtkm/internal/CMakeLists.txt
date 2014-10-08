@@ -25,12 +25,14 @@ set(headers
   FunctionInterface.h
   FunctionInterfaceDetailPost.h
   FunctionInterfaceDetailPre.h
+  ListTagDetail.h
   )
 
 vtkm_declare_headers(${headers})
 
 vtkm_pyexpander_generated_file(FunctionInterfaceDetailPre.h)
 vtkm_pyexpander_generated_file(FunctionInterfaceDetailPost.h)
+vtkm_pyexpander_generated_file(ListTagDetail.h)
 
 add_subdirectory(testing)
 

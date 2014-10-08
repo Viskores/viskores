@@ -39,15 +39,15 @@ struct TestListTag1
 {  };
 
 struct TestListTag2
-    : vtkm::ListTagBase2<TestClass<21>,TestClass<22> >
+    : vtkm::ListTagBase<TestClass<21>,TestClass<22> >
 {  };
 
 struct TestListTag3
-    : vtkm::ListTagBase3<TestClass<31>,TestClass<32>,TestClass<33> >
+    : vtkm::ListTagBase<TestClass<31>,TestClass<32>,TestClass<33> >
 {  };
 
 struct TestListTag4
-    : vtkm::ListTagBase4<TestClass<41>,TestClass<42>,TestClass<43>,TestClass<44> >
+    : vtkm::ListTagBase<TestClass<41>,TestClass<42>,TestClass<43>,TestClass<44> >
 {  };
 
 struct TestListTagJoin

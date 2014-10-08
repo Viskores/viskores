@@ -86,7 +86,7 @@ public:
 };
 
 struct StorageListTagUnusual :
-    vtkm::ListTagBase2<
+    vtkm::ListTagBase<
       ArrayHandleWithUnusualStorage<vtkm::Id>::StorageTag,
       ArrayHandleWithUnusualStorage<std::string>::StorageTag>
 {  };

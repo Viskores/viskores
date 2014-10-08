@@ -38,10 +38,10 @@ struct TypeListTagVector3 : vtkm::ListTagBase<vtkm::Vector3> { };
 struct TypeListTagVector4 : vtkm::ListTagBase<vtkm::Vector4> { };
 
 struct TypeListTagIndex
-    : vtkm::ListTagBase3<vtkm::Id,vtkm::Id2,vtkm::Id3> { };
+    : vtkm::ListTagBase<vtkm::Id,vtkm::Id2,vtkm::Id3> { };
 
 struct TypeListTagReal
-    : vtkm::ListTagBase4<vtkm::Scalar,vtkm::Vector2,vtkm::Vector3,vtkm::Vector4>
+    : vtkm::ListTagBase<vtkm::Scalar,vtkm::Vector2,vtkm::Vector3,vtkm::Vector4>
 { };
 
 /// A list of all basic types listed in vtkm/Types.h. Does not include all
@@ -56,7 +56,7 @@ struct TypeListTagAll
 /// Id, Scalar, and Vector3.
 ///
 struct TypeListTagCommon
-    : vtkm::ListTagBase3<vtkm::Id, vtkm::Scalar, vtkm::Vector3>
+    : vtkm::ListTagBase<vtkm::Id, vtkm::Scalar, vtkm::Vector3>
 { };
 
 } // namespace vtkm
