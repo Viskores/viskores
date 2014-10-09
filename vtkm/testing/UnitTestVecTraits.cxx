@@ -47,14 +47,14 @@ void TestVecTraits()
 {
   TestVecTypeFunctor test;
   vtkm::testing::Testing::TryAllTypes(test);
-  std::cout << "vtkm::Vec<vtkm::Scalar, 5>" << std::endl;
-  test(vtkm::Vec<vtkm::Scalar,5>());
+  std::cout << "vtkm::Vec<vtkm::FloatDefault, 5>" << std::endl;
+  test(vtkm::Vec<vtkm::FloatDefault,5>());
 
   vtkm::testing::TestVecComponentsTag<vtkm::Id3>();
-  vtkm::testing::TestVecComponentsTag<vtkm::Vector3>();
-  vtkm::testing::TestVecComponentsTag<vtkm::Vector4>();
+  vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault,3> >();
+  vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault,4> >();
   vtkm::testing::TestScalarComponentsTag<vtkm::Id>();
-  vtkm::testing::TestScalarComponentsTag<vtkm::Scalar>();
+  vtkm::testing::TestScalarComponentsTag<vtkm::FloatDefault>();
 }
 
 } // anonymous namespace

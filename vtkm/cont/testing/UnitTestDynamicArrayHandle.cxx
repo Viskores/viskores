@@ -271,12 +271,18 @@ void TryUnusualTypeAndStorage()
 void TestDynamicArrayHandle()
 {
   std::cout << "Try common types with default type lists." << std::endl;
-  std::cout << "*** vtkm::Id ***************" << std::endl;
+  std::cout << "*** vtkm::Id **********************" << std::endl;
   TryDefaultType(vtkm::Id());
-  std::cout << "*** vtkm::Scalar ***********" << std::endl;
-  TryDefaultType(vtkm::Scalar());
-  std::cout << "*** vtkm::Vector3 **********" << std::endl;
-  TryDefaultType(vtkm::Vector3());
+  std::cout << "*** vtkm::FloatDefault ************" << std::endl;
+  TryDefaultType(vtkm::FloatDefault());
+  std::cout << "*** vtkm::Float32 *****************" << std::endl;
+  TryDefaultType(vtkm::Float32());
+  std::cout << "*** vtkm::Float64 *****************" << std::endl;
+  TryDefaultType(vtkm::Float64());
+  std::cout << "*** vtkm::Vec<Float32,3> **********" << std::endl;
+  TryDefaultType(vtkm::Vec<vtkm::Float32,3>());
+  std::cout << "*** vtkm::Vec<Float64,3> **********" << std::endl;
+  TryDefaultType(vtkm::Vec<vtkm::Float64,3>());
 
   std::cout << "Try all VTK-m types." << std::endl;
   vtkm::testing::Testing::TryAllTypes(TryBasicVTKmType());

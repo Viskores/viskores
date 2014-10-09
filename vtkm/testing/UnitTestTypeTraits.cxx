@@ -75,8 +75,8 @@ static void TestTypeTraits()
 {
   TypeTraitTest test;
   vtkm::testing::Testing::TryAllTypes(test);
-  std::cout << "vtkm::Vec<vtkm::Scalar, 5>" << std::endl;
-  test(vtkm::Vec<vtkm::Scalar, 5>());
+  std::cout << "vtkm::Vec<vtkm::FloatDefault, 5>" << std::endl;
+  test(vtkm::Vec<vtkm::FloatDefault, 5>());
 }
 
 } // anonymous namespace

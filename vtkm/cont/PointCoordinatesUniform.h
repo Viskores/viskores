@@ -39,13 +39,15 @@ namespace cont {
 class PointCoordinatesUniform : public internal::PointCoordinatesBase
 {
 public:
+  typedef vtkm::Vec<vtkm::FloatDefault,3> ValueType;
+
   VTKM_CONT_EXPORT
   PointCoordinatesUniform() {  }
 
   VTKM_CONT_EXPORT
   PointCoordinatesUniform(const vtkm::Extent3 &extent,
-                          const vtkm::Vector3 &origin,
-                          const vtkm::Vector3 &spacing)
+                          const ValueType &origin,
+                          const ValueType &spacing)
     : Array(extent, origin, spacing)
   {  }
 

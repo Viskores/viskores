@@ -347,15 +347,15 @@ public:
   /// number of times to get the progressive time. This method synchronizes all
   /// asynchronous operations.
   ///
-  VTKM_CONT_EXPORT vtkm::Scalar GetElapsedTime()
+  VTKM_CONT_EXPORT vtkm::Float64 GetElapsedTime()
   {
     TimeStamp currentTime = this->GetCurrentTime();
 
-    vtkm::Scalar elapsedTime;
-    elapsedTime = vtkm::Scalar(currentTime.Seconds - this->StartTime.Seconds);
+    vtkm::Float64 elapsedTime;
+    elapsedTime = vtkm::Float64(currentTime.Seconds - this->StartTime.Seconds);
     elapsedTime +=
-      (vtkm::Scalar(currentTime.Microseconds - this->StartTime.Microseconds)
-       /vtkm::Scalar(1000000));
+      (vtkm::Float64(currentTime.Microseconds - this->StartTime.Microseconds)
+       /vtkm::Float64(1000000));
 
     return elapsedTime;
   }

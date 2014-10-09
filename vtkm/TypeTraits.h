@@ -111,28 +111,12 @@ VTKM_BASIC_INTEGER_TYPE(vtkm::UInt64);
 #undef VTKM_BASIC_REAL_TYPE
 #undef VTKM_BASIC_INTEGER_TYPE
 
-#define VTKM_VECTOR_TYPE(T, NTag) \
-  template<> struct TypeTraits<T> { \
-    typedef NTag NumericTag; \
-    typedef TypeTraitsVectorTag DimensionalityTag; \
-  }
-
-/// Traits for vector types.
-///
-
-VTKM_VECTOR_TYPE(vtkm::Id3, TypeTraitsIntegerTag);
-VTKM_VECTOR_TYPE(vtkm::Vector2, TypeTraitsRealTag);
-VTKM_VECTOR_TYPE(vtkm::Vector3, TypeTraitsRealTag);
-VTKM_VECTOR_TYPE(vtkm::Vector4, TypeTraitsRealTag);
-
-#undef VTKM_VECTOR_TYPE
-
-/// Traits for tuples.
+/// Traits for Vec types.
 ///
 template<typename T, vtkm::IdComponent Size>
-struct TypeTraits<vtkm::Vec<T, Size> >
+struct TypeTraits<vtkm::Vec<T,Size> >
 {
-  typedef typename TypeTraits<T>::NumericTag NumericTag;
+  typedef typename vtkm::TypeTraits<T>::NumericTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;
 };
 

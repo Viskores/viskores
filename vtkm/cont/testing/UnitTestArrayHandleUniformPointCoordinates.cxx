@@ -24,14 +24,16 @@
 
 namespace {
 
+typedef vtkm::Vec<vtkm::FloatDefault, 3> Vector3;
+
 const vtkm::Id3 MIN_VALUES(-5, 8, 40);
 const vtkm::Id3 MAX_VALUES(10, 25, 44);
 const vtkm::Id3 POINT_DIMS(16, 18,  5);
 const vtkm::Id NUM_POINTS = 1440;
 
-const vtkm::Vector3 ORIGIN(30, -3, -14);
-const vtkm::Vector3 SPACING(10, 1, 0.1f);
-const vtkm::Vector3 LOWER_LEFT(-20, 5, -10); // MIN_VALUES*SPACING + ORIGIN
+const Vector3 ORIGIN(30, -3, -14);
+const Vector3 SPACING(10, 1, 0.1f);
+const Vector3 LOWER_LEFT(-20, 5, -10); // MIN_VALUES*SPACING + ORIGIN
 
 void TestArrayHandleUniformPointCoordinates()
 {
@@ -51,7 +53,7 @@ void TestArrayHandleUniformPointCoordinates()
                    "Portal range is wrong.");
 
   std::cout << "Checking computed values of portal." << std::endl;
-  vtkm::Vector3 expectedValue;
+  Vector3 expectedValue;
   vtkm::Id flatIndex = 0;
   vtkm::Id3 blockIndex;
   expectedValue[2] = LOWER_LEFT[2];

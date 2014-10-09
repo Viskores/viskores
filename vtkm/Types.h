@@ -156,13 +156,13 @@ typedef vtkm::Int32 IdComponent;
 
 #ifdef VTKM_USE_DOUBLE_PRECISION
 
-/// Scalar corresponds to a floating point number.
-typedef vtkm::Float64 Scalar;
+/// The floating point type to use when no other precision is specified.
+typedef vtkm::Float64 FloatDefault;
 
 #else //VTKM_USE_DOUBLE_PRECISION
 
-/// Scalar corresponds to a floating point number.
-typedef vtkm::Float32 Scalar;
+/// The floating point type to use when no other precision is specified.
+typedef vtkm::Float32 FloatDefault;
 
 #endif //VTKM_USE_DOUBLE_PRECISION
 
@@ -1043,9 +1043,6 @@ public:
   }
 };
 
-/// Vector2 corresponds to a 2-tuple
-typedef vtkm::Vec<vtkm::Scalar,2> Vector2;
-
 /// Id2 corresponds to a 2-dimensional index
 typedef vtkm::Vec<vtkm::Id,2> Id2;
 
@@ -1070,9 +1067,6 @@ public:
     this->Components[2] = z;
   }
 };
-
-/// Vector3 corresponds to a 3-tuple
-typedef vtkm::Vec<vtkm::Scalar,3> Vector3;
 
 /// Id3 corresponds to a 3-dimensional index for 3d arrays.  Note that
 /// the precision of each index may be less than vtkm::Id.
@@ -1101,39 +1095,6 @@ public:
   }
 };
 
-/// Vector4 corresponds to a 4-tuple
-typedef vtkm::Vec<vtkm::Scalar,4> Vector4;
-
-
-/// Initializes and returns a Vector2.
-VTKM_EXEC_CONT_EXPORT vtkm::Vector2 make_Vector2(vtkm::Scalar x,
-                                               vtkm::Scalar y)
-{
-  return vtkm::Vector2(x, y);
-}
-
-/// Initializes and returns a Vector3.
-VTKM_EXEC_CONT_EXPORT vtkm::Vector3 make_Vector3(vtkm::Scalar x,
-                                               vtkm::Scalar y,
-                                               vtkm::Scalar z)
-{
-  return vtkm::Vector3(x, y, z);
-}
-
-/// Initializes and returns a Vector4.
-VTKM_EXEC_CONT_EXPORT vtkm::Vector4 make_Vector4(vtkm::Scalar x,
-                                               vtkm::Scalar y,
-                                               vtkm::Scalar z,
-                                               vtkm::Scalar w)
-{
-  return vtkm::Vector4(x, y, z, w);
-}
-
-/// Initializes and returns an Id3
-VTKM_EXEC_CONT_EXPORT vtkm::Id3 make_Id3(vtkm::Id x, vtkm::Id y, vtkm::Id z)
-{
-  return vtkm::Id3(x, y, z);
-}
 
 /// Initializes and returns a Vec of length 2.
 ///

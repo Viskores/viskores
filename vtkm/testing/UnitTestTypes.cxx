@@ -176,7 +176,7 @@ void TypeTest(const vtkm::Vec<Scalar,2> &)
                    "Vectors to not multiply correctly.");
 
   Vector div = a / b;
-  VTKM_TEST_ASSERT(test_equal(div, vtkm::make_Vector2(2, 2)),
+  VTKM_TEST_ASSERT(test_equal(div, vtkm::make_Vec(2, 2)),
                    "Vectors to not divide correctly.");
 
   mult = s * a;
@@ -248,7 +248,7 @@ void TypeTest(const vtkm::Vec<Scalar,3> &)
   VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(10, 20, 30)),
                    "Vector and scalar to not multiply correctly.");
 
-  vtkm::Scalar d = vtkm::dot(a, b);
+  Scalar d = vtkm::dot(a, b);
   VTKM_TEST_ASSERT(test_equal(d, Scalar(28)), "dot(Vector3) wrong");
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
@@ -309,8 +309,8 @@ void TypeTest(const vtkm::Vec<Scalar,4> &)
   VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(10, 20, 30, 40)),
                    "Vector and scalar to not multiply correctly.");
 
-  vtkm::Scalar d = vtkm::dot(a, b);
-  VTKM_TEST_ASSERT(test_equal(d, vtkm::Scalar(60)), "dot(Vector4) wrong");
+  Scalar d = vtkm::dot(a, b);
+  VTKM_TEST_ASSERT(test_equal(d, Scalar(60)), "dot(Vector4) wrong");
 
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
@@ -396,11 +396,11 @@ void TestTypes()
   vtkm::testing::Testing::TryAllTypes(TypeTestFunctor());
 
   //try with some custom tuple types
-  TypeTestFunctor()( vtkm::Vec<vtkm::Scalar,6>() );
+  TypeTestFunctor()( vtkm::Vec<vtkm::FloatDefault,6>() );
   TypeTestFunctor()( vtkm::Vec<vtkm::Id,4>() );
   TypeTestFunctor()( vtkm::Vec<unsigned char,4>() );
   TypeTestFunctor()( vtkm::Vec<vtkm::Id,1>() );
-  TypeTestFunctor()( vtkm::Vec<vtkm::Scalar,1>() );
+  TypeTestFunctor()( vtkm::Vec<vtkm::Float64,1>() );
 }
 
 } // anonymous namespace

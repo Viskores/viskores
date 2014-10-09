@@ -36,15 +36,15 @@ namespace internal {
 class ArrayPortalUniformPointCoordinates
 {
 public:
-  typedef vtkm::Vector3 ValueType;
+  typedef vtkm::Vec<vtkm::FloatDefault,3> ValueType;
 
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalUniformPointCoordinates() : NumberOfValues(0) {  }
 
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalUniformPointCoordinates(vtkm::Extent3 extent,
-                                     vtkm::Vector3 origin,
-                                     vtkm::Vector3 spacing)
+                                     ValueType origin,
+                                     ValueType spacing)
     : Extent(extent),
       Dimensions(vtkm::ExtentPointDimensions(extent)),
       NumberOfValues(vtkm::ExtentNumberOfPoints(extent)),
@@ -78,7 +78,7 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Vector3 Get(vtkm::Id index) const {
+  ValueType Get(vtkm::Id index) const {
     return this->GetCoordinatesForTopologyIndex(
           vtkm::ExtentPointFlatIndexToTopologyIndex(index, this->Extent));
   }
@@ -87,7 +87,7 @@ public:
   vtkm::Id3 GetRange3() const { return this->Dimensions; }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Vector3 Get(vtkm::Id3 index) const {
+  ValueType Get(vtkm::Id3 index) const {
     return this->GetCoordinatesForTopologyIndex(index + this->Extent.Min);
   }
 
@@ -95,14 +95,14 @@ private:
   vtkm::Extent3 Extent;
   vtkm::Id3 Dimensions;
   vtkm::Id NumberOfValues;
-  vtkm::Vector3 Origin;
-  vtkm::Vector3 Spacing;
+  ValueType Origin;
+  ValueType Spacing;
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Vector3 GetCoordinatesForTopologyIndex(vtkm::Id3 ijk) const {
-    return vtkm::Vector3(this->Origin[0] + this->Spacing[0]*ijk[0],
-                         this->Origin[1] + this->Spacing[1]*ijk[1],
-                         this->Origin[2] + this->Spacing[2]*ijk[2]);
+  ValueType GetCoordinatesForTopologyIndex(vtkm::Id3 ijk) const {
+    return ValueType(this->Origin[0] + this->Spacing[0]*ijk[0],
+                     this->Origin[1] + this->Spacing[1]*ijk[1],
+                     this->Origin[2] + this->Spacing[2]*ijk[2]);
   }
 };
 
@@ -115,12 +115,16 @@ private:
 ///
 class ArrayHandleUniformPointCoordinates
     : public vtkm::cont::ArrayHandle<
-        vtkm::Vector3,
+        vtkm::Vec<vtkm::FloatDefault,3>,
         vtkm::cont::StorageTagImplicit<
           internal::ArrayPortalUniformPointCoordinates> >
 {
+public:
+  typedef vtkm::Vec<vtkm::FloatDefault,3> ValueType;
+
+private:
   typedef vtkm::cont::ArrayHandle<
-    vtkm::Vector3,
+    ValueType,
     vtkm::cont::StorageTagImplicit<
       internal::ArrayPortalUniformPointCoordinates> > Superclass;
 
@@ -130,8 +134,8 @@ public:
 
   VTKM_CONT_EXPORT
   ArrayHandleUniformPointCoordinates(vtkm::Extent3 extent,
-                                     vtkm::Vector3 origin,
-                                     vtkm::Vector3 spacing)
+                                     ValueType origin,
+                                     ValueType spacing)
     : Superclass(
         internal::ArrayPortalUniformPointCoordinates(extent, origin, spacing))
   {  }

@@ -127,7 +127,8 @@ struct TestFunctor
 void TestArrayHandleCounting()
 {
   TestFunctor()(vtkm::Id(0));
-  TestFunctor()(vtkm::Scalar(0));
+  TestFunctor()(vtkm::Float32(0));
+  TestFunctor()(vtkm::Float64(0));
   TestFunctor()(StringInt(0));
   TestFunctor()(StringInt(10));
 }

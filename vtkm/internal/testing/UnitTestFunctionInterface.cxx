@@ -32,13 +32,13 @@ namespace {
 typedef vtkm::Id Type1;
 const Type1 Arg1 = 1234;
 
-typedef vtkm::Scalar Type2;
+typedef vtkm::Float64 Type2;
 const Type2 Arg2 = 5678.125;
 
 typedef std::string Type3;
 const Type3 Arg3("Third argument");
 
-typedef vtkm::Vector3 Type4;
+typedef vtkm::Vec<vtkm::Float32,3> Type4;
 const Type4 Arg4(1.2f, 3.4f, 5.6f);
 
 typedef vtkm::Id3 Type5;
@@ -151,16 +151,16 @@ struct FiveArgSwizzledFunctor {
 struct LotsOfArgsFunctor {
   LotsOfArgsFunctor() : Field(0) {  }
 
-  void operator()(vtkm::Scalar arg1,
-                  vtkm::Scalar arg2,
-                  vtkm::Scalar arg3,
-                  vtkm::Scalar arg4,
-                  vtkm::Scalar arg5,
-                  vtkm::Scalar arg6,
-                  vtkm::Scalar arg7,
-                  vtkm::Scalar arg8,
-                  vtkm::Scalar arg9,
-                  vtkm::Scalar arg10) {
+  void operator()(vtkm::FloatDefault arg1,
+                  vtkm::FloatDefault arg2,
+                  vtkm::FloatDefault arg3,
+                  vtkm::FloatDefault arg4,
+                  vtkm::FloatDefault arg5,
+                  vtkm::FloatDefault arg6,
+                  vtkm::FloatDefault arg7,
+                  vtkm::FloatDefault arg8,
+                  vtkm::FloatDefault arg9,
+                  vtkm::FloatDefault arg10) {
     VTKM_TEST_ASSERT(arg1 == 1.0, "Got bad argument");
     VTKM_TEST_ASSERT(arg2 == 2.0, "Got bad argument");
     VTKM_TEST_ASSERT(arg3 == 3.0, "Got bad argument");
@@ -175,7 +175,7 @@ struct LotsOfArgsFunctor {
     this->Field +=
       arg1 + arg2 + arg3 + arg4 + arg5 + arg6 + arg7 + arg8 + arg9 + arg10;
   }
-  vtkm::Scalar Field;
+  vtkm::FloatDefault Field;
 };
 
 template<typename T>
@@ -458,37 +458,37 @@ void TestInvokeTime()
   {
     f(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f);
   }
-  vtkm::Scalar directCallTime = timer.GetElapsedTime();
+  vtkm::Float64 directCallTime = timer.GetElapsedTime();
   std::cout << "Time for direct call: " << directCallTime << " seconds"
             << std::endl;
 
-  vtkm::internal::FunctionInterface<void(vtkm::Scalar,
-                                         vtkm::Scalar,
-                                         vtkm::Scalar,
-                                         vtkm::Scalar,
-                                         vtkm::Scalar,
-                                         vtkm::Scalar,
-                                         vtkm::Scalar,
-                                         vtkm::Scalar,
-                                         vtkm::Scalar,
-                                         vtkm::Scalar)> funcInterface =
-      vtkm::internal::make_FunctionInterface<void>(vtkm::Scalar(1),
-                                                   vtkm::Scalar(2),
-                                                   vtkm::Scalar(3),
-                                                   vtkm::Scalar(4),
-                                                   vtkm::Scalar(5),
-                                                   vtkm::Scalar(6),
-                                                   vtkm::Scalar(7),
-                                                   vtkm::Scalar(8),
-                                                   vtkm::Scalar(9),
-                                                   vtkm::Scalar(10));
+  vtkm::internal::FunctionInterface<void(vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault)> funcInterface =
+      vtkm::internal::make_FunctionInterface<void>(vtkm::FloatDefault(1),
+                                                   vtkm::FloatDefault(2),
+                                                   vtkm::FloatDefault(3),
+                                                   vtkm::FloatDefault(4),
+                                                   vtkm::FloatDefault(5),
+                                                   vtkm::FloatDefault(6),
+                                                   vtkm::FloatDefault(7),
+                                                   vtkm::FloatDefault(8),
+                                                   vtkm::FloatDefault(9),
+                                                   vtkm::FloatDefault(10));
 
   timer.Reset();
   for (vtkm::Id trial = 0; trial < NUM_TRIALS; trial++)
   {
     funcInterface.InvokeCont(f);
   }
-  vtkm::Scalar invokeCallTime = timer.GetElapsedTime();
+  vtkm::Float64 invokeCallTime = timer.GetElapsedTime();
   std::cout << "Time for invoking function interface: " << invokeCallTime
             << " seconds" << std::endl;
   std::cout << "Pointless result (makeing sure compiler computes it) "

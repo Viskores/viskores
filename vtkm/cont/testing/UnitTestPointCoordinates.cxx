@@ -42,8 +42,10 @@
 namespace {
 
 const vtkm::Extent3 EXTENT = vtkm::Extent3(vtkm::Id3(0,0,0), vtkm::Id3(9,9,9));
-const vtkm::Vector3 ORIGIN = vtkm::Vector3(0, 0, 0);
-const vtkm::Vector3 SPACING = vtkm::Vector3(1, 1, 1);
+const vtkm::Vec<vtkm::FloatDefault,3> ORIGIN =
+    vtkm::Vec<vtkm::FloatDefault,3>(0, 0, 0);
+const vtkm::Vec<vtkm::FloatDefault,3> SPACING =
+    vtkm::Vec<vtkm::FloatDefault,3>(1, 1, 1);
 
 const vtkm::Id3 DIMENSION = vtkm::ExtentPointDimensions(EXTENT);
 const vtkm::Id ARRAY_SIZE = DIMENSION[0]*DIMENSION[1]*DIMENSION[2];
@@ -52,12 +54,10 @@ typedef vtkm::cont::StorageTagBasic StorageTag;
 
 struct StorageListTag : vtkm::cont::StorageListTagBasic {  };
 
-vtkm::Vector3 TestValue(vtkm::Id index)
+vtkm::Vec<vtkm::FloatDefault,3> TestValue(vtkm::Id index)
 {
   vtkm::Id3 index3d = vtkm::ExtentPointFlatIndexToTopologyIndex(index, EXTENT);
-  return vtkm::Vector3(vtkm::Scalar(index3d[0]),
-                       vtkm::Scalar(index3d[1]),
-                       vtkm::Scalar(index3d[2]));
+  return vtkm::Vec<vtkm::FloatDefault,3>(index3d[0], index3d[1], index3d[2]);
 }
 
 struct CheckArray
@@ -65,6 +65,8 @@ struct CheckArray
   template<typename ArrayType>
   void operator()(const ArrayType &array) const
   {
+    typedef typename ArrayType::ValueType ValueType;
+
     std::cout << "    In CastAndCall functor" << std::endl;
     typename ArrayType::PortalConstControl portal =
         array.GetPortalConstControl();
@@ -74,38 +76,42 @@ struct CheckArray
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      const vtkm::Vector3 receivedValue = portal.Get(index);
-      const vtkm::Vector3 expectedValue = TestValue(index);
+      const ValueType receivedValue = portal.Get(index);
+      const ValueType expectedValue = TestValue(index);
       VTKM_TEST_ASSERT(receivedValue == expectedValue,
                        "Got bad value in array.");
     }
   }
 };
 
-void TestPointCoordinatesArray()
+struct TestPointCoordinatesArray
 {
-  std::cout << "Testing PointCoordinatesArray" << std::endl;
-
-  std::cout << "  Creating buffer of data values" << std::endl;
-  std::vector<vtkm::Vector3> buffer(ARRAY_SIZE);
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  template<typename Vector3>
+  void operator()(Vector3) const
   {
-    buffer[index] = TestValue(index);
+    std::cout << "Testing PointCoordinatesArray" << std::endl;
+
+    std::cout << "  Creating buffer of data values" << std::endl;
+    std::vector<Vector3> buffer(ARRAY_SIZE);
+    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+    {
+      buffer[index] = TestValue(index);
+    }
+
+    std::cout << "  Creating and checking array handle" << std::endl;
+    vtkm::cont::ArrayHandle<Vector3,StorageTag> array =
+        vtkm::cont::make_ArrayHandle(buffer, StorageTag());
+    CheckArray()(array);
+
+    std::cout << "  Creating and checking PointCoordinatesArray" << std::endl;
+    vtkm::cont::PointCoordinatesArray pointCoordinates =
+        vtkm::cont::PointCoordinatesArray(array);
+    pointCoordinates.CastAndCall(
+          CheckArray(),
+          vtkm::ListTagEmpty(), // Internally sets to Vector3
+          vtkm::cont::StorageListTagBasic());
   }
-
-  std::cout << "  Creating and checking array handle" << std::endl;
-  vtkm::cont::ArrayHandle<vtkm::Vector3,StorageTag> array =
-      vtkm::cont::make_ArrayHandle(buffer, StorageTag());
-  CheckArray()(array);
-
-  std::cout << "  Creating and checking PointCoordinatesArray" << std::endl;
-  vtkm::cont::PointCoordinatesArray pointCoordinates =
-      vtkm::cont::PointCoordinatesArray(array);
-  pointCoordinates.CastAndCall(
-        CheckArray(),
-        vtkm::ListTagEmpty(), // Internally sets to Vector3
-        vtkm::cont::StorageListTagBasic());
-}
+};
 
 void TestPointCoordinatesUniform()
 {
@@ -121,7 +127,8 @@ void TestPointCoordinatesUniform()
 
 void PointCoordinatesTests()
 {
-  TestPointCoordinatesArray();
+  vtkm::testing::Testing::TryTypes(TestPointCoordinatesArray(),
+                                   vtkm::TypeListTagVec3());
   TestPointCoordinatesUniform();
 }
 

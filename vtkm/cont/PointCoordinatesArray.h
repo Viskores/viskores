@@ -52,7 +52,13 @@ public:
   template<typename Storage>
   VTKM_CONT_EXPORT
   PointCoordinatesArray(
-      const vtkm::cont::ArrayHandle<vtkm::Vector3,Storage> &array)
+      const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3>,Storage> &array)
+    : Array(array) {  }
+
+  template<typename Storage>
+  VTKM_CONT_EXPORT
+  PointCoordinatesArray(
+      const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64,3>,Storage> &array)
     : Array(array) {  }
 
   /// In this \c CastAndCall, \c TypeList is ignored. All point coordinates are

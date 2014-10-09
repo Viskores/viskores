@@ -38,7 +38,7 @@ void Time()
   Sleep(1000);
 #endif
 
-  vtkm::Scalar elapsedTime = timer.GetElapsedTime();
+  vtkm::Float64 elapsedTime = timer.GetElapsedTime();
 
   std::cout << "Elapsed time: " << elapsedTime << std::endl;
 

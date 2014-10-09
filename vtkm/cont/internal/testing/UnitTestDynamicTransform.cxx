@@ -40,7 +40,7 @@ static int g_FunctionCalls;
 struct TypeListTagString : vtkm::ListTagBase<std::string> { };
 
 struct ScalarFunctor {
-  void operator()(vtkm::Scalar) const {
+  void operator()(vtkm::FloatDefault) const {
     std::cout << "    In Scalar functor." << std::endl;
     g_FunctionCalls++;
   }
@@ -51,7 +51,7 @@ struct ArrayHandleScalarFunctor {
   void operator()(const vtkm::cont::ArrayHandle<T> &) const {
     VTKM_TEST_FAIL("Called wrong form of functor operator.");
   }
-  void operator()(const vtkm::cont::ArrayHandle<vtkm::Scalar> &) const {
+  void operator()(const vtkm::cont::ArrayHandle<vtkm::FloatDefault> &) const {
     std::cout << "    In ArrayHandle<Scalar> functor." << std::endl;
     g_FunctionCalls++;
   }
@@ -71,8 +71,8 @@ struct FunctionInterfaceFunctor {
   }
   void operator()(
       const vtkm::internal::FunctionInterface<
-        void(vtkm::cont::ArrayHandle<vtkm::Scalar>,
-             vtkm::cont::ArrayHandle<vtkm::Scalar>,
+        void(vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+             vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
              vtkm::cont::ArrayHandle<std::string>,
              vtkm::cont::ArrayHandleUniformPointCoordinates)> &) const {
     std::cout << "    In FunctionInterface<...> functor." << std::endl;
@@ -87,10 +87,10 @@ void TestBasicTransform()
   vtkm::cont::internal::DynamicTransform transform;
 
   std::cout << "  Trying with simple scalar." << std::endl;
-  TRY_TRANSFORM(transform(vtkm::Scalar(5), ScalarFunctor()));
+  TRY_TRANSFORM(transform(vtkm::FloatDefault(5), ScalarFunctor()));
 
   std::cout << "  Trying with basic scalar array." << std::endl;
-  vtkm::cont::ArrayHandle<vtkm::Scalar> concreteArray;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> concreteArray;
   TRY_TRANSFORM(transform(concreteArray, ArrayHandleScalarFunctor()));
 
   std::cout << "  Trying scalar dynamic array." << std::endl;
@@ -107,7 +107,7 @@ void TestFunctionTransform()
 {
   std::cout << "Testing transforms in FunctionInterface." << std::endl;
 
-  vtkm::cont::ArrayHandle<vtkm::Scalar> scalarArray;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> scalarArray;
   vtkm::cont::ArrayHandle<std::string> stringArray;
   vtkm::cont::ArrayHandleUniformPointCoordinates pointCoordinatesArray;
 
