@@ -20,9 +20,12 @@
 #ifndef vtk_m_testing_Testing_h
 #define vtk_m_testing_Testing_h
 
+#include <vtkm/TypeListTag.h>
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
-#include <vtkm/VectorTraits.h>
+#include <vtkm/VecTraits.h>
+
+#include <boost/static_assert.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -60,6 +63,43 @@
 
 namespace vtkm {
 namespace testing {
+
+// If you get an error about this class definition being incomplete, it means
+// that you tried to get the name of a type that is not specified. You can
+// either not use that type, not try to get the string name, or add it to the
+// list.
+template<typename T>
+struct TypeName;
+
+#define VTK_M_BASIC_TYPE(type) \
+  template<> struct TypeName<type> { \
+    static std::string Name() { return #type; } \
+  } \
+
+VTK_M_BASIC_TYPE(vtkm::Float32);
+VTK_M_BASIC_TYPE(vtkm::Float64);
+VTK_M_BASIC_TYPE(vtkm::Int8);
+VTK_M_BASIC_TYPE(vtkm::UInt8);
+VTK_M_BASIC_TYPE(vtkm::Int16);
+VTK_M_BASIC_TYPE(vtkm::UInt16);
+VTK_M_BASIC_TYPE(vtkm::Int32);
+VTK_M_BASIC_TYPE(vtkm::UInt32);
+VTK_M_BASIC_TYPE(vtkm::Int64);
+VTK_M_BASIC_TYPE(vtkm::UInt64);
+
+template<typename T, vtkm::IdComponent Size>
+struct TypeName<vtkm::Vec<T,Size> >
+{
+  static std::string Name() {
+    std::stringstream stream;
+    stream << "vtkm::Vec< "
+           << TypeName<T>::Name()
+           << ", "
+           << Size
+           << " >";
+    return stream.str();
+  }
+};
 
 struct Testing
 {
@@ -163,130 +203,42 @@ public:
   }
 #endif
 
-  /// Check functors to be used with the TryAllTypes method.
-  ///
-  struct TypeCheckAlwaysTrue
+  template<typename FunctionType>
+  struct InternalPrintTypeAndInvoke
   {
-    template <typename T, class Functor>
-    void operator()(T t, Functor function) const { function(t); }
-  };
-  struct TypeCheckInteger
-  {
-    template <typename T, class Functor>
-    void operator()(T t, Functor function) const
-    {
-      this->DoInteger(typename vtkm::TypeTraits<T>::NumericTag(), t, function);
-    }
-  private:
-    template <class Tag, typename T, class Functor>
-    void DoInteger(Tag, T, const Functor&) const {  }
-    template <typename T, class Functor>
-    void DoInteger(vtkm::TypeTraitsIntegerTag, T t, Functor function) const
-    {
-      function(t);
-    }
-  };
-  struct TypeCheckReal
-  {
-    template <typename T, class Functor>
-    void operator()(T t, Functor function) const
-    {
-      this->DoReal(typename vtkm::TypeTraits<T>::NumericTag(), t, function);
-    }
-  private:
-    template <class Tag, typename T, class Functor>
-    void DoReal(Tag, T, const Functor&) const {  }
-    template <typename T, class Functor>
-    void DoReal(vtkm::TypeTraitsRealTag, T t, Functor function) const
-    {
-      function(t);
-    }
-  };
-  struct TypeCheckScalar
-  {
-    template <typename T, class Functor>
-    void operator()(T t, Functor func) const
-    {
-      this->DoScalar(typename vtkm::TypeTraits<T>::DimensionalityTag(), t, func);
-    }
-  private:
-    template <class Tag, typename T, class Functor>
-    void DoScalar(Tag, const T &, const Functor &) const {  }
-    template <typename T, class Functor>
-    void DoScalar(vtkm::TypeTraitsScalarTag, T t, Functor function) const
-    {
-      function(t);
-    }
-  };
-  struct TypeCheckVector
-  {
-    template <typename T, class Functor>
-    void operator()(T t, Functor func) const
-    {
-      this->DoVector(typename vtkm::TypeTraits<T>::DimensionalityTag(), t, func);
-    }
-  private:
-    template <class Tag, typename T, class Functor>
-    void DoVector(Tag, const T &, const Functor &) const {  }
-    template <typename T, class Functor>
-    void DoVector(vtkm::TypeTraitsVectorTag, T t, Functor function) const
-    {
-      function(t);
-    }
-  };
+    InternalPrintTypeAndInvoke(FunctionType function) : Function(function) {  }
 
-  template<class FunctionType>
-  struct InternalPrintOnInvoke
-  {
-    InternalPrintOnInvoke(FunctionType function, std::string toprint)
-      : Function(function), ToPrint(toprint) { }
-    template <typename T> void operator()(T t)
+    template<typename T>
+    void operator()(T t) const
     {
-      std::cout << this->ToPrint << std::endl;
+      std::cout << "*** "
+                << vtkm::testing::TypeName<T>::Name()
+                << " ***************" << std::endl;
       this->Function(t);
     }
+
   private:
     FunctionType Function;
-    std::string ToPrint;
   };
 
-  /// Runs templated \p function on all the basic types defined in VTKm. This is
-  /// helpful to test templated functions that should work on all types. If the
-  /// function is supposed to work on some subset of types, then \p check can
-  /// be set to restrict the types used. This Testing class contains several
-  /// helpful check functors.
+  /// Runs template \p function on all the types in the given list.
   ///
-  template<class FunctionType, class CheckType>
-  static void TryAllTypes(FunctionType function, CheckType check)
+  template<class FunctionType, class TypeList>
+  static void TryTypes(const FunctionType &function, TypeList)
   {
-    vtkm::Id id = 0;
-    check(id, InternalPrintOnInvoke<FunctionType>(
-            function, "*** vtkm::Id ***************"));
-
-    vtkm::Id3 id3 = vtkm::make_Id3(0, 0, 0);
-    check(id3, InternalPrintOnInvoke<FunctionType>(
-            function, "*** vtkm::Id3 **************"));
-
-    vtkm::Scalar scalar = 0.0;
-    check(scalar, InternalPrintOnInvoke<FunctionType>(
-            function, "*** vtkm::Scalar ***********"));
-
-    vtkm::Vector2 vector2 = vtkm::make_Vector2(0.0, 0.0);
-    check(vector2, InternalPrintOnInvoke<FunctionType>(
-            function, "*** vtkm::Vector2 **********"));
-
-    vtkm::Vector3 vector3 = vtkm::make_Vector3(0.0, 0.0, 0.0);
-    check(vector3, InternalPrintOnInvoke<FunctionType>(
-            function, "*** vtkm::Vector3 **********"));
-
-    vtkm::Vector4 vector4 = vtkm::make_Vector4(0.0, 0.0, 0.0, 0.0);
-    check(vector4, InternalPrintOnInvoke<FunctionType>(
-            function, "*** vtkm::Vector4 **********"));
+    vtkm::ListForEach(InternalPrintTypeAndInvoke<FunctionType>(function),
+                      TypeList());
   }
+
+  /// Runs templated \p function on all the basic types defined in VTK-m. This
+  /// is helpful to test templated functions that should work on all types. If
+  /// the function is supposed to work on some subset of types, then use
+  /// \c TryTypes to restrict the call to some other list of types.
+  ///
   template<class FunctionType>
-  static void TryAllTypes(FunctionType function)
+  static void TryAllTypes(const FunctionType &function)
   {
-    TryAllTypes(function, TypeCheckAlwaysTrue());
+    TryTypes(function, vtkm::TypeListTagAll());
   }
 
 };
@@ -297,24 +249,31 @@ public:
 /// Helper function to test two quanitites for equality accounting for slight
 /// variance due to floating point numerical inaccuracies.
 ///
-template<typename VectorType>
+template<typename VectorType1, typename VectorType2>
 VTKM_EXEC_CONT_EXPORT
-bool test_equal(VectorType vector1,
-                VectorType vector2,
-                vtkm::Scalar tolerance = 0.0001)
+bool test_equal(VectorType1 vector1,
+                VectorType2 vector2,
+                vtkm::Float64 tolerance = 0.0001)
 {
-  typedef typename vtkm::VectorTraits<VectorType> Traits;
-  for (int component = 0; component < Traits::NUM_COMPONENTS; component++)
+  typedef typename vtkm::VecTraits<VectorType1> Traits;
+  BOOST_STATIC_ASSERT(
+        Traits::NUM_COMPONENTS == vtkm::VecTraits<VectorType2>::NUM_COMPONENTS);
+
+  for (vtkm::IdComponent component = 0;
+       component < Traits::NUM_COMPONENTS;
+       component++)
   {
-    vtkm::Scalar value1 = vtkm::Scalar(Traits::GetComponent(vector1, component));
-    vtkm::Scalar value2 = vtkm::Scalar(Traits::GetComponent(vector2, component));
+    vtkm::Float64 value1 =
+        vtkm::Float64(Traits::GetComponent(vector1, component));
+    vtkm::Float64 value2 =
+        vtkm::Float64(Traits::GetComponent(vector2, component));
     if ((fabs(value1) < 2*tolerance) && (fabs(value2) < 2*tolerance))
     {
       continue;
     }
-    vtkm::Scalar ratio = value1/value2;
-    if ((ratio > vtkm::Scalar(1.0) - tolerance)
-        && (ratio < vtkm::Scalar(1.0) + tolerance))
+    vtkm::Float64 ratio = value1/value2;
+    if ((ratio > vtkm::Float64(1.0) - tolerance)
+        && (ratio < vtkm::Float64(1.0) + tolerance))
     {
       // This component is OK. The condition is checked in this way to
       // correctly handle non-finites that fail all comparisons. Thus, if a
@@ -332,7 +291,7 @@ bool test_equal(VectorType vector1,
 /// Special implementation of test_equal for strings, which don't fit a model
 /// of fixed length vectors of numbers.
 ///
-VTKM_EXEC_CONT_EXPORT
+VTKM_CONT_EXPORT
 bool test_equal(const std::string &string1, const std::string &string2)
 {
   return string1 == string2;
@@ -340,16 +299,16 @@ bool test_equal(const std::string &string1, const std::string &string2)
 
 /// Helper function for printing out vectors during testing.
 ///
-template<typename T, int Size>
+template<typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT_EXPORT
-std::ostream &operator<<(std::ostream &stream, const vtkm::Tuple<T,Size> &tuple)
+std::ostream &operator<<(std::ostream &stream, const vtkm::Vec<T,Size> &vec)
 {
   stream << "[";
-  for (int component = 0; component < Size-1; component++)
+  for (vtkm::IdComponent component = 0; component < Size-1; component++)
   {
-    stream << tuple[component] << ",";
+    stream << vec[component] << ",";
   }
-  return stream << tuple[Size-1] << "]";
+  return stream << vec[Size-1] << "]";
 }
 
 #endif //vtk_m_testing_Testing_h

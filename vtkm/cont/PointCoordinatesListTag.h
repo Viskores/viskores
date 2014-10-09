@@ -41,7 +41,7 @@ struct PointCoordinatesListTagUniform :
 /// PointCoordinatesArray.
 ///
 struct PointCoordinatesListTagCommon
-    : vtkm::ListTagBase2<
+    : vtkm::ListTagBase<
         vtkm::cont::PointCoordinatesArray,
         vtkm::cont::PointCoordinatesUniform>
 {  };

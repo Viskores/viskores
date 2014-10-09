@@ -37,7 +37,7 @@ struct TypeTraitsRealTag {};
 struct TypeTraitsIntegerTag {};
 
 /// Tag used to identify 0 dimensional types (scalars). Scalars can also be
-/// treated like vectors when used with VectorTraits. A TypeTraits class will
+/// treated like vectors when used with VecTraits. A TypeTraits class will
 /// typedef this class to DimensionalityTag.
 ///
 struct TypeTraitsScalarTag {};
@@ -97,48 +97,26 @@ struct TypeTraits<const T> : TypeTraits<T>
 /// Traits for basic C++ types.
 ///
 
-VTKM_BASIC_REAL_TYPE(float);
-VTKM_BASIC_REAL_TYPE(double);
-VTKM_BASIC_INTEGER_TYPE(char);
-VTKM_BASIC_INTEGER_TYPE(unsigned char);
-VTKM_BASIC_INTEGER_TYPE(short);
-VTKM_BASIC_INTEGER_TYPE(unsigned short);
-VTKM_BASIC_INTEGER_TYPE(int);
-VTKM_BASIC_INTEGER_TYPE(unsigned int);
-#if VTKM_SIZE_LONG == 8
-VTKM_BASIC_INTEGER_TYPE(long);
-VTKM_BASIC_INTEGER_TYPE(unsigned long);
-#elif VTKM_SIZE_LONG_LONG == 8
-VTKM_BASIC_INTEGER_TYPE(long long);
-VTKM_BASIC_INTEGER_TYPE(unsigned long long);
-#else
-#error No implementation for 64-bit integer traits.
-#endif
+VTKM_BASIC_REAL_TYPE(vtkm::Float32);
+VTKM_BASIC_REAL_TYPE(vtkm::Float64);
+VTKM_BASIC_INTEGER_TYPE(vtkm::Int8);
+VTKM_BASIC_INTEGER_TYPE(vtkm::UInt8);
+VTKM_BASIC_INTEGER_TYPE(vtkm::Int16);
+VTKM_BASIC_INTEGER_TYPE(vtkm::UInt16);
+VTKM_BASIC_INTEGER_TYPE(vtkm::Int32);
+VTKM_BASIC_INTEGER_TYPE(vtkm::UInt32);
+VTKM_BASIC_INTEGER_TYPE(vtkm::Int64);
+VTKM_BASIC_INTEGER_TYPE(vtkm::UInt64);
 
 #undef VTKM_BASIC_REAL_TYPE
 #undef VTKM_BASIC_INTEGER_TYPE
 
-#define VTKM_VECTOR_TYPE(T, NTag) \
-  template<> struct TypeTraits<T> { \
-    typedef NTag NumericTag; \
-    typedef TypeTraitsVectorTag DimensionalityTag; \
-  }
-
-/// Traits for vector types.
+/// Traits for Vec types.
 ///
-
-VTKM_VECTOR_TYPE(vtkm::Id3, TypeTraitsIntegerTag);
-VTKM_VECTOR_TYPE(vtkm::Vector2, TypeTraitsRealTag);
-VTKM_VECTOR_TYPE(vtkm::Vector3, TypeTraitsRealTag);
-VTKM_VECTOR_TYPE(vtkm::Vector4, TypeTraitsRealTag);
-
-#undef VTKM_VECTOR_TYPE
-
-/// Traits for tuples.
-///
-template<typename T, int Size> struct TypeTraits<vtkm::Tuple<T, Size> >
+template<typename T, vtkm::IdComponent Size>
+struct TypeTraits<vtkm::Vec<T,Size> >
 {
-  typedef typename TypeTraits<T>::NumericTag NumericTag;
+  typedef typename vtkm::TypeTraits<T>::NumericTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;
 };
 

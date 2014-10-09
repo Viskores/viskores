@@ -32,18 +32,18 @@
 namespace {
 
 const vtkm::Extent3 EXTENT = vtkm::Extent3(vtkm::Id3(0,0,0), vtkm::Id3(9,9,9));
-const vtkm::Vector3 ORIGIN = vtkm::Vector3(0, 0, 0);
-const vtkm::Vector3 SPACING = vtkm::Vector3(1, 1, 1);
+const vtkm::Vec<vtkm::FloatDefault,3> ORIGIN =
+    vtkm::Vec<vtkm::FloatDefault,3>(0, 0, 0);
+const vtkm::Vec<vtkm::FloatDefault,3> SPACING =
+    vtkm::Vec<vtkm::FloatDefault,3>(1, 1, 1);
 
 const vtkm::Id3 DIMENSION = vtkm::ExtentPointDimensions(EXTENT);
 const vtkm::Id ARRAY_SIZE = DIMENSION[0]*DIMENSION[1]*DIMENSION[2];
 
-vtkm::Vector3 TestValue(vtkm::Id index)
+vtkm::Vec<vtkm::FloatDefault,3> TestValue(vtkm::Id index)
 {
   vtkm::Id3 index3d = vtkm::ExtentPointFlatIndexToTopologyIndex(index, EXTENT);
-  return vtkm::Vector3(vtkm::Scalar(index3d[0]),
-                       vtkm::Scalar(index3d[1]),
-                       vtkm::Scalar(index3d[2]));
+  return vtkm::Vec<vtkm::FloatDefault,3>(index3d[0], index3d[1], index3d[2]);
 }
 
 int g_CheckArrayInvocations;
@@ -54,13 +54,14 @@ struct CheckArray
     g_CheckArrayInvocations = 0;
   }
 
-  template<typename Storage>
-  void operator()(
-      const vtkm::cont::ArrayHandle<vtkm::Vector3,Storage> &array) const
+  template<typename ArrayType>
+  void operator()(const ArrayType &array) const
   {
+    typedef typename ArrayType::ValueType ValueType;
+
     std::cout << "    In CastAndCall functor" << std::endl;
     g_CheckArrayInvocations++;
-    typename vtkm::cont::ArrayHandle<vtkm::Vector3,Storage>::PortalConstControl portal =
+    typename ArrayType::PortalConstControl portal =
         array.GetPortalConstControl();
 
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE,
@@ -68,8 +69,8 @@ struct CheckArray
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      const vtkm::Vector3 receivedValue = portal.Get(index);
-      const vtkm::Vector3 expectedValue = TestValue(index);
+      const ValueType receivedValue = portal.Get(index);
+      const ValueType expectedValue = TestValue(index);
       VTKM_TEST_ASSERT(receivedValue == expectedValue,
                        "Got bad value in array.");
     }
@@ -78,7 +79,7 @@ struct CheckArray
 
 struct UnusualPortal
 {
-  typedef vtkm::Vector3 ValueType;
+  typedef vtkm::Vec<vtkm::FloatDefault,3> ValueType;
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
@@ -88,9 +89,9 @@ struct UnusualPortal
 };
 
 class ArrayHandleWithUnusualStorage
-    : public vtkm::cont::ArrayHandle<vtkm::Vector3, vtkm::cont::StorageTagImplicit<UnusualPortal> >
+    : public vtkm::cont::ArrayHandle<UnusualPortal::ValueType, vtkm::cont::StorageTagImplicit<UnusualPortal> >
 {
-  typedef vtkm::cont::ArrayHandle<vtkm::Vector3, vtkm::cont::StorageTagImplicit<UnusualPortal> >
+  typedef vtkm::cont::ArrayHandle<UnusualPortal::ValueType, vtkm::cont::StorageTagImplicit<UnusualPortal> >
       Superclass;
 public:
   VTKM_CONT_EXPORT
@@ -114,25 +115,29 @@ struct PointCoordinatesUnusual : vtkm::cont::internal::PointCoordinatesBase
 struct PointCoordinatesListUnusual
     : vtkm::ListTagBase<PointCoordinatesUnusual> {  };
 
-void TryDefaultArray()
+struct TryDefaultArray
 {
-  std::cout << "Trying a basic point coordinates array with a default storage."
-            << std::endl;
-  std::vector<vtkm::Vector3> buffer(ARRAY_SIZE);
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  template<typename Vector3>
+  void operator()(Vector3) const
   {
-    buffer[index] = TestValue(index);
+    std::cout << "Trying basic point coordinates array with a default storage."
+              << std::endl;
+    std::vector<Vector3> buffer(ARRAY_SIZE);
+    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+    {
+      buffer[index] = TestValue(index);
+    }
+
+    vtkm::cont::DynamicPointCoordinates pointCoordinates =
+        vtkm::cont::DynamicPointCoordinates(
+          vtkm::cont::make_ArrayHandle(buffer));
+
+    pointCoordinates.CastAndCall(CheckArray());
+
+    VTKM_TEST_ASSERT(g_CheckArrayInvocations == 1,
+                     "CastAndCall functor not called expected number of times.");
   }
-
-  vtkm::cont::DynamicPointCoordinates pointCoordinates =
-      vtkm::cont::DynamicPointCoordinates(
-        vtkm::cont::make_ArrayHandle(buffer));
-
-  pointCoordinates.CastAndCall(CheckArray());
-
-  VTKM_TEST_ASSERT(g_CheckArrayInvocations == 1,
-                   "CastAndCall functor not called expected number of times.");
-}
+};
 
 void TryUnusualStorage()
 {
@@ -206,7 +211,7 @@ void TryUnusualPointCoordinates()
 
 void DynamicPointCoordiantesTest()
 {
-  TryDefaultArray();
+  vtkm::testing::Testing::TryTypes(TryDefaultArray(), vtkm::TypeListTagVec3());
   TryUnusualStorage();
   TryUniformPointCoordinates();
   TryUnusualPointCoordinates();

@@ -42,9 +42,9 @@ void GoodAssert()
 
 void TestTestEqual()
 {
-  VTKM_TEST_ASSERT(test_equal(vtkm::Scalar(2.0), vtkm::Scalar(1.9999999)),
+  VTKM_TEST_ASSERT(test_equal(2.0, 1.9999999),
                    "These should be close enough.");
-  VTKM_TEST_ASSERT(!test_equal(vtkm::Scalar(2.0), vtkm::Scalar(1.999)),
+  VTKM_TEST_ASSERT(!test_equal(2.0, 1.999),
                    "These should not be close enough.");
 }
 

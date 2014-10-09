@@ -21,7 +21,7 @@
 #define VTKM_STORAGE VTKM_STORAGE_ERROR
 
 #include <vtkm/Types.h>
-#include <vtkm/VectorTraits.h>
+#include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageImplicit.h>
@@ -128,7 +128,7 @@ struct TemplatedTests
 struct TestFunctor
 {
   template <typename T>
-  void operator()(T)
+  void operator()(T) const
   {
     TemplatedTests<T> tests;
     tests();

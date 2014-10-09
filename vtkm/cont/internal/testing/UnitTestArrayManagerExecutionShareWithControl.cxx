@@ -71,7 +71,7 @@ struct TemplatedTests
 
   void InputData()
   {
-    const ValueType INPUT_VALUE(4145);
+    const ValueType INPUT_VALUE(45);
 
     StorageType controlArray;
     controlArray.Allocate(ARRAY_SIZE);
@@ -94,7 +94,7 @@ struct TemplatedTests
 
   void InPlaceData()
   {
-    const ValueType INPUT_VALUE(2350);
+    const ValueType INPUT_VALUE(50);
 
     StorageType controlArray;
     controlArray.Allocate(ARRAY_SIZE);
@@ -121,7 +121,7 @@ struct TemplatedTests
 
   void OutputData()
   {
-    const ValueType OUTPUT_VALUE(6712);
+    const ValueType OUTPUT_VALUE(12);
 
     StorageType controlArray;
 
@@ -154,7 +154,7 @@ struct TemplatedTests
 struct TestFunctor
 {
   template <typename T>
-  void operator()(T)
+  void operator()(T) const
   {
     TemplatedTests<T> tests;
     tests();

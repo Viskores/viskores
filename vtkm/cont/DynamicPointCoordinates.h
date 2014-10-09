@@ -91,7 +91,17 @@ public:
   template<typename Storage>
   VTKM_CONT_EXPORT
   DynamicPointCoordinates(
-      const vtkm::cont::ArrayHandle<vtkm::Vector3,Storage> &array)
+      const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3>,Storage> &array)
+    : PointCoordinatesContainer(new vtkm::cont::PointCoordinatesArray(array))
+  {  }
+
+  /// Special constructor for the common case of using a basic array to store
+  /// point coordinates.
+  ///
+  template<typename Storage>
+  VTKM_CONT_EXPORT
+  DynamicPointCoordinates(
+      const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64,3>,Storage> &array)
     : PointCoordinatesContainer(new vtkm::cont::PointCoordinatesArray(array))
   {  }
 

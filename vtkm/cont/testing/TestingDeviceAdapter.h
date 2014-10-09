@@ -64,9 +64,9 @@ struct SortLess
   VTKM_EXEC_CONT_EXPORT bool compare(const T& a,const T& b,
                                      vtkm::TypeTraitsVectorTag) const
   {
-    enum {SIZE = vtkm::VectorTraits<T>::NUM_COMPONENTS};
+    const vtkm::IdComponent SIZE = vtkm::VecTraits<T>::NUM_COMPONENTS;
     bool valid = true;
-    for(unsigned int i=0; i < SIZE && valid; ++i)
+    for(vtkm::IdComponent i=0; (i < SIZE) && valid; ++i)
     {
       valid = a[i] < b[i];
     }
@@ -92,9 +92,9 @@ struct SortGreater
   VTKM_EXEC_CONT_EXPORT bool compare(const T& a,const T& b,
                                      vtkm::TypeTraitsVectorTag) const
   {
-    enum {SIZE = vtkm::VectorTraits<T>::NUM_COMPONENTS};
+    const vtkm::IdComponent SIZE = vtkm::VecTraits<T>::NUM_COMPONENTS;
     bool valid = true;
-    for(unsigned int i=0; i < SIZE && valid; ++i)
+    for(vtkm::IdComponent i=0; (i < SIZE) && valid; ++i)
     {
       valid = a[i] > b[i];
     }
@@ -120,7 +120,7 @@ private:
   typedef vtkm::cont::ArrayHandle<vtkm::Id, StorageTag>
         IdArrayHandle;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Scalar,StorageTag>
+  typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault,StorageTag>
       ScalarArrayHandle;
 
   typedef vtkm::cont::internal::ArrayManagerExecution<
@@ -134,8 +134,8 @@ private:
   typedef typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>
       ::PortalConst IdPortalConstType;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Vector3,StorageTag>
-      Vector3ArrayHandle;
+  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault,3>,StorageTag>
+      Vec3ArrayHandle;
 
   typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>
       Algorithm;
@@ -357,26 +357,26 @@ private:
     std::cout << "Testing ArrayManagerExecution" << std::endl;
 
     typedef vtkm::cont::internal::ArrayManagerExecution<
-        vtkm::Scalar,StorageTagBasic,DeviceAdapterTag>
+        vtkm::FloatDefault,StorageTagBasic,DeviceAdapterTag>
         ArrayManagerExecution;
 
     // Create original input array.
-    vtkm::Scalar inputArray[ARRAY_SIZE*2];
+    vtkm::FloatDefault inputArray[ARRAY_SIZE*2];
     for (vtkm::Id index = 0; index < ARRAY_SIZE*2; index++)
     {
-      inputArray[index] = vtkm::Scalar(index);
+      inputArray[index] = vtkm::FloatDefault(index);
     }
-    ::vtkm::cont::internal::ArrayPortalFromIterators<vtkm::Scalar *>
+    ::vtkm::cont::internal::ArrayPortalFromIterators<vtkm::FloatDefault *>
         inputPortal(inputArray, inputArray+ARRAY_SIZE*2);
     ArrayManagerExecution inputManager;
     inputManager.LoadDataForInput(
-          ::vtkm::cont::internal::ArrayPortalFromIterators<const vtkm::Scalar*>(inputPortal));
+          ::vtkm::cont::internal::ArrayPortalFromIterators<const vtkm::FloatDefault*>(inputPortal));
 
     // Change size.
     inputManager.Shrink(ARRAY_SIZE);
 
     // Copy array back.
-    vtkm::Scalar outputArray[ARRAY_SIZE];
+    vtkm::FloatDefault outputArray[ARRAY_SIZE];
     vtkm::cont::ArrayPortalToIterators<
         typename ArrayManagerExecution::PortalConstType>
       iterators(inputManager.GetPortalConst());
@@ -437,7 +437,7 @@ private:
     Sleep(1000);
 #endif
 
-    vtkm::Scalar elapsedTime = timer.GetElapsedTime();
+    vtkm::FloatDefault elapsedTime = timer.GetElapsedTime();
 
     std::cout << "Elapsed time: " << elapsedTime << std::endl;
 
@@ -562,7 +562,7 @@ private:
   //   VTKM_TEST_ASSERT(singleElement[0] == 1234,
   //                   "output of single scheduling is incorrect");
 
-  //   std::vector<vtkm::Scalar> field(ARRAY_SIZE);
+  //   std::vector<vtkm::FloatDefault> field(ARRAY_SIZE);
   //   for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
   //     {
   //     field[i]=i;
@@ -580,8 +580,8 @@ private:
 
   //   for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
   //     {
-  //     vtkm::Scalar squareValue = multPortal.Get(i);
-  //     vtkm::Scalar squareTrue = field[i]*field[i];
+  //     vtkm::FloatDefault squareValue = multPortal.Get(i);
+  //     vtkm::FloatDefault squareTrue = field[i]*field[i];
   //     VTKM_TEST_ASSERT(test_equal(squareValue, squareTrue),
   //                     "Got bad multiply result");
   //     }
@@ -592,15 +592,15 @@ private:
 
   //   for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
   //     {
-  //     vtkm::Scalar squareValue = multPortal.Get(i);
-  //     vtkm::Scalar squareTrue = field[i]*4.0f;
+  //     vtkm::FloatDefault squareValue = multPortal.Get(i);
+  //     vtkm::FloatDefault squareTrue = field[i]*4.0f;
   //     VTKM_TEST_ASSERT(test_equal(squareValue, squareTrue),
   //                     "Got bad multiply result");
   //     }
 
 
   //   std::cout << "Testing Schedule on Subset" << std::endl;
-  //   std::vector<vtkm::Scalar> fullField(ARRAY_SIZE);
+  //   std::vector<vtkm::FloatDefault> fullField(ARRAY_SIZE);
   //   std::vector<vtkm::Id> subSetLookup(ARRAY_SIZE/2);
   //   for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
   //     {
@@ -852,10 +852,10 @@ private:
   //     }
 
   //   IdArrayHandle keys = MakeArrayHandle(testKeys, ARRAY_SIZE);
-  //   Vector3ArrayHandle values = MakeArrayHandle(testValues, ARRAY_SIZE);
+  //   Vec3ArrayHandle values = MakeArrayHandle(testValues, ARRAY_SIZE);
 
   //   IdArrayHandle sorted_keys;
-  //   Vector3ArrayHandle sorted_values;
+  //   Vec3ArrayHandle sorted_values;
 
   //   Algorithm::Copy(keys,sorted_keys);
   //   Algorithm::Copy(values,sorted_values);
@@ -865,7 +865,7 @@ private:
   //     {
   //     //keys should be sorted from 1 to ARRAY_SIZE
   //     //values should be sorted from (ARRAY_SIZE-1) to 0
-  //     vtkm::Scalar sorted_value =
+  //     vtkm::FloatDefault sorted_value =
   //                       sorted_values.GetPortalConstControl().Get(i)[0];
   //     vtkm::Id sorted_key = sorted_keys.GetPortalConstControl().Get(i);
 
@@ -880,7 +880,7 @@ private:
   //     {
   //     //keys should be sorted from ARRAY_SIZE to 1
   //     //values should be sorted from 0 to (ARRAY_SIZE-1)
-  //     vtkm::Scalar sorted_value =
+  //     vtkm::FloatDefault sorted_value =
   //                       sorted_values.GetPortalConstControl().Get(i)[0];
   //     vtkm::Id sorted_key = sorted_keys.GetPortalConstControl().Get(i);
 
@@ -896,7 +896,7 @@ private:
   //     {
   //     //keys should be sorted from ARRAY_SIZE to 1
   //     //values should be sorted from 0 to (ARRAY_SIZE-1)
-  //     vtkm::Scalar sorted_value =
+  //     vtkm::FloatDefault sorted_value =
   //                       sorted_values.GetPortalConstControl().Get(i)[0];
   //     vtkm::Id sorted_key = sorted_keys.GetPortalConstControl().Get(i);
 
@@ -1029,7 +1029,7 @@ private:
     //ie 1, 3, 6, 10, 15, 21 ...
     vtkm::Id partialSum = 0;
     vtkm::Id triangleNumber = 0;
-    for(unsigned int i=0, pos=1; i < ARRAY_SIZE; ++i, ++pos)
+    for(vtkm::Id i=0, pos=1; i < ARRAY_SIZE; ++i, ++pos)
     {
       const vtkm::Id value = array.GetPortalConstControl().Get(i);
       partialSum += value;
@@ -1062,7 +1062,7 @@ private:
     //ie 0, 1, 3, 6, 10, 15, 21 ...
     vtkm::Id partialSum = 0;
     vtkm::Id triangleNumber = 0;
-    for(unsigned int i=0, pos=0; i < ARRAY_SIZE; ++i, ++pos)
+    for(vtkm::Id i=0, pos=0; i < ARRAY_SIZE; ++i, ++pos)
     {
       const vtkm::Id value = array.GetPortalConstControl().Get(i);
       partialSum += value;
@@ -1119,7 +1119,7 @@ private:
 
   //   vtkm::Vector3 trueGradient = vtkm::make_Vector3(1.0, 1.0, 1.0);
 
-  //   std::vector<vtkm::Scalar> field(grid->GetNumberOfPoints());
+  //   std::vector<vtkm::FloatDefault> field(grid->GetNumberOfPoints());
   //   std::cout << "Number of Points in the grid: "
   //             <<  grid->GetNumberOfPoints()
   //             << std::endl;
@@ -1147,8 +1147,8 @@ private:
   //        pointIndex < grid->GetNumberOfPoints();
   //        pointIndex++)
   //     {
-  //     vtkm::Scalar squareValue = squarePortal.Get(pointIndex);
-  //     vtkm::Scalar squareTrue = field[pointIndex]*field[pointIndex];
+  //     vtkm::FloatDefault squareValue = squarePortal.Get(pointIndex);
+  //     vtkm::FloatDefault squareTrue = field[pointIndex]*field[pointIndex];
   //     VTKM_TEST_ASSERT(test_equal(squareValue, squareTrue),
   //                     "Got bad square");
   //     }
@@ -1209,7 +1209,7 @@ private:
 
   //   vtkm::Vector3 trueGradient = vtkm::make_Vector3(1.0, 1.0, 1.0);
 
-  //   std::vector<vtkm::Scalar> field(grid->GetNumberOfPoints());
+  //   std::vector<vtkm::FloatDefault> field(grid->GetNumberOfPoints());
   //   for (vtkm::Id pointIndex = 0;
   //        pointIndex < grid->GetNumberOfPoints();
   //        pointIndex++)
@@ -1219,7 +1219,7 @@ private:
   //     }
   //   ScalarArrayHandle fieldHandle = MakeArrayHandle(field);
 
-  //   Vector3ArrayHandle gradientHandle;
+  //   Vec3ArrayHandle gradientHandle;
 
   //   std::cout << "Running CellGradient worklet" << std::endl;
 
@@ -1230,7 +1230,7 @@ private:
   //                   fieldHandle,
   //                   gradientHandle);
 
-  //   typename Vector3ArrayHandle::PortalConstControl gradientPortal =
+  //   typename Vec3ArrayHandle::PortalConstControl gradientPortal =
   //       gradientHandle.GetPortalConstControl();
 
   //   std::cout << "Checking result" << std::endl;

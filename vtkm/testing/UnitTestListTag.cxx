@@ -39,15 +39,15 @@ struct TestListTag1
 {  };
 
 struct TestListTag2
-    : vtkm::ListTagBase2<TestClass<21>,TestClass<22> >
+    : vtkm::ListTagBase<TestClass<21>,TestClass<22> >
 {  };
 
 struct TestListTag3
-    : vtkm::ListTagBase3<TestClass<31>,TestClass<32>,TestClass<33> >
+    : vtkm::ListTagBase<TestClass<31>,TestClass<32>,TestClass<33> >
 {  };
 
 struct TestListTag4
-    : vtkm::ListTagBase4<TestClass<41>,TestClass<42>,TestClass<43>,TestClass<44> >
+    : vtkm::ListTagBase<TestClass<41>,TestClass<42>,TestClass<43>,TestClass<44> >
 {  };
 
 struct TestListTagJoin
@@ -80,22 +80,22 @@ struct ConstantFunctor
   }
 };
 
-template<int N>
-void CheckSame(const vtkm::Tuple<int,N> &expected,
+template<vtkm::IdComponent N>
+void CheckSame(const vtkm::Vec<int,N> &expected,
                const std::vector<int> &found)
 {
   VTKM_TEST_ASSERT(static_cast<int>(found.size()) == N,
                    "Got wrong number of items.");
 
-  for (int index = 0; index < N; index++)
+  for (vtkm::IdComponent index = 0; index < N; index++)
   {
     VTKM_TEST_ASSERT(expected[index] == found[index],
                      "Got wrong type.");
   }
 }
 
-template<int N, typename ListTag>
-void TryList(const vtkm::Tuple<int,N> &expected, ListTag)
+template<vtkm::IdComponent N, typename ListTag>
+void TryList(const vtkm::Vec<int,N> &expected, ListTag)
 {
   std::cout << "    Try mutable for each" << std::endl;
   MutableFunctor functor;
@@ -110,22 +110,22 @@ void TryList(const vtkm::Tuple<int,N> &expected, ListTag)
 void TestLists()
 {
   std::cout << "ListTagEmpty" << std::endl;
-  TryList(vtkm::Tuple<int,0>(), vtkm::ListTagEmpty());
+  TryList(vtkm::Vec<int,0>(), vtkm::ListTagEmpty());
 
   std::cout << "ListTagBase" << std::endl;
-  TryList(vtkm::Tuple<int,1>(11), TestListTag1());
+  TryList(vtkm::Vec<int,1>(11), TestListTag1());
 
   std::cout << "ListTagBase2" << std::endl;
-  TryList(vtkm::Tuple<int,2>(21,22), TestListTag2());
+  TryList(vtkm::Vec<int,2>(21,22), TestListTag2());
 
   std::cout << "ListTagBase3" << std::endl;
-  TryList(vtkm::Tuple<int,3>(31,32,33), TestListTag3());
+  TryList(vtkm::Vec<int,3>(31,32,33), TestListTag3());
 
   std::cout << "ListTagBase4" << std::endl;
-  TryList(vtkm::Tuple<int,4>(41,42,43,44), TestListTag4());
+  TryList(vtkm::Vec<int,4>(41,42,43,44), TestListTag4());
 
   std::cout << "ListTagJoin" << std::endl;
-  TryList(vtkm::Tuple<int,4>(31,32,33,11), TestListTagJoin());
+  TryList(vtkm::Vec<int,4>(31,32,33,11), TestListTagJoin());
 }
 
 } // anonymous namespace

@@ -27,18 +27,18 @@ namespace vtkm {
 /// Extent stores the values for the index ranges for a structured grid array.
 /// It does this through the minimum indices and the maximum indices.
 ///
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 struct Extent
 {
-  vtkm::Tuple<vtkm::Id,Dimensions> Min;
-  vtkm::Tuple<vtkm::Id,Dimensions> Max;
+  vtkm::Vec<vtkm::Id,Dimensions> Min;
+  vtkm::Vec<vtkm::Id,Dimensions> Max;
 
   VTKM_EXEC_CONT_EXPORT
   Extent() : Min(0), Max(0) {  }
 
   VTKM_EXEC_CONT_EXPORT
-  Extent(const vtkm::Tuple<vtkm::Id,Dimensions> &min,
-         const vtkm::Tuple<vtkm::Id,Dimensions> &max)
+  Extent(const vtkm::Vec<vtkm::Id,Dimensions> &min,
+         const vtkm::Vec<vtkm::Id,Dimensions> &max)
     : Min(min), Max(max) {  }
 
   VTKM_EXEC_CONT_EXPORT
@@ -66,12 +66,12 @@ typedef vtkm::Extent<2> Extent2;
 
 /// Given an extent, returns the array dimensions for the points.
 ///
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Tuple<vtkm::Id,Dimensions>
+vtkm::Vec<vtkm::Id,Dimensions>
 ExtentPointDimensions(const vtkm::Extent<Dimensions> &extent)
 {
-  return extent.Max - extent.Min + vtkm::Tuple<vtkm::Id,Dimensions>(1);
+  return extent.Max - extent.Min + vtkm::Vec<vtkm::Id,Dimensions>(1);
 }
 
 VTKM_EXEC_CONT_EXPORT
@@ -93,9 +93,9 @@ vtkm::Id2 ExtentPointDimensions(const vtkm::Extent2 &extent)
 
 /// Given an extent, returns the array dimensions for the cells.
 ///
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Tuple<vtkm::Id,Dimensions>
+vtkm::Vec<vtkm::Id,Dimensions>
 ExtentCellDimensions(const vtkm::Extent<Dimensions> &extent)
 {
   return extent.Max - extent.Min;
@@ -103,11 +103,11 @@ ExtentCellDimensions(const vtkm::Extent<Dimensions> &extent)
 
 /// Given an extent, returns the number of points in the structured mesh.
 ///
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 VTKM_EXEC_CONT_EXPORT
 vtkm::Id ExtentNumberOfPoints(const vtkm::Extent<Dimensions> &extent)
 {
-  return internal::product_vector<Dimensions>()(
+  return internal::VecProduct<Dimensions>()(
         vtkm::ExtentPointDimensions(extent));
 }
 
@@ -134,11 +134,11 @@ vtkm::Id ExtentNumberOfPoints(const vtkm::Extent2 &extent)
 
 /// Given an extent, returns the number of cells in the structured mesh.
 ///
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 VTKM_EXEC_CONT_EXPORT
 vtkm::Id ExtentNumberOfCells(const vtkm::Extent<Dimensions> &extent)
 {
-  return internal::product_vector<Dimensions>()(
+  return internal::VecProduct<Dimensions>()(
         vtkm::ExtentCellDimensions(extent));
 }
 
@@ -168,17 +168,17 @@ vtkm::Id ExtentNumberOfCells(const vtkm::Extent2 &extent)
 /// then the s direction and so on.  This method converts a flat index to the
 /// topological coordinates (e.g. r,s,t for 3d topologies).
 ///
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Tuple<vtkm::Id,Dimensions>
+vtkm::Vec<vtkm::Id,Dimensions>
 ExtentPointFlatIndexToTopologyIndex(vtkm::Id index,
                                     const vtkm::Extent<Dimensions> &extent)
 {
-  const vtkm::Tuple<vtkm::Id,Dimensions> dims =
+  const vtkm::Vec<vtkm::Id,Dimensions> dims =
       vtkm::ExtentPointDimensions(extent);
-  vtkm::Tuple<vtkm::Id,Dimensions> ijkIndex;
+  vtkm::Vec<vtkm::Id,Dimensions> ijkIndex;
   vtkm::Id indexOnDim = index;
-  for (int dimIndex = 0; dimIndex < Dimensions-1; dimIndex++)
+  for (vtkm::IdComponent dimIndex = 0; dimIndex < Dimensions-1; dimIndex++)
   {
     ijkIndex[dimIndex] = indexOnDim % dims[dimIndex] + extent.Min[dimIndex];
     indexOnDim /= dims[dimIndex];
@@ -216,17 +216,17 @@ vtkm::Id2 ExtentPointFlatIndexToTopologyIndex(vtkm::Id index,
 /// then the s direction and so on.  This method converts a flat index to the
 /// topological coordinates (e.g. r,s,t for 3d topologies).
 ///
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Tuple<vtkm::Id,Dimensions>
+vtkm::Vec<vtkm::Id,Dimensions>
 ExtentCellFlatIndexToTopologyIndex(vtkm::Id index,
                                    const vtkm::Extent<Dimensions> &extent)
 {
-  const vtkm::Tuple<vtkm::Id,Dimensions> dims =
+  const vtkm::Vec<vtkm::Id,Dimensions> dims =
       vtkm::ExtentCellDimensions(extent);
-  vtkm::Tuple<vtkm::Id,Dimensions> ijkIndex;
+  vtkm::Vec<vtkm::Id,Dimensions> ijkIndex;
   vtkm::Id indexOnDim = index;
-  for (int dimIndex = 0; dimIndex < Dimensions-1; dimIndex++)
+  for (vtkm::IdComponent dimIndex = 0; dimIndex < Dimensions-1; dimIndex++)
   {
     ijkIndex[dimIndex] = indexOnDim % dims[dimIndex] + extent.Min[dimIndex];
     indexOnDim /= dims[dimIndex];
@@ -264,16 +264,16 @@ vtkm::Id2 ExtentCellFlatIndexToTopologyIndex(vtkm::Id index,
 /// then the s direction and so on. This method converts topological
 /// coordinates to a flat index.
 ///
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 VTKM_EXEC_CONT_EXPORT
 vtkm::Id
-ExtentPointTopologyIndexToFlatIndex(const vtkm::Tuple<vtkm::Id,Dimensions> &ijk,
+ExtentPointTopologyIndexToFlatIndex(const vtkm::Vec<vtkm::Id,Dimensions> &ijk,
                                     const vtkm::Extent<Dimensions> &extent)
 {
-  const vtkm::Tuple<vtkm::Id,Dimensions> dims = ExtentPointDimensions(extent);
-  const vtkm::Tuple<vtkm::Id,Dimensions> deltas = ijk - extent.Min;
+  const vtkm::Vec<vtkm::Id,Dimensions> dims = ExtentPointDimensions(extent);
+  const vtkm::Vec<vtkm::Id,Dimensions> deltas = ijk - extent.Min;
   vtkm::Id flatIndex = deltas[Dimensions-1];
-  for (int dimIndex = Dimensions-2; dimIndex >= 0; dimIndex--)
+  for (vtkm::IdComponent dimIndex = Dimensions-2; dimIndex >= 0; dimIndex--)
   {
     flatIndex = flatIndex*dims[dimIndex] + deltas[dimIndex];
   }
@@ -285,16 +285,16 @@ ExtentPointTopologyIndexToFlatIndex(const vtkm::Tuple<vtkm::Id,Dimensions> &ijk,
 /// then the s direction and so on. This method converts topological
 /// coordinates to a flat index.
 ///
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 VTKM_EXEC_CONT_EXPORT
 vtkm::Id
-ExtentCellTopologyIndexToFlatIndex(const vtkm::Tuple<vtkm::Id,Dimensions> &ijk,
+ExtentCellTopologyIndexToFlatIndex(const vtkm::Vec<vtkm::Id,Dimensions> &ijk,
                                    const vtkm::Extent<Dimensions> &extent)
 {
-  const vtkm::Tuple<vtkm::Id,Dimensions> dims = ExtentCellDimensions(extent);
-  const vtkm::Tuple<vtkm::Id,Dimensions> deltas = ijk - extent.Min;
+  const vtkm::Vec<vtkm::Id,Dimensions> dims = ExtentCellDimensions(extent);
+  const vtkm::Vec<vtkm::Id,Dimensions> deltas = ijk - extent.Min;
   vtkm::Id flatIndex = deltas[Dimensions-1];
-  for (int dimIndex = Dimensions-2; dimIndex >= 0; dimIndex--)
+  for (vtkm::IdComponent dimIndex = Dimensions-2; dimIndex >= 0; dimIndex--)
   {
     flatIndex = flatIndex*dims[dimIndex] + deltas[dimIndex];
   }
@@ -304,7 +304,7 @@ ExtentCellTopologyIndexToFlatIndex(const vtkm::Tuple<vtkm::Id,Dimensions> &ijk,
 /// Given a cell index, returns the index to the first point incident on that
 /// cell.
 ///
-template<int Dimensions>
+template<vtkm::IdComponent Dimensions>
 VTKM_EXEC_CONT_EXPORT
 vtkm::Id ExtentFirstPointOnCell(vtkm::Id cellIndex,
                                 const Extent<Dimensions> &extent)

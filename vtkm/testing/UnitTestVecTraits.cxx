@@ -17,49 +17,49 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <vtkm/testing/VectorTraitsTests.h>
+#include <vtkm/testing/VecTraitsTests.h>
 
 #include <vtkm/testing/Testing.h>
 
 namespace {
 
 static const vtkm::Id MAX_VECTOR_SIZE = 5;
-static const vtkm::Id VectorInit[MAX_VECTOR_SIZE] = { 42, 54, 67, 12, 78 };
+static const vtkm::Id VecInit[MAX_VECTOR_SIZE] = { 42, 54, 67, 12, 78 };
 
-struct TestVectorTypeFunctor
+struct TestVecTypeFunctor
 {
   template <typename T> void operator()(const T&) const
   {
-    typedef vtkm::VectorTraits<T> Traits;
+    typedef vtkm::VecTraits<T> Traits;
     typedef typename Traits::ComponentType ComponentType;
     VTKM_TEST_ASSERT(Traits::NUM_COMPONENTS <= MAX_VECTOR_SIZE,
                      "Need to update test for larger vectors.");
     T vector;
-    for (int index = 0; index < Traits::NUM_COMPONENTS; index++)
+    for (vtkm::IdComponent index = 0; index < Traits::NUM_COMPONENTS; index++)
     {
-      Traits::SetComponent(vector, index, ComponentType(VectorInit[index]));
+      Traits::SetComponent(vector, index, ComponentType(VecInit[index]));
     }
-    vtkm::testing::TestVectorType(vector);
+    vtkm::testing::TestVecType(vector);
   }
 };
 
-void TestVectorTraits()
+void TestVecTraits()
 {
-  TestVectorTypeFunctor test;
+  TestVecTypeFunctor test;
   vtkm::testing::Testing::TryAllTypes(test);
-  std::cout << "vtkm::Tuple<vtkm::Scalar, 5>" << std::endl;
-  test(vtkm::Tuple<vtkm::Scalar,5>());
+  std::cout << "vtkm::Vec<vtkm::FloatDefault, 5>" << std::endl;
+  test(vtkm::Vec<vtkm::FloatDefault,5>());
 
-  vtkm::testing::TestVectorComponentsTag<vtkm::Id3>();
-  vtkm::testing::TestVectorComponentsTag<vtkm::Vector3>();
-  vtkm::testing::TestVectorComponentsTag<vtkm::Vector4>();
+  vtkm::testing::TestVecComponentsTag<vtkm::Id3>();
+  vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault,3> >();
+  vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault,4> >();
   vtkm::testing::TestScalarComponentsTag<vtkm::Id>();
-  vtkm::testing::TestScalarComponentsTag<vtkm::Scalar>();
+  vtkm::testing::TestScalarComponentsTag<vtkm::FloatDefault>();
 }
 
 } // anonymous namespace
 
-int UnitTestVectorTraits(int, char *[])
+int UnitTestVecTraits(int, char *[])
 {
-  return vtkm::testing::Testing::Run(TestVectorTraits);
+  return vtkm::testing::Testing::Run(TestVecTraits);
 }

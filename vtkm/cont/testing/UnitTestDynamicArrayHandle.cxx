@@ -21,6 +21,8 @@
 
 #include <vtkm/cont/DynamicArrayHandle.h>
 
+#include <vtkm/TypeTraits.h>
+
 #include <vtkm/cont/StorageImplicit.h>
 
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
@@ -35,18 +37,28 @@ namespace {
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-vtkm::Id TestValue(vtkm::Id index, vtkm::Id) {
-  return index*100;
+template<typename T>
+T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
+{
+  return T(index*100);
 }
 
-vtkm::Scalar TestValue(vtkm::Id index, vtkm::Scalar) {
-  return static_cast<vtkm::Scalar>(index)/100;
+template<typename T>
+T TestValue(vtkm::Id index, T, vtkm::TypeTraitsRealTag)
+{
+  return T(index)/100;
 }
 
-template<typename T, int N>
-vtkm::Tuple<T,N> TestValue(vtkm::Id index, vtkm::Tuple<T,N>) {
-  vtkm::Tuple<T,N> value;
-  for (int i = 0; i < N; i++)
+template<typename T>
+T TestValue(vtkm::Id index, T)
+{
+  return TestValue(index, T(), typename vtkm::TypeTraits<T>::NumericTag());
+}
+
+template<typename T, vtkm::IdComponent N>
+vtkm::Vec<T,N> TestValue(vtkm::Id index, vtkm::Vec<T,N>) {
+  vtkm::Vec<T,N> value;
+  for (vtkm::IdComponent i = 0; i < N; i++)
   {
     value[i] = TestValue(index, T()) + (i + 1);
   }
@@ -86,7 +98,7 @@ public:
 };
 
 struct StorageListTagUnusual :
-    vtkm::ListTagBase2<
+    vtkm::ListTagBase<
       ArrayHandleWithUnusualStorage<vtkm::Id>::StorageTag,
       ArrayHandleWithUnusualStorage<std::string>::StorageTag>
 {  };
@@ -143,7 +155,7 @@ void TryDefaultType(T)
 struct TryBasicVTKmType
 {
   template<typename T>
-  void operator()(T) {
+  void operator()(T) const {
     CheckCalled = false;
 
     vtkm::cont::DynamicArrayHandle array = CreateDynamicArray(T());
@@ -259,12 +271,18 @@ void TryUnusualTypeAndStorage()
 void TestDynamicArrayHandle()
 {
   std::cout << "Try common types with default type lists." << std::endl;
-  std::cout << "*** vtkm::Id ***************" << std::endl;
+  std::cout << "*** vtkm::Id **********************" << std::endl;
   TryDefaultType(vtkm::Id());
-  std::cout << "*** vtkm::Scalar ***********" << std::endl;
-  TryDefaultType(vtkm::Scalar());
-  std::cout << "*** vtkm::Vector3 **********" << std::endl;
-  TryDefaultType(vtkm::Vector3());
+  std::cout << "*** vtkm::FloatDefault ************" << std::endl;
+  TryDefaultType(vtkm::FloatDefault());
+  std::cout << "*** vtkm::Float32 *****************" << std::endl;
+  TryDefaultType(vtkm::Float32());
+  std::cout << "*** vtkm::Float64 *****************" << std::endl;
+  TryDefaultType(vtkm::Float64());
+  std::cout << "*** vtkm::Vec<Float32,3> **********" << std::endl;
+  TryDefaultType(vtkm::Vec<vtkm::Float32,3>());
+  std::cout << "*** vtkm::Vec<Float64,3> **********" << std::endl;
+  TryDefaultType(vtkm::Vec<vtkm::Float64,3>());
 
   std::cout << "Try all VTK-m types." << std::endl;
   vtkm::testing::Testing::TryAllTypes(TryBasicVTKmType());

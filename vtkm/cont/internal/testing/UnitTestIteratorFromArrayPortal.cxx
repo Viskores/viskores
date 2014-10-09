@@ -20,7 +20,7 @@
 
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 
-#include <vtkm/VectorTraits.h>
+#include <vtkm/VecTraits.h>
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -33,7 +33,7 @@ struct TemplatedTests
   static const vtkm::Id ARRAY_SIZE = 10;
 
   typedef T ValueType;
-  typedef typename vtkm::VectorTraits<ValueType>::ComponentType ComponentType;
+  typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
 
   ValueType ExpectedValue(vtkm::Id index, ComponentType value)
   {
@@ -115,7 +115,7 @@ struct TemplatedTests
     IteratorType begin = vtkm::cont::internal::make_IteratorBegin(portal);
     IteratorType end = vtkm::cont::internal::make_IteratorEnd(portal);
 
-    static const ComponentType WRITE_VALUE = 873;
+    static const ComponentType WRITE_VALUE = 73;
 
     std::cout << "    Write values to iterator." << std::endl;
     FillIterator(begin, end, WRITE_VALUE);
@@ -150,7 +150,7 @@ struct TemplatedTests
 struct TestFunctor
 {
   template<typename T>
-  void operator()(T)
+  void operator()(T) const
   {
     TemplatedTests<T> tests;
     tests();

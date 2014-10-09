@@ -43,22 +43,22 @@ struct TestFunctor
   }
 };
 
-template<int N>
-void CheckSame(const vtkm::Tuple<TypeId,N> &expected,
+template<vtkm::IdComponent N>
+void CheckSame(const vtkm::Vec<TypeId,N> &expected,
                const std::vector<TypeId> &found)
 {
-  VTKM_TEST_ASSERT(static_cast<int>(found.size()) == N,
+  VTKM_TEST_ASSERT(static_cast<vtkm::IdComponent>(found.size()) == N,
                    "Got wrong number of items.");
 
-  for (int index = 0; index < N; index++)
+  for (vtkm::IdComponent index = 0; index < N; index++)
   {
     VTKM_TEST_ASSERT(expected[index] == found[index],
                      "Got wrong type.");
   }
 }
 
-template<int N, typename ListTag>
-void TryList(const vtkm::Tuple<TypeId,N> &expected, ListTag)
+template<vtkm::IdComponent N, typename ListTag>
+void TryList(const vtkm::Vec<TypeId,N> &expected, ListTag)
 {
   TestFunctor functor;
   vtkm::ListForEach(functor, ListTag());
@@ -68,7 +68,7 @@ void TryList(const vtkm::Tuple<TypeId,N> &expected, ListTag)
 void TestLists()
 {
   std::cout << "StorageListTagBasic" << std::endl;
-  TryList(vtkm::Tuple<TypeId,1>(BASIC), vtkm::cont::StorageListTagBasic());
+  TryList(vtkm::Vec<TypeId,1>(BASIC), vtkm::cont::StorageListTagBasic());
 }
 
 } // anonymous namespace

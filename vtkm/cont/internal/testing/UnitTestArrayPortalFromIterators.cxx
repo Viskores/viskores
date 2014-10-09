@@ -21,7 +21,7 @@
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/VectorTraits.h>
+#include <vtkm/VecTraits.h>
 
 namespace {
 
@@ -31,7 +31,7 @@ struct TemplatedTests
   static const vtkm::Id ARRAY_SIZE = 10;
 
   typedef T ValueType;
-  typedef typename vtkm::VectorTraits<ValueType>::ComponentType ComponentType;
+  typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
 
   ValueType ExpectedValue(vtkm::Id index, ComponentType value)
   {
@@ -130,7 +130,7 @@ struct TemplatedTests
     VTKM_TEST_ASSERT(CheckPortal(const_portal, ORIGINAL_VALUE),
                      "Const portal iterator has bad value.");
 
-    static const ComponentType SET_VALUE = 562;
+    static const ComponentType SET_VALUE = 62;
 
     std::cout << "  Check get/set methods." << std::endl;
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
@@ -156,7 +156,7 @@ struct TemplatedTests
 struct TestFunctor
 {
   template<typename T>
-  void operator()(T)
+  void operator()(T) const
   {
     TemplatedTests<T> tests;
     tests();

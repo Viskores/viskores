@@ -60,7 +60,7 @@ public:
   /// asynchronous operations.
   ///
   VTKM_CONT_EXPORT
-  vtkm::Scalar GetElapsedTime()
+  vtkm::Float64 GetElapsedTime()
   {
     return this->TimerImplementation.GetElapsedTime();
   }
