@@ -88,11 +88,10 @@ struct TypeListTagField
                         vtkm::Vec<vtkm::Float64,4> >
 {  };
 
-/// A list of all basic types listed in vtkm/Types.h. Does not include all
-/// possible VTK-m types like arbitrarily typed and sized tuples or math
-/// types like matrices.
+/// A list of all scalars defined in vtkm/Types.h. A scalar is a type that
+/// holds a single number.
 ///
-struct TypeListTagAll
+struct TypeListTagScalarAll
     : vtkm::ListTagBase<vtkm::Int8,
                         vtkm::UInt8,
                         vtkm::Int16,
@@ -102,22 +101,71 @@ struct TypeListTagAll
                         vtkm::Int64,
                         vtkm::UInt64,
                         vtkm::Float32,
-                        vtkm::Float64,
-                        vtkm::Vec<vtkm::Int8,2>,
+                        vtkm::Float64>
+{  };
+
+/// A list of the most commonly use Vec classes. Specifically, these are
+/// vectors of size 2, 3, or 4 containing either unsigned bytes, signed
+/// integers of 32 or 64 bits, or floating point values of 32 or 64 bits.
+///
+struct TypeListTagVecCommon
+    : vtkm::ListTagBase<vtkm::Vec<vtkm::UInt8,2>,
                         vtkm::Vec<vtkm::Int32,2>,
                         vtkm::Vec<vtkm::Int64,2>,
                         vtkm::Vec<vtkm::Float32,2>,
                         vtkm::Vec<vtkm::Float64,2>,
-                        vtkm::Vec<vtkm::Int8,3>,
+                        vtkm::Vec<vtkm::UInt8,3>,
                         vtkm::Vec<vtkm::Int32,3>,
                         vtkm::Vec<vtkm::Int64,3>,
                         vtkm::Vec<vtkm::Float32,3>,
                         vtkm::Vec<vtkm::Float64,3>,
-                        vtkm::Vec<vtkm::Int8,4>,
+                        vtkm::Vec<vtkm::UInt8,4>,
                         vtkm::Vec<vtkm::Int32,4>,
                         vtkm::Vec<vtkm::Int64,4>,
                         vtkm::Vec<vtkm::Float32,4>,
                         vtkm::Vec<vtkm::Float64,4> >
+{  };
+
+namespace internal {
+
+/// A list of uncommon Vec classes with length up to 4. This is not much
+/// use in general, but is used when joined with \c TypeListTagVecCommon
+/// to get a list of all vectors up to size 4.
+///
+struct TypeListTagVecUncommon
+    : vtkm::ListTagBase<vtkm::Vec<vtkm::Int8,2>,
+                        vtkm::Vec<vtkm::Int16,2>,
+                        vtkm::Vec<vtkm::UInt16,2>,
+                        vtkm::Vec<vtkm::UInt32,2>,
+                        vtkm::Vec<vtkm::UInt64,2>,
+                        vtkm::Vec<vtkm::Int8,3>,
+                        vtkm::Vec<vtkm::Int16,3>,
+                        vtkm::Vec<vtkm::UInt16,3>,
+                        vtkm::Vec<vtkm::UInt32,3>,
+                        vtkm::Vec<vtkm::UInt64,3>,
+                        vtkm::Vec<vtkm::Int8,4>,
+                        vtkm::Vec<vtkm::Int16,4>,
+                        vtkm::Vec<vtkm::UInt16,4>,
+                        vtkm::Vec<vtkm::UInt32,4>,
+                        vtkm::Vec<vtkm::UInt64,4> >
+{  };
+
+} // namespace internal
+
+/// A list of all vector classes with standard types as components and
+/// lengths between 2 and 4.
+///
+struct TypeListTagVecAll
+    : vtkm::ListTagJoin<
+          vtkm::TypeListTagVecCommon, vtkm::internal::TypeListTagVecUncommon>
+{  };
+
+/// A list of all basic types listed in vtkm/Types.h. Does not include all
+/// possible VTK-m types like arbitrarily typed and sized Vecs (only up to
+/// length 4) or math types like matrices.
+///
+struct TypeListTagAll
+    : vtkm::ListTagJoin<vtkm::TypeListTagScalarAll, vtkm::TypeListTagVecAll>
 {  };
 
 /// A list of the most commonly used types across multiple domains. Includes
