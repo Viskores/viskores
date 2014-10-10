@@ -50,26 +50,26 @@ struct TypeListTagIndex
 /// A list containing types used for scalar fields. Specifically, contains
 /// floating point numbers of different widths (i.e. vtkm::Float32 and
 /// vtkm::Float64).
-struct TypeListTagScalar : vtkm::ListTagBase<vtkm::Float32,vtkm::Float64> { };
+struct TypeListTagFieldScalar : vtkm::ListTagBase<vtkm::Float32,vtkm::Float64> { };
 
 /// A list containing types for values for fields with two dimensional
 /// vectors.
 ///
-struct TypeListTagVec2
+struct TypeListTagFieldVec2
     : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32,2>,
                         vtkm::Vec<vtkm::Float64,2> > { };
 
 /// A list containing types for values for fields with three dimensional
 /// vectors.
 ///
-struct TypeListTagVec3
+struct TypeListTagFieldVec3
     : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32,3>,
                         vtkm::Vec<vtkm::Float64,3> > { };
 
 /// A list containing types for values for fields with four dimensional
 /// vectors.
 ///
-struct TypeListTagVec4
+struct TypeListTagFieldVec4
     : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32,4>,
                         vtkm::Vec<vtkm::Float64,4> > { };
 

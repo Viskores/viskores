@@ -87,6 +87,8 @@ VTK_M_BASIC_TYPE(vtkm::UInt32);
 VTK_M_BASIC_TYPE(vtkm::Int64);
 VTK_M_BASIC_TYPE(vtkm::UInt64);
 
+#undef VTK_M_BASIC_TYPE
+
 template<typename T, vtkm::IdComponent Size>
 struct TypeName<vtkm::Vec<T,Size> >
 {
