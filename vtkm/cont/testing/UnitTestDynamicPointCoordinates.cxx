@@ -211,7 +211,8 @@ void TryUnusualPointCoordinates()
 
 void DynamicPointCoordiantesTest()
 {
-  vtkm::testing::Testing::TryTypes(TryDefaultArray(), vtkm::TypeListTagVec3());
+  vtkm::testing::Testing::TryTypes(TryDefaultArray(),
+                                   vtkm::TypeListTagFieldVec3());
   TryUnusualStorage();
   TryUniformPointCoordinates();
   TryUnusualPointCoordinates();

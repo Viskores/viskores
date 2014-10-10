@@ -128,7 +128,7 @@ void TestPointCoordinatesUniform()
 void PointCoordinatesTests()
 {
   vtkm::testing::Testing::TryTypes(TestPointCoordinatesArray(),
-                                   vtkm::TypeListTagVec3());
+                                   vtkm::TypeListTagFieldVec3());
   TestPointCoordinatesUniform();
 }
 

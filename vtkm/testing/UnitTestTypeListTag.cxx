@@ -113,29 +113,29 @@ void TestLists()
   index.AddExpected(vtkm::Id3());
   TryList(index, vtkm::TypeListTagIndex());
 
-  std::cout << "TypeListTagScalar" << std::endl;
+  std::cout << "TypeListTagFieldScalar" << std::endl;
   TypeSet scalar;
   scalar.AddExpected(vtkm::Float32());
   scalar.AddExpected(vtkm::Float64());
-  TryList(scalar, vtkm::TypeListTagScalar());
+  TryList(scalar, vtkm::TypeListTagFieldScalar());
 
-  std::cout << "TypeListTagVec2" << std::endl;
+  std::cout << "TypeListTagFieldVec2" << std::endl;
   TypeSet vec2;
   vec2.AddExpected(vtkm::Vec<vtkm::Float32,2>());
   vec2.AddExpected(vtkm::Vec<vtkm::Float64,2>());
-  TryList(vec2, vtkm::TypeListTagVec2());
+  TryList(vec2, vtkm::TypeListTagFieldVec2());
 
-  std::cout << "TypeListTagVec3" << std::endl;
+  std::cout << "TypeListTagFieldVec3" << std::endl;
   TypeSet vec3;
   vec3.AddExpected(vtkm::Vec<vtkm::Float32,3>());
   vec3.AddExpected(vtkm::Vec<vtkm::Float64,3>());
-  TryList(vec3, vtkm::TypeListTagVec3());
+  TryList(vec3, vtkm::TypeListTagFieldVec3());
 
-  std::cout << "TypeListTagVec4" << std::endl;
+  std::cout << "TypeListTagFieldVec4" << std::endl;
   TypeSet vec4;
   vec4.AddExpected(vtkm::Vec<vtkm::Float32,4>());
   vec4.AddExpected(vtkm::Vec<vtkm::Float64,4>());
-  TryList(vec4, vtkm::TypeListTagVec4());
+  TryList(vec4, vtkm::TypeListTagFieldVec4());
 
   std::cout << "TypeListTagField" << std::endl;
   TypeSet field;
