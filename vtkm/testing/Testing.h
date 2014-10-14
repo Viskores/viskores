@@ -103,6 +103,7 @@ struct TypeName<vtkm::Vec<T,Size> >
   }
 };
 
+
 struct Testing
 {
 public:
@@ -311,6 +312,75 @@ std::ostream &operator<<(std::ostream &stream, const vtkm::Vec<T,Size> &vec)
     stream << vec[component] << ",";
   }
   return stream << vec[Size-1] << "]";
+}
+
+
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
+{
+  return T(index*100);
+}
+
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T TestValue(vtkm::Id index, T, vtkm::TypeTraitsRealTag)
+{
+  return T(0.01*index + 0.001);
+}
+
+/// Many tests involve getting and setting values in some index-based structure
+/// (like an array). These tests also often involve trying many types. The
+/// overloaded TestValue function returns some unique value for an index for a
+/// given type. Different types might give different values.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T TestValue(vtkm::Id index, T)
+{
+  return TestValue(index, T(), typename vtkm::TypeTraits<T>::NumericTag());
+}
+
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> TestValue(vtkm::Id index, vtkm::Vec<T,N>) {
+  vtkm::Vec<T,N> value;
+  for (vtkm::IdComponent i = 0; i < N; i++)
+  {
+    value[i] = TestValue(index, T()) + (i + 1);
+  }
+  return value;
+}
+
+VTKM_CONT_EXPORT
+std::string TestValue(vtkm::Id index, std::string) {
+  std::stringstream stream;
+  stream << index;
+  return stream.str();
+}
+
+/// Verifies that the contents of the given array portal match the values
+/// returned by vtkm::testing::TestValue.
+///
+template<typename PortalType>
+VTKM_CONT_EXPORT
+void CheckPortal(const PortalType &portal)
+{
+  typedef typename PortalType::ValueType ValueType;
+
+  for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
+  {
+    ValueType expectedValue = TestValue(index, ValueType());
+    ValueType foundValue = portal.Get(index);
+    if (!test_equal(expectedValue, foundValue))
+    {
+      std::stringstream message;
+      message << "Got unexpected value in array." << std::endl
+              << "Expected: " << expectedValue
+              << ", Found: " << foundValue << std::endl;
+      VTKM_TEST_FAIL(message.str().c_str());
+    }
+  }
 }
 
 #endif //vtk_m_testing_Testing_h

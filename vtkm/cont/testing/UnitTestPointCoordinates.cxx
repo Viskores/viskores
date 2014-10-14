@@ -54,7 +54,7 @@ typedef vtkm::cont::StorageTagBasic StorageTag;
 
 struct StorageListTag : vtkm::cont::StorageListTagBasic {  };
 
-vtkm::Vec<vtkm::FloatDefault,3> TestValue(vtkm::Id index)
+vtkm::Vec<vtkm::FloatDefault,3> ExpectedCoordinates(vtkm::Id index)
 {
   vtkm::Id3 index3d = vtkm::ExtentPointFlatIndexToTopologyIndex(index, EXTENT);
   return vtkm::Vec<vtkm::FloatDefault,3>(index3d[0], index3d[1], index3d[2]);
@@ -77,7 +77,7 @@ struct CheckArray
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
       const ValueType receivedValue = portal.Get(index);
-      const ValueType expectedValue = TestValue(index);
+      const ValueType expectedValue = ExpectedCoordinates(index);
       VTKM_TEST_ASSERT(receivedValue == expectedValue,
                        "Got bad value in array.");
     }
@@ -95,7 +95,7 @@ struct TestPointCoordinatesArray
     std::vector<Vector3> buffer(ARRAY_SIZE);
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      buffer[index] = TestValue(index);
+      buffer[index] = ExpectedCoordinates(index);
     }
 
     std::cout << "  Creating and checking array handle" << std::endl;

@@ -32,59 +32,13 @@
 #include <algorithm>
 
 namespace {
+
 const vtkm::Id ARRAY_SIZE = 10;
 
 template<typename T>
-T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
+void CheckArray(const vtkm::cont::ArrayHandle<T> &handle)
 {
-  return T(index*100);
-}
-
-template<typename T>
-T TestValue(vtkm::Id index, T, vtkm::TypeTraitsRealTag)
-{
-  return T(10.0*index + 0.01*(index+1))/100;
-}
-
-template<typename T>
-T TestValue(vtkm::Id index, T)
-{
-  return TestValue(index, T(), typename vtkm::TypeTraits<T>::NumericTag());
-}
-
-template<typename T, vtkm::IdComponent N>
-vtkm::Vec<T,N> TestValue(vtkm::Id index, vtkm::Vec<T,N>) {
-  vtkm::Vec<T,N> value;
-  for (vtkm::IdComponent i = 0; i < N; i++)
-  {
-    value[i] = TestValue(index, T()) + (i + 1);
-  }
-  return value;
-}
-
-template<class IteratorType>
-bool CheckIterators(IteratorType begin, IteratorType end)
-{
-  vtkm::Id index = 0;
-  for (IteratorType iter = begin; iter != end; iter++)
-  {
-    if (!test_equal(*iter, TestValue(index, *iter))) { return false; }
-    index++;
-  }
-  return true;
-}
-
-template<class PortalType>
-bool CheckPortal(const PortalType &portal)
-{
-  vtkm::cont::ArrayPortalToIterators<PortalType> iterators(portal);
-  return CheckIterators(iterators.GetBegin(), iterators.GetEnd());
-}
-
-template<typename T>
-bool CheckArray(const vtkm::cont::ArrayHandle<T> &handle)
-{
-  return CheckPortal(handle.GetPortalConstControl());
+  CheckPortal(handle.GetPortalConstControl());
 }
 
 struct TryArrayHandleType
@@ -108,8 +62,7 @@ struct TryArrayHandleType
                      "ArrayHandle has wrong number of entries.");
 
     std::cout << "Check basic array." << std::endl;
-    VTKM_TEST_ASSERT(CheckArray(arrayHandle),
-                     "Array values not set correctly.");
+    CheckArray(arrayHandle);
 
     std::cout << "Check out execution array behavior." << std::endl;
     {
@@ -118,8 +71,7 @@ struct TryArrayHandleType
           executionPortal;
       executionPortal =
           arrayHandle.PrepareForInput(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-      VTKM_TEST_ASSERT(CheckPortal(executionPortal),
-                       "Array not copied to execution correctly.");
+      CheckPortal(executionPortal);
     }
 
     {
@@ -153,15 +105,13 @@ struct TryArrayHandleType
     }
     VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE*2,
                      "Array not allocated correctly.");
-    VTKM_TEST_ASSERT(CheckArray(arrayHandle),
-                     "Array values not retrieved from execution.");
+    CheckArray(arrayHandle);
 
     std::cout << "Try shrinking the array." << std::endl;
     arrayHandle.Shrink(ARRAY_SIZE);
     VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
                      "Array size did not shrink correctly.");
-    VTKM_TEST_ASSERT(CheckArray(arrayHandle),
-                     "Array values not retrieved from execution.");
+    CheckArray(arrayHandle);
 
     std::cout << "Try in place operation." << std::endl;
     {
