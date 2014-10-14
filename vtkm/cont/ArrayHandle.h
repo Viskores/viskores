@@ -43,6 +43,14 @@ namespace cont {
 
 namespace internal {
 
+/// \brief Base class of all ArrayHandle classes.
+///
+/// This is an empty class that is used to check if something is an \c
+/// ArrayHandle class (or at least something that behaves exactly like one).
+/// The \c ArrayHandle template class inherits from this.
+///
+class ArrayHandleBase {  };
+
 /// Checks to see if the given type and storage can form a valid array handle
 /// (some storage objects cannot support all types). This check is compatable
 /// with the Boost meta-template programming library (MPL). It contains a
@@ -58,6 +66,29 @@ struct IsValidArrayHandle {
       >::type
     >::type type;
 };
+
+/// Checks to see if the given object is an array handle. This check is
+/// compatiable with the Boost meta-template programming library (MPL). It
+/// contains a typedef named type that is eitehr boost::mpl::true_ or
+/// boost::mpl::false_. Both of these have a typedef named value with the
+/// respective boolean value.
+///
+/// Unlike \c IsValidArrayHandle, if an \c ArrayHandle is used with this
+/// class, then it must be created by the compiler and therefore must already
+/// be valid. Where \c IsValidArrayHandle is used when you know something is
+/// an \c ArrayHandle but you are not sure if the \c StorageTag is valid, this
+/// class is used to ensure that a given type is an \c ArrayHandle. It is
+/// used internally in the VTKM_IS_ARRAY_HANDLE macro.
+///
+template<typename T>
+struct ArrayHandleCheck
+{
+  typedef typename boost::is_base_of<
+      ::vtkm::cont::internal::ArrayHandleBase, T>::type type;
+};
+
+#define VTKM_IS_ARRAY_HANDLE(type) \
+  BOOST_MPL_ASSERT(( ::vtkm::cont::internal::ArrayHandleCheck<type> ))
 
 } // namespace internal
 
@@ -85,7 +116,7 @@ struct IsValidArrayHandle {
 template<
     typename T,
     typename StorageTag_ = VTKM_DEFAULT_STORAGE_TAG>
-class ArrayHandle
+class ArrayHandle : public internal::ArrayHandleBase
 {
 private:
   typedef vtkm::cont::internal::Storage<T,StorageTag_> StorageType;

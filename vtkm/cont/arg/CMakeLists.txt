@@ -21,39 +21,13 @@
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(headers
-  ArrayHandle.h
-  ArrayHandleCompositeVector.h
-  ArrayHandleCounting.h
-  ArrayHandleUniformPointCoordinates.h
-  ArrayPortal.h
-  ArrayPortalToIterators.h
-  Assert.h
-  DeviceAdapter.h
-  DeviceAdapterSerial.h
-  DynamicArrayHandle.h
-  DynamicPointCoordinates.h
-  Error.h
-  ErrorControl.h
-  ErrorControlAssert.h
-  ErrorControlBadValue.h
-  ErrorControlInternal.h
-  ErrorControlOutOfMemory.h
-  ErrorExecution.h
-  PointCoordinatesArray.h
-  PointCoordinatesListTag.h
-  PointCoordinatesUniform.h
-  Storage.h
-  StorageBasic.h
-  StorageImplicit.h
-  StorageListTag.h
-  Timer.h
+  Transport.h
+  TransportTagArrayIn.h
+  TransportTagArrayOut.h
+  TransportTagExecObject.h
   )
 
-#-----------------------------------------------------------------------------
-add_subdirectory(internal)
-add_subdirectory(arg)
-
-vtkm_declare_headers(${impl_headers} ${headers})
+vtkm_declare_headers(${headers})
 
 
 #-----------------------------------------------------------------------------

@@ -18,16 +18,10 @@
 ##  this software.
 ##============================================================================
 
-set(headers
-  ExecutionObjectBase.h
-  FunctorBase.h
+set(unit_tests
+  UnitTestTransportArrayIn.cxx
+  UnitTestTransportArrayOut.cxx
+  UnitTestTransportExecObject.cxx
   )
 
-#-----------------------------------------------------------------------------
-add_subdirectory(internal)
-
-vtkm_declare_headers(${impl_headers} ${headers})
-
-
-#-----------------------------------------------------------------------------
-# add_subdirectory(testing)
+vtkm_unit_tests(SOURCES ${unit_tests})
