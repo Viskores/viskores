@@ -40,7 +40,7 @@ const vtkm::Vec<vtkm::FloatDefault,3> SPACING =
 const vtkm::Id3 DIMENSION = vtkm::ExtentPointDimensions(EXTENT);
 const vtkm::Id ARRAY_SIZE = DIMENSION[0]*DIMENSION[1]*DIMENSION[2];
 
-vtkm::Vec<vtkm::FloatDefault,3> TestValue(vtkm::Id index)
+vtkm::Vec<vtkm::FloatDefault,3> ExpectedCoordinates(vtkm::Id index)
 {
   vtkm::Id3 index3d = vtkm::ExtentPointFlatIndexToTopologyIndex(index, EXTENT);
   return vtkm::Vec<vtkm::FloatDefault,3>(index3d[0], index3d[1], index3d[2]);
@@ -70,7 +70,7 @@ struct CheckArray
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
       const ValueType receivedValue = portal.Get(index);
-      const ValueType expectedValue = TestValue(index);
+      const ValueType expectedValue = ExpectedCoordinates(index);
       VTKM_TEST_ASSERT(receivedValue == expectedValue,
                        "Got bad value in array.");
     }
@@ -85,7 +85,7 @@ struct UnusualPortal
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
   VTKM_EXEC_CONT_EXPORT
-  ValueType Get(vtkm::Id index) const { return TestValue(index); }
+  ValueType Get(vtkm::Id index) const { return ExpectedCoordinates(index); }
 };
 
 class ArrayHandleWithUnusualStorage
@@ -125,7 +125,7 @@ struct TryDefaultArray
     std::vector<Vector3> buffer(ARRAY_SIZE);
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      buffer[index] = TestValue(index);
+      buffer[index] = ExpectedCoordinates(index);
     }
 
     vtkm::cont::DynamicPointCoordinates pointCoordinates =

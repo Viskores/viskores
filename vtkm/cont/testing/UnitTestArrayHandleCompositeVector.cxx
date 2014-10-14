@@ -40,9 +40,9 @@ const vtkm::Id ARRAY_SIZE = 10;
 
 typedef vtkm::cont::StorageTagBasic StorageTag;
 
-vtkm::FloatDefault TestValue(vtkm::Id index,
-                       vtkm::IdComponent inComponentIndex,
-                       int inArrayId)
+vtkm::FloatDefault TestValue3Ids(vtkm::Id index,
+                                 vtkm::IdComponent inComponentIndex,
+                                 int inArrayId)
 {
   return index + vtkm::FloatDefault(0.1)*inComponentIndex + vtkm::FloatDefault(0.01)*inArrayId;
 }
@@ -63,7 +63,7 @@ MakeInputArray(int arrayId)
     {
       VTraits::SetComponent(buffer[index],
                             componentIndex,
-                            TestValue(index, componentIndex, arrayId));
+                            TestValue3Ids(index, componentIndex, arrayId));
     }
   }
 
@@ -106,7 +106,7 @@ void CheckArray(const vtkm::cont::ArrayHandle<ValueType,C> &outArray,
     {
       vtkm::FloatDefault retrievedComponent =
           VTraits::GetComponent(retreivedValue, componentIndex);
-      vtkm::FloatDefault expectedComponent = TestValue(index,
+      vtkm::FloatDefault expectedComponent = TestValue3Ids(index,
                                                  inComponents[componentIndex],
                                                  inArrayIds[componentIndex]);
       VTKM_TEST_ASSERT(retrievedComponent == expectedComponent,

@@ -37,40 +37,6 @@ namespace {
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-template<typename T>
-T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
-{
-  return T(index*100);
-}
-
-template<typename T>
-T TestValue(vtkm::Id index, T, vtkm::TypeTraitsRealTag)
-{
-  return T(index)/100;
-}
-
-template<typename T>
-T TestValue(vtkm::Id index, T)
-{
-  return TestValue(index, T(), typename vtkm::TypeTraits<T>::NumericTag());
-}
-
-template<typename T, vtkm::IdComponent N>
-vtkm::Vec<T,N> TestValue(vtkm::Id index, vtkm::Vec<T,N>) {
-  vtkm::Vec<T,N> value;
-  for (vtkm::IdComponent i = 0; i < N; i++)
-  {
-    value[i] = TestValue(index, T()) + (i + 1);
-  }
-  return value;
-}
-
-std::string TestValue(vtkm::Id index, std::string) {
-  std::stringstream stream;
-  stream << index;
-  return stream.str();
-}
-
 struct TypeListTagString : vtkm::ListTagBase<std::string> {  };
 
 template<typename T>
@@ -82,7 +48,9 @@ struct UnusualPortal
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
   VTKM_EXEC_CONT_EXPORT
-  ValueType Get(vtkm::Id index) const { return TestValue(index, ValueType()); }
+  ValueType Get(vtkm::Id index) const {
+    return TestValue(index, ValueType());
+  }
 };
 
 template<typename T>
@@ -117,11 +85,7 @@ struct CheckFunctor
 
     typename vtkm::cont::ArrayHandle<T,Storage>::PortalConstControl portal =
         array.GetPortalConstControl();
-    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
-    {
-      VTKM_TEST_ASSERT(test_equal(portal.Get(index), TestValue(index, T())),
-                       "Got bad value in array. Perhaps a bad cast?");
-    }
+    CheckPortal(portal);
   }
 };
 
