@@ -25,6 +25,7 @@ set(headers
   FunctionInterface.h
   FunctionInterfaceDetailPost.h
   FunctionInterfaceDetailPre.h
+  Invocation.h
   ListTagDetail.h
   )
 

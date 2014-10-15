@@ -19,16 +19,15 @@
 ##============================================================================
 
 set(headers
-  ExecutionObjectBase.h
-  FunctorBase.h
+  AspectTagDefault.h
+  Fetch.h
+  FetchTagArrayDirectIn.h
+  FetchTagArrayDirectOut.h
+  FetchTagExecObject.h
   )
 
-#-----------------------------------------------------------------------------
-add_subdirectory(internal)
-add_subdirectory(arg)
-
-vtkm_declare_headers(${impl_headers} ${headers})
+vtkm_declare_headers(${headers})
 
 
 #-----------------------------------------------------------------------------
-# add_subdirectory(testing)
+add_subdirectory(testing)

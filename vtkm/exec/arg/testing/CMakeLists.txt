@@ -1,4 +1,4 @@
-##============================================================================
+#============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -18,17 +18,10 @@
 ##  this software.
 ##============================================================================
 
-set(headers
-  ExecutionObjectBase.h
-  FunctorBase.h
+set(unit_tests
+  UnitTestFetchArrayDirectIn.cxx
+  UnitTestFetchArrayDirectOut.cxx
+  UnitTestFetchExecObject.cxx
   )
 
-#-----------------------------------------------------------------------------
-add_subdirectory(internal)
-add_subdirectory(arg)
-
-vtkm_declare_headers(${impl_headers} ${headers})
-
-
-#-----------------------------------------------------------------------------
-# add_subdirectory(testing)
+vtkm_unit_tests(SOURCES ${unit_tests})

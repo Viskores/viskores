@@ -21,7 +21,6 @@
 #define vtk_m_internal_FunctionInterface_h
 
 #include <vtkm/Types.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
 
 #include <boost/function_types/components.hpp>
 #include <boost/function_types/function_arity.hpp>
