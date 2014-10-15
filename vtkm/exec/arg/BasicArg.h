@@ -17,25 +17,32 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_internal_WorkletBase_h
-#define vtk_m_exec_internal_WorkletBase_h
+#ifndef vtk_m_exec_arg_BasicArg_h
+#define vtk_m_exec_arg_BasicArg_h
 
-#include <vtkm/exec/FunctorBase.h>
+#include <vtkm/Types.h>
+
+#include <vtkm/exec/arg/AspectTagDefault.h>
 
 namespace vtkm {
 namespace exec {
-namespace internal {
+namespace arg {
 
-/// Base class for all worklet classes. Worklet classes are subclasses and a
-/// operator() const is added to implement an algorithm in VTK-m. Different
-/// worklets have different calling semantics.
+/// \brief The underlying tag for basic \c ExecutionSignature arguments.
 ///
-class WorkletBase : public FunctorBase
+/// The basic \c ExecutionSignature arguments of _1, _2, etc. are all
+/// subclasses of \c BasicArg. They all make available the components of
+/// this class.
+///
+template<vtkm::IdComponent ControlSignatureIndex>
+struct BasicArg
 {
+  static const vtkm::IdComponent INDEX = ControlSignatureIndex;
+  typedef vtkm::exec::arg::AspectTagDefault AspectTag;
 };
 
 }
 }
-} // namespace vtkm::exec::internal
+} // namespace vtkm::exec::arg
 
-#endif //vtk_m_exec_internal_WorkletBase_h
+#endif //vtk_m_exec_arg_BasicArg_h

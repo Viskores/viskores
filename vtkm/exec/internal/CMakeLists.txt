@@ -20,7 +20,6 @@
 
 set(headers
   ErrorMessageBuffer.h
-  WorkletBase.h
   )
 
 vtkm_declare_headers(${headers})

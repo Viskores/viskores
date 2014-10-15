@@ -19,17 +19,14 @@
 ##============================================================================
 
 set(headers
-  AspectTagDefault.h
-  BasicArg.h
-  Fetch.h
-  FetchTagArrayDirectIn.h
-  FetchTagArrayDirectOut.h
-  FetchTagExecObject.h
-  WorkIndex.h
+  WorkletMapField.h
   )
+
+#-----------------------------------------------------------------------------
+add_subdirectory(internal)
 
 vtkm_declare_headers(${headers})
 
 
 #-----------------------------------------------------------------------------
-add_subdirectory(testing)
+# add_subdirectory(testing)

@@ -22,6 +22,7 @@ set(unit_tests
   UnitTestFetchArrayDirectIn.cxx
   UnitTestFetchArrayDirectOut.cxx
   UnitTestFetchExecObject.cxx
+  UnitTestFetchWorkIndex.cxx
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})
