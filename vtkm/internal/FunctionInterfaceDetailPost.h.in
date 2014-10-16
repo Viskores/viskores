@@ -69,8 +69,8 @@ def template_params(num_params, start=0, name=''):
     result += ',\n         typename %s' % ptype(param, name)
   return result
 
-def signature(num_params, return_type=ptype(0), name=''):
-  result = '%s(' % return_type
+def signature(num_params, name=''):
+  result = '%s(' % ptype(0, name)
   if num_params > 0:
     result += ptype(1, name)
   for param in xrange(2, num_params+1):
@@ -132,6 +132,53 @@ $for(param_index in xrange(1,num_params+1))\
   fi.template SetParameter<$(param_index)>(p$(param_index));
 $endfor\
   return fi;
+}
+
+$endfor\
+
+$for(num_params in xrange(0, max_parameters+1))\
+template<$template_params(num_params, name='T'),
+         $template_params(num_params, name='U')>
+struct FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<$signature(num_params, name='T')>,
+    vtkm::internal::FunctionInterface<$signature(num_params, name='U')> >
+{
+  typedef vtkm::internal::FunctionInterface<
+      typename detail::FunctionInterfaceZipReturn<$ptype(0,name='T'),$ptype(0,name='U')>::type (
+$for(param_index in xrange(1, num_params+1))\
+        vtkm::Pair<$ptype(param_index,name='T'), $ptype(param_index,name='U')>$comma_if(num_params-param_index)
+$endfor\
+        )> type;
+};
+
+$endfor\
+
+/// Creates a "zipped" version of two \c FunctionInterface objects. Each
+/// parameter in the returned object is a \c vtkm::Pair that is a combination
+/// of the corresponding pair of the input objects.
+///
+$for(num_params in xrange(1, max_parameters+1))\
+template<$template_params(num_params, name='T'),
+         $template_params(num_params, name='U')>
+VTKM_EXEC_CONT_EXPORT
+typename vtkm::internal::FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<$signature(num_params, name='T')>,
+    vtkm::internal::FunctionInterface<$signature(num_params, name='U')> >::type
+make_FunctionInterfaceZip(
+      const vtkm::internal::FunctionInterface<$signature(num_params, name='T')> &first,
+      const vtkm::internal::FunctionInterface<$signature(num_params, name='U')> &second)
+{
+  typename vtkm::internal::FunctionInterfaceZipType<
+      vtkm::internal::FunctionInterface<$signature(num_params, name='T')>,
+      vtkm::internal::FunctionInterface<$signature(num_params, name='U')> >::type result;
+
+$for(param_index in xrange(1, num_params+1))\
+  result.template SetParameter<$(param_index)>(
+      vtkm::make_Pair(first.template GetParameter<$(param_index)>(),
+                      second.template GetParameter<$(param_index)>()));
+$endfor\
+
+  return result;
 }
 
 $endfor\
