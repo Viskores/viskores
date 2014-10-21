@@ -18,16 +18,8 @@
 ##  this software.
 ##============================================================================
 
-set(headers
-  DispatcherMapField.h
-  WorkletMapField.h
+set(unit_tests
+  UnitTestWorkletMapField.cxx
   )
 
-#-----------------------------------------------------------------------------
-add_subdirectory(internal)
-
-vtkm_declare_headers(${headers})
-
-
-#-----------------------------------------------------------------------------
-add_subdirectory(testing)
+vtkm_unit_tests(SOURCES ${unit_tests})
