@@ -296,7 +296,7 @@ struct AssignScalarToVec<4>
   }
 };
 
-template<vtkm::IdComponent Size>
+template<typename CType, vtkm::IdComponent Size>
 struct VecCopy
 {
   template<typename T1, typename T2>
@@ -306,54 +306,54 @@ struct VecCopy
          componentIndex < Size;
          componentIndex++)
     {
-      dest[componentIndex] = src[componentIndex];
+      dest[componentIndex] = CType(src[componentIndex]);
     }
   }
 };
 
-template<>
-struct VecCopy<1>
+template<typename CType>
+struct VecCopy<CType, 1>
 {
   template<typename T1, typename T2>
   VTKM_EXEC_CONT_EXPORT void operator()(T1 &dest, const T2 &src)
   {
-    dest[0] = src[0];
+    dest[0] = CType(src[0]);
   }
 };
 
-template<>
-struct VecCopy<2>
+template<typename CType>
+struct VecCopy<CType, 2>
 {
   template<typename T1, typename T2>
   VTKM_EXEC_CONT_EXPORT void operator()(T1 &dest, const T2 &src)
   {
-    dest[0] = src[0];
-    dest[1] = src[1];
+    dest[0] = CType(src[0]);
+    dest[1] = CType(src[1]);
   }
 };
 
-template<>
-struct VecCopy<3>
+template<typename CType>
+struct VecCopy<CType, 3>
 {
   template<typename T1, typename T2>
   VTKM_EXEC_CONT_EXPORT void operator()(T1 &dest, const T2 &src)
   {
-    dest[0] = src[0];
-    dest[1] = src[1];
-    dest[2] = src[2];
+    dest[0] = CType(src[0]);
+    dest[1] = CType(src[1]);
+    dest[2] = CType(src[2]);
   }
 };
 
-template<>
-struct VecCopy<4>
+template<typename CType>
+struct VecCopy<CType, 4>
 {
   template<typename T1, typename T2>
   VTKM_EXEC_CONT_EXPORT void operator()(T1 &dest, const T2 &src)
   {
-    dest[0] = src[0];
-    dest[1] = src[1];
-    dest[2] = src[2];
-    dest[3] = src[3];
+    dest[0] = CType(src[0]);
+    dest[1] = CType(src[1]);
+    dest[2] = CType(src[2]);
+    dest[3] = CType(src[3]);
   }
 };
 
@@ -730,21 +730,24 @@ protected:
   VTKM_EXEC_CONT_EXPORT
   explicit VecBase(const ComponentType* values)
   {
-    vtkm::internal::VecCopy<NUM_COMPONENTS>()(this->Components, values);
+    vtkm::internal::VecCopy<ComponentType,NUM_COMPONENTS>()(
+      this->Components, values);
   }
 
   template<typename OtherValueType, typename OtherDerivedType>
   VTKM_EXEC_CONT_EXPORT
   VecBase(const VecBase<OtherValueType,Size,OtherDerivedType> &src)
   {
-    vtkm::internal::VecCopy<NUM_COMPONENTS>()(this->Components, src);
+    vtkm::internal::VecCopy<ComponentType,NUM_COMPONENTS>()(
+      this->Components, src);
   }
 
 public:
   VTKM_EXEC_CONT_EXPORT
   DerivedClass &operator=(const DerivedClass &src)
   {
-    vtkm::internal::VecCopy<NUM_COMPONENTS>()(this->Components, src);
+    vtkm::internal::VecCopy<ComponentType,NUM_COMPONENTS>()(
+      this->Components, src);
     return *reinterpret_cast<DerivedClass *>(this);
   }
 

@@ -43,7 +43,9 @@ const vtkm::Id ARRAY_SIZE = DIMENSION[0]*DIMENSION[1]*DIMENSION[2];
 vtkm::Vec<vtkm::FloatDefault,3> TestValue(vtkm::Id index)
 {
   vtkm::Id3 index3d = vtkm::ExtentPointFlatIndexToTopologyIndex(index, EXTENT);
-  return vtkm::Vec<vtkm::FloatDefault,3>(index3d[0], index3d[1], index3d[2]);
+  return vtkm::make_Vec(vtkm::FloatDefault(index3d[0]),
+                        vtkm::FloatDefault(index3d[1]),
+                        vtkm::FloatDefault(index3d[2]));
 }
 
 int g_CheckArrayInvocations;

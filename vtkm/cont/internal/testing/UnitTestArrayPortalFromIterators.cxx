@@ -74,7 +74,7 @@ struct TemplatedTests
   {
     ValueType array[ARRAY_SIZE];
 
-    static const ComponentType ORIGINAL_VALUE = 239;
+    static const ComponentType ORIGINAL_VALUE = 109;
     FillIterator(array, array+ARRAY_SIZE, ORIGINAL_VALUE);
 
     ::vtkm::cont::internal::ArrayPortalFromIterators<ValueType *>
