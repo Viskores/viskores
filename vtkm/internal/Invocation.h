@@ -32,15 +32,33 @@ namespace internal {
 /// worklet. \c Invocation is a class that manages all these types.
 ///
 template<typename _ParameterInterface,
+         typename _ControlInterface,
+         typename _ExecutionInterface,
          vtkm::IdComponent _InputDomainIndex>
 struct Invocation
 {
   /// \brief The types of the parameters
   ///
-  /// \c ParameterInterface is (expected to be) a FunctionInterface class that
-  /// lists the types of the parameters for the invocation.
+  /// \c ParameterInterface is (expected to be) a \c FunctionInterface class
+  /// that lists the types of the parameters for the invocation.
   ///
   typedef _ParameterInterface ParameterInterface;
+
+  /// \brief The tags of the \c ControlSignature.
+  ///
+  /// \c ControlInterface is (expected to be) a \c FunctionInterface class that
+  /// represents the \c ControlSignature of a worklet (although dispatchers
+  /// might modify the control signature to provide auxiliary information).
+  ///
+  typedef _ControlInterface ControlInterface;
+
+  /// \brief The tags of the \c ExecutionSignature.
+  ///
+  /// \c ExecutionInterface is (expected to be) a \c FunctionInterface class that
+  /// represents the \c ExecutionSignature of a worklet (although dispatchers
+  /// might modify the execution signature to provide auxiliary information).
+  ///
+  typedef _ExecutionInterface ExecutionInterface;
 
   /// \brief The index of the input domain.
   ///
@@ -58,11 +76,14 @@ struct Invocation
   ///
   template<typename NewParameterInterface>
   struct ChangeParametersType {
-    typedef Invocation<NewParameterInterface,InputDomainIndex> type;
+    typedef Invocation<NewParameterInterface,
+                       ControlInterface,
+                       ExecutionInterface,
+                       InputDomainIndex> type;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
-  /// \c Parameters type is changed to the type given.
+  /// \c Parameters are replaced with those provided.
   ///
   template<typename NewParameterInterface>
   VTKM_EXEC_CONT_EXPORT
@@ -73,11 +94,56 @@ struct Invocation
   }
 
   /// Defines a new \c Invocation type that is the same as this type except
+  /// with the \c ControlInterface replaced.
+  ///
+  template<typename NewControlInterface>
+  struct ChangeControlInterfaceType {
+    typedef Invocation<ParameterInterface,
+                       NewControlInterface,
+                       ExecutionInterface,
+                       InputDomainIndex> type;
+  };
+
+  /// Returns a new \c Invocation that is the same as this one except that the
+  /// \c ControlInterface type is changed to the type given.
+  ///
+  template<typename NewControlInterface>
+  typename ChangeControlInterfaceType<NewControlInterface>::type
+  ChangeControlInterface(NewControlInterface) const {
+    return typename ChangeControlInterfaceType<NewControlInterface>::type(
+          this->Parameters);
+  }
+
+  /// Defines a new \c Invocation type that is the same as this type except
+  /// with the \c ExecutionInterface replaced.
+  ///
+  template<typename NewExecutionInterface>
+  struct ChangeExecutionInterfaceType {
+    typedef Invocation<ParameterInterface,
+                       NewExecutionInterface,
+                       ExecutionInterface,
+                       InputDomainIndex> type;
+  };
+
+  /// Returns a new \c Invocation that is the same as this one except that the
+  /// \c ExecutionInterface type is changed to the type given.
+  ///
+  template<typename NewExecutionInterface>
+  typename ChangeExecutionInterfaceType<NewExecutionInterface>::type
+  ChangeExecutionInterface(NewExecutionInterface) const {
+    return typename ChangeExecutionInterfaceType<NewExecutionInterface>::type(
+          this->Parameters);
+  }
+
+  /// Defines a new \c Invocation type that is the same as this type except
   /// with the \c InputDomainIndex replaced.
   ///
   template<vtkm::IdComponent NewInputDomainIndex>
   struct ChangeInputDomainIndexType {
-    typedef Invocation<ParameterInterface,NewInputDomainIndex> type;
+    typedef Invocation<ParameterInterface,
+                       ControlInterface,
+                       ExecutionInterface,
+                       NewInputDomainIndex> type;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -100,12 +166,21 @@ struct Invocation
 /// Convenience function for creating an Invocation object.
 ///
 template<vtkm::IdComponent InputDomainIndex,
+         typename ControlInterface,
+         typename ExecutionInterface,
          typename ParameterInterface>
 VTKM_CONT_EXPORT
-vtkm::internal::Invocation<ParameterInterface, InputDomainIndex>
-make_Invocation(const ParameterInterface &params)
+vtkm::internal::Invocation<ParameterInterface,
+                           ControlInterface,
+                           ExecutionInterface,
+                           InputDomainIndex>
+make_Invocation(const ParameterInterface &params,
+                ControlInterface = ControlInterface(),
+                ExecutionInterface = ExecutionInterface())
 {
   return vtkm::internal::Invocation<ParameterInterface,
+                                    ControlInterface,
+                                    ExecutionInterface,
                                     InputDomainIndex>(params);
 }
 

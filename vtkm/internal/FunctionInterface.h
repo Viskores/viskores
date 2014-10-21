@@ -625,7 +625,7 @@ public:
   template<typename TransformFunctor, typename FinishFunctor>
   VTKM_CONT_EXPORT
   void DynamicTransformCont(const TransformFunctor &transform,
-                            const FinishFunctor &finish) {
+                            const FinishFunctor &finish) const {
     typedef detail::FunctionInterfaceDynamicTransformContContinue<
         FunctionSignature,
         ResultType(),
@@ -637,7 +637,7 @@ public:
         ContinueFunctorType(*this, emptyInterface, transform, finish);
 
     continueFunctor.DoNextTransform(emptyInterface);
-    this->Result = emptyInterface.GetReturnValueSafe();
+//    this->Result = emptyInterface.GetReturnValueSafe();
   }
 
   /// \brief Applies a function to all the parameters.
@@ -682,7 +682,7 @@ class FunctionInterfaceDynamicTransformContContinue
 {
 public:
   FunctionInterfaceDynamicTransformContContinue(
-      vtkm::internal::FunctionInterface<OriginalFunction> &originalInterface,
+      const vtkm::internal::FunctionInterface<OriginalFunction> &originalInterface,
       vtkm::internal::FunctionInterface<NewFunction> &newInterface,
       const TransformFunctor &transform,
       const FinishFunctor &finish)
@@ -740,7 +740,7 @@ public:
   }
 
 private:
-  vtkm::internal::FunctionInterface<OriginalFunction> &OriginalInterface;
+  const vtkm::internal::FunctionInterface<OriginalFunction> &OriginalInterface;
   vtkm::internal::FunctionInterface<NewFunction> &NewInterface;
   const TransformFunctor &Transform;
   const FinishFunctor &Finish;

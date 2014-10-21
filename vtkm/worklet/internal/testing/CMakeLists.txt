@@ -18,13 +18,8 @@
 ##  this software.
 ##============================================================================
 
-set(headers
-  DispatcherBase.h
-  WorkletBase.h
+set(unit_tests
+  UnitTestDispatcherBase.cxx
   )
 
-vtkm_declare_headers(${headers})
-
-vtkm_pyexpander_generated_file(DispatcherBaseDetailInvoke.h)
-
-add_subdirectory(testing)
+vtkm_unit_tests(SOURCES ${unit_tests})

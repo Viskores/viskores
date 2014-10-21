@@ -63,7 +63,9 @@ void TestWorkIndexFetch()
       void(NullParam,NullParam,NullParam,NullParam,NullParam)>
       BaseFunctionInterface;
 
-  TryInvocation(vtkm::internal::make_Invocation<1>( BaseFunctionInterface()));
+  TryInvocation(vtkm::internal::make_Invocation<1>(BaseFunctionInterface(),
+                                                   NullParam(),
+                                                   NullParam()));
 }
 
 } // anonymous namespace

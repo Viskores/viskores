@@ -78,7 +78,9 @@ void TryParamIndex()
 
   TryInvocation<ParamIndex>(vtkm::internal::make_Invocation<1>(
                               BaseFunctionInterface().Replace<ParamIndex>(
-                                TestExecutionObject(EXPECTED_NUMBER))));
+                                TestExecutionObject(EXPECTED_NUMBER)),
+                              NullParam(),
+                              NullParam()));
 }
 
 void TestExecObjectFetch()

@@ -83,7 +83,9 @@ struct FetchArrayDirectInTests
 
     this->TryInvocation(vtkm::internal::make_Invocation<1>(
                           BaseFunctionInterface().Replace<ParamIndex>(
-                            TestPortal<T>())));
+                            TestPortal<T>()),
+                          NullParam(),
+                          NullParam()));
   }
 
 };
