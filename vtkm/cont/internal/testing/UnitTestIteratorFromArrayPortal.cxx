@@ -72,7 +72,7 @@ struct TemplatedTests
     return CheckIterator(iterators.GetBegin(), iterators.GetEnd(), value);
   }
 
-  ComponentType ORIGINAL_VALUE() { return 239; }
+  ComponentType ORIGINAL_VALUE() { return 39; }
 
   template<class ArrayPortalType>
   void TestIteratorRead(ArrayPortalType portal)

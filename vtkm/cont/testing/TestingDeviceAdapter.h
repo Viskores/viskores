@@ -437,7 +437,7 @@ private:
     Sleep(1000);
 #endif
 
-    vtkm::FloatDefault elapsedTime = timer.GetElapsedTime();
+    vtkm::Float64 elapsedTime = timer.GetElapsedTime();
 
     std::cout << "Elapsed time: " << elapsedTime << std::endl;
 

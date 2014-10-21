@@ -243,7 +243,7 @@ struct DynamicTransformFinish
 struct ForEachFunctor
 {
   template<typename T>
-  void operator()(T &x) const { x = 2*x; }
+  void operator()(T &x) const { x = T(2)*x; }
 
   void operator()(std::string &x) const { x.append("*2"); }
 };
@@ -436,14 +436,14 @@ void TestForEach()
   VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == 2*Arg1, "Arg 1 incorrect.");
   VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == 2*Arg2, "Arg 2 incorrect.");
   VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3+"*2", "Arg 3 incorrect.");
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == 2*Arg4, "Arg 4 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == 2.0f*Arg4, "Arg 4 incorrect.");
   VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == 2*Arg5, "Arg 5 incorrect.");
 
   funcInterface.ForEachExec(ForEachFunctor());
   VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == 4*Arg1, "Arg 1 incorrect.");
   VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == 4*Arg2, "Arg 2 incorrect.");
   VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3+"*2*2", "Arg 3 incorrect.");
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == 4*Arg4, "Arg 4 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == 4.0f*Arg4, "Arg 4 incorrect.");
   VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == 4*Arg5, "Arg 5 incorrect.");
 }
 
