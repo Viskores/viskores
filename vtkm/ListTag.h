@@ -29,13 +29,6 @@
 
 namespace vtkm {
 
-namespace detail {
-
-template<typename ListTag1, typename ListTag2>
-struct ListJoin { };
-
-} // namespace detail
-
 namespace internal {
 
 template<typename ListTag>
@@ -56,6 +49,13 @@ struct ListTagCheck
   BOOST_STATIC_ASSERT_MSG( \
     ::vtkm::internal::ListTagCheck<tag>::Valid, \
     "Provided type is not a valid VTK-m list tag.")
+
+namespace detail {
+
+template<typename ListTag1, typename ListTag2>
+struct ListJoin { };
+
+} // namespace detail
 
 /// A special tag for an empty list.
 ///
@@ -105,6 +105,7 @@ template<typename Functor, typename ListTag>
 VTKM_CONT_EXPORT
 void ListForEach(Functor &f, ListTag)
 {
+  VTKM_IS_LIST_TAG(ListTag);
   detail::ListForEachImpl(f, typename ListTag::List());
 }
 
@@ -115,8 +116,32 @@ template<typename Functor, typename ListTag>
 VTKM_CONT_EXPORT
 void ListForEach(const Functor &f, ListTag)
 {
+  VTKM_IS_LIST_TAG(ListTag);
   detail::ListForEachImpl(f, typename ListTag::List());
 }
+
+/// Checks to see if the given \c Type is in the list pointed to by \c ListTag.
+/// There is a static boolean named \c value that is set to true if the type is
+/// contained in the list and false otherwise.
+///
+template<typename ListTag, typename Type>
+struct ListContains
+{
+  VTKM_IS_LIST_TAG(ListTag);
+  static const bool value =
+      detail::ListContainsImpl<typename ListTag::List,Type>::value;
+};
+
+namespace detail {
+
+template<typename Type, typename ListTag1, typename ListTag2>
+struct ListContainsImpl<ListJoin<ListTag1,ListTag2>, Type>
+{
+  static const bool value = (vtkm::ListContains<ListTag1,Type>::value ||
+                             vtkm::ListContains<ListTag2,Type>::value);
+};
+
+} // namespace detail
 
 } // namespace vtkm
 

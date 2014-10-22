@@ -24,6 +24,7 @@
 
 #include <vtkm/testing/Testing.h>
 
+#include <algorithm>
 #include <vector>
 
 namespace {
@@ -94,6 +95,16 @@ void CheckSame(const vtkm::Vec<int,N> &expected,
   }
 }
 
+template<int N, typename ListTag>
+void CheckContains(TestClass<N>, ListTag, const std::vector<int> contents)
+{
+  bool listContains = vtkm::ListContains<ListTag, TestClass<N> >::value;
+  bool shouldContain =
+      std::find(contents.begin(), contents.end(), N) != contents.end();
+  VTKM_TEST_ASSERT(listContains == shouldContain,
+                   "ListContains check failed.");
+}
+
 template<vtkm::IdComponent N, typename ListTag>
 void TryList(const vtkm::Vec<int,N> &expected, ListTag)
 {
@@ -107,6 +118,18 @@ void TryList(const vtkm::Vec<int,N> &expected, ListTag)
   std::cout << "    Try constant for each" << std::endl;
   vtkm::ListForEach(ConstantFunctor(), ListTag());
   CheckSame(expected, g_FoundType);
+
+  std::cout << "    Try checking contents" << std::endl;
+  CheckContains(TestClass<11>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<21>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<22>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<31>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<32>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<33>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<41>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<42>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<43>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<44>(), ListTag(), functor.FoundTypes);
 }
 
 void TestLists()

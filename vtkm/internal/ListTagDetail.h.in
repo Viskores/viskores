@@ -41,7 +41,7 @@ $# Ignore the following comment. It is meant for the generated file.
 
 #include <vtkm/Types.h>
 
-$py(max_base_list=25)\
+$py(max_base_list=15)\
 #define VTKM_MAX_BASE_LIST $(max_base_list)
 
 $# Python commands used in template expansion.
@@ -68,11 +68,11 @@ def param_list(num_params, name='T', start=1):
     result += ',%s%d' % (name, param)
   return result
 
-def signature(num_params, name='T', return_type='void'):
+def signature(num_params, name='T', return_type='void', start=1):
   result = '%s(' % return_type
-  if num_params > 0:
-    result += '%s1' % name
-  for param in xrange(2, num_params+1):
+  if num_params >= start:
+    result += '%s%d' % (name, start)
+  for param in xrange(start+1, num_params+1):
     result += ',%s%d' % (name, param)
   result += ')'
   return result
@@ -122,6 +122,47 @@ $for(param_index in range(1, num_params+1))\
   f(T$(param_index)());
 $endfor\
 }
+
+$endfor\
+
+//-----------------------------------------------------------------------------
+
+template<typename List, typename Type>
+struct ListContainsImpl;
+
+template<typename Type>
+struct ListContainsImpl<ListBase<void()>, Type>
+{
+  static const bool value = false;
+};
+
+template<typename Type>
+struct ListContainsImpl<ListBase<void(Type)>, Type>
+{
+  static const bool value = true;
+};
+
+template<typename Type, typename T1>
+struct ListContainsImpl<ListBase<void(T1)>, Type>
+{
+  static const bool value = false;
+};
+
+$for(num_params in xrange(2, max_base_list+1))\
+template<typename Type,
+         $template_params(num_params, start=2)>
+struct ListContainsImpl<ListBase<void(Type,$param_list(num_params, start=2))>, Type>
+{
+  static const bool value = true;
+};
+
+template<typename Type,
+         $template_params(num_params)>
+struct ListContainsImpl<ListBase<$signature(num_params)>, Type>
+{
+  static const bool value =
+      ListContainsImpl<ListBase<$signature(num_params, start=2)>, Type>::value;
+};
 
 $endfor\
 
