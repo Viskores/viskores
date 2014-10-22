@@ -260,6 +260,7 @@ void TestErrorFunctorInvoke()
   WorkletInvokeFunctor1 workletInvokeFunctor1 =
       WorkletInvokeFunctor1(TestWorkletErrorProxy(), InvocationType1(execObjects));
   char message[1024];
+  message[0] = '\0';
   vtkm::exec::internal::ErrorMessageBuffer errorMessage(message, 1024);
   workletInvokeFunctor1.SetErrorMessageBuffer(errorMessage);
   workletInvokeFunctor1(1);
