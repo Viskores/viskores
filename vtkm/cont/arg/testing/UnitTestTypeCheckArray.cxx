@@ -34,7 +34,8 @@ struct TryArraysOfType
   void operator()(T) const
   {
     using vtkm::cont::arg::TypeCheck;
-    using vtkm::cont::arg::TypeCheckTagArray;
+    typedef vtkm::cont::arg::TypeCheckTagArray<vtkm::TypeListTagAll>
+        TypeCheckTagArray;
 
     typedef vtkm::cont::ArrayHandle<T> StandardArray;
     VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArray,StandardArray>::value),
@@ -55,7 +56,6 @@ struct TryArraysOfType
                      "Not an array type check failed.");
 
     // Another type that is not a valid array.
-    typedef typename StandardArray::PortalControl NotAnArray;
     VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArray,T>::value),
                      "Not an array type check failed.");
   }
@@ -64,6 +64,27 @@ struct TryArraysOfType
 void TestCheckArray()
 {
   vtkm::testing::Testing::TryAllTypes(TryArraysOfType());
+
+  std::cout << "Trying some arrays with types that do not match the list."
+            << std::endl;
+  using vtkm::cont::arg::TypeCheck;
+  using vtkm::cont::arg::TypeCheckTagArray;
+
+  typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> ScalarArray;
+  VTKM_TEST_ASSERT(
+        (TypeCheck<TypeCheckTagArray<vtkm::TypeListTagFieldScalar>,ScalarArray>::value),
+        "Scalar for scalar check failed.");
+  VTKM_TEST_ASSERT(
+        !(TypeCheck<TypeCheckTagArray<vtkm::TypeListTagFieldVec3>,ScalarArray>::value),
+        "Scalar for vector check failed.");
+
+  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault,3> > VecArray;
+  VTKM_TEST_ASSERT(
+        (TypeCheck<TypeCheckTagArray<vtkm::TypeListTagFieldVec3>,VecArray>::value),
+        "Vector for vector check failed.");
+  VTKM_TEST_ASSERT(
+        !(TypeCheck<TypeCheckTagArray<vtkm::TypeListTagFieldScalar>,VecArray>::value),
+        "Vector for scalar check failed.");
 }
 
 } // anonymous namespace

@@ -20,6 +20,8 @@
 #ifndef vtk_m_worklet_internal_WorkletBase_h
 #define vtk_m_worklet_internal_WorkletBase_h
 
+#include <vtkm/TypeListTag.h>
+
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
 #include <vtkm/exec/arg/FetchTagExecObject.h>
@@ -66,6 +68,90 @@ public:
   /// Default input domain is the first argument. Worklet subclasses can
   /// override this by redefining this type.
   typedef _1 InputDomain;
+
+  /// \brief A type list containing the type vtkm::Id.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagId IdType;
+
+  /// \brief A type list containing the type vtkm::Id2.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagId2 Id2Type;
+
+  /// \brief A type list containing the type vtkm::Id3.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagId3 Id3Type;
+
+  /// \brief A list of types commonly used for indexing.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagIndex Index;
+
+  /// \brief A list of types commonly used for scalar fields.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagFieldScalar Scalar;
+
+  /// \brief A list of all basic types used for scalar fields.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagScalarAll ScalarAll;
+
+  /// \brief A list of types commonly used for vector fields of 2 components.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagFieldVec2 Vec2;
+
+  /// \brief A list of types commonly used for vector fields of 3 components.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagFieldVec3 Vec3;
+
+  /// \brief A list of types commonly used for vector fields of 4 components.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagFieldVec4 Vec4;
+
+  /// \brief A list of all basic types used for vector fields.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagVecAll VecAll;
+
+  /// \brief A list of types (scalar and vector) commonly used in fields.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagField FieldCommon;
+
+  /// \brief A list of vector types commonly used in fields.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagVecCommon VecCommon;
+
+  /// \brief A list of generally common types.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagCommon CommonTypes;
+
+  /// \brief A list of all basic types.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagAll AllTypes;
 };
 
 }

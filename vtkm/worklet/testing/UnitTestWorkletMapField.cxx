@@ -33,20 +33,44 @@ static const vtkm::Id ARRAY_SIZE = 10;
 class TestWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn, FieldOut);
-  typedef _2 ExecutionSignature(_1, WorkIndex);
+  typedef void ControlSignature(FieldIn<>, FieldOut<>);
+  typedef void ExecutionSignature(_1, _2, WorkIndex);
 
   template<typename T>
-  T operator()(T x, vtkm::Id workIndex) const
+  void operator()(const T &in, T &out, vtkm::Id workIndex) const
   {
-    if (x != TestValue(workIndex, T()) + T(100))
+    if (in != TestValue(workIndex, T()) + T(100))
     {
       this->RaiseError("Got wrong input value.");
     }
-    return x - T(100);
+    out = in - T(100);
+  }
+
+  template<typename T1, typename T2>
+  void operator()(const T1 &, const T2 &, vtkm::Id) const
+  {
+    this->RaiseError("Cannot call this worklet with different types.");
   }
 };
 
+class TestWorkletLimitedTypes : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
+  typedef _2 ExecutionSignature(_1, WorkIndex);
+
+  template<typename T>
+  T operator()(const T &in, vtkm::Id workIndex) const
+  {
+    if (in != TestValue(workIndex, T()) + T(100))
+    {
+      this->RaiseError("Got wrong input value.");
+    }
+    return in - T(100);
+  }
+};
+
+template<typename WorkletType>
 struct DoTestWorklet
 {
   template<typename T>
@@ -66,51 +90,42 @@ struct DoTestWorklet
     vtkm::cont::ArrayHandle<T> outputHandle;
 
     std::cout << "Create and run dispatcher." << std::endl;
-    vtkm::worklet::DispatcherMapField<TestWorklet> dispatcher;
+    vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
     dispatcher.Invoke(inputHandle, outputHandle);
 
     std::cout << "Check result." << std::endl;
     CheckPortal(outputHandle.GetPortalConstControl());
 
-    // The following test is commented out because as of this writing
-    // (10-21-2014) there is an issue with getting unexpected types when
-    // casting dynamic arrays. In particular, this issue is with using dynamic
-    // arrays. We know that both arrays will always be the same type, but the
-    // arrays are cast independently. Thus, the compiler will generate code for
-    // odd combinations that are incompatibile with each other. Thus, we need a
-    // way to better specify the types expected by the worklet function. I can
-    // think of two general ways (there might be more).
-    //
-    // 1. Specify the expected type in the ControlSignature. This would
-    // probably be a template argument of the tag with a list of basic types
-    // that could be in the array. The dynamic array casting would then take
-    // that into account and only try those specified types. That should be
-    // fairly straightforward to implement and handle many cases. However, it
-    // still has the problem that all dynamic arrays are cast independently.
-    // Thus, for example, if you have a worklet that can operate on vectors of
-    // any size, you will likely get a compile error when trying to operate on
-    // two vectors of different size when you expected them to be the same.
-    // This particular general case might actually be quite rare, so in that
-    // case the user has the onus to create a default template that handles
-    // this exceptional case with failure.
-    //
-    // 2. Have a mechanism to identify when the type of two things is expected
-    // to be the same. I'm not sure what the programming interface for that
-    // would look though.
-    //
-//    std::cout << "Repeat with dynamic arrays." << std::endl;
-//    // Clear out output array.
-//    outputHandle = vtkm::cont::ArrayHandle<T>();
-//    vtkm::cont::DynamicArrayHandle inputDynamic(inputHandle);
-//    vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
-//    dispatcher.Invoke(inputDynamic, outputDynamic);
-//    CheckPortal(outputHandle.GetPortalConstControl());
+    std::cout << "Repeat with dynamic arrays." << std::endl;
+    // Clear out output array.
+    outputHandle = vtkm::cont::ArrayHandle<T>();
+    vtkm::cont::DynamicArrayHandle inputDynamic(inputHandle);
+    vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
+    dispatcher.Invoke(inputDynamic, outputDynamic);
+    CheckPortal(outputHandle.GetPortalConstControl());
   }
 };
 
 void TestWorkletMapField()
 {
-  vtkm::testing::Testing::TryTypes(DoTestWorklet(), vtkm::TypeListTagCommon());
+  std::cout << "--- Worklet accepting all types." << std::endl;
+  vtkm::testing::Testing::TryTypes(DoTestWorklet<TestWorklet>(),
+                                   vtkm::TypeListTagCommon());
+
+  std::cout << "--- Worklet accepting some types." << std::endl;
+  vtkm::testing::Testing::TryTypes(DoTestWorklet<TestWorkletLimitedTypes>(),
+                                   vtkm::TypeListTagFieldScalar());
+
+  std::cout << "--- Sending bad type to worklet." << std::endl;
+  try
+  {
+    DoTestWorklet<TestWorkletLimitedTypes>()(vtkm::Vec<vtkm::Float32,3>());
+    VTKM_TEST_FAIL("Did not throw expected error.");
+  }
+  catch (vtkm::cont::ErrorControlBadType &error)
+  {
+    std::cout << "Got expected error: " << error.GetMessage() << std::endl;
+  }
 }
 
 } // anonymous namespace

@@ -22,6 +22,8 @@
 
 #include <vtkm/worklet/internal/WorkletBase.h>
 
+#include <vtkm/TypeListTag.h>
+
 #include <vtkm/cont/arg/TransportTagArrayIn.h>
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
@@ -39,16 +41,26 @@ namespace worklet {
 class WorkletMapField : public vtkm::worklet::internal::WorkletBase
 {
 public:
-  /// A control signature tag for input fields.
+  /// \brief A control signature tag for input fields.
+  ///
+  /// This tag takes a template argument that is a type list tag that limits
+  /// the possible value types in the array.
+  ///
+  template<typename TypeList = AllTypes>
   struct FieldIn {
-    typedef vtkm::cont::arg::TypeCheckTagArray TypeCheckTag;
+    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag;
   };
 
-  /// A control signature tag for output fields.
+  /// \brief A control signature tag for output fields.
+  ///
+  /// This tag takes a template argument that is a type list tag that limits
+  /// the possible value types in the array.
+  ///
+  template<typename TypeList = AllTypes>
   struct FieldOut {
-    typedef vtkm::cont::arg::TypeCheckTagArray TypeCheckTag;
+    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayOut TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectOut FetchTag;
   };
