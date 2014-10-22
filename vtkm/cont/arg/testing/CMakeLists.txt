@@ -22,6 +22,8 @@ set(unit_tests
   UnitTestTransportArrayIn.cxx
   UnitTestTransportArrayOut.cxx
   UnitTestTransportExecObject.cxx
+  UnitTestTypeCheckArray.cxx
+  UnitTestTypeCheckExecObject.cxx
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})

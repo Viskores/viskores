@@ -35,6 +35,7 @@ set(headers
   Error.h
   ErrorControl.h
   ErrorControlAssert.h
+  ErrorControlBadType.h
   ErrorControlBadValue.h
   ErrorControlInternal.h
   ErrorControlOutOfMemory.h

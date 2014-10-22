@@ -25,6 +25,9 @@ set(headers
   TransportTagArrayIn.h
   TransportTagArrayOut.h
   TransportTagExecObject.h
+  TypeCheck.h
+  TypeCheckTagArray.h
+  TypeCheckTagExecObject.h
   )
 
 vtkm_declare_headers(${headers})

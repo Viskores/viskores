@@ -43,6 +43,7 @@ struct TestExecObject
   vtkm::Id *Array;
 };
 
+struct TestTypeCheckTag {  };
 struct TestTransportTag {  };
 struct TestFetchTagInput {  };
 struct TestFetchTagOutput {  };
@@ -52,6 +53,12 @@ struct TestFetchTagOutput {  };
 namespace vtkm {
 namespace cont {
 namespace arg {
+
+template<>
+struct TypeCheck<TestTypeCheckTag, vtkm::Id *>
+{
+  static const bool value = true;
+};
 
 template<>
 struct Transport<TestTransportTag, vtkm::Id *, Device>
@@ -122,10 +129,12 @@ class TestWorkletBase : public vtkm::worklet::internal::WorkletBase
 {
 public:
   struct TestIn {
+    typedef TestTypeCheckTag TypeCheckTag;
     typedef TestTransportTag TransportTag;
     typedef TestFetchTagInput FetchTag;
   };
   struct TestOut {
+    typedef TestTypeCheckTag TypeCheckTag;
     typedef TestTransportTag TransportTag;
     typedef TestFetchTagOutput FetchTag;
   };
@@ -199,7 +208,8 @@ private:
 
 void TestBasicInvoke()
 {
-  std::cout << "Set up data." << std::endl;
+  std::cout << "Test basic invoke" << std::endl;
+  std::cout << "  Set up data." << std::endl;
   vtkm::Id inputArray[ARRAY_SIZE];
   vtkm::Id outputArray[ARRAY_SIZE];
 
@@ -209,11 +219,11 @@ void TestBasicInvoke()
     outputArray[index] = 0xDEADDEAD;
   }
 
-  std::cout << "Create and run dispatcher." << std::endl;
+  std::cout << "  Create and run dispatcher." << std::endl;
   TestDispatcher<TestWorklet> dispatcher;
   dispatcher.Invoke(inputArray, outputArray);
 
-  std::cout << "Check output of invoke." << std::endl;
+  std::cout << "  Check output of invoke." << std::endl;
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
     VTKM_TEST_ASSERT(outputArray[index] == TestValue(index, vtkm::Id()) + 1000,
@@ -223,7 +233,8 @@ void TestBasicInvoke()
 
 void TestInvokeWithError()
 {
-  std::cout << "Set up data." << std::endl;
+  std::cout << "Test invoke with error raised" << std::endl;
+  std::cout << "  Set up data." << std::endl;
   vtkm::Id inputArray[ARRAY_SIZE];
   vtkm::Id outputArray[ARRAY_SIZE];
 
@@ -235,16 +246,50 @@ void TestInvokeWithError()
 
   try
   {
-    std::cout << "Create and run dispatcher that raises error." << std::endl;
+    std::cout << "  Create and run dispatcher that raises error." << std::endl;
     TestDispatcher<TestErrorWorklet> dispatcher;
     dispatcher.Invoke(inputArray, outputArray);
     VTKM_TEST_FAIL("Exception not thrown.");
   }
   catch (vtkm::cont::ErrorExecution error)
   {
-    std::cout << "Got expected exception." << std::endl;
+    std::cout << "  Got expected exception." << std::endl;
     VTKM_TEST_ASSERT(error.GetMessage() == ERROR_MESSAGE,
                      "Got unexpected error message.");
+  }
+}
+
+void TestInvokeWithBadType()
+{
+  std::cout << "Test invoke with bad type" << std::endl;
+
+  vtkm::Id array[ARRAY_SIZE];
+  TestDispatcher<TestWorklet> dispatcher;
+
+  try
+  {
+    std::cout << "  First argument bad." << std::endl;
+    dispatcher.Invoke(NULL, array);
+  }
+  catch (vtkm::cont::ErrorControlBadType error)
+  {
+    std::cout << "    Got expected exception." << std::endl;
+    std::cout << "    " << error.GetMessage() << std::endl;
+    VTKM_TEST_ASSERT(error.GetMessage().find(" 1 ") != std::string::npos,
+                     "Parameter index not named in error message.");
+  }
+
+  try
+  {
+    std::cout << "  Second argument bad." << std::endl;
+    dispatcher.Invoke(array, NULL);
+  }
+  catch (vtkm::cont::ErrorControlBadType error)
+  {
+    std::cout << "    Got expected exception." << std::endl;
+    std::cout << "    " << error.GetMessage() << std::endl;
+    VTKM_TEST_ASSERT(error.GetMessage().find(" 2 ") != std::string::npos,
+                     "Parameter index not named in error message.");
   }
 }
 
@@ -252,6 +297,7 @@ void TestDispatcherBase()
 {
   TestBasicInvoke();
   TestInvokeWithError();
+  TestInvokeWithBadType();
 }
 
 } // anonymous namespace

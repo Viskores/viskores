@@ -24,6 +24,7 @@
 
 #include <vtkm/cont/arg/TransportTagArrayIn.h>
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
+#include <vtkm/cont/arg/TypeCheckTagArray.h>
 
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
@@ -40,12 +41,14 @@ class WorkletMapField : public vtkm::worklet::internal::WorkletBase
 public:
   /// A control signature tag for input fields.
   struct FieldIn {
+    typedef vtkm::cont::arg::TypeCheckTagArray TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag;
   };
 
   /// A control signature tag for output fields.
   struct FieldOut {
+    typedef vtkm::cont::arg::TypeCheckTagArray TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayOut TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectOut FetchTag;
   };

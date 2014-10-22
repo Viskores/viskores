@@ -26,6 +26,7 @@
 #include <vtkm/exec/arg/WorkIndex.h>
 
 #include <vtkm/cont/arg/TransportTagExecObject.h>
+#include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 
 namespace vtkm {
 namespace worklet {
@@ -57,6 +58,7 @@ public:
 
   /// \c ControlSignature tag for execution object inputs.
   struct ExecObject {
+    typedef vtkm::cont::arg::TypeCheckTagExecObject TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagExecObject TransportTag;
     typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
   };

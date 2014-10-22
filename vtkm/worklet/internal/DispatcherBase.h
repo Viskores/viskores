@@ -24,8 +24,10 @@
 #include <vtkm/internal/Invocation.h>
 
 #include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/ErrorControlBadType.h>
 
 #include <vtkm/cont/arg/Transport.h>
+#include <vtkm/cont/arg/TypeCheck.h>
 
 #include <vtkm/cont/internal/DynamicTransform.h>
 
@@ -34,12 +36,85 @@
 #include <boost/mpl/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
+#include <boost/utility/enable_if.hpp>
+
+#include <sstream>
 
 namespace vtkm {
 namespace worklet {
 namespace internal {
 
 namespace detail {
+
+template<typename ContinueFunctor, typename TypeCheckTag>
+struct DispatcherBaseTypeCheckFunctor
+{
+  const ContinueFunctor &Continue;
+  vtkm::IdComponent ParameterIndex;
+
+  VTKM_CONT_EXPORT
+  DispatcherBaseTypeCheckFunctor(const ContinueFunctor &continueFunc,
+                                 vtkm::IdComponent parameterIndex)
+    : Continue(continueFunc), ParameterIndex(parameterIndex) {  }
+
+  template<typename T>
+  VTKM_CONT_EXPORT
+  typename boost::enable_if_c<vtkm::cont::arg::TypeCheck<TypeCheckTag,T>::value>::type
+  operator()(const T &x) const
+  {
+    this->Continue(x);
+  }
+
+  // This code is actually taking an error found at compile-time and not
+  // reporting it until run-time. This seems strange at first, but this
+  // behavior is actually important. With dynamic arrays and similar dynamic
+  // classes, there may be types that are technically possible (such as using a
+  // vector where a scalar is expected) but in reality never happen. Thus, for
+  // these unsported combinations we just silently halt the compiler from
+  // attempting to create code for these errant conditions and throw a run-time
+  // error if one every tries to create one.
+  template<typename T>
+  VTKM_CONT_EXPORT
+  typename boost::disable_if_c<vtkm::cont::arg::TypeCheck<TypeCheckTag,T>::value>::type
+  operator()(const T &) const
+  {
+    std::stringstream message;
+    message << "Encountered bad type for parameter "
+            << this->ParameterIndex
+            << " when calling Invoke on a dispatcher.";
+    throw vtkm::cont::ErrorControlBadType(message.str());
+  }
+};
+
+struct DispatcherBaseDynamicTransform
+{
+  vtkm::cont::internal::DynamicTransform BasicDynamicTransform;
+  vtkm::IdComponent *ParameterCounter;
+
+  VTKM_CONT_EXPORT
+  DispatcherBaseDynamicTransform(vtkm::IdComponent *parameterCounter)
+    : ParameterCounter(parameterCounter)
+  {
+    *this->ParameterCounter = 0;
+  }
+
+  template<typename ControlSignatureTag,
+           typename InputType,
+           typename ContinueFunctor>
+  VTKM_CONT_EXPORT
+  void operator()(const vtkm::Pair<ControlSignatureTag, InputType> &input,
+                  const ContinueFunctor &continueFunc) const
+  {
+    (*this->ParameterCounter)++;
+
+    typedef DispatcherBaseTypeCheckFunctor<
+        ContinueFunctor, typename ControlSignatureTag::TypeCheckTag>
+        TypeCheckFunctor;
+    this->BasicDynamicTransform(input.second,
+                                TypeCheckFunctor(continueFunc,
+                                                 *this->ParameterCounter));
+  }
+};
 
 template<typename DispatcherBaseType>
 struct DispatcherBaseDynamicTransformHelper
@@ -122,8 +197,24 @@ protected:
 
     BOOST_MPL_ASSERT(( boost::is_base_of<BaseWorkletType,WorkletType> ));
 
-    parameters.DynamicTransformCont(
-          vtkm::cont::internal::DynamicTransform(),
+    // As we do the dynamic transform, we are also going to check the static
+    // type against the TypeCheckTag in the ControlSignature tags. To do this,
+    // the check needs access to both the parameter (in the parameters
+    // argument) and the ControlSignature tags (in the ControlInterface type).
+    // To make this possible, we use the zip mechanism of FunctionInterface to
+    // combine these two separate function interfaces into a single
+    // FunctionInterface with each parameter being a Pair containing both
+    // the ControlSignature tag and the control object itself.
+    typedef typename vtkm::internal::FunctionInterfaceZipType<
+        ControlInterface, ParameterInterface>::type ZippedInterface;
+    ZippedInterface zippedInterface =
+        vtkm::internal::make_FunctionInterfaceZip(ControlInterface(),
+                                                  parameters);
+
+    vtkm::IdComponent parameterIndexCounter;
+
+    zippedInterface.DynamicTransformCont(
+          detail::DispatcherBaseDynamicTransform(&parameterIndexCounter),
           detail::DispatcherBaseDynamicTransformHelper<MyType>(this));
   }
 
@@ -179,7 +270,7 @@ private:
     // object itself. To make it easier to work with each parameter, use the
     // zip mechanism of FunctionInterface to combine the separate function
     // interfaces of the ControlSignature and the parameters into one. This
-    // will make a Function interface with each parameter being a Pair
+    // will make a FunctionInterface with each parameter being a Pair
     // containing both the ControlSignature tag and the control object itself.
     typedef typename vtkm::internal::FunctionInterfaceZipType<
         typename Invocation::ControlInterface,

@@ -26,26 +26,6 @@ namespace vtkm {
 namespace cont {
 namespace internal {
 
-namespace detail {
-
-template<typename ContinueFunctor>
-struct DynamicArrayTransformCastAndCall
-{
-  const ContinueFunctor &Continue;
-
-  VTKM_CONT_EXPORT
-  DynamicArrayTransformCastAndCall(const ContinueFunctor &continueFunc)
-    : Continue(continueFunc) {  }
-
-  template<typename T>
-  VTKM_CONT_EXPORT
-  void operator()(const T &x) const {
-    this->Continue(x);
-  }
-};
-
-} // namespace detail
-
 /// Tag used to identify an object that is a dynamic object that contains a
 /// CastAndCall method that iterates over all possible dynamic choices to run
 /// templated code.
@@ -109,8 +89,7 @@ private:
                    const ContinueFunctor &continueFunc,
                    vtkm::cont::internal::DynamicTransformTagCastAndCall) const
   {
-    dynamicInput.CastAndCall(
-          detail::DynamicArrayTransformCastAndCall<ContinueFunctor>(continueFunc));
+    dynamicInput.CastAndCall(continueFunc);
   }
 };
 
