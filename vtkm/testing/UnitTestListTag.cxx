@@ -97,6 +97,8 @@ void CheckSame(const vtkm::Vec<int,N> &expected,
 template<vtkm::IdComponent N, typename ListTag>
 void TryList(const vtkm::Vec<int,N> &expected, ListTag)
 {
+  VTKM_IS_LIST_TAG(ListTag);
+
   std::cout << "    Try mutable for each" << std::endl;
   MutableFunctor functor;
   vtkm::ListForEach(functor, ListTag());
@@ -109,6 +111,14 @@ void TryList(const vtkm::Vec<int,N> &expected, ListTag)
 
 void TestLists()
 {
+  std::cout << "Valid List Tag Checks" << std::endl;
+  VTKM_TEST_ASSERT(vtkm::internal::ListTagCheck<TestListTag1>::Valid,
+                   "Failed list tag check");
+  VTKM_TEST_ASSERT(vtkm::internal::ListTagCheck<TestListTagJoin>::Valid,
+                   "Failed list tag check");
+  VTKM_TEST_ASSERT(!vtkm::internal::ListTagCheck<TestClass<1> >::Valid,
+                   "Failed list tag check");
+
   std::cout << "ListTagEmpty" << std::endl;
   TryList(vtkm::Vec<int,0>(), vtkm::ListTagEmpty());
 

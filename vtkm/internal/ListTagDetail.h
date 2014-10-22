@@ -38,6 +38,11 @@ namespace detail {
 
 //-----------------------------------------------------------------------------
 
+/// Base class that all ListTag classes inherit from. Helps identify lists
+/// in macros like VTKM_IS_LIST_TAG.
+///
+struct ListRoot {  };
+
 template<typename signature>
 struct ListBase {  };
 
@@ -1681,26 +1686,26 @@ template<typename T1 = vtkm::detail::ListParamNull,
          typename T23 = vtkm::detail::ListParamNull,
          typename T24 = vtkm::detail::ListParamNull,
          typename T25 = vtkm::detail::ListParamNull>
-struct ListTagBase
+struct ListTagBase : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24,T25)> List;
 };
 
 template<>
-struct ListTagBase<>
+struct ListTagBase<> : detail::ListRoot
 {
   typedef detail::ListBase<void()> List;
 };
 
 template<typename T1>
-struct ListTagBase<T1>
+struct ListTagBase<T1> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1)> List;
 };
 
 template<typename T1,
          typename T2>
-struct ListTagBase<T1,T2>
+struct ListTagBase<T1,T2> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2)> List;
 };
@@ -1708,7 +1713,7 @@ struct ListTagBase<T1,T2>
 template<typename T1,
          typename T2,
          typename T3>
-struct ListTagBase<T1,T2,T3>
+struct ListTagBase<T1,T2,T3> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3)> List;
 };
@@ -1717,7 +1722,7 @@ template<typename T1,
          typename T2,
          typename T3,
          typename T4>
-struct ListTagBase<T1,T2,T3,T4>
+struct ListTagBase<T1,T2,T3,T4> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4)> List;
 };
@@ -1727,7 +1732,7 @@ template<typename T1,
          typename T3,
          typename T4,
          typename T5>
-struct ListTagBase<T1,T2,T3,T4,T5>
+struct ListTagBase<T1,T2,T3,T4,T5> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5)> List;
 };
@@ -1738,7 +1743,7 @@ template<typename T1,
          typename T4,
          typename T5,
          typename T6>
-struct ListTagBase<T1,T2,T3,T4,T5,T6>
+struct ListTagBase<T1,T2,T3,T4,T5,T6> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6)> List;
 };
@@ -1750,7 +1755,7 @@ template<typename T1,
          typename T5,
          typename T6,
          typename T7>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7)> List;
 };
@@ -1763,7 +1768,7 @@ template<typename T1,
          typename T6,
          typename T7,
          typename T8>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8)> List;
 };
@@ -1777,7 +1782,7 @@ template<typename T1,
          typename T7,
          typename T8,
          typename T9>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9)> List;
 };
@@ -1792,7 +1797,7 @@ template<typename T1,
          typename T8,
          typename T9,
          typename T10>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10)> List;
 };
@@ -1808,7 +1813,7 @@ template<typename T1,
          typename T9,
          typename T10,
          typename T11>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11)> List;
 };
@@ -1825,7 +1830,7 @@ template<typename T1,
          typename T10,
          typename T11,
          typename T12>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12)> List;
 };
@@ -1843,7 +1848,7 @@ template<typename T1,
          typename T11,
          typename T12,
          typename T13>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13)> List;
 };
@@ -1862,7 +1867,7 @@ template<typename T1,
          typename T12,
          typename T13,
          typename T14>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14)> List;
 };
@@ -1882,7 +1887,7 @@ template<typename T1,
          typename T13,
          typename T14,
          typename T15>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15)> List;
 };
@@ -1903,7 +1908,7 @@ template<typename T1,
          typename T14,
          typename T15,
          typename T16>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16)> List;
 };
@@ -1925,7 +1930,7 @@ template<typename T1,
          typename T15,
          typename T16,
          typename T17>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17)> List;
 };
@@ -1948,7 +1953,7 @@ template<typename T1,
          typename T16,
          typename T17,
          typename T18>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18)> List;
 };
@@ -1972,7 +1977,7 @@ template<typename T1,
          typename T17,
          typename T18,
          typename T19>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19)> List;
 };
@@ -1997,7 +2002,7 @@ template<typename T1,
          typename T18,
          typename T19,
          typename T20>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20)> List;
 };
@@ -2023,7 +2028,7 @@ template<typename T1,
          typename T19,
          typename T20,
          typename T21>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21)> List;
 };
@@ -2050,7 +2055,7 @@ template<typename T1,
          typename T20,
          typename T21,
          typename T22>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22)> List;
 };
@@ -2078,7 +2083,7 @@ template<typename T1,
          typename T21,
          typename T22,
          typename T23>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23)> List;
 };
@@ -2107,7 +2112,7 @@ template<typename T1,
          typename T22,
          typename T23,
          typename T24>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24)> List;
 };

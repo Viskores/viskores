@@ -24,6 +24,9 @@
 
 #include <vtkm/internal/ExportMacros.h>
 
+#include <boost/static_assert.hpp>
+#include <boost/type_traits/is_base_of.hpp>
+
 namespace vtkm {
 
 namespace detail {
@@ -33,16 +36,37 @@ struct ListJoin { };
 
 } // namespace detail
 
+namespace internal {
+
+template<typename ListTag>
+struct ListTagCheck
+{
+  static const bool Valid =
+      boost::is_base_of<vtkm::detail::ListRoot,ListTag>::value;
+};
+
+} // namespace internal
+
+/// Checks that the argument is a proper list tag. This is a handy concept
+/// check for functions and classes to make sure that a template argument is
+/// actually a device adapter tag. (You can get weird errors elsewhere in the
+/// code when a mistake is made.)
+///
+#define VTKM_IS_LIST_TAG(tag) \
+  BOOST_STATIC_ASSERT_MSG( \
+    ::vtkm::internal::ListTagCheck<tag>::Valid, \
+    "Provided type is not a valid VTK-m list tag.")
+
 /// A special tag for an empty list.
 ///
-struct ListTagEmpty {
+struct ListTagEmpty : detail::ListRoot {
   typedef detail::ListBase<void()> List;
 };
 
 /// A tag that is a construction of two other tags joined together. This struct
 /// can be subclassed and still behave like a list tag.
 template<typename ListTag1, typename ListTag2>
-struct ListTagJoin {
+struct ListTagJoin : detail::ListRoot {
   typedef detail::ListJoin<ListTag1, ListTag2> List;
 };
 

@@ -86,6 +86,11 @@ namespace detail {
 
 //-----------------------------------------------------------------------------
 
+/// Base class that all ListTag classes inherit from. Helps identify lists
+/// in macros like VTKM_IS_LIST_TAG.
+///
+struct ListRoot {  };
+
 template<typename signature>
 struct ListBase {  };
 
@@ -127,14 +132,14 @@ $endfor\
 /// A basic tag for a list of typenames. This struct can be subclassed
 /// and still behave like a list tag.
 template<$template_params(max_base_list, default=' = vtkm::detail::ListParamNull')>
-struct ListTagBase
+struct ListTagBase : detail::ListRoot
 {
   typedef detail::ListBase<void($param_list(max_base_list))> List;
 };
 
 $for(num_params in xrange(0, (max_base_list+1)-1))\
 template<$template_params(num_params)>
-struct ListTagBase<$param_list(num_params)>
+struct ListTagBase<$param_list(num_params)> : detail::ListRoot
 {
   typedef detail::ListBase<void($param_list(num_params))> List;
 };
