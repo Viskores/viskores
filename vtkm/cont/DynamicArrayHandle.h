@@ -130,6 +130,7 @@ public:
   VTKM_CONT_EXPORT
   internal::DynamicArrayHandleCast<NewTypeList,VTKM_DEFAULT_STORAGE_LIST_TAG>
   ResetTypeList(NewTypeList = NewTypeList()) const {
+    VTKM_IS_LIST_TAG(NewTypeList);
     return internal::DynamicArrayHandleCast<
         NewTypeList,VTKM_DEFAULT_STORAGE_LIST_TAG>(*this);
   }
@@ -145,6 +146,7 @@ public:
   VTKM_CONT_EXPORT
   internal::DynamicArrayHandleCast<VTKM_DEFAULT_TYPE_LIST_TAG,NewStorageList>
   ResetStorageList(NewStorageList = NewStorageList()) const {
+    VTKM_IS_LIST_TAG(NewStorageList);
     return internal::DynamicArrayHandleCast<
         VTKM_DEFAULT_TYPE_LIST_TAG,NewStorageList>(*this);
   }
@@ -258,6 +260,8 @@ void DynamicArrayHandle::CastAndCall(const Functor &f,
                                      TypeList,
                                      StorageList) const
 {
+  VTKM_IS_LIST_TAG(TypeList);
+  VTKM_IS_LIST_TAG(StorageList);
   typedef detail::DynamicArrayHandleTryType<Functor, StorageList> TryTypeType;
   TryTypeType tryType = TryTypeType(*this, f);
   vtkm::ListForEach(tryType, TypeList());
@@ -273,6 +277,9 @@ namespace internal {
 template<typename TypeList, typename StorageList>
 class DynamicArrayHandleCast : public vtkm::cont::DynamicArrayHandle
 {
+  VTKM_IS_LIST_TAG(TypeList);
+  VTKM_IS_LIST_TAG(StorageList);
+
 public:
   VTKM_CONT_EXPORT
   DynamicArrayHandleCast() : DynamicArrayHandle() {  }
@@ -291,6 +298,7 @@ public:
   VTKM_CONT_EXPORT
   DynamicArrayHandleCast<NewTypeList,StorageList>
   ResetTypeList(NewTypeList = NewTypeList()) const {
+    VTKM_IS_LIST_TAG(NewTypeList);
     return DynamicArrayHandleCast<NewTypeList,StorageList>(*this);
   }
 
@@ -298,6 +306,7 @@ public:
   VTKM_CONT_EXPORT
   internal::DynamicArrayHandleCast<TypeList,NewStorageList>
   ResetStorageList(NewStorageList = NewStorageList()) const {
+    VTKM_IS_LIST_TAG(NewStorageList);
     return internal::DynamicArrayHandleCast<TypeList,NewStorageList>(*this);
   }
 

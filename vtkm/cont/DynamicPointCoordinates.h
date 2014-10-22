@@ -165,6 +165,7 @@ public:
     VTKM_DEFAULT_STORAGE_LIST_TAG>
   ResetPointCoordinatesList(
       NewPointCoordinatesList = NewPointCoordinatesList()) const {
+    VTKM_IS_LIST_TAG(NewPointCoordinatesList);
     return internal::DynamicPointCoordinatesCast<
         NewPointCoordinatesList,
         VTKM_DEFAULT_TYPE_LIST_TAG,
@@ -185,6 +186,7 @@ public:
     NewTypeList,
     VTKM_DEFAULT_STORAGE_LIST_TAG>
   ResetTypeList(NewTypeList = NewTypeList()) const {
+    VTKM_IS_LIST_TAG(NewTypeList);
     return internal::DynamicPointCoordinatesCast<
         VTKM_DEFAULT_POINT_COORDINATES_LIST_TAG,
         NewTypeList,
@@ -205,6 +207,7 @@ public:
     VTKM_DEFAULT_TYPE_LIST_TAG,
     NewStorageList>
   ResetStorageList(NewStorageList = NewStorageList()) const {
+    VTKM_IS_LIST_TAG(NewStorageList);
     return internal::DynamicPointCoordinatesCast<
         VTKM_DEFAULT_POINT_COORDINATES_LIST_TAG,
         VTKM_DEFAULT_TYPE_LIST_TAG,
@@ -300,6 +303,9 @@ void DynamicPointCoordinates::CastAndCall(const Functor &f,
                                           TypeList,
                                           StorageList) const
 {
+  VTKM_IS_LIST_TAG(PointCoordinatesList);
+  VTKM_IS_LIST_TAG(TypeList);
+  VTKM_IS_LIST_TAG(StorageList);
   typedef detail::DynamicPointCoordinatesTryStorage<
       Functor, TypeList, StorageList> TryTypeType;
   TryTypeType tryType = TryTypeType(*this, f);
@@ -318,6 +324,10 @@ template<typename PointCoordinatesList,
          typename StorageList>
 class DynamicPointCoordinatesCast : public vtkm::cont::DynamicPointCoordinates
 {
+  VTKM_IS_LIST_TAG(PointCoordinatesList);
+  VTKM_IS_LIST_TAG(TypeList);
+  VTKM_IS_LIST_TAG(StorageList);
+
 public:
   VTKM_CONT_EXPORT
   DynamicPointCoordinatesCast() : DynamicPointCoordinates() {  }
@@ -340,6 +350,7 @@ public:
   DynamicPointCoordinatesCast<NewPointCoordinatesList,TypeList,StorageList>
   ResetPointCoordinatesList(
       NewPointCoordinatesList = NewPointCoordinatesList()) const {
+    VTKM_IS_LIST_TAG(NewPointCoordinatesList);
     return DynamicPointCoordinatesCast<
         NewPointCoordinatesList,TypeList,StorageList>(*this);
   }
@@ -348,6 +359,7 @@ public:
   VTKM_CONT_EXPORT
   DynamicPointCoordinatesCast<PointCoordinatesList,NewTypeList,StorageList>
   ResetTypeList(NewTypeList = NewTypeList()) const {
+    VTKM_IS_LIST_TAG(NewTypeList);
     return DynamicPointCoordinatesCast<
         PointCoordinatesList,NewTypeList,StorageList>(*this);
   }
@@ -356,6 +368,7 @@ public:
   VTKM_CONT_EXPORT
   DynamicPointCoordinatesCast<PointCoordinatesList,TypeList,NewStorageList>
   ResetStorageList(NewStorageList = NewStorageList()) const {
+    VTKM_IS_LIST_TAG(NewStorageList);
     return DynamicPointCoordinatesCast<
         PointCoordinatesList,TypeList,NewStorageList>(*this);
   }
