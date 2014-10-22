@@ -80,10 +80,11 @@ struct DeviceAdapterTagCheck
 /// concept check for functions and classes to make sure that a template
 /// argument is actually a device adapter tag. (You can get weird errors
 /// elsewhere in the code when a mistake is made.)
+///
 #define VTKM_IS_DEVICE_ADAPTER_TAG(tag) \
   BOOST_STATIC_ASSERT_MSG( \
       ::vtkm::cont::internal::DeviceAdapterTagCheck<tag>::Valid, \
-      "Provided type is not a valid VTKm device adapter tag.")
+      "Provided type is not a valid VTK-m device adapter tag.")
 
 //-----------------------------------------------------------------------------
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_SERIAL

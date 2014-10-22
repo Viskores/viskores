@@ -180,6 +180,16 @@ struct TypeListTagCommon
                         vtkm::Vec<vtkm::Float64,3> >
 { };
 
+// Special implementation of ListContains for TypeListTagAll to always be
+// true. Although TypeListTagAll is necessarily finite, the point is to
+// be all inclusive. Besides, this should speed up the compilation when
+// checking a list that should contain everything.
+template<typename Type>
+struct ListContains<vtkm::TypeListTagAll, Type>
+{
+  static const bool value = true;
+};
+
 } // namespace vtkm
 
 #endif //vtk_m_TypeListTag_h

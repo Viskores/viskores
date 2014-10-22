@@ -29,7 +29,7 @@
 
 #include <vtkm/Types.h>
 
-#define VTKM_MAX_BASE_LIST 25
+#define VTKM_MAX_BASE_LIST 15
 
 
 namespace vtkm {
@@ -37,6 +37,11 @@ namespace vtkm {
 namespace detail {
 
 //-----------------------------------------------------------------------------
+
+/// Base class that all ListTag classes inherit from. Helps identify lists
+/// in macros like VTKM_IS_LIST_TAG.
+///
+struct ListRoot {  };
 
 template<typename signature>
 struct ListBase {  };
@@ -709,891 +714,415 @@ void ListForEachImpl(const Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,
   f(T15());
 }
 
-template<typename Functor,
-         typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16>
-VTKM_CONT_EXPORT
-void ListForEachImpl(Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16)>)
-{
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-}
 
-template<typename Functor,
-         typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16>
-VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16)>)
-{
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-}
+//-----------------------------------------------------------------------------
 
-template<typename Functor,
-         typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17>
-VTKM_CONT_EXPORT
-void ListForEachImpl(Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17)>)
-{
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-}
+template<typename List, typename Type>
+struct ListContainsImpl;
 
-template<typename Functor,
-         typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17>
-VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17)>)
+template<typename Type>
+struct ListContainsImpl<ListBase<void()>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-}
+  static const bool value = false;
+};
 
-template<typename Functor,
-         typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18>
-VTKM_CONT_EXPORT
-void ListForEachImpl(Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18)>)
+template<typename Type>
+struct ListContainsImpl<ListBase<void(Type)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-}
+  static const bool value = true;
+};
 
-template<typename Functor,
-         typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18>
-VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18)>)
+template<typename Type, typename T1>
+struct ListContainsImpl<ListBase<void(T1)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-}
+  static const bool value = false;
+};
 
-template<typename Functor,
-         typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19>
-VTKM_CONT_EXPORT
-void ListForEachImpl(Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19)>)
+template<typename Type,
+         typename T2>
+struct ListContainsImpl<ListBase<void(Type,T2)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-}
+  static const bool value = true;
+};
 
-template<typename Functor,
+template<typename Type,
          typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19>
-VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19)>)
+         typename T2>
+struct ListContainsImpl<ListBase<void(T1,T2)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-}
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2)>, Type>::value;
+};
 
-template<typename Functor,
-         typename T1,
+template<typename Type,
          typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20>
-VTKM_CONT_EXPORT
-void ListForEachImpl(Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20)>)
+         typename T3>
+struct ListContainsImpl<ListBase<void(Type,T2,T3)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-  f(T20());
-}
+  static const bool value = true;
+};
 
-template<typename Functor,
+template<typename Type,
          typename T1,
          typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20>
-VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20)>)
+         typename T3>
+struct ListContainsImpl<ListBase<void(T1,T2,T3)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-  f(T20());
-}
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3)>, Type>::value;
+};
 
-template<typename Functor,
-         typename T1,
+template<typename Type,
          typename T2,
          typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21>
-VTKM_CONT_EXPORT
-void ListForEachImpl(Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21)>)
+         typename T4>
+struct ListContainsImpl<ListBase<void(Type,T2,T3,T4)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-  f(T20());
-  f(T21());
-}
+  static const bool value = true;
+};
 
-template<typename Functor,
+template<typename Type,
          typename T1,
          typename T2,
          typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21>
-VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21)>)
+         typename T4>
+struct ListContainsImpl<ListBase<void(T1,T2,T3,T4)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-  f(T20());
-  f(T21());
-}
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3,T4)>, Type>::value;
+};
 
-template<typename Functor,
-         typename T1,
+template<typename Type,
          typename T2,
          typename T3,
          typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21,
-         typename T22>
-VTKM_CONT_EXPORT
-void ListForEachImpl(Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22)>)
+         typename T5>
+struct ListContainsImpl<ListBase<void(Type,T2,T3,T4,T5)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-  f(T20());
-  f(T21());
-  f(T22());
-}
+  static const bool value = true;
+};
 
-template<typename Functor,
+template<typename Type,
          typename T1,
          typename T2,
          typename T3,
          typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21,
-         typename T22>
-VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22)>)
+         typename T5>
+struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-  f(T20());
-  f(T21());
-  f(T22());
-}
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3,T4,T5)>, Type>::value;
+};
 
-template<typename Functor,
-         typename T1,
+template<typename Type,
          typename T2,
          typename T3,
          typename T4,
          typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21,
-         typename T22,
-         typename T23>
-VTKM_CONT_EXPORT
-void ListForEachImpl(Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23)>)
+         typename T6>
+struct ListContainsImpl<ListBase<void(Type,T2,T3,T4,T5,T6)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-  f(T20());
-  f(T21());
-  f(T22());
-  f(T23());
-}
+  static const bool value = true;
+};
 
-template<typename Functor,
+template<typename Type,
          typename T1,
          typename T2,
          typename T3,
          typename T4,
          typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21,
-         typename T22,
-         typename T23>
-VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23)>)
+         typename T6>
+struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5,T6)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-  f(T20());
-  f(T21());
-  f(T22());
-  f(T23());
-}
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3,T4,T5,T6)>, Type>::value;
+};
 
-template<typename Functor,
-         typename T1,
+template<typename Type,
          typename T2,
          typename T3,
          typename T4,
          typename T5,
          typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21,
-         typename T22,
-         typename T23,
-         typename T24>
-VTKM_CONT_EXPORT
-void ListForEachImpl(Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24)>)
+         typename T7>
+struct ListContainsImpl<ListBase<void(Type,T2,T3,T4,T5,T6,T7)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-  f(T20());
-  f(T21());
-  f(T22());
-  f(T23());
-  f(T24());
-}
+  static const bool value = true;
+};
 
-template<typename Functor,
+template<typename Type,
          typename T1,
          typename T2,
          typename T3,
          typename T4,
          typename T5,
          typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21,
-         typename T22,
-         typename T23,
-         typename T24>
-VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24)>)
+         typename T7>
+struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5,T6,T7)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-  f(T20());
-  f(T21());
-  f(T22());
-  f(T23());
-  f(T24());
-}
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3,T4,T5,T6,T7)>, Type>::value;
+};
 
-template<typename Functor,
-         typename T1,
+template<typename Type,
          typename T2,
          typename T3,
          typename T4,
          typename T5,
          typename T6,
          typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21,
-         typename T22,
-         typename T23,
-         typename T24,
-         typename T25>
-VTKM_CONT_EXPORT
-void ListForEachImpl(Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24,T25)>)
+         typename T8>
+struct ListContainsImpl<ListBase<void(Type,T2,T3,T4,T5,T6,T7,T8)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-  f(T20());
-  f(T21());
-  f(T22());
-  f(T23());
-  f(T24());
-  f(T25());
-}
+  static const bool value = true;
+};
 
-template<typename Functor,
+template<typename Type,
+         typename T1,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8>
+struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8)>, Type>
+{
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3,T4,T5,T6,T7,T8)>, Type>::value;
+};
+
+template<typename Type,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9>
+struct ListContainsImpl<ListBase<void(Type,T2,T3,T4,T5,T6,T7,T8,T9)>, Type>
+{
+  static const bool value = true;
+};
+
+template<typename Type,
+         typename T1,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9>
+struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9)>, Type>
+{
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3,T4,T5,T6,T7,T8,T9)>, Type>::value;
+};
+
+template<typename Type,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9,
+         typename T10>
+struct ListContainsImpl<ListBase<void(Type,T2,T3,T4,T5,T6,T7,T8,T9,T10)>, Type>
+{
+  static const bool value = true;
+};
+
+template<typename Type,
+         typename T1,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9,
+         typename T10>
+struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10)>, Type>
+{
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3,T4,T5,T6,T7,T8,T9,T10)>, Type>::value;
+};
+
+template<typename Type,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9,
+         typename T10,
+         typename T11>
+struct ListContainsImpl<ListBase<void(Type,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11)>, Type>
+{
+  static const bool value = true;
+};
+
+template<typename Type,
+         typename T1,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9,
+         typename T10,
+         typename T11>
+struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11)>, Type>
+{
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3,T4,T5,T6,T7,T8,T9,T10,T11)>, Type>::value;
+};
+
+template<typename Type,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9,
+         typename T10,
+         typename T11,
+         typename T12>
+struct ListContainsImpl<ListBase<void(Type,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12)>, Type>
+{
+  static const bool value = true;
+};
+
+template<typename Type,
+         typename T1,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9,
+         typename T10,
+         typename T11,
+         typename T12>
+struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12)>, Type>
+{
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12)>, Type>::value;
+};
+
+template<typename Type,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9,
+         typename T10,
+         typename T11,
+         typename T12,
+         typename T13>
+struct ListContainsImpl<ListBase<void(Type,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13)>, Type>
+{
+  static const bool value = true;
+};
+
+template<typename Type,
+         typename T1,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9,
+         typename T10,
+         typename T11,
+         typename T12,
+         typename T13>
+struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13)>, Type>
+{
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13)>, Type>::value;
+};
+
+template<typename Type,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9,
+         typename T10,
+         typename T11,
+         typename T12,
+         typename T13,
+         typename T14>
+struct ListContainsImpl<ListBase<void(Type,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14)>, Type>
+{
+  static const bool value = true;
+};
+
+template<typename Type,
+         typename T1,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9,
+         typename T10,
+         typename T11,
+         typename T12,
+         typename T13,
+         typename T14>
+struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14)>, Type>
+{
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14)>, Type>::value;
+};
+
+template<typename Type,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename T5,
+         typename T6,
+         typename T7,
+         typename T8,
+         typename T9,
+         typename T10,
+         typename T11,
+         typename T12,
+         typename T13,
+         typename T14,
+         typename T15>
+struct ListContainsImpl<ListBase<void(Type,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15)>, Type>
+{
+  static const bool value = true;
+};
+
+template<typename Type,
          typename T1,
          typename T2,
          typename T3,
@@ -1608,46 +1137,12 @@ template<typename Functor,
          typename T12,
          typename T13,
          typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21,
-         typename T22,
-         typename T23,
-         typename T24,
-         typename T25>
-VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &f, ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24,T25)>)
+         typename T15>
+struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15)>, Type>
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  f(T5());
-  f(T6());
-  f(T7());
-  f(T8());
-  f(T9());
-  f(T10());
-  f(T11());
-  f(T12());
-  f(T13());
-  f(T14());
-  f(T15());
-  f(T16());
-  f(T17());
-  f(T18());
-  f(T19());
-  f(T20());
-  f(T21());
-  f(T22());
-  f(T23());
-  f(T24());
-  f(T25());
-}
+  static const bool value =
+      ListContainsImpl<ListBase<void(T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15)>, Type>::value;
+};
 
 
 } // namespace detail
@@ -1670,37 +1165,27 @@ template<typename T1 = vtkm::detail::ListParamNull,
          typename T12 = vtkm::detail::ListParamNull,
          typename T13 = vtkm::detail::ListParamNull,
          typename T14 = vtkm::detail::ListParamNull,
-         typename T15 = vtkm::detail::ListParamNull,
-         typename T16 = vtkm::detail::ListParamNull,
-         typename T17 = vtkm::detail::ListParamNull,
-         typename T18 = vtkm::detail::ListParamNull,
-         typename T19 = vtkm::detail::ListParamNull,
-         typename T20 = vtkm::detail::ListParamNull,
-         typename T21 = vtkm::detail::ListParamNull,
-         typename T22 = vtkm::detail::ListParamNull,
-         typename T23 = vtkm::detail::ListParamNull,
-         typename T24 = vtkm::detail::ListParamNull,
-         typename T25 = vtkm::detail::ListParamNull>
-struct ListTagBase
+         typename T15 = vtkm::detail::ListParamNull>
+struct ListTagBase : detail::ListRoot
 {
-  typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24,T25)> List;
+  typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15)> List;
 };
 
 template<>
-struct ListTagBase<>
+struct ListTagBase<> : detail::ListRoot
 {
   typedef detail::ListBase<void()> List;
 };
 
 template<typename T1>
-struct ListTagBase<T1>
+struct ListTagBase<T1> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1)> List;
 };
 
 template<typename T1,
          typename T2>
-struct ListTagBase<T1,T2>
+struct ListTagBase<T1,T2> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2)> List;
 };
@@ -1708,7 +1193,7 @@ struct ListTagBase<T1,T2>
 template<typename T1,
          typename T2,
          typename T3>
-struct ListTagBase<T1,T2,T3>
+struct ListTagBase<T1,T2,T3> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3)> List;
 };
@@ -1717,7 +1202,7 @@ template<typename T1,
          typename T2,
          typename T3,
          typename T4>
-struct ListTagBase<T1,T2,T3,T4>
+struct ListTagBase<T1,T2,T3,T4> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4)> List;
 };
@@ -1727,7 +1212,7 @@ template<typename T1,
          typename T3,
          typename T4,
          typename T5>
-struct ListTagBase<T1,T2,T3,T4,T5>
+struct ListTagBase<T1,T2,T3,T4,T5> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5)> List;
 };
@@ -1738,7 +1223,7 @@ template<typename T1,
          typename T4,
          typename T5,
          typename T6>
-struct ListTagBase<T1,T2,T3,T4,T5,T6>
+struct ListTagBase<T1,T2,T3,T4,T5,T6> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6)> List;
 };
@@ -1750,7 +1235,7 @@ template<typename T1,
          typename T5,
          typename T6,
          typename T7>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7)> List;
 };
@@ -1763,7 +1248,7 @@ template<typename T1,
          typename T6,
          typename T7,
          typename T8>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8)> List;
 };
@@ -1777,7 +1262,7 @@ template<typename T1,
          typename T7,
          typename T8,
          typename T9>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9)> List;
 };
@@ -1792,7 +1277,7 @@ template<typename T1,
          typename T8,
          typename T9,
          typename T10>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10)> List;
 };
@@ -1808,7 +1293,7 @@ template<typename T1,
          typename T9,
          typename T10,
          typename T11>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11)> List;
 };
@@ -1825,7 +1310,7 @@ template<typename T1,
          typename T10,
          typename T11,
          typename T12>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12)> List;
 };
@@ -1843,7 +1328,7 @@ template<typename T1,
          typename T11,
          typename T12,
          typename T13>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13)> List;
 };
@@ -1862,254 +1347,9 @@ template<typename T1,
          typename T12,
          typename T13,
          typename T14>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14>
+struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14> : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14)> List;
-};
-
-template<typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15>
-{
-  typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15)> List;
-};
-
-template<typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16>
-{
-  typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16)> List;
-};
-
-template<typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17>
-{
-  typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17)> List;
-};
-
-template<typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18>
-{
-  typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18)> List;
-};
-
-template<typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19>
-{
-  typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19)> List;
-};
-
-template<typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20>
-{
-  typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20)> List;
-};
-
-template<typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21>
-{
-  typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21)> List;
-};
-
-template<typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21,
-         typename T22>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22>
-{
-  typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22)> List;
-};
-
-template<typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21,
-         typename T22,
-         typename T23>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23>
-{
-  typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23)> List;
-};
-
-template<typename T1,
-         typename T2,
-         typename T3,
-         typename T4,
-         typename T5,
-         typename T6,
-         typename T7,
-         typename T8,
-         typename T9,
-         typename T10,
-         typename T11,
-         typename T12,
-         typename T13,
-         typename T14,
-         typename T15,
-         typename T16,
-         typename T17,
-         typename T18,
-         typename T19,
-         typename T20,
-         typename T21,
-         typename T22,
-         typename T23,
-         typename T24>
-struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24>
-{
-  typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19,T20,T21,T22,T23,T24)> List;
 };
 
 

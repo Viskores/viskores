@@ -24,6 +24,7 @@
 
 #include <vtkm/testing/Testing.h>
 
+#include <algorithm>
 #include <vector>
 
 namespace {
@@ -94,9 +95,21 @@ void CheckSame(const vtkm::Vec<int,N> &expected,
   }
 }
 
+template<int N, typename ListTag>
+void CheckContains(TestClass<N>, ListTag, const std::vector<int> contents)
+{
+  bool listContains = vtkm::ListContains<ListTag, TestClass<N> >::value;
+  bool shouldContain =
+      std::find(contents.begin(), contents.end(), N) != contents.end();
+  VTKM_TEST_ASSERT(listContains == shouldContain,
+                   "ListContains check failed.");
+}
+
 template<vtkm::IdComponent N, typename ListTag>
 void TryList(const vtkm::Vec<int,N> &expected, ListTag)
 {
+  VTKM_IS_LIST_TAG(ListTag);
+
   std::cout << "    Try mutable for each" << std::endl;
   MutableFunctor functor;
   vtkm::ListForEach(functor, ListTag());
@@ -105,10 +118,30 @@ void TryList(const vtkm::Vec<int,N> &expected, ListTag)
   std::cout << "    Try constant for each" << std::endl;
   vtkm::ListForEach(ConstantFunctor(), ListTag());
   CheckSame(expected, g_FoundType);
+
+  std::cout << "    Try checking contents" << std::endl;
+  CheckContains(TestClass<11>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<21>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<22>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<31>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<32>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<33>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<41>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<42>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<43>(), ListTag(), functor.FoundTypes);
+  CheckContains(TestClass<44>(), ListTag(), functor.FoundTypes);
 }
 
 void TestLists()
 {
+  std::cout << "Valid List Tag Checks" << std::endl;
+  VTKM_TEST_ASSERT(vtkm::internal::ListTagCheck<TestListTag1>::Valid,
+                   "Failed list tag check");
+  VTKM_TEST_ASSERT(vtkm::internal::ListTagCheck<TestListTagJoin>::Valid,
+                   "Failed list tag check");
+  VTKM_TEST_ASSERT(!vtkm::internal::ListTagCheck<TestClass<1> >::Valid,
+                   "Failed list tag check");
+
   std::cout << "ListTagEmpty" << std::endl;
   TryList(vtkm::Vec<int,0>(), vtkm::ListTagEmpty());
 

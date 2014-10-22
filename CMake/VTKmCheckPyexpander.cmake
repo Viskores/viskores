@@ -54,20 +54,16 @@ if(${pyexpander_result})
   return()
 endif()
 
-file(WRITE ${GENERATED_FILE} "${pyexpander_output}")
+file(WRITE ${GENERATED_FILE}.save "${pyexpander_output}")
 
 execute_process(
-  COMMAND ${CMAKE_COMMAND} -E compare_files ${SOURCE_FILE} ${GENERATED_FILE}
+  COMMAND ${CMAKE_COMMAND} -E compare_files ${SOURCE_FILE} ${GENERATED_FILE}.save
   RESULT_VARIABLE diff_result
   )
 
 if(${diff_result})
   # If diff returned non-zero, it failed and the two files are different.
   get_filename_component(filename ${SOURCE_FILE} NAME)
-  # Move the generated file so that the build does not confuse it with the
-  # files in the source directory.
-  file(REMOVE ${GENERATED_FILE}.save)
-  file(RENAME ${GENERATED_FILE} ${GENERATED_FILE}.save)
   message(SEND_ERROR
     "The source file ${filename} does not match the generated file. If you have modified this file directly, then you have messed up. Modify the ${filename}.in file instead and then copy the pyexpander result to ${filename}. If you modified ${filename}.in, then you might just need to copy the pyresult back to the source directory. If you have not modifed either, then you have likely checked out an inappropriate change. Check the git logs to see what changes were made.
 If the changes have resulted from modifying ${filename}.in, then you can finish by moving ${GENERATED_FILE}.save over ${SOURCE_FILE}")
@@ -75,7 +71,7 @@ else()
   # Now that we have done the comparison, remove the generated file so there is
   # no confusion between the generated files and the source files checked into
   # the repository.
-  file(REMOVE ${GENERATED_FILE})
+  file(REMOVE ${GENERATED_FILE}.save)
   # Pyexpander successfully checked, so touch a file to tell make when the
   # check was last successfully performed.
   execute_process(

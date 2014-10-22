@@ -41,7 +41,7 @@ $# Ignore the following comment. It is meant for the generated file.
 
 #include <vtkm/Types.h>
 
-$py(max_base_list=25)\
+$py(max_base_list=15)\
 #define VTKM_MAX_BASE_LIST $(max_base_list)
 
 $# Python commands used in template expansion.
@@ -68,11 +68,11 @@ def param_list(num_params, name='T', start=1):
     result += ',%s%d' % (name, param)
   return result
 
-def signature(num_params, name='T', return_type='void'):
+def signature(num_params, name='T', return_type='void', start=1):
   result = '%s(' % return_type
-  if num_params > 0:
-    result += '%s1' % name
-  for param in xrange(2, num_params+1):
+  if num_params >= start:
+    result += '%s%d' % (name, start)
+  for param in xrange(start+1, num_params+1):
     result += ',%s%d' % (name, param)
   result += ')'
   return result
@@ -85,6 +85,11 @@ namespace vtkm {
 namespace detail {
 
 //-----------------------------------------------------------------------------
+
+/// Base class that all ListTag classes inherit from. Helps identify lists
+/// in macros like VTKM_IS_LIST_TAG.
+///
+struct ListRoot {  };
 
 template<typename signature>
 struct ListBase {  };
@@ -120,6 +125,47 @@ $endfor\
 
 $endfor\
 
+//-----------------------------------------------------------------------------
+
+template<typename List, typename Type>
+struct ListContainsImpl;
+
+template<typename Type>
+struct ListContainsImpl<ListBase<void()>, Type>
+{
+  static const bool value = false;
+};
+
+template<typename Type>
+struct ListContainsImpl<ListBase<void(Type)>, Type>
+{
+  static const bool value = true;
+};
+
+template<typename Type, typename T1>
+struct ListContainsImpl<ListBase<void(T1)>, Type>
+{
+  static const bool value = false;
+};
+
+$for(num_params in xrange(2, max_base_list+1))\
+template<typename Type,
+         $template_params(num_params, start=2)>
+struct ListContainsImpl<ListBase<void(Type,$param_list(num_params, start=2))>, Type>
+{
+  static const bool value = true;
+};
+
+template<typename Type,
+         $template_params(num_params)>
+struct ListContainsImpl<ListBase<$signature(num_params)>, Type>
+{
+  static const bool value =
+      ListContainsImpl<ListBase<$signature(num_params, start=2)>, Type>::value;
+};
+
+$endfor\
+
 } // namespace detail
 
 //-----------------------------------------------------------------------------
@@ -127,14 +173,14 @@ $endfor\
 /// A basic tag for a list of typenames. This struct can be subclassed
 /// and still behave like a list tag.
 template<$template_params(max_base_list, default=' = vtkm::detail::ListParamNull')>
-struct ListTagBase
+struct ListTagBase : detail::ListRoot
 {
   typedef detail::ListBase<void($param_list(max_base_list))> List;
 };
 
 $for(num_params in xrange(0, (max_base_list+1)-1))\
 template<$template_params(num_params)>
-struct ListTagBase<$param_list(num_params)>
+struct ListTagBase<$param_list(num_params)> : detail::ListRoot
 {
   typedef detail::ListBase<void($param_list(num_params))> List;
 };
