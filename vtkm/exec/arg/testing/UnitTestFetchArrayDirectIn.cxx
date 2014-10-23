@@ -38,7 +38,11 @@ struct TestPortal
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
   VTKM_EXEC_CONT_EXPORT
-  ValueType Get(vtkm::Id index) const { return TestValue(index, ValueType()); }
+  ValueType Get(vtkm::Id index) const {
+    VTKM_TEST_ASSERT(index >= 0, "Bad portal index.");
+    VTKM_TEST_ASSERT(index < this->GetNumberOfValues(), "Bad portal index.");
+    return TestValue(index, ValueType());
+  }
 };
 
 struct NullParam {  };

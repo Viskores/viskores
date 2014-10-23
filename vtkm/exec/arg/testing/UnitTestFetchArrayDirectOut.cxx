@@ -41,6 +41,8 @@ struct TestPortal
 
   VTKM_EXEC_CONT_EXPORT
   void Set(vtkm::Id index, const ValueType &value) const {
+    VTKM_TEST_ASSERT(index >= 0, "Bad portal index.");
+    VTKM_TEST_ASSERT(index < this->GetNumberOfValues(), "Bad portal index.");
     VTKM_TEST_ASSERT(test_equal(value, TestValue(index, ValueType())),
                      "Tried to set invalid value.");
     g_NumSets++;
