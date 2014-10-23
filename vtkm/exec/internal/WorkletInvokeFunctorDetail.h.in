@@ -166,8 +166,9 @@ $for(param_index in range(1, num_params+1))\
 $endfor\
 
   typedef typename InvocationToFetch<Invocation,0>::type ReturnFetchType;
+  typedef typename ReturnFetchType::ValueType ReturnValueType;
   ReturnFetchType returnFetch;
-  typename ReturnFetchType::ValueType $pname(0) = worklet($arg_list(num_params));
+  ReturnValueType $pname(0) = ReturnValueType(worklet($arg_list(num_params)));
 
   returnFetch.Store(index, invocation, $pname(0));
 

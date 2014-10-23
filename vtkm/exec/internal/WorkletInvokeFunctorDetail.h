@@ -103,8 +103,9 @@ void DoWorkletInvokeFunctor(
   typename FetchType1::ValueType p1 = fetch1.Load(index, invocation);
 
   typedef typename InvocationToFetch<Invocation,0>::type ReturnFetchType;
+  typedef typename ReturnFetchType::ValueType ReturnValueType;
   ReturnFetchType returnFetch;
-  typename ReturnFetchType::ValueType r = worklet(p1);
+  ReturnValueType r = ReturnValueType(worklet(p1));
 
   returnFetch.Store(index, invocation, r);
 
@@ -171,8 +172,9 @@ void DoWorkletInvokeFunctor(
   typename FetchType2::ValueType p2 = fetch2.Load(index, invocation);
 
   typedef typename InvocationToFetch<Invocation,0>::type ReturnFetchType;
+  typedef typename ReturnFetchType::ValueType ReturnValueType;
   ReturnFetchType returnFetch;
-  typename ReturnFetchType::ValueType r = worklet(p1,p2);
+  ReturnValueType r = ReturnValueType(worklet(p1,p2));
 
   returnFetch.Store(index, invocation, r);
 
@@ -251,8 +253,9 @@ void DoWorkletInvokeFunctor(
   typename FetchType3::ValueType p3 = fetch3.Load(index, invocation);
 
   typedef typename InvocationToFetch<Invocation,0>::type ReturnFetchType;
+  typedef typename ReturnFetchType::ValueType ReturnValueType;
   ReturnFetchType returnFetch;
-  typename ReturnFetchType::ValueType r = worklet(p1,p2,p3);
+  ReturnValueType r = ReturnValueType(worklet(p1,p2,p3));
 
   returnFetch.Store(index, invocation, r);
 
@@ -343,8 +346,9 @@ void DoWorkletInvokeFunctor(
   typename FetchType4::ValueType p4 = fetch4.Load(index, invocation);
 
   typedef typename InvocationToFetch<Invocation,0>::type ReturnFetchType;
+  typedef typename ReturnFetchType::ValueType ReturnValueType;
   ReturnFetchType returnFetch;
-  typename ReturnFetchType::ValueType r = worklet(p1,p2,p3,p4);
+  ReturnValueType r = ReturnValueType(worklet(p1,p2,p3,p4));
 
   returnFetch.Store(index, invocation, r);
 
@@ -447,8 +451,9 @@ void DoWorkletInvokeFunctor(
   typename FetchType5::ValueType p5 = fetch5.Load(index, invocation);
 
   typedef typename InvocationToFetch<Invocation,0>::type ReturnFetchType;
+  typedef typename ReturnFetchType::ValueType ReturnValueType;
   ReturnFetchType returnFetch;
-  typename ReturnFetchType::ValueType r = worklet(p1,p2,p3,p4,p5);
+  ReturnValueType r = ReturnValueType(worklet(p1,p2,p3,p4,p5));
 
   returnFetch.Store(index, invocation, r);
 
@@ -563,8 +568,9 @@ void DoWorkletInvokeFunctor(
   typename FetchType6::ValueType p6 = fetch6.Load(index, invocation);
 
   typedef typename InvocationToFetch<Invocation,0>::type ReturnFetchType;
+  typedef typename ReturnFetchType::ValueType ReturnValueType;
   ReturnFetchType returnFetch;
-  typename ReturnFetchType::ValueType r = worklet(p1,p2,p3,p4,p5,p6);
+  ReturnValueType r = ReturnValueType(worklet(p1,p2,p3,p4,p5,p6));
 
   returnFetch.Store(index, invocation, r);
 
@@ -691,8 +697,9 @@ void DoWorkletInvokeFunctor(
   typename FetchType7::ValueType p7 = fetch7.Load(index, invocation);
 
   typedef typename InvocationToFetch<Invocation,0>::type ReturnFetchType;
+  typedef typename ReturnFetchType::ValueType ReturnValueType;
   ReturnFetchType returnFetch;
-  typename ReturnFetchType::ValueType r = worklet(p1,p2,p3,p4,p5,p6,p7);
+  ReturnValueType r = ReturnValueType(worklet(p1,p2,p3,p4,p5,p6,p7));
 
   returnFetch.Store(index, invocation, r);
 
@@ -831,8 +838,9 @@ void DoWorkletInvokeFunctor(
   typename FetchType8::ValueType p8 = fetch8.Load(index, invocation);
 
   typedef typename InvocationToFetch<Invocation,0>::type ReturnFetchType;
+  typedef typename ReturnFetchType::ValueType ReturnValueType;
   ReturnFetchType returnFetch;
-  typename ReturnFetchType::ValueType r = worklet(p1,p2,p3,p4,p5,p6,p7,p8);
+  ReturnValueType r = ReturnValueType(worklet(p1,p2,p3,p4,p5,p6,p7,p8));
 
   returnFetch.Store(index, invocation, r);
 
@@ -983,8 +991,9 @@ void DoWorkletInvokeFunctor(
   typename FetchType9::ValueType p9 = fetch9.Load(index, invocation);
 
   typedef typename InvocationToFetch<Invocation,0>::type ReturnFetchType;
+  typedef typename ReturnFetchType::ValueType ReturnValueType;
   ReturnFetchType returnFetch;
-  typename ReturnFetchType::ValueType r = worklet(p1,p2,p3,p4,p5,p6,p7,p8,p9);
+  ReturnValueType r = ReturnValueType(worklet(p1,p2,p3,p4,p5,p6,p7,p8,p9));
 
   returnFetch.Store(index, invocation, r);
 
@@ -1147,8 +1156,9 @@ void DoWorkletInvokeFunctor(
   typename FetchType10::ValueType p10 = fetch10.Load(index, invocation);
 
   typedef typename InvocationToFetch<Invocation,0>::type ReturnFetchType;
+  typedef typename ReturnFetchType::ValueType ReturnValueType;
   ReturnFetchType returnFetch;
-  typename ReturnFetchType::ValueType r = worklet(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10);
+  ReturnValueType r = ReturnValueType(worklet(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10));
 
   returnFetch.Store(index, invocation, r);
 
