@@ -52,7 +52,6 @@ public:
   typedef vtkm::cont::internal::ArrayPortalFromIterators<ValueType*> PortalType;
   typedef vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*> PortalConstType;
 
-private:
   /// The original design of this class provided an allocator as a template
   /// parameters. That messed things up, though, because other templated
   /// classes assume that the \c Storage has one template parameter. There are
