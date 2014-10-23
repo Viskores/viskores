@@ -447,6 +447,7 @@ void TestForEach()
   VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == 4*Arg5, "Arg 5 incorrect.");
 }
 
+#if 0
 void TestInvokeTime()
 {
   std::cout << "Checking time to call lots of args lots of times." << std::endl;
@@ -515,6 +516,7 @@ void TestInvokeTime()
                    "Function interface invoke took longer than expected.");
 #endif
 }
+#endif // if 0
 
 void TestFunctionInterface()
 {
@@ -525,7 +527,10 @@ void TestFunctionInterface()
   TestStaticTransform();
   TestDynamicTransform();
   TestForEach();
-  TestInvokeTime();
+  // Disable this last test. It is unreliable and the most critical invoke
+  // (for the instance of a worklet) does not directly use the Invoke
+  // method.
+  //TestInvokeTime();
 }
 
 } // anonymous namespace
