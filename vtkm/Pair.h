@@ -24,6 +24,8 @@
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
+#include <utility>
+
 namespace vtkm {
 
 /// A \c vtkm::Pair is essentially the same as an STL pair object except that
