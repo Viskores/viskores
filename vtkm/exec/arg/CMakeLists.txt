@@ -21,6 +21,7 @@
 set(headers
   AspectTagDefault.h
   BasicArg.h
+  ExecutionSignatureTagBase.h
   Fetch.h
   FetchTagArrayDirectIn.h
   FetchTagArrayDirectOut.h

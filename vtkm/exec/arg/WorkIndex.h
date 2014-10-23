@@ -21,6 +21,7 @@
 #define vtk_m_exec_arg_WorkIndex_h
 
 #include <vtkm/exec/arg/Fetch.h>
+#include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 
 namespace vtkm {
 namespace exec {
@@ -40,7 +41,7 @@ struct AspectTagWorkIndex {  };
 /// ExecutionSignature passes the index for this work. \c WorkletBase contains
 /// a typedef that points to this class.
 ///
-struct WorkIndex
+struct WorkIndex : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   // The index does not really matter because the fetch is going to ignore it.
   // However, it still has to point to a valid parameter in the

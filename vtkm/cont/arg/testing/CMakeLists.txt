@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestControlSignatureTag.cxx
   UnitTestTransportArrayIn.cxx
   UnitTestTransportArrayOut.cxx
   UnitTestTransportExecObject.cxx

@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestExecutionSignatureTag.cxx
   UnitTestFetchArrayDirectIn.cxx
   UnitTestFetchArrayDirectOut.cxx
   UnitTestFetchExecObject.cxx

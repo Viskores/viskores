@@ -24,6 +24,7 @@
 
 #include <vtkm/TypeListTag.h>
 
+#include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagArrayIn.h>
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
@@ -47,7 +48,7 @@ public:
   /// the possible value types in the array.
   ///
   template<typename TypeList = AllTypes>
-  struct FieldIn {
+  struct FieldIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag;
@@ -59,7 +60,7 @@ public:
   /// the possible value types in the array.
   ///
   template<typename TypeList = AllTypes>
-  struct FieldOut {
+  struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayOut TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectOut FetchTag;

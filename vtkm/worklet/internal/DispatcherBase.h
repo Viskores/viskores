@@ -26,10 +26,13 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorControlBadType.h>
 
+#include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/Transport.h>
 #include <vtkm/cont/arg/TypeCheck.h>
 
 #include <vtkm/cont/internal/DynamicTransform.h>
+
+#include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
 
@@ -46,6 +49,34 @@ namespace internal {
 
 namespace detail {
 
+// Checks that an argument in a ControlSignature is a valid control signature
+// tag. Causes a compile error otherwise.
+struct DispatcherBaseControlSignatureTagCheck
+{
+  template<typename ControlSignatureTag>
+  struct ReturnType {
+    // If you get a compile error here, it means there is something that is
+    // not a valid control signature tag in a worklet's ControlSignature.
+    VTKM_IS_CONTROL_SIGNATURE_TAG(ControlSignatureTag);
+    typedef ControlSignatureTag type;
+  };
+};
+
+// Checks that an argument in a ExecutionSignature is a valid execution
+// signature tag. Causes a compile error otherwise.
+struct DispatcherBaseExecutionSignatureTagCheck
+{
+  template<typename ExecutionSignatureTag>
+  struct ReturnType {
+    // If you get a compile error here, it means there is something that is not
+    // a valid execution signature tag in a worklet's ExecutionSignature.
+    VTKM_IS_EXECUTION_SIGNATURE_TAG(ExecutionSignatureTag);
+    typedef ExecutionSignatureTag type;
+  };
+};
+
+// Used in the dynamic cast to check to make sure that the type passed into
+// the Invoke method matches the type accepted by the ControlSignature.
 template<typename ContinueFunctor, typename TypeCheckTag>
 struct DispatcherBaseTypeCheckFunctor
 {
@@ -86,6 +117,9 @@ struct DispatcherBaseTypeCheckFunctor
   }
 };
 
+// Uses vtkm::cont::internal::DynamicTransform and the DynamicTransformCont
+// method of FunctionInterface to convert all DynamicArrayHandles and any
+// other arguments declaring themselves as dynamic to static versions.
 struct DispatcherBaseDynamicTransform
 {
   vtkm::cont::internal::DynamicTransform BasicDynamicTransform;
@@ -116,6 +150,8 @@ struct DispatcherBaseDynamicTransform
   }
 };
 
+// A functor called at the end of the dynamic transform to call the next
+// step in the dynamic transform.
 template<typename DispatcherBaseType>
 struct DispatcherBaseDynamicTransformHelper
 {
@@ -132,6 +168,8 @@ struct DispatcherBaseDynamicTransformHelper
   }
 };
 
+// A functor used in a StaticCast of a FunctionInterface to transport arguments
+// from the control environment to the execution environment.
 template<typename Device>
 struct DispatcherBaseTransportFunctor
 {
@@ -185,6 +223,18 @@ protected:
       typename WorkletType::ExecutionSignature> ExecutionInterface;
 
   static const vtkm::IdComponent NUM_INVOKE_PARAMS = ControlInterface::ARITY;
+
+private:
+  // We don't really need these types, but declaring them checks the arguments
+  // of the control and execution signatures.
+  typedef typename ControlInterface::
+      template StaticTransformType<
+        detail::DispatcherBaseControlSignatureTagCheck>::type
+      ControlSignatureCheck;
+  typedef typename ExecutionInterface::
+      template StaticTransformType<
+        detail::DispatcherBaseExecutionSignatureTagCheck>::type
+      ExecutionSignatureCheck;
 
   template<typename Signature>
   VTKM_CONT_EXPORT

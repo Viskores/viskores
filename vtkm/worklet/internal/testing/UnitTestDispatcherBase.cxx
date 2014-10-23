@@ -22,6 +22,8 @@
 
 #include <vtkm/cont/DeviceAdapterSerial.h>
 
+#include <vtkm/cont/arg/ControlSignatureTagBase.h>
+
 #include <vtkm/worklet/internal/WorkletBase.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -128,12 +130,12 @@ namespace {
 class TestWorkletBase : public vtkm::worklet::internal::WorkletBase
 {
 public:
-  struct TestIn {
+  struct TestIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef TestTypeCheckTag TypeCheckTag;
     typedef TestTransportTag TransportTag;
     typedef TestFetchTagInput FetchTag;
   };
-  struct TestOut {
+  struct TestOut : vtkm::cont::arg::ControlSignatureTagBase {
     typedef TestTypeCheckTag TypeCheckTag;
     typedef TestTransportTag TransportTag;
     typedef TestFetchTagOutput FetchTag;

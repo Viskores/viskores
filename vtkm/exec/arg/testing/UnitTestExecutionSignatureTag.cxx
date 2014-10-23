@@ -17,33 +17,36 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_arg_BasicArg_h
-#define vtk_m_exec_arg_BasicArg_h
 
-#include <vtkm/Types.h>
+#include <vtkm/exec/arg/BasicArg.h>
+#include <vtkm/exec/arg/WorkIndex.h>
 
-#include <vtkm/exec/arg/AspectTagDefault.h>
-#include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
+#include <vtkm/testing/Testing.h>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace {
 
-/// \brief The underlying tag for basic \c ExecutionSignature arguments.
-///
-/// The basic \c ExecutionSignature arguments of _1, _2, etc. are all
-/// subclasses of \c BasicArg. They all make available the components of
-/// this class.
-///
-template<vtkm::IdComponent ControlSignatureIndex>
-struct BasicArg : vtkm::exec::arg::ExecutionSignatureTagBase
+void TestExecutionSignatures()
 {
-  static const vtkm::IdComponent INDEX = ControlSignatureIndex;
-  typedef vtkm::exec::arg::AspectTagDefault AspectTag;
-};
+  VTKM_IS_EXECUTION_SIGNATURE_TAG(vtkm::exec::arg::BasicArg<1>);
 
-}
-}
-} // namespace vtkm::exec::arg
+  VTKM_TEST_ASSERT(
+        vtkm::exec::arg::internal::ExecutionSignatureTagCheck<
+          vtkm::exec::arg::BasicArg<2> >::Valid,
+        "Bad check for BasicArg");
 
-#endif //vtk_m_exec_arg_BasicArg_h
+  VTKM_TEST_ASSERT(
+        vtkm::exec::arg::internal::ExecutionSignatureTagCheck<
+          vtkm::exec::arg::WorkIndex >::Valid,
+        "Bad check for WorkIndex");
+
+  VTKM_TEST_ASSERT(
+        !vtkm::exec::arg::internal::ExecutionSignatureTagCheck<vtkm::Id>::Valid,
+        "Bad check for vtkm::Id");
+}
+
+} // anonymous namespace
+
+int UnitTestExecutionSignatureTag(int, char *[])
+{
+  return vtkm::testing::Testing::Run(TestExecutionSignatures);
+}
