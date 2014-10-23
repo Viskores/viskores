@@ -72,7 +72,7 @@ struct TemplatedTests
 
     StorageType stealMyArray;
     stealMyArray.Allocate(ARRAY_SIZE);
-    SetStorage(stealMyArray, stolenArrayValue);
+    this->SetStorage(stealMyArray, stolenArrayValue);
 
     VTKM_TEST_ASSERT(stealMyArray.GetNumberOfValues() == ARRAY_SIZE,
                      "Array not properly allocated.");
@@ -92,7 +92,8 @@ struct TemplatedTests
       VTKM_TEST_ASSERT(test_equal(stolenArray[index], stolenArrayValue),
                        "Stolen array did not retain values.");
     }
-    delete[] stolenArray;
+    typename StorageType::AllocatorType allocator;
+    allocator.deallocate(stolenArray, ARRAY_SIZE);
   }
 
   void BasicAllocation()
@@ -106,8 +107,8 @@ struct TemplatedTests
                      "Array not properly allocated.");
 
     const ValueType BASIC_ALLOC_VALUE = ValueType(48);
-    SetStorage(arrayStorage, BASIC_ALLOC_VALUE);
-    VTKM_TEST_ASSERT(CheckStorage(arrayStorage, BASIC_ALLOC_VALUE),
+    this->SetStorage(arrayStorage, BASIC_ALLOC_VALUE);
+    VTKM_TEST_ASSERT(this->CheckStorage(arrayStorage, BASIC_ALLOC_VALUE),
                      "Array not holding value.");
 
     arrayStorage.Allocate(ARRAY_SIZE * 2);
