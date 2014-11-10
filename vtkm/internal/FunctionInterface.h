@@ -20,8 +20,8 @@
 #ifndef vtk_m_internal_FunctionInterface_h
 #define vtk_m_internal_FunctionInterface_h
 
+#include <vtkm/Pair.h>
 #include <vtkm/Types.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
 
 #include <boost/function_types/components.hpp>
 #include <boost/function_types/function_arity.hpp>
@@ -498,7 +498,7 @@ public:
   /// the return type of the transform for a given input type.
   ///
   /// The transformation is only applied to the parameters of the function. The
-  /// return argument is uneffected.
+  /// return argument is unaffected.
   ///
   /// The return type can be determined with the \c StaticTransformType
   /// template.
@@ -567,7 +567,7 @@ public:
   ///
   /// Here is a contrived but illustrative example. This transformation will
   /// pass all arguments except any string that looks like a number will be
-  /// converted to a vtkm::Scalar. Note that because the types are not
+  /// converted to a vtkm::FloatDefault. Note that because the types are not
   /// determined till runtime, this transform cannot be determined at compile
   /// time with meta-template programming.
   ///
@@ -589,7 +589,7 @@ public:
   ///     if ((input[0] >= '0' && (input[0] <= '9'))
   ///     {
   ///       std::stringstream stream(input);
-  ///       vtkm::Scalar value;
+  ///       vtkm::FloatDefault value;
   ///       stream >> value;
   ///       continueFunc(value);
   ///     }
@@ -625,7 +625,7 @@ public:
   template<typename TransformFunctor, typename FinishFunctor>
   VTKM_CONT_EXPORT
   void DynamicTransformCont(const TransformFunctor &transform,
-                            const FinishFunctor &finish) {
+                            const FinishFunctor &finish) const {
     typedef detail::FunctionInterfaceDynamicTransformContContinue<
         FunctionSignature,
         ResultType(),
@@ -637,7 +637,7 @@ public:
         ContinueFunctorType(*this, emptyInterface, transform, finish);
 
     continueFunctor.DoNextTransform(emptyInterface);
-    this->Result = emptyInterface.GetReturnValueSafe();
+//    this->Result = emptyInterface.GetReturnValueSafe();
   }
 
   /// \brief Applies a function to all the parameters.
@@ -682,7 +682,7 @@ class FunctionInterfaceDynamicTransformContContinue
 {
 public:
   FunctionInterfaceDynamicTransformContContinue(
-      vtkm::internal::FunctionInterface<OriginalFunction> &originalInterface,
+      const vtkm::internal::FunctionInterface<OriginalFunction> &originalInterface,
       vtkm::internal::FunctionInterface<NewFunction> &newInterface,
       const TransformFunctor &transform,
       const FinishFunctor &finish)
@@ -740,13 +740,32 @@ public:
   }
 
 private:
-  vtkm::internal::FunctionInterface<OriginalFunction> &OriginalInterface;
+  const vtkm::internal::FunctionInterface<OriginalFunction> &OriginalInterface;
   vtkm::internal::FunctionInterface<NewFunction> &NewInterface;
   const TransformFunctor &Transform;
   const FinishFunctor &Finish;
 };
 
+template<typename FirstType, typename SecondType>
+struct FunctionInterfaceZipReturn
+{
+  typedef vtkm::Pair<FirstType,SecondType> type;
+};
+
+template<>
+struct FunctionInterfaceZipReturn<void, void>
+{
+  typedef void type;
+};
+
 } // namespace detail
+
+/// Used to determine the type returned from \c make_FunctionInterfaceZip.
+/// Contains a typedef named \c type that is the appropriate \c
+/// FunctionInterface type.
+///
+template<typename FirstFunctionInterface, typename SecondFunctionInterface>
+struct FunctionInterfaceZipType;
 
 }
 } // namespace vtkm::internal

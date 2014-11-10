@@ -17,25 +17,34 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_internal_WorkletBase_h
-#define vtk_m_exec_internal_WorkletBase_h
+#ifndef vtk_m_cont_arg_TypeCheckTagExecObject_h
+#define vtk_m_cont_arg_TypeCheckTagExecObject_h
 
-#include <vtkm/exec/FunctorBase.h>
+#include <vtkm/cont/arg/TypeCheck.h>
+
+#include <vtkm/exec/ExecutionObjectBase.h>
+
+#include <boost/type_traits/is_base_of.hpp>
 
 namespace vtkm {
-namespace exec {
-namespace internal {
+namespace cont {
+namespace arg {
 
-/// Base class for all worklet classes. Worklet classes are subclasses and a
-/// operator() const is added to implement an algorithm in VTK-m. Different
-/// worklets have different calling semantics.
+/// The ExecObject type check passes for any object that inherits from \c
+/// ExecutionObjectBase. This is supposed to signify that the object can be
+/// used in the execution environment although there is no way to verify that.
 ///
-class WorkletBase : public FunctorBase
+struct TypeCheckTagExecObject {  };
+
+template<typename Type>
+struct TypeCheck<TypeCheckTagExecObject, Type>
 {
+  static const bool value =
+      boost::is_base_of<vtkm::exec::ExecutionObjectBase, Type>::value;
 };
 
 }
 }
-} // namespace vtkm::exec::internal
+} // namespace vtkm::cont::arg
 
-#endif //vtk_m_exec_internal_WorkletBase_h
+#endif //vtk_m_cont_arg_TypeCheckTagExecObject_h

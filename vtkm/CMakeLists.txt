@@ -23,6 +23,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(headers
   Extent.h
   ListTag.h
+  Pair.h
   TypeListTag.h
   Types.h
   TypeTraits.h
@@ -40,3 +41,7 @@ add_subdirectory(internal)
 #add the control and exec folders
 add_subdirectory(cont)
 add_subdirectory(exec)
+
+#-----------------------------------------------------------------------------
+#add the worklet folder
+add_subdirectory(worklet)

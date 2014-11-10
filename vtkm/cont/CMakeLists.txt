@@ -35,6 +35,7 @@ set(headers
   Error.h
   ErrorControl.h
   ErrorControlAssert.h
+  ErrorControlBadType.h
   ErrorControlBadValue.h
   ErrorControlInternal.h
   ErrorControlOutOfMemory.h
@@ -51,6 +52,7 @@ set(headers
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
+add_subdirectory(arg)
 
 vtkm_declare_headers(${impl_headers} ${headers})
 

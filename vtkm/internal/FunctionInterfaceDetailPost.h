@@ -641,6 +641,753 @@ make_FunctionInterface(
 }
 
 
+template<typename TR,
+         typename UR>
+struct FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR()>,
+    vtkm::internal::FunctionInterface<UR()> >
+{
+  typedef vtkm::internal::FunctionInterface<
+      typename detail::FunctionInterfaceZipReturn<TR,UR>::type (
+        )> type;
+};
+
+template<typename TR,
+         typename TP1,
+         typename UR,
+         typename UP1>
+struct FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1)>,
+    vtkm::internal::FunctionInterface<UR(UP1)> >
+{
+  typedef vtkm::internal::FunctionInterface<
+      typename detail::FunctionInterfaceZipReturn<TR,UR>::type (
+        vtkm::Pair<TP1, UP1>
+        )> type;
+};
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename UR,
+         typename UP1,
+         typename UP2>
+struct FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2)> >
+{
+  typedef vtkm::internal::FunctionInterface<
+      typename detail::FunctionInterfaceZipReturn<TR,UR>::type (
+        vtkm::Pair<TP1, UP1>,
+        vtkm::Pair<TP2, UP2>
+        )> type;
+};
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3>
+struct FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3)> >
+{
+  typedef vtkm::internal::FunctionInterface<
+      typename detail::FunctionInterfaceZipReturn<TR,UR>::type (
+        vtkm::Pair<TP1, UP1>,
+        vtkm::Pair<TP2, UP2>,
+        vtkm::Pair<TP3, UP3>
+        )> type;
+};
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4>
+struct FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4)> >
+{
+  typedef vtkm::internal::FunctionInterface<
+      typename detail::FunctionInterfaceZipReturn<TR,UR>::type (
+        vtkm::Pair<TP1, UP1>,
+        vtkm::Pair<TP2, UP2>,
+        vtkm::Pair<TP3, UP3>,
+        vtkm::Pair<TP4, UP4>
+        )> type;
+};
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename TP5,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4,
+         typename UP5>
+struct FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5)> >
+{
+  typedef vtkm::internal::FunctionInterface<
+      typename detail::FunctionInterfaceZipReturn<TR,UR>::type (
+        vtkm::Pair<TP1, UP1>,
+        vtkm::Pair<TP2, UP2>,
+        vtkm::Pair<TP3, UP3>,
+        vtkm::Pair<TP4, UP4>,
+        vtkm::Pair<TP5, UP5>
+        )> type;
+};
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename TP5,
+         typename TP6,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4,
+         typename UP5,
+         typename UP6>
+struct FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6)> >
+{
+  typedef vtkm::internal::FunctionInterface<
+      typename detail::FunctionInterfaceZipReturn<TR,UR>::type (
+        vtkm::Pair<TP1, UP1>,
+        vtkm::Pair<TP2, UP2>,
+        vtkm::Pair<TP3, UP3>,
+        vtkm::Pair<TP4, UP4>,
+        vtkm::Pair<TP5, UP5>,
+        vtkm::Pair<TP6, UP6>
+        )> type;
+};
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename TP5,
+         typename TP6,
+         typename TP7,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4,
+         typename UP5,
+         typename UP6,
+         typename UP7>
+struct FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7)> >
+{
+  typedef vtkm::internal::FunctionInterface<
+      typename detail::FunctionInterfaceZipReturn<TR,UR>::type (
+        vtkm::Pair<TP1, UP1>,
+        vtkm::Pair<TP2, UP2>,
+        vtkm::Pair<TP3, UP3>,
+        vtkm::Pair<TP4, UP4>,
+        vtkm::Pair<TP5, UP5>,
+        vtkm::Pair<TP6, UP6>,
+        vtkm::Pair<TP7, UP7>
+        )> type;
+};
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename TP5,
+         typename TP6,
+         typename TP7,
+         typename TP8,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4,
+         typename UP5,
+         typename UP6,
+         typename UP7,
+         typename UP8>
+struct FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7,UP8)> >
+{
+  typedef vtkm::internal::FunctionInterface<
+      typename detail::FunctionInterfaceZipReturn<TR,UR>::type (
+        vtkm::Pair<TP1, UP1>,
+        vtkm::Pair<TP2, UP2>,
+        vtkm::Pair<TP3, UP3>,
+        vtkm::Pair<TP4, UP4>,
+        vtkm::Pair<TP5, UP5>,
+        vtkm::Pair<TP6, UP6>,
+        vtkm::Pair<TP7, UP7>,
+        vtkm::Pair<TP8, UP8>
+        )> type;
+};
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename TP5,
+         typename TP6,
+         typename TP7,
+         typename TP8,
+         typename TP9,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4,
+         typename UP5,
+         typename UP6,
+         typename UP7,
+         typename UP8,
+         typename UP9>
+struct FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8,TP9)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7,UP8,UP9)> >
+{
+  typedef vtkm::internal::FunctionInterface<
+      typename detail::FunctionInterfaceZipReturn<TR,UR>::type (
+        vtkm::Pair<TP1, UP1>,
+        vtkm::Pair<TP2, UP2>,
+        vtkm::Pair<TP3, UP3>,
+        vtkm::Pair<TP4, UP4>,
+        vtkm::Pair<TP5, UP5>,
+        vtkm::Pair<TP6, UP6>,
+        vtkm::Pair<TP7, UP7>,
+        vtkm::Pair<TP8, UP8>,
+        vtkm::Pair<TP9, UP9>
+        )> type;
+};
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename TP5,
+         typename TP6,
+         typename TP7,
+         typename TP8,
+         typename TP9,
+         typename TP10,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4,
+         typename UP5,
+         typename UP6,
+         typename UP7,
+         typename UP8,
+         typename UP9,
+         typename UP10>
+struct FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8,TP9,TP10)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7,UP8,UP9,UP10)> >
+{
+  typedef vtkm::internal::FunctionInterface<
+      typename detail::FunctionInterfaceZipReturn<TR,UR>::type (
+        vtkm::Pair<TP1, UP1>,
+        vtkm::Pair<TP2, UP2>,
+        vtkm::Pair<TP3, UP3>,
+        vtkm::Pair<TP4, UP4>,
+        vtkm::Pair<TP5, UP5>,
+        vtkm::Pair<TP6, UP6>,
+        vtkm::Pair<TP7, UP7>,
+        vtkm::Pair<TP8, UP8>,
+        vtkm::Pair<TP9, UP9>,
+        vtkm::Pair<TP10, UP10>
+        )> type;
+};
+
+
+/// Creates a "zipped" version of two \c FunctionInterface objects. Each
+/// parameter in the returned object is a \c vtkm::Pair that is a combination
+/// of the corresponding pair of the input objects.
+///
+template<typename TR,
+         typename TP1,
+         typename UR,
+         typename UP1>
+VTKM_EXEC_CONT_EXPORT
+typename vtkm::internal::FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1)>,
+    vtkm::internal::FunctionInterface<UR(UP1)> >::type
+make_FunctionInterfaceZip(
+      const vtkm::internal::FunctionInterface<TR(TP1)> &first,
+      const vtkm::internal::FunctionInterface<UR(UP1)> &second)
+{
+  typename vtkm::internal::FunctionInterfaceZipType<
+      vtkm::internal::FunctionInterface<TR(TP1)>,
+      vtkm::internal::FunctionInterface<UR(UP1)> >::type result;
+
+  result.template SetParameter<1>(
+      vtkm::make_Pair(first.template GetParameter<1>(),
+                      second.template GetParameter<1>()));
+
+  return result;
+}
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename UR,
+         typename UP1,
+         typename UP2>
+VTKM_EXEC_CONT_EXPORT
+typename vtkm::internal::FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2)> >::type
+make_FunctionInterfaceZip(
+      const vtkm::internal::FunctionInterface<TR(TP1,TP2)> &first,
+      const vtkm::internal::FunctionInterface<UR(UP1,UP2)> &second)
+{
+  typename vtkm::internal::FunctionInterfaceZipType<
+      vtkm::internal::FunctionInterface<TR(TP1,TP2)>,
+      vtkm::internal::FunctionInterface<UR(UP1,UP2)> >::type result;
+
+  result.template SetParameter<1>(
+      vtkm::make_Pair(first.template GetParameter<1>(),
+                      second.template GetParameter<1>()));
+  result.template SetParameter<2>(
+      vtkm::make_Pair(first.template GetParameter<2>(),
+                      second.template GetParameter<2>()));
+
+  return result;
+}
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3>
+VTKM_EXEC_CONT_EXPORT
+typename vtkm::internal::FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3)> >::type
+make_FunctionInterfaceZip(
+      const vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3)> &first,
+      const vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3)> &second)
+{
+  typename vtkm::internal::FunctionInterfaceZipType<
+      vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3)>,
+      vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3)> >::type result;
+
+  result.template SetParameter<1>(
+      vtkm::make_Pair(first.template GetParameter<1>(),
+                      second.template GetParameter<1>()));
+  result.template SetParameter<2>(
+      vtkm::make_Pair(first.template GetParameter<2>(),
+                      second.template GetParameter<2>()));
+  result.template SetParameter<3>(
+      vtkm::make_Pair(first.template GetParameter<3>(),
+                      second.template GetParameter<3>()));
+
+  return result;
+}
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4>
+VTKM_EXEC_CONT_EXPORT
+typename vtkm::internal::FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4)> >::type
+make_FunctionInterfaceZip(
+      const vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4)> &first,
+      const vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4)> &second)
+{
+  typename vtkm::internal::FunctionInterfaceZipType<
+      vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4)>,
+      vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4)> >::type result;
+
+  result.template SetParameter<1>(
+      vtkm::make_Pair(first.template GetParameter<1>(),
+                      second.template GetParameter<1>()));
+  result.template SetParameter<2>(
+      vtkm::make_Pair(first.template GetParameter<2>(),
+                      second.template GetParameter<2>()));
+  result.template SetParameter<3>(
+      vtkm::make_Pair(first.template GetParameter<3>(),
+                      second.template GetParameter<3>()));
+  result.template SetParameter<4>(
+      vtkm::make_Pair(first.template GetParameter<4>(),
+                      second.template GetParameter<4>()));
+
+  return result;
+}
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename TP5,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4,
+         typename UP5>
+VTKM_EXEC_CONT_EXPORT
+typename vtkm::internal::FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5)> >::type
+make_FunctionInterfaceZip(
+      const vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5)> &first,
+      const vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5)> &second)
+{
+  typename vtkm::internal::FunctionInterfaceZipType<
+      vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5)>,
+      vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5)> >::type result;
+
+  result.template SetParameter<1>(
+      vtkm::make_Pair(first.template GetParameter<1>(),
+                      second.template GetParameter<1>()));
+  result.template SetParameter<2>(
+      vtkm::make_Pair(first.template GetParameter<2>(),
+                      second.template GetParameter<2>()));
+  result.template SetParameter<3>(
+      vtkm::make_Pair(first.template GetParameter<3>(),
+                      second.template GetParameter<3>()));
+  result.template SetParameter<4>(
+      vtkm::make_Pair(first.template GetParameter<4>(),
+                      second.template GetParameter<4>()));
+  result.template SetParameter<5>(
+      vtkm::make_Pair(first.template GetParameter<5>(),
+                      second.template GetParameter<5>()));
+
+  return result;
+}
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename TP5,
+         typename TP6,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4,
+         typename UP5,
+         typename UP6>
+VTKM_EXEC_CONT_EXPORT
+typename vtkm::internal::FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6)> >::type
+make_FunctionInterfaceZip(
+      const vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6)> &first,
+      const vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6)> &second)
+{
+  typename vtkm::internal::FunctionInterfaceZipType<
+      vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6)>,
+      vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6)> >::type result;
+
+  result.template SetParameter<1>(
+      vtkm::make_Pair(first.template GetParameter<1>(),
+                      second.template GetParameter<1>()));
+  result.template SetParameter<2>(
+      vtkm::make_Pair(first.template GetParameter<2>(),
+                      second.template GetParameter<2>()));
+  result.template SetParameter<3>(
+      vtkm::make_Pair(first.template GetParameter<3>(),
+                      second.template GetParameter<3>()));
+  result.template SetParameter<4>(
+      vtkm::make_Pair(first.template GetParameter<4>(),
+                      second.template GetParameter<4>()));
+  result.template SetParameter<5>(
+      vtkm::make_Pair(first.template GetParameter<5>(),
+                      second.template GetParameter<5>()));
+  result.template SetParameter<6>(
+      vtkm::make_Pair(first.template GetParameter<6>(),
+                      second.template GetParameter<6>()));
+
+  return result;
+}
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename TP5,
+         typename TP6,
+         typename TP7,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4,
+         typename UP5,
+         typename UP6,
+         typename UP7>
+VTKM_EXEC_CONT_EXPORT
+typename vtkm::internal::FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7)> >::type
+make_FunctionInterfaceZip(
+      const vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7)> &first,
+      const vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7)> &second)
+{
+  typename vtkm::internal::FunctionInterfaceZipType<
+      vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7)>,
+      vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7)> >::type result;
+
+  result.template SetParameter<1>(
+      vtkm::make_Pair(first.template GetParameter<1>(),
+                      second.template GetParameter<1>()));
+  result.template SetParameter<2>(
+      vtkm::make_Pair(first.template GetParameter<2>(),
+                      second.template GetParameter<2>()));
+  result.template SetParameter<3>(
+      vtkm::make_Pair(first.template GetParameter<3>(),
+                      second.template GetParameter<3>()));
+  result.template SetParameter<4>(
+      vtkm::make_Pair(first.template GetParameter<4>(),
+                      second.template GetParameter<4>()));
+  result.template SetParameter<5>(
+      vtkm::make_Pair(first.template GetParameter<5>(),
+                      second.template GetParameter<5>()));
+  result.template SetParameter<6>(
+      vtkm::make_Pair(first.template GetParameter<6>(),
+                      second.template GetParameter<6>()));
+  result.template SetParameter<7>(
+      vtkm::make_Pair(first.template GetParameter<7>(),
+                      second.template GetParameter<7>()));
+
+  return result;
+}
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename TP5,
+         typename TP6,
+         typename TP7,
+         typename TP8,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4,
+         typename UP5,
+         typename UP6,
+         typename UP7,
+         typename UP8>
+VTKM_EXEC_CONT_EXPORT
+typename vtkm::internal::FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7,UP8)> >::type
+make_FunctionInterfaceZip(
+      const vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8)> &first,
+      const vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7,UP8)> &second)
+{
+  typename vtkm::internal::FunctionInterfaceZipType<
+      vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8)>,
+      vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7,UP8)> >::type result;
+
+  result.template SetParameter<1>(
+      vtkm::make_Pair(first.template GetParameter<1>(),
+                      second.template GetParameter<1>()));
+  result.template SetParameter<2>(
+      vtkm::make_Pair(first.template GetParameter<2>(),
+                      second.template GetParameter<2>()));
+  result.template SetParameter<3>(
+      vtkm::make_Pair(first.template GetParameter<3>(),
+                      second.template GetParameter<3>()));
+  result.template SetParameter<4>(
+      vtkm::make_Pair(first.template GetParameter<4>(),
+                      second.template GetParameter<4>()));
+  result.template SetParameter<5>(
+      vtkm::make_Pair(first.template GetParameter<5>(),
+                      second.template GetParameter<5>()));
+  result.template SetParameter<6>(
+      vtkm::make_Pair(first.template GetParameter<6>(),
+                      second.template GetParameter<6>()));
+  result.template SetParameter<7>(
+      vtkm::make_Pair(first.template GetParameter<7>(),
+                      second.template GetParameter<7>()));
+  result.template SetParameter<8>(
+      vtkm::make_Pair(first.template GetParameter<8>(),
+                      second.template GetParameter<8>()));
+
+  return result;
+}
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename TP5,
+         typename TP6,
+         typename TP7,
+         typename TP8,
+         typename TP9,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4,
+         typename UP5,
+         typename UP6,
+         typename UP7,
+         typename UP8,
+         typename UP9>
+VTKM_EXEC_CONT_EXPORT
+typename vtkm::internal::FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8,TP9)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7,UP8,UP9)> >::type
+make_FunctionInterfaceZip(
+      const vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8,TP9)> &first,
+      const vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7,UP8,UP9)> &second)
+{
+  typename vtkm::internal::FunctionInterfaceZipType<
+      vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8,TP9)>,
+      vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7,UP8,UP9)> >::type result;
+
+  result.template SetParameter<1>(
+      vtkm::make_Pair(first.template GetParameter<1>(),
+                      second.template GetParameter<1>()));
+  result.template SetParameter<2>(
+      vtkm::make_Pair(first.template GetParameter<2>(),
+                      second.template GetParameter<2>()));
+  result.template SetParameter<3>(
+      vtkm::make_Pair(first.template GetParameter<3>(),
+                      second.template GetParameter<3>()));
+  result.template SetParameter<4>(
+      vtkm::make_Pair(first.template GetParameter<4>(),
+                      second.template GetParameter<4>()));
+  result.template SetParameter<5>(
+      vtkm::make_Pair(first.template GetParameter<5>(),
+                      second.template GetParameter<5>()));
+  result.template SetParameter<6>(
+      vtkm::make_Pair(first.template GetParameter<6>(),
+                      second.template GetParameter<6>()));
+  result.template SetParameter<7>(
+      vtkm::make_Pair(first.template GetParameter<7>(),
+                      second.template GetParameter<7>()));
+  result.template SetParameter<8>(
+      vtkm::make_Pair(first.template GetParameter<8>(),
+                      second.template GetParameter<8>()));
+  result.template SetParameter<9>(
+      vtkm::make_Pair(first.template GetParameter<9>(),
+                      second.template GetParameter<9>()));
+
+  return result;
+}
+
+template<typename TR,
+         typename TP1,
+         typename TP2,
+         typename TP3,
+         typename TP4,
+         typename TP5,
+         typename TP6,
+         typename TP7,
+         typename TP8,
+         typename TP9,
+         typename TP10,
+         typename UR,
+         typename UP1,
+         typename UP2,
+         typename UP3,
+         typename UP4,
+         typename UP5,
+         typename UP6,
+         typename UP7,
+         typename UP8,
+         typename UP9,
+         typename UP10>
+VTKM_EXEC_CONT_EXPORT
+typename vtkm::internal::FunctionInterfaceZipType<
+    vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8,TP9,TP10)>,
+    vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7,UP8,UP9,UP10)> >::type
+make_FunctionInterfaceZip(
+      const vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8,TP9,TP10)> &first,
+      const vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7,UP8,UP9,UP10)> &second)
+{
+  typename vtkm::internal::FunctionInterfaceZipType<
+      vtkm::internal::FunctionInterface<TR(TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8,TP9,TP10)>,
+      vtkm::internal::FunctionInterface<UR(UP1,UP2,UP3,UP4,UP5,UP6,UP7,UP8,UP9,UP10)> >::type result;
+
+  result.template SetParameter<1>(
+      vtkm::make_Pair(first.template GetParameter<1>(),
+                      second.template GetParameter<1>()));
+  result.template SetParameter<2>(
+      vtkm::make_Pair(first.template GetParameter<2>(),
+                      second.template GetParameter<2>()));
+  result.template SetParameter<3>(
+      vtkm::make_Pair(first.template GetParameter<3>(),
+                      second.template GetParameter<3>()));
+  result.template SetParameter<4>(
+      vtkm::make_Pair(first.template GetParameter<4>(),
+                      second.template GetParameter<4>()));
+  result.template SetParameter<5>(
+      vtkm::make_Pair(first.template GetParameter<5>(),
+                      second.template GetParameter<5>()));
+  result.template SetParameter<6>(
+      vtkm::make_Pair(first.template GetParameter<6>(),
+                      second.template GetParameter<6>()));
+  result.template SetParameter<7>(
+      vtkm::make_Pair(first.template GetParameter<7>(),
+                      second.template GetParameter<7>()));
+  result.template SetParameter<8>(
+      vtkm::make_Pair(first.template GetParameter<8>(),
+                      second.template GetParameter<8>()));
+  result.template SetParameter<9>(
+      vtkm::make_Pair(first.template GetParameter<9>(),
+                      second.template GetParameter<9>()));
+  result.template SetParameter<10>(
+      vtkm::make_Pair(first.template GetParameter<10>(),
+                      second.template GetParameter<10>()));
+
+  return result;
+}
+
+
 }
 } // namespace vtkm::internal
 

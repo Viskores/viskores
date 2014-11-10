@@ -19,11 +19,13 @@
 ##============================================================================
 
 set(headers
+  ExecutionObjectBase.h
   FunctorBase.h
   )
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
+add_subdirectory(arg)
 
 vtkm_declare_headers(${impl_headers} ${headers})
 

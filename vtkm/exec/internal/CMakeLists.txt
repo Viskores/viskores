@@ -20,9 +20,12 @@
 
 set(headers
   ErrorMessageBuffer.h
-  WorkletBase.h
+  WorkletInvokeFunctor.h
+  WorkletInvokeFunctorDetail.h
   )
 
 vtkm_declare_headers(${headers})
+
+vtkm_pyexpander_generated_file(WorkletInvokeFunctorDetail.h)
 
 add_subdirectory(testing)
