@@ -498,7 +498,7 @@ public:
   /// the return type of the transform for a given input type.
   ///
   /// The transformation is only applied to the parameters of the function. The
-  /// return argument is uneffected.
+  /// return argument is unaffected.
   ///
   /// The return type can be determined with the \c StaticTransformType
   /// template.
@@ -567,7 +567,7 @@ public:
   ///
   /// Here is a contrived but illustrative example. This transformation will
   /// pass all arguments except any string that looks like a number will be
-  /// converted to a vtkm::Scalar. Note that because the types are not
+  /// converted to a vtkm::FloatDefault. Note that because the types are not
   /// determined till runtime, this transform cannot be determined at compile
   /// time with meta-template programming.
   ///
@@ -589,7 +589,7 @@ public:
   ///     if ((input[0] >= '0' && (input[0] <= '9'))
   ///     {
   ///       std::stringstream stream(input);
-  ///       vtkm::Scalar value;
+  ///       vtkm::FloatDefault value;
   ///       stream >> value;
   ///       continueFunc(value);
   ///     }
