@@ -40,7 +40,7 @@ struct TestKernel : public vtkm::exec::FunctorBase
   void operator()(vtkm::Id index) const
   {
     typedef typename PortalType::ValueType ValueType;
-    if (this->Portal.Get(index) != TestValue(index, ValueType()))
+    if (!test_equal(this->Portal.Get(index), TestValue(index, ValueType())))
     {
       this->RaiseError("Got bad execution object.");
     }

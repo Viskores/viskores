@@ -138,11 +138,11 @@ class FunctionInterfaceDynamicTransformContContinue;
 /// function signatures.
 ///
 /// The \c FunctionInterface contains several ways to invoke a functor whose
-/// parameters match those of the parameter pack. This allows you to complete
-/// the transition of calling an arbitrary function (like a worklet).
+/// parameters match those of the function interface. This allows you to
+/// complete the transition of calling an arbitrary function (like a worklet).
 ///
-/// The following is a rundown of a \c FunctionInterface is created and used.
-/// See the independent documentation for more details.
+/// The following is a rundown of how a \c FunctionInterface is created and
+/// used. See the independent documentation for more details.
 ///
 /// Use the \c make_FunctionInterface function to create a \c FunctionInterface
 /// and initialize the state of all the parameters. \c make_FunctionInterface

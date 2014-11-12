@@ -37,9 +37,10 @@ public:
   typedef void ExecutionSignature(_1, _2, WorkIndex);
 
   template<typename T>
+  VTKM_EXEC_EXPORT
   void operator()(const T &in, T &out, vtkm::Id workIndex) const
   {
-    if (in != TestValue(workIndex, T()) + T(100))
+    if (!test_equal(in, TestValue(workIndex, T()) + T(100)))
     {
       this->RaiseError("Got wrong input value.");
     }
@@ -47,6 +48,7 @@ public:
   }
 
   template<typename T1, typename T2>
+  VTKM_EXEC_EXPORT
   void operator()(const T1 &, const T2 &, vtkm::Id) const
   {
     this->RaiseError("Cannot call this worklet with different types.");
@@ -60,9 +62,10 @@ public:
   typedef _2 ExecutionSignature(_1, WorkIndex);
 
   template<typename T>
+  VTKM_EXEC_EXPORT
   T operator()(const T &in, vtkm::Id workIndex) const
   {
-    if (in != TestValue(workIndex, T()) + T(100))
+    if (!test_equal(in, TestValue(workIndex, T()) + T(100)))
     {
       this->RaiseError("Got wrong input value.");
     }

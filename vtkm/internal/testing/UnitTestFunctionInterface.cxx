@@ -27,6 +27,11 @@
 #include <sstream>
 #include <string>
 
+// Disable the test on the overhead to invoke a function. It is unreliable and
+// the most critical invoke (for the instance of a worklet) does not directly
+// use the Invoke method.
+#define TEST_INVOKE_TIME
+
 namespace {
 
 typedef vtkm::Id Type1;
@@ -148,6 +153,7 @@ struct FiveArgSwizzledFunctor {
   }
 };
 
+#ifdef TEST_INVOKE_TIME
 struct LotsOfArgsFunctor {
   LotsOfArgsFunctor() : Field(0) {  }
 
@@ -177,6 +183,7 @@ struct LotsOfArgsFunctor {
   }
   vtkm::FloatDefault Field;
 };
+#endif //TEST_INVOKE_TIME
 
 template<typename T>
 std::string ToString(const T &value)
@@ -474,7 +481,7 @@ void TestZip()
       InvokeCont(ZipFunctor());
 }
 
-#if 0
+#ifdef TEST_INVOKE_TIME
 void TestInvokeTime()
 {
   std::cout << "Checking time to call lots of args lots of times." << std::endl;
@@ -543,7 +550,7 @@ void TestInvokeTime()
                    "Function interface invoke took longer than expected.");
 #endif
 }
-#endif // if 0
+#endif // if TEST_INVOKE_TIME
 
 void TestFunctionInterface()
 {
@@ -555,10 +562,9 @@ void TestFunctionInterface()
   TestDynamicTransform();
   TestForEach();
   TestZip();
-  // Disable this last test. It is unreliable and the most critical invoke
-  // (for the instance of a worklet) does not directly use the Invoke
-  // method.
-  //TestInvokeTime();
+#ifdef TEST_INVOKE_TIME
+  TestInvokeTime();
+#endif //TEST_INVOKE_TIME
 }
 
 } // anonymous namespace
