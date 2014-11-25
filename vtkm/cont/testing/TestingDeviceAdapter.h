@@ -26,7 +26,7 @@
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/internal/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/cont/internal/DeviceAdapterError.h>
 

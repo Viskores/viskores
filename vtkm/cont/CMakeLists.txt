@@ -29,6 +29,7 @@ set(headers
   ArrayPortalToIterators.h
   Assert.h
   DeviceAdapter.h
+  DeviceAdapterAlgorithm.h
   DeviceAdapterSerial.h
   DynamicArrayHandle.h
   DynamicPointCoordinates.h
