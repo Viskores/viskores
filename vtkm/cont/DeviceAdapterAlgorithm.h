@@ -395,8 +395,8 @@ public:
 
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_SERIAL
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmSerial.h>
-// #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
-// #include <vtkm/cuda/cont/internal/DeviceAdapterAlgorithmCuda.h>
+#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
+#include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmCuda.h>
 // #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
 // #include <vtkm/openmp/cont/internal/DeviceAdapterAlgorithmOpenMP.h>
 // #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB

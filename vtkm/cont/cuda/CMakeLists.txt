@@ -18,48 +18,19 @@
 ##  this software.
 ##============================================================================
 
-include_directories(${Boost_INCLUDE_DIRS})
-
 set(headers
-  ArrayHandle.h
-  ArrayHandleCompositeVector.h
-  ArrayHandleCounting.h
-  ArrayHandleUniformPointCoordinates.h
-  ArrayPortal.h
-  ArrayPortalToIterators.h
-  Assert.h
-  DeviceAdapter.h
-  DeviceAdapterAlgorithm.h
-  DeviceAdapterSerial.h
-  DynamicArrayHandle.h
-  DynamicPointCoordinates.h
-  Error.h
-  ErrorControl.h
-  ErrorControlAssert.h
-  ErrorControlBadType.h
-  ErrorControlBadValue.h
-  ErrorControlInternal.h
-  ErrorControlOutOfMemory.h
-  ErrorExecution.h
-  PointCoordinatesArray.h
-  PointCoordinatesListTag.h
-  PointCoordinatesUniform.h
-  Storage.h
-  StorageBasic.h
-  StorageImplicit.h
-  StorageListTag.h
-  Timer.h
+  ChooseCudaDevice.h
+  DeviceAdapterCuda.h
   )
 
+vtkm_disable_troublesome_thrust_warnings()
+
 #-----------------------------------------------------------------------------
+CUDA_INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+
 add_subdirectory(internal)
-add_subdirectory(arg)
-
-vtkm_declare_headers(${impl_headers} ${headers})
-
-if (VTKm_ENABLE_CUDA)
-  add_subdirectory(cuda)
-endif (VTKm_ENABLE_CUDA)
 
 #-----------------------------------------------------------------------------
+vtkm_declare_headers(CUDA ${headers})
+
 add_subdirectory(testing)

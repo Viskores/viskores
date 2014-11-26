@@ -53,6 +53,7 @@ include(CMake/VTKmCompilerExtras.cmake)
 
 #-----------------------------------------------------------------------------
 # Configurable Options
+option(VTKm_ENABLE_CUDA "Enable Cuda support" ON)
 option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 
 option(VTKm_USE_DOUBLE_PRECISION
@@ -65,6 +66,13 @@ if (VTKm_ENABLE_TESTING)
   enable_testing()
   include(CTest)
 endif()
+
+#-----------------------------------------------------------------------------
+# Set up devices selected.
+vtkm_configure_device(Serial)
+if (VTKm_ENABLE_CUDA)
+  vtkm_configure_device(Cuda)
+endif (VTKm_ENABLE_CUDA)
 
 #-----------------------------------------------------------------------------
 
@@ -122,12 +130,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/vtkm/internal/Configure.h.in
 vtkm_install_headers(
   vtkm/internal ${CMAKE_CURRENT_BINARY_DIR}/vtkm/internal/Configure.h)
 
-
-# List of Boost features used:
-# * Smart Ptr
-# * Meta programming language
-find_package(BoostHeaders ${VTKm_REQUIRED_BOOST_VERSION} REQUIRED)
-
 find_package(Pyexpander)
 
 #-----------------------------------------------------------------------------
@@ -182,6 +184,15 @@ install(
     ${VTKm_SOURCE_DIR}/CMake/FindBoostHeaders.cmake
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
+
+# Install Use files.
+install(
+  FILES
+    ${VTKm_SOURCE_DIR}/CMake/UseVTKmSerial.cmake
+    ${VTKm_SOURCE_DIR}/CMake/UseVTKmCuda.cmake
+  DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
+  )
+
 
 # Enable CPack packaging
 set(CPACK_PACKAGE_DESCRIPTION_FILE ${VTKm_SOURCE_DIR}/README.md)

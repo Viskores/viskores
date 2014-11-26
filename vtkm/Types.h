@@ -1172,6 +1172,18 @@ VTK_M_SCALAR_DOT(vtkm::UInt64)
 VTK_M_SCALAR_DOT(vtkm::Float32)
 VTK_M_SCALAR_DOT(vtkm::Float64)
 
+
+/// Predicate that takes a single argument \c x, and returns
+/// True if it isn't the identity of the Type \p T.
+template<typename T>
+struct not_default_constructor
+{
+  VTKM_EXEC_CONT_EXPORT bool operator()(const T &x)
+  {
+    return (x  != T());
+  }
+};
+
 } // End of namespace vtkm
 
 // Declared outside of vtkm namespace so that the operator works with all code.

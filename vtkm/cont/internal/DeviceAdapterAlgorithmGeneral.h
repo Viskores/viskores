@@ -31,20 +31,6 @@
 
 #include <algorithm>
 
-namespace {
-/// Predicate that takes a single argument \c x, and returns
-/// True if it isn't the identity of the Type \p T.
-template<typename T>
-struct not_default_constructor
-{
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T &x)
-  {
-    return (x  != T());
-  }
-};
-
-}
-
 namespace vtkm {
 namespace cont {
 namespace internal {
@@ -621,7 +607,7 @@ private:
     void operator()(vtkm::Id index) const
     {
       StencilValueType value = this->StencilPortal.Get(index);
-      bool flag = not_default_constructor<StencilValueType>()(value);
+      bool flag = ::vtkm::not_default_constructor<StencilValueType>()(value);
       this->OutputPortal.Set(index, flag ? 1 : 0);
     }
 
@@ -656,7 +642,7 @@ private:
     {
       typedef typename StencilPortalType::ValueType StencilValueType;
       StencilValueType stencilValue = this->StencilPortal.Get(index);
-      if (not_default_constructor<StencilValueType>()(stencilValue))
+      if (::vtkm::not_default_constructor<StencilValueType>()(stencilValue))
       {
         vtkm::Id outputIndex = this->IndexPortal.Get(index);
 

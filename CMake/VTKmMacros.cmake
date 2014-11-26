@@ -368,3 +368,14 @@ macro(vtkm_disable_troublesome_thrust_warnings_var flags_var)
   string(REPLACE "-Wall" "" new_flags "${new_flags}")
   set(${flags_var} "${new_flags}")
 endmacro(vtkm_disable_troublesome_thrust_warnings_var)
+
+# Set up configuration for a given device.
+macro(vtkm_configure_device device)
+  string(TOUPPER "${device}" device_uppercase)
+  set(VTKm_ENABLE_${device_uppercase} ON)
+  include("${VTKm_SOURCE_DIR}/CMake/UseVTKm${device}.cmake")
+  if(NOT VTKm_${device}_FOUND)
+    message(SEND_ERROR "Could not configure for using VTKm with ${device}")
+  endif(NOT VTKm_${device}_FOUND)
+endmacro(vtkm_configure_device)
+
