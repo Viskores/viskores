@@ -54,9 +54,8 @@ struct DeviceAdapterAlgorithm
   /// allocated to the appropriate size.
   ///
   template<typename T, class CIn, class COut>
-  VTKM_CONT_EXPORT static void Copy(
-      const vtkm::cont::ArrayHandle<T, CIn, DeviceAdapterTag> &input,
-      vtkm::cont::ArrayHandle<T, COut, DeviceAdapterTag> &output);
+  VTKM_CONT_EXPORT static void Copy(const vtkm::cont::ArrayHandle<T,CIn> &input,
+                                    vtkm::cont::ArrayHandle<T, COut> &output);
 
   /// \brief Output is the first index in input for each item in values that wouldn't alter the ordering of input
   ///
@@ -69,9 +68,9 @@ struct DeviceAdapterAlgorithm
   ///
   template<typename T, class CIn, class CVal, class COut>
   VTKM_CONT_EXPORT static void LowerBounds(
-      const vtkm::cont::ArrayHandle<T,CIn,DeviceAdapterTag>& input,
-      const vtkm::cont::ArrayHandle<T,CVal,DeviceAdapterTag>& values,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut,DeviceAdapterTag>& output);
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      const vtkm::cont::ArrayHandle<T,CVal>& values,
+      vtkm::cont::ArrayHandle<vtkm::Id,COut>& output);
 
   /// \brief Output is the first index in input for each item in values that wouldn't alter the ordering of input
   ///
@@ -85,9 +84,9 @@ struct DeviceAdapterAlgorithm
   ///
   template<typename T, class CIn, class CVal, class COut, class Compare>
   VTKM_CONT_EXPORT static void LowerBounds(
-      const vtkm::cont::ArrayHandle<T,CIn,DeviceAdapterTag>& input,
-      const vtkm::cont::ArrayHandle<T,CVal,DeviceAdapterTag>& values,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut,DeviceAdapterTag>& output,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      const vtkm::cont::ArrayHandle<T,CVal>& values,
+      vtkm::cont::ArrayHandle<vtkm::Id,COut>& output,
       Compare comp);
 
   /// \brief A special version of LowerBounds that does an in place operation.
@@ -99,8 +98,8 @@ struct DeviceAdapterAlgorithm
   ///
   template<class CIn, class COut>
   VTKM_CONT_EXPORT static void LowerBounds(
-      const vtkm::cont::ArrayHandle<vtkm::Id,CIn,DeviceAdapterTag>& input,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut,DeviceAdapterTag>& values_output);
+      const vtkm::cont::ArrayHandle<vtkm::Id,CIn>& input,
+      vtkm::cont::ArrayHandle<vtkm::Id,COut>& values_output);
 
   /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
   ///
@@ -116,8 +115,8 @@ struct DeviceAdapterAlgorithm
   ///
   template<typename T, class CIn, class COut>
   VTKM_CONT_EXPORT static T ScanInclusive(
-      const vtkm::cont::ArrayHandle<T,CIn,DeviceAdapterTag> &input,
-      vtkm::cont::ArrayHandle<T,COut,DeviceAdapterTag>& output);
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      vtkm::cont::ArrayHandle<T,COut>& output);
 
   /// \brief Compute an exclusive prefix sum operation on the input ArrayHandle.
   ///
@@ -133,8 +132,8 @@ struct DeviceAdapterAlgorithm
   ///
   template<typename T, class CIn, class COut>
   VTKM_CONT_EXPORT static T ScanExclusive(
-      const vtkm::cont::ArrayHandle<T,CIn,DeviceAdapterTag> &input,
-      vtkm::cont::ArrayHandle<T,COut,DeviceAdapterTag>& output);
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      vtkm::cont::ArrayHandle<T,COut>& output);
 
   /// \brief Schedule many instances of a function to run on concurrent threads.
   ///
@@ -189,8 +188,7 @@ struct DeviceAdapterAlgorithm
   /// guarantee stability
   ///
   template<typename T, class Storage>
-  VTKM_CONT_EXPORT static void Sort(
-      vtkm::cont::ArrayHandle<T,Storage,DeviceAdapterTag> &values);
+  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage> &values);
 
   /// \brief Unstable ascending sort of input array.
   ///
@@ -198,9 +196,8 @@ struct DeviceAdapterAlgorithm
   /// on the custom compare functor.
   ///
   template<typename T, class Storage, class Compare>
-  VTKM_CONT_EXPORT static void Sort(
-      vtkm::cont::ArrayHandle<T,Storage,DeviceAdapterTag> &values,
-      Compare comp);
+  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage> &values,
+                                    Compare comp);
 
   /// \brief Performs stream compaction to remove unwanted elements in the input array. Output becomes the index values of input that are valid.
   ///
@@ -214,8 +211,8 @@ struct DeviceAdapterAlgorithm
   ///
   template<typename T, class CStencil, class COut>
   VTKM_CONT_EXPORT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<T,CStencil,DeviceAdapterTag> &stencil,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut,DeviceAdapterTag> &output);
+      const vtkm::cont::ArrayHandle<T,CStencil> &stencil,
+      vtkm::cont::ArrayHandle<vtkm::Id,COut> &output);
 
   /// \brief Performs stream compaction to remove unwanted elements in the input array.
   ///
@@ -229,9 +226,9 @@ struct DeviceAdapterAlgorithm
   ///
   template<typename T, typename U, class CIn, class CStencil, class COut>
   VTKM_CONT_EXPORT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<T,CIn,DeviceAdapterTag> &input,
-      const vtkm::cont::ArrayHandle<U,CStencil,DeviceAdapterTag> &stencil,
-      vtkm::cont::ArrayHandle<T,COut,DeviceAdapterTag> &output);
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
+      vtkm::cont::ArrayHandle<T,COut> &output);
 
   /// \brief Completes any asynchronous operations running on the device.
   ///
@@ -248,7 +245,7 @@ struct DeviceAdapterAlgorithm
   ///
   template<typename T, class Storage>
   VTKM_CONT_EXPORT static void Unique(
-      vtkm::cont::ArrayHandle<T,Storage,DeviceAdapterTag>& values);
+      vtkm::cont::ArrayHandle<T,Storage>& values);
 
   /// \brief Reduce an array to only the unique values it contains
   ///
@@ -262,7 +259,7 @@ struct DeviceAdapterAlgorithm
   ///
   template<typename T, class Storage, class Compare>
   VTKM_CONT_EXPORT static void Unique(
-      vtkm::cont::ArrayHandle<T,Storage,DeviceAdapterTag>& values,
+      vtkm::cont::ArrayHandle<T,Storage>& values,
       Compare comp);
 
   /// \brief Output is the last index in input for each item in values that wouldn't alter the ordering of input
@@ -276,9 +273,9 @@ struct DeviceAdapterAlgorithm
   ///
   template<typename T, class CIn, class CVal, class COut>
   VTKM_CONT_EXPORT static void UpperBounds(
-      const vtkm::cont::ArrayHandle<T,CIn,DeviceAdapterTag___>& input,
-      const vtkm::cont::ArrayHandle<T,CVal,DeviceAdapterTag___>& values,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut,DeviceAdapterTag___>& output);
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      const vtkm::cont::ArrayHandle<T,CVal>& values,
+      vtkm::cont::ArrayHandle<vtkm::Id,COut>& output);
 
   /// \brief Output is the last index in input for each item in values that wouldn't alter the ordering of input
   ///
@@ -292,9 +289,9 @@ struct DeviceAdapterAlgorithm
   ///
   template<typename T, class CIn, class CVal, class COut, class Compare>
   VTKM_CONT_EXPORT static void UpperBounds(
-      const vtkm::cont::ArrayHandle<T,CIn,DeviceAdapterTag>& input,
-      const vtkm::cont::ArrayHandle<T,CVal,DeviceAdapterTag>& values,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut,DeviceAdapterTag>& output,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      const vtkm::cont::ArrayHandle<T,CVal>& values,
+      vtkm::cont::ArrayHandle<vtkm::Id,COut>& output,
       Compare comp);
 
   /// \brief A special version of UpperBounds that does an in place operation.
@@ -306,8 +303,8 @@ struct DeviceAdapterAlgorithm
   ///
   template<class CIn, class COut>
   VTKM_CONT_EXPORT static void UpperBounds(
-      const vtkm::cont::ArrayHandle<vtkm::Id,CIn,DeviceAdapterTag___>& input,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut,DeviceAdapterTag___>& values_output);
+      const vtkm::cont::ArrayHandle<vtkm::Id,CIn>& input,
+      vtkm::cont::ArrayHandle<vtkm::Id,COut>& values_output);
 };
 #else // VTKM_DOXYGEN_ONLY
     ;

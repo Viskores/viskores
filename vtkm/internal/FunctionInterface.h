@@ -515,7 +515,7 @@ public:
   ///   };
   ///
   ///   template<typename T>
-  ///   DAX_CONT_EXPORT
+  ///   VTKM_CONT_EXPORT
   ///   const T *operator()(const T &x) const {
   ///     return &x;
   ///   }
