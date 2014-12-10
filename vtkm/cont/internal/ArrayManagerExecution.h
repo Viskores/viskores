@@ -53,7 +53,7 @@ private:
   typedef vtkm::cont::internal::Storage<T,StorageTag> StorageType;
 
 public:
-  /// The type of value held in the array (vtkm::Scalar, vtkm::Vector3, etc.)
+  /// The type of value held in the array (vtkm::FloatDefault, vtkm::Vec, etc.)
   ///
   typedef T ValueType;
 

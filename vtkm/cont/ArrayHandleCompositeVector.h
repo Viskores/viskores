@@ -595,8 +595,8 @@ public:
 ///
 /// \code{.cpp}
 /// typedef vtkm::cont::ArrayHandleCompositeVector<
-///     vtkm::cont::ArrayHandle<vtkm::Scalar>,
-///     vtkm::cont::ArrayHandle<vtkm::Scalar> >::type OutArrayType;
+///     vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+///     vtkm::cont::ArrayHandle<vtkm::FloatDefault> >::type OutArrayType;
 /// OutArrayType outArray = vtkm::cont::make_ArrayHandleCompositeVector(a1,a2);
 /// \endcode
 ///

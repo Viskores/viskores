@@ -154,7 +154,7 @@ struct DecideFirstType
 
 void TestPair()
 {
-  //we want to test each combination of standard dax types in a
+  //we want to test each combination of standard vtkm types in a
   //vtkm::Pair, so to do that we dispatch twice on TryTypes. We could
   //dispatch on all types, but that gets excessively large and takes a
   //long time to compile (although it runs fast). Instead, just select

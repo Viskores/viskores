@@ -38,7 +38,7 @@ namespace cont {
 /// mechanisms to run algorithms on a type of parallel device. The tag
 /// DeviceAdapterTag___ does not actually exist. Rather, this documentation is
 /// provided to describe the interface for a DeviceAdapter. Loading the
-/// dax/cont/DeviceAdapter.h header file will set a default device adapter
+/// vtkm/cont/DeviceAdapter.h header file will set a default device adapter
 /// appropriate for the current compile environment. You can specify the
 /// default device adapter by first setting the \c VTKM_DEVICE_ADAPTER macro.
 /// Valid values for \c VTKM_DEVICE_ADAPTER are the following:
