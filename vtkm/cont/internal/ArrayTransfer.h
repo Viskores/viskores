@@ -52,7 +52,7 @@ private:
       T,StorageTag,DeviceAdapterTag> ArrayManagerType;
 
 public:
-  /// The type of value held in the array (vtkm::Scalar, vtkm::Vector3, etc.)
+  /// The type of value held in the array (vtkm::FloatDefault, vtkm::Vec, etc.)
   ///
   typedef T ValueType;
 

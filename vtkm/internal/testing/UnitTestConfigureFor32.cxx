@@ -46,7 +46,7 @@ void TestTypeSizes()
   VTKM_TEST_ASSERT(VTKM_SIZE_SCALAR == EXPECTED_SIZE,
                    "VTKM_SIZE_SCALAR an unexpected size.");
   VTKM_TEST_ASSERT(sizeof(vtkm::FloatDefault) == EXPECTED_SIZE,
-                   "vtkm::Scalar an unexpected size.");
+                   "vtkm::FloatDefault an unexpected size.");
 }
 
 }
