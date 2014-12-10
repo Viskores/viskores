@@ -30,7 +30,7 @@
 // Disable the test on the overhead to invoke a function. It is unreliable and
 // the most critical invoke (for the instance of a worklet) does not directly
 // use the Invoke method.
-#define TEST_INVOKE_TIME
+//#define TEST_INVOKE_TIME
 
 namespace {
 
