@@ -23,7 +23,7 @@
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/ErrorControlOutOfMemory.h>
 
-// Disable GCC warnings we check Dax for but Thrust does not.
+// Disable GCC warnings we check vtkmfor but Thrust does not.
 #if defined(__GNUC__) && !defined(VTKM_CUDA)
 #if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
 #pragma GCC diagnostic push

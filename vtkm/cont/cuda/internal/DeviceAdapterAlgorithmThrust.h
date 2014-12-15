@@ -20,16 +20,15 @@
 #ifndef vtk_m_cont_cuda_internal_DeviceAdapterThrust_h
 #define vtk_m_cont_cuda_internal_DeviceAdapterThrust_h
 
-#include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorExecution.h>
 
-#include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
+#include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
+
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
 
-// Disable GCC warnings we check Dax for but Thrust does not.
+// Disable GCC warnings we check vtkmfor but Thrust does not.
 #if defined(__GNUC__) && !defined(VTKM_CUDA)
 #if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
 #pragma GCC diagnostic push

@@ -23,7 +23,10 @@
 #include <vtkm/Types.h>
 #include <vtkm/internal/ExportMacros.h>
 
-// Disable GCC warnings we check Dax for but Thrust does not.
+#include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
+#include <vtkm/exec/cuda/internal/ArrayPortalFromTexture.h>
+
+// Disable GCC warnings we check vtkmfor but Thrust does not.
 #if defined(__GNUC__) && !defined(VTKM_CUDA)
 #if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
 #pragma GCC diagnostic push
@@ -56,6 +59,7 @@ namespace detail {
 // Tags to specify what type of thrust iterator to use.
 struct ThrustIteratorTransformTag {  };
 struct ThrustIteratorDevicePtrTag {  };
+struct ThrustIteratorDeviceTextureTag {  };
 
 // Traits to help classify what thrust iterators will be used.
 template<class IteratorType>
@@ -143,6 +147,14 @@ struct IteratorTraits
   typedef typename PortalType::IteratorType BaseIteratorType;
   typedef typename detail::ThrustIteratorTag<BaseIteratorType>::Type Tag;
   typedef typename IteratorChooser<PortalType, Tag>::Type IteratorType;
+};
+
+template<typename T>
+struct IteratorTraits< vtkm::exec::cuda::internal::ConstArrayPortalFromTexture< T > >
+{
+//   typedef vtkm::exec::cuda::internal::ConstArrayPortalFromTexture< T > PortalType;
+//   typedef ThrustIteratorDeviceTextureTag Tag;
+//   typedef typename PortalType::IteratorType IteratorType;
 };
 
 template<typename T>

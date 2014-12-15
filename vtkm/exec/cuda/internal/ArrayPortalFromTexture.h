@@ -53,7 +53,26 @@
 
 #include <iterator>
 
-// #include <iostream>
+// Disable GCC warnings we check vtkmfor but Thrust does not.
+#if defined(__GNUC__) && !defined(VTKM_CUDA)
+#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
+#pragma GCC diagnostic push
+#endif // gcc version >= 4.6
+#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 2)
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif // gcc version >= 4.2
+#endif // gcc && !CUDA
+
+#include <thrust/system/cuda/memory.h>
+#include <thrust/iterator/iterator_facade.h>
+
+#if defined(__GNUC__) && !defined(VTKM_CUDA)
+#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
+#pragma GCC diagnostic pop
+#endif // gcc version >= 4.6
+#endif // gcc && !CUDA
+
 
 namespace
 {
