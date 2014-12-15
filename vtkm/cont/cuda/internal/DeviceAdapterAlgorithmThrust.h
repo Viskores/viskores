@@ -393,6 +393,31 @@ public:
 #ifndef VTKM_CUDA
 private:
 #endif
+  // we use cuda pinned memory to reduce the amount of synchronization
+  // and mem copies between the host and device.
+  VTKM_CONT_EXPORT
+  static char* GetPinnedErrorArray(vtkm::Id &arraySize, char** hostPointer)
+    {
+    const vtkm::Id ERROR_ARRAY_SIZE = 1024;
+    static bool errorArrayInit = false;
+    static char* hostPtr = NULL;
+    static char* devicePtr = NULL;
+    if( !errorArrayInit )
+      {
+      cudaMallocHost( (void**)&hostPtr, ERROR_ARRAY_SIZE, cudaHostAllocMapped );
+      cudaHostGetDevicePointer(&devicePtr, hostPtr, 0);
+      errorArrayInit = true;
+      }
+    //set the size of the array
+    arraySize = ERROR_ARRAY_SIZE;
+
+    //specify the host pointer to the memory
+    *hostPointer = hostPtr;
+    (void) hostPointer;
+    return devicePtr;
+    }
+
+
   template<class FunctorType>
   class ScheduleKernel
   {
@@ -412,12 +437,17 @@ public:
   template<class Functor>
   VTKM_CONT_EXPORT static void Schedule(Functor functor, vtkm::Id numInstances)
   {
-    const vtkm::Id ERROR_ARRAY_SIZE = 1024;
-    ::thrust::system::cuda::vector<char> errorArray(ERROR_ARRAY_SIZE);
-    errorArray[0] = '\0';
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(
-          ::thrust::raw_pointer_cast(&(*errorArray.begin())),
-          errorArray.size());
+    //since the memory is pinned we can access it safely on the host
+    //without a memcpy
+    vtkm::Id errorArraySize = 0;
+    char* hostErrorPtr = NULL;
+    char* deviceErrorPtr = GetPinnedErrorArray(errorArraySize, &hostErrorPtr);
+
+    //clear the first character which means that we don't contain an error
+    hostErrorPtr[0] = '\0';
+
+    vtkm::exec::internal::ErrorMessageBuffer errorMessage( deviceErrorPtr,
+                                                           errorArraySize);
 
     functor.SetErrorMessageBuffer(errorMessage);
 
@@ -427,12 +457,17 @@ public:
                        ::thrust::make_counting_iterator<vtkm::Id>(numInstances),
                        kernel);
 
-    if (errorArray[0] != '\0')
-      {
-      char errorString[ERROR_ARRAY_SIZE];
-      ::thrust::copy(errorArray.begin(), errorArray.end(), errorString);
 
-      throw vtkm::cont::ErrorExecution(errorString);
+    //sync so that we can check the results of the call.
+    //In the future I want move this before the for_each call, and throwing
+    //an exception if the previous schedule wrote an error. This would help
+    //cuda to run longer before we hard sync.
+    cudaDeviceSynchronize();
+
+    //check what the value is
+    if (hostErrorPtr[0] != '\0')
+      {
+      throw vtkm::cont::ErrorExecution(hostErrorPtr);
       }
   }
 
