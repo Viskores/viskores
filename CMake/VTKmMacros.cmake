@@ -293,7 +293,7 @@ function(vtkm_worklet_unit_tests device_adapter)
   #detect if we are generating a .cu files
   set(is_cuda FALSE)
   set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
-  if("${device_adapter}" STREQUAL "VTKm_DEVICE_ADAPTER_CUDA")
+  if("${device_adapter}" STREQUAL "VTKM_DEVICE_ADAPTER_CUDA")
     set(is_cuda TRUE)
     #if we are generating cu files need to setup three things.
     #1. us the configured .cu files
@@ -308,9 +308,14 @@ function(vtkm_worklet_unit_tests device_adapter)
     list(APPEND CUDA_NVCC_FLAGS "-w")
   endif()
 
+
   if(VTKm_ENABLE_TESTING)
+    string(REPLACE "VTKM_DEVICE_ADAPTER_" "" device_type ${device_adapter})
+
     vtkm_get_kit_name(kit)
-    set(test_prog WorkletTests_${kit})
+
+    #inject the device adapter into the test program name so each one is unique
+    set(test_prog WorkletTests_${device_type})
 
     if(is_cuda)
       cuda_add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
@@ -321,9 +326,6 @@ function(vtkm_worklet_unit_tests device_adapter)
     #add a test for each worklet test file. We will inject the device
     #adapter type into the test name so that it is easier to see what
     #exact device a test is failing on.
-
-    string(REPLACE "VTKm_DEVICE_ADAPTER_" "" device_type ${device_adapter})
-
     foreach (test ${unit_test_srcs})
       get_filename_component(tname ${test} NAME_WE)
       add_test(NAME "${tname}${device_type}"

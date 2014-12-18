@@ -111,6 +111,11 @@ struct DoTestWorklet
 
 void TestWorkletMapField()
 {
+  typedef vtkm::cont::internal::DeviceAdapterTraits<
+                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
+  std::cout << "Testing Map Field on device adapter: "
+            << DeviceAdapterTraits::GetId() << std::endl;
+
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(DoTestWorklet<TestWorklet>(),
                                    vtkm::TypeListTagCommon());

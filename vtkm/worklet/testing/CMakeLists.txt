@@ -22,4 +22,10 @@ set(unit_tests
   UnitTestWorkletMapField.cxx
   )
 
-vtkm_unit_tests(SOURCES ${unit_tests})
+vtkm_save_worklet_unit_tests(${unit_tests})
+
+vtkm_worklet_unit_tests( VTKM_DEVICE_ADAPTER_SERIAL )
+
+if (VTKm_ENABLE_CUDA)
+  vtkm_worklet_unit_tests( VTKM_DEVICE_ADAPTER_CUDA )
+endif()
