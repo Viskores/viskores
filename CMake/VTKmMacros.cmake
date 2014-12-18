@@ -297,14 +297,18 @@ function(vtkm_worklet_unit_tests device_adapter)
     set(is_cuda TRUE)
     #if we are generating cu files need to setup three things.
     #1. us the configured .cu files
-    #2. Set BOOST_SP_DISABLE_THREADS to disable threading warnings
-    #3. Disable unused function warnings
-    #the FindCUDA module and helper methods don't read target level
-    #properties so we have to modify CUDA_NVCC_FLAGS  instead of using
-    # target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
-    #
+    #2. Explicitly set the cuda device adapter as a define this is currently
+    #   done as a work around since the cuda executable ignores compile
+    #   definitions
+    #3. Set BOOST_SP_DISABLE_THREADS to disable threading warnings
+    #4. Disable unused function warnings
+    #   the FindCUDA module and helper methods don't read target level
+    #   properties so we have to modify CUDA_NVCC_FLAGS  instead of using
+    #   target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
     get_property(unit_test_srcs GLOBAL PROPERTY vtkm_worklet_unit_tests_cu_sources )
-    list(APPEND CUDA_NVCC_FLAGS -DBOOST_SP_DISABLE_THREADS)
+
+    list(APPEND CUDA_NVCC_FLAGS "-DVTKM_DEVICE_ADAPTER=${device_adapter}")
+    list(APPEND CUDA_NVCC_FLAGS "-DBOOST_SP_DISABLE_THREADS")
     list(APPEND CUDA_NVCC_FLAGS "-w")
   endif()
 
@@ -338,13 +342,13 @@ function(vtkm_worklet_unit_tests device_adapter)
     #generates
     if(VTKm_EXTRA_COMPILER_WARNINGS)
       set_property(TARGET ${test_prog}
-            APPEND PROPERTY COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA} )
+                   APPEND PROPERTY COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA} )
     endif()
 
     #set the device adapter on the executable
     set_property(TARGET ${test_prog}
-             APPEND
-             PROPERTY COMPILE_DEFINITIONS VTKm_DEVICE_ADAPTER=${device_adapter})
+                 APPEND
+                 PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=${device_adapter}" )
   endif()
 
   set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
