@@ -39,17 +39,9 @@ if (VTKm_Cuda_FOUND)
   endif (NOT Boost_FOUND)
 endif (VTKm_Cuda_FOUND)
 
-# Find the Thrust library.
-if (VTKm_Cuda_FOUND)
-  find_package(Thrust)
-
-  if (NOT THRUST_FOUND)
-    message(STATUS "Thrust not found")
-    set(VTKm_Cuda_FOUND)
-  endif (NOT THRUST_FOUND)
-endif (VTKm_Cuda_FOUND)
-
-# Find Cuda support.
+#-----------------------------------------------------------------------------
+# Find CUDA library.
+#-----------------------------------------------------------------------------
 if (VTKm_Cuda_FOUND)
   find_package(CUDA)
 
@@ -59,9 +51,23 @@ if (VTKm_Cuda_FOUND)
     message(STATUS "CUDA not found")
     set(VTKm_Cuda_FOUND)
   endif (NOT CUDA_FOUND)
-endif (VTKm_Cuda_FOUND)
+endif ()
 
+#-----------------------------------------------------------------------------
+# Find Thrust library.
+#-----------------------------------------------------------------------------
+if (VTKm_Cuda_FOUND)
+  find_package(Thrust)
+
+  if (NOT THRUST_FOUND)
+    message(STATUS "Thrust not found")
+    set(VTKm_Cuda_FOUND)
+  endif (NOT THRUST_FOUND)
+endif ()
+
+#-----------------------------------------------------------------------------
 # Set up all these dependent packages (if they were all found).
+#-----------------------------------------------------------------------------
 if (VTKm_Cuda_FOUND)
   cuda_include_directories(
     ${Boost_INCLUDE_DIRS}
