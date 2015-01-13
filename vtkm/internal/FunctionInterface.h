@@ -746,26 +746,7 @@ private:
   const FinishFunctor &Finish;
 };
 
-template<typename FirstType, typename SecondType>
-struct FunctionInterfaceZipReturn
-{
-  typedef vtkm::Pair<FirstType,SecondType> type;
-};
-
-template<>
-struct FunctionInterfaceZipReturn<void, void>
-{
-  typedef void type;
-};
-
 } // namespace detail
-
-/// Used to determine the type returned from \c make_FunctionInterfaceZip.
-/// Contains a typedef named \c type that is the appropriate \c
-/// FunctionInterface type.
-///
-template<typename FirstFunctionInterface, typename SecondFunctionInterface>
-struct FunctionInterfaceZipType;
 
 }
 } // namespace vtkm::internal
