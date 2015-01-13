@@ -255,23 +255,6 @@ struct ForEachFunctor
   void operator()(std::string &x) const { x.append("*2"); }
 };
 
-struct ZipFunctor
-{
-  void operator()(const vtkm::Pair<Type1,Type3> &a1,
-                  const vtkm::Pair<Type2,Type4> &a2,
-                  const vtkm::Pair<Type3,Type5> &a3) const
-  {
-    std::cout << "In functor for zipped functions." << std::endl;
-
-    VTKM_TEST_ASSERT(a1.first == Arg1, "Bad arg.");
-    VTKM_TEST_ASSERT(a1.second == Arg3, "Bad arg.");
-    VTKM_TEST_ASSERT(a2.first == Arg2, "Bad arg.");
-    VTKM_TEST_ASSERT(a2.second == Arg4, "Bad arg.");
-    VTKM_TEST_ASSERT(a3.first == Arg3, "Bad arg.");
-    VTKM_TEST_ASSERT(a3.second == Arg5, "Bad arg.");
-  }
-};
-
 void TryFunctionInterface5(
     vtkm::internal::FunctionInterface<void(Type1,Type2,Type3,Type4,Type5)> funcInterface)
 {
@@ -471,16 +454,6 @@ void TestForEach()
   VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == 4*Arg5, "Arg 5 incorrect.");
 }
 
-void TestZip()
-{
-  std::cout << "Testing zipping function interfaces." << std::endl;
-
-  vtkm::internal::make_FunctionInterfaceZip(
-        vtkm::internal::make_FunctionInterface<void>(Arg1, Arg2, Arg3),
-        vtkm::internal::make_FunctionInterface<void>(Arg3, Arg4, Arg5)).
-      InvokeCont(ZipFunctor());
-}
-
 #ifdef TEST_INVOKE_TIME
 void TestInvokeTime()
 {
@@ -561,7 +534,6 @@ void TestFunctionInterface()
   TestStaticTransform();
   TestDynamicTransform();
   TestForEach();
-  TestZip();
 #ifdef TEST_INVOKE_TIME
   TestInvokeTime();
 #endif //TEST_INVOKE_TIME
