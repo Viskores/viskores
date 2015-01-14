@@ -53,7 +53,7 @@ template<typename Transform,
          typename P1>
 struct FunctionInterfaceStaticTransformType<R(P1), Transform> {
   typedef R(type)(
-        typename Transform::template ReturnType<P1>::type
+        typename Transform::template ReturnType<P1,1>::type
         );
 };
 
@@ -63,8 +63,8 @@ template<typename Transform,
          typename P2>
 struct FunctionInterfaceStaticTransformType<R(P1,P2), Transform> {
   typedef R(type)(
-        typename Transform::template ReturnType<P1>::type,
-        typename Transform::template ReturnType<P2>::type
+        typename Transform::template ReturnType<P1,1>::type,
+        typename Transform::template ReturnType<P2,2>::type
         );
 };
 
@@ -75,9 +75,9 @@ template<typename Transform,
          typename P3>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3), Transform> {
   typedef R(type)(
-        typename Transform::template ReturnType<P1>::type,
-        typename Transform::template ReturnType<P2>::type,
-        typename Transform::template ReturnType<P3>::type
+        typename Transform::template ReturnType<P1,1>::type,
+        typename Transform::template ReturnType<P2,2>::type,
+        typename Transform::template ReturnType<P3,3>::type
         );
 };
 
@@ -89,10 +89,10 @@ template<typename Transform,
          typename P4>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4), Transform> {
   typedef R(type)(
-        typename Transform::template ReturnType<P1>::type,
-        typename Transform::template ReturnType<P2>::type,
-        typename Transform::template ReturnType<P3>::type,
-        typename Transform::template ReturnType<P4>::type
+        typename Transform::template ReturnType<P1,1>::type,
+        typename Transform::template ReturnType<P2,2>::type,
+        typename Transform::template ReturnType<P3,3>::type,
+        typename Transform::template ReturnType<P4,4>::type
         );
 };
 
@@ -105,11 +105,11 @@ template<typename Transform,
          typename P5>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5), Transform> {
   typedef R(type)(
-        typename Transform::template ReturnType<P1>::type,
-        typename Transform::template ReturnType<P2>::type,
-        typename Transform::template ReturnType<P3>::type,
-        typename Transform::template ReturnType<P4>::type,
-        typename Transform::template ReturnType<P5>::type
+        typename Transform::template ReturnType<P1,1>::type,
+        typename Transform::template ReturnType<P2,2>::type,
+        typename Transform::template ReturnType<P3,3>::type,
+        typename Transform::template ReturnType<P4,4>::type,
+        typename Transform::template ReturnType<P5,5>::type
         );
 };
 
@@ -123,12 +123,12 @@ template<typename Transform,
          typename P6>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6), Transform> {
   typedef R(type)(
-        typename Transform::template ReturnType<P1>::type,
-        typename Transform::template ReturnType<P2>::type,
-        typename Transform::template ReturnType<P3>::type,
-        typename Transform::template ReturnType<P4>::type,
-        typename Transform::template ReturnType<P5>::type,
-        typename Transform::template ReturnType<P6>::type
+        typename Transform::template ReturnType<P1,1>::type,
+        typename Transform::template ReturnType<P2,2>::type,
+        typename Transform::template ReturnType<P3,3>::type,
+        typename Transform::template ReturnType<P4,4>::type,
+        typename Transform::template ReturnType<P5,5>::type,
+        typename Transform::template ReturnType<P6,6>::type
         );
 };
 
@@ -143,13 +143,13 @@ template<typename Transform,
          typename P7>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7), Transform> {
   typedef R(type)(
-        typename Transform::template ReturnType<P1>::type,
-        typename Transform::template ReturnType<P2>::type,
-        typename Transform::template ReturnType<P3>::type,
-        typename Transform::template ReturnType<P4>::type,
-        typename Transform::template ReturnType<P5>::type,
-        typename Transform::template ReturnType<P6>::type,
-        typename Transform::template ReturnType<P7>::type
+        typename Transform::template ReturnType<P1,1>::type,
+        typename Transform::template ReturnType<P2,2>::type,
+        typename Transform::template ReturnType<P3,3>::type,
+        typename Transform::template ReturnType<P4,4>::type,
+        typename Transform::template ReturnType<P5,5>::type,
+        typename Transform::template ReturnType<P6,6>::type,
+        typename Transform::template ReturnType<P7,7>::type
         );
 };
 
@@ -165,14 +165,14 @@ template<typename Transform,
          typename P8>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8), Transform> {
   typedef R(type)(
-        typename Transform::template ReturnType<P1>::type,
-        typename Transform::template ReturnType<P2>::type,
-        typename Transform::template ReturnType<P3>::type,
-        typename Transform::template ReturnType<P4>::type,
-        typename Transform::template ReturnType<P5>::type,
-        typename Transform::template ReturnType<P6>::type,
-        typename Transform::template ReturnType<P7>::type,
-        typename Transform::template ReturnType<P8>::type
+        typename Transform::template ReturnType<P1,1>::type,
+        typename Transform::template ReturnType<P2,2>::type,
+        typename Transform::template ReturnType<P3,3>::type,
+        typename Transform::template ReturnType<P4,4>::type,
+        typename Transform::template ReturnType<P5,5>::type,
+        typename Transform::template ReturnType<P6,6>::type,
+        typename Transform::template ReturnType<P7,7>::type,
+        typename Transform::template ReturnType<P8,8>::type
         );
 };
 
@@ -189,15 +189,15 @@ template<typename Transform,
          typename P9>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9), Transform> {
   typedef R(type)(
-        typename Transform::template ReturnType<P1>::type,
-        typename Transform::template ReturnType<P2>::type,
-        typename Transform::template ReturnType<P3>::type,
-        typename Transform::template ReturnType<P4>::type,
-        typename Transform::template ReturnType<P5>::type,
-        typename Transform::template ReturnType<P6>::type,
-        typename Transform::template ReturnType<P7>::type,
-        typename Transform::template ReturnType<P8>::type,
-        typename Transform::template ReturnType<P9>::type
+        typename Transform::template ReturnType<P1,1>::type,
+        typename Transform::template ReturnType<P2,2>::type,
+        typename Transform::template ReturnType<P3,3>::type,
+        typename Transform::template ReturnType<P4,4>::type,
+        typename Transform::template ReturnType<P5,5>::type,
+        typename Transform::template ReturnType<P6,6>::type,
+        typename Transform::template ReturnType<P7,7>::type,
+        typename Transform::template ReturnType<P8,8>::type,
+        typename Transform::template ReturnType<P9,9>::type
         );
 };
 
@@ -215,16 +215,16 @@ template<typename Transform,
          typename P10>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10), Transform> {
   typedef R(type)(
-        typename Transform::template ReturnType<P1>::type,
-        typename Transform::template ReturnType<P2>::type,
-        typename Transform::template ReturnType<P3>::type,
-        typename Transform::template ReturnType<P4>::type,
-        typename Transform::template ReturnType<P5>::type,
-        typename Transform::template ReturnType<P6>::type,
-        typename Transform::template ReturnType<P7>::type,
-        typename Transform::template ReturnType<P8>::type,
-        typename Transform::template ReturnType<P9>::type,
-        typename Transform::template ReturnType<P10>::type
+        typename Transform::template ReturnType<P1,1>::type,
+        typename Transform::template ReturnType<P2,2>::type,
+        typename Transform::template ReturnType<P3,3>::type,
+        typename Transform::template ReturnType<P4,4>::type,
+        typename Transform::template ReturnType<P5,5>::type,
+        typename Transform::template ReturnType<P6,6>::type,
+        typename Transform::template ReturnType<P7,7>::type,
+        typename Transform::template ReturnType<P8,8>::type,
+        typename Transform::template ReturnType<P9,9>::type,
+        typename Transform::template ReturnType<P10,10>::type
         );
 };
 

@@ -85,22 +85,24 @@ void TestBasicTransform()
   std::cout << "Testing basic transform." << std::endl;
 
   vtkm::cont::internal::DynamicTransform transform;
+  vtkm::internal::IndexTag<1> indexTag;
 
   std::cout << "  Trying with simple scalar." << std::endl;
-  TRY_TRANSFORM(transform(vtkm::FloatDefault(5), ScalarFunctor()));
+  TRY_TRANSFORM(transform(vtkm::FloatDefault(5), ScalarFunctor(), indexTag));
 
   std::cout << "  Trying with basic scalar array." << std::endl;
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> concreteArray;
-  TRY_TRANSFORM(transform(concreteArray, ArrayHandleScalarFunctor()));
+  TRY_TRANSFORM(transform(concreteArray, ArrayHandleScalarFunctor(), indexTag));
 
   std::cout << "  Trying scalar dynamic array." << std::endl;
   vtkm::cont::DynamicArrayHandle dynamicArray = concreteArray;
-  TRY_TRANSFORM(transform(dynamicArray, ArrayHandleScalarFunctor()));
+  TRY_TRANSFORM(transform(dynamicArray, ArrayHandleScalarFunctor(), indexTag));
 
   std::cout << "  Trying with unusual (string) dynamic array." << std::endl;
   dynamicArray = vtkm::cont::ArrayHandle<std::string>();
   TRY_TRANSFORM(transform(dynamicArray.ResetTypeList(TypeListTagString()),
-                          ArrayHandleStringFunctor()));
+                          ArrayHandleStringFunctor(),
+                          indexTag));
 }
 
 void TestFunctionTransform()

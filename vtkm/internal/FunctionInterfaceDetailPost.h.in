@@ -94,7 +94,7 @@ template<typename Transform,
 struct FunctionInterfaceStaticTransformType<$signature(num_params), Transform> {
   typedef $ptype(0)(type)(
 $for(param_index in xrange(1, num_params+1))\
-        typename Transform::template ReturnType<$ptype(param_index)>::type$comma_if(param_index<num_params)
+        typename Transform::template ReturnType<$ptype(param_index),$(param_index)>::type$comma_if(param_index<num_params)
 $endfor\
         );
 };
