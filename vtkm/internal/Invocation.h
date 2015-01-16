@@ -86,7 +86,7 @@ struct Invocation
   /// \c Parameters are replaced with those provided.
   ///
   template<typename NewParameterInterface>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_CONT_EXPORT
   typename ChangeParametersType<NewParameterInterface>::type
   ChangeParameters(NewParameterInterface newParameters) const {
     return typename ChangeParametersType<NewParameterInterface>::type(
