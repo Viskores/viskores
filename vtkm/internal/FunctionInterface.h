@@ -438,7 +438,7 @@ public:
   /// template.
   ///
   template<typename NewType>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_CONT_EXPORT
   typename AppendType<NewType>::type
   Append(NewType newParameter) const {
     typename AppendType<NewType>::type appendedFuncInterface;
@@ -467,7 +467,7 @@ public:
   /// template.
   ///
   template<vtkm::IdComponent ParameterIndex, typename NewType>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_CONT_EXPORT
   typename ReplaceType<ParameterIndex, NewType>::type
   Replace(NewType newParameter) const {
     typename ReplaceType<ParameterIndex, NewType>::type replacedFuncInterface;
