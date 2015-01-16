@@ -144,6 +144,7 @@ template<typename WorkletType,
          typename ControlInterface,
          vtkm::IdComponent InputDomainIndex,
          $template_params(num_params)>
+VTKM_EXEC_EXPORT
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -182,6 +183,7 @@ template<typename WorkletType,
          typename ControlInterface,
          vtkm::IdComponent InputDomainIndex,
          $template_params(num_params, start=1)>
+VTKM_EXEC_EXPORT
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
