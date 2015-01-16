@@ -40,6 +40,7 @@ $# Ignore the following comment. It is meant for the generated file.
 #endif
 
 #include <vtkm/Types.h>
+#include <vtkm/internal/IndexTag.h>
 
 #include <boost/function_types/function_type.hpp>
 #include <boost/mpl/at.hpp>
@@ -228,7 +229,8 @@ $if(num_params < 1)\
   (void)transformedParameters;
 $else\
 $for(param_index in xrange(1, num_params+1))\
-  transformedParameters.Parameter$(param_index) = transform(originalParameters.Parameter$(param_index));
+  transformedParameters.Parameter$(param_index) =
+    transform(originalParameters.Parameter$(param_index), vtkm::internal::IndexTag<$(param_index)>());
 $endfor\
 $endif\
 }
@@ -255,7 +257,7 @@ $if(num_params < 1)\
   (void)parameters;
 $else\
 $for(param_index in xrange(1, num_params+1))\
-  f(parameters.Parameter$(param_index));
+  f(parameters.Parameter$(param_index), vtkm::internal::IndexTag<$(param_index)>());
 $endfor\
 $endif\
 }

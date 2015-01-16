@@ -30,6 +30,8 @@
 
 #include <boost/static_assert.hpp>
 
+#include <sstream>
+
 namespace vtkm {
 namespace cont {
 
@@ -128,16 +130,17 @@ struct CompositeVectorArrayToPortalCont {
 
 template<typename DeviceAdapterTag>
 struct CompositeVectorArrayToPortalExec {
-  template<typename ArrayHandleType>
+  template<typename ArrayHandleType, vtkm::IdComponent Index>
   struct ReturnType {
     typedef typename ArrayHandleType::template ExecutionTypes<
           DeviceAdapterTag>::PortalConst type;
   };
 
-  template<typename ArrayHandleType>
+  template<typename ArrayHandleType, vtkm::IdComponent Index>
   VTKM_CONT_EXPORT
-  typename ReturnType<ArrayHandleType>::type
-  operator()(const ArrayHandleType &array) const {
+  typename ReturnType<ArrayHandleType, Index>::type
+  operator()(const ArrayHandleType &array,
+             vtkm::internal::IndexTag<Index>) const {
     return array.PrepareForInput(DeviceAdapterTag());
   }
 };
@@ -146,12 +149,15 @@ struct CheckArraySizeFunctor {
   vtkm::Id ExpectedSize;
   CheckArraySizeFunctor(vtkm::Id expectedSize) : ExpectedSize(expectedSize) {  }
 
-  template<typename T>
-  void operator()(const T &a) const {
+  template<typename T, vtkm::IdComponent Index>
+  void operator()(const T &a, vtkm::internal::IndexTag<Index>) const {
     if (a.GetNumberOfValues() != this->ExpectedSize)
     {
-      throw vtkm::cont::ErrorControlBadValue(
-            "All input arrays to ArrayHandleCompositeVector must be the same size.");
+      std::stringstream message;
+      message << "All input arrays to ArrayHandleCompositeVector must be the same size.\n"
+              << "Array " << Index-1 << " has " << a.GetNumberOfValues()
+              << ". Expected " << this->ExpectedSize << ".";
+      throw vtkm::cont::ErrorControlBadValue(message.str().c_str());
     }
   }
 };

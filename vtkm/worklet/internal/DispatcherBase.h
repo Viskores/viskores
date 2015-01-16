@@ -53,7 +53,7 @@ namespace detail {
 // tag. Causes a compile error otherwise.
 struct DispatcherBaseControlSignatureTagCheck
 {
-  template<typename ControlSignatureTag>
+  template<typename ControlSignatureTag, vtkm::IdComponent Index>
   struct ReturnType {
     // If you get a compile error here, it means there is something that is
     // not a valid control signature tag in a worklet's ControlSignature.
@@ -66,7 +66,7 @@ struct DispatcherBaseControlSignatureTagCheck
 // signature tag. Causes a compile error otherwise.
 struct DispatcherBaseExecutionSignatureTagCheck
 {
-  template<typename ExecutionSignatureTag>
+  template<typename ExecutionSignatureTag, vtkm::IdComponent Index>
   struct ReturnType {
     // If you get a compile error here, it means there is something that is not
     // a valid execution signature tag in a worklet's ExecutionSignature.
@@ -77,16 +77,16 @@ struct DispatcherBaseExecutionSignatureTagCheck
 
 // Used in the dynamic cast to check to make sure that the type passed into
 // the Invoke method matches the type accepted by the ControlSignature.
-template<typename ContinueFunctor, typename TypeCheckTag>
+template<typename ContinueFunctor,
+         typename TypeCheckTag,
+         vtkm::IdComponent Index>
 struct DispatcherBaseTypeCheckFunctor
 {
   const ContinueFunctor &Continue;
-  vtkm::IdComponent ParameterIndex;
 
   VTKM_CONT_EXPORT
-  DispatcherBaseTypeCheckFunctor(const ContinueFunctor &continueFunc,
-                                 vtkm::IdComponent parameterIndex)
-    : Continue(continueFunc), ParameterIndex(parameterIndex) {  }
+  DispatcherBaseTypeCheckFunctor(const ContinueFunctor &continueFunc)
+    : Continue(continueFunc) {  }
 
   template<typename T>
   VTKM_CONT_EXPORT
@@ -111,7 +111,7 @@ struct DispatcherBaseTypeCheckFunctor
   {
     std::stringstream message;
     message << "Encountered bad type for parameter "
-            << this->ParameterIndex
+            << Index
             << " when calling Invoke on a dispatcher.";
     throw vtkm::cont::ErrorControlBadType(message.str());
   }
@@ -120,33 +120,27 @@ struct DispatcherBaseTypeCheckFunctor
 // Uses vtkm::cont::internal::DynamicTransform and the DynamicTransformCont
 // method of FunctionInterface to convert all DynamicArrayHandles and any
 // other arguments declaring themselves as dynamic to static versions.
+template<typename ControlInterface>
 struct DispatcherBaseDynamicTransform
 {
-  vtkm::cont::internal::DynamicTransform BasicDynamicTransform;
-  vtkm::IdComponent *ParameterCounter;
-
+  template<typename InputType,
+           typename ContinueFunctor,
+           vtkm::IdComponent Index>
   VTKM_CONT_EXPORT
-  DispatcherBaseDynamicTransform(vtkm::IdComponent *parameterCounter)
-    : ParameterCounter(parameterCounter)
+  void operator()(const InputType &input,
+                  const ContinueFunctor &continueFunc,
+                  vtkm::internal::IndexTag<Index> indexTag) const
   {
-    *this->ParameterCounter = 0;
-  }
-
-  template<typename ControlSignatureTag,
-           typename InputType,
-           typename ContinueFunctor>
-  VTKM_CONT_EXPORT
-  void operator()(const vtkm::Pair<ControlSignatureTag, InputType> &input,
-                  const ContinueFunctor &continueFunc) const
-  {
-    (*this->ParameterCounter)++;
+    typedef typename ControlInterface::template ParameterType<Index>::type
+        ControlSignatureTag;
 
     typedef DispatcherBaseTypeCheckFunctor<
-        ContinueFunctor, typename ControlSignatureTag::TypeCheckTag>
+        ContinueFunctor, typename ControlSignatureTag::TypeCheckTag, Index>
         TypeCheckFunctor;
-    this->BasicDynamicTransform(input.second,
-                                TypeCheckFunctor(continueFunc,
-                                                 *this->ParameterCounter));
+
+    vtkm::cont::internal::DynamicTransform basicDynamicTransform;
+
+    basicDynamicTransform(input, TypeCheckFunctor(continueFunc), indexTag);
   }
 };
 
@@ -170,7 +164,7 @@ struct DispatcherBaseDynamicTransformHelper
 
 // A functor used in a StaticCast of a FunctionInterface to transport arguments
 // from the control environment to the execution environment.
-template<typename Device>
+template<typename ControlInterface, typename Device>
 struct DispatcherBaseTransportFunctor
 {
   vtkm::Id NumInstances;
@@ -178,25 +172,28 @@ struct DispatcherBaseTransportFunctor
   DispatcherBaseTransportFunctor(vtkm::Id numInstances)
     : NumInstances(numInstances) {  }
 
-  template<typename T>
+  template<typename ControlParameter, vtkm::IdComponent Index>
   struct InvokeTypes {
-    typedef typename T::FirstType::TransportTag TransportTag;
-    typedef typename T::SecondType ControlParameter;
+    typedef typename ControlInterface::template ParameterType<Index>::type
+        ControlSignatureTag;
+    typedef typename ControlSignatureTag::TransportTag TransportTag;
     typedef vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device>
         TransportType;
   };
 
-  template<typename T>
+  template<typename ControlParameter, vtkm::IdComponent Index>
   struct ReturnType {
-    typedef typename InvokeTypes<T>::TransportType::ExecObjectType type;
+    typedef typename InvokeTypes<ControlParameter, Index>::
+        TransportType::ExecObjectType type;
   };
 
-  template<typename T>
+  template<typename ControlParameter, vtkm::IdComponent Index>
   VTKM_CONT_EXPORT
-  typename ReturnType<T>::type
-  operator()(const T &invokeData) const {
-    typename InvokeTypes<T>::TransportType transport;
-    return transport(invokeData.second, this->NumInstances);
+  typename ReturnType<ControlParameter, Index>::type
+  operator()(const ControlParameter &invokeData,
+             vtkm::internal::IndexTag<Index>) const {
+    typename InvokeTypes<ControlParameter, Index>::TransportType transport;
+    return transport(invokeData, this->NumInstances);
   }
 };
 
@@ -251,20 +248,13 @@ private:
     // type against the TypeCheckTag in the ControlSignature tags. To do this,
     // the check needs access to both the parameter (in the parameters
     // argument) and the ControlSignature tags (in the ControlInterface type).
-    // To make this possible, we use the zip mechanism of FunctionInterface to
-    // combine these two separate function interfaces into a single
-    // FunctionInterface with each parameter being a Pair containing both
-    // the ControlSignature tag and the control object itself.
-    typedef typename vtkm::internal::FunctionInterfaceZipType<
-        ControlInterface, ParameterInterface>::type ZippedInterface;
-    ZippedInterface zippedInterface =
-        vtkm::internal::make_FunctionInterfaceZip(ControlInterface(),
-                                                  parameters);
-
-    vtkm::IdComponent parameterIndexCounter;
-
-    zippedInterface.DynamicTransformCont(
-          detail::DispatcherBaseDynamicTransform(&parameterIndexCounter),
+    // To make this possible, we call DynamicTransform with a functor containing
+    // the control signature tags. It uses the index provided by the
+    // dynamic transform mechanism to get the right tag and make sure that
+    // the dynamic type is correct. (This prevents the compiler from expanding
+    // worklets with types that should not be.)
+    parameters.DynamicTransformCont(
+          detail::DispatcherBaseDynamicTransform<ControlInterface>(),
           detail::DispatcherBaseDynamicTransformHelper<MyType>(this));
   }
 
@@ -308,38 +298,25 @@ private:
   void InvokeTransportParameters(const Invocation &invocation,
                                  vtkm::Id numInstances) const
   {
-    // The first step in invoking a worklet is transport the arguments to the
-    // execution environment. The invocation object passed to this function
+    // The first step in invoking a worklet is to transport the arguments to
+    // the execution environment. The invocation object passed to this function
     // contains the parameters passed to Invoke in the control environment. We
     // will use the template magic in the FunctionInterface class to invoke the
-    // appropriate Transport class on each parameter to get a list of execution
-    // objects (corresponding to the arguments of the Invoke in the control
-    // environment) in a FunctionInterface.
+    // appropriate Transport class on each parameter and get a list of
+    // execution objects (corresponding to the arguments of the Invoke in the
+    // control environment) in a FunctionInterface. Specifically, we use a
+    // static transform of the FunctionInterface to call the transport on each
+    // argument and return the corresponding execution environment object.
+    typedef typename Invocation::ParameterInterface ParameterInterfaceType;
+    const ParameterInterfaceType &parameters = invocation.Parameters;
 
-    // The Transport relies on both the ControlSignature tag and the control
-    // object itself. To make it easier to work with each parameter, use the
-    // zip mechanism of FunctionInterface to combine the separate function
-    // interfaces of the ControlSignature and the parameters into one. This
-    // will make a FunctionInterface with each parameter being a Pair
-    // containing both the ControlSignature tag and the control object itself.
-    typedef typename vtkm::internal::FunctionInterfaceZipType<
-        typename Invocation::ControlInterface,
-        typename Invocation::ParameterInterface>::type ZippedInterface;
-    ZippedInterface zippedInterface =
-        vtkm::internal::make_FunctionInterfaceZip(
-          typename Invocation::ControlInterface(), invocation.Parameters);
+    typedef detail::DispatcherBaseTransportFunctor<
+        typename Invocation::ControlInterface, Device> TransportFunctorType;
+    typedef typename ParameterInterfaceType::template StaticTransformType<
+        TransportFunctorType>::type ExecObjectParameters;
 
-    // Use the StaticTransform mechanism to run the
-    // DispatcherBaseTransportFunctor on each parameter of the zipped
-    // interface. This functor will in turn run the appropriate Transform on
-    // the parameter and return the associated execution object. The end result
-    // of the transform is a FunctionInterface containing execution objects
-    // corresponding to each Invoke argument.
-    typedef detail::DispatcherBaseTransportFunctor<Device> TransportFunctor;
-    typedef typename ZippedInterface::template StaticTransformType<
-        TransportFunctor>::type ExecObjectParameters;
     ExecObjectParameters execObjectParameters =
-        zippedInterface.StaticTransformCont(TransportFunctor(numInstances));
+        parameters.StaticTransformCont(TransportFunctorType(numInstances));
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke.

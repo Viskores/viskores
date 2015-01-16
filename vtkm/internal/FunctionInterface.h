@@ -20,8 +20,9 @@
 #ifndef vtk_m_internal_FunctionInterface_h
 #define vtk_m_internal_FunctionInterface_h
 
-#include <vtkm/Pair.h>
 #include <vtkm/Types.h>
+
+#include <vtkm/internal/IndexTag.h>
 
 #include <boost/function_types/components.hpp>
 #include <boost/function_types/function_arity.hpp>
@@ -301,27 +302,75 @@ public:
   }
 
   /// Gets the value for the parameter of the given index. Parameters are
-  /// indexed starting at 1. To use this method you have to specify the index
-  /// as a template parameter. If you are using FunctionInterface within a
-  /// template (which is almost always the case), then you will have to use the
-  /// template keyword. For example, here is a simple implementation of a
-  /// method that grabs the first parameter of FunctionInterface.
+  /// indexed starting at 1. To use this method you have to specify a static,
+  /// compile time index. There are two ways to specify the index. The first is
+  /// to specify a specific template parameter (e.g.
+  /// <tt>GetParameter<1>()</tt>). Note that if you are using FunctionInterface
+  /// within a template (which is almost always the case), then you will have
+  /// to use the template keyword. For example, here is a simple implementation
+  /// of a method that grabs the first parameter of FunctionInterface.
   ///
   /// \code{.cpp}
   /// template<FunctionSignature>
-  /// void Foo(const vtkm::cont::internal::FunctionInterface<FunctionSignature> &fInterface)
+  /// void Foo(const vtkm::internal::FunctionInterface<FunctionSignature> &fInterface)
   /// {
   ///   bar(fInterface.template GetParameter<1>());
+  /// }
+  /// \endcode
+  ///
+  /// Alternatively the \c GetParameter method also has an optional argument
+  /// that can be a \c IndexTag that specifies the parameter index. Here is
+  /// a repeat of the previous example using this method.
+  ///
+  /// \code{.cpp}
+  /// template<FunctionSignature>
+  /// void Foo(const vtkm::internal::FunctionInterface<FunctionSignature> &fInterface)
+  /// {
+  ///   using vtkm::internal::IndexTag;
+  ///   bar(fInterface.GetParameter(IndexTag<1>()));
   /// }
   /// \endcode
   ///
   template<vtkm::IdComponent ParameterIndex>
   VTKM_EXEC_CONT_EXPORT
   typename ParameterType<ParameterIndex>::type
-  GetParameter() const {
+  GetParameter(
+      vtkm::internal::IndexTag<ParameterIndex> =
+        vtkm::internal::IndexTag<ParameterIndex>()) const {
     return detail::GetParameter<ParameterIndex>(this->Parameters);
   }
 
+  /// Sets the value for the parameter of the given index. Parameters are
+  /// indexed starting at 1. To use this method you have to specify a static,
+  /// compile time index. There are two ways to specify the index. The first is
+  /// to specify a specific template parameter (e.g.
+  /// <tt>SetParameter<1>(value)</tt>). Note that if you are using
+  /// FunctionInterface within a template (which is almost always the case),
+  /// then you will have to use the template keyword. For example, here is a
+  /// simple implementation of a method that grabs the first parameter of
+  /// FunctionInterface.
+  ///
+  /// \code{.cpp}
+  /// template<FunctionSignature>
+  /// void Foo(vtkm::internal::FunctionInterface<FunctionSignature> &fInterface)
+  /// {
+  ///   fInterface.template SetParameter<1>(bar);
+  /// }
+  /// \endcode
+  ///
+  /// Alternatively the \c GetParameter method also has an optional argument
+  /// that can be a \c IndexTag that specifies the parameter index. Here is
+  /// a repeat of the previous example using this method.
+  ///
+  /// \code{.cpp}
+  /// template<FunctionSignature>
+  /// void Foo(vtkm::internal::FunctionInterface<FunctionSignature> &fInterface)
+  /// {
+  ///   using vtkm::internal::IndexTag;
+  ///   fInterface.SetParameter(bar, IndexTag<1>());
+  /// }
+  /// \endcode
+  ///
   /// Sets the value for the parameter of the given index. Parameters are
   /// indexed starting at 1. To use this method you have to specify the index
   /// as a template parameter. If you are using FunctionInterface within a
@@ -330,7 +379,10 @@ public:
   ///
   template<vtkm::IdComponent ParameterIndex>
   VTKM_EXEC_CONT_EXPORT
-  void SetParameter(typename ParameterType<ParameterIndex>::type parameter)
+  void SetParameter(
+      typename ParameterType<ParameterIndex>::type parameter,
+      vtkm::internal::IndexTag<ParameterIndex> =
+        vtkm::internal::IndexTag<ParameterIndex>())
   {
     detail::SetParameter<ParameterIndex>(this->Parameters, parameter);
   }
@@ -461,15 +513,47 @@ public:
 
   /// Returns a new \c FunctionInterface with all the parameters of this \c
   /// FunctionInterface except that the parameter indexed at the template
-  /// parameter \c ParameterIndex is replaced with the given argument. This
-  /// method can be used in place of SetParameter when the parameter type
-  /// changes. The return type can be determined with the \c ReplaceType
-  /// template.
+  /// parameter \c ParameterIndex (also specified with the optional second
+  /// argument) is replaced with the given argument. This method can be used in
+  /// place of SetParameter when the parameter type changes. The return type
+  /// can be determined with the \c ReplaceType template.
+  /// Gets the value for the parameter of the given index. Parameters are
+  /// indexed starting at 1. To use this method you have to specify a static,
+  /// compile time index. There are two ways to specify the index. The first is
+  /// to specify a specific template parameter (e.g.
+  /// <tt>GetParameter<1>()</tt>). Note that if you are using FunctionInterface
+  /// within a template (which is almost always the case), then you will have
+  /// to use the template keyword. For example, here is a simple implementation
+  /// of a method that grabs the first parameter of FunctionInterface.
+  ///
+  /// \code{.cpp}
+  /// template<FunctionSignature>
+  /// void Foo(const vtkm::internal::FunctionInterface<FunctionSignature> &fInterface)
+  /// {
+  ///   bar(fInterface.template GetParameter<1>());
+  /// }
+  /// \endcode
+  ///
+  /// Alternatively the \c GetParameter method also has an optional argument
+  /// that can be a \c IndexTag that specifies the parameter index. Here is
+  /// a repeat of the previous example using this method.
+  ///
+  /// \code{.cpp}
+  /// template<FunctionSignature>
+  /// void Foo(const vtkm::internal::FunctionInterface<FunctionSignature> &fInterface)
+  /// {
+  ///   using vtkm::internal::IndexTag;
+  ///   bar(fInterface.GetParameter(IndexTag<1>()));
+  /// }
+  /// \endcode
+  ///
   ///
   template<vtkm::IdComponent ParameterIndex, typename NewType>
   VTKM_CONT_EXPORT
   typename ReplaceType<ParameterIndex, NewType>::type
-  Replace(NewType newParameter) const {
+  Replace(NewType newParameter,
+          vtkm::internal::IndexTag<ParameterIndex> =
+            vtkm::internal::IndexTag<ParameterIndex>()) const {
     typename ReplaceType<ParameterIndex, NewType>::type replacedFuncInterface;
     detail::FunctionInterfaceCopyParameters<ParameterIndex-1>::
         Copy(replacedFuncInterface.Parameters, this->Parameters);
@@ -491,11 +575,13 @@ public:
   ///
   /// The \c StaticTransform methods transform all the parameters of this \c
   /// FunctionInterface to different types and values based on compile-time
-  /// information. It operates by accepting a functor that defines a unary
-  /// function whose argument is the parameter to transform and the return
-  /// value is the transformed value. The functor must also contain a templated
-  /// struct name ReturnType with an internal type named \c type that defines
-  /// the return type of the transform for a given input type.
+  /// information. It operates by accepting a functor that two arguments. The
+  /// first argument is the parameter to transform and the second argument is
+  /// an \c IndexTag specifying the index of the parameter (which can be
+  /// ignored in many cases). The functor's return value is the transformed
+  /// value. The functor must also contain a templated struct name ReturnType
+  /// with an internal type named \c type that defines the return type of the
+  /// transform for a given input type and parameter index.
   ///
   /// The transformation is only applied to the parameters of the function. The
   /// return argument is unaffected.
@@ -509,14 +595,14 @@ public:
   ///
   /// \code
   /// struct MyTransformFunctor {
-  ///   template<typename T>
+  ///   template<typename T, vtkm::IdComponent Index>
   ///   struct ReturnType {
   ///     typedef const T *type;
   ///   };
   ///
-  ///   template<typename T>
+  ///   template<typename T, vtkm::IdComponent Index>
   ///   VTKM_CONT_EXPORT
-  ///   const T *operator()(const T &x) const {
+  ///   const T *operator()(const T &x, vtkm::internal::IndexTag<Index>) const {
   ///     return &x;
   ///   }
   /// };
@@ -557,10 +643,11 @@ public:
   /// The \c DynamicTransform method transforms all the parameters of this \c
   /// FunctionInterface to different types and values based on run-time
   /// information. It operates by accepting two functors. The first functor
-  /// accepts two arguments. The first argument is a parameter to transform and
-  /// the second is a functor to call with the transformed result.
+  /// accepts three arguments. The first argument is a parameter to transform,
+  /// the second is a functor to call with the transformed result, and the third
+  /// is an instance of \c IndexTag denoting the index parameter..
   ///
-  /// The second argument to \c DynamicTransform is another function that
+  /// The second argument to \c DynamicTransform is another functor that
   /// accepts the transformed \c FunctionInterface and does something. If that
   /// transformed \c FunctionInterface has a return value, that return value
   /// will be passed back to this \c FunctionInterface.
@@ -568,23 +655,27 @@ public:
   /// Here is a contrived but illustrative example. This transformation will
   /// pass all arguments except any string that looks like a number will be
   /// converted to a vtkm::FloatDefault. Note that because the types are not
-  /// determined till runtime, this transform cannot be determined at compile
+  /// determined until runtime, this transform cannot be determined at compile
   /// time with meta-template programming.
   ///
   /// \code
   /// struct MyTransformFunctor {
-  ///   template<typename InputType, typename ContinueFunctor>
+  ///   template<typename InputType,
+  ///            typename ContinueFunctor,
+  ///            vtkm::IdComponent Index>
   ///   VTKM_CONT_EXPORT
   ///   void operator()(const InputType &input,
-  ///                   const ContinueFunctor &continueFunc) const
+  ///                   const ContinueFunctor &continueFunc,
+  ///                   vtkm::internal::IndexTag<Index>) const
   ///   {
   ///     continueFunc(input);
   ///   }
   ///
-  ///   template<typename ContinueFunctor>
+  ///   template<typename ContinueFunctor, vtkm::IdComponent Index>
   ///   VTKM_CONT_EXPORT
   ///   void operator()(const std::string &input,
-  ///                   const ContinueFunctor &continueFunc) const
+  ///                   const ContinueFunctor &continueFunc,
+  ///                   vtkm::internal::IndexTag<Index>) const
   ///   {
   ///     if ((input[0] >= '0' && (input[0] <= '9'))
   ///     {
@@ -642,9 +733,11 @@ public:
 
   /// \brief Applies a function to all the parameters.
   ///
-  /// The \c ForEach methods take a function and apply that function to each
-  /// of the parameters in the \c FunctionInterface. (Return values are not
-  /// effected.)
+  /// The \c ForEach methods take a functor and apply that functor to each of
+  /// the parameters in the \c FunctionInterface. (Return values are not
+  /// effected.) The first argument of the functor is the parameter value and
+  /// the second argument is an \c IndexTag, which can be used to identify the
+  /// index of the parameter.
   ///
   template<typename Functor>
   VTKM_CONT_EXPORT
@@ -721,8 +814,12 @@ public:
                                                      nextInterface,
                                                      this->Transform,
                                                      this->Finish);
-    this->Transform(this->OriginalInterface.template GetParameter<vtkm::internal::FunctionInterface<NextFunction>::ARITY + 1>(),
-                    nextContinue);
+    static const vtkm::IdComponent Index =
+        vtkm::internal::FunctionInterface<NextFunction>::ARITY + 1;
+    vtkm::internal::IndexTag<Index> indexTag;
+    this->Transform(this->OriginalInterface.GetParameter(indexTag),
+                    nextContinue,
+                    indexTag);
   }
 
   template<typename NextFunction>
@@ -746,26 +843,7 @@ private:
   const FinishFunctor &Finish;
 };
 
-template<typename FirstType, typename SecondType>
-struct FunctionInterfaceZipReturn
-{
-  typedef vtkm::Pair<FirstType,SecondType> type;
-};
-
-template<>
-struct FunctionInterfaceZipReturn<void, void>
-{
-  typedef void type;
-};
-
 } // namespace detail
-
-/// Used to determine the type returned from \c make_FunctionInterfaceZip.
-/// Contains a typedef named \c type that is the appropriate \c
-/// FunctionInterface type.
-///
-template<typename FirstFunctionInterface, typename SecondFunctionInterface>
-struct FunctionInterfaceZipType;
 
 }
 } // namespace vtkm::internal
