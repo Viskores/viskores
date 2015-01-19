@@ -132,9 +132,10 @@ public:
     this->PortalValid = true;
   }
 
-  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType &controlArray)
+  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType& vtkmNotUsed(controlArray) )
   {
-    this->LoadDataForInput(controlArray.GetPortalConst());
+    throw vtkm::cont::ErrorControlBadValue(
+          "Implicit arrays have no storage, you need to load from a portal");
   }
 
   VTKM_CONT_EXPORT
