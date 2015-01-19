@@ -31,7 +31,7 @@
 
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
 
-namespace ut_implicit{
+namespace ut_handle_counting{
 
 const vtkm::Id ARRAY_SIZE = 300;
 
@@ -60,15 +60,16 @@ struct CountingTest
     vtkm::cont::ArrayHandleCounting< ValueType > implicit =
         vtkm::cont::make_ArrayHandleCounting(start, end);
     vtkm::cont::ArrayHandle< ValueType > result;
-    vtkm::worklet::DispatcherMapField< ut_implicit::PassThrough > dispatcher;
+
+    vtkm::worklet::DispatcherMapField< ut_handle_counting::PassThrough > dispatcher;
     dispatcher.Invoke(implicit, result);
 
     //verify that the control portal works
-    for(int i=0; i < ARRAY_SIZE; ++i)
+    for(int i=v; i < ARRAY_SIZE; ++i)
       {
-      const ValueType v = result.GetPortalConstControl().Get(i);
-      const ValueType correct_value = ValueType(i);
-        VTKM_TEST_ASSERT(v == correct_value, "Counting Handle Failed");
+      const ValueType result_v = result.GetPortalConstControl().Get(i);
+      const ValueType correct_value = v + ValueType(i);
+      VTKM_TEST_ASSERT(result_v == correct_value, "Counting Handle Failed");
       }
   }
 
@@ -84,17 +85,17 @@ void RunCountingTest(const T t)
 
 void TestArrayHandleCounting()
 {
-  RunCountingTest( vtkm::Id(0) );
-  RunCountingTest( vtkm::Float32(0) );
+  RunCountingTest( vtkm::Id(42) );
+  RunCountingTest( vtkm::Float32(3) );
   // RunCountingTest( vtkm::Vec< vtkm::Float32, 3>() );
 }
 
 
 
-} // ut_implicit namespace
+} // ut_handle_counting namespace
 
 int UnitTestCudaArrayHandleCounting(int, char *[])
 {
   return vtkm::cont::cuda::internal::Testing::Run(
-                                      ut_implicit::TestArrayHandleCounting);
+                                      ut_handle_counting::TestArrayHandleCounting);
 }
