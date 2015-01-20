@@ -35,18 +35,18 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
 
   # Addtional warnings for GCC
   set(CMAKE_CXX_FLAGS_WARN_EXTRA "-Wno-long-long -Wcast-align -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common")
-  if (VTKM_FORCE_ANSI)
+  if (VTKm_FORCE_ANSI)
     set(CMAKE_CXX_FLAGS_WARN_EXTRA "-ansi ${CMAKE_CXX_FLAGS_WARN_EXTRA}")
   endif()
 
   # Set up the debug CXX_FLAGS for extra warnings
-  option(VTKM_EXTRA_COMPILER_WARNINGS "Add compiler flags to do stricter checking when building debug." ON)
+  option(VTKm_EXTRA_COMPILER_WARNINGS "Add compiler flags to do stricter checking when building debug." ON)
   # We used to add the compiler flags globally, but this caused problems with
   # the CUDA compiler (and its lack of support for GCC pragmas).  Instead,
   # the vtkm_declare_headers and vtkm_unit_tests CMake functions add these flags
   # to their compiles.  As long as the unit tests have good coverage, this
   # should catch all problems.
-  if(VTKM_EXTRA_COMPILER_WARNINGS)
+  if(VTKm_EXTRA_COMPILER_WARNINGS)
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO
       "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${CMAKE_CXX_FLAGS_WARN_EXTRA}")
     set(CMAKE_CXX_FLAGS_DEBUG
