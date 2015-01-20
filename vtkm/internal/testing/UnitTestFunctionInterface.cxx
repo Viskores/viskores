@@ -83,13 +83,13 @@ struct GetReferenceFunctor
 };
 
 struct PointerTransform {
-  template<typename T>
+  template<typename T, vtkm::IdComponent Index>
   struct ReturnType {
     typedef const T *type;
   };
 
-  template<typename T>
-  const T *operator()(const T &x) const {
+  template<typename T, typename IndexTag>
+  const T *operator()(const T &x, IndexTag) const {
     return &x;
   }
 };
@@ -216,15 +216,19 @@ struct ThreeArgStringFunctorWithReturn
 
 struct DynamicTransformFunctor
 {
-  template<typename T, typename ContinueFunctor>
-  void operator()(const T &input, const ContinueFunctor continueFunc) const
+  template<typename T, typename ContinueFunctor, vtkm::IdComponent Index>
+  void operator()(const T &input,
+                  const ContinueFunctor continueFunc,
+                  vtkm::internal::IndexTag<Index>) const
   {
-    continueFunc(input);
-    continueFunc(ToString(input));
+    continueFunc(input+T(Index));
+    continueFunc(ToString(input+T(Index)));
   }
 
-  template<typename ContinueFunctor>
-  void operator()(const std::string &input, const ContinueFunctor continueFunc) const
+  template<typename ContinueFunctor, vtkm::IdComponent Index>
+  void operator()(const std::string &input,
+                  const ContinueFunctor continueFunc,
+                  vtkm::internal::IndexTag<Index>) const
   {
     continueFunc(input);
   }
@@ -238,9 +242,9 @@ struct DynamicTransformFinish
   void operator()(vtkm::internal::FunctionInterface<Signature> &funcInterface) const
   {
     g_DynamicTransformFinishCalls++;
-    VTKM_TEST_ASSERT(ToString(funcInterface.template GetParameter<1>()) == ToString(Arg1),
+    VTKM_TEST_ASSERT(ToString(funcInterface.template GetParameter<1>()) == ToString(Arg1+1),
                      "Arg 1 incorrect");
-    VTKM_TEST_ASSERT(ToString(funcInterface.template GetParameter<2>()) == ToString(Arg2),
+    VTKM_TEST_ASSERT(ToString(funcInterface.template GetParameter<2>()) == ToString(Arg2+2),
                      "Arg 2 incorrect");
     VTKM_TEST_ASSERT(ToString(funcInterface.template GetParameter<3>()) == ToString(Arg3),
                      "Arg 3 incorrect");
@@ -249,26 +253,16 @@ struct DynamicTransformFinish
 
 struct ForEachFunctor
 {
-  template<typename T>
-  void operator()(T &x) const { x = T(2)*x; }
+  template<typename T, vtkm::IdComponent Index>
+  void operator()(T &x, vtkm::internal::IndexTag<Index>) const {
+    x = T(Index)+x;
+  }
 
-  void operator()(std::string &x) const { x.append("*2"); }
-};
-
-struct ZipFunctor
-{
-  void operator()(const vtkm::Pair<Type1,Type3> &a1,
-                  const vtkm::Pair<Type2,Type4> &a2,
-                  const vtkm::Pair<Type3,Type5> &a3) const
-  {
-    std::cout << "In functor for zipped functions." << std::endl;
-
-    VTKM_TEST_ASSERT(a1.first == Arg1, "Bad arg.");
-    VTKM_TEST_ASSERT(a1.second == Arg3, "Bad arg.");
-    VTKM_TEST_ASSERT(a2.first == Arg2, "Bad arg.");
-    VTKM_TEST_ASSERT(a2.second == Arg4, "Bad arg.");
-    VTKM_TEST_ASSERT(a3.first == Arg3, "Bad arg.");
-    VTKM_TEST_ASSERT(a3.second == Arg5, "Bad arg.");
+  template<vtkm::IdComponent Index>
+  void operator()(std::string &x, vtkm::internal::IndexTag<Index>) const {
+    std::stringstream message;
+    message << x << "+" << Index;
+    x = message.str();
   }
 };
 
@@ -290,7 +284,7 @@ void TryFunctionInterface5(
 
   std::cout << "Swizzling parameters with replace." << std::endl;
   funcInterface.Replace<1>(Arg5)
-      .Replace<2>(Arg1)
+      .Replace(Arg1, vtkm::internal::IndexTag<2>())
       .Replace<5>(Arg2)
       .InvokeCont(FiveArgSwizzledFunctor());
 }
@@ -305,7 +299,7 @@ void TestBasicFunctionInterface()
   VTKM_TEST_ASSERT(funcInterface.GetArity() == 3,
                    "Got wrong number of parameters.");
   VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == Arg1, "Arg 1 incorrect.");
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == Arg2, "Arg 2 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter(vtkm::internal::IndexTag<2>()) == Arg2, "Arg 2 incorrect.");
   VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3, "Arg 3 incorrect.");
 
   std::cout << "Checking invocation." << std::endl;
@@ -314,7 +308,7 @@ void TestBasicFunctionInterface()
 
   std::cout << "Checking invocation with argument modification." << std::endl;
   funcInterface.SetParameter<1>(Type1());
-  funcInterface.SetParameter<2>(Type2());
+  funcInterface.SetParameter(Type2(), vtkm::internal::IndexTag<2>());
   funcInterface.SetParameter<3>(Type3());
   VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() != Arg1, "Arg 1 not cleared.");
   VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() != Arg2, "Arg 2 not cleared.");
@@ -457,28 +451,18 @@ void TestForEach()
   VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == Arg5, "Arg 5 incorrect.");
 
   funcInterface.ForEachCont(ForEachFunctor());
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == 2*Arg1, "Arg 1 incorrect.");
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == 2*Arg2, "Arg 2 incorrect.");
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3+"*2", "Arg 3 incorrect.");
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == 2.0f*Arg4, "Arg 4 incorrect.");
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == 2*Arg5, "Arg 5 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == Type1(1)+Arg1, "Arg 1 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == Type2(2)+Arg2, "Arg 2 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3+"+3", "Arg 3 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == Type4(4)+Arg4, "Arg 4 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == Type5(5)+Arg5, "Arg 5 incorrect.");
 
   funcInterface.ForEachExec(ForEachFunctor());
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == 4*Arg1, "Arg 1 incorrect.");
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == 4*Arg2, "Arg 2 incorrect.");
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3+"*2*2", "Arg 3 incorrect.");
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == 4.0f*Arg4, "Arg 4 incorrect.");
-  VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == 4*Arg5, "Arg 5 incorrect.");
-}
-
-void TestZip()
-{
-  std::cout << "Testing zipping function interfaces." << std::endl;
-
-  vtkm::internal::make_FunctionInterfaceZip(
-        vtkm::internal::make_FunctionInterface<void>(Arg1, Arg2, Arg3),
-        vtkm::internal::make_FunctionInterface<void>(Arg3, Arg4, Arg5)).
-      InvokeCont(ZipFunctor());
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<1>() == Type1(2)+Arg1, "Arg 1 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<2>() == Type2(4)+Arg2, "Arg 2 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<3>() == Arg3+"+3+3", "Arg 3 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<4>() == Type4(8)+Arg4, "Arg 4 incorrect.");
+  VTKM_TEST_ASSERT(funcInterface.GetParameter<5>() == Type5(10)+Arg5, "Arg 5 incorrect.");
 }
 
 #ifdef TEST_INVOKE_TIME
@@ -561,7 +545,6 @@ void TestFunctionInterface()
   TestStaticTransform();
   TestDynamicTransform();
   TestForEach();
-  TestZip();
 #ifdef TEST_INVOKE_TIME
   TestInvokeTime();
 #endif //TEST_INVOKE_TIME

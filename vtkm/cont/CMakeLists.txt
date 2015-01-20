@@ -29,6 +29,7 @@ set(headers
   ArrayPortalToIterators.h
   Assert.h
   DeviceAdapter.h
+  DeviceAdapterAlgorithm.h
   DeviceAdapterSerial.h
   DynamicArrayHandle.h
   DynamicPointCoordinates.h
@@ -56,6 +57,9 @@ add_subdirectory(arg)
 
 vtkm_declare_headers(${impl_headers} ${headers})
 
+if (VTKm_ENABLE_CUDA)
+  add_subdirectory(cuda)
+endif (VTKm_ENABLE_CUDA)
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)

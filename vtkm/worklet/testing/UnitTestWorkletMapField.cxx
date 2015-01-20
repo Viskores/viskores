@@ -26,9 +26,7 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
-
-static const vtkm::Id ARRAY_SIZE = 10;
+namespace worklets {
 
 class TestWorklet : public vtkm::worklet::WorkletMapField
 {
@@ -73,6 +71,13 @@ public:
   }
 };
 
+} // worklet namespace
+
+namespace {
+
+static const vtkm::Id ARRAY_SIZE = 10;
+
+
 template<typename WorkletType>
 struct DoTestWorklet
 {
@@ -111,18 +116,26 @@ struct DoTestWorklet
 
 void TestWorkletMapField()
 {
+  typedef vtkm::cont::internal::DeviceAdapterTraits<
+                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
+  std::cout << "Testing Map Field on device adapter: "
+            << DeviceAdapterTraits::GetId() << std::endl;
+
   std::cout << "--- Worklet accepting all types." << std::endl;
-  vtkm::testing::Testing::TryTypes(DoTestWorklet<TestWorklet>(),
-                                   vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(
+                         DoTestWorklet< ::worklets::TestWorklet >(),
+                         vtkm::TypeListTagCommon());
 
   std::cout << "--- Worklet accepting some types." << std::endl;
-  vtkm::testing::Testing::TryTypes(DoTestWorklet<TestWorkletLimitedTypes>(),
-                                   vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(
+                         DoTestWorklet< ::worklets::TestWorkletLimitedTypes >(),
+                         vtkm::TypeListTagFieldScalar());
 
   std::cout << "--- Sending bad type to worklet." << std::endl;
   try
   {
-    DoTestWorklet<TestWorkletLimitedTypes>()(vtkm::Vec<vtkm::Float32,3>());
+    DoTestWorklet< ::worklets::TestWorkletLimitedTypes > badWorkletTest;
+    badWorkletTest( vtkm::Vec<vtkm::Float32,3>() );
     VTKM_TEST_FAIL("Did not throw expected error.");
   }
   catch (vtkm::cont::ErrorControlBadType &error)

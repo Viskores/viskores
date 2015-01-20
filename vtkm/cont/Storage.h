@@ -72,7 +72,7 @@ namespace detail {
 // arguments.
 template<typename T>
 struct UndefinedArrayPortal {
-  BOOST_STATIC_ASSERT(sizeof(T) == -1);
+  BOOST_STATIC_ASSERT(sizeof(T) == static_cast<size_t>(-1));
 };
 
 } // namespace detail

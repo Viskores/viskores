@@ -28,6 +28,7 @@
 #endif
 
 #include <vtkm/Types.h>
+#include <vtkm/internal/IndexTag.h>
 
 #include <boost/function_types/function_type.hpp>
 #include <boost/mpl/at.hpp>
@@ -2478,7 +2479,8 @@ void DoStaticTransformCont(
       const ParameterContainer<OriginalR(OriginalP1)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
 }
 
 template<typename Transform,
@@ -2492,7 +2494,8 @@ void DoStaticTransformExec(
       const ParameterContainer<OriginalR(OriginalP1)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
 }
 
 template<typename Transform,
@@ -2508,8 +2511,10 @@ void DoStaticTransformCont(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
 }
 
 template<typename Transform,
@@ -2525,8 +2530,10 @@ void DoStaticTransformExec(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
 }
 
 template<typename Transform,
@@ -2544,9 +2551,12 @@ void DoStaticTransformCont(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
 }
 
 template<typename Transform,
@@ -2564,9 +2574,12 @@ void DoStaticTransformExec(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
 }
 
 template<typename Transform,
@@ -2586,10 +2599,14 @@ void DoStaticTransformCont(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3,TransformedP4)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
-  transformedParameters.Parameter4 = transform(originalParameters.Parameter4);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
 }
 
 template<typename Transform,
@@ -2609,10 +2626,14 @@ void DoStaticTransformExec(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3,TransformedP4)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
-  transformedParameters.Parameter4 = transform(originalParameters.Parameter4);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
 }
 
 template<typename Transform,
@@ -2634,11 +2655,16 @@ void DoStaticTransformCont(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3,TransformedP4,TransformedP5)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
-  transformedParameters.Parameter4 = transform(originalParameters.Parameter4);
-  transformedParameters.Parameter5 = transform(originalParameters.Parameter5);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
 }
 
 template<typename Transform,
@@ -2660,11 +2686,16 @@ void DoStaticTransformExec(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3,TransformedP4,TransformedP5)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
-  transformedParameters.Parameter4 = transform(originalParameters.Parameter4);
-  transformedParameters.Parameter5 = transform(originalParameters.Parameter5);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
 }
 
 template<typename Transform,
@@ -2688,12 +2719,18 @@ void DoStaticTransformCont(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3,TransformedP4,TransformedP5,TransformedP6)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
-  transformedParameters.Parameter4 = transform(originalParameters.Parameter4);
-  transformedParameters.Parameter5 = transform(originalParameters.Parameter5);
-  transformedParameters.Parameter6 = transform(originalParameters.Parameter6);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
 }
 
 template<typename Transform,
@@ -2717,12 +2754,18 @@ void DoStaticTransformExec(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3,TransformedP4,TransformedP5,TransformedP6)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
-  transformedParameters.Parameter4 = transform(originalParameters.Parameter4);
-  transformedParameters.Parameter5 = transform(originalParameters.Parameter5);
-  transformedParameters.Parameter6 = transform(originalParameters.Parameter6);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
 }
 
 template<typename Transform,
@@ -2748,13 +2791,20 @@ void DoStaticTransformCont(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6,OriginalP7)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3,TransformedP4,TransformedP5,TransformedP6,TransformedP7)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
-  transformedParameters.Parameter4 = transform(originalParameters.Parameter4);
-  transformedParameters.Parameter5 = transform(originalParameters.Parameter5);
-  transformedParameters.Parameter6 = transform(originalParameters.Parameter6);
-  transformedParameters.Parameter7 = transform(originalParameters.Parameter7);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
 }
 
 template<typename Transform,
@@ -2780,13 +2830,20 @@ void DoStaticTransformExec(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6,OriginalP7)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3,TransformedP4,TransformedP5,TransformedP6,TransformedP7)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
-  transformedParameters.Parameter4 = transform(originalParameters.Parameter4);
-  transformedParameters.Parameter5 = transform(originalParameters.Parameter5);
-  transformedParameters.Parameter6 = transform(originalParameters.Parameter6);
-  transformedParameters.Parameter7 = transform(originalParameters.Parameter7);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
 }
 
 template<typename Transform,
@@ -2814,14 +2871,22 @@ void DoStaticTransformCont(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6,OriginalP7,OriginalP8)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3,TransformedP4,TransformedP5,TransformedP6,TransformedP7,TransformedP8)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
-  transformedParameters.Parameter4 = transform(originalParameters.Parameter4);
-  transformedParameters.Parameter5 = transform(originalParameters.Parameter5);
-  transformedParameters.Parameter6 = transform(originalParameters.Parameter6);
-  transformedParameters.Parameter7 = transform(originalParameters.Parameter7);
-  transformedParameters.Parameter8 = transform(originalParameters.Parameter8);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
 }
 
 template<typename Transform,
@@ -2849,14 +2914,22 @@ void DoStaticTransformExec(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6,OriginalP7,OriginalP8)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3,TransformedP4,TransformedP5,TransformedP6,TransformedP7,TransformedP8)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
-  transformedParameters.Parameter4 = transform(originalParameters.Parameter4);
-  transformedParameters.Parameter5 = transform(originalParameters.Parameter5);
-  transformedParameters.Parameter6 = transform(originalParameters.Parameter6);
-  transformedParameters.Parameter7 = transform(originalParameters.Parameter7);
-  transformedParameters.Parameter8 = transform(originalParameters.Parameter8);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
 }
 
 template<typename Transform,
@@ -2886,15 +2959,24 @@ void DoStaticTransformCont(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6,OriginalP7,OriginalP8,OriginalP9)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3,TransformedP4,TransformedP5,TransformedP6,TransformedP7,TransformedP8,TransformedP9)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
-  transformedParameters.Parameter4 = transform(originalParameters.Parameter4);
-  transformedParameters.Parameter5 = transform(originalParameters.Parameter5);
-  transformedParameters.Parameter6 = transform(originalParameters.Parameter6);
-  transformedParameters.Parameter7 = transform(originalParameters.Parameter7);
-  transformedParameters.Parameter8 = transform(originalParameters.Parameter8);
-  transformedParameters.Parameter9 = transform(originalParameters.Parameter9);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
 }
 
 template<typename Transform,
@@ -2924,15 +3006,24 @@ void DoStaticTransformExec(
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6,OriginalP7,OriginalP8,OriginalP9)> &originalParameters,
       ParameterContainer<TransformedR(TransformedP1,TransformedP2,TransformedP3,TransformedP4,TransformedP5,TransformedP6,TransformedP7,TransformedP8,TransformedP9)> &transformedParameters)
 {
-  transformedParameters.Parameter1 = transform(originalParameters.Parameter1);
-  transformedParameters.Parameter2 = transform(originalParameters.Parameter2);
-  transformedParameters.Parameter3 = transform(originalParameters.Parameter3);
-  transformedParameters.Parameter4 = transform(originalParameters.Parameter4);
-  transformedParameters.Parameter5 = transform(originalParameters.Parameter5);
-  transformedParameters.Parameter6 = transform(originalParameters.Parameter6);
-  transformedParameters.Parameter7 = transform(originalParameters.Parameter7);
-  transformedParameters.Parameter8 = transform(originalParameters.Parameter8);
-  transformedParameters.Parameter9 = transform(originalParameters.Parameter9);
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
 }
 
 
@@ -2990,7 +3081,7 @@ void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1)> &parameters)
 {
-  f(parameters.Parameter1);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
 }
 
 template<typename Functor,
@@ -3001,7 +3092,7 @@ void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1)> &parameters)
 {
-  f(parameters.Parameter1);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
 }
 
 template<typename Functor,
@@ -3012,7 +3103,7 @@ void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1)> &parameters)
 {
-  f(parameters.Parameter1);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
 }
 
 template<typename Functor,
@@ -3023,7 +3114,7 @@ void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1)> &parameters)
 {
-  f(parameters.Parameter1);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
 }
 
 template<typename Functor,
@@ -3035,8 +3126,8 @@ void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
 }
 
 template<typename Functor,
@@ -3048,8 +3139,8 @@ void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
 }
 
 template<typename Functor,
@@ -3061,8 +3152,8 @@ void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
 }
 
 template<typename Functor,
@@ -3074,8 +3165,8 @@ void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
 }
 
 template<typename Functor,
@@ -3088,9 +3179,9 @@ void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
 }
 
 template<typename Functor,
@@ -3103,9 +3194,9 @@ void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
 }
 
 template<typename Functor,
@@ -3118,9 +3209,9 @@ void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
 }
 
 template<typename Functor,
@@ -3133,9 +3224,9 @@ void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
 }
 
 template<typename Functor,
@@ -3149,10 +3240,10 @@ void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
 }
 
 template<typename Functor,
@@ -3166,10 +3257,10 @@ void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
 }
 
 template<typename Functor,
@@ -3183,10 +3274,10 @@ void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
 }
 
 template<typename Functor,
@@ -3200,10 +3291,10 @@ void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
 }
 
 template<typename Functor,
@@ -3218,11 +3309,11 @@ void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
 }
 
 template<typename Functor,
@@ -3237,11 +3328,11 @@ void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
 }
 
 template<typename Functor,
@@ -3256,11 +3347,11 @@ void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
 }
 
 template<typename Functor,
@@ -3275,11 +3366,11 @@ void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
 }
 
 template<typename Functor,
@@ -3295,12 +3386,12 @@ void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
 }
 
 template<typename Functor,
@@ -3316,12 +3407,12 @@ void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
 }
 
 template<typename Functor,
@@ -3337,12 +3428,12 @@ void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
 }
 
 template<typename Functor,
@@ -3358,12 +3449,12 @@ void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
 }
 
 template<typename Functor,
@@ -3380,13 +3471,13 @@ void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
-  f(parameters.Parameter7);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
 }
 
 template<typename Functor,
@@ -3403,13 +3494,13 @@ void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
-  f(parameters.Parameter7);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
 }
 
 template<typename Functor,
@@ -3426,13 +3517,13 @@ void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
-  f(parameters.Parameter7);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
 }
 
 template<typename Functor,
@@ -3449,13 +3540,13 @@ void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
-  f(parameters.Parameter7);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
 }
 
 template<typename Functor,
@@ -3473,14 +3564,14 @@ void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
-  f(parameters.Parameter7);
-  f(parameters.Parameter8);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
 }
 
 template<typename Functor,
@@ -3498,14 +3589,14 @@ void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
-  f(parameters.Parameter7);
-  f(parameters.Parameter8);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
 }
 
 template<typename Functor,
@@ -3523,14 +3614,14 @@ void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
-  f(parameters.Parameter7);
-  f(parameters.Parameter8);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
 }
 
 template<typename Functor,
@@ -3548,14 +3639,14 @@ void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
-  f(parameters.Parameter7);
-  f(parameters.Parameter8);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
 }
 
 template<typename Functor,
@@ -3574,15 +3665,15 @@ void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
-  f(parameters.Parameter7);
-  f(parameters.Parameter8);
-  f(parameters.Parameter9);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
 }
 
 template<typename Functor,
@@ -3601,15 +3692,15 @@ void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
-  f(parameters.Parameter7);
-  f(parameters.Parameter8);
-  f(parameters.Parameter9);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
 }
 
 template<typename Functor,
@@ -3628,15 +3719,15 @@ void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
-  f(parameters.Parameter7);
-  f(parameters.Parameter8);
-  f(parameters.Parameter9);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
 }
 
 template<typename Functor,
@@ -3655,15 +3746,15 @@ void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters)
 {
-  f(parameters.Parameter1);
-  f(parameters.Parameter2);
-  f(parameters.Parameter3);
-  f(parameters.Parameter4);
-  f(parameters.Parameter5);
-  f(parameters.Parameter6);
-  f(parameters.Parameter7);
-  f(parameters.Parameter8);
-  f(parameters.Parameter9);
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
 }
 
 

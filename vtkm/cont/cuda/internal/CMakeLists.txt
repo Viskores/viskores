@@ -19,30 +19,14 @@
 ##============================================================================
 
 set(headers
-  ArrayHandleExecutionManager.h
-  ArrayManagerExecution.h
-  ArrayManagerExecutionSerial.h
-  ArrayManagerExecutionShareWithControl.h
-  ArrayPortalFromIterators.h
-  ArrayPortalShrink.h
-  ArrayTransfer.h
-  DeviceAdapterAlgorithmGeneral.h
-  DeviceAdapterAlgorithmSerial.h
-  DeviceAdapterError.h
-  DeviceAdapterTag.h
-  DeviceAdapterTagSerial.h
-  DynamicTransform.h
-  IteratorFromArrayPortal.h
-  PointCoordinatesBase.h
-  SimplePolymorphicContainer.h
-  StorageError.h
+  ArrayManagerExecutionCuda.h
+  ArrayManagerExecutionThrustDevice.h
+  DeviceAdapterAlgorithmCuda.h
+  DeviceAdapterAlgorithmThrust.h
+  DeviceAdapterTagCuda.h
+  SetThrustForCuda.h
   )
 
-vtkm_declare_headers(${headers})
-
-# These source files are actually compiled in the parent directory.
-# They are in a separate directory to highlight which objects are
-# internal and which are part of the external interface.
-#add_custom_target(vtkmContInternal ALL DEPENDS vtkmCont)
+vtkm_declare_headers(CUDA ${headers})
 
 add_subdirectory(testing)

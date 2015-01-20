@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_internal_DynamicTransform_h
 #define vtk_m_cont_internal_DynamicTransform_h
 
-#include "vtkm/internal/ExportMacros.h"
+#include "vtkm/internal/IndexTag.h"
 
 namespace vtkm {
 namespace cont {
@@ -62,10 +62,13 @@ struct DynamicTransformTraits {
 ///
 struct DynamicTransform
 {
-  template<typename InputType, typename ContinueFunctor>
+  template<typename InputType,
+           typename ContinueFunctor,
+           vtkm::IdComponent Index>
   VTKM_CONT_EXPORT
   void operator()(const InputType &input,
-                  const ContinueFunctor &continueFunc) const
+                  const ContinueFunctor &continueFunc,
+                  vtkm::internal::IndexTag<Index>) const
   {
     this->DoTransform(
           input,

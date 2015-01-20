@@ -22,8 +22,8 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
-#include <vtkm/cont/internal/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 #include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
 

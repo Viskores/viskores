@@ -293,24 +293,33 @@ function(vtkm_worklet_unit_tests device_adapter)
   #detect if we are generating a .cu files
   set(is_cuda FALSE)
   set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
-  if("${device_adapter}" STREQUAL "VTKm_DEVICE_ADAPTER_CUDA")
+  if("${device_adapter}" STREQUAL "VTKM_DEVICE_ADAPTER_CUDA")
     set(is_cuda TRUE)
     #if we are generating cu files need to setup three things.
     #1. us the configured .cu files
-    #2. Set BOOST_SP_DISABLE_THREADS to disable threading warnings
-    #3. Disable unused function warnings
-    #the FindCUDA module and helper methods don't read target level
-    #properties so we have to modify CUDA_NVCC_FLAGS  instead of using
-    # target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
-    #
+    #2. Explicitly set the cuda device adapter as a define this is currently
+    #   done as a work around since the cuda executable ignores compile
+    #   definitions
+    #3. Set BOOST_SP_DISABLE_THREADS to disable threading warnings
+    #4. Disable unused function warnings
+    #   the FindCUDA module and helper methods don't read target level
+    #   properties so we have to modify CUDA_NVCC_FLAGS  instead of using
+    #   target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
     get_property(unit_test_srcs GLOBAL PROPERTY vtkm_worklet_unit_tests_cu_sources )
-    list(APPEND CUDA_NVCC_FLAGS -DBOOST_SP_DISABLE_THREADS)
+
+    list(APPEND CUDA_NVCC_FLAGS "-DVTKM_DEVICE_ADAPTER=${device_adapter}")
+    list(APPEND CUDA_NVCC_FLAGS "-DBOOST_SP_DISABLE_THREADS")
     list(APPEND CUDA_NVCC_FLAGS "-w")
   endif()
 
+
   if(VTKm_ENABLE_TESTING)
+    string(REPLACE "VTKM_DEVICE_ADAPTER_" "" device_type ${device_adapter})
+
     vtkm_get_kit_name(kit)
-    set(test_prog WorkletTests_${kit})
+
+    #inject the device adapter into the test program name so each one is unique
+    set(test_prog WorkletTests_${device_type})
 
     if(is_cuda)
       cuda_add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
@@ -321,9 +330,6 @@ function(vtkm_worklet_unit_tests device_adapter)
     #add a test for each worklet test file. We will inject the device
     #adapter type into the test name so that it is easier to see what
     #exact device a test is failing on.
-
-    string(REPLACE "VTKm_DEVICE_ADAPTER_" "" device_type ${device_adapter})
-
     foreach (test ${unit_test_srcs})
       get_filename_component(tname ${test} NAME_WE)
       add_test(NAME "${tname}${device_type}"
@@ -336,13 +342,13 @@ function(vtkm_worklet_unit_tests device_adapter)
     #generates
     if(VTKm_EXTRA_COMPILER_WARNINGS)
       set_property(TARGET ${test_prog}
-            APPEND PROPERTY COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA} )
+                   APPEND PROPERTY COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA} )
     endif()
 
     #set the device adapter on the executable
     set_property(TARGET ${test_prog}
-             APPEND
-             PROPERTY COMPILE_DEFINITIONS VTKm_DEVICE_ADAPTER=${device_adapter})
+                 APPEND
+                 PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=${device_adapter}" )
   endif()
 
   set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
@@ -368,3 +374,14 @@ macro(vtkm_disable_troublesome_thrust_warnings_var flags_var)
   string(REPLACE "-Wall" "" new_flags "${new_flags}")
   set(${flags_var} "${new_flags}")
 endmacro(vtkm_disable_troublesome_thrust_warnings_var)
+
+# Set up configuration for a given device.
+macro(vtkm_configure_device device)
+  string(TOUPPER "${device}" device_uppercase)
+  set(VTKm_ENABLE_${device_uppercase} ON)
+  include("${VTKm_SOURCE_DIR}/CMake/UseVTKm${device}.cmake")
+  if(NOT VTKm_${device}_FOUND)
+    message(SEND_ERROR "Could not configure for using VTKm with ${device}")
+  endif(NOT VTKm_${device}_FOUND)
+endmacro(vtkm_configure_device)
+

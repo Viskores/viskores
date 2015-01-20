@@ -18,31 +18,30 @@
 ##  this software.
 ##============================================================================
 
-set(headers
-  ArrayHandleExecutionManager.h
-  ArrayManagerExecution.h
-  ArrayManagerExecutionSerial.h
-  ArrayManagerExecutionShareWithControl.h
-  ArrayPortalFromIterators.h
-  ArrayPortalShrink.h
-  ArrayTransfer.h
-  DeviceAdapterAlgorithmGeneral.h
-  DeviceAdapterAlgorithmSerial.h
-  DeviceAdapterError.h
-  DeviceAdapterTag.h
-  DeviceAdapterTagSerial.h
-  DynamicTransform.h
-  IteratorFromArrayPortal.h
-  PointCoordinatesBase.h
-  SimplePolymorphicContainer.h
-  StorageError.h
-  )
+if (VTKm_Serial_initialize_complete)
+  return()
+endif (VTKm_Serial_initialize_complete)
 
-vtkm_declare_headers(${headers})
+# Find the Boost library.
+if (NOT VTKm_Serial_FOUND)
+  if(NOT Boost_FOUND)
+    find_package(BoostHeaders ${VTKm_REQUIRED_BOOST_VERSION})
+  endif()
 
-# These source files are actually compiled in the parent directory.
-# They are in a separate directory to highlight which objects are
-# internal and which are part of the external interface.
-#add_custom_target(vtkmContInternal ALL DEPENDS vtkmCont)
+  if (NOT Boost_FOUND)
+    message(STATUS "Boost not found")
+    set(VTKm_Serial_FOUND FALSE)
+  else(NOT Boost_FOUND)
+    set(VTKm_Serial_FOUND TRUE)
+  endif (NOT Boost_FOUND)
+endif (NOT VTKm_Serial_FOUND)
 
-add_subdirectory(testing)
+# Set up all these dependent packages (if they were all found).
+if (VTKm_Serial_FOUND)
+  include_directories(
+    ${Boost_INCLUDE_DIRS}
+    ${VTKm_INCLUDE_DIRS}
+    )
+
+  set(VTKm_Serial_initialize_complete TRUE)
+endif (VTKm_Serial_FOUND)

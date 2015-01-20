@@ -30,6 +30,7 @@
 #define VTKM_DEVICE_ADAPTER_ERROR     -2
 #define VTKM_DEVICE_ADAPTER_UNDEFINED -1
 #define VTKM_DEVICE_ADAPTER_SERIAL     1
+#define VTKM_DEVICE_ADAPTER_CUDA       2
 
 #ifndef VTKM_DEVICE_ADAPTER
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
@@ -91,6 +92,11 @@ struct DeviceAdapterTagCheck
 
 #include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
 #define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagSerial
+
+#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
+
+#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
+#define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagCuda
 
 #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_ERROR
 
