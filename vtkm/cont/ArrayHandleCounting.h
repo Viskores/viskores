@@ -35,6 +35,9 @@ class ArrayPortalCounting
 public:
   typedef CountingValueType ValueType;
 
+  typedef vtkm::cont::internal::IteratorFromArrayPortal<
+          ArrayPortalCounting < ValueType> > IteratorType;
+
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalCounting() :
     StartingValue(),
