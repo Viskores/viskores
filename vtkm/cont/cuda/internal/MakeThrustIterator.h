@@ -152,9 +152,9 @@ struct IteratorTraits
 template<typename T>
 struct IteratorTraits< vtkm::exec::cuda::internal::ConstArrayPortalFromTexture< T > >
 {
-//   typedef vtkm::exec::cuda::internal::ConstArrayPortalFromTexture< T > PortalType;
-//   typedef ThrustIteratorDeviceTextureTag Tag;
-//   typedef typename PortalType::IteratorType IteratorType;
+  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromTexture< T > PortalType;
+  typedef ThrustIteratorDeviceTextureTag Tag;
+  typedef typename PortalType::IteratorType IteratorType;
 };
 
 template<typename T>
@@ -188,6 +188,14 @@ typename IteratorTraits<PortalType>::IteratorType
 MakeIteratorBegin(PortalType portal, detail::ThrustIteratorDevicePtrTag)
 {
   return MakeDevicePtr(portal.GetIteratorBegin());
+}
+
+template<class PortalType>
+VTKM_CONT_EXPORT static
+typename IteratorTraits<PortalType>::IteratorType
+MakeIteratorBegin(PortalType portal, detail::ThrustIteratorDeviceTextureTag)
+{
+  return portal.GetIteratorBegin();
 }
 
 } // namespace detail

@@ -46,9 +46,11 @@
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
 #include <vtkm/exec/cuda/internal/ArrayPortalFromTexture.h>
 
-#ifndef VTKM_USE_TEXTURE_MEM
-#  define VTKM_USE_TEXTURE_MEM
-#endif
+//Currently disabled as we are still tracking down issues with Texture
+//Memory. The major issue is that in testing it is slower than classic arrays
+// #ifndef VTKM_USE_TEXTURE_MEM
+// #  define VTKM_USE_TEXTURE_MEM
+// #endif
 
 namespace vtkm {
 namespace cont {
