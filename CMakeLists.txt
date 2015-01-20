@@ -53,7 +53,7 @@ include(CMake/VTKmCompilerExtras.cmake)
 
 #-----------------------------------------------------------------------------
 # Configurable Options
-option(VTKm_ENABLE_CUDA "Enable Cuda support" ON)
+option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
 option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 
 option(VTKm_USE_DOUBLE_PRECISION
