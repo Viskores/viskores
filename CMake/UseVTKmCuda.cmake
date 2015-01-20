@@ -44,8 +44,14 @@ endif (VTKm_Cuda_FOUND)
 #-----------------------------------------------------------------------------
 if (VTKm_Cuda_FOUND)
   find_package(CUDA)
-
-  mark_as_advanced(CUDA_BUILD_CUBIN CUDA_BUILD_EMULATION CUDA_VERBOSE_BUILD)
+  mark_as_advanced(CUDA_BUILD_CUBIN
+                   CUDA_BUILD_EMULATION
+                   CUDA_HOST_COMPILER
+                   CUDA_SDK_ROOT_DIR
+                   CUDA_SEPARABLE_COMPILATION
+                   CUDA_TOOLKIT_ROOT_DIR
+                   CUDA_VERBOSE_BUILD
+                   )
 
   if (NOT CUDA_FOUND)
     message(STATUS "CUDA not found")
