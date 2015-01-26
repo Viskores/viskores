@@ -196,11 +196,13 @@ function(vtkm_unit_tests)
           PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA})
       endif(VTKm_EXTRA_COMPILER_WARNINGS)
       if(MSVC)
-        # The generated source for the tests can cause a warning with MSVC.
-        # Suppress that warning for that file.
-        # Reported as CMake bug 15066. Should be fixed in CMake 3.1.
-        set_source_files_properties(${test_prog}.cxx
-          PROPERTIES COMPILE_FLAGS "/wd4996")
+        #disable MSVC CRT and SCL warnings as they recommend using non standard
+        #c++ extensions
+        set_property(TARGET ${test_prog}
+                   APPEND PROPERTY COMPILE_DEFINITIONS
+                   "_SCL_SECURE_NO_WARNINGS"
+                   "_CRT_SECURE_NO_WARNINGS"
+                   )
       endif()
     endif (VTKm_UT_CUDA)
 
@@ -336,6 +338,16 @@ function(vtkm_worklet_unit_tests device_adapter)
         COMMAND ${test_prog} ${tname}
         )
     endforeach (test)
+
+    #disable MSVC CRT and SCL warnings as they recommend using non standard
+    #c++ extensions
+    if(MSVC)
+      set_property(TARGET ${test_prog}
+                   APPEND PROPERTY COMPILE_DEFINITIONS
+                   "_SCL_SECURE_NO_WARNINGS"
+                   "_CRT_SECURE_NO_WARNINGS"
+                   )
+    endif()
 
     #increase warning level if needed, we are going to skip cuda here
     #to remove all the false positive unused function warnings that cuda
