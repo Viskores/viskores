@@ -28,6 +28,7 @@ set(headers
   ArrayPortal.h
   ArrayPortalToIterators.h
   Assert.h
+  DataSet.h
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
   DeviceAdapterSerial.h
