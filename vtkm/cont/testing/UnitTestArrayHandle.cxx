@@ -147,5 +147,5 @@ void TestArrayHandle()
 
 int UnitTestArrayHandle(int, char *[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayHandle);
+    return vtkm::cont::testing::Testing::Run(TestArrayHandle);
 }
