@@ -15,7 +15,8 @@ public:
     }
     
     //EAVL-esque everything is a field data model
-    vtkm::Vec<vtkm::cont::ArrayHandle<FloatDefault, vtkm::cont::StorageTagBasic>, 1> Fields;
+    //vtkm::Vec<vtkm::cont::ArrayHandle<FloatDefault, vtkm::cont::StorageTagBasic>, 1> Fields;
+    std::vector<vtkm::cont::ArrayHandle<FloatDefault, vtkm::cont::StorageTagBasic> > Fields;
     vtkm::Id x_idx, y_idx, z_idx;
 
     //traditional data-model
