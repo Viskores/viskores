@@ -102,6 +102,11 @@ public:
 
   }
 
+  ~ArrayManagerExecutionThrustDevice()
+  {
+    this->ReleaseResources();
+  }
+
   /// Returns the size of the array.
   ///
   VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const {
@@ -244,11 +249,7 @@ public:
 
   ~ArrayManagerExecutionThrustDevice()
   {
-  if(this->HaveTextureBound)
-    {
-    this->HaveTextureBound = false;
-    this->InputArrayIterator.UnbindTexture();
-    }
+    this->ReleaseResources();
   }
 
   /// Returns the size of the array.
