@@ -20,6 +20,7 @@
 
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 void TestDataSet()
 {
@@ -30,7 +31,44 @@ void TestDataSet()
     ds.z_idx = 2;
     ds.Fields.resize(4);
 
-    int nVerts = 3;
+    const int nVerts = 3;
+    vtkm::Float32 xVals[nVerts] = {0, 1, 1};
+    vtkm::Float32 yVals[nVerts] = {0, 0, 1};
+    vtkm::Float32 zVals[nVerts] = {0, 0, 0};
+    vtkm::Float32 vars[nVerts] = {10, 20, 30};
+
+
+    vtkm::cont::ArrayHandle<vtkm::Float32> tmp;
+    //Set X, Y, and Z fields.
+    tmp = vtkm::cont::make_ArrayHandle(xVals, nVerts);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.x_idx]);
+    tmp = vtkm::cont::make_ArrayHandle(yVals, nVerts);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.y_idx]);
+    tmp = vtkm::cont::make_ArrayHandle(zVals, nVerts);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.z_idx]);
+
+    //Set scalar
+    tmp = vtkm::cont::make_ArrayHandle(vars, nVerts);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[3]);
+
+
+    //Add connectivity
+    vtkm::cont::ArrayHandle<vtkm::Id> tmp2;
+    std::vector<vtkm::Id> shapes;
+    shapes.push_back(1); //Triangle
+
+    std::vector<vtkm::Id> conn;
+    conn.push_back(0);
+    conn.push_back(1);
+    conn.push_back(2);
+    
+    tmp2 = vtkm::cont::make_ArrayHandle(shapes);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.Shapes);
+
+    tmp2 = vtkm::cont::make_ArrayHandle(conn);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.Connectivity);
+
+#if 0
     //Add some verts.
     ds.Fields[ds.x_idx].PrepareForOutput(nVerts, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     ds.Fields[ds.y_idx].PrepareForOutput(nVerts, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
@@ -71,6 +109,7 @@ void TestDataSet()
     ds.Field.GetPortalControl().Set(1, vtkm::Vec<vtkm::FloatDefault,1>(20));
     ds.Field.GetPortalControl().Set(2, vtkm::Vec<vtkm::FloatDefault,1>(30));
     */
+#endif
 
 }
 
