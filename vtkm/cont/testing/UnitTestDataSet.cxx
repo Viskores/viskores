@@ -21,6 +21,28 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+
+class CellType : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn<IdType> inCells, FieldOut<Scalar> outCells);
+  typedef _2 ExecutionSignature(_1); // FieldOut<Scalar> ExecutionSignature(FieldIn<Scalar>);
+  typedef _1 InputDomain;
+
+  VTKM_CONT_EXPORT
+  CellType() { };
+
+  VTKM_EXEC_EXPORT
+  vtkm::Float32 operator()(const vtkm::Id &cell) const
+  {
+      std::cout<<"CellType worklet: "<<cell<<std::endl;
+      return (vtkm::Float32)cell;
+  }
+
+};
+
 
 void TestDataSet()
 {
@@ -29,13 +51,13 @@ void TestDataSet()
     ds.x_idx = 0;
     ds.y_idx = 1;
     ds.z_idx = 2;
-    ds.Fields.resize(4);
+    ds.Fields.resize(5);
 
-    const int nVerts = 3;
-    vtkm::Float32 xVals[nVerts] = {0, 1, 1};
-    vtkm::Float32 yVals[nVerts] = {0, 0, 1};
-    vtkm::Float32 zVals[nVerts] = {0, 0, 0};
-    vtkm::Float32 vars[nVerts] = {10, 20, 30};
+    const int nVerts = 4;
+    vtkm::Float32 xVals[nVerts] = {0, 1, 1, 0};
+    vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1};
+    vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0};
+    vtkm::Float32 vars[nVerts] = {10, 20, 30, 40};
 
 
     vtkm::cont::ArrayHandle<vtkm::Float32> tmp;
@@ -47,7 +69,7 @@ void TestDataSet()
     tmp = vtkm::cont::make_ArrayHandle(zVals, nVerts);
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.z_idx]);
 
-    //Set scalar
+    //Set node scalar
     tmp = vtkm::cont::make_ArrayHandle(vars, nVerts);
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[3]);
 
@@ -56,17 +78,33 @@ void TestDataSet()
     vtkm::cont::ArrayHandle<vtkm::Id> tmp2;
     std::vector<vtkm::Id> shapes;
     shapes.push_back(1); //Triangle
+    shapes.push_back(1); //Triangle
 
     std::vector<vtkm::Id> conn;
+    //Triangle 1
     conn.push_back(0);
     conn.push_back(1);
     conn.push_back(2);
+
+    //Triangle 2
+    conn.push_back(1);
+    conn.push_back(2);
+    conn.push_back(3);
     
     tmp2 = vtkm::cont::make_ArrayHandle(shapes);
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.Shapes);
 
     tmp2 = vtkm::cont::make_ArrayHandle(conn);
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.Connectivity);
+
+
+    //Run a worklet to populate a cell centered field.
+    vtkm::Float32 cellVals[1] = {-1.0};
+    tmp = vtkm::cont::make_ArrayHandle(cellVals, 1);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[4]);
+
+    vtkm::worklet::DispatcherMapField<CellType> dispatcher;
+    dispatcher.Invoke(ds.conn.Shapes, ds.Fields[4]);
 
 #if 0
     //Add some verts.
