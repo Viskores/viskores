@@ -28,18 +28,18 @@ class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
   typedef void ControlSignature(FieldCellIn<IdType> inCells, TopologyIn topology, FieldCellOut<Scalar> outCells);
-    typedef _3 ExecutionSignature(_1);//, vtkm::worklet::WorkletMapCell::ThreeNodes); // FieldOut<Scalar> ExecutionSignature(FieldIn<Scalar>);
+    typedef _3 ExecutionSignature(_1, vtkm::exec::arg::NodeIdTriplet); // FieldOut<Scalar> ExecutionSignature(FieldIn<Scalar>);
   typedef _1 InputDomain;
 
   VTKM_CONT_EXPORT
   CellType() { };
 
   VTKM_EXEC_EXPORT
-  vtkm::Float32 operator()(const vtkm::Id &cell) const
+  vtkm::Float32 operator()(const vtkm::Id &cell, const vtkm::Id &nodeID) const
   {
       std::cout << "CellType worklet: " << std::endl;
       std::cout << "   -- input field value: " << cell << std::endl;
-      //std::cout << "   -- input node IDs: "<<nodeId1<<","<<nodeId2<<","<<nodeId3<<","<<std::endl;
+      std::cout << "   -- input node IDs (not really, it's just the work index for now): "<<nodeID<<","<<nodeID<<","<<nodeID<<","<<std::endl;
       return (vtkm::Float32)cell;
   }
 

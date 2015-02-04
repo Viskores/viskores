@@ -31,14 +31,14 @@
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagTopology.h>
 
+#include <vtkm/exec/arg/NodeIdTriplet.h>
+
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 #include <vtkm/exec/arg/FetchTagTopologyIn.h>
 
 namespace vtkm {
 namespace worklet {
-
-struct AspectTagThreeNodes {  };
 
 /// Base class for worklets that do a simple mapping of field arrays. All
 /// inputs and outputs are on the same domain. That is, all the arrays are the
@@ -81,11 +81,6 @@ public:
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayOut TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectOut FetchTag;
-  };
-
-  struct ThreeNodes : vtkm::exec::arg::ExecutionSignatureTagBase {
-      static const vtkm::IdComponent INDEX = 1;
-      typedef vtkm::worklet::AspectTagThreeNodes AspectTag;
   };
 };
 
