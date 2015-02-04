@@ -30,7 +30,7 @@ namespace arg {
 /// \brief Aspect tag to use for getting the work index.
 ///
 /// The \c AspectTagNodeIdTriplet aspect tag causes the \c Fetch class to
-/// obtain node IDs from a topology object.
+/// obtain the first three node IDs for a cell from a topology object.
 ///
 struct AspectTagNodeIdTriplet {  };
 
@@ -48,9 +48,33 @@ struct Fetch<FetchTag, vtkm::exec::arg::AspectTagNodeIdTriplet, Invocation, 1>
   typedef vtkm::Id3 ValueType;
 
   VTKM_EXEC_EXPORT
-  vtkm::Id3 Load(vtkm::Id index, const Invocation &) const
+  vtkm::Id3 Load(vtkm::Id index, const Invocation &invocation) const
   {
-    return vtkm::Id3(index,index+10,index+50);
+    // The parameter for the input domain is stored in the Invocation. (It is
+    // also in the worklet, but it is safer to get it from the Invocation
+    // in case some other dispatch operation had to modify it.)
+    static const vtkm::IdComponent InputDomainIndex =
+        Invocation::InputDomainIndex;
+
+    // ParameterInterface (from Invocation) is a FunctionInterface type
+    // containing types for all objects passed to the Invoke method (with
+    // some dynamic casting performed so objects like DynamicArrayHandle get
+    // cast to ArrayHandle).
+    typedef typename Invocation::ParameterInterface ParameterInterface;
+
+    // This is the type for the input domain (derived from the last two things
+    // we got from the Invocation).
+    typedef typename ParameterInterface::
+        template ParameterType<InputDomainIndex>::type TopologyType;
+
+    // We can pull the input domain parameter (the data specifying the input
+    // domain) from the invocation object.
+    TopologyType topology =
+        invocation.Parameters.template GetParameter<InputDomainIndex>();
+
+    return vtkm::Id3(topology.Connectivity.GetPortalControl().Get(index*3+0),
+                     topology.Connectivity.GetPortalControl().Get(index*3+1),
+                     topology.Connectivity.GetPortalControl().Get(index*3+2));
   }
 
   VTKM_EXEC_EXPORT

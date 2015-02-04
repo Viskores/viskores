@@ -31,8 +31,6 @@
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagTopology.h>
 
-#include <vtkm/exec/arg/NodeIdTriplet.h>
-
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 #include <vtkm/exec/arg/FetchTagTopologyIn.h>

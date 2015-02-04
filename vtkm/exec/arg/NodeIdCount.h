@@ -17,41 +17,38 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_worklet_Dispatcher_MapCell_h
-#define vtk_m_worklet_Dispatcher_MapCell_h
+#ifndef vtk_m_exec_arg_NodeIdCount_h
+#define vtk_m_exec_arg_NodeIdCount_h
 
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/worklet/WorkletMapCell.h>
-#include <vtkm/worklet/internal/DispatcherBase.h>
+#include <vtkm/exec/arg/Fetch.h>
+#include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 
 namespace vtkm {
-namespace worklet {
+namespace exec {
+namespace arg {
 
-/// \brief Dispatcher for worklets that inherit from \c WorkletMapCell.
+/// \brief Aspect tag to use for getting the work index.
 ///
-template<typename WorkletType,
-         typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
-class DispatcherMapCell :
-    public vtkm::worklet::internal::DispatcherBase<
-      DispatcherMapCell<WorkletType,Device>,
-      WorkletType,
-      vtkm::worklet::WorkletMapCell,
-      Device>
+/// The \c AspectTagNodeIdCount aspect tag causes the \c Fetch class to
+/// obtain the number of node IDs for a cell from a topology object.
+///
+struct AspectTagNodeIdCount {  };
+
+/// \brief The \c ExecutionSignature tag to use to get the node IDs.
+///
+struct NodeIdCount : vtkm::exec::arg::ExecutionSignatureTagBase
 {
-  typedef vtkm::worklet::internal::DispatcherBase<
-    DispatcherMapCell<WorkletType,Device>,
-    WorkletType,
-    vtkm::worklet::WorkletMapCell,
-    Device> Superclass;
+  static const vtkm::IdComponent INDEX = 1;
+  typedef vtkm::exec::arg::AspectTagNodeIdCount AspectTag;
+};
 
-public:
-  VTKM_CONT_EXPORT
-  DispatcherMapCell(const WorkletType &worklet = WorkletType())
-    : Superclass(worklet) {  }
+template<typename FetchTag, typename Invocation>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagNodeIdCount, Invocation, 1>
+{
+  typedef vtkm::Id ValueType;
 
-  template<typename Invocation>
-  VTKM_CONT_EXPORT
-  void DoInvoke(const Invocation &invocation) const
+  VTKM_EXEC_EXPORT
+  ValueType Load(vtkm::Id index, const Invocation &invocation) const
   {
     // The parameter for the input domain is stored in the Invocation. (It is
     // also in the worklet, but it is safer to get it from the Invocation
@@ -68,27 +65,25 @@ public:
     // This is the type for the input domain (derived from the last two things
     // we got from the Invocation).
     typedef typename ParameterInterface::
-        template ParameterType<InputDomainIndex>::type InputDomainType;
+        template ParameterType<InputDomainIndex>::type TopologyType;
 
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
-    InputDomainType inputDomain =
+    TopologyType topology =
         invocation.Parameters.template GetParameter<InputDomainIndex>();
 
-    // For a DispatcherMapCell, the inputDomain must be an ArrayHandle (or
-    // a DynamicArrayHandle that gets cast to one). The size of the domain
-    // (number of threads/worklet instances) is equal to the size of the
-    // array.
+    return topology.GetNumberOfIndices(index);
+  }
 
-    ///\todo: GetNumberOfCells
-    vtkm::Id numInstances = inputDomain.GetNumberOfElements();
-
-    ///\todo: 
-    this->BasicInvoke(invocation, numInstances);
+  VTKM_EXEC_EXPORT
+  void Store(vtkm::Id, const Invocation &, const ValueType &) const
+  {
+    // Store is a no-op.
   }
 };
 
 }
-} // namespace vtkm::worklet
+}
+} // namespace vtkm::exec::arg
 
-#endif //vtk_m_worklet_Dispatcher_MapCell_h
+#endif //vtk_m_exec_arg_NodeIdCount_h

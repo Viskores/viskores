@@ -23,23 +23,31 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/WorkletMapCell.h>
 #include <vtkm/worklet/DispatcherMapCell.h>
+#include <vtkm/exec/arg/NodeIdSet.h>
+#include <vtkm/exec/arg/NodeIdCount.h>
+#include <vtkm/exec/arg/TopologyElementType.h>
 
 class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
   typedef void ControlSignature(FieldCellIn<IdType> inCells, TopologyIn topology, FieldCellOut<Scalar> outCells);
-  typedef _3 ExecutionSignature(_1, vtkm::exec::arg::NodeIdTriplet);
+  typedef _3 ExecutionSignature(_1, vtkm::exec::arg::NodeIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::NodeIdSet);
   typedef _2 InputDomain;
 
   VTKM_CONT_EXPORT
   CellType() { };
 
   VTKM_EXEC_EXPORT
-  vtkm::Float32 operator()(const vtkm::Id &cell, const vtkm::Id3 &nodeIDs) const
+  vtkm::Float32 operator()(const vtkm::Id &cell, const vtkm::Id &count, const vtkm::Id &type, const vtkm::Vec<vtkm::Id,8> &nodeIDs) const
   {
       std::cout << "CellType worklet: " << std::endl;
       std::cout << "   -- input field value: " << cell << std::endl;
-      std::cout << "   -- input node IDs (not really, it's just workindex+0,10,50 for now): "<<nodeIDs[0]<<","<<nodeIDs[1]<<","<<nodeIDs[2]<<","<<std::endl;
+      std::cout << "   -- cell type: " << type << std::endl;
+      std::cout << "   -- number of IDs for this cell: " << count << std::endl;
+      std::cout << "   -- input node IDs: ";
+      for (int i=0; i<count; ++i)
+          std::cout << (i>0?",":"") << nodeIDs[i];
+      std::cout << std::endl;
       return (vtkm::Float32)cell;
   }
 
@@ -79,24 +87,40 @@ void TestDataSet()
     //Add connectivity
     vtkm::cont::ArrayHandle<vtkm::Id> tmp2;
     std::vector<vtkm::Id> shapes;
-    shapes.push_back(1); //Triangle
-    shapes.push_back(39); //A Special Triangle
+    shapes.push_back(vtkm::cont::VTKM_TRI);
+    shapes.push_back(vtkm::cont::VTKM_QUAD);
+
+    std::vector<vtkm::Id> numindices;
+    numindices.push_back(3);
+    numindices.push_back(4);
 
     std::vector<vtkm::Id> conn;
-    // First Triangle
+    // First Cell: Triangle
     conn.push_back(0);
     conn.push_back(1);
     conn.push_back(2);
-    // Second Triangle
+    // Second Cell: Quad
     conn.push_back(2);
     conn.push_back(1);
     conn.push_back(3);
+    conn.push_back(4);
+
+    std::vector<vtkm::Id> map_cell_to_iondex;
+    map_cell_to_iondex.push_back(0);
+    map_cell_to_iondex.push_back(3);
+
     
     tmp2 = vtkm::cont::make_ArrayHandle(shapes);
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.Shapes);
 
+    tmp2 = vtkm::cont::make_ArrayHandle(numindices);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.NumIndices);
+
     tmp2 = vtkm::cont::make_ArrayHandle(conn);
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.Connectivity);
+
+    tmp2 = vtkm::cont::make_ArrayHandle(map_cell_to_iondex);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.MapCellToConnectivityIndex);
 
 
     //Run a worklet to populate a cell centered field.
