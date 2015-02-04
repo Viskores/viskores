@@ -21,10 +21,10 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapCell.h>
+#include <vtkm/worklet/DispatcherMapCell.h>
 
-class CellType : public vtkm::worklet::WorkletMapField
+class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
   typedef void ControlSignature(FieldIn<IdType> inCells, FieldOut<Scalar> outCells);
@@ -103,7 +103,7 @@ void TestDataSet()
     tmp = vtkm::cont::make_ArrayHandle(cellVals, 1);
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[4]);
 
-    vtkm::worklet::DispatcherMapField<CellType> dispatcher;
+    vtkm::worklet::DispatcherMapCell<CellType> dispatcher;
     dispatcher.Invoke(ds.conn.Shapes, ds.Fields[4]);
 
 #if 0

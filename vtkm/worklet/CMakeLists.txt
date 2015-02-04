@@ -21,6 +21,8 @@
 set(headers
   DispatcherMapField.h
   WorkletMapField.h
+  DispatcherMapCell.h
+  WorkletMapCell.h
   )
 
 #-----------------------------------------------------------------------------
