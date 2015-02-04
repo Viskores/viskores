@@ -65,10 +65,9 @@ public:
   /// the possible value types in the array.
   ///
   struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag; ///\todo: create this TypeCheckTagTopology
-    typedef vtkm::cont::arg::TransportTagTopologyIn TransportTag; ///\todo: create this too
-    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag; ///\todo: and this
-    ///\todo: define Aspect
+    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagTopologyIn TransportTag;
+    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
   };
 
   /// \brief A control signature tag for output fields.

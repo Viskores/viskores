@@ -35,11 +35,11 @@ public:
   CellType() { };
 
   VTKM_EXEC_EXPORT
-  vtkm::Float32 operator()(const vtkm::Id &cell, const vtkm::Id &nodeID) const
+  vtkm::Float32 operator()(const vtkm::Id &cell, const vtkm::Id3 &nodeIDs) const
   {
       std::cout << "CellType worklet: " << std::endl;
       std::cout << "   -- input field value: " << cell << std::endl;
-      std::cout << "   -- input node IDs (not really, it's just the work index for now): "<<nodeID<<","<<nodeID<<","<<nodeID<<","<<std::endl;
+      std::cout << "   -- input node IDs (not really, it's just workindex+0,10,50 for now): "<<nodeIDs[0]<<","<<nodeIDs[1]<<","<<nodeIDs[2]<<","<<std::endl;
       return (vtkm::Float32)cell;
   }
 

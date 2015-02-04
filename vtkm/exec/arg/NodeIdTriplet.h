@@ -45,12 +45,12 @@ struct NodeIdTriplet : vtkm::exec::arg::ExecutionSignatureTagBase
 template<typename FetchTag, typename Invocation>
 struct Fetch<FetchTag, vtkm::exec::arg::AspectTagNodeIdTriplet, Invocation, 1>
 {
-  typedef vtkm::Id ValueType;
+  typedef vtkm::Id3 ValueType;
 
   VTKM_EXEC_EXPORT
-  vtkm::Id Load(vtkm::Id index, const Invocation &) const
+  vtkm::Id3 Load(vtkm::Id index, const Invocation &) const
   {
-    return index;
+    return vtkm::Id3(index,index+10,index+50);
   }
 
   VTKM_EXEC_EXPORT

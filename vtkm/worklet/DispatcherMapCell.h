@@ -79,7 +79,9 @@ public:
     // a DynamicArrayHandle that gets cast to one). The size of the domain
     // (number of threads/worklet instances) is equal to the size of the
     // array.
-    vtkm::Id numInstances = inputDomain.GetNumberOfValues(); ///\todo: GetNumberOfCells
+
+    ///\todo: GetNumberOfCells
+    vtkm::Id numInstances = inputDomain.GetNumberOfValues();
 
     ///\todo: 
     this->BasicInvoke(invocation, numInstances);
