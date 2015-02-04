@@ -11,7 +11,9 @@ class ExplicitConnectivity
 {
 public:
     ExplicitConnectivity() : Shapes(), Connectivity() {}
-    
+
+    vtkm::Id GetNumberOfCells() { return Shapes.GetNumberOfValues(); }
+
     vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> Shapes;
     vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> Connectivity;
 };

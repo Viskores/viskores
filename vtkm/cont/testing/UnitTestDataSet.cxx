@@ -28,8 +28,8 @@ class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
   typedef void ControlSignature(FieldCellIn<IdType> inCells, TopologyIn topology, FieldCellOut<Scalar> outCells);
-    typedef _3 ExecutionSignature(_1, vtkm::exec::arg::NodeIdTriplet); // FieldOut<Scalar> ExecutionSignature(FieldIn<Scalar>);
-  typedef _1 InputDomain;
+  typedef _3 ExecutionSignature(_1, vtkm::exec::arg::NodeIdTriplet);
+  typedef _2 InputDomain;
 
   VTKM_CONT_EXPORT
   CellType() { };

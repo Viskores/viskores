@@ -81,7 +81,7 @@ public:
     // array.
 
     ///\todo: GetNumberOfCells
-    vtkm::Id numInstances = inputDomain.GetNumberOfValues();
+    vtkm::Id numInstances = inputDomain.GetNumberOfCells();
 
     ///\todo: 
     this->BasicInvoke(invocation, numInstances);
