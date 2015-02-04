@@ -54,6 +54,18 @@ public:
     typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag;
   };
 
+  /// \brief A control signature tag for input connectivity.
+  ///
+  /// This tag takes a template argument that is a type list tag that limits
+  /// the possible value types in the array.
+  ///
+  template<typename TypeList = AllTypes>
+  struct ConnectivityIn : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
+    typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag;
+  };
+
   /// \brief A control signature tag for output fields.
   ///
   /// This tag takes a template argument that is a type list tag that limits

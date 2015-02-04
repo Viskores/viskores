@@ -13,7 +13,7 @@ public:
     ExplicitConnectivity() : Shapes(), Connectivity() {}
     
     vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> Shapes;
-    vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> Connectivity;
+    vtkm::cont::ArrayHandle<vtkm::Id3, vtkm::cont::StorageTagBasic> Connectivity;
 };
     
 class DataSet
