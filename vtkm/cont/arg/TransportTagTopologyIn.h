@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_arg_TransportTagArrayIn_h
-#define vtk_m_cont_arg_TransportTagArrayIn_h
+#ifndef vtk_m_cont_arg_TransportTagTopologyIn_h
+#define vtk_m_cont_arg_TransportTagTopologyIn_h
 
 #include <vtkm/Types.h>
 
@@ -32,24 +32,23 @@ namespace arg {
 
 /// \brief \c Transport tag for input arrays.
 ///
-/// \c TransportTagArrayIn is a tag used with the \c Transport class to
-/// transport \c ArrayHandle objects for input data.
+/// \c TransportTagTopologyIn is a tag used with the \c Transport class to
+/// transport topology objects for input data.
 ///
-struct TransportTagArrayIn {  };
+struct TransportTagTopologyIn {  };
 
 template<typename ContObjectType, typename Device>
-struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
+struct Transport<vtkm::cont::arg::TransportTagTopologyIn, ContObjectType, Device>
 {
-  ///\todo: something like VTKM_IS_ARRAY_HANDLE(ContObjectType), but for topology
+  ///\todo: something equivalent to VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
-  typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst
-      ExecObjectType;
+  ///\todo: actually figure out the execution object type from the control
+  typedef ContObjectType ExecObjectType;
 
   VTKM_CONT_EXPORT
   ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
   {
-    ///\todo: fill me in
-    return object.PrepareForInput(Device());
+    return object;
   }
 };
 
@@ -57,4 +56,4 @@ struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
 }
 } // namespace vtkm::cont::arg
 
-#endif //vtk_m_cont_arg_TransportTagArrayIn_h
+#endif //vtk_m_cont_arg_TransportTagTopologyIn_h

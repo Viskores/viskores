@@ -27,19 +27,19 @@
 class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> inCells, ConnectivityIn<IdType> nodeIds, FieldOut<Scalar> outCells);
-  typedef _3 ExecutionSignature(_1, _2, _2, _2); // FieldOut<Scalar> ExecutionSignature(FieldIn<Scalar>);
+  typedef void ControlSignature(FieldCellIn<IdType> inCells, TopologyIn topology, FieldCellOut<Scalar> outCells);
+    typedef _3 ExecutionSignature(_1);//, vtkm::worklet::WorkletMapCell::ThreeNodes); // FieldOut<Scalar> ExecutionSignature(FieldIn<Scalar>);
   typedef _1 InputDomain;
 
   VTKM_CONT_EXPORT
   CellType() { };
 
   VTKM_EXEC_EXPORT
-  vtkm::Float32 operator()(const vtkm::Id &cell, vtkm::Id &nodeId1, vtkm::Id &nodeId2, vtkm::Id &nodeId3) const
+  vtkm::Float32 operator()(const vtkm::Id &cell) const
   {
       std::cout << "CellType worklet: " << std::endl;
       std::cout << "   -- input field value: " << cell << std::endl;
-      std::cout << "   -- input node IDs: "<<nodeId1<<","<<nodeId2<<","<<nodeId3<<","<<std::endl;
+      //std::cout << "   -- input node IDs: "<<nodeId1<<","<<nodeId2<<","<<nodeId3<<","<<std::endl;
       return (vtkm::Float32)cell;
   }
 
@@ -105,7 +105,7 @@ void TestDataSet()
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[4]);
 
     vtkm::worklet::DispatcherMapCell<CellType> dispatcher;
-    dispatcher.Invoke(ds.conn.Shapes, ds.conn.Connectivity, ds.Fields[4]);
+    dispatcher.Invoke(ds.conn.Shapes, ds.conn, ds.Fields[4]);
 
 #if 0
     //Add some verts.

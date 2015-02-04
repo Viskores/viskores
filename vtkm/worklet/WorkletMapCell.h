@@ -27,13 +27,18 @@
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagArrayIn.h>
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
+#include <vtkm/cont/arg/TransportTagTopologyIn.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
+#include <vtkm/cont/arg/TypeCheckTagTopology.h>
 
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
+#include <vtkm/exec/arg/FetchTagTopologyIn.h>
 
 namespace vtkm {
 namespace worklet {
+
+struct AspectTagThreeNodes {  };
 
 /// Base class for worklets that do a simple mapping of field arrays. All
 /// inputs and outputs are on the same domain. That is, all the arrays are the
@@ -48,7 +53,7 @@ public:
   /// the possible value types in the array.
   ///
   template<typename TypeList = AllTypes>
-  struct FieldIn : vtkm::cont::arg::ControlSignatureTagBase {
+  struct FieldCellIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag;
@@ -59,11 +64,11 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template<typename TypeList = AllTypes>
-  struct ConnectivityIn : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
-    typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag;
+  struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag; ///\todo: create this TypeCheckTagTopology
+    typedef vtkm::cont::arg::TransportTagTopologyIn TransportTag; ///\todo: create this too
+    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag; ///\todo: and this
+    ///\todo: define Aspect
   };
 
   /// \brief A control signature tag for output fields.
@@ -72,10 +77,15 @@ public:
   /// the possible value types in the array.
   ///
   template<typename TypeList = AllTypes>
-  struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase {
+  struct FieldCellOut : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayOut TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectOut FetchTag;
+  };
+
+  struct ThreeNodes : vtkm::exec::arg::ExecutionSignatureTagBase {
+      static const vtkm::IdComponent INDEX = 1;
+      typedef vtkm::worklet::AspectTagThreeNodes AspectTag;
   };
 };
 

@@ -26,6 +26,7 @@ set(headers
   FetchTagArrayDirectIn.h
   FetchTagArrayDirectOut.h
   FetchTagExecObject.h
+  FetchTagTopologyIn.h
   WorkIndex.h
   )
 

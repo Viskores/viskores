@@ -17,44 +17,33 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_arg_TransportTagArrayIn_h
-#define vtk_m_cont_arg_TransportTagArrayIn_h
+#ifndef vtk_m_cont_arg_TypeCheckTagTopology_h
+#define vtk_m_cont_arg_TypeCheckTagTopology_h
 
-#include <vtkm/Types.h>
+#include <vtkm/cont/arg/TypeCheck.h>
+
+#include <vtkm/ListTag.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-
-#include <vtkm/cont/arg/Transport.h>
 
 namespace vtkm {
 namespace cont {
 namespace arg {
 
-/// \brief \c Transport tag for input arrays.
+/// Check for a topology-like object.
 ///
-/// \c TransportTagArrayIn is a tag used with the \c Transport class to
-/// transport \c ArrayHandle objects for input data.
-///
-struct TransportTagArrayIn {  };
-
-template<typename ContObjectType, typename Device>
-struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
+struct TypeCheckTagTopology
 {
-  ///\todo: something like VTKM_IS_ARRAY_HANDLE(ContObjectType), but for topology
+};
 
-  typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst
-      ExecObjectType;
-
-  VTKM_CONT_EXPORT
-  ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
-  {
-    ///\todo: fill me in
-    return object.PrepareForInput(Device());
-  }
+template<typename ArrayType>
+struct TypeCheck<TypeCheckTagTopology, ArrayType>
+{
+  static const bool value = true;
 };
 
 }
 }
 } // namespace vtkm::cont::arg
 
-#endif //vtk_m_cont_arg_TransportTagArrayIn_h
+#endif //vtk_m_cont_arg_TypeCheckTagTopology_h
