@@ -27,18 +27,19 @@
 class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> inCells, ConnectivityIn<Id3Type> nodeIds, FieldOut<Scalar> outCells);
-  typedef _3 ExecutionSignature(_1, _2); // FieldOut<Scalar> ExecutionSignature(FieldIn<Scalar>);
+  typedef void ControlSignature(FieldIn<IdType> inCells, ConnectivityIn<IdType> nodeIds, FieldOut<Scalar> outCells);
+  typedef _3 ExecutionSignature(_1, _2, _2, _2); // FieldOut<Scalar> ExecutionSignature(FieldIn<Scalar>);
   typedef _1 InputDomain;
 
   VTKM_CONT_EXPORT
   CellType() { };
 
   VTKM_EXEC_EXPORT
-  vtkm::Float32 operator()(const vtkm::Id &cell, vtkm::Id3 &nodeIds) const
+  vtkm::Float32 operator()(const vtkm::Id &cell, vtkm::Id &nodeId1, vtkm::Id &nodeId2, vtkm::Id &nodeId3) const
   {
-      std::cout<<"CellType worklet: "<<cell<<std::endl;
-      std::cout<<"CellType worklet: "<<nodeIds[0]<<","<<nodeIds[1]<<","<<nodeIds[2]<<","<<std::endl;
+      std::cout << "CellType worklet: " << std::endl;
+      std::cout << "   -- input field value: " << cell << std::endl;
+      std::cout << "   -- input node IDs: "<<nodeId1<<","<<nodeId2<<","<<nodeId3<<","<<std::endl;
       return (vtkm::Float32)cell;
   }
 
@@ -77,20 +78,25 @@ void TestDataSet()
 
     //Add connectivity
     vtkm::cont::ArrayHandle<vtkm::Id> tmp2;
-    vtkm::cont::ArrayHandle<vtkm::Id3> tmp3;
     std::vector<vtkm::Id> shapes;
     shapes.push_back(1); //Triangle
     shapes.push_back(39); //A Special Triangle
 
-    std::vector<vtkm::Id3> conn;
-    conn.push_back(vtkm::Id3(0,1,2));
-    conn.push_back(vtkm::Id3(1,2,3));
+    std::vector<vtkm::Id> conn;
+    // First Triangle
+    conn.push_back(0);
+    conn.push_back(1);
+    conn.push_back(2);
+    // Second Triangle
+    conn.push_back(2);
+    conn.push_back(1);
+    conn.push_back(3);
     
     tmp2 = vtkm::cont::make_ArrayHandle(shapes);
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.Shapes);
 
-    tmp3 = vtkm::cont::make_ArrayHandle(conn);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp3, ds.conn.Connectivity);
+    tmp2 = vtkm::cont::make_ArrayHandle(conn);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.Connectivity);
 
 
     //Run a worklet to populate a cell centered field.
