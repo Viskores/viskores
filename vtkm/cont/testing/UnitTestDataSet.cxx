@@ -30,7 +30,7 @@
 class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
-  typedef void ControlSignature(FieldCellIn<IdType> inCells, TopologyIn topology, FieldCellOut<Scalar> outCells);
+  typedef void ControlSignature(FieldCellIn<Scalar> inCells, TopologyIn topology, FieldCellOut<Scalar> outCells);
   typedef _3 ExecutionSignature(_1, vtkm::exec::arg::NodeIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::NodeIdSet);
   typedef _2 InputDomain;
 
@@ -38,30 +38,32 @@ public:
   CellType() { };
 
   VTKM_EXEC_EXPORT
-  vtkm::Float32 operator()(const vtkm::Id &cell, const vtkm::Id &count, const vtkm::Id &type, const vtkm::Vec<vtkm::Id,8> &nodeIDs) const
+  vtkm::Float32 operator()(const vtkm::Float32 &cellval, const vtkm::Id &count, const vtkm::Id &type, const vtkm::Vec<vtkm::Id,8> &nodeIDs) const
   {
       std::cout << "CellType worklet: " << std::endl;
-      std::cout << "   -- input field value: " << cell << std::endl;
+      std::cout << "   -- input field value: " << cellval << std::endl;
       std::cout << "   -- cell type: " << type << std::endl;
       std::cout << "   -- number of IDs for this cell: " << count << std::endl;
       std::cout << "   -- input node IDs: ";
       for (int i=0; i<count; ++i)
           std::cout << (i>0?",":"") << nodeIDs[i];
       std::cout << std::endl;
-      return (vtkm::Float32)cell;
+      return (vtkm::Float32)cellval;
   }
 
 };
 
 
-void TestDataSet()
+void TestDataSet_Explicit()
 {
+    std::cout << std::endl;
+    std::cout << "--TestDataSet_Explicit--" << std::endl;
     vtkm::cont::DataSet ds;
     
     ds.x_idx = 0;
     ds.y_idx = 1;
     ds.z_idx = 2;
-    ds.Fields.resize(5);
+    ds.Fields.resize(6);
 
     const int nVerts = 4;
     vtkm::Float32 xVals[nVerts] = {0, 1, 1, 0};
@@ -83,6 +85,10 @@ void TestDataSet()
     tmp = vtkm::cont::make_ArrayHandle(vars, nVerts);
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[3]);
 
+    //Set cell scalar
+    vtkm::Float32 cellvar[2] = {100.1, 100.2};
+    tmp = vtkm::cont::make_ArrayHandle(cellvar, 2);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[4]);
 
     //Add connectivity
     vtkm::cont::ArrayHandle<vtkm::Id> tmp2;
@@ -124,12 +130,13 @@ void TestDataSet()
 
 
     //Run a worklet to populate a cell centered field.
-    vtkm::Float32 cellVals[2] = {-1.0, -1.0};
-    tmp = vtkm::cont::make_ArrayHandle(cellVals, 2);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[4]);
+    //Here, we're filling it with test values.
+    vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
+    tmp = vtkm::cont::make_ArrayHandle(outcellVals, 2);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[5]);
 
     vtkm::worklet::DispatcherMapCell<CellType> dispatcher;
-    dispatcher.Invoke(ds.conn.Shapes, ds.conn, ds.Fields[4]);
+    dispatcher.Invoke(ds.Fields[4], ds.conn, ds.Fields[5]);
 
 #if 0
     //Add some verts.
@@ -176,7 +183,59 @@ void TestDataSet()
 
 }
 
+void TestDataSet_Regular()
+{
+    std::cout << std::endl;
+    std::cout << "--TestDataSet_Regular--" << std::endl;
+    vtkm::cont::DataSet ds;
+    
+    ds.x_idx = 0;
+    ds.y_idx = 1;
+    ds.z_idx = 2;
+    ds.Fields.resize(6);
+
+    const int nVerts = 4;
+    vtkm::Float32 xVals[nVerts] = {0, 1, 1, 0};
+    vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1};
+    vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0};
+    vtkm::Float32 vars[nVerts] = {10, 20, 30, 40};
+
+
+    vtkm::cont::ArrayHandle<vtkm::Float32> tmp;
+    //Set X, Y, and Z fields.
+    tmp = vtkm::cont::make_ArrayHandle(xVals, nVerts);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.x_idx]);
+    tmp = vtkm::cont::make_ArrayHandle(yVals, nVerts);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.y_idx]);
+    tmp = vtkm::cont::make_ArrayHandle(zVals, nVerts);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.z_idx]);
+
+    //Set node scalar
+    tmp = vtkm::cont::make_ArrayHandle(vars, nVerts);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[3]);
+
+    //Set cell scalar
+    vtkm::Float32 cellvar[4] = {100.1, 100.2, 100.3, 100.4};
+    tmp = vtkm::cont::make_ArrayHandle(cellvar, 4);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[4]);
+
+
+    //Set regular structure
+    ds.reg.SetNodeDimension3D(3,2,3);
+
+    //Run a worklet to populate a cell centered field.
+    vtkm::Float32 cellVals[4] = {-1.1, -1.2, -1.3, -1.4};
+    tmp = vtkm::cont::make_ArrayHandle(cellVals, 4);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[5]);
+
+    vtkm::worklet::DispatcherMapCell<CellType> dispatcher;
+    dispatcher.Invoke(ds.Fields[4], ds.reg, ds.Fields[5]);
+}
+
 int UnitTestDataSet(int, char *[])
 {
-    return vtkm::cont::testing::Testing::Run(TestDataSet);
+    int err = 0;
+    err += vtkm::cont::testing::Testing::Run(TestDataSet_Explicit);
+    err += vtkm::cont::testing::Testing::Run(TestDataSet_Regular);
+    return err;
 }
