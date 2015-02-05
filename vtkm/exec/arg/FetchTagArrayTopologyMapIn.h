@@ -66,7 +66,7 @@ struct Fetch<
     topology.GetIndices(index,ids);
 
     ValueType v;
-    for (int i=0; i<8; ++i)
+    for (int i=0; i<nids; ++i)
     {
         v[i] = invocation.Parameters.template GetParameter<ParameterIndex>().
             Get(ids[i]);

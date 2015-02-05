@@ -42,7 +42,10 @@ public:
   {
       std::cout << "CellType worklet: " << std::endl;
       std::cout << "   -- input cell field value: " << cellval << std::endl;
-      std::cout << "   -- input node field value: " << nodevals[0] << std::endl;
+      std::cout << "   -- input node field values: ";
+      for (int i=0; i<count; ++i)
+          std::cout << (i>0?",":"") << nodevals[i];
+      std::cout << std::endl;
       std::cout << "   -- cell type: " << type << std::endl;
       std::cout << "   -- number of IDs for this cell: " << count << std::endl;
       std::cout << "   -- input node IDs: ";
