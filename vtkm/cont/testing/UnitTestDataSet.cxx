@@ -26,22 +26,24 @@
 #include <vtkm/exec/arg/NodeIdSet.h>
 #include <vtkm/exec/arg/NodeIdCount.h>
 #include <vtkm/exec/arg/TopologyElementType.h>
+#include <vtkm/exec/arg/TopologyValueSet.h>
 
 class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
-  typedef void ControlSignature(FieldCellIn<Scalar> inCells, TopologyIn topology, FieldCellOut<Scalar> outCells);
-  typedef _3 ExecutionSignature(_1, vtkm::exec::arg::NodeIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::NodeIdSet);
-  typedef _2 InputDomain;
+  typedef void ControlSignature(FieldCellIn<Scalar> inCells, FieldNodeIn<Scalar> inNodes, TopologyIn topology, FieldCellOut<Scalar> outCells);
+  typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::NodeIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::NodeIdSet);
+  typedef _3 InputDomain;
 
   VTKM_CONT_EXPORT
   CellType() { };
 
   VTKM_EXEC_EXPORT
-  vtkm::Float32 operator()(const vtkm::Float32 &cellval, const vtkm::Id &count, const vtkm::Id &type, const vtkm::Vec<vtkm::Id,8> &nodeIDs) const
+  vtkm::Float32 operator()(const vtkm::Float32 &cellval, const vtkm::Float32 &nodeval, const vtkm::Id &count, const vtkm::Id &type, const vtkm::Vec<vtkm::Id,8> &nodeIDs) const
   {
       std::cout << "CellType worklet: " << std::endl;
-      std::cout << "   -- input field value: " << cellval << std::endl;
+      std::cout << "   -- input cell field value: " << cellval << std::endl;
+      std::cout << "   -- input node field value: " << nodeval << std::endl;
       std::cout << "   -- cell type: " << type << std::endl;
       std::cout << "   -- number of IDs for this cell: " << count << std::endl;
       std::cout << "   -- input node IDs: ";
@@ -57,7 +59,7 @@ public:
 void TestDataSet_Explicit()
 {
     std::cout << std::endl;
-    std::cout << "--TestDataSet_Explicit--" << std::endl;
+    std::cout << "--TestDataSet_Explicit--" << std::endl << std::endl;
     vtkm::cont::DataSet ds;
     
     ds.x_idx = 0;
@@ -65,11 +67,11 @@ void TestDataSet_Explicit()
     ds.z_idx = 2;
     ds.Fields.resize(6);
 
-    const int nVerts = 4;
-    vtkm::Float32 xVals[nVerts] = {0, 1, 1, 0};
-    vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1};
-    vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0};
-    vtkm::Float32 vars[nVerts] = {10, 20, 30, 40};
+    const int nVerts = 5;
+    vtkm::Float32 xVals[nVerts] = {0, 1, 1, 2, 2};
+    vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1, 2};
+    vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0};
+    vtkm::Float32 vars[nVerts] = {10, 20, 30, 40, 50};
 
 
     vtkm::cont::ArrayHandle<vtkm::Float32> tmp;
@@ -136,7 +138,7 @@ void TestDataSet_Explicit()
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[5]);
 
     vtkm::worklet::DispatcherMapCell<CellType> dispatcher;
-    dispatcher.Invoke(ds.Fields[4], ds.conn, ds.Fields[5]);
+    dispatcher.Invoke(ds.Fields[4], ds.Fields[3], ds.conn, ds.Fields[5]);
 
 #if 0
     //Add some verts.
@@ -186,7 +188,7 @@ void TestDataSet_Explicit()
 void TestDataSet_Regular()
 {
     std::cout << std::endl;
-    std::cout << "--TestDataSet_Regular--" << std::endl;
+    std::cout << "--TestDataSet_Regular--" << std::endl << std::endl;
     vtkm::cont::DataSet ds;
     
     ds.x_idx = 0;
@@ -194,11 +196,11 @@ void TestDataSet_Regular()
     ds.z_idx = 2;
     ds.Fields.resize(6);
 
-    const int nVerts = 4;
-    vtkm::Float32 xVals[nVerts] = {0, 1, 1, 0};
-    vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1};
-    vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0};
-    vtkm::Float32 vars[nVerts] = {10, 20, 30, 40};
+    const int nVerts = 8;
+    vtkm::Float32 xVals[nVerts] = {0, 1, 0, 1, 0, 1, 0, 1};
+    vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1, 0, 0, 1, 1};
+    vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 1, 1, 1, 1};
+    vtkm::Float32 vars[nVerts] = {10, 20, 30, 40, 50, 60, 70, 80};
 
 
     vtkm::cont::ArrayHandle<vtkm::Float32> tmp;
@@ -229,7 +231,7 @@ void TestDataSet_Regular()
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[5]);
 
     vtkm::worklet::DispatcherMapCell<CellType> dispatcher;
-    dispatcher.Invoke(ds.Fields[4], ds.reg, ds.Fields[5]);
+    dispatcher.Invoke(ds.Fields[4], ds.Fields[3], ds.reg, ds.Fields[5]);
 }
 
 int UnitTestDataSet(int, char *[])

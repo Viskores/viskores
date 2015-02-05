@@ -27,10 +27,11 @@ namespace vtkm {
 namespace exec {
 namespace arg {
 
-/// \brief \c Fetch tag for getting array values with direct indexing.
+/// \brief \c Fetch tag for getting topology information.
 ///
 /// \c FetchTagTopologyIn is a tag used with the \c Fetch class to retreive
-/// values from a topology.
+/// values from a topology object.  This default parameter returns
+/// the basis topology type, i.e. cell type in a \c WorkletCellMap.
 ///
 struct FetchTagTopologyIn {  };
 
@@ -45,13 +46,13 @@ struct Fetch<
   typedef typename Invocation::ParameterInterface::
       template ParameterType<ParameterIndex>::type ExecObjectType;
 
-  typedef typename ExecObjectType::ValueType ValueType;
+  typedef vtkm::Id ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
   {
     return invocation.Parameters.template GetParameter<ParameterIndex>().
-        Get(index);
+        GetElementShapeType(index);
   }
 
   VTKM_EXEC_EXPORT
