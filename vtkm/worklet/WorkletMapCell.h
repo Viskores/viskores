@@ -34,6 +34,7 @@
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 #include <vtkm/exec/arg/FetchTagTopologyIn.h>
+#include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
 
 namespace vtkm {
 namespace worklet {
@@ -66,7 +67,7 @@ public:
   struct FieldNodeIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
-    typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag; ///\todo: NEW ONE HERE
+    typedef vtkm::exec::arg::FetchTagArrayTopologyMapIn FetchTag; ///\todo: NEW ONE HERE
   };
 
   /// \brief A control signature tag for input connectivity.

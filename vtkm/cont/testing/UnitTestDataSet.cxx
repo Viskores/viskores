@@ -39,11 +39,11 @@ public:
   CellType() { };
 
   VTKM_EXEC_EXPORT
-  vtkm::Float32 operator()(const vtkm::Float32 &cellval, const vtkm::Float32 &nodeval, const vtkm::Id &count, const vtkm::Id &type, const vtkm::Vec<vtkm::Id,8> &nodeIDs) const
+  vtkm::Float32 operator()(const vtkm::Float32 &cellval, const vtkm::Vec<vtkm::Float32,8> &nodevals, const vtkm::Id &count, const vtkm::Id &type, const vtkm::Vec<vtkm::Id,8> &nodeIDs) const
   {
       std::cout << "CellType worklet: " << std::endl;
       std::cout << "   -- input cell field value: " << cellval << std::endl;
-      std::cout << "   -- input node field value: " << nodeval << std::endl;
+      std::cout << "   -- input node field value: " << nodevals[0] << std::endl;
       std::cout << "   -- cell type: " << type << std::endl;
       std::cout << "   -- number of IDs for this cell: " << count << std::endl;
       std::cout << "   -- input node IDs: ";
