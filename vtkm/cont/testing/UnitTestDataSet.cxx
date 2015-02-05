@@ -68,6 +68,12 @@ void TestDataSet_Explicit()
     ds.y_idx = 1;
     ds.z_idx = 2;
     ds.Fields.resize(6);
+    ds.Fields[0] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
+    ds.Fields[1] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
+    ds.Fields[2] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
+    ds.Fields[3] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
+    ds.Fields[4] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
+    ds.Fields[5] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
 
     const int nVerts = 5;
     vtkm::Float32 xVals[nVerts] = {0, 1, 1, 2, 2};
@@ -197,12 +203,18 @@ void TestDataSet_Regular()
     ds.y_idx = 1;
     ds.z_idx = 2;
     ds.Fields.resize(6);
+    ds.Fields[0] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
+    ds.Fields[1] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
+    ds.Fields[2] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
+    ds.Fields[3] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
+    ds.Fields[4] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
+    ds.Fields[5] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
 
-    const int nVerts = 8;
-    vtkm::Float32 xVals[nVerts] = {0, 1, 0, 1, 0, 1, 0, 1};
-    vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1, 0, 0, 1, 1};
-    vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 1, 1, 1, 1};
-    vtkm::Float32 vars[nVerts] = {10, 20, 30, 40, 50, 60, 70, 80};
+    const int nVerts = 18;
+    vtkm::Float32 xVals[nVerts] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
+    vtkm::Float32 yVals[nVerts] = {0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1};
+    vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2};
+    vtkm::Float32 vars[nVerts] = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
 
 
     vtkm::cont::ArrayHandle<vtkm::Float32> tmp;
