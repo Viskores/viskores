@@ -23,16 +23,15 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/WorkletMapCell.h>
 #include <vtkm/worklet/DispatcherMapCell.h>
-#include <vtkm/exec/arg/NodeIdSet.h>
-#include <vtkm/exec/arg/NodeIdCount.h>
+#include <vtkm/exec/arg/TopologyIdSet.h>
+#include <vtkm/exec/arg/TopologyIdCount.h>
 #include <vtkm/exec/arg/TopologyElementType.h>
-#include <vtkm/exec/arg/TopologyValueSet.h>
 
 class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
   typedef void ControlSignature(FieldCellIn<Scalar> inCells, FieldNodeIn<Scalar> inNodes, TopologyIn topology, FieldCellOut<Scalar> outCells);
-  typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::NodeIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::NodeIdSet);
+  typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::TopologyIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::TopologyIdSet);
   typedef _3 InputDomain;
 
   VTKM_CONT_EXPORT
