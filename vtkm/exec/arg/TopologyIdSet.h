@@ -41,8 +41,7 @@ template <vtkm::IdComponent nvals>
 struct TopologyIdSet : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static const vtkm::IdComponent INDEX = 1;
-  static const vtkm::IdComponent NVALS = nvals;
-  typedef vtkm::exec::arg::AspectTagTopologyIdSet<NVALS> AspectTag;
+  typedef vtkm::exec::arg::AspectTagTopologyIdSet<nvals> AspectTag;
 };
 
 template<typename FetchTag, typename Invocation, vtkm::IdComponent nvals>

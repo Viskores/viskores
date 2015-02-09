@@ -33,12 +33,14 @@ namespace arg {
 /// retreive values from an array portal. The fetch uses indexing based on
 /// the topology structure used for the input domain.
 ///
+template <vtkm::IdComponent nvals>
 struct FetchTagArrayTopologyMapIn {  };
 
-
-template<typename Invocation, vtkm::IdComponent ParameterIndex>
+template<typename Invocation,
+         vtkm::IdComponent ParameterIndex,
+         vtkm::IdComponent nvals>
 struct Fetch<
-    vtkm::exec::arg::FetchTagArrayTopologyMapIn,
+    vtkm::exec::arg::FetchTagArrayTopologyMapIn<nvals>,
     vtkm::exec::arg::AspectTagDefault,
     Invocation,
     ParameterIndex>
@@ -46,7 +48,7 @@ struct Fetch<
   typedef typename Invocation::ParameterInterface::
       template ParameterType<ParameterIndex>::type ExecObjectType;
 
-    typedef vtkm::Vec<typename ExecObjectType::ValueType,8> ValueType;
+  typedef vtkm::Vec<typename ExecObjectType::ValueType,nvals> ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
@@ -62,11 +64,11 @@ struct Fetch<
 
     int nids = topology.GetNumberOfIndices(index);
     
-    vtkm::Vec<vtkm::Id,8> ids;
+    vtkm::Vec<vtkm::Id,nvals> ids;
     topology.GetIndices(index,ids);
 
     ValueType v;
-    for (int i=0; i<nids; ++i)
+    for (int i=0; i<nids && i<nvals; ++i)
     {
         v[i] = invocation.Parameters.template GetParameter<ParameterIndex>().
             Get(ids[i]);

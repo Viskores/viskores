@@ -63,11 +63,11 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template<typename TypeList = AllTypes>
+  template<typename TypeList = AllTypes, vtkm::IdComponent nvals=1>
   struct FieldNodeIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
-    typedef vtkm::exec::arg::FetchTagArrayTopologyMapIn FetchTag; ///\todo: NEW ONE HERE
+    typedef vtkm::exec::arg::FetchTagArrayTopologyMapIn<nvals> FetchTag;
   };
 
   /// \brief A control signature tag for input connectivity.

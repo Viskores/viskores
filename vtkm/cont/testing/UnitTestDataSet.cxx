@@ -27,13 +27,14 @@
 #include <vtkm/exec/arg/TopologyIdCount.h>
 #include <vtkm/exec/arg/TopologyElementType.h>
 
-static const int NVALS_IN_ID_SET = 4;
+static const int LEN_IDS = 6;
+static const int LEN_NVALS = 7;
 
 class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
-  typedef void ControlSignature(FieldCellIn<Scalar> inCells, FieldNodeIn<Scalar> inNodes, TopologyIn topology, FieldCellOut<Scalar> outCells);
-  typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::TopologyIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::TopologyIdSet<NVALS_IN_ID_SET>);
+  typedef void ControlSignature(FieldCellIn<Scalar> inCells, FieldNodeIn<Scalar,LEN_NVALS> inNodes, TopologyIn topology, FieldCellOut<Scalar> outCells);
+  typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::TopologyIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::TopologyIdSet<LEN_IDS>);
   typedef _3 InputDomain;
 
   VTKM_CONT_EXPORT
@@ -41,24 +42,38 @@ public:
 
   VTKM_EXEC_EXPORT
   vtkm::Float32 operator()(const vtkm::Float32 &cellval,
-                           const vtkm::Vec<vtkm::Float32,8> &nodevals,
+                           const vtkm::Vec<vtkm::Float32,LEN_NVALS> &nodevals,
                            const vtkm::Id &count,
                            const vtkm::Id &type,
-                           const vtkm::Vec<vtkm::Id,NVALS_IN_ID_SET> &nodeIDs) const
+                           const vtkm::Vec<vtkm::Id,LEN_IDS> &nodeIDs) const
   {
       std::cout << "CellType worklet: " << std::endl;
-      if (count > NVALS_IN_ID_SET)
-          std::cout << "   ++ WARNING: DIDN'T USE A SET SIZE SUFFICIENTLY LARGE" << std::endl;
       std::cout << "   -- input cell field value: " << cellval << std::endl;
+      if (count > LEN_NVALS)
+          std::cout << "   ++ WARNING: DIDN'T USE A VALUE SET SIZE SUFFICIENTLY LARGE" << std::endl;
       std::cout << "   -- input node field values: ";
-      for (int i=0; i<count && i<NVALS_IN_ID_SET; ++i)
-          std::cout << (i>0?",":"") << nodevals[i];
+      for (int i=0; i<count; ++i)
+      {
+          std::cout << (i>0?", ":"");
+          if (i < LEN_NVALS)
+              std::cout << nodevals[i];
+          else
+              std::cout << "?";
+      }
       std::cout << std::endl;
       std::cout << "   -- cell type: " << type << std::endl;
       std::cout << "   -- number of IDs for this cell: " << count << std::endl;
+      if (count > LEN_IDS)
+          std::cout << "   ++ WARNING: DIDN'T USE AN ID SET SIZE SUFFICIENTLY LARGE" << std::endl;
       std::cout << "   -- input node IDs: ";
-      for (int i=0; i<count && i<NVALS_IN_ID_SET; ++i)
-          std::cout << (i>0?",":"") << nodeIDs[i];
+      for (int i=0; i<count; ++i)
+      {
+          std::cout << (i>0?", ":"");
+          if (i < LEN_IDS)
+              std::cout << nodeIDs[i];
+          else
+              std::cout << "?";
+      }
       std::cout << std::endl;
       return (vtkm::Float32)cellval;
   }
