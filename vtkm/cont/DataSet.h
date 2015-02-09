@@ -42,12 +42,12 @@ public:
   {
     return Shapes.GetPortalControl().Get(index);
   }
-  template <vtkm::IdComponent nvals>
-  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,nvals> &ids)
+  template <vtkm::IdComponent ItemTupleLength>
+  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
     int n = GetNumberOfIndices(index);
     int start = MapCellToConnectivityIndex.GetPortalControl().Get(index);
-    for (int i=0; i<n && i<nvals; i++)
+    for (int i=0; i<n && i<ItemTupleLength; i++)
       ids[i] = Connectivity.GetPortalControl().Get(start+i);
   }
 
@@ -82,26 +82,26 @@ public:
   {
     return VTKM_VOXEL;
   }
-  template <vtkm::IdComponent nvals>
-  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,nvals> &ids)
+  template <vtkm::IdComponent ItemTupleLength>
+  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
     int i,j,k;
     CalculateLogicalCellIndices3D(index, i,j,k);
-    ///\todo: assert nvals >= 8, or return early?
+    ///\todo: assert ItemTupleLength >= 8, or return early?
     ids[0] = CalculateNodeIndex3D(i, j, k);
-    if (nvals <= 1) return;
+    if (ItemTupleLength <= 1) return;
     ids[1] = ids[0] + 1;
-    if (nvals <= 2) return;
+    if (ItemTupleLength <= 2) return;
     ids[2] = ids[0] + nodeDims[0];
-    if (nvals <= 3) return;
+    if (ItemTupleLength <= 3) return;
     ids[3] = ids[2] + 1;
-    if (nvals <= 4) return;
+    if (ItemTupleLength <= 4) return;
     ids[4] = ids[0] + nodeDims[0]*nodeDims[1];
-    if (nvals <= 5) return;
+    if (ItemTupleLength <= 5) return;
     ids[5] = ids[4] + 1;
-    if (nvals <= 6) return;
+    if (ItemTupleLength <= 6) return;
     ids[6] = ids[4] + nodeDims[0];
-    if (nvals <= 7) return;
+    if (ItemTupleLength <= 7) return;
     ids[7] = ids[6] + 1;
   }
 private:

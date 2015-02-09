@@ -33,7 +33,7 @@ static const int LEN_NVALS = 7;
 class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
-  typedef void ControlSignature(FieldCellIn<Scalar> inCells, FieldNodeIn<Scalar,LEN_NVALS> inNodes, TopologyIn topology, FieldCellOut<Scalar> outCells);
+    typedef void ControlSignature(FieldCellIn<Scalar> inCells, FieldNodeIn<LEN_NVALS> inNodes, TopologyIn topology, FieldCellOut<Scalar> outCells);
   typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::TopologyIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::TopologyIdSet<LEN_IDS>);
   typedef _3 InputDomain;
 
@@ -102,7 +102,7 @@ void TestDataSet_Explicit()
     vtkm::Float32 xVals[nVerts] = {0, 1, 1, 2, 2};
     vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1, 2};
     vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0};
-    vtkm::Float32 vars[nVerts] = {10, 20, 30, 40, 50};
+    vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.2, 40.2, 50.3};
 
 
     vtkm::cont::ArrayHandle<vtkm::Float32> tmp;
@@ -237,7 +237,7 @@ void TestDataSet_Regular()
     vtkm::Float32 xVals[nVerts] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
     vtkm::Float32 yVals[nVerts] = {0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1};
     vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2};
-    vtkm::Float32 vars[nVerts] = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
+    vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.1, 40.1, 50.2, 60.2, 70.2, 80.2, 90.3, 100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5, 180.5};
 
 
     vtkm::cont::ArrayHandle<vtkm::Float32> tmp;
