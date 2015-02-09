@@ -27,29 +27,37 @@
 #include <vtkm/exec/arg/TopologyIdCount.h>
 #include <vtkm/exec/arg/TopologyElementType.h>
 
+static const int NVALS_IN_ID_SET = 4;
+
 class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
   typedef void ControlSignature(FieldCellIn<Scalar> inCells, FieldNodeIn<Scalar> inNodes, TopologyIn topology, FieldCellOut<Scalar> outCells);
-  typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::TopologyIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::TopologyIdSet);
+  typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::TopologyIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::TopologyIdSet<NVALS_IN_ID_SET>);
   typedef _3 InputDomain;
 
   VTKM_CONT_EXPORT
   CellType() { };
 
   VTKM_EXEC_EXPORT
-  vtkm::Float32 operator()(const vtkm::Float32 &cellval, const vtkm::Vec<vtkm::Float32,8> &nodevals, const vtkm::Id &count, const vtkm::Id &type, const vtkm::Vec<vtkm::Id,8> &nodeIDs) const
+  vtkm::Float32 operator()(const vtkm::Float32 &cellval,
+                           const vtkm::Vec<vtkm::Float32,8> &nodevals,
+                           const vtkm::Id &count,
+                           const vtkm::Id &type,
+                           const vtkm::Vec<vtkm::Id,NVALS_IN_ID_SET> &nodeIDs) const
   {
       std::cout << "CellType worklet: " << std::endl;
+      if (count > NVALS_IN_ID_SET)
+          std::cout << "   ++ WARNING: DIDN'T USE A SET SIZE SUFFICIENTLY LARGE" << std::endl;
       std::cout << "   -- input cell field value: " << cellval << std::endl;
       std::cout << "   -- input node field values: ";
-      for (int i=0; i<count; ++i)
+      for (int i=0; i<count && i<NVALS_IN_ID_SET; ++i)
           std::cout << (i>0?",":"") << nodevals[i];
       std::cout << std::endl;
       std::cout << "   -- cell type: " << type << std::endl;
       std::cout << "   -- number of IDs for this cell: " << count << std::endl;
       std::cout << "   -- input node IDs: ";
-      for (int i=0; i<count; ++i)
+      for (int i=0; i<count && i<NVALS_IN_ID_SET; ++i)
           std::cout << (i>0?",":"") << nodeIDs[i];
       std::cout << std::endl;
       return (vtkm::Float32)cellval;
