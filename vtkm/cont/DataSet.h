@@ -1,29 +1,12 @@
 #ifndef vtk_m_cont_DataSet_h
 #define vtk_m_cont_DataSet_h
 
+#include <vtkm/CellType.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 
 namespace vtkm {
 namespace cont {
-
-enum CellShape
-{
-    VTKM_POINT,
-    VTKM_BEAM,
-    VTKM_TRI,
-    VTKM_QUAD,
-    VTKM_PIXEL,
-    VTKM_TET,
-    VTKM_PYRAMID,
-    VTKM_WEDGE,
-    VTKM_HEX,
-    VTKM_VOXEL,
-    VTKM_TRISTRIP,
-    VTKM_POLYGON,
-    VTKM_OTHER
-};
-
 
 class ExplicitConnectivity
 {

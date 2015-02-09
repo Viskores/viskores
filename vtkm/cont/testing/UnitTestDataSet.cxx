@@ -125,8 +125,8 @@ void TestDataSet_Explicit()
     //Add connectivity
     vtkm::cont::ArrayHandle<vtkm::Id> tmp2;
     std::vector<vtkm::Id> shapes;
-    shapes.push_back(vtkm::cont::VTKM_TRI);
-    shapes.push_back(vtkm::cont::VTKM_QUAD);
+    shapes.push_back(vtkm::VTKM_TRIANGLE);
+    shapes.push_back(vtkm::VTKM_QUAD);
 
     std::vector<vtkm::Id> numindices;
     numindices.push_back(3);
