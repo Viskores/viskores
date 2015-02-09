@@ -24,6 +24,7 @@
 
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorControlInternal.h>
 #include <vtkm/cont/Storage.h>
 
 #include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
@@ -178,7 +179,8 @@ public:
     }
     else
     {
-      throw vtkm::cont::ErrorControlBadValue("ArrayHandle contains no data.");
+      throw vtkm::cont::ErrorControlInternal(
+            "ArrayHandle::SyncControlArray did not make control array valid.");
     }
   }
 
@@ -197,7 +199,8 @@ public:
     }
     else
     {
-      throw vtkm::cont::ErrorControlBadValue("ArrayHandle contains no data.");
+      throw vtkm::cont::ErrorControlInternal(
+            "ArrayHandle::SyncControlArray did not make control array valid.");
     }
   }
 
@@ -507,15 +510,26 @@ public:
   ///
   VTKM_CONT_EXPORT void SyncControlArray() const
   {
-    if (   !this->Internals->UserPortalValid
-           && !this->Internals->ControlArrayValid)
+    if (!this->Internals->UserPortalValid
+        && !this->Internals->ControlArrayValid)
     {
       // Need to change some state that does not change the logical state from
       // an external point of view.
       InternalStruct *internals
         = const_cast<InternalStruct*>(this->Internals.get());
-      internals->ExecutionArray->RetrieveOutputData(internals->ControlArray);
-      internals->ControlArrayValid = true;
+      if (this->Internals->ExecutionArrayValid)
+      {
+        internals->ExecutionArray->RetrieveOutputData(internals->ControlArray);
+        internals->ControlArrayValid = true;
+      }
+      else
+      {
+        // This array is in the null state (there is nothing allocated), but
+        // the calling function wants to do something with the array. Put this
+        // class into a valid state by allocating an array of size 0.
+        internals->ControlArray.Allocate(0);
+        internals->ControlArrayValid = true;
+      }
     }
     else
     {

@@ -135,6 +135,25 @@ struct TryArrayHandleType
                                   TestValue(index, T()) + T(1)),
                        "Did not get result from in place operation.");
     }
+
+    std::cout << "Try operations on empty arrays." << std::endl;
+    // After each operation, reinitialize array in case something gets
+    // allocated.
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
+                     "Uninitialized array does not report zero values.");
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    VTKM_TEST_ASSERT(
+          arrayHandle.GetPortalConstControl().GetNumberOfValues() == 0,
+          "Uninitialized array does not give portal with zero values.");
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    arrayHandle.Shrink(0);
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    arrayHandle.ReleaseResourcesExecution();
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    arrayHandle.ReleaseResources();
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    arrayHandle.PrepareForOutput(ARRAY_SIZE, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   }
 };
 
