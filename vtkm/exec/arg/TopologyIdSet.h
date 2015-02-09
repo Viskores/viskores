@@ -44,8 +44,13 @@ struct TopologyIdSet : vtkm::exec::arg::ExecutionSignatureTagBase
   typedef vtkm::exec::arg::AspectTagTopologyIdSet<ItemTupleLength> AspectTag;
 };
 
-template<typename FetchTag, typename Invocation, vtkm::IdComponent ItemTupleLength>
-struct Fetch<FetchTag, vtkm::exec::arg::AspectTagTopologyIdSet<ItemTupleLength>, Invocation, 1>
+template<typename FetchTag,
+         typename Invocation,
+         vtkm::IdComponent ItemTupleLength>
+struct Fetch<FetchTag,
+             vtkm::exec::arg::AspectTagTopologyIdSet<ItemTupleLength>,
+             Invocation,
+             1>
 {
   typedef vtkm::Vec<vtkm::Id,ItemTupleLength> ValueType;
 

@@ -67,7 +67,8 @@ public:
   struct FieldNodeIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
-    typedef vtkm::exec::arg::FetchTagArrayTopologyMapIn<ItemTupleLength> FetchTag;
+    typedef vtkm::exec::arg::FetchTagArrayTopologyMapIn<ItemTupleLength>
+                                                                     FetchTag;
   };
 
   /// \brief A control signature tag for input connectivity.

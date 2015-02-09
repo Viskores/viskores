@@ -48,7 +48,8 @@ struct Fetch<
   typedef typename Invocation::ParameterInterface::
       template ParameterType<ParameterIndex>::type ExecObjectType;
 
-  typedef vtkm::Vec<typename ExecObjectType::ValueType,ItemTupleLength> ValueType;
+  typedef vtkm::Vec<typename 
+                    ExecObjectType::ValueType,ItemTupleLength> ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
