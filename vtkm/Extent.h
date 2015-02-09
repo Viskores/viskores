@@ -25,7 +25,8 @@
 namespace vtkm {
 
 /// Extent stores the values for the index ranges for a structured grid array.
-/// It does this through the minimum indices and the maximum indices.
+/// It does this through the minimum indices and the maximum indices for the
+/// points in the grid.
 ///
 template<vtkm::IdComponent Dimensions>
 struct Extent

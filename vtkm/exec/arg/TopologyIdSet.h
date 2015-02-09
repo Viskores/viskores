@@ -32,27 +32,29 @@ namespace arg {
 /// The \c AspectTagTopologyIdSet aspect tag causes the \c Fetch class to
 /// obtain node IDs for a cell from a topology object.
 ///
-template <vtkm::IdComponent ItemTupleLength>
 struct AspectTagTopologyIdSet {  };
 
 /// \brief The \c ExecutionSignature tag to use to get the node IDs.
 ///
-template <vtkm::IdComponent ItemTupleLength>
 struct TopologyIdSet : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static const vtkm::IdComponent INDEX = 1;
-  typedef vtkm::exec::arg::AspectTagTopologyIdSet<ItemTupleLength> AspectTag;
+  typedef vtkm::exec::arg::AspectTagTopologyIdSet AspectTag;
 };
 
-template<typename FetchTag,
-         typename Invocation,
-         vtkm::IdComponent ItemTupleLength>
+template<typename FetchTag, typename Invocation>
 struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagTopologyIdSet<ItemTupleLength>,
+             vtkm::exec::arg::AspectTagTopologyIdSet,
              Invocation,
              1>
 {
-  typedef vtkm::Vec<vtkm::Id,ItemTupleLength> ValueType;
+  static const vtkm::IdComponent InputDomainIndex =
+      Invocation::InputDomainIndex;
+  typedef typename Invocation::ControlInterface::template 
+      ParameterType<InputDomainIndex>::type ControlSignatureTag;
+  static const vtkm::IdComponent ITEM_TUPLE_LENGTH =
+      ControlSignatureTag::ITEM_TUPLE_LENGTH;
+  typedef vtkm::Vec<vtkm::Id,ITEM_TUPLE_LENGTH> ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const

@@ -63,12 +63,11 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template< vtkm::IdComponent ItemTupleLength, typename TypeList = AllTypes>
+  template<typename TypeList = AllTypes>
   struct FieldNodeIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
-    typedef vtkm::exec::arg::FetchTagArrayTopologyMapIn<ItemTupleLength>
-                                                                     FetchTag;
+    typedef vtkm::exec::arg::FetchTagArrayTopologyMapIn FetchTag;
   };
 
   /// \brief A control signature tag for input connectivity.
@@ -76,10 +75,12 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
+  template< vtkm::IdComponent ItemTupleLength>
   struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagTopologyIn TransportTag;
     typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
+    static const int ITEM_TUPLE_LENGTH = ItemTupleLength;
   };
 
   /// \brief A control signature tag for output fields.

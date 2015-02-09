@@ -28,13 +28,12 @@
 #include <vtkm/exec/arg/TopologyElementType.h>
 
 static const int LEN_IDS = 6;
-static const int LEN_NVALS = 7;
 
 class CellType : public vtkm::worklet::WorkletMapCell
 {
 public:
-    typedef void ControlSignature(FieldCellIn<Scalar> inCells, FieldNodeIn<LEN_NVALS> inNodes, TopologyIn topology, FieldCellOut<Scalar> outCells);
-  typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::TopologyIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::TopologyIdSet<LEN_IDS>);
+  typedef void ControlSignature(FieldCellIn<Scalar> inCells, FieldNodeIn<Scalar> inNodes, TopologyIn<LEN_IDS> topology, FieldCellOut<Scalar> outCells);
+  typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::TopologyIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::TopologyIdSet);
   typedef _3 InputDomain;
 
   VTKM_CONT_EXPORT
@@ -42,20 +41,20 @@ public:
 
   VTKM_EXEC_EXPORT
   vtkm::Float32 operator()(const vtkm::Float32 &cellval,
-                           const vtkm::Vec<vtkm::Float32,LEN_NVALS> &nodevals,
+                           const vtkm::Vec<vtkm::Float32,LEN_IDS> &nodevals,
                            const vtkm::Id &count,
                            const vtkm::Id &type,
                            const vtkm::Vec<vtkm::Id,LEN_IDS> &nodeIDs) const
   {
       std::cout << "CellType worklet: " << std::endl;
       std::cout << "   -- input cell field value: " << cellval << std::endl;
-      if (count > LEN_NVALS)
+      if (count > LEN_IDS)
           std::cout << "   ++ WARNING: DIDN'T USE A VALUE SET SIZE SUFFICIENTLY LARGE" << std::endl;
       std::cout << "   -- input node field values: ";
       for (int i=0; i<count; ++i)
       {
           std::cout << (i>0?", ":"");
-          if (i < LEN_NVALS)
+          if (i < LEN_IDS)
               std::cout << nodevals[i];
           else
               std::cout << "?";

@@ -33,29 +33,31 @@ namespace arg {
 /// retreive values from an array portal. The fetch uses indexing based on
 /// the topology structure used for the input domain.
 ///
-template <vtkm::IdComponent ItemTupleLength>
 struct FetchTagArrayTopologyMapIn {  };
 
-template<typename Invocation,
-         vtkm::IdComponent ParameterIndex,
-         vtkm::IdComponent ItemTupleLength>
+template<typename Invocation, vtkm::IdComponent ParameterIndex>
 struct Fetch<
-    vtkm::exec::arg::FetchTagArrayTopologyMapIn<ItemTupleLength>,
+    vtkm::exec::arg::FetchTagArrayTopologyMapIn,
     vtkm::exec::arg::AspectTagDefault,
     Invocation,
     ParameterIndex>
 {
+  static const vtkm::IdComponent InputDomainIndex =
+      Invocation::InputDomainIndex;
+  typedef typename Invocation::ControlInterface::template 
+      ParameterType<InputDomainIndex>::type ControlSignatureTag;
+  static const vtkm::IdComponent ITEM_TUPLE_LENGTH =
+      ControlSignatureTag::ITEM_TUPLE_LENGTH;
+
   typedef typename Invocation::ParameterInterface::
       template ParameterType<ParameterIndex>::type ExecObjectType;
 
-  typedef vtkm::Vec<typename 
-                    ExecObjectType::ValueType,ItemTupleLength> ValueType;
+  typedef vtkm::Vec<typename ExecObjectType::ValueType,
+                    ITEM_TUPLE_LENGTH> ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
   {
-    static const vtkm::IdComponent InputDomainIndex =
-        Invocation::InputDomainIndex;
     typedef typename Invocation::ParameterInterface ParameterInterface;
     typedef typename ParameterInterface::
         template ParameterType<InputDomainIndex>::type TopologyType;
@@ -65,11 +67,11 @@ struct Fetch<
 
     int nids = topology.GetNumberOfIndices(index);
     
-    vtkm::Vec<vtkm::Id,ItemTupleLength> ids;
+    vtkm::Vec<vtkm::Id,ITEM_TUPLE_LENGTH> ids;
     topology.GetIndices(index,ids);
 
     ValueType v;
-    for (int i=0; i<nids && i<ItemTupleLength; ++i)
+    for (int i=0; i<nids && i<ITEM_TUPLE_LENGTH; ++i)
     {
         v[i] = invocation.Parameters.template GetParameter<ParameterIndex>().
             Get(ids[i]);
