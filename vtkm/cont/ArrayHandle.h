@@ -174,7 +174,7 @@ public:
       // If the user writes into the iterator we return, then the execution
       // array will become invalid. Play it safe and release the execution
       // resources. (Use the const version to preserve the execution array.)
-      this->ReleaseResourcesExecution();
+      this->ReleaseResourcesExecutionInternal();
       return this->Internals->ControlArray.GetPortal();
     }
     else
@@ -227,6 +227,23 @@ public:
     }
   }
 
+  /// \brief Allocates an array large enough to hold the given number of values.
+  ///
+  /// The allocation may be done on an already existing array, but can wipe out
+  /// any data already in the array. This method can throw
+  /// ErrorControlOutOfMemory if the array cannot be allocated or
+  /// ErrorControlBadValue if the allocation is not feasible (for example, the
+  /// array storage is read-only).
+  ///
+  VTKM_CONT_EXPORT
+  void Allocate(vtkm::Id numberOfValues)
+  {
+    this->ReleaseResourcesExecutionInternal();
+    this->Internals->UserPortalValid = false;
+    this->Internals->ControlArray.Allocate(numberOfValues);
+    this->Internals->ControlArrayValid = true;
+  }
+
   /// \brief Reduces the size of the array without changing its values.
   ///
   /// This method allows you to resize the array without reallocating it. The
@@ -273,18 +290,18 @@ public:
   ///
   VTKM_CONT_EXPORT void ReleaseResourcesExecution()
   {
-    if (this->Internals->ExecutionArrayValid)
-    {
-      this->Internals->ExecutionArray->ReleaseResources();
-      this->Internals->ExecutionArrayValid = false;
-    }
+    // Save any data in the execution environment by making sure it is synced
+    // with the control environment.
+    this->SyncControlArray();
+
+    this->ReleaseResourcesExecutionInternal();
   }
 
   /// Releases all resources in both the control and execution environments.
   ///
   VTKM_CONT_EXPORT void ReleaseResources()
   {
-    this->ReleaseResourcesExecution();
+    this->ReleaseResourcesExecutionInternal();
 
     // Forget about any user iterators.
     this->Internals->UserPortalValid = false;
@@ -538,6 +555,16 @@ public:
       VTKM_ASSERT_CONT(!this->Internals->UserPortalValid
                        || !this->Internals->ControlArrayValid);
       // Nothing to do.
+    }
+  }
+
+  VTKM_CONT_EXPORT
+  void ReleaseResourcesExecutionInternal()
+  {
+    if (this->Internals->ExecutionArrayValid)
+    {
+      this->Internals->ExecutionArray->ReleaseResources();
+      this->Internals->ExecutionArrayValid = false;
     }
   }
 
