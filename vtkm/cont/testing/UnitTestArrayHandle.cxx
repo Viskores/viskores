@@ -113,6 +113,12 @@ struct TryArrayHandleType
                      "Array size did not shrink correctly.");
     CheckArray(arrayHandle);
 
+    std::cout << "Try reallocating array." << std::endl;
+    arrayHandle.Allocate(ARRAY_SIZE*2);
+    VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE*2,
+                     "Array size did not allocate correctly.");
+    // No point in checking values. This method can invalidate them.
+
     std::cout << "Try in place operation." << std::endl;
     {
       typedef typename vtkm::cont::ArrayHandle<T>::template

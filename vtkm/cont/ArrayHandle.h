@@ -227,6 +227,23 @@ public:
     }
   }
 
+  /// \brief Allocates an array large enough to hold the given number of values.
+  ///
+  /// The allocation may be done on an already existing array, but can wipe out
+  /// any data already in the array. This method can throw
+  /// ErrorControlOutOfMemory if the array cannot be allocated or
+  /// ErrorControlBadValue if the allocation is not feasible (for example, the
+  /// array storage is read-only).
+  ///
+  VTKM_CONT_EXPORT
+  void Allocate(vtkm::Id numberOfValues)
+  {
+    this->ReleaseResourcesExecutionInternal();
+    this->Internals->UserPortalValid = false;
+    this->Internals->ControlArray.Allocate(numberOfValues);
+    this->Internals->ControlArrayValid = true;
+  }
+
   /// \brief Reduces the size of the array without changing its values.
   ///
   /// This method allows you to resize the array without reallocating it. The
