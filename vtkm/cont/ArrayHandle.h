@@ -174,7 +174,7 @@ public:
       // If the user writes into the iterator we return, then the execution
       // array will become invalid. Play it safe and release the execution
       // resources. (Use the const version to preserve the execution array.)
-      this->ReleaseResourcesExecution();
+      this->ReleaseResourcesExecutionInternal();
       return this->Internals->ControlArray.GetPortal();
     }
     else
@@ -273,18 +273,18 @@ public:
   ///
   VTKM_CONT_EXPORT void ReleaseResourcesExecution()
   {
-    if (this->Internals->ExecutionArrayValid)
-    {
-      this->Internals->ExecutionArray->ReleaseResources();
-      this->Internals->ExecutionArrayValid = false;
-    }
+    // Save any data in the execution environment by making sure it is synced
+    // with the control environment.
+    this->SyncControlArray();
+
+    this->ReleaseResourcesExecutionInternal();
   }
 
   /// Releases all resources in both the control and execution environments.
   ///
   VTKM_CONT_EXPORT void ReleaseResources()
   {
-    this->ReleaseResourcesExecution();
+    this->ReleaseResourcesExecutionInternal();
 
     // Forget about any user iterators.
     this->Internals->UserPortalValid = false;
@@ -538,6 +538,16 @@ public:
       VTKM_ASSERT_CONT(!this->Internals->UserPortalValid
                        || !this->Internals->ControlArrayValid);
       // Nothing to do.
+    }
+  }
+
+  VTKM_CONT_EXPORT
+  void ReleaseResourcesExecutionInternal()
+  {
+    if (this->Internals->ExecutionArrayValid)
+    {
+      this->Internals->ExecutionArray->ReleaseResources();
+      this->Internals->ExecutionArrayValid = false;
     }
   }
 
