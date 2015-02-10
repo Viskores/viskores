@@ -21,18 +21,18 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/worklet/WorkletMapCell.h>
-#include <vtkm/worklet/DispatcherMapCell.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/exec/arg/TopologyIdSet.h>
 #include <vtkm/exec/arg/TopologyIdCount.h>
 #include <vtkm/exec/arg/TopologyElementType.h>
 
 static const int LEN_IDS = 6;
 
-class CellType : public vtkm::worklet::WorkletMapCell
+class CellType : public vtkm::worklet::WorkletMapTopology
 {
 public:
-  typedef void ControlSignature(FieldCellIn<Scalar> inCells, FieldNodeIn<Scalar> inNodes, TopologyIn<LEN_IDS> topology, FieldCellOut<Scalar> outCells);
+  typedef void ControlSignature(FieldDestIn<Scalar> inCells, FieldSrcIn<Scalar> inNodes, TopologyIn<LEN_IDS> topology, FieldDestOut<Scalar> outCells);
   typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::TopologyIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::TopologyIdSet);
   typedef _3 InputDomain;
 
@@ -151,7 +151,7 @@ void TestDataSet_Explicit()
     vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
     ds.AddFieldViaCopy(outcellVals, 2);
 
-    vtkm::worklet::DispatcherMapCell<CellType> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<CellType> dispatcher;
     dispatcher.Invoke(ds.GetField(4).GetData(), ds.GetField(3).GetData(), ds.conn, ds.GetField(5).GetData());
 
 #if 0
@@ -218,7 +218,7 @@ void TestDataSet_Regular()
     vtkm::Float32 cellVals[4] = {-1.1, -1.2, -1.3, -1.4};
     ds.AddFieldViaCopy(cellVals, 4);
 
-    vtkm::worklet::DispatcherMapCell<CellType> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<CellType> dispatcher;
     dispatcher.Invoke(ds.GetField(4).GetData(), ds.GetField(3).GetData(), ds.reg, ds.GetField(5).GetData());
 }
 

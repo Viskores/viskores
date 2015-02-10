@@ -35,6 +35,11 @@ public:
     for (int i=0; i<n && i<ItemTupleLength; i++)
       ids[i] = Connectivity.GetPortalControl().Get(start+i);
   }
+  template <vtkm::IdComponent ItemTupleLength>
+  void AddShape(vtkm::CellType cellType, int numVertices, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+  {
+    ///\todo: how do I modify an array handle?
+  }
 
   vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> Shapes;
   vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> NumIndices;
