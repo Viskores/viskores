@@ -79,7 +79,6 @@ public:
 
 };
 
-
 void TestDataSet_Explicit()
 {
     std::cout << std::endl;
@@ -89,13 +88,6 @@ void TestDataSet_Explicit()
     ds.x_idx = 0;
     ds.y_idx = 1;
     ds.z_idx = 2;
-    ds.Fields.resize(6);
-    ds.Fields[0] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
-    ds.Fields[1] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
-    ds.Fields[2] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
-    ds.Fields[3] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
-    ds.Fields[4] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
-    ds.Fields[5] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
 
     const int nVerts = 5;
     vtkm::Float32 xVals[nVerts] = {0, 1, 1, 2, 2};
@@ -104,23 +96,16 @@ void TestDataSet_Explicit()
     vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.2, 40.2, 50.3};
 
 
-    vtkm::cont::ArrayHandle<vtkm::Float32> tmp;
-    //Set X, Y, and Z fields.
-    tmp = vtkm::cont::make_ArrayHandle(xVals, nVerts);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.x_idx]);
-    tmp = vtkm::cont::make_ArrayHandle(yVals, nVerts);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.y_idx]);
-    tmp = vtkm::cont::make_ArrayHandle(zVals, nVerts);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.z_idx]);
+    ds.AddFieldViaCopy(xVals, nVerts);
+    ds.AddFieldViaCopy(yVals, nVerts);
+    ds.AddFieldViaCopy(zVals, nVerts);
 
     //Set node scalar
-    tmp = vtkm::cont::make_ArrayHandle(vars, nVerts);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[3]);
+    ds.AddFieldViaCopy(vars, nVerts);
 
     //Set cell scalar
     vtkm::Float32 cellvar[2] = {100.1, 100.2};
-    tmp = vtkm::cont::make_ArrayHandle(cellvar, 2);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[4]);
+    ds.AddFieldViaCopy(cellvar, 2);
 
     //Add connectivity
     vtkm::cont::ArrayHandle<vtkm::Id> tmp2;
@@ -164,53 +149,36 @@ void TestDataSet_Explicit()
     //Run a worklet to populate a cell centered field.
     //Here, we're filling it with test values.
     vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
-    tmp = vtkm::cont::make_ArrayHandle(outcellVals, 2);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[5]);
+    ds.AddFieldViaCopy(outcellVals, 2);
 
     vtkm::worklet::DispatcherMapCell<CellType> dispatcher;
-    dispatcher.Invoke(ds.Fields[4], ds.Fields[3], ds.conn, ds.Fields[5]);
+    dispatcher.Invoke(ds.GetField(4).GetData(), ds.GetField(3).GetData(), ds.conn, ds.GetField(5).GetData());
 
 #if 0
     //Add some verts.
-    ds.Fields[ds.x_idx].PrepareForOutput(nVerts, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    ds.Fields[ds.y_idx].PrepareForOutput(nVerts, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    ds.Fields[ds.z_idx].PrepareForOutput(nVerts, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    ds.GetField(ds.x_idx).PrepareForOutput(nVerts, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    ds.GetField(ds.y_idx).PrepareForOutput(nVerts, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    ds.GetField(ds.z_idx).PrepareForOutput(nVerts, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     
     //v0 = (0,0,0)
-    ds.Fields[ds.x_idx].GetPortalControl().Set(0, 0.0);
-    ds.Fields[ds.y_idx].GetPortalControl().Set(0, 0.0);
-    ds.Fields[ds.z_idx].GetPortalControl().Set(0, 0.0);
+    ds.GetField(ds.x_idx).GetPortalControl().Set(0, 0.0);
+    ds.GetField(ds.y_idx).GetPortalControl().Set(0, 0.0);
+    ds.GetField(ds.z_idx).GetPortalControl().Set(0, 0.0);
 
     //v1 = (1,0,0)
-    ds.Fields[ds.x_idx].GetPortalControl().Set(1, 1.0);
-    ds.Fields[ds.y_idx].GetPortalControl().Set(1, 0.0);
-    ds.Fields[ds.z_idx].GetPortalControl().Set(1, 0.0);
+    ds.GetField(ds.x_idx).GetPortalControl().Set(1, 1.0);
+    ds.GetField(ds.y_idx).GetPortalControl().Set(1, 0.0);
+    ds.GetField(ds.z_idx).GetPortalControl().Set(1, 0.0);
 
     //v2 = (1,1,0)
-    ds.Fields[ds.x_idx].GetPortalControl().Set(2, 1.0);
-    ds.Fields[ds.y_idx].GetPortalControl().Set(2, 1.0);
-    ds.Fields[ds.z_idx].GetPortalControl().Set(2, 0.0);
+    ds.GetField(ds.x_idx).GetPortalControl().Set(2, 1.0);
+    ds.GetField(ds.y_idx).GetPortalControl().Set(2, 1.0);
+    ds.GetField(ds.z_idx).GetPortalControl().Set(2, 0.0);
 
     //scalar
-    ds.Fields[3].PrepareForOutput(nVerts, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    ds.GetField(3).PrepareForOutput(nVerts, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     for (int i = 0; i < nVerts; i++)
-	ds.Fields[3].GetPortalControl().Set(i, i*10.0);
-    
-    /*
-    ds.Points.PrepareForOutput(nVerts, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    ds.Field.PrepareForOutput(nVerts, vtkm::cont::DeviceAdapterTagSerial());
-    vtkm::Vec<vtkm::FloatDefault,3> V0 = vtkm::Vec<vtkm::FloatDefault,3>(0, 0, 0);
-    vtkm::Vec<vtkm::FloatDefault,3> V1 = vtkm::Vec<vtkm::FloatDefault,3>(1, 0, 0);
-    vtkm::Vec<vtkm::FloatDefault,3> V2 = vtkm::Vec<vtkm::FloatDefault,3>(1, 1, 0);
-    
-    ds.Points.GetPortalControl().Set(0, V0);
-    ds.Points.GetPortalControl().Set(1, V1);
-    ds.Points.GetPortalControl().Set(2, V2);
-
-    ds.Field.GetPortalControl().Set(0, vtkm::Vec<vtkm::FloatDefault,1>(10));
-    ds.Field.GetPortalControl().Set(1, vtkm::Vec<vtkm::FloatDefault,1>(20));
-    ds.Field.GetPortalControl().Set(2, vtkm::Vec<vtkm::FloatDefault,1>(30));
-    */
+	ds.GetField(3).GetPortalControl().Set(i, i*10.0);
 #endif
 
 }
@@ -224,13 +192,6 @@ void TestDataSet_Regular()
     ds.x_idx = 0;
     ds.y_idx = 1;
     ds.z_idx = 2;
-    ds.Fields.resize(6);
-    ds.Fields[0] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
-    ds.Fields[1] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
-    ds.Fields[2] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
-    ds.Fields[3] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
-    ds.Fields[4] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
-    ds.Fields[5] = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
 
     const int nVerts = 18;
     vtkm::Float32 xVals[nVerts] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
@@ -238,24 +199,16 @@ void TestDataSet_Regular()
     vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2};
     vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.1, 40.1, 50.2, 60.2, 70.2, 80.2, 90.3, 100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5, 180.5};
 
-
-    vtkm::cont::ArrayHandle<vtkm::Float32> tmp;
-    //Set X, Y, and Z fields.
-    tmp = vtkm::cont::make_ArrayHandle(xVals, nVerts);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.x_idx]);
-    tmp = vtkm::cont::make_ArrayHandle(yVals, nVerts);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.y_idx]);
-    tmp = vtkm::cont::make_ArrayHandle(zVals, nVerts);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[ds.z_idx]);
+    ds.AddFieldViaCopy(xVals, nVerts);
+    ds.AddFieldViaCopy(yVals, nVerts);
+    ds.AddFieldViaCopy(zVals, nVerts);
 
     //Set node scalar
-    tmp = vtkm::cont::make_ArrayHandle(vars, nVerts);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[3]);
+    ds.AddFieldViaCopy(vars, nVerts);
 
     //Set cell scalar
     vtkm::Float32 cellvar[4] = {100.1, 100.2, 100.3, 100.4};
-    tmp = vtkm::cont::make_ArrayHandle(cellvar, 4);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[4]);
+    ds.AddFieldViaCopy(cellvar, 4);
 
 
     //Set regular structure
@@ -263,11 +216,10 @@ void TestDataSet_Regular()
 
     //Run a worklet to populate a cell centered field.
     vtkm::Float32 cellVals[4] = {-1.1, -1.2, -1.3, -1.4};
-    tmp = vtkm::cont::make_ArrayHandle(cellVals, 4);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp, ds.Fields[5]);
+    ds.AddFieldViaCopy(cellVals, 4);
 
     vtkm::worklet::DispatcherMapCell<CellType> dispatcher;
-    dispatcher.Invoke(ds.Fields[4], ds.Fields[3], ds.reg, ds.Fields[5]);
+    dispatcher.Invoke(ds.GetField(4).GetData(), ds.GetField(3).GetData(), ds.reg, ds.GetField(5).GetData());
 }
 
 int UnitTestDataSet(int, char *[])
