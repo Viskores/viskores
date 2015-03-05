@@ -74,375 +74,44 @@
 #endif // gcc && !CUDA
 
 
-namespace
-{
-
-/**
- * \brief Type selection (<tt>IF ? ThenType : ElseType</tt>)
- */
-template <bool IF, typename ThenType, typename ElseType>
-struct If
-{
-    /// Conditional type result
-    typedef ThenType Type;      // true
-};
-
-template <typename ThenType, typename ElseType>
-struct If<false, ThenType, ElseType>
-{
-    typedef ElseType Type;      // false
-};
-
-/******************************************************************************
-* Size and alignment
-******************************************************************************/
-
-/// Structure alignment
-template <typename T>
-struct AlignBytes
-{
-    struct Pad
-    {
-        T       val;
-        char    byte;
-    };
-
-    enum
-    {
-        /// The alignment of T in bytes
-        ALIGN_BYTES = sizeof(Pad) - sizeof(T)
-    };
-};
-
-// Specializations where host C++ compilers (e.g., Windows) may disagree with device C++ compilers (EDG)
-
-template <> struct AlignBytes<short4>               { enum { ALIGN_BYTES = 8 }; };
-template <> struct AlignBytes<ushort4>              { enum { ALIGN_BYTES = 8 }; };
-template <> struct AlignBytes<int2>                 { enum { ALIGN_BYTES = 8 }; };
-template <> struct AlignBytes<uint2>                { enum { ALIGN_BYTES = 8 }; };
-#ifdef _WIN32
-    template <> struct AlignBytes<long2>            { enum { ALIGN_BYTES = 8 }; };
-    template <> struct AlignBytes<ulong2>           { enum { ALIGN_BYTES = 8 }; };
-#endif
-template <> struct AlignBytes<long long>            { enum { ALIGN_BYTES = 8 }; };
-template <> struct AlignBytes<unsigned long long>   { enum { ALIGN_BYTES = 8 }; };
-template <> struct AlignBytes<float2>               { enum { ALIGN_BYTES = 8 }; };
-template <> struct AlignBytes<double>               { enum { ALIGN_BYTES = 8 }; };
-
-template <> struct AlignBytes<int4>                 { enum { ALIGN_BYTES = 16 }; };
-template <> struct AlignBytes<uint4>                { enum { ALIGN_BYTES = 16 }; };
-template <> struct AlignBytes<float4>               { enum { ALIGN_BYTES = 16 }; };
-#ifndef _WIN32
-    template <> struct AlignBytes<long2>            { enum { ALIGN_BYTES = 16 }; };
-    template <> struct AlignBytes<ulong2>           { enum { ALIGN_BYTES = 16 }; };
-#endif
-template <> struct AlignBytes<long4>                { enum { ALIGN_BYTES = 16 }; };
-template <> struct AlignBytes<ulong4>               { enum { ALIGN_BYTES = 16 }; };
-template <> struct AlignBytes<longlong2>            { enum { ALIGN_BYTES = 16 }; };
-template <> struct AlignBytes<ulonglong2>           { enum { ALIGN_BYTES = 16 }; };
-template <> struct AlignBytes<double2>              { enum { ALIGN_BYTES = 16 }; };
-template <> struct AlignBytes<longlong4>            { enum { ALIGN_BYTES = 16 }; };
-template <> struct AlignBytes<ulonglong4>           { enum { ALIGN_BYTES = 16 }; };
-template <> struct AlignBytes<double4>              { enum { ALIGN_BYTES = 16 }; };
-
-
-/// Unit-words of data movement
-template <typename T>
-struct UnitWord
-{
-    enum {
-        ALIGN_BYTES = AlignBytes<T>::ALIGN_BYTES
-    };
-
-    template <typename Unit>
-    struct IsMultiple
-    {
-        enum {
-            UNIT_ALIGN_BYTES    = AlignBytes<Unit>::ALIGN_BYTES,
-            IS_MULTIPLE         = (sizeof(T) % sizeof(Unit) == 0) && (ALIGN_BYTES % UNIT_ALIGN_BYTES == 0)
-        };
-    };
-
-    /// Biggest shuffle word that T is a whole multiple of and is not larger than the alignment of T
-    typedef typename If<IsMultiple<int>::IS_MULTIPLE,
-        unsigned int,
-        typename If<IsMultiple<short>::IS_MULTIPLE,
-            unsigned short,
-            unsigned char>::Type>::Type         ShuffleWord;
-
-    /// Biggest volatile word that T is a whole multiple of and is not larger than the alignment of T
-    typedef typename If<IsMultiple<long long>::IS_MULTIPLE,
-        unsigned long long,
-        ShuffleWord>::Type                      VolatileWord;
-
-    /// Biggest memory-access word that T is a whole multiple of and is not larger than the alignment of T
-    typedef typename If<IsMultiple<longlong2>::IS_MULTIPLE,
-        ulonglong2,
-        VolatileWord>::Type                     DeviceWord;
-
-    /// Biggest texture reference word that T is a whole multiple of and is not larger than the alignment of T
-    typedef typename If<IsMultiple<int4>::IS_MULTIPLE,
-        uint4,
-        typename If<IsMultiple<int2>::IS_MULTIPLE,
-            uint2,
-            ShuffleWord>::Type>::Type           TextureWord;
-};
-
-}
-
-
 namespace vtkm {
 namespace exec {
 namespace cuda {
 namespace internal {
 
-template <
-    typename    T,
-    typename    Offset = ptrdiff_t>
-class DaxTexObjInputIterator
+template<typename T>
+class ConstArrayPortalFromTexture : public ArrayPortalFromThrustBase
 {
 public:
 
-    // Required iterator traits
-    typedef DaxTexObjInputIterator              self_type;              ///< My own type
-    typedef Offset                              difference_type;        ///< Type to express the result of subtracting one iterator from another
-    typedef T                                   value_type;             ///< The type of the element the iterator can point to
-    typedef T*                                  pointer;                ///< The type of a pointer to an element the iterator can point to
-    typedef T                                   reference;              ///< The type of a reference to an element the iterator can point to
-
-    // Use Thrust's iterator categories so we can use these iterators in Thrust 1.7 (or newer) methods
-    typedef typename ::thrust::detail::iterator_facade_category<
-        ::thrust::device_system_tag,
-        ::thrust::random_access_traversal_tag,
-        value_type,
-        reference
-      >::type iterator_category;                                        ///< The iterator category
-
-private:
-
-    // Largest texture word we can use in device
-    typedef typename UnitWord<T>::TextureWord TextureWord;
-
-    // Number of texture words per T
-    enum { TEXTURE_MULTIPLE = sizeof(T) / sizeof(TextureWord) };
-
-private:
-
-    const T*                  ptr;
-    difference_type     tex_offset;
-    cudaTextureObject_t tex_obj;
-
-public:
-
-    /// Constructor
-    __host__ __device__ __forceinline__ DaxTexObjInputIterator()
-    :
-        ptr(NULL),
-        tex_offset(0),
-        tex_obj(0)
-    {}
-
-    /// Use this iterator to bind \p ptr with a texture reference
-    cudaError_t BindTexture(
-        const ::thrust::system::cuda::pointer<T>  ptr,               ///< Native pointer to wrap that is aligned to cudaDeviceProp::textureAlignment
-        size_t          numElements,        ///< Number of elements in the range
-        size_t          tex_offset = 0)     ///< Offset (in items) from \p ptr denoting the position of the iterator
-    {
-        this->ptr = ptr.get();
-        this->tex_offset = tex_offset;
-
-        cudaChannelFormatDesc   channel_desc = cudaCreateChannelDesc<TextureWord>();
-        cudaResourceDesc        res_desc;
-        cudaTextureDesc         tex_desc;
-        memset(&res_desc, 0, sizeof(cudaResourceDesc));
-        memset(&tex_desc, 0, sizeof(cudaTextureDesc));
-        res_desc.resType                = cudaResourceTypeLinear;
-        res_desc.res.linear.devPtr      = (void*)ptr.get();
-        res_desc.res.linear.desc        = channel_desc;
-        res_desc.res.linear.sizeInBytes = numElements * sizeof(T);
-        tex_desc.readMode               = cudaReadModeElementType;
-
-        return cudaCreateTextureObject(&tex_obj, &res_desc, &tex_desc, NULL);
-    }
-
-    /// Unbind this iterator from its texture reference
-    cudaError_t UnbindTexture()
-    {
-      return cudaDestroyTextureObject(tex_obj);
-    }
-
-    /// Postfix increment
-    __host__ __device__ __forceinline__ self_type operator++(int)
-    {
-        self_type retval = *this;
-        tex_offset++;
-        return retval;
-    }
-
-    /// Prefix increment
-    __host__ __device__ __forceinline__ self_type operator++()
-    {
-        tex_offset++;
-        return *this;
-    }
-
-    /// Postfix decrement
-    __host__ __device__ __forceinline__ self_type operator--(int)
-    {
-        self_type retval = *this;
-        tex_offset--;
-        return retval;
-    }
-
-    /// Prefix decrement
-    __host__ __device__ __forceinline__ self_type operator--()
-    {
-        tex_offset--;
-        return *this;
-    }
-
-    /// Indirection
-    __host__ __device__ __forceinline__ reference operator*() const
-    {
-#ifndef DAX_CUDA_COMPILATION
-        // Simply dereference the pointer on the host
-        return ptr[tex_offset];
-#else
-        // Move array of uninitialized words, then alias and assign to return value
-        TextureWord words[TEXTURE_MULTIPLE];
-
-        #pragma unroll
-        for (int i = 0; i < TEXTURE_MULTIPLE; ++i)
-        {
-            words[i] = tex1Dfetch<TextureWord>(
-                tex_obj,
-                (tex_offset * TEXTURE_MULTIPLE) + i);
-        }
-
-        // Load from words
-        return *reinterpret_cast<T*>(words);
-#endif
-    }
-
-    /// Addition
-    template <typename Distance>
-    __host__ __device__ __forceinline__ self_type operator+(Distance n) const
-    {
-        self_type retval;
-        retval.ptr          = ptr;
-        retval.tex_obj      = tex_obj;
-        retval.tex_offset   = tex_offset + n;
-        return retval;
-    }
-
-    /// Addition assignment
-    template <typename Distance>
-    __host__ __device__ __forceinline__ self_type& operator+=(Distance n)
-    {
-        tex_offset += n;
-        return *this;
-    }
-
-    /// Subtraction
-    template <typename Distance>
-    __host__ __device__ __forceinline__ self_type operator-(Distance n) const
-    {
-        self_type retval;
-        retval.ptr          = ptr;
-        retval.tex_obj      = tex_obj;
-        retval.tex_offset   = tex_offset - n;
-        return retval;
-    }
-
-    /// Subtraction assignment
-    template <typename Distance>
-    __host__ __device__ __forceinline__ self_type& operator-=(Distance n)
-    {
-        tex_offset -= n;
-        return *this;
-    }
-
-    /// Distance
-    __host__ __device__ __forceinline__ difference_type operator-(self_type other) const
-    {
-        return tex_offset - other.tex_offset;
-    }
-
-    /// Array subscript
-    template <typename Distance>
-    __host__ __device__ __forceinline__ reference operator[](Distance n) const
-    {
-        return *(*this + n);
-    }
-
-    /// Structure dereference
-    __host__ __device__ __forceinline__ pointer operator->()
-    {
-        return &(*(*this));
-    }
-
-    /// Equal to
-    __host__ __device__ __forceinline__ bool operator==(const self_type& rhs) const
-    {
-        return ((ptr == rhs.ptr) && (tex_offset == rhs.tex_offset) && (tex_obj == rhs.tex_obj));
-    }
-
-    /// Not equal to
-    __host__ __device__ __forceinline__ bool operator!=(const self_type& rhs) const
-    {
-        return ((ptr != rhs.ptr) || (tex_offset != rhs.tex_offset) || (tex_obj != rhs.tex_obj));
-    }
-
-    /// less than
-    __host__ __device__ __forceinline__ bool operator<(const self_type& rhs)
-    {
-        return (tex_offset < rhs.tex_offset);
-    }
-
-    /// ostream operator
-    friend std::ostream& operator<<(std::ostream& os, const self_type& itr)
-    {
-        return os;
-    }
-
-};
-
-
-template<class TextureIterator>
-class ConstArrayPortalFromTexture
-{
-public:
-
-  typedef typename TextureIterator::value_type ValueType;
-  typedef TextureIterator IteratorType;
+  typedef T ValueType;
+  typedef typename thrust::system::cuda::pointer< T > PointerType;
+  typedef const T* IteratorType;
 
   VTKM_EXEC_CONT_EXPORT ConstArrayPortalFromTexture() {  }
 
   VTKM_CONT_EXPORT
-  ConstArrayPortalFromTexture(IteratorType begin, ptrdiff_t size)
-    : Length(size),
-      BeginIterator(begin),
-      EndIterator(begin+size)
-  {  }
+  ConstArrayPortalFromTexture(const PointerType begin, const PointerType end)
+    : BeginIterator( begin ),
+      EndIterator( end )
+      {  }
 
   /// Copy constructor for any other ConstArrayPortalFromTexture with an iterator
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
-  template<typename OtherIteratorT>
+  template<typename OtherT>
   VTKM_EXEC_CONT_EXPORT
-  ConstArrayPortalFromTexture(const ConstArrayPortalFromTexture<OtherIteratorT> &src)
-    : Length(src.Length),
-      BeginIterator(src.BeginIterator),
+  ConstArrayPortalFromTexture(const ConstArrayPortalFromTexture<OtherT> &src)
+    : BeginIterator(src.BeginIterator),
       EndIterator(src.EndIterator)
   {  }
 
-  template<typename OtherIteratorT>
+  template<typename OtherT>
   VTKM_EXEC_CONT_EXPORT
-  ConstArrayPortalFromTexture<IteratorType> &operator=(
-      const ConstArrayPortalFromTexture<OtherIteratorT> &src)
+  ConstArrayPortalFromTexture<T> &operator=(
+      const ConstArrayPortalFromTexture<OtherT> &src)
   {
-    this->Length = src.Length;
     this->BeginIterator = src.BeginIterator;
     this->EndIterator = src.EndIterator;
     return *this;
@@ -450,12 +119,17 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
-    return static_cast<vtkm::Id>(this->Length);
+    // Not using std::distance because on CUDA it cannot be used on a device.
+    return (this->EndIterator - this->BeginIterator);
   }
 
   VTKM_EXEC_EXPORT
   ValueType Get(vtkm::Id index) const {
+#if __CUDA_ARCH__ >= 350
+    return __ldg(this->IteratorAt(index).get());
+#else
     return *this->IteratorAt(index);
+#endif
   }
 
   VTKM_EXEC_EXPORT
@@ -464,18 +138,17 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  IteratorType GetIteratorBegin() const { return this->BeginIterator; }
+  IteratorType GetIteratorBegin() const { return this->BeginIterator.get(); }
 
   VTKM_CONT_EXPORT
-  IteratorType GetIteratorEnd() const { return this->EndIterator; }
+  IteratorType GetIteratorEnd() const { return this->EndIterator.get(); }
 
 private:
-  ptrdiff_t Length;
-  IteratorType BeginIterator;
-  IteratorType EndIterator;
+  PointerType BeginIterator;
+  PointerType EndIterator;
 
   VTKM_EXEC_EXPORT
-  IteratorType IteratorAt(vtkm::Id index) const {
+  PointerType IteratorAt(vtkm::Id index) const {
     // Not using std::advance because on CUDA it cannot be used on a device.
     return (this->BeginIterator + index);
   }

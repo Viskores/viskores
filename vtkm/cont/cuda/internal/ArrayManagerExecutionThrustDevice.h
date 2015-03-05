@@ -55,17 +55,24 @@ namespace internal {
 
 template<typename T> struct UseTexturePortal      {typedef  boost::false_type type;};
 
-//Currently disabled as we are still tracking down issues with Texture
-//Memory. The major issue is that in testing it is slower than classic arrays
-#ifdef VTKM_USE_TEXTURE_MEM
 template<> struct UseTexturePortal<vtkm::Int8>    {typedef boost::true_type type; };
 template<> struct UseTexturePortal<vtkm::UInt8>   {typedef boost::true_type type; };
 template<> struct UseTexturePortal<vtkm::Int16>   {typedef boost::true_type type; };
 template<> struct UseTexturePortal<vtkm::UInt16>  {typedef boost::true_type type; };
 template<> struct UseTexturePortal<vtkm::Int32>   {typedef boost::true_type type; };
 template<> struct UseTexturePortal<vtkm::UInt32>  {typedef boost::true_type type; };
+
+template<> struct UseTexturePortal<vtkm::Vec<vtkm::Int32,2> > {typedef boost::true_type type; };
+template<> struct UseTexturePortal<vtkm::Vec<vtkm::UInt32,2> > {typedef boost::true_type type; };
+template<> struct UseTexturePortal<vtkm::Vec<vtkm::Int32,4> > {typedef boost::true_type type; };
+template<> struct UseTexturePortal<vtkm::Vec<vtkm::UInt32,4> > {typedef boost::true_type type; };
+
 template<> struct UseTexturePortal<vtkm::Float32> {typedef boost::true_type type; };
-#endif
+template<> struct UseTexturePortal<vtkm::Float64> {typedef boost::true_type type; };
+
+template<> struct UseTexturePortal<vtkm::Vec<vtkm::Float32,2> > {typedef boost::true_type type; };
+template<> struct UseTexturePortal<vtkm::Vec<vtkm::Float32,4> > {typedef boost::true_type type; };
+template<> struct UseTexturePortal<vtkm::Vec<vtkm::Float64,2> > {typedef boost::true_type type; };
 
 
 /// \c ArrayManagerExecutionThrustDevice provides an implementation for a \c
@@ -222,27 +229,19 @@ template<typename T, class StorageTag>
 class ArrayManagerExecutionThrustDevice<T, StorageTag,
     typename ::boost::enable_if< typename UseTexturePortal<T>::type >::type >
 {
-  //we need a way to detect that we are using FERMI or lower and disable
-  //the usage of texture iterator. The __CUDA_ARCH__ define is only around
-  //for device code so that can't be used. I expect that we will have to devise
-  //some form of Try/Compile with CUDA or just offer this as an advanced CMake
-  //option. We could also try and see if a runtime switch is possible.
-
 public:
   typedef T ValueType;
 
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> ContainerType;
 
   typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust< T > PortalType;
-  typedef ::vtkm::exec::cuda::internal::DaxTexObjInputIterator<T> TextureIteratorType;
-  typedef ::vtkm::exec::cuda::internal::ConstArrayPortalFromTexture< TextureIteratorType > PortalConstType;
+  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromTexture< T > PortalConstType;
+
 
   VTKM_CONT_EXPORT ArrayManagerExecutionThrustDevice():
     NumberOfValues(0),
     ArrayBegin(),
-    ArrayEnd(),
-    HaveTextureBound(false),
-    InputArrayIterator()
+    ArrayEnd()
   {
 
   }
@@ -336,25 +335,14 @@ public:
 
   VTKM_CONT_EXPORT PortalConstType GetPortalConst() const
   {
-    if(!this->HaveTextureBound)
-      {
-      this->HaveTextureBound = true;
-      this->InputArrayIterator.BindTexture(ArrayBegin,this->NumberOfValues);
-      }
-
-    //if we have a texture iterator bound use that
-    return PortalConstType(this->InputArrayIterator, this->NumberOfValues);
+    return PortalConstType(this->ArrayBegin, this->ArrayEnd);
   }
 
 
   /// Frees all memory.
   ///
-  VTKM_CONT_EXPORT void ReleaseResources() {
-  if(this->HaveTextureBound)
-    {
-    this->HaveTextureBound = false;
-    this->InputArrayIterator.UnbindTexture();
-    }
+  VTKM_CONT_EXPORT void ReleaseResources()
+  {
     ::thrust::system::cuda::free( this->ArrayBegin  );
     this->ArrayBegin = ::thrust::system::cuda::pointer<ValueType>();
     this->ArrayEnd = ::thrust::system::cuda::pointer<ValueType>();
@@ -370,8 +358,6 @@ private:
   vtkm::Id NumberOfValues;
   ::thrust::system::cuda::pointer<ValueType> ArrayBegin;
   ::thrust::system::cuda::pointer<ValueType> ArrayEnd;
-  mutable bool HaveTextureBound;
-  mutable TextureIteratorType InputArrayIterator;
 };
 
 
