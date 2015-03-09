@@ -24,7 +24,6 @@
 #include <vtkm/internal/ExportMacros.h>
 
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
-#include <vtkm/exec/cuda/internal/ArrayPortalFromTexture.h>
 
 // Disable GCC warnings we check vtkmfor but Thrust does not.
 #if defined(__GNUC__) && !defined(VTKM_CUDA)
@@ -59,7 +58,6 @@ namespace detail {
 // Tags to specify what type of thrust iterator to use.
 struct ThrustIteratorTransformTag {  };
 struct ThrustIteratorDevicePtrTag {  };
-struct ThrustIteratorDeviceTextureTag {  };
 
 // Traits to help classify what thrust iterators will be used.
 template<class IteratorType>
@@ -149,13 +147,6 @@ struct IteratorTraits
   typedef typename IteratorChooser<PortalType, Tag>::Type IteratorType;
 };
 
-template<typename T>
-struct IteratorTraits< vtkm::exec::cuda::internal::ConstArrayPortalFromTexture< T > >
-{
-  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromTexture< T > PortalType;
-  typedef ThrustIteratorDeviceTextureTag Tag;
-  typedef thrust::system::cuda::pointer< const T > IteratorType;
-};
 
 template<typename T>
 VTKM_CONT_EXPORT static
@@ -186,14 +177,6 @@ template<class PortalType>
 VTKM_CONT_EXPORT static
 typename IteratorTraits<PortalType>::IteratorType
 MakeIteratorBegin(PortalType portal, detail::ThrustIteratorDevicePtrTag)
-{
-  return MakeDevicePtr(portal.GetIteratorBegin());
-}
-
-template<class PortalType>
-VTKM_CONT_EXPORT static
-typename IteratorTraits<PortalType>::IteratorType
-MakeIteratorBegin(PortalType portal, detail::ThrustIteratorDeviceTextureTag)
 {
   return MakeDevicePtr(portal.GetIteratorBegin());
 }
