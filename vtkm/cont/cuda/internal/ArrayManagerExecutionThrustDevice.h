@@ -23,6 +23,8 @@
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/ErrorControlOutOfMemory.h>
 
+#include <iostream>
+
 // Disable GCC warnings we check vtkmfor but Thrust does not.
 #if defined(__GNUC__) && !defined(VTKM_CUDA)
 #if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
@@ -34,7 +36,7 @@
 #endif // gcc version >= 4.2
 #endif // gcc && !CUDA
 
-#include <thrust/system/cuda/memory.h>
+#include <thrust/system/cuda/vector.h>
 #include <thrust/copy.h>
 
 #if defined(__GNUC__) && !defined(VTKM_CUDA)
@@ -68,12 +70,10 @@ public:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> ContainerType;
 
   typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust< T > PortalType;
-  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< T > PortalConstType;
+  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< const T > PortalConstType;
 
   VTKM_CONT_EXPORT ArrayManagerExecutionThrustDevice():
-    NumberOfValues(0),
-    ArrayBegin(),
-    ArrayEnd()
+    Array()
   {
 
   }
@@ -86,7 +86,7 @@ public:
   /// Returns the size of the array.
   ///
   VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const {
-    return this->NumberOfValues;
+    return this->Array.size();
   }
 
   /// Allocates the appropriate size of the array and copies the given data
@@ -100,13 +100,8 @@ public:
     //calling get portal const
     try
       {
-      this->NumberOfValues = arrayPortal.GetNumberOfValues();
-      this->ArrayBegin = ::thrust::system::cuda::malloc<T>( static_cast<std::size_t>(this->NumberOfValues)  );
-      this->ArrayEnd = this->ArrayBegin + this->NumberOfValues;
-
-      ::thrust::copy(arrayPortal.GetRawIterator(),
-                     arrayPortal.GetRawIterator() + this->NumberOfValues,
-                     this->ArrayBegin);
+      this->Array.assign(arrayPortal.GetRawIterator(),
+                         arrayPortal.GetRawIterator() + arrayPortal.GetNumberOfValues());
       }
     catch (std::bad_alloc error)
       {
@@ -129,13 +124,16 @@ public:
       ContainerType &vtkmNotUsed(container),
       vtkm::Id numberOfValues)
   {
-    if(this->NumberOfValues > 0)
+    try
       {
-      ::thrust::system::cuda::free( this->ArrayBegin  );
+      this->Array.resize(numberOfValues);
       }
-    this->NumberOfValues = numberOfValues;
-    this->ArrayBegin = ::thrust::system::cuda::malloc<T>( this->NumberOfValues  );
-    this->ArrayEnd = this->ArrayBegin + numberOfValues;
+    catch (std::bad_alloc error)
+      {
+      throw vtkm::cont::ErrorControlOutOfMemory(error.what());
+      }
+
+
   }
 
   /// Allocates enough space in \c controlArray and copies the data in the
@@ -143,9 +141,9 @@ public:
   ///
   VTKM_CONT_EXPORT void RetrieveOutputData(ContainerType &controlArray) const
   {
-    controlArray.Allocate(this->NumberOfValues);
-    ::thrust::copy(this->ArrayBegin,
-                   this->ArrayEnd,
+    controlArray.Allocate(this->Array.size());
+    ::thrust::copy( this->Array.data(),
+                    this->Array.data() + this->Array.size(),
                    controlArray.GetPortal().GetRawIterator());
   }
 
@@ -155,19 +153,21 @@ public:
   {
     // The operation will succeed even if this assertion fails, but this
     // is still supposed to be a precondition to Shrink.
-    VTKM_ASSERT_CONT(numberOfValues <= this->NumberOfValues);
-    this->NumberOfValues = numberOfValues;
-    this->ArrayEnd = this->ArrayBegin + this->NumberOfValues;
+    VTKM_ASSERT_CONT(numberOfValues <= this->Array.size());
+
+    this->Array.resize(numberOfValues);
   }
 
   VTKM_CONT_EXPORT PortalType GetPortal()
   {
-    return PortalType(this->ArrayBegin, this->ArrayEnd);
+    return PortalType( this->Array.data(),
+                       this->Array.data() + this->Array.size());
   }
 
   VTKM_CONT_EXPORT PortalConstType GetPortalConst() const
   {
-    return PortalConstType(this->ArrayBegin, this->ArrayEnd);
+    return PortalConstType( this->Array.data(),
+                            this->Array.data() + this->Array.size());
   }
 
 
@@ -175,9 +175,8 @@ public:
   ///
   VTKM_CONT_EXPORT void ReleaseResources()
   {
-    ::thrust::system::cuda::free( this->ArrayBegin  );
-    this->ArrayBegin = ::thrust::system::cuda::pointer<ValueType>();
-    this->ArrayEnd = ::thrust::system::cuda::pointer<ValueType>();
+    this->Array.clear();
+    this->Array.shrink_to_fit();
   }
 
 private:
@@ -187,9 +186,7 @@ private:
   void operator=(
       ArrayManagerExecutionThrustDevice<T, StorageTag> &);
 
-  vtkm::Id NumberOfValues;
-  ::thrust::system::cuda::pointer<ValueType> ArrayBegin;
-  ::thrust::system::cuda::pointer<ValueType> ArrayEnd;
+  ::thrust::system::cuda::vector<ValueType> Array;
 };
 
 
