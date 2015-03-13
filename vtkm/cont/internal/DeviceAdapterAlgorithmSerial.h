@@ -255,10 +255,11 @@ public:
 
     DeviceAdapterAlgorithm<Device>::ScheduleKernel<Functor> kernel(functor);
 
-    std::for_each(
-          ::boost::counting_iterator<vtkm::Id>(0),
-          ::boost::counting_iterator<vtkm::Id>(numInstances),
-          kernel);
+    const vtkm::Id size = numInstances;
+    for(vtkm::Id i=0; i < size; ++i)
+      {
+      kernel(i);
+      }
 
     if (errorMessage.IsErrorRaised())
     {
@@ -266,12 +267,69 @@ public:
     }
   }
 
+private:
+  // This runs in the execution environment.
   template<class FunctorType>
-  VTKM_CONT_EXPORT
-  static void Schedule(FunctorType functor, vtkm::Id3 rangeMax)
+  class ScheduleKernel3D
   {
-    DeviceAdapterAlgorithm<Device>::Schedule(functor,
-                                     rangeMax[0] * rangeMax[1] * rangeMax[2] );
+  public:
+    ScheduleKernel3D(vtkm::Id3 dims,
+                     const FunctorType &functor)
+      : Dims(dims), Functor(functor) {  }
+
+    //needed for when calling from schedule on a i,j,k range
+    VTKM_EXEC_EXPORT void operator()(vtkm::Id3 indexIJK) const
+    {
+      //convert from the id3 index to flat index space, as this is a placeholder
+      //algorithm while we wait for the ability to pass i,j,k indexes down
+      //the scheduling pipeline
+      const vtkm::Id flatIndex = indexIJK[0] +
+              this->Dims[0] * ( indexIJK[1] + this->Dims[1]* indexIJK[2] );
+      Functor(flatIndex);
+    }
+
+  private:
+    vtkm::Id3 Dims;
+    const FunctorType Functor;
+  };
+
+public:
+  template<class Functor>
+  VTKM_CONT_EXPORT
+  static void Schedule(Functor functor, vtkm::Id3 rangeMax)
+  {
+    const vtkm::Id MESSAGE_SIZE = 1024;
+    char errorString[MESSAGE_SIZE];
+    errorString[0] = '\0';
+    vtkm::exec::internal::ErrorMessageBuffer
+        errorMessage(errorString, MESSAGE_SIZE);
+
+    functor.SetErrorMessageBuffer(errorMessage);
+
+    DeviceAdapterAlgorithm<Device>::ScheduleKernel3D<Functor> kernel(rangeMax,
+                                                                     functor);
+
+    //use a const variable to hint to compiler this doesn't change
+    const vtkm::Id3 sizes = rangeMax;
+    vtkm::Id3 ijkIndex(0,0,0);
+    for(vtkm::Id k=0; k < sizes[2]; ++k)
+      {
+      ijkIndex[2] = k;
+      for(vtkm::Id j=0; j < sizes[1]; ++j)
+        {
+        ijkIndex[1] = j;
+        for(vtkm::Id i=0; i < sizes[0]; ++i)
+          {
+          ijkIndex[0] = i;
+          kernel( ijkIndex );
+          }
+        }
+      }
+
+    if (errorMessage.IsErrorRaised())
+    {
+      throw vtkm::cont::ErrorExecution(errorString);
+    }
   }
 
   template<typename T, class Storage>
