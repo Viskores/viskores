@@ -37,6 +37,7 @@
 #endif // gcc && !CUDA
 
 #include <thrust/system/cuda/vector.h>
+#include <thrust/device_malloc_allocator.h>
 #include <thrust/copy.h>
 
 #if defined(__GNUC__) && !defined(VTKM_CUDA)
@@ -51,6 +52,22 @@ namespace vtkm {
 namespace cont {
 namespace cuda {
 namespace internal {
+
+// UninitializedAllocator is an allocator which
+// derives from device_allocator and which has a
+// no-op construct member function
+template<typename T>
+  struct UninitializedAllocator
+    : ::thrust::device_malloc_allocator<T>
+{
+  // note that construct is annotated as
+  // a __host__ __device__ function
+  __host__ __device__
+  void construct(T *p)
+  {
+    // no-op
+  }
+};
 
 /// \c ArrayManagerExecutionThrustDevice provides an implementation for a \c
 /// ArrayManagerExecution class for a thrust device adapter that is designed
@@ -186,7 +203,8 @@ private:
   void operator=(
       ArrayManagerExecutionThrustDevice<T, StorageTag> &);
 
-  ::thrust::system::cuda::vector<ValueType> Array;
+  ::thrust::system::cuda::vector<ValueType,
+                                 UninitializedAllocator<ValueType> > Array;
 };
 
 
