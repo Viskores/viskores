@@ -27,6 +27,13 @@
 #include <vtkm/exec/arg/TopologyIdCount.h>
 #include <vtkm/exec/arg/TopologyElementType.h>
 
+/*
+call notes.
+wrap execution portal with restrictors. (abandone the fixed length array).
+compile time polymorphic types.
+
+*/
+
 static const int LEN_IDS = 6;
 
 class CellType : public vtkm::worklet::WorkletMapTopology
