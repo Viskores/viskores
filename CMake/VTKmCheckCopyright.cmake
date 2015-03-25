@@ -89,7 +89,7 @@ function (get_year var)
   set(${var} "${result}" PARENT_SCOPE)
 endfunction (get_year)
 
-set(copyright_file_year 2011)
+set(copyright_file_year 2014)
 get_year(current_year)
 
 # Escapes ';' characters (list delimiters) and splits the given string into
