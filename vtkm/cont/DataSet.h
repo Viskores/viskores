@@ -151,6 +151,7 @@ public:
 
   ExplicitConnectivity conn;
   RegularConnectivity3D reg;
+    //TODO: Logical structure: vtkm::Extents?  Use EAVL logicalStructure?
 
   //traditional data-model
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault,3> > Points;
