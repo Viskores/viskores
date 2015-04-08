@@ -176,7 +176,7 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
     int z = results[i].blockSize.z;
     float t = results[i].elapsedTime;
 
-    std::cout << "BlockSize of: " << x << "," << y << ", " << z << " required: " << t << std::endl;
+    std::cout << "BlockSize of: " << x << "," << y << "," << z << " required: " << t << std::endl;
     }
 
   std::cout << "flat array performance " << std::endl;
@@ -209,7 +209,7 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
-  dim3 blockSize3d(32,4,1);
+  dim3 blockSize3d(64,2,1);
   dim3 gridSize3d;
 
   compute_block_size(rangeMax, blockSize3d, gridSize3d);
@@ -609,7 +609,7 @@ public:
     Schedule1DIndexKernel<Functor> <<<blocksPerGrid, blockSize>>> (functor, numInstances);
 
     //sync so that we can check the results of the call.
-    //In the future I want move this before the for_each call, and throwing
+    //In the future I want move this before the schedule call, and throwing
     //an exception if the previous schedule wrote an error. This would help
     //cuda to run longer before we hard sync.
     cudaDeviceSynchronize();
@@ -639,19 +639,30 @@ public:
 
     functor.SetErrorMessageBuffer(errorMessage);
 
-#ifdef ANALYZE_VTKM_SCHEDULER
+#ifndef ANALYZE_VTKM_SCHEDULER
     //requires the errormessage buffer be set
     compare_3d_schedule_patterns(functor,rangeMax);
 #endif
 
-    dim3 blockSize3d(32,4,1);
-    dim3 gridSize3d;
+    //currently we presume that 3d scheduling access patterns prefer accessing
+    //memory in the X direction. Also should be good for thin in the Z axis
+    //algorithms
+    dim3 blockSize3d(64,2,1);
 
+    //handle the simple use case of 'bad' datasets which are thin in X
+    //but larger in the other directions, allowing us decent performance with
+    //that use case.
+    if(rangeMax[0] <= 64 && rangeMax[1] >= 64 && rangeMax[2] >= 64)
+      {
+      blockSize3d = dim3(16,4,4);
+      }
+
+    dim3 gridSize3d;
     compute_block_size(rangeMax, blockSize3d, gridSize3d);
     Schedule3DIndexKernel<Functor> <<<gridSize3d, blockSize3d>>> (functor, rangeMax);
 
     //sync so that we can check the results of the call.
-    //In the future I want move this before the for_each call, and throwing
+    //In the future I want move this before the schedule call, and throwing
     //an exception if the previous schedule wrote an error. This would help
     //cuda to run longer before we hard sync.
     cudaDeviceSynchronize();
