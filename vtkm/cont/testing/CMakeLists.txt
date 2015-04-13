@@ -30,6 +30,7 @@ set(unit_tests
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
   UnitTestArrayHandleImplicit.cxx
+  UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestContTesting.cxx
