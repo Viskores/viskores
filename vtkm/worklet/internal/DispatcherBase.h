@@ -275,6 +275,9 @@ public:
   // Implementation of the Invoke method is in this generated file.
 #include <vtkm/worklet/internal/DispatcherBaseDetailInvoke.h>
 
+  bool Use3DSchedule;
+  vtkm::Id3 dims;
+
 protected:
   VTKM_CONT_EXPORT
   DispatcherBase(const WorkletType &worklet) : Worklet(worklet) {  }
@@ -337,7 +340,15 @@ private:
         WorkletInvokeFunctorType(this->Worklet, invocation);
 
     typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
-    Algorithm::Schedule(workletFunctor, numInstances);
+
+    if(this->Use3DSchedule)
+      {
+      Algorithm::Schedule(workletFunctor, dims);
+      }
+    else
+      {
+      Algorithm::Schedule(workletFunctor, numInstances);
+      }
   }
 };
 
