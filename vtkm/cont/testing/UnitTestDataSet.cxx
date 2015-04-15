@@ -223,7 +223,7 @@ void TestDataSet_Regular()
 
 
     //Set regular structure
-    ds.reg.SetNodeDimension3D(3,2,3);
+    ds.reg.SetNodeDimension(3,2,3);
 
     //Run a worklet to populate a cell centered field.
     vtkm::Float32 cellVals[4] = {-1.1, -1.2, -1.3, -1.4};

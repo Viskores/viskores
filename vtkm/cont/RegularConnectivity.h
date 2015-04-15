@@ -39,9 +39,9 @@ public:
   void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
     int i,j,k;
-    CalculateLogicalCellIndices3D(index, i,j,k);
+    CalculateLogicalCellIndices(index, i,j,k);
     ///\todo: assert ItemTupleLength >= 8, or return early?
-    ids[0] = CalculateNodeIndex3D(i, j, k);
+    ids[0] = CalculateNodeIndex(i, j, k);
     if (ItemTupleLength <= 1) return;
     ids[1] = ids[0] + 1;
     if (ItemTupleLength <= 2) return;

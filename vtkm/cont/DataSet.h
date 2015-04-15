@@ -39,7 +39,7 @@ public:
   vtkm::Id x_idx, y_idx, z_idx;
 
   ExplicitConnectivity conn;
-  RegularConnectivity3D reg;
+  RegularConnectivity reg;
     //TODO: Logical structure: vtkm::Extents?  Use EAVL logicalStructure?
 
   //traditional data-model
