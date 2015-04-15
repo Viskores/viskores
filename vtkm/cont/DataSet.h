@@ -12,6 +12,8 @@
 namespace vtkm {
 namespace cont {
 
+class CellSet;
+
 class DataSet
 {
 public:
@@ -38,18 +40,13 @@ public:
 
   vtkm::Id x_idx, y_idx, z_idx;
 
+
   ExplicitConnectivity conn;
   RegularConnectivity reg;
-    //TODO: Logical structure: vtkm::Extents?  Use EAVL logicalStructure?
-
-  //traditional data-model
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault,3> > Points;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault,1> > Field;
 
 private:
   std::vector<vtkm::cont::Field> Fields;
-
-
+  std::vector<vtkm::cont::CellSet*> CellSets;
 };
 
 }

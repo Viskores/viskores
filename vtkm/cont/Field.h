@@ -37,7 +37,7 @@ public:
   {
   }
 
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> &GetData()
+  vtkm::cont::DynamicArrayHandle &GetData()
   {
     return data;
   }
@@ -57,7 +57,8 @@ public:
   */
   
 private:
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> data;
+  //vtkm::cont::ArrayHandle<vtkm::FloatDefault> data;
+  vtkm::cont::DynamicArrayHandle data;
 };
 
 
