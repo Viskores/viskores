@@ -143,18 +143,19 @@ void TestDataSet_Explicit()
     map_cell_to_iondex.push_back(0);
     map_cell_to_iondex.push_back(3);
 
+    vtkm::cont::CellSetExplicit *cs = new vtkm::cont::CellSetExplicit;
     
     tmp2 = vtkm::cont::make_ArrayHandle(shapes);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.Shapes);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, cs->nodesOfCellsConnectivity.Shapes);
 
     tmp2 = vtkm::cont::make_ArrayHandle(numindices);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.NumIndices);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, cs->nodesOfCellsConnectivity.NumIndices);
 
     tmp2 = vtkm::cont::make_ArrayHandle(conn);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.Connectivity);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, cs->nodesOfCellsConnectivity.Connectivity);
 
     tmp2 = vtkm::cont::make_ArrayHandle(map_cell_to_iondex);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, ds.conn.MapCellToConnectivityIndex);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, cs->nodesOfCellsConnectivity.MapCellToConnectivityIndex);
 
 
     //Run a worklet to populate a cell centered field.
@@ -163,7 +164,7 @@ void TestDataSet_Explicit()
     ds.AddFieldViaCopy(outcellVals, 2);
 
     vtkm::worklet::DispatcherMapTopology<CellType> dispatcher;
-    dispatcher.Invoke(ds.GetField(4).GetData(), ds.GetField(3).GetData(), ds.conn, ds.GetField(5).GetData());
+    dispatcher.Invoke(ds.GetField(4).GetData(), ds.GetField(3).GetData(), cs->nodesOfCellsConnectivity, ds.GetField(5).GetData());
 
 #if 0
     //Add some verts.
@@ -222,15 +223,17 @@ void TestDataSet_Regular()
     ds.AddFieldViaCopy(cellvar, 4);
 
 
+    vtkm::cont::CellSetStructured *cs = new vtkm::cont::CellSetStructured;
+
     //Set regular structure
-    ds.reg.SetNodeDimension(3,2,3);
+    cs->structure.SetNodeDimension(3,2,3);
 
     //Run a worklet to populate a cell centered field.
     vtkm::Float32 cellVals[4] = {-1.1, -1.2, -1.3, -1.4};
     ds.AddFieldViaCopy(cellVals, 4);
 
     vtkm::worklet::DispatcherMapTopology<CellType> dispatcher;
-    dispatcher.Invoke(ds.GetField(4).GetData(), ds.GetField(3).GetData(), ds.reg, ds.GetField(5).GetData());
+    dispatcher.Invoke(ds.GetField(4).GetData(), ds.GetField(3).GetData(), cs->structure, ds.GetField(5).GetData());
 }
 
 int UnitTestDataSet(int, char *[])

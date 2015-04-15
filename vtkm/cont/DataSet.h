@@ -43,9 +43,15 @@ public:
 
   vtkm::Id x_idx, y_idx, z_idx;
 
+  vtkm::cont::CellSet *GetCellSet(int index=0)
+  {
+    return CellSets[index];
+  }
 
-  ExplicitConnectivity conn;
-  RegularConnectivity reg;
+  void AddCellSet(vtkm::cont::CellSet *cs)
+  {
+    CellSets.push_back(cs);
+  }
 
 private:
   std::vector<vtkm::cont::Field> Fields;

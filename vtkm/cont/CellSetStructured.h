@@ -9,7 +9,7 @@ namespace cont {
 
 class CellSetStructured
 {
-  protected:
+  public:
     RegularConnectivity structure;
 };
 

@@ -9,7 +9,7 @@ namespace cont {
 
 class CellSetExplicit
 {
-  protected:
+  public:
     ExplicitConnectivity nodesOfCellsConnectivity;
 };
 
