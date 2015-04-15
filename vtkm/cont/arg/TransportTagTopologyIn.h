@@ -48,6 +48,8 @@ struct Transport<vtkm::cont::arg::TransportTagTopologyIn, ContObjectType, Device
   VTKM_CONT_EXPORT
   ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
   {
+      //DRP: object.PrepareForinput(Device()); //create CUDA version of connectivity array.
+      //make an execution version of the connectivity array.
     return object;
   }
 };

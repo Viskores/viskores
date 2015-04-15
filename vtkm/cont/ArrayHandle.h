@@ -24,6 +24,7 @@
 
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorControlInternal.h>
 #include <vtkm/cont/Storage.h>
 
 #include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
@@ -173,12 +174,13 @@ public:
       // If the user writes into the iterator we return, then the execution
       // array will become invalid. Play it safe and release the execution
       // resources. (Use the const version to preserve the execution array.)
-      this->ReleaseResourcesExecution();
+      this->ReleaseResourcesExecutionInternal();
       return this->Internals->ControlArray.GetPortal();
     }
     else
     {
-      throw vtkm::cont::ErrorControlBadValue("ArrayHandle contains no data.");
+      throw vtkm::cont::ErrorControlInternal(
+            "ArrayHandle::SyncControlArray did not make control array valid.");
     }
   }
 
@@ -197,7 +199,8 @@ public:
     }
     else
     {
-      throw vtkm::cont::ErrorControlBadValue("ArrayHandle contains no data.");
+      throw vtkm::cont::ErrorControlInternal(
+            "ArrayHandle::SyncControlArray did not make control array valid.");
     }
   }
 
@@ -222,6 +225,23 @@ public:
     {
       return 0;
     }
+  }
+
+  /// \brief Allocates an array large enough to hold the given number of values.
+  ///
+  /// The allocation may be done on an already existing array, but can wipe out
+  /// any data already in the array. This method can throw
+  /// ErrorControlOutOfMemory if the array cannot be allocated or
+  /// ErrorControlBadValue if the allocation is not feasible (for example, the
+  /// array storage is read-only).
+  ///
+  VTKM_CONT_EXPORT
+  void Allocate(vtkm::Id numberOfValues)
+  {
+    this->ReleaseResourcesExecutionInternal();
+    this->Internals->UserPortalValid = false;
+    this->Internals->ControlArray.Allocate(numberOfValues);
+    this->Internals->ControlArrayValid = true;
   }
 
   /// \brief Reduces the size of the array without changing its values.
@@ -270,18 +290,18 @@ public:
   ///
   VTKM_CONT_EXPORT void ReleaseResourcesExecution()
   {
-    if (this->Internals->ExecutionArrayValid)
-    {
-      this->Internals->ExecutionArray->ReleaseResources();
-      this->Internals->ExecutionArrayValid = false;
-    }
+    // Save any data in the execution environment by making sure it is synced
+    // with the control environment.
+    this->SyncControlArray();
+
+    this->ReleaseResourcesExecutionInternal();
   }
 
   /// Releases all resources in both the control and execution environments.
   ///
   VTKM_CONT_EXPORT void ReleaseResources()
   {
-    this->ReleaseResourcesExecution();
+    this->ReleaseResourcesExecutionInternal();
 
     // Forget about any user iterators.
     this->Internals->UserPortalValid = false;
@@ -507,15 +527,26 @@ public:
   ///
   VTKM_CONT_EXPORT void SyncControlArray() const
   {
-    if (   !this->Internals->UserPortalValid
-           && !this->Internals->ControlArrayValid)
+    if (!this->Internals->UserPortalValid
+        && !this->Internals->ControlArrayValid)
     {
       // Need to change some state that does not change the logical state from
       // an external point of view.
       InternalStruct *internals
         = const_cast<InternalStruct*>(this->Internals.get());
-      internals->ExecutionArray->RetrieveOutputData(internals->ControlArray);
-      internals->ControlArrayValid = true;
+      if (this->Internals->ExecutionArrayValid)
+      {
+        internals->ExecutionArray->RetrieveOutputData(internals->ControlArray);
+        internals->ControlArrayValid = true;
+      }
+      else
+      {
+        // This array is in the null state (there is nothing allocated), but
+        // the calling function wants to do something with the array. Put this
+        // class into a valid state by allocating an array of size 0.
+        internals->ControlArray.Allocate(0);
+        internals->ControlArrayValid = true;
+      }
     }
     else
     {
@@ -524,6 +555,16 @@ public:
       VTKM_ASSERT_CONT(!this->Internals->UserPortalValid
                        || !this->Internals->ControlArrayValid);
       // Nothing to do.
+    }
+  }
+
+  VTKM_CONT_EXPORT
+  void ReleaseResourcesExecutionInternal()
+  {
+    if (this->Internals->ExecutionArrayValid)
+    {
+      this->Internals->ExecutionArray->ReleaseResources();
+      this->Internals->ExecutionArrayValid = false;
     }
   }
 

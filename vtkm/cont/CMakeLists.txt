@@ -34,6 +34,7 @@ set(headers
   DeviceAdapterSerial.h
   DynamicArrayHandle.h
   DynamicPointCoordinates.h
+  ExplicitConnectivity.h
   Error.h
   ErrorControl.h
   ErrorControlAssert.h
@@ -45,6 +46,7 @@ set(headers
   PointCoordinatesArray.h
   PointCoordinatesListTag.h
   PointCoordinatesUniform.h
+  RegularConnectivity.h
   Storage.h
   StorageBasic.h
   StorageImplicit.h

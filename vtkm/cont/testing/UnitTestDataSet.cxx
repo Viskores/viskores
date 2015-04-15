@@ -18,6 +18,10 @@
 //  this software.
 //============================================================================
 
+//#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
+//#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
+//#include <vtkm/cont/DeviceAdapter.h>
+
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -26,6 +30,13 @@
 #include <vtkm/exec/arg/TopologyIdSet.h>
 #include <vtkm/exec/arg/TopologyIdCount.h>
 #include <vtkm/exec/arg/TopologyElementType.h>
+
+/*
+call notes.
+wrap execution portal with restrictors. (abandone the fixed length array).
+compile time polymorphic types.
+
+*/
 
 static const int LEN_IDS = 6;
 

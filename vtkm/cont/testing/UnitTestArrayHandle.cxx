@@ -113,6 +113,12 @@ struct TryArrayHandleType
                      "Array size did not shrink correctly.");
     CheckArray(arrayHandle);
 
+    std::cout << "Try reallocating array." << std::endl;
+    arrayHandle.Allocate(ARRAY_SIZE*2);
+    VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE*2,
+                     "Array size did not allocate correctly.");
+    // No point in checking values. This method can invalidate them.
+
     std::cout << "Try in place operation." << std::endl;
     {
       typedef typename vtkm::cont::ArrayHandle<T>::template
@@ -135,6 +141,25 @@ struct TryArrayHandleType
                                   TestValue(index, T()) + T(1)),
                        "Did not get result from in place operation.");
     }
+
+    std::cout << "Try operations on empty arrays." << std::endl;
+    // After each operation, reinitialize array in case something gets
+    // allocated.
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
+                     "Uninitialized array does not report zero values.");
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    VTKM_TEST_ASSERT(
+          arrayHandle.GetPortalConstControl().GetNumberOfValues() == 0,
+          "Uninitialized array does not give portal with zero values.");
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    arrayHandle.Shrink(0);
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    arrayHandle.ReleaseResourcesExecution();
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    arrayHandle.ReleaseResources();
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    arrayHandle.PrepareForOutput(ARRAY_SIZE, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   }
 };
 
