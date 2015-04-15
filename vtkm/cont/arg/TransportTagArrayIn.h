@@ -40,7 +40,7 @@ struct TransportTagArrayIn {  };
 template<typename ContObjectType, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
 {
-  ///\todo: something like VTKM_IS_ARRAY_HANDLE(ContObjectType), but for topology
+  ///\todo: something equivalent to VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
   typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst
       ExecObjectType;
