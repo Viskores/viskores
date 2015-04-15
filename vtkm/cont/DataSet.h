@@ -8,6 +8,9 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ExplicitConnectivity.h>
 #include <vtkm/cont/RegularConnectivity.h>
+#include <vtkm/cont/CellSet.h>
+#include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/CellSetStructured.h>
 
 namespace vtkm {
 namespace cont {
