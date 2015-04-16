@@ -639,7 +639,7 @@ public:
 
     functor.SetErrorMessageBuffer(errorMessage);
 
-#ifndef ANALYZE_VTKM_SCHEDULER
+#ifdef ANALYZE_VTKM_SCHEDULER
     //requires the errormessage buffer be set
     compare_3d_schedule_patterns(functor,rangeMax);
 #endif
