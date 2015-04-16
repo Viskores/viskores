@@ -45,7 +45,7 @@ namespace vtkm {
 namespace cont {
 namespace testing {
 
-namespace {
+namespace comparison {
 struct SortLess
 {
   template<typename T>
@@ -83,13 +83,13 @@ struct SortGreater
     return this->compare(a,b,Dimensionality());
   }
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool compare(const T& a,const T& b,
+  VTKM_EXEC_EXPORT bool compare(const T& a,const T& b,
                                      vtkm::TypeTraitsScalarTag) const
   {
     return a > b;
   }
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool compare(const T& a,const T& b,
+  VTKM_EXEC_EXPORT bool compare(const T& a,const T& b,
                                      vtkm::TypeTraitsVectorTag) const
   {
     const vtkm::IdComponent SIZE = vtkm::VecTraits<T>::NUM_COMPONENTS;
@@ -814,8 +814,35 @@ private:
     VTKM_TEST_ASSERT(randomData[5] == 4, "Got bad value - UpperBound");
   }
 
-  static VTKM_CONT_EXPORT void TestSortWithComparisonObject()
+  static VTKM_CONT_EXPORT void TestSort()
   {
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "Sort" << std::endl;
+    vtkm::Id testData[ARRAY_SIZE];
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      testData[i]= OFFSET+((ARRAY_SIZE-i) % 50);
+    }
+    IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
+
+    IdArrayHandle sorted;
+
+    Algorithm::Copy(input,sorted);
+
+    //Validate the standard sort is correct
+    Algorithm::Sort(sorted);
+
+    for (vtkm::Id i = 0; i < ARRAY_SIZE-1; ++i)
+    {
+      vtkm::Id sorted1 = sorted.GetPortalConstControl().Get(i);
+      vtkm::Id sorted2 = sorted.GetPortalConstControl().Get(i+1);
+      //      std::cout << sorted1 << " <= " << sorted2 << std::endl;
+      VTKM_TEST_ASSERT(sorted1 <= sorted2, "Values not properly sorted.");
+    }
+  }
+
+  static VTKM_CONT_EXPORT void TestSortWithComparisonObject()
+    {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Sort with comparison object" << std::endl;
     vtkm::Id testData[ARRAY_SIZE];
@@ -834,16 +861,8 @@ private:
     //Validate the standard sort is correct
     Algorithm::Sort(sorted);
 
-    for (vtkm::Id i = 0; i < ARRAY_SIZE-1; ++i)
-    {
-      vtkm::Id sorted1 = sorted.GetPortalConstControl().Get(i);
-      vtkm::Id sorted2 = sorted.GetPortalConstControl().Get(i+1);
-      //      std::cout << sorted1 << " <= " << sorted2 << std::endl;
-      VTKM_TEST_ASSERT(sorted1 <= sorted2, "Values not properly sorted.");
-    }
-
     //Validate the sort, and SortGreater are inverse
-    Algorithm::Sort(comp_sorted,SortGreater());
+    Algorithm::Sort(comp_sorted,comparison::SortGreater());
 
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
     {
@@ -854,7 +873,7 @@ private:
                        "Got bad sort values when using SortGreater");
     }
 
-    Algorithm::Sort(comp_sorted,SortLess());
+    Algorithm::Sort(comp_sorted,comparison::SortLess());
 
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
     {
@@ -904,7 +923,7 @@ private:
   //     }
 
   //   // this will return everything back to what it was before sorting
-  //   Algorithm::SortByKey(sorted_keys,sorted_values,SortGreater());
+  //   Algorithm::SortByKey(sorted_keys,sorted_values,comparison::SortGreater());
   //   for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
   //     {
   //     //keys should be sorted from ARRAY_SIZE to 1
@@ -954,7 +973,7 @@ private:
 
     IdArrayHandle handle;
     //verify lower bounds work
-    Algorithm::LowerBounds(temp,input,handle,SortLess());
+    Algorithm::LowerBounds(temp,input,handle,comparison::SortLess());
 
     // Check to make sure that temp was resized correctly during Unique.
     // (This was a discovered bug at one point.)
@@ -990,7 +1009,7 @@ private:
 
     IdArrayHandle handle;
     //verify upper bounds work
-    Algorithm::UpperBounds(temp,input,handle,SortLess());
+    Algorithm::UpperBounds(temp,input,handle,comparison::SortLess());
 
     // Check to make sure that temp was resized correctly during Unique.
     // (This was a discovered bug at one point.)
@@ -1318,22 +1337,23 @@ private:
     {
       std::cout << "Doing DeviceAdapter tests" << std::endl;
       TestArrayManagerExecution();
-      // TestOutOfMemory();
-      // TestTimer();
+      TestOutOfMemory();
+      TestTimer();
 
-      // TestAlgorithmSchedule();
-      // TestErrorExecution();
-      // TestScanInclusive();
-      // TestScanExclusive();
-      // TestSortWithComparisonObject();
+      TestAlgorithmSchedule();
+      TestErrorExecution();
+      TestScanInclusive();
+      TestScanExclusive();
+      TestSort();
+      TestSortWithComparisonObject();
       // // TestSortByKey();
-      // TestLowerBoundsWithComparisonObject();
-      // TestUpperBoundsWithComparisonObject();
-      // TestUniqueWithComparisonObject();
-      // TestOrderedUniqueValues(); //tests Copy, LowerBounds, Sort, Unique
-      // // TestDispatcher();
-      // TestStreamCompactWithStencil();
-      // TestStreamCompact();
+      TestLowerBoundsWithComparisonObject();
+      TestUpperBoundsWithComparisonObject();
+      TestUniqueWithComparisonObject();
+      TestOrderedUniqueValues(); //tests Copy, LowerBounds, Sort, Unique
+      // TestDispatcher();
+      TestStreamCompactWithStencil();
+      TestStreamCompact();
 
 
       // std::cout << "Doing Worklet tests with all grid type" << std::endl;
