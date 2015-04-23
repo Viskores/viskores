@@ -151,8 +151,8 @@ public:
 
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_SERIAL
 #include <vtkm/cont/internal/ArrayManagerExecutionSerial.h>
-// #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
-// #include <vtkm/cuda/cont/internal/ArrayManagerExecutionCuda.h>
+#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
+#include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 // #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
 // #include <vtkm/openmp/cont/internal/ArrayManagerExecutionOpenMP.h>
 // #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
