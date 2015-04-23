@@ -44,9 +44,8 @@ public:
 
   VTKM_CONT_EXPORT
   ArrayPortalTransform(const PortalType &portal = PortalType(),
-                       vtkm::Id size = 0,
                        const FunctorType &functor = FunctorType())
-    : Portal(portal), NumberOfValues(size), Functor(functor)
+    : Portal(portal), Functor(functor)
   {  }
 
   /// Copy constructor for any other ArrayPortalTransform with an iterator
@@ -57,12 +56,13 @@ public:
   VTKM_CONT_EXPORT
   ArrayPortalTransform(const ArrayPortalTransform<OtherV,OtherP,OtherF> &src)
     : Portal(src.GetPortal()),
-      NumberOfValues(src.GetNumberOfValues()),
       Functor(src.GetFunctor())
   {  }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id GetNumberOfValues() const { return this->GetNumberOfValues(); }
+  vtkm::Id GetNumberOfValues() const {
+    return this->Portal.GetNumberOfValues();
+  }
 
   VTKM_EXEC_EXPORT
   ValueType Get(vtkm::Id index) const {
@@ -77,7 +77,6 @@ public:
 
 private:
   PortalType Portal;
-  vtkm::Id NumberOfValues;
   FunctorType Functor;
 };
 
@@ -109,15 +108,13 @@ public:
   PortalType GetPortal() {
     VTKM_ASSERT_CONT(this->Valid);
     return PortalType(this->Array.GetPortalControl(),
-                      this->GetNumberOfValues(),
                       this->Functor);
   }
 
   VTKM_CONT_EXPORT
-  PortalType GetPortalConst() const {
+  PortalConstType GetPortalConst() const {
     VTKM_ASSERT_CONT(this->Valid);
     return PortalConstType(this->Array.GetPortalConstControl(),
-                           this->GetNumberOfValues(),
                            this->Functor);
   }
 
