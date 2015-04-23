@@ -339,7 +339,7 @@ private:
 
   template<class KeysPortal, class ValuesPortal>
   VTKM_CONT_EXPORT static void SortByKeyPortal(const KeysPortal &keys,
-                                              const ValuesPortal &values)
+                                               const ValuesPortal &values)
   {
     ::thrust::sort_by_key(IteratorBegin(keys),
                           IteratorEnd(keys),
@@ -348,8 +348,8 @@ private:
 
   template<class KeysPortal, class ValuesPortal, class Compare>
   VTKM_CONT_EXPORT static void SortByKeyPortal(const KeysPortal &keys,
-                                              const ValuesPortal &values,
-                                              Compare comp)
+                                               const ValuesPortal &values,
+                                               Compare comp)
   {
     ::thrust::sort_by_key(IteratorBegin(keys),
                           IteratorEnd(keys),

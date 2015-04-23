@@ -23,6 +23,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/exec/FunctorBase.h>
@@ -586,6 +587,62 @@ public:
       vtkm::cont::ArrayHandle<T,Storage> &values)
   {
     DerivedAlgorithm::Sort(values, DefaultCompareFunctor());
+  }
+
+  //--------------------------------------------------------------------------
+  // Sort by Key
+private:
+  template<typename T, typename U, class Compare=DefaultCompareFunctor>
+  struct KeyCompare
+  {
+    KeyCompare(): CompareFunctor() {}
+    explicit KeyCompare(Compare c): CompareFunctor(c) {}
+
+    VTKM_EXEC_EXPORT
+    bool operator()(const vtkm::Pair<T,U>& a, const vtkm::Pair<T,U>& b) const
+    {
+      return CompareFunctor(a.first,b.first);
+    }
+  private:
+    Compare CompareFunctor;
+  };
+
+public:
+
+  template<typename T, typename U, class StorageT,  class StorageU>
+  VTKM_CONT_EXPORT static void SortByKey(
+      vtkm::cont::ArrayHandle<T,StorageT> &keys,
+      vtkm::cont::ArrayHandle<U,StorageU> &values)
+  {
+    //combine the keys and values into a ZipArrayHandle
+    //we than need to specify a custom compare function wrapper
+    //that only checks for key side of the pair, using a custom compare functor.
+    typedef vtkm::cont::ArrayHandle<T,StorageT> KeyType;
+    typedef vtkm::cont::ArrayHandle<U,StorageU> ValueType;
+    typedef vtkm::cont::ArrayHandleZip<KeyType,ValueType> ZipHandleType;
+
+    ZipHandleType zipHandle =
+                    vtkm::cont::make_ArrayHandleZip(keys,values);
+    DerivedAlgorithm::Sort(zipHandle,KeyCompare<T,U>());
+  }
+
+  template<typename T, typename U, class StorageT,  class StorageU, class Compare>
+  VTKM_CONT_EXPORT static void SortByKey(
+      vtkm::cont::ArrayHandle<T,StorageT> &keys,
+      vtkm::cont::ArrayHandle<U,StorageU> &values,
+      Compare comp)
+  {
+    //combine the keys and values into a ZipArrayHandle
+    //we than need to specify a custom compare function wrapper
+    //that only checks for key side of the pair, using the custom compare
+    //functor that the user passed in
+    typedef vtkm::cont::ArrayHandle<T,StorageT> KeyType;
+    typedef vtkm::cont::ArrayHandle<U,StorageU> ValueType;
+    typedef vtkm::cont::ArrayHandleZip<KeyType,ValueType> ZipHandleType;
+
+    ZipHandleType zipHandle =
+                    vtkm::cont::make_ArrayHandleZip(keys,values);
+    DerivedAlgorithm::Sort(zipHandle,KeyCompare<T,U,Compare>(comp));
   }
 
   //--------------------------------------------------------------------------
