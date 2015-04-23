@@ -20,8 +20,6 @@
 #ifndef vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_h
 #define vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_h
 
-#include <vtkm/cont/cuda/internal/SetThrustForCuda.h>
-
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 
 #include <vtkm/cont/Storage.h>
