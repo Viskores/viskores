@@ -48,9 +48,10 @@ public:
     : Portal(portal), Functor(functor)
   {  }
 
-  /// Copy constructor for any other ArrayPortalTransform with an iterator
-  /// type that can be copied to this iterator type. This allows us to do any
-  /// type casting that the iterators do (like the non-const to const cast).
+  /// Copy constructor for any other ArrayPortalTransform with a portal and
+  /// functor type that can be copied to these types. This allows us to do any
+  /// type casting that the delegate portal does (like the non-const to const
+  /// cast).
   ///
   template<class OtherV, class OtherP, class OtherF>
   VTKM_CONT_EXPORT
@@ -275,8 +276,8 @@ private:
 /// environments.
 ///
 template <typename ValueType,
-          class ArrayHandleType,
-          class FunctorType>
+          typename ArrayHandleType,
+          typename FunctorType>
 class ArrayHandleTransform
     : public vtkm::cont::ArrayHandle<
         ValueType,
