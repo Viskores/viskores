@@ -28,14 +28,12 @@
 #include <vtkm/cont/ErrorControlInternal.h>
 
 namespace vtkm {
-namespace cont {
-
+namespace exec {
 namespace internal {
-
 /// \brief An array portal that transforms a value from another portal.
 ///
 template<typename ValueType_, typename PortalType_, typename FunctorType_>
-class ArrayPortalTransform
+class ArrayPortalExecTransform
 {
 public:
   typedef PortalType_ PortalType;
@@ -43,19 +41,18 @@ public:
   typedef FunctorType_ FunctorType;
 
   VTKM_CONT_EXPORT
-  ArrayPortalTransform(const PortalType &portal = PortalType(),
+  ArrayPortalExecTransform(const PortalType &portal = PortalType(),
                        const FunctorType &functor = FunctorType())
     : Portal(portal), Functor(functor)
   {  }
 
-  /// Copy constructor for any other ArrayPortalTransform with a portal and
-  /// functor type that can be copied to these types. This allows us to do any
-  /// type casting that the delegate portal does (like the non-const to const
-  /// cast).
+  /// Copy constructor for any other ArrayPortalExecTransform with an iterator
+  /// type that can be copied to this iterator type. This allows us to do any
+  /// type casting that the iterators do (like the non-const to const cast).
   ///
   template<class OtherV, class OtherP, class OtherF>
   VTKM_CONT_EXPORT
-  ArrayPortalTransform(const ArrayPortalTransform<OtherV,OtherP,OtherF> &src)
+  ArrayPortalExecTransform(const ArrayPortalExecTransform<OtherV,OtherP,OtherF> &src)
     : Portal(src.GetPortal()),
       Functor(src.GetFunctor())
   {  }
@@ -81,6 +78,64 @@ private:
   FunctorType Functor;
 };
 
+}
+}
+} // namespace vtkm::exec::internal
+
+
+namespace vtkm {
+namespace cont {
+
+namespace internal {
+
+/// \brief An array portal that transforms a value from another portal.
+///
+template<typename ValueType_, typename PortalType_, typename FunctorType_>
+class ArrayPortalContTransform
+{
+public:
+  typedef PortalType_ PortalType;
+  typedef ValueType_ ValueType;
+  typedef FunctorType_ FunctorType;
+
+  VTKM_CONT_EXPORT
+  ArrayPortalContTransform(const PortalType &portal = PortalType(),
+                       const FunctorType &functor = FunctorType())
+    : Portal(portal), Functor(functor)
+  {  }
+
+  /// Copy constructor for any other ArrayPortalContTransform with an iterator
+  /// type that can be copied to this iterator type. This allows us to do any
+  /// type casting that the iterators do (like the non-const to const cast).
+  ///
+  template<class OtherV, class OtherP, class OtherF>
+  VTKM_CONT_EXPORT
+  ArrayPortalContTransform(const ArrayPortalContTransform<OtherV,OtherP,OtherF> &src)
+    : Portal(src.GetPortal()),
+      Functor(src.GetFunctor())
+  {  }
+
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfValues() const {
+    return this->Portal.GetNumberOfValues();
+  }
+
+  VTKM_CONT_EXPORT
+  ValueType Get(vtkm::Id index) const {
+    return this->Functor(this->Portal.Get(index));
+  }
+
+  VTKM_CONT_EXPORT
+  const PortalType &GetPortal() const { return this->Portal; }
+
+  VTKM_CONT_EXPORT
+  const FunctorType &GetFunctor() const { return this->Functor; }
+
+private:
+  PortalType Portal;
+  FunctorType Functor;
+};
+
 template<typename ValueType, typename ArrayHandleType, typename FunctorType>
 struct StorageTagTransform;
 
@@ -90,10 +145,10 @@ class Storage<T, StorageTagTransform<T, ArrayHandleType, FunctorType > >
 public:
   typedef T ValueType;
 
-  typedef ArrayPortalTransform<
+  typedef ArrayPortalContTransform<
       ValueType, typename ArrayHandleType::PortalControl, FunctorType>
     PortalType;
-  typedef ArrayPortalTransform<
+  typedef ArrayPortalContTransform<
       ValueType, typename ArrayHandleType::PortalConstControl, FunctorType>
     PortalConstType;
 
@@ -172,11 +227,11 @@ public:
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
 
-  typedef ArrayPortalTransform<
+  typedef vtkm::exec::internal::ArrayPortalExecTransform<
       ValueType,
       typename ArrayHandleType::template ExecutionTypes<Device>::Portal,
       FunctorType> PortalExecution;
-  typedef ArrayPortalTransform<
+  typedef vtkm::exec::internal::ArrayPortalExecTransform<
       ValueType,
       typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
       FunctorType> PortalConstExecution;
