@@ -45,9 +45,9 @@ public:
   typedef typename Superclass::ValueType ValueType;
   typedef typename Superclass::PortalType PortalType;
   typedef typename Superclass::PortalConstType PortalConstType;
+  typedef typename Superclass::StorageType StorageType;
 
-  template<class PortalControl>
-  VTKM_CONT_EXPORT void LoadDataForInput(PortalControl arrayPortal)
+  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType &arrayPortal)
   {
     try
       {

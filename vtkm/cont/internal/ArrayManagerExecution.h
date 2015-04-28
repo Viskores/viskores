@@ -76,28 +76,27 @@ public:
   VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const;
 
   /// Allocates a large enough array in the execution environment and copies
-  /// the given data to that array. The allocated array can later be accessed
-  /// via the GetPortalConst method. If control and execution share arrays,
-  /// then this method may save the iterators to be returned in the \c
+  /// the data from the storage to that array. The allocated array can later be
+  /// accessed via the GetPortalConst method. If control and execution share
+  /// arrays, then this method may save the iterators to be returned in the \c
   /// GetPortalConst method.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInput(
-      const typename StorageType::PortalConstType& portal);
+  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType &storage);
 
   /// Allocates a large enough array in the execution environment and copies
-  /// the given data to that array. The allocated array can later be accessed
-  /// via the GetPortal method. If control and execution share arrays, then
-  /// this method may save the iterators of the storage to be returned in the
-  /// \c GetPortal* methods.
+  /// the data from the storage to that array. The allocated array can later be
+  /// accessed via the GetPortal method. If control and execution share arrays,
+  /// then this method may save the iterators of the storage to be returned in
+  /// the \c GetPortal* methods.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInPlace(PortalType portal);
+  VTKM_CONT_EXPORT void LoadDataForInPlace(StorageType &storage);
 
   /// Allocates an array in the execution environment of the specified size.
   /// If control and execution share arrays, then this class can allocate
   /// data using the given Storage object and remember its iterators
   /// so that it can be used directly in the execution environment.
   ///
-  VTKM_CONT_EXPORT void AllocateArrayForOutput(StorageType &controlArray,
+  VTKM_CONT_EXPORT void AllocateArrayForOutput(StorageType &storage,
                                                vtkm::Id numberOfValues);
 
   /// Allocates data in the given Storage and copies data held
@@ -106,7 +105,7 @@ public:
   /// This method should only be called after AllocateArrayForOutput is
   /// called.
   ///
-  VTKM_CONT_EXPORT void RetrieveOutputData(StorageType &controlArray) const;
+  VTKM_CONT_EXPORT void RetrieveOutputData(StorageType &storage) const;
 
   /// \brief Reduces the size of the array without changing its values.
   ///

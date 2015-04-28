@@ -81,20 +81,9 @@ public:
   /// arrays, then this method may save the iterators to be returned in the \c
   /// GetPortalConst methods.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInput(const PortalConstControl& portal)
+  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType &storage)
   {
-    this->ArrayManager.LoadDataForInput(portal);
-  }
-
-  /// Allocates a large enough array in the execution environment and copies
-  /// the given data to that array. The allocated array can later be accessed
-  /// via the GetPortalConstExecution method. If control and execution share
-  /// arrays, then this method may save the iterators to be returned in the \c
-  /// GetPortalConst methods.
-  ///
-  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType &controlArray)
-  {
-    this->ArrayManager.LoadDataForInput(controlArray.GetPortalConst());
+    this->ArrayManager.LoadDataForInput(storage);
   }
 
   /// Allocates a large enough array in the execution environment and copies
@@ -103,9 +92,9 @@ public:
   /// then this method may save the iterators of the storage to be returned
   /// in the \c GetPortal* methods.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInPlace(StorageType &controlArray)
+  VTKM_CONT_EXPORT void LoadDataForInPlace(StorageType &storage)
   {
-    this->ArrayManager.LoadDataForInPlace(controlArray.GetPortal());
+    this->ArrayManager.LoadDataForInPlace(storage);
   }
 
   /// Allocates an array in the execution environment of the specified size. If
@@ -113,10 +102,10 @@ public:
   /// using the given Storage and remember its iterators so that it can be used
   /// directly in the execution environment.
   ///
-  VTKM_CONT_EXPORT void AllocateArrayForOutput(StorageType &controlArray,
+  VTKM_CONT_EXPORT void AllocateArrayForOutput(StorageType &storage,
                                                vtkm::Id numberOfValues)
   {
-    this->ArrayManager.AllocateArrayForOutput(controlArray, numberOfValues);
+    this->ArrayManager.AllocateArrayForOutput(storage, numberOfValues);
   }
 
   /// Allocates data in the given Storage and copies data held in the execution
@@ -124,9 +113,9 @@ public:
   /// and execution share arrays, this can be no operation. This method should
   /// only be called after AllocateArrayForOutput is called.
   ///
-  VTKM_CONT_EXPORT void RetrieveOutputData(StorageType &controlArray) const
+  VTKM_CONT_EXPORT void RetrieveOutputData(StorageType &storage) const
   {
-    this->ArrayManager.RetrieveOutputData(controlArray);
+    this->ArrayManager.RetrieveOutputData(storage);
   }
 
   /// \brief Reduces the size of the array without changing its values.

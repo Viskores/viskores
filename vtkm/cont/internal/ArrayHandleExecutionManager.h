@@ -73,15 +73,7 @@ public:
   /// arrays, then this method may save the iterators to be returned in the \c
   /// GetPortalConst methods.
   ///
-  virtual void LoadDataForInput(const PortalConstControl& portal) = 0;
-
-  /// Allocates a large enough array in the execution environment and copies
-  /// the given data to that array. The allocated array can later be accessed
-  /// via the GetPortalConstExecution method. If control and execution share
-  /// arrays, then this method may save the iterators to be returned in the \c
-  /// GetPortalConst methods.
-  ///
-  virtual void LoadDataForInput(const StorageType &controlArray) = 0;
+  virtual void LoadDataForInput(const StorageType &storage) = 0;
 
   /// Allocates a large enough array in the execution environment and copies
   /// the given data to that array. The allocated array can later be accessed
@@ -89,14 +81,14 @@ public:
   /// then this method may save the iterators of the storage to be returned
   /// in the \c GetPortal* methods.
   ///
-  virtual void LoadDataForInPlace(StorageType &controlArray) = 0;
+  virtual void LoadDataForInPlace(StorageType &storage) = 0;
 
   /// Allocates an array in the execution environment of the specified size. If
   /// control and execution share arrays, then this class can allocate data
   /// using the given Storage and remember its iterators so that it can be used
   /// directly in the execution environment.
   ///
-  virtual void AllocateArrayForOutput(StorageType &controlArray,
+  virtual void AllocateArrayForOutput(StorageType &storage,
                                       vtkm::Id numberOfValues) = 0;
 
   /// Allocates data in the given Storage and copies data held
@@ -105,7 +97,7 @@ public:
   /// This method should only be called after AllocateArrayForOutput is
   /// called.
   ///
-  virtual void RetrieveOutputData(StorageType &controlArray) const = 0;
+  virtual void RetrieveOutputData(StorageType &storage) const = 0;
 
   /// \brief Reduces the size of the array without changing its values.
   ///
@@ -212,33 +204,27 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(const PortalConstControl& portal)
+  void LoadDataForInput(const StorageType &storage)
   {
-    this->Transfer.LoadDataForInput(portal);
+    this->Transfer.LoadDataForInput(storage);
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(const StorageType &controlArray)
+  void LoadDataForInPlace(StorageType &storage)
   {
-    this->Transfer.LoadDataForInput(controlArray);
+    this->Transfer.LoadDataForInPlace(storage);
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInPlace(StorageType &controlArray)
+  void AllocateArrayForOutput(StorageType &storage, Id numberOfValues)
   {
-    this->Transfer.LoadDataForInPlace(controlArray);
+    this->Transfer.AllocateArrayForOutput(storage, numberOfValues);
   }
 
   VTKM_CONT_EXPORT
-  void AllocateArrayForOutput(StorageType &controlArray, Id numberOfValues)
+  void RetrieveOutputData(StorageType &storage) const
   {
-    this->Transfer.AllocateArrayForOutput(controlArray, numberOfValues);
-  }
-
-  VTKM_CONT_EXPORT
-  void RetrieveOutputData(StorageType &controlArray) const
-  {
-    this->Transfer.RetrieveOutputData(controlArray);
+    this->Transfer.RetrieveOutputData(storage);
   }
 
   VTKM_CONT_EXPORT

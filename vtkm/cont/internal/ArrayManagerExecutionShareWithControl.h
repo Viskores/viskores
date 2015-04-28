@@ -62,9 +62,9 @@ public:
 
   /// Saves the given iterators to be returned later.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInput(const PortalConstType& portal)
+  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType& storage)
   {
-    this->ConstPortal = portal;
+    this->ConstPortal = storage.GetPortalConst();
     this->ConstPortalValid = true;
 
     // Non-const versions not defined.
@@ -73,13 +73,13 @@ public:
 
   /// Saves the given iterators to be returned later.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInPlace(PortalType portal)
+  VTKM_CONT_EXPORT void LoadDataForInPlace(StorageType &storage)
   {
     // This only works if there is a valid cast from non-const to const
     // iterator.
-    this->LoadDataForInput(portal);
+    this->LoadDataForInput(storage);
 
-    this->Portal = portal;
+    this->Portal = storage.GetPortal();
     this->PortalValid = true;
   }
 

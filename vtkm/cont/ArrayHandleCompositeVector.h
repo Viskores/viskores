@@ -417,14 +417,6 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(PortalConstControl vtkmNotUsed(contPortal))
-  {
-    throw vtkm::cont::ErrorControlInternal(
-          "ArrayHandleCompositeVector in a bad state. "
-          "There must be a UserArray set, but how did that happen?");
-  }
-
-  VTKM_CONT_EXPORT
   void LoadDataForInput(const StorageType &controlArray)
   {
     this->Storage = controlArray;

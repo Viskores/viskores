@@ -20,8 +20,9 @@
 #ifndef vtk_m_cont_cuda_internal_ArrayManagerExecutionThrustDevice_h
 #define vtk_m_cont_cuda_internal_ArrayManagerExecutionThrustDevice_h
 
-#include <vtkm/cont/Storage.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorControlOutOfMemory.h>
+#include <vtkm/cont/Storage.h>
 
 #include <iostream>
 
@@ -84,7 +85,7 @@ class ArrayManagerExecutionThrustDevice
 public:
   typedef T ValueType;
 
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> ContainerType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
   typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust< T > PortalType;
   typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< const T > PortalConstType;
@@ -109,16 +110,16 @@ public:
   /// Allocates the appropriate size of the array and copies the given data
   /// into the array.
   ///
-  template<class PortalControl>
-  VTKM_CONT_EXPORT void LoadDataForInput(PortalControl arrayPortal)
+  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType &storage)
   {
     //don't bind to the texture yet, as we could have allocate the array
     //on a previous call with AllocateArrayForOutput and now are directly
     //calling get portal const
     try
       {
-      this->Array.assign(arrayPortal.GetRawIterator(),
-                         arrayPortal.GetRawIterator() + arrayPortal.GetNumberOfValues());
+      this->Array.assign(
+            vtkm::cont::ArrayPortalToIteratorBegin(storage.GetPortalConst()),
+            vtkm::cont::ArrayPortalToIteratorEnd(storage.GetPortalConst()));
       }
     catch (std::bad_alloc error)
       {
@@ -138,30 +139,31 @@ public:
   /// Allocates the array to the given size.
   ///
   VTKM_CONT_EXPORT void AllocateArrayForOutput(
-      ContainerType &vtkmNotUsed(container),
+      StorageType &vtkmNotUsed(container),
       vtkm::Id numberOfValues)
   {
     try
       {
+      // Resize to 0 first so that you don't have to copy data when resizing
+      // to a larger size.
+      this->Array.clear();
       this->Array.resize(numberOfValues);
       }
     catch (std::bad_alloc error)
       {
       throw vtkm::cont::ErrorControlOutOfMemory(error.what());
       }
-
-
   }
 
-  /// Allocates enough space in \c controlArray and copies the data in the
+  /// Allocates enough space in \c storage and copies the data in the
   /// device vector into it.
   ///
-  VTKM_CONT_EXPORT void RetrieveOutputData(ContainerType &controlArray) const
+  VTKM_CONT_EXPORT void RetrieveOutputData(StorageType &storage) const
   {
-    controlArray.Allocate(this->Array.size());
-    ::thrust::copy( this->Array.data(),
-                    this->Array.data() + this->Array.size(),
-                   controlArray.GetPortal().GetRawIterator());
+    storage.Allocate(this->Array.size());
+    ::thrust::copy(this->Array.data(),
+                   this->Array.data() + this->Array.size(),
+                   vtkm::cont::ArrayPortalToIteratorBegin(storage.GetPortal()));
   }
 
   /// Resizes the device vector.

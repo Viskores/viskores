@@ -132,13 +132,6 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(const PortalConstControl& portal)
-  {
-    this->Portal = portal;
-    this->PortalValid = true;
-  }
-
-  VTKM_CONT_EXPORT
   void LoadDataForInput(const StorageType& controlArray)
   {
     this->Portal = controlArray.GetPortalConst();

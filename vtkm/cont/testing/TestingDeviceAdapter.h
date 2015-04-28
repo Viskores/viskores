@@ -343,9 +343,7 @@ private:
   vtkm::cont::ArrayHandle<T, StorageTagBasic>
   MakeArrayHandle(const T *array, vtkm::Id length)
   {
-    return vtkm::cont::make_ArrayHandle(array,
-                                        length,
-                                        StorageTagBasic());
+    return vtkm::cont::make_ArrayHandle(array, length);
   }
 
   template<typename T>
@@ -385,17 +383,20 @@ private:
         vtkm::FloatDefault,StorageTagBasic,DeviceAdapterTag>
         ArrayManagerExecution;
 
+    typedef vtkm::cont::internal::Storage<vtkm::FloatDefault,StorageTagBasic>
+        StorageType;
+
     // Create original input array.
     vtkm::FloatDefault inputArray[ARRAY_SIZE*2];
     for (vtkm::Id index = 0; index < ARRAY_SIZE*2; index++)
     {
       inputArray[index] = vtkm::FloatDefault(index);
     }
-    ::vtkm::cont::internal::ArrayPortalFromIterators<vtkm::FloatDefault *>
-        inputPortal(inputArray, inputArray+ARRAY_SIZE*2);
+
+    StorageType storage(inputArray, ARRAY_SIZE*2);
+
     ArrayManagerExecution inputManager;
-    inputManager.LoadDataForInput(
-          ::vtkm::cont::internal::ArrayPortalFromIterators<const vtkm::FloatDefault*>(inputPortal));
+    inputManager.LoadDataForInput(storage);
 
     // Change size.
     inputManager.Shrink(ARRAY_SIZE);
