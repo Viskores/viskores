@@ -22,8 +22,9 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/exec/FunctorBase.h>
@@ -314,6 +315,107 @@ public:
         DerivedAlgorithm,DeviceAdapterTag>::LowerBounds(input,
                                                         values_output,
                                                         values_output);
+  }
+
+  //--------------------------------------------------------------------------
+  // Reduce
+private:
+  template<int ReduceWidth, typename T, typename ArrayType, typename BinaryOperation >
+  struct ReduceKernel : vtkm::exec::FunctorBase
+  {
+    typedef typename ArrayType::template ExecutionTypes<
+                            DeviceAdapterTag> ExecutionTypes;
+    typedef typename ExecutionTypes::PortalConst PortalConst;
+
+    PortalConst Portal;
+    BinaryOperation BinaryOperator;
+    vtkm::Id ArrayLength;
+
+    VTKM_CONT_EXPORT
+    ReduceKernel()
+    : Portal(),
+      BinaryOperator(),
+      ArrayLength(0)
+    {
+    }
+
+    VTKM_CONT_EXPORT
+    ReduceKernel(const ArrayType &array, BinaryOperation op)
+      : Portal(array.PrepareForInput( DeviceAdapterTag() ) ),
+        BinaryOperator(op),
+        ArrayLength( array.GetNumberOfValues() )
+    {  }
+
+    VTKM_EXEC_EXPORT
+    T operator()(vtkm::Id index) const
+    {
+      const vtkm::Id offset = index * ReduceWidth;
+
+      //at least the first value access to the portal will be valid
+      //only the rest could be invalid
+      T partialSum = this->Portal.Get( offset );
+
+      if( offset + ReduceWidth >= this->ArrayLength )
+        {
+        vtkm::Id currentIndex = offset + 1;
+        while( currentIndex < this->ArrayLength)
+          {
+          partialSum = BinaryOperator(partialSum, this->Portal.Get(currentIndex));
+          ++currentIndex;
+          }
+        }
+      else
+        {
+        //optimize the usecase where all values are valid and we don't
+        //need to check that we might go out of bounds
+        for(int i=1; i < ReduceWidth; ++i)
+          {
+          partialSum = BinaryOperator(partialSum,
+                                      this->Portal.Get( offset + i )
+                                      );
+          }
+        }
+      return partialSum;
+    }
+  };
+public:
+
+ template<typename T, class CIn>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
+  {
+    //Crazy Idea:
+    //We create a implicit array handle that wraps the input
+    //array handle. The implicit functor is passed the input array handle, and
+    //the number of elements it needs to sum. This way the implicit handle
+    //acts as the first level reduction. Say for example reducing 16 values
+    //at a time.
+    //
+    //Now that we have an implicit array that is 1/16 the length of full array
+    //we can use scan inclusive to compute the final sum
+    typedef ReduceKernel<
+            16,
+            T,
+            vtkm::cont::ArrayHandle<T,CIn>,
+            vtkm::internal::Add
+            > ReduceKernelType;
+
+    typedef vtkm::cont::ArrayHandleImplicit<
+                                            T,
+                                            ReduceKernelType > ReduceHandleType;
+    typedef vtkm::cont::ArrayHandle<
+                                    T,
+                                    vtkm::cont::StorageTagBasic> TempArrayType;
+
+    ReduceKernelType kernel(input, vtkm::internal::Add());
+    vtkm::Id length = (input.GetNumberOfValues() / 16);
+    length += (input.GetNumberOfValues() % 16 == 0) ? 0 : 1;
+    ReduceHandleType reduced = vtkm::cont::make_ArrayHandleImplicit<T>(kernel,
+                                                                       length);
+
+    TempArrayType inclusiveScan;
+    return initialValue + DerivedAlgorithm::ScanInclusive(reduced,
+                                                          inclusiveScan);
   }
 
   //--------------------------------------------------------------------------

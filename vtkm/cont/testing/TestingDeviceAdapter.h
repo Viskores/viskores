@@ -1053,6 +1053,33 @@ private:
     VTKM_TEST_ASSERT(value == OFFSET, "Got bad unique value");
   }
 
+  static VTKM_CONT_EXPORT void TestReduce()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Reduce" << std::endl;
+
+    //construct the index array
+    IdArrayHandle array;
+    Algorithm::Schedule(
+      ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
+                       DeviceAdapterTag())),
+      ARRAY_SIZE);
+
+    //the output of reduce and scan inclusive should be the same
+    vtkm::Id reduce_sum = Algorithm::Reduce(array, vtkm::Id(0));
+    vtkm::Id reduce_sum_with_intial_value = Algorithm::Reduce(array,
+                                                          vtkm::Id(ARRAY_SIZE));
+    vtkm::Id inclusive_sum = Algorithm::ScanInclusive(array, array);
+
+    VTKM_TEST_ASSERT(reduce_sum == OFFSET * ARRAY_SIZE,
+                     "Got bad sum from Reduce");
+    VTKM_TEST_ASSERT(reduce_sum_with_intial_value == reduce_sum + ARRAY_SIZE,
+                     "Got bad sum from Reduce with initial value");
+
+    VTKM_TEST_ASSERT(reduce_sum == inclusive_sum,
+                     "Got different sums from Reduce and ScanInclusive");
+  }
+
   static VTKM_CONT_EXPORT void TestScanInclusive()
   {
     std::cout << "-------------------------------------------" << std::endl;
@@ -1340,14 +1367,22 @@ private:
 
       TestAlgorithmSchedule();
       TestErrorExecution();
+
+      TestReduce();
+
       TestScanInclusive();
       TestScanExclusive();
+
       TestSort();
       TestSortWithComparisonObject();
       TestSortByKey();
+
       TestLowerBoundsWithComparisonObject();
+
       TestUpperBoundsWithComparisonObject();
+
       TestUniqueWithComparisonObject();
+
       TestOrderedUniqueValues(); //tests Copy, LowerBounds, Sort, Unique
       // TestDispatcher();
       TestStreamCompactWithStencil();

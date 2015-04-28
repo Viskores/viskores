@@ -290,6 +290,16 @@ private:
                           IteratorBegin(values_output));
   }
 
+  template<class InputPortal>
+  VTKM_CONT_EXPORT static
+  typename InputPortal::ValueType ReducePortal(const InputPortal &input,
+                            typename InputPortal::ValueType initialValue)
+  {
+    return ::thrust::reduce(IteratorBegin(input),
+                            IteratorEnd(input),
+                            initialValue);
+  }
+
   template<class InputPortal, class OutputPortal>
   VTKM_CONT_EXPORT static
   typename InputPortal::ValueType ScanExclusivePortal(const InputPortal &input,
@@ -523,6 +533,18 @@ public:
   {
     LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTag()),
                       values_output.PrepareForInPlace(DeviceAdapterTag()));
+  }
+ template<typename T, class SIn>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,SIn> &input, T initialValue)
+  {
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
+    if (numberOfValues <= 0)
+      {
+      return initialValue;
+      }
+    return ReducePortal(input.PrepareForInput( DeviceAdapterTag() ),
+                        initialValue);
   }
 
   template<typename T, class SIn, class SOut>
