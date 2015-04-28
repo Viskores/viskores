@@ -66,41 +66,44 @@ public:
     typedef void *IteratorType;
   };
 
+  VTKM_CONT_EXPORT
+  Storage(const PortalConstType &portal = PortalConstType())
+    : Portal(portal) {  }
+
   // All these methods do nothing but raise errors.
+  VTKM_CONT_EXPORT
   PortalType GetPortal()
   {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
   }
+  VTKM_CONT_EXPORT
   PortalConstType GetPortalConst() const
   {
-    // This does not work because the ArrayHandle holds the constant
-    // ArrayPortal, not the storage.
-    throw vtkm::cont::ErrorControlBadValue(
-          "Implicit storage does not store array portal.  "
-          "Perhaps you did not set the ArrayPortal when "
-          "constructing the ArrayHandle.");
+    return this->Portal;
   }
+  VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const
   {
-    // This does not work because the ArrayHandle holds the constant
-    // ArrayPortal, not the Storage.
-    throw vtkm::cont::ErrorControlBadValue(
-          "Implicit storage does not store array portal.  "
-          "Perhaps you did not set the ArrayPortal when "
-          "constructing the ArrayHandle.");
+    return this->Portal.GetNumberOfValues();
   }
+  VTKM_CONT_EXPORT
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
   }
+  VTKM_CONT_EXPORT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
   }
+  VTKM_CONT_EXPORT
   void ReleaseResources()
   {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
   }
+
+private:
+  PortalConstType Portal;
 };
 
 template<typename T, class ArrayPortalType, class DeviceAdapterTag>
@@ -118,24 +121,28 @@ public:
   typedef PortalControl PortalExecution;
   typedef PortalConstControl PortalConstExecution;
 
+  VTKM_CONT_EXPORT
   ArrayTransfer() : PortalValid(false) {  }
 
-  VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfValues() const
   {
     VTKM_ASSERT_CONT(this->PortalValid);
     return this->Portal.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT void LoadDataForInput(const PortalConstControl& portal)
+  VTKM_CONT_EXPORT
+  void LoadDataForInput(const PortalConstControl& portal)
   {
     this->Portal = portal;
     this->PortalValid = true;
   }
 
-  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType& vtkmNotUsed(controlArray) )
+  VTKM_CONT_EXPORT
+  void LoadDataForInput(const StorageType& controlArray)
   {
-    throw vtkm::cont::ErrorControlBadValue(
-          "Implicit arrays have no storage, you need to load from a portal");
+    this->Portal = controlArray.GetPortalConst();
+    this->PortalValid = true;
   }
 
   VTKM_CONT_EXPORT
@@ -145,37 +152,41 @@ public:
           "Implicit arrays cannot be used for output or in place.");
   }
 
-  VTKM_CONT_EXPORT void AllocateArrayForOutput(
-      StorageType &vtkmNotUsed(controlArray),
-      vtkm::Id vtkmNotUsed(numberOfValues))
+  VTKM_CONT_EXPORT
+  void AllocateArrayForOutput(StorageType &vtkmNotUsed(controlArray),
+                              vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Implicit arrays cannot be used for output.");
   }
-  VTKM_CONT_EXPORT void RetrieveOutputData(
-      StorageType &vtkmNotUsed(controlArray)) const
+  VTKM_CONT_EXPORT
+  void RetrieveOutputData(StorageType &vtkmNotUsed(controlArray)) const
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Implicit arrays cannot be used for output.");
   }
 
-  VTKM_CONT_EXPORT void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
+  VTKM_CONT_EXPORT
+  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays cannot be resized.");
   }
 
-  VTKM_CONT_EXPORT PortalExecution GetPortalExecution()
+  VTKM_CONT_EXPORT
+  PortalExecution GetPortalExecution()
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Implicit arrays are read-only.  (Get the const portal.)");
   }
-  VTKM_CONT_EXPORT PortalConstExecution GetPortalConstExecution() const
+  VTKM_CONT_EXPORT
+  PortalConstExecution GetPortalConstExecution() const
   {
     VTKM_ASSERT_CONT(this->PortalValid);
     return this->Portal;
   }
 
-  VTKM_CONT_EXPORT void ReleaseResources() {  }
+  VTKM_CONT_EXPORT
+  void ReleaseResources() {  }
 
 private:
   PortalConstExecution Portal;

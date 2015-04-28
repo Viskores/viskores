@@ -74,13 +74,10 @@ struct TemplatedTests
   {
     StorageType arrayStorage;
 
-    try
-    {
-      arrayStorage.GetNumberOfValues();
-      VTKM_TEST_ASSERT(false == true,
-                       "Implicit Storage GetNumberOfValues method didn't throw error.");
-    }
-    catch(vtkm::cont::ErrorControlBadValue e) {}
+    // The implicit portal defined for this test always returns 1 for the
+    // number of values. We should get that.
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == 1,
+                     "Implicit Storage GetNumberOfValues returned wrong size.");
 
     try
     {
