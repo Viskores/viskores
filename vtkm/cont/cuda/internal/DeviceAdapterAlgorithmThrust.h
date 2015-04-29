@@ -485,7 +485,7 @@ public:
       const vtkm::cont::ArrayHandle<T,SIn> &input,
       vtkm::cont::ArrayHandle<T,SOut> &output)
   {
-    vtkm::Id numberOfValues = input.GetNumberOfValues();
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
     CopyPortal(input.PrepareForInput(DeviceAdapterTag()),
                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
@@ -530,7 +530,7 @@ public:
       const vtkm::cont::ArrayHandle<T,SIn> &input,
       vtkm::cont::ArrayHandle<T,SOut>& output)
   {
-    vtkm::Id numberOfValues = input.GetNumberOfValues();
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
       {
       output.PrepareForOutput(0, DeviceAdapterTag());
@@ -545,7 +545,7 @@ public:
       const vtkm::cont::ArrayHandle<T,SIn> &input,
       vtkm::cont::ArrayHandle<T,SOut>& output)
   {
-    vtkm::Id numberOfValues = input.GetNumberOfValues();
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
       {
       output.PrepareForOutput(0, DeviceAdapterTag());
