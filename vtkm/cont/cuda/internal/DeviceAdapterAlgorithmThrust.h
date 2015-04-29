@@ -330,6 +330,21 @@ private:
     return *(IteratorEnd(output) - 1);
   }
 
+  template<class InputPortal, class OutputPortal, class BinaryOperation>
+  VTKM_CONT_EXPORT static
+  typename InputPortal::ValueType ScanInclusivePortal(const InputPortal &input,
+                                                      const OutputPortal &output,
+                                                      BinaryOperation binaryOp)
+  {
+    ::thrust::inclusive_scan(IteratorBegin(input),
+                             IteratorEnd(input),
+                             IteratorBegin(output),
+                             binaryOp);
+
+    //return the value at the last index in the array, as that is the sum
+    return *(IteratorEnd(output) - 1);
+  }
+
   template<class ValuesPortal>
   VTKM_CONT_EXPORT static void SortPortal(const ValuesPortal &values)
   {
@@ -534,6 +549,7 @@ public:
     LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTag()),
                       values_output.PrepareForInPlace(DeviceAdapterTag()));
   }
+
  template<typename T, class SIn>
   VTKM_CONT_EXPORT static T Reduce(
       const vtkm::cont::ArrayHandle<T,SIn> &input, T initialValue)
@@ -562,6 +578,7 @@ public:
     return ScanExclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
+
   template<typename T, class SIn, class SOut>
   VTKM_CONT_EXPORT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,SIn> &input,
@@ -576,6 +593,24 @@ public:
 
     return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
+  }
+
+  template<typename T, class SIn, class SOut, class BinaryOperation>
+  VTKM_CONT_EXPORT static T ScanInclusive(
+      const vtkm::cont::ArrayHandle<T,SIn> &input,
+      vtkm::cont::ArrayHandle<T,SOut>& output,
+      BinaryOperation binaryOp)
+  {
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
+    if (numberOfValues <= 0)
+      {
+      output.PrepareForOutput(0, DeviceAdapterTag());
+      return 0;
+      }
+
+    return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
+                               output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+                               binaryOp);
   }
 
 // Because of some funny code conversions in nvcc, kernels for devices have to

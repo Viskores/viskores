@@ -133,6 +133,24 @@ struct DeviceAdapterAlgorithm
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output);
 
+  /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
+  ///
+  /// Computes an inclusive prefix sum operation on the \c input ArrayHandle,
+  /// storing the results in the \c output ArrayHandle. InclusiveScan is
+  /// similar to the stl partial sum function, exception that InclusiveScan
+  /// doesn't do a serial summation. This means that if you have defined a
+  /// custom plus operator for T it must be associative, or you will get
+  /// inconsistent results. When the input and output ArrayHandles are the same
+  /// ArrayHandle the operation will be done inplace.
+  ///
+  /// \return The total sum.
+  ///
+  template<typename T, class CIn, class COut, class BinaryOperation>
+  VTKM_CONT_EXPORT static T ScanInclusive(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      BinaryOperation binaryOp);
+
   /// \brief Compute an exclusive prefix sum operation on the input ArrayHandle.
   ///
   /// Computes an exclusive prefix sum operation on the \c input ArrayHandle,

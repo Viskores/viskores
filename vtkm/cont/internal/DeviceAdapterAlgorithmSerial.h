@@ -63,11 +63,38 @@ public:
     PortalIn inputPortal = input.PrepareForInput(Device());
     PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
-    if (numberOfValues <= 0) { return 0; }
+    if (numberOfValues <= 0) { return T(0); }
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorBegin(outputPortal));
+
+    // Return the value at the last index in the array, which is the full sum.
+    return outputPortal.Get(numberOfValues - 1);
+  }
+
+  template<typename T, class CIn, class COut, class BinaryOperation>
+  VTKM_CONT_EXPORT static T ScanInclusive(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      BinaryOperation binaryOp)
+  {
+    typedef typename vtkm::cont::ArrayHandle<T,COut>
+        ::template ExecutionTypes<Device>::Portal PortalOut;
+    typedef typename vtkm::cont::ArrayHandle<T,CIn>
+        ::template ExecutionTypes<Device>::PortalConst PortalIn;
+
+    vtkm::Id numberOfValues = input.GetNumberOfValues();
+
+    PortalIn inputPortal = input.PrepareForInput(Device());
+    PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
+
+    if (numberOfValues <= 0) { return T(0); }
+
+    std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
+                 vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
+                 vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
+                 binaryOp);
 
     // Return the value at the last index in the array, which is the full sum.
     return outputPortal.Get(numberOfValues - 1);

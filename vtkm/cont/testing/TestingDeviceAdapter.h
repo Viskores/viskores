@@ -105,6 +105,16 @@ struct SortGreater
     return valid;
   }
 };
+
+struct MaxValue
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT T operator()(const T& a,const T& b) const
+  {
+    return (a > b) ? a : b;
+  }
+};
+
 }
 
 
@@ -1112,6 +1122,54 @@ private:
     }
   }
 
+  static VTKM_CONT_EXPORT void TestScanInclusiveWithComparisonObject()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Inclusive Scan with comparison object " << std::endl;
+
+    //construct the index array
+    IdArrayHandle array;
+    Algorithm::Schedule(
+      ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
+                       DeviceAdapterTag())),
+      ARRAY_SIZE);
+
+    Algorithm::Schedule(
+      AddArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
+                     DeviceAdapterTag())),
+      ARRAY_SIZE);
+    //we know have an array whose sum is equal to OFFSET * ARRAY_SIZE,
+    //let's validate that
+    IdArrayHandle result;
+    vtkm::Id sum = Algorithm::ScanInclusive(array,
+                                            result,
+                                            comparison::MaxValue());
+    VTKM_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE-1),
+                     "Got bad sum from Inclusive Scan with comparison object");
+
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      const vtkm::Id input_value = array.GetPortalConstControl().Get(i);
+      const vtkm::Id result_value = result.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(input_value == result_value, "Incorrect partial sum");
+    }
+
+    //now try it inline
+    sum = Algorithm::ScanInclusive(array,
+                                   array,
+                                   comparison::MaxValue());
+    VTKM_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE-1),
+                     "Got bad sum from Inclusive Scan with comparison object");
+
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      const vtkm::Id input_value = array.GetPortalConstControl().Get(i);
+      const vtkm::Id result_value = result.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(input_value == result_value, "Incorrect partial sum");
+    }
+
+  }
+
   static VTKM_CONT_EXPORT void TestScanExclusive()
   {
     std::cout << "-------------------------------------------" << std::endl;
@@ -1371,6 +1429,8 @@ private:
       TestReduce();
 
       TestScanInclusive();
+      TestScanInclusiveWithComparisonObject();
+
       TestScanExclusive();
 
       TestSort();

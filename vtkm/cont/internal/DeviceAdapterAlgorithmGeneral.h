@@ -488,17 +488,20 @@ public:
   //--------------------------------------------------------------------------
   // Scan Inclusive
 private:
-  template<typename PortalType>
+  template<typename PortalType, typename BinaryOperation>
   struct ScanKernel : vtkm::exec::FunctorBase
   {
     PortalType Portal;
+    BinaryOperation BinaryOperator;
     vtkm::Id Stride;
     vtkm::Id Offset;
     vtkm::Id Distance;
 
     VTKM_CONT_EXPORT
-    ScanKernel(const PortalType &portal, vtkm::Id stride, vtkm::Id offset)
+    ScanKernel(const PortalType &portal, BinaryOperation binaryOp,
+               vtkm::Id stride, vtkm::Id offset)
       : Portal(portal),
+        BinaryOperator(binaryOp),
         Stride(stride),
         Offset(offset),
         Distance(stride/2)
@@ -516,7 +519,7 @@ private:
       {
         ValueType leftValue = this->Portal.Get(leftIndex);
         ValueType rightValue = this->Portal.Get(rightIndex);
-        this->Portal.Set(rightIndex, leftValue+rightValue);
+        this->Portal.Set(rightIndex, BinaryOperator(leftValue,rightValue) );
       }
     }
   };
@@ -527,16 +530,29 @@ public:
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
+    return DerivedAlgorithm::ScanInclusive(input,
+                                            output,
+                                            vtkm::internal::Add());
+  }
+
+  template<typename T, class CIn, class COut, class BinaryOperation>
+  VTKM_CONT_EXPORT static T ScanInclusive(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      BinaryOperation binaryOp)
+  {
     typedef typename
         vtkm::cont::ArrayHandle<T,COut>
             ::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
+
+    typedef ScanKernel<PortalType,BinaryOperation> ScanKernelType;
 
     DerivedAlgorithm::Copy(input, output);
 
     vtkm::Id numValues = output.GetNumberOfValues();
     if (numValues < 1)
     {
-      return 0;
+      return T(0);
     }
 
     PortalType portal = output.PrepareForInPlace(DeviceAdapterTag());
@@ -544,14 +560,14 @@ public:
     vtkm::Id stride;
     for (stride = 2; stride-1 < numValues; stride *= 2)
     {
-      ScanKernel<PortalType> kernel(portal, stride, stride/2 - 1);
+      ScanKernelType kernel(portal, binaryOp, stride, stride/2 - 1);
       DerivedAlgorithm::Schedule(kernel, numValues/stride);
     }
 
     // Do reverse operation on odd indices. Start at stride we were just at.
     for (stride /= 2; stride > 1; stride /= 2)
     {
-      ScanKernel<PortalType> kernel(portal, stride, stride - 1);
+      ScanKernelType kernel(portal, binaryOp, stride, stride - 1);
       DerivedAlgorithm::Schedule(kernel, numValues/stride);
     }
 
