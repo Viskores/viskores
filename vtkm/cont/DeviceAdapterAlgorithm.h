@@ -103,6 +103,20 @@ struct DeviceAdapterAlgorithm
 
   /// \brief Compute a accumulated sum operation on the input ArrayHandle
   ///
+  /// Computes an accumulated sum on the \c input ArrayHandle, returning the
+  /// total sum. Reduce is similar to the stl accumulate sum function,
+  /// exception that Reduce doesn't do a serial summation. This means that if
+  /// you have defined a custom plus operator for T it must be commutative,
+  /// or you will get inconsistent results.
+  ///
+  /// \return The total sum.
+  template<typename T, class CIn>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      T initialValue);
+
+  /// \brief Compute a accumulated sum operation on the input ArrayHandle
+  ///
   /// Computes an accumulated sum (or any user binary operation) on the
   /// \c input ArrayHandle, returning the total sum. Reduce is
   /// similar to the stl accumulate sum function, exception that Reduce
@@ -111,10 +125,11 @@ struct DeviceAdapterAlgorithm
   /// inconsistent results.
   ///
   /// \return The total sum.
-  template<typename T, class CIn>
+  template<typename T, class CIn, class BinaryOperation>
   VTKM_CONT_EXPORT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
-      T initialValue);
+      T initialValue,
+      BinaryOperation binaryOp);
 
   /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
   ///

@@ -379,10 +379,18 @@ private:
     }
   };
 public:
-
  template<typename T, class CIn>
   VTKM_CONT_EXPORT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
+  {
+    return DerivedAlgorithm::Reduce(input, initialValue, vtkm::internal::Add());
+  }
+
+ template<typename T, class CIn, class BinaryOperator>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      T initialValue,
+      BinaryOperator binaryOp)
   {
     //Crazy Idea:
     //We create a implicit array handle that wraps the input
@@ -397,7 +405,7 @@ public:
             16,
             T,
             vtkm::cont::ArrayHandle<T,CIn>,
-            vtkm::internal::Add
+            BinaryOperator
             > ReduceKernelType;
 
     typedef vtkm::cont::ArrayHandleImplicit<
@@ -407,15 +415,17 @@ public:
                                     T,
                                     vtkm::cont::StorageTagBasic> TempArrayType;
 
-    ReduceKernelType kernel(input, vtkm::internal::Add());
+    ReduceKernelType kernel(input, binaryOp);
     vtkm::Id length = (input.GetNumberOfValues() / 16);
     length += (input.GetNumberOfValues() % 16 == 0) ? 0 : 1;
     ReduceHandleType reduced = vtkm::cont::make_ArrayHandleImplicit<T>(kernel,
                                                                        length);
 
-    TempArrayType inclusiveScan;
-    return initialValue + DerivedAlgorithm::ScanInclusive(reduced,
-                                                          inclusiveScan);
+    TempArrayType inclusiveScanStorage;
+    T scanResult = DerivedAlgorithm::ScanInclusive(reduced,
+                                                   inclusiveScanStorage,
+                                                   binaryOp);
+    return binaryOp(initialValue, scanResult);
   }
 
   //--------------------------------------------------------------------------

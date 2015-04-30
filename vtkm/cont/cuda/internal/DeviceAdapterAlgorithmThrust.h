@@ -300,6 +300,18 @@ private:
                             initialValue);
   }
 
+  template<class InputPortal, class BinaryOperation>
+  VTKM_CONT_EXPORT static
+  typename InputPortal::ValueType ReducePortal(const InputPortal &input,
+                            typename InputPortal::ValueType initialValue,
+                            BinaryOperation binaryOP)
+  {
+    return ::thrust::reduce(IteratorBegin(input),
+                            IteratorEnd(input),
+                            initialValue,
+                            binaryOP);
+  }
+
   template<class InputPortal, class OutputPortal>
   VTKM_CONT_EXPORT static
   typename InputPortal::ValueType ScanExclusivePortal(const InputPortal &input,
@@ -552,7 +564,8 @@ public:
 
  template<typename T, class SIn>
   VTKM_CONT_EXPORT static T Reduce(
-      const vtkm::cont::ArrayHandle<T,SIn> &input, T initialValue)
+      const vtkm::cont::ArrayHandle<T,SIn> &input,
+      T initialValue)
   {
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
@@ -561,6 +574,22 @@ public:
       }
     return ReducePortal(input.PrepareForInput( DeviceAdapterTag() ),
                         initialValue);
+  }
+
+ template<typename T, class SIn, class BinaryOperation>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,SIn> &input,
+      T initialValue,
+      BinaryOperation binaryOp)
+  {
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
+    if (numberOfValues <= 0)
+      {
+      return initialValue;
+      }
+    return ReducePortal(input.PrepareForInput( DeviceAdapterTag() ),
+                        initialValue,
+                        binaryOp);
   }
 
   template<typename T, class SIn, class SOut>

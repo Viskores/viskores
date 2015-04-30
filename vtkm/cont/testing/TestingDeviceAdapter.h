@@ -1090,11 +1090,34 @@ private:
                      "Got different sums from Reduce and ScanInclusive");
   }
 
+  static VTKM_CONT_EXPORT void TestReduceWithComparisonObject()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Reduce with comparison object " << std::endl;
+
+    //construct the index array. Assign an abnormally large value
+    //to the middle of the array, that should be what we see as our sum.
+    vtkm::Id testData[ARRAY_SIZE];
+    const vtkm::Id maxValue = ARRAY_SIZE*2;
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      testData[i]= i;
+    }
+    testData[ARRAY_SIZE/2] = maxValue;
+
+    IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
+    vtkm::Id largestValue = Algorithm::Reduce(input,
+                                              vtkm::Id(),
+                                              comparison::MaxValue());
+
+    VTKM_TEST_ASSERT(largestValue == maxValue,
+                    "Got bad value from Reduce with comparison object");
+  }
+
   static VTKM_CONT_EXPORT void TestScanInclusive()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Inclusive Scan" << std::endl;
-
     //construct the index array
     IdArrayHandle array;
     Algorithm::Schedule(
@@ -1427,6 +1450,7 @@ private:
       TestErrorExecution();
 
       TestReduce();
+      TestReduceWithComparisonObject();
 
       TestScanInclusive();
       TestScanInclusiveWithComparisonObject();
