@@ -26,38 +26,6 @@
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
 
-namespace vtkm {
-namespace cont {
-namespace testing {
-
-template<>
-struct CopyInto<vtkm::cont::DeviceAdapterTagCuda>
-{
-  template<typename T, typename StorageTagType>
-  VTKM_CONT_EXPORT
-  void operator()( vtkm::cont::internal::ArrayManagerExecution<
-                    T,
-                    StorageTagType,
-                    vtkm::cont::DeviceAdapterTagCuda>& manager,
-                 T* start)
-  {
-    typedef vtkm::cont::internal::Storage< T, StorageTagType > StorageType;
-    StorageType outputArray;
-    std::cout << "now calling RetrieveOutputData: " << std::endl;
-    manager.RetrieveOutputData( outputArray );
-
-    vtkm::cont::ArrayPortalToIterators<
-                typename StorageType::PortalConstType>
-      iterators(outputArray.GetPortalConst());
-     std::copy(iterators.GetBegin(), iterators.GetEnd(), start);
-  }
-};
-
-
-}
-}
-}
-
 int UnitTestDeviceAdapterCuda(int, char *[])
 {
   int result =  vtkm::cont::testing::TestingDeviceAdapter

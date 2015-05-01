@@ -408,38 +408,44 @@ public:
   typedef ArrayPortalCompositeVector<SignatureWithPortals> PortalConstExecution;
 
   VTKM_CONT_EXPORT
-  ArrayTransfer() : StorageValid(false) {  }
+  ArrayTransfer(StorageType &storage) : Storage(storage) {  }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
-    VTKM_ASSERT_CONT(this->StorageValid);
     return this->Storage.GetNumberOfValues();
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(const StorageType &controlArray)
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) const
   {
-    this->Storage = controlArray;
-    this->StorageValid = true;
+    return
+        PortalConstExecution(
+          this->Storage.GetArrays().StaticTransformCont(
+            detail::CompositeVectorArrayToPortalExec<DeviceAdapterTag>()),
+          this->Storage.GetSourceComponents());
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInPlace(StorageType &vtkmNotUsed(controlArray))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
+    // It may be the case a composite vector could be used for in place
+    // operations, but this is not implemented currently.
     throw vtkm::cont::ErrorControlBadValue(
           "Composite vector arrays cannot be used for output or in place.");
   }
 
   VTKM_CONT_EXPORT
-  void AllocateArrayForOutput(StorageType &vtkmNotUsed(controlArray),
-                              vtkm::Id vtkmNotUsed(numberOfValues))
+  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
   {
+    // It may be the case a composite vector could be used for output if you
+    // want the delegate arrays to be resized, but this is not implemented
+    // currently.
     throw vtkm::cont::ErrorControlBadValue(
           "Composite vector arrays cannot be used for output.");
   }
 
   VTKM_CONT_EXPORT
-  void RetrieveOutputData(StorageType &vtkmNotUsed(controlArray)) const
+  void RetrieveOutputData(StorageType &vtkmNotUsed(storage)) const
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Composite vector arrays cannot be used for output.");
@@ -453,31 +459,12 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  PortalExecution GetPortalExecution()
-  {
-    throw vtkm::cont::ErrorControlBadValue(
-          "Composite vector arrays are read-only. (Get the const portal.)");
-  }
-
-  VTKM_CONT_EXPORT
-  PortalConstExecution GetPortalConstExecution() const
-  {
-    VTKM_ASSERT_CONT(this->StorageValid);
-    return
-        PortalConstExecution(
-          this->Storage.GetArrays().StaticTransformCont(
-            detail::CompositeVectorArrayToPortalExec<DeviceAdapterTag>()),
-          this->Storage.GetSourceComponents());
-  }
-
-  VTKM_CONT_EXPORT
   void ReleaseResources() {
     this->Storage.ReleaseResources();
   }
 
 private:
-  bool StorageValid;
-  StorageType Storage;
+  StorageType &Storage;
 };
 
 } // namespace internal

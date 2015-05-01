@@ -66,54 +66,65 @@ public:
   typedef typename ArrayManagerType::PortalType PortalExecution;
   typedef typename ArrayManagerType::PortalConstType PortalConstExecution;
 
+  VTKM_CONT_EXPORT
+  ArrayTransfer(StorageType &storage) : ArrayManager(storage) {  }
 
   /// Returns the number of values stored in the array.  Results are undefined
   /// if data has not been loaded or allocated.
   ///
-  VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfValues() const
   {
     return this->ArrayManager.GetNumberOfValues();
   }
 
-  /// Allocates a large enough array in the execution environment and copies
-  /// the given data to that array. The allocated array can later be accessed
-  /// via the GetPortalConstExecution method. If control and execution share
-  /// arrays, then this method may save the iterators to be returned in the \c
-  /// GetPortalConst methods.
+  /// Prepares the data for use as input in the execution environment. If the
+  /// flag \c updateData is true, then data is transferred to the execution
+  /// environment. Otherwise, this transfer is (or may be) skipped.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType &storage)
+  /// Returns a constant array portal valid in the execution environment.
+  ///
+  VTKM_CONT_EXPORT
+  PortalConstExecution PrepareForInput(bool updateData)
   {
-    this->ArrayManager.LoadDataForInput(storage);
+    return this->ArrayManager.PrepareForInput(updateData);
   }
 
-  /// Allocates a large enough array in the execution environment and copies
-  /// the given data to that array. The allocated array can later be accessed
-  /// via the GetPortalExection method. If control and execution share arrays,
-  /// then this method may save the iterators of the storage to be returned
-  /// in the \c GetPortal* methods.
+  /// Prepares the data for use as both input and output in the execution
+  /// environment. If the flag \c updateData is true, then data is transferred
+  /// to the execution environment. Otherwise, this transfer is (or may be)
+  /// skipped.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInPlace(StorageType &storage)
+  /// Returns a read-write array portal valid in the execution environment.
+  ///
+  VTKM_CONT_EXPORT
+  PortalExecution PrepareForInPlace(bool updateData)
   {
-    this->ArrayManager.LoadDataForInPlace(storage);
+    return this->ArrayManager.PrepareForInPlace(updateData);
   }
 
   /// Allocates an array in the execution environment of the specified size. If
   /// control and execution share arrays, then this class can allocate data
-  /// using the given Storage and remember its iterators so that it can be used
-  /// directly in the execution environment.
+  /// using the given Storage it can be used directly in the execution
+  /// environment.
   ///
-  VTKM_CONT_EXPORT void AllocateArrayForOutput(StorageType &storage,
-                                               vtkm::Id numberOfValues)
+  /// Returns a writable array portal valid in the execution environment.
+  ///
+  VTKM_CONT_EXPORT
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
-    this->ArrayManager.AllocateArrayForOutput(storage, numberOfValues);
+    return this->ArrayManager.PrepareForOutput(numberOfValues);
   }
 
   /// Allocates data in the given Storage and copies data held in the execution
-  /// environment (managed by this class) into the control array. If control
-  /// and execution share arrays, this can be no operation. This method should
-  /// only be called after AllocateArrayForOutput is called.
+  /// environment (managed by this class) into the storage object. The
+  /// reference to the storage given is the same as that passed to the
+  /// constructor. If control and execution share arrays, this can be no
+  /// operation. This method should only be called after PrepareForOutput is
+  /// called.
   ///
-  VTKM_CONT_EXPORT void RetrieveOutputData(StorageType &storage) const
+  VTKM_CONT_EXPORT
+  void RetrieveOutputData(StorageType &storage) const
   {
     this->ArrayManager.RetrieveOutputData(storage);
   }
@@ -127,32 +138,17 @@ public:
   /// (returned from GetNumberOfValues). That is, this method can only be used
   /// to shorten the array, not lengthen.
   ///
-  VTKM_CONT_EXPORT void Shrink(vtkm::Id numberOfValues)
+  VTKM_CONT_EXPORT
+  void Shrink(vtkm::Id numberOfValues)
   {
     this->ArrayManager.Shrink(numberOfValues);
-  }
-
-  /// Returns an array portal that can be used in the execution environment.
-  /// This portal was defined in either LoadDataForInput or
-  /// AllocateArrayForOutput. If control and environment share memory space,
-  /// this class may return the iterator from the \c controlArray.
-  ///
-  VTKM_CONT_EXPORT PortalExecution GetPortalExecution()
-  {
-    return this->ArrayManager.GetPortal();
-  }
-
-  /// Const version of GetPortal.
-  ///
-  VTKM_CONT_EXPORT PortalConstExecution GetPortalConstExecution() const
-  {
-    return this->ArrayManager.GetPortalConst();
   }
 
   /// Frees any resources (i.e. memory) allocated for the exeuction
   /// environment, if any.
   ///
-  VTKM_CONT_EXPORT void ReleaseResources()
+  VTKM_CONT_EXPORT
+  void ReleaseResources()
   {
     this->ArrayManager.ReleaseResources();
   }

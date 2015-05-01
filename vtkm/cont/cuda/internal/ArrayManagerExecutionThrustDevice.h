@@ -90,12 +90,14 @@ public:
   typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust< T > PortalType;
   typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< const T > PortalConstType;
 
-  VTKM_CONT_EXPORT ArrayManagerExecutionThrustDevice():
-    Array()
+  VTKM_CONT_EXPORT
+  ArrayManagerExecutionThrustDevice(StorageType &storage)
+    : Storage(storage), Array()
   {
 
   }
 
+  VTKM_CONT_EXPORT
   ~ArrayManagerExecutionThrustDevice()
   {
     this->ReleaseResources();
@@ -103,62 +105,83 @@ public:
 
   /// Returns the size of the array.
   ///
-  VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const {
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfValues() const {
     return this->Array.size();
   }
 
   /// Allocates the appropriate size of the array and copies the given data
   /// into the array.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInput(const StorageType &storage)
+  VTKM_CONT_EXPORT
+  PortalConstType PrepareForInput(bool updateData)
   {
-    //don't bind to the texture yet, as we could have allocate the array
-    //on a previous call with AllocateArrayForOutput and now are directly
-    //calling get portal const
-    try
-      {
-      this->Array.assign(
-            vtkm::cont::ArrayPortalToIteratorBegin(storage.GetPortalConst()),
-            vtkm::cont::ArrayPortalToIteratorEnd(storage.GetPortalConst()));
-      }
-    catch (std::bad_alloc error)
-      {
-      throw vtkm::cont::ErrorControlOutOfMemory(error.what());
-      }
+    if (updateData)
+    {
+      this->CopyToExecution();
+    }
+    else // !updateData
+    {
+      // The data in this->Array should already be valid. We are not messing
+      // with texture yet, so we don't have to worry about being in the wrong
+      // memory space.
+    }
+
+    return PortalConstType(this->Array.data(),
+                           this->Array.data() + this->Array.size());
   }
 
   /// Allocates the appropriate size of the array and copies the given data
   /// into the array.
   ///
-  template<class PortalControl>
-  VTKM_CONT_EXPORT void LoadDataForInPlace(PortalControl arrayPortal)
+  VTKM_CONT_EXPORT
+  PortalType PrepareForInPlace(bool updateData)
   {
-    this->LoadDataForInput(arrayPortal);
+    if (updateData)
+    {
+      this->CopyToExecution();
+    }
+    else // !updateData
+    {
+      // The data in this->Array should already be valid. We are not messing
+      // with texture yet, so we don't have to worry about being in the wrong
+      // memory space.
+    }
+
+    return PortalType(this->Array.data(),
+                      this->Array.data() + this->Array.size());
   }
 
   /// Allocates the array to the given size.
   ///
-  VTKM_CONT_EXPORT void AllocateArrayForOutput(
-      StorageType &vtkmNotUsed(container),
-      vtkm::Id numberOfValues)
+  VTKM_CONT_EXPORT
+  PortalType PrepareForOutput(vtkm::Id numberOfValues)
   {
-    try
-      {
+    if (numberOfValues > this->GetNumberOfValues())
+    {
       // Resize to 0 first so that you don't have to copy data when resizing
       // to a larger size.
       this->Array.clear();
+    }
+
+    try
+      {
       this->Array.resize(numberOfValues);
       }
     catch (std::bad_alloc error)
       {
       throw vtkm::cont::ErrorControlOutOfMemory(error.what());
       }
+
+    return PortalType(this->Array.data(),
+                      this->Array.data() + this->Array.size());
   }
 
   /// Allocates enough space in \c storage and copies the data in the
   /// device vector into it.
   ///
-  VTKM_CONT_EXPORT void RetrieveOutputData(StorageType &storage) const
+  VTKM_CONT_EXPORT
+  void RetrieveOutputData(StorageType &storage) const
   {
     storage.Allocate(this->Array.size());
     ::thrust::copy(this->Array.data(),
@@ -177,18 +200,6 @@ public:
     this->Array.resize(numberOfValues);
   }
 
-  VTKM_CONT_EXPORT PortalType GetPortal()
-  {
-    return PortalType( this->Array.data(),
-                       this->Array.data() + this->Array.size());
-  }
-
-  VTKM_CONT_EXPORT PortalConstType GetPortalConst() const
-  {
-    return PortalConstType( this->Array.data(),
-                            this->Array.data() + this->Array.size());
-  }
-
 
   /// Frees all memory.
   ///
@@ -205,8 +216,28 @@ private:
   void operator=(
       ArrayManagerExecutionThrustDevice<T, StorageTag> &);
 
+  StorageType &Storage;
+
   ::thrust::system::cuda::vector<ValueType,
                                  UninitializedAllocator<ValueType> > Array;
+
+  VTKM_CONT_EXPORT
+  void CopyToExecution()
+  {
+    //don't bind to the texture yet, as we could have allocate the array
+    //on a previous call with AllocateArrayForOutput and now are directly
+    //calling get portal const
+    try
+    {
+      this->Array.assign(
+            vtkm::cont::ArrayPortalToIteratorBegin(this->Storage.GetPortalConst()),
+            vtkm::cont::ArrayPortalToIteratorEnd(this->Storage.GetPortalConst()));
+    }
+    catch (std::bad_alloc error)
+    {
+      throw vtkm::cont::ErrorControlOutOfMemory(error.what());
+    }
+  }
 };
 
 

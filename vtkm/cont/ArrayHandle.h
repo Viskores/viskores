@@ -302,24 +302,21 @@ public:
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-    if (this->Internals->ExecutionArrayValid)
-    {
-      // Nothing to do, data already loaded.
-    }
-    else if (this->Internals->ControlArrayValid)
-    {
-      this->PrepareForDevice(DeviceAdapterTag());
-      this->Internals->ExecutionArray->LoadDataForInput(
-        this->Internals->ControlArray);
-      this->Internals->ExecutionArrayValid = true;
-    }
-    else
+    if (!this->Internals->ControlArrayValid
+        && !this->Internals->ExecutionArrayValid)
     {
       throw vtkm::cont::ErrorControlBadValue(
         "ArrayHandle has no data when PrepareForInput called.");
     }
-    return this->Internals->ExecutionArray->GetPortalConstExecution(
-             DeviceAdapterTag());
+
+    this->PrepareForDevice(DeviceAdapterTag());
+    typename ExecutionTypes<DeviceAdapterTag>::PortalConst portal =
+        this->Internals->ExecutionArray->PrepareForInput(
+          !this->Internals->ExecutionArrayValid, DeviceAdapterTag());
+
+    this->Internals->ExecutionArrayValid = true;
+
+    return portal;
   }
 
   /// Prepares (allocates) this array to be used as an output from an operation
@@ -342,8 +339,9 @@ public:
     this->Internals->ControlArrayValid = false;
 
     this->PrepareForDevice(DeviceAdapterTag());
-    this->Internals->ExecutionArray->AllocateArrayForOutput(
-      this->Internals->ControlArray, numberOfValues);
+    typename ExecutionTypes<DeviceAdapterTag>::Portal portal =
+        this->Internals->ExecutionArray->PrepareForOutput(numberOfValues,
+                                                          DeviceAdapterTag());
 
     // We are assuming that the calling code will fill the array using the
     // iterators we are returning, so go ahead and mark the execution array as
@@ -356,7 +354,7 @@ public:
     // assumption anyway.)
     this->Internals->ExecutionArrayValid = true;
 
-    return this->Internals->ExecutionArray->GetPortalExecution(DeviceAdapterTag());
+    return portal;
   }
 
   /// Prepares this array to be used in an in-place operation (both as input
@@ -372,32 +370,26 @@ public:
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-    // This code is similar to PrepareForInput except that we have to give a
-    // writable portal instead of the const portal to the execution array
-    // manager so that the data can (potentially) be written to.
-    if (this->Internals->ExecutionArrayValid)
-    {
-      // Nothing to do, data already loaded.
-    }
-    else if (this->Internals->ControlArrayValid)
-    {
-      this->PrepareForDevice(DeviceAdapterTag());
-      this->Internals->ExecutionArray->LoadDataForInPlace(
-        this->Internals->ControlArray);
-      this->Internals->ExecutionArrayValid = true;
-    }
-    else
+    if (!this->Internals->ControlArrayValid
+        && !this->Internals->ExecutionArrayValid)
     {
       throw vtkm::cont::ErrorControlBadValue(
         "ArrayHandle has no data when PrepareForInput called.");
     }
+
+    this->PrepareForDevice(DeviceAdapterTag());
+    typename ExecutionTypes<DeviceAdapterTag>::Portal portal =
+        this->Internals->ExecutionArray->PrepareForInPlace(
+          !this->Internals->ExecutionArrayValid, DeviceAdapterTag());
+
+    this->Internals->ExecutionArrayValid = true;
 
     // Invalidate any control arrays since their data will become invalid when
     // the execution data is overwritten. Don't actually release the control
     // array. It may be shared as the execution array.
     this->Internals->ControlArrayValid = false;
 
-    return this->Internals->ExecutionArray->GetPortalExecution(DeviceAdapterTag());
+    return portal;
   }
 
 // private:
@@ -451,14 +443,14 @@ public:
       }
 
     VTKM_ASSERT_CONT(this->Internals->ExecutionArray == NULL);
-    VTKM_ASSERT_CONT(this->Internals->ExecutionArrayValid == false);
+    VTKM_ASSERT_CONT(!this->Internals->ExecutionArrayValid);
     // Need to change some state that does not change the logical state from
     // an external point of view.
     InternalStruct *internals
         = const_cast<InternalStruct*>(this->Internals.get());
     internals->ExecutionArray.reset(
           new vtkm::cont::internal::ArrayHandleExecutionManager<
-            T, StorageTag, DeviceAdapterTag>);
+            T, StorageTag, DeviceAdapterTag>(internals->ControlArray));
   }
 
   /// Synchronizes the control array with the execution array. If either the

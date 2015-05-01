@@ -122,32 +122,29 @@ public:
   typedef PortalConstControl PortalConstExecution;
 
   VTKM_CONT_EXPORT
-  ArrayTransfer() : PortalValid(false) {  }
+  ArrayTransfer(StorageType &storage) : Storage(storage) {  }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const
   {
-    VTKM_ASSERT_CONT(this->PortalValid);
-    return this->Portal.GetNumberOfValues();
+    return this->Storage.GetNumberOfValues();
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(const StorageType& controlArray)
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
-    this->Portal = controlArray.GetPortalConst();
-    this->PortalValid = true;
+    return this->Storage.GetPortalConst();
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInPlace(StorageType &vtkmNotUsed(controlArray))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Implicit arrays cannot be used for output or in place.");
   }
 
   VTKM_CONT_EXPORT
-  void AllocateArrayForOutput(StorageType &vtkmNotUsed(controlArray),
-                              vtkm::Id vtkmNotUsed(numberOfValues))
+  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Implicit arrays cannot be used for output.");
@@ -166,24 +163,10 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  PortalExecution GetPortalExecution()
-  {
-    throw vtkm::cont::ErrorControlBadValue(
-          "Implicit arrays are read-only.  (Get the const portal.)");
-  }
-  VTKM_CONT_EXPORT
-  PortalConstExecution GetPortalConstExecution() const
-  {
-    VTKM_ASSERT_CONT(this->PortalValid);
-    return this->Portal;
-  }
-
-  VTKM_CONT_EXPORT
   void ReleaseResources() {  }
 
 private:
-  PortalConstExecution Portal;
-  bool PortalValid;
+  StorageType &Storage;
 };
 
 } // namespace internal

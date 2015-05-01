@@ -65,39 +65,74 @@ public:
   /// Returns the number of values stored in the array.  Results are undefined
   /// if data has not been loaded or allocated.
   ///
-  virtual vtkm::Id GetNumberOfValues() const = 0;
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfValues() const {
+    return this->GetNumberOfValuesImpl();
+  }
 
-  /// Allocates a large enough array in the execution environment and copies
-  /// the given data to that array. The allocated array can later be accessed
-  /// via the GetPortalConstExecution method. If control and execution share
-  /// arrays, then this method may save the iterators to be returned in the \c
-  /// GetPortalConst methods.
+  /// Prepares the data for use as input in the execution environment. If the
+  /// flag \c updateData is true, then data is transferred to the execution
+  /// environment. Otherwise, this transfer should be skipped.
   ///
-  virtual void LoadDataForInput(const StorageType &storage) = 0;
+  /// Returns a constant array portal valid in the execution environment.
+  ///
+  template<typename DeviceAdapter>
+  VTKM_CONT_EXPORT
+  typename ExecutionTypes<DeviceAdapter>::PortalConst
+  PrepareForInput(bool updateData, DeviceAdapter) {
+    this->VerifyDeviceAdapter(DeviceAdapter());
 
-  /// Allocates a large enough array in the execution environment and copies
-  /// the given data to that array. The allocated array can later be accessed
-  /// via the GetPortalExection method. If control and execution share arrays,
-  /// then this method may save the iterators of the storage to be returned
-  /// in the \c GetPortal* methods.
+    typename ExecutionTypes<DeviceAdapter>::PortalConst portal;
+    this->PrepareForInputImpl(updateData, &portal);
+    return portal;
+  }
+
+  /// Prepares the data for use as both input and output in the execution
+  /// environment. If the flag \c updateData is true, then data is transferred
+  /// to the execution environment. Otherwise, this transfer should be skipped.
   ///
-  virtual void LoadDataForInPlace(StorageType &storage) = 0;
+  /// Returns a read-write array portal valid in the execution environment.
+  ///
+  template<typename DeviceAdapter>
+  VTKM_CONT_EXPORT
+  typename ExecutionTypes<DeviceAdapter>::Portal
+  PrepareForInPlace(bool updateData, DeviceAdapter) {
+    this->VerifyDeviceAdapter(DeviceAdapter());
+
+    typename ExecutionTypes<DeviceAdapter>::Portal portal;
+    this->PrepareForInPlaceImpl(updateData, &portal);
+    return portal;
+  }
 
   /// Allocates an array in the execution environment of the specified size. If
   /// control and execution share arrays, then this class can allocate data
-  /// using the given Storage and remember its iterators so that it can be used
-  /// directly in the execution environment.
+  /// using the given Storage it can be used directly in the execution
+  /// environment.
   ///
-  virtual void AllocateArrayForOutput(StorageType &storage,
-                                      vtkm::Id numberOfValues) = 0;
+  /// Returns a writable array portal valid in the execution environment.
+  ///
+  template<typename DeviceAdapter>
+  VTKM_CONT_EXPORT
+  typename ExecutionTypes<DeviceAdapter>::Portal
+  PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapter) {
+    this->VerifyDeviceAdapter(DeviceAdapter());
 
-  /// Allocates data in the given Storage and copies data held
-  /// in the execution environment (managed by this class) into the control
-  /// array. If control and execution share arrays, this can be no operation.
-  /// This method should only be called after AllocateArrayForOutput is
+    typename ExecutionTypes<DeviceAdapter>::Portal portal;
+    this->PrepareForOutputImpl(numberOfValues, &portal);
+    return portal;
+  }
+
+  /// Allocates data in the given Storage and copies data held in the execution
+  /// environment (managed by this class) into the storage object. The
+  /// reference to the storage given is the same as that passed to the
+  /// constructor. If control and execution share arrays, this can be no
+  /// operation. This method should only be called after PrepareForOutput is
   /// called.
   ///
-  virtual void RetrieveOutputData(StorageType &storage) const = 0;
+  VTKM_CONT_EXPORT
+  void RetrieveOutputData(StorageType &storage) const {
+    this->RetrieveOutputDataImpl(storage);
+  }
 
   /// \brief Reduces the size of the array without changing its values.
   ///
@@ -108,43 +143,18 @@ public:
   /// (returned from GetNumberOfValues). That is, this method can only be used
   /// to shorten the array, not lengthen.
   ///
-  virtual void Shrink(vtkm::Id numberOfValues) = 0;
-
-  /// Returns an array portal that can be used in the execution environment.
-  /// This portal was defined in either LoadDataForInput or
-  /// AllocateArrayForOutput. If control and environment share memory space,
-  /// this class may return the iterator from the \c controlArray.
-  ///
-  template<typename DeviceAdapter>
   VTKM_CONT_EXPORT
-  typename ExecutionTypes<DeviceAdapter>::Portal
-  GetPortalExecution(DeviceAdapter device)
-  {
-    this->VerifyDeviceAdapter(device);
-
-    typename ExecutionTypes<DeviceAdapter>::Portal portal;
-    this->GetPortalExecutionImpl(&portal);
-    return portal;
-  }
-
-  /// Const version of GetPortal.
-  ///
-  template<typename DeviceAdapter>
-  VTKM_CONT_EXPORT
-  typename ExecutionTypes<DeviceAdapter>::PortalConst
-  GetPortalConstExecution(DeviceAdapter device) const
-  {
-    this->VerifyDeviceAdapter(device);
-
-    typename ExecutionTypes<DeviceAdapter>::PortalConst portal;
-    this->GetPortalConstExecutionImpl(&portal);
-    return portal;
+  void Shrink(vtkm::Id numberOfValues) {
+    this->ShrinkImpl(numberOfValues);
   }
 
   /// Frees any resources (i.e. memory) allocated for the exeuction
   /// environment, if any.
   ///
-  virtual void ReleaseResources() = 0;
+  VTKM_CONT_EXPORT
+  void ReleaseResources() {
+    this->ReleaseResourcesImpl();
+  }
 
   template<typename DeviceAdapter>
   VTKM_CONT_EXPORT
@@ -155,10 +165,22 @@ public:
   }
 
 protected:
-  virtual void GetPortalExecutionImpl(void *portalExecution) = 0;
+  virtual vtkm::Id GetNumberOfValuesImpl() const = 0;
 
-  virtual void GetPortalConstExecutionImpl(
-    void *portalConstExecution) const = 0;
+  virtual void PrepareForInputImpl(bool updateData,
+                                   void *portalExecutionVoid) = 0;
+
+  virtual void PrepareForInPlaceImpl(bool updateData,
+                                     void *portalExecutionVoid) = 0;
+
+  virtual void PrepareForOutputImpl(vtkm::Id numberOfValues,
+                                    void *portalExecution) = 0;
+
+  virtual void RetrieveOutputDataImpl(StorageType &storage) const = 0;
+
+  virtual void ShrinkImpl(Id numberOfValues) = 0;
+
+  virtual void ReleaseResourcesImpl() = 0;
 
   virtual bool IsDeviceAdapterImpl(
     const vtkm::cont::internal::DeviceAdapterId &id) const = 0;
@@ -197,63 +219,57 @@ public:
   typedef typename ArrayTransferType::PortalControl PortalControl;
   typedef typename ArrayTransferType::PortalConstControl PortalConstControl;
 
+  typedef typename ArrayTransferType::PortalExecution PortalExecution;
+  typedef typename ArrayTransferType::PortalConstExecution PortalConstExecution;
+
   VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfValues() const
+  ArrayHandleExecutionManager(StorageType &storage)
+    : Transfer(storage) {  }
+
+protected:
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfValuesImpl() const
   {
     return this->Transfer.GetNumberOfValues();
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(const StorageType &storage)
+  void PrepareForInputImpl(bool updateData, void *portalExecutionVoid)
   {
-    this->Transfer.LoadDataForInput(storage);
+    PortalConstExecution portal = this->Transfer.PrepareForInput(updateData);
+    *reinterpret_cast<PortalConstExecution *>(portalExecutionVoid) = portal;
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInPlace(StorageType &storage)
+  void PrepareForInPlaceImpl(bool updateData, void *portalExecutionVoid)
   {
-    this->Transfer.LoadDataForInPlace(storage);
+    PortalExecution portal = this->Transfer.PrepareForInPlace(updateData);
+    *reinterpret_cast<PortalExecution *>(portalExecutionVoid) = portal;
   }
 
   VTKM_CONT_EXPORT
-  void AllocateArrayForOutput(StorageType &storage, Id numberOfValues)
+  void PrepareForOutputImpl(vtkm::Id numberOfValues, void *portalExecutionVoid)
   {
-    this->Transfer.AllocateArrayForOutput(storage, numberOfValues);
+    PortalExecution portal = this->Transfer.PrepareForOutput(numberOfValues);
+    *reinterpret_cast<PortalExecution *>(portalExecutionVoid) = portal;
   }
 
   VTKM_CONT_EXPORT
-  void RetrieveOutputData(StorageType &storage) const
+  void RetrieveOutputDataImpl(StorageType &storage) const
   {
     this->Transfer.RetrieveOutputData(storage);
   }
 
   VTKM_CONT_EXPORT
-  void Shrink(Id numberOfValues)
+  void ShrinkImpl(Id numberOfValues)
   {
     this->Transfer.Shrink(numberOfValues);
   }
 
   VTKM_CONT_EXPORT
-  void ReleaseResources()
+  void ReleaseResourcesImpl()
   {
     this->Transfer.ReleaseResources();
-  }
-
-protected:
-  VTKM_CONT_EXPORT
-  void GetPortalExecutionImpl(void *portalExecutionVoid)
-  {
-    typedef typename ArrayTransferType::PortalExecution PortalType;
-    PortalType portalExecution = this->Transfer.GetPortalExecution();
-    *reinterpret_cast<PortalType *>(portalExecutionVoid) = portalExecution;
-  }
-
-  VTKM_CONT_EXPORT
-  void GetPortalConstExecutionImpl(void *portalExecutionVoid) const
-  {
-    typedef typename ArrayTransferType::PortalConstExecution PortalType;
-    PortalType portalExecution = this->Transfer.GetPortalConstExecution();
-    *reinterpret_cast<PortalType *>(portalExecutionVoid) = portalExecution;
   }
 
   VTKM_CONT_EXPORT
