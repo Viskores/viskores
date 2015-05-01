@@ -254,63 +254,31 @@ public:
     PortalConstExecution;
 
   VTKM_CONT_EXPORT
-  ArrayTransfer()
-    : ArraysValid(false),
-      ExecutionPortalConstValid(false),
-      ExecutionPortalValid(false) {  }
+  ArrayTransfer(StorageType *storage)
+    : IndexArray(storage->GetIndexArray()),
+      ValueArray(storage->GetValueArray()) {  }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
-    VTKM_ASSERT_CONT(this->ArraysValid);
     return this->IndexArray.GetNumberOfValues();
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(PortalConstControl vtkmNotUsed(portal)) {
-    throw vtkm::cont::ErrorControlInternal(
-          "Wrong version of LoadDataForInput called. "
-          "ArrayHandle must be in bad state.");
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
+    return PortalConstExecution(this->IndexArray.PrepareForInput(Device()),
+                                this->ValueArray.PrepareForInput(Device()));
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(const StorageType &storage) {
-    this->IndexArray = storage.GetIndexArray();
-    this->ValueArray = storage.GetValueArray();
-    this->ArraysValid = true;
-
-    this->ExecutionPortalConst =
-        PortalConstExecution(this->IndexArray.PrepareForInput(Device()),
-                             this->ValueArray.PrepareForInput(Device()));
-    this->ExecutionPortalConstValid = true;
-    this->ExecutionPortalValid = false;
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData)) {
+    return PortalExecution(this->IndexArray.PrepareForInput(Device()),
+                           this->ValueArray.PrepareForInPlace(Device()));
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInPlace(StorageType &storage) {
-    this->IndexArray = storage.GetIndexArray();
-    this->ValueArray = storage.GetValueArray();
-    this->ArraysValid = true;
-
-    this->ExecutionPortal =
-        PortalExecution(this->IndexArray.PrepareForInput(Device()),
-                        this->ValueArray.PrepareForInPlace(Device()));
-    this->ExecutionPortalConst = this->ExecutionPortal;
-    this->ExecutionPortalConstValid = true;
-    this->ExecutionPortalValid = true;
-  }
-
-  VTKM_CONT_EXPORT
-  void AllocateArrayForOutput(StorageType &storage,
-                              vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
-    this->IndexArray = storage.GetIndexArray();
-    this->ValueArray = storage.GetValueArray();
-    this->ArraysValid = true;
-
     if (numberOfValues != this->GetNumberOfValues()) {
-      this->ExecutionPortalConstValid = false;
-      this->ExecutionPortalValid = false;
-
       throw vtkm::cont::ErrorControlBadValue(
             "An ArrayHandlePermutation can be used as an output array, "
             "but it cannot be resized. Make sure the index array is sized "
@@ -323,25 +291,18 @@ public:
     // we have to assume the allocation is correct.
     if ((numberOfValues > 0) && (this->ValueArray.GetNumberOfValues() < 1))
     {
-      this->ExecutionPortalConstValid = false;
-      this->ExecutionPortalValid = false;
-
       throw vtkm::cont::ErrorControlBadValue(
             "The value array must be pre-allocated before it is used for the "
             "output of ArrayHandlePermutation.");
     }
 
-    this->ExecutionPortal =
-        PortalExecution(this->IndexArray.PrepareForInput(Device()),
-                        this->ValueArray.PrepareForOutput(
-                          this->ValueArray.GetNumberOfValues(), Device()));
-    this->ExecutionPortalConst = this->ExecutionPortal;
-    this->ExecutionPortalConstValid = true;
-    this->ExecutionPortalValid = true;
+    return PortalExecution(this->IndexArray.PrepareForInput(Device()),
+                           this->ValueArray.PrepareForOutput(
+                             this->ValueArray.GetNumberOfValues(), Device()));
   }
 
   VTKM_CONT_EXPORT
-  void RetrieveOutputData(StorageType &vtkmNotUsed(storage)) const {
+  void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const {
     // Implementation of this method should be unnecessary. The internal
     // array handles should automatically retrieve the output data as
     // necessary.
@@ -354,34 +315,14 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  PortalExecution GetPortalExecution() {
-    VTKM_ASSERT_CONT(this->ExecutionPortalValid);
-    return this->ExecutionPortal;
-  }
-
-  VTKM_CONT_EXPORT
-  PortalConstExecution GetPortalConstExecution() const {
-    VTKM_ASSERT_CONT(this->ExecutionPortalConstValid);
-    return this->ExecutionPortalConst;
-  }
-
-  VTKM_CONT_EXPORT
   void ReleaseResources() {
-    VTKM_ASSERT_CONT(this->ArraysValid);
     this->IndexArray.ReleaseResourcesExecution();
     this->ValueArray.ReleaseResourcesExecution();
-    this->ExecutionPortalValid = false;
-    this->ExecutionPortalConstValid = false;
   }
 
 private:
   IndexArrayType IndexArray;
   ValueArrayType ValueArray;
-  bool ArraysValid;
-  PortalConstExecution ExecutionPortalConst;
-  bool ExecutionPortalConstValid;
-  PortalExecution ExecutionPortal;
-  bool ExecutionPortalValid;
 };
 
 } // namespace internal

@@ -182,47 +182,33 @@ public:
       FunctorType> PortalConstExecution;
 
   VTKM_CONT_EXPORT
-  ArrayTransfer() : ArrayValid(false), ExecutionPortalConstValid(false) {  }
+  ArrayTransfer(StorageType *storage) : Array(storage->GetArray()) {  }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
-    VTKM_ASSERT_CONT(this->ArrayValid);
     return this->Array.GetNumberOfValues();
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(PortalConstControl vtkmNotUsed(portal)) {
-    throw vtkm::cont::ErrorControlInternal(
-          "Wrong version of LoadDataForInput called. "
-          "ArrayHandle must be in a bad state.");
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
+    return PortalConstExecution(this->Array.PrepareForInput(Device()));
   }
 
   VTKM_CONT_EXPORT
-  void LoadDataForInput(const StorageType &storage) {
-    this->Array = storage.GetArray();
-    this->ArrayValid = true;
-
-    this->ExecutionPortalConst =
-        PortalConstExecution(this->Array.PrepareForInput(Device()));
-    this->ExecutionPortalConstValid = true;
-  }
-
-  VTKM_CONT_EXPORT
-  void LoadDataForInPlace(StorageType &vtkmNotUsed(storage)) {
+  PortalExecution PrepareForInPlace(bool &vtkmNotUsed(updateData)) {
     throw vtkm::cont::ErrorControlBadType(
           "ArrayHandleTransform read only. "
           "Cannot be used for in-place operations.");
   }
 
   VTKM_CONT_EXPORT
-  void AllocateArrayForOutput(StorageType &vtkmNotUsed(storage),
-                              vtkm::Id vtkmNotUsed(numberOfValues)) {
+  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues)) {
     throw vtkm::cont::ErrorControlBadType(
           "ArrayHandleTransform read only. Cannot be used as output.");
   }
 
   VTKM_CONT_EXPORT
-  void RetrieveOutputData(StorageType &vtkmNotUsed(storage)) const {
+  void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const {
     throw vtkm::cont::ErrorControlInternal(
           "ArrayHandleTransform read only. "
           "There should be no occurance of the ArrayHandle trying to pull "
@@ -236,30 +222,12 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  PortalExecution GetPortalExecution() {
-    throw vtkm::cont::ErrorControlInternal(
-          "ArrayHandleTransform read only. Cannot get writable array portal. "
-          "(Should have detected that by now.)");
-  }
-
-  VTKM_CONT_EXPORT
-  PortalConstExecution GetPortalConstExecution() const {
-    VTKM_ASSERT_CONT(this->ExecutionPortalConstValid);
-    return this->ExecutionPortalConst;
-  }
-
-  VTKM_CONT_EXPORT
   void ReleaseResources() {
-    VTKM_ASSERT_CONT(this->ArrayValid);
     this->Array.ReleaseResourcesExecution();
-    this->ExecutionPortalConstValid = false;
   }
 
 private:
   ArrayHandleType Array;
-  bool ArrayValid;
-  PortalConstExecution ExecutionPortalConst;
-  bool ExecutionPortalConstValid;
 };
 
 } // namespace internal

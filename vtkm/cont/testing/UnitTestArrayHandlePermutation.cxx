@@ -215,8 +215,7 @@ struct PermutationTests
     }
 
     // Create an ArrayHandle from the buffer
-    ValueArrayType array =
-        vtkm::cont::make_ArrayHandle(buffer, vtkm::cont::StorageTagBasic());
+    ValueArrayType array = vtkm::cont::make_ArrayHandle(buffer);
 
     // Copy the array so that the data is not destroyed when we return from
     // this method.
