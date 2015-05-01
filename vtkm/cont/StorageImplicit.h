@@ -122,18 +122,18 @@ public:
   typedef PortalConstControl PortalConstExecution;
 
   VTKM_CONT_EXPORT
-  ArrayTransfer(StorageType &storage) : Storage(storage) {  }
+  ArrayTransfer(StorageType *storage) : Storage(storage) {  }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const
   {
-    return this->Storage.GetNumberOfValues();
+    return this->Storage->GetNumberOfValues();
   }
 
   VTKM_CONT_EXPORT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
-    return this->Storage.GetPortalConst();
+    return this->Storage->GetPortalConst();
   }
 
   VTKM_CONT_EXPORT
@@ -150,7 +150,7 @@ public:
           "Implicit arrays cannot be used for output.");
   }
   VTKM_CONT_EXPORT
-  void RetrieveOutputData(StorageType &vtkmNotUsed(controlArray)) const
+  void RetrieveOutputData(StorageType *vtkmNotUsed(controlArray)) const
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Implicit arrays cannot be used for output.");
@@ -166,7 +166,7 @@ public:
   void ReleaseResources() {  }
 
 private:
-  StorageType &Storage;
+  StorageType *Storage;
 };
 
 } // namespace internal

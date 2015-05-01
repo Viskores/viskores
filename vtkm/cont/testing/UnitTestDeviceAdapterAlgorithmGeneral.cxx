@@ -91,7 +91,7 @@ public:
   typedef typename Superclass::PortalType PortalType;
   typedef typename Superclass::PortalConstType PortalConstType;
 
-  ArrayManagerExecution(vtkm::cont::internal::Storage<T, StorageTag> &storage)
+  ArrayManagerExecution(vtkm::cont::internal::Storage<T, StorageTag> *storage)
     : Superclass(storage) {  }
 };
 

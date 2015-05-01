@@ -450,7 +450,7 @@ public:
         = const_cast<InternalStruct*>(this->Internals.get());
     internals->ExecutionArray.reset(
           new vtkm::cont::internal::ArrayHandleExecutionManager<
-            T, StorageTag, DeviceAdapterTag>(internals->ControlArray));
+            T, StorageTag, DeviceAdapterTag>(&internals->ControlArray));
   }
 
   /// Synchronizes the control array with the execution array. If either the
@@ -469,7 +469,7 @@ public:
         = const_cast<InternalStruct*>(this->Internals.get());
       if (this->Internals->ExecutionArrayValid)
       {
-        internals->ExecutionArray->RetrieveOutputData(internals->ControlArray);
+        internals->ExecutionArray->RetrieveOutputData(&internals->ControlArray);
         internals->ControlArrayValid = true;
       }
       else

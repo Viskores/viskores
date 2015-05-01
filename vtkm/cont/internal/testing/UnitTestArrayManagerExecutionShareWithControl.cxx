@@ -77,7 +77,7 @@ struct TemplatedTests
     storage.Allocate(ARRAY_SIZE);
     SetStorage(storage, INPUT_VALUE);
 
-    ArrayManagerType executionArray(storage);
+    ArrayManagerType executionArray(&storage);
 
     // Although the ArrayManagerExecutionShareWithControl class wraps the
     // control array portal in a different array portal, it should still
@@ -99,7 +99,7 @@ struct TemplatedTests
     storage.Allocate(ARRAY_SIZE);
     SetStorage(storage, INPUT_VALUE);
 
-    ArrayManagerType executionArray(storage);
+    ArrayManagerType executionArray(&storage);
 
     // Although the ArrayManagerExecutionShareWithControl class wraps the
     // control array portal in a different array portal, it should still
@@ -123,7 +123,7 @@ struct TemplatedTests
 
     StorageType storage;
 
-    ArrayManagerType executionArray(storage);
+    ArrayManagerType executionArray(&storage);
 
     vtkm::cont::ArrayPortalToIterators<typename ArrayManagerType::PortalType>
         iterators(executionArray.PrepareForOutput(ARRAY_SIZE));
@@ -132,7 +132,7 @@ struct TemplatedTests
     VTKM_TEST_ASSERT(CheckManager(executionArray, OUTPUT_VALUE),
                      "Did not get correct array back.");
 
-    executionArray.RetrieveOutputData(storage);
+    executionArray.RetrieveOutputData(&storage);
 
     VTKM_TEST_ASSERT(CheckStorage(storage, OUTPUT_VALUE),
                      "Did not get the right value in the storage.");

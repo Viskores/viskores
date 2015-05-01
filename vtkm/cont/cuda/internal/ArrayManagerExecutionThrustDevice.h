@@ -91,7 +91,7 @@ public:
   typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< const T > PortalConstType;
 
   VTKM_CONT_EXPORT
-  ArrayManagerExecutionThrustDevice(StorageType &storage)
+  ArrayManagerExecutionThrustDevice(StorageType *storage)
     : Storage(storage), Array()
   {
 
@@ -181,12 +181,13 @@ public:
   /// device vector into it.
   ///
   VTKM_CONT_EXPORT
-  void RetrieveOutputData(StorageType &storage) const
+  void RetrieveOutputData(StorageType *storage) const
   {
-    storage.Allocate(this->Array.size());
-    ::thrust::copy(this->Array.data(),
-                   this->Array.data() + this->Array.size(),
-                   vtkm::cont::ArrayPortalToIteratorBegin(storage.GetPortal()));
+    storage->Allocate(this->Array.size());
+    ::thrust::copy(
+          this->Array.data(),
+          this->Array.data() + this->Array.size(),
+          vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
   }
 
   /// Resizes the device vector.
@@ -216,7 +217,7 @@ private:
   void operator=(
       ArrayManagerExecutionThrustDevice<T, StorageTag> &);
 
-  StorageType &Storage;
+  StorageType *Storage;
 
   ::thrust::system::cuda::vector<ValueType,
                                  UninitializedAllocator<ValueType> > Array;
@@ -230,8 +231,8 @@ private:
     try
     {
       this->Array.assign(
-            vtkm::cont::ArrayPortalToIteratorBegin(this->Storage.GetPortalConst()),
-            vtkm::cont::ArrayPortalToIteratorEnd(this->Storage.GetPortalConst()));
+            vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst()),
+            vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()));
     }
     catch (std::bad_alloc error)
     {

@@ -130,7 +130,7 @@ public:
   /// called.
   ///
   VTKM_CONT_EXPORT
-  void RetrieveOutputData(StorageType &storage) const {
+  void RetrieveOutputData(StorageType *storage) const {
     this->RetrieveOutputDataImpl(storage);
   }
 
@@ -176,7 +176,7 @@ protected:
   virtual void PrepareForOutputImpl(vtkm::Id numberOfValues,
                                     void *portalExecution) = 0;
 
-  virtual void RetrieveOutputDataImpl(StorageType &storage) const = 0;
+  virtual void RetrieveOutputDataImpl(StorageType *storage) const = 0;
 
   virtual void ShrinkImpl(Id numberOfValues) = 0;
 
@@ -223,7 +223,7 @@ public:
   typedef typename ArrayTransferType::PortalConstExecution PortalConstExecution;
 
   VTKM_CONT_EXPORT
-  ArrayHandleExecutionManager(StorageType &storage)
+  ArrayHandleExecutionManager(StorageType *storage)
     : Transfer(storage) {  }
 
 protected:
@@ -255,7 +255,7 @@ protected:
   }
 
   VTKM_CONT_EXPORT
-  void RetrieveOutputDataImpl(StorageType &storage) const
+  void RetrieveOutputDataImpl(StorageType *storage) const
   {
     this->Transfer.RetrieveOutputData(storage);
   }

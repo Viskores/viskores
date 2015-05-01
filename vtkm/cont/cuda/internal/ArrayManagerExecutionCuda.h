@@ -48,7 +48,7 @@ public:
   typedef typename Superclass::StorageType StorageType;
 
   VTKM_CONT_EXPORT
-  ArrayManagerExecution(StorageType &storage)
+  ArrayManagerExecution(StorageType *storage)
     : Superclass(storage) {  }
 
   VTKM_CONT_EXPORT

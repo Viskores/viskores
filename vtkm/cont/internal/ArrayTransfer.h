@@ -67,7 +67,7 @@ public:
   typedef typename ArrayManagerType::PortalConstType PortalConstExecution;
 
   VTKM_CONT_EXPORT
-  ArrayTransfer(StorageType &storage) : ArrayManager(storage) {  }
+  ArrayTransfer(StorageType *storage) : ArrayManager(storage) {  }
 
   /// Returns the number of values stored in the array.  Results are undefined
   /// if data has not been loaded or allocated.
@@ -124,7 +124,7 @@ public:
   /// called.
   ///
   VTKM_CONT_EXPORT
-  void RetrieveOutputData(StorageType &storage) const
+  void RetrieveOutputData(StorageType *storage) const
   {
     this->ArrayManager.RetrieveOutputData(storage);
   }

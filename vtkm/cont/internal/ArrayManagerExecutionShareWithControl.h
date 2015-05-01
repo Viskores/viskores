@@ -46,7 +46,7 @@ public:
   typedef typename StorageType::PortalConstType PortalConstType;
 
   VTKM_CONT_EXPORT
-  ArrayManagerExecutionShareWithControl(StorageType &storage)
+  ArrayManagerExecutionShareWithControl(StorageType *storage)
     : Storage(storage) { }
 
   /// Returns the size of the storage.
@@ -54,7 +54,7 @@ public:
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const
   {
-    return this->Storage.GetNumberOfValues();
+    return this->Storage->GetNumberOfValues();
   }
 
   /// Returns the constant portal from the storage.
@@ -62,7 +62,7 @@ public:
   VTKM_CONT_EXPORT
   PortalConstType PrepareForInput(bool vtkmNotUsed(uploadData)) const
   {
-    return this->Storage.GetPortalConst();
+    return this->Storage->GetPortalConst();
   }
 
   /// Returns the read-write portal from the storage.
@@ -70,7 +70,7 @@ public:
   VTKM_CONT_EXPORT
   PortalType PrepareForInPlace(bool vtkmNotUsed(uploadData))
   {
-    return this->Storage.GetPortal();
+    return this->Storage->GetPortal();
   }
 
   /// Allocates data in the storage and return the portal to that.
@@ -78,8 +78,8 @@ public:
   VTKM_CONT_EXPORT
   PortalType PrepareForOutput(vtkm::Id numberOfValues)
   {
-    this->Storage.Allocate(numberOfValues);
-    return this->Storage.GetPortal();
+    this->Storage->Allocate(numberOfValues);
+    return this->Storage->GetPortal();
   }
 
   /// This method is a no-op (except for a few checks). Any data written to
@@ -87,10 +87,10 @@ public:
   /// controlArray (under correct operation).
   ///
   VTKM_CONT_EXPORT
-  void RetrieveOutputData(StorageType &storage) const
+  void RetrieveOutputData(StorageType *storage) const
   {
     (void)storage;
-    VTKM_ASSERT_CONT(&storage == &this->Storage);
+    VTKM_ASSERT_CONT(storage == this->Storage);
   }
 
   /// Shrinks the storage.
@@ -98,7 +98,7 @@ public:
   VTKM_CONT_EXPORT
   void Shrink(vtkm::Id numberOfValues)
   {
-    this->Storage.Shrink(numberOfValues);
+    this->Storage->Shrink(numberOfValues);
   }
 
   /// A no-op.
@@ -113,7 +113,7 @@ private:
   void operator=(
       ArrayManagerExecutionShareWithControl<T, StorageTag> &);
 
-  StorageType &Storage;
+  StorageType *Storage;
 };
 
 }

@@ -408,11 +408,11 @@ public:
   typedef ArrayPortalCompositeVector<SignatureWithPortals> PortalConstExecution;
 
   VTKM_CONT_EXPORT
-  ArrayTransfer(StorageType &storage) : Storage(storage) {  }
+  ArrayTransfer(StorageType *storage) : Storage(storage) {  }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
-    return this->Storage.GetNumberOfValues();
+    return this->Storage->GetNumberOfValues();
   }
 
   VTKM_CONT_EXPORT
@@ -420,9 +420,9 @@ public:
   {
     return
         PortalConstExecution(
-          this->Storage.GetArrays().StaticTransformCont(
+          this->Storage->GetArrays().StaticTransformCont(
             detail::CompositeVectorArrayToPortalExec<DeviceAdapterTag>()),
-          this->Storage.GetSourceComponents());
+          this->Storage->GetSourceComponents());
   }
 
   VTKM_CONT_EXPORT
@@ -445,7 +445,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void RetrieveOutputData(StorageType &vtkmNotUsed(storage)) const
+  void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Composite vector arrays cannot be used for output.");
@@ -460,11 +460,11 @@ public:
 
   VTKM_CONT_EXPORT
   void ReleaseResources() {
-    this->Storage.ReleaseResources();
+    this->Storage->ReleaseResources();
   }
 
 private:
-  StorageType &Storage;
+  StorageType *Storage;
 };
 
 } // namespace internal

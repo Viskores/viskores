@@ -375,7 +375,7 @@ private:
       portal.Set(index, TestValue(index, vtkm::Id()));
     }
 
-    ArrayManagerExecution manager(storage);
+    ArrayManagerExecution manager(&storage);
 
     // Do an operation just so we know the values are placed in the execution
     // environment and they change. We are only calling on half the array
@@ -392,7 +392,7 @@ private:
     // Get the array back and check its values. We have to get it back into
     // the same storage since some ArrayManagerExecution classes will expect
     // that.
-    manager.RetrieveOutputData(storage);
+    manager.RetrieveOutputData(&storage);
 
     VTKM_TEST_ASSERT(storage.GetNumberOfValues() == ARRAY_SIZE,
                      "Storage has wrong number of values after execution "
@@ -476,7 +476,7 @@ private:
     {
       std::cout << "Allocating execution array" << std::endl;
       IdStorage storage;
-      IdArrayManagerExecution manager(storage);
+      IdArrayManagerExecution manager(&storage);
 
       std::cout << "Running clear." << std::endl;
       Algorithm::Schedule(ClearArrayKernel(manager.PrepareForOutput(1)), 1);
@@ -485,7 +485,7 @@ private:
       Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)), 1);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(storage);
+      manager.RetrieveOutputData(&storage);
 
       for (vtkm::Id index = 0; index < 1; index++)
       {
@@ -501,7 +501,7 @@ private:
     {
       std::cout << "Allocating execution array" << std::endl;
       IdStorage storage;
-      IdArrayManagerExecution manager(storage);
+      IdArrayManagerExecution manager(&storage);
 
       std::cout << "Running clear." << std::endl;
       Algorithm::Schedule(ClearArrayKernel(manager.PrepareForOutput(ARRAY_SIZE)),
@@ -512,7 +512,7 @@ private:
                           ARRAY_SIZE);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(storage);
+      manager.RetrieveOutputData(&storage);
 
       for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
       {
@@ -529,7 +529,7 @@ private:
     {
       std::cout << "Allocating execution array" << std::endl;
       IdStorage storage;
-      IdArrayManagerExecution manager(storage);
+      IdArrayManagerExecution manager(&storage);
       vtkm::Id DIM_SIZE = vtkm::Id(std::pow(ARRAY_SIZE, 1/3.0f));
       vtkm::Id3 maxRange(DIM_SIZE);
 
@@ -544,7 +544,7 @@ private:
                           maxRange);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(storage);
+      manager.RetrieveOutputData(&storage);
 
       const vtkm::Id maxId = DIM_SIZE * DIM_SIZE * DIM_SIZE;
       for (vtkm::Id index = 0; index < maxId; index++)
