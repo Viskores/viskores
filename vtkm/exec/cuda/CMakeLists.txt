@@ -19,13 +19,13 @@
 ##============================================================================
 
 set(headers
-  ArrayManagerExecutionCuda.h
-  ArrayManagerExecutionThrustDevice.h
-  DeviceAdapterAlgorithmCuda.h
-  DeviceAdapterAlgorithmThrust.h
-  DeviceAdapterTagCuda.h
   )
 
-vtkm_declare_headers(CUDA ${headers})
+#-----------------------------------------------------------------------------
+add_subdirectory(internal)
 
-add_subdirectory(testing)
+# vtkm_declare_headers(${impl_headers} ${headers})
+
+
+#-----------------------------------------------------------------------------
+# add_subdirectory(testing)

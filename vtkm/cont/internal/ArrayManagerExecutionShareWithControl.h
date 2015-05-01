@@ -25,8 +25,6 @@
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/Storage.h>
 
-#include <vtkm/cont/internal/ArrayPortalShrink.h>
-
 #include <algorithm>
 
 namespace vtkm {
@@ -44,101 +42,69 @@ class ArrayManagerExecutionShareWithControl
 public:
   typedef T ValueType;
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
-  typedef vtkm::cont::internal::ArrayPortalShrink<
-      typename StorageType::PortalType> PortalType;
-  typedef vtkm::cont::internal::ArrayPortalShrink<
-      typename StorageType::PortalConstType> PortalConstType;
+  typedef typename StorageType::PortalType PortalType;
+  typedef typename StorageType::PortalConstType PortalConstType;
 
-  VTKM_CONT_EXPORT ArrayManagerExecutionShareWithControl()
-    : PortalValid(false), ConstPortalValid(false) { }
+  VTKM_CONT_EXPORT
+  ArrayManagerExecutionShareWithControl(StorageType *storage)
+    : Storage(storage) { }
 
-  /// Returns the size of the saved portal.
+  /// Returns the size of the storage.
   ///
-  VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfValues() const
   {
-    VTKM_ASSERT_CONT(this->ConstPortalValid);
-    return this->ConstPortal.GetNumberOfValues();
+    return this->Storage->GetNumberOfValues();
   }
 
-  /// Saves the given iterators to be returned later.
+  /// Returns the constant portal from the storage.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInput(const PortalConstType& portal)
+  VTKM_CONT_EXPORT
+  PortalConstType PrepareForInput(bool vtkmNotUsed(uploadData)) const
   {
-    this->ConstPortal = portal;
-    this->ConstPortalValid = true;
-
-    // Non-const versions not defined.
-    this->PortalValid = false;
+    return this->Storage->GetPortalConst();
   }
 
-  /// Saves the given iterators to be returned later.
+  /// Returns the read-write portal from the storage.
   ///
-  VTKM_CONT_EXPORT void LoadDataForInPlace(PortalType portal)
+  VTKM_CONT_EXPORT
+  PortalType PrepareForInPlace(bool vtkmNotUsed(uploadData))
   {
-    // This only works if there is a valid cast from non-const to const
-    // iterator.
-    this->LoadDataForInput(portal);
-
-    this->Portal = portal;
-    this->PortalValid = true;
+    return this->Storage->GetPortal();
   }
 
-  /// Actually just allocates memory in the given \p controlArray.
+  /// Allocates data in the storage and return the portal to that.
   ///
-  VTKM_CONT_EXPORT void AllocateArrayForOutput(StorageType &controlArray,
-                                               vtkm::Id numberOfValues)
+  VTKM_CONT_EXPORT
+  PortalType PrepareForOutput(vtkm::Id numberOfValues)
   {
-    controlArray.Allocate(numberOfValues);
-
-    this->Portal = controlArray.GetPortal();
-    this->PortalValid = true;
-
-    this->ConstPortal = controlArray.GetPortalConst();
-    this->ConstPortalValid = true;
+    this->Storage->Allocate(numberOfValues);
+    return this->Storage->GetPortal();
   }
 
   /// This method is a no-op (except for a few checks). Any data written to
   /// this class's portals should already be written to the given \c
   /// controlArray (under correct operation).
   ///
-  VTKM_CONT_EXPORT void RetrieveOutputData(StorageType &controlArray) const
+  VTKM_CONT_EXPORT
+  void RetrieveOutputData(StorageType *storage) const
   {
-    VTKM_ASSERT_CONT(this->ConstPortalValid);
-    controlArray.Shrink(this->ConstPortal.GetNumberOfValues());
+    (void)storage;
+    VTKM_ASSERT_CONT(storage == this->Storage);
   }
 
-  /// Adjusts saved end iterators to resize array.
+  /// Shrinks the storage.
   ///
-  VTKM_CONT_EXPORT void Shrink(vtkm::Id numberOfValues)
+  VTKM_CONT_EXPORT
+  void Shrink(vtkm::Id numberOfValues)
   {
-    VTKM_ASSERT_CONT(this->ConstPortalValid);
-    this->ConstPortal.Shrink(numberOfValues);
-
-    if (this->PortalValid)
-    {
-      this->Portal.Shrink(numberOfValues);
-    }
-  }
-
-  /// Returns the portal previously saved from a \c Storage.
-  ///
-  VTKM_CONT_EXPORT PortalType GetPortal()
-  {
-    VTKM_ASSERT_CONT(this->PortalValid);
-    return this->Portal;
-  }
-
-  /// Const version of GetPortal.
-  ///
-  VTKM_CONT_EXPORT PortalConstType GetPortalConst() const
-  {
-    VTKM_ASSERT_CONT(this->ConstPortalValid);
-    return this->ConstPortal;
+    this->Storage->Shrink(numberOfValues);
   }
 
   /// A no-op.
   ///
-  VTKM_CONT_EXPORT void ReleaseResources() { }
+  VTKM_CONT_EXPORT
+  void ReleaseResources() { }
 
 private:
   // Not implemented.
@@ -147,11 +113,7 @@ private:
   void operator=(
       ArrayManagerExecutionShareWithControl<T, StorageTag> &);
 
-  PortalType Portal;
-  bool PortalValid;
-
-  PortalConstType ConstPortal;
-  bool ConstPortalValid;
+  StorageType *Storage;
 };
 
 }

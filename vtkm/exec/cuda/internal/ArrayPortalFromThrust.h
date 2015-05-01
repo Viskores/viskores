@@ -42,10 +42,63 @@
 #pragma GCC diagnostic pop
 #endif // gcc version >= 4.6
 #endif // gcc && !CUDA
+
+#include <boost/type_traits/integral_constant.hpp>
+#include <boost/utility/enable_if.hpp>
+
 namespace vtkm {
 namespace exec {
 namespace cuda {
 namespace internal {
+
+template<typename T> struct UseTextureLoad      {typedef  boost::false_type type;};
+
+template<> struct UseTextureLoad<vtkm::Int8*>    {typedef boost::true_type type; };
+template<> struct UseTextureLoad<vtkm::UInt8*>   {typedef boost::true_type type; };
+template<> struct UseTextureLoad<vtkm::Int16*>   {typedef boost::true_type type; };
+template<> struct UseTextureLoad<vtkm::UInt16*>  {typedef boost::true_type type; };
+template<> struct UseTextureLoad<vtkm::Int32*>   {typedef boost::true_type type; };
+template<> struct UseTextureLoad<vtkm::UInt32*>  {typedef boost::true_type type; };
+
+template<> struct UseTextureLoad<vtkm::Vec<vtkm::Int32,2>* > {typedef boost::true_type type; };
+template<> struct UseTextureLoad<vtkm::Vec<vtkm::UInt32,2>* > {typedef boost::true_type type; };
+template<> struct UseTextureLoad<vtkm::Vec<vtkm::Int32,4>* > {typedef boost::true_type type; };
+template<> struct UseTextureLoad<vtkm::Vec<vtkm::UInt32,4>* > {typedef boost::true_type type; };
+
+template<> struct UseTextureLoad<vtkm::Float32* > {typedef boost::true_type type; };
+template<> struct UseTextureLoad<vtkm::Float64* > {typedef boost::true_type type; };
+
+template<> struct UseTextureLoad<vtkm::Vec<vtkm::Float32,2>* > {typedef boost::true_type type; };
+template<> struct UseTextureLoad<vtkm::Vec<vtkm::Float32,4>* > {typedef boost::true_type type; };
+template<> struct UseTextureLoad<vtkm::Vec<vtkm::Float64,2>* > {typedef boost::true_type type; };
+
+//this T type is not one that is valid to be loaded through texture memory
+template<typename T, typename Enable = void>
+struct load_through_texture
+{
+  VTKM_EXEC_EXPORT
+  static  T get(const thrust::system::cuda::pointer<T> data)
+  {
+  return *(data.get());
+  }
+};
+
+//this T type is valid to be loaded through texture memory
+template<typename T>
+struct load_through_texture<T, typename ::boost::enable_if< typename UseTextureLoad<T>::type >::type >
+{
+  VTKM_EXEC_EXPORT
+  static T get(const thrust::system::cuda::pointer<T> data)
+  {
+  //only load through a texture if we have sm 35 support
+#if __CUDA_ARCH__ >= 350
+  return __ldg(data.get());
+#else
+  return *(data.get());
+#endif
+  }
+};
+
 
 class ArrayPortalFromThrustBase {};
 
@@ -111,7 +164,7 @@ public:
   VTKM_CONT_EXPORT
   IteratorType GetIteratorEnd() const { return this->EndIterator.get(); }
 
-private:
+//private:
   PointerType BeginIterator;
   PointerType EndIterator;
 
@@ -168,7 +221,7 @@ public:
 
   VTKM_EXEC_EXPORT
   ValueType Get(vtkm::Id index) const {
-    return *this->IteratorAt(index);
+    return vtkm::exec::cuda::internal::load_through_texture<ValueType>::get( this->IteratorAt(index) );
   }
 
   VTKM_EXEC_EXPORT

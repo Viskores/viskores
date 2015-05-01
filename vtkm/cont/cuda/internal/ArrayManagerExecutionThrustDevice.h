@@ -20,8 +20,11 @@
 #ifndef vtk_m_cont_cuda_internal_ArrayManagerExecutionThrustDevice_h
 #define vtk_m_cont_cuda_internal_ArrayManagerExecutionThrustDevice_h
 
-#include <vtkm/cont/Storage.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorControlOutOfMemory.h>
+#include <vtkm/cont/Storage.h>
+
+#include <iostream>
 
 // Disable GCC warnings we check vtkmfor but Thrust does not.
 #if defined(__GNUC__) && !defined(VTKM_CUDA)
@@ -34,7 +37,8 @@
 #endif // gcc version >= 4.2
 #endif // gcc && !CUDA
 
-#include <thrust/system/cuda/memory.h>
+#include <thrust/system/cuda/vector.h>
+#include <thrust/device_malloc_allocator.h>
 #include <thrust/copy.h>
 
 #if defined(__GNUC__) && !defined(VTKM_CUDA)
@@ -44,29 +48,27 @@
 #endif // gcc && !CUDA
 
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
-#include <vtkm/exec/cuda/internal/ArrayPortalFromTexture.h>
-
-#include <boost/utility/enable_if.hpp>
 
 namespace vtkm {
 namespace cont {
 namespace cuda {
 namespace internal {
 
-template<typename T> struct UseTexturePortal      {typedef  boost::false_type type;};
-
-//Currently disabled as we are still tracking down issues with Texture
-//Memory. The major issue is that in testing it is slower than classic arrays
-#ifdef VTKM_USE_TEXTURE_MEM
-template<> struct UseTexturePortal<vtkm::Int8>    {typedef boost::true_type type; };
-template<> struct UseTexturePortal<vtkm::UInt8>   {typedef boost::true_type type; };
-template<> struct UseTexturePortal<vtkm::Int16>   {typedef boost::true_type type; };
-template<> struct UseTexturePortal<vtkm::UInt16>  {typedef boost::true_type type; };
-template<> struct UseTexturePortal<vtkm::Int32>   {typedef boost::true_type type; };
-template<> struct UseTexturePortal<vtkm::UInt32>  {typedef boost::true_type type; };
-template<> struct UseTexturePortal<vtkm::Float32> {typedef boost::true_type type; };
-#endif
-
+// UninitializedAllocator is an allocator which
+// derives from device_allocator and which has a
+// no-op construct member function
+template<typename T>
+  struct UninitializedAllocator
+    : ::thrust::device_malloc_allocator<T>
+{
+  // note that construct is annotated as
+  // a __host__ __device__ function
+  __host__ __device__
+  void construct(T *p)
+  {
+    // no-op
+  }
+};
 
 /// \c ArrayManagerExecutionThrustDevice provides an implementation for a \c
 /// ArrayManagerExecution class for a thrust device adapter that is designed
@@ -77,31 +79,25 @@ template<> struct UseTexturePortal<vtkm::Float32> {typedef boost::true_type type
 /// This array manager should only be used with the cuda device adapter,
 /// since in the future it will take advantage of texture memory and
 /// the unique memory access patterns of cuda systems.
-template<typename T, class StorageTag, typename Enable= void>
+template<typename T, class StorageTag>
 class ArrayManagerExecutionThrustDevice
 {
-  //we need a way to detect that we are using FERMI or lower and disable
-  //the usage of texture iterator. The __CUDA_ARCH__ define is only around
-  //for device code so that can't be used. I expect that we will have to devise
-  //some form of Try/Compile with CUDA or just offer this as an advanced CMake
-  //option. We could also try and see if a runtime switch is possible.
-
 public:
   typedef T ValueType;
 
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> ContainerType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
   typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust< T > PortalType;
-  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< T > PortalConstType;
+  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< const T > PortalConstType;
 
-  VTKM_CONT_EXPORT ArrayManagerExecutionThrustDevice():
-    NumberOfValues(0),
-    ArrayBegin(),
-    ArrayEnd()
+  VTKM_CONT_EXPORT
+  ArrayManagerExecutionThrustDevice(StorageType *storage)
+    : Storage(storage), Array()
   {
 
   }
 
+  VTKM_CONT_EXPORT
   ~ArrayManagerExecutionThrustDevice()
   {
     this->ReleaseResources();
@@ -109,68 +105,89 @@ public:
 
   /// Returns the size of the array.
   ///
-  VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const {
-    return this->NumberOfValues;
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfValues() const {
+    return this->Array.size();
   }
 
   /// Allocates the appropriate size of the array and copies the given data
   /// into the array.
   ///
-  template<class PortalControl>
-  VTKM_CONT_EXPORT void LoadDataForInput(PortalControl arrayPortal)
+  VTKM_CONT_EXPORT
+  PortalConstType PrepareForInput(bool updateData)
   {
-    //don't bind to the texture yet, as we could have allocate the array
-    //on a previous call with AllocateArrayForOutput and now are directly
-    //calling get portal const
+    if (updateData)
+    {
+      this->CopyToExecution();
+    }
+    else // !updateData
+    {
+      // The data in this->Array should already be valid. We are not messing
+      // with texture yet, so we don't have to worry about being in the wrong
+      // memory space.
+    }
+
+    return PortalConstType(this->Array.data(),
+                           this->Array.data() + this->Array.size());
+  }
+
+  /// Allocates the appropriate size of the array and copies the given data
+  /// into the array.
+  ///
+  VTKM_CONT_EXPORT
+  PortalType PrepareForInPlace(bool updateData)
+  {
+    if (updateData)
+    {
+      this->CopyToExecution();
+    }
+    else // !updateData
+    {
+      // The data in this->Array should already be valid. We are not messing
+      // with texture yet, so we don't have to worry about being in the wrong
+      // memory space.
+    }
+
+    return PortalType(this->Array.data(),
+                      this->Array.data() + this->Array.size());
+  }
+
+  /// Allocates the array to the given size.
+  ///
+  VTKM_CONT_EXPORT
+  PortalType PrepareForOutput(vtkm::Id numberOfValues)
+  {
+    if (numberOfValues > this->GetNumberOfValues())
+    {
+      // Resize to 0 first so that you don't have to copy data when resizing
+      // to a larger size.
+      this->Array.clear();
+    }
+
     try
       {
-      this->NumberOfValues = arrayPortal.GetNumberOfValues();
-      this->ArrayBegin = ::thrust::system::cuda::malloc<T>( static_cast<std::size_t>(this->NumberOfValues)  );
-      this->ArrayEnd = this->ArrayBegin + this->NumberOfValues;
-
-      ::thrust::copy(arrayPortal.GetRawIterator(),
-                     arrayPortal.GetRawIterator() + this->NumberOfValues,
-                     this->ArrayBegin);
+      this->Array.resize(numberOfValues);
       }
     catch (std::bad_alloc error)
       {
       throw vtkm::cont::ErrorControlOutOfMemory(error.what());
       }
+
+    return PortalType(this->Array.data(),
+                      this->Array.data() + this->Array.size());
   }
 
-  /// Allocates the appropriate size of the array and copies the given data
-  /// into the array.
-  ///
-  template<class PortalControl>
-  VTKM_CONT_EXPORT void LoadDataForInPlace(PortalControl arrayPortal)
-  {
-    this->LoadDataForInput(arrayPortal);
-  }
-
-  /// Allocates the array to the given size.
-  ///
-  VTKM_CONT_EXPORT void AllocateArrayForOutput(
-      ContainerType &vtkmNotUsed(container),
-      vtkm::Id numberOfValues)
-  {
-    if(this->NumberOfValues > 0)
-      {
-      ::thrust::system::cuda::free( this->ArrayBegin  );
-      }
-    this->NumberOfValues = numberOfValues;
-    this->ArrayBegin = ::thrust::system::cuda::malloc<T>( this->NumberOfValues  );
-    this->ArrayEnd = this->ArrayBegin + numberOfValues;
-  }
-
-  /// Allocates enough space in \c controlArray and copies the data in the
+  /// Allocates enough space in \c storage and copies the data in the
   /// device vector into it.
   ///
-  VTKM_CONT_EXPORT void RetrieveOutputData(ContainerType &controlArray) const
+  VTKM_CONT_EXPORT
+  void RetrieveOutputData(StorageType *storage) const
   {
-    controlArray.Allocate(this->NumberOfValues);
-    ::thrust::copy(this->ArrayBegin,
-                   this->ArrayEnd,
-                   controlArray.GetPortal().GetRawIterator());
+    storage->Allocate(this->Array.size());
+    ::thrust::copy(
+          this->Array.data(),
+          this->Array.data() + this->Array.size(),
+          vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
   }
 
   /// Resizes the device vector.
@@ -179,19 +196,9 @@ public:
   {
     // The operation will succeed even if this assertion fails, but this
     // is still supposed to be a precondition to Shrink.
-    VTKM_ASSERT_CONT(numberOfValues <= this->NumberOfValues);
-    this->NumberOfValues = numberOfValues;
-    this->ArrayEnd = this->ArrayBegin + this->NumberOfValues;
-  }
+    VTKM_ASSERT_CONT(numberOfValues <= this->Array.size());
 
-  VTKM_CONT_EXPORT PortalType GetPortal()
-  {
-    return PortalType(this->ArrayBegin, this->ArrayEnd);
-  }
-
-  VTKM_CONT_EXPORT PortalConstType GetPortalConst() const
-  {
-    return PortalConstType(this->ArrayBegin, this->ArrayEnd);
+    this->Array.resize(numberOfValues);
   }
 
 
@@ -199,9 +206,8 @@ public:
   ///
   VTKM_CONT_EXPORT void ReleaseResources()
   {
-    ::thrust::system::cuda::free( this->ArrayBegin  );
-    this->ArrayBegin = ::thrust::system::cuda::pointer<ValueType>();
-    this->ArrayEnd = ::thrust::system::cuda::pointer<ValueType>();
+    this->Array.clear();
+    this->Array.shrink_to_fit();
   }
 
 private:
@@ -211,167 +217,28 @@ private:
   void operator=(
       ArrayManagerExecutionThrustDevice<T, StorageTag> &);
 
-  vtkm::Id NumberOfValues;
-  ::thrust::system::cuda::pointer<ValueType> ArrayBegin;
-  ::thrust::system::cuda::pointer<ValueType> ArrayEnd;
-};
+  StorageType *Storage;
 
+  ::thrust::system::cuda::vector<ValueType,
+                                 UninitializedAllocator<ValueType> > Array;
 
-/// This is a specialization that is used to enable texture memory iterators
-template<typename T, class StorageTag>
-class ArrayManagerExecutionThrustDevice<T, StorageTag,
-    typename ::boost::enable_if< typename UseTexturePortal<T>::type >::type >
-{
-  //we need a way to detect that we are using FERMI or lower and disable
-  //the usage of texture iterator. The __CUDA_ARCH__ define is only around
-  //for device code so that can't be used. I expect that we will have to devise
-  //some form of Try/Compile with CUDA or just offer this as an advanced CMake
-  //option. We could also try and see if a runtime switch is possible.
-
-public:
-  typedef T ValueType;
-
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> ContainerType;
-
-  typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust< T > PortalType;
-  typedef ::vtkm::exec::cuda::internal::DaxTexObjInputIterator<T> TextureIteratorType;
-  typedef ::vtkm::exec::cuda::internal::ConstArrayPortalFromTexture< TextureIteratorType > PortalConstType;
-
-  VTKM_CONT_EXPORT ArrayManagerExecutionThrustDevice():
-    NumberOfValues(0),
-    ArrayBegin(),
-    ArrayEnd(),
-    HaveTextureBound(false),
-    InputArrayIterator()
-  {
-
-  }
-
-  ~ArrayManagerExecutionThrustDevice()
-  {
-    this->ReleaseResources();
-  }
-
-  /// Returns the size of the array.
-  ///
-  VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const {
-    return this->NumberOfValues;
-  }
-
-  /// Allocates the appropriate size of the array and copies the given data
-  /// into the array.
-  ///
-  template<class PortalControl>
-  VTKM_CONT_EXPORT void LoadDataForInput(PortalControl arrayPortal)
+  VTKM_CONT_EXPORT
+  void CopyToExecution()
   {
     //don't bind to the texture yet, as we could have allocate the array
     //on a previous call with AllocateArrayForOutput and now are directly
     //calling get portal const
     try
-      {
-      this->NumberOfValues = arrayPortal.GetNumberOfValues();
-      this->ArrayBegin = ::thrust::system::cuda::malloc<T>( static_cast<std::size_t>(this->NumberOfValues)  );
-      this->ArrayEnd = this->ArrayBegin + this->NumberOfValues;
-
-      ::thrust::copy(arrayPortal.GetRawIterator(),
-                     arrayPortal.GetRawIterator() + this->NumberOfValues,
-                     this->ArrayBegin);
-      }
-    catch (std::bad_alloc error)
-      {
-      throw vtkm::cont::ErrorControlOutOfMemory(error.what());
-      }
-  }
-
-  /// Allocates the appropriate size of the array and copies the given data
-  /// into the array.
-  ///
-  template<class PortalControl>
-  VTKM_CONT_EXPORT void LoadDataForInPlace(PortalControl arrayPortal)
-  {
-    this->LoadDataForInput(arrayPortal);
-  }
-
-  /// Allocates the array to the given size.
-  ///
-  VTKM_CONT_EXPORT void AllocateArrayForOutput(
-      ContainerType &vtkmNotUsed(container),
-      vtkm::Id numberOfValues)
-  {
-    if(this->NumberOfValues > 0)
-      {
-      ::thrust::system::cuda::free( this->ArrayBegin  );
-      }
-    this->NumberOfValues = numberOfValues;
-    this->ArrayBegin = ::thrust::system::cuda::malloc<T>( this->NumberOfValues  );
-    this->ArrayEnd = this->ArrayBegin + numberOfValues;
-  }
-
-  /// Allocates enough space in \c controlArray and copies the data in the
-  /// device vector into it.
-  ///
-  VTKM_CONT_EXPORT void RetrieveOutputData(ContainerType &controlArray) const
-  {
-    controlArray.Allocate(this->NumberOfValues);
-    ::thrust::copy(this->ArrayBegin,
-                   this->ArrayEnd,
-                   controlArray.GetPortal().GetRawIterator());
-  }
-
-  /// Resizes the device vector.
-  ///
-  VTKM_CONT_EXPORT void Shrink(vtkm::Id numberOfValues)
-  {
-    // The operation will succeed even if this assertion fails, but this
-    // is still supposed to be a precondition to Shrink.
-    VTKM_ASSERT_CONT(numberOfValues <= this->NumberOfValues);
-    this->NumberOfValues = numberOfValues;
-    this->ArrayEnd = this->ArrayBegin + this->NumberOfValues;
-  }
-
-  VTKM_CONT_EXPORT PortalType GetPortal()
-  {
-    return PortalType(this->ArrayBegin, this->ArrayEnd);
-  }
-
-  VTKM_CONT_EXPORT PortalConstType GetPortalConst() const
-  {
-    if(!this->HaveTextureBound)
-      {
-      this->HaveTextureBound = true;
-      this->InputArrayIterator.BindTexture(ArrayBegin,this->NumberOfValues);
-      }
-
-    //if we have a texture iterator bound use that
-    return PortalConstType(this->InputArrayIterator, this->NumberOfValues);
-  }
-
-
-  /// Frees all memory.
-  ///
-  VTKM_CONT_EXPORT void ReleaseResources() {
-  if(this->HaveTextureBound)
     {
-    this->HaveTextureBound = false;
-    this->InputArrayIterator.UnbindTexture();
+      this->Array.assign(
+            vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst()),
+            vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()));
     }
-    ::thrust::system::cuda::free( this->ArrayBegin  );
-    this->ArrayBegin = ::thrust::system::cuda::pointer<ValueType>();
-    this->ArrayEnd = ::thrust::system::cuda::pointer<ValueType>();
+    catch (std::bad_alloc error)
+    {
+      throw vtkm::cont::ErrorControlOutOfMemory(error.what());
+    }
   }
-
-private:
-  // Not implemented
-  ArrayManagerExecutionThrustDevice(
-      ArrayManagerExecutionThrustDevice<T, StorageTag> &);
-  void operator=(
-      ArrayManagerExecutionThrustDevice<T, StorageTag> &);
-
-  vtkm::Id NumberOfValues;
-  ::thrust::system::cuda::pointer<ValueType> ArrayBegin;
-  ::thrust::system::cuda::pointer<ValueType> ArrayEnd;
-  mutable bool HaveTextureBound;
-  mutable TextureIteratorType InputArrayIterator;
 };
 
 

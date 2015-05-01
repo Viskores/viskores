@@ -53,10 +53,10 @@ struct TryArrayHandleType
       array[index] = TestValue(index, T());
     }
 
-    typename vtkm::cont::ArrayHandle<T>::PortalControl arrayPortal(
-          &array[0], &array[ARRAY_SIZE]);
+    vtkm::cont::internal::Storage<T,vtkm::cont::StorageTagBasic>
+        arrayStorage(array, ARRAY_SIZE);
 
-    vtkm::cont::ArrayHandle<T> arrayHandle(arrayPortal);
+    vtkm::cont::ArrayHandle<T> arrayHandle(arrayStorage);
 
     VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
                      "ArrayHandle has wrong number of entries.");

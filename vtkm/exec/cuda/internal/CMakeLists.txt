@@ -19,13 +19,16 @@
 ##============================================================================
 
 set(headers
-  ArrayManagerExecutionCuda.h
-  ArrayManagerExecutionThrustDevice.h
-  DeviceAdapterAlgorithmCuda.h
-  DeviceAdapterAlgorithmThrust.h
-  DeviceAdapterTagCuda.h
+  ArrayPortalFromThrust.h
   )
+
+vtkm_disable_troublesome_thrust_warnings()
+
+#-----------------------------------------------------------------------------
+CUDA_INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 
 vtkm_declare_headers(CUDA ${headers})
 
-add_subdirectory(testing)
+
+#-----------------------------------------------------------------------------
+# add_subdirectory(testing)

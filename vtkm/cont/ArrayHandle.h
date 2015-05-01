@@ -26,9 +26,9 @@
 #include <vtkm/cont/ErrorControlBadValue.h>
 #include <vtkm/cont/ErrorControlInternal.h>
 #include <vtkm/cont/Storage.h>
+#include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
-#include <vtkm/cont/internal/ArrayTransfer.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
 #include <boost/concept_check.hpp>
@@ -142,20 +142,19 @@ public:
   ///
   VTKM_CONT_EXPORT ArrayHandle() : Internals(new InternalStruct)
   {
-    this->Internals->UserPortalValid = false;
     this->Internals->ControlArrayValid = false;
     this->Internals->ExecutionArrayValid = false;
   }
 
-  /// Constructs an ArrayHandle pointing to the data in the given array portal.
+  /// Special constructor for subclass specializations that need to set the
+  /// initial state of the control array. When this constructor is used, it
+  /// is assumed that the control array is valid.
   ///
-  VTKM_CONT_EXPORT ArrayHandle(const PortalConstControl& userData)
+  ArrayHandle(const StorageType &storage)
     : Internals(new InternalStruct)
   {
-    this->Internals->UserPortal = userData;
-    this->Internals->UserPortalValid = true;
-
-    this->Internals->ControlArrayValid = false;
+    this->Internals->ControlArray = storage;
+    this->Internals->ControlArrayValid = true;
     this->Internals->ExecutionArrayValid = false;
   }
 
@@ -164,12 +163,7 @@ public:
   VTKM_CONT_EXPORT PortalControl GetPortalControl()
   {
     this->SyncControlArray();
-    if (this->Internals->UserPortalValid)
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-        "ArrayHandle has a read-only control portal.");
-    }
-    else if (this->Internals->ControlArrayValid)
+    if (this->Internals->ControlArrayValid)
     {
       // If the user writes into the iterator we return, then the execution
       // array will become invalid. Play it safe and release the execution
@@ -189,11 +183,7 @@ public:
   VTKM_CONT_EXPORT PortalConstControl GetPortalConstControl() const
   {
     this->SyncControlArray();
-    if (this->Internals->UserPortalValid)
-    {
-      return this->Internals->UserPortal;
-    }
-    else if (this->Internals->ControlArrayValid)
+    if (this->Internals->ControlArrayValid)
     {
       return this->Internals->ControlArray.GetPortalConst();
     }
@@ -208,18 +198,13 @@ public:
   ///
   VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const
   {
-    if (this->Internals->UserPortalValid)
-    {
-      return this->Internals->UserPortal.GetNumberOfValues();
-    }
-    else if (this->Internals->ControlArrayValid)
+    if (this->Internals->ControlArrayValid)
     {
       return this->Internals->ControlArray.GetNumberOfValues();
     }
     else if (this->Internals->ExecutionArrayValid)
     {
-      return
-        this->Internals->ExecutionArray->GetNumberOfValues();
+      return this->Internals->ExecutionArray->GetNumberOfValues();
     }
     else
     {
@@ -239,7 +224,6 @@ public:
   void Allocate(vtkm::Id numberOfValues)
   {
     this->ReleaseResourcesExecutionInternal();
-    this->Internals->UserPortalValid = false;
     this->Internals->ControlArray.Allocate(numberOfValues);
     this->Internals->ControlArrayValid = true;
   }
@@ -258,11 +242,6 @@ public:
 
     if (numberOfValues < originalNumberOfValues)
     {
-      if (this->Internals->UserPortalValid)
-      {
-        throw vtkm::cont::ErrorControlBadValue(
-          "ArrayHandle has a read-only control portal.");
-      }
       if (this->Internals->ControlArrayValid)
       {
         this->Internals->ControlArray.Shrink(numberOfValues);
@@ -303,9 +282,6 @@ public:
   {
     this->ReleaseResourcesExecutionInternal();
 
-    // Forget about any user iterators.
-    this->Internals->UserPortalValid = false;
-
     if (this->Internals->ControlArrayValid)
     {
       this->Internals->ControlArray.ReleaseResources();
@@ -326,32 +302,21 @@ public:
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-    if (this->Internals->ExecutionArrayValid)
-    {
-      // Nothing to do, data already loaded.
-    }
-    else if (this->Internals->UserPortalValid)
-    {
-      VTKM_ASSERT_CONT(!this->Internals->ControlArrayValid);
-      this->PrepareForDevice(DeviceAdapterTag());
-      this->Internals->ExecutionArray->LoadDataForInput(
-        this->Internals->UserPortal);
-      this->Internals->ExecutionArrayValid = true;
-    }
-    else if (this->Internals->ControlArrayValid)
-    {
-      this->PrepareForDevice(DeviceAdapterTag());
-      this->Internals->ExecutionArray->LoadDataForInput(
-        this->Internals->ControlArray);
-      this->Internals->ExecutionArrayValid = true;
-    }
-    else
+    if (!this->Internals->ControlArrayValid
+        && !this->Internals->ExecutionArrayValid)
     {
       throw vtkm::cont::ErrorControlBadValue(
         "ArrayHandle has no data when PrepareForInput called.");
     }
-    return this->Internals->ExecutionArray->GetPortalConstExecution(
-             DeviceAdapterTag());
+
+    this->PrepareForDevice(DeviceAdapterTag());
+    typename ExecutionTypes<DeviceAdapterTag>::PortalConst portal =
+        this->Internals->ExecutionArray->PrepareForInput(
+          !this->Internals->ExecutionArrayValid, DeviceAdapterTag());
+
+    this->Internals->ExecutionArrayValid = true;
+
+    return portal;
   }
 
   /// Prepares (allocates) this array to be used as an output from an operation
@@ -371,12 +336,12 @@ public:
     // Invalidate any control arrays.
     // Should the control array resource be released? Probably not a good
     // idea when shared with execution.
-    this->Internals->UserPortalValid = false;
     this->Internals->ControlArrayValid = false;
 
     this->PrepareForDevice(DeviceAdapterTag());
-    this->Internals->ExecutionArray->AllocateArrayForOutput(
-      this->Internals->ControlArray, numberOfValues);
+    typename ExecutionTypes<DeviceAdapterTag>::Portal portal =
+        this->Internals->ExecutionArray->PrepareForOutput(numberOfValues,
+                                                          DeviceAdapterTag());
 
     // We are assuming that the calling code will fill the array using the
     // iterators we are returning, so go ahead and mark the execution array as
@@ -389,7 +354,7 @@ public:
     // assumption anyway.)
     this->Internals->ExecutionArrayValid = true;
 
-    return this->Internals->ExecutionArray->GetPortalExecution(DeviceAdapterTag());
+    return portal;
   }
 
   /// Prepares this array to be used in an in-place operation (both as input
@@ -405,62 +370,31 @@ public:
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-    if (this->Internals->UserPortalValid)
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-        "In place execution cannot be used with an ArrayHandle that has "
-        "user arrays because this might write data back into user space "
-        "unexpectedly.  Copy the data to a new array first.");
-    }
-
-    // This code is similar to PrepareForInput except that we have to give a
-    // writable portal instead of the const portal to the execution array
-    // manager so that the data can (potentially) be written to.
-    if (this->Internals->ExecutionArrayValid)
-    {
-      // Nothing to do, data already loaded.
-    }
-    else if (this->Internals->ControlArrayValid)
-    {
-      this->PrepareForDevice(DeviceAdapterTag());
-      this->Internals->ExecutionArray->LoadDataForInPlace(
-        this->Internals->ControlArray);
-      this->Internals->ExecutionArrayValid = true;
-    }
-    else
+    if (!this->Internals->ControlArrayValid
+        && !this->Internals->ExecutionArrayValid)
     {
       throw vtkm::cont::ErrorControlBadValue(
         "ArrayHandle has no data when PrepareForInput called.");
     }
+
+    this->PrepareForDevice(DeviceAdapterTag());
+    typename ExecutionTypes<DeviceAdapterTag>::Portal portal =
+        this->Internals->ExecutionArray->PrepareForInPlace(
+          !this->Internals->ExecutionArrayValid, DeviceAdapterTag());
+
+    this->Internals->ExecutionArrayValid = true;
 
     // Invalidate any control arrays since their data will become invalid when
     // the execution data is overwritten. Don't actually release the control
     // array. It may be shared as the execution array.
     this->Internals->ControlArrayValid = false;
 
-    return this->Internals->ExecutionArray->GetPortalExecution(DeviceAdapterTag());
+    return portal;
   }
 
-// protected:
-  /// Special constructor for subclass specializations that need to set the
-  /// initial state of the control array. When this constructor is used, it
-  /// is assumed that the control array is valid.
-  ///
-  ArrayHandle(const StorageType &storage)
-    : Internals(new InternalStruct)
-  {
-    this->Internals->UserPortalValid = false;
-    this->Internals->ControlArray = storage;
-    this->Internals->ControlArrayValid = true;
-    this->Internals->ExecutionArrayValid = false;
-  }
-
-  // private:
+// private:
   struct InternalStruct
   {
-    PortalConstControl UserPortal;
-    bool UserPortalValid;
-
     StorageType ControlArray;
     bool ControlArrayValid;
 
@@ -509,14 +443,14 @@ public:
       }
 
     VTKM_ASSERT_CONT(this->Internals->ExecutionArray == NULL);
-    VTKM_ASSERT_CONT(this->Internals->ExecutionArrayValid == false);
+    VTKM_ASSERT_CONT(!this->Internals->ExecutionArrayValid);
     // Need to change some state that does not change the logical state from
     // an external point of view.
     InternalStruct *internals
         = const_cast<InternalStruct*>(this->Internals.get());
     internals->ExecutionArray.reset(
           new vtkm::cont::internal::ArrayHandleExecutionManager<
-            T, StorageTag, DeviceAdapterTag>);
+            T, StorageTag, DeviceAdapterTag>(&internals->ControlArray));
   }
 
   /// Synchronizes the control array with the execution array. If either the
@@ -527,8 +461,7 @@ public:
   ///
   VTKM_CONT_EXPORT void SyncControlArray() const
   {
-    if (!this->Internals->UserPortalValid
-        && !this->Internals->ControlArrayValid)
+    if (!this->Internals->ControlArrayValid)
     {
       // Need to change some state that does not change the logical state from
       // an external point of view.
@@ -536,7 +469,7 @@ public:
         = const_cast<InternalStruct*>(this->Internals.get());
       if (this->Internals->ExecutionArrayValid)
       {
-        internals->ExecutionArray->RetrieveOutputData(internals->ControlArray);
+        internals->ExecutionArray->RetrieveOutputData(&internals->ControlArray);
         internals->ControlArrayValid = true;
       }
       else
@@ -547,14 +480,6 @@ public:
         internals->ControlArray.Allocate(0);
         internals->ControlArrayValid = true;
       }
-    }
-    else
-    {
-      // It should never be the case that both the user and control array are
-      // valid.
-      VTKM_ASSERT_CONT(!this->Internals->UserPortalValid
-                       || !this->Internals->ControlArrayValid);
-      // Nothing to do.
     }
   }
 
@@ -572,54 +497,29 @@ public:
 };
 
 /// A convenience function for creating an ArrayHandle from a standard C array.
-/// Unless properly specialized, this only works with storage types that use an
-/// array portal that accepts a pair of pointers to signify the beginning and
-/// end of the array.
 ///
-template<typename T, typename StorageTag>
-VTKM_CONT_EXPORT
-vtkm::cont::ArrayHandle<T, StorageTag>
-make_ArrayHandle(const T *array,
-                 vtkm::Id length,
-                 StorageTag)
-{
-  typedef vtkm::cont::ArrayHandle<T, StorageTag> ArrayHandleType;
-  typedef typename ArrayHandleType::PortalConstControl PortalType;
-  return ArrayHandleType(PortalType(array, array+length));
-}
 template<typename T>
 VTKM_CONT_EXPORT
-vtkm::cont::ArrayHandle<T, VTKM_DEFAULT_STORAGE_TAG>
-make_ArrayHandle(const T *array, vtkm::Id length)
+vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
+make_ArrayHandle(const T *array,
+                 vtkm::Id length)
 {
-  return make_ArrayHandle(array,
-                          length,
-                          VTKM_DEFAULT_STORAGE_TAG());
+  typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
+      ArrayHandleType;
+  typedef vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>
+      StorageType;
+  return ArrayHandleType(StorageType(array, length));
 }
 
 /// A convenience function for creating an ArrayHandle from an std::vector.
-/// Unless properly specialized, this only works with storage types that use an
-/// array portal that accepts a pair of pointers to signify the beginning and
-/// end of the array.
 ///
 template<typename T,
-         typename Allocator,
-         typename StorageTag>
+         typename Allocator>
 VTKM_CONT_EXPORT
-vtkm::cont::ArrayHandle<T, StorageTag>
-make_ArrayHandle(const std::vector<T,Allocator> &array,
-                 StorageTag)
-{
-  typedef vtkm::cont::ArrayHandle<T, StorageTag> ArrayHandleType;
-  typedef typename ArrayHandleType::PortalConstControl PortalType;
-  return ArrayHandleType(PortalType(&array.front(), &array.back() + 1));
-}
-template<typename T, typename Allocator>
-VTKM_CONT_EXPORT
-vtkm::cont::ArrayHandle<T, VTKM_DEFAULT_STORAGE_TAG>
+vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
 make_ArrayHandle(const std::vector<T,Allocator> &array)
 {
-  return make_ArrayHandle(array, VTKM_DEFAULT_STORAGE_TAG());
+  return make_ArrayHandle(&array.front(), array.size());
 }
 
 }

@@ -70,7 +70,7 @@ MakeInputArray(int arrayId)
   // Make an array handle that points to this buffer.
   typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> ArrayHandleType;
   ArrayHandleType bufferHandle =
-      vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE, StorageTag());
+      vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE);
 
   // When this function returns, the array is going to go out of scope, which
   // will invalidate the array handle we just created. So copy to a new buffer

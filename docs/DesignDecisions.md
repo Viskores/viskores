@@ -1,37 +1,31 @@
 ### Design Decisions ###
 
-A quick list of where the primary classes that will go into VTKM.
-
-High level classes:
-+ vtkm::vtkAllocators [ dax ]
-+ vtkm::vtkMappedDataSets [ dax ]
-+ vtkm::Filters [ eavl ]
-  + pistons halo finder
-+ vtkm::Mutators [ eavl ] + additive fields
-+ vtkm::OpenGLInterop [ dax + piston ]
-
-
-Mid level:
-+ vtkm::ArrayHandle [dax]
-  + dynamic info from eavl
-+ vtkm::CellSet [eavl]
-  + Includes the Explicit and Implicit versions
-+ vtkm::DataSet [eavl]
-  + Holds a Coordinate field
-  + Holds a collection of CellSets
-  + Holds a collection of array handles as fields
-
-Low level:
-+ vtkm::DeviceAdapter [dax]
-+ vtkm::DeviceAdapterGeneral [dax]
-+ vtkm::TopologyMap [eavl]
-+ vtkm::WorkletConcept [ eavl + dax ]
-
+A quick list of what the final design of vtkm should look like:
 
 Code Layout:
+```
 vtkm/
   cont/
-    datamodel/
-    filters/
+    - vtkm::cont::ArrayHandle
+    - vtkm::cont::CellSet
+    - vtkm::cont::DataSet
+
+    interop/
+      - OpenGL interop classes
+      - VTK interop classes
+    cuda/
+
+  filters/
+    - vtkm::filter::ThresholdFilter
+    - vtkm::filter::ContourFilter
+    - Mutators?
   exec/
-    worklets/
+    cuda/
+
+  worklets/
+    - vtkm::worklet::WorkletMapField
+    - vtkm::worklet::WorkletMapCell
+```
+
+
+
