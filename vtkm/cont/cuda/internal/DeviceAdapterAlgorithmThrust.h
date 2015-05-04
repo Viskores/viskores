@@ -312,6 +312,34 @@ private:
                             binaryOP);
   }
 
+  template<class KeysPortal, class ValuesPortal,
+           class KeysOutputPortal, class ValueOutputPortal,
+           class BinaryOperation>
+  VTKM_CONT_EXPORT static
+  vtkm::Id ReduceByKeyPortal(const KeysPortal &keys,
+                             const ValuesPortal& values,
+                             const KeysOutputPortal &keys_output,
+                             const ValueOutputPortal &values_output,
+                             BinaryOperation binaryOP)
+  {
+    typedef typename detail::IteratorTraits<KeysOutputPortal>::IteratorType
+                                                               IteratorType;
+    IteratorType keys_out_begin = IteratorBegin(keys_output);
+    ::thrust::pair< IteratorType, IteratorType > result_iterators;
+
+    ::thrust::equal_to<typename KeysPortal::ValueType> binaryPredicate;
+
+    result_iterators = ::thrust::reduce_by_key(IteratorBegin(keys),
+                                               IteratorEnd(keys),
+                                               IteratorBegin(values),
+                                               keys_out_begin,
+                                               IteratorBegin(values_output),
+                                               binaryPredicate,
+                                               binaryOP);
+
+    return ::thrust::distance(keys_out_begin, result_iterators.first);
+  }
+
   template<class InputPortal, class OutputPortal>
   VTKM_CONT_EXPORT static
   typename InputPortal::ValueType ScanExclusivePortal(const InputPortal &input,
@@ -574,6 +602,33 @@ public:
     return ReducePortal(input.PrepareForInput( DeviceAdapterTag() ),
                         initialValue,
                         binaryOp);
+  }
+
+ template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
+          class BinaryOperation>
+  VTKM_CONT_EXPORT static void ReduceByKey(
+      const vtkm::cont::ArrayHandle<T,KIn> &keys,
+      const vtkm::cont::ArrayHandle<U,VIn> &values,
+      vtkm::cont::ArrayHandle<T,KOut> &keys_output,
+      vtkm::cont::ArrayHandle<U,VOut> &values_output,
+      BinaryOperation binaryOp)
+  {
+    //there is a concern that by default we will allocate too much
+    //space for the keys/values output. 1 option is to
+    const vtkm::Id numberOfValues = keys.GetNumberOfValues();
+    if (numberOfValues <= 0)
+      {
+      return;
+      }
+    vtkm::Id reduced_size =
+            ReduceByKeyPortal(keys.PrepareForInput( DeviceAdapterTag() ),
+                              values.PrepareForInput( DeviceAdapterTag() ),
+                              keys_output.PrepareForOutput( numberOfValues, DeviceAdapterTag() ),
+                              values_output.PrepareForOutput( numberOfValues, DeviceAdapterTag() ),
+                              binaryOp);
+
+    keys_output.Shrink( reduced_size );
+    values_output.Shrink( reduced_size );
   }
 
   template<typename T, class SIn, class SOut>

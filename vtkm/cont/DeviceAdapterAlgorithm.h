@@ -131,6 +131,25 @@ struct DeviceAdapterAlgorithm
       T initialValue,
       BinaryOperation binaryOp);
 
+  /// \brief Compute a accumulated sum operation on the input key value pairs
+  ///
+  /// Computes a segmented accumulated sum (or any user binary operation) on the
+  /// \c keys and \c values ArrayHandle(s). Each segmented accumulated sum is
+  /// run on consecutive equal keys with the binary operation applied to all
+  /// values inside that range. Once finished a single key and value is created
+  /// for each segment.
+  ///
+  template<typename T,
+           class CKeyIn,  class CValIn,
+           class CKeyOut, class CValOut,
+           class BinaryOperation >
+  VTKM_CONT_EXPORT static void ReduceByKey(
+      const vtkm::cont::ArrayHandle<T,CKeyIn> &keys,
+      const vtkm::cont::ArrayHandle<U,CValIn> &values,
+      vtkm::cont::ArrayHandle<T,CKeyOut>& keys_output,
+      vtkm::cont::ArrayHandle<T,CValOut>& values_output,
+      BinaryOperation binaryOp);
+
   /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
   ///
   /// Computes an inclusive prefix sum operation on the \c input ArrayHandle,

@@ -1112,6 +1112,91 @@ private:
                     "Got bad value from Reduce with comparison object");
   }
 
+  static VTKM_CONT_EXPORT void TestReduceByKey()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Reduce By Key" << std::endl;
+
+    //first test with very basic integer key / values
+    {
+    const vtkm::Id inputLength = 12;
+    const vtkm::Id expectedLength = 6;
+    vtkm::Id inputKeys[inputLength] =    {0, 0, 0,\
+                                          1, 1,\
+                                          4,\
+                                          0,\
+                                          2, 2, 2, 2,\
+                                          -1}; // input keys
+    vtkm::Id inputValues[inputLength] =  {13, -2, -1,\
+                                          1, 1,\
+                                          0,\
+                                          3,\
+                                          1, 2, 3, 4, \
+                                          -42}; // input keys
+    vtkm::Id expectedKeys[expectedLength] =   { 0, 1, 4, 0,  2, -1 };
+    vtkm::Id expectedValues[expectedLength] = {10, 2, 0, 3, 10, -42};
+
+    IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
+    IdArrayHandle values = MakeArrayHandle(inputValues, inputLength);
+
+    IdArrayHandle keysOut, valuesOut;
+    Algorithm::ReduceByKey( keys,
+                            values,
+                            keysOut,
+                            valuesOut,
+                            vtkm::internal::Add() );
+
+    VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
+                    "Got wrong number of output keys");
+
+    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
+                    "Got wrong number of output values");
+
+    for(vtkm::Id i=0; i < expectedLength; ++i)
+      {
+      const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
+      const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
+      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
+      }
+    }
+
+    //next test with a single key across the entire set
+    {
+    const vtkm::Id inputLength = 3;
+    const vtkm::Id expectedLength = 1;
+    vtkm::Id inputKeys[inputLength] =    {0, 0, 0}; // input keys
+    vtkm::Id inputValues[inputLength] =  {13, -2, -1}; // input keys
+    vtkm::Id expectedKeys[expectedLength] =   { 0};
+    vtkm::Id expectedValues[expectedLength] = {10};
+
+    IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
+    IdArrayHandle values = MakeArrayHandle(inputValues, inputLength);
+
+    IdArrayHandle keysOut, valuesOut;
+    Algorithm::ReduceByKey( keys,
+                            values,
+                            keysOut,
+                            valuesOut,
+                            vtkm::internal::Add() );
+
+    VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
+                    "Got wrong number of output keys");
+
+    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
+                    "Got wrong number of output values");
+
+    for(vtkm::Id i=0; i < expectedLength; ++i)
+      {
+      const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
+      const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
+      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
+      }
+    }
+
+  }
+
   static VTKM_CONT_EXPORT void TestScanInclusive()
   {
     std::cout << "-------------------------------------------" << std::endl;
@@ -1449,6 +1534,8 @@ private:
 
       TestReduce();
       TestReduceWithComparisonObject();
+
+      TestReduceByKey();
 
       TestScanInclusive();
       TestScanInclusiveWithComparisonObject();

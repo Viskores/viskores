@@ -103,6 +103,92 @@ private:
   typedef vtkm::cont::DeviceAdapterTagSerial Device;
 
 public:
+
+ template<typename T, class CIn>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
+  {
+    return Reduce(input, initialValue, vtkm::internal::Add());
+  }
+
+ template<typename T, class CIn, class BinaryOperator>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      T initialValue,
+      BinaryOperator binaryOp)
+  {
+    typedef typename vtkm::cont::ArrayHandle<T,CIn>
+        ::template ExecutionTypes<Device>::PortalConst PortalIn;
+
+    PortalIn inputPortal = input.PrepareForInput(Device());
+    return std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
+                           vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
+                           initialValue,
+                           binaryOp);
+  }
+
+  template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
+          class BinaryOperation>
+  VTKM_CONT_EXPORT static void ReduceByKey(
+      const vtkm::cont::ArrayHandle<T,KIn> &keys,
+      const vtkm::cont::ArrayHandle<U,VIn> &values,
+      vtkm::cont::ArrayHandle<T,KOut> &keys_output,
+      vtkm::cont::ArrayHandle<U,VOut> &values_output,
+      BinaryOperation binaryOp)
+  {
+    typedef typename vtkm::cont::ArrayHandle<T,KIn>
+        ::template ExecutionTypes<Device>::PortalConst PortalKIn;
+    typedef typename vtkm::cont::ArrayHandle<T,VIn>
+        ::template ExecutionTypes<Device>::PortalConst PortalVIn;
+
+    typedef typename vtkm::cont::ArrayHandle<T,KOut>
+        ::template ExecutionTypes<Device>::Portal PortalKOut;
+    typedef typename vtkm::cont::ArrayHandle<T,VOut>
+        ::template ExecutionTypes<Device>::Portal PortalVOut;
+
+    PortalKIn keysPortalIn = keys.PrepareForInput(Device());
+    PortalVIn valuesPortalIn = values.PrepareForInput(Device());
+
+    const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
+    PortalKOut keysPortalOut = keys_output.PrepareForOutput(numberOfKeys, Device());
+    PortalVOut valuesPortalOut = values_output.PrepareForOutput(numberOfKeys, Device());
+
+    vtkm::Id writePos = 0;
+    vtkm::Id readPos = 0;
+
+    T currentKey = keysPortalIn.Get(readPos);
+    U currentValue = valuesPortalIn.Get(readPos);
+
+    for(++readPos; readPos < numberOfKeys; ++readPos)
+      {
+      while(readPos < numberOfKeys &&
+            currentKey == keysPortalIn.Get(readPos) )
+        {
+        currentValue = binaryOp(currentValue, valuesPortalIn.Get(readPos));
+        ++readPos;
+        }
+
+      if(readPos < numberOfKeys)
+        {
+        keysPortalOut.Set(writePos, currentKey);
+        valuesPortalOut.Set(writePos, currentValue);
+        ++writePos;
+
+        currentKey = keysPortalIn.Get(readPos);
+        currentValue = valuesPortalIn.Get(readPos);
+        }
+      }
+
+    //now write out the last set of values
+    keysPortalOut.Set(writePos, currentKey);
+    valuesPortalOut.Set(writePos, currentValue);
+
+    //now we need to shrink to the correct number of keys/values
+    //writePos is zero-based so add 1 to get correct length
+    keys_output.Shrink( writePos + 1  );
+    values_output.Shrink( writePos + 1 );
+  }
+
   template<typename T, class CIn, class COut>
   VTKM_CONT_EXPORT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
@@ -142,8 +228,7 @@ public:
     //We need to wrap the operator in a WrappedBinaryOperator struct
     //which can detect and handle calling the binary operator with complex
     //value types such as IteratorFromArrayPortalValue which happen
-    //when passed an input array that is implicit. This occurs when
-    //invoking reduce which calls ScanInclusive
+    //when passed an input array that is implicit.
     internal::WrappedBinaryOperator<T,BinaryOperation> wrappedBinaryOp(
                                                                      binaryOp);
 
