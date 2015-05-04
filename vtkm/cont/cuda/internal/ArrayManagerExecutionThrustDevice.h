@@ -72,13 +72,10 @@ template<typename T>
 
 /// \c ArrayManagerExecutionThrustDevice provides an implementation for a \c
 /// ArrayManagerExecution class for a thrust device adapter that is designed
-/// for the cuda backend which has separate memory spaces for host and device. This
-/// implementation contains a ::thrust::system::cuda::vector to allocate and manage
-/// the array.
+/// for the cuda backend which has separate memory spaces for host and device.
+/// This implementation contains a ::thrust::system::cuda::vector to allocate
+/// and manage the array.
 ///
-/// This array manager should only be used with the cuda device adapter,
-/// since in the future it will take advantage of texture memory and
-/// the unique memory access patterns of cuda systems.
 template<typename T, class StorageTag>
 class ArrayManagerExecutionThrustDevice
 {
@@ -122,9 +119,7 @@ public:
     }
     else // !updateData
     {
-      // The data in this->Array should already be valid. We are not messing
-      // with texture yet, so we don't have to worry about being in the wrong
-      // memory space.
+      // The data in this->Array should already be valid.
     }
 
     return PortalConstType(this->Array.data(),
@@ -143,9 +138,7 @@ public:
     }
     else // !updateData
     {
-      // The data in this->Array should already be valid. We are not messing
-      // with texture yet, so we don't have to worry about being in the wrong
-      // memory space.
+      // The data in this->Array should already be valid.
     }
 
     return PortalType(this->Array.data(),
@@ -225,9 +218,6 @@ private:
   VTKM_CONT_EXPORT
   void CopyToExecution()
   {
-    //don't bind to the texture yet, as we could have allocate the array
-    //on a previous call with AllocateArrayForOutput and now are directly
-    //calling get portal const
     try
     {
       this->Array.assign(
