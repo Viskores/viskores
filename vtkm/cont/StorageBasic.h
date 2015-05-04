@@ -63,20 +63,67 @@ public:
 
 public:
 
-  Storage() : Array(NULL), NumberOfValues(0), AllocatedSize(0) { }
+  VTKM_CONT_EXPORT
+  Storage(const ValueType *array = NULL, vtkm::Id numberOfValues = 0)
+    : Array(const_cast<ValueType *>(array)),
+      NumberOfValues(numberOfValues),
+      AllocatedSize(numberOfValues),
+      DeallocateOnRelease(false),
+      ReadOnly(true) { }
 
+  VTKM_CONT_EXPORT
   ~Storage()
   {
     this->ReleaseResources();
   }
 
+  VTKM_CONT_EXPORT
+  Storage(const Storage<ValueType, StorageTagBasic> &src)
+    : Array(src.Array),
+      NumberOfValues(src.NumberOfValues),
+      AllocatedSize(src.AllocatedSize),
+      DeallocateOnRelease(false),
+      ReadOnly(src.ReadOnly)
+  {
+    if (src.DeallocateOnRelease)
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Attempted to copy a storage array that needs deallocation. "
+            "This is disallowed to prevent complications with deallocation.");
+    }
+  }
+
+  VTKM_CONT_EXPORT
+  Storage &operator=(const Storage<ValueType, StorageTagBasic> &src)
+  {
+    if (src.DeallocateOnRelease)
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Attempted to copy a storage array that needs deallocation. "
+            "This is disallowed to prevent complications with deallocation.");
+    }
+
+    this->ReleaseResources();
+    this->Array = src.Array;
+    this->NumberOfValues = src.NumberOfValues;
+    this->AllocatedSize = src.AllocatedSize;
+    this->DeallocateOnRelease = src.DeallocateOnRelease;
+    this->ReadOnly = src.ReadOnly;
+
+    return *this;
+  }
+
+  VTKM_CONT_EXPORT
   void ReleaseResources()
   {
     if (this->NumberOfValues > 0)
     {
       VTKM_ASSERT_CONT(this->Array != NULL);
-      AllocatorType allocator;
-      allocator.deallocate(this->Array, this->AllocatedSize);
+      if (this->DeallocateOnRelease)
+      {
+        AllocatorType allocator;
+        allocator.deallocate(this->Array, this->AllocatedSize);
+      }
       this->Array = NULL;
       this->NumberOfValues = 0;
       this->AllocatedSize = 0;
@@ -87,9 +134,11 @@ public:
     }
   }
 
+  VTKM_CONT_EXPORT
   void Allocate(vtkm::Id numberOfValues)
   {
-    if (numberOfValues <= this->AllocatedSize)
+    if ((numberOfValues <= this->AllocatedSize)
+        && !this->ReadOnly)
     {
       this->NumberOfValues = numberOfValues;
       return;
@@ -120,15 +169,25 @@ public:
       throw vtkm::cont::ErrorControlOutOfMemory(
         "Could not allocate basic control array.");
     }
+
+    this->DeallocateOnRelease = true;
+    this->ReadOnly = false;
   }
 
+  VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const
   {
     return this->NumberOfValues;
   }
 
+  VTKM_CONT_EXPORT
   void Shrink(vtkm::Id numberOfValues)
   {
+    if (this->ReadOnly)
+    {
+      throw vtkm::cont::ErrorControlBadValue("Cannot shrink read-only array.");
+    }
+
     if (numberOfValues > this->GetNumberOfValues())
     {
       throw vtkm::cont::ErrorControlBadValue(
@@ -138,11 +197,18 @@ public:
     this->NumberOfValues = numberOfValues;
   }
 
+  VTKM_CONT_EXPORT
   PortalType GetPortal()
   {
+    if (this->ReadOnly)
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Tried to access read-only array as read-write.");
+    }
     return PortalType(this->Array, this->Array + this->NumberOfValues);
   }
 
+  VTKM_CONT_EXPORT
   PortalConstType GetPortalConst() const
   {
     return PortalConstType(this->Array, this->Array + this->NumberOfValues);
@@ -157,6 +223,7 @@ public:
   /// a VTK-m object around. Obviously the caller becomes responsible for
   /// destroying the memory.
   ///
+  VTKM_CONT_EXPORT
   ValueType *StealArray()
   {
     ValueType *saveArray =  this->Array;
@@ -167,13 +234,11 @@ public:
   }
 
 private:
-  // Not implemented.
-  Storage(const Storage<ValueType, StorageTagBasic> &src);
-  void operator=(const Storage<ValueType, StorageTagBasic> &src);
-
   ValueType *Array;
   vtkm::Id NumberOfValues;
   vtkm::Id AllocatedSize;
+  bool DeallocateOnRelease;
+  bool ReadOnly;
 };
 
 } // namespace internal

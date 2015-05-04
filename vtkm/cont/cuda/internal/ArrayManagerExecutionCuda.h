@@ -45,13 +45,18 @@ public:
   typedef typename Superclass::ValueType ValueType;
   typedef typename Superclass::PortalType PortalType;
   typedef typename Superclass::PortalConstType PortalConstType;
+  typedef typename Superclass::StorageType StorageType;
 
-  template<class PortalControl>
-  VTKM_CONT_EXPORT void LoadDataForInput(PortalControl arrayPortal)
+  VTKM_CONT_EXPORT
+  ArrayManagerExecution(StorageType *storage)
+    : Superclass(storage) {  }
+
+  VTKM_CONT_EXPORT
+  PortalConstType PrepareForInput(bool updateData)
   {
     try
       {
-      this->Superclass::LoadDataForInput(arrayPortal);
+      return this->Superclass::PrepareForInput(updateData);
       }
     catch (vtkm::cont::ErrorControlOutOfMemory error)
       {
@@ -65,14 +70,31 @@ public:
       }
   }
 
-  VTKM_CONT_EXPORT void AllocateArrayForOutput(
-      vtkm::cont::internal::Storage<ValueType,StorageTag>
-        &container,
-      vtkm::Id numberOfValues)
+  VTKM_CONT_EXPORT
+  PortalType PrepareForInPlace(bool updateData)
   {
     try
       {
-      this->Superclass::AllocateArrayForOutput(container, numberOfValues);
+      return this->Superclass::PrepareForInPlace(updateData);
+      }
+    catch (vtkm::cont::ErrorControlOutOfMemory error)
+      {
+      // Thrust does not seem to be clearing the CUDA error, so do it here.
+      cudaError_t cudaError = cudaPeekAtLastError();
+      if (cudaError == cudaErrorMemoryAllocation)
+        {
+        cudaGetLastError();
+        }
+      throw error;
+      }
+  }
+
+  VTKM_CONT_EXPORT
+  PortalType PrepareForOutput(vtkm::Id numberOfValues)
+  {
+    try
+      {
+      return this->Superclass::PrepareForOutput(numberOfValues);
       }
     catch (vtkm::cont::ErrorControlOutOfMemory error)
       {

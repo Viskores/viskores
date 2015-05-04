@@ -103,29 +103,6 @@ struct SortGreater
 };
 }
 
-//in the namespace vtkm::cont::testing so device adapters
-//that don't use shared memory space can specialize this
-template<typename DeviceTagType>
-struct CopyInto
-{
-  template<typename T, typename StorageTagType>
-  VTKM_CONT_EXPORT
-  void operator()( vtkm::cont::internal::ArrayManagerExecution<
-                    T,
-                    StorageTagType,
-                    DeviceTagType>& manager,
-                 T* start)
-  {
-    typedef vtkm::cont::internal::ArrayManagerExecution< T,
-            StorageTagType, DeviceTagType> ArrayManagerExecution;
-
-    vtkm::cont::ArrayPortalToIterators<
-        typename ArrayManagerExecution::PortalConstType>
-      iterators(manager.GetPortalConst());
-     std::copy(iterators.GetBegin(), iterators.GetEnd(), start);
-  }
-};
-
 
 
 #define ERROR_MESSAGE "Got an error."
@@ -343,9 +320,7 @@ private:
   vtkm::cont::ArrayHandle<T, StorageTagBasic>
   MakeArrayHandle(const T *array, vtkm::Id length)
   {
-    return vtkm::cont::make_ArrayHandle(array,
-                                        length,
-                                        StorageTagBasic());
+    return vtkm::cont::make_ArrayHandle(array, length);
   }
 
   template<typename T>
@@ -382,40 +357,57 @@ private:
     std::cout << "Testing ArrayManagerExecution" << std::endl;
 
     typedef vtkm::cont::internal::ArrayManagerExecution<
-        vtkm::FloatDefault,StorageTagBasic,DeviceAdapterTag>
+        vtkm::Id,StorageTagBasic,DeviceAdapterTag>
         ArrayManagerExecution;
 
+    typedef vtkm::cont::internal::Storage<vtkm::Id,StorageTagBasic> StorageType;
+
     // Create original input array.
-    vtkm::FloatDefault inputArray[ARRAY_SIZE*2];
-    for (vtkm::Id index = 0; index < ARRAY_SIZE*2; index++)
-    {
-      inputArray[index] = vtkm::FloatDefault(index);
-    }
-    ::vtkm::cont::internal::ArrayPortalFromIterators<vtkm::FloatDefault *>
-        inputPortal(inputArray, inputArray+ARRAY_SIZE*2);
-    ArrayManagerExecution inputManager;
-    inputManager.LoadDataForInput(
-          ::vtkm::cont::internal::ArrayPortalFromIterators<const vtkm::FloatDefault*>(inputPortal));
+    StorageType storage;
+    storage.Allocate(ARRAY_SIZE*2);
 
-    // Change size.
-    inputManager.Shrink(ARRAY_SIZE);
+    StorageType::PortalType portal = storage.GetPortal();
+    VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE*2,
+                     "Storage portal has unexpected size.");
 
-    // Copy array back. The issue is we need to know if we are accessing
-    // an array manger that shares memory with the control side. If so
-    // it doesn't support RetrieveOutputData.
-    // the naive way is to use ArrayPortalToIteratorBegin but that fails
-    // since it only works with portals from arrayhandles, as the
-    // arrayhandle does all the syncing.
-    //The solution is to a class that the cuda device adapter can specialize
-    //that handles copying back into control space
-    vtkm::FloatDefault outputArray[ARRAY_SIZE];
-    CopyInto<DeviceAdapterTag>()(inputManager, outputArray);
-
-    // Check array.
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      VTKM_TEST_ASSERT(outputArray[index] == index,
-                       "Did not get correct values from array.");
+      portal.Set(index, TestValue(index, vtkm::Id()));
+    }
+
+    ArrayManagerExecution manager(&storage);
+
+    // Do an operation just so we know the values are placed in the execution
+    // environment and they change. We are only calling on half the array
+    // because we are about to shrink.
+    Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(true)),
+                        ARRAY_SIZE);
+
+    // Change size.
+    manager.Shrink(ARRAY_SIZE);
+
+    VTKM_TEST_ASSERT(manager.GetNumberOfValues() == ARRAY_SIZE,
+                     "Shrink did not set size of array manager correctly.");
+
+    // Get the array back and check its values. We have to get it back into
+    // the same storage since some ArrayManagerExecution classes will expect
+    // that.
+    manager.RetrieveOutputData(&storage);
+
+    VTKM_TEST_ASSERT(storage.GetNumberOfValues() == ARRAY_SIZE,
+                     "Storage has wrong number of values after execution "
+                     "array shrink.");
+
+    // Check array.
+    StorageType::PortalConstType checkPortal = storage.GetPortalConst();
+    VTKM_TEST_ASSERT(checkPortal.GetNumberOfValues() == ARRAY_SIZE,
+                     "Storage portal wrong size.");
+
+    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+    {
+      VTKM_TEST_ASSERT(
+            checkPortal.Get(index) == TestValue(index, vtkm::Id()) + index,
+            "Did not get correct values from array.");
     }
   }
 
@@ -484,17 +476,16 @@ private:
     {
       std::cout << "Allocating execution array" << std::endl;
       IdStorage storage;
-      IdArrayManagerExecution manager;
-      manager.AllocateArrayForOutput(storage, 1);
+      IdArrayManagerExecution manager(&storage);
 
       std::cout << "Running clear." << std::endl;
-      Algorithm::Schedule(ClearArrayKernel(manager.GetPortal()), 1);
+      Algorithm::Schedule(ClearArrayKernel(manager.PrepareForOutput(1)), 1);
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(manager.GetPortal()), 1);
+      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)), 1);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(storage);
+      manager.RetrieveOutputData(&storage);
 
       for (vtkm::Id index = 0; index < 1; index++)
       {
@@ -510,17 +501,18 @@ private:
     {
       std::cout << "Allocating execution array" << std::endl;
       IdStorage storage;
-      IdArrayManagerExecution manager;
-      manager.AllocateArrayForOutput(storage, ARRAY_SIZE);
+      IdArrayManagerExecution manager(&storage);
 
       std::cout << "Running clear." << std::endl;
-      Algorithm::Schedule(ClearArrayKernel(manager.GetPortal()), ARRAY_SIZE);
+      Algorithm::Schedule(ClearArrayKernel(manager.PrepareForOutput(ARRAY_SIZE)),
+                          ARRAY_SIZE);
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(manager.GetPortal()), ARRAY_SIZE);
+      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)),
+                          ARRAY_SIZE);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(storage);
+      manager.RetrieveOutputData(&storage);
 
       for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
       {
@@ -537,20 +529,22 @@ private:
     {
       std::cout << "Allocating execution array" << std::endl;
       IdStorage storage;
-      IdArrayManagerExecution manager;
+      IdArrayManagerExecution manager(&storage);
       vtkm::Id DIM_SIZE = vtkm::Id(std::pow(ARRAY_SIZE, 1/3.0f));
-      manager.AllocateArrayForOutput(storage,
-                                     DIM_SIZE * DIM_SIZE * DIM_SIZE);
       vtkm::Id3 maxRange(DIM_SIZE);
 
       std::cout << "Running clear." << std::endl;
-      Algorithm::Schedule(ClearArrayKernel(manager.GetPortal()), maxRange);
+      Algorithm::Schedule(
+            ClearArrayKernel(manager.PrepareForOutput(
+                               DIM_SIZE * DIM_SIZE * DIM_SIZE)),
+            maxRange);
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(manager.GetPortal()), maxRange);
+      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)),
+                          maxRange);
 
       std::cout << "Checking results." << std::endl;
-      manager.RetrieveOutputData(storage);
+      manager.RetrieveOutputData(&storage);
 
       const vtkm::Id maxId = DIM_SIZE * DIM_SIZE * DIM_SIZE;
       for (vtkm::Id index = 0; index < maxId; index++)

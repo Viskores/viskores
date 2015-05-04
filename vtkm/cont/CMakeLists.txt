@@ -24,6 +24,9 @@ set(headers
   ArrayHandle.h
   ArrayHandleCompositeVector.h
   ArrayHandleCounting.h
+  ArrayHandleImplicit.h
+  ArrayHandlePermutation.h
+  ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
   ArrayPortal.h
   ArrayPortalToIterators.h

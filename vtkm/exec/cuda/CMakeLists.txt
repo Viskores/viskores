@@ -19,33 +19,13 @@
 ##============================================================================
 
 set(headers
-  Testing.h
-  TestingDeviceAdapter.h
   )
 
-vtkm_declare_headers(${headers})
+#-----------------------------------------------------------------------------
+add_subdirectory(internal)
 
-set(unit_tests
-  UnitTestArrayHandle.cxx
-  UnitTestArrayHandleCompositeVector.cxx
-  UnitTestArrayHandleCounting.cxx
-  UnitTestArrayHandleImplicit.cxx
-  UnitTestArrayHandlePermutation.cxx
-  UnitTestArrayHandleTransform.cxx
-  UnitTestArrayHandleUniformPointCoordinates.cxx
-  UnitTestArrayPortalToIterators.cxx
-  UnitTestContTesting.cxx
-  UnitTestDeviceAdapterAlgorithmDependency.cxx
-  UnitTestDeviceAdapterAlgorithmGeneral.cxx
-  UnitTestDeviceAdapterSerial.cxx
-  UnitTestDynamicArrayHandle.cxx
-  UnitTestDynamicPointCoordinates.cxx
-  UnitTestPointCoordinates.cxx
-  UnitTestStorageBasic.cxx
-  UnitTestStorageImplicit.cxx
-  UnitTestStorageListTag.cxx
-  UnitTestTimer.cxx
-  )
+# vtkm_declare_headers(${impl_headers} ${headers})
 
-vtkm_unit_tests(SOURCES ${unit_tests})
 
+#-----------------------------------------------------------------------------
+# add_subdirectory(testing)

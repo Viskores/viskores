@@ -102,7 +102,7 @@ struct TestPointCoordinatesArray
 
     std::cout << "  Creating and checking array handle" << std::endl;
     vtkm::cont::ArrayHandle<Vector3,StorageTag> array =
-        vtkm::cont::make_ArrayHandle(buffer, StorageTag());
+        vtkm::cont::make_ArrayHandle(buffer);
     CheckArray()(array);
 
     std::cout << "  Creating and checking PointCoordinatesArray" << std::endl;

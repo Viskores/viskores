@@ -43,6 +43,7 @@
 #endif // gcc version >= 4.6
 #endif // gcc && !CUDA
 
+#include <boost/type_traits/integral_constant.hpp>
 #include <boost/utility/enable_if.hpp>
 
 namespace vtkm {
@@ -163,7 +164,7 @@ public:
   VTKM_CONT_EXPORT
   IteratorType GetIteratorEnd() const { return this->EndIterator.get(); }
 
-private:
+//private:
   PointerType BeginIterator;
   PointerType EndIterator;
 

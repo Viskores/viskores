@@ -19,33 +19,16 @@
 ##============================================================================
 
 set(headers
-  Testing.h
-  TestingDeviceAdapter.h
+  ArrayPortalFromThrust.h
   )
 
-vtkm_declare_headers(${headers})
+vtkm_disable_troublesome_thrust_warnings()
 
-set(unit_tests
-  UnitTestArrayHandle.cxx
-  UnitTestArrayHandleCompositeVector.cxx
-  UnitTestArrayHandleCounting.cxx
-  UnitTestArrayHandleImplicit.cxx
-  UnitTestArrayHandlePermutation.cxx
-  UnitTestArrayHandleTransform.cxx
-  UnitTestArrayHandleUniformPointCoordinates.cxx
-  UnitTestArrayPortalToIterators.cxx
-  UnitTestContTesting.cxx
-  UnitTestDeviceAdapterAlgorithmDependency.cxx
-  UnitTestDeviceAdapterAlgorithmGeneral.cxx
-  UnitTestDeviceAdapterSerial.cxx
-  UnitTestDynamicArrayHandle.cxx
-  UnitTestDynamicPointCoordinates.cxx
-  UnitTestPointCoordinates.cxx
-  UnitTestStorageBasic.cxx
-  UnitTestStorageImplicit.cxx
-  UnitTestStorageListTag.cxx
-  UnitTestTimer.cxx
-  )
+#-----------------------------------------------------------------------------
+CUDA_INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 
-vtkm_unit_tests(SOURCES ${unit_tests})
+vtkm_declare_headers(CUDA ${headers})
 
+
+#-----------------------------------------------------------------------------
+# add_subdirectory(testing)
