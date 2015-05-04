@@ -122,7 +122,7 @@ public:
   ///
   VTKM_CONT_EXPORT
   void RetrieveOutputData(
-      vtkm::cont::internal::Storage<T,StorageTag>  &storage) const;
+      vtkm::cont::internal::Storage<T,StorageTag>* storage) const;
 
   /// \brief Reduces the size of the array without changing its values.
   ///
