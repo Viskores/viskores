@@ -21,6 +21,7 @@
 set(headers
   Testing.h
   TestingDeviceAdapter.h
+  TestingFancyArrayHandles.h
   )
 
 vtkm_declare_headers(${headers})
@@ -29,6 +30,7 @@ set(unit_tests
   UnitTestArrayHandle.cxx
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
+  UnitTestArrayHandleFancy.cxx
   UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandlePermutation.cxx
   UnitTestArrayHandleTransform.cxx
