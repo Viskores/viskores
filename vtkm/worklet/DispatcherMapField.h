@@ -47,7 +47,7 @@ class DispatcherMapField :
 public:
   VTKM_CONT_EXPORT
   DispatcherMapField(const WorkletType &worklet = WorkletType())
-    : Superclass(worklet) { this->Use3DSchedule=false;  }
+    : Superclass(worklet) {  }
 
   template<typename Invocation>
   VTKM_CONT_EXPORT
