@@ -20,6 +20,7 @@
 #ifndef vtk_m_testing_Testing_h
 #define vtk_m_testing_Testing_h
 
+#include <vtkm/Pair.h>
 #include <vtkm/TypeListTag.h>
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
@@ -98,6 +99,20 @@ struct TypeName<vtkm::Vec<T,Size> >
            << TypeName<T>::Name()
            << ", "
            << Size
+           << " >";
+    return stream.str();
+  }
+};
+
+template<typename T, typename U>
+struct TypeName<vtkm::Pair<T,U> >
+{
+  static std::string Name() {
+    std::stringstream stream;
+    stream << "vtkm::Pair< "
+           << TypeName<T>::Name()
+           << ", "
+           << TypeName<U>::Name()
            << " >";
     return stream.str();
   }

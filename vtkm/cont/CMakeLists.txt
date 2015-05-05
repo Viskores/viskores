@@ -28,6 +28,7 @@ set(headers
   ArrayHandlePermutation.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
+  ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
   Assert.h
