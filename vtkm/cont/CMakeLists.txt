@@ -62,7 +62,7 @@ vtkm_declare_headers(${impl_headers} ${headers})
 
 if (VTKm_ENABLE_CUDA)
   add_subdirectory(cuda)
-endif (VTKm_ENABLE_CUDA)
+endif ()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)
