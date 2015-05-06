@@ -64,8 +64,10 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   elseif (${cxxfiles_len} GREATER 0)
     add_library(TestBuild_${name} ${cxxfiles} ${hfiles})
     if(VTKm_EXTRA_COMPILER_WARNINGS)
-      set_target_properties(TestBuild_${name}
-        PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA})
+      set_property(TARGET ${test_prog}
+                   APPEND PROPERTY COMPILE_FLAGS
+                   ${CMAKE_CXX_FLAGS_WARN_EXTRA}
+                   )
     endif(VTKm_EXTRA_COMPILER_WARNINGS)
   endif ()
   set_source_files_properties(${hfiles}
@@ -191,17 +193,28 @@ function(vtkm_unit_tests)
       cuda_add_executable(${test_prog} ${TestSources})
     else (VTKm_UT_CUDA)
       add_executable(${test_prog} ${TestSources})
+
       if(VTKm_EXTRA_COMPILER_WARNINGS)
-        set_target_properties(${test_prog}
-          PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA})
+        set_property(TARGET ${test_prog}
+                   APPEND PROPERTY COMPILE_FLAGS
+                   ${CMAKE_CXX_FLAGS_WARN_EXTRA}
+                   )
       endif(VTKm_EXTRA_COMPILER_WARNINGS)
+
       if(MSVC)
         #disable MSVC CRT and SCL warnings as they recommend using non standard
         #c++ extensions
+        #enable bigobj support so that
         set_property(TARGET ${test_prog}
                    APPEND PROPERTY COMPILE_DEFINITIONS
                    "_SCL_SECURE_NO_WARNINGS"
                    "_CRT_SECURE_NO_WARNINGS"
+                   )
+
+        #enable large object support 2^32 addressable sections
+        set_property(TARGET ${test_prog}
+                   APPEND PROPERTY COMPILE_FLAGS
+                   "/bigobj"
                    )
       endif()
     endif (VTKm_UT_CUDA)
@@ -339,13 +352,19 @@ function(vtkm_worklet_unit_tests device_adapter)
         )
     endforeach (test)
 
-    #disable MSVC CRT and SCL warnings as they recommend using non standard
-    #c++ extensions
     if(MSVC)
+      #disable MSVC CRT and SCL warnings as they recommend using non standard
+      #c++ extensions
       set_property(TARGET ${test_prog}
                    APPEND PROPERTY COMPILE_DEFINITIONS
                    "_SCL_SECURE_NO_WARNINGS"
                    "_CRT_SECURE_NO_WARNINGS"
+                   )
+
+      #enable large object support 2^32 addressable sections
+      set_property(TARGET ${test_prog}
+                   APPEND PROPERTY COMPILE_FLAGS
+                   "/bigobj"
                    )
     endif()
 
