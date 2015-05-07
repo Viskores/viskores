@@ -23,6 +23,8 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageImplicit.h>
 
+#include <vtkm/VecTraits.h>
+
 namespace vtkm {
 namespace cont {
 
@@ -32,6 +34,9 @@ namespace internal {
 template <class CountingValueType>
 class ArrayPortalCounting
 {
+  typedef typename vtkm::VecTraits<CountingValueType>::ComponentType
+      ComponentType;
+
 public:
   typedef CountingValueType ValueType;
 
@@ -71,7 +76,9 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_EXEC_CONT_EXPORT
-  ValueType Get(vtkm::Id index) const { return StartingValue+ValueType(index); }
+  ValueType Get(vtkm::Id index) const {
+    return StartingValue + ValueType(ComponentType(index));
+  }
 
 private:
   ValueType StartingValue;
