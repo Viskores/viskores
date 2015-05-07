@@ -124,7 +124,7 @@ void CheckInPlaceResult(PortalType portal)
       // This index was part of the permuted array; has a value changed
       T expectedValue = TestValue(permutedIndex, T()) + T(1000);
       T retrievedValue = portal.Get(permutedIndex);
-      VTKM_TEST_ASSERT(expectedValue == retrievedValue,
+      VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "Permuted set unexpected value.");
     }
     else
@@ -132,7 +132,7 @@ void CheckInPlaceResult(PortalType portal)
       // This index was not part of the permuted array; has original value
       T expectedValue = TestValue(permutedIndex, T());
       T retrievedValue = portal.Get(permutedIndex);
-      VTKM_TEST_ASSERT(expectedValue == retrievedValue,
+      VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "Permuted array modified value it should not have.");
     }
   }
@@ -179,7 +179,7 @@ void CheckOutputResult(PortalType portal)
       vtkm::Id originalIndex = permutedIndex/2;
       T expectedValue = TestValue(originalIndex, T());
       T retrievedValue = portal.Get(permutedIndex);
-      VTKM_TEST_ASSERT(expectedValue == retrievedValue,
+      VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "Permuted set unexpected value.");
     }
     else
@@ -187,7 +187,7 @@ void CheckOutputResult(PortalType portal)
       // This index was not part of the permuted array; has original value
       T expectedValue = TestValue(permutedIndex, T());
       T retrievedValue = portal.Get(permutedIndex);
-      VTKM_TEST_ASSERT(expectedValue == retrievedValue,
+      VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "Permuted array modified value it should not have.");
     }
   }
