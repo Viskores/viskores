@@ -31,8 +31,19 @@
 /// Asserts that \a condition resolves to true.  If \a condition is false,
 /// then an error is raised.  This macro is meant to work in the VTKm control
 /// environment and throws an ErrorControlAssert object on failure.
-
-#ifndef NDEBUG
+///
+/// Like the POSIX assert macro, the check will be removed when compiling
+/// in non-debug mode (specifically when NDEBUG is defined), so be prepared
+/// for the possibility that the condition is never evaluated.
+///
+/// VTKM_ASSERT_CONT will also be removed when compiling for CUDA devices.
+/// Technically speaking, this macro should not be used in methods targeted for
+/// CUDA devices since they run in the execution environment and this is for
+/// the control environment. However, it is often convenient to have an assert
+/// in a method that is to run in either control or execution environment, so
+/// we go ahead and let you declare the assert there as well.
+///
+#if !defined(NDEBUG) && !defined(__CUDA_ARCH__)
 #define VTKM_ASSERT_CONT(condition) \
   if (!(condition)) \
     ::vtkm::cont::Assert(condition, __FILE__, __LINE__, #condition)
