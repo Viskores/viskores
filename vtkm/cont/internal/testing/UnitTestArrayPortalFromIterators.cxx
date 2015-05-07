@@ -35,7 +35,7 @@ struct TemplatedTests
 
   ValueType ExpectedValue(vtkm::Id index, ComponentType value)
   {
-    return ValueType(index + value);
+    return ValueType(ComponentType(index) + value);
   }
 
   template<class IteratorType>

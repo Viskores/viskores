@@ -273,18 +273,18 @@ bool test_equal(VectorType1 vector1,
                 VectorType2 vector2,
                 vtkm::Float64 tolerance = 0.0001)
 {
-  typedef typename vtkm::VecTraits<VectorType1> Traits;
-  BOOST_STATIC_ASSERT(
-        Traits::NUM_COMPONENTS == vtkm::VecTraits<VectorType2>::NUM_COMPONENTS);
+  typedef typename vtkm::VecTraits<VectorType1> Traits1;
+  typedef typename vtkm::VecTraits<VectorType2> Traits2;
+  BOOST_STATIC_ASSERT(Traits1::NUM_COMPONENTS == Traits2::NUM_COMPONENTS);
 
   for (vtkm::IdComponent component = 0;
-       component < Traits::NUM_COMPONENTS;
+       component < Traits1::NUM_COMPONENTS;
        component++)
   {
     vtkm::Float64 value1 =
-        vtkm::Float64(Traits::GetComponent(vector1, component));
+        vtkm::Float64(Traits1::GetComponent(vector1, component));
     vtkm::Float64 value2 =
-        vtkm::Float64(Traits::GetComponent(vector2, component));
+        vtkm::Float64(Traits2::GetComponent(vector2, component));
     if ((fabs(value1) < 2*tolerance) && (fabs(value2) < 2*tolerance))
     {
       continue;
@@ -313,6 +313,19 @@ VTKM_CONT_EXPORT
 bool test_equal(const std::string &string1, const std::string &string2)
 {
   return string1 == string2;
+}
+
+/// Special implementation of test_equal for Pairs, which are a bit different
+/// than a vector of numbers of the same type.
+///
+template<typename T1, typename T2, typename T3, typename T4>
+VTKM_CONT_EXPORT
+bool test_equal(const vtkm::Pair<T1,T2> &pair1,
+                const vtkm::Pair<T3,T4> &pair2,
+                vtkm::Float64 tolerance = 0.0001)
+{
+  return test_equal(pair1.first, pair2.first, tolerance)
+      && test_equal(pair1.second, pair2.second, tolerance);
 }
 
 /// Helper function for printing out vectors during testing.
@@ -362,7 +375,7 @@ vtkm::Vec<T,N> TestValue(vtkm::Id index, vtkm::Vec<T,N>) {
   vtkm::Vec<T,N> value;
   for (vtkm::IdComponent i = 0; i < N; i++)
   {
-    value[i] = TestValue(index, T()) + (i + 1);
+    value[i] = TestValue(index, T()) + T(i + 1);
   }
   return value;
 }

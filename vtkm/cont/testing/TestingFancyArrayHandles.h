@@ -48,13 +48,10 @@ public:
   }
 
   VTKM_EXEC_CONT_EXPORT
-  explicit IncrementBy2(vtkm::Id index):
-    Value(0) //required before we increment
-  {
-    VTKM_ASSERT_CONT(index >= 0);
-    for (vtkm::Id i = 0; i < index; i++)
-      { this->Value++; this->Value++; }
-  }
+  explicit IncrementBy2(T value): Value(2*value) {  }
+
+  VTKM_EXEC_CONT_EXPORT
+  operator T() const { return this->Value; }
 
   VTKM_EXEC_CONT_EXPORT
   IncrementBy2 operator+(const IncrementBy2 &rhs) const
@@ -88,12 +85,21 @@ public:
   T Value;
 };
 
+template<typename T>
+IncrementBy2<T> TestValue(vtkm::Id index, IncrementBy2<T>)
+{
+  return IncrementBy2<T>(::TestValue(index, T()));
+}
+
 template<typename ValueType>
 struct IndexSquared
 {
   VTKM_EXEC_CONT_EXPORT
-  ValueType operator()(vtkm::Id i) const
-    { return ValueType( vtkm::dot(i,i) ); }
+  ValueType operator()(vtkm::Id index) const
+  {
+    typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+    return ValueType( static_cast<ComponentType>(index*index) );
+  }
 };
 
 template<typename ValueType>
@@ -171,6 +177,8 @@ private:
     void operator()(vtkm::Pair<KeyType,ValueType> vtkmNotUsed(pair)) const
     {
       typedef vtkm::Pair< KeyType, ValueType > PairType;
+      typedef typename vtkm::VecTraits<KeyType>::ComponentType KeyComponentType;
+      typedef typename vtkm::VecTraits<ValueType>::ComponentType ValueComponentType;
 
 
       KeyType testKeys[ARRAY_SIZE];
@@ -178,8 +186,8 @@ private:
 
       for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
         {
-        testKeys[i] = KeyType(ARRAY_SIZE - i);
-        testValues[i] = ValueType(i);
+        testKeys[i] = KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i));
+        testValues[i] = ValueType(static_cast<ValueComponentType>(i));
         }
       vtkm::cont::ArrayHandle< KeyType > keys =
                           vtkm::cont::make_ArrayHandle(testKeys, ARRAY_SIZE);
@@ -200,8 +208,11 @@ private:
       for(int i=0; i < ARRAY_SIZE; ++i)
         {
         const PairType result_v = result.GetPortalConstControl().Get(i);
-        const PairType correct_value( KeyType(ARRAY_SIZE - i), ValueType(i) );
-        VTKM_TEST_ASSERT(result_v == correct_value, "ArrayHandleZip Failed as input");
+        const PairType correct_value(
+              KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i)),
+              ValueType(static_cast<ValueComponentType>(i)));
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
+                         "ArrayHandleZip Failed as input");
         }
     }
 
@@ -214,11 +225,15 @@ private:
     void operator()(vtkm::Pair<KeyType,ValueType> vtkmNotUsed(pair)) const
     {
       typedef vtkm::Pair< KeyType, ValueType > PairType;
+      typedef typename vtkm::VecTraits<KeyType>::ComponentType KeyComponentType;
+      typedef typename vtkm::VecTraits<ValueType>::ComponentType ValueComponentType;
 
       PairType testKeysAndValues[ARRAY_SIZE];
       for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
         {
-        testKeysAndValues[i] = PairType(KeyType(ARRAY_SIZE - i), ValueType(i) );
+        testKeysAndValues[i] =
+            PairType(KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i)),
+                     ValueType(static_cast<ValueComponentType>(i)) );
         }
       vtkm::cont::ArrayHandle< PairType > input =
                     vtkm::cont::make_ArrayHandle(testKeysAndValues, ARRAY_SIZE);
@@ -239,8 +254,12 @@ private:
         const KeyType result_key = result_keys.GetPortalConstControl().Get(i);
         const ValueType result_value = result_values.GetPortalConstControl().Get(i);
 
-        VTKM_TEST_ASSERT(result_key == KeyType(ARRAY_SIZE - i), "ArrayHandleZip Failed as input");
-        VTKM_TEST_ASSERT(result_value == ValueType(i), "ArrayHandleZip Failed as input");
+        VTKM_TEST_ASSERT(
+              test_equal(result_key, KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i))),
+              "ArrayHandleZip Failed as input for key");
+        VTKM_TEST_ASSERT(
+              test_equal(result_value, ValueType(static_cast<ValueComponentType>(i))),
+              "ArrayHandleZip Failed as input for value");
         }
     }
   };
@@ -250,12 +269,14 @@ private:
     template< typename ValueType >
     VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
     {
+      typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+
       const vtkm::Id length = ARRAY_SIZE;
 
       //need to initialize the start value or else vectors will have
       //random values to start
-      vtkm::Id initial_value(0);
-      const ValueType start = ValueType(initial_value);
+      ComponentType component_value(0);
+      const ValueType start = ValueType(component_value);
 
       vtkm::cont::ArrayHandleCounting< ValueType > counting =
           vtkm::cont::make_ArrayHandleCounting(start, length);
@@ -268,10 +289,13 @@ private:
       for(vtkm::Id i=0; i < length; ++i)
         {
         const ValueType result_v = result.GetPortalConstControl().Get(i);
-        const ValueType correct_value = ValueType(initial_value + i);
+        const ValueType correct_value = ValueType(component_value);
         const ValueType control_value = counting.GetPortalConstControl().Get(i);
-        VTKM_TEST_ASSERT(result_v == correct_value, "Counting Handle Failed");
-        VTKM_TEST_ASSERT(result_v == control_value, "Counting Handle Failed");
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
+                         "Counting Handle Failed");
+        VTKM_TEST_ASSERT(test_equal(result_v, control_value),
+                         "Counting Handle Control Failed");
+        component_value = component_value + ComponentType(1);
         }
     }
   };
@@ -299,8 +323,10 @@ private:
         const ValueType result_v = result.GetPortalConstControl().Get(i);
         const ValueType correct_value = functor( i );
         const ValueType control_value = implicit.GetPortalConstControl().Get(i);
-        VTKM_TEST_ASSERT(result_v == correct_value, "Implicit Handle Failed");
-        VTKM_TEST_ASSERT(result_v == control_value, "Implicit Handle Failed");
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
+                         "Implicit Handle Failed");
+        VTKM_TEST_ASSERT(test_equal(result_v, control_value)
+                         , "Implicit Handle Failed");
         }
     }
   };
@@ -352,8 +378,10 @@ private:
           const ValueType result_v = result.GetPortalConstControl().Get( value_index );
           const ValueType correct_value = implicit.GetPortalConstControl().Get( key_index );
           const ValueType control_value = permutation.GetPortalConstControl().Get( value_index );
-          VTKM_TEST_ASSERT(result_v == correct_value, "Implicit Handle Failed");
-          VTKM_TEST_ASSERT(result_v == control_value, "Implicit Handle Failed");
+          VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
+                           "Implicit Handle Failed");
+          VTKM_TEST_ASSERT(test_equal(result_v, control_value),
+                           "Implicit Handle Failed");
           }
         }
     }
@@ -381,10 +409,9 @@ private:
       typedef typename vtkm::cont::ArrayHandle<ValueType>::PortalControl Portal;
       input.Allocate(length);
       Portal portal = input.GetPortalControl();
-      vtkm::Id initial_value(length);
       for(vtkm::Id i=0; i < length; ++i)
         {
-        portal.Set(i, ValueType(initial_value - i) );
+        portal.Set(i, TestValue(i, ValueType()) );
         }
 
       vtkm::cont::ArrayHandle< OutputValueType > result;
@@ -396,8 +423,13 @@ private:
     for(vtkm::Id i=0; i < length; ++i)
       {
       const OutputValueType result_v = result.GetPortalConstControl().Get(i);
-      const OutputValueType correct_value = transformed.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(result_v == correct_value, "Transform Handle Failed");
+      const OutputValueType correct_value = functor(TestValue(i, ValueType()));
+      const OutputValueType control_value =
+          transformed.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
+                       "Transform Handle Failed");
+      VTKM_TEST_ASSERT(test_equal(result_v, control_value),
+                       "Transform Handle Control Failed");
       }
     }
   };
@@ -407,7 +439,8 @@ private:
     template< typename ValueType>
     VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
     {
-      typedef typename vtkm::VecTraits<ValueType>::ComponentType OutputValueType;
+      typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+      typedef ComponentType OutputValueType;
       typedef fancy_array_detail::ValueSquared<OutputValueType> FunctorType;
 
       vtkm::Id length = ARRAY_SIZE;
@@ -415,8 +448,8 @@ private:
 
       //need to initialize the start value or else vectors will have
       //random values to start
-      vtkm::Id initial_value(0);
-      const ValueType start = ValueType(initial_value);
+      ComponentType component_value(0);
+      const ValueType start = ValueType(component_value);
 
       vtkm::cont::ArrayHandleCounting< ValueType > counting =
                                 vtkm::cont::make_ArrayHandleCounting(start,
@@ -439,8 +472,15 @@ private:
       for(vtkm::Id i=0; i < length; ++i)
         {
         const OutputValueType result_v = result.GetPortalConstControl().Get(i);
-        const OutputValueType correct_value = countingTransformed.GetPortalConstControl().Get(i);
-        VTKM_TEST_ASSERT(result_v == correct_value, "Transform Counting Handle Failed");
+        const OutputValueType correct_value =
+            functor(ValueType(component_value));
+        const OutputValueType control_value =
+            countingTransformed.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
+                         "Transform Counting Handle Failed");
+        VTKM_TEST_ASSERT(test_equal(result_v, control_value),
+                         "Transform Counting Handle Control Failed");
+        component_value = component_value + ComponentType(1);
         }
     }
   };

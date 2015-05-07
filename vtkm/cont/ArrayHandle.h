@@ -519,7 +519,7 @@ VTKM_CONT_EXPORT
 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
 make_ArrayHandle(const std::vector<T,Allocator> &array)
 {
-  return make_ArrayHandle(&array.front(), array.size());
+  return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()));
 }
 
 }

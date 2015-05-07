@@ -188,31 +188,30 @@ struct VecTraitsBasic {
     return vtkm::Vec<ScalarType,1>(vector);
   }
 };
-}
+} // namespace internal
+
+} // anonymous namespace
 
 #define VTKM_BASIC_TYPE_VECTOR(type) \
-  template<> \
-  struct VecTraits<type> \
-      : public vtkm::internal::VecTraitsBasic<type> { }/*; \
-  template<> \
-  struct VecTraits<const type> \
-      : public vtkm::internal::VecTraitsBasic<type> { }*/
+  namespace vtkm { \
+    template<> \
+    struct VecTraits<type> \
+        : public vtkm::internal::VecTraitsBasic<type> { }; \
+  }
 
 /// Allows you to treat basic types as if they were vectors.
 
-VTKM_BASIC_TYPE_VECTOR(vtkm::Float32);
-VTKM_BASIC_TYPE_VECTOR(vtkm::Float64);
-VTKM_BASIC_TYPE_VECTOR(vtkm::Int8);
-VTKM_BASIC_TYPE_VECTOR(vtkm::UInt8);
-VTKM_BASIC_TYPE_VECTOR(vtkm::Int16);
-VTKM_BASIC_TYPE_VECTOR(vtkm::UInt16);
-VTKM_BASIC_TYPE_VECTOR(vtkm::Int32);
-VTKM_BASIC_TYPE_VECTOR(vtkm::UInt32);
-VTKM_BASIC_TYPE_VECTOR(vtkm::Int64);
-VTKM_BASIC_TYPE_VECTOR(vtkm::UInt64);
+VTKM_BASIC_TYPE_VECTOR(vtkm::Float32)
+VTKM_BASIC_TYPE_VECTOR(vtkm::Float64)
+VTKM_BASIC_TYPE_VECTOR(vtkm::Int8)
+VTKM_BASIC_TYPE_VECTOR(vtkm::UInt8)
+VTKM_BASIC_TYPE_VECTOR(vtkm::Int16)
+VTKM_BASIC_TYPE_VECTOR(vtkm::UInt16)
+VTKM_BASIC_TYPE_VECTOR(vtkm::Int32)
+VTKM_BASIC_TYPE_VECTOR(vtkm::UInt32)
+VTKM_BASIC_TYPE_VECTOR(vtkm::Int64)
+VTKM_BASIC_TYPE_VECTOR(vtkm::UInt64)
 
-#undef VTKM_BASIC_TYPE_VECTOR
-
-}
+//#undef VTKM_BASIC_TYPE_VECTOR
 
 #endif //vtk_m_VecTraits_h
