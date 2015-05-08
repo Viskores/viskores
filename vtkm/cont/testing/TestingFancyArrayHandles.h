@@ -37,7 +37,6 @@
 namespace fancy_array_detail
 {
 
-template<typename T>
 class IncrementBy2
 {
 public:
@@ -48,10 +47,10 @@ public:
   }
 
   VTKM_EXEC_CONT_EXPORT
-  explicit IncrementBy2(T value): Value(2*value) {  }
+  explicit IncrementBy2(vtkm::Id value): Value(2*value) {  }
 
   VTKM_EXEC_CONT_EXPORT
-  operator T() const { return this->Value; }
+  operator vtkm::Id() const { return this->Value; }
 
   VTKM_EXEC_CONT_EXPORT
   IncrementBy2 operator+(const IncrementBy2 &rhs) const
@@ -82,13 +81,12 @@ public:
   { os << v.Value; return os; }
 
 
-  T Value;
+  vtkm::Id Value;
 };
 
-template<typename T>
-IncrementBy2<T> TestValue(vtkm::Id index, IncrementBy2<T>)
+IncrementBy2 TestValue(vtkm::Id index, IncrementBy2)
 {
-  return IncrementBy2<T>(::TestValue(index, T()));
+  return IncrementBy2(::TestValue(index, vtkm::Id()));
 }
 
 template<typename ValueType>
@@ -110,32 +108,22 @@ struct ValueSquared
   ValueType operator()(U u) const
     { return vtkm::dot(u, u); }
 
-  template<typename U>
   VTKM_EXEC_CONT_EXPORT
-  ValueType operator()( ::fancy_array_detail::IncrementBy2<U> u) const
+  ValueType operator()( ::fancy_array_detail::IncrementBy2 u) const
     { return ValueType( vtkm::dot(u.Value, u.Value) ); }
 };
 
 }
 
-namespace vtkm {
-// Allows us to use vec traits with IncrementBy2, will make look like
-// a vector of a single component
-template< typename T >
-struct VecTraits< ::fancy_array_detail::IncrementBy2<T> > :
-  public vtkm::internal::VecTraitsBasic< ::fancy_array_detail::IncrementBy2<T> >
-  { };
-}
+VTKM_BASIC_TYPE_VECTOR(::fancy_array_detail::IncrementBy2)
 
 namespace vtkm { namespace testing {
-template<typename T>
-struct TypeName< ::fancy_array_detail::IncrementBy2<T> >
+template<>
+struct TypeName< ::fancy_array_detail::IncrementBy2 >
 {
-static std::string Name()
+  static std::string Name()
   {
-  std::stringstream stream;
-  stream << "fancy_array_detail::IncrementBy2< " << TypeName<T>::Name() << " >";
-  return stream.str();
+    return std::string("fancy_array_detail::IncrementBy2");
   }
 };
 
@@ -505,8 +493,7 @@ private:
                          vtkm::Float64,
                          vtkm::Vec<vtkm::Float64,3>,
                          vtkm::Vec<vtkm::Float32,4>,
-                         ::fancy_array_detail::IncrementBy2 < vtkm::Int32 >,
-                         ::fancy_array_detail::IncrementBy2 < vtkm::Float32 >
+                         ::fancy_array_detail::IncrementBy2
                          >
   {  };
 
