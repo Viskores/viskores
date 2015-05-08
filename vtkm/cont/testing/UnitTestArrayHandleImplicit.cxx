@@ -24,6 +24,8 @@
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/DeviceAdapterSerial.h>
 
+#include <vtkm/VecTraits.h>
+
 #include <vtkm/cont/testing/Testing.h>
 
 namespace {
@@ -35,7 +37,10 @@ struct IndexSquared
 {
   VTKM_EXEC_CONT_EXPORT
   ValueType operator()(vtkm::Id i) const
-    { return ValueType(i*i); }
+  {
+    typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+    return ValueType(static_cast<ComponentType>(i*i));
+  }
 };
 
 

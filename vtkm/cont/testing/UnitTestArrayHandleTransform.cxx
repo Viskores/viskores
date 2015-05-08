@@ -166,7 +166,7 @@ struct TransformTests
     Portal portal = input.GetPortalControl();
     for(vtkm::Id index=0; index < ARRAY_SIZE; ++index)
     {
-      portal.Set(index, InputValueType(index+2) );
+      portal.Set(index, TestValue(index, InputValueType()) );
     }
 
     CheckControlPortals(input, thandle);
@@ -180,7 +180,7 @@ struct TransformTests
               << std::endl;
     for(vtkm::Id index=0; index < ARRAY_SIZE; ++index)
     {
-      portal.Set(index, InputValueType(index*index));
+      portal.Set(index, TestValue(index*index, InputValueType()));
     }
 
     CheckControlPortals(input, thandle);
