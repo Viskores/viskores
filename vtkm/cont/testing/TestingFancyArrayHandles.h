@@ -375,6 +375,52 @@ private:
     }
   };
 
+struct TestPermutationAsOutput
+  {
+    template< typename ValueType>
+    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    {
+      const vtkm::Id length = ARRAY_SIZE;
+
+      typedef vtkm::cont::ArrayHandleCounting< vtkm::Id > KeyHandleType;
+      typedef vtkm::cont::ArrayHandle< ValueType > ValueHandleType;
+      typedef vtkm::cont::ArrayHandlePermutation< KeyHandleType,
+                                                  ValueHandleType
+                                                  > PermutationHandleType;
+
+      typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+      vtkm::cont::ArrayHandle<ValueType> input;
+      typedef typename vtkm::cont::ArrayHandle<ValueType>::PortalControl Portal;
+      input.Allocate(length);
+      Portal inputPortal = input.GetPortalControl();
+      for(vtkm::Id i=0; i < length; ++i)
+        {
+        inputPortal.Set(i,ValueType(ComponentType(i)));
+        }
+
+      ValueHandleType values;
+      values.Allocate(length*2);
+
+      KeyHandleType counting =
+        vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(length, length);
+
+      PermutationHandleType permutation =
+        vtkm::cont::make_ArrayHandlePermutation(counting, values);
+      vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
+      dispatcher.Invoke(input, permutation);
+
+      //verify that the control portal works
+      for(vtkm::Id i=0; i <length; ++i)
+        {
+        const ValueType result_v = permutation.GetPortalConstControl().Get( i );
+        const ValueType correct_value = ValueType(ComponentType(i));
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
+                         "Permutation Handle Failed As Output");
+        }
+    }
+  };
+
+
   struct TestTransformAsInput
   {
     template< typename ValueType>
@@ -483,8 +529,8 @@ private:
   {  };
 
   struct HandleTypesToTest
-    : vtkm::ListTagBase< vtkm::Int8,
-                         vtkm::UInt8,
+    : vtkm::ListTagBase< vtkm::UInt8,
+                         vtkm::UInt32,
                          vtkm::Int32,
                          vtkm::Int64,
                          vtkm::Vec<vtkm::Int32,2>,
@@ -508,12 +554,6 @@ private:
       std::cout << "Testing ArrayHandleZip as Input" << std::endl;
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestZipAsInput(),
-                              ZipTypesToTest());
-
-      std::cout << "-------------------------------------------" << std::endl;
-      std::cout << "Testing ArrayHandleZip as Output" << std::endl;
-      vtkm::testing::Testing::TryTypes(
-                              TestingFancyArrayHandles<DeviceAdapterTag>::TestZipAsOutput(),
                               ZipTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
@@ -546,6 +586,17 @@ private:
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestCountingTransformAsInput(),
                               HandleTypesToTest());
 
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleZip as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestZipAsOutput(),
+                              ZipTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandlePermutation as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestPermutationAsOutput(),
+                              HandleTypesToTest());
     }
   };
   public:
