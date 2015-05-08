@@ -77,7 +77,7 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   ValueType Get(vtkm::Id index) const {
-    return StartingValue + ValueType(ComponentType(index));
+    return StartingValue + ValueType(static_cast<ComponentType>(index));
   }
 
 private:
