@@ -28,13 +28,71 @@ namespace vtkm {
 namespace cont {
 
 /// A \c Field encapsulates an array on some piece of the mesh, such as
-/// the points, a cell set, a logical dimension, or the whole mesh.
+/// the points, a cell set, a node logical dimension, or the whole mesh.
 ///
 class Field
 {
 public:
+
+    enum Association
+    {
+        ASSOC_WHOLE_MESH,
+        ASSOC_POINTS,
+        ASSOC_CELL_SET,
+        ASSOC_LOGICAL_DIM
+    };
+
+  /// default constructor
   Field()
   {
+  }
+
+  /// constructor for points / whole mesh
+  template <typename T>
+  Field(int o, Association a, ArrayHandle<T> &d)
+    : order(o), association(a), data(d)
+  {
+    VTKM_ASSERT_CONT(association == ASSOC_WHOLE_MESH ||
+                     association == ASSOC_POINTS);
+    SetData(d);
+  }
+
+  /// constructor for cell set associations
+  template <typename T>
+  Field(int o, Association a, std::string n, ArrayHandle<T> &d)
+    : order(o), association(a), assoc_cellset_name(n), data(d)
+  {
+    VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
+    SetData(d);
+  }
+
+  /// constructor for logical dimension associations
+  template <typename T>
+  Field(int o, Association a, int l, ArrayHandle<T> &d)
+    : order(o), association(a), assoc_logical_dim(l), data(d)
+  {
+    VTKM_ASSERT_CONT(association == ASSOC_LOGICAL_DIM);
+    SetData(d);
+  }
+
+  Association GetAssociation()
+  {
+    return association;
+  }
+
+  int GetOrder()
+  {
+    return order;
+  }
+
+  std::string GetAssocCellSet()
+  {
+    return assoc_cellset_name;
+  }
+
+  int GetAssocLogicalDim()
+  {
+    return assoc_logical_dim;
   }
 
   vtkm::cont::DynamicArrayHandle &GetData()
@@ -42,7 +100,8 @@ public:
     return data;
   }
 
-  void SetData(vtkm::cont::ArrayHandle<vtkm::FloatDefault> &newdata)
+  template <typename T>
+  void SetData(vtkm::cont::ArrayHandle<T> &newdata)
   {
     data = newdata;
   }
@@ -57,6 +116,11 @@ public:
   */
   
 private:
+  int          order; ///< 0=(piecewise) constant, 1=linear, 2=quadratic
+  Association  association;
+  std::string  assoc_cellset_name;  ///< only populate if assoc is cells
+  int          assoc_logical_dim; ///< only populate if assoc is logical dim
+
   //vtkm::cont::ArrayHandle<vtkm::FloatDefault> data;
   vtkm::cont::DynamicArrayHandle data;
 };

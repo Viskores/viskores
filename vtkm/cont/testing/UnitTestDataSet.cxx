@@ -33,7 +33,7 @@
 
 /*
 call notes.
-wrap execution portal with restrictors. (abandone the fixed length array).
+wrap execution portal with restrictors. (abandon the fixed length array).
 compile time polymorphic types.
 
 */
