@@ -17,59 +17,17 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_CellSet_h
-#define vtk_m_cont_CellSet_h
-
-#include <vtkm/CellType.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/Field.h>
-#include <vtkm/cont/LogicalStructure.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#ifndef vtk_m_cont_LogicalStructure_h
+#define vtk_m_cont_LogicalStructure_h
 
 namespace vtkm {
 namespace cont {
 
-class CellSet
+class LogicalStructure
 {
-public:
-  CellSet(const std::string &n, int d)
-    : name(n), dimensionality(d), structure(NULL)
-  {
-  }
-
-  virtual ~CellSet()
-  {
-  }
-
-  virtual std::string GetName()
-  {
-    return name;
-  }
-  virtual int GetDimensionality()
-  {
-    return dimensionality;
-  }
-
-  virtual int GetNumCells() = 0;
-
-  virtual int GetNumFaces()
-  {
-    return 0;
-  }
-
-  virtual int GetNumEdges()
-  {
-    return 0;
-  }
-
-private:
-    std::string name;
-    int dimensionality;
-    vtkm::cont::LogicalStructure *structure;
 };
 
-}
-} // namespace vtkm::cont
+} // namespace cont
+} // namespace vtkm
 
-#endif //vtk_m_cont_CellSet_h
+#endif
