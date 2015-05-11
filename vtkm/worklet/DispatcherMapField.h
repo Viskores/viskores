@@ -85,6 +85,7 @@ public:
     // of invocations, the superclass can take care of the rest.
     this->BasicInvoke(invocation, numInstances);
   }
+
 };
 
 }

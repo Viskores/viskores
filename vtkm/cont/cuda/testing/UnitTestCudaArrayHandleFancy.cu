@@ -23,12 +23,13 @@
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
-#include <vtkm/cont/testing/TestingDeviceAdapter.h>
+#include <vtkm/cont/testing/TestingFancyArrayHandles.h>
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
 
-int UnitTestDeviceAdapterCuda(int, char *[])
+int UnitTestCudaArrayHandleFancy(int, char *[])
 {
-  int result =  vtkm::cont::testing::TestingDeviceAdapter
+  int result = vtkm::cont::testing::TestingFancyArrayHandles
       <vtkm::cont::DeviceAdapterTagCuda>::Run();
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }
+

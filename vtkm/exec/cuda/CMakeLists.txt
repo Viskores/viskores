@@ -19,21 +19,12 @@
 ##============================================================================
 
 set(headers
-  ExecutionObjectBase.h
-  FunctorBase.h
   )
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
-add_subdirectory(arg)
 
-vtkm_declare_headers(${impl_headers} ${headers})
-
-
-#-----------------------------------------------------------------------------
-if (VTKm_ENABLE_CUDA)
-  add_subdirectory(cuda)
-endif ()
+# vtkm_declare_headers(${impl_headers} ${headers})
 
 
 #-----------------------------------------------------------------------------

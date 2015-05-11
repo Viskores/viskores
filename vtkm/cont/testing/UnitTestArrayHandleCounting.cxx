@@ -47,6 +47,8 @@ public:
     }
   }
 
+  operator vtkm::Id() const { return vtkm::Id(this->Value.size()); }
+
   StringInt operator+(const StringInt &rhs) const
   {
     return StringInt(this->Value + rhs.Value);
@@ -69,6 +71,11 @@ private:
   std::string Value;
 };
 
+} // anonymous namespace
+
+VTKM_BASIC_TYPE_VECTOR(StringInt)
+
+namespace {
 
 template< typename ValueType>
 struct TemplatedTests

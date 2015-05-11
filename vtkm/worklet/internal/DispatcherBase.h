@@ -169,8 +169,17 @@ struct DispatcherBaseTransportFunctor
 {
   vtkm::Id NumInstances;
 
+  VTKM_CONT_EXPORT
   DispatcherBaseTransportFunctor(vtkm::Id numInstances)
     : NumInstances(numInstances) {  }
+
+  // TODO: We need to think harder about how scheduling on 3D arrays works.
+  // Chances are we need to allow the transport for each argument to manage
+  // 3D indices (for example, allocate a 3D array instead of a 1D array).
+  // But for now, just treat all transports as 1D arrays.
+  VTKM_CONT_EXPORT
+  DispatcherBaseTransportFunctor(vtkm::Id3 dimensions)
+    : NumInstances(dimensions[0]*dimensions[1]*dimensions[2]) {  }
 
   template<typename ControlParameter, vtkm::IdComponent Index>
   struct InvokeTypes {
@@ -286,6 +295,13 @@ protected:
     this->InvokeTransportParameters(invocation, numInstances);
   }
 
+  template<typename Invocation>
+  VTKM_CONT_EXPORT
+  void BasicInvoke(const Invocation &invocation, vtkm::Id3 dimensions) const
+  {
+    this->InvokeTransportParameters(invocation, dimensions);
+  }
+
   WorkletType Worklet;
 
 private:
@@ -293,10 +309,10 @@ private:
   DispatcherBase(const MyType &);
   void operator=(const MyType &);
 
-  template<typename Invocation>
+  template<typename Invocation, typename RangeType>
   VTKM_CONT_EXPORT
   void InvokeTransportParameters(const Invocation &invocation,
-                                 vtkm::Id numInstances) const
+                                 RangeType range) const
   {
     // The first step in invoking a worklet is to transport the arguments to
     // the execution environment. The invocation object passed to this function
@@ -316,17 +332,17 @@ private:
         TransportFunctorType>::type ExecObjectParameters;
 
     ExecObjectParameters execObjectParameters =
-        parameters.StaticTransformCont(TransportFunctorType(numInstances));
+        parameters.StaticTransformCont(TransportFunctorType(range));
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke.
     this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters),
-                         numInstances);
+                         range);
   }
 
-  template<typename Invocation>
+  template<typename Invocation, typename RangeType>
   VTKM_CONT_EXPORT
-  void InvokeSchedule(const Invocation &invocation, vtkm::Id numInstances) const
+  void InvokeSchedule(const Invocation &invocation, RangeType range) const
   {
     // The WorkletInvokeFunctor class handles the magic of fetching values
     // for each instance and calling the worklet's function. So just create
@@ -337,7 +353,8 @@ private:
         WorkletInvokeFunctorType(this->Worklet, invocation);
 
     typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
-    Algorithm::Schedule(workletFunctor, numInstances);
+
+    Algorithm::Schedule(workletFunctor, range);
   }
 };
 

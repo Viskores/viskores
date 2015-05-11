@@ -19,21 +19,15 @@
 ##============================================================================
 
 set(headers
-  ExecutionObjectBase.h
-  FunctorBase.h
+  ArrayPortalFromThrust.h
   )
 
-#-----------------------------------------------------------------------------
-add_subdirectory(internal)
-add_subdirectory(arg)
-
-vtkm_declare_headers(${impl_headers} ${headers})
-
+vtkm_disable_troublesome_thrust_warnings()
 
 #-----------------------------------------------------------------------------
-if (VTKm_ENABLE_CUDA)
-  add_subdirectory(cuda)
-endif ()
+CUDA_INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+
+vtkm_declare_headers(CUDA ${headers})
 
 
 #-----------------------------------------------------------------------------

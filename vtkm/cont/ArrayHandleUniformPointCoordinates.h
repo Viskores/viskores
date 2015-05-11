@@ -123,10 +123,12 @@ public:
   typedef vtkm::Vec<vtkm::FloatDefault,3> ValueType;
 
 private:
-  typedef vtkm::cont::ArrayHandle<
-    ValueType,
-    vtkm::cont::StorageTagImplicit<
-      internal::ArrayPortalUniformPointCoordinates> > Superclass;
+  typedef vtkm::cont::StorageTagImplicit<
+      internal::ArrayPortalUniformPointCoordinates> StorageTag;
+
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+
+  typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> Superclass;
 
 public:
   VTKM_CONT_EXPORT
@@ -137,7 +139,9 @@ public:
                                      ValueType origin,
                                      ValueType spacing)
     : Superclass(
-        internal::ArrayPortalUniformPointCoordinates(extent, origin, spacing))
+        StorageType(internal::ArrayPortalUniformPointCoordinates(extent,
+                                                                 origin,
+                                                                 spacing)))
   {  }
 };
 

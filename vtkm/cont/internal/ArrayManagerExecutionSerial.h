@@ -39,6 +39,10 @@ public:
   typedef typename Superclass::ValueType ValueType;
   typedef typename Superclass::PortalType PortalType;
   typedef typename Superclass::PortalConstType PortalConstType;
+
+  VTKM_CONT_EXPORT
+  ArrayManagerExecution(typename Superclass::StorageType *storage)
+    : Superclass(storage) {  }
 };
 
 }

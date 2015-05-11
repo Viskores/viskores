@@ -43,6 +43,7 @@
 #endif // gcc version >= 4.6
 #endif // gcc && !CUDA
 
+#include <boost/type_traits/integral_constant.hpp>
 #include <boost/utility/enable_if.hpp>
 
 namespace vtkm {
@@ -127,19 +128,9 @@ public:
   template<typename OtherT>
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalFromThrust(const ArrayPortalFromThrust<OtherT> &src)
-    : BeginIterator(src.BeginIterator),
-      EndIterator(src.EndIterator)
+    : BeginIterator(src.GetIteratorBegin()),
+      EndIterator(src.GetIteratorEnd())
   {  }
-
-  template<typename OtherT>
-  VTKM_EXEC_CONT_EXPORT
-  ArrayPortalFromThrust<T> &operator=(
-      const ArrayPortalFromThrust<OtherT> &src)
-  {
-    this->BeginIterator = src.BeginIterator;
-    this->EndIterator = src.EndIterator;
-    return *this;
-  }
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
@@ -157,13 +148,13 @@ public:
     *this->IteratorAt(index) = value;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   IteratorType GetIteratorBegin() const { return this->BeginIterator.get(); }
 
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   IteratorType GetIteratorEnd() const { return this->EndIterator.get(); }
 
-private:
+//private:
   PointerType BeginIterator;
   PointerType EndIterator;
 
@@ -195,22 +186,12 @@ public:
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
-  template<typename OtherT>
+  // template<typename OtherT>
   VTKM_EXEC_CONT_EXPORT
-  ConstArrayPortalFromThrust(const ConstArrayPortalFromThrust<OtherT> &src)
-    : BeginIterator(src.BeginIterator),
-      EndIterator(src.EndIterator)
+  ConstArrayPortalFromThrust(const ArrayPortalFromThrust<T> &src)
+    : BeginIterator(src.GetIteratorBegin()),
+      EndIterator(src.GetIteratorEnd())
   {  }
-
-  template<typename OtherT>
-  VTKM_EXEC_CONT_EXPORT
-  ConstArrayPortalFromThrust<T> &operator=(
-      const ConstArrayPortalFromThrust<OtherT> &src)
-  {
-    this->BeginIterator = src.BeginIterator;
-    this->EndIterator = src.EndIterator;
-    return *this;
-  }
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
@@ -228,10 +209,10 @@ public:
     *this->IteratorAt(index) = value;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   IteratorType GetIteratorBegin() const { return this->BeginIterator.get(); }
 
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   IteratorType GetIteratorEnd() const { return this->EndIterator.get(); }
 
 private:
