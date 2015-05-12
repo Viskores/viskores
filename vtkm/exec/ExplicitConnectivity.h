@@ -51,9 +51,8 @@ public:
       return Shapes.Get(index);
   }
 
-#if 0
-  VTKM_EXEC_EXPORT
   template <vtkm::IdComponent ItemTupleLength>
+  VTKM_EXEC_EXPORT
   void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
     int n = GetNumberOfIndices(index);
@@ -62,6 +61,7 @@ public:
       ids[i] = Connectivity.Get(start+i);
   }
 
+#if 0
   VTKM_EXEC_EXPORT
   template <vtkm::IdComponent ItemTupleLength>
   void AddShape(vtkm::CellType cellType, int numVertices, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)

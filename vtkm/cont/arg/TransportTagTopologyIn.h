@@ -42,15 +42,13 @@ struct Transport<vtkm::cont::arg::TransportTagTopologyIn, ContObjectType, Device
 {
   ///\todo: something like VTKM_IS_ARRAY_HANDLE(ContObjectType), but for topology
 
-  ///\todo: actually figure out the execution object type from the control
-  typedef ContObjectType ExecObjectType;
+  typedef typename ContObjectType::ExecObjectType ExecObjectType;
 
   VTKM_CONT_EXPORT
   ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
   {
-      //DRP: object.PrepareForinput(Device()); //create CUDA version of connectivity array.
-      //make an execution version of the connectivity array.
-    return object;
+    //create CUDA version of connectivity array.
+    return object.PrepareForInput(Device());
   }
 };
 

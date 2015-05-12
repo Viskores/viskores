@@ -64,12 +64,14 @@ public:
     ///\todo: how do I modify an array handle?
   }
 
-  ExecObjectType GetExecObject()
+  template<typename Device>
+  ExecObjectType PrepareForInput(Device d) const
   {
     ExecObjectType obj;
-    //vtkm::exec::ExplicitConnectivity obj<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
-    //obj.Shapes = Shapes.GetPortal(); ///???
-    /// ...
+    obj.Shapes = Shapes.PrepareForInput(d);
+    obj.NumIndices = NumIndices.PrepareForInput(d);
+    obj.Connectivity = Connectivity.PrepareForInput(d);
+    obj.MapCellToConnectivityIndex = MapCellToConnectivityIndex.PrepareForInput(d);
     return obj;
   }
 

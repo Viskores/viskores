@@ -48,7 +48,6 @@ struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
   VTKM_CONT_EXPORT
   ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
   {
-    ///\todo: fill me in
     return object.PrepareForInput(Device());
   }
 };
