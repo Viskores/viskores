@@ -81,14 +81,25 @@ void TestDataSet_Explicit()
   ec.Connectivity = vtkm::cont::make_ArrayHandle(conn);
   ec.MapCellToConnectivityIndex = vtkm::cont::make_ArrayHandle(map_cell_to_index);
 
-  //todo this need to be a reference
+  //todo this need to be a reference/shared_ptr style class
   vtkm::cont::CellSetExplicit *cs = new vtkm::cont::CellSetExplicit("cells",2);
   cs->nodesOfCellsConnectivity = ec;
+  ds.AddCellSet(cs);
 
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.
   vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
   ds.AddFieldViaCopy(outcellVals, 2);
+
+
+  VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfCellSets(), 1),
+                       "Incorrect number of cell sets");
+
+  VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfFields(), 6),
+                       "Incorrect number of fields");
+
+  //cleanup memory
+  delete cs;
 }
 
 }
