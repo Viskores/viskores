@@ -143,7 +143,7 @@ void TestDataSet_Explicit()
     map_cell_to_iondex.push_back(0);
     map_cell_to_iondex.push_back(3);
 
-    vtkm::cont::CellSetExplicit *cs = new vtkm::cont::CellSetExplicit;
+    vtkm::cont::CellSetExplicit *cs = new vtkm::cont::CellSetExplicit("cells",2);
     
     tmp2 = vtkm::cont::make_ArrayHandle(shapes);
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmp2, cs->nodesOfCellsConnectivity.Shapes);

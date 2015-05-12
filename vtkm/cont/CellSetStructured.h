@@ -7,7 +7,7 @@
 namespace vtkm {
 namespace cont {
 
-class CellSetStructured
+class CellSetStructured// : public CellSet
 {
   public:
     RegularConnectivity structure;

@@ -7,10 +7,25 @@
 namespace vtkm {
 namespace cont {
 
-class CellSetExplicit
+class CellSetExplicit : public CellSet
 {
-  public:
-    ExplicitConnectivity nodesOfCellsConnectivity;
+public:
+  //CellSetExplicit() : CellSet("", 0)
+  //{
+  //}
+
+  CellSetExplicit(const std::string &n, int d)
+    : CellSet(n,d)
+  {
+  }
+
+  virtual int GetNumCells()
+  {
+    return nodesOfCellsConnectivity.GetNumberOfElements();
+  }
+
+public:
+  ExplicitConnectivity nodesOfCellsConnectivity;
 };
 
 }
