@@ -50,10 +50,13 @@ struct Fetch<FetchTag,
 {
   static const vtkm::IdComponent InputDomainIndex =
       Invocation::InputDomainIndex;
-  typedef typename Invocation::ControlInterface::template 
+
+  typedef typename Invocation::ControlInterface::template
       ParameterType<InputDomainIndex>::type ControlSignatureTag;
+
   static const vtkm::IdComponent ITEM_TUPLE_LENGTH =
       ControlSignatureTag::ITEM_TUPLE_LENGTH;
+
   typedef vtkm::Vec<vtkm::Id,ITEM_TUPLE_LENGTH> ValueType;
 
   VTKM_EXEC_EXPORT
@@ -62,8 +65,6 @@ struct Fetch<FetchTag,
     // The parameter for the input domain is stored in the Invocation. (It is
     // also in the worklet, but it is safer to get it from the Invocation
     // in case some other dispatch operation had to modify it.)
-    static const vtkm::IdComponent InputDomainIndex =
-        Invocation::InputDomainIndex;
 
     // ParameterInterface (from Invocation) is a FunctionInterface type
     // containing types for all objects passed to the Invoke method (with
