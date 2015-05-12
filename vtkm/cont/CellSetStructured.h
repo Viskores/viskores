@@ -7,10 +7,23 @@
 namespace vtkm {
 namespace cont {
 
-class CellSetStructured// : public CellSet
+class CellSetStructured : public CellSet
 {
   public:
-    RegularConnectivity structure;
+
+  CellSetStructured(const std::string &n)
+    : CellSet(n,3)
+  {
+  }
+
+
+  virtual int GetNumCells()
+  {
+   return structure.GetNumberOfElements();
+  }
+
+  RegularConnectivity structure;
+
 };
 
 }
