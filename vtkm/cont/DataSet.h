@@ -68,6 +68,16 @@ public:
     CellSets.push_back(cs);
   }
 
+  vtkm::Id GetNumberOfCellSets()
+  {
+    return static_cast<vtkm::Id>(this->CellSets.size());
+  }
+
+  vtkm::Id GetNumberOfFields()
+  {
+    return static_cast<vtkm::Id>(this->Fields.size());
+  }
+
 private:
   std::vector<vtkm::cont::Field> Fields;
   std::vector<vtkm::cont::CellSet*> CellSets;
