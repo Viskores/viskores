@@ -33,7 +33,7 @@ namespace cont {
 class ExplicitConnectivity
 {
 public:
-  typedef vtkm::exec::ExplicitConnectivity ExecObjectType;
+typedef vtkm::exec::ExplicitConnectivity<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> ExecObjectType;
 
 public:
   ExplicitConnectivity() {}
@@ -66,7 +66,8 @@ public:
 
   ExecObjectType GetExecObject()
   {
-    vtkm::exec::ExplicitConnectivity obj;
+    ExecObjectType obj;
+    //vtkm::exec::ExplicitConnectivity obj<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
     //obj.Shapes = Shapes.GetPortal(); ///???
     /// ...
     return obj;
