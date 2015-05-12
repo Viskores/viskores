@@ -44,8 +44,10 @@ struct Fetch<
 {
   static const vtkm::IdComponent InputDomainIndex =
       Invocation::InputDomainIndex;
-  typedef typename Invocation::ControlInterface::template 
+
+  typedef typename Invocation::ControlInterface::template
       ParameterType<InputDomainIndex>::type ControlSignatureTag;
+
   static const vtkm::IdComponent ITEM_TUPLE_LENGTH =
       ControlSignatureTag::ITEM_TUPLE_LENGTH;
 
@@ -66,7 +68,7 @@ struct Fetch<
 
 
     int nids = topology.GetNumberOfIndices(index);
-    
+
     vtkm::Vec<vtkm::Id,ITEM_TUPLE_LENGTH> ids;
     topology.GetIndices(index,ids);
 
