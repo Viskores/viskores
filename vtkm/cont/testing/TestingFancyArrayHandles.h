@@ -22,6 +22,7 @@
 #ifndef vtk_m_cont_testing_TestingFancyArrayHandles_h
 #define vtk_m_cont_testing_TestingFancyArrayHandles_h
 
+#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -248,6 +249,33 @@ private:
         VTKM_TEST_ASSERT(
               test_equal(result_value, ValueType(static_cast<ValueComponentType>(i))),
               "ArrayHandleZip Failed as input for value");
+        }
+    }
+  };
+
+  struct TestConstantAsInput
+  {
+    template< typename ValueType >
+    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    {
+      const ValueType value = TestValue(43, ValueType());
+
+      vtkm::cont::ArrayHandleConstant<ValueType> constant =
+          vtkm::cont::make_ArrayHandleConstant(value, ARRAY_SIZE);
+      vtkm::cont::ArrayHandle<ValueType> result;
+
+      vtkm::worklet::DispatcherMapField<PassThrough, DeviceAdapterTag> dispatcher;
+      dispatcher.Invoke(constant, result);
+
+      //verify that the control portal works
+      for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+        {
+        const ValueType result_v = result.GetPortalConstControl().Get(i);
+        const ValueType control_value = constant.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(test_equal(result_v, value),
+                         "Counting Handle Failed");
+        VTKM_TEST_ASSERT(test_equal(result_v, control_value),
+                         "Counting Handle Control Failed");
         }
     }
   };
@@ -555,6 +583,12 @@ struct TestPermutationAsOutput
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestZipAsInput(),
                               ZipTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleConstant as Input" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestConstantAsInput(),
+                              HandleTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleCounting as Input" << std::endl;
