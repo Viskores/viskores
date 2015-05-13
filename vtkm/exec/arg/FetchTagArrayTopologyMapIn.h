@@ -23,6 +23,8 @@
 #include <vtkm/exec/arg/AspectTagDefault.h>
 #include <vtkm/exec/arg/Fetch.h>
 
+#include <boost/type_traits.hpp>
+
 namespace vtkm {
 namespace exec {
 namespace arg {
@@ -54,8 +56,8 @@ struct Fetch<
   typedef typename Invocation::ParameterInterface::
       template ParameterType<ParameterIndex>::type ExecObjectType;
 
-  typedef vtkm::Vec<typename ExecObjectType::ValueType,
-                    ITEM_TUPLE_LENGTH> ValueType;
+  typedef boost::remove_const<typename ExecObjectType::ValueType> NonConstType;
+  typedef vtkm::Vec< typename NonConstType::type, ITEM_TUPLE_LENGTH> ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
