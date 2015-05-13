@@ -7,7 +7,7 @@ VTK-m is a toolkit of scientific visualization algorithms for emerging processor
 
 ## Getting VTK-m ##
 
-The VTK-m repository is located at [http://public.kitware.com/gitweb?p=vtkm.git](http://public.kitware.com/gitweb?p=vtkm.git)
+The VTK-m repository is located at [https://gitlab.kitware.com/vtk/vtk-m](https://gitlab.kitware.com/vtk/vtk-m)
 
 VTK-m dependencies are:
 
@@ -17,7 +17,7 @@ VTK-m dependencies are:
 +  [Cuda Toolkit 6+](https://developer.nvidia.com/cuda-toolkit) or [Thrust 1.7+](https://thrust.github.com)
 
 ```
-git clone git://public.kitware.com/vtkm.git vtkm
+git clone https://gitlab.kitware.com/vtk/vtk-m.git vtkm
 mkdir vtkm-build
 cd vtkm-build
 cmake-gui ../vtkm
