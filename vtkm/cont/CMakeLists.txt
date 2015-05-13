@@ -23,6 +23,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(headers
   ArrayHandle.h
   ArrayHandleCompositeVector.h
+  ArrayHandleConstant.h
   ArrayHandleCounting.h
   ArrayHandleImplicit.h
   ArrayHandlePermutation.h

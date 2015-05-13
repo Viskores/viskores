@@ -96,7 +96,7 @@ struct ArrayHandleCountingTraits
 
 } // namespace internal
 
-/// ArrayHandleCountings is a specialization of ArrayHandle. By default it
+/// ArrayHandleCounting is a specialization of ArrayHandle. By default it
 /// contains a increment value, that is increment for each step between zero
 /// and the passed in length
 template <typename CountingValueType>
