@@ -1,6 +1,7 @@
 #ifndef vtk_m_cont_RegularConnectivity_h
 #define vtk_m_cont_RegularConnectivity_h
 
+#include <vtkm/cont/TopologyType.h>
 #include <vtkm/Extent.h>
 #include <vtkm/CellType.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -25,12 +26,13 @@ public:
       nodeDims.Max[0] = node_i;
   }
   vtkm::Id GetNumberOfElements() const {return cellDims.Max[0];}
-  vtkm::Id GetNumberOfIndices(vtkm::Id) const {return 1;}
-  vtkm::Id GetElementShapeType(vtkm::Id) const {return VTKM_VERTEX;}
+  vtkm::Id GetNumberOfIndices(vtkm::Id) const {return 2;}
+  vtkm::Id GetElementShapeType(vtkm::Id) const {return VTKM_LINE;}
 
-  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,1> &ids) const
+  void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,2> &ids) const
   {
       ids[0] = index;
+      ids[1] = ids[0] + 1;
   }
     
 private:
@@ -53,18 +55,18 @@ public:
       nodeDims.Max[1] = node_j;
   }
   vtkm::Id GetNumberOfElements() const {return cellDims.Max[0]*cellDims.Max[1];}
-  vtkm::Id GetNumberOfIndices(vtkm::Id) const {return 2;}
-  vtkm::Id GetElementShapeType(vtkm::Id) const {return VTKM_LINE;}
+  vtkm::Id GetNumberOfIndices(vtkm::Id) const {return 4;}
+  vtkm::Id GetElementShapeType(vtkm::Id) const {return VTKM_PIXEL;}
 
-  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,2> &ids) const
+  void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,4> &ids) const
   {
-      int cellDims01 = cellDims.Max[0] * cellDims.Max[1];
-      int indexij = index % cellDims01;
-      int i = indexij % cellDims.Max[0];
-      int j = indexij / cellDims.Max[0];
-      
-      ids[0] = j + nodeDims.Max[0] + i;
+      int i = index % cellDims.Max[0];
+      int j = index / cellDims.Max[0];
+
+      ids[0] = j*nodeDims.Max[0] + i;
       ids[1] = ids[0] + 1;
+      ids[2] = ids[0] + nodeDims.Max[0];
+      ids[3] = ids[2] + 1;
   }
     
 private:
@@ -92,7 +94,7 @@ public:
   vtkm::Id GetNumberOfIndices(vtkm::Id) const {return 8;}
   vtkm::Id GetElementShapeType(vtkm::Id) const {return VTKM_VOXEL;}
 
-  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,8> &ids) const
+  void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,2> &ids) const
   {
       int cellDims01 = cellDims.Max[0] * cellDims.Max[1];
       int k = index / cellDims01;
@@ -128,10 +130,10 @@ public:
   vtkm::Id GetNumberOfIndices(vtkm::Id) const {return rs.GetNumberOfIndices();}
   vtkm::Id GetElementShapeType(vtkm::Id) const {return rs.GetElementShapeType();}
 
-  template <vtkm::IdComponent ItemTupleLength>
+  template <vtkm::IdComponent ItemTupleLength, vtkm::cont::TopologyType Topology>
   void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
-      return rs.GetIndices(index, ids);
+      return rs.GetNodesOfCells(index, ids);
   }
 private:
   RegularStructure<Dimension> rs;
