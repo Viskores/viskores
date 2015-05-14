@@ -117,7 +117,8 @@ private:
     Extent<3> nodeDims;
 };
 
-template<vtkm::IdComponent Dimension>
+template<TopologyType FromTopology, TopologyType ToTopoogy,
+         vtkm::IdComponent Dimension>
 class RegularConnectivity
 {
 public:
@@ -130,14 +131,20 @@ public:
   vtkm::Id GetNumberOfIndices(vtkm::Id) const {return rs.GetNumberOfIndices();}
   vtkm::Id GetElementShapeType(vtkm::Id) const {return rs.GetElementShapeType();}
 
-  template <vtkm::IdComponent ItemTupleLength, vtkm::cont::TopologyType Topology>
-  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
-  {
-      return rs.GetNodesOfCells(index, ids);
-  }
+  template <vtkm::IdComponent ItemTupleLength>
+  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids);
 private:
   RegularStructure<Dimension> rs;
 };
+
+template<TopologyType FromTopology, TopologyType ToTopoogy,
+         vtkm::IdComponent Dimension>
+template <vtkm::IdComponent ItemTupleLength>
+void RegularConnectivity<FromTopology,ToTopoogy,Dimension>::GetIndices(vtkm::Id index,
+                                     vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+{
+    return rs.GetNodesOfCells(index, ids);
+}
 
 //TODO:
 //Add specialized 1D and 2D versions.
