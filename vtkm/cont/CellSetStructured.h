@@ -7,23 +7,24 @@
 namespace vtkm {
 namespace cont {
 
+
+template<vtkm::IdComponent Dimension>
 class CellSetStructured : public CellSet
 {
   public:
 
   CellSetStructured(const std::string &n)
-    : CellSet(n,3)
+    : CellSet(n,Dimension)
   {
   }
 
 
-  virtual int GetNumCells()
+  virtual vtkm::Id GetNumCells()
   {
-   return structure.GetNumberOfElements();
+    return regConn.GetNumberOfElements();
   }
 
-  RegularConnectivity structure;
-
+    vtkm::cont::RegularConnectivity<Dimension> regConn;
 };
 
 }

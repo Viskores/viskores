@@ -48,12 +48,13 @@ void TestDataSet_Regular()
     //Set cell scalar
     vtkm::Float32 cellvar[4] = {100.1, 100.2, 100.3, 100.4};
     ds.AddFieldViaCopy(cellvar, 4);
-
-    vtkm::cont::CellSetStructured *cs = new vtkm::cont::CellSetStructured("cells");
+    
+    static const vtkm::IdComponent dim = 3;
+    vtkm::cont::CellSetStructured<dim> *cs = new vtkm::cont::CellSetStructured<dim>("cells");
     ds.AddCellSet(cs);
 
     //Set regular structure
-    cs->structure.SetNodeDimension(3,2,3);
+    cs->regConn.SetNodeDimension(3,2,3);
 
     //Run a worklet to populate a cell centered field.
     vtkm::Float32 cellVals[4] = {-1.1, -1.2, -1.3, -1.4};
@@ -65,8 +66,16 @@ void TestDataSet_Regular()
     VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfFields(), 6),
                      "Incorrect number of fields");
 
+    //Add a 1D cell set.
+    vtkm::cont::CellSetStructured<1> *cs2 = new vtkm::cont::CellSetStructured<1>("vertex");
+    ds.AddCellSet(cs2);
+    cs2->regConn.SetNodeDimension(18);
+    VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfCellSets(), 2),
+                     "Incorrect number of cell sets");
+
     //cleanup memory now
     delete cs;
+    delete cs2;
 }
 
 int UnitTestDataSetRegular(int, char *[])
