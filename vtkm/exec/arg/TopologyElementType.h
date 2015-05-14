@@ -53,8 +53,7 @@ struct Fetch<FetchTag, vtkm::exec::arg::AspectTagTopologyElementType, Invocation
     // The parameter for the input domain is stored in the Invocation. (It is
     // also in the worklet, but it is safer to get it from the Invocation
     // in case some other dispatch operation had to modify it.)
-    static const vtkm::IdComponent InputDomainIndex =
-        Invocation::InputDomainIndex;
+    const vtkm::IdComponent InputDomainIndex = Invocation::InputDomainIndex;
 
     // ParameterInterface (from Invocation) is a FunctionInterface type
     // containing types for all objects passed to the Invoke method (with
