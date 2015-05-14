@@ -29,7 +29,7 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace worklet {
+namespace test {
 
 class CellValue : public vtkm::worklet::WorkletMapTopology
 {
@@ -149,7 +149,7 @@ void TestWorkletMapTopologyExplicit()
   //derived implementation. The vtkm::cont::CellSet should have
   //a method that return the nodesOfCellsConnectivity / structure
   //for that derived type. ( talk to robert for how dax did this )
-  vtkm::worklet::DispatcherMapTopology< ::worklet::CellValue > dispatcher;
+  vtkm::worklet::DispatcherMapTopology< ::test::CellValue > dispatcher;
   dispatcher.Invoke(ds.GetField(4).GetData(),
                     ds.GetField(3).GetData(),
                     cs->nodesOfCellsConnectivity,

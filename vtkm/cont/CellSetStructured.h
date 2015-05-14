@@ -24,7 +24,7 @@ class CellSetStructured : public CellSet
     return regConn.GetNumberOfElements();
   }
 
-    vtkm::cont::RegularConnectivity<Dimension> regConn;
+  vtkm::cont::RegularConnectivity<Dimension> regConn;
 };
 
 }
