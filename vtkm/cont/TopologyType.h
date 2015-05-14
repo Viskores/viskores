@@ -33,3 +33,5 @@ enum TopologyType
 
 } // namespace cont
 } // namespace vtkm
+
+#endif //vtk_m_cont_TopologyType_h
