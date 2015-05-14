@@ -23,6 +23,8 @@
 #include <vtkm/exec/arg/AspectTagDefault.h>
 #include <vtkm/exec/arg/Fetch.h>
 
+#include <boost/type_traits.hpp>
+
 namespace vtkm {
 namespace exec {
 namespace arg {
@@ -44,16 +46,18 @@ struct Fetch<
 {
   static const vtkm::IdComponent InputDomainIndex =
       Invocation::InputDomainIndex;
-  typedef typename Invocation::ControlInterface::template 
+
+  typedef typename Invocation::ControlInterface::template
       ParameterType<InputDomainIndex>::type ControlSignatureTag;
+
   static const vtkm::IdComponent ITEM_TUPLE_LENGTH =
       ControlSignatureTag::ITEM_TUPLE_LENGTH;
 
   typedef typename Invocation::ParameterInterface::
       template ParameterType<ParameterIndex>::type ExecObjectType;
 
-  typedef vtkm::Vec<typename ExecObjectType::ValueType,
-                    ITEM_TUPLE_LENGTH> ValueType;
+  typedef boost::remove_const<typename ExecObjectType::ValueType> NonConstType;
+  typedef vtkm::Vec< typename NonConstType::type, ITEM_TUPLE_LENGTH> ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
@@ -66,7 +70,7 @@ struct Fetch<
 
 
     int nids = topology.GetNumberOfIndices(index);
-    
+
     vtkm::Vec<vtkm::Id,ITEM_TUPLE_LENGTH> ids;
     topology.GetIndices(index,ids);
 
