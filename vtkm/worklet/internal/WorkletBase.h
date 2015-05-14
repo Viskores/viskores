@@ -27,6 +27,7 @@
 #include <vtkm/exec/arg/FetchTagExecObject.h>
 #include <vtkm/exec/arg/WorkIndex.h>
 
+#include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagExecObject.h>
 #include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 
@@ -59,7 +60,7 @@ public:
   typedef vtkm::exec::arg::WorkIndex WorkIndex;
 
   /// \c ControlSignature tag for execution object inputs.
-  struct ExecObject {
+  struct ExecObject : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagExecObject TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagExecObject TransportTag;
     typedef vtkm::exec::arg::FetchTagExecObject FetchTag;

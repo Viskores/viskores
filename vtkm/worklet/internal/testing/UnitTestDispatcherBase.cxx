@@ -127,6 +127,13 @@ struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, Invocation, 
 
 namespace {
 
+struct TestExecObjectType : vtkm::exec::ExecutionObjectBase
+{
+  vtkm::Id Value;
+};
+
+static const vtkm::Id EXPECTED_EXEC_OBJECT_VALUE = 123;
+
 class TestWorkletBase : public vtkm::worklet::internal::WorkletBase
 {
 public:
@@ -145,14 +152,18 @@ public:
 class TestWorklet : public TestWorkletBase
 {
 public:
-  typedef void ControlSignature(TestIn, TestOut);
-  typedef _2 ExecutionSignature(_1, WorkIndex);
+  typedef void ControlSignature(TestIn, ExecObject, TestOut);
+  typedef _3 ExecutionSignature(_1, _2, WorkIndex);
 
   VTKM_EXEC_EXPORT
-  vtkm::Id operator()(vtkm::Id value, vtkm::Id index) const
+  vtkm::Id operator()(vtkm::Id value,
+                      TestExecObjectType execObject,
+                      vtkm::Id index) const
   {
     VTKM_TEST_ASSERT(value == TestValue(index, vtkm::Id()),
                      "Got bad value in worklet.");
+    VTKM_TEST_ASSERT(execObject.Value == EXPECTED_EXEC_OBJECT_VALUE,
+                     "Got bad exec object in worklet.");
     return TestValue(index, vtkm::Id()) + 1000;
   }
 };
@@ -162,11 +173,11 @@ public:
 class TestErrorWorklet : public TestWorkletBase
 {
 public:
-  typedef void ControlSignature(TestIn, TestOut);
-  typedef void ExecutionSignature(_1, _2);
+  typedef void ControlSignature(TestIn, ExecObject, TestOut);
+  typedef void ExecutionSignature(_1, _2, _3);
 
   VTKM_EXEC_EXPORT
-  void operator()(vtkm::Id, vtkm::Id) const
+  void operator()(vtkm::Id, TestExecObjectType, vtkm::Id) const
   {
     this->RaiseError(ERROR_MESSAGE);
   }
@@ -185,7 +196,7 @@ class TestDispatcher :
       WorkletType,
       TestWorkletBase,
       Device> Superclass;
-  typedef vtkm::internal::FunctionInterface<void(vtkm::Id *, vtkm::Id *)>
+  typedef vtkm::internal::FunctionInterface<void(vtkm::Id *, TestExecObjectType, vtkm::Id *)>
       ParameterInterface;
   typedef vtkm::internal::Invocation<
       ParameterInterface,
@@ -214,6 +225,8 @@ void TestBasicInvoke()
   std::cout << "  Set up data." << std::endl;
   vtkm::Id inputArray[ARRAY_SIZE];
   vtkm::Id outputArray[ARRAY_SIZE];
+  TestExecObjectType execObject;
+  execObject.Value = EXPECTED_EXEC_OBJECT_VALUE;
 
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
@@ -223,7 +236,7 @@ void TestBasicInvoke()
 
   std::cout << "  Create and run dispatcher." << std::endl;
   TestDispatcher<TestWorklet> dispatcher;
-  dispatcher.Invoke(inputArray, outputArray);
+  dispatcher.Invoke(inputArray, execObject, outputArray);
 
   std::cout << "  Check output of invoke." << std::endl;
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
@@ -239,6 +252,8 @@ void TestInvokeWithError()
   std::cout << "  Set up data." << std::endl;
   vtkm::Id inputArray[ARRAY_SIZE];
   vtkm::Id outputArray[ARRAY_SIZE];
+  TestExecObjectType execObject;
+  execObject.Value = EXPECTED_EXEC_OBJECT_VALUE;
 
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
@@ -250,7 +265,7 @@ void TestInvokeWithError()
   {
     std::cout << "  Create and run dispatcher that raises error." << std::endl;
     TestDispatcher<TestErrorWorklet> dispatcher;
-    dispatcher.Invoke(inputArray, outputArray);
+    dispatcher.Invoke(inputArray, execObject, outputArray);
     VTKM_TEST_FAIL("Exception not thrown.");
   }
   catch (vtkm::cont::ErrorExecution error)
@@ -266,12 +281,13 @@ void TestInvokeWithBadType()
   std::cout << "Test invoke with bad type" << std::endl;
 
   vtkm::Id array[ARRAY_SIZE];
+  TestExecObjectType execObject;
   TestDispatcher<TestWorklet> dispatcher;
 
   try
   {
     std::cout << "  First argument bad." << std::endl;
-    dispatcher.Invoke(NULL, array);
+    dispatcher.Invoke(NULL, execObject, array);
   }
   catch (vtkm::cont::ErrorControlBadType error)
   {
@@ -284,13 +300,26 @@ void TestInvokeWithBadType()
   try
   {
     std::cout << "  Second argument bad." << std::endl;
-    dispatcher.Invoke(array, NULL);
+    dispatcher.Invoke(array, NULL, array);
   }
   catch (vtkm::cont::ErrorControlBadType error)
   {
     std::cout << "    Got expected exception." << std::endl;
     std::cout << "    " << error.GetMessage() << std::endl;
     VTKM_TEST_ASSERT(error.GetMessage().find(" 2 ") != std::string::npos,
+                     "Parameter index not named in error message.");
+  }
+
+  try
+  {
+    std::cout << "  Third argument bad." << std::endl;
+    dispatcher.Invoke(array, execObject, NULL);
+  }
+  catch (vtkm::cont::ErrorControlBadType error)
+  {
+    std::cout << "    Got expected exception." << std::endl;
+    std::cout << "    " << error.GetMessage() << std::endl;
+    VTKM_TEST_ASSERT(error.GetMessage().find(" 3 ") != std::string::npos,
                      "Parameter index not named in error message.");
   }
 }
