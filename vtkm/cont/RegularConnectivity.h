@@ -9,6 +9,8 @@
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
+#include <boost/static_assert.hpp>
+
 namespace vtkm {
 namespace cont {
 
@@ -94,7 +96,7 @@ public:
   vtkm::Id GetNumberOfIndices(vtkm::Id) const {return 8;}
   vtkm::Id GetElementShapeType(vtkm::Id) const {return VTKM_VOXEL;}
 
-  void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,2> &ids) const
+  void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,8> &ids) const
   {
       int cellDims01 = cellDims.Max[0] * cellDims.Max[1];
       int k = index / cellDims01;
@@ -117,6 +119,28 @@ private:
     Extent<3> nodeDims;
 };
 
+template<TopologyType From, TopologyType To, vtkm::IdComponent Dimension>
+struct IndexLookupHelper
+{
+  // We want an unconditional failure if this unspecialized class ever gets
+  // instantiated, because it means someone missed a topology mapping type.
+  // We need to create a test which depends on the templated types so
+  // it doesn't get picked up without a concrete instantiation.
+  BOOST_STATIC_ASSERT_MSG(From != To && From == To,
+                          "Missing Specialization for Topologies");
+};
+
+template<vtkm::IdComponent Dimension>
+struct IndexLookupHelper<NODE,CELL,Dimension>
+{
+  template <vtkm::IdComponent ItemTupleLength>
+  static void GetIndices(RegularStructure<Dimension> &rs,
+                  vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+  {
+    rs.GetNodesOfCells(index,ids);
+  }
+};
+
 template<TopologyType FromTopology, TopologyType ToTopoogy,
          vtkm::IdComponent Dimension>
 class RegularConnectivity
@@ -134,8 +158,7 @@ public:
   template <vtkm::IdComponent ItemTupleLength>
   void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
-    if (FromTopology==NODE && ToTopoogy==CELL)
-      rs.GetNodesOfCells(index,ids);
+    IndexLookupHelper<FromTopology,ToTopoogy,Dimension>::GetIndices(rs,index,ids);
   }
 private:
   RegularStructure<Dimension> rs;
