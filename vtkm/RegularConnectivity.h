@@ -22,6 +22,7 @@
 #ifndef vtk_m_RegularConnectivity_h
 #define vtk_m_RegularConnectivity_h
 
+#include <vtkm/Types.h>
 #include <vtkm/RegularStructure.h>
 #include <vtkm/cont/TopologyType.h>
 

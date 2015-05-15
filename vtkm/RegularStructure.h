@@ -21,7 +21,7 @@
 #ifndef vtk_m_RegularStructure_h
 #define vtk_m_RegularStructure_h
 
-#include <vtkm/Extent.h>
+#include <vtkm/Types.h>
 #include <vtkm/CellType.h>
 
 namespace vtkm {
@@ -36,12 +36,11 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void SetNodeDimension(int node_i, int, int)
   {
-      cellDims.Min[0] = nodeDims.Min[0] = 0;
-      cellDims.Max[0] = node_i-1;
-      nodeDims.Max[0] = node_i;
+      cellDims[0] = node_i-1;
+      nodeDims[0] = node_i;
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id GetNumberOfCells() const {return cellDims.Max[0];}
+  vtkm::Id GetNumberOfCells() const {return cellDims[0];}
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfIndices() const {return 2;}
   VTKM_EXEC_CONT_EXPORT
@@ -55,8 +54,8 @@ public:
   }
     
 private:
-    Extent<1> cellDims;
-    Extent<1> nodeDims;
+    vtkm::Id cellDims[1];
+    vtkm::Id nodeDims[1];
 };
 
 //2 D specialization.
@@ -67,15 +66,13 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void SetNodeDimension(int node_i, int node_j, int)
   {
-      cellDims.Min[0] = cellDims.Min[1] = 0;
-      nodeDims.Min[0] = nodeDims.Min[1] = 0;
-      cellDims.Max[0] = node_i-1;
-      nodeDims.Max[0] = node_i;
-      cellDims.Max[1] = node_j-1;
-      nodeDims.Max[1] = node_j;
+      cellDims[0] = node_i-1;
+      nodeDims[0] = node_i;
+      cellDims[1] = node_j-1;
+      nodeDims[1] = node_j;
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id GetNumberOfCells() const {return cellDims.Max[0]*cellDims.Max[1];}
+  vtkm::Id GetNumberOfCells() const {return cellDims[0]*cellDims[1];}
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfIndices() const {return 4;}
   VTKM_EXEC_CONT_EXPORT
@@ -84,18 +81,18 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,4> &ids) const
   {
-      int i = index % cellDims.Max[0];
-      int j = index / cellDims.Max[0];
+      int i = index % cellDims[0];
+      int j = index / cellDims[0];
 
-      ids[0] = j*nodeDims.Max[0] + i;
+      ids[0] = j*nodeDims[0] + i;
       ids[1] = ids[0] + 1;
-      ids[2] = ids[0] + nodeDims.Max[0];
+      ids[2] = ids[0] + nodeDims[0];
       ids[3] = ids[2] + 1;
   }
     
 private:
-    Extent<2> cellDims;
-    Extent<2> nodeDims;
+    vtkm::Id cellDims[2];
+    vtkm::Id nodeDims[2];
 };
 
 //3 D specialization.
@@ -106,17 +103,15 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void SetNodeDimension(int node_i, int node_j, int node_k)
   {
-      cellDims.Min[0] = cellDims.Min[1] = cellDims.Min[2] = 0;
-      nodeDims.Min[0] = nodeDims.Min[1] = nodeDims.Min[2] = 0;
-      cellDims.Max[0] = node_i-1;
-      nodeDims.Max[0] = node_i;
-      cellDims.Max[1] = node_j-1;
-      nodeDims.Max[1] = node_j;
-      cellDims.Max[2] = node_k-1;
-      nodeDims.Max[2] = node_k;
+      cellDims[0] = node_i-1;
+      nodeDims[0] = node_i;
+      cellDims[1] = node_j-1;
+      nodeDims[1] = node_j;
+      cellDims[2] = node_k-1;
+      nodeDims[2] = node_k;
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id GetNumberOfCells() const {return cellDims.Max[0]*cellDims.Max[1]*cellDims.Max[2];}
+  vtkm::Id GetNumberOfCells() const {return cellDims[0]*cellDims[1]*cellDims[2];}
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfIndices() const {return 8;}
   VTKM_EXEC_CONT_EXPORT
@@ -125,25 +120,25 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,8> &ids) const
   {
-      int cellDims01 = cellDims.Max[0] * cellDims.Max[1];
+      int cellDims01 = cellDims[0] * cellDims[1];
       int k = index / cellDims01;
       int indexij = index % cellDims01;
-      int j = indexij / cellDims.Max[0];
-      int i = indexij % cellDims.Max[0];
+      int j = indexij / cellDims[0];
+      int i = indexij % cellDims[0];
 
-      ids[0] = (k * nodeDims.Max[1] + j) * nodeDims.Max[0] + i;
+      ids[0] = (k * nodeDims[1] + j) * nodeDims[0] + i;
       ids[1] = ids[0] + 1;
-      ids[2] = ids[0] + nodeDims.Max[0];
+      ids[2] = ids[0] + nodeDims[0];
       ids[3] = ids[2] + 1;
-      ids[4] = ids[0] + nodeDims.Max[0]*nodeDims.Max[1];
+      ids[4] = ids[0] + nodeDims[0]*nodeDims[1];
       ids[5] = ids[4] + 1;
-      ids[6] = ids[4] + nodeDims.Max[0];
+      ids[6] = ids[4] + nodeDims[0];
       ids[7] = ids[6] + 1;
   }
     
 private:
-    Extent<3> cellDims;
-    Extent<3> nodeDims;
+    vtkm::Id cellDims[3];
+    vtkm::Id nodeDims[3];
 };
 
 } // namespace vtkm
