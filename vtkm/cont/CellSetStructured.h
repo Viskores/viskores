@@ -2,8 +2,8 @@
 #define vtk_m_cont_CellSetStructured_h
 
 #include <vtkm/cont/CellSet.h>
-#include <vtkm/cont/RegularConnectivity.h>
-#include <vtkm/cont/RegularStructure.h>
+#include <vtkm/RegularConnectivity.h>
+#include <vtkm/RegularStructure.h>
 
 namespace vtkm {
 namespace cont {
@@ -22,21 +22,21 @@ public:
 
   virtual vtkm::Id GetNumCells()
   {
-    return regStruct.GetNumberOfCells();
+    return structure.GetNumberOfCells();
   }
 
-  vtkm::cont::RegularConnectivity<NODE,CELL,Dimension> 
+  vtkm::RegularConnectivity<NODE,CELL,Dimension> 
   GetNodeToCellConnectivity()
   {
-    vtkm::cont::RegularConnectivity<NODE,CELL,Dimension> regConn;
-    regConn.SetNodeDimension(regStruct.nodeDims.Max[0],
-                             regStruct.nodeDims.Max[1],
-                             regStruct.nodeDims.Max[2]);
+    vtkm::RegularConnectivity<NODE,CELL,Dimension> regConn;
+    regConn.SetNodeDimension(structure.nodeDims.Max[0],
+                             structure.nodeDims.Max[1],
+                             structure.nodeDims.Max[2]);
     return regConn;
   }
 
 public:
-  vtkm::cont::RegularStructure<Dimension> regStruct;
+  vtkm::RegularStructure<Dimension> structure;
 };
 
 }

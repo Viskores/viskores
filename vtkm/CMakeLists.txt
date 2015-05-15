@@ -24,6 +24,8 @@ set(headers
   Extent.h
   ListTag.h
   Pair.h
+  RegularConnectivity.h
+  RegularStructure.h
   TypeListTag.h
   Types.h
   TypeTraits.h

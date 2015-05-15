@@ -18,14 +18,13 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_cont_RegularStructure_h
-#define vtk_m_cont_RegularStructure_h
+#ifndef vtk_m_RegularStructure_h
+#define vtk_m_RegularStructure_h
 
 #include <vtkm/Extent.h>
 #include <vtkm/CellType.h>
 
 namespace vtkm {
-namespace cont {
 
 template<vtkm::IdComponent> class RegularStructure;
 
@@ -34,16 +33,21 @@ template<>
 class RegularStructure<1>
 {
 public:
+  VTKM_EXEC_CONT_EXPORT
   void SetNodeDimension(int node_i, int, int)
   {
       cellDims.Min[0] = nodeDims.Min[0] = 0;
       cellDims.Max[0] = node_i-1;
       nodeDims.Max[0] = node_i;
   }
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const {return cellDims.Max[0];}
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfIndices() const {return 2;}
+  VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetElementShapeType() const {return VTKM_LINE;}
 
+  VTKM_EXEC_CONT_EXPORT
   void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,2> &ids) const
   {
       ids[0] = index;
@@ -60,6 +64,7 @@ template<>
 class RegularStructure<2>
 {
 public:
+  VTKM_EXEC_CONT_EXPORT
   void SetNodeDimension(int node_i, int node_j, int)
   {
       cellDims.Min[0] = cellDims.Min[1] = 0;
@@ -69,10 +74,14 @@ public:
       cellDims.Max[1] = node_j-1;
       nodeDims.Max[1] = node_j;
   }
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const {return cellDims.Max[0]*cellDims.Max[1];}
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfIndices() const {return 4;}
+  VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetElementShapeType() const {return VTKM_PIXEL;}
 
+  VTKM_EXEC_CONT_EXPORT
   void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,4> &ids) const
   {
       int i = index % cellDims.Max[0];
@@ -94,6 +103,7 @@ template<>
 class RegularStructure<3>
 {
 public:
+  VTKM_EXEC_CONT_EXPORT
   void SetNodeDimension(int node_i, int node_j, int node_k)
   {
       cellDims.Min[0] = cellDims.Min[1] = cellDims.Min[2] = 0;
@@ -105,10 +115,14 @@ public:
       cellDims.Max[2] = node_k-1;
       nodeDims.Max[2] = node_k;
   }
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const {return cellDims.Max[0]*cellDims.Max[1]*cellDims.Max[2];}
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfIndices() const {return 8;}
+  VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetElementShapeType() const {return VTKM_VOXEL;}
 
+  VTKM_EXEC_CONT_EXPORT
   void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,8> &ids) const
   {
       int cellDims01 = cellDims.Max[0] * cellDims.Max[1];
@@ -132,7 +146,6 @@ private:
     Extent<3> nodeDims;
 };
 
-}
-} // namespace vtkm::cont
+} // namespace vtkm
 
-#endif //vtk_m_cont_RegularStructure_h
+#endif //vtk_m_RegularStructure_h

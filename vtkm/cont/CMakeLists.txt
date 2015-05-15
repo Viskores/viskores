@@ -50,8 +50,6 @@ set(headers
   PointCoordinatesArray.h
   PointCoordinatesListTag.h
   PointCoordinatesUniform.h
-  RegularConnectivity.h
-  RegularStructure.h
   Storage.h
   StorageBasic.h
   StorageImplicit.h

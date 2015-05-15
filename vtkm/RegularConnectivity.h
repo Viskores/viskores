@@ -19,22 +19,17 @@
 //============================================================================
 
 
-#ifndef vtk_m_cont_RegularConnectivity_h
-#define vtk_m_cont_RegularConnectivity_h
+#ifndef vtk_m_RegularConnectivity_h
+#define vtk_m_RegularConnectivity_h
 
-#include <vtkm/cont/RegularStructure.h>
+#include <vtkm/RegularStructure.h>
 #include <vtkm/cont/TopologyType.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/Field.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <boost/static_assert.hpp>
 
 namespace vtkm {
-namespace cont {
 
-template<TopologyType From, TopologyType To, vtkm::IdComponent Dimension>
+template<vtkm::cont::TopologyType From, vtkm::cont::TopologyType To, vtkm::IdComponent Dimension>
 struct IndexLookupHelper
 {
   // We want an unconditional failure if this unspecialized class ever gets
@@ -46,9 +41,10 @@ struct IndexLookupHelper
 };
 
 template<vtkm::IdComponent Dimension>
-struct IndexLookupHelper<NODE,CELL,Dimension>
+struct IndexLookupHelper<vtkm::cont::NODE,vtkm::cont::CELL,Dimension>
 {
   template <vtkm::IdComponent ItemTupleLength>
+  VTKM_EXEC_CONT_EXPORT
   static void GetIndices(RegularStructure<Dimension> &rs,
                   vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
@@ -56,21 +52,26 @@ struct IndexLookupHelper<NODE,CELL,Dimension>
   }
 };
 
-template<TopologyType FromTopology, TopologyType ToTopoogy,
+template<vtkm::cont::TopologyType FromTopology, vtkm::cont::TopologyType ToTopoogy,
          vtkm::IdComponent Dimension>
 class RegularConnectivity
 {
 public:
+  VTKM_EXEC_CONT_EXPORT
   void SetNodeDimension(int node_i, int node_j=0, int node_k=0)
   {
      rs.SetNodeDimension(node_i, node_j, node_k);
   }
 
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfElements() const {return rs.GetNumberOfElements();}
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfIndices(vtkm::Id=0) const {return rs.GetNumberOfIndices();}
+  VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetElementShapeType(vtkm::Id=0) const {return rs.GetElementShapeType();}
 
   template <vtkm::IdComponent ItemTupleLength>
+  VTKM_EXEC_CONT_EXPORT
   void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
     IndexLookupHelper<FromTopology,ToTopoogy,Dimension>::GetIndices(rs,index,ids);
@@ -79,7 +80,6 @@ private:
   RegularStructure<Dimension> rs;
 };
     
-}
-} // namespace vtkm::cont
+} // namespace vtkm
 
-#endif //vtk_m_cont_RegularConnectivity_h
+#endif //vtk_m_RegularConnectivity_h
