@@ -21,6 +21,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/CellType.h>
 
 void TestDataSet_Regular()
 {
@@ -66,16 +67,23 @@ void TestDataSet_Regular()
     VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfFields(), 6),
                      "Incorrect number of fields");
 
-    //Add a 1D cell set.
-    vtkm::cont::CellSetStructured<1> *cs2 = new vtkm::cont::CellSetStructured<1>("vertex");
-    ds.AddCellSet(cs2);
-    cs2->regConn.SetNodeDimension(18);
-    VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfCellSets(), 2),
-                     "Incorrect number of cell sets");
+    VTKM_TEST_ASSERT(test_equal(cs->regConn.GetNumberOfElements(), 4),
+                     "Incorrect number of cells");
+    
+    vtkm::Id numCells = cs->regConn.GetNumberOfElements();
+    vtkm::Vec<vtkm::Id,8> ids;
+    for (int i = 0; i < numCells; i++)
+    {
+        VTKM_TEST_ASSERT(test_equal(cs->regConn.GetNumberOfIndices(), 8),
+                         "Incorrect number of cell indices");
+        vtkm::CellType shape = cs->regConn.GetElementShapeType();
+        if (shape != vtkm::VTKM_VOXEL)
+            VTKM_TEST_ASSERT(false,
+                             "Incorrect element type.");
+    }
 
     //cleanup memory now
     delete cs;
-    delete cs2;
 }
 
 int UnitTestDataSetRegular(int, char *[])
