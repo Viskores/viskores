@@ -55,7 +55,7 @@ void TestDataSet_Regular()
     ds.AddCellSet(cs);
 
     //Set regular structure
-    cs->regConn.SetNodeDimension(3,2,3);
+    cs->regStruct.SetNodeDimension(3,2,3);
 
     //Run a worklet to populate a cell centered field.
     vtkm::Float32 cellVals[4] = {-1.1, -1.2, -1.3, -1.4};
@@ -67,19 +67,17 @@ void TestDataSet_Regular()
     VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfFields(), 6),
                      "Incorrect number of fields");
 
-    VTKM_TEST_ASSERT(test_equal(cs->regConn.GetNumberOfElements(), 4),
+    VTKM_TEST_ASSERT(test_equal(cs->regStruct.GetNumberOfCells(), 4),
                      "Incorrect number of cells");
     
-    vtkm::Id numCells = cs->regConn.GetNumberOfElements();
+    vtkm::Id numCells = cs->regStruct.GetNumberOfCells();
     vtkm::Vec<vtkm::Id,8> ids;
     for (int i = 0; i < numCells; i++)
     {
-        VTKM_TEST_ASSERT(test_equal(cs->regConn.GetNumberOfIndices(), 8),
+        VTKM_TEST_ASSERT(test_equal(cs->regStruct.GetNumberOfIndices(), 8),
                          "Incorrect number of cell indices");
-        vtkm::CellType shape = cs->regConn.GetElementShapeType();
-        if (shape != vtkm::VTKM_VOXEL)
-            VTKM_TEST_ASSERT(false,
-                             "Incorrect element type.");
+        vtkm::CellType shape = cs->regStruct.GetElementShapeType();
+        VTKM_TEST_ASSERT(shape == vtkm::VTKM_VOXEL, "Incorrect element type.");
     }
 
     //cleanup memory now

@@ -152,7 +152,7 @@ void TestWorkletMapTopologyExplicit()
   vtkm::worklet::DispatcherMapTopology< ::test::CellValue > dispatcher;
   dispatcher.Invoke(ds.GetField(4).GetData(),
                     ds.GetField(3).GetData(),
-                    cs->nodesOfCellsConnectivity,
+                    cs->GetNodeToCellConnectivity(),
                     ds.GetField(5).GetData());
 
 

@@ -40,7 +40,7 @@ public:
       cellDims.Max[0] = node_i-1;
       nodeDims.Max[0] = node_i;
   }
-  vtkm::Id GetNumberOfElements() const {return cellDims.Max[0];}
+  vtkm::Id GetNumberOfCells() const {return cellDims.Max[0];}
   vtkm::Id GetNumberOfIndices() const {return 2;}
   vtkm::CellType GetElementShapeType() const {return VTKM_LINE;}
 
@@ -69,7 +69,7 @@ public:
       cellDims.Max[1] = node_j-1;
       nodeDims.Max[1] = node_j;
   }
-  vtkm::Id GetNumberOfElements() const {return cellDims.Max[0]*cellDims.Max[1];}
+  vtkm::Id GetNumberOfCells() const {return cellDims.Max[0]*cellDims.Max[1];}
   vtkm::Id GetNumberOfIndices() const {return 4;}
   vtkm::CellType GetElementShapeType() const {return VTKM_PIXEL;}
 
@@ -105,7 +105,7 @@ public:
       cellDims.Max[2] = node_k-1;
       nodeDims.Max[2] = node_k;
   }
-  vtkm::Id GetNumberOfElements() const {return cellDims.Max[0]*cellDims.Max[1]*cellDims.Max[2];}
+  vtkm::Id GetNumberOfCells() const {return cellDims.Max[0]*cellDims.Max[1]*cellDims.Max[2];}
   vtkm::Id GetNumberOfIndices() const {return 8;}
   vtkm::CellType GetElementShapeType() const {return VTKM_VOXEL;}
 
