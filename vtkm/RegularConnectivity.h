@@ -53,6 +53,18 @@ struct IndexLookupHelper<vtkm::cont::NODE,vtkm::cont::CELL,Dimension>
   }
 };
 
+template<vtkm::IdComponent Dimension>
+struct IndexLookupHelper<vtkm::cont::CELL,vtkm::cont::NODE,Dimension>
+{
+  template <vtkm::IdComponent ItemTupleLength>
+  VTKM_EXEC_CONT_EXPORT
+  static void GetIndices(RegularStructure<Dimension> &rs,
+                  vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+  {
+    rs.GetCellsOfNode(index,ids);
+  }
+};
+
 template<vtkm::cont::TopologyType FromTopology, vtkm::cont::TopologyType ToTopoogy,
          vtkm::IdComponent Dimension>
 class RegularConnectivity
