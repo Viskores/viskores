@@ -887,14 +887,15 @@ private:
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Sort by keys" << std::endl;
 
-    vtkm::Id testKeys[ARRAY_SIZE];
-    vtkm::Vec<FloatDefault,3> testValues[ARRAY_SIZE];
+    typedef vtkm::Vec<FloatDefault,3> Vec3;
 
-    vtkm::Vec<FloatDefault,3> grad(1.0,1.0,1.0);
+    vtkm::Id testKeys[ARRAY_SIZE];
+    Vec3 testValues[ARRAY_SIZE];
+
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
       {
       testKeys[i] = ARRAY_SIZE - i;
-      testValues[i] = vtkm::Vec<FloatDefault,3>(i);
+      testValues[i] = TestValue(i, Vec3());
       }
 
     IdArrayHandle keys = MakeArrayHandle(testKeys, ARRAY_SIZE);
@@ -911,12 +912,11 @@ private:
       {
       //keys should be sorted from 1 to ARRAY_SIZE
       //values should be sorted from (ARRAY_SIZE-1) to 0
-      vtkm::FloatDefault sorted_value =
-                        sorted_values.GetPortalConstControl().Get(i)[0];
+      Vec3 sorted_value = sorted_values.GetPortalConstControl().Get(i);
       vtkm::Id sorted_key = sorted_keys.GetPortalConstControl().Get(i);
 
       VTKM_TEST_ASSERT( (sorted_key == (i+1)) , "Got bad SortByKeys key");
-      VTKM_TEST_ASSERT( (sorted_value == (ARRAY_SIZE-1-i)),
+      VTKM_TEST_ASSERT( test_equal(sorted_value, TestValue(ARRAY_SIZE-1-i, Vec3())),
                                       "Got bad SortByKeys value");
       }
 
@@ -926,29 +926,27 @@ private:
       {
       //keys should be sorted from ARRAY_SIZE to 1
       //values should be sorted from 0 to (ARRAY_SIZE-1)
-      vtkm::FloatDefault sorted_value =
-                        sorted_values.GetPortalConstControl().Get(i)[0];
+      Vec3 sorted_value = sorted_values.GetPortalConstControl().Get(i);
       vtkm::Id sorted_key = sorted_keys.GetPortalConstControl().Get(i);
 
       VTKM_TEST_ASSERT( (sorted_key == (ARRAY_SIZE-i)),
                                       "Got bad SortByKeys key");
-      VTKM_TEST_ASSERT( (sorted_value == i),
+      VTKM_TEST_ASSERT( test_equal(sorted_value, TestValue(i, Vec3())),
                                       "Got bad SortByKeys value");
       }
 
-    //this is here to verify we can sort by vtkm::Tuples
+    //this is here to verify we can sort by vtkm::Vec
     Algorithm::SortByKey(sorted_values,sorted_keys);
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
       {
       //keys should be sorted from ARRAY_SIZE to 1
       //values should be sorted from 0 to (ARRAY_SIZE-1)
-      vtkm::FloatDefault sorted_value =
-                        sorted_values.GetPortalConstControl().Get(i)[0];
+      Vec3 sorted_value = sorted_values.GetPortalConstControl().Get(i);
       vtkm::Id sorted_key = sorted_keys.GetPortalConstControl().Get(i);
 
       VTKM_TEST_ASSERT( (sorted_key == (ARRAY_SIZE-i)),
                                       "Got bad SortByKeys key");
-      VTKM_TEST_ASSERT( (sorted_value == i),
+      VTKM_TEST_ASSERT( test_equal(sorted_value, TestValue(i, Vec3())),
                                       "Got bad SortByKeys value");
       }
   }
