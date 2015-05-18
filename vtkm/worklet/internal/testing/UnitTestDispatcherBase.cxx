@@ -289,6 +289,7 @@ void TestInvokeWithBadType()
   {
     std::cout << "  First argument bad." << std::endl;
     dispatcher.Invoke(NULL, execObject, array);
+    VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
   }
   catch (vtkm::cont::ErrorControlBadType error)
   {
@@ -302,6 +303,7 @@ void TestInvokeWithBadType()
   {
     std::cout << "  Second argument bad." << std::endl;
     dispatcher.Invoke(array, NULL, array);
+    VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
   }
   catch (vtkm::cont::ErrorControlBadType error)
   {
@@ -315,6 +317,7 @@ void TestInvokeWithBadType()
   {
     std::cout << "  Third argument bad." << std::endl;
     dispatcher.Invoke(array, execObject, NULL);
+    VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
   }
   catch (vtkm::cont::ErrorControlBadType error)
   {
