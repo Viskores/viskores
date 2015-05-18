@@ -282,6 +282,7 @@ void TestInvokeWithBadType()
 
   vtkm::Id array[ARRAY_SIZE];
   TestExecObjectType execObject;
+  execObject.Value = EXPECTED_EXEC_OBJECT_VALUE;
   TestDispatcher<TestWorklet> dispatcher;
 
   try
