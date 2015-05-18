@@ -77,6 +77,7 @@ void TestWorkletMapTopologyRegular()
   vtkm::cont::DataSet *ds = tds.Make2DRegularDataSet0();
   vtkm::cont::CellSetStructured<2> *cs;
   cs = dynamic_cast<vtkm::cont::CellSetStructured<2> *>(ds->GetCellSet(0));
+  VTKM_TEST_ASSERT(cs!=NULL, "Structured cell set not found"):
 
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.
