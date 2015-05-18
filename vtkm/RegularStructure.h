@@ -20,7 +20,7 @@
 
 #ifndef vtk_m_RegularStructure_h
 #define vtk_m_RegularStructure_h
-
+#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/Types.h>
 #include <vtkm/CellType.h>
 
@@ -65,10 +65,8 @@ public:
       if (index < nodeDims[0]-1)
 	  ids[idx++] = index;
   }
-    
-private:
-    vtkm::Id cellDims[1];
-    vtkm::Id nodeDims[1];
+  vtkm::Id cellDims[1];
+  vtkm::Id nodeDims[1];
 };
 
 //2 D specialization.
@@ -77,7 +75,7 @@ class RegularStructure<2>
 {
 public:
   VTKM_EXEC_CONT_EXPORT
-  void SetNodeDimension(int node_i, int node_j, int)
+  void SetNodeDimension(int node_i, int node_j, int=0)
   {
       cellDims[0] = node_i-1;
       nodeDims[0] = node_i;
@@ -121,6 +119,9 @@ public:
 	  ids[idx++] = CalculateCellIndex(i  , j  );
   }
     
+  vtkm::Id cellDims[2];
+  vtkm::Id nodeDims[2];
+
 private:
   VTKM_EXEC_CONT_EXPORT
   void CalculateLogicalNodeIndices(vtkm::Id index, int &i, int &j) const
@@ -133,9 +134,6 @@ private:
   {
       return j*cellDims[0] + i;
   }
-    
-    vtkm::Id cellDims[2];
-    vtkm::Id nodeDims[2];
 };
 
 //3 D specialization.
@@ -184,7 +182,9 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void GetCellsOfNode(vtkm::Id index, vtkm::Vec<vtkm::Id,8> &ids) const
   {
-      ids[0]=ids[1]=ids[2]=ids[3]=ids[4]=ids[5]=ids[6]=ids[7]=0;
+
+      ids[0]=ids[1]=ids[2]=ids[3]=ids[4]=ids[5]=ids[6]=ids[7]=-1;
+
       int i, j, k, idx=0;
 
       CalculateLogicalNodeIndices(index, i, j, k);
@@ -206,6 +206,9 @@ public:
       if (i < nodeDims[0]-1 && j < nodeDims[1]-1 && k < nodeDims[2]-1)
 	  ids[idx++] = CalculateCellIndex(i  , j  , k); 
   }
+
+  vtkm::Id cellDims[3];
+  vtkm::Id nodeDims[3];
     
 private:
   VTKM_EXEC_CONT_EXPORT
@@ -223,9 +226,6 @@ private:
   {
       return (k * cellDims[1] + j) * cellDims[0] + i;
   }
-
-    vtkm::Id cellDims[3];
-    vtkm::Id nodeDims[3];
 };
 
 } // namespace vtkm

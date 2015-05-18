@@ -25,13 +25,23 @@ public:
     return structure.GetNumberOfCells();
   }
 
-  vtkm::RegularConnectivity<NODE,CELL,Dimension> 
+  vtkm::RegularConnectivity<vtkm::cont::NODE,vtkm::cont::CELL,Dimension> 
   GetNodeToCellConnectivity()
   {
-    vtkm::RegularConnectivity<NODE,CELL,Dimension> regConn;
-    regConn.SetNodeDimension(structure.nodeDims.Max[0],
-                             structure.nodeDims.Max[1],
-                             structure.nodeDims.Max[2]);
+    vtkm::RegularConnectivity<vtkm::cont::NODE,vtkm::cont::CELL,Dimension> regConn;
+    regConn.SetNodeDimension(structure.nodeDims[0],
+			     structure.nodeDims[1],
+			     structure.nodeDims[2]);
+    return regConn;
+  }
+
+  vtkm::RegularConnectivity<vtkm::cont::CELL,vtkm::cont::NODE,Dimension> 
+  GetCellToNodeConnectivity()
+  {
+    vtkm::RegularConnectivity<vtkm::cont::CELL,vtkm::cont::NODE,Dimension> regConn;
+    regConn.SetNodeDimension(structure.nodeDims[0],
+			     structure.nodeDims[1],
+			     structure.nodeDims[2]);
     return regConn;
   }
 
