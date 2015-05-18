@@ -25,6 +25,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/RegularStructure.h>
 #include <vtkm/cont/TopologyType.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <boost/static_assert.hpp>
 
@@ -70,6 +71,9 @@ template<vtkm::cont::TopologyType FromTopology, vtkm::cont::TopologyType ToTopoo
 class RegularConnectivity
 {
 public:
+typedef vtkm::RegularConnectivity<FromTopology,ToTopoogy,Dimension> ExecObjectType;
+
+public:
   VTKM_EXEC_CONT_EXPORT
   void SetNodeDimension(int node_i, int node_j=0, int node_k=0)
   {
@@ -89,6 +93,13 @@ public:
   {
     IndexLookupHelper<FromTopology,ToTopoogy,Dimension>::GetIndices(rs,index,ids);
   }
+
+  template<typename Device>
+  ExecObjectType PrepareForInput(Device) const
+  {
+      return *this;
+  }
+
 private:
   RegularStructure<Dimension> rs;
 };
