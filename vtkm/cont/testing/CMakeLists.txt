@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  MakeTestDataSet.h
   Testing.h
   TestingDeviceAdapter.h
   TestingFancyArrayHandles.h
