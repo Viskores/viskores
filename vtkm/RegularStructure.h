@@ -42,6 +42,8 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfNodes() const {return nodeDims[0];}
   VTKM_EXEC_CONT_EXPORT
+  vtkm::Id GetNumberOfElements() const {return GetNumberOfCells();}
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const {return cellDims[0];}
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfIndices() const {return 2;}
@@ -84,6 +86,8 @@ public:
   }
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfNodes() const {return nodeDims[0]*nodeDims[1];}
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id GetNumberOfElements() const {return GetNumberOfCells();}
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const {return cellDims[0]*cellDims[1];}
   VTKM_EXEC_CONT_EXPORT
@@ -153,6 +157,8 @@ public:
   }
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfNodes() const {return nodeDims[0]*nodeDims[1]*nodeDims[2];}
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id GetNumberOfElements() const {return GetNumberOfCells();}
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const {return cellDims[0]*cellDims[1]*cellDims[2];}
   VTKM_EXEC_CONT_EXPORT
