@@ -33,7 +33,7 @@ void TestDataSet_Explicit()
   VTKM_TEST_ASSERT(ds->GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");
 
-  VTKM_TEST_ASSERT(ds->GetNumberOfFields() == 6,
+  VTKM_TEST_ASSERT(ds->GetNumberOfFields() == 5,
                        "Incorrect number of fields");
 
   //cleanup memory

@@ -52,6 +52,8 @@ TwoDimRegularTest()
 
     VTKM_TEST_ASSERT(ds->GetNumberOfCellSets() == 1,
                      "Incorrect number of cell sets");
+    VTKM_TEST_ASSERT(ds->GetNumberOfFields() == 4,
+                     "Incorrect number of fields");
     VTKM_TEST_ASSERT(cs->structure.GetNumberOfNodes() == 6,
                      "Incorrect number of nodes");
     VTKM_TEST_ASSERT(cs->structure.GetNumberOfCells() == 2,
@@ -116,7 +118,7 @@ ThreeDimRegularTest()
     VTKM_TEST_ASSERT(ds->GetNumberOfCellSets() == 1,
                      "Incorrect number of cell sets");
 
-    VTKM_TEST_ASSERT(ds->GetNumberOfFields() == 6,
+    VTKM_TEST_ASSERT(ds->GetNumberOfFields() == 5,
                      "Incorrect number of fields");
 
     VTKM_TEST_ASSERT(cs->structure.GetNumberOfNodes() == 18,

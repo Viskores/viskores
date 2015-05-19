@@ -42,32 +42,95 @@ public:
         ASSOC_LOGICAL_DIM
     };
 
-  /// constructor for points / whole mesh
+  /// constructors for points / whole mesh
   template <typename T>
   Field(std::string n, int o, Association a, ArrayHandle<T> &d)
-    : name(n), order(o), association(a), data(d)
+    : name(n), order(o), association(a)
   {
     VTKM_ASSERT_CONT(association == ASSOC_WHOLE_MESH ||
                      association == ASSOC_POINTS);
     SetData(d);
   }
+  template <typename T>
+  Field(std::string n, int o, Association a, const std::vector<T> &d)
+    : name(n), order(o), association(a)
+  {
+    VTKM_ASSERT_CONT(association == ASSOC_WHOLE_MESH ||
+                     association == ASSOC_POINTS);
+    CopyData(&d[0], d.size());
+  }
+  template <typename T>
+  Field(std::string n, int o, Association a, const T *d, int nvals)
+    : name(n), order(o), association(a)
+  {
+    VTKM_ASSERT_CONT(association == ASSOC_WHOLE_MESH ||
+                     association == ASSOC_POINTS);
+    CopyData(d, nvals);
+  }
+  template <typename T>
+  Field(std::string n, int o, Association a)
+    : name(n), order(o), association(a)
+  {
+    VTKM_ASSERT_CONT(association == ASSOC_WHOLE_MESH ||
+                     association == ASSOC_POINTS);
+  }
 
-  /// constructor for cell set associations
+  /// constructors for cell set associations
   template <typename T>
   Field(std::string n, int o, Association a, std::string csn, ArrayHandle<T> &d)
-    : name(n), order(o), association(a), assoc_cellset_name(csn), data(d)
+    : name(n), order(o), association(a), assoc_cellset_name(csn)
   {
     VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
     SetData(d);
   }
+  template <typename T>
+  Field(std::string n, int o, Association a, std::string csn, const std::vector<T> &d)
+    : name(n), order(o), association(a), assoc_cellset_name(csn)
+  {
+    VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
+    CopyData(&d[0], d.size());
+  }
+  template <typename T>
+  Field(std::string n, int o, Association a, std::string csn, const T *d, int nvals)
+    : name(n), order(o), association(a), assoc_cellset_name(csn)
+  {
+    VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
+    CopyData(d, nvals);
+  }
+  template <typename T>
+  Field(std::string n, int o, Association a, std::string csn)
+    : name(n), order(o), association(a), assoc_cellset_name(csn)
+  {
+    VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
+  }
 
-  /// constructor for logical dimension associations
+  /// constructors for logical dimension associations
   template <typename T>
   Field(std::string n, int o, Association a, int l, ArrayHandle<T> &d)
-    : name(n), order(o), association(a), assoc_logical_dim(l), data(d)
+    : name(n), order(o), association(a), assoc_logical_dim(l)
   {
     VTKM_ASSERT_CONT(association == ASSOC_LOGICAL_DIM);
     SetData(d);
+  }
+  template <typename T>
+  Field(std::string n, int o, Association a, int l, const std::vector<T> &d)
+    : name(n), order(o), association(a), assoc_logical_dim(l)
+  {
+    VTKM_ASSERT_CONT(association == ASSOC_LOGICAL_DIM);
+    CopyData(&d[0], d.size());
+  }
+  template <typename T>
+  Field(std::string n, int o, Association a, int l, const T *d, int nvals)
+    : name(n), order(o), association(a), assoc_logical_dim(l)
+  {
+    VTKM_ASSERT_CONT(association == ASSOC_LOGICAL_DIM);
+    CopyData(d, nvals);
+  }
+  template <typename T>
+  Field(std::string n, int o, Association a, int l)
+    : name(n), order(o), association(a), assoc_logical_dim(l)
+  {
+    VTKM_ASSERT_CONT(association == ASSOC_LOGICAL_DIM);
   }
 
   const std::string &GetName()
@@ -107,24 +170,17 @@ public:
   }
 
   template <typename T>
-  void CopyData(T *ptr, int nvals)
+  void CopyData(const T *ptr, int nvals)
   {
-    vtkm::cont::ArrayHandle<T> tmp = vtkm::cont::make_ArrayHandle(ptr, nvals);
+    vtkm::cont::ArrayHandle<T> tmp1 = vtkm::cont::make_ArrayHandle(ptr, nvals);
+    vtkm::cont::ArrayHandle<T> tmp2;
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::
-      Copy(tmp, data);
+      Copy(tmp1, tmp2);
+    data = tmp2;
   }
-
-  /*
-  void CopyIntoData(vtkm::cont::ArrayHandle<vtkm::FloatDefault> &tmp)
-  {
-    data = vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>();
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::
-      Copy(tmp, data);
-  }
-  */
   
 private:
-  std::string  name;  ///< only populate if assoc is cells
+  std::string  name;  ///< name of field
 
   int          order; ///< 0=(piecewise) constant, 1=linear, 2=quadratic
   Association  association;

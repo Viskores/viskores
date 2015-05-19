@@ -39,19 +39,15 @@ class CellSet;
 class DataSet
 {
 public:
-  DataSet() {}
-
-  template <typename T>
-  void AddFieldViaCopy(T *ptr, int nvals)
+  DataSet()
   {
-    vtkm::cont::ArrayHandle<T> tmp = vtkm::cont::make_ArrayHandle(ptr, nvals);
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> array;
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::
-      Copy(tmp, array);
+  }
 
-    Field f("name", 1, Field::ASSOC_POINTS, array);
+  void AddField(Field f)
+  {
     Fields.push_back(f);
   }
+
   vtkm::cont::Field &GetField(int index)
   {
     return Fields[index];

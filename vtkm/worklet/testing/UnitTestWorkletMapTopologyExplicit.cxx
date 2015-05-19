@@ -76,6 +76,11 @@ void TestWorkletMapTopologyExplicit()
   vtkm::cont::testing::MakeTestDataSet tds;
   vtkm::cont::DataSet *ds = tds.Make3DExplicitDataSet1();
 
+  //Run a worklet to populate a cell centered field.
+  //Here, we're filling it with test values.
+  vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
+  ds->AddField(vtkm::cont::Field("outcellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", outcellVals, 2));
+
   VTKM_TEST_ASSERT(ds->GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");
 

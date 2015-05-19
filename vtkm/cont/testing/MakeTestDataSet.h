@@ -56,14 +56,16 @@ MakeTestDataSet::Make2DRegularDataSet0()
     vtkm::Float32 xVals[nVerts] = {0, 1, 2, 0, 1, 2};
     vtkm::Float32 yVals[nVerts] = {0, 0, 0, 1, 1, 1};
     vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.1, 40.1, 50.1, 60.1};
-    ds->AddFieldViaCopy(xVals, nVerts);
-    ds->AddFieldViaCopy(yVals, nVerts);
+
+    ds->AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
+    ds->AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
     
     //set node scalar.
-    ds->AddFieldViaCopy(vars, nVerts);
+    ds->AddField(Field("v", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
+    //create scalar.
     vtkm::Float32 cellvar[2] = {100.1, 200.1};
-    ds->AddFieldViaCopy(cellvar, 2);
+    ds->AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
     vtkm::cont::CellSetStructured<2> *cs = new vtkm::cont::CellSetStructured<2>("cells");
     //Set regular structure
@@ -90,16 +92,16 @@ MakeTestDataSet::Make3DRegularDataSet0()
                                   100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5,
                                   180.5};
 
-    ds->AddFieldViaCopy(xVals, nVerts);
-    ds->AddFieldViaCopy(yVals, nVerts);
-    ds->AddFieldViaCopy(zVals, nVerts);
+    ds->AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
+    ds->AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
+    ds->AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
 
     //Set node scalar
-    ds->AddFieldViaCopy(vars, nVerts);
+    ds->AddField(Field("v", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
     //Set cell scalar
     vtkm::Float32 cellvar[4] = {100.1, 100.2, 100.3, 100.4};
-    ds->AddFieldViaCopy(cellvar, 4);
+    ds->AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 4));
     
     static const vtkm::IdComponent dim = 3;
     vtkm::cont::CellSetStructured<dim> *cs = new vtkm::cont::CellSetStructured<dim>("cells");
@@ -107,10 +109,6 @@ MakeTestDataSet::Make3DRegularDataSet0()
 
     //Set regular structure
     cs->structure.SetNodeDimension(3,2,3);
-
-    //Run a worklet to populate a cell centered field.
-    vtkm::Float32 cellVals[4] = {-1.1, -1.2, -1.3, -1.4};
-    ds->AddFieldViaCopy(cellVals, 4);
 
     return ds;
 }
@@ -130,17 +128,16 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0};
   vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.2, 40.2, 50.3};
 
-
-  ds->AddFieldViaCopy(xVals, nVerts);
-  ds->AddFieldViaCopy(yVals, nVerts);
-  ds->AddFieldViaCopy(zVals, nVerts);
+  ds->AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
+  ds->AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
+  ds->AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
 
   //Set node scalar
-  ds->AddFieldViaCopy(vars, nVerts);
+  ds->AddField(Field("v", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = {100.1, 100.2};
-  ds->AddFieldViaCopy(cellvar, 2);
+  ds->AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
   //Add connectivity
   std::vector<vtkm::Id> shapes;
@@ -170,11 +167,6 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   //todo this need to be a reference/shared_ptr style class
   ds->AddCellSet(cs);
 
-  //Run a worklet to populate a cell centered field.
-  //Here, we're filling it with test values.
-  vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
-  ds->AddFieldViaCopy(outcellVals, 2);
-
   return ds;
 }
 
@@ -193,17 +185,16 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0};
   vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.2, 40.2, 50.3};
 
-
-  ds->AddFieldViaCopy(xVals, nVerts);
-  ds->AddFieldViaCopy(yVals, nVerts);
-  ds->AddFieldViaCopy(zVals, nVerts);
+  ds->AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
+  ds->AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
+  ds->AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
 
   //Set node scalar
-  ds->AddFieldViaCopy(vars, nVerts);
+  ds->AddField(Field("v", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = {100.1, 100.2};
-  ds->AddFieldViaCopy(cellvar, 2);
+  ds->AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
   vtkm::cont::CellSetExplicit *cs = new vtkm::cont::CellSetExplicit("cells",2);
   vtkm::cont::ExplicitConnectivity &ec = cs->nodesOfCellsConnectivity;
@@ -215,11 +206,6 @@ MakeTestDataSet::Make3DExplicitDataSet1()
 
   //todo this need to be a reference/shared_ptr style class
   ds->AddCellSet(cs);
-
-  //Run a worklet to populate a cell centered field.
-  //Here, we're filling it with test values.
-  vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
-  ds->AddFieldViaCopy(outcellVals, 2);
 
   return ds;
 }
