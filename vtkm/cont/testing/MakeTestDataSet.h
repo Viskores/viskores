@@ -38,6 +38,7 @@ public:
 
     // 3D explicit datasets.
     vtkm::cont::DataSet * Make3DExplicitDataSet0();
+    vtkm::cont::DataSet * Make3DExplicitDataSet1();
 };
 
 
@@ -142,7 +143,6 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   ds->AddFieldViaCopy(cellvar, 2);
 
   //Add connectivity
-  vtkm::cont::ArrayHandle<vtkm::Id> tmp2;
   std::vector<vtkm::Id> shapes;
   shapes.push_back(vtkm::VTKM_TRIANGLE);
   shapes.push_back(vtkm::VTKM_QUAD);
@@ -162,20 +162,56 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   conn.push_back(3);
   conn.push_back(4);
 
-  std::vector<vtkm::Id> map_cell_to_index;
-  map_cell_to_index.push_back(0);
-  map_cell_to_index.push_back(3);
+  vtkm::cont::CellSetExplicit *cs = new vtkm::cont::CellSetExplicit("cells",2);
+  vtkm::cont::ExplicitConnectivity &ec = cs->nodesOfCellsConnectivity;
+
+  ec.FillViaCopy(shapes, numindices, conn);
+
+  //todo this need to be a reference/shared_ptr style class
+  ds->AddCellSet(cs);
+
+  //Run a worklet to populate a cell centered field.
+  //Here, we're filling it with test values.
+  vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
+  ds->AddFieldViaCopy(outcellVals, 2);
+
+  return ds;
+}
+
+inline vtkm::cont::DataSet *
+MakeTestDataSet::Make3DExplicitDataSet1()
+{
+  vtkm::cont::DataSet *ds = new vtkm::cont::DataSet;
+
+  ds->x_idx = 0;
+  ds->y_idx = 1;
+  ds->z_idx = 2;
+
+  const int nVerts = 5;
+  vtkm::Float32 xVals[nVerts] = {0, 1, 1, 2, 2};
+  vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1, 2};
+  vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0};
+  vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.2, 40.2, 50.3};
+
+
+  ds->AddFieldViaCopy(xVals, nVerts);
+  ds->AddFieldViaCopy(yVals, nVerts);
+  ds->AddFieldViaCopy(zVals, nVerts);
+
+  //Set node scalar
+  ds->AddFieldViaCopy(vars, nVerts);
+
+  //Set cell scalar
+  vtkm::Float32 cellvar[2] = {100.1, 100.2};
+  ds->AddFieldViaCopy(cellvar, 2);
 
   vtkm::cont::CellSetExplicit *cs = new vtkm::cont::CellSetExplicit("cells",2);
   vtkm::cont::ExplicitConnectivity &ec = cs->nodesOfCellsConnectivity;
-  vtkm::cont::ArrayHandle<vtkm::Id> tmpShapes = vtkm::cont::make_ArrayHandle(shapes);
-  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmpShapes, ec.Shapes);
-  vtkm::cont::ArrayHandle<vtkm::Id> tmpNumIndices = vtkm::cont::make_ArrayHandle(numindices);
-  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmpNumIndices, ec.NumIndices);
-  vtkm::cont::ArrayHandle<vtkm::Id> tmpConnectivity = vtkm::cont::make_ArrayHandle(conn);
-  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmpConnectivity, ec.Connectivity);
-  vtkm::cont::ArrayHandle<vtkm::Id> tmpMapCellToConnectivityIndex = vtkm::cont::make_ArrayHandle(map_cell_to_index);
-  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmpMapCellToConnectivityIndex, ec.MapCellToConnectivityIndex);
+
+  ec.PrepareToAddCells(2, 4);
+  ec.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
+  ec.AddCell(vtkm::VTKM_QUAD, 4, make_Vec<vtkm::Id>(2,1,3,4));
+  ec.CompleteAddingCells();
 
   //todo this need to be a reference/shared_ptr style class
   ds->AddCellSet(cs);
