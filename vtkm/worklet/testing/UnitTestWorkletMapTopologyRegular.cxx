@@ -78,6 +78,8 @@ void TestWorkletMapTopologyRegular()
   vtkm::cont::CellSetStructured<2> *cs;
   cs = dynamic_cast<vtkm::cont::CellSetStructured<2> *>(ds->GetCellSet(0));
 
+  VTKM_TEST_ASSERT(cs, "Structured cell set not found");
+
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.
   vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
