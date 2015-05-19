@@ -74,7 +74,7 @@ void TestWorkletMapTopologyExplicit()
             << DeviceAdapterTraits::GetId() << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet tds;
-  vtkm::cont::DataSet *ds = tds.Make3DExplicitDataSet0();
+  vtkm::cont::DataSet *ds = tds.Make3DExplicitDataSet1();
 
   VTKM_TEST_ASSERT(ds->GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");

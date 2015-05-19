@@ -36,7 +36,11 @@ public:
 typedef vtkm::exec::ExplicitConnectivity<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> ExecObjectType;
 
 public:
-  ExplicitConnectivity() {}
+  ExplicitConnectivity()
+  {
+    NumShapes = 0;
+    ConnectivityLength = 0;
+  }
 
   vtkm::Id GetNumberOfElements()
   {
@@ -58,10 +62,58 @@ public:
     for (int i=0; i<n && i<ItemTupleLength; i++)
       ids[i] = Connectivity.GetPortalControl().Get(start+i);
   }
-  template <vtkm::IdComponent ItemTupleLength>
-  void AddShape(vtkm::CellType cellType, int numVertices, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+
+  void PrepareToAddCells(vtkm::Id numShapes, vtkm::Id maxIdsPerShape)
   {
-    ///\todo: how do I modify an array handle?
+    Shapes.Allocate(numShapes);
+    NumIndices.Allocate(numShapes);
+    Connectivity.Allocate(numShapes * maxIdsPerShape);
+    MapCellToConnectivityIndex.Allocate(numShapes);
+    NumShapes = 0;
+    ConnectivityLength = 0;
+  }
+
+  template <vtkm::IdComponent ItemTupleLength>
+  void AddCell(vtkm::CellType cellType, int numVertices,
+                const vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+  {
+    Shapes.GetPortalControl().Set(NumShapes, cellType);
+    NumIndices.GetPortalControl().Set(NumShapes, numVertices);
+    for (int i=0; i < numVertices; ++i)
+      Connectivity.GetPortalControl().Set(ConnectivityLength+i,ids[i]);
+    MapCellToConnectivityIndex.GetPortalControl().Set(NumShapes,
+                                                      ConnectivityLength);
+    NumShapes++;
+    ConnectivityLength += numVertices;
+  }
+
+  void CompleteAddingCells()
+  {
+    Connectivity.Shrink(ConnectivityLength);
+  }
+
+  void FillViaCopy(const std::vector<vtkm::Id> &cellTypes,
+                   const std::vector<vtkm::Id> &numIndices,
+                   const std::vector<vtkm::Id> &connectivity)
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> t1 = vtkm::cont::make_ArrayHandle(cellTypes);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(t1, Shapes);
+    vtkm::cont::ArrayHandle<vtkm::Id> t2 = vtkm::cont::make_ArrayHandle(numIndices);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(t2, NumIndices);
+    vtkm::cont::ArrayHandle<vtkm::Id> t3 = vtkm::cont::make_ArrayHandle(connectivity);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(t3, Connectivity);
+
+    NumShapes = cellTypes.size();
+    ConnectivityLength = connectivity.size();
+
+    // allocate and build reverse index
+    MapCellToConnectivityIndex.Allocate(NumShapes);
+    vtkm::Id counter = 0;
+    for (vtkm::Id i=0; i<NumShapes; ++i)
+    {
+      MapCellToConnectivityIndex.GetPortalControl().Set(i, counter);
+      counter += NumIndices.GetPortalControl().Get(i);
+    }
   }
 
   template<typename Device>
@@ -76,6 +128,9 @@ public:
   }
 
 
+private:
+  vtkm::Id ConnectivityLength;
+  vtkm::Id NumShapes;
   vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> Shapes;
   vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> NumIndices;
   vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> Connectivity;

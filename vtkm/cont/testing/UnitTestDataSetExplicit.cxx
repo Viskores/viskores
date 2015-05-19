@@ -21,85 +21,23 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 
 namespace {
 
 void TestDataSet_Explicit()
 {
-  vtkm::cont::DataSet ds;
+  vtkm::cont::testing::MakeTestDataSet tds;
+  vtkm::cont::DataSet *ds = tds.Make3DExplicitDataSet1();
 
-  ds.x_idx = 0;
-  ds.y_idx = 1;
-  ds.z_idx = 2;
-
-  const int nVerts = 5;
-  vtkm::Float32 xVals[nVerts] = {0, 1, 1, 2, 2};
-  vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1, 2};
-  vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0};
-  vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.2, 40.2, 50.3};
-
-
-  ds.AddFieldViaCopy(xVals, nVerts);
-  ds.AddFieldViaCopy(yVals, nVerts);
-  ds.AddFieldViaCopy(zVals, nVerts);
-
-  //Set node scalar
-  ds.AddFieldViaCopy(vars, nVerts);
-
-  //Set cell scalar
-  vtkm::Float32 cellvar[2] = {100.1, 100.2};
-  ds.AddFieldViaCopy(cellvar, 2);
-
-  //Add connectivity
-  vtkm::cont::ArrayHandle<vtkm::Id> tmp2;
-  std::vector<vtkm::Id> shapes;
-  shapes.push_back(vtkm::VTKM_TRIANGLE);
-  shapes.push_back(vtkm::VTKM_QUAD);
-
-  std::vector<vtkm::Id> numindices;
-  numindices.push_back(3);
-  numindices.push_back(4);
-
-  std::vector<vtkm::Id> conn;
-  // First Cell: Triangle
-  conn.push_back(0);
-  conn.push_back(1);
-  conn.push_back(2);
-  // Second Cell: Quad
-  conn.push_back(2);
-  conn.push_back(1);
-  conn.push_back(3);
-  conn.push_back(4);
-
-  std::vector<vtkm::Id> map_cell_to_index;
-  map_cell_to_index.push_back(0);
-  map_cell_to_index.push_back(3);
-
-  vtkm::cont::ExplicitConnectivity ec;
-  ec.Shapes = vtkm::cont::make_ArrayHandle(shapes);
-  ec.NumIndices = vtkm::cont::make_ArrayHandle(numindices);
-  ec.Connectivity = vtkm::cont::make_ArrayHandle(conn);
-  ec.MapCellToConnectivityIndex = vtkm::cont::make_ArrayHandle(map_cell_to_index);
-
-  //todo this need to be a reference/shared_ptr style class
-  vtkm::cont::CellSetExplicit *cs = new vtkm::cont::CellSetExplicit("cells",2);
-  cs->nodesOfCellsConnectivity = ec;
-  ds.AddCellSet(cs);
-
-  //Run a worklet to populate a cell centered field.
-  //Here, we're filling it with test values.
-  vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
-  ds.AddFieldViaCopy(outcellVals, 2);
-
-
-  VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfCellSets(), 1),
+  VTKM_TEST_ASSERT(ds->GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");
 
-  VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfFields(), 6),
+  VTKM_TEST_ASSERT(ds->GetNumberOfFields() == 6,
                        "Incorrect number of fields");
 
   //cleanup memory
-  delete cs;
+  delete ds;
 }
 
 }
