@@ -208,7 +208,7 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   vtkm::cont::CellSetExplicit *cs = new vtkm::cont::CellSetExplicit("cells",2);
   vtkm::cont::ExplicitConnectivity &ec = cs->nodesOfCellsConnectivity;
 
-  ec.PrepareToAddCells(2, 4);
+  ec.PrepareToAddCells(2, 7);
   ec.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
   ec.AddCell(vtkm::VTKM_QUAD, 4, make_Vec<vtkm::Id>(2,1,3,4));
   ec.CompleteAddingCells();

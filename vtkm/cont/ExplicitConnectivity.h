@@ -63,11 +63,12 @@ public:
       ids[i] = Connectivity.GetPortalControl().Get(start+i);
   }
 
-  void PrepareToAddCells(vtkm::Id numShapes, vtkm::Id maxIdsPerShape)
+  /// First method to add cells -- one at a time.
+  void PrepareToAddCells(vtkm::Id numShapes, vtkm::Id connectivityMaxLen)
   {
     Shapes.Allocate(numShapes);
     NumIndices.Allocate(numShapes);
-    Connectivity.Allocate(numShapes * maxIdsPerShape);
+    Connectivity.Allocate(connectivityMaxLen);
     MapCellToConnectivityIndex.Allocate(numShapes);
     NumShapes = 0;
     ConnectivityLength = 0;
@@ -92,6 +93,7 @@ public:
     Connectivity.Shrink(ConnectivityLength);
   }
 
+  /// Second method to add cells -- all at once.
   void FillViaCopy(const std::vector<vtkm::Id> &cellTypes,
                    const std::vector<vtkm::Id> &numIndices,
                    const std::vector<vtkm::Id> &connectivity)
