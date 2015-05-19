@@ -105,6 +105,16 @@ struct SortGreater
     return valid;
   }
 };
+
+struct MaxValue
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT T operator()(const T& a,const T& b) const
+  {
+    return (a > b) ? a : b;
+  }
+};
+
 }
 
 
@@ -1051,11 +1061,61 @@ private:
     VTKM_TEST_ASSERT(value == OFFSET, "Got bad unique value");
   }
 
+  static VTKM_CONT_EXPORT void TestReduce()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Reduce" << std::endl;
+
+    //construct the index array
+    IdArrayHandle array;
+    Algorithm::Schedule(
+      ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
+                       DeviceAdapterTag())),
+      ARRAY_SIZE);
+
+    //the output of reduce and scan inclusive should be the same
+    vtkm::Id reduce_sum = Algorithm::Reduce(array, vtkm::Id(0));
+    vtkm::Id reduce_sum_with_intial_value = Algorithm::Reduce(array,
+                                                          vtkm::Id(ARRAY_SIZE));
+    vtkm::Id inclusive_sum = Algorithm::ScanInclusive(array, array);
+
+    VTKM_TEST_ASSERT(reduce_sum == OFFSET * ARRAY_SIZE,
+                     "Got bad sum from Reduce");
+    VTKM_TEST_ASSERT(reduce_sum_with_intial_value == reduce_sum + ARRAY_SIZE,
+                     "Got bad sum from Reduce with initial value");
+
+    VTKM_TEST_ASSERT(reduce_sum == inclusive_sum,
+                     "Got different sums from Reduce and ScanInclusive");
+  }
+
+  static VTKM_CONT_EXPORT void TestReduceWithComparisonObject()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Reduce with comparison object " << std::endl;
+
+    //construct the index array. Assign an abnormally large value
+    //to the middle of the array, that should be what we see as our sum.
+    vtkm::Id testData[ARRAY_SIZE];
+    const vtkm::Id maxValue = ARRAY_SIZE*2;
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      testData[i]= i;
+    }
+    testData[ARRAY_SIZE/2] = maxValue;
+
+    IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
+    vtkm::Id largestValue = Algorithm::Reduce(input,
+                                              vtkm::Id(),
+                                              comparison::MaxValue());
+
+    VTKM_TEST_ASSERT(largestValue == maxValue,
+                    "Got bad value from Reduce with comparison object");
+  }
+
   static VTKM_CONT_EXPORT void TestScanInclusive()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Inclusive Scan" << std::endl;
-
     //construct the index array
     IdArrayHandle array;
     Algorithm::Schedule(
@@ -1081,6 +1141,54 @@ private:
       VTKM_TEST_ASSERT(partialSum == triangleNumber * OFFSET,
                        "Incorrect partial sum");
     }
+  }
+
+  static VTKM_CONT_EXPORT void TestScanInclusiveWithComparisonObject()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Inclusive Scan with comparison object " << std::endl;
+
+    //construct the index array
+    IdArrayHandle array;
+    Algorithm::Schedule(
+      ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
+                       DeviceAdapterTag())),
+      ARRAY_SIZE);
+
+    Algorithm::Schedule(
+      AddArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
+                     DeviceAdapterTag())),
+      ARRAY_SIZE);
+    //we know have an array whose sum is equal to OFFSET * ARRAY_SIZE,
+    //let's validate that
+    IdArrayHandle result;
+    vtkm::Id sum = Algorithm::ScanInclusive(array,
+                                            result,
+                                            comparison::MaxValue());
+    VTKM_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE-1),
+                     "Got bad sum from Inclusive Scan with comparison object");
+
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      const vtkm::Id input_value = array.GetPortalConstControl().Get(i);
+      const vtkm::Id result_value = result.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(input_value == result_value, "Incorrect partial sum");
+    }
+
+    //now try it inline
+    sum = Algorithm::ScanInclusive(array,
+                                   array,
+                                   comparison::MaxValue());
+    VTKM_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE-1),
+                     "Got bad sum from Inclusive Scan with comparison object");
+
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      const vtkm::Id input_value = array.GetPortalConstControl().Get(i);
+      const vtkm::Id result_value = result.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(input_value == result_value, "Incorrect partial sum");
+    }
+
   }
 
   static VTKM_CONT_EXPORT void TestScanExclusive()
@@ -1338,14 +1446,25 @@ private:
 
       TestAlgorithmSchedule();
       TestErrorExecution();
+
+      TestReduce();
+      TestReduceWithComparisonObject();
+
       TestScanInclusive();
+      TestScanInclusiveWithComparisonObject();
+
       TestScanExclusive();
+
       TestSort();
       TestSortWithComparisonObject();
       TestSortByKey();
+
       TestLowerBoundsWithComparisonObject();
+
       TestUpperBoundsWithComparisonObject();
+
       TestUniqueWithComparisonObject();
+
       TestOrderedUniqueValues(); //tests Copy, LowerBounds, Sort, Unique
       // TestDispatcher();
       TestStreamCompactWithStencil();

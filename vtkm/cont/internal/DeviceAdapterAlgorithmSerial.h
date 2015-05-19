@@ -38,6 +38,61 @@
 namespace vtkm {
 namespace cont {
 
+namespace internal
+{
+
+template<typename ResultType, typename Function>
+  struct WrappedBinaryOperator
+{
+  Function m_f;
+
+ VTKM_CONT_EXPORT
+  WrappedBinaryOperator(const Function &f)
+    : m_f(f)
+  {}
+
+  template<typename Argument1, typename Argument2>
+   VTKM_CONT_EXPORT ResultType operator()(const Argument1 &x, const Argument2 &y) const
+  {
+    return m_f(x, y);
+  }
+
+  template<typename Argument1, typename Argument2>
+   VTKM_CONT_EXPORT ResultType operator()(
+    const detail::IteratorFromArrayPortalValue<Argument1> &x,
+    const detail::IteratorFromArrayPortalValue<Argument2> &y) const
+  {
+    typedef typename detail::IteratorFromArrayPortalValue<Argument1>::ValueType
+                            ValueTypeX;
+    typedef typename detail::IteratorFromArrayPortalValue<Argument2>::ValueType
+                            ValueTypeY;
+    return m_f( (ValueTypeX)x, (ValueTypeY)y );
+  }
+
+  template<typename Argument1, typename Argument2>
+   VTKM_CONT_EXPORT ResultType operator()(
+    const Argument1 &x,
+    const detail::IteratorFromArrayPortalValue<Argument2> &y) const
+  {
+    typedef typename detail::IteratorFromArrayPortalValue<Argument2>::ValueType
+                            ValueTypeY;
+    return m_f( x, (ValueTypeY)y );
+  }
+
+  template<typename Argument1, typename Argument2>
+   VTKM_CONT_EXPORT ResultType operator()(
+    const detail::IteratorFromArrayPortalValue<Argument1> &x,
+    const Argument2 &y) const
+  {
+    typedef typename detail::IteratorFromArrayPortalValue<Argument1>::ValueType
+                            ValueTypeX;
+    return m_f( (ValueTypeX)x, y );
+  }
+
+};
+
+}
+
 template<>
 struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial> :
     vtkm::cont::internal::DeviceAdapterAlgorithmGeneral<
@@ -63,11 +118,46 @@ public:
     PortalIn inputPortal = input.PrepareForInput(Device());
     PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
-    if (numberOfValues <= 0) { return 0; }
+    if (numberOfValues <= 0) { return T(0); }
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorBegin(outputPortal));
+
+    // Return the value at the last index in the array, which is the full sum.
+    return outputPortal.Get(numberOfValues - 1);
+  }
+
+  template<typename T, class CIn, class COut, class BinaryOperation>
+  VTKM_CONT_EXPORT static T ScanInclusive(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      BinaryOperation binaryOp)
+  {
+    typedef typename vtkm::cont::ArrayHandle<T,COut>
+        ::template ExecutionTypes<Device>::Portal PortalOut;
+    typedef typename vtkm::cont::ArrayHandle<T,CIn>
+        ::template ExecutionTypes<Device>::PortalConst PortalIn;
+
+    //We need to wrap the operator in a WrappedBinaryOperator struct
+    //which can detect and handle calling the binary operator with complex
+    //value types such as IteratorFromArrayPortalValue which happen
+    //when passed an input array that is implicit. This occurs when
+    //invoking reduce which calls ScanInclusive
+    internal::WrappedBinaryOperator<T,BinaryOperation> wrappedBinaryOp(
+                                                                     binaryOp);
+
+    vtkm::Id numberOfValues = input.GetNumberOfValues();
+
+    PortalIn inputPortal = input.PrepareForInput(Device());
+    PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
+
+    if (numberOfValues <= 0) { return T(0); }
+
+    std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
+                     vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
+                     vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
+                     wrappedBinaryOp);
 
     // Return the value at the last index in the array, which is the full sum.
     return outputPortal.Get(numberOfValues - 1);

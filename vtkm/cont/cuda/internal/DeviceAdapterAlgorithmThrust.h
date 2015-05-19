@@ -290,6 +290,28 @@ private:
                           IteratorBegin(values_output));
   }
 
+  template<class InputPortal>
+  VTKM_CONT_EXPORT static
+  typename InputPortal::ValueType ReducePortal(const InputPortal &input,
+                            typename InputPortal::ValueType initialValue)
+  {
+    return ::thrust::reduce(IteratorBegin(input),
+                            IteratorEnd(input),
+                            initialValue);
+  }
+
+  template<class InputPortal, class BinaryOperation>
+  VTKM_CONT_EXPORT static
+  typename InputPortal::ValueType ReducePortal(const InputPortal &input,
+                            typename InputPortal::ValueType initialValue,
+                            BinaryOperation binaryOP)
+  {
+    return ::thrust::reduce(IteratorBegin(input),
+                            IteratorEnd(input),
+                            initialValue,
+                            binaryOP);
+  }
+
   template<class InputPortal, class OutputPortal>
   VTKM_CONT_EXPORT static
   typename InputPortal::ValueType ScanExclusivePortal(const InputPortal &input,
@@ -315,6 +337,21 @@ private:
     ::thrust::inclusive_scan(IteratorBegin(input),
                              IteratorEnd(input),
                              IteratorBegin(output));
+
+    //return the value at the last index in the array, as that is the sum
+    return *(IteratorEnd(output) - 1);
+  }
+
+  template<class InputPortal, class OutputPortal, class BinaryOperation>
+  VTKM_CONT_EXPORT static
+  typename InputPortal::ValueType ScanInclusivePortal(const InputPortal &input,
+                                                      const OutputPortal &output,
+                                                      BinaryOperation binaryOp)
+  {
+    ::thrust::inclusive_scan(IteratorBegin(input),
+                             IteratorEnd(input),
+                             IteratorBegin(output),
+                             binaryOp);
 
     //return the value at the last index in the array, as that is the sum
     return *(IteratorEnd(output) - 1);
@@ -485,7 +522,7 @@ public:
       const vtkm::cont::ArrayHandle<T,SIn> &input,
       vtkm::cont::ArrayHandle<T,SOut> &output)
   {
-    vtkm::Id numberOfValues = input.GetNumberOfValues();
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
     CopyPortal(input.PrepareForInput(DeviceAdapterTag()),
                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
@@ -525,12 +562,42 @@ public:
                       values_output.PrepareForInPlace(DeviceAdapterTag()));
   }
 
+ template<typename T, class SIn>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,SIn> &input,
+      T initialValue)
+  {
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
+    if (numberOfValues <= 0)
+      {
+      return initialValue;
+      }
+    return ReducePortal(input.PrepareForInput( DeviceAdapterTag() ),
+                        initialValue);
+  }
+
+ template<typename T, class SIn, class BinaryOperation>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,SIn> &input,
+      T initialValue,
+      BinaryOperation binaryOp)
+  {
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
+    if (numberOfValues <= 0)
+      {
+      return initialValue;
+      }
+    return ReducePortal(input.PrepareForInput( DeviceAdapterTag() ),
+                        initialValue,
+                        binaryOp);
+  }
+
   template<typename T, class SIn, class SOut>
   VTKM_CONT_EXPORT static T ScanExclusive(
       const vtkm::cont::ArrayHandle<T,SIn> &input,
       vtkm::cont::ArrayHandle<T,SOut>& output)
   {
-    vtkm::Id numberOfValues = input.GetNumberOfValues();
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
       {
       output.PrepareForOutput(0, DeviceAdapterTag());
@@ -540,12 +607,13 @@ public:
     return ScanExclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
+
   template<typename T, class SIn, class SOut>
   VTKM_CONT_EXPORT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,SIn> &input,
       vtkm::cont::ArrayHandle<T,SOut>& output)
   {
-    vtkm::Id numberOfValues = input.GetNumberOfValues();
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
       {
       output.PrepareForOutput(0, DeviceAdapterTag());
@@ -554,6 +622,24 @@ public:
 
     return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
+  }
+
+  template<typename T, class SIn, class SOut, class BinaryOperation>
+  VTKM_CONT_EXPORT static T ScanInclusive(
+      const vtkm::cont::ArrayHandle<T,SIn> &input,
+      vtkm::cont::ArrayHandle<T,SOut>& output,
+      BinaryOperation binaryOp)
+  {
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
+    if (numberOfValues <= 0)
+      {
+      output.PrepareForOutput(0, DeviceAdapterTag());
+      return 0;
+      }
+
+    return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
+                               output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+                               binaryOp);
   }
 
 // Because of some funny code conversions in nvcc, kernels for devices have to

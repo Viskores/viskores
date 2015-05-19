@@ -22,8 +22,9 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/exec/FunctorBase.h>
@@ -317,6 +318,117 @@ public:
   }
 
   //--------------------------------------------------------------------------
+  // Reduce
+private:
+  template<int ReduceWidth, typename T, typename ArrayType, typename BinaryOperation >
+  struct ReduceKernel : vtkm::exec::FunctorBase
+  {
+    typedef typename ArrayType::template ExecutionTypes<
+                            DeviceAdapterTag> ExecutionTypes;
+    typedef typename ExecutionTypes::PortalConst PortalConst;
+
+    PortalConst Portal;
+    BinaryOperation BinaryOperator;
+    vtkm::Id ArrayLength;
+
+    VTKM_CONT_EXPORT
+    ReduceKernel()
+    : Portal(),
+      BinaryOperator(),
+      ArrayLength(0)
+    {
+    }
+
+    VTKM_CONT_EXPORT
+    ReduceKernel(const ArrayType &array, BinaryOperation op)
+      : Portal(array.PrepareForInput( DeviceAdapterTag() ) ),
+        BinaryOperator(op),
+        ArrayLength( array.GetNumberOfValues() )
+    {  }
+
+    VTKM_EXEC_EXPORT
+    T operator()(vtkm::Id index) const
+    {
+      const vtkm::Id offset = index * ReduceWidth;
+
+      //at least the first value access to the portal will be valid
+      //only the rest could be invalid
+      T partialSum = this->Portal.Get( offset );
+
+      if( offset + ReduceWidth >= this->ArrayLength )
+        {
+        vtkm::Id currentIndex = offset + 1;
+        while( currentIndex < this->ArrayLength)
+          {
+          partialSum = BinaryOperator(partialSum, this->Portal.Get(currentIndex));
+          ++currentIndex;
+          }
+        }
+      else
+        {
+        //optimize the usecase where all values are valid and we don't
+        //need to check that we might go out of bounds
+        for(int i=1; i < ReduceWidth; ++i)
+          {
+          partialSum = BinaryOperator(partialSum,
+                                      this->Portal.Get( offset + i )
+                                      );
+          }
+        }
+      return partialSum;
+    }
+  };
+public:
+ template<typename T, class CIn>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
+  {
+    return DerivedAlgorithm::Reduce(input, initialValue, vtkm::internal::Add());
+  }
+
+ template<typename T, class CIn, class BinaryOperator>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      T initialValue,
+      BinaryOperator binaryOp)
+  {
+    //Crazy Idea:
+    //We create a implicit array handle that wraps the input
+    //array handle. The implicit functor is passed the input array handle, and
+    //the number of elements it needs to sum. This way the implicit handle
+    //acts as the first level reduction. Say for example reducing 16 values
+    //at a time.
+    //
+    //Now that we have an implicit array that is 1/16 the length of full array
+    //we can use scan inclusive to compute the final sum
+    typedef ReduceKernel<
+            16,
+            T,
+            vtkm::cont::ArrayHandle<T,CIn>,
+            BinaryOperator
+            > ReduceKernelType;
+
+    typedef vtkm::cont::ArrayHandleImplicit<
+                                            T,
+                                            ReduceKernelType > ReduceHandleType;
+    typedef vtkm::cont::ArrayHandle<
+                                    T,
+                                    vtkm::cont::StorageTagBasic> TempArrayType;
+
+    ReduceKernelType kernel(input, binaryOp);
+    vtkm::Id length = (input.GetNumberOfValues() / 16);
+    length += (input.GetNumberOfValues() % 16 == 0) ? 0 : 1;
+    ReduceHandleType reduced = vtkm::cont::make_ArrayHandleImplicit<T>(kernel,
+                                                                       length);
+
+    TempArrayType inclusiveScanStorage;
+    T scanResult = DerivedAlgorithm::ScanInclusive(reduced,
+                                                   inclusiveScanStorage,
+                                                   binaryOp);
+    return binaryOp(initialValue, scanResult);
+  }
+
+  //--------------------------------------------------------------------------
   // Scan Exclusive
 private:
   template<typename PortalType>
@@ -386,17 +498,20 @@ public:
   //--------------------------------------------------------------------------
   // Scan Inclusive
 private:
-  template<typename PortalType>
+  template<typename PortalType, typename BinaryOperation>
   struct ScanKernel : vtkm::exec::FunctorBase
   {
     PortalType Portal;
+    BinaryOperation BinaryOperator;
     vtkm::Id Stride;
     vtkm::Id Offset;
     vtkm::Id Distance;
 
     VTKM_CONT_EXPORT
-    ScanKernel(const PortalType &portal, vtkm::Id stride, vtkm::Id offset)
+    ScanKernel(const PortalType &portal, BinaryOperation binaryOp,
+               vtkm::Id stride, vtkm::Id offset)
       : Portal(portal),
+        BinaryOperator(binaryOp),
         Stride(stride),
         Offset(offset),
         Distance(stride/2)
@@ -414,7 +529,7 @@ private:
       {
         ValueType leftValue = this->Portal.Get(leftIndex);
         ValueType rightValue = this->Portal.Get(rightIndex);
-        this->Portal.Set(rightIndex, leftValue+rightValue);
+        this->Portal.Set(rightIndex, BinaryOperator(leftValue,rightValue) );
       }
     }
   };
@@ -425,16 +540,29 @@ public:
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
+    return DerivedAlgorithm::ScanInclusive(input,
+                                            output,
+                                            vtkm::internal::Add());
+  }
+
+  template<typename T, class CIn, class COut, class BinaryOperation>
+  VTKM_CONT_EXPORT static T ScanInclusive(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      BinaryOperation binaryOp)
+  {
     typedef typename
         vtkm::cont::ArrayHandle<T,COut>
             ::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
+
+    typedef ScanKernel<PortalType,BinaryOperation> ScanKernelType;
 
     DerivedAlgorithm::Copy(input, output);
 
     vtkm::Id numValues = output.GetNumberOfValues();
     if (numValues < 1)
     {
-      return 0;
+      return T(0);
     }
 
     PortalType portal = output.PrepareForInPlace(DeviceAdapterTag());
@@ -442,14 +570,14 @@ public:
     vtkm::Id stride;
     for (stride = 2; stride-1 < numValues; stride *= 2)
     {
-      ScanKernel<PortalType> kernel(portal, stride, stride/2 - 1);
+      ScanKernelType kernel(portal, binaryOp, stride, stride/2 - 1);
       DerivedAlgorithm::Schedule(kernel, numValues/stride);
     }
 
     // Do reverse operation on odd indices. Start at stride we were just at.
     for (stride /= 2; stride > 1; stride /= 2)
     {
-      ScanKernel<PortalType> kernel(portal, stride, stride - 1);
+      ScanKernelType kernel(portal, binaryOp, stride, stride - 1);
       DerivedAlgorithm::Schedule(kernel, numValues/stride);
     }
 
