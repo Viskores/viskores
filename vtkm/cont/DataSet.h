@@ -48,8 +48,9 @@ public:
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> array;
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::
       Copy(tmp, array);
-    Fields.resize(Fields.size()+1);
-    Fields[Fields.size()-1].SetData(array);
+
+    Field f("name", 1, Field::ASSOC_POINTS, array);
+    Fields.push_back(f);
   }
   vtkm::cont::Field &GetField(int index)
   {

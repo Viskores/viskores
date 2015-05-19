@@ -42,15 +42,10 @@ public:
         ASSOC_LOGICAL_DIM
     };
 
-  /// default constructor
-  Field()
-  {
-  }
-
   /// constructor for points / whole mesh
   template <typename T>
-  Field(int o, Association a, ArrayHandle<T> &d)
-    : order(o), association(a), data(d)
+  Field(std::string n, int o, Association a, ArrayHandle<T> &d)
+    : name(n), order(o), association(a), data(d)
   {
     VTKM_ASSERT_CONT(association == ASSOC_WHOLE_MESH ||
                      association == ASSOC_POINTS);
@@ -59,8 +54,8 @@ public:
 
   /// constructor for cell set associations
   template <typename T>
-  Field(int o, Association a, std::string n, ArrayHandle<T> &d)
-    : order(o), association(a), assoc_cellset_name(n), data(d)
+  Field(std::string n, int o, Association a, std::string csn, ArrayHandle<T> &d)
+    : name(n), order(o), association(a), assoc_cellset_name(csn), data(d)
   {
     VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
     SetData(d);
@@ -68,11 +63,16 @@ public:
 
   /// constructor for logical dimension associations
   template <typename T>
-  Field(int o, Association a, int l, ArrayHandle<T> &d)
-    : order(o), association(a), assoc_logical_dim(l), data(d)
+  Field(std::string n, int o, Association a, int l, ArrayHandle<T> &d)
+    : name(n), order(o), association(a), assoc_logical_dim(l), data(d)
   {
     VTKM_ASSERT_CONT(association == ASSOC_LOGICAL_DIM);
     SetData(d);
+  }
+
+  const std::string &GetName()
+  {
+    return name;
   }
 
   Association GetAssociation()
@@ -106,6 +106,14 @@ public:
     data = newdata;
   }
 
+  template <typename T>
+  void CopyData(T *ptr, int nvals)
+  {
+    vtkm::cont::ArrayHandle<T> tmp = vtkm::cont::make_ArrayHandle(ptr, nvals);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::
+      Copy(tmp, data);
+  }
+
   /*
   void CopyIntoData(vtkm::cont::ArrayHandle<vtkm::FloatDefault> &tmp)
   {
@@ -116,6 +124,8 @@ public:
   */
   
 private:
+  std::string  name;  ///< only populate if assoc is cells
+
   int          order; ///< 0=(piecewise) constant, 1=linear, 2=quadratic
   Association  association;
   std::string  assoc_cellset_name;  ///< only populate if assoc is cells
