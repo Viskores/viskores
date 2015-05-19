@@ -46,10 +46,10 @@ public:
 
   VTKM_EXEC_EXPORT
   vtkm::Float32 operator()(const vtkm::Float32 &cellval,
-                           const vtkm::Vec<vtkm::Float32,LEN_IDS> &nodevals,
+                           const vtkm::exec::TopologyData<vtkm::Float32,LEN_IDS> &nodevals,
                            const vtkm::Id &count,
                            const vtkm::Id &type,
-                           const vtkm::Vec<vtkm::Id,LEN_IDS> &nodeIDs) const
+                           const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> &nodeIDs) const
   {
   //simple functor that returns the max of CellValue and nodeValue
   vtkm::Float32 max_value = cellval;

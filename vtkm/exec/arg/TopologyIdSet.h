@@ -22,6 +22,7 @@
 
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
+#include <vtkm/exec/TopologyData.h>
 
 namespace vtkm {
 namespace exec {
@@ -57,7 +58,7 @@ struct Fetch<FetchTag,
   static const vtkm::IdComponent ITEM_TUPLE_LENGTH =
       ControlSignatureTag::ITEM_TUPLE_LENGTH;
 
-  typedef vtkm::Vec<vtkm::Id,ITEM_TUPLE_LENGTH> ValueType;
+  typedef vtkm::exec::TopologyData<vtkm::Id,ITEM_TUPLE_LENGTH> ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
@@ -83,7 +84,7 @@ struct Fetch<FetchTag,
         invocation.Parameters.template GetParameter<InputDomainIndex>();
 
     ValueType v;
-    topology.GetIndices(index,v);
+    topology.GetIndices(index,v.vec);
 
     return v;
   }

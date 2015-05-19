@@ -23,6 +23,7 @@
 
 #include <vtkm/cont/DataSet.h>
 
+#include <vtkm/exec/TopologyData.h>
 #include <vtkm/exec/arg/TopologyIdSet.h>
 #include <vtkm/exec/arg/TopologyIdCount.h>
 #include <vtkm/exec/arg/TopologyElementType.h>
@@ -52,10 +53,10 @@ public:
 
   VTKM_EXEC_EXPORT
   vtkm::Float32 operator()(const vtkm::Float32 &cellval,
-                           const vtkm::Vec<vtkm::Float32,LEN_IDS> &nodevals,
+                           const vtkm::exec::TopologyData<vtkm::Float32,LEN_IDS> &nodevals,
                            const vtkm::Id &count,
                            const vtkm::Id &type,
-                           const vtkm::Vec<vtkm::Id,LEN_IDS> &nodeIDs) const
+                           const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> &nodeIDs) const
   {
   //simple functor that returns the max of CellValue and nodeValue
   vtkm::Float32 max_value = cellval;
@@ -85,10 +86,10 @@ public:
   AvgNodeToCellValue() { };
 
   VTKM_EXEC_EXPORT
-  vtkm::Float32 operator()(const vtkm::Vec<vtkm::Float32,LEN_IDS> &nodevals,
+  vtkm::Float32 operator()(const vtkm::exec::TopologyData<vtkm::Float32,LEN_IDS> &nodevals,
                            const vtkm::Id &count,
                            const vtkm::Id &type,
-                           const vtkm::Vec<vtkm::Id,LEN_IDS> &nodeIDs) const
+                           const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> &nodeIDs) const
   {
       //simple functor that returns the average nodeValue.
       vtkm::Float32 avgVal = 0.0;
