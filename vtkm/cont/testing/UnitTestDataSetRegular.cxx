@@ -45,7 +45,6 @@ TwoDimRegularTest()
     vtkm::cont::testing::MakeTestDataSet tds;
 
     vtkm::cont::DataSet *ds = tds.Make2DRegularDataSet0();
-    ds->PrintSummary(std::cout);
 
     vtkm::cont::CellSetStructured<2> *cs;
     cs = dynamic_cast<vtkm::cont::CellSetStructured<2> *>(ds->GetCellSet(0));
@@ -112,7 +111,6 @@ ThreeDimRegularTest()
     vtkm::cont::testing::MakeTestDataSet tds;
 
     vtkm::cont::DataSet *ds = tds.Make3DRegularDataSet0();
-    ds->PrintSummary(std::cout);
 
     vtkm::cont::CellSetStructured<3> *cs;
     cs = dynamic_cast<vtkm::cont::CellSetStructured<3> *>(ds->GetCellSet(0));
