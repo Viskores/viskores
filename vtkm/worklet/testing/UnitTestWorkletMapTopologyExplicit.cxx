@@ -32,7 +32,7 @@
 
 namespace test {
 
-class CellValue : public vtkm::worklet::WorkletMapTopology
+class MaxNodeOrCellValue : public vtkm::worklet::WorkletMapTopology
 {
   static const int LEN_IDS = 6;
 public:
@@ -42,7 +42,7 @@ public:
   typedef _3 InputDomain;
 
   VTKM_CONT_EXPORT
-  CellValue() { };
+  MaxNodeOrCellValue() { };
 
   VTKM_EXEC_EXPORT
   vtkm::Float32 operator()(const vtkm::Float32 &cellval,
@@ -62,9 +62,47 @@ public:
 
 };
 
+class AvgNodeToCellValue : public vtkm::worklet::WorkletMapTopology
+{
+  static const int LEN_IDS = 98;
+public:
+  typedef void ControlSignature(FieldSrcIn<Scalar> inNodes,
+                                TopologyIn<LEN_IDS> topology,
+                                FieldDestOut<Scalar> outCells);
+  //Todo: we need a way to mark what control signature item each execution signature for topology comes from
+  typedef _3 ExecutionSignature(_1,
+                                vtkm::exec::arg::TopologyIdCount,
+                                vtkm::exec::arg::TopologyElementType,
+                                vtkm::exec::arg::TopologyIdSet);
+  typedef _2 InputDomain;
+
+  VTKM_CONT_EXPORT
+  AvgNodeToCellValue() { };
+
+  VTKM_EXEC_EXPORT
+  vtkm::Float32 operator()(const vtkm::exec::TopologyData<vtkm::Float32,LEN_IDS> &nodevals,
+                           const vtkm::Id &count,
+                           const vtkm::Id &type,
+                           const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> &nodeIDs) const
+  {
+      std::cout<<__LINE__<<std::endl;
+      //simple functor that returns the average nodeValue.
+      vtkm::Float32 avgVal = 0.0;
+
+      for (vtkm::Id i=0; i<count; ++i)
+          avgVal += nodevals[i];
+
+      avgVal /= count;
+      return avgVal;
+  }
+};
+
 }
 
 namespace {
+
+static void TestMaxNodeOrCell();
+static void TestAvgNodeToCell();
 
 void TestWorkletMapTopologyExplicit()
 {
@@ -73,6 +111,15 @@ void TestWorkletMapTopologyExplicit()
   std::cout << "Testing Topology Worklet ( Explicit ) on device adapter: "
             << DeviceAdapterTraits::GetId() << std::endl;
 
+    TestMaxNodeOrCell();
+    TestAvgNodeToCell();
+}
+
+
+static void
+TestMaxNodeOrCell()
+{
+  std::cout<<"Testing MaxNodeOfCell worklet"<<std::endl;
   vtkm::cont::testing::MakeTestDataSet tds;
   vtkm::cont::DataSet *ds = tds.Make3DExplicitDataSet1();
 
@@ -98,15 +145,69 @@ void TestWorkletMapTopologyExplicit()
   //derived implementation. The vtkm::cont::CellSet should have
   //a method that return the nodesOfCellsConnectivity / structure
   //for that derived type. ( talk to robert for how dax did this )
-  vtkm::worklet::DispatcherMapTopology< ::test::CellValue > dispatcher;
+  vtkm::worklet::DispatcherMapTopology< ::test::MaxNodeOrCellValue > dispatcher;
   dispatcher.Invoke(ds->GetField(4).GetData(),
                     ds->GetField(3).GetData(),
                     cse->GetNodeToCellConnectivity(),
                     ds->GetField(5).GetData());
 
+  //Make sure we got the right answer.
+  vtkm::cont::ArrayHandle<vtkm::Float32> res;
+  res = ds->GetField(5).GetData().CastToArrayHandle(vtkm::Float32(),
+						    VTKM_DEFAULT_STORAGE_TAG());
+  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1),
+		   "Wrong result for NodeToCellAverage worklet");
+  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 100.2),
+		   "Wrong result for NodeToCellAverage worklet");
 
   //cleanup memory
   delete cs;
+}
+
+static void
+TestAvgNodeToCell()
+{
+  std::cout<<"Testing AvgNodeToCell worklet"<<std::endl;
+  
+  vtkm::cont::testing::MakeTestDataSet tds;
+  vtkm::cont::DataSet *ds = tds.Make3DExplicitDataSet1();
+
+  //Run a worklet to populate a cell centered field.
+  //Here, we're filling it with test values.
+  vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
+  ds->AddField(vtkm::cont::Field("outcellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", outcellVals, 2));
+
+  VTKM_TEST_ASSERT(ds->GetNumberOfCellSets() == 1,
+                       "Incorrect number of cell sets");
+
+  VTKM_TEST_ASSERT(ds->GetNumberOfFields() == 6,
+                       "Incorrect number of fields");
+
+  vtkm::cont::CellSet *cs = ds->GetCellSet(0);
+  vtkm::cont::CellSetExplicit *cse = 
+               dynamic_cast<vtkm::cont::CellSetExplicit*>(cs);
+
+  VTKM_TEST_ASSERT(cse, "Expected an explicit cell set");
+
+  vtkm::worklet::DispatcherMapTopology< ::test::AvgNodeToCellValue > dispatcher;
+  dispatcher.Invoke(ds->GetField(4).GetData(),
+		    cse->GetNodeToCellConnectivity(),
+		    ds->GetField(5).GetData());
+  std::cout<<__LINE__<<std::endl;
+    
+  //make sure we got the right answer.
+  vtkm::cont::ArrayHandle<vtkm::Float32> res;
+  res = ds->GetField(5).GetData().CastToArrayHandle(vtkm::Float32(),
+						    VTKM_DEFAULT_STORAGE_TAG());
+  
+  std::cout<<__LINE__<<std::endl;
+  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 76.833),
+		   "Wrong result for NodeToCellAverage worklet");
+  std::cout<<__LINE__<<std::endl;
+  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 55.225),
+		   "Wrong result for NodeToCellAverage worklet");
+  std::cout<<__LINE__<<std::endl;
+  delete ds;
 }
 
 } // anonymous namespace
