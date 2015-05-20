@@ -34,7 +34,7 @@ class CellSet
 {
 public:
   CellSet(const std::string &n, int d)
-    : name(n), dimensionality(d), structure(NULL)
+    : name(n), dimensionality(d), logicalStructure(NULL)
   {
   }
 
@@ -63,10 +63,12 @@ public:
     return 0;
   }
 
-private:
+  virtual void PrintSummary(std::ostream&) = 0;
+
+protected:
     std::string name;
     int dimensionality;
-    vtkm::cont::LogicalStructure *structure;
+    vtkm::cont::LogicalStructure *logicalStructure;
 };
 
 }

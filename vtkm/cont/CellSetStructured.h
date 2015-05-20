@@ -45,6 +45,12 @@ public:
     return regConn;
   }
 
+  virtual void PrintSummary(std::ostream &out)
+  {
+      out<<"  StructuredCellSet: "<<name<<" dim= "<<dimensionality<<std::endl;
+      structure.PrintSummary(out);
+  }
+
 public:
   vtkm::RegularStructure<Dimension> structure;
 };

@@ -67,6 +67,15 @@ public:
       if (index < nodeDims[0]-1)
 	  ids[idx++] = index;
   }
+    
+  virtual void PrintSummary(std::ostream &out)
+  {
+      out<<"   RegularConnectivity<1> ";
+      out<<"cellDim["<<cellDims[0]<<"] ";
+      out<<"nodeDim["<<nodeDims[0]<<"] ";
+      out<<"\n";
+  }
+
   vtkm::Id cellDims[1];
   vtkm::Id nodeDims[1];
 };
@@ -121,6 +130,14 @@ public:
 	  ids[idx++] = CalculateCellIndex(i-1, j  );
       if (i < nodeDims[0]-1 && j < nodeDims[1]-1)
 	  ids[idx++] = CalculateCellIndex(i  , j  );
+  }
+
+  virtual void PrintSummary(std::ostream &out)
+  {
+      out<<"   RegularConnectivity<2> ";
+      out<<"cellDim["<<cellDims[0]<<" "<<cellDims[1]<<"] ";
+      out<<"nodeDim["<<nodeDims[0]<<" "<<nodeDims[1]<<"] ";
+      out<<"\n";
   }
     
   vtkm::Id cellDims[2];
@@ -215,6 +232,14 @@ public:
 
   vtkm::Id cellDims[3];
   vtkm::Id nodeDims[3];
+
+  virtual void PrintSummary(std::ostream &out)
+  {
+      out<<"   RegularConnectivity<3> ";
+      out<<"cellDim["<<cellDims[0]<<" "<<cellDims[1]<<" "<<cellDims[2]<<"] ";
+      out<<"nodeDim["<<nodeDims[0]<<" "<<nodeDims[1]<<" "<<nodeDims[2]<<"] ";
+      out<<"\n";
+  }
     
 private:
   VTKM_EXEC_CONT_EXPORT

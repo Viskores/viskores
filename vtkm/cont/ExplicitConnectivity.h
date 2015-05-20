@@ -129,6 +129,20 @@ public:
     return obj;
   }
 
+  virtual void PrintSummary(std::ostream &out)
+  {
+      out<<"    ExplicitConnectivity: #shapes= "<<NumShapes<<" #connectivity= "<<ConnectivityLength<<"\n";
+      out<<"     Shapes: ";
+      printSummary_ArrayHandle(Shapes, out);
+      out<<"\n";
+      out<<"     NumIndices: ";
+      printSummary_ArrayHandle(NumIndices, out);
+      out<<"\n";
+      out<<"     Connectivity: ";
+      printSummary_ArrayHandle(Connectivity, out);
+      out<<"\n";
+  }
+
 
 private:
   vtkm::Id ConnectivityLength;

@@ -62,6 +62,17 @@ class CoordinateSystem
         axes.push_back(CoordinateAxis(nx));
     }
 
+    void PrintSummary(std::ostream &out)
+    {
+	out<<"   {";
+	for (vtkm::Id i = 0; i < axes.size(); i++)
+	{
+	    out<<axes[i].FieldName<<"["<<axes[i].FieldComponent<<"]";
+	    if (i < axes.size()-1) out<<", ";
+	}
+	out<<"}\n";
+    }
+    
   private:
     std::vector<CoordinateAxis> axes;
 };

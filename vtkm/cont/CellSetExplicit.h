@@ -29,6 +29,12 @@ public:
     return nodesOfCellsConnectivity;
   }
 
+  virtual void PrintSummary(std::ostream &out)
+  {
+      out<<"   ExplicitCellSet: "<<name<<" dim= "<<dimensionality<<std::endl;
+      nodesOfCellsConnectivity.PrintSummary(out);
+  }
+
 public:
   ExplicitConnectivity nodesOfCellsConnectivity;
 };

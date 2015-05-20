@@ -178,6 +178,24 @@ public:
       Copy(tmp1, tmp2);
     data = tmp2;
   }
+
+  virtual void PrintSummary(std::ostream &out)
+  {
+      out<<"   "<<name;
+      out<<" assoc= ";
+      switch (GetAssociation())
+      {
+      case ASSOC_WHOLE_MESH: out<<"Mesh "; break;
+      case ASSOC_POINTS: out<<"Points "; break;
+      case ASSOC_CELL_SET: out<<"Cells "; break;
+      case ASSOC_LOGICAL_DIM: out<<"LogicalDim "; break;
+      }
+      vtkm::cont::ArrayHandle<vtkm::Float32> vals;
+      vals = data.CastToArrayHandle(vtkm::Float32(), VTKM_DEFAULT_STORAGE_TAG());
+      printSummary_ArrayHandle(vals, out);
+      //out<<" order= "<<order;
+      out<<"\n";
+  }
   
 private:
   std::string  name;  ///< name of field
