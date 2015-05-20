@@ -561,9 +561,9 @@ public:
 
     vtkm::Id numValues = output.GetNumberOfValues();
     if (numValues < 1)
-    {
-      return T(0);
-    }
+      {
+      return output.GetPortalConstControl().Get(0);
+      }
 
     PortalType portal = output.PrepareForInPlace(DeviceAdapterTag());
 
