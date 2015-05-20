@@ -30,6 +30,7 @@
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/ErrorControlBadValue.h>
 
 namespace vtkm {
 namespace cont {
@@ -50,13 +51,25 @@ public:
 
   vtkm::cont::Field &GetField(int index)
   {
+    VTKM_ASSERT_CONT(index >= 0 && index <= int(Fields.size()));
     return Fields[index];
+  }
+
+  vtkm::cont::Field &GetField(const std::string &n)
+  {
+    for (unsigned int i=0; i<Fields.size(); ++i)
+    {
+      if (Fields[i].GetName() == n)
+        return Fields[i];
+    }
+    throw vtkm::cont::ErrorControlBadValue("No field with requested name");
   }
 
   vtkm::Id x_idx, y_idx, z_idx;
 
   vtkm::cont::CellSet *GetCellSet(int index=0)
   {
+    VTKM_ASSERT_CONT(index >= 0 && index <= int(CellSets.size()));
     return CellSets[index];
   }
 

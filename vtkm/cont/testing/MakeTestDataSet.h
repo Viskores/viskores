@@ -61,7 +61,7 @@ MakeTestDataSet::Make2DRegularDataSet0()
     ds->AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
     
     //set node scalar.
-    ds->AddField(Field("v", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+    ds->AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
     //create scalar.
     vtkm::Float32 cellvar[2] = {100.1, 200.1};
@@ -97,7 +97,7 @@ MakeTestDataSet::Make3DRegularDataSet0()
     ds->AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
 
     //Set node scalar
-    ds->AddField(Field("v", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+    ds->AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
     //Set cell scalar
     vtkm::Float32 cellvar[4] = {100.1, 100.2, 100.3, 100.4};
@@ -133,7 +133,7 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   ds->AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
 
   //Set node scalar
-  ds->AddField(Field("v", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  ds->AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = {100.1, 100.2};
@@ -190,7 +190,7 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   ds->AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
 
   //Set node scalar
-  ds->AddField(Field("v", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  ds->AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = {100.1, 100.2};

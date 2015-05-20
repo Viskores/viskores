@@ -146,10 +146,10 @@ TestMaxNodeOrCell()
   //a method that return the nodesOfCellsConnectivity / structure
   //for that derived type. ( talk to robert for how dax did this )
   vtkm::worklet::DispatcherMapTopology< ::test::MaxNodeOrCellValue > dispatcher;
-  dispatcher.Invoke(ds->GetField(4).GetData(),
-                    ds->GetField(3).GetData(),
+  dispatcher.Invoke(ds->GetField("cellvar").GetData(),
+                    ds->GetField("nodevar").GetData(),
                     cse->GetNodeToCellConnectivity(),
-                    ds->GetField(5).GetData());
+                    ds->GetField("outcellvar").GetData());
 
   //Make sure we got the right answer.
   vtkm::cont::ArrayHandle<vtkm::Float32> res;
@@ -190,9 +190,9 @@ TestAvgNodeToCell()
   VTKM_TEST_ASSERT(cse, "Expected an explicit cell set");
 
   vtkm::worklet::DispatcherMapTopology< ::test::AvgNodeToCellValue > dispatcher;
-  dispatcher.Invoke(ds->GetField(4).GetData(),
+  dispatcher.Invoke(ds->GetField("nodevar").GetData(),
 		    cse->GetNodeToCellConnectivity(),
-		    ds->GetField(5).GetData());
+		    ds->GetField("outcellvar").GetData());
   std::cout<<__LINE__<<std::endl;
     
   //make sure we got the right answer.
