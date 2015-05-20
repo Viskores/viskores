@@ -85,7 +85,6 @@ public:
                            const vtkm::Id &type,
                            const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> &nodeIDs) const
   {
-      std::cout<<__LINE__<<std::endl;
       //simple functor that returns the average nodeValue.
       vtkm::Float32 avgVal = 0.0;
 
@@ -200,13 +199,10 @@ TestAvgNodeToCell()
   res = ds->GetField(5).GetData().CastToArrayHandle(vtkm::Float32(),
 						    VTKM_DEFAULT_STORAGE_TAG());
   
-  std::cout<<__LINE__<<std::endl;
   VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 76.833),
 		   "Wrong result for NodeToCellAverage worklet");
-  std::cout<<__LINE__<<std::endl;
   VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 55.225),
 		   "Wrong result for NodeToCellAverage worklet");
-  std::cout<<__LINE__<<std::endl;
   delete ds;
 }
 
