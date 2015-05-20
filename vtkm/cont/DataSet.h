@@ -30,6 +30,7 @@
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 
 namespace vtkm {
@@ -65,12 +66,15 @@ public:
     throw vtkm::cont::ErrorControlBadValue("No field with requested name");
   }
 
-  vtkm::Id x_idx, y_idx, z_idx;
-
   vtkm::cont::CellSet *GetCellSet(int index=0)
   {
     VTKM_ASSERT_CONT(index >= 0 && index <= int(CellSets.size()));
     return CellSets[index];
+  }
+
+  void AddCoordinateSystem(vtkm::cont::CoordinateSystem cs)
+  {
+    CoordSystems.push_back(cs);
   }
 
   void AddCellSet(vtkm::cont::CellSet *cs)
@@ -89,6 +93,7 @@ public:
   }
 
 private:
+  std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
   std::vector<vtkm::cont::Field> Fields;
   std::vector<vtkm::cont::CellSet*> CellSets;
 };

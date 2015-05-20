@@ -48,9 +48,6 @@ inline vtkm::cont::DataSet *
 MakeTestDataSet::Make2DRegularDataSet0()
 {
     vtkm::cont::DataSet *ds = new vtkm::cont::DataSet;
-    ds->x_idx = 0;
-    ds->y_idx = 1;
-    ds->z_idx = -1;
 
     const int nVerts = 6;
     vtkm::Float32 xVals[nVerts] = {0, 1, 2, 0, 1, 2};
@@ -59,6 +56,7 @@ MakeTestDataSet::Make2DRegularDataSet0()
 
     ds->AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
     ds->AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
+    ds->AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y"));
     
     //set node scalar.
     ds->AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
@@ -80,10 +78,6 @@ MakeTestDataSet::Make3DRegularDataSet0()
 {
     vtkm::cont::DataSet *ds = new vtkm::cont::DataSet;
 
-    ds->x_idx = 0;
-    ds->y_idx = 1;
-    ds->z_idx = 2;
-
     const int nVerts = 18;
     vtkm::Float32 xVals[nVerts] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
     vtkm::Float32 yVals[nVerts] = {0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1};
@@ -95,6 +89,7 @@ MakeTestDataSet::Make3DRegularDataSet0()
     ds->AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
     ds->AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
     ds->AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
+    ds->AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
     //Set node scalar
     ds->AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
@@ -118,10 +113,6 @@ MakeTestDataSet::Make3DExplicitDataSet0()
 {
   vtkm::cont::DataSet *ds = new vtkm::cont::DataSet;
 
-  ds->x_idx = 0;
-  ds->y_idx = 1;
-  ds->z_idx = 2;
-
   const int nVerts = 5;
   vtkm::Float32 xVals[nVerts] = {0, 1, 1, 2, 2};
   vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1, 2};
@@ -131,6 +122,7 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   ds->AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
   ds->AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
   ds->AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
+  ds->AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
   //Set node scalar
   ds->AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
@@ -175,10 +167,6 @@ MakeTestDataSet::Make3DExplicitDataSet1()
 {
   vtkm::cont::DataSet *ds = new vtkm::cont::DataSet;
 
-  ds->x_idx = 0;
-  ds->y_idx = 1;
-  ds->z_idx = 2;
-
   const int nVerts = 5;
   vtkm::Float32 xVals[nVerts] = {0, 1, 1, 2, 2};
   vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1, 2};
@@ -188,6 +176,7 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   ds->AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
   ds->AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
   ds->AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
+  ds->AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
   //Set node scalar
   ds->AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
