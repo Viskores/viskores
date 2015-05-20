@@ -776,24 +776,29 @@ public:
   //--------------------------------------------------------------------------
   // Stream Compact
 private:
-  template<class StencilPortalType, class OutputPortalType>
+  template<class StencilPortalType,
+           class OutputPortalType,
+           class PredicateOperator>
   struct StencilToIndexFlagKernel
   {
     typedef typename StencilPortalType::ValueType StencilValueType;
     StencilPortalType StencilPortal;
     OutputPortalType OutputPortal;
+    PredicateOperator Predicate;
 
     VTKM_CONT_EXPORT
     StencilToIndexFlagKernel(StencilPortalType stencilPortal,
-                             OutputPortalType outputPortal)
-      : StencilPortal(stencilPortal), OutputPortal(outputPortal) {  }
+                             OutputPortalType outputPortal,
+                             PredicateOperator predicate)
+      : StencilPortal(stencilPortal),
+        OutputPortal(outputPortal),
+        Predicate(predicate) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
     {
       StencilValueType value = this->StencilPortal.Get(index);
-      bool flag = ::vtkm::not_default_constructor<StencilValueType>()(value);
-      this->OutputPortal.Set(index, flag ? 1 : 0);
+      this->OutputPortal.Set(index, this->Predicate(value) ? 1 : 0);
     }
 
     VTKM_CONT_EXPORT
@@ -804,38 +809,42 @@ private:
   template<class InputPortalType,
            class StencilPortalType,
            class IndexPortalType,
-           class OutputPortalType>
+           class OutputPortalType,
+           class PredicateOperator>
   struct CopyIfKernel
   {
     InputPortalType InputPortal;
     StencilPortalType StencilPortal;
     IndexPortalType IndexPortal;
     OutputPortalType OutputPortal;
+    PredicateOperator Predicate;
 
     VTKM_CONT_EXPORT
     CopyIfKernel(InputPortalType inputPortal,
                  StencilPortalType stencilPortal,
                  IndexPortalType indexPortal,
-                 OutputPortalType outputPortal)
+                 OutputPortalType outputPortal,
+                 PredicateOperator predicate)
       : InputPortal(inputPortal),
         StencilPortal(stencilPortal),
         IndexPortal(indexPortal),
-        OutputPortal(outputPortal) {  }
+        OutputPortal(outputPortal),
+        Predicate(predicate) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
     {
       typedef typename StencilPortalType::ValueType StencilValueType;
       StencilValueType stencilValue = this->StencilPortal.Get(index);
-      if (::vtkm::not_default_constructor<StencilValueType>()(stencilValue))
-      {
+      if (Predicate(stencilValue))
+        {
         vtkm::Id outputIndex = this->IndexPortal.Get(index);
 
         typedef typename OutputPortalType::ValueType OutputValueType;
         OutputValueType value = this->InputPortal.Get(index);
 
         this->OutputPortal.Set(outputIndex, value);
-      }
+        }
     }
 
     VTKM_CONT_EXPORT
@@ -845,11 +854,13 @@ private:
 
 public:
 
-  template<typename T, typename U, class CIn, class CStencil, class COut>
+  template<typename T, typename U, class CIn, class CStencil,
+           class COut, class PredicateOperator>
   VTKM_CONT_EXPORT static void StreamCompact(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
-      vtkm::cont::ArrayHandle<T,COut>& output)
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      PredicateOperator predicate)
   {
     VTKM_ASSERT_CONT(input.GetNumberOfValues() == stencil.GetNumberOfValues());
     vtkm::Id arrayLength = stencil.GetNumberOfValues();
@@ -869,9 +880,11 @@ public:
     IndexPortalType indexPortal =
         indices.PrepareForOutput(arrayLength, DeviceAdapterTag());
 
-    StencilToIndexFlagKernel<
-        StencilPortalType, IndexPortalType> indexKernel(stencilPortal,
-                                                        indexPortal);
+    StencilToIndexFlagKernel< StencilPortalType,
+                              IndexPortalType,
+                              PredicateOperator> indexKernel(stencilPortal,
+                                                         indexPortal,
+                                                         predicate);
 
     DerivedAlgorithm::Schedule(indexKernel, arrayLength);
 
@@ -891,11 +904,23 @@ public:
         InputPortalType,
         StencilPortalType,
         IndexPortalType,
-        OutputPortalType>copyKernel(inputPortal,
+        OutputPortalType,
+        PredicateOperator> copyKernel(inputPortal,
                                     stencilPortal,
                                     indexPortal,
-                                    outputPortal);
+                                    outputPortal,
+                                    predicate);
     DerivedAlgorithm::Schedule(copyKernel, arrayLength);
+  }
+
+template<typename T, typename U, class CIn, class CStencil, class COut>
+  VTKM_CONT_EXPORT static void StreamCompact(
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
+      vtkm::cont::ArrayHandle<T,COut>& output)
+  {
+    ::vtkm::not_default_constructor<U> predicate;
+    DerivedAlgorithm::StreamCompact(input, stencil, output, predicate);
   }
 
   template<typename T, class CStencil, class COut>

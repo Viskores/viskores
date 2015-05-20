@@ -394,61 +394,45 @@ private:
                           comp);
   }
 
-
-
-  template<class StencilPortal>
-  VTKM_CONT_EXPORT static vtkm::Id CountIfPortal(const StencilPortal &stencil)
-  {
-    typedef typename StencilPortal::ValueType ValueType;
-    return ::thrust::count_if(IteratorBegin(stencil),
-                              IteratorEnd(stencil),
-                              ::vtkm::not_default_constructor<ValueType>());
-  }
-
   template<class ValueIterator,
            class StencilPortal,
-           class OutputPortal>
-  VTKM_CONT_EXPORT static void CopyIfPortal(ValueIterator valuesBegin,
-                                           ValueIterator valuesEnd,
-                                           const StencilPortal &stencil,
-                                           const OutputPortal &output)
-  {
-    typedef typename StencilPortal::ValueType ValueType;
-    ::thrust::copy_if(valuesBegin,
-                      valuesEnd,
-                      IteratorBegin(stencil),
-                      IteratorBegin(output),
-                      ::vtkm::not_default_constructor<ValueType>());
-  }
-
-  template<class ValueIterator,
-           class StencilArrayHandle,
-           class OutputArrayHandle>
-  VTKM_CONT_EXPORT static void RemoveIf(ValueIterator valuesBegin,
-                                       ValueIterator valuesEnd,
-                                       const StencilArrayHandle& stencil,
-                                       OutputArrayHandle& output)
-  {
-    vtkm::Id numLeft = CountIfPortal(stencil.PrepareForInput(DeviceAdapterTag()));
-
-    CopyIfPortal(valuesBegin,
-                 valuesEnd,
-                 stencil.PrepareForInput(DeviceAdapterTag()),
-                 output.PrepareForOutput(numLeft, DeviceAdapterTag()));
-  }
-
-  template<class InputPortal,
-           class StencilArrayHandle,
-           class OutputArrayHandle>
+           class OutputPortal,
+           class PredicateOperator>
   VTKM_CONT_EXPORT static
-  void StreamCompactPortal(const InputPortal& inputPortal,
-                           const StencilArrayHandle &stencil,
-                           OutputArrayHandle& output)
+  vtkm::Id CopyIfPortal(ValueIterator valuesBegin,
+                        ValueIterator valuesEnd,
+                        StencilPortal stencil,
+                        OutputPortal output,
+                        PredicateOperator predicate)
   {
-    RemoveIf(IteratorBegin(inputPortal),
-             IteratorEnd(inputPortal),
-             stencil,
-             output);
+    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
+                                                            IteratorType;
+
+    IteratorType outputBegin = IteratorBegin(output);
+    IteratorType newLast = ::thrust::copy_if(valuesBegin,
+                                             valuesEnd,
+                                             IteratorBegin(stencil),
+                                             outputBegin,
+                                             predicate);
+
+    return ::thrust::distance(outputBegin, newLast);
+  }
+
+    template<class ValuePortal,
+             class StencilPortal,
+             class OutputPortal,
+             class PredicateOperator>
+  VTKM_CONT_EXPORT static
+  vtkm::Id CopyIfPortal(ValuePortal values,
+                        StencilPortal stencil,
+                        OutputPortal output,
+                        PredicateOperator predicate)
+  {
+    return CopyIfPortal(IteratorBegin(values),
+                        IteratorEnd(values),
+                        stencil,
+                        output,
+                        predicate);
   }
 
   template<class ValuesPortal>
@@ -804,12 +788,13 @@ public:
       const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
       vtkm::cont::ArrayHandle<vtkm::Id,SOut>& output)
   {
-    vtkm::Id stencilSize = stencil.GetNumberOfValues();
-
-    RemoveIf(::thrust::make_counting_iterator<vtkm::Id>(0),
-             ::thrust::make_counting_iterator<vtkm::Id>(stencilSize),
-             stencil,
-             output);
+    vtkm::Id size = stencil.GetNumberOfValues();
+    vtkm::Id newSize = CopyIfPortal(::thrust::make_counting_iterator<vtkm::Id>(0),
+                                    ::thrust::make_counting_iterator<vtkm::Id>(size),
+                                    stencil.PrepareForInput(DeviceAdapterTag()),
+                                    output.PrepareForOutput(size, DeviceAdapterTag()),
+                                    ::vtkm::not_default_constructor<T>());
+    output.Shrink(newSize);
   }
 
   template<typename T,
@@ -822,7 +807,32 @@ public:
       const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
       vtkm::cont::ArrayHandle<U,SOut>& output)
   {
-    StreamCompactPortal(input.PrepareForInput(DeviceAdapterTag()), stencil, output);
+    vtkm::Id size = stencil.GetNumberOfValues();
+    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTag()),
+                                    stencil.PrepareForInput(DeviceAdapterTag()),
+                                    output.PrepareForOutput(size, DeviceAdapterTag()),
+                                    ::vtkm::not_default_constructor<T>()); //yes on the stencil
+    output.Shrink(newSize);
+  }
+
+  template<typename T,
+           typename U,
+           class SIn,
+           class SStencil,
+           class SOut,
+           class PredicateOperator>
+  VTKM_CONT_EXPORT static void StreamCompact(
+      const vtkm::cont::ArrayHandle<U,SIn>& input,
+      const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
+      vtkm::cont::ArrayHandle<U,SOut>& output,
+      PredicateOperator predicate)
+  {
+    vtkm::Id size = stencil.GetNumberOfValues();
+    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTag()),
+                                    stencil.PrepareForInput(DeviceAdapterTag()),
+                                    output.PrepareForOutput(size, DeviceAdapterTag()),
+                                    predicate);
+    output.Shrink(newSize);
   }
 
   template<typename T, class Storage>
