@@ -131,6 +131,25 @@ struct DeviceAdapterAlgorithm
       T initialValue,
       BinaryOperation binaryOp);
 
+  /// \brief Compute a accumulated sum operation on the input key value pairs
+  ///
+  /// Computes a segmented accumulated sum (or any user binary operation) on the
+  /// \c keys and \c values ArrayHandle(s). Each segmented accumulated sum is
+  /// run on consecutive equal keys with the binary operation applied to all
+  /// values inside that range. Once finished a single key and value is created
+  /// for each segment.
+  ///
+  template<typename T,
+           class CKeyIn,  class CValIn,
+           class CKeyOut, class CValOut,
+           class BinaryOperation >
+  VTKM_CONT_EXPORT static void ReduceByKey(
+      const vtkm::cont::ArrayHandle<T,CKeyIn> &keys,
+      const vtkm::cont::ArrayHandle<U,CValIn> &values,
+      vtkm::cont::ArrayHandle<T,CKeyOut>& keys_output,
+      vtkm::cont::ArrayHandle<T,CValOut>& values_output,
+      BinaryOperation binaryOp);
+
   /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
   ///
   /// Computes an inclusive prefix sum operation on the \c input ArrayHandle,
@@ -253,7 +272,7 @@ struct DeviceAdapterAlgorithm
   /// input to remove unwanted elements. The result of the stream compaction is
   /// placed in \c output. The \c input values are used as the stream
   /// compaction stencil while \c input indices are used as the values to place
-  /// into \c ouput. The size of \c output will be modified after this call as
+  /// into \c output. The size of \c output will be modified after this call as
   /// we can't know the number of elements that will be removed by the stream
   /// compaction algorithm.
   ///
@@ -266,10 +285,11 @@ struct DeviceAdapterAlgorithm
   ///
   /// Calls the parallel primitive function of stream compaction on the \c
   /// input to remove unwanted elements. The result of the stream compaction is
-  /// placed in \c output. The values in \c stencil are used as the stream
-  /// compaction stencil while \c input values are placed into \c ouput. The
-  /// size of \c output will be modified after this call as we can't know the
-  /// number of elements that will be removed by the stream compaction
+  /// placed in \c output. The values in \c stencil are used to determine which
+  /// \c input values are placed into \c output, with all stencil values not
+  /// equal to the default constructor being considered valid.
+  /// The size of \c output will be modified after this call as we can't know
+  /// the number of elements that will be removed by the stream compaction
   /// algorithm.
   ///
   template<typename T, typename U, class CIn, class CStencil, class COut>
@@ -277,6 +297,25 @@ struct DeviceAdapterAlgorithm
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
       vtkm::cont::ArrayHandle<T,COut> &output);
+
+  /// \brief Performs stream compaction to remove unwanted elements in the input array.
+  ///
+  /// Calls the parallel primitive function of stream compaction on the \c
+  /// input to remove unwanted elements. The result of the stream compaction is
+  /// placed in \c output. The values in \c stencil are passed to the unary
+  /// comparison object which is used to determine which /c input values are
+  /// placed into \c output.
+  /// The size of \c output will be modified after this call as we can't know
+  /// the number of elements that will be removed by the stream compaction
+  /// algorithm.
+  ///
+  template<typename T, typename U, class CIn, class CStencil,
+           class COut, class PredicateOperator>
+  VTKM_CONT_EXPORT static void StreamCompact(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
+      vtkm::cont::ArrayHandle<T,COut> &output,
+      PredicateOperator predicate);
 
   /// \brief Completes any asynchronous operations running on the device.
   ///

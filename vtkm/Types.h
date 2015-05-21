@@ -1178,7 +1178,7 @@ VTK_M_SCALAR_DOT(vtkm::Float64)
 template<typename T>
 struct not_default_constructor
 {
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T &x)
+  VTKM_EXEC_CONT_EXPORT bool operator()(const T &x) const
   {
     return (x  != T());
   }
