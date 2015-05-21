@@ -406,16 +406,6 @@ void TestStaticTransform()
   funcInterfaceTransform1 =
       funcInterface.StaticTransformExec(PointerTransform());
   funcInterfaceTransform1.InvokeExec(ThreePointerArgFunctor());
-
-  std::cout << "Transform with expected type." << std::endl;
-  typedef vtkm::internal::FunctionInterface<void(Type1*,Type2*,Type3*)>
-      ExpectedType;
-  ReportedType funcInterfaceTransform2 =
-      funcInterface.StaticTransformCont(PointerTransform());
-  funcInterfaceTransform2.InvokeCont(ThreePointerArgFunctor());
-  funcInterfaceTransform2 =
-      funcInterface.StaticTransformExec(PointerTransform());
-  funcInterfaceTransform2.InvokeExec(ThreePointerArgFunctor());
 }
 
 void TestDynamicTransform()
