@@ -26,26 +26,21 @@
 
 #include <iostream>
 
-// Disable GCC warnings we check vtkmfor but Thrust does not.
-#if defined(__GNUC__) && !defined(VTKM_CUDA)
-#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
+// Disable warnings we check vtkm for but Thrust does not.
+#if defined(__GNUC__) || defined(____clang__)
 #pragma GCC diagnostic push
-#endif // gcc version >= 4.6
-#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 2)
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#endif // gcc version >= 4.2
-#endif // gcc && !CUDA
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
 
 #include <thrust/system/cuda/vector.h>
 #include <thrust/device_malloc_allocator.h>
 #include <thrust/copy.h>
 
-#if defined(__GNUC__) && !defined(VTKM_CUDA)
-#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
+#if defined(__GNUC__) || defined(____clang__)
 #pragma GCC diagnostic pop
-#endif // gcc version >= 4.6
-#endif // gcc && !CUDA
+#endif // gcc || clang
 
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
 
@@ -81,6 +76,7 @@ class ArrayManagerExecutionThrustDevice
 {
 public:
   typedef T ValueType;
+  typedef typename thrust::system::cuda::pointer<T>::difference_type difference_type;
 
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
@@ -104,7 +100,7 @@ public:
   ///
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
-    return this->Array.size();
+    return static_cast<vtkm::Id>(this->Array.size());
   }
 
   /// Allocates the appropriate size of the array and copies the given data
@@ -122,8 +118,9 @@ public:
       // The data in this->Array should already be valid.
     }
 
+
     return PortalConstType(this->Array.data(),
-                           this->Array.data() + this->Array.size());
+                           this->Array.data() + static_cast<difference_type>(this->Array.size()));
   }
 
   /// Allocates the appropriate size of the array and copies the given data
@@ -142,7 +139,7 @@ public:
     }
 
     return PortalType(this->Array.data(),
-                      this->Array.data() + this->Array.size());
+                      this->Array.data() + static_cast<difference_type>(this->Array.size()));
   }
 
   /// Allocates the array to the given size.
@@ -159,7 +156,7 @@ public:
 
     try
       {
-      this->Array.resize(numberOfValues);
+      this->Array.resize(static_cast<vtkm::UInt64>(numberOfValues));
       }
     catch (std::bad_alloc error)
       {
@@ -167,7 +164,7 @@ public:
       }
 
     return PortalType(this->Array.data(),
-                      this->Array.data() + this->Array.size());
+                      this->Array.data() + static_cast<difference_type>(this->Array.size()));
   }
 
   /// Allocates enough space in \c storage and copies the data in the
@@ -176,10 +173,10 @@ public:
   VTKM_CONT_EXPORT
   void RetrieveOutputData(StorageType *storage) const
   {
-    storage->Allocate(this->Array.size());
+    storage->Allocate(static_cast<vtkm::Id>(this->Array.size()));
     ::thrust::copy(
           this->Array.data(),
-          this->Array.data() + this->Array.size(),
+          this->Array.data() + static_cast<difference_type>(this->Array.size()),
           vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
   }
 
@@ -189,9 +186,9 @@ public:
   {
     // The operation will succeed even if this assertion fails, but this
     // is still supposed to be a precondition to Shrink.
-    VTKM_ASSERT_CONT(numberOfValues <= this->Array.size());
+    VTKM_ASSERT_CONT(numberOfValues <= static_cast<vtkm::Id>(this->Array.size()));
 
-    this->Array.resize(numberOfValues);
+    this->Array.resize(static_cast<vtkm::UInt64>(numberOfValues));
   }
 
 

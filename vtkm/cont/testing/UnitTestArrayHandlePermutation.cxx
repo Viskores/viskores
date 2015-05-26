@@ -123,7 +123,7 @@ void CheckInPlaceResult(PortalType portal)
     {
       // This index was part of the permuted array; has a value changed
       T expectedValue = TestValue(permutedIndex, T()) + T(1000);
-      T retrievedValue = portal.Get(permutedIndex);
+      T retrievedValue = portal.Get(permutedIndex );
       VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "Permuted set unexpected value.");
     }
@@ -131,7 +131,7 @@ void CheckInPlaceResult(PortalType portal)
     {
       // This index was not part of the permuted array; has original value
       T expectedValue = TestValue(permutedIndex, T());
-      T retrievedValue = portal.Get(permutedIndex);
+      T retrievedValue = portal.Get(permutedIndex );
       VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "Permuted array modified value it should not have.");
     }
@@ -146,7 +146,7 @@ struct OutputPermutationFunctor : vtkm::exec::FunctorBase
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const {
     typedef typename PermutedPortalType::ValueType T;
-    this->PermutedPortal.Set(index, TestValue(index, T()));
+    this->PermutedPortal.Set(index, TestValue(static_cast<vtkm::Id>(index), T()));
   }
 };
 
@@ -169,7 +169,7 @@ VTKM_CONT_EXPORT
 void CheckOutputResult(PortalType portal)
 {
   typedef typename PortalType::ValueType T;
-  for (vtkm::Id permutedIndex = 0;
+  for (vtkm::IdComponent permutedIndex = 0;
        permutedIndex < 2*ARRAY_SIZE;
        permutedIndex++)
   {
@@ -178,7 +178,7 @@ void CheckOutputResult(PortalType portal)
       // This index was part of the permuted array; has a value changed
       vtkm::Id originalIndex = permutedIndex/2;
       T expectedValue = TestValue(originalIndex, T());
-      T retrievedValue = portal.Get(permutedIndex);
+      T retrievedValue = portal.Get(permutedIndex );
       VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "Permuted set unexpected value.");
     }
@@ -186,7 +186,7 @@ void CheckOutputResult(PortalType portal)
     {
       // This index was not part of the permuted array; has original value
       T expectedValue = TestValue(permutedIndex, T());
-      T retrievedValue = portal.Get(permutedIndex);
+      T retrievedValue = portal.Get(permutedIndex );
       VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "Permuted array modified value it should not have.");
     }
@@ -209,9 +209,10 @@ struct PermutationTests
   ValueArrayType MakeValueArray() const {
     // Allocate a buffer and set initial values
     std::vector<ValueType> buffer(2*ARRAY_SIZE);
-    for (vtkm::Id index = 0; index < 2*ARRAY_SIZE; index++)
+    for (vtkm::IdComponent index = 0; index < 2*ARRAY_SIZE; index++)
     {
-      buffer[index] = TestValue(index, ValueType());
+      vtkm::UInt32 i = static_cast<vtkm::UInt32>(index);
+      buffer[i] = TestValue(index, ValueType());
     }
 
     // Create an ArrayHandle from the buffer

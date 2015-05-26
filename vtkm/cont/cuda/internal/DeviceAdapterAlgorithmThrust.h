@@ -30,16 +30,13 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
 
-// Disable GCC warnings we check vtkmfor but Thrust does not.
-#if defined(__GNUC__) && !defined(VTKM_CUDA)
-#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
+// Disable warnings we check vtkm for but Thrust does not.
+#if defined(__GNUC__) || defined(____clang__)
 #pragma GCC diagnostic push
-#endif // gcc version >= 4.6
-#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 2)
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#endif // gcc version >= 4.2
-#endif // gcc && !CUDA
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
 
 #include <thrust/advance.h>
 #include <thrust/binary_search.h>
@@ -52,11 +49,9 @@
 
 #include <thrust/iterator/counting_iterator.h>
 
-#if defined(__GNUC__) && !defined(VTKM_CUDA)
-#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
+#if defined(__GNUC__) || defined(____clang__)
 #pragma GCC diagnostic pop
-#endif // gcc version >= 4.6
-#endif // gcc && !CUDA
+#endif // gcc || clang
 
 namespace vtkm {
 namespace cont {
@@ -76,28 +71,28 @@ void Schedule1DIndexKernel(FunctorType functor, vtkm::Id length)
 
 template<class FunctorType>
 __global__
-void Schedule3DIndexKernel(FunctorType functor, vtkm::Id3 size)
+void Schedule3DIndexKernel(FunctorType functor, dim3 size)
 {
   const vtkm::Id x = blockIdx.x*blockDim.x + threadIdx.x;
   const vtkm::Id y = blockIdx.y*blockDim.y + threadIdx.y;
   const vtkm::Id z = blockIdx.z*blockDim.z + threadIdx.z;
 
-  if (x >= size[0] || y >= size[1] || z >= size[2])
+  if (x >= size.x || y >= size.y || z >= size.z)
     {
     return;
     }
 
   //now convert back to flat memory
-  const int idx = x + size[0]*(y + size[1]*z);
+  const int idx = x + size.x*(y + size.y*z);
   functor( idx );
 }
 
 inline
-void compute_block_size(vtkm::Id3 rangeMax, dim3 blockSize3d, dim3& gridSize3d)
+void compute_block_size(dim3 rangeMax, dim3 blockSize3d, dim3& gridSize3d)
 {
-  gridSize3d.x = (rangeMax[0] % blockSize3d.x != 0) ? (rangeMax[0] / blockSize3d.x + 1) : (rangeMax[0] / blockSize3d.x);
-  gridSize3d.y = (rangeMax[1] % blockSize3d.y != 1) ? (rangeMax[1] / blockSize3d.y + 1) : (rangeMax[1] / blockSize3d.y);
-  gridSize3d.z = (rangeMax[2] % blockSize3d.z != 2) ? (rangeMax[2] / blockSize3d.z + 1) : (rangeMax[2] / blockSize3d.z);
+  gridSize3d.x = (rangeMax.x % blockSize3d.x != 0) ? (rangeMax.x / blockSize3d.x + 1) : (rangeMax.x / blockSize3d.x);
+  gridSize3d.y = (rangeMax.y % blockSize3d.y != 1) ? (rangeMax.y / blockSize3d.y + 1) : (rangeMax.y / blockSize3d.y);
+  gridSize3d.z = (rangeMax.z % blockSize3d.z != 2) ? (rangeMax.z / blockSize3d.z + 1) : (rangeMax.z / blockSize3d.z);
 }
 
 class PerfRecord
@@ -121,14 +116,17 @@ public:
 template<class Functor>
 static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& rangeMax)
 {
+  const dim3 ranges(static_cast<vtkm::UInt32>(rangeMax[0]),
+                    static_cast<vtkm::UInt32>(rangeMax[1]),
+                    static_cast<vtkm::UInt32>(rangeMax[2]) );
   std::vector< PerfRecord > results;
-  int indexTable[16] = {1, 2, 4, 8, 12, 16, 20, 24, 28, 30, 32, 64, 128, 256, 512, 1024};
+  vtkm::UInt32 indexTable[16] = {1, 2, 4, 8, 12, 16, 20, 24, 28, 30, 32, 64, 128, 256, 512, 1024};
 
-  for(int i=0; i < 16; i++)
+  for(vtkm::UInt32 i=0; i < 16; i++)
     {
-    for(int j=0; j < 16; j++)
+    for(vtkm::UInt32 j=0; j < 16; j++)
       {
-      for(int k=0; k < 16; k++)
+      for(vtkm::UInt32 k=0; k < 16; k++)
         {
         cudaEvent_t start, stop;
         cudaEventCreate(&start);
@@ -150,9 +148,9 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
           continue;
           }
 
-        compute_block_size(rangeMax, blockSize3d, gridSize3d);
+        compute_block_size(ranges, blockSize3d, gridSize3d);
         cudaEventRecord(start, 0);
-        Schedule3DIndexKernel<Functor> <<<gridSize3d, blockSize3d>>> (functor, rangeMax);
+        Schedule3DIndexKernel<Functor> <<<gridSize3d, blockSize3d>>> (functor, ranges);
         cudaEventRecord(stop, 0);
 
         cudaEventSynchronize(stop);
@@ -169,12 +167,14 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
   }
 
   std::sort(results.begin(), results.end());
-  for(int i=results.size()-1; i >= 0; --i)
+  const vtkm::Int64 size = static_cast<vtkm::Int64>(results.size());
+  for(vtkm::Int64 i=1; i <= size; i++)
     {
-    int x = results[i].blockSize.x;
-    int y = results[i].blockSize.y;
-    int z = results[i].blockSize.z;
-    float t = results[i].elapsedTime;
+    vtkm::UInt64 index = static_cast<vtkm::UInt64>(size-i);
+    vtkm::UInt32 x = results[index].blockSize.x;
+    vtkm::UInt32 y = results[index].blockSize.y;
+    vtkm::UInt32 z = results[index].blockSize.z;
+    float t = results[index].elapsedTime;
 
     std::cout << "BlockSize of: " << x << "," << y << "," << z << " required: " << t << std::endl;
     }
@@ -185,9 +185,9 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
-  const vtkm::Id numInstances = rangeMax[0] * rangeMax[1] * rangeMax[2];
-  const int blockSize = 128;
-  const int blocksPerGrid = (numInstances + blockSize - 1) / blockSize;
+  const vtkm::UInt32 numInstances = static_cast<vtkm::UInt32>(rangeMax[0] * rangeMax[1] * rangeMax[2]);
+  const vtkm::UInt32 blockSize = 128;
+  const vtkm::UInt32 blocksPerGrid = (numInstances + blockSize - 1) / blockSize;
 
   cudaEventRecord(start, 0);
   Schedule1DIndexKernel<Functor> <<<blocksPerGrid, blockSize>>> (functor, numInstances);
@@ -212,9 +212,9 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
   dim3 blockSize3d(64,2,1);
   dim3 gridSize3d;
 
-  compute_block_size(rangeMax, blockSize3d, gridSize3d);
+  compute_block_size(ranges, blockSize3d, gridSize3d);
   cudaEventRecord(start, 0);
-  Schedule3DIndexKernel<Functor> <<<gridSize3d, blockSize3d>>> (functor, rangeMax);
+  Schedule3DIndexKernel<Functor> <<<gridSize3d, blockSize3d>>> (functor, ranges);
   cudaEventRecord(stop, 0);
 
   cudaEventSynchronize(stop);
@@ -337,7 +337,8 @@ private:
                                                binaryPredicate,
                                                binaryOP);
 
-    return ::thrust::distance(keys_out_begin, result_iterators.first);
+    return static_cast<vtkm::Id>( ::thrust::distance(keys_out_begin,
+                                                     result_iterators.first) );
   }
 
   template<class InputPortal, class OutputPortal>
@@ -443,7 +444,7 @@ private:
                                              outputBegin,
                                              predicate);
 
-    return ::thrust::distance(outputBegin, newLast);
+    return static_cast<vtkm::Id>( ::thrust::distance(outputBegin, newLast) );
   }
 
     template<class ValuePortal,
@@ -471,7 +472,7 @@ private:
                                                             IteratorType;
     IteratorType begin = IteratorBegin(values);
     IteratorType newLast = ::thrust::unique(begin, IteratorEnd(values));
-    return ::thrust::distance(begin, newLast);
+    return static_cast<vtkm::Id>( ::thrust::distance(begin, newLast) );
   }
 
   template<class ValuesPortal, class Compare>
@@ -482,7 +483,7 @@ private:
                                                             IteratorType;
     IteratorType begin = IteratorBegin(values);
     IteratorType newLast = ::thrust::unique(begin, IteratorEnd(values), comp);
-    return ::thrust::distance(begin, newLast);
+    return static_cast<vtkm::Id>( ::thrust::distance(begin, newLast) );
   }
 
   template<class InputPortal, class ValuesPortal, class OutputPortal>
@@ -728,8 +729,8 @@ public:
 
     functor.SetErrorMessageBuffer(errorMessage);
 
-    const int blockSize = 128;
-    const int blocksPerGrid = (numInstances + blockSize - 1) / blockSize;
+    const vtkm::UInt32 blockSize = 128;
+    const vtkm::UInt32 blocksPerGrid = (static_cast<vtkm::UInt32>(numInstances) + blockSize - 1) / blockSize;
 
     Schedule1DIndexKernel<Functor> <<<blocksPerGrid, blockSize>>> (functor, numInstances);
 
@@ -768,6 +769,9 @@ public:
     //requires the errormessage buffer be set
     compare_3d_schedule_patterns(functor,rangeMax);
 #endif
+    const dim3 ranges(static_cast<vtkm::UInt32>(rangeMax[0]),
+                      static_cast<vtkm::UInt32>(rangeMax[1]),
+                      static_cast<vtkm::UInt32>(rangeMax[2]) );
 
     //currently we presume that 3d scheduling access patterns prefer accessing
     //memory in the X direction. Also should be good for thin in the Z axis
@@ -783,8 +787,8 @@ public:
       }
 
     dim3 gridSize3d;
-    compute_block_size(rangeMax, blockSize3d, gridSize3d);
-    Schedule3DIndexKernel<Functor> <<<gridSize3d, blockSize3d>>> (functor, rangeMax);
+    compute_block_size(ranges, blockSize3d, gridSize3d);
+    Schedule3DIndexKernel<Functor> <<<gridSize3d, blockSize3d>>> (functor, ranges);
 
     //sync so that we can check the results of the call.
     //In the future I want move this before the schedule call, and throwing

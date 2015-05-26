@@ -33,7 +33,7 @@ namespace {
 
 struct TestExecutionObject : public vtkm::exec::ExecutionObjectBase
 {
-  TestExecutionObject() : Number(0xDEADDEAD) {  }
+  TestExecutionObject() : Number( static_cast<vtkm::Int32>(0xDEADDEAD) ) {  }
   TestExecutionObject(vtkm::Int32 number) : Number(number) {  }
   vtkm::Int32 Number;
 };

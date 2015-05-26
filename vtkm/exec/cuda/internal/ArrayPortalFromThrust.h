@@ -24,24 +24,18 @@
 
 #include <iterator>
 
-// Disable GCC warnings we check vtkmfor but Thrust does not.
-#if defined(__GNUC__) && !defined(VTKM_CUDA)
-#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
+// Disable warnings we check vtkm for but Thrust does not.
+#if defined(__GNUC__) || defined(____clang__)
 #pragma GCC diagnostic push
-#endif // gcc version >= 4.6
-#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 2)
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#endif // gcc version >= 4.2
-#endif // gcc && !CUDA
-
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
 #include <thrust/system/cuda/memory.h>
 
-#if defined(__GNUC__) && !defined(VTKM_CUDA)
-#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
+#if defined(__GNUC__) || defined(____clang__)
 #pragma GCC diagnostic pop
-#endif // gcc version >= 4.6
-#endif // gcc && !CUDA
+#endif // gcc || clang
 
 #include <boost/type_traits/integral_constant.hpp>
 #include <boost/utility/enable_if.hpp>
@@ -135,7 +129,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
     // Not using std::distance because on CUDA it cannot be used on a device.
-    return (this->EndIterator - this->BeginIterator);
+    return static_cast<vtkm::Id>( (this->EndIterator - this->BeginIterator) );
   }
 
   VTKM_EXEC_EXPORT
@@ -196,7 +190,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
     // Not using std::distance because on CUDA it cannot be used on a device.
-    return (this->EndIterator - this->BeginIterator);
+    return static_cast<vtkm::Id>( (this->EndIterator - this->BeginIterator) );
   }
 
   VTKM_EXEC_EXPORT

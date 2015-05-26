@@ -124,10 +124,12 @@ struct TryDefaultArray
   {
     std::cout << "Trying basic point coordinates array with a default storage."
               << std::endl;
-    std::vector<Vector3> buffer(ARRAY_SIZE);
+
+    std::vector<Vector3> buffer( static_cast<vtkm::UInt32>(ARRAY_SIZE) );
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      buffer[index] = ExpectedCoordinates(index);
+      vtkm::UInt32 i = static_cast< vtkm::UInt32 >(index);
+      buffer[i] = ExpectedCoordinates(index);
     }
 
     vtkm::cont::DynamicPointCoordinates pointCoordinates =

@@ -52,13 +52,13 @@ static void TestVecTypeImpl(
 {
   typedef typename vtkm::VecTraits<T> Traits;
   typedef typename Traits::ComponentType ComponentType;
-  static const int NUM_COMPONENTS = Traits::NUM_COMPONENTS;
+  static const vtkm::IdComponent NUM_COMPONENTS = Traits::NUM_COMPONENTS;
   typedef typename boost::remove_const<T>::type NonConstT;
 
   {
     NonConstT result;
     const ComponentType multiplier = 4;
-    for (int i = 0; i < NUM_COMPONENTS; i++)
+    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
     {
       Traits::SetComponent(result, i, multiplier*Traits::GetComponent(vector, i));
     }
@@ -70,7 +70,7 @@ static void TestVecTypeImpl(
   {
     NonConstT result;
     const ComponentType multiplier = 7;
-    for (int i = 0; i < NUM_COMPONENTS; i++)
+    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
     {
       Traits::GetComponent(result, i)
         = multiplier * Traits::GetComponent(vector, i);
@@ -82,7 +82,7 @@ static void TestVecTypeImpl(
 
   {
     ComponentType result = 0;
-    for (int i = 0; i < NUM_COMPONENTS; i++)
+    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
     {
       ComponentType component
         = Traits::GetComponent(vector, i);

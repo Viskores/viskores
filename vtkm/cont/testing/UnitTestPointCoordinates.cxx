@@ -94,10 +94,12 @@ struct TestPointCoordinatesArray
     std::cout << "Testing PointCoordinatesArray" << std::endl;
 
     std::cout << "  Creating buffer of data values" << std::endl;
-    std::vector<Vector3> buffer(ARRAY_SIZE);
+
+    std::vector<Vector3> buffer( static_cast<vtkm::UInt32>(ARRAY_SIZE) );
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      buffer[index] = ExpectedCoordinates(index);
+      vtkm::UInt32 i = static_cast<vtkm::UInt32>(index);
+      buffer[i] = ExpectedCoordinates(index);
     }
 
     std::cout << "  Creating and checking array handle" << std::endl;
