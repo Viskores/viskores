@@ -188,7 +188,7 @@ void TestDoWorkletInvoke()
 
   std::cout << "  Try void return." << std::endl;
   inputTestValue = 5;
-  outputTestValue = 0xDEADDEAD;
+  outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
   vtkm::exec::internal::detail::DoWorkletInvokeFunctor(
         TestWorkletProxy(),
         vtkm::internal::make_Invocation<1>(execObjects,
@@ -201,7 +201,7 @@ void TestDoWorkletInvoke()
 
   std::cout << "  Try return value." << std::endl;
   inputTestValue = 6;
-  outputTestValue = 0xDEADDEAD;
+  outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
   vtkm::exec::internal::detail::DoWorkletInvokeFunctor(
         TestWorkletProxy(),
         vtkm::internal::make_Invocation<1>(execObjects,
@@ -225,7 +225,7 @@ void TestNormalFunctorInvoke()
 
   std::cout << "  Try void return." << std::endl;
   inputTestValue = 5;
-  outputTestValue = 0xDEADDEAD;
+  outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
   typedef vtkm::exec::internal::WorkletInvokeFunctor<TestWorkletProxy,InvocationType1> WorkletInvokeFunctor1;
   WorkletInvokeFunctor1 workletInvokeFunctor1 =
       WorkletInvokeFunctor1(TestWorkletProxy(), InvocationType1(execObjects));
@@ -236,7 +236,7 @@ void TestNormalFunctorInvoke()
 
   std::cout << "  Try return value." << std::endl;
   inputTestValue = 6;
-  outputTestValue = 0xDEADDEAD;
+  outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
   typedef vtkm::exec::internal::WorkletInvokeFunctor<TestWorkletProxy,InvocationType2> WorkletInvokeFunctor2;
   WorkletInvokeFunctor2 workletInvokeFunctor2 =
       WorkletInvokeFunctor2(TestWorkletProxy(), InvocationType2(execObjects));
@@ -251,7 +251,7 @@ void TestErrorFunctorInvoke()
   std::cout << "Testing invoke with an error raised in the worklet." << std::endl;
 
   vtkm::Id inputTestValue = 5;
-  vtkm::Id outputTestValue = 0xDEADDEAD;
+  vtkm::Id outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
   vtkm::internal::FunctionInterface<void(TestExecObject,TestExecObject)> execObjects =
       vtkm::internal::make_FunctionInterface<void>(TestExecObject(&inputTestValue),
                                                    TestExecObject(&outputTestValue));

@@ -231,7 +231,7 @@ void TestBasicInvoke()
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
     inputArray[index] = TestValue(index, vtkm::Id());
-    outputArray[index] = 0xDEADDEAD;
+    outputArray[index] = static_cast<vtkm::Id>(0xDEADDEAD);
   }
 
   std::cout << "  Create and run dispatcher." << std::endl;
@@ -258,7 +258,7 @@ void TestInvokeWithError()
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
     inputArray[index] = TestValue(index, vtkm::Id());
-    outputArray[index] = 0xDEADDEAD;
+    outputArray[index] = static_cast<vtkm::Id>(0xDEADDEAD);
   }
 
   try
