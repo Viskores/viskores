@@ -24,6 +24,7 @@ set(headers
   CellType.h
   Extent.h
   ListTag.h
+  Math.h
   Pair.h
   RegularConnectivity.h
   RegularStructure.h
@@ -32,6 +33,8 @@ set(headers
   TypeTraits.h
   VecTraits.h
   )
+
+vtkm_pyexpander_generated_file(Math.h)
 
 vtkm_declare_headers(${headers})
 
