@@ -122,7 +122,8 @@ public:
       if (this->DeallocateOnRelease)
       {
         AllocatorType allocator;
-        allocator.deallocate(this->Array, this->AllocatedSize);
+        allocator.deallocate(this->Array,
+                             static_cast<std::size_t>(this->AllocatedSize) );
       }
       this->Array = NULL;
       this->NumberOfValues = 0;
@@ -150,7 +151,8 @@ public:
       if (numberOfValues > 0)
       {
         AllocatorType allocator;
-        this->Array = allocator.allocate(numberOfValues);
+        this->Array = allocator.allocate(
+                                   static_cast<std::size_t>(numberOfValues) );
         this->AllocatedSize  = numberOfValues;
         this->NumberOfValues = numberOfValues;
       }

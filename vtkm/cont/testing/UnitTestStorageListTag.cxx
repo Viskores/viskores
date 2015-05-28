@@ -52,7 +52,8 @@ void CheckSame(const vtkm::Vec<TypeId,N> &expected,
 
   for (vtkm::IdComponent index = 0; index < N; index++)
   {
-    VTKM_TEST_ASSERT(expected[index] == found[index],
+    vtkm::UInt32 i = static_cast<vtkm::UInt32>(index);
+    VTKM_TEST_ASSERT(expected[index] == found[i],
                      "Got wrong type.");
   }
 }
