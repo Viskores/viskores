@@ -48,8 +48,8 @@ public:
   vtkm::Float32 operator()(const vtkm::Float32 &cellval,
                            const vtkm::exec::TopologyData<vtkm::Float32,LEN_IDS> &nodevals,
                            const vtkm::Id &count,
-                           const vtkm::Id &type,
-                           const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> &nodeIDs) const
+                           const vtkm::Id & vtkmNotUsed(type),
+                           const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> & vtkmNotUsed(nodeIDs)) const
   {
   //simple functor that returns the max of CellValue and nodeValue
   vtkm::Float32 max_value = cellval;
@@ -82,8 +82,8 @@ public:
   VTKM_EXEC_EXPORT
   vtkm::Float32 operator()(const vtkm::exec::TopologyData<vtkm::Float32,LEN_IDS> &nodevals,
                            const vtkm::Id &count,
-                           const vtkm::Id &type,
-                           const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> &nodeIDs) const
+                           const vtkm::Id & vtkmNotUsed(type),
+                           const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> & vtkmNotUsed(nodeIDs) ) const
   {
       //simple functor that returns the average nodeValue.
       vtkm::Float32 avgVal = 0.0;
