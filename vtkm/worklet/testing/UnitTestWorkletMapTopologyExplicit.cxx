@@ -133,9 +133,9 @@ TestMaxNodeOrCell()
   VTKM_TEST_ASSERT(ds->GetNumberOfFields() == 6,
                        "Incorrect number of fields");
 
-  vtkm::cont::CellSet *cs = ds->GetCellSet(0);
-  vtkm::cont::CellSetExplicit *cse = 
-               dynamic_cast<vtkm::cont::CellSetExplicit*>(cs);
+  boost::shared_ptr<vtkm::cont::CellSet> cs = ds->GetCellSet(0);
+  vtkm::cont::CellSetExplicit *cse =
+        dynamic_cast<vtkm::cont::CellSetExplicit*>(cs.get());
 
   VTKM_TEST_ASSERT(cse, "Expected an explicit cell set");
 
@@ -160,14 +160,14 @@ TestMaxNodeOrCell()
 		   "Wrong result for NodeToCellAverage worklet");
 
   //cleanup memory
-  delete cs;
+  delete ds;
 }
 
 static void
 TestAvgNodeToCell()
 {
   std::cout<<"Testing AvgNodeToCell worklet"<<std::endl;
-  
+
   vtkm::cont::testing::MakeTestDataSet tds;
   vtkm::cont::DataSet *ds = tds.Make3DExplicitDataSet1();
 
@@ -182,9 +182,9 @@ TestAvgNodeToCell()
   VTKM_TEST_ASSERT(ds->GetNumberOfFields() == 6,
                        "Incorrect number of fields");
 
-  vtkm::cont::CellSet *cs = ds->GetCellSet(0);
-  vtkm::cont::CellSetExplicit *cse = 
-               dynamic_cast<vtkm::cont::CellSetExplicit*>(cs);
+  boost::shared_ptr<vtkm::cont::CellSet> cs = ds->GetCellSet(0);
+  vtkm::cont::CellSetExplicit *cse =
+        dynamic_cast<vtkm::cont::CellSetExplicit*>(cs.get());
 
   VTKM_TEST_ASSERT(cse, "Expected an explicit cell set");
 
@@ -193,12 +193,12 @@ TestAvgNodeToCell()
 		    cse->GetNodeToCellConnectivity(),
 		    ds->GetField("outcellvar").GetData());
   std::cout<<__LINE__<<std::endl;
-    
+
   //make sure we got the right answer.
   vtkm::cont::ArrayHandle<vtkm::Float32> res;
   res = ds->GetField(5).GetData().CastToArrayHandle(vtkm::Float32(),
 						    VTKM_DEFAULT_STORAGE_TAG());
-  
+
   VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 76.833),
 		   "Wrong result for NodeToCellAverage worklet");
   VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 55.225),

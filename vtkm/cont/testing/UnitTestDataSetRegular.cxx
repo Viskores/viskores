@@ -46,8 +46,9 @@ TwoDimRegularTest()
 
     vtkm::cont::DataSet *ds = tds.Make2DRegularDataSet0();
 
-    vtkm::cont::CellSetStructured<2> *cs;
-    cs = dynamic_cast<vtkm::cont::CellSetStructured<2> *>(ds->GetCellSet(0));
+    boost::shared_ptr<vtkm::cont::CellSet> scs = ds->GetCellSet(0);
+    vtkm::cont::CellSetStructured<2> *cs =
+        dynamic_cast<vtkm::cont::CellSetStructured<2> *>(scs.get());
     VTKM_TEST_ASSERT(cs, "Invalid Cell Set");
 
     VTKM_TEST_ASSERT(ds->GetNumberOfCellSets() == 1,
@@ -58,7 +59,7 @@ TwoDimRegularTest()
                      "Incorrect number of nodes");
     VTKM_TEST_ASSERT(cs->structure.GetNumberOfCells() == 2,
                      "Incorrect number of cells");
-    
+
     vtkm::Id numCells = cs->structure.GetNumberOfCells();
     for (int i = 0; i < numCells; i++)
     {
@@ -72,7 +73,7 @@ TwoDimRegularTest()
                               vtkm::cont::CELL,2> nodeToCell = cs->GetNodeToCellConnectivity();
     vtkm::RegularConnectivity<vtkm::cont::CELL,
                               vtkm::cont::NODE,2> cellToNode = cs->GetCellToNodeConnectivity();
-    
+
     vtkm::Id cells[2][4] = {{0,1,3,4}, {1,2,4,5}};
     vtkm::Vec<vtkm::Id,4> nodeIds;
     for (int i = 0; i < 2; i++)
@@ -91,7 +92,7 @@ TwoDimRegularTest()
                             {0,1,-1,-1},
                             {2,-1,-1,-1},
                             {2,3,-1,-1}};
-                            
+
     for (int i = 0; i < 6; i++)
     {
         vtkm::Vec<vtkm::Id,4> cellIds;
@@ -100,7 +101,7 @@ TwoDimRegularTest()
             VTKM_TEST_ASSERT(cellIds[j] == nodes[i][j],
                              "Incorrect cell ID for node");
     }
-    
+
     delete ds;
 }
 
@@ -112,8 +113,10 @@ ThreeDimRegularTest()
 
     vtkm::cont::DataSet *ds = tds.Make3DRegularDataSet0();
 
-    vtkm::cont::CellSetStructured<3> *cs;
-    cs = dynamic_cast<vtkm::cont::CellSetStructured<3> *>(ds->GetCellSet(0));
+    boost::shared_ptr<vtkm::cont::CellSet> scs = ds->GetCellSet(0);
+    vtkm::cont::CellSetStructured<3> *cs =
+        dynamic_cast<vtkm::cont::CellSetStructured<3> *>(scs.get());
+
     VTKM_TEST_ASSERT(cs, "Invalid Cell Set");
 
     VTKM_TEST_ASSERT(ds->GetNumberOfCellSets() == 1,
@@ -127,7 +130,7 @@ ThreeDimRegularTest()
 
     VTKM_TEST_ASSERT(cs->structure.GetNumberOfCells() == 4,
                      "Incorrect number of cells");
-    
+
     vtkm::Id numCells = cs->structure.GetNumberOfCells();
     for (int i = 0; i < numCells; i++)
     {
@@ -155,8 +158,8 @@ ThreeDimRegularTest()
     for (int i = 0; i < 8; i++)
         VTKM_TEST_ASSERT(cellIds[i] == cells[i],
                          "Incorrect cell ID for node");
-    
-    delete cs;
+
+    delete ds;
 }
 
 int UnitTestDataSetRegular(int, char *[])

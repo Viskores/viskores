@@ -125,18 +125,20 @@ TestMaxNodeOrCell()
     std::cout<<"Testing MaxNodeOfCell worklet"<<std::endl;
     vtkm::cont::testing::MakeTestDataSet tds;
     vtkm::cont::DataSet *ds = tds.Make2DRegularDataSet0();
-    vtkm::cont::CellSetStructured<2> *cs;
-    cs = dynamic_cast<vtkm::cont::CellSetStructured<2> *>(ds->GetCellSet(0));
+
+    boost::shared_ptr<vtkm::cont::CellSet> scs = ds->GetCellSet(0);
+    vtkm::cont::CellSetStructured<2> *cs =
+        dynamic_cast<vtkm::cont::CellSetStructured<2> *>(scs.get());
     VTKM_TEST_ASSERT(cs, "Structured cell set not found");
-    
+
     //Run a worklet to populate a cell centered field.
     //Here, we're filling it with test values.
     vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
     ds->AddField(vtkm::cont::Field("outcellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", outcellVals, 2));
-    
+
     VTKM_TEST_ASSERT(test_equal(ds->GetNumberOfCellSets(), 1),
                      "Incorrect number of cell sets");
-    
+
     VTKM_TEST_ASSERT(test_equal(ds->GetNumberOfFields(), 5),
                      "Incorrect number of fields");
     //Todo:
@@ -149,12 +151,12 @@ TestMaxNodeOrCell()
                       ds->GetField("nodevar").GetData(),
                       cs->GetNodeToCellConnectivity(),
                       ds->GetField(4).GetData());
-    
+
     //make sure we got the right answer.
     vtkm::cont::ArrayHandle<vtkm::Float32> res;
     res = ds->GetField(4).GetData().CastToArrayHandle(vtkm::Float32(),
 						      VTKM_DEFAULT_STORAGE_TAG());
-    
+
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1),
 		     "Wrong result for MaxNodeOrCell worklet");
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 200.1),
@@ -169,18 +171,20 @@ TestAvgNodeToCell()
     std::cout<<"Testing AvgNodeToCell worklet"<<std::endl;
     vtkm::cont::testing::MakeTestDataSet tds;
     vtkm::cont::DataSet *ds = tds.Make2DRegularDataSet0();
-    vtkm::cont::CellSetStructured<2> *cs;
-    cs = dynamic_cast<vtkm::cont::CellSetStructured<2> *>(ds->GetCellSet(0));
+
+    boost::shared_ptr<vtkm::cont::CellSet> scs = ds->GetCellSet(0);
+    vtkm::cont::CellSetStructured<2> *cs =
+        dynamic_cast<vtkm::cont::CellSetStructured<2> *>(scs.get());
     VTKM_TEST_ASSERT(cs, "Structured cell set not found");
-    
+
     //Run a worklet to populate a cell centered field.
     //Here, we're filling it with test values.
     vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
     ds->AddField(vtkm::cont::Field("outcellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", outcellVals, 2));
-    
+
     VTKM_TEST_ASSERT(test_equal(ds->GetNumberOfCellSets(), 1),
                      "Incorrect number of cell sets");
-    
+
     VTKM_TEST_ASSERT(test_equal(ds->GetNumberOfFields(), 5),
                      "Incorrect number of fields");
     //Todo:
@@ -192,12 +196,12 @@ TestAvgNodeToCell()
     dispatcher.Invoke(ds->GetField("nodevar").GetData(),
                       cs->GetNodeToCellConnectivity(),
                       ds->GetField("outcellvar").GetData());
-    
+
     //make sure we got the right answer.
     vtkm::cont::ArrayHandle<vtkm::Float32> res;
     res = ds->GetField(4).GetData().CastToArrayHandle(vtkm::Float32(),
 						      VTKM_DEFAULT_STORAGE_TAG());
-    
+
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 30.1),
 		     "Wrong result for NodeToCellAverage worklet");
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 40.1),

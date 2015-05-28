@@ -33,6 +33,8 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 
+#include <boost/smart_ptr/shared_ptr.hpp>
+
 namespace vtkm {
 namespace cont {
 
@@ -66,7 +68,7 @@ public:
     throw vtkm::cont::ErrorControlBadValue("No field with requested name");
   }
 
-  vtkm::cont::CellSet *GetCellSet(int index=0)
+  boost::shared_ptr<vtkm::cont::CellSet> GetCellSet(int index=0)
   {
     VTKM_ASSERT_CONT(index >= 0 && index <= int(CellSets.size()));
     return CellSets[index];
@@ -77,7 +79,7 @@ public:
     CoordSystems.push_back(cs);
   }
 
-  void AddCellSet(vtkm::cont::CellSet *cs)
+  void AddCellSet(boost::shared_ptr<vtkm::cont::CellSet> cs)
   {
     CellSets.push_back(cs);
   }
@@ -109,7 +111,7 @@ public:
 private:
   std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
   std::vector<vtkm::cont::Field> Fields;
-  std::vector<vtkm::cont::CellSet*> CellSets;
+  std::vector< boost::shared_ptr<vtkm::cont::CellSet> > CellSets;
 };
 
 } // namespace cont

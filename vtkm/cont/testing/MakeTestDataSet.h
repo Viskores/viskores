@@ -57,7 +57,7 @@ MakeTestDataSet::Make2DRegularDataSet0()
     ds->AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
     ds->AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
     ds->AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y"));
-    
+
     //set node scalar.
     ds->AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
@@ -65,7 +65,8 @@ MakeTestDataSet::Make2DRegularDataSet0()
     vtkm::Float32 cellvar[2] = {100.1, 200.1};
     ds->AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
-    vtkm::cont::CellSetStructured<2> *cs = new vtkm::cont::CellSetStructured<2>("cells");
+    boost::shared_ptr< vtkm::cont::CellSetStructured<2> > cs(
+                                new vtkm::cont::CellSetStructured<2>("cells"));
     //Set regular structure
     cs->structure.SetNodeDimension(3,2);
     ds->AddCellSet(cs);
@@ -97,9 +98,10 @@ MakeTestDataSet::Make3DRegularDataSet0()
     //Set cell scalar
     vtkm::Float32 cellvar[4] = {100.1, 100.2, 100.3, 100.4};
     ds->AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 4));
-    
+
     static const vtkm::IdComponent dim = 3;
-    vtkm::cont::CellSetStructured<dim> *cs = new vtkm::cont::CellSetStructured<dim>("cells");
+    boost::shared_ptr< vtkm::cont::CellSetStructured<dim> > cs(
+                                new vtkm::cont::CellSetStructured<dim>("cells"));
     ds->AddCellSet(cs);
 
     //Set regular structure
@@ -151,9 +153,9 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   conn.push_back(3);
   conn.push_back(4);
 
-  vtkm::cont::CellSetExplicit *cs = new vtkm::cont::CellSetExplicit("cells",2);
+  boost::shared_ptr< vtkm::cont::CellSetExplicit > cs(
+                                new vtkm::cont::CellSetExplicit("cells", 2));
   vtkm::cont::ExplicitConnectivity &ec = cs->nodesOfCellsConnectivity;
-
   ec.FillViaCopy(shapes, numindices, conn);
 
   //todo this need to be a reference/shared_ptr style class
@@ -185,7 +187,8 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   vtkm::Float32 cellvar[2] = {100.1, 100.2};
   ds->AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
-  vtkm::cont::CellSetExplicit *cs = new vtkm::cont::CellSetExplicit("cells",2);
+  boost::shared_ptr< vtkm::cont::CellSetExplicit > cs(
+                                new vtkm::cont::CellSetExplicit("cells", 2));
   vtkm::cont::ExplicitConnectivity &ec = cs->nodesOfCellsConnectivity;
 
   ec.PrepareToAddCells(2, 7);
