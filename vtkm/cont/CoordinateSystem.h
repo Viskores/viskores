@@ -41,8 +41,8 @@ class CoordinateSystem
         }
     };
 
-    CoordinateSystem(std::string nx, 
-                     std::string ny, 
+    CoordinateSystem(std::string nx,
+                     std::string ny,
                      std::string nz)
     {
         axes.push_back(CoordinateAxis(nx));
@@ -50,7 +50,7 @@ class CoordinateSystem
         axes.push_back(CoordinateAxis(nz));
     }
 
-    CoordinateSystem(std::string nx, 
+    CoordinateSystem(std::string nx,
                      std::string ny)
     {
         axes.push_back(CoordinateAxis(nx));
@@ -65,14 +65,14 @@ class CoordinateSystem
     void PrintSummary(std::ostream &out)
     {
 	out<<"   {";
-	for (vtkm::Id i = 0; i < axes.size(); i++)
+	for (std::size_t i = 0; i < axes.size(); i++)
 	{
 	    out<<axes[i].FieldName<<"["<<axes[i].FieldComponent<<"]";
 	    if (i < axes.size()-1) out<<", ";
 	}
 	out<<"}\n";
     }
-    
+
   private:
     std::vector<CoordinateAxis> axes;
 };

@@ -68,7 +68,7 @@ MakeTestDataSet::Make2DRegularDataSet0()
     boost::shared_ptr< vtkm::cont::CellSetStructured<2> > cs(
                                 new vtkm::cont::CellSetStructured<2>("cells"));
     //Set regular structure
-    cs->structure.SetNodeDimension(3,2);
+    cs->structure.SetNodeDimension( vtkm::make_Vec(3,2) );
     ds.AddCellSet(cs);
 
     return ds;
@@ -105,7 +105,7 @@ MakeTestDataSet::Make3DRegularDataSet0()
     ds.AddCellSet(cs);
 
     //Set regular structure
-    cs->structure.SetNodeDimension(3,2,3);
+    cs->structure.SetNodeDimension( vtkm::make_Vec(3,2,3) );
 
     return ds;
 }

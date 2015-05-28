@@ -9,10 +9,12 @@ namespace vtkm {
 namespace cont {
 
 
-template<vtkm::IdComponent Dimension>
+
+template<vtkm::IdComponent DIMENSION>
 class CellSetStructured : public CellSet
 {
 public:
+  static const int Dimension=DIMENSION;
 
   CellSetStructured(const std::string &n)
     : CellSet(n,Dimension)
@@ -25,24 +27,22 @@ public:
     return structure.GetNumberOfCells();
   }
 
-  vtkm::RegularConnectivity<vtkm::cont::NODE,vtkm::cont::CELL,Dimension> 
+  vtkm::RegularConnectivity<vtkm::cont::NODE,vtkm::cont::CELL,Dimension>
   GetNodeToCellConnectivity()
   {
-    vtkm::RegularConnectivity<vtkm::cont::NODE,vtkm::cont::CELL,Dimension> regConn;
-    regConn.SetNodeDimension(structure.nodeDims[0],
-			     structure.nodeDims[1],
-			     structure.nodeDims[2]);
-    return regConn;
+    typedef vtkm::RegularConnectivity<vtkm::cont::NODE,
+                                      vtkm::cont::CELL,
+                                      Dimension> NodeToCellConnectivity;
+    return NodeToCellConnectivity(structure);
   }
 
-  vtkm::RegularConnectivity<vtkm::cont::CELL,vtkm::cont::NODE,Dimension> 
+  vtkm::RegularConnectivity<vtkm::cont::CELL,vtkm::cont::NODE,Dimension>
   GetCellToNodeConnectivity()
   {
-    vtkm::RegularConnectivity<vtkm::cont::CELL,vtkm::cont::NODE,Dimension> regConn;
-    regConn.SetNodeDimension(structure.nodeDims[0],
-			     structure.nodeDims[1],
-			     structure.nodeDims[2]);
-    return regConn;
+    typedef vtkm::RegularConnectivity<vtkm::cont::CELL,
+                                      vtkm::cont::NODE,
+                                      Dimension> CellToNodeConnectivity;
+    return CellToNodeConnectivity(structure);
   }
 
   virtual void PrintSummary(std::ostream &out)
@@ -54,6 +54,7 @@ public:
 public:
   vtkm::RegularStructure<Dimension> structure;
 };
+
 
 }
 } // namespace vtkm::cont

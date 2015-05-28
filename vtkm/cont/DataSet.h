@@ -98,14 +98,22 @@ public:
   {
       out<<"DataSet:\n";
       out<<"  CoordSystems["<<CoordSystems.size()<<"]\n";
-      for (vtkm::Id i = 0; i < CoordSystems.size(); i++)
-	  CoordSystems[i].PrintSummary(out);
+      for (std::size_t i = 0; i < CoordSystems.size(); i++)
+      {
+        CoordSystems[i].PrintSummary(out);
+      }
+
       out<<"  CellSets["<<GetNumberOfCellSets()<<"]\n";
       for (vtkm::Id i = 0; i < GetNumberOfCellSets(); i++)
-      	  GetCellSet(i)->PrintSummary(out);
+      {
+    	  GetCellSet(i)->PrintSummary(out);
+      }
+
       out<<"  Fields["<<GetNumberOfFields()<<"]\n";
       for (vtkm::Id i = 0; i < GetNumberOfFields(); i++)
-      	  GetField(i).PrintSummary(out);
+      {
+    	  GetField(i).PrintSummary(out);
+      }
   }
 
 private:

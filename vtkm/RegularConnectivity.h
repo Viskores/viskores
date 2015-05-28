@@ -74,11 +74,18 @@ public:
 typedef vtkm::RegularConnectivity<FromTopology,ToTopoogy,Dimension> ExecObjectType;
 
 public:
-  VTKM_EXEC_CONT_EXPORT
-  void SetNodeDimension(int node_i, int node_j=0, int node_k=0)
+  RegularConnectivity():
+    rs()
   {
-     rs.SetNodeDimension(node_i, node_j, node_k);
+
   }
+
+  RegularConnectivity(RegularStructure<Dimension> regularStructure):
+    rs(regularStructure)
+    {
+
+    }
+
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfElements() const {return rs.GetNumberOfElements();}
@@ -103,7 +110,7 @@ public:
 private:
   RegularStructure<Dimension> rs;
 };
-    
+
 } // namespace vtkm
 
 #endif //vtk_m_RegularConnectivity_h
