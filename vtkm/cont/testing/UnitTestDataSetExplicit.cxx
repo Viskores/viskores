@@ -28,16 +28,13 @@ namespace {
 void TestDataSet_Explicit()
 {
   vtkm::cont::testing::MakeTestDataSet tds;
-  vtkm::cont::DataSet *ds = tds.Make3DExplicitDataSet1();
+  vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet1();
 
-  VTKM_TEST_ASSERT(ds->GetNumberOfCellSets() == 1,
+  VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");
 
-  VTKM_TEST_ASSERT(ds->GetNumberOfFields() == 5,
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 5,
                        "Incorrect number of fields");
-
-  //cleanup memory
-  delete ds;
 }
 
 }

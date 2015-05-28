@@ -44,16 +44,16 @@ TwoDimRegularTest()
     std::cout<<"2D Regular data set"<<std::endl;
     vtkm::cont::testing::MakeTestDataSet tds;
 
-    vtkm::cont::DataSet *ds = tds.Make2DRegularDataSet0();
+    vtkm::cont::DataSet ds = tds.Make2DRegularDataSet0();
 
-    boost::shared_ptr<vtkm::cont::CellSet> scs = ds->GetCellSet(0);
+    boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
     vtkm::cont::CellSetStructured<2> *cs =
         dynamic_cast<vtkm::cont::CellSetStructured<2> *>(scs.get());
     VTKM_TEST_ASSERT(cs, "Invalid Cell Set");
 
-    VTKM_TEST_ASSERT(ds->GetNumberOfCellSets() == 1,
+    VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                      "Incorrect number of cell sets");
-    VTKM_TEST_ASSERT(ds->GetNumberOfFields() == 4,
+    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 4,
                      "Incorrect number of fields");
     VTKM_TEST_ASSERT(cs->structure.GetNumberOfNodes() == 6,
                      "Incorrect number of nodes");
@@ -101,8 +101,6 @@ TwoDimRegularTest()
             VTKM_TEST_ASSERT(cellIds[j] == nodes[i][j],
                              "Incorrect cell ID for node");
     }
-
-    delete ds;
 }
 
 static void
@@ -111,18 +109,18 @@ ThreeDimRegularTest()
     std::cout<<"3D Regular data set"<<std::endl;
     vtkm::cont::testing::MakeTestDataSet tds;
 
-    vtkm::cont::DataSet *ds = tds.Make3DRegularDataSet0();
+    vtkm::cont::DataSet ds = tds.Make3DRegularDataSet0();
 
-    boost::shared_ptr<vtkm::cont::CellSet> scs = ds->GetCellSet(0);
+    boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
     vtkm::cont::CellSetStructured<3> *cs =
         dynamic_cast<vtkm::cont::CellSetStructured<3> *>(scs.get());
 
     VTKM_TEST_ASSERT(cs, "Invalid Cell Set");
 
-    VTKM_TEST_ASSERT(ds->GetNumberOfCellSets() == 1,
+    VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                      "Incorrect number of cell sets");
 
-    VTKM_TEST_ASSERT(ds->GetNumberOfFields() == 5,
+    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 5,
                      "Incorrect number of fields");
 
     VTKM_TEST_ASSERT(cs->structure.GetNumberOfNodes() == 18,
@@ -158,8 +156,6 @@ ThreeDimRegularTest()
     for (int i = 0; i < 8; i++)
         VTKM_TEST_ASSERT(cellIds[i] == cells[i],
                          "Incorrect cell ID for node");
-
-    delete ds;
 }
 
 int UnitTestDataSetRegular(int, char *[])
