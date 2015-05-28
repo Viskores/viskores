@@ -285,6 +285,52 @@ ExtentPointTopologyIndexToFlatIndex(const vtkm::Vec<vtkm::Id,Dimensions> &ijk,
 /// then the s direction and so on. This method converts topological
 /// coordinates to a flat index.
 ///
+template<>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Id
+ExtentPointTopologyIndexToFlatIndex<1>(const vtkm::Vec<vtkm::Id,1> &ijk,
+                                       const vtkm::Extent<1> &extent)
+{
+  return ijk[0] - extent.Min[0];
+}
+
+/// Elements in structured grids have a single index with 0 being the entry at
+/// the minimum extent in every direction and then increasing first in the r
+/// then the s direction and so on. This method converts topological
+/// coordinates to a flat index.
+///
+template<>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Id
+ExtentPointTopologyIndexToFlatIndex<2>(const vtkm::Vec<vtkm::Id,2> &ijk,
+                                       const vtkm::Extent<2> &extent)
+{
+  const vtkm::Vec<vtkm::Id,2> dims = ExtentPointDimensions(extent);
+  const vtkm::Vec<vtkm::Id,2> deltas = ijk - extent.Min;
+  return (deltas[1] * dims[0] + deltas[0]);
+}
+
+/// Elements in structured grids have a single index with 0 being the entry at
+/// the minimum extent in every direction and then increasing first in the r
+/// then the s direction and so on. This method converts topological
+/// coordinates to a flat index.
+///
+template<>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Id
+ExtentPointTopologyIndexToFlatIndex<3>(const vtkm::Vec<vtkm::Id,3> &ijk,
+                                       const vtkm::Extent<3> &extent)
+{
+  const vtkm::Vec<vtkm::Id,3> dims = ExtentPointDimensions(extent);
+  const vtkm::Vec<vtkm::Id,3> deltas = ijk - extent.Min;
+  return (deltas[2] * dims[1] + deltas[1]) * dims[0] + deltas[0];
+}
+
+/// Elements in structured grids have a single index with 0 being the entry at
+/// the minimum extent in every direction and then increasing first in the r
+/// then the s direction and so on. This method converts topological
+/// coordinates to a flat index.
+///
 template<vtkm::IdComponent Dimensions>
 VTKM_EXEC_CONT_EXPORT
 vtkm::Id
@@ -299,6 +345,52 @@ ExtentCellTopologyIndexToFlatIndex(const vtkm::Vec<vtkm::Id,Dimensions> &ijk,
     flatIndex = flatIndex*dims[dimIndex] + deltas[dimIndex];
   }
   return flatIndex;
+}
+
+/// Elements in structured grids have a single index with 0 being the entry at
+/// the minimum extent in every direction and then increasing first in the r
+/// then the s direction and so on. This method converts topological
+/// coordinates to a flat index.
+///
+template<>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Id
+ExtentCellTopologyIndexToFlatIndex<1>(const vtkm::Vec<vtkm::Id,1> &ijk,
+                                       const vtkm::Extent<1> &extent)
+{
+  return ijk[0] - extent.Min[0];
+}
+
+/// Elements in structured grids have a single index with 0 being the entry at
+/// the minimum extent in every direction and then increasing first in the r
+/// then the s direction and so on. This method converts topological
+/// coordinates to a flat index.
+///
+template<>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Id
+ExtentCellTopologyIndexToFlatIndex<2>(const vtkm::Vec<vtkm::Id,2> &ijk,
+                                       const vtkm::Extent<2> &extent)
+{
+  const vtkm::Vec<vtkm::Id,2> dims = ExtentCellDimensions(extent);
+  const vtkm::Vec<vtkm::Id,2> deltas = ijk - extent.Min;
+  return (deltas[1] * dims[0] + deltas[0]);
+}
+
+/// Elements in structured grids have a single index with 0 being the entry at
+/// the minimum extent in every direction and then increasing first in the r
+/// then the s direction and so on. This method converts topological
+/// coordinates to a flat index.
+///
+template<>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Id
+ExtentCellTopologyIndexToFlatIndex<3>(const vtkm::Vec<vtkm::Id,3> &ijk,
+                                       const vtkm::Extent<3> &extent)
+{
+  const vtkm::Vec<vtkm::Id,3> dims = ExtentCellDimensions(extent);
+  const vtkm::Vec<vtkm::Id,3> deltas = ijk - extent.Min;
+  return (deltas[2] * dims[1] + deltas[1]) * dims[0] + deltas[0];
 }
 
 /// Given a cell index, returns the index to the first point incident on that
