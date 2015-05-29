@@ -22,7 +22,8 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+
+#include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
 namespace vtkm {
 namespace cont {
@@ -60,7 +61,7 @@ public:
     CopyData(&d[0], d.size());
   }
   template <typename T>
-  Field(std::string n, int o, Association a, const T *d, int nvals)
+  Field(std::string n, int o, Association a, const T *d, vtkm::Id nvals)
     : name(n), order(o), association(a)
   {
     VTKM_ASSERT_CONT(association == ASSOC_WHOLE_MESH ||
@@ -91,7 +92,7 @@ public:
     CopyData(&d[0], d.size());
   }
   template <typename T>
-  Field(std::string n, int o, Association a, std::string csn, const T *d, int nvals)
+  Field(std::string n, int o, Association a, std::string csn, const T *d, vtkm::Id nvals)
     : name(n), order(o), association(a), assoc_cellset_name(csn)
   {
     VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
@@ -120,7 +121,7 @@ public:
     CopyData(&d[0], d.size());
   }
   template <typename T>
-  Field(std::string n, int o, Association a, int l, const T *d, int nvals)
+  Field(std::string n, int o, Association a, int l, const T *d, vtkm::Id nvals)
     : name(n), order(o), association(a), assoc_logical_dim(l)
   {
     VTKM_ASSERT_CONT(association == ASSOC_LOGICAL_DIM);
@@ -170,13 +171,19 @@ public:
   }
 
   template <typename T>
-  void CopyData(const T *ptr, int nvals)
+  void CopyData(const T *ptr, vtkm::Id nvals)
   {
-    vtkm::cont::ArrayHandle<T> tmp1 = vtkm::cont::make_ArrayHandle(ptr, nvals);
-    vtkm::cont::ArrayHandle<T> tmp2;
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::
-      Copy(tmp1, tmp2);
-    data = tmp2;
+    //allocate main memory using an array handle
+    vtkm::cont::ArrayHandle<T> tmp;
+    tmp.Allocate(nvals);
+
+    //copy into the memory owned by the array handle
+    std::copy(ptr,
+              ptr + static_cast<std::size_t>(nvals),
+              vtkm::cont::ArrayPortalToIteratorBegin(tmp.GetPortalControl()));
+
+    //assign to the dynamic array handle
+    data = tmp;
   }
 
   virtual void PrintSummary(std::ostream &out)
@@ -196,7 +203,7 @@ public:
       //out<<" order= "<<order;
       out<<"\n";
   }
-  
+
 private:
   std::string  name;  ///< name of field
 
