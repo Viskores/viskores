@@ -18,17 +18,12 @@
 ##  this software.
 ##============================================================================
 
-set(unit_tests
-  UnitTestWorkletMapField.cxx
+set(headers
+  DeviceAdapterTBB.h
   )
 
-vtkm_save_worklet_unit_tests(${unit_tests})
+add_subdirectory(internal)
 
-vtkm_worklet_unit_tests( VTKM_DEVICE_ADAPTER_SERIAL )
+vtkm_declare_headers(${headers})
 
-if (VTKm_ENABLE_CUDA)
-  vtkm_worklet_unit_tests( VTKM_DEVICE_ADAPTER_CUDA )
-endif()
-if (VTKm_ENABLE_TBB)
-  vtkm_worklet_unit_tests( VTKM_DEVICE_ADAPTER_TBB )
-endif()
+add_subdirectory(testing)

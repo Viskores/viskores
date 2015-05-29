@@ -37,6 +37,60 @@ namespace vtkm {
 namespace cont {
 namespace internal {
 
+// Binary function object wrapper which can detect and handle calling the
+// wrapped operator with complex value types such as
+// IteratorFromArrayPortalValue which happen when passed an input array that
+// is implicit.
+template<typename ResultType, typename Function>
+  struct WrappedBinaryOperator
+{
+  Function m_f;
+
+ VTKM_CONT_EXPORT
+  WrappedBinaryOperator(const Function &f)
+    : m_f(f)
+  {}
+
+  template<typename Argument1, typename Argument2>
+   VTKM_CONT_EXPORT ResultType operator()(const Argument1 &x, const Argument2 &y) const
+  {
+    return m_f(x, y);
+  }
+
+  template<typename Argument1, typename Argument2>
+   VTKM_CONT_EXPORT ResultType operator()(
+    const detail::IteratorFromArrayPortalValue<Argument1> &x,
+    const detail::IteratorFromArrayPortalValue<Argument2> &y) const
+  {
+    typedef typename detail::IteratorFromArrayPortalValue<Argument1>::ValueType
+                            ValueTypeX;
+    typedef typename detail::IteratorFromArrayPortalValue<Argument2>::ValueType
+                            ValueTypeY;
+    return m_f( (ValueTypeX)x, (ValueTypeY)y );
+  }
+
+  template<typename Argument1, typename Argument2>
+   VTKM_CONT_EXPORT ResultType operator()(
+    const Argument1 &x,
+    const detail::IteratorFromArrayPortalValue<Argument2> &y) const
+  {
+    typedef typename detail::IteratorFromArrayPortalValue<Argument2>::ValueType
+                            ValueTypeY;
+    return m_f( x, (ValueTypeY)y );
+  }
+
+  template<typename Argument1, typename Argument2>
+   VTKM_CONT_EXPORT ResultType operator()(
+    const detail::IteratorFromArrayPortalValue<Argument1> &x,
+    const Argument2 &y) const
+  {
+    typedef typename detail::IteratorFromArrayPortalValue<Argument1>::ValueType
+                            ValueTypeX;
+    return m_f( (ValueTypeX)x, y );
+  }
+
+};
+
 /// \brief
 ///
 /// This struct provides algorithms that implement "general" device adapter

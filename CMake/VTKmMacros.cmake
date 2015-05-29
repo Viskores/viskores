@@ -340,6 +340,9 @@ function(vtkm_worklet_unit_tests device_adapter)
       cuda_add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
     else()
       add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
+      if("${device_adapter}" STREQUAL "VTKM_DEVICE_ADAPTER_TBB")
+        target_link_libraries(${test_prog} ${TBB_LIBRARIES})
+      endif()
     endif()
 
     #add a test for each worklet test file. We will inject the device

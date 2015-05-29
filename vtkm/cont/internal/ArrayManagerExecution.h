@@ -162,8 +162,8 @@ public:
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 // #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
 // #include <vtkm/openmp/cont/internal/ArrayManagerExecutionOpenMP.h>
-// #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
-// #include <vtkm/tbb/cont/internal/ArrayManagerExecutionTBB.h>
+#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
+#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
 #endif
 
 #endif //vtk_m_cont_internal_ArrayManagerExecution_h

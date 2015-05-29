@@ -18,56 +18,40 @@
 ##  this software.
 ##============================================================================
 
-include_directories(${Boost_INCLUDE_DIRS})
+if (VTKm_TBB_initialize_complete)
+  return()
+endif (VTKm_TBB_initialize_complete)
 
-set(headers
-  ArrayHandle.h
-  ArrayHandleCompositeVector.h
-  ArrayHandleConstant.h
-  ArrayHandleCounting.h
-  ArrayHandleImplicit.h
-  ArrayHandlePermutation.h
-  ArrayHandleTransform.h
-  ArrayHandleUniformPointCoordinates.h
-  ArrayHandleZip.h
-  ArrayPortal.h
-  ArrayPortalToIterators.h
-  Assert.h
-  DeviceAdapter.h
-  DeviceAdapterAlgorithm.h
-  DeviceAdapterSerial.h
-  DynamicArrayHandle.h
-  DynamicPointCoordinates.h
-  Error.h
-  ErrorControl.h
-  ErrorControlAssert.h
-  ErrorControlBadType.h
-  ErrorControlBadValue.h
-  ErrorControlInternal.h
-  ErrorControlOutOfMemory.h
-  ErrorExecution.h
-  PointCoordinatesArray.h
-  PointCoordinatesListTag.h
-  PointCoordinatesUniform.h
-  Storage.h
-  StorageBasic.h
-  StorageImplicit.h
-  StorageListTag.h
-  Timer.h
+#-----------------------------------------------------------------------------
+# Find TBB.
+#-----------------------------------------------------------------------------
+if (NOT VTKm_TBB_FOUND)
+  find_package(TBB REQUIRED)
+  set (VTKm_TBB_FOUND ${TBB_FOUND})
+endif()
+
+#-----------------------------------------------------------------------------
+# Find the Boost library.
+#-----------------------------------------------------------------------------
+if (VTKm_TBB_FOUND)
+  if(NOT Boost_FOUND)
+    find_package(BoostHeaders ${VTKm_REQUIRED_BOOST_VERSION})
+  endif()
+
+  if (NOT Boost_FOUND)
+    message(STATUS "Boost not found")
+    set(VTKm_TBB_FOUND FALSE)
+  endif()
+endif()
+
+#-----------------------------------------------------------------------------
+# Set up all these dependent packages (if they were all found).
+#-----------------------------------------------------------------------------
+if (VTKm_TBB_FOUND)
+  include_directories(
+    ${Boost_INCLUDE_DIRS}
+    ${VTKm_INCLUDE_DIRS}
+    ${TBB_INCLUDE_DIRS}
   )
-
-#-----------------------------------------------------------------------------
-add_subdirectory(internal)
-add_subdirectory(arg)
-
-vtkm_declare_headers(${impl_headers} ${headers})
-
-if (VTKm_ENABLE_CUDA)
-  add_subdirectory(cuda)
-endif ()
-if (VTKm_ENABLE_TBB)
-  add_subdirectory(tbb)
-endif ()
-
-#-----------------------------------------------------------------------------
-add_subdirectory(testing)
+  set(VTKm_TBB_initialize_complete TRUE)
+endif()
