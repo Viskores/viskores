@@ -85,14 +85,17 @@ public:
                            const vtkm::Id & vtkmNotUsed(type),
                            const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> & vtkmNotUsed(nodeIDs) ) const
   {
-      //simple functor that returns the average nodeValue.
-      vtkm::Float32 avgVal = 0.0;
+    //simple functor that returns the average nodeValue.
+    vtkm::Float32 avgVal = 0.0;
 
-      for (vtkm::Id i=0; i<count; ++i)
-          avgVal += nodevals[i];
-
-      avgVal /= count;
-      return avgVal;
+    for (vtkm::Id i=0; i<count; ++i)
+    {
+      avgVal += nodevals[i];
+      // std::cout << i << " " << nodevals[i] << std::endl;
+    }
+    // std::cout << "avgVal: " << avgVal << std::endl;
+    // std::cout << "avgVal: " << (avgVal / count) << std::endl;
+    return avgVal / count;
   }
 };
 
@@ -189,16 +192,15 @@ TestAvgNodeToCell()
   dispatcher.Invoke(ds.GetField("nodevar").GetData(),
 		    cse->GetNodeToCellConnectivity(),
 		    ds.GetField("outcellvar").GetData());
-  std::cout<<__LINE__<<std::endl;
 
   //make sure we got the right answer.
   vtkm::cont::ArrayHandle<vtkm::Float32> res;
-  res = ds.GetField(5).GetData().CastToArrayHandle(vtkm::Float32(),
+  res = ds.GetField("outcellvar").GetData().CastToArrayHandle(vtkm::Float32(),
 						    VTKM_DEFAULT_STORAGE_TAG());
 
-  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 76.833),
+  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 20.1333),
 		   "Wrong result for NodeToCellAverage worklet");
-  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 55.225),
+  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 35.2),
 		   "Wrong result for NodeToCellAverage worklet");
 }
 
