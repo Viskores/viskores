@@ -71,9 +71,6 @@ template<vtkm::cont::TopologyType FromTopology, vtkm::cont::TopologyType ToTopoo
 class RegularConnectivity
 {
 public:
-typedef vtkm::RegularConnectivity<FromTopology,ToTopoogy,Dimension> ExecObjectType;
-
-public:
   RegularConnectivity():
     rs()
   {
@@ -82,9 +79,13 @@ public:
 
   RegularConnectivity(RegularStructure<Dimension> regularStructure):
     rs(regularStructure)
-    {
+  {
+  }
 
-    }
+  RegularConnectivity( const RegularConnectivity& other):
+    rs(other.rs)
+  {
+  }
 
 
   VTKM_EXEC_CONT_EXPORT
@@ -101,10 +102,18 @@ public:
     IndexLookupHelper<FromTopology,ToTopoogy,Dimension>::GetIndices(rs,index,ids);
   }
 
-  template<typename Device>
-  ExecObjectType PrepareForInput(Device) const
+  template <typename DeviceAdapterTag>
+  struct ExecutionTypes
+  { //Using this style so we can template the RegularConnecivity based on the
+    //backend in the future without have to change the Transport logic
+    typedef vtkm::RegularConnectivity<FromTopology,ToTopoogy,Dimension> ExecObjectType;
+  };
+
+  template<typename DeviceAdapterTag>
+  typename ExecutionTypes<DeviceAdapterTag>::ExecObjectType
+  PrepareForInput(DeviceAdapterTag) const
   {
-      return *this;
+      return typename ExecutionTypes<DeviceAdapterTag>::ExecObjectType(*this);
   }
 
 private:

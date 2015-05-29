@@ -41,8 +41,8 @@ template<typename ContObjectType, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagTopologyIn, ContObjectType, Device>
 {
   ///\todo: something like VTKM_IS_ARRAY_HANDLE(ContObjectType), but for topology
-
-  typedef typename ContObjectType::ExecObjectType ExecObjectType;
+  typedef typename ContObjectType::template ExecutionTypes<Device>::ExecObjectType
+      ExecObjectType;
 
   VTKM_CONT_EXPORT
   ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const

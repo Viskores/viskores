@@ -33,9 +33,6 @@ namespace cont {
 class ExplicitConnectivity
 {
 public:
-typedef vtkm::exec::ExplicitConnectivity<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> ExecObjectType;
-
-public:
   ExplicitConnectivity()
   {
     NumShapes = 0;
@@ -118,14 +115,21 @@ public:
     }
   }
 
-  template<typename Device>
-  ExecObjectType PrepareForInput(Device d) const
+  template <typename DeviceAdapterTag>
+  struct ExecutionTypes
   {
-    ExecObjectType obj;
-    obj.Shapes = Shapes.PrepareForInput(d);
-    obj.NumIndices = NumIndices.PrepareForInput(d);
-    obj.Connectivity = Connectivity.PrepareForInput(d);
-    obj.MapCellToConnectivityIndex = MapCellToConnectivityIndex.PrepareForInput(d);
+    typedef vtkm::exec::ExplicitConnectivity<DeviceAdapterTag> ExecObjectType;
+  };
+
+  template<typename DeviceAdapterTag>
+  typename ExecutionTypes<DeviceAdapterTag>::ExecObjectType
+  PrepareForInput(DeviceAdapterTag tag) const
+  {
+    vtkm::exec::ExplicitConnectivity<DeviceAdapterTag> obj;
+    obj.Shapes = Shapes.PrepareForInput(tag);
+    obj.NumIndices = NumIndices.PrepareForInput(tag);
+    obj.Connectivity = Connectivity.PrepareForInput(tag);
+    obj.MapCellToConnectivityIndex = MapCellToConnectivityIndex.PrepareForInput(tag);
     return obj;
   }
 
