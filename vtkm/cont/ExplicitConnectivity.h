@@ -25,7 +25,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
 namespace vtkm {
 namespace cont {
@@ -91,19 +91,26 @@ public:
   }
 
   /// Second method to add cells -- all at once.
+  /// Copies the data from the vectors, so they can be released.
   void FillViaCopy(const std::vector<vtkm::Id> &cellTypes,
                    const std::vector<vtkm::Id> &numIndices,
                    const std::vector<vtkm::Id> &connectivity)
   {
-    vtkm::cont::ArrayHandle<vtkm::Id> t1 = vtkm::cont::make_ArrayHandle(cellTypes);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(t1, Shapes);
-    vtkm::cont::ArrayHandle<vtkm::Id> t2 = vtkm::cont::make_ArrayHandle(numIndices);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(t2, NumIndices);
-    vtkm::cont::ArrayHandle<vtkm::Id> t3 = vtkm::cont::make_ArrayHandle(connectivity);
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(t3, Connectivity);
 
-    NumShapes = cellTypes.size();
-    ConnectivityLength = connectivity.size();
+    this->Shapes.Allocate( static_cast<vtkm::Id>(cellTypes.size()) );
+    std::copy(cellTypes.begin(), cellTypes.end(),
+              vtkm::cont::ArrayPortalToIteratorBegin(this->Shapes.GetPortalControl()));
+
+    this->NumIndices.Allocate( static_cast<vtkm::Id>(numIndices.size()) );
+    std::copy(numIndices.begin(), numIndices.end(),
+              vtkm::cont::ArrayPortalToIteratorBegin(this->NumIndices.GetPortalControl()));
+
+    this->Connectivity.Allocate( static_cast<vtkm::Id>(connectivity.size()) );
+    std::copy(connectivity.begin(), connectivity.end(),
+              vtkm::cont::ArrayPortalToIteratorBegin(this->Connectivity.GetPortalControl()));
+
+    this->NumShapes = this->Shapes.GetNumberOfValues();
+    this->ConnectivityLength = this->Connectivity.GetNumberOfValues();
 
     // allocate and build reverse index
     MapCellToConnectivityIndex.Allocate(NumShapes);
@@ -112,6 +119,30 @@ public:
     {
       MapCellToConnectivityIndex.GetPortalControl().Set(i, counter);
       counter += NumIndices.GetPortalControl().Get(i);
+    }
+  }
+
+  /// Second method to add cells -- all at once.
+  /// Assigns the array handles to the explicit connectivity. This is
+  /// the way you can fill the memory from another system without copying
+  void Fill(const vtkm::cont::ArrayHandle<vtkm::Id> &cellTypes,
+            const vtkm::cont::ArrayHandle<vtkm::Id> &numIndices,
+            const vtkm::cont::ArrayHandle<vtkm::Id> &connectivity)
+  {
+    this->Shapes = cellTypes;
+    this->NumIndices = numIndices;
+    this->Connectivity = connectivity;
+
+    this->NumShapes = this->Shapes.GetNumberOfValues();
+    this->ConnectivityLength = this->Connectivity.GetNumberOfValues();
+
+    // allocate and build reverse index
+    MapCellToConnectivityIndex.Allocate(this->NumShapes);
+    vtkm::Id counter = 0;
+    for (vtkm::Id i=0; i<this->NumShapes; ++i)
+    {
+      MapCellToConnectivityIndex.GetPortalControl().Set(i, counter);
+      counter += this->NumIndices.GetPortalControl().Get(i);
     }
   }
 
