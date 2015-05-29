@@ -32,7 +32,6 @@ set(headers
   NodeIdSet.h
   NodeIdTriplet.h
   NodeType.h
-  testing
   TopologyElementType.h
   TopologyIdCount.h
   TopologyIdSet.h
