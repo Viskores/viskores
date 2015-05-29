@@ -127,15 +127,15 @@ public:
     }
   }
 
-  template<typename Device>
+  template<typename DeviceTag>
   VTKM_CONT_EXPORT
-  ExecObjectType PrepareForInput(Device d) const
+  vtkm::exec::ExplicitConnectivity< DeviceTag> PrepareForInput(DeviceTag dt) const
   {
-    ExecObjectType obj;
-    obj.Shapes = Shapes.PrepareForInput(d);
-    obj.NumIndices = NumIndices.PrepareForInput(d);
-    obj.Connectivity = Connectivity.PrepareForInput(d);
-    obj.MapCellToConnectivityIndex = MapCellToConnectivityIndex.PrepareForInput(d);
+    vtkm::exec::ExplicitConnectivity< DeviceTag> obj;
+    obj.Shapes = Shapes.PrepareForInput(dt);
+    obj.NumIndices = NumIndices.PrepareForInput(dt);
+    obj.Connectivity = Connectivity.PrepareForInput(dt);
+    obj.MapCellToConnectivityIndex = MapCellToConnectivityIndex.PrepareForInput(dt);
     return obj;
   }
 

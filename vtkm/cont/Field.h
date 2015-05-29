@@ -44,6 +44,7 @@ public:
 
   /// constructors for points / whole mesh
   template <typename T>
+  VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, ArrayHandle<T> &d)
     : name(n), order(o), association(a)
   {
@@ -52,6 +53,7 @@ public:
     SetData(d);
   }
   template <typename T>
+  VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, const std::vector<T> &d)
     : name(n), order(o), association(a)
   {
@@ -60,6 +62,7 @@ public:
     CopyData(&d[0], d.size());
   }
   template <typename T>
+  VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, const T *d, int nvals)
     : name(n), order(o), association(a)
   {
@@ -68,6 +71,7 @@ public:
     CopyData(d, nvals);
   }
   template <typename T>
+  VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a)
     : name(n), order(o), association(a)
   {
@@ -77,6 +81,7 @@ public:
 
   /// constructors for cell set associations
   template <typename T>
+  VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, std::string csn, ArrayHandle<T> &d)
     : name(n), order(o), association(a), assoc_cellset_name(csn)
   {
@@ -84,6 +89,7 @@ public:
     SetData(d);
   }
   template <typename T>
+  VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, std::string csn, const std::vector<T> &d)
     : name(n), order(o), association(a), assoc_cellset_name(csn)
   {
@@ -91,6 +97,7 @@ public:
     CopyData(&d[0], d.size());
   }
   template <typename T>
+  VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, std::string csn, const T *d, int nvals)
     : name(n), order(o), association(a), assoc_cellset_name(csn)
   {
@@ -98,6 +105,7 @@ public:
     CopyData(d, nvals);
   }
   template <typename T>
+  VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, std::string csn)
     : name(n), order(o), association(a), assoc_cellset_name(csn)
   {
@@ -106,6 +114,7 @@ public:
 
   /// constructors for logical dimension associations
   template <typename T>
+  VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, int l, ArrayHandle<T> &d)
     : name(n), order(o), association(a), assoc_logical_dim(l)
   {
@@ -113,6 +122,7 @@ public:
     SetData(d);
   }
   template <typename T>
+  VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, int l, const std::vector<T> &d)
     : name(n), order(o), association(a), assoc_logical_dim(l)
   {
@@ -120,6 +130,7 @@ public:
     CopyData(&d[0], d.size());
   }
   template <typename T>
+  VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, int l, const T *d, int nvals)
     : name(n), order(o), association(a), assoc_logical_dim(l)
   {
@@ -127,49 +138,58 @@ public:
     CopyData(d, nvals);
   }
   template <typename T>
+  VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, int l)
     : name(n), order(o), association(a), assoc_logical_dim(l)
   {
     VTKM_ASSERT_CONT(association == ASSOC_LOGICAL_DIM);
   }
 
+  VTKM_CONT_EXPORT
   const std::string &GetName()
   {
     return name;
   }
 
+  VTKM_CONT_EXPORT
   Association GetAssociation()
   {
     return association;
   }
 
+  VTKM_CONT_EXPORT
   int GetOrder()
   {
     return order;
   }
 
+  VTKM_CONT_EXPORT
   std::string GetAssocCellSet()
   {
     return assoc_cellset_name;
   }
 
+  VTKM_CONT_EXPORT
   int GetAssocLogicalDim()
   {
     return assoc_logical_dim;
   }
 
+  VTKM_CONT_EXPORT
   vtkm::cont::DynamicArrayHandle &GetData()
   {
     return data;
   }
 
   template <typename T>
+  VTKM_CONT_EXPORT
   void SetData(vtkm::cont::ArrayHandle<T> &newdata)
   {
     data = newdata;
   }
 
   template <typename T>
+  VTKM_CONT_EXPORT
   void CopyData(const T *ptr, int nvals)
   {
     vtkm::cont::ArrayHandle<T> tmp1 = vtkm::cont::make_ArrayHandle(ptr, nvals);
@@ -179,6 +199,7 @@ public:
     data = tmp2;
   }
 
+  VTKM_CONT_EXPORT
   virtual void PrintSummary(std::ostream &out)
   {
       out<<"   "<<name;

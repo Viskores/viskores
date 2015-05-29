@@ -81,6 +81,6 @@ class CoordinateSystem
 } // namespace vtkm
 
 
-#endif //vtk_m_cont_DataSet_h
+#endif //vtk_m_cont_CoordinateSystem_h
 
 
