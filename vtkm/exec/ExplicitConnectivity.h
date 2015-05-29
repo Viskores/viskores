@@ -61,16 +61,6 @@ public:
       ids[i] = Connectivity.Get(start+i);
   }
 
-#if 0
-  VTKM_EXEC_EXPORT
-  template <vtkm::IdComponent ItemTupleLength>
-  void AddShape(vtkm::CellType cellType, int numVertices, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
-  {
-    ///\todo: how do I modify an array handle?
-  }
-#endif
-
-
  typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<Device>::PortalConst PortalType;
  PortalType Shapes;
  PortalType NumIndices;

@@ -33,25 +33,31 @@ namespace cont {
 class ExplicitConnectivity
 {
 public:
+
+  VTKM_CONT_EXPORT
   ExplicitConnectivity()
   {
     NumShapes = 0;
     ConnectivityLength = 0;
   }
 
+  VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfElements()
   {
     return Shapes.GetNumberOfValues();
   }
+  VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfIndices(vtkm::Id index)
   {
     return NumIndices.GetPortalControl().Get(index);
   }
+  VTKM_CONT_EXPORT
   vtkm::Id GetElementShapeType(vtkm::Id index)
   {
     return Shapes.GetPortalControl().Get(index);
   }
   template <vtkm::IdComponent ItemTupleLength>
+  VTKM_CONT_EXPORT
   void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
     int n = GetNumberOfIndices(index);
@@ -61,6 +67,7 @@ public:
   }
 
   /// First method to add cells -- one at a time.
+  VTKM_CONT_EXPORT
   void PrepareToAddCells(vtkm::Id numShapes, vtkm::Id connectivityMaxLen)
   {
     Shapes.Allocate(numShapes);
@@ -72,6 +79,7 @@ public:
   }
 
   template <vtkm::IdComponent ItemTupleLength>
+  VTKM_CONT_EXPORT
   void AddCell(vtkm::CellType cellType, int numVertices,
                 const vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
@@ -85,6 +93,7 @@ public:
     ConnectivityLength += numVertices;
   }
 
+  VTKM_CONT_EXPORT
   void CompleteAddingCells()
   {
     Connectivity.Shrink(ConnectivityLength);
@@ -92,6 +101,7 @@ public:
 
   /// Second method to add cells -- all at once.
   /// Copies the data from the vectors, so they can be released.
+  VTKM_CONT_EXPORT
   void FillViaCopy(const std::vector<vtkm::Id> &cellTypes,
                    const std::vector<vtkm::Id> &numIndices,
                    const std::vector<vtkm::Id> &connectivity)
@@ -161,9 +171,11 @@ public:
     obj.NumIndices = NumIndices.PrepareForInput(tag);
     obj.Connectivity = Connectivity.PrepareForInput(tag);
     obj.MapCellToConnectivityIndex = MapCellToConnectivityIndex.PrepareForInput(tag);
+
     return obj;
   }
 
+  VTKM_CONT_EXPORT
   virtual void PrintSummary(std::ostream &out)
   {
       out<<"    ExplicitConnectivity: #shapes= "<<NumShapes<<" #connectivity= "<<ConnectivityLength<<"\n";
