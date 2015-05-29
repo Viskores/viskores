@@ -23,6 +23,7 @@
 #include <vtkm/Types.h>
 #include <vector>
 #include <string>
+#include <ostream>
 
 namespace vtkm {
 namespace cont {

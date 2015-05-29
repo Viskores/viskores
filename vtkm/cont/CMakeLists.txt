@@ -32,6 +32,10 @@ set(headers
   ArrayPortal.h
   ArrayPortalToIterators.h
   Assert.h
+  CellSet.h
+  CellSetExplicit.h
+  CellSetStructured.h
+  CoordinateSystem.h
   DataSet.h
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
@@ -47,6 +51,8 @@ set(headers
   ErrorControlInternal.h
   ErrorControlOutOfMemory.h
   ErrorExecution.h
+  Field.h
+  LogicalStructure.h
   PointCoordinatesArray.h
   PointCoordinatesListTag.h
   PointCoordinatesUniform.h
@@ -55,6 +61,7 @@ set(headers
   StorageImplicit.h
   StorageListTag.h
   Timer.h
+  TopologyType.h
   )
 
 #-----------------------------------------------------------------------------
