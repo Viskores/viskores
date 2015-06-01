@@ -30,6 +30,9 @@
 namespace vtkm {
 namespace cont {
 
+template<typename ShapeStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
+         typename IndiceStorageTag        = VTKM_DEFAULT_STORAGE_TAG,
+         typename ConnectivityStorageTag  = VTKM_DEFAULT_STORAGE_TAG >
 class ExplicitConnectivity
 {
 public:
@@ -135,9 +138,9 @@ public:
   /// Second method to add cells -- all at once.
   /// Assigns the array handles to the explicit connectivity. This is
   /// the way you can fill the memory from another system without copying
-  void Fill(const vtkm::cont::ArrayHandle<vtkm::Id> &cellTypes,
-            const vtkm::cont::ArrayHandle<vtkm::Id> &numIndices,
-            const vtkm::cont::ArrayHandle<vtkm::Id> &connectivity)
+  void Fill(const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &cellTypes,
+            const vtkm::cont::ArrayHandle<vtkm::Id, IndiceStorageTag> &numIndices,
+            const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &connectivity)
   {
     this->Shapes = cellTypes;
     this->NumIndices = numIndices;
@@ -159,20 +162,32 @@ public:
   template <typename DeviceAdapterTag>
   struct ExecutionTypes
   {
-    typedef vtkm::exec::ExplicitConnectivity<DeviceAdapterTag> ExecObjectType;
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> ShapeHandle;
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Id, IndiceStorageTag> IndiceHandle;
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> ConnectivityHandle;
+    typedef vtkm::cont::ArrayHandle<vtkm::Id> MapCellToConnectivityHandle;
+
+    typedef typename ShapeHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst ShapePortalType;
+    typedef typename IndiceHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst IndicePortalType;
+    typedef typename ConnectivityHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst ConnectivityPortalType;
+    typedef typename MapCellToConnectivityHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst MapConnectivityPortalType;
+
+    typedef vtkm::exec::ExplicitConnectivity<ShapePortalType,
+                                             IndicePortalType,
+                                             ConnectivityPortalType,
+                                             MapConnectivityPortalType
+                                             > ExecObjectType;
   };
 
   template<typename DeviceAdapterTag>
   typename ExecutionTypes<DeviceAdapterTag>::ExecObjectType
   PrepareForInput(DeviceAdapterTag tag) const
   {
-    vtkm::exec::ExplicitConnectivity<DeviceAdapterTag> obj;
-    obj.Shapes = Shapes.PrepareForInput(tag);
-    obj.NumIndices = NumIndices.PrepareForInput(tag);
-    obj.Connectivity = Connectivity.PrepareForInput(tag);
-    obj.MapCellToConnectivityIndex = MapCellToConnectivityIndex.PrepareForInput(tag);
-
-    return obj;
+    typedef typename ExecutionTypes<DeviceAdapterTag>::ExecObjectType ExecObjType;
+    return ExecObjType(this->Shapes.PrepareForInput(tag),
+                       this->NumIndices.PrepareForInput(tag),
+                       this->Connectivity.PrepareForInput(tag),
+                       this->MapCellToConnectivityIndex.PrepareForInput(tag));
   }
 
   VTKM_CONT_EXPORT
@@ -194,10 +209,10 @@ public:
 private:
   vtkm::Id ConnectivityLength;
   vtkm::Id NumShapes;
-  vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> Shapes;
-  vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> NumIndices;
-  vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> Connectivity;
-  vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> MapCellToConnectivityIndex;
+  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> Shapes;
+  vtkm::cont::ArrayHandle<vtkm::Id, IndiceStorageTag> NumIndices;
+  vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> Connectivity;
+  vtkm::cont::ArrayHandle<vtkm::Id> MapCellToConnectivityIndex;
 };
 
 }

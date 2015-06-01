@@ -24,7 +24,7 @@ public:
     return nodesOfCellsConnectivity.GetNumberOfElements();
   }
 
-  ExplicitConnectivity &GetNodeToCellConnectivity()
+  ExplicitConnectivity<> &GetNodeToCellConnectivity()
   {
     return nodesOfCellsConnectivity;
   }
@@ -36,7 +36,7 @@ public:
   }
 
 public:
-  ExplicitConnectivity nodesOfCellsConnectivity;
+  ExplicitConnectivity<> nodesOfCellsConnectivity;
 };
 
 }

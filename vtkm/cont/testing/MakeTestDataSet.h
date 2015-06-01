@@ -155,7 +155,7 @@ MakeTestDataSet::Make3DExplicitDataSet0()
 
   boost::shared_ptr< vtkm::cont::CellSetExplicit > cs(
                                 new vtkm::cont::CellSetExplicit("cells", 2));
-  vtkm::cont::ExplicitConnectivity &ec = cs->nodesOfCellsConnectivity;
+  vtkm::cont::ExplicitConnectivity<> &ec = cs->nodesOfCellsConnectivity;
   ec.FillViaCopy(shapes, numindices, conn);
 
   //todo this need to be a reference/shared_ptr style class
@@ -189,7 +189,7 @@ MakeTestDataSet::Make3DExplicitDataSet1()
 
   boost::shared_ptr< vtkm::cont::CellSetExplicit > cs(
                                 new vtkm::cont::CellSetExplicit("cells", 2));
-  vtkm::cont::ExplicitConnectivity &ec = cs->nodesOfCellsConnectivity;
+  vtkm::cont::ExplicitConnectivity<> &ec = cs->nodesOfCellsConnectivity;
 
   ec.PrepareToAddCells(2, 7);
   ec.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));

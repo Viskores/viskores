@@ -27,11 +27,28 @@
 namespace vtkm {
 namespace exec {
 
-template<typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+template<typename ShapePortalType,
+         typename IndicePortalType,
+         typename ConnectivityPortalType,
+         typename MapConnectivityPortalType
+         >
 class ExplicitConnectivity
 {
 public:
   ExplicitConnectivity() {}
+
+  ExplicitConnectivity(const ShapePortalType& shapePortal,
+                       const IndicePortalType& indicePortal,
+                       const ConnectivityPortalType& connPortal,
+                       const MapConnectivityPortalType& mapConnPortal
+                       )
+  : Shapes(shapePortal),
+    NumIndices(indicePortal),
+    Connectivity(connPortal),
+    MapCellToConnectivityIndex(mapConnPortal)
+  {
+
+  }
 
   VTKM_EXEC_EXPORT
   vtkm::Id GetNumberOfElements()
@@ -61,11 +78,11 @@ public:
       ids[i] = Connectivity.Get(start+i);
   }
 
- typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<Device>::PortalConst PortalType;
- PortalType Shapes;
- PortalType NumIndices;
- PortalType Connectivity;
- PortalType MapCellToConnectivityIndex;
+private:
+ ShapePortalType Shapes;
+ IndicePortalType NumIndices;
+ ConnectivityPortalType Connectivity;
+ MapConnectivityPortalType MapCellToConnectivityIndex;
 };
 
 } // namespace exec
