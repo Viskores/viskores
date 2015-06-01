@@ -153,8 +153,8 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   conn.push_back(3);
   conn.push_back(4);
 
-  boost::shared_ptr< vtkm::cont::CellSetExplicit > cs(
-                                new vtkm::cont::CellSetExplicit("cells", 2));
+  boost::shared_ptr< vtkm::cont::CellSetExplicit<> > cs(
+                                new vtkm::cont::CellSetExplicit<>("cells", 2));
   vtkm::cont::ExplicitConnectivity<> &ec = cs->nodesOfCellsConnectivity;
   ec.FillViaCopy(shapes, numindices, conn);
 
@@ -187,8 +187,8 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   vtkm::Float32 cellvar[2] = {100.1, 100.2};
   ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
-  boost::shared_ptr< vtkm::cont::CellSetExplicit > cs(
-                                new vtkm::cont::CellSetExplicit("cells", 2));
+  boost::shared_ptr< vtkm::cont::CellSetExplicit<> > cs(
+                                new vtkm::cont::CellSetExplicit<>("cells", 2));
   vtkm::cont::ExplicitConnectivity<> &ec = cs->nodesOfCellsConnectivity;
 
   ec.PrepareToAddCells(2, 7);

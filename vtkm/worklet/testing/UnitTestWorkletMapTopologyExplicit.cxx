@@ -137,8 +137,8 @@ TestMaxNodeOrCell()
                        "Incorrect number of fields");
 
   boost::shared_ptr<vtkm::cont::CellSet> cs = ds.GetCellSet(0);
-  vtkm::cont::CellSetExplicit *cse =
-        dynamic_cast<vtkm::cont::CellSetExplicit*>(cs.get());
+  vtkm::cont::CellSetExplicit<> *cse =
+        dynamic_cast<vtkm::cont::CellSetExplicit<>*>(cs.get());
 
   VTKM_TEST_ASSERT(cse, "Expected an explicit cell set");
 
@@ -183,8 +183,8 @@ TestAvgNodeToCell()
                        "Incorrect number of fields");
 
   boost::shared_ptr<vtkm::cont::CellSet> cs = ds.GetCellSet(0);
-  vtkm::cont::CellSetExplicit *cse =
-        dynamic_cast<vtkm::cont::CellSetExplicit*>(cs.get());
+  vtkm::cont::CellSetExplicit<> *cse =
+        dynamic_cast<vtkm::cont::CellSetExplicit<>*>(cs.get());
 
   VTKM_TEST_ASSERT(cse, "Expected an explicit cell set");
 

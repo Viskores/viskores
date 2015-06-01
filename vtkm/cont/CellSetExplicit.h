@@ -7,12 +7,16 @@
 namespace vtkm {
 namespace cont {
 
+template<typename ShapeStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
+         typename IndiceStorageTag        = VTKM_DEFAULT_STORAGE_TAG,
+         typename ConnectivityStorageTag  = VTKM_DEFAULT_STORAGE_TAG >
 class CellSetExplicit : public CellSet
 {
 public:
-  //CellSetExplicit() : CellSet("", 0)
-  //{
-  //}
+  typedef ExplicitConnectivity<ShapeStorageTag,
+                               IndiceStorageTag,
+                               ConnectivityStorageTag
+                               > ExplicitConnectivityType;
 
   CellSetExplicit(const std::string &n, int d)
     : CellSet(n,d)
@@ -24,7 +28,7 @@ public:
     return nodesOfCellsConnectivity.GetNumberOfElements();
   }
 
-  ExplicitConnectivity<> &GetNodeToCellConnectivity()
+  ExplicitConnectivityType &GetNodeToCellConnectivity()
   {
     return nodesOfCellsConnectivity;
   }
@@ -36,7 +40,7 @@ public:
   }
 
 public:
-  ExplicitConnectivity<> nodesOfCellsConnectivity;
+  ExplicitConnectivityType nodesOfCellsConnectivity;
 };
 
 }
