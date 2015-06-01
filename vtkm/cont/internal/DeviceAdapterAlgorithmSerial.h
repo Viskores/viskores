@@ -138,12 +138,12 @@ public:
   {
     typedef typename vtkm::cont::ArrayHandle<T,KIn>
         ::template ExecutionTypes<Device>::PortalConst PortalKIn;
-    typedef typename vtkm::cont::ArrayHandle<T,VIn>
+    typedef typename vtkm::cont::ArrayHandle<U,VIn>
         ::template ExecutionTypes<Device>::PortalConst PortalVIn;
 
     typedef typename vtkm::cont::ArrayHandle<T,KOut>
         ::template ExecutionTypes<Device>::Portal PortalKOut;
-    typedef typename vtkm::cont::ArrayHandle<T,VOut>
+    typedef typename vtkm::cont::ArrayHandle<U,VOut>
         ::template ExecutionTypes<Device>::Portal PortalVOut;
 
     PortalKIn keysPortalIn = keys.PrepareForInput(Device());

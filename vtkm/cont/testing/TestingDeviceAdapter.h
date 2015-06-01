@@ -1195,6 +1195,44 @@ private:
       }
     }
 
+
+    //next test with values in vec3d (Added by Jimmy to be reviewed)
+    {
+    const vtkm::Id inputLength = 3;
+    const vtkm::Id expectedLength = 1;
+    vtkm::Id inputKeys[inputLength] =    {0, 0, 0}; // input keys
+    vtkm::Vec<vtkm::Float64, 3> inputValues[inputLength] =  {{13.1, 13.3, 13.5},
+                                                             {-2.1, -2.3, -2.5},
+                                                             {-1.0, -1.0, -1.0}}; // input keys
+    vtkm::Id expectedKeys[expectedLength] =   { 0};
+    vtkm::Vec<vtkm::Float64, 3> expectedValues[expectedLength] = {{10., 10., 10.}};
+
+    IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> values = MakeArrayHandle(inputValues, inputLength);
+
+    IdArrayHandle keysOut;
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> valuesOut;
+    Algorithm::ReduceByKey( keys,
+                            values,
+                            keysOut,
+                            valuesOut,
+                            vtkm::internal::Add() );
+
+    VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
+                    "Got wrong number of output keys");
+
+    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
+                    "Got wrong number of output values");
+
+    for(vtkm::Id i=0; i < expectedLength; ++i)
+      {
+      const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
+      const vtkm::Vec<vtkm::Float64, 3> v = valuesOut.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
+      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
+      }
+    }
+
   }
 
   static VTKM_CONT_EXPORT void TestScanInclusive()
