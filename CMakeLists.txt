@@ -54,6 +54,7 @@ include(CMake/VTKmCompilerExtras.cmake)
 #-----------------------------------------------------------------------------
 # Configurable Options
 option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
+option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
 option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 
 option(VTKm_USE_DOUBLE_PRECISION
@@ -73,6 +74,9 @@ vtkm_configure_device(Serial)
 if (VTKm_ENABLE_CUDA)
   vtkm_configure_device(Cuda)
 endif (VTKm_ENABLE_CUDA)
+if (VTKm_ENABLE_TBB)
+  vtkm_configure_device(TBB)
+endif (VTKm_ENABLE_TBB)
 
 #-----------------------------------------------------------------------------
 

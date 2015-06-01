@@ -38,60 +38,6 @@
 namespace vtkm {
 namespace cont {
 
-namespace internal
-{
-
-template<typename ResultType, typename Function>
-  struct WrappedBinaryOperator
-{
-  Function m_f;
-
- VTKM_CONT_EXPORT
-  WrappedBinaryOperator(const Function &f)
-    : m_f(f)
-  {}
-
-  template<typename Argument1, typename Argument2>
-   VTKM_CONT_EXPORT ResultType operator()(const Argument1 &x, const Argument2 &y) const
-  {
-    return m_f(x, y);
-  }
-
-  template<typename Argument1, typename Argument2>
-   VTKM_CONT_EXPORT ResultType operator()(
-    const detail::IteratorFromArrayPortalValue<Argument1> &x,
-    const detail::IteratorFromArrayPortalValue<Argument2> &y) const
-  {
-    typedef typename detail::IteratorFromArrayPortalValue<Argument1>::ValueType
-                            ValueTypeX;
-    typedef typename detail::IteratorFromArrayPortalValue<Argument2>::ValueType
-                            ValueTypeY;
-    return m_f( (ValueTypeX)x, (ValueTypeY)y );
-  }
-
-  template<typename Argument1, typename Argument2>
-   VTKM_CONT_EXPORT ResultType operator()(
-    const Argument1 &x,
-    const detail::IteratorFromArrayPortalValue<Argument2> &y) const
-  {
-    typedef typename detail::IteratorFromArrayPortalValue<Argument2>::ValueType
-                            ValueTypeY;
-    return m_f( x, (ValueTypeY)y );
-  }
-
-  template<typename Argument1, typename Argument2>
-   VTKM_CONT_EXPORT ResultType operator()(
-    const detail::IteratorFromArrayPortalValue<Argument1> &x,
-    const Argument2 &y) const
-  {
-    typedef typename detail::IteratorFromArrayPortalValue<Argument1>::ValueType
-                            ValueTypeX;
-    return m_f( (ValueTypeX)x, y );
-  }
-
-};
-
-}
 
 template<>
 struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial> :
@@ -204,7 +150,7 @@ public:
     PortalIn inputPortal = input.PrepareForInput(Device());
     PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
-    if (numberOfValues <= 0) { return T(0); }
+    if (numberOfValues <= 0) { return T(); }
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
@@ -225,10 +171,6 @@ public:
     typedef typename vtkm::cont::ArrayHandle<T,CIn>
         ::template ExecutionTypes<Device>::PortalConst PortalIn;
 
-    //We need to wrap the operator in a WrappedBinaryOperator struct
-    //which can detect and handle calling the binary operator with complex
-    //value types such as IteratorFromArrayPortalValue which happen
-    //when passed an input array that is implicit.
     internal::WrappedBinaryOperator<T,BinaryOperation> wrappedBinaryOp(
                                                                      binaryOp);
 
@@ -237,7 +179,7 @@ public:
     PortalIn inputPortal = input.PrepareForInput(Device());
     PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
-    if (numberOfValues <= 0) { return T(0); }
+    if (numberOfValues <= 0) { return T(); }
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
@@ -263,7 +205,7 @@ public:
     PortalIn inputPortal = input.PrepareForInput(Device());
     PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
-    if (numberOfValues <= 0) { return 0; }
+    if (numberOfValues <= 0) { return T(); }
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
