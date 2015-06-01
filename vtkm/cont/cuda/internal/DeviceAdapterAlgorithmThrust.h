@@ -21,6 +21,7 @@
 #ifndef vtk_m_cont_cuda_internal_DeviceAdapterThrust_h
 #define vtk_m_cont_cuda_internal_DeviceAdapterThrust_h
 
+#include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorExecution.h>
 
@@ -323,9 +324,14 @@ private:
                              BinaryOperation binaryOP)
   {
     typedef typename detail::IteratorTraits<KeysOutputPortal>::IteratorType
-                                                               IteratorType;
-    IteratorType keys_out_begin = IteratorBegin(keys_output);
-    ::thrust::pair< IteratorType, IteratorType > result_iterators;
+                                                             KeysIteratorType;
+    typedef typename detail::IteratorTraits<ValueOutputPortal>::IteratorType
+                                                             ValuesIteratorType;
+
+    KeysIteratorType keys_out_begin = IteratorBegin(keys_output);
+    ValuesIteratorType values_out_begin = IteratorBegin(values_output);
+
+    ::thrust::pair< KeysIteratorType, ValuesIteratorType > result_iterators;
 
     ::thrust::equal_to<typename KeysPortal::ValueType> binaryPredicate;
 
@@ -333,7 +339,7 @@ private:
                                                IteratorEnd(keys),
                                                IteratorBegin(values),
                                                keys_out_begin,
-                                               IteratorBegin(values_output),
+                                               values_out_begin,
                                                binaryPredicate,
                                                binaryOP);
 
