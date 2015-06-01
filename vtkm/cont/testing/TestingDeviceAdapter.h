@@ -1201,11 +1201,14 @@ private:
     const vtkm::Id inputLength = 3;
     const vtkm::Id expectedLength = 1;
     vtkm::Id inputKeys[inputLength] =    {0, 0, 0}; // input keys
-    vtkm::Vec<vtkm::Float64, 3> inputValues[inputLength] =  {{13.1, 13.3, 13.5},
-                                                             {-2.1, -2.3, -2.5},
-                                                             {-1.0, -1.0, -1.0}}; // input keys
+    vtkm::Vec<vtkm::Float64, 3> inputValues[inputLength];
+    inputValues[0] = vtkm::make_Vec(13.1, 13.3, 13.5);
+    inputValues[1] = vtkm::make_Vec(-2.1, -2.3, -2.5);
+    inputValues[2] = vtkm::make_Vec(-1.0, -1.0, -1.0); // input keys
     vtkm::Id expectedKeys[expectedLength] =   { 0};
-    vtkm::Vec<vtkm::Float64, 3> expectedValues[expectedLength] = {{10., 10., 10.}};
+
+    vtkm::Vec<vtkm::Float64, 3> expectedValues[expectedLength];
+    expectedValues[0] = vtkm::make_Vec(10., 10., 10.);
 
     IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> values = MakeArrayHandle(inputValues, inputLength);
