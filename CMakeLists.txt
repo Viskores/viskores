@@ -61,7 +61,7 @@ option(VTKm_USE_DOUBLE_PRECISION
   "Use double precision for floating point calculations"
   OFF
   )
-option(VTKm_USE_64BIT_IDS "Use 64-bit indices." OFF)
+option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
 if (VTKm_ENABLE_TESTING)
   enable_testing()
