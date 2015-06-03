@@ -25,7 +25,16 @@ set(headers
   Fetch.h
   FetchTagArrayDirectIn.h
   FetchTagArrayDirectOut.h
+  FetchTagArrayTopologyMapIn.h
   FetchTagExecObject.h
+  FetchTagTopologyIn.h
+  NodeIdCount.h
+  NodeIdSet.h
+  NodeIdTriplet.h
+  NodeType.h
+  TopologyElementType.h
+  TopologyIdCount.h
+  TopologyIdSet.h
   WorkIndex.h
   )
 

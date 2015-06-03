@@ -134,7 +134,12 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/vtkm/internal/Configure.h.in
 vtkm_install_headers(
   vtkm/internal ${CMAKE_CURRENT_BINARY_DIR}/vtkm/internal/Configure.h)
 
-find_package(Pyexpander)
+# List of Boost features used:
+# * Smart Ptr
+# * Meta programming language
+find_package(BoostHeaders ${VTKm_REQUIRED_BOOST_VERSION} REQUIRED)
+
+#####find_package(Pyexpander)
 
 #-----------------------------------------------------------------------------
 # Add subdirectories

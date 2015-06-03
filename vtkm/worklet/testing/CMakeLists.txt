@@ -20,6 +20,8 @@
 
 set(unit_tests
   UnitTestWorkletMapField.cxx
+  UnitTestWorkletMapTopologyExplicit.cxx
+  UnitTestWorkletMapTopologyRegular.cxx
   )
 
 vtkm_save_worklet_unit_tests(${unit_tests})

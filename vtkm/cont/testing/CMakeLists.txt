@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  MakeTestDataSet.h
   Testing.h
   TestingDeviceAdapter.h
   TestingFancyArrayHandles.h
@@ -37,6 +38,8 @@ set(unit_tests
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestContTesting.cxx
+  UnitTestDataSetRegular.cxx
+  UnitTestDataSetExplicit.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDeviceAdapterSerial.cxx

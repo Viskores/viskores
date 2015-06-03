@@ -20,7 +20,9 @@
 
 set(headers
   ExecutionObjectBase.h
+  ExplicitConnectivity.h
   FunctorBase.h
+  TopologyData.h
   )
 
 #-----------------------------------------------------------------------------

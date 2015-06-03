@@ -522,6 +522,29 @@ make_ArrayHandle(const std::vector<T,Allocator> &array)
   return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()));
 }
 
+template<typename T>
+VTKM_CONT_EXPORT
+void
+printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T> &array,
+			 std::ostream &out)
+{
+    vtkm::Id sz = array.GetNumberOfValues();
+    out<<"sz= "<<sz<<" [";
+    if (sz <= 5)
+	for (vtkm::Id i = 0 ; i < sz; i++)
+	{
+	    out<<array.GetPortalConstControl().Get(i);
+	    if (i != (sz-1)) out<<" ";
+	}
+    else
+    {
+	out<<array.GetPortalConstControl().Get(0)<<" "<<array.GetPortalConstControl().Get(1);
+	out<<" ... ";
+	out<<array.GetPortalConstControl().Get(sz-2)<<" "<<array.GetPortalConstControl().Get(sz-1);
+    }
+    out<<"]";
+}
+
 }
 }
 
