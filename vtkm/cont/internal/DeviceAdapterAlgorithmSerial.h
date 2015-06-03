@@ -8,7 +8,7 @@
 //
 //  Copyright 2014 Sandia Corporation.
 //  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014. Los Alamos National Security
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -38,6 +38,7 @@
 namespace vtkm {
 namespace cont {
 
+
 template<>
 struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial> :
     vtkm::cont::internal::DeviceAdapterAlgorithmGeneral<
@@ -48,6 +49,92 @@ private:
   typedef vtkm::cont::DeviceAdapterTagSerial Device;
 
 public:
+
+ template<typename T, class CIn>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
+  {
+    return Reduce(input, initialValue, vtkm::internal::Add());
+  }
+
+ template<typename T, class CIn, class BinaryOperator>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      T initialValue,
+      BinaryOperator binaryOp)
+  {
+    typedef typename vtkm::cont::ArrayHandle<T,CIn>
+        ::template ExecutionTypes<Device>::PortalConst PortalIn;
+
+    PortalIn inputPortal = input.PrepareForInput(Device());
+    return std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
+                           vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
+                           initialValue,
+                           binaryOp);
+  }
+
+  template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
+          class BinaryOperation>
+  VTKM_CONT_EXPORT static void ReduceByKey(
+      const vtkm::cont::ArrayHandle<T,KIn> &keys,
+      const vtkm::cont::ArrayHandle<U,VIn> &values,
+      vtkm::cont::ArrayHandle<T,KOut> &keys_output,
+      vtkm::cont::ArrayHandle<U,VOut> &values_output,
+      BinaryOperation binaryOp)
+  {
+    typedef typename vtkm::cont::ArrayHandle<T,KIn>
+        ::template ExecutionTypes<Device>::PortalConst PortalKIn;
+    typedef typename vtkm::cont::ArrayHandle<U,VIn>
+        ::template ExecutionTypes<Device>::PortalConst PortalVIn;
+
+    typedef typename vtkm::cont::ArrayHandle<T,KOut>
+        ::template ExecutionTypes<Device>::Portal PortalKOut;
+    typedef typename vtkm::cont::ArrayHandle<U,VOut>
+        ::template ExecutionTypes<Device>::Portal PortalVOut;
+
+    PortalKIn keysPortalIn = keys.PrepareForInput(Device());
+    PortalVIn valuesPortalIn = values.PrepareForInput(Device());
+
+    const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
+    PortalKOut keysPortalOut = keys_output.PrepareForOutput(numberOfKeys, Device());
+    PortalVOut valuesPortalOut = values_output.PrepareForOutput(numberOfKeys, Device());
+
+    vtkm::Id writePos = 0;
+    vtkm::Id readPos = 0;
+
+    T currentKey = keysPortalIn.Get(readPos);
+    U currentValue = valuesPortalIn.Get(readPos);
+
+    for(++readPos; readPos < numberOfKeys; ++readPos)
+      {
+      while(readPos < numberOfKeys &&
+            currentKey == keysPortalIn.Get(readPos) )
+        {
+        currentValue = binaryOp(currentValue, valuesPortalIn.Get(readPos));
+        ++readPos;
+        }
+
+      if(readPos < numberOfKeys)
+        {
+        keysPortalOut.Set(writePos, currentKey);
+        valuesPortalOut.Set(writePos, currentValue);
+        ++writePos;
+
+        currentKey = keysPortalIn.Get(readPos);
+        currentValue = valuesPortalIn.Get(readPos);
+        }
+      }
+
+    //now write out the last set of values
+    keysPortalOut.Set(writePos, currentKey);
+    valuesPortalOut.Set(writePos, currentValue);
+
+    //now we need to shrink to the correct number of keys/values
+    //writePos is zero-based so add 1 to get correct length
+    keys_output.Shrink( writePos + 1  );
+    values_output.Shrink( writePos + 1 );
+  }
+
   template<typename T, class CIn, class COut>
   VTKM_CONT_EXPORT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
@@ -63,11 +150,41 @@ public:
     PortalIn inputPortal = input.PrepareForInput(Device());
     PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
-    if (numberOfValues <= 0) { return 0; }
+    if (numberOfValues <= 0) { return T(); }
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorBegin(outputPortal));
+
+    // Return the value at the last index in the array, which is the full sum.
+    return outputPortal.Get(numberOfValues - 1);
+  }
+
+  template<typename T, class CIn, class COut, class BinaryOperation>
+  VTKM_CONT_EXPORT static T ScanInclusive(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      BinaryOperation binaryOp)
+  {
+    typedef typename vtkm::cont::ArrayHandle<T,COut>
+        ::template ExecutionTypes<Device>::Portal PortalOut;
+    typedef typename vtkm::cont::ArrayHandle<T,CIn>
+        ::template ExecutionTypes<Device>::PortalConst PortalIn;
+
+    internal::WrappedBinaryOperator<T,BinaryOperation> wrappedBinaryOp(
+                                                                     binaryOp);
+
+    vtkm::Id numberOfValues = input.GetNumberOfValues();
+
+    PortalIn inputPortal = input.PrepareForInput(Device());
+    PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
+
+    if (numberOfValues <= 0) { return T(); }
+
+    std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
+                     vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
+                     vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
+                     wrappedBinaryOp);
 
     // Return the value at the last index in the array, which is the full sum.
     return outputPortal.Get(numberOfValues - 1);
@@ -88,7 +205,7 @@ public:
     PortalIn inputPortal = input.PrepareForInput(Device());
     PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
-    if (numberOfValues <= 0) { return 0; }
+    if (numberOfValues <= 0) { return T(); }
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),

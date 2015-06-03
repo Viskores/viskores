@@ -8,7 +8,7 @@
 //
 //  Copyright 2014 Sandia Corporation.
 //  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014. Los Alamos National Security
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -1159,12 +1159,16 @@ T dot(const vtkm::Vec<T,4> &a, const vtkm::Vec<T,4> &b)
   return (a[0]*b[0]) + (a[1]*b[1]) + (a[2]*b[2]) + (a[3]*b[3]);
 }
 
+//Integer types of a width less than an integer get implicitly casted to
+//an integer when doing a multiplication.
+#define VTK_M_INTEGER_PROMOTION_SCALAR_DOT(type) \
+  VTKM_EXEC_CONT_EXPORT type dot(type a, type b) { return static_cast<type>(a * b); }
+VTK_M_INTEGER_PROMOTION_SCALAR_DOT(vtkm::Int8)
+VTK_M_INTEGER_PROMOTION_SCALAR_DOT(vtkm::UInt8)
+VTK_M_INTEGER_PROMOTION_SCALAR_DOT(vtkm::Int16)
+VTK_M_INTEGER_PROMOTION_SCALAR_DOT(vtkm::UInt16)
 #define VTK_M_SCALAR_DOT(type) \
   VTKM_EXEC_CONT_EXPORT type dot(type a, type b) { return a * b; }
-VTK_M_SCALAR_DOT(vtkm::Int8)
-VTK_M_SCALAR_DOT(vtkm::UInt8)
-VTK_M_SCALAR_DOT(vtkm::Int16)
-VTK_M_SCALAR_DOT(vtkm::UInt16)
 VTK_M_SCALAR_DOT(vtkm::Int32)
 VTK_M_SCALAR_DOT(vtkm::UInt32)
 VTK_M_SCALAR_DOT(vtkm::Int64)
@@ -1178,7 +1182,7 @@ VTK_M_SCALAR_DOT(vtkm::Float64)
 template<typename T>
 struct not_default_constructor
 {
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T &x)
+  VTKM_EXEC_CONT_EXPORT bool operator()(const T &x) const
   {
     return (x  != T());
   }

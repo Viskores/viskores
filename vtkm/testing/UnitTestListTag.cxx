@@ -8,7 +8,7 @@
 //
 //  Copyright 2014 Sandia Corporation.
 //  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014. Los Alamos National Security
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -90,7 +90,8 @@ void CheckSame(const vtkm::Vec<int,N> &expected,
 
   for (vtkm::IdComponent index = 0; index < N; index++)
   {
-    VTKM_TEST_ASSERT(expected[index] == found[index],
+    vtkm::UInt32 i = static_cast<vtkm::UInt32>(index);
+    VTKM_TEST_ASSERT(expected[index] == found[i],
                      "Got wrong type.");
   }
 }

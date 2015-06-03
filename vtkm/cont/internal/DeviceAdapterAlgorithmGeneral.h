@@ -8,7 +8,7 @@
 //
 //  Copyright 2014 Sandia Corporation.
 //  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014. Los Alamos National Security
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -22,8 +22,9 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/exec/FunctorBase.h>
@@ -35,6 +36,60 @@
 namespace vtkm {
 namespace cont {
 namespace internal {
+
+// Binary function object wrapper which can detect and handle calling the
+// wrapped operator with complex value types such as
+// IteratorFromArrayPortalValue which happen when passed an input array that
+// is implicit.
+template<typename ResultType, typename Function>
+  struct WrappedBinaryOperator
+{
+  Function m_f;
+
+ VTKM_CONT_EXPORT
+  WrappedBinaryOperator(const Function &f)
+    : m_f(f)
+  {}
+
+  template<typename Argument1, typename Argument2>
+   VTKM_CONT_EXPORT ResultType operator()(const Argument1 &x, const Argument2 &y) const
+  {
+    return m_f(x, y);
+  }
+
+  template<typename Argument1, typename Argument2>
+   VTKM_CONT_EXPORT ResultType operator()(
+    const detail::IteratorFromArrayPortalValue<Argument1> &x,
+    const detail::IteratorFromArrayPortalValue<Argument2> &y) const
+  {
+    typedef typename detail::IteratorFromArrayPortalValue<Argument1>::ValueType
+                            ValueTypeX;
+    typedef typename detail::IteratorFromArrayPortalValue<Argument2>::ValueType
+                            ValueTypeY;
+    return m_f( (ValueTypeX)x, (ValueTypeY)y );
+  }
+
+  template<typename Argument1, typename Argument2>
+   VTKM_CONT_EXPORT ResultType operator()(
+    const Argument1 &x,
+    const detail::IteratorFromArrayPortalValue<Argument2> &y) const
+  {
+    typedef typename detail::IteratorFromArrayPortalValue<Argument2>::ValueType
+                            ValueTypeY;
+    return m_f( x, (ValueTypeY)y );
+  }
+
+  template<typename Argument1, typename Argument2>
+   VTKM_CONT_EXPORT ResultType operator()(
+    const detail::IteratorFromArrayPortalValue<Argument1> &x,
+    const Argument2 &y) const
+  {
+    typedef typename detail::IteratorFromArrayPortalValue<Argument1>::ValueType
+                            ValueTypeX;
+    return m_f( (ValueTypeX)x, y );
+  }
+
+};
 
 /// \brief
 ///
@@ -317,6 +372,336 @@ public:
   }
 
   //--------------------------------------------------------------------------
+  // Reduce
+private:
+  template<int ReduceWidth, typename T, typename ArrayType, typename BinaryOperation >
+  struct ReduceKernel : vtkm::exec::FunctorBase
+  {
+    typedef typename ArrayType::template ExecutionTypes<
+                            DeviceAdapterTag> ExecutionTypes;
+    typedef typename ExecutionTypes::PortalConst PortalConst;
+
+    PortalConst Portal;
+    BinaryOperation BinaryOperator;
+    vtkm::Id ArrayLength;
+
+    VTKM_CONT_EXPORT
+    ReduceKernel()
+    : Portal(),
+      BinaryOperator(),
+      ArrayLength(0)
+    {
+    }
+
+    VTKM_CONT_EXPORT
+    ReduceKernel(const ArrayType &array, BinaryOperation op)
+      : Portal(array.PrepareForInput( DeviceAdapterTag() ) ),
+        BinaryOperator(op),
+        ArrayLength( array.GetNumberOfValues() )
+    {  }
+
+    VTKM_EXEC_EXPORT
+    T operator()(vtkm::Id index) const
+    {
+      const vtkm::Id offset = index * ReduceWidth;
+
+      //at least the first value access to the portal will be valid
+      //only the rest could be invalid
+      T partialSum = this->Portal.Get( offset );
+
+      if( offset + ReduceWidth >= this->ArrayLength )
+        {
+        vtkm::Id currentIndex = offset + 1;
+        while( currentIndex < this->ArrayLength)
+          {
+          partialSum = BinaryOperator(partialSum, this->Portal.Get(currentIndex));
+          ++currentIndex;
+          }
+        }
+      else
+        {
+        //optimize the usecase where all values are valid and we don't
+        //need to check that we might go out of bounds
+        for(int i=1; i < ReduceWidth; ++i)
+          {
+          partialSum = BinaryOperator(partialSum,
+                                      this->Portal.Get( offset + i )
+                                      );
+          }
+        }
+      return partialSum;
+    }
+  };
+
+  //--------------------------------------------------------------------------
+  // Reduce
+public:
+ template<typename T, class CIn>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
+  {
+    return DerivedAlgorithm::Reduce(input, initialValue, vtkm::internal::Add());
+  }
+
+ template<typename T, class CIn, class BinaryOperator>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      T initialValue,
+      BinaryOperator binaryOp)
+  {
+    //Crazy Idea:
+    //We create a implicit array handle that wraps the input
+    //array handle. The implicit functor is passed the input array handle, and
+    //the number of elements it needs to sum. This way the implicit handle
+    //acts as the first level reduction. Say for example reducing 16 values
+    //at a time.
+    //
+    //Now that we have an implicit array that is 1/16 the length of full array
+    //we can use scan inclusive to compute the final sum
+    typedef ReduceKernel<
+            16,
+            T,
+            vtkm::cont::ArrayHandle<T,CIn>,
+            BinaryOperator
+            > ReduceKernelType;
+
+    typedef vtkm::cont::ArrayHandleImplicit<
+                                            T,
+                                            ReduceKernelType > ReduceHandleType;
+    typedef vtkm::cont::ArrayHandle<
+                                    T,
+                                    vtkm::cont::StorageTagBasic> TempArrayType;
+
+    ReduceKernelType kernel(input, binaryOp);
+    vtkm::Id length = (input.GetNumberOfValues() / 16);
+    length += (input.GetNumberOfValues() % 16 == 0) ? 0 : 1;
+    ReduceHandleType reduced = vtkm::cont::make_ArrayHandleImplicit<T>(kernel,
+                                                                       length);
+
+    TempArrayType inclusiveScanStorage;
+    T scanResult = DerivedAlgorithm::ScanInclusive(reduced,
+                                                   inclusiveScanStorage,
+                                                   binaryOp);
+    return binaryOp(initialValue, scanResult);
+  }
+
+  //--------------------------------------------------------------------------
+  // Reduce By Key
+private:
+
+  struct ReduceKeySeriesStates
+  {
+    //It is needed that END and START_AND_END are both odd numbers
+    //so that the first bit of both are 1
+    enum { MIDDLE=0, END=1, START=2, START_AND_END=3};
+  };
+
+  template<typename InputPortalType>
+  struct ReduceStencilGeneration : vtkm::exec::FunctorBase
+  {
+    typedef typename vtkm::cont::ArrayHandle< vtkm::UInt8 >::template ExecutionTypes<DeviceAdapterTag>
+        ::Portal KeyStatePortalType;
+
+    InputPortalType Input;
+    KeyStatePortalType KeyState;
+
+    VTKM_CONT_EXPORT
+    ReduceStencilGeneration(const InputPortalType &input,
+                            const KeyStatePortalType &kstate)
+      : Input(input),
+        KeyState(kstate)
+    {  }
+
+    VTKM_EXEC_EXPORT
+    void operator()(vtkm::Id centerIndex) const
+    {
+      typedef ReduceKeySeriesStates States;
+
+      typedef typename InputPortalType::ValueType ValueType;
+      typedef typename KeyStatePortalType::ValueType KeyStateType;
+
+      const vtkm::Id leftIndex = centerIndex - 1;
+      const vtkm::Id rightIndex = centerIndex + 1;
+
+      //we need to determine which of three states this
+      //index is. It can be:
+      // 1. Middle of a set of equivalent keys.
+      // 2. Start of a set of equivalent keys.
+      // 3. End of a set of equivalent keys.
+      // 4. Both the start and end of a set of keys
+
+      //we don't have to worry about an array of length 1, as
+      //the calling code handles that use case
+
+      if(centerIndex == 0)
+        {
+        //this means we are at the start of the array
+        //means we are automatically START
+        //just need to check if we are END
+        const ValueType centerValue = this->Input.Get(centerIndex);
+        const ValueType rightValue = this->Input.Get(rightIndex);
+        const KeyStateType state = (rightValue == centerValue) ? States::START :
+                                                                 States::START_AND_END;
+        this->KeyState.Set(centerIndex, state);
+        }
+      else if(rightIndex == this->Input.GetNumberOfValues())
+        {
+        //this means we are at the end, so we are at least END
+        //just need to check if we are START
+        const ValueType centerValue = this->Input.Get(centerIndex);
+        const ValueType leftValue = this->Input.Get(leftIndex);
+        const KeyStateType state = (leftValue == centerValue) ? States::END :
+                                                               States::START_AND_END;
+        this->KeyState.Set(centerIndex, state);
+        }
+      else
+        {
+        const ValueType centerValue = this->Input.Get(centerIndex);
+        const bool leftMatches(this->Input.Get(leftIndex) == centerValue);
+        const bool rightMatches(this->Input.Get(rightIndex) == centerValue);
+
+        //assume it is the middle, and check for the other use-case
+        KeyStateType state = States::MIDDLE;
+        if(!leftMatches && rightMatches)
+          {
+          state = States::START;
+          }
+        else if(leftMatches && !rightMatches)
+          {
+          state = States::END;
+          }
+        else if(!leftMatches && !rightMatches)
+          {
+          state = States::START_AND_END;
+          }
+        this->KeyState.Set(centerIndex, state);
+        }
+    }
+  };
+
+  struct ReduceByKeyAdd
+  {
+    template<typename T>
+    vtkm::Pair<T, vtkm::UInt8> operator()(const vtkm::Pair<T, vtkm::UInt8>& a,
+                                          const vtkm::Pair<T, vtkm::UInt8>& b) const
+    {
+    typedef vtkm::Pair<T, vtkm::UInt8> ReturnType;
+    typedef ReduceKeySeriesStates States;
+    //need too handle how we are going to add two numbers together
+    //based on the keyStates that they have
+
+    //need to optimize this logic, we can use a bit mask to determine
+    //the secondary value.
+    if(a.second == States::START && b.second == States::END)
+      {
+      return ReturnType(a.first + b.first, States::START_AND_END); //with second type as START_AND_END
+      }
+    else if((a.second == States::START  || a.second == States::MIDDLE) &&
+            (b.second == States::MIDDLE || b.second == States::END))
+      {
+      //note that we cant have START + END as that is handled above
+      //as a special use case
+      return ReturnType(a.first + b.first, b.second); //with second type as b.second
+      }
+    else
+      {
+      return b;
+      }
+    }
+
+  };
+
+  struct ReduceByKeyUnaryStencilOp
+  {
+    bool operator()(vtkm::UInt8 keySeriesState) const
+    {
+    typedef ReduceKeySeriesStates States;
+    return (keySeriesState == States::END ||
+            keySeriesState == States::START_AND_END);
+    }
+
+  };
+
+public:
+  template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
+          class BinaryOperation>
+  VTKM_CONT_EXPORT static void ReduceByKey(
+      const vtkm::cont::ArrayHandle<T,KIn> &keys,
+      const vtkm::cont::ArrayHandle<U,VIn> &values,
+      vtkm::cont::ArrayHandle<T,KOut> &keys_output,
+      vtkm::cont::ArrayHandle<U,VOut> &values_output,
+      BinaryOperation binaryOp)
+  {
+    (void) binaryOp;
+
+    VTKM_ASSERT_CONT(keys.GetNumberOfValues() == values.GetNumberOfValues());
+    const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
+
+    if(numberOfKeys <= 1)
+      { //we only have a single key/value so that is our output
+      DerivedAlgorithm::Copy(keys, keys_output);
+      DerivedAlgorithm::Copy(values, values_output);
+      return;
+      }
+
+    //we need to determine based on the keys what is the keystate for
+    //each key. The states are start, middle, end of a series and the special
+    //state start and end of a series
+    vtkm::cont::ArrayHandle< vtkm::UInt8 > keystate;
+
+    {
+    typedef typename vtkm::cont::ArrayHandle<T,KIn>::template ExecutionTypes<DeviceAdapterTag>
+        ::PortalConst InputPortalType;
+
+    typedef typename vtkm::cont::ArrayHandle< vtkm::UInt8 >::template ExecutionTypes<DeviceAdapterTag>
+        ::Portal KeyStatePortalType;
+
+    InputPortalType inputPortal = keys.PrepareForInput(DeviceAdapterTag());
+    KeyStatePortalType keyStatePortal = keystate.PrepareForOutput(numberOfKeys,
+                                                                 DeviceAdapterTag());
+    ReduceStencilGeneration<InputPortalType> kernel(inputPortal, keyStatePortal);
+    DerivedAlgorithm::Schedule(kernel, numberOfKeys);
+    }
+
+    //next step is we need to reduce the values for each key. This is done
+    //by running an inclusive scan over the values array using the stencil.
+    //
+    // this inclusive scan will write out two values, the first being
+    // the value summed currently, the second being 0 or 1, with 1 being used
+    // when this is a value of a key we need to write ( END or START_AND_END)
+    {
+    typedef vtkm::cont::ArrayHandle<U,VIn> ValueHandleType;
+    typedef vtkm::cont::ArrayHandle< vtkm::UInt8> StencilHandleType;
+    typedef vtkm::cont::ArrayHandleZip<ValueHandleType,
+                                      StencilHandleType> ZipHandleType;
+
+    vtkm::cont::ArrayHandle< vtkm::UInt8 > stencil;
+    vtkm::cont::ArrayHandle< U > reducedValues;
+
+    ZipHandleType scanInput( values, keystate);
+    ZipHandleType scanOutput( reducedValues, stencil);
+    DerivedAlgorithm::ScanInclusive(scanInput, scanOutput, ReduceByKeyAdd() );
+
+    //at this point we are done with keystate, so free the memory
+    keystate.ReleaseResources();
+
+    // all we need know is an efficient way of doing the write back to the
+    // reduced global memory. this is done by using StreamCompact with the
+    // stencil and values we just created with the inclusive scan
+    DerivedAlgorithm::StreamCompact( reducedValues,
+                                     stencil,
+                                     values_output,
+                                     ReduceByKeyUnaryStencilOp());
+
+    } //release all temporary memory
+
+
+    //find all the unique keys
+    DerivedAlgorithm::Copy(keys,keys_output);
+    DerivedAlgorithm::Unique(keys_output);
+  }
+
+  //--------------------------------------------------------------------------
   // Scan Exclusive
 private:
   template<typename PortalType>
@@ -386,17 +771,20 @@ public:
   //--------------------------------------------------------------------------
   // Scan Inclusive
 private:
-  template<typename PortalType>
+  template<typename PortalType, typename BinaryOperation>
   struct ScanKernel : vtkm::exec::FunctorBase
   {
     PortalType Portal;
+    BinaryOperation BinaryOperator;
     vtkm::Id Stride;
     vtkm::Id Offset;
     vtkm::Id Distance;
 
     VTKM_CONT_EXPORT
-    ScanKernel(const PortalType &portal, vtkm::Id stride, vtkm::Id offset)
+    ScanKernel(const PortalType &portal, BinaryOperation binaryOp,
+               vtkm::Id stride, vtkm::Id offset)
       : Portal(portal),
+        BinaryOperator(binaryOp),
         Stride(stride),
         Offset(offset),
         Distance(stride/2)
@@ -414,7 +802,7 @@ private:
       {
         ValueType leftValue = this->Portal.Get(leftIndex);
         ValueType rightValue = this->Portal.Get(rightIndex);
-        this->Portal.Set(rightIndex, leftValue+rightValue);
+        this->Portal.Set(rightIndex, BinaryOperator(leftValue,rightValue) );
       }
     }
   };
@@ -425,31 +813,44 @@ public:
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
+    return DerivedAlgorithm::ScanInclusive(input,
+                                            output,
+                                            vtkm::internal::Add());
+  }
+
+  template<typename T, class CIn, class COut, class BinaryOperation>
+  VTKM_CONT_EXPORT static T ScanInclusive(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      BinaryOperation binaryOp)
+  {
     typedef typename
         vtkm::cont::ArrayHandle<T,COut>
             ::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
+
+    typedef ScanKernel<PortalType,BinaryOperation> ScanKernelType;
 
     DerivedAlgorithm::Copy(input, output);
 
     vtkm::Id numValues = output.GetNumberOfValues();
     if (numValues < 1)
-    {
-      return 0;
-    }
+      {
+      return output.GetPortalConstControl().Get(0);
+      }
 
     PortalType portal = output.PrepareForInPlace(DeviceAdapterTag());
 
     vtkm::Id stride;
     for (stride = 2; stride-1 < numValues; stride *= 2)
     {
-      ScanKernel<PortalType> kernel(portal, stride, stride/2 - 1);
+      ScanKernelType kernel(portal, binaryOp, stride, stride/2 - 1);
       DerivedAlgorithm::Schedule(kernel, numValues/stride);
     }
 
     // Do reverse operation on odd indices. Start at stride we were just at.
     for (stride /= 2; stride > 1; stride /= 2)
     {
-      ScanKernel<PortalType> kernel(portal, stride, stride - 1);
+      ScanKernelType kernel(portal, binaryOp, stride, stride - 1);
       DerivedAlgorithm::Schedule(kernel, numValues/stride);
     }
 
@@ -648,24 +1049,29 @@ public:
   //--------------------------------------------------------------------------
   // Stream Compact
 private:
-  template<class StencilPortalType, class OutputPortalType>
+  template<class StencilPortalType,
+           class OutputPortalType,
+           class PredicateOperator>
   struct StencilToIndexFlagKernel
   {
     typedef typename StencilPortalType::ValueType StencilValueType;
     StencilPortalType StencilPortal;
     OutputPortalType OutputPortal;
+    PredicateOperator Predicate;
 
     VTKM_CONT_EXPORT
     StencilToIndexFlagKernel(StencilPortalType stencilPortal,
-                             OutputPortalType outputPortal)
-      : StencilPortal(stencilPortal), OutputPortal(outputPortal) {  }
+                             OutputPortalType outputPortal,
+                             PredicateOperator predicate)
+      : StencilPortal(stencilPortal),
+        OutputPortal(outputPortal),
+        Predicate(predicate) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
     {
       StencilValueType value = this->StencilPortal.Get(index);
-      bool flag = ::vtkm::not_default_constructor<StencilValueType>()(value);
-      this->OutputPortal.Set(index, flag ? 1 : 0);
+      this->OutputPortal.Set(index, this->Predicate(value) ? 1 : 0);
     }
 
     VTKM_CONT_EXPORT
@@ -676,38 +1082,42 @@ private:
   template<class InputPortalType,
            class StencilPortalType,
            class IndexPortalType,
-           class OutputPortalType>
+           class OutputPortalType,
+           class PredicateOperator>
   struct CopyIfKernel
   {
     InputPortalType InputPortal;
     StencilPortalType StencilPortal;
     IndexPortalType IndexPortal;
     OutputPortalType OutputPortal;
+    PredicateOperator Predicate;
 
     VTKM_CONT_EXPORT
     CopyIfKernel(InputPortalType inputPortal,
                  StencilPortalType stencilPortal,
                  IndexPortalType indexPortal,
-                 OutputPortalType outputPortal)
+                 OutputPortalType outputPortal,
+                 PredicateOperator predicate)
       : InputPortal(inputPortal),
         StencilPortal(stencilPortal),
         IndexPortal(indexPortal),
-        OutputPortal(outputPortal) {  }
+        OutputPortal(outputPortal),
+        Predicate(predicate) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
     {
       typedef typename StencilPortalType::ValueType StencilValueType;
       StencilValueType stencilValue = this->StencilPortal.Get(index);
-      if (::vtkm::not_default_constructor<StencilValueType>()(stencilValue))
-      {
+      if (Predicate(stencilValue))
+        {
         vtkm::Id outputIndex = this->IndexPortal.Get(index);
 
         typedef typename OutputPortalType::ValueType OutputValueType;
         OutputValueType value = this->InputPortal.Get(index);
 
         this->OutputPortal.Set(outputIndex, value);
-      }
+        }
     }
 
     VTKM_CONT_EXPORT
@@ -717,11 +1127,13 @@ private:
 
 public:
 
-  template<typename T, typename U, class CIn, class CStencil, class COut>
+  template<typename T, typename U, class CIn, class CStencil,
+           class COut, class PredicateOperator>
   VTKM_CONT_EXPORT static void StreamCompact(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
-      vtkm::cont::ArrayHandle<T,COut>& output)
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      PredicateOperator predicate)
   {
     VTKM_ASSERT_CONT(input.GetNumberOfValues() == stencil.GetNumberOfValues());
     vtkm::Id arrayLength = stencil.GetNumberOfValues();
@@ -741,9 +1153,11 @@ public:
     IndexPortalType indexPortal =
         indices.PrepareForOutput(arrayLength, DeviceAdapterTag());
 
-    StencilToIndexFlagKernel<
-        StencilPortalType, IndexPortalType> indexKernel(stencilPortal,
-                                                        indexPortal);
+    StencilToIndexFlagKernel< StencilPortalType,
+                              IndexPortalType,
+                              PredicateOperator> indexKernel(stencilPortal,
+                                                         indexPortal,
+                                                         predicate);
 
     DerivedAlgorithm::Schedule(indexKernel, arrayLength);
 
@@ -763,11 +1177,23 @@ public:
         InputPortalType,
         StencilPortalType,
         IndexPortalType,
-        OutputPortalType>copyKernel(inputPortal,
+        OutputPortalType,
+        PredicateOperator> copyKernel(inputPortal,
                                     stencilPortal,
                                     indexPortal,
-                                    outputPortal);
+                                    outputPortal,
+                                    predicate);
     DerivedAlgorithm::Schedule(copyKernel, arrayLength);
+  }
+
+template<typename T, typename U, class CIn, class CStencil, class COut>
+  VTKM_CONT_EXPORT static void StreamCompact(
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
+      vtkm::cont::ArrayHandle<T,COut>& output)
+  {
+    ::vtkm::not_default_constructor<U> predicate;
+    DerivedAlgorithm::StreamCompact(input, stencil, output, predicate);
   }
 
   template<typename T, class CStencil, class COut>

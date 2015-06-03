@@ -8,7 +8,7 @@
 //
 //  Copyright 2014 Sandia Corporation.
 //  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014. Los Alamos National Security
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -53,9 +53,9 @@ struct CountingTest
   void operator()(const ValueType v) const
   {
     std::vector< ValueType > inputVector(ARRAY_SIZE);
-    for(int i=0; i < ARRAY_SIZE; ++i)
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
       {
-      inputVector[i] = v + i;
+      inputVector[static_cast<vtkm::UInt32>(i)] = v + i;
       }
 
     vtkm::cont::ArrayHandle< ValueType > input =
@@ -65,7 +65,7 @@ struct CountingTest
     dispatcher.Invoke(input, result);
 
     //verify that the control portal works
-    for(int i=v; i < ARRAY_SIZE; ++i)
+    for(vtkm::Id i=static_cast<vtkm::Id>(v); i < ARRAY_SIZE; ++i)
       {
       const ValueType result_v = result.GetPortalConstControl().Get(i);
       const ValueType correct_value = v + ValueType(i);

@@ -8,7 +8,7 @@
 //
 //  Copyright 2014 Sandia Corporation.
 //  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014. Los Alamos National Security
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -73,7 +73,7 @@ public:
 
 } // worklet namespace
 
-namespace {
+namespace mapfield{
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
@@ -123,12 +123,12 @@ void TestWorkletMapField()
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(
-                         DoTestWorklet< ::worklets::TestWorklet >(),
+                         mapfield::DoTestWorklet< ::worklets::TestWorklet >(),
                          vtkm::TypeListTagCommon());
 
   std::cout << "--- Worklet accepting some types." << std::endl;
   vtkm::testing::Testing::TryTypes(
-                         DoTestWorklet< ::worklets::TestWorkletLimitedTypes >(),
+                         mapfield::DoTestWorklet< ::worklets::TestWorkletLimitedTypes >(),
                          vtkm::TypeListTagFieldScalar());
 
   std::cout << "--- Sending bad type to worklet." << std::endl;
@@ -148,5 +148,5 @@ void TestWorkletMapField()
 
 int UnitTestWorkletMapField(int, char *[])
 {
-  return vtkm::cont::testing::Testing::Run(TestWorkletMapField);
+  return vtkm::cont::testing::Testing::Run(mapfield::TestWorkletMapField);
 }

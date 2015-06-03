@@ -8,7 +8,7 @@
 //
 //  Copyright 2014 Sandia Corporation.
 //  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014. Los Alamos National Security
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -101,12 +101,61 @@ struct DeviceAdapterAlgorithm
       const vtkm::cont::ArrayHandle<vtkm::Id,CIn>& input,
       vtkm::cont::ArrayHandle<vtkm::Id,COut>& values_output);
 
+  /// \brief Compute a accumulated sum operation on the input ArrayHandle
+  ///
+  /// Computes an accumulated sum on the \c input ArrayHandle, returning the
+  /// total sum. Reduce is similar to the stl accumulate sum function,
+  /// exception that Reduce doesn't do a serial summation. This means that if
+  /// you have defined a custom plus operator for T it must be commutative,
+  /// or you will get inconsistent results.
+  ///
+  /// \return The total sum.
+  template<typename T, class CIn>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      T initialValue);
+
+  /// \brief Compute a accumulated sum operation on the input ArrayHandle
+  ///
+  /// Computes an accumulated sum (or any user binary operation) on the
+  /// \c input ArrayHandle, returning the total sum. Reduce is
+  /// similar to the stl accumulate sum function, exception that Reduce
+  /// doesn't do a serial summation. This means that if you have defined a
+  /// custom plus operator for T it must be commutative, or you will get
+  /// inconsistent results.
+  ///
+  /// \return The total sum.
+  template<typename T, class CIn, class BinaryOperation>
+  VTKM_CONT_EXPORT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      T initialValue,
+      BinaryOperation binaryOp);
+
+  /// \brief Compute a accumulated sum operation on the input key value pairs
+  ///
+  /// Computes a segmented accumulated sum (or any user binary operation) on the
+  /// \c keys and \c values ArrayHandle(s). Each segmented accumulated sum is
+  /// run on consecutive equal keys with the binary operation applied to all
+  /// values inside that range. Once finished a single key and value is created
+  /// for each segment.
+  ///
+  template<typename T,
+           class CKeyIn,  class CValIn,
+           class CKeyOut, class CValOut,
+           class BinaryOperation >
+  VTKM_CONT_EXPORT static void ReduceByKey(
+      const vtkm::cont::ArrayHandle<T,CKeyIn> &keys,
+      const vtkm::cont::ArrayHandle<U,CValIn> &values,
+      vtkm::cont::ArrayHandle<T,CKeyOut>& keys_output,
+      vtkm::cont::ArrayHandle<T,CValOut>& values_output,
+      BinaryOperation binaryOp);
+
   /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
   ///
   /// Computes an inclusive prefix sum operation on the \c input ArrayHandle,
   /// storing the results in the \c output ArrayHandle. InclusiveScan is
-  /// similiar to the stl partial sum function, exception that InclusiveScan
-  /// doesn't do a serial sumnation. This means that if you have defined a
+  /// similar to the stl partial sum function, exception that InclusiveScan
+  /// doesn't do a serial summation. This means that if you have defined a
   /// custom plus operator for T it must be associative, or you will get
   /// inconsistent results. When the input and output ArrayHandles are the same
   /// ArrayHandle the operation will be done inplace.
@@ -118,12 +167,30 @@ struct DeviceAdapterAlgorithm
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output);
 
+  /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
+  ///
+  /// Computes an inclusive prefix sum operation on the \c input ArrayHandle,
+  /// storing the results in the \c output ArrayHandle. InclusiveScan is
+  /// similar to the stl partial sum function, exception that InclusiveScan
+  /// doesn't do a serial summation. This means that if you have defined a
+  /// custom plus operator for T it must be associative, or you will get
+  /// inconsistent results. When the input and output ArrayHandles are the same
+  /// ArrayHandle the operation will be done inplace.
+  ///
+  /// \return The total sum.
+  ///
+  template<typename T, class CIn, class COut, class BinaryOperation>
+  VTKM_CONT_EXPORT static T ScanInclusive(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      BinaryOperation binaryOp);
+
   /// \brief Compute an exclusive prefix sum operation on the input ArrayHandle.
   ///
   /// Computes an exclusive prefix sum operation on the \c input ArrayHandle,
   /// storing the results in the \c output ArrayHandle. ExclusiveScan is
-  /// similiar to the stl partial sum function, exception that ExclusiveScan
-  /// doesn't do a serial sumnation. This means that if you have defined a
+  /// similar to the stl partial sum function, exception that ExclusiveScan
+  /// doesn't do a serial summation. This means that if you have defined a
   /// custom plus operator for T it must be associative, or you will get
   /// inconsistent results. When the input and output ArrayHandles are the same
   /// ArrayHandle the operation will be done inplace.
@@ -205,7 +272,7 @@ struct DeviceAdapterAlgorithm
   /// input to remove unwanted elements. The result of the stream compaction is
   /// placed in \c output. The \c input values are used as the stream
   /// compaction stencil while \c input indices are used as the values to place
-  /// into \c ouput. The size of \c output will be modified after this call as
+  /// into \c output. The size of \c output will be modified after this call as
   /// we can't know the number of elements that will be removed by the stream
   /// compaction algorithm.
   ///
@@ -218,10 +285,11 @@ struct DeviceAdapterAlgorithm
   ///
   /// Calls the parallel primitive function of stream compaction on the \c
   /// input to remove unwanted elements. The result of the stream compaction is
-  /// placed in \c output. The values in \c stencil are used as the stream
-  /// compaction stencil while \c input values are placed into \c ouput. The
-  /// size of \c output will be modified after this call as we can't know the
-  /// number of elements that will be removed by the stream compaction
+  /// placed in \c output. The values in \c stencil are used to determine which
+  /// \c input values are placed into \c output, with all stencil values not
+  /// equal to the default constructor being considered valid.
+  /// The size of \c output will be modified after this call as we can't know
+  /// the number of elements that will be removed by the stream compaction
   /// algorithm.
   ///
   template<typename T, typename U, class CIn, class CStencil, class COut>
@@ -229,6 +297,25 @@ struct DeviceAdapterAlgorithm
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
       vtkm::cont::ArrayHandle<T,COut> &output);
+
+  /// \brief Performs stream compaction to remove unwanted elements in the input array.
+  ///
+  /// Calls the parallel primitive function of stream compaction on the \c
+  /// input to remove unwanted elements. The result of the stream compaction is
+  /// placed in \c output. The values in \c stencil are passed to the unary
+  /// comparison object which is used to determine which /c input values are
+  /// placed into \c output.
+  /// The size of \c output will be modified after this call as we can't know
+  /// the number of elements that will be removed by the stream compaction
+  /// algorithm.
+  ///
+  template<typename T, typename U, class CIn, class CStencil,
+           class COut, class PredicateOperator>
+  VTKM_CONT_EXPORT static void StreamCompact(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
+      vtkm::cont::ArrayHandle<T,COut> &output,
+      PredicateOperator predicate);
 
   /// \brief Completes any asynchronous operations running on the device.
   ///
@@ -399,8 +486,8 @@ public:
 #include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmCuda.h>
 // #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
 // #include <vtkm/openmp/cont/internal/DeviceAdapterAlgorithmOpenMP.h>
-// #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
-// #include <vtkm/tbb/cont/internal/DeviceAdapterAlgorithmTBB.h>
+#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
+#include <vtkm/cont/tbb/internal/DeviceAdapterAlgorithmTBB.h>
 #endif
 
 #endif //vtk_m_cont_DeviceAdapterAlgorithm_h

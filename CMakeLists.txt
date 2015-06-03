@@ -8,7 +8,7 @@
 ##
 ##  Copyright 2014 Sandia Corporation.
 ##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014. Los Alamos National Security
+##  Copyright 2014 Los Alamos National Security.
 ##
 ##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 ##  the U.S. Government retains certain rights in this software.
@@ -54,13 +54,14 @@ include(CMake/VTKmCompilerExtras.cmake)
 #-----------------------------------------------------------------------------
 # Configurable Options
 option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
+option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
 option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 
 option(VTKm_USE_DOUBLE_PRECISION
   "Use double precision for floating point calculations"
   OFF
   )
-option(VTKm_USE_64BIT_IDS "Use 64-bit indices." OFF)
+option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
 if (VTKm_ENABLE_TESTING)
   enable_testing()
@@ -73,6 +74,9 @@ vtkm_configure_device(Serial)
 if (VTKm_ENABLE_CUDA)
   vtkm_configure_device(Cuda)
 endif (VTKm_ENABLE_CUDA)
+if (VTKm_ENABLE_TBB)
+  vtkm_configure_device(TBB)
+endif (VTKm_ENABLE_TBB)
 
 #-----------------------------------------------------------------------------
 

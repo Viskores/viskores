@@ -8,7 +8,7 @@
 //
 //  Copyright 2014 Sandia Corporation.
 //  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014. Los Alamos National Security
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -406,16 +406,6 @@ void TestStaticTransform()
   funcInterfaceTransform1 =
       funcInterface.StaticTransformExec(PointerTransform());
   funcInterfaceTransform1.InvokeExec(ThreePointerArgFunctor());
-
-  std::cout << "Transform with expected type." << std::endl;
-  typedef vtkm::internal::FunctionInterface<void(Type1*,Type2*,Type3*)>
-      ExpectedType;
-  ReportedType funcInterfaceTransform2 =
-      funcInterface.StaticTransformCont(PointerTransform());
-  funcInterfaceTransform2.InvokeCont(ThreePointerArgFunctor());
-  funcInterfaceTransform2 =
-      funcInterface.StaticTransformExec(PointerTransform());
-  funcInterfaceTransform2.InvokeExec(ThreePointerArgFunctor());
 }
 
 void TestDynamicTransform()

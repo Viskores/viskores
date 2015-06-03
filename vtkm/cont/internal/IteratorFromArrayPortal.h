@@ -8,7 +8,7 @@
 //
 //  Copyright 2014 Sandia Corporation.
 //  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014. Los Alamos National Security
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -97,10 +97,10 @@ public:
 
   VTKM_CONT_EXPORT
   detail::IteratorFromArrayPortalValue<ArrayPortalType>
-  operator[](vtkm::Id idx) const
+  operator[](std::size_t idx) const
   {
     return detail::IteratorFromArrayPortalValue<ArrayPortalType>(this->Portal,
-           idx);
+           static_cast<vtkm::Id>(idx) );
   }
 
 private:

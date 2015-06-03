@@ -8,7 +8,7 @@
 //
 //  Copyright 2014 Sandia Corporation.
 //  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014. Los Alamos National Security
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -162,8 +162,8 @@ public:
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 // #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
 // #include <vtkm/openmp/cont/internal/ArrayManagerExecutionOpenMP.h>
-// #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
-// #include <vtkm/tbb/cont/internal/ArrayManagerExecutionTBB.h>
+#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
+#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
 #endif
 
 #endif //vtk_m_cont_internal_ArrayManagerExecution_h

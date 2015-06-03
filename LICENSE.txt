@@ -72,4 +72,6 @@ licenses.
 - - - - - - - - - - - - - - - - - - - - - - - - do not remove this line
 CMake/CheckCXX11Features.cmake
 CMake/FindBoostHeaders.cmake
+CMake/FindTBB.cmake
+vtkm/cont/tbb/internal/parallel_sort.h
 vtkm/testing/OptionParser.h

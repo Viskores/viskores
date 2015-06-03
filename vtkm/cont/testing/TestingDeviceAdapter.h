@@ -8,7 +8,7 @@
 //
 //  Copyright 2014 Sandia Corporation.
 //  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014. Los Alamos National Security
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -105,6 +105,16 @@ struct SortGreater
     return valid;
   }
 };
+
+struct MaxValue
+{
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT T operator()(const T& a,const T& b) const
+  {
+    return (a > b) ? a : b;
+  }
+};
+
 }
 
 
@@ -887,14 +897,15 @@ private:
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Sort by keys" << std::endl;
 
-    vtkm::Id testKeys[ARRAY_SIZE];
-    vtkm::Vec<FloatDefault,3> testValues[ARRAY_SIZE];
+    typedef vtkm::Vec<FloatDefault,3> Vec3;
 
-    vtkm::Vec<FloatDefault,3> grad(1.0,1.0,1.0);
+    vtkm::Id testKeys[ARRAY_SIZE];
+    Vec3 testValues[ARRAY_SIZE];
+
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
       {
       testKeys[i] = ARRAY_SIZE - i;
-      testValues[i] = vtkm::Vec<FloatDefault,3>(i);
+      testValues[i] = TestValue(i, Vec3());
       }
 
     IdArrayHandle keys = MakeArrayHandle(testKeys, ARRAY_SIZE);
@@ -911,12 +922,11 @@ private:
       {
       //keys should be sorted from 1 to ARRAY_SIZE
       //values should be sorted from (ARRAY_SIZE-1) to 0
-      vtkm::FloatDefault sorted_value =
-                        sorted_values.GetPortalConstControl().Get(i)[0];
+      Vec3 sorted_value = sorted_values.GetPortalConstControl().Get(i);
       vtkm::Id sorted_key = sorted_keys.GetPortalConstControl().Get(i);
 
       VTKM_TEST_ASSERT( (sorted_key == (i+1)) , "Got bad SortByKeys key");
-      VTKM_TEST_ASSERT( (sorted_value == (ARRAY_SIZE-1-i)),
+      VTKM_TEST_ASSERT( test_equal(sorted_value, TestValue(ARRAY_SIZE-1-i, Vec3())),
                                       "Got bad SortByKeys value");
       }
 
@@ -926,29 +936,27 @@ private:
       {
       //keys should be sorted from ARRAY_SIZE to 1
       //values should be sorted from 0 to (ARRAY_SIZE-1)
-      vtkm::FloatDefault sorted_value =
-                        sorted_values.GetPortalConstControl().Get(i)[0];
+      Vec3 sorted_value = sorted_values.GetPortalConstControl().Get(i);
       vtkm::Id sorted_key = sorted_keys.GetPortalConstControl().Get(i);
 
       VTKM_TEST_ASSERT( (sorted_key == (ARRAY_SIZE-i)),
                                       "Got bad SortByKeys key");
-      VTKM_TEST_ASSERT( (sorted_value == i),
+      VTKM_TEST_ASSERT( test_equal(sorted_value, TestValue(i, Vec3())),
                                       "Got bad SortByKeys value");
       }
 
-    //this is here to verify we can sort by vtkm::Tuples
+    //this is here to verify we can sort by vtkm::Vec
     Algorithm::SortByKey(sorted_values,sorted_keys);
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
       {
       //keys should be sorted from ARRAY_SIZE to 1
       //values should be sorted from 0 to (ARRAY_SIZE-1)
-      vtkm::FloatDefault sorted_value =
-                        sorted_values.GetPortalConstControl().Get(i)[0];
+      Vec3 sorted_value = sorted_values.GetPortalConstControl().Get(i);
       vtkm::Id sorted_key = sorted_keys.GetPortalConstControl().Get(i);
 
       VTKM_TEST_ASSERT( (sorted_key == (ARRAY_SIZE-i)),
                                       "Got bad SortByKeys key");
-      VTKM_TEST_ASSERT( (sorted_value == i),
+      VTKM_TEST_ASSERT( test_equal(sorted_value, TestValue(i, Vec3())),
                                       "Got bad SortByKeys value");
       }
   }
@@ -1053,11 +1061,187 @@ private:
     VTKM_TEST_ASSERT(value == OFFSET, "Got bad unique value");
   }
 
+  static VTKM_CONT_EXPORT void TestReduce()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Reduce" << std::endl;
+
+    //construct the index array
+    IdArrayHandle array;
+    Algorithm::Schedule(
+      ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
+                       DeviceAdapterTag())),
+      ARRAY_SIZE);
+
+    //the output of reduce and scan inclusive should be the same
+    vtkm::Id reduce_sum = Algorithm::Reduce(array, vtkm::Id(0));
+    vtkm::Id reduce_sum_with_intial_value = Algorithm::Reduce(array,
+                                                          vtkm::Id(ARRAY_SIZE));
+    vtkm::Id inclusive_sum = Algorithm::ScanInclusive(array, array);
+
+    VTKM_TEST_ASSERT(reduce_sum == OFFSET * ARRAY_SIZE,
+                     "Got bad sum from Reduce");
+    VTKM_TEST_ASSERT(reduce_sum_with_intial_value == reduce_sum + ARRAY_SIZE,
+                     "Got bad sum from Reduce with initial value");
+
+    VTKM_TEST_ASSERT(reduce_sum == inclusive_sum,
+                     "Got different sums from Reduce and ScanInclusive");
+  }
+
+  static VTKM_CONT_EXPORT void TestReduceWithComparisonObject()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Reduce with comparison object " << std::endl;
+
+    //construct the index array. Assign an abnormally large value
+    //to the middle of the array, that should be what we see as our sum.
+    vtkm::Id testData[ARRAY_SIZE];
+    const vtkm::Id maxValue = ARRAY_SIZE*2;
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      testData[i]= i;
+    }
+    testData[ARRAY_SIZE/2] = maxValue;
+
+    IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
+    vtkm::Id largestValue = Algorithm::Reduce(input,
+                                              vtkm::Id(),
+                                              comparison::MaxValue());
+
+    VTKM_TEST_ASSERT(largestValue == maxValue,
+                    "Got bad value from Reduce with comparison object");
+  }
+
+  static VTKM_CONT_EXPORT void TestReduceByKey()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Reduce By Key" << std::endl;
+
+    //first test with very basic integer key / values
+    {
+    const vtkm::Id inputLength = 12;
+    const vtkm::Id expectedLength = 6;
+    vtkm::Id inputKeys[inputLength] =    {0, 0, 0,\
+                                          1, 1,\
+                                          4,\
+                                          0,\
+                                          2, 2, 2, 2,\
+                                          -1}; // input keys
+    vtkm::Id inputValues[inputLength] =  {13, -2, -1,\
+                                          1, 1,\
+                                          0,\
+                                          3,\
+                                          1, 2, 3, 4, \
+                                          -42}; // input keys
+    vtkm::Id expectedKeys[expectedLength] =   { 0, 1, 4, 0,  2, -1 };
+    vtkm::Id expectedValues[expectedLength] = {10, 2, 0, 3, 10, -42};
+
+    IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
+    IdArrayHandle values = MakeArrayHandle(inputValues, inputLength);
+
+    IdArrayHandle keysOut, valuesOut;
+    Algorithm::ReduceByKey( keys,
+                            values,
+                            keysOut,
+                            valuesOut,
+                            vtkm::internal::Add() );
+
+    VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
+                    "Got wrong number of output keys");
+
+    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
+                    "Got wrong number of output values");
+
+    for(vtkm::Id i=0; i < expectedLength; ++i)
+      {
+      const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
+      const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
+      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
+      }
+    }
+
+    //next test with a single key across the entire set
+    {
+    const vtkm::Id inputLength = 3;
+    const vtkm::Id expectedLength = 1;
+    vtkm::Id inputKeys[inputLength] =    {0, 0, 0}; // input keys
+    vtkm::Id inputValues[inputLength] =  {13, -2, -1}; // input keys
+    vtkm::Id expectedKeys[expectedLength] =   { 0};
+    vtkm::Id expectedValues[expectedLength] = {10};
+
+    IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
+    IdArrayHandle values = MakeArrayHandle(inputValues, inputLength);
+
+    IdArrayHandle keysOut, valuesOut;
+    Algorithm::ReduceByKey( keys,
+                            values,
+                            keysOut,
+                            valuesOut,
+                            vtkm::internal::Add() );
+
+    VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
+                    "Got wrong number of output keys");
+
+    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
+                    "Got wrong number of output values");
+
+    for(vtkm::Id i=0; i < expectedLength; ++i)
+      {
+      const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
+      const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
+      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
+      }
+    }
+
+
+    //next test with values in vec3d (Added by Jimmy to be reviewed)
+    {
+    const vtkm::Id inputLength = 3;
+    const vtkm::Id expectedLength = 1;
+    vtkm::Id inputKeys[inputLength] =    {0, 0, 0}; // input keys
+    vtkm::Vec<vtkm::Float64, 3> inputValues[inputLength];
+    inputValues[0] = vtkm::make_Vec(13.1, 13.3, 13.5);
+    inputValues[1] = vtkm::make_Vec(-2.1, -2.3, -2.5);
+    inputValues[2] = vtkm::make_Vec(-1.0, -1.0, -1.0); // input keys
+    vtkm::Id expectedKeys[expectedLength] =   { 0};
+
+    vtkm::Vec<vtkm::Float64, 3> expectedValues[expectedLength];
+    expectedValues[0] = vtkm::make_Vec(10., 10., 10.);
+
+    IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> values = MakeArrayHandle(inputValues, inputLength);
+
+    IdArrayHandle keysOut;
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> valuesOut;
+    Algorithm::ReduceByKey( keys,
+                            values,
+                            keysOut,
+                            valuesOut,
+                            vtkm::internal::Add() );
+
+    VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
+                    "Got wrong number of output keys");
+
+    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
+                    "Got wrong number of output values");
+
+    for(vtkm::Id i=0; i < expectedLength; ++i)
+      {
+      const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
+      const vtkm::Vec<vtkm::Float64, 3> v = valuesOut.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
+      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
+      }
+    }
+
+  }
+
   static VTKM_CONT_EXPORT void TestScanInclusive()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Inclusive Scan" << std::endl;
-
     //construct the index array
     IdArrayHandle array;
     Algorithm::Schedule(
@@ -1083,6 +1267,54 @@ private:
       VTKM_TEST_ASSERT(partialSum == triangleNumber * OFFSET,
                        "Incorrect partial sum");
     }
+  }
+
+  static VTKM_CONT_EXPORT void TestScanInclusiveWithComparisonObject()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Inclusive Scan with comparison object " << std::endl;
+
+    //construct the index array
+    IdArrayHandle array;
+    Algorithm::Schedule(
+      ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
+                       DeviceAdapterTag())),
+      ARRAY_SIZE);
+
+    Algorithm::Schedule(
+      AddArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
+                     DeviceAdapterTag())),
+      ARRAY_SIZE);
+    //we know have an array whose sum is equal to OFFSET * ARRAY_SIZE,
+    //let's validate that
+    IdArrayHandle result;
+    vtkm::Id sum = Algorithm::ScanInclusive(array,
+                                            result,
+                                            comparison::MaxValue());
+    VTKM_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE-1),
+                     "Got bad sum from Inclusive Scan with comparison object");
+
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      const vtkm::Id input_value = array.GetPortalConstControl().Get(i);
+      const vtkm::Id result_value = result.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(input_value == result_value, "Incorrect partial sum");
+    }
+
+    //now try it inline
+    sum = Algorithm::ScanInclusive(array,
+                                   array,
+                                   comparison::MaxValue());
+    VTKM_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE-1),
+                     "Got bad sum from Inclusive Scan with comparison object");
+
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      const vtkm::Id input_value = array.GetPortalConstControl().Get(i);
+      const vtkm::Id result_value = result.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(input_value == result_value, "Incorrect partial sum");
+    }
+
   }
 
   static VTKM_CONT_EXPORT void TestScanExclusive()
@@ -1340,14 +1572,27 @@ private:
 
       TestAlgorithmSchedule();
       TestErrorExecution();
+
+      TestReduce();
+      TestReduceWithComparisonObject();
+
+      TestReduceByKey();
+
       TestScanInclusive();
+      TestScanInclusiveWithComparisonObject();
+
       TestScanExclusive();
+
       TestSort();
       TestSortWithComparisonObject();
       TestSortByKey();
+
       TestLowerBoundsWithComparisonObject();
+
       TestUpperBoundsWithComparisonObject();
+
       TestUniqueWithComparisonObject();
+
       TestOrderedUniqueValues(); //tests Copy, LowerBounds, Sort, Unique
       // TestDispatcher();
       TestStreamCompactWithStencil();

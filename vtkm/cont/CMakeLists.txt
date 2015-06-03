@@ -8,7 +8,7 @@
 ##
 ##  Copyright 2014 Sandia Corporation.
 ##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014. Los Alamos National Security
+##  Copyright 2014 Los Alamos National Security.
 ##
 ##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 ##  the U.S. Government retains certain rights in this software.
@@ -23,6 +23,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(headers
   ArrayHandle.h
   ArrayHandleCompositeVector.h
+  ArrayHandleConstant.h
   ArrayHandleCounting.h
   ArrayHandleImplicit.h
   ArrayHandlePermutation.h
@@ -72,6 +73,9 @@ vtkm_declare_headers(${impl_headers} ${headers})
 
 if (VTKm_ENABLE_CUDA)
   add_subdirectory(cuda)
+endif ()
+if (VTKm_ENABLE_TBB)
+  add_subdirectory(tbb)
 endif ()
 
 #-----------------------------------------------------------------------------
