@@ -33,6 +33,13 @@
 
 #include <boost/type_traits/remove_reference.hpp>
 
+// Disable warnings we check vtkm for but TBB does not.
+#if defined(__GNUC__) || defined(____clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
 
 //we provide an patched implementation of tbb parallel_sort
 //that fixes ADL for std::swap. This patch has been submitted to Intel
@@ -45,6 +52,11 @@
 #include <tbb/parallel_scan.h>
 #include <tbb/partitioner.h>
 #include <tbb/tick_count.h>
+
+
+#if defined(__GNUC__) || defined(____clang__)
+#pragma GCC diagnostic pop
+#endif // gcc || clang
 
 
 namespace vtkm {
