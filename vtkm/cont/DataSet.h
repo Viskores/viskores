@@ -52,10 +52,10 @@ public:
     Fields.push_back(f);
   }
 
-  vtkm::cont::Field &GetField(int index)
+  vtkm::cont::Field &GetField(vtkm::Id index)
   {
-    VTKM_ASSERT_CONT(index >= 0 && index <= int(Fields.size()));
-    return Fields[index];
+    VTKM_ASSERT_CONT(index >= 0 && index <= static_cast<vtkm::Id>(Fields.size()));
+    return Fields[static_cast<std::size_t>(index)];
   }
 
   vtkm::cont::Field &GetField(const std::string &n)
@@ -68,10 +68,10 @@ public:
     throw vtkm::cont::ErrorControlBadValue("No field with requested name");
   }
 
-  boost::shared_ptr<vtkm::cont::CellSet> GetCellSet(int index=0)
+  boost::shared_ptr<vtkm::cont::CellSet> GetCellSet(vtkm::Id index=0)
   {
-    VTKM_ASSERT_CONT(index >= 0 && index <= int(CellSets.size()));
-    return CellSets[index];
+    VTKM_ASSERT_CONT(index >= 0 && index <= static_cast<vtkm::Id>(CellSets.size()));
+    return CellSets[static_cast<std::size_t>(index)];
   }
 
   void AddCoordinateSystem(vtkm::cont::CoordinateSystem cs)

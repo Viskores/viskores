@@ -133,7 +133,7 @@ TestMaxNodeOrCell()
 
     //Run a worklet to populate a cell centered field.
     //Here, we're filling it with test values.
-    vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
+    vtkm::Float32 outcellVals[2] = {-1.4f, -1.7f};
     ds.AddField(vtkm::cont::Field("outcellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", outcellVals, 2));
 
     VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfCellSets(), 1),
@@ -157,9 +157,9 @@ TestMaxNodeOrCell()
     res = ds.GetField(4).GetData().CastToArrayHandle(vtkm::Float32(),
 						      VTKM_DEFAULT_STORAGE_TAG());
 
-    VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1),
+    VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1f),
 		     "Wrong result for MaxNodeOrCell worklet");
-    VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 200.1),
+    VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 200.1f),
 		     "Wrong result for MaxNodeOrCell worklet");
 }
 
@@ -177,7 +177,7 @@ TestAvgNodeToCell()
 
     //Run a worklet to populate a cell centered field.
     //Here, we're filling it with test values.
-    vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
+    vtkm::Float32 outcellVals[2] = {-1.4f, -1.7f};
     ds.AddField(vtkm::cont::Field("outcellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", outcellVals, 2));
 
     VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfCellSets(), 1),
@@ -200,9 +200,9 @@ TestAvgNodeToCell()
     res = ds.GetField(4).GetData().CastToArrayHandle(vtkm::Float32(),
 						      VTKM_DEFAULT_STORAGE_TAG());
 
-    VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 30.1),
+    VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 30.1f),
 		     "Wrong result for NodeToCellAverage worklet");
-    VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 40.1),
+    VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 40.1f),
 		     "Wrong result for NodeToCellAverage worklet");
 }
 
