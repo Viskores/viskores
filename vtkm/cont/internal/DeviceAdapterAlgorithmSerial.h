@@ -302,6 +302,7 @@ public:
     }
   }
 
+private:
   template<typename Vin, typename I, typename Vout, class StorageVin,  class StorageI, class StorageVout>
   VTKM_CONT_EXPORT static void Scatter(
       vtkm::cont::ArrayHandle<Vin,StorageVin> &values,
@@ -329,6 +330,7 @@ public:
       }
   }
 
+private:
   template<typename T, typename U, class StorageT,  class StorageU, class Compare>
   VTKM_CONT_EXPORT static void SortByKeyDirect(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
@@ -348,6 +350,7 @@ public:
       Sort(zipHandle,KeyCompare<T,U,Compare>(comp));
   }
 
+public:
   template<typename T, typename U, class StorageT,  class StorageU>
   VTKM_CONT_EXPORT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
