@@ -348,11 +348,19 @@ public:
       Sort(zipHandle,KeyCompare<T,U,Compare>(comp));
   }
 
+  template<typename T, typename U, class StorageT,  class StorageU>
+  VTKM_CONT_EXPORT static void SortByKey(
+      vtkm::cont::ArrayHandle<T,StorageT> &keys,
+      vtkm::cont::ArrayHandle<U,StorageU> &values)
+  {
+      SortByKey(keys, values, std::less<T>());
+  }
+
   template<typename T, typename U, class StorageT,  class StorageU, class Less>
   VTKM_CONT_EXPORT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values,
-      Less comp = std::less<T>() )
+      const Less &less)
   {
       if (sizeof(U) > sizeof(vtkm::Id)) {
           // More efficient sort
@@ -365,12 +373,12 @@ public:
           IndexType indexArray;
           ValueType valuesScattered;
           Copy( make_ArrayHandleCounting(0, keys.GetNumberOfValues()), indexArray);
-          SortByKeyDirect(keys, indexArray, comp);
+          SortByKeyDirect(keys, indexArray, less);
           Scatter(values, indexArray, valuesScattered);
           Copy( valuesScattered, values );
       } else
       {
-          SortByKeyDirect(keys, values, comp);
+          SortByKeyDirect(keys, values, less);
       }
   }
 
