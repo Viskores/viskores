@@ -302,6 +302,78 @@ public:
     }
   }
 
+  template<typename Vin, typename I, typename Vout, class StorageVin,  class StorageI, class StorageVout>
+  VTKM_CONT_EXPORT static void Scatter(
+      vtkm::cont::ArrayHandle<Vin,StorageVin> &values,
+      vtkm::cont::ArrayHandle<I,StorageI> &index,
+      vtkm::cont::ArrayHandle<Vout,StorageVout> &values_out
+          )
+  {
+      typedef typename vtkm::cont::ArrayHandle<Vin,StorageVin>
+          ::template ExecutionTypes<Device>::PortalConst PortalVIn;
+      typedef typename vtkm::cont::ArrayHandle<I,StorageI>
+          ::template ExecutionTypes<Device>::PortalConst PortalI;
+      typedef typename vtkm::cont::ArrayHandle<Vout,StorageVout>
+          ::template ExecutionTypes<Device>::Portal PortalVout;
+
+      const vtkm::Id n = values.GetNumberOfValues();
+      VTKM_ASSERT_CONT(n == index.GetNumberOfValues() );
+
+      PortalVIn valuesPortal = values.PrepareForInput(Device());
+      PortalI indexPortal = index.PrepareForInput(Device());
+      PortalVout valuesOutPortal = values_out.PrepareForOutput(n, Device());
+
+      for (vtkm::Id i=0; i<n; i++)
+      {
+         valuesOutPortal.Set( i, valuesPortal.Get(indexPortal.Get(i)) );
+      }
+  }
+
+  template<typename T, typename U, class StorageT,  class StorageU, class Compare>
+  VTKM_CONT_EXPORT static void SortByKeyDirect(
+      vtkm::cont::ArrayHandle<T,StorageT> &keys,
+      vtkm::cont::ArrayHandle<U,StorageU> &values,
+      Compare comp)
+  {
+      //combine the keys and values into a ZipArrayHandle
+      //we than need to specify a custom compare function wrapper
+      //that only checks for key side of the pair, using the custom compare
+      //functor that the user passed in
+      typedef vtkm::cont::ArrayHandle<T,StorageT> KeyType;
+      typedef vtkm::cont::ArrayHandle<U,StorageU> ValueType;
+      typedef vtkm::cont::ArrayHandleZip<KeyType,ValueType> ZipHandleType;
+
+      ZipHandleType zipHandle =
+                      vtkm::cont::make_ArrayHandleZip(keys,values);
+      Sort(zipHandle,KeyCompare<T,U,Compare>(comp));
+  }
+
+  template<typename T, typename U, class StorageT,  class StorageU, class Less>
+  VTKM_CONT_EXPORT static void SortByKey(
+      vtkm::cont::ArrayHandle<T,StorageT> &keys,
+      vtkm::cont::ArrayHandle<U,StorageU> &values,
+      Less comp = std::less<T>() )
+  {
+      if (sizeof(U) > sizeof(vtkm::Id)) {
+          // More efficient sort
+          typedef vtkm::cont::ArrayHandle<T,StorageT> KeyType;
+          typedef vtkm::cont::ArrayHandle<U,StorageU> ValueType;
+          typedef vtkm::cont::ArrayHandleZip<KeyType,ValueType> ZipHandleType;
+          typedef vtkm::cont::ArrayHandle<vtkm::Id,StorageU> IndexType;
+          typedef vtkm::cont::ArrayHandleZip<KeyType,IndexType> ZipIndexHandleType;
+
+          IndexType indexArray;
+          ValueType valuesScattered;
+          Copy( make_ArrayHandleCounting(0, keys.GetNumberOfValues()), indexArray);
+          SortByKeyDirect(keys, indexArray, comp);
+          Scatter(values, indexArray, valuesScattered);
+          Copy( valuesScattered, values );
+      } else
+      {
+          SortByKeyDirect(keys, values, comp);
+      }
+  }
+
   template<typename T, class Storage>
   VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage>& values)
   {
