@@ -34,72 +34,89 @@ namespace test {
 
 class MaxNodeOrCellValue : public vtkm::worklet::WorkletMapTopology
 {
-  static const int LEN_IDS = 6;
+  static const int LEN_IDS = 8;
 public:
   typedef void ControlSignature(FieldDestIn<Scalar> inCells,
                                 FieldSrcIn<Scalar> inNodes,
                                 TopologyIn<LEN_IDS> topology,
                                 FieldDestOut<Scalar> outCells);
-  //Todo: we need a way to mark what control signature item each execution signature for topology comes from
-  typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::TopologyIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::TopologyIdSet);
+  typedef void ExecutionSignature(_1, _4, _2,
+                                  vtkm::exec::arg::TopologyIdCount,
+                                  vtkm::exec::arg::TopologyElementType,
+                                  vtkm::exec::arg::TopologyIdSet);
   typedef _3 InputDomain;
 
   VTKM_CONT_EXPORT
   MaxNodeOrCellValue() { };
 
+  template<typename T>
   VTKM_EXEC_EXPORT
-  vtkm::Float32 operator()(const vtkm::Float32 &cellval,
-                           const vtkm::exec::TopologyData<vtkm::Float32,LEN_IDS> &nodevals,
-                           const vtkm::Id &count,
-                           const vtkm::Id & vtkmNotUsed(type),
-                           const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> & vtkmNotUsed(nodeIDs)) const
+  void operator()(const T &cellval,
+                  T& max_value,
+                  const vtkm::exec::TopologyData<T,LEN_IDS> &nodevals,
+                  const vtkm::Id &count,
+                  const vtkm::Id & vtkmNotUsed(type),
+                  const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> & vtkmNotUsed(nodeIDs)) const
   {
   //simple functor that returns the max of CellValue and nodeValue
-  vtkm::Float32 max_value = cellval;
+  max_value = cellval;
   for (vtkm::Id i=0; i<count; ++i)
     {
     max_value = nodevals[i] > max_value ? nodevals[i] : max_value;
     }
-  return max_value;
+  }
+
+  template<typename T1, typename T2, typename T3>
+  VTKM_EXEC_EXPORT
+  void operator()(const T1 &,
+                  T2 &,
+                  const vtkm::exec::TopologyData<T3,LEN_IDS> &,
+                  const vtkm::Id &,
+                  const vtkm::Id &,
+                  const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> &) const
+  {
+    this->RaiseError("Cannot call this worklet with different types.");
   }
 
 };
 
 class AvgNodeToCellValue : public vtkm::worklet::WorkletMapTopology
 {
-  static const int LEN_IDS = 98;
+  static const int LEN_IDS = 8;
 public:
   typedef void ControlSignature(FieldSrcIn<Scalar> inNodes,
                                 TopologyIn<LEN_IDS> topology,
                                 FieldDestOut<Scalar> outCells);
-  //Todo: we need a way to mark what control signature item each execution signature for topology comes from
-  typedef _3 ExecutionSignature(_1,
-                                vtkm::exec::arg::TopologyIdCount,
-                                vtkm::exec::arg::TopologyElementType,
-                                vtkm::exec::arg::TopologyIdSet);
+  typedef void ExecutionSignature(_1,
+                                  _3,
+                                  vtkm::exec::arg::TopologyIdCount);
   typedef _2 InputDomain;
 
   VTKM_CONT_EXPORT
   AvgNodeToCellValue() { };
 
+  template<typename T>
   VTKM_EXEC_EXPORT
-  vtkm::Float32 operator()(const vtkm::exec::TopologyData<vtkm::Float32,LEN_IDS> &nodevals,
-                           const vtkm::Id &count,
-                           const vtkm::Id & vtkmNotUsed(type),
-                           const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> & vtkmNotUsed(nodeIDs) ) const
+  void operator()(const vtkm::exec::TopologyData<T,LEN_IDS> &nodevals,
+                  T& avgVal,
+                  const vtkm::Id &count) const
   {
     //simple functor that returns the average nodeValue.
-    vtkm::Float32 avgVal = 0.0;
-
-    for (vtkm::Id i=0; i<count; ++i)
+    avgVal = nodevals[0];
+    for (vtkm::Id i=1; i<count; ++i)
     {
       avgVal += nodevals[i];
-      // std::cout << i << " " << nodevals[i] << std::endl;
     }
-    // std::cout << "avgVal: " << avgVal << std::endl;
-    // std::cout << "avgVal: " << (avgVal / count) << std::endl;
-    return avgVal / count;
+    avgVal = avgVal / count;
   }
+
+  template<typename T1, typename T2>
+  VTKM_EXEC_EXPORT
+  void operator()(const T1 &, T2 &, const vtkm::Id &) const
+  {
+    this->RaiseError("Cannot call this worklet with different types.");
+  }
+
 };
 
 }
