@@ -50,7 +50,7 @@ class DynamicArrayHandleCast;
 ///
 /// \c DynamicArrayHandle holds an \c ArrayHandle object using runtime
 /// polymorphism to manage different value types and storage rather than
-/// compile-time templates. This adds a programming convienience that helps
+/// compile-time templates. This adds a programming convenience that helps
 /// avoid a proliferation of templates. It also provides the management
 /// necessary to interface VTK-m with data sources where types will not be
 /// known until runtime.
@@ -70,7 +70,7 @@ class DynamicArrayHandleCast;
 /// used. If a type is missing you will get a runtime error. If there are more
 /// types than necessary, then the template mechanism will create a lot of
 /// object code that is never used, and keep in mind that the number of
-/// combinations grows exponentally when using multiple \c DynamicArrayHandle
+/// combinations grows exponentially when using multiple \c DynamicArrayHandle
 /// objects.
 ///
 class DynamicArrayHandle

@@ -52,7 +52,7 @@ MakeTestDataSet::Make2DRegularDataSet0()
     const int nVerts = 6;
     vtkm::Float32 xVals[nVerts] = {0, 1, 2, 0, 1, 2};
     vtkm::Float32 yVals[nVerts] = {0, 0, 0, 1, 1, 1};
-    vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.1, 40.1, 50.1, 60.1};
+    vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f};
 
     ds.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
     ds.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
@@ -62,7 +62,7 @@ MakeTestDataSet::Make2DRegularDataSet0()
     ds.AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
     //create scalar.
-    vtkm::Float32 cellvar[2] = {100.1, 200.1};
+    vtkm::Float32 cellvar[2] = {100.1f, 200.1f};
     ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
     boost::shared_ptr< vtkm::cont::CellSetStructured<2> > cs(
@@ -83,9 +83,9 @@ MakeTestDataSet::Make3DRegularDataSet0()
     vtkm::Float32 xVals[nVerts] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
     vtkm::Float32 yVals[nVerts] = {0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1};
     vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2};
-    vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.1, 40.1, 50.2, 60.2, 70.2, 80.2, 90.3,
-                                  100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5,
-                                  180.5};
+    vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.1f, 40.1f, 50.2f, 60.2f, 70.2f, 80.2f, 90.3f,
+                                  100.3f, 110.3f, 120.3f, 130.4f, 140.4f, 150.4f, 160.4f, 170.5f,
+                                  180.5f};
 
     ds.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
     ds.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
@@ -96,7 +96,7 @@ MakeTestDataSet::Make3DRegularDataSet0()
     ds.AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
     //Set cell scalar
-    vtkm::Float32 cellvar[4] = {100.1, 100.2, 100.3, 100.4};
+    vtkm::Float32 cellvar[4] = {100.1f, 100.2f, 100.3f, 100.4f};
     ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 4));
 
     static const vtkm::IdComponent dim = 3;
@@ -119,7 +119,7 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   vtkm::Float32 xVals[nVerts] = {0, 1, 1, 2, 2};
   vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1, 2};
   vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0};
-  vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.2, 40.2, 50.3};
+  vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f};
 
   ds.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
   ds.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
@@ -130,7 +130,7 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   ds.AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
   //Set cell scalar
-  vtkm::Float32 cellvar[2] = {100.1, 100.2};
+  vtkm::Float32 cellvar[2] = {100.1f, 100.2f};
   ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
   //Add connectivity
@@ -173,7 +173,7 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   vtkm::Float32 xVals[nVerts] = {0, 1, 1, 2, 2};
   vtkm::Float32 yVals[nVerts] = {0, 0, 1, 1, 2};
   vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0};
-  vtkm::Float32 vars[nVerts] = {10.1, 20.1, 30.2, 40.2, 50.3};
+  vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f};
 
   ds.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
   ds.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
@@ -184,7 +184,7 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   ds.AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
   //Set cell scalar
-  vtkm::Float32 cellvar[2] = {100.1, 100.2};
+  vtkm::Float32 cellvar[2] = {100.1f, 100.2f};
   ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
   boost::shared_ptr< vtkm::cont::CellSetExplicit<> > cs(

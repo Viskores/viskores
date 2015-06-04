@@ -36,7 +36,10 @@ class MaxNodeOrCellValue : public vtkm::worklet::WorkletMapTopology
 {
   static const int LEN_IDS = 6;
 public:
-  typedef void ControlSignature(FieldDestIn<Scalar> inCells, FieldSrcIn<Scalar> inNodes, TopologyIn<LEN_IDS> topology, FieldDestOut<Scalar> outCells);
+  typedef void ControlSignature(FieldDestIn<Scalar> inCells,
+                                FieldSrcIn<Scalar> inNodes,
+                                TopologyIn<LEN_IDS> topology,
+                                FieldDestOut<Scalar> outCells);
   //Todo: we need a way to mark what control signature item each execution signature for topology comes from
   typedef _4 ExecutionSignature(_1, _2, vtkm::exec::arg::TopologyIdCount, vtkm::exec::arg::TopologyElementType, vtkm::exec::arg::TopologyIdSet);
   typedef _3 InputDomain;
@@ -127,7 +130,7 @@ TestMaxNodeOrCell()
 
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.
-  vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
+  vtkm::Float32 outcellVals[2] = {-1.4f, -1.7f};
   ds.AddField(vtkm::cont::Field("outcellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", outcellVals, 2));
 
   VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
@@ -157,9 +160,9 @@ TestMaxNodeOrCell()
   vtkm::cont::ArrayHandle<vtkm::Float32> res;
   res = ds.GetField(5).GetData().CastToArrayHandle(vtkm::Float32(),
 						    VTKM_DEFAULT_STORAGE_TAG());
-  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1),
+  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1f),
 		   "Wrong result for NodeToCellAverage worklet");
-  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 100.2),
+  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 100.2f),
 		   "Wrong result for NodeToCellAverage worklet");
 }
 
@@ -173,7 +176,7 @@ TestAvgNodeToCell()
 
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.
-  vtkm::Float32 outcellVals[2] = {-1.4, -1.7};
+  vtkm::Float32 outcellVals[2] = {-1.4f, -1.7f};
   ds.AddField(vtkm::cont::Field("outcellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", outcellVals, 2));
 
   VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
@@ -198,9 +201,9 @@ TestAvgNodeToCell()
   res = ds.GetField("outcellvar").GetData().CastToArrayHandle(vtkm::Float32(),
 						    VTKM_DEFAULT_STORAGE_TAG());
 
-  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 20.1333),
+  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 20.1333f),
 		   "Wrong result for NodeToCellAverage worklet");
-  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 35.2),
+  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 35.2f),
 		   "Wrong result for NodeToCellAverage worklet");
 }
 

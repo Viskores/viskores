@@ -53,6 +53,7 @@ public:
                      association == ASSOC_POINTS);
     SetData(d);
   }
+
   template <typename T>
   VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, const std::vector<T> &d)
@@ -62,6 +63,7 @@ public:
                      association == ASSOC_POINTS);
     CopyData(&d[0], d.size());
   }
+
   template <typename T>
   VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, const T *d, vtkm::Id nvals)
@@ -71,7 +73,7 @@ public:
                      association == ASSOC_POINTS);
     CopyData(d, nvals);
   }
-  template <typename T>
+
   VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a)
     : name(n), order(o), association(a)
@@ -89,6 +91,7 @@ public:
     VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
     SetData(d);
   }
+
   template <typename T>
   VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, std::string csn, const std::vector<T> &d)
@@ -97,6 +100,7 @@ public:
     VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
     CopyData(&d[0], d.size());
   }
+
   template <typename T>
   VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, std::string csn, const T *d, vtkm::Id nvals)
@@ -105,7 +109,7 @@ public:
     VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
     CopyData(d, nvals);
   }
-  template <typename T>
+
   VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, std::string csn)
     : name(n), order(o), association(a), assoc_cellset_name(csn)
@@ -122,6 +126,7 @@ public:
     VTKM_ASSERT_CONT(association == ASSOC_LOGICAL_DIM);
     SetData(d);
   }
+
   template <typename T>
   VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, int l, const std::vector<T> &d)
@@ -130,6 +135,7 @@ public:
     VTKM_ASSERT_CONT(association == ASSOC_LOGICAL_DIM);
     CopyData(&d[0], d.size());
   }
+
   template <typename T>
   VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, int l, const T *d, vtkm::Id nvals)
@@ -138,7 +144,7 @@ public:
     VTKM_ASSERT_CONT(association == ASSOC_LOGICAL_DIM);
     CopyData(d, nvals);
   }
-  template <typename T>
+
   VTKM_CONT_EXPORT
   Field(std::string n, int o, Association a, int l)
     : name(n), order(o), association(a), assoc_logical_dim(l)
@@ -233,7 +239,6 @@ private:
   std::string  assoc_cellset_name;  ///< only populate if assoc is cells
   int          assoc_logical_dim; ///< only populate if assoc is logical dim
 
-  //vtkm::cont::ArrayHandle<vtkm::FloatDefault> data;
   vtkm::cont::DynamicArrayHandle data;
 };
 
