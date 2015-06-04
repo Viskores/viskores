@@ -20,6 +20,7 @@
 
 set(unit_tests
   UnitTestWorkletMapField.cxx
+  UnitTestWorkletMapFieldMultiParam.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyRegular.cxx
   )
