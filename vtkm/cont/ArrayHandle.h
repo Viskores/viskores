@@ -105,8 +105,8 @@ struct ArrayHandleCheck
 /// creates an empty, unallocated array that can later be allocated and filled
 /// either by the user or a VTKm algorithm. The \c ArrayHandle can also be
 /// constructed with iterators to a user's array. In this case the \c
-/// ArrayHandle will keep a reference to this array but may drop it if the
-/// array is reallocated.
+/// ArrayHandle will keep a reference to this array but will throw an exception
+/// if asked to re-allocate to a larger size.
 ///
 /// \c ArrayHandle behaves like a shared smart pointer in that when it is copied
 /// each copy holds a reference to the same array.  These copies are reference
