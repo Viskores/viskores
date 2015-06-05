@@ -140,4 +140,11 @@ vtkm::Pair<T1,T2> make_Pair(const T1 &firstSrc, const T2 &secondSrc)
 
 } // namespace vtkm
 
+
+template<typename T, typename U>
+vtkm::Pair<T, U> operator+(const vtkm::Pair<T, U>& a, const vtkm::Pair<T, U> &b)
+{
+    return vtkm::Pair<T,U>(a.first + b.first, a.second + b.second);
+}
+
 #endif //vtk_m_Pair_h
