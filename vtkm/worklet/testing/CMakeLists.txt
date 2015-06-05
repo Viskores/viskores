@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestCellAverage.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldMultiParam.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
