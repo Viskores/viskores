@@ -121,7 +121,7 @@ struct MaxValue
 #define ERROR_MESSAGE "Got an error."
 #define ARRAY_SIZE 500
 #define OFFSET 1000
-#define DIM 64
+#define DIM_SIZE 128
 
 /// This class has a single static member, Run, that tests the templated
 /// DeviceAdapter for conformance.
@@ -519,7 +519,6 @@ private:
       std::cout << "Allocating execution array" << std::endl;
       IdStorage storage;
       IdArrayManagerExecution manager(&storage);
-      vtkm::Id DIM_SIZE = vtkm::Id(std::pow(ARRAY_SIZE, 1/3.0f));
       vtkm::Id3 maxRange(DIM_SIZE);
 
       std::cout << "Running clear." << std::endl;
