@@ -267,32 +267,6 @@ public:
     }
   }
 
-private:
-  // This runs in the execution environment.
-  template<class FunctorType>
-  class ScheduleKernel3D
-  {
-  public:
-    ScheduleKernel3D(vtkm::Id3 dims,
-                     const FunctorType &functor)
-      : Dims(dims), Functor(functor) {  }
-
-    //needed for when calling from schedule on a i,j,k range
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id3 indexIJK) const
-    {
-      //convert from the id3 index to flat index space, as this is a placeholder
-      //algorithm while we wait for the ability to pass i,j,k indexes down
-      //the scheduling pipeline
-      const vtkm::Id flatIndex = indexIJK[0] +
-              this->Dims[0] * ( indexIJK[1] + this->Dims[1]* indexIJK[2] );
-      Functor(flatIndex);
-    }
-
-  private:
-    vtkm::Id3 Dims;
-    const FunctorType Functor;
-  };
-
 public:
   template<class Functor>
   VTKM_CONT_EXPORT
@@ -306,23 +280,19 @@ public:
 
     functor.SetErrorMessageBuffer(errorMessage);
 
-    DeviceAdapterAlgorithm<Device>::ScheduleKernel3D<Functor> kernel(rangeMax,
-                                                                     functor);
+    DeviceAdapterAlgorithm<Device>::ScheduleKernel<Functor> kernel(functor);
 
     //use a const variable to hint to compiler this doesn't change
-    const vtkm::Id3 sizes = rangeMax;
-    vtkm::Id3 ijkIndex(0,0,0);
-    for(vtkm::Id k=0; k < sizes[2]; ++k)
+    for(vtkm::Id k=0; k < rangeMax[2]; ++k)
       {
-      ijkIndex[2] = k;
-      for(vtkm::Id j=0; j < sizes[1]; ++j)
+      vtkm::Id index = k * rangeMax[1] * rangeMax[0];
+      for(vtkm::Id j=0; j < rangeMax[1]; ++j)
         {
-        ijkIndex[1] = j;
-        for(vtkm::Id i=0; i < sizes[0]; ++i)
+        for(vtkm::Id i=0; i < rangeMax[0]; ++i)
           {
-          ijkIndex[0] = i;
-          kernel( ijkIndex );
+          kernel( index + i );
           }
+        index += rangeMax[0];
         }
       }
 
