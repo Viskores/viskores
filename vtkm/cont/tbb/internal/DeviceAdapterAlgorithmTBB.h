@@ -434,13 +434,14 @@ private:
         for( vtkm::Id k=range.pages().begin(); k!=range.pages().end(); ++k)
           {
           vtkm::Id index = k * this->Dims[1] * this->Dims[0];
+          index += range.rows().begin() * this->Dims[0];
           for( vtkm::Id j=range.rows().begin(); j!=range.rows().end(); ++j)
             {
-            index += j * this->Dims[0];
             for( vtkm::Id i=range.cols().begin(); i!=range.cols().end(); ++i)
               {
               this->Functor(index + i);
               }
+            index += this->Dims[0];
             }
           }
         }

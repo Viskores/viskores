@@ -255,10 +255,11 @@ public:
 
     DeviceAdapterAlgorithm<Device>::ScheduleKernel<Functor> kernel(functor);
 
-    std::for_each(
-          ::boost::counting_iterator<vtkm::Id>(0),
-          ::boost::counting_iterator<vtkm::Id>(numInstances),
-          kernel);
+    const vtkm::Id size = numInstances;
+    for(vtkm::Id i=0; i < size; ++i)
+      {
+      kernel(i);
+      }
 
     if (errorMessage.IsErrorRaised())
     {
@@ -266,12 +267,39 @@ public:
     }
   }
 
-  template<class FunctorType>
+public:
+  template<class Functor>
   VTKM_CONT_EXPORT
-  static void Schedule(FunctorType functor, vtkm::Id3 rangeMax)
+  static void Schedule(Functor functor, vtkm::Id3 rangeMax)
   {
-    DeviceAdapterAlgorithm<Device>::Schedule(functor,
-                                     rangeMax[0] * rangeMax[1] * rangeMax[2] );
+    const vtkm::Id MESSAGE_SIZE = 1024;
+    char errorString[MESSAGE_SIZE];
+    errorString[0] = '\0';
+    vtkm::exec::internal::ErrorMessageBuffer
+        errorMessage(errorString, MESSAGE_SIZE);
+
+    functor.SetErrorMessageBuffer(errorMessage);
+
+    DeviceAdapterAlgorithm<Device>::ScheduleKernel<Functor> kernel(functor);
+
+    //use a const variable to hint to compiler this doesn't change
+    for(vtkm::Id k=0; k < rangeMax[2]; ++k)
+      {
+      vtkm::Id index = k * rangeMax[1] * rangeMax[0];
+      for(vtkm::Id j=0; j < rangeMax[1]; ++j)
+        {
+        for(vtkm::Id i=0; i < rangeMax[0]; ++i)
+          {
+          kernel( index + i );
+          }
+        index += rangeMax[0];
+        }
+      }
+
+    if (errorMessage.IsErrorRaised())
+    {
+      throw vtkm::cont::ErrorExecution(errorString);
+    }
   }
 
   template<typename T, class Storage>
