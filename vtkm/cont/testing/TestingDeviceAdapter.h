@@ -118,7 +118,6 @@ struct MaxValue
 }
 
 
-
 #define ERROR_MESSAGE "Got an error."
 #define ARRAY_SIZE 500
 #define OFFSET 1000
@@ -290,30 +289,6 @@ public:
         const vtkm::exec::internal::ErrorMessageBuffer &) {  }
 
     IdPortalType Array;
-  };
-
-  struct NGMult //: public vtkm::exec::WorkletMapField
-  {
-    // typedef void ControlSignature(Field(In), Field(In), Field(Out));
-    // typedef _3 ExecutionSignature(_1, _2);
-
-    template<typename T>
-    VTKM_EXEC_EXPORT T operator()(T a, T b) const
-    {
-      return a * b;
-    }
-  };
-
-  struct NGNoOp //: public vtkm::exec::WorkletMapField
-  {
-    // typedef void ControlSignature(Field(In), Field(Out));
-    // typedef _2 ExecutionSignature(_1);
-
-    template<typename T>
-    VTKM_EXEC_EXPORT T operator()(T a) const
-    {
-      return a;
-    }
   };
 
   struct FuseAll
@@ -569,101 +544,6 @@ private:
       }
     } //release memory
   }
-
-  // static VTKM_CONT_EXPORT void TestDispatcher()
-  // {
-  //   std::cout << "-------------------------------------------" << std::endl;
-  //   std::cout << "Testing vtkm::cont::Dispatcher* classes" << std::endl;
-
-  //   std::cout << "Testing vtkm::cont::Dispatcher with array of size 1" << std::endl;
-
-  //   std::vector<vtkm::Id> singleElement; singleElement.push_back(1234);
-  //   IdArrayHandle hSingleElement = MakeArrayHandle(singleElement);
-  //   IdArrayHandle hResult;
-
-  //   vtkm::cont::DispatcherMapField< NGNoOp, DeviceAdapterTag > dispatcherNoOp;
-  //   dispatcherNoOp.Invoke( hSingleElement, hResult );
-
-  //   // output
-  //   std::cout << "hResult.GetNumberOfValues(): " << hResult.GetNumberOfValues() << std::endl;
-  //   for (vtkm::Id i = 0; i < hResult.GetNumberOfValues(); ++i)
-  //     {
-  //     std::cout << hResult.GetPortalConstControl().Get(i) << ",";
-  //     }
-  //   std::cout << std::endl;
-
-  //   // assert
-  //   VTKM_TEST_ASSERT(
-  //           hSingleElement.GetNumberOfValues() == hResult.GetNumberOfValues(),
-  //           "out handle of single scheduling is wrong size");
-  //   VTKM_TEST_ASSERT(singleElement[0] == 1234,
-  //                   "output of single scheduling is incorrect");
-
-  //   std::vector<vtkm::FloatDefault> field(ARRAY_SIZE);
-  //   for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
-  //     {
-  //     field[i]=i;
-  //     }
-  //   ScalarArrayHandle fieldHandle = MakeArrayHandle(field);
-  //   ScalarArrayHandle multHandle;
-
-  //   std::cout << "Running NG Multiply worklet with two handles" << std::endl;
-
-  //   vtkm::cont::DispatcherMapField< NGMult, DeviceAdapterTag > dispatcherMult;
-  //   dispatcherMult.Invoke( fieldHandle, fieldHandle, multHandle );
-
-  //   typename ScalarArrayHandle::PortalConstControl multPortal =
-  //       multHandle.GetPortalConstControl();
-
-  //   for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
-  //     {
-  //     vtkm::FloatDefault squareValue = multPortal.Get(i);
-  //     vtkm::FloatDefault squareTrue = field[i]*field[i];
-  //     VTKM_TEST_ASSERT(test_equal(squareValue, squareTrue),
-  //                     "Got bad multiply result");
-  //     }
-
-  //   std::cout << "Running NG Multiply worklet with handle and constant" << std::endl;
-  //   dispatcherMult.Invoke(4.0f,fieldHandle, multHandle);
-  //   multPortal = multHandle.GetPortalConstControl();
-
-  //   for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
-  //     {
-  //     vtkm::FloatDefault squareValue = multPortal.Get(i);
-  //     vtkm::FloatDefault squareTrue = field[i]*4.0f;
-  //     VTKM_TEST_ASSERT(test_equal(squareValue, squareTrue),
-  //                     "Got bad multiply result");
-  //     }
-
-
-  //   std::cout << "Testing Schedule on Subset" << std::endl;
-  //   std::vector<vtkm::FloatDefault> fullField(ARRAY_SIZE);
-  //   std::vector<vtkm::Id> subSetLookup(ARRAY_SIZE/2);
-  //   for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
-  //     {
-  //     field[i]=i;
-  //     if(i%2==0)
-  //       {
-  //       subSetLookup[i/2]=i;
-  //       }
-  //     }
-
-  //   IdArrayHandle subSetLookupHandle = MakeArrayHandle(subSetLookup);
-  //   ScalarArrayHandle fullFieldHandle = MakeArrayHandle(fullField);
-
-  //   std::cout << "Running clear on subset." << std::endl;
-  //   vtkm::cont::DispatcherMapField< ClearArrayMapKernel,
-  //                                  DeviceAdapterTag > dispatcherClear;
-  //   dispatcherClear.Invoke(
-  //         make_Permutation(subSetLookupHandle,fullFieldHandle,ARRAY_SIZE));
-
-  //   for (vtkm::Id index = 0; index < ARRAY_SIZE; index+=2)
-  //     {
-  //     vtkm::Id value = fullFieldHandle.GetPortalConstControl().Get(index);
-  //     VTKM_TEST_ASSERT(value == OFFSET,
-  //                     "Got bad value for subset scheduled kernel.");
-  //     }
-  // }
 
   static VTKM_CONT_EXPORT void TestStreamCompact()
   {
@@ -1384,183 +1264,6 @@ private:
                      "Did not get expected error message.");
   }
 
-  // template<typename GridType>
-  // static VTKM_CONT_EXPORT void TestWorkletMapField()
-  // {
-  //   std::cout << "-------------------------------------------" << std::endl;
-  //   std::cout << "Testing basic map field worklet" << std::endl;
-
-  //   //use a scoped pointer that constructs and fills a grid of the
-  //   //right type
-  //   vtkm::cont::testing::TestGrid<GridType,StorageTagBasic>
-  //       grid(DIM);
-
-  //   vtkm::Vector3 trueGradient = vtkm::make_Vector3(1.0, 1.0, 1.0);
-
-  //   std::vector<vtkm::FloatDefault> field(grid->GetNumberOfPoints());
-  //   std::cout << "Number of Points in the grid: "
-  //             <<  grid->GetNumberOfPoints()
-  //             << std::endl;
-  //   for (vtkm::Id pointIndex = 0;
-  //        pointIndex < grid->GetNumberOfPoints();
-  //        pointIndex++)
-  //     {
-  //     vtkm::Vector3 coordinates = grid.GetPointCoordinates(pointIndex);
-  //     field[pointIndex] = vtkm::dot(coordinates, trueGradient);
-  //     }
-  //   ScalarArrayHandle fieldHandle = MakeArrayHandle(field);
-
-  //   ScalarArrayHandle squareHandle;
-
-  //   std::cout << "Running Square worklet" << std::endl;
-  //   vtkm::cont::DispatcherMapField<vtkm::worklet::Square,
-  //                                 DeviceAdapterTag> dispatcher;
-  //   dispatcher.Invoke(fieldHandle, squareHandle);
-
-  //   typename ScalarArrayHandle::PortalConstControl squarePortal =
-  //       squareHandle.GetPortalConstControl();
-
-  //   std::cout << "Checking result" << std::endl;
-  //   for (vtkm::Id pointIndex = 0;
-  //        pointIndex < grid->GetNumberOfPoints();
-  //        pointIndex++)
-  //     {
-  //     vtkm::FloatDefault squareValue = squarePortal.Get(pointIndex);
-  //     vtkm::FloatDefault squareTrue = field[pointIndex]*field[pointIndex];
-  //     VTKM_TEST_ASSERT(test_equal(squareValue, squareTrue),
-  //                     "Got bad square");
-  //     }
-  // }
-
-  // template<typename GridType>
-  // static VTKM_CONT_EXPORT void TestWorkletFieldMapError()
-  // {
-  //   std::cout << "-------------------------------------------" << std::endl;
-  //   std::cout << "Testing map field worklet error" << std::endl;
-
-  //   vtkm::cont::testing::TestGrid<GridType,StorageTagBasic>
-  //       grid(DIM);
-
-  //   std::cout << "Running field map worklet that errors" << std::endl;
-  //   bool gotError = false;
-  //   try
-  //     {
-  //     vtkm::cont::DispatcherMapField< vtkm::worklet::testing::FieldMapError,
-  //                                 DeviceAdapterTag> dispatcher;
-  //     dispatcher.Invoke( grid.GetRealGrid().GetPointCoordinates() );
-  //     }
-  //   catch (vtkm::cont::ErrorExecution error)
-  //     {
-  //     std::cout << "Got expected ErrorExecution object." << std::endl;
-  //     std::cout << error.GetMessage() << std::endl;
-  //     gotError = true;
-  //     }
-
-  //   VTKM_TEST_ASSERT(gotError, "Never got the error thrown.");
-  // }
-
-  // template<typename GridType>
-  // static VTKM_CONT_EXPORT void TestWorkletMapCell()
-  // {
-  //   std::cout << "-------------------------------------------" << std::endl;
-  //   std::cout << "Testing basic map cell worklet" << std::endl;
-
-  //   if (vtkm::CellTraits<typename GridType::CellTag>::TOPOLOGICAL_DIMENSIONS < 3)
-  //     {
-  //     std::cout << "Skipping.  Too hard to check gradient "
-  //               << "on cells with topological dimension < 3" << std::endl;
-  //     }
-  //   else
-  //     {
-  //     // Calling a separate Impl function because the CUDA compiler is good
-  //     // enough to optimize the if statement as a constant expression and
-  //     // then complains about unreachable statements after a return.
-  //     TestWorkletMapCellImpl<GridType>();
-  //     }
-  // }
-
-  // template<typename GridType>
-  // static VTKM_CONT_EXPORT void TestWorkletMapCellImpl()
-  // {
-  //   vtkm::cont::testing::TestGrid<GridType,StorageTagBasic>
-  //       grid(DIM);
-
-  //   vtkm::Vector3 trueGradient = vtkm::make_Vector3(1.0, 1.0, 1.0);
-
-  //   std::vector<vtkm::FloatDefault> field(grid->GetNumberOfPoints());
-  //   for (vtkm::Id pointIndex = 0;
-  //        pointIndex < grid->GetNumberOfPoints();
-  //        pointIndex++)
-  //     {
-  //     vtkm::Vector3 coordinates = grid.GetPointCoordinates(pointIndex);
-  //     field[pointIndex] = vtkm::dot(coordinates, trueGradient);
-  //     }
-  //   ScalarArrayHandle fieldHandle = MakeArrayHandle(field);
-
-  //   Vec3ArrayHandle gradientHandle;
-
-  //   std::cout << "Running CellGradient worklet" << std::endl;
-
-  //   vtkm::cont::DispatcherMapCell< vtkm::worklet::CellGradient,
-  //                                  DeviceAdapterTag> dispatcher;
-  //   dispatcher.Invoke(grid.GetRealGrid(),
-  //                   grid->GetPointCoordinates(),
-  //                   fieldHandle,
-  //                   gradientHandle);
-
-  //   typename Vec3ArrayHandle::PortalConstControl gradientPortal =
-  //       gradientHandle.GetPortalConstControl();
-
-  //   std::cout << "Checking result" << std::endl;
-  //   for (vtkm::Id cellIndex = 0;
-  //        cellIndex < grid->GetNumberOfCells();
-  //        cellIndex++)
-  //     {
-  //     vtkm::Vector3 gradientValue = gradientPortal.Get(cellIndex);
-  //     VTKM_TEST_ASSERT(test_equal(gradientValue, trueGradient),
-  //                     "Got bad gradient");
-  //     }
-  // }
-
-  // template<typename GridType>
-  // static VTKM_CONT_EXPORT void TestWorkletCellMapError()
-  // {
-  //   std::cout << "-------------------------------------------" << std::endl;
-  //   std::cout << "Testing map cell worklet error" << std::endl;
-
-  //   vtkm::cont::testing::TestGrid<GridType,StorageTagBasic>
-  //       grid(DIM);
-
-  //   std::cout << "Running cell map worklet that errors" << std::endl;
-  //   bool gotError = false;
-  //   try
-  //     {
-  //     vtkm::cont::DispatcherMapCell< vtkm::worklet::testing::CellMapError,
-  //                                    DeviceAdapterTag> dispatcher;
-  //     dispatcher.Invoke( grid.GetRealGrid() );
-  //     }
-  //   catch (vtkm::cont::ErrorExecution error)
-  //     {
-  //     std::cout << "Got expected ErrorExecution object." << std::endl;
-  //     std::cout << error.GetMessage() << std::endl;
-  //     gotError = true;
-  //     }
-
-  //   VTKM_TEST_ASSERT(gotError, "Never got the error thrown.");
-  // }
-
-  // struct TestWorklets
-  // {
-  //   template<typename GridType>
-  //   VTKM_CONT_EXPORT void operator()(const GridType&) const
-  //     {
-  //     TestWorkletMapField<GridType>();
-  //     TestWorkletFieldMapError<GridType>();
-  //     TestWorkletMapCell<GridType>();
-  //     TestWorkletCellMapError<GridType>();
-  //     }
-  // };
-
   struct TestAll
   {
     VTKM_CONT_EXPORT void operator()() const
@@ -1594,14 +1297,8 @@ private:
       TestUniqueWithComparisonObject();
 
       TestOrderedUniqueValues(); //tests Copy, LowerBounds, Sort, Unique
-      // TestDispatcher();
       TestStreamCompactWithStencil();
       TestStreamCompact();
-
-
-      // std::cout << "Doing Worklet tests with all grid type" << std::endl;
-      // vtkm::cont::testing::GridTesting::TryAllGridTypes(
-      //       TestWorklets(), StorageTagBasic());
     }
   };
 
