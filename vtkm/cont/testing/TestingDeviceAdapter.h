@@ -734,14 +734,18 @@ private:
     {
       testData[i]= OFFSET+(i % 50);
     }
+
     IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
+
+    //make a deep copy of input and place it into temp
+    IdArrayHandle temp;
+    Algorithm::Copy(input,temp);
+
+    Algorithm::Sort(temp);
+    Algorithm::Unique(temp);
 
     IdArrayHandle handle;
     IdArrayHandle handle1;
-    IdArrayHandle temp;
-    Algorithm::Copy(input,temp);
-    Algorithm::Sort(temp);
-    Algorithm::Unique(temp);
 
     //verify lower and upper bounds work
     Algorithm::LowerBounds(temp,input,handle);
@@ -831,20 +835,15 @@ private:
     {
       testData[i]= OFFSET+((ARRAY_SIZE-i) % 50);
     }
-    IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
+    IdArrayHandle sorted = MakeArrayHandle(testData, ARRAY_SIZE);
 
-    IdArrayHandle sorted;
-
-    Algorithm::Copy(input,sorted);
-
-    //Validate the standard sort is correct
+    //Validate the standard inplace sort is correct
     Algorithm::Sort(sorted);
 
     for (vtkm::Id i = 0; i < ARRAY_SIZE-1; ++i)
     {
       vtkm::Id sorted1 = sorted.GetPortalConstControl().Get(i);
       vtkm::Id sorted2 = sorted.GetPortalConstControl().Get(i+1);
-      //      std::cout << sorted1 << " <= " << sorted2 << std::endl;
       VTKM_TEST_ASSERT(sorted1 <= sorted2, "Values not properly sorted.");
     }
   }
@@ -858,31 +857,28 @@ private:
     {
       testData[i]= OFFSET+((ARRAY_SIZE-i) % 50);
     }
-    IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
 
-    IdArrayHandle sorted;
-    IdArrayHandle comp_sorted;
-
-    Algorithm::Copy(input,sorted);
-    Algorithm::Copy(input,comp_sorted);
-
-    //Validate the standard sort is correct
+    //sort the users memory in-place
+    IdArrayHandle sorted = MakeArrayHandle(testData, ARRAY_SIZE);
     Algorithm::Sort(sorted);
 
-    //Validate the sort, and SortGreater are inverse
+    //copy the sorted array into our own memory, if use the same user ptr
+    //we would also sort the 'sorted' handle
+    IdArrayHandle comp_sorted;
+    Algorithm::Copy(sorted, comp_sorted);
     Algorithm::Sort(comp_sorted,comparison::SortGreater());
 
+    //Validate that sorted and comp_sorted are sorted in the opposite directions
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
     {
       vtkm::Id sorted1 = sorted.GetPortalConstControl().Get(i);
       vtkm::Id sorted2 = comp_sorted.GetPortalConstControl().Get(ARRAY_SIZE - (i + 1));
-      //      std::cout << sorted1 << "==" << sorted2 << std::endl;
       VTKM_TEST_ASSERT(sorted1 == sorted2,
                        "Got bad sort values when using SortGreater");
     }
 
+    //validate that sorted and comp_sorted are now equal
     Algorithm::Sort(comp_sorted,comparison::SortLess());
-
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
     {
       vtkm::Id sorted1 = sorted.GetPortalConstControl().Get(i);
@@ -911,19 +907,13 @@ private:
     IdArrayHandle keys = MakeArrayHandle(testKeys, ARRAY_SIZE);
     Vec3ArrayHandle values = MakeArrayHandle(testValues, ARRAY_SIZE);
 
-    IdArrayHandle sorted_keys;
-    Vec3ArrayHandle sorted_values;
-
-    Algorithm::Copy(keys,sorted_keys);
-    Algorithm::Copy(values,sorted_values);
-
-    Algorithm::SortByKey(sorted_keys,sorted_values);
+    Algorithm::SortByKey(keys,values);
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
       {
       //keys should be sorted from 1 to ARRAY_SIZE
       //values should be sorted from (ARRAY_SIZE-1) to 0
-      Vec3 sorted_value = sorted_values.GetPortalConstControl().Get(i);
-      vtkm::Id sorted_key = sorted_keys.GetPortalConstControl().Get(i);
+      Vec3 sorted_value = values.GetPortalConstControl().Get(i);
+      vtkm::Id sorted_key = keys.GetPortalConstControl().Get(i);
 
       VTKM_TEST_ASSERT( (sorted_key == (i+1)) , "Got bad SortByKeys key");
       VTKM_TEST_ASSERT( test_equal(sorted_value, TestValue(ARRAY_SIZE-1-i, Vec3())),
@@ -931,13 +921,13 @@ private:
       }
 
     // this will return everything back to what it was before sorting
-    Algorithm::SortByKey(sorted_keys,sorted_values,comparison::SortGreater());
+    Algorithm::SortByKey(keys,values,comparison::SortGreater());
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
       {
       //keys should be sorted from ARRAY_SIZE to 1
       //values should be sorted from 0 to (ARRAY_SIZE-1)
-      Vec3 sorted_value = sorted_values.GetPortalConstControl().Get(i);
-      vtkm::Id sorted_key = sorted_keys.GetPortalConstControl().Get(i);
+      Vec3 sorted_value = values.GetPortalConstControl().Get(i);
+      vtkm::Id sorted_key = keys.GetPortalConstControl().Get(i);
 
       VTKM_TEST_ASSERT( (sorted_key == (ARRAY_SIZE-i)),
                                       "Got bad SortByKeys key");
@@ -946,13 +936,13 @@ private:
       }
 
     //this is here to verify we can sort by vtkm::Vec
-    Algorithm::SortByKey(sorted_values,sorted_keys);
+    Algorithm::SortByKey(values,keys);
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
       {
       //keys should be sorted from ARRAY_SIZE to 1
       //values should be sorted from 0 to (ARRAY_SIZE-1)
-      Vec3 sorted_value = sorted_values.GetPortalConstControl().Get(i);
-      vtkm::Id sorted_key = sorted_keys.GetPortalConstControl().Get(i);
+      Vec3 sorted_value = values.GetPortalConstControl().Get(i);
+      vtkm::Id sorted_key = keys.GetPortalConstControl().Get(i);
 
       VTKM_TEST_ASSERT( (sorted_key == (ARRAY_SIZE-i)),
                                       "Got bad SortByKeys key");
@@ -972,8 +962,10 @@ private:
     }
     IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
 
+    //make a deep copy of input and place it into temp
     IdArrayHandle temp;
     Algorithm::Copy(input,temp);
+
     Algorithm::Sort(temp);
     Algorithm::Unique(temp);
 
@@ -1008,8 +1000,10 @@ private:
     }
     IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
 
+    //make a deep copy of input and place it into temp
     IdArrayHandle temp;
     Algorithm::Copy(input,temp);
+
     Algorithm::Sort(temp);
     Algorithm::Unique(temp);
 
@@ -1042,22 +1036,18 @@ private:
       testData[i]= OFFSET+(i % 50);
     }
     IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
+    Algorithm::Sort(input);
+    Algorithm::Unique(input, FuseAll());
 
-    IdArrayHandle temp;
-    Algorithm::Copy(input,temp);
-    Algorithm::Sort(temp);
-    Algorithm::Unique(temp, FuseAll());
-
-    // Check to make sure that temp was resized correctly during Unique.
+    // Check to make sure that input was resized correctly during Unique.
     // (This was a discovered bug at one point.)
-    temp.GetPortalConstControl();  // Forces copy back to control.
-    temp.ReleaseResourcesExecution(); // Make sure not counting on execution.
-    std::cout << "temp size: " << temp.GetNumberOfValues() << std::endl;
+    input.GetPortalConstControl();  // Forces copy back to control.
+    input.ReleaseResourcesExecution(); // Make sure not counting on execution.
     VTKM_TEST_ASSERT(
-          temp.GetNumberOfValues() == 1,
+          input.GetNumberOfValues() == 1,
           "Unique did not resize array (or size did not copy to control).");
 
-    vtkm::Id value = temp.GetPortalConstControl().Get(0);
+    vtkm::Id value = input.GetPortalConstControl().Get(0);
     VTKM_TEST_ASSERT(value == OFFSET, "Got bad unique value");
   }
 

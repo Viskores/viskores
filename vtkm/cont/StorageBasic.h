@@ -69,7 +69,10 @@ public:
       NumberOfValues(numberOfValues),
       AllocatedSize(numberOfValues),
       DeallocateOnRelease(false),
-      ReadOnly(true) { }
+      UserProvidedMemory( array == NULL ? false : true)
+  {
+
+  }
 
   VTKM_CONT_EXPORT
   ~Storage()
@@ -83,7 +86,7 @@ public:
       NumberOfValues(src.NumberOfValues),
       AllocatedSize(src.AllocatedSize),
       DeallocateOnRelease(false),
-      ReadOnly(src.ReadOnly)
+      UserProvidedMemory(src.UserProvidedMemory)
   {
     if (src.DeallocateOnRelease)
     {
@@ -108,7 +111,7 @@ public:
     this->NumberOfValues = src.NumberOfValues;
     this->AllocatedSize = src.AllocatedSize;
     this->DeallocateOnRelease = src.DeallocateOnRelease;
-    this->ReadOnly = src.ReadOnly;
+    this->UserProvidedMemory = src.UserProvidedMemory;
 
     return *this;
   }
@@ -138,11 +141,16 @@ public:
   VTKM_CONT_EXPORT
   void Allocate(vtkm::Id numberOfValues)
   {
-    if ((numberOfValues <= this->AllocatedSize)
-        && !this->ReadOnly)
+    if (numberOfValues <= this->AllocatedSize)
     {
       this->NumberOfValues = numberOfValues;
       return;
+    }
+
+    if(this->UserProvidedMemory)
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+        "User allocated arrays cannot be reallocated.");
     }
 
     this->ReleaseResources();
@@ -173,7 +181,7 @@ public:
     }
 
     this->DeallocateOnRelease = true;
-    this->ReadOnly = false;
+    this->UserProvidedMemory = false;
   }
 
   VTKM_CONT_EXPORT
@@ -185,11 +193,6 @@ public:
   VTKM_CONT_EXPORT
   void Shrink(vtkm::Id numberOfValues)
   {
-    if (this->ReadOnly)
-    {
-      throw vtkm::cont::ErrorControlBadValue("Cannot shrink read-only array.");
-    }
-
     if (numberOfValues > this->GetNumberOfValues())
     {
       throw vtkm::cont::ErrorControlBadValue(
@@ -202,11 +205,6 @@ public:
   VTKM_CONT_EXPORT
   PortalType GetPortal()
   {
-    if (this->ReadOnly)
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-            "Tried to access read-only array as read-write.");
-    }
     return PortalType(this->Array, this->Array + this->NumberOfValues);
   }
 
@@ -240,7 +238,7 @@ private:
   vtkm::Id NumberOfValues;
   vtkm::Id AllocatedSize;
   bool DeallocateOnRelease;
-  bool ReadOnly;
+  bool UserProvidedMemory;
 };
 
 } // namespace internal

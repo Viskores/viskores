@@ -46,7 +46,37 @@ struct TryArrayHandleType
   template<typename T>
   void operator()(T) const
   {
-    std::cout << "Create array handle." << std::endl;
+    VerifyEmptyArrays(T());
+    VerifyUserAllocatedHandle(T());
+    VerifyVTKMAllocatedHandle(T());
+  }
+
+  template<typename T>
+  void VerifyEmptyArrays(T) const
+  {
+    std::cout << "Try operations on empty arrays." << std::endl;
+    // After each operation, reinitialize array in case something gets
+    // allocated.
+    vtkm::cont::ArrayHandle<T> arrayHandle = vtkm::cont::ArrayHandle<T>();
+    VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
+                     "Uninitialized array does not report zero values.");
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    VTKM_TEST_ASSERT(
+          arrayHandle.GetPortalConstControl().GetNumberOfValues() == 0,
+          "Uninitialized array does not give portal with zero values.");
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    arrayHandle.Shrink(0);
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    arrayHandle.ReleaseResourcesExecution();
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    arrayHandle.ReleaseResources();
+    arrayHandle = vtkm::cont::ArrayHandle<T>();
+    arrayHandle.PrepareForOutput(ARRAY_SIZE, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  }
+
+  template<typename T>
+  void VerifyUserAllocatedHandle(T) const
+  {
     T array[ARRAY_SIZE];
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
@@ -61,11 +91,11 @@ struct TryArrayHandleType
     VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
                      "ArrayHandle has wrong number of entries.");
 
-    std::cout << "Check basic array." << std::endl;
+    std::cout << "Check array with user provided memory." << std::endl;
     CheckArray(arrayHandle);
 
     std::cout << "Check out execution array behavior." << std::endl;
-    {
+    { //as input
       typename vtkm::cont::ArrayHandle<T>::template
           ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::PortalConst
           executionPortal;
@@ -74,35 +104,74 @@ struct TryArrayHandleType
       CheckPortal(executionPortal);
     }
 
-    {
-      bool gotException = false;
-      try
-      {
-        arrayHandle.PrepareForInPlace(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-      }
-      catch (vtkm::cont::Error &error)
-      {
-        std::cout << "Got expected error: " << error.GetMessage() << std::endl;
-        gotException = true;
-      }
-      VTKM_TEST_ASSERT(gotException,
-                       "PrepareForInPlace did not fail for const array.");
+    { //as inplace
+      typename vtkm::cont::ArrayHandle<T>::template
+          ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal
+          executionPortal;
+      executionPortal =
+          arrayHandle.PrepareForInPlace(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+      CheckPortal(executionPortal);
     }
 
-    {
+    { //as output with same length as user provided. This should work
+      //as no new memory needs to be allocated
+      typename vtkm::cont::ArrayHandle<T>::template
+          ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal
+          executionPortal;
+      executionPortal =
+          arrayHandle.PrepareForOutput(ARRAY_SIZE,
+                                      VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+      CheckPortal(executionPortal);
+    }
+
+    { //as output with a length larger than the memory provided by the user
+      //this should fail
       typedef typename vtkm::cont::ArrayHandle<T>::template
         ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal
           ExecutionPortalType;
-      ExecutionPortalType executionPortal =
-          arrayHandle.PrepareForOutput(ARRAY_SIZE*2,
-                                       VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-      for (vtkm::Id index = 0;
-           index < executionPortal.GetNumberOfValues();
-           index++)
+
+      bool gotException = false;
+      try
       {
-        executionPortal.Set(index, TestValue(index, T()));
+        //you should not be able to allocate
+        ExecutionPortalType executionPortal =
+            arrayHandle.PrepareForOutput(ARRAY_SIZE*2,
+                                         VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+        CheckPortal(executionPortal);
+      }
+      catch (vtkm::cont::Error &error)
+      {
+        gotException = true;
+      }
+      VTKM_TEST_ASSERT(gotException,
+                       "PrepareForOutput should fail when asked to "\
+                       "re-allocate user provided memory.");
+    }
+  }
+
+  template<typename T>
+  void VerifyVTKMAllocatedHandle(T) const
+    {
+    vtkm::cont::ArrayHandle<T> arrayHandle;
+
+    VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
+                     "ArrayHandle has wrong number of entries.");
+
+    {
+      typedef typename vtkm::cont::ArrayHandle<T>::template
+         ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal
+           ExecutionPortalType;
+      ExecutionPortalType executionPortal =
+           arrayHandle.PrepareForOutput(ARRAY_SIZE*2,
+                                        VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+      for (vtkm::Id index = 0;
+          index < executionPortal.GetNumberOfValues();
+          index++)
+      {
+       executionPortal.Set(index, TestValue(index, T()));
       }
     }
+
     VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE*2,
                      "Array not allocated correctly.");
     CheckArray(arrayHandle);
@@ -141,26 +210,8 @@ struct TryArrayHandleType
                                   TestValue(index, T()) + T(1)),
                        "Did not get result from in place operation.");
     }
-
-    std::cout << "Try operations on empty arrays." << std::endl;
-    // After each operation, reinitialize array in case something gets
-    // allocated.
-    arrayHandle = vtkm::cont::ArrayHandle<T>();
-    VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
-                     "Uninitialized array does not report zero values.");
-    arrayHandle = vtkm::cont::ArrayHandle<T>();
-    VTKM_TEST_ASSERT(
-          arrayHandle.GetPortalConstControl().GetNumberOfValues() == 0,
-          "Uninitialized array does not give portal with zero values.");
-    arrayHandle = vtkm::cont::ArrayHandle<T>();
-    arrayHandle.Shrink(0);
-    arrayHandle = vtkm::cont::ArrayHandle<T>();
-    arrayHandle.ReleaseResourcesExecution();
-    arrayHandle = vtkm::cont::ArrayHandle<T>();
-    arrayHandle.ReleaseResources();
-    arrayHandle = vtkm::cont::ArrayHandle<T>();
-    arrayHandle.PrepareForOutput(ARRAY_SIZE, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   }
+
 };
 
 void TestArrayHandle()
