@@ -331,6 +331,7 @@ private:
   }
 
 private:
+  /// Reorder the value array along with the sorting algorithm
   template<typename T, typename U, class StorageT,  class StorageU, class Compare>
   VTKM_CONT_EXPORT static void SortByKeyDirect(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
@@ -366,15 +367,16 @@ public:
       const Less &less)
   {
       if (sizeof(U) > sizeof(vtkm::Id)) {
-          // More efficient sort
+          /// More efficient sort:
+          /// Move value indexes when sorting and reorder the value array at last
           typedef vtkm::cont::ArrayHandle<T,StorageT> KeyType;
           typedef vtkm::cont::ArrayHandle<U,StorageU> ValueType;
           typedef vtkm::cont::ArrayHandleZip<KeyType,ValueType> ZipHandleType;
           typedef vtkm::cont::ArrayHandle<vtkm::Id,StorageU> IndexType;
           typedef vtkm::cont::ArrayHandleZip<KeyType,IndexType> ZipIndexHandleType;
-
           IndexType indexArray;
           ValueType valuesScattered;
+
           Copy( make_ArrayHandleCounting(0, keys.GetNumberOfValues()), indexArray);
           SortByKeyDirect(keys, indexArray, less);
           Scatter(values, indexArray, valuesScattered);
