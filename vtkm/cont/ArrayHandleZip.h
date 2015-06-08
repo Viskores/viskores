@@ -30,13 +30,16 @@ namespace internal {
 /// \brief An array portal that zips two portals together into a single value
 /// for the execution environment
 template<typename ValueType_,
-         typename PortalTypeFirst,
-         typename PortalTypeSecond>
+         typename PortalTypeFirst_,
+         typename PortalTypeSecond_>
 class ArrayPortalExecZip
 {
 public:
   typedef ValueType_ ValueType;
   typedef ValueType_ IteratorType;
+  typedef PortalTypeFirst_ PortalTypeFirst;
+  typedef PortalTypeSecond_ PortalTypeSecond;
+
 
   VTKM_CONT_EXPORT
   ArrayPortalExecZip(const PortalTypeFirst  &portalfirst = PortalTypeFirst(),

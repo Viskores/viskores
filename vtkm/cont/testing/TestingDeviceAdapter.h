@@ -1126,7 +1126,6 @@ private:
       VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
       }
     }
-
   }
 
   static VTKM_CONT_EXPORT void TestScanInclusive()

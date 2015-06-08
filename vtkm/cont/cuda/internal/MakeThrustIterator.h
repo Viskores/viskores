@@ -21,6 +21,7 @@
 #define vtk_m_cont_cuda_internal_MakeThrustIterator_h
 
 #include <vtkm/Types.h>
+#include <vtkm/Pair.h>
 #include <vtkm/internal/ExportMacros.h>
 
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
@@ -37,10 +38,27 @@
 #include <thrust/functional.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/transform_iterator.h>
+#include <thrust/iterator/zip_iterator.h>
 
 #if defined(__GNUC__) || defined(____clang__)
 #pragma GCC diagnostic pop
 #endif // gcc || clang
+
+
+//needed forward declares
+namespace vtkm {
+namespace exec {
+namespace internal {
+
+template<typename ValueType_,
+         typename PortalTypeFirst,
+         typename PortalTypeSecond>
+class ArrayPortalExecZip;
+
+}
+}
+}
+
 
 namespace vtkm {
 namespace cont {
@@ -51,21 +69,33 @@ namespace detail {
 
 // Tags to specify what type of thrust iterator to use.
 struct ThrustIteratorTransformTag {  };
+struct ThrustIteratorZipTag {  };
 struct ThrustIteratorDevicePtrTag {  };
 
 // Traits to help classify what thrust iterators will be used.
-template<class IteratorType>
+template<class PortalType, class IteratorType>
 struct ThrustIteratorTag {
   typedef ThrustIteratorTransformTag Type;
 };
-template<typename T>
-struct ThrustIteratorTag<T *> {
+template<typename PortalType, typename T>
+struct ThrustIteratorTag<PortalType, T *> {
   typedef ThrustIteratorDevicePtrTag Type;
 };
-template<typename T>
-struct ThrustIteratorTag<const T*> {
+template<typename PortalType, typename T>
+struct ThrustIteratorTag<PortalType, const T*> {
   typedef ThrustIteratorDevicePtrTag Type;
 };
+template<typename T, typename U, typename V>
+struct ThrustIteratorTag< vtkm::exec::internal::ArrayPortalExecZip< T, U, V >,
+                          T > {
+  //this is a real special case. ExecZip and PortalValue don't combine
+  //well together, when used with DeviceAlgorithm that has a custom operator
+  //the custom operator is actually passed the PortalValue instead of
+  //the real values, and by that point we can't fix anything since we
+  //don't know what the original operator is
+  typedef ThrustIteratorZipTag Type;
+};
+
 
 template<typename T> struct ThrustStripPointer;
 template<typename T> struct ThrustStripPointer<T *> {
@@ -81,8 +111,17 @@ struct PortalValue {
   typedef typename PortalType::ValueType ValueType;
 
   VTKM_EXEC_EXPORT
+  PortalValue()
+    : Portal(),
+      Index(0) {  }
+
+  VTKM_EXEC_EXPORT
   PortalValue(const PortalType &portal, vtkm::Id index)
     : Portal(portal), Index(index) {  }
+
+  VTKM_EXEC_EXPORT
+  PortalValue(const PortalValue<PortalType> &other)
+    : Portal(other.Portal), Index(other.Index) {  }
 
   VTKM_EXEC_EXPORT
   ValueType operator=(ValueType value) {
@@ -105,7 +144,10 @@ class LookupFunctor
                                         PortalValue<PortalType>  >
 {
   public:
-    VTKM_CONT_EXPORT LookupFunctor(PortalType portal)
+    VTKM_EXEC_EXPORT LookupFunctor()
+      : Portal() {  }
+
+    VTKM_EXEC_EXPORT LookupFunctor(PortalType portal)
       : Portal(portal) {  }
 
     VTKM_EXEC_EXPORT
@@ -127,6 +169,29 @@ struct IteratorChooser<PortalType, detail::ThrustIteratorTransformTag> {
       ::thrust::counting_iterator<vtkm::Id> > Type;
 };
 template<class PortalType>
+struct IteratorChooser<PortalType, detail::ThrustIteratorZipTag> {
+
+  //this is a real special case. ExecZip and PortalValue don't combine
+  //well together, when used with DeviceAlgorithm that has a custom operator
+  //the custom operator is actually passed the PortalValue instead of
+  //the real values, and by that point we can't fix anything since we
+  //don't know what the original operator is.
+
+  //So to fix this issue we wrap the original array portals into a thrust
+  //zip iterator and let handle everything
+  typedef typename PortalType::PortalTypeFirst PortalTypeFirst;
+  typedef typename IteratorTraits<PortalTypeFirst>::IteratorType FirstIterType;
+
+  typedef typename PortalType::PortalTypeSecond PortalTypeSecond;
+  typedef typename IteratorTraits<PortalTypeSecond>::IteratorType SecondIterType;
+
+
+  //Now that we have deduced the concrete types of the first and second
+  //array portals of the zip we can construct a zip iterator for those
+  typedef ::thrust::tuple<FirstIterType, SecondIterType> IteratorTuple;
+  typedef ::thrust::zip_iterator<IteratorTuple> Type;
+};
+template<class PortalType>
 struct IteratorChooser<PortalType, detail::ThrustIteratorDevicePtrTag> {
   typedef ::thrust::cuda::pointer<
       typename detail::ThrustStripPointer<
@@ -136,8 +201,9 @@ struct IteratorChooser<PortalType, detail::ThrustIteratorDevicePtrTag> {
 template<class PortalType>
 struct IteratorTraits
 {
-  typedef typename PortalType::IteratorType BaseIteratorType;
-  typedef typename detail::ThrustIteratorTag<BaseIteratorType>::Type Tag;
+  typedef typename detail::ThrustIteratorTag<
+                          PortalType,
+                          typename PortalType::IteratorType>::Type Tag;
   typedef typename IteratorChooser<PortalType, Tag>::Type IteratorType;
 };
 
@@ -157,6 +223,19 @@ MakeDevicePtr(const T *iter)
   return ::thrust::cuda::pointer<const T>(iter);
 }
 
+template<typename T, typename U>
+VTKM_CONT_EXPORT static
+::thrust::zip_iterator<T,U>
+MakeZipIterator(const T t, const U u)
+{
+  //todo deduce from T and U the iterator types
+  this is what needs finished
+  return ::thrust::make_zip_iterator(
+          ::thrust::make_tuple( IteratorBegin(t),
+                                IteratorBegin(u) )
+          );
+}
+
 template<class PortalType>
 VTKM_CONT_EXPORT static
 typename IteratorTraits<PortalType>::IteratorType
@@ -165,6 +244,16 @@ MakeIteratorBegin(PortalType portal, detail::ThrustIteratorTransformTag)
   return ::thrust::make_transform_iterator(
         ::thrust::make_counting_iterator(vtkm::Id(0)),
         LookupFunctor<PortalType>(portal));
+}
+
+template<class PortalType>
+VTKM_CONT_EXPORT static
+typename IteratorTraits<PortalType>::IteratorType
+MakeIteratorBegin(PortalType portal, detail::ThrustIteratorZipTag)
+{
+    return MakeZipIterator(portal.GetFirstPortal(),
+                           portal.GetSecondPortal()
+                           );
 }
 
 template<class PortalType>
@@ -199,6 +288,8 @@ IteratorEnd(PortalType portal)
 }
 }
 }
+
+
 } //namespace vtkm::cont::cuda::internal
 
 namespace thrust {
