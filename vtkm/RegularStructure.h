@@ -53,16 +53,20 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetElementShapeType() const {return VTKM_LINE;}
 
+  template <int IdsLength>
   VTKM_EXEC_CONT_EXPORT
-  void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,2> &ids) const
+  void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,IdsLength> &ids) const
   {
+    BOOST_STATIC_ASSERT(IdsLength >= 2);
     ids[0] = index;
     ids[1] = ids[0] + 1;
   }
 
+  template <int IdsLength>
   VTKM_EXEC_CONT_EXPORT
-  void GetCellsOfNode(vtkm::Id index, vtkm::Vec<vtkm::Id,2> &ids) const
+  void GetCellsOfNode(vtkm::Id index, vtkm::Vec<vtkm::Id,IdsLength> &ids) const
   {
+    BOOST_STATIC_ASSERT(IdsLength >= 2);
     ids[0] = ids[1] = -1;
     vtkm::Id idx = 0;
     if (index > 0)
@@ -108,9 +112,12 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetElementShapeType() const {return VTKM_PIXEL;}
 
+  template <int IdsLength>
   VTKM_EXEC_CONT_EXPORT
-  void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,4> &ids) const
+  void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,IdsLength> &ids) const
   {
+    BOOST_STATIC_ASSERT(IdsLength >= 4);
+
     vtkm::Id i, j;
     CalculateLogicalNodeIndices(index, i, j);
 
@@ -120,9 +127,12 @@ public:
     ids[3] = ids[2] + 1;
   }
 
+  template <int IdsLength>
   VTKM_EXEC_CONT_EXPORT
-  void GetCellsOfNode(vtkm::Id index, vtkm::Vec<vtkm::Id,4> &ids) const
+  void GetCellsOfNode(vtkm::Id index, vtkm::Vec<vtkm::Id,IdsLength> &ids) const
   {
+    BOOST_STATIC_ASSERT(IdsLength >= 4);
+
     ids[0] = ids[1] = ids[2] = ids[3] = -1;
     vtkm::Id i, j, idx = 0;
     CalculateLogicalNodeIndices(index, i, j);
@@ -188,9 +198,12 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetElementShapeType() const {return VTKM_VOXEL;}
 
+  template <int IdsLength>
   VTKM_EXEC_CONT_EXPORT
-  void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,8> &ids) const
+  void GetNodesOfCells(vtkm::Id index, vtkm::Vec<vtkm::Id,IdsLength> &ids) const
   {
+    BOOST_STATIC_ASSERT(IdsLength >= 8);
+
     vtkm::Id cellDims01 = cellDims[0] * cellDims[1];
     vtkm::Id k = index / cellDims01;
     vtkm::Id indexij = index % cellDims01;
@@ -207,9 +220,11 @@ public:
     ids[7] = ids[6] + 1;
   }
 
+  template <int IdsLength>
   VTKM_EXEC_CONT_EXPORT
-  void GetCellsOfNode(vtkm::Id index, vtkm::Vec<vtkm::Id,8> &ids) const
+  void GetCellsOfNode(vtkm::Id index, vtkm::Vec<vtkm::Id,IdsLength> &ids) const
   {
+    BOOST_STATIC_ASSERT(IdsLength >= 8);
 
     ids[0]=ids[1]=ids[2]=ids[3]=ids[4]=ids[5]=ids[6]=ids[7]=-1;
 
