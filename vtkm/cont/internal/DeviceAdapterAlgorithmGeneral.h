@@ -992,7 +992,7 @@ public:
 
   //--------------------------------------------------------------------------
   // Sort by Key
-private:
+protected:
   template<typename T, typename U, class Compare=DefaultCompareFunctor>
   struct KeyCompare
   {
