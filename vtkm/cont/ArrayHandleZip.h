@@ -184,32 +184,29 @@ public:
                                                                PortalConstType;
 
   VTKM_CONT_EXPORT
-  Storage() : Valid(false) {  }
+  Storage() : FirstArray(), SecondArray() {  }
 
   VTKM_CONT_EXPORT
   Storage(const FirstHandleType &farray, const SecondHandleType &sarray)
-    : FirstArray(farray), SecondArray(sarray), Valid(true)
+    : FirstArray(farray), SecondArray(sarray)
   {
 
   }
 
   VTKM_CONT_EXPORT
   PortalType GetPortal() {
-    VTKM_ASSERT_CONT(this->Valid);
     return PortalType(this->FirstArray.GetPortalControl(),
                       this->SecondArray.GetPortalControl());
   }
 
   VTKM_CONT_EXPORT
   PortalConstType GetPortalConst() const {
-    VTKM_ASSERT_CONT(this->Valid);
     return PortalConstType(this->FirstArray.GetPortalConstControl(),
                            this->SecondArray.GetPortalConstControl());
   }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
-    VTKM_ASSERT_CONT(this->Valid);
     VTKM_ASSERT_CONT(this->FirstArray.GetNumberOfValues()
                      == this->SecondArray.GetNumberOfValues());
     return this->FirstArray.GetNumberOfValues();
@@ -217,14 +214,12 @@ public:
 
   VTKM_CONT_EXPORT
   void Allocate(vtkm::Id numberOfValues) {
-    VTKM_ASSERT_CONT(this->Valid);
     this->FirstArray.Allocate(numberOfValues);
     this->SecondArray.Allocate(numberOfValues);
   }
 
   VTKM_CONT_EXPORT
   void Shrink(vtkm::Id numberOfValues) {
-    VTKM_ASSERT_CONT(this->Valid);
     this->FirstArray.Shrink(numberOfValues);
     this->SecondArray.Shrink(numberOfValues);
   }
@@ -237,20 +232,17 @@ public:
 
   VTKM_CONT_EXPORT
   const FirstHandleType &GetFirstArray() const {
-    VTKM_ASSERT_CONT(this->Valid);
     return this->FirstArray;
   }
 
   VTKM_CONT_EXPORT
   const SecondHandleType &GetSecondArray() const {
-    VTKM_ASSERT_CONT(this->Valid);
     return this->SecondArray;
   }
 
 private:
   FirstHandleType FirstArray;
   SecondHandleType SecondArray;
-  bool Valid;
 };
 
 template<typename T,
