@@ -1066,7 +1066,7 @@ private:
     }
 
 
-    //next test with values in vec3d (Added by Jimmy to be reviewed)
+    //next test with values in vec3d
     {
     const vtkm::Id inputLength = 3;
     const vtkm::Id expectedLength = 1;
@@ -1106,8 +1106,7 @@ private:
       }
     }
 
-    // ** has problem
-    //next test with values in zip (Added by Jimmy to be reviewed)
+    //next test with values in zip
     {
     const vtkm::Id inputLength = 3;
     const vtkm::Id expectedLength = 1;
@@ -1155,8 +1154,7 @@ private:
       }
     }
 
-    // ** has problem
-    //next test with values in heterogeneous zip (Added by Jimmy to be reviewed)
+    //next test with values in heterogeneous zip
     {
     const vtkm::Id inputLength = 3;
     const vtkm::Id expectedLength = 1;
