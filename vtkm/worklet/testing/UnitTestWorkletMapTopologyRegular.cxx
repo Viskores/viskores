@@ -153,8 +153,13 @@ TestMaxNodeOrCell()
 
     //Run a worklet to populate a cell centered field.
     //Here, we're filling it with test values.
-    vtkm::Float32 outcellVals[2] = {-1.4f, -1.7f};
-    ds.AddField(vtkm::cont::Field("outcellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", outcellVals, 2));
+    vtkm::cont::Field f("outcellvar",
+                      1,
+                      vtkm::cont::Field::ASSOC_CELL_SET,
+                      std::string("cells"),
+                      vtkm::Float32());
+
+    ds.AddField(f);
 
     VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfCellSets(), 1),
                      "Incorrect number of cell sets");
@@ -197,8 +202,13 @@ TestAvgNodeToCell()
 
     //Run a worklet to populate a cell centered field.
     //Here, we're filling it with test values.
-    vtkm::Float32 outcellVals[2] = {-1.4f, -1.7f};
-    ds.AddField(vtkm::cont::Field("outcellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", outcellVals, 2));
+    vtkm::cont::Field f("outcellvar",
+                      1,
+                      vtkm::cont::Field::ASSOC_CELL_SET,
+                      std::string("cells"),
+                      vtkm::Float32());
+
+    ds.AddField(f);
 
     VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfCellSets(), 1),
                      "Incorrect number of cell sets");

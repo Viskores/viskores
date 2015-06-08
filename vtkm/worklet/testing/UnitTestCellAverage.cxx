@@ -29,7 +29,7 @@
 void TestCellAverageRegular3D()
 {
   std::cout << "Testing CellAverage Worklet on 3D strucutred data" << std::endl;
-  
+
   vtkm::cont::testing::MakeTestDataSet tds;
   vtkm::cont::DataSet ds = tds.Make3DRegularDataSet0();
 
@@ -38,10 +38,12 @@ void TestCellAverageRegular3D()
       dynamic_cast<vtkm::cont::CellSetStructured<3> *>(scs.get());
   VTKM_TEST_ASSERT(cs, "Structured cell set not found");
 
-  vtkm::Float32 dummy[4];
-  vtkm::cont::Field result("avgvals", 1, vtkm::cont::Field::ASSOC_CELL_SET,
-                           "cells", dummy, 4);
-  
+  vtkm::cont::Field result("avgvals",
+                           1,
+                           vtkm::cont::Field::ASSOC_CELL_SET,
+                           std::string("cells"),
+                           vtkm::Float32());
+
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(ds.GetField("nodevar").GetData(),
                     cs->GetNodeToCellConnectivity(),
@@ -61,7 +63,7 @@ void TestCellAverageRegular3D()
 void TestCellAverageRegular2D()
 {
   std::cout << "Testing CellAverage Worklet on 2D strucutred data" << std::endl;
-  
+
   vtkm::cont::testing::MakeTestDataSet tds;
   vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet1();
 
@@ -70,10 +72,12 @@ void TestCellAverageRegular2D()
       dynamic_cast<vtkm::cont::CellSetExplicit<> *>(ecs.get());
   VTKM_TEST_ASSERT(cs, "Explicit cell set not found");
 
-  vtkm::Float32 dummy[2];
-  vtkm::cont::Field result("avgvals", 1, vtkm::cont::Field::ASSOC_CELL_SET,
-                           "cells", dummy, 2);
-  
+  vtkm::cont::Field result("avgvals",
+                           1,
+                           vtkm::cont::Field::ASSOC_CELL_SET,
+                           std::string("cells"),
+                           vtkm::Float32());
+
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(ds.GetField("nodevar").GetData(),
                     cs->GetNodeToCellConnectivity(),
@@ -93,7 +97,7 @@ void TestCellAverageRegular2D()
 void TestCellAverageExplicit()
 {
   std::cout << "Testing CellAverage Worklet on Explicit data" << std::endl;
-  
+
   vtkm::cont::testing::MakeTestDataSet tds;
   vtkm::cont::DataSet ds = tds.Make2DRegularDataSet0();
 
@@ -102,10 +106,12 @@ void TestCellAverageExplicit()
       dynamic_cast<vtkm::cont::CellSetStructured<2> *>(scs.get());
   VTKM_TEST_ASSERT(cs, "Structured cell set not found");
 
-  vtkm::Float32 dummy[2];
-  vtkm::cont::Field result("avgvals", 1, vtkm::cont::Field::ASSOC_CELL_SET,
-                           "cells", dummy, 2);
-  
+  vtkm::cont::Field result("avgvals",
+                           1,
+                           vtkm::cont::Field::ASSOC_CELL_SET,
+                           std::string("cells"),
+                           vtkm::Float32());
+
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(ds.GetField("nodevar").GetData(),
                     cs->GetNodeToCellConnectivity(),
