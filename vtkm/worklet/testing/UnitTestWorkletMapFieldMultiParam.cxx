@@ -28,7 +28,7 @@
 
 namespace worklets {
 
-class TestWorklet : public vtkm::worklet::WorkletMapField
+class TestWorkletMP : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
@@ -110,7 +110,7 @@ void TestWorkletMapFieldMultiParam()
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(
-                         multi_mapfield::DoTestWorklet< ::worklets::TestWorklet >(),
+                         multi_mapfield::DoTestWorklet< ::worklets::TestWorkletMP >(),
                          vtkm::TypeListTagCommon());
 }
 

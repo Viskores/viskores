@@ -74,9 +74,10 @@ public:
     CopyData(d, nvals);
   }
 
+  template<typename T>
   VTKM_CONT_EXPORT
-  Field(std::string n, int o, Association a)
-    : name(n), order(o), association(a)
+  Field(std::string n, int o, Association a, T)
+    : name(n), order(o), association(a), data(vtkm::cont::ArrayHandle<T>())
   {
     VTKM_ASSERT_CONT(association == ASSOC_WHOLE_MESH ||
                      association == ASSOC_POINTS);
@@ -85,7 +86,7 @@ public:
   /// constructors for cell set associations
   template <typename T>
   VTKM_CONT_EXPORT
-  Field(std::string n, int o, Association a, std::string csn, ArrayHandle<T> &d)
+  Field(std::string n, int o, Association a, const std::string& csn, ArrayHandle<T> &d)
     : name(n), order(o), association(a), assoc_cellset_name(csn)
   {
     VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
@@ -94,7 +95,7 @@ public:
 
   template <typename T>
   VTKM_CONT_EXPORT
-  Field(std::string n, int o, Association a, std::string csn, const std::vector<T> &d)
+  Field(std::string n, int o, Association a, const std::string& csn, const std::vector<T> &d)
     : name(n), order(o), association(a), assoc_cellset_name(csn)
   {
     VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
@@ -103,16 +104,17 @@ public:
 
   template <typename T>
   VTKM_CONT_EXPORT
-  Field(std::string n, int o, Association a, std::string csn, const T *d, vtkm::Id nvals)
+  Field(std::string n, int o, Association a, const std::string& csn, const T *d, vtkm::Id nvals)
     : name(n), order(o), association(a), assoc_cellset_name(csn)
   {
     VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
     CopyData(d, nvals);
   }
 
+  template<typename T>
   VTKM_CONT_EXPORT
-  Field(std::string n, int o, Association a, std::string csn)
-    : name(n), order(o), association(a), assoc_cellset_name(csn)
+  Field(std::string n, int o, Association a, const std::string& csn, T)
+    : name(n), order(o), association(a), assoc_cellset_name(csn), data(vtkm::cont::ArrayHandle<T>())
   {
     VTKM_ASSERT_CONT(association == ASSOC_CELL_SET);
   }
@@ -145,9 +147,10 @@ public:
     CopyData(d, nvals);
   }
 
+  template<typename T>
   VTKM_CONT_EXPORT
-  Field(std::string n, int o, Association a, int l)
-    : name(n), order(o), association(a), assoc_logical_dim(l)
+  Field(std::string n, int o, Association a, int l, T)
+    : name(n), order(o), association(a), assoc_logical_dim(l), data(vtkm::cont::ArrayHandle<T>())
   {
     VTKM_ASSERT_CONT(association == ASSOC_LOGICAL_DIM);
   }
