@@ -31,7 +31,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-namespace test {
+namespace test_regular {
 
 class MaxNodeOrCellValue : public vtkm::worklet::WorkletMapTopology
 {
@@ -166,7 +166,7 @@ TestMaxNodeOrCell()
     //derived implementation. The vtkm::cont::CellSet should have
     //a method that return the nodesOfCellsConnectivity / structure
     //for that derived type. ( talk to robert for how dax did this )
-    vtkm::worklet::DispatcherMapTopology< ::test::MaxNodeOrCellValue > dispatcher;
+    vtkm::worklet::DispatcherMapTopology< ::test_regular::MaxNodeOrCellValue > dispatcher;
     dispatcher.Invoke(ds.GetField("cellvar").GetData(),
                       ds.GetField("nodevar").GetData(),
                       cs->GetNodeToCellConnectivity(),
@@ -210,7 +210,7 @@ TestAvgNodeToCell()
     //derived implementation. The vtkm::cont::CellSet should have
     //a method that return the nodesOfCellsConnectivity / structure
     //for that derived type. ( talk to robert for how dax did this )
-    vtkm::worklet::DispatcherMapTopology< ::test::AvgNodeToCellValue > dispatcher;
+    vtkm::worklet::DispatcherMapTopology< ::test_regular::AvgNodeToCellValue > dispatcher;
     dispatcher.Invoke(ds.GetField("nodevar").GetData(),
                       cs->GetNodeToCellConnectivity(),
                       ds.GetField("outcellvar").GetData());
