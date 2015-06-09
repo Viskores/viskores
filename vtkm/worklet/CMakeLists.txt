@@ -23,6 +23,8 @@ set(headers
   WorkletMapField.h
   DispatcherMapTopology.h
   WorkletMapTopology.h
+  CellAverage.h
+  PointElevation.h
   )
 
 #-----------------------------------------------------------------------------
