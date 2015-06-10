@@ -20,7 +20,9 @@
 #ifndef vtk_m_cont_testing_TestingDeviceAdapter_h
 #define vtk_m_cont_testing_TestingDeviceAdapter_h
 
+#include <vtkm/TypeTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorControlOutOfMemory.h>
 #include <vtkm/cont/ErrorExecution.h>
@@ -52,21 +54,15 @@ namespace testing {
 namespace comparison {
 struct SortLess
 {
-  template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a,const T& b) const
-  {
-    typedef typename vtkm::TypeTraits<T>::DimensionalityTag Dimensionality;
-    return this->compare(a,b,Dimensionality());
-  }
-  template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool compare(const T& a,const T& b,
-                                     vtkm::TypeTraitsScalarTag) const
+  template<typename T, typename U>
+  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a, const U& b) const
   {
     return a < b;
   }
-  template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool compare(const T& a,const T& b,
-                                     vtkm::TypeTraitsVectorTag) const
+
+  template<typename T, int N>
+  VTKM_EXEC_EXPORT bool operator()(const vtkm::Vec<T,N>& a,
+                                   const vtkm::Vec<T,N>& b) const
   {
     const vtkm::IdComponent SIZE = vtkm::VecTraits<T>::NUM_COMPONENTS;
     bool valid = true;
@@ -80,21 +76,15 @@ struct SortLess
 
 struct SortGreater
 {
-  template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a,const T& b) const
-  {
-    typedef typename vtkm::TypeTraits<T>::DimensionalityTag Dimensionality;
-    return this->compare(a,b,Dimensionality());
-  }
-  template<typename T>
-  VTKM_EXEC_EXPORT bool compare(const T& a,const T& b,
-                                     vtkm::TypeTraitsScalarTag) const
+  template<typename T, typename U>
+  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a, const U& b) const
   {
     return a > b;
   }
-  template<typename T>
-  VTKM_EXEC_EXPORT bool compare(const T& a,const T& b,
-                                     vtkm::TypeTraitsVectorTag) const
+
+  template<typename T, int N>
+  VTKM_EXEC_EXPORT bool operator()(const vtkm::Vec<T,N>& a,
+                                   const vtkm::Vec<T,N>& b) const
   {
     const vtkm::IdComponent SIZE = vtkm::VecTraits<T>::NUM_COMPONENTS;
     bool valid = true;
@@ -119,7 +109,7 @@ struct MaxValue
 
 
 #define ERROR_MESSAGE "Got an error."
-#define ARRAY_SIZE 500
+#define ARRAY_SIZE 1000
 #define OFFSET 1000
 #define DIM_SIZE 128
 
@@ -714,7 +704,10 @@ private:
     {
       testData[i]= OFFSET+((ARRAY_SIZE-i) % 50);
     }
-    IdArrayHandle sorted = MakeArrayHandle(testData, ARRAY_SIZE);
+
+    IdArrayHandle unsorted = MakeArrayHandle(testData, ARRAY_SIZE);
+    IdArrayHandle sorted;
+    Algorithm::Copy(unsorted, sorted);
 
     //Validate the standard inplace sort is correct
     Algorithm::Sort(sorted);
@@ -724,6 +717,23 @@ private:
       vtkm::Id sorted1 = sorted.GetPortalConstControl().Get(i);
       vtkm::Id sorted2 = sorted.GetPortalConstControl().Get(i+1);
       VTKM_TEST_ASSERT(sorted1 <= sorted2, "Values not properly sorted.");
+    }
+
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "Sort of a ArrayHandleZip" << std::endl;
+
+    //verify that we can use ArrayHandleZip inplace
+    vtkm::cont::ArrayHandleZip< IdArrayHandle, IdArrayHandle> zipped(unsorted, sorted);
+
+    //verify we can use the default an custom operator sort with zip handle
+    Algorithm::Sort(zipped, comparison::SortGreater());
+    Algorithm::Sort(zipped);
+
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+    {
+      vtkm::Pair<vtkm::Id,vtkm::Id> kv_sorted = zipped.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(( OFFSET +  ( i / (ARRAY_SIZE/50)) ) == kv_sorted.first,
+                       "ArrayZipHandle improperly sorted");
     }
   }
 
@@ -787,6 +797,7 @@ private:
     Vec3ArrayHandle values = MakeArrayHandle(testValues, ARRAY_SIZE);
 
     Algorithm::SortByKey(keys,values);
+
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
       {
       //keys should be sorted from 1 to ARRAY_SIZE
@@ -1104,7 +1115,6 @@ private:
       VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
       }
     }
-
   }
 
   static VTKM_CONT_EXPORT void TestScanInclusive()

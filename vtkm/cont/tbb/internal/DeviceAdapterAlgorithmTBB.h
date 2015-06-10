@@ -27,6 +27,7 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/Extent.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
@@ -506,6 +507,24 @@ public:
     ::tbb::parallel_sort(iterators.GetBegin(), iterators.GetEnd());
   }
 
+  template<typename T, typename U>
+  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandleZip<T,U>& values)
+  {
+    typedef typename vtkm::cont::ArrayHandleZip<T,U>::template
+      ExecutionTypes<vtkm::cont::DeviceAdapterTagTBB>::Portal PortalType;
+    PortalType arrayPortal = values.PrepareForInPlace(
+      vtkm::cont::DeviceAdapterTagTBB());
+
+    typedef vtkm::cont::ArrayPortalToIterators<PortalType> IteratorsType;
+    IteratorsType iterators(arrayPortal);
+
+    //this is required to get sort to work with zip handles
+    typedef vtkm::cont::internal::ArrayHandleZipTraits< T, U > ZipTraits;
+    typedef std::less< typename ZipTraits::ValueType > LessOp;
+    internal::WrappedBinaryOperator<bool, LessOp> wrappedCompare( (LessOp()) );
+    std::sort(iterators.GetBegin(), iterators.GetEnd());
+  }
+
   template<typename T, class Container, class Compare>
   VTKM_CONT_EXPORT static void Sort(
       vtkm::cont::ArrayHandle<T,Container> &values, Compare comp)
@@ -518,7 +537,10 @@ public:
     typedef vtkm::cont::ArrayPortalToIterators<PortalType> IteratorsType;
     IteratorsType iterators(arrayPortal);
 
-    ::tbb::parallel_sort(iterators.GetBegin(), iterators.GetEnd(), comp);
+    internal::WrappedBinaryOperator<bool,Compare> wrappedCompare(comp);
+    ::tbb::parallel_sort(iterators.GetBegin(),
+                         iterators.GetEnd(),
+                         wrappedCompare);
   }
 
 
