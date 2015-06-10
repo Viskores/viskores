@@ -20,6 +20,7 @@
 #ifndef vtk_m_cont_testing_TestingDeviceAdapter_h
 #define vtk_m_cont_testing_TestingDeviceAdapter_h
 
+#include <vtkm/TypeTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
@@ -53,21 +54,15 @@ namespace testing {
 namespace comparison {
 struct SortLess
 {
-  template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a,const T& b) const
-  {
-    typedef typename vtkm::TypeTraits<T>::DimensionalityTag Dimensionality;
-    return this->compare(a,b,Dimensionality());
-  }
-  template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool compare(const T& a,const T& b,
-                                     vtkm::TypeTraitsScalarTag) const
+  template<typename T, typename U>
+  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a, const U& b) const
   {
     return a < b;
   }
-  template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool compare(const T& a,const T& b,
-                                     vtkm::TypeTraitsVectorTag) const
+
+  template<typename T, int N>
+  VTKM_EXEC_EXPORT bool operator()(const vtkm::Vec<T,N>& a,
+                                   const vtkm::Vec<T,N>& b) const
   {
     const vtkm::IdComponent SIZE = vtkm::VecTraits<T>::NUM_COMPONENTS;
     bool valid = true;
@@ -81,21 +76,15 @@ struct SortLess
 
 struct SortGreater
 {
-  template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a,const T& b) const
-  {
-    typedef typename vtkm::TypeTraits<T>::DimensionalityTag Dimensionality;
-    return this->compare(a,b,Dimensionality());
-  }
-  template<typename T>
-  VTKM_EXEC_EXPORT bool compare(const T& a,const T& b,
-                                     vtkm::TypeTraitsScalarTag) const
+  template<typename T, typename U>
+  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a, const U& b) const
   {
     return a > b;
   }
-  template<typename T>
-  VTKM_EXEC_EXPORT bool compare(const T& a,const T& b,
-                                     vtkm::TypeTraitsVectorTag) const
+
+  template<typename T, int N>
+  VTKM_EXEC_EXPORT bool operator()(const vtkm::Vec<T,N>& a,
+                                   const vtkm::Vec<T,N>& b) const
   {
     const vtkm::IdComponent SIZE = vtkm::VecTraits<T>::NUM_COMPONENTS;
     bool valid = true;
