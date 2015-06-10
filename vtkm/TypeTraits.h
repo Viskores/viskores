@@ -21,6 +21,7 @@
 #define vtk_m_TypeTraits_h
 
 #include <vtkm/Types.h>
+#include <vtkm/Pair.h>
 
 namespace vtkm {
 
@@ -118,6 +119,15 @@ struct TypeTraits<vtkm::Vec<T,Size> >
 {
   typedef typename vtkm::TypeTraits<T>::NumericTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;
+};
+
+/// Traits for Pair types.
+///
+template<typename T, typename U>
+struct TypeTraits<vtkm::Pair<T,U> >
+{
+  typedef typename vtkm::TypeTraits<T>::NumericTag NumericTag;
+  typedef TypeTraitsScalarTag DimensionalityTag;
 };
 
 } // namespace vtkm
