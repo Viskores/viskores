@@ -21,6 +21,7 @@
 #define vtk_m_cont_internal_DeviceAdapterAlgorithmSerial_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
@@ -395,6 +396,23 @@ public:
 
     PortalType arrayPortal = values.PrepareForInPlace(Device());
     vtkm::cont::ArrayPortalToIterators<PortalType> iterators(arrayPortal);
+
+    std::sort(iterators.GetBegin(), iterators.GetEnd());
+  }
+
+  template<typename T, typename U>
+  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandleZip<T,U>& values)
+  {
+    typedef typename vtkm::cont::ArrayHandleZip<T,U>
+        ::template ExecutionTypes<Device>::Portal PortalType;
+
+    PortalType arrayPortal = values.PrepareForInPlace(Device());
+    vtkm::cont::ArrayPortalToIterators<PortalType> iterators(arrayPortal);
+
+    //this is required to get sort to work with zip handles
+    typedef vtkm::cont::internal::ArrayHandleZipTraits< T, U > ZipTraits;
+    typedef std::less< typename ZipTraits::ValueType > LessOp;
+    internal::WrappedBinaryOperator<bool, LessOp> wrappedCompare( (LessOp()) );
     std::sort(iterators.GetBegin(), iterators.GetEnd());
   }
 
@@ -407,7 +425,10 @@ public:
 
     PortalType arrayPortal = values.PrepareForInPlace(Device());
     vtkm::cont::ArrayPortalToIterators<PortalType> iterators(arrayPortal);
-    std::sort(iterators.GetBegin(), iterators.GetEnd(), comp);
+
+
+    internal::WrappedBinaryOperator<bool,Compare> wrappedCompare(comp);
+    std::sort(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
   }
 
   VTKM_CONT_EXPORT static void Synchronize()
