@@ -49,6 +49,7 @@
 #include <thrust/system/cuda/vector.h>
 
 #include <thrust/iterator/counting_iterator.h>
+#include <thrust/system/cuda/execution_policy.h>
 
 #if defined(__GNUC__) || defined(____clang__)
 #pragma GCC diagnostic pop
@@ -247,7 +248,8 @@ private:
   VTKM_CONT_EXPORT static void CopyPortal(const InputPortal &input,
                                          const OutputPortal &output)
   {
-    ::thrust::copy(IteratorBegin(input),
+    ::thrust::copy(thrust::cuda::par,
+                   IteratorBegin(input),
                    IteratorEnd(input),
                    IteratorBegin(output));
   }
@@ -257,7 +259,8 @@ private:
                                                 const ValuesPortal &values,
                                                 const OutputPortal &output)
   {
-    ::thrust::lower_bound(IteratorBegin(input),
+    ::thrust::lower_bound(thrust::cuda::par,
+                          IteratorBegin(input),
                           IteratorEnd(input),
                           IteratorBegin(values),
                           IteratorEnd(values),
@@ -271,7 +274,8 @@ private:
                                                 const OutputPortal &output,
                                                 Compare comp)
   {
-    ::thrust::lower_bound(IteratorBegin(input),
+    ::thrust::lower_bound(thrust::cuda::par,
+                          IteratorBegin(input),
                           IteratorEnd(input),
                           IteratorBegin(values),
                           IteratorEnd(values),
@@ -284,7 +288,8 @@ private:
   void LowerBoundsPortal(const InputPortal &input,
                          const OutputPortal &values_output)
   {
-    ::thrust::lower_bound(IteratorBegin(input),
+    ::thrust::lower_bound(thrust::cuda::par,
+                          IteratorBegin(input),
                           IteratorEnd(input),
                           IteratorBegin(values_output),
                           IteratorEnd(values_output),
@@ -296,7 +301,8 @@ private:
   typename InputPortal::ValueType ReducePortal(const InputPortal &input,
                             typename InputPortal::ValueType initialValue)
   {
-    return ::thrust::reduce(IteratorBegin(input),
+    return ::thrust::reduce(thrust::cuda::par,
+                            IteratorBegin(input),
                             IteratorEnd(input),
                             initialValue);
   }
@@ -307,7 +313,8 @@ private:
                             typename InputPortal::ValueType initialValue,
                             BinaryOperation binaryOP)
   {
-    return ::thrust::reduce(IteratorBegin(input),
+    return ::thrust::reduce(thrust::cuda::par,
+                            IteratorBegin(input),
                             IteratorEnd(input),
                             initialValue,
                             binaryOP);
@@ -335,7 +342,8 @@ private:
 
     ::thrust::equal_to<typename KeysPortal::ValueType> binaryPredicate;
 
-    result_iterators = ::thrust::reduce_by_key(IteratorBegin(keys),
+    result_iterators = ::thrust::reduce_by_key(thrust::cuda::par,
+                                               IteratorBegin(keys),
                                                IteratorEnd(keys),
                                                IteratorBegin(values),
                                                keys_out_begin,
@@ -356,7 +364,8 @@ private:
     // data on device.
     typename InputPortal::ValueType inputEnd = *(IteratorEnd(input) - 1);
 
-    ::thrust::exclusive_scan(IteratorBegin(input),
+    ::thrust::exclusive_scan(thrust::cuda::par,
+                             IteratorBegin(input),
                              IteratorEnd(input),
                              IteratorBegin(output));
 
@@ -369,7 +378,8 @@ private:
   typename InputPortal::ValueType ScanInclusivePortal(const InputPortal &input,
                                                       const OutputPortal &output)
   {
-    ::thrust::inclusive_scan(IteratorBegin(input),
+    ::thrust::inclusive_scan(thrust::cuda::par,
+                             IteratorBegin(input),
                              IteratorEnd(input),
                              IteratorBegin(output));
 
@@ -383,7 +393,8 @@ private:
                                                       const OutputPortal &output,
                                                       BinaryOperation binaryOp)
   {
-    ::thrust::inclusive_scan(IteratorBegin(input),
+    ::thrust::inclusive_scan(thrust::cuda::par,
+                             IteratorBegin(input),
                              IteratorEnd(input),
                              IteratorBegin(output),
                              binaryOp);
@@ -395,7 +406,8 @@ private:
   template<class ValuesPortal>
   VTKM_CONT_EXPORT static void SortPortal(const ValuesPortal &values)
   {
-    ::thrust::sort(IteratorBegin(values),
+    ::thrust::sort(thrust::cuda::par,
+                   IteratorBegin(values),
                    IteratorEnd(values));
   }
 
@@ -403,7 +415,8 @@ private:
   VTKM_CONT_EXPORT static void SortPortal(const ValuesPortal &values,
                                          Compare comp)
   {
-    ::thrust::sort(IteratorBegin(values),
+    ::thrust::sort(thrust::cuda::par,
+                   IteratorBegin(values),
                    IteratorEnd(values),
                    comp);
   }
@@ -413,7 +426,8 @@ private:
   VTKM_CONT_EXPORT static void SortByKeyPortal(const KeysPortal &keys,
                                                const ValuesPortal &values)
   {
-    ::thrust::sort_by_key(IteratorBegin(keys),
+    ::thrust::sort_by_key(thrust::cuda::par,
+                          IteratorBegin(keys),
                           IteratorEnd(keys),
                           IteratorBegin(values));
   }
@@ -423,7 +437,8 @@ private:
                                                const ValuesPortal &values,
                                                Compare comp)
   {
-    ::thrust::sort_by_key(IteratorBegin(keys),
+    ::thrust::sort_by_key(thrust::cuda::par,
+                          IteratorBegin(keys),
                           IteratorEnd(keys),
                           IteratorBegin(values),
                           comp);
@@ -444,7 +459,8 @@ private:
                                                             IteratorType;
 
     IteratorType outputBegin = IteratorBegin(output);
-    IteratorType newLast = ::thrust::copy_if(valuesBegin,
+    IteratorType newLast = ::thrust::copy_if(thrust::cuda::par,
+                                             valuesBegin,
                                              valuesEnd,
                                              IteratorBegin(stencil),
                                              outputBegin,
@@ -477,7 +493,9 @@ private:
     typedef typename detail::IteratorTraits<ValuesPortal>::IteratorType
                                                             IteratorType;
     IteratorType begin = IteratorBegin(values);
-    IteratorType newLast = ::thrust::unique(begin, IteratorEnd(values));
+    IteratorType newLast = ::thrust::unique(thrust::cuda::par,
+                                            begin,
+                                            IteratorEnd(values));
     return static_cast<vtkm::Id>( ::thrust::distance(begin, newLast) );
   }
 
@@ -488,7 +506,10 @@ private:
     typedef typename detail::IteratorTraits<ValuesPortal>::IteratorType
                                                             IteratorType;
     IteratorType begin = IteratorBegin(values);
-    IteratorType newLast = ::thrust::unique(begin, IteratorEnd(values), comp);
+    IteratorType newLast = ::thrust::unique(thrust::cuda::par,
+                                            begin,
+                                            IteratorEnd(values),
+                                            comp);
     return static_cast<vtkm::Id>( ::thrust::distance(begin, newLast) );
   }
 
@@ -498,7 +519,8 @@ private:
                          const ValuesPortal &values,
                          const OutputPortal &output)
   {
-    ::thrust::upper_bound(IteratorBegin(input),
+    ::thrust::upper_bound(thrust::cuda::par,
+                          IteratorBegin(input),
                           IteratorEnd(input),
                           IteratorBegin(values),
                           IteratorEnd(values),
@@ -513,7 +535,8 @@ private:
                                                 const OutputPortal &output,
                                                 Compare comp)
   {
-    ::thrust::upper_bound(IteratorBegin(input),
+    ::thrust::upper_bound(thrust::cuda::par,
+                          IteratorBegin(input),
                           IteratorEnd(input),
                           IteratorBegin(values),
                           IteratorEnd(values),
@@ -526,7 +549,8 @@ private:
   void UpperBoundsPortal(const InputPortal &input,
                          const OutputPortal &values_output)
   {
-    ::thrust::upper_bound(IteratorBegin(input),
+    ::thrust::upper_bound(thrust::cuda::par,
+                          IteratorBegin(input),
                           IteratorEnd(input),
                           IteratorBegin(values_output),
                           IteratorEnd(values_output),
