@@ -45,7 +45,7 @@
 #endif // gcc || clang
 
 
-//needed forward declares
+//needed forward declares to get zip handle to work properly
 namespace vtkm {
 namespace exec {
 namespace internal {
@@ -59,12 +59,29 @@ class ArrayPortalExecZip;
 }
 }
 
-
+//more forward declares needed to get zip handle to work properly
 namespace vtkm {
 namespace cont {
 namespace cuda {
 namespace internal {
 
+namespace detail { template<class PortalType> struct IteratorTraits; }
+
+//forward declare IteratorBegin
+template<class PortalType>
+VTKM_CONT_EXPORT
+typename detail::IteratorTraits<PortalType>::IteratorType
+IteratorBegin(PortalType portal);
+}
+}
+}
+}
+
+
+namespace vtkm {
+namespace cont {
+namespace cuda {
+namespace internal {
 namespace detail {
 
 // Tags to specify what type of thrust iterator to use.
@@ -180,11 +197,16 @@ struct IteratorChooser<PortalType, detail::ThrustIteratorZipTag> {
   //So to fix this issue we wrap the original array portals into a thrust
   //zip iterator and let handle everything
   typedef typename PortalType::PortalTypeFirst PortalTypeFirst;
-  typedef typename IteratorTraits<PortalTypeFirst>::IteratorType FirstIterType;
+  typedef typename detail::ThrustIteratorTag<
+                          PortalTypeFirst,
+                          typename PortalTypeFirst::IteratorType>::Type FirstTag;
+  typedef typename IteratorChooser<PortalTypeFirst, FirstTag>::Type FirstIterType;
 
   typedef typename PortalType::PortalTypeSecond PortalTypeSecond;
-  typedef typename IteratorTraits<PortalTypeSecond>::IteratorType SecondIterType;
-
+  typedef typename detail::ThrustIteratorTag<
+                          PortalTypeSecond,
+                          typename PortalTypeSecond::IteratorType>::Type SecondTag;
+  typedef typename IteratorChooser<PortalTypeSecond, SecondTag>::Type SecondIterType;
 
   //Now that we have deduced the concrete types of the first and second
   //array portals of the zip we can construct a zip iterator for those
@@ -209,14 +231,14 @@ struct IteratorTraits
 
 
 template<typename T>
-VTKM_CONT_EXPORT static
+VTKM_CONT_EXPORT
 ::thrust::cuda::pointer<T>
 MakeDevicePtr(T *iter)
 {
   return::thrust::cuda::pointer<T>(iter);
 }
 template<typename T>
-VTKM_CONT_EXPORT static
+VTKM_CONT_EXPORT
 ::thrust::cuda::pointer<const T>
 MakeDevicePtr(const T *iter)
 {
@@ -224,20 +246,25 @@ MakeDevicePtr(const T *iter)
 }
 
 template<typename T, typename U>
-VTKM_CONT_EXPORT static
-::thrust::zip_iterator<T,U>
-MakeZipIterator(const T t, const U u)
+VTKM_CONT_EXPORT
+::thrust::zip_iterator<
+  ::thrust::tuple<typename IteratorTraits<T>::IteratorType,
+                  typename IteratorTraits<U>::IteratorType
+                  >
+  >
+MakeZipIterator(const T& t, const U& u)
 {
   //todo deduce from T and U the iterator types
-  this is what needs finished
+  typedef typename IteratorTraits<T>::IteratorType FirstIterType;
+  typedef typename IteratorTraits<U>::IteratorType SecondIterType;
   return ::thrust::make_zip_iterator(
-          ::thrust::make_tuple( IteratorBegin(t),
-                                IteratorBegin(u) )
+          ::thrust::make_tuple( vtkm::cont::cuda::internal::IteratorBegin(t),
+                                vtkm::cont::cuda::internal::IteratorBegin(u) )
           );
 }
 
 template<class PortalType>
-VTKM_CONT_EXPORT static
+VTKM_CONT_EXPORT
 typename IteratorTraits<PortalType>::IteratorType
 MakeIteratorBegin(PortalType portal, detail::ThrustIteratorTransformTag)
 {
@@ -247,7 +274,7 @@ MakeIteratorBegin(PortalType portal, detail::ThrustIteratorTransformTag)
 }
 
 template<class PortalType>
-VTKM_CONT_EXPORT static
+VTKM_CONT_EXPORT
 typename IteratorTraits<PortalType>::IteratorType
 MakeIteratorBegin(PortalType portal, detail::ThrustIteratorZipTag)
 {
@@ -257,7 +284,7 @@ MakeIteratorBegin(PortalType portal, detail::ThrustIteratorZipTag)
 }
 
 template<class PortalType>
-VTKM_CONT_EXPORT static
+VTKM_CONT_EXPORT
 typename IteratorTraits<PortalType>::IteratorType
 MakeIteratorBegin(PortalType portal, detail::ThrustIteratorDevicePtrTag)
 {
@@ -292,33 +319,4 @@ IteratorEnd(PortalType portal)
 
 } //namespace vtkm::cont::cuda::internal
 
-namespace thrust {
-
-template< typename PortalType >
-struct less< vtkm::cont::cuda::internal::detail::PortalValue< PortalType > > :
-        public binary_function<
-          vtkm::cont::cuda::internal::detail::PortalValue< PortalType >,
-          vtkm::cont::cuda::internal::detail::PortalValue< PortalType >,
-          bool>
-{
-  typedef vtkm::cont::cuda::internal::detail::PortalValue< PortalType > T;
-  typedef typename vtkm::cont::cuda::internal::detail::PortalValue<
-                        PortalType >::ValueType ValueType;
-
-
-  /*! Function call operator. The return value is <tt>lhs < rhs</tt>.
-   */
-  __host__ __device__ bool operator()(const T &lhs, const T &rhs) const
-  {return (ValueType)lhs < (ValueType)rhs;}
-
-  /*! Function call operator. The return value is <tt>lhs < rhs</tt>.
-      specially designed to work with vtkm portal values, which can
-      be compared to their underline type
-   */
-  __host__ __device__ bool operator()(const T &lhs,
-                                      const ValueType &rhs) const
-  {return (ValueType)lhs < rhs;}
-}; // end less
-
-}
 #endif
