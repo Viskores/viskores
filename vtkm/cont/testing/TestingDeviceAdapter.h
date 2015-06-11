@@ -23,6 +23,8 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleZip.h>
@@ -1173,8 +1175,8 @@ private:
     typedef vtkm::Float32 ValueType;
     vtkm::Id inputKeys[inputLength] =    {0, 0, 0}; // input keys
     ValueType inputValues1[inputLength] = {13.1f, -2.1f, -1.0f}; // input values array1
-    vtkm::Id expectedKeys[expectedLength] =   { 0};
 
+    vtkm::Id expectedKeys[expectedLength] =   { 0};
     ValueType expectedValues1[expectedLength] = {10.f}; // output values 1
     ValueType expectedValues2[expectedLength] = {3.f}; // output values 2
 
@@ -1209,8 +1211,66 @@ private:
       const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
       const vtkm::Pair<ValueType, ValueType> v = valuesOutZip.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
-      VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced vale");
-      VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced vale");
+      VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced value1");
+      VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced value2");
+    }
+    }
+
+    //next test with values in heterogeneous zip with diff. keys
+    {
+    const vtkm::Id inputLength = 30;
+    const vtkm::Id expectedLength = 10;
+    typedef vtkm::Float32 ValueType;
+    vtkm::Id inputKeys[inputLength] =    {0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,
+                                          5,5,5,6,6,6,7,7,7,8,8,8,9,9,9}; // input keys
+    ValueType inputValues1[inputLength] = {13.1f, -2.1f, -1.0f,
+                                           13.1f, -2.1f, -1.0f,
+                                           13.1f, -2.1f, -1.0f,
+                                           13.1f, -2.1f, -1.0f,
+                                           13.1f, -2.1f, -1.0f,
+                                           13.1f, -2.1f, -1.0f,
+                                           13.1f, -2.1f, -1.0f,
+                                           13.1f, -2.1f, -1.0f,
+                                           13.1f, -2.1f, -1.0f,
+                                           13.1f, -2.1f, -1.0f}; // input values array1
+    vtkm::Id expectedKeys[expectedLength] =   {0,1,2,3,4,5,6,7,8,9};
+    ValueType expectedValues1[expectedLength] = {10.f,10.f,10.f,10.f,10.f,10.f,10.f,10.f,10.f,10.f}; // output values 1
+    ValueType expectedValues2[expectedLength] = {3.f,3.f,3.f,3.f,3.f,3.f,3.f,3.f,3.f,3.f}; // output values 2
+
+    IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
+    typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> ValueArrayType;
+    ValueArrayType values1 = MakeArrayHandle(inputValues1, inputLength);
+    typedef vtkm::cont::ArrayHandleConstant<ValueType> ConstValueArrayType;
+    ConstValueArrayType constOneArray(1.f, inputLength);
+
+    vtkm::cont::ArrayHandleZip<ValueArrayType, ConstValueArrayType> valuesZip;
+    valuesZip = make_ArrayHandleZip(values1, constOneArray); // values in zip
+
+    IdArrayHandle keysOut;
+    ValueArrayType valuesOut1;
+    ValueArrayType valuesOut2;
+    vtkm::cont::ArrayHandleZip<ValueArrayType, ValueArrayType> valuesOutZip(valuesOut1, valuesOut2);
+
+    Algorithm::ReduceByKey( keys,
+                        valuesZip,
+                        keysOut,
+                        valuesOutZip,
+                        vtkm::internal::Add() );
+
+    VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
+                "Got wrong number of output keys");
+
+    VTKM_TEST_ASSERT(valuesOutZip.GetNumberOfValues() == expectedLength,
+                "Got wrong number of output values");
+
+    for(vtkm::Id i=0; i < expectedLength; ++i)
+    {
+      const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
+      const vtkm::Pair<ValueType, ValueType> v = valuesOutZip.GetPortalConstControl().Get(i);
+      std::cout << "key=" << k << "," << "expectedValues1[i] = " << expectedValues1[i] <<  "," << "computed value1 = " << v.first << std::endl;
+      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
+      VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced value1");
+      VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced value2");
     }
     }
 
