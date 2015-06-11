@@ -67,11 +67,12 @@ public:
     typedef typename vtkm::cont::ArrayHandle<T,CIn>
         ::template ExecutionTypes<Device>::PortalConst PortalIn;
 
+    internal::WrappedBinaryOperator<T, BinaryOperator> wrappedOp( binaryOp );
     PortalIn inputPortal = input.PrepareForInput(Device());
     return std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                            vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
                            initialValue,
-                           binaryOp);
+                           wrappedOp);
   }
 
   template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
