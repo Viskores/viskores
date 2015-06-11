@@ -40,10 +40,14 @@ public:
   typedef PortalTypeFirst_ PortalTypeFirst;
   typedef PortalTypeSecond_ PortalTypeSecond;
 
+  VTKM_EXEC_CONT_EXPORT
+  ArrayPortalExecZip()
+    : PortalFirst(), PortalSecond()
+  {  } //needs to be host and device so that cuda can create lvalue of these
 
   VTKM_CONT_EXPORT
-  ArrayPortalExecZip(const PortalTypeFirst  &portalfirst = PortalTypeFirst(),
-                 const PortalTypeSecond &portalsecond = PortalTypeSecond())
+  ArrayPortalExecZip(const PortalTypeFirst  &portalfirst,
+                     const PortalTypeSecond &portalsecond)
     : PortalFirst(portalfirst), PortalSecond(portalsecond)
   {  }
 
