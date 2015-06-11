@@ -1271,6 +1271,8 @@ private:
       VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
       VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced value1");
       VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced value2");
+      VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced vale");
+      VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced vale");
     }
     }
 
