@@ -53,9 +53,9 @@ struct DeviceAdapterAlgorithm
   /// Copies the contents of \c input to \c output. The array \c to will be
   /// allocated to the appropriate size.
   ///
-  template<typename T, class CIn, class COut>
+  template<typename T, typename U, class CIn, class COut>
   VTKM_CONT_EXPORT static void Copy(const vtkm::cont::ArrayHandle<T,CIn> &input,
-                                    vtkm::cont::ArrayHandle<T, COut> &output);
+                                    vtkm::cont::ArrayHandle<U, COut> &output);
 
   /// \brief Output is the first index in input for each item in values that wouldn't alter the ordering of input
   ///
