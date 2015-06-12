@@ -579,8 +579,15 @@ private:
     }
   };
 
+  template<typename BinaryOperator>
   struct ReduceByKeyAdd
   {
+    BinaryOperator BinaryFunctor;
+
+    ReduceByKeyAdd(BinaryOperator binaryOp):
+      BinaryFunctor( binaryOp )
+    { }
+
     template<typename T>
     vtkm::Pair<T, vtkm::UInt8> operator()(const vtkm::Pair<T, vtkm::UInt8>& a,
                                           const vtkm::Pair<T, vtkm::UInt8>& b) const
@@ -594,14 +601,18 @@ private:
     //the secondary value.
     if(a.second == States::START && b.second == States::END)
       {
-      return ReturnType(a.first + b.first, States::START_AND_END); //with second type as START_AND_END
+      return ReturnType(this->BinaryFunctor(a.first,
+                                            b.first),
+                        States::START_AND_END); //with second type as START_AND_END
       }
     else if((a.second == States::START  || a.second == States::MIDDLE) &&
             (b.second == States::MIDDLE || b.second == States::END))
       {
       //note that we cant have START + END as that is handled above
       //as a special use case
-      return ReturnType(a.first + b.first, b.second); //with second type as b.second
+      return ReturnType( this->BinaryFunctor(a.first,
+                                             b.first),
+                          b.second); //with second type as b.second
       }
     else
       {
@@ -632,8 +643,6 @@ public:
       vtkm::cont::ArrayHandle<U,VOut> &values_output,
       BinaryOperation binaryOp)
   {
-    (void) binaryOp;
-
     VTKM_ASSERT_CONT(keys.GetNumberOfValues() == values.GetNumberOfValues());
     const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
 
@@ -683,7 +692,10 @@ public:
 
     ZipInHandleType scanInput( values, keystate);
     ZipOutHandleType scanOutput( reducedValues, stencil);
-    DerivedAlgorithm::ScanInclusive(scanInput, scanOutput, ReduceByKeyAdd() );
+
+    DerivedAlgorithm::ScanInclusive(scanInput,
+                                    scanOutput,
+                                    ReduceByKeyAdd<BinaryOperation>(binaryOp) );
 
     //at this point we are done with keystate, so free the memory
     keystate.ReleaseResources();
