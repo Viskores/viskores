@@ -82,12 +82,12 @@ struct DeviceAdapterAlgorithm
   /// \par Requirements:
   /// \arg \c input must already be sorted
   ///
-  template<typename T, class CIn, class CVal, class COut, class Compare>
+  template<typename T, class CIn, class CVal, class COut, class BinaryCompare>
   VTKM_CONT_EXPORT static void LowerBounds(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       const vtkm::cont::ArrayHandle<T,CVal>& values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut>& output,
-      Compare comp);
+      BinaryCompare binary_compare);
 
   /// \brief A special version of LowerBounds that does an in place operation.
   ///
@@ -125,11 +125,11 @@ struct DeviceAdapterAlgorithm
   /// inconsistent results.
   ///
   /// \return The total sum.
-  template<typename T, class CIn, class BinaryOperation>
+  template<typename T, class CIn, class BinaryFunctor>
   VTKM_CONT_EXPORT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       T initialValue,
-      BinaryOperation binaryOp);
+      BinaryFunctor binary_functor);
 
   /// \brief Compute a accumulated sum operation on the input key value pairs
   ///
@@ -142,13 +142,13 @@ struct DeviceAdapterAlgorithm
   template<typename T,
            class CKeyIn,  class CValIn,
            class CKeyOut, class CValOut,
-           class BinaryOperation >
+           class BinaryFunctor >
   VTKM_CONT_EXPORT static void ReduceByKey(
       const vtkm::cont::ArrayHandle<T,CKeyIn> &keys,
       const vtkm::cont::ArrayHandle<U,CValIn> &values,
       vtkm::cont::ArrayHandle<T,CKeyOut>& keys_output,
       vtkm::cont::ArrayHandle<T,CValOut>& values_output,
-      BinaryOperation binaryOp);
+      BinaryFunctor binary_functor);
 
   /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
   ///
@@ -179,11 +179,11 @@ struct DeviceAdapterAlgorithm
   ///
   /// \return The total sum.
   ///
-  template<typename T, class CIn, class COut, class BinaryOperation>
+  template<typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT_EXPORT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output,
-      BinaryOperation binaryOp);
+      BinaryFunctor binary_functor);
 
   /// \brief Compute an exclusive prefix sum operation on the input ArrayHandle.
   ///
@@ -262,9 +262,34 @@ struct DeviceAdapterAlgorithm
   /// Sorts the contents of \c values so that they in ascending value based
   /// on the custom compare functor.
   ///
-  template<typename T, class Storage, class Compare>
+  /// BinaryCompare should be a strict weak ordering comparison operator
+  ///
+  template<typename T, class Storage, class BinaryCompare>
   VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage> &values,
-                                    Compare comp);
+                                    BinaryCompare binary_compare);
+
+  /// \brief Unstable ascending sort of keys and values.
+  ///
+  /// Sorts the contents of \c keys and \c values so that they in ascending value based
+  /// on the values of keys.
+  ///
+  template<typename T, typename U, class StorageT,  class StorageU>
+  VTKM_CONT_EXPORT static void SortByKey(
+      vtkm::cont::ArrayHandle<T,StorageT> &keys,
+      vtkm::cont::ArrayHandle<U,StorageU> &values);
+
+  /// \brief Unstable ascending sort of keys and values.
+  ///
+  /// Sorts the contents of \c keys and \c values so that they in ascending value based
+  /// on the custom compare functor.
+  ///
+  /// BinaryCompare should be a strict weak ordering comparison operator
+  ///
+  template<typename T, typename U, class StorageT,  class StorageU, class BinaryCompare>
+  VTKM_CONT_EXPORT static void SortByKey(
+      vtkm::cont::ArrayHandle<T,StorageT> &keys,
+      vtkm::cont::ArrayHandle<U,StorageU> &values,
+      BinaryCompare binary_compare)
 
   /// \brief Performs stream compaction to remove unwanted elements in the input array. Output becomes the index values of input that are valid.
   ///
@@ -310,12 +335,12 @@ struct DeviceAdapterAlgorithm
   /// algorithm.
   ///
   template<typename T, typename U, class CIn, class CStencil,
-           class COut, class PredicateOperator>
+           class COut, class UnaryPredicate>
   VTKM_CONT_EXPORT static void StreamCompact(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
       vtkm::cont::ArrayHandle<T,COut> &output,
-      PredicateOperator predicate);
+      UnaryPredicate unary_predicate);
 
   /// \brief Completes any asynchronous operations running on the device.
   ///
@@ -344,10 +369,10 @@ struct DeviceAdapterAlgorithm
   /// Uses the custom binary predicate Comparison to determine if something
   /// is unique. The predicate must return true if the two items are the same.
   ///
-  template<typename T, class Storage, class Compare>
+  template<typename T, class Storage, class BinaryCompare>
   VTKM_CONT_EXPORT static void Unique(
       vtkm::cont::ArrayHandle<T,Storage>& values,
-      Compare comp);
+      BinaryCompare binary_compare);
 
   /// \brief Output is the last index in input for each item in values that wouldn't alter the ordering of input
   ///
@@ -374,12 +399,12 @@ struct DeviceAdapterAlgorithm
   /// \par Requirements:
   /// \arg \c input must already be sorted
   ///
-  template<typename T, class CIn, class CVal, class COut, class Compare>
+  template<typename T, class CIn, class CVal, class COut, class BinaryCompare>
   VTKM_CONT_EXPORT static void UpperBounds(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       const vtkm::cont::ArrayHandle<T,CVal>& values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut>& output,
-      Compare comp);
+      BinaryCompare binary_compare);
 
   /// \brief A special version of UpperBounds that does an in place operation.
   ///
