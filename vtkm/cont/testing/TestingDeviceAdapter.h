@@ -1073,7 +1073,7 @@ private:
       const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
-      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
+      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced value");
       }
     }
 
