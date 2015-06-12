@@ -95,9 +95,12 @@ class IteratorFromArrayPortal : public
       vtkm::Id>
 {
 public:
+
+  VTKM_CONT_EXPORT
   IteratorFromArrayPortal()
     : Portal(), Index(0) { }
 
+  VTKM_CONT_EXPORT
   explicit IteratorFromArrayPortal(const ArrayPortalType &portal,
                                    vtkm::Id index = 0)
     : Portal(portal), Index(index) {  }
