@@ -564,10 +564,10 @@ private:
 //-----------------------------------------------------------------------------
 
 public:
-  template<typename T, class SIn, class SOut>
+  template<typename T, typename U, class SIn, class SOut>
   VTKM_CONT_EXPORT static void Copy(
       const vtkm::cont::ArrayHandle<T,SIn> &input,
-      vtkm::cont::ArrayHandle<T,SOut> &output)
+      vtkm::cont::ArrayHandle<U,SOut> &output)
   {
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     CopyPortal(input.PrepareForInput(DeviceAdapterTag()),

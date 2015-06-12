@@ -1295,6 +1295,31 @@ private:
                      "Did not get expected error message.");
   }
 
+
+  static VTKM_CONT_EXPORT void TestCopyArraysInDiffTypes()
+  {
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "Testing Copy to a different array type" << std::endl;
+    vtkm::Id testData[ARRAY_SIZE];
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      testData[i]= OFFSET+(i % 50);
+    }
+
+    IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
+
+    //make a deep copy of input and place it into temp
+    vtkm::cont::ArrayHandle<vtkm::Float64> temp;
+    Algorithm::Copy(input,temp);
+
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      vtkm::Float64 value = temp.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(value == testData[i], "Got bad value (Copy)");
+    }
+
+  }
+
   struct TestAll
   {
     VTKM_CONT_EXPORT void operator()() const
@@ -1330,6 +1355,8 @@ private:
       TestOrderedUniqueValues(); //tests Copy, LowerBounds, Sort, Unique
       TestStreamCompactWithStencil();
       TestStreamCompact();
+
+      TestCopyArraysInDiffTypes();
     }
   };
 
