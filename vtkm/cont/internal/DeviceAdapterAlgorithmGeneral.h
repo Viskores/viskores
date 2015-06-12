@@ -207,15 +207,15 @@ private:
   };
 
 public:
-  template<typename T, class CIn, class COut>
+  template<typename T, typename U, class CIn, class COut>
   VTKM_CONT_EXPORT static void Copy(const vtkm::cont::ArrayHandle<T, CIn> &input,
-                                    vtkm::cont::ArrayHandle<T, COut> &output)
+                                    vtkm::cont::ArrayHandle<U, COut> &output)
   {
     vtkm::Id arraySize = input.GetNumberOfValues();
 
     CopyKernel<
         typename vtkm::cont::ArrayHandle<T,CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
-        typename vtkm::cont::ArrayHandle<T,COut>::template ExecutionTypes<DeviceAdapterTag>::Portal>
+        typename vtkm::cont::ArrayHandle<U,COut>::template ExecutionTypes<DeviceAdapterTag>::Portal>
         kernel(input.PrepareForInput(DeviceAdapterTag()),
                output.PrepareForOutput(arraySize, DeviceAdapterTag()));
 
