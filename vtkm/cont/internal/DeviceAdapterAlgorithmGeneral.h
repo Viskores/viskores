@@ -670,16 +670,19 @@ public:
     // the value summed currently, the second being 0 or 1, with 1 being used
     // when this is a value of a key we need to write ( END or START_AND_END)
     {
-    typedef vtkm::cont::ArrayHandle<U,VIn> ValueHandleType;
+    typedef vtkm::cont::ArrayHandle<U,VIn> ValueInHandleType;
+    typedef vtkm::cont::ArrayHandle<U,VOut> ValueOutHandleType;
     typedef vtkm::cont::ArrayHandle< vtkm::UInt8> StencilHandleType;
-    typedef vtkm::cont::ArrayHandleZip<ValueHandleType,
-                                      StencilHandleType> ZipHandleType;
+    typedef vtkm::cont::ArrayHandleZip<ValueInHandleType,
+                                      StencilHandleType> ZipInHandleType;
+        typedef vtkm::cont::ArrayHandleZip<ValueOutHandleType,
+                                          StencilHandleType> ZipOutHandleType;
 
-    vtkm::cont::ArrayHandle< vtkm::UInt8 > stencil;
-    vtkm::cont::ArrayHandle< U > reducedValues;
+    StencilHandleType stencil;
+    ValueOutHandleType reducedValues;
 
-    ZipHandleType scanInput( values, keystate);
-    ZipHandleType scanOutput( reducedValues, stencil);
+    ZipInHandleType scanInput( values, keystate);
+    ZipOutHandleType scanOutput( reducedValues, stencil);
     DerivedAlgorithm::ScanInclusive(scanInput, scanOutput, ReduceByKeyAdd() );
 
     //at this point we are done with keystate, so free the memory
