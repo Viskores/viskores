@@ -24,12 +24,13 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorExecution.h>
+#include <vtkm/cont/Timer.h>
 
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
-#include <vtkm/cont/Timer.h>
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
+#include <vtkm/exec/cuda/internal/WrappedOperators.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
 #if defined(__GNUC__) || defined(____clang__)
@@ -301,10 +302,10 @@ private:
   typename InputPortal::ValueType ReducePortal(const InputPortal &input,
                             typename InputPortal::ValueType initialValue)
   {
-    return ::thrust::reduce(thrust::cuda::par,
-                            IteratorBegin(input),
-                            IteratorEnd(input),
-                            initialValue);
+    typedef typename InputPortal::ValueType ValueType;
+    return ReducePortal(input,
+                        initialValue,
+                        ::thrust::plus<ValueType>());
   }
 
   template<class InputPortal, class BinaryOperation>
@@ -313,11 +314,13 @@ private:
                             typename InputPortal::ValueType initialValue,
                             BinaryOperation binaryOP)
   {
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<typename InputPortal::ValueType,
+                                                      BinaryOperation> bop(binaryOP);
     return ::thrust::reduce(thrust::cuda::par,
                             IteratorBegin(input),
                             IteratorEnd(input),
                             initialValue,
-                            binaryOP);
+                            bop);
   }
 
   template<class KeysPortal, class ValuesPortal,
@@ -342,6 +345,8 @@ private:
 
     ::thrust::equal_to<typename KeysPortal::ValueType> binaryPredicate;
 
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<typename ValuesPortal::ValueType,
+                                                      BinaryOperation> bop(binaryOP);
     result_iterators = ::thrust::reduce_by_key(thrust::cuda::par,
                                                IteratorBegin(keys),
                                                IteratorEnd(keys),
@@ -349,7 +354,7 @@ private:
                                                keys_out_begin,
                                                values_out_begin,
                                                binaryPredicate,
-                                               binaryOP);
+                                               bop);
 
     return static_cast<vtkm::Id>( ::thrust::distance(keys_out_begin,
                                                      result_iterators.first) );
@@ -406,19 +411,19 @@ private:
   template<class ValuesPortal>
   VTKM_CONT_EXPORT static void SortPortal(const ValuesPortal &values)
   {
-    ::thrust::sort(thrust::cuda::par,
-                   IteratorBegin(values),
-                   IteratorEnd(values));
+    typedef typename ValuesPortal::ValueType ValueType;
+    SortPortal(values, ::thrust::less<ValueType>());
   }
 
   template<class ValuesPortal, class Compare>
   VTKM_CONT_EXPORT static void SortPortal(const ValuesPortal &values,
                                          Compare comp)
   {
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<bool,Compare> bop(comp);
     ::thrust::sort(thrust::cuda::par,
                    IteratorBegin(values),
                    IteratorEnd(values),
-                   comp);
+                   bop);
   }
 
 
@@ -426,10 +431,8 @@ private:
   VTKM_CONT_EXPORT static void SortByKeyPortal(const KeysPortal &keys,
                                                const ValuesPortal &values)
   {
-    ::thrust::sort_by_key(thrust::cuda::par,
-                          IteratorBegin(keys),
-                          IteratorEnd(keys),
-                          IteratorBegin(values));
+    typedef typename KeysPortal::ValueType ValueType;
+    SortByKeyPortal(keys,values,::thrust::less<ValueType>());
   }
 
   template<class KeysPortal, class ValuesPortal, class Compare>
@@ -437,6 +440,7 @@ private:
                                                const ValuesPortal &values,
                                                Compare comp)
   {
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<bool,Compare> bop(comp);
     ::thrust::sort_by_key(thrust::cuda::par,
                           IteratorBegin(keys),
                           IteratorEnd(keys),

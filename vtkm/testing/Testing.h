@@ -342,6 +342,15 @@ std::ostream &operator<<(std::ostream &stream, const vtkm::Vec<T,Size> &vec)
   return stream << vec[Size-1] << "]";
 }
 
+/// Helper function for printing out pairs during testing.
+///
+template<typename T, typename U>
+VTKM_EXEC_CONT_EXPORT
+std::ostream &operator<<(std::ostream &stream, const vtkm::Pair<T,U> &vec)
+{
+  return stream << "[" << vec.first << "," << vec.second << "]";
+}
+
 
 template<typename T>
 VTKM_EXEC_CONT_EXPORT

@@ -17,31 +17,45 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_internal_IteratorFromArrayPortal_h
-#define vtk_m_cont_internal_IteratorFromArrayPortal_h
+#ifndef vtk_m_exec_cuda_internal_IteratorFromArrayPortal_h
+#define vtk_m_exec_cuda_internal_IteratorFromArrayPortal_h
 
-#include <vtkm/cont/ArrayPortal.h>
+#include <vtkm/Types.h>
+#include <vtkm/Pair.h>
+#include <vtkm/internal/ExportMacros.h>
 
-#include <vtkm/cont/Assert.h>
+// Disable warnings we check vtkm for but Thrust does not.
+#if defined(__GNUC__) || defined(____clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
 
-#include <boost/iterator/iterator_facade.hpp>
+#include <thrust/functional.h>
+#include <thrust/iterator/iterator_facade.h>
+#include <thrust/system/cuda/execution_policy.h>
+
+#if defined(__GNUC__) || defined(____clang__)
+#pragma GCC diagnostic pop
+#endif // gcc || clang
 
 namespace vtkm {
-namespace cont {
+namespace exec {
+namespace cuda {
 namespace internal {
-namespace detail {
 
 template<class ArrayPortalType>
-struct IteratorFromArrayPortalValue
+struct PortalValue
 {
   typedef typename ArrayPortalType::ValueType ValueType;
 
-  VTKM_CONT_EXPORT
-  IteratorFromArrayPortalValue(const ArrayPortalType &portal, vtkm::Id index)
+  VTKM_EXEC_CONT_EXPORT
+  PortalValue(const ArrayPortalType &portal, vtkm::Id index)
     : Portal(portal), Index(index) {  }
 
-  VTKM_CONT_EXPORT
-  void Swap( IteratorFromArrayPortalValue<ArrayPortalType> &rhs ) throw()
+  VTKM_EXEC_EXPORT
+  void Swap( PortalValue<ArrayPortalType> &rhs ) throw()
   {
     //we need use the explicit type not a proxy temp object
     //A proxy temp object would point to the same underlying data structure
@@ -51,29 +65,22 @@ struct IteratorFromArrayPortalValue
     rhs = aValue;
   }
 
-  VTKM_CONT_EXPORT
-  IteratorFromArrayPortalValue<ArrayPortalType> &operator=(
-    const IteratorFromArrayPortalValue<ArrayPortalType> &rhs)
+  VTKM_EXEC_EXPORT
+  PortalValue<ArrayPortalType> &operator=(
+    const PortalValue<ArrayPortalType> &rhs)
   {
     this->Portal.Set(this->Index, rhs.Portal.Get(rhs.Index));
     return *this;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   ValueType operator=(const ValueType& value)
   {
     this->Portal.Set(this->Index, value);
     return value;
   }
 
-  VTKM_CONT_EXPORT
-  bool operator<(const ValueType& value) const
-  {
-    return this->Portal.Get(this->Index) < value;
-  }
-
-
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   operator ValueType(void) const
   {
     return this->Portal.Get(this->Index);
@@ -83,20 +90,19 @@ struct IteratorFromArrayPortalValue
   vtkm::Id Index;
 };
 
-} // namespace detail
-
 template<class ArrayPortalType>
 class IteratorFromArrayPortal : public
-    boost::iterator_facade<
+    ::thrust::iterator_facade<
       IteratorFromArrayPortal<ArrayPortalType>,
       typename ArrayPortalType::ValueType,
-      boost::random_access_traversal_tag,
-      detail::IteratorFromArrayPortalValue<ArrayPortalType>,
+      ::thrust::system::cuda::tag,
+      ::thrust::random_access_traversal_tag,
+      PortalValue<ArrayPortalType>,
       vtkm::Id>
 {
 public:
 
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   IteratorFromArrayPortal()
     : Portal(), Index(0) { }
 
@@ -105,11 +111,11 @@ public:
                                    vtkm::Id index = 0)
     : Portal(portal), Index(index) {  }
 
-  VTKM_CONT_EXPORT
-  detail::IteratorFromArrayPortalValue<ArrayPortalType>
+  VTKM_EXEC_EXPORT
+  PortalValue<ArrayPortalType>
   operator[](std::size_t idx) const
   {
-    return detail::IteratorFromArrayPortalValue<ArrayPortalType>(this->Portal,
+    return PortalValue<ArrayPortalType>(this->Portal,
            this->Index + static_cast<vtkm::Id>(idx) );
   }
 
@@ -117,17 +123,17 @@ private:
   ArrayPortalType Portal;
   vtkm::Id Index;
 
-  // Implementation for boost iterator_facade
-  friend class boost::iterator_core_access;
+  // Implementation for ::thrust iterator_facade
+  friend class ::thrust::iterator_core_access;
 
-  VTKM_CONT_EXPORT
-  detail::IteratorFromArrayPortalValue<ArrayPortalType> dereference() const
+  VTKM_EXEC_EXPORT
+  PortalValue<ArrayPortalType> dereference() const
   {
-    return detail::IteratorFromArrayPortalValue<ArrayPortalType>(this->Portal,
+    return PortalValue<ArrayPortalType>(this->Portal,
            this->Index);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   bool equal(const IteratorFromArrayPortal<ArrayPortalType> &other) const
   {
     // Technically, we should probably check that the portals are the same,
@@ -137,31 +143,25 @@ private:
     return (this->Index == other.Index);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   void increment()
   {
     this->Index++;
-    VTKM_ASSERT_CONT(this->Index >= 0);
-    VTKM_ASSERT_CONT(this->Index <= this->Portal.GetNumberOfValues());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   void decrement()
   {
     this->Index--;
-    VTKM_ASSERT_CONT(this->Index >= 0);
-    VTKM_ASSERT_CONT(this->Index <= this->Portal.GetNumberOfValues());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   void advance(vtkm::Id delta)
   {
     this->Index += delta;
-    VTKM_ASSERT_CONT(this->Index >= 0);
-    VTKM_ASSERT_CONT(this->Index <= this->Portal.GetNumberOfValues());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id
   distance_to(const IteratorFromArrayPortal<ArrayPortalType> &other) const
   {
@@ -173,34 +173,31 @@ private:
   }
 };
 
-template<class ArrayPortalType>
-IteratorFromArrayPortal<ArrayPortalType> make_IteratorBegin(
-  const ArrayPortalType &portal)
+}
+}
+}
+} //namespace vtkm::exec::cuda::internal
+
+//So for the unary_transform_functor and binary_transform_functor inside
+//of thrust, they verify that the index they are storing into is a reference
+//instead of a value, so that the contents actually are written to global memory.
+//
+//But for vtk-m we pass in facade objects, which are passed by value, but
+//must be treated as references. So do to do that properly we need to specialize
+//is_non_const_reference to state a PortalValue by value is valid for writing
+namespace thrust
 {
-  return IteratorFromArrayPortal<ArrayPortalType>(portal, 0);
-}
-
-template<class ArrayPortalType>
-IteratorFromArrayPortal<ArrayPortalType> make_IteratorEnd(
-  const ArrayPortalType &portal)
+namespace detail
 {
-  return IteratorFromArrayPortal<ArrayPortalType>(portal,
-         portal.GetNumberOfValues());
-}
 
+  template< typename T > struct is_non_const_reference;
 
-//implementat a custom swap function, since the std::swap won't work
-//since we return RValues instead of Lvalues
-template<typename T>
-void swap( vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> a,
-           vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> b)
-{
-  a.Swap(b);
-}
-
+  template< typename T >
+  struct is_non_const_reference< vtkm::exec::cuda::internal::PortalValue<T> >
+    : thrust::detail::true_type
+  { };
 
 }
 }
-} // namespace vtkm::cont::internal
 
-#endif //vtk_m_cont_internal_IteratorFromArrayPortal_h
+#endif //vtk_m_exec_cuda_internal_IteratorFromArrayPortal_h

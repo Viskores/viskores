@@ -54,8 +54,8 @@ namespace testing {
 namespace comparison {
 struct SortLess
 {
-  template<typename T, typename U>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a, const U& b) const
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a, const T& b) const
   {
     return a < b;
   }
@@ -76,8 +76,8 @@ struct SortLess
 
 struct SortGreater
 {
-  template<typename T, typename U>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a, const U& b) const
+  template<typename T>
+  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a, const T& b) const
   {
     return a > b;
   }
@@ -946,6 +946,7 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce" << std::endl;
 
+    {
     //construct the index array
     IdArrayHandle array;
     Algorithm::Schedule(
@@ -966,6 +967,37 @@ private:
 
     VTKM_TEST_ASSERT(reduce_sum == inclusive_sum,
                      "Got different sums from Reduce and ScanInclusive");
+    }
+
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Reduce with ArrayHandleZip" << std::endl;
+    {
+    IdArrayHandle keys, values;
+    Algorithm::Schedule(
+      ClearArrayKernel(keys.PrepareForOutput(ARRAY_SIZE,
+                       DeviceAdapterTag())),
+      ARRAY_SIZE);
+
+    Algorithm::Schedule(
+      ClearArrayKernel(values.PrepareForOutput(ARRAY_SIZE,
+                       DeviceAdapterTag())),
+      ARRAY_SIZE);
+
+    vtkm::cont::ArrayHandleZip< IdArrayHandle,
+                                IdArrayHandle > zipped(keys,values);
+
+    //the output of reduce and scan inclusive should be the same
+    typedef vtkm::Pair<vtkm::Id,vtkm::Id> ResultType;
+    ResultType reduce_sum_with_intial_value =
+               Algorithm::Reduce(zipped, ResultType(ARRAY_SIZE,ARRAY_SIZE));
+
+    ResultType expectedResult(OFFSET * ARRAY_SIZE + ARRAY_SIZE,
+                              OFFSET * ARRAY_SIZE + ARRAY_SIZE);
+    VTKM_TEST_ASSERT( ( reduce_sum_with_intial_value == expectedResult),
+                     "Got bad sum from Reduce with initial value");
+    }
+
+
   }
 
   static VTKM_CONT_EXPORT void TestReduceWithComparisonObject()

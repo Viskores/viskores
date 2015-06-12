@@ -20,6 +20,8 @@
 
 set(headers
   ArrayPortalFromThrust.h
+  IteratorFromArrayPortal.h
+  WrappedOperators.h
   )
 
 vtkm_disable_troublesome_thrust_warnings()
