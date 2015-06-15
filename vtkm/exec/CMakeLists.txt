@@ -20,6 +20,7 @@
 
 set(headers
   ExecutionObjectBase.h
+  ExecutionWholeArray.h
   ExplicitConnectivity.h
   FunctorBase.h
   TopologyData.h
