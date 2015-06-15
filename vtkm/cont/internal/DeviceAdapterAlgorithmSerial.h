@@ -371,11 +371,9 @@ public:
       if (sizeof(U) > sizeof(vtkm::Id)) {
           /// More efficient sort:
           /// Move value indexes when sorting and reorder the value array at last
-          typedef vtkm::cont::ArrayHandle<T,StorageT> KeyType;
           typedef vtkm::cont::ArrayHandle<U,StorageU> ValueType;
-          typedef vtkm::cont::ArrayHandleZip<KeyType,ValueType> ZipHandleType;
           typedef vtkm::cont::ArrayHandle<vtkm::Id,StorageU> IndexType;
-          typedef vtkm::cont::ArrayHandleZip<KeyType,IndexType> ZipIndexHandleType;
+
           IndexType indexArray;
           ValueType valuesScattered;
 
