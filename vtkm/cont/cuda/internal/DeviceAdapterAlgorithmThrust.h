@@ -257,15 +257,21 @@ private:
 
   template<class InputPortal, class ValuesPortal, class OutputPortal>
   VTKM_CONT_EXPORT static void LowerBoundsPortal(const InputPortal &input,
-                                                const ValuesPortal &values,
-                                                const OutputPortal &output)
+                                                 const ValuesPortal &values,
+                                                 const OutputPortal &output)
   {
-    ::thrust::lower_bound(thrust::cuda::par,
-                          IteratorBegin(input),
-                          IteratorEnd(input),
-                          IteratorBegin(values),
-                          IteratorEnd(values),
-                          IteratorBegin(output));
+    typedef typename ValuesPortal::ValueType ValueType;
+    LowerBoundsPortal(input, values, output, ::thrust::less<ValueType>() );
+  }
+
+  template<class InputPortal, class OutputPortal>
+  VTKM_CONT_EXPORT static
+  void LowerBoundsPortal(const InputPortal &input,
+                         const OutputPortal &values_output)
+  {
+    typedef typename InputPortal::ValueType ValueType;
+    LowerBoundsPortal(input, values_output, values_output,
+                      ::thrust::less<ValueType>() );
   }
 
   template<class InputPortal, class ValuesPortal, class OutputPortal,
@@ -275,6 +281,7 @@ private:
                                                 const OutputPortal &output,
                                                 Compare comp)
   {
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<bool, Compare> bop(comp);
     ::thrust::lower_bound(thrust::cuda::par,
                           IteratorBegin(input),
                           IteratorEnd(input),
@@ -282,19 +289,6 @@ private:
                           IteratorEnd(values),
                           IteratorBegin(output),
                           comp);
-  }
-
-  template<class InputPortal, class OutputPortal>
-  VTKM_CONT_EXPORT static
-  void LowerBoundsPortal(const InputPortal &input,
-                         const OutputPortal &values_output)
-  {
-    ::thrust::lower_bound(thrust::cuda::par,
-                          IteratorBegin(input),
-                          IteratorEnd(input),
-                          IteratorBegin(values_output),
-                          IteratorEnd(values_output),
-                          IteratorBegin(values_output));
   }
 
   template<class InputPortal>
@@ -365,17 +359,39 @@ private:
   typename InputPortal::ValueType ScanExclusivePortal(const InputPortal &input,
                                                       const OutputPortal &output)
   {
+    typedef typename InputPortal::ValueType ValueType;
+
+    return ScanExclusivePortal(input,
+                               output,
+                               (::thrust::plus<ValueType>()) );
+
+  }
+
+    template<class InputPortal, class OutputPortal, class BinaryOperation>
+  VTKM_CONT_EXPORT static
+  typename InputPortal::ValueType ScanExclusivePortal(const InputPortal &input,
+                                                      const OutputPortal &output,
+                                                      BinaryOperation binaryOp)
+  {
     // Use iterator to get value so that thrust device_ptr has chance to handle
     // data on device.
-    typename InputPortal::ValueType inputEnd = *(IteratorEnd(input) - 1);
+    typedef typename InputPortal::ValueType ValueType;
+    ValueType inputEnd = *(IteratorEnd(input) - 1);
 
-    ::thrust::exclusive_scan(thrust::cuda::par,
-                             IteratorBegin(input),
-                             IteratorEnd(input),
-                             IteratorBegin(output));
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
+                                                      BinaryOperation> bop(binaryOp);
+
+    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
+                                                            IteratorType;
+    IteratorType end = ::thrust::exclusive_scan(thrust::cuda::par,
+                                                IteratorBegin(input),
+                                                IteratorEnd(input),
+                                                IteratorBegin(output),
+                                                vtkm::cont::internal::zeroinit::init<ValueType>(),
+                                                bop);
 
     //return the value at the last index in the array, as that is the sum
-    return *(IteratorEnd(output) - 1) + inputEnd;
+    return binaryOp( *(end-1), inputEnd);
   }
 
   template<class InputPortal, class OutputPortal>
@@ -383,13 +399,8 @@ private:
   typename InputPortal::ValueType ScanInclusivePortal(const InputPortal &input,
                                                       const OutputPortal &output)
   {
-    ::thrust::inclusive_scan(thrust::cuda::par,
-                             IteratorBegin(input),
-                             IteratorEnd(input),
-                             IteratorBegin(output));
-
-    //return the value at the last index in the array, as that is the sum
-    return *(IteratorEnd(output) - 1);
+    typedef typename InputPortal::ValueType ValueType;
+    return ScanInclusivePortal(input, output, ::thrust::plus<ValueType>() );
   }
 
   template<class InputPortal, class OutputPortal, class BinaryOperation>
@@ -398,14 +409,20 @@ private:
                                                       const OutputPortal &output,
                                                       BinaryOperation binaryOp)
   {
-    ::thrust::inclusive_scan(thrust::cuda::par,
-                             IteratorBegin(input),
-                             IteratorEnd(input),
-                             IteratorBegin(output),
-                             binaryOp);
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<typename InputPortal::ValueType,
+                                                      BinaryOperation> bop(binaryOp);
+
+    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
+                                                            IteratorType;
+
+    IteratorType end = ::thrust::inclusive_scan(thrust::cuda::par,
+                                                IteratorBegin(input),
+                                                IteratorEnd(input),
+                                                IteratorBegin(output),
+                                                bop);
 
     //return the value at the last index in the array, as that is the sum
-    return *(IteratorEnd(output) - 1);
+    return *(end-1);
   }
 
   template<class ValuesPortal>
