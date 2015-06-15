@@ -1090,7 +1090,7 @@ private:
     vtkm::Id expectedKeys[expectedLength] =   { 0};
 
     vtkm::Vec<vtkm::Float64, 3> expectedValues[expectedLength];
-    expectedValues[0] = vtkm::make_Vec(16.2, 16.6, 15.);
+    expectedValues[0] = vtkm::make_Vec(27.51, 30.59, -33.75);
 
     IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> values = MakeArrayHandle(inputValues, inputLength);
@@ -1101,7 +1101,7 @@ private:
                             values,
                             keysOut,
                             valuesOut,
-                            vtkm::internal::Subtract() );
+                            vtkm::internal::Multiply() );
 
     VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
                     "Got wrong number of output keys");
@@ -1174,8 +1174,6 @@ private:
       VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
       VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced value1");
       VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced value2");
-      VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced vale");
-      VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced vale");
     }
     }
 

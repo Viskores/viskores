@@ -583,11 +583,15 @@ private:
     //need too handle how we are going to add two numbers together
     //based on the keyStates that they have
 
-    //need to optimize this logic, we can use a bit mask to determine
-    //the secondary value.
 #if 1  // Make it work for parallel inclusive scan.  Will end up with all start bits = 1
-    if (!b.second.fStart)  // is b is not START, then it's safe to add.  Propagate a's start flag to b
-        return ReturnType(a.first + b.first, ReduceKeySeriesStates(a.second.fStart, b.second.fEnd));
+       // the following logic should change if you use a different parallel scan algorithm.
+    if (!b.second.fStart) {
+        // if b is not START, then it's safe to sum a & b.
+        // Propagate a's start flag to b
+        // so that later when b's START bit is set, it means there must exists a START between a and b
+        return ReturnType(this->BinaryFunctor(a.first , b.first),
+                          ReduceKeySeriesStates(a.second.fStart, b.second.fEnd));
+    }
     return b;
 #else  // Works only for sequencial scan
     if(a.second == States::START && b.second == States::END)
