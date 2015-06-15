@@ -83,7 +83,19 @@
 #cmakedefine VTKM_NO_VARIADIC_TEMPLATE
 #if !defined(VTKM_USE_VARIADIC_TEMPLATE) && !defined(VTKM_NO_VARIADIC_TEMPLATE)
 // Currently using Boost to determine support.
+
+# if defined(__GNUC__) || defined(____clang__)
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wconversion"
+# endif // gcc || clang
+
 # include <boost/config.hpp>
+
+
+# if defined(__GNUC__) || defined(____clang__)
+#   pragma GCC diagnostic pop
+# endif // gcc || clang
+
 # if defined(BOOST_HAS_VARIADIC_TMPL)
 #  define VTKM_USE_VARIADIC_TEMPLATE 1
 # endif
