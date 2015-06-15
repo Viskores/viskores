@@ -727,13 +727,6 @@ protected:
           this->Components, value);
   }
 
-  VTKM_EXEC_CONT_EXPORT
-  explicit VecBase(const ComponentType* values)
-  {
-    vtkm::internal::VecCopy<ComponentType,NUM_COMPONENTS>()(
-      this->Components, values);
-  }
-
   template<typename OtherValueType, typename OtherDerivedType>
   VTKM_EXEC_CONT_EXPORT
   VecBase(const VecBase<OtherValueType,Size,OtherDerivedType> &src)
@@ -970,7 +963,7 @@ public:
 
   VTKM_EXEC_CONT_EXPORT Vec() {}
   VTKM_EXEC_CONT_EXPORT explicit Vec(const T& value) : Superclass(value) {  }
-  VTKM_EXEC_CONT_EXPORT explicit Vec(const T* values) : Superclass(values) {  }
+  // VTKM_EXEC_CONT_EXPORT explicit Vec(const T* values) : Superclass(values) {  }
 
   template<typename OtherType>
   VTKM_EXEC_CONT_EXPORT
@@ -992,7 +985,6 @@ public:
 
   VTKM_EXEC_CONT_EXPORT Vec() {}
   VTKM_EXEC_CONT_EXPORT explicit Vec(const ComponentType&) {  }
-  VTKM_EXEC_CONT_EXPORT explicit Vec(const ComponentType*) {  }
 
   template<typename OtherType>
   VTKM_EXEC_CONT_EXPORT Vec(const Vec<OtherType, NUM_COMPONENTS> &) {  }
@@ -1033,7 +1025,6 @@ class Vec<T,2> : public detail::VecBase<T, 2, Vec<T,2> >
 public:
   VTKM_EXEC_CONT_EXPORT Vec() {}
   VTKM_EXEC_CONT_EXPORT explicit Vec(const T& value) : Superclass(value) {  }
-  VTKM_EXEC_CONT_EXPORT explicit Vec(const T* values) : Superclass(values) {  }
 
   template<typename OtherType>
   VTKM_EXEC_CONT_EXPORT Vec(const Vec<OtherType, 2> &src) : Superclass(src) {  }
@@ -1057,7 +1048,6 @@ class Vec<T,3> : public detail::VecBase<T, 3, Vec<T,3> >
 public:
   VTKM_EXEC_CONT_EXPORT Vec() {}
   VTKM_EXEC_CONT_EXPORT explicit Vec(const T& value) : Superclass(value) {  }
-  VTKM_EXEC_CONT_EXPORT explicit Vec(const T* values) : Superclass(values) {  }
 
   template<typename OtherType>
   VTKM_EXEC_CONT_EXPORT Vec(const Vec<OtherType, 3> &src) : Superclass(src) {  }
@@ -1083,7 +1073,6 @@ class Vec<T,4> : public detail::VecBase<T, 4, Vec<T,4> >
 public:
   VTKM_EXEC_CONT_EXPORT Vec() {}
   VTKM_EXEC_CONT_EXPORT explicit Vec(const T& value) : Superclass(value) {  }
-  VTKM_EXEC_CONT_EXPORT explicit Vec(const T* values) : Superclass(values) {  }
 
   template<typename OtherType>
   VTKM_EXEC_CONT_EXPORT Vec(const Vec<OtherType, 4> &src) : Superclass(src) {  }
