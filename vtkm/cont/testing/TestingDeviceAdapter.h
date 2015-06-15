@@ -1073,46 +1073,12 @@ private:
       const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
-      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
+      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced value");
       }
     }
 
-    //next test with a single key across the entire set
-    {
-    const vtkm::Id inputLength = 3;
-    const vtkm::Id expectedLength = 1;
-    vtkm::Id inputKeys[inputLength] =    {0, 0, 0}; // input keys
-    vtkm::Id inputValues[inputLength] =  {13, -2, -1}; // input keys
-    vtkm::Id expectedKeys[expectedLength] =   { 0};
-    vtkm::Id expectedValues[expectedLength] = {10};
-
-    IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = MakeArrayHandle(inputValues, inputLength);
-
-    IdArrayHandle keysOut, valuesOut;
-    Algorithm::ReduceByKey( keys,
-                            values,
-                            keysOut,
-                            valuesOut,
-                            vtkm::internal::Add() );
-
-    VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
-                    "Got wrong number of output keys");
-
-    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
-                    "Got wrong number of output values");
-
-    for(vtkm::Id i=0; i < expectedLength; ++i)
-      {
-      const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
-      const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
-      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
-      }
-    }
-
-
-    //next test with values in vec3d
+    //next test with a single key across the entire set, using vec3 as the
+    //value, using a custom reduce binary functor
     {
     const vtkm::Id inputLength = 3;
     const vtkm::Id expectedLength = 1;
@@ -1120,11 +1086,11 @@ private:
     vtkm::Vec<vtkm::Float64, 3> inputValues[inputLength];
     inputValues[0] = vtkm::make_Vec(13.1, 13.3, 13.5);
     inputValues[1] = vtkm::make_Vec(-2.1, -2.3, -2.5);
-    inputValues[2] = vtkm::make_Vec(-1.0, -1.0, -1.0); // input keys
+    inputValues[2] = vtkm::make_Vec(-1.0, -1.0, 1.0); // input keys
     vtkm::Id expectedKeys[expectedLength] =   { 0};
 
     vtkm::Vec<vtkm::Float64, 3> expectedValues[expectedLength];
-    expectedValues[0] = vtkm::make_Vec(10., 10., 10.);
+    expectedValues[0] = vtkm::make_Vec(27.51, 30.59, -33.75);
 
     IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> values = MakeArrayHandle(inputValues, inputLength);
@@ -1135,7 +1101,7 @@ private:
                             values,
                             keysOut,
                             valuesOut,
-                            vtkm::internal::Add() );
+                            vtkm::internal::Multiply() );
 
     VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
                     "Got wrong number of output keys");
@@ -1152,103 +1118,8 @@ private:
       }
     }
 
-    //next test with values in zip
-    {
-    const vtkm::Id inputLength = 3;
-    const vtkm::Id expectedLength = 1;
-    typedef vtkm::Float32 ValueType;
-    vtkm::Id inputKeys[inputLength] =    {0, 0, 0}; // input keys
-    ValueType inputValues1[inputLength] = {13.1f, -2.1f, -1.0f}; // input values array1
-    ValueType inputValues2[inputLength] = {13.3f, -2.3f, -1.0f}; // input values array2
-    vtkm::Id expectedKeys[expectedLength] =   { 0};
-
-    ValueType expectedValues1[expectedLength] = {10.f}; // output values 1
-    ValueType expectedValues2[expectedLength] = {10.f}; // output values 2
-
-    IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
-    typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> ValueArrayType;
-    ValueArrayType values1 = MakeArrayHandle(inputValues1, inputLength);
-    ValueArrayType values2 = MakeArrayHandle(inputValues2, inputLength);
-
-    vtkm::cont::ArrayHandleZip<ValueArrayType, ValueArrayType> valuesZip;
-    valuesZip = make_ArrayHandleZip(values1, values2); // values in zip
-
-    IdArrayHandle keysOut;
-    ValueArrayType valuesOut1;
-    ValueArrayType valuesOut2;
-    vtkm::cont::ArrayHandleZip<ValueArrayType, ValueArrayType> valuesOutZip(valuesOut1, valuesOut2);
-
-    Algorithm::ReduceByKey( keys,
-                            valuesZip,
-                            keysOut,
-                            valuesOutZip,
-                            vtkm::internal::Add() );
-
-    VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
-                    "Got wrong number of output keys");
-
-    VTKM_TEST_ASSERT(valuesOutZip.GetNumberOfValues() == expectedLength,
-                    "Got wrong number of output values");
-
-    for(vtkm::Id i=0; i < expectedLength; ++i)
-      {
-      const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
-      const vtkm::Pair<ValueType, ValueType> v = valuesOutZip.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
-      VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced vale");
-      VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced vale");
-      }
-    }
-
-    //next test with values in heterogeneous zip
-    {
-    const vtkm::Id inputLength = 3;
-    const vtkm::Id expectedLength = 1;
-    typedef vtkm::Float32 ValueType;
-    vtkm::Id inputKeys[inputLength] =    {0, 0, 0}; // input keys
-    ValueType inputValues1[inputLength] = {13.1f, -2.1f, -1.0f}; // input values array1
-
-    vtkm::Id expectedKeys[expectedLength] =   { 0};
-    ValueType expectedValues1[expectedLength] = {10.f}; // output values 1
-    ValueType expectedValues2[expectedLength] = {3.f}; // output values 2
-
-    IdArrayHandle keys = MakeArrayHandle(inputKeys, inputLength);
-    typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> ValueArrayType;
-    ValueArrayType values1 = MakeArrayHandle(inputValues1, inputLength);
-    typedef vtkm::cont::ArrayHandleConstant<ValueType> ConstValueArrayType;
-    ConstValueArrayType constOneArray(1.f, inputLength);
-
-    vtkm::cont::ArrayHandleZip<ValueArrayType, ConstValueArrayType> valuesZip;
-    valuesZip = make_ArrayHandleZip(values1, constOneArray); // values in zip
-
-    IdArrayHandle keysOut;
-    ValueArrayType valuesOut1;
-    ValueArrayType valuesOut2;
-    vtkm::cont::ArrayHandleZip<ValueArrayType, ValueArrayType> valuesOutZip(valuesOut1, valuesOut2);
-
-    Algorithm::ReduceByKey( keys,
-                        valuesZip,
-                        keysOut,
-                        valuesOutZip,
-                        vtkm::internal::Add() );
-
-    VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
-                "Got wrong number of output keys");
-
-    VTKM_TEST_ASSERT(valuesOutZip.GetNumberOfValues() == expectedLength,
-                "Got wrong number of output values");
-
-    for(vtkm::Id i=0; i < expectedLength; ++i)
-    {
-      const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
-      const vtkm::Pair<ValueType, ValueType> v = valuesOutZip.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
-      VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced value1");
-      VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced value2");
-    }
-    }
-
-    //next test with values in heterogeneous zip with diff. keys
+    //lastly test with heterogeneous zip values ( vec3, and constant array handle),
+    //and a custom reduce binary functor
     {
     const vtkm::Id inputLength = 30;
     const vtkm::Id expectedLength = 10;
@@ -1303,8 +1174,6 @@ private:
       VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
       VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced value1");
       VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced value2");
-      VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced vale");
-      VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced vale");
     }
     }
 
