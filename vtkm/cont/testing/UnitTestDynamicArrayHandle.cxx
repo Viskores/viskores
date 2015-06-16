@@ -89,6 +89,24 @@ struct CheckFunctor
   }
 };
 
+void CheckDynamicArray(vtkm::cont::DynamicArrayHandle array)
+{
+  array.CastAndCall(CheckFunctor());
+
+  VTKM_TEST_ASSERT(CheckCalled,
+                   "The functor was never called (and apparently a bad value exception not thrown).");
+}
+
+template<typename TypeList, typename StorageList>
+void CheckDynamicArray(
+    vtkm::cont::internal::DynamicArrayHandleCast<TypeList, StorageList> array)
+{
+  array.CastAndCall(CheckFunctor());
+
+  VTKM_TEST_ASSERT(CheckCalled,
+                   "The functor was never called (and apparently a bad value exception not thrown).");
+}
+
 template<typename T>
 vtkm::cont::DynamicArrayHandle CreateDynamicArray(T)
 {
@@ -103,6 +121,38 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArray(T)
         vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE));
 }
 
+template<typename T, typename DynamicArrayType>
+void TryNewInstance(T, DynamicArrayType originalArray)
+{
+  // This check should already have been performed by caller, but just in case.
+  CheckDynamicArray(originalArray);
+
+  std::cout << "Create new instance of array." << std::endl;
+  DynamicArrayType newArray = originalArray.NewInstance();
+
+  std::cout << "Get a static instance of the new array (which checks the type)."
+            << std::endl;
+  vtkm::cont::ArrayHandle<T> staticArray =
+      newArray.CastToArrayHandle(T(), VTKM_DEFAULT_STORAGE_TAG());
+
+  std::cout << "Fill the new array with invalid values and make sure the original" << std::endl
+            << "is uneffected." << std::endl;
+  staticArray.Allocate(ARRAY_SIZE);
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  {
+    staticArray.GetPortalControl().Set(index, TestValue(index+100, T()));
+  }
+  CheckDynamicArray(originalArray);
+
+  std::cout << "Set the new static array to expected values and make sure the new" << std::endl
+            << "dynamic array points to the same new values." << std::endl;
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  {
+    staticArray.GetPortalControl().Set(index, TestValue(index, T()));
+  }
+  CheckDynamicArray(newArray);
+}
+
 template<typename T>
 void TryDefaultType(T)
 {
@@ -110,10 +160,9 @@ void TryDefaultType(T)
 
   vtkm::cont::DynamicArrayHandle array = CreateDynamicArray(T());
 
-  array.CastAndCall(CheckFunctor());
+  CheckDynamicArray(array);
 
-  VTKM_TEST_ASSERT(CheckCalled,
-                   "The functor was never called (and apparently a bad value exception not thrown).");
+  TryNewInstance(T(), array);
 }
 
 struct TryBasicVTKmType
@@ -124,10 +173,9 @@ struct TryBasicVTKmType
 
     vtkm::cont::DynamicArrayHandle array = CreateDynamicArray(T());
 
-    array.ResetTypeList(vtkm::TypeListTagAll()).CastAndCall(CheckFunctor());
+    CheckDynamicArray(array.ResetTypeList(vtkm::TypeListTagAll()));
 
-    VTKM_TEST_ASSERT(CheckCalled,
-                     "The functor was never called (and apparently a bad value exception not thrown).");
+    TryNewInstance(T(), array.ResetTypeList(vtkm::TypeListTagAll()));
   }
 };
 
@@ -138,7 +186,7 @@ void TryUnusualType()
 
   try
   {
-    array.CastAndCall(CheckFunctor());
+    CheckDynamicArray(array);
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized type.");
   }
   catch (vtkm::cont::ErrorControlBadValue)
@@ -147,7 +195,7 @@ void TryUnusualType()
   }
 
   CheckCalled = false;
-  array.ResetTypeList(TypeListTagString()).CastAndCall(CheckFunctor());
+  CheckDynamicArray(array.ResetTypeList(TypeListTagString()));
   VTKM_TEST_ASSERT(CheckCalled,
                    "The functor was never called (and apparently a bad value exception not thrown).");
   std::cout << "  Found type when type list was reset." << std:: endl;
@@ -160,7 +208,7 @@ void TryUnusualStorage()
 
   try
   {
-    array.CastAndCall(CheckFunctor());
+    CheckDynamicArray(array);
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized storage.");
   }
   catch (vtkm::cont::ErrorControlBadValue)
@@ -169,9 +217,7 @@ void TryUnusualStorage()
   }
 
   CheckCalled = false;
-  array.ResetStorageList(StorageListTagUnusual()).CastAndCall(CheckFunctor());
-  VTKM_TEST_ASSERT(CheckCalled,
-                   "The functor was never called (and apparently a bad value exception not thrown).");
+  CheckDynamicArray(array.ResetStorageList(StorageListTagUnusual()));
   std::cout << "  Found instance when storage list was reset." << std:: endl;
 }
 
@@ -182,7 +228,7 @@ void TryUnusualTypeAndStorage()
 
   try
   {
-    array.CastAndCall(CheckFunctor());
+    CheckDynamicArray(array);
     VTKM_TEST_FAIL(
           "CastAndCall failed to error for unrecognized type/storage.");
   }
@@ -194,7 +240,7 @@ void TryUnusualTypeAndStorage()
 
   try
   {
-    array.ResetTypeList(TypeListTagString()).CastAndCall(CheckFunctor());
+    CheckDynamicArray(array.ResetTypeList(TypeListTagString()));
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized storage.");
   }
   catch (vtkm::cont::ErrorControlBadValue)
@@ -204,8 +250,7 @@ void TryUnusualTypeAndStorage()
 
   try
   {
-    array.ResetStorageList(StorageListTagUnusual()).
-        CastAndCall(CheckFunctor());
+    CheckDynamicArray(array.ResetStorageList(StorageListTagUnusual()));
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized type.");
   }
   catch (vtkm::cont::ErrorControlBadValue)
@@ -214,21 +259,15 @@ void TryUnusualTypeAndStorage()
   }
 
   CheckCalled = false;
-  array
-      .ResetTypeList(TypeListTagString())
-      .ResetStorageList(StorageListTagUnusual())
-      .CastAndCall(CheckFunctor());
-  VTKM_TEST_ASSERT(CheckCalled,
-                   "The functor was never called (and apparently a bad value exception not thrown).");
+  CheckDynamicArray(array
+                    .ResetTypeList(TypeListTagString())
+                    .ResetStorageList(StorageListTagUnusual()));
   std::cout << "  Found instance when type and storage lists were reset." << std:: endl;
 
   CheckCalled = false;
-  array
-      .ResetStorageList(StorageListTagUnusual())
-      .ResetTypeList(TypeListTagString())
-      .CastAndCall(CheckFunctor());
-  VTKM_TEST_ASSERT(CheckCalled,
-                   "The functor was never called (and apparently a bad value exception not thrown).");
+  CheckDynamicArray(array
+                    .ResetStorageList(StorageListTagUnusual())
+                    .ResetTypeList(TypeListTagString()));
   std::cout << "  Found instance when storage and type lists were reset." << std:: endl;
 }
 
