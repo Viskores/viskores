@@ -95,27 +95,6 @@ template<typename ResultType, typename Function>
   }
 
   template<typename T>
-  VTKM_EXEC_EXPORT ResultType operator()(const thrust::system::cuda::reference<T> &x,
-                                         const T &y) const
-  {
-    return m_f(*x, y);
-  }
-
-  template<typename T>
-  VTKM_EXEC_EXPORT ResultType operator()(const T &x,
-                                         const thrust::system::cuda::reference<T> &y) const
-  {
-    return m_f(x, *y);
-  }
-
-  template<typename T>
-  VTKM_EXEC_EXPORT ResultType operator()(const thrust::system::cuda::reference<T> &x,
-                                         const thrust::system::cuda::reference<T> &y) const
-  {
-    return m_f(*x, *y);
-  }
-
-  template<typename T>
   VTKM_EXEC_EXPORT ResultType operator()(const thrust::system::cuda::pointer<T> x,
                                          const T* y) const
   {
