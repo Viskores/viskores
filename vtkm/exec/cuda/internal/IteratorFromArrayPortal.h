@@ -113,7 +113,7 @@ public:
 
   VTKM_EXEC_EXPORT
   PortalValue<ArrayPortalType>
-  operator[](std::size_t idx) const
+  operator[](std::ptrdiff_t idx) const //NEEDS to be signed
   {
     return PortalValue<ArrayPortalType>(this->Portal,
            this->Index + static_cast<vtkm::Id>(idx) );

@@ -107,7 +107,7 @@ public:
 
   VTKM_CONT_EXPORT
   detail::IteratorFromArrayPortalValue<ArrayPortalType>
-  operator[](std::size_t idx) const
+  operator[](std::ptrdiff_t idx) const //NEEDS to be signed
   {
     return detail::IteratorFromArrayPortalValue<ArrayPortalType>(this->Portal,
            this->Index + static_cast<vtkm::Id>(idx) );
