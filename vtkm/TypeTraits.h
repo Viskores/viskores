@@ -25,6 +25,10 @@
 
 namespace vtkm {
 
+/// Tag used to identify types that aren't Real, Integer, Scalar or Vector.
+///
+struct TypeTraitsUnkownTag {};
+
 /// Tag used to identify types that store real (floating-point) numbers. A
 /// TypeTraits class will typedef this class to NumericTag if it stores real
 /// numbers (or vectors of real numbers).
@@ -48,9 +52,6 @@ struct TypeTraitsScalarTag {};
 ///
 struct TypeTraitsVectorTag {};
 
-template<typename T> struct TypeTraits;
-
-#ifdef VTKM_DOXYGEN_ONLY
 
 /// The TypeTraits class provides helpful compile-time information about the
 /// basic types used in VTKm (and a few others for convienience). The majority
@@ -60,22 +61,20 @@ template<typename T> struct TypeTraits;
 template<typename T>
 class TypeTraits
 {
-  typedef int tag_type; // Shut up, test compile.
 public:
-
   /// \brief A tag to determing whether the type is integer or real.
   ///
   /// This tag is either TypeTraitsRealTag or TypeTraitsIntegerTag.
-  typedef tag_type NumericTag;
+  typedef TypeTraitsUnkownTag NumericTag;
 
   /// \brief A tag to determine whether the type has multiple components.
   ///
   /// This tag is either TypeTraitsScalarTag or TypeTraitsVectorTag. Scalars can
   /// also be treated as vectors.
-  typedef tag_type DimensionalityTag;
-};
+  typedef TypeTraitsUnkownTag DimensionalityTag;
 
-#endif //VTKM_DOXYGEN_ONLY
+  VTKM_EXEC_CONT_EXPORT static T ZeroInitialization() { return T(); }
+};
 
 // Const types should have the same traits as their non-const counterparts.
 //
@@ -87,12 +86,14 @@ struct TypeTraits<const T> : TypeTraits<T>
   template<> struct TypeTraits<T> { \
     typedef TypeTraitsRealTag NumericTag; \
     typedef TypeTraitsScalarTag DimensionalityTag; \
+    VTKM_EXEC_CONT_EXPORT static T ZeroInitialization() { return T(); } \
   }
 
 #define VTKM_BASIC_INTEGER_TYPE(T) \
   template<> struct TypeTraits<T> { \
     typedef TypeTraitsIntegerTag NumericTag; \
     typedef TypeTraitsScalarTag DimensionalityTag; \
+    VTKM_EXEC_CONT_EXPORT static T ZeroInitialization() { return T(); } \
   }
 
 /// Traits for basic C++ types.
@@ -119,6 +120,10 @@ struct TypeTraits<vtkm::Vec<T,Size> >
 {
   typedef typename vtkm::TypeTraits<T>::NumericTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<T,Size> ZeroInitialization()
+    { return vtkm::Vec<T,Size>( (T()) ); }
 };
 
 /// Traits for Pair types.
@@ -126,8 +131,11 @@ struct TypeTraits<vtkm::Vec<T,Size> >
 template<typename T, typename U>
 struct TypeTraits<vtkm::Pair<T,U> >
 {
-  typedef typename vtkm::TypeTraits<T>::NumericTag NumericTag;
+  typedef TypeTraitsUnkownTag NumericTag;
   typedef TypeTraitsScalarTag DimensionalityTag;
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Pair<T,U> ZeroInitialization() { return vtkm::Pair<T,U>(); }
 };
 
 } // namespace vtkm

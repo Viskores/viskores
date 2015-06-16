@@ -39,7 +39,6 @@
 namespace vtkm {
 namespace cont {
 
-
 template<>
 struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial> :
     vtkm::cont::internal::DeviceAdapterAlgorithmGeneral<
@@ -152,7 +151,7 @@ public:
     PortalIn inputPortal = input.PrepareForInput(Device());
     PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
-    if (numberOfValues <= 0) { return T(); }
+    if (numberOfValues <= 0) { return vtkm::TypeTraits<T>::ZeroInitialization(); }
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
@@ -181,7 +180,7 @@ public:
     PortalIn inputPortal = input.PrepareForInput(Device());
     PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
-    if (numberOfValues <= 0) { return T(); }
+    if (numberOfValues <= 0) { return vtkm::TypeTraits<T>::ZeroInitialization(); }
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
@@ -207,7 +206,7 @@ public:
     PortalIn inputPortal = input.PrepareForInput(Device());
     PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
-    if (numberOfValues <= 0) { return T(); }
+    if (numberOfValues <= 0) { return vtkm::TypeTraits<T>::ZeroInitialization(); }
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
@@ -219,7 +218,7 @@ public:
     std::copy_backward(vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
                        vtkm::cont::ArrayPortalToIteratorEnd(outputPortal)-1,
                        vtkm::cont::ArrayPortalToIteratorEnd(outputPortal));
-    outputPortal.Set(0, 0);
+    outputPortal.Set(0, vtkm::TypeTraits<T>::ZeroInitialization());
     return fullSum;
   }
 

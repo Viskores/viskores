@@ -331,7 +331,7 @@ bool test_equal(const vtkm::Pair<T1,T2> &pair1,
 /// Helper function for printing out vectors during testing.
 ///
 template<typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT_EXPORT
+VTKM_CONT_EXPORT
 std::ostream &operator<<(std::ostream &stream, const vtkm::Vec<T,Size> &vec)
 {
   stream << "[";

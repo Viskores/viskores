@@ -20,6 +20,7 @@
 #ifndef vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
 #define vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
 
+#include <vtkm/TypeTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
@@ -765,7 +766,10 @@ public:
 
     // Set first value in output (always 0).
     DerivedAlgorithm::Schedule(
-          SetConstantKernel<DestPortalType>(destPortal,0), 1);
+          SetConstantKernel<DestPortalType>(
+                                    destPortal,
+                                    vtkm::TypeTraits<T>::ZeroInitialization()),
+          1);
     // Shift remaining values over by one.
     DerivedAlgorithm::Schedule(
           CopyKernel<SrcPortalType,DestPortalType>(srcPortal,

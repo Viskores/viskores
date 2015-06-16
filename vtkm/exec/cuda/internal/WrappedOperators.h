@@ -25,6 +25,20 @@
 #include <vtkm/internal/ExportMacros.h>
 #include <vtkm/exec/cuda/internal/IteratorFromArrayPortal.h>
 
+// Disable warnings we check vtkm for but Thrust does not.
+#if defined(__GNUC__) || defined(____clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
+
+#include <thrust/system/cuda/memory.h>
+
+#if defined(__GNUC__) || defined(____clang__)
+#pragma GCC diagnostic pop
+#endif // gcc || clang
+
 namespace vtkm {
 namespace exec {
 namespace cuda {
@@ -38,6 +52,11 @@ template<typename ResultType, typename Function>
   struct WrappedBinaryOperator
 {
   Function m_f;
+
+  VTKM_EXEC_EXPORT
+  WrappedBinaryOperator()
+    : m_f()
+  {}
 
   VTKM_CONT_EXPORT
   WrappedBinaryOperator(const Function &f)
@@ -73,6 +92,55 @@ template<typename ResultType, typename Function>
     typedef typename PortalValue<T>::ValueType ValueTypeT;
     typedef typename PortalValue<U>::ValueType ValueTypeU;
     return m_f((ValueTypeT)x, (ValueTypeU)y);
+  }
+
+  template<typename T>
+  VTKM_EXEC_EXPORT ResultType operator()(const thrust::system::cuda::reference<T> &x,
+                                         const T &y) const
+  {
+    return m_f(*x, y);
+  }
+
+  template<typename T>
+  VTKM_EXEC_EXPORT ResultType operator()(const T &x,
+                                         const thrust::system::cuda::reference<T> &y) const
+  {
+    return m_f(x, *y);
+  }
+
+  template<typename T>
+  VTKM_EXEC_EXPORT ResultType operator()(const thrust::system::cuda::reference<T> &x,
+                                         const thrust::system::cuda::reference<T> &y) const
+  {
+    return m_f(*x, *y);
+  }
+
+  template<typename T>
+  VTKM_EXEC_EXPORT ResultType operator()(const thrust::system::cuda::pointer<T> x,
+                                         const T* y) const
+  {
+    return m_f(*x, *y);
+  }
+
+  template<typename T>
+  VTKM_EXEC_EXPORT ResultType operator()(const thrust::system::cuda::pointer<T> x,
+                                         const T& y) const
+  {
+    return m_f(*x, y);
+  }
+
+  template<typename T>
+  VTKM_EXEC_EXPORT ResultType operator()(const T& x,
+                                         const thrust::system::cuda::pointer<T> y) const
+  {
+    return m_f(x, *y);
+  }
+
+  template<typename T>
+  VTKM_EXEC_EXPORT ResultType operator()(const thrust::system::cuda::pointer<T> x,
+                                         const thrust::system::cuda::pointer<T> y) const
+  {
+    return m_f(*x, *y);
   }
 
 };
