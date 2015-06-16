@@ -173,6 +173,20 @@ public:
   VTKM_CONT_EXPORT
   void CastAndCall(const Functor &f, TypeList, StorageList) const;
 
+  /// \brief Create a new array of the same type as this array.
+  ///
+  /// This method creates a new array that is the same type as this one and
+  /// returns a new dynamic array handle for it. This method is convenient when
+  /// creating output arrays that should be the same type as some input array.
+  ///
+  VTKM_CONT_EXPORT
+  DynamicArrayHandle NewInstance() const
+  {
+    DynamicArrayHandle newArray;
+    newArray.ArrayStorage = this->ArrayStorage->NewInstance();
+    return newArray;
+  }
+
 private:
   boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
     ArrayStorage;
@@ -322,6 +336,13 @@ public:
   void CastAndCall(const Functor &f, TL, CL) const
   {
     this->DynamicArrayHandle::CastAndCall(f, TL(), CL());
+  }
+
+  VTKM_CONT_EXPORT
+  DynamicArrayHandleCast<TypeList,StorageList> NewInstance() const
+  {
+    return DynamicArrayHandleCast<TypeList,StorageList>(
+          this->DynamicArrayHandle::NewInstance());
   }
 };
 

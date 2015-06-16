@@ -22,6 +22,8 @@
 
 #include <vtkm/Types.h>
 
+#include <boost/smart_ptr/shared_ptr.hpp>
+
 namespace vtkm {
 namespace cont {
 namespace internal {
@@ -30,6 +32,9 @@ namespace internal {
 ///
 struct SimplePolymorphicContainerBase {
   virtual ~SimplePolymorphicContainerBase() {  }
+
+  virtual boost::shared_ptr<SimplePolymorphicContainerBase>
+  NewInstance() const = 0;
 };
 
 /// \brief Simple object container that can use C++ run-time type information.
@@ -51,6 +56,12 @@ struct SimplePolymorphicContainer : public SimplePolymorphicContainerBase
 
   VTKM_CONT_EXPORT
   SimplePolymorphicContainer(const T &src) : Item(src) {  }
+
+  virtual boost::shared_ptr<SimplePolymorphicContainerBase> NewInstance() const
+  {
+    return boost::shared_ptr<SimplePolymorphicContainerBase>(
+          new SimplePolymorphicContainer<T>());
+  }
 };
 
 }
