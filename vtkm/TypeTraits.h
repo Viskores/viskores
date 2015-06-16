@@ -21,7 +21,6 @@
 #define vtk_m_TypeTraits_h
 
 #include <vtkm/Types.h>
-#include <vtkm/Pair.h>
 
 namespace vtkm {
 
@@ -124,18 +123,6 @@ struct TypeTraits<vtkm::Vec<T,Size> >
   VTKM_EXEC_CONT_EXPORT
   static vtkm::Vec<T,Size> ZeroInitialization()
     { return vtkm::Vec<T,Size>( (T()) ); }
-};
-
-/// Traits for Pair types.
-///
-template<typename T, typename U>
-struct TypeTraits<vtkm::Pair<T,U> >
-{
-  typedef TypeTraitsUnkownTag NumericTag;
-  typedef TypeTraitsScalarTag DimensionalityTag;
-
-  VTKM_EXEC_CONT_EXPORT
-  static vtkm::Pair<T,U> ZeroInitialization() { return vtkm::Pair<T,U>(); }
 };
 
 } // namespace vtkm
