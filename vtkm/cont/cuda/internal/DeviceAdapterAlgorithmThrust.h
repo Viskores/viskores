@@ -25,6 +25,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/TypeTraits.h>
 
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
 
@@ -387,7 +388,7 @@ private:
                                                 IteratorBegin(input),
                                                 IteratorEnd(input),
                                                 IteratorBegin(output),
-                                                vtkm::cont::internal::zeroinit::init<ValueType>(),
+                                                vtkm::TypeTraits<ValueType>::ZeroInitialization(),
                                                 bop);
 
     //return the value at the last index in the array, as that is the sum
@@ -692,7 +693,7 @@ public:
     if (numberOfValues <= 0)
       {
       output.PrepareForOutput(0, DeviceAdapterTag());
-      return 0;
+      return vtkm::TypeTraits<T>::ZeroInitialization();
       }
 
     return ScanExclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
@@ -708,7 +709,7 @@ public:
     if (numberOfValues <= 0)
       {
       output.PrepareForOutput(0, DeviceAdapterTag());
-      return 0;
+      return vtkm::TypeTraits<T>::ZeroInitialization();
       }
 
     return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
@@ -725,7 +726,7 @@ public:
     if (numberOfValues <= 0)
       {
       output.PrepareForOutput(0, DeviceAdapterTag());
-      return 0;
+      return vtkm::TypeTraits<T>::ZeroInitialization();
       }
 
     return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),

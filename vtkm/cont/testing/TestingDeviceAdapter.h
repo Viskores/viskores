@@ -143,9 +143,6 @@ private:
   typedef typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>
       ::PortalConst IdPortalConstType;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault,3>,StorageTag>
-      Vec3ArrayHandle;
-
   typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>
       Algorithm;
 
@@ -787,6 +784,9 @@ private:
     std::cout << "Sort by keys" << std::endl;
 
     typedef vtkm::Vec<FloatDefault,3> Vec3;
+    typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault,3>,StorageTag>
+      Vec3ArrayHandle;
+
 
     vtkm::Id testKeys[ARRAY_SIZE];
     Vec3 testValues[ARRAY_SIZE];
@@ -1183,6 +1183,8 @@ private:
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Inclusive Scan" << std::endl;
+
+    {
     //construct the index array
     IdArrayHandle array;
     Algorithm::Schedule(
@@ -1208,6 +1210,31 @@ private:
       VTKM_TEST_ASSERT(partialSum == triangleNumber * OFFSET,
                        "Incorrect partial sum");
     }
+
+    }
+
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Inclusive Scan with a vtkm::Vec" << std::endl;
+
+    {
+    typedef vtkm::Vec<Float64,3> Vec3;
+    typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64,3>,StorageTag>
+      Vec3ArrayHandle;
+
+    Vec3 testValues[ARRAY_SIZE];
+
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      testValues[i] = TestValue(i, Vec3());
+    }
+    Vec3ArrayHandle values = MakeArrayHandle(testValues, ARRAY_SIZE);
+
+    Vec3 sum = Algorithm::ScanInclusive(values, values);
+    std::cout << "Sum that was returned " << sum << std::endl;
+    VTKM_TEST_ASSERT( test_equal(sum, vtkm::make_Vec(6996.0,7996.0,8996.0) ),
+                      "Got bad sum from Inclusive Scan");
+    }
+
   }
 
   static VTKM_CONT_EXPORT void TestScanInclusiveWithComparisonObject()
@@ -1263,6 +1290,7 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Exclusive Scan" << std::endl;
 
+    {
     //construct the index array
     IdArrayHandle array;
     Algorithm::Schedule(
@@ -1273,7 +1301,7 @@ private:
     // we know have an array whose sum = (OFFSET * ARRAY_SIZE),
     // let's validate that
     vtkm::Id sum = Algorithm::ScanExclusive(array, array);
-
+    std::cout << "Sum that was returned " << sum << std::endl;
     VTKM_TEST_ASSERT(sum == (OFFSET * ARRAY_SIZE),
                      "Got bad sum from Exclusive Scan");
 
@@ -1288,6 +1316,29 @@ private:
       triangleNumber = ((pos*(pos+1))/2);
       VTKM_TEST_ASSERT(partialSum == triangleNumber * OFFSET,
                        "Incorrect partial sum");
+    }
+    }
+
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Exclusive Scan with a vtkm::Vec" << std::endl;
+
+    {
+    typedef vtkm::Vec<Float64,3> Vec3;
+    typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64,3>,StorageTag>
+      Vec3ArrayHandle;
+
+    Vec3 testValues[ARRAY_SIZE];
+
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      testValues[i] = TestValue(i, Vec3());
+    }
+    Vec3ArrayHandle values = MakeArrayHandle(testValues, ARRAY_SIZE);
+
+    Vec3 sum = Algorithm::ScanExclusive(values, values);
+    std::cout << "Sum that was returned " << sum << std::endl;
+    VTKM_TEST_ASSERT( test_equal(sum, vtkm::make_Vec(6996.0,7996.0,8996.0) ),
+                      "Got bad sum from Exclusive Scan");
     }
   }
 
@@ -1367,10 +1418,10 @@ private:
 
       TestReduceByKey();
 
+      TestScanExclusive();
+
       TestScanInclusive();
       TestScanInclusiveWithComparisonObject();
-
-      TestScanExclusive();
 
       TestSort();
       TestSortWithComparisonObject();

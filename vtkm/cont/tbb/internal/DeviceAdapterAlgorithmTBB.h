@@ -89,13 +89,15 @@ private:
     ScanInclusiveBody(const InputPortalType &inputPortal,
                       const OutputPortalType &outputPortal,
                       BinaryOperationType binaryOperation)
-      : Sum(), InputPortal(inputPortal), OutputPortal(outputPortal),
+      : Sum( vtkm::TypeTraits<ValueType>::ZeroInitialization() ),
+        InputPortal(inputPortal),
+        OutputPortal(outputPortal),
         BinaryOperation(binaryOperation)
     {  }
 
     VTKM_EXEC_CONT_EXPORT
     ScanInclusiveBody(const ScanInclusiveBody &body, ::tbb::split)
-      : Sum(),
+      : Sum( vtkm::TypeTraits<ValueType>::ZeroInitialization() ),
         InputPortal(body.InputPortal),
         OutputPortal(body.OutputPortal),
         BinaryOperation(body.BinaryOperation) {  }
@@ -194,13 +196,15 @@ private:
     ScanExclusiveBody(const InputPortalType &inputPortal,
                       const OutputPortalType &outputPortal,
                       BinaryOperationType binaryOperation)
-      : Sum(), InputPortal(inputPortal), OutputPortal(outputPortal),
+      : Sum( vtkm::TypeTraits<ValueType>::ZeroInitialization() ),
+        InputPortal(inputPortal),
+        OutputPortal(outputPortal),
         BinaryOperation(binaryOperation)
     {  }
 
     VTKM_EXEC_CONT_EXPORT
     ScanExclusiveBody(const ScanExclusiveBody &body, ::tbb::split)
-      : Sum(),
+      : Sum( vtkm::TypeTraits<ValueType>::ZeroInitialization() ),
         InputPortal(body.InputPortal),
         OutputPortal(body.OutputPortal),
         BinaryOperation(body.BinaryOperation) {  }
