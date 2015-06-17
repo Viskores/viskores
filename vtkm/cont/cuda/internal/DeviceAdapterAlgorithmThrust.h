@@ -588,6 +588,12 @@ public:
       vtkm::cont::ArrayHandle<U,SOut> &output)
   {
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
+
+    //We need call PrepareForInput on the input argument before invoking a
+    //function. The order of execution of parameters of a function is undefined
+    //so we need to make sure input is called before output, or else in-place
+    //use case breaks.
+    input.PrepareForInput(DeviceAdapterTag());
     CopyPortal(input.PrepareForInput(DeviceAdapterTag()),
                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
@@ -696,6 +702,11 @@ public:
       return vtkm::TypeTraits<T>::ZeroInitialization();
       }
 
+    //We need call PrepareForInput on the input argument before invoking a
+    //function. The order of execution of parameters of a function is undefined
+    //so we need to make sure input is called before output, or else in-place
+    //use case breaks.
+    input.PrepareForInput(DeviceAdapterTag());
     return ScanExclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
@@ -712,6 +723,11 @@ public:
       return vtkm::TypeTraits<T>::ZeroInitialization();
       }
 
+    //We need call PrepareForInput on the input argument before invoking a
+    //function. The order of execution of parameters of a function is undefined
+    //so we need to make sure input is called before output, or else in-place
+    //use case breaks.
+    input.PrepareForInput(DeviceAdapterTag());
     return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
@@ -729,6 +745,11 @@ public:
       return vtkm::TypeTraits<T>::ZeroInitialization();
       }
 
+    //We need call PrepareForInput on the input argument before invoking a
+    //function. The order of execution of parameters of a function is undefined
+    //so we need to make sure input is called before output, or else in-place
+    //use case breaks.
+    input.PrepareForInput(DeviceAdapterTag());
     return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
                                binaryOp);
