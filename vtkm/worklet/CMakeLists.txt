@@ -25,6 +25,8 @@ set(headers
   WorkletMapTopology.h
   CellAverage.h
   PointElevation.h
+  VertexClustering.h
+  AverageByKey.h
   )
 
 #-----------------------------------------------------------------------------
