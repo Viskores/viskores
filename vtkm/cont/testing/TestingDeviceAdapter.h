@@ -22,12 +22,11 @@
 
 #include <vtkm/TypeTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ErrorControlOutOfMemory.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -719,27 +718,10 @@ private:
       vtkm::Id sorted2 = sorted.GetPortalConstControl().Get(i+1);
       VTKM_TEST_ASSERT(sorted1 <= sorted2, "Values not properly sorted.");
     }
-
-    std::cout << "-------------------------------------------------" << std::endl;
-    std::cout << "Sort of a ArrayHandleZip" << std::endl;
-
-    //verify that we can use ArrayHandleZip inplace
-    vtkm::cont::ArrayHandleZip< IdArrayHandle, IdArrayHandle> zipped(unsorted, sorted);
-
-    //verify we can use the default an custom operator sort with zip handle
-    Algorithm::Sort(zipped, comparison::SortGreater());
-    Algorithm::Sort(zipped);
-
-    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
-    {
-      vtkm::Pair<vtkm::Id,vtkm::Id> kv_sorted = zipped.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(( OFFSET +  ( i / (ARRAY_SIZE/50)) ) == kv_sorted.first,
-                       "ArrayZipHandle improperly sorted");
-    }
   }
 
   static VTKM_CONT_EXPORT void TestSortWithComparisonObject()
-    {
+  {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Sort with comparison object" << std::endl;
     vtkm::Id testData[ARRAY_SIZE];
@@ -775,6 +757,62 @@ private:
       vtkm::Id sorted2 = comp_sorted.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT(sorted1 == sorted2,
                        "Got bad sort values when using SortLesser");
+    }
+  }
+
+  static VTKM_CONT_EXPORT void TestSortWithFancyArrays()
+  {
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "Sort of a ArrayHandleZip" << std::endl;
+
+    vtkm::Id testData[ARRAY_SIZE];
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      testData[i]= OFFSET+((ARRAY_SIZE-i) % 50);
+    }
+
+    IdArrayHandle unsorted = MakeArrayHandle(testData, ARRAY_SIZE);
+    IdArrayHandle sorted;
+    Algorithm::Copy(unsorted, sorted);
+
+    //verify that we can use ArrayHandleZip inplace
+    vtkm::cont::ArrayHandleZip< IdArrayHandle, IdArrayHandle> zipped(unsorted, sorted);
+
+    //verify we can use sort with zip handle
+    Algorithm::Sort(zipped, comparison::SortGreater());
+    Algorithm::Sort(zipped);
+
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+    {
+      vtkm::Pair<vtkm::Id,vtkm::Id> kv_sorted = zipped.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(( OFFSET +  ( i / (ARRAY_SIZE/50)) ) == kv_sorted.first,
+                       "ArrayZipHandle improperly sorted");
+    }
+
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "Sort of a ArrayHandlePermutation" << std::endl;
+
+    //verify that we can use ArrayHandlePermutation inplace
+    vtkm::cont::ArrayHandleCounting< vtkm::Id > index(0, ARRAY_SIZE);
+    vtkm::cont::ArrayHandlePermutation< vtkm::cont::ArrayHandleCounting< vtkm::Id >,
+                                        IdArrayHandle> perm(index, sorted);
+
+    //verify we can use a custom operator sort with permutation handle
+    Algorithm::Sort(perm, comparison::SortGreater());
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+    {
+      vtkm::Id sorted_value = perm.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(( OFFSET +  ( (ARRAY_SIZE-(i+1)) / (ARRAY_SIZE/50)) ) == sorted_value,
+                       "ArrayZipPermutation improperly sorted");
+    }
+
+    //verify we can use the default sort with permutation handle
+    Algorithm::Sort(perm);
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+    {
+      vtkm::Id sorted_value = perm.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(( OFFSET +  ( i / (ARRAY_SIZE/50)) ) == sorted_value,
+                       "ArrayZipPermutation improperly sorted");
     }
   }
 
@@ -950,7 +988,6 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce" << std::endl;
 
-    {
     //construct the index array
     IdArrayHandle array;
     Algorithm::Schedule(
@@ -971,8 +1008,34 @@ private:
 
     VTKM_TEST_ASSERT(reduce_sum == inclusive_sum,
                      "Got different sums from Reduce and ScanInclusive");
-    }
+  }
 
+  static VTKM_CONT_EXPORT void TestReduceWithComparisonObject()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Reduce with comparison object " << std::endl;
+
+    //construct the index array. Assign an abnormally large value
+    //to the middle of the array, that should be what we see as our sum.
+    vtkm::Id testData[ARRAY_SIZE];
+    const vtkm::Id maxValue = ARRAY_SIZE*2;
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      testData[i]= i;
+    }
+    testData[ARRAY_SIZE/2] = maxValue;
+
+    IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
+    vtkm::Id largestValue = Algorithm::Reduce(input,
+                                              vtkm::Id(),
+                                              comparison::MaxValue());
+
+    VTKM_TEST_ASSERT(largestValue == maxValue,
+                    "Got bad value from Reduce with comparison object");
+  }
+
+  static VTKM_CONT_EXPORT void TestReduceWithFancyArrays()
+  {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce with ArrayHandleZip" << std::endl;
     {
@@ -1001,31 +1064,34 @@ private:
                      "Got bad sum from Reduce with initial value");
     }
 
-
-  }
-
-  static VTKM_CONT_EXPORT void TestReduceWithComparisonObject()
-  {
     std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing Reduce with comparison object " << std::endl;
-
-    //construct the index array. Assign an abnormally large value
-    //to the middle of the array, that should be what we see as our sum.
-    vtkm::Id testData[ARRAY_SIZE];
-    const vtkm::Id maxValue = ARRAY_SIZE*2;
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    std::cout << "Testing Reduce with ArrayHandlePermutation" << std::endl;
     {
-      testData[i]= i;
+    //lastly test with heterogeneous zip values ( vec3, and constant array handle),
+    //and a custom reduce binary functor
+    const vtkm::Id indexLength = 30;
+    const vtkm::Id valuesLength = 10;
+    typedef vtkm::Float32 ValueType;
+
+    vtkm::Id indexs[indexLength] =    {0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,
+                                       5,5,5,1,4,9,7,7,7,8,8,8,0,1,2};
+    ValueType values[valuesLength] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f,
+                                      6.0f, 7.0f, 8.0f, 9.0f, -2.0f};
+    const ValueType expectedSum = 125;
+
+    IdArrayHandle indexHandle = MakeArrayHandle(indexs, indexLength);
+    vtkm::cont::ArrayHandle<ValueType> valueHandle = MakeArrayHandle(values, valuesLength);
+
+    vtkm::cont::ArrayHandlePermutation< IdArrayHandle, vtkm::cont::ArrayHandle<ValueType> > perm;
+    perm = vtkm::cont::make_ArrayHandlePermutation(indexHandle, valueHandle);
+
+    const ValueType sum = Algorithm::Reduce(perm, ValueType(0.0f));
+
+    std::cout << "sum: " << sum << std::endl;
+    VTKM_TEST_ASSERT( ( sum == expectedSum),
+                     "Got bad sum from Reduce with permutation handle");
     }
-    testData[ARRAY_SIZE/2] = maxValue;
 
-    IdArrayHandle input = MakeArrayHandle(testData, ARRAY_SIZE);
-    vtkm::Id largestValue = Algorithm::Reduce(input,
-                                              vtkm::Id(),
-                                              comparison::MaxValue());
-
-    VTKM_TEST_ASSERT(largestValue == maxValue,
-                    "Got bad value from Reduce with comparison object");
   }
 
   static VTKM_CONT_EXPORT void TestReduceByKey()
@@ -1116,11 +1182,17 @@ private:
       VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
       VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
       }
+      }
     }
+
+   static VTKM_CONT_EXPORT void TestReduceByKeyWithFancyArrays()
+    {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Reduce By Key with Fancy Arrays" << std::endl;
+
 
     //lastly test with heterogeneous zip values ( vec3, and constant array handle),
     //and a custom reduce binary functor
-    {
     const vtkm::Id inputLength = 30;
     const vtkm::Id expectedLength = 10;
     typedef vtkm::Float32 ValueType;
@@ -1175,8 +1247,6 @@ private:
       VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced value1");
       VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced value2");
     }
-    }
-
   }
 
   static VTKM_CONT_EXPORT void TestScanInclusive()
@@ -1415,8 +1485,10 @@ private:
 
       TestReduce();
       TestReduceWithComparisonObject();
+      TestReduceWithFancyArrays();
 
       TestReduceByKey();
+      TestReduceByKeyWithFancyArrays();
 
       TestScanExclusive();
 
@@ -1425,6 +1497,7 @@ private:
 
       TestSort();
       TestSortWithComparisonObject();
+      TestSortWithFancyArrays();
       TestSortByKey();
 
       TestLowerBoundsWithComparisonObject();
