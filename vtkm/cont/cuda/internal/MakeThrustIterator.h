@@ -39,7 +39,6 @@
 #include <thrust/functional.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/transform_iterator.h>
-#include <thrust/iterator/zip_iterator.h>
 
 #if defined(__GNUC__) || defined(____clang__)
 #pragma GCC diagnostic pop
@@ -53,7 +52,6 @@ namespace detail {
 
 // Tags to specify what type of thrust iterator to use.
 struct ThrustIteratorTransformTag {  };
-struct ThrustIteratorZipTag {  };
 struct ThrustIteratorDevicePtrTag {  };
 
 // Traits to help classify what thrust iterators will be used.
@@ -121,16 +119,6 @@ typename IteratorTraits<PortalType>::IteratorType
 MakeIteratorBegin(PortalType portal, detail::ThrustIteratorTransformTag)
 {
   return vtkm::exec::cuda::internal::IteratorFromArrayPortal<PortalType>(portal,0);
-}
-
-template<class PortalType>
-VTKM_CONT_EXPORT
-typename IteratorTraits<PortalType>::IteratorType
-MakeIteratorBegin(PortalType portal, detail::ThrustIteratorZipTag)
-{
-    return MakeZipIterator(portal.GetFirstPortal(),
-                           portal.GetSecondPortal()
-                           );
 }
 
 template<class PortalType>
