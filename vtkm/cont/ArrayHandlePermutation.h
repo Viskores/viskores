@@ -36,11 +36,16 @@ class ArrayPortalPermutationExec
 {
 public:
   typedef typename ValuePortalType::ValueType ValueType;
+  typedef ValueType IteratorType;
+
+  VTKM_EXEC_CONT_EXPORT
+  ArrayPortalPermutationExec( )
+    : IndexPortal(), ValuePortal() {  }
 
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalPermutationExec(
-      const IndexPortalType &indexPortal = IndexPortalType(),
-      const ValuePortalType &valuePortal = ValuePortalType())
+      const IndexPortalType &indexPortal,
+      const ValuePortalType &valuePortal)
     : IndexPortal(indexPortal), ValuePortal(valuePortal) {  }
 
   /// Copy constructor for any other ArrayPortalPermutation with delegate
@@ -55,7 +60,7 @@ public:
     : IndexPortal(src.GetIndexPortal()), ValuePortal(src.GetValuePortal())
   {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
     return this->IndexPortal.GetNumberOfValues();
   }
@@ -97,11 +102,16 @@ class ArrayPortalPermutationCont
 {
 public:
   typedef typename ValuePortalType::ValueType ValueType;
+  typedef ValueType IteratorType;
+
+  VTKM_CONT_EXPORT
+  ArrayPortalPermutationCont( )
+    : IndexPortal(), ValuePortal() {  }
 
   VTKM_CONT_EXPORT
   ArrayPortalPermutationCont(
-      const IndexPortalType &indexPortal = IndexPortalType(),
-      const ValuePortalType &valuePortal = ValuePortalType())
+      const IndexPortalType &indexPortal,
+      const ValuePortalType &valuePortal)
     : IndexPortal(indexPortal), ValuePortal(valuePortal) {  }
 
   /// Copy constructor for any other ArrayPortalPermutation with delegate
@@ -110,7 +120,7 @@ public:
   /// const cast).
   ///
   template<typename OtherIP, typename OtherVP>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_CONT_EXPORT
   ArrayPortalPermutationCont(
       const ArrayPortalPermutationCont<OtherIP,OtherVP> &src)
     : IndexPortal(src.GetIndexPortal()), ValuePortal(src.GetValuePortal())
