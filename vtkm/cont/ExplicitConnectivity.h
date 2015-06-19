@@ -161,7 +161,7 @@ public:
     for (vtkm::Id i=0; i<this->NumShapes; ++i)
     {
       MapCellToConnectivityIndex.GetPortalControl().Set(i, counter);
-      counter += this->NumIndices.GetPortalControl().Get(i);
+      counter += this->NumIndices.GetPortalConstControl().Get(i);
     }
   }
 
@@ -211,6 +211,10 @@ public:
       out<<"\n";
   }
 
+  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &GetShapesArray() { return Shapes; }
+  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &GetNumIndicesArray() { return NumIndices; }
+  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &GetConnectivityArray() { return Connectivity; }
+  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &GetCellToConnectivityIndexArray() { return MapCellToConnectivityIndex; }
 
 private:
   vtkm::Id ConnectivityLength;

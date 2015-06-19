@@ -20,8 +20,11 @@
 #ifndef vtk_m_worklet_VertexClustering_h
 #define vtk_m_worklet_VertexClustering_h
 
+namespace vtkm{ namespace worklet
+{
 
 
+}} // namespace vtkm::worklet
 
 #endif // vtk_m_worklet_VertexClustering_h
 

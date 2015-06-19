@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestWorkletMapFieldMultiParam.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyRegular.cxx
+  UnitTestVertexClustering.cxx
   )
 
 vtkm_save_worklet_unit_tests(${unit_tests})

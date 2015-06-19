@@ -48,7 +48,8 @@ struct DivideWorklet: public vtkm::worklet::WorkletMapField{
     {  vout = v * (1./count);  }
 };
 
-template <class KeyType, class ValueType, class DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+
+template <class KeyType, class ValueType, class DeviceAdapter>
 void AverageByKey( const vtkm::cont::ArrayHandle<KeyType> &keyArray,
                    const vtkm::cont::ArrayHandle<ValueType> &valueArray,
                    vtkm::cont::ArrayHandle<KeyType> &outputKeyArray,
@@ -96,6 +97,15 @@ void AverageByKey( const vtkm::cont::ArrayHandle<KeyType> &keyArray,
   DispatcherMapField<DivideWorklet<ValueType> >().Invoke(
         sumArray, countArray, outputValueArray);
 
+}
+
+template <class KeyType, class ValueType>
+void AverageByKey( const vtkm::cont::ArrayHandle<KeyType> &keyArray,
+                   const vtkm::cont::ArrayHandle<ValueType> &valueArray,
+                   vtkm::cont::ArrayHandle<KeyType> &outputKeyArray,
+                   vtkm::cont::ArrayHandle<ValueType> &outputValueArray)
+{
+  AverageByKey<KeyType, ValueType, VTKM_DEFAULT_DEVICE_ADAPTER_TAG> (keyArray, valueArray, outputKeyArray, outputValueArray);
 }
 
 }} // vtkm::worklet
