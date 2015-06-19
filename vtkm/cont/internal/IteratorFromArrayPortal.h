@@ -67,13 +67,6 @@ struct IteratorFromArrayPortalValue
   }
 
   VTKM_CONT_EXPORT
-  bool operator<(const ValueType& value) const
-  {
-    return this->Portal.Get(this->Index) < value;
-  }
-
-
-  VTKM_CONT_EXPORT
   operator ValueType(void) const
   {
     return this->Portal.Get(this->Index);

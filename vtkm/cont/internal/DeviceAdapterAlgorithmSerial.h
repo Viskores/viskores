@@ -367,51 +367,30 @@ public:
       vtkm::cont::ArrayHandle<U,StorageU> &values,
       const Less &less)
   {
-      if (sizeof(U) > sizeof(vtkm::Id)) {
-          /// More efficient sort:
-          /// Move value indexes when sorting and reorder the value array at last
-          typedef vtkm::cont::ArrayHandle<U,StorageU> ValueType;
-          typedef vtkm::cont::ArrayHandle<vtkm::Id,StorageU> IndexType;
+    internal::WrappedBinaryOperator<bool, Less > wrappedCompare( less );
+    if (sizeof(U) > sizeof(vtkm::Id)) {
+        /// More efficient sort:
+        /// Move value indexes when sorting and reorder the value array at last
+        typedef vtkm::cont::ArrayHandle<U,StorageU> ValueType;
+        typedef vtkm::cont::ArrayHandle<vtkm::Id,StorageU> IndexType;
 
-          IndexType indexArray;
-          ValueType valuesScattered;
+        IndexType indexArray;
+        ValueType valuesScattered;
 
-          Copy( make_ArrayHandleCounting(0, keys.GetNumberOfValues()), indexArray);
-          SortByKeyDirect(keys, indexArray, less);
-          Scatter(values, indexArray, valuesScattered);
-          Copy( valuesScattered, values );
-      } else
-      {
-          SortByKeyDirect(keys, values, less);
-      }
+        Copy( make_ArrayHandleCounting(0, keys.GetNumberOfValues()), indexArray);
+        SortByKeyDirect(keys, indexArray, wrappedCompare);
+        Scatter(values, indexArray, valuesScattered);
+        Copy( valuesScattered, values );
+    } else
+    {
+        SortByKeyDirect(keys, values, wrappedCompare);
+    }
   }
 
   template<typename T, class Storage>
   VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage>& values)
   {
-    typedef typename vtkm::cont::ArrayHandle<T,Storage>
-        ::template ExecutionTypes<Device>::Portal PortalType;
-
-    PortalType arrayPortal = values.PrepareForInPlace(Device());
-    vtkm::cont::ArrayPortalToIterators<PortalType> iterators(arrayPortal);
-
-    std::sort(iterators.GetBegin(), iterators.GetEnd());
-  }
-
-  template<typename T, typename U>
-  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandleZip<T,U>& values)
-  {
-    typedef typename vtkm::cont::ArrayHandleZip<T,U>
-        ::template ExecutionTypes<Device>::Portal PortalType;
-
-    PortalType arrayPortal = values.PrepareForInPlace(Device());
-    vtkm::cont::ArrayPortalToIterators<PortalType> iterators(arrayPortal);
-
-    //this is required to get sort to work with zip handles
-    typedef vtkm::cont::internal::ArrayHandleZipTraits< T, U > ZipTraits;
-    typedef std::less< typename ZipTraits::ValueType > LessOp;
-    internal::WrappedBinaryOperator<bool, LessOp> wrappedCompare( (LessOp()) );
-    std::sort(iterators.GetBegin(), iterators.GetEnd());
+    Sort(values, std::less<T>());
   }
 
   template<typename T, class Storage, class Compare>
