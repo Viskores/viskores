@@ -297,6 +297,8 @@ private:
     return body.Sum;
   }
 
+
+
 public:
   template<typename T, class CIn, class COut>
   VTKM_CONT_EXPORT static T ScanInclusive(
@@ -523,6 +525,127 @@ public:
                          wrappedCompare);
   }
 
+private:
+
+  template<typename InputPortalType,
+           typename IndexPortalType,
+           typename OutputPortalType>
+  class ScatterKernel
+  {
+  public:
+    VTKM_CONT_EXPORT ScatterKernel(InputPortalType  inputPortal,
+                                   IndexPortalType  indexPortal,
+                                   OutputPortalType outputPortal)
+      : ValuesPortal(inputPortal),
+        IndexPortal(indexPortal),
+        OutputPortal(outputPortal)
+    {  }
+
+    VTKM_EXEC_EXPORT
+    void operator()(const ::tbb::blocked_range<vtkm::Id> &range) const
+    {
+      // The TBB device adapter causes array classes to be shared between
+      // control and execution environment. This means that it is possible for
+      // an exception to be thrown even though this is typically not allowed.
+      // Throwing an exception from here is bad because there are several
+      // simultaneous threads running. Get around the problem by catching the
+      // error and setting the message buffer as expected.
+      try
+        {
+        for (vtkm::Id i = range.begin(); i < range.end(); i++)
+          {
+          OutputPortal.Set( i, ValuesPortal.Get(IndexPortal.Get(i)) );
+          }
+        }
+      catch (vtkm::cont::Error error)
+        {
+        this->ErrorMessage.RaiseError(error.GetMessage().c_str());
+        }
+      catch (...)
+        {
+        this->ErrorMessage.RaiseError(
+            "Unexpected error in execution environment.");
+        }
+    }
+  private:
+    InputPortalType ValuesPortal;
+    IndexPortalType IndexPortal;
+    OutputPortalType OutputPortal;
+    vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
+  };
+
+  template<typename InputPortalType,
+           typename IndexPortalType,
+           typename OutputPortalType>
+  VTKM_CONT_EXPORT static void ScatterPortal(InputPortalType  inputPortal,
+                                             IndexPortalType  indexPortal,
+                                             OutputPortalType outputPortal)
+  {
+    const vtkm::Id size = inputPortal.GetNumberOfValues();
+    VTKM_ASSERT_CONT(size == indexPortal.GetNumberOfValues() );
+
+    ScatterKernel<InputPortalType,
+                  IndexPortalType,
+                  OutputPortalType> scatter(inputPortal,
+                                            indexPortal,
+                                            outputPortal);
+
+    ::tbb::blocked_range<vtkm::Id> range(0, size, TBB_GRAIN_SIZE);
+    ::tbb::parallel_for(range, scatter);
+  }
+
+public:
+  template<typename T, typename U, class StorageT,  class StorageU>
+  VTKM_CONT_EXPORT static void SortByKey(
+      vtkm::cont::ArrayHandle<T,StorageT> &keys,
+      vtkm::cont::ArrayHandle<U,StorageU> &values)
+  {
+    SortByKey(keys, values, std::less<T>());
+  }
+
+  template<typename T, typename U,
+           class StorageT, class StorageU,
+           class Compare>
+  VTKM_CONT_EXPORT static void SortByKey(
+      vtkm::cont::ArrayHandle<T,StorageT>& keys,
+      vtkm::cont::ArrayHandle<U,StorageU>& values,
+      Compare comp)
+  {
+    typedef vtkm::cont::ArrayHandle<T,StorageT> KeyType;
+    if (sizeof(U) > sizeof(vtkm::Id))
+    {
+      /// More efficient sort:
+      /// Move value indexes when sorting and reorder the value array at last
+
+      typedef vtkm::cont::ArrayHandle<U,StorageU> ValueType;
+      typedef vtkm::cont::ArrayHandle<vtkm::Id,StorageU> IndexType;
+      typedef vtkm::cont::ArrayHandleZip<KeyType,IndexType> ZipHandleType;
+
+      IndexType indexArray;
+      ValueType valuesScattered;
+      const vtkm::Id size = values.GetNumberOfValues();
+
+      Copy( make_ArrayHandleCounting(0, keys.GetNumberOfValues()), indexArray);
+
+      ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys,indexArray);
+      Sort(zipHandle,KeyCompare<T,vtkm::Id,Compare>(comp));
+
+
+      ScatterPortal(values.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
+                    indexArray.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
+                    valuesScattered.PrepareForOutput(size,vtkm::cont::DeviceAdapterTagTBB()));
+
+      Copy( valuesScattered, values );
+    }
+    else
+    {
+      typedef vtkm::cont::ArrayHandle<U,StorageU> ValueType;
+      typedef vtkm::cont::ArrayHandleZip<KeyType,ValueType> ZipHandleType;
+
+      ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys,values);
+      Sort(zipHandle,KeyCompare<T,U,Compare>(comp));
+    }
+  }
 
   VTKM_CONT_EXPORT static void Synchronize()
   {
