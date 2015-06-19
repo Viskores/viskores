@@ -24,8 +24,6 @@
 #include <vtkm/cont/ErrorControlOutOfMemory.h>
 #include <vtkm/cont/Storage.h>
 
-#include <iostream>
-
 // Disable warnings we check vtkm for but Thrust does not.
 #if defined(__GNUC__) || defined(____clang__)
 #pragma GCC diagnostic push
