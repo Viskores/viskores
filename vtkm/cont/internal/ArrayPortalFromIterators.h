@@ -41,6 +41,7 @@ class ArrayPortalFromIterators
 {
 public:
   typedef typename std::iterator_traits<IteratorT>::value_type ValueType;
+  typedef IteratorT IteratorType;
 
   VTKM_CONT_EXPORT ArrayPortalFromIterators() {  }
 
@@ -69,7 +70,7 @@ public:
   template<class OtherIteratorT>
   VTKM_CONT_EXPORT
   ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT> &src)
-    : BeginIterator(src.GetRawIterator()), NumberOfValues(src.GetNumberOfValues())
+    : BeginIterator(src.GetIteratorBegin()), NumberOfValues(src.GetNumberOfValues())
   {  }
 
   VTKM_CONT_EXPORT
@@ -91,7 +92,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  IteratorT GetRawIterator() const {
+  IteratorT GetIteratorBegin() const {
     return this->BeginIterator;
   }
 
@@ -132,7 +133,7 @@ public:
 
   VTKM_CONT_EXPORT
   ArrayPortalToIterators(const PortalType &portal)
-    : Iterator(portal.GetRawIterator()),
+    : Iterator(portal.GetIteratorBegin()),
       NumberOfValues(portal.GetNumberOfValues())
   {  }
 
@@ -144,7 +145,7 @@ public:
 
   VTKM_CONT_EXPORT
   ArrayPortalToIterators(const PortalType &portal)
-    : Iterator(portal.GetRawIterator(), portal.GetNumberOfValues()),
+    : Iterator(portal.GetIteratorBegin(), portal.GetNumberOfValues()),
       NumberOfValues(portal.GetNumberOfValues())
   {  }
 
