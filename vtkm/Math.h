@@ -36,10 +36,19 @@
 #include <boost/math/special_functions/expm1.hpp>
 #include <boost/math/special_functions/log1p.hpp>
 #define VTKM_USE_BOOST_MATH
+#if _MSC_VER <= 1600
+#define VTKM_USE_STL_MIN_MAX
+#include <algorithm>
+#endif
 #endif
 
 #define VTKM_SYS_MATH_FUNCTION_32(func) func ## f
 #define VTKM_SYS_MATH_FUNCTION_64(func) func
+
+
+
+
+
 
 
 
@@ -690,6 +699,64 @@ vtkm::Vec<T,2> Log1P(const vtkm::Vec<T,2> &x) {
 }
 
 
+//-----------------------------------------------------------------------------
+/// Returns \p x or \p y, whichever is larger.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Max(const T &x, const T &y) {
+  return (x < y) ? y : x;
+}
+#ifdef VTKM_USE_STL_MIN_MAX
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Max(vtkm::Float32 x, vtkm::Float32 y) {
+  return (std::max)(x, y);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y) {
+  return (std::max)(x, y);
+}
+
+#else // !VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Max(vtkm::Float32 x, vtkm::Float32 y) {
+  return VTKM_SYS_MATH_FUNCTION_32(fmax)(x,y);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y) {
+  return VTKM_SYS_MATH_FUNCTION_64(fmax)(x,y);
+}
+
+#endif // !VTKM_USE_BOOST_MATH
+
+/// Returns \p x or \p y, whichever is smaller.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Min(const T &x, const T &y) {
+  return (x < y) ? x : y;
+}
+#ifdef VTKM_USE_STL_MIN_MAX
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y) {
+  return (std::min)(x, y);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y) {
+  return (std::min)(x, y);
+}
+
+#else // !VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y) {
+  return VTKM_SYS_MATH_FUNCTION_32(fmin)(x,y);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y) {
+  return VTKM_SYS_MATH_FUNCTION_64(fmin)(x,y);
+}
+
+#endif // !VTKM_USE_BOOST_MATH
 } // namespace vtkm
 
 #endif //vtk_m_Math_h

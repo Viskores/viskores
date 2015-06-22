@@ -275,7 +275,9 @@ void Log1PTest()
 //-----------------------------------------------------------------------------
 struct TestExpFunctor
 {
-  template <typename T> void operator()(const T&) const {
+  template <typename T>
+  void operator()(const T&) const
+  {
     SqrtTest<T>();
     RSqrtTest<T>();
     CbrtTest<T>();
@@ -290,13 +292,28 @@ struct TestExpFunctor
   }
 };
 
-void RunExpTests()
+struct TestMinMaxFunctor
+{
+  template<typename T>
+  void operator()(const T&) const {
+    T low = TestValue(2, T());
+    T high = TestValue(10, T());
+    std::cout << "Testing min/max " << low << " " << high << std::endl;
+    VTKM_TEST_ASSERT(test_equal(vtkm::Min(low, high), low), "Wrong min.");
+    VTKM_TEST_ASSERT(test_equal(vtkm::Min(high, low), low), "Wrong min.");
+    VTKM_TEST_ASSERT(test_equal(vtkm::Max(low, high), high), "Wrong max.");
+    VTKM_TEST_ASSERT(test_equal(vtkm::Max(high, low), high), "Wrong max.");
+  }
+};
+
+void RunMathTests()
 {
   PowTest<vtkm::Float32>();
   PowTest<vtkm::Float64>();
   Log2Test();
   Log2Test();
   vtkm::testing::Testing::TryTypes(TestExpFunctor(), vtkm::TypeListTagField());
+  vtkm::testing::Testing::TryTypes(TestMinMaxFunctor(), vtkm::TypeListTagScalarAll());
 }
 
 } // Anonymous namespace
@@ -304,5 +321,5 @@ void RunExpTests()
 //-----------------------------------------------------------------------------
 int UnitTestMath(int, char *[])
 {
-  return vtkm::testing::Testing::Run(RunExpTests);
+  return vtkm::testing::Testing::Run(RunMathTests);
 }

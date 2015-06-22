@@ -48,6 +48,10 @@ $# Ignore the following comment. It is meant for the generated file.
 #include <boost/math/special_functions/expm1.hpp>
 #include <boost/math/special_functions/log1p.hpp>
 #define VTKM_USE_BOOST_MATH
+#if _MSC_VER <= 1600
+#define VTKM_USE_STL_MIN_MAX
+#include <algorithm>
+#endif
 #endif
 
 #define VTKM_SYS_MATH_FUNCTION_32(func) func ## f
@@ -132,8 +136,24 @@ def binary_math_function(vtkmname, sysname):
          binary_function(vtkmname,
                          'vtkm::Float64',
                          'VTKM_SYS_MATH_FUNCTION_64(' + sysname + ')(x,y)')
+
+def binary_template_function(vtkmname, expression):
+  return '''VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 {0}(vtkm::Float32 x, vtkm::Float32 y) {{
+  return {1};
+}}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 {0}(vtkm::Float64 x, vtkm::Float64 y) {{
+  return {1};
+}}
+'''.format(vtkmname, expression)
 )
-$extend(unary_math_function, unary_math_function_no_vec, unary_Vec_function, unary_template_function_no_vec, binary_math_function)
+$extend(unary_math_function)
+$extend(unary_math_function_no_vec)
+$extend(unary_Vec_function)
+$extend(unary_template_function_no_vec)
+$extend(binary_math_function)
+$extend(binary_template_function)
 
 namespace vtkm {
 
@@ -249,6 +269,32 @@ $unary_math_function_no_vec('Log1P', 'log1p')
 #endif // !VTKM_USE_BOOST_MATH
 $unary_Vec_function('Log1P')
 
+//-----------------------------------------------------------------------------
+/// Returns \p x or \p y, whichever is larger.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Max(const T &x, const T &y) {
+  return (x < y) ? y : x;
+}
+#ifdef VTKM_USE_STL_MIN_MAX
+$binary_template_function('Max', '(std::max)(x, y)')
+#else // !VTKM_USE_BOOST_MATH
+$binary_math_function('Max', 'fmax')
+#endif // !VTKM_USE_BOOST_MATH
+
+/// Returns \p x or \p y, whichever is smaller.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Min(const T &x, const T &y) {
+  return (x < y) ? x : y;
+}
+#ifdef VTKM_USE_STL_MIN_MAX
+$binary_template_function('Min', '(std::min)(x, y)')
+#else // !VTKM_USE_BOOST_MATH
+$binary_math_function('Min', 'fmin')
+#endif // !VTKM_USE_BOOST_MATH
 } // namespace vtkm
 
 #endif //vtk_m_Math_h
