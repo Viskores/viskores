@@ -31,6 +31,13 @@
 #include <math.h>
 #endif
 
+#if VTKM_MSVC && !defined(VTKM_CUDA)
+#include <boost/math/special_functions/cbrt.hpp>
+#include <boost/math/special_functions/expm1.hpp>
+#include <boost/math/special_functions/log1p.hpp>
+#define VTKM_USE_BOOST_MATH
+#endif
+
 #define VTKM_SYS_MATH_FUNCTION_32(func) func ## f
 #define VTKM_SYS_MATH_FUNCTION_64(func) func
 
@@ -38,6 +45,18 @@
 
 
 namespace vtkm {
+
+/// Computes \p x raised to the power of \p y.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Pow(vtkm::Float32 x, vtkm::Float32 y) {
+  return VTKM_SYS_MATH_FUNCTION_32(pow)(x,y);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Pow(vtkm::Float64 x, vtkm::Float64 y) {
+  return VTKM_SYS_MATH_FUNCTION_64(pow)(x,y);
+}
+
 
 /// Compute the square root of \p x.
 ///
@@ -50,7 +69,8 @@ vtkm::Float64 Sqrt(vtkm::Float64 x) {
   return VTKM_SYS_MATH_FUNCTION_64(sqrt)(x);
 }
 template<typename T, vtkm::IdComponent N>
-vtkm::Vec<T,N> Sqrt(const vtkm::Vec<T,N> x) {
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Sqrt(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
   {
@@ -60,7 +80,7 @@ vtkm::Vec<T,N> Sqrt(const vtkm::Vec<T,N> x) {
 }
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Vec<T,4> Sqrt(const vtkm::Vec<T,4> x) {
+vtkm::Vec<T,4> Sqrt(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Sqrt(x[0]),
                         vtkm::Sqrt(x[1]),
                         vtkm::Sqrt(x[2]),
@@ -68,16 +88,605 @@ vtkm::Vec<T,4> Sqrt(const vtkm::Vec<T,4> x) {
 }
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Vec<T,3> Sqrt(const vtkm::Vec<T,3> x) {
+vtkm::Vec<T,3> Sqrt(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Sqrt(x[0]),
                         vtkm::Sqrt(x[1]),
                         vtkm::Sqrt(x[2]));
 }
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Vec<T,2> Sqrt(const vtkm::Vec<T,2> x) {
+vtkm::Vec<T,2> Sqrt(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Sqrt(x[0]),
                         vtkm::Sqrt(x[1]));
+}
+
+
+/// Compute the reciprocal square root of \p x. The result of this function is
+/// equivalent to <tt>1/Sqrt(x)</tt>. However, on some devices it is faster to
+/// compute the reciprocal square root than the regular square root. Thus, you
+/// should use this function whenever dividing by the square root.
+///
+#ifdef VTKM_CUDA
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 RSqrt(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(rsqrt)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 RSqrt(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(rsqrt)(x);
+}
+
+#else // !VTKM_CUDA
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 RSqrt(vtkm::Float32 x) {
+  return 1/vtkm::Sqrt(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 RSqrt(vtkm::Float64 x) {
+  return 1/vtkm::Sqrt(x);
+}
+
+#endif // !VTKM_CUDA
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> RSqrt(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::RSqrt(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> RSqrt(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::RSqrt(x[0]),
+                        vtkm::RSqrt(x[1]),
+                        vtkm::RSqrt(x[2]),
+                        vtkm::RSqrt(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> RSqrt(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::RSqrt(x[0]),
+                        vtkm::RSqrt(x[1]),
+                        vtkm::RSqrt(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> RSqrt(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::RSqrt(x[0]),
+                        vtkm::RSqrt(x[1]));
+}
+
+
+/// Compute the cube root of \p x.
+///
+#ifdef VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Cbrt(vtkm::Float32 x) {
+  return boost::math::cbrt(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Cbrt(vtkm::Float64 x) {
+  return boost::math::cbrt(x);
+}
+
+#else // !VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Cbrt(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(cbrt)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Cbrt(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(cbrt)(x);
+}
+
+#endif // !VTKM_USE_BOOST_MATH
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Cbrt(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Cbrt(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Cbrt(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Cbrt(x[0]),
+                        vtkm::Cbrt(x[1]),
+                        vtkm::Cbrt(x[2]),
+                        vtkm::Cbrt(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Cbrt(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Cbrt(x[0]),
+                        vtkm::Cbrt(x[1]),
+                        vtkm::Cbrt(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Cbrt(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Cbrt(x[0]),
+                        vtkm::Cbrt(x[1]));
+}
+
+
+/// Compute the reciprocal cube root of \p x. The result of this function is
+/// equivalent to <tt>1/Cbrt(x)</tt>. However, on some devices it is faster to
+/// compute the reciprocal cube root than the regular cube root. Thus, you
+/// should use this function whenever dividing by the cube root.
+///
+#ifdef VTKM_CUDA
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 RCbrt(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(rcbrt)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 RCbrt(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(rcbrt)(x);
+}
+
+#else // !VTKM_CUDA
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 RCbrt(vtkm::Float32 x) {
+  return 1/vtkm::Cbrt(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 RCbrt(vtkm::Float64 x) {
+  return 1/vtkm::Cbrt(x);
+}
+
+#endif // !VTKM_CUDA
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> RCbrt(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::RCbrt(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> RCbrt(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::RCbrt(x[0]),
+                        vtkm::RCbrt(x[1]),
+                        vtkm::RCbrt(x[2]),
+                        vtkm::RCbrt(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> RCbrt(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::RCbrt(x[0]),
+                        vtkm::RCbrt(x[1]),
+                        vtkm::RCbrt(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> RCbrt(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::RCbrt(x[0]),
+                        vtkm::RCbrt(x[1]));
+}
+
+
+/// Computes e**\p x, the base-e exponential of \p x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Exp(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(exp)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Exp(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(exp)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Exp(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Exp(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Exp(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Exp(x[0]),
+                        vtkm::Exp(x[1]),
+                        vtkm::Exp(x[2]),
+                        vtkm::Exp(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Exp(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Exp(x[0]),
+                        vtkm::Exp(x[1]),
+                        vtkm::Exp(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Exp(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Exp(x[0]),
+                        vtkm::Exp(x[1]));
+}
+
+
+/// Computes 2**\p x, the base-2 exponential of \p x.
+///
+#ifdef VTKM_MSVC
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Exp2(vtkm::Float32 x) {
+  return vtkm::Pow(2,x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Exp2(vtkm::Float64 x) {
+  return vtkm::Pow(2,x);
+}
+
+#else // !VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Exp2(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(exp2)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Exp2(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(exp2)(x);
+}
+
+#endif // !VTKM_USE_BOOST_MATH
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Exp2(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Exp2(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Exp2(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Exp2(x[0]),
+                        vtkm::Exp2(x[1]),
+                        vtkm::Exp2(x[2]),
+                        vtkm::Exp2(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Exp2(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Exp2(x[0]),
+                        vtkm::Exp2(x[1]),
+                        vtkm::Exp2(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Exp2(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Exp2(x[0]),
+                        vtkm::Exp2(x[1]));
+}
+
+
+/// Computes (e**\p x) - 1, the of base-e exponental of \p x then minus 1. The
+/// accuracy of this function is good even for very small values of x.
+///
+#ifdef VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ExpM1(vtkm::Float32 x) {
+  return boost::math::expm1(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ExpM1(vtkm::Float64 x) {
+  return boost::math::expm1(x);
+}
+
+#else // !VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ExpM1(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(expm1)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ExpM1(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(expm1)(x);
+}
+
+#endif // !VTKM_USE_BOOST_MATH
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> ExpM1(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::ExpM1(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> ExpM1(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::ExpM1(x[0]),
+                        vtkm::ExpM1(x[1]),
+                        vtkm::ExpM1(x[2]),
+                        vtkm::ExpM1(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> ExpM1(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::ExpM1(x[0]),
+                        vtkm::ExpM1(x[1]),
+                        vtkm::ExpM1(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> ExpM1(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::ExpM1(x[0]),
+                        vtkm::ExpM1(x[1]));
+}
+
+
+/// Computes 10**\p x, the base-10 exponential of \p x.
+///
+#ifdef VTKM_CUDA
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Exp10(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(exp10)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Exp10(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(exp10)(x);
+}
+
+#else // !VTKM_CUDA
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Exp10(vtkm::Float32 x) {
+  return vtkm::Pow(10, x);;
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Exp10(vtkm::Float64 x) {
+  return vtkm::Pow(10, x);;
+}
+
+#endif // !VTKM_CUDA
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Exp10(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Exp10(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Exp10(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Exp10(x[0]),
+                        vtkm::Exp10(x[1]),
+                        vtkm::Exp10(x[2]),
+                        vtkm::Exp10(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Exp10(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Exp10(x[0]),
+                        vtkm::Exp10(x[1]),
+                        vtkm::Exp10(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Exp10(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Exp10(x[0]),
+                        vtkm::Exp10(x[1]));
+}
+
+
+/// Computes the natural logarithm of \p x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Log(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(log)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Log(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(log)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Log(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Log(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Log(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Log(x[0]),
+                        vtkm::Log(x[1]),
+                        vtkm::Log(x[2]),
+                        vtkm::Log(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Log(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Log(x[0]),
+                        vtkm::Log(x[1]),
+                        vtkm::Log(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Log(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Log(x[0]),
+                        vtkm::Log(x[1]));
+}
+
+
+/// Computes the logarithm base 2 of \p x.
+///
+#ifdef VTKM_MSVC
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Log2(vtkm::Float32 x) {
+  //windows and boost don't provide log2
+  //0.6931471805599453 is the constant value of log(2)
+  const vtkm::Float32 log2v(0.6931471805599453);
+  return vtkm::Log(x)/log2v;
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Log2(vtkm::Float64 x) {
+  //windows and boost don't provide log2
+  //0.6931471805599453 is the constant value of log(2)
+  const vtkm::Float64 log2v(0.6931471805599453);
+  return vtkm::Log(x)/log2v;
+}
+#else // !VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Log2(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(log2)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Log2(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(log2)(x);
+}
+
+#endif // !VTKM_USE_BOOST_MATH
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Log2(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Log2(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Log2(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Log2(x[0]),
+                        vtkm::Log2(x[1]),
+                        vtkm::Log2(x[2]),
+                        vtkm::Log2(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Log2(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Log2(x[0]),
+                        vtkm::Log2(x[1]),
+                        vtkm::Log2(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Log2(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Log2(x[0]),
+                        vtkm::Log2(x[1]));
+}
+
+
+/// Computes the logarithm base 10 of \p x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Log10(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(log10)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Log10(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(log10)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Log10(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Log10(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Log10(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Log10(x[0]),
+                        vtkm::Log10(x[1]),
+                        vtkm::Log10(x[2]),
+                        vtkm::Log10(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Log10(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Log10(x[0]),
+                        vtkm::Log10(x[1]),
+                        vtkm::Log10(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Log10(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Log10(x[0]),
+                        vtkm::Log10(x[1]));
+}
+
+
+/// Computes the value of log(1+x) accurately for very small values of x.
+///
+#ifdef VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Log1P(vtkm::Float32 x) {
+  return boost::math::log1p(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Log1P(vtkm::Float64 x) {
+  return boost::math::log1p(x);
+}
+
+#else // !VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Log1P(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(log1p)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Log1P(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(log1p)(x);
+}
+
+#endif // !VTKM_USE_BOOST_MATH
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Log1P(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Log1P(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Log1P(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Log1P(x[0]),
+                        vtkm::Log1P(x[1]),
+                        vtkm::Log1P(x[2]),
+                        vtkm::Log1P(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Log1P(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Log1P(x[0]),
+                        vtkm::Log1P(x[1]),
+                        vtkm::Log1P(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Log1P(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Log1P(x[0]),
+                        vtkm::Log1P(x[1]));
 }
 
 
