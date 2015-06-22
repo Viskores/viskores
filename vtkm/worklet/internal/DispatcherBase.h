@@ -297,6 +297,15 @@ protected:
 
   template<typename Invocation>
   VTKM_CONT_EXPORT
+  void BasicInvoke(const Invocation &invocation, vtkm::Id2 dimensions) const
+  {
+    vtkm::Id3 dim3d(dimensions[0], dimensions[1], 1);
+    this->InvokeTransportParameters(invocation, dim3d);
+  }
+
+
+  template<typename Invocation>
+  VTKM_CONT_EXPORT
   void BasicInvoke(const Invocation &invocation, vtkm::Id3 dimensions) const
   {
     this->InvokeTransportParameters(invocation, dimensions);
