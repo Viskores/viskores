@@ -43,6 +43,9 @@ public:
   vtkm::Vec<vtkm::Id,1> GetNodeDimensions() const { return nodeDim; }
 
   VTKM_EXEC_CONT_EXPORT
+  vtkm::Id GetSchedulingDimensions() const {return GetNumberOfCells();}
+
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfNodes() const {return nodeDim[0];}
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfElements() const {return GetNumberOfCells();}
@@ -103,6 +106,11 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfNodes() const {return vtkm::internal::VecProduct<2>()(nodeDims);}
+
+  //returns an id2 to signal what kind of scheduling to use
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id2 GetSchedulingDimensions() const {return cellDims;}
+
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfElements() const {return GetNumberOfCells();}
   VTKM_EXEC_CONT_EXPORT
@@ -189,7 +197,11 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfNodes() const {return vtkm::internal::VecProduct<3>()(nodeDims);}
+
+  //returns an id3 to signal what kind of scheduling to use
   VTKM_EXEC_CONT_EXPORT
+  vtkm::Id3 GetSchedulingDimensions() const { return cellDims;}
+
   vtkm::Id GetNumberOfElements() const {return GetNumberOfCells();}
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const {return vtkm::internal::VecProduct<3>()(cellDims);}

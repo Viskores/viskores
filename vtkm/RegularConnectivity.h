@@ -32,6 +32,24 @@
 namespace vtkm {
 
 template<vtkm::cont::TopologyType From, vtkm::cont::TopologyType To, vtkm::IdComponent Dimension>
+struct SchedulingDimension
+{
+  typedef vtkm::Id ValueType;
+};
+
+template<vtkm::cont::TopologyType From, vtkm::cont::TopologyType To>
+struct SchedulingDimension<From,To, 2>
+{
+  typedef vtkm::Id2 ValueType;
+};
+
+template<vtkm::cont::TopologyType From, vtkm::cont::TopologyType To>
+struct SchedulingDimension<From,To, 3>
+{
+  typedef vtkm::Id3 ValueType;
+};
+
+template<vtkm::cont::TopologyType From, vtkm::cont::TopologyType To, vtkm::IdComponent Dimension>
 struct IndexLookupHelper
 {
   // We want an unconditional failure if this unspecialized class ever gets
@@ -71,6 +89,9 @@ template<vtkm::cont::TopologyType FromTopology, vtkm::cont::TopologyType ToTopoo
 class RegularConnectivity
 {
 public:
+  typedef typename SchedulingDimension< FromTopology,
+                                        ToTopoogy,
+                                        Dimension >::ValueType SchedulingDimension;
   RegularConnectivity():
     rs()
   {
@@ -87,6 +108,8 @@ public:
   {
   }
 
+  VTKM_EXEC_CONT_EXPORT
+  SchedulingDimension GetSchedulingDimensions() const {return rs.GetSchedulingDimensions();}
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfElements() const {return rs.GetNumberOfElements();}

@@ -45,7 +45,13 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfElements()
+  vtkm::Id GetSchedulingDimensions() const
+  {
+    return Shapes.GetNumberOfValues();
+  }
+
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfElements() const
   {
     return Shapes.GetNumberOfValues();
   }

@@ -95,8 +95,8 @@ inline
 void compute_block_size(dim3 rangeMax, dim3 blockSize3d, dim3& gridSize3d)
 {
   gridSize3d.x = (rangeMax.x % blockSize3d.x != 0) ? (rangeMax.x / blockSize3d.x + 1) : (rangeMax.x / blockSize3d.x);
-  gridSize3d.y = (rangeMax.y % blockSize3d.y != 1) ? (rangeMax.y / blockSize3d.y + 1) : (rangeMax.y / blockSize3d.y);
-  gridSize3d.z = (rangeMax.z % blockSize3d.z != 2) ? (rangeMax.z / blockSize3d.z + 1) : (rangeMax.z / blockSize3d.z);
+  gridSize3d.y = (rangeMax.y % blockSize3d.y != 0) ? (rangeMax.y / blockSize3d.y + 1) : (rangeMax.y / blockSize3d.y);
+  gridSize3d.z = (rangeMax.z % blockSize3d.z != 0) ? (rangeMax.z / blockSize3d.z + 1) : (rangeMax.z / blockSize3d.z);
 }
 
 class PerfRecord
