@@ -276,20 +276,21 @@ private:
   }
 
   template<class InputPortal, class ValuesPortal, class OutputPortal,
-           class Compare>
+           class BinaryCompare>
   VTKM_CONT_EXPORT static void LowerBoundsPortal(const InputPortal &input,
                                                 const ValuesPortal &values,
                                                 const OutputPortal &output,
-                                                Compare comp)
+                                                BinaryCompare binary_compare)
   {
-    vtkm::exec::cuda::internal::WrappedBinaryOperator<bool, Compare> bop(comp);
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<bool,
+                                            BinaryCompare> bop(binary_compare);
     ::thrust::lower_bound(thrust::cuda::par,
                           IteratorBegin(input),
                           IteratorEnd(input),
                           IteratorBegin(values),
                           IteratorEnd(values),
                           IteratorBegin(output),
-                          comp);
+                          bop);
   }
 
   template<class InputPortal>
@@ -610,18 +611,18 @@ public:
                       output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
 
-  template<typename T, class SIn, class SVal, class SOut, class Compare>
+  template<typename T, class SIn, class SVal, class SOut, class BinaryCompare>
   VTKM_CONT_EXPORT static void LowerBounds(
       const vtkm::cont::ArrayHandle<T,SIn>& input,
       const vtkm::cont::ArrayHandle<T,SVal>& values,
       vtkm::cont::ArrayHandle<vtkm::Id,SOut>& output,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
     vtkm::Id numberOfValues = values.GetNumberOfValues();
     LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTag()),
                       values.PrepareForInput(DeviceAdapterTag()),
                       output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
-                      comp);
+                      binary_compare);
   }
 
   template<class SIn, class SOut>
