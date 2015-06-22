@@ -20,7 +20,10 @@
 #ifndef vtk_m_worklet_Dispatcher_MapTopology_h
 #define vtk_m_worklet_Dispatcher_MapTopology_h
 
+#include <vtkm/RegularConnectivity.h>
+
 #include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/ExplicitConnectivity.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
@@ -75,16 +78,53 @@ public:
     InputDomainType inputDomain =
         invocation.Parameters.template GetParameter<InputDomainIndex>();
 
-    // For a DispatcherMapTopology, the inputDomain must be an ArrayHandle (or
-    // a DynamicArrayHandle that gets cast to one). The size of the domain
-    // (number of threads/worklet instances) is equal to the size of the
-    // array.
+    //we need to now template based on the input domain type. If the input
+    //domain type is a regular or explicit grid we call GetSchedulingDimensions.
+    //but in theory your input domain could be a permutation array
+    this->InvokeBasedOnDomainType(invocation,inputDomain);
+  }
 
-    ///\todo: GetNumberOfCells
-    vtkm::Id numInstances = inputDomain.GetNumberOfElements();
+  template<typename Invocation, typename InputDomainType>
+  VTKM_CONT_EXPORT
+  void InvokeBasedOnDomainType(const Invocation &invocation,
+                               const InputDomainType& domain) const
+  {
+    //presume that the input domain isn't a grid, so call GetNumberOfValues()
+    //this code path is currently not exercised as the InputDomain currently
+    //is required to be Explicit or Regular Connectivity. In the future if
+    //we ever allow the InputDomain and the TopologyDomain to differ, this
+    //invocation will be used
+    this->BasicInvoke(invocation, domain.GetNumberOfValues());
+  }
 
-    ///\todo:
-    this->BasicInvoke(invocation, numInstances);
+  template<typename Invocation,
+           typename T,
+           typename U,
+           typename V>
+  VTKM_CONT_EXPORT
+  void InvokeBasedOnDomainType(const Invocation &invocation,
+                               const vtkm::cont::ExplicitConnectivity<T,U,V>& domain) const
+  {
+
+    // For a DispatcherMapTopology, when the inputDomain is some for of
+    // explicit connectivity we call GetSchedulingDimensions which will return
+    // a linear value representing the number of cells to schedule
+    this->BasicInvoke(invocation, domain.GetSchedulingDimensions());
+  }
+
+  template<typename Invocation,
+           vtkm::cont::TopologyType From,
+           vtkm::cont::TopologyType To,
+           vtkm::IdComponent Domain>
+  VTKM_CONT_EXPORT
+  void InvokeBasedOnDomainType(const Invocation &invocation,
+                               const vtkm::RegularConnectivity<From,To,Domain>& domain) const
+  {
+
+    // For a DispatcherMapTopology, the inputDomain is some for of connectivity
+    // so the GetSchedulingDimensions can return a vtkm::Id for linear scheduling,
+    // or a vtkm::Id2 or vtkm::Id3 for 3d block scheduling
+    this->BasicInvoke(invocation, domain.GetSchedulingDimensions());
   }
 };
 
