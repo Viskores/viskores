@@ -57,16 +57,16 @@ public:
     return Reduce(input, initialValue, vtkm::internal::Add());
   }
 
- template<typename T, class CIn, class BinaryOperator>
+ template<typename T, class CIn, class BinaryFunctor>
   VTKM_CONT_EXPORT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       T initialValue,
-      BinaryOperator binaryOp)
+      BinaryFunctor binary_functor)
   {
     typedef typename vtkm::cont::ArrayHandle<T,CIn>
         ::template ExecutionTypes<Device>::PortalConst PortalIn;
 
-    internal::WrappedBinaryOperator<T, BinaryOperator> wrappedOp( binaryOp );
+    internal::WrappedBinaryOperator<T, BinaryFunctor> wrappedOp( binary_functor );
     PortalIn inputPortal = input.PrepareForInput(Device());
     return std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                            vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
@@ -75,13 +75,13 @@ public:
   }
 
   template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
-          class BinaryOperation>
+          class BinaryFunctor>
   VTKM_CONT_EXPORT static void ReduceByKey(
       const vtkm::cont::ArrayHandle<T,KIn> &keys,
       const vtkm::cont::ArrayHandle<U,VIn> &values,
       vtkm::cont::ArrayHandle<T,KOut> &keys_output,
       vtkm::cont::ArrayHandle<U,VOut> &values_output,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     typedef typename vtkm::cont::ArrayHandle<T,KIn>
         ::template ExecutionTypes<Device>::PortalConst PortalKIn;
@@ -111,7 +111,7 @@ public:
       while(readPos < numberOfKeys &&
             currentKey == keysPortalIn.Get(readPos) )
         {
-        currentValue = binaryOp(currentValue, valuesPortalIn.Get(readPos));
+        currentValue = binary_functor(currentValue, valuesPortalIn.Get(readPos));
         ++readPos;
         }
 

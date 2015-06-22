@@ -376,7 +376,7 @@ public:
   //--------------------------------------------------------------------------
   // Reduce
 private:
-  template<int ReduceWidth, typename T, typename ArrayType, typename BinaryOperation >
+  template<int ReduceWidth, typename T, typename ArrayType, typename BinaryFunctor >
   struct ReduceKernel : vtkm::exec::FunctorBase
   {
     typedef typename ArrayType::template ExecutionTypes<
@@ -384,7 +384,7 @@ private:
     typedef typename ExecutionTypes::PortalConst PortalConst;
 
     PortalConst Portal;
-    BinaryOperation BinaryOperator;
+    BinaryFunctor BinaryOperator;
     vtkm::Id ArrayLength;
 
     VTKM_CONT_EXPORT
@@ -396,9 +396,9 @@ private:
     }
 
     VTKM_CONT_EXPORT
-    ReduceKernel(const ArrayType &array, BinaryOperation op)
+    ReduceKernel(const ArrayType &array, BinaryFunctor binary_functor)
       : Portal(array.PrepareForInput( DeviceAdapterTag() ) ),
-        BinaryOperator(op),
+        BinaryOperator(binary_functor),
         ArrayLength( array.GetNumberOfValues() )
     {  }
 
@@ -445,11 +445,11 @@ public:
     return DerivedAlgorithm::Reduce(input, initialValue, vtkm::internal::Add());
   }
 
- template<typename T, class CIn, class BinaryOperator>
+ template<typename T, class CIn, class BinaryFunctor>
   VTKM_CONT_EXPORT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       T initialValue,
-      BinaryOperator binaryOp)
+      BinaryFunctor binary_functor)
   {
     //Crazy Idea:
     //We create a implicit array handle that wraps the input
@@ -464,7 +464,7 @@ public:
             16,
             T,
             vtkm::cont::ArrayHandle<T,CIn>,
-            BinaryOperator
+            BinaryFunctor
             > ReduceKernelType;
 
     typedef vtkm::cont::ArrayHandleImplicit<
@@ -474,7 +474,7 @@ public:
                                     T,
                                     vtkm::cont::StorageTagBasic> TempArrayType;
 
-    ReduceKernelType kernel(input, binaryOp);
+    ReduceKernelType kernel(input, binary_functor);
     vtkm::Id length = (input.GetNumberOfValues() / 16);
     length += (input.GetNumberOfValues() % 16 == 0) ? 0 : 1;
     ReduceHandleType reduced = vtkm::cont::make_ArrayHandleImplicit<T>(kernel,
@@ -483,8 +483,8 @@ public:
     TempArrayType inclusiveScanStorage;
     T scanResult = DerivedAlgorithm::ScanInclusive(reduced,
                                                    inclusiveScanStorage,
-                                                   binaryOp);
-    return binaryOp(initialValue, scanResult);
+                                                   binary_functor);
+    return binary_functor(initialValue, scanResult);
   }
 
   //--------------------------------------------------------------------------
@@ -567,13 +567,13 @@ private:
     }
   };
 
-  template<typename BinaryOperator>
+  template<typename BinaryFunctor>
   struct ReduceByKeyAdd
   {
-    BinaryOperator BinaryFunctor;
+    BinaryFunctor BinaryOperator;
 
-    ReduceByKeyAdd(BinaryOperator binaryOp):
-      BinaryFunctor( binaryOp )
+    ReduceByKeyAdd(BinaryFunctor binary_functor):
+      BinaryOperator( binary_functor )
     { }
 
     template<typename T>
@@ -591,7 +591,7 @@ private:
         // if b is not START, then it's safe to sum a & b.
         // Propagate a's start flag to b
         // so that later when b's START bit is set, it means there must exists a START between a and b
-        return ReturnType(this->BinaryFunctor(a.first , b.first),
+        return ReturnType(this->BinaryOperator(a.first , b.first),
                           ReduceKeySeriesStates(a.second.fStart, b.second.fEnd));
     }
     return b;
@@ -610,13 +610,13 @@ private:
 
 public:
   template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
-          class BinaryOperation>
+          class BinaryFunctor>
   VTKM_CONT_EXPORT static void ReduceByKey(
       const vtkm::cont::ArrayHandle<T,KIn> &keys,
       const vtkm::cont::ArrayHandle<U,VIn> &values,
       vtkm::cont::ArrayHandle<T,KOut> &keys_output,
       vtkm::cont::ArrayHandle<U,VOut> &values_output,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     VTKM_ASSERT_CONT(keys.GetNumberOfValues() == values.GetNumberOfValues());
     const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
@@ -670,7 +670,7 @@ public:
 
     DerivedAlgorithm::ScanInclusive(scanInput,
                                     scanOutput,
-                                    ReduceByKeyAdd<BinaryOperation>(binaryOp) );
+                                    ReduceByKeyAdd<BinaryFunctor>(binary_functor) );
 
     //at this point we are done with keystate, so free the memory
     keystate.ReleaseResources();

@@ -304,14 +304,14 @@ private:
                         ::thrust::plus<ValueType>());
   }
 
-  template<class InputPortal, class BinaryOperation>
+  template<class InputPortal, class BinaryFunctor>
   VTKM_CONT_EXPORT static
   typename InputPortal::ValueType ReducePortal(const InputPortal &input,
                             typename InputPortal::ValueType initialValue,
-                            BinaryOperation binaryOP)
+                            BinaryFunctor binary_functor)
   {
     vtkm::exec::cuda::internal::WrappedBinaryOperator<typename InputPortal::ValueType,
-                                                      BinaryOperation> bop(binaryOP);
+                                                      BinaryFunctor> bop(binary_functor);
     return ::thrust::reduce(thrust::cuda::par,
                             IteratorBegin(input),
                             IteratorEnd(input),
@@ -321,13 +321,13 @@ private:
 
   template<class KeysPortal, class ValuesPortal,
            class KeysOutputPortal, class ValueOutputPortal,
-           class BinaryOperation>
+           class BinaryFunctor>
   VTKM_CONT_EXPORT static
   vtkm::Id ReduceByKeyPortal(const KeysPortal &keys,
                              const ValuesPortal& values,
                              const KeysOutputPortal &keys_output,
                              const ValueOutputPortal &values_output,
-                             BinaryOperation binaryOP)
+                             BinaryFunctor binary_functor)
   {
     typedef typename detail::IteratorTraits<KeysOutputPortal>::IteratorType
                                                              KeysIteratorType;
@@ -342,7 +342,7 @@ private:
     ::thrust::equal_to<typename KeysPortal::ValueType> binaryPredicate;
 
     vtkm::exec::cuda::internal::WrappedBinaryOperator<typename ValuesPortal::ValueType,
-                                                      BinaryOperation> bop(binaryOP);
+                                                      BinaryFunctor> bop(binary_functor);
     result_iterators = ::thrust::reduce_by_key(thrust::cuda::par,
                                                IteratorBegin(keys),
                                                IteratorEnd(keys),
@@ -648,11 +648,11 @@ public:
                         initialValue);
   }
 
- template<typename T, class SIn, class BinaryOperation>
+ template<typename T, class SIn, class BinaryFunctor>
   VTKM_CONT_EXPORT static T Reduce(
       const vtkm::cont::ArrayHandle<T,SIn> &input,
       T initialValue,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
@@ -661,17 +661,17 @@ public:
       }
     return ReducePortal(input.PrepareForInput( DeviceAdapterTag() ),
                         initialValue,
-                        binaryOp);
+                        binary_functor);
   }
 
  template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
-          class BinaryOperation>
+          class BinaryFunctor>
   VTKM_CONT_EXPORT static void ReduceByKey(
       const vtkm::cont::ArrayHandle<T,KIn> &keys,
       const vtkm::cont::ArrayHandle<U,VIn> &values,
       vtkm::cont::ArrayHandle<T,KOut> &keys_output,
       vtkm::cont::ArrayHandle<U,VOut> &values_output,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     //there is a concern that by default we will allocate too much
     //space for the keys/values output. 1 option is to
@@ -685,7 +685,7 @@ public:
                               values.PrepareForInput( DeviceAdapterTag() ),
                               keys_output.PrepareForOutput( numberOfValues, DeviceAdapterTag() ),
                               values_output.PrepareForOutput( numberOfValues, DeviceAdapterTag() ),
-                              binaryOp);
+                              binary_functor);
 
     keys_output.Shrink( reduced_size );
     values_output.Shrink( reduced_size );
