@@ -28,13 +28,23 @@
 #include <vtkm/Types.h>
 
 #ifndef VTKM_CUDA
+#include <limits.h>
 #include <math.h>
-#endif
+
+// The nonfinite test functions are usually defined as macros, and boost seems
+// to want to undefine those macros so that it can implement the C99 templates
+// and other implementations of the same name. Get around the problem by using
+// the boost version when compiling for a CPU.
+#include <boost/math/special_functions/fpclassify.hpp>
+#include <cmath>
+#define VTKM_USE_BOOST_CLASSIFY
+#endif // !VTKM_CUDA
 
 #if VTKM_MSVC && !defined(VTKM_CUDA)
 #include <boost/math/special_functions/cbrt.hpp>
 #include <boost/math/special_functions/expm1.hpp>
 #include <boost/math/special_functions/log1p.hpp>
+#include <boost/math/special_functions/round.hpp>
 #define VTKM_USE_BOOST_MATH
 #if _MSC_VER <= 1600
 #define VTKM_USE_STL_MIN_MAX
@@ -55,6 +65,7 @@
 
 namespace vtkm {
 
+//-----------------------------------------------------------------------------
 /// Computes \p x raised to the power of \p y.
 ///
 VTKM_EXEC_CONT_EXPORT
@@ -757,6 +768,446 @@ vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y) {
 }
 
 #endif // !VTKM_USE_BOOST_MATH
+
+
+//-----------------------------------------------------------------------------
+
+#ifdef VTKM_CUDA
+#define VTKM_USE_IEEE_NONFINITE
+#endif
+
+#ifdef VTKM_USE_IEEE_NONFINITE
+
+namespace detail {
+
+union IEEE754Bits32 {
+  vtkm::UInt32 bits;
+  vtkm::Float32 scalar;
+};
+#define VTKM_NAN_BITS_32      0x7FC00000
+#define VTKM_INF_BITS_32      0x7F800000
+#define VTKM_NEG_INF_BITS_32  0xFF800000
+#define VTKM_EPSILON_32       1e-5f
+
+union IEEE754Bits64 {
+  vtkm::UInt64 bits;
+  vtkm::Float64 scalar;
+};
+#define VTKM_NAN_BITS_64      0x7FF8000000000000LL
+#define VTKM_INF_BITS_64      0x7FF0000000000000LL
+#define VTKM_NEG_INF_BITS_64  0xFFF0000000000000LL
+#define VTKM_EPSILON_64       1e-9
+
+template<typename T> struct FloatBits;
+
+template<>
+struct FloatBits<vtkm::Float32>
+{
+  typedef vtkm::detail::IEEE754Bits32 BitsType;
+  static const BitsType Nan;
+  static const BitsType Infinity;
+  static const BitsType NegativeInfinity;
+  static const vtkm::Float32 Epsilon;
+};
+const FloatBits<vtkm::Float32>::BitsType FloatBits<vtkm::Float32>::Nan = {VTKM_NAN_BITS_32};
+const FloatBits<vtkm::Float32>::BitsType FloatBits<vtkm::Float32>::Infinity = {VTKM_INF_BITS_32};
+const FloatBits<vtkm::Float32>::BitsType FloatBits<vtkm::Float32>::NegativeInfinity = {VTKM_NEG_INF_BITS_32};
+const vtkm::Float32 FloatBits<vtkm::Float32>::Epsilon = VTKM_EPSILON_32;
+
+template<>
+struct FloatBits<vtkm::Float64>
+{
+  typedef vtkm::detail::IEEE754Bits64 BitsType;
+  static const BitsType Nan;
+  static const BitsType Infinity;
+  static const BitsType NegativeInfinity;
+  static const vtkm::Float64 Epsilon;
+};
+const FloatBits<vtkm::Float64>::BitsType FloatBits<vtkm::Float64>::Nan = {VTKM_NAN_BITS_64};
+const FloatBits<vtkm::Float64>::BitsType FloatBits<vtkm::Float64>::Infinity = {VTKM_INF_BITS_64};
+const FloatBits<vtkm::Float64>::BitsType FloatBits<vtkm::Float64>::NegativeInfinity = {VTKM_NEG_INF_BITS_64};
+const vtkm::Float64 FloatBits<vtkm::Float64>::Epsilon = VTKM_EPSILON_64;
+
+#undef VTKM_NAN_BITS_32
+#undef VTKM_INF_BITS_32
+#undef VTKM_NEG_INF_BITS_32
+#undef VTKM_EPSILON_32
+#undef VTKM_NAN_BITS_64
+#undef VTKM_INF_BITS_64
+#undef VTKM_NEG_INF_BITS_64
+#undef VTKM_EPSILON_64
+
+} // namespace detail
+
+/// Returns the representation for not-a-number (NaN).
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Nan()
+{
+  return detail::FloatBits<T>::Nan.scalar;
+}
+
+/// Returns the representation for infinity.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Infinity()
+{
+  return detail::FloatBits<T>::Infinity.scalar;
+}
+
+/// Returns the representation for negative infinity.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T NegativeInfinity()
+{
+  return detail::FloatBits<T>::NegativeInfinity.scalar;
+}
+
+/// Returns the difference between 1 and the least value greater than 1
+/// that is representable.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Epsilon()
+{
+  return detail::FloatBits<T>::Epsilon;
+}
+
+#else // !VTKM_USE_IEEE_NONFINITE
+
+/// Returns the representation for not-a-number (NaN).
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Nan()
+{
+  return std::numeric_limits<T>::quiet_NaN();
+}
+
+/// Returns the representation for infinity.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Infinity()
+{
+  return std::numeric_limits<T>::infinity();
+}
+
+/// Returns the representation for negative infinity.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T NegativeInfinity()
+{
+  return -std::numeric_limits<T>::infinity();
+}
+
+/// Returns the difference between 1 and the least value greater than 1
+/// that is representable.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Epsilon()
+{
+  return std::numeric_limits<T>::epsilon();
+}
+#endif // !VTKM_USE_IEEE_NONFINITE
+
+/// Returns the representation for not-a-number (NaN).
+///
+VTKM_EXEC_CONT_EXPORT vtkm::Float32 Nan32() {
+  return vtkm::Nan<vtkm::Float32>();
+}
+VTKM_EXEC_CONT_EXPORT vtkm::Float64 Nan64() {
+  return vtkm::Nan<vtkm::Float64>();
+}
+
+/// Returns the representation for infinity.
+///
+VTKM_EXEC_CONT_EXPORT vtkm::Float32 Infinity32() {
+  return vtkm::Infinity<vtkm::Float32>();
+}
+VTKM_EXEC_CONT_EXPORT vtkm::Float64 Infinity64() {
+  return vtkm::Infinity<vtkm::Float64>();
+}
+
+/// Returns the representation for negative infinity.
+///
+VTKM_EXEC_CONT_EXPORT vtkm::Float32 NegativeInfinity32() {
+  return vtkm::NegativeInfinity<vtkm::Float32>();
+}
+VTKM_EXEC_CONT_EXPORT vtkm::Float64 NegativeInfinity64() {
+  return vtkm::NegativeInfinity<vtkm::Float64>();
+}
+
+//-----------------------------------------------------------------------------
+/// Returns true if \p x is not a number.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+bool IsNan(T x)
+{
+#ifdef VTKM_USE_BOOST_CLASSIFY
+  using boost::math::isnan;
+#endif
+  return (isnan(x) != 0);
+}
+
+/// Returns true if \p x is positive or negative infinity.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+bool IsInf(T x)
+{
+#ifdef VTKM_USE_BOOST_CLASSIFY
+  using boost::math::isinf;
+#endif
+  return (isinf(x) != 0);
+}
+
+/// Returns true if \p x is a normal number (not NaN or infinite).
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+bool IsFinite(T x)
+{
+#ifdef VTKM_USE_BOOST_CLASSIFY
+  using boost::math::isfinite;
+#endif
+  return (isfinite(x) != 0);
+}
+
+//-----------------------------------------------------------------------------
+/// Computes the remainder on division of 2 floating point numbers. The return
+/// value is \p numerator - n \p denominator, where n is the quotient of \p
+/// numerator divided by \p denominator rounded towards zero to an integer. For
+/// example, <tt>FMod(6.5, 2.3)</tt> returns 1.9, which is 6.5 - 2*2.3.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 FMod(vtkm::Float32 x, vtkm::Float32 y) {
+  return VTKM_SYS_MATH_FUNCTION_32(fmod)(x,y);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 FMod(vtkm::Float64 x, vtkm::Float64 y) {
+  return VTKM_SYS_MATH_FUNCTION_64(fmod)(x,y);
+}
+
+
+/// Computes the remainder on division of 2 floating point numbers. The return
+/// value is \p numerator - n \p denominator, where n is the quotient of \p
+/// numerator divided by \p denominator rounded towards the nearest integer
+/// (instead of toward zero like FMod). For example, <tt>FMod(6.5, 2.3)</tt>
+/// returns -0.4, which is 6.5 - 3*2.3.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Remainder(vtkm::Float32 x, vtkm::Float32 y) {
+  return VTKM_SYS_MATH_FUNCTION_32(remainder)(x,y);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Remainder(vtkm::Float64 x, vtkm::Float64 y) {
+  return VTKM_SYS_MATH_FUNCTION_64(remainder)(x,y);
+}
+
+
+/// Returns the remainder on division of 2 floating point numbers just like
+/// Remainder. In addition, this function also returns the \c quotient used to
+/// get that remainder.
+///
+template<typename QType>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 RemainderQuotient(vtkm::Float32 numerator,
+                                vtkm::Float32 denominator,
+                                QType &quotient)
+{
+#ifdef VTKM_USE_BOOST_MATH
+  quotient = static_cast<QType>(boost::math::round(numerator/denominator));
+  return vtkm::Remainder(numerator, denominator);
+#else
+  int iQuotient;
+  vtkm::Float32 result =
+      VTKM_SYS_MATH_FUNCTION_32(remquo)(numerator, denominator, &iQuotient);
+  quotient = iQuotient;
+  return result;
+#endif
+}
+template<typename QType>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 RemainderQuotient(vtkm::Float64 numerator,
+                                vtkm::Float64 denominator,
+                                QType &quotient)
+{
+#ifdef VTKM_USE_BOOST_MATH
+  quotient = static_cast<QType>(boost::math::round(numerator/denominator));
+  return vtkm::Remainder(numerator, denominator);
+#else
+  int iQuotient;
+  vtkm::Float64 result =
+      VTKM_SYS_MATH_FUNCTION_64(remquo)(numerator, denominator, &iQuotient);
+  quotient = iQuotient;
+  return result;
+#endif
+}
+
+/// Gets the integral and fractional parts of \c x. The return value is the
+/// fractional part and \c integral is set to the integral part.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ModF(vtkm::Float32 x, vtkm::Float32 &integral)
+{
+  return VTKM_SYS_MATH_FUNCTION_32(modf)(x, &integral);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64 &integral)
+{
+  return VTKM_SYS_MATH_FUNCTION_64(modf)(x, &integral);
+}
+
+//-----------------------------------------------------------------------------
+/// Round \p x to the smallest integer value not less than x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Ceil(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(ceil)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Ceil(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(ceil)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Ceil(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Ceil(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Ceil(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Ceil(x[0]),
+                        vtkm::Ceil(x[1]),
+                        vtkm::Ceil(x[2]),
+                        vtkm::Ceil(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Ceil(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Ceil(x[0]),
+                        vtkm::Ceil(x[1]),
+                        vtkm::Ceil(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Ceil(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Ceil(x[0]),
+                        vtkm::Ceil(x[1]));
+}
+
+
+/// Round \p x to the largest integer value not greater than x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Floor(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(floor)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Floor(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(floor)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Floor(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Floor(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Floor(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Floor(x[0]),
+                        vtkm::Floor(x[1]),
+                        vtkm::Floor(x[2]),
+                        vtkm::Floor(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Floor(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Floor(x[0]),
+                        vtkm::Floor(x[1]),
+                        vtkm::Floor(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Floor(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Floor(x[0]),
+                        vtkm::Floor(x[1]));
+}
+
+
+/// Round \p x to the nearest integral value.
+///
+#ifdef VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Round(vtkm::Float32 x) {
+  return boost::math::round(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Round(vtkm::Float64 x) {
+  return boost::math::round(x);
+}
+
+#else // !VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Round(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(round)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Round(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(round)(x);
+}
+
+#endif // !VTKM_USE_BOOST_MATH
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Round(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Round(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Round(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Round(x[0]),
+                        vtkm::Round(x[1]),
+                        vtkm::Round(x[2]),
+                        vtkm::Round(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Round(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Round(x[0]),
+                        vtkm::Round(x[1]),
+                        vtkm::Round(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Round(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Round(x[0]),
+                        vtkm::Round(x[1]));
+}
+
+
 } // namespace vtkm
 
 #endif //vtk_m_Math_h

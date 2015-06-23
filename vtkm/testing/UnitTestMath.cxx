@@ -27,6 +27,18 @@ namespace {
 const vtkm::IdComponent NUM_NUMBERS = 5;
 const vtkm::Float64 NumberList[NUM_NUMBERS] = { 0.25, 0.5, 1.0, 2.0, 3.75 };
 
+const vtkm::Float64 NumeratorList[NUM_NUMBERS] =   { 6.5, 5.8, 9.3, 77.0, 0.1 };
+const vtkm::Float64 DenominatorList[NUM_NUMBERS] = { 2.3, 1.6, 3.1, 19.0, 0.4 };
+const vtkm::Float64 FModRemainderList[NUM_NUMBERS]={ 1.9, 1.0, 0.0,  1.0, 0.1 };
+const vtkm::Float64 RemainderList[NUM_NUMBERS] =   {-0.4,-0.6, 0.0,  1.0, 0.1 };
+const vtkm::Int64   QuotientList[NUM_NUMBERS] =    { 3  , 4  , 3  ,  4  , 0   };
+
+const vtkm::Float64 XList[NUM_NUMBERS] =           {4.6, 0.1, 73.4, 55.0, 3.75 };
+const vtkm::Float64 FractionalList[NUM_NUMBERS] =  {0.6, 0.1,  0.4,  0.0, 0.75 };
+const vtkm::Float64 FloorList[NUM_NUMBERS] =       {4.0, 0.0, 73.0, 55.0, 3.0  };
+const vtkm::Float64 CeilList[NUM_NUMBERS] =        {5.0, 1.0, 74.0, 55.0, 4.0  };
+const vtkm::Float64 RoundList[NUM_NUMBERS] =       {5.0, 0.0, 73.0, 55.0, 4.0  };
+
 //-----------------------------------------------------------------------------
 template<typename T>
 void PowTest()
@@ -292,6 +304,7 @@ struct TestExpFunctor
   }
 };
 
+//-----------------------------------------------------------------------------
 struct TestMinMaxFunctor
 {
   template<typename T>
@@ -306,6 +319,112 @@ struct TestMinMaxFunctor
   }
 };
 
+//-----------------------------------------------------------------------------
+template<typename T>
+void TestNonFinites()
+{
+  std::cout << "Testing non-finites." << std::endl;
+
+  T zero = 0.0;
+  T finite = 1.0;
+  T nan = vtkm::Nan<T>();
+  T inf = vtkm::Infinity<T>();
+  T neginf = vtkm::NegativeInfinity<T>();
+  T epsilon = vtkm::Epsilon<T>();
+
+  // General behavior.
+  VTKM_TEST_ASSERT(nan != nan, "Nan not equal itself.");
+  VTKM_TEST_ASSERT(!(nan >= zero), "Nan not greater or less.");
+  VTKM_TEST_ASSERT(!(nan <= zero), "Nan not greater or less.");
+  VTKM_TEST_ASSERT(!(nan >= finite), "Nan not greater or less.");
+  VTKM_TEST_ASSERT(!(nan <= finite), "Nan not greater or less.");
+
+  VTKM_TEST_ASSERT(neginf < inf, "Infinity big");
+  VTKM_TEST_ASSERT(zero < inf, "Infinity big");
+  VTKM_TEST_ASSERT(finite < inf, "Infinity big");
+  VTKM_TEST_ASSERT(zero > -inf, "-Infinity small");
+  VTKM_TEST_ASSERT(finite > -inf, "-Infinity small");
+  VTKM_TEST_ASSERT(zero > neginf, "-Infinity small");
+  VTKM_TEST_ASSERT(finite > neginf, "-Infinity small");
+
+  VTKM_TEST_ASSERT(zero < epsilon, "Negative epsilon");
+  VTKM_TEST_ASSERT(finite > epsilon, "Large epsilon");
+
+  // Math check functions.
+  VTKM_TEST_ASSERT(!vtkm::IsNan(zero), "Bad IsNan check.");
+  VTKM_TEST_ASSERT(!vtkm::IsNan(finite), "Bad IsNan check.");
+  VTKM_TEST_ASSERT(vtkm::IsNan(nan), "Bad IsNan check.");
+  VTKM_TEST_ASSERT(!vtkm::IsNan(inf), "Bad IsNan check.");
+  VTKM_TEST_ASSERT(!vtkm::IsNan(neginf), "Bad IsNan check.");
+  VTKM_TEST_ASSERT(!vtkm::IsNan(epsilon), "Bad IsNan check.");
+
+  VTKM_TEST_ASSERT(!vtkm::IsInf(zero), "Bad infinity check.");
+  VTKM_TEST_ASSERT(!vtkm::IsInf(finite), "Bad infinity check.");
+  VTKM_TEST_ASSERT(!vtkm::IsInf(nan), "Bad infinity check.");
+  VTKM_TEST_ASSERT(vtkm::IsInf(inf), "Bad infinity check.");
+  VTKM_TEST_ASSERT(vtkm::IsInf(neginf), "Bad infinity check.");
+  VTKM_TEST_ASSERT(!vtkm::IsInf(epsilon), "Bad infinity check.");
+
+  VTKM_TEST_ASSERT(vtkm::IsFinite(zero), "Bad finite check.");
+  VTKM_TEST_ASSERT(vtkm::IsFinite(finite), "Bad finite check.");
+  VTKM_TEST_ASSERT(!vtkm::IsFinite(nan), "Bad finite check.");
+  VTKM_TEST_ASSERT(!vtkm::IsFinite(inf), "Bad finite check.");
+  VTKM_TEST_ASSERT(!vtkm::IsFinite(neginf), "Bad finite check.");
+  VTKM_TEST_ASSERT(vtkm::IsFinite(epsilon), "Bad finite check.");
+}
+
+//-----------------------------------------------------------------------------
+template<typename T>
+void TestRemainders()
+{
+  std::cout << "Testing remainders." << std::endl;
+  for (vtkm::IdComponent index = 0; index < NUM_NUMBERS; index++)
+  {
+    T numerator = static_cast<T>(NumeratorList[index]);
+    T denominator = static_cast<T>(DenominatorList[index]);
+    T fmodremainder = static_cast<T>(FModRemainderList[index]);
+    T remainder = static_cast<T>(RemainderList[index]);
+    vtkm::Int64 quotient = QuotientList[index];
+
+    VTKM_TEST_ASSERT(test_equal(vtkm::FMod(numerator, denominator), fmodremainder),
+                     "Bad FMod remainder.");
+    VTKM_TEST_ASSERT(test_equal(vtkm::Remainder(numerator, denominator), remainder),
+                     "Bad remainder.");
+    vtkm::Int64 q;
+    VTKM_TEST_ASSERT(test_equal(vtkm::RemainderQuotient(numerator, denominator, q), remainder),
+                     "Bad remainder-quotient remainder.");
+    VTKM_TEST_ASSERT(test_equal(q, quotient),
+                     "Bad reminder-quotient quotient.");
+  }
+}
+
+//-----------------------------------------------------------------------------
+template<typename T>
+void TestRound()
+{
+  std::cout << "Testing round." << std::endl;
+  for (vtkm::IdComponent index = 0; index < NUM_NUMBERS; index++)
+  {
+    T x = static_cast<T>(XList[index]);
+    T fractional = static_cast<T>(FractionalList[index]);
+    T floor = static_cast<T>(FloorList[index]);
+    T ceil = static_cast<T>(CeilList[index]);
+    T round = static_cast<T>(RoundList[index]);
+
+    T intPart;
+    VTKM_TEST_ASSERT(test_equal(vtkm::ModF(x,intPart), fractional),
+                     "ModF returned wrong fractional part.");
+    VTKM_TEST_ASSERT(test_equal(intPart, floor),
+                     "ModF returned wrong integral part.");
+    VTKM_TEST_ASSERT(test_equal(vtkm::Floor(x), floor),
+                     "Bad floor.");
+    VTKM_TEST_ASSERT(test_equal(vtkm::Ceil(x), ceil),
+                     "Bad ceil.");
+    VTKM_TEST_ASSERT(test_equal(vtkm::Round(x), round),
+                     "Bad round.");
+  }
+}
+
 void RunMathTests()
 {
   PowTest<vtkm::Float32>();
@@ -314,6 +433,12 @@ void RunMathTests()
   Log2Test();
   vtkm::testing::Testing::TryTypes(TestExpFunctor(), vtkm::TypeListTagField());
   vtkm::testing::Testing::TryTypes(TestMinMaxFunctor(), vtkm::TypeListTagScalarAll());
+  TestNonFinites<vtkm::Float32>();
+  TestNonFinites<vtkm::Float64>();
+  TestRemainders<vtkm::Float32>();
+  TestRemainders<vtkm::Float64>();
+  TestRound<vtkm::Float32>();
+  TestRound<vtkm::Float64>();
 }
 
 } // Anonymous namespace
