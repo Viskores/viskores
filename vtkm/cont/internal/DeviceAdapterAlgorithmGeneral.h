@@ -270,23 +270,24 @@ private:
     {  }
   };
 
-  template<class InputPortalType,class ValuesPortalType,class OutputPortalType,class Compare>
+  template<class InputPortalType, class ValuesPortalType,
+           class OutputPortalType, class BinaryCompare>
   struct LowerBoundsComparisonKernel
   {
     InputPortalType InputPortal;
     ValuesPortalType ValuesPortal;
     OutputPortalType OutputPortal;
-    Compare CompareFunctor;
+    BinaryCompare CompareFunctor;
 
     VTKM_CONT_EXPORT
     LowerBoundsComparisonKernel(InputPortalType inputPortal,
                                 ValuesPortalType valuesPortal,
                                 OutputPortalType outputPortal,
-                                Compare comp)
+                                BinaryCompare binary_compare)
       : InputPortal(inputPortal),
         ValuesPortal(valuesPortal),
         OutputPortal(outputPortal),
-        CompareFunctor(comp) {  }
+        CompareFunctor(binary_compare) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
@@ -339,12 +340,12 @@ public:
     DerivedAlgorithm::Schedule(kernel, arraySize);
   }
 
-  template<typename T, class CIn, class CVal, class COut, class Compare>
+  template<typename T, class CIn, class CVal, class COut, class BinaryCompare>
   VTKM_CONT_EXPORT static void LowerBounds(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       const vtkm::cont::ArrayHandle<T,CVal> &values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut> &output,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
     vtkm::Id arraySize = values.GetNumberOfValues();
 
@@ -352,11 +353,11 @@ public:
         typename vtkm::cont::ArrayHandle<T,CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
         typename vtkm::cont::ArrayHandle<T,CVal>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
         typename vtkm::cont::ArrayHandle<vtkm::Id,COut>::template ExecutionTypes<DeviceAdapterTag>::Portal,
-        Compare>
+        BinaryCompare>
         kernel(input.PrepareForInput(DeviceAdapterTag()),
                values.PrepareForInput(DeviceAdapterTag()),
                output.PrepareForOutput(arraySize, DeviceAdapterTag()),
-               comp);
+               binary_compare);
 
     DerivedAlgorithm::Schedule(kernel, arraySize);
   }
@@ -375,7 +376,7 @@ public:
   //--------------------------------------------------------------------------
   // Reduce
 private:
-  template<int ReduceWidth, typename T, typename ArrayType, typename BinaryOperation >
+  template<int ReduceWidth, typename T, typename ArrayType, typename BinaryFunctor >
   struct ReduceKernel : vtkm::exec::FunctorBase
   {
     typedef typename ArrayType::template ExecutionTypes<
@@ -383,7 +384,7 @@ private:
     typedef typename ExecutionTypes::PortalConst PortalConst;
 
     PortalConst Portal;
-    BinaryOperation BinaryOperator;
+    BinaryFunctor BinaryOperator;
     vtkm::Id ArrayLength;
 
     VTKM_CONT_EXPORT
@@ -395,9 +396,9 @@ private:
     }
 
     VTKM_CONT_EXPORT
-    ReduceKernel(const ArrayType &array, BinaryOperation op)
+    ReduceKernel(const ArrayType &array, BinaryFunctor binary_functor)
       : Portal(array.PrepareForInput( DeviceAdapterTag() ) ),
-        BinaryOperator(op),
+        BinaryOperator(binary_functor),
         ArrayLength( array.GetNumberOfValues() )
     {  }
 
@@ -444,11 +445,11 @@ public:
     return DerivedAlgorithm::Reduce(input, initialValue, vtkm::internal::Add());
   }
 
- template<typename T, class CIn, class BinaryOperator>
+ template<typename T, class CIn, class BinaryFunctor>
   VTKM_CONT_EXPORT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       T initialValue,
-      BinaryOperator binaryOp)
+      BinaryFunctor binary_functor)
   {
     //Crazy Idea:
     //We create a implicit array handle that wraps the input
@@ -463,7 +464,7 @@ public:
             16,
             T,
             vtkm::cont::ArrayHandle<T,CIn>,
-            BinaryOperator
+            BinaryFunctor
             > ReduceKernelType;
 
     typedef vtkm::cont::ArrayHandleImplicit<
@@ -473,7 +474,7 @@ public:
                                     T,
                                     vtkm::cont::StorageTagBasic> TempArrayType;
 
-    ReduceKernelType kernel(input, binaryOp);
+    ReduceKernelType kernel(input, binary_functor);
     vtkm::Id length = (input.GetNumberOfValues() / 16);
     length += (input.GetNumberOfValues() % 16 == 0) ? 0 : 1;
     ReduceHandleType reduced = vtkm::cont::make_ArrayHandleImplicit<T>(kernel,
@@ -482,8 +483,8 @@ public:
     TempArrayType inclusiveScanStorage;
     T scanResult = DerivedAlgorithm::ScanInclusive(reduced,
                                                    inclusiveScanStorage,
-                                                   binaryOp);
-    return binaryOp(initialValue, scanResult);
+                                                   binary_functor);
+    return binary_functor(initialValue, scanResult);
   }
 
   //--------------------------------------------------------------------------
@@ -566,13 +567,13 @@ private:
     }
   };
 
-  template<typename BinaryOperator>
+  template<typename BinaryFunctor>
   struct ReduceByKeyAdd
   {
-    BinaryOperator BinaryFunctor;
+    BinaryFunctor BinaryOperator;
 
-    ReduceByKeyAdd(BinaryOperator binaryOp):
-      BinaryFunctor( binaryOp )
+    ReduceByKeyAdd(BinaryFunctor binary_functor):
+      BinaryOperator( binary_functor )
     { }
 
     template<typename T>
@@ -590,7 +591,7 @@ private:
         // if b is not START, then it's safe to sum a & b.
         // Propagate a's start flag to b
         // so that later when b's START bit is set, it means there must exists a START between a and b
-        return ReturnType(this->BinaryFunctor(a.first , b.first),
+        return ReturnType(this->BinaryOperator(a.first , b.first),
                           ReduceKeySeriesStates(a.second.fStart, b.second.fEnd));
     }
     return b;
@@ -609,13 +610,13 @@ private:
 
 public:
   template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
-          class BinaryOperation>
+          class BinaryFunctor>
   VTKM_CONT_EXPORT static void ReduceByKey(
       const vtkm::cont::ArrayHandle<T,KIn> &keys,
       const vtkm::cont::ArrayHandle<U,VIn> &values,
       vtkm::cont::ArrayHandle<T,KOut> &keys_output,
       vtkm::cont::ArrayHandle<U,VOut> &values_output,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     VTKM_ASSERT_CONT(keys.GetNumberOfValues() == values.GetNumberOfValues());
     const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
@@ -669,7 +670,7 @@ public:
 
     DerivedAlgorithm::ScanInclusive(scanInput,
                                     scanOutput,
-                                    ReduceByKeyAdd<BinaryOperation>(binaryOp) );
+                                    ReduceByKeyAdd<BinaryFunctor>(binary_functor) );
 
     //at this point we are done with keystate, so free the memory
     keystate.ReleaseResources();
@@ -763,20 +764,20 @@ public:
   //--------------------------------------------------------------------------
   // Scan Inclusive
 private:
-  template<typename PortalType, typename BinaryOperation>
+  template<typename PortalType, typename BinaryFunctor>
   struct ScanKernel : vtkm::exec::FunctorBase
   {
     PortalType Portal;
-    BinaryOperation BinaryOperator;
+    BinaryFunctor BinaryOperator;
     vtkm::Id Stride;
     vtkm::Id Offset;
     vtkm::Id Distance;
 
     VTKM_CONT_EXPORT
-    ScanKernel(const PortalType &portal, BinaryOperation binaryOp,
+    ScanKernel(const PortalType &portal, BinaryFunctor binary_functor,
                vtkm::Id stride, vtkm::Id offset)
       : Portal(portal),
-        BinaryOperator(binaryOp),
+        BinaryOperator(binary_functor),
         Stride(stride),
         Offset(offset),
         Distance(stride/2)
@@ -810,17 +811,17 @@ public:
                                             vtkm::internal::Add());
   }
 
-  template<typename T, class CIn, class COut, class BinaryOperation>
+  template<typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT_EXPORT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     typedef typename
         vtkm::cont::ArrayHandle<T,COut>
             ::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
 
-    typedef ScanKernel<PortalType,BinaryOperation> ScanKernelType;
+    typedef ScanKernel<PortalType,BinaryFunctor> ScanKernelType;
 
     DerivedAlgorithm::Copy(input, output);
 
@@ -835,14 +836,14 @@ public:
     vtkm::Id stride;
     for (stride = 2; stride-1 < numValues; stride *= 2)
     {
-      ScanKernelType kernel(portal, binaryOp, stride, stride/2 - 1);
+      ScanKernelType kernel(portal, binary_functor, stride, stride/2 - 1);
       DerivedAlgorithm::Schedule(kernel, numValues/stride);
     }
 
     // Do reverse operation on odd indices. Start at stride we were just at.
     for (stride /= 2; stride > 1; stride /= 2)
     {
-      ScanKernelType kernel(portal, binaryOp, stride, stride - 1);
+      ScanKernelType kernel(portal, binary_functor, stride, stride - 1);
       DerivedAlgorithm::Schedule(kernel, numValues/stride);
     }
 
@@ -852,16 +853,16 @@ public:
   //--------------------------------------------------------------------------
   // Sort
 private:
-  template<typename PortalType, typename CompareType>
+  template<typename PortalType, typename BinaryCompare>
   struct BitonicSortMergeKernel : vtkm::exec::FunctorBase
   {
     PortalType Portal;
-    CompareType Compare;
+    BinaryCompare Compare;
     vtkm::Id GroupSize;
 
     VTKM_CONT_EXPORT
     BitonicSortMergeKernel(const PortalType &portal,
-                           const CompareType &compare,
+                           const BinaryCompare &compare,
                            vtkm::Id groupSize)
       : Portal(portal), Compare(compare), GroupSize(groupSize) {  }
 
@@ -890,16 +891,16 @@ private:
     }
   };
 
-  template<typename PortalType, typename CompareType>
+  template<typename PortalType, typename BinaryCompare>
   struct BitonicSortCrossoverKernel : vtkm::exec::FunctorBase
   {
     PortalType Portal;
-    CompareType Compare;
+    BinaryCompare Compare;
     vtkm::Id GroupSize;
 
     VTKM_CONT_EXPORT
     BitonicSortCrossoverKernel(const PortalType &portal,
-                               const CompareType &compare,
+                               const BinaryCompare &compare,
                                vtkm::Id groupSize)
       : Portal(portal), Compare(compare), GroupSize(groupSize) {  }
 
@@ -940,10 +941,10 @@ private:
   };
 
 public:
-  template<typename T, class Storage, class CompareType>
+  template<typename T, class Storage, class BinaryCompare>
   VTKM_CONT_EXPORT static void Sort(
       vtkm::cont::ArrayHandle<T,Storage> &values,
-      CompareType compare)
+      BinaryCompare binary_compare)
   {
     typedef typename vtkm::cont::ArrayHandle<T,Storage> ArrayType;
     typedef typename ArrayType::template ExecutionTypes<DeviceAdapterTag>
@@ -958,18 +959,18 @@ public:
     while (numThreads < numValues) { numThreads *= 2; }
     numThreads /= 2;
 
-    typedef BitonicSortMergeKernel<PortalType,CompareType> MergeKernel;
-    typedef BitonicSortCrossoverKernel<PortalType,CompareType> CrossoverKernel;
+    typedef BitonicSortMergeKernel<PortalType,BinaryCompare> MergeKernel;
+    typedef BitonicSortCrossoverKernel<PortalType,BinaryCompare> CrossoverKernel;
 
     for (vtkm::Id crossoverSize = 1;
          crossoverSize < numValues;
          crossoverSize *= 2)
     {
-      DerivedAlgorithm::Schedule(CrossoverKernel(portal,compare,crossoverSize),
+      DerivedAlgorithm::Schedule(CrossoverKernel(portal,binary_compare,crossoverSize),
                                  numThreads);
       for (vtkm::Id mergeSize = crossoverSize/2; mergeSize > 0; mergeSize /= 2)
       {
-        DerivedAlgorithm::Schedule(MergeKernel(portal,compare,mergeSize),
+        DerivedAlgorithm::Schedule(MergeKernel(portal,binary_compare,mergeSize),
                                    numThreads);
       }
     }
@@ -985,11 +986,11 @@ public:
   //--------------------------------------------------------------------------
   // Sort by Key
 protected:
-  template<typename T, typename U, class Compare=DefaultCompareFunctor>
+  template<typename T, typename U, class BinaryCompare=DefaultCompareFunctor>
   struct KeyCompare
   {
     KeyCompare(): CompareFunctor() {}
-    explicit KeyCompare(Compare c): CompareFunctor(c) {}
+    explicit KeyCompare(BinaryCompare c): CompareFunctor(c) {}
 
     VTKM_EXEC_EXPORT
     bool operator()(const vtkm::Pair<T,U>& a, const vtkm::Pair<T,U>& b) const
@@ -997,7 +998,7 @@ protected:
       return CompareFunctor(a.first,b.first);
     }
   private:
-    Compare CompareFunctor;
+    BinaryCompare CompareFunctor;
   };
 
 public:
@@ -1019,11 +1020,11 @@ public:
     DerivedAlgorithm::Sort(zipHandle,KeyCompare<T,U>());
   }
 
-  template<typename T, typename U, class StorageT,  class StorageU, class Compare>
+  template<typename T, typename U, class StorageT,  class StorageU, class BinaryCompare>
   VTKM_CONT_EXPORT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
     //combine the keys and values into a ZipArrayHandle
     //we than need to specify a custom compare function wrapper
@@ -1035,7 +1036,7 @@ public:
 
     ZipHandleType zipHandle =
                     vtkm::cont::make_ArrayHandleZip(keys,values);
-    DerivedAlgorithm::Sort(zipHandle,KeyCompare<T,U,Compare>(comp));
+    DerivedAlgorithm::Sort(zipHandle,KeyCompare<T,U,BinaryCompare>(binary_compare));
   }
 
   //--------------------------------------------------------------------------
@@ -1043,21 +1044,21 @@ public:
 private:
   template<class StencilPortalType,
            class OutputPortalType,
-           class PredicateOperator>
+           class UnaryPredicate>
   struct StencilToIndexFlagKernel
   {
     typedef typename StencilPortalType::ValueType StencilValueType;
     StencilPortalType StencilPortal;
     OutputPortalType OutputPortal;
-    PredicateOperator Predicate;
+    UnaryPredicate Predicate;
 
     VTKM_CONT_EXPORT
     StencilToIndexFlagKernel(StencilPortalType stencilPortal,
                              OutputPortalType outputPortal,
-                             PredicateOperator predicate)
+                             UnaryPredicate unary_predicate)
       : StencilPortal(stencilPortal),
         OutputPortal(outputPortal),
-        Predicate(predicate) {  }
+        Predicate(unary_predicate) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
@@ -1089,12 +1090,12 @@ private:
                  StencilPortalType stencilPortal,
                  IndexPortalType indexPortal,
                  OutputPortalType outputPortal,
-                 PredicateOperator predicate)
+                 PredicateOperator unary_predicate)
       : InputPortal(inputPortal),
         StencilPortal(stencilPortal),
         IndexPortal(indexPortal),
         OutputPortal(outputPortal),
-        Predicate(predicate) {  }
+        Predicate(unary_predicate) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
@@ -1120,12 +1121,12 @@ private:
 public:
 
   template<typename T, typename U, class CIn, class CStencil,
-           class COut, class PredicateOperator>
+           class COut, class UnaryPredicate>
   VTKM_CONT_EXPORT static void StreamCompact(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
       vtkm::cont::ArrayHandle<T,COut>& output,
-      PredicateOperator predicate)
+      UnaryPredicate unary_predicate)
   {
     VTKM_ASSERT_CONT(input.GetNumberOfValues() == stencil.GetNumberOfValues());
     vtkm::Id arrayLength = stencil.GetNumberOfValues();
@@ -1147,9 +1148,9 @@ public:
 
     StencilToIndexFlagKernel< StencilPortalType,
                               IndexPortalType,
-                              PredicateOperator> indexKernel(stencilPortal,
+                              UnaryPredicate> indexKernel(stencilPortal,
                                                          indexPortal,
-                                                         predicate);
+                                                         unary_predicate);
 
     DerivedAlgorithm::Schedule(indexKernel, arrayLength);
 
@@ -1170,11 +1171,11 @@ public:
         StencilPortalType,
         IndexPortalType,
         OutputPortalType,
-        PredicateOperator> copyKernel(inputPortal,
+        UnaryPredicate> copyKernel(inputPortal,
                                     stencilPortal,
                                     indexPortal,
                                     outputPortal,
-                                    predicate);
+                                    unary_predicate);
     DerivedAlgorithm::Schedule(copyKernel, arrayLength);
   }
 
@@ -1184,8 +1185,8 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
       const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
-    ::vtkm::not_default_constructor<U> predicate;
-    DerivedAlgorithm::StreamCompact(input, stencil, output, predicate);
+    ::vtkm::not_default_constructor<U> unary_predicate;
+    DerivedAlgorithm::StreamCompact(input, stencil, output, unary_predicate);
   }
 
   template<typename T, class CStencil, class COut>
@@ -1237,20 +1238,20 @@ private:
     {  }
   };
 
-  template<class InputPortalType, class StencilPortalType, class Compare>
+  template<class InputPortalType, class StencilPortalType, class BinaryCompare>
   struct ClassifyUniqueComparisonKernel
   {
     InputPortalType InputPortal;
     StencilPortalType StencilPortal;
-    Compare CompareFunctor;
+    BinaryCompare CompareFunctor;
 
     VTKM_CONT_EXPORT
     ClassifyUniqueComparisonKernel(InputPortalType inputPortal,
                                    StencilPortalType stencilPortal,
-                                   Compare comp):
+                                   BinaryCompare binary_compare):
       InputPortal(inputPortal),
       StencilPortal(stencilPortal),
-      CompareFunctor(comp) {  }
+      CompareFunctor(binary_compare) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
@@ -1300,10 +1301,10 @@ public:
     DerivedAlgorithm::Copy(outputArray, values);
   }
 
-  template<typename T, class Storage, class Compare>
+  template<typename T, class Storage, class BinaryCompare>
   VTKM_CONT_EXPORT static void Unique(
       vtkm::cont::ArrayHandle<T,Storage> &values,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
     vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>
         stencilArray;
@@ -1312,10 +1313,10 @@ public:
     ClassifyUniqueComparisonKernel<
         typename vtkm::cont::ArrayHandle<T,Storage>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
         typename vtkm::cont::ArrayHandle<vtkm::Id,vtkm::cont::StorageTagBasic>::template ExecutionTypes<DeviceAdapterTag>::Portal,
-        Compare>
+        BinaryCompare>
         classifyKernel(values.PrepareForInput(DeviceAdapterTag()),
                        stencilArray.PrepareForOutput(inputSize, DeviceAdapterTag()),
-                       comp);
+                       binary_compare);
     DerivedAlgorithm::Schedule(classifyKernel, inputSize);
 
     vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
@@ -1374,23 +1375,23 @@ private:
   };
 
 
-  template<class InputPortalType,class ValuesPortalType,class OutputPortalType,class Compare>
+  template<class InputPortalType,class ValuesPortalType,class OutputPortalType,class BinaryCompare>
   struct UpperBoundsKernelComparisonKernel
   {
     InputPortalType InputPortal;
     ValuesPortalType ValuesPortal;
     OutputPortalType OutputPortal;
-    Compare CompareFunctor;
+    BinaryCompare CompareFunctor;
 
     VTKM_CONT_EXPORT
     UpperBoundsKernelComparisonKernel(InputPortalType inputPortal,
                                       ValuesPortalType valuesPortal,
                                       OutputPortalType outputPortal,
-                                      Compare comp)
+                                      BinaryCompare binary_compare)
       : InputPortal(inputPortal),
         ValuesPortal(valuesPortal),
         OutputPortal(outputPortal),
-        CompareFunctor(comp) {  }
+        CompareFunctor(binary_compare) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
@@ -1442,12 +1443,12 @@ public:
     DerivedAlgorithm::Schedule(kernel, arraySize);
   }
 
-  template<typename T, class CIn, class CVal, class COut, class Compare>
+  template<typename T, class CIn, class CVal, class COut, class BinaryCompare>
   VTKM_CONT_EXPORT static void UpperBounds(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       const vtkm::cont::ArrayHandle<T,CVal> &values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut> &output,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
     vtkm::Id arraySize = values.GetNumberOfValues();
 
@@ -1455,11 +1456,11 @@ public:
         typename vtkm::cont::ArrayHandle<T,CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
         typename vtkm::cont::ArrayHandle<T,CVal>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
         typename vtkm::cont::ArrayHandle<T,COut>::template ExecutionTypes<DeviceAdapterTag>::Portal,
-        Compare>
+        BinaryCompare>
         kernel(input.PrepareForInput(DeviceAdapterTag()),
                values.PrepareForInput(DeviceAdapterTag()),
                output.PrepareForOutput(arraySize, DeviceAdapterTag()),
-               comp);
+               binary_compare);
 
     DerivedAlgorithm::Schedule(kernel, arraySize);
   }

@@ -1,4 +1,4 @@
-//============================================================================
+  //============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -57,16 +57,16 @@ public:
     return Reduce(input, initialValue, vtkm::internal::Add());
   }
 
- template<typename T, class CIn, class BinaryOperator>
+ template<typename T, class CIn, class BinaryFunctor>
   VTKM_CONT_EXPORT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       T initialValue,
-      BinaryOperator binaryOp)
+      BinaryFunctor binary_functor)
   {
     typedef typename vtkm::cont::ArrayHandle<T,CIn>
         ::template ExecutionTypes<Device>::PortalConst PortalIn;
 
-    internal::WrappedBinaryOperator<T, BinaryOperator> wrappedOp( binaryOp );
+    internal::WrappedBinaryOperator<T, BinaryFunctor> wrappedOp( binary_functor );
     PortalIn inputPortal = input.PrepareForInput(Device());
     return std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                            vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
@@ -75,13 +75,13 @@ public:
   }
 
   template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
-          class BinaryOperation>
+          class BinaryFunctor>
   VTKM_CONT_EXPORT static void ReduceByKey(
       const vtkm::cont::ArrayHandle<T,KIn> &keys,
       const vtkm::cont::ArrayHandle<U,VIn> &values,
       vtkm::cont::ArrayHandle<T,KOut> &keys_output,
       vtkm::cont::ArrayHandle<U,VOut> &values_output,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     typedef typename vtkm::cont::ArrayHandle<T,KIn>
         ::template ExecutionTypes<Device>::PortalConst PortalKIn;
@@ -111,7 +111,7 @@ public:
       while(readPos < numberOfKeys &&
             currentKey == keysPortalIn.Get(readPos) )
         {
-        currentValue = binaryOp(currentValue, valuesPortalIn.Get(readPos));
+        currentValue = binary_functor(currentValue, valuesPortalIn.Get(readPos));
         ++readPos;
         }
 
@@ -161,19 +161,19 @@ public:
     return outputPortal.Get(numberOfValues - 1);
   }
 
-  template<typename T, class CIn, class COut, class BinaryOperation>
+  template<typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT_EXPORT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     typedef typename vtkm::cont::ArrayHandle<T,COut>
         ::template ExecutionTypes<Device>::Portal PortalOut;
     typedef typename vtkm::cont::ArrayHandle<T,CIn>
         ::template ExecutionTypes<Device>::PortalConst PortalIn;
 
-    internal::WrappedBinaryOperator<T,BinaryOperation> wrappedBinaryOp(
-                                                                     binaryOp);
+    internal::WrappedBinaryOperator<T,BinaryFunctor> wrappedBinaryOp(
+                                                               binary_functor);
 
     vtkm::Id numberOfValues = input.GetNumberOfValues();
 
@@ -333,11 +333,11 @@ private:
 
 private:
   /// Reorder the value array along with the sorting algorithm
-  template<typename T, typename U, class StorageT,  class StorageU, class Compare>
+  template<typename T, typename U, class StorageT,  class StorageU, class BinaryCompare>
   VTKM_CONT_EXPORT static void SortByKeyDirect(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
     //combine the keys and values into a ZipArrayHandle
     //we than need to specify a custom compare function wrapper
@@ -349,7 +349,7 @@ private:
 
     ZipHandleType zipHandle =
                     vtkm::cont::make_ArrayHandleZip(keys,values);
-    Sort(zipHandle,KeyCompare<T,U,Compare>(comp));
+    Sort(zipHandle,KeyCompare<T,U,BinaryCompare>(binary_compare));
   }
 
 public:
@@ -361,13 +361,13 @@ public:
     SortByKey(keys, values, std::less<T>());
   }
 
-  template<typename T, typename U, class StorageT,  class StorageU, class Less>
+  template<typename T, typename U, class StorageT,  class StorageU, class BinaryCompare>
   VTKM_CONT_EXPORT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values,
-      const Less &less)
+      const BinaryCompare &binary_compare)
   {
-    internal::WrappedBinaryOperator<bool, Less > wrappedCompare( less );
+    internal::WrappedBinaryOperator<bool, BinaryCompare > wrappedCompare( binary_compare );
     if (sizeof(U) > sizeof(vtkm::Id))
     {
       /// More efficient sort:
@@ -395,9 +395,9 @@ public:
     Sort(values, std::less<T>());
   }
 
-  template<typename T, class Storage, class Compare>
+  template<typename T, class Storage, class BinaryCompare>
   VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage>& values,
-                                    Compare comp)
+                                    BinaryCompare binary_compare)
   {
     typedef typename vtkm::cont::ArrayHandle<T,Storage>
         ::template ExecutionTypes<Device>::Portal PortalType;
@@ -406,7 +406,7 @@ public:
     vtkm::cont::ArrayPortalToIterators<PortalType> iterators(arrayPortal);
 
 
-    internal::WrappedBinaryOperator<bool,Compare> wrappedCompare(comp);
+    internal::WrappedBinaryOperator<bool,BinaryCompare> wrappedCompare(binary_compare);
     std::sort(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
   }
 
