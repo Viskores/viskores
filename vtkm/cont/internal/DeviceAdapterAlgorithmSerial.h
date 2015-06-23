@@ -161,19 +161,19 @@ public:
     return outputPortal.Get(numberOfValues - 1);
   }
 
-  template<typename T, class CIn, class COut, class BinaryOperation>
+  template<typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT_EXPORT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     typedef typename vtkm::cont::ArrayHandle<T,COut>
         ::template ExecutionTypes<Device>::Portal PortalOut;
     typedef typename vtkm::cont::ArrayHandle<T,CIn>
         ::template ExecutionTypes<Device>::PortalConst PortalIn;
 
-    internal::WrappedBinaryOperator<T,BinaryOperation> wrappedBinaryOp(
-                                                                     binaryOp);
+    internal::WrappedBinaryOperator<T,BinaryFunctor> wrappedBinaryOp(
+                                                               binary_functor);
 
     vtkm::Id numberOfValues = input.GetNumberOfValues();
 

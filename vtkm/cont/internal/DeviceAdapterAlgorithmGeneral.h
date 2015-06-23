@@ -764,20 +764,20 @@ public:
   //--------------------------------------------------------------------------
   // Scan Inclusive
 private:
-  template<typename PortalType, typename BinaryOperation>
+  template<typename PortalType, typename BinaryFunctor>
   struct ScanKernel : vtkm::exec::FunctorBase
   {
     PortalType Portal;
-    BinaryOperation BinaryOperator;
+    BinaryFunctor BinaryOperator;
     vtkm::Id Stride;
     vtkm::Id Offset;
     vtkm::Id Distance;
 
     VTKM_CONT_EXPORT
-    ScanKernel(const PortalType &portal, BinaryOperation binaryOp,
+    ScanKernel(const PortalType &portal, BinaryFunctor binary_functor,
                vtkm::Id stride, vtkm::Id offset)
       : Portal(portal),
-        BinaryOperator(binaryOp),
+        BinaryOperator(binary_functor),
         Stride(stride),
         Offset(offset),
         Distance(stride/2)
@@ -811,17 +811,17 @@ public:
                                             vtkm::internal::Add());
   }
 
-  template<typename T, class CIn, class COut, class BinaryOperation>
+  template<typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT_EXPORT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     typedef typename
         vtkm::cont::ArrayHandle<T,COut>
             ::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
 
-    typedef ScanKernel<PortalType,BinaryOperation> ScanKernelType;
+    typedef ScanKernel<PortalType,BinaryFunctor> ScanKernelType;
 
     DerivedAlgorithm::Copy(input, output);
 
@@ -836,14 +836,14 @@ public:
     vtkm::Id stride;
     for (stride = 2; stride-1 < numValues; stride *= 2)
     {
-      ScanKernelType kernel(portal, binaryOp, stride, stride/2 - 1);
+      ScanKernelType kernel(portal, binary_functor, stride, stride/2 - 1);
       DerivedAlgorithm::Schedule(kernel, numValues/stride);
     }
 
     // Do reverse operation on odd indices. Start at stride we were just at.
     for (stride /= 2; stride > 1; stride /= 2)
     {
-      ScanKernelType kernel(portal, binaryOp, stride, stride - 1);
+      ScanKernelType kernel(portal, binary_functor, stride, stride - 1);
       DerivedAlgorithm::Schedule(kernel, numValues/stride);
     }
 

@@ -405,14 +405,14 @@ private:
     return ScanInclusivePortal(input, output, ::thrust::plus<ValueType>() );
   }
 
-  template<class InputPortal, class OutputPortal, class BinaryOperation>
+  template<class InputPortal, class OutputPortal, class BinaryFunctor>
   VTKM_CONT_EXPORT static
   typename InputPortal::ValueType ScanInclusivePortal(const InputPortal &input,
                                                       const OutputPortal &output,
-                                                      BinaryOperation binaryOp)
+                                                      BinaryFunctor binary_functor)
   {
     vtkm::exec::cuda::internal::WrappedBinaryOperator<typename InputPortal::ValueType,
-                                                      BinaryOperation> bop(binaryOp);
+                                                      BinaryFunctor> bop(binary_functor);
 
     typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
                                                             IteratorType;
@@ -733,11 +733,11 @@ public:
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
 
-  template<typename T, class SIn, class SOut, class BinaryOperation>
+  template<typename T, class SIn, class SOut, class BinaryFunctor>
   VTKM_CONT_EXPORT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,SIn> &input,
       vtkm::cont::ArrayHandle<T,SOut>& output,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
@@ -753,7 +753,7 @@ public:
     input.PrepareForInput(DeviceAdapterTag());
     return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
-                               binaryOp);
+                               binary_functor);
   }
 
 // Because of some funny code conversions in nvcc, kernels for devices have to

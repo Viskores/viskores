@@ -311,16 +311,16 @@ public:
               vtkm::cont::DeviceAdapterTagTBB()), vtkm::internal::Add());
   }
 
-  template<typename T, class CIn, class COut, class BinaryOperation>
+  template<typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT_EXPORT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut> &output,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     return ScanInclusivePortals(
           input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
           output.PrepareForOutput(input.GetNumberOfValues(),
-            vtkm::cont::DeviceAdapterTagTBB()), binaryOp);
+            vtkm::cont::DeviceAdapterTagTBB()), binary_functor);
   }
 
   template<typename T, class CIn, class COut>
@@ -334,16 +334,16 @@ public:
             vtkm::cont::DeviceAdapterTagTBB()), vtkm::internal::Add());
   }
 
-  template<typename T, class CIn, class COut, class BinaryOperation>
+  template<typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT_EXPORT static T ScanExclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut> &output,
-      BinaryOperation binaryOp)
+      BinaryFunctor binary_functor)
   {
     return ScanExclusivePortals(
           input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
           output.PrepareForOutput(input.GetNumberOfValues(),
-            vtkm::cont::DeviceAdapterTagTBB()), binaryOp);
+            vtkm::cont::DeviceAdapterTagTBB()), binary_functor);
   }
 
 private:
