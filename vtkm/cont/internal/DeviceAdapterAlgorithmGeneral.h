@@ -1044,21 +1044,21 @@ public:
 private:
   template<class StencilPortalType,
            class OutputPortalType,
-           class PredicateOperator>
+           class UnaryPredicate>
   struct StencilToIndexFlagKernel
   {
     typedef typename StencilPortalType::ValueType StencilValueType;
     StencilPortalType StencilPortal;
     OutputPortalType OutputPortal;
-    PredicateOperator Predicate;
+    UnaryPredicate Predicate;
 
     VTKM_CONT_EXPORT
     StencilToIndexFlagKernel(StencilPortalType stencilPortal,
                              OutputPortalType outputPortal,
-                             PredicateOperator predicate)
+                             UnaryPredicate unary_predicate)
       : StencilPortal(stencilPortal),
         OutputPortal(outputPortal),
-        Predicate(predicate) {  }
+        Predicate(unary_predicate) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
@@ -1090,12 +1090,12 @@ private:
                  StencilPortalType stencilPortal,
                  IndexPortalType indexPortal,
                  OutputPortalType outputPortal,
-                 PredicateOperator predicate)
+                 PredicateOperator unary_predicate)
       : InputPortal(inputPortal),
         StencilPortal(stencilPortal),
         IndexPortal(indexPortal),
         OutputPortal(outputPortal),
-        Predicate(predicate) {  }
+        Predicate(unary_predicate) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
@@ -1121,12 +1121,12 @@ private:
 public:
 
   template<typename T, typename U, class CIn, class CStencil,
-           class COut, class PredicateOperator>
+           class COut, class UnaryPredicate>
   VTKM_CONT_EXPORT static void StreamCompact(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
       vtkm::cont::ArrayHandle<T,COut>& output,
-      PredicateOperator predicate)
+      UnaryPredicate unary_predicate)
   {
     VTKM_ASSERT_CONT(input.GetNumberOfValues() == stencil.GetNumberOfValues());
     vtkm::Id arrayLength = stencil.GetNumberOfValues();
@@ -1148,9 +1148,9 @@ public:
 
     StencilToIndexFlagKernel< StencilPortalType,
                               IndexPortalType,
-                              PredicateOperator> indexKernel(stencilPortal,
+                              UnaryPredicate> indexKernel(stencilPortal,
                                                          indexPortal,
-                                                         predicate);
+                                                         unary_predicate);
 
     DerivedAlgorithm::Schedule(indexKernel, arrayLength);
 
@@ -1171,11 +1171,11 @@ public:
         StencilPortalType,
         IndexPortalType,
         OutputPortalType,
-        PredicateOperator> copyKernel(inputPortal,
+        UnaryPredicate> copyKernel(inputPortal,
                                     stencilPortal,
                                     indexPortal,
                                     outputPortal,
-                                    predicate);
+                                    unary_predicate);
     DerivedAlgorithm::Schedule(copyKernel, arrayLength);
   }
 
@@ -1185,8 +1185,8 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
       const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
-    ::vtkm::not_default_constructor<U> predicate;
-    DerivedAlgorithm::StreamCompact(input, stencil, output, predicate);
+    ::vtkm::not_default_constructor<U> unary_predicate;
+    DerivedAlgorithm::StreamCompact(input, stencil, output, unary_predicate);
   }
 
   template<typename T, class CStencil, class COut>

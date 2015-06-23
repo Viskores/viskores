@@ -470,13 +470,13 @@ private:
   template<class ValueIterator,
            class StencilPortal,
            class OutputPortal,
-           class PredicateOperator>
+           class UnaryPredicate>
   VTKM_CONT_EXPORT static
   vtkm::Id CopyIfPortal(ValueIterator valuesBegin,
                         ValueIterator valuesEnd,
                         StencilPortal stencil,
                         OutputPortal output,
-                        PredicateOperator predicate)
+                        UnaryPredicate unary_predicate)
   {
     typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
                                                             IteratorType;
@@ -487,7 +487,7 @@ private:
                                              valuesEnd,
                                              IteratorBegin(stencil),
                                              outputBegin,
-                                             predicate);
+                                             unary_predicate);
 
     return static_cast<vtkm::Id>( ::thrust::distance(outputBegin, newLast) );
   }
@@ -495,18 +495,18 @@ private:
     template<class ValuePortal,
              class StencilPortal,
              class OutputPortal,
-             class PredicateOperator>
+             class UnaryPredicate>
   VTKM_CONT_EXPORT static
   vtkm::Id CopyIfPortal(ValuePortal values,
                         StencilPortal stencil,
                         OutputPortal output,
-                        PredicateOperator predicate)
+                        UnaryPredicate unary_predicate)
   {
     return CopyIfPortal(IteratorBegin(values),
                         IteratorEnd(values),
                         stencil,
                         output,
-                        predicate);
+                        unary_predicate);
   }
 
   template<class ValuesPortal>
@@ -953,18 +953,18 @@ public:
            class SIn,
            class SStencil,
            class SOut,
-           class PredicateOperator>
+           class UnaryPredicate>
   VTKM_CONT_EXPORT static void StreamCompact(
       const vtkm::cont::ArrayHandle<U,SIn>& input,
       const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
       vtkm::cont::ArrayHandle<U,SOut>& output,
-      PredicateOperator predicate)
+      UnaryPredicate unary_predicate)
   {
     vtkm::Id size = stencil.GetNumberOfValues();
     vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTag()),
                                     stencil.PrepareForInput(DeviceAdapterTag()),
                                     output.PrepareForOutput(size, DeviceAdapterTag()),
-                                    predicate);
+                                    unary_predicate);
     output.Shrink(newSize);
   }
 
