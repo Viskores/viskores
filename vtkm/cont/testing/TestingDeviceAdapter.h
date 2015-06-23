@@ -1284,6 +1284,39 @@ private:
     }
 
     std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Inclusive Scan with multiplication operator" << std::endl;
+    {
+    vtkm::Float64 inputValues[ARRAY_SIZE];
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+    {
+      inputValues[i] = 1.01;
+    }
+
+    vtkm::Id mid = ARRAY_SIZE/2;
+    inputValues[mid] = 0.0;
+
+    vtkm::cont::ArrayHandle<vtkm::Float64> array = MakeArrayHandle(inputValues,
+                                                                   ARRAY_SIZE);
+
+    vtkm::Float64 product = Algorithm::ScanInclusive(array, array,
+                                                     vtkm::internal::Multiply());
+
+    VTKM_TEST_ASSERT(product == 0.0f, "ScanInclusive product result not 0.0");
+    for (vtkm::Id i = 0; i < mid; ++i)
+    {
+      vtkm::Float64 expected = pow(1.01, static_cast<vtkm::Float64>(i + 1));
+      vtkm::Float64 got = array.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(test_equal(got, expected),
+                       "Incorrect results for ScanInclusive");
+    }
+    for (vtkm::Id i = mid; i < ARRAY_SIZE; ++i)
+    {
+      VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(i) == 0.0f,
+                       "Incorrect results for ScanInclusive");
+    }
+    }
+
+    std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Inclusive Scan with a vtkm::Vec" << std::endl;
 
     {
@@ -1388,6 +1421,47 @@ private:
                        "Incorrect partial sum");
     }
     }
+
+// Enable when Exclusive Scan with custom operator is implemented for all
+// device adaptors
+#if 0
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Exclusive Scan with multiplication operator" << std::endl;
+    {
+    vtkm::Float64 inputValues[ARRAY_SIZE];
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+    {
+      inputValues[i] = 1.01;
+    }
+
+    vtkm::Id mid = ARRAY_SIZE/2;
+    inputValues[mid] = 0.0;
+
+    vtkm::cont::ArrayHandle<vtkm::Float64> array = MakeArrayHandle(inputValues,
+                                                                   ARRAY_SIZE);
+
+    vtkm::Float64 initialValue = 2.00;
+    vtkm::Float64 product = Algorithm::ScanExclusive(array, array,
+        vtkm::internal::Multiply(), initialValue);
+
+    VTKM_TEST_ASSERT(product == 0.0f, "ScanExclusive product result not 0.0");
+    VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(0) == initialValue,
+                     "ScanExclusive result's first value != initialValue");
+    for (vtkm::Id i = 1; i <= mid; ++i)
+    {
+      vtkm::Float64 expected = pow(1.01, static_cast<vtkm::Float64>(i)) *
+                               initialValue;
+      vtkm::Float64 got = array.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(test_equal(got, expected),
+                       "Incorrect results for ScanExclusive");
+    }
+    for (vtkm::Id i = mid + 1; i < ARRAY_SIZE; ++i)
+    {
+      VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(i) == 0.0f,
+                       "Incorrect results for ScanExclusive");
+    }
+    }
+#endif
 
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Exclusive Scan with a vtkm::Vec" << std::endl;
