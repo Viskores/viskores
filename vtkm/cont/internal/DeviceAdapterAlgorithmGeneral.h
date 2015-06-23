@@ -1375,23 +1375,23 @@ private:
   };
 
 
-  template<class InputPortalType,class ValuesPortalType,class OutputPortalType,class Compare>
+  template<class InputPortalType,class ValuesPortalType,class OutputPortalType,class BinaryCompare>
   struct UpperBoundsKernelComparisonKernel
   {
     InputPortalType InputPortal;
     ValuesPortalType ValuesPortal;
     OutputPortalType OutputPortal;
-    Compare CompareFunctor;
+    BinaryCompare CompareFunctor;
 
     VTKM_CONT_EXPORT
     UpperBoundsKernelComparisonKernel(InputPortalType inputPortal,
                                       ValuesPortalType valuesPortal,
                                       OutputPortalType outputPortal,
-                                      Compare comp)
+                                      BinaryCompare binary_compare)
       : InputPortal(inputPortal),
         ValuesPortal(valuesPortal),
         OutputPortal(outputPortal),
-        CompareFunctor(comp) {  }
+        CompareFunctor(binary_compare) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
@@ -1443,12 +1443,12 @@ public:
     DerivedAlgorithm::Schedule(kernel, arraySize);
   }
 
-  template<typename T, class CIn, class CVal, class COut, class Compare>
+  template<typename T, class CIn, class CVal, class COut, class BinaryCompare>
   VTKM_CONT_EXPORT static void UpperBounds(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       const vtkm::cont::ArrayHandle<T,CVal> &values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut> &output,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
     vtkm::Id arraySize = values.GetNumberOfValues();
 
@@ -1456,11 +1456,11 @@ public:
         typename vtkm::cont::ArrayHandle<T,CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
         typename vtkm::cont::ArrayHandle<T,CVal>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
         typename vtkm::cont::ArrayHandle<T,COut>::template ExecutionTypes<DeviceAdapterTag>::Portal,
-        Compare>
+        BinaryCompare>
         kernel(input.PrepareForInput(DeviceAdapterTag()),
                values.PrepareForInput(DeviceAdapterTag()),
                output.PrepareForOutput(arraySize, DeviceAdapterTag()),
-               comp);
+               binary_compare);
 
     DerivedAlgorithm::Schedule(kernel, arraySize);
   }
