@@ -1,4 +1,4 @@
-//============================================================================
+  //============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -333,11 +333,11 @@ private:
 
 private:
   /// Reorder the value array along with the sorting algorithm
-  template<typename T, typename U, class StorageT,  class StorageU, class Compare>
+  template<typename T, typename U, class StorageT,  class StorageU, class BinaryCompare>
   VTKM_CONT_EXPORT static void SortByKeyDirect(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
     //combine the keys and values into a ZipArrayHandle
     //we than need to specify a custom compare function wrapper
@@ -349,7 +349,7 @@ private:
 
     ZipHandleType zipHandle =
                     vtkm::cont::make_ArrayHandleZip(keys,values);
-    Sort(zipHandle,KeyCompare<T,U,Compare>(comp));
+    Sort(zipHandle,KeyCompare<T,U,BinaryCompare>(binary_compare));
   }
 
 public:
@@ -361,13 +361,13 @@ public:
     SortByKey(keys, values, std::less<T>());
   }
 
-  template<typename T, typename U, class StorageT,  class StorageU, class Less>
+  template<typename T, typename U, class StorageT,  class StorageU, class BinaryCompare>
   VTKM_CONT_EXPORT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values,
-      const Less &less)
+      const BinaryCompare &binary_compare)
   {
-    internal::WrappedBinaryOperator<bool, Less > wrappedCompare( less );
+    internal::WrappedBinaryOperator<bool, BinaryCompare > wrappedCompare( binary_compare );
     if (sizeof(U) > sizeof(vtkm::Id))
     {
       /// More efficient sort:
@@ -395,9 +395,9 @@ public:
     Sort(values, std::less<T>());
   }
 
-  template<typename T, class Storage, class Compare>
+  template<typename T, class Storage, class BinaryCompare>
   VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage>& values,
-                                    Compare comp)
+                                    BinaryCompare binary_compare)
   {
     typedef typename vtkm::cont::ArrayHandle<T,Storage>
         ::template ExecutionTypes<Device>::Portal PortalType;
@@ -406,7 +406,7 @@ public:
     vtkm::cont::ArrayPortalToIterators<PortalType> iterators(arrayPortal);
 
 
-    internal::WrappedBinaryOperator<bool,Compare> wrappedCompare(comp);
+    internal::WrappedBinaryOperator<bool,BinaryCompare> wrappedCompare(binary_compare);
     std::sort(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
   }
 

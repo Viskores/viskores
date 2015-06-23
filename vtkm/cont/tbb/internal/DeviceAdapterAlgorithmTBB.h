@@ -507,9 +507,9 @@ public:
     Sort(values, lessOp );
   }
 
-  template<typename T, class Container, class Compare>
+  template<typename T, class Container, class BinaryCompare>
   VTKM_CONT_EXPORT static void Sort(
-      vtkm::cont::ArrayHandle<T,Container> &values, Compare comp)
+      vtkm::cont::ArrayHandle<T,Container> &values, BinaryCompare binary_compare)
   {
     typedef typename vtkm::cont::ArrayHandle<T,Container>::template
       ExecutionTypes<vtkm::cont::DeviceAdapterTagTBB>::Portal PortalType;
@@ -519,7 +519,7 @@ public:
     typedef vtkm::cont::ArrayPortalToIterators<PortalType> IteratorsType;
     IteratorsType iterators(arrayPortal);
 
-    internal::WrappedBinaryOperator<bool,Compare> wrappedCompare(comp);
+    internal::WrappedBinaryOperator<bool,BinaryCompare> wrappedCompare(binary_compare);
     ::tbb::parallel_sort(iterators.GetBegin(),
                          iterators.GetEnd(),
                          wrappedCompare);

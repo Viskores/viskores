@@ -853,16 +853,16 @@ public:
   //--------------------------------------------------------------------------
   // Sort
 private:
-  template<typename PortalType, typename CompareType>
+  template<typename PortalType, typename BinaryCompare>
   struct BitonicSortMergeKernel : vtkm::exec::FunctorBase
   {
     PortalType Portal;
-    CompareType Compare;
+    BinaryCompare Compare;
     vtkm::Id GroupSize;
 
     VTKM_CONT_EXPORT
     BitonicSortMergeKernel(const PortalType &portal,
-                           const CompareType &compare,
+                           const BinaryCompare &compare,
                            vtkm::Id groupSize)
       : Portal(portal), Compare(compare), GroupSize(groupSize) {  }
 
@@ -891,16 +891,16 @@ private:
     }
   };
 
-  template<typename PortalType, typename CompareType>
+  template<typename PortalType, typename BinaryCompare>
   struct BitonicSortCrossoverKernel : vtkm::exec::FunctorBase
   {
     PortalType Portal;
-    CompareType Compare;
+    BinaryCompare Compare;
     vtkm::Id GroupSize;
 
     VTKM_CONT_EXPORT
     BitonicSortCrossoverKernel(const PortalType &portal,
-                               const CompareType &compare,
+                               const BinaryCompare &compare,
                                vtkm::Id groupSize)
       : Portal(portal), Compare(compare), GroupSize(groupSize) {  }
 
@@ -941,10 +941,10 @@ private:
   };
 
 public:
-  template<typename T, class Storage, class CompareType>
+  template<typename T, class Storage, class BinaryCompare>
   VTKM_CONT_EXPORT static void Sort(
       vtkm::cont::ArrayHandle<T,Storage> &values,
-      CompareType compare)
+      BinaryCompare binary_compare)
   {
     typedef typename vtkm::cont::ArrayHandle<T,Storage> ArrayType;
     typedef typename ArrayType::template ExecutionTypes<DeviceAdapterTag>
@@ -959,18 +959,18 @@ public:
     while (numThreads < numValues) { numThreads *= 2; }
     numThreads /= 2;
 
-    typedef BitonicSortMergeKernel<PortalType,CompareType> MergeKernel;
-    typedef BitonicSortCrossoverKernel<PortalType,CompareType> CrossoverKernel;
+    typedef BitonicSortMergeKernel<PortalType,BinaryCompare> MergeKernel;
+    typedef BitonicSortCrossoverKernel<PortalType,BinaryCompare> CrossoverKernel;
 
     for (vtkm::Id crossoverSize = 1;
          crossoverSize < numValues;
          crossoverSize *= 2)
     {
-      DerivedAlgorithm::Schedule(CrossoverKernel(portal,compare,crossoverSize),
+      DerivedAlgorithm::Schedule(CrossoverKernel(portal,binary_compare,crossoverSize),
                                  numThreads);
       for (vtkm::Id mergeSize = crossoverSize/2; mergeSize > 0; mergeSize /= 2)
       {
-        DerivedAlgorithm::Schedule(MergeKernel(portal,compare,mergeSize),
+        DerivedAlgorithm::Schedule(MergeKernel(portal,binary_compare,mergeSize),
                                    numThreads);
       }
     }
@@ -986,11 +986,11 @@ public:
   //--------------------------------------------------------------------------
   // Sort by Key
 protected:
-  template<typename T, typename U, class Compare=DefaultCompareFunctor>
+  template<typename T, typename U, class BinaryCompare=DefaultCompareFunctor>
   struct KeyCompare
   {
     KeyCompare(): CompareFunctor() {}
-    explicit KeyCompare(Compare c): CompareFunctor(c) {}
+    explicit KeyCompare(BinaryCompare c): CompareFunctor(c) {}
 
     VTKM_EXEC_EXPORT
     bool operator()(const vtkm::Pair<T,U>& a, const vtkm::Pair<T,U>& b) const
@@ -998,7 +998,7 @@ protected:
       return CompareFunctor(a.first,b.first);
     }
   private:
-    Compare CompareFunctor;
+    BinaryCompare CompareFunctor;
   };
 
 public:
@@ -1020,11 +1020,11 @@ public:
     DerivedAlgorithm::Sort(zipHandle,KeyCompare<T,U>());
   }
 
-  template<typename T, typename U, class StorageT,  class StorageU, class Compare>
+  template<typename T, typename U, class StorageT,  class StorageU, class BinaryCompare>
   VTKM_CONT_EXPORT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
     //combine the keys and values into a ZipArrayHandle
     //we than need to specify a custom compare function wrapper
@@ -1036,7 +1036,7 @@ public:
 
     ZipHandleType zipHandle =
                     vtkm::cont::make_ArrayHandleZip(keys,values);
-    DerivedAlgorithm::Sort(zipHandle,KeyCompare<T,U,Compare>(comp));
+    DerivedAlgorithm::Sort(zipHandle,KeyCompare<T,U,BinaryCompare>(binary_compare));
   }
 
   //--------------------------------------------------------------------------

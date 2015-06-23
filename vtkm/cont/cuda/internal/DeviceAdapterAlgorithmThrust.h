@@ -434,11 +434,11 @@ private:
     SortPortal(values, ::thrust::less<ValueType>());
   }
 
-  template<class ValuesPortal, class Compare>
+  template<class ValuesPortal, class BinaryCompare>
   VTKM_CONT_EXPORT static void SortPortal(const ValuesPortal &values,
-                                         Compare comp)
+                                         BinaryCompare binary_compare)
   {
-    vtkm::exec::cuda::internal::WrappedBinaryOperator<bool,Compare> bop(comp);
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<bool,BinaryCompare> bop(binary_compare);
     ::thrust::sort(thrust::cuda::par,
                    IteratorBegin(values),
                    IteratorEnd(values),
@@ -454,17 +454,17 @@ private:
     SortByKeyPortal(keys,values,::thrust::less<ValueType>());
   }
 
-  template<class KeysPortal, class ValuesPortal, class Compare>
+  template<class KeysPortal, class ValuesPortal, class BinaryCompare>
   VTKM_CONT_EXPORT static void SortByKeyPortal(const KeysPortal &keys,
                                                const ValuesPortal &values,
-                                               Compare comp)
+                                               BinaryCompare binary_compare)
   {
-    vtkm::exec::cuda::internal::WrappedBinaryOperator<bool,Compare> bop(comp);
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<bool,BinaryCompare> bop(binary_compare);
     ::thrust::sort_by_key(thrust::cuda::par,
                           IteratorBegin(keys),
                           IteratorEnd(keys),
                           IteratorBegin(values),
-                          comp);
+                          bop);
   }
 
   template<class ValueIterator,
@@ -884,12 +884,12 @@ public:
     SortPortal(values.PrepareForInPlace(DeviceAdapterTag()));
   }
 
-  template<typename T, class Storage, class Compare>
+  template<typename T, class Storage, class BinaryCompare>
   VTKM_CONT_EXPORT static void Sort(
       vtkm::cont::ArrayHandle<T,Storage>& values,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
-    SortPortal(values.PrepareForInPlace(DeviceAdapterTag()),comp);
+    SortPortal(values.PrepareForInPlace(DeviceAdapterTag()),binary_compare);
   }
 
   template<typename T, typename U,
@@ -904,15 +904,15 @@ public:
 
   template<typename T, typename U,
            class StorageT, class StorageU,
-           class Compare>
+           class BinaryCompare>
   VTKM_CONT_EXPORT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT>& keys,
       vtkm::cont::ArrayHandle<U,StorageU>& values,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
     SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTag()),
                     values.PrepareForInPlace(DeviceAdapterTag()),
-                    comp);
+                    binary_compare);
   }
 
 
