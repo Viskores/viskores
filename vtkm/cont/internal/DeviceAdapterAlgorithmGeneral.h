@@ -1238,20 +1238,20 @@ private:
     {  }
   };
 
-  template<class InputPortalType, class StencilPortalType, class Compare>
+  template<class InputPortalType, class StencilPortalType, class BinaryCompare>
   struct ClassifyUniqueComparisonKernel
   {
     InputPortalType InputPortal;
     StencilPortalType StencilPortal;
-    Compare CompareFunctor;
+    BinaryCompare CompareFunctor;
 
     VTKM_CONT_EXPORT
     ClassifyUniqueComparisonKernel(InputPortalType inputPortal,
                                    StencilPortalType stencilPortal,
-                                   Compare comp):
+                                   BinaryCompare binary_compare):
       InputPortal(inputPortal),
       StencilPortal(stencilPortal),
-      CompareFunctor(comp) {  }
+      CompareFunctor(binary_compare) {  }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
@@ -1301,10 +1301,10 @@ public:
     DerivedAlgorithm::Copy(outputArray, values);
   }
 
-  template<typename T, class Storage, class Compare>
+  template<typename T, class Storage, class BinaryCompare>
   VTKM_CONT_EXPORT static void Unique(
       vtkm::cont::ArrayHandle<T,Storage> &values,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
     vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>
         stencilArray;
@@ -1313,10 +1313,10 @@ public:
     ClassifyUniqueComparisonKernel<
         typename vtkm::cont::ArrayHandle<T,Storage>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
         typename vtkm::cont::ArrayHandle<vtkm::Id,vtkm::cont::StorageTagBasic>::template ExecutionTypes<DeviceAdapterTag>::Portal,
-        Compare>
+        BinaryCompare>
         classifyKernel(values.PrepareForInput(DeviceAdapterTag()),
                        stencilArray.PrepareForOutput(inputSize, DeviceAdapterTag()),
-                       comp);
+                       binary_compare);
     DerivedAlgorithm::Schedule(classifyKernel, inputSize);
 
     vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>

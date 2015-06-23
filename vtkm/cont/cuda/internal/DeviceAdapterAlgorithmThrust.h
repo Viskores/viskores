@@ -522,17 +522,18 @@ private:
     return static_cast<vtkm::Id>( ::thrust::distance(begin, newLast) );
   }
 
-  template<class ValuesPortal, class Compare>
+  template<class ValuesPortal, class BinaryCompare>
   VTKM_CONT_EXPORT static
-  vtkm::Id UniquePortal(const ValuesPortal values, Compare comp)
+  vtkm::Id UniquePortal(const ValuesPortal values, BinaryCompare binary_compare)
   {
     typedef typename detail::IteratorTraits<ValuesPortal>::IteratorType
                                                             IteratorType;
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<bool,BinaryCompare> bop(binary_compare);
     IteratorType begin = IteratorBegin(values);
     IteratorType newLast = ::thrust::unique(thrust::cuda::par,
                                             begin,
                                             IteratorEnd(values),
-                                            comp);
+                                            bop);
     return static_cast<vtkm::Id>( ::thrust::distance(begin, newLast) );
   }
 
@@ -977,12 +978,12 @@ public:
     values.Shrink(newSize);
   }
 
-  template<typename T, class Storage, class Compare>
+  template<typename T, class Storage, class BinaryCompare>
   VTKM_CONT_EXPORT static void Unique(
       vtkm::cont::ArrayHandle<T,Storage> &values,
-      Compare comp)
+      BinaryCompare binary_compare)
   {
-    vtkm::Id newSize = UniquePortal(values.PrepareForInPlace(DeviceAdapterTag()),comp);
+    vtkm::Id newSize = UniquePortal(values.PrepareForInPlace(DeviceAdapterTag()),binary_compare);
 
     values.Shrink(newSize);
   }
