@@ -65,7 +65,7 @@ void print_array(const char *msg, const T &array)
 const vtkm::Id VC_INVALID_ID = std::numeric_limits<vtkm::Id>::max();
 
 template <class DeviceAdapter>
-class VertexClustering{
+struct VertexClustering{
 
   typedef vtkm::Vec<vtkm::Float32,3> Vector3;
   typedef Vector3 PointType;
@@ -81,12 +81,13 @@ class VertexClustering{
   // input: points  output: cid of the points
   class MapPointsWorklet : public vtkm::worklet::WorkletMapField {
   private:
-      const VTKM_EXEC_CONSTANT_EXPORT GridInfo grid;
+      //const VTKM_EXEC_CONSTANT_EXPORT GridInfo grid;
+      const GridInfo grid;
   public:
       typedef void ControlSignature(FieldIn<> , FieldOut<>);
       typedef void ExecutionSignature(_1, _2);
 
-      VTKM_CONT_EXPORT
+      VTKM_EXEC_EXPORT
       MapPointsWorklet(const GridInfo &grid_)
           : grid(grid_)
       { }
@@ -121,7 +122,7 @@ class VertexClustering{
     typedef void ControlSignature(FieldIn<> , FieldOut<>);
     typedef void ExecutionSignature(_1, _2);
 
-    VTKM_CONT_EXPORT
+    VTKM_EXEC_EXPORT
     MapCellsWorklet(
         const IdArrayHandle &pointIdArray,   // the given point Ids
         const IdArrayHandle &pointCidArray)   // the cluser ids each pointId will map to
