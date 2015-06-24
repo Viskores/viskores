@@ -41,23 +41,26 @@
 
 #include <vtkm/worklet/AverageByKey.h>
 
+//#define VC_DEBUG
+//#define VC_BENCHMARK
+
 namespace vtkm{ namespace worklet
 {
 
 
 // debug
+#ifdef VC_DEBUG
 template<class T>
 void print_array(const char *msg, const T &array)
 {
-#if 1
     std::cout << msg << "(" << array.GetNumberOfValues() << ")";
     for (int i=0; i<array.GetNumberOfValues(); i++)
     {
         std::cout << array.GetPortalConstControl().Get(i) << ", ";
     }
     std::cout << std::endl;
-#endif
 }
+#endif
 
 const vtkm::Id VC_INVALID_ID = std::numeric_limits<vtkm::Id>::max();
 
@@ -259,7 +262,6 @@ public:
       for (int i=0; i<3; i++)
           res[i] = (bounds[i*2+1]-bounds[i*2])/nDivisions;
       gridInfo.grid_width = std::max(res[0], std::max(res[1], res[2]));
-      std::cout << "grid_width = " << gridInfo.grid_width << std::endl;
 
       double inv_grid_width = gridInfo.inv_grid_width = 1. / gridInfo.grid_width;
 
@@ -272,8 +274,6 @@ public:
       gridInfo.origin[0] = (vtkm::Float32) ((bounds[1]+bounds[0])*0.5 - gridInfo.grid_width*(gridInfo.dim[0])*.5);
       gridInfo.origin[1] = (vtkm::Float32) ((bounds[3]+bounds[2])*0.5 - gridInfo.grid_width*(gridInfo.dim[1])*.5);
       gridInfo.origin[2] = (vtkm::Float32) ((bounds[5]+bounds[4])*0.5 - gridInfo.grid_width*(gridInfo.dim[2])*.5);
-
-      std::cout << res[0] << "," << res[1] << ", " << res[2] << "," << bounds[3] << std::endl;
     }
 
     //construct the scheduler that will execute all the worklets
@@ -290,7 +290,9 @@ public:
     vtkm::worklet::DispatcherMapField<MapPointsWorklet>(MapPointsWorklet(gridInfo))
         .Invoke(pointArray, pointCidArray );
 
+#ifdef VC_BENCHMARK
     std::cout << "Time map points (s): " << timer.GetElapsedTime() << std::endl;
+#endif
 
 
     /// pass 2 : compute average point position for each cluster,
@@ -302,7 +304,9 @@ public:
     vtkm::worklet::internal::
       AverageByKey( pointCidArray, pointArray, pointCidArrayReduced, repPointArray );
 
+#ifdef VC_BENCHMARK
     std::cout << "Time after averaging (s): " << timer.GetElapsedTime() << std::endl;
+#endif
 
 
     /// Pass 3 : Decimated mesh generation
@@ -336,7 +340,9 @@ public:
                                                     .Invoke(cid3Array, pointId3Array);
 
 
+#ifdef VC_BENCHMARK
     std::cout << "Time before unique (s): " << timer.GetElapsedTime() << std::endl;
+#endif
 
     ///
     /// Unique: Decimate replicated cells
@@ -345,15 +351,21 @@ public:
 
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(pointId3Array,uniquePointId3Array);
 
+#ifdef VC_BENCHMARK
     std::cout << "Time after copy (s): " << timer.GetElapsedTime() << std::endl;
+#endif
 
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(uniquePointId3Array, Id3Less());
 
+#ifdef VC_BENCHMARK
     std::cout << "Time after sort (s): " << timer.GetElapsedTime() << std::endl;
+#endif
 
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Unique(uniquePointId3Array);
 
+#ifdef VC_BENCHMARK
     std::cout << "Time after unique (s): " << timer.GetElapsedTime() << std::endl;
+#endif
 
     // remove the last one if invalid
     int cells = uniquePointId3Array.GetNumberOfValues();
@@ -364,11 +376,15 @@ public:
       }
 
     /// generate output
+#ifdef VC_BENCHMARK
     std::cout << "number of output points: " << repPointArray.GetNumberOfValues() << std::endl;
     std::cout << "number of output cells: " << uniquePointId3Array.GetNumberOfValues() << std::endl;
+#endif
 
+#ifdef VC_DEBUG
     print_array("repPointArray", repPointArray);
     print_array("uniquePointId3Array", uniquePointId3Array);
+#endif
 
     vtkm::cont::DataSet new_ds;
 
@@ -404,8 +420,10 @@ public:
     /// Note that there is a cell with ids <-1, -1, -1>.
     /// The removal of it is deferred to the conversion to VTK
     /// ////////////////////////////////////////
+#ifdef VC_BENCHMARK
     double t = timer.GetElapsedTime();
     std::cout << "Time (s): " << t << std::endl;
+#endif
 
     return new_ds;
   }
