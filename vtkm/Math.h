@@ -44,6 +44,9 @@
 #endif // !VTKM_CUDA
 
 #if VTKM_MSVC && !defined(VTKM_CUDA)
+#include <boost/math/special_functions/acosh.hpp>
+#include <boost/math/special_functions/asinh.hpp>
+#include <boost/math/special_functions/atanh.hpp>
 #include <boost/math/special_functions/cbrt.hpp>
 #include <boost/math/special_functions/expm1.hpp>
 #include <boost/math/special_functions/log1p.hpp>
@@ -67,6 +70,564 @@
 
 
 namespace vtkm {
+
+//-----------------------------------------------------------------------------
+/// Returns the constant Pi.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Pi()
+{
+  return 3.14159265358979323846264338327950288;
+}
+
+/// Compute the sine of \p x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Sin(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(sin)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Sin(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(sin)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Sin(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Sin(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Sin(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Sin(x[0]),
+                        vtkm::Sin(x[1]),
+                        vtkm::Sin(x[2]),
+                        vtkm::Sin(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Sin(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Sin(x[0]),
+                        vtkm::Sin(x[1]),
+                        vtkm::Sin(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Sin(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Sin(x[0]),
+                        vtkm::Sin(x[1]));
+}
+
+/// Compute the cosine of \p x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Cos(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(cos)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Cos(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(cos)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Cos(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Cos(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Cos(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Cos(x[0]),
+                        vtkm::Cos(x[1]),
+                        vtkm::Cos(x[2]),
+                        vtkm::Cos(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Cos(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Cos(x[0]),
+                        vtkm::Cos(x[1]),
+                        vtkm::Cos(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Cos(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Cos(x[0]),
+                        vtkm::Cos(x[1]));
+}
+
+/// Compute the tangent of \p x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Tan(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(tan)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Tan(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(tan)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Tan(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Tan(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Tan(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Tan(x[0]),
+                        vtkm::Tan(x[1]),
+                        vtkm::Tan(x[2]),
+                        vtkm::Tan(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Tan(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Tan(x[0]),
+                        vtkm::Tan(x[1]),
+                        vtkm::Tan(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Tan(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Tan(x[0]),
+                        vtkm::Tan(x[1]));
+}
+
+/// Compute the arc sine of \p x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ASin(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(asin)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ASin(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(asin)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> ASin(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::ASin(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> ASin(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::ASin(x[0]),
+                        vtkm::ASin(x[1]),
+                        vtkm::ASin(x[2]),
+                        vtkm::ASin(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> ASin(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::ASin(x[0]),
+                        vtkm::ASin(x[1]),
+                        vtkm::ASin(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> ASin(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::ASin(x[0]),
+                        vtkm::ASin(x[1]));
+}
+
+/// Compute the arc cosine of \p x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ACos(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(acos)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ACos(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(acos)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> ACos(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::ACos(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> ACos(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::ACos(x[0]),
+                        vtkm::ACos(x[1]),
+                        vtkm::ACos(x[2]),
+                        vtkm::ACos(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> ACos(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::ACos(x[0]),
+                        vtkm::ACos(x[1]),
+                        vtkm::ACos(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> ACos(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::ACos(x[0]),
+                        vtkm::ACos(x[1]));
+}
+
+/// Compute the arc tangent of \p x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ATan(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(atan)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ATan(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(atan)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> ATan(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::ATan(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> ATan(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::ATan(x[0]),
+                        vtkm::ATan(x[1]),
+                        vtkm::ATan(x[2]),
+                        vtkm::ATan(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> ATan(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::ATan(x[0]),
+                        vtkm::ATan(x[1]),
+                        vtkm::ATan(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> ATan(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::ATan(x[0]),
+                        vtkm::ATan(x[1]));
+}
+
+/// Compute the arc tangent of \p x / \p y using the signs of both arguments
+/// to determine the quadrant of the return value.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ATan2(vtkm::Float32 x, vtkm::Float32 y) {
+  return VTKM_SYS_MATH_FUNCTION_32(atan2)(x,y);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ATan2(vtkm::Float64 x, vtkm::Float64 y) {
+  return VTKM_SYS_MATH_FUNCTION_64(atan2)(x,y);
+}
+
+/// Compute the hyperbolic sine of \p x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 SinH(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(sinh)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 SinH(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(sinh)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> SinH(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::SinH(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> SinH(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::SinH(x[0]),
+                        vtkm::SinH(x[1]),
+                        vtkm::SinH(x[2]),
+                        vtkm::SinH(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> SinH(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::SinH(x[0]),
+                        vtkm::SinH(x[1]),
+                        vtkm::SinH(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> SinH(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::SinH(x[0]),
+                        vtkm::SinH(x[1]));
+}
+
+/// Compute the hyperbolic cosine of \p x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 CosH(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(cosh)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 CosH(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(cosh)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> CosH(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::CosH(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> CosH(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::CosH(x[0]),
+                        vtkm::CosH(x[1]),
+                        vtkm::CosH(x[2]),
+                        vtkm::CosH(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> CosH(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::CosH(x[0]),
+                        vtkm::CosH(x[1]),
+                        vtkm::CosH(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> CosH(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::CosH(x[0]),
+                        vtkm::CosH(x[1]));
+}
+
+/// Compute the hyperbolic tangent of \p x.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 TanH(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(tanh)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 TanH(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(tanh)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> TanH(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::TanH(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> TanH(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::TanH(x[0]),
+                        vtkm::TanH(x[1]),
+                        vtkm::TanH(x[2]),
+                        vtkm::TanH(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> TanH(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::TanH(x[0]),
+                        vtkm::TanH(x[1]),
+                        vtkm::TanH(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> TanH(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::TanH(x[0]),
+                        vtkm::TanH(x[1]));
+}
+
+/// Compute the hyperbolic arc sine of \p x.
+///
+#ifdef VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ASinH(vtkm::Float32 x) {
+  return boost::math::asinh(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ASinH(vtkm::Float64 x) {
+  return boost::math::asinh(x);
+}
+#else // !VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ASinH(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(asinh)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ASinH(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(asinh)(x);
+}
+#endif // !VTKM_USE_BOOST_MATH
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> ASinH(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::ASinH(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> ASinH(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::ASinH(x[0]),
+                        vtkm::ASinH(x[1]),
+                        vtkm::ASinH(x[2]),
+                        vtkm::ASinH(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> ASinH(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::ASinH(x[0]),
+                        vtkm::ASinH(x[1]),
+                        vtkm::ASinH(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> ASinH(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::ASinH(x[0]),
+                        vtkm::ASinH(x[1]));
+}
+
+/// Compute the hyperbolic arc cosine of \p x.
+///
+#ifdef VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ACosH(vtkm::Float32 x) {
+  return boost::math::acosh(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ACosH(vtkm::Float64 x) {
+  return boost::math::acosh(x);
+}
+#else // !VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ACosH(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(acosh)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ACosH(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(acosh)(x);
+}
+#endif // !VTKM_USE_BOOST_MATH
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> ACosH(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::ACosH(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> ACosH(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::ACosH(x[0]),
+                        vtkm::ACosH(x[1]),
+                        vtkm::ACosH(x[2]),
+                        vtkm::ACosH(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> ACosH(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::ACosH(x[0]),
+                        vtkm::ACosH(x[1]),
+                        vtkm::ACosH(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> ACosH(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::ACosH(x[0]),
+                        vtkm::ACosH(x[1]));
+}
+
+/// Compute the hyperbolic arc tangent of \p x.
+///
+#ifdef VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ATanH(vtkm::Float32 x) {
+  return boost::math::atanh(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ATanH(vtkm::Float64 x) {
+  return boost::math::atanh(x);
+}
+#else // !VTKM_USE_BOOST_MATH
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ATanH(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(atanh)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ATanH(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(atanh)(x);
+}
+#endif // !VTKM_USE_BOOST_MATH
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> ATanH(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::ATanH(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> ATanH(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::ATanH(x[0]),
+                        vtkm::ATanH(x[1]),
+                        vtkm::ATanH(x[2]),
+                        vtkm::ATanH(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> ATanH(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::ATanH(x[0]),
+                        vtkm::ATanH(x[1]),
+                        vtkm::ATanH(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> ATanH(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::ATanH(x[0]),
+                        vtkm::ATanH(x[1]));
+}
 
 //-----------------------------------------------------------------------------
 /// Computes \p x raised to the power of \p y.

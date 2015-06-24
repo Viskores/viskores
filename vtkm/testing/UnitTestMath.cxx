@@ -27,6 +27,15 @@ namespace {
 const vtkm::IdComponent NUM_NUMBERS = 5;
 const vtkm::Float64 NumberList[NUM_NUMBERS] = { 0.25, 0.5, 1.0, 2.0, 3.75 };
 
+const vtkm::Float64 AngleList[NUM_NUMBERS] =      { 0.643501108793284,
+                                                    (1.0f/4.0f)*vtkm::Pi(),
+                                                    (1.0f/6.0f)*vtkm::Pi(),
+                                                    (1.0f/3.0f)*vtkm::Pi(),
+                                                    0.0 };
+const vtkm::Float64 OppositeList[NUM_NUMBERS] =   { 3.0, 1.0, 1.0, vtkm::Sqrt(3.0), 0.0 };
+const vtkm::Float64 AdjacentList[NUM_NUMBERS] =   { 4.0, 1.0, vtkm::Sqrt(3.0), 1.0, 1.0 };
+const vtkm::Float64 HypotenuseList[NUM_NUMBERS] = { 5.0, vtkm::Sqrt(2.0), 2.0, 2.0, 1.0 };
+
 const vtkm::Float64 NumeratorList[NUM_NUMBERS] =   { 6.5, 5.8, 9.3, 77.0, 0.1 };
 const vtkm::Float64 DenominatorList[NUM_NUMBERS] = { 2.3, 1.6, 3.1, 19.0, 0.4 };
 const vtkm::Float64 FModRemainderList[NUM_NUMBERS]={ 1.9, 1.0, 0.0,  1.0, 0.1 };
@@ -38,6 +47,153 @@ const vtkm::Float64 FractionalList[NUM_NUMBERS] =  {0.6, 0.1,  0.4,  0.0, 0.75 }
 const vtkm::Float64 FloorList[NUM_NUMBERS] =       {4.0, 0.0, 73.0, 55.0, 3.0  };
 const vtkm::Float64 CeilList[NUM_NUMBERS] =        {5.0, 1.0, 74.0, 55.0, 4.0  };
 const vtkm::Float64 RoundList[NUM_NUMBERS] =       {5.0, 0.0, 73.0, 55.0, 4.0  };
+
+//-----------------------------------------------------------------------------
+void TestPi()
+{
+  std::cout << "Testing Pi" << std::endl;
+  VTKM_TEST_ASSERT(test_equal(vtkm::Pi(), 3.14159265), "Pi not correct.");
+}
+
+template<typename T>
+void TestArcTan2()
+{
+  std::cout << "Testing arc tan 2" << std::endl;
+
+  VTKM_TEST_ASSERT(test_equal(vtkm::ATan2(T(0.0), T(1.0)),
+                              T(0.0)),
+                   "ATan2 x+ axis.");
+  VTKM_TEST_ASSERT(test_equal(vtkm::ATan2(T(1.0), T(0.0)),
+                              T(0.5*vtkm::Pi())),
+                   "ATan2 y+ axis.");
+  VTKM_TEST_ASSERT(test_equal(vtkm::ATan2(T(-1.0), T(0.0)),
+                              T(-0.5*vtkm::Pi())),
+                   "ATan2 y- axis.");
+
+  VTKM_TEST_ASSERT(test_equal(vtkm::ATan2(T(1.0), T(1.0)),
+                              T(0.25*vtkm::Pi())),
+                   "ATan2 Quadrant 1");
+  VTKM_TEST_ASSERT(test_equal(vtkm::ATan2(T(1.0), T(-1.0)),
+                              T(0.75*vtkm::Pi())),
+                   "ATan2 Quadrant 2");
+  VTKM_TEST_ASSERT(test_equal(vtkm::ATan2(T(-1.0), T(-1.0)),
+                              T(-0.75*vtkm::Pi())),
+                   "ATan2 Quadrant 3");
+  VTKM_TEST_ASSERT(test_equal(vtkm::ATan2(T(-1.0), T(1.0)),
+                              T(-0.25*vtkm::Pi())),
+                   "ATan2 Quadrant 4");
+}
+
+struct TestTrigFunctor
+{
+  template<typename VectorType>
+  void TestTriangle() const
+  {
+    std::cout << "Testing normal trig functions." << std::endl;
+
+    typedef vtkm::VecTraits<VectorType> Traits;
+    typedef typename Traits::ComponentType ComponentType;
+    const vtkm::IdComponent NUM_COMPONENTS = Traits::NUM_COMPONENTS;
+
+    for (vtkm::IdComponent index = 0;
+         index < NUM_NUMBERS - NUM_COMPONENTS + 1;
+         index++)
+    {
+      VectorType angle;
+      VectorType opposite;
+      VectorType adjacent;
+      VectorType hypotenuse;
+      for (vtkm::IdComponent componentIndex = 0;
+           componentIndex < NUM_COMPONENTS;
+           componentIndex++)
+      {
+        Traits::SetComponent(
+              angle,
+              componentIndex,
+              static_cast<ComponentType>(AngleList[componentIndex+index]));
+        Traits::SetComponent(
+              opposite,
+              componentIndex,
+              static_cast<ComponentType>(OppositeList[componentIndex+index]));
+        Traits::SetComponent(
+              adjacent,
+              componentIndex,
+              static_cast<ComponentType>(AdjacentList[componentIndex+index]));
+        Traits::SetComponent(
+              hypotenuse,
+              componentIndex,
+              static_cast<ComponentType>(HypotenuseList[componentIndex+index]));
+      }
+
+      VTKM_TEST_ASSERT(test_equal(vtkm::Sin(angle), opposite/hypotenuse),
+                      "Sin failed test.");
+      VTKM_TEST_ASSERT(test_equal(vtkm::Cos(angle), adjacent/hypotenuse),
+                      "Cos failed test.");
+      VTKM_TEST_ASSERT(test_equal(vtkm::Tan(angle), opposite/adjacent),
+                      "Tan failed test.");
+
+      VTKM_TEST_ASSERT(test_equal(vtkm::ASin(opposite/hypotenuse), angle),
+                      "Arc Sin failed test.");
+      VTKM_TEST_ASSERT(test_equal(vtkm::ACos(adjacent/hypotenuse), angle),
+                      "Arc Cos failed test.");
+      VTKM_TEST_ASSERT(test_equal(vtkm::ATan(opposite/adjacent), angle),
+                      "Arc Tan failed test.");
+    }
+  }
+
+  template<typename VectorType>
+  void TestHyperbolic() const
+  {
+    std::cout << "Testing hyperbolic trig functions." << std::endl;
+
+    typedef vtkm::VecTraits<VectorType> Traits;
+    typedef typename Traits::ComponentType ComponentType;
+    const vtkm::IdComponent NUM_COMPONENTS = Traits::NUM_COMPONENTS;
+
+    const VectorType zero(0);
+
+    for (vtkm::IdComponent index = 0;
+         index < NUM_NUMBERS - NUM_COMPONENTS + 1;
+         index++)
+    {
+      VectorType x;
+      for (vtkm::IdComponent componentIndex = 0;
+           componentIndex < NUM_COMPONENTS;
+           componentIndex++)
+      {
+        Traits::SetComponent(
+              x,
+              componentIndex,
+              static_cast<ComponentType>(AngleList[componentIndex+index]));
+      }
+
+      const VectorType minusX = zero - x;
+
+      VTKM_TEST_ASSERT(test_equal(vtkm::SinH(x),
+                                  0.5f*(vtkm::Exp(x) - vtkm::Exp(minusX))),
+                      "SinH does not match definition.");
+      VTKM_TEST_ASSERT(test_equal(vtkm::CosH(x),
+                                  0.5f*(vtkm::Exp(x) + vtkm::Exp(minusX))),
+                      "SinH does not match definition.");
+      VTKM_TEST_ASSERT(test_equal(vtkm::TanH(x), vtkm::SinH(x)/vtkm::CosH(x)),
+                      "TanH does not match definition");
+
+      VTKM_TEST_ASSERT(test_equal(vtkm::ASinH(vtkm::SinH(x)), x),
+                      "SinH not inverting.");
+      VTKM_TEST_ASSERT(test_equal(vtkm::ACosH(vtkm::CosH(x)), x),
+                      "CosH not inverting.");
+      VTKM_TEST_ASSERT(test_equal(vtkm::ATanH(vtkm::TanH(x)), x),
+                      "TanH not inverting.");
+    }
+  }
+
+  template<typename T>
+  void operator()(const T&) const
+  {
+    this->TestTriangle<T>();
+    this->TestHyperbolic<T>();
+  }
+};
 
 //-----------------------------------------------------------------------------
 template<typename T>
@@ -499,6 +655,10 @@ struct TestCopySignFunctor
 //-----------------------------------------------------------------------------
 void RunMathTests()
 {
+  TestPi();
+  TestArcTan2<vtkm::Float32>();
+  TestArcTan2<vtkm::Float64>();
+  vtkm::testing::Testing::TryTypes(TestTrigFunctor(), vtkm::TypeListTagField());
   PowTest<vtkm::Float32>();
   PowTest<vtkm::Float64>();
   Log2Test();
