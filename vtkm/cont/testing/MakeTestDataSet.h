@@ -218,9 +218,9 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
   int i;
   for (i=0; i<nVerts; i++)
     {
-      points[i][0] = xVals[i] = xyzVals[i][0];
-      points[i][1] = yVals[i] = xyzVals[i][1];
-      points[i][2] = zVals[i] = xyzVals[i][2];
+      points[i][0] = xVals[i] = (vtkm::Float32)xyzVals[i][0];
+      points[i][1] = yVals[i] = (vtkm::Float32)xyzVals[i][1];
+      points[i][2] = zVals[i] = (vtkm::Float32)xyzVals[i][2];
     }
 
   // create DataSet

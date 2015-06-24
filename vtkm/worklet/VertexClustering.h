@@ -44,8 +44,25 @@
 namespace vtkm{ namespace worklet
 {
 
+
+// debug
+template<class T>
+void print_array(const char *msg, const T &array)
+{
+#if 1
+    std::cout << msg << "(" << array.GetNumberOfValues() << ")";
+    for (int i=0; i<array.GetNumberOfValues(); i++)
+    {
+        std::cout << array.GetPortalConstControl().Get(i) << ", ";
+    }
+    std::cout << std::endl;
+#endif
+}
+
+const vtkm::Id VC_INVALID_ID = std::numeric_limits<vtkm::Id>::max();
+
 template <class DeviceAdapter>
-struct VertexClustering{
+class VertexClustering{
 
   typedef vtkm::Vec<vtkm::Float32,3> Vector3;
   typedef Vector3 PointType;
@@ -54,8 +71,8 @@ struct VertexClustering{
   {
       int dim[3];
       Vector3 origin;
-      float grid_width;
-      float inv_grid_width; // = 1/grid_width
+      double grid_width;
+      double inv_grid_width; // = 1/grid_width
   };
 
   // input: points  output: cid of the points
@@ -134,7 +151,7 @@ struct VertexClustering{
       typedef void ExecutionSignature(_1, _2);
 
       VTKM_CONT_EXPORT
-      IndexingWorklet( size_t n )
+      IndexingWorklet( vtkm::Id n )
       {
           cidIndexRaw = cidIndexArray.PrepareForOutput(n, DeviceAdapter() );
       }
@@ -176,7 +193,7 @@ struct VertexClustering{
       {
           if (cid3[0]==cid3[1] || cid3[0]==cid3[2] || cid3[1]==cid3[2])
           {
-              pointId3[0] = pointId3[1] = pointId3[2] = std::numeric_limits<vtkm::Id>::max();
+              pointId3[0] = pointId3[1] = pointId3[2] = VC_INVALID_ID;
           } else {
               pointId3[0] = cidIndexRaw.Get( cid3[0] );
               pointId3[1] = cidIndexRaw.Get( cid3[1] );
@@ -201,7 +218,7 @@ struct VertexClustering{
   template<typename T, int N>
   vtkm::cont::ArrayHandle<T> copyFromVec( vtkm::cont::ArrayHandle< vtkm::Vec<T, N> > const& other)
   {
-      const T *vmem = reinterpret_cast< const T *>(& *other.GetPortalConstControl().GetRawIterator());
+      const T *vmem = reinterpret_cast< const T *>(& *other.GetPortalConstControl().GetIteratorBegin());
       vtkm::cont::ArrayHandle<T> mem = vtkm::cont::make_ArrayHandle(vmem, other.GetNumberOfValues()*N);
       vtkm::cont::ArrayHandle<T> result;
       vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(mem,result);
@@ -217,13 +234,14 @@ struct VertexClustering{
   }
 
 
+public:
   ///////////////////////////////////////////////////
   /// \brief VertexClustering: Mesh simplification
   /// \param ds : dataset
   /// \param bounds: dataset bounds
   /// \param nDivisions : number of max divisions per dimension
   ///
-  vtkm::cont::DataSet run(vtkm::cont::DataSet &ds, double bounds[6], int nDivisions)
+  vtkm::cont::DataSet run(vtkm::cont::DataSet &ds, const double bounds[6], int nDivisions)
   {
 
     boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
@@ -240,17 +258,22 @@ struct VertexClustering{
       double res[3];
       for (int i=0; i<3; i++)
           res[i] = (bounds[i*2+1]-bounds[i*2])/nDivisions;
-      gridInfo.grid_width = std::max(res[0], std::min(res[1], res[2]));
+      gridInfo.grid_width = std::max(res[0], std::max(res[1], res[2]));
+      std::cout << "grid_width = " << gridInfo.grid_width << std::endl;
 
       double inv_grid_width = gridInfo.inv_grid_width = 1. / gridInfo.grid_width;
 
       //printf("Bounds: %lf, %lf, %lf, %lf, %lf, %lf\n", bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
-      gridInfo.dim[0] = ceil((bounds[1]-bounds[0])*inv_grid_width);
-      gridInfo.dim[1] = ceil((bounds[3]-bounds[2])*inv_grid_width);
-      gridInfo.dim[2] = ceil((bounds[5]-bounds[4])*inv_grid_width);
-      gridInfo.origin[0] = (bounds[1]+bounds[0])*0.5 - gridInfo.grid_width*(gridInfo.dim[0])*.5;
-      gridInfo.origin[1] = (bounds[3]+bounds[2])*0.5 - gridInfo.grid_width*(gridInfo.dim[1])*.5;
-      gridInfo.origin[2] = (bounds[5]+bounds[4])*0.5 - gridInfo.grid_width*(gridInfo.dim[2])*.5;
+      gridInfo.dim[0] = (int)ceil((bounds[1]-bounds[0])*inv_grid_width);
+      gridInfo.dim[1] = (int)ceil((bounds[3]-bounds[2])*inv_grid_width);
+      gridInfo.dim[2] = (int)ceil((bounds[5]-bounds[4])*inv_grid_width);
+
+      // center the mesh in the grids
+      gridInfo.origin[0] = (vtkm::Float32) ((bounds[1]+bounds[0])*0.5 - gridInfo.grid_width*(gridInfo.dim[0])*.5);
+      gridInfo.origin[1] = (vtkm::Float32) ((bounds[3]+bounds[2])*0.5 - gridInfo.grid_width*(gridInfo.dim[1])*.5);
+      gridInfo.origin[2] = (vtkm::Float32) ((bounds[5]+bounds[4])*0.5 - gridInfo.grid_width*(gridInfo.dim[2])*.5);
+
+      std::cout << res[0] << "," << res[1] << ", " << res[2] << "," << bounds[3] << std::endl;
     }
 
     //construct the scheduler that will execute all the worklets
@@ -276,7 +299,7 @@ struct VertexClustering{
     vtkm::cont::ArrayHandle<vtkm::Id> pointCidArrayReduced;
     vtkm::cont::ArrayHandle<Vector3> repPointArray;  // representative point
 
-    vtkm::worklet::
+    vtkm::worklet::internal::
       AverageByKey( pointCidArray, pointArray, pointCidArrayReduced, repPointArray );
 
     std::cout << "Time after averaging (s): " << timer.GetElapsedTime() << std::endl;
@@ -332,8 +355,20 @@ struct VertexClustering{
 
     std::cout << "Time after unique (s): " << timer.GetElapsedTime() << std::endl;
 
+    // remove the last one if invalid
+    int cells = uniquePointId3Array.GetNumberOfValues();
+    if (cells > 0 && uniquePointId3Array.GetPortalConstControl().Get(cells-1)[0] == VC_INVALID_ID )
+      {
+        cells-- ;
+        uniquePointId3Array.Shrink(cells);
+      }
 
     /// generate output
+    std::cout << "number of output points: " << repPointArray.GetNumberOfValues() << std::endl;
+    std::cout << "number of output cells: " << uniquePointId3Array.GetNumberOfValues() << std::endl;
+
+    print_array("repPointArray", repPointArray);
+    print_array("uniquePointId3Array", uniquePointId3Array);
 
     vtkm::cont::DataSet new_ds;
 
@@ -342,8 +377,6 @@ struct VertexClustering{
 
     {
       int cells = uniquePointId3Array.GetNumberOfValues();
-      cells-- ;
-      uniquePointId3Array.Shrink(cells);  // remove the last invalid one
 
       //typedef typename vtkm::cont::ArrayHandleConstant<vtkm::Id>::StorageTag ConstantStorage;
       //typedef typename vtkm::cont::ArrayHandleImplicit<vtkm::Id, CounterOfThree>::StorageTag CountingStorage;

@@ -24,6 +24,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleZip.h>
 
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Timer.h>
@@ -37,6 +38,7 @@
 
 namespace vtkm {
 namespace worklet {
+namespace internal {
 
 template <class ValueType>
 struct DivideWorklet: public vtkm::worklet::WorkletMapField{
@@ -55,26 +57,29 @@ void AverageByKey( const vtkm::cont::ArrayHandle<KeyType> &keyArray,
                    vtkm::cont::ArrayHandle<KeyType> &outputKeyArray,
                    vtkm::cont::ArrayHandle<ValueType> &outputValueArray)
 {
-  vtkm::cont::ArrayHandle<ValueType> sumArray;
+  typedef vtkm::cont::ArrayHandle<ValueType> ValueArray;
+  typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArray;
+  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
 
   // sort the indexed array
-  vtkm::cont::ArrayHandle<KeyType> keyArraySorted;
-  vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>, vtkm::cont::ArrayHandle<ValueType> >
-      valueArraySorted ;
-  {
   vtkm::cont::ArrayHandleCounting<vtkm::Id> indexArray(0, keyArray.GetNumberOfValues());
-  vtkm::cont::ArrayHandle<vtkm::Id> indexArraySorted;
+  IdArray indexArraySorted;
+  vtkm::cont::ArrayHandle<KeyType> keyArraySorted;
 
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy( keyArray, keyArraySorted );
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy( indexArray, indexArraySorted );
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::SortByKey( keyArraySorted, indexArraySorted, std::less<KeyType>() ) ;
+  Algorithm::Copy( keyArray, keyArraySorted ); // keep the input key array unchanged
+  Algorithm::Copy( indexArray, indexArraySorted );
+  Algorithm::SortByKey( keyArraySorted, indexArraySorted, std::less<KeyType>() ) ;
 
-  valueArraySorted = vtkm::cont::make_ArrayHandlePermutation( indexArraySorted, valueArray );
-  }
+  // generate permultation array based on the indexes
+  typedef vtkm::cont::ArrayHandlePermutation<IdArray, ValueArray > PermutatedValueArray;
+  PermutatedValueArray valueArraySorted = vtkm::cont::make_ArrayHandlePermutation( indexArraySorted, valueArray );
 
-  vtkm::cont::ArrayHandleConstant<vtkm::Id> constOneArray(1, valueArray.GetNumberOfValues());
-  vtkm::cont::ArrayHandle<vtkm::Id> countArray;
-#if 1 // reduce twice : fastest
+  // reduce by key
+  typedef vtkm::cont::ArrayHandleConstant<vtkm::Id> ConstIdArray;
+  ConstIdArray constOneArray(1, valueArray.GetNumberOfValues());
+  IdArray countArray;
+  ValueArray sumArray;
+#if 0 // reduce twice
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ReduceByKey(
         keyArraySorted, valueArraySorted,
         outputKeyArray, sumArray,
@@ -84,13 +89,13 @@ void AverageByKey( const vtkm::cont::ArrayHandle<KeyType> &keyArray,
         outputKeyArray, countArray,
         vtkm::internal::Add()  );
 
-#else // use zip (a little slower)
-  auto inputZipHandle = vtkm::cont::make_ArrayHandleZip(valueArraySorted, constOneArray);
-  auto outputZipHandle = vtkm::cont::make_ArrayHandleZip(sumArray, countArray);
+#else // use zip
+  vtkm::cont::ArrayHandleZip< PermutatedValueArray, ConstIdArray > inputZipHandle(valueArraySorted, constOneArray);
+  vtkm::cont::ArrayHandleZip< ValueArray, IdArray > outputZipHandle(sumArray, countArray);
 
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ReduceByKey( keyArraySorted, inputZipHandle,
-                                                                  outputKeyArray, outputZipHandle,
-                                                                  ZipAdd()  );
+  Algorithm::ReduceByKey( keyArraySorted, inputZipHandle,
+                          outputKeyArray, outputZipHandle,
+                          vtkm::internal::Add()  );
 #endif
 
   // get average
@@ -108,6 +113,6 @@ void AverageByKey( const vtkm::cont::ArrayHandle<KeyType> &keyArray,
   AverageByKey<KeyType, ValueType, VTKM_DEFAULT_DEVICE_ADAPTER_TAG> (keyArray, valueArray, outputKeyArray, outputValueArray);
 }
 
-}} // vtkm::worklet
+}}} // vtkm::worklet:internal
 
 #endif  //vtk_m_worklet_AverageByKey_h
