@@ -30,14 +30,17 @@
 #ifndef VTKM_CUDA
 #include <limits.h>
 #include <math.h>
+#include <stdlib.h>
 
-// The nonfinite test functions are usually defined as macros, and boost seems
-// to want to undefine those macros so that it can implement the C99 templates
-// and other implementations of the same name. Get around the problem by using
-// the boost version when compiling for a CPU.
+// The nonfinite and sign test functions are usually defined as macros, and
+// boost seems to want to undefine those macros so that it can implement the
+// C99 templates and other implementations of the same name. Get around the
+// problem by using the boost version when compiling for a CPU.
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/math/special_functions/sign.hpp>
 #include <cmath>
 #define VTKM_USE_BOOST_CLASSIFY
+#define VTKM_USE_BOOST_SIGN
 #endif // !VTKM_CUDA
 
 #if VTKM_MSVC && !defined(VTKM_CUDA)
@@ -76,7 +79,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Pow(vtkm::Float64 x, vtkm::Float64 y) {
   return VTKM_SYS_MATH_FUNCTION_64(pow)(x,y);
 }
-
 
 /// Compute the square root of \p x.
 ///
@@ -120,7 +122,6 @@ vtkm::Vec<T,2> Sqrt(const vtkm::Vec<T,2> &x) {
                         vtkm::Sqrt(x[1]));
 }
 
-
 /// Compute the reciprocal square root of \p x. The result of this function is
 /// equivalent to <tt>1/Sqrt(x)</tt>. However, on some devices it is faster to
 /// compute the reciprocal square root than the regular square root. Thus, you
@@ -135,7 +136,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 RSqrt(vtkm::Float64 x) {
   return VTKM_SYS_MATH_FUNCTION_64(rsqrt)(x);
 }
-
 #else // !VTKM_CUDA
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 RSqrt(vtkm::Float32 x) {
@@ -145,7 +145,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 RSqrt(vtkm::Float64 x) {
   return 1/vtkm::Sqrt(x);
 }
-
 #endif // !VTKM_CUDA
 template<typename T, vtkm::IdComponent N>
 VTKM_EXEC_CONT_EXPORT
@@ -179,7 +178,6 @@ vtkm::Vec<T,2> RSqrt(const vtkm::Vec<T,2> &x) {
                         vtkm::RSqrt(x[1]));
 }
 
-
 /// Compute the cube root of \p x.
 ///
 #ifdef VTKM_USE_BOOST_MATH
@@ -191,7 +189,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Cbrt(vtkm::Float64 x) {
   return boost::math::cbrt(x);
 }
-
 #else // !VTKM_USE_BOOST_MATH
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 Cbrt(vtkm::Float32 x) {
@@ -201,7 +198,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Cbrt(vtkm::Float64 x) {
   return VTKM_SYS_MATH_FUNCTION_64(cbrt)(x);
 }
-
 #endif // !VTKM_USE_BOOST_MATH
 template<typename T, vtkm::IdComponent N>
 VTKM_EXEC_CONT_EXPORT
@@ -235,7 +231,6 @@ vtkm::Vec<T,2> Cbrt(const vtkm::Vec<T,2> &x) {
                         vtkm::Cbrt(x[1]));
 }
 
-
 /// Compute the reciprocal cube root of \p x. The result of this function is
 /// equivalent to <tt>1/Cbrt(x)</tt>. However, on some devices it is faster to
 /// compute the reciprocal cube root than the regular cube root. Thus, you
@@ -250,7 +245,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 RCbrt(vtkm::Float64 x) {
   return VTKM_SYS_MATH_FUNCTION_64(rcbrt)(x);
 }
-
 #else // !VTKM_CUDA
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 RCbrt(vtkm::Float32 x) {
@@ -260,7 +254,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 RCbrt(vtkm::Float64 x) {
   return 1/vtkm::Cbrt(x);
 }
-
 #endif // !VTKM_CUDA
 template<typename T, vtkm::IdComponent N>
 VTKM_EXEC_CONT_EXPORT
@@ -293,7 +286,6 @@ vtkm::Vec<T,2> RCbrt(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::RCbrt(x[0]),
                         vtkm::RCbrt(x[1]));
 }
-
 
 /// Computes e**\p x, the base-e exponential of \p x.
 ///
@@ -337,7 +329,6 @@ vtkm::Vec<T,2> Exp(const vtkm::Vec<T,2> &x) {
                         vtkm::Exp(x[1]));
 }
 
-
 /// Computes 2**\p x, the base-2 exponential of \p x.
 ///
 #ifdef VTKM_MSVC
@@ -349,7 +340,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Exp2(vtkm::Float64 x) {
   return vtkm::Pow(2,x);
 }
-
 #else // !VTKM_USE_BOOST_MATH
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 Exp2(vtkm::Float32 x) {
@@ -359,7 +349,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Exp2(vtkm::Float64 x) {
   return VTKM_SYS_MATH_FUNCTION_64(exp2)(x);
 }
-
 #endif // !VTKM_USE_BOOST_MATH
 template<typename T, vtkm::IdComponent N>
 VTKM_EXEC_CONT_EXPORT
@@ -393,7 +382,6 @@ vtkm::Vec<T,2> Exp2(const vtkm::Vec<T,2> &x) {
                         vtkm::Exp2(x[1]));
 }
 
-
 /// Computes (e**\p x) - 1, the of base-e exponental of \p x then minus 1. The
 /// accuracy of this function is good even for very small values of x.
 ///
@@ -406,7 +394,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 ExpM1(vtkm::Float64 x) {
   return boost::math::expm1(x);
 }
-
 #else // !VTKM_USE_BOOST_MATH
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 ExpM1(vtkm::Float32 x) {
@@ -416,7 +403,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 ExpM1(vtkm::Float64 x) {
   return VTKM_SYS_MATH_FUNCTION_64(expm1)(x);
 }
-
 #endif // !VTKM_USE_BOOST_MATH
 template<typename T, vtkm::IdComponent N>
 VTKM_EXEC_CONT_EXPORT
@@ -450,7 +436,6 @@ vtkm::Vec<T,2> ExpM1(const vtkm::Vec<T,2> &x) {
                         vtkm::ExpM1(x[1]));
 }
 
-
 /// Computes 10**\p x, the base-10 exponential of \p x.
 ///
 #ifdef VTKM_CUDA
@@ -462,7 +447,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Exp10(vtkm::Float64 x) {
   return VTKM_SYS_MATH_FUNCTION_64(exp10)(x);
 }
-
 #else // !VTKM_CUDA
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 Exp10(vtkm::Float32 x) {
@@ -472,7 +456,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Exp10(vtkm::Float64 x) {
   return vtkm::Pow(10, x);;
 }
-
 #endif // !VTKM_CUDA
 template<typename T, vtkm::IdComponent N>
 VTKM_EXEC_CONT_EXPORT
@@ -505,7 +488,6 @@ vtkm::Vec<T,2> Exp10(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Exp10(x[0]),
                         vtkm::Exp10(x[1]));
 }
-
 
 /// Computes the natural logarithm of \p x.
 ///
@@ -549,7 +531,6 @@ vtkm::Vec<T,2> Log(const vtkm::Vec<T,2> &x) {
                         vtkm::Log(x[1]));
 }
 
-
 /// Computes the logarithm base 2 of \p x.
 ///
 #ifdef VTKM_MSVC
@@ -576,7 +557,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Log2(vtkm::Float64 x) {
   return VTKM_SYS_MATH_FUNCTION_64(log2)(x);
 }
-
 #endif // !VTKM_USE_BOOST_MATH
 template<typename T, vtkm::IdComponent N>
 VTKM_EXEC_CONT_EXPORT
@@ -609,7 +589,6 @@ vtkm::Vec<T,2> Log2(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Log2(x[0]),
                         vtkm::Log2(x[1]));
 }
-
 
 /// Computes the logarithm base 10 of \p x.
 ///
@@ -653,7 +632,6 @@ vtkm::Vec<T,2> Log10(const vtkm::Vec<T,2> &x) {
                         vtkm::Log10(x[1]));
 }
 
-
 /// Computes the value of log(1+x) accurately for very small values of x.
 ///
 #ifdef VTKM_USE_BOOST_MATH
@@ -665,7 +643,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Log1P(vtkm::Float64 x) {
   return boost::math::log1p(x);
 }
-
 #else // !VTKM_USE_BOOST_MATH
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 Log1P(vtkm::Float32 x) {
@@ -675,7 +652,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Log1P(vtkm::Float64 x) {
   return VTKM_SYS_MATH_FUNCTION_64(log1p)(x);
 }
-
 #endif // !VTKM_USE_BOOST_MATH
 template<typename T, vtkm::IdComponent N>
 VTKM_EXEC_CONT_EXPORT
@@ -709,7 +685,6 @@ vtkm::Vec<T,2> Log1P(const vtkm::Vec<T,2> &x) {
                         vtkm::Log1P(x[1]));
 }
 
-
 //-----------------------------------------------------------------------------
 /// Returns \p x or \p y, whichever is larger.
 ///
@@ -727,7 +702,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y) {
   return (std::max)(x, y);
 }
-
 #else // !VTKM_USE_BOOST_MATH
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 Max(vtkm::Float32 x, vtkm::Float32 y) {
@@ -737,7 +711,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y) {
   return VTKM_SYS_MATH_FUNCTION_64(fmax)(x,y);
 }
-
 #endif // !VTKM_USE_BOOST_MATH
 
 /// Returns \p x or \p y, whichever is smaller.
@@ -756,7 +729,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y) {
   return (std::min)(x, y);
 }
-
 #else // !VTKM_USE_BOOST_MATH
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y) {
@@ -766,7 +738,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y) {
   return VTKM_SYS_MATH_FUNCTION_64(fmin)(x,y);
 }
-
 #endif // !VTKM_USE_BOOST_MATH
 
 
@@ -995,7 +966,6 @@ vtkm::Float64 FMod(vtkm::Float64 x, vtkm::Float64 y) {
   return VTKM_SYS_MATH_FUNCTION_64(fmod)(x,y);
 }
 
-
 /// Computes the remainder on division of 2 floating point numbers. The return
 /// value is \p numerator - n \p denominator, where n is the quotient of \p
 /// numerator divided by \p denominator rounded towards the nearest integer
@@ -1010,7 +980,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Remainder(vtkm::Float64 x, vtkm::Float64 y) {
   return VTKM_SYS_MATH_FUNCTION_64(remainder)(x,y);
 }
-
 
 /// Returns the remainder on division of 2 floating point numbers just like
 /// Remainder. In addition, this function also returns the \c quotient used to
@@ -1108,7 +1077,6 @@ vtkm::Vec<T,2> Ceil(const vtkm::Vec<T,2> &x) {
                         vtkm::Ceil(x[1]));
 }
 
-
 /// Round \p x to the largest integer value not greater than x.
 ///
 VTKM_EXEC_CONT_EXPORT
@@ -1151,7 +1119,6 @@ vtkm::Vec<T,2> Floor(const vtkm::Vec<T,2> &x) {
                         vtkm::Floor(x[1]));
 }
 
-
 /// Round \p x to the nearest integral value.
 ///
 #ifdef VTKM_USE_BOOST_MATH
@@ -1163,7 +1130,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Round(vtkm::Float64 x) {
   return boost::math::round(x);
 }
-
 #else // !VTKM_USE_BOOST_MATH
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 Round(vtkm::Float32 x) {
@@ -1173,7 +1139,6 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Round(vtkm::Float64 x) {
   return VTKM_SYS_MATH_FUNCTION_64(round)(x);
 }
-
 #endif // !VTKM_USE_BOOST_MATH
 template<typename T, vtkm::IdComponent N>
 VTKM_EXEC_CONT_EXPORT
@@ -1207,6 +1172,131 @@ vtkm::Vec<T,2> Round(const vtkm::Vec<T,2> &x) {
                         vtkm::Round(x[1]));
 }
 
+//-----------------------------------------------------------------------------
+/// Return the absolute value of \x. That is, return \p x if it is positive or
+/// \p -x if it is negative.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Int32 Abs(vtkm::Int32 x)
+{
+#if VTKM_SIZE_INT == 4
+  return abs(x);
+#else
+#error Unknown size of Int32.
+#endif
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Int64 Abs(vtkm::Int64 x)
+{
+#if VTKM_SIZE_LONG == 8
+  return labs(x);
+#elif VTKM_SIZE_LONG_LONG == 8
+  return llabs(x);
+#else
+#error Unknown size of Int64.
+#endif
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Abs(vtkm::Float32 x) {
+  return VTKM_SYS_MATH_FUNCTION_32(fabs)(x);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Abs(vtkm::Float64 x) {
+  return VTKM_SYS_MATH_FUNCTION_64(fabs)(x);
+}
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> Abs(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Abs(x[index]);
+  }
+  return result;
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,4> Abs(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Abs(x[0]),
+                        vtkm::Abs(x[1]),
+                        vtkm::Abs(x[2]),
+                        vtkm::Abs(x[3]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Abs(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Abs(x[0]),
+                        vtkm::Abs(x[1]),
+                        vtkm::Abs(x[2]));
+}
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,2> Abs(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Abs(x[0]),
+                        vtkm::Abs(x[1]));
+}
+
+/// Returns a nonzero value if \x is negative.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Int32 SignBit(vtkm::Float32 x) {
+#ifdef VTKM_USE_BOOST_SIGN
+  using boost::math::signbit;
+#endif
+  return static_cast<vtkm::Int32>(signbit(x));
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Int32 SignBit(vtkm::Float64 x) {
+#ifdef VTKM_USE_BOOST_SIGN
+  using boost::math::signbit;
+#endif
+  return static_cast<vtkm::Int32>(signbit(x));
+}
+
+/// Returns true if \p x is less than zero, false otherwise.
+///
+VTKM_EXEC_CONT_EXPORT
+bool IsNegative(vtkm::Float32 x) {
+  return (vtkm::SignBit(x) != 0);
+}
+VTKM_EXEC_CONT_EXPORT
+bool IsNegative(vtkm::Float64 x) {
+  return (vtkm::SignBit(x) != 0);
+}
+
+/// Copies the sign of \p y onto \p x.  If \p y is positive, returns Abs(\p x).
+/// If \p y is negative, returns -Abs(\p x).
+///
+#ifdef VTKM_USE_BOOST_SIGN
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 CopySign(vtkm::Float32 x, vtkm::Float32 y) {
+  return boost::math::copysign(x,y);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 CopySign(vtkm::Float64 x, vtkm::Float64 y) {
+  return boost::math::copysign(x,y);
+}
+#else // !VTKM_USE_BOOST_SIGN
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 CopySign(vtkm::Float32 x, vtkm::Float32 y) {
+  return VTKM_SYS_MATH_FUNCTION_32(copysign)(x,y);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 CopySign(vtkm::Float64 x, vtkm::Float64 y) {
+  return VTKM_SYS_MATH_FUNCTION_64(copysign)(x,y);
+}
+#endif // !VTKM_USE_BOOST_SIGN
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> CopySign(const vtkm::Vec<T,N> &x, const vtkm::Vec<T,N> &y)
+{
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::CopySign(x[index], y[index]);
+  }
+  return result;
+}
 
 } // namespace vtkm
 

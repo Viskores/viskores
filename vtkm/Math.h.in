@@ -42,14 +42,17 @@ $# Ignore the following comment. It is meant for the generated file.
 #ifndef VTKM_CUDA
 #include <limits.h>
 #include <math.h>
+#include <stdlib.h>
 
-// The nonfinite test functions are usually defined as macros, and boost seems
-// to want to undefine those macros so that it can implement the C99 templates
-// and other implementations of the same name. Get around the problem by using
-// the boost version when compiling for a CPU.
+// The nonfinite and sign test functions are usually defined as macros, and
+// boost seems to want to undefine those macros so that it can implement the
+// C99 templates and other implementations of the same name. Get around the
+// problem by using the boost version when compiling for a CPU.
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/math/special_functions/sign.hpp>
 #include <cmath>
 #define VTKM_USE_BOOST_CLASSIFY
+#define VTKM_USE_BOOST_SIGN
 #endif // !VTKM_CUDA
 
 #if VTKM_MSVC && !defined(VTKM_CUDA)
@@ -68,12 +71,12 @@ $# Ignore the following comment. It is meant for the generated file.
 #define VTKM_SYS_MATH_FUNCTION_64(func) func
 
 $py(
-def unary_function(name, type, expression):
+def unary_function(name, type, returntype, expression):
   return '''VTKM_EXEC_CONT_EXPORT
-{1} {0}({1} x) {{
-  return {2};
+{2} {0}({1} x) {{
+  return {3};
 }}
-'''.format(name, type, expression)
+'''.format(name, type, returntype, expression)
 
 def unary_Vec_function(vtkmname):
   return '''template<typename T, vtkm::IdComponent N>
@@ -109,28 +112,40 @@ vtkm::Vec<T,2> {0}(const vtkm::Vec<T,2> &x) {{
 }}
 '''.format(vtkmname)
 
-def unary_math_function_no_vec(vtkmname, sysname):
+def unary_math_function_no_vec(vtkmname, sysname, returntype = None):
   return unary_function(vtkmname,
                         'vtkm::Float32',
+                        'vtkm::Float32' if returntype == None else returntype,
                         'VTKM_SYS_MATH_FUNCTION_32(' + sysname + ')(x)') + \
          unary_function(vtkmname,
                         'vtkm::Float64',
+                        'vtkm::Float64' if returntype == None else returntype,
                         'VTKM_SYS_MATH_FUNCTION_64(' + sysname + ')(x)')
 
 def unary_math_function(vtkmname, sysname):
   return unary_math_function_no_vec(vtkmname, sysname) + \
          unary_Vec_function(vtkmname)
 
-def unary_template_function_no_vec(vtkmname, expression):
+def unary_template_function_no_vec(vtkmname,
+                                   expression,
+                                   returntype = None,
+                                   preexpression = ''):
   return '''VTKM_EXEC_CONT_EXPORT
-vtkm::Float32 {0}(vtkm::Float32 x) {{
-  return {1};
+{2} {0}(vtkm::Float32 x) {{
+{3}  return {1};
 }}
-VTKM_EXEC_CONT_EXPORT
-vtkm::Float64 {0}(vtkm::Float64 x) {{
-  return {1};
+'''.format(vtkmname,
+           expression,
+           'vtkm::Float32' if returntype == None else returntype,
+           preexpression) + \
+'''VTKM_EXEC_CONT_EXPORT
+{2} {0}(vtkm::Float64 x) {{
+{3}  return {1};
 }}
-'''.format(vtkmname, expression)
+'''.format(vtkmname,
+           expression,
+           'vtkm::Float64' if returntype == None else returntype,
+           preexpression)
 
 def binary_function(name, type, expression):
   return '''VTKM_EXEC_CONT_EXPORT
@@ -170,11 +185,11 @@ namespace vtkm {
 //-----------------------------------------------------------------------------
 /// Computes \p x raised to the power of \p y.
 ///
-$binary_math_function('Pow', 'pow')
+$binary_math_function('Pow', 'pow')\
 
 /// Compute the square root of \p x.
 ///
-$unary_math_function('Sqrt', 'sqrt')
+$unary_math_function('Sqrt', 'sqrt')\
 
 /// Compute the reciprocal square root of \p x. The result of this function is
 /// equivalent to <tt>1/Sqrt(x)</tt>. However, on some devices it is faster to
@@ -182,20 +197,24 @@ $unary_math_function('Sqrt', 'sqrt')
 /// should use this function whenever dividing by the square root.
 ///
 #ifdef VTKM_CUDA
-$unary_math_function_no_vec('RSqrt', 'rsqrt')
+$unary_math_function_no_vec('RSqrt', 'rsqrt')\
+$#
 #else // !VTKM_CUDA
-$unary_template_function_no_vec('RSqrt', '1/vtkm::Sqrt(x)')
+$unary_template_function_no_vec('RSqrt', '1/vtkm::Sqrt(x)')\
+$#
 #endif // !VTKM_CUDA
-$unary_Vec_function('RSqrt')
+$unary_Vec_function('RSqrt')\
 
 /// Compute the cube root of \p x.
 ///
 #ifdef VTKM_USE_BOOST_MATH
-$unary_template_function_no_vec('Cbrt', 'boost::math::cbrt(x)')
+$unary_template_function_no_vec('Cbrt', 'boost::math::cbrt(x)')\
+$#
 #else // !VTKM_USE_BOOST_MATH
-$unary_math_function_no_vec('Cbrt', 'cbrt')
+$unary_math_function_no_vec('Cbrt', 'cbrt')\
+$#
 #endif // !VTKM_USE_BOOST_MATH
-$unary_Vec_function('Cbrt')
+$unary_Vec_function('Cbrt')\
 
 /// Compute the reciprocal cube root of \p x. The result of this function is
 /// equivalent to <tt>1/Cbrt(x)</tt>. However, on some devices it is faster to
@@ -203,47 +222,55 @@ $unary_Vec_function('Cbrt')
 /// should use this function whenever dividing by the cube root.
 ///
 #ifdef VTKM_CUDA
-$unary_math_function_no_vec('RCbrt', 'rcbrt')
+$unary_math_function_no_vec('RCbrt', 'rcbrt')\
+$#
 #else // !VTKM_CUDA
-$unary_template_function_no_vec('RCbrt', '1/vtkm::Cbrt(x)')
+$unary_template_function_no_vec('RCbrt', '1/vtkm::Cbrt(x)')\
+$#
 #endif // !VTKM_CUDA
-$unary_Vec_function('RCbrt')
+$unary_Vec_function('RCbrt')\
 
 /// Computes e**\p x, the base-e exponential of \p x.
 ///
-$unary_math_function('Exp', 'exp')
+$unary_math_function('Exp', 'exp')\
 
 /// Computes 2**\p x, the base-2 exponential of \p x.
 ///
 #ifdef VTKM_MSVC
-$unary_template_function_no_vec('Exp2', 'vtkm::Pow(2,x)')
+$unary_template_function_no_vec('Exp2', 'vtkm::Pow(2,x)')\
+$#
 #else // !VTKM_USE_BOOST_MATH
-$unary_math_function_no_vec('Exp2', 'exp2')
+$unary_math_function_no_vec('Exp2', 'exp2')\
+$#
 #endif // !VTKM_USE_BOOST_MATH
-$unary_Vec_function('Exp2')
+$unary_Vec_function('Exp2')\
 
 /// Computes (e**\p x) - 1, the of base-e exponental of \p x then minus 1. The
 /// accuracy of this function is good even for very small values of x.
 ///
 #ifdef VTKM_USE_BOOST_MATH
-$unary_template_function_no_vec('ExpM1', 'boost::math::expm1(x)')
+$unary_template_function_no_vec('ExpM1', 'boost::math::expm1(x)')\
+$#
 #else // !VTKM_USE_BOOST_MATH
-$unary_math_function_no_vec('ExpM1', 'expm1')
+$unary_math_function_no_vec('ExpM1', 'expm1')\
+$#
 #endif // !VTKM_USE_BOOST_MATH
-$unary_Vec_function('ExpM1')
+$unary_Vec_function('ExpM1')\
 
 /// Computes 10**\p x, the base-10 exponential of \p x.
 ///
 #ifdef VTKM_CUDA
-$unary_math_function_no_vec('Exp10', 'exp10')
+$unary_math_function_no_vec('Exp10', 'exp10')\
+$#
 #else // !VTKM_CUDA
-$unary_template_function_no_vec('Exp10', 'vtkm::Pow(10, x);')
+$unary_template_function_no_vec('Exp10', 'vtkm::Pow(10, x);')\
+$#
 #endif // !VTKM_CUDA
-$unary_Vec_function('Exp10')
+$unary_Vec_function('Exp10')\
 
 /// Computes the natural logarithm of \p x.
 ///
-$unary_math_function('Log', 'log')
+$unary_math_function('Log', 'log')\
 
 /// Computes the logarithm base 2 of \p x.
 ///
@@ -263,22 +290,25 @@ vtkm::Float64 Log2(vtkm::Float64 x) {
   return vtkm::Log(x)/log2v;
 }
 #else // !VTKM_USE_BOOST_MATH
-$unary_math_function_no_vec('Log2', 'log2')
+$unary_math_function_no_vec('Log2', 'log2')\
+$#
 #endif // !VTKM_USE_BOOST_MATH
-$unary_Vec_function('Log2')
+$unary_Vec_function('Log2')\
 
 /// Computes the logarithm base 10 of \p x.
 ///
-$unary_math_function('Log10', 'log10')
+$unary_math_function('Log10', 'log10')\
 
 /// Computes the value of log(1+x) accurately for very small values of x.
 ///
 #ifdef VTKM_USE_BOOST_MATH
-$unary_template_function_no_vec('Log1P', 'boost::math::log1p(x)')
+$unary_template_function_no_vec('Log1P', 'boost::math::log1p(x)')\
+$#
 #else // !VTKM_USE_BOOST_MATH
-$unary_math_function_no_vec('Log1P', 'log1p')
+$unary_math_function_no_vec('Log1P', 'log1p')\
+$#
 #endif // !VTKM_USE_BOOST_MATH
-$unary_Vec_function('Log1P')
+$unary_Vec_function('Log1P')\
 
 //-----------------------------------------------------------------------------
 /// Returns \p x or \p y, whichever is larger.
@@ -289,9 +319,11 @@ T Max(const T &x, const T &y) {
   return (x < y) ? y : x;
 }
 #ifdef VTKM_USE_STL_MIN_MAX
-$binary_template_function('Max', '(std::max)(x, y)')
+$binary_template_function('Max', '(std::max)(x, y)')\
+$#
 #else // !VTKM_USE_BOOST_MATH
-$binary_math_function('Max', 'fmax')
+$binary_math_function('Max', 'fmax')\
+$#
 #endif // !VTKM_USE_BOOST_MATH
 
 /// Returns \p x or \p y, whichever is smaller.
@@ -302,9 +334,11 @@ T Min(const T &x, const T &y) {
   return (x < y) ? x : y;
 }
 #ifdef VTKM_USE_STL_MIN_MAX
-$binary_template_function('Min', '(std::min)(x, y)')
+$binary_template_function('Min', '(std::min)(x, y)')\
+$#
 #else // !VTKM_USE_BOOST_MATH
-$binary_math_function('Min', 'fmin')
+$binary_math_function('Min', 'fmin')\
+$#
 #endif // !VTKM_USE_BOOST_MATH
 
 
@@ -524,7 +558,7 @@ bool IsFinite(T x)
 /// numerator divided by \p denominator rounded towards zero to an integer. For
 /// example, <tt>FMod(6.5, 2.3)</tt> returns 1.9, which is 6.5 - 2*2.3.
 ///
-$binary_math_function('FMod', 'fmod')
+$binary_math_function('FMod', 'fmod')\
 
 /// Computes the remainder on division of 2 floating point numbers. The return
 /// value is \p numerator - n \p denominator, where n is the quotient of \p
@@ -532,7 +566,7 @@ $binary_math_function('FMod', 'fmod')
 /// (instead of toward zero like FMod). For example, <tt>FMod(6.5, 2.3)</tt>
 /// returns -0.4, which is 6.5 - 3*2.3.
 ///
-$binary_math_function('Remainder', 'remainder')
+$binary_math_function('Remainder', 'remainder')\
 
 /// Returns the remainder on division of 2 floating point numbers just like
 /// Remainder. In addition, this function also returns the \c quotient used to
@@ -590,20 +624,84 @@ vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64 &integral)
 //-----------------------------------------------------------------------------
 /// Round \p x to the smallest integer value not less than x.
 ///
-$unary_math_function('Ceil', 'ceil')
+$unary_math_function('Ceil', 'ceil')\
 
 /// Round \p x to the largest integer value not greater than x.
 ///
-$unary_math_function('Floor', 'floor')
+$unary_math_function('Floor', 'floor')\
 
 /// Round \p x to the nearest integral value.
 ///
 #ifdef VTKM_USE_BOOST_MATH
-$unary_template_function_no_vec('Round', 'boost::math::round(x)')
+$unary_template_function_no_vec('Round', 'boost::math::round(x)')\
+$#
 #else // !VTKM_USE_BOOST_MATH
-$unary_math_function_no_vec('Round', 'round')
+$unary_math_function_no_vec('Round', 'round')\
+$#
 #endif // !VTKM_USE_BOOST_MATH
-$unary_Vec_function('Round')
+$unary_Vec_function('Round')\
+
+//-----------------------------------------------------------------------------
+/// Return the absolute value of \x. That is, return \p x if it is positive or
+/// \p -x if it is negative.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Int32 Abs(vtkm::Int32 x)
+{
+#if VTKM_SIZE_INT == 4
+  return abs(x);
+#else
+#error Unknown size of Int32.
+#endif
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Int64 Abs(vtkm::Int64 x)
+{
+#if VTKM_SIZE_LONG == 8
+  return labs(x);
+#elif VTKM_SIZE_LONG_LONG == 8
+  return llabs(x);
+#else
+#error Unknown size of Int64.
+#endif
+}
+$unary_math_function('Abs', 'fabs')\
+
+/// Returns a nonzero value if \x is negative.
+///
+$unary_template_function_no_vec('SignBit',
+                                'static_cast<vtkm::Int32>(signbit(x))',
+                                'vtkm::Int32',
+'''#ifdef VTKM_USE_BOOST_SIGN
+  using boost::math::signbit;
+#endif
+''')\
+
+/// Returns true if \p x is less than zero, false otherwise.
+///
+$unary_template_function_no_vec('IsNegative', '(vtkm::SignBit(x) != 0)', 'bool')\
+
+/// Copies the sign of \p y onto \p x.  If \p y is positive, returns Abs(\p x).
+/// If \p y is negative, returns -Abs(\p x).
+///
+#ifdef VTKM_USE_BOOST_SIGN
+$binary_template_function('CopySign', 'boost::math::copysign(x,y)')\
+$#
+#else // !VTKM_USE_BOOST_SIGN
+$binary_math_function('CopySign', 'copysign')\
+$#
+#endif // !VTKM_USE_BOOST_SIGN
+template<typename T, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,N> CopySign(const vtkm::Vec<T,N> &x, const vtkm::Vec<T,N> &y)
+{
+  vtkm::Vec<T,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::CopySign(x[index], y[index]);
+  }
+  return result;
+}
 
 } // namespace vtkm
 

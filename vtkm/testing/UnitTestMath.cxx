@@ -425,6 +425,78 @@ void TestRound()
   }
 }
 
+//-----------------------------------------------------------------------------
+struct TestAbsFunctor
+{
+  template<typename T>
+  void operator()(const T&) const {
+    std::cout << "Testing Abs." << std::endl;
+    for (vtkm::Id index = 0; index < 5; index++)
+    {
+      T positive = TestValue(index, T());  // Assuming all TestValues positive.
+      T negative = -1*positive;
+
+      VTKM_TEST_ASSERT(test_equal(vtkm::Abs(positive), positive),
+                       "Abs returned wrong value.");
+      VTKM_TEST_ASSERT(test_equal(vtkm::Abs(negative), positive),
+                       "Abs returned wrong value.");
+    }
+  }
+};
+struct TypeListTagAbs
+    : vtkm::ListTagJoin<
+        vtkm::ListTagJoin<
+          vtkm::ListTagBase<vtkm::Int32, vtkm::Int64>,
+          vtkm::TypeListTagIndex>,
+        vtkm::TypeListTagField> {  };
+
+template<typename T>
+void TestIsNegative()
+{
+  std::cout << "Testing SignBit and IsNegative." << std::endl;
+  T x = 0;
+  VTKM_TEST_ASSERT(vtkm::SignBit(x) == 0, "SignBit wrong for 0.");
+  VTKM_TEST_ASSERT(!vtkm::IsNegative(x), "IsNegative wrong for 0.");
+
+  x = 20;
+  VTKM_TEST_ASSERT(vtkm::SignBit(x) == 0, "SignBit wrong for 20.");
+  VTKM_TEST_ASSERT(!vtkm::IsNegative(x), "IsNegative wrong for 20.");
+
+  x = -20;
+  VTKM_TEST_ASSERT(vtkm::SignBit(x) != 0, "SignBit wrong for -20.");
+  VTKM_TEST_ASSERT(vtkm::IsNegative(x), "IsNegative wrong for -20.");
+
+  x = 0.02f;
+  VTKM_TEST_ASSERT(vtkm::SignBit(x) == 0, "SignBit wrong for 0.02.");
+  VTKM_TEST_ASSERT(!vtkm::IsNegative(x), "IsNegative wrong for 0.02.");
+
+  x = -0.02f;
+  VTKM_TEST_ASSERT(vtkm::SignBit(x) != 0, "SignBit wrong for -0.02.");
+  VTKM_TEST_ASSERT(vtkm::IsNegative(x), "IsNegative wrong for -0.02.");
+}
+
+struct TestCopySignFunctor
+{
+  template<typename T>
+  void operator()(const T&) const {
+    std::cout << "Testing CopySign." << std::endl;
+    T positive1 = TestValue(1, T());  // Assuming all TestValues positive.
+    T positive2 = TestValue(2, T());  // Assuming all TestValues positive.
+    T negative1 = -1*positive1;
+    T negative2 = -1*positive2;
+
+    VTKM_TEST_ASSERT(test_equal(vtkm::CopySign(positive1, positive2), positive1),
+                     "CopySign failed.");
+    VTKM_TEST_ASSERT(test_equal(vtkm::CopySign(negative1, positive2), positive1),
+                     "CopySign failed.");
+    VTKM_TEST_ASSERT(test_equal(vtkm::CopySign(positive1, negative2), negative1),
+                     "CopySign failed.");
+    VTKM_TEST_ASSERT(test_equal(vtkm::CopySign(negative1, negative2), negative1),
+                     "CopySign failed.");
+  }
+};
+
+//-----------------------------------------------------------------------------
 void RunMathTests()
 {
   PowTest<vtkm::Float32>();
@@ -439,6 +511,10 @@ void RunMathTests()
   TestRemainders<vtkm::Float64>();
   TestRound<vtkm::Float32>();
   TestRound<vtkm::Float64>();
+  vtkm::testing::Testing::TryTypes(TestAbsFunctor(), TypeListTagAbs());
+  TestIsNegative<vtkm::Float32>();
+  TestIsNegative<vtkm::Float64>();
+  vtkm::testing::Testing::TryTypes(TestCopySignFunctor(), vtkm::TypeListTagField());
 }
 
 } // Anonymous namespace
