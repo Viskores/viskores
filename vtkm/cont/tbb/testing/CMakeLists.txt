@@ -20,6 +20,7 @@
 
 set(unit_tests
   UnitTestDeviceAdapterTBB.cxx
+  UnitTestTBBArrayHandle.cxx
   UnitTestTBBArrayHandleFancy.cxx
   )
 vtkm_unit_tests(TBB SOURCES ${unit_tests})

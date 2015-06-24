@@ -19,16 +19,12 @@
 //============================================================================
 
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
-#define BOOST_SP_DISABLE_THREADS
 
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-
+#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 #include <vtkm/cont/testing/TestingArrayHandles.h>
-#include <vtkm/cont/cuda/internal/testing/Testing.h>
 
-int UnitTestCudaArrayHandle(int, char *[])
+int UnitTestTBBArrayHandle(int, char *[])
 {
-  int result = vtkm::cont::testing::TestingArrayHandles
-      <vtkm::cont::DeviceAdapterTagCuda>::Run();
-  return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
+  return vtkm::cont::testing::TestingArrayHandles
+    <vtkm::cont::DeviceAdapterTagTBB>::Run();
 }
