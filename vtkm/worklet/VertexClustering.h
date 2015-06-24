@@ -62,7 +62,7 @@ void print_array(const char *msg, const T &array)
 }
 #endif
 
-const vtkm::Id VC_INVALID_ID = std::numeric_limits<vtkm::Id>::max();
+#define VTKM_VC_INVALID_ID (0x7FFFFFFF)
 
 template <class DeviceAdapter>
 struct VertexClustering{
@@ -82,12 +82,12 @@ struct VertexClustering{
   class MapPointsWorklet : public vtkm::worklet::WorkletMapField {
   private:
       //const VTKM_EXEC_CONSTANT_EXPORT GridInfo grid;
-      const GridInfo grid;
+      GridInfo grid;
   public:
       typedef void ControlSignature(FieldIn<> , FieldOut<>);
       typedef void ExecutionSignature(_1, _2);
 
-      VTKM_EXEC_EXPORT
+      VTKM_CONT_EXPORT
       MapPointsWorklet(const GridInfo &grid_)
           : grid(grid_)
       { }
@@ -97,9 +97,9 @@ struct VertexClustering{
       vtkm::Id get_cluster_id( const Vector3 &p) const
       {
           Vector3 p_rel = (p - grid.origin) * grid.inv_grid_width;
-          vtkm::Id x = std::min((int)p_rel[0], grid.dim[0]-1);
-          vtkm::Id y = std::min((int)p_rel[1], grid.dim[1]-1);
-          vtkm::Id z = std::min((int)p_rel[2], grid.dim[2]-1);
+          vtkm::Id x = min((int)p_rel[0], grid.dim[0]-1);
+          vtkm::Id y = min((int)p_rel[1], grid.dim[1]-1);
+          vtkm::Id z = min((int)p_rel[2], grid.dim[2]-1);
           return x + grid.dim[0] * (y + grid.dim[1] * z);  // get a unique hash value
       }
 
@@ -122,7 +122,7 @@ struct VertexClustering{
     typedef void ControlSignature(FieldIn<> , FieldOut<>);
     typedef void ExecutionSignature(_1, _2);
 
-    VTKM_EXEC_EXPORT
+    VTKM_CONT_EXPORT
     MapCellsWorklet(
         const IdArrayHandle &pointIdArray,   // the given point Ids
         const IdArrayHandle &pointCidArray)   // the cluser ids each pointId will map to
@@ -197,7 +197,7 @@ struct VertexClustering{
       {
           if (cid3[0]==cid3[1] || cid3[0]==cid3[2] || cid3[1]==cid3[2])
           {
-              pointId3[0] = pointId3[1] = pointId3[2] = VC_INVALID_ID;
+              pointId3[0] = pointId3[1] = pointId3[2] = VTKM_VC_INVALID_ID ;
           } else {
               pointId3[0] = cidIndexRaw.Get( cid3[0] );
               pointId3[1] = cidIndexRaw.Get( cid3[1] );
@@ -370,7 +370,7 @@ public:
 
     // remove the last one if invalid
     int cells = uniquePointId3Array.GetNumberOfValues();
-    if (cells > 0 && uniquePointId3Array.GetPortalConstControl().Get(cells-1)[0] == VC_INVALID_ID )
+    if (cells > 0 && uniquePointId3Array.GetPortalConstControl().Get(cells-1)[0] == VTKM_VC_INVALID_ID  )
       {
         cells-- ;
         uniquePointId3Array.Shrink(cells);

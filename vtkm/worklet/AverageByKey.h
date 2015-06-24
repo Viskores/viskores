@@ -46,9 +46,17 @@ struct DivideWorklet: public vtkm::worklet::WorkletMapField{
     typedef void ExecutionSignature(_1, _2, _3);
 
     VTKM_EXEC_EXPORT void operator()(
-        const ValueType &v, vtkm::Id &count, ValueType &vout) const
+        const ValueType &v, const vtkm::Id &count, ValueType &vout) const
     {  vout = v * (1./count);  }
 };
+
+template<typename _Tp>
+  struct less
+  {
+    VTKM_EXEC_EXPORT
+    bool operator()(const _Tp& __x, const _Tp& __y) const
+    { return __x < __y; }
+  };
 
 
 template <class KeyType, class ValueType, class DeviceAdapter>
@@ -68,7 +76,7 @@ void AverageByKey( const vtkm::cont::ArrayHandle<KeyType> &keyArray,
 
   Algorithm::Copy( keyArray, keyArraySorted ); // keep the input key array unchanged
   Algorithm::Copy( indexArray, indexArraySorted );
-  Algorithm::SortByKey( keyArraySorted, indexArraySorted, std::less<KeyType>() ) ;
+  Algorithm::SortByKey( keyArraySorted, indexArraySorted, less<KeyType>() ) ;
 
   // generate permultation array based on the indexes
   typedef vtkm::cont::ArrayHandlePermutation<IdArray, ValueArray > PermutatedValueArray;
