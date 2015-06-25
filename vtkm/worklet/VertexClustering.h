@@ -56,8 +56,8 @@ struct VertexClustering{
   {
       int dim[3];
       Vector3 origin;
-      double grid_width;
-      double inv_grid_width; // = 1/grid_width
+      vtkm::Float64 grid_width;
+      vtkm::Float64 inv_grid_width; // = 1/grid_width
   };
 
   // input: points  output: cid of the points
@@ -234,7 +234,7 @@ public:
   /// \param bounds: dataset bounds
   /// \param nDivisions : number of max divisions per dimension
   ///
-  vtkm::cont::DataSet run(vtkm::cont::DataSet &ds, const double bounds[6], int nDivisions)
+  vtkm::cont::DataSet run(vtkm::cont::DataSet &ds, const vtkm::Float64 bounds[6], int nDivisions)
   {
     std::cout << LONG_MAX << ", " << sizeof(vtkm::Id) << std::endl;
 
@@ -249,12 +249,12 @@ public:
     /// determine grid resolution for clustering
     GridInfo gridInfo;
     {
-      double res[3];
+      vtkm::Float64 res[3];
       for (int i=0; i<3; i++)
           res[i] = (bounds[i*2+1]-bounds[i*2])/nDivisions;
       gridInfo.grid_width = std::max(res[0], std::max(res[1], res[2]));
 
-      double inv_grid_width = gridInfo.inv_grid_width = 1. / gridInfo.grid_width;
+      vtkm::Float64 inv_grid_width = gridInfo.inv_grid_width = 1. / gridInfo.grid_width;
 
       //printf("Bounds: %lf, %lf, %lf, %lf, %lf, %lf\n", bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
       gridInfo.dim[0] = (int)ceil((bounds[1]-bounds[0])*inv_grid_width);
@@ -408,7 +408,7 @@ public:
     /// The removal of it is deferred to the conversion to VTK
     /// ////////////////////////////////////////
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-    double t = timer.GetElapsedTime();
+    vtkm::Float64 t = timer.GetElapsedTime();
     std::cout << "Time (s): " << t << std::endl;
 #endif
 
