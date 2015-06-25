@@ -20,12 +20,15 @@
 //
 //=============================================================================
 
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
+#define BOOST_SP_DISABLE_THREADS
+
 #include <vtkm/testing/TestingMath.h>
 
-#include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
-int UnitTestMath(int, char *[])
+int UnitTestCudaMath(int, char *[])
 {
   return vtkm::cont::testing::Testing::Run(
-        UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagSerial>);
+        UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagCuda>);
 }

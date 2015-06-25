@@ -1304,9 +1304,9 @@ vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y) {
 
 //-----------------------------------------------------------------------------
 
-#ifdef VTKM_CUDA
+//#ifdef VTKM_CUDA
 #define VTKM_USE_IEEE_NONFINITE
-#endif
+//#endif
 
 #ifdef VTKM_USE_IEEE_NONFINITE
 
@@ -1330,35 +1330,65 @@ union IEEE754Bits64 {
 #define VTKM_NEG_INF_BITS_64  0xFFF0000000000000LL
 #define VTKM_EPSILON_64       1e-9
 
-template<typename T> struct FloatBits;
+template<typename T> struct FloatLimits;
 
 template<>
-struct FloatBits<vtkm::Float32>
+struct FloatLimits<vtkm::Float32>
 {
   typedef vtkm::detail::IEEE754Bits32 BitsType;
-  static const BitsType Nan;
-  static const BitsType Infinity;
-  static const BitsType NegativeInfinity;
-  static const vtkm::Float32 Epsilon;
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Float32 Nan() {
+    BitsType nan = {VTKM_NAN_BITS_32};
+    return nan.scalar;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Float32 Infinity() {
+    BitsType inf = {VTKM_INF_BITS_32};
+    return inf.scalar;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Float32 NegativeInfinity() {
+    BitsType neginf = {VTKM_NEG_INF_BITS_32};
+    return neginf.scalar;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Float32 Epsilon() {
+    return VTKM_EPSILON_32;
+  }
 };
-const FloatBits<vtkm::Float32>::BitsType FloatBits<vtkm::Float32>::Nan = {VTKM_NAN_BITS_32};
-const FloatBits<vtkm::Float32>::BitsType FloatBits<vtkm::Float32>::Infinity = {VTKM_INF_BITS_32};
-const FloatBits<vtkm::Float32>::BitsType FloatBits<vtkm::Float32>::NegativeInfinity = {VTKM_NEG_INF_BITS_32};
-const vtkm::Float32 FloatBits<vtkm::Float32>::Epsilon = VTKM_EPSILON_32;
 
 template<>
-struct FloatBits<vtkm::Float64>
+struct FloatLimits<vtkm::Float64>
 {
   typedef vtkm::detail::IEEE754Bits64 BitsType;
-  static const BitsType Nan;
-  static const BitsType Infinity;
-  static const BitsType NegativeInfinity;
-  static const vtkm::Float64 Epsilon;
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Float64 Nan() {
+    BitsType nan = {VTKM_NAN_BITS_64};
+    return nan.scalar;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Float64 Infinity() {
+    BitsType inf = {VTKM_INF_BITS_64};
+    return inf.scalar;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Float64 NegativeInfinity() {
+    BitsType neginf = {VTKM_NEG_INF_BITS_64};
+    return neginf.scalar;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Float64 Epsilon() {
+    return VTKM_EPSILON_64;
+  }
 };
-const FloatBits<vtkm::Float64>::BitsType FloatBits<vtkm::Float64>::Nan = {VTKM_NAN_BITS_64};
-const FloatBits<vtkm::Float64>::BitsType FloatBits<vtkm::Float64>::Infinity = {VTKM_INF_BITS_64};
-const FloatBits<vtkm::Float64>::BitsType FloatBits<vtkm::Float64>::NegativeInfinity = {VTKM_NEG_INF_BITS_64};
-const vtkm::Float64 FloatBits<vtkm::Float64>::Epsilon = VTKM_EPSILON_64;
 
 #undef VTKM_NAN_BITS_32
 #undef VTKM_INF_BITS_32
@@ -1377,7 +1407,7 @@ template<typename T>
 VTKM_EXEC_CONT_EXPORT
 T Nan()
 {
-  return detail::FloatBits<T>::Nan.scalar;
+  return detail::FloatLimits<T>::Nan();
 }
 
 /// Returns the representation for infinity.
@@ -1386,7 +1416,7 @@ template<typename T>
 VTKM_EXEC_CONT_EXPORT
 T Infinity()
 {
-  return detail::FloatBits<T>::Infinity.scalar;
+  return detail::FloatLimits<T>::Infinity();
 }
 
 /// Returns the representation for negative infinity.
@@ -1395,7 +1425,7 @@ template<typename T>
 VTKM_EXEC_CONT_EXPORT
 T NegativeInfinity()
 {
-  return detail::FloatBits<T>::NegativeInfinity.scalar;
+  return detail::FloatLimits<T>::NegativeInfinity();
 }
 
 /// Returns the difference between 1 and the least value greater than 1
@@ -1405,7 +1435,7 @@ template<typename T>
 VTKM_EXEC_CONT_EXPORT
 T Epsilon()
 {
-  return detail::FloatBits<T>::Epsilon;
+  return detail::FloatLimits<T>::Epsilon();
 }
 
 #else // !VTKM_USE_IEEE_NONFINITE

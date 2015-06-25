@@ -20,6 +20,7 @@
 
 set(headers
   Testing.h
+  TestingMath.h
   OptionParser.h
   VecTraitsTests.h
   )
