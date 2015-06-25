@@ -38,7 +38,6 @@
 
 namespace vtkm {
 namespace worklet {
-namespace internal {
 
 template <class ValueType>
 struct DivideWorklet: public vtkm::worklet::WorkletMapField{
@@ -121,6 +120,6 @@ void AverageByKey( const vtkm::cont::ArrayHandle<KeyType> &keyArray,
   AverageByKey<KeyType, ValueType, VTKM_DEFAULT_DEVICE_ADAPTER_TAG> (keyArray, valueArray, outputKeyArray, outputValueArray);
 }
 
-}}} // vtkm::worklet:internal
+}} // vtkm::worklet
 
 #endif  //vtk_m_worklet_AverageByKey_h
