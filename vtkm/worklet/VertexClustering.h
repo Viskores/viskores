@@ -20,6 +20,8 @@
 #ifndef vtk_m_worklet_VertexClustering_h
 #define vtk_m_worklet_VertexClustering_h
 
+#include <numeric>
+
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -44,8 +46,6 @@
 namespace vtkm{ namespace worklet
 {
 
-#define VTKM_VC_INVALID_ID (0x7FFFFFFF)
-
 template <class DeviceAdapter>
 struct VertexClustering{
 
@@ -65,6 +65,11 @@ struct VertexClustering{
   private:
       //const VTKM_EXEC_CONSTANT_EXPORT GridInfo grid;
       GridInfo grid;
+
+      VTKM_EXEC_EXPORT
+      vtkm::Id min(vtkm::Id a, vtkm::Id b) const {
+        return (a<b)?a:b;
+      }
   public:
       typedef void ControlSignature(FieldIn<> , FieldOut<>);
       typedef void ExecutionSignature(_1, _2);
@@ -72,16 +77,16 @@ struct VertexClustering{
       VTKM_CONT_EXPORT
       MapPointsWorklet(const GridInfo &grid_)
           : grid(grid_)
-      { }
+      { }      
 
       /// determine grid resolution for clustering
       VTKM_EXEC_EXPORT
       vtkm::Id get_cluster_id( const Vector3 &p) const
       {
           Vector3 p_rel = (p - grid.origin) * grid.inv_grid_width;
-          vtkm::Id x = min((int)p_rel[0], grid.dim[0]-1);
-          vtkm::Id y = min((int)p_rel[1], grid.dim[1]-1);
-          vtkm::Id z = min((int)p_rel[2], grid.dim[2]-1);
+          vtkm::Id x = min((vtkm::Id)p_rel[0], grid.dim[0]-1);
+          vtkm::Id y = min((vtkm::Id)p_rel[1], grid.dim[1]-1);
+          vtkm::Id z = min((vtkm::Id)p_rel[2], grid.dim[2]-1);
           return x + grid.dim[0] * (y + grid.dim[1] * z);  // get a unique hash value
       }
 
@@ -115,7 +120,7 @@ struct VertexClustering{
     VTKM_EXEC_EXPORT
     void operator()(const vtkm::Id &pointIdIndex, vtkm::Id3 &cid3) const
     {
-      VTKM_ASSERT_CONT(pointIdIndex % 3 == 0);  // TODO: may ignore non-triangle cells
+      //VTKM_ASSERT_CONT(pointIdIndex % 3 == 0);  // TODO: may ignore non-triangle cells
       // assume it's a triangle
       cid3[0] = pointCidPortal.Get( pointIdPortal.Get(pointIdIndex) );
       cid3[1] = pointCidPortal.Get( pointIdPortal.Get(pointIdIndex+1) );
@@ -146,7 +151,6 @@ struct VertexClustering{
       void operator()(const vtkm::Id &counter, const vtkm::Id &cid) const
       {
           cidIndexRaw.Set(cid, counter);
-          //printf("cid[%d] = %d\n", cid, counter);
       }
 
       VTKM_CONT_EXPORT
@@ -179,7 +183,7 @@ struct VertexClustering{
       {
           if (cid3[0]==cid3[1] || cid3[0]==cid3[2] || cid3[1]==cid3[2])
           {
-              pointId3[0] = pointId3[1] = pointId3[2] = VTKM_VC_INVALID_ID ;
+              pointId3[0] = pointId3[1] = pointId3[2] = -1 ; // invalid cell to be removed
           } else {
               pointId3[0] = cidIndexRaw.Get( cid3[0] );
               pointId3[1] = cidIndexRaw.Get( cid3[1] );
@@ -192,13 +196,16 @@ struct VertexClustering{
 
   class Id3Less{
   public:
-      VTKM_EXEC_EXPORT
-      bool operator() (const vtkm::Id3 & a, const vtkm::Id3 & b) const
-      {
-          return (a[0] < b[0] ||
-              (a[0]==b[0] && a[1] < b[1]) ||
-              (a[0]==b[0] && a[1]==b[1] && a[2] < b[2]));
-      }
+    VTKM_EXEC_EXPORT
+    bool operator() (const vtkm::Id3 & a, const vtkm::Id3 & b) const
+    {
+      if (a[0] < 0) // invalid id: place at the last after sorting (comparing to 0 is faster than matching -1)
+        return false;
+      return b[0] < 0 ||
+             a[0] < b[0] ||
+             a[0]==b[0] && a[1] < b[1] ||
+             a[0]==b[0] && a[1]==b[1] && a[2] < b[2];
+    }
   };
 
   template<typename T, int N>
@@ -229,6 +236,7 @@ public:
   ///
   vtkm::cont::DataSet run(vtkm::cont::DataSet &ds, const double bounds[6], int nDivisions)
   {
+    std::cout << LONG_MAX << ", " << sizeof(vtkm::Id) << std::endl;
 
     boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
     vtkm::cont::CellSetExplicit<> *cs =
@@ -353,9 +361,8 @@ public:
 #endif
 
     // remove the last one if invalid
-    int cells = uniquePointId3Array.GetNumberOfValues();
-    if (cells > 0 && uniquePointId3Array.GetPortalConstControl().Get(cells-1)[0] == VTKM_VC_INVALID_ID  )
-      {
+    vtkm::Id cells = uniquePointId3Array.GetNumberOfValues();
+    if (cells > 0 && uniquePointId3Array.GetPortalConstControl().Get(cells-1) == vtkm::make_Vec<vtkm::Id>(-1,-1,-1) ) {
         cells-- ;
         uniquePointId3Array.Shrink(cells);
       }
