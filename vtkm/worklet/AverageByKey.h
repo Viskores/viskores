@@ -81,29 +81,17 @@ void AverageByKey( const vtkm::cont::ArrayHandle<KeyType> &keyArray,
   typedef vtkm::cont::ArrayHandlePermutation<IdArray, ValueArray > PermutatedValueArray;
   PermutatedValueArray valueArraySorted = vtkm::cont::make_ArrayHandlePermutation( indexArraySorted, valueArray );
 
-  // reduce by key
+  // reduce both sumArray and countArray by key
   typedef vtkm::cont::ArrayHandleConstant<vtkm::Id> ConstIdArray;
   ConstIdArray constOneArray(1, valueArray.GetNumberOfValues());
   IdArray countArray;
   ValueArray sumArray;
-#if 0 // reduce twice
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ReduceByKey(
-        keyArraySorted, valueArraySorted,
-        outputKeyArray, sumArray,
-        vtkm::internal::Add()  );
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ReduceByKey(
-        keyArraySorted, constOneArray,
-        outputKeyArray, countArray,
-        vtkm::internal::Add()  );
-
-#else // use zip
   vtkm::cont::ArrayHandleZip< PermutatedValueArray, ConstIdArray > inputZipHandle(valueArraySorted, constOneArray);
   vtkm::cont::ArrayHandleZip< ValueArray, IdArray > outputZipHandle(sumArray, countArray);
 
   Algorithm::ReduceByKey( keyArraySorted, inputZipHandle,
                           outputKeyArray, outputZipHandle,
                           vtkm::internal::Add()  );
-#endif
 
   // get average
   DispatcherMapField<DivideWorklet<ValueType> >().Invoke(
