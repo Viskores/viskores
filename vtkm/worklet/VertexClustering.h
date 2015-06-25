@@ -208,44 +208,21 @@ struct VertexClustering{
     }
   };
 
-  template<typename T, int N>
-  vtkm::cont::ArrayHandle<T> copyFromVec( vtkm::cont::ArrayHandle< vtkm::Vec<T, N> > const& other)
-  {
-      const T *vmem = reinterpret_cast< const T *>(& *other.GetPortalConstControl().GetIteratorBegin());
-      vtkm::cont::ArrayHandle<T> mem = vtkm::cont::make_ArrayHandle(vmem, other.GetNumberOfValues()*N);
-      vtkm::cont::ArrayHandle<T> result;
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(mem,result);
-      return result;
-  }
-
-  template<typename T, typename StorageTag>
-  vtkm::cont::ArrayHandle<T> copyFromImplicit( vtkm::cont::ArrayHandle<T, StorageTag> const& other)
-  {
-    vtkm::cont::ArrayHandle<T> result;
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(other, result);
-    return result;
-  }
-
-
 public:
+
   ///////////////////////////////////////////////////
   /// \brief VertexClustering: Mesh simplification
   /// \param ds : dataset
   /// \param bounds: dataset bounds
   /// \param nDivisions : number of max divisions per dimension
-  ///
-  vtkm::cont::DataSet run(vtkm::cont::DataSet &ds, const vtkm::Float64 bounds[6], int nDivisions)
+  template <class StorageT, class StorageU, class StorageV>
+  void run(const vtkm::cont::ArrayHandle<PointType, StorageT> pointArray,
+           const vtkm::cont::ArrayHandle<vtkm::Id, StorageU>  pointIdArray,
+           const vtkm::cont::ArrayHandle<vtkm::Id, StorageV>  cellToConnectivityIndexArray,
+           const vtkm::Float64 bounds[6], vtkm::Id nDivisions,
+           vtkm::cont::ArrayHandle<PointType> &output_pointArray,
+           vtkm::cont::ArrayHandle<vtkm::Id3> &output_pointId3Array)
   {
-    std::cout << LONG_MAX << ", " << sizeof(vtkm::Id) << std::endl;
-
-    boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
-    vtkm::cont::CellSetExplicit<> *cs =
-        dynamic_cast<vtkm::cont::CellSetExplicit<> *>(scs.get());
-
-    vtkm::cont::ArrayHandle<PointType> pointArray = ds.GetField("xyz").GetData().CastToArrayHandle<PointType, VTKM_DEFAULT_STORAGE_TAG>();
-    vtkm::cont::ArrayHandle<vtkm::Id> pointIdArray = cs->GetNodeToCellConnectivity().GetConnectivityArray();
-    vtkm::cont::ArrayHandle<vtkm::Id> cellToConnectivityIndexArray = cs->GetNodeToCellConnectivity().GetCellToConnectivityIndexArray();
-
     /// determine grid resolution for clustering
     GridInfo gridInfo;
     {
@@ -367,41 +344,14 @@ public:
         uniquePointId3Array.Shrink(cells);
       }
 
+    output_pointArray = repPointArray;
+    output_pointId3Array = uniquePointId3Array;
+
     /// generate output
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "number of output points: " << repPointArray.GetNumberOfValues() << std::endl;
     std::cout << "number of output cells: " << uniquePointId3Array.GetNumberOfValues() << std::endl;
 #endif
-
-    vtkm::cont::DataSet new_ds;
-
-    new_ds.AddField(vtkm::cont::Field("xyz", 0, vtkm::cont::Field::ASSOC_POINTS, repPointArray));
-    new_ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("xyz"));
-
-    {
-      int cells = uniquePointId3Array.GetNumberOfValues();
-
-      //typedef typename vtkm::cont::ArrayHandleConstant<vtkm::Id>::StorageTag ConstantStorage;
-      //typedef typename vtkm::cont::ArrayHandleImplicit<vtkm::Id, CounterOfThree>::StorageTag CountingStorage;
-      typedef vtkm::cont::CellSetExplicit<> Connectivity;
-
-      boost::shared_ptr< Connectivity > new_cs(
-          new Connectivity("cells", 0) );
-
-      if (cells > 0)
-        new_cs->GetNodeToCellConnectivity().Fill(
-          copyFromImplicit(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(vtkm::VTKM_TRIANGLE, cells)),
-          copyFromImplicit(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(3, cells)),
-          copyFromVec(uniquePointId3Array)
-              );
-
-      //print_array("uniquePointId3Array", uniquePointId3Array);
-      //print_array("CellToConnectivityIndexArray", new_cs->GetNodeToCellConnectivity().GetCellToConnectivityIndexArray());
-      //print_array("PointIdArray", new_cs->GetNodeToCellConnectivity().GetConnectivityArray());
-
-      new_ds.AddCellSet(new_cs);
-    }
-
 
     /// end of algorithm
     /// Note that there is a cell with ids <-1, -1, -1>.
@@ -412,7 +362,6 @@ public:
     std::cout << "Time (s): " << t << std::endl;
 #endif
 
-    return new_ds;
   }
 }; // struct VertexClustering
 

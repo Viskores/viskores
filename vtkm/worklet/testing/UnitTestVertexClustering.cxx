@@ -30,7 +30,71 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
 #include <vtkm/worklet/VertexClustering.h>
-namespace{
+
+template<typename T, int N>
+vtkm::cont::ArrayHandle<T> copyFromVec( vtkm::cont::ArrayHandle< vtkm::Vec<T, N> > const& other)
+{
+    const T *vmem = reinterpret_cast< const T *>(& *other.GetPortalConstControl().GetIteratorBegin());
+    vtkm::cont::ArrayHandle<T> mem = vtkm::cont::make_ArrayHandle(vmem, other.GetNumberOfValues()*N);
+    vtkm::cont::ArrayHandle<T> result;
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(mem,result);
+    return result;
+}
+
+template<typename T, typename StorageTag>
+vtkm::cont::ArrayHandle<T> copyFromImplicit( vtkm::cont::ArrayHandle<T, StorageTag> const& other)
+{
+  vtkm::cont::ArrayHandle<T> result;
+  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(other, result);
+  return result;
+}
+
+vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &ds, const vtkm::Float64 bounds[6], int nDivisions)
+{
+  typedef vtkm::Vec<vtkm::Float32,3>  PointType;
+
+  boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
+  vtkm::cont::CellSetExplicit<> *cs =
+      dynamic_cast<vtkm::cont::CellSetExplicit<> *>(scs.get());
+
+  vtkm::cont::ArrayHandle<PointType> pointArray = ds.GetField("xyz").GetData().CastToArrayHandle<PointType, VTKM_DEFAULT_STORAGE_TAG>();
+  vtkm::cont::ArrayHandle<vtkm::Id> pointIdArray = cs->GetNodeToCellConnectivity().GetConnectivityArray();
+  vtkm::cont::ArrayHandle<vtkm::Id> cellToConnectivityIndexArray = cs->GetNodeToCellConnectivity().GetCellToConnectivityIndexArray();
+
+  vtkm::cont::ArrayHandle<PointType> output_pointArray ;
+  vtkm::cont::ArrayHandle<vtkm::Id3> output_pointId3Array ;
+
+  // run
+  vtkm::worklet::VertexClustering<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().run(pointArray, pointIdArray, cellToConnectivityIndexArray,
+                                                       bounds, nDivisions,
+                                                       output_pointArray, output_pointId3Array);
+
+  vtkm::cont::DataSet new_ds;
+
+  new_ds.AddField(vtkm::cont::Field("xyz", 0, vtkm::cont::Field::ASSOC_POINTS, output_pointArray));
+  new_ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("xyz"));
+
+  int cells = output_pointId3Array.GetNumberOfValues();
+  if (cells > 0)
+  {
+    //typedef typename vtkm::cont::ArrayHandleConstant<vtkm::Id>::StorageTag ConstantStorage;
+    //typedef typename vtkm::cont::ArrayHandleImplicit<vtkm::Id, CounterOfThree>::StorageTag CountingStorage;
+    typedef vtkm::cont::CellSetExplicit<> Connectivity;
+
+    boost::shared_ptr< Connectivity > new_cs(
+        new Connectivity("cells", 0) );
+
+      new_cs->GetNodeToCellConnectivity().Fill(
+        copyFromImplicit(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(vtkm::VTKM_TRIANGLE, cells)),
+        copyFromImplicit(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(3, cells)),
+        copyFromVec(output_pointId3Array)
+            );
+
+    new_ds.AddCellSet(new_cs);
+  }
+
+  return new_ds;
+}
 
 void TestVertexClustering()
 {
@@ -40,7 +104,7 @@ void TestVertexClustering()
   vtkm::cont::DataSet ds = maker.Make3DExplicitDataSetCowNose(bounds);
 
   // run
-  vtkm::cont::DataSet ds_out = vtkm::worklet::VertexClustering<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().run(ds, bounds, divisions);
+  vtkm::cont::DataSet ds_out = RunVertexClustering(ds, bounds, divisions);
 
   // test
   const int output_pointIds = 9;
@@ -59,7 +123,7 @@ void TestVertexClustering()
       const PointType &p1 = pointArray.GetPortalConstControl().Get(i);
       PointType p2 = vtkm::make_Vec<vtkm::Float32>((vtkm::Float32)output_point[i][0], (vtkm::Float32)output_point[i][1], (vtkm::Float32)output_point[i][2]) ;
       std::cout << "point: " << p1 << " " << p2 << std::endl;
-      //VTKM_TEST_ASSERT(test_equal(p1, p2), "Point Array mismatch");
+      VTKM_TEST_ASSERT(test_equal(p1, p2), "Point Array mismatch");
     }
 
   VTKM_TEST_ASSERT(ds_out.GetNumberOfCellSets() == 1, "Number of output cellsets mismatch");
@@ -72,12 +136,11 @@ void TestVertexClustering()
       vtkm::Id id1 = conn.GetConnectivityArray().GetPortalConstControl().Get(i) ;
       vtkm::Id id2 = output_pointId[i] ;
       std::cout << "pointid: " << id1 << " " << id2 << std::endl;
-      //VTKM_TEST_ASSERT( id1 == id2, "Connectivity Array mismatch" )  ;
+      VTKM_TEST_ASSERT( id1 == id2, "Connectivity Array mismatch" )  ;
     }
 
 } // TestVertexClustering
 
-} // namespace
 
 int UnitTestVertexClustering(int, char *[])
 {
