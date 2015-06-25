@@ -21,6 +21,7 @@
 set(headers
   MakeTestDataSet.h
   Testing.h
+  TestingArrayHandles.h
   TestingDeviceAdapter.h
   TestingFancyArrayHandles.h
   )
