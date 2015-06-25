@@ -41,21 +41,21 @@ namespace worklet {
 
 template <class ValueType>
 struct DivideWorklet: public vtkm::worklet::WorkletMapField{
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
-    typedef void ExecutionSignature(_1, _2, _3);
+  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
+  typedef void ExecutionSignature(_1, _2, _3);
 
-    VTKM_EXEC_EXPORT void operator()(
-        const ValueType &v, const vtkm::Id &count, ValueType &vout) const
-    {  vout = v * (1./count);  }
+  VTKM_EXEC_EXPORT void operator()(
+      const ValueType &v, const vtkm::Id &count, ValueType &vout) const
+  {  vout = v * (1./count);  }
 };
 
 template<typename _Tp>
-  struct less
-  {
-    VTKM_EXEC_EXPORT
-    bool operator()(const _Tp& __x, const _Tp& __y) const
-    { return __x < __y; }
-  };
+struct less
+{
+  VTKM_EXEC_EXPORT
+  bool operator()(const _Tp& __x, const _Tp& __y) const
+  { return __x < __y; }
+};
 
 
 template <class KeyType, class ValueType, class DeviceAdapter>

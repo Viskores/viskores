@@ -20,14 +20,11 @@
 #ifndef vtk_m_worklet_VertexClustering_h
 #define vtk_m_worklet_VertexClustering_h
 
-#include <iostream>
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 
 #include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/cont/Timer.h>
 #include <vtkm/Pair.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -41,26 +38,11 @@
 
 #include <vtkm/worklet/AverageByKey.h>
 
-//#define VC_DEBUG
-//#define VC_BENCHMARK
+//#define __VTKM_VERTEX_CLUSTERING_BENCHMARK
+//#include <vtkm/cont/Timer.h>
 
 namespace vtkm{ namespace worklet
 {
-
-
-// debug
-#ifdef VC_DEBUG
-template<class T>
-void print_array(const char *msg, const T &array)
-{
-    std::cout << msg << "(" << array.GetNumberOfValues() << ")";
-    for (int i=0; i<array.GetNumberOfValues(); i++)
-    {
-        std::cout << array.GetPortalConstControl().Get(i) << ", ";
-    }
-    std::cout << std::endl;
-}
-#endif
 
 #define VTKM_VC_INVALID_ID (0x7FFFFFFF)
 
@@ -278,7 +260,9 @@ public:
     }
 
     //construct the scheduler that will execute all the worklets
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     vtkm::cont::Timer<> timer;
+#endif
 
     //////////////////////////////////////////////
     /// start algorithm
@@ -291,7 +275,7 @@ public:
     vtkm::worklet::DispatcherMapField<MapPointsWorklet>(MapPointsWorklet(gridInfo))
         .Invoke(pointArray, pointCidArray );
 
-#ifdef VC_BENCHMARK
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time map points (s): " << timer.GetElapsedTime() << std::endl;
 #endif
 
@@ -302,10 +286,10 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> pointCidArrayReduced;
     vtkm::cont::ArrayHandle<Vector3> repPointArray;  // representative point
 
-    vtkm::worklet::internal::
+    vtkm::worklet::
       AverageByKey( pointCidArray, pointArray, pointCidArrayReduced, repPointArray );
 
-#ifdef VC_BENCHMARK
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after averaging (s): " << timer.GetElapsedTime() << std::endl;
 #endif
 
@@ -341,7 +325,7 @@ public:
                                                     .Invoke(cid3Array, pointId3Array);
 
 
-#ifdef VC_BENCHMARK
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time before unique (s): " << timer.GetElapsedTime() << std::endl;
 #endif
 
@@ -352,19 +336,19 @@ public:
 
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(pointId3Array,uniquePointId3Array);
 
-#ifdef VC_BENCHMARK
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after copy (s): " << timer.GetElapsedTime() << std::endl;
 #endif
 
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(uniquePointId3Array, Id3Less());
 
-#ifdef VC_BENCHMARK
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after sort (s): " << timer.GetElapsedTime() << std::endl;
 #endif
 
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Unique(uniquePointId3Array);
 
-#ifdef VC_BENCHMARK
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after unique (s): " << timer.GetElapsedTime() << std::endl;
 #endif
 
@@ -377,14 +361,9 @@ public:
       }
 
     /// generate output
-#ifdef VC_BENCHMARK
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "number of output points: " << repPointArray.GetNumberOfValues() << std::endl;
     std::cout << "number of output cells: " << uniquePointId3Array.GetNumberOfValues() << std::endl;
-#endif
-
-#ifdef VC_DEBUG
-    print_array("repPointArray", repPointArray);
-    print_array("uniquePointId3Array", uniquePointId3Array);
 #endif
 
     vtkm::cont::DataSet new_ds;
@@ -421,7 +400,7 @@ public:
     /// Note that there is a cell with ids <-1, -1, -1>.
     /// The removal of it is deferred to the conversion to VTK
     /// ////////////////////////////////////////
-#ifdef VC_BENCHMARK
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     double t = timer.GetElapsedTime();
     std::cout << "Time (s): " << t << std::endl;
 #endif
