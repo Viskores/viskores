@@ -26,9 +26,11 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+
+namespace multi_mapfield{
 namespace worklets {
 
-class TestWorkletMP : public vtkm::worklet::WorkletMapField
+class TestWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
@@ -59,7 +61,6 @@ public:
 
 } // worklet namespace
 
-namespace multi_mapfield{
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
@@ -110,11 +111,11 @@ void TestWorkletMapFieldMultiParam()
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(
-                         multi_mapfield::DoTestWorklet< ::worklets::TestWorkletMP >(),
+                         multi_mapfield::DoTestWorklet< worklets::TestWorklet >(),
                          vtkm::TypeListTagCommon());
 }
 
-} // anonymous namespace
+} // multi_mapfield namespace
 
 int UnitTestWorkletMapFieldMultiParam(int, char *[])
 {
