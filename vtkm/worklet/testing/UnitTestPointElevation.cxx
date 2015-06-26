@@ -36,11 +36,11 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
   const vtkm::Id dim = 5;
   for (vtkm::Id j = 0; j < dim; ++j)
   {
-    vtkm::Float32 z = static_cast<vtkm::Float32>(j) / 
+    vtkm::Float32 z = static_cast<vtkm::Float32>(j) /
                       static_cast<vtkm::Float32>(dim - 1);
     for (vtkm::Id i = 0; i < dim; ++i)
     {
-      vtkm::Float32 x = static_cast<vtkm::Float32>(i) / 
+      vtkm::Float32 x = static_cast<vtkm::Float32>(i) /
                         static_cast<vtkm::Float32>(dim - 1);
       vtkm::Float32 y = (x*x + z*z)/2.0f;
       xVals.push_back(x);

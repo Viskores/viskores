@@ -26,6 +26,8 @@
 
 #include <boost/shared_ptr.hpp>
 
+namespace {
+
 void TestCellAverageRegular3D()
 {
   std::cout << "Testing CellAverage Worklet on 3D strucutred data" << std::endl;
@@ -134,6 +136,8 @@ void TestCellAverage()
   TestCellAverageRegular2D();
   TestCellAverageRegular3D();
   TestCellAverageExplicit();
+}
+
 }
 
 int UnitTestCellAverage(int, char *[])

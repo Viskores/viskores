@@ -19,9 +19,9 @@
 ##============================================================================
 
 set(unit_tests
-  # UnitTestCellAverage.cxx
-  # UnitTestPointElevation.cxx
-  # UnitTestWorkletMapField.cxx
+  UnitTestCellAverage.cxx
+  UnitTestPointElevation.cxx
+  UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldMultiParam.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyRegular.cxx
