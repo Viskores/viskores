@@ -20,6 +20,7 @@
 
 set(headers
   Testing.h
+  TestingMath.h
   OptionParser.h
   VecTraitsTests.h
   )
@@ -29,6 +30,7 @@ VTKM_declare_headers(${headers})
 set(unit_tests
   UnitTestExtent.cxx
   UnitTestListTag.cxx
+  UnitTestMath.cxx
   UnitTestPair.cxx
   UnitTestTesting.cxx
   UnitTestTypeListTag.cxx
