@@ -39,6 +39,7 @@ public:
     // 3D explicit datasets.
     vtkm::cont::DataSet Make3DExplicitDataSet0();
     vtkm::cont::DataSet Make3DExplicitDataSet1();
+    vtkm::cont::DataSet Make3DExplicitDataSetCowNose(double *pBounds = NULL);
 };
 
 
@@ -202,6 +203,55 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   return ds;
 }
 
+inline vtkm::cont::DataSet
+MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
+{
+  // prepare data array
+  const int nVerts = 17;
+  vtkm::Float64 xyzVals[nVerts][3] = {{0.0480879,0.151874,0.107334}, {0.0293568,0.245532,0.125337}, {0.0224398,0.246495,0.1351}, {0.0180085,0.20436,0.145316}, {0.0307091,0.152142,0.0539249}, {0.0270341,0.242992,0.107567}, {0.000684071,0.00272505,0.175648}, {0.00946217,0.077227,0.187097}, {-0.000168991,0.0692243,0.200755}, {-0.000129414,0.00247137,0.176561}, {0.0174172,0.137124,0.124553}, {0.00325994,0.0797155,0.184912}, {0.00191765,0.00589327,0.16608}, {0.0174716,0.0501928,0.0930275}, {0.0242103,0.250062,0.126256}, {0.0108188,0.152774,0.167914}, {5.41687e-05,0.00137834,0.175119}};
+  const int nPointIds = 57;
+  vtkm::Id pointId[nPointIds] = {0, 1, 3, 2, 3, 1, 4, 5, 0, 1, 0, 5, 7, 8, 6, 9, 6, 8, 0, 10, 7, 11, 7, 10, 0, 6, 13, 12, 13, 6, 1, 5, 14, 1, 14, 2, 0, 3, 15, 0, 13, 4, 6, 16, 12, 6, 9, 16, 7, 11, 8, 0, 15, 10, 7, 6, 0};
+  double _bounds[6] = {-0.000169, 0.048088, 0.001378, 0.250062, 0.053925, 0.200755};
+
+  vtkm::Float32 xVals[nVerts], yVals[nVerts], zVals[nVerts];
+  vtkm::Vec<vtkm::Float32, 3> points[nVerts];
+  int i;
+  for (i=0; i<nVerts; i++)
+    {
+      points[i][0] = xVals[i] = (vtkm::Float32)xyzVals[i][0];
+      points[i][1] = yVals[i] = (vtkm::Float32)xyzVals[i][1];
+      points[i][2] = zVals[i] = (vtkm::Float32)xyzVals[i][2];
+    }
+
+  // create DataSet
+  vtkm::cont::DataSet ds;
+  ds.AddField(Field("xyz", 1, vtkm::cont::Field::ASSOC_POINTS, points, nVerts));
+  ds.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
+  ds.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
+  ds.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
+  ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
+
+  boost::shared_ptr< vtkm::cont::CellSetExplicit<> > cs(
+                                new vtkm::cont::CellSetExplicit<>("cells", 2));
+  vtkm::cont::ExplicitConnectivity<> &ec = cs->nodesOfCellsConnectivity;
+
+  ec.PrepareToAddCells(nPointIds/3, nPointIds);
+  for (i=0; i<nPointIds/3; i++)
+    {
+      ec.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(pointId[i*3], pointId[i*3+1], pointId[i*3+2]));
+    }
+  ec.CompleteAddingCells();
+
+  //todo this need to be a reference/shared_ptr style class
+  ds.AddCellSet(cs);
+
+  // copy bounds
+  if (pBounds != NULL)
+    for (i=0; i<6; i++)
+      pBounds[i] = _bounds[i];
+
+  return ds;
+}
 }
 }
 } // namespace vtkm::cont::testing
