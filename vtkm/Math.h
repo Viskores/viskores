@@ -43,7 +43,7 @@
 #define VTKM_USE_BOOST_SIGN
 #endif // !VTKM_CUDA
 
-#if VTKM_MSVC && !defined(VTKM_CUDA)
+#if defined(VTKM_MSVC) && !defined(VTKM_CUDA)
 #include <boost/math/special_functions/acosh.hpp>
 #include <boost/math/special_functions/asinh.hpp>
 #include <boost/math/special_functions/atanh.hpp>
