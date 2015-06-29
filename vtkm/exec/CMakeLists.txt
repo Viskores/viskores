@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  Assert.h
   ExecutionObjectBase.h
   ExplicitConnectivity.h
   FunctorBase.h

@@ -30,6 +30,7 @@
 #include <vtkm/cont/Timer.h>
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
+#include <vtkm/VecTraits.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -46,7 +47,10 @@ struct DivideWorklet: public vtkm::worklet::WorkletMapField{
 
   VTKM_EXEC_EXPORT void operator()(
       const ValueType &v, const vtkm::Id &count, ValueType &vout) const
-  {  vout = v * (1./count);  }
+  {
+    typedef typename VecTraits<ValueType>::ComponentType ComponentType;
+    vout = v * ComponentType(1./count);
+  }
 };
 
 template<typename _Tp>

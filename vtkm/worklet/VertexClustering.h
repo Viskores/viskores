@@ -20,7 +20,9 @@
 #ifndef vtk_m_worklet_VertexClustering_h
 #define vtk_m_worklet_VertexClustering_h
 
-#include <numeric>
+#include <vtkm/Math.h>
+
+#include <vtkm/exec/Assert.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
@@ -46,65 +48,59 @@
 namespace vtkm{ namespace worklet
 {
 
-template <class DeviceAdapter>
+template<typename DeviceAdapter>
 struct VertexClustering{
 
-  typedef vtkm::Vec<vtkm::Float32,3> Vector3;
-  typedef Vector3 PointType;
-
+  template<typename PointType>
   struct GridInfo
   {
-      int dim[3];
-      Vector3 origin;
-      vtkm::Float64 grid_width;
-      vtkm::Float64 inv_grid_width; // = 1/grid_width
+    vtkm::Id dim[3];
+    PointType origin;
+    typename PointType::ComponentType grid_width;
+    typename PointType::ComponentType inv_grid_width; // = 1/grid_width
   };
 
   // input: points  output: cid of the points
+  template<typename PointType>
   class MapPointsWorklet : public vtkm::worklet::WorkletMapField {
   private:
-      //const VTKM_EXEC_CONSTANT_EXPORT GridInfo grid;
-      GridInfo grid;
-
-      VTKM_EXEC_EXPORT
-      vtkm::Id min(vtkm::Id a, vtkm::Id b) const {
-        return (a<b)?a:b;
-      }
+    //const VTKM_EXEC_CONSTANT_EXPORT GridInfo<PointType> Grid;
+    GridInfo<PointType> Grid;
   public:
-      typedef void ControlSignature(FieldIn<> , FieldOut<>);
-      typedef void ExecutionSignature(_1, _2);
+    typedef void ControlSignature(FieldIn<> , FieldOut<>);
+    typedef void ExecutionSignature(_1, _2);
 
-      VTKM_CONT_EXPORT
-      MapPointsWorklet(const GridInfo &grid_)
-          : grid(grid_)
-      { }      
+    VTKM_CONT_EXPORT
+    MapPointsWorklet(const GridInfo<PointType> &grid)
+      : Grid(grid)
+    { }
 
-      /// determine grid resolution for clustering
-      VTKM_EXEC_EXPORT
-      vtkm::Id get_cluster_id( const Vector3 &p) const
-      {
-          Vector3 p_rel = (p - grid.origin) * grid.inv_grid_width;
-          vtkm::Id x = min((vtkm::Id)p_rel[0], grid.dim[0]-1);
-          vtkm::Id y = min((vtkm::Id)p_rel[1], grid.dim[1]-1);
-          vtkm::Id z = min((vtkm::Id)p_rel[2], grid.dim[2]-1);
-          return x + grid.dim[0] * (y + grid.dim[1] * z);  // get a unique hash value
-      }
+    /// determine grid resolution for clustering
+    VTKM_EXEC_EXPORT
+    vtkm::Id GetClusterId(const PointType &p) const
+    {
+      PointType p_rel = (p - this->Grid.origin) * this->Grid.inv_grid_width;
+      vtkm::Id x = vtkm::Min((vtkm::Id)p_rel[0], this->Grid.dim[0]-1);
+      vtkm::Id y = vtkm::Min((vtkm::Id)p_rel[1], this->Grid.dim[1]-1);
+      vtkm::Id z = vtkm::Min((vtkm::Id)p_rel[2], this->Grid.dim[2]-1);
+      return x + this->Grid.dim[0] * (y + this->Grid.dim[1] * z);  // get a unique hash value
+    }
 
-      VTKM_EXEC_EXPORT
-      void operator()(const PointType &point, vtkm::Id &cid) const
-      {
-          cid = get_cluster_id(point);
-          VTKM_ASSERT_CONT(cid>=0);  // the id could overflow if too many cells
-      }
+    VTKM_EXEC_EXPORT
+    void operator()(const PointType &point, vtkm::Id &cid) const
+    {
+      cid = this->GetClusterId(point);
+      VTKM_ASSERT_EXEC(cid>=0, *this);  // the id could overflow if too many cells
+    }
   };
 
 
   class MapCellsWorklet: public vtkm::worklet::WorkletMapField {
     typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
     typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
-    IdPortalType pointIdPortal;
-    IdPortalType pointCidPortal;
-    IdPortalType numIndicesPortal;
+    IdPortalType PointIdPortal;
+    IdPortalType PointCidPortal;
+    IdPortalType NumIndicesPortal;
   public:
     typedef void ControlSignature(FieldIn<> , FieldOut<>);
     typedef void ExecutionSignature(_1, _2);
@@ -113,18 +109,18 @@ struct VertexClustering{
     MapCellsWorklet(
         const IdArrayHandle &pointIdArray,   // the given point Ids
         const IdArrayHandle &pointCidArray)   // the cluser ids each pointId will map to
-      : pointIdPortal(pointIdArray.PrepareForInput(DeviceAdapter()) ),
-        pointCidPortal( pointCidArray.PrepareForInput(DeviceAdapter()))
+      : PointIdPortal(pointIdArray.PrepareForInput(DeviceAdapter())),
+        PointCidPortal(pointCidArray.PrepareForInput(DeviceAdapter()))
     { }
 
     VTKM_EXEC_EXPORT
     void operator()(const vtkm::Id &pointIdIndex, vtkm::Id3 &cid3) const
     {
-      //VTKM_ASSERT_CONT(pointIdIndex % 3 == 0);  // TODO: may ignore non-triangle cells
+      //VTKM_ASSERT_EXEC(pointIdIndex % 3 == 0, *this);  // TODO: may ignore non-triangle cells
       // assume it's a triangle
-      cid3[0] = pointCidPortal.Get( pointIdPortal.Get(pointIdIndex) );
-      cid3[1] = pointCidPortal.Get( pointIdPortal.Get(pointIdIndex+1) );
-      cid3[2] = pointCidPortal.Get( pointIdPortal.Get(pointIdIndex+2) );
+      cid3[0] = this->PointCidPortal.Get( this->PointIdPortal.Get(pointIdIndex) );
+      cid3[1] = this->PointCidPortal.Get( this->PointIdPortal.Get(pointIdIndex+1) );
+      cid3[2] = this->PointCidPortal.Get( this->PointIdPortal.Get(pointIdIndex+2) );
     }
   };
 
@@ -132,11 +128,11 @@ struct VertexClustering{
   class IndexingWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-      typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
   private:
-      typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::Portal IdPortalType;
-      IdArrayHandle cidIndexArray;
-      IdPortalType cidIndexRaw;
+    typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::Portal IdPortalType;
+    IdArrayHandle CidIndexArray;
+    IdPortalType CidIndexRaw;
   public:
       typedef void ControlSignature(FieldIn<>, FieldIn<>);
       typedef void ExecutionSignature(_1, _2);
@@ -144,19 +140,19 @@ struct VertexClustering{
       VTKM_CONT_EXPORT
       IndexingWorklet( vtkm::Id n )
       {
-          cidIndexRaw = cidIndexArray.PrepareForOutput(n, DeviceAdapter() );
+        this->CidIndexRaw = this->CidIndexArray.PrepareForOutput(n, DeviceAdapter() );
       }
 
       VTKM_EXEC_EXPORT
       void operator()(const vtkm::Id &counter, const vtkm::Id &cid) const
       {
-          cidIndexRaw.Set(cid, counter);
+        this->CidIndexRaw.Set(cid, counter);
       }
 
       VTKM_CONT_EXPORT
-      IdArrayHandle &getOutput()
+      IdArrayHandle &GetOutput()
       {
-          return cidIndexArray;
+        return this->CidIndexArray;
       }
   };
 
@@ -164,32 +160,32 @@ struct VertexClustering{
   class Cid2PointIdWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-      typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
   private:
-      typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
-      const IdPortalType cidIndexRaw;
+    typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
+    const IdPortalType CidIndexRaw;
   public:
-      typedef void ControlSignature(FieldIn<>, FieldOut<>);
-      typedef void ExecutionSignature(_1, _2);
+    typedef void ControlSignature(FieldIn<>, FieldOut<>);
+    typedef void ExecutionSignature(_1, _2);
 
-      VTKM_CONT_EXPORT
-      Cid2PointIdWorklet( IdArrayHandle &cidIndexArray )
-          : cidIndexRaw ( cidIndexArray.PrepareForInput(DeviceAdapter()) )
-      {
-      }
+    VTKM_CONT_EXPORT
+    Cid2PointIdWorklet( IdArrayHandle &cidIndexArray )
+      : CidIndexRaw ( cidIndexArray.PrepareForInput(DeviceAdapter()) )
+    {
+    }
 
-      VTKM_EXEC_EXPORT
-      void operator()(const vtkm::Id3 &cid3, vtkm::Id3 &pointId3) const
+    VTKM_EXEC_EXPORT
+    void operator()(const vtkm::Id3 &cid3, vtkm::Id3 &pointId3) const
+    {
+      if (cid3[0]==cid3[1] || cid3[0]==cid3[2] || cid3[1]==cid3[2])
       {
-          if (cid3[0]==cid3[1] || cid3[0]==cid3[2] || cid3[1]==cid3[2])
-          {
-              pointId3[0] = pointId3[1] = pointId3[2] = -1 ; // invalid cell to be removed
-          } else {
-              pointId3[0] = cidIndexRaw.Get( cid3[0] );
-              pointId3[1] = cidIndexRaw.Get( cid3[1] );
-              pointId3[2] = cidIndexRaw.Get( cid3[2] );
-          }
+        pointId3[0] = pointId3[1] = pointId3[2] = -1 ; // invalid cell to be removed
+      } else {
+        pointId3[0] = this->CidIndexRaw.Get( cid3[0] );
+        pointId3[1] = this->CidIndexRaw.Get( cid3[1] );
+        pointId3[2] = this->CidIndexRaw.Get( cid3[2] );
       }
+    }
 
   };
 
@@ -215,33 +211,41 @@ public:
   /// \param ds : dataset
   /// \param bounds: dataset bounds
   /// \param nDivisions : number of max divisions per dimension
-  template <class StorageT, class StorageU, class StorageV>
-  void run(const vtkm::cont::ArrayHandle<PointType, StorageT> pointArray,
+  template <typename FloatType,
+            typename BoundsType,
+            typename StorageT,
+            typename StorageU,
+            typename StorageV>
+  void run(const vtkm::cont::ArrayHandle<vtkm::Vec<FloatType,3>, StorageT> pointArray,
            const vtkm::cont::ArrayHandle<vtkm::Id, StorageU>  pointIdArray,
            const vtkm::cont::ArrayHandle<vtkm::Id, StorageV>  cellToConnectivityIndexArray,
-           const vtkm::Float64 bounds[6], vtkm::Id nDivisions,
-           vtkm::cont::ArrayHandle<PointType> &output_pointArray,
+           const BoundsType bounds[6], vtkm::Id nDivisions,
+           vtkm::cont::ArrayHandle<vtkm::Vec<FloatType,3> > &output_pointArray,
            vtkm::cont::ArrayHandle<vtkm::Id3> &output_pointId3Array)
   {
-    /// determine grid resolution for clustering
-    GridInfo gridInfo;
-    {
-      vtkm::Float64 res[3];
-      for (int i=0; i<3; i++)
-          res[i] = (bounds[i*2+1]-bounds[i*2])/nDivisions;
-      gridInfo.grid_width = std::max(res[0], std::max(res[1], res[2]));
+    typedef vtkm::Vec<FloatType,3> PointType;
 
-      vtkm::Float64 inv_grid_width = gridInfo.inv_grid_width = 1. / gridInfo.grid_width;
+    /// determine grid resolution for clustering
+    GridInfo<PointType> gridInfo;
+    {
+      FloatType res[3];
+      for (vtkm::IdComponent i=0; i<3; i++)
+      {
+        res[i] = static_cast<FloatType>((bounds[i*2+1]-bounds[i*2])/nDivisions);
+      }
+      gridInfo.grid_width = vtkm::Max(res[0], vtkm::Max(res[1], res[2]));
+
+      FloatType inv_grid_width = gridInfo.inv_grid_width = FloatType(1) / gridInfo.grid_width;
 
       //printf("Bounds: %lf, %lf, %lf, %lf, %lf, %lf\n", bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
-      gridInfo.dim[0] = (int)ceil((bounds[1]-bounds[0])*inv_grid_width);
-      gridInfo.dim[1] = (int)ceil((bounds[3]-bounds[2])*inv_grid_width);
-      gridInfo.dim[2] = (int)ceil((bounds[5]-bounds[4])*inv_grid_width);
+      gridInfo.dim[0] = (vtkm::Id)vtkm::Ceil((bounds[1]-bounds[0])*inv_grid_width);
+      gridInfo.dim[1] = (vtkm::Id)vtkm::Ceil((bounds[3]-bounds[2])*inv_grid_width);
+      gridInfo.dim[2] = (vtkm::Id)vtkm::Ceil((bounds[5]-bounds[4])*inv_grid_width);
 
       // center the mesh in the grids
-      gridInfo.origin[0] = (vtkm::Float32) ((bounds[1]+bounds[0])*0.5 - gridInfo.grid_width*(gridInfo.dim[0])*.5);
-      gridInfo.origin[1] = (vtkm::Float32) ((bounds[3]+bounds[2])*0.5 - gridInfo.grid_width*(gridInfo.dim[1])*.5);
-      gridInfo.origin[2] = (vtkm::Float32) ((bounds[5]+bounds[4])*0.5 - gridInfo.grid_width*(gridInfo.dim[2])*.5);
+      gridInfo.origin[0] = static_cast<FloatType>((bounds[1]+bounds[0])*0.5 - gridInfo.grid_width*(gridInfo.dim[0])*.5);
+      gridInfo.origin[1] = static_cast<FloatType>((bounds[3]+bounds[2])*0.5 - gridInfo.grid_width*(gridInfo.dim[1])*.5);
+      gridInfo.origin[2] = static_cast<FloatType>((bounds[5]+bounds[4])*0.5 - gridInfo.grid_width*(gridInfo.dim[2])*.5);
     }
 
     //construct the scheduler that will execute all the worklets
@@ -257,7 +261,8 @@ public:
     /// map points
     vtkm::cont::ArrayHandle<vtkm::Id> pointCidArray;
 
-    vtkm::worklet::DispatcherMapField<MapPointsWorklet>(MapPointsWorklet(gridInfo))
+    vtkm::worklet::DispatcherMapField<MapPointsWorklet<PointType> >(
+          MapPointsWorklet<PointType>(gridInfo))
         .Invoke(pointArray, pointCidArray );
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
@@ -269,7 +274,7 @@ public:
     ///          using pointCidArray as the key
     ///
     vtkm::cont::ArrayHandle<vtkm::Id> pointCidArrayReduced;
-    vtkm::cont::ArrayHandle<Vector3> repPointArray;  // representative point
+    vtkm::cont::ArrayHandle<PointType> repPointArray;  // representative point
 
     vtkm::worklet::
       AverageByKey( pointCidArray, pointArray, pointCidArrayReduced, repPointArray );
@@ -306,8 +311,9 @@ public:
     ///
     vtkm::cont::ArrayHandle<vtkm::Id3> pointId3Array;
 
-    vtkm::worklet::DispatcherMapField<Cid2PointIdWorklet> ( Cid2PointIdWorklet( worklet3.getOutput() ) )
-                                                    .Invoke(cid3Array, pointId3Array);
+    vtkm::worklet::DispatcherMapField<Cid2PointIdWorklet>(
+          Cid2PointIdWorklet( worklet3.GetOutput() ) )
+        .Invoke(cid3Array, pointId3Array);
 
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
