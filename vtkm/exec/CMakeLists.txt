@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  Assert.h
   ExecutionObjectBase.h
   ExecutionWholeArray.h
   ExplicitConnectivity.h

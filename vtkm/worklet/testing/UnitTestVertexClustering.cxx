@@ -31,7 +31,7 @@
 
 #include <vtkm/worklet/VertexClustering.h>
 
-template<typename T, int N>
+template<typename T, vtkm::IdComponent N>
 vtkm::cont::ArrayHandle<T> copyFromVec( vtkm::cont::ArrayHandle< vtkm::Vec<T, N> > const& other)
 {
     const T *vmem = reinterpret_cast< const T *>(& *other.GetPortalConstControl().GetIteratorBegin());
@@ -49,7 +49,9 @@ vtkm::cont::ArrayHandle<T> copyFromImplicit( vtkm::cont::ArrayHandle<T, StorageT
   return result;
 }
 
-vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &ds, const vtkm::Float64 bounds[6], int nDivisions)
+vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &ds,
+                                        const vtkm::Float64 bounds[6],
+                                        vtkm::Id nDivisions)
 {
   typedef vtkm::Vec<vtkm::Float32,3>  PointType;
 
@@ -65,16 +67,21 @@ vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &ds, const vtkm::Flo
   vtkm::cont::ArrayHandle<vtkm::Id3> output_pointId3Array ;
 
   // run
-  vtkm::worklet::VertexClustering<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().run(pointArray, pointIdArray, cellToConnectivityIndexArray,
-                                                       bounds, nDivisions,
-                                                       output_pointArray, output_pointId3Array);
+  vtkm::worklet::VertexClustering<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().run(
+        pointArray,
+        pointIdArray,
+        cellToConnectivityIndexArray,
+        bounds,
+        nDivisions,
+        output_pointArray,
+        output_pointId3Array);
 
   vtkm::cont::DataSet new_ds;
 
   new_ds.AddField(vtkm::cont::Field("xyz", 0, vtkm::cont::Field::ASSOC_POINTS, output_pointArray));
   new_ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("xyz"));
 
-  int cells = output_pointId3Array.GetNumberOfValues();
+  vtkm::Id cells = output_pointId3Array.GetNumberOfValues();
   if (cells > 0)
   {
     //typedef typename vtkm::cont::ArrayHandleConstant<vtkm::Id>::StorageTag ConstantStorage;
@@ -98,8 +105,8 @@ vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &ds, const vtkm::Flo
 
 void TestVertexClustering()
 {
-  double bounds[6];
-  const int divisions = 3;
+  vtkm::Float64 bounds[6];
+  const vtkm::Id divisions = 3;
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::DataSet ds = maker.Make3DExplicitDataSetCowNose(bounds);
 
@@ -107,18 +114,17 @@ void TestVertexClustering()
   vtkm::cont::DataSet ds_out = RunVertexClustering(ds, bounds, divisions);
 
   // test
-  const int output_pointIds = 9;
-  int output_pointId[output_pointIds] = {1,2,5, 1,3,0, 1,5,4};
-  const int output_points = 6;
+  const vtkm::Id output_pointIds = 9;
+  vtkm::Id output_pointId[output_pointIds] = {1,2,5, 1,3,0, 1,5,4};
+  const vtkm::Id output_points = 6;
   double output_point[output_points][3] = {{0.0174716003,0.0501927994,0.0930275023}, {0.0320714004,0.14704667,0.0952706337}, {0.0268670674,0.246195346,0.119720004}, {0.00215422804,0.0340906903,0.180881709}, {0.0108188,0.152774006,0.167914003}, {0.0202241503,0.225427493,0.140208006}};
 
-  vtkm::Id i;
   VTKM_TEST_ASSERT(ds_out.GetNumberOfFields() == 1, "Number of output fields mismatch");
   typedef vtkm::Vec<vtkm::Float32, 3> PointType;
   typedef vtkm::cont::ArrayHandle<PointType > PointArray;
   PointArray pointArray = ds_out.GetField(0).GetData().CastToArrayHandle<PointArray::ValueType, PointArray::StorageTag>();
   VTKM_TEST_ASSERT(pointArray.GetNumberOfValues() == output_points, "Number of output points mismatch" );
-  for (i = 0; i < pointArray.GetNumberOfValues(); ++i)
+  for (vtkm::Id i = 0; i < pointArray.GetNumberOfValues(); ++i)
     {
       const PointType &p1 = pointArray.GetPortalConstControl().Get(i);
       PointType p2 = vtkm::make_Vec<vtkm::Float32>((vtkm::Float32)output_point[i][0], (vtkm::Float32)output_point[i][1], (vtkm::Float32)output_point[i][2]) ;
@@ -131,7 +137,7 @@ void TestVertexClustering()
   VTKM_TEST_ASSERT(cellset, "CellSet Cast fail");
   vtkm::cont::ExplicitConnectivity<> &conn = cellset->GetNodeToCellConnectivity();
   VTKM_TEST_ASSERT(conn.GetConnectivityArray().GetNumberOfValues() == output_pointIds, "Number of connectivity array elements mismatch");
-  for (i=0; i<conn.GetConnectivityArray().GetNumberOfValues(); i++)
+  for (vtkm::Id i=0; i<conn.GetConnectivityArray().GetNumberOfValues(); i++)
     {
       vtkm::Id id1 = conn.GetConnectivityArray().GetPortalConstControl().Get(i) ;
       vtkm::Id id2 = output_pointId[i] ;
