@@ -134,11 +134,11 @@ struct VertexClustering{
     IdArrayHandle CidIndexArray;
     IdPortalType CidIndexRaw;
   public:
-      typedef void ControlSignature(FieldIn<>, FieldIn<>);
-      typedef void ExecutionSignature(_1, _2);
+      typedef void ControlSignature(FieldIn<>);
+      typedef void ExecutionSignature(WorkIndex, _1);  // WorkIndex: use vtkm indexing
 
       VTKM_CONT_EXPORT
-      IndexingWorklet( vtkm::Id n )
+      IndexingWorklet( size_t n )
       {
         this->CidIndexRaw = this->CidIndexArray.PrepareForOutput(n, DeviceAdapter() );
       }
@@ -155,7 +155,6 @@ struct VertexClustering{
         return this->CidIndexArray;
       }
   };
-
 
   class Cid2PointIdWorklet : public vtkm::worklet::WorkletMapField
   {
@@ -296,14 +295,16 @@ public:
           MapCellsWorklet(pointIdArray, pointCidArray)
           ).Invoke(cellToConnectivityIndexArray, cid3Array );
 
+    pointCidArray.ReleaseResources();
 
     /// preparation: Get the indexes of the clustered points to prepare for new cell array
     /// The output indexes are stored in the worklet
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> counterArray3(0, pointCidArrayReduced.GetNumberOfValues());
     IndexingWorklet worklet3 ( gridInfo.dim[0]*gridInfo.dim[1]*gridInfo.dim[2] );
 
     vtkm::worklet::DispatcherMapField<IndexingWorklet> ( worklet3 )
-                                  .Invoke(counterArray3, pointCidArrayReduced);
+                                  .Invoke(pointCidArrayReduced);
+
+    pointCidArrayReduced.ReleaseResources();
 
     ///
     /// map: convert each triangle vertices from original point id to the new cluster indexes
@@ -315,6 +316,7 @@ public:
           Cid2PointIdWorklet( worklet3.GetOutput() ) )
         .Invoke(cid3Array, pointId3Array);
 
+    cid3Array.ReleaseResources();
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time before unique (s): " << timer.GetElapsedTime() << std::endl;
@@ -326,6 +328,8 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id3 > uniquePointId3Array;
 
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(pointId3Array,uniquePointId3Array);
+
+    pointId3Array.ReleaseResources();
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after copy (s): " << timer.GetElapsedTime() << std::endl;
