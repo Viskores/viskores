@@ -99,7 +99,6 @@ public:
   VTKM_CONT_EXPORT
   void ReleaseResources()
   {
-    throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
   }
 
 private:

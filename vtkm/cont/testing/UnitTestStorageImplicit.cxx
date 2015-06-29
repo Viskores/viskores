@@ -95,13 +95,9 @@ struct TemplatedTests
     }
     catch(vtkm::cont::ErrorControlBadValue) {}
 
-    try
-    {
-      arrayStorage.ReleaseResources();
-      VTKM_TEST_ASSERT(true==false,
-                       "Can't Release an implicit array");
-    }
-    catch(vtkm::cont::ErrorControlBadValue) {}
+    //verify that calling ReleaseResources doesn't throw an exception
+    arrayStorage.ReleaseResources();
+
   }
 
   void BasicAccess()
