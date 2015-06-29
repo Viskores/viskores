@@ -238,9 +238,9 @@ public:
       FloatType inv_grid_width = gridInfo.inv_grid_width = FloatType(1) / gridInfo.grid_width;
 
       //printf("Bounds: %lf, %lf, %lf, %lf, %lf, %lf\n", bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
-      gridInfo.dim[0] = (vtkm::Id)vtkm::Ceil((bounds[1]-bounds[0])*inv_grid_width);
-      gridInfo.dim[1] = (vtkm::Id)vtkm::Ceil((bounds[3]-bounds[2])*inv_grid_width);
-      gridInfo.dim[2] = (vtkm::Id)vtkm::Ceil((bounds[5]-bounds[4])*inv_grid_width);
+      gridInfo.dim[0] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[1]-bounds[0])*inv_grid_width), nDivisions);
+      gridInfo.dim[1] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[3]-bounds[2])*inv_grid_width), nDivisions);
+      gridInfo.dim[2] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[5]-bounds[4])*inv_grid_width), nDivisions);
 
       // center the mesh in the grids
       gridInfo.origin[0] = static_cast<FloatType>((bounds[1]+bounds[0])*0.5 - gridInfo.grid_width*(gridInfo.dim[0])*.5);
