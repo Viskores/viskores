@@ -22,6 +22,7 @@ set(unit_tests
   UnitTestCellAverage.cxx
   UnitTestPointElevation.cxx
   UnitTestWorkletMapField.cxx
+  UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapFieldMultiParam.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyRegular.cxx
