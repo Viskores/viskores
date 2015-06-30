@@ -517,8 +517,6 @@ private:
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id centerIndex) const
     {
-      typedef ReduceKeySeriesStates States;
-
       typedef typename InputPortalType::ValueType ValueType;
       typedef typename KeyStatePortalType::ValueType KeyStateType;
 
@@ -581,7 +579,6 @@ private:
                                           const vtkm::Pair<T, ReduceKeySeriesStates>& b) const
     {
     typedef vtkm::Pair<T, ReduceKeySeriesStates> ReturnType;
-    typedef ReduceKeySeriesStates States;
     //need too handle how we are going to add two numbers together
     //based on the keyStates that they have
 
