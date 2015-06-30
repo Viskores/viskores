@@ -183,6 +183,14 @@ struct VertexClustering{
 
   };
 
+#if 0
+  template<typename ValueType, class StorageTag>
+  IndexedSortAndUnique(vtkm::cont::ArrayHandle<ValueType, StorageTag> pointId3Array, vtkm::cont::ArrayHandle<ValueType> uniqePointId3Array)
+  {
+
+  }
+#endif
+
 
   class Id3Less{
   public:
@@ -319,26 +327,26 @@ public:
     ///
     /// Unique: Decimate replicated cells
     ///
+#if 0
     vtkm::cont::ArrayHandle<vtkm::Id3 > uniquePointId3Array;
+    IndexedSortAndUnique(pointId3Array, uniqePointId3Array);
 
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(pointId3Array,uniquePointId3Array);
+#else
 
-    pointId3Array.ReleaseResources();
-
-#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-    std::cout << "Time after copy (s): " << timer.GetElapsedTime() << std::endl;
-#endif
-
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(uniquePointId3Array, Id3Less());
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(pointId3Array, Id3Less());
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after sort (s): " << timer.GetElapsedTime() << std::endl;
 #endif
 
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Unique(uniquePointId3Array);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Unique(pointId3Array);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after unique (s): " << timer.GetElapsedTime() << std::endl;
+#endif
+
+    vtkm::cont::ArrayHandle<vtkm::Id3 > uniquePointId3Array = pointId3Array;
+
 #endif
 
     // remove the last one if invalid
