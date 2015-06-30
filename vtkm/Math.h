@@ -1099,14 +1099,14 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 Log2(vtkm::Float32 x) {
   //windows and boost don't provide log2
   //0.6931471805599453 is the constant value of log(2)
-  const vtkm::Float32 log2v(0.6931471805599453);
+  const vtkm::Float32 log2v = 0.6931471805599453f;
   return vtkm::Log(x)/log2v;
 }
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Log2(vtkm::Float64 x) {
   //windows and boost don't provide log2
   //0.6931471805599453 is the constant value of log(2)
-  const vtkm::Float64 log2v(0.6931471805599453);
+  const vtkm::Float64 log2v = 0.6931471805599453;
   return vtkm::Log(x)/log2v;
 }
 #else // !VTKM_USE_BOOST_MATH
@@ -1543,89 +1543,6 @@ bool IsFinite(T x)
 }
 
 //-----------------------------------------------------------------------------
-/// Computes the remainder on division of 2 floating point numbers. The return
-/// value is \p numerator - n \p denominator, where n is the quotient of \p
-/// numerator divided by \p denominator rounded towards zero to an integer. For
-/// example, <tt>FMod(6.5, 2.3)</tt> returns 1.9, which is 6.5 - 2*2.3.
-///
-VTKM_EXEC_CONT_EXPORT
-vtkm::Float32 FMod(vtkm::Float32 x, vtkm::Float32 y) {
-  return VTKM_SYS_MATH_FUNCTION_32(fmod)(x,y);
-}
-VTKM_EXEC_CONT_EXPORT
-vtkm::Float64 FMod(vtkm::Float64 x, vtkm::Float64 y) {
-  return VTKM_SYS_MATH_FUNCTION_64(fmod)(x,y);
-}
-
-/// Computes the remainder on division of 2 floating point numbers. The return
-/// value is \p numerator - n \p denominator, where n is the quotient of \p
-/// numerator divided by \p denominator rounded towards the nearest integer
-/// (instead of toward zero like FMod). For example, <tt>FMod(6.5, 2.3)</tt>
-/// returns -0.4, which is 6.5 - 3*2.3.
-///
-VTKM_EXEC_CONT_EXPORT
-vtkm::Float32 Remainder(vtkm::Float32 x, vtkm::Float32 y) {
-  return VTKM_SYS_MATH_FUNCTION_32(remainder)(x,y);
-}
-VTKM_EXEC_CONT_EXPORT
-vtkm::Float64 Remainder(vtkm::Float64 x, vtkm::Float64 y) {
-  return VTKM_SYS_MATH_FUNCTION_64(remainder)(x,y);
-}
-
-/// Returns the remainder on division of 2 floating point numbers just like
-/// Remainder. In addition, this function also returns the \c quotient used to
-/// get that remainder.
-///
-template<typename QType>
-VTKM_EXEC_CONT_EXPORT
-vtkm::Float32 RemainderQuotient(vtkm::Float32 numerator,
-                                vtkm::Float32 denominator,
-                                QType &quotient)
-{
-#ifdef VTKM_USE_BOOST_MATH
-  quotient = static_cast<QType>(boost::math::round(numerator/denominator));
-  return vtkm::Remainder(numerator, denominator);
-#else
-  int iQuotient;
-  vtkm::Float32 result =
-      VTKM_SYS_MATH_FUNCTION_32(remquo)(numerator, denominator, &iQuotient);
-  quotient = iQuotient;
-  return result;
-#endif
-}
-template<typename QType>
-VTKM_EXEC_CONT_EXPORT
-vtkm::Float64 RemainderQuotient(vtkm::Float64 numerator,
-                                vtkm::Float64 denominator,
-                                QType &quotient)
-{
-#ifdef VTKM_USE_BOOST_MATH
-  quotient = static_cast<QType>(boost::math::round(numerator/denominator));
-  return vtkm::Remainder(numerator, denominator);
-#else
-  int iQuotient;
-  vtkm::Float64 result =
-      VTKM_SYS_MATH_FUNCTION_64(remquo)(numerator, denominator, &iQuotient);
-  quotient = iQuotient;
-  return result;
-#endif
-}
-
-/// Gets the integral and fractional parts of \c x. The return value is the
-/// fractional part and \c integral is set to the integral part.
-///
-VTKM_EXEC_CONT_EXPORT
-vtkm::Float32 ModF(vtkm::Float32 x, vtkm::Float32 &integral)
-{
-  return VTKM_SYS_MATH_FUNCTION_32(modf)(x, &integral);
-}
-VTKM_EXEC_CONT_EXPORT
-vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64 &integral)
-{
-  return VTKM_SYS_MATH_FUNCTION_64(modf)(x, &integral);
-}
-
-//-----------------------------------------------------------------------------
 /// Round \p x to the smallest integer value not less than x.
 ///
 VTKM_EXEC_CONT_EXPORT
@@ -1761,6 +1678,99 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Vec<T,2> Round(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Round(x[0]),
                         vtkm::Round(x[1]));
+}
+
+//-----------------------------------------------------------------------------
+/// Computes the remainder on division of 2 floating point numbers. The return
+/// value is \p numerator - n \p denominator, where n is the quotient of \p
+/// numerator divided by \p denominator rounded towards zero to an integer. For
+/// example, <tt>FMod(6.5, 2.3)</tt> returns 1.9, which is 6.5 - 2*2.3.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 FMod(vtkm::Float32 x, vtkm::Float32 y) {
+  return VTKM_SYS_MATH_FUNCTION_32(fmod)(x,y);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 FMod(vtkm::Float64 x, vtkm::Float64 y) {
+  return VTKM_SYS_MATH_FUNCTION_64(fmod)(x,y);
+}
+
+/// Computes the remainder on division of 2 floating point numbers. The return
+/// value is \p numerator - n \p denominator, where n is the quotient of \p
+/// numerator divided by \p denominator rounded towards the nearest integer
+/// (instead of toward zero like FMod). For example, <tt>FMod(6.5, 2.3)</tt>
+/// returns -0.4, which is 6.5 - 3*2.3.
+///
+#ifdef VTKM_MSVC
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Remainder(T numerator, T denominator)
+{
+  T quotient = vtkm::Round(numerator/denominator);
+  return numerator - quotient*denominator;
+}
+#else // !VTKM_MSVC
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 Remainder(vtkm::Float32 x, vtkm::Float32 y) {
+  return VTKM_SYS_MATH_FUNCTION_32(remainder)(x,y);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Remainder(vtkm::Float64 x, vtkm::Float64 y) {
+  return VTKM_SYS_MATH_FUNCTION_64(remainder)(x,y);
+}
+#endif // !VTKM_MSVC
+
+/// Returns the remainder on division of 2 floating point numbers just like
+/// Remainder. In addition, this function also returns the \c quotient used to
+/// get that remainder.
+///
+template<typename QType>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 RemainderQuotient(vtkm::Float32 numerator,
+                                vtkm::Float32 denominator,
+                                QType &quotient)
+{
+#ifdef VTKM_USE_BOOST_MATH
+  quotient = static_cast<QType>(boost::math::round(numerator/denominator));
+  return vtkm::Remainder(numerator, denominator);
+#else
+  int iQuotient;
+  vtkm::Float32 result =
+      VTKM_SYS_MATH_FUNCTION_32(remquo)(numerator, denominator, &iQuotient);
+  quotient = iQuotient;
+  return result;
+#endif
+}
+template<typename QType>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 RemainderQuotient(vtkm::Float64 numerator,
+                                vtkm::Float64 denominator,
+                                QType &quotient)
+{
+#ifdef VTKM_USE_BOOST_MATH
+  quotient = static_cast<QType>(boost::math::round(numerator/denominator));
+  return vtkm::Remainder(numerator, denominator);
+#else
+  int iQuotient;
+  vtkm::Float64 result =
+      VTKM_SYS_MATH_FUNCTION_64(remquo)(numerator, denominator, &iQuotient);
+  quotient = iQuotient;
+  return result;
+#endif
+}
+
+/// Gets the integral and fractional parts of \c x. The return value is the
+/// fractional part and \c integral is set to the integral part.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float32 ModF(vtkm::Float32 x, vtkm::Float32 &integral)
+{
+  return VTKM_SYS_MATH_FUNCTION_32(modf)(x, &integral);
+}
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64 &integral)
+{
+  return VTKM_SYS_MATH_FUNCTION_64(modf)(x, &integral);
 }
 
 //-----------------------------------------------------------------------------
