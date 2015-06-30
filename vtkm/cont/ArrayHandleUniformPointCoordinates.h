@@ -100,9 +100,9 @@ private:
 
   VTKM_EXEC_CONT_EXPORT
   ValueType GetCoordinatesForTopologyIndex(vtkm::Id3 ijk) const {
-    return ValueType(this->Origin[0] + this->Spacing[0]*ijk[0],
-                     this->Origin[1] + this->Spacing[1]*ijk[1],
-                     this->Origin[2] + this->Spacing[2]*ijk[2]);
+    return ValueType(this->Origin[0] + this->Spacing[0] * static_cast<vtkm::FloatDefault>(ijk[0]),
+                     this->Origin[1] + this->Spacing[1] * static_cast<vtkm::FloatDefault>(ijk[1]),
+                     this->Origin[2] + this->Spacing[2] * static_cast<vtkm::FloatDefault>(ijk[2]));
   }
 };
 
