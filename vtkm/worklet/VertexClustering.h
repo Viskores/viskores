@@ -131,28 +131,23 @@ struct VertexClustering{
     typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
   private:
     typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::Portal IdPortalType;
-    IdArrayHandle CidIndexArray;
     IdPortalType CidIndexRaw;
+    vtkm::Id len;
   public:
       typedef void ControlSignature(FieldIn<>);
       typedef void ExecutionSignature(WorkIndex, _1);  // WorkIndex: use vtkm indexing
 
       VTKM_CONT_EXPORT
-      IndexingWorklet( vtkm::Id n )
+      IndexingWorklet( IdArrayHandle &cidIndexArray, vtkm::Id n ) : len(n)
       {
-        this->CidIndexRaw = this->CidIndexArray.PrepareForOutput(n, DeviceAdapter() );
+        this->CidIndexRaw = cidIndexArray.PrepareForOutput(n, DeviceAdapter() );
       }
 
       VTKM_EXEC_EXPORT
       void operator()(const vtkm::Id &counter, const vtkm::Id &cid) const
       {
+        VTKM_ASSERT_EXEC( cid < this->len , *this );
         this->CidIndexRaw.Set(cid, counter);
-      }
-
-      VTKM_CONT_EXPORT
-      IdArrayHandle &GetOutput()
-      {
-        return this->CidIndexArray;
       }
   };
 
@@ -298,11 +293,10 @@ public:
     pointCidArray.ReleaseResources();
 
     /// preparation: Get the indexes of the clustered points to prepare for new cell array
-    /// The output indexes are stored in the worklet
-    IndexingWorklet worklet3 ( gridInfo.dim[0]*gridInfo.dim[1]*gridInfo.dim[2] );
+    vtkm::cont::ArrayHandle<vtkm::Id> cidIndexArray;
 
-    vtkm::worklet::DispatcherMapField<IndexingWorklet> ( worklet3 )
-                                  .Invoke(pointCidArrayReduced);
+    vtkm::worklet::DispatcherMapField<IndexingWorklet> ( IndexingWorklet( cidIndexArray, gridInfo.dim[0]*gridInfo.dim[1]*gridInfo.dim[2] ) )
+        .Invoke(pointCidArrayReduced);
 
     pointCidArrayReduced.ReleaseResources();
 
@@ -312,11 +306,11 @@ public:
     ///
     vtkm::cont::ArrayHandle<vtkm::Id3> pointId3Array;
 
-    vtkm::worklet::DispatcherMapField<Cid2PointIdWorklet>(
-          Cid2PointIdWorklet( worklet3.GetOutput() ) )
+    vtkm::worklet::DispatcherMapField<Cid2PointIdWorklet>( Cid2PointIdWorklet( cidIndexArray ) )
         .Invoke(cid3Array, pointId3Array);
 
     cid3Array.ReleaseResources();
+    cidIndexArray.ReleaseResources();
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time before unique (s): " << timer.GetElapsedTime() << std::endl;
