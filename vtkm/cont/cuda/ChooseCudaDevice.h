@@ -54,9 +54,9 @@ struct compute_info
   //sort from fastest to slowest
   bool operator<(const compute_info other) const
   {
-    //if we are both SM2 or greater check performance
+    //if we are both SM3 or greater check performance
     //if we both the same SM level check performance
-    if( (this->Major >= 2 && other.Major >= 2) ||
+    if( (this->Major >= 3 && other.Major >= 3) ||
         (this->Major == other.Major) )
     {
       return betterPerfomance(other);
