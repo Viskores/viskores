@@ -41,7 +41,7 @@ struct compute_info
     this->MemorySize = prop.totalGlobalMem;
     this->Performance = prop.multiProcessorCount *
         prop.maxThreadsPerMultiProcessor *
-        (prop.clockRate / 100000.0f);
+        (prop.clockRate / 100000.0);
 
     //9999 is equal to emulation make sure it is a super bad device
     if(this->Major >= 9999)
@@ -54,9 +54,9 @@ struct compute_info
   //sort from fastest to slowest
   bool operator<(const compute_info other) const
   {
-    //if we are both SM2 or greater check performance
+    //if we are both SM3 or greater check performance
     //if we both the same SM level check performance
-    if( (this->Major >= 2 && other.Major >= 2) ||
+    if( (this->Major >= 3 && other.Major >= 3) ||
         (this->Major == other.Major) )
     {
       return betterPerfomance(other);
@@ -86,7 +86,7 @@ private:
   int Index;
   int Major;
   size_t MemorySize;
-  float Performance;
+  double Performance;
 };
 
 }
