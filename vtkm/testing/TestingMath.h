@@ -367,6 +367,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
 //    std::cout << "Testing hyperbolic trig functions." << std::endl;
 
     const VectorType zero(0);
+    const VectorType half(0.5);
 
     for (vtkm::IdComponent index = 0;
          index < NUM_NUMBERS - NUM_COMPONENTS + 1;
@@ -386,10 +387,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
       const VectorType minusX = zero - x;
 
       VTKM_MATH_ASSERT(test_equal(vtkm::SinH(x),
-                                  0.5f*(vtkm::Exp(x) - vtkm::Exp(minusX))),
+                                  half*(vtkm::Exp(x) - vtkm::Exp(minusX))),
                       "SinH does not match definition.");
       VTKM_MATH_ASSERT(test_equal(vtkm::CosH(x),
-                                  0.5f*(vtkm::Exp(x) + vtkm::Exp(minusX))),
+                                  half*(vtkm::Exp(x) + vtkm::Exp(minusX))),
                       "SinH does not match definition.");
       VTKM_MATH_ASSERT(test_equal(vtkm::TanH(x), vtkm::SinH(x)/vtkm::CosH(x)),
                       "TanH does not match definition");
@@ -628,8 +629,8 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     // Assuming all TestValues positive.
     VectorType positive1 = TestValue(1, VectorType());
     VectorType positive2 = TestValue(2, VectorType());
-    VectorType negative1 = -1*positive1;
-    VectorType negative2 = -1*positive2;
+    VectorType negative1 = -positive1;
+    VectorType negative2 = -positive2;
 
     VTKM_MATH_ASSERT(test_equal(vtkm::CopySign(positive1, positive2), positive1),
                      "CopySign failed.");
@@ -714,7 +715,7 @@ struct AbsTests : public vtkm::exec::FunctorBase
   void operator()(vtkm::Id index) const {
 //    std::cout << "Testing Abs." << std::endl;
     T positive = TestValue(index, T());  // Assuming all TestValues positive.
-    T negative = -1*positive;
+    T negative = -positive;
 
     VTKM_MATH_ASSERT(test_equal(vtkm::Abs(positive), positive),
                      "Abs returned wrong value.");
