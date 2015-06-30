@@ -41,7 +41,7 @@ struct compute_info
     this->MemorySize = prop.totalGlobalMem;
     this->Performance = prop.multiProcessorCount *
         prop.maxThreadsPerMultiProcessor *
-        (prop.clockRate / 100000.0f);
+        (prop.clockRate / 100000.0);
 
     //9999 is equal to emulation make sure it is a super bad device
     if(this->Major >= 9999)
@@ -86,7 +86,7 @@ private:
   int Index;
   int Major;
   size_t MemorySize;
-  float Performance;
+  double Performance;
 };
 
 }
