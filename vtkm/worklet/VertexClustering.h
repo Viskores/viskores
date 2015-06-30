@@ -138,7 +138,7 @@ struct VertexClustering{
       typedef void ExecutionSignature(WorkIndex, _1);  // WorkIndex: use vtkm indexing
 
       VTKM_CONT_EXPORT
-      IndexingWorklet( size_t n )
+      IndexingWorklet( vtkm::Id n )
       {
         this->CidIndexRaw = this->CidIndexArray.PrepareForOutput(n, DeviceAdapter() );
       }
