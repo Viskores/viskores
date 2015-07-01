@@ -207,7 +207,7 @@ private:
           arrayHandle.PrepareForOutput(ARRAY_SIZE*2,DeviceAdapterTag());
           arrayHandle.GetPortalControl();
         }
-        catch (vtkm::cont::Error &error)
+        catch (vtkm::cont::Error &)
         {
           gotException = true;
         }
