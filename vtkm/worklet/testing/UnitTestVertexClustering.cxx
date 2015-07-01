@@ -115,7 +115,7 @@ void TestVertexClustering()
 
   // test
   const vtkm::Id output_pointIds = 9;
-  vtkm::Id output_pointId[output_pointIds] = {1,2,5, 1,3,0, 1,5,4};
+  vtkm::Id output_pointId[output_pointIds] = {1,3,0, 1,5,4, 1,2,5};
   const vtkm::Id output_points = 6;
   double output_point[output_points][3] = {{0.0174716003,0.0501927994,0.0930275023}, {0.0320714004,0.14704667,0.0952706337}, {0.0268670674,0.246195346,0.119720004}, {0.00215422804,0.0340906903,0.180881709}, {0.0108188,0.152774006,0.167914003}, {0.0202241503,0.225427493,0.140208006}};
 
