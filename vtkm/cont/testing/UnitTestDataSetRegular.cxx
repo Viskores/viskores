@@ -49,7 +49,7 @@ TwoDimRegularTest()
     boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
     vtkm::cont::CellSetStructured<2> *cs =
         dynamic_cast<vtkm::cont::CellSetStructured<2> *>(scs.get());
-    VTKM_TEST_ASSERT(cs, "Invalid Cell Set");
+    VTKM_TEST_ASSERT( (cs!=NULL), "Invalid Cell Set");
 
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                      "Incorrect number of cell sets");
@@ -115,7 +115,7 @@ ThreeDimRegularTest()
     vtkm::cont::CellSetStructured<3> *cs =
         dynamic_cast<vtkm::cont::CellSetStructured<3> *>(scs.get());
 
-    VTKM_TEST_ASSERT(cs, "Invalid Cell Set");
+    VTKM_TEST_ASSERT( (cs!=NULL), "Invalid Cell Set");
 
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                      "Incorrect number of cell sets");
