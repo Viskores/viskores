@@ -160,6 +160,13 @@ struct VertexClustering{
     typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
     const IdPortalType CidIndexRaw;
     vtkm::Id nPoints;
+
+    VTKM_EXEC_EXPORT
+    void rotate(vtkm::Id3 &ids) const
+    {
+        int temp=ids[0]; ids[0] = ids[1]; ids[1] = ids[2]; ids[2] = temp;
+    }
+
   public:
     typedef void ControlSignature(FieldIn<>, FieldOut<>);
     typedef void ExecutionSignature(_1, _2);
@@ -182,6 +189,14 @@ struct VertexClustering{
         pointId3[1] = this->CidIndexRaw.Get( cid3[1] );
         pointId3[2] = this->CidIndexRaw.Get( cid3[2] );
         VTKM_ASSERT_EXEC( pointId3[0] < nPoints && pointId3[1] < nPoints && pointId3[2] < nPoints , *this );
+
+        // Sort triangle point ids so that the same triangle will have the same signature
+        // Rotate these ids making the first one is the smallest
+        if (pointId3[0]>pointId3[1] || pointId3[0]>pointId3[2]) {
+          rotate(pointId3);
+          if (pointId3[0]>pointId3[1] || pointId3[0]>pointId3[2])
+            rotate(pointId3);
+        }
       }
     }
 
