@@ -191,7 +191,7 @@ struct VertexClustering{
         VTKM_ASSERT_EXEC( pointId3[0] < nPoints && pointId3[1] < nPoints && pointId3[2] < nPoints , *this );
 
         // Sort triangle point ids so that the same triangle will have the same signature
-        // Rotate these ids making the first one is the smallest
+        // Rotate these ids making the first one the smallest
         if (pointId3[0]>pointId3[1] || pointId3[0]>pointId3[2]) {
           rotate(pointId3);
           if (pointId3[0]>pointId3[1] || pointId3[0]>pointId3[2])
