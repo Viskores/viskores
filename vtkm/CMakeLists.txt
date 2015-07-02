@@ -25,6 +25,7 @@ set(headers
   Extent.h
   ListTag.h
   Math.h
+  Matrix.h
   Pair.h
   RegularConnectivity.h
   RegularStructure.h

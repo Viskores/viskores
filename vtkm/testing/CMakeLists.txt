@@ -31,6 +31,7 @@ set(unit_tests
   UnitTestExtent.cxx
   UnitTestListTag.cxx
   UnitTestMath.cxx
+  UnitTestMatrix.cxx
   UnitTestPair.cxx
   UnitTestTesting.cxx
   UnitTestTypeListTag.cxx
