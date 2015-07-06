@@ -1505,6 +1505,18 @@ VTKM_EXEC_CONT_EXPORT vtkm::Float64 NegativeInfinity64() {
   return vtkm::NegativeInfinity<vtkm::Float64>();
 }
 
+/// Returns the difference between 1 and the least value greater than 1
+/// that is representable.
+///
+VTKM_EXEC_CONT_EXPORT vtkm::Float32 Epsilon32()
+{
+  return vtkm::Epsilon<vtkm::Float32>();
+}
+VTKM_EXEC_CONT_EXPORT vtkm::Float64 Epsilon64()
+{
+  return vtkm::Epsilon<vtkm::Float64>();
+}
+
 //-----------------------------------------------------------------------------
 /// Returns true if \p x is not a number.
 ///
