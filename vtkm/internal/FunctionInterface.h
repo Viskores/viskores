@@ -26,7 +26,7 @@
 
 
 // Disable conversion warnings inside boost
-# if defined(__GNUC__) || defined(____clang__)
+# if defined(VTKM_GCC) || defined(VTKM_CLANG)
 #   pragma GCC diagnostic push
 #   pragma GCC diagnostic ignored "-Wconversion"
 # endif // gcc || clang
@@ -47,7 +47,7 @@
 #include <boost/utility/enable_if.hpp>
 
 
-# if defined(__GNUC__) || defined(____clang__)
+# if defined(VTKM_GCC) || defined(VTKM_CLANG)
 #   pragma GCC diagnostic pop
 # endif // gcc || clang
 

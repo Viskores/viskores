@@ -26,7 +26,7 @@
 #include <boost/type_traits/remove_const.hpp>
 
 // Disable warnings we check vtkm for but Thrust does not.
-#if defined(__GNUC__) || defined(____clang__)
+#if defined(VTKM_GCC) || defined(VTKM_CLANG)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -34,7 +34,7 @@
 #endif // gcc || clang
 #include <thrust/system/cuda/memory.h>
 
-#if defined(__GNUC__) || defined(____clang__)
+#if defined(VTKM_GCC) || defined(VTKM_CLANG)
 #pragma GCC diagnostic pop
 #endif // gcc || clang
 

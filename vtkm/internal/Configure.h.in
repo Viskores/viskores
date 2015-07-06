@@ -20,6 +20,31 @@
 #ifndef vtk_m_internal_Configure_h
 #define vtk_m_internal_Configure_h
 
+#ifdef __CUDACC__
+#define VTKM_CUDA
+#endif
+
+#ifdef _OPENMP
+#define VTKM_OPENMP
+#endif
+
+#ifdef _MSC_VER
+#define VTKM_MSVC
+#endif
+
+#ifdef ____clang__
+#define VTKM_CLANG
+#endif
+
+#ifdef __INTEL_COMPILER
+#define VTKM_ICC
+#endif
+
+// Several compilers pretend to be GCC but have minor differences. Try to
+// compensate for that.
+#if defined(__GNUC__) && !defined(VTKM_CLANG) && !defined(VTKM_ICC)
+#define VTKM_GCC
+#endif
 
 #if !defined(VTKM_USE_DOUBLE_PRECISION) && !defined(VTKM_NO_DOUBLE_PRECISION)
 #cmakedefine VTKM_USE_DOUBLE_PRECISION
@@ -84,7 +109,7 @@
 #if !defined(VTKM_USE_VARIADIC_TEMPLATE) && !defined(VTKM_NO_VARIADIC_TEMPLATE)
 // Currently using Boost to determine support.
 
-# if defined(__GNUC__) || defined(____clang__)
+# if defined(VTKM_GCC) || defined(VTKM_CLANG)
 #   pragma GCC diagnostic push
 #   pragma GCC diagnostic ignored "-Wconversion"
 # endif // gcc || clang
@@ -92,7 +117,7 @@
 # include <boost/config.hpp>
 
 
-# if defined(__GNUC__) || defined(____clang__)
+# if defined(VTKM_GCC) || defined(VTKM_CLANG)
 #   pragma GCC diagnostic pop
 # endif // gcc || clang
 
