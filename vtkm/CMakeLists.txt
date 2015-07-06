@@ -53,3 +53,8 @@ add_subdirectory(exec)
 #-----------------------------------------------------------------------------
 #add the worklet folder
 add_subdirectory(worklet)
+
+#-----------------------------------------------------------------------------
+#add the benchmarking folder
+add_subdirectory(benchmarking)
+
