@@ -20,21 +20,11 @@
 #ifndef vtk_m_internal__ExportMacros_h
 #define vtk_m_internal__ExportMacros_h
 
+#include <vtkm/internal/Configure.h>
+
 /*!
   * Export macros for various parts of the VTKm library.
   */
-
-#ifdef __CUDACC__
-#define VTKM_CUDA
-#endif
-
-#ifdef _OPENMP
-#define VTKM_OPENMP
-#endif
-
-#ifdef _MSC_VER
-#define VTKM_MSVC
-#endif
 
 #ifdef VTKM_CUDA
 #define VTKM_EXEC_EXPORT inline __device__

@@ -62,7 +62,7 @@ struct MatrixTest
     MatrixType matrix(5);
     FOR_ROW_COL(matrix)
     {
-      VTKM_TEST_ASSERT(matrix(row,col) == static_cast<T>(5),
+      VTKM_TEST_ASSERT(test_equal(matrix(row,col), static_cast<T>(5)),
                        "Constant set incorrect.");
     }
   }
@@ -73,30 +73,30 @@ struct MatrixTest
     MatrixType matrix;
     MatrixType value = TestValue(0, MatrixType());
     FOR_ROW_COL(matrix)
-      {
+    {
       matrix[row][col] = value(row,col)*2;
-      }
+    }
     FOR_ROW_COL(matrix)
-      {
-      VTKM_TEST_ASSERT(matrix(row,col) == value(row,col)*2,
+    {
+      VTKM_TEST_ASSERT(test_equal(matrix(row,col), value(row,col)*2),
                        "Bad set or retreive.");
       const MatrixType const_matrix = matrix;
-      VTKM_TEST_ASSERT(const_matrix(row,col) == value(row,col)*2,
+      VTKM_TEST_ASSERT(test_equal(const_matrix(row,col), value(row,col)*2),
                        "Bad set or retreive.");
-      }
+    }
 
     FOR_ROW_COL(matrix)
-      {
+    {
       matrix(row,col) = value(row,col);
-      }
+    }
     const MatrixType const_matrix = matrix;
     FOR_ROW_COL(matrix)
-      {
-      VTKM_TEST_ASSERT(matrix[row][col] == value(row,col),
+    {
+      VTKM_TEST_ASSERT(test_equal(matrix[row][col], value(row,col)),
                        "Bad set or retreive.");
-      VTKM_TEST_ASSERT(const_matrix[row][col] == value(row,col),
+      VTKM_TEST_ASSERT(test_equal(const_matrix[row][col], value(row,col)),
                        "Bad set or retreive.");
-      }
+    }
     VTKM_TEST_ASSERT(matrix == const_matrix,
                      "Equal test operator not working.");
     VTKM_TEST_ASSERT(!(matrix != const_matrix),
@@ -114,36 +114,40 @@ struct MatrixTest
 
     std::cout << "Access by row or column" << std::endl;
     FOR_ROW_COL(matrix)
-      {
+    {
       RowType rowvec = vtkm::MatrixGetRow(const_matrix, row);
-      VTKM_TEST_ASSERT(rowvec[col] == const_matrix(row,col), "Bad get row.");
+      VTKM_TEST_ASSERT(test_equal(rowvec[col], const_matrix(row,col)),
+                       "Bad get row.");
       ColumnType columnvec = vtkm::MatrixGetColumn(const_matrix, col);
-      VTKM_TEST_ASSERT(columnvec[row] == const_matrix(row,col), "Bad get col.");
-      }
+      VTKM_TEST_ASSERT(test_equal(columnvec[row], const_matrix(row,col)),
+                       "Bad get col.");
+    }
 
     std::cout << "Set a row." << std::endl;
     for (vtkm::IdComponent row = 0; row < NUM_ROWS; row++)
-      {
+    {
       RowType rowvec = vtkm::MatrixGetRow(const_matrix, NUM_ROWS-row-1);
       vtkm::MatrixSetRow(matrix, row, rowvec);
-      }
+    }
     FOR_ROW_COL(matrix)
-      {
-      VTKM_TEST_ASSERT(matrix(NUM_ROWS-row-1,col) == const_matrix(row,col),
+    {
+      VTKM_TEST_ASSERT(test_equal(matrix(NUM_ROWS-row-1,col),
+                                  const_matrix(row,col)),
                       "Rows not set right.");
-      }
+    }
 
     std::cout << "Set a column." << std::endl;
     for (vtkm::IdComponent col = 0; col < NUM_COLS; col++)
-      {
+    {
       ColumnType colvec = vtkm::MatrixGetColumn(const_matrix, NUM_COLS-col-1);
       vtkm::MatrixSetColumn(matrix, col, colvec);
-      }
+    }
     FOR_ROW_COL(matrix)
-      {
-      VTKM_TEST_ASSERT(matrix(row,NUM_COLS-col-1) == const_matrix(row,col),
-                      "Columns not set right.");
-      }
+    {
+      VTKM_TEST_ASSERT(test_equal(matrix(row,NUM_COLS-col-1),
+                                  const_matrix(row,col)),
+                       "Columns not set right.");
+    }
   }
 
   static void Multiply()
@@ -157,31 +161,31 @@ struct MatrixTest
         = vtkm::MatrixMultiply(leftFactor, rightFactor);
 
     FOR_ROW_COL(product)
-      {
+    {
       vtkm::Vec<T,NUM_COLS> leftVector = vtkm::MatrixGetRow(leftFactor, row);
       vtkm::Vec<T,NUM_COLS> rightVector=vtkm::MatrixGetColumn(rightFactor, col);
       VTKM_TEST_ASSERT(test_equal(product(row,col),
                                   vtkm::dot(leftVector,rightVector)),
                        "Matrix multiple wrong.");
-      }
+    }
 
     std::cout << "Vector multiply." << std::endl;
     MatrixType matrixFactor;
     vtkm::Vec<T,NUM_ROWS> leftVector(2);
     vtkm::Vec<T,NUM_COLS> rightVector;
     FOR_ROW_COL(matrixFactor)
-      {
+    {
       matrixFactor(row,col) = T(row + 1);
       rightVector[col] = T(col + 1);
-      }
+    }
 
     vtkm::Vec<T,NUM_COLS> leftResult =
         vtkm::MatrixMultiply(leftVector, matrixFactor);
     for (vtkm::IdComponent index = 0; index < NUM_COLS; index++)
-      {
+    {
       VTKM_TEST_ASSERT(test_equal(leftResult[index], T(NUM_ROWS*(NUM_ROWS+1))),
                       "Vector/matrix multiple wrong.");
-      }
+    }
 
     vtkm::Vec<T,NUM_ROWS> rightResult =
         vtkm::MatrixMultiply(matrixFactor, rightVector);
@@ -220,7 +224,7 @@ struct MatrixTest
         vtkm::MatrixTranspose(originalMatrix);
     FOR_ROW_COL(originalMatrix)
     {
-      VTKM_TEST_ASSERT(originalMatrix(row,col) == transMatrix(col,row),
+      VTKM_TEST_ASSERT(test_equal(originalMatrix(row,col), transMatrix(col,row)),
                        "Transpose wrong.");
     }
   }
@@ -295,15 +299,15 @@ template<typename T, int Size>
 void SingularMatrix(vtkm::Matrix<T,Size,Size> &singularMatrix)
 {
   FOR_ROW_COL(singularMatrix)
-    {
+  {
     singularMatrix(row,col) = row+col;
-    }
+  }
   if (Size > 1)
-    {
+  {
     vtkm::MatrixSetRow(singularMatrix,
                        0,
                        vtkm::MatrixGetRow(singularMatrix, (Size+1)/2));
-    }
+  }
 }
 
 // A simple but slow implementation of finding a determinant for comparison
@@ -406,7 +410,7 @@ struct SquareMatrixTest {
         }
       }
     }
-    VTKM_TEST_ASSERT(inversionParity == computedParity,
+    VTKM_TEST_ASSERT(test_equal(inversionParity, computedParity),
                     "Got bad inversion parity.");
 
     // Reconstruct permutation matrix P.

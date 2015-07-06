@@ -34,7 +34,7 @@
 #include <vtkm/exec/cuda/internal/WrappedOperators.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
-#if defined(__GNUC__) || defined(____clang__)
+#if defined(VTKM_GCC) || defined(VTKM_CLANG)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -53,7 +53,7 @@
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/system/cuda/execution_policy.h>
 
-#if defined(__GNUC__) || defined(____clang__)
+#if defined(VTKM_GCC) || defined(VTKM_CLANG)
 #pragma GCC diagnostic pop
 #endif // gcc || clang
 
