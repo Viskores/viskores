@@ -27,7 +27,7 @@
 
 #include <string>
 
-namespace {
+namespace UnitTestArrayHandleCountingNamespace {
 
 const vtkm::Id ARRAY_SIZE = 10;
 
@@ -71,11 +71,11 @@ private:
   std::string Value;
 };
 
-} // anonymous namespace
+} // namespace UnitTestArrayHandleCountingNamespace
 
-VTKM_BASIC_TYPE_VECTOR(StringInt)
+VTKM_BASIC_TYPE_VECTOR(UnitTestArrayHandleCountingNamespace::StringInt)
 
-namespace {
+namespace UnitTestArrayHandleCountingNamespace {
 
 template< typename ValueType>
 struct TemplatedTests
@@ -141,9 +141,10 @@ void TestArrayHandleCounting()
 }
 
 
-} // annonymous namespace
+} // namespace UnitTestArrayHandleCountingNamespace
 
 int UnitTestArrayHandleCounting(int, char *[])
 {
+  using namespace UnitTestArrayHandleCountingNamespace;
   return vtkm::cont::testing::Testing::Run(TestArrayHandleCounting);
 }
