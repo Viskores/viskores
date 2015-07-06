@@ -244,6 +244,15 @@ vtkm::Matrix<T,NumCols,NumRows> MatrixTranspose(
   for (vtkm::IdComponent index = 0; index < NumRows; index++)
   {
     vtkm::MatrixSetColumn(result, index, vtkm::MatrixGetRow(matrix, index));
+#ifdef VTKM_ICC
+    // For reasons I do not really understand, the Intel compiler with with
+    // optimization on is sometimes removing this for loop. It appears that the
+    // optimizer sometimes does not recognize that the MatrixSetColumn function
+    // has side effects. I cannot fathom any reason for this other than a bug in
+    // the compiler, but unfortunately I do not know a reliable way to
+    // demonstrate the problem.
+    __asm__("");
+#endif
   }
   return result;
 }
