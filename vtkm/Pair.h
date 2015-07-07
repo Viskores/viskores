@@ -154,7 +154,7 @@ vtkm::Pair<T1,T2> make_Pair(const T1 &firstSrc, const T2 &secondSrc)
 template<typename T, typename U>
 struct TypeTraits<vtkm::Pair<T,U> >
 {
-  typedef TypeTraitsUnkownTag NumericTag;
+  typedef TypeTraitsUnknownTag NumericTag;
   typedef TypeTraitsScalarTag DimensionalityTag;
 
   VTKM_EXEC_CONT_EXPORT

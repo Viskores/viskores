@@ -37,6 +37,7 @@ set(unit_tests
   UnitTestTypeListTag.cxx
   UnitTestTypes.cxx
   UnitTestTypeTraits.cxx
+  UnitTestVectorAnalysis.cxx
   UnitTestVecTraits.cxx
   )
 

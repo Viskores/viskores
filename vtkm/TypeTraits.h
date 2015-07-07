@@ -26,7 +26,7 @@ namespace vtkm {
 
 /// Tag used to identify types that aren't Real, Integer, Scalar or Vector.
 ///
-struct TypeTraitsUnkownTag {};
+struct TypeTraitsUnknownTag {};
 
 /// Tag used to identify types that store real (floating-point) numbers. A
 /// TypeTraits class will typedef this class to NumericTag if it stores real
@@ -64,13 +64,13 @@ public:
   /// \brief A tag to determing whether the type is integer or real.
   ///
   /// This tag is either TypeTraitsRealTag or TypeTraitsIntegerTag.
-  typedef TypeTraitsUnkownTag NumericTag;
+  typedef TypeTraitsUnknownTag NumericTag;
 
   /// \brief A tag to determine whether the type has multiple components.
   ///
   /// This tag is either TypeTraitsScalarTag or TypeTraitsVectorTag. Scalars can
   /// also be treated as vectors.
-  typedef TypeTraitsUnkownTag DimensionalityTag;
+  typedef TypeTraitsUnknownTag DimensionalityTag;
 
   VTKM_EXEC_CONT_EXPORT static T ZeroInitialization() { return T(); }
 };

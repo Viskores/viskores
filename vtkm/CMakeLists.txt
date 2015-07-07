@@ -32,6 +32,7 @@ set(headers
   TypeListTag.h
   Types.h
   TypeTraits.h
+  VectorAnalysis.h
   VecTraits.h
   )
 
