@@ -300,7 +300,7 @@ void SingularMatrix(vtkm::Matrix<T,Size,Size> &singularMatrix)
 {
   FOR_ROW_COL(singularMatrix)
   {
-    singularMatrix(row,col) = row+col;
+    singularMatrix(row,col) = static_cast<T>(row+col);
   }
   if (Size > 1)
   {
@@ -445,7 +445,7 @@ struct SquareMatrixTest {
     NonSingularMatrix(A);
     for (vtkm::IdComponent index = 0; index < SIZE; index++)
     {
-      b[index] = index+1;
+      b[index] = static_cast<T>(index+1);
     }
     bool valid;
 
