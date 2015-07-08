@@ -28,6 +28,21 @@
 
 #include "vtkm/cont/testing/Testing.h"
 
+namespace vtkm {
+
+// DynamicArrayHandle requires its value type to have a defined VecTraits
+// class. One of the tests is to use an "unusual" array of std::string
+// (which is pretty pointless but might tease out some assumptions).
+// Make an implementation here. Because I am lazy, this is only a partial
+// implementation.
+template<>
+struct VecTraits<std::string>
+{
+  static const vtkm::IdComponent NUM_COMPONENTS = 1;
+};
+
+} // namespace vtkm
+
 namespace {
 
 static int g_FunctionCalls;
