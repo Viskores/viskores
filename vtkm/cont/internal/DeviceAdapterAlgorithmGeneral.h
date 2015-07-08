@@ -1432,7 +1432,7 @@ public:
     UpperBoundsKernel<
         typename vtkm::cont::ArrayHandle<T,CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
         typename vtkm::cont::ArrayHandle<T,CVal>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
-        typename vtkm::cont::ArrayHandle<T,COut>::template ExecutionTypes<DeviceAdapterTag>::Portal>
+        typename vtkm::cont::ArrayHandle<vtkm::Id,COut>::template ExecutionTypes<DeviceAdapterTag>::Portal>
         kernel(input.PrepareForInput(DeviceAdapterTag()),
                values.PrepareForInput(DeviceAdapterTag()),
                output.PrepareForOutput(arraySize, DeviceAdapterTag()));
@@ -1452,7 +1452,7 @@ public:
     UpperBoundsKernelComparisonKernel<
         typename vtkm::cont::ArrayHandle<T,CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
         typename vtkm::cont::ArrayHandle<T,CVal>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
-        typename vtkm::cont::ArrayHandle<T,COut>::template ExecutionTypes<DeviceAdapterTag>::Portal,
+        typename vtkm::cont::ArrayHandle<vtkm::Id,COut>::template ExecutionTypes<DeviceAdapterTag>::Portal,
         BinaryCompare>
         kernel(input.PrepareForInput(DeviceAdapterTag()),
                values.PrepareForInput(DeviceAdapterTag()),
