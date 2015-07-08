@@ -21,19 +21,78 @@
 #define vtk_m_cont_DynamicArrayHandle_h
 
 #include <vtkm/TypeListTag.h>
+#include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 #include <vtkm/cont/StorageListTag.h>
 
 #include <vtkm/cont/internal/DynamicTransform.h>
-#include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/utility/enable_if.hpp>
 
 namespace vtkm {
 namespace cont {
+
+namespace detail {
+
+/// \brief Base class for PolymorphicArrayHandleContainer
+///
+struct PolymorphicArrayHandleContainerBase
+{
+  // This must exist so that subclasses are destroyed correctly.
+  virtual ~PolymorphicArrayHandleContainerBase() {  }
+
+  virtual vtkm::IdComponent GetNumberOfComponents() const = 0;
+  virtual vtkm::Id GetNumberOfValues() const = 0;
+
+  virtual boost::shared_ptr<PolymorphicArrayHandleContainerBase>
+  NewInstance() const = 0;
+};
+
+/// \brief ArrayHandle container that can use C++ run-time type information.
+///
+/// The \c PolymorphicArrayHandleContainer is similar to the
+/// \c SimplePolymorphicContainer in that it can contain an object of an
+/// unkown type. However, this class specifically holds ArrayHandle objects
+/// (with different template parameters) so that it can polymorphically answer
+/// simple questions about the object.
+///
+template<typename T, typename Storage>
+struct PolymorphicArrayHandleContainer
+    : public PolymorphicArrayHandleContainerBase
+{
+  typedef vtkm::cont::ArrayHandle<T, Storage> ArrayHandleType;
+
+  ArrayHandleType Array;
+
+  VTKM_CONT_EXPORT
+  PolymorphicArrayHandleContainer() : Array() {  }
+
+  VTKM_CONT_EXPORT
+  PolymorphicArrayHandleContainer(const ArrayHandleType &array)
+    : Array(array) {  }
+
+  virtual vtkm::IdComponent GetNumberOfComponents() const
+  {
+    return vtkm::VecTraits<T>::NUM_COMPONENTS;
+  }
+
+  virtual vtkm::Id GetNumberOfValues() const
+  {
+    return this->Array.GetNumberOfValues();
+  }
+
+  virtual boost::shared_ptr<PolymorphicArrayHandleContainerBase>
+  NewInstance() const
+  {
+    return boost::shared_ptr<PolymorphicArrayHandleContainerBase>(
+          new PolymorphicArrayHandleContainer<T,Storage>());
+  }
+};
+
+} // namespace detail
 
 namespace internal {
 
@@ -82,8 +141,8 @@ public:
   template<typename Type, typename Storage>
   VTKM_CONT_EXPORT
   DynamicArrayHandle(const vtkm::cont::ArrayHandle<Type,Storage> &array)
-    : ArrayStorage(new vtkm::cont::internal::SimplePolymorphicContainer<
-                     vtkm::cont::ArrayHandle<Type,Storage> >(array))
+    : ArrayStorage(new vtkm::cont::detail::PolymorphicArrayHandleContainer<
+                     Type,Storage>(array))
   {  }
 
   template<typename TypeList, typename StorageList>
@@ -109,14 +168,13 @@ public:
   VTKM_CONT_EXPORT
   vtkm::cont::ArrayHandle<Type, Storage>
   CastToArrayHandle(Type = Type(), Storage = Storage()) const {
-    vtkm::cont::internal::SimplePolymorphicContainer<
-      vtkm::cont::ArrayHandle<Type,Storage> > *container =
-        this->TryCastStorage<Type,Storage>();
+    vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage> *container
+        = this->TryCastStorage<Type,Storage>();
     if (container == NULL)
     {
       throw vtkm::cont::ErrorControlBadValue("Bad cast of dynamic array.");
     }
-    return container->Item;
+    return container->Array;
   }
 
   /// Changes the types to try casting to when resolving this dynamic array,
@@ -187,20 +245,38 @@ public:
     return newArray;
   }
 
+  /// \brief Get the number of components in each array value.
+  ///
+  /// This method will query the array type for the number of components in
+  /// each value of the array. The number of components is determined by
+  /// the \c VecTraits::NUM_COMPONENTS trait class.
+  ///
+  VTKM_CONT_EXPORT
+  vtkm::IdComponent GetNumberOfComponents() const
+  {
+    return this->ArrayStorage->GetNumberOfComponents();
+  }
+
+  /// \brief Get the number of values in the array.
+  ///
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfValues() const
+  {
+    return this->ArrayStorage->GetNumberOfValues();
+  }
+
 private:
-  boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
+  boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>
     ArrayStorage;
 
   template<typename Type, typename Storage>
   VTKM_CONT_EXPORT
-  vtkm::cont::internal::SimplePolymorphicContainer<
-    vtkm::cont::ArrayHandle<Type,Storage> > *
+  vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage> *
   TryCastStorage() const {
     return
         dynamic_cast<
-          vtkm::cont::internal::SimplePolymorphicContainer<
-            vtkm::cont::ArrayHandle<Type,Storage> > *>(
-          this->ArrayStorage.get());
+          vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage> *>(
+            this->ArrayStorage.get());
   }
 };
 

@@ -31,6 +31,7 @@ namespace internal {
 /// \brief Base class for SimplePolymorphicContainer
 ///
 struct SimplePolymorphicContainerBase {
+  // This must exist so that subclasses are destroyed correctly.
   virtual ~SimplePolymorphicContainerBase() {  }
 
   virtual boost::shared_ptr<SimplePolymorphicContainerBase>
