@@ -133,13 +133,13 @@ struct VertexClustering{
   private:
     typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::Portal IdPortalType;
     IdPortalType CidIndexRaw;
-    vtkm::Id len;
+    vtkm::Id Len;
   public:
       typedef void ControlSignature(FieldIn<>);
       typedef void ExecutionSignature(WorkIndex, _1);  // WorkIndex: use vtkm indexing
 
       VTKM_CONT_EXPORT
-      IndexingWorklet( IdArrayHandle &cidIndexArray, vtkm::Id n ) : len(n)
+      IndexingWorklet( IdArrayHandle &cidIndexArray, vtkm::Id n ) : Len(n)
       {
         this->CidIndexRaw = cidIndexArray.PrepareForOutput(n, DeviceAdapter() );
       }
@@ -147,19 +147,17 @@ struct VertexClustering{
       VTKM_EXEC_EXPORT
       void operator()(const vtkm::Id &counter, const vtkm::Id &cid) const
       {
-        VTKM_ASSERT_EXEC( cid < this->len , *this );
+        VTKM_ASSERT_EXEC( cid < this->Len , *this );
         this->CidIndexRaw.Set(cid, counter);
       }
   };
 
   class Cid2PointIdWorklet : public vtkm::worklet::WorkletMapField
   {
-  public:
     typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
-  private:
     typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
     const IdPortalType CidIndexRaw;
-    vtkm::Id nPoints;
+    vtkm::Id NPoints;
 
     VTKM_EXEC_EXPORT
     void rotate(vtkm::Id3 &ids) const
@@ -172,23 +170,22 @@ struct VertexClustering{
     typedef void ExecutionSignature(_1, _2);
 
     VTKM_CONT_EXPORT
-    Cid2PointIdWorklet( IdArrayHandle &cidIndexArray, vtkm::Id nPoints_ )
+    Cid2PointIdWorklet( IdArrayHandle &cidIndexArray, vtkm::Id nPoints )
       : CidIndexRaw ( cidIndexArray.PrepareForInput(DeviceAdapter()) ),
-      nPoints(nPoints_)
-    {
-    }
+      NPoints(nPoints)
+    {}
 
     VTKM_EXEC_EXPORT
     void operator()(const vtkm::Id3 &cid3, vtkm::Id3 &pointId3) const
     {
       if (cid3[0]==cid3[1] || cid3[0]==cid3[2] || cid3[1]==cid3[2])
       {
-        pointId3[0] = pointId3[1] = pointId3[2] = this->nPoints ; // invalid cell to be removed
+        pointId3[0] = pointId3[1] = pointId3[2] = this->NPoints ; // invalid cell to be removed
       } else {
         pointId3[0] = this->CidIndexRaw.Get( cid3[0] );
         pointId3[1] = this->CidIndexRaw.Get( cid3[1] );
         pointId3[2] = this->CidIndexRaw.Get( cid3[2] );
-        VTKM_ASSERT_EXEC( pointId3[0] < nPoints && pointId3[1] < nPoints && pointId3[2] < nPoints , *this );
+        VTKM_ASSERT_EXEC( pointId3[0] < this->NPoints && pointId3[1] < this->NPoints && pointId3[2] < this->NPoints, *this );
 
         // Sort triangle point ids so that the same triangle will have the same signature
         // Rotate these ids making the first one the smallest
@@ -204,42 +201,42 @@ struct VertexClustering{
 
   class Cid3HashWorklet : public vtkm::worklet::WorkletMapField {
   private:
-    vtkm::Int64 nPoints;
+    vtkm::Int64 NPoints ;
   public:
     typedef void ControlSignature(FieldIn<> , FieldOut<>);
     typedef void ExecutionSignature(_1, _2);
 
     VTKM_CONT_EXPORT
-    Cid3HashWorklet(vtkm::Id nPoints_)
-      : nPoints(nPoints_)
+    Cid3HashWorklet(vtkm::Id nPoints)
+      : NPoints(nPoints)
     { }
 
     VTKM_EXEC_EXPORT
     void operator()(const vtkm::Id3 &cid, vtkm::Int64 &cidHash) const
     {
-      cidHash = cid[0] + nPoints * (cid[1] + nPoints * cid[2]);  // get a unique hash value
+      cidHash = cid[0] + this->NPoints  * (cid[1] + this->NPoints * cid[2]);  // get a unique hash value
     }
   };
 
   class Cid3UnhashWorklet : public vtkm::worklet::WorkletMapField {
   private:
-    vtkm::Int64 nPoints;
+    vtkm::Int64 NPoints ;
   public:
     typedef void ControlSignature(FieldIn<> , FieldOut<>);
     typedef void ExecutionSignature(_1, _2);
 
     VTKM_CONT_EXPORT
-    Cid3UnhashWorklet(vtkm::Id nPoints_)
-      : nPoints(nPoints_)
+    Cid3UnhashWorklet(vtkm::Id nPoints)
+      : NPoints(nPoints)
     { }
 
     VTKM_EXEC_EXPORT
     void operator()(const vtkm::Int64 &cidHash, vtkm::Id3 &cid) const
     {
-      cid[0] = static_cast<vtkm::Id>( cidHash % nPoints );
-      vtkm::Int64 t = cidHash / nPoints;
-      cid[1] = static_cast<vtkm::Id>( t % nPoints );
-      cid[2] = static_cast<vtkm::Id>( t / nPoints );
+      cid[0] = static_cast<vtkm::Id>( cidHash % this->NPoints  );
+      vtkm::Int64 t = cidHash / this->NPoints ;
+      cid[1] = static_cast<vtkm::Id>( t % this->NPoints  );
+      cid[2] = static_cast<vtkm::Id>( t / this->NPoints  );
     }
   };
 
