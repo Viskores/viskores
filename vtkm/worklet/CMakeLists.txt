@@ -27,6 +27,7 @@ set(headers
   PointElevation.h
   VertexClustering.h
   AverageByKey.h
+  ExternalFaces.h
   )
 
 #-----------------------------------------------------------------------------

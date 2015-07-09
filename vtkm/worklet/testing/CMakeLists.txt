@@ -1,4 +1,4 @@
-##============================================================================
+#============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -27,7 +27,8 @@ set(unit_tests
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyRegular.cxx
   UnitTestVertexClustering.cxx
-  )
+  UnitTestExternalFaces.cxx 
+ )
 
 vtkm_save_worklet_unit_tests(${unit_tests})
 
