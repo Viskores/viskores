@@ -522,10 +522,10 @@ make_ArrayHandle(const std::vector<T,Allocator> &array)
   return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()));
 }
 
-template<typename T>
+template<typename T, typename StorageT>
 VTKM_CONT_EXPORT
 void
-printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T> &array,
+printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
 			 std::ostream &out)
 {
     vtkm::Id sz = array.GetNumberOfValues();
