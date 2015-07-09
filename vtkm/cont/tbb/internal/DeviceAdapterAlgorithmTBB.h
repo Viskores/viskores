@@ -72,7 +72,7 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB> :
 private:
   // The "grain size" of scheduling with TBB.  Not a lot of thought has gone
   // into picking this size.
-  static const vtkm::Id TBB_GRAIN_SIZE = 128;
+  static const vtkm::Id TBB_GRAIN_SIZE = 4096;
 
   template<class InputPortalType, class OutputPortalType,
       class BinaryOperationType>
@@ -185,7 +185,9 @@ private:
     ScanInclusiveBody<InputPortalType, OutputPortalType, WrappedBinaryOp>
         body(inputPortal, outputPortal, wrappedBinaryOp);
     vtkm::Id arrayLength = inputPortal.GetNumberOfValues();
-    ::tbb::parallel_scan( ::tbb::blocked_range<vtkm::Id>(0, arrayLength), body);
+
+    ::tbb::blocked_range<vtkm::Id> range(0, arrayLength, TBB_GRAIN_SIZE);
+    ::tbb::parallel_scan( range, body );
     return body.Sum;
   }
 
@@ -303,7 +305,8 @@ private:
         body(inputPortal, outputPortal, wrappedBinaryOp, initialValue);
     vtkm::Id arrayLength = inputPortal.GetNumberOfValues();
 
-    ::tbb::parallel_scan( ::tbb::blocked_range<vtkm::Id>(0, arrayLength), body);
+    ::tbb::blocked_range<vtkm::Id> range(0, arrayLength, TBB_GRAIN_SIZE);
+    ::tbb::parallel_scan( range, body );
 
     // Seems a little weird to me that we would return the last value in the
     // array rather than the sum, but that is how the function is specified.
