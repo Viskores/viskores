@@ -33,8 +33,9 @@ namespace cont {
 class CellSet
 {
 public:
-  CellSet(const std::string &n, vtkm::Id d)
-    : name(n), dimensionality(d), logicalStructure()
+  VTKM_CONT_EXPORT
+  CellSet(const std::string &name, vtkm::IdComponent dimensionality)
+    : Name(name), Dimensionality(dimensionality), LogicalStructure()
   {
   }
 
@@ -42,33 +43,33 @@ public:
   {
   }
 
-  virtual std::string GetName()
+  virtual std::string GetName() const
   {
-    return name;
+    return this->Name;
   }
-  virtual vtkm::Id GetDimensionality()
+  virtual vtkm::IdComponent GetDimensionality() const
   {
-    return dimensionality;
-  }
-
-  virtual vtkm::Id GetNumCells() = 0;
-
-  virtual vtkm::Id GetNumFaces()
-  {
-    return 0;
+    return this->Dimensionality;
   }
 
-  virtual vtkm::Id GetNumEdges()
+  virtual vtkm::Id GetNumCells() const = 0;
+
+  virtual vtkm::Id GetNumFaces() const
   {
     return 0;
   }
 
-  virtual void PrintSummary(std::ostream&) = 0;
+  virtual vtkm::Id GetNumEdges() const
+  {
+    return 0;
+  }
+
+  virtual void PrintSummary(std::ostream&) const = 0;
 
 protected:
-    std::string name;
-    vtkm::Id dimensionality;
-    vtkm::cont::LogicalStructure logicalStructure;
+    std::string Name;
+    vtkm::IdComponent Dimensionality;
+    vtkm::cont::LogicalStructure LogicalStructure;
 };
 
 }

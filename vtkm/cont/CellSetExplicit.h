@@ -37,29 +37,31 @@ public:
                                ConnectivityStorageTag
                                > ExplicitConnectivityType;
 
-  CellSetExplicit(const std::string &n, vtkm::Id d)
-    : CellSet(n,d)
+  VTKM_CONT_EXPORT
+  CellSetExplicit(const std::string &name, vtkm::IdComponent dimensionality)
+    : CellSet(name, dimensionality)
   {
   }
 
-  virtual vtkm::Id GetNumCells()
+  virtual vtkm::Id GetNumCells() const
   {
-    return nodesOfCellsConnectivity.GetNumberOfElements();
+    return this->NodesOfCellsConnectivity.GetNumberOfElements();
   }
 
   ExplicitConnectivityType &GetNodeToCellConnectivity()
   {
-    return nodesOfCellsConnectivity;
+    return this->NodesOfCellsConnectivity;
   }
 
-  virtual void PrintSummary(std::ostream &out)
+  virtual void PrintSummary(std::ostream &out) const
   {
-      out<<"   ExplicitCellSet: "<<name<<" dim= "<<dimensionality<<std::endl;
-      nodesOfCellsConnectivity.PrintSummary(out);
+      out << "   ExplicitCellSet: " << this->Name
+          << " dim= " << this->Dimensionality << std::endl;
+      this->NodesOfCellsConnectivity.PrintSummary(out);
   }
 
 public:
-  ExplicitConnectivityType nodesOfCellsConnectivity;
+  ExplicitConnectivityType NodesOfCellsConnectivity;
 };
 
 }

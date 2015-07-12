@@ -40,66 +40,72 @@ public:
   VTKM_CONT_EXPORT
   ExplicitConnectivity()
   {
-    NumShapes = 0;
-    ConnectivityLength = 0;
+    this->NumShapes = 0;
+    this->ConnectivityLength = 0;
   }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetSchedulingDimensions() const
   {
-    return Shapes.GetNumberOfValues();
+    return this->Shapes.GetNumberOfValues();
   }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfElements() const
   {
-    return Shapes.GetNumberOfValues();
+    return this->Shapes.GetNumberOfValues();
   }
   VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfIndices(vtkm::Id index)
+  vtkm::Id GetNumberOfIndices(vtkm::Id index) const
   {
-    return NumIndices.GetPortalControl().Get(index);
+    return this->NumIndices.GetPortalControl().Get(index);
   }
   VTKM_CONT_EXPORT
-  vtkm::Id GetElementShapeType(vtkm::Id index)
+  vtkm::Id GetElementShapeType(vtkm::Id index) const
   {
-    return Shapes.GetPortalControl().Get(index);
+    return this->Shapes.GetPortalControl().Get(index);
   }
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_CONT_EXPORT
-  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+  void GetIndices(vtkm::Id index,
+                  vtkm::Vec<vtkm::Id,ItemTupleLength> &ids) const
   {
-    vtkm::Id n = GetNumberOfIndices(index);
-    vtkm::Id start = MapCellToConnectivityIndex.GetPortalControl().Get(index);
-    for (vtkm::IdComponent i=0; i<n && i<ItemTupleLength; i++)
-      ids[i] = Connectivity.GetPortalControl().Get(start+i);
+    vtkm::Id numIndices = this->GetNumberOfIndices(index);
+    vtkm::Id start =
+        this->MapCellToConnectivityIndex.GetPortalControl().Get(index);
+    for (vtkm::IdComponent i=0; i<numIndices && i<ItemTupleLength; i++)
+      ids[i] = this->Connectivity.GetPortalControl().Get(start+i);
   }
 
   /// First method to add cells -- one at a time.
   VTKM_CONT_EXPORT
   void PrepareToAddCells(vtkm::Id numShapes, vtkm::Id connectivityMaxLen)
   {
-    Shapes.Allocate(numShapes);
-    NumIndices.Allocate(numShapes);
-    Connectivity.Allocate(connectivityMaxLen);
-    MapCellToConnectivityIndex.Allocate(numShapes);
-    NumShapes = 0;
-    ConnectivityLength = 0;
+    this->Shapes.Allocate(numShapes);
+    this->NumIndices.Allocate(numShapes);
+    this->Connectivity.Allocate(connectivityMaxLen);
+    this->MapCellToConnectivityIndex.Allocate(numShapes);
+    this->NumShapes = 0;
+    this->ConnectivityLength = 0;
   }
 
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_CONT_EXPORT
-  void AddCell(vtkm::CellType cellType, int numVertices,
-                const vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+  void AddCell(vtkm::CellType cellType,
+               int numVertices,
+               const vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
-    Shapes.GetPortalControl().Set(NumShapes, cellType);
-    NumIndices.GetPortalControl().Set(NumShapes, numVertices);
-    for (int i=0; i < numVertices; ++i)
-      Connectivity.GetPortalControl().Set(ConnectivityLength+i,ids[i]);
-    MapCellToConnectivityIndex.GetPortalControl().Set(NumShapes,
-                                                      ConnectivityLength);
-    NumShapes++;
-    ConnectivityLength += numVertices;
+    this->Shapes.GetPortalControl().Set(this->NumShapes, cellType);
+    this->NumIndices.GetPortalControl().Set(this->NumShapes, numVertices);
+    for (vtkm::IdComponent i=0; i < numVertices; ++i)
+    {
+      this->Connectivity.GetPortalControl().Set(
+            this->ConnectivityLength+i,ids[i]);
+    }
+    this->MapCellToConnectivityIndex.GetPortalControl().Set(
+          this->NumShapes, this->ConnectivityLength);
+    this->NumShapes++;
+    this->ConnectivityLength += numVertices;
   }
 
   VTKM_CONT_EXPORT
@@ -132,12 +138,12 @@ public:
     this->ConnectivityLength = this->Connectivity.GetNumberOfValues();
 
     // allocate and build reverse index
-    MapCellToConnectivityIndex.Allocate(NumShapes);
+    this->MapCellToConnectivityIndex.Allocate(NumShapes);
     vtkm::Id counter = 0;
-    for (vtkm::Id i=0; i<NumShapes; ++i)
+    for (vtkm::Id i=0; i<this->NumShapes; ++i)
     {
-      MapCellToConnectivityIndex.GetPortalControl().Set(i, counter);
-      counter += NumIndices.GetPortalControl().Get(i);
+      this->MapCellToConnectivityIndex.GetPortalControl().Set(i, counter);
+      counter += this->NumIndices.GetPortalControl().Get(i);
     }
   }
 
@@ -156,11 +162,11 @@ public:
     this->ConnectivityLength = this->Connectivity.GetNumberOfValues();
 
     // allocate and build reverse index
-    MapCellToConnectivityIndex.Allocate(this->NumShapes);
+    this->MapCellToConnectivityIndex.Allocate(this->NumShapes);
     vtkm::Id counter = 0;
     for (vtkm::Id i=0; i<this->NumShapes; ++i)
     {
-      MapCellToConnectivityIndex.GetPortalControl().Set(i, counter);
+      this->MapCellToConnectivityIndex.GetPortalControl().Set(i, counter);
       counter += this->NumIndices.GetPortalConstControl().Get(i);
     }
   }
@@ -197,24 +203,38 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  virtual void PrintSummary(std::ostream &out)
+  virtual void PrintSummary(std::ostream &out) const
   {
-      out<<"    ExplicitConnectivity: #shapes= "<<NumShapes<<" #connectivity= "<<ConnectivityLength<<"\n";
-      out<<"     Shapes: ";
+      out << "    ExplicitConnectivity: #shapes= " << this->NumShapes
+          << " #connectivity= " << ConnectivityLength << std::endl;
+      out <<"     Shapes: ";
       printSummary_ArrayHandle(Shapes, out);
-      out<<"\n";
-      out<<"     NumIndices: ";
+      out << std::endl;
+      out << "     NumIndices: ";
       printSummary_ArrayHandle(NumIndices, out);
-      out<<"\n";
-      out<<"     Connectivity: ";
+      out << std::endl;
+      out << "     Connectivity: ";
       printSummary_ArrayHandle(Connectivity, out);
-      out<<"\n";
+      out << std::endl;
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &GetShapesArray() { return Shapes; }
-  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &GetNumIndicesArray() { return NumIndices; }
-  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &GetConnectivityArray() { return Connectivity; }
-  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &GetCellToConnectivityIndexArray() { return MapCellToConnectivityIndex; }
+  VTKM_CONT_EXPORT
+  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
+  GetShapesArray() const { return this->Shapes; }
+
+  VTKM_CONT_EXPORT
+  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
+  GetNumIndicesArray() const { return this->NumIndices; }
+
+  VTKM_CONT_EXPORT
+  const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
+  GetConnectivityArray() const { return this->Connectivity; }
+
+  VTKM_CONT_EXPORT
+  const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
+  GetCellToConnectivityIndexArray() const {
+    return this->MapCellToConnectivityIndex;
+  }
 
 private:
   vtkm::Id ConnectivityLength;
