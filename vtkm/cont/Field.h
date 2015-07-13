@@ -44,6 +44,15 @@ public:
     };
 
   /// constructors for points / whole mesh
+  VTKM_CONT_EXPORT
+  Field(std::string name, int order, Association association,
+      vtkm::cont::DynamicArrayHandle &data)
+    : Name(name), Order(order), AssocTag(association), Data(data)
+  {
+    VTKM_ASSERT_CONT(this->AssocTag == ASSOC_WHOLE_MESH ||
+                     this->AssocTag == ASSOC_POINTS);
+  }
+
   template <typename T>
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, ArrayHandle<T> &data)
@@ -87,6 +96,15 @@ public:
   }
 
   /// constructors for cell set associations
+  VTKM_CONT_EXPORT
+  Field(std::string name, int order, Association association,
+      const std::string& cellSetName, vtkm::cont::DynamicArrayHandle &data)
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName),
+      Data(data)
+  {
+    VTKM_ASSERT_CONT(this->AssocTag == ASSOC_CELL_SET);
+  }
+
   template <typename T>
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association,
@@ -128,6 +146,15 @@ public:
   }
 
   /// constructors for logical dimension associations
+  VTKM_CONT_EXPORT
+  Field(std::string name, int order, Association association, int logicalDim,
+      vtkm::cont::DynamicArrayHandle &data)
+    : Name(name), Order(order), AssocTag(association), AssocLogicalDim(logicalDim),
+      Data(data)
+  {
+    VTKM_ASSERT_CONT(this->AssocTag == ASSOC_LOGICAL_DIM);
+  }
+
   template <typename T>
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, int logicalDim,
