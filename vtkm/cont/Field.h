@@ -195,33 +195,39 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  const std::string &GetName()
+  const std::string &GetName() const
   {
     return this->Name;
   }
 
   VTKM_CONT_EXPORT
-  Association GetAssociation()
+  Association GetAssociation() const
   {
     return this->AssocTag;
   }
 
   VTKM_CONT_EXPORT
-  int GetOrder()
+  int GetOrder() const
   {
     return this->Order;
   }
 
   VTKM_CONT_EXPORT
-  std::string GetAssocCellSet()
+  std::string GetAssocCellSet() const
   {
     return this->AssocCellsetName;
   }
 
   VTKM_CONT_EXPORT
-  int GetAssocLogicalDim()
+  int GetAssocLogicalDim() const
   {
     return this->AssocLogicalDim;
+  }
+
+  VTKM_CONT_EXPORT
+  const vtkm::cont::DynamicArrayHandle &GetData() const
+  {
+    return this->Data;
   }
 
   VTKM_CONT_EXPORT
@@ -255,7 +261,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  virtual void PrintSummary(std::ostream &out)
+  virtual void PrintSummary(std::ostream &out) const
   {
       out<<"   "<<this->Name;
       out<<" assoc= ";
