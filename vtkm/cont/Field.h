@@ -47,7 +47,8 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association,
       vtkm::cont::DynamicArrayHandle &data)
-    : Name(name), Order(order), AssocTag(association), Data(data)
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
+      AssocLogicalDim(-1), Data(data)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_WHOLE_MESH ||
                      this->AssocTag == ASSOC_POINTS);
@@ -56,7 +57,8 @@ public:
   template <typename T>
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, ArrayHandle<T> &data)
-    : Name(name), Order(order), AssocTag(association)
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
+      AssocLogicalDim(-1)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_WHOLE_MESH ||
                      this->AssocTag == ASSOC_POINTS);
@@ -67,7 +69,8 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association,
       const std::vector<T> &data)
-    : Name(name), Order(order), AssocTag(association)
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
+      AssocLogicalDim(-1)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_WHOLE_MESH ||
                      this->AssocTag == ASSOC_POINTS);
@@ -78,7 +81,8 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, const T *data,
       vtkm::Id nvals)
-    : Name(name), Order(order), AssocTag(association)
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
+      AssocLogicalDim(-1)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_WHOLE_MESH ||
                      this->AssocTag == ASSOC_POINTS);
@@ -88,8 +92,8 @@ public:
   template<typename T>
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, T)
-    : Name(name), Order(order), AssocTag(association),
-      Data(vtkm::cont::ArrayHandle<T>())
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
+      AssocLogicalDim(-1), Data(vtkm::cont::ArrayHandle<T>())
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_WHOLE_MESH ||
                      this->AssocTag == ASSOC_POINTS);
@@ -100,7 +104,7 @@ public:
   Field(std::string name, int order, Association association,
       const std::string& cellSetName, vtkm::cont::DynamicArrayHandle &data)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName),
-      Data(data)
+      AssocLogicalDim(-1), Data(data)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_CELL_SET);
   }
@@ -109,7 +113,8 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association,
       const std::string& cellSetName, ArrayHandle<T> &data)
-    : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName)
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName),
+      AssocLogicalDim(-1)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_CELL_SET);
     this->SetData(data);
@@ -119,7 +124,8 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association,
       const std::string& cellSetName, const std::vector<T> &data)
-    : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName)
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName),
+      AssocLogicalDim(-1)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_CELL_SET);
     this->CopyData(&data[0], data.size());
@@ -129,7 +135,8 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association,
        const std::string& cellSetName, const T *data, vtkm::Id nvals)
-    : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName)
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName),
+      AssocLogicalDim(-1)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_CELL_SET);
     this->CopyData(data, nvals);
@@ -140,7 +147,7 @@ public:
   Field(std::string name, int order, Association association,
       const std::string& cellSetName, T)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName),
-      Data(vtkm::cont::ArrayHandle<T>())
+      AssocLogicalDim(-1), Data(vtkm::cont::ArrayHandle<T>())
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_CELL_SET);
   }
@@ -149,8 +156,8 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, int logicalDim,
       vtkm::cont::DynamicArrayHandle &data)
-    : Name(name), Order(order), AssocTag(association), AssocLogicalDim(logicalDim),
-      Data(data)
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
+      AssocLogicalDim(logicalDim), Data(data)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_LOGICAL_DIM);
   }
@@ -159,7 +166,8 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, int logicalDim,
       ArrayHandle<T> &data)
-    : Name(name), Order(order), AssocTag(association), AssocLogicalDim(logicalDim)
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
+      AssocLogicalDim(logicalDim)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_LOGICAL_DIM);
     this->SetData(data);
@@ -169,7 +177,8 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, int logicalDim,
       const std::vector<T> &data)
-    : Name(name), Order(order), AssocTag(association), AssocLogicalDim(logicalDim)
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
+      AssocLogicalDim(logicalDim)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_LOGICAL_DIM);
     this->CopyData(&data[0], data.size());
@@ -179,7 +188,8 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, int logicalDim,
       const T *data, vtkm::Id nvals)
-    : Name(name), Order(order), AssocTag(association), AssocLogicalDim(logicalDim)
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
+      AssocLogicalDim(logicalDim)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_LOGICAL_DIM);
     this->CopyData(data, nvals);
@@ -188,8 +198,8 @@ public:
   template<typename T>
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, int logicalDim, T)
-    : Name(name), Order(order), AssocTag(association), AssocLogicalDim(logicalDim),
-      Data(vtkm::cont::ArrayHandle<T>())
+    : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
+      AssocLogicalDim(logicalDim), Data(vtkm::cont::ArrayHandle<T>())
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_LOGICAL_DIM);
   }
