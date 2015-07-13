@@ -23,6 +23,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/Pair.h>
 #include <vtkm/internal/ExportMacros.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
 #include <vtkm/exec/cuda/internal/WrappedOperators.h>
@@ -51,20 +52,20 @@ namespace internal {
 namespace detail {
 
 // Tags to specify what type of thrust iterator to use.
-struct ThrustIteratorTransformTag {  };
+struct ThrustIteratorFromArrayPortalTag {  };
 struct ThrustIteratorDevicePtrTag {  };
 
 // Traits to help classify what thrust iterators will be used.
-template<class PortalType, class IteratorType>
+template<typename IteratorType>
 struct ThrustIteratorTag {
-  typedef ThrustIteratorTransformTag Type;
+  typedef ThrustIteratorFromArrayPortalTag Type;
 };
-template<typename PortalType, typename T>
-struct ThrustIteratorTag<PortalType, T *> {
+template<typename T>
+struct ThrustIteratorTag<T *> {
   typedef ThrustIteratorDevicePtrTag Type;
 };
-template<typename PortalType, typename T>
-struct ThrustIteratorTag<PortalType, const T*> {
+template<typename T>
+struct ThrustIteratorTag<const T*> {
   typedef ThrustIteratorDevicePtrTag Type;
 };
 
@@ -76,25 +77,32 @@ template<typename T> struct ThrustStripPointer<const T *> {
   typedef const T Type;
 };
 
-template<class PortalType, class Tag> struct IteratorChooser;
-template<class PortalType>
-struct IteratorChooser<PortalType, detail::ThrustIteratorTransformTag> {
+template<typename PortalType, typename Tag> struct IteratorChooser;
+template<typename PortalType>
+struct IteratorChooser<PortalType, detail::ThrustIteratorFromArrayPortalTag> {
   typedef vtkm::exec::cuda::internal::IteratorFromArrayPortal<PortalType> Type;
 };
-template<class PortalType>
+template<typename PortalType>
 struct IteratorChooser<PortalType, detail::ThrustIteratorDevicePtrTag> {
+  typedef vtkm::cont::ArrayPortalToIterators<PortalType> PortalToIteratorType;
+  typedef typename PortalToIteratorType::IteratorType ContIteratorType;
+
   typedef ::thrust::cuda::pointer<
-      typename detail::ThrustStripPointer<
-          typename PortalType::IteratorType>::Type> Type;
+          typename detail::ThrustStripPointer<ContIteratorType>::Type
+          > Type;
+
 };
 
-template<class PortalType>
+template<typename PortalType>
 struct IteratorTraits
 {
+  typedef vtkm::cont::ArrayPortalToIterators<PortalType> PortalToIteratorType;
   typedef typename detail::ThrustIteratorTag<
-                          PortalType,
-                          typename PortalType::IteratorType>::Type Tag;
-  typedef typename IteratorChooser<PortalType, Tag>::Type IteratorType;
+                  typename PortalToIteratorType::IteratorType>::Type Tag;
+  typedef typename IteratorChooser<
+                                PortalType,
+                                Tag
+                                >::Type IteratorType;
 };
 
 
@@ -113,15 +121,15 @@ MakeDevicePtr(const T *iter)
   return ::thrust::cuda::pointer<const T>(iter);
 }
 
-template<class PortalType>
+template<typename PortalType>
 VTKM_CONT_EXPORT
 typename IteratorTraits<PortalType>::IteratorType
-MakeIteratorBegin(PortalType portal, detail::ThrustIteratorTransformTag)
+MakeIteratorBegin(PortalType portal, detail::ThrustIteratorFromArrayPortalTag)
 {
   return vtkm::exec::cuda::internal::IteratorFromArrayPortal<PortalType>(portal,0);
 }
 
-template<class PortalType>
+template<typename PortalType>
 VTKM_CONT_EXPORT
 typename IteratorTraits<PortalType>::IteratorType
 MakeIteratorBegin(PortalType portal, detail::ThrustIteratorDevicePtrTag)
@@ -133,7 +141,7 @@ MakeIteratorBegin(PortalType portal, detail::ThrustIteratorDevicePtrTag)
 
 
 
-template<class PortalType>
+template<typename PortalType>
 VTKM_CONT_EXPORT
 typename detail::IteratorTraits<PortalType>::IteratorType
 IteratorBegin(PortalType portal)
@@ -142,7 +150,7 @@ IteratorBegin(PortalType portal)
   return detail::MakeIteratorBegin(portal, IteratorTag());
 }
 
-template<class PortalType>
+template<typename PortalType>
 VTKM_CONT_EXPORT
 typename detail::IteratorTraits<PortalType>::IteratorType
 IteratorEnd(PortalType portal)

@@ -21,6 +21,7 @@
 #define vtk_m_exec_cuda_internal_ArrayPortalFromThrust_h
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 
 #include <iterator>
 #include <boost/type_traits/remove_const.hpp>
@@ -362,6 +363,83 @@ private:
 }
 }
 } // namespace vtkm::exec::cuda::internal
+
+
+namespace vtkm {
+namespace cont {
+
+/// Partial specialization of \c ArrayPortalToIterators for \c
+/// ArrayPortalFromThrust. Returns the original array rather than
+/// the portal wrapped in an \c IteratorFromArrayPortal.
+///
+template<typename T>
+class ArrayPortalToIterators<
+    vtkm::exec::cuda::internal::ArrayPortalFromThrust<T> >
+{
+  typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust<T>
+      PortalType;
+public:
+
+  typedef typename PortalType::IteratorType IteratorType;
+
+  VTKM_CONT_EXPORT
+  ArrayPortalToIterators(const PortalType &portal)
+    : Iterator(portal.GetIteratorBegin()),
+      NumberOfValues(portal.GetNumberOfValues())
+  {  }
+
+  VTKM_CONT_EXPORT
+  IteratorType GetBegin() const { return this->Iterator; }
+
+  VTKM_CONT_EXPORT
+  IteratorType GetEnd() const {
+    IteratorType iterator = this->Iterator;
+    std::advance(iterator, this->NumberOfValues);
+    return iterator;
+  }
+
+private:
+  IteratorType Iterator;
+  vtkm::Id NumberOfValues;
+};
+
+/// Partial specialization of \c ArrayPortalToIterators for \c
+/// ConstArrayPortalFromThrust. Returns the original array rather than
+/// the portal wrapped in an \c IteratorFromArrayPortal.
+///
+template<typename T>
+class ArrayPortalToIterators<
+    vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T> >
+{
+  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T>
+      PortalType;
+public:
+
+  typedef typename PortalType::IteratorType IteratorType;
+
+  VTKM_CONT_EXPORT
+  ArrayPortalToIterators(const PortalType &portal)
+    : Iterator(portal.GetIteratorBegin()),
+      NumberOfValues(portal.GetNumberOfValues())
+  {  }
+
+  VTKM_CONT_EXPORT
+  IteratorType GetBegin() const { return this->Iterator; }
+
+  VTKM_CONT_EXPORT
+  IteratorType GetEnd() const {
+    IteratorType iterator = this->Iterator;
+    std::advance(iterator, this->NumberOfValues);
+    return iterator;
+  }
+
+private:
+  IteratorType Iterator;
+  vtkm::Id NumberOfValues;
+};
+
+}
+} // namespace vtkm::cont
 
 
 #endif //vtk_m_exec_cuda_internal_ArrayPortalFromThrust_h

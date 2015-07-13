@@ -44,7 +44,6 @@ class ArrayPortalImplicit
 {
 public:
   typedef ValueType_ ValueType;
-  typedef ValueType_ IteratorType;
   typedef FunctorType_ FunctorType;
 
   VTKM_EXEC_CONT_EXPORT
