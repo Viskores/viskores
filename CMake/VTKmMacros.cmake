@@ -388,6 +388,150 @@ function(vtkm_worklet_unit_tests device_adapter)
   set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
 endfunction(vtkm_worklet_unit_tests)
 
+# Save the benchmarks to run with each device adapter
+# This is based on vtkm_save_worklet_unit_tests
+# Usage:
+#
+# vtkm_save_benchmarks( sources )
+#
+# notes: will save the sources absolute path as the
+# vtkm_benchmarks_sources global property
+function(vtkm_save_benchmarks)
+
+  #create the benchmarks driver when we are called, since
+  #the driver expects the files to be in the same
+  #directory as the test driver
+	#TODO: This is probably ok to use for benchmarks as well
+  create_test_sourcelist(bench_sources BenchmarkDriver.cxx ${ARGN})
+
+  #store the absolute path for the driver and all the test
+  #files
+  set(driver ${CMAKE_CURRENT_BINARY_DIR}/BenchmarkDriver.cxx)
+  set(cxx_sources)
+  set(cu_sources)
+
+  #we need to store the absolute source for the file so that
+  #we can properly compile it into the benchmark driver. At
+  #the same time we want to configure each file into the build
+  #directory as a .cu file so that we can compile it with cuda
+  #if needed
+  foreach(fname ${ARGN})
+    set(absPath)
+
+    get_filename_component(absPath ${fname} ABSOLUTE)
+    get_filename_component(file_name_only ${fname} NAME_WE)
+
+    set(cuda_file_name "${CMAKE_CURRENT_BINARY_DIR}/${file_name_only}.cu")
+    configure_file("${absPath}"
+                   "${cuda_file_name}"
+                   COPYONLY)
+    list(APPEND cxx_sources ${absPath})
+    list(APPEND cu_sources ${cuda_file_name})
+  endforeach()
+
+  #we create a property that holds all the worklets to test,
+  #but don't actually attempt to create a unit test with the yet.
+  #That is done by each device adapter
+  set_property( GLOBAL APPEND
+                PROPERTY vtkm_benchmarks_sources ${cxx_sources})
+  set_property( GLOBAL APPEND
+                PROPERTY vtkm_benchmarks_cu_sources ${cu_sources})
+  set_property( GLOBAL APPEND
+                PROPERTY vtkm_benchmarks_drivers ${driver})
+
+endfunction(vtkm_save_benchmarks)
+
+# Call each benchmark for the given device adapter
+# Usage:
+#
+# vtkm_benchmark( device_adapter )
+#
+# notes: will look for the vtkm_benchmarks_sources global
+# property to find what are the benchmarks that need to be
+# compiled for the give device adapter
+function(vtkm_benchmarks device_adapter)
+
+  set(benchmark_srcs)
+  get_property(benchmark_srcs GLOBAL
+               PROPERTY vtkm_benchmarks_sources )
+
+  set(benchmark_drivers)
+  get_property(benchmark_drivers GLOBAL
+               PROPERTY vtkm_benchmarks_drivers )
+
+  #detect if we are generating a .cu files
+  set(is_cuda FALSE)
+  set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
+  if("${device_adapter}" STREQUAL "VTKM_DEVICE_ADAPTER_CUDA")
+    set(is_cuda TRUE)
+    #if we are generating cu files need to setup three things.
+    #1. us the configured .cu files
+    #2. Explicitly set the cuda device adapter as a define this is currently
+    #   done as a work around since the cuda executable ignores compile
+    #   definitions
+    #3. Set BOOST_SP_DISABLE_THREADS to disable threading warnings
+    #4. Disable unused function warnings
+    #   the FindCUDA module and helper methods don't read target level
+    #   properties so we have to modify CUDA_NVCC_FLAGS  instead of using
+    #   target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
+    get_property(benchmark_srcs GLOBAL PROPERTY vtkm_benchmarks_cu_sources )
+
+    list(APPEND CUDA_NVCC_FLAGS "-DVTKM_DEVICE_ADAPTER=${device_adapter}")
+    list(APPEND CUDA_NVCC_FLAGS "-DBOOST_SP_DISABLE_THREADS")
+    list(APPEND CUDA_NVCC_FLAGS "-w")
+  endif()
+
+
+  if(VTKm_ENABLE_BENCHMARKS AND VTKm_ENABLE_TESTING)
+    string(REPLACE "VTKM_DEVICE_ADAPTER_" "" device_type ${device_adapter})
+
+    vtkm_get_kit_name(kit)
+
+    #inject the device adapter into the benchmark program name so each one is unique
+    set(benchmark_prog Benchmarks_${device_type})
+
+    if(is_cuda)
+      cuda_add_executable(${benchmark_prog} ${benchmark_drivers} ${benchmark_srcs})
+    else()
+      add_executable(${benchmark_prog} ${benchmark_drivers} ${benchmark_srcs})
+      if("${device_adapter}" STREQUAL "VTKM_DEVICE_ADAPTER_TBB")
+        target_link_libraries(${benchmark_prog} ${TBB_LIBRARIES})
+      endif()
+    endif()
+
+    if(MSVC)
+      #disable MSVC CRT and SCL warnings as they recommend using non standard
+      #c++ extensions
+      set_property(TARGET ${benchmark_prog}
+                   APPEND PROPERTY COMPILE_DEFINITIONS
+                   "_SCL_SECURE_NO_WARNINGS"
+                   "_CRT_SECURE_NO_WARNINGS"
+                   )
+
+      #enable large object support 2^32 addressable sections
+      set_property(TARGET ${benchmark_prog}
+                   APPEND PROPERTY COMPILE_FLAGS
+                   "/bigobj"
+                   )
+    endif()
+
+    #increase warning level if needed, we are going to skip cuda here
+    #to remove all the false positive unused function warnings that cuda
+    #generates
+    if(VTKm_EXTRA_COMPILER_WARNINGS)
+      set_property(TARGET ${benchmark_prog}
+                   APPEND PROPERTY COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA} )
+    endif()
+
+    #set the device adapter on the executable
+    set_property(TARGET ${benchmark_prog}
+                 APPEND
+                 PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=${device_adapter}" )
+  endif()
+
+  set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+endfunction(vtkm_benchmarks)
+
 # The Thrust project is not as careful as the VTKm project in avoiding warnings
 # on shadow variables and unused arguments.  With a real GCC compiler, you
 # can disable these warnings inline, but with something like nvcc, those
