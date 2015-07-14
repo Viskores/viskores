@@ -22,6 +22,8 @@
 #ifndef vtk_m_cont_testing_TestingFancyArrayHandles_h
 #define vtk_m_cont_testing_TestingFancyArrayHandles_h
 
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
@@ -34,6 +36,8 @@
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/testing/Testing.h>
+
+#include <vector>
 
 namespace fancy_array_detail
 {
@@ -159,99 +163,46 @@ public:
 
 
 private:
-  struct TestZipAsInput
+
+  struct TestCompositeAsInput
   {
-    template< typename KeyType, typename ValueType >
-    VTKM_CONT_EXPORT
-    void operator()(vtkm::Pair<KeyType,ValueType> vtkmNotUsed(pair)) const
+    template< typename ValueType >
+    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
     {
-      typedef vtkm::Pair< KeyType, ValueType > PairType;
-      typedef typename vtkm::VecTraits<KeyType>::ComponentType KeyComponentType;
-      typedef typename vtkm::VecTraits<ValueType>::ComponentType ValueComponentType;
+      //hard-coded to make a vtkm::Vec<ValueType,3> composite vector
+      //for each ValueType.
 
+      typedef typename vtkm::cont::ArrayHandleCompositeVectorType<
+        vtkm::cont::ArrayHandle< ValueType >,
+        vtkm::cont::ArrayHandle< ValueType >,
+        vtkm::cont::ArrayHandle< ValueType > >::type CompositeHandleType;
 
-      KeyType testKeys[ARRAY_SIZE];
-      ValueType testValues[ARRAY_SIZE];
+      const ValueType value = TestValue(13, ValueType());
+      std::vector< ValueType > compositeData( ARRAY_SIZE, value );
+      vtkm::cont::ArrayHandle< ValueType > compositeInput =
+                                vtkm::cont::make_ArrayHandle(compositeData);
 
-      for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
-        {
-        testKeys[i] = KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i));
-        testValues[i] = ValueType(static_cast<ValueComponentType>(i));
-        }
-      vtkm::cont::ArrayHandle< KeyType > keys =
-                          vtkm::cont::make_ArrayHandle(testKeys, ARRAY_SIZE);
-      vtkm::cont::ArrayHandle< ValueType > values =
-                          vtkm::cont::make_ArrayHandle(testValues, ARRAY_SIZE);
+      CompositeHandleType composite =
+          vtkm::cont::make_ArrayHandleCompositeVector(compositeInput, 0,
+                                                      compositeInput, 1,
+                                                      compositeInput, 2);
 
-      vtkm::cont::ArrayHandleZip<
-          vtkm::cont::ArrayHandle< KeyType >,
-          vtkm::cont::ArrayHandle< ValueType > > zip =
-                                vtkm::cont::make_ArrayHandleZip(keys, values);
+      vtkm::cont::ArrayHandle< vtkm::Vec<ValueType, 3> > result;
 
-      vtkm::cont::ArrayHandle< PairType > result;
-
-      vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
-      dispatcher.Invoke(zip, result);
+      vtkm::worklet::DispatcherMapField<PassThrough, DeviceAdapterTag> dispatcher;
+      dispatcher.Invoke(composite, result);
 
       //verify that the control portal works
-      for(int i=0; i < ARRAY_SIZE; ++i)
-        {
-        const PairType result_v = result.GetPortalConstControl().Get(i);
-        const PairType correct_value(
-              KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i)),
-              ValueType(static_cast<ValueComponentType>(i)));
-        VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
-                         "ArrayHandleZip Failed as input");
-        }
-    }
-
-  };
-
-  struct TestZipAsOutput
-  {
-    template< typename KeyType, typename ValueType >
-    VTKM_CONT_EXPORT
-    void operator()(vtkm::Pair<KeyType,ValueType> vtkmNotUsed(pair)) const
-    {
-      typedef vtkm::Pair< KeyType, ValueType > PairType;
-      typedef typename vtkm::VecTraits<KeyType>::ComponentType KeyComponentType;
-      typedef typename vtkm::VecTraits<ValueType>::ComponentType ValueComponentType;
-
-      PairType testKeysAndValues[ARRAY_SIZE];
       for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
         {
-        testKeysAndValues[i] =
-            PairType(KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i)),
-                     ValueType(static_cast<ValueComponentType>(i)) );
-        }
-      vtkm::cont::ArrayHandle< PairType > input =
-                    vtkm::cont::make_ArrayHandle(testKeysAndValues, ARRAY_SIZE);
-
-      vtkm::cont::ArrayHandle< KeyType > result_keys;
-      vtkm::cont::ArrayHandle< ValueType > result_values;
-      vtkm::cont::ArrayHandleZip<
-          vtkm::cont::ArrayHandle< KeyType >,
-          vtkm::cont::ArrayHandle< ValueType > > result_zip =
-                      vtkm::cont::make_ArrayHandleZip(result_keys, result_values);
-
-      vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
-      dispatcher.Invoke(input, result_zip);
-
-      //now the two arrays we have zipped should have data inside them
-      for(int i=0; i < ARRAY_SIZE; ++i)
-        {
-        const KeyType result_key = result_keys.GetPortalConstControl().Get(i);
-        const ValueType result_value = result_values.GetPortalConstControl().Get(i);
-
-        VTKM_TEST_ASSERT(
-              test_equal(result_key, KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i))),
-              "ArrayHandleZip Failed as input for key");
-        VTKM_TEST_ASSERT(
-              test_equal(result_value, ValueType(static_cast<ValueComponentType>(i))),
-              "ArrayHandleZip Failed as input for value");
+        const vtkm::Vec<ValueType, 3> result_v =
+                                    result.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(test_equal(result_v, vtkm::Vec<ValueType, 3>(value)),
+                        "CompositeVector Handle Failed");
         }
     }
   };
+
 
   struct TestConstantAsInput
   {
@@ -403,52 +354,6 @@ private:
     }
   };
 
-struct TestPermutationAsOutput
-  {
-    template< typename ValueType>
-    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
-    {
-      const vtkm::Id length = ARRAY_SIZE;
-
-      typedef vtkm::cont::ArrayHandleCounting< vtkm::Id > KeyHandleType;
-      typedef vtkm::cont::ArrayHandle< ValueType > ValueHandleType;
-      typedef vtkm::cont::ArrayHandlePermutation< KeyHandleType,
-                                                  ValueHandleType
-                                                  > PermutationHandleType;
-
-      typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
-      vtkm::cont::ArrayHandle<ValueType> input;
-      typedef typename vtkm::cont::ArrayHandle<ValueType>::PortalControl Portal;
-      input.Allocate(length);
-      Portal inputPortal = input.GetPortalControl();
-      for(vtkm::Id i=0; i < length; ++i)
-        {
-        inputPortal.Set(i,ValueType(ComponentType(i)));
-        }
-
-      ValueHandleType values;
-      values.Allocate(length*2);
-
-      KeyHandleType counting =
-        vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(length, length);
-
-      PermutationHandleType permutation =
-        vtkm::cont::make_ArrayHandlePermutation(counting, values);
-      vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
-      dispatcher.Invoke(input, permutation);
-
-      //verify that the control portal works
-      for(vtkm::Id i=0; i <length; ++i)
-        {
-        const ValueType result_v = permutation.GetPortalConstControl().Get( i );
-        const ValueType correct_value = ValueType(ComponentType(i));
-        VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
-                         "Permutation Handle Failed As Output");
-        }
-    }
-  };
-
-
   struct TestTransformAsInput
   {
     template< typename ValueType>
@@ -547,6 +452,147 @@ struct TestPermutationAsOutput
     }
   };
 
+
+  struct TestZipAsInput
+  {
+    template< typename KeyType, typename ValueType >
+    VTKM_CONT_EXPORT
+    void operator()(vtkm::Pair<KeyType,ValueType> vtkmNotUsed(pair)) const
+    {
+      typedef vtkm::Pair< KeyType, ValueType > PairType;
+      typedef typename vtkm::VecTraits<KeyType>::ComponentType KeyComponentType;
+      typedef typename vtkm::VecTraits<ValueType>::ComponentType ValueComponentType;
+
+
+      KeyType testKeys[ARRAY_SIZE];
+      ValueType testValues[ARRAY_SIZE];
+
+      for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+        {
+        testKeys[i] = KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i));
+        testValues[i] = ValueType(static_cast<ValueComponentType>(i));
+        }
+      vtkm::cont::ArrayHandle< KeyType > keys =
+                          vtkm::cont::make_ArrayHandle(testKeys, ARRAY_SIZE);
+      vtkm::cont::ArrayHandle< ValueType > values =
+                          vtkm::cont::make_ArrayHandle(testValues, ARRAY_SIZE);
+
+      vtkm::cont::ArrayHandleZip<
+          vtkm::cont::ArrayHandle< KeyType >,
+          vtkm::cont::ArrayHandle< ValueType > > zip =
+                                vtkm::cont::make_ArrayHandleZip(keys, values);
+
+      vtkm::cont::ArrayHandle< PairType > result;
+
+      vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
+      dispatcher.Invoke(zip, result);
+
+      //verify that the control portal works
+      for(int i=0; i < ARRAY_SIZE; ++i)
+        {
+        const PairType result_v = result.GetPortalConstControl().Get(i);
+        const PairType correct_value(
+              KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i)),
+              ValueType(static_cast<ValueComponentType>(i)));
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
+                         "ArrayHandleZip Failed as input");
+        }
+    }
+  };
+
+  struct TestPermutationAsOutput
+  {
+    template< typename ValueType>
+    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    {
+      const vtkm::Id length = ARRAY_SIZE;
+
+      typedef vtkm::cont::ArrayHandleCounting< vtkm::Id > KeyHandleType;
+      typedef vtkm::cont::ArrayHandle< ValueType > ValueHandleType;
+      typedef vtkm::cont::ArrayHandlePermutation< KeyHandleType,
+                                                  ValueHandleType
+                                                  > PermutationHandleType;
+
+      typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+      vtkm::cont::ArrayHandle<ValueType> input;
+      typedef typename vtkm::cont::ArrayHandle<ValueType>::PortalControl Portal;
+      input.Allocate(length);
+      Portal inputPortal = input.GetPortalControl();
+      for(vtkm::Id i=0; i < length; ++i)
+        {
+        inputPortal.Set(i,ValueType(ComponentType(i)));
+        }
+
+      ValueHandleType values;
+      values.Allocate(length*2);
+
+      KeyHandleType counting =
+        vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(length, length);
+
+      PermutationHandleType permutation =
+        vtkm::cont::make_ArrayHandlePermutation(counting, values);
+      vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
+      dispatcher.Invoke(input, permutation);
+
+      //verify that the control portal works
+      for(vtkm::Id i=0; i <length; ++i)
+        {
+        const ValueType result_v = permutation.GetPortalConstControl().Get( i );
+        const ValueType correct_value = ValueType(ComponentType(i));
+        VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
+                         "Permutation Handle Failed As Output");
+        }
+    }
+  };
+
+
+  struct TestZipAsOutput
+  {
+    template< typename KeyType, typename ValueType >
+    VTKM_CONT_EXPORT
+    void operator()(vtkm::Pair<KeyType,ValueType> vtkmNotUsed(pair)) const
+    {
+      typedef vtkm::Pair< KeyType, ValueType > PairType;
+      typedef typename vtkm::VecTraits<KeyType>::ComponentType KeyComponentType;
+      typedef typename vtkm::VecTraits<ValueType>::ComponentType ValueComponentType;
+
+      PairType testKeysAndValues[ARRAY_SIZE];
+      for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+        {
+        testKeysAndValues[i] =
+            PairType(KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i)),
+                     ValueType(static_cast<ValueComponentType>(i)) );
+        }
+      vtkm::cont::ArrayHandle< PairType > input =
+                    vtkm::cont::make_ArrayHandle(testKeysAndValues, ARRAY_SIZE);
+
+      vtkm::cont::ArrayHandle< KeyType > result_keys;
+      vtkm::cont::ArrayHandle< ValueType > result_values;
+      vtkm::cont::ArrayHandleZip<
+          vtkm::cont::ArrayHandle< KeyType >,
+          vtkm::cont::ArrayHandle< ValueType > > result_zip =
+                      vtkm::cont::make_ArrayHandleZip(result_keys, result_values);
+
+      vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
+      dispatcher.Invoke(input, result_zip);
+
+      //now the two arrays we have zipped should have data inside them
+      for(int i=0; i < ARRAY_SIZE; ++i)
+        {
+        const KeyType result_key = result_keys.GetPortalConstControl().Get(i);
+        const ValueType result_value = result_values.GetPortalConstControl().Get(i);
+
+        VTKM_TEST_ASSERT(
+              test_equal(result_key, KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i))),
+              "ArrayHandleZip Failed as input for key");
+        VTKM_TEST_ASSERT(
+              test_equal(result_value, ValueType(static_cast<ValueComponentType>(i))),
+              "ArrayHandleZip Failed as input for value");
+        }
+    }
+  };
+
+
  struct ZipTypesToTest
     : vtkm::ListTagBase< vtkm::Pair< vtkm::UInt8, vtkm::Id >,
                          vtkm::Pair< vtkm::Int32, vtkm::Vec< vtkm::Float32, 3> >,
@@ -579,10 +625,10 @@ struct TestPermutationAsOutput
       std::cout << "Doing FancyArrayHandle tests" << std::endl;
 
       std::cout << "-------------------------------------------" << std::endl;
-      std::cout << "Testing ArrayHandleZip as Input" << std::endl;
+      std::cout << "Testing ArrayHandleCompositeVector as Input" << std::endl;
       vtkm::testing::Testing::TryTypes(
-                              TestingFancyArrayHandles<DeviceAdapterTag>::TestZipAsInput(),
-                              ZipTypesToTest());
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestCompositeAsInput(),
+                              vtkm::TypeListTagScalarAll());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleConstant as Input" << std::endl;
@@ -621,9 +667,9 @@ struct TestPermutationAsOutput
                               HandleTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
-      std::cout << "Testing ArrayHandleZip as Output" << std::endl;
+      std::cout << "Testing ArrayHandleZip as Input" << std::endl;
       vtkm::testing::Testing::TryTypes(
-                              TestingFancyArrayHandles<DeviceAdapterTag>::TestZipAsOutput(),
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestZipAsInput(),
                               ZipTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
@@ -631,6 +677,12 @@ struct TestPermutationAsOutput
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestPermutationAsOutput(),
                               HandleTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleZip as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestZipAsOutput(),
+                              ZipTypesToTest());
     }
   };
   public:
