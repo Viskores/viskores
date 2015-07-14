@@ -20,13 +20,13 @@
 
 set(unit_tests
   UnitTestCellAverage.cxx
+  UnitTestExternalFaces.cxx 
   UnitTestPointElevation.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyRegular.cxx
   UnitTestVertexClustering.cxx
-  UnitTestExternalFaces.cxx 
  )
 
 vtkm_save_worklet_unit_tests(${unit_tests})

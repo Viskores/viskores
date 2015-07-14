@@ -23,8 +23,6 @@
 #include <vtkm/Math.h>
 #include <vtkm/CellType.h>
 
-
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -33,6 +31,7 @@
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/ExplicitConnectivity.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Timer.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
@@ -60,29 +59,52 @@ namespace worklet
         template<typename T>
         VTKM_EXEC_CONT_EXPORT bool operator()(const T &x) const
         {
-            return x == 1;
+            return x == T(1);
+        }
+    };
+
+    struct Id3LessThan
+    {
+        template<typename T>
+        VTKM_EXEC_CONT_EXPORT bool operator()(const vtkm::Id3 &a,
+                                              const vtkm::Id3 &b) const
+        {
+            bool isLessThan = false;
+            if(a[0] < b[0])
+                isLessThan = true;
+            else if(a[0] == b[0])
+            {
+                if(a[1] < b[1])
+                    isLessThan = true;
+                else if(a[1] == b[1])
+                {
+                    if(a[2] < b[2])
+                        isLessThan = true;
+                }
+            }
+            return isLessThan;
         }
     };
 
     //Binary operator
     //Returns (a-b) mod c
-    class Subtract : public vtkm::worklet::WorkletMapField
+    class SubtractAndModulus : public vtkm::worklet::WorkletMapField
     {
         private:
-            vtkm::Id modulus;
+            vtkm::Id Modulus;
 
         public:
             typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
             typedef _3 ExecutionSignature(_1, _2);
 
             VTKM_CONT_EXPORT
-            Subtract(const vtkm::Id &c) : modulus(c) { };
+            SubtractAndModulus(const vtkm::Id &c) : Modulus(c) { };
 
             template<typename T>
             VTKM_EXEC_CONT_EXPORT
             T operator()(const T &a, const T &b) const
             {
-                return (a - b) % modulus;
+                return (a - b) % Modulus;
             }
     };
 
@@ -93,9 +115,6 @@ namespace worklet
             typedef void ControlSignature(FieldIn<>, FieldOut<>);
             typedef _2 ExecutionSignature(_1);
             typedef _1 InputDomain;
-
-            VTKM_CONT_EXPORT
-            NumFacesPerCell() { };
 
             template<typename T>
             VTKM_EXEC_EXPORT
@@ -113,20 +132,18 @@ namespace worklet
     //Worklet that returns a hash key for a face
     class FaceHashKey : public vtkm::worklet::WorkletMapTopology
     {
-        static const int LEN_IDS = 4; //The max num of nodes in a cell
+        static const int LEN_IDS = 4;
 
         public:
-            typedef void ControlSignature(//FieldSrcIn<Scalar> inNodes,
-                                          FieldDestIn<AllTypes> localFaceIds,
+            typedef void ControlSignature(FieldDestIn<AllTypes> localFaceIds,
                                           TopologyIn<LEN_IDS> topology,
+                                          FieldDestOut<VecCommon> faceVertices,
                                           FieldDestOut<AllTypes> faceHashes
                                           );
-            typedef void ExecutionSignature(//_1, _2, _4, _5, _6,
-                                            _1, _3,
+            typedef void ExecutionSignature(_1, _3, _4,
                                             vtkm::exec::arg::TopologyIdCount,
                                             vtkm::exec::arg::TopologyElementType,
                                             vtkm::exec::arg::TopologyIdSet);
-            //typedef _3 InputDomain;
             typedef _2 InputDomain;
 
             VTKM_CONT_EXPORT
@@ -134,8 +151,8 @@ namespace worklet
 
             template<typename T>
             VTKM_EXEC_EXPORT
-            void operator()(//const vtkm::exec::TopologyData<T,LEN_IDS> & vtkmNotUsed(nodevals),
-                            const T &cellFaceId,
+            void operator()(const T &cellFaceId,
+                            vtkm::Vec<T, 3> &faceVertices,
                             T &faceHash,
                             const vtkm::Id & vtkmNotUsed(numNodes),
                             const vtkm::Id &cellType,
@@ -143,36 +160,12 @@ namespace worklet
             {
                 if (cellType == vtkm::VTKM_TETRA)
                 {
+                    vtkm::Id faceIdTable[12] = {0,1,2,0,1,3,0,2,3,1,2,3};
+
                     //Assign cell points/nodes to this face
-                    vtkm::Id faceP1, faceP2, faceP3;
-                    if(cellFaceId == 0)
-                    {
-                        //Face A: (0, 1, 2)
-                        faceP1 = cellNodeIds[0];
-                        faceP2 = cellNodeIds[1];
-                        faceP3 = cellNodeIds[2];
-                    }
-                    else if (cellFaceId == 1)
-                    {
-                        //Face B: (0, 1, 3)
-                        faceP1 = cellNodeIds[0];
-                        faceP2 = cellNodeIds[1];
-                        faceP3 = cellNodeIds[3];
-                    }
-                    else if (cellFaceId == 2)
-                    {
-                        //Face C: (0, 2, 3)
-                        faceP1 = cellNodeIds[0];
-                        faceP2 = cellNodeIds[2];
-                        faceP3 = cellNodeIds[3];
-                    }
-                    else if (cellFaceId == 3)
-                    {
-                        //Face D: (1, 2, 3)
-                        faceP1 = cellNodeIds[1];
-                        faceP2 = cellNodeIds[2];
-                        faceP3 = cellNodeIds[3];
-                    }
+                    vtkm::Id faceP1 = cellNodeIds[faceIdTable[cellFaceId*3]];
+                    vtkm::Id faceP2 = cellNodeIds[faceIdTable[cellFaceId*3] + 1];
+                    vtkm::Id faceP3 = cellNodeIds[faceIdTable[cellFaceId*3] + 2];
 
                     //Sort the face points/nodes in ascending order
                     vtkm::Id sorted[3] = {faceP1, faceP2, faceP3};
@@ -195,6 +188,11 @@ namespace worklet
                         sorted[1] = sorted[2];
                         sorted[2] = temp;
                     }
+                    /*
+                    faceVertices[0] = sorted[0];
+                    faceVertices[1] = sorted[1];
+                    faceVertices[2] = sorted[2];
+                    */
 
                     //Calculate a hash key for the sorted points of this face
                     unsigned int h  = 2166136261;
@@ -214,7 +212,10 @@ namespace worklet
       void run(const vtkm::cont::ArrayHandle<vtkm::Id, StorageT> shapes,
                const vtkm::cont::ArrayHandle<vtkm::Id, StorageU> numIndices,
                const vtkm::cont::ArrayHandle<vtkm::Id, StorageV> conn,
-               vtkm::Id &output_numExtFaces)
+               vtkm::cont::ArrayHandle<vtkm::Id, StorageT> &output_shapes,
+               vtkm::cont::ArrayHandle<vtkm::Id, StorageU> &output_numIndices,
+               vtkm::cont::ArrayHandle<vtkm::Id, StorageV> &output_conn
+               )
     {
 
       //Create a worklet to map the number of faces to each cell
@@ -222,7 +223,7 @@ namespace worklet
       vtkm::worklet::DispatcherMapField<NumFacesPerCell> numFacesDispatcher;
 
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-        vtkm::cont::DeviceAdapterTimerImplementation<DeviceAdapter> timer;
+        vtkm::cont::Timer<DeviceAdapter> timer;
       #endif
       numFacesDispatcher.Invoke(shapes, facesPerCell);
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
@@ -258,19 +259,19 @@ namespace worklet
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         std::cout << "UpperBounds," << timer.GetElapsedTime() << "\n";
       #endif
-      vtkm::worklet::DispatcherMapField<Subtract> subtractDispatcher(Subtract(4));
+      vtkm::worklet::DispatcherMapField<SubtractAndModulus> subtractDispatcher(SubtractAndModulus(4));
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         timer.Reset();
       #endif
       subtractDispatcher.Invoke(countingArray, face2CellId, localFaceIds);
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-        std::cout << "SubtractWorklet," << timer.GetElapsedTime() << "\n";
+        std::cout << "SubtractAndModulusWorklet," << timer.GetElapsedTime() << "\n";
       #endif
       countingArray.ReleaseResources();
 
       //Construct a connectivity array of length 4*totalFaces (4 repeat entries for each tet)
       vtkm::cont::ArrayHandle<vtkm::Id> faceConn;
-      typename vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl portal =
+      typename vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl facePortal =
                 conn.GetPortalConstControl();
       faceConn.Allocate(static_cast<vtkm::Id>(4 * totalFaces));
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
@@ -280,7 +281,7 @@ namespace worklet
       for(int i = 0; i < facesPerCell.GetNumberOfValues(); i++)
           for(int j = 0; j < facesPerCell.GetPortalConstControl().Get(i); j++)
               for(int k = 0; k < 4; k++)
-                  faceConn.GetPortalControl().Set(index++, portal.Get(4*i + k));
+                  faceConn.GetPortalControl().Set(index++, facePortal.Get(4*i + k));
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         std::cout << "FaceConnectivityLoop," << timer.GetElapsedTime() << "\n";
       #endif
@@ -296,11 +297,13 @@ namespace worklet
       PermutedExplicitConnectivity permConn;
       permConn.Fill(pt1, pt2, faceConn);
       vtkm::cont::ArrayHandle<vtkm::Id> faceHashes;
+      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3> > faceVertices;
       vtkm::worklet::DispatcherMapTopology<FaceHashKey> faceHashDispatcher;
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         timer.Reset();
       #endif
-      faceHashDispatcher.Invoke(localFaceIds, permConn, faceHashes);
+      faceHashDispatcher.Invoke(localFaceIds, permConn, faceVertices, faceHashes);
+      /*
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         std::cout << "FaceHashKeyWorklet," << timer.GetElapsedTime() << "\n";
       #endif
@@ -308,25 +311,39 @@ namespace worklet
       localFaceIds.ReleaseResources();
 
       //Sort the faces in ascending order by hash key
+
+      //vtkm::cont::ArrayHandleCounting<vtkm::Id> faceIdKeys(vtkm::Id(0), vtkm::Id(totalFaces));
+
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         timer.Reset();
       #endif
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(faceHashes);
+      //vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(faceHashes);
+      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(faceVertices, Id3LessThan());
+
+
+
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         std::cout << "Sort," << timer.GetElapsedTime() << "\n";
       #endif
 
+      //1. Hash a tuple of face vertices
+      //Associate the cell Id with each face
+      //2. Sort the vtkm::Id hashes
+      //3. Remove the non-unique hashes
+
       //Search neighboring faces/hashes for duplicates - the internal faces
-      vtkm::cont::ArrayHandle<vtkm::Id> uniqueFaceHashes;
+      //vtkm::cont::ArrayHandle<vtkm::Id> uniqueFaceHashes;
+      vtkm::cont::ArrayHandle<vtkm::Id3> uniqueFaceVertices;
       vtkm::cont::ArrayHandle<vtkm::Id> uniqueHashCounts;
-      vtkm::cont::ArrayHandle<vtkm::Id> externalFaceHashes;
+      //vtkm::cont::ArrayHandle<vtkm::Id> externalFaceHashes;
+      vtkm::cont::ArrayHandle<vtkm::Id3> externalFaces;
       vtkm::cont::ArrayHandleConstant<vtkm::Id> ones(1, totalFaces); //Initially all 1's
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         timer.Reset();
       #endif
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ReduceByKey(faceHashes,
+      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ReduceByKey(faceVertices,
                                                                      ones,
-                                                                     uniqueFaceHashes,
+                                                                     uniqueFaceVertices,
                                                                      uniqueHashCounts,
                                                                      vtkm::internal::Add());
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
@@ -340,22 +357,38 @@ namespace worklet
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         timer.Reset();
       #endif
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::StreamCompact(uniqueFaceHashes,
+      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::StreamCompact(uniqueFaceVertices,
                                                                        uniqueHashCounts,
-                                                                       externalFaceHashes,
+                                                                       externalFaces,
                                                                        IsUnity());
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         std::cout << "StreamCompact," << timer.GetElapsedTime() << "\n";
       #endif
-      uniqueFaceHashes.ReleaseResources();
+      //uniqueFaceHashes.ReleaseResources();
       uniqueHashCounts.ReleaseResources();
 
       //Generate output - the number of external faces
-      output_numExtFaces = externalFaceHashes.GetNumberOfValues();
+      vtkm::Id output_numExtFaces = externalFaces.GetNumberOfValues();
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         std::cout << "Total External Faces = " << output_numExtFaces << std::endl;
       #endif
-      externalFaceHashes.ReleaseResources();
+
+      typename vtkm::cont::ArrayHandle<vtkm::Id3>::PortalConstControl extFacePortal =
+                externalFaces.GetPortalConstControl();
+
+      output_shapes.Allocate(output_numExtFaces);
+      output_numIndices.Allocate(output_numExtFaces);
+      output_conn.Allocate(3 * output_numExtFaces);
+      for(int face = 0; face < output_numExtFaces; face++)
+      {
+          output_shapes.GetPortalControl().Set(face, vtkm::VTKM_TRIANGLE);
+          output_numIndices.GetPortalControl().Set(face, static_cast<vtkm::Id>(3));
+          output_conn.GetPortalControl().Set(3*face, extFacePortal.Get(face)[0]);
+          output_conn.GetPortalControl().Set(3*face + 1, extFacePortal.Get(face)[1]);
+          output_conn.GetPortalControl().Set(3*face + 2, extFacePortal.Get(face)[2]);
+      }
+      externalFaces.ReleaseResources();
+      */
 
       //End of algorithm
     }
