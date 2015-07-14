@@ -20,17 +20,12 @@
 
 #include <iostream>
 #include <algorithm>
-
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/cont/DeviceAdapter.h>
-
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-
 #include <vtkm/worklet/ExternalFaces.h>
 
 
-vtkm::Id RunExternalFaces(vtkm::cont::DataSet &ds)
+vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
 {
 
   boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
@@ -41,16 +36,31 @@ vtkm::Id RunExternalFaces(vtkm::cont::DataSet &ds)
   vtkm::cont::ArrayHandle<vtkm::Id> numIndices = cs->GetNodeToCellConnectivity().GetNumIndicesArray();
   vtkm::cont::ArrayHandle<vtkm::Id> conn = cs->GetNodeToCellConnectivity().GetConnectivityArray();
 
-  vtkm::Id numExtFaces;
+  vtkm::cont::ArrayHandle<vtkm::Id> output_shapes;
+  vtkm::cont::ArrayHandle<vtkm::Id> output_numIndices;
+  vtkm::cont::ArrayHandle<vtkm::Id> output_conn;
 
   //Run the External Faces worklet
   vtkm::worklet::ExternalFaces<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().run(
         shapes,
         numIndices,
         conn,
-        numExtFaces);
+        output_shapes,
+        output_numIndices,
+        output_conn);
 
-  return numExtFaces;
+  vtkm::cont::DataSet new_ds;
+  new_ds.AddField(ds.GetField("x"));
+  new_ds.AddField(ds.GetField("y"));
+  new_ds.AddField(ds.GetField("z"));
+  new_ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
+  boost::shared_ptr< vtkm::cont::CellSetExplicit<> > new_cs(
+                              new vtkm::cont::CellSetExplicit<>("cells", output_shapes.GetNumberOfValues()));
+  vtkm::cont::ExplicitConnectivity<> &new_ec = new_cs->nodesOfCellsConnectivity;
+  new_ec.Fill(output_shapes, output_numIndices, output_conn);
+  new_ds.AddCellSet(new_cs);
+
+  return new_ds;
 }
 
 void TestExternalFaces()
@@ -98,7 +108,12 @@ void TestExternalFaces()
   ds.PrintSummary(std::cout);
 
   //Run the External Faces worklet
-  vtkm::Id numExtFaces_out = RunExternalFaces(ds);
+  vtkm::cont::DataSet new_ds = RunExternalFaces(ds);
+  boost::shared_ptr<vtkm::cont::CellSet> new_scs = new_ds.GetCellSet(0);
+  vtkm::cont::CellSetExplicit<> *new_cs =
+      dynamic_cast<vtkm::cont::CellSetExplicit<> *>(new_scs.get());
+
+  vtkm::Id numExtFaces_out = new_cs->GetNumCells();
 
   //Validate the number of external faces (output) returned by the worklet
   const vtkm::Id numExtFaces_actual = 12;
