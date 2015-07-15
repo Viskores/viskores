@@ -48,13 +48,15 @@ endfunction(vtkm_get_kit_name)
 #   While we have specified this as target compile flag, those aren't
 #   currently loooked at by FindCUDA, so we have to manually add it ourselves
 function(vtkm_setup_nvcc_flags old_flags )
-  set(PARENT_SCOPE ${old_flags} ${CUDA_NVCC_FLAGS})
-  list(APPEND CUDA_NVCC_FLAGS "-DVTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  list(APPEND CUDA_NVCC_FLAGS "-DBOOST_SP_DISABLE_THREADS")
-  list(APPEND CUDA_NVCC_FLAGS "-w")
+  set(${old_flags} ${CUDA_NVCC_FLAGS} PARENT_SCOPE)
+  set(new_flags ${CUDA_NVCC_FLAGS})
+  list(APPEND new_flags "-DVTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
+  list(APPEND new_flags "-DBOOST_SP_DISABLE_THREADS")
+  list(APPEND new_flags "-w")
   if(MSVC)
-    list(APPEND CUDA_NVCC_FLAGS "--compiler-options;/bigobj")
+    list(APPEND new_flags "--compiler-options;/bigobj")
   endif()
+  set(CUDA_NVCC_FLAGS ${new_flags} PARENT_SCOPE)
 endfunction(vtkm_setup_nvcc_flags)
 
 #Utility to set MSVC only COMPILE_DEFINITIONS and COMPILE_FLAGS needed to
@@ -496,7 +498,7 @@ function(vtkm_benchmarks device_adapter)
     endif()
 
     if(MSVC)
-      vtkm_setup_msvc_properties(${test_prog})
+      vtkm_setup_msvc_properties(${benchmark_prog})
     endif()
 
     #increase warning level if needed, we are going to skip cuda here
