@@ -40,7 +40,15 @@
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wconversion"
-#endif // gcc || clang
+// gcc || clang
+#elif _WIN32
+// TBB includes windows.h, which clobbers min and max functions so we
+// define NOMINMAX to fix that problem. We also include WIN32_LEAN_AND_MEAN
+// to reduce the number of macros and objects windows.h imports as those also
+// can cause conflicts
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#endif
 
 //we provide an patched implementation of tbb parallel_sort
 //that fixes ADL for std::swap. This patch has been submitted to Intel
@@ -57,8 +65,11 @@
 
 #if defined(VTKM_GCC) || defined(VTKM_CLANG)
 #pragma GCC diagnostic pop
-#endif // gcc || clang
-
+// gcc || clang
+#elif _WIN32
+#undef WIN32_LEAN_AND_MEAN
+#undef NOMINMAX
+#endif
 
 namespace vtkm {
 namespace cont {
