@@ -55,7 +55,25 @@ function(vtkm_setup_nvcc_flags old_flags )
   if(MSVC)
     list(APPEND CUDA_NVCC_FLAGS "--compiler-options;/bigobj")
   endif()
-endif()
+endfunction(vtkm_setup_nvcc_flags)
+
+#Utility to set MSVC only COMPILE_DEFINITIONS and COMPILE_FLAGS needed to
+#reduce number of warnings and compile issues with Visual Studio
+function(vtkm_setup_msvc_properties target )
+  #disable MSVC CRT and SCL warnings as they recommend using non standard
+  #c++ extensions
+  set_property(TARGET ${target}
+               APPEND PROPERTY COMPILE_DEFINITIONS
+               "_SCL_SECURE_NO_WARNINGS"
+               "_CRT_SECURE_NO_WARNINGS"
+               )
+
+  #enable large object support so we can have 2^32 addressable sections
+  set_property(TARGET ${target}
+               APPEND PROPERTY COMPILE_FLAGS
+               "/bigobj"
+               )
+endfunction(vtkm_setup_msvc_properties)
 
 # Builds a source file and an executable that does nothing other than
 # compile the given header files.
@@ -223,30 +241,6 @@ function(vtkm_unit_tests)
 
     else (VTKm_UT_CUDA)
       add_executable(${test_prog} ${TestSources})
-
-      if(VTKm_EXTRA_COMPILER_WARNINGS)
-        set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_FLAGS
-                   ${CMAKE_CXX_FLAGS_WARN_EXTRA}
-                   )
-      endif(VTKm_EXTRA_COMPILER_WARNINGS)
-
-      if(MSVC)
-        #disable MSVC CRT and SCL warnings as they recommend using non standard
-        #c++ extensions
-        #enable bigobj support so that
-        set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_DEFINITIONS
-                   "_SCL_SECURE_NO_WARNINGS"
-                   "_CRT_SECURE_NO_WARNINGS"
-                   )
-
-        #enable large object support 2^32 addressable sections
-        set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_FLAGS
-                   "/bigobj"
-                   )
-      endif()
     endif (VTKm_UT_CUDA)
 
     #do it as a property value so we don't pollute the include_directories
@@ -256,6 +250,16 @@ function(vtkm_unit_tests)
 
     target_link_libraries(${test_prog} ${VTKm_UT_LIBRARIES})
 
+    if(MSVC)
+      vtkm_setup_msvc_properties(${test_prog})
+    endif()
+
+    if(VTKm_EXTRA_COMPILER_WARNINGS)
+      set_property(TARGET ${test_prog}
+                 APPEND PROPERTY COMPILE_FLAGS
+                 ${CMAKE_CXX_FLAGS_WARN_EXTRA}
+                 )
+    endif(VTKm_EXTRA_COMPILER_WARNINGS)
 
     foreach (test ${VTKm_UT_SOURCES})
       get_filename_component(tname ${test} NAME_WE)
@@ -375,19 +379,7 @@ function(vtkm_worklet_unit_tests device_adapter)
     endforeach (test)
 
     if(MSVC)
-      #disable MSVC CRT and SCL warnings as they recommend using non standard
-      #c++ extensions
-      set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_DEFINITIONS
-                   "_SCL_SECURE_NO_WARNINGS"
-                   "_CRT_SECURE_NO_WARNINGS"
-                   )
-
-      #enable large object support 2^32 addressable sections
-      set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_FLAGS
-                   "/bigobj"
-                   )
+      vtkm_setup_msvc_properties(${test_prog})
     endif()
 
     #increase warning level if needed, we are going to skip cuda here
@@ -504,19 +496,7 @@ function(vtkm_benchmarks device_adapter)
     endif()
 
     if(MSVC)
-      #disable MSVC CRT and SCL warnings as they recommend using non standard
-      #c++ extensions
-      set_property(TARGET ${benchmark_prog}
-                   APPEND PROPERTY COMPILE_DEFINITIONS
-                   "_SCL_SECURE_NO_WARNINGS"
-                   "_CRT_SECURE_NO_WARNINGS"
-                   )
-
-      #enable large object support 2^32 addressable sections
-      set_property(TARGET ${benchmark_prog}
-                   APPEND PROPERTY COMPILE_FLAGS
-                   "/bigobj"
-                   )
+      vtkm_setup_msvc_properties(${test_prog})
     endif()
 
     #increase warning level if needed, we are going to skip cuda here
