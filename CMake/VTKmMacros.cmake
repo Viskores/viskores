@@ -190,7 +190,30 @@ function(vtkm_unit_tests)
     set(test_prog UnitTests_kit_${kit})
     create_test_sourcelist(TestSources ${test_prog}.cxx ${VTKm_UT_SOURCES})
     if (VTKm_UT_CUDA)
+      #if we are generating cu files need to setup three things.
+      #1. us the configured .cu files
+      #2. Explicitly set the cuda device adapter as a define this is currently
+      #   done as a work around since the cuda executable ignores compile
+      #   definitions
+      #3. Set BOOST_SP_DISABLE_THREADS to disable threading warnings
+      #4. Disable unused function warnings
+      #   the FindCUDA module and helper methods don't read target level
+      #   properties so we have to modify CUDA_NVCC_FLAGS  instead of using
+      #   target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
+      #5. Set the compile option /bigobj when using VisualStudio generators.
+      #   While we have specified this as target compile flag, those aren't
+      #   currently loooked at by FindCUDA, so we have to manually add it ourselves
+      list(APPEND CUDA_NVCC_FLAGS "-DVTKM_DEVICE_ADAPTER=${device_adapter}")
+      list(APPEND CUDA_NVCC_FLAGS "-DBOOST_SP_DISABLE_THREADS")
+      list(APPEND CUDA_NVCC_FLAGS "-w")
+      if(WIN32)
+        list(APPEND CUDA_NVCC_FLAGS "--compiler-options;/bigobj")
+      endif()
+
       cuda_add_executable(${test_prog} ${TestSources})
+
+      set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+
     else (VTKm_UT_CUDA)
       add_executable(${test_prog} ${TestSources})
 
@@ -234,6 +257,7 @@ function(vtkm_unit_tests)
         )
     endforeach (test)
   endif (VTKm_ENABLE_TESTING)
+
 endfunction(vtkm_unit_tests)
 
 # Save the worklets to test with each device adapter
@@ -320,11 +344,17 @@ function(vtkm_worklet_unit_tests device_adapter)
     #   the FindCUDA module and helper methods don't read target level
     #   properties so we have to modify CUDA_NVCC_FLAGS  instead of using
     #   target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
+    #5. Set the compile option /bigobj when using VisualStudio generators.
+    #   While we have specified this as target compile flag, those aren't
+    #   currently loooked at by FindCUDA, so we have to manually add it ourselves
     get_property(unit_test_srcs GLOBAL PROPERTY vtkm_worklet_unit_tests_cu_sources )
 
     list(APPEND CUDA_NVCC_FLAGS "-DVTKM_DEVICE_ADAPTER=${device_adapter}")
     list(APPEND CUDA_NVCC_FLAGS "-DBOOST_SP_DISABLE_THREADS")
     list(APPEND CUDA_NVCC_FLAGS "-w")
+    if(WIN32)
+      list(APPEND CUDA_NVCC_FLAGS "--compiler-options;/bigobj")
+    endif()
   endif()
 
 
@@ -474,11 +504,17 @@ function(vtkm_benchmarks device_adapter)
     #   the FindCUDA module and helper methods don't read target level
     #   properties so we have to modify CUDA_NVCC_FLAGS  instead of using
     #   target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
+    #5. Set the compile option /bigobj when using VisualStudio generators.
+    #   While we have specified this as target compile flag, those aren't
+    #   currently loooked at by FindCUDA, so we have to manually add it ourselves
     get_property(benchmark_srcs GLOBAL PROPERTY vtkm_benchmarks_cu_sources )
 
     list(APPEND CUDA_NVCC_FLAGS "-DVTKM_DEVICE_ADAPTER=${device_adapter}")
     list(APPEND CUDA_NVCC_FLAGS "-DBOOST_SP_DISABLE_THREADS")
     list(APPEND CUDA_NVCC_FLAGS "-w")
+    if(WIN32)
+      list(APPEND CUDA_NVCC_FLAGS "--compiler-options;/bigobj")
+    endif()
   endif()
 
 
