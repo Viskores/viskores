@@ -309,8 +309,13 @@ public:
       gridInfo.origin[2] = static_cast<FloatType>((bounds[5]+bounds[4])*0.5 - gridInfo.grid_width*(gridInfo.dim[2])*.5);
     }
 
-    if( static_cast<vtkm::Int64>(gridInfo.dim[0])*gridInfo.dim[1]*gridInfo.dim[2] > std::numeric_limits<vtkm::Id>::max() )
+    const vtkm::Int64 gridSize = static_cast<vtkm::Int64>(gridInfo.dim[0]) *
+                                 static_cast<vtkm::Int64>(gridInfo.dim[1]) *
+                                 static_cast<vtkm::Int64>(gridInfo.dim[2]);
+    if( gridSize > std::numeric_limits<vtkm::Id>::max() )
+      {
       throw vtkm::cont::ErrorControlBadValue("Grid resolution larger than vtkm::Id capacity. ");
+      }
     // Use 64-bit id will solve the issue.
 
     //construct the scheduler that will execute all the worklets
@@ -373,7 +378,7 @@ public:
     ///
     /// map: convert each triangle vertices from original point id to the new cluster indexes
     ///      If the triangle is degenerated, set the ids to <-1, -1, -1>
-    ///    
+    ///
     vtkm::Id nPoints = repPointArray.GetNumberOfValues();
 
     vtkm::cont::ArrayHandle<vtkm::Id3> pointId3Array;
