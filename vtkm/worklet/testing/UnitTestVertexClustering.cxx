@@ -134,7 +134,7 @@ void TestVertexClustering()
 
   VTKM_TEST_ASSERT(ds_out.GetNumberOfCellSets() == 1, "Number of output cellsets mismatch");
   vtkm::cont::CellSetExplicit<> *cellset = dynamic_cast<vtkm::cont::CellSetExplicit<> *>(ds_out.GetCellSet(0).get());
-  VTKM_TEST_ASSERT(cellset, "CellSet Cast fail");
+  VTKM_TEST_ASSERT(cellset != NULL, "CellSet Cast fail");
   vtkm::cont::ExplicitConnectivity<> &conn = cellset->GetNodeToCellConnectivity();
   VTKM_TEST_ASSERT(conn.GetConnectivityArray().GetNumberOfValues() == output_pointIds, "Number of connectivity array elements mismatch");
   for (vtkm::Id i=0; i<conn.GetConnectivityArray().GetNumberOfValues(); i++)
