@@ -17,20 +17,15 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DynamicArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
-
 #include <vtkm/cont/testing/Testing.h>
 
-
-namespace mapfield{
-namespace worklets {
-
-class TestWorklet : public vtkm::worklet::WorkletMapField
+class TestMapFieldWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn<>, FieldOut<>);
@@ -55,7 +50,7 @@ public:
   }
 };
 
-class TestWorkletLimitedTypes : public vtkm::worklet::WorkletMapField
+class TestMapFieldWorkletLimitedTypes : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
@@ -73,12 +68,9 @@ public:
   }
 };
 
-} // worklet namespace
 
-
-
+namespace mapfield {
 static const vtkm::Id ARRAY_SIZE = 10;
-
 
 template<typename WorkletType>
 struct DoTestWorklet
@@ -125,18 +117,18 @@ void TestWorkletMapField()
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(
-                         mapfield::DoTestWorklet< worklets::TestWorklet >(),
+                         mapfield::DoTestWorklet< TestMapFieldWorklet >(),
                          vtkm::TypeListTagCommon());
 
   std::cout << "--- Worklet accepting some types." << std::endl;
   vtkm::testing::Testing::TryTypes(
-                         mapfield::DoTestWorklet< worklets::TestWorkletLimitedTypes >(),
+                         mapfield::DoTestWorklet< TestMapFieldWorkletLimitedTypes >(),
                          vtkm::TypeListTagFieldScalar());
 
   std::cout << "--- Sending bad type to worklet." << std::endl;
   try
   {
-    DoTestWorklet< worklets::TestWorkletLimitedTypes > badWorkletTest;
+    DoTestWorklet< TestMapFieldWorkletLimitedTypes > badWorkletTest;
     badWorkletTest( vtkm::Vec<vtkm::Float32,3>() );
     VTKM_TEST_FAIL("Did not throw expected error.");
   }
