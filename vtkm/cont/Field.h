@@ -20,13 +20,178 @@
 #ifndef vtk_m_cont_Field_h
 #define vtk_m_cont_Field_h
 
+#include <vtkm/Types.h>
+#include <vtkm/Math.h>
+#include <vtkm/VecTraits.h>
+
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleTransform.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
 namespace vtkm {
 namespace cont {
+
+namespace internal {
+
+template<vtkm::Id NumberOfComponents>
+class InputToOutputTypeTransform
+{
+public:
+  typedef vtkm::Vec<vtkm::Float64, NumberOfComponents> ResultType;
+  typedef vtkm::Pair<ResultType, ResultType> MinMaxPairType;
+
+  template<typename ValueType>
+  VTKM_EXEC_EXPORT
+  MinMaxPairType operator()(const ValueType &value) const
+  {
+    ResultType input;
+    for (vtkm::Id i = 0; i < NumberOfComponents; ++i)
+    {
+      input[i] = static_cast<vtkm::Float64>(
+          vtkm::VecTraits<ValueType>::GetComponent(value, i));
+    }
+    return make_Pair(input, input);
+  }
+};
+
+template<vtkm::Id NumberOfComponents>
+class MinMax
+{
+public:
+  typedef vtkm::Vec<vtkm::Float64, NumberOfComponents> ResultType;
+  typedef vtkm::Pair<ResultType, ResultType> MinMaxPairType;
+
+  VTKM_EXEC_EXPORT
+  MinMaxPairType operator()(const MinMaxPairType &v1, const MinMaxPairType &v2) const
+  {
+    MinMaxPairType result;
+    for (vtkm::Id i = 0; i < NumberOfComponents; ++i)
+    {
+      result.first[i] = vtkm::Min(v1.first[i], v2.first[i]);
+      result.second[i] = vtkm::Max(v1.second[i], v2.second[i]);
+    }
+    return result;
+  }
+};
+
+enum
+{
+  MAX_NUMBER_OF_COMPONENTS = 10
+};
+
+template<vtkm::Id NumberOfComponents, typename ComputeBoundsClass>
+class SelectNumberOfComponents
+{
+public:
+  static void Execute(vtkm::Id components, const vtkm::cont::DynamicArrayHandle &data,
+                      ArrayHandle<vtkm::Float64> &bounds)
+  {
+    if (components == NumberOfComponents)
+    {
+      ComputeBoundsClass::template CallBody<NumberOfComponents>(data, bounds);
+    }
+    else
+    {
+      SelectNumberOfComponents<NumberOfComponents+1, ComputeBoundsClass>::Execute(
+          components, data, bounds);
+    }
+  }
+};
+
+template<typename ComputeBoundsClass>
+class SelectNumberOfComponents<MAX_NUMBER_OF_COMPONENTS, ComputeBoundsClass>
+{
+public:
+  static void Execute(vtkm::Id, const vtkm::cont::DynamicArrayHandle&,
+                      ArrayHandle<vtkm::Float64>&)
+  {
+    throw vtkm::cont::ErrorControlInternal(
+        "Number of components in array greater than expected maximum.");
+  }
+};
+
+
+template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
+class ComputeBounds
+{
+private:
+  template<vtkm::Id NumberOfComponents>
+  class Body
+  {
+  public:
+    Body(ArrayHandle<vtkm::Float64> *bounds) : Bounds(bounds) {}
+
+    template<typename ArrayHandleType>
+    void operator()(const ArrayHandleType &data) const
+    {
+      typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
+      typedef vtkm::Vec<vtkm::Float64, NumberOfComponents> ResultType;
+      typedef vtkm::Pair<ResultType, ResultType> MinMaxPairType;
+
+      MinMaxPairType initialValue = make_Pair(ResultType(vtkm::Infinity64()),
+                                              ResultType(vtkm::NegativeInfinity64()));
+
+      vtkm::cont::ArrayHandleTransform<MinMaxPairType, ArrayHandleType,
+          InputToOutputTypeTransform<NumberOfComponents> > input(data);
+
+      MinMaxPairType result = Algorithm::Reduce(input, initialValue,
+                                                MinMax<NumberOfComponents>());
+
+      this->Bounds->Allocate(NumberOfComponents * 2);
+      for (vtkm::Id i = 0; i < NumberOfComponents; ++i)
+      {
+        this->Bounds->GetPortalControl().Set(i * 2, result.first[i]);
+        this->Bounds->GetPortalControl().Set(i * 2 + 1, result.second[i]);
+      }
+    }
+
+  private:
+    ArrayHandle<vtkm::Float64> *Bounds;
+  };
+
+public:
+  template<vtkm::Id NumberOfComponents>
+  static void CallBody(const vtkm::cont::DynamicArrayHandle &data,
+      ArrayHandle<vtkm::Float64> &bounds)
+  {
+    Body<NumberOfComponents> cb(&bounds);
+    data.CastAndCall(cb, TypeList(), StorageList());
+  }
+
+  static void DoCompute(const DynamicArrayHandle &data,
+                        ArrayHandle<vtkm::Float64> &bounds)
+  {
+    typedef ComputeBounds<DeviceAdapterTag, TypeList, StorageList> SelfType;
+    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
+
+    vtkm::Id numberOfComponents = data.GetNumberOfComponents();
+    switch(numberOfComponents)
+      {
+      case 1:
+        CallBody<1>(data, bounds);
+        break;
+      case 2:
+        CallBody<2>(data, bounds);
+        break;
+      case 3:
+        CallBody<3>(data, bounds);
+        break;
+      case 4:
+        CallBody<4>(data, bounds);
+        break;
+      default:
+        SelectNumberOfComponents<5, SelfType>::Execute(numberOfComponents, data,
+                                                       bounds);
+        break;
+      }
+  }
+};
+
+} // namespace internal
+
 
 /// A \c Field encapsulates an array on some piece of the mesh, such as
 /// the points, a cell set, a node logical dimension, or the whole mesh.
@@ -48,7 +213,7 @@ public:
   Field(std::string name, int order, Association association,
       vtkm::cont::DynamicArrayHandle &data)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
-      AssocLogicalDim(-1), Data(data)
+      AssocLogicalDim(-1), Data(data), Bounds(), ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_WHOLE_MESH ||
                      this->AssocTag == ASSOC_POINTS);
@@ -58,7 +223,7 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, ArrayHandle<T> &data)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
-      AssocLogicalDim(-1)
+      AssocLogicalDim(-1), Bounds(), ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_WHOLE_MESH ||
                      this->AssocTag == ASSOC_POINTS);
@@ -70,7 +235,7 @@ public:
   Field(std::string name, int order, Association association,
       const std::vector<T> &data)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
-      AssocLogicalDim(-1)
+      AssocLogicalDim(-1), Bounds(), ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_WHOLE_MESH ||
                      this->AssocTag == ASSOC_POINTS);
@@ -82,7 +247,7 @@ public:
   Field(std::string name, int order, Association association, const T *data,
       vtkm::Id nvals)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
-      AssocLogicalDim(-1)
+      AssocLogicalDim(-1), Bounds(), ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_WHOLE_MESH ||
                      this->AssocTag == ASSOC_POINTS);
@@ -93,7 +258,8 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, T)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
-      AssocLogicalDim(-1), Data(vtkm::cont::ArrayHandle<T>())
+      AssocLogicalDim(-1), Data(vtkm::cont::ArrayHandle<T>()), Bounds(),
+      ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_WHOLE_MESH ||
                      this->AssocTag == ASSOC_POINTS);
@@ -104,7 +270,7 @@ public:
   Field(std::string name, int order, Association association,
       const std::string& cellSetName, vtkm::cont::DynamicArrayHandle &data)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName),
-      AssocLogicalDim(-1), Data(data)
+      AssocLogicalDim(-1), Data(data), Bounds(), ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_CELL_SET);
   }
@@ -114,7 +280,7 @@ public:
   Field(std::string name, int order, Association association,
       const std::string& cellSetName, ArrayHandle<T> &data)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName),
-      AssocLogicalDim(-1)
+      AssocLogicalDim(-1), Bounds(), ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_CELL_SET);
     this->SetData(data);
@@ -125,7 +291,7 @@ public:
   Field(std::string name, int order, Association association,
       const std::string& cellSetName, const std::vector<T> &data)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName),
-      AssocLogicalDim(-1)
+      AssocLogicalDim(-1), Bounds(), ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_CELL_SET);
     this->CopyData(&data[0], data.size());
@@ -136,7 +302,7 @@ public:
   Field(std::string name, int order, Association association,
        const std::string& cellSetName, const T *data, vtkm::Id nvals)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName),
-      AssocLogicalDim(-1)
+      AssocLogicalDim(-1), Bounds(), ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_CELL_SET);
     this->CopyData(data, nvals);
@@ -147,7 +313,8 @@ public:
   Field(std::string name, int order, Association association,
       const std::string& cellSetName, T)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(cellSetName),
-      AssocLogicalDim(-1), Data(vtkm::cont::ArrayHandle<T>())
+      AssocLogicalDim(-1), Data(vtkm::cont::ArrayHandle<T>()), Bounds(),
+      ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_CELL_SET);
   }
@@ -157,7 +324,7 @@ public:
   Field(std::string name, int order, Association association, int logicalDim,
       vtkm::cont::DynamicArrayHandle &data)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
-      AssocLogicalDim(logicalDim), Data(data)
+      AssocLogicalDim(logicalDim), Data(data), Bounds(), ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_LOGICAL_DIM);
   }
@@ -167,7 +334,7 @@ public:
   Field(std::string name, int order, Association association, int logicalDim,
       ArrayHandle<T> &data)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
-      AssocLogicalDim(logicalDim)
+      AssocLogicalDim(logicalDim), Bounds(), ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_LOGICAL_DIM);
     this->SetData(data);
@@ -178,7 +345,7 @@ public:
   Field(std::string name, int order, Association association, int logicalDim,
       const std::vector<T> &data)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
-      AssocLogicalDim(logicalDim)
+      AssocLogicalDim(logicalDim), Bounds(), ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_LOGICAL_DIM);
     this->CopyData(&data[0], data.size());
@@ -189,7 +356,7 @@ public:
   Field(std::string name, int order, Association association, int logicalDim,
       const T *data, vtkm::Id nvals)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
-      AssocLogicalDim(logicalDim)
+      AssocLogicalDim(logicalDim), Bounds(), ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_LOGICAL_DIM);
     this->CopyData(data, nvals);
@@ -199,7 +366,8 @@ public:
   VTKM_CONT_EXPORT
   Field(std::string name, int order, Association association, int logicalDim, T)
     : Name(name), Order(order), AssocTag(association), AssocCellsetName(),
-      AssocLogicalDim(logicalDim), Data(vtkm::cont::ArrayHandle<T>())
+      AssocLogicalDim(logicalDim), Data(vtkm::cont::ArrayHandle<T>()), Bounds(),
+      ModifiedFlag(true)
   {
     VTKM_ASSERT_CONT(this->AssocTag == ASSOC_LOGICAL_DIM);
   }
@@ -240,9 +408,72 @@ public:
     return this->Data;
   }
 
+  template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
+  VTKM_CONT_EXPORT
+  const vtkm::cont::ArrayHandle<vtkm::Float64>& GetBounds(DeviceAdapterTag,
+                                                          TypeList,
+                                                          StorageList) const
+  {
+    if (this->ModifiedFlag)
+    {
+      internal::ComputeBounds<DeviceAdapterTag, TypeList, StorageList>::DoCompute(
+          this->Data, this->Bounds);
+      this->ModifiedFlag = false;
+    }
+
+    return this->Bounds;
+  }
+
+  template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
+  VTKM_CONT_EXPORT
+  void GetBounds(vtkm::Float64 *bounds, DeviceAdapterTag, TypeList, StorageList) const
+  {
+    this->GetBounds(DeviceAdapterTag(), TypeList(), StorageList());
+
+    vtkm::Id length = this->Bounds.GetNumberOfValues();
+    for (vtkm::Id i = 0; i < length; ++i)
+    {
+      bounds[i] = this->Bounds.GetPortalConstControl().Get(i);
+    }
+  }
+
+  template<typename DeviceAdapterTag, typename TypeList>
+  VTKM_CONT_EXPORT
+  const vtkm::cont::ArrayHandle<vtkm::Float64>& GetBounds(DeviceAdapterTag,
+                                                          TypeList) const
+  {
+    return this->GetBounds(DeviceAdapterTag(), TypeList(),
+                           VTKM_DEFAULT_STORAGE_LIST_TAG());
+  }
+
+  template<typename DeviceAdapterTag, typename TypeList>
+  VTKM_CONT_EXPORT
+  void GetBounds(vtkm::Float64 *bounds, DeviceAdapterTag, TypeList) const
+  {
+    this->GetBounds(bounds, DeviceAdapterTag(), TypeList(),
+                    VTKM_DEFAULT_STORAGE_LIST_TAG());
+  }
+
+  template<typename DeviceAdapterTag>
+  VTKM_CONT_EXPORT
+  const vtkm::cont::ArrayHandle<vtkm::Float64>& GetBounds(DeviceAdapterTag) const
+  {
+    return this->GetBounds(DeviceAdapterTag(), VTKM_DEFAULT_TYPE_LIST_TAG(),
+                           VTKM_DEFAULT_STORAGE_LIST_TAG());
+  }
+
+  template<typename DeviceAdapterTag>
+  VTKM_CONT_EXPORT
+  void GetBounds(vtkm::Float64 *bounds, DeviceAdapterTag) const
+  {
+    this->GetBounds(bounds, DeviceAdapterTag(), VTKM_DEFAULT_TYPE_LIST_TAG(),
+                    VTKM_DEFAULT_STORAGE_LIST_TAG());
+  }
+
   VTKM_CONT_EXPORT
   vtkm::cont::DynamicArrayHandle &GetData()
   {
+    this->ModifiedFlag = true;
     return this->Data;
   }
 
@@ -251,6 +482,7 @@ public:
   void SetData(vtkm::cont::ArrayHandle<T> &newdata)
   {
     this->Data = newdata;
+    this->ModifiedFlag = true;
   }
 
   template <typename T>
@@ -268,6 +500,7 @@ public:
 
     //assign to the dynamic array handle
     this->Data = tmp;
+    this->ModifiedFlag = true;
   }
 
   VTKM_CONT_EXPORT
@@ -298,6 +531,8 @@ private:
   int          AssocLogicalDim; ///< only populate if assoc is logical dim
 
   vtkm::cont::DynamicArrayHandle Data;
+  mutable vtkm::cont::ArrayHandle<vtkm::Float64> Bounds;
+  mutable bool ModifiedFlag;
 };
 
 

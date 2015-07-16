@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestComputeBoundsCuda.cu
   UnitTestCudaArrayHandle.cu
   UnitTestCudaArrayHandleFancy.cu
   UnitTestCudaMath.cu

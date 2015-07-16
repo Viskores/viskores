@@ -22,6 +22,7 @@ set(headers
   MakeTestDataSet.h
   Testing.h
   TestingArrayHandles.h
+  TestingComputeBounds.h
   TestingDeviceAdapter.h
   TestingFancyArrayHandles.h
   )
@@ -39,6 +40,7 @@ set(unit_tests
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestContTesting.cxx
+  UnitTestComputeBoundsSerial.cxx
   UnitTestDataSetRegular.cxx
   UnitTestDataSetExplicit.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
@@ -54,4 +56,3 @@ set(unit_tests
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})
-
