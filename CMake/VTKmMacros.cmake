@@ -33,6 +33,50 @@ function(vtkm_get_kit_name kitvar)
   endif (${ARGC} GREATER 1)
 endfunction(vtkm_get_kit_name)
 
+
+#Utility to setup nvcc flags so that we properly work around issues inside FindCUDA.
+#if we are generating cu files need to setup four things.
+#1. Explicitly set the cuda device adapter as a define this is currently
+#   done as a work around since the cuda executable ignores compile
+#   definitions
+#2. Set BOOST_SP_DISABLE_THREADS to disable threading warnings
+#3. Disable unused function warnings
+#   the FindCUDA module and helper methods don't read target level
+#   properties so we have to modify CUDA_NVCC_FLAGS  instead of using
+#   target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
+#4. Set the compile option /bigobj when using VisualStudio generators.
+#   While we have specified this as target compile flag, those aren't
+#   currently loooked at by FindCUDA, so we have to manually add it ourselves
+function(vtkm_setup_nvcc_flags old_flags )
+  set(${old_flags} ${CUDA_NVCC_FLAGS} PARENT_SCOPE)
+  set(new_flags ${CUDA_NVCC_FLAGS})
+  list(APPEND new_flags "-DVTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
+  list(APPEND new_flags "-DBOOST_SP_DISABLE_THREADS")
+  list(APPEND new_flags "-w")
+  if(MSVC)
+    list(APPEND new_flags "--compiler-options;/bigobj")
+  endif()
+  set(CUDA_NVCC_FLAGS ${new_flags} PARENT_SCOPE)
+endfunction(vtkm_setup_nvcc_flags)
+
+#Utility to set MSVC only COMPILE_DEFINITIONS and COMPILE_FLAGS needed to
+#reduce number of warnings and compile issues with Visual Studio
+function(vtkm_setup_msvc_properties target )
+  #disable MSVC CRT and SCL warnings as they recommend using non standard
+  #c++ extensions
+  set_property(TARGET ${target}
+               APPEND PROPERTY COMPILE_DEFINITIONS
+               "_SCL_SECURE_NO_WARNINGS"
+               "_CRT_SECURE_NO_WARNINGS"
+               )
+
+  #enable large object support so we can have 2^32 addressable sections
+  set_property(TARGET ${target}
+               APPEND PROPERTY COMPILE_FLAGS
+               "/bigobj"
+               )
+endfunction(vtkm_setup_msvc_properties)
+
 # Builds a source file and an executable that does nothing other than
 # compile the given header files.
 function(vtkm_add_header_build_test name dir_prefix use_cuda)
@@ -190,25 +234,8 @@ function(vtkm_unit_tests)
     set(test_prog UnitTests_kit_${kit})
     create_test_sourcelist(TestSources ${test_prog}.cxx ${VTKm_UT_SOURCES})
     if (VTKm_UT_CUDA)
-      #if we are generating cu files need to setup three things.
-      #1. us the configured .cu files
-      #2. Explicitly set the cuda device adapter as a define this is currently
-      #   done as a work around since the cuda executable ignores compile
-      #   definitions
-      #3. Set BOOST_SP_DISABLE_THREADS to disable threading warnings
-      #4. Disable unused function warnings
-      #   the FindCUDA module and helper methods don't read target level
-      #   properties so we have to modify CUDA_NVCC_FLAGS  instead of using
-      #   target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
-      #5. Set the compile option /bigobj when using VisualStudio generators.
-      #   While we have specified this as target compile flag, those aren't
-      #   currently loooked at by FindCUDA, so we have to manually add it ourselves
-      list(APPEND CUDA_NVCC_FLAGS "-DVTKM_DEVICE_ADAPTER=${device_adapter}")
-      list(APPEND CUDA_NVCC_FLAGS "-DBOOST_SP_DISABLE_THREADS")
-      list(APPEND CUDA_NVCC_FLAGS "-w")
-      if(WIN32)
-        list(APPEND CUDA_NVCC_FLAGS "--compiler-options;/bigobj")
-      endif()
+
+      vtkm_setup_nvcc_flags( old_nvcc_flags )
 
       cuda_add_executable(${test_prog} ${TestSources})
 
@@ -216,30 +243,6 @@ function(vtkm_unit_tests)
 
     else (VTKm_UT_CUDA)
       add_executable(${test_prog} ${TestSources})
-
-      if(VTKm_EXTRA_COMPILER_WARNINGS)
-        set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_FLAGS
-                   ${CMAKE_CXX_FLAGS_WARN_EXTRA}
-                   )
-      endif(VTKm_EXTRA_COMPILER_WARNINGS)
-
-      if(MSVC)
-        #disable MSVC CRT and SCL warnings as they recommend using non standard
-        #c++ extensions
-        #enable bigobj support so that
-        set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_DEFINITIONS
-                   "_SCL_SECURE_NO_WARNINGS"
-                   "_CRT_SECURE_NO_WARNINGS"
-                   )
-
-        #enable large object support 2^32 addressable sections
-        set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_FLAGS
-                   "/bigobj"
-                   )
-      endif()
     endif (VTKm_UT_CUDA)
 
     #do it as a property value so we don't pollute the include_directories
@@ -249,6 +252,16 @@ function(vtkm_unit_tests)
 
     target_link_libraries(${test_prog} ${VTKm_UT_LIBRARIES})
 
+    if(MSVC)
+      vtkm_setup_msvc_properties(${test_prog})
+    endif()
+
+    if(VTKm_EXTRA_COMPILER_WARNINGS)
+      set_property(TARGET ${test_prog}
+                 APPEND PROPERTY COMPILE_FLAGS
+                 ${CMAKE_CXX_FLAGS_WARN_EXTRA}
+                 )
+    endif(VTKm_EXTRA_COMPILER_WARNINGS)
 
     foreach (test ${VTKm_UT_SOURCES})
       get_filename_component(tname ${test} NAME_WE)
@@ -331,32 +344,9 @@ function(vtkm_worklet_unit_tests device_adapter)
 
   #detect if we are generating a .cu files
   set(is_cuda FALSE)
-  set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
   if("${device_adapter}" STREQUAL "VTKM_DEVICE_ADAPTER_CUDA")
     set(is_cuda TRUE)
-    #if we are generating cu files need to setup three things.
-    #1. us the configured .cu files
-    #2. Explicitly set the cuda device adapter as a define this is currently
-    #   done as a work around since the cuda executable ignores compile
-    #   definitions
-    #3. Set BOOST_SP_DISABLE_THREADS to disable threading warnings
-    #4. Disable unused function warnings
-    #   the FindCUDA module and helper methods don't read target level
-    #   properties so we have to modify CUDA_NVCC_FLAGS  instead of using
-    #   target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
-    #5. Set the compile option /bigobj when using VisualStudio generators.
-    #   While we have specified this as target compile flag, those aren't
-    #   currently loooked at by FindCUDA, so we have to manually add it ourselves
-    get_property(unit_test_srcs GLOBAL PROPERTY vtkm_worklet_unit_tests_cu_sources )
-
-    list(APPEND CUDA_NVCC_FLAGS "-DVTKM_DEVICE_ADAPTER=${device_adapter}")
-    list(APPEND CUDA_NVCC_FLAGS "-DBOOST_SP_DISABLE_THREADS")
-    list(APPEND CUDA_NVCC_FLAGS "-w")
-    if(WIN32)
-      list(APPEND CUDA_NVCC_FLAGS "--compiler-options;/bigobj")
-    endif()
   endif()
-
 
   if(VTKm_ENABLE_TESTING)
     string(REPLACE "VTKM_DEVICE_ADAPTER_" "" device_type ${device_adapter})
@@ -367,7 +357,12 @@ function(vtkm_worklet_unit_tests device_adapter)
     set(test_prog WorkletTests_${device_type})
 
     if(is_cuda)
+      get_property(unit_test_srcs GLOBAL PROPERTY vtkm_worklet_unit_tests_cu_sources )
+      vtkm_setup_nvcc_flags( old_nvcc_flags )
+
       cuda_add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
+
+      set(CUDA_NVCC_FLAGS ${old_nvcc_flags} )
     else()
       add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
       if("${device_adapter}" STREQUAL "VTKM_DEVICE_ADAPTER_TBB")
@@ -386,19 +381,7 @@ function(vtkm_worklet_unit_tests device_adapter)
     endforeach (test)
 
     if(MSVC)
-      #disable MSVC CRT and SCL warnings as they recommend using non standard
-      #c++ extensions
-      set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_DEFINITIONS
-                   "_SCL_SECURE_NO_WARNINGS"
-                   "_CRT_SECURE_NO_WARNINGS"
-                   )
-
-      #enable large object support 2^32 addressable sections
-      set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_FLAGS
-                   "/bigobj"
-                   )
+      vtkm_setup_msvc_properties(${test_prog})
     endif()
 
     #increase warning level if needed, we are going to skip cuda here
@@ -414,8 +397,6 @@ function(vtkm_worklet_unit_tests device_adapter)
                  APPEND
                  PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=${device_adapter}" )
   endif()
-
-  set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
 endfunction(vtkm_worklet_unit_tests)
 
 # Save the benchmarks to run with each device adapter
@@ -494,29 +475,7 @@ function(vtkm_benchmarks device_adapter)
   set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
   if("${device_adapter}" STREQUAL "VTKM_DEVICE_ADAPTER_CUDA")
     set(is_cuda TRUE)
-    #if we are generating cu files need to setup three things.
-    #1. us the configured .cu files
-    #2. Explicitly set the cuda device adapter as a define this is currently
-    #   done as a work around since the cuda executable ignores compile
-    #   definitions
-    #3. Set BOOST_SP_DISABLE_THREADS to disable threading warnings
-    #4. Disable unused function warnings
-    #   the FindCUDA module and helper methods don't read target level
-    #   properties so we have to modify CUDA_NVCC_FLAGS  instead of using
-    #   target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
-    #5. Set the compile option /bigobj when using VisualStudio generators.
-    #   While we have specified this as target compile flag, those aren't
-    #   currently loooked at by FindCUDA, so we have to manually add it ourselves
-    get_property(benchmark_srcs GLOBAL PROPERTY vtkm_benchmarks_cu_sources )
-
-    list(APPEND CUDA_NVCC_FLAGS "-DVTKM_DEVICE_ADAPTER=${device_adapter}")
-    list(APPEND CUDA_NVCC_FLAGS "-DBOOST_SP_DISABLE_THREADS")
-    list(APPEND CUDA_NVCC_FLAGS "-w")
-    if(WIN32)
-      list(APPEND CUDA_NVCC_FLAGS "--compiler-options;/bigobj")
-    endif()
   endif()
-
 
   if(VTKm_ENABLE_BENCHMARKS AND VTKm_ENABLE_TESTING)
     string(REPLACE "VTKM_DEVICE_ADAPTER_" "" device_type ${device_adapter})
@@ -527,7 +486,10 @@ function(vtkm_benchmarks device_adapter)
     set(benchmark_prog Benchmarks_${device_type})
 
     if(is_cuda)
+      vtkm_setup_nvcc_flags( old_nvcc_flags )
+      get_property(benchmark_srcs GLOBAL PROPERTY vtkm_benchmarks_cu_sources )
       cuda_add_executable(${benchmark_prog} ${benchmark_drivers} ${benchmark_srcs})
+      set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
     else()
       add_executable(${benchmark_prog} ${benchmark_drivers} ${benchmark_srcs})
       if("${device_adapter}" STREQUAL "VTKM_DEVICE_ADAPTER_TBB")
@@ -536,19 +498,7 @@ function(vtkm_benchmarks device_adapter)
     endif()
 
     if(MSVC)
-      #disable MSVC CRT and SCL warnings as they recommend using non standard
-      #c++ extensions
-      set_property(TARGET ${benchmark_prog}
-                   APPEND PROPERTY COMPILE_DEFINITIONS
-                   "_SCL_SECURE_NO_WARNINGS"
-                   "_CRT_SECURE_NO_WARNINGS"
-                   )
-
-      #enable large object support 2^32 addressable sections
-      set_property(TARGET ${benchmark_prog}
-                   APPEND PROPERTY COMPILE_FLAGS
-                   "/bigobj"
-                   )
+      vtkm_setup_msvc_properties(${benchmark_prog})
     endif()
 
     #increase warning level if needed, we are going to skip cuda here
@@ -565,7 +515,6 @@ function(vtkm_benchmarks device_adapter)
                  PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=${device_adapter}" )
   endif()
 
-  set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
 endfunction(vtkm_benchmarks)
 
 # The Thrust project is not as careful as the VTKm project in avoiding warnings
