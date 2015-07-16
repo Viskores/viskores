@@ -239,7 +239,7 @@ public:
       Copy( ArrayHandleIndex(keys.GetNumberOfValues()), indexArray);
 
       ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys,indexArray);
-      Sort(zipHandle,KeyCompare<T,vtkm::Id,Compare>(comp));
+      Sort(zipHandle,vtkm::cont::internal::KeyCompare<T,vtkm::Id,Compare>(comp));
 
 
       tbb::ScatterPortal(values.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
@@ -254,7 +254,7 @@ public:
       typedef vtkm::cont::ArrayHandleZip<KeyType,ValueType> ZipHandleType;
 
       ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys,values);
-      Sort(zipHandle,KeyCompare<T,U,Compare>(comp));
+      Sort(zipHandle,vtkm::cont::internal::KeyCompare<T,U,Compare>(comp));
     }
   }
 
