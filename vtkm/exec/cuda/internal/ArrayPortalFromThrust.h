@@ -21,6 +21,7 @@
 #define vtk_m_exec_cuda_internal_ArrayPortalFromThrust_h
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 
 #include <iterator>
 #include <boost/type_traits/remove_const.hpp>
@@ -239,13 +240,13 @@ class ArrayPortalFromThrust : public ArrayPortalFromThrustBase
 {
 public:
   typedef T ValueType;
-  typedef typename thrust::system::cuda::pointer< T > PointerType;
-  typedef T* IteratorType;
+  typedef thrust::system::cuda::pointer< T > IteratorType;
 
   VTKM_EXEC_CONT_EXPORT ArrayPortalFromThrust() {  }
 
   VTKM_CONT_EXPORT
-  ArrayPortalFromThrust(PointerType begin, PointerType end)
+  ArrayPortalFromThrust(thrust::system::cuda::pointer< T > begin,
+                        thrust::system::cuda::pointer< T > end)
     : BeginIterator( begin ),
       EndIterator( end  )
       {  }
@@ -269,29 +270,23 @@ public:
 
   VTKM_EXEC_EXPORT
   ValueType Get(vtkm::Id index) const {
-    return *this->IteratorAt(index);
+    return *(this->BeginIterator + index);
   }
 
   VTKM_EXEC_EXPORT
   void Set(vtkm::Id index, ValueType value) const {
-    *this->IteratorAt(index) = value;
+    *(this->BeginIterator + index) = value;
   }
 
   VTKM_EXEC_CONT_EXPORT
-  IteratorType GetIteratorBegin() const { return this->BeginIterator.get(); }
+  IteratorType GetIteratorBegin() const { return this->BeginIterator; }
 
   VTKM_EXEC_CONT_EXPORT
-  IteratorType GetIteratorEnd() const { return this->EndIterator.get(); }
+  IteratorType GetIteratorEnd() const { return this->EndIterator; }
 
 private:
-  PointerType BeginIterator;
-  PointerType EndIterator;
-
-  VTKM_EXEC_EXPORT
-  PointerType IteratorAt(vtkm::Id index) const {
-    // Not using std::advance because on CUDA it cannot be used on a device.
-    return (this->BeginIterator + index);
-  }
+  IteratorType BeginIterator;
+  IteratorType EndIterator;
 };
 
 template<typename T>
@@ -300,13 +295,13 @@ class ConstArrayPortalFromThrust : public ArrayPortalFromThrustBase
 public:
 
   typedef T ValueType;
-  typedef typename thrust::system::cuda::pointer< T > PointerType;
-  typedef const T* IteratorType;
+  typedef thrust::system::cuda::pointer< const T > IteratorType;
 
   VTKM_EXEC_CONT_EXPORT ConstArrayPortalFromThrust() {  }
 
   VTKM_CONT_EXPORT
-  ConstArrayPortalFromThrust(const PointerType begin, const PointerType end)
+  ConstArrayPortalFromThrust(const thrust::system::cuda::pointer< T > begin,
+                             const thrust::system::cuda::pointer< T > end)
     : BeginIterator( begin ),
       EndIterator( end )
   {
@@ -333,35 +328,100 @@ public:
 
   VTKM_EXEC_EXPORT
   ValueType Get(vtkm::Id index) const {
-    return vtkm::exec::cuda::internal::load_through_texture<ValueType>::get( this->IteratorAt(index) );
+    return vtkm::exec::cuda::internal::load_through_texture<ValueType>::get( this->BeginIterator + index );
   }
 
   VTKM_EXEC_EXPORT
   void Set(vtkm::Id index, ValueType value) const {
-    *this->IteratorAt(index) = value;
+    *(this->BeginIterator + index) = value;
   }
 
   VTKM_EXEC_CONT_EXPORT
-  IteratorType GetIteratorBegin() const { return this->BeginIterator.get(); }
+  IteratorType GetIteratorBegin() const { return this->BeginIterator; }
 
   VTKM_EXEC_CONT_EXPORT
-  IteratorType GetIteratorEnd() const { return this->EndIterator.get(); }
+  IteratorType GetIteratorEnd() const { return this->EndIterator; }
 
 private:
-  PointerType BeginIterator;
-  PointerType EndIterator;
-
-  VTKM_EXEC_EXPORT
-  PointerType IteratorAt(vtkm::Id index) const {
-    // Not using std::advance because on CUDA it cannot be used on a device.
-    return (this->BeginIterator + index);
-  }
+  IteratorType BeginIterator;
+  IteratorType EndIterator;
 };
 
 }
 }
 }
 } // namespace vtkm::exec::cuda::internal
+
+
+namespace vtkm {
+namespace cont {
+
+/// Partial specialization of \c ArrayPortalToIterators for \c
+/// ArrayPortalFromThrust. Returns the original array rather than
+/// the portal wrapped in an \c IteratorFromArrayPortal.
+///
+template<typename T>
+class ArrayPortalToIterators<
+    vtkm::exec::cuda::internal::ArrayPortalFromThrust<T> >
+{
+  typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust<T>
+      PortalType;
+public:
+
+  typedef typename PortalType::IteratorType IteratorType;
+
+  VTKM_CONT_EXPORT
+  ArrayPortalToIterators(const PortalType &portal)
+    : BIterator(portal.GetIteratorBegin()),
+      EIterator(portal.GetIteratorEnd())
+  {  }
+
+  VTKM_CONT_EXPORT
+  IteratorType GetBegin() const { return this->BIterator; }
+
+  VTKM_CONT_EXPORT
+  IteratorType GetEnd() const { return this->EIterator; }
+
+private:
+  IteratorType BIterator;
+  IteratorType EIterator;
+  vtkm::Id NumberOfValues;
+};
+
+/// Partial specialization of \c ArrayPortalToIterators for \c
+/// ConstArrayPortalFromThrust. Returns the original array rather than
+/// the portal wrapped in an \c IteratorFromArrayPortal.
+///
+template<typename T>
+class ArrayPortalToIterators<
+    vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T> >
+{
+  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T>
+      PortalType;
+public:
+
+  typedef typename PortalType::IteratorType IteratorType;
+
+  VTKM_CONT_EXPORT
+  ArrayPortalToIterators(const PortalType &portal)
+    : BIterator(portal.GetIteratorBegin()),
+      EIterator(portal.GetIteratorEnd())
+  {  }
+
+  VTKM_CONT_EXPORT
+  IteratorType GetBegin() const { return this->BIterator; }
+
+  VTKM_CONT_EXPORT
+  IteratorType GetEnd() const { return this->EIterator; }
+
+private:
+  IteratorType BIterator;
+  IteratorType EIterator;
+  vtkm::Id NumberOfValues;
+};
+
+}
+} // namespace vtkm::cont
 
 
 #endif //vtk_m_exec_cuda_internal_ArrayPortalFromThrust_h

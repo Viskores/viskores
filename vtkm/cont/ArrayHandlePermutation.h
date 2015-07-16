@@ -36,7 +36,6 @@ class ArrayPortalPermutationExec
 {
 public:
   typedef typename ValuePortalType::ValueType ValueType;
-  typedef ValueType IteratorType;
 
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalPermutationExec( )
@@ -102,7 +101,6 @@ class ArrayPortalPermutationCont
 {
 public:
   typedef typename ValuePortalType::ValueType ValueType;
-  typedef ValueType IteratorType;
 
   VTKM_CONT_EXPORT
   ArrayPortalPermutationCont( )
