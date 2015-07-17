@@ -66,7 +66,7 @@ template<typename T>
 /// \c ArrayManagerExecutionThrustDevice provides an implementation for a \c
 /// ArrayManagerExecution class for a thrust device adapter that is designed
 /// for the cuda backend which has separate memory spaces for host and device.
-/// This implementation contains a ::thrust::system::cuda::vector to allocate
+/// This implementation contains a thrust::system::cuda::vector to allocate
 /// and manage the array.
 ///
 template<typename T, class StorageTag>

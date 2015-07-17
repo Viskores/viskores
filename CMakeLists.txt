@@ -58,6 +58,8 @@ option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
 option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 
+option(VTKm_BUILD_DOCUMENTATION "Build Doxygen documentation" OFF)
+
 option(VTKm_USE_DOUBLE_PRECISION
   "Use double precision for floating point calculations"
   OFF
@@ -146,6 +148,14 @@ find_package(Pyexpander)
 # Add subdirectories
 add_subdirectory(vtkm)
 
+#-----------------------------------------------------------------------------
+# Build documentation
+if (VTKm_BUILD_DOCUMENTATION)
+  include(CMake/VTKmBuildDocumentation.cmake)
+  vtkm_build_documentation()
+endif()
+
+#-----------------------------------------------------------------------------
 # Configuration for build directory.
 set(VTKm_INCLUDE_DIRS_CONFIG "${VTKm_SOURCE_DIR};${VTKm_BINARY_DIR}")
 set(VTKm_CMAKE_MODULE_PATH_CONFIG "${VTKm_SOURCE_DIR}/CMake")

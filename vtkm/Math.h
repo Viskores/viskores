@@ -1786,7 +1786,7 @@ vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64 &integral)
 }
 
 //-----------------------------------------------------------------------------
-/// Return the absolute value of \x. That is, return \p x if it is positive or
+/// Return the absolute value of \p x. That is, return \p x if it is positive or
 /// \p -x if it is negative.
 ///
 VTKM_EXEC_CONT_EXPORT
@@ -1849,7 +1849,7 @@ vtkm::Vec<T,2> Abs(const vtkm::Vec<T,2> &x) {
                         vtkm::Abs(x[1]));
 }
 
-/// Returns a nonzero value if \x is negative.
+/// Returns a nonzero value if \p x is negative.
 ///
 VTKM_EXEC_CONT_EXPORT
 vtkm::Int32 SignBit(vtkm::Float32 x) {
