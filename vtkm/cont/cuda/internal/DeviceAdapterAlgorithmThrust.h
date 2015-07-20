@@ -21,11 +21,12 @@
 #ifndef vtk_m_cont_cuda_internal_DeviceAdapterThrust_h
 #define vtk_m_cont_cuda_internal_DeviceAdapterThrust_h
 
-#include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/UnaryPredicates.h>
 
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
 
@@ -977,7 +978,7 @@ public:
                                     ::thrust::make_counting_iterator<vtkm::Id>(size),
                                     stencil.PrepareForInput(DeviceAdapterTag()),
                                     output.PrepareForOutput(size, DeviceAdapterTag()),
-                                    ::vtkm::not_default_constructor<T>());
+                                    ::vtkm::NotZeroInitialized());
     output.Shrink(newSize);
   }
 
@@ -995,7 +996,7 @@ public:
     vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTag()),
                                     stencil.PrepareForInput(DeviceAdapterTag()),
                                     output.PrepareForOutput(size, DeviceAdapterTag()),
-                                    ::vtkm::not_default_constructor<T>()); //yes on the stencil
+                                    ::vtkm::NotZeroInitialized()); //yes on the stencil
     output.Shrink(newSize);
   }
 
