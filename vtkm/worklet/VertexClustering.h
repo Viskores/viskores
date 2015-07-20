@@ -269,9 +269,13 @@ public:
 
   ///////////////////////////////////////////////////
   /// \brief VertexClustering: Mesh simplification
-  /// \param ds : dataset
-  /// \param bounds: dataset bounds
-  /// \param nDivisions : number of max divisions per dimension
+  /// \param pointArray : Input points
+  /// \param pointIdArray: Input point-ids
+  /// \param cellToConnectivityIndexArray : Connectivity
+  /// \param bounds : Bounds of the input dataset
+  /// \param nDivisions: Number of divisions
+  /// \param output_pointArray: Output points
+  /// \param output_pointId3Array: Output point-ids
   template <typename FloatType,
             typename BoundsType,
             typename StorageT,
