@@ -17,22 +17,18 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
+
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/exec/ExecutionWholeArray.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace map_exec_field{
-namespace worklets {
-
-class TestWorklet : public vtkm::worklet::WorkletMapField
+class TestExecObjectWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature( FieldIn<>, ExecObject, FieldOut<>);
@@ -59,7 +55,7 @@ public:
   }
 };
 
-} // worklet namespace
+namespace map_exec_field {
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
@@ -112,7 +108,7 @@ void TestWorkletMapFieldExecArg()
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(
-                         map_exec_field::DoTestWorklet< worklets::TestWorklet >(),
+                         map_exec_field::DoTestWorklet< TestExecObjectWorklet >(),
                          vtkm::TypeListTagCommon());
 
 }

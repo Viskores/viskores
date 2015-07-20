@@ -23,7 +23,6 @@ set(unit_tests
   UnitTestPointElevation.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
-  UnitTestWorkletMapFieldMultiParam.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyRegular.cxx
   UnitTestVertexClustering.cxx
