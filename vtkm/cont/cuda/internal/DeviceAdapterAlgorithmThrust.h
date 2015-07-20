@@ -64,12 +64,13 @@ namespace internal {
 
 template<class FunctorType>
 __global__
-void Schedule1DIndexKernel(FunctorType functor, vtkm::Id length)
+void Schedule1DIndexKernel(FunctorType functor, vtkm::Id offset, vtkm::Id length)
 {
+  //the purpose of the offset is
   const int idx = blockDim.x * blockIdx.x + threadIdx.x;
   if(idx < length)
     {
-    functor(idx);
+    functor(offset+idx);
     }
 }
 
@@ -787,6 +788,26 @@ private:
     return devicePtr;
     }
 
+  // we query cuda for the max blocks per grid for 1D scheduling
+  // and cache the values in static variables
+  VTKM_CONT_EXPORT
+  static const vtkm::Vec<vtkm::UInt32,3>& GetMaxGridOfThreadBlocks()
+    {
+    static bool gridQueryInit = false;
+    static vtkm::Vec< vtkm::UInt32, 3> maxGridSize;
+    if( !gridQueryInit )
+      {
+      int currDevice; cudaGetDevice(&currDevice); //get deviceid from cuda
+
+      cudaDeviceProp properties;
+      cudaGetDeviceProperties(&properties, currDevice);
+      maxGridSize[0] = static_cast<vtkm::UInt32>(properties.maxGridSize[0]);
+      maxGridSize[1] = static_cast<vtkm::UInt32>(properties.maxGridSize[1]);
+      maxGridSize[2] = static_cast<vtkm::UInt32>(properties.maxGridSize[2]);
+      }
+    return maxGridSize;
+    }
+
 public:
   template<class Functor>
   VTKM_CONT_EXPORT static void Schedule(Functor functor, vtkm::Id numInstances)
@@ -806,9 +827,34 @@ public:
     functor.SetErrorMessageBuffer(errorMessage);
 
     const vtkm::UInt32 blockSize = 128;
-    const vtkm::UInt32 blocksPerGrid = (static_cast<vtkm::UInt32>(numInstances) + blockSize - 1) / blockSize;
+    const vtkm::UInt32 totalBlocks = (static_cast<vtkm::UInt32>(numInstances) + blockSize - 1) / blockSize;
 
-    Schedule1DIndexKernel<Functor> <<<blocksPerGrid, blockSize>>> (functor, numInstances);
+    //Note: We need to make sure that the grid size doesn't over flow 65535
+    //in any given dimension. In theory SM_3 and SM_5 devices can schedule up
+    //to (2^31-1) at the same time, but the code needs to be compile for
+    //SM_3/SM_5 for that to work.
+    const vtkm::UInt32 maxAllowableBlocks = GetMaxGridOfThreadBlocks()[0];
+    vtkm::UInt32 iterationsBlocksPerGrid =
+        totalBlocks >= maxAllowableBlocks ?  maxAllowableBlocks : totalBlocks;
+    vtkm::UInt32 current_count = 0;
+    do
+      {
+      Schedule1DIndexKernel<Functor> <<<iterationsBlocksPerGrid, blockSize>>> (functor, current_count, numInstances);
+      cudaError err = cudaPeekAtLastError();
+      if(err == cudaErrorInvalidValue && iterationsBlocksPerGrid > 65535)
+        {
+        //we had a launch failure when trying to run on a SM_3 or SM_5 device
+        //so fall back to SM_2 grid size
+        iterationsBlocksPerGrid = 65535;
+        cudaGetLastError(); //clear error
+        }
+      else
+        {
+        current_count += iterationsBlocksPerGrid;
+        }
+
+      }
+    while(current_count < totalBlocks);
 
     //sync so that we can check the results of the call.
     //In the future I want move this before the schedule call, and throwing
