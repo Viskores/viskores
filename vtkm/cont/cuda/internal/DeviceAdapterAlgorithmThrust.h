@@ -895,21 +895,24 @@ public:
                       static_cast<vtkm::UInt32>(rangeMax[1]),
                       static_cast<vtkm::UInt32>(rangeMax[2]) );
 
+
     //currently we presume that 3d scheduling access patterns prefer accessing
     //memory in the X direction. Also should be good for thin in the Z axis
-    //algorithms
+    //algorithms.
     dim3 blockSize3d(64,2,1);
 
     //handle the simple use case of 'bad' datasets which are thin in X
     //but larger in the other directions, allowing us decent performance with
     //that use case.
-    if(rangeMax[0] <= 64 && rangeMax[1] >= 64 && rangeMax[2] >= 64)
+    if(rangeMax[0] <= 128 &&
+       (rangeMax[0] < rangeMax[1] || rangeMax[0] < rangeMax[2]) )
       {
       blockSize3d = dim3(16,4,4);
       }
 
     dim3 gridSize3d;
     compute_block_size(ranges, blockSize3d, gridSize3d);
+
     Schedule3DIndexKernel<Functor> <<<gridSize3d, blockSize3d>>> (functor, ranges);
 
     //sync so that we can check the results of the call.
