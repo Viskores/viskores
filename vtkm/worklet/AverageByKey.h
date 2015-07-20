@@ -20,17 +20,18 @@
 #ifndef vtk_m_worklet_AverageByKey_h
 #define vtk_m_worklet_AverageByKey_h
 
+#include <vtkm/BinaryPredicates.h>
+#include <vtkm/Pair.h>
+#include <vtkm/VecTraits.h>
+
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleZip.h>
-
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/Pair.h>
-#include <vtkm/Types.h>
-#include <vtkm/VecTraits.h>
+
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -53,15 +54,6 @@ struct DivideWorklet: public vtkm::worklet::WorkletMapField{
   }
 };
 
-template<typename _Tp>
-struct less
-{
-  VTKM_EXEC_EXPORT
-  bool operator()(const _Tp& __x, const _Tp& __y) const
-  { return __x < __y; }
-};
-
-
 template <class KeyType, class ValueType, class DeviceAdapter>
 void AverageByKey( const vtkm::cont::ArrayHandle<KeyType> &keyArray,
                    const vtkm::cont::ArrayHandle<ValueType> &valueArray,
@@ -79,7 +71,7 @@ void AverageByKey( const vtkm::cont::ArrayHandle<KeyType> &keyArray,
 
   Algorithm::Copy( keyArray, keyArraySorted ); // keep the input key array unchanged
   Algorithm::Copy( indexArray, indexArraySorted );
-  Algorithm::SortByKey( keyArraySorted, indexArraySorted, less<KeyType>() ) ;
+  Algorithm::SortByKey( keyArraySorted, indexArraySorted, vtkm::SortLess() ) ;
 
   // generate permultation array based on the indexes
   typedef vtkm::cont::ArrayHandlePermutation<IdArray, ValueArray > PermutatedValueArray;
