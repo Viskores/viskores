@@ -86,7 +86,7 @@ namespace worklet
                         const vtkm::Id &f,
                         const vtkm::Id &p) : FacePortal(portal), FacesPerCell(f), PointsPerCell(p) {};
 
-          VTKM_EXEC_EXPORT
+          VTKM_EXEC_CONT_EXPORT
           vtkm::Id operator()(vtkm::Id index) const
           {
               int divisor = FacesPerCell*PointsPerCell;
