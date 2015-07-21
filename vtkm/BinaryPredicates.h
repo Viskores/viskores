@@ -20,7 +20,7 @@
 #ifndef vtk_m_BinaryPredicates_h
 #define vtk_m_BinaryPredicates_h
 
-#include <vtkm/Types.h>
+#include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm {
 
