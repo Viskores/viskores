@@ -69,10 +69,11 @@ namespace worklet
     //In this connectivity, the points/vertices of a cell are enumerated
     //for each face of the cell.  This functor returns the point index
     //corresponding to the input index in the face connectivity array.
+    template<typename ExecutionPortalType>
     struct GetFaceVertex
     {
         private:
-          vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl FacePortal;
+          ExecutionPortalType FacePortal;
           vtkm::Id FacesPerCell;
           vtkm::Id PointsPerCell;
 
@@ -80,17 +81,18 @@ namespace worklet
 
           VTKM_CONT_EXPORT
           GetFaceVertex() {};
-          GetFaceVertex(const vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl &pc,
-                        const vtkm::Id &f,
-                        const vtkm::Id &p) : FacePortal(pc), FacesPerCell(f), PointsPerCell(p) { };
 
-          VTKM_EXEC_CONT_EXPORT
+          GetFaceVertex(const ExecutionPortalType &portal,
+                        const vtkm::Id &f,
+                        const vtkm::Id &p) : FacePortal(portal), FacesPerCell(f), PointsPerCell(p) {};
+
+          VTKM_EXEC_EXPORT
           vtkm::Id operator()(vtkm::Id index) const
           {
               int divisor = FacesPerCell*PointsPerCell;
               int cellIndex = index / divisor;
               int vertexIndex = (index % divisor) % PointsPerCell;
-              return FacePortal.Get(PointsPerCell*cellIndex + vertexIndex);
+              return this->FacePortal.Get(PointsPerCell*cellIndex + vertexIndex);
           }
     };
 
@@ -297,8 +299,10 @@ namespace worklet
 
       //Extract the point/vertices for each cell face
       typedef vtkm::cont::ArrayHandle<vtkm::Id> IdHandleType;
+      typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::template
+          ExecutionTypes<DeviceAdapter>::PortalConst ExecutionPortalType;
       typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, IdHandleType> IdPermutationType;
-      typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, GetFaceVertex> IdImplicitType;
+      typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, GetFaceVertex<ExecutionPortalType> > IdImplicitType;
       typedef vtkm::cont::ExplicitConnectivity<IdPermutationType::StorageTag,
                                                IdPermutationType::StorageTag,
                                                typename IdImplicitType::StorageTag> PermutedExplicitConnectivity;
@@ -307,11 +311,12 @@ namespace worklet
 
       //Construct a connectivity array of length 4*totalFaces
       //Repeat the 4 cell vertices for each cell face: 4763 4763 4763 4763 (cell 1) | 4632 4632...(cell 2)...
+      ExecutionPortalType executionPortal = conn.PrepareForInput(DeviceAdapter());
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         timer.Reset();
       #endif
       IdImplicitType faceConn = vtkm::cont::make_ArrayHandleImplicit<vtkm::Id>
-                                           (GetFaceVertex(conn.GetPortalConstControl(), 4, 4),
+                                           (GetFaceVertex<ExecutionPortalType>(executionPortal, 4, 4),
                                            4*totalFaces);
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
           std::cout << "MakeImplicitFaceConn," << timer.GetElapsedTime() << "\n";
