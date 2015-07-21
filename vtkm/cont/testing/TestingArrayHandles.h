@@ -195,10 +195,6 @@ private:
 
       { //as output with a length larger than the memory provided by the user
         //this should fail
-        typedef typename vtkm::cont::ArrayHandle<T>::template
-          ExecutionTypes<DeviceAdapterTag>::Portal
-            ExecutionPortalType;
-
         bool gotException = false;
         try
         {
