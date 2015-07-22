@@ -485,6 +485,36 @@ private:
       }
     } //release memory
 
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Schedule with a vary large Id value" << std::endl;
+
+    {
+      std::cout << "Allocating execution array" << std::endl;
+      IdStorage storage;
+      IdArrayManagerExecution manager(&storage);
+
+      std::cout << "Running clear." << std::endl;
+      //size is selected to be larger than the CUDA backend can launch in a
+      //single invocation when compiled for SM_2 support
+      const vtkm::Id size = 8400000;
+      Algorithm::Schedule(ClearArrayKernel(manager.PrepareForOutput(size)),
+                          size);
+
+      std::cout << "Running add." << std::endl;
+      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)),
+                          size);
+
+      std::cout << "Checking results." << std::endl;
+      manager.RetrieveOutputData(&storage);
+
+      for (vtkm::Id index = 0; index < size; index++)
+      {
+        vtkm::Id value = storage.GetPortalConst().Get(index);
+        VTKM_TEST_ASSERT(value == index + OFFSET,
+                         "Got bad value for scheduled kernels.");
+      }
+    } //release memory
+
     //verify that the schedule call works with id3
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Schedule with vtkm::Id3" << std::endl;
