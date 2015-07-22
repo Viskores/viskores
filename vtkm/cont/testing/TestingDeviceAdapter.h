@@ -494,6 +494,7 @@ private:
       IdArrayManagerExecution manager(&storage);
 
       std::cout << "Running clear." << std::endl;
+
       //size is selected to be larger than the CUDA backend can launch in a
       //single invocation when compiled for SM_2 support
       const vtkm::Id size = 8400000;

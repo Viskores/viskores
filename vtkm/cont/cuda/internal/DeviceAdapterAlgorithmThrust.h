@@ -114,6 +114,7 @@ void compute_block_size(dim3 rangeMax, dim3 blockSize3d, dim3& gridSize3d)
   gridSize3d.z = (rangeMax.z % blockSize3d.z != 0) ? (rangeMax.z / blockSize3d.z + 1) : (rangeMax.z / blockSize3d.z);
 }
 
+#ifdef ANALYZE_VTKM_SCHEDULER
 class PerfRecord
 {
 public:
@@ -204,12 +205,11 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
-  const vtkm::UInt32 numInstances = static_cast<vtkm::UInt32>(rangeMax[0] * rangeMax[1] * rangeMax[2]);
-  const vtkm::UInt32 blockSize = 128;
-  const vtkm::UInt32 blocksPerGrid = (numInstances + blockSize - 1) / blockSize;
-
   cudaEventRecord(start, 0);
-  Schedule1DIndexKernel<Functor> <<<blocksPerGrid, blockSize>>> (functor, numInstances);
+  typedef
+    vtkm::cont::cuda::internal::DeviceAdapterAlgorithmThrust<
+          vtkm::cont::DeviceAdapterTagCuda > Algorithm;
+  Algorithm::Schedule(functor, numInstances);
   cudaEventRecord(stop, 0);
 
   cudaEventSynchronize(stop);
@@ -247,6 +247,8 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
   std::cout << "GridSize of: " << gridSize3d.x << "," << gridSize3d.y << "," << gridSize3d.z << " required: " << elapsedTimeMilliseconds << std::endl;
   }
 }
+
+#endif
 
 
 /// This class can be subclassed to implement the DeviceAdapterAlgorithm for a
@@ -805,7 +807,7 @@ private:
   // we query cuda for the max blocks per grid for 1D scheduling
   // and cache the values in static variables
   VTKM_CONT_EXPORT
-  static const vtkm::Vec<vtkm::UInt32,3>& GetMaxGridOfThreadBlocks()
+  static vtkm::Vec<vtkm::UInt32,3> GetMaxGridOfThreadBlocks()
     {
     static bool gridQueryInit = false;
     static vtkm::Vec< vtkm::UInt32, 3> maxGridSize;
@@ -885,7 +887,6 @@ public:
                                                                             numInstances);
         }
       }
-
 
     //sync so that we can check the results of the call.
     //In the future I want move this before the schedule call, and throwing
