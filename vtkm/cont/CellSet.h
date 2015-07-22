@@ -33,7 +33,7 @@ namespace cont {
 class CellSet
 {
 public:
-  CellSet(const std::string &n, int d)
+  CellSet(const std::string &n, vtkm::Id d)
     : name(n), dimensionality(d), logicalStructure()
   {
   }
@@ -46,19 +46,19 @@ public:
   {
     return name;
   }
-  virtual int GetDimensionality()
+  virtual vtkm::Id GetDimensionality()
   {
     return dimensionality;
   }
 
-  virtual int GetNumCells() = 0;
+  virtual vtkm::Id GetNumCells() = 0;
 
-  virtual int GetNumFaces()
+  virtual vtkm::Id GetNumFaces()
   {
     return 0;
   }
 
-  virtual int GetNumEdges()
+  virtual vtkm::Id GetNumEdges()
   {
     return 0;
   }
@@ -67,7 +67,7 @@ public:
 
 protected:
     std::string name;
-    int dimensionality;
+    vtkm::Id dimensionality;
     vtkm::cont::LogicalStructure logicalStructure;
 };
 

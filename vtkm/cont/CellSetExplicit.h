@@ -37,12 +37,12 @@ public:
                                ConnectivityStorageTag
                                > ExplicitConnectivityType;
 
-  CellSetExplicit(const std::string &n, int d)
+  CellSetExplicit(const std::string &n, vtkm::Id d)
     : CellSet(n,d)
   {
   }
 
-  virtual int GetNumCells()
+  virtual vtkm::Id GetNumCells()
   {
     return nodesOfCellsConnectivity.GetNumberOfElements();
   }

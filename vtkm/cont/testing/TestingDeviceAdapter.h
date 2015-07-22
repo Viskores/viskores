@@ -384,13 +384,14 @@ private:
     try
     {
       std::cout << "Do array allocation that should fail." << std::endl;
-      vtkm::cont::internal::ArrayManagerExecution<
-          vtkm::Vector4,StorageTagBasic,DeviceAdapterTag>
-          bigManager;
       vtkm::cont::internal::Storage<
-          vtkm::Vector4, StorageTagBasic> supportArray;
+          vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic> supportArray;
+      vtkm::cont::internal::ArrayManagerExecution<
+          vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic, DeviceAdapterTag>
+          bigManager(&supportArray);
+
       const vtkm::Id bigSize = 0x7FFFFFFFFFFFFFFFLL;
-      bigManager.AllocateArrayForOutput(supportArray, bigSize);
+      bigManager.PrepareForOutput(bigSize);
       // It does not seem reasonable to get here.  The previous call should fail.
       VTKM_TEST_FAIL("A ridiculously sized allocation succeeded.  Either there "
                      "was a failure that was not reported but should have been "
@@ -402,7 +403,7 @@ private:
       std::cout << "Got the expected error: " << error.GetMessage() << std::endl;
     }
 #else
-    std::cout << "--------- Skiping out of memory test" << std::endl;
+    std::cout << "--------- Skipping out of memory test" << std::endl;
 #endif
   }
 
