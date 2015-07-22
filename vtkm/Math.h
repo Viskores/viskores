@@ -26,6 +26,8 @@
 #define vtk_m_Math_h
 
 #include <vtkm/Types.h>
+#include <vtkm/TypeTraits.h>
+#include <vtkm/VecTraits.h>
 
 #ifndef VTKM_CUDA
 #include <limits.h>
@@ -1251,9 +1253,7 @@ vtkm::Vec<T,2> Log1P(const vtkm::Vec<T,2> &x) {
 ///
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
-T Max(const T &x, const T &y) {
-  return (x < y) ? y : x;
-}
+T Max(const T &x, const T &y);
 #ifdef VTKM_USE_STL_MIN_MAX
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 Max(vtkm::Float32 x, vtkm::Float32 y) {
@@ -1278,9 +1278,7 @@ vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y) {
 ///
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
-T Min(const T &x, const T &y) {
-  return (x < y) ? x : y;
-}
+T Min(const T &x, const T &y);
 #ifdef VTKM_USE_STL_MIN_MAX
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y) {
@@ -1300,6 +1298,72 @@ vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y) {
   return VTKM_SYS_MATH_FUNCTION_64(fmin)(x,y);
 }
 #endif // !VTKM_USE_BOOST_MATH
+
+namespace detail {
+
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Max(T x, T y, vtkm::TypeTraitsScalarTag)
+{
+  return (x < y) ? y : x;
+}
+
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Max(const T &x, const T &y, vtkm::TypeTraitsVectorTag)
+{
+  typedef vtkm::VecTraits<T> Traits;
+  T result;
+  for (vtkm::IdComponent index = 0; index < Traits::NUM_COMPONENTS; index++)
+  {
+    Traits::SetComponent(result,
+                         index,
+                         vtkm::Max(Traits::GetComponent(x, index),
+                                   Traits::GetComponent(y, index)));
+  }
+  return result;
+}
+
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Min(T x, T y, vtkm::TypeTraitsScalarTag)
+{
+  return (x < y) ? x : y;
+}
+
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Min(const T &x, const T &y, vtkm::TypeTraitsVectorTag)
+{
+  typedef vtkm::VecTraits<T> Traits;
+  T result;
+  for (vtkm::IdComponent index = 0; index < Traits::NUM_COMPONENTS; index++)
+  {
+    Traits::SetComponent(result,
+                         index,
+                         vtkm::Min(Traits::GetComponent(x, index),
+                                   Traits::GetComponent(y, index)));
+  }
+  return result;
+}
+
+} // namespace detail
+
+/// Returns \p x or \p y, whichever is larger.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Max(const T &x, const T &y) {
+  return detail::Max(x, y, typename vtkm::TypeTraits<T>::DimensionalityTag());
+}
+
+/// Returns \p x or \p y, whichever is smaller.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+T Min(const T &x, const T &y) {
+  return detail::Min(x, y, typename vtkm::TypeTraits<T>::DimensionalityTag());
+}
 
 
 //-----------------------------------------------------------------------------
