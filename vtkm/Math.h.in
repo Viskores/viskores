@@ -781,7 +781,7 @@ vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64 &integral)
 }
 
 //-----------------------------------------------------------------------------
-/// Return the absolute value of \x. That is, return \p x if it is positive or
+/// Return the absolute value of \p x. That is, return \p x if it is positive or
 /// \p -x if it is negative.
 ///
 VTKM_EXEC_CONT_EXPORT
@@ -806,7 +806,7 @@ vtkm::Int64 Abs(vtkm::Int64 x)
 }
 $unary_math_function('Abs', 'fabs')\
 
-/// Returns a nonzero value if \x is negative.
+/// Returns a nonzero value if \p x is negative.
 ///
 $unary_template_function_no_vec('SignBit',
                                 'static_cast<vtkm::Int32>(signbit(x))',
