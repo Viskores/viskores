@@ -675,7 +675,7 @@ struct TryScalarVectorFieldTests
 
 //-----------------------------------------------------------------------------
 template<typename T>
-struct AllScalarTests : public vtkm::exec::FunctorBase
+struct AllTypesTests : public vtkm::exec::FunctorBase
 {
   VTKM_EXEC_EXPORT
   void TestMinMax() const
@@ -687,6 +687,16 @@ struct AllScalarTests : public vtkm::exec::FunctorBase
     VTKM_MATH_ASSERT(test_equal(vtkm::Min(high, low), low), "Wrong min.");
     VTKM_MATH_ASSERT(test_equal(vtkm::Max(low, high), high), "Wrong max.");
     VTKM_MATH_ASSERT(test_equal(vtkm::Max(high, low), high), "Wrong max.");
+
+    typedef vtkm::VecTraits<T> Traits;
+    T mixed1 = low;
+    T mixed2 = high;
+    Traits::SetComponent(mixed1, 0, Traits::GetComponent(high, 0));
+    Traits::SetComponent(mixed2, 0, Traits::GetComponent(low, 0));
+    VTKM_MATH_ASSERT(test_equal(vtkm::Min(mixed1, mixed2), low), "Wrong min.");
+    VTKM_MATH_ASSERT(test_equal(vtkm::Min(mixed2, mixed1), low), "Wrong min.");
+    VTKM_MATH_ASSERT(test_equal(vtkm::Max(mixed1, mixed2), high), "Wrong max.");
+    VTKM_MATH_ASSERT(test_equal(vtkm::Max(mixed2, mixed1), high), "Wrong max.");
   }
 
   VTKM_EXEC_EXPORT
@@ -697,13 +707,13 @@ struct AllScalarTests : public vtkm::exec::FunctorBase
 };
 
 template<typename Device>
-struct TryAllScalarTests
+struct TryAllTypesTests
 {
   template<typename T>
   void operator()(const T&) const
   {
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
-          AllScalarTests<T>(), 1);
+          AllTypesTests<T>(), 1);
   }
 };
 
@@ -752,9 +762,8 @@ void RunMathTests()
   std::cout << "Test for scalar and vector types." << std::endl;
   vtkm::testing::Testing::TryTypes(TryScalarVectorFieldTests<Device>(),
                                    vtkm::TypeListTagField());
-  std::cout << "Test for all basic types." << std::endl;
-  vtkm::testing::Testing::TryTypes(TryAllScalarTests<Device>(),
-                                   vtkm::TypeListTagScalarAll());
+  std::cout << "Test for all types." << std::endl;
+  vtkm::testing::Testing::TryAllTypes(TryAllTypesTests<Device>());
   std::cout << "Test all Abs types" << std::endl;
   vtkm::testing::Testing::TryTypes(TryAbsTests<Device>(),
                                    TypeListTagAbs());
