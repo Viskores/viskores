@@ -49,6 +49,24 @@ namespace internal {
 
 namespace detail {
 
+// This code is actually taking an error found at compile-time and not
+// reporting it until run-time. This seems strange at first, but this
+// behavior is actually important. With dynamic arrays and similar dynamic
+// classes, there may be types that are technically possible (such as using a
+// vector where a scalar is expected) but in reality never happen. Thus, for
+// these unsupported combinations we just silently halt the compiler from
+// attempting to create code for these errant conditions and throw a run-time
+// error if one every tries to create one.
+inline void PrintFailureMessage(int, boost::true_type) {}
+inline void PrintFailureMessage(int index, boost::false_type)
+{
+  std::stringstream message;
+  message << "Encountered bad type for parameter "
+          << index
+          << " when calling Invoke on a dispatcher.";
+  throw vtkm::cont::ErrorControlBadType(message.str());
+}
+
 // Checks that an argument in a ControlSignature is a valid control signature
 // tag. Causes a compile error otherwise.
 struct DispatcherBaseControlSignatureTagCheck
@@ -90,31 +108,27 @@ struct DispatcherBaseTypeCheckFunctor
 
   template<typename T>
   VTKM_CONT_EXPORT
-  typename boost::enable_if_c<vtkm::cont::arg::TypeCheck<TypeCheckTag,T>::value>::type
-  operator()(const T &x) const
+  void operator()(const T &x) const
+  {
+    typedef boost::integral_constant<bool,
+            vtkm::cont::arg::TypeCheck<TypeCheckTag,T>::value> CanContinueTagType;
+
+    vtkm::worklet::internal::detail::PrintFailureMessage(Index,CanContinueTagType());
+    this->WillContinue(x, CanContinueTagType());
+  }
+
+private:
+  template<typename T>
+  VTKM_CONT_EXPORT
+  void WillContinue(const T &x, boost::true_type) const
   {
     this->Continue(x);
   }
 
-  // This code is actually taking an error found at compile-time and not
-  // reporting it until run-time. This seems strange at first, but this
-  // behavior is actually important. With dynamic arrays and similar dynamic
-  // classes, there may be types that are technically possible (such as using a
-  // vector where a scalar is expected) but in reality never happen. Thus, for
-  // these unsported combinations we just silently halt the compiler from
-  // attempting to create code for these errant conditions and throw a run-time
-  // error if one every tries to create one.
   template<typename T>
   VTKM_CONT_EXPORT
-  typename boost::disable_if_c<vtkm::cont::arg::TypeCheck<TypeCheckTag,T>::value>::type
-  operator()(const T &) const
-  {
-    std::stringstream message;
-    message << "Encountered bad type for parameter "
-            << Index
-            << " when calling Invoke on a dispatcher.";
-    throw vtkm::cont::ErrorControlBadType(message.str());
-  }
+  void WillContinue(const T&, boost::false_type) const
+  { }
 };
 
 // Uses vtkm::cont::internal::DynamicTransform and the DynamicTransformCont
