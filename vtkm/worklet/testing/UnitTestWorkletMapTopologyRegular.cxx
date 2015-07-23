@@ -62,7 +62,7 @@ public:
   {
   //simple functor that returns the max of CellValue and nodeValue
   max_value = cellval;
-  for (vtkm::Id i=0; i<count; ++i)
+  for (vtkm::IdComponent i=0; i< count; ++i)
     {
     max_value = nodevals[i] > max_value ? nodevals[i] : max_value;
     }
@@ -105,7 +105,7 @@ public:
   {
     //simple functor that returns the average nodeValue.
     avgVal = nodevals[0];
-    for (vtkm::Id i=1; i<count; ++i)
+    for (vtkm::IdComponent i=1; i<count; ++i)
     {
       avgVal += nodevals[i];
     }

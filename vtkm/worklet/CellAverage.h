@@ -49,7 +49,7 @@ public:
                   T2 &average) const
   {
     T1 sum = nodevals[0];
-    for (vtkm::Id i=1; i<count; ++i)
+    for (vtkm::IdComponent i=1; i< count; ++i)
       {
       sum += nodevals[i];
       }
