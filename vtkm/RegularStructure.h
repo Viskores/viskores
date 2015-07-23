@@ -71,7 +71,7 @@ public:
   {
     BOOST_STATIC_ASSERT(IdsLength >= 2);
     ids[0] = ids[1] = -1;
-    vtkm::Id idx = 0;
+    vtkm::IdComponent idx = 0;
     if (index > 0)
 	   ids[idx++] = index-1;
     if (index < nodeDim[0]-1)
@@ -142,7 +142,8 @@ public:
     BOOST_STATIC_ASSERT(IdsLength >= 4);
 
     ids[0] = ids[1] = ids[2] = ids[3] = -1;
-    vtkm::Id i, j, idx = 0;
+    vtkm::Id i, j;
+    vtkm::IdComponent idx = 0;
     CalculateLogicalNodeIndices(index, i, j);
     if (i > 0 && j > 0)
       ids[idx++] = CalculateCellIndex(i-1, j-1);
@@ -240,7 +241,8 @@ public:
 
     ids[0]=ids[1]=ids[2]=ids[3]=ids[4]=ids[5]=ids[6]=ids[7]=-1;
 
-    vtkm::Id i, j, k, idx=0;
+    vtkm::Id i, j, k;
+    vtkm::IdComponent idx=0;
 
     CalculateLogicalNodeIndices(index, i, j, k);
     if (i > 0 && j > 0 && k > 0)

@@ -36,7 +36,7 @@ namespace cont {
 
 namespace internal {
 
-template<vtkm::Id NumberOfComponents>
+template<vtkm::IdComponent NumberOfComponents>
 class InputToOutputTypeTransform
 {
 public:
@@ -48,7 +48,7 @@ public:
   MinMaxPairType operator()(const ValueType &value) const
   {
     ResultType input;
-    for (vtkm::Id i = 0; i < NumberOfComponents; ++i)
+    for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
       input[i] = static_cast<vtkm::Float64>(
           vtkm::VecTraits<ValueType>::GetComponent(value, i));
@@ -57,7 +57,7 @@ public:
   }
 };
 
-template<vtkm::Id NumberOfComponents>
+template<vtkm::IdComponent NumberOfComponents>
 class MinMax
 {
 public:
@@ -68,7 +68,7 @@ public:
   MinMaxPairType operator()(const MinMaxPairType &v1, const MinMaxPairType &v2) const
   {
     MinMaxPairType result;
-    for (vtkm::Id i = 0; i < NumberOfComponents; ++i)
+    for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
       result.first[i] = vtkm::Min(v1.first[i], v2.first[i]);
       result.second[i] = vtkm::Max(v1.second[i], v2.second[i]);
@@ -82,11 +82,12 @@ enum
   MAX_NUMBER_OF_COMPONENTS = 10
 };
 
-template<vtkm::Id NumberOfComponents, typename ComputeBoundsClass>
+template<vtkm::IdComponent NumberOfComponents, typename ComputeBoundsClass>
 class SelectNumberOfComponents
 {
 public:
-  static void Execute(vtkm::Id components, const vtkm::cont::DynamicArrayHandle &data,
+  static void Execute(vtkm::IdComponent components,
+                      const vtkm::cont::DynamicArrayHandle &data,
                       ArrayHandle<vtkm::Float64> &bounds)
   {
     if (components == NumberOfComponents)
@@ -95,8 +96,10 @@ public:
     }
     else
     {
-      SelectNumberOfComponents<NumberOfComponents+1, ComputeBoundsClass>::Execute(
-          components, data, bounds);
+      SelectNumberOfComponents<NumberOfComponents+1,
+                               ComputeBoundsClass>::Execute(components,
+                                                            data,
+                                                            bounds);
     }
   }
 };
@@ -118,7 +121,7 @@ template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
 class ComputeBounds
 {
 private:
-  template<vtkm::Id NumberOfComponents>
+  template<vtkm::IdComponent NumberOfComponents>
   class Body
   {
   public:
@@ -141,7 +144,7 @@ private:
                                                 MinMax<NumberOfComponents>());
 
       this->Bounds->Allocate(NumberOfComponents * 2);
-      for (vtkm::Id i = 0; i < NumberOfComponents; ++i)
+      for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
       {
         this->Bounds->GetPortalControl().Set(i * 2, result.first[i]);
         this->Bounds->GetPortalControl().Set(i * 2 + 1, result.second[i]);
@@ -153,7 +156,7 @@ private:
   };
 
 public:
-  template<vtkm::Id NumberOfComponents>
+  template<vtkm::IdComponent NumberOfComponents>
   static void CallBody(const vtkm::cont::DynamicArrayHandle &data,
       ArrayHandle<vtkm::Float64> &bounds)
   {
@@ -167,7 +170,7 @@ public:
     typedef ComputeBounds<DeviceAdapterTag, TypeList, StorageList> SelfType;
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-    vtkm::Id numberOfComponents = data.GetNumberOfComponents();
+    vtkm::IdComponent numberOfComponents = data.GetNumberOfComponents();
     switch(numberOfComponents)
       {
       case 1:

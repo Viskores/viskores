@@ -71,13 +71,14 @@ struct Fetch<
         invocation.Parameters.template GetParameter<InputDomainIndex>();
 
 
-    int nids = topology.GetNumberOfIndices(index);
+    vtkm::IdComponent nids =
+      static_cast<vtkm::IdComponent>(topology.GetNumberOfIndices(index));
 
     vtkm::Vec<vtkm::Id,ITEM_TUPLE_LENGTH> ids;
     topology.GetIndices(index,ids);
 
     ValueType v;
-    for (int i=0; i<nids && i<ITEM_TUPLE_LENGTH; ++i)
+    for (vtkm::IdComponent i=0; i<nids && i<ITEM_TUPLE_LENGTH; ++i)
     {
         v[i] = invocation.Parameters.template GetParameter<ParameterIndex>().
             Get(ids[i]);

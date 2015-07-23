@@ -72,9 +72,9 @@ public:
   VTKM_EXEC_EXPORT
   void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
-    int n = GetNumberOfIndices(index);
-    int start = MapCellToConnectivityIndex.Get(index);
-    for (int i=0; i<n && i<ItemTupleLength; i++)
+    vtkm::Id n = GetNumberOfIndices(index);
+    vtkm::Id start = MapCellToConnectivityIndex.Get(index);
+    for (vtkm::IdComponent i=0; i<n && i<ItemTupleLength; i++)
       ids[i] = Connectivity.Get(start+i);
   }
 

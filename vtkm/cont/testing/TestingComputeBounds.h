@@ -77,7 +77,7 @@ private:
     const vtkm::Id nvals = 11;
     T data[nvals] = { 1, 2, 3, 4, 5, -5, -4, -3, -2, -1, 0 };
     vtkm::Vec<T, NumberOfComponents> fieldData[nvals];
-    for (vtkm::Id i = 0; i < NumberOfComponents; ++i)
+    for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
       std::random_shuffle(data, data + nvals);
       for (vtkm::Id j = 0; j < nvals; ++j)
@@ -93,7 +93,7 @@ private:
                     VTKM_DEFAULT_STORAGE_LIST_TAG());
 
     bool success = true;
-    for (vtkm::Id i = 0; i < NumberOfComponents; ++i)
+    for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
       if (result[i * 2] != -5.0 || result[i * 2 + 1] != 5.0)
       {
@@ -109,12 +109,12 @@ private:
     else
     {
       std::cout << "Expected: -5.0s and 5.0s; Got: ";
-      for (vtkm::Id i = 0; i < NumberOfComponents; ++i)
+      for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
       {
         std::cout << result[i * 2] << ",";
       }
       std::cout << " and ";
-      for (vtkm::Id i = 0; i < NumberOfComponents; ++i)
+      for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
       {
         std::cout << result[i * 2 + 1] << ",";
       }

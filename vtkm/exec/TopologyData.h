@@ -29,8 +29,8 @@ template<typename T, vtkm::IdComponent ITEM_TUPLE_LENGTH = 8>
 class TopologyData
 {
 public:
-  VTKM_EXEC_EXPORT T &operator[](vtkm::Id index) { return vec[index]; }
-  VTKM_EXEC_EXPORT const T &operator[](vtkm::Id index) const { return vec[index]; }
+  VTKM_EXEC_EXPORT T &operator[](vtkm::IdComponent index) { return vec[index]; }
+  VTKM_EXEC_EXPORT const T &operator[](vtkm::IdComponent index) const { return vec[index]; }
 
   VTKM_EXEC_EXPORT TopologyData()
   {

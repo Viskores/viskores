@@ -131,12 +131,21 @@ check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
 
 #-----------------------------------------------------------------------------
 # Build the configure file.
+# need to set VTKM_USE_DOUBLE_PRECISION, and VTKM_USE_64BIT_IDS as that
+# is the spelling we use for our defines.
+set(VTKM_USE_DOUBLE_PRECISION ${VTKm_USE_DOUBLE_PRECISION})
+set(VTKM_USE_64BIT_IDS ${VTKm_USE_64BIT_IDS})
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/vtkm/internal/Configure.h.in
   ${CMAKE_CURRENT_BINARY_DIR}/vtkm/internal/Configure.h
   @ONLY)
 vtkm_install_headers(
   vtkm/internal ${CMAKE_CURRENT_BINARY_DIR}/vtkm/internal/Configure.h)
 
+unset(VTKM_USE_DOUBLE_PRECISION)
+unset(VTKM_USE_64BIT_IDS)
+
+#-----------------------------------------------------------------------------
 # List of Boost features used:
 # * Smart Ptr
 # * Meta programming language
