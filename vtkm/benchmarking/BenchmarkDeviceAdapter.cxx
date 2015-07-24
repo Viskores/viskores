@@ -22,9 +22,58 @@
 
 #include <vtkm/benchmarking/BenchmarkDeviceAdapter.h>
 
-int BenchmarkDeviceAdapter(int, char *[])
+#include <iostream>
+#include <algorithm>
+#include <string>
+#include <cctype>
+
+int BenchmarkDeviceAdapter(int argc, char *argv[])
 {
-	return vtkm::benchmarking::BenchmarkDeviceAdapter
-		<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Run();
+  int benchmarks = 0;
+  if (argc < 2){
+    benchmarks = vtkm::benchmarking::ALL;
+  }
+  else {
+    for (int i = 1; i < argc; ++i){
+      std::string arg = argv[i];
+      std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+      if (arg == "lowerbounds"){
+        benchmarks |= vtkm::benchmarking::LOWER_BOUNDS;
+      }
+      else if (arg == "reduce"){
+        benchmarks |= vtkm::benchmarking::REDUCE;
+      }
+      else if (arg == "reducebykey"){
+        benchmarks |= vtkm::benchmarking::REDUCE_BY_KEY;
+      }
+      else if (arg == "scaninclusive"){
+        benchmarks |= vtkm::benchmarking::SCAN_INCLUSIVE;
+      }
+      else if (arg == "scanexclusive"){
+        benchmarks |= vtkm::benchmarking::SCAN_EXCLUSIVE;
+      }
+      else if (arg == "sort"){
+        benchmarks |= vtkm::benchmarking::SORT;
+      }
+      else if (arg == "sortbykey"){
+        benchmarks |= vtkm::benchmarking::SORT_BY_KEY;
+      }
+      else if (arg == "streamcompact"){
+        benchmarks |= vtkm::benchmarking::STREAM_COMPACT;
+      }
+      else if (arg == "unique"){
+        benchmarks |= vtkm::benchmarking::UNIQUE;
+      }
+      else if (arg == "upperbounds"){
+        benchmarks |= vtkm::benchmarking::UPPER_BOUNDS;
+      }
+      else {
+        std::cout << "Unrecognized benchmark: " << argv[i] << std::endl;
+        return 1;
+      }
+    }
+  }
+  return vtkm::benchmarking::BenchmarkDeviceAdapter
+    <VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Run(benchmarks);
 }
 
