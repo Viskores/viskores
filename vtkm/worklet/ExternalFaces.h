@@ -82,11 +82,12 @@ namespace worklet
           VTKM_CONT_EXPORT
           GetFaceVertex() {};
 
+          VTKM_CONT_EXPORT
           GetFaceVertex(const ExecutionPortalType &portal,
                         const vtkm::Id &f,
                         const vtkm::Id &p) : FacePortal(portal), FacesPerCell(f), PointsPerCell(p) {};
 
-          VTKM_EXEC_CONT_EXPORT
+          VTKM_EXEC_EXPORT
           vtkm::Id operator()(vtkm::Id index) const
           {
               int divisor = FacesPerCell*PointsPerCell;
