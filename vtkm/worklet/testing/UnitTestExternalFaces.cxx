@@ -105,7 +105,6 @@ void TestExternalFaces()
 
       //Add the VTK-m cell set
       ds.AddCellSet(cs);
-      ds.PrintSummary(std::cout);
 
       //Run the External Faces worklet
       vtkm::cont::DataSet new_ds = RunExternalFaces(ds);
