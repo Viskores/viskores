@@ -60,8 +60,8 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
   ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
   boost::shared_ptr<vtkm::cont::CellSetExplicit<> > cs(
-      new vtkm::cont::CellSetExplicit<>("cells", numCells));
-  vtkm::cont::ExplicitConnectivity<> &ec = cs->nodesOfCellsConnectivity;
+      new vtkm::cont::CellSetExplicit<>("cells", 3));
+  vtkm::cont::ExplicitConnectivity<> &ec = cs->NodesOfCellsConnectivity;
   ec.PrepareToAddCells(numCells, numCells * 4);
   for (vtkm::Id j = 0; j < dim - 1; ++j)
   {

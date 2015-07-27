@@ -38,81 +38,93 @@
 namespace vtkm {
 namespace cont {
 
-class CellSet;
-
 class DataSet
 {
 public:
+  VTKM_CONT_EXPORT
   DataSet()
   {
   }
 
-  void AddField(Field f)
+  VTKM_CONT_EXPORT
+  void AddField(Field field)
   {
-    Fields.push_back(f);
+    this->Fields.push_back(field);
   }
 
-  vtkm::cont::Field &GetField(vtkm::Id index)
+  VTKM_CONT_EXPORT
+  const vtkm::cont::Field &GetField(vtkm::Id index) const
   {
-    VTKM_ASSERT_CONT(index >= 0 && index <= static_cast<vtkm::Id>(Fields.size()));
-    return Fields[static_cast<std::size_t>(index)];
+    VTKM_ASSERT_CONT((index >= 0) &&
+                     (index <= static_cast<vtkm::Id>(this->Fields.size())));
+    return this->Fields[static_cast<std::size_t>(index)];
   }
 
-  vtkm::cont::Field &GetField(const std::string &n)
+  VTKM_CONT_EXPORT
+  const vtkm::cont::Field &GetField(const std::string &name) const
   {
-    for (unsigned int i=0; i<Fields.size(); ++i)
+    for (std::size_t i=0; i < this->Fields.size(); ++i)
     {
-      if (Fields[i].GetName() == n)
-        return Fields[i];
+      if (this->Fields[i].GetName() == name)
+      {
+        return this->Fields[i];
+      }
     }
     throw vtkm::cont::ErrorControlBadValue("No field with requested name");
   }
 
-  boost::shared_ptr<vtkm::cont::CellSet> GetCellSet(vtkm::Id index=0)
+  VTKM_CONT_EXPORT
+  boost::shared_ptr<vtkm::cont::CellSet> GetCellSet(vtkm::Id index=0) const
   {
-    VTKM_ASSERT_CONT(index >= 0 && index <= static_cast<vtkm::Id>(CellSets.size()));
-    return CellSets[static_cast<std::size_t>(index)];
+    VTKM_ASSERT_CONT((index >= 0) &&
+                     (index <= static_cast<vtkm::Id>(this->CellSets.size())));
+    return this->CellSets[static_cast<std::size_t>(index)];
   }
 
+  VTKM_CONT_EXPORT
   void AddCoordinateSystem(vtkm::cont::CoordinateSystem cs)
   {
-    CoordSystems.push_back(cs);
+    this->CoordSystems.push_back(cs);
   }
 
+  VTKM_CONT_EXPORT
   void AddCellSet(boost::shared_ptr<vtkm::cont::CellSet> cs)
   {
-    CellSets.push_back(cs);
+    this->CellSets.push_back(cs);
   }
 
-  vtkm::Id GetNumberOfCellSets()
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfCellSets() const
   {
     return static_cast<vtkm::Id>(this->CellSets.size());
   }
 
-  vtkm::Id GetNumberOfFields()
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfFields() const
   {
     return static_cast<vtkm::Id>(this->Fields.size());
   }
 
-  void PrintSummary(std::ostream &out)
+  VTKM_CONT_EXPORT
+  void PrintSummary(std::ostream &out) const
   {
       out<<"DataSet:\n";
-      out<<"  CoordSystems["<<CoordSystems.size()<<"]\n";
-      for (std::size_t i = 0; i < CoordSystems.size(); i++)
+      out<<"  CoordSystems["<<this->CoordSystems.size()<<"]\n";
+      for (std::size_t i = 0; i < this->CoordSystems.size(); i++)
       {
-        CoordSystems[i].PrintSummary(out);
+        this->CoordSystems[i].PrintSummary(out);
       }
 
-      out<<"  CellSets["<<GetNumberOfCellSets()<<"]\n";
-      for (vtkm::Id i = 0; i < GetNumberOfCellSets(); i++)
+      out<<"  CellSets["<<this->GetNumberOfCellSets()<<"]\n";
+      for (vtkm::Id i = 0; i < this->GetNumberOfCellSets(); i++)
       {
-    	  GetCellSet(i)->PrintSummary(out);
+        this->GetCellSet(i)->PrintSummary(out);
       }
 
-      out<<"  Fields["<<GetNumberOfFields()<<"]\n";
-      for (vtkm::Id i = 0; i < GetNumberOfFields(); i++)
+      out<<"  Fields["<<this->GetNumberOfFields()<<"]\n";
+      for (vtkm::Id i = 0; i < this->GetNumberOfFields(); i++)
       {
-    	  GetField(i).PrintSummary(out);
+        this->GetField(i).PrintSummary(out);
       }
   }
 

@@ -55,17 +55,17 @@ TwoDimRegularTest()
                      "Incorrect number of cell sets");
     VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 4,
                      "Incorrect number of fields");
-    VTKM_TEST_ASSERT(cs->structure.GetNumberOfNodes() == 6,
+    VTKM_TEST_ASSERT(cs->Structure.GetNumberOfNodes() == 6,
                      "Incorrect number of nodes");
-    VTKM_TEST_ASSERT(cs->structure.GetNumberOfCells() == 2,
+    VTKM_TEST_ASSERT(cs->Structure.GetNumberOfCells() == 2,
                      "Incorrect number of cells");
 
-    vtkm::Id numCells = cs->structure.GetNumberOfCells();
+    vtkm::Id numCells = cs->Structure.GetNumberOfCells();
     for (int i = 0; i < numCells; i++)
     {
-        VTKM_TEST_ASSERT(cs->structure.GetNumberOfIndices() == 4,
+        VTKM_TEST_ASSERT(cs->Structure.GetNumberOfIndices() == 4,
                          "Incorrect number of cell indices");
-        vtkm::CellType shape = cs->structure.GetElementShapeType();
+        vtkm::CellType shape = cs->Structure.GetElementShapeType();
         VTKM_TEST_ASSERT(shape == vtkm::VTKM_PIXEL, "Incorrect element type.");
     }
 
@@ -123,18 +123,18 @@ ThreeDimRegularTest()
     VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 5,
                      "Incorrect number of fields");
 
-    VTKM_TEST_ASSERT(cs->structure.GetNumberOfNodes() == 18,
+    VTKM_TEST_ASSERT(cs->Structure.GetNumberOfNodes() == 18,
                      "Incorrect number of nodes");
 
-    VTKM_TEST_ASSERT(cs->structure.GetNumberOfCells() == 4,
+    VTKM_TEST_ASSERT(cs->Structure.GetNumberOfCells() == 4,
                      "Incorrect number of cells");
 
-    vtkm::Id numCells = cs->structure.GetNumberOfCells();
+    vtkm::Id numCells = cs->Structure.GetNumberOfCells();
     for (int i = 0; i < numCells; i++)
     {
-        VTKM_TEST_ASSERT(cs->structure.GetNumberOfIndices() == 8,
+        VTKM_TEST_ASSERT(cs->Structure.GetNumberOfIndices() == 8,
                          "Incorrect number of cell indices");
-        vtkm::CellType shape = cs->structure.GetElementShapeType();
+        vtkm::CellType shape = cs->Structure.GetElementShapeType();
         VTKM_TEST_ASSERT(shape == vtkm::VTKM_VOXEL, "Incorrect element type.");
     }
 

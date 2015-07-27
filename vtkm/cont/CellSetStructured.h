@@ -35,43 +35,47 @@ class CellSetStructured : public CellSet
 public:
   static const int Dimension=DIMENSION;
 
-  CellSetStructured(const std::string &n)
-    : CellSet(n,Dimension)
+  VTKM_CONT_EXPORT
+  CellSetStructured(const std::string &name)
+    : CellSet(name,Dimension)
   {
   }
 
 
-  virtual vtkm::Id GetNumCells()
+  virtual vtkm::Id GetNumCells() const
   {
-    return structure.GetNumberOfCells();
+    return this->Structure.GetNumberOfCells();
   }
 
+  VTKM_CONT_EXPORT
   vtkm::RegularConnectivity<vtkm::cont::NODE,vtkm::cont::CELL,Dimension>
-  GetNodeToCellConnectivity()
+  GetNodeToCellConnectivity() const
   {
     typedef vtkm::RegularConnectivity<vtkm::cont::NODE,
                                       vtkm::cont::CELL,
                                       Dimension> NodeToCellConnectivity;
-    return NodeToCellConnectivity(structure);
+    return NodeToCellConnectivity(this->Structure);
   }
 
+  VTKM_CONT_EXPORT
   vtkm::RegularConnectivity<vtkm::cont::CELL,vtkm::cont::NODE,Dimension>
-  GetCellToNodeConnectivity()
+  GetCellToNodeConnectivity() const
   {
     typedef vtkm::RegularConnectivity<vtkm::cont::CELL,
                                       vtkm::cont::NODE,
                                       Dimension> CellToNodeConnectivity;
-    return CellToNodeConnectivity(structure);
+    return CellToNodeConnectivity(this->Structure);
   }
 
-  virtual void PrintSummary(std::ostream &out)
+  virtual void PrintSummary(std::ostream &out) const
   {
-      out<<"  StructuredCellSet: "<<name<<" dim= "<<dimensionality<<std::endl;
-      structure.PrintSummary(out);
+      out << "  StructuredCellSet: " << this->GetName()
+          << " dim= " << this->GetDimensionality() << std::endl;
+      this->Structure.PrintSummary(out);
   }
 
 public:
-  vtkm::RegularStructure<Dimension> structure;
+  vtkm::RegularStructure<Dimension> Structure;
 };
 
 
