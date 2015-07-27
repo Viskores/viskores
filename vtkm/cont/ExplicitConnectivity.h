@@ -58,12 +58,12 @@ public:
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfIndices(vtkm::Id index) const
   {
-    return this->NumIndices.GetPortalControl().Get(index);
+    return this->NumIndices.GetPortalConstControl().Get(index);
   }
   VTKM_CONT_EXPORT
   vtkm::Id GetElementShapeType(vtkm::Id index) const
   {
-    return this->Shapes.GetPortalControl().Get(index);
+    return this->Shapes.GetPortalConstControl().Get(index);
   }
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_CONT_EXPORT
@@ -72,9 +72,9 @@ public:
   {
     vtkm::Id numIndices = this->GetNumberOfIndices(index);
     vtkm::Id start =
-        this->MapCellToConnectivityIndex.GetPortalControl().Get(index);
+        this->MapCellToConnectivityIndex.GetPortalConstControl().Get(index);
     for (vtkm::IdComponent i=0; i<numIndices && i<ItemTupleLength; i++)
-      ids[i] = this->Connectivity.GetPortalControl().Get(start+i);
+      ids[i] = this->Connectivity.GetPortalConstControl().Get(start+i);
   }
 
   /// First method to add cells -- one at a time.
@@ -143,7 +143,7 @@ public:
     for (vtkm::Id i=0; i<this->NumShapes; ++i)
     {
       this->MapCellToConnectivityIndex.GetPortalControl().Set(i, counter);
-      counter += this->NumIndices.GetPortalControl().Get(i);
+      counter += this->NumIndices.GetPortalConstControl().Get(i);
     }
   }
 
