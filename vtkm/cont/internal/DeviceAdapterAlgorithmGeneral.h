@@ -197,9 +197,11 @@ private:
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
     {
+      typedef typename OutputPortalType::ValueType ValueType;
       this->OutputPortal.Set(
         index + this->OutputOffset,
-        this->InputPortal.Get(index + this->InputOffset));
+        static_cast<ValueType>(
+		  this->InputPortal.Get(index + this->InputOffset)));
     }
 
     VTKM_CONT_EXPORT

@@ -149,7 +149,7 @@ TestMaxNodeOrCell()
     boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
     vtkm::cont::CellSetStructured<2> *cs =
         dynamic_cast<vtkm::cont::CellSetStructured<2> *>(scs.get());
-    VTKM_TEST_ASSERT(cs, "Structured cell set not found");
+    VTKM_TEST_ASSERT(cs != NULL, "Structured cell set not found");
 
     //Run a worklet to populate a cell centered field.
     //Here, we're filling it with test values.
@@ -198,7 +198,7 @@ TestAvgNodeToCell()
     boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
     vtkm::cont::CellSetStructured<2> *cs =
         dynamic_cast<vtkm::cont::CellSetStructured<2> *>(scs.get());
-    VTKM_TEST_ASSERT(cs, "Structured cell set not found");
+    VTKM_TEST_ASSERT(cs != NULL, "Structured cell set not found");
 
     //Run a worklet to populate a cell centered field.
     //Here, we're filling it with test values.

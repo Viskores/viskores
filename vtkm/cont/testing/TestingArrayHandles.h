@@ -28,6 +28,7 @@
 
 #include <vtkm/cont/testing/Testing.h>
 #include <algorithm>
+#include <vector>
 
 namespace vtkm {
 namespace cont {
@@ -63,41 +64,35 @@ struct TestingArrayHandles
   };
 
   template<typename T, typename ExecutionPortalType>
-  struct AssignTestValue
+  struct AssignTestValue : public vtkm::exec::FunctorBase
   {
     ExecutionPortalType Portal;
+    VTKM_CONT_EXPORT
     AssignTestValue(ExecutionPortalType p): Portal(p) {}
 
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id index,
-                    const vtkm::exec::internal::ErrorMessageBuffer &) const
+    void operator()(vtkm::Id index) const
     {
       this->Portal.Set(index, TestValue(index, T()) );
     }
-
-    VTKM_CONT_EXPORT void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &) {  }
   };
 
   template<typename T, typename ExecutionPortalType>
-  struct InplaceFunctor
+  struct InplaceFunctor : public vtkm::exec::FunctorBase
   {
     ExecutionPortalType Portal;
+    VTKM_CONT_EXPORT
     InplaceFunctor(ExecutionPortalType p): Portal(p) {}
 
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id index,
-                    const vtkm::exec::internal::ErrorMessageBuffer &) const
+    void operator()(vtkm::Id index) const
     {
       this->Portal.Set(index, this->Portal.Get(index)+ T(1));
     }
-
-    VTKM_CONT_EXPORT void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &) {  }
   };
 
 private:
-  static const vtkm::Id ARRAY_SIZE = 100000;
+  static const vtkm::Id ARRAY_SIZE = 100;
 
   typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
 
@@ -134,16 +129,14 @@ private:
     template<typename T>
     VTKM_CONT_EXPORT void operator()(T) const
     {
-      T array[ARRAY_SIZE];
-      for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+      std::vector<T> buffer(ARRAY_SIZE);
+	  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
       {
-        array[index] = TestValue(index, T());
+        buffer[static_cast<std::size_t>(index)] = TestValue(index, T());
       }
 
-      vtkm::cont::internal::Storage<T,vtkm::cont::StorageTagBasic>
-          arrayStorage(array, ARRAY_SIZE);
-
-      vtkm::cont::ArrayHandle<T> arrayHandle(arrayStorage);
+      vtkm::cont::ArrayHandle<T> arrayHandle =
+          vtkm::cont::make_ArrayHandle(buffer);
 
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
                        "ArrayHandle has wrong number of entries.");
@@ -239,13 +232,13 @@ private:
 
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE*2,
                        "Array not allocated correctly.");
-      CheckArray(arrayHandle);
+      array_handle_testing::CheckArray(arrayHandle);
 
       std::cout << "Try shrinking the array." << std::endl;
       arrayHandle.Shrink(ARRAY_SIZE);
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
                        "Array size did not shrink correctly.");
-      CheckArray(arrayHandle);
+      array_handle_testing::CheckArray(arrayHandle);
 
       std::cout << "Try reallocating array." << std::endl;
       arrayHandle.Allocate(ARRAY_SIZE*2);
@@ -283,8 +276,7 @@ private:
       {
       vtkm::testing::Testing::TryAllTypes(VerifyEmptyArrays());
       vtkm::testing::Testing::TryAllTypes(VerifyUserAllocatedHandle());
-      // TestingArrayHandles<DeviceAdapterTag>::VerifyVTKMAllocatedHandle<T>()();
-
+      vtkm::testing::Testing::TryAllTypes(VerifyVTKMAllocatedHandle());
       }
     };
 
