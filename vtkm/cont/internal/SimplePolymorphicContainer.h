@@ -36,6 +36,8 @@ struct SimplePolymorphicContainerBase {
 
   virtual boost::shared_ptr<SimplePolymorphicContainerBase>
   NewInstance() const = 0;
+
+  virtual const void *GetVoidPointer() const = 0;
 };
 
 /// \brief Simple object container that can use C++ run-time type information.
@@ -62,6 +64,11 @@ struct SimplePolymorphicContainer : public SimplePolymorphicContainerBase
   {
     return boost::shared_ptr<SimplePolymorphicContainerBase>(
           new SimplePolymorphicContainer<T>());
+  }
+
+  virtual const void *GetVoidPointer() const
+  {
+    return &this->Item;
   }
 };
 

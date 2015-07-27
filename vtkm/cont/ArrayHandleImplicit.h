@@ -75,7 +75,7 @@ struct ArrayHandleImplicitTraits
 {
   typedef vtkm::cont::StorageTagImplicit<
       vtkm::cont::detail::ArrayPortalImplicit<ValueType,
-                                              FunctorType> > Tag;
+                                              FunctorType> > StorageTag;
 };
 
 } // namespace detail
@@ -94,16 +94,16 @@ class ArrayHandleImplicit
     : public vtkm::cont::ArrayHandle <
           ValueType,
           typename detail::ArrayHandleImplicitTraits<ValueType,
-                                                     FunctorType>::Tag >
+                                                     FunctorType>::StorageTag >
 {
 private:
   typedef typename detail::ArrayHandleImplicitTraits<ValueType,
                                                      FunctorType> ArrayTraits;
 
-  typedef typename ArrayTraits::Tag Tag;
-
  public:
-  typedef vtkm::cont::ArrayHandle<ValueType,Tag> Superclass;
+  typedef typename ArrayTraits::StorageTag StorageTag;
+
+  typedef vtkm::cont::ArrayHandle<ValueType,StorageTag> Superclass;
 
   ArrayHandleImplicit()
     : Superclass(typename Superclass::PortalConstControl(FunctorType(),0)) {  }

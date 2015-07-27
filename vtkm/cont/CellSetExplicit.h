@@ -27,19 +27,26 @@ namespace vtkm {
 namespace cont {
 
 template<typename ShapeStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
-         typename IndiceStorageTag        = VTKM_DEFAULT_STORAGE_TAG,
+         typename IndexStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
          typename ConnectivityStorageTag  = VTKM_DEFAULT_STORAGE_TAG >
 class CellSetExplicit : public CellSet
 {
 public:
   typedef ExplicitConnectivity<ShapeStorageTag,
-                               IndiceStorageTag,
+                               IndexStorageTag,
                                ConnectivityStorageTag
                                > ExplicitConnectivityType;
 
   VTKM_CONT_EXPORT
-  CellSetExplicit(const std::string &name, vtkm::IdComponent dimensionality)
+  CellSetExplicit(const std::string &name = "",
+                  vtkm::IdComponent dimensionality = 3)
     : CellSet(name, dimensionality)
+  {
+  }
+
+  VTKM_CONT_EXPORT
+  CellSetExplicit(int dimensionality)
+    : CellSet("", dimensionality)
   {
   }
 

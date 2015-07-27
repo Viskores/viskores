@@ -47,6 +47,7 @@ set(unit_tests
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDeviceAdapterSerial.cxx
   UnitTestDynamicArrayHandle.cxx
+  UnitTestDynamicCellSet.cxx
   UnitTestDynamicPointCoordinates.cxx
   UnitTestPointCoordinates.cxx
   UnitTestStorageBasic.cxx
