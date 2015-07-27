@@ -165,7 +165,7 @@ TestMaxNodeOrCell()
   vtkm::cont::CellSetExplicit<> *cse =
         dynamic_cast<vtkm::cont::CellSetExplicit<>*>(cs.get());
 
-  VTKM_TEST_ASSERT(cse, "Expected an explicit cell set");
+  VTKM_TEST_ASSERT(cse != NULL, "Expected an explicit cell set");
 
   //Todo:
   //the scheduling should just be passed a CellSet, and not the
@@ -216,7 +216,7 @@ TestAvgNodeToCell()
   vtkm::cont::CellSetExplicit<> *cse =
         dynamic_cast<vtkm::cont::CellSetExplicit<>*>(cs.get());
 
-  VTKM_TEST_ASSERT(cse, "Expected an explicit cell set");
+  VTKM_TEST_ASSERT(cse != NULL, "Expected an explicit cell set");
 
   vtkm::worklet::DispatcherMapTopology< ::test_explicit::AvgNodeToCellValue > dispatcher;
   dispatcher.Invoke(ds.GetField("nodevar").GetData(),

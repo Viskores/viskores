@@ -145,7 +145,8 @@ public:
 
   VTKM_CONT_EXPORT
   ArrayPortalToIterators(const PortalType &portal)
-    : Iterator(portal.GetIteratorBegin(), portal.GetNumberOfValues()),
+    : Iterator(portal.GetIteratorBegin(),
+	           static_cast<size_t>(portal.GetNumberOfValues())),
       NumberOfValues(portal.GetNumberOfValues())
   {  }
 
@@ -157,7 +158,9 @@ public:
   VTKM_CONT_EXPORT
   IteratorType GetEnd() const {
     IteratorType iterator = this->Iterator;
-    std::advance(iterator, this->NumberOfValues);
+	typedef typename std::iterator_traits<IteratorType>::difference_type
+		difference_type;
+    std::advance(iterator, static_cast<difference_type>(this->NumberOfValues));
     return iterator;
   }
 

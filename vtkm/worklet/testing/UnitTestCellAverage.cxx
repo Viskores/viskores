@@ -38,7 +38,7 @@ void TestCellAverageRegular3D()
   boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
   vtkm::cont::CellSetStructured<3> *cs =
       dynamic_cast<vtkm::cont::CellSetStructured<3> *>(scs.get());
-  VTKM_TEST_ASSERT(cs, "Structured cell set not found");
+  VTKM_TEST_ASSERT(cs != NULL, "Structured cell set not found");
 
   vtkm::cont::Field result("avgvals",
                            1,
@@ -72,7 +72,7 @@ void TestCellAverageRegular2D()
   boost::shared_ptr<vtkm::cont::CellSet> ecs = ds.GetCellSet(0);
   vtkm::cont::CellSetExplicit<> *cs =
       dynamic_cast<vtkm::cont::CellSetExplicit<> *>(ecs.get());
-  VTKM_TEST_ASSERT(cs, "Explicit cell set not found");
+  VTKM_TEST_ASSERT(cs != NULL, "Explicit cell set not found");
 
   vtkm::cont::Field result("avgvals",
                            1,
@@ -106,7 +106,7 @@ void TestCellAverageExplicit()
   boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
   vtkm::cont::CellSetStructured<2> *cs =
       dynamic_cast<vtkm::cont::CellSetStructured<2> *>(scs.get());
-  VTKM_TEST_ASSERT(cs, "Structured cell set not found");
+  VTKM_TEST_ASSERT(cs != NULL, "Structured cell set not found");
 
   vtkm::cont::Field result("avgvals",
                            1,
