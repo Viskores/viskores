@@ -66,11 +66,10 @@ MakeTestDataSet::Make2DRegularDataSet0()
     vtkm::Float32 cellvar[2] = {100.1f, 200.1f};
     ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
-    boost::shared_ptr< vtkm::cont::CellSetStructured<2> > cs(
-                                new vtkm::cont::CellSetStructured<2>("cells"));
+    vtkm::cont::CellSetStructured<2> cellSet("cells");
     //Set regular structure
-    cs->Structure.SetNodeDimension( vtkm::make_Vec(3,2) );
-    ds.AddCellSet(cs);
+    cellSet.Structure.SetNodeDimension( vtkm::make_Vec(3,2) );
+    ds.AddCellSet(cellSet);
 
     return ds;
 }
@@ -101,12 +100,9 @@ MakeTestDataSet::Make3DRegularDataSet0()
     ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 4));
 
     static const vtkm::IdComponent dim = 3;
-    boost::shared_ptr< vtkm::cont::CellSetStructured<dim> > cs(
-                                new vtkm::cont::CellSetStructured<dim>("cells"));
-    ds.AddCellSet(cs);
-
-    //Set regular structure
-    cs->Structure.SetNodeDimension( vtkm::make_Vec(3,2,3) );
+    vtkm::cont::CellSetStructured<dim> cellSet("cells");
+    cellSet.Structure.SetNodeDimension( vtkm::make_Vec(3,2,3) );
+    ds.AddCellSet(cellSet);
 
     return ds;
 }
@@ -154,12 +150,10 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   conn.push_back(3);
   conn.push_back(4);
 
-  boost::shared_ptr< vtkm::cont::CellSetExplicit<> > cs(
-                                new vtkm::cont::CellSetExplicit<>("cells", 2));
-  vtkm::cont::ExplicitConnectivity<> &ec = cs->NodesOfCellsConnectivity;
+  vtkm::cont::CellSetExplicit<> cs("cells", 2);
+  vtkm::cont::ExplicitConnectivity<> &ec = cs.NodesOfCellsConnectivity;
   ec.FillViaCopy(shapes, numindices, conn);
 
-  //todo this need to be a reference/shared_ptr style class
   ds.AddCellSet(cs);
 
   return ds;
@@ -188,9 +182,8 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   vtkm::Float32 cellvar[2] = {100.1f, 100.2f};
   ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
-  boost::shared_ptr< vtkm::cont::CellSetExplicit<> > cs(
-                                new vtkm::cont::CellSetExplicit<>("cells", 2));
-  vtkm::cont::ExplicitConnectivity<> &ec = cs->NodesOfCellsConnectivity;
+  vtkm::cont::CellSetExplicit<> cellSet("cells", 2);
+  vtkm::cont::ExplicitConnectivity<> &ec = cellSet.NodesOfCellsConnectivity;
 
   ec.PrepareToAddCells(2, 7);
   ec.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
@@ -198,7 +191,7 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   ec.CompleteAddingCells();
 
   //todo this need to be a reference/shared_ptr style class
-  ds.AddCellSet(cs);
+  ds.AddCellSet(cellSet);
 
   return ds;
 }
@@ -231,9 +224,8 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
   ds.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
   ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
-  boost::shared_ptr< vtkm::cont::CellSetExplicit<> > cs(
-                                new vtkm::cont::CellSetExplicit<>("cells", 2));
-  vtkm::cont::ExplicitConnectivity<> &ec = cs->NodesOfCellsConnectivity;
+  vtkm::cont::CellSetExplicit<> cellSet("cells", 2);
+  vtkm::cont::ExplicitConnectivity<> &ec = cellSet.NodesOfCellsConnectivity;
 
   ec.PrepareToAddCells(nPointIds/3, nPointIds);
   for (i=0; i<nPointIds/3; i++)
@@ -243,7 +235,7 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
   ec.CompleteAddingCells();
 
   //todo this need to be a reference/shared_ptr style class
-  ds.AddCellSet(cs);
+  ds.AddCellSet(cellSet);
 
   // copy bounds
   if (pBounds != NULL)

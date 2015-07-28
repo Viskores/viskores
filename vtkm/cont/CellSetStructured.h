@@ -33,7 +33,7 @@ template<vtkm::IdComponent DIMENSION>
 class CellSetStructured : public CellSet
 {
 public:
-  static const int Dimension=DIMENSION;
+  static const vtkm::IdComponent Dimension=DIMENSION;
 
   VTKM_CONT_EXPORT
   CellSetStructured(const std::string &name = "")
@@ -46,6 +46,12 @@ public:
   {
     return this->Structure.GetNumberOfCells();
   }
+
+  template<vtkm::cont::TopologyType FromTopology,
+           vtkm::cont::TopologyType ToTopology>
+  struct ConnectivityType {
+    typedef vtkm::RegularConnectivity<FromTopology,ToTopology,Dimension> Type;
+  };
 
   VTKM_CONT_EXPORT
   vtkm::RegularConnectivity<vtkm::cont::NODE,vtkm::cont::CELL,Dimension>

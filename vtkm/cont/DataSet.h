@@ -24,16 +24,12 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ExplicitConnectivity.h>
 #include <vtkm/RegularConnectivity.h>
-#include <vtkm/cont/CellSet.h>
-#include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
-
-#include <boost/smart_ptr/shared_ptr.hpp>
 
 namespace vtkm {
 namespace cont {
@@ -74,7 +70,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  boost::shared_ptr<vtkm::cont::CellSet> GetCellSet(vtkm::Id index=0) const
+  vtkm::cont::DynamicCellSet GetCellSet(vtkm::Id index=0) const
   {
     VTKM_ASSERT_CONT((index >= 0) &&
                      (index <= static_cast<vtkm::Id>(this->CellSets.size())));
@@ -88,9 +84,17 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void AddCellSet(boost::shared_ptr<vtkm::cont::CellSet> cs)
+  void AddCellSet(vtkm::cont::DynamicCellSet cellSet)
   {
-    this->CellSets.push_back(cs);
+    this->CellSets.push_back(cellSet);
+  }
+
+  template<typename CellSetType>
+  VTKM_CONT_EXPORT
+  void AddCellSet(const CellSetType &cellSet)
+  {
+    VTKM_IS_CELL_SET(CellSetType);
+    this->CellSets.push_back(vtkm::cont::DynamicCellSet(cellSet));
   }
 
   VTKM_CONT_EXPORT
@@ -118,7 +122,7 @@ public:
       out<<"  CellSets["<<this->GetNumberOfCellSets()<<"]\n";
       for (vtkm::Id i = 0; i < this->GetNumberOfCellSets(); i++)
       {
-        this->GetCellSet(i)->PrintSummary(out);
+        this->GetCellSet(i).GetCellSet().PrintSummary(out);
       }
 
       out<<"  Fields["<<this->GetNumberOfFields()<<"]\n";
@@ -131,7 +135,7 @@ public:
 private:
   std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
   std::vector<vtkm::cont::Field> Fields;
-  std::vector< boost::shared_ptr<vtkm::cont::CellSet> > CellSets;
+  std::vector<vtkm::cont::DynamicCellSet> CellSets;
 };
 
 } // namespace cont

@@ -22,9 +22,7 @@
 
 #include <vtkm/cont/arg/TypeCheck.h>
 
-#include <vtkm/ListTag.h>
-
-#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/CellSet.h>
 
 namespace vtkm {
 namespace cont {
@@ -36,10 +34,11 @@ struct TypeCheckTagTopology
 {
 };
 
-template<typename ArrayType>
-struct TypeCheck<TypeCheckTagTopology, ArrayType>
+template<typename CellSetType>
+struct TypeCheck<TypeCheckTagTopology, CellSetType>
 {
-  static const bool value = true;
+  static const bool value =
+      vtkm::cont::internal::CellSetCheck<CellSetType>::type::value;
 };
 
 }

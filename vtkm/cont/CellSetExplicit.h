@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/ExplicitConnectivity.h>
+#include <vtkm/cont/TopologyType.h>
 
 namespace vtkm {
 namespace cont {
@@ -53,6 +54,18 @@ public:
   virtual vtkm::Id GetNumCells() const
   {
     return this->NodesOfCellsConnectivity.GetNumberOfElements();
+  }
+
+  template<vtkm::cont::TopologyType FromTopology, vtkm::cont::TopologyType ToTopoogy>
+  struct ConnectivityType {
+    // This type is really only valid for Point to Cell connectivity. When
+    // other connectivity types are supported, these will need to be added.
+    typedef ExplicitConnectivityType Type;
+  };
+
+  const ExplicitConnectivityType &GetNodeToCellConnectivity() const
+  {
+    return this->NodesOfCellsConnectivity;
   }
 
   ExplicitConnectivityType &GetNodeToCellConnectivity()

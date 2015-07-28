@@ -81,7 +81,8 @@ public:
     //we need to now template based on the input domain type. If the input
     //domain type is a regular or explicit grid we call GetSchedulingDimensions.
     //but in theory your input domain could be a permutation array
-    this->InvokeBasedOnDomainType(invocation,inputDomain);
+    this->InvokeBasedOnDomainType(invocation,
+                                  inputDomain.GetNodeToCellConnectivity());
   }
 
   template<typename Invocation, typename InputDomainType>

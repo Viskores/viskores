@@ -100,8 +100,7 @@ public:
         new vtkm::cont::internal::SimplePolymorphicContainer<CellSetType>(
           cellSet))
   {
-    // TODO: Would be good to check that CellSetType is really a subclass of
-    // CellSet.
+    VTKM_IS_CELL_SET(CellSetType);
   }
 
   VTKM_CONT_EXPORT

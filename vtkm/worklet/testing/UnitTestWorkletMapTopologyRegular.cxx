@@ -143,13 +143,8 @@ static void
 TestMaxNodeOrCell()
 {
     std::cout<<"Testing MaxNodeOfCell worklet"<<std::endl;
-    vtkm::cont::testing::MakeTestDataSet tds;
-    vtkm::cont::DataSet ds = tds.Make2DRegularDataSet0();
-
-    boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
-    vtkm::cont::CellSetStructured<2> *cs =
-        dynamic_cast<vtkm::cont::CellSetStructured<2> *>(scs.get());
-    VTKM_TEST_ASSERT(cs != NULL, "Structured cell set not found");
+    vtkm::cont::testing::MakeTestDataSet testDataSet;
+    vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
 
     //Run a worklet to populate a cell centered field.
     //Here, we're filling it with test values.
@@ -159,46 +154,41 @@ TestMaxNodeOrCell()
                       std::string("cells"),
                       vtkm::Float32());
 
-    ds.AddField(f);
+    dataSet.AddField(f);
 
-    VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfCellSets(), 1),
+    VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfCellSets(), 1),
                      "Incorrect number of cell sets");
 
-    VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfFields(), 5),
+    VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 5),
                      "Incorrect number of fields");
-    //Todo:
-    //the scheduling should just be passed a CellSet, and not the
-    //derived implementation. The vtkm::cont::CellSet should have
-    //a method that return the nodesOfCellsConnectivity / structure
-    //for that derived type. ( talk to robert for how dax did this )
     vtkm::worklet::DispatcherMapTopology< ::test_regular::MaxNodeOrCellValue > dispatcher;
-    dispatcher.Invoke(ds.GetField("cellvar").GetData(),
-                      ds.GetField("nodevar").GetData(),
-                      cs->GetNodeToCellConnectivity(),
-                      ds.GetField(4).GetData());
+    dispatcher.Invoke(dataSet.GetField("cellvar").GetData(),
+                      dataSet.GetField("nodevar").GetData(),
+                      // We know that the cell set is a structured 2D grid and
+                      // The worklet does not work with general types because
+                      // of the way we get cell indices. We need to make that
+                      // part more flexible.
+                      dataSet.GetCellSet(0).ResetCellSetList(
+                        vtkm::cont::CellSetListTagStructured2D()),
+                      dataSet.GetField(4).GetData());
 
     //make sure we got the right answer.
     vtkm::cont::ArrayHandle<vtkm::Float32> res;
-    res = ds.GetField(4).GetData().CastToArrayHandle(vtkm::Float32(),
-						      VTKM_DEFAULT_STORAGE_TAG());
+    res = dataSet.GetField(4).GetData().CastToArrayHandle(vtkm::Float32(),
+                                                      VTKM_DEFAULT_STORAGE_TAG());
 
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1f),
-		     "Wrong result for MaxNodeOrCell worklet");
+                     "Wrong result for MaxNodeOrCell worklet");
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 200.1f),
-		     "Wrong result for MaxNodeOrCell worklet");
+                     "Wrong result for MaxNodeOrCell worklet");
 }
 
 static void
 TestAvgNodeToCell()
 {
     std::cout<<"Testing AvgNodeToCell worklet"<<std::endl;
-    vtkm::cont::testing::MakeTestDataSet tds;
-    vtkm::cont::DataSet ds = tds.Make2DRegularDataSet0();
-
-    boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
-    vtkm::cont::CellSetStructured<2> *cs =
-        dynamic_cast<vtkm::cont::CellSetStructured<2> *>(scs.get());
-    VTKM_TEST_ASSERT(cs != NULL, "Structured cell set not found");
+    vtkm::cont::testing::MakeTestDataSet testDataSet;
+    vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
 
     //Run a worklet to populate a cell centered field.
     //Here, we're filling it with test values.
@@ -208,32 +198,32 @@ TestAvgNodeToCell()
                       std::string("cells"),
                       vtkm::Float32());
 
-    ds.AddField(f);
+    dataSet.AddField(f);
 
-    VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfCellSets(), 1),
+    VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfCellSets(), 1),
                      "Incorrect number of cell sets");
 
-    VTKM_TEST_ASSERT(test_equal(ds.GetNumberOfFields(), 5),
+    VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 5),
                      "Incorrect number of fields");
-    //Todo:
-    //the scheduling should just be passed a CellSet, and not the
-    //derived implementation. The vtkm::cont::CellSet should have
-    //a method that return the nodesOfCellsConnectivity / structure
-    //for that derived type. ( talk to robert for how dax did this )
     vtkm::worklet::DispatcherMapTopology< ::test_regular::AvgNodeToCellValue > dispatcher;
-    dispatcher.Invoke(ds.GetField("nodevar").GetData(),
-                      cs->GetNodeToCellConnectivity(),
-                      ds.GetField("outcellvar").GetData());
+    dispatcher.Invoke(dataSet.GetField("nodevar").GetData(),
+                      // We know that the cell set is a structured 2D grid and
+                      // The worklet does not work with general types because
+                      // of the way we get cell indices. We need to make that
+                      // part more flexible.
+                      dataSet.GetCellSet(0).ResetCellSetList(
+                        vtkm::cont::CellSetListTagStructured2D()),
+                      dataSet.GetField("outcellvar").GetData());
 
     //make sure we got the right answer.
     vtkm::cont::ArrayHandle<vtkm::Float32> res;
-    res = ds.GetField(4).GetData().CastToArrayHandle(vtkm::Float32(),
-						      VTKM_DEFAULT_STORAGE_TAG());
+    res = dataSet.GetField(4).GetData().CastToArrayHandle(vtkm::Float32(),
+                                                      VTKM_DEFAULT_STORAGE_TAG());
 
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 30.1f),
-		     "Wrong result for NodeToCellAverage worklet");
+                     "Wrong result for NodeToCellAverage worklet");
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 40.1f),
-		     "Wrong result for NodeToCellAverage worklet");
+                     "Wrong result for NodeToCellAverage worklet");
 }
 
 } // anonymous namespace
