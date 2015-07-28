@@ -285,11 +285,22 @@ bool test_equal(VectorType1 vector1,
         vtkm::Float64(Traits1::GetComponent(vector1, component));
     vtkm::Float64 value2 =
         vtkm::Float64(Traits2::GetComponent(vector2, component));
-    if ((fabs(value1) < 2*tolerance) && (fabs(value2) < 2*tolerance))
+    if ((fabs(value1) <= 2*tolerance) && (fabs(value2) <= 2*tolerance))
     {
       continue;
     }
-    vtkm::Float64 ratio = value1/value2;
+    vtkm::Float64 ratio;
+    // The following condition is redundant since the previous check
+    // guarantees neither value will be zero, but the MSVC compiler
+    // sometimes complains about it.
+    if (value2 != 0)
+    {
+      ratio = value1 / value2;
+    }
+    else
+    {
+      ratio = 1.0;
+    }
     if ((ratio > vtkm::Float64(1.0) - tolerance)
         && (ratio < vtkm::Float64(1.0) + tolerance))
     {
