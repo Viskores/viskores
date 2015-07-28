@@ -84,8 +84,7 @@ class IteratorFromArrayPortal : public
       IteratorFromArrayPortal<ArrayPortalType>,
       typename ArrayPortalType::ValueType,
       boost::random_access_traversal_tag,
-      detail::IteratorFromArrayPortalValue<ArrayPortalType>,
-      vtkm::Id>
+      detail::IteratorFromArrayPortalValue<ArrayPortalType> >
 {
 public:
 
@@ -147,22 +146,23 @@ private:
   }
 
   VTKM_CONT_EXPORT
-  void advance(vtkm::Id delta)
+  void advance(
+      typename IteratorFromArrayPortal<ArrayPortalType>::difference_type delta)
   {
-    this->Index += delta;
+    this->Index += static_cast<vtkm::Id>(delta);
     VTKM_ASSERT_CONT(this->Index >= 0);
     VTKM_ASSERT_CONT(this->Index <= this->Portal.GetNumberOfValues());
   }
 
   VTKM_CONT_EXPORT
-  vtkm::Id
+  typename IteratorFromArrayPortal<ArrayPortalType>::difference_type
   distance_to(const IteratorFromArrayPortal<ArrayPortalType> &other) const
   {
     // Technically, we should probably check that the portals are the same,
     // but the portal interface does not specify an equal operator.  It is
     // by its nature undefined what happens when comparing iterators from
     // different portals anyway.
-    return other.Index - this->Index;
+    return static_cast<typename difference_type>(other.Index - this->Index);
   }
 };
 
