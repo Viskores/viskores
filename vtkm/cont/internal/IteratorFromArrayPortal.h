@@ -162,7 +162,8 @@ private:
     // but the portal interface does not specify an equal operator.  It is
     // by its nature undefined what happens when comparing iterators from
     // different portals anyway.
-    return static_cast<typename difference_type>(other.Index - this->Index);
+    return static_cast<typename IteratorFromArrayPortal<ArrayPortalType>::difference_type>(
+        other.Index - this->Index);
   }
 };
 
