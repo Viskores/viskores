@@ -64,11 +64,22 @@ namespace internal {
 
 static
 __global__
-void DetermineProperXGridSize()
+void DetermineProperXGridSize(vtkm::UInt32 desired_size,
+                              vtkm::UInt32* actual_size)
 {
 //used only to see if we can launch kernels with a x grid size that
 //matches the max of the graphics card, or are we having to fall back
 //to SM_2 grid sizes
+ if(blockIdx.x != 0)
+  {
+  return;
+  }
+#if __CUDA_ARCH__ <= 200
+  const vtkm::UInt32 maxXGridSizeForSM2 = 65535;
+  *actual_size = maxXGridSizeForSM2;
+#else
+  *actual_size = desired_size;
+#endif
 }
 
 template<class FunctorType>
@@ -829,18 +840,17 @@ private:
       //Now since SM architecture is only available inside kernels we have to
       //invoke one to see what the actual limit is for our device.  So that is
       //what we are going to do next, and than we will store that result
-      const vtkm::UInt32 maxXGridSizeForSM2 = 65535;
-      if(maxGridSize[0] > maxXGridSizeForSM2)
-        {
-        DetermineProperXGridSize<<<maxGridSize[0],1>>>();
-        cudaError err = cudaGetLastError();
-        if(err == cudaErrorInvalidValue)
-          {
-          maxGridSize[0] = maxXGridSizeForSM2;
-          }
-        }
-      }
 
+      vtkm::UInt32 *dev_actual_size;
+      cudaMalloc( (void**)&dev_actual_size, sizeof(vtkm::UInt32) );
+      DetermineProperXGridSize <<<1,1>>> (maxGridSize[0], dev_actual_size);
+      cudaDeviceSynchronize();
+      cudaMemcpy( &maxGridSize[0],
+                  dev_actual_size,
+                  sizeof(vtkm::UInt32),
+                  cudaMemcpyDeviceToHost );
+      cudaFree(dev_actual_size);
+      }
     return maxGridSize;
     }
 
