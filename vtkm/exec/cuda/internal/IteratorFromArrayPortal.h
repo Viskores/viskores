@@ -98,7 +98,7 @@ class IteratorFromArrayPortal : public
       ::thrust::system::cuda::tag,
       ::thrust::random_access_traversal_tag,
       PortalValue<ArrayPortalType>,
-      vtkm::Id>
+      std::ptrdiff_t>
 {
 public:
 
@@ -156,20 +156,20 @@ private:
   }
 
   VTKM_EXEC_CONT_EXPORT
-  void advance(vtkm::Id delta)
+  void advance(std::ptrdiff_t delta)
   {
-    this->Index += delta;
+    this->Index += static_cast<vtkm::Id>(delta);
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id
+  std::ptrdiff_t
   distance_to(const IteratorFromArrayPortal<ArrayPortalType> &other) const
   {
     // Technically, we should probably check that the portals are the same,
     // but the portal interface does not specify an equal operator.  It is
     // by its nature undefined what happens when comparing iterators from
     // different portals anyway.
-    return other.Index - this->Index;
+    return static_cast<std::ptrdiff_t>(other.Index - this->Index);
   }
 };
 
