@@ -109,8 +109,6 @@ public:
   DynamicCellSetBase(const DynamicCellSetBase<CellSetList> &src)
     : CellSetContainer(src.CellSetContainer) {  }
 
-  friend class DynamicCellSetBase;
-
   template<typename OtherCellSetList>
   VTKM_CONT_EXPORT
   explicit
