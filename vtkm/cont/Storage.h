@@ -28,7 +28,11 @@
 #define VTKM_STORAGE VTKM_STORAGE_BASIC
 #endif
 
+#include <vtkm/internal/ExportMacros.h>
+
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/static_assert.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 namespace vtkm {
 namespace cont {

@@ -26,8 +26,10 @@
 
 #include <vtkm/testing/Testing.h>
 
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/mpl/assert.hpp>
 #include <boost/type_traits/is_same.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 namespace {
 

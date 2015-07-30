@@ -103,23 +103,31 @@
 # endif
 #endif
 
+// Define a pair of macros, VTKM_BOOST_PRE_INCLUDE and VTKM_BOOST_POST_INCLUDE,
+// that should be wrapped around any #include for a boost header file. Mostly
+// this is used to set pragmas that dissable warnings that VTK-m checks for
+// but boost does not.
+#if defined(VTKM_GCC) || defined(VTKM_CLANG)
+#define VTKM_BOOST_PRE_INCLUDE \
+  _Pragma("GCC diagnostic push") \
+  _Pragma("GCC diagnostic ignored \"-Wconversion\"")
+#define VTKM_BOOST_POST_INCLUDE \
+  _Pragma("GCC diagnostic pop")
+#else
+#define VTKM_BOOST_PRE_INCLUDE
+#define VTKM_BOOST_POST_INCLUDE
+#endif
+
 // Determine whether we will use variadic templates (a new feature in C++11).
 // Currently have VARIADIC_TEMPLATE support off.
 #cmakedefine VTKM_NO_VARIADIC_TEMPLATE
 #if !defined(VTKM_USE_VARIADIC_TEMPLATE) && !defined(VTKM_NO_VARIADIC_TEMPLATE)
 // Currently using Boost to determine support.
 
-# if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#   pragma GCC diagnostic push
-#   pragma GCC diagnostic ignored "-Wconversion"
-# endif // gcc || clang
-
+VTKM_BOOST_PRE_INCLUDE
 # include <boost/config.hpp>
+VTKM_BOOST_POST_INCLUDE
 
-
-# if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#   pragma GCC diagnostic pop
-# endif // gcc || clang
 
 # if defined(BOOST_HAS_VARIADIC_TMPL)
 #  define VTKM_USE_VARIADIC_TEMPLATE 1

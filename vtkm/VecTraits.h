@@ -22,7 +22,9 @@
 
 #include <vtkm/Types.h>
 
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/type_traits/remove_const.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 namespace vtkm {
 

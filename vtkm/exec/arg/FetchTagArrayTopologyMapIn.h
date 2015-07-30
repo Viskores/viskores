@@ -24,7 +24,9 @@
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/TopologyData.h>
 
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/type_traits.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 namespace vtkm {
 namespace exec {

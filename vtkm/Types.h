@@ -24,10 +24,12 @@
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/mpl/or.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
 #include <boost/type_traits/is_signed.hpp>
 #include <boost/utility/enable_if.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 /*!
  * \namespace vtkm

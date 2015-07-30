@@ -30,8 +30,10 @@
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/utility/enable_if.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 #include <algorithm>
 #include <numeric>

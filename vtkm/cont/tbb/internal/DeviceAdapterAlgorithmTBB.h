@@ -32,7 +32,9 @@
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/type_traits/remove_reference.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 // Disable warnings we check vtkm for but TBB does not.
 #if defined(VTKM_GCC) || defined(VTKM_CLANG)
