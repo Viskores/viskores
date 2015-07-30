@@ -125,7 +125,7 @@ private:
 
       //use temp, and iterators instead of member variable to reduce false sharing
       typename InputIteratorsType::IteratorType inIter =
-        inputIterators.GetBegin() + static_cast<std::size_t>(range.begin());
+        inputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
       ValueType temp = this->FirstCall ? *inIter++ :
                        this->BinaryOperation(this->Sum, *inIter++);
       this->FirstCall = false;
@@ -150,9 +150,9 @@ private:
 
       //use temp, and iterators instead of member variable to reduce false sharing
       typename InputIteratorsType::IteratorType inIter =
-        inputIterators.GetBegin() + static_cast<std::size_t>(range.begin());
+        inputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
       typename OutputIteratorsType::IteratorType outIter =
-        outputIterators.GetBegin() + static_cast<std::size_t>(range.begin());
+        outputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
       ValueType temp = this->FirstCall ? *inIter++ :
                        this->BinaryOperation(this->Sum, *inIter++);
       this->FirstCall = false;
@@ -244,7 +244,7 @@ private:
 
       //move the iterator to the first item
       typename InputIteratorsType::IteratorType iter =
-        inputIterators.GetBegin() + static_cast<std::size_t>(range.begin());
+        inputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
       ValueType temp = this->Sum;
       for (vtkm::Id index = range.begin(); index != range.end(); ++index, ++iter)
         {
@@ -266,9 +266,9 @@ private:
 
       //move the iterators to the first item
       typename InputIteratorsType::IteratorType inIter =
-        inputIterators.GetBegin() + static_cast<std::size_t>(range.begin());
+        inputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
       typename OutputIteratorsType::IteratorType outIter =
-        outputIterators.GetBegin() + static_cast<std::size_t>(range.begin());
+        outputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
       ValueType temp = this->Sum;
       for (vtkm::Id index = range.begin(); index != range.end();
            ++index, ++inIter, ++outIter)
