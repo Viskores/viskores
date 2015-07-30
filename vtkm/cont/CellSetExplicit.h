@@ -39,7 +39,7 @@ public:
                                > ExplicitConnectivityType;
 
   VTKM_CONT_EXPORT
-  CellSetExplicit(const std::string &name = "",
+  CellSetExplicit(const std::string &name = std::string(),
                   vtkm::IdComponent dimensionality = 3)
     : CellSet(name, dimensionality)
   {
@@ -47,7 +47,7 @@ public:
 
   VTKM_CONT_EXPORT
   CellSetExplicit(int dimensionality)
-    : CellSet("", dimensionality)
+    : CellSet(std::string(), dimensionality)
   {
   }
 

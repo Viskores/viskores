@@ -36,7 +36,7 @@ public:
   static const vtkm::IdComponent Dimension=DIMENSION;
 
   VTKM_CONT_EXPORT
-  CellSetStructured(const std::string &name = "")
+  CellSetStructured(const std::string &name = std::string())
     : CellSet(name,Dimension)
   {
   }
