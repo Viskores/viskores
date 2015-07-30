@@ -397,7 +397,7 @@ vtkm::Vec<T,N> TestValue(vtkm::Id index, vtkm::Vec<T,N>) {
   vtkm::Vec<T,N> value;
   for (vtkm::IdComponent i = 0; i < N; i++)
   {
-    value[i] = TestValue(index, T()) + T(i + 1);
+    value[i] = T(TestValue(index, T()) + T(i + 1));
   }
   return value;
 }

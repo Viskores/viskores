@@ -44,7 +44,9 @@ vtkm::FloatDefault TestValue3Ids(vtkm::Id index,
                                  vtkm::IdComponent inComponentIndex,
                                  int inArrayId)
 {
-  return index + vtkm::FloatDefault(0.1)*inComponentIndex + vtkm::FloatDefault(0.01)*inArrayId;
+  return (vtkm::FloatDefault(index) +
+          0.1f*vtkm::FloatDefault(inComponentIndex) +
+          0.01f*vtkm::FloatDefault(inArrayId));
 }
 
 template<typename ValueType>

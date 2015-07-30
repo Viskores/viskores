@@ -55,6 +55,7 @@ struct MatrixTest
   static const vtkm::IdComponent NUM_ROWS = NumRow;
   static const vtkm::IdComponent NUM_COLS = NumCol;
   typedef vtkm::Matrix<T,NUM_ROWS,NUM_COLS> MatrixType;
+  typedef typename MatrixType::ComponentType ComponentType;
 
   static void BasicCreation()
   {
@@ -74,7 +75,7 @@ struct MatrixTest
     MatrixType value = TestValue(0, MatrixType());
     FOR_ROW_COL(matrix)
     {
-      matrix[row][col] = value(row,col)*2;
+      matrix[row][col] = ComponentType(value(row,col)*2);
     }
     FOR_ROW_COL(matrix)
     {

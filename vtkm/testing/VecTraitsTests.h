@@ -62,7 +62,10 @@ static void TestVecTypeImpl(
     const ComponentType multiplier = 4;
     for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
     {
-      Traits::SetComponent(result, i, multiplier*Traits::GetComponent(vector, i));
+      Traits::SetComponent(result,
+                           i,
+                           ComponentType(
+                               multiplier*Traits::GetComponent(vector, i)));
     }
     VTKM_TEST_ASSERT(test_equal(Traits::ToVec(result),
                                 multiplier*Traits::ToVec(vector)),
@@ -75,7 +78,7 @@ static void TestVecTypeImpl(
     for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
     {
       Traits::GetComponent(result, i)
-        = multiplier * Traits::GetComponent(vector, i);
+        = ComponentType(multiplier * Traits::GetComponent(vector, i));
     }
     VTKM_TEST_ASSERT(test_equal(Traits::ToVec(result),
                                 multiplier*Traits::ToVec(vector)),
@@ -88,7 +91,7 @@ static void TestVecTypeImpl(
     {
       ComponentType component
         = Traits::GetComponent(vector, i);
-      result += component * component;
+      result = ComponentType(result + (component * component));
     }
     VTKM_TEST_ASSERT(
       test_equal(result,

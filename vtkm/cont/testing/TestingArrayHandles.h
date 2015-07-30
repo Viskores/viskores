@@ -87,7 +87,7 @@ struct TestingArrayHandles
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
     {
-      this->Portal.Set(index, this->Portal.Get(index)+ T(1));
+      this->Portal.Set(index, T(this->Portal.Get(index) + T(1)));
     }
   };
 

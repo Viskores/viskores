@@ -161,13 +161,13 @@ vtkm::Matrix<T,NumRow,NumCol> MatrixMultiply(
   {
     for (vtkm::IdComponent colIndex = 0; colIndex < NumCol; colIndex++)
     {
-      T sum = leftFactor(rowIndex, 0) * rightFactor(0, colIndex);
+      T sum = T(leftFactor(rowIndex, 0) * rightFactor(0, colIndex));
       for (vtkm::IdComponent internalIndex = 1;
            internalIndex < NumInternal;
            internalIndex++)
       {
-        sum += leftFactor(rowIndex, internalIndex)
-            * rightFactor(internalIndex, colIndex);
+        sum = T(sum + (leftFactor(rowIndex, internalIndex)
+                       * rightFactor(internalIndex, colIndex)));
       }
       result(rowIndex, colIndex) = sum;
     }

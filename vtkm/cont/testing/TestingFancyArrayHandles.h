@@ -262,7 +262,7 @@ private:
                          "Counting Handle Failed");
         VTKM_TEST_ASSERT(test_equal(result_v, control_value),
                          "Counting Handle Control Failed");
-        component_value = component_value + ComponentType(1);
+        component_value = ComponentType(component_value + ComponentType(1));
         }
     }
   };
@@ -447,7 +447,7 @@ private:
                          "Transform Counting Handle Failed");
         VTKM_TEST_ASSERT(test_equal(result_v, control_value),
                          "Transform Counting Handle Control Failed");
-        component_value = component_value + ComponentType(1);
+        component_value = ComponentType(component_value + ComponentType(1));
         }
     }
   };
