@@ -42,64 +42,63 @@ static void
 TwoDimRegularTest()
 {
     std::cout<<"2D Regular data set"<<std::endl;
-    vtkm::cont::testing::MakeTestDataSet tds;
+    vtkm::cont::testing::MakeTestDataSet testDataSet;
 
-    vtkm::cont::DataSet ds = tds.Make2DRegularDataSet0();
+    vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
 
-    boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
-    vtkm::cont::CellSetStructured<2> *cs =
-        dynamic_cast<vtkm::cont::CellSetStructured<2> *>(scs.get());
-    VTKM_TEST_ASSERT( (cs!=NULL), "Invalid Cell Set");
+    typedef vtkm::cont::CellSetStructured<2> CellSetType;
+    CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
 
-    VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
+    VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1,
                      "Incorrect number of cell sets");
-    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 4,
+    VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 4,
                      "Incorrect number of fields");
-    VTKM_TEST_ASSERT(cs->Structure.GetNumberOfNodes() == 6,
+    VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfNodes() == 6,
                      "Incorrect number of nodes");
-    VTKM_TEST_ASSERT(cs->Structure.GetNumberOfCells() == 2,
+    VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfCells() == 2,
                      "Incorrect number of cells");
 
-    vtkm::Id numCells = cs->Structure.GetNumberOfCells();
-    for (int i = 0; i < numCells; i++)
+    vtkm::Id numCells = cellSet.Structure.GetNumberOfCells();
+    for (vtkm::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
     {
-        VTKM_TEST_ASSERT(cs->Structure.GetNumberOfIndices() == 4,
-                         "Incorrect number of cell indices");
-        vtkm::CellType shape = cs->Structure.GetElementShapeType();
-        VTKM_TEST_ASSERT(shape == vtkm::VTKM_PIXEL, "Incorrect element type.");
+      VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfIndices() == 4,
+                       "Incorrect number of cell indices");
+      vtkm::CellType shape = cellSet.Structure.GetElementShapeType();
+      VTKM_TEST_ASSERT(shape == vtkm::VTKM_PIXEL, "Incorrect element type.");
     }
 
-    vtkm::RegularConnectivity<vtkm::cont::NODE,
-                              vtkm::cont::CELL,2> nodeToCell = cs->GetNodeToCellConnectivity();
-    vtkm::RegularConnectivity<vtkm::cont::CELL,
-                              vtkm::cont::NODE,2> cellToNode = cs->GetCellToNodeConnectivity();
+    vtkm::RegularConnectivity<vtkm::cont::NODE, vtkm::cont::CELL,2> nodeToCell =
+        cellSet.GetNodeToCellConnectivity();
+    vtkm::RegularConnectivity<vtkm::cont::CELL, vtkm::cont::NODE,2> cellToNode =
+        cellSet.GetCellToNodeConnectivity();
 
     vtkm::Id cells[2][4] = {{0,1,3,4}, {1,2,4,5}};
     vtkm::Vec<vtkm::Id,4> nodeIds;
-    for (int i = 0; i < 2; i++)
+    for (vtkm::Id cellIndex = 0; cellIndex < 2; cellIndex++)
     {
-        nodeToCell.GetIndices(i, nodeIds);
-        for (int j = 0; j < 4; j++)
-        {
-            VTKM_TEST_ASSERT(nodeIds[j] == cells[i][j],
-                             "Incorrect node ID for cell");
-        }
+      nodeToCell.GetIndices(cellIndex, nodeIds);
+      for (vtkm::IdComponent nodeIndex = 0; nodeIndex < 4; nodeIndex++)
+      {
+        VTKM_TEST_ASSERT(nodeIds[nodeIndex] == cells[cellIndex][nodeIndex],
+                         "Incorrect node ID for cell");
+      }
     }
 
-    vtkm::Id nodes[6][4] = {{0,-1,-1,-1},
-                            {0,1,-1,-1},
-                            {0,-1,-1,-1},
-                            {0,1,-1,-1},
-                            {2,-1,-1,-1},
-                            {2,3,-1,-1}};
+    vtkm::Id expectedCellIds[6][4] = {{0,-1,-1,-1},
+                                      {0,1,-1,-1},
+                                      {0,-1,-1,-1},
+                                      {0,1,-1,-1},
+                                      {2,-1,-1,-1},
+                                      {2,3,-1,-1}};
 
-    for (int i = 0; i < 6; i++)
+    for (vtkm::Id pointIndex = 0; pointIndex < 6; pointIndex++)
     {
-        vtkm::Vec<vtkm::Id,4> cellIds;
-        cellToNode.GetIndices(i, cellIds);
-        for (int j = 0; j < 4; j++)
-            VTKM_TEST_ASSERT(cellIds[j] == nodes[i][j],
-                             "Incorrect cell ID for node");
+      vtkm::Vec<vtkm::Id,4> retrievedCellIds;
+      cellToNode.GetIndices(pointIndex, retrievedCellIds);
+      for (vtkm::IdComponent cellIndex = 0; cellIndex < 4; cellIndex++)
+        VTKM_TEST_ASSERT(
+              retrievedCellIds[cellIndex] == expectedCellIds[pointIndex][cellIndex],
+              "Incorrect cell ID for node");
     }
 }
 
@@ -107,55 +106,58 @@ static void
 ThreeDimRegularTest()
 {
     std::cout<<"3D Regular data set"<<std::endl;
-    vtkm::cont::testing::MakeTestDataSet tds;
+    vtkm::cont::testing::MakeTestDataSet testDataSet;
 
-    vtkm::cont::DataSet ds = tds.Make3DRegularDataSet0();
+    vtkm::cont::DataSet dataSet = testDataSet.Make3DRegularDataSet0();
 
-    boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
-    vtkm::cont::CellSetStructured<3> *cs =
-        dynamic_cast<vtkm::cont::CellSetStructured<3> *>(scs.get());
+    typedef vtkm::cont::CellSetStructured<3> CellSetType;
+    CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
 
-    VTKM_TEST_ASSERT( (cs!=NULL), "Invalid Cell Set");
-
-    VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
+    VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1,
                      "Incorrect number of cell sets");
 
-    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 5,
+    VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 5,
                      "Incorrect number of fields");
 
-    VTKM_TEST_ASSERT(cs->Structure.GetNumberOfNodes() == 18,
+    VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfNodes() == 18,
                      "Incorrect number of nodes");
 
-    VTKM_TEST_ASSERT(cs->Structure.GetNumberOfCells() == 4,
+    VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfCells() == 4,
                      "Incorrect number of cells");
 
-    vtkm::Id numCells = cs->Structure.GetNumberOfCells();
-    for (int i = 0; i < numCells; i++)
+    vtkm::Id numCells = cellSet.Structure.GetNumberOfCells();
+    for (vtkm::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
     {
-        VTKM_TEST_ASSERT(cs->Structure.GetNumberOfIndices() == 8,
-                         "Incorrect number of cell indices");
-        vtkm::CellType shape = cs->Structure.GetElementShapeType();
-        VTKM_TEST_ASSERT(shape == vtkm::VTKM_VOXEL, "Incorrect element type.");
+      VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfIndices() == 8,
+                       "Incorrect number of cell indices");
+      vtkm::CellType shape = cellSet.Structure.GetElementShapeType();
+      VTKM_TEST_ASSERT(shape == vtkm::VTKM_VOXEL, "Incorrect element type.");
     }
 
     //Test regular connectivity.
-    vtkm::RegularConnectivity<vtkm::cont::NODE,
-                              vtkm::cont::CELL,3> nodeToCell = cs->GetNodeToCellConnectivity();
-    vtkm::Id nodes[8] = {0,1,3,4,6,7,9,10};
-    vtkm::Vec<vtkm::Id,8> nodeIds;
-    nodeToCell.GetIndices(0, nodeIds);
-    for (int i = 0; i < 8; i++)
-        VTKM_TEST_ASSERT(nodeIds[i] == nodes[i],
-                             "Incorrect node ID for cell");
+    vtkm::RegularConnectivity<vtkm::cont::NODE, vtkm::cont::CELL,3> nodeToCell =
+        cellSet.GetNodeToCellConnectivity();
+    vtkm::Id expectedPointIds[8] = {0,1,3,4,6,7,9,10};
+    vtkm::Vec<vtkm::Id,8> retrievedPointIds;
+    nodeToCell.GetIndices(0, retrievedPointIds);
+    for (vtkm::IdComponent nodeIndex = 0; nodeIndex < 8; nodeIndex++)
+    {
+      VTKM_TEST_ASSERT(
+            retrievedPointIds[nodeIndex] == expectedPointIds[nodeIndex],
+            "Incorrect node ID for cell");
+    }
 
-    vtkm::RegularConnectivity<vtkm::cont::CELL,
-                              vtkm::cont::NODE,3> cellToNode = cs->GetCellToNodeConnectivity();
-    vtkm::Vec<vtkm::Id,8> cellIds;
-    vtkm::Id cells[8] = {0,-1,-1,-1,-1,-1,-1,-1};
-    cellToNode.GetIndices(0, cellIds);
-    for (int i = 0; i < 8; i++)
-        VTKM_TEST_ASSERT(cellIds[i] == cells[i],
-                         "Incorrect cell ID for node");
+    vtkm::RegularConnectivity<vtkm::cont::CELL, vtkm::cont::NODE,3> cellToNode =
+        cellSet.GetCellToNodeConnectivity();
+    vtkm::Vec<vtkm::Id,8> expectedCellIds;
+    vtkm::Id retrievedCellIds[8] = {0,-1,-1,-1,-1,-1,-1,-1};
+    cellToNode.GetIndices(0, expectedCellIds);
+    for (vtkm::IdComponent nodeIndex = 0; nodeIndex < 8; nodeIndex++)
+    {
+      VTKM_TEST_ASSERT(
+            expectedCellIds[nodeIndex] == retrievedCellIds[nodeIndex],
+            "Incorrect cell ID for node");
+    }
 }
 
 int UnitTestDataSetRegular(int, char *[])

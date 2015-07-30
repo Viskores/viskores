@@ -22,30 +22,50 @@
 
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/ExplicitConnectivity.h>
+#include <vtkm/cont/TopologyType.h>
 
 namespace vtkm {
 namespace cont {
 
 template<typename ShapeStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
-         typename IndiceStorageTag        = VTKM_DEFAULT_STORAGE_TAG,
+         typename IndexStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
          typename ConnectivityStorageTag  = VTKM_DEFAULT_STORAGE_TAG >
 class CellSetExplicit : public CellSet
 {
 public:
   typedef ExplicitConnectivity<ShapeStorageTag,
-                               IndiceStorageTag,
+                               IndexStorageTag,
                                ConnectivityStorageTag
                                > ExplicitConnectivityType;
 
   VTKM_CONT_EXPORT
-  CellSetExplicit(const std::string &name, vtkm::IdComponent dimensionality)
+  CellSetExplicit(const std::string &name = std::string(),
+                  vtkm::IdComponent dimensionality = 3)
     : CellSet(name, dimensionality)
+  {
+  }
+
+  VTKM_CONT_EXPORT
+  CellSetExplicit(int dimensionality)
+    : CellSet(std::string(), dimensionality)
   {
   }
 
   virtual vtkm::Id GetNumCells() const
   {
     return this->NodesOfCellsConnectivity.GetNumberOfElements();
+  }
+
+  template<vtkm::cont::TopologyType FromTopology, vtkm::cont::TopologyType ToTopoogy>
+  struct ConnectivityType {
+    // This type is really only valid for Point to Cell connectivity. When
+    // other connectivity types are supported, these will need to be added.
+    typedef ExplicitConnectivityType Type;
+  };
+
+  const ExplicitConnectivityType &GetNodeToCellConnectivity() const
+  {
+    return this->NodesOfCellsConnectivity;
   }
 
   ExplicitConnectivityType &GetNodeToCellConnectivity()

@@ -27,6 +27,8 @@
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
+#include <boost/type_traits/is_base_of.hpp>
+
 namespace vtkm {
 namespace cont {
 
@@ -71,6 +73,25 @@ protected:
     vtkm::IdComponent Dimensionality;
     vtkm::cont::LogicalStructure LogicalStructure;
 };
+
+namespace internal {
+
+/// Checks to see if the given object is a cell set. This check is compatible
+/// with the Boost meta-template programming library(MPL). It contains a
+/// typedef named \c type that is either boost::mpl::true_ or
+/// boost::mpl::false_. Both of these have a typedef named value with the
+/// respective boolean value.
+///
+template<typename T>
+struct CellSetCheck
+{
+  typedef typename boost::is_base_of<vtkm::cont::CellSet, T>::type type;
+};
+
+#define VTKM_IS_CELL_SET(type) \
+  BOOST_MPL_ASSERT(( ::vtkm::cont::internal::CellSetCheck<type> ))
+
+} // namespace internal
 
 }
 } // namespace vtkm::cont

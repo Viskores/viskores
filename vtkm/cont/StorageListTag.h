@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_StorageListTag_h
-#define vtk_m_StorageListTag_h
+#ifndef vtk_m_cont_StorageListTag_h
+#define vtk_m_cont_StorageListTag_h
 
 #ifndef VTKM_DEFAULT_STORAGE_LIST_TAG
 #define VTKM_DEFAULT_STORAGE_LIST_TAG ::vtkm::cont::StorageListTagBasic
@@ -38,4 +38,4 @@ struct StorageListTagBasic
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_StorageListTag_h
+#endif //vtk_m_cont_StorageListTag_h

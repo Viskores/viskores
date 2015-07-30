@@ -30,7 +30,7 @@ namespace {
 
 vtkm::cont::DataSet MakePointElevationTestDataSet()
 {
-  vtkm::cont::DataSet ds;
+  vtkm::cont::DataSet dataSet;
 
   std::vector<vtkm::Float32> xVals, yVals, zVals;
   const vtkm::Id dim = 5;
@@ -51,32 +51,33 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
 
   vtkm::Id numVerts = dim * dim;
   vtkm::Id numCells = (dim - 1) * (dim - 1);
-  ds.AddField(vtkm::cont::Field("x", 1, vtkm::cont::Field::ASSOC_POINTS,
+  dataSet.AddField(vtkm::cont::Field("x", 1, vtkm::cont::Field::ASSOC_POINTS,
       &xVals[0], numVerts));
-  ds.AddField(vtkm::cont::Field("y", 1, vtkm::cont::Field::ASSOC_POINTS,
+  dataSet.AddField(vtkm::cont::Field("y", 1, vtkm::cont::Field::ASSOC_POINTS,
       &yVals[0], numVerts));
-  ds.AddField(vtkm::cont::Field("z", 1, vtkm::cont::Field::ASSOC_POINTS,
+  dataSet.AddField(vtkm::cont::Field("z", 1, vtkm::cont::Field::ASSOC_POINTS,
       &zVals[0], numVerts));
-  ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
-  boost::shared_ptr<vtkm::cont::CellSetExplicit<> > cs(
-      new vtkm::cont::CellSetExplicit<>("cells", 3));
-  vtkm::cont::ExplicitConnectivity<> &ec = cs->NodesOfCellsConnectivity;
-  ec.PrepareToAddCells(numCells, numCells * 4);
+  vtkm::cont::CellSetExplicit<> cellSet("cells", 3);
+  vtkm::cont::ExplicitConnectivity<> &connectivity = cellSet.NodesOfCellsConnectivity;
+  connectivity.PrepareToAddCells(numCells, numCells * 4);
   for (vtkm::Id j = 0; j < dim - 1; ++j)
   {
     for (vtkm::Id i = 0; i < dim - 1; ++i)
     {
-      ec.AddCell(vtkm::VTKM_QUAD, 4, vtkm::make_Vec<vtkm::Id>(j * dim + i,
-                                                              j * dim + i + 1,
-                                                              (j + 1) * dim + i + 1,
-                                                              (j + 1) * dim + i));
+      connectivity.AddCell(vtkm::VTKM_QUAD,
+                           4,
+                           vtkm::make_Vec<vtkm::Id>(j * dim + i,
+                                                    j * dim + i + 1,
+                                                    (j + 1) * dim + i + 1,
+                                                    (j + 1) * dim + i));
     }
   }
-  ec.CompleteAddingCells();
+  connectivity.CompleteAddingCells();
 
-  ds.AddCellSet(cs);
-  return ds;
+  dataSet.AddCellSet(cellSet);
+  return dataSet;
 }
 
 }
@@ -85,9 +86,9 @@ void TestPointElevation()
 {
   std::cout << "Testing PointElevation Worklet" << std::endl;
 
-  vtkm::cont::DataSet ds = MakePointElevationTestDataSet();
+  vtkm::cont::DataSet dataSet = MakePointElevationTestDataSet();
 
-  ds.AddField(vtkm::cont::Field("elevation", 1, vtkm::cont::Field::ASSOC_POINTS,
+  dataSet.AddField(vtkm::cont::Field("elevation", 1, vtkm::cont::Field::ASSOC_POINTS,
                                 vtkm::Float32()));
 
   vtkm::worklet::PointElevation pointElevationWorklet;
@@ -97,16 +98,16 @@ void TestPointElevation()
 
   vtkm::worklet::DispatcherMapField<vtkm::worklet::PointElevation>
       dispatcher(pointElevationWorklet);
-  dispatcher.Invoke(ds.GetField("x").GetData(),
-                    ds.GetField("y").GetData(),
-                    ds.GetField("z").GetData(),
-                    ds.GetField("elevation").GetData());
+  dispatcher.Invoke(dataSet.GetField("x").GetData(),
+                    dataSet.GetField("y").GetData(),
+                    dataSet.GetField("z").GetData(),
+                    dataSet.GetField("elevation").GetData());
 
   vtkm::cont::ArrayHandle<vtkm::Float32> yVals =
-      ds.GetField("y").GetData().CastToArrayHandle(vtkm::Float32(),
+      dataSet.GetField("y").GetData().CastToArrayHandle(vtkm::Float32(),
           VTKM_DEFAULT_STORAGE_TAG());
   vtkm::cont::ArrayHandle<vtkm::Float32> result =
-      ds.GetField("elevation").GetData().CastToArrayHandle(vtkm::Float32(),
+      dataSet.GetField("elevation").GetData().CastToArrayHandle(vtkm::Float32(),
           VTKM_DEFAULT_STORAGE_TAG());
 
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
