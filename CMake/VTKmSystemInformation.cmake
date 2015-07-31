@@ -25,7 +25,7 @@
 #
 # This script is called with a command like:
 #
-# cmake -D VTKm_BINARY_DIR=<top-of-build-tree> -P <this-script>
+# cmake -D VTKm_BINARY_DIR=<top-of-build-tree> -D VTKm_SOURCE_DIR=<top-of-source-tree> -P <this-script>
 #
 
 set(FILES
@@ -50,7 +50,20 @@ Contents of \"${filename}\":
   endif()
 endfunction(print_file)
 
+
 message("CTEST_FULL_OUTPUT (Avoid ctest truncation of output)")
+
+execute_process(
+  COMMAND git rev-parse -q HEAD
+  WORKING_DIRECTORY "${VTKm_SOURCE_DIR}"
+  OUTPUT_VARIABLE GIT_SHA
+  )
+
+message("
+
+==============================================================================
+
+git SHA: ${GIT_SHA}")
 
 foreach(filename ${FILES})
   print_file(${filename})
