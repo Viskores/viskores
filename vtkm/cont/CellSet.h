@@ -79,7 +79,7 @@ protected:
 namespace internal {
 
 /// Checks to see if the given object is a cell set. This check is compatible
-/// with the Boost meta-template programming library(MPL). It contains a
+/// with the Boost meta-template programming library (MPL). It contains a
 /// typedef named \c type that is either boost::mpl::true_ or
 /// boost::mpl::false_. Both of these have a typedef named value with the
 /// respective boolean value.

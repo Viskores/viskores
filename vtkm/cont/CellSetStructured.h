@@ -23,6 +23,7 @@
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/RegularConnectivity.h>
 #include <vtkm/RegularStructure.h>
+#include <vtkm/TopologyElementTag.h>
 
 namespace vtkm {
 namespace cont {
@@ -47,28 +48,31 @@ public:
     return this->Structure.GetNumberOfCells();
   }
 
-  template<vtkm::cont::TopologyType FromTopology,
-           vtkm::cont::TopologyType ToTopology>
+  template<typename FromTopology, typename ToTopology>
   struct ConnectivityType {
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
     typedef vtkm::RegularConnectivity<FromTopology,ToTopology,Dimension> Type;
   };
 
   VTKM_CONT_EXPORT
-  vtkm::RegularConnectivity<vtkm::cont::NODE,vtkm::cont::CELL,Dimension>
+  vtkm::RegularConnectivity<
+      vtkm::TopologyElementTagPoint,vtkm::TopologyElementTagCell,Dimension>
   GetNodeToCellConnectivity() const
   {
-    typedef vtkm::RegularConnectivity<vtkm::cont::NODE,
-                                      vtkm::cont::CELL,
+    typedef vtkm::RegularConnectivity<vtkm::TopologyElementTagPoint,
+                                      vtkm::TopologyElementTagCell,
                                       Dimension> NodeToCellConnectivity;
     return NodeToCellConnectivity(this->Structure);
   }
 
   VTKM_CONT_EXPORT
-  vtkm::RegularConnectivity<vtkm::cont::CELL,vtkm::cont::NODE,Dimension>
+  vtkm::RegularConnectivity<
+      vtkm::TopologyElementTagCell,vtkm::TopologyElementTagPoint,Dimension>
   GetCellToNodeConnectivity() const
   {
-    typedef vtkm::RegularConnectivity<vtkm::cont::CELL,
-                                      vtkm::cont::NODE,
+    typedef vtkm::RegularConnectivity<vtkm::TopologyElementTagCell,
+                                      vtkm::TopologyElementTagPoint,
                                       Dimension> CellToNodeConnectivity;
     return CellToNodeConnectivity(this->Structure);
   }

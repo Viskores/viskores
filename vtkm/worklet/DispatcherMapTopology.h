@@ -114,12 +114,13 @@ public:
   }
 
   template<typename Invocation,
-           vtkm::cont::TopologyType From,
-           vtkm::cont::TopologyType To,
+           typename From,
+           typename To,
            vtkm::IdComponent Domain>
   VTKM_CONT_EXPORT
-  void InvokeBasedOnDomainType(const Invocation &invocation,
-                               const vtkm::RegularConnectivity<From,To,Domain>& domain) const
+  void InvokeBasedOnDomainType(
+      const Invocation &invocation,
+      const vtkm::RegularConnectivity<From,To,Domain>& domain) const
   {
 
     // For a DispatcherMapTopology, the inputDomain is some for of connectivity

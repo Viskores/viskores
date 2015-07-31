@@ -64,7 +64,6 @@ set(headers
   StorageImplicit.h
   StorageListTag.h
   Timer.h
-  TopologyType.h
   )
 
 #-----------------------------------------------------------------------------

@@ -22,9 +22,9 @@
 #ifndef vtk_m_RegularConnectivity_h
 #define vtk_m_RegularConnectivity_h
 
-#include <vtkm/Types.h>
 #include <vtkm/RegularStructure.h>
-#include <vtkm/cont/TopologyType.h>
+#include <vtkm/Types.h>
+#include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 VTKM_BOOST_PRE_INCLUDE
@@ -33,37 +33,38 @@ VTKM_BOOST_POST_INCLUDE
 
 namespace vtkm {
 
-template<vtkm::cont::TopologyType From, vtkm::cont::TopologyType To, vtkm::IdComponent Dimension>
+template<vtkm::IdComponent Dimension>
 struct SchedulingDimension
 {
   typedef vtkm::Id ValueType;
 };
 
-template<vtkm::cont::TopologyType From, vtkm::cont::TopologyType To>
-struct SchedulingDimension<From,To, 2>
+template<>
+struct SchedulingDimension<2>
 {
   typedef vtkm::Id2 ValueType;
 };
 
-template<vtkm::cont::TopologyType From, vtkm::cont::TopologyType To>
-struct SchedulingDimension<From,To, 3>
+template<>
+struct SchedulingDimension<3>
 {
   typedef vtkm::Id3 ValueType;
 };
 
-template<vtkm::cont::TopologyType From, vtkm::cont::TopologyType To, vtkm::IdComponent Dimension>
+template<typename From, typename To, vtkm::IdComponent Dimension>
 struct IndexLookupHelper
 {
   // We want an unconditional failure if this unspecialized class ever gets
   // instantiated, because it means someone missed a topology mapping type.
   // We need to create a test which depends on the templated types so
   // it doesn't get picked up without a concrete instantiation.
-  BOOST_STATIC_ASSERT_MSG(From != To && From == To,
+  BOOST_STATIC_ASSERT_MSG(sizeof(To) == static_cast<size_t>(-1),
                           "Missing Specialization for Topologies");
 };
 
 template<vtkm::IdComponent Dimension>
-struct IndexLookupHelper<vtkm::cont::NODE,vtkm::cont::CELL,Dimension>
+struct IndexLookupHelper<
+    vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, Dimension>
 {
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_EXEC_CONT_EXPORT
@@ -75,7 +76,8 @@ struct IndexLookupHelper<vtkm::cont::NODE,vtkm::cont::CELL,Dimension>
 };
 
 template<vtkm::IdComponent Dimension>
-struct IndexLookupHelper<vtkm::cont::CELL,vtkm::cont::NODE,Dimension>
+struct IndexLookupHelper<
+    vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, Dimension>
 {
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_EXEC_CONT_EXPORT
@@ -86,14 +88,16 @@ struct IndexLookupHelper<vtkm::cont::CELL,vtkm::cont::NODE,Dimension>
   }
 };
 
-template<vtkm::cont::TopologyType FromTopology, vtkm::cont::TopologyType ToTopoogy,
+template<typename FromTopology,
+         typename ToTopology,
          vtkm::IdComponent Dimension>
 class RegularConnectivity
 {
+  VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
+  VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
+
 public:
-  typedef typename SchedulingDimension< FromTopology,
-                                        ToTopoogy,
-                                        Dimension >::ValueType SchedulingDimension;
+  typedef typename SchedulingDimension<Dimension>::ValueType SchedulingDimension;
   RegularConnectivity():
     rs()
   {
@@ -124,14 +128,14 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
-    IndexLookupHelper<FromTopology,ToTopoogy,Dimension>::GetIndices(rs,index,ids);
+    IndexLookupHelper<FromTopology,ToTopology,Dimension>::GetIndices(rs,index,ids);
   }
 
   template <typename DeviceAdapterTag>
   struct ExecutionTypes
   { //Using this style so we can template the RegularConnecivity based on the
     //backend in the future without have to change the Transport logic
-    typedef vtkm::RegularConnectivity<FromTopology,ToTopoogy,Dimension> ExecObjectType;
+    typedef vtkm::RegularConnectivity<FromTopology,ToTopology,Dimension> ExecObjectType;
   };
 
   template<typename DeviceAdapterTag>

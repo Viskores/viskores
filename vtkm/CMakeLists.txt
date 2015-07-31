@@ -29,6 +29,7 @@ set(headers
   Pair.h
   RegularConnectivity.h
   RegularStructure.h
+  TopologyElementTag.h
   TypeListTag.h
   Types.h
   TypeTraits.h

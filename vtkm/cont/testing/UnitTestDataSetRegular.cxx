@@ -18,13 +18,13 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/testing/Testing.h>
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/CellType.h>
 #include <vtkm/RegularConnectivity.h>
+
+#include <vtkm/cont/testing/Testing.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 
 static void TwoDimRegularTest();
 static void ThreeDimRegularTest();
@@ -67,10 +67,14 @@ TwoDimRegularTest()
       VTKM_TEST_ASSERT(shape == vtkm::VTKM_PIXEL, "Incorrect element type.");
     }
 
-    vtkm::RegularConnectivity<vtkm::cont::NODE, vtkm::cont::CELL,2> nodeToCell =
-        cellSet.GetNodeToCellConnectivity();
-    vtkm::RegularConnectivity<vtkm::cont::CELL, vtkm::cont::NODE,2> cellToNode =
-        cellSet.GetCellToNodeConnectivity();
+    vtkm::RegularConnectivity<
+        vtkm::TopologyElementTagPoint,
+        vtkm::TopologyElementTagCell,
+        2> nodeToCell = cellSet.GetNodeToCellConnectivity();
+    vtkm::RegularConnectivity<
+        vtkm::TopologyElementTagCell,
+        vtkm::TopologyElementTagPoint,
+        2> cellToNode = cellSet.GetCellToNodeConnectivity();
 
     vtkm::Id cells[2][4] = {{0,1,3,4}, {1,2,4,5}};
     vtkm::Vec<vtkm::Id,4> nodeIds;
@@ -135,8 +139,10 @@ ThreeDimRegularTest()
     }
 
     //Test regular connectivity.
-    vtkm::RegularConnectivity<vtkm::cont::NODE, vtkm::cont::CELL,3> nodeToCell =
-        cellSet.GetNodeToCellConnectivity();
+    vtkm::RegularConnectivity<
+        vtkm::TopologyElementTagPoint,
+        vtkm::TopologyElementTagCell,
+        3> nodeToCell = cellSet.GetNodeToCellConnectivity();
     vtkm::Id expectedPointIds[8] = {0,1,3,4,6,7,9,10};
     vtkm::Vec<vtkm::Id,8> retrievedPointIds;
     nodeToCell.GetIndices(0, retrievedPointIds);
@@ -147,8 +153,10 @@ ThreeDimRegularTest()
             "Incorrect node ID for cell");
     }
 
-    vtkm::RegularConnectivity<vtkm::cont::CELL, vtkm::cont::NODE,3> cellToNode =
-        cellSet.GetCellToNodeConnectivity();
+    vtkm::RegularConnectivity<
+        vtkm::TopologyElementTagCell,
+        vtkm::TopologyElementTagPoint,
+        3> cellToNode = cellSet.GetCellToNodeConnectivity();
     vtkm::Vec<vtkm::Id,8> expectedCellIds;
     vtkm::Id retrievedCellIds[8] = {0,-1,-1,-1,-1,-1,-1,-1};
     cellToNode.GetIndices(0, expectedCellIds);

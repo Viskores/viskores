@@ -20,9 +20,9 @@
 #ifndef vtk_m_cont_CellSetExplicit_h
 #define vtk_m_cont_CellSetExplicit_h
 
+#include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/ExplicitConnectivity.h>
-#include <vtkm/cont/TopologyType.h>
 
 namespace vtkm {
 namespace cont {
@@ -56,8 +56,10 @@ public:
     return this->NodesOfCellsConnectivity.GetNumberOfElements();
   }
 
-  template<vtkm::cont::TopologyType FromTopology, vtkm::cont::TopologyType ToTopoogy>
+  template<typename FromTopology, typename ToTopology>
   struct ConnectivityType {
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
     // This type is really only valid for Point to Cell connectivity. When
     // other connectivity types are supported, these will need to be added.
     typedef ExplicitConnectivityType Type;

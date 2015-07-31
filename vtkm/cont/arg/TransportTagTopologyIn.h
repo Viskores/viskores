@@ -20,10 +20,10 @@
 #ifndef vtk_m_cont_arg_TransportTagTopologyIn_h
 #define vtk_m_cont_arg_TransportTagTopologyIn_h
 
+#include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/CellSet.h>
-#include <vtkm/cont/TopologyType.h>
 
 #include <vtkm/cont/arg/Transport.h>
 
@@ -44,7 +44,8 @@ struct Transport<vtkm::cont::arg::TransportTagTopologyIn, ContObjectType, Device
   VTKM_IS_CELL_SET(ContObjectType);
 
   typedef typename ContObjectType
-      ::template ConnectivityType<vtkm::cont::NODE,vtkm::cont::CELL>::Type
+      ::template ConnectivityType<
+          vtkm::TopologyElementTagPoint,vtkm::TopologyElementTagCell>::Type
       ::template ExecutionTypes<Device>
       ::ExecObjectType ExecObjectType;
 
