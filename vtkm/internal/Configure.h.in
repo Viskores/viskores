@@ -110,7 +110,8 @@
 #if defined(VTKM_GCC) || defined(VTKM_CLANG)
 #define VTKM_BOOST_PRE_INCLUDE \
   _Pragma("GCC diagnostic push") \
-  _Pragma("GCC diagnostic ignored \"-Wconversion\"")
+  _Pragma("GCC diagnostic ignored \"-Wconversion\"") \
+  _Pragma("GCC diagnostic ignored \"-Wshadow\"")
 #define VTKM_BOOST_POST_INCLUDE \
   _Pragma("GCC diagnostic pop")
 #else
