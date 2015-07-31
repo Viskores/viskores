@@ -21,7 +21,9 @@
 #include <vtkm/worklet/PointElevation.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
+#include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
+
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vector>
@@ -60,7 +62,7 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells", 3);
-  vtkm::cont::ExplicitConnectivity<> &connectivity = cellSet.NodesOfCellsConnectivity;
+  vtkm::cont::ConnectivityExplicit<> &connectivity = cellSet.NodesOfCellsConnectivity;
   connectivity.PrepareToAddCells(numCells, numCells * 4);
   for (vtkm::Id j = 0; j < dim - 1; ++j)
   {

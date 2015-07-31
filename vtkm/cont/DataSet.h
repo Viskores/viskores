@@ -22,14 +22,12 @@
 
 #include <vtkm/CellType.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/Field.h>
+#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/ExplicitConnectivity.h>
-#include <vtkm/RegularConnectivity.h>
-#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/Field.h>
 
 namespace vtkm {
 namespace cont {

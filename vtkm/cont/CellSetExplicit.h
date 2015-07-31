@@ -22,7 +22,7 @@
 
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/CellSet.h>
-#include <vtkm/cont/ExplicitConnectivity.h>
+#include <vtkm/cont/ConnectivityExplicit.h>
 
 namespace vtkm {
 namespace cont {
@@ -33,7 +33,7 @@ template<typename ShapeStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
 class CellSetExplicit : public CellSet
 {
 public:
-  typedef ExplicitConnectivity<ShapeStorageTag,
+  typedef ConnectivityExplicit<ShapeStorageTag,
                                IndexStorageTag,
                                ConnectivityStorageTag
                                > ExplicitConnectivityType;

@@ -37,6 +37,7 @@ set(headers
   CellSetExplicit.h
   CellSetListTag.h
   CellSetStructured.h
+  ConnectivityExplicit.h
   CoordinateSystem.h
   DataSet.h
   DeviceAdapter.h
@@ -45,7 +46,6 @@ set(headers
   DynamicArrayHandle.h
   DynamicCellSet.h
   DynamicPointCoordinates.h
-  ExplicitConnectivity.h
   Error.h
   ErrorControl.h
   ErrorControlAssert.h

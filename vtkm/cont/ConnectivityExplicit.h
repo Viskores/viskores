@@ -17,11 +17,11 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ExplicitConnectivity_h
-#define vtk_m_cont_ExplicitConnectivity_h
+#ifndef vtk_m_cont_ConnectivityExplicit_h
+#define vtk_m_cont_ConnectivityExplicit_h
 
 #include <vtkm/CellType.h>
-#include <vtkm/exec/ExplicitConnectivity.h>
+#include <vtkm/exec/ConnectivityExplicit.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
@@ -31,14 +31,14 @@ namespace vtkm {
 namespace cont {
 
 template<typename ShapeStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
-         typename IndiceStorageTag        = VTKM_DEFAULT_STORAGE_TAG,
+         typename NumIndicesStorageTag    = VTKM_DEFAULT_STORAGE_TAG,
          typename ConnectivityStorageTag  = VTKM_DEFAULT_STORAGE_TAG >
-class ExplicitConnectivity
+class ConnectivityExplicit
 {
 public:
 
   VTKM_CONT_EXPORT
-  ExplicitConnectivity()
+  ConnectivityExplicit()
   {
     this->NumShapes = 0;
     this->ConnectivityLength = 0;
@@ -151,7 +151,7 @@ public:
   /// Assigns the array handles to the explicit connectivity. This is
   /// the way you can fill the memory from another system without copying
   void Fill(const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &cellTypes,
-            const vtkm::cont::ArrayHandle<vtkm::Id, IndiceStorageTag> &numIndices,
+            const vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> &numIndices,
             const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &connectivity)
   {
     this->Shapes = cellTypes;
@@ -175,7 +175,7 @@ public:
   struct ExecutionTypes
   {
     typedef typename vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> ShapeHandle;
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Id, IndiceStorageTag> IndiceHandle;
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> IndiceHandle;
     typedef typename vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> ConnectivityHandle;
     typedef vtkm::cont::ArrayHandle<vtkm::Id> MapCellToConnectivityHandle;
 
@@ -184,7 +184,7 @@ public:
     typedef typename ConnectivityHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst ConnectivityPortalType;
     typedef typename MapCellToConnectivityHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst MapConnectivityPortalType;
 
-    typedef vtkm::exec::ExplicitConnectivity<ShapePortalType,
+    typedef vtkm::exec::ConnectivityExplicit<ShapePortalType,
                                              IndicePortalType,
                                              ConnectivityPortalType,
                                              MapConnectivityPortalType
@@ -205,7 +205,7 @@ public:
   VTKM_CONT_EXPORT
   virtual void PrintSummary(std::ostream &out) const
   {
-      out << "    ExplicitConnectivity: #shapes= " << this->NumShapes
+      out << "    ConnectivityExplicit: #shapes= " << this->NumShapes
           << " #connectivity= " << ConnectivityLength << std::endl;
       out <<"     Shapes: ";
       printSummary_ArrayHandle(Shapes, out);
@@ -223,15 +223,15 @@ public:
   GetShapesArray() const { return this->Shapes; }
 
   VTKM_CONT_EXPORT
-  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
+  vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> &
   GetNumIndicesArray() const { return this->NumIndices; }
 
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
+  const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &
   GetConnectivityArray() const { return this->Connectivity; }
 
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
+  const vtkm::cont::ArrayHandle<vtkm::Id> &
   GetCellToConnectivityIndexArray() const {
     return this->MapCellToConnectivityIndex;
   }
@@ -240,7 +240,7 @@ private:
   vtkm::Id ConnectivityLength;
   vtkm::Id NumShapes;
   vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> Shapes;
-  vtkm::cont::ArrayHandle<vtkm::Id, IndiceStorageTag> NumIndices;
+  vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> NumIndices;
   vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> Connectivity;
   vtkm::cont::ArrayHandle<vtkm::Id> MapCellToConnectivityIndex;
 };
@@ -248,4 +248,4 @@ private:
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_cont_ExplicitConnectivity_h
+#endif //vtk_m_cont_ConnectivityExplicit_h

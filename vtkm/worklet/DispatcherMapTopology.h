@@ -22,8 +22,8 @@
 
 #include <vtkm/RegularConnectivity.h>
 
+#include <vtkm/cont/ConnectivityExplicit.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/ExplicitConnectivity.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
@@ -104,7 +104,7 @@ public:
            typename V>
   VTKM_CONT_EXPORT
   void InvokeBasedOnDomainType(const Invocation &invocation,
-                               const vtkm::cont::ExplicitConnectivity<T,U,V>& domain) const
+                               const vtkm::cont::ConnectivityExplicit<T,U,V>& domain) const
   {
 
     // For a DispatcherMapTopology, when the inputDomain is some for of

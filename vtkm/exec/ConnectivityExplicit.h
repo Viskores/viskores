@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_ExplicitConnectivity_h
-#define vtk_m_exec_ExplicitConnectivity_h
+#ifndef vtk_m_exec_ConnectivityExplicit_h
+#define vtk_m_exec_ConnectivityExplicit_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/DeviceAdapter.h>
@@ -28,17 +28,17 @@ namespace vtkm {
 namespace exec {
 
 template<typename ShapePortalType,
-         typename IndicePortalType,
+         typename NumIndicesPortalType,
          typename ConnectivityPortalType,
          typename MapConnectivityPortalType
          >
-class ExplicitConnectivity
+class ConnectivityExplicit
 {
 public:
-  ExplicitConnectivity() {}
+  ConnectivityExplicit() {}
 
-  ExplicitConnectivity(const ShapePortalType& shapePortal,
-                       const IndicePortalType& indicePortal,
+  ConnectivityExplicit(const ShapePortalType& shapePortal,
+                       const NumIndicesPortalType& indicePortal,
                        const ConnectivityPortalType& connPortal,
                        const MapConnectivityPortalType& mapConnPortal
                        )
@@ -80,7 +80,7 @@ public:
 
 private:
  ShapePortalType Shapes;
- IndicePortalType NumIndices;
+ NumIndicesPortalType NumIndices;
  ConnectivityPortalType Connectivity;
  MapConnectivityPortalType MapCellToConnectivityIndex;
 };
@@ -88,4 +88,4 @@ private:
 } // namespace exec
 } // namespace vtkm
 
-#endif //  vtk_m_exec_ExplicitConnectivity_h
+#endif //  vtk_m_exec_ConnectivityExplicit_h

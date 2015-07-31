@@ -151,7 +151,7 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   conn.push_back(4);
 
   vtkm::cont::CellSetExplicit<> cs("cells", 2);
-  vtkm::cont::ExplicitConnectivity<> &ec = cs.NodesOfCellsConnectivity;
+  vtkm::cont::ConnectivityExplicit<> &ec = cs.NodesOfCellsConnectivity;
   ec.FillViaCopy(shapes, numindices, conn);
 
   ds.AddCellSet(cs);
@@ -183,7 +183,7 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells", 2);
-  vtkm::cont::ExplicitConnectivity<> &ec = cellSet.NodesOfCellsConnectivity;
+  vtkm::cont::ConnectivityExplicit<> &ec = cellSet.NodesOfCellsConnectivity;
 
   ec.PrepareToAddCells(2, 7);
   ec.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
@@ -225,7 +225,7 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
   ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells", 2);
-  vtkm::cont::ExplicitConnectivity<> &ec = cellSet.NodesOfCellsConnectivity;
+  vtkm::cont::ConnectivityExplicit<> &ec = cellSet.NodesOfCellsConnectivity;
 
   ec.PrepareToAddCells(nPointIds/3, nPointIds);
   for (i=0; i<nPointIds/3; i++)
