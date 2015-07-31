@@ -25,7 +25,9 @@
 
 #include <string>
 
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/static_assert.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 #define VTKM_DEVICE_ADAPTER_ERROR     -2
 #define VTKM_DEVICE_ADAPTER_UNDEFINED -1

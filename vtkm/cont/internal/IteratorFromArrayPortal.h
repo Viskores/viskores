@@ -24,7 +24,9 @@
 
 #include <vtkm/cont/Assert.h>
 
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/iterator/iterator_facade.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 namespace vtkm {
 namespace cont {

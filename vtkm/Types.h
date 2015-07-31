@@ -24,10 +24,12 @@
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/mpl/or.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
 #include <boost/type_traits/is_signed.hpp>
 #include <boost/utility/enable_if.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 /*!
  * \namespace vtkm
@@ -675,7 +677,7 @@ struct Add
   template<typename T>
   VTKM_EXEC_CONT_EXPORT T operator()(const T &a, const T &b) const
   {
-    return a + b;
+    return T(a + b);
   }
 };
 
@@ -684,7 +686,7 @@ struct Subtract
   template<typename T>
   VTKM_EXEC_CONT_EXPORT T operator()(const T &a, const T &b) const
   {
-    return a - b;
+    return T(a - b);
   }
 };
 
@@ -693,7 +695,7 @@ struct Multiply
   template<typename T>
   VTKM_EXEC_CONT_EXPORT T operator()(const T &a, const T &b) const
   {
-    return a * b;
+    return T(a * b);
   }
 };
 
@@ -702,7 +704,7 @@ struct Divide
   template<typename T>
   VTKM_EXEC_CONT_EXPORT T operator()(const T &a, const T &b) const
   {
-    return a / b;
+    return T(a / b);
   }
 };
 
@@ -711,7 +713,7 @@ struct Negate
   template<typename T>
   VTKM_EXEC_CONT_EXPORT T operator()(const T &x) const
   {
-    return -x;
+    return T(-x);
   }
 };
 
@@ -1053,10 +1055,10 @@ template<typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT_EXPORT
 T dot(const vtkm::Vec<T,Size> &a, const vtkm::Vec<T,Size> &b)
 {
-  T result = a[0]*b[0];
+  T result = T(a[0]*b[0]);
   for (vtkm::IdComponent componentIndex = 1; componentIndex < Size; componentIndex++)
   {
-    result += a[componentIndex]*b[componentIndex];
+    result = T(result + a[componentIndex]*b[componentIndex]);
   }
   return result;
 }
@@ -1065,21 +1067,21 @@ template<typename T>
 VTKM_EXEC_CONT_EXPORT
 T dot(const vtkm::Vec<T,2> &a, const vtkm::Vec<T,2> &b)
 {
-  return (a[0]*b[0]) + (a[1]*b[1]);
+  return T((a[0]*b[0]) + (a[1]*b[1]));
 }
 
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
 T dot(const vtkm::Vec<T,3> &a, const vtkm::Vec<T,3> &b)
 {
-  return (a[0]*b[0]) + (a[1]*b[1]) + (a[2]*b[2]);
+  return T((a[0]*b[0]) + (a[1]*b[1]) + (a[2]*b[2]));
 }
 
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
 T dot(const vtkm::Vec<T,4> &a, const vtkm::Vec<T,4> &b)
 {
-  return (a[0]*b[0]) + (a[1]*b[1]) + (a[2]*b[2]) + (a[3]*b[3]);
+  return T((a[0]*b[0]) + (a[1]*b[1]) + (a[2]*b[2]) + (a[3]*b[3]));
 }
 
 //Integer types of a width less than an integer get implicitly casted to

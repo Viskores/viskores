@@ -24,8 +24,10 @@
 
 #include <vtkm/internal/ExportMacros.h>
 
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 namespace vtkm {
 

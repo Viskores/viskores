@@ -26,7 +26,9 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VecTraits.h>
 
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/static_assert.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 #include <iostream>
 #include <sstream>
@@ -395,7 +397,7 @@ vtkm::Vec<T,N> TestValue(vtkm::Id index, vtkm::Vec<T,N>) {
   vtkm::Vec<T,N> value;
   for (vtkm::IdComponent i = 0; i < N; i++)
   {
-    value[i] = TestValue(index, T()) + T(i + 1);
+    value[i] = T(TestValue(index, T()) + T(i + 1));
   }
   return value;
 }

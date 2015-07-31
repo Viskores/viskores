@@ -25,12 +25,7 @@
 #include <vtkm/internal/IndexTag.h>
 
 
-// Disable conversion warnings inside boost
-# if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#   pragma GCC diagnostic push
-#   pragma GCC diagnostic ignored "-Wconversion"
-# endif // gcc || clang
-
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/function_types/components.hpp>
 #include <boost/function_types/function_arity.hpp>
 #include <boost/function_types/function_type.hpp>
@@ -45,11 +40,8 @@
 #include <boost/mpl/less.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/utility/enable_if.hpp>
+VTKM_BOOST_POST_INCLUDE
 
-
-# if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#   pragma GCC diagnostic pop
-# endif // gcc || clang
 
 
 #include <vtkm/internal/FunctionInterfaceDetailPre.h>

@@ -27,7 +27,9 @@
 #include <vtkm/cont/internal/DynamicTransform.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
+VTKM_BOOST_PRE_INCLUDE
 #include <boost/smart_ptr/shared_ptr.hpp>
+VTKM_BOOST_POST_INCLUDE
 
 namespace vtkm {
 namespace cont {
@@ -106,8 +108,6 @@ public:
   VTKM_CONT_EXPORT
   DynamicCellSetBase(const DynamicCellSetBase<CellSetList> &src)
     : CellSetContainer(src.CellSetContainer) {  }
-
-  friend class DynamicCellSetBase;
 
   template<typename OtherCellSetList>
   VTKM_CONT_EXPORT
