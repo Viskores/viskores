@@ -68,7 +68,7 @@ MakeTestDataSet::Make2DRegularDataSet0()
 
     vtkm::cont::CellSetStructured<2> cellSet("cells");
     //Set regular structure
-    cellSet.Structure.SetNodeDimension( vtkm::make_Vec(3,2) );
+    cellSet.Structure.SetPointDimensions( vtkm::make_Vec(3,2) );
     ds.AddCellSet(cellSet);
 
     return ds;
@@ -101,7 +101,7 @@ MakeTestDataSet::Make3DRegularDataSet0()
 
     static const vtkm::IdComponent dim = 3;
     vtkm::cont::CellSetStructured<dim> cellSet("cells");
-    cellSet.Structure.SetNodeDimension( vtkm::make_Vec(3,2,3) );
+    cellSet.Structure.SetPointDimensions( vtkm::make_Vec(3,2,3) );
     ds.AddCellSet(cellSet);
 
     return ds;

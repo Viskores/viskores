@@ -71,7 +71,7 @@ struct Fetch<FetchTag, vtkm::exec::arg::AspectTagTopologyElementType, Invocation
     TopologyType topology =
         invocation.Parameters.template GetParameter<InputDomainIndex>();
 
-    return topology.GetElementShapeType(index);
+    return topology.GetCellShapeType(index);
   }
 
   VTKM_EXEC_EXPORT

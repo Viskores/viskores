@@ -53,7 +53,7 @@ TwoDimRegularTest()
                      "Incorrect number of cell sets");
     VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 4,
                      "Incorrect number of fields");
-    VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfNodes() == 6,
+    VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfPoints() == 6,
                      "Incorrect number of nodes");
     VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfCells() == 2,
                      "Incorrect number of cells");
@@ -61,9 +61,9 @@ TwoDimRegularTest()
     vtkm::Id numCells = cellSet.Structure.GetNumberOfCells();
     for (vtkm::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
     {
-      VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfIndices() == 4,
+      VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfNodesPerCell() == 4,
                        "Incorrect number of cell indices");
-      vtkm::CellType shape = cellSet.Structure.GetElementShapeType();
+      vtkm::CellType shape = cellSet.Structure.GetCellShapeType();
       VTKM_TEST_ASSERT(shape == vtkm::VTKM_PIXEL, "Incorrect element type.");
     }
 
@@ -123,7 +123,7 @@ ThreeDimRegularTest()
     VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 5,
                      "Incorrect number of fields");
 
-    VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfNodes() == 18,
+    VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfPoints() == 18,
                      "Incorrect number of nodes");
 
     VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfCells() == 4,
@@ -132,9 +132,9 @@ ThreeDimRegularTest()
     vtkm::Id numCells = cellSet.Structure.GetNumberOfCells();
     for (vtkm::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
     {
-      VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfIndices() == 8,
+      VTKM_TEST_ASSERT(cellSet.Structure.GetNumberOfNodesPerCell() == 8,
                        "Incorrect number of cell indices");
-      vtkm::CellType shape = cellSet.Structure.GetElementShapeType();
+      vtkm::CellType shape = cellSet.Structure.GetCellShapeType();
       VTKM_TEST_ASSERT(shape == vtkm::VTKM_VOXEL, "Incorrect element type.");
     }
 

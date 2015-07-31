@@ -22,8 +22,8 @@
 
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/RegularConnectivity.h>
-#include <vtkm/RegularStructure.h>
 #include <vtkm/TopologyElementTag.h>
+#include <vtkm/internal/ConnectivityStructuredInternals.h>
 
 namespace vtkm {
 namespace cont {
@@ -85,7 +85,7 @@ public:
   }
 
 public:
-  vtkm::RegularStructure<Dimension> Structure;
+  vtkm::internal::ConnectivityStructuredInternals<Dimension> Structure;
 };
 
 

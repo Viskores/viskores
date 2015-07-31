@@ -28,7 +28,6 @@ set(headers
   Matrix.h
   Pair.h
   RegularConnectivity.h
-  RegularStructure.h
   TopologyElementTag.h
   TypeListTag.h
   Types.h

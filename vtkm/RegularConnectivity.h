@@ -22,70 +22,23 @@
 #ifndef vtk_m_RegularConnectivity_h
 #define vtk_m_RegularConnectivity_h
 
-#include <vtkm/RegularStructure.h>
-#include <vtkm/Types.h>
 #include <vtkm/TopologyElementTag.h>
+#include <vtkm/Types.h>
+#include <vtkm/internal/ConnectivityStructuredInternals.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-
-VTKM_BOOST_PRE_INCLUDE
-#include <boost/static_assert.hpp>
-VTKM_BOOST_POST_INCLUDE
 
 namespace vtkm {
 
 template<vtkm::IdComponent Dimension>
 struct SchedulingDimension
 {
+  typedef vtkm::Vec<vtkm::Id, Dimension> ValueType;
+};
+
+template<>
+struct SchedulingDimension<1>
+{
   typedef vtkm::Id ValueType;
-};
-
-template<>
-struct SchedulingDimension<2>
-{
-  typedef vtkm::Id2 ValueType;
-};
-
-template<>
-struct SchedulingDimension<3>
-{
-  typedef vtkm::Id3 ValueType;
-};
-
-template<typename From, typename To, vtkm::IdComponent Dimension>
-struct IndexLookupHelper
-{
-  // We want an unconditional failure if this unspecialized class ever gets
-  // instantiated, because it means someone missed a topology mapping type.
-  // We need to create a test which depends on the templated types so
-  // it doesn't get picked up without a concrete instantiation.
-  BOOST_STATIC_ASSERT_MSG(sizeof(To) == static_cast<size_t>(-1),
-                          "Missing Specialization for Topologies");
-};
-
-template<vtkm::IdComponent Dimension>
-struct IndexLookupHelper<
-    vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, Dimension>
-{
-  template <vtkm::IdComponent ItemTupleLength>
-  VTKM_EXEC_CONT_EXPORT
-  static void GetIndices(RegularStructure<Dimension> &rs,
-                  vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
-  {
-    rs.GetNodesOfCells(index,ids);
-  }
-};
-
-template<vtkm::IdComponent Dimension>
-struct IndexLookupHelper<
-    vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, Dimension>
-{
-  template <vtkm::IdComponent ItemTupleLength>
-  VTKM_EXEC_CONT_EXPORT
-  static void GetIndices(RegularStructure<Dimension> &rs,
-                  vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
-  {
-    rs.GetCellsOfNode(index,ids);
-  }
 };
 
 template<typename FromTopology,
@@ -96,45 +49,58 @@ class RegularConnectivity
   VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
   VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
 
+  typedef vtkm::internal::ConnectivityStructuredInternals<Dimension>
+      InternalsType;
+
 public:
   typedef typename SchedulingDimension<Dimension>::ValueType SchedulingDimension;
+
   RegularConnectivity():
-    rs()
+    Internals()
   {
 
   }
 
-  RegularConnectivity(RegularStructure<Dimension> regularStructure):
-    rs(regularStructure)
+  RegularConnectivity(const InternalsType &src):
+    Internals(src)
   {
   }
 
-  RegularConnectivity( const RegularConnectivity& other):
-    rs(other.rs)
+  RegularConnectivity(const RegularConnectivity &src):
+    Internals(src.Internals)
   {
   }
 
   VTKM_EXEC_CONT_EXPORT
-  SchedulingDimension GetSchedulingDimensions() const {return rs.GetSchedulingDimensions();}
+  SchedulingDimension GetSchedulingDimensions() const {
+    return Internals.GetSchedulingDimensions();
+  }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id GetNumberOfElements() const {return rs.GetNumberOfElements();}
+  vtkm::Id GetNumberOfIndices(vtkm::Id index) const {
+    typedef vtkm::internal::ConnectivityStructuredIndexHelper<
+        FromTopology,ToTopology,Dimension> Helper;
+    return Helper::GetNumberOfIndices(this->Internals, index);
+  }
+  // This needs some thought. What does cell shape mean when the to topology
+  // is not a cell?
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id GetNumberOfIndices(vtkm::Id=0) const {return rs.GetNumberOfIndices();}
-  VTKM_EXEC_CONT_EXPORT
-  vtkm::CellType GetElementShapeType(vtkm::Id=0) const {return rs.GetElementShapeType();}
+  vtkm::CellType GetCellShapeType(vtkm::Id=0) const {
+    return Internals.GetCellShapeType();
+  }
 
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_EXEC_CONT_EXPORT
   void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
-    IndexLookupHelper<FromTopology,ToTopology,Dimension>::GetIndices(rs,index,ids);
+    typedef vtkm::internal::ConnectivityStructuredIndexHelper<
+        FromTopology,ToTopology,Dimension> Helper;
+    Helper::GetIndices(this->Internals,index,ids);
   }
 
   template <typename DeviceAdapterTag>
   struct ExecutionTypes
-  { //Using this style so we can template the RegularConnecivity based on the
-    //backend in the future without have to change the Transport logic
+  {
     typedef vtkm::RegularConnectivity<FromTopology,ToTopology,Dimension> ExecObjectType;
   };
 
@@ -142,11 +108,11 @@ public:
   typename ExecutionTypes<DeviceAdapterTag>::ExecObjectType
   PrepareForInput(DeviceAdapterTag) const
   {
-      return typename ExecutionTypes<DeviceAdapterTag>::ExecObjectType(*this);
+    return typename ExecutionTypes<DeviceAdapterTag>::ExecObjectType(*this);
   }
 
 private:
-  RegularStructure<Dimension> rs;
+  InternalsType Internals;
 };
 
 } // namespace vtkm
