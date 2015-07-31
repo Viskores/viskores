@@ -115,7 +115,6 @@ vtkm::Float64 PercentileValue(const std::vector<vtkm::Float64> &samples, const v
   }
   VTKM_ASSERT_CONT(percent >= 0.0);
   VTKM_ASSERT_CONT(percent <= 100.0);
-  VTKM_ASSERT_CONT(std::is_sorted(samples.begin(), samples.end()));
   if (percent == 100.0){
     return samples.back();
   }
@@ -189,7 +188,7 @@ struct Benchmarker {
   const vtkm::Float64 MAX_RUNTIME;
   const size_t MAX_ITERATIONS;
 
-  Benchmarker() : MAX_RUNTIME(1.5), MAX_ITERATIONS(500){}
+  Benchmarker() : MAX_RUNTIME(30), MAX_ITERATIONS(500){}
 
   template<typename Functor>
   VTKM_CONT_EXPORT
