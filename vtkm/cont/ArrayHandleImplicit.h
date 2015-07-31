@@ -63,6 +63,16 @@ public:
   VTKM_EXEC_CONT_EXPORT
   ValueType Get(vtkm::Id index) const { return this->Functor(index); }
 
+  typedef vtkm::cont::internal::IteratorFromArrayPortal < ArrayPortalImplicit
+                                             < ValueType, FunctorType  > >
+  IteratorType;
+
+  VTKM_CONT_EXPORT
+  IteratorType GetIteratorBegin() const
+  {
+    return IteratorType(*this);
+  }
+
 private:
   FunctorType Functor;
   vtkm::Id NumberOfValues;
@@ -100,7 +110,7 @@ private:
   typedef typename detail::ArrayHandleImplicitTraits<ValueType,
                                                      FunctorType> ArrayTraits;
 
- public:
+public:
   typedef typename ArrayTraits::StorageTag StorageTag;
 
   typedef vtkm::cont::ArrayHandle<ValueType,StorageTag> Superclass;

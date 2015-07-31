@@ -134,6 +134,18 @@ public:
     this->RetrieveOutputDataImpl(storage);
   }
 
+  /// Similar to RetrieveOutputData except that instead of writing to the
+  /// controlArray itself, it writes to the given control environment
+  /// iterator. This allows the user to retrieve data without necessarily
+  /// allocating an array in the ArrayContainerControl (assuming that control
+  /// and exeuction have seperate memory spaces).
+  ///
+  // template<class IteratorTypeControl> 
+  // VTKM_CONT_EXPORT
+  // void CopyInto(IteratorTypeControl dest) const {
+  //   this->CopyIntoImpl(&dest);
+  // }
+
   /// \brief Reduces the size of the array without changing its values.
   ///
   /// This method allows you to resize the array without reallocating it. The
@@ -226,6 +238,12 @@ public:
   ArrayHandleExecutionManager(StorageType *storage)
     : Transfer(storage) {  }
 
+  template<class IteratorTypeControl>
+  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
+  {
+    this->Transfer.CopyInto(dest);
+  }
+
 protected:
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValuesImpl() const
@@ -259,6 +277,12 @@ protected:
   {
     this->Transfer.RetrieveOutputData(storage);
   }
+
+  // template<class IteratorTypeControl>
+  // VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
+  // {
+  //   this->Transfer.CopyInto(dest);
+  // }
 
   VTKM_CONT_EXPORT
   void ShrinkImpl(Id numberOfValues)
