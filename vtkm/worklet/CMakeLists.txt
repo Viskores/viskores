@@ -24,6 +24,7 @@ set(headers
   DispatcherMapTopology.h
   WorkletMapTopology.h
   CellAverage.h
+  Clip.h
   PointElevation.h
   VertexClustering.h
   AverageByKey.h
