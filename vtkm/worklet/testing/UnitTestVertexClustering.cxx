@@ -61,8 +61,8 @@ vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &dataSet,
       dataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
   vtkm::cont::ArrayHandle<PointType> pointArray = dataSet.GetField("xyz").GetData().CastToArrayHandle<PointType, VTKM_DEFAULT_STORAGE_TAG>();
-  vtkm::cont::ArrayHandle<vtkm::Id> pointIdArray = cellSet.GetNodeToCellConnectivity().GetConnectivityArray();
-  vtkm::cont::ArrayHandle<vtkm::Id> cellToConnectivityIndexArray = cellSet.GetNodeToCellConnectivity().GetCellToConnectivityIndexArray();
+  vtkm::cont::ArrayHandle<vtkm::Id> pointIdArray = cellSet.GetConnectivityArray();
+  vtkm::cont::ArrayHandle<vtkm::Id> cellToConnectivityIndexArray = cellSet.GetCellToConnectivityIndexArray();
 
   vtkm::cont::ArrayHandle<PointType> output_pointArray ;
   vtkm::cont::ArrayHandle<vtkm::Id3> output_pointId3Array ;
@@ -90,7 +90,7 @@ vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &dataSet,
 
     vtkm::cont::CellSetExplicit<> newCellSet("cells", 0);
 
-    newCellSet.GetNodeToCellConnectivity().Fill(
+    newCellSet.Fill(
           copyFromImplicit(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(vtkm::VTKM_TRIANGLE, cells)),
           copyFromImplicit(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(3, cells)),
           copyFromVec(output_pointId3Array)
@@ -134,11 +134,12 @@ void TestVertexClustering()
   VTKM_TEST_ASSERT(outDataSet.GetNumberOfCellSets() == 1, "Number of output cellsets mismatch");
   vtkm::cont::CellSetExplicit<> &cellSet =
       outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
-  vtkm::cont::ConnectivityExplicit<> &conn = cellSet.GetNodeToCellConnectivity();
-  VTKM_TEST_ASSERT(conn.GetConnectivityArray().GetNumberOfValues() == output_pointIds, "Number of connectivity array elements mismatch");
-  for (vtkm::Id i=0; i<conn.GetConnectivityArray().GetNumberOfValues(); i++)
+  VTKM_TEST_ASSERT(
+        cellSet.GetConnectivityArray().GetNumberOfValues() == output_pointIds,
+        "Number of connectivity array elements mismatch");
+  for (vtkm::Id i=0; i<cellSet.GetConnectivityArray().GetNumberOfValues(); i++)
     {
-      vtkm::Id id1 = conn.GetConnectivityArray().GetPortalConstControl().Get(i) ;
+      vtkm::Id id1 = cellSet.GetConnectivityArray().GetPortalConstControl().Get(i) ;
       vtkm::Id id2 = output_pointId[i] ;
       std::cout << "pointid: " << id1 << " " << id2 << std::endl;
       //VTKM_TEST_ASSERT( id1 == id2, "Connectivity Array mismatch" )  ;

@@ -62,21 +62,20 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells", 3);
-  vtkm::cont::ConnectivityExplicit<> &connectivity = cellSet.NodesOfCellsConnectivity;
-  connectivity.PrepareToAddCells(numCells, numCells * 4);
+  cellSet.PrepareToAddCells(numCells, numCells * 4);
   for (vtkm::Id j = 0; j < dim - 1; ++j)
   {
     for (vtkm::Id i = 0; i < dim - 1; ++i)
     {
-      connectivity.AddCell(vtkm::VTKM_QUAD,
-                           4,
-                           vtkm::make_Vec<vtkm::Id>(j * dim + i,
-                                                    j * dim + i + 1,
-                                                    (j + 1) * dim + i + 1,
-                                                    (j + 1) * dim + i));
+      cellSet.AddCell(vtkm::VTKM_QUAD,
+                      4,
+                      vtkm::make_Vec<vtkm::Id>(j * dim + i,
+                                               j * dim + i + 1,
+                                               (j + 1) * dim + i + 1,
+                                               (j + 1) * dim + i));
     }
   }
-  connectivity.CompleteAddingCells();
+  cellSet.CompleteAddingCells();
 
   dataSet.AddCellSet(cellSet);
   return dataSet;

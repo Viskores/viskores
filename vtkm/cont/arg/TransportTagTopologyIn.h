@@ -44,16 +44,17 @@ struct Transport<vtkm::cont::arg::TransportTagTopologyIn, ContObjectType, Device
   VTKM_IS_CELL_SET(ContObjectType);
 
   typedef typename ContObjectType
-      ::template ConnectivityType<
-          vtkm::TopologyElementTagPoint,vtkm::TopologyElementTagCell>::Type
-      ::template ExecutionTypes<Device>
+      ::template ExecutionTypes<
+          Device,vtkm::TopologyElementTagPoint,vtkm::TopologyElementTagCell>
       ::ExecObjectType ExecObjectType;
 
   VTKM_CONT_EXPORT
   ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
   {
     //create CUDA version of connectivity array.
-    return object.GetNodeToCellConnectivity().PrepareForInput(Device());
+    return object.PrepareForInput(Device(),
+                                  vtkm::TopologyElementTagPoint(),
+                                  vtkm::TopologyElementTagCell());
   }
 };
 

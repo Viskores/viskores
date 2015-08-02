@@ -37,7 +37,6 @@ set(headers
   CellSetExplicit.h
   CellSetListTag.h
   CellSetStructured.h
-  ConnectivityExplicit.h
   CoordinateSystem.h
   DataSet.h
   DeviceAdapter.h

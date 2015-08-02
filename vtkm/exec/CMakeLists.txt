@@ -21,6 +21,7 @@
 set(headers
   Assert.h
   ConnectivityExplicit.h
+  ConnectivityStructured.h
   ExecutionObjectBase.h
   ExecutionWholeArray.h
   FunctorBase.h

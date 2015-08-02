@@ -21,9 +21,10 @@
 #define vtk_m_cont_CellSetStructured_h
 
 #include <vtkm/cont/CellSet.h>
-#include <vtkm/RegularConnectivity.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/internal/ConnectivityStructuredInternals.h>
+#include <vtkm/exec/ConnectivityStructured.h>
 
 namespace vtkm {
 namespace cont {
@@ -33,8 +34,14 @@ namespace cont {
 template<vtkm::IdComponent DIMENSION>
 class CellSetStructured : public CellSet
 {
+private:
+  typedef vtkm::internal::ConnectivityStructuredInternals<DIMENSION>
+      InternalsType;
+
 public:
   static const vtkm::IdComponent Dimension=DIMENSION;
+
+  typedef typename InternalsType::SchedulingRangeType SchedulingRangeType;
 
   VTKM_CONT_EXPORT
   CellSetStructured(const std::string &name = std::string())
@@ -43,38 +50,56 @@ public:
   }
 
 
-  virtual vtkm::Id GetNumCells() const
+  virtual vtkm::Id GetNumberOfCells() const
   {
     return this->Structure.GetNumberOfCells();
   }
 
-  template<typename FromTopology, typename ToTopology>
-  struct ConnectivityType {
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
-    typedef vtkm::RegularConnectivity<FromTopology,ToTopology,Dimension> Type;
-  };
-
-  VTKM_CONT_EXPORT
-  vtkm::RegularConnectivity<
-      vtkm::TopologyElementTagPoint,vtkm::TopologyElementTagCell,Dimension>
-  GetNodeToCellConnectivity() const
+  virtual vtkm::Id GetNumberOfPoints() const
   {
-    typedef vtkm::RegularConnectivity<vtkm::TopologyElementTagPoint,
-                                      vtkm::TopologyElementTagCell,
-                                      Dimension> NodeToCellConnectivity;
-    return NodeToCellConnectivity(this->Structure);
+    return this->Structure.GetNumberOfPoints();
+  }
+
+  void SetPointDimensions(SchedulingRangeType dimensions)
+  {
+    this->Structure.SetPointDimensions(dimensions);
   }
 
   VTKM_CONT_EXPORT
-  vtkm::RegularConnectivity<
-      vtkm::TopologyElementTagCell,vtkm::TopologyElementTagPoint,Dimension>
-  GetCellToNodeConnectivity() const
+  vtkm::IdComponent GetNumberOfNodesPerCell() const
   {
-    typedef vtkm::RegularConnectivity<vtkm::TopologyElementTagCell,
-                                      vtkm::TopologyElementTagPoint,
-                                      Dimension> CellToNodeConnectivity;
-    return CellToNodeConnectivity(this->Structure);
+    return this->Structure.GetNumberOfNodesPerCell();
+  }
+
+  VTKM_CONT_EXPORT
+  vtkm::CellType GetCellShapeType() const
+  {
+    return this->Structure.GetCellShapeType();
+  }
+
+  template<typename TopologyElement>
+  VTKM_CONT_EXPORT
+  SchedulingRangeType GetSchedulingRange(TopologyElement) const {
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(TopologyElement);
+    return this->Structure.GetSchedulingRange(TopologyElement());
+  }
+
+  template<typename DeviceAdapter, typename FromTopology, typename ToTopology>
+  struct ExecutionTypes {
+    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
+    typedef vtkm::exec::ConnectivityStructured<FromTopology,ToTopology,Dimension> ExecObjectType;
+  };
+
+  template<typename DeviceAdapter, typename FromTopology, typename ToTopology>
+  typename ExecutionTypes<DeviceAdapter,FromTopology,ToTopology>::ExecObjectType
+  PrepareForInput(DeviceAdapter, FromTopology, ToTopology) const
+  {
+    typedef typename
+        ExecutionTypes<DeviceAdapter,FromTopology,ToTopology>::ExecObjectType
+            ConnectivityType;
+    return ConnectivityType(this->Structure);
   }
 
   virtual void PrintSummary(std::ostream &out) const
@@ -84,8 +109,8 @@ public:
       this->Structure.PrintSummary(out);
   }
 
-public:
-  vtkm::internal::ConnectivityStructuredInternals<Dimension> Structure;
+private:
+  InternalsType Structure;
 };
 
 

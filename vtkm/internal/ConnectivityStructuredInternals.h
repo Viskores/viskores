@@ -41,36 +41,44 @@ template<>
 class ConnectivityStructuredInternals<1>
 {
 public:
+  typedef vtkm::Id SchedulingRangeType;
+
   VTKM_EXEC_CONT_EXPORT
-  void SetPointDimensions(vtkm::Vec<vtkm::Id,1> dimensions)
+  void SetPointDimensions(vtkm::Id dimensions)
   {
     this->PointDimensions = dimensions;
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Vec<vtkm::Id,1> GetPointDimensions() const
+  vtkm::Id GetPointDimensions() const
   {
     return this->PointDimensions;
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Vec<vtkm::Id,1> GetCellDimensions() const
+  vtkm::Id GetCellDimensions() const
   {
-    return this->PointDimensions - vtkm::Vec<vtkm::Id,1>(1);
+    return this->PointDimensions - 1;
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id GetSchedulingDimensions() const
+  SchedulingRangeType GetSchedulingRange(vtkm::TopologyElementTagCell) const
   {
     return this->GetNumberOfCells();
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id GetNumberOfPoints() const {return this->PointDimensions[0];}
+  SchedulingRangeType GetSchedulingRange(vtkm::TopologyElementTagPoint) const
+  {
+    return this->GetNumberOfPoints();
+  }
+
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id GetNumberOfCells() const {return this->PointDimensions[0]-1;}
+  vtkm::Id GetNumberOfPoints() const {return this->PointDimensions;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id GetNumberOfNodesPerCell() const {return 2;}
+  vtkm::Id GetNumberOfCells() const {return this->PointDimensions-1;}
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::IdComponent GetNumberOfNodesPerCell() const {return 2;}
   VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetCellShapeType() const {return VTKM_LINE;}
 
@@ -94,7 +102,7 @@ public:
     {
       ids[idx++] = index-1;
     }
-    if (index < this->PointDimensions[0]-1)
+    if (index < this->PointDimensions-1)
     {
       ids[idx++] = index;
     }
@@ -104,12 +112,12 @@ public:
   void PrintSummary(std::ostream &out) const
   {
     out<<"   RegularConnectivity<1> ";
-    out<<"this->PointDimensions["<<this->PointDimensions[0]<<"] ";
+    out<<"this->PointDimensions["<<this->PointDimensions<<"] ";
     out<<"\n";
   }
 
 private:
-  vtkm::Vec<vtkm::Id,1> PointDimensions;
+  vtkm::Id PointDimensions;
 };
 
 //2 D specialization.
@@ -117,6 +125,8 @@ template<>
 class ConnectivityStructuredInternals<2>
 {
 public:
+  typedef vtkm::Id2 SchedulingRangeType;
+
   VTKM_EXEC_CONT_EXPORT
   void SetPointDimensions(vtkm::Id2 dims)
   {
@@ -140,8 +150,12 @@ public:
 
   //returns an id2 to signal what kind of scheduling to use
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id2 GetSchedulingDimensions() const {
+  vtkm::Id2 GetSchedulingRange(vtkm::TopologyElementTagCell) const {
     return this->GetCellDimensions();
+  }
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id2 GetSchedulingRange(vtkm::TopologyElementTagPoint) const {
+    return this->GetPointDimensions();
   }
 
   VTKM_EXEC_CONT_EXPORT
@@ -150,7 +164,7 @@ public:
     return vtkm::internal::VecProduct<2>()(this->GetCellDimensions());
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id GetNumberOfNodesPerCell() const { return 4; }
+  vtkm::IdComponent GetNumberOfNodesPerCell() const { return 4; }
   VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetCellShapeType() const { return VTKM_PIXEL; }
 
@@ -229,6 +243,8 @@ template<>
 class ConnectivityStructuredInternals<3>
 {
 public:
+  typedef vtkm::Id3 SchedulingRangeType;
+
   VTKM_EXEC_CONT_EXPORT
   void SetPointDimensions(vtkm::Id3 dims)
   {
@@ -255,8 +271,12 @@ public:
 
   //returns an id3 to signal what kind of scheduling to use
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id3 GetSchedulingDimensions() const {
+  vtkm::Id3 GetSchedulingRange(vtkm::TopologyElementTagCell) const {
     return this->GetCellDimensions();
+  }
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id3 GetSchedulingRange(vtkm::TopologyElementTagPoint) const {
+    return this->GetPointDimensions();
   }
 
   VTKM_EXEC_CONT_EXPORT
@@ -265,7 +285,7 @@ public:
     return vtkm::internal::VecProduct<3>()(this->GetCellDimensions());
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id GetNumberOfNodesPerCell() const { return 8; }
+  vtkm::IdComponent GetNumberOfNodesPerCell() const { return 8; }
   VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetCellShapeType() const { return VTKM_VOXEL; }
 
@@ -408,7 +428,7 @@ struct ConnectivityStructuredIndexHelper<
   }
 
   VTKM_EXEC_CONT_EXPORT
-  static vtkm::Id GetNumberOfIndices(
+  static vtkm::IdComponent GetNumberOfIndices(
         const vtkm::internal::ConnectivityStructuredInternals<Dimension> &connectivity,
         vtkm::Id vtkmNotUsed(cellIndex))
   {

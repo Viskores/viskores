@@ -19,32 +19,20 @@
 //============================================================================
 
 
-#ifndef vtk_m_RegularConnectivity_h
-#define vtk_m_RegularConnectivity_h
+#ifndef vtk_m_exec_ConnectivityStructured_h
+#define vtk_m_exec_ConnectivityStructured_h
 
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
 #include <vtkm/internal/ConnectivityStructuredInternals.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 namespace vtkm {
-
-template<vtkm::IdComponent Dimension>
-struct SchedulingDimension
-{
-  typedef vtkm::Vec<vtkm::Id, Dimension> ValueType;
-};
-
-template<>
-struct SchedulingDimension<1>
-{
-  typedef vtkm::Id ValueType;
-};
+namespace exec {
 
 template<typename FromTopology,
          typename ToTopology,
          vtkm::IdComponent Dimension>
-class RegularConnectivity
+class ConnectivityStructured
 {
   VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
   VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
@@ -53,30 +41,28 @@ class RegularConnectivity
       InternalsType;
 
 public:
-  typedef typename SchedulingDimension<Dimension>::ValueType SchedulingDimension;
+  typedef typename InternalsType::SchedulingRangeType SchedulingRangeType;
 
-  RegularConnectivity():
+  VTKM_EXEC_CONT_EXPORT
+  ConnectivityStructured():
     Internals()
   {
 
   }
 
-  RegularConnectivity(const InternalsType &src):
+  VTKM_EXEC_CONT_EXPORT
+  ConnectivityStructured(const InternalsType &src):
     Internals(src)
   {
   }
 
-  RegularConnectivity(const RegularConnectivity &src):
+  VTKM_EXEC_CONT_EXPORT
+  ConnectivityStructured(const ConnectivityStructured &src):
     Internals(src.Internals)
   {
   }
 
-  VTKM_EXEC_CONT_EXPORT
-  SchedulingDimension GetSchedulingDimensions() const {
-    return Internals.GetSchedulingDimensions();
-  }
-
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   vtkm::Id GetNumberOfIndices(vtkm::Id index) const {
     typedef vtkm::internal::ConnectivityStructuredIndexHelper<
         FromTopology,ToTopology,Dimension> Helper;
@@ -84,13 +70,13 @@ public:
   }
   // This needs some thought. What does cell shape mean when the to topology
   // is not a cell?
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   vtkm::CellType GetCellShapeType(vtkm::Id=0) const {
     return Internals.GetCellShapeType();
   }
 
   template <vtkm::IdComponent ItemTupleLength>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
     typedef vtkm::internal::ConnectivityStructuredIndexHelper<
@@ -98,23 +84,11 @@ public:
     Helper::GetIndices(this->Internals,index,ids);
   }
 
-  template <typename DeviceAdapterTag>
-  struct ExecutionTypes
-  {
-    typedef vtkm::RegularConnectivity<FromTopology,ToTopology,Dimension> ExecObjectType;
-  };
-
-  template<typename DeviceAdapterTag>
-  typename ExecutionTypes<DeviceAdapterTag>::ExecObjectType
-  PrepareForInput(DeviceAdapterTag) const
-  {
-    return typename ExecutionTypes<DeviceAdapterTag>::ExecObjectType(*this);
-  }
-
 private:
   InternalsType Internals;
 };
 
-} // namespace vtkm
+}
+} // namespace vtkm::exec
 
-#endif //vtk_m_RegularConnectivity_h
+#endif //vtk_m_exec_ConnectivityStructured_h
