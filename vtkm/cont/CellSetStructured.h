@@ -66,15 +66,16 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::IdComponent GetNumberOfNodesPerCell() const
+  vtkm::IdComponent
+  GetNumberOfPointsInCell(vtkm::Id vtkmNotUsed(cellIndex)=0) const
   {
-    return this->Structure.GetNumberOfNodesPerCell();
+    return this->Structure.GetNumberOfPointsInCell();
   }
 
   VTKM_CONT_EXPORT
-  vtkm::CellType GetCellShapeType() const
+  vtkm::CellType GetCellShape() const
   {
-    return this->Structure.GetCellShapeType();
+    return this->Structure.GetCellShape();
   }
 
   template<typename TopologyElement>

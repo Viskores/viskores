@@ -57,16 +57,16 @@ TwoDimRegularTest()
     VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 4,
                      "Incorrect number of fields");
     VTKM_TEST_ASSERT(cellSet.GetNumberOfPoints() == 6,
-                     "Incorrect number of nodes");
+                     "Incorrect number of points");
     VTKM_TEST_ASSERT(cellSet.GetNumberOfCells() == 2,
                      "Incorrect number of cells");
 
     vtkm::Id numCells = cellSet.GetNumberOfCells();
     for (vtkm::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
     {
-      VTKM_TEST_ASSERT(cellSet.GetNumberOfNodesPerCell() == 4,
+      VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(cellIndex) == 4,
                        "Incorrect number of cell indices");
-      vtkm::CellType shape = cellSet.GetCellShapeType();
+      vtkm::CellType shape = cellSet.GetCellShape();
       VTKM_TEST_ASSERT(shape == vtkm::VTKM_PIXEL, "Incorrect element type.");
     }
 
@@ -89,14 +89,17 @@ TwoDimRegularTest()
 
 
     vtkm::Id cells[2][4] = {{0,1,3,4}, {1,2,4,5}};
-    vtkm::Vec<vtkm::Id,4> nodeIds;
+    vtkm::Vec<vtkm::Id,4> pointIds;
     for (vtkm::Id cellIndex = 0; cellIndex < 2; cellIndex++)
     {
-      pointToCell.GetIndices(cellIndex, nodeIds);
-      for (vtkm::IdComponent nodeIndex = 0; nodeIndex < 4; nodeIndex++)
+      pointToCell.GetIndices(cellIndex, pointIds);
+      for (vtkm::IdComponent localPointIndex = 0;
+           localPointIndex < 4;
+           localPointIndex++)
       {
-        VTKM_TEST_ASSERT(nodeIds[nodeIndex] == cells[cellIndex][nodeIndex],
-                         "Incorrect node ID for cell");
+        VTKM_TEST_ASSERT(
+              pointIds[localPointIndex] == cells[cellIndex][localPointIndex],
+              "Incorrect point ID for cell");
       }
     }
 
@@ -114,7 +117,7 @@ TwoDimRegularTest()
       for (vtkm::IdComponent cellIndex = 0; cellIndex < 4; cellIndex++)
         VTKM_TEST_ASSERT(
               retrievedCellIds[cellIndex] == expectedCellIds[pointIndex][cellIndex],
-              "Incorrect cell ID for node");
+              "Incorrect cell ID for point");
     }
 }
 
@@ -136,7 +139,7 @@ ThreeDimRegularTest()
                      "Incorrect number of fields");
 
     VTKM_TEST_ASSERT(cellSet.GetNumberOfPoints() == 18,
-                     "Incorrect number of nodes");
+                     "Incorrect number of points");
 
     VTKM_TEST_ASSERT(cellSet.GetNumberOfCells() == 4,
                      "Incorrect number of cells");
@@ -144,9 +147,9 @@ ThreeDimRegularTest()
     vtkm::Id numCells = cellSet.GetNumberOfCells();
     for (vtkm::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
     {
-      VTKM_TEST_ASSERT(cellSet.GetNumberOfNodesPerCell() == 8,
+      VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(cellIndex) == 8,
                        "Incorrect number of cell indices");
-      vtkm::CellType shape = cellSet.GetCellShapeType();
+      vtkm::CellType shape = cellSet.GetCellShape();
       VTKM_TEST_ASSERT(shape == vtkm::VTKM_VOXEL, "Incorrect element type.");
     }
 
@@ -162,11 +165,13 @@ ThreeDimRegularTest()
     vtkm::Id expectedPointIds[8] = {0,1,3,4,6,7,9,10};
     vtkm::Vec<vtkm::Id,8> retrievedPointIds;
     pointToCell.GetIndices(0, retrievedPointIds);
-    for (vtkm::IdComponent nodeIndex = 0; nodeIndex < 8; nodeIndex++)
+    for (vtkm::IdComponent localPointIndex = 0;
+         localPointIndex < 8;
+         localPointIndex++)
     {
       VTKM_TEST_ASSERT(
-            retrievedPointIds[nodeIndex] == expectedPointIds[nodeIndex],
-            "Incorrect node ID for cell");
+            retrievedPointIds[localPointIndex] == expectedPointIds[localPointIndex],
+            "Incorrect point ID for cell");
     }
 
     vtkm::exec::ConnectivityStructured<
@@ -180,11 +185,13 @@ ThreeDimRegularTest()
     vtkm::Vec<vtkm::Id,8> expectedCellIds;
     vtkm::Id retrievedCellIds[8] = {0,-1,-1,-1,-1,-1,-1,-1};
     cellToPoint.GetIndices(0, expectedCellIds);
-    for (vtkm::IdComponent nodeIndex = 0; nodeIndex < 8; nodeIndex++)
+    for (vtkm::IdComponent localPointIndex = 0;
+         localPointIndex < 8;
+         localPointIndex++)
     {
       VTKM_TEST_ASSERT(
-            expectedCellIds[nodeIndex] == retrievedCellIds[nodeIndex],
-            "Incorrect cell ID for node");
+            expectedCellIds[localPointIndex] == retrievedCellIds[localPointIndex],
+            "Incorrect cell ID for point");
     }
 }
 

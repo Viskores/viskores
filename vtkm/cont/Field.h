@@ -197,7 +197,7 @@ public:
 
 
 /// A \c Field encapsulates an array on some piece of the mesh, such as
-/// the points, a cell set, a node logical dimension, or the whole mesh.
+/// the points, a cell set, a point logical dimension, or the whole mesh.
 ///
 class Field
 {

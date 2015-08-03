@@ -63,7 +63,7 @@ public:
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Id GetCellShapeType(vtkm::Id index)
+  vtkm::Id GetCellShape(vtkm::Id index)
   {
       return Shapes.Get(index);
   }

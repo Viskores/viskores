@@ -59,8 +59,8 @@ MakeTestDataSet::Make2DRegularDataSet0()
     dataSet.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
     dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y"));
 
-    //set node scalar.
-    dataSet.AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+    //set point scalar.
+    dataSet.AddField(Field("pointvar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
     //create scalar.
     vtkm::Float32 cellvar[2] = {100.1f, 200.1f};
@@ -92,8 +92,8 @@ MakeTestDataSet::Make3DRegularDataSet0()
     dataSet.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
     dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
-    //Set node scalar
-    dataSet.AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+    //Set point scalar
+    dataSet.AddField(Field("pointvar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
     //Set cell scalar
     vtkm::Float32 cellvar[4] = {100.1f, 100.2f, 100.3f, 100.4f};
@@ -123,8 +123,8 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   dataSet.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
-  //Set node scalar
-  dataSet.AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  //Set point scalar
+  dataSet.AddField(Field("pointvar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = {100.1f, 100.2f};
@@ -174,8 +174,8 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   dataSet.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
-  //Set node scalar
-  dataSet.AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  //Set point scalar
+  dataSet.AddField(Field("pointvar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = {100.1f, 100.2f};

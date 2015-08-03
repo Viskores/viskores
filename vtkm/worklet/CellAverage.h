@@ -24,34 +24,31 @@
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/exec/TopologyData.h>
-#include <vtkm/exec/arg/TopologyIdCount.h>
 
 namespace vtkm {
 namespace worklet {
 
-//simple functor that returns the average nodeValue.
+//simple functor that returns the average point value.
 class CellAverage : public vtkm::worklet::WorkletMapTopology
 {
   static const int LEN_IDS = 8;
 public:
-  typedef void ControlSignature(FieldSrcIn<Scalar> inNodes,
+  typedef void ControlSignature(FieldSrcIn<Scalar> inPoints,
                                 TopologyIn<LEN_IDS> topology,
                                 FieldDestOut<Scalar> outCells);
-  typedef void ExecutionSignature(_1,
-                                  vtkm::exec::arg::TopologyIdCount,
-                                  _3);
+  typedef void ExecutionSignature(_1, FromCount, _3);
   typedef _2 InputDomain;
 
   template<typename T1, typename T2>
   VTKM_EXEC_EXPORT
-  void operator()(const vtkm::exec::TopologyData<T1,LEN_IDS> &nodevals,
+  void operator()(const vtkm::exec::TopologyData<T1,LEN_IDS> &pointValues,
                   const vtkm::Id &count,
                   T2 &average) const
   {
-    T1 sum = nodevals[0];
+    T1 sum = pointValues[0];
     for (vtkm::IdComponent i=1; i< count; ++i)
       {
-      sum += nodevals[i];
+      sum += pointValues[i];
       }
 
     average = static_cast<T2>(sum / static_cast<T1>(count));

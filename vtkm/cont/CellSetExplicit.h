@@ -69,13 +69,13 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfNodesInCell(vtkm::Id cellIndex) const
+  vtkm::Id GetNumberOfPointsInCell(vtkm::Id cellIndex) const
   {
     return this->NumIndices.GetPortalConstControl().Get(cellIndex);
   }
 
   VTKM_CONT_EXPORT
-  vtkm::Id GetCellShapeType(vtkm::Id cellIndex) const
+  vtkm::Id GetCellShape(vtkm::Id cellIndex) const
   {
     return this->Shapes.GetPortalConstControl().Get(cellIndex);
   }

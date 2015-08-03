@@ -17,48 +17,35 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_arg_TopologyIdSet_h
-#define vtk_m_exec_arg_TopologyIdSet_h
+#ifndef vtk_m_exec_arg_CellShape_h
+#define vtk_m_exec_arg_CellShape_h
 
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
-#include <vtkm/exec/TopologyData.h>
 
 namespace vtkm {
 namespace exec {
 namespace arg {
 
-/// \brief Aspect tag to use for getting the work index.
+/// \brief Aspect tag to use for getting the cell shape.
 ///
-/// The \c AspectTagTopologyIdSet aspect tag causes the \c Fetch class to
-/// obtain node IDs for a cell from a topology object.
+/// The \c AspectTagCellShape aspect tag causes the \c Fetch class to
+/// obtain the type of element (e.g. cell cell) from the topology object.
 ///
-struct AspectTagTopologyIdSet {  };
+struct AspectTagCellShape {  };
 
-/// \brief The \c ExecutionSignature tag to use to get the node IDs.
+/// \brief The \c ExecutionSignature tag to use to get the cell shape.
 ///
-struct TopologyIdSet : vtkm::exec::arg::ExecutionSignatureTagBase
+struct CellShape : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static const vtkm::IdComponent INDEX = 1;
-  typedef vtkm::exec::arg::AspectTagTopologyIdSet AspectTag;
+  typedef vtkm::exec::arg::AspectTagCellShape AspectTag;
 };
 
 template<typename FetchTag, typename Invocation>
-struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagTopologyIdSet,
-             Invocation,
-             1>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagCellShape, Invocation, 1>
 {
-  static const vtkm::IdComponent InputDomainIndex =
-      Invocation::InputDomainIndex;
-
-  typedef typename Invocation::ControlInterface::template
-      ParameterType<InputDomainIndex>::type ControlSignatureTag;
-
-  static const vtkm::IdComponent ITEM_TUPLE_LENGTH =
-      ControlSignatureTag::ITEM_TUPLE_LENGTH;
-
-  typedef vtkm::exec::TopologyData<vtkm::Id,ITEM_TUPLE_LENGTH> ValueType;
+  typedef vtkm::Id ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
@@ -66,6 +53,7 @@ struct Fetch<FetchTag,
     // The parameter for the input domain is stored in the Invocation. (It is
     // also in the worklet, but it is safer to get it from the Invocation
     // in case some other dispatch operation had to modify it.)
+    const vtkm::IdComponent InputDomainIndex = Invocation::InputDomainIndex;
 
     // ParameterInterface (from Invocation) is a FunctionInterface type
     // containing types for all objects passed to the Invoke method (with
@@ -83,10 +71,7 @@ struct Fetch<FetchTag,
     TopologyType topology =
         invocation.Parameters.template GetParameter<InputDomainIndex>();
 
-    ValueType v;
-    topology.GetIndices(index,v.vec);
-
-    return v;
+    return topology.GetCellShape(index);
   }
 
   VTKM_EXEC_EXPORT
@@ -100,4 +85,4 @@ struct Fetch<FetchTag,
 }
 } // namespace vtkm::exec::arg
 
-#endif //vtk_m_exec_arg_TopologyIdSet_h
+#endif //vtk_m_exec_arg_CellShape_h

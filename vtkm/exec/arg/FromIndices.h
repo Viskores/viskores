@@ -17,46 +17,59 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_arg_TopologyIdCount_h
-#define vtk_m_exec_arg_TopologyIdCount_h
+#ifndef vtk_m_exec_arg_FromIndices_h
+#define vtk_m_exec_arg_FromIndices_h
 
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
+
+#include <vtkm/exec/TopologyData.h>
 
 namespace vtkm {
 namespace exec {
 namespace arg {
 
-/// \brief Aspect tag to use for getting the work index.
+/// \brief Aspect tag to use for getting the from indices.
 ///
-/// The \c AspectTagTopologyIdCount aspect tag causes the \c Fetch class to
-/// obtain the number of node IDs for a cell from a topology object.
+/// The \c AspectTagFromIndices aspect tag causes the \c Fetch class to obtain
+/// the indices that map to the current topology element.
 ///
-struct AspectTagTopologyIdCount {  };
+struct AspectTagFromIndices {  };
 
-/// \brief The \c ExecutionSignature tag to use to get the node IDs.
+/// \brief The \c ExecutionSignature tag to get the indices of from elements.
 ///
-struct TopologyIdCount : vtkm::exec::arg::ExecutionSignatureTagBase
+/// In a topology map, there are \em from and \em to topology elements
+/// specified. The scheduling occurs on the \em to elements, and for each \em
+/// to element there is some number of incident \em from elements that are
+/// accessible. This \c ExecutionSignature tag provides the indices of these
+/// \em from elements that are accessible.
+///
+struct FromIndices : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static const vtkm::IdComponent INDEX = 1;
-  typedef vtkm::exec::arg::AspectTagTopologyIdCount AspectTag;
+  typedef vtkm::exec::arg::AspectTagFromIndices AspectTag;
 };
 
 template<typename FetchTag, typename Invocation>
-struct Fetch<FetchTag, vtkm::exec::arg::AspectTagTopologyIdCount, Invocation, 1>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagFromIndices, Invocation, 1>
 {
+  // The parameter for the input domain is stored in the Invocation. (It is
+  // also in the worklet, but it is safer to get it from the Invocation
+  // in case some other dispatch operation had to modify it.)
   static const vtkm::IdComponent InputDomainIndex =
       Invocation::InputDomainIndex;
 
-  typedef vtkm::Id ValueType;
+  typedef typename Invocation::ControlInterface::template
+      ParameterType<InputDomainIndex>::type InputDomainTag;
+
+  static const vtkm::IdComponent ITEM_TUPLE_LENGTH =
+      InputDomainTag::ITEM_TUPLE_LENGTH;
+
+  typedef vtkm::exec::TopologyData<vtkm::Id,ITEM_TUPLE_LENGTH> ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
   {
-    // The parameter for the input domain is stored in the Invocation. (It is
-    // also in the worklet, but it is safer to get it from the Invocation
-    // in case some other dispatch operation had to modify it.)
-
     // ParameterInterface (from Invocation) is a FunctionInterface type
     // containing types for all objects passed to the Invoke method (with
     // some dynamic casting performed so objects like DynamicArrayHandle get
@@ -73,7 +86,10 @@ struct Fetch<FetchTag, vtkm::exec::arg::AspectTagTopologyIdCount, Invocation, 1>
     TopologyType topology =
         invocation.Parameters.template GetParameter<InputDomainIndex>();
 
-    return topology.GetNumberOfIndices(index);
+    ValueType v;
+    topology.GetIndices(index,v.vec);
+
+    return v;
   }
 
   VTKM_EXEC_EXPORT
@@ -87,4 +103,4 @@ struct Fetch<FetchTag, vtkm::exec::arg::AspectTagTopologyIdCount, Invocation, 1>
 }
 } // namespace vtkm::exec::arg
 
-#endif //vtk_m_exec_arg_TopologyIdCount_h
+#endif //vtk_m_exec_arg_FromIndices_h

@@ -78,9 +78,9 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const {return this->PointDimensions-1;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::IdComponent GetNumberOfNodesPerCell() const {return 2;}
+  vtkm::IdComponent GetNumberOfPointsInCell() const {return 2;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::CellType GetCellShapeType() const {return VTKM_LINE;}
+  vtkm::CellType GetCellShape() const {return VTKM_LINE;}
 
   template <vtkm::IdComponent IdsLength>
   VTKM_EXEC_CONT_EXPORT
@@ -164,9 +164,9 @@ public:
     return vtkm::internal::VecProduct<2>()(this->GetCellDimensions());
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::IdComponent GetNumberOfNodesPerCell() const { return 4; }
+  vtkm::IdComponent GetNumberOfPointsInCell() const { return 4; }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::CellType GetCellShapeType() const { return VTKM_PIXEL; }
+  vtkm::CellType GetCellShape() const { return VTKM_PIXEL; }
 
   template <vtkm::IdComponent IdsLength>
   VTKM_EXEC_CONT_EXPORT
@@ -175,7 +175,7 @@ public:
     BOOST_STATIC_ASSERT(IdsLength >= 4);
 
     vtkm::Id i, j;
-    this->CalculateLogicalNodeIndices(index, i, j);
+    this->CalculateLogicalPointIndices(index, i, j);
 
     ids[0] = j*this->PointDimensions[0] + i;
     ids[1] = ids[0] + 1;
@@ -192,7 +192,7 @@ public:
     ids[0] = ids[1] = ids[2] = ids[3] = -1;
     vtkm::Id i, j;
     vtkm::IdComponent idx = 0;
-    CalculateLogicalNodeIndices(index, i, j);
+    CalculateLogicalPointIndices(index, i, j);
     if ((i > 0) && (j > 0))
     {
       ids[idx++] = this->CalculateCellIndex(i-1, j-1);
@@ -224,7 +224,7 @@ private:
 
 private:
   VTKM_EXEC_CONT_EXPORT
-  void CalculateLogicalNodeIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j) const
+  void CalculateLogicalPointIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j) const
   {
     vtkm::Id2 cellDimensions = this->GetCellDimensions();
     i = index % cellDimensions[0];
@@ -285,9 +285,9 @@ public:
     return vtkm::internal::VecProduct<3>()(this->GetCellDimensions());
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::IdComponent GetNumberOfNodesPerCell() const { return 8; }
+  vtkm::IdComponent GetNumberOfPointsInCell() const { return 8; }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::CellType GetCellShapeType() const { return VTKM_VOXEL; }
+  vtkm::CellType GetCellShape() const { return VTKM_VOXEL; }
 
   template <vtkm::IdComponent IdsLength>
   VTKM_EXEC_CONT_EXPORT
@@ -324,7 +324,7 @@ public:
     vtkm::Id i, j, k;
     vtkm::IdComponent idx=0;
 
-    this->CalculateLogicalNodeIndices(index, i, j, k);
+    this->CalculateLogicalPointIndices(index, i, j, k);
     if ((i > 0) && (j > 0) && (k > 0))
     {
       ids[idx++] = this->CalculateCellIndex(i-1, j-1, k-1);
@@ -382,11 +382,11 @@ private:
 
 private:
   VTKM_EXEC_CONT_EXPORT
-  void CalculateLogicalNodeIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j, vtkm::Id &k) const
+  void CalculateLogicalPointIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j, vtkm::Id &k) const
   {
-    vtkm::Id nodeDims01 = this->PointDimensions[0] * this->PointDimensions[1];
-    k = index / nodeDims01;
-    vtkm::Id indexij = index % nodeDims01;
+    vtkm::Id pointDims01 = this->PointDimensions[0] * this->PointDimensions[1];
+    k = index / pointDims01;
+    vtkm::Id indexij = index % pointDims01;
     j = indexij / this->PointDimensions[0];
     i = indexij % this->PointDimensions[0];
   }
@@ -432,7 +432,7 @@ struct ConnectivityStructuredIndexHelper<
         const vtkm::internal::ConnectivityStructuredInternals<Dimension> &connectivity,
         vtkm::Id vtkmNotUsed(cellIndex))
   {
-    return connectivity.GetNumberOfNodesPerCell();
+    return connectivity.GetNumberOfPointsInCell();
   }
 };
 

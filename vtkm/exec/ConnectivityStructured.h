@@ -71,8 +71,8 @@ public:
   // This needs some thought. What does cell shape mean when the to topology
   // is not a cell?
   VTKM_EXEC_EXPORT
-  vtkm::CellType GetCellShapeType(vtkm::Id=0) const {
-    return Internals.GetCellShapeType();
+  vtkm::CellType GetCellShape(vtkm::Id=0) const {
+    return Internals.GetCellShape();
   }
 
   template <vtkm::IdComponent ItemTupleLength>
