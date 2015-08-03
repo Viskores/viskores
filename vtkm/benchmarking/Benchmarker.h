@@ -105,6 +105,19 @@
 namespace vtkm {
 namespace benchmarking {
 namespace stats {
+// Checks that the sequence is sorted, returns true if it's sorted, false
+// otherwise
+template<typename ForwardIt>
+bool is_sorted(ForwardIt first, ForwardIt last){
+  ForwardIt next = first;
+  ++next;
+  for (; next != last; ++next, ++first){
+    if (*first > *next){
+      return false;
+    }
+  }
+  return true;
+}
 
 // Get the value representing the `percent` percentile of the
 // sorted samples using linear interpolation
@@ -115,6 +128,7 @@ vtkm::Float64 PercentileValue(const std::vector<vtkm::Float64> &samples, const v
   }
   VTKM_ASSERT_CONT(percent >= 0.0);
   VTKM_ASSERT_CONT(percent <= 100.0);
+  VTKM_ASSERT_CONT(is_sorted(samples.begin(), samples.end()));
   if (percent == 100.0){
     return samples.back();
   }
@@ -173,6 +187,7 @@ vtkm::Float64 MedianAbsDeviation(const std::vector<vtkm::Float64> &samples){
   for (std::vector<vtkm::Float64>::const_iterator it = samples.begin(); it != samples.end(); ++it){
     abs_deviations.push_back(vtkm::Abs(*it - median));
   }
+  std::sort(abs_deviations.begin(), abs_deviations.end());
   return PercentileValue(abs_deviations, 50.0);
 }
 } // stats
