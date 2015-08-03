@@ -32,10 +32,10 @@ class MaxPointOrCellValue : public vtkm::worklet::WorkletMapTopology
 {
   static const int LEN_IDS = 8;
 public:
-  typedef void ControlSignature(FieldDestIn<Scalar> inCells,
-                                FieldSrcIn<Scalar> inPoints,
+  typedef void ControlSignature(FieldInTo<Scalar> inCells,
+                                FieldInFrom<Scalar> inPoints,
                                 TopologyIn<LEN_IDS> topology,
-                                FieldDestOut<Scalar> outCells);
+                                FieldOut<Scalar> outCells);
   typedef void ExecutionSignature(_1, _4, _2, FromCount, CellShape, FromIndices);
   typedef _3 InputDomain;
 
@@ -77,9 +77,9 @@ class AveragePointToCellValue : public vtkm::worklet::WorkletMapTopology
 {
   static const int LEN_IDS = 8;
 public:
-  typedef void ControlSignature(FieldSrcIn<Scalar> inPoints,
+  typedef void ControlSignature(FieldInFrom<Scalar> inPoints,
                                 TopologyIn<LEN_IDS> topology,
-                                FieldDestOut<Scalar> outCells);
+                                FieldOut<Scalar> outCells);
   typedef void ExecutionSignature(_1, _3, FromCount);
   typedef _2 InputDomain;
 

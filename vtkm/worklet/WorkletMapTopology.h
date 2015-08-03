@@ -46,6 +46,12 @@ namespace worklet {
 /// inputs and outputs are on the same domain. That is, all the arrays are the
 /// same size.
 ///
+/// TODO: Although the nomenclature of this class suggests it handles general
+/// topological links, it really only handles point to cell operations for
+/// now. This worklet needs to be templated to handle generic from/to topology
+/// links. I also suggest having convenience subclasses for common (supported?)
+/// link directions.
+///
 class WorkletMapTopology : public vtkm::worklet::internal::WorkletBase
 {
 public:
@@ -55,7 +61,7 @@ public:
   /// the possible value types in the array.
   ///
   template<typename TypeList = AllTypes>
-  struct FieldDestIn : vtkm::cont::arg::ControlSignatureTagBase {
+  struct FieldInTo : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag;
@@ -67,7 +73,7 @@ public:
   /// the possible value types in the array.
   ///
   template<typename TypeList = AllTypes>
-  struct FieldSrcIn : vtkm::cont::arg::ControlSignatureTagBase {
+  struct FieldInFrom : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayTopologyMapIn FetchTag;
@@ -92,7 +98,7 @@ public:
   /// the possible value types in the array.
   ///
   template<typename TypeList = AllTypes>
-  struct FieldDestOut : vtkm::cont::arg::ControlSignatureTagBase {
+  struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayOut TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectOut FetchTag;
@@ -110,9 +116,6 @@ public:
   /// accessible. This \c ExecutionSignature tag provides the number of these
   /// \em from elements that are accessible.
   ///
-  /// TODO: There is an inconsistency in naming topology elements that should be
-  /// rectified.
-  ///
   struct FromCount : vtkm::exec::arg::FromCount {  };
 
   /// \brief An execution signature tag to get the indices of from elements.
@@ -122,8 +125,6 @@ public:
   /// to element there is some number of incident \em from elements that are
   /// accessible. This \c ExecutionSignature tag provides the indices of these
   /// \em from elements that are accessible.
-  /// TODO: There is an inconsistency in naming topology elements that should be
-  /// rectified.
   ///
   struct FromIndices : vtkm::exec::arg::FromIndices {  };
 };

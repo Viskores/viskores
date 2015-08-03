@@ -32,7 +32,7 @@ namespace vtkm {
 namespace exec {
 namespace arg {
 
-/// \brief \c Fetch tag for getting array values with direct indexing.
+/// \brief \c Fetch tag for getting array values determined by topology connections.
 ///
 /// \c FetchTagArrayTopologyMapIn is a tag used with the \c Fetch class to
 /// retreive values from an array portal. The fetch uses indexing based on
