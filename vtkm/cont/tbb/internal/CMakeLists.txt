@@ -25,8 +25,8 @@ set(headers
   )
 
 if("${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}" VERSION_LESS 4.3)
-  if("${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}" VERSION_LESS 4.2)
-    message_error("VTK-m not tested with TBB before version 4.1. Please upgrade your TBB library.")
+  if("${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}" VERSION_LESS 4.0)
+    message_error("VTK-m not tested with TBB before version 4.0. Please upgrade your TBB library.")
   endif()
   set(headers ${headers} parallel_sort.h)
 endif()
