@@ -28,6 +28,7 @@ set(headers
 VTKM_declare_headers(${headers})
 
 set(unit_tests
+  UnitTestBinaryPredicates.cxx
   UnitTestExtent.cxx
   UnitTestListTag.cxx
   UnitTestMath.cxx
