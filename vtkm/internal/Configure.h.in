@@ -46,6 +46,13 @@
 #define VTKM_GCC
 #endif
 
+#if defined(unix) || defined(__unix) || defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#include <unistd.h>
+# ifdef _POSIX_VERSION
+#  define VTKM_POSIX _POSIX_VERSION
+# endif
+#endif
+
 #if !defined(VTKM_USE_DOUBLE_PRECISION) && !defined(VTKM_NO_DOUBLE_PRECISION)
 #cmakedefine VTKM_USE_DOUBLE_PRECISION
 #endif

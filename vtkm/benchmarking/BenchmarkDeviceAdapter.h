@@ -45,7 +45,6 @@ VTKM_BOOST_POST_INCLUDE
 #include <cmath>
 #include <ctime>
 #include <utility>
-#include <vector>
 #include <string>
 
 #ifdef _WIN32
@@ -83,7 +82,6 @@ enum BenchmarkName {
 /// device adapter
 template<class DeviceAdapterTag>
 class BenchmarkDeviceAdapter {
-  typedef vtkm::cont::StorageTagBasic StorageTagBasic;
   typedef vtkm::cont::StorageTagBasic StorageTag;
 
   typedef vtkm::cont::ArrayHandle<vtkm::Id, StorageTag> IdArrayHandle;
@@ -331,18 +329,17 @@ private:
   struct BenchSort {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
-    std::vector<Value> Values;
     ValueArrayHandle ValueHandle;
     boost::mt19937 Rng;
 
     VTKM_CONT_EXPORT
-    BenchSort() : Values(ARRAY_SIZE, Value()) {
-      ValueHandle = vtkm::cont::make_ArrayHandle(Values);
+    BenchSort(){
+      ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
     }
 
     VTKM_CONT_EXPORT
     vtkm::Float64 operator()(){
-      for (size_t i = 0; i < Values.size(); ++i){
+      for (vtkm::Id i = 0; i < ValueHandle.GetNumberOfValues(); ++i){
         ValueHandle.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
       }
       Timer timer;
@@ -365,20 +362,17 @@ private:
 
     boost::mt19937 Rng;
     vtkm::Id N_KEYS;
-    std::vector<Value> Values;
     ValueArrayHandle ValueHandle;
     IdArrayHandle KeyHandle;
 
     VTKM_CONT_EXPORT
-    BenchSortByKey(vtkm::Id percent_key) : N_KEYS((ARRAY_SIZE * percent_key) / 100),
-      Values(ARRAY_SIZE, Value())
-    {
-      ValueHandle = vtkm::cont::make_ArrayHandle(Values);
+    BenchSortByKey(vtkm::Id percent_key) : N_KEYS((ARRAY_SIZE * percent_key) / 100){
+      ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
     }
 
     VTKM_CONT_EXPORT
     vtkm::Float64 operator()(){
-      for (size_t i = 0; i < Values.size(); ++i){
+      for (vtkm::Id i = 0; i < ValueHandle.GetNumberOfValues(); ++i){
         ValueHandle.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
       }
       Algorithm::Schedule(FillModuloTestValueKernel<vtkm::Id>(N_KEYS,
