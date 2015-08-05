@@ -24,6 +24,17 @@
 
 namespace vtkm {
 
+// Disable conversion warnings for Sum and Product on GCC only.
+// GCC creates false positive warnings for signed/unsigned char* operations.
+// This occurs because the values are implicitly casted up to int's for the
+// operation, and than  casted back down to char's when return.
+// This causes a false positive warning, even when the values is within
+// the value types range
+#if defined(VTKM_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
+
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns sum (addition) of the two values.
 /// Note: Requires Type \p T implement the + operator.
@@ -47,6 +58,11 @@ struct Product
     return x * y;
   }
 };
+
+#if defined(VTKM_GCC) || defined(VTKM_CLANG)
+#pragma GCC diagnostic pop
+#endif // gcc || clang
+
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns the \c x if x > y otherwise returns \c y.
