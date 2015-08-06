@@ -199,16 +199,17 @@ public:
   VTKM_CONT_EXPORT
   virtual void PrintSummary(std::ostream &out)
   {
-      out<<"    ExplicitConnectivity: #shapes= "<<NumShapes<<" #connectivity= "<<ConnectivityLength<<"\n";
-      out<<"     Shapes: ";
+      out << "   ExplicitConnectivity: #shapes= " << this->NumShapes
+          << " #connectivity= " << ConnectivityLength << std::endl;
+      out <<"     Shapes: ";
       printSummary_ArrayHandle(Shapes, out);
-      out<<"\n";
-      out<<"     NumIndices: ";
+      out << std::endl;
+      out << "     NumIndices: ";
       printSummary_ArrayHandle(NumIndices, out);
-      out<<"\n";
-      out<<"     Connectivity: ";
+      out << std::endl;
+      out << "     Connectivity: ";
       printSummary_ArrayHandle(Connectivity, out);
-      out<<"\n";
+      out << std::endl;
   }
 
   vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &GetShapesArray() { return Shapes; }
