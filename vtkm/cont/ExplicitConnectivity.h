@@ -207,7 +207,7 @@ public:
       printSummary_ArrayHandle(NumIndices, out);
       out<<"\n";
       out<<"     Connectivity: ";
-      //printSummary_ArrayHandle(Connectivity, out);
+      printSummary_ArrayHandle(Connectivity, out);
       out<<"\n";
   }
 
