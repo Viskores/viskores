@@ -672,6 +672,16 @@ struct BindRightBinaryOp
   }
 };
 
+// Disable conversion warnings for Add, Subtract, Multiply, Divide on GCC only.
+// GCC creates false positive warnings for signed/unsigned char* operations.
+// This occurs because the values are implicitly casted up to int's for the
+// operation, and than  casted back down to char's when return.
+// This causes a false positive warning, even when the values is within
+// the value types range
+#if defined(VTKM_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
 struct Add
 {
   template<typename T>
@@ -716,6 +726,10 @@ struct Negate
     return T(-x);
   }
 };
+
+#if defined(VTKM_GCC) || defined(VTKM_CLANG)
+#pragma GCC diagnostic pop
+#endif // gcc || clang
 
 } // namespace internal
 
@@ -1100,18 +1114,6 @@ VTK_M_SCALAR_DOT(vtkm::Int64)
 VTK_M_SCALAR_DOT(vtkm::UInt64)
 VTK_M_SCALAR_DOT(vtkm::Float32)
 VTK_M_SCALAR_DOT(vtkm::Float64)
-
-
-/// Predicate that takes a single argument \c x, and returns
-/// True if it isn't the identity of the Type \p T.
-template<typename T>
-struct not_default_constructor
-{
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T &x) const
-  {
-    return (x  != T());
-  }
-};
 
 } // End of namespace vtkm
 
