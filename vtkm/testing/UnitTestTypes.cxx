@@ -130,17 +130,25 @@ template<typename ComponentType, vtkm::IdComponent Size>
 void GeneralVecTypeTest(const vtkm::Vec<ComponentType,Size> &)
 {
   typedef vtkm::Vec<ComponentType,Size> T;
+
+  VTKM_TEST_ASSERT(T::NUM_COMPONENTS == Size,
+                   "NUM_COMPONENTS is wrong size.");
  
   //grab the number of elements of T
   T a, b, c;
   ComponentType s(5);
 
+  VTKM_TEST_ASSERT(a.GetNumberOfComponents() == Size,
+                   "GetNumberOfComponents returns wrong size.");
+
   for(vtkm::IdComponent i=0; i < T::NUM_COMPONENTS; ++i)
   {
     a[i]=ComponentType((i+1)*2);
     b[i]=ComponentType(i+1);
-    c[i]=ComponentType((i+1)*2);
   }
+
+  a.CopyInto(c);
+  VTKM_TEST_ASSERT(test_equal(a, c), "CopyInto does not work.");
 
   //verify prefix and postfix increment and decrement
   ++c[T::NUM_COMPONENTS-1];
