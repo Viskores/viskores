@@ -20,7 +20,7 @@
 
 set(unit_tests
   UnitTestCellAverage.cxx
-  UnitTestExternalFaces.cxx 
+  UnitTestExternalFaces.cxx
   UnitTestPointElevation.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx

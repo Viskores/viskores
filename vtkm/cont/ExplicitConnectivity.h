@@ -219,11 +219,11 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
+  const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
   GetShapesArray() const { return this->Shapes; }
 
   VTKM_CONT_EXPORT
-  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
+  const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
   GetNumIndicesArray() const { return this->NumIndices; }
 
   VTKM_CONT_EXPORT

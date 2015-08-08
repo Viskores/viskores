@@ -151,4 +151,3 @@ int UnitTestVertexClustering(int, char *[])
 {
   return vtkm::cont::testing::Testing::Run(TestVertexClustering);
 }
-

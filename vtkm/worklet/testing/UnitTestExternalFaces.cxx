@@ -28,13 +28,12 @@
 vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
 {
 
-      boost::shared_ptr<vtkm::cont::CellSet> scs = ds.GetCellSet(0);
-      vtkm::cont::CellSetExplicit<> *cs =
-          dynamic_cast<vtkm::cont::CellSetExplicit<> *>(scs.get());
+      vtkm::cont::CellSetExplicit<> &cs =
+          ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
-      vtkm::cont::ArrayHandle<vtkm::Id> shapes = cs->GetNodeToCellConnectivity().GetShapesArray();
-      vtkm::cont::ArrayHandle<vtkm::Id> numIndices = cs->GetNodeToCellConnectivity().GetNumIndicesArray();
-      vtkm::cont::ArrayHandle<vtkm::Id> conn = cs->GetNodeToCellConnectivity().GetConnectivityArray();
+      vtkm::cont::ArrayHandle<vtkm::Id> shapes = cs.GetNodeToCellConnectivity().GetShapesArray();
+      vtkm::cont::ArrayHandle<vtkm::Id> numIndices = cs.GetNodeToCellConnectivity().GetNumIndicesArray();
+      vtkm::cont::ArrayHandle<vtkm::Id> conn = cs.GetNodeToCellConnectivity().GetConnectivityArray();
 
       vtkm::cont::ArrayHandle<vtkm::Id> output_shapes;
       vtkm::cont::ArrayHandle<vtkm::Id> output_numIndices;
@@ -56,7 +55,7 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
       new_ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
       boost::shared_ptr< vtkm::cont::CellSetExplicit<> > new_cs(
                                   new vtkm::cont::CellSetExplicit<>("cells", output_shapes.GetNumberOfValues()));
-      vtkm::cont::ExplicitConnectivity<> &new_ec = new_cs->nodesOfCellsConnectivity;
+      vtkm::cont::ExplicitConnectivity<> &new_ec = new_cs->GetNodeToCellConnectivity();
       new_ec.Fill(output_shapes, output_numIndices, output_conn);
       new_ds.AddCellSet(new_cs);
 
@@ -100,7 +99,7 @@ void TestExternalFaces()
             conn.GetPortalControl().Set(index++, static_cast<vtkm::Id>(cellVerts[j][k]));
       }
 
-      vtkm::cont::ExplicitConnectivity<> &ec = cs->nodesOfCellsConnectivity;
+      vtkm::cont::ExplicitConnectivity<> &ec = cs->GetNodeToCellConnectivity();
       ec.Fill(shapes, numIndices, conn);
 
       //Add the VTK-m cell set
@@ -108,11 +107,10 @@ void TestExternalFaces()
 
       //Run the External Faces worklet
       vtkm::cont::DataSet new_ds = RunExternalFaces(ds);
-      boost::shared_ptr<vtkm::cont::CellSet> new_scs = new_ds.GetCellSet(0);
-      vtkm::cont::CellSetExplicit<> *new_cs =
-          dynamic_cast<vtkm::cont::CellSetExplicit<> *>(new_scs.get());
+      vtkm::cont::CellSetExplicit<> &new_cs =
+          new_ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
-      vtkm::Id numExtFaces_out = new_cs->GetNumCells();
+      vtkm::Id numExtFaces_out = new_cs.GetNumCells();
 
       //Validate the number of external faces (output) returned by the worklet
       const vtkm::Id numExtFaces_actual = 12;
