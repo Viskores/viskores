@@ -22,6 +22,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(CMAKE_COMPILER_IS_CLANGXX 1)
 endif()
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
+  set(CMAKE_COMPILER_IS_PGIXX 1)
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
 
   include(CheckCXXCompilerFlag)
@@ -52,5 +56,11 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
     set(CMAKE_CXX_FLAGS_DEBUG
       "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS_WARN_EXTRA}")
   endif()
+elseif(CMAKE_COMPILER_IS_PGIXX)
+  #PGI and boost do not play well together when it comes to detected float128
+  #support. The primary issue is that Boost believes that PGI supports __float128
+  #because it is reporting itself as GCC, but it actually doesn't.
+  #our workaround for this is to manually explicitly disable float128
+  add_definitions("-DBOOST_MATH_DISABLE_FLOAT128=1")
 endif()
 
