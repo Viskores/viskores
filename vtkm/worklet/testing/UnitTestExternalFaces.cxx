@@ -53,10 +53,10 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
       new_ds.AddField(ds.GetField("y"));
       new_ds.AddField(ds.GetField("z"));
       new_ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
-      boost::shared_ptr< vtkm::cont::CellSetExplicit<> > new_cs(
-                                  new vtkm::cont::CellSetExplicit<>("cells", output_shapes.GetNumberOfValues()));
-      vtkm::cont::ExplicitConnectivity<> &new_ec = new_cs->GetNodeToCellConnectivity();
-      new_ec.Fill(output_shapes, output_numIndices, output_conn);
+
+      vtkm::cont::CellSetExplicit<> new_cs("cells",
+                  static_cast<vtkm::IdComponent>(output_shapes.GetNumberOfValues()));
+      new_cs.GetNodeToCellConnectivity().Fill(output_shapes, output_numIndices, output_conn);
       new_ds.AddCellSet(new_cs);
 
       return new_ds;
@@ -81,8 +81,8 @@ void TestExternalFaces()
       const int nCells = 6;  //The tetrahedrons of the cube
       int cellVerts[nCells][4] = {{4,7,6,3}, {4,6,3,2}, {4,0,3,2},
                                  {4,6,5,2}, {4,5,0,2}, {1,0,5,2}};
-      boost::shared_ptr< vtkm::cont::CellSetExplicit<> > cs(
-                                  new vtkm::cont::CellSetExplicit<>("cells", nCells));
+      vtkm::cont::CellSetExplicit<> cs("cells", nCells);
+
       vtkm::cont::ArrayHandle<vtkm::Id> shapes;
       vtkm::cont::ArrayHandle<vtkm::Id> numIndices;
       vtkm::cont::ArrayHandle<vtkm::Id> conn;
@@ -99,8 +99,7 @@ void TestExternalFaces()
             conn.GetPortalControl().Set(index++, static_cast<vtkm::Id>(cellVerts[j][k]));
       }
 
-      vtkm::cont::ExplicitConnectivity<> &ec = cs->GetNodeToCellConnectivity();
-      ec.Fill(shapes, numIndices, conn);
+      cs.GetNodeToCellConnectivity().Fill(shapes, numIndices, conn);
 
       //Add the VTK-m cell set
       ds.AddCellSet(cs);
