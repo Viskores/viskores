@@ -25,6 +25,16 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/VecTraits.h>
 
+// We use these to check if the aligned allocator provided by
+// StorageBasic can be used with all STL containers
+#include <vector>
+#include <deque>
+#include <list>
+#include <set>
+#include <map>
+#include <stack>
+#include <queue>
+
 namespace {
 
 const vtkm::Id ARRAY_SIZE = 10;
@@ -59,6 +69,49 @@ struct TemplatedTests
   typename vtkm::VecTraits<ValueType>::ComponentType STOLEN_ARRAY_VALUE()
   {
     return 29;
+  }
+
+  void TestAlignedAllocatorSTL(){
+    typedef typename StorageType::AllocatorType Allocator;
+    std::vector<ValueType, Allocator> vec(ARRAY_SIZE, ValueType());
+    StorageType store(&vec[0], ARRAY_SIZE);
+  }
+
+  // This test checks that we can compile and use the allocator with all
+  // STL containers
+  void CompileSTLAllocator(){
+    typedef typename StorageType::AllocatorType Allocator;
+    typedef typename StorageType::AllocatorType::
+      template rebind<std::pair<ValueType, ValueType> >::other PairAllocator;
+    std::vector<ValueType, Allocator> v;
+    v.push_back(ValueType());
+
+    std::deque<ValueType, Allocator> d;
+    d.push_front(ValueType());
+
+    std::list<ValueType, Allocator> l;
+    l.push_front(ValueType());
+
+    std::set<ValueType, std::less<ValueType>, Allocator> set;
+    set.insert(ValueType());
+
+    std::map<ValueType, ValueType, std::less<ValueType>, PairAllocator> m;
+    m[ValueType()] = ValueType();
+
+    std::multiset<ValueType, std::less<ValueType>, Allocator> ms;
+    ms.insert(ValueType());
+
+    std::multimap<ValueType, ValueType, std::less<ValueType>, PairAllocator> mm;
+    mm.insert(std::pair<ValueType, ValueType>(ValueType(), ValueType()));
+
+    std::stack<ValueType, std::deque<ValueType, Allocator> > stack;
+    stack.push(ValueType());
+
+    std::queue<ValueType, std::deque<ValueType, Allocator> > queue;
+    queue.push(ValueType());
+
+    std::priority_queue<ValueType, std::vector<ValueType, Allocator> > pqueue;
+    pqueue.push(ValueType());
   }
 
   /// Returned value should later be passed to StealArray2.  It is best to
@@ -139,6 +192,9 @@ struct TemplatedTests
     BasicAllocation();
 
     StealArray2(stolenArray);
+
+    TestAlignedAllocatorSTL();
+    CompileSTLAllocator();
   }
 };
 
