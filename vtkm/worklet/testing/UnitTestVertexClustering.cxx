@@ -62,7 +62,7 @@ vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &dataSet,
 
   vtkm::cont::ArrayHandle<PointType> pointArray = dataSet.GetField("xyz").GetData().CastToArrayHandle<PointType, VTKM_DEFAULT_STORAGE_TAG>();
   vtkm::cont::ArrayHandle<vtkm::Id> pointIdArray = cellSet.GetConnectivityArray();
-  vtkm::cont::ArrayHandle<vtkm::Id> cellToConnectivityIndexArray = cellSet.GetCellToConnectivityIndexArray();
+  vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetArray = cellSet.GetIndexOffsetArray();
 
   vtkm::cont::ArrayHandle<PointType> output_pointArray ;
   vtkm::cont::ArrayHandle<vtkm::Id3> output_pointId3Array ;
@@ -71,7 +71,7 @@ vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &dataSet,
   vtkm::worklet::VertexClustering<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().run(
         pointArray,
         pointIdArray,
-        cellToConnectivityIndexArray,
+        indexOffsetArray,
         bounds,
         nDivisions,
         output_pointArray,

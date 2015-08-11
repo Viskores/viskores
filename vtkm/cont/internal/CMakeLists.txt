@@ -26,6 +26,7 @@ set(headers
   ArrayPortalFromIterators.h
   ArrayPortalShrink.h
   ArrayTransfer.h
+  ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
   DeviceAdapterAlgorithmSerial.h
   DeviceAdapterError.h
