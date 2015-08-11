@@ -157,6 +157,30 @@ unset(VTKM_USE_DOUBLE_PRECISION)
 unset(VTKM_USE_64BIT_IDS)
 
 
+#-----------------------------------------------------------------------------
+# Find OpenGL and GLEW, if both are found we can enable
+# the OpenGL Interop support. We use
+include(CMakeDependentOption)
+
+# enable Interop only if we have OpenGL and GLEW
+find_package(OpenGL)
+find_package(GLEW)
+find_package(GLUT)
+
+#dependent option reads, value to set, if condition is true, otherwise
+#use last value
+CMAKE_DEPENDENT_OPTION(VTKm_ENABLE_OPENGL_INTEROP
+                       "Enable OpenGL Interop will require GLEW"
+                       ON "OPENGL_FOUND;GLEW_FOUND" OFF)
+
+#Only enable OpenGL Interop tests if we have Interop enabled
+#and we have GLUT
+#dependent option reads, value to set, if condition is true, otherwise
+#use last value
+CMAKE_DEPENDENT_OPTION(VTKm_ENABLE_OPENGL_TESTS
+                       "Enable OpenGL Interop Render Window Tests"
+                       ON "VTKm_ENABLE_OPENGL_INTEROP;GLUT_FOUND" OFF)
+
 find_package(Pyexpander)
 
 #-----------------------------------------------------------------------------
@@ -217,6 +241,9 @@ install(FILES ${VTKm_SOURCE_DIR}/LICENSE.txt
 install(
   FILES
     ${VTKm_SOURCE_DIR}/CMake/FindBoostHeaders.cmake
+    ${VTKm_SOURCE_DIR}/CMake/FindGLEW.cmake
+    ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
+    ${VTKm_SOURCE_DIR}/CMake/FindThrust.cmake
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
 
@@ -224,6 +251,7 @@ install(
 install(
   FILES
     ${VTKm_SOURCE_DIR}/CMake/UseVTKmSerial.cmake
+    ${VTKm_SOURCE_DIR}/CMake/UseVTKmTBB.cmake
     ${VTKm_SOURCE_DIR}/CMake/UseVTKmCuda.cmake
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
