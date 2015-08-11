@@ -40,6 +40,8 @@ class ConnectivityStructured
   typedef vtkm::internal::ConnectivityStructuredInternals<Dimension>
       InternalsType;
 
+  typedef vtkm::internal::ConnectivityStructuredIndexHelper<
+      FromTopology,ToTopology,Dimension> Helper;
 public:
   typedef typename InternalsType::SchedulingRangeType SchedulingRangeType;
 
@@ -64,8 +66,6 @@ public:
 
   VTKM_EXEC_EXPORT
   vtkm::Id GetNumberOfIndices(vtkm::Id index) const {
-    typedef vtkm::internal::ConnectivityStructuredIndexHelper<
-        FromTopology,ToTopology,Dimension> Helper;
     return Helper::GetNumberOfIndices(this->Internals, index);
   }
   // This needs some thought. What does cell shape mean when the to topology
@@ -75,13 +75,12 @@ public:
     return Internals.GetCellShape();
   }
 
-  template <vtkm::IdComponent ItemTupleLength>
+  typedef typename Helper::IndicesType IndicesType;
+
   VTKM_EXEC_EXPORT
-  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+  IndicesType GetIndices(vtkm::Id index) const
   {
-    typedef vtkm::internal::ConnectivityStructuredIndexHelper<
-        FromTopology,ToTopology,Dimension> Helper;
-    Helper::GetIndices(this->Internals,index,ids);
+    return Helper::GetIndices(this->Internals,index);
   }
 
 private:

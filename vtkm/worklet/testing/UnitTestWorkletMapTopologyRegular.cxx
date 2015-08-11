@@ -45,14 +45,14 @@ public:
   VTKM_CONT_EXPORT
   MaxPointOrCellValue() { }
 
-  template<typename T>
+  template<typename T, typename FromIndexType>
   VTKM_EXEC_EXPORT
   void operator()(const T &cellval,
                   T& max_value,
                   const vtkm::exec::TopologyData<T,LEN_IDS> &pointValues,
                   const vtkm::Id &count,
                   const vtkm::Id & vtkmNotUsed(type),
-                  const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> & vtkmNotUsed(pointIDs)) const
+                  const FromIndexType & vtkmNotUsed(pointIDs)) const
   {
   //simple functor that returns the max of cellValue and pointValue
   max_value = cellval;
@@ -62,14 +62,14 @@ public:
     }
   }
 
-  template<typename T1, typename T2, typename T3>
+  template<typename T1, typename T2, typename T3, typename FromIndex>
   VTKM_EXEC_EXPORT
   void operator()(const T1 &,
                   T2 &,
                   const vtkm::exec::TopologyData<T3,LEN_IDS> &,
                   const vtkm::Id &,
                   const vtkm::Id &,
-                  const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> &) const
+                  const FromIndex &) const
   {
     this->RaiseError("Cannot call this worklet with different types.");
   }

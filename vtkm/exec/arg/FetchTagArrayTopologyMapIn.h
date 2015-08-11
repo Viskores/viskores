@@ -76,8 +76,7 @@ struct Fetch<
     vtkm::IdComponent nids =
       static_cast<vtkm::IdComponent>(topology.GetNumberOfIndices(index));
 
-    vtkm::Vec<vtkm::Id,ITEM_TUPLE_LENGTH> ids;
-    topology.GetIndices(index,ids);
+    typename TopologyType::IndicesType ids = topology.GetIndices(index);
 
     ValueType v;
     for (vtkm::IdComponent i=0; i<nids && i<ITEM_TUPLE_LENGTH; ++i)

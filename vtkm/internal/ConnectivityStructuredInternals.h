@@ -73,39 +73,52 @@ public:
     return this->GetNumberOfPoints();
   }
 
+  static const vtkm::IdComponent NUM_POINTS_IN_CELL = 2;
+  static const vtkm::IdComponent MAX_CELL_TO_POINT = 2;
+
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfPoints() const {return this->PointDimensions;}
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const {return this->PointDimensions-1;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::IdComponent GetNumberOfPointsInCell() const {return 2;}
+  vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetCellShape() const {return VTKM_LINE;}
 
-  template <vtkm::IdComponent IdsLength>
   VTKM_EXEC_CONT_EXPORT
-  void GetPointsOfCell(vtkm::Id index, vtkm::Vec<vtkm::Id,IdsLength> &ids) const
+  vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
   {
-    BOOST_STATIC_ASSERT(IdsLength >= 2);
-    ids[0] = index;
-    ids[1] = ids[0] + 1;
+    vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> pointIds;
+    pointIds[0] = index;
+    pointIds[1] = pointIds[0] + 1;
+    return pointIds;
   }
 
-  template <vtkm::IdComponent IdsLength>
   VTKM_EXEC_CONT_EXPORT
-  void GetCellsOfPoint(vtkm::Id index, vtkm::Vec<vtkm::Id,IdsLength> &ids) const
+  vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
   {
-    BOOST_STATIC_ASSERT(IdsLength >= 2);
-    ids[0] = ids[1] = -1;
+    return
+        (static_cast<vtkm::IdComponent>(pointIndex > 0)
+         + static_cast<vtkm::IdComponent>(pointIndex < this->PointDimensions-1));
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Vec<vtkm::Id,MAX_CELL_TO_POINT> GetCellsOfPoint(vtkm::Id index) const
+  {
+    vtkm::Vec<vtkm::Id,MAX_CELL_TO_POINT> cellIds;
+
+    cellIds[0] = cellIds[1] = -1;
     vtkm::IdComponent idx = 0;
     if (index > 0)
     {
-      ids[idx++] = index-1;
+      cellIds[idx++] = index-1;
     }
     if (index < this->PointDimensions-1)
     {
-      ids[idx++] = index;
+      cellIds[idx++] = index;
     }
+
+    return cellIds;
   }
 
   VTKM_CONT_EXPORT
@@ -158,57 +171,73 @@ public:
     return this->GetPointDimensions();
   }
 
+  static const vtkm::IdComponent NUM_POINTS_IN_CELL = 4;
+  static const vtkm::IdComponent MAX_CELL_TO_POINT = 4;
+
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const
   {
     return vtkm::internal::VecProduct<2>()(this->GetCellDimensions());
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::IdComponent GetNumberOfPointsInCell() const { return 4; }
+  vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetCellShape() const { return VTKM_PIXEL; }
 
-  template <vtkm::IdComponent IdsLength>
   VTKM_EXEC_CONT_EXPORT
-  void GetPointsOfCell(vtkm::Id index, vtkm::Vec<vtkm::Id,IdsLength> &ids) const
+  vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
   {
-    BOOST_STATIC_ASSERT(IdsLength >= 4);
-
     vtkm::Id i, j;
     this->CalculateLogicalPointIndices(index, i, j);
 
-    ids[0] = j*this->PointDimensions[0] + i;
-    ids[1] = ids[0] + 1;
-    ids[2] = ids[0] + this->PointDimensions[0];
-    ids[3] = ids[2] + 1;
+    vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> pointIds;
+    pointIds[0] = j*this->PointDimensions[0] + i;
+    pointIds[1] = pointIds[0] + 1;
+    pointIds[2] = pointIds[0] + this->PointDimensions[0];
+    pointIds[3] = pointIds[2] + 1;
+    return pointIds;
   }
 
-  template <vtkm::IdComponent IdsLength>
   VTKM_EXEC_CONT_EXPORT
-  void GetCellsOfPoint(vtkm::Id index, vtkm::Vec<vtkm::Id,IdsLength> &ids) const
+  vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
   {
-    BOOST_STATIC_ASSERT(IdsLength >= 4);
+    vtkm::Id i, j;
+    this->CalculateLogicalPointIndices(pointIndex, i, j);
+    return
+        (static_cast<vtkm::IdComponent>((i > 0) && (j > 0))
+         + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) && (j > 0))
+         + static_cast<vtkm::IdComponent>((i > 0) && (j < this->PointDimensions[1]-1))
+         + static_cast<vtkm::IdComponent>(
+          (i < this->PointDimensions[0]-1) && (j < this->PointDimensions[1]-1)));
+  }
 
-    ids[0] = ids[1] = ids[2] = ids[3] = -1;
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Vec<vtkm::Id,MAX_CELL_TO_POINT> GetCellsOfPoint(vtkm::Id index) const
+  {
+    vtkm::Vec<vtkm::Id,MAX_CELL_TO_POINT> cellIds;
+
+    cellIds[0] = cellIds[1] = cellIds[2] = cellIds[3] = -1;
     vtkm::Id i, j;
     vtkm::IdComponent idx = 0;
-    CalculateLogicalPointIndices(index, i, j);
+    this->CalculateLogicalPointIndices(index, i, j);
     if ((i > 0) && (j > 0))
     {
-      ids[idx++] = this->CalculateCellIndex(i-1, j-1);
+      cellIds[idx++] = this->CalculateCellIndex(i-1, j-1);
     }
     if ((i < this->PointDimensions[0]-1) && (j > 0))
     {
-      ids[idx++] = this->CalculateCellIndex(i  , j-1);
+      cellIds[idx++] = this->CalculateCellIndex(i  , j-1);
     }
     if ((i > 0) && (j < this->PointDimensions[1]-1))
     {
-      ids[idx++] = this->CalculateCellIndex(i-1, j  );
+      cellIds[idx++] = this->CalculateCellIndex(i-1, j  );
     }
     if ((i < this->PointDimensions[0]-1) && (j < this->PointDimensions[1]-1))
     {
-      ids[idx++] = this->CalculateCellIndex(i  , j  );
+      cellIds[idx++] = this->CalculateCellIndex(i  , j  );
     }
+
+    return cellIds;
   }
 
   VTKM_CONT_EXPORT
@@ -279,22 +308,22 @@ public:
     return this->GetPointDimensions();
   }
 
+  static const vtkm::IdComponent NUM_POINTS_IN_CELL = 8;
+  static const vtkm::IdComponent MAX_CELL_TO_POINT = 6;
+
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const
   {
     return vtkm::internal::VecProduct<3>()(this->GetCellDimensions());
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::IdComponent GetNumberOfPointsInCell() const { return 8; }
+  vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
   vtkm::CellType GetCellShape() const { return VTKM_VOXEL; }
 
-  template <vtkm::IdComponent IdsLength>
   VTKM_EXEC_CONT_EXPORT
-  void GetPointsOfCell(vtkm::Id index, vtkm::Vec<vtkm::Id,IdsLength> &ids) const
+  vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
   {
-    BOOST_STATIC_ASSERT(IdsLength >= 8);
-
     vtkm::Id3 cellDimensions = this->GetCellDimensions();
 
     vtkm::Id cellDims01 = cellDimensions[0] * cellDimensions[1];
@@ -303,23 +332,25 @@ public:
     vtkm::Id j = indexij / cellDimensions[0];
     vtkm::Id i = indexij % cellDimensions[0];
 
-    ids[0] = (k * this->PointDimensions[1] + j) * this->PointDimensions[0] + i;
-    ids[1] = ids[0] + 1;
-    ids[2] = ids[0] + this->PointDimensions[0];
-    ids[3] = ids[2] + 1;
-    ids[4] = ids[0] + this->PointDimensions[0]*this->PointDimensions[1];
-    ids[5] = ids[4] + 1;
-    ids[6] = ids[4] + this->PointDimensions[0];
-    ids[7] = ids[6] + 1;
+    vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> pointIds;
+    pointIds[0] = (k * this->PointDimensions[1] + j) * this->PointDimensions[0] + i;
+    pointIds[1] = pointIds[0] + 1;
+    pointIds[2] = pointIds[0] + this->PointDimensions[0];
+    pointIds[3] = pointIds[2] + 1;
+    pointIds[4] = pointIds[0] + this->PointDimensions[0]*this->PointDimensions[1];
+    pointIds[5] = pointIds[4] + 1;
+    pointIds[6] = pointIds[4] + this->PointDimensions[0];
+    pointIds[7] = pointIds[6] + 1;
+
+    return pointIds;
   }
 
-  template <vtkm::IdComponent IdsLength>
   VTKM_EXEC_CONT_EXPORT
-  void GetCellsOfPoint(vtkm::Id index, vtkm::Vec<vtkm::Id,IdsLength> &ids) const
+  vtkm::Vec<vtkm::Id,MAX_CELL_TO_POINT> GetCellsOfPoint(vtkm::Id index) const
   {
-    BOOST_STATIC_ASSERT(IdsLength >= 8);
+    vtkm::Vec<vtkm::Id,MAX_CELL_TO_POINT> cellIds;
 
-    ids[0]=ids[1]=ids[2]=ids[3]=ids[4]=ids[5]=ids[6]=ids[7]=-1;
+    cellIds[0]=cellIds[1]=cellIds[2]=cellIds[3]=cellIds[4]=cellIds[5]=-1;
 
     vtkm::Id i, j, k;
     vtkm::IdComponent idx=0;
@@ -327,45 +358,47 @@ public:
     this->CalculateLogicalPointIndices(index, i, j, k);
     if ((i > 0) && (j > 0) && (k > 0))
     {
-      ids[idx++] = this->CalculateCellIndex(i-1, j-1, k-1);
+      cellIds[idx++] = this->CalculateCellIndex(i-1, j-1, k-1);
     }
     if ((i < this->PointDimensions[0]-1) && (j > 0) && (k > 0))
     {
-      ids[idx++] = this->CalculateCellIndex(i  , j-1, k-1);
+      cellIds[idx++] = this->CalculateCellIndex(i  , j-1, k-1);
     }
     if ((i > 0) && (j < this->PointDimensions[1]-1) && (k > 0))
     {
-      ids[idx++] = this->CalculateCellIndex(i-1, j  , k-1);
+      cellIds[idx++] = this->CalculateCellIndex(i-1, j  , k-1);
     }
     if ((i < this->PointDimensions[0]-1) &&
         (j < this->PointDimensions[1]-1) &&
         (k > 0))
     {
-      ids[idx++] = this->CalculateCellIndex(i  , j  , k-1);
+      cellIds[idx++] = this->CalculateCellIndex(i  , j  , k-1);
     }
 
     if ((i > 0) && (j > 0) && (k < this->PointDimensions[2]-1))
     {
-      ids[idx++] = this->CalculateCellIndex(i-1, j-1, k);
+      cellIds[idx++] = this->CalculateCellIndex(i-1, j-1, k);
     }
     if ((i < this->PointDimensions[0]-1) &&
         (j > 0) &&
         (k < this->PointDimensions[2]-1))
     {
-      ids[idx++] = this->CalculateCellIndex(i  , j-1, k);
+      cellIds[idx++] = this->CalculateCellIndex(i  , j-1, k);
     }
     if ((i > 0) &&
         (j < this->PointDimensions[1]-1) &&
         (k < this->PointDimensions[2]-1))
     {
-      ids[idx++] = this->CalculateCellIndex(i-1, j  , k);
+      cellIds[idx++] = this->CalculateCellIndex(i-1, j  , k);
     }
     if ((i < this->PointDimensions[0]-1) &&
         (j < this->PointDimensions[1]-1) &&
         (k < this->PointDimensions[2]-1))
     {
-      ids[idx++] = this->CalculateCellIndex(i  , j  , k);
+      cellIds[idx++] = this->CalculateCellIndex(i  , j  , k);
     }
+
+    return cellIds;
   }
 
   VTKM_CONT_EXPORT
@@ -417,19 +450,21 @@ template<vtkm::IdComponent Dimension>
 struct ConnectivityStructuredIndexHelper<
     vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, Dimension>
 {
-  template <vtkm::IdComponent ItemTupleLength>
+  typedef vtkm::internal::ConnectivityStructuredInternals<Dimension>
+      ConnectivityType;
+
+  typedef vtkm::Vec<vtkm::Id,ConnectivityType::NUM_POINTS_IN_CELL> IndicesType;
+
   VTKM_EXEC_CONT_EXPORT
-  static void GetIndices(
-      const vtkm::internal::ConnectivityStructuredInternals<Dimension> &connectivity,
-      vtkm::Id cellIndex,
-      vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+  static IndicesType GetIndices(const ConnectivityType &connectivity,
+                                vtkm::Id cellIndex)
   {
-    connectivity.GetPointsOfCell(cellIndex, ids);
+    return connectivity.GetPointsOfCell(cellIndex);
   }
 
   VTKM_EXEC_CONT_EXPORT
   static vtkm::IdComponent GetNumberOfIndices(
-        const vtkm::internal::ConnectivityStructuredInternals<Dimension> &connectivity,
+        const ConnectivityType &connectivity,
         vtkm::Id vtkmNotUsed(cellIndex))
   {
     return connectivity.GetNumberOfPointsInCell();
@@ -440,18 +475,27 @@ template<vtkm::IdComponent Dimension>
 struct ConnectivityStructuredIndexHelper<
     vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, Dimension>
 {
-  template <vtkm::IdComponent ItemTupleLength>
+  typedef vtkm::internal::ConnectivityStructuredInternals<Dimension>
+      ConnectivityType;
+
+  // TODO: This needs to change to a Vec-like that supports a max size.
+  // Likewise, all the GetCellsOfPoint methods need to use it as well.
+  typedef vtkm::Vec<vtkm::Id,ConnectivityType::MAX_CELL_TO_POINT> IndicesType;
+
   VTKM_EXEC_CONT_EXPORT
-  static void GetIndices(
-      const vtkm::internal::ConnectivityStructuredInternals<Dimension> &connectivity,
-      vtkm::Id pointIndex,
-      vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+  static IndicesType GetIndices(const ConnectivityType &connectivity,
+                                vtkm::Id pointIndex)
   {
-    connectivity.GetCellsOfPoint(pointIndex,ids);
+    return connectivity.GetCellsOfPoint(pointIndex);
   }
 
-  // TODO: Implement GetNumberOfIndices, which will rely on a
-  // GetNumberOfCellsOnPoint method in ConnectivityStructuredInternals
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::IdComponent GetNumberOfIndices(
+        const ConnectivityType &connectivity,
+        vtkm::Id pointIndex)
+  {
+    return connectivity.GetNumberOfCellsIncidentOnPoint(pointIndex);
+  }
 };
 
 }

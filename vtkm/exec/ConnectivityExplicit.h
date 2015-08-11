@@ -51,38 +51,44 @@ public:
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Id GetNumberOfElements()
+  vtkm::Id GetNumberOfElements() const
   {
       return Shapes.GetNumberOfValues();
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Id GetNumberOfIndices(vtkm::Id index)
+  vtkm::Id GetNumberOfIndices(vtkm::Id index) const
   {
       return NumIndices.Get(index);
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Id GetCellShape(vtkm::Id index)
+  vtkm::Id GetCellShape(vtkm::Id index) const
   {
       return Shapes.Get(index);
   }
 
-  template <vtkm::IdComponent ItemTupleLength>
+  // TODO: This becomes a Vec-like
+  typedef vtkm::Vec<vtkm::Id,8> IndicesType;
+
   VTKM_EXEC_EXPORT
-  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+  IndicesType GetIndices(vtkm::Id index) const
   {
     vtkm::Id n = GetNumberOfIndices(index);
+    IndicesType ids;
     vtkm::Id start = IndexOffset.Get(index);
-    for (vtkm::IdComponent i=0; i<n && i<ItemTupleLength; i++)
+    for (vtkm::IdComponent i=0; i<n && i<8; i++)
+    {
       ids[i] = Connectivity.Get(start+i);
+    }
+    return ids;
   }
 
 private:
- ShapePortalType Shapes;
- NumIndicesPortalType NumIndices;
- ConnectivityPortalType Connectivity;
- IndexOffsetPortalType IndexOffset;
+  ShapePortalType Shapes;
+  NumIndicesPortalType NumIndices;
+  ConnectivityPortalType Connectivity;
+  IndexOffsetPortalType IndexOffset;
 };
 
 } // namespace exec
