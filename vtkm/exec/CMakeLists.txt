@@ -20,9 +20,10 @@
 
 set(headers
   Assert.h
+  ConnectivityExplicit.h
+  ConnectivityStructured.h
   ExecutionObjectBase.h
   ExecutionWholeArray.h
-  ExplicitConnectivity.h
   FunctorBase.h
   TopologyData.h
   )

@@ -24,47 +24,41 @@
 #include <vtkm/cont/DataSet.h>
 
 #include <vtkm/exec/TopologyData.h>
-#include <vtkm/exec/arg/TopologyIdSet.h>
-#include <vtkm/exec/arg/TopologyIdCount.h>
-#include <vtkm/exec/arg/TopologyElementType.h>
 
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
 namespace test_regular {
 
-class MaxNodeOrCellValue : public vtkm::worklet::WorkletMapTopology
+class MaxPointOrCellValue : public vtkm::worklet::WorkletMapTopology
 {
   static const int LEN_IDS = 4;
 public:
-  typedef void ControlSignature(FieldDestIn<Scalar> inCells,
-                                FieldSrcIn<Scalar> inNodes,
+  typedef void ControlSignature(FieldInTo<Scalar> inCells,
+                                FieldInFrom<Scalar> inPoints,
                                 TopologyIn<LEN_IDS> topology,
-                                FieldDestOut<Scalar> outCells);
+                                FieldOut<Scalar> outCells);
   //Todo: we need a way to mark what control signature item each execution signature for topology comes from
-  typedef void ExecutionSignature(_1, _4, _2,
-                                vtkm::exec::arg::TopologyIdCount,
-                                vtkm::exec::arg::TopologyElementType,
-                                vtkm::exec::arg::TopologyIdSet);
+  typedef void ExecutionSignature(_1, _4, _2, FromCount, CellShape, FromIndices);
   typedef _3 InputDomain;
 
   VTKM_CONT_EXPORT
-  MaxNodeOrCellValue() { };
+  MaxPointOrCellValue() { }
 
   template<typename T>
   VTKM_EXEC_EXPORT
   void operator()(const T &cellval,
                   T& max_value,
-                  const vtkm::exec::TopologyData<T,LEN_IDS> &nodevals,
+                  const vtkm::exec::TopologyData<T,LEN_IDS> &pointValues,
                   const vtkm::Id &count,
                   const vtkm::Id & vtkmNotUsed(type),
-                  const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> & vtkmNotUsed(nodeIDs)) const
+                  const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> & vtkmNotUsed(pointIDs)) const
   {
-  //simple functor that returns the max of CellValue and nodeValue
+  //simple functor that returns the max of cellValue and pointValue
   max_value = cellval;
   for (vtkm::IdComponent i=0; i< count; ++i)
     {
-    max_value = nodevals[i] > max_value ? nodevals[i] : max_value;
+    max_value = pointValues[i] > max_value ? pointValues[i] : max_value;
     }
   }
 
@@ -82,32 +76,30 @@ public:
 
 };
 
-class AvgNodeToCellValue : public vtkm::worklet::WorkletMapTopology
+class AveragePointToCellValue : public vtkm::worklet::WorkletMapTopology
 {
   static const int LEN_IDS = 4;
 public:
-  typedef void ControlSignature(FieldSrcIn<Scalar> inNodes,
+  typedef void ControlSignature(FieldInFrom<Scalar> inPoints,
                                 TopologyIn<LEN_IDS> topology,
-                                FieldDestOut<Scalar> outCells);
-  typedef void ExecutionSignature(_1,
-                                  _3,
-                                  vtkm::exec::arg::TopologyIdCount);
+                                FieldOut<Scalar> outCells);
+  typedef void ExecutionSignature(_1, _3, FromCount);
   typedef _2 InputDomain;
 
   VTKM_CONT_EXPORT
-  AvgNodeToCellValue() { };
+  AveragePointToCellValue() { }
 
   template<typename T>
   VTKM_EXEC_EXPORT
-  void operator()(const vtkm::exec::TopologyData<T,LEN_IDS> &nodevals,
+  void operator()(const vtkm::exec::TopologyData<T,LEN_IDS> &pointValues,
                   T& avgVal,
                   const vtkm::Id &count) const
   {
-    //simple functor that returns the average nodeValue.
-    avgVal = nodevals[0];
+    //simple functor that returns the average pointValue.
+    avgVal = pointValues[0];
     for (vtkm::IdComponent i=1; i<count; ++i)
     {
-      avgVal += nodevals[i];
+      avgVal += pointValues[i];
     }
     avgVal = avgVal / count;
   }
@@ -125,8 +117,8 @@ public:
 
 namespace {
 
-static void TestMaxNodeOrCell();
-static void TestAvgNodeToCell();
+static void TestMaxPointOrCell();
+static void TestAvgPointToCell();
 
 void TestWorkletMapTopologyRegular()
 {
@@ -135,14 +127,14 @@ void TestWorkletMapTopologyRegular()
     std::cout << "Testing Topology Worklet ( Regular ) on device adapter: "
               << DeviceAdapterTraits::GetId() << std::endl;
 
-    TestMaxNodeOrCell();
-    TestAvgNodeToCell();
+    TestMaxPointOrCell();
+    TestAvgPointToCell();
 }
 
 static void
-TestMaxNodeOrCell()
+TestMaxPointOrCell()
 {
-    std::cout<<"Testing MaxNodeOfCell worklet"<<std::endl;
+    std::cout<<"Testing MaxPointOfCell worklet"<<std::endl;
     vtkm::cont::testing::MakeTestDataSet testDataSet;
     vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
 
@@ -161,9 +153,9 @@ TestMaxNodeOrCell()
 
     VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 5),
                      "Incorrect number of fields");
-    vtkm::worklet::DispatcherMapTopology< ::test_regular::MaxNodeOrCellValue > dispatcher;
+    vtkm::worklet::DispatcherMapTopology< ::test_regular::MaxPointOrCellValue > dispatcher;
     dispatcher.Invoke(dataSet.GetField("cellvar").GetData(),
-                      dataSet.GetField("nodevar").GetData(),
+                      dataSet.GetField("pointvar").GetData(),
                       // We know that the cell set is a structured 2D grid and
                       // The worklet does not work with general types because
                       // of the way we get cell indices. We need to make that
@@ -178,15 +170,15 @@ TestMaxNodeOrCell()
                                                       VTKM_DEFAULT_STORAGE_TAG());
 
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1f),
-                     "Wrong result for MaxNodeOrCell worklet");
+                     "Wrong result for MaxPointOrCell worklet");
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 200.1f),
-                     "Wrong result for MaxNodeOrCell worklet");
+                     "Wrong result for MaxPointOrCell worklet");
 }
 
 static void
-TestAvgNodeToCell()
+TestAvgPointToCell()
 {
-    std::cout<<"Testing AvgNodeToCell worklet"<<std::endl;
+    std::cout<<"Testing AvgPointToCell worklet"<<std::endl;
     vtkm::cont::testing::MakeTestDataSet testDataSet;
     vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
 
@@ -205,8 +197,8 @@ TestAvgNodeToCell()
 
     VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 5),
                      "Incorrect number of fields");
-    vtkm::worklet::DispatcherMapTopology< ::test_regular::AvgNodeToCellValue > dispatcher;
-    dispatcher.Invoke(dataSet.GetField("nodevar").GetData(),
+    vtkm::worklet::DispatcherMapTopology< ::test_regular::AveragePointToCellValue > dispatcher;
+    dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                       // We know that the cell set is a structured 2D grid and
                       // The worklet does not work with general types because
                       // of the way we get cell indices. We need to make that
@@ -221,9 +213,9 @@ TestAvgNodeToCell()
                                                       VTKM_DEFAULT_STORAGE_TAG());
 
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 30.1f),
-                     "Wrong result for NodeToCellAverage worklet");
+                     "Wrong result for PointToCellAverage worklet");
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 40.1f),
-                     "Wrong result for NodeToCellAverage worklet");
+                     "Wrong result for PointToCellAverage worklet");
 }
 
 } // anonymous namespace

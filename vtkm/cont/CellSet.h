@@ -56,17 +56,21 @@ public:
     return this->Dimensionality;
   }
 
-  virtual vtkm::Id GetNumCells() const = 0;
+  virtual vtkm::Id GetNumberOfCells() const = 0;
 
-  virtual vtkm::Id GetNumFaces() const
+  virtual vtkm::Id GetNumberOfFaces() const
   {
     return 0;
   }
 
-  virtual vtkm::Id GetNumEdges() const
+  virtual vtkm::Id GetNumberOfEdges() const
   {
     return 0;
   }
+
+  // A cell set does not (necessarily) know the number of points. Nor does a
+  // DataSet. Shouldn't someone know?
+//  virtual vtkm::Id GetNumberOfPoints() const = 0;
 
   virtual void PrintSummary(std::ostream&) const = 0;
 
@@ -79,7 +83,7 @@ protected:
 namespace internal {
 
 /// Checks to see if the given object is a cell set. This check is compatible
-/// with the Boost meta-template programming library(MPL). It contains a
+/// with the Boost meta-template programming library (MPL). It contains a
 /// typedef named \c type that is either boost::mpl::true_ or
 /// boost::mpl::false_. Both of these have a typedef named value with the
 /// respective boolean value.

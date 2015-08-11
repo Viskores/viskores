@@ -21,6 +21,7 @@
 set(headers
   AspectTagDefault.h
   BasicArg.h
+  CellShape.h
   ExecutionSignatureTagBase.h
   Fetch.h
   FetchTagArrayDirectIn.h
@@ -28,13 +29,8 @@ set(headers
   FetchTagArrayTopologyMapIn.h
   FetchTagExecObject.h
   FetchTagTopologyIn.h
-  NodeIdCount.h
-  NodeIdSet.h
-  NodeIdTriplet.h
-  NodeType.h
-  TopologyElementType.h
-  TopologyIdCount.h
-  TopologyIdSet.h
+  FromCount.h
+  FromIndices.h
   WorkIndex.h
   )
 
