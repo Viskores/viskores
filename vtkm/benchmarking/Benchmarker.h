@@ -128,7 +128,8 @@ vtkm::Float64 PercentileValue(const std::vector<vtkm::Float64> &samples, const v
   }
   VTKM_ASSERT_CONT(percent >= 0.0);
   VTKM_ASSERT_CONT(percent <= 100.0);
-  VTKM_ASSERT_CONT(is_sorted(samples.begin(), samples.end()));
+  VTKM_ASSERT_CONT(
+        vtkm::benchmarking::stats::is_sorted(samples.begin(), samples.end()));
   if (percent == 100.0){
     return samples.back();
   }
