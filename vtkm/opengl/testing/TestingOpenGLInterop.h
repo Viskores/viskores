@@ -184,7 +184,7 @@ private:
 
       for(std::size_t i=0; i < Size; ++i)
         {
-        VTKM_TEST_ASSERT(test_equal(expectedValues+=i,returnedValues[i]),
+        VTKM_TEST_ASSERT(test_equal(*(expectedValues+i),returnedValues[i]),
                         "Array Handle failed to transfer properly");
         }
 
@@ -202,7 +202,7 @@ private:
 
       for(std::size_t i=0; i < Size*2; ++i)
         {
-        VTKM_TEST_ASSERT(test_equal(expectedValues+=i,returnedValues[i]),
+        VTKM_TEST_ASSERT(test_equal(*(expectedValues+i),returnedValues[i]),
                         "Array Handle failed to transfer properly");
         }
 

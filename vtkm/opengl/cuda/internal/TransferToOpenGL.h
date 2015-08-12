@@ -28,7 +28,6 @@
 
 #include <vtkm/opengl/internal/TransferToOpenGL.h>
 
-//Usesd for ::thrust::copy
 #include <thrust/copy.h>
 #include <thrust/device_ptr.h>
 
@@ -122,9 +121,8 @@ public:
   //Copy the data into memory that opengl owns, since we can't
   //give memory from cuda to opengl
 
-  //Pulled this line from Dax's Copy.h file
-  //To use this function directly, I've added thrust/copy and thrust/device_ptr in the includes above
-  //It also requires MakeThrustIterator to create an thrust iterator from the portals
+  //Perhaps a direct call to thrust copy should be wrapped in a vtkm 
+  //compatble function
   ::thrust::copy(vtkm::cont::cuda::internal::IteratorBegin(portal),
                 vtkm::cont::cuda::internal::IteratorEnd(portal),
                 thrust::cuda::pointer<ValueType>(beginPointer));

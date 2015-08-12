@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageBasic.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/opengl/internal/OpenGLHeaders.h>
 #include <vtkm/opengl/internal/BufferTypePicker.h>
@@ -39,20 +40,23 @@ void CopyFromHandle(
   GLenum type,
   DeviceAdapterTag)
 {
-  //Generic implementation that will work no matter what. We pull the data
-  //back to the control enviornment using PerpareForInput and give an iterator
-  //from the portal to OpenGL to upload to the rendering system
+  //Generic implementation that will work no matter what. We copy the data
+  //in the given handle to a temporary handle using the basic storage tag.
+  //We then ensure the data is available in the control environment by 
+  //synchronizing the control array. Last, we steal the array and pass the
+  //iterator to the rendering system
   const vtkm::Id numberOfValues = handle.GetNumberOfValues();
   std::size_t size = sizeof(ValueType) * numberOfValues;
 
-  //Copy that data its specialized Storage container to a basic storage
+  //Copy the data from its specialized Storage container to a basic storage
   vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic> tmpHandle;
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>::Copy(handle, tmpHandle);
 
-  //Sync the control array to make sure the most current data is available
+  //Synchronize the arrays to ensure the most current data is available in the 
+  //control environment
   tmpHandle.SyncControlArray();
 
-  //Note that the ArrayHandle is no longer valid after this call
+  //Note that the temporary ArrayHandle is no longer valid after this call
   ValueType* temporaryStorage = tmpHandle.Internals->ControlArray.StealArray();
 
   //Detach the current buffer
