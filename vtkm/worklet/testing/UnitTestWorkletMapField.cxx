@@ -28,23 +28,28 @@
 class TestMapFieldWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldInOut<>);
+  typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
 
   template<typename T>
   VTKM_EXEC_EXPORT
-  void operator()(const T &in, T &out, vtkm::Id workIndex) const
+  void operator()(const T &in, T &out, T &inout, vtkm::Id workIndex) const
   {
     if (!test_equal(in, TestValue(workIndex, T()) + T(100)))
     {
       this->RaiseError("Got wrong input value.");
     }
     out = in - T(100);
+    if (!test_equal(inout, TestValue(workIndex, T()) + T(100)))
+    {
+      this->RaiseError("Got wrong in-out value.");
+    }
+    inout = inout - T(100);
   }
 
-  template<typename T1, typename T2>
+  template<typename T1, typename T2, typename T3>
   VTKM_EXEC_EXPORT
-  void operator()(const T1 &, const T2 &, vtkm::Id) const
+  void operator()(const T1 &, const T2 &, const T3 &, vtkm::Id) const
   {
     this->RaiseError("Cannot call this worklet with different types.");
   }
@@ -53,18 +58,27 @@ public:
 class TestMapFieldWorkletLimitedTypes : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
-  typedef _2 ExecutionSignature(_1, WorkIndex);
+  typedef void ControlSignature(FieldIn<ScalarAll>,
+                                FieldOut<ScalarAll>,
+                                FieldInOut<ScalarAll>);
+  typedef _2 ExecutionSignature(_1, _3, WorkIndex);
 
-  template<typename T>
+  template<typename T1, typename T3>
   VTKM_EXEC_EXPORT
-  T operator()(const T &in, vtkm::Id workIndex) const
+  T1 operator()(const T1 &in, T3 &inout, vtkm::Id workIndex) const
   {
-    if (!test_equal(in, TestValue(workIndex, T()) + T(100)))
+    if (!test_equal(in, TestValue(workIndex, T1()) + T1(100)))
     {
       this->RaiseError("Got wrong input value.");
     }
-    return in - T(100);
+
+    if (!test_equal(inout, TestValue(workIndex, T3()) + T3(100)))
+    {
+      this->RaiseError("Got wrong in-out value.");
+    }
+    inout = inout - T3(100);
+
+    return in - T1(100);
   }
 };
 
@@ -90,21 +104,30 @@ struct DoTestWorklet
     vtkm::cont::ArrayHandle<T> inputHandle =
         vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
     vtkm::cont::ArrayHandle<T> outputHandle;
+    vtkm::cont::ArrayHandle<T> inoutHandle;
+
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::
+        Copy(inputHandle, inoutHandle);
 
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(inputHandle, outputHandle);
+    dispatcher.Invoke(inputHandle, outputHandle, inoutHandle);
 
     std::cout << "Check result." << std::endl;
     CheckPortal(outputHandle.GetPortalConstControl());
+    CheckPortal(inoutHandle.GetPortalConstControl());
 
     std::cout << "Repeat with dynamic arrays." << std::endl;
     // Clear out output array.
     outputHandle = vtkm::cont::ArrayHandle<T>();
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::
+        Copy(inputHandle, inoutHandle);
     vtkm::cont::DynamicArrayHandle inputDynamic(inputHandle);
     vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
-    dispatcher.Invoke(inputDynamic, outputDynamic);
+    vtkm::cont::DynamicArrayHandle inoutDynamic(inoutHandle);
+    dispatcher.Invoke(inputDynamic, outputDynamic, inoutDynamic);
     CheckPortal(outputHandle.GetPortalConstControl());
+    CheckPortal(inoutHandle.GetPortalConstControl());
   }
 };
 
