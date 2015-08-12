@@ -29,8 +29,10 @@
 #ifndef __TBB_parallel_sort_H
 #define __TBB_parallel_sort_H
 
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <tbb/parallel_for.h>
 #include <tbb/blocked_range.h>
+VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <algorithm>
 #include <iterator>

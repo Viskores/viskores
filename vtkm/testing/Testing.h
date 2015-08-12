@@ -26,9 +26,9 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VecTraits.h>
 
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/static_assert.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <iostream>
 #include <sstream>

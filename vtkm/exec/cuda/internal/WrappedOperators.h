@@ -26,9 +26,9 @@
 #include <vtkm/exec/cuda/internal/IteratorFromArrayPortal.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cuda/memory.h>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
 namespace exec {
