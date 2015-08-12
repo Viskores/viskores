@@ -43,19 +43,18 @@ void TestDataSet_Explicit()
 
   try
   {
-    const vtkm::cont::Field &f2 = ds.GetField("cellvar",
-                                            vtkm::cont::Field::ASSOC_CELL_SET);
+    //const vtkm::cont::Field &f2 = 
+    ds.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
   }
   catch (...)
   {
     VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
   }
 
-
   try
   {
-    const vtkm::cont::Field &f2 = ds.GetField("cellvar",
-                                              vtkm::cont::Field::ASSOC_POINTS);
+    //const vtkm::cont::Field &f3 = 
+    ds.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
     VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
   }
   catch (vtkm::cont::ErrorControlBadValue error)
