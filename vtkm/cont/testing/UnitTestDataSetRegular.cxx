@@ -61,6 +61,29 @@ TwoDimRegularTest()
     VTKM_TEST_ASSERT(cellSet.GetNumberOfCells() == 2,
                      "Incorrect number of cells");
 
+  // test various field-getting methods and associations
+  try
+  {
+    const vtkm::cont::Field &f2 = dataSet.GetField("cellvar",
+                                            vtkm::cont::Field::ASSOC_CELL_SET);
+  }
+  catch (...)
+  {
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+  }
+
+  try
+  {
+    const vtkm::cont::Field &f2 = dataSet.GetField("cellvar",
+                                              vtkm::cont::Field::ASSOC_POINTS);
+    VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
+  }
+  catch (vtkm::cont::ErrorControlBadValue error)
+  {
+    std::cout << "Caught expected error for association mismatch: "
+              << std::endl << "    " << error.GetMessage() << std::endl;
+  }
+
     vtkm::Id numCells = cellSet.GetNumberOfCells();
     for (vtkm::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
     {
@@ -89,9 +112,10 @@ TwoDimRegularTest()
 
 
     vtkm::Id cells[2][4] = {{0,1,3,4}, {1,2,4,5}};
+  vtkm::Vec<vtkm::Id,4> pointIds;
     for (vtkm::Id cellIndex = 0; cellIndex < 2; cellIndex++)
     {
-      vtkm::Vec<vtkm::Id,4> pointIds = pointToCell.GetIndices(cellIndex);
+    pointToCell.GetIndices(cellIndex, pointIds);
       for (vtkm::IdComponent localPointIndex = 0;
            localPointIndex < 4;
            localPointIndex++)
@@ -111,8 +135,8 @@ TwoDimRegularTest()
 
     for (vtkm::Id pointIndex = 0; pointIndex < 6; pointIndex++)
     {
-      vtkm::Vec<vtkm::Id,4> retrievedCellIds =
-          cellToPoint.GetIndices(pointIndex);
+    vtkm::Vec<vtkm::Id,4> retrievedCellIds;
+    cellToPoint.GetIndices(pointIndex, retrievedCellIds);
       for (vtkm::IdComponent cellIndex = 0; cellIndex < 4; cellIndex++)
         VTKM_TEST_ASSERT(
               retrievedCellIds[cellIndex] == expectedCellIds[pointIndex][cellIndex],
@@ -143,6 +167,29 @@ ThreeDimRegularTest()
     VTKM_TEST_ASSERT(cellSet.GetNumberOfCells() == 4,
                      "Incorrect number of cells");
 
+  // test various field-getting methods and associations
+  try
+  {
+    const vtkm::cont::Field &f2 = dataSet.GetField("cellvar",
+                                            vtkm::cont::Field::ASSOC_CELL_SET);
+  }
+  catch (...)
+  {
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+  }
+
+  try
+  {
+    const vtkm::cont::Field &f2 = dataSet.GetField("cellvar",
+                                              vtkm::cont::Field::ASSOC_POINTS);
+    VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
+  }
+  catch (vtkm::cont::ErrorControlBadValue error)
+  {
+    std::cout << "Caught expected error for association mismatch: "
+              << std::endl << "    " << error.GetMessage() << std::endl;
+  }
+
     vtkm::Id numCells = cellSet.GetNumberOfCells();
     for (vtkm::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
     {
@@ -162,7 +209,8 @@ ThreeDimRegularTest()
           vtkm::TopologyElementTagPoint(),
           vtkm::TopologyElementTagCell());
     vtkm::Id expectedPointIds[8] = {0,1,3,4,6,7,9,10};
-    vtkm::Vec<vtkm::Id,8> retrievedPointIds = pointToCell.GetIndices(0);
+  vtkm::Vec<vtkm::Id,8> retrievedPointIds;
+  pointToCell.GetIndices(0, retrievedPointIds);
     for (vtkm::IdComponent localPointIndex = 0;
          localPointIndex < 8;
          localPointIndex++)
@@ -180,10 +228,11 @@ ThreeDimRegularTest()
           vtkm::cont::DeviceAdapterTagSerial(),
           vtkm::TopologyElementTagCell(),
           vtkm::TopologyElementTagPoint());
-    vtkm::Id retrievedCellIds[6] = {0,-1,-1,-1,-1,-1};
-    vtkm::Vec<vtkm::Id,6> expectedCellIds = cellToPoint.GetIndices(0);
+  vtkm::Vec<vtkm::Id,8> expectedCellIds;
+  vtkm::Id retrievedCellIds[8] = {0,-1,-1,-1,-1,-1,-1,-1};
+  cellToPoint.GetIndices(0, expectedCellIds);
     for (vtkm::IdComponent localPointIndex = 0;
-         localPointIndex < 6;
+       localPointIndex < 8;
          localPointIndex++)
     {
       VTKM_TEST_ASSERT(

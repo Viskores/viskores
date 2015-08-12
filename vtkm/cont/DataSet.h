@@ -55,11 +55,15 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  const vtkm::cont::Field &GetField(const std::string &name) const
+  const vtkm::cont::Field &GetField(const std::string &name,
+      vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY)
+      const
   {
     for (std::size_t i=0; i < this->Fields.size(); ++i)
     {
-      if (this->Fields[i].GetName() == name)
+      if ((assoc == vtkm::cont::Field::ASSOC_ANY ||
+           assoc == this->Fields[i].GetAssociation()) &&
+          this->Fields[i].GetName() == name)
       {
         return this->Fields[i];
       }

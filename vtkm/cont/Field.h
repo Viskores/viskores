@@ -205,6 +205,7 @@ public:
 
   enum AssociationEnum
   {
+    ASSOC_ANY,
     ASSOC_WHOLE_MESH,
     ASSOC_POINTS,
     ASSOC_CELL_SET,
