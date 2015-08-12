@@ -34,16 +34,9 @@
 
 VTKM_BOOST_PRE_INCLUDE
 #include <boost/type_traits/remove_reference.hpp>
-VTKM_BOOST_POST_INCLUDE
 
-// Disable warnings we check vtkm for but TBB does not.
-#if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wconversion"
 // gcc || clang
-#elif _WIN32
+#if  defined(_WIN32)
 // TBB includes windows.h, which clobbers min and max functions so we
 // define NOMINMAX to fix that problem. We also include WIN32_LEAN_AND_MEAN
 // to reduce the number of macros and objects windows.h imports as those also
@@ -69,14 +62,12 @@ VTKM_BOOST_POST_INCLUDE
 #include <tbb/partitioner.h>
 #include <tbb/tick_count.h>
 
-
-#if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#pragma GCC diagnostic pop
-// gcc || clang
-#elif _WIN32
+#if defined(_WIN32)
 #undef WIN32_LEAN_AND_MEAN
 #undef NOMINMAX
 #endif
+
+VTKM_BOOST_POST_INCLUDE
 
 namespace vtkm {
 namespace cont {

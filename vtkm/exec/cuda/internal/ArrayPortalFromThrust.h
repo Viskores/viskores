@@ -24,26 +24,13 @@
 #include <vtkm/cont/ArrayPortalToIterators.h>
 
 #include <iterator>
+
 VTKM_BOOST_PRE_INCLUDE
 #include <boost/type_traits/remove_const.hpp>
-VTKM_BOOST_POST_INCLUDE
-
-// Disable warnings we check vtkm for but Thrust does not.
-#if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif // gcc || clang
-#include <thrust/system/cuda/memory.h>
-
-#if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#pragma GCC diagnostic pop
-#endif // gcc || clang
-
-VTKM_BOOST_PRE_INCLUDE
 #include <boost/type_traits/integral_constant.hpp>
 #include <boost/utility/enable_if.hpp>
+
+#include <thrust/system/cuda/memory.h>
 VTKM_BOOST_POST_INCLUDE
 
 namespace vtkm {
