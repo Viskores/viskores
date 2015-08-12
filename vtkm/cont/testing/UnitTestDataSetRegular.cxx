@@ -172,10 +172,14 @@ ThreeDimRegularTest()
                    "Incorrect number of cells");
 
   // test various field-getting methods and associations
+  const vtkm::cont::Field &f1 = dataSet.GetField("pointvar");
+  VTKM_TEST_ASSERT(f1.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
+                       "Association of 'pointvar' was not ASSOC_POINTS");
+
   try
   {
-    const vtkm::cont::Field &f2 = dataSet.GetField("cellvar",
-                                            vtkm::cont::Field::ASSOC_CELL_SET);
+    //const vtkm::cont::Field &f2 = 
+    dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
   }
   catch (...)
   {
@@ -184,8 +188,8 @@ ThreeDimRegularTest()
 
   try
   {
-    const vtkm::cont::Field &f2 = dataSet.GetField("cellvar",
-                                              vtkm::cont::Field::ASSOC_POINTS);
+    //const vtkm::cont::Field &f3 = 
+    dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
     VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
   }
   catch (vtkm::cont::ErrorControlBadValue error)
