@@ -25,6 +25,7 @@ set(headers
   ExecutionSignatureTagBase.h
   Fetch.h
   FetchTagArrayDirectIn.h
+  FetchTagArrayDirectInOut.h
   FetchTagArrayDirectOut.h
   FetchTagArrayTopologyMapIn.h
   FetchTagExecObject.h
