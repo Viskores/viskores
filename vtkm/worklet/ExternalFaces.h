@@ -82,7 +82,7 @@ namespace worklet
           GetConnIndex(const vtkm::Id &f,
                         const vtkm::Id &p) : FacesPerCell(f), PointsPerCell(p) {};
 
-          VTKM_EXEC_EXPORT
+          VTKM_EXEC_CONT_EXPORT
           vtkm::Id operator()(vtkm::Id index) const
           {
               vtkm::Id divisor = FacesPerCell*PointsPerCell;
