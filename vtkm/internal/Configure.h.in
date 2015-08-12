@@ -40,6 +40,10 @@
 #define VTKM_ICC
 #endif
 
+#ifdef __PGI
+#define VTKM_PGI
+#endif
+
 // Several compilers pretend to be GCC but have minor differences. Try to
 // compensate for that.
 #if defined(__GNUC__) && !defined(VTKM_CLANG) && !defined(VTKM_ICC)
@@ -114,7 +118,7 @@
 // that should be wrapped around any #include for a boost header file. Mostly
 // this is used to set pragmas that dissable warnings that VTK-m checks for
 // but boost does not.
-#if defined(VTKM_GCC) || defined(VTKM_CLANG)
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
 #define VTKM_BOOST_PRE_INCLUDE \
   _Pragma("GCC diagnostic push") \
   _Pragma("GCC diagnostic ignored \"-Wconversion\"") \
