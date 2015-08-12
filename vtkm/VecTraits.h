@@ -146,6 +146,7 @@ struct VecTraits<vtkm::Vec<T,Size> >
 
   /// Number of components in the given vector.
   ///
+  VTKM_EXEC_CONT_EXPORT
   static vtkm::IdComponent GetNumberOfComponents(const VecType &) {
     return NUM_COMPONENTS;
   }

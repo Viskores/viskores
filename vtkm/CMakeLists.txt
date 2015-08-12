@@ -35,6 +35,7 @@ set(headers
   TypeTraits.h
   VectorAnalysis.h
   VecTraits.h
+  VecVariable.h
   UnaryPredicates.h
   )
 
