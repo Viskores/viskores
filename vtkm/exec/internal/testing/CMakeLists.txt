@@ -22,6 +22,7 @@
 
 set(unit_tests
   UnitTestErrorMessageBuffer.cxx
+  UnitTestVecFromPortal.cxx
   UnitTestWorkletInvokeFunctor.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests})

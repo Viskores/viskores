@@ -113,12 +113,12 @@ struct VecTraits
                                                 vtkm::IdComponent component,
                                                 ComponentType value);
 
-  /// Copies the components in this vector into a given Vec object.
+  /// Copies the components in the given vector into a given Vec object.
   ///
   template<vktm::IdComponent destSize>
   VTKM_EXEC_CONT_EXPORT
   static void
-  ToVec(const VecType &src, vtkm::Vec<ComponentType,destSize> &dest);
+  CopyInto(const VecType &src, vtkm::Vec<ComponentType,destSize> &dest);
 };
 #else // VTKM_DOXYGEN_ONLY
     ;

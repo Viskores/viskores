@@ -20,6 +20,7 @@
 
 set(headers
   ErrorMessageBuffer.h
+  VecFromPortal.h
   WorkletInvokeFunctor.h
   WorkletInvokeFunctorDetail.h
   )
