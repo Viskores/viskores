@@ -25,7 +25,7 @@
 #include <vtkm/internal/IndexTag.h>
 
 
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/function_types/components.hpp>
 #include <boost/function_types/function_arity.hpp>
 #include <boost/function_types/function_type.hpp>
@@ -40,7 +40,7 @@ VTKM_BOOST_PRE_INCLUDE
 #include <boost/mpl/less.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/utility/enable_if.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
 
 

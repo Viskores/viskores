@@ -50,17 +50,17 @@ $# Ignore the following comment. It is meant for the generated file.
 // boost seems to want to undefine those macros so that it can implement the
 // C99 templates and other implementations of the same name. Get around the
 // problem by using the boost version when compiling for a CPU.
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/math/special_functions/sign.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 #include <cmath>
 #define VTKM_USE_BOOST_CLASSIFY
 #define VTKM_USE_BOOST_SIGN
 #endif // !VTKM_CUDA
 
 #if defined(VTKM_MSVC) && !defined(VTKM_CUDA)
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/math/special_functions/acosh.hpp>
 #include <boost/math/special_functions/asinh.hpp>
 #include <boost/math/special_functions/atanh.hpp>
@@ -68,7 +68,7 @@ VTKM_BOOST_PRE_INCLUDE
 #include <boost/math/special_functions/expm1.hpp>
 #include <boost/math/special_functions/log1p.hpp>
 #include <boost/math/special_functions/round.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 #define VTKM_USE_BOOST_MATH
 #if _MSC_VER <= 1600
 #define VTKM_USE_STL_MIN_MAX
