@@ -21,6 +21,7 @@
 set(headers
   ErrorMessageBuffer.h
   VecFromPortal.h
+  VecFromPortalPermute.h
   WorkletInvokeFunctor.h
   WorkletInvokeFunctorDetail.h
   )
