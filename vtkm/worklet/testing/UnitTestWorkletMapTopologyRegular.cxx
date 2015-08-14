@@ -21,6 +21,8 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+#include <vtkm/Math.h>
+
 #include <vtkm/cont/DataSet.h>
 
 #include <vtkm/exec/TopologyData.h>
@@ -32,56 +34,44 @@ namespace test_regular {
 
 class MaxPointOrCellValue : public vtkm::worklet::WorkletMapTopology
 {
-  static const int LEN_IDS = 4;
 public:
   typedef void ControlSignature(FieldInTo<Scalar> inCells,
                                 FieldInFrom<Scalar> inPoints,
-                                TopologyIn<LEN_IDS> topology,
+                                TopologyIn topology,
                                 FieldOut<Scalar> outCells);
-  //Todo: we need a way to mark what control signature item each execution signature for topology comes from
   typedef void ExecutionSignature(_1, _4, _2, FromCount, CellShape, FromIndices);
   typedef _3 InputDomain;
 
   VTKM_CONT_EXPORT
   MaxPointOrCellValue() { }
 
-  template<typename T, typename FromIndexType>
+  template<typename InCellType,
+           typename OutCellType,
+           typename InPointVecType,
+           typename FromIndexType>
   VTKM_EXEC_EXPORT
-  void operator()(const T &cellval,
-                  T& max_value,
-                  const vtkm::exec::TopologyData<T,LEN_IDS> &pointValues,
-                  const vtkm::Id &count,
-                  const vtkm::Id & vtkmNotUsed(type),
-                  const FromIndexType & vtkmNotUsed(pointIDs)) const
+  void operator()(const InCellType &cellValue,
+                  OutCellType &maxValue,
+                  const InPointVecType &pointValues,
+                  const vtkm::IdComponent &numPoints,
+                  const vtkm::Id &vtkmNotUsed(type),
+                  const FromIndexType &vtkmNotUsed(pointIDs)) const
   {
-  //simple functor that returns the max of cellValue and pointValue
-  max_value = cellval;
-  for (vtkm::IdComponent i=0; i< count; ++i)
+    //simple functor that returns the max of cellValue and pointValue
+    maxValue = static_cast<OutCellType>(cellValue);
+    for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; ++pointIndex)
     {
-    max_value = pointValues[i] > max_value ? pointValues[i] : max_value;
+      maxValue = vtkm::Max(maxValue,
+                           static_cast<OutCellType>(pointValues[pointIndex]));
     }
   }
-
-  template<typename T1, typename T2, typename T3, typename FromIndex>
-  VTKM_EXEC_EXPORT
-  void operator()(const T1 &,
-                  T2 &,
-                  const vtkm::exec::TopologyData<T3,LEN_IDS> &,
-                  const vtkm::Id &,
-                  const vtkm::Id &,
-                  const FromIndex &) const
-  {
-    this->RaiseError("Cannot call this worklet with different types.");
-  }
-
 };
 
 class AveragePointToCellValue : public vtkm::worklet::WorkletMapTopology
 {
-  static const int LEN_IDS = 4;
 public:
   typedef void ControlSignature(FieldInFrom<Scalar> inPoints,
-                                TopologyIn<LEN_IDS> topology,
+                                TopologyIn topology,
                                 FieldOut<Scalar> outCells);
   typedef void ExecutionSignature(_1, _3, FromCount);
   typedef _2 InputDomain;
@@ -89,28 +79,20 @@ public:
   VTKM_CONT_EXPORT
   AveragePointToCellValue() { }
 
-  template<typename T>
+  template<typename PointVecType, typename OutType>
   VTKM_EXEC_EXPORT
-  void operator()(const vtkm::exec::TopologyData<T,LEN_IDS> &pointValues,
-                  T& avgVal,
-                  const vtkm::Id &count) const
+  void operator()(const PointVecType &pointValues,
+                  OutType &avgVal,
+                  const vtkm::IdComponent &numPoints) const
   {
     //simple functor that returns the average pointValue.
-    avgVal = pointValues[0];
-    for (vtkm::IdComponent i=1; i<count; ++i)
+    avgVal = static_cast<OutType>(pointValues[0]);
+    for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
     {
-      avgVal += pointValues[i];
+      avgVal += static_cast<OutType>(pointValues[pointIndex]);
     }
-    avgVal = avgVal / count;
+    avgVal = avgVal / static_cast<OutType>(numPoints);
   }
-
-  template<typename T1, typename T2>
-  VTKM_EXEC_EXPORT
-  void operator()(const T1 &, T2 &, const vtkm::Id &) const
-  {
-    this->RaiseError("Cannot call this worklet with different types.");
-  }
-
 };
 
 }
