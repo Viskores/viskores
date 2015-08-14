@@ -76,6 +76,11 @@ public:
   typedef vtkm::exec::internal::VecFromPortal<ConnectivityPortalType>
       IndicesType;
 
+  /// Returns a Vec-like object containing the indices for the given index.
+  /// The object returned is not an actual array, but rather an object that
+  /// loads the indices lazily out of the connectivity array. This prevents
+  /// us from having to know the number of indices at compile time.
+  ///
   VTKM_EXEC_EXPORT
   IndicesType GetIndices(vtkm::Id index) const
   {
