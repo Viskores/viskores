@@ -194,9 +194,26 @@ void swap( vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> a,
   a.Swap(b);
 }
 
-
 }
 }
 } // namespace vtkm::cont::internal
+
+namespace boost {
+
+/// The boost::iterator_facade lets you redefine the reference type, which is
+/// good since you cannot set an array portal from a reference in general.
+/// However, the iterator_facade then checks to see if the reference type is an
+/// actual reference, and if it is not it can set up some rather restrictive
+/// traits that we do not want. To get around this, specialize the
+/// boost::is_reference type check to declare our value class as a reference
+/// type. Even though it is not a true reference type, its operators make it
+/// behave like one.
+///  
+template<typename T>
+struct is_reference<
+    vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> >
+  : public boost::true_type {  };
+
+} // namespace boost
 
 #endif //vtk_m_cont_internal_IteratorFromArrayPortal_h
