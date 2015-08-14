@@ -23,8 +23,6 @@
 
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/exec/TopologyData.h>
-
 namespace vtkm {
 namespace worklet {
 

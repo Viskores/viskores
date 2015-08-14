@@ -23,8 +23,6 @@
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 
-#include <vtkm/exec/TopologyData.h>
-
 namespace vtkm {
 namespace exec {
 namespace arg {
