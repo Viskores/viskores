@@ -159,13 +159,11 @@ public:
   VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
   {
     typedef typename StorageType::PortalConstType::IteratorType IteratorType;
-    IteratorType BeginIterator = this->Storage->GetPortalConst().GetIteratorBegin();
-    //It might be unsafe to take the begin iterator and just add the number of 
-    //values, but I can't think of a better/safer way to do this
-    std::copy(BeginIterator, BeginIterator+this->Storage->GetNumberOfValues(), dest);
-    // std::copy(this->Portal.GetIteratorBegin(),
-    //           this->Portal.GetIteratorEnd(),
-    //           dest);
+    IteratorType beginIterator = 
+                    this->Storage->GetPortalConst().GetIteratorBegin();
+
+    std::copy(beginIterator, 
+              beginIterator + this->Storage->GetNumberOfValues(), dest);
   }
 
   VTKM_CONT_EXPORT

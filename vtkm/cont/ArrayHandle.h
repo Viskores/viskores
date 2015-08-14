@@ -225,21 +225,20 @@ public:
 
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-    if (!this->Internals->ControlArrayValid
-        && !this->Internals->ExecutionArrayValid)
+    if (!this->Internals->ControlArrayValid &&
+        !this->Internals->ExecutionArrayValid)
       {
       throw vtkm::cont::ErrorControlBadValue(
         "ArrayHandle has no data to copy into Iterator.");
       }
 
-    if (this->Internals->ExecutionArrayValid)
+    if (!this->Internals->ControlArrayValid &&
+        this->Internals->ExecutionArray->IsDeviceAdapter(DeviceAdapterTag()))
       {
-        //This will ensure we have a concrete instance of the
-        //ArrayHandleExecutionManager
-        this->PrepareForDevice(DeviceAdapterTag());
-
-        //Next, do a dynamic cast to convert the ArrayHandleExecutionManager
-        //into a concrete class to call CopyInto
+        /// Dynamically cast ArrayHandleExecutionManagerBase into a concrete
+        /// class and call CopyInto. The dynamic conversion will be sucessful
+        /// becuase the check to ensure the ExecutionArray is of the type
+        /// DeviceAdapterTag has already passed
         typedef vtkm::cont::internal::ArrayHandleExecutionManager<
                                 T, StorageTag, DeviceAdapterTag> ConcreteType;
         ConcreteType *ConcreteExecutionArray =
