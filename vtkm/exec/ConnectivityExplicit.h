@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_ExplicitConnectivity_h
-#define vtk_m_exec_ExplicitConnectivity_h
+#ifndef vtk_m_exec_ConnectivityExplicit_h
+#define vtk_m_exec_ConnectivityExplicit_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/DeviceAdapter.h>
@@ -28,24 +28,24 @@ namespace vtkm {
 namespace exec {
 
 template<typename ShapePortalType,
-         typename IndicePortalType,
+         typename NumIndicesPortalType,
          typename ConnectivityPortalType,
-         typename MapConnectivityPortalType
+         typename IndexOffsetPortalType
          >
-class ExplicitConnectivity
+class ConnectivityExplicit
 {
 public:
-  ExplicitConnectivity() {}
+  ConnectivityExplicit() {}
 
-  ExplicitConnectivity(const ShapePortalType& shapePortal,
-                       const IndicePortalType& indicePortal,
+  ConnectivityExplicit(const ShapePortalType& shapePortal,
+                       const NumIndicesPortalType& numIndicesPortal,
                        const ConnectivityPortalType& connPortal,
-                       const MapConnectivityPortalType& mapConnPortal
+                       const IndexOffsetPortalType& indexOffsetPortal
                        )
   : Shapes(shapePortal),
-    NumIndices(indicePortal),
+    NumIndices(numIndicesPortal),
     Connectivity(connPortal),
-    MapCellToConnectivityIndex(mapConnPortal)
+    IndexOffset(indexOffsetPortal)
   {
 
   }
@@ -63,7 +63,7 @@ public:
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Id GetElementShapeType(vtkm::Id index)
+  vtkm::Id GetCellShape(vtkm::Id index)
   {
       return Shapes.Get(index);
   }
@@ -73,19 +73,19 @@ public:
   void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
     vtkm::Id n = GetNumberOfIndices(index);
-    vtkm::Id start = MapCellToConnectivityIndex.Get(index);
+    vtkm::Id start = IndexOffset.Get(index);
     for (vtkm::IdComponent i=0; i<n && i<ItemTupleLength; i++)
       ids[i] = Connectivity.Get(start+i);
   }
 
 private:
  ShapePortalType Shapes;
- IndicePortalType NumIndices;
+ NumIndicesPortalType NumIndices;
  ConnectivityPortalType Connectivity;
- MapConnectivityPortalType MapCellToConnectivityIndex;
+ IndexOffsetPortalType IndexOffset;
 };
 
 } // namespace exec
 } // namespace vtkm
 
-#endif //  vtk_m_exec_ExplicitConnectivity_h
+#endif //  vtk_m_exec_ConnectivityExplicit_h

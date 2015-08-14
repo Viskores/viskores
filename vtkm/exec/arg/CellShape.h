@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_arg_TopologyElementType_h
-#define vtk_m_exec_arg_TopologyElementType_h
+#ifndef vtk_m_exec_arg_CellShape_h
+#define vtk_m_exec_arg_CellShape_h
 
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
@@ -27,23 +27,23 @@ namespace vtkm {
 namespace exec {
 namespace arg {
 
-/// \brief Aspect tag to use for getting the work index.
+/// \brief Aspect tag to use for getting the cell shape.
 ///
-/// The \c AspectTagTopologyElementType aspect tag causes the \c Fetch class to
-/// obtain the type of element (e.g. cell type) from the topology object.
+/// The \c AspectTagCellShape aspect tag causes the \c Fetch class to
+/// obtain the type of element (e.g. cell cell) from the topology object.
 ///
-struct AspectTagTopologyElementType {  };
+struct AspectTagCellShape {  };
 
-/// \brief The \c ExecutionSignature tag to use to get the node IDs.
+/// \brief The \c ExecutionSignature tag to use to get the cell shape.
 ///
-struct TopologyElementType : vtkm::exec::arg::ExecutionSignatureTagBase
+struct CellShape : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static const vtkm::IdComponent INDEX = 1;
-  typedef vtkm::exec::arg::AspectTagTopologyElementType AspectTag;
+  typedef vtkm::exec::arg::AspectTagCellShape AspectTag;
 };
 
 template<typename FetchTag, typename Invocation>
-struct Fetch<FetchTag, vtkm::exec::arg::AspectTagTopologyElementType, Invocation, 1>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagCellShape, Invocation, 1>
 {
   typedef vtkm::Id ValueType;
 
@@ -71,7 +71,7 @@ struct Fetch<FetchTag, vtkm::exec::arg::AspectTagTopologyElementType, Invocation
     TopologyType topology =
         invocation.Parameters.template GetParameter<InputDomainIndex>();
 
-    return topology.GetElementShapeType(index);
+    return topology.GetCellShape(index);
   }
 
   VTKM_EXEC_EXPORT
@@ -85,4 +85,4 @@ struct Fetch<FetchTag, vtkm::exec::arg::AspectTagTopologyElementType, Invocation
 }
 } // namespace vtkm::exec::arg
 
-#endif //vtk_m_exec_arg_TopologyElementType_h
+#endif //vtk_m_exec_arg_CellShape_h

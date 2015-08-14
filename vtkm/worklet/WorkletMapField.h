@@ -26,10 +26,12 @@
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagArrayIn.h>
+#include <vtkm/cont/arg/TransportTagArrayInOut.h>
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
+#include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 
 namespace vtkm {
@@ -64,6 +66,18 @@ public:
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayOut TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectOut FetchTag;
+  };
+
+  /// \brief A control signature tag for input-output (in-place) fields.
+  ///
+  /// This tag takes a template argument that is a type list tag that limits
+  /// the possible value types in the array.
+  ///
+  template<typename TypeList = AllTypes>
+  struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagArrayInOut TransportTag;
+    typedef vtkm::exec::arg::FetchTagArrayDirectInOut FetchTag;
   };
 };
 

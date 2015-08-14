@@ -24,6 +24,7 @@ set(headers
   ControlSignatureTagBase.h
   Transport.h
   TransportTagArrayIn.h
+  TransportTagArrayInOut.h
   TransportTagArrayOut.h
   TransportTagExecObject.h
   TransportTagTopologyIn.h

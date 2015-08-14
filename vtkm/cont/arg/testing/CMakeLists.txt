@@ -21,6 +21,7 @@
 set(unit_tests
   UnitTestControlSignatureTag.cxx
   UnitTestTransportArrayIn.cxx
+  UnitTestTransportArrayInOut.cxx
   UnitTestTransportArrayOut.cxx
   UnitTestTransportExecObject.cxx
   UnitTestTypeCheckArray.cxx

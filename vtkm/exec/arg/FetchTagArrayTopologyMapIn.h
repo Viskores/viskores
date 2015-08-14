@@ -24,15 +24,15 @@
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/TopologyData.h>
 
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/type_traits.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
 namespace exec {
 namespace arg {
 
-/// \brief \c Fetch tag for getting array values with direct indexing.
+/// \brief \c Fetch tag for getting array values determined by topology connections.
 ///
 /// \c FetchTagArrayTopologyMapIn is a tag used with the \c Fetch class to
 /// retreive values from an array portal. The fetch uses indexing based on

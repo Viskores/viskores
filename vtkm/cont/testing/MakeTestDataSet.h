@@ -48,36 +48,36 @@ public:
 inline vtkm::cont::DataSet
 MakeTestDataSet::Make2DRegularDataSet0()
 {
-    vtkm::cont::DataSet ds;
+    vtkm::cont::DataSet dataSet;
 
     const int nVerts = 6;
     vtkm::Float32 xVals[nVerts] = {0, 1, 2, 0, 1, 2};
     vtkm::Float32 yVals[nVerts] = {0, 0, 0, 1, 1, 1};
     vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f};
 
-    ds.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
-    ds.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
-    ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y"));
+    dataSet.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
+    dataSet.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
+    dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y"));
 
-    //set node scalar.
-    ds.AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+    //set point scalar.
+    dataSet.AddField(Field("pointvar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
     //create scalar.
     vtkm::Float32 cellvar[2] = {100.1f, 200.1f};
-    ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
+    dataSet.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
     vtkm::cont::CellSetStructured<2> cellSet("cells");
     //Set regular structure
-    cellSet.Structure.SetNodeDimension( vtkm::make_Vec(3,2) );
-    ds.AddCellSet(cellSet);
+    cellSet.SetPointDimensions( vtkm::make_Vec(3,2) );
+    dataSet.AddCellSet(cellSet);
 
-    return ds;
+    return dataSet;
 }
 
 inline vtkm::cont::DataSet
 MakeTestDataSet::Make3DRegularDataSet0()
 {
-    vtkm::cont::DataSet ds;
+    vtkm::cont::DataSet dataSet;
 
     const int nVerts = 18;
     vtkm::Float32 xVals[nVerts] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
@@ -87,30 +87,30 @@ MakeTestDataSet::Make3DRegularDataSet0()
                                   100.3f, 110.3f, 120.3f, 130.4f, 140.4f, 150.4f, 160.4f, 170.5f,
                                   180.5f};
 
-    ds.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
-    ds.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
-    ds.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
-    ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
+    dataSet.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
+    dataSet.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
+    dataSet.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
+    dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
-    //Set node scalar
-    ds.AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+    //Set point scalar
+    dataSet.AddField(Field("pointvar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
     //Set cell scalar
     vtkm::Float32 cellvar[4] = {100.1f, 100.2f, 100.3f, 100.4f};
-    ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 4));
+    dataSet.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 4));
 
     static const vtkm::IdComponent dim = 3;
     vtkm::cont::CellSetStructured<dim> cellSet("cells");
-    cellSet.Structure.SetNodeDimension( vtkm::make_Vec(3,2,3) );
-    ds.AddCellSet(cellSet);
+    cellSet.SetPointDimensions( vtkm::make_Vec(3,2,3) );
+    dataSet.AddCellSet(cellSet);
 
-    return ds;
+    return dataSet;
 }
 
 inline vtkm::cont::DataSet
 MakeTestDataSet::Make3DExplicitDataSet0()
 {
-  vtkm::cont::DataSet ds;
+  vtkm::cont::DataSet dataSet;
 
   const int nVerts = 5;
   vtkm::Float32 xVals[nVerts] = {0, 1, 1, 2, 2};
@@ -118,17 +118,17 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0};
   vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f};
 
-  ds.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
-  ds.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
-  ds.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
-  ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
+  dataSet.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
+  dataSet.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
+  dataSet.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
-  //Set node scalar
-  ds.AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  //Set point scalar
+  dataSet.AddField(Field("pointvar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = {100.1f, 100.2f};
-  ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
+  dataSet.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
   //Add connectivity
   std::vector<vtkm::Id> shapes;
@@ -150,19 +150,18 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   conn.push_back(3);
   conn.push_back(4);
 
-  vtkm::cont::CellSetExplicit<> cs("cells", 2);
-  vtkm::cont::ExplicitConnectivity<> &ec = cs.NodesOfCellsConnectivity;
-  ec.FillViaCopy(shapes, numindices, conn);
+  vtkm::cont::CellSetExplicit<> cellSet("cells", 2);
+  cellSet.FillViaCopy(shapes, numindices, conn);
 
-  ds.AddCellSet(cs);
+  dataSet.AddCellSet(cellSet);
 
-  return ds;
+  return dataSet;
 }
 
 inline vtkm::cont::DataSet
 MakeTestDataSet::Make3DExplicitDataSet1()
 {
-  vtkm::cont::DataSet ds;
+  vtkm::cont::DataSet dataSet;
 
   const int nVerts = 5;
   vtkm::Float32 xVals[nVerts] = {0, 1, 1, 2, 2};
@@ -170,30 +169,29 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   vtkm::Float32 zVals[nVerts] = {0, 0, 0, 0, 0};
   vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f};
 
-  ds.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
-  ds.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
-  ds.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
-  ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
+  dataSet.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
+  dataSet.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
+  dataSet.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
-  //Set node scalar
-  ds.AddField(Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  //Set point scalar
+  dataSet.AddField(Field("pointvar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = {100.1f, 100.2f};
-  ds.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
+  dataSet.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells", 2);
-  vtkm::cont::ExplicitConnectivity<> &ec = cellSet.NodesOfCellsConnectivity;
 
-  ec.PrepareToAddCells(2, 7);
-  ec.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
-  ec.AddCell(vtkm::VTKM_QUAD, 4, make_Vec<vtkm::Id>(2,1,3,4));
-  ec.CompleteAddingCells();
+  cellSet.PrepareToAddCells(2, 7);
+  cellSet.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
+  cellSet.AddCell(vtkm::VTKM_QUAD, 4, make_Vec<vtkm::Id>(2,1,3,4));
+  cellSet.CompleteAddingCells();
 
   //todo this need to be a reference/shared_ptr style class
-  ds.AddCellSet(cellSet);
+  dataSet.AddCellSet(cellSet);
 
-  return ds;
+  return dataSet;
 }
 
 inline vtkm::cont::DataSet
@@ -217,32 +215,31 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
     }
 
   // create DataSet
-  vtkm::cont::DataSet ds;
-  ds.AddField(Field("xyz", 1, vtkm::cont::Field::ASSOC_POINTS, points, nVerts));
-  ds.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
-  ds.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
-  ds.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
-  ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
+  vtkm::cont::DataSet dataSet;
+  dataSet.AddField(Field("xyz", 1, vtkm::cont::Field::ASSOC_POINTS, points, nVerts));
+  dataSet.AddField(Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, xVals, nVerts));
+  dataSet.AddField(Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, yVals, nVerts));
+  dataSet.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells", 2);
-  vtkm::cont::ExplicitConnectivity<> &ec = cellSet.NodesOfCellsConnectivity;
 
-  ec.PrepareToAddCells(nPointIds/3, nPointIds);
+  cellSet.PrepareToAddCells(nPointIds/3, nPointIds);
   for (i=0; i<nPointIds/3; i++)
-    {
-      ec.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(pointId[i*3], pointId[i*3+1], pointId[i*3+2]));
-    }
-  ec.CompleteAddingCells();
+  {
+    cellSet.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(pointId[i*3], pointId[i*3+1], pointId[i*3+2]));
+  }
+  cellSet.CompleteAddingCells();
 
   //todo this need to be a reference/shared_ptr style class
-  ds.AddCellSet(cellSet);
+  dataSet.AddCellSet(cellSet);
 
   // copy bounds
   if (pBounds != NULL)
     for (i=0; i<6; i++)
       pBounds[i] = _bounds[i];
 
-  return ds;
+  return dataSet;
 }
 }
 }

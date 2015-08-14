@@ -38,7 +38,6 @@
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/ExplicitConnectivity.h>
 #include <vtkm/cont/DataSet.h>
 
 #include <vtkm/worklet/AverageByKey.h>

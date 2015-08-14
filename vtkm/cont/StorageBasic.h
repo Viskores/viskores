@@ -28,6 +28,29 @@
 
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
+#if defined(VTKM_POSIX)
+#define VTKM_MEMALIGN_POSIX
+#elif defined(_WIN32)
+#define VTKM_MEMALIGN_WIN
+#elif defined(__SSE__)
+#define VTKM_MEMALIGN_SSE
+#else
+#define VTKM_MEMALIGN_NONE
+#endif
+
+#if defined(VTKM_MEMALIGN_POSIX)
+#include <stdlib.h>
+#elif defined(VTKM_MEMALIGN_WIN)
+#include <malloc.h>
+#elif defined(VTKM_MEMALIGN_SSE)
+#include <xmmintrin.h>
+#else
+#include <malloc.h>
+#endif
+
+// Defines the cache line size in bytes to align allocations to
+#define VTKM_CACHE_LINE_SIZE 64
+
 namespace vtkm {
 namespace cont {
 
@@ -35,6 +58,93 @@ namespace cont {
 struct StorageTagBasic {  };
 
 namespace internal {
+
+inline void* alloc_aligned(size_t size, size_t align){
+#if defined(VTKM_MEMALIGN_POSIX)
+  void *mem = NULL;
+  if (posix_memalign(&mem, align, size) != 0){
+    mem = NULL;
+  }
+#elif defined(VTKM_MEMALIGN_WIN)
+  void *mem = _aligned_malloc(size, align);
+#elif defined(VTKM_MEMALIGN_SSE)
+  void *mem = _mm_malloc(size, align);
+#else
+  void *mem = malloc(size);
+#endif
+  if (mem == NULL){
+    throw std::bad_alloc();
+  }
+  return mem;
+}
+inline void free_aligned(void *mem){
+#if defined(VTKM_MEMALIGN_POSIX)
+  free(mem);
+#elif defined(VTKM_MEMALIGN_WIN)
+  _aligned_free(mem);
+#elif defined(VTKM_MEMALIGN_SSE)
+  _mm_free(mem);
+#else
+  free(mem);
+#endif
+}
+
+/// A simple aligned allocator type that will align allocations to `Alignment` bytes
+/// TODO: Once C++11 std::allocator_traits is better used by STL and we want to drop
+/// support for pre-C++11 we can drop a lot of the typedefs and functions here.
+template<typename T, size_t Alignment>
+struct AlignedAllocator {
+  typedef T value_type;
+  typedef T& reference;
+  typedef const T& const_reference;
+  typedef T* pointer;
+  typedef const T* const_pointer;
+  typedef void* void_pointer;
+  typedef const void* const_void_pointer;
+  typedef ptrdiff_t difference_type;
+  typedef size_t size_type;
+
+  template<typename U>
+  struct rebind {
+    typedef AlignedAllocator<U, Alignment> other;
+  };
+
+  AlignedAllocator(){}
+
+  template<typename Tb>
+  AlignedAllocator(const AlignedAllocator<Tb, Alignment>&){}
+
+  pointer allocate(size_t n){
+    return static_cast<pointer>(alloc_aligned(n * sizeof(T), Alignment));
+  }
+  void deallocate(pointer p, size_t){
+    free_aligned(static_cast<void*>(p));
+  }
+  pointer address(reference r){
+    return &r;
+  }
+  const_pointer address(const_reference r){
+    return &r;
+  }
+  size_type max_size() const {
+    return std::numeric_limits<size_type>::max() / sizeof(T);
+  }
+  void construct(pointer p, const T &t){
+    new(p) T(t);
+  }
+  void destroy(pointer p){
+    p->~T();
+  }
+};
+
+template<typename T, typename U, size_t AlignA, size_t AlignB>
+bool operator==(const AlignedAllocator<T, AlignA>&, const AlignedAllocator<U, AlignB>&){
+  return AlignA == AlignB;
+}
+template<typename T, typename U, size_t AlignA, size_t AlignB>
+bool operator!=(const AlignedAllocator<T, AlignA>&, const AlignedAllocator<U, AlignB>&){
+  return AlignA != AlignB;
+}
 
 /// A basic implementation of an Storage object.
 ///
@@ -59,7 +169,7 @@ public:
   /// whether that would ever be useful. So, instead of jumping through hoops
   /// implementing them, just fix the allocator for now.
   ///
-  typedef std::allocator<ValueType> AllocatorType;
+  typedef AlignedAllocator<ValueType, VTKM_CACHE_LINE_SIZE> AllocatorType;
 
 public:
 
@@ -71,7 +181,6 @@ public:
       DeallocateOnRelease(false),
       UserProvidedMemory( array == NULL ? false : true)
   {
-
   }
 
   VTKM_CONT_EXPORT
@@ -159,8 +268,7 @@ public:
       if (numberOfValues > 0)
       {
         AllocatorType allocator;
-        this->Array = allocator.allocate(
-                                   static_cast<std::size_t>(numberOfValues) );
+        this->Array = allocator.allocate(static_cast<std::size_t>(numberOfValues));
         this->AllocatedSize  = numberOfValues;
         this->NumberOfValues = numberOfValues;
       }

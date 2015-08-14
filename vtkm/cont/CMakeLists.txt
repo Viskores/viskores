@@ -45,7 +45,6 @@ set(headers
   DynamicArrayHandle.h
   DynamicCellSet.h
   DynamicPointCoordinates.h
-  ExplicitConnectivity.h
   Error.h
   ErrorControl.h
   ErrorControlAssert.h
@@ -64,7 +63,6 @@ set(headers
   StorageImplicit.h
   StorageListTag.h
   Timer.h
-  TopologyType.h
   )
 
 #-----------------------------------------------------------------------------
