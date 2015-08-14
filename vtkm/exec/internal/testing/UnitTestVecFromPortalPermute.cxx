@@ -24,7 +24,7 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace UnitTestVecFromPortalPermuteNamespace {
 
 static const vtkm::IdComponent ARRAY_SIZE = 10;
 
@@ -123,9 +123,10 @@ void VecFromPortalPermuteTest()
                                    vtkm::TypeListTagCommon());
 }
 
-} // anonymous namespace
+} // namespace UnitTestVecFromPortalPermuteNamespace
 
 int UnitTestVecFromPortalPermute(int, char *[])
 {
-  return vtkm::testing::Testing::Run(VecFromPortalPermuteTest);
+  return vtkm::testing::Testing::Run(
+      UnitTestVecFromPortalPermuteNamespace::VecFromPortalPermuteTest);
 }
