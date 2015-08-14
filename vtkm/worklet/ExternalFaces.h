@@ -300,9 +300,12 @@ namespace worklet
       typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, GetConnIndex> IdImplicitType;
       typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, IdHandleType> IdPermutationType1;
       typedef vtkm::cont::ArrayHandlePermutation<IdImplicitType, IdHandleType> IdPermutationType2;
-      typedef vtkm::cont::ExplicitConnectivity<IdPermutationType1::StorageTag,
-                                               IdPermutationType1::StorageTag,
-                                               typename IdPermutationType2::StorageTag> PermutedExplicitConnectivity;
+
+
+      typedef vtkm::cont::CellSetExplicit<IdPermutationType1::StorageTag,
+                                          IdPermutationType1::StorageTag,
+                                          typename IdPermutationType2::StorageTag> PermutedCellSetExplicit;
+
       IdPermutationType1 pt1(face2CellId, shapes);
       IdPermutationType1 pt2(face2CellId, numIndices);
 
@@ -312,14 +315,14 @@ namespace worklet
       IdImplicitType connIndices(GetConnIndex(4, 4), 4*totalFaces);
       IdPermutationType2 faceConn(connIndices, conn);
 
-      PermutedExplicitConnectivity permConn;
-      permConn.Fill(pt1, pt2, faceConn);
+      PermutedCellSetExplicit permutedCellSet;
+      permutedCellSet.GetNodeToCellConnectivity().Fill(pt1, pt2, faceConn);
       vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3> > faceVertices;
       vtkm::worklet::DispatcherMapTopology<GetFace> faceHashDispatcher;
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         timer.Reset();
       #endif
-      faceHashDispatcher.Invoke(localFaceIds, permConn, faceVertices);
+      faceHashDispatcher.Invoke(localFaceIds, permutedCellSet, faceVertices);
       //faceVertices Output: <476> <473> <463> <763> (cell 1) | <463> <462> <432> <632> (cell 2) ...
       #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
         std::cout << "GetFace_Worklet," << timer.GetElapsedTime() << "\n";
