@@ -65,7 +65,7 @@ public:
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Id GetNumberOfIndices(vtkm::Id index) const {
+  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const {
     return Helper::GetNumberOfIndices(this->Internals, index);
   }
   // This needs some thought. What does cell shape mean when the to topology
