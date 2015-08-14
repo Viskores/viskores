@@ -24,6 +24,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/ExternalFaces.h>
 
+namespace {
 
 vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
 {
@@ -117,6 +118,7 @@ void TestExternalFaces()
 
 } // TestExternalFaces
 
+}
 
 int UnitTestExternalFaces(int, char *[])
 {
