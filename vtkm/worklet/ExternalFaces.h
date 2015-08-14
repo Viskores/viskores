@@ -189,7 +189,7 @@ namespace worklet
             {
                 if (cellType == vtkm::VTKM_TETRA)
                 {
-                    vtkm::Id faceIdTable[12] = {0,1,2,0,1,3,0,2,3,1,2,3};
+                    vtkm::IdComponent faceIdTable[12] = {0,1,2,0,1,3,0,2,3,1,2,3};
 
                     //Assign cell points/nodes to this face
                     vtkm::Id faceP1 = cellNodeIds[faceIdTable[cellFaceId*N]];
