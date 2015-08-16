@@ -83,7 +83,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::CellShapeId GetCellShape() const {return CELL_SHAPE_LINE;}
+  vtkm::IdComponent GetCellShape() const {return CELL_SHAPE_LINE;}
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
@@ -182,7 +182,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::CellShapeId GetCellShape() const { return CELL_SHAPE_PIXEL; }
+  vtkm::IdComponent GetCellShape() const { return CELL_SHAPE_PIXEL; }
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
@@ -319,7 +319,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::CellShapeId GetCellShape() const { return CELL_SHAPE_VOXEL; }
+  vtkm::IdComponent GetCellShape() const { return CELL_SHAPE_VOXEL; }
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const

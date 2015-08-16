@@ -125,7 +125,7 @@ public:
 
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_CONT_EXPORT
-  void AddCell(vtkm::CellShapeId cellType,
+  void AddCell(vtkm::IdComponent cellType,
                int numVertices,
                const vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {

@@ -95,7 +95,7 @@ TwoDimRegularTest()
   {
     VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(cellIndex) == 4,
                      "Incorrect number of cell indices");
-    vtkm::CellShapeId shape = cellSet.GetCellShape();
+    vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_PIXEL,
                      "Incorrect element type.");
   }
@@ -208,7 +208,7 @@ ThreeDimRegularTest()
   {
     VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(cellIndex) == 8,
                      "Incorrect number of cell indices");
-    vtkm::CellShapeId shape = cellSet.GetCellShape();
+    vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_VOXEL,
                      "Incorrect element type.");
   }

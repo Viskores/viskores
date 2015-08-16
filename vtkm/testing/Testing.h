@@ -20,6 +20,7 @@
 #ifndef vtk_m_testing_Testing_h
 #define vtk_m_testing_Testing_h
 
+#include <vtkm/CellShape.h>
 #include <vtkm/Pair.h>
 #include <vtkm/TypeListTag.h>
 #include <vtkm/Types.h>
@@ -120,6 +121,44 @@ struct TypeName<vtkm::Pair<T,U> >
   }
 };
 
+namespace detail {
+
+template<vtkm::IdComponent cellShapeId>
+struct InternalTryCellShape
+{
+  template<typename FunctionType>
+  void operator()(const FunctionType &function) const {
+    this->PrintAndInvoke(function,
+                         typename vtkm::CellShapeIdToTag<cellShapeId>::valid());
+    InternalTryCellShape<cellShapeId+1>()(function);
+  }
+
+private:
+  template<typename FunctionType>
+  void PrintAndInvoke(const FunctionType &function, boost::true_type) const {
+    typedef typename vtkm::CellShapeIdToTag<cellShapeId>::Tag CellShapeTag;
+    std::cout << "*** "
+              << vtkm::GetCellShapeName(CellShapeTag())
+              << " ***************" << std::endl;
+    function(CellShapeTag());
+  }
+
+  template<typename FunctionType>
+  void PrintAndInvoke(const FunctionType &, boost::false_type) const {
+    // Not a valid cell shape. Do nothing.
+  }
+};
+
+template<>
+struct InternalTryCellShape<vtkm::NUMBER_OF_CELL_SHAPES>
+{
+  template<typename FunctionType>
+  void operator()(const FunctionType &) const {
+    // Done processing cell sets. Do nothing and return.
+  }
+};
+
+} // namespace detail
 
 struct Testing
 {
@@ -243,7 +282,7 @@ public:
 
   /// Runs template \p function on all the types in the given list.
   ///
-  template<class FunctionType, class TypeList>
+  template<typename FunctionType, typename TypeList>
   static void TryTypes(const FunctionType &function, TypeList)
   {
     vtkm::ListForEach(InternalPrintTypeAndInvoke<FunctionType>(function),
@@ -255,10 +294,19 @@ public:
   /// the function is supposed to work on some subset of types, then use
   /// \c TryTypes to restrict the call to some other list of types.
   ///
-  template<class FunctionType>
+  template<typename FunctionType>
   static void TryAllTypes(const FunctionType &function)
   {
     TryTypes(function, vtkm::TypeListTagAll());
+  }
+
+  /// Runs templated \p function on all cell shapes defined in VTK-m. This is
+  /// helpful to test templated functions that should work on all cell types.
+  ///
+  template<typename FunctionType>
+  static void TryAllCellShapes(const FunctionType &function)
+  {
+    detail::InternalTryCellShape<0>()(function);
   }
 
 };

@@ -67,10 +67,10 @@ public:
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::CellShapeId GetCellShape(vtkm::Id index) const
+  vtkm::IdComponent GetCellShape(vtkm::Id index) const
   {
     // Likewise, should Shapes be vtkm::Id or something smaller?
-    return static_cast<vtkm::CellShapeId>(this->Shapes.Get(index));
+    return static_cast<vtkm::IdComponent>(this->Shapes.Get(index));
   }
 
   typedef vtkm::exec::internal::VecFromPortal<ConnectivityPortalType>
