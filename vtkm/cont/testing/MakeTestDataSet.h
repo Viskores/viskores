@@ -132,8 +132,8 @@ MakeTestDataSet::Make3DExplicitDataSet0()
 
   //Add connectivity
   std::vector<vtkm::Id> shapes;
-  shapes.push_back(vtkm::VTKM_TRIANGLE);
-  shapes.push_back(vtkm::VTKM_QUAD);
+  shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
+  shapes.push_back(vtkm::CELL_SHAPE_QUAD);
 
   std::vector<vtkm::Id> numindices;
   numindices.push_back(3);
@@ -187,8 +187,8 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   vtkm::cont::CellSetExplicit<> cellSet("cells", 2);
 
   cellSet.PrepareToAddCells(2, 7);
-  cellSet.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
-  cellSet.AddCell(vtkm::VTKM_QUAD, 4, make_Vec<vtkm::Id>(2,1,3,4));
+  cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
+  cellSet.AddCell(vtkm::CELL_SHAPE_QUAD, 4, make_Vec<vtkm::Id>(2,1,3,4));
   cellSet.CompleteAddingCells();
 
   //todo this need to be a reference/shared_ptr style class
@@ -256,7 +256,11 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
   cellSet.PrepareToAddCells(nPointIds/3, nPointIds);
   for (vtkm::Id i=0; i<nPointIds/3; i++)
   {
-    cellSet.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(pointId[i*3], pointId[i*3+1], pointId[i*3+2]));
+    cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE,
+                    3,
+                    make_Vec<vtkm::Id>(pointId[i*3],
+                    pointId[i*3+1],
+                    pointId[i*3+2]));
   }
   cellSet.CompleteAddingCells();
 

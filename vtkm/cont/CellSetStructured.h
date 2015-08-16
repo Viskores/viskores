@@ -73,7 +73,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::CellType GetCellShape() const
+  vtkm::CellShapeId GetCellShape() const
   {
     return this->Structure.GetCellShape();
   }

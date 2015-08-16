@@ -17,37 +17,37 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_CellType_h
-#define vtk_m_CellType_h
+#ifndef vtk_m_CellShape_h
+#define vtk_m_CellShape_h
 
 namespace vtkm {
 
-/// CellType stores the type of each cell.  Currently these are designed to
-/// match up with VTK cell types.
+/// CellShapeId identifies the type of each cell. Currently these are designed
+/// to match up with VTK cell types.
 ///
-enum CellType
+enum CellShapeId
 {
   // Linear cells
-  VTKM_EMPTY_CELL         = 0,
-  VTKM_VERTEX             = 1,
-  //VTKM_POLY_VERTEX      = 2,
-  VTKM_LINE               = 3,
-  //VTKM_POLY_LINE        = 4,
-  VTKM_TRIANGLE           = 5,
-  //VTKM_TRIANGLE_STRIP   = 6,
-  VTKM_POLYGON            = 7,
-  VTKM_PIXEL              = 8,
-  VTKM_QUAD               = 9,
-  VTKM_TETRA              = 10,
-  VTKM_VOXEL              = 11,
-  VTKM_HEXAHEDRON         = 12,
-  VTKM_WEDGE              = 13,
-  VTKM_PYRAMID            = 14,
+  CELL_SHAPE_EMPTY              = 0,
+  CELL_SHAPE_VERTEX             = 1,
+  //CELL_SHAPE_POLY_VERTEX      = 2,
+  CELL_SHAPE_LINE               = 3,
+  //CELL_SHAPE_POLY_LINE        = 4,
+  CELL_SHAPE_TRIANGLE           = 5,
+  //CELL_SHAPE_TRIANGLE_STRIP   = 6,
+  CELL_SHAPE_POLYGON            = 7,
+  CELL_SHAPE_PIXEL              = 8,
+  CELL_SHAPE_QUAD               = 9,
+  CELL_SHAPE_TETRA              = 10,
+  CELL_SHAPE_VOXEL              = 11,
+  CELL_SHAPE_HEXAHEDRON         = 12,
+  CELL_SHAPE_WEDGE              = 13,
+  CELL_SHAPE_PYRAMID            = 14,
 
-  VTKM_NUMBER_OF_CELL_TYPES
+  NUMBER_OF_CELL_SHAPES
 };
 
 
 } // namespace vtkm
 
-#endif //vtk_m_CellType_h
+#endif //vtk_m_CellShape_h

@@ -21,7 +21,7 @@
 #ifndef vtk_m_internal_ConnectivityStructuredInternals_h
 #define vtk_m_internal_ConnectivityStructuredInternals_h
 
-#include <vtkm/CellType.h>
+#include <vtkm/CellShape.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
 
@@ -83,7 +83,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::CellType GetCellShape() const {return VTKM_LINE;}
+  vtkm::CellShapeId GetCellShape() const {return CELL_SHAPE_LINE;}
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
@@ -182,7 +182,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::CellType GetCellShape() const { return VTKM_PIXEL; }
+  vtkm::CellShapeId GetCellShape() const { return CELL_SHAPE_PIXEL; }
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
@@ -319,7 +319,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::CellType GetCellShape() const { return VTKM_VOXEL; }
+  vtkm::CellShapeId GetCellShape() const { return CELL_SHAPE_VOXEL; }
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const

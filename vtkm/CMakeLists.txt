@@ -23,7 +23,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(headers
   BinaryPredicates.h
   BinaryOperators.h
-  CellType.h
+  CellShape.h
   Extent.h
   ListTag.h
   Math.h

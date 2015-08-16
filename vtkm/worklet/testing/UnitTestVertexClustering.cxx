@@ -91,7 +91,7 @@ vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &dataSet,
     vtkm::cont::CellSetExplicit<> newCellSet("cells", 0);
 
     newCellSet.Fill(
-          copyFromImplicit(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(vtkm::VTKM_TRIANGLE, cells)),
+          copyFromImplicit(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(vtkm::CELL_SHAPE_TRIANGLE, cells)),
           copyFromImplicit(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(3, cells)),
           copyFromVec(output_pointId3Array)
           );

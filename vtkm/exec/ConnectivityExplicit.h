@@ -20,7 +20,7 @@
 #ifndef vtk_m_exec_ConnectivityExplicit_h
 #define vtk_m_exec_ConnectivityExplicit_h
 
-#include <vtkm/CellType.h>
+#include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/exec/internal/VecFromPortal.h>
@@ -67,10 +67,10 @@ public:
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::CellType GetCellShape(vtkm::Id index) const
+  vtkm::CellShapeId GetCellShape(vtkm::Id index) const
   {
     // Likewise, should Shapes be vtkm::Id or something smaller?
-    return static_cast<vtkm::CellType>(this->Shapes.Get(index));
+    return static_cast<vtkm::CellShapeId>(this->Shapes.Get(index));
   }
 
   typedef vtkm::exec::internal::VecFromPortal<ConnectivityPortalType>

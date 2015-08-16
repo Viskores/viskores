@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/CellType.h>
+#include <vtkm/CellShape.h>
 
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
@@ -95,8 +95,9 @@ TwoDimRegularTest()
   {
     VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(cellIndex) == 4,
                      "Incorrect number of cell indices");
-    vtkm::CellType shape = cellSet.GetCellShape();
-    VTKM_TEST_ASSERT(shape == vtkm::VTKM_PIXEL, "Incorrect element type.");
+    vtkm::CellShapeId shape = cellSet.GetCellShape();
+    VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_PIXEL,
+                     "Incorrect element type.");
   }
 
   vtkm::exec::ConnectivityStructured<
@@ -202,13 +203,14 @@ ThreeDimRegularTest()
               << std::endl << "    " << error.GetMessage() << std::endl;
   }
 
-  vtkm::Id numCells = cellSet.GetNumberOfCells();
+    vtkm::Id numCells = cellSet.GetNumberOfCells();
   for (vtkm::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
   {
     VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(cellIndex) == 8,
                      "Incorrect number of cell indices");
-    vtkm::CellType shape = cellSet.GetCellShape();
-    VTKM_TEST_ASSERT(shape == vtkm::VTKM_VOXEL, "Incorrect element type.");
+    vtkm::CellShapeId shape = cellSet.GetCellShape();
+    VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_VOXEL,
+                     "Incorrect element type.");
   }
 
   //Test regular connectivity.

@@ -20,6 +20,7 @@
 #ifndef vtk_m_cont_CellSetExplicit_h
 #define vtk_m_cont_CellSetExplicit_h
 
+#include <vtkm/CellShape.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/internal/ConnectivityExplicitInternals.h>
@@ -124,7 +125,7 @@ public:
 
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_CONT_EXPORT
-  void AddCell(vtkm::CellType cellType,
+  void AddCell(vtkm::CellShapeId cellType,
                int numVertices,
                const vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
