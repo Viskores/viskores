@@ -45,10 +45,10 @@ public:
   PointCoordinatesUniform() {  }
 
   VTKM_CONT_EXPORT
-  PointCoordinatesUniform(const vtkm::Extent3 &extent,
+  PointCoordinatesUniform(const vtkm::Id3 &dimensions,
                           const ValueType &origin,
                           const ValueType &spacing)
-    : Array(extent, origin, spacing)
+    : Array(dimensions, origin, spacing)
   {  }
 
   /// In this \c CastAndCall, both \c TypeList and \c StorageList are

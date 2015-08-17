@@ -31,21 +31,20 @@
 
 namespace {
 
-const vtkm::Extent3 EXTENT = vtkm::Extent3(vtkm::Id3(0,0,0), vtkm::Id3(9,9,9));
+const vtkm::Id3 DIMENSIONS = vtkm::Id3(9,9,9);
 const vtkm::Vec<vtkm::FloatDefault,3> ORIGIN =
     vtkm::Vec<vtkm::FloatDefault,3>(0, 0, 0);
 const vtkm::Vec<vtkm::FloatDefault,3> SPACING =
     vtkm::Vec<vtkm::FloatDefault,3>(1, 1, 1);
 
-const vtkm::Id3 DIMENSION = vtkm::ExtentPointDimensions(EXTENT);
-const vtkm::Id ARRAY_SIZE = DIMENSION[0]*DIMENSION[1]*DIMENSION[2];
+const vtkm::Id ARRAY_SIZE = DIMENSIONS[0]*DIMENSIONS[1]*DIMENSIONS[2];
 
 vtkm::Vec<vtkm::FloatDefault,3> ExpectedCoordinates(vtkm::Id index)
 {
-  vtkm::Id3 index3d = vtkm::ExtentPointFlatIndexToTopologyIndex(index, EXTENT);
-  return vtkm::make_Vec(vtkm::FloatDefault(index3d[0]),
-                        vtkm::FloatDefault(index3d[1]),
-                        vtkm::FloatDefault(index3d[2]));
+  return vtkm::make_Vec(
+        vtkm::FloatDefault(index%DIMENSIONS[0]),
+        vtkm::FloatDefault((index/DIMENSIONS[0])%DIMENSIONS[1]),
+        vtkm::FloatDefault(index/(DIMENSIONS[0]*DIMENSIONS[1])));
 }
 
 int g_CheckArrayInvocations;
@@ -178,7 +177,7 @@ void TryUniformPointCoordinates()
 
   vtkm::cont::DynamicPointCoordinates pointCoordinates =
       vtkm::cont::DynamicPointCoordinates(
-        vtkm::cont::PointCoordinatesUniform(EXTENT, ORIGIN, SPACING));
+        vtkm::cont::PointCoordinatesUniform(DIMENSIONS, ORIGIN, SPACING));
 
   pointCoordinates.CastAndCall(CheckArray());
 
