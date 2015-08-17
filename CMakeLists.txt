@@ -30,12 +30,23 @@ set(VTKm_INSTALL_INCLUDE_DIR "include")
 set(VTKm_INSTALL_CONFIG_DIR "include")
 set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm/cmake")
 
-set(VTKm_REQUIRED_BOOST_VERSION 1.48.0)
+set(VTKm_REQUIRED_BOOST_VERSION "1.48")
 
 # include some vtkm-specific cmake code.
 include(CMake/VTKmMacros.cmake)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_SOURCE_DIR}/CMake)
+
+#-----------------------------------------------------------------------------
+# List of Boost features used:
+# * Smart Ptr
+# * Meta programming language
+# We check for boost first, as the device configuration code requires boost
+# to be found
+find_package(BoostHeaders ${VTKm_REQUIRED_BOOST_VERSION} REQUIRED)
+if(NOT Boost_FOUND)
+  message(FATAL_ERROR "Please specify where to find boost headers (${VTKm_REQUIRED_BOOST_VERSION}+)" )
+endif()
 
 #-----------------------------------------------------------------------------
 # Check for Cxx11 support.
@@ -145,11 +156,6 @@ vtkm_install_headers(
 unset(VTKM_USE_DOUBLE_PRECISION)
 unset(VTKM_USE_64BIT_IDS)
 
-#-----------------------------------------------------------------------------
-# List of Boost features used:
-# * Smart Ptr
-# * Meta programming language
-find_package(BoostHeaders ${VTKm_REQUIRED_BOOST_VERSION} REQUIRED)
 
 find_package(Pyexpander)
 
