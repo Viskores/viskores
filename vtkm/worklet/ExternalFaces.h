@@ -24,14 +24,14 @@
 #include <vtkm/CellType.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/ArrayHandleImplicit.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/Field.h>
-#include <vtkm/cont/ExplicitConnectivity.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleImplicit.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Field.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
