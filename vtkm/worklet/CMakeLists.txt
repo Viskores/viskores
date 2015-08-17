@@ -23,11 +23,11 @@ set(headers
   WorkletMapField.h
   DispatcherMapTopology.h
   WorkletMapTopology.h
+  AverageByKey.h
   CellAverage.h
+  ExternalFaces.h
   PointElevation.h
   VertexClustering.h
-  AverageByKey.h
-  ExternalFaces.h
   )
 
 #-----------------------------------------------------------------------------
