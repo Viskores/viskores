@@ -54,8 +54,10 @@ TwoDimRegularTest()
 
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1,
                    "Incorrect number of cell sets");
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 4,
+  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 2,
                    "Incorrect number of fields");
+  VTKM_TEST_ASSERT(dataSet.GetNumberOfCoordinateSystems() == 1,
+                   "Incorrect number of coordinate systems");
   VTKM_TEST_ASSERT(cellSet.GetNumberOfPoints() == 6,
                    "Incorrect number of points");
   VTKM_TEST_ASSERT(cellSet.GetNumberOfCells() == 2,
@@ -68,7 +70,7 @@ TwoDimRegularTest()
 
   try
   {
-    //const vtkm::cont::Field &f2 = 
+    //const vtkm::cont::Field &f2 =
     dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
   }
   catch (...)
@@ -78,7 +80,7 @@ TwoDimRegularTest()
 
   try
   {
-    //const vtkm::cont::Field &f3 = 
+    //const vtkm::cont::Field &f3 =
     dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
     VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
   }
@@ -161,8 +163,11 @@ ThreeDimRegularTest()
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1,
                    "Incorrect number of cell sets");
 
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 5,
+  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 2,
                    "Incorrect number of fields");
+
+  VTKM_TEST_ASSERT(dataSet.GetNumberOfCoordinateSystems() == 1,
+                   "Incorrect number of coordinate systems");
 
   VTKM_TEST_ASSERT(cellSet.GetNumberOfPoints() == 18,
                    "Incorrect number of points");
@@ -177,7 +182,7 @@ ThreeDimRegularTest()
 
   try
   {
-    //const vtkm::cont::Field &f2 = 
+    //const vtkm::cont::Field &f2 =
     dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
   }
   catch (...)
@@ -187,7 +192,7 @@ ThreeDimRegularTest()
 
   try
   {
-    //const vtkm::cont::Field &f3 = 
+    //const vtkm::cont::Field &f3 =
     dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
     VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
   }

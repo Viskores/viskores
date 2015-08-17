@@ -53,9 +53,10 @@ public:
   ArrayHandleUniformPointCoordinates() : Superclass() {  }
 
   VTKM_CONT_EXPORT
-  ArrayHandleUniformPointCoordinates(vtkm::Id3 dimensions,
-                                     ValueType origin,
-                                     ValueType spacing)
+  ArrayHandleUniformPointCoordinates(
+      vtkm::Id3 dimensions,
+      ValueType origin = ValueType(0.0f, 0.0f, 0.0f),
+      ValueType spacing = ValueType(1.0f, 1.0f, 1.0f))
     : Superclass(
         StorageType(vtkm::internal::ArrayPortalUniformPointCoordinates(
                       dimensions, origin, spacing)))

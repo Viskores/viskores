@@ -217,7 +217,7 @@ public:
   Field(std::string name,
         vtkm::IdComponent order,
         AssociationEnum association,
-        vtkm::cont::DynamicArrayHandle &data)
+        const vtkm::cont::DynamicArrayHandle &data)
     : Name(name),
       Order(order),
       Association(association),
@@ -236,7 +236,7 @@ public:
   Field(std::string name,
         vtkm::IdComponent order,
         AssociationEnum association,
-        ArrayHandle<T, Storage> &data)
+        const ArrayHandle<T, Storage> &data)
     : Name(name),
       Order(order),
       Association(association),

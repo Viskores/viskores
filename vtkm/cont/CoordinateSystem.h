@@ -20,70 +20,48 @@
 #ifndef vtk_m_cont_CoordinateSystem_h
 #define vtk_m_cont_CoordinateSystem_h
 
-#include <vtkm/Types.h>
-#include <vector>
-#include <string>
-#include <ostream>
+#include <vtkm/cont/Field.h>
 
 namespace vtkm {
 namespace cont {
 
-class CoordinateSystem
+class CoordinateSystem : public vtkm::cont::Field
 {
 public:
-  struct CoordinateAxis
-  {
-    std::string       FieldName;
-    vtkm::IdComponent FieldComponent;
-    VTKM_CONT_EXPORT
-    CoordinateAxis(const std::string &name,
-                   vtkm::IdComponent componentIndex = 0)
-      : FieldName(name), FieldComponent(componentIndex)
-    {
-    }
-  };
+  VTKM_CONT_EXPORT
+  CoordinateSystem(std::string name,
+                   vtkm::IdComponent order,
+                   const vtkm::cont::DynamicArrayHandle &data)
+    : Field(name, order, ASSOC_POINTS, data) {  }
+
+  template<typename T, typename Storage>
+  VTKM_CONT_EXPORT
+  CoordinateSystem(std::string name,
+                   vtkm::IdComponent order,
+                   const ArrayHandle<T, Storage> &data)
+    : Field(name, order, ASSOC_POINTS, data) {  }
+
+  template<typename T>
+  VTKM_CONT_EXPORT
+  CoordinateSystem(std::string name,
+                   vtkm::IdComponent order,
+                   const std::vector<T> &data)
+    : Field(name, order, ASSOC_POINTS, data) {  }
+
+  template<typename T>
+  VTKM_CONT_EXPORT
+  CoordinateSystem(std::string name,
+                   vtkm::IdComponent order,
+                   const T *data,
+                   vtkm::Id numberOfValues)
+    : Field(name, order, ASSOC_POINTS, data, numberOfValues) {  }
 
   VTKM_CONT_EXPORT
-  CoordinateSystem(std::string nx,
-                   std::string ny,
-                   std::string nz)
+  virtual void PrintSummary(std::ostream &out) const
   {
-    this->Axes.push_back(CoordinateAxis(nx));
-    this->Axes.push_back(CoordinateAxis(ny));
-    this->Axes.push_back(CoordinateAxis(nz));
+    out << "    Coordinate System ";
+    this->PrintSummary(out);
   }
-
-  VTKM_CONT_EXPORT
-  CoordinateSystem(std::string nx,
-                   std::string ny)
-  {
-    this->Axes.push_back(CoordinateAxis(nx));
-    this->Axes.push_back(CoordinateAxis(ny));
-  }
-
-  VTKM_CONT_EXPORT
-  CoordinateSystem(std::string nx)
-  {
-    this->Axes.push_back(CoordinateAxis(nx));
-  }
-
-  VTKM_CONT_EXPORT
-  void PrintSummary(std::ostream &out) const
-  {
-    out<<"   {";
-    for (std::size_t i = 0; i < this->Axes.size(); i++)
-    {
-      out<<this->Axes[i].FieldName<<"["<<this->Axes[i].FieldComponent<<"]";
-      if (i < this->Axes.size()-1)
-      {
-        out<<", ";
-      }
-    }
-    out<<"}\n";
-  }
-
-  private:
-    std::vector<CoordinateAxis> Axes;
 };
 
 } // namespace cont
