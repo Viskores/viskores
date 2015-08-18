@@ -86,9 +86,11 @@ template<vtkm::IdComponent NumberOfComponents, typename ComputeBoundsClass>
 class SelectNumberOfComponents
 {
 public:
-  static void Execute(vtkm::IdComponent components,
-                      const vtkm::cont::DynamicArrayHandle &data,
-                      ArrayHandle<vtkm::Float64> &bounds)
+  template<typename TypeList, typename StorageList>
+  static void Execute(
+      vtkm::IdComponent components,
+      const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &data,
+      ArrayHandle<vtkm::Float64> &bounds)
   {
     if (components == NumberOfComponents)
     {
@@ -108,7 +110,9 @@ template<typename ComputeBoundsClass>
 class SelectNumberOfComponents<MAX_NUMBER_OF_COMPONENTS, ComputeBoundsClass>
 {
 public:
-  static void Execute(vtkm::Id, const vtkm::cont::DynamicArrayHandle&,
+  template<typename TypeList, typename StorageList>
+  static void Execute(vtkm::IdComponent,
+                      const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &,
                       ArrayHandle<vtkm::Float64>&)
   {
     throw vtkm::cont::ErrorControlInternal(
@@ -117,7 +121,7 @@ public:
 };
 
 
-template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
+template<typename DeviceAdapterTag>
 class ComputeBounds
 {
 private:
@@ -156,18 +160,23 @@ private:
   };
 
 public:
-  template<vtkm::IdComponent NumberOfComponents>
-  static void CallBody(const vtkm::cont::DynamicArrayHandle &data,
+  template<vtkm::IdComponent NumberOfComponents,
+           typename TypeList,
+           typename StorageList>
+  static void CallBody(
+      const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList> &data,
       ArrayHandle<vtkm::Float64> &bounds)
   {
     Body<NumberOfComponents> cb(&bounds);
-    data.CastAndCall(cb, TypeList(), StorageList());
+    data.CastAndCall(cb);
   }
 
-  static void DoCompute(const DynamicArrayHandle &data,
-                        ArrayHandle<vtkm::Float64> &bounds)
+  template<typename TypeList, typename StorageList>
+  static void DoCompute(
+      const DynamicArrayHandleBase<TypeList,StorageList> &data,
+      ArrayHandle<vtkm::Float64> &bounds)
   {
-    typedef ComputeBounds<DeviceAdapterTag, TypeList, StorageList> SelfType;
+    typedef ComputeBounds<DeviceAdapterTag> SelfType;
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
     vtkm::IdComponent numberOfComponents = data.GetNumberOfComponents();
@@ -186,7 +195,8 @@ public:
         CallBody<4>(data, bounds);
         break;
       default:
-        SelectNumberOfComponents<5, SelfType>::Execute(numberOfComponents, data,
+        SelectNumberOfComponents<5, SelfType>::Execute(numberOfComponents,
+                                                       data,
                                                        bounds);
         break;
       }
@@ -534,8 +544,9 @@ public:
   {
     if (this->ModifiedFlag)
     {
-      internal::ComputeBounds<DeviceAdapterTag, TypeList, StorageList>::DoCompute(
-          this->Data, this->Bounds);
+      internal::ComputeBounds<DeviceAdapterTag>::DoCompute(
+          this->Data.ResetTypeList(TypeList()).ResetStorageList(StorageList()),
+          this->Bounds);
       this->ModifiedFlag = false;
     }
 
