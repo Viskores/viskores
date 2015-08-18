@@ -20,6 +20,16 @@
 #ifndef vtk_m_cont_testing_TestingArrayHandles_h
 #define vtk_m_cont_testing_TestingArrayHandles_h
 
+#ifdef VTKM_CUDA
+#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
+#include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
+#endif
+
+#include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
+#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
+#include <vtkm/cont/internal/ArrayManagerExecutionSerial.h>
+#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
+
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/TypeTraits.h>
 
@@ -36,6 +46,61 @@ namespace testing {
 
 namespace array_handle_testing
 {
+  template<typename T, typename DeviceAdapterTag>
+  VTKM_CONT_EXPORT
+  void UseDifferentAdapter(const vtkm::cont::ArrayHandle<T> &handle, 
+                                              T *array, DeviceAdapterTag)
+  {
+    std::stringstream message;
+    message << "Test called CopyInto using the same device adapter." << std::endl
+            << "Expected to be called with a different device adapter. " << std::endl;
+    VTKM_TEST_FAIL(message.str().c_str());
+  }
+#ifdef VTKM_CUDA
+  template<typename T>
+  VTKM_CONT_EXPORT
+  void UseDifferentAdapter(const vtkm::cont::ArrayHandle<T> &handle, 
+                                T *array, vtkm::cont::DeviceAdapterTagCuda)
+  {
+    handle.CopyInto(array, vtkm::cont::DeviceAdapterTagSerial());
+  }
+#endif
+  template<typename T>
+  VTKM_CONT_EXPORT
+  void UseDifferentAdapter(const vtkm::cont::ArrayHandle<T> &handle, 
+                              T *array, vtkm::cont::DeviceAdapterTagSerial)
+  {
+    handle.CopyInto(array, vtkm::cont::DeviceAdapterTagTBB());
+  }
+  template<typename T>
+  VTKM_CONT_EXPORT
+  void UseDifferentAdapter(const vtkm::cont::ArrayHandle<T> &handle, 
+                                T *array, vtkm::cont::DeviceAdapterTagTBB)
+  {
+    handle.CopyInto(array, vtkm::cont::DeviceAdapterTagSerial());
+  }
+
+  template<class IteratorType, typename T>
+  void CheckValues(IteratorType begin, IteratorType end, T)
+  {
+
+    vtkm::Id index = 0;
+    for (IteratorType iter = begin; iter != end; iter++)
+    {
+      T expectedValue = TestValue(index, T());
+      if (!test_equal(*iter, expectedValue))
+      {
+        std::stringstream message;
+        message << "Got unexpected value in array." << std::endl
+                << "Expected: " << expectedValue
+                << ", Found: " << *iter << std::endl;
+        VTKM_TEST_FAIL(message.str().c_str());
+      }
+
+      index++;
+    }
+  }
+
   template<typename T>
   void CheckArray(const vtkm::cont::ArrayHandle<T> &handle)
   {
@@ -184,6 +249,41 @@ private:
 
         //we can't verify output contents as those aren't fetched, we
         //can just make sure the allocation didn't throw an exception
+      }
+
+      std::cout << "Check CopyInto from control array" << std::endl;
+      { //Release the execution resources so that data is only
+        //in the control environment
+        arrayHandle.ReleaseResourcesExecution();
+
+        //Copy data from handle into iterator
+        T array[ARRAY_SIZE];
+        arrayHandle.CopyInto(array, DeviceAdapterTag());
+        array_handle_testing::CheckValues(array, array+ARRAY_SIZE, T());
+      }
+
+      std::cout << "Check CopyInto from execution array" << std::endl;
+      { //Copy the data to the execution environment  
+        vtkm::cont::ArrayHandle<T> result;
+        DispatcherPassThrough().Invoke(arrayHandle, result);
+
+        //Copy data from handle into iterator
+        T array[ARRAY_SIZE];
+        result.CopyInto(array, DeviceAdapterTag());
+        array_handle_testing::CheckValues(array, array+ARRAY_SIZE, T());
+      }
+
+      std::cout << "Check using different device adapter" << std::endl;
+      { //Copy the data to the execution environment  
+        vtkm::cont::ArrayHandle<T> result;
+        DispatcherPassThrough().Invoke(arrayHandle, result);
+
+        //CopyInto allows you to copy the data even
+        //if you request it from a different device adapter
+        T array[ARRAY_SIZE];
+        array_handle_testing::UseDifferentAdapter(result, 
+                                              array, DeviceAdapterTag());
+        array_handle_testing::CheckValues(array, array+ARRAY_SIZE, T());
       }
 
       { //as output with a length larger than the memory provided by the user
