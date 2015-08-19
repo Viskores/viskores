@@ -246,11 +246,11 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
+  const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
   GetShapesArray() const { return this->PointToCell.Shapes; }
 
   VTKM_CONT_EXPORT
-  vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> &
+  const vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> &
   GetNumIndicesArray() const { return this->PointToCell.NumIndices; }
 
   VTKM_CONT_EXPORT
