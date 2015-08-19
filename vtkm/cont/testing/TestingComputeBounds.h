@@ -21,6 +21,7 @@
 #define vtk_m_cont_testing_TestingComputeBounds_h
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -123,6 +124,26 @@ private:
     }
   }
 
+  static void TestUniformCoordinateField()
+  {
+    vtkm::cont::CoordinateSystem field(
+          "TestField",
+          1,
+          vtkm::Id3(10, 20, 5),
+          vtkm::Vec<vtkm::FloatDefault,3>(0.0f,-5.0f,4.0f),
+          vtkm::Vec<vtkm::FloatDefault,3>(1.0f,0.5f,2.0f));
+
+    vtkm::Float64 result[6];
+    field.GetBounds(result, DeviceAdapterTag());
+
+    VTKM_TEST_ASSERT(test_equal(result[0], 0.0), "Min x wrong.");
+    VTKM_TEST_ASSERT(test_equal(result[1], 9.0), "Max x wrong.");
+    VTKM_TEST_ASSERT(test_equal(result[2], -5.0), "Min y wrong.");
+    VTKM_TEST_ASSERT(test_equal(result[3], 4.5), "Max y wrong.");
+    VTKM_TEST_ASSERT(test_equal(result[4], 4.0), "Min z wrong.");
+    VTKM_TEST_ASSERT(test_equal(result[5], 12.0), "Max z wrong.");
+  }
+
   struct TestAll
   {
     VTKM_CONT_EXPORT void operator()() const
@@ -153,6 +174,9 @@ private:
       TestingComputeBounds::TestVecField<vtkm::Float32, 9>();
       std::cout << "Testing (Float64, 9)..." << std::endl;
       TestingComputeBounds::TestVecField<vtkm::Float64, 9>();
+
+      std::cout << "Testing UniformPointCoords..." << std::endl;
+      TestingComputeBounds::TestUniformCoordinateField();
     }
   };
 

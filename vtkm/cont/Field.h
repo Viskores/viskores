@@ -26,6 +26,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 
@@ -155,8 +156,35 @@ private:
       }
     }
 
+    // Special implementation for regular point coordinates, which are easy
+    // to determine.
+    void operator()(vtkm::cont::ArrayHandle<
+                        vtkm::Vec<vtkm::FloatDefault,3>,
+                        vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>
+                      array)
+    {
+      vtkm::internal::ArrayPortalUniformPointCoordinates portal =
+          array.GetPortalConstControl();
+
+      // In this portal we know that the min value is the first entry and the
+      // max value is the last entry.
+      vtkm::Vec<vtkm::FloatDefault,3> minimum = portal.Get(0);
+      vtkm::Vec<vtkm::FloatDefault,3> maximum =
+          portal.Get(portal.GetNumberOfValues()-1);
+
+      this->Bounds->Allocate(6);
+      vtkm::cont::ArrayHandle<vtkm::Float64>::PortalControl outPortal =
+          this->Bounds->GetPortalControl();
+      outPortal.Set(0, minimum[0]);
+      outPortal.Set(1, maximum[0]);
+      outPortal.Set(2, minimum[1]);
+      outPortal.Set(3, maximum[1]);
+      outPortal.Set(4, minimum[2]);
+      outPortal.Set(5, maximum[2]);
+    }
+
   private:
-    ArrayHandle<vtkm::Float64> *Bounds;
+    vtkm::cont::ArrayHandle<vtkm::Float64> *Bounds;
   };
 
 public:
