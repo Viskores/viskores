@@ -42,36 +42,42 @@ struct CellShape : vtkm::exec::arg::ExecutionSignatureTagBase
   typedef vtkm::exec::arg::AspectTagCellShape AspectTag;
 };
 
-template<typename FetchTag, typename Invocation>
-struct Fetch<FetchTag, vtkm::exec::arg::AspectTagCellShape, Invocation, 1>
+template<typename FetchTag,
+         typename Invocation,
+         vtkm::IdComponent ParameterIndex>
+struct Fetch<
+    FetchTag, vtkm::exec::arg::AspectTagCellShape, Invocation, ParameterIndex>
 {
-  typedef vtkm::Id ValueType;
+  // The parameter for the input domain is stored in the Invocation. (It is
+  // also in the worklet, but it is safer to get it from the Invocation
+  // in case some other dispatch operation had to modify it.)
+  static const vtkm::IdComponent InputDomainIndex =
+      Invocation::InputDomainIndex;
+
+  // ParameterInterface (from Invocation) is a FunctionInterface type
+  // containing types for all objects passed to the Invoke method (with some
+  // dynamic casting performed so objects like DynamicArrayHandle get cast to
+  // ArrayHandle) and then transferred to the execution environment. This
+  // interface contains a set of exec objects.
+  typedef typename Invocation::ParameterInterface ParameterInterface;
+
+  // This is the type for the input domain (derived from the last two things we
+  // got from the Invocation). Assuming the input domain is set up correctly,
+  // this should be one of the vtkm::exec::Connectivity* classes.
+  typedef typename ParameterInterface::
+      template ParameterType<InputDomainIndex>::type ConnectivityType;
+
+  typedef typename ConnectivityType::CellShapeTag ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
   {
-    // The parameter for the input domain is stored in the Invocation. (It is
-    // also in the worklet, but it is safer to get it from the Invocation
-    // in case some other dispatch operation had to modify it.)
-    const vtkm::IdComponent InputDomainIndex = Invocation::InputDomainIndex;
-
-    // ParameterInterface (from Invocation) is a FunctionInterface type
-    // containing types for all objects passed to the Invoke method (with
-    // some dynamic casting performed so objects like DynamicArrayHandle get
-    // cast to ArrayHandle).
-    typedef typename Invocation::ParameterInterface ParameterInterface;
-
-    // This is the type for the input domain (derived from the last two things
-    // we got from the Invocation).
-    typedef typename ParameterInterface::
-        template ParameterType<InputDomainIndex>::type TopologyType;
-
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
-    TopologyType topology =
+    ConnectivityType connectivity =
         invocation.Parameters.template GetParameter<InputDomainIndex>();
 
-    return topology.GetCellShape(index);
+    return connectivity.GetCellShape(index);
   }
 
   VTKM_EXEC_EXPORT

@@ -85,6 +85,8 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetCellShape() const {return CELL_SHAPE_LINE;}
 
+  typedef vtkm::CellShapeTagLine CellShapeTag;
+
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
   {
@@ -183,6 +185,8 @@ public:
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetCellShape() const { return CELL_SHAPE_PIXEL; }
+
+  typedef vtkm::CellShapeTagPixel CellShapeTag;
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
@@ -320,6 +324,8 @@ public:
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetCellShape() const { return CELL_SHAPE_VOXEL; }
+
+  typedef vtkm::CellShapeTagVoxel CellShapeTag;
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const

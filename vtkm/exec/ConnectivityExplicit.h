@@ -66,11 +66,13 @@ public:
     return static_cast<vtkm::IdComponent>(this->NumIndices.Get(index));
   }
 
+  typedef vtkm::CellShapeTagGeneric CellShapeTag;
+
   VTKM_EXEC_EXPORT
-  vtkm::IdComponent GetCellShape(vtkm::Id index) const
+  CellShapeTag GetCellShape(vtkm::Id index) const
   {
     // Likewise, should Shapes be vtkm::Id or something smaller?
-    return static_cast<vtkm::IdComponent>(this->Shapes.Get(index));
+    return CellShapeTag(static_cast<vtkm::IdComponent>(this->Shapes.Get(index)));
   }
 
   typedef vtkm::exec::internal::VecFromPortal<ConnectivityPortalType>
