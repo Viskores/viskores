@@ -29,12 +29,12 @@ namespace {
 vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
 {
 
-      vtkm::cont::CellSetExplicit<> &cs =
+      vtkm::cont::CellSetExplicit<> &cellset =
           ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
-      vtkm::cont::ArrayHandle<vtkm::Id> shapes = cs.GetNodeToCellConnectivity().GetShapesArray();
-      vtkm::cont::ArrayHandle<vtkm::Id> numIndices = cs.GetNodeToCellConnectivity().GetNumIndicesArray();
-      vtkm::cont::ArrayHandle<vtkm::Id> conn = cs.GetNodeToCellConnectivity().GetConnectivityArray();
+      vtkm::cont::ArrayHandle<vtkm::Id> shapes = cellset.GetShapesArray();
+      vtkm::cont::ArrayHandle<vtkm::Id> numIndices = cellset.GetNumIndicesArray();
+      vtkm::cont::ArrayHandle<vtkm::Id> conn = cellset.GetConnectivityArray();
 
       vtkm::cont::ArrayHandle<vtkm::Id> output_shapes;
       vtkm::cont::ArrayHandle<vtkm::Id> output_numIndices;
@@ -57,7 +57,7 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
 
       vtkm::cont::CellSetExplicit<> new_cs("cells",
                   static_cast<vtkm::IdComponent>(output_shapes.GetNumberOfValues()));
-      new_cs.GetNodeToCellConnectivity().Fill(output_shapes, output_numIndices, output_conn);
+      new_cs.Fill(output_shapes, output_numIndices, output_conn);
       new_ds.AddCellSet(new_cs);
 
       return new_ds;
@@ -100,7 +100,7 @@ void TestExternalFaces()
             conn.GetPortalControl().Set(index++, static_cast<vtkm::Id>(cellVerts[j][k]));
       }
 
-      cs.GetNodeToCellConnectivity().Fill(shapes, numIndices, conn);
+      cs.Fill(shapes, numIndices, conn);
 
       //Add the VTK-m cell set
       ds.AddCellSet(cs);
@@ -110,7 +110,7 @@ void TestExternalFaces()
       vtkm::cont::CellSetExplicit<> &new_cs =
           new_ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
-      vtkm::Id numExtFaces_out = new_cs.GetNumCells();
+      vtkm::Id numExtFaces_out = new_cs.GetNumberOfCells();
 
       //Validate the number of external faces (output) returned by the worklet
       const vtkm::Id numExtFaces_actual = 12;

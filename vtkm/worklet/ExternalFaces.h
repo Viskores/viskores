@@ -39,11 +39,6 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/exec/Assert.h>
-#include <vtkm/exec/arg/TopologyIdSet.h>
-#include <vtkm/exec/arg/TopologyIdCount.h>
-#include <vtkm/exec/arg/TopologyElementType.h>
-
 #define __VTKM_EXTERNAL_FACES_BENCHMARK
 
 namespace vtkm
@@ -175,14 +170,11 @@ struct ExternalFaces
   static const int LEN_IDS = 4;
 
   public:
-    typedef void ControlSignature(FieldDestIn<AllTypes> localFaceIds,
+    typedef void ControlSignature(FieldInTo<AllTypes> localFaceIds,
                                   TopologyIn<LEN_IDS> topology,
-                                  FieldDestOut<VecCommon> faceVertices
+                                  FieldOut<VecCommon> faceVertices
                                   );
-    typedef void ExecutionSignature(_1, _3,
-                                    vtkm::exec::arg::TopologyIdCount,
-                                    vtkm::exec::arg::TopologyElementType,
-                                    vtkm::exec::arg::TopologyIdSet);
+    typedef void ExecutionSignature(_1, _3, FromCount, CellShape, FromIndices);
     typedef _2 InputDomain;
 
     VTKM_CONT_EXPORT
@@ -335,7 +327,7 @@ public:
     IdPermutationType2 faceConn(connIndices, conn);
 
     PermutedCellSetExplicit permutedCellSet;
-    permutedCellSet.GetNodeToCellConnectivity().Fill(pt1, pt2, faceConn);
+    permutedCellSet.Fill(pt1, pt2, faceConn);
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3> > faceVertices;
     vtkm::worklet::DispatcherMapTopology<GetFace> faceHashDispatcher;
 
