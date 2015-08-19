@@ -55,8 +55,10 @@ enum CellShapeIdEnum
 };
 
 // If you wish to add cell shapes to this list, in addition to adding an index
-// to the enum above, you need to define an associated tag with
+// to the enum above, you at a minimum need to define an associated tag with
 // VTKM_DEFINE_CELL_TAG and add a condition to the vtkmGenericCellShapeMacro.
+// There are also many other cell-specific features that code might expect such
+// as \c CellTraits and interpolations.
 
 namespace internal {
 

@@ -24,6 +24,7 @@ set(headers
   BinaryPredicates.h
   BinaryOperators.h
   CellShape.h
+  CellTraits.h
   Extent.h
   ListTag.h
   Math.h
