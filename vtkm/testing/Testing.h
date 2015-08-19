@@ -277,10 +277,15 @@ bool test_equal(VectorType1 vector1,
 {
   typedef typename vtkm::VecTraits<VectorType1> Traits1;
   typedef typename vtkm::VecTraits<VectorType2> Traits2;
-  BOOST_STATIC_ASSERT(Traits1::NUM_COMPONENTS == Traits2::NUM_COMPONENTS);
+
+  if (Traits1::GetNumberOfComponents(vector1) !=
+      Traits2::GetNumberOfComponents(vector2))
+  {
+    return false;
+  }
 
   for (vtkm::IdComponent component = 0;
-       component < Traits1::NUM_COMPONENTS;
+       component < Traits1::GetNumberOfComponents(vector1);
        component++)
   {
     vtkm::Float64 value1 =

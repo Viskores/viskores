@@ -20,9 +20,10 @@
 #ifndef vtk_m_exec_ConnectivityExplicit_h
 #define vtk_m_exec_ConnectivityExplicit_h
 
+#include <vtkm/CellType.h>
 #include <vtkm/Types.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/ArrayHandle.h>
+
+#include <vtkm/exec/internal/VecFromPortal.h>
 
 namespace vtkm {
 namespace exec {
@@ -51,38 +52,48 @@ public:
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Id GetNumberOfElements()
+  vtkm::Id GetNumberOfElements() const
   {
-      return Shapes.GetNumberOfValues();
+    return this->Shapes.GetNumberOfValues();
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Id GetNumberOfIndices(vtkm::Id index)
+  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const
   {
-      return NumIndices.Get(index);
+    // Should the NumIndices array be typed as vtkm::IdComponent instead of
+    // vtkm::Id? (NumIndices is really defined in
+    // vtkm::cont::internal::ConnectivityExplicitInternals.)
+    return static_cast<vtkm::IdComponent>(this->NumIndices.Get(index));
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Id GetCellShape(vtkm::Id index)
+  vtkm::CellType GetCellShape(vtkm::Id index) const
   {
-      return Shapes.Get(index);
+    // Likewise, should Shapes be vtkm::Id or something smaller?
+    return static_cast<vtkm::CellType>(this->Shapes.Get(index));
   }
 
-  template <vtkm::IdComponent ItemTupleLength>
+  typedef vtkm::exec::internal::VecFromPortal<ConnectivityPortalType>
+      IndicesType;
+
+  /// Returns a Vec-like object containing the indices for the given index.
+  /// The object returned is not an actual array, but rather an object that
+  /// loads the indices lazily out of the connectivity array. This prevents
+  /// us from having to know the number of indices at compile time.
+  ///
   VTKM_EXEC_EXPORT
-  void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+  IndicesType GetIndices(vtkm::Id index) const
   {
-    vtkm::Id n = GetNumberOfIndices(index);
-    vtkm::Id start = IndexOffset.Get(index);
-    for (vtkm::IdComponent i=0; i<n && i<ItemTupleLength; i++)
-      ids[i] = Connectivity.Get(start+i);
+    vtkm::Id offset = this->IndexOffset.Get(index);
+    vtkm::IdComponent length = this->GetNumberOfIndices(index);
+    return IndicesType(this->Connectivity, length, offset);
   }
 
 private:
- ShapePortalType Shapes;
- NumIndicesPortalType NumIndices;
- ConnectivityPortalType Connectivity;
- IndexOffsetPortalType IndexOffset;
+  ShapePortalType Shapes;
+  NumIndicesPortalType NumIndices;
+  ConnectivityPortalType Connectivity;
+  IndexOffsetPortalType IndexOffset;
 };
 
 } // namespace exec

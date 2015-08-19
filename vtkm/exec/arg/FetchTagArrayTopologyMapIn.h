@@ -22,11 +22,8 @@
 
 #include <vtkm/exec/arg/AspectTagDefault.h>
 #include <vtkm/exec/arg/Fetch.h>
-#include <vtkm/exec/TopologyData.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/type_traits.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <vtkm/exec/internal/VecFromPortalPermute.h>
 
 namespace vtkm {
 namespace exec {
@@ -40,6 +37,40 @@ namespace arg {
 ///
 struct FetchTagArrayTopologyMapIn {  };
 
+namespace detail {
+
+// This internal class defines how a TopologyMapIn fetch loads from field data
+// based on the connectivity class and the object holding the field data. The
+// default implementation gets a Vec of indices and an array portal for the
+// field and delivers a VecFromPortalPermute. Specializations could have more
+// efficient implementations. For example, if the connectivity is structured
+// and the field is regular point coordinates, it is much faster to compute the
+// field directly.
+
+template<typename ConnectivityType, typename FieldExecObjectType>
+struct FetchArrayTopologyMapInImplementation
+{
+  // The connectivity classes are expected to have an IndicesType that is
+  // is Vec-like class that will be returned from a GetIndices method.
+  typedef typename ConnectivityType::IndicesType IndexVecType;
+
+  // The FieldExecObjectType is expected to behave like an ArrayPortal.
+  typedef FieldExecObjectType PortalType;
+
+  typedef vtkm::exec::internal::VecFromPortalPermute<
+      IndexVecType,PortalType> ValueType;
+
+  VTKM_EXEC_EXPORT
+  static ValueType Load(vtkm::Id index,
+                        const ConnectivityType &connectivity,
+                        const FieldExecObjectType &field)
+  {
+    return ValueType(connectivity.GetIndices(index), field);
+  }
+};
+
+} // namespace detail
+
 template<typename Invocation, vtkm::IdComponent ParameterIndex>
 struct Fetch<
     vtkm::exec::arg::FetchTagArrayTopologyMapIn,
@@ -47,45 +78,37 @@ struct Fetch<
     Invocation,
     ParameterIndex>
 {
+  // The parameter for the input domain is stored in the Invocation. (It is
+  // also in the worklet, but it is safer to get it from the Invocation
+  // in case some other dispatch operation had to modify it.)
   static const vtkm::IdComponent InputDomainIndex =
       Invocation::InputDomainIndex;
 
-  typedef typename Invocation::ControlInterface::template
-      ParameterType<InputDomainIndex>::type ControlSignatureTag;
+  // Assuming that this fetch is used in a topology map, which is its
+  // intention, InputDomainIndex points to a connectivity object. Thus,
+  // ConnectivityType is one of the vtkm::exec::Connectivity* classes.
+  typedef typename Invocation::ParameterInterface::
+      template ParameterType<InputDomainIndex>::type ConnectivityType;
 
-  static const vtkm::IdComponent ITEM_TUPLE_LENGTH =
-      ControlSignatureTag::ITEM_TUPLE_LENGTH;
-
+  // The execution object associated with this parameter is expected to be
+  // an array portal containing the field values.
   typedef typename Invocation::ParameterInterface::
       template ParameterType<ParameterIndex>::type ExecObjectType;
 
-  typedef boost::remove_const<typename ExecObjectType::ValueType> NonConstType;
-  typedef vtkm::exec::TopologyData<typename NonConstType::type,
-                                   ITEM_TUPLE_LENGTH> ValueType;
+  typedef detail::FetchArrayTopologyMapInImplementation<
+      ConnectivityType,ExecObjectType> Implementation;
+
+  typedef typename Implementation::ValueType ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
   {
-    typedef typename Invocation::ParameterInterface ParameterInterface;
-    typedef typename ParameterInterface::
-        template ParameterType<InputDomainIndex>::type TopologyType;
-    TopologyType topology =
+    const ConnectivityType &connectivity =
         invocation.Parameters.template GetParameter<InputDomainIndex>();
+    const ExecObjectType &field =
+        invocation.Parameters.template GetParameter<ParameterIndex>();
 
-
-    vtkm::IdComponent nids =
-      static_cast<vtkm::IdComponent>(topology.GetNumberOfIndices(index));
-
-    vtkm::Vec<vtkm::Id,ITEM_TUPLE_LENGTH> ids;
-    topology.GetIndices(index,ids);
-
-    ValueType v;
-    for (vtkm::IdComponent i=0; i<nids && i<ITEM_TUPLE_LENGTH; ++i)
-    {
-        v[i] = invocation.Parameters.template GetParameter<ParameterIndex>().
-            Get(ids[i]);
-    }
-    return v;
+    return Implementation::Load(index, connectivity, field);
   }
 
   VTKM_EXEC_EXPORT

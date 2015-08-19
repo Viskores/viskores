@@ -51,7 +51,7 @@ struct FromCount : vtkm::exec::arg::ExecutionSignatureTagBase
 template<typename FetchTag, typename Invocation>
 struct Fetch<FetchTag, vtkm::exec::arg::AspectTagFromCount, Invocation, 1>
 {
-  typedef vtkm::Id ValueType;
+  typedef vtkm::IdComponent ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const

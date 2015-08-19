@@ -83,15 +83,10 @@ public:
 
   /// \brief A control signature tag for input connectivity.
   ///
-  /// This tag takes a template argument that is a type list tag that limits
-  /// the possible value types in the array.
-  ///
-  template< vtkm::IdComponent ItemTupleLength>
   struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagTopologyIn TransportTag;
     typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
-    static const int ITEM_TUPLE_LENGTH = ItemTupleLength;
   };
 
   /// \brief A control signature tag for output fields.

@@ -25,7 +25,6 @@ set(headers
   ExecutionObjectBase.h
   ExecutionWholeArray.h
   FunctorBase.h
-  TopologyData.h
   )
 
 #-----------------------------------------------------------------------------

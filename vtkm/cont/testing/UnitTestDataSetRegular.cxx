@@ -89,10 +89,9 @@ TwoDimRegularTest()
 
 
     vtkm::Id cells[2][4] = {{0,1,3,4}, {1,2,4,5}};
-    vtkm::Vec<vtkm::Id,4> pointIds;
     for (vtkm::Id cellIndex = 0; cellIndex < 2; cellIndex++)
     {
-      pointToCell.GetIndices(cellIndex, pointIds);
+      vtkm::Vec<vtkm::Id,4> pointIds = pointToCell.GetIndices(cellIndex);
       for (vtkm::IdComponent localPointIndex = 0;
            localPointIndex < 4;
            localPointIndex++)
@@ -112,8 +111,8 @@ TwoDimRegularTest()
 
     for (vtkm::Id pointIndex = 0; pointIndex < 6; pointIndex++)
     {
-      vtkm::Vec<vtkm::Id,4> retrievedCellIds;
-      cellToPoint.GetIndices(pointIndex, retrievedCellIds);
+      vtkm::Vec<vtkm::Id,4> retrievedCellIds =
+          cellToPoint.GetIndices(pointIndex);
       for (vtkm::IdComponent cellIndex = 0; cellIndex < 4; cellIndex++)
         VTKM_TEST_ASSERT(
               retrievedCellIds[cellIndex] == expectedCellIds[pointIndex][cellIndex],
@@ -163,8 +162,7 @@ ThreeDimRegularTest()
           vtkm::TopologyElementTagPoint(),
           vtkm::TopologyElementTagCell());
     vtkm::Id expectedPointIds[8] = {0,1,3,4,6,7,9,10};
-    vtkm::Vec<vtkm::Id,8> retrievedPointIds;
-    pointToCell.GetIndices(0, retrievedPointIds);
+    vtkm::Vec<vtkm::Id,8> retrievedPointIds = pointToCell.GetIndices(0);
     for (vtkm::IdComponent localPointIndex = 0;
          localPointIndex < 8;
          localPointIndex++)
@@ -182,11 +180,10 @@ ThreeDimRegularTest()
           vtkm::cont::DeviceAdapterTagSerial(),
           vtkm::TopologyElementTagCell(),
           vtkm::TopologyElementTagPoint());
-    vtkm::Vec<vtkm::Id,8> expectedCellIds;
-    vtkm::Id retrievedCellIds[8] = {0,-1,-1,-1,-1,-1,-1,-1};
-    cellToPoint.GetIndices(0, expectedCellIds);
+    vtkm::Id retrievedCellIds[6] = {0,-1,-1,-1,-1,-1};
+    vtkm::Vec<vtkm::Id,6> expectedCellIds = cellToPoint.GetIndices(0);
     for (vtkm::IdComponent localPointIndex = 0;
-         localPointIndex < 8;
+         localPointIndex < 6;
          localPointIndex++)
     {
       VTKM_TEST_ASSERT(
