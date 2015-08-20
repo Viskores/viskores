@@ -31,6 +31,14 @@ namespace vtkm {
 template<vtkm::IdComponent dimension>
 struct CellTopologicalDimensionsTag { };
 
+/// \brief Tag for cell shapes with a fixed number of points.
+///
+struct CellTraitsTagSizeFixed {  };
+
+/// \brief Tag for cell shapes that can have a variable number of points.
+///
+struct CellTraitsTagSizeVariable {  };
+
 /// \brief Information about a cell based on its tag.
 ///
 /// The templated CellTraits struct provides the basic high level information
@@ -53,6 +61,21 @@ struct CellTraits
   ///
   typedef vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS>
       TopologicalDimensionsTag;
+
+  /// \brief A tag specifying whether the number of points is fixed.
+  ///
+  /// If set to \c CellTraitsTagSizeFixed, then \c NUM_POINTS is set. If set to
+  /// \c CellTraitsTagSizeVariable, then the number of points is not known at
+  /// compile time.
+  ///
+  typedef vtkm::CellTraitsTagSizeFixed IsSizeFixed;
+
+  /// \brief Number of points in the cell.
+  ///
+  /// This is only defined for cell shapes of a fixed number of points (i.e.
+  /// \c IsSizedFixed is set to \c CellTraitsTagSizeFixed.
+  ///
+  static const vtkm::IdComponent NUM_POINTS = 3;
 };
 #else // VTKM_DOXYGEN_ONLY
     ;
@@ -62,29 +85,40 @@ struct CellTraits
 
 // Define traits for every cell type.
 
-#define VTKM_DEFINE_CELL_TRAITS(name, dimensions) \
+#define VTKM_DEFINE_CELL_TRAITS(name, dimensions, numPoints) \
   template<> \
   struct CellTraits<vtkm::CellShapeTag ## name> { \
     const static vtkm::IdComponent TOPOLOGICAL_DIMENSIONS = dimensions; \
     typedef vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS> \
         TopologicalDimensionsTag; \
+    typedef vtkm::CellTraitsTagSizeFixed IsSizeFixed; \
+    static const vtkm::IdComponent NUM_POINTS = numPoints; \
   }
 
-VTKM_DEFINE_CELL_TRAITS(Empty, 0);
-VTKM_DEFINE_CELL_TRAITS(Vertex, 0);
-//VTKM_DEFINE_CELL_TRAITS(PolyVertex, 0);
-VTKM_DEFINE_CELL_TRAITS(Line, 1);
-//VTKM_DEFINE_CELL_TRAITS(PolyLine, 1);
-VTKM_DEFINE_CELL_TRAITS(Triangle, 2);
-//VTKM_DEFINE_CELL_TRAITS(TriangleStrip, 2);
-VTKM_DEFINE_CELL_TRAITS(Polygon, 2);
-VTKM_DEFINE_CELL_TRAITS(Pixel, 2);
-VTKM_DEFINE_CELL_TRAITS(Quad, 2);
-VTKM_DEFINE_CELL_TRAITS(Tetra, 3);
-VTKM_DEFINE_CELL_TRAITS(Voxel, 3);
-VTKM_DEFINE_CELL_TRAITS(Hexahedron, 3);
-VTKM_DEFINE_CELL_TRAITS(Wedge, 3);
-VTKM_DEFINE_CELL_TRAITS(Pyramid, 3);
+#define VTKM_DEFINE_CELL_TRAITS_VARIABLE(name, dimensions) \
+  template<> \
+  struct CellTraits<vtkm::CellShapeTag ## name> { \
+    const static vtkm::IdComponent TOPOLOGICAL_DIMENSIONS = dimensions; \
+    typedef vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS> \
+        TopologicalDimensionsTag; \
+    typedef vtkm::CellTraitsTagSizeVariable IsSizeFixed; \
+  }
+
+VTKM_DEFINE_CELL_TRAITS(Empty, 0, 0);
+VTKM_DEFINE_CELL_TRAITS(Vertex, 0, 1);
+//VTKM_DEFINE_CELL_TRAITS_VARIABLE(PolyVertex, 0);
+VTKM_DEFINE_CELL_TRAITS(Line, 1, 2);
+//VTKM_DEFINE_CELL_TRAITS_VARIABLE(PolyLine, 1);
+VTKM_DEFINE_CELL_TRAITS(Triangle, 2, 3);
+//VTKM_DEFINE_CELL_TRAITS_VARIABLE(TriangleStrip, 2);
+VTKM_DEFINE_CELL_TRAITS_VARIABLE(Polygon, 2);
+VTKM_DEFINE_CELL_TRAITS(Pixel, 2, 4);
+VTKM_DEFINE_CELL_TRAITS(Quad, 2, 4);
+VTKM_DEFINE_CELL_TRAITS(Tetra, 3, 4);
+VTKM_DEFINE_CELL_TRAITS(Voxel, 3, 8);
+VTKM_DEFINE_CELL_TRAITS(Hexahedron, 3, 8);
+VTKM_DEFINE_CELL_TRAITS(Wedge, 3, 6);
+VTKM_DEFINE_CELL_TRAITS(Pyramid, 3, 5);
 
 #undef VTKM_DEFINE_CELL_TRAITS
 

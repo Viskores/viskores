@@ -227,9 +227,10 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagGeneric shape,
 /// Returns the parametric center of the given cell shape with the given number
 /// of points.
 ///
+template<typename CellShapeTag>
 VTKM_EXEC_EXPORT
 vtkm::Vec<vtkm::FloatDefault,3>
-ParametricCoordinatesCenter(vtkm::CellShapeTagGeneric shape,
+ParametricCoordinatesCenter(CellShapeTag shape,
                             vtkm::IdComponent numPoints,
                             const vtkm::exec::FunctorBase &worklet)
 {
@@ -348,8 +349,8 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagPolygon,
   const ParametricCoordType angle =
       static_cast<ParametricCoordType>(pointIndex*2*vtkm::Pi()/numPoints);
 
-  pcoords[0] = 0.5*(vtkm::Cos(angle)+1);
-  pcoords[1] = 0.5*(vtkm::Sin(angle)+1);
+  pcoords[0] = 0.5f*(vtkm::Cos(angle)+1);
+  pcoords[1] = 0.5f*(vtkm::Sin(angle)+1);
   pcoords[2] = 0;
 }
 
@@ -540,9 +541,10 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagGeneric shape,
 /// Returns the parametric coordinate of a cell point of the given shape with
 /// the given number of points.
 ///
+template<typename CellShapeTag>
 VTKM_EXEC_EXPORT
 vtkm::Vec<vtkm::FloatDefault,3>
-ParametricCoordinatesPoint(vtkm::CellShapeTagGeneric shape,
+ParametricCoordinatesPoint(CellShapeTag shape,
                            vtkm::IdComponent numPoints,
                            vtkm::IdComponent pointIndex,
                            const vtkm::exec::FunctorBase &worklet)
