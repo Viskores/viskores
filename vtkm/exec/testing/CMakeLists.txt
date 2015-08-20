@@ -21,6 +21,7 @@
 ##=============================================================================
 
 set(unit_tests
+  UnitTestDerivative.cxx
   UnitTestInterpolate.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests})
