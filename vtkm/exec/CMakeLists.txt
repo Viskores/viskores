@@ -26,6 +26,7 @@ set(headers
   ExecutionWholeArray.h
   FunctorBase.h
   Interpolate.h
+  ParametricCoordinates.h
   )
 
 #-----------------------------------------------------------------------------

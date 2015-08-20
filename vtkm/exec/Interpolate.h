@@ -24,6 +24,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/exec/Assert.h>
+#include <vtkm/exec/FunctorBase.h>
 
 namespace vtkm {
 namespace exec {
@@ -34,14 +35,13 @@ namespace exec {
 /// of a point within the cell, interpolates the field to that point.
 ///
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &pointFieldValues,
                 const vtkm::Vec<ParametricCoordType,3> parametricCoords,
                 vtkm::CellShapeTagGeneric shape,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   switch (shape.Id)
   {
@@ -57,14 +57,13 @@ CellInterpolate(const FieldVecType &pointFieldValues,
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &,
                 const vtkm::Vec<ParametricCoordType,3> ,
                 vtkm::CellShapeTagEmpty,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   worklet.RaiseError("Attempted to interpolate an empty cell.");
   return vtkm::Nan<typename FieldVecType::ComponentType>();
@@ -72,14 +71,13 @@ CellInterpolate(const FieldVecType &,
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &pointFieldValues,
                 const vtkm::Vec<ParametricCoordType,3>,
                 vtkm::CellShapeTagVertex,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(pointFieldValues.GetNumberOfValues() == 1, worklet);
   return pointFieldValues[0];
@@ -87,14 +85,13 @@ CellInterpolate(const FieldVecType &pointFieldValues,
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &pointFieldValues,
                 const vtkm::Vec<ParametricCoordType,3> parametricCoords,
                 vtkm::CellShapeTagLine,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(pointFieldValues.GetNumberOfValues() == 2, worklet);
   return vtkm::Lerp(pointFieldValues[0],
@@ -104,14 +101,13 @@ CellInterpolate(const FieldVecType &pointFieldValues,
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> pcoords,
                 vtkm::CellShapeTagTriangle,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(field.GetNumberOfValues() == 3, worklet);
   typedef typename FieldVecType::ComponentType T;
@@ -124,14 +120,13 @@ CellInterpolate(const FieldVecType &field,
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> pcoords,
                 vtkm::CellShapeTagPolygon,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   vtkm::IdComponent numPoints = field.GetNumberOfValues();
   VTKM_ASSERT_EXEC(numPoints > 0, worklet);
@@ -185,14 +180,13 @@ CellInterpolate(const FieldVecType &field,
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> pcoords,
                 vtkm::CellShapeTagPixel,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(field.GetNumberOfValues() == 4, worklet);
 
@@ -206,14 +200,13 @@ CellInterpolate(const FieldVecType &field,
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> pcoords,
                 vtkm::CellShapeTagQuad,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(field.GetNumberOfValues() == 4, worklet);
 
@@ -227,14 +220,13 @@ CellInterpolate(const FieldVecType &field,
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> pcoords,
                 vtkm::CellShapeTagTetra,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(field.GetNumberOfValues() == 4, worklet);
   typedef typename FieldVecType::ComponentType T;
@@ -248,14 +240,13 @@ CellInterpolate(const FieldVecType &field,
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> pcoords,
                 vtkm::CellShapeTagVoxel,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(field.GetNumberOfValues() == 8, worklet);
 
@@ -274,14 +265,13 @@ CellInterpolate(const FieldVecType &field,
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> pcoords,
                 vtkm::CellShapeTagHexahedron,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(field.GetNumberOfValues() == 8, worklet);
 
@@ -300,14 +290,13 @@ CellInterpolate(const FieldVecType &field,
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> pcoords,
                 vtkm::CellShapeTagWedge,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(field.GetNumberOfValues() == 6, worklet);
 
@@ -328,14 +317,13 @@ CellInterpolate(const FieldVecType &field,
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
-         typename ParametricCoordType,
-         typename WorkletType>
+         typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> pcoords,
                 vtkm::CellShapeTagPyramid,
-                const WorkletType &worklet)
+                const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(field.GetNumberOfValues() == 5, worklet);
 
