@@ -20,13 +20,13 @@
 
 set(headers
   Assert.h
+  CellDerivative.h
+  CellInterpolate.h
   ConnectivityExplicit.h
   ConnectivityStructured.h
-  Derivative.h
   ExecutionObjectBase.h
   ExecutionWholeArray.h
   FunctorBase.h
-  Interpolate.h
   ParametricCoordinates.h
   )
 

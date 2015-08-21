@@ -31,9 +31,9 @@ namespace exec {
 //-----------------------------------------------------------------------------
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagEmpty,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagEmpty,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 0, worklet);
@@ -44,9 +44,9 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagEmpty,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagVertex,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagVertex,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 1, worklet);
@@ -57,9 +57,9 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagVertex,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagLine,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagLine,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 2, worklet);
@@ -70,9 +70,9 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagLine,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagTriangle,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagTriangle,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 3, worklet);
@@ -83,9 +83,9 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagTriangle,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagPolygon,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagPolygon,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints > 0, worklet);
@@ -93,15 +93,15 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagPolygon,
   {
     case 1:
       ParametricCoordinatesCenter(
-            vtkm::CellShapeTagVertex(), numPoints, pcoords, worklet);
+            numPoints, pcoords, vtkm::CellShapeTagVertex(), worklet);
       break;
     case 2:
       ParametricCoordinatesCenter(
-            vtkm::CellShapeTagLine(), numPoints, pcoords, worklet);
+            numPoints, pcoords, vtkm::CellShapeTagLine(), worklet);
       break;
     case 3:
       ParametricCoordinatesCenter(
-            vtkm::CellShapeTagTriangle(), numPoints, pcoords, worklet);
+            numPoints, pcoords, vtkm::CellShapeTagTriangle(), worklet);
       break;
     default:
       pcoords[0] = 0.5;
@@ -113,9 +113,9 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagPolygon,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagPixel,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagPixel,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 4, worklet);
@@ -126,9 +126,9 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagPixel,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagQuad,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagQuad,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 4, worklet);
@@ -139,9 +139,9 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagQuad,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagTetra,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagTetra,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 4, worklet);
@@ -152,9 +152,9 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagTetra,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagVoxel,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagVoxel,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 8, worklet);
@@ -165,9 +165,9 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagVoxel,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagHexahedron,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagHexahedron,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 8, worklet);
@@ -178,9 +178,9 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagHexahedron,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagWedge,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagWedge,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 6, worklet);
@@ -191,9 +191,9 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagWedge,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagPyramid,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagPyramid,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 5, worklet);
@@ -208,16 +208,16 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagPyramid,
 ///
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::CellShapeTagGeneric shape,
-                                 vtkm::IdComponent numPoints,
+void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                 vtkm::CellShapeTagGeneric shape,
                                  const vtkm::exec::FunctorBase &worklet)
 {
   switch (shape.Id)
   {
-    vtkmGenericCellShapeMacro(ParametricCoordinatesCenter(CellShapeTag(),
-                                                          numPoints,
+    vtkmGenericCellShapeMacro(ParametricCoordinatesCenter(numPoints,
                                                           pcoords,
+                                                          CellShapeTag(),
                                                           worklet));
     default:
       worklet.RaiseError("Bad shape given to ParametricCoordinatesCenter.");
@@ -230,22 +230,22 @@ void ParametricCoordinatesCenter(vtkm::CellShapeTagGeneric shape,
 template<typename CellShapeTag>
 VTKM_EXEC_EXPORT
 vtkm::Vec<vtkm::FloatDefault,3>
-ParametricCoordinatesCenter(CellShapeTag shape,
-                            vtkm::IdComponent numPoints,
+ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
+                            CellShapeTag shape,
                             const vtkm::exec::FunctorBase &worklet)
 {
   vtkm::Vec<vtkm::FloatDefault,3> pcoords;
-  ParametricCoordinatesCenter(shape, numPoints, pcoords, worklet);
+  ParametricCoordinatesCenter(numPoints, pcoords, shape, worklet);
   return pcoords;
 }
 
 //-----------------------------------------------------------------------------
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagEmpty,
-                                vtkm::IdComponent,
+void ParametricCoordinatesPoint(vtkm::IdComponent,
                                 vtkm::IdComponent,
                                 vtkm::Vec<ParametricCoordType,3> &,
+                                vtkm::CellShapeTagEmpty,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   worklet.RaiseError("Empty cell has no points.");
@@ -253,10 +253,10 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagEmpty,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagVertex,
-                                vtkm::IdComponent numPoints,
+void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                vtkm::CellShapeTagVertex,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 1, worklet);
@@ -268,10 +268,10 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagVertex,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagLine,
-                                vtkm::IdComponent numPoints,
+void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                vtkm::CellShapeTagLine,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 2, worklet);
@@ -284,10 +284,10 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagLine,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagTriangle,
-                                vtkm::IdComponent numPoints,
+void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                vtkm::CellShapeTagTriangle,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 3, worklet);
@@ -304,10 +304,10 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagTriangle,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagPolygon,
-                                vtkm::IdComponent numPoints,
+void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                vtkm::CellShapeTagPolygon,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints > 0, worklet);
@@ -315,31 +315,31 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagPolygon,
   switch (numPoints)
   {
     case 1:
-      ParametricCoordinatesPoint(vtkm::CellShapeTagVertex(),
-                                 numPoints,
+      ParametricCoordinatesPoint(numPoints,
                                  pointIndex,
                                  pcoords,
+                                 vtkm::CellShapeTagVertex(),
                                  worklet);
       return;
     case 2:
-      ParametricCoordinatesPoint(vtkm::CellShapeTagLine(),
-                                 numPoints,
+      ParametricCoordinatesPoint(numPoints,
                                  pointIndex,
                                  pcoords,
+                                 vtkm::CellShapeTagLine(),
                                  worklet);
       return;
     case 3:
-      ParametricCoordinatesPoint(vtkm::CellShapeTagTriangle(),
-                                 numPoints,
+      ParametricCoordinatesPoint(numPoints,
                                  pointIndex,
                                  pcoords,
+                                 vtkm::CellShapeTagTriangle(),
                                  worklet);
       return;
     case 4:
-      ParametricCoordinatesPoint(vtkm::CellShapeTagQuad(),
-                                 numPoints,
+      ParametricCoordinatesPoint(numPoints,
                                  pointIndex,
                                  pcoords,
+                                 vtkm::CellShapeTagQuad(),
                                  worklet);
       return;
   }
@@ -356,10 +356,10 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagPolygon,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagPixel,
-                                vtkm::IdComponent numPoints,
+void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                vtkm::CellShapeTagPixel,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 4, worklet);
@@ -378,10 +378,10 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagPixel,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagQuad,
-                                vtkm::IdComponent numPoints,
+void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                vtkm::CellShapeTagQuad,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 4, worklet);
@@ -400,10 +400,10 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagQuad,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagTetra,
-                                vtkm::IdComponent numPoints,
+void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                vtkm::CellShapeTagTetra,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 4, worklet);
@@ -421,10 +421,10 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagTetra,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagVoxel,
-                                vtkm::IdComponent numPoints,
+void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                vtkm::CellShapeTagVoxel,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 8, worklet);
@@ -446,10 +446,10 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagVoxel,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagHexahedron,
-                                vtkm::IdComponent numPoints,
+void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                vtkm::CellShapeTagHexahedron,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 8, worklet);
@@ -471,10 +471,10 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagHexahedron,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagWedge,
-                                vtkm::IdComponent numPoints,
+void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                vtkm::CellShapeTagWedge,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 6, worklet);
@@ -494,10 +494,10 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagWedge,
 
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagPyramid,
-                                vtkm::IdComponent numPoints,
+void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                vtkm::CellShapeTagPyramid,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   VTKM_ASSERT_EXEC(numPoints == 5, worklet);
@@ -520,18 +520,18 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagPyramid,
 ///
 template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::CellShapeTagGeneric shape,
-                                vtkm::IdComponent numPoints,
+void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
+                                vtkm::CellShapeTagGeneric shape,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   switch (shape.Id)
   {
-    vtkmGenericCellShapeMacro(ParametricCoordinatesPoint(CellShapeTag(),
-                                                         numPoints,
+    vtkmGenericCellShapeMacro(ParametricCoordinatesPoint(numPoints,
                                                          pointIndex,
                                                          pcoords,
+                                                         CellShapeTag(),
                                                          worklet));
     default:
       worklet.RaiseError("Bad shape given to ParametricCoordinatesPoint.");
@@ -544,13 +544,13 @@ void ParametricCoordinatesPoint(vtkm::CellShapeTagGeneric shape,
 template<typename CellShapeTag>
 VTKM_EXEC_EXPORT
 vtkm::Vec<vtkm::FloatDefault,3>
-ParametricCoordinatesPoint(CellShapeTag shape,
-                           vtkm::IdComponent numPoints,
+ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                            vtkm::IdComponent pointIndex,
+                           CellShapeTag shape,
                            const vtkm::exec::FunctorBase &worklet)
 {
   vtkm::Vec<vtkm::FloatDefault,3> pcoords;
-  ParametricCoordinatesPoint(shape, numPoints, pointIndex, pcoords, worklet);
+  ParametricCoordinatesPoint(numPoints, pointIndex, pcoords, shape, worklet);
   return pcoords;
 }
 

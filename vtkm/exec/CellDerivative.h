@@ -26,8 +26,8 @@
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/exec/Assert.h>
+#include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/FunctorBase.h>
-#include <vtkm/exec/Interpolate.h>
 
 namespace vtkm {
 namespace exec {

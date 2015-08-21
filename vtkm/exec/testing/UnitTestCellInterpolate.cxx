@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/exec/Interpolate.h>
+#include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
@@ -87,9 +87,9 @@ struct TestInterpolateFunctor
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
       vtkm::Vec<vtkm::FloatDefault,3> pcoord =
-          vtkm::exec::ParametricCoordinatesPoint(shape,
-                                                 numPoints,
+          vtkm::exec::ParametricCoordinatesPoint(numPoints,
                                                  pointIndex,
+                                                 shape,
                                                  workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
       FieldType interpolatedValue =
@@ -107,7 +107,7 @@ struct TestInterpolateFunctor
     {
       std::cout << "  Test interpolated value at cell center." << std::endl;
       vtkm::Vec<vtkm::FloatDefault,3> pcoord =
-          vtkm::exec::ParametricCoordinatesCenter(shape,numPoints,workletProxy);
+          vtkm::exec::ParametricCoordinatesCenter(numPoints,shape,workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
       FieldType interpolatedValue =
           vtkm::exec::CellInterpolate(fieldValues,
@@ -166,7 +166,7 @@ void TestInterpolate()
 
 } // anonymous namespace
 
-int UnitTestInterpolate(int, char *[])
+int UnitTestCellInterpolate(int, char *[])
 {
   return vtkm::testing::Testing::Run(TestInterpolate);
 }

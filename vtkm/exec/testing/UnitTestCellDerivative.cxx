@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/exec/Derivative.h>
+#include <vtkm/exec/CellDerivative.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
@@ -111,9 +111,9 @@ struct TestDerivativeFunctor
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
       vtkm::Vec<vtkm::FloatDefault,3> pcoords =
-          vtkm::exec::ParametricCoordinatesPoint(shape,
-                                                 numPoints,
+          vtkm::exec::ParametricCoordinatesPoint(numPoints,
                                                  pointIndex,
+                                                 shape,
                                                  workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
       vtkm::Vec<vtkm::FloatDefault,3> wcoords = ParametricToWorld(pcoords);
@@ -138,9 +138,9 @@ struct TestDerivativeFunctor
            pointIndex++)
       {
         vtkm::Vec<vtkm::FloatDefault,3> pointPcoords =
-            vtkm::exec::ParametricCoordinatesPoint(shape,
-                                                   numPoints,
+            vtkm::exec::ParametricCoordinatesPoint(numPoints,
                                                    pointIndex,
+                                                   shape,
                                                    workletProxy);
         VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
         vtkm::FloatDefault weight = randomDist(g_RandomGenerator);
@@ -270,7 +270,7 @@ void TestDerivative()
 
 } // anonymous namespace
 
-int UnitTestDerivative(int, char *[])
+int UnitTestCellDerivative(int, char *[])
 {
   return vtkm::testing::Testing::Run(TestDerivative);
 }
