@@ -46,9 +46,15 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  ExecutionWholeArray( const vtkm::cont::ArrayHandle<T,StorageTag>& handle,
+  ExecutionWholeArray( vtkm::cont::ArrayHandle<T,StorageTag>& handle ):
+    Portal( handle.PrepareForInPlace( DeviceAdapterTag()) )
+  {
+  }
+
+  VTKM_CONT_EXPORT
+  ExecutionWholeArray( vtkm::cont::ArrayHandle<T,StorageTag>& handle,
                        vtkm::Id length ):
-    Portal( handle.PrepareForInPlace(length, DeviceAdapterTag()) )
+    Portal( handle.PrepareForOutput( length, DeviceAdapterTag()) )
   {
   }
 
