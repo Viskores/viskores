@@ -131,6 +131,11 @@
 #define VTKM_THIRDPARTY_POST_INCLUDE
 #endif
 
+//Mark if we are building with interop enabled
+#ifndef VTKm_ENABLE_OPENGL_INTEROP
+#cmakedefine VTKm_ENABLE_OPENGL_INTEROP
+#endif
+
 // Determine whether we will use variadic templates (a new feature in C++11).
 // Currently have VARIADIC_TEMPLATE support off.
 #cmakedefine VTKM_NO_VARIADIC_TEMPLATE

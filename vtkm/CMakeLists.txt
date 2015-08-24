@@ -48,6 +48,10 @@ vtkm_declare_headers(${headers})
 add_subdirectory(testing)
 add_subdirectory(internal)
 
+if(VTKm_ENABLE_OPENGL_INTEROP)
+  add_subdirectory(opengl)
+endif(VTKm_ENABLE_OPENGL_INTEROP)
+
 #-----------------------------------------------------------------------------
 #add the control and exec folders
 add_subdirectory(cont)
