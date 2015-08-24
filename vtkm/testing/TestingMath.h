@@ -160,7 +160,7 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
     T epsilon = vtkm::Epsilon<T>();
 
     // General behavior.
-    VTKM_MATH_ASSERT(nan != nan, "Nan not equal itself.");
+    VTKM_MATH_ASSERT(nan != vtkm::Nan<T>(), "Nan not equal itself.");
     VTKM_MATH_ASSERT(!(nan >= zero), "Nan not greater or less.");
     VTKM_MATH_ASSERT(!(nan <= zero), "Nan not greater or less.");
     VTKM_MATH_ASSERT(!(nan >= finite), "Nan not greater or less.");

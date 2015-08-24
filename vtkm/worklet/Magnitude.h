@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
+//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -17,35 +17,32 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_TopologyData_h
-#define vtk_m_exec_TopologyData_h
+#ifndef vtk_m_worklet_Magnitude_h
+#define vtk_m_worklet_Magnitude_h
 
-#include <vtkm/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
+
+#include <vtkm/VectorAnalysis.h>
 
 namespace vtkm {
-namespace exec {
+namespace worklet {
 
-template<typename T, vtkm::IdComponent ITEM_TUPLE_LENGTH = 8>
-class TopologyData
+class Magnitude : public vtkm::worklet::WorkletMapField
 {
 public:
-  VTKM_EXEC_EXPORT T &operator[](vtkm::IdComponent index) { return vec[index]; }
-  VTKM_EXEC_EXPORT const T &operator[](vtkm::IdComponent index) const { return vec[index]; }
+  typedef void ControlSignature(FieldIn<>, FieldOut<>);
+  typedef void ExecutionSignature(_1, _2);
 
-  VTKM_EXEC_EXPORT TopologyData()
+  template<typename T>
+  VTKM_EXEC_EXPORT
+  void operator()(const vtkm::Vec<T,3> &inValue,
+                    T &outValue) const
   {
+    outValue = vtkm::Magnitude(inValue);
   }
-  template <typename T2>
-  VTKM_EXEC_EXPORT TopologyData(const TopologyData<T2,ITEM_TUPLE_LENGTH> &other)
-      : vec(other.vec)
-  {
-  }
-
-  vtkm::Vec<T, ITEM_TUPLE_LENGTH> vec;
 };
 
-
 }
-} // namespace vtkm::exec
+} // namespace vtkm::worklet
 
-#endif //vtk_m_exec_FunctorBase_h
+#endif // vtk_m_worklet_Magnitude_h

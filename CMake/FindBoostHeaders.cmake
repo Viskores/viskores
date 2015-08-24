@@ -148,6 +148,16 @@ endfunction()
 #-------------------------------------------------------------------------------
 # main.
 #-------------------------------------------------------------------------------
+#
+# Act like the real boost find package by setting up the Boost version variables
+# We want to keep the original Boost.cmake names so it is easier to patch this
+# file, when Boost.cmake gets updated.
+#
+set(Boost_FIND_VERSION ${BoostHeaders_FIND_VERSION})
+set(Boost_FIND_VERSION_MAJOR ${BoostHeaders_FIND_VERSION_MAJOR})
+set(Boost_FIND_VERSION_MINOR ${BoostHeaders_FIND_VERSION_MINOR})
+set(Boost_FIND_VERSION_PATCH ${BoostHeaders_FIND_VERSION_PATCH})
+set(Boost_DEBUG ${BoostHeaders_DEBUG})
 
 # Check the version of Boost against the requested version.
 if(Boost_FIND_VERSION AND NOT Boost_FIND_VERSION_MINOR)

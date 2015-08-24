@@ -42,6 +42,7 @@ set(unit_tests
   UnitTestUnaryPredicates.cxx
   UnitTestVectorAnalysis.cxx
   UnitTestVecTraits.cxx
+  UnitTestVecVariable.cxx
   )
 
 VTKM_unit_tests(SOURCES ${unit_tests})

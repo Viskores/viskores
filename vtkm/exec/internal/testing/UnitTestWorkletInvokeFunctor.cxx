@@ -27,7 +27,7 @@
 #include <vtkm/testing/Testing.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/mpl/assert.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/type_traits/is_same.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
@@ -166,17 +166,17 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
 
 // Check behavior of InvocationToFetch helper class.
 
-BOOST_MPL_ASSERT(( boost::is_same<
-                     vtkm::exec::internal::detail::InvocationToFetch<InvocationType1,1>::type,
-                     vtkm::exec::arg::Fetch<TestFetchTagInput,vtkm::exec::arg::AspectTagDefault,InvocationType1,1> > ));
+BOOST_STATIC_ASSERT(( boost::is_same<
+                        vtkm::exec::internal::detail::InvocationToFetch<InvocationType1,1>::type,
+                        vtkm::exec::arg::Fetch<TestFetchTagInput,vtkm::exec::arg::AspectTagDefault,InvocationType1,1> >::type::value ));
 
-BOOST_MPL_ASSERT(( boost::is_same<
-                     vtkm::exec::internal::detail::InvocationToFetch<InvocationType1,2>::type,
-                     vtkm::exec::arg::Fetch<TestFetchTagOutput,vtkm::exec::arg::AspectTagDefault,InvocationType1,2> > ));
+BOOST_STATIC_ASSERT(( boost::is_same<
+                        vtkm::exec::internal::detail::InvocationToFetch<InvocationType1,2>::type,
+                        vtkm::exec::arg::Fetch<TestFetchTagOutput,vtkm::exec::arg::AspectTagDefault,InvocationType1,2> >::type::value ));
 
-BOOST_MPL_ASSERT(( boost::is_same<
-                     vtkm::exec::internal::detail::InvocationToFetch<InvocationType2,0>::type,
-                     vtkm::exec::arg::Fetch<TestFetchTagOutput,vtkm::exec::arg::AspectTagDefault,InvocationType2,2> > ));
+BOOST_STATIC_ASSERT(( boost::is_same<
+                        vtkm::exec::internal::detail::InvocationToFetch<InvocationType2,0>::type,
+                        vtkm::exec::arg::Fetch<TestFetchTagOutput,vtkm::exec::arg::AspectTagDefault,InvocationType2,2> >::type::value ));
 
 void TestDoWorkletInvoke()
 {

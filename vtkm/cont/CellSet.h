@@ -28,6 +28,7 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
+#include <boost/static_assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
@@ -94,8 +95,8 @@ struct CellSetCheck
   typedef typename boost::is_base_of<vtkm::cont::CellSet, T>::type type;
 };
 
-#define VTKM_IS_CELL_SET(type) \
-  BOOST_MPL_ASSERT(( ::vtkm::cont::internal::CellSetCheck<type> ))
+#define VTKM_IS_CELL_SET(T) \
+  BOOST_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value)
 
 } // namespace internal
 

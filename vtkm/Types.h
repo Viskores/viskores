@@ -735,6 +735,9 @@ struct Negate
 
 //-----------------------------------------------------------------------------
 
+// Pre declaration
+template<typename T, vtkm::IdComponent Size> class Vec;
+
 namespace detail {
 
 /// Base implementation of all Vec classes.
@@ -766,6 +769,21 @@ protected:
   }
 
 public:
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::IdComponent GetNumberOfComponents() { return NUM_COMPONENTS; }
+
+  template<vtkm::IdComponent OtherSize>
+  VTKM_EXEC_CONT_EXPORT
+  void CopyInto(vtkm::Vec<ComponentType,OtherSize> &dest) const
+  {
+    for (vtkm::IdComponent index = 0;
+         (index < NUM_COMPONENTS) && (index < OtherSize);
+         index++)
+    {
+      dest[index] = (*this)[index];
+    }
+  }
+
   VTKM_EXEC_CONT_EXPORT
   DerivedClass &operator=(const DerivedClass &src)
   {

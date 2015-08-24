@@ -18,26 +18,6 @@
 //  this software.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 Sandia Corporation.
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//============================================================================
-
 #include <vtkm/Types.h>
 
 #include <vtkm/testing/Testing.h>
@@ -130,17 +110,25 @@ template<typename ComponentType, vtkm::IdComponent Size>
 void GeneralVecTypeTest(const vtkm::Vec<ComponentType,Size> &)
 {
   typedef vtkm::Vec<ComponentType,Size> T;
+
+  VTKM_TEST_ASSERT(T::NUM_COMPONENTS == Size,
+                   "NUM_COMPONENTS is wrong size.");
  
   //grab the number of elements of T
   T a, b, c;
   ComponentType s(5);
 
+  VTKM_TEST_ASSERT(a.GetNumberOfComponents() == Size,
+                   "GetNumberOfComponents returns wrong size.");
+
   for(vtkm::IdComponent i=0; i < T::NUM_COMPONENTS; ++i)
   {
     a[i]=ComponentType((i+1)*2);
     b[i]=ComponentType(i+1);
-    c[i]=ComponentType((i+1)*2);
   }
+
+  a.CopyInto(c);
+  VTKM_TEST_ASSERT(test_equal(a, c), "CopyInto does not work.");
 
   //verify prefix and postfix increment and decrement
   ++c[T::NUM_COMPONENTS-1];

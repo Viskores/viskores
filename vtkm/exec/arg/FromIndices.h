@@ -23,8 +23,6 @@
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 
-#include <vtkm/exec/TopologyData.h>
-
 namespace vtkm {
 namespace exec {
 namespace arg {
@@ -50,8 +48,11 @@ struct FromIndices : vtkm::exec::arg::ExecutionSignatureTagBase
   typedef vtkm::exec::arg::AspectTagFromIndices AspectTag;
 };
 
-template<typename FetchTag, typename Invocation>
-struct Fetch<FetchTag, vtkm::exec::arg::AspectTagFromIndices, Invocation, 1>
+template<typename FetchTag,
+         typename Invocation,
+         vtkm::IdComponent ParameterIndex>
+struct Fetch<
+    FetchTag, vtkm::exec::arg::AspectTagFromIndices, Invocation, ParameterIndex>
 {
   // The parameter for the input domain is stored in the Invocation. (It is
   // also in the worklet, but it is safer to get it from the Invocation
@@ -59,37 +60,23 @@ struct Fetch<FetchTag, vtkm::exec::arg::AspectTagFromIndices, Invocation, 1>
   static const vtkm::IdComponent InputDomainIndex =
       Invocation::InputDomainIndex;
 
-  typedef typename Invocation::ControlInterface::template
-      ParameterType<InputDomainIndex>::type InputDomainTag;
+  // Assuming that this fetch is used in a topology map, which is its
+  // intention, InputDomainIndex points to a connectivity object. Thus,
+  // ConnectivityType is one of the vtkm::exec::Connectivity* classes.
+  typedef typename Invocation::ParameterInterface::
+      template ParameterType<InputDomainIndex>::type ConnectivityType;
 
-  static const vtkm::IdComponent ITEM_TUPLE_LENGTH =
-      InputDomainTag::ITEM_TUPLE_LENGTH;
-
-  typedef vtkm::exec::TopologyData<vtkm::Id,ITEM_TUPLE_LENGTH> ValueType;
+  typedef typename ConnectivityType::IndicesType ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
   {
-    // ParameterInterface (from Invocation) is a FunctionInterface type
-    // containing types for all objects passed to the Invoke method (with
-    // some dynamic casting performed so objects like DynamicArrayHandle get
-    // cast to ArrayHandle).
-    typedef typename Invocation::ParameterInterface ParameterInterface;
-
-    // This is the type for the input domain (derived from the last two things
-    // we got from the Invocation).
-    typedef typename ParameterInterface::
-        template ParameterType<InputDomainIndex>::type TopologyType;
-
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
-    TopologyType topology =
+    const ConnectivityType &connectivity =
         invocation.Parameters.template GetParameter<InputDomainIndex>();
 
-    ValueType v;
-    topology.GetIndices(index,v.vec);
-
-    return v;
+    return connectivity.GetIndices(index);
   }
 
   VTKM_EXEC_EXPORT

@@ -39,7 +39,7 @@ struct TestVecTypeFunctor
     {
       Traits::SetComponent(vector, index, ComponentType(VecInit[index]));
     }
-    vtkm::testing::TestVecType(vector);
+    vtkm::testing::TestVecType<Traits::NUM_COMPONENTS>(vector);
   }
 };
 
