@@ -109,6 +109,14 @@ void Schedule3DIndexKernel(FunctorType functor, dim3 size)
   functor( idx );
 }
 
+template<typename T, typename BinaryOperationType >
+__global__
+void SumExclusiveScan(T a, T b, T result,
+                      BinaryOperationType binary_op)
+{
+  result = binary_op(a,b);
+}
+
 inline
 void compute_block_size(dim3 rangeMax, dim3 blockSize3d, dim3& gridSize3d)
 {
@@ -401,7 +409,16 @@ private:
     // Use iterator to get value so that thrust device_ptr has chance to handle
     // data on device.
     typedef typename OutputPortal::ValueType ValueType;
-    ValueType inputEnd = *(IteratorEnd(input) - 1);
+
+    //store the current value in last position array in a separate cuda
+    //memory location, we have size two so that we can store the result
+    ::thrust::system::cuda::vector< ValueType > sum(2);
+
+    ::thrust::copy_n(thrust::cuda::par,
+                     IteratorEnd(input) - 1,
+                     1,
+                     sum.begin()
+                     );
 
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
                                                       BinaryOperation> bop(binaryOp);
@@ -415,8 +432,9 @@ private:
                                                 vtkm::TypeTraits<ValueType>::ZeroInitialization(),
                                                 bop);
 
-    //return the value at the last index in the array, as that is the sum
-    return binaryOp( *(end-1), inputEnd);
+    //execute the binaryOp one last time on the device.
+    SumExclusiveScan <<<1,1>>> (sum[0], *(end-1), sum[1], binaryOp);
+    return sum[1];
   }
 
   template<class InputPortal, class OutputPortal>
