@@ -44,15 +44,6 @@ namespace worklet {
 
 namespace internal {
 
-/// Linear interpolation
-/*template <typename T1, typename T2>
-VTKM_EXEC_EXPORT
-T1 lerp(T1 a, T1 b, T2 t)
-{
-  return a + t*(b-a);
-}*/
-
-
 /// \brief Computes number of vertices for Marching Cubes case
 class ClassifyCell : public vtkm::worklet::WorkletMapTopology
 {
