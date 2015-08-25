@@ -205,6 +205,7 @@ public:
 
   enum AssociationEnum
   {
+    ASSOC_ANY,
     ASSOC_WHOLE_MESH,
     ASSOC_POINTS,
     ASSOC_CELL_SET,
@@ -636,6 +637,7 @@ public:
       out<<" assoc= ";
       switch (this->GetAssociation())
       {
+      case ASSOC_ANY: out<<"Any "; break;
       case ASSOC_WHOLE_MESH: out<<"Mesh "; break;
       case ASSOC_POINTS: out<<"Points "; break;
       case ASSOC_CELL_SET: out<<"Cells "; break;
