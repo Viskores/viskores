@@ -23,6 +23,7 @@
 #include <vtkm/worklet/internal/WorkletBase.h>
 
 #include <vtkm/TypeListTag.h>
+#include <vtkm/TopologyElementTag.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagArrayIn.h>
@@ -48,12 +49,10 @@ namespace worklet {
 /// inputs and outputs are on the same domain. That is, all the arrays are the
 /// same size.
 ///
-/// TODO: Although the nomenclature of this class suggests it handles general
-/// topological links, it really only handles point to cell operations for
-/// now. This worklet needs to be templated to handle generic from/to topology
-/// links. I also suggest having convenience subclasses for common (supported?)
+/// TODO: I also suggest having convenience subclasses for common (supported?)
 /// link directions.
 ///
+template<typename FromTopology, typename ToTopology>
 class WorkletMapTopology : public vtkm::worklet::internal::WorkletBase
 {
 public:
@@ -85,7 +84,7 @@ public:
   ///
   struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagTopologyIn TransportTag;
+    typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopology,ToTopology> TransportTag;
     typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
   };
 

@@ -30,19 +30,21 @@ namespace worklet {
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletMapTopology.
 ///
-template<typename WorkletType,
+template<typename FromTopology,
+         typename ToTopology,
+         typename WorkletType,
          typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class DispatcherMapTopology :
     public vtkm::worklet::internal::DispatcherBase<
-      DispatcherMapTopology<WorkletType,Device>,
+      DispatcherMapTopology<FromTopology,ToTopology,WorkletType,Device>,
       WorkletType,
-      vtkm::worklet::WorkletMapTopology,
+      vtkm::worklet::WorkletMapTopology<FromTopology,ToTopology>,
       Device>
 {
   typedef vtkm::worklet::internal::DispatcherBase<
-    DispatcherMapTopology<WorkletType,Device>,
+    DispatcherMapTopology<FromTopology,ToTopology,WorkletType,Device>,
     WorkletType,
-    vtkm::worklet::WorkletMapTopology,
+    vtkm::worklet::WorkletMapTopology<FromTopology,ToTopology>,
     Device> Superclass;
 
 public:
@@ -85,7 +87,7 @@ public:
     // scheduling and call BadicInvoke.
     this->BasicInvoke(invocation,
                       inputDomain.GetSchedulingRange(
-                        vtkm::TopologyElementTagCell()));
+                        ToTopology()));
   }
 };
 

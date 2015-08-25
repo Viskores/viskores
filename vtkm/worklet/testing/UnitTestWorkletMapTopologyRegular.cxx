@@ -30,7 +30,9 @@
 
 namespace test_regular {
 
-class MaxPointOrCellValue : public vtkm::worklet::WorkletMapTopology
+class MaxPointOrCellValue :
+    public vtkm::worklet::WorkletMapTopology<vtkm::TopologyElementTagPoint,
+                                             vtkm::TopologyElementTagCell>
 {
 public:
   typedef void ControlSignature(FieldInTo<Scalar> inCells,
@@ -65,7 +67,9 @@ public:
   }
 };
 
-class AveragePointToCellValue : public vtkm::worklet::WorkletMapTopology
+class AveragePointToCellValue : 
+    public vtkm::worklet::WorkletMapTopology<vtkm::TopologyElementTagPoint,
+                                             vtkm::TopologyElementTagCell>
 {
 public:
   typedef void ControlSignature(FieldInFrom<Scalar> inPoints,
@@ -133,7 +137,10 @@ TestMaxPointOrCell()
 
     VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 5),
                      "Incorrect number of fields");
-    vtkm::worklet::DispatcherMapTopology< ::test_regular::MaxPointOrCellValue > dispatcher;
+    vtkm::worklet::DispatcherMapTopology<
+        vtkm::TopologyElementTagPoint,
+        vtkm::TopologyElementTagCell,
+        ::test_regular::MaxPointOrCellValue > dispatcher;
     dispatcher.Invoke(dataSet.GetField("cellvar").GetData(),
                       dataSet.GetField("pointvar").GetData(),
                       // We know that the cell set is a structured 2D grid and
@@ -177,7 +184,10 @@ TestAvgPointToCell()
 
     VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 5),
                      "Incorrect number of fields");
-    vtkm::worklet::DispatcherMapTopology< ::test_regular::AveragePointToCellValue > dispatcher;
+    vtkm::worklet::DispatcherMapTopology<
+        vtkm::TopologyElementTagPoint,
+        vtkm::TopologyElementTagCell,
+        ::test_regular::AveragePointToCellValue > dispatcher;
     dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                       // We know that the cell set is a structured 2D grid and
                       // The worklet does not work with general types because

@@ -30,7 +30,9 @@
 
 namespace test_explicit {
 
-class MaxPointOrCellValue : public vtkm::worklet::WorkletMapTopology
+class MaxPointOrCellValue :
+    public vtkm::worklet::WorkletMapTopology<vtkm::TopologyElementTagPoint,
+                                             vtkm::TopologyElementTagCell>
 {
 public:
   typedef void ControlSignature(FieldInTo<Scalar> inCells,
@@ -65,7 +67,9 @@ public:
   }
 };
 
-class AveragePointToCellValue : public vtkm::worklet::WorkletMapTopology
+class AveragePointToCellValue :
+    public vtkm::worklet::WorkletMapTopology<vtkm::TopologyElementTagPoint,
+                                             vtkm::TopologyElementTagCell>
 {
 public:
   typedef void ControlSignature(FieldInFrom<Scalar> inPoints,
@@ -122,7 +126,7 @@ TestMaxPointOrCell()
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.
   vtkm::cont::Field f("outcellvar",
-                      1,
+                      0,
                       vtkm::cont::Field::ASSOC_CELL_SET,
                       std::string("cells"),
                       vtkm::Float32());
@@ -135,7 +139,10 @@ TestMaxPointOrCell()
   VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 6,
                    "Incorrect number of fields");
 
-  vtkm::worklet::DispatcherMapTopology< ::test_explicit::MaxPointOrCellValue >
+  vtkm::worklet::DispatcherMapTopology<
+      vtkm::TopologyElementTagPoint,
+      vtkm::TopologyElementTagCell,
+      ::test_explicit::MaxPointOrCellValue >
       dispatcher;
   dispatcher.Invoke(dataSet.GetField("cellvar").GetData(),
                     dataSet.GetField("pointvar").GetData(),
@@ -163,7 +170,7 @@ TestAvgPointToCell()
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.
   vtkm::cont::Field f("outcellvar",
-                      1,
+                      0,
                       vtkm::cont::Field::ASSOC_CELL_SET,
                       std::string("cells"),
                       vtkm::Float32());
@@ -176,7 +183,10 @@ TestAvgPointToCell()
   VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 6,
                        "Incorrect number of fields");
 
-  vtkm::worklet::DispatcherMapTopology< ::test_explicit::AveragePointToCellValue > dispatcher;
+  vtkm::worklet::DispatcherMapTopology<
+      vtkm::TopologyElementTagPoint,
+      vtkm::TopologyElementTagCell,
+      ::test_explicit::AveragePointToCellValue > dispatcher;
   dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                     dataSet.GetCellSet(),
                     dataSet.GetField("outcellvar").GetData());
