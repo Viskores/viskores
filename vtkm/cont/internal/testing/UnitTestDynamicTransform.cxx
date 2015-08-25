@@ -23,7 +23,6 @@
 #include "vtkm/cont/ArrayHandle.h"
 #include "vtkm/cont/DynamicArrayHandle.h"
 #include "vtkm/cont/DynamicCellSet.h"
-#include "vtkm/cont/DynamicPointCoordinates.h"
 
 #include "vtkm/internal/FunctionInterface.h"
 
@@ -101,8 +100,7 @@ struct FunctionInterfaceFunctor {
         void(vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
              vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
              vtkm::cont::ArrayHandle<std::string>,
-             vtkm::cont::CellSetStructured<3>,
-             vtkm::cont::ArrayHandleUniformPointCoordinates)> &) const {
+             vtkm::cont::CellSetStructured<3>)> &) const {
     std::cout << "    In FunctionInterface<...> functor." << std::endl;
     g_FunctionCalls++;
   }
@@ -152,7 +150,6 @@ void TestFunctionTransform()
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> scalarArray;
   vtkm::cont::ArrayHandle<std::string> stringArray;
   vtkm::cont::CellSetStructured<3> structuredCellSet;
-  vtkm::cont::ArrayHandleUniformPointCoordinates pointCoordinatesArray;
 
   std::cout << "  Trying basic functor call w/o transform (make sure it works)."
             << std::endl;
@@ -161,8 +158,7 @@ void TestFunctionTransform()
                     scalarArray,
                     scalarArray,
                     stringArray,
-                    structuredCellSet,
-                    pointCoordinatesArray)));
+                    structuredCellSet)));
 
   std::cout << "  Trying dynamic cast" << std::endl;
   TRY_TRANSFORM(
@@ -170,8 +166,7 @@ void TestFunctionTransform()
           scalarArray,
           vtkm::cont::DynamicArrayHandle(scalarArray),
           vtkm::cont::DynamicArrayHandle(stringArray).ResetTypeList(TypeListTagString()),
-          vtkm::cont::DynamicCellSet(structuredCellSet),
-          vtkm::cont::DynamicPointCoordinates(vtkm::cont::PointCoordinatesUniform()))
+          vtkm::cont::DynamicCellSet(structuredCellSet))
         .DynamicTransformCont(vtkm::cont::internal::DynamicTransform(),
                               FunctionInterfaceFunctor()));
 }

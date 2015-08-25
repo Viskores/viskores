@@ -34,7 +34,7 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
 {
   vtkm::cont::DataSet dataSet;
 
-  std::vector<vtkm::Float32> xVals, yVals, zVals;
+  std::vector<vtkm::Vec<vtkm::Float32,3> > coordinates;
   const vtkm::Id dim = 5;
   for (vtkm::Id j = 0; j < dim; ++j)
   {
@@ -45,21 +45,13 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
       vtkm::Float32 x = static_cast<vtkm::Float32>(i) /
                         static_cast<vtkm::Float32>(dim - 1);
       vtkm::Float32 y = (x*x + z*z)/2.0f;
-      xVals.push_back(x);
-      yVals.push_back(y);
-      zVals.push_back(z);
+      coordinates.push_back(vtkm::make_Vec(x,y,z));
     }
   }
 
-  vtkm::Id numVerts = dim * dim;
   vtkm::Id numCells = (dim - 1) * (dim - 1);
-  dataSet.AddField(vtkm::cont::Field("x", 1, vtkm::cont::Field::ASSOC_POINTS,
-      &xVals[0], numVerts));
-  dataSet.AddField(vtkm::cont::Field("y", 1, vtkm::cont::Field::ASSOC_POINTS,
-      &yVals[0], numVerts));
-  dataSet.AddField(vtkm::cont::Field("z", 1, vtkm::cont::Field::ASSOC_POINTS,
-      &zVals[0], numVerts));
-  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
+  dataSet.AddCoordinateSystem(
+        vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells", 3);
   cellSet.PrepareToAddCells(numCells, numCells * 4);
@@ -99,21 +91,19 @@ void TestPointElevation()
 
   vtkm::worklet::DispatcherMapField<vtkm::worklet::PointElevation>
       dispatcher(pointElevationWorklet);
-  dispatcher.Invoke(dataSet.GetField("x").GetData(),
-                    dataSet.GetField("y").GetData(),
-                    dataSet.GetField("z").GetData(),
+  dispatcher.Invoke(dataSet.GetCoordinateSystem().GetData(),
                     dataSet.GetField("elevation").GetData());
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> yVals =
-      dataSet.GetField("y").GetData().CastToArrayHandle(vtkm::Float32(),
-          VTKM_DEFAULT_STORAGE_TAG());
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > coordinates =
+      dataSet.GetCoordinateSystem().GetData().
+      CastToArrayHandle(vtkm::Vec<vtkm::Float32,3>(),VTKM_DEFAULT_STORAGE_TAG());
   vtkm::cont::ArrayHandle<vtkm::Float32> result =
-      dataSet.GetField("elevation").GetData().CastToArrayHandle(vtkm::Float32(),
-          VTKM_DEFAULT_STORAGE_TAG());
+      dataSet.GetField("elevation").GetData().
+      CastToArrayHandle(vtkm::Float32(),VTKM_DEFAULT_STORAGE_TAG());
 
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(yVals.GetPortalConstControl().Get(i) * 2.0,
+    VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
                                 result.GetPortalConstControl().Get(i)),
        "Wrong result for PointElevation worklet");
   }

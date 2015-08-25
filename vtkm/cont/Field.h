@@ -26,6 +26,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 
@@ -86,9 +87,11 @@ template<vtkm::IdComponent NumberOfComponents, typename ComputeBoundsClass>
 class SelectNumberOfComponents
 {
 public:
-  static void Execute(vtkm::IdComponent components,
-                      const vtkm::cont::DynamicArrayHandle &data,
-                      ArrayHandle<vtkm::Float64> &bounds)
+  template<typename TypeList, typename StorageList>
+  static void Execute(
+      vtkm::IdComponent components,
+      const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &data,
+      ArrayHandle<vtkm::Float64> &bounds)
   {
     if (components == NumberOfComponents)
     {
@@ -108,7 +111,9 @@ template<typename ComputeBoundsClass>
 class SelectNumberOfComponents<MAX_NUMBER_OF_COMPONENTS, ComputeBoundsClass>
 {
 public:
-  static void Execute(vtkm::Id, const vtkm::cont::DynamicArrayHandle&,
+  template<typename TypeList, typename StorageList>
+  static void Execute(vtkm::IdComponent,
+                      const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &,
                       ArrayHandle<vtkm::Float64>&)
   {
     throw vtkm::cont::ErrorControlInternal(
@@ -117,7 +122,7 @@ public:
 };
 
 
-template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
+template<typename DeviceAdapterTag>
 class ComputeBounds
 {
 private:
@@ -151,23 +156,55 @@ private:
       }
     }
 
+    // Special implementation for regular point coordinates, which are easy
+    // to determine.
+    void operator()(vtkm::cont::ArrayHandle<
+                        vtkm::Vec<vtkm::FloatDefault,3>,
+                        vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>
+                      array)
+    {
+      vtkm::internal::ArrayPortalUniformPointCoordinates portal =
+          array.GetPortalConstControl();
+
+      // In this portal we know that the min value is the first entry and the
+      // max value is the last entry.
+      vtkm::Vec<vtkm::FloatDefault,3> minimum = portal.Get(0);
+      vtkm::Vec<vtkm::FloatDefault,3> maximum =
+          portal.Get(portal.GetNumberOfValues()-1);
+
+      this->Bounds->Allocate(6);
+      vtkm::cont::ArrayHandle<vtkm::Float64>::PortalControl outPortal =
+          this->Bounds->GetPortalControl();
+      outPortal.Set(0, minimum[0]);
+      outPortal.Set(1, maximum[0]);
+      outPortal.Set(2, minimum[1]);
+      outPortal.Set(3, maximum[1]);
+      outPortal.Set(4, minimum[2]);
+      outPortal.Set(5, maximum[2]);
+    }
+
   private:
-    ArrayHandle<vtkm::Float64> *Bounds;
+    vtkm::cont::ArrayHandle<vtkm::Float64> *Bounds;
   };
 
 public:
-  template<vtkm::IdComponent NumberOfComponents>
-  static void CallBody(const vtkm::cont::DynamicArrayHandle &data,
+  template<vtkm::IdComponent NumberOfComponents,
+           typename TypeList,
+           typename StorageList>
+  static void CallBody(
+      const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList> &data,
       ArrayHandle<vtkm::Float64> &bounds)
   {
     Body<NumberOfComponents> cb(&bounds);
-    data.CastAndCall(cb, TypeList(), StorageList());
+    data.CastAndCall(cb);
   }
 
-  static void DoCompute(const DynamicArrayHandle &data,
-                        ArrayHandle<vtkm::Float64> &bounds)
+  template<typename TypeList, typename StorageList>
+  static void DoCompute(
+      const DynamicArrayHandleBase<TypeList,StorageList> &data,
+      ArrayHandle<vtkm::Float64> &bounds)
   {
-    typedef ComputeBounds<DeviceAdapterTag, TypeList, StorageList> SelfType;
+    typedef ComputeBounds<DeviceAdapterTag> SelfType;
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
     vtkm::IdComponent numberOfComponents = data.GetNumberOfComponents();
@@ -186,7 +223,8 @@ public:
         CallBody<4>(data, bounds);
         break;
       default:
-        SelectNumberOfComponents<5, SelfType>::Execute(numberOfComponents, data,
+        SelectNumberOfComponents<5, SelfType>::Execute(numberOfComponents,
+                                                       data,
                                                        bounds);
         break;
       }
@@ -217,7 +255,7 @@ public:
   Field(std::string name,
         vtkm::IdComponent order,
         AssociationEnum association,
-        vtkm::cont::DynamicArrayHandle &data)
+        const vtkm::cont::DynamicArrayHandle &data)
     : Name(name),
       Order(order),
       Association(association),
@@ -236,7 +274,7 @@ public:
   Field(std::string name,
         vtkm::IdComponent order,
         AssociationEnum association,
-        ArrayHandle<T, Storage> &data)
+        const ArrayHandle<T, Storage> &data)
     : Name(name),
       Order(order),
       Association(association),
@@ -534,8 +572,9 @@ public:
   {
     if (this->ModifiedFlag)
     {
-      internal::ComputeBounds<DeviceAdapterTag, TypeList, StorageList>::DoCompute(
-          this->Data, this->Bounds);
+      internal::ComputeBounds<DeviceAdapterTag>::DoCompute(
+          this->Data.ResetTypeList(TypeList()).ResetStorageList(StorageList()),
+          this->Bounds);
       this->ModifiedFlag = false;
     }
 

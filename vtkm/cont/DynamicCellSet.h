@@ -83,7 +83,7 @@ struct DynamicCellSetCopyHelper {
 /// combinations grows exponentially when using multiple \c Dynamic* objects.
 ///
 /// The actual implementation of \c DynamicCellSet is in a templated class
-/// names \c DynamicCellSetBase, which is templated on the list of cell set
+/// named \c DynamicCellSetBase, which is templated on the list of cell set
 /// types. \c DynamicCellSet is really just a typedef of \c DynamicCellSetBase
 /// with the default cell set list.
 ///

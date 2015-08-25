@@ -33,7 +33,7 @@ void TestDataSet_Explicit()
   VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");
 
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 5,
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
                        "Incorrect number of fields");
 
   // test various field-getting methods and associations
@@ -43,7 +43,7 @@ void TestDataSet_Explicit()
 
   try
   {
-    //const vtkm::cont::Field &f2 = 
+    //const vtkm::cont::Field &f2 =
     ds.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
   }
   catch (...)
@@ -53,7 +53,7 @@ void TestDataSet_Explicit()
 
   try
   {
-    //const vtkm::cont::Field &f3 = 
+    //const vtkm::cont::Field &f3 =
     ds.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
     VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
   }
@@ -62,6 +62,9 @@ void TestDataSet_Explicit()
     std::cout << "Caught expected error for association mismatch: "
               << std::endl << "    " << error.GetMessage() << std::endl;
   }
+
+  VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
+                   "Incorrect number of coordinate systems");
 }
 
 }
