@@ -56,6 +56,9 @@ template<typename FromTopology, typename ToTopology>
 class WorkletMapTopology : public vtkm::worklet::internal::WorkletBase
 {
 public:
+  typedef FromTopology FromTopologyType;
+  typedef ToTopology ToTopologyType;
+
   /// \brief A control signature tag for input fields.
   ///
   /// This tag takes a template argument that is a type list tag that limits

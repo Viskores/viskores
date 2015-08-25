@@ -43,10 +43,7 @@ void TestCellAverageRegular3D()
                            std::string("cells"),
                            vtkm::Float32());
 
-  vtkm::worklet::DispatcherMapTopology<
-      vtkm::TopologyElementTagPoint,
-      vtkm::TopologyElementTagCell,
-      vtkm::worklet::CellAverage> dispatcher;
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                     dataSet.GetCellSet(),
                     result.GetData());
@@ -75,10 +72,7 @@ void TestCellAverageRegular2D()
                            std::string("cells"),
                            vtkm::Float32());
 
-  vtkm::worklet::DispatcherMapTopology<
-      vtkm::TopologyElementTagPoint,
-      vtkm::TopologyElementTagCell,
-      vtkm::worklet::CellAverage> dispatcher;
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                     dataSet.GetCellSet(),
                     result.GetData());
@@ -107,10 +101,7 @@ void TestCellAverageExplicit()
                            std::string("cells"),
                            vtkm::Float32());
 
-  vtkm::worklet::DispatcherMapTopology<
-      vtkm::TopologyElementTagPoint,
-      vtkm::TopologyElementTagCell,
-      vtkm::worklet::CellAverage> dispatcher;
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                     dataSet.GetCellSet(),
                     result.GetData());
