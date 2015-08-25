@@ -33,6 +33,7 @@
 #include <vtkm/cont/Field.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/VectorAnalysis.h>
 
 #include "MarchingCubesDataTables.h"
 
@@ -44,12 +45,12 @@ namespace worklet {
 namespace internal {
 
 /// Linear interpolation
-template <typename T1, typename T2>
+/*template <typename T1, typename T2>
 VTKM_EXEC_EXPORT
 T1 lerp(T1 a, T1 b, T2 t)
 {
   return a + t*(b-a);
-}
+}*/
 
 
 /// \brief Computes number of vertices for Marching Cubes case
@@ -100,13 +101,13 @@ public:
   typedef void ExecutionSignature(WorkIndex, _1, _2);
   typedef _1 InputDomain;
 
-  typedef typename vtkm::cont::ArrayHandle<FieldType>::template ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::PortalConst FieldPortalType;
+  typedef typename vtkm::cont::ArrayHandle<FieldType>::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalType;
   FieldPortalType field, source;
 
-  typedef typename vtkm::cont::ArrayHandle<FieldType>::template ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal OutputPortalType;
+  typedef typename vtkm::cont::ArrayHandle<FieldType>::template ExecutionTypes<DeviceAdapter>::Portal OutputPortalType;
   OutputPortalType scalars;
 
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> >::template ExecutionTypes<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Portal VectorPortalType;
+  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> >::template ExecutionTypes<DeviceAdapter>::Portal VectorPortalType;
   VectorPortalType vertices;
 
   typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
@@ -219,8 +220,8 @@ public:
       const int v1   = verticesForEdge[2*edge + 1];
       const float t  = (isovalue - f[v0]) / (f[v1] - f[v0]);
 
-      this->vertices.Set(outputVertId + v, lerp(p[v0], p[v1], t));
-      this->scalars.Set(outputVertId + v, lerp(s[v0], s[v1], t));
+      this->vertices.Set(outputVertId + v, vtkm::Lerp(p[v0], p[v1], t));
+      this->scalars.Set(outputVertId + v, vtkm::Lerp(s[v0], s[v1], t));
     }
   }
 };
@@ -249,7 +250,8 @@ public:
     // Call the ClassifyCell functor to compute the Marching Cubes case numbers for each cell, and the number of vertices to be generated
     vtkm::cont::Field numVerticesField("numverts", 1, vtkm::cont::Field::ASSOC_CELL_SET, std::string("cells"), vtkm::Id());
     dataSet.AddField(numVerticesField);
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::internal::ClassifyCell>(vtkm::worklet::internal::ClassifyCell(vertexTableArray.PrepareForInput(DeviceAdapter()), isovalue)).Invoke(
+    vtkm::worklet::internal::ClassifyCell classifyCellFunctor(vertexTableArray.PrepareForInput(DeviceAdapter()), isovalue);
+    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::internal::ClassifyCell>(classifyCellFunctor).Invoke(
                    dataSet.GetField("nodevar").GetData(), dataSet.GetCellSet(0), dataSet.GetField("numverts").GetData()); 
     vtkm::cont::ArrayHandle<vtkm::Id> numOutputTrisPerCell;
     numOutputTrisPerCell = dataSet.GetField("numverts").GetData().CastToArrayHandle(vtkm::Id(), VTKM_DEFAULT_STORAGE_TAG());
