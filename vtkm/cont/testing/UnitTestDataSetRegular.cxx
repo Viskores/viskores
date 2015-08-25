@@ -144,7 +144,108 @@ TwoDimRegularTest()
       VTKM_TEST_ASSERT(
             retrievedCellIds[cellIndex] == expectedCellIds[pointIndex][cellIndex],
             "Incorrect cell ID for point");
-    }
+  }
+}
+
+static void
+ThreeDimRegularTest()
+{
+  std::cout<<"3D Regular data set"<<std::endl;
+  vtkm::cont::testing::MakeTestDataSet testDataSet;
+
+  vtkm::cont::DataSet dataSet = testDataSet.Make3DRegularDataSet0();
+
+  typedef vtkm::cont::CellSetStructured<3> CellSetType;
+  CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
+
+  VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1,
+                   "Incorrect number of cell sets");
+
+  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 5,
+                   "Incorrect number of fields");
+
+  VTKM_TEST_ASSERT(cellSet.GetNumberOfPoints() == 18,
+                   "Incorrect number of points");
+
+  VTKM_TEST_ASSERT(cellSet.GetNumberOfCells() == 4,
+                   "Incorrect number of cells");
+
+  // test various field-getting methods and associations
+  const vtkm::cont::Field &f1 = dataSet.GetField("pointvar");
+  VTKM_TEST_ASSERT(f1.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
+                       "Association of 'pointvar' was not ASSOC_POINTS");
+
+  try
+  {
+    //const vtkm::cont::Field &f2 = 
+    dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+  }
+  catch (...)
+  {
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+  }
+
+  try
+  {
+    //const vtkm::cont::Field &f3 = 
+    dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
+    VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
+  }
+  catch (vtkm::cont::ErrorControlBadValue error)
+  {
+    std::cout << "Caught expected error for association mismatch: "
+              << std::endl << "    " << error.GetMessage() << std::endl;
+  }
+
+  vtkm::Id numCells = cellSet.GetNumberOfCells();
+  for (vtkm::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
+  {
+    VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(cellIndex) == 8,
+                     "Incorrect number of cell indices");
+    vtkm::CellType shape = cellSet.GetCellShape();
+    VTKM_TEST_ASSERT(shape == vtkm::VTKM_VOXEL, "Incorrect element type.");
+  }
+
+  //Test regular connectivity.
+  vtkm::exec::ConnectivityStructured<
+      vtkm::TopologyElementTagPoint,
+      vtkm::TopologyElementTagCell,
+      3> pointToCell =
+      cellSet.PrepareForInput(
+        vtkm::cont::DeviceAdapterTagSerial(),
+        vtkm::TopologyElementTagPoint(),
+        vtkm::TopologyElementTagCell());
+  vtkm::Id expectedPointIds[8] = {0,1,3,4,6,7,9,10};
+  vtkm::Vec<vtkm::Id,8> retrievedPointIds;
+  pointToCell.GetIndices(0, retrievedPointIds);
+  for (vtkm::IdComponent localPointIndex = 0;
+       localPointIndex < 8;
+       localPointIndex++)
+  {
+    VTKM_TEST_ASSERT(
+          retrievedPointIds[localPointIndex] == expectedPointIds[localPointIndex],
+          "Incorrect point ID for cell");
+  }
+
+  vtkm::exec::ConnectivityStructured<
+      vtkm::TopologyElementTagCell,
+      vtkm::TopologyElementTagPoint,
+      3> cellToPoint =
+      cellSet.PrepareForInput(
+        vtkm::cont::DeviceAdapterTagSerial(),
+        vtkm::TopologyElementTagCell(),
+        vtkm::TopologyElementTagPoint());
+  vtkm::Vec<vtkm::Id,8> expectedCellIds;
+  vtkm::Id retrievedCellIds[8] = {0,-1,-1,-1,-1,-1,-1,-1};
+  cellToPoint.GetIndices(0, expectedCellIds);
+  for (vtkm::IdComponent localPointIndex = 0;
+       localPointIndex < 8;
+       localPointIndex++)
+  {
+    VTKM_TEST_ASSERT(
+          expectedCellIds[localPointIndex] == retrievedCellIds[localPointIndex],
+          "Incorrect cell ID for point");
+  }
 }
 
 static void
