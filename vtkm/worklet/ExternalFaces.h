@@ -167,38 +167,35 @@ struct ExternalFaces
   //Worklet that identifies the vertices of a cell face
   class GetFace : public vtkm::worklet::WorkletMapTopology
   {
-  static const int LEN_IDS = 4;
-
   public:
     typedef void ControlSignature(FieldInTo<AllTypes> localFaceIds,
-                                  TopologyIn<LEN_IDS> topology,
+                                  TopologyIn topology,
                                   FieldOut<VecCommon> faceVertices
                                   );
-    typedef void ExecutionSignature(_1, _3, FromCount, CellShape, FromIndices);
+    typedef void ExecutionSignature(_1, _3, CellShape, FromIndices);
     typedef _2 InputDomain;
 
     VTKM_CONT_EXPORT
     GetFace() { };
 
-    template<typename T, vtkm::IdComponent N>
+    template<typename T, typename FaceValueVecType, typename CellNodeVecType>
     VTKM_EXEC_EXPORT
     void operator()(const T &cellFaceId,
-                    vtkm::Vec<T, N> &faceVertices,
-                    const vtkm::Id & vtkmNotUsed(numNodes),
+                    FaceValueVecType &faceVertices,
                     const vtkm::Id &cellType,
-                    const vtkm::exec::TopologyData<vtkm::Id,LEN_IDS> &cellNodeIds) const
+                    const CellNodeVecType &cellNodeIds) const
     {
       if (cellType == vtkm::VTKM_TETRA)
       {
         vtkm::IdComponent faceIdTable[12] = {0,1,2,0,1,3,0,2,3,1,2,3};
 
         //Assign cell points/nodes to this face
-        vtkm::Id faceP1 = cellNodeIds[faceIdTable[cellFaceId*N]];
-        vtkm::Id faceP2 = cellNodeIds[faceIdTable[cellFaceId*N + 1]];
-        vtkm::Id faceP3 = cellNodeIds[faceIdTable[cellFaceId*N + 2]];
+        vtkm::Id faceP1 = cellNodeIds[faceIdTable[cellFaceId*3]];
+        vtkm::Id faceP2 = cellNodeIds[faceIdTable[cellFaceId*3 + 1]];
+        vtkm::Id faceP3 = cellNodeIds[faceIdTable[cellFaceId*3 + 2]];
 
         //Sort the face points/nodes in ascending order
-        vtkm::Id sorted[N] = {faceP1, faceP2, faceP3};
+        vtkm::Id sorted[3] = {faceP1, faceP2, faceP3};
         vtkm::Id temp;
         if (sorted[0] > sorted[2])
         {
