@@ -61,7 +61,7 @@ private:
     data.resize(length);
     vtkm::Id pos = 0;
     for(iterator i = data.begin(); i != data.end(); ++i, ++pos)
-      { *i=T(pos); }
+      { *i=TestValue(pos,T()); }
 
     std::random_shuffle(data.begin(),data.end());
     return vtkm::cont::make_ArrayHandle(data);
@@ -131,7 +131,7 @@ private:
     //get the size of the buffer
     int bytesInBuffer = 0;
     glGetBufferParameteriv(type, GL_BUFFER_SIZE, &bytesInBuffer);
-    int size = ( bytesInBuffer / sizeof(T) );
+    const std::size_t size = ( static_cast<std::size_t>(bytesInBuffer) / sizeof(T) );
 
     //get the buffer contents and place it into a vector
     std::vector<T> data;
@@ -141,25 +141,12 @@ private:
     return data;
   }
 
-  //make a random value that we can test when loading constant values
-  template<typename T>
-  static
-  T MakeRandomValue(T)
-  {
-  return T(rand());
-  }
-
-
   struct TransferFunctor
   {
-    // std::size_t Size;
-    // GLuint GLHandle;
-
     template <typename T>
     void operator()(const T t) const
     {
-      //this->Size = 10;
-      std::size_t Size = 10;
+      const std::size_t Size = 10;
       GLuint GLHandle;
       //verify that T is able to be transfer to openGL.
       //than pull down the results from the array buffer and verify
@@ -206,10 +193,10 @@ private:
                         "Array Handle failed to transfer properly");
         }
 
-
       //verify this work for a constant value array handle
-      T constantValue = MakeRandomValue(t);
-      vtkm::cont::ArrayHandleConstant<T> constant(constantValue, Size);
+      T constantValue = TestValue(2,T()); //verified by die roll
+      vtkm::cont::ArrayHandleConstant<T> constant(constantValue,
+                                                  static_cast<vtkm::Id>(Size) );
       SafelyTransferArray(constant,GLHandle);
       is_buffer = glIsBuffer(GLHandle);
       VTKM_TEST_ASSERT(is_buffer==true,
