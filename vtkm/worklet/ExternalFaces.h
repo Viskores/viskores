@@ -303,8 +303,6 @@ public:
 
     //Extract the point/vertices for each cell face
     typedef vtkm::cont::ArrayHandle<vtkm::Id> IdHandleType;
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::template
-        ExecutionTypes<DeviceAdapter>::PortalConst ExecutionPortalType;
     typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, GetConnIndex> IdImplicitType;
     typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, IdHandleType> IdPermutationType1;
     typedef vtkm::cont::ArrayHandlePermutation<IdImplicitType, IdHandleType> IdPermutationType2;
