@@ -132,7 +132,7 @@ TestMaxPointOrCell()
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1,
                    "Incorrect number of cell sets");
 
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 6,
+  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 3,
                    "Incorrect number of fields");
 
   vtkm::worklet::DispatcherMapTopology< ::test_explicit::MaxPointOrCellValue >
@@ -144,8 +144,8 @@ TestMaxPointOrCell()
 
   //Make sure we got the right answer.
   vtkm::cont::ArrayHandle<vtkm::Float32> res;
-  res = dataSet.GetField(5).GetData().CastToArrayHandle(vtkm::Float32(),
-                                                    VTKM_DEFAULT_STORAGE_TAG());
+  res = dataSet.GetField("outcellvar").GetData().
+      CastToArrayHandle(vtkm::Float32(), VTKM_DEFAULT_STORAGE_TAG());
   VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1f),
                    "Wrong result for PointToCellMax worklet");
   VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 100.2f),
@@ -173,7 +173,7 @@ TestAvgPointToCell()
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");
 
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 6,
+  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 3,
                        "Incorrect number of fields");
 
   vtkm::worklet::DispatcherMapTopology< ::test_explicit::AveragePointToCellValue > dispatcher;

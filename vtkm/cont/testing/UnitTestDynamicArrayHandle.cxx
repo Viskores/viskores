@@ -104,8 +104,10 @@ struct CheckFunctor
   }
 };
 
-void BasicDynamicArrayChecks(const vtkm::cont::DynamicArrayHandle &array,
-                             vtkm::IdComponent numComponents)
+template<typename TypeList, typename StorageList>
+void BasicDynamicArrayChecks(
+    const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &array,
+    vtkm::IdComponent numComponents)
 {
   VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE,
                    "Dynamic array reports unexpected size.");
@@ -126,7 +128,7 @@ void CheckDynamicArray(vtkm::cont::DynamicArrayHandle array,
 
 template<typename TypeList, typename StorageList>
 void CheckDynamicArray(
-    vtkm::cont::internal::DynamicArrayHandleCast<TypeList, StorageList> array,
+    vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList> array,
     vtkm::IdComponent numComponents)
 {
   BasicDynamicArrayChecks(array, numComponents);

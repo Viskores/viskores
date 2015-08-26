@@ -48,8 +48,6 @@ set(unit_tests
   UnitTestDeviceAdapterSerial.cxx
   UnitTestDynamicArrayHandle.cxx
   UnitTestDynamicCellSet.cxx
-  UnitTestDynamicPointCoordinates.cxx
-  UnitTestPointCoordinates.cxx
   UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx
   UnitTestStorageListTag.cxx
