@@ -54,8 +54,8 @@ public:
   typedef void ExecutionSignature(_1, _3);
   typedef _2 InputDomain;
 
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
-  typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
+  typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
+  typedef IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
   IdPortalType vertexTable;
   vtkm::Float32 isovalue;
 
