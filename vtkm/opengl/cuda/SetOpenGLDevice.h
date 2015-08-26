@@ -50,6 +50,6 @@ static void SetCudaGLDevice(int id)
 
 }
 }
-} //namespace 
+} //namespace
 
 #endif //vtk_m_cuda_opengl_SetOpenGLDevice_h

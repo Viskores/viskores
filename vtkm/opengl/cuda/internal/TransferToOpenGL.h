@@ -114,14 +114,14 @@ public:
 
   //get the device pointers
   typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> HandleType;
-  typedef typename HandleType::template 
+  typedef typename HandleType::template
                 ExecutionTypes<DeviceAdapterTag>::PortalConst PortalType;
   PortalType portal = handle.PrepareForInput(DeviceAdapterTag());
 
   //Copy the data into memory that opengl owns, since we can't
   //give memory from cuda to opengl
 
-  //Perhaps a direct call to thrust copy should be wrapped in a vtkm 
+  //Perhaps a direct call to thrust copy should be wrapped in a vtkm
   //compatble function
   ::thrust::copy(vtkm::cont::cuda::internal::IteratorBegin(portal),
                 vtkm::cont::cuda::internal::IteratorEnd(portal),
