@@ -30,7 +30,7 @@ namespace worklet {
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletMapTopology.
 ///
-template<class WorkletType,
+template<typename WorkletType,
          typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class DispatcherMapTopology :
     public vtkm::worklet::internal::DispatcherBase<
