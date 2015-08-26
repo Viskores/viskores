@@ -24,6 +24,12 @@
 //that vtkm to open gl bindings work
 #include <string>
 
+#include <vtkm/internal/Configure.h>
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 // OpenGL Graphics includes
 //glew needs to go before glut
 #include <vtkm/opengl/internal/OpenGLHeaders.h>
@@ -157,4 +163,9 @@ public:
 }
 }
 }
+
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
+# pragma GCC diagnostic pop
+#endif
+
 #endif //vtkm_m_opengl_testing_WindowBase_h
