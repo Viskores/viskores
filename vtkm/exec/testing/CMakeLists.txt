@@ -24,5 +24,6 @@ set(unit_tests
   UnitTestCellDerivative.cxx
   UnitTestCellInterpolate.cxx
   UnitTestNewtonsMethod.cxx
+  UnitTestParametricCoordinates.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests})

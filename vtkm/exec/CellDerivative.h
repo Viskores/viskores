@@ -147,16 +147,20 @@ VTKM_EXEC_EXPORT
 vtkm::Vec<typename FieldVecType::ComponentType,8>
 PermutePyramidToHex(const FieldVecType &field)
 {
-  vtkm::Vec<typename FieldVecType::ComponentType,8> hexField;
+  typedef typename FieldVecType::ComponentType T;
+
+  vtkm::Vec<T,8> hexField;
+
+  T baseCenter = T(0.25f)*(field[0]+field[1]+field[2]+field[3]);
 
   hexField[0] = field[0];
   hexField[1] = field[1];
   hexField[2] = field[2];
   hexField[3] = field[3];
-  hexField[4] = field[4];
-  hexField[5] = field[4];
-  hexField[6] = field[4];
-  hexField[7] = field[4];
+  hexField[4] = field[4]+(field[0]-baseCenter);
+  hexField[5] = field[4]+(field[1]-baseCenter);
+  hexField[6] = field[4]+(field[2]-baseCenter);
+  hexField[7] = field[4]+(field[3]-baseCenter);
 
   return hexField;
 }

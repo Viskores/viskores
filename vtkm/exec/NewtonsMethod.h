@@ -47,7 +47,7 @@ NewtonsMethod(JacobianFunctor jacobianEvaluator,
               vtkm::Vec<ScalarType,Size> desiredFunctionOutput,
               vtkm::Vec<ScalarType,Size> initialGuess
               = vtkm::Vec<ScalarType,Size>(ScalarType(0)),
-              ScalarType convergeDifference = 1e-3,
+              ScalarType convergeDifference = ScalarType(1e-3),
               vtkm::IdComponent maxIterations = 10)
 {
   typedef vtkm::Vec<ScalarType,Size> VectorType;

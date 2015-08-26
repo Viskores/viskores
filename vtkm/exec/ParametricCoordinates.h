@@ -23,7 +23,10 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
 #include <vtkm/exec/Assert.h>
+#include <vtkm/exec/CellDerivative.h>
+#include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/FunctorBase.h>
+#include <vtkm/exec/NewtonsMethod.h>
 
 namespace vtkm {
 namespace exec {
@@ -553,6 +556,520 @@ ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
   ParametricCoordinatesPoint(numPoints, pointIndex, pcoords, shape, worklet);
   return pcoords;
 }
+
+//-----------------------------------------------------------------------------
+template<typename WorldCoordVector, typename PCoordType, typename CellShapeTag>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+ParametricCoordinatesToWorldCoordinates(
+    const WorldCoordVector &pointWCoords,
+    const vtkm::Vec<PCoordType,3> &pcoords,
+    CellShapeTag shape,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  return vtkm::exec::CellInterpolate(pointWCoords, pcoords, shape, worklet);
+}
+
+//-----------------------------------------------------------------------------
+
+namespace detail {
+
+template<typename WorldCoordVector, typename CellShapeTag>
+class JacobianFunctorQuad
+{
+  typedef typename WorldCoordVector::ComponentType::ComponentType T;
+  typedef vtkm::Vec<T,2> Vector2;
+  typedef vtkm::Matrix<T,2,2> Matrix2x2;
+  typedef vtkm::exec::internal::Space2D<T> SpaceType;
+
+  const WorldCoordVector *PointWCoords;
+  const SpaceType *Space;
+
+public:
+  VTKM_EXEC_EXPORT
+  JacobianFunctorQuad(
+      const WorldCoordVector *pointWCoords,
+      const SpaceType *space)
+    : PointWCoords(pointWCoords), Space(space)
+  {  }
+
+  VTKM_EXEC_EXPORT
+  Matrix2x2 operator()(const Vector2 &pcoords) const
+  {
+    Matrix2x2 jacobian;
+    vtkm::exec::internal::JacobianFor2DCell(
+          *this->PointWCoords,
+          vtkm::Vec<T,3>(pcoords[0],pcoords[1],0),
+          *this->Space,
+          jacobian,
+          CellShapeTag());
+    return jacobian;
+  }
+};
+
+template<typename WorldCoordVector, typename CellShapeTag>
+class CoordinatesFunctorQuad
+{
+  typedef typename WorldCoordVector::ComponentType::ComponentType T;
+  typedef vtkm::Vec<T,2> Vector2;
+  typedef vtkm::Vec<T,3> Vector3;
+  typedef vtkm::exec::internal::Space2D<T> SpaceType;
+
+  const WorldCoordVector *PointWCoords;
+  const SpaceType *Space;
+  const vtkm::exec::FunctorBase *Worklet;
+
+public:
+  VTKM_EXEC_EXPORT
+  CoordinatesFunctorQuad(
+      const WorldCoordVector *pointWCoords,
+      const SpaceType *space,
+      const vtkm::exec::FunctorBase *worklet)
+    : PointWCoords(pointWCoords), Space(space), Worklet(worklet)
+  {  }
+
+  VTKM_EXEC_EXPORT
+  Vector2 operator()(Vector2 pcoords) const {
+    Vector3 pcoords3D(pcoords[0], pcoords[1], 0);
+    Vector3 wcoords =
+        vtkm::exec::ParametricCoordinatesToWorldCoordinates(
+          *this->PointWCoords, pcoords3D, CellShapeTag(), *this->Worklet);
+    return this->Space->ConvertCoordToSpace(wcoords);
+  }
+};
+
+template<typename WorldCoordVector, typename CellShapeTag>
+class JacobianFunctor3DCell
+{
+  typedef typename WorldCoordVector::ComponentType::ComponentType T;
+  typedef vtkm::Vec<T,3> Vector3;
+  typedef vtkm::Matrix<T,3,3> Matrix3x3;
+
+  const WorldCoordVector *PointWCoords;
+
+public:
+  VTKM_EXEC_EXPORT
+  JacobianFunctor3DCell(
+      const WorldCoordVector *pointWCoords)
+    : PointWCoords(pointWCoords)
+  {  }
+
+  VTKM_EXEC_EXPORT
+  Matrix3x3 operator()(const Vector3 &pcoords) const
+  {
+    Matrix3x3 jacobian;
+    vtkm::exec::internal::JacobianFor3DCell(*this->PointWCoords,
+                                            pcoords,
+                                            jacobian,
+                                            CellShapeTag());
+    return jacobian;
+  }
+};
+
+template<typename WorldCoordVector, typename CellShapeTag>
+class CoordinatesFunctor3DCell
+{
+  typedef typename WorldCoordVector::ComponentType::ComponentType T;
+  typedef vtkm::Vec<T,3> Vector3;
+
+  const WorldCoordVector *PointWCoords;
+  const vtkm::exec::FunctorBase *Worklet;
+
+public:
+  VTKM_EXEC_EXPORT
+  CoordinatesFunctor3DCell(const WorldCoordVector *pointWCoords,
+                           const vtkm::exec::FunctorBase *worklet)
+    : PointWCoords(pointWCoords), Worklet(worklet)
+  {  }
+
+  VTKM_EXEC_EXPORT
+  Vector3 operator()(Vector3 pcoords) const {
+    return
+        vtkm::exec::ParametricCoordinatesToWorldCoordinates(
+          *this->PointWCoords, pcoords, CellShapeTag(), *this->Worklet);
+  }
+};
+
+template<typename WorldCoordVector, typename CellShapeTag>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates3D(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
+    CellShapeTag,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  return vtkm::exec::NewtonsMethod(
+        JacobianFunctor3DCell<WorldCoordVector,CellShapeTag>(&pointWCoords),
+        CoordinatesFunctor3DCell<WorldCoordVector,CellShapeTag>(&pointWCoords, &worklet),
+        wcoords,
+        typename WorldCoordVector::ComponentType(0.5f,0.5f,0.5f));
+}
+
+
+} // namespace detail
+
+//-----------------------------------------------------------------------------
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
+    vtkm::CellShapeTagGeneric shape,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  switch (shape.Id)
+  {
+    vtkmGenericCellShapeMacro(
+          return WorldCoordinatesToParametricCoordinates(pointWCoords,
+                                                         wcoords,
+                                                         CellShapeTag(),
+                                                         worklet));
+    default:
+      worklet.RaiseError("Unknown cell shape sent to world 2 parametric.");
+      return typename WorldCoordVector::ComponentType();
+  }
+}
+
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &,
+    const typename WorldCoordVector::ComponentType &,
+    vtkm::CellShapeTagEmpty,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  worklet.RaiseError("Attempted to find point coordinates in empty cell.");
+  return typename WorldCoordVector::ComponentType();
+}
+
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &,
+    vtkm::CellShapeTagVertex,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 3, worklet);
+  return typename WorldCoordVector::ComponentType(0, 0, 0);
+}
+
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
+    vtkm::CellShapeTagLine,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 2, worklet);
+
+  // Because this is a line, there is only one vaild parametric coordinate. Let
+  // vec be the vector from the first point to the second point
+  // (pointWCoords[1] - pointWCoords[0]), which is the direction of the line.
+  // dot(vec,wcoords-pointWCoords[0])/mag(vec) is the orthoginal projection of
+  // wcoords on the line and represents the distance between the orthoginal
+  // projection and pointWCoords[0]. The parametric coordinate is the fraction
+  // of this over the length of the segment, which is mag(vec). Thus, the
+  // parametric coordinate is dot(vec,wcoords-pointWCoords[0])/mag(vec)^2.
+
+  typedef typename WorldCoordVector::ComponentType Vector3;
+  typedef typename Vector3::ComponentType T;
+
+  Vector3 vec = pointWCoords[1] - pointWCoords[0];
+  T numerator = vtkm::dot(vec, wcoords - pointWCoords[0]);
+  T denominator = vtkm::MagnitudeSquared(vec);
+
+  return Vector3(numerator/denominator, 0, 0);
+}
+
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
+    vtkm::CellShapeTagTriangle,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 3, worklet);
+
+  // We will solve the world to parametric coordinates problem geometrically.
+  // Consider the parallelogram formed by wcoords and p0 of the triangle and
+  // the two adjacent edges. This parallelogram is equivalent to the
+  // axis-aligned rectangle anchored at the origin of parametric space.
+  //
+  //   p2 |\                 (1,0) |\                                        //
+  //      | \                      |  \                                      //
+  //      |  \                     |    \                                    //
+  //     |    \                    |      \                                  //
+  //     |     \                   |        \                                //
+  //     |      \                  |    (u,v) \                              //
+  //    | ---    \                 |-------*    \                            //
+  //    |    ---*wcoords           |       |      \                          //
+  //    |       |  \               |       |        \                        //
+  // p0 *---    |   \        (0,0) *------------------\ (1,0)                //
+  //        ---|     \                                                       //
+  //           x--    \                                                      //
+  //              ---  \                                                     //
+  //                 ---\ p1                                                 //
+  //
+  // In this diagram, the distance between p0 and the point marked x divided by
+  // the length of the edge it is on is equal, by proportionality, to the u
+  // parametric coordiante. (The v coordinate follows the other edge
+  // accordingly.) Thus, if we can find the interesection at x (or more
+  // specifically the distance between p0 and x), then we can find that
+  // parametric coordinate.
+  //
+  // Because the triangle is in 3-space, we are actually going to intersect the
+  // edge with a plane that is parallel to the opposite edge of p0 and
+  // perpendicular to the triangle. This is partially because it is easy to
+  // find the intersection between a plane and a line and partially because the
+  // computation will work for points not on the plane. (The result is
+  // equivalent to a point projected on the plane.)
+  //
+  // First, we define an implicit plane as:
+  //
+  // dot((p - wcoords), planeNormal) = 0
+  //
+  // where planeNormal is the normal to the plane (easily computed from the
+  // triangle), and p is any point in the plane. Next, we define the parametric
+  // form of the line:
+  //
+  // p(d) = (p1 - p0)d + p0
+  //
+  // Where d is the fraction of distance from p0 toward p1. Note that d is
+  // actually equal to the parametric coordinate we are trying to find. Once we
+  // compute it, we are done. We can skip the part about finding the actual
+  // coordinates of the intersection.
+  //
+  // Solving for the interesection is as simple as substituting the line's
+  // definition of p(d) into p for the plane equation. With some basic algebra
+  // you get:
+  //
+  // d = dot((wcoords - p0), planeNormal)/dot((p1-p0), planeNormal)
+  //
+  // From here, the u coordiante is simply d. The v coordinate follows
+  // similarly.
+  //
+
+  typedef typename WorldCoordVector::ComponentType Vector3;
+  typedef typename Vector3::ComponentType T;
+
+  Vector3 pcoords(T(0));
+  Vector3 triangleNormal =
+      vtkm::TriangleNormal(pointWCoords[0], pointWCoords[1], pointWCoords[2]);
+
+  for (vtkm::IdComponent dimension = 0; dimension < 2; dimension++)
+    {
+    Vector3 p0 = pointWCoords[0];
+    Vector3 p1 = pointWCoords[dimension+1];
+    Vector3 p2 = pointWCoords[2-dimension];
+    Vector3 planeNormal = vtkm::Cross(triangleNormal, p2-p0);
+
+    T d = vtkm::dot(wcoords - p0, planeNormal)/vtkm::dot(p1 - p0, planeNormal);
+
+    pcoords[dimension] = d;
+    }
+
+  return pcoords;
+}
+
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &vtkmNotUsed(pointWCoords),
+    const typename WorldCoordVector::ComponentType &vtkmNotUsed(wcoords),
+    vtkm::CellShapeTagPolygon,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  worklet.RaiseError("Not implemented yet.");
+  return typename WorldCoordVector::ComponentType();
+}
+
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
+    vtkm::CellShapeTagPixel,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 4, worklet);
+
+  typedef typename WorldCoordVector::ComponentType::ComponentType T;
+  typedef vtkm::Vec<T,2> Vector2;
+  typedef vtkm::Vec<T,3> Vector3;
+
+  // We have an underdetermined system in 3D, so create a 2D space in the
+  // plane that the polygon sits.
+  vtkm::exec::internal::Space2D<T> space(
+        pointWCoords[0], pointWCoords[1], pointWCoords[3]);
+
+  Vector2 pcoords =
+      vtkm::exec::NewtonsMethod(
+        detail::JacobianFunctorQuad<WorldCoordVector,vtkm::CellShapeTagPixel>(&pointWCoords, &space),
+        detail::CoordinatesFunctorQuad<WorldCoordVector,vtkm::CellShapeTagPixel>(&pointWCoords, &space, &worklet),
+        space.ConvertCoordToSpace(wcoords),
+        Vector2(0.5f, 0.5f));
+
+  return Vector3(pcoords[0], pcoords[1], 0);
+}
+
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
+    vtkm::CellShapeTagQuad,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 4, worklet);
+
+  typedef typename WorldCoordVector::ComponentType::ComponentType T;
+  typedef vtkm::Vec<T,2> Vector2;
+  typedef vtkm::Vec<T,3> Vector3;
+
+  // We have an underdetermined system in 3D, so create a 2D space in the
+  // plane that the polygon sits.
+  vtkm::exec::internal::Space2D<T> space(
+        pointWCoords[0], pointWCoords[1], pointWCoords[3]);
+
+  Vector2 pcoords =
+      vtkm::exec::NewtonsMethod(
+        detail::JacobianFunctorQuad<WorldCoordVector,vtkm::CellShapeTagQuad>(&pointWCoords, &space),
+        detail::CoordinatesFunctorQuad<WorldCoordVector,vtkm::CellShapeTagQuad>(&pointWCoords, &space, &worklet),
+        space.ConvertCoordToSpace(wcoords),
+        Vector2(0.5f, 0.5f));
+
+  return Vector3(pcoords[0], pcoords[1], 0);
+}
+
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
+    vtkm::CellShapeTagTetra,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 4, worklet);
+
+  // We solve the world to parametric coordinates problem for tetrahedra
+  // similarly to that for triangles. Before understanding this code, you
+  // should understand the triangle code. Go ahead. Read it now.
+  //
+  // The tetrahedron code is an obvious extension of the triangle code by
+  // considering the parallelpiped formed by wcoords and p0 of the triangle
+  // and the three adjacent faces.  This parallelpiped is equivalent to the
+  // axis-aligned cuboid anchored at the origin of parametric space.
+  //
+  // Just like the triangle, we compute the parametric coordinate for each axis
+  // by intersecting a plane with each edge emanating from p0. The plane is
+  // defined by the one that goes through wcoords (duh) and is parallel to the
+  // plane formed by the other two edges emanating from p0 (as dictated by the
+  // aforementioned parallelpiped).
+  //
+  // In review, by parameterizing the line by fraction of distance the distance
+  // from p0 to the adjacent point (which is itself the parametric coordinate
+  // we are after), we get the following definition for the intersection.
+  //
+  // d = dot((wcoords - p0), planeNormal)/dot((p1-p0), planeNormal)
+  //
+
+  typedef typename WorldCoordVector::ComponentType Vector3;
+  typedef typename Vector3::ComponentType T;
+
+  Vector3 pcoords;
+
+  const Vector3 vec0 = pointWCoords[1] - pointWCoords[0];
+  const Vector3 vec1 = pointWCoords[2] - pointWCoords[0];
+  const Vector3 vec2 = pointWCoords[3] - pointWCoords[0];
+  const Vector3 coordVec = wcoords - pointWCoords[0];
+
+  Vector3 planeNormal = vtkm::Cross(vec1, vec2);
+  pcoords[0] = vtkm::dot(coordVec, planeNormal)/vtkm::dot(vec0, planeNormal);
+
+  planeNormal = vtkm::Cross(vec0, vec2);
+  pcoords[1] = vtkm::dot(coordVec, planeNormal)/vtkm::dot(vec1, planeNormal);
+
+  planeNormal = vtkm::Cross(vec0, vec1);
+  pcoords[2] = vtkm::dot(coordVec, planeNormal)/vtkm::dot(vec2, planeNormal);
+
+  return pcoords;
+}
+
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
+    vtkm::CellShapeTagVoxel,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 8, worklet);
+
+  return detail::WorldCoordinatesToParametricCoordinates3D(
+        pointWCoords, wcoords, vtkm::CellShapeTagVoxel(), worklet);
+}
+
+
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
+    vtkm::CellShapeTagHexahedron,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 8, worklet);
+
+  return detail::WorldCoordinatesToParametricCoordinates3D(
+        pointWCoords, wcoords, vtkm::CellShapeTagHexahedron(), worklet);
+}
+
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
+    vtkm::CellShapeTagWedge,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 6, worklet);
+
+  return detail::WorldCoordinatesToParametricCoordinates3D(
+        pointWCoords, wcoords, vtkm::CellShapeTagWedge(), worklet);
+}
+
+
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
+    vtkm::CellShapeTagPyramid,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 5, worklet);
+
+  return detail::WorldCoordinatesToParametricCoordinates3D(
+        pointWCoords, wcoords, vtkm::CellShapeTagPyramid(), worklet);
+}
+
 
 }
 } // namespace vtkm::exec

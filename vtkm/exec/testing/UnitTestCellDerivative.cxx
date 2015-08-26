@@ -19,8 +19,8 @@
 //============================================================================
 
 #include <vtkm/exec/CellDerivative.h>
-#include <vtkm/exec/ParametricCoordinates.h>
 #include <vtkm/exec/FunctorBase.h>
+#include <vtkm/exec/ParametricCoordinates.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
 #include <vtkm/CellTraits.h>
