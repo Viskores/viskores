@@ -118,19 +118,6 @@ template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
-                                 vtkm::CellShapeTagPixel,
-                                 const vtkm::exec::FunctorBase &worklet)
-{
-  VTKM_ASSERT_EXEC(numPoints == 4, worklet);
-  pcoords[0] = 0.5;
-  pcoords[1] = 0.5;
-  pcoords[2] = 0;
-}
-
-template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
-                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagQuad,
                                  const vtkm::exec::FunctorBase &worklet)
 {
@@ -151,19 +138,6 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
   pcoords[0] = 0.25;
   pcoords[1] = 0.25;
   pcoords[2] = 0.25;
-}
-
-template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
-void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
-                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
-                                 vtkm::CellShapeTagVoxel,
-                                 const vtkm::exec::FunctorBase &worklet)
-{
-  VTKM_ASSERT_EXEC(numPoints == 8, worklet);
-  pcoords[0] = 0.5;
-  pcoords[1] = 0.5;
-  pcoords[2] = 0.5;
 }
 
 template<typename ParametricCoordType>
@@ -362,28 +336,6 @@ VTKM_EXEC_EXPORT
 void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
-                                vtkm::CellShapeTagPixel,
-                                const vtkm::exec::FunctorBase &worklet)
-{
-  VTKM_ASSERT_EXEC(numPoints == 4, worklet);
-
-  switch (pointIndex)
-  {
-    case 0: pcoords[0] = 0; pcoords[1] = 0; break;
-    case 1: pcoords[0] = 1; pcoords[1] = 0; break;
-    case 2: pcoords[0] = 0; pcoords[1] = 1; break;
-    case 3: pcoords[0] = 1; pcoords[1] = 1; break;
-    default:
-      worklet.RaiseError("Bad point index.");
-  }
-  pcoords[2] = 0;
-}
-
-template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
-                                vtkm::IdComponent pointIndex,
-                                vtkm::Vec<ParametricCoordType,3> &pcoords,
                                 vtkm::CellShapeTagQuad,
                                 const vtkm::exec::FunctorBase &worklet)
 {
@@ -417,31 +369,6 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
     case 1: pcoords[0] = 1; pcoords[1] = 0; pcoords[2] = 0; break;
     case 2: pcoords[0] = 0; pcoords[1] = 1; pcoords[2] = 0; break;
     case 3: pcoords[0] = 0; pcoords[1] = 0; pcoords[2] = 1; break;
-    default:
-      worklet.RaiseError("Bad point index.");
-  }
-}
-
-template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
-void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
-                                vtkm::IdComponent pointIndex,
-                                vtkm::Vec<ParametricCoordType,3> &pcoords,
-                                vtkm::CellShapeTagVoxel,
-                                const vtkm::exec::FunctorBase &worklet)
-{
-  VTKM_ASSERT_EXEC(numPoints == 8, worklet);
-
-  switch (pointIndex)
-  {
-    case 0: pcoords[0] = 0; pcoords[1] = 0; pcoords[2] = 0; break;
-    case 1: pcoords[0] = 1; pcoords[1] = 0; pcoords[2] = 0; break;
-    case 2: pcoords[0] = 0; pcoords[1] = 1; pcoords[2] = 0; break;
-    case 3: pcoords[0] = 1; pcoords[1] = 1; pcoords[2] = 0; break;
-    case 4: pcoords[0] = 0; pcoords[1] = 0; pcoords[2] = 1; break;
-    case 5: pcoords[0] = 1; pcoords[1] = 0; pcoords[2] = 1; break;
-    case 6: pcoords[0] = 0; pcoords[1] = 1; pcoords[2] = 1; break;
-    case 7: pcoords[0] = 1; pcoords[1] = 1; pcoords[2] = 1; break;
     default:
       worklet.RaiseError("Bad point index.");
   }
@@ -943,36 +870,6 @@ typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
     const typename WorldCoordVector::ComponentType &wcoords,
-    vtkm::CellShapeTagPixel,
-    const vtkm::exec::FunctorBase &worklet)
-{
-  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 4, worklet);
-
-  typedef typename WorldCoordVector::ComponentType::ComponentType T;
-  typedef vtkm::Vec<T,2> Vector2;
-  typedef vtkm::Vec<T,3> Vector3;
-
-  // We have an underdetermined system in 3D, so create a 2D space in the
-  // plane that the polygon sits.
-  vtkm::exec::internal::Space2D<T> space(
-        pointWCoords[0], pointWCoords[1], pointWCoords[3]);
-
-  Vector2 pcoords =
-      vtkm::exec::NewtonsMethod(
-        detail::JacobianFunctorQuad<WorldCoordVector,vtkm::CellShapeTagPixel>(&pointWCoords, &space),
-        detail::CoordinatesFunctorQuad<WorldCoordVector,vtkm::CellShapeTagPixel>(&pointWCoords, &space, &worklet),
-        space.ConvertCoordToSpace(wcoords),
-        Vector2(0.5f, 0.5f));
-
-  return Vector3(pcoords[0], pcoords[1], 0);
-}
-
-template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
-typename WorldCoordVector::ComponentType
-WorldCoordinatesToParametricCoordinates(
-    const WorldCoordVector &pointWCoords,
-    const typename WorldCoordVector::ComponentType &wcoords,
     vtkm::CellShapeTagQuad,
     const vtkm::exec::FunctorBase &worklet)
 {
@@ -1051,21 +948,6 @@ WorldCoordinatesToParametricCoordinates(
   pcoords[2] = vtkm::dot(coordVec, planeNormal)/vtkm::dot(vec2, planeNormal);
 
   return pcoords;
-}
-
-template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
-typename WorldCoordVector::ComponentType
-WorldCoordinatesToParametricCoordinates(
-    const WorldCoordVector &pointWCoords,
-    const typename WorldCoordVector::ComponentType &wcoords,
-    vtkm::CellShapeTagVoxel,
-    const vtkm::exec::FunctorBase &worklet)
-{
-  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 8, worklet);
-
-  return detail::WorldCoordinatesToParametricCoordinates3D(
-        pointWCoords, wcoords, vtkm::CellShapeTagVoxel(), worklet);
 }
 
 

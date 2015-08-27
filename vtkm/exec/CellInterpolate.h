@@ -318,26 +318,6 @@ VTKM_EXEC_EXPORT
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
-                vtkm::CellShapeTagPixel,
-                const vtkm::exec::FunctorBase &worklet)
-{
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 4, worklet);
-
-  typedef typename FieldVecType::ComponentType T;
-
-  T bottomInterp = vtkm::Lerp(field[0], field[1], pcoords[0]);
-  T topInterp = vtkm::Lerp(field[2], field[3], pcoords[0]);
-
-  return vtkm::Lerp(bottomInterp, topInterp, pcoords[1]);
-}
-
-//-----------------------------------------------------------------------------
-template<typename FieldVecType,
-         typename ParametricCoordType>
-VTKM_EXEC_EXPORT
-typename FieldVecType::ComponentType
-CellInterpolate(const FieldVecType &field,
-                const vtkm::Vec<ParametricCoordType,3> &pcoords,
                 vtkm::CellShapeTagQuad,
                 const vtkm::exec::FunctorBase &worklet)
 {
@@ -367,31 +347,6 @@ CellInterpolate(const FieldVecType &field,
                         + (field[1] * pcoords[0])
                         + (field[2] * pcoords[1])
                         + (field[3] * pcoords[2]));
-}
-
-//-----------------------------------------------------------------------------
-template<typename FieldVecType,
-         typename ParametricCoordType>
-VTKM_EXEC_EXPORT
-typename FieldVecType::ComponentType
-CellInterpolate(const FieldVecType &field,
-                const vtkm::Vec<ParametricCoordType,3> &pcoords,
-                vtkm::CellShapeTagVoxel,
-                const vtkm::exec::FunctorBase &worklet)
-{
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 8, worklet);
-
-  typedef typename FieldVecType::ComponentType T;
-
-  T bottomFrontInterp = vtkm::Lerp(field[0], field[1], pcoords[0]);
-  T bottomBackInterp = vtkm::Lerp(field[2], field[3], pcoords[0]);
-  T topFrontInterp = vtkm::Lerp(field[4], field[5], pcoords[0]);
-  T topBackInterp = vtkm::Lerp(field[6], field[7], pcoords[0]);
-
-  T bottomInterp = vtkm::Lerp(bottomFrontInterp, bottomBackInterp, pcoords[1]);
-  T topInterp = vtkm::Lerp(topFrontInterp, topBackInterp, pcoords[1]);
-
-  return vtkm::Lerp(bottomInterp, topInterp, pcoords[2]);
 }
 
 //-----------------------------------------------------------------------------

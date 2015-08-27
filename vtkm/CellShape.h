@@ -43,10 +43,10 @@ enum CellShapeIdEnum
   CELL_SHAPE_TRIANGLE           = 5,
   //CELL_SHAPE_TRIANGLE_STRIP   = 6,
   CELL_SHAPE_POLYGON            = 7,
-  CELL_SHAPE_PIXEL              = 8,
+  //CELL_SHAPE_PIXEL              = 8,
   CELL_SHAPE_QUAD               = 9,
   CELL_SHAPE_TETRA              = 10,
-  CELL_SHAPE_VOXEL              = 11,
+  //CELL_SHAPE_VOXEL              = 11,
   CELL_SHAPE_HEXAHEDRON         = 12,
   CELL_SHAPE_WEDGE              = 13,
   CELL_SHAPE_PYRAMID            = 14,
@@ -121,10 +121,10 @@ VTKM_DEFINE_CELL_TAG(Line, CELL_SHAPE_LINE);
 VTKM_DEFINE_CELL_TAG(Triangle, CELL_SHAPE_TRIANGLE);
 //VTKM_DEFINE_CELL_TAG(TriangleStrip, CELL_SHAPE_TRIANGLE_STRIP);
 VTKM_DEFINE_CELL_TAG(Polygon, CELL_SHAPE_POLYGON);
-VTKM_DEFINE_CELL_TAG(Pixel, CELL_SHAPE_PIXEL);
+//VTKM_DEFINE_CELL_TAG(Pixel, CELL_SHAPE_PIXEL);
 VTKM_DEFINE_CELL_TAG(Quad, CELL_SHAPE_QUAD);
 VTKM_DEFINE_CELL_TAG(Tetra, CELL_SHAPE_TETRA);
-VTKM_DEFINE_CELL_TAG(Voxel, CELL_SHAPE_VOXEL);
+//VTKM_DEFINE_CELL_TAG(Voxel, CELL_SHAPE_VOXEL);
 VTKM_DEFINE_CELL_TAG(Hexahedron, CELL_SHAPE_HEXAHEDRON);
 VTKM_DEFINE_CELL_TAG(Wedge, CELL_SHAPE_WEDGE);
 VTKM_DEFINE_CELL_TAG(Pyramid, CELL_SHAPE_PYRAMID);
@@ -189,10 +189,8 @@ struct CellShapeTagGeneric {
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_LINE, call); \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_TRIANGLE, call); \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_POLYGON, call); \
-  vtkmGenericCellShapeMacroCase(CELL_SHAPE_PIXEL, call); \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_QUAD, call); \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_TETRA, call); \
-  vtkmGenericCellShapeMacroCase(CELL_SHAPE_VOXEL, call); \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_HEXAHEDRON, call); \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_WEDGE, call); \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_PYRAMID, call)

@@ -84,7 +84,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::IdComponent GetCellShape() const {return CELL_SHAPE_LINE;}
+  vtkm::IdComponent GetCellShape() const {return vtkm::CELL_SHAPE_LINE;}
 
   typedef vtkm::CellShapeTagLine CellShapeTag;
 
@@ -184,9 +184,9 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::IdComponent GetCellShape() const { return CELL_SHAPE_PIXEL; }
+  vtkm::IdComponent GetCellShape() const { return vtkm::CELL_SHAPE_QUAD; }
 
-  typedef vtkm::CellShapeTagPixel CellShapeTag;
+  typedef vtkm::CellShapeTagQuad CellShapeTag;
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
@@ -197,8 +197,8 @@ public:
     vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> pointIds;
     pointIds[0] = j*this->PointDimensions[0] + i;
     pointIds[1] = pointIds[0] + 1;
-    pointIds[2] = pointIds[0] + this->PointDimensions[0];
-    pointIds[3] = pointIds[2] + 1;
+    pointIds[2] = pointIds[1] + this->PointDimensions[0];
+    pointIds[3] = pointIds[2] - 1;
     return pointIds;
   }
 
@@ -322,9 +322,9 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
   VTKM_EXEC_CONT_EXPORT
-  vtkm::IdComponent GetCellShape() const { return CELL_SHAPE_VOXEL; }
+  vtkm::IdComponent GetCellShape() const { return vtkm::CELL_SHAPE_HEXAHEDRON; }
 
-  typedef vtkm::CellShapeTagVoxel CellShapeTag;
+  typedef vtkm::CellShapeTagHexahedron CellShapeTag;
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
@@ -340,12 +340,12 @@ public:
     vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> pointIds;
     pointIds[0] = (k * this->PointDimensions[1] + j) * this->PointDimensions[0] + i;
     pointIds[1] = pointIds[0] + 1;
-    pointIds[2] = pointIds[0] + this->PointDimensions[0];
-    pointIds[3] = pointIds[2] + 1;
+    pointIds[2] = pointIds[1] + this->PointDimensions[0];
+    pointIds[3] = pointIds[2] - 1;
     pointIds[4] = pointIds[0] + this->PointDimensions[0]*this->PointDimensions[1];
     pointIds[5] = pointIds[4] + 1;
-    pointIds[6] = pointIds[4] + this->PointDimensions[0];
-    pointIds[7] = pointIds[6] + 1;
+    pointIds[6] = pointIds[5] + this->PointDimensions[0];
+    pointIds[7] = pointIds[6] - 1;
 
     return pointIds;
   }

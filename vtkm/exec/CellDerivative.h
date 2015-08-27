@@ -213,22 +213,6 @@ VTKM_EXEC_EXPORT
 void JacobianFor3DCell(const WorldCoordType &wCoords,
                        const vtkm::Vec<ParametricCoordType,3> &pcoords,
                        vtkm::Matrix<JacobianType,3,3> &jacobian,
-                       vtkm::CellShapeTagVoxel)
-{
-  vtkm::Vec<JacobianType,3> pc(pcoords);
-  vtkm::Vec<JacobianType,3> rc = vtkm::Vec<JacobianType,3>(1) - pc;
-
-  jacobian = vtkm::Matrix<JacobianType,3,3>(0);
-  VTKM_DERIVATIVE_WEIGHTS_VOXEL(pc, rc, VTKM_ACCUM_JACOBIAN_3D);
-}
-
-template<typename WorldCoordType,
-         typename ParametricCoordType,
-         typename JacobianType>
-VTKM_EXEC_EXPORT
-void JacobianFor3DCell(const WorldCoordType &wCoords,
-                       const vtkm::Vec<ParametricCoordType,3> &pcoords,
-                       vtkm::Matrix<JacobianType,3,3> &jacobian,
                        vtkm::CellShapeTagWedge)
 {
 #if 0
@@ -300,24 +284,6 @@ void JacobianFor2DCell(const WorldCoordType &wCoords,
   vtkm::Vec<JacobianType,2> wcoords2d;
   jacobian = vtkm::Matrix<JacobianType,2,2>(0);
   VTKM_DERIVATIVE_WEIGHTS_QUAD(pc, rc, VTKM_ACCUM_JACOBIAN_2D);
-}
-
-template<typename WorldCoordType,
-         typename ParametricCoordType,
-         typename JacobianType>
-VTKM_EXEC_EXPORT
-void JacobianFor2DCell(const WorldCoordType &wCoords,
-                       const vtkm::Vec<ParametricCoordType,3> &pcoords,
-                       const vtkm::exec::internal::Space2D<JacobianType> &space,
-                       vtkm::Matrix<JacobianType,2,2> &jacobian,
-                       vtkm::CellShapeTagPixel)
-{
-  vtkm::Vec<JacobianType,2> pc(pcoords[0], pcoords[1]);
-  vtkm::Vec<JacobianType,2> rc = vtkm::Vec<JacobianType,2>(1) - pc;
-
-  vtkm::Vec<JacobianType,2> wcoords2d;
-  jacobian = vtkm::Matrix<JacobianType,2,2>(0);
-  VTKM_DERIVATIVE_WEIGHTS_PIXEL(pc, rc, VTKM_ACCUM_JACOBIAN_2D);
 }
 
 #if 0
@@ -402,26 +368,6 @@ VTKM_EXEC_EXPORT
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 ParametricDerivative(const FieldVecType &field,
                      const vtkm::Vec<ParametricCoordType,3> &pcoords,
-                     vtkm::CellShapeTagVoxel)
-{
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef vtkm::Vec<FieldType,3> GradientType;
-
-  GradientType pc(pcoords);
-  GradientType rc = GradientType(1) - pc;
-
-  GradientType parametricDerivative(0);
-  VTKM_DERIVATIVE_WEIGHTS_VOXEL(pc, rc, VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D);
-
-  return parametricDerivative;
-}
-
-template<typename FieldVecType,
-         typename ParametricCoordType>
-VTKM_EXEC_EXPORT
-vtkm::Vec<typename FieldVecType::ComponentType,3>
-ParametricDerivative(const FieldVecType &field,
-                     const vtkm::Vec<ParametricCoordType,3> &pcoords,
                      vtkm::CellShapeTagWedge)
 {
 #if 0
@@ -492,26 +438,6 @@ ParametricDerivative(const FieldVecType &field,
 
   GradientType parametricDerivative(0);
   VTKM_DERIVATIVE_WEIGHTS_QUAD(pc, rc, VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D);
-
-  return parametricDerivative;
-}
-
-template<typename FieldVecType,
-         typename ParametricCoordType>
-VTKM_EXEC_EXPORT
-vtkm::Vec<typename FieldVecType::ComponentType,2>
-ParametricDerivative(const FieldVecType &field,
-                     const vtkm::Vec<ParametricCoordType,3> &pcoords,
-                     vtkm::CellShapeTagPixel)
-{
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef vtkm::Vec<FieldType,2> GradientType;
-
-  GradientType pc(pcoords[0], pcoords[1]);
-  GradientType rc = GradientType(1) - pc;
-
-  GradientType parametricDerivative(0);
-  VTKM_DERIVATIVE_WEIGHTS_PIXEL(pc, rc, VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D);
 
   return parametricDerivative;
 }
@@ -962,25 +888,6 @@ vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &field,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &pcoords,
-               vtkm::CellShapeTagPixel,
-               const vtkm::exec::FunctorBase &worklet)
-{
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 4, worklet);
-  VTKM_ASSERT_EXEC(wCoords.GetNumberOfComponents() == 4, worklet);
-
-  return detail::CellDerivativeFor2DCell(
-        field, wCoords, pcoords, vtkm::CellShapeTagPixel());
-}
-
-//-----------------------------------------------------------------------------
-template<typename FieldVecType,
-         typename WorldCoordType,
-         typename ParametricCoordType>
-VTKM_EXEC_EXPORT
-vtkm::Vec<typename FieldVecType::ComponentType,3>
-CellDerivative(const FieldVecType &field,
-               const WorldCoordType &wCoords,
-               const vtkm::Vec<ParametricCoordType,3> &pcoords,
                vtkm::CellShapeTagQuad,
                const vtkm::exec::FunctorBase &worklet)
 {
@@ -1057,25 +964,6 @@ CellDerivative(const FieldVecType &field,
   bool valid;
 
   return vtkm::SolveLinearSystem(A, b, valid);
-}
-
-//-----------------------------------------------------------------------------
-template<typename FieldVecType,
-         typename WorldCoordType,
-         typename ParametricCoordType>
-VTKM_EXEC_EXPORT
-vtkm::Vec<typename FieldVecType::ComponentType,3>
-CellDerivative(const FieldVecType &field,
-               const WorldCoordType &wCoords,
-               const vtkm::Vec<ParametricCoordType,3> &pcoords,
-               vtkm::CellShapeTagVoxel,
-               const vtkm::exec::FunctorBase &worklet)
-{
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 8, worklet);
-  VTKM_ASSERT_EXEC(wCoords.GetNumberOfComponents() == 8, worklet);
-
-  return detail::CellDerivativeFor3DCell(
-        field, wCoords, pcoords, vtkm::CellShapeTagVoxel());
 }
 
 //-----------------------------------------------------------------------------

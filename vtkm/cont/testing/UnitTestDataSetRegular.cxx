@@ -96,7 +96,7 @@ TwoDimRegularTest()
     VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(cellIndex) == 4,
                      "Incorrect number of cell indices");
     vtkm::IdComponent shape = cellSet.GetCellShape();
-    VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_PIXEL,
+    VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_QUAD,
                      "Incorrect element type.");
   }
 
@@ -118,7 +118,7 @@ TwoDimRegularTest()
         vtkm::TopologyElementTagPoint());
 
 
-  vtkm::Id cells[2][4] = {{0,1,3,4}, {1,2,4,5}};
+  vtkm::Id cells[2][4] = {{0,1,4,3}, {1,2,5,4}};
   for (vtkm::Id cellIndex = 0; cellIndex < 2; cellIndex++)
   {
     vtkm::Vec<vtkm::Id,4> pointIds = pointToCell.GetIndices(cellIndex);
@@ -213,7 +213,7 @@ ThreeDimRegularTest()
     VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(cellIndex) == 8,
                      "Incorrect number of cell indices");
     vtkm::IdComponent shape = cellSet.GetCellShape();
-    VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_VOXEL,
+    VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_HEXAHEDRON,
                      "Incorrect element type.");
   }
 
@@ -226,7 +226,7 @@ ThreeDimRegularTest()
         vtkm::cont::DeviceAdapterTagSerial(),
         vtkm::TopologyElementTagPoint(),
         vtkm::TopologyElementTagCell());
-  vtkm::Id expectedPointIds[8] = {0,1,3,4,6,7,9,10};
+  vtkm::Id expectedPointIds[8] = {0,1,4,3,6,7,10,9};
   vtkm::Vec<vtkm::Id,8> retrievedPointIds = pointToCell.GetIndices(0);
   for (vtkm::IdComponent localPointIndex = 0;
        localPointIndex < 8;
