@@ -92,8 +92,9 @@ vtkm::cont::DataSet MakeTestDatasetStructured()
 {
   static const vtkm::Vec<vtkm::Float32, 3> origin(0.0f, 0.0f, 0.0f);
   static const vtkm::Vec<vtkm::Float32, 3> spacing(1.0f, 1.0f, 1.0f);
-  static const vtkm::Id3 dim(3, 3, 1);
-  static const vtkm::Id numVerts = dim[0] * dim[1];
+  static const vtkm::Id xdim = 3, ydim = 3;
+  static const vtkm::Id3 dim(xdim, ydim, 1);
+  static const vtkm::Id numVerts = xdim * ydim;
 
   vtkm::Float32 scalars[numVerts];
   for (vtkm::Id i = 0; i < numVerts; ++i)
