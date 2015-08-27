@@ -26,6 +26,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
   set(CMAKE_COMPILER_IS_PGIXX 1)
 endif()
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+  set(CMAKE_COMPILER_IS_ICCXX 1)
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
 
   include(CheckCXXCompilerFlag)
@@ -62,5 +66,10 @@ elseif(CMAKE_COMPILER_IS_PGIXX)
   #because it is reporting itself as GCC, but it actually doesn't.
   #our workaround for this is to manually explicitly disable float128
   add_definitions("-DBOOST_MATH_DISABLE_FLOAT128=1")
+elseif(CMAKE_COMPILER_IS_ICCXX)
+  #Intel compiler offers header level suppression in the form of
+  # #pragma warning(disable : 1478), but for warning 1478 it seems to not
+  #work. Instead we add it as a definition
+  add_definitions("-wd1478")
 endif()
 
