@@ -141,9 +141,13 @@ TwoDimRegularTest()
 
   for (vtkm::Id pointIndex = 0; pointIndex < 6; pointIndex++)
   {
-    vtkm::Vec<vtkm::Id,4> retrievedCellIds =
+    vtkm::VecVariable<vtkm::Id,4> retrievedCellIds =
       cellToPoint.GetIndices(pointIndex);
-    for (vtkm::IdComponent cellIndex = 0; cellIndex < 4; cellIndex++)
+    VTKM_TEST_ASSERT(retrievedCellIds.GetNumberOfComponents() <= 4,
+                     "Got wrong number of cell ids.");
+    for (vtkm::IdComponent cellIndex = 0;
+         cellIndex < retrievedCellIds.GetNumberOfComponents();
+         cellIndex++)
       VTKM_TEST_ASSERT(
             retrievedCellIds[cellIndex] == expectedCellIds[pointIndex][cellIndex],
             "Incorrect cell ID for point");
@@ -242,9 +246,11 @@ ThreeDimRegularTest()
         vtkm::TopologyElementTagCell(),
         vtkm::TopologyElementTagPoint());
   vtkm::Id retrievedCellIds[6] = {0,-1,-1,-1,-1,-1};
-  vtkm::Vec<vtkm::Id,6> expectedCellIds = cellToPoint.GetIndices(0);
+  vtkm::VecVariable<vtkm::Id,6> expectedCellIds = cellToPoint.GetIndices(0);
+  VTKM_TEST_ASSERT(expectedCellIds.GetNumberOfComponents() <= 6,
+                   "Got unexpected number of cell ids");
   for (vtkm::IdComponent localPointIndex = 0;
-       localPointIndex < 6;
+       localPointIndex < expectedCellIds.GetNumberOfComponents();
        localPointIndex++)
   {
     VTKM_TEST_ASSERT(
