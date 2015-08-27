@@ -346,29 +346,6 @@ bool test_equal(const vtkm::Pair<T1,T2> &pair1,
       && test_equal(pair1.second, pair2.second, tolerance);
 }
 
-/// Helper function for printing out vectors during testing.
-///
-template<typename T, vtkm::IdComponent Size>
-VTKM_CONT_EXPORT
-std::ostream &operator<<(std::ostream &stream, const vtkm::Vec<T,Size> &vec)
-{
-  stream << "[";
-  for (vtkm::IdComponent component = 0; component < Size-1; component++)
-  {
-    stream << vec[component] << ",";
-  }
-  return stream << vec[Size-1] << "]";
-}
-
-/// Helper function for printing out pairs during testing.
-///
-template<typename T, typename U>
-VTKM_EXEC_CONT_EXPORT
-std::ostream &operator<<(std::ostream &stream, const vtkm::Pair<T,U> &vec)
-{
-  return stream << "[" << vec.first << "," << vec.second << "]";
-}
-
 
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
