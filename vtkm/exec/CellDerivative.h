@@ -559,7 +559,6 @@ CellDerivativeFor2DCell(const FieldVecType &field,
                         CellShapeTag)
 {
   typedef typename FieldVecType::ComponentType FieldType;
-  typedef vtkm::Vec<FieldType,3> GradientType;
 
   // We have an underdetermined system in 3D, so create a 2D space in the
   // plane that the polygon sits.

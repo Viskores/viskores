@@ -929,7 +929,6 @@ WorldCoordinatesToParametricCoordinates(
   //
 
   typedef typename WorldCoordVector::ComponentType Vector3;
-  typedef typename Vector3::ComponentType T;
 
   Vector3 pcoords;
 

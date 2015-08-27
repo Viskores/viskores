@@ -75,11 +75,11 @@ void TestNewtonsMethodTemplate()
   Vector3 expected2(2.0f/3.0f, 2.0f/3.0f, 1.0f/3.0f);
 
   Vector3 initialGuess;
-  for (initialGuess[0] = 0.25; initialGuess[0] <= 1; initialGuess[0] += 0.25)
+  for (initialGuess[0] = 0.25f; initialGuess[0] <= 1; initialGuess[0] += 0.25f)
   {
-    for (initialGuess[1] = 0.25; initialGuess[1] <= 1; initialGuess[1] += 0.25)
+    for (initialGuess[1] = 0.25f; initialGuess[1] <= 1; initialGuess[1] += 0.25f)
     {
-      for (initialGuess[2] = 0.25; initialGuess[2] <= 1; initialGuess[2] +=0.25)
+      for (initialGuess[2] = 0.25f; initialGuess[2] <= 1; initialGuess[2] +=0.25f)
       {
         std::cout << "   " << initialGuess << std::endl;
 
