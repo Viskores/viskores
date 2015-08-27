@@ -31,8 +31,7 @@
 namespace test_regular {
 
 class MaxPointOrCellValue :
-    public vtkm::worklet::WorkletMapTopology<vtkm::TopologyElementTagPoint,
-                                             vtkm::TopologyElementTagCell>
+    public vtkm::worklet::WorkletMapTopologyPointToCell
 {
 public:
   typedef void ControlSignature(FieldInTo<Scalar> inCells,
@@ -67,9 +66,8 @@ public:
   }
 };
 
-class AveragePointToCellValue : 
-    public vtkm::worklet::WorkletMapTopology<vtkm::TopologyElementTagPoint,
-                                             vtkm::TopologyElementTagCell>
+class AveragePointToCellValue :
+    public vtkm::worklet::WorkletMapTopologyPointToCell
 {
 public:
   typedef void ControlSignature(FieldInFrom<Scalar> inPoints,

@@ -233,11 +233,12 @@ private:
 
   typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
 
+
 public:
   struct TypeClipStats : vtkm::ListTagBase<ClipStats> { };
 
 
-  class ComputeStats : public vtkm::worklet::WorkletMapTopology
+  class ComputeStats : public vtkm::worklet::WorkletMapTopologyPointToCell
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
@@ -296,7 +297,7 @@ public:
   };
 
 
-  class GenerateCellSet : public vtkm::worklet::WorkletMapTopology
+  class GenerateCellSet : public vtkm::worklet::WorkletMapTopologyPointToCell
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
