@@ -754,7 +754,7 @@ WorldCoordinatesToParametricCoordinates(
     vtkm::CellShapeTagVertex,
     const vtkm::exec::FunctorBase &worklet)
 {
-  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 3, worklet);
+  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 1, worklet);
   return typename WorldCoordVector::ComponentType(0, 0, 0);
 }
 
@@ -797,100 +797,144 @@ WorldCoordinatesToParametricCoordinates(
     vtkm::CellShapeTagTriangle,
     const vtkm::exec::FunctorBase &worklet)
 {
-  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 3, worklet);
-
-  // We will solve the world to parametric coordinates problem geometrically.
-  // Consider the parallelogram formed by wcoords and p0 of the triangle and
-  // the two adjacent edges. This parallelogram is equivalent to the
-  // axis-aligned rectangle anchored at the origin of parametric space.
-  //
-  //   p2 |\                 (1,0) |\                                        //
-  //      | \                      |  \                                      //
-  //      |  \                     |    \                                    //
-  //     |    \                    |      \                                  //
-  //     |     \                   |        \                                //
-  //     |      \                  |    (u,v) \                              //
-  //    | ---    \                 |-------*    \                            //
-  //    |    ---*wcoords           |       |      \                          //
-  //    |       |  \               |       |        \                        //
-  // p0 *---    |   \        (0,0) *------------------\ (1,0)                //
-  //        ---|     \                                                       //
-  //           x--    \                                                      //
-  //              ---  \                                                     //
-  //                 ---\ p1                                                 //
-  //
-  // In this diagram, the distance between p0 and the point marked x divided by
-  // the length of the edge it is on is equal, by proportionality, to the u
-  // parametric coordiante. (The v coordinate follows the other edge
-  // accordingly.) Thus, if we can find the interesection at x (or more
-  // specifically the distance between p0 and x), then we can find that
-  // parametric coordinate.
-  //
-  // Because the triangle is in 3-space, we are actually going to intersect the
-  // edge with a plane that is parallel to the opposite edge of p0 and
-  // perpendicular to the triangle. This is partially because it is easy to
-  // find the intersection between a plane and a line and partially because the
-  // computation will work for points not on the plane. (The result is
-  // equivalent to a point projected on the plane.)
-  //
-  // First, we define an implicit plane as:
-  //
-  // dot((p - wcoords), planeNormal) = 0
-  //
-  // where planeNormal is the normal to the plane (easily computed from the
-  // triangle), and p is any point in the plane. Next, we define the parametric
-  // form of the line:
-  //
-  // p(d) = (p1 - p0)d + p0
-  //
-  // Where d is the fraction of distance from p0 toward p1. Note that d is
-  // actually equal to the parametric coordinate we are trying to find. Once we
-  // compute it, we are done. We can skip the part about finding the actual
-  // coordinates of the intersection.
-  //
-  // Solving for the interesection is as simple as substituting the line's
-  // definition of p(d) into p for the plane equation. With some basic algebra
-  // you get:
-  //
-  // d = dot((wcoords - p0), planeNormal)/dot((p1-p0), planeNormal)
-  //
-  // From here, the u coordiante is simply d. The v coordinate follows
-  // similarly.
-  //
-
-  typedef typename WorldCoordVector::ComponentType Vector3;
-  typedef typename Vector3::ComponentType T;
-
-  Vector3 pcoords(T(0));
-  Vector3 triangleNormal =
-      vtkm::TriangleNormal(pointWCoords[0], pointWCoords[1], pointWCoords[2]);
-
-  for (vtkm::IdComponent dimension = 0; dimension < 2; dimension++)
-    {
-    Vector3 p0 = pointWCoords[0];
-    Vector3 p1 = pointWCoords[dimension+1];
-    Vector3 p2 = pointWCoords[2-dimension];
-    Vector3 planeNormal = vtkm::Cross(triangleNormal, p2-p0);
-
-    T d = vtkm::dot(wcoords - p0, planeNormal)/vtkm::dot(p1 - p0, planeNormal);
-
-    pcoords[dimension] = d;
-    }
-
-  return pcoords;
+  return vtkm::exec::internal::ReverseInterpolateTriangle(
+        pointWCoords, wcoords, worklet);
 }
 
 template<typename WorldCoordVector>
 VTKM_EXEC_EXPORT
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
-    const WorldCoordVector &vtkmNotUsed(pointWCoords),
-    const typename WorldCoordVector::ComponentType &vtkmNotUsed(wcoords),
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
     vtkm::CellShapeTagPolygon,
     const vtkm::exec::FunctorBase &worklet)
 {
-  worklet.RaiseError("Not implemented yet.");
-  return typename WorldCoordVector::ComponentType();
+  const vtkm::IdComponent numPoints = pointWCoords.GetNumberOfComponents();
+  VTKM_ASSERT_EXEC(numPoints > 0, worklet);
+  switch (numPoints)
+  {
+    case 1:
+      return WorldCoordinatesToParametricCoordinates(
+            pointWCoords, wcoords, vtkm::CellShapeTagVertex(), worklet);
+    case 2:
+      return WorldCoordinatesToParametricCoordinates(
+            pointWCoords, wcoords, vtkm::CellShapeTagLine(), worklet);
+    case 3:
+      return WorldCoordinatesToParametricCoordinates(
+            pointWCoords, wcoords, vtkm::CellShapeTagTriangle(), worklet);
+    case 4:
+      return WorldCoordinatesToParametricCoordinates(
+            pointWCoords, wcoords, vtkm::CellShapeTagQuad(), worklet);
+  }
+
+  // If we are here, then there are 5 or more points on this polygon.
+
+  // Arrange the points such that they are on the circle circumscribed in the
+  // unit square from 0 to 1. That is, the point are on the circle centered at
+  // coordinate 0.5,0.5 with radius 0.5. The polygon is divided into regions
+  // defined by they triangle fan formed by the points around the center. This
+  // is C0 continuous but not necessarily C1 continuous. It is also possible to
+  // have a non 1 to 1 mapping between parametric coordinates world coordinates
+  // if the polygon is not planar or convex.
+
+  typedef typename WorldCoordVector::ComponentType WCoordType;
+
+  // Find the position of the center point.
+  WCoordType wcoordCenter = pointWCoords[0];
+  for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; pointIndex++)
+  {
+    wcoordCenter = wcoordCenter + pointWCoords[pointIndex];
+  }
+  wcoordCenter = wcoordCenter*WCoordType(1.0f/numPoints);
+
+  // Find the normal vector to the polygon. If the polygon is planar, convex,
+  // and in general position, any three points will give a normal in the same
+  // direction. Although not perfectly robust, we can reduce the effect of
+  // non-planar, non-convex, or degenerate polygons by picking three points
+  // topologically far from each other. Note that we do not care about the
+  // length of the normal in this case.
+  WCoordType polygonNormal;
+  {
+    WCoordType vec1 = pointWCoords[numPoints/3] - pointWCoords[0];
+    WCoordType vec2 = pointWCoords[2*numPoints/3] - pointWCoords[1];
+    polygonNormal = vtkm::Cross(vec1, vec2);
+  }
+
+  // Find which triangle wcoords is located in. We do this by defining the
+  // equations for the planes through the radial edges and perpendicular to the
+  // polygon. The point is in the triangle if it is on the correct side of both
+  // planes.
+  vtkm::IdComponent firstPointIndex;
+  vtkm::IdComponent secondPointIndex;
+  bool foundTriangle = false;
+  for (firstPointIndex = 0; firstPointIndex < numPoints-1; firstPointIndex++)
+  {
+    WCoordType vecInPlane = pointWCoords[firstPointIndex] - wcoordCenter;
+    WCoordType planeNormal = vtkm::Cross(polygonNormal, vecInPlane);
+    typename WCoordType::ComponentType planeOffset =
+        vtkm::dot(planeNormal,wcoordCenter);
+    if (vtkm::dot(planeNormal,wcoords) < planeOffset)
+    {
+      // wcoords on wrong side of plane, thus outside of triangle
+      continue;
+    }
+
+    secondPointIndex = firstPointIndex+1;
+    vecInPlane = pointWCoords[secondPointIndex] - wcoordCenter;
+    planeNormal = vtkm::Cross(polygonNormal, vecInPlane);
+    planeOffset = vtkm::dot(planeNormal,wcoordCenter);
+    if (vtkm::dot(planeNormal,wcoords) > planeOffset)
+    {
+      // wcoords on wrong side of plane, thus outside of triangle
+      continue;
+    }
+
+    foundTriangle = true;
+    break;
+  }
+  if (!foundTriangle)
+  {
+    // wcoord was outside of all triangles we checked. It must be inside the
+    // one triangle we did not check (the one between the first and last
+    // polygon points).
+    firstPointIndex = numPoints-1;
+    secondPointIndex = 0;
+  }
+
+  // Build a structure containing the points of the triangle wcoords is in and
+  // use the triangle version of this function to find the parametric
+  // coordinates.
+  vtkm::Vec<WCoordType,3> triangleWCoords;
+  triangleWCoords[0] = wcoordCenter;
+  triangleWCoords[1] = pointWCoords[firstPointIndex];
+  triangleWCoords[2] = pointWCoords[secondPointIndex];
+
+  WCoordType trianglePCoords =
+      WorldCoordinatesToParametricCoordinates(triangleWCoords,
+                                              wcoords,
+                                              vtkm::CellShapeTagTriangle(),
+                                              worklet);
+
+  // trianglePCoords is in the triangle's parameter space rather than the
+  // polygon's parameter space. We can find the polygon's parameter space by
+  // repurposing the ParametricCoordinatesToWorldCoordinates by using the
+  // polygon parametric coordinates as a proxy for world coordinates.
+  triangleWCoords[0] = WCoordType(0.5f, 0.5f, 0);
+  ParametricCoordinatesPoint(numPoints,
+                             firstPointIndex,
+                             triangleWCoords[1],
+                             vtkm::CellShapeTagPolygon(),
+                             worklet);
+  ParametricCoordinatesPoint(numPoints,
+                             secondPointIndex,
+                             triangleWCoords[2],
+                             vtkm::CellShapeTagPolygon(),
+                             worklet);
+  return ParametricCoordinatesToWorldCoordinates(triangleWCoords,
+                                                 trianglePCoords,
+                                                 vtkm::CellShapeTagTriangle(),
+                                                 worklet);
 }
 
 template<typename WorldCoordVector>
@@ -966,7 +1010,8 @@ WorldCoordinatesToParametricCoordinates(
 
   // We solve the world to parametric coordinates problem for tetrahedra
   // similarly to that for triangles. Before understanding this code, you
-  // should understand the triangle code. Go ahead. Read it now.
+  // should understand the triangle code (in ReverseInterpolateTriangle in
+  // CellInterpolate.h). Go ahead. Read it now.
   //
   // The tetrahedron code is an obvious extension of the triangle code by
   // considering the parallelpiped formed by wcoords and p0 of the triangle

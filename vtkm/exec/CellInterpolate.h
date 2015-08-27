@@ -29,6 +29,104 @@
 namespace vtkm {
 namespace exec {
 
+namespace internal {
+
+// This is really the WorldCoorindatesToParametericCoordinates function, but
+// moved to this header file because it is required to interpolate in a
+// polygon, which is divided into triangles.
+template<typename WorldCoordVector>
+VTKM_EXEC_EXPORT
+typename WorldCoordVector::ComponentType
+ReverseInterpolateTriangle(
+    const WorldCoordVector &pointWCoords,
+    const typename WorldCoordVector::ComponentType &wcoords,
+    const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 3, worklet);
+
+  // We will solve the world to parametric coordinates problem geometrically.
+  // Consider the parallelogram formed by wcoords and p0 of the triangle and
+  // the two adjacent edges. This parallelogram is equivalent to the
+  // axis-aligned rectangle anchored at the origin of parametric space.
+  //
+  //   p2 |\                 (1,0) |\                                        //
+  //      | \                      |  \                                      //
+  //      |  \                     |    \                                    //
+  //     |    \                    |      \                                  //
+  //     |     \                   |        \                                //
+  //     |      \                  |    (u,v) \                              //
+  //    | ---    \                 |-------*    \                            //
+  //    |    ---*wcoords           |       |      \                          //
+  //    |       |  \               |       |        \                        //
+  // p0 *---    |   \        (0,0) *------------------\ (1,0)                //
+  //        ---|     \                                                       //
+  //           x--    \                                                      //
+  //              ---  \                                                     //
+  //                 ---\ p1                                                 //
+  //
+  // In this diagram, the distance between p0 and the point marked x divided by
+  // the length of the edge it is on is equal, by proportionality, to the u
+  // parametric coordiante. (The v coordinate follows the other edge
+  // accordingly.) Thus, if we can find the interesection at x (or more
+  // specifically the distance between p0 and x), then we can find that
+  // parametric coordinate.
+  //
+  // Because the triangle is in 3-space, we are actually going to intersect the
+  // edge with a plane that is parallel to the opposite edge of p0 and
+  // perpendicular to the triangle. This is partially because it is easy to
+  // find the intersection between a plane and a line and partially because the
+  // computation will work for points not on the plane. (The result is
+  // equivalent to a point projected on the plane.)
+  //
+  // First, we define an implicit plane as:
+  //
+  // dot((p - wcoords), planeNormal) = 0
+  //
+  // where planeNormal is the normal to the plane (easily computed from the
+  // triangle), and p is any point in the plane. Next, we define the parametric
+  // form of the line:
+  //
+  // p(d) = (p1 - p0)d + p0
+  //
+  // Where d is the fraction of distance from p0 toward p1. Note that d is
+  // actually equal to the parametric coordinate we are trying to find. Once we
+  // compute it, we are done. We can skip the part about finding the actual
+  // coordinates of the intersection.
+  //
+  // Solving for the interesection is as simple as substituting the line's
+  // definition of p(d) into p for the plane equation. With some basic algebra
+  // you get:
+  //
+  // d = dot((wcoords - p0), planeNormal)/dot((p1-p0), planeNormal)
+  //
+  // From here, the u coordiante is simply d. The v coordinate follows
+  // similarly.
+  //
+
+  typedef typename WorldCoordVector::ComponentType Vector3;
+  typedef typename Vector3::ComponentType T;
+
+  Vector3 pcoords(T(0));
+  Vector3 triangleNormal =
+      vtkm::TriangleNormal(pointWCoords[0], pointWCoords[1], pointWCoords[2]);
+
+  for (vtkm::IdComponent dimension = 0; dimension < 2; dimension++)
+    {
+    Vector3 p0 = pointWCoords[0];
+    Vector3 p1 = pointWCoords[dimension+1];
+    Vector3 p2 = pointWCoords[2-dimension];
+    Vector3 planeNormal = vtkm::Cross(triangleNormal, p2-p0);
+
+    T d = vtkm::dot(wcoords - p0, planeNormal)/vtkm::dot(p1 - p0, planeNormal);
+
+    pcoords[dimension] = d;
+    }
+
+  return pcoords;
+}
+
+}
+
 /// \brief Interpolate a point field in a cell.
 ///
 /// Given the point field values for each node and the parametric coordinates
@@ -127,7 +225,7 @@ CellInterpolate(const FieldVecType &field,
                 vtkm::CellShapeTagPolygon,
                 const vtkm::exec::FunctorBase &worklet)
 {
-  vtkm::IdComponent numPoints = field.GetNumberOfComponents();
+  const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
   VTKM_ASSERT_EXEC(numPoints > 0, worklet);
   switch (numPoints)
   {
@@ -144,37 +242,73 @@ CellInterpolate(const FieldVecType &field,
   // If we are here, then there are 5 or more points on this polygon.
 
   // Arrange the points such that they are on the circle circumscribed in the
-  // unit square from 0 to 1. That is, the point are on the circle centered
-  // at coordinate 0.5,0.5 with radius 0.5.
-
-  // We only care about the first two parametric coordinates.
-  vtkm::Vec<ParametricCoordType,2> pcoords2(pcoords[0],pcoords[1]);
+  // unit square from 0 to 1. That is, the point are on the circle centered at
+  // coordinate 0.5,0.5 with radius 0.5. The polygon is divided into regions
+  // defined by they triangle fan formed by the points around the center. This
+  // is C0 continuous but not necessarily C1 continuous. It is also possible to
+  // have a non 1 to 1 mapping between parametric coordinates world coordinates
+  // if the polygon is not planar or convex.
 
   typedef typename FieldVecType::ComponentType FieldType;
 
-  ParametricCoordType angle = 0;
-  const ParametricCoordType deltaAngle =
-      static_cast<ParametricCoordType>(2*vtkm::Pi()/numPoints);
-  const ParametricCoordType epsilon = 8*vtkm::Epsilon<ParametricCoordType>();
-  FieldType weightedSum(0);
-  ParametricCoordType totalWeight = 0;
-
-  for (vtkm::IdComponent nodeIndex = 0; nodeIndex < numPoints; nodeIndex++)
+  // Find the interpolation for the center point.
+  FieldType fieldCenter = field[0];
+  for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; pointIndex++)
   {
-    vtkm::Vec<ParametricCoordType,2> nodePCoords(0.5f*(vtkm::Cos(angle)+1),
-                                                 0.5f*(vtkm::Sin(angle)+1));
-    ParametricCoordType distanceSqr =
-        vtkm::MagnitudeSquared(pcoords2-nodePCoords);
-    if (distanceSqr < epsilon) { return field[nodeIndex]; }
+    fieldCenter = fieldCenter + field[pointIndex];
+  }
+  fieldCenter = fieldCenter*FieldType(1.0f/numPoints);
 
-    ParametricCoordType weight = vtkm::RSqrt(distanceSqr);
-    weightedSum = weightedSum + FieldType(weight)*field[nodeIndex];
-    totalWeight += weight;
-
-    angle += deltaAngle;
+  if ((vtkm::Abs(pcoords[0]-0.5f) < 4*vtkm::Epsilon<ParametricCoordType>()) &&
+      (vtkm::Abs(pcoords[1]-0.5f) < 4*vtkm::Epsilon<ParametricCoordType>()))
+  {
+    return fieldCenter;
   }
 
-  return weightedSum * FieldType(1/totalWeight);
+  ParametricCoordType angle = vtkm::ATan2(pcoords[1]-0.5f, pcoords[0]-0.5f);
+  if (angle < 0)
+  {
+    angle += static_cast<ParametricCoordType>(2*vtkm::Pi());
+  }
+  const ParametricCoordType deltaAngle =
+      static_cast<ParametricCoordType>(2*vtkm::Pi()/numPoints);
+  vtkm::IdComponent firstPointIndex =
+      static_cast<vtkm::IdComponent>(vtkm::Floor(angle/deltaAngle));
+  vtkm::IdComponent secondPointIndex = firstPointIndex + 1;
+  if (secondPointIndex == numPoints)
+  {
+    secondPointIndex = 0;
+  }
+
+  // Transform pcoords for polygon into pcoords for triangle.
+  vtkm::Vec<vtkm::Vec<ParametricCoordType,3>,3> polygonCoords;
+  polygonCoords[0][0] = 0.5f;
+  polygonCoords[0][1] = 0.5f;
+  polygonCoords[0][2] = 0;
+
+  polygonCoords[1][0] = 0.5f*(vtkm::Cos(deltaAngle*firstPointIndex)+1);
+  polygonCoords[1][1] = 0.5f*(vtkm::Sin(deltaAngle*firstPointIndex)+1);
+  polygonCoords[1][2] = 0;
+
+  polygonCoords[2][0] = 0.5f*(vtkm::Cos(deltaAngle*secondPointIndex)+1);
+  polygonCoords[2][1] = 0.5f*(vtkm::Sin(deltaAngle*secondPointIndex)+1);
+  polygonCoords[2][2] = 0;
+
+  vtkm::Vec<ParametricCoordType,3> trianglePCoords =
+      vtkm::exec::internal::ReverseInterpolateTriangle(
+        polygonCoords, pcoords, worklet);
+
+  // Set up parameters for triangle that pcoords is in
+  vtkm::Vec<FieldType,3> triangleField;
+  triangleField[0] = fieldCenter;
+  triangleField[1] = field[firstPointIndex];
+  triangleField[2] = field[secondPointIndex];
+
+  // Now use the triangle interpolate
+  return vtkm::exec::CellInterpolate(triangleField,
+                                     trianglePCoords,
+                                     vtkm::CellShapeTagTriangle(),
+                                     worklet);
 }
 
 //-----------------------------------------------------------------------------

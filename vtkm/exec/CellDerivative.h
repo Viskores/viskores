@@ -855,7 +855,9 @@ CellDerivative(const FieldVecType &field,
   VTKM_ASSERT_EXEC(field.GetNumberOfComponents() ==
                      wCoords.GetNumberOfComponents(),
                    worklet);
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() > 0, worklet);
+
+  const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
+  VTKM_ASSERT_EXEC(numPoints > 0, worklet);
 
   switch (field.GetNumberOfComponents())
   {
@@ -881,36 +883,74 @@ CellDerivative(const FieldVecType &field,
                                   worklet);
   }
 
-  // If we are here, then our polygon has 5 or more nodes. Estimate the
-  // gradient by sampling a small triangle at the point coordinates and
-  // computing the gradient of that triangle.
-  static const ParametricCoordType delta = 0.01f;
-  vtkm::Vec<typename WorldCoordType::ComponentType,3> triWorldCoords;
-  vtkm::Vec<typename FieldVecType::ComponentType,3> triField;
-  triWorldCoords[0] =
-      CellInterpolate(wCoords, pcoords, vtkm::CellShapeTagPolygon(), worklet);
-  triField[0] =
-      CellInterpolate(field, pcoords, vtkm::CellShapeTagPolygon(), worklet);
-  vtkm::Vec<ParametricCoordType,3>
-      pcoords1(pcoords[0]+delta, pcoords[1], pcoords[2]);
-  triWorldCoords[1] =
-      CellInterpolate(wCoords, pcoords1, vtkm::CellShapeTagPolygon(), worklet);
-  triField[1] =
-      CellInterpolate(field, pcoords1, vtkm::CellShapeTagPolygon(), worklet);
-  vtkm::Vec<ParametricCoordType,3>
-      pcoords2(pcoords[0], pcoords[1]+delta, pcoords[2]);
-  triWorldCoords[2] =
-      CellInterpolate(wCoords, pcoords2, vtkm::CellShapeTagPolygon(), worklet);
-  triField[2] =
-      CellInterpolate(field, pcoords2, vtkm::CellShapeTagPolygon(), worklet);
+  // If we are here, then there are 5 or more points on this polygon.
 
-  // In the call below, pcoords is actually wrong, but that does not matter
-  // since the triangle cell derivative ignores it.
-  return CellDerivative(triField,
-                        triWorldCoords,
-                        pcoords,
-                        vtkm::CellShapeTagTriangle(),
-                        worklet);
+  // Arrange the points such that they are on the circle circumscribed in the
+  // unit square from 0 to 1. That is, the point are on the circle centered at
+  // coordinate 0.5,0.5 with radius 0.5. The polygon is divided into regions
+  // defined by they triangle fan formed by the points around the center. This
+  // is C0 continuous but not necessarily C1 continuous. It is also possible to
+  // have a non 1 to 1 mapping between parametric coordinates world coordinates
+  // if the polygon is not planar or convex.
+
+  typedef typename FieldVecType::ComponentType FieldType;
+  typedef typename WorldCoordType::ComponentType WCoordType;
+
+  // Find the interpolation for the center point.
+  FieldType fieldCenter = field[0];
+  WCoordType wcoordCenter = wCoords[0];
+  for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; pointIndex++)
+  {
+    fieldCenter = fieldCenter + field[pointIndex];
+    wcoordCenter = wcoordCenter + wCoords[pointIndex];
+  }
+  fieldCenter = fieldCenter*FieldType(1.0f/numPoints);
+  wcoordCenter = wcoordCenter*WCoordType(1.0f/numPoints);
+
+  ParametricCoordType angle;
+  if ((vtkm::Abs(pcoords[0]-0.5f) < 4*vtkm::Epsilon<ParametricCoordType>()) &&
+      (vtkm::Abs(pcoords[1]-0.5f) < 4*vtkm::Epsilon<ParametricCoordType>()))
+  {
+    angle = 0;
+  }
+  else
+  {
+    angle = vtkm::ATan2(pcoords[1]-0.5f, pcoords[0]-0.5f);
+    if (angle < 0)
+    {
+      angle += static_cast<ParametricCoordType>(2*vtkm::Pi());
+    }
+  }
+
+  const ParametricCoordType deltaAngle =
+      static_cast<ParametricCoordType>(2*vtkm::Pi()/numPoints);
+  vtkm::IdComponent firstPointIndex =
+      static_cast<vtkm::IdComponent>(vtkm::Floor(angle/deltaAngle));
+  vtkm::IdComponent secondPointIndex = firstPointIndex + 1;
+  if (secondPointIndex == numPoints)
+  {
+    secondPointIndex = 0;
+  }
+
+  // Set up parameters for triangle that pcoords is in
+  vtkm::Vec<FieldType,3> triangleField;
+  triangleField[0] = fieldCenter;
+  triangleField[1] = field[firstPointIndex];
+  triangleField[2] = field[secondPointIndex];
+
+  vtkm::Vec<WCoordType,3> triangleWCoords;
+  triangleWCoords[0] = wcoordCenter;
+  triangleWCoords[1] = wCoords[firstPointIndex];
+  triangleWCoords[2] = wCoords[secondPointIndex];
+
+  // Now use the triangle derivative. pcoords is actually invalid for the
+  // triangle, but that does not matter as the derivative for a triangle does
+  // not depend on it.
+  return vtkm::exec::CellDerivative(triangleField,
+                                    triangleWCoords,
+                                    pcoords,
+                                    vtkm::CellShapeTagTriangle(),
+                                    worklet);
 }
 
 //-----------------------------------------------------------------------------
