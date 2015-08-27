@@ -20,6 +20,7 @@
 
 set(unit_tests
   UnitTestCellAverage.cxx
+  UnitTestClipping.cxx
   UnitTestPointElevation.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx

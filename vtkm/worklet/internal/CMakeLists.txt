@@ -21,6 +21,7 @@
 set(headers
   DispatcherBase.h
   WorkletBase.h
+  ClipTables.h
   )
 
 vtkm_declare_headers(${headers})
