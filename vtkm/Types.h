@@ -31,6 +31,8 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/utility/enable_if.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
+#include <iostream>
+
 /*!
  * \namespace vtkm
  * \brief VTKm Toolkit.
@@ -1162,6 +1164,20 @@ operator-(const vtkm::Vec<T,Size> &x)
 {
   return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
         x, vtkm::internal::Negate());
+}
+
+/// Helper function for printing out vectors during testing.
+///
+template<typename T, vtkm::IdComponent Size>
+VTKM_CONT_EXPORT
+std::ostream &operator<<(std::ostream &stream, const vtkm::Vec<T,Size> &vec)
+{
+  stream << "[";
+  for (vtkm::IdComponent component = 0; component < Size-1; component++)
+  {
+    stream << vec[component] << ",";
+  }
+  return stream << vec[Size-1] << "]";
 }
 
 #endif //vtk_m_Types_h

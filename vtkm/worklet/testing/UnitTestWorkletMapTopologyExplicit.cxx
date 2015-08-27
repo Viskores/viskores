@@ -30,7 +30,8 @@
 
 namespace test_explicit {
 
-class MaxPointOrCellValue : public vtkm::worklet::WorkletMapTopology
+class MaxPointOrCellValue :
+    public vtkm::worklet::WorkletMapTopologyPointToCell
 {
 public:
   typedef void ControlSignature(FieldInTo<Scalar> inCells,
@@ -65,7 +66,8 @@ public:
   }
 };
 
-class AveragePointToCellValue : public vtkm::worklet::WorkletMapTopology
+class AveragePointToCellValue :
+    public vtkm::worklet::WorkletMapTopologyPointToCell
 {
 public:
   typedef void ControlSignature(FieldInFrom<Scalar> inPoints,
@@ -122,7 +124,7 @@ TestMaxPointOrCell()
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.
   vtkm::cont::Field f("outcellvar",
-                      1,
+                      0,
                       vtkm::cont::Field::ASSOC_CELL_SET,
                       std::string("cells"),
                       vtkm::Float32());
@@ -163,7 +165,7 @@ TestAvgPointToCell()
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.
   vtkm::cont::Field f("outcellvar",
-                      1,
+                      0,
                       vtkm::cont::Field::ASSOC_CELL_SET,
                       std::string("cells"),
                       vtkm::Float32());

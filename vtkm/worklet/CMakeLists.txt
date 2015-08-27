@@ -25,6 +25,7 @@ set(headers
   WorkletMapTopology.h
   AverageByKey.h
   CellAverage.h
+  Clip.h
   ExternalFaces.h
   PointElevation.h
   VertexClustering.h

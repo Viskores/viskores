@@ -30,6 +30,8 @@ void TestDataSet_Explicit()
   vtkm::cont::testing::MakeTestDataSet tds;
   vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet1();
 
+  ds.PrintSummary(std::cout);
+
   VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");
 

@@ -162,7 +162,7 @@ public:
   virtual void PrintSummary(std::ostream &out) const
   {
     out << "    Coordinate System ";
-    this->PrintSummary(out);
+    this->Superclass::PrintSummary(out);
   }
 };
 

@@ -53,6 +53,8 @@ struct PolymorphicArrayHandleContainerBase
   virtual vtkm::IdComponent GetNumberOfComponents() const = 0;
   virtual vtkm::Id GetNumberOfValues() const = 0;
 
+  virtual void PrintSummary(std::ostream &out) const = 0;
+
   virtual boost::shared_ptr<PolymorphicArrayHandleContainerBase>
   NewInstance() const = 0;
 };
@@ -88,6 +90,11 @@ struct PolymorphicArrayHandleContainer
   virtual vtkm::Id GetNumberOfValues() const
   {
     return this->Array.GetNumberOfValues();
+  }
+
+  virtual void PrintSummary(std::ostream &out) const
+  {
+    vtkm::cont::printSummary_ArrayHandle(this->Array, out);
   }
 
   virtual boost::shared_ptr<PolymorphicArrayHandleContainerBase>
@@ -275,6 +282,12 @@ public:
   vtkm::Id GetNumberOfValues() const
   {
     return this->ArrayContainer->GetNumberOfValues();
+  }
+
+  VTKM_CONT_EXPORT
+  virtual void PrintSummary(std::ostream &out) const
+  {
+    this->ArrayContainer->PrintSummary(out);
   }
 
 private:
