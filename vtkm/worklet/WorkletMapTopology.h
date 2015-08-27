@@ -140,6 +140,13 @@ public:
   struct FromIndices : vtkm::exec::arg::FromIndices {  };
 };
 
+/// Convenience base class for worklets that map from Points to Cells.
+///
+class WorkletMapTopologyPointToCell
+ : public WorkletMapTopology<vtkm::TopologyElementTagPoint,
+                             vtkm::TopologyElementTagCell>
+{ };
+
 }
 } // namespace vtkm::worklet
 
