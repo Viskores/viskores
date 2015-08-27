@@ -682,10 +682,7 @@ public:
       case ASSOC_CELL_SET: out<<"Cells "; break;
       case ASSOC_LOGICAL_DIM: out<<"LogicalDim "; break;
       }
-      vtkm::cont::ArrayHandle<vtkm::Float32> vals;
-      vals = this->Data.CastToArrayHandle(
-            vtkm::Float32(), VTKM_DEFAULT_STORAGE_TAG());
-      printSummary_ArrayHandle(vals, out);
+      this->Data.PrintSummary(out);
       //out<<" Order= "<<Order;
       out<<"\n";
   }

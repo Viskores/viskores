@@ -49,6 +49,8 @@ TwoDimRegularTest()
 
   vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
 
+  dataSet.PrintSummary(std::cout);
+
   typedef vtkm::cont::CellSetStructured<2> CellSetType;
   CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
 
@@ -156,6 +158,8 @@ ThreeDimRegularTest()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
 
   vtkm::cont::DataSet dataSet = testDataSet.Make3DRegularDataSet0();
+
+  dataSet.PrintSummary(std::cout);
 
   typedef vtkm::cont::CellSetStructured<3> CellSetType;
   CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
