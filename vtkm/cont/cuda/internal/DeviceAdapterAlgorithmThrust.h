@@ -396,15 +396,17 @@ private:
 
     return ScanExclusivePortal(input,
                                output,
-                               (::thrust::plus<ValueType>()) );
+                               (::thrust::plus<ValueType>()),
+                               vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   }
 
-    template<class InputPortal, class OutputPortal, class BinaryOperation>
+    template<class InputPortal, class OutputPortal, class BinaryFunctor>
   VTKM_CONT_EXPORT static
   typename InputPortal::ValueType ScanExclusivePortal(const InputPortal &input,
                                                       const OutputPortal &output,
-                                                      BinaryOperation binaryOp)
+                                                      BinaryFunctor binaryOp,
+                                        typename InputPortal::ValueType initialValue)
   {
     // Use iterator to get value so that thrust device_ptr has chance to handle
     // data on device.
@@ -421,7 +423,7 @@ private:
                      );
 
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
-                                                      BinaryOperation> bop(binaryOp);
+                                                      BinaryFunctor> bop(binaryOp);
 
     typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
                                                             IteratorType;
@@ -429,11 +431,11 @@ private:
                                                 IteratorBegin(input),
                                                 IteratorEnd(input),
                                                 IteratorBegin(output),
-                                                vtkm::TypeTraits<ValueType>::ZeroInitialization(),
+                                                initialValue,
                                                 bop);
 
     //execute the binaryOp one last time on the device.
-    SumExclusiveScan <<<1,1>>> (sum[0], *(end-1), sum[1], binaryOp);
+    SumExclusiveScan <<<1,1>>> (sum[0], *(end-1), sum[1], bop);
     return sum[1];
   }
 
@@ -764,6 +766,32 @@ public:
     input.PrepareForInput(DeviceAdapterTag());
     return ScanExclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
+  }
+
+  template<typename T, class SIn, class SOut, class BinaryFunctor>
+  VTKM_CONT_EXPORT static T ScanExclusive(
+      const vtkm::cont::ArrayHandle<T,SIn> &input,
+      vtkm::cont::ArrayHandle<T,SOut>& output,
+      BinaryFunctor binary_functor,
+      const T& initialValue)
+  {
+    const vtkm::Id numberOfValues = input.GetNumberOfValues();
+    if (numberOfValues <= 0)
+      {
+      output.PrepareForOutput(0, DeviceAdapterTag());
+      return vtkm::TypeTraits<T>::ZeroInitialization();
+      }
+
+    //We need call PrepareForInput on the input argument before invoking a
+    //function. The order of execution of parameters of a function is undefined
+    //so we need to make sure input is called before output, or else in-place
+    //use case breaks.
+    input.PrepareForInput(DeviceAdapterTag());
+    return ScanExclusivePortal(
+        input.PrepareForInput(DeviceAdapterTag()),
+        output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+        binary_functor,
+        initialValue);
   }
 
   template<typename T, class SIn, class SOut>

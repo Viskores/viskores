@@ -1396,7 +1396,6 @@ private:
 
 // Enable when Exclusive Scan with custom operator is implemented for all
 // device adaptors
-#if 0
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Exclusive Scan with multiplication operator" << std::endl;
     {
@@ -1433,7 +1432,6 @@ private:
                        "Incorrect results for ScanExclusive");
     }
     }
-#endif
 
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Exclusive Scan with a vtkm::Vec" << std::endl;
