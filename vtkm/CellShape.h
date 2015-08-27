@@ -138,6 +138,7 @@ VTKM_DEFINE_CELL_TAG(Pyramid, CELL_SHAPE_PYRAMID);
 /// \c vtkmGenericCellShapeMacro to specialize on the cell type.
 ///
 struct CellShapeTagGeneric {
+  VTKM_EXEC_CONT_EXPORT
   CellShapeTagGeneric(vtkm::IdComponent shape) : Id(shape) {  }
 
   const vtkm::IdComponent Id;
