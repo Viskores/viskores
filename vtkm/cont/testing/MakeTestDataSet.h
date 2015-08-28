@@ -150,8 +150,9 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   conn.push_back(3);
   conn.push_back(4);
 
-  vtkm::cont::CellSetExplicit<> cellSet("cells", 2);
+  vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells", 2);
   cellSet.FillViaCopy(shapes, numindices, conn);
+  cellSet.CreateCellToPointConnectivity();
 
   dataSet.AddCellSet(cellSet);
 
@@ -181,14 +182,15 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   vtkm::Float32 cellvar[2] = {100.1f, 100.2f};
   dataSet.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
-  vtkm::cont::CellSetExplicit<> cellSet("cells", 2);
+  vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells", 2);
 
   cellSet.PrepareToAddCells(2, 7);
   cellSet.AddCell(vtkm::VTKM_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
   cellSet.AddCell(vtkm::VTKM_QUAD, 4, make_Vec<vtkm::Id>(2,1,3,4));
   cellSet.CompleteAddingCells();
 
-  //todo this need to be a reference/shared_ptr style class
+  cellSet.CreateCellToPointConnectivity();
+
   dataSet.AddCellSet(cellSet);
 
   return dataSet;
@@ -222,7 +224,7 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
   dataSet.AddField(Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, zVals, nVerts));
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
 
-  vtkm::cont::CellSetExplicit<> cellSet("cells", 2);
+  vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells", 2);
 
   cellSet.PrepareToAddCells(nPointIds/3, nPointIds);
   for (i=0; i<nPointIds/3; i++)
@@ -231,7 +233,8 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
   }
   cellSet.CompleteAddingCells();
 
-  //todo this need to be a reference/shared_ptr style class
+  cellSet.CreateCellToPointConnectivity();
+
   dataSet.AddCellSet(cellSet);
 
   // copy bounds

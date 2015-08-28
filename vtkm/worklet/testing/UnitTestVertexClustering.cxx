@@ -88,7 +88,7 @@ vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &dataSet,
     //typedef typename vtkm::cont::ArrayHandleConstant<vtkm::Id>::StorageTag ConstantStorage;
     //typedef typename vtkm::cont::ArrayHandleImplicit<vtkm::Id, CounterOfThree>::StorageTag CountingStorage;
 
-    vtkm::cont::CellSetExplicit<> newCellSet("cells", 0);
+    vtkm::cont::CellSetExplicit<> newCellSet(pointArray.GetNumberOfValues(), "cells", 0);
 
     newCellSet.Fill(
           copyFromImplicit(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(vtkm::VTKM_TRIANGLE, cells)),
