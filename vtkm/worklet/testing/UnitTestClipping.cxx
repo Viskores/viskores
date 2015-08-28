@@ -80,7 +80,7 @@ vtkm::cont::DataSet MakeTestDatasetExplicit()
   std::vector<vtkm::Id> numIndsVec(numInds, numInds + numCells);
   std::vector<vtkm::Id> connectivityVec(connectivity, connectivity + (numCells * 3));
 
-  vtkm::cont::CellSetExplicit<> cs("cells", 3);
+  vtkm::cont::CellSetExplicit<> cs(numVerts, "cells", 3);
   cs.FillViaCopy(shapesVec, numIndsVec, connectivityVec);
 
   ds.AddCellSet(cs);

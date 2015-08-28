@@ -247,7 +247,7 @@ TestAvgCellToPoint()
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");
 
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 6,
+  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 3,
                        "Incorrect number of fields");
 
 

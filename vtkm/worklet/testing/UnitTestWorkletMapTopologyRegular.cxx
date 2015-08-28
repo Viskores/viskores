@@ -252,7 +252,7 @@ TestAvgCellToPoint()
     VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfCellSets(), 1),
                      "Incorrect number of cell sets");
 
-    VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 5),
+    VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 3),
                      "Incorrect number of fields");
 
     vtkm::worklet::DispatcherMapTopology< ::test_regular::AverageCellToPointValue > dispatcher;
@@ -267,7 +267,7 @@ TestAvgCellToPoint()
 
     //make sure we got the right answer.
     vtkm::cont::ArrayHandle<vtkm::Float32> res;
-    res = dataSet.GetField(4).GetData().CastToArrayHandle(vtkm::Float32(),
+    res = dataSet.GetField("outpointvar").GetData().CastToArrayHandle(vtkm::Float32(),
                                                       VTKM_DEFAULT_STORAGE_TAG());
 
     VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1f),
