@@ -51,9 +51,9 @@ public:
     const vtkm::Id y = (vertexId / (xdim)) % (ydim);
     const vtkm::Id z = vertexId / cellsPerLayer;
 
-    xx = 3.0*(xmin+(xmax-xmin)*(1.0*x/(xdim-1)));
-    yy = 3.0*(ymin+(ymax-ymin)*(1.0*y/(xdim-1)));
-    zz = 3.0*(zmin+(zmax-zmin)*(1.0*z/(xdim-1)));
+    xx = 3.0f*(xmin+(xmax-xmin)*(1.0f*x/(xdim-1)));
+    yy = 3.0f*(ymin+(ymax-ymin)*(1.0f*y/(xdim-1)));
+    zz = 3.0f*(zmin+(zmax-zmin)*(1.0f*z/(xdim-1)));
 
     v = (xx*xx*xx*xx - 5.0f*xx*xx + yy*yy*yy*yy - 5.0f*yy*yy + zz*zz*zz*zz - 5.0f*zz*zz + 11.8f) * 0.2f + 0.5f;
   }
@@ -81,10 +81,17 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(int dim)
 
   dataSet.AddField(vtkm::cont::Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, fieldArray));
 
-  vtkm::Float32 cellvar[dim3];
-  for(int i=0; i<dim3; i++)
-    cellvar[i] = float(i);
-  dataSet.AddField(vtkm::cont::Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, dim3));
+  std::vector<vtkm::Float32> cellvar( static_cast<std::size_t>(dim3) );
+  for(std::size_t i=0; i < cellvar.size(); i++)
+    {
+    cellvar[i] = vtkm::Float32(i);
+    }
+
+  vtkm::cont::Field cellField("cellvar", 1,
+                              vtkm::cont::Field::ASSOC_CELL_SET,
+                              "cells",
+                              cellvar);
+  dataSet.AddField(cellField);
 
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
@@ -104,11 +111,17 @@ void TestIsosurfaceUniformGrid()
   int dim = 4;
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dim);
 
-  vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG> isosurfaceFilter(dim, dataSet);
+  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+
+  vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32,
+                                            DeviceAdapter> isosurfaceFilter(dim, dataSet);
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
-  isosurfaceFilter.computeIsosurface(0.5, verticesArray, scalarsArray);
+  isosurfaceFilter.Run(0.5,
+                       dataSet.GetField("nodevar").GetData(),
+                       verticesArray,
+                       scalarsArray);
 
   VTKM_TEST_ASSERT(test_equal(verticesArray.GetNumberOfValues(), 480),
                    "Wrong result for Isosurface filter");
