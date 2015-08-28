@@ -37,11 +37,11 @@ public:
   typedef void ExecutionSignature(_1, _2);
   typedef _1 InputDomain;
 
-  const int xdim, ydim, zdim, cellsPerLayer;
+  const vtkm::Id xdim, ydim, zdim, cellsPerLayer;
   const float xmin, ymin, zmin, xmax, ymax, zmax;
 
   VTKM_CONT_EXPORT
-  TangleField(const int dims[3], const float mins[3], const float maxs[3]) : xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
+  TangleField(const vtkm::Id3 dims, const float mins[3], const float maxs[3]) : xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
               xmin(mins[0]), ymin(mins[1]), zmin(mins[2]), xmax(maxs[0]), ymax(maxs[1]), zmax(maxs[2]), cellsPerLayer((xdim) * (ydim)) { };
 
   VTKM_EXEC_EXPORT
@@ -60,22 +60,22 @@ public:
 };
 
 
-vtkm::cont::DataSet MakeIsosurfaceTestDataSet(int dim)
+vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 {
   vtkm::cont::DataSet dataSet;
 
-  const int vdim = dim + 1;  const int dim3 = dim*dim*dim;
-  int vdims[3] = { vdim, vdim, vdim };
+  const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, dims[2] + 1);
+  const vtkm::Id dim3 = dims[0]*dims[1]*dims[2];
+
   float mins[3] = {-1.0f, -1.0f, -1.0f};
   float maxs[3] = {1.0f, 1.0f, 1.0f};
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(0, vdim*vdim*vdim);
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(0, vdims[0]*vdims[1]*vdims[2]);
   vtkm::worklet::DispatcherMapField<TangleField> tangleFieldDispatcher(TangleField(vdims, mins, maxs));
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates
-        coordinates(vtkm::Id3(vdims[0], vdims[1], vdims[2]));
+  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims);
   dataSet.AddCoordinateSystem(
           vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
 
@@ -95,7 +95,7 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(int dim)
 
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
-  cellSet.SetPointDimensions( vtkm::make_Vec(vdims[0], vdims[1], vdims[2]) );
+  cellSet.SetPointDimensions(vdims);
   dataSet.AddCellSet(cellSet);
 
   return dataSet;
@@ -108,13 +108,13 @@ void TestIsosurfaceUniformGrid()
 {
   std::cout << "Testing IsosurfaceUniformGrid Filter" << std::endl;
 
-  int dim = 4;
-  vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dim);
+  vtkm::Id3 dims(4,4,4);
+  vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
   vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32,
-                                            DeviceAdapter> isosurfaceFilter(dim, dataSet);
+                                            DeviceAdapter> isosurfaceFilter(dims, dataSet);
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;

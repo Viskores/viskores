@@ -109,7 +109,7 @@ public:
 
     template<typename U, typename W, typename X>
     VTKM_CONT_EXPORT
-    IsoSurfaceGenerate(const float ivalue, const vtkm::Id dims[3], IdPortalType triTablePortal,
+    IsoSurfaceGenerate(const float ivalue, const vtkm::Id3 dims, IdPortalType triTablePortal,
                         const U & field, const U & source, const W & vertices, const X & scalars) :
                         Isovalue(ivalue), xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
                         xmin(-1), ymin(-1), zmin(-1), xmax(1), ymax(1), zmax(1),
@@ -199,14 +199,14 @@ public:
   };
 
 
-  IsosurfaceFilterUniformGrid(const vtkm::Id &dim,
+  IsosurfaceFilterUniformGrid(const vtkm::Id3 &vdims,
                               const vtkm::cont::DataSet &dataSet) :
-    Dim(dim),
+    VDims(vdims),
     DataSet(dataSet)
   {
   }
 
-  vtkm::Id Dim;
+  vtkm::Id3 VDims;
   vtkm::cont::DataSet DataSet;
 
   template<typename IsoField, typename CoordinateType>
@@ -216,8 +216,6 @@ public:
            vtkm::cont::ArrayHandle<FieldType> &scalarsArray)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
-
-    const vtkm::Id vdims[3] = { this->Dim + 1, this->Dim + 1, this->Dim + 1 };
 
     // Set up the Marching Cubes case tables
     vtkm::cont::ArrayHandle<vtkm::Id> vertexTableArray =
@@ -270,7 +268,7 @@ public:
 
 
     IsoSurfaceGenerate isosurface(isovalue,
-                                 vdims,
+                                 this->VDims,
                                  triangleTableArray.PrepareForInput(DeviceAdapter()),
                                  field,
                                  field,
