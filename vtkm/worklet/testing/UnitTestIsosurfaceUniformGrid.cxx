@@ -33,8 +33,8 @@ namespace {
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexId, FieldOut<Scalar> xx, FieldOut<Scalar> yy, FieldOut<Scalar> zz, FieldOut<Scalar> v);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+  typedef void ControlSignature(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
+  typedef void ExecutionSignature(_1, _2);
   typedef _1 InputDomain;
 
   const int xdim, ydim, zdim, cellsPerLayer;
@@ -45,15 +45,15 @@ public:
               xmin(mins[0]), ymin(mins[1]), zmin(mins[2]), xmax(maxs[0]), ymax(maxs[1]), zmax(maxs[2]), cellsPerLayer((xdim) * (ydim)) { };
 
   VTKM_EXEC_EXPORT
-  void operator()(const vtkm::Id &vertexId, vtkm::Float32 &xx, vtkm::Float32 &yy, vtkm::Float32 &zz, vtkm::Float32 &v) const
+  void operator()(const vtkm::Id &vertexId, vtkm::Float32 &v) const
   {
     const vtkm::Id x = vertexId % (xdim);
     const vtkm::Id y = (vertexId / (xdim)) % (ydim);
     const vtkm::Id z = vertexId / cellsPerLayer;
 
-    xx = 3.0f*(xmin+(xmax-xmin)*(1.0f*x/(xdim-1)));
-    yy = 3.0f*(ymin+(ymax-ymin)*(1.0f*y/(xdim-1)));
-    zz = 3.0f*(zmin+(zmax-zmin)*(1.0f*z/(xdim-1)));
+    const vtkm::Float32 xx = 3.0f*(xmin+(xmax-xmin)*(1.0f*x/(xdim-1)));
+    const vtkm::Float32 yy = 3.0f*(ymin+(ymax-ymin)*(1.0f*y/(xdim-1)));
+    const vtkm::Float32 zz = 3.0f*(zmin+(zmax-zmin)*(1.0f*z/(xdim-1)));
 
     v = (xx*xx*xx*xx - 5.0f*xx*xx + yy*yy*yy*yy - 5.0f*yy*yy + zz*zz*zz*zz - 5.0f*zz*zz + 11.8f) * 0.2f + 0.5f;
   }
@@ -69,15 +69,15 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(int dim)
   float mins[3] = {-1.0f, -1.0f, -1.0f};
   float maxs[3] = {1.0f, 1.0f, 1.0f};
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray, x, y, z;
+  vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
   vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(0, vdim*vdim*vdim);
   vtkm::worklet::DispatcherMapField<TangleField> tangleFieldDispatcher(TangleField(vdims, mins, maxs));
-  tangleFieldDispatcher.Invoke(vertexCountImplicitArray, x, y, z, fieldArray);
+  tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);
 
-  dataSet.AddField(vtkm::cont::Field("x", 1, vtkm::cont::Field::ASSOC_POINTS, x));
-  dataSet.AddField(vtkm::cont::Field("y", 1, vtkm::cont::Field::ASSOC_POINTS, y));
-  dataSet.AddField(vtkm::cont::Field("z", 1, vtkm::cont::Field::ASSOC_POINTS, z));
-  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("x","y","z"));
+  vtkm::cont::ArrayHandleUniformPointCoordinates
+        coordinates(vtkm::Id3(vdims[0], vdims[1], vdims[2]));
+  dataSet.AddCoordinateSystem(
+          vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
 
   dataSet.AddField(vtkm::cont::Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, fieldArray));
 
@@ -95,7 +95,7 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(int dim)
 
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
-  cellSet.SetPointDimensions( vtkm::make_Vec(vdim,vdim,vdim) );
+  cellSet.SetPointDimensions( vtkm::make_Vec(vdims[0], vdims[1], vdims[2]) );
   dataSet.AddCellSet(cellSet);
 
   return dataSet;
