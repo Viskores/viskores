@@ -256,9 +256,9 @@ private:
   VTKM_EXEC_CONT_EXPORT
   void CalculateLogicalPointIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j) const
   {
-    vtkm::Id2 cellDimensions = this->GetCellDimensions();
-    i = index % cellDimensions[0];
-    j = index / cellDimensions[0];
+    vtkm::Id2 pointDimensions = this->GetPointDimensions();
+    i = index % pointDimensions[0];
+    j = index / pointDimensions[0];
   }
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id CalculateCellIndex(vtkm::Id i, vtkm::Id j) const
