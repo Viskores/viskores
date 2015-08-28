@@ -53,7 +53,7 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
   dataSet.AddCoordinateSystem(
         vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
 
-  vtkm::cont::CellSetExplicit<> cellSet("cells", 3);
+  vtkm::cont::CellSetExplicit<> cellSet(numVerts, "cells", 3);
   cellSet.PrepareToAddCells(numCells, numCells * 4);
   for (vtkm::Id j = 0; j < dim - 1; ++j)
   {

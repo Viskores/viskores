@@ -26,6 +26,9 @@
 #include <vtkm/cont/internal/ConnectivityExplicitInternals.h>
 #include <vtkm/exec/ConnectivityExplicit.h>
 
+#include <map>
+#include <utility>
+
 namespace vtkm {
 namespace cont {
 
@@ -59,17 +62,20 @@ public:
   typedef vtkm::Id SchedulingRangeType;
 
   VTKM_CONT_EXPORT
-  CellSetExplicit(const std::string &name = std::string(),
+  CellSetExplicit(vtkm::Id numpoints = 0,
+                  const std::string &name = std::string(),
                   vtkm::IdComponent dimensionality = 3)
-    : CellSet(name, dimensionality),
+    : NumberOfPoints(numpoints),
+      CellSet(name, dimensionality),
       ConnectivityLength(-1),
       NumberOfCells(-1)
   {
   }
 
   VTKM_CONT_EXPORT
-  CellSetExplicit(int dimensionality)
-    : CellSet(std::string(), dimensionality),
+  CellSetExplicit(vtkm::Id numpoints, int dimensionality)
+    : NumberOfPoints(numpoints),
+      CellSet(std::string(), dimensionality),
       ConnectivityLength(-1),
       NumberOfCells(-1)
   {
@@ -80,10 +86,21 @@ public:
     return this->PointToCell.GetNumberOfElements();
   }
 
+  virtual vtkm::Id GetNumberOfPoints() const
+  {
+    return this->NumberOfPoints;
+  }
+
   VTKM_CONT_EXPORT
   vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagCell) const
   {
     return this->GetNumberOfCells();
+  }
+
+  VTKM_CONT_EXPORT
+  vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagPoint) const
+  {
+    return this->GetNumberOfPoints();
   }
 
   VTKM_CONT_EXPORT
@@ -236,6 +253,76 @@ public:
                        connectivity.IndexOffsets.PrepareForInput(Device()));
   }
 
+  void CreateCellToPointConnectivity()
+  {
+    std::multimap<int,int> cells_of_nodes;
+
+    vtkm::Id maxNodeID = 0;
+    vtkm::Id numCells = GetNumberOfCells();
+    vtkm::Id numPoints = GetNumberOfPoints();
+    for (vtkm::Id cell = 0, cindex = 0; cell < numCells; ++cell)
+    {
+      vtkm::Id npts = this->PointToCell.NumIndices.GetPortalControl().Get(cell);
+      for (int pt=0; pt<npts; ++pt)
+      {
+        vtkm::Id index = this->PointToCell.Connectivity.GetPortalControl().Get(cindex++);
+        if (index > maxNodeID)
+          maxNodeID = index;
+        cells_of_nodes.insert(std::pair<int,int>(index,cell));
+      }
+    }
+
+    std::vector<vtkm::Id> shapes;
+    std::vector<vtkm::Id> numindices;
+    std::vector<vtkm::Id> conn;
+
+    vtkm::Id filled_array_to_node = 0;
+    for (std::multimap<int,int>::iterator iter = cells_of_nodes.begin();
+         iter != cells_of_nodes.end(); iter++)
+    {
+      int node = iter->first;
+      while (filled_array_to_node <= node)
+      {
+        // add empty spots to skip nodes not referenced by our cells
+        // also add a spot for the current one
+        ++filled_array_to_node;
+        shapes.push_back(VTKM_VERTEX);
+        numindices.push_back(0);
+      }
+      vtkm::Id cell = iter->second;
+      conn.push_back(cell);
+      ++numindices[numindices.size()-1];
+    }
+    while (filled_array_to_node < numPoints)
+    {
+      // add empty spots for tail nodes not referenced by our cells
+      ++filled_array_to_node;
+      shapes.push_back(VTKM_VERTEX);
+      numindices.push_back(0);
+    }
+
+    ///\todo: THIS IS A COPY OF "FillViaCopy", because that method
+    /// is specific to PointToCell.  Should make it non-specific and call 
+    /// it instead.
+    this->CellToPoint.Shapes.Allocate( static_cast<vtkm::Id>(shapes.size()) );
+    std::copy(shapes.begin(), shapes.end(),
+              vtkm::cont::ArrayPortalToIteratorBegin(
+                this->CellToPoint.Shapes.GetPortalControl()));
+
+    this->CellToPoint.NumIndices.Allocate( static_cast<vtkm::Id>(numindices.size()) );
+    std::copy(numindices.begin(), numindices.end(),
+              vtkm::cont::ArrayPortalToIteratorBegin(
+                this->CellToPoint.NumIndices.GetPortalControl()));
+
+    this->CellToPoint.Connectivity.Allocate( static_cast<vtkm::Id>(conn.size()) );
+    std::copy(conn.begin(), conn.end(),
+              vtkm::cont::ArrayPortalToIteratorBegin(
+                this->CellToPoint.Connectivity.GetPortalControl()));
+
+    this->CellToPoint.ElementsValid = true;
+    this->CellToPoint.IndexOffsetsValid = false;
+  }
+
   virtual void PrintSummary(std::ostream &out) const
   {
       out << "   ExplicitCellSet: " << this->Name
@@ -306,6 +393,7 @@ private:
   // cells.
   vtkm::Id ConnectivityLength;
   vtkm::Id NumberOfCells;
+  vtkm::Id NumberOfPoints;
 };
 
 namespace detail {
