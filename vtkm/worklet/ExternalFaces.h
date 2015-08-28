@@ -20,8 +20,8 @@
 #ifndef vtk_m_worklet_ExternalFaces_h
 #define vtk_m_worklet_ExternalFaces_h
 
+#include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
-#include <vtkm/CellType.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -155,10 +155,10 @@ struct ExternalFaces
     VTKM_EXEC_EXPORT
     T operator()(const T &cellType) const
     {
-      if (cellType == vtkm::VTKM_TETRA) return 4;
-      else if (cellType == vtkm::VTKM_PYRAMID) return 5;
-      else if (cellType == vtkm::VTKM_WEDGE) return 5;
-      else if (cellType == vtkm::VTKM_HEXAHEDRON) return 6;
+      if (cellType == vtkm::CELL_SHAPE_TETRA) return 4;
+      else if (cellType == vtkm::CELL_SHAPE_PYRAMID) return 5;
+      else if (cellType == vtkm::CELL_SHAPE_WEDGE) return 5;
+      else if (cellType == vtkm::CELL_SHAPE_HEXAHEDRON) return 6;
       else return -1;
     }
   };
@@ -176,16 +176,19 @@ struct ExternalFaces
     typedef _2 InputDomain;
 
     VTKM_CONT_EXPORT
-    GetFace() { };
+    GetFace() { }
 
-    template<typename T, typename FaceValueVecType, typename CellNodeVecType>
+    template<typename T,
+             typename FaceValueVecType,
+             typename CellShapeTag,
+             typename CellNodeVecType>
     VTKM_EXEC_EXPORT
     void operator()(const T &cellFaceId,
                     FaceValueVecType &faceVertices,
-                    const vtkm::Id &cellType,
+                    CellShapeTag shape,
                     const CellNodeVecType &cellNodeIds) const
     {
-      if (cellType == vtkm::VTKM_TETRA)
+      if (shape.Id == vtkm::CELL_SHAPE_TETRA)
       {
         vtkm::IdComponent faceIdTable[12] = {0,1,2,0,1,3,0,2,3,1,2,3};
 
@@ -400,7 +403,7 @@ public:
     output_conn.Allocate(3 * output_numExtFaces);
     for(int face = 0; face < output_numExtFaces; face++)
     {
-      output_shapes.GetPortalControl().Set(face, vtkm::VTKM_TRIANGLE);
+      output_shapes.GetPortalControl().Set(face, vtkm::CELL_SHAPE_TRIANGLE);
       output_numIndices.GetPortalControl().Set(face, static_cast<vtkm::Id>(3));
       output_conn.GetPortalControl().Set(3*face, extFacePortal.Get(face)[0]);
       output_conn.GetPortalControl().Set(3*face + 1, extFacePortal.Get(face)[1]);

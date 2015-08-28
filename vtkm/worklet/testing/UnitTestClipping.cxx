@@ -67,7 +67,7 @@ vtkm::cont::DataSet MakeTestDatasetExplicit()
     Coord3D(0.0f, 1.0f, 0.0f),
   };
   static vtkm::Float32 values[] = { 1.0, 2.0, 1.0, 0.0 };
-  static vtkm::Id shapes[] = { vtkm::VTKM_TRIANGLE, vtkm::VTKM_TRIANGLE };
+  static vtkm::Id shapes[] = { vtkm::CELL_SHAPE_TRIANGLE, vtkm::CELL_SHAPE_TRIANGLE };
   static vtkm::Id numInds[] = { 3, 3 };
   static vtkm::Id connectivity[] = {  0, 1, 3, 3, 1, 2 };
 

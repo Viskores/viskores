@@ -20,7 +20,7 @@
 #ifndef vtk_m_ClipTables_h
 #define vtk_m_ClipTables_h
 
-#include <vtkm/CellType.h>
+#include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
@@ -34,15 +34,15 @@ namespace internal {
 // values < 100 represent edges where the corresponding vertex lies
 // values >= 100 reresent existing vertices of the input cell (vertex = value - 100)
 static vtkm::Id ClipTablesData[] = {
-  // VTKM_VERTEX
+  // vtkm::CELL_SHAPE_VERTEX
   0,  -1,  -1,  -1, // 0
   1,   1,   1, 100, // 1
-  // VTKM_LINE
+  // vtkm::CELL_SHAPE_LINE
   0,  -1,  -1,  -1,  -1, // 0
   1,   3,   2, 100,   1, // 1
   1,   3,   2,   0, 101, // 2
   1,   3,   2, 100, 101, // 3
-  // VTKM_TRIANGLE
+  // vtkm::CELL_SHAPE_TRIANGLE
   0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 0
   1,   5,   3,   0,   2, 100,   0,  -1,  -1,  -1,  -1, // 1
   1,   5,   3,   1,   0, 101,   0,  -1,  -1,  -1,  -1, // 2
@@ -51,24 +51,7 @@ static vtkm::Id ClipTablesData[] = {
   2,   5,   3,   0,   1, 102,   5,   3, 102, 100,   0, // 5
   2,   5,   3,   0, 101,   2,   5,   3,   2, 101, 102, // 6
   1,   5,   3, 100, 101, 102,   0,  -1,  -1,  -1,  -1, // 7
-  // VTKM_PIXEL
-  0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 0
-  1,   5,   3, 100,   0,   3,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 1
-  1,   5,   3, 101,   1,   0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 2
-  1,   8,   4, 100, 101,   1,   3,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 3
-  1,   5,   3, 102,   3,   2,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 4
-  1,   8,   4, 100,   0,   2, 102,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 5
-  3,   5,   3, 101,   1,   0,   5,   3, 102,   3,   2,   8,   4,   0,   1,   2,   3, // 6
-  3,   5,   3, 100, 101,   1,   5,   3, 100,   1,   2,   5,   3, 100,   2, 102,  -1, // 7
-  1,   5,   3, 103,   2,   1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 8
-  3,   5,   3, 100,   0,   3,   5,   3, 103,   2,   1,   8,   4,   0,   1,   2,   3, // 9
-  1,   8,   4, 101, 103,   2,   0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 10
-  3,   5,   3, 100, 101,   3,   5,   3, 101,   2,   3,   5,   3, 101, 103,   2,  -1, // 11
-  1,   8,   4, 103, 102,   3,   1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 12
-  3,   5,   3, 100,   0, 102,   5,   3,   0,   1, 102,   5,   3,   1, 103, 102,  -1, // 13
-  3,   5,   3,   0, 101, 103,   5,   3,   0, 103,   3,   5,   3, 103, 102,   3,  -1, // 14
-  1,   8,   4, 100, 101, 103, 102,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 15
-  // VTKM_QUAD
+  // vtkm::CELL_SHAPE_QUAD
   0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 0
   1,   5,   3, 100,   0,   3,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 1
   1,   5,   3, 101,   1,   0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 2
@@ -85,7 +68,7 @@ static vtkm::Id ClipTablesData[] = {
   3,   5,   3, 100,   0, 103,   5,   3,   0,   1, 103,   5,   3,   1, 102, 103,  -1, // 13
   3,   5,   3,   0, 101, 102,   5,   3,   0, 102,   3,   5,   3, 102, 103,   3,  -1, // 14
   1,   9,   4, 100, 101, 102, 103,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 15
-  // VTKM_TETRA
+  // vtkm::CELL_SHAPE_TETRA
   0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, // 0
   1,  10,   4,   0,   3,   2, 100,  -1,  -1, // 1
   1,  10,   4,   0,   1,   4, 101,  -1,  -1, // 2
@@ -113,7 +96,7 @@ static vtkm::IdComponent CellEdges[] = {
   0, 1,  1, 2,  2, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,
   0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,
   0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,
-  0, 1,  1, 3,  2, 3,  0, 2,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,
+  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,
   0, 1,  1, 2,  3, 2,  0, 3,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,
   0, 1,  1, 2,  2, 0,  0, 3,  1, 3,  2, 3,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,
   0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,
@@ -127,40 +110,40 @@ enum {
   EDGE_TABLES_SIZE = sizeof(CellEdges)/sizeof(vtkm::IdComponent)
 };
 
-static vtkm::Id ShapeToTableWidthMap[VTKM_NUMBER_OF_CELL_TYPES] = {
-  -1, // VTKM_EMPTY_CELL
-   4, // VTKM_VERTEX
-  -1, // VTKM_POLY_VERTEX
-   5, // VTKM_LINE
-  -1, // VTKM_POLY_LINE
-  11, // VTKM_TRIANGLE
-  -1, // VTKM_TRIANGLE_STRIP
-  -1, // VTKM_POLYGON
-  17, // VTKM_PIXEL
-  17, // VTKM_QUAD
-   9, // VTKM_TETRA
-  -1, // VTKM_VOXEL
-  -1, // VTKM_HEXAHEDRON
-  -1, // VTKM_WEDGE
-  -1  // VTKM_PYRAMID
+static vtkm::Id ShapeToTableWidthMap[vtkm::NUMBER_OF_CELL_SHAPES] = {
+  -1, // vtkm::CELL_SHAPE_EMPTY_CELL
+   4, // vtkm::CELL_SHAPE_VERTEX
+  -1, // vtkm::CELL_SHAPE_POLY_VERTEX
+   5, // vtkm::CELL_SHAPE_LINE
+  -1, // vtkm::CELL_SHAPE_POLY_LINE
+  11, // vtkm::CELL_SHAPE_TRIANGLE
+  -1, // vtkm::CELL_SHAPE_TRIANGLE_STRIP
+  -1, // vtkm::CELL_SHAPE_POLYGON
+  -1, // vtkm::CELL_SHAPE_PIXEL
+  17, // vtkm::CELL_SHAPE_QUAD
+   9, // vtkm::CELL_SHAPE_TETRA
+  -1, // vtkm::CELL_SHAPE_VOXEL
+  -1, // vtkm::CELL_SHAPE_HEXAHEDRON
+  -1, // vtkm::CELL_SHAPE_WEDGE
+  -1  // vtkm::CELL_SHAPE_PYRAMID
 };
 
-static vtkm::Id ShapeToTableIndexMap[VTKM_NUMBER_OF_CELL_TYPES] = {
-   -1, // VTKM_EMPTY_CELL
-    0, // VTKM_VERTEX
-   -1, // VTKM_POLY_VERTEX
-    8, // VTKM_LINE
-   -1, // VTKM_POLY_LINE
-   28, // VTKM_TRIANGLE
-   -1, // VTKM_TRIANGLE_STRIP
-   -1, // VTKM_POLYGON
-  116, // VTKM_PIXEL
-  388, // VTKM_QUAD
-  660, // VTKM_TETRA
-   -1, // VTKM_VOXEL
-   -1, // VTKM_HEXAHEDRON
-   -1, // VTKM_WEDGE
-   -1  // VTKM_PYRAMID
+static vtkm::Id ShapeToTableIndexMap[vtkm::NUMBER_OF_CELL_SHAPES] = {
+   -1, // vtkm::CELL_SHAPE_EMPTY_CELL
+    0, // vtkm::CELL_SHAPE_VERTEX
+   -1, // vtkm::CELL_SHAPE_POLY_VERTEX
+    8, // vtkm::CELL_SHAPE_LINE
+   -1, // vtkm::CELL_SHAPE_POLY_LINE
+   28, // vtkm::CELL_SHAPE_TRIANGLE
+   -1, // vtkm::CELL_SHAPE_TRIANGLE_STRIP
+   -1, // vtkm::CELL_SHAPE_POLYGON
+   -1, // vtkm::CELL_SHAPE_PIXEL
+  116, // vtkm::CELL_SHAPE_QUAD
+  388, // vtkm::CELL_SHAPE_TETRA
+   -1, // vtkm::CELL_SHAPE_VOXEL
+   -1, // vtkm::CELL_SHAPE_HEXAHEDRON
+   -1, // vtkm::CELL_SHAPE_WEDGE
+   -1  // vtkm::CELL_SHAPE_PYRAMID
 };
 
 
@@ -213,9 +196,9 @@ public:
   ClipTables()
     : ClipTablesArray(vtkm::cont::make_ArrayHandle(ClipTablesData, CLIP_TABLES_SIZE)),
       ShapeToTableWidthMapArray(vtkm::cont::make_ArrayHandle(
-         ShapeToTableWidthMap, VTKM_NUMBER_OF_CELL_TYPES)),
+         ShapeToTableWidthMap, vtkm::NUMBER_OF_CELL_SHAPES)),
       ShapeToTableIndexMapArray(vtkm::cont::make_ArrayHandle(
-         ShapeToTableIndexMap, VTKM_NUMBER_OF_CELL_TYPES)),
+         ShapeToTableIndexMap, vtkm::NUMBER_OF_CELL_SHAPES)),
       EdgeTablesArray(vtkm::cont::make_ArrayHandle(CellEdges, EDGE_TABLES_SIZE))
   {
   }

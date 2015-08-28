@@ -102,7 +102,7 @@ void TestExternalFaces()
   int index = 0;
   for(int j = 0; j < nCells; j++)
   {
-    shapes.GetPortalControl().Set(j, static_cast<vtkm::Id>(vtkm::VTKM_TETRA));
+    shapes.GetPortalControl().Set(j, static_cast<vtkm::Id>(vtkm::CELL_SHAPE_TETRA));
     numIndices.GetPortalControl().Set(j, 4);
     for(int k = 0; k < 4; k++)
       conn.GetPortalControl().Set(index++, static_cast<vtkm::Id>(cellVerts[j][k]));
