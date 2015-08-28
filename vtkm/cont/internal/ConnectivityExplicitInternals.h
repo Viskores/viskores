@@ -99,6 +99,7 @@ struct ConnectivityExplicitInternals
     out << std::endl;
     out << "     IndexOffsets: ";
     vtkm::cont::printSummary_ArrayHandle(this->IndexOffsets, out);
+    out << std::endl;
   }
 };
 
