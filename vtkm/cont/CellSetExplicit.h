@@ -286,7 +286,7 @@ public:
         // add empty spots to skip nodes not referenced by our cells
         // also add a spot for the current one
         ++filled_array_to_node;
-        shapes.push_back(VTKM_VERTEX);
+        shapes.push_back(CELL_SHAPE_VERTEX);
         numindices.push_back(0);
       }
       vtkm::Id cell = iter->second;
@@ -297,7 +297,7 @@ public:
     {
       // add empty spots for tail nodes not referenced by our cells
       ++filled_array_to_node;
-      shapes.push_back(VTKM_VERTEX);
+      shapes.push_back(CELL_SHAPE_VERTEX);
       numindices.push_back(0);
     }
 
