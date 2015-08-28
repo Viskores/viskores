@@ -72,12 +72,12 @@ public:
     {
       vtkm::Id caseNumber  = (pointValues[0] > this->Isovalue);
       caseNumber += (pointValues[1] > this->Isovalue)*2;
-      caseNumber += (pointValues[3] > this->Isovalue)*4;
-      caseNumber += (pointValues[2] > this->Isovalue)*8;
+      caseNumber += (pointValues[2] > this->Isovalue)*4;
+      caseNumber += (pointValues[3] > this->Isovalue)*8;
       caseNumber += (pointValues[4] > this->Isovalue)*16;
       caseNumber += (pointValues[5] > this->Isovalue)*32;
-      caseNumber += (pointValues[7] > this->Isovalue)*64;
-      caseNumber += (pointValues[6] > this->Isovalue)*128;
+      caseNumber += (pointValues[6] > this->Isovalue)*64;
+      caseNumber += (pointValues[7] > this->Isovalue)*128;
       numVertices = this->VertexTable.Get(caseNumber) / 3;
     }
   };
