@@ -136,10 +136,10 @@ TwoDimRegularTest()
 
   vtkm::Id expectedCellIds[6][4] = {{0,-1,-1,-1},
                                     {0,1,-1,-1},
+                                    {1,-1,-1,-1},
                                     {0,-1,-1,-1},
                                     {0,1,-1,-1},
-                                    {2,-1,-1,-1},
-                                    {2,3,-1,-1}};
+                                    {1,-1,-1,-1}};
 
   for (vtkm::Id pointIndex = 0; pointIndex < 6; pointIndex++)
   {
@@ -150,9 +150,11 @@ TwoDimRegularTest()
     for (vtkm::IdComponent cellIndex = 0;
          cellIndex < retrievedCellIds.GetNumberOfComponents();
          cellIndex++)
+    {
       VTKM_TEST_ASSERT(
             retrievedCellIds[cellIndex] == expectedCellIds[pointIndex][cellIndex],
             "Incorrect cell ID for point");
+    }
   }
 }
 
