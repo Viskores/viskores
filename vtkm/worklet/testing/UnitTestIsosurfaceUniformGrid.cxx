@@ -104,7 +104,7 @@ void TestIsosurfaceUniformGrid()
   int dim = 4;
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dim);
 
-  vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32> isosurfaceFilter(dim, dataSet);
+  vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG> isosurfaceFilter(dim, dataSet);
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
