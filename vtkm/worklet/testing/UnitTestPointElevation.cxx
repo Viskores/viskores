@@ -59,7 +59,7 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
   {
     for (vtkm::Id i = 0; i < dim - 1; ++i)
     {
-      cellSet.AddCell(vtkm::VTKM_QUAD,
+      cellSet.AddCell(vtkm::CELL_SHAPE_QUAD,
                       4,
                       vtkm::make_Vec<vtkm::Id>(j * dim + i,
                                                j * dim + i + 1,

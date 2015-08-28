@@ -20,7 +20,6 @@
 #ifndef vtk_m_cont_CellSet_h
 #define vtk_m_cont_CellSet_h
 
-#include <vtkm/CellType.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/LogicalStructure.h>

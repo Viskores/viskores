@@ -74,8 +74,9 @@ struct VecTraits
   ///
   typedef typename VecType::ComponentType ComponentType;
 
-  /// Number of components in the vector. This is only defined for vectors
-  /// of a static size.
+  /// \brief Number of components in the vector.
+  ///
+  /// This is only defined for vectors of a static size.
   ///
   static const vtkm::IdComponent NUM_COMPONENTS = VecType::NUM_COMPONENTS;
 
@@ -83,18 +84,19 @@ struct VecTraits
   ///
   static vtkm::IdComponent GetNumberOfComponents(const VecType &vec);
 
-  /// A tag specifying whether this vector has multiple components (i.e. is a
-  /// "real" vector). This tag can be useful for creating specialized functions
-  /// when a vector is really just a scalar.
+  /// \brief A tag specifying whether this vector has multiple components (i.e. is a "real" vector).
+  ///
+  /// This tag can be useful for creating specialized functions when a vector
+  /// is really just a scalar.
   ///
   typedef typename internal::VecTraitsMultipleComponentChooser<
       NUM_COMPONENTS>::Type HasMultipleComponents;
 
-  /// A tag specifying whether the size of this vector is known at compile
-  /// time. If set to \c VecTraitsTagSizeStatic, then \c NUM_COMPONENTS is set.
-  /// If set to \c VecTraitsTagSizeVariable, then the number of components is
-  /// not known at compile time and must be queried with \c
-  /// GetNumberOfComponents.
+  /// \brief A tag specifying whether the size of this vector is known at compile time.
+  ///
+  /// If set to \c VecTraitsTagSizeStatic, then \c NUM_COMPONENTS is set. If
+  /// set to \c VecTraitsTagSizeVariable, then the number of components is not
+  /// known at compile time and must be queried with \c GetNumberOfComponents.
   ///
   typedef vtkm::VecTraitsTagSizeStatic IsSizeStatic;
 

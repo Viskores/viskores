@@ -20,11 +20,15 @@
 
 set(headers
   Assert.h
+  CellDerivative.h
+  CellInterpolate.h
   ConnectivityExplicit.h
   ConnectivityStructured.h
   ExecutionObjectBase.h
   ExecutionWholeArray.h
   FunctorBase.h
+  NewtonsMethod.h
+  ParametricCoordinates.h
   )
 
 #-----------------------------------------------------------------------------
@@ -41,4 +45,4 @@ endif ()
 
 
 #-----------------------------------------------------------------------------
-# add_subdirectory(testing)
+add_subdirectory(testing)

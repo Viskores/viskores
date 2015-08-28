@@ -20,7 +20,6 @@
 #ifndef vtk_m_cont_DataSet_h
 #define vtk_m_cont_DataSet_h
 
-#include <vtkm/CellType.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicArrayHandle.h>

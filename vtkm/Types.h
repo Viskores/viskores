@@ -772,7 +772,7 @@ protected:
 
 public:
   VTKM_EXEC_CONT_EXPORT
-  vtkm::IdComponent GetNumberOfComponents() { return NUM_COMPONENTS; }
+  vtkm::IdComponent GetNumberOfComponents() const { return NUM_COMPONENTS; }
 
   template<vtkm::IdComponent OtherSize>
   VTKM_EXEC_CONT_EXPORT

@@ -68,11 +68,13 @@ public:
   vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const {
     return Helper::GetNumberOfIndices(this->Internals, index);
   }
+
   // This needs some thought. What does cell shape mean when the to topology
   // is not a cell?
+  typedef typename InternalsType::CellShapeTag CellShapeTag;
   VTKM_EXEC_EXPORT
-  vtkm::CellType GetCellShape(vtkm::Id=0) const {
-    return Internals.GetCellShape();
+  CellShapeTag GetCellShape(vtkm::Id=0) const {
+    return CellShapeTag();
   }
 
   typedef typename Helper::IndicesType IndicesType;

@@ -47,13 +47,14 @@ public:
   template<typename InCellType,
            typename OutCellType,
            typename InPointVecType,
+           typename CellShapeTag,
            typename FromIndexType>
   VTKM_EXEC_EXPORT
   void operator()(const InCellType &cellValue,
                   OutCellType &maxValue,
                   const InPointVecType &pointValues,
                   const vtkm::IdComponent &numPoints,
-                  const vtkm::Id &vtkmNotUsed(type),
+                  const CellShapeTag &vtkmNotUsed(type),
                   const FromIndexType &vtkmNotUsed(pointIDs)) const
   {
     //simple functor that returns the max of cellValue and pointValue

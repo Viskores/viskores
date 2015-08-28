@@ -40,19 +40,29 @@ namespace vtkm {
 /// vector of the same length as x and y. If w is outside [0,1] then lerp
 /// extrapolates. If w=0 => v0 is returned if w=1 => v1 is returned.
 ///
-template<typename T>
+template<typename ValueType, typename WeightType>
 VTKM_EXEC_CONT_EXPORT
-T Lerp(const T &v0, const T & v1, const T &w)
+ValueType Lerp(const ValueType &value0,
+               const ValueType & value1,
+               const WeightType &weight)
 {
-  return v0 + w * (v1-v0);
+  return static_cast<ValueType>(value0 + weight * (value1-value0));
 }
-template<typename T, vtkm::IdComponent N>
+template<typename ValueType, vtkm::IdComponent N, typename WeightType>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Vec<T,N> Lerp(const vtkm::Vec<T,N> &v0,
-                    const vtkm::Vec<T,N> &v1,
-                    const T &w)
+vtkm::Vec<ValueType,N> Lerp(const vtkm::Vec<ValueType,N> &value0,
+                            const vtkm::Vec<ValueType,N> &value1,
+                            const WeightType &weight)
 {
-  return v0 + w * (v1-v0);
+  return value0 + static_cast<ValueType>(weight) * (value1-value0);
+}
+template<typename ValueType, vtkm::IdComponent N>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<ValueType,N> Lerp(const vtkm::Vec<ValueType,N> &value0,
+                            const vtkm::Vec<ValueType,N> &value1,
+                            const vtkm::Vec<ValueType,N> &weight)
+{
+  return value0 + weight * (value1-value0);
 }
 
 // ----------------------------------------------------------------------------
