@@ -19,88 +19,16 @@
 //============================================================================
 
 #include <iostream>
-#include <algorithm>
 
-#include <vtkm/worklet/PointElevation.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/cont/DeviceAdapter.h>
-
+#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/testing/Testing.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/VertexClustering.h>
 
-template<typename T, vtkm::IdComponent N>
-vtkm::cont::ArrayHandle<T> copyFromVec( vtkm::cont::ArrayHandle< vtkm::Vec<T, N> > const& other)
-{
-    const T *vmem = reinterpret_cast< const T *>(& *other.GetPortalConstControl().GetIteratorBegin());
-    vtkm::cont::ArrayHandle<T> mem = vtkm::cont::make_ArrayHandle(vmem, other.GetNumberOfValues()*N);
-    vtkm::cont::ArrayHandle<T> result;
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(mem,result);
-    return result;
-}
-
-template<typename T, typename StorageTag>
-vtkm::cont::ArrayHandle<T> copyFromImplicit( vtkm::cont::ArrayHandle<T, StorageTag> const& other)
-{
-  vtkm::cont::ArrayHandle<T> result;
-  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(other, result);
-  return result;
-}
-
-vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &dataSet,
-                                        const vtkm::Float64 bounds[6],
-                                        vtkm::Id nDivisions)
-{
-  typedef vtkm::Vec<vtkm::Float64,3>  PointType;
-
-  // TODO: The VertexClustering operation needs some work. You should not have
-  // to cast the cell set yourself (I don't think).
-  vtkm::cont::CellSetExplicit<> &cellSet =
-      dataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
-
-  vtkm::cont::ArrayHandle<PointType> pointArray = dataSet.GetCoordinateSystem("coordinates").GetData().CastToArrayHandle<PointType, VTKM_DEFAULT_STORAGE_TAG>();
-  vtkm::cont::ArrayHandle<vtkm::Id> pointIdArray = cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
-  vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetArray = cellSet.GetIndexOffsetArray(vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
-
-  vtkm::cont::ArrayHandle<PointType> output_pointArray ;
-  vtkm::cont::ArrayHandle<vtkm::Id3> output_pointId3Array ;
-
-  // run
-  vtkm::worklet::VertexClustering<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().run(
-        pointArray,
-        pointIdArray,
-        indexOffsetArray,
-        bounds,
-        nDivisions,
-        output_pointArray,
-        output_pointId3Array);
-
-  vtkm::cont::DataSet newDataSet;
-
-  newDataSet.AddCoordinateSystem(
-        vtkm::cont::CoordinateSystem("coordinates", 0, output_pointArray));
-
-  vtkm::Id cells = output_pointId3Array.GetNumberOfValues();
-  if (cells > 0)
-  {
-    //typedef typename vtkm::cont::ArrayHandleConstant<vtkm::Id>::StorageTag ConstantStorage;
-    //typedef typename vtkm::cont::ArrayHandleImplicit<vtkm::Id, CounterOfThree>::StorageTag CountingStorage;
-
-    vtkm::cont::CellSetExplicit<> newCellSet(pointArray.GetNumberOfValues(), "cells", 0);
-
-    newCellSet.Fill(
-          copyFromImplicit(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(vtkm::CELL_SHAPE_TRIANGLE, cells)),
-          copyFromImplicit(vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(3, cells)),
-          copyFromVec(output_pointId3Array)
-          );
-
-    newDataSet.AddCellSet(newCellSet);
-  }
-
-  return newDataSet;
-}
 
 void TestVertexClustering()
 {
@@ -110,7 +38,10 @@ void TestVertexClustering()
   vtkm::cont::DataSet dataSet = maker.Make3DExplicitDataSetCowNose(bounds);
 
   // run
-  vtkm::cont::DataSet outDataSet = RunVertexClustering(dataSet, bounds, divisions);
+  vtkm::worklet::VertexClustering<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> clustering;
+  vtkm::cont::DataSet outDataSet = clustering.Run(dataSet.GetCellSet(),
+                                                  dataSet.GetCoordinateSystem(),
+                                                  divisions);
 
   // test
   const vtkm::Id output_pointIds = 9;
@@ -137,9 +68,13 @@ void TestVertexClustering()
       VTKM_TEST_ASSERT(test_equal(p1, p2), "Point Array mismatch");
     }
 
+  typedef vtkm::cont::CellSetExplicit<
+      vtkm::cont::ArrayHandleConstant<vtkm::Id>::StorageTag,
+      vtkm::cont::ArrayHandleConstant<vtkm::Id>::StorageTag,
+      VTKM_DEFAULT_STORAGE_TAG> CellSetType;
+
   VTKM_TEST_ASSERT(outDataSet.GetNumberOfCellSets() == 1, "Number of output cellsets mismatch");
-  vtkm::cont::CellSetExplicit<> &cellSet =
-      outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+  CellSetType &cellSet = outDataSet.GetCellSet(0).CastTo<CellSetType>();
   VTKM_TEST_ASSERT(
         cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell()).GetNumberOfValues() == output_pointIds,
         "Number of connectivity array elements mismatch");
