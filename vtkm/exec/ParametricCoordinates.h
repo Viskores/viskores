@@ -198,6 +198,8 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                                           worklet));
     default:
       worklet.RaiseError("Bad shape given to ParametricCoordinatesCenter.");
+      pcoords[0] = pcoords[1] = pcoords[2] = 0;
+      break;
   }
 }
 
@@ -221,11 +223,12 @@ template<typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 void ParametricCoordinatesPoint(vtkm::IdComponent,
                                 vtkm::IdComponent,
-                                vtkm::Vec<ParametricCoordType,3> &,
+                                vtkm::Vec<ParametricCoordType,3> &pcoords,
                                 vtkm::CellShapeTagEmpty,
                                 const vtkm::exec::FunctorBase &worklet)
 {
   worklet.RaiseError("Empty cell has no points.");
+  pcoords[0] = pcoords[1] = pcoords[2] = 0;
 }
 
 template<typename ParametricCoordType>
@@ -275,6 +278,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
     case 1: pcoords[0] = 1; pcoords[1] = 0; break;
     case 2: pcoords[0] = 0; pcoords[1] = 1; break;
     default: worklet.RaiseError("Bad point index.");
+      pcoords[0] = pcoords[1] = pcoords[2] = 0;
+      break;
   }
   pcoords[2] = 0;
 }
@@ -349,6 +354,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
     case 3: pcoords[0] = 0; pcoords[1] = 1; break;
     default:
       worklet.RaiseError("Bad point index.");
+      pcoords[0] = pcoords[1] = pcoords[2] = 0;
+      break;
   }
   pcoords[2] = 0;
 }
@@ -371,6 +378,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
     case 3: pcoords[0] = 0; pcoords[1] = 0; pcoords[2] = 1; break;
     default:
       worklet.RaiseError("Bad point index.");
+      pcoords[0] = pcoords[1] = pcoords[2] = 0;
+      break;
   }
 }
 
@@ -396,6 +405,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
     case 7: pcoords[0] = 0; pcoords[1] = 1; pcoords[2] = 1; break;
     default:
       worklet.RaiseError("Bad point index.");
+      pcoords[0] = pcoords[1] = pcoords[2] = 0;
+      break;
   }
 }
 
@@ -419,6 +430,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
     case 5: pcoords[0] = 1; pcoords[1] = 0; pcoords[2] = 1; break;
     default:
       worklet.RaiseError("Bad point index.");
+      pcoords[0] = pcoords[1] = pcoords[2] = 0;
+      break;
   }
 }
 
@@ -441,6 +454,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
     case 4: pcoords[0] = 0.5; pcoords[1] = 0.5; pcoords[2] = 1; break;
     default:
       worklet.RaiseError("Bad point index.");
+      pcoords[0] = pcoords[1] = pcoords[2] = 0;
+      break;
   }
 }
 
@@ -465,6 +480,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                                          worklet));
     default:
       worklet.RaiseError("Bad shape given to ParametricCoordinatesPoint.");
+      pcoords[0] = pcoords[1] = pcoords[2] = 0;
+      break;
   }
 }
 
