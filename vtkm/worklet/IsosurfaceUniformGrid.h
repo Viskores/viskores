@@ -62,8 +62,10 @@ public:
 
     VTKM_CONT_EXPORT
     ClassifyCell(IdPortalType vTable, float isovalue) :
-                 VertexTable(vTable),
-                 Isovalue(isovalue) {};
+      VertexTable(vTable),
+      Isovalue(isovalue)
+    {
+    }
 
     template<typename InPointVecType>
     VTKM_EXEC_EXPORT
@@ -91,6 +93,10 @@ public:
     typedef void ExecutionSignature(WorkIndex, _1, _2);
     typedef _1 InputDomain;
 
+    const float Isovalue;
+    vtkm::Id xdim, ydim, zdim;
+    const float xmin, ymin, zmin, xmax, ymax, zmax;
+
     typedef typename vtkm::cont::ArrayHandle<FieldType>::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalType;
     FieldPortalType Field, Source;
 
@@ -104,22 +110,22 @@ public:
     typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
     IdPortalType TriTable;
 
-    const vtkm::Id xdim, ydim, zdim, cellsPerLayer, pointsPerLayer;
-    const float Isovalue, xmin, ymin, zmin, xmax, ymax, zmax;
+    const vtkm::Id cellsPerLayer, pointsPerLayer;
 
     template<typename U, typename W, typename X>
     VTKM_CONT_EXPORT
     IsoSurfaceGenerate(const float ivalue, const vtkm::Id3 dims, IdPortalType triTablePortal,
                         const U & field, const U & source, const W & vertices, const X & scalars) :
-                        Isovalue(ivalue), xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
-                        xmin(-1), ymin(-1), zmin(-1), xmax(1), ymax(1), zmax(1),
-                        TriTable(triTablePortal),
-                        Field( field.PrepareForInput( DeviceAdapter() ) ),
-                        Source( source.PrepareForInput( DeviceAdapter() ) ),
-                        Vertices(vertices),
-                        Scalars(scalars),
-                        cellsPerLayer((xdim-1) * (ydim-1)),
-                        pointsPerLayer (xdim*ydim)
+      Isovalue(ivalue),
+      xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
+      xmin(-1), ymin(-1), zmin(-1), xmax(1), ymax(1), zmax(1),
+      Field( field.PrepareForInput( DeviceAdapter() ) ),
+      Source( source.PrepareForInput( DeviceAdapter() ) ),
+      Scalars(scalars),
+      Vertices(vertices),
+      TriTable(triTablePortal),
+      cellsPerLayer((xdim-1) * (ydim-1)),
+      pointsPerLayer (xdim*ydim)
     {
     }
 
@@ -184,7 +190,7 @@ public:
       // Interpolate for vertex positions and associated scalar values
       const vtkm::Id inputIteration = (outputCellId - inputLowerBounds);
       const vtkm::Id outputVertId = outputCellId * 3;
-      const vtkm::Id cellOffset = cubeindex*16 + (inputIteration * 3);
+      const vtkm::Id cellOffset = static_cast<vtkm::Id>(cubeindex*16) + (inputIteration * 3);
       for (int v = 0; v < 3; v++)
       {
         const vtkm::Id edge = this->TriTable.Get(cellOffset + v);

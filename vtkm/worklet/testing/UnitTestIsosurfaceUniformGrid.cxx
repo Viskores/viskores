@@ -37,8 +37,9 @@ public:
   typedef void ExecutionSignature(_1, _2);
   typedef _1 InputDomain;
 
-  const vtkm::Id xdim, ydim, zdim, cellsPerLayer;
+  const vtkm::Id xdim, ydim, zdim;
   const float xmin, ymin, zmin, xmax, ymax, zmax;
+  const vtkm::Id cellsPerLayer;
 
   VTKM_CONT_EXPORT
   TangleField(const vtkm::Id3 dims, const float mins[3], const float maxs[3]) : xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
@@ -51,9 +52,13 @@ public:
     const vtkm::Id y = (vertexId / (xdim)) % (ydim);
     const vtkm::Id z = vertexId / cellsPerLayer;
 
-    const vtkm::Float32 xx = 3.0f*(xmin+(xmax-xmin)*(1.0f*x/(xdim-1)));
-    const vtkm::Float32 yy = 3.0f*(ymin+(ymax-ymin)*(1.0f*y/(xdim-1)));
-    const vtkm::Float32 zz = 3.0f*(zmin+(zmax-zmin)*(1.0f*z/(xdim-1)));
+    const float fx = static_cast<float>(x) / static_cast<float>(xdim-1);
+    const float fy = static_cast<float>(y) / static_cast<float>(xdim-1);
+    const float fz = static_cast<float>(z) / static_cast<float>(xdim-1);
+
+    const vtkm::Float32 xx = 3.0f*(xmin+(xmax-xmin)*(fx));
+    const vtkm::Float32 yy = 3.0f*(ymin+(ymax-ymin)*(fy));
+    const vtkm::Float32 zz = 3.0f*(zmin+(zmax-zmin)*(fz));
 
     v = (xx*xx*xx*xx - 5.0f*xx*xx + yy*yy*yy*yy - 5.0f*yy*yy + zz*zz*zz*zz - 5.0f*zz*zz + 11.8f) * 0.2f + 0.5f;
   }
