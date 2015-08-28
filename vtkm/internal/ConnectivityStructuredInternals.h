@@ -255,9 +255,9 @@ private:
   VTKM_EXEC_CONT_EXPORT
   void CalculateLogicalPointIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j) const
   {
-    vtkm::Id2 cellDimensions = this->GetCellDimensions();
-    i = index % cellDimensions[0];
-    j = index / cellDimensions[0];
+    vtkm::Id2 pointDimensions = this->GetPointDimensions();
+    i = index % pointDimensions[0];
+    j = index / pointDimensions[0];
   }
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id CalculateCellIndex(vtkm::Id i, vtkm::Id j) const
@@ -343,6 +343,34 @@ public:
     pointIds[7] = pointIds[6] + 1;
 
     return pointIds;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
+  {
+    vtkm::Id i, j, k;
+    vtkm::IdComponent idx=0;
+
+    this->CalculateLogicalPointIndices(pointIndex, i, j, k);
+
+    return (
+            static_cast<vtkm::IdComponent>((i > 0) && (j > 0) && (k > 0))
+          + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) && (j > 0) && (k > 0))
+          + static_cast<vtkm::IdComponent>((i > 0) && (j < this->PointDimensions[1]-1) && (k > 0))
+          + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) &&
+                                           (j < this->PointDimensions[1]-1) &&
+                                           (k > 0))
+          + static_cast<vtkm::IdComponent>((i > 0) && (j > 0) && (k < this->PointDimensions[2]-1))
+          + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) &&
+                                           (j > 0) &&
+                                           (k < this->PointDimensions[2]-1))
+          + static_cast<vtkm::IdComponent>((i > 0) &&
+                                           (j < this->PointDimensions[1]-1) &&
+                                           (k < this->PointDimensions[2]-1))
+          + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) &&
+                                           (j < this->PointDimensions[1]-1) &&
+                                           (k < this->PointDimensions[2]-1))
+            );
   }
 
   VTKM_EXEC_CONT_EXPORT
