@@ -31,6 +31,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/static_assert.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
+#include <exception>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -252,6 +253,11 @@ public:
                 << error.GetFile() << ":" << error.GetLine() << std::endl
                 << error.GetMessage() << std::endl;
       return 1;
+    }
+    catch (std::exception error)
+    {
+      std::cout << "***** STL exception throw." << std::endl
+                << error.what() << std::endl;
     }
     catch (...)
     {
