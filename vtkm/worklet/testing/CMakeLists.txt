@@ -22,6 +22,7 @@ set(unit_tests
   UnitTestCellAverage.cxx
   UnitTestClipping.cxx
   UnitTestExternalFaces.cxx
+  UnitTestIsosurfaceUniformGrid.cxx
   UnitTestPointElevation.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx

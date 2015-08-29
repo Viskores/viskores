@@ -27,6 +27,8 @@ set(headers
   CellAverage.h
   Clip.h
   ExternalFaces.h
+  IsosurfaceUniformGrid.h
+  MarchingCubesDataTables.h
   PointElevation.h
   VertexClustering.h
   )
