@@ -75,7 +75,7 @@ namespace worklet
 
        template<typename T>
        VTKM_EXEC_CONT_EXPORT
-       void operator()(const T &modulus, const T &spatPointId,
+       void operator()(const T &modulus, const T &splatPointId,
                     const vtkm::Id &index, T &localId) const
        {
            localId = (index - splatPointId) % modulus;
@@ -204,7 +204,7 @@ namespace worklet
                               const vtkm::Float64 &ef,
                               const vtkm::Float64 &sf)
                               : Spacing(s), Origin(orig), VolumeDim(dim),
-                                Radius2(rad), ExponentFactor(ef), ScalingFactor(sf)) {}
+                                Radius2(rad), ExponentFactor(ef), ScalingFactor(sf) {}
 
                 template<typename T>
                 VTKM_EXEC_CONT_EXPORT
@@ -242,6 +242,7 @@ namespace worklet
                     }
                     neighborVoxelId = (neighbor[0]*VolumeDim[1]*VolumeDim[2]) +
                                       (neighbor[1]*VolumeDim[2]) + neighbor[2];
+                }
           };
 
       //Given an index of a gridpoint within the volume bounding
@@ -321,15 +322,15 @@ namespace worklet
 
       //Get the scalar value bounds - min and max - for each dimension
       vtkm::Float64 b1[2];
-      xValues.GetBounds(b1, DeviceAdapter);
+      xValues.GetBounds(b1);
       vtkm::Vec<vtkm::Float64,2> xBounds = vtkm::make_Vec(b1[0],b1[1]);
 
       vtkm::Float64 b2[2];
-      yValues.GetBounds(b2, DeviceAdapter);
+      yValues.GetBounds(b2);
       vtkm::Vec<vtkm::Float64,2> yBounds = vtkm::make_Vec(b2[0],b2[1]);
 
       vtkm::Float64 b3[2];
-      zValues.GetBounds(b3, DeviceAdapter);
+      zValues.GetBounds(b3);
       vtkm::Vec<vtkm::Float64,2> zBounds = vtkm::make_Vec(b3[0],b3[1]);
 
       //Add the bounds vectors to an ArrayHandle for sorting
@@ -340,7 +341,7 @@ namespace worklet
       //Sort the bounds vectors from smallest to largest range (max-min)
       vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(allBounds, DimBoundsCompare());
 
-      vtkm::Vec<vtkm::Float64,2> maxBound = allBounds.GetConstPortalControl().Get(2);
+      vtkm::Vec<vtkm::Float64,2> maxBound = allBounds.GetPortalConstControl().Get(2);
       const vtkm::Float64 maxDist = (maxBound[1] - maxBound[0]) * radius;
       const vtkm::Float64 radius2 = maxDist * maxDist;
 
@@ -355,8 +356,11 @@ namespace worklet
       vtkm::cont::ArrayHandle<vtkm::Float64> splatDist;
       vtkm::worklet::DispatcherMapField<ConfigureVolumeProps> configVolumeDispatcher;
       configVolumeDispatcher.Invoke(allBounds, sampleDimensions, spacing, splatDist);
-      vtkm::Vec<vtkm::Float64, 3> vecSpacing = vtkm::make_Vec(spacing[0],spacing[1],spacing[2]);
-      vtkm::Vec<vtkm::Float64, 3> vecSplatDist = vtkm::make_Vec(splatDist[0],splatDist[1],splatDist[2]);
+
+      vtkm::cont::ArrayHandle<vtkm::Float64>::PortalConstControl spcc = spacing.GetPortalConstControl();
+      vtkm::cont::ArrayHandle<vtkm::Float64>::PortalConstControl dpcc = spacing.GetPortalConstControl();
+      vtkm::Vec<vtkm::Float64, 3> vecSpacing = vtkm::make_Vec(spcc.Get(0),spcc.Get(1),spcc.Get(2));
+      vtkm::Vec<vtkm::Float64, 3> vecSplatDist = vtkm::make_Vec(dpcc.Get(0),dpcc.Get(1),dpcc.Get(2));
 
       //Number of grid points in the volume bounding box
       const vtkm::Id numVolumePoints = sampleDim[0] * sampleDim[1] * sampleDim[2];
@@ -445,7 +449,7 @@ namespace worklet
       //would be 0,1,2,3,4
       IdHandleType localNeighborIds;
       IdPermType modulii(neighbor2SplatId, numNeighborsPrefixSum);
-      vtkm::worklet::DispatcherMapField<ComputeLocalNeighborId> idDispatcher();
+      vtkm::worklet::DispatcherMapField<ComputeLocalNeighborId> idDispatcher;
       #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
         timer.Reset();
       #endif
@@ -471,7 +475,7 @@ namespace worklet
                                                                           volDimensions,
                                                                           radius2,
                                                                           exponentFactor,
-                                                                          scalingFactor);
+                                                                          scaleFactor);
       #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
         timer.Reset();
       #endif
