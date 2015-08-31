@@ -114,18 +114,18 @@ public:
 
     template<typename U, typename W, typename X>
     VTKM_CONT_EXPORT
-    IsoSurfaceGenerate(const float ivalue, const vtkm::Id3 dims, IdPortalType triTablePortal,
+    IsoSurfaceGenerate(const float ivalue, const vtkm::Id3 cdims, IdPortalType triTablePortal,
                         const U & field, const U & source, const W & vertices, const X & scalars) :
       Isovalue(ivalue),
-      xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
+      xdim(cdims[0]), ydim(cdims[1]), zdim(cdims[2]),
       xmin(-1), ymin(-1), zmin(-1), xmax(1), ymax(1), zmax(1),
       Field( field.PrepareForInput( DeviceAdapter() ) ),
       Source( source.PrepareForInput( DeviceAdapter() ) ),
       Scalars(scalars),
       Vertices(vertices),
       TriTable(triTablePortal),
-      cellsPerLayer((xdim-1) * (ydim-1)),
-      pointsPerLayer (xdim*ydim)
+      cellsPerLayer(xdim * ydim),
+      pointsPerLayer ((xdim+1)*(ydim+1))
     {
     }
 
@@ -137,15 +137,15 @@ public:
                                       4, 5, 5, 6, 7, 6, 4, 7,
                                       0, 4, 1, 5, 2, 6, 3, 7 };
 
-      const vtkm::Id x = inputCellId % (xdim - 1);
-      const vtkm::Id y = (inputCellId / (xdim - 1)) % (ydim -1);
+      const vtkm::Id x = inputCellId % xdim;
+      const vtkm::Id y = (inputCellId / xdim) % ydim;
       const vtkm::Id z = inputCellId / cellsPerLayer;
 
       // Compute indices for the eight vertices of this cell
-      const vtkm::Id i0 = x    + y*xdim + z * pointsPerLayer;
+      const vtkm::Id i0 = x    + y*(xdim+1) + z * pointsPerLayer;
       const vtkm::Id i1 = i0   + 1;
-      const vtkm::Id i2 = i0   + 1 + xdim;
-      const vtkm::Id i3 = i0   + xdim;
+      const vtkm::Id i2 = i0   + 1 + (xdim + 1); //xdim is cell dim
+      const vtkm::Id i3 = i0   + (xdim + 1);     //xdim is cell dim
       const vtkm::Id i4 = i0   + pointsPerLayer;
       const vtkm::Id i5 = i1   + pointsPerLayer;
       const vtkm::Id i6 = i2   + pointsPerLayer;
@@ -205,14 +205,14 @@ public:
   };
 
 
-  IsosurfaceFilterUniformGrid(const vtkm::Id3 &vdims,
+  IsosurfaceFilterUniformGrid(const vtkm::Id3 &dims,
                               const vtkm::cont::DataSet &dataSet) :
-    VDims(vdims),
+    CDims(dims),
     DataSet(dataSet)
   {
   }
 
-  vtkm::Id3 VDims;
+  vtkm::Id3 CDims;
   vtkm::cont::DataSet DataSet;
 
   template<typename IsoField, typename CoordinateType>
@@ -267,6 +267,7 @@ public:
 
     // Generate a single triangle per cell
     const vtkm::Id numTotalVertices = numOutputCells * 3;
+    std::cout << "validCellIndicesArray: " << validCellIndicesArray.GetNumberOfValues() << std::endl;
 
     //todo this needs to change so that we don't presume the storage type
     vtkm::cont::ArrayHandle<FieldType> field;
@@ -274,7 +275,7 @@ public:
 
 
     IsoSurfaceGenerate isosurface(isovalue,
-                                 this->VDims,
+                                 this->CDims,
                                  triangleTableArray.PrepareForInput(DeviceAdapter()),
                                  field,
                                  field,
