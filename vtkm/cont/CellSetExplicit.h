@@ -255,7 +255,7 @@ public:
 
   void CreateCellToPointConnectivity()
   {
-    std::multimap<int,int> cells_of_nodes;
+    std::multimap<vtkm::Id,vtkm::Id> cells_of_nodes;
 
     vtkm::Id maxNodeID = 0;
     vtkm::Id numCells = GetNumberOfCells();
@@ -268,7 +268,7 @@ public:
         vtkm::Id index = this->PointToCell.Connectivity.GetPortalControl().Get(cindex++);
         if (index > maxNodeID)
           maxNodeID = index;
-        cells_of_nodes.insert(std::pair<int,int>(index,cell));
+        cells_of_nodes.insert(std::pair<vtkm::Id,vtkm::Id>(index,cell));
       }
     }
 
@@ -277,10 +277,10 @@ public:
     std::vector<vtkm::Id> conn;
 
     vtkm::Id filled_array_to_node = 0;
-    for (std::multimap<int,int>::iterator iter = cells_of_nodes.begin();
+    for (std::multimap<vtkm::Id,vtkm::Id>::iterator iter = cells_of_nodes.begin();
          iter != cells_of_nodes.end(); iter++)
     {
-      int node = iter->first;
+      vtkm::Id node = iter->first;
       while (filled_array_to_node <= node)
       {
         // add empty spots to skip nodes not referenced by our cells
