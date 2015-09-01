@@ -284,6 +284,7 @@ public:
 
     std::multimap<vtkm::Id,vtkm::Id> cells_of_nodes;
 
+    vtkm::Id pairCount = 0;
     vtkm::Id maxNodeID = 0;
     vtkm::Id numCells = GetNumberOfCells();
     vtkm::Id numPoints = GetNumberOfPoints();
@@ -296,55 +297,42 @@ public:
         if (index > maxNodeID)
           maxNodeID = index;
         cells_of_nodes.insert(std::pair<vtkm::Id,vtkm::Id>(index,cell));
+        pairCount++;
       }
     }
 
-    std::vector<vtkm::Id> shapes;
-    std::vector<vtkm::Id> numindices;
-    std::vector<vtkm::Id> conn;
+    this->CellToPoint.Shapes.Allocate(numPoints);
+    this->CellToPoint.NumIndices.Allocate(numPoints);
+    this->CellToPoint.Connectivity.Allocate(pairCount);
 
-    vtkm::Id filled_array_to_node = 0;
+    vtkm::Id connIndex = 0;
+    vtkm::Id pointIndex = 0;
+
     for (std::multimap<vtkm::Id,vtkm::Id>::iterator iter = cells_of_nodes.begin();
          iter != cells_of_nodes.end(); iter++)
     {
-      vtkm::Id node = iter->first;
-      while (filled_array_to_node <= node)
+      vtkm::Id pointId = iter->first;
+      while (pointIndex <= pointId)
       {
-        // add empty spots to skip nodes not referenced by our cells
-        // also add a spot for the current one
-        ++filled_array_to_node;
-        shapes.push_back(CELL_SHAPE_VERTEX);
-        numindices.push_back(0);
+        // add empty spots to skip points not referenced by our cells
+        // also initialize the current one
+        this->CellToPoint.Shapes.GetPortalControl().Set(pointIndex,CELL_SHAPE_VERTEX);
+        this->CellToPoint.NumIndices.GetPortalControl().Set(pointIndex,0);
+        ++pointIndex;
       }
-      vtkm::Id cell = iter->second;
-      conn.push_back(cell);
-      ++numindices[numindices.size()-1];
+      vtkm::Id cellId = iter->second;
+      this->CellToPoint.Connectivity.GetPortalControl().Set(connIndex,cellId);
+      ++connIndex;
+      vtkm::Id oldCellCount = this->CellToPoint.NumIndices.GetPortalControl().Get(pointIndex-1);
+      this->CellToPoint.NumIndices.GetPortalControl().Set(pointIndex-1,oldCellCount+1);
     }
-    while (filled_array_to_node < numPoints)
+    while (pointIndex < numPoints)
     {
-      // add empty spots for tail nodes not referenced by our cells
-      ++filled_array_to_node;
-      shapes.push_back(CELL_SHAPE_VERTEX);
-      numindices.push_back(0);
+      // add empty spots for tail points not referenced by our cells
+      this->CellToPoint.Shapes.GetPortalControl().Set(pointIndex,CELL_SHAPE_VERTEX);
+      this->CellToPoint.NumIndices.GetPortalControl().Set(pointIndex,0);
+      ++pointIndex;
     }
-
-    ///\todo: THIS IS A COPY OF "FillViaCopy", because that method
-    /// is specific to PointToCell.  Should make it non-specific and call 
-    /// it instead.
-    this->CellToPoint.Shapes.Allocate( static_cast<vtkm::Id>(shapes.size()) );
-    std::copy(shapes.begin(), shapes.end(),
-              vtkm::cont::ArrayPortalToIteratorBegin(
-                this->CellToPoint.Shapes.GetPortalControl()));
-
-    this->CellToPoint.NumIndices.Allocate( static_cast<vtkm::Id>(numindices.size()) );
-    std::copy(numindices.begin(), numindices.end(),
-              vtkm::cont::ArrayPortalToIteratorBegin(
-                this->CellToPoint.NumIndices.GetPortalControl()));
-
-    this->CellToPoint.Connectivity.Allocate( static_cast<vtkm::Id>(conn.size()) );
-    std::copy(conn.begin(), conn.end(),
-              vtkm::cont::ArrayPortalToIteratorBegin(
-                this->CellToPoint.Connectivity.GetPortalControl()));
 
     this->CellToPoint.ElementsValid = true;
     this->CellToPoint.IndexOffsetsValid = false;
