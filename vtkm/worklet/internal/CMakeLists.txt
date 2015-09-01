@@ -20,6 +20,7 @@
 
 set(headers
   DispatcherBase.h
+  DispatcherBaseDetailInvoke.h
   WorkletBase.h
   ClipTables.h
   )
