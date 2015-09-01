@@ -190,7 +190,7 @@ public:
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
   {
     vtkm::Id i, j;
-    this->CalculateLogicalPointIndices(index, i, j);
+    this->CalculateLogicalCellIndices(index, i, j);
 
     vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> pointIds;
     pointIds[0] = j*this->PointDimensions[0] + i;
@@ -261,6 +261,13 @@ private:
     j = index / pointDimensions[0];
   }
   VTKM_EXEC_CONT_EXPORT
+  void CalculateLogicalCellIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j) const
+  {
+    vtkm::Id2 cellDimensions = this->GetCellDimensions();
+    i = index % cellDimensions[0];
+    j = index / cellDimensions[0];
+  }
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id CalculateCellIndex(vtkm::Id i, vtkm::Id j) const
   {
     vtkm::Id2 cellDimensions = this->GetCellDimensions();
@@ -327,13 +334,8 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
   {
-    vtkm::Id3 cellDimensions = this->GetCellDimensions();
-
-    vtkm::Id cellDims01 = cellDimensions[0] * cellDimensions[1];
-    vtkm::Id k = index / cellDims01;
-    vtkm::Id indexij = index % cellDims01;
-    vtkm::Id j = indexij / cellDimensions[0];
-    vtkm::Id i = indexij % cellDimensions[0];
+    vtkm::Id i, j, k;
+    this->CalculateLogicalCellIndices(index, i, j, k);
 
     vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> pointIds;
     pointIds[0] = (k * this->PointDimensions[1] + j) * this->PointDimensions[0] + i;
@@ -443,6 +445,17 @@ private:
 
 
 private:
+  VTKM_EXEC_CONT_EXPORT
+  void CalculateLogicalCellIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j, vtkm::Id &k) const
+  {
+    vtkm::Id3 cellDimensions = this->GetCellDimensions();
+    vtkm::Id cellDims01 = cellDimensions[0] * cellDimensions[1];
+    k = index / cellDims01;
+    vtkm::Id indexij = index % cellDims01;
+    j = indexij / cellDimensions[0];
+    i = indexij % cellDimensions[0];
+  }
+
   VTKM_EXEC_CONT_EXPORT
   void CalculateLogicalPointIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j, vtkm::Id &k) const
   {
