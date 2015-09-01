@@ -22,6 +22,7 @@
 
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
+#include <vtkm/VecRectilinearPointCoordinates.h>
 #include <vtkm/exec/Assert.h>
 #include <vtkm/exec/CellDerivative.h>
 #include <vtkm/exec/CellInterpolate.h>
@@ -732,6 +733,17 @@ WorldCoordinatesToParametricCoordinates(
   return Vector3(numerator/denominator, 0, 0);
 }
 
+VTKM_EXEC_EXPORT
+vtkm::Vec<vtkm::FloatDefault,3>
+WorldCoordinatesToParametricCoordinates(
+    const vtkm::VecRectilinearPointCoordinates<1> &pointWCoords,
+    const vtkm::Vec<vtkm::FloatDefault,3> &wcoords,
+    vtkm::CellShapeTagLine,
+    const FunctorBase &)
+{
+  return (wcoords - pointWCoords.GetOrigin())/pointWCoords.GetSpacing();
+}
+
 template<typename WorldCoordVector>
 VTKM_EXEC_EXPORT
 typename WorldCoordVector::ComponentType
@@ -911,6 +923,17 @@ WorldCoordinatesToParametricCoordinates(
   return Vector3(pcoords[0], pcoords[1], 0);
 }
 
+VTKM_EXEC_EXPORT
+vtkm::Vec<vtkm::FloatDefault,3>
+WorldCoordinatesToParametricCoordinates(
+    const vtkm::VecRectilinearPointCoordinates<2> &pointWCoords,
+    const vtkm::Vec<vtkm::FloatDefault,3> &wcoords,
+    vtkm::CellShapeTagQuad,
+    const FunctorBase &)
+{
+  return (wcoords - pointWCoords.GetOrigin())/pointWCoords.GetSpacing();
+}
+
 template<typename WorldCoordVector>
 VTKM_EXEC_EXPORT
 typename WorldCoordVector::ComponentType
@@ -980,6 +1003,17 @@ WorldCoordinatesToParametricCoordinates(
 
   return detail::WorldCoordinatesToParametricCoordinates3D(
         pointWCoords, wcoords, vtkm::CellShapeTagHexahedron(), worklet);
+}
+
+VTKM_EXEC_EXPORT
+vtkm::Vec<vtkm::FloatDefault,3>
+WorldCoordinatesToParametricCoordinates(
+    const vtkm::VecRectilinearPointCoordinates<3> &pointWCoords,
+    const vtkm::Vec<vtkm::FloatDefault,3> &wcoords,
+    vtkm::CellShapeTagHexahedron,
+    const FunctorBase &)
+{
+  return (wcoords - pointWCoords.GetOrigin())/pointWCoords.GetSpacing();
 }
 
 template<typename WorldCoordVector>

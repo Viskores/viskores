@@ -116,6 +116,10 @@ void TryVecRectilinearPointCoordinates(
   vtkm::Vec<vtkm::Vec<vtkm::FloatDefault,3>,VecCoordsType::NUM_COMPONENTS> copy2;
   VTraits::CopyInto(coords, copy2);
   CheckCoordsValues(copy2);
+
+  std::cout << "Check origin and spacing." << std::endl;
+  VTKM_TEST_ASSERT(test_equal(coords.GetOrigin(), g_Origin), "Wrong origin.");
+  VTKM_TEST_ASSERT(test_equal(coords.GetSpacing(), g_Spacing), "Wrong spacing");
 }
 
 void TestVecRectilinearPointCoordinates()
