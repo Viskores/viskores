@@ -22,6 +22,7 @@
 
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
+#include <vtkm/VecRectilinearPointCoordinates.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/exec/Assert.h>
 #include <vtkm/exec/FunctorBase.h>
@@ -198,6 +199,24 @@ CellInterpolate(const FieldVecType &pointFieldValues,
                     parametricCoords[0]);
 }
 
+template<typename ParametricCoordType>
+VTKM_EXEC_EXPORT
+vtkm::Vec<vtkm::FloatDefault,3>
+CellInterpolate(const vtkm::VecRectilinearPointCoordinates<1> &field,
+                const vtkm::Vec<ParametricCoordType,3> &pcoords,
+                vtkm::CellShapeTagLine,
+                const vtkm::exec::FunctorBase &)
+{
+  typedef vtkm::Vec<vtkm::FloatDefault,3> T;
+
+  const T &origin = field.GetOrigin();
+  const T &spacing = field.GetSpacing();
+
+  return T(origin[0] + static_cast<vtkm::FloatDefault>(pcoords[0])*spacing[0],
+           origin[1],
+           origin[2]);
+}
+
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename ParametricCoordType>
@@ -331,6 +350,24 @@ CellInterpolate(const FieldVecType &field,
   return vtkm::Lerp(bottomInterp, topInterp, pcoords[1]);
 }
 
+template<typename ParametricCoordType>
+VTKM_EXEC_EXPORT
+vtkm::Vec<vtkm::FloatDefault,3>
+CellInterpolate(const vtkm::VecRectilinearPointCoordinates<2> &field,
+                const vtkm::Vec<ParametricCoordType,3> &pcoords,
+                vtkm::CellShapeTagQuad,
+                const vtkm::exec::FunctorBase &)
+{
+  typedef vtkm::Vec<vtkm::FloatDefault,3> T;
+
+  const T &origin = field.GetOrigin();
+  const T &spacing = field.GetSpacing();
+
+  return T(origin[0] + static_cast<vtkm::FloatDefault>(pcoords[0])*spacing[0],
+           origin[1] + static_cast<vtkm::FloatDefault>(pcoords[1])*spacing[1],
+           origin[2]);
+}
+
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename ParametricCoordType>
@@ -372,6 +409,22 @@ CellInterpolate(const FieldVecType &field,
   T topInterp = vtkm::Lerp(topFrontInterp, topBackInterp, pcoords[1]);
 
   return vtkm::Lerp(bottomInterp, topInterp, pcoords[2]);
+}
+
+template<typename ParametricCoordType>
+VTKM_EXEC_EXPORT
+vtkm::Vec<vtkm::FloatDefault,3>
+CellInterpolate(const vtkm::VecRectilinearPointCoordinates<3> &field,
+                const vtkm::Vec<ParametricCoordType,3> &pcoords,
+                vtkm::CellShapeTagHexahedron,
+                const vtkm::exec::FunctorBase &)
+{
+  vtkm::Vec<vtkm::FloatDefault,3> pcoordsCast(
+        static_cast<vtkm::FloatDefault>(pcoords[0]),
+        static_cast<vtkm::FloatDefault>(pcoords[1]),
+        static_cast<vtkm::FloatDefault>(pcoords[2]));
+
+  return field.GetOrigin() + pcoordsCast*field.GetSpacing();
 }
 
 //-----------------------------------------------------------------------------
