@@ -26,7 +26,24 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+#if defined (__APPLE__)
+# include <GLUT/glut.h>
+#else
+# include <GL/glut.h>
+#endif
+
+#include "quaternion.h"
+
 #include <vector>
+
+typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+
+vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32, DeviceAdapter> *isosurfaceFilter;
+vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray, normalsArray;
+vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
+Quaternion qrot;
+int lastx, lasty;
+int mouse_state = 1;
 
 namespace {
 
@@ -109,31 +126,124 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 }
 
 
-void TestIsosurfaceUniformGrid()
+void initializeGL()
 {
-  std::cout << "Testing IsosurfaceUniformGrid Filter" << std::endl;
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glEnable(GL_DEPTH_TEST);
+  glShadeModel(GL_SMOOTH);
 
-  vtkm::Id3 dims(4,4,4);
+  float white[] = { 0.8, 0.8, 0.8, 1.0 };
+  float black[] = { 0.0, 0.0, 0.0, 1.0 };
+  float lightPos[] = { 10.0, 10.0, 10.5, 1.0 };
+
+  glLightfv(GL_LIGHT0, GL_AMBIENT, white);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, black);
+  glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+
+  glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
+
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+  glEnable(GL_NORMALIZE);
+  glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+  glEnable(GL_COLOR_MATERIAL);
+}
+
+
+void displayCall()
+{
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_DEPTH_TEST);
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluPerspective( 45.0f, 1.0f, 1.0f, 20.0f);
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  gluLookAt(0.0f, 0.0f, 3.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+
+  glPushMatrix();
+  float rotationMatrix[16];
+  qrot.getRotMat(rotationMatrix);
+  glMultMatrixf(rotationMatrix);
+
+  glColor3f(0.1f, 0.1f, 0.6f);
+
+  glBegin(GL_TRIANGLES);
+  for (unsigned int i=0; i<verticesArray.GetNumberOfValues(); i++)
+  {
+    vtkm::Vec<vtkm::Float32, 3> curNormal = normalsArray.GetPortalConstControl().Get(i);
+    vtkm::Vec<vtkm::Float32, 3> curVertex = verticesArray.GetPortalConstControl().Get(i);
+    glNormal3f(curNormal[0], curNormal[1], curNormal[2]);
+    glVertex3f(curVertex[0], curVertex[1], curVertex[2]);
+  }
+  glEnd();
+
+  glPopMatrix();
+  glutSwapBuffers();
+}
+
+
+void mouseMove(int x, int y)
+{
+  int dx = x - lastx;
+  int dy = y - lasty;
+
+  if (mouse_state == 0)
+  {
+    Quaternion newRotX;
+    newRotX.setEulerAngles(-0.2*dx*M_PI/180.0, 0.0, 0.0);
+    qrot.mul(newRotX);
+
+    Quaternion newRotY;
+    newRotY.setEulerAngles(0.0, 0.0, -0.2*dy*M_PI/180.0);
+    qrot.mul(newRotY);
+  }
+  lastx = x;
+  lasty = y;
+
+  glutPostRedisplay();
+}
+
+
+void mouseCall(int button, int state, int x, int y)
+{
+  if (button == 0) mouse_state = state;
+  if ((button == 0) && (state == 0)) { lastx = x;  lasty = y; }
+}
+
+
+int main(int argc, char* argv[])
+{
+  std::cout << "IsosurfaceUniformGrid Example" << std::endl;
+
+  vtkm::Id3 dims(16,16,16);
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+  isosurfaceFilter = new vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32, DeviceAdapter>(dims, dataSet);
 
-  vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32,
-                                            DeviceAdapter> isosurfaceFilter(dims, dataSet);
+  isosurfaceFilter->Run(0.5,
+                        dataSet.GetField("nodevar").GetData(),
+                        verticesArray,
+                        normalsArray,
+                        scalarsArray);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray, normalsArray;
-  vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
-  isosurfaceFilter.Run(0.5,
-                       dataSet.GetField("nodevar").GetData(),
-                       verticesArray,
-                       normalsArray,
-                       scalarsArray);
+  std::cout << verticesArray.GetNumberOfValues() << std::endl;
+ 
+  lastx = lasty = 0;
+  glutInit(&argc, argv);
+  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+  glutInitWindowSize(1000, 1000);
+  glutInitWindowPosition(300, 200);
+  glutCreateWindow("VTK-m Isosurface");
+  initializeGL();
+  glutDisplayFunc(displayCall);
+  glutMotionFunc(mouseMove);
+  glutMouseFunc(mouseCall);
+  glutMainLoop();
 
-  VTKM_TEST_ASSERT(test_equal(verticesArray.GetNumberOfValues(), 480),
-                   "Wrong result for Isosurface filter");
+  return 0;
 }
 
-int UnitTestIsosurfaceUniformGrid(int, char *[])
-{
-  return vtkm::cont::testing::Testing::Run(TestIsosurfaceUniformGrid);
-}

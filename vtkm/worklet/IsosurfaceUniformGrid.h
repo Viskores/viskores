@@ -105,6 +105,7 @@ public:
 
     typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> >::template ExecutionTypes<DeviceAdapter>::Portal VectorPortalType;
     VectorPortalType Vertices;
+    VectorPortalType Normals;
 
     typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
     typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
@@ -115,14 +116,15 @@ public:
     template<typename U, typename W, typename X>
     VTKM_CONT_EXPORT
     IsoSurfaceGenerate(const float ivalue, const vtkm::Id3 cdims, IdPortalType triTablePortal,
-                        const U & field, const U & source, const W & vertices, const X & scalars) :
+                       const U & field, const U & source, const W & vertices, const W & normals, const X & scalars) :
       Isovalue(ivalue),
       xdim(cdims[0]), ydim(cdims[1]), zdim(cdims[2]),
       xmin(-1), ymin(-1), zmin(-1), xmax(1), ymax(1), zmax(1),
       Field( field.PrepareForInput( DeviceAdapter() ) ),
       Source( source.PrepareForInput( DeviceAdapter() ) ),
-      Scalars(scalars),
       Vertices(vertices),
+      Normals(normals),
+      Scalars(scalars),
       TriTable(triTablePortal),
       cellsPerLayer(xdim * ydim),
       pointsPerLayer ((xdim+1)*(ydim+1))
@@ -224,6 +226,16 @@ public:
         this->Vertices.Set(outputVertId + v, vtkm::Lerp(p[v0], p[v1], t));
         this->Scalars.Set(outputVertId + v, vtkm::Lerp(s[v0], s[v1], t));
       }
+
+      vtkm::Vec<FieldType, 3> vertex0 = this->Vertices.Get(outputVertId + 0);
+      vtkm::Vec<FieldType, 3> vertex1 = this->Vertices.Get(outputVertId + 1);
+      vtkm::Vec<FieldType, 3> vertex2 = this->Vertices.Get(outputVertId + 2);
+
+      vtkm::Vec<FieldType, 3> curNorm = vtkm::Cross(vertex1-vertex0, vertex2-vertex0);
+      vtkm::Normalize(curNorm);
+      this->Normals.Set(outputVertId + 0, curNorm);
+      this->Normals.Set(outputVertId + 1, curNorm);
+      this->Normals.Set(outputVertId + 2, curNorm);
     }
   };
 
@@ -242,6 +254,7 @@ public:
   void Run(const float &isovalue,
            IsoField isoField,
            vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3> > &verticesArray,
+           vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3> > &normalsArray,
            vtkm::cont::ArrayHandle<FieldType> &scalarsArray)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
@@ -303,6 +316,7 @@ public:
                                  field,
                                  field,
                                  verticesArray.PrepareForOutput(numTotalVertices, DeviceAdapter()),
+                                 normalsArray.PrepareForOutput(numTotalVertices, DeviceAdapter()),
                                  scalarsArray.PrepareForOutput(numTotalVertices, DeviceAdapter())
                                  );
 

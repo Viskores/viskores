@@ -70,6 +70,7 @@ option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 
 option(VTKm_BUILD_DOCUMENTATION "Build Doxygen documentation" OFF)
+option(VTKm_BUILD_EXAMPLES "Build examples" OFF)
 
 option(VTKm_USE_DOUBLE_PRECISION
   "Use double precision for floating point calculations"
@@ -193,6 +194,12 @@ if (VTKm_BUILD_DOCUMENTATION)
   include(CMake/VTKmBuildDocumentation.cmake)
   vtkm_build_documentation()
 endif()
+
+#-----------------------------------------------------------------------------
+# Build examples
+if(VTKm_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif(VTKm_BUILD_EXAMPLES)
 
 #-----------------------------------------------------------------------------
 # Configuration for build directory.
