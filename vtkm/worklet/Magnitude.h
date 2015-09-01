@@ -30,7 +30,7 @@ namespace worklet {
 class Magnitude : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<>);
   typedef void ExecutionSignature(_1, _2);
 
   template<typename T>
