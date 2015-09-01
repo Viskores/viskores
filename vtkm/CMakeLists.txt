@@ -35,6 +35,7 @@ set(headers
   Types.h
   TypeTraits.h
   VectorAnalysis.h
+  VecRectilinearPointCoordinates.h
   VecTraits.h
   VecVariable.h
   UnaryPredicates.h
