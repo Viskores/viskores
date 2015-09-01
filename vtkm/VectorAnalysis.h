@@ -107,6 +107,7 @@ MagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 /// actually plan to divide by the magnitude.
 ///
 template<typename T>
+VTKM_EXEC_CONT_EXPORT
 typename vtkm::VecTraits<T>::ComponentType
 Magnitude(const T &x)
 {

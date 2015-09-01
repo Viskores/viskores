@@ -64,7 +64,7 @@ void TestCellAverageRegular2D()
   std::cout << "Testing CellAverage Worklet on 2D strucutred data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet1();
+  vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
 
   vtkm::cont::Field result("avgvals",
                            1,
@@ -80,7 +80,7 @@ void TestCellAverageRegular2D()
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle =
       result.GetData().CastToArrayHandle(vtkm::Float32(), VTKM_DEFAULT_STORAGE_TAG());
 
-  vtkm::Float32 expected[2] = { 20.1333f, 35.2f };
+  vtkm::Float32 expected[2] = { 30.1f, 40.1f };
   for (int i = 0; i < 2; ++i)
     {
     VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i),
