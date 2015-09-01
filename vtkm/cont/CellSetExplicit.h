@@ -65,8 +65,8 @@ public:
   CellSetExplicit(vtkm::Id numpoints = 0,
                   const std::string &name = std::string(),
                   vtkm::IdComponent dimensionality = 3)
-    : NumberOfPoints(numpoints),
-      CellSet(name, dimensionality),
+    : CellSet(name, dimensionality),
+      NumberOfPoints(numpoints),
       ConnectivityLength(-1),
       NumberOfCells(-1)
   {
@@ -74,8 +74,8 @@ public:
 
   VTKM_CONT_EXPORT
   CellSetExplicit(vtkm::Id numpoints, int dimensionality)
-    : NumberOfPoints(numpoints),
-      CellSet(std::string(), dimensionality),
+    : CellSet(std::string(), dimensionality),
+      NumberOfPoints(numpoints),
       ConnectivityLength(-1),
       NumberOfCells(-1)
   {

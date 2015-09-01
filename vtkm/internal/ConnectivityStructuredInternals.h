@@ -354,7 +354,6 @@ public:
   vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
   {
     vtkm::Id i, j, k;
-    vtkm::IdComponent idx=0;
 
     this->CalculateLogicalPointIndices(pointIndex, i, j, k);
 
