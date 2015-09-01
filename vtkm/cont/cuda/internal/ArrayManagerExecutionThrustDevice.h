@@ -29,6 +29,9 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cuda/vector.h>
 #include <thrust/device_malloc_allocator.h>
 #include <thrust/copy.h>
+
+#include <thrust/system/cuda/execution_policy.h>
+
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
@@ -164,6 +167,7 @@ public:
   {
     storage->Allocate(static_cast<vtkm::Id>(this->Array.size()));
     ::thrust::copy(
+          thrust::cuda::par,
           this->Array.data(),
           this->Array.data() + static_cast<difference_type>(this->Array.size()),
           vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
