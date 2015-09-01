@@ -48,21 +48,10 @@ VTKM_THIRDPARTY_POST_INCLUDE
  * Environment. Users of the VTKm Toolkit can use this namespace to access the
  * Control Environment.
  *
- * \namespace vtkm::cuda
- * \brief CUDA implementation.
- *
- * vtkm::cuda includes the code to implement the VTKm for CUDA-based platforms.
- *
- * \namespace vtkm::cuda::cont
+ * \namespace vtkm::cont::cuda
  * \brief CUDA implementation for Control Environment.
  *
- * vtkm::cuda::cont includes the code to implement the VTKm Control Environment
- * for CUDA-based platforms.
- *
- * \namespace vtkm::cuda::exec
- * \brief CUDA implementation for Execution Environment.
- *
- * vtkm::cuda::exec includes the code to implement the VTKm Execution Environment
+ * vtkm::cont::cuda includes the code to implement the VTKm Control Environment
  * for CUDA-based platforms.
  *
  * \namespace vtkm::exec
@@ -72,6 +61,12 @@ VTKM_THIRDPARTY_POST_INCLUDE
  * Environment. Worklets typically use classes/apis defined within this
  * namespace alone.
  *
+ * \namespace vtkm::exec::cuda
+ * \brief CUDA implementation for Execution Environment.
+ *
+ * vtkm::exec::cuda includes the code to implement the VTKm Execution Environment
+ * for CUDA-based platforms.
+ *
  * \namespace vtkm::internal
  * \brief VTKm Internal Environment
  *
@@ -79,10 +74,11 @@ VTKM_THIRDPARTY_POST_INCLUDE
  * change. This should not be used for projects using VTKm. Instead it servers
  * are a reference for the developers of VTKm.
  *
- * \namespace vtkm::math
- * \brief Utility math functions
+ * \namespace vtkm::opengl
+ * \brief Utility opengl interop functions
  *
- * vtkm::math defines the publicly accessible API for Utility Math functions.
+ * vtkm::opengl defines the publicly accessible API for interoperability between
+ * vtkm and opengl.
  *
  * \namespace vtkm::testing
  * \brief Internal testing classes
