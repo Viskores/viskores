@@ -68,8 +68,8 @@ void TestVertexClustering()
     }
 
   typedef vtkm::cont::CellSetExplicit<
-      vtkm::cont::ArrayHandleConstant<vtkm::Id>::StorageTag,
-      vtkm::cont::ArrayHandleConstant<vtkm::Id>::StorageTag,
+      vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag,
+      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag,
       VTKM_DEFAULT_STORAGE_TAG> CellSetType;
 
   VTKM_TEST_ASSERT(outDataSet.GetNumberOfCellSets() == 1, "Number of output cellsets mismatch");

@@ -34,8 +34,8 @@ template<typename ShapeStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
          typename IndexOffsetStorageTag   = VTKM_DEFAULT_STORAGE_TAG>
 struct ConnectivityExplicitInternals
 {
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> ShapeArrayType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> NumIndicesArrayType;
+  typedef vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> ShapeArrayType;
+  typedef vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> NumIndicesArrayType;
   typedef vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> ConnectivityArrayType;
   typedef vtkm::cont::ArrayHandle<vtkm::Id, IndexOffsetStorageTag> IndexOffsetArrayType;
 

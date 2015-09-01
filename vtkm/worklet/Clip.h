@@ -106,6 +106,12 @@ template <typename DeviceAdapter>
 class ExecutionConnectivityExplicit : vtkm::exec::ExecutionObjectBase
 {
 private:
+  typedef typename vtkm::cont::ArrayHandle<vtkm::UInt8>
+      ::template ExecutionTypes<DeviceAdapter>::Portal UInt8Portal;
+
+  typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>
+      ::template ExecutionTypes<DeviceAdapter>::Portal IdComponentPortal;
+
   typedef typename vtkm::cont::ArrayHandle<vtkm::Id>
       ::template ExecutionTypes<DeviceAdapter>::Portal IdPortal;
 
@@ -117,8 +123,8 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  ExecutionConnectivityExplicit(const IdPortal &shapes,
-                                const IdPortal &numIndices,
+  ExecutionConnectivityExplicit(const UInt8Portal &shapes,
+                                const IdComponentPortal &numIndices,
                                 const IdPortal &connectivity,
                                 const IdPortal &indexOffsets)
     : Shapes(shapes),
@@ -129,13 +135,13 @@ public:
   }
 
   VTKM_EXEC_EXPORT
-  void SetCellShape(vtkm::Id cellIndex, vtkm::Id shape)
+  void SetCellShape(vtkm::Id cellIndex, vtkm::UInt8 shape)
   {
     this->Shapes.Set(cellIndex, shape);
   }
 
   VTKM_EXEC_EXPORT
-  void SetNumberOfIndices(vtkm::Id cellIndex, vtkm::Id numIndices)
+  void SetNumberOfIndices(vtkm::Id cellIndex, vtkm::IdComponent numIndices)
   {
     this->NumIndices.Set(cellIndex, numIndices);
   }
@@ -153,8 +159,8 @@ public:
   }
 
 private:
-  IdPortal Shapes;
-  IdPortal NumIndices;
+  UInt8Portal Shapes;
+  IdComponentPortal NumIndices;
   IdPortal Connectivity;
   IdPortal IndexOffsets;
 };
@@ -563,8 +569,8 @@ public:
 
 
     // Step 2. generate the output cell set
-    vtkm::cont::ArrayHandle<vtkm::Id> shapes;
-    vtkm::cont::ArrayHandle<vtkm::Id> numIndices;
+    vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
     vtkm::cont::ArrayHandle<vtkm::Id> cellToConnectivityMap;
     internal::ExecutionConnectivityExplicit<DeviceAdapter> outConnectivity(

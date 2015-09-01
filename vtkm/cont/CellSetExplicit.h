@@ -142,8 +142,8 @@ public:
 
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_CONT_EXPORT
-  void AddCell(vtkm::IdComponent cellType,
-               int numVertices,
+  void AddCell(vtkm::UInt8 cellType,
+               vtkm::IdComponent numVertices,
                const vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
     this->PointToCell.Shapes.GetPortalControl().Set(this->NumberOfCells, cellType);
@@ -170,17 +170,17 @@ public:
   /// Second method to add cells -- all at once.
   /// Copies the data from the vectors, so they can be released.
   VTKM_CONT_EXPORT
-  void FillViaCopy(const std::vector<vtkm::Id> &cellTypes,
-                   const std::vector<vtkm::Id> &numIndices,
+  void FillViaCopy(const std::vector<vtkm::UInt8> &cellTypes,
+                   const std::vector<vtkm::IdComponent> &numIndices,
                    const std::vector<vtkm::Id> &connectivity)
   {
 
-    this->PointToCell.Shapes.Allocate( static_cast<vtkm::Id>(cellTypes.size()) );
+    this->PointToCell.Shapes.Allocate( static_cast<vtkm::UInt8>(cellTypes.size()) );
     std::copy(cellTypes.begin(), cellTypes.end(),
               vtkm::cont::ArrayPortalToIteratorBegin(
                 this->PointToCell.Shapes.GetPortalControl()));
 
-    this->PointToCell.NumIndices.Allocate( static_cast<vtkm::Id>(numIndices.size()) );
+    this->PointToCell.NumIndices.Allocate( static_cast<vtkm::IdComponent>(numIndices.size()) );
     std::copy(numIndices.begin(), numIndices.end(),
               vtkm::cont::ArrayPortalToIteratorBegin(
                 this->PointToCell.NumIndices.GetPortalControl()));
@@ -197,8 +197,8 @@ public:
   /// Second method to add cells -- all at once.
   /// Assigns the array handles to the explicit connectivity. This is
   /// the way you can fill the memory from another system without copying
-  void Fill(const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &cellTypes,
-            const vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> &numIndices,
+  void Fill(const vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> &cellTypes,
+            const vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> &numIndices,
             const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &connectivity)
   {
     this->PointToCell.Shapes = cellTypes;
@@ -352,7 +352,7 @@ public:
 
   template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
+  const vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> &
   GetShapesArray(FromTopology,ToTopology) const
   {
     return this->GetConnectivity(FromTopology(), ToTopology()).Shapes;
@@ -360,7 +360,7 @@ public:
 
   template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> &
+  const vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> &
   GetNumIndicesArray(FromTopology,ToTopology) const
   {
     return this->GetConnectivity(FromTopology(), ToTopology()).NumIndices;
