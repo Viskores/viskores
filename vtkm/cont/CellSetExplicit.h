@@ -236,13 +236,13 @@ public:
   typename ExecutionTypes<Device,FromTopology,ToTopology>::ExecObjectType
   PrepareForInput(Device, FromTopology, ToTopology) const
   {
+    this->BuildConnectivity(FromTopology(), ToTopology());
+
     const typename
         ConnectivityChooser<FromTopology,ToTopology>::ConnectivityType
         &connectivity = this->GetConnectivity(FromTopology(), ToTopology());
 
     VTKM_ASSERT_CONT(connectivity.ElementsValid);
-
-    connectivity.BuildIndexOffsets(Device());
 
     typedef typename
         ExecutionTypes<Device,FromTopology,ToTopology>::ExecObjectType
@@ -253,8 +253,35 @@ public:
                        connectivity.IndexOffsets.PrepareForInput(Device()));
   }
 
-  void CreateCellToPointConnectivity()
+  template<typename FromTopology, typename ToTopology>
+  VTKM_CONT_EXPORT
+  void BuildConnectivity(FromTopology, ToTopology) const
   {
+    typedef CellSetExplicit<ShapeStorageTag,
+      NumIndicesStorageTag,
+      ConnectivityStorageTag> CSE;
+    CSE *self = const_cast<CSE*>(this);
+
+    self->CreateConnectivity(FromTopology(), ToTopology());
+
+    self->GetConnectivity(FromTopology(), ToTopology()).
+      BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  }
+
+  VTKM_CONT_EXPORT
+  void CreateConnectivity(vtkm::TopologyElementTagPoint,
+                          vtkm::TopologyElementTagCell)
+  {
+    // nothing to do
+  }
+
+  VTKM_CONT_EXPORT
+  void CreateConnectivity(vtkm::TopologyElementTagCell,
+                          vtkm::TopologyElementTagPoint)
+  {
+    if (this->CellToPoint.ElementsValid)
+      return;
+
     std::multimap<vtkm::Id,vtkm::Id> cells_of_nodes;
 
     vtkm::Id maxNodeID = 0;

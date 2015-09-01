@@ -152,7 +152,6 @@ MakeTestDataSet::Make3DExplicitDataSet0()
 
   vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells", 2);
   cellSet.FillViaCopy(shapes, numindices, conn);
-  cellSet.CreateCellToPointConnectivity();
 
   dataSet.AddCellSet(cellSet);
 
@@ -191,8 +190,6 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
   cellSet.AddCell(vtkm::CELL_SHAPE_QUAD, 4, make_Vec<vtkm::Id>(2,1,3,4));
   cellSet.CompleteAddingCells();
-
-  cellSet.CreateCellToPointConnectivity();
 
   dataSet.AddCellSet(cellSet);
 
@@ -265,8 +262,6 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
                     pointId[i*3+2]));
   }
   cellSet.CompleteAddingCells();
-
-  cellSet.CreateCellToPointConnectivity();
 
   dataSet.AddCellSet(cellSet);
 
