@@ -980,6 +980,27 @@ public:
   }
 };
 
+// Vectors of size 1 should implicitly convert between the scalar and the
+// vector. Otherwise, it should behave the same.
+template<typename T>
+class Vec<T,1> : public detail::VecBase<T, 1, Vec<T,1> >
+{
+  typedef detail::VecBase<T, 1, Vec<T,1> > Superclass;
+
+public:
+  VTKM_EXEC_CONT_EXPORT Vec() {}
+  VTKM_EXEC_CONT_EXPORT Vec(const T& value) : Superclass(value) {  }
+
+  template<typename OtherType>
+  VTKM_EXEC_CONT_EXPORT Vec(const Vec<OtherType, 1> &src) : Superclass(src) {  }
+
+  VTKM_EXEC_CONT_EXPORT
+  operator T() const
+  {
+    return this->Components[0];
+  }
+};
+
 //-----------------------------------------------------------------------------
 // Specializations for common tuple sizes (with special names).
 

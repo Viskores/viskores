@@ -85,6 +85,34 @@ public:
     return Helper::GetIndices(this->Internals,index);
   }
 
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Vec<vtkm::Id,Dimension>
+  FlatToLogicalPointIndex(vtkm::Id flatPointIndex) const
+  {
+    return this->Internals.FlatToLogicalPointIndex(flatPointIndex);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id LogicalToFlatPointIndex(
+      const vtkm::Vec<vtkm::Id,Dimension> &logicalPointIndex) const
+  {
+    return this->Internals.LogicalToFlatPointIndex(logicalPointIndex);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Vec<vtkm::Id,Dimension>
+  FlatToLogicalCellIndex(vtkm::Id flatCellIndex) const
+  {
+    return this->Internals.FlatToLogicalCellIndex(flatCellIndex);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id LogicalToFlatCellIndex(
+      const vtkm::Vec<vtkm::Id,Dimension> &logicalCellIndex) const
+  {
+    return this->Internals.LogicalToFlatCellIndex(logicalCellIndex);
+  }
+
 private:
   InternalsType Internals;
 };
