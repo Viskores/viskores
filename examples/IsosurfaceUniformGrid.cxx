@@ -163,13 +163,14 @@ void displayCall()
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  gluLookAt((dims[0]+1.0f)/2.0f, (dims[1]+1.0f)/2.0f, dims[2]*3.0f, (dims[0]+1.0f)/2.0f, (dims[1]+1.0f)/2.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+  gluLookAt(0.0f, 0.0f, 3.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
   glPushMatrix();
   float rotationMatrix[16];
   qrot.getRotMat(rotationMatrix);
   glMultMatrixf(rotationMatrix);
-
+  glTranslatef(-0.5f, -0.5f, -0.5f);
+ 
   glColor3f(0.1f, 0.1f, 0.6f);
 
   glBegin(GL_TRIANGLES);
