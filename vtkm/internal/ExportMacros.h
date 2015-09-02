@@ -27,7 +27,7 @@
   */
 
 #ifdef VTKM_CUDA
-#define VTKM_EXEC_EXPORT inline __device__
+#define VTKM_EXEC_EXPORT inline __device__ __host__
 #define VTKM_EXEC_CONT_EXPORT inline __device__ __host__
 #define VTKM_EXEC_CONSTANT_EXPORT __device__ __constant__
 #else
