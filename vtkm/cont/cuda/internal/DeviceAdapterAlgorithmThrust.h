@@ -36,6 +36,8 @@
 
 // Disable warnings we check vtkm for but Thrust does not.
 VTKM_THIRDPARTY_PRE_INCLUDE
+//our own custom thrust execution policy
+#include <vtkm/exec/cuda/internal/ExecutionPolicy.h>
 #include <thrust/advance.h>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
@@ -485,7 +487,7 @@ private:
     typedef typename ValuesPortal::ValueType ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType,
                                                        BinaryCompare> bop(binary_compare);
-    ::thrust::sort(thrust::cuda::par,
+    ::thrust::sort(vtkm_cuda_policy(),
                    IteratorBegin(values),
                    IteratorEnd(values),
                    bop);

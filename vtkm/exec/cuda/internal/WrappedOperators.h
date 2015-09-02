@@ -21,6 +21,7 @@
 #define vtk_m_exec_cuda_internal_WrappedOperators_h
 
 #include <vtkm/Types.h>
+#include <vtkm/BinaryPredicates.h>
 #include <vtkm/Pair.h>
 #include <vtkm/internal/ExportMacros.h>
 #include <vtkm/exec/cuda/internal/IteratorFromArrayPortal.h>
@@ -195,28 +196,19 @@ struct WrappedBinaryPredicate
 }
 } //namespace vtkm::exec::cuda::internal
 
-#if defined(THRUST_MAJOR_VERSION) && THRUST_MAJOR_VERSION == 1 && \
-    THRUST_MINOR_VERSION == 8 && THRUST_SUBMINOR_VERSION < 3 
-//So for thrust 1.8.0 - 1.8.2 the inclusive_scan has a bug when accumulating
-//values when the binary operators states it is not commutative. For now
-//we can work around this issue by stating that any BinaryOperator
-//from vtkm is considered to be a commutative BinaryOperator. I have
-//also moved Predicates over to WrappedBinaryPredicates so that they
-//don't get marked as commutative incorrectly.
-//
-//You can follow the status of the thrust issue at:
-// https://github.com/thrust/thrust/issues/692
 namespace thrust
 {
 namespace detail
 {
+//So for thrust 1.8.0 - 1.8.2 the inclusive_scan has a bug when accumulating
+//values when the binary operators states it is not commutative. At the
+//same time the is_commutative condition is used to perform faster paths. So
+//We state that all WrappedBinaryOperator are commutative.
 template< typename T, typename F>
 struct is_commutative< vtkm::exec::cuda::internal::WrappedBinaryOperator<T, F> > :
       public thrust::detail::is_arithmetic<T> { };
-
 }
 }
-#endif
 
 
 #endif //vtk_m_exec_cuda_internal_WrappedOperators_h
