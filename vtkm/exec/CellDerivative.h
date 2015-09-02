@@ -710,7 +710,6 @@ CellDerivative(const FieldVecType &field,
   VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 2, worklet);
 
   typedef typename FieldVecType::ComponentType T;
-  typedef vtkm::Vec<T,2> VecT;
 
   return vtkm::Vec<T,3>((field[1]-field[0])/wCoords.GetSpacing()[0], 0, 0);
 }
