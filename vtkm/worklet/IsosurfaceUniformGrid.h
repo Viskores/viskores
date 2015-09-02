@@ -100,12 +100,12 @@ public:
     typedef typename vtkm::cont::ArrayHandle<FieldType>::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalType;
     FieldPortalType Field, Source;
 
-    typedef typename vtkm::cont::ArrayHandle<FieldType>::template ExecutionTypes<DeviceAdapter>::Portal OutputPortalType;
-    OutputPortalType Scalars;
-
     typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> >::template ExecutionTypes<DeviceAdapter>::Portal VectorPortalType;
     VectorPortalType Vertices;
     VectorPortalType Normals;
+
+    typedef typename vtkm::cont::ArrayHandle<FieldType>::template ExecutionTypes<DeviceAdapter>::Portal OutputPortalType;
+    OutputPortalType Scalars;
 
     typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
     typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
@@ -322,7 +322,7 @@ public:
 
     // Generate a single triangle per cell
     const vtkm::Id numTotalVertices = numOutputCells * 3;
-    
+
     IsoSurfaceGenerate isosurface(isovalue,
                                   this->CDims,
                                   triangleTableArray.PrepareForInput(DeviceAdapter()),
