@@ -38,6 +38,7 @@
 
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
+vtkm::Id3 dims(16,16,16);
 vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32, DeviceAdapter> *isosurfaceFilter;
 vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray, normalsArray;
 vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
@@ -162,7 +163,7 @@ void displayCall()
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  gluLookAt(0.0f, 0.0f, 3.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+  gluLookAt((dims[0]+1.0f)/2.0f, (dims[1]+1.0f)/2.0f, dims[2]*3.0f, (dims[0]+1.0f)/2.0f, (dims[1]+1.0f)/2.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
   glPushMatrix();
   float rotationMatrix[16];
@@ -219,7 +220,6 @@ int main(int argc, char* argv[])
 {
   std::cout << "IsosurfaceUniformGrid Example" << std::endl;
 
-  vtkm::Id3 dims(16,16,16);
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
   isosurfaceFilter = new vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32, DeviceAdapter>(dims, dataSet);
@@ -236,7 +236,6 @@ int main(int argc, char* argv[])
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
   glutInitWindowSize(1000, 1000);
-  glutInitWindowPosition(300, 200);
   glutCreateWindow("VTK-m Isosurface");
   initializeGL();
   glutDisplayFunc(displayCall);
