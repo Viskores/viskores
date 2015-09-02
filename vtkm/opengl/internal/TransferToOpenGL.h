@@ -89,10 +89,10 @@ void CopyFromHandle(
   glBufferData(type, size, 0, GL_DYNAMIC_DRAW);
 
   //Allocate the memory and set it as static draw and copy into opengl
-  glBufferSubData(type,0,size,
-                      vtkm::cont::ArrayPortalToIteratorBegin(
-                          handle.PrepareForInput(DeviceAdapterTag())
-                  ));
+  const ValueType* memory = &(*vtkm::cont::ArrayPortalToIteratorBegin(
+                                handle.PrepareForInput(DeviceAdapterTag())));
+  glBufferSubData(type,0,size,memory);
+
 }
 
 } //namespace detail
