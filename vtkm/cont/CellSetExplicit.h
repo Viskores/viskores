@@ -26,6 +26,9 @@
 #include <vtkm/cont/internal/ConnectivityExplicitInternals.h>
 #include <vtkm/exec/ConnectivityExplicit.h>
 
+#include <map>
+#include <utility>
+
 namespace vtkm {
 namespace cont {
 
@@ -59,19 +62,22 @@ public:
   typedef vtkm::Id SchedulingRangeType;
 
   VTKM_CONT_EXPORT
-  CellSetExplicit(const std::string &name = std::string(),
+  CellSetExplicit(vtkm::Id numpoints = 0,
+                  const std::string &name = std::string(),
                   vtkm::IdComponent dimensionality = 3)
     : CellSet(name, dimensionality),
       ConnectivityLength(-1),
-      NumberOfCells(-1)
+      NumberOfCells(-1),
+      NumberOfPoints(numpoints)
   {
   }
 
   VTKM_CONT_EXPORT
-  CellSetExplicit(int dimensionality)
+  CellSetExplicit(vtkm::Id numpoints, int dimensionality)
     : CellSet(std::string(), dimensionality),
       ConnectivityLength(-1),
-      NumberOfCells(-1)
+      NumberOfCells(-1),
+      NumberOfPoints(numpoints)
   {
   }
 
@@ -80,10 +86,21 @@ public:
     return this->PointToCell.GetNumberOfElements();
   }
 
+  virtual vtkm::Id GetNumberOfPoints() const
+  {
+    return this->NumberOfPoints;
+  }
+
   VTKM_CONT_EXPORT
   vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagCell) const
   {
     return this->GetNumberOfCells();
+  }
+
+  VTKM_CONT_EXPORT
+  vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagPoint) const
+  {
+    return this->GetNumberOfPoints();
   }
 
   VTKM_CONT_EXPORT
@@ -219,13 +236,13 @@ public:
   typename ExecutionTypes<Device,FromTopology,ToTopology>::ExecObjectType
   PrepareForInput(Device, FromTopology, ToTopology) const
   {
+    this->BuildConnectivity(FromTopology(), ToTopology());
+
     const typename
         ConnectivityChooser<FromTopology,ToTopology>::ConnectivityType
         &connectivity = this->GetConnectivity(FromTopology(), ToTopology());
 
     VTKM_ASSERT_CONT(connectivity.ElementsValid);
-
-    connectivity.BuildIndexOffsets(Device());
 
     typedef typename
         ExecutionTypes<Device,FromTopology,ToTopology>::ExecObjectType
@@ -234,6 +251,93 @@ public:
                        connectivity.NumIndices.PrepareForInput(Device()),
                        connectivity.Connectivity.PrepareForInput(Device()),
                        connectivity.IndexOffsets.PrepareForInput(Device()));
+  }
+
+  template<typename FromTopology, typename ToTopology>
+  VTKM_CONT_EXPORT
+  void BuildConnectivity(FromTopology, ToTopology) const
+  {
+    typedef CellSetExplicit<ShapeStorageTag,
+      NumIndicesStorageTag,
+      ConnectivityStorageTag> CSE;
+    CSE *self = const_cast<CSE*>(this);
+
+    self->CreateConnectivity(FromTopology(), ToTopology());
+
+    self->GetConnectivity(FromTopology(), ToTopology()).
+      BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  }
+
+  VTKM_CONT_EXPORT
+  void CreateConnectivity(vtkm::TopologyElementTagPoint,
+                          vtkm::TopologyElementTagCell)
+  {
+    // nothing to do
+  }
+
+  VTKM_CONT_EXPORT
+  void CreateConnectivity(vtkm::TopologyElementTagCell,
+                          vtkm::TopologyElementTagPoint)
+  {
+    if (this->CellToPoint.ElementsValid)
+    {
+      return;
+    }
+
+    std::multimap<vtkm::Id,vtkm::Id> cells_of_nodes;
+
+    vtkm::Id pairCount = 0;
+    vtkm::Id maxNodeID = 0;
+    vtkm::Id numCells = GetNumberOfCells();
+    vtkm::Id numPoints = GetNumberOfPoints();
+    for (vtkm::Id cell = 0, cindex = 0; cell < numCells; ++cell)
+    {
+      vtkm::Id npts = this->PointToCell.NumIndices.GetPortalControl().Get(cell);
+      for (int pt=0; pt<npts; ++pt)
+      {
+        vtkm::Id index = this->PointToCell.Connectivity.GetPortalControl().Get(cindex++);
+        if (index > maxNodeID)
+          maxNodeID = index;
+        cells_of_nodes.insert(std::pair<vtkm::Id,vtkm::Id>(index,cell));
+        pairCount++;
+      }
+    }
+
+    this->CellToPoint.Shapes.Allocate(numPoints);
+    this->CellToPoint.NumIndices.Allocate(numPoints);
+    this->CellToPoint.Connectivity.Allocate(pairCount);
+
+    vtkm::Id connIndex = 0;
+    vtkm::Id pointIndex = 0;
+
+    for (std::multimap<vtkm::Id,vtkm::Id>::iterator iter = cells_of_nodes.begin();
+         iter != cells_of_nodes.end(); iter++)
+    {
+      vtkm::Id pointId = iter->first;
+      while (pointIndex <= pointId)
+      {
+        // add empty spots to skip points not referenced by our cells
+        // also initialize the current one
+        this->CellToPoint.Shapes.GetPortalControl().Set(pointIndex,CELL_SHAPE_VERTEX);
+        this->CellToPoint.NumIndices.GetPortalControl().Set(pointIndex,0);
+        ++pointIndex;
+      }
+      vtkm::Id cellId = iter->second;
+      this->CellToPoint.Connectivity.GetPortalControl().Set(connIndex,cellId);
+      ++connIndex;
+      vtkm::Id oldCellCount = this->CellToPoint.NumIndices.GetPortalControl().Get(pointIndex-1);
+      this->CellToPoint.NumIndices.GetPortalControl().Set(pointIndex-1,oldCellCount+1);
+    }
+    while (pointIndex < numPoints)
+    {
+      // add empty spots for tail points not referenced by our cells
+      this->CellToPoint.Shapes.GetPortalControl().Set(pointIndex,CELL_SHAPE_VERTEX);
+      this->CellToPoint.NumIndices.GetPortalControl().Set(pointIndex,0);
+      ++pointIndex;
+    }
+
+    this->CellToPoint.ElementsValid = true;
+    this->CellToPoint.IndexOffsetsValid = false;
   }
 
   virtual void PrintSummary(std::ostream &out) const
@@ -246,22 +350,36 @@ public:
       this->CellToPoint.PrintSummary(out);
   }
 
+  template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
   const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
-  GetShapesArray() const { return this->PointToCell.Shapes; }
+  GetShapesArray(FromTopology,ToTopology) const
+  {
+    return this->GetConnectivity(FromTopology(), ToTopology()).Shapes;
+  }
 
+  template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
   const vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> &
-  GetNumIndicesArray() const { return this->PointToCell.NumIndices; }
+  GetNumIndicesArray(FromTopology,ToTopology) const
+  {
+    return this->GetConnectivity(FromTopology(), ToTopology()).NumIndices;
+  }
 
+  template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
   const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &
-  GetConnectivityArray() const { return this->PointToCell.Connectivity; }
+  GetConnectivityArray(FromTopology,ToTopology) const
+  {
+    return this->GetConnectivity(FromTopology(), ToTopology()).Connectivity;
+  }
 
+  template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
   const vtkm::cont::ArrayHandle<vtkm::Id> &
-  GetIndexOffsetArray() const {
-    return this->PointToCell.IndexOffsets;
+  GetIndexOffsetArray(FromTopology,ToTopology) const
+  {
+    return this->GetConnectivity(FromTopology(), ToTopology()).IndexOffsets;
   }
 
 private:
@@ -306,6 +424,7 @@ private:
   // cells.
   vtkm::Id ConnectivityLength;
   vtkm::Id NumberOfCells;
+  vtkm::Id NumberOfPoints;
 };
 
 namespace detail {

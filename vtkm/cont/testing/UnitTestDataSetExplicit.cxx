@@ -25,6 +25,27 @@
 
 namespace {
 
+template<typename T, typename Storage>
+bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage> &ah, const T *expected,
+                     vtkm::Id size)
+{
+  if (size != ah.GetNumberOfValues())
+  {
+    return false;
+  }
+
+  for (vtkm::Id i = 0; i < size; ++i)
+  {
+    if (ah.GetPortalConstControl().Get(i) != expected[i])
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
 void TestDataSet_Explicit()
 {
   vtkm::cont::testing::MakeTestDataSet tds;
@@ -67,6 +88,40 @@ void TestDataSet_Explicit()
 
   VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
                    "Incorrect number of coordinate systems");
+
+  // test cell-to-point connectivity
+  vtkm::cont::CellSetExplicit<> &cellset =
+      ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+
+  cellset.BuildConnectivity(vtkm::TopologyElementTagCell(),
+                            vtkm::TopologyElementTagPoint());
+
+  vtkm::Id connectivitySize = 7;
+  vtkm::Id numPoints = 5;
+
+  vtkm::Id correctShapes[] = {1, 1, 1, 1, 1};
+  vtkm::Id correctNumIndices[] = {1, 2, 2, 1, 1};
+  vtkm::Id correctConnectivity[] = {0, 0, 1, 0, 1, 1, 1};
+
+  vtkm::cont::ArrayHandle<vtkm::Id> shapes = cellset.GetShapesArray(
+    vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
+  vtkm::cont::ArrayHandle<vtkm::Id> numIndices = cellset.GetNumIndicesArray(
+    vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
+  vtkm::cont::ArrayHandle<vtkm::Id> conn = cellset.GetConnectivityArray(
+    vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
+
+  VTKM_TEST_ASSERT(TestArrayHandle(shapes,
+        correctShapes,
+        numPoints),
+      "Got incorrect shapes");
+  VTKM_TEST_ASSERT(TestArrayHandle(numIndices,
+        correctNumIndices,
+        numPoints),
+      "Got incorrect shapes");
+  VTKM_TEST_ASSERT(TestArrayHandle(conn,
+        correctConnectivity,
+        connectivitySize),
+      "Got incorrect conectivity");
 }
 
 }

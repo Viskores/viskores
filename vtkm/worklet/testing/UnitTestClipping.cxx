@@ -80,7 +80,7 @@ vtkm::cont::DataSet MakeTestDatasetExplicit()
   std::vector<vtkm::Id> numIndsVec(numInds, numInds + numCells);
   std::vector<vtkm::Id> connectivityVec(connectivity, connectivity + (numCells * 3));
 
-  vtkm::cont::CellSetExplicit<> cs("cells", 3);
+  vtkm::cont::CellSetExplicit<> cs(numVerts, "cells", 3);
   cs.FillViaCopy(shapesVec, numIndsVec, connectivityVec);
 
   ds.AddCellSet(cs);
@@ -144,7 +144,9 @@ void TestClippingExplicit()
   vtkm::Float32 expectedScalars[] = { 1, 2, 1, 0, 0.5, 0.5, 0.5 };
 
   VTKM_TEST_ASSERT(
-      TestArrayHandle(outputCellSet.GetConnectivityArray(), expectedConnectivity,
+      TestArrayHandle(outputCellSet.GetConnectivityArray(
+        vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell()),
+        expectedConnectivity,
         connectivitySize),
       "Got incorrect conectivity");
 
@@ -189,7 +191,9 @@ void TestClippingStrucutred()
   vtkm::Float32 expectedScalars[] = { 1, 1, 1, 1, 0, 1, 1, 1, 1, 0.5, 0.5, 0.5, 0.5 };
 
   VTKM_TEST_ASSERT(
-      TestArrayHandle(outputCellSet.GetConnectivityArray(), expectedConnectivity,
+      TestArrayHandle(outputCellSet.GetConnectivityArray(
+        vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell()),
+        expectedConnectivity,
         connectivitySize),
       "Got incorrect conectivity");
 

@@ -532,7 +532,7 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
 {
     vtkm::Id sz = array.GetNumberOfValues();
     out<<"sz= "<<sz<<" [";
-    if (sz <= 5)
+    if (sz <= 7)
         for (vtkm::Id i = 0 ; i < sz; i++)
         {
             out<<array.GetPortalConstControl().Get(i);
@@ -540,9 +540,9 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
         }
     else
     {
-        out<<array.GetPortalConstControl().Get(0)<<" "<<array.GetPortalConstControl().Get(1);
+        out<<array.GetPortalConstControl().Get(0)<<" "<<array.GetPortalConstControl().Get(1)<<" "<<array.GetPortalConstControl().Get(2);
         out<<" ... ";
-        out<<array.GetPortalConstControl().Get(sz-2)<<" "<<array.GetPortalConstControl().Get(sz-1);
+        out<<array.GetPortalConstControl().Get(sz-3)<<" "<<array.GetPortalConstControl().Get(sz-2)<<" "<<array.GetPortalConstControl().Get(sz-1);
     }
     out<<"]";
 }
