@@ -29,10 +29,14 @@
 #ifdef VTKM_CUDA
 #define VTKM_EXEC_EXPORT inline __device__ __host__
 #define VTKM_EXEC_CONT_EXPORT inline __device__ __host__
+#define VTKM_SUPPRESS_EXEC_WARNINGS \
+  #pragma hd_warning_disable \
+  #pragma nv_exec_check_disable
 #define VTKM_EXEC_CONSTANT_EXPORT __device__ __constant__
 #else
 #define VTKM_EXEC_EXPORT inline
 #define VTKM_EXEC_CONT_EXPORT inline
+#define VTKM_SUPPRESS_EXEC_WARNINGS
 #define VTKM_EXEC_CONSTANT_EXPORT
 #endif
 
