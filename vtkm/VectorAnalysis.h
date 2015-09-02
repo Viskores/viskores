@@ -139,6 +139,7 @@ RMagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 /// as fast as MagnitudeSquared.
 ///
 template<typename T>
+VTKM_EXEC_CONT_EXPORT
 typename vtkm::VecTraits<T>::ComponentType
 RMagnitude(const T &x)
 {

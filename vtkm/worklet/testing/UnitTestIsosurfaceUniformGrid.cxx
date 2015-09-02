@@ -86,18 +86,6 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 
   dataSet.AddField(vtkm::cont::Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, fieldArray));
 
-  std::vector<vtkm::Float32> cellvar( static_cast<std::size_t>(dim3) );
-  for(std::size_t i=0; i < cellvar.size(); i++)
-    {
-    cellvar[i] = vtkm::Float32(i);
-    }
-
-  vtkm::cont::Field cellField("cellvar", 1,
-                              vtkm::cont::Field::ASSOC_CELL_SET,
-                              "cells",
-                              cellvar);
-  dataSet.AddField(cellField);
-
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
   cellSet.SetPointDimensions(vdims);
@@ -121,11 +109,12 @@ void TestIsosurfaceUniformGrid()
   vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32,
                                             DeviceAdapter> isosurfaceFilter(dims, dataSet);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray, normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
   isosurfaceFilter.Run(0.5,
                        dataSet.GetField("nodevar").GetData(),
                        verticesArray,
+                       normalsArray,
                        scalarsArray);
 
   VTKM_TEST_ASSERT(test_equal(verticesArray.GetNumberOfValues(), 480),
