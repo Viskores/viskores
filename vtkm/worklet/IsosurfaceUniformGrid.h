@@ -303,7 +303,7 @@ public:
 
     // Generate a single triangle per cell
     const vtkm::Id numTotalVertices = numOutputCells * 3;
-    std::cout << "validCellIndicesArray: " << validCellIndicesArray.GetNumberOfValues() << std::endl;
+    //std::cout << "validCellIndicesArray: " << validCellIndicesArray.GetNumberOfValues() << std::endl;
 
     //todo this needs to change so that we don't presume the storage type
     vtkm::cont::ArrayHandle<FieldType> field;

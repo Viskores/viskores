@@ -86,18 +86,6 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 
   dataSet.AddField(vtkm::cont::Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, fieldArray));
 
-  std::vector<vtkm::Float32> cellvar( static_cast<std::size_t>(dim3) );
-  for(std::size_t i=0; i < cellvar.size(); i++)
-    {
-    cellvar[i] = vtkm::Float32(i);
-    }
-
-  vtkm::cont::Field cellField("cellvar", 1,
-                              vtkm::cont::Field::ASSOC_CELL_SET,
-                              "cells",
-                              cellvar);
-  dataSet.AddField(cellField);
-
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
   cellSet.SetPointDimensions(vdims);

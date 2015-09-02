@@ -48,6 +48,7 @@ int mouse_state = 1;
 
 namespace {
 
+// Define the tangle field for the input data
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -83,6 +84,7 @@ public:
 };
 
 
+// Construct an input data set using the tangle field worklet
 vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 {
   vtkm::cont::DataSet dataSet;
@@ -104,18 +106,6 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 
   dataSet.AddField(vtkm::cont::Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, fieldArray));
 
-  std::vector<vtkm::Float32> cellvar( static_cast<std::size_t>(dim3) );
-  for(std::size_t i=0; i < cellvar.size(); i++)
-    {
-    cellvar[i] = vtkm::Float32(i);
-    }
-
-  vtkm::cont::Field cellField("cellvar", 1,
-                              vtkm::cont::Field::ASSOC_CELL_SET,
-                              "cells",
-                              cellvar);
-  dataSet.AddField(cellField);
-
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
   cellSet.SetPointDimensions(vdims);
@@ -127,6 +117,7 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 }
 
 
+// Initialize the OpenGL state
 void initializeGL()
 {
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -152,6 +143,7 @@ void initializeGL()
 }
 
 
+// Render the output using simple OpenGL
 void displayCall()
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -188,6 +180,7 @@ void displayCall()
 }
 
 
+// Allow rotations of the view
 void mouseMove(int x, int y)
 {
   int dx = x - lastx;
@@ -210,6 +203,7 @@ void mouseMove(int x, int y)
 }
 
 
+// Respond to mouse button
 void mouseCall(int button, int state, int x, int y)
 {
   if (button == 0) mouse_state = state;
@@ -217,6 +211,7 @@ void mouseCall(int button, int state, int x, int y)
 }
 
 
+// Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
 {
   std::cout << "IsosurfaceUniformGrid Example" << std::endl;
@@ -231,7 +226,7 @@ int main(int argc, char* argv[])
                         normalsArray,
                         scalarsArray);
 
-  std::cout << verticesArray.GetNumberOfValues() << std::endl;
+  std::cout << "Number of output vertices: " << verticesArray.GetNumberOfValues() << std::endl;
  
   lastx = lasty = 0;
   glutInit(&argc, argv);
