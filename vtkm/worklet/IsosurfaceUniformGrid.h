@@ -58,10 +58,10 @@ public:
     typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
     typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
     IdPortalType VertexTable;
-    vtkm::Float32 Isovalue;
+    FieldType Isovalue;
 
     VTKM_CONT_EXPORT
-    ClassifyCell(IdPortalType vTable, float isovalue) :
+    ClassifyCell(IdPortalType vTable, FieldType isovalue) :
       VertexTable(vTable),
       Isovalue(isovalue)
     {
@@ -93,7 +93,7 @@ public:
     typedef void ExecutionSignature(WorkIndex, _1, _2);
     typedef _1 InputDomain;
 
-    const float Isovalue;
+    const FieldType Isovalue;
     vtkm::Id xdim, ydim, zdim;
     const float xmin, ymin, zmin, xmax, ymax, zmax;
 
@@ -114,7 +114,7 @@ public:
 
     template<typename U, typename W, typename X>
     VTKM_CONT_EXPORT
-    IsoSurfaceGenerate(const float ivalue, const vtkm::Id3 cdims, IdPortalType triTablePortal,
+    IsoSurfaceGenerate(FieldType ivalue, const vtkm::Id3 cdims, IdPortalType triTablePortal,
                         const U & field, const U & source, const W & vertices, const X & scalars) :
       Isovalue(ivalue),
       xdim(cdims[0]), ydim(cdims[1]), zdim(cdims[2]),
@@ -152,7 +152,7 @@ public:
       const vtkm::Id i7 = i3   + pointsPerLayer;
 
       // Get the field values at these eight vertices
-      float f[8];
+      FieldType f[8];
       f[0] = this->Field.Get(i0);
       f[1] = this->Field.Get(i1);
       f[2] = this->Field.Get(i2);
@@ -206,7 +206,7 @@ public:
       }
 
       // Get the scalar source values at the eight vertices
-      float s[8];
+      FieldType s[8];
       s[0] = this->Source.Get(i0);
       s[1] = this->Source.Get(i1);
       s[2] = this->Source.Get(i2);
@@ -225,7 +225,7 @@ public:
         const vtkm::Id edge = this->TriTable.Get(cellOffset + v);
         const int v0   = verticesForEdge[2*edge];
         const int v1   = verticesForEdge[2*edge + 1];
-        const float t  = (this->Isovalue - f[v0]) / (f[v1] - f[v0]);
+        const FieldType t  = (this->Isovalue - f[v0]) / (f[v1] - f[v0]);
         this->Vertices.Set(outputVertId + v, vtkm::Lerp(p[v0], p[v1], t));
         this->Scalars.Set(outputVertId + v, vtkm::Lerp(s[v0], s[v1], t));
       }
