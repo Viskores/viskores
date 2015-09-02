@@ -23,6 +23,7 @@ set(unit_tests
   UnitTestFetchArrayDirectIn.cxx
   UnitTestFetchArrayDirectInOut.cxx
   UnitTestFetchArrayDirectOut.cxx
+  UnitTestFetchArrayTopologyMapIn.cxx
   UnitTestFetchExecObject.cxx
   UnitTestFetchWorkIndex.cxx
   )

@@ -41,6 +41,7 @@ set(unit_tests
   UnitTestTypes.cxx
   UnitTestTypeTraits.cxx
   UnitTestUnaryPredicates.cxx
+  UnitTestVecRectilinearPointCoordinates.cxx
   UnitTestVectorAnalysis.cxx
   UnitTestVecTraits.cxx
   UnitTestVecVariable.cxx

@@ -24,6 +24,7 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
 #include <vtkm/CellTraits.h>
+#include <vtkm/VecRectilinearPointCoordinates.h>
 #include <vtkm/VecVariable.h>
 
 #include <vtkm/testing/Testing.h>
@@ -61,18 +62,17 @@ void GetMinMaxPoints(CellShapeTag,
 template<typename FieldType>
 struct TestInterpolateFunctor
 {
-  template<typename CellShapeTag>
-  void DoTest(CellShapeTag shape, vtkm::IdComponent numPoints) const
-  {
-    typedef typename vtkm::VecTraits<FieldType>::ComponentType ComponentType;
+  typedef typename vtkm::VecTraits<FieldType>::ComponentType ComponentType;
 
-    vtkm::VecVariable<FieldType, MAX_POINTS> fieldValues;
+  template<typename CellShapeTag, typename FieldVecType>
+  void DoTestWithField(CellShapeTag shape,
+                       const FieldVecType &fieldValues) const
+  {
+    vtkm::IdComponent numPoints = fieldValues.GetNumberOfComponents();
     FieldType averageValue = vtkm::TypeTraits<FieldType>::ZeroInitialization();
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
-      FieldType value = TestValue(pointIndex+1, FieldType());
-      fieldValues.Append(value);
-      averageValue = averageValue + value;
+      averageValue = averageValue + fieldValues[pointIndex];
     }
     averageValue = static_cast<ComponentType>(1.0/numPoints)*averageValue;
 
@@ -122,6 +122,19 @@ struct TestInterpolateFunctor
   }
 
   template<typename CellShapeTag>
+  void DoTest(CellShapeTag shape, vtkm::IdComponent numPoints) const
+  {
+    vtkm::VecVariable<FieldType, MAX_POINTS> fieldValues;
+    for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
+    {
+      FieldType value = TestValue(pointIndex+1, FieldType());
+      fieldValues.Append(value);
+    }
+
+    this->DoTestWithField(shape, fieldValues);
+  }
+
+  template<typename CellShapeTag>
   void operator()(CellShapeTag) const
   {
     vtkm::IdComponent minPoints;
@@ -162,6 +175,22 @@ void TestInterpolate()
   vtkm::testing::Testing::TryAllCellShapes(TestInterpolateFunctor<vtkm::Vec<vtkm::Float32,3> >());
   std::cout << "======== Vec<Float64,3> ===================" << std::endl;
   vtkm::testing::Testing::TryAllCellShapes(TestInterpolateFunctor<vtkm::Vec<vtkm::Float64,3> >());
+
+  TestInterpolateFunctor<vtkm::Vec<vtkm::FloatDefault,3> > testFunctor;
+  vtkm::Vec<vtkm::FloatDefault,3> origin = TestValue(0, vtkm::Vec<vtkm::FloatDefault,3>());
+  vtkm::Vec<vtkm::FloatDefault,3> spacing = TestValue(1, vtkm::Vec<vtkm::FloatDefault,3>());
+  std::cout << "======== Uniform Point Coordinates 1D =====" << std::endl;
+  testFunctor.DoTestWithField(
+        vtkm::CellShapeTagLine(),
+        vtkm::VecRectilinearPointCoordinates<1>(origin, spacing));
+  std::cout << "======== Uniform Point Coordinates 2D =====" << std::endl;
+  testFunctor.DoTestWithField(
+        vtkm::CellShapeTagQuad(),
+        vtkm::VecRectilinearPointCoordinates<2>(origin, spacing));
+  std::cout << "======== Uniform Point Coordinates 3D =====" << std::endl;
+  testFunctor.DoTestWithField(
+        vtkm::CellShapeTagHexahedron(),
+        vtkm::VecRectilinearPointCoordinates<3>(origin, spacing));
 }
 
 } // anonymous namespace

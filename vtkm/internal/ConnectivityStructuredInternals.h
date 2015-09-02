@@ -121,6 +121,30 @@ public:
     return cellIds;
   }
 
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id FlatToLogicalPointIndex(vtkm::Id flatPointIndex) const
+  {
+    return flatPointIndex;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id LogicalToFlatPointIndex(vtkm::Id logicalPointIndex) const
+  {
+    return logicalPointIndex;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id FlatToLogicalCellIndex(vtkm::Id flatCellIndex) const
+  {
+    return flatCellIndex;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id LogicalToFlatCellIndex(vtkm::Id logicalCellIndex) const
+  {
+    return logicalCellIndex;
+  }
+
   VTKM_CONT_EXPORT
   void PrintSummary(std::ostream &out) const
   {
@@ -187,13 +211,13 @@ public:
   typedef vtkm::CellShapeTagQuad CellShapeTag;
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
+  vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL>
+      GetPointsOfCell(vtkm::Id cellIndex) const
   {
-    vtkm::Id i, j;
-    this->CalculateLogicalCellIndices(index, i, j);
+    vtkm::Id2 ij = this->FlatToLogicalCellIndex(cellIndex);
 
     vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> pointIds;
-    pointIds[0] = j*this->PointDimensions[0] + i;
+    pointIds[0] = this->LogicalToFlatPointIndex(ij);
     pointIds[1] = pointIds[0] + 1;
     pointIds[2] = pointIds[1] + this->PointDimensions[0];
     pointIds[3] = pointIds[2] - 1;
@@ -203,42 +227,74 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
   {
-    vtkm::Id i, j;
-    this->CalculateLogicalPointIndices(pointIndex, i, j);
+    vtkm::Id2 ij = this->FlatToLogicalPointIndex(pointIndex);
     return
-        (static_cast<vtkm::IdComponent>((i > 0) && (j > 0))
-         + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) && (j > 0))
-         + static_cast<vtkm::IdComponent>((i > 0) && (j < this->PointDimensions[1]-1))
+        (static_cast<vtkm::IdComponent>((ij[0] > 0) && (ij[1] > 0))
+         + static_cast<vtkm::IdComponent>((ij[0] < this->PointDimensions[0]-1) && (ij[1] > 0))
+         + static_cast<vtkm::IdComponent>((ij[0] > 0) && (ij[1] < this->PointDimensions[1]-1))
          + static_cast<vtkm::IdComponent>(
-          (i < this->PointDimensions[0]-1) && (j < this->PointDimensions[1]-1)));
+          (ij[0] < this->PointDimensions[0]-1) && (ij[1] < this->PointDimensions[1]-1)));
   }
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT>
-  GetCellsOfPoint(vtkm::Id index) const
+  GetCellsOfPoint(vtkm::Id pointIndex) const
   {
     vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT> cellIds;
 
-    vtkm::Id i, j;
-    this->CalculateLogicalPointIndices(index, i, j);
-    if ((i > 0) && (j > 0))
+    vtkm::Id2 ij = this->FlatToLogicalPointIndex(pointIndex);
+    if ((ij[0] > 0) && (ij[1] > 0))
     {
-      cellIds.Append(this->CalculateCellIndex(i-1, j-1));
+      cellIds.Append(this->LogicalToFlatCellIndex(ij - vtkm::Id2(1,1)));
     }
-    if ((i < this->PointDimensions[0]-1) && (j > 0))
+    if ((ij[0] < this->PointDimensions[0]-1) && (ij[1] > 0))
     {
-      cellIds.Append(this->CalculateCellIndex(i  , j-1));
+      cellIds.Append(this->LogicalToFlatCellIndex(ij - vtkm::Id2(0,1)));
     }
-    if ((i > 0) && (j < this->PointDimensions[1]-1))
+    if ((ij[0] > 0) && (ij[1] < this->PointDimensions[1]-1))
     {
-      cellIds.Append(this->CalculateCellIndex(i-1, j  ));
+      cellIds.Append(this->LogicalToFlatCellIndex(ij - vtkm::Id2(1,0)));
     }
-    if ((i < this->PointDimensions[0]-1) && (j < this->PointDimensions[1]-1))
+    if ((ij[0] < this->PointDimensions[0]-1) && (ij[1] < this->PointDimensions[1]-1))
     {
-      cellIds.Append(this->CalculateCellIndex(i  , j  ));
+      cellIds.Append(this->LogicalToFlatCellIndex(ij));
     }
 
     return cellIds;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id2 FlatToLogicalPointIndex(vtkm::Id flatPointIndex) const
+  {
+    vtkm::Id2 logicalPointIndex;
+    logicalPointIndex[0] = flatPointIndex % this->PointDimensions[0];
+    logicalPointIndex[1] = flatPointIndex / this->PointDimensions[0];
+    return logicalPointIndex;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id LogicalToFlatPointIndex(const vtkm::Id2 &logicalPointIndex) const
+  {
+    return logicalPointIndex[0]
+        + this->PointDimensions[0]*logicalPointIndex[1];
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id2 FlatToLogicalCellIndex(vtkm::Id flatCellIndex) const
+  {
+    vtkm::Id2 cellDimensions = this->GetCellDimensions();
+    vtkm::Id2 logicalCellIndex;
+    logicalCellIndex[0] = flatCellIndex % cellDimensions[0];
+    logicalCellIndex[1] = flatCellIndex / cellDimensions[0];
+    return logicalCellIndex;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id LogicalToFlatCellIndex(const vtkm::Id2 &logicalCellIndex) const
+  {
+    vtkm::Id2 cellDimensions = this->GetCellDimensions();
+    return logicalCellIndex[0]
+        + cellDimensions[0]*logicalCellIndex[1];
   }
 
   VTKM_CONT_EXPORT
@@ -251,28 +307,6 @@ public:
 
 private:
   vtkm::Id2 PointDimensions;
-
-private:
-  VTKM_EXEC_CONT_EXPORT
-  void CalculateLogicalPointIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j) const
-  {
-    vtkm::Id2 pointDimensions = this->GetPointDimensions();
-    i = index % pointDimensions[0];
-    j = index / pointDimensions[0];
-  }
-  VTKM_EXEC_CONT_EXPORT
-  void CalculateLogicalCellIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j) const
-  {
-    vtkm::Id2 cellDimensions = this->GetCellDimensions();
-    i = index % cellDimensions[0];
-    j = index / cellDimensions[0];
-  }
-  VTKM_EXEC_CONT_EXPORT
-  vtkm::Id CalculateCellIndex(vtkm::Id i, vtkm::Id j) const
-  {
-    vtkm::Id2 cellDimensions = this->GetCellDimensions();
-    return j*cellDimensions[0] + i;
-  }
 };
 
 //3 D specialization.
@@ -332,13 +366,12 @@ public:
   typedef vtkm::CellShapeTagHexahedron CellShapeTag;
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
+  vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id cellIndex) const
   {
-    vtkm::Id i, j, k;
-    this->CalculateLogicalCellIndices(index, i, j, k);
+    vtkm::Id3 ijk = this->FlatToLogicalCellIndex(cellIndex);
 
     vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> pointIds;
-    pointIds[0] = (k * this->PointDimensions[1] + j) * this->PointDimensions[0] + i;
+    pointIds[0] = (ijk[2] * this->PointDimensions[1] + ijk[1]) * this->PointDimensions[0] + ijk[0];
     pointIds[1] = pointIds[0] + 1;
     pointIds[2] = pointIds[1] + this->PointDimensions[0];
     pointIds[3] = pointIds[2] - 1;
@@ -353,79 +386,76 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
   {
-    vtkm::Id i, j, k;
-
-    this->CalculateLogicalPointIndices(pointIndex, i, j, k);
+    vtkm::Id3 ijk = this->FlatToLogicalPointIndex(pointIndex);
 
     return (
-            static_cast<vtkm::IdComponent>((i > 0) && (j > 0) && (k > 0))
-          + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) && (j > 0) && (k > 0))
-          + static_cast<vtkm::IdComponent>((i > 0) && (j < this->PointDimensions[1]-1) && (k > 0))
-          + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) &&
-                                           (j < this->PointDimensions[1]-1) &&
-                                           (k > 0))
-          + static_cast<vtkm::IdComponent>((i > 0) && (j > 0) && (k < this->PointDimensions[2]-1))
-          + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) &&
-                                           (j > 0) &&
-                                           (k < this->PointDimensions[2]-1))
-          + static_cast<vtkm::IdComponent>((i > 0) &&
-                                           (j < this->PointDimensions[1]-1) &&
-                                           (k < this->PointDimensions[2]-1))
-          + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) &&
-                                           (j < this->PointDimensions[1]-1) &&
-                                           (k < this->PointDimensions[2]-1))
+            static_cast<vtkm::IdComponent>((ijk[0] > 0) && (ijk[1] > 0) && (ijk[2] > 0))
+          + static_cast<vtkm::IdComponent>((ijk[0] < this->PointDimensions[0]-1) && (ijk[1] > 0) && (ijk[2] > 0))
+          + static_cast<vtkm::IdComponent>((ijk[0] > 0) && (ijk[1] < this->PointDimensions[1]-1) && (ijk[2] > 0))
+          + static_cast<vtkm::IdComponent>((ijk[0] < this->PointDimensions[0]-1) &&
+                                           (ijk[1] < this->PointDimensions[1]-1) &&
+                                           (ijk[2] > 0))
+          + static_cast<vtkm::IdComponent>((ijk[0] > 0) && (ijk[1] > 0) && (ijk[2] < this->PointDimensions[2]-1))
+          + static_cast<vtkm::IdComponent>((ijk[0] < this->PointDimensions[0]-1) &&
+                                           (ijk[1] > 0) &&
+                                           (ijk[2] < this->PointDimensions[2]-1))
+          + static_cast<vtkm::IdComponent>((ijk[0] > 0) &&
+                                           (ijk[1] < this->PointDimensions[1]-1) &&
+                                           (ijk[2] < this->PointDimensions[2]-1))
+          + static_cast<vtkm::IdComponent>((ijk[0] < this->PointDimensions[0]-1) &&
+                                           (ijk[1] < this->PointDimensions[1]-1) &&
+                                           (ijk[2] < this->PointDimensions[2]-1))
             );
   }
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT>
-  GetCellsOfPoint(vtkm::Id index) const
+  GetCellsOfPoint(vtkm::Id pointIndex) const
   {
     vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT> cellIds;
 
-    vtkm::Id i, j, k;
+    vtkm::Id3 ijk = this->FlatToLogicalPointIndex(pointIndex);
 
-    this->CalculateLogicalPointIndices(index, i, j, k);
-    if ((i > 0) && (j > 0) && (k > 0))
+    if ((ijk[0] > 0) && (ijk[1] > 0) && (ijk[2] > 0))
     {
-      cellIds.Append(this->CalculateCellIndex(i-1, j-1, k-1));
+      cellIds.Append(this->LogicalToFlatCellIndex(ijk - vtkm::Id3(1,1,1)));
     }
-    if ((i < this->PointDimensions[0]-1) && (j > 0) && (k > 0))
+    if ((ijk[0] < this->PointDimensions[0]-1) && (ijk[1] > 0) && (ijk[2] > 0))
     {
-      cellIds.Append(this->CalculateCellIndex(i  , j-1, k-1));
+      cellIds.Append(this->LogicalToFlatCellIndex(ijk - vtkm::Id3(0,1,1)));
     }
-    if ((i > 0) && (j < this->PointDimensions[1]-1) && (k > 0))
+    if ((ijk[0] > 0) && (ijk[1] < this->PointDimensions[1]-1) && (ijk[2] > 0))
     {
-      cellIds.Append(this->CalculateCellIndex(i-1, j  , k-1));
+      cellIds.Append(this->LogicalToFlatCellIndex(ijk - vtkm::Id3(1,0,1)));
     }
-    if ((i < this->PointDimensions[0]-1) &&
-        (j < this->PointDimensions[1]-1) &&
-        (k > 0))
+    if ((ijk[0] < this->PointDimensions[0]-1) &&
+        (ijk[1] < this->PointDimensions[1]-1) &&
+        (ijk[2] > 0))
     {
-      cellIds.Append(this->CalculateCellIndex(i  , j  , k-1));
+      cellIds.Append(this->LogicalToFlatCellIndex(ijk - vtkm::Id3(0,0,1)));
     }
 
-    if ((i > 0) && (j > 0) && (k < this->PointDimensions[2]-1))
+    if ((ijk[0] > 0) && (ijk[1] > 0) && (ijk[2] < this->PointDimensions[2]-1))
     {
-      cellIds.Append(this->CalculateCellIndex(i-1, j-1, k));
+      cellIds.Append(this->LogicalToFlatCellIndex(ijk - vtkm::Id3(1,1,0)));
     }
-    if ((i < this->PointDimensions[0]-1) &&
-        (j > 0) &&
-        (k < this->PointDimensions[2]-1))
+    if ((ijk[0] < this->PointDimensions[0]-1) &&
+        (ijk[1] > 0) &&
+        (ijk[2] < this->PointDimensions[2]-1))
     {
-      cellIds.Append(this->CalculateCellIndex(i  , j-1, k));
+      cellIds.Append(this->LogicalToFlatCellIndex(ijk - vtkm::Id3(0,1,0)));
     }
-    if ((i > 0) &&
-        (j < this->PointDimensions[1]-1) &&
-        (k < this->PointDimensions[2]-1))
+    if ((ijk[0] > 0) &&
+        (ijk[1] < this->PointDimensions[1]-1) &&
+        (ijk[2] < this->PointDimensions[2]-1))
     {
-      cellIds.Append(this->CalculateCellIndex(i-1, j  , k));
+      cellIds.Append(this->LogicalToFlatCellIndex(ijk - vtkm::Id3(1,0,0)));
     }
-    if ((i < this->PointDimensions[0]-1) &&
-        (j < this->PointDimensions[1]-1) &&
-        (k < this->PointDimensions[2]-1))
+    if ((ijk[0] < this->PointDimensions[0]-1) &&
+        (ijk[1] < this->PointDimensions[1]-1) &&
+        (ijk[2] < this->PointDimensions[2]-1))
     {
-      cellIds.Append(this->CalculateCellIndex(i  , j  , k));
+      cellIds.Append(this->LogicalToFlatCellIndex(ijk));
     }
 
     return cellIds;
@@ -439,38 +469,51 @@ public:
     out<<std::endl;
   }
 
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id3 FlatToLogicalPointIndex(vtkm::Id flatPointIndex) const
+  {
+    vtkm::Id3 logicalPointIndex;
+    vtkm::Id pointDims01 = this->PointDimensions[0] * this->PointDimensions[1];
+    logicalPointIndex[2] = flatPointIndex / pointDims01;
+    vtkm::Id indexij = flatPointIndex % pointDims01;
+    logicalPointIndex[1] = indexij / this->PointDimensions[0];
+    logicalPointIndex[0] = indexij % this->PointDimensions[0];
+    return logicalPointIndex;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id LogicalToFlatPointIndex(const vtkm::Id3 &logicalPointIndex) const
+  {
+    return logicalPointIndex[0]
+        + this->PointDimensions[0]*(logicalPointIndex[1]
+                                    + this->PointDimensions[1]*logicalPointIndex[2]);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id3 FlatToLogicalCellIndex(vtkm::Id flatCellIndex) const
+  {
+    vtkm::Id3 cellDimensions = this->GetCellDimensions();
+    vtkm::Id3 logicalCellIndex;
+    vtkm::Id cellDims01 = cellDimensions[0] * cellDimensions[1];
+    logicalCellIndex[2] = flatCellIndex / cellDims01;
+    vtkm::Id indexij = flatCellIndex % cellDims01;
+    logicalCellIndex[1] = indexij / cellDimensions[0];
+    logicalCellIndex[0] = indexij % cellDimensions[0];
+    return logicalCellIndex;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id LogicalToFlatCellIndex(const vtkm::Id3 &logicalCellIndex) const
+  {
+    vtkm::Id3 cellDimensions = this->GetCellDimensions();
+    return logicalCellIndex[0]
+        + cellDimensions[0]*(logicalCellIndex[1]
+                                    + cellDimensions[1]*logicalCellIndex[2]);
+  }
+
 private:
   vtkm::Id3 PointDimensions;
 
-
-private:
-  VTKM_EXEC_CONT_EXPORT
-  void CalculateLogicalCellIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j, vtkm::Id &k) const
-  {
-    vtkm::Id3 cellDimensions = this->GetCellDimensions();
-    vtkm::Id cellDims01 = cellDimensions[0] * cellDimensions[1];
-    k = index / cellDims01;
-    vtkm::Id indexij = index % cellDims01;
-    j = indexij / cellDimensions[0];
-    i = indexij % cellDimensions[0];
-  }
-
-  VTKM_EXEC_CONT_EXPORT
-  void CalculateLogicalPointIndices(vtkm::Id index, vtkm::Id &i, vtkm::Id &j, vtkm::Id &k) const
-  {
-    vtkm::Id pointDims01 = this->PointDimensions[0] * this->PointDimensions[1];
-    k = index / pointDims01;
-    vtkm::Id indexij = index % pointDims01;
-    j = indexij / this->PointDimensions[0];
-    i = indexij % this->PointDimensions[0];
-  }
-
-  VTKM_EXEC_CONT_EXPORT
-  vtkm::Id CalculateCellIndex(vtkm::Id i, vtkm::Id j, vtkm::Id k) const
-  {
-    vtkm::Id3 cellDimensions = this->GetCellDimensions();
-    return (k * cellDimensions[1] + j) * cellDimensions[0] + i;
-  }
 };
 
 // We may want to generalize this class depending on how ConnectivityExplicit

@@ -93,11 +93,11 @@ void GetMinMaxPoints(CellShapeTag,
 template<typename FieldType>
 struct TestDerivativeFunctor
 {
-  template<typename CellShapeTag>
-  void DoTest(CellShapeTag shape,
-              vtkm::IdComponent numPoints,
-              LinearField field,
-              vtkm::Vec<FieldType,3> expectedGradient) const
+  template<typename CellShapeTag, typename WCoordsVecType>
+  void DoTestWithWCoords(CellShapeTag shape,
+                         const WCoordsVecType worldCoordinates,
+                         LinearField field,
+                         vtkm::Vec<FieldType,3> expectedGradient) const
   {
     // Stuff to fake running in the execution environment.
     char messageBuffer[256];
@@ -106,20 +106,12 @@ struct TestDerivativeFunctor
     vtkm::exec::FunctorBase workletProxy;
     workletProxy.SetErrorMessageBuffer(errorMessage);
 
-    vtkm::VecVariable<vtkm::Vec<vtkm::FloatDefault,3>, MAX_POINTS> worldCoordinates;
+    vtkm::IdComponent numPoints = worldCoordinates.GetNumberOfComponents();
+
     vtkm::VecVariable<FieldType, MAX_POINTS> fieldValues;
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
-      vtkm::Vec<vtkm::FloatDefault,3> pcoords =
-          vtkm::exec::ParametricCoordinatesPoint(numPoints,
-                                                 pointIndex,
-                                                 shape,
-                                                 workletProxy);
-      VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
-      vtkm::Vec<vtkm::FloatDefault,3> wcoords = ParametricToWorld(pcoords);
-      VTKM_TEST_ASSERT(test_equal(pcoords, WorldToParametric(wcoords)),
-                       "Test world/parametric conversion broken.");
-      worldCoordinates.Append(wcoords);
+      vtkm::Vec<vtkm::FloatDefault,3> wcoords = worldCoordinates[pointIndex];
       FieldType value = field.GetValue(wcoords);
       fieldValues.Append(value);
     }
@@ -166,6 +158,37 @@ struct TestDerivativeFunctor
       VTKM_TEST_ASSERT(test_equal(computedGradient, expectedGradient, 0.01),
                        "Gradient is not as expected.");
     }
+  }
+
+  template<typename CellShapeTag>
+  void DoTest(CellShapeTag shape,
+              vtkm::IdComponent numPoints,
+              LinearField field,
+              vtkm::Vec<FieldType,3> expectedGradient) const
+  {
+    // Stuff to fake running in the execution environment.
+    char messageBuffer[256];
+    messageBuffer[0] = '\0';
+    vtkm::exec::internal::ErrorMessageBuffer errorMessage(messageBuffer, 256);
+    vtkm::exec::FunctorBase workletProxy;
+    workletProxy.SetErrorMessageBuffer(errorMessage);
+
+    vtkm::VecVariable<vtkm::Vec<vtkm::FloatDefault,3>, MAX_POINTS> worldCoordinates;
+    for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
+    {
+      vtkm::Vec<vtkm::FloatDefault,3> pcoords =
+          vtkm::exec::ParametricCoordinatesPoint(numPoints,
+                                                 pointIndex,
+                                                 shape,
+                                                 workletProxy);
+      VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+      vtkm::Vec<vtkm::FloatDefault,3> wcoords = ParametricToWorld(pcoords);
+      VTKM_TEST_ASSERT(test_equal(pcoords, WorldToParametric(wcoords)),
+                       "Test world/parametric conversion broken.");
+      worldCoordinates.Append(wcoords);
+    }
+
+    this->DoTestWithWCoords(shape, worldCoordinates, field, expectedGradient);
   }
 
   template<typename CellShapeTag>
@@ -266,6 +289,38 @@ void TestDerivative()
   vtkm::testing::Testing::TryAllCellShapes(TestDerivativeFunctor<vtkm::Float32>());
   std::cout << "======== Float64 ==========================" << std::endl;
   vtkm::testing::Testing::TryAllCellShapes(TestDerivativeFunctor<vtkm::Float64>());
+
+  boost::random::uniform_real_distribution<vtkm::Float64> randomDist(-20.0, 20.0);
+  LinearField field;
+  field.OriginValue = randomDist(g_RandomGenerator);
+  field.Gradient = vtkm::make_Vec(randomDist(g_RandomGenerator),
+                                  randomDist(g_RandomGenerator),
+                                  randomDist(g_RandomGenerator));
+  vtkm::Vec<vtkm::Float64,3> expectedGradient = field.Gradient;
+
+  TestDerivativeFunctor<vtkm::Float64> testFunctor;
+  vtkm::Vec<vtkm::FloatDefault,3> origin = vtkm::Vec<vtkm::FloatDefault,3>(0.25f, 0.25f, 0.25f);
+  vtkm::Vec<vtkm::FloatDefault,3> spacing = vtkm::Vec<vtkm::FloatDefault,3>(2.0f, 2.0f, 2.0f);
+  std::cout << "======== Uniform Point Coordinates 3D =====" << std::endl;
+  testFunctor.DoTestWithWCoords(
+        vtkm::CellShapeTagHexahedron(),
+        vtkm::VecRectilinearPointCoordinates<3>(origin, spacing),
+        field,
+        expectedGradient);
+  std::cout << "======== Uniform Point Coordinates 2D =====" << std::endl;
+  expectedGradient[2] = 0.0;
+  testFunctor.DoTestWithWCoords(
+        vtkm::CellShapeTagQuad(),
+        vtkm::VecRectilinearPointCoordinates<2>(origin, spacing),
+        field,
+        expectedGradient);
+  std::cout << "======== Uniform Point Coordinates 1D =====" << std::endl;
+  expectedGradient[1] = 0.0;
+  testFunctor.DoTestWithWCoords(
+        vtkm::CellShapeTagLine(),
+        vtkm::VecRectilinearPointCoordinates<1>(origin, spacing),
+        field,
+        expectedGradient);
 }
 
 } // anonymous namespace

@@ -23,6 +23,13 @@
 #include <vtkm/exec/arg/AspectTagDefault.h>
 #include <vtkm/exec/arg/Fetch.h>
 
+#include <vtkm/TopologyElementTag.h>
+
+#include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
+
+#include <vtkm/exec/ConnectivityStructured.h>
+#include <vtkm/VecRectilinearPointCoordinates.h>
+
 #include <vtkm/exec/internal/VecFromPortalPermute.h>
 
 namespace vtkm {
@@ -66,6 +73,77 @@ struct FetchArrayTopologyMapInImplementation
                         const FieldExecObjectType &field)
   {
     return ValueType(connectivity.GetIndices(index), field);
+  }
+};
+
+VTKM_EXEC_EXPORT
+vtkm::VecRectilinearPointCoordinates<1>
+make_VecRectilinearPointCoordinates(
+    const vtkm::Vec<vtkm::FloatDefault,3> &origin,
+    const vtkm::Vec<vtkm::FloatDefault,3> &spacing,
+    const vtkm::Vec<vtkm::Id,1> &logicalId)
+{
+  vtkm::Vec<vtkm::FloatDefault,3> offsetOrigin(
+        origin[0] + spacing[0]*static_cast<vtkm::FloatDefault>(logicalId[0]),
+        origin[1],
+        origin[2]);
+  return vtkm::VecRectilinearPointCoordinates<1>(offsetOrigin, spacing);
+}
+
+VTKM_EXEC_EXPORT
+vtkm::VecRectilinearPointCoordinates<2>
+make_VecRectilinearPointCoordinates(
+    const vtkm::Vec<vtkm::FloatDefault,3> &origin,
+    const vtkm::Vec<vtkm::FloatDefault,3> &spacing,
+    const vtkm::Vec<vtkm::Id,2> &logicalId)
+{
+  vtkm::Vec<vtkm::FloatDefault,3> offsetOrigin(
+        origin[0] + spacing[0]*static_cast<vtkm::FloatDefault>(logicalId[0]),
+        origin[1] + spacing[1]*static_cast<vtkm::FloatDefault>(logicalId[1]),
+        origin[2]);
+  return vtkm::VecRectilinearPointCoordinates<2>(offsetOrigin, spacing);
+}
+
+VTKM_EXEC_EXPORT
+vtkm::VecRectilinearPointCoordinates<3>
+make_VecRectilinearPointCoordinates(
+    const vtkm::Vec<vtkm::FloatDefault,3> &origin,
+    const vtkm::Vec<vtkm::FloatDefault,3> &spacing,
+    const vtkm::Vec<vtkm::Id,3> &logicalId)
+{
+  vtkm::Vec<vtkm::FloatDefault,3> offsetOrigin(
+        origin[0] + spacing[0]*static_cast<vtkm::FloatDefault>(logicalId[0]),
+        origin[1] + spacing[1]*static_cast<vtkm::FloatDefault>(logicalId[1]),
+        origin[2] + spacing[2]*static_cast<vtkm::FloatDefault>(logicalId[2]));
+  return vtkm::VecRectilinearPointCoordinates<3>(offsetOrigin, spacing);
+}
+
+template<vtkm::IdComponent NumDimensions>
+struct FetchArrayTopologyMapInImplementation<
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                       vtkm::TopologyElementTagCell,
+                                       NumDimensions>,
+    vtkm::internal::ArrayPortalUniformPointCoordinates>
+
+{
+  typedef vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                             vtkm::TopologyElementTagCell,
+                                             NumDimensions> ConnectivityType;
+
+  typedef vtkm::VecRectilinearPointCoordinates<NumDimensions> ValueType;
+
+  VTKM_EXEC_EXPORT
+  static ValueType Load(
+      vtkm::Id index,
+      const ConnectivityType &connectivity,
+      const vtkm::internal::ArrayPortalUniformPointCoordinates &field)
+  {
+    // This works because the logical cell index is the same as the logical
+    // point index of the first point on the cell.
+    return vtkm::exec::arg::detail::make_VecRectilinearPointCoordinates(
+          field.GetOrigin(),
+          field.GetSpacing(),
+          connectivity.FlatToLogicalCellIndex(index));
   }
 };
 

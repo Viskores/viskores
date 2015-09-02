@@ -295,6 +295,22 @@ void TestAllPCoords()
   vtkm::testing::Testing::TryAllCellShapes(TestPCoordsFunctor<vtkm::Float32>());
   std::cout << "======== Float64 ==========================" << std::endl;
   vtkm::testing::Testing::TryAllCellShapes(TestPCoordsFunctor<vtkm::Float64>());
+
+  std::cout << "======== Rectilinear Shapes ===============" << std::endl;
+  boost::random::uniform_real_distribution<vtkm::FloatDefault> randomDist(0.01f,1.0f);
+  vtkm::Vec<vtkm::FloatDefault,3> origin(randomDist(g_RandomGenerator),
+                                         randomDist(g_RandomGenerator),
+                                         randomDist(g_RandomGenerator));
+  vtkm::Vec<vtkm::FloatDefault,3> spacing(randomDist(g_RandomGenerator),
+                                          randomDist(g_RandomGenerator),
+                                          randomDist(g_RandomGenerator));
+
+  TestPCoords(vtkm::VecRectilinearPointCoordinates<3>(origin, spacing),
+              vtkm::CellShapeTagHexahedron());
+  TestPCoords(vtkm::VecRectilinearPointCoordinates<2>(origin, spacing),
+              vtkm::CellShapeTagQuad());
+  TestPCoords(vtkm::VecRectilinearPointCoordinates<1>(origin, spacing),
+              vtkm::CellShapeTagLine());
 }
 
 } // Anonymous namespace

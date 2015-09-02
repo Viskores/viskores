@@ -23,6 +23,7 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
+#include <vtkm/VecRectilinearPointCoordinates.h>
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/exec/Assert.h>
@@ -696,6 +697,23 @@ CellDerivative(const FieldVecType &field,
   return (deltaField/vtkm::MagnitudeSquared(vec))*vec;
 }
 
+template<typename FieldVecType,
+         typename ParametricCoordType>
+VTKM_EXEC_EXPORT
+vtkm::Vec<typename FieldVecType::ComponentType,3>
+CellDerivative(const FieldVecType &field,
+               const vtkm::VecRectilinearPointCoordinates<1> &wCoords,
+               const vtkm::Vec<ParametricCoordType,3> &vtkmNotUsed(pcoords),
+               vtkm::CellShapeTagLine,
+               const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 2, worklet);
+
+  typedef typename FieldVecType::ComponentType T;
+
+  return vtkm::Vec<T,3>((field[1]-field[0])/wCoords.GetSpacing()[0], 0, 0);
+}
+
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename WorldCoordType,
@@ -897,6 +915,35 @@ CellDerivative(const FieldVecType &field,
         field, wCoords, pcoords, vtkm::CellShapeTagQuad());
 }
 
+template<typename FieldVecType,
+         typename ParametricCoordType>
+VTKM_EXEC_EXPORT
+vtkm::Vec<typename FieldVecType::ComponentType,3>
+CellDerivative(const FieldVecType &field,
+               const vtkm::VecRectilinearPointCoordinates<2> &wCoords,
+               const vtkm::Vec<ParametricCoordType,3> &pcoords,
+               vtkm::CellShapeTagQuad,
+               const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 4, worklet);
+
+  typedef typename FieldVecType::ComponentType T;
+  typedef vtkm::Vec<T,2> VecT;
+
+  VecT pc(static_cast<T>(pcoords[0]),
+          static_cast<T>(pcoords[1]));
+  VecT rc = VecT(1) - pc;
+
+  VecT sum =  field[0]*VecT(-rc[1], -rc[0]);
+  sum = sum + field[1]*VecT( rc[1], -pc[0]);
+  sum = sum + field[2]*VecT( pc[1],  pc[0]);
+  sum = sum + field[3]*VecT(-pc[1],  rc[0]);
+
+  return vtkm::Vec<T,3>(sum[0]/wCoords.GetSpacing()[0],
+                        sum[1]/wCoords.GetSpacing()[1],
+                        0);
+}
+
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename WorldCoordType,
@@ -982,6 +1029,38 @@ CellDerivative(const FieldVecType &field,
 
   return detail::CellDerivativeFor3DCell(
         field, wCoords, pcoords, vtkm::CellShapeTagHexahedron());
+}
+
+template<typename FieldVecType,
+         typename ParametricCoordType>
+VTKM_EXEC_EXPORT
+vtkm::Vec<typename FieldVecType::ComponentType,3>
+CellDerivative(const FieldVecType &field,
+               const vtkm::VecRectilinearPointCoordinates<3> &wCoords,
+               const vtkm::Vec<ParametricCoordType,3> &pcoords,
+               vtkm::CellShapeTagHexahedron,
+               const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 8, worklet);
+
+  typedef typename FieldVecType::ComponentType T;
+  typedef vtkm::Vec<T,3> VecT;
+
+  VecT pc(static_cast<T>(pcoords[0]),
+          static_cast<T>(pcoords[1]),
+          static_cast<T>(pcoords[2]));
+  VecT rc = VecT(1) - pc;
+
+  VecT sum =  field[0]*VecT(-rc[1]*rc[2], -rc[0]*rc[2], -rc[0]*rc[1]);
+  sum = sum + field[1]*VecT( rc[1]*rc[2], -pc[0]*rc[2], -pc[0]*rc[1]);
+  sum = sum + field[2]*VecT( pc[1]*rc[2],  pc[0]*rc[2], -pc[0]*pc[1]);
+  sum = sum + field[3]*VecT(-pc[1]*rc[2],  rc[0]*rc[2], -rc[0]*pc[1]);
+  sum = sum + field[4]*VecT(-rc[1]*pc[2], -rc[0]*pc[2],  rc[0]*rc[1]);
+  sum = sum + field[5]*VecT( rc[1]*pc[2], -pc[0]*pc[2],  pc[0]*rc[1]);
+  sum = sum + field[6]*VecT( pc[1]*pc[2],  pc[0]*pc[2],  pc[0]*pc[1]);
+  sum = sum + field[7]*VecT(-pc[1]*pc[2],  rc[0]*pc[2],  rc[0]*pc[1]);
+
+  return sum/wCoords.GetSpacing();
 }
 
 
