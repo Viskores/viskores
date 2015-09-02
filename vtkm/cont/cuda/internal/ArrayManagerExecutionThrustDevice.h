@@ -167,7 +167,6 @@ public:
   {
     storage->Allocate(static_cast<vtkm::Id>(this->Array.size()));
     ::thrust::copy(
-          thrust::cuda::par,
           this->Array.data(),
           this->Array.data() + static_cast<difference_type>(this->Array.size()),
           vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
