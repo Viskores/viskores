@@ -140,3 +140,4 @@ void Invoke(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5, T6 a6, T7 a7, T8 a8, T9 a9) const
   this->StartInvoke(
         vtkm::internal::make_FunctionInterface<void>(a1,a2,a3,a4,a5,a6,a7,a8,a9));
 }
+
