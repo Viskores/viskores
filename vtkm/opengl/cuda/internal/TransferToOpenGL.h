@@ -28,8 +28,12 @@
 
 #include <vtkm/opengl/internal/TransferToOpenGL.h>
 
+// Disable warnings we check vtkm for but Thrust does not.
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/copy.h>
 #include <thrust/device_ptr.h>
+#include <thrust/system/cuda/execution_policy.h>
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
 namespace opengl {
@@ -123,7 +127,9 @@ public:
 
   //Perhaps a direct call to thrust copy should be wrapped in a vtkm
   //compatble function
-  ::thrust::copy(vtkm::cont::cuda::internal::IteratorBegin(portal),
+  ::thrust::copy(
+                thrust::cuda::par,
+                vtkm::cont::cuda::internal::IteratorBegin(portal),
                 vtkm::cont::cuda::internal::IteratorEnd(portal),
                 thrust::cuda::pointer<ValueType>(beginPointer));
 
