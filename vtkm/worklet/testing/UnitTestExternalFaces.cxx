@@ -32,9 +32,12 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
   vtkm::cont::CellSetExplicit<> &cellset =
       ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
-  vtkm::cont::ArrayHandle<vtkm::Id> shapes = cellset.GetShapesArray();
-  vtkm::cont::ArrayHandle<vtkm::Id> numIndices = cellset.GetNumIndicesArray();
-  vtkm::cont::ArrayHandle<vtkm::Id> conn = cellset.GetConnectivityArray();
+  vtkm::cont::ArrayHandle<vtkm::Id> shapes = cellset.GetShapesArray(
+    vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
+  vtkm::cont::ArrayHandle<vtkm::Id> numIndices = cellset.GetNumIndicesArray(
+    vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
+  vtkm::cont::ArrayHandle<vtkm::Id> conn = cellset.GetConnectivityArray(
+    vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
 
   vtkm::cont::ArrayHandle<vtkm::Id> output_shapes;
   vtkm::cont::ArrayHandle<vtkm::Id> output_numIndices;

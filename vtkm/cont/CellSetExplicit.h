@@ -280,7 +280,9 @@ public:
                           vtkm::TopologyElementTagPoint)
   {
     if (this->CellToPoint.ElementsValid)
+    {
       return;
+    }
 
     std::multimap<vtkm::Id,vtkm::Id> cells_of_nodes;
 
@@ -348,22 +350,36 @@ public:
       this->CellToPoint.PrintSummary(out);
   }
 
+  template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
   const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
-  GetShapesArray() const { return this->PointToCell.Shapes; }
+  GetShapesArray(FromTopology,ToTopology) const
+  {
+    return this->GetConnectivity(FromTopology(), ToTopology()).Shapes;
+  }
 
+  template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
   const vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> &
-  GetNumIndicesArray() const { return this->PointToCell.NumIndices; }
+  GetNumIndicesArray(FromTopology,ToTopology) const
+  {
+    return this->GetConnectivity(FromTopology(), ToTopology()).NumIndices;
+  }
 
+  template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
   const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &
-  GetConnectivityArray() const { return this->PointToCell.Connectivity; }
+  GetConnectivityArray(FromTopology,ToTopology) const
+  {
+    return this->GetConnectivity(FromTopology(), ToTopology()).Connectivity;
+  }
 
+  template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
   const vtkm::cont::ArrayHandle<vtkm::Id> &
-  GetIndexOffsetArray() const {
-    return this->PointToCell.IndexOffsets;
+  GetIndexOffsetArray(FromTopology,ToTopology) const
+  {
+    return this->GetConnectivity(FromTopology(), ToTopology()).IndexOffsets;
   }
 
 private:

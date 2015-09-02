@@ -61,8 +61,8 @@ vtkm::cont::DataSet RunVertexClustering(vtkm::cont::DataSet &dataSet,
       dataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
   vtkm::cont::ArrayHandle<PointType> pointArray = dataSet.GetCoordinateSystem("coordinates").GetData().CastToArrayHandle<PointType, VTKM_DEFAULT_STORAGE_TAG>();
-  vtkm::cont::ArrayHandle<vtkm::Id> pointIdArray = cellSet.GetConnectivityArray();
-  vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetArray = cellSet.GetIndexOffsetArray();
+  vtkm::cont::ArrayHandle<vtkm::Id> pointIdArray = cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
+  vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetArray = cellSet.GetIndexOffsetArray(vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
 
   vtkm::cont::ArrayHandle<PointType> output_pointArray ;
   vtkm::cont::ArrayHandle<vtkm::Id3> output_pointId3Array ;
@@ -141,11 +141,11 @@ void TestVertexClustering()
   vtkm::cont::CellSetExplicit<> &cellSet =
       outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
   VTKM_TEST_ASSERT(
-        cellSet.GetConnectivityArray().GetNumberOfValues() == output_pointIds,
+        cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell()).GetNumberOfValues() == output_pointIds,
         "Number of connectivity array elements mismatch");
-  for (vtkm::Id i=0; i<cellSet.GetConnectivityArray().GetNumberOfValues(); i++)
+  for (vtkm::Id i=0; i<cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell()).GetNumberOfValues(); i++)
     {
-      vtkm::Id id1 = cellSet.GetConnectivityArray().GetPortalConstControl().Get(i) ;
+      vtkm::Id id1 = cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell()).GetPortalConstControl().Get(i) ;
       vtkm::Id id2 = output_pointId[i] ;
       std::cout << "pointid: " << id1 << " " << id2 << std::endl;
       //VTKM_TEST_ASSERT( id1 == id2, "Connectivity Array mismatch" )  ;
