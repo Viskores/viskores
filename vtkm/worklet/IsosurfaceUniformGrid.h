@@ -58,10 +58,10 @@ public:
     typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
     typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
     IdPortalType VertexTable;
-    vtkm::Float32 Isovalue;
+    FieldType Isovalue;
 
     VTKM_CONT_EXPORT
-    ClassifyCell(IdPortalType vTable, float isovalue) :
+    ClassifyCell(IdPortalType vTable, FieldType isovalue) :
       VertexTable(vTable),
       Isovalue(isovalue)
     {
@@ -93,7 +93,7 @@ public:
     typedef void ExecutionSignature(WorkIndex, _1, _2);
     typedef _1 InputDomain;
 
-    const float Isovalue;
+    const FieldType Isovalue;
     vtkm::Id xdim, ydim, zdim;
     const float xmin, ymin, zmin, xmax, ymax, zmax;
 
@@ -115,7 +115,7 @@ public:
 
     template<typename U, typename W, typename X>
     VTKM_CONT_EXPORT
-    IsoSurfaceGenerate(const float ivalue, const vtkm::Id3 cdims, IdPortalType triTablePortal,
+    IsoSurfaceGenerate(FieldType ivalue, const vtkm::Id3 cdims, IdPortalType triTablePortal,
                        const U & field, const U & source, const W & vertices, const W & normals, const X & scalars) :
       Isovalue(ivalue),
       xdim(cdims[0]), ydim(cdims[1]), zdim(cdims[2]),
@@ -154,7 +154,7 @@ public:
       const vtkm::Id i7 = i3   + pointsPerLayer;
 
       // Get the field values at these eight vertices
-      float f[8];
+      FieldType f[8];
       f[0] = this->Field.Get(i0);
       f[1] = this->Field.Get(i1);
       f[2] = this->Field.Get(i2);
@@ -174,12 +174,18 @@ public:
       cubeindex += (f[5] > this->Isovalue)*32;
       cubeindex += (f[6] > this->Isovalue)*64;
       cubeindex += (f[7] > this->Isovalue)*128;
+      // printf("inputCellId: %i \n",inputCellId);
+      // printf("x: %i, y: %i, z: %i \n",x, y, z);
+      // printf("i0: %i \n",i0);
+      // printf("f0 %F\n", f[0]);
+      // printf("cubeindex: %i \n",cubeindex);
+      // printf("numCells: %i \n",(vtkm::worklet::internal::numVerticesTable[cubeindex]/3) );
 
       // Compute the coordinates of the uniform regular grid at each of the cell's eight vertices
       vtkm::Vec<FieldType, 3> p[8];
 
       // If we have offset and spacing, can we simplify this computation
-      { 
+      {
         vtkm::Vec<FieldType, 3> offset = vtkm::make_Vec(xmin+(xmax-xmin),
                                                         ymin+(ymax-ymin),
                                                         zmin+(zmax-zmin) );
@@ -202,7 +208,7 @@ public:
       }
 
       // Get the scalar source values at the eight vertices
-      float s[8];
+      FieldType s[8];
       s[0] = this->Source.Get(i0);
       s[1] = this->Source.Get(i1);
       s[2] = this->Source.Get(i2);
@@ -221,8 +227,7 @@ public:
         const vtkm::Id edge = this->TriTable.Get(cellOffset + v);
         const int v0   = verticesForEdge[2*edge];
         const int v1   = verticesForEdge[2*edge + 1];
-        const float t  = (this->Isovalue - f[v0]) / (f[v1] - f[v0]);
-
+        const FieldType t  = (this->Isovalue - f[v0]) / (f[v1] - f[v0]);
         this->Vertices.Set(outputVertId + v, vtkm::Lerp(p[v0], p[v1], t));
         this->Scalars.Set(outputVertId + v, vtkm::Lerp(s[v0], s[v1], t));
       }
@@ -250,12 +255,26 @@ public:
   vtkm::Id3 CDims;
   vtkm::cont::DataSet DataSet;
 
-  template<typename IsoField, typename CoordinateType>
+  template<typename CoordinateType>
   void Run(const float &isovalue,
-           IsoField isoField,
-           vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3> > &verticesArray,
-           vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3> > &normalsArray,
-           vtkm::cont::ArrayHandle<FieldType> &scalarsArray)
+           const vtkm::cont::DynamicArrayHandle& isoField,
+           vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3> > verticesArray,
+           vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3> > normalsArray,
+           vtkm::cont::ArrayHandle<FieldType> scalarsArray)
+  {
+    //todo this needs to change so that we don't presume the storage type
+    vtkm::cont::ArrayHandle<FieldType> field;
+    field = isoField.CastToArrayHandle(FieldType(), VTKM_DEFAULT_STORAGE_TAG());
+    this->Run(isovalue, field, verticesArray, normalsArray, scalarsArray);
+
+  }
+
+  template<typename StorageTag, typename CoordinateType>
+  void Run(const float &isovalue,
+           const vtkm::cont::ArrayHandle<FieldType, StorageTag>& field,
+           vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3> > verticesArray,
+           vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3> > normalsArray,
+           vtkm::cont::ArrayHandle<FieldType> scalarsArray)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
 
@@ -278,7 +297,7 @@ public:
     ClassifyCellDispatcher classifyCellDispatcher(classifyCell);
 
     vtkm::cont::ArrayHandle<vtkm::Id> numOutputTrisPerCell;
-    classifyCellDispatcher.Invoke( isoField,
+    classifyCellDispatcher.Invoke( field,
                                    this->DataSet.GetCellSet(0),
                                    numOutputTrisPerCell);
 
@@ -303,27 +322,22 @@ public:
 
     // Generate a single triangle per cell
     const vtkm::Id numTotalVertices = numOutputCells * 3;
-    //std::cout << "validCellIndicesArray: " << validCellIndicesArray.GetNumberOfValues() << std::endl;
-
-    //todo this needs to change so that we don't presume the storage type
-    vtkm::cont::ArrayHandle<FieldType> field;
-    field = isoField.CastToArrayHandle(FieldType(), VTKM_DEFAULT_STORAGE_TAG());
-
-
+    
     IsoSurfaceGenerate isosurface(isovalue,
-                                 this->CDims,
-                                 triangleTableArray.PrepareForInput(DeviceAdapter()),
-                                 field,
-                                 field,
-                                 verticesArray.PrepareForOutput(numTotalVertices, DeviceAdapter()),
-                                 normalsArray.PrepareForOutput(numTotalVertices, DeviceAdapter()),
-                                 scalarsArray.PrepareForOutput(numTotalVertices, DeviceAdapter())
-                                 );
+                                  this->CDims,
+                                  triangleTableArray.PrepareForInput(DeviceAdapter()),
+                                  field,
+                                  field,
+                                  verticesArray.PrepareForOutput(numTotalVertices, DeviceAdapter()),
+                                  normalsArray.PrepareForOutput(numTotalVertices, DeviceAdapter()),
+                                  scalarsArray.PrepareForOutput(numTotalVertices, DeviceAdapter())
+                                  );
 
     typedef typename vtkm::worklet::DispatcherMapField< IsoSurfaceGenerate,
                                                         DeviceAdapter> IsoSurfaceDispatcher;
     IsoSurfaceDispatcher isosurfaceDispatcher(isosurface);
-    isosurfaceDispatcher.Invoke(validCellIndicesArray, inputCellIterationNumber);
+    isosurfaceDispatcher.Invoke(validCellIndicesArray,
+                                inputCellIterationNumber);
   }
 };
 

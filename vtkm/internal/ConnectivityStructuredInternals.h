@@ -351,6 +351,33 @@ public:
   }
 
   VTKM_EXEC_CONT_EXPORT
+  vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
+  {
+    vtkm::Id i, j, k;
+
+    this->CalculateLogicalPointIndices(pointIndex, i, j, k);
+
+    return (
+            static_cast<vtkm::IdComponent>((i > 0) && (j > 0) && (k > 0))
+          + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) && (j > 0) && (k > 0))
+          + static_cast<vtkm::IdComponent>((i > 0) && (j < this->PointDimensions[1]-1) && (k > 0))
+          + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) &&
+                                           (j < this->PointDimensions[1]-1) &&
+                                           (k > 0))
+          + static_cast<vtkm::IdComponent>((i > 0) && (j > 0) && (k < this->PointDimensions[2]-1))
+          + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) &&
+                                           (j > 0) &&
+                                           (k < this->PointDimensions[2]-1))
+          + static_cast<vtkm::IdComponent>((i > 0) &&
+                                           (j < this->PointDimensions[1]-1) &&
+                                           (k < this->PointDimensions[2]-1))
+          + static_cast<vtkm::IdComponent>((i < this->PointDimensions[0]-1) &&
+                                           (j < this->PointDimensions[1]-1) &&
+                                           (k < this->PointDimensions[2]-1))
+            );
+  }
+
+  VTKM_EXEC_CONT_EXPORT
   vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT>
   GetCellsOfPoint(vtkm::Id index) const
   {

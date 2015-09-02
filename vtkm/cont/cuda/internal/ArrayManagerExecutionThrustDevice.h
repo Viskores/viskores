@@ -29,6 +29,9 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cuda/vector.h>
 #include <thrust/device_malloc_allocator.h>
 #include <thrust/copy.h>
+
+#include <thrust/system/cuda/execution_policy.h>
+
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>

@@ -32,9 +32,12 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
   vtkm::cont::CellSetExplicit<> &cellset =
       ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
-  vtkm::cont::ArrayHandle<vtkm::Id> shapes = cellset.GetShapesArray();
-  vtkm::cont::ArrayHandle<vtkm::Id> numIndices = cellset.GetNumIndicesArray();
-  vtkm::cont::ArrayHandle<vtkm::Id> conn = cellset.GetConnectivityArray();
+  vtkm::cont::ArrayHandle<vtkm::Id> shapes = cellset.GetShapesArray(
+    vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
+  vtkm::cont::ArrayHandle<vtkm::Id> numIndices = cellset.GetNumIndicesArray(
+    vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
+  vtkm::cont::ArrayHandle<vtkm::Id> conn = cellset.GetConnectivityArray(
+    vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
 
   vtkm::cont::ArrayHandle<vtkm::Id> output_shapes;
   vtkm::cont::ArrayHandle<vtkm::Id> output_numIndices;
@@ -56,8 +59,7 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
   }
 
 
-  vtkm::cont::CellSetExplicit<> new_cs("cells",
-              static_cast<vtkm::IdComponent>(output_shapes.GetNumberOfValues()));
+  vtkm::cont::CellSetExplicit<> new_cs(cellset.GetNumberOfPoints(),"cells", 2);
   new_cs.Fill(output_shapes, output_numIndices, output_conn);
   new_ds.AddCellSet(new_cs);
 
@@ -90,7 +92,7 @@ void TestExternalFaces()
   const int nCells = 6;  //The tetrahedrons of the cube
   int cellVerts[nCells][4] = {{4,7,6,3}, {4,6,3,2}, {4,0,3,2},
                              {4,6,5,2}, {4,5,0,2}, {1,0,5,2}};
-  vtkm::cont::CellSetExplicit<> cs("cells", nCells);
+  vtkm::cont::CellSetExplicit<> cs(nVerts, "cells", nCells);
 
   vtkm::cont::ArrayHandle<vtkm::Id> shapes;
   vtkm::cont::ArrayHandle<vtkm::Id> numIndices;

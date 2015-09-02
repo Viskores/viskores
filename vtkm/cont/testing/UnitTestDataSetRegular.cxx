@@ -150,9 +150,11 @@ TwoDimRegularTest()
     for (vtkm::IdComponent cellIndex = 0;
          cellIndex < retrievedCellIds.GetNumberOfComponents();
          cellIndex++)
+    {
       VTKM_TEST_ASSERT(
             retrievedCellIds[cellIndex] == expectedCellIds[pointIndex][cellIndex],
             "Incorrect cell ID for point");
+    }
   }
 }
 
