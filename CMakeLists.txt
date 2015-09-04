@@ -142,23 +142,6 @@ check_type_size(long VTKm_SIZE_LONG BUILTIN_TYPES_ONLY)
 check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
 
 #-----------------------------------------------------------------------------
-# Build the configure file.
-# need to set VTKM_USE_DOUBLE_PRECISION, and VTKM_USE_64BIT_IDS as that
-# is the spelling we use for our defines.
-set(VTKM_USE_DOUBLE_PRECISION ${VTKm_USE_DOUBLE_PRECISION})
-set(VTKM_USE_64BIT_IDS ${VTKm_USE_64BIT_IDS})
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/vtkm/internal/Configure.h.in
-  ${CMAKE_CURRENT_BINARY_DIR}/vtkm/internal/Configure.h
-  @ONLY)
-vtkm_install_headers(
-  vtkm/internal ${CMAKE_CURRENT_BINARY_DIR}/vtkm/internal/Configure.h)
-
-unset(VTKM_USE_DOUBLE_PRECISION)
-unset(VTKM_USE_64BIT_IDS)
-
-
-#-----------------------------------------------------------------------------
 # Find OpenGL and GLEW, if both are found we can enable
 # the OpenGL Interop support. We use
 include(CMakeDependentOption)
@@ -182,6 +165,9 @@ CMAKE_DEPENDENT_OPTION(VTKm_ENABLE_OPENGL_TESTS
                        "Enable OpenGL Interop Render Window Tests"
                        ON "VTKm_ENABLE_OPENGL_INTEROP;GLUT_FOUND" OFF)
 
+#-----------------------------------------------------------------------------
+# Find Pyexpander in case somebody wants to update the auto generated
+# faux variadic template code
 find_package(Pyexpander)
 
 #-----------------------------------------------------------------------------
@@ -200,6 +186,25 @@ endif()
 if(VTKm_BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif(VTKm_BUILD_EXAMPLES)
+
+#-----------------------------------------------------------------------------
+# Build the configure file.
+# need to set numerous VTKm cmake properties to the naming convention
+# that we exepect for our C++ defines.
+
+set(VTKM_USE_DOUBLE_PRECISION ${VTKm_USE_DOUBLE_PRECISION})
+set(VTKM_USE_64BIT_IDS ${VTKm_USE_64BIT_IDS})
+set(VTKM_ENABLE_OPENGL_INTEROP ${VTKm_ENABLE_OPENGL_INTEROP})
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/vtkm/internal/Configure.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/vtkm/internal/Configure.h
+  @ONLY)
+vtkm_install_headers(
+  vtkm/internal ${CMAKE_CURRENT_BINARY_DIR}/vtkm/internal/Configure.h)
+
+unset(VTKM_ENABLE_OPENGL_INTEROP)
+unset(VTKM_USE_64BIT_IDS)
+unset(VTKM_USE_DOUBLE_PRECISION)
 
 #-----------------------------------------------------------------------------
 # Configuration for build directory.
