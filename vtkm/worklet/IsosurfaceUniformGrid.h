@@ -122,9 +122,9 @@ public:
       xmin(-1), ymin(-1), zmin(-1), xmax(1), ymax(1), zmax(1),
       Field( field.PrepareForInput( DeviceAdapter() ) ),
       Source( source.PrepareForInput( DeviceAdapter() ) ),
-      Scalars(scalars),
       Vertices(vertices),
       Normals(normals),
+      Scalars(scalars),
       TriTable(triTablePortal),
       cellsPerLayer(xdim * ydim),
       pointsPerLayer ((xdim+1)*(ydim+1))
