@@ -165,6 +165,12 @@ CMAKE_DEPENDENT_OPTION(VTKm_ENABLE_OPENGL_TESTS
                        "Enable OpenGL Interop Render Window Tests"
                        ON "VTKm_ENABLE_OPENGL_INTEROP;GLUT_FOUND" OFF)
 
+#on unix/linux Glew uses pthreads, so we need to find that, and link to it
+#explicitly or else in release mode we get sigsegv on launch
+if(UNIX AND VTKm_ENABLE_OPENGL_INTEROP)
+  find_package(Threads REQUIRED)
+endif()
+
 #-----------------------------------------------------------------------------
 # Find Pyexpander in case somebody wants to update the auto generated
 # faux variadic template code
