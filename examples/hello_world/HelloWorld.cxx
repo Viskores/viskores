@@ -49,28 +49,37 @@ struct HelloVTKMInterop
 
   vtkm::cont::Timer<DeviceAdapter> Timer;
 
+  std::vector< vtkm::Vec< T, 3 > > InputData;
   vtkm::cont::ArrayHandle< vtkm::Vec< T, 3 > > InHandle;
   vtkm::cont::ArrayHandle< vtkm::Vec< T, 3 > > OutCoords;
   vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::UInt8, 4 > > OutColors;
 
-  HelloVTKMInterop(vtkm::Int32 width, vtkm::Int32 height)
+  HelloVTKMInterop(vtkm::Int32 width, vtkm::Int32 height):
+    Dims(256,256),
+    ProgramId(),
+    VBOId(),
+    VAOId(),
+    ColorId(),
+    Timer(),
+    InputData(),
+    InHandle(),
+    OutCoords(),
+    OutColors()
   {
     int dim = 256;
-    std::vector< vtkm::Vec< T, 3 > > data;
-    data.reserve( static_cast<std::size_t>(dim) );
-
+    this->InputData.reserve( static_cast<std::size_t>(dim*dim) );
     for (int i = 0; i < dim; ++i )
     {
       for (int j = 0; j < dim; ++j )
       {
-        data.push_back( vtkm::Vec<T,3>( 2.f * i / dim - 1.f,
+      this->InputData.push_back( vtkm::Vec<T,3>( 2.f * i / dim - 1.f,
                                         0.f,
                                         2.f * j / dim - 1.f ) );
       }
     }
 
     this->Dims = vtkm::Vec< vtkm::Int32, 2 >( dim, dim );
-    this->InHandle = vtkm::cont::make_ArrayHandle(data);
+    this->InHandle = vtkm::cont::make_ArrayHandle(this->InputData);
 
     glGenVertexArrays( 1, &this->VAOId );
     glBindVertexArray( this->VAOId );
@@ -128,8 +137,8 @@ struct HelloVTKMInterop
       output[2] = input[2];
 
       color[0] = 0;
-      color[1] = 160 + (96 * vtkm::Sin( input[0] * 10.f + t ) );
-      color[2] = 160 + (96 * vtkm::Cos( input[2] * 5.f + t ) );
+      color[1] = 160 + static_cast<vtkm::UInt8>(96 * vtkm::Sin( input[0] * 10.f + t ) );
+      color[2] = 160 + static_cast<vtkm::UInt8>(96 * vtkm::Cos( input[2] * 5.f + t ) );
       color[3] = 255;
     }
   };
@@ -147,6 +156,11 @@ struct HelloVTKMInterop
   vtkm::opengl::TransferToOpenGL( this->OutColors, this->ColorId, DeviceAdapter() );
 
   this->render();
+  if(t > 10)
+  {
+    //after 10seconds quit the demo
+    exit(0);
+  }
   }
 };
 
