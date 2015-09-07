@@ -29,6 +29,7 @@
 #include <vtkm/UnaryPredicates.h>
 
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
+#include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
@@ -280,10 +281,17 @@ private:
   VTKM_CONT_EXPORT static void CopyPortal(const InputPortal &input,
                                          const OutputPortal &output)
   {
-    ::thrust::copy(thrust::cuda::par,
-                   IteratorBegin(input),
-                   IteratorEnd(input),
-                   IteratorBegin(output));
+    try
+    {
+      ::thrust::copy(thrust::cuda::par,
+                     IteratorBegin(input),
+                     IteratorEnd(input),
+                     IteratorBegin(output));
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
   }
 
   template<class InputPortal, class ValuesPortal, class OutputPortal>
@@ -315,13 +323,21 @@ private:
     typedef typename InputPortal::ValueType ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType,
                                             BinaryCompare> bop(binary_compare);
-    ::thrust::lower_bound(thrust::cuda::par,
-                          IteratorBegin(input),
-                          IteratorEnd(input),
-                          IteratorBegin(values),
-                          IteratorEnd(values),
-                          IteratorBegin(output),
-                          bop);
+
+    try
+    {
+      ::thrust::lower_bound(thrust::cuda::par,
+                            IteratorBegin(input),
+                            IteratorEnd(input),
+                            IteratorBegin(values),
+                            IteratorEnd(values),
+                            IteratorBegin(output),
+                            bop);
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
   }
 
   template<class InputPortal>
@@ -344,11 +360,19 @@ private:
     typedef typename InputPortal::ValueType ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
                                                       BinaryFunctor> bop(binary_functor);
-    return ::thrust::reduce(thrust::cuda::par,
-                            IteratorBegin(input),
-                            IteratorEnd(input),
-                            initialValue,
-                            bop);
+
+    try
+    {
+      return ::thrust::reduce(thrust::cuda::par,
+                              IteratorBegin(input),
+                              IteratorEnd(input),
+                              initialValue,
+                              bop);
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
   }
 
   template<class KeysPortal, class ValuesPortal,
@@ -376,14 +400,22 @@ private:
     typedef typename ValuesPortal::ValueType ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
                                                       BinaryFunctor> bop(binary_functor);
-    result_iterators = ::thrust::reduce_by_key(thrust::cuda::par,
-                                               IteratorBegin(keys),
-                                               IteratorEnd(keys),
-                                               IteratorBegin(values),
-                                               keys_out_begin,
-                                               values_out_begin,
-                                               binaryPredicate,
-                                               bop);
+
+    try
+    {
+      result_iterators = ::thrust::reduce_by_key(thrust::cuda::par,
+                                                 IteratorBegin(keys),
+                                                 IteratorEnd(keys),
+                                                 IteratorBegin(values),
+                                                 keys_out_begin,
+                                                 values_out_begin,
+                                                 binaryPredicate,
+                                                 bop);
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
 
     return static_cast<vtkm::Id>( ::thrust::distance(keys_out_begin,
                                                      result_iterators.first) );
@@ -418,26 +450,33 @@ private:
     //memory location, we have size two so that we can store the result
     ::thrust::system::cuda::vector< ValueType > sum(2);
 
-    ::thrust::copy_n(thrust::cuda::par,
-                     IteratorEnd(input) - 1,
-                     1,
-                     sum.begin()
-                     );
+    try
+    {
+      ::thrust::copy_n(thrust::cuda::par,
+                       IteratorEnd(input) - 1,
+                       1,
+                       sum.begin()
+                       );
 
-    vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
-                                                      BinaryFunctor> bop(binaryOp);
+      vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
+                                                        BinaryFunctor> bop(binaryOp);
 
-    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
-                                                            IteratorType;
-    IteratorType end = ::thrust::exclusive_scan(thrust::cuda::par,
-                                                IteratorBegin(input),
-                                                IteratorEnd(input),
-                                                IteratorBegin(output),
-                                                initialValue,
-                                                bop);
+      typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
+                                                              IteratorType;
+      IteratorType end = ::thrust::exclusive_scan(thrust::cuda::par,
+                                                  IteratorBegin(input),
+                                                  IteratorEnd(input),
+                                                  IteratorBegin(output),
+                                                  initialValue,
+                                                  bop);
 
-    //execute the binaryOp one last time on the device.
-    SumExclusiveScan <<<1,1>>> (sum[0], *(end-1), sum[1], bop);
+      //execute the binaryOp one last time on the device.
+      SumExclusiveScan <<<1,1>>> (sum[0], *(end-1), sum[1], bop);
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
     return sum[1];
   }
 
@@ -463,14 +502,23 @@ private:
     typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
                                                             IteratorType;
 
-    IteratorType end = ::thrust::inclusive_scan(thrust::cuda::par,
-                                                IteratorBegin(input),
-                                                IteratorEnd(input),
-                                                IteratorBegin(output),
-                                                bop);
+    try
+    {
+      IteratorType end = ::thrust::inclusive_scan(thrust::cuda::par,
+                                                  IteratorBegin(input),
+                                                  IteratorEnd(input),
+                                                  IteratorBegin(output),
+                                                  bop);
+      return *(end-1);
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+      return typename InputPortal::ValueType();
+    }
 
     //return the value at the last index in the array, as that is the sum
-    return *(end-1);
+
   }
 
   template<class ValuesPortal>
@@ -487,10 +535,17 @@ private:
     typedef typename ValuesPortal::ValueType ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType,
                                                        BinaryCompare> bop(binary_compare);
-    ::thrust::sort(vtkm_cuda_policy(),
-                   IteratorBegin(values),
-                   IteratorEnd(values),
-                   bop);
+    try
+    {
+      ::thrust::sort(vtkm_cuda_policy(),
+                     IteratorBegin(values),
+                     IteratorEnd(values),
+                     bop);
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
   }
 
 
@@ -510,11 +565,18 @@ private:
     typedef typename KeysPortal::ValueType ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType,
                                                        BinaryCompare> bop(binary_compare);
-    ::thrust::sort_by_key(thrust::cuda::par,
-                          IteratorBegin(keys),
-                          IteratorEnd(keys),
-                          IteratorBegin(values),
-                          bop);
+    try
+    {
+      ::thrust::sort_by_key(thrust::cuda::par,
+                            IteratorBegin(keys),
+                            IteratorEnd(keys),
+                            IteratorBegin(values),
+                            bop);
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
   }
 
   template<class ValueIterator,
@@ -532,14 +594,24 @@ private:
                                                             IteratorType;
 
     IteratorType outputBegin = IteratorBegin(output);
-    IteratorType newLast = ::thrust::copy_if(thrust::cuda::par,
-                                             valuesBegin,
-                                             valuesEnd,
-                                             IteratorBegin(stencil),
-                                             outputBegin,
-                                             unary_predicate);
 
-    return static_cast<vtkm::Id>( ::thrust::distance(outputBegin, newLast) );
+    try
+    {
+      IteratorType newLast = ::thrust::copy_if(thrust::cuda::par,
+                                               valuesBegin,
+                                               valuesEnd,
+                                               IteratorBegin(stencil),
+                                               outputBegin,
+                                               unary_predicate);
+      return static_cast<vtkm::Id>( ::thrust::distance(outputBegin, newLast) );
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+      return vtkm::Id(0);
+    }
+
+
   }
 
     template<class ValuePortal,
@@ -565,11 +637,19 @@ private:
   {
     typedef typename detail::IteratorTraits<ValuesPortal>::IteratorType
                                                             IteratorType;
-    IteratorType begin = IteratorBegin(values);
-    IteratorType newLast = ::thrust::unique(thrust::cuda::par,
-                                            begin,
-                                            IteratorEnd(values));
-    return static_cast<vtkm::Id>( ::thrust::distance(begin, newLast) );
+    try
+    {
+      IteratorType begin = IteratorBegin(values);
+      IteratorType newLast = ::thrust::unique(thrust::cuda::par,
+                                              begin,
+                                              IteratorEnd(values));
+      return static_cast<vtkm::Id>( ::thrust::distance(begin, newLast) );
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+      return vtkm::Id(0);
+    }
   }
 
   template<class ValuesPortal, class BinaryCompare>
@@ -582,12 +662,20 @@ private:
 
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType,
                                                        BinaryCompare> bop(binary_compare);
-    IteratorType begin = IteratorBegin(values);
-    IteratorType newLast = ::thrust::unique(thrust::cuda::par,
-                                            begin,
-                                            IteratorEnd(values),
-                                            bop);
-    return static_cast<vtkm::Id>( ::thrust::distance(begin, newLast) );
+    try
+    {
+      IteratorType begin = IteratorBegin(values);
+      IteratorType newLast = ::thrust::unique(thrust::cuda::par,
+                                              begin,
+                                              IteratorEnd(values),
+                                              bop);
+      return static_cast<vtkm::Id>( ::thrust::distance(begin, newLast) );
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+      return vtkm::Id(0);
+    }
   }
 
   template<class InputPortal, class ValuesPortal, class OutputPortal>
@@ -596,14 +684,20 @@ private:
                          const ValuesPortal &values,
                          const OutputPortal &output)
   {
-    ::thrust::upper_bound(thrust::cuda::par,
-                          IteratorBegin(input),
-                          IteratorEnd(input),
-                          IteratorBegin(values),
-                          IteratorEnd(values),
-                          IteratorBegin(output));
+    try
+    {
+      ::thrust::upper_bound(thrust::cuda::par,
+                            IteratorBegin(input),
+                            IteratorEnd(input),
+                            IteratorBegin(values),
+                            IteratorEnd(values),
+                            IteratorBegin(output));
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
   }
-
 
   template<class InputPortal, class ValuesPortal, class OutputPortal,
            class BinaryCompare>
@@ -616,13 +710,20 @@ private:
 
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType,
                                                        BinaryCompare> bop(binary_compare);
-    ::thrust::upper_bound(thrust::cuda::par,
-                          IteratorBegin(input),
-                          IteratorEnd(input),
-                          IteratorBegin(values),
-                          IteratorEnd(values),
-                          IteratorBegin(output),
-                          bop);
+    try
+    {
+      ::thrust::upper_bound(thrust::cuda::par,
+                            IteratorBegin(input),
+                            IteratorEnd(input),
+                            IteratorBegin(values),
+                            IteratorEnd(values),
+                            IteratorBegin(output),
+                            bop);
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
   }
 
   template<class InputPortal, class OutputPortal>
@@ -630,12 +731,19 @@ private:
   void UpperBoundsPortal(const InputPortal &input,
                          const OutputPortal &values_output)
   {
-    ::thrust::upper_bound(thrust::cuda::par,
-                          IteratorBegin(input),
-                          IteratorEnd(input),
-                          IteratorBegin(values_output),
-                          IteratorEnd(values_output),
-                          IteratorBegin(values_output));
+    try
+    {
+      ::thrust::upper_bound(thrust::cuda::par,
+                            IteratorBegin(input),
+                            IteratorEnd(input),
+                            IteratorBegin(values_output),
+                            IteratorEnd(values_output),
+                            IteratorBegin(values_output));
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
   }
 
 //-----------------------------------------------------------------------------
