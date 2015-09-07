@@ -24,6 +24,8 @@ set(headers
   DeviceAdapterAlgorithmCuda.h
   DeviceAdapterAlgorithmThrust.h
   DeviceAdapterTagCuda.h
+  MakeThrustIterator.h
+  ThrustExceptionHandler.h
   )
 
 vtkm_declare_headers(CUDA ${headers})
