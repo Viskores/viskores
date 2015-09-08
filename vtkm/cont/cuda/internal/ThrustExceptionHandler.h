@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_cuda_interal_ThrustExecptionHandler_h
 #define vtk_m_cont_cuda_interal_ThrustExecptionHandler_h
 
-#include <vtkm/Types.h>
+#include <vtkm/internal/ExportMacros.h>
 #include <vtkm/cont/ErrorControlOutOfMemory.h>
 #include <vtkm/cont/ErrorExecution.h>
 
@@ -34,7 +34,7 @@ namespace cuda {
 namespace internal
 {
 
-void throwAsVTKmException()
+static inline void throwAsVTKmException()
 {
   try
   {
