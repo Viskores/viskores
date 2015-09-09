@@ -38,6 +38,9 @@ template<typename T,
          >
 class ExecutionWholeArray : public vtkm::exec::ExecutionObjectBase
 {
+  typedef vtkm::cont::ArrayHandle<T,StorageTag> HandleType;
+  typedef typename HandleType::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
+
 public:
   VTKM_CONT_EXPORT
   ExecutionWholeArray( ):
@@ -46,17 +49,22 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  ExecutionWholeArray( vtkm::cont::ArrayHandle<T,StorageTag>& handle ):
+  ExecutionWholeArray( HandleType& handle ):
     Portal( handle.PrepareForInPlace( DeviceAdapterTag()) )
   {
   }
 
   VTKM_CONT_EXPORT
-  ExecutionWholeArray( vtkm::cont::ArrayHandle<T,StorageTag>& handle,
+  ExecutionWholeArray( HandleType& handle,
                        vtkm::Id length ):
     Portal( handle.PrepareForOutput( length, DeviceAdapterTag()) )
   {
   }
+
+  typedef typename PortalType::ValueType ValueType;
+
+  VTKM_EXEC_EXPORT
+  vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
 
   VTKM_EXEC_EXPORT
   T Get(vtkm::Id index) const { return this->Portal.Get(index); }
@@ -65,8 +73,6 @@ public:
   void Set(vtkm::Id index, const T& t) const { return this->Portal.Set(index, t); }
 
 private:
-  typedef vtkm::cont::ArrayHandle<T,StorageTag> HandleType;
-  typedef typename HandleType::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
   PortalType Portal;
 };
 
@@ -81,6 +87,9 @@ template<typename T,
          >
 class ExecutionWholeArrayConst : public vtkm::exec::ExecutionObjectBase
 {
+  typedef vtkm::cont::ArrayHandle<T,StorageTag> HandleType;
+  typedef typename HandleType::template ExecutionTypes<DeviceAdapterTag>::PortalConst PortalType;
+
 public:
   VTKM_CONT_EXPORT
   ExecutionWholeArrayConst( ):
@@ -89,17 +98,20 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  ExecutionWholeArrayConst( const vtkm::cont::ArrayHandle<T,StorageTag>& handle):
+  ExecutionWholeArrayConst( const HandleType& handle):
     Portal( handle.PrepareForInput( DeviceAdapterTag() ) )
   {
   }
+
+  typedef typename PortalType::ValueType ValueType;
+
+  VTKM_EXEC_EXPORT
+  vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
 
   VTKM_EXEC_EXPORT
   T Get(vtkm::Id index) const { return this->Portal.Get(index); }
 
 private:
-  typedef vtkm::cont::ArrayHandle<T,StorageTag> HandleType;
-  typedef typename HandleType::template ExecutionTypes<DeviceAdapterTag>::PortalConst PortalType;
   PortalType Portal;
 };
 
