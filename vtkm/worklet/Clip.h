@@ -28,11 +28,13 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/Timer.h>
 
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/exec/FunctorBase.h>
 
-#define COMBINE_LOWERBOUND_AMEND 0
+
+#define COMBINE_LOWERBOUND_AMEND
 
 namespace vtkm {
 namespace worklet {
@@ -424,7 +426,7 @@ public:
         if (lt(this->UniqueNewPoints.Get(mid), current))
         {
           first = ++mid;
-          count = step - 1;
+          count -= step + 1;
         }
         else
         {
@@ -455,7 +457,7 @@ public:
                       IdPortal connectivity)
       : NewPointsConnectivityReverseMap(newPointsConnectivityReverseMap),
         ConnectivityValues(connectivityValues),
-        NewPointsStartIndex(newPointsOffset),
+        NewPointsOffset(newPointsOffset),
         Connectivity(connectivity)
     {
     }
@@ -618,6 +620,7 @@ public:
 
 
     // Step 4. update the connectivity array with indexes to the new, unique points
+    vtkm::cont::Timer<DeviceAdapter> timer;
 #if defined(COMBINE_LOWERBOUND_AMEND)
     AmendConnectivity computeNewPointsConnectivity(
         newPoints.PrepareForInput(device),
@@ -628,16 +631,16 @@ public:
     Algorithm::Schedule(computeNewPointsConnectivity, total.NumberOfNewPoints);
 #else
     vtkm::cont::ArrayHandle<vtkm::Id> newPointsIndices;
-    Algorithm::LowerBounds(uniqueNewPoints, newPointsInfo, newPointsIndices,
+    Algorithm::LowerBounds(uniqueNewPoints, newPoints, newPointsIndices,
                            EdgeInterpolation::LessThanOp());
     Algorithm::Schedule(
-        AmendConnectivity(newPointsConnectivityMap.PrepareForInput(device),
+        AmendConnectivity(newPointsConnectivityReverseMap.PrepareForInput(device),
                           newPointsIndices.PrepareForInput(device),
                           this->NewPointsOffset,
                           connectivity.PrepareForInPlace(device)),
         total.NumberOfNewPoints);
 #endif
-
+    std::cout << "step 4 time: " << timer.GetElapsedTime() << std::endl;
 
     vtkm::cont::CellSetExplicit<> output;
     output.Fill(shapes, numIndices, connectivity);
