@@ -63,7 +63,7 @@ typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, PointHandleType> PointV
 typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, IdHandleType>    IdPermType;
 typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, FloatHandleType> FloatPermType;
 
-
+#ifdef DEBUG_PRINT
 //----------------------------------------------------------------------------
 template<typename T, typename S = VTKM_DEFAULT_STORAGE_TAG>
 void OutputArrayDebug(const vtkm::cont::ArrayHandle<T,S> &outputArray, const std::string &name)
@@ -94,25 +94,11 @@ void OutputArrayDebug(const vtkm::cont::ArrayHandle< vtkm::Vec<T,S> > &outputArr
   }
   std::cout << std::endl;
 }
-/*
-//----------------------------------------------------------------------------
-void OutputArrayDebug(const PointVecPermType &outputArray, const std::string &name)
-{
-  typedef PointVecPermType::PortalConstControl PortalConstType;
-  PortalConstType readPortal = outputArray.GetPortalConstControl();
-  vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
-  std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
-  for (int i=0; i<outputArray.GetNumberOfValues(); ++i) {
-    std::cout << outputArray.GetPortalConstControl().Get(i);
-  }
-  std::cout << std::endl;
-}
-*/
 //----------------------------------------------------------------------------
 template<typename I, typename T, int S>
 void OutputArrayDebug(const vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S> > > &outputArray, const std::string &name)
 {
-  typedef vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S> > >::PortalConstControl PortalConstType;
+  typedef typename vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S> > >::PortalConstControl PortalConstType;
   PortalConstType readPortal = outputArray.GetPortalConstControl();
   vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
   std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
@@ -121,6 +107,20 @@ void OutputArrayDebug(const vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::Ar
   }
   std::cout << std::endl;
 }
+
+#else
+template<typename T, typename S = VTKM_DEFAULT_STORAGE_TAG>
+void OutputArrayDebug(const vtkm::cont::ArrayHandle<T,S> &outputArray, const std::string &name)
+{}
+//----------------------------------------------------------------------------
+template<typename T, int S>
+void OutputArrayDebug(const vtkm::cont::ArrayHandle< vtkm::Vec<T,S> > &outputArray, const std::string &name)
+{}
+//----------------------------------------------------------------------------
+template<typename I, typename T, int S>
+void OutputArrayDebug(const vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S> > > &outputArray, const std::string &name)
+{}
+#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -608,6 +608,7 @@ namespace vtkm { namespace worklet
           vtkm::exec::ExecutionWholeArray<vtkm::Float32>(scalarSplatOutput),
           dummy);
         END_TIMER_BLOCK(UpdateVoxelSplats)
+        OutputArrayDebug(scalarSplatOutput, "scalarSplatOutput");
 
         uniqueVoxelIds.ReleaseResources();
         voxelSplatSums.ReleaseResources();
