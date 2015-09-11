@@ -121,11 +121,11 @@ public:
                   vtkm::Vec<vtkm::Id,ItemTupleLength> &ids) const
   {
     this->PointToCell.BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    vtkm::Id numIndices = this->GetNumberOfIndices(index);
+    vtkm::Id numIndices = this->GetNumberOfPointsInCell(index);
     vtkm::Id start =
-        this->PointToCell.IndexOffset.GetPortalConstControl().Get(index);
+        this->PointToCell.IndexOffsets.GetPortalConstControl().Get(index);
     for (vtkm::IdComponent i=0; i<numIndices && i<ItemTupleLength; i++)
-      ids[i] = this->Connectivity.GetPortalConstControl().Get(start+i);
+      ids[i] = this->PointToCell.Connectivity.GetPortalConstControl().Get(start+i);
   }
 
   /// First method to add cells -- one at a time.
