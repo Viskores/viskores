@@ -65,23 +65,26 @@ void TestTetrahedralizeUniformGrid()
   std::cout << "Testing TetrahedralizeUniformGrid Filter" << std::endl;
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
-  // Create the input uniform cell set, populated with index type
+  // Create the input uniform cell set
   vtkm::Id3 dims(4,4,4);
-  vtkm::cont::DataSet dataSet = MakeTetrahedralizeTestDataSet(dims);
+  vtkm::cont::DataSet inDataSet = MakeTetrahedralizeTestDataSet(dims);
 
-  // Set the number of points supporting the cell set
-  const vtkm::Id nVerts = (dims[0] + 1) * (dims[1] + 1) * (dims[2] + 1); 
+  // Set number of cells and vertices in input dataset
+  vtkm::Id numberOfCells = dims[0] * dims[1] * dims[2];
+  vtkm::Id numberOfVertices = (dims[0] + 1) * (dims[1] + 1) * (dims[2] + 1);
 
-  // Create the explicit cell set without the cells which is empty
-  vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells", 3);
+  // Create the output dataset which will get a CellSetExplicit
+  vtkm::cont::DataSet outDataSet;
+  vtkm::cont::CellSetExplicit<> cellSet(numberOfVertices, "cells", 3);
+  outDataSet.AddCellSet(cellSet);
 
-  // Get the points from the input dataset and copy to the output dataset (PKF)
-
-  vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> tetrahedralizeFilter(dims, dataSet, cellSet);
+  vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> 
+                 tetrahedralizeFilter(dims, inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
   // Five tets are created for every hex cell
-  VTKM_TEST_ASSERT(test_equal(cellSet.GetNumberOfCells(), 64 * 5),
+  VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >().GetNumberOfCells(),
+                   numberOfCells * 5),
                    "Wrong result for Tetrahedralize filter");
 }
 
