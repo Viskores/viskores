@@ -29,14 +29,44 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/ArrayHandleTransform.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/DynamicArrayHandle.h>
 
+#include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #define __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
 
+// start timer
+# define START_TIMER_BLOCK(name) \
+  vtkm::cont::Timer<DeviceAdapter> timer_##name;
+
+// stop timer
+# define END_TIMER_BLOCK(name) \
+  std::cout << #name " : time elapsed : " << timer_##name.GetElapsedTime() << "\n";
+
+
+typedef vtkm::cont::ArrayHandle<vtkm::Float64> DoubleHandleType;
+typedef vtkm::cont::ArrayHandle<vtkm::Float32> FloatHandleType;
+typedef vtkm::cont::ArrayHandle<vtkm::Id3>     VecHandleType;
+typedef vtkm::cont::ArrayHandle<vtkm::Id>      IdHandleType;
+//
+typedef vtkm::Vec<vtkm::Float32, 3>           FloatVec;
+typedef vtkm::Vec<vtkm::Float64, 3>           PointType;
+typedef vtkm::cont::ArrayHandle<PointType>    PointHandleType;
+//
+typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, VecHandleType>   VecPermType;
+typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, PointHandleType> PointVecPermType;
+typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, IdHandleType>    IdPermType;
+typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, FloatHandleType> FloatPermType;
+
+
+//----------------------------------------------------------------------------
 template<typename T, typename S = VTKM_DEFAULT_STORAGE_TAG>
-void OutputArrayDebug(vtkm::cont::ArrayHandle<T,S> &outputArray, const std::string &name)
+void OutputArrayDebug(const vtkm::cont::ArrayHandle<T,S> &outputArray, const std::string &name)
 {
   typedef T ValueType;
   typedef vtkm::cont::internal::Storage<T,S> StorageType;
@@ -45,581 +75,693 @@ void OutputArrayDebug(vtkm::cont::ArrayHandle<T,S> &outputArray, const std::stri
   vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
   std::vector<ValueType> result(readPortal.GetNumberOfValues());
   std::copy(iterators.GetBegin(), iterators.GetEnd(), result.begin());
-  std::cout << name.c_str() << "\n";
-  std::copy(result.begin(), result.end(), std::ostream_iterator<ValueType>(std::cout, " "));  std::cout << std::endl;
+  std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
+  std::copy(result.begin(), result.end(), std::ostream_iterator<ValueType>(std::cout, " "));
   std::cout << std::endl;
 }
 
-std::ostream& operator<<(std::ostream& os, const vtkm::Id3& v)
-{
-    os << '{' << v[0] << ',' << v[1] << ',' << v[2] << "}, ";
-    return os;
-}
-
+//----------------------------------------------------------------------------
 template<typename T, int S>
-void OutputArrayDebug(vtkm::cont::ArrayHandle< vtkm::Vec<T,S> > &outputArray, const std::string &name)
+void OutputArrayDebug(const vtkm::cont::ArrayHandle< vtkm::Vec<T,S> > &outputArray, const std::string &name)
 {
   typedef T ValueType;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id3>::PortalConstControl PortalConstType;
+  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T, S> >::PortalConstControl PortalConstType;
   PortalConstType readPortal = outputArray.GetPortalConstControl();
   vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
-  std::vector<vtkm::Id3> result(readPortal.GetNumberOfValues());
-  std::copy(iterators.GetBegin(), iterators.GetEnd(), result.begin());
-  std::cout << name.c_str() << "\n";
+  std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
   for (int i=0; i<outputArray.GetNumberOfValues(); ++i) {
     std::cout << outputArray.GetPortalConstControl().Get(i);
   }
   std::cout << std::endl;
 }
-
-namespace vtkm
+/*
+//----------------------------------------------------------------------------
+void OutputArrayDebug(const PointVecPermType &outputArray, const std::string &name)
 {
-namespace worklet
+  typedef PointVecPermType::PortalConstControl PortalConstType;
+  PortalConstType readPortal = outputArray.GetPortalConstControl();
+  vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
+  std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
+  for (int i=0; i<outputArray.GetNumberOfValues(); ++i) {
+    std::cout << outputArray.GetPortalConstControl().Get(i);
+  }
+  std::cout << std::endl;
+}
+*/
+//----------------------------------------------------------------------------
+template<typename I, typename T, int S>
+void OutputArrayDebug(const vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S> > > &outputArray, const std::string &name)
+{
+  typedef vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S> > >::PortalConstControl PortalConstType;
+  PortalConstType readPortal = outputArray.GetPortalConstControl();
+  vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
+  std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
+  for (int i = 0; i<outputArray.GetNumberOfValues(); ++i) {
+    std::cout << outputArray.GetPortalConstControl().Get(i);
+  }
+  std::cout << std::endl;
+}
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+namespace vtkm { namespace worklet
 {
 
-  template<typename DeviceAdapter>
-  struct GaussianSplatter
-  {
-
-    //Return True if the bounds range of the first vector argument
-    //is less than or equal to that of the second vector argument; otherwise, False
-    struct DimBoundsCompare
+    template<typename DeviceAdapter>
+    struct GaussianSplatterFilterUniformGrid
     {
-       template<typename T>
-       VTKM_EXEC_CONT_EXPORT
-       bool operator()(const vtkm::Vec<T,2> &a,
-                       const vtkm::Vec<T,2> &b) const
-       {
-           bool isLessThan = false;
-           if((a[1] - a[0]) <= (b[1] - b[0]))
-           {
-             isLessThan = true;
-           }
-           return isLessThan;
-       }
-    };
 
-    //Return a "local" Id of a voxel within a splat point's footprint.
-    //A splat point that affects 5 neighboring voxel gridpoints would
-    //have local Ids 0,1,2,3,4
-    class ComputeLocalNeighborId : public vtkm::worklet::WorkletMapField
-    {
-    public:
-      typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
-      typedef void ExecutionSignature(_1, _2, WorkIndex, _3);
+      //-----------------------------------------------------------------------
+      // zero an array
+      //-----------------------------------------------------------------------
+      struct zero_voxel : public vtkm::worklet::WorkletMapField {
+        typedef void ControlSignature(FieldIn<>, FieldOut<>);
+        typedef void ExecutionSignature(_1, WorkIndex, _2);
+        //
+        VTKM_CONT_EXPORT 
+        zero_voxel() {}
 
-      VTKM_CONT_EXPORT
-      ComputeLocalNeighborId() {}
-
-       template<typename T>
-       VTKM_EXEC_CONT_EXPORT
-       void operator()(const T &modulus, const T &splatPointId,
-                    const vtkm::Id &index, T &localId) const
-       {
-           localId = (index - splatPointId) % modulus;
-//         std::cout << "localId = (index - splatPointId) % modulus " << localId << " " << index << " " << splatPointId << " " << modulus << "\n";
-       }
-    };
-
-    //For each volume dimension, set the spacing and splat distance properties
-    class ConfigureVolumeProps : public vtkm::worklet::WorkletMapField
-    {
-        private:
-            vtkm::Float64 MaxDist;
-
-        public:
-            typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>, FieldOut<>);
-            typedef void ExecutionSignature(_1, _2, _3, _4);
-
-            VTKM_CONT_EXPORT
-            ConfigureVolumeProps() {}
-
-            VTKM_CONT_EXPORT
-            ConfigureVolumeProps(const vtkm::Float64 &c) : MaxDist(c) {}
-
-            template<typename S, typename U, typename T>
-            VTKM_EXEC_CONT_EXPORT
-            void operator()(const S &dimBounds,
-                            const U &sampleDimValue,
-                            T &spacing,
-                            T &splatDistance) const
-            {
-                //Set the spacing
-                spacing = static_cast<T>((dimBounds[1] - dimBounds[0]) / (sampleDimValue - 1));
-                if (spacing <= T(0.0))
-                {
-                  spacing = T(1.0);
-                }
-
-                //Set the splat distance
-                splatDistance = static_cast<T>(this->MaxDist / spacing);
-            }
+        template<typename T>
+        VTKM_EXEC_CONT_EXPORT
+        void operator()(const vtkm::Id &, const vtkm::Id &index, T &voxel_value) const
+        {
+          voxel_value = T(0);
+        }
       };
 
-      //Return the splat footprint/neighborhood of each sample point, as
-      //represented by min and max boundaries in each dimension.  Also
-      //return the size of this footprint and the gridpoint coordinates
-      //of the splat point.
+      //-----------------------------------------------------------------------
+      // Return the splat footprint/neighborhood of each sample point, as
+      // represented by min and max boundaries in each dimension.  Also
+      // return the size of this footprint and the gridpoint coordinates
+      // of the splat point.
       class GetFootprint : public vtkm::worklet::WorkletMapField
       {
-          private:
-              vtkm::Vec<vtkm::Float64, 3> Spacing;
-              vtkm::Vec<vtkm::Float64, 3> SplatDist;
-              vtkm::Vec<vtkm::Float64, 3> Origin;
-              vtkm::Id3 VolumeDimensions;
+      private:
+        vtkm::Vec<vtkm::Float64, 3> Spacing;
+        vtkm::Vec<vtkm::Float64, 3> SplatDist;
+        vtkm::Vec<vtkm::Float64, 3> Origin;
+        vtkm::Id3 VolumeDimensions;
 
-          public:
-              typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>,
-                                            FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
-              typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
+      public:
+        typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>,
+          FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
+        typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
 
-              VTKM_CONT_EXPORT
-              GetFootprint(const vtkm::Vec<vtkm::Float64, 3> &s,
-                           const vtkm::Vec<vtkm::Float64, 3> &sd,
-                           const vtkm::Vec<vtkm::Float64, 3> &o,
-                           const vtkm::Id3 &dim)
-                            : Spacing(s), SplatDist(sd), Origin(o),
-                              VolumeDimensions(dim) { }
+        VTKM_CONT_EXPORT
+          GetFootprint(
+            const vtkm::Vec<vtkm::Float64, 3> &o,
+            const vtkm::Vec<vtkm::Float64, 3> &s,
+            const vtkm::Vec<vtkm::Float64, 3> &sd,
+            const vtkm::Id3 &dim)
+          : Origin(o), Spacing(s), SplatDist(sd), 
+          VolumeDimensions(dim) { }
 
-              template<typename T>
-              VTKM_EXEC_CONT_EXPORT
-              void operator()(const T &xValue,
-                              const T &yValue,
-                              const T &zValue,
-                              vtkm::Id3 &splatPoint,
-                              vtkm::Id3 &minFootprint,
-                              vtkm::Id3 &maxFootprint,
-                              vtkm::Id &footprintSize) const
-              {
-                  vtkm::Id3 splat, min, max;
-                  vtkm::Vec<vtkm::Float64, 3> sample = vtkm::make_Vec(xValue, yValue, zValue);
-                  vtkm::Id size = 1;
-                  for(int i = 0; i < 3; i++)
-                  {
-                      splat[i] = static_cast<vtkm::Id>((sample[i] - this->Origin[i]) / this->Spacing[i]);
-                      min[i] = static_cast<vtkm::Id>(floor(static_cast<double>(splat[i])-this->SplatDist[i]));
-                      max[i] = static_cast<vtkm::Id>(ceil(static_cast<double>(splat[i])+this->SplatDist[i]));
-                      if( min[i] < 0 )
-                      {
-                          min[i] = 0;
-                      }
-                      if( max[i] >= this->VolumeDimensions[i] )
-                      {
-                          max[i] = this->VolumeDimensions[i] - 1;
-                      }
-                      size = size * (max[i] - min[i]);
-                  }
-                  splatPoint = splat;
-                  minFootprint = min;
-                  maxFootprint = max;
-                  footprintSize = size;
-              }
-        };
-
-        //Compute the Gaussian splatter value of the input voxel
-        //gridpoint.  The Id of this point within the volume is
-        //also determined.
-        class GetSplatValue : public vtkm::worklet::WorkletMapField
+        template<typename T, typename T2>
+        VTKM_EXEC_CONT_EXPORT
+          void operator()(
+            const T &xValue,
+            const T &yValue,
+            const T &zValue,
+            const T2 &rValue,
+            vtkm::Vec<vtkm::Float64, 3> &splatPoint,
+            vtkm::Id3 &minFootprint,
+            vtkm::Id3 &maxFootprint,
+            vtkm::Id &footprintSize) const
         {
-            private:
-                vtkm::Vec<vtkm::Float64, 3> Spacing;
-                vtkm::Vec<vtkm::Float64, 3> Origin;
-                vtkm::Id3 VolumeDim;
-                vtkm::Float64 Radius2;
-                vtkm::Float64 ExponentFactor;
-                vtkm::Float64 ScalingFactor;
-
-            public:
-                typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>,
-                                              FieldIn<>, FieldIn<>, FieldOut<>,
-                                              FieldOut<>);
-                typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
-
-                VTKM_CONT_EXPORT
-                GetSplatValue(const vtkm::Vec<vtkm::Float64, 3> &s,
-                              const vtkm::Vec<vtkm::Float64, 3> &orig,
-                              const vtkm::Id3 &dim,
-                              const vtkm::Float64 &rad,
-                              const vtkm::Float64 &ef,
-                              const vtkm::Float64 &sf)
-                              : Spacing(s), Origin(orig), VolumeDim(dim),
-                                Radius2(rad), ExponentFactor(ef), ScalingFactor(sf) {}
-
-                template<typename T>
-                VTKM_EXEC_CONT_EXPORT
-                void operator()(const T &splatPoint,
-                                const T &minBound,
-                                const T &maxBound,
-                                const vtkm::Id splatPointId,
-                                const vtkm::Id localNeighborId,
-                                vtkm::Id &neighborVoxelId,
-                                vtkm::Float64 &splatValue) const
-                {
-                    vtkm::Id yRange = maxBound[1] - minBound[1];
-                    vtkm::Id xRange = maxBound[0] - minBound[0];
-                    vtkm::Id divisor = yRange * xRange;
-                    vtkm::Id i = localNeighborId / divisor;
-                    vtkm::Id remainder = localNeighborId % divisor;
-                    vtkm::Id j = remainder / xRange;
-                    vtkm::Id k = remainder % xRange;
-                    vtkm::Id3 neighbor;
-//                  std::cout <<"Splat kernel, {i,j,k} " << i << "," << j << "," << k << "\n";
-//                  neighbor[2] = this->Origin[2] + this->Spacing[2]*i;
-//                  neighbor[1] = this->Origin[1] + this->Spacing[1]*j;
-//                  neighbor[0] = this->Origin[0] + this->Spacing[0]*k;
-                  neighbor[2] = splatPoint[2] + (i-(maxBound[2]-minBound[2])/2);
-                  neighbor[1] = splatPoint[1] + (j-yRange/2);
-                  neighbor[0] = splatPoint[0] + (k-xRange/2);
-
-                    //Compute Gaussian splat value
-                    splatValue = 0.0;
-                    vtkm::Float64 dist2 = ((neighbor[0]-splatPoint[0])*(neighbor[0]-splatPoint[0])*this->Spacing[0]*this->Spacing[0] +
-                                           (neighbor[1]-splatPoint[1])*(neighbor[1]-splatPoint[1])*this->Spacing[1]*this->Spacing[1] +
-                                           (neighbor[2]-splatPoint[2])*(neighbor[2]-splatPoint[2])*this->Spacing[2]*this->Spacing[2]);
-
-                    if(dist2 <= this->Radius2)
-                    {
-                        splatValue = this->ScalingFactor *
-                                     vtkm::Exp((this->ExponentFactor*(dist2)/this->Radius2));
-
-                    }
-                    neighborVoxelId = (neighbor[0]*VolumeDim[1]*VolumeDim[2]) +
-                                      (neighbor[1]*VolumeDim[2]) + neighbor[2];
-                  if (neighborVoxelId<0) neighborVoxelId = 0;
-                  else if (neighborVoxelId>=VolumeDim[0]*VolumeDim[1]*VolumeDim[2]) neighborVoxelId = VolumeDim[0]*VolumeDim[1]*VolumeDim[2]-1;
-//                  std::cout << "localId = (index - splatPointId) % modulus " << localId << " " << index << " " << splatPointId << " " << modulus << "\n";
-                }
-          };
-
-      //Given an index of a gridpoint within the volume bounding
-      //box, return the corresponding coordinates of this point.
-      class GetVolumeCoords : public vtkm::worklet::WorkletMapField
-      {
-          private:
-            vtkm::Id3 Dimensions;
-
-          public:
-
-            typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldOut<>);
-            typedef void ExecutionSignature(_1, _2, _3);
-
-            VTKM_CONT_EXPORT
-            GetVolumeCoords(const vtkm::Id3 &d) : Dimensions(d) {}
-
-            template<typename T>
-            VTKM_EXEC_CONT_EXPORT
-            void operator()(const vtkm::Id &index,
-                            T &voxelCoords,
-                            vtkm::Float64 &splatValue) const
-            {
-                vtkm::Id divisor = Dimensions[1] * Dimensions[2];
-                vtkm::Id x = index / divisor;
-                vtkm::Id remainder = index % divisor;
-                vtkm::Id y = remainder / Dimensions[2];
-                vtkm::Id z = remainder % Dimensions[2];
-                voxelCoords = vtkm::make_Vec(x, y, z);
-                splatValue = 0.0;
+          PointType splat, min, max;
+          vtkm::Vec<vtkm::Float64, 3> sample = vtkm::make_Vec(xValue, yValue, zValue);
+          vtkm::Vec<vtkm::Float64, 3> radius = vtkm::make_Vec(rValue, rValue, rValue);
+          vtkm::Id size = 1;
+          for (int i = 0; i < 3; i++)
+          {
+            splat[i] = (sample[i] - this->Origin[i]) / this->Spacing[i];
+            min[i] = static_cast<vtkm::Id>(ceil(static_cast<double>(splat[i]) - rValue));
+            max[i] = static_cast<vtkm::Id>(floor(static_cast<double>(splat[i]) + rValue));
+            if (min[i] < 0) {
+              min[i] = 0;
             }
+            if (max[i] >= this->VolumeDimensions[i]) {
+              max[i] = this->VolumeDimensions[i] - 1;
+            }
+            size = size * (1 + max[i] - min[i]);
+          }
+          splatPoint = splat;
+          minFootprint = min;
+          maxFootprint = max;
+          footprintSize = size;
+        }
       };
 
-      //Scatter worklet that writes a splat value into the larger,
-      //master splat value array, using the splat value's voxel Id
-      //as an index.
+      //-----------------------------------------------------------------------
+      // Return a "local" Id of a voxel within a splat point's footprint.
+      // A splat point that affects 5 neighboring voxel gridpoints would
+      // have local Ids 0,1,2,3,4
+      class ComputeLocalNeighborId : public vtkm::worklet::WorkletMapField
+      {
+      public:
+        typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
+        typedef void ExecutionSignature(_1, _2, _3, WorkIndex, _4);
+
+        VTKM_CONT_EXPORT
+          ComputeLocalNeighborId() {}
+
+        template<typename T>
+        VTKM_EXEC_CONT_EXPORT
+          void operator()(const T &modulus, const T &offset, const T &splatPointId,
+            const vtkm::Id &index, T &localId) const
+        {
+          localId = (index - offset) % modulus;
+        }
+      };
+
+      //-----------------------------------------------------------------------
+      //Compute the Gaussian splatter value of the input voxel
+      //gridpoint.  The Id of this point within the volume is
+      //also determined.
+      class GetSplatValue : public vtkm::worklet::WorkletMapField
+      {
+      private:
+        vtkm::Vec<vtkm::Float64, 3> Spacing;
+        vtkm::Vec<vtkm::Float64, 3> Origin;
+        vtkm::Id3 VolumeDim;
+        vtkm::Float64 Radius2;
+        vtkm::Float64 ExponentFactor;
+        vtkm::Float64 ScalingFactor;
+
+      public:
+        typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>,
+          FieldIn<>, FieldIn<>, FieldOut<>,
+          FieldOut<>);
+        typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
+
+        VTKM_CONT_EXPORT
+          GetSplatValue(
+            const vtkm::Vec<vtkm::Float64, 3> &orig,
+            const vtkm::Vec<vtkm::Float64, 3> &s,
+            const vtkm::Id3 &dim,
+            const vtkm::Float64 &ef,
+            const vtkm::Float64 &sf)
+          : Spacing(s), Origin(orig), VolumeDim(dim),
+          ExponentFactor(ef), ScalingFactor(sf) {}
+
+        template<typename T, typename T2, typename P>
+        VTKM_EXEC_CONT_EXPORT
+          void operator()(
+            const vtkm::Vec<P, 3> &splatPoint,
+            const T &minBound,
+            const T &maxBound,
+            const T2 &radius,
+            const vtkm::Id splatPointId,
+            const vtkm::Id localNeighborId,
+            vtkm::Id &neighborVoxelId,
+            vtkm::Float32 &splatValue) const
+        {
+          vtkm::Id zRange = 1 + maxBound[2] - minBound[2];
+          vtkm::Id yRange = 1 + maxBound[1] - minBound[1];
+          vtkm::Id xRange = 1 + maxBound[0] - minBound[0];
+          vtkm::Id divisor = yRange * xRange;
+          vtkm::Id i = localNeighborId / divisor;
+          vtkm::Id remainder = localNeighborId % divisor;
+          vtkm::Id j = remainder / xRange;
+          vtkm::Id k = remainder % xRange;
+          vtkm::Float64 radius2 = radius*radius;
+          vtkm::Id3     voxel = minBound + vtkm::make_Vec(k, j, i);
+          PointType dist = vtkm::make_Vec(
+            (splatPoint[0] - voxel[0])*Spacing[0],
+            (splatPoint[1] - voxel[1])*Spacing[0],
+            (splatPoint[2] - voxel[2])*Spacing[0]
+          );
+          vtkm::Float64 dist2 = vtkm::dot(dist,dist);
+
+          // std::cout <<"Splat kernel, {i,j,k} " << i << "," << j << "," << k << "\n";
+          // Compute Gaussian splat value
+          if (dist2 <= radius2) {
+            splatValue = this->ScalingFactor *
+              vtkm::Exp((this->ExponentFactor*(dist2) / radius2));
+          }
+          else {
+            splatValue = 0.0;
+          }
+          neighborVoxelId = (voxel[2] * VolumeDim[0] * VolumeDim[1]) +
+                            (voxel[1] * VolumeDim[0]) + voxel[0];
+          if (neighborVoxelId<0) neighborVoxelId = -1;
+          else if (neighborVoxelId >= VolumeDim[0] * VolumeDim[1] * VolumeDim[2]) 
+            neighborVoxelId = VolumeDim[0] * VolumeDim[1] * VolumeDim[2] - 1;
+          //                  std::cout << "localId = (index - splatPointId) % modulus " << localId << " " << index << " " << splatPointId << " " << modulus << "\n";
+        }
+      };
+
+      //-----------------------------------------------------------------------
+      // Given an index of a gridpoint within the volume bounding
+      // box, return the corresponding coordinates of this point.
+      class GetVolumeCoords : public vtkm::worklet::WorkletMapField
+      {
+      private:
+        vtkm::Id3 Dimensions;
+
+      public:
+
+        typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldOut<>);
+        typedef void ExecutionSignature(_1, _2, _3);
+
+        VTKM_CONT_EXPORT
+          GetVolumeCoords(const vtkm::Id3 &d) : Dimensions(d) {}
+
+        template<typename T>
+        VTKM_EXEC_CONT_EXPORT
+          void operator()(const vtkm::Id &index,
+            T &voxelCoords,
+            vtkm::Float64 &splatValue) const
+        {
+          vtkm::Id divisor = Dimensions[1] * Dimensions[2];
+          vtkm::Id x = index / divisor;
+          vtkm::Id remainder = index % divisor;
+          vtkm::Id y = remainder / Dimensions[2];
+          vtkm::Id z = remainder % Dimensions[2];
+          voxelCoords = vtkm::make_Vec(x, y, z);
+          splatValue = 0.0;
+        }
+      };
+
+      //-----------------------------------------------------------------------
+      // Scatter worklet that writes a splat value into the larger,
+      // master splat value array, using the splat value's voxel Id
+      // as an index.
       class UpdateVoxelSplats : public vtkm::worklet::WorkletMapField
       {
       public:
-            typedef void ControlSignature(FieldIn<>, FieldIn<>, ExecObject, FieldOut<>);
-            typedef void ExecutionSignature(_1, _2, _3, _4);
+        typedef void ControlSignature(FieldIn<>, FieldIn<>, ExecObject, FieldOut<>);
+        typedef void ExecutionSignature(_1, _2, _3, _4);
 
-            VTKM_CONT_EXPORT
-            UpdateVoxelSplats() {}
+        VTKM_CONT_EXPORT
+          UpdateVoxelSplats() {}
 
 
-            VTKM_EXEC_CONT_EXPORT
-            void operator()(const vtkm::Id &voxelIndex,
-                            const vtkm::Float64 &splatValue,
-                            vtkm::exec::ExecutionWholeArray<vtkm::Float64> &execArg,
-                            vtkm::Float64 &output) const
-            {
-//              std::cout << "Voxel index " << voxelIndex << ",";
-                execArg.Set(voxelIndex, splatValue);
-            }
+        VTKM_EXEC_CONT_EXPORT
+          void operator()(const vtkm::Id &voxelIndex,
+            const vtkm::Float64 &splatValue,
+            vtkm::exec::ExecutionWholeArray<vtkm::Float32> &execArg,
+            vtkm::Float32 &output) const
+        {
+          //              std::cout << "Voxel index " << voxelIndex << ",";
+          execArg.Set(voxelIndex, splatValue);
+        }
       };
 
+      //-----------------------------------------------------------------------
+      // construct a splatter filter/object
+      //-----------------------------------------------------------------------
+      GaussianSplatterFilterUniformGrid(const vtkm::Id3 &dims, 
+        vtkm::Vec<vtkm::FloatDefault, 3> origin, 
+        vtkm::Vec<vtkm::FloatDefault, 3> spacing,
+        const vtkm::cont::DataSet &dataSet) :
+        CDims(dims),
+        Origin(origin),
+        Spacing(spacing),
+        DataSet(dataSet)
+      {
+      }
 
-    public:
+      //-----------------------------------------------------------------------
+      // class variables for the splat filter
+      //-----------------------------------------------------------------------
+      //
+      //
+      vtkm::Id3           CDims;
+      FloatVec            Origin, Spacing;
+      vtkm::cont::DataSet DataSet;
 
-    template <typename StorageT,
-              typename StorageU>
-    void run(const vtkm::cont::ArrayHandle<vtkm::Float64,StorageT> xValues,
-             const vtkm::cont::ArrayHandle<vtkm::Float64,StorageT> yValues,
-             const vtkm::cont::ArrayHandle<vtkm::Float64,StorageT> zValues,
-             vtkm::cont::ArrayHandle<vtkm::Id3,StorageU> &output_volume_points,
-             vtkm::cont::ArrayHandle<vtkm::Float64,StorageT> &output_volume_splat_values)
-    {
-      //Define the constants for the algorithm
-      vtkm::Id sampleDim [] = {51, 51, 51};
-      vtkm::cont::ArrayHandle<vtkm::Id> sampleDimensions = vtkm::cont::make_ArrayHandle(sampleDim, 3);
-      vtkm::Id3 volDimensions = vtkm::make_Vec(sampleDim[0], sampleDim[1], sampleDim[2]);
+      //-----------------------------------------------------------------------
+      // Run the filter, given the input params
+      //-----------------------------------------------------------------------
+      template <typename StorageT, typename StorageU>
+        void run(
+          const vtkm::cont::ArrayHandle<vtkm::Float64, StorageT> xValues,
+          const vtkm::cont::ArrayHandle<vtkm::Float64, StorageT> yValues,
+          const vtkm::cont::ArrayHandle<vtkm::Float64, StorageT> zValues,
+          const vtkm::cont::ArrayHandle<vtkm::Float32, StorageT> rValues,
+          FloatHandleType scalarSplatOutput)
+      {
+        // get the coordinate system, we are expecting a structured grid
+        vtkm::cont::CoordinateSystem coordinates = DataSet.GetCoordinateSystem();
+        // get the array handle
+//        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3> > coord_array =
+//          coordinates.GetData().
+//          CastToArrayHandle(vtkm::Vec<vtkm::FloatDefault, 3>(), VTKM_DEFAULT_STORAGE_TAG());
+        // see if we can get a valid portal
+//        vtkm::cont::PortalConstControl portal =
+//          coord_array.GetPortalConstControl();
+    
+        // @TODO fix detection of spacing and origin from datset
+//        vtkm::internal::ArrayPortalUniformPointCoordinates grid_portal = dynamic_Cast<
+//          coord_arrray.GetPortalConstControl();
+//       vtkm::Internal::ArrayPortalUniformPointCoordinates = coord_arrray
+//        vtkm::cont::ArrayHandleUniformPointCoordinates *ahpc = dynamic_cast<vtkm::cont::ArrayHandleUniformPointCoordinates*>(coordinates);
 
-      const vtkm::Float64 radius = 0.1;
-      const vtkm::Float64 exponentFactor = -5.0;
-      const vtkm::Float64 scaleFactor = 1.0;
+        //Define the constants for the algorithm
+        const vtkm::Float64 radius = 0.2;
+        const vtkm::Float64 exponentFactor = -5.0;
+        const vtkm::Float64 scaleFactor = 1.0;
+        vtkm::Id3 pointDimensions = vtkm::make_Vec(CDims[0]+1, CDims[1]+1, CDims[2]+1);
 
-//----------Configure a volume bounding box------------------------//
+        int max_i = std::max(std::max(CDims[0], CDims[1]), CDims[2]);
+        int min_i = 0;
+        const vtkm::Float64 maxDist = (max_i - min_i) * radius;
+        const vtkm::Float64 radius2 = maxDist * maxDist;
 
-      //Get the scalar value bounds - min and max - for each dimension
-      vtkm::Float64 b1[2] = {0, 5};
-//      xValues.GetBounds(b1);
-      vtkm::Vec<vtkm::Float64,2> xBounds = vtkm::make_Vec(b1[0],b1[1]);
+        FloatVec splat_radius = vtkm::make_Vec(radius2, radius2, radius2);
 
-      vtkm::Float64 b2[2] = {0, 5};
-//      yValues.GetBounds(b2);
-      vtkm::Vec<vtkm::Float64,2> yBounds = vtkm::make_Vec(b2[0],b2[1]);
+        //Number of grid points in the volume bounding box
+        const vtkm::Id numVolumePoints = (CDims[0] + 1) * (CDims[1] + 1) * (CDims[2] + 1);
 
-      vtkm::Float64 b3[2] = {0, 5};
-//      zValues.GetBounds(b3);
-      vtkm::Vec<vtkm::Float64,2> zBounds = vtkm::make_Vec(b3[0],b3[1]);
+        //Number of points (x,y,z) that will be splat onto the volume grid
+        const vtkm::Id numSamplePoints = xValues.GetNumberOfValues();
 
-      //Add the bounds vectors to an ArrayHandle for sorting
-      vtkm::Vec<vtkm::Float64,2> bounds [] = {xBounds, yBounds, zBounds};
-      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64,2> > allBounds =
-          vtkm::cont::make_ArrayHandle(bounds, 3);
+        //
+        // initialize each field value to zero to begin with
+        //
+        vtkm::cont::ArrayHandleCounting<vtkm::Id> indexArray(vtkm::Id(0), numVolumePoints);
+        vtkm::worklet::DispatcherMapField<zero_voxel> zeroDispatcher;
+        zeroDispatcher.Invoke(indexArray, scalarSplatOutput);
 
-      //Sort the bounds vectors from smallest to largest range (max-min)
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(allBounds, DimBoundsCompare());
+        //OutputArrayDebug(scalarSplatOutput,"scalarSplatOutput");
+     
+        //Get the splat footprint/neighborhood of each sample point, as
+        //represented by min and max boundaries in each dimension.
+        PointHandleType splatPoints;
+        VecHandleType   footprintMin;
+        VecHandleType   footprintMax;
+        IdHandleType    numNeighbors;
+        IdHandleType localNeighborIds;
 
-      vtkm::Vec<vtkm::Float64,2> maxBound = allBounds.GetPortalConstControl().Get(2);
-      const vtkm::Float64 maxDist = (maxBound[1] - maxBound[0]) * radius;
-      const vtkm::Float64 radius2 = maxDist * maxDist;
+        GetFootprint    footprint_worklet(Origin, Spacing, splat_radius, pointDimensions);
 
-      //If desired, invoke a WorkletMapField here to adjust the bounds in
-      //each direction by maxDist, so that the model fits strictly inside...
+        vtkm::worklet::DispatcherMapField<GetFootprint> footprintDispatcher(footprint_worklet);
 
-      //Set the volume origin
-      vtkm::Vec<vtkm::Float64, 3> origin = vtkm::make_Vec(xBounds[0], yBounds[0], zBounds[0]);
+        START_TIMER_BLOCK(GetFootprint)
+        footprintDispatcher.Invoke(
+          xValues, yValues, zValues, rValues,
+          splatPoints, footprintMin,
+          footprintMax, numNeighbors);
+        END_TIMER_BLOCK(GetFootprint)
 
-      //Set the volume spacing and splat distance via a WorkletMapField
-      vtkm::cont::ArrayHandle<vtkm::Float64> spacing;
-      vtkm::cont::ArrayHandle<vtkm::Float64> splatDist;
-      vtkm::worklet::DispatcherMapField<ConfigureVolumeProps> configVolumeDispatcher(maxDist);
-      configVolumeDispatcher.Invoke(allBounds, sampleDimensions, spacing, splatDist);
+        OutputArrayDebug(numNeighbors, "numNeighbours");
+        OutputArrayDebug(footprintMin, "footprintMin");
+        OutputArrayDebug(footprintMax, "footprintMax");
+        OutputArrayDebug(splatPoints,  "splatPoints");
 
-      vtkm::cont::ArrayHandle<vtkm::Float64>::PortalConstControl spcc = spacing.GetPortalConstControl();
-      vtkm::cont::ArrayHandle<vtkm::Float64>::PortalConstControl dpcc = splatDist.GetPortalConstControl();
-      vtkm::Vec<vtkm::Float64, 3> vecSpacing = vtkm::make_Vec(spcc.Get(0),spcc.Get(1),spcc.Get(2));
-      vtkm::Vec<vtkm::Float64, 3> vecSplatDist = vtkm::make_Vec(dpcc.Get(0),dpcc.Get(1),dpcc.Get(2));
+        // Prefix sum of the number of affected splat voxels ("neighbors")
+        // for each sample point.  The total sum represents the number of
+        // voxels for which splat values will be computed.
+        IdHandleType numNeighborsPrefixSum;
+        START_TIMER_BLOCK(numNeighborsPrefixSum)
+        const vtkm::Id totalSplatSize =
+              vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ScanInclusive(numNeighbors,
+                                                                         numNeighborsPrefixSum);
+        END_TIMER_BLOCK(numNeighborsPrefixSum)
+        std::cout << "totalSplatSize " << totalSplatSize << "\n";
+      OutputArrayDebug(numNeighborsPrefixSum, "numNeighborsPrefixSum");
+                          
+        IdHandleType numNeighborsExclusiveSum;
+        START_TIMER_BLOCK(numNeighborsExclusiveSum)
+              vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ScanExclusive(numNeighbors,
+                                                                         numNeighborsExclusiveSum);
+        END_TIMER_BLOCK(numNeighborsExclusiveSum)
+      OutputArrayDebug(numNeighborsExclusiveSum, "numNeighborsExclusiveSum");
 
-      //Number of grid points in the volume bounding box
-      const vtkm::Id numVolumePoints = sampleDim[0] * sampleDim[1] * sampleDim[2];
-
-      //Number of points (x,y,z) that will be splat onto the volume grid
-      const vtkm::Id numSamplePoints = xValues. GetNumberOfValues();
-
-//------------------------Begin splatting phase-------------------------//
-
-      typedef vtkm::cont::ArrayHandle<vtkm::Float64> FloatHandleType;
-      typedef vtkm::cont::ArrayHandle<vtkm::Id3> VecHandleType;
-      typedef vtkm::cont::ArrayHandle<vtkm::Id> IdHandleType;
-      typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, VecHandleType> VecPermType;
-      typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, IdHandleType> IdPermType;
-
-      //Compute each of the volume gridpoint coordinates and assign
-      //each voxel an initial splat value of 0
-      VecHandleType allVoxelPoints; //of length numVolumePoints
-      FloatHandleType allSplatValues; //of length numVolumePoints
-      vtkm::cont::ArrayHandleCounting<vtkm::Id> indexArray(vtkm::Id(1), numVolumePoints);
-      vtkm::worklet::DispatcherMapField<GetVolumeCoords> coordsDispatcher(volDimensions);
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        vtkm::cont::Timer<DeviceAdapter> timer;
-      #endif
-      coordsDispatcher.Invoke(indexArray, allVoxelPoints, allSplatValues);
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        std::cout << "GetVolumeCoords_Worklet," << timer.GetElapsedTime() << "\n";
-      #endif
-      indexArray.ReleaseResources();
-//      OutputArrayDebug(allSplatValues, "allSplatValues");
-      OutputArrayDebug(allVoxelPoints, "allVoxelPoints");
-
-      //Get the splat footprint/neighborhood of each sample point, as
-      //represented by min and max boundaries in each dimension.
-      VecHandleType splatPoints;
-      VecHandleType footprintMin;
-      VecHandleType footprintMax;
-      IdHandleType numNeighbors;
-      GetFootprint footprint_worklet(vecSpacing,
-                                     vecSplatDist,
-                                     origin,
-                                     volDimensions);
-
-      vtkm::worklet::DispatcherMapField<GetFootprint> footprintDispatcher(footprint_worklet);
-
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        timer.Reset();
-      #endif
-      footprintDispatcher.Invoke(xValues, yValues, zValues,
-                                    splatPoints, footprintMin,
-                                    footprintMax, numNeighbors);
-
-//      OutputArrayDebug(numNeighbors, "numNeighbours");
-//      OutputArrayDebug(footprintMin, "footprintMin");
-//      OutputArrayDebug(footprintMax, "footprintMax");
-
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        std::cout << "GetFootprint_Worklet," << timer.GetElapsedTime() << "\n";
-      #endif
-
-      //Prefix sum of the number of affected splat voxels ("neighbors")
-      //for each sample point.  The total sum represents the number of
-      //voxels for which splat values will be computed.
-      IdHandleType numNeighborsPrefixSum;
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        timer.Reset();
-      #endif
-      const vtkm::Id totalSplatSize =
-            vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ScanInclusive(numNeighbors,
-                                                                       numNeighborsPrefixSum);
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        std::cout << "ScanInclusive_Adapter," << timer.GetElapsedTime() << "\n";
-      #endif
-
-      //Generate a lookup array that, for each splat voxel, identifies
-      //the Id of its corresponding (sample) splat point.
-      //For example, if splat point 0 affects 5 neighbor voxels, then
-      //the five entries in the lookup array would be 0,0,0,0,0
+      // Generate a lookup array that, for each splat voxel, identifies
+      // the Id of its corresponding (sample) splat point.
+      // For example, if splat point 0 affects 5 neighbor voxels, then
+      // the five entries in the lookup array would be 0,0,0,0,0
       IdHandleType neighbor2SplatId;
       vtkm::cont::ArrayHandleCounting<vtkm::Id> countingArray(vtkm::Id(0), vtkm::Id(totalSplatSize));
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        timer.Reset();
-      #endif
+      START_TIMER_BLOCK(Upper_bounds)
       vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::UpperBounds(numNeighborsPrefixSum,
                                                                       countingArray,
                                                                       neighbor2SplatId);
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        std::cout << "UpperBounds_Adapter," << timer.GetElapsedTime() << "\n";
-      #endif
+      END_TIMER_BLOCK(Upper_bounds)
       countingArray.ReleaseResources();
-//      OutputArrayDebug(neighbor2SplatId, "neighbor2SplatId");
+      OutputArrayDebug(neighbor2SplatId, "neighbor2SplatId");
 
       //Extract a "local" Id lookup array of the foregoing
       //neighbor2SplatId array.  So, the local version of 0,0,0,0,0
-      //would be 0,1,2,3,4
-      IdHandleType localNeighborIds;
-//      IdPermType modulii(neighbor2SplatId, numNeighborsPrefixSum);
+      //would be 0,1,2,3,4      
       IdPermType modulii(neighbor2SplatId, numNeighbors);
+      OutputArrayDebug(modulii, "modulii");
 
+      IdPermType offsets(neighbor2SplatId, numNeighborsExclusiveSum);
+      OutputArrayDebug(offsets, "offsets");
 
-//      OutputArrayDebug(numNeighborsPrefixSum, "numNeighborsPrefixSum");
-//      OutputArrayDebug(modulii, "modulii");
+      FloatPermType radii(neighbor2SplatId, rValues);
+      OutputArrayDebug(radii, "radii");
+
 
       vtkm::worklet::DispatcherMapField<ComputeLocalNeighborId> idDispatcher;
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        timer.Reset();
-      #endif
-      idDispatcher.Invoke(modulii, neighbor2SplatId, localNeighborIds);
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        std::cout << "ComputeLocalNeighborId_Worklet," << timer.GetElapsedTime() << "\n";
-      #endif
-//      modulii.ReleaseResources();
+      START_TIMER_BLOCK(idDispatcher)
+      idDispatcher.Invoke(modulii, offsets, neighbor2SplatId, localNeighborIds);
+      END_TIMER_BLOCK(idDispatcher)
+      OutputArrayDebug(localNeighborIds, "localNeighborIds");
+
       // JB
       numNeighbors.ReleaseResources();
       numNeighborsPrefixSum.ReleaseResources();
-//      OutputArrayDebug(localNeighborIds, "localNeighborIds");
+//      modulii.ReleaseResources();
 
-      //Perform gather operations via permutation arrays
-      VecPermType ptSplatPoints(neighbor2SplatId, splatPoints);
+
+      // Perform gather operations via permutation arrays
+      PointVecPermType ptSplatPoints(neighbor2SplatId, splatPoints);
       VecPermType ptFootprintMins(neighbor2SplatId, footprintMin);
       VecPermType ptFootprintMaxs(neighbor2SplatId, footprintMax);
 
-      //Calculate the splat value of each affected voxel
-      FloatHandleType splatValues;
-      FloatHandleType voxelSplatSums;
-      IdHandleType neighborVoxelIds;
-      IdHandleType uniqueVoxelIds;
-      GetSplatValue splatterDispatcher_worklet(vecSpacing,
-                                        origin,
-                                        volDimensions,
-                                        radius2,
-                                        exponentFactor,
-                                        scaleFactor);
-      vtkm::worklet::DispatcherMapField<GetSplatValue> splatterDispatcher(splatterDispatcher_worklet);
-
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        timer.Reset();
-      #endif
-      splatterDispatcher.Invoke(ptSplatPoints, ptFootprintMins,
-                                ptFootprintMaxs, neighbor2SplatId,
-                                localNeighborIds, neighborVoxelIds, splatValues);
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        std::cout << "GetSplatValue_Worklet," << timer.GetElapsedTime() << "\n";
-      #endif
-      ptSplatPoints.ReleaseResources();
-      ptFootprintMins.ReleaseResources();
-      ptFootprintMaxs.ReleaseResources();
-      neighbor2SplatId.ReleaseResources();
-      localNeighborIds.ReleaseResources();
-      splatPoints.ReleaseResources();
-      footprintMin.ReleaseResources();
-      footprintMax.ReleaseResources();
-
-      //Sort the voxel Ids in ascending order
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        timer.Reset();
-      #endif
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::SortByKey(neighborVoxelIds,
-                                                                   splatValues);
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        std::cout << "SortByKey_Adapter," << timer.GetElapsedTime() << "\n";
-      #endif
-//      OutputArrayDebug(splatValues, "splatValues");
-
-      //Produces the sum of all splat values for each unique voxel
-      //that was part of the splatter
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        timer.Reset();
-      #endif
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ReduceByKey(neighborVoxelIds,
-                                                                     splatValues,
-                                                                     uniqueVoxelIds,
-                                                                     voxelSplatSums,
-                                                                     vtkm::internal::Add());
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        std::cout << "ReduceByKey_Adapter," << timer.GetElapsedTime() << "\n";
-      #endif
-//      OutputArrayDebug(neighborVoxelIds, "neighborVoxelIds");
-
-      neighborVoxelIds.ReleaseResources();
-      splatValues.ReleaseResources();
-
-      //Scatter operation to write the previously-computed splat
-      //value sums into their corresponding entries in the master
-      //splat value array.  Any voxels (volume gridpoints) that weren't
-      //affected by the splatter will still have the default value of 0.
-      FloatHandleType finalSplatValues;
-      vtkm::worklet::DispatcherMapField<UpdateVoxelSplats> scatterDispatcher;
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        timer.Reset();
-      #endif
-      scatterDispatcher.Invoke(uniqueVoxelIds, voxelSplatSums,
-                               vtkm::exec::ExecutionWholeArray<vtkm::Float64>(allSplatValues),
-                               finalSplatValues);
-      #ifdef __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
-        std::cout << "UpdateVoxelSplats_Worklet," << timer.GetElapsedTime() << "\n";
-      #endif
-      uniqueVoxelIds.ReleaseResources();
-      voxelSplatSums.ReleaseResources();
-      finalSplatValues.ReleaseResources();
-
-      //Assign the volume gridpoint coordinates and their splatter values
-      //as the output of this worklet
-      output_volume_points = allVoxelPoints;
-      output_volume_splat_values = allSplatValues;
-
-    }
-
-  }; //struct GaussianSplatter
+//      OutputArrayDebug(ptSplatPoints,   "ptSplatPoints");
+//      OutputArrayDebug(ptFootprintMins, "ptFootprintMins");
 
 
-}} //namespace vtkm::worklet
+        //Calculate the splat value of each affected voxel
+        FloatHandleType voxelSplatSums;
+        IdHandleType neighborVoxelIds;
+        IdHandleType uniqueVoxelIds;
+        GetSplatValue splatterDispatcher_worklet(
+          Origin,
+          Spacing,
+          pointDimensions,
+          exponentFactor,
+          scaleFactor);
+        vtkm::worklet::DispatcherMapField<GetSplatValue> splatterDispatcher(splatterDispatcher_worklet);
+
+        FloatHandleType splatValues;
+        START_TIMER_BLOCK(GetSplatValue)
+        splatterDispatcher.Invoke(
+          // splatcentre, min and max extents of splat footprint
+          ptSplatPoints, ptFootprintMins, ptFootprintMaxs, 
+          // radius of the point
+          radii,
+          neighbor2SplatId,
+          localNeighborIds, neighborVoxelIds, splatValues);
+        END_TIMER_BLOCK(GetSplatValue)
+
+      OutputArrayDebug(splatValues, "splatValues");
+      OutputArrayDebug(neighborVoxelIds, "neighborVoxelIds");
+      
+        ptSplatPoints.ReleaseResources();
+        ptFootprintMins.ReleaseResources();
+        ptFootprintMaxs.ReleaseResources();
+        neighbor2SplatId.ReleaseResources();
+        localNeighborIds.ReleaseResources();
+        splatPoints.ReleaseResources();
+        footprintMin.ReleaseResources();
+        footprintMax.ReleaseResources();
+
+        //Sort the voxel Ids in ascending order
+        START_TIMER_BLOCK(SortByKey)
+        vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::SortByKey(neighborVoxelIds,
+          splatValues);
+        END_TIMER_BLOCK(SortByKey)
+        OutputArrayDebug(splatValues, "splatValues");
+
+        //Produces the sum of all splat values for each unique voxel
+        START_TIMER_BLOCK(ReduceByKey)
+        vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ReduceByKey(neighborVoxelIds,
+          splatValues,
+          uniqueVoxelIds,
+          voxelSplatSums,
+          vtkm::internal::Add());
+        END_TIMER_BLOCK(ReduceByKey)
+          OutputArrayDebug(neighborVoxelIds, "neighborVoxelIds");
+        OutputArrayDebug(uniqueVoxelIds, "uniqueVoxelIds");
+        OutputArrayDebug(voxelSplatSums, "voxelSplatSums");
+
+        neighborVoxelIds.ReleaseResources();
+        splatValues.ReleaseResources();
+
+        //Scatter operation to write the previously-computed splat
+        //value sums into their corresponding entries in the master
+        //splat value array.  Any voxels (volume gridpoints) that weren't
+        //affected by the splatter will still have the default value of 0.
+        vtkm::worklet::DispatcherMapField<UpdateVoxelSplats> scatterDispatcher;
+
+        FloatHandleType dummy;
+
+        START_TIMER_BLOCK(UpdateVoxelSplats)
+        scatterDispatcher.Invoke(uniqueVoxelIds, voxelSplatSums,
+          vtkm::exec::ExecutionWholeArray<vtkm::Float32>(scalarSplatOutput),
+          dummy);
+        END_TIMER_BLOCK(UpdateVoxelSplats)
+
+        uniqueVoxelIds.ReleaseResources();
+        voxelSplatSums.ReleaseResources();
+//        finalSplatValues.ReleaseResources();
+
+        //Assign the volume gridpoint coordinates and their splatter values
+        //as the output of this worklet
+        //output_volume_splat_values = allSplatValues;
+
+      std::cout << "Here "<< std::endl;
+   
+/*
+        //
+        // compute the scan sum of the number of points in the regions to give the 'offset'
+        // that each point starts from as an index array.
+        //
+
+
+        //------------------------Begin splatting phase-------------------------//
+
+        typedef vtkm::cont::ArrayHandle<vtkm::Float64> FloatHandleType;
+        typedef vtkm::cont::ArrayHandle<vtkm::Id3>     VecHandleType;
+        typedef vtkm::cont::ArrayHandle<vtkm::Id>      IdHandleType;
+        typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, VecHandleType> VecPermType;
+        typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, IdHandleType>  IdPermType;
+
+        // Compute each of the volume gridpoint coordinates and assign
+        // each voxel an initial splat value of 0
+        VecHandleType allVoxelPoints; //of length numVolumePoints
+        FloatHandleType allSplatValues; //of length numVolumePoints
+        vtkm::cont::ArrayHandleCounting<vtkm::Id> indexArray(vtkm::Id(0), numVolumePoints);
+        vtkm::worklet::DispatcherMapField<GetVolumeCoords> coordsDispatcher(volDimensions);
+
+        START_TIMER_BLOCK(GetVolumeCoords_Worklet)
+        coordsDispatcher.Invoke(indexArray, allVoxelPoints, allSplatValues);
+        END_TIMER_BLOCK(GetVolumeCoords_Worklet)
+
+        indexArray.ReleaseResources();
+        //      OutputArrayDebug(allSplatValues, "allSplatValues");
+        OutputArrayDebug(allVoxelPoints, "allVoxelPoints");
+
+        //Get the splat footprint/neighborhood of each sample point, as
+        //represented by min and max boundaries in each dimension.
+        VecHandleType splatPoints;
+        VecHandleType footprintMin;
+        VecHandleType footprintMax;
+        IdHandleType numNeighbors;
+        GetFootprint footprint_worklet(vecSpacing,
+          vecSplatDist,
+          origin,
+          volDimensions);
+
+        vtkm::worklet::DispatcherMapField<GetFootprint> footprintDispatcher(footprint_worklet);
+
+        START_TIMER_BLOCK(GetFootprint_Worklet)
+        footprintDispatcher.Invoke(xValues, yValues, zValues,
+          splatPoints, footprintMin,
+          footprintMax, numNeighbors);
+
+        //      OutputArrayDebug(numNeighbors, "numNeighbours");
+        //      OutputArrayDebug(footprintMin, "footprintMin");
+        //      OutputArrayDebug(footprintMax, "footprintMax");
+
+        END_TIMER_BLOCK(GetFootprint_Worklet)
+
+        //Prefix sum of the number of affected splat voxels ("neighbors")
+        //for each sample point.  The total sum represents the number of
+        //voxels for which splat values will be computed.
+        IdHandleType numNeighborsPrefixSum;
+        START_TIMER_BLOCK(ScanInclusive_Adapter)
+        const vtkm::Id totalSplatSize =
+          vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ScanInclusive(numNeighbors,
+            numNeighborsPrefixSum);
+        END_TIMER_BLOCK(ScanInclusive_Adapter)
+
+        //Generate a lookup array that, for each splat voxel, identifies
+        //the Id of its corresponding (sample) splat point.
+        //For example, if splat point 0 affects 5 neighbor voxels, then
+        //the five entries in the lookup array would be 0,0,0,0,0
+        IdHandleType neighbor2SplatId;
+        vtkm::cont::ArrayHandleCounting<vtkm::Id> countingArray(vtkm::Id(0), vtkm::Id(totalSplatSize));
+
+        START_TIMER_BLOCK(UpperBounds_Adapter)
+        vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::UpperBounds(numNeighborsPrefixSum,
+          countingArray,
+          neighbor2SplatId);
+        END_TIMER_BLOCK(UpperBounds_Adapter)
+
+        countingArray.ReleaseResources();
+        //      OutputArrayDebug(neighbor2SplatId, "neighbor2SplatId");
+
+        //Extract a "local" Id lookup array of the foregoing
+        //neighbor2SplatId array.  So, the local version of 0,0,0,0,0
+        //would be 0,1,2,3,4
+        IdHandleType localNeighborIds;
+        //      IdPermType modulii(neighbor2SplatId, numNeighborsPrefixSum);
+        IdPermType modulii(neighbor2SplatId, numNeighbors);
+
+
+        //      OutputArrayDebug(numNeighborsPrefixSum, "numNeighborsPrefixSum");
+        //      OutputArrayDebug(modulii, "modulii");
+
+        vtkm::worklet::DispatcherMapField<ComputeLocalNeighborId> idDispatcher;
+
+        START_TIMER_BLOCK(ComputeLocalNeighborId_Worklet)
+        idDispatcher.Invoke(modulii, neighbor2SplatId, localNeighborIds);
+        END_TIMER_BLOCK(ComputeLocalNeighborId_Worklet)
+
+        //      modulii.ReleaseResources();
+        // JB
+        numNeighbors.ReleaseResources();
+        numNeighborsPrefixSum.ReleaseResources();
+        //      OutputArrayDebug(localNeighborIds, "localNeighborIds");
+
+        //Perform gather operations via permutation arrays
+        VecPermType ptSplatPoints(neighbor2SplatId, splatPoints);
+        VecPermType ptFootprintMins(neighbor2SplatId, footprintMin);
+        VecPermType ptFootprintMaxs(neighbor2SplatId, footprintMax);
+
+        //Calculate the splat value of each affected voxel
+        FloatHandleType splatValues;
+        FloatHandleType voxelSplatSums;
+        IdHandleType neighborVoxelIds;
+        IdHandleType uniqueVoxelIds;
+        GetSplatValue splatterDispatcher_worklet(vecSpacing,
+          origin,
+          volDimensions,
+          radius2,
+          exponentFactor,
+          scaleFactor);
+        vtkm::worklet::DispatcherMapField<GetSplatValue> splatterDispatcher(splatterDispatcher_worklet);
+
+        START_TIMER_BLOCK(GetSplatValue_Worklet)
+        splatterDispatcher.Invoke(ptSplatPoints, ptFootprintMins,
+          ptFootprintMaxs, neighbor2SplatId,
+          localNeighborIds, neighborVoxelIds, splatValues);
+        END_TIMER_BLOCK(GetSplatValue_Worklet)
+
+        ptSplatPoints.ReleaseResources();
+        ptFootprintMins.ReleaseResources();
+        ptFootprintMaxs.ReleaseResources();
+        neighbor2SplatId.ReleaseResources();
+        localNeighborIds.ReleaseResources();
+        splatPoints.ReleaseResources();
+        footprintMin.ReleaseResources();
+        footprintMax.ReleaseResources();
+
+  */
+      }
+
+    }; //struct GaussianSplatter
+
+
+  }
+} //namespace vtkm::worklet
 
 #endif //vtk_m_worklet_GaussianSplatter_h
