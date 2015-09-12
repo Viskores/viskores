@@ -24,9 +24,9 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/shared_ptr.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace {
 
@@ -44,7 +44,7 @@ void TestCellAverageRegular3D()
                            vtkm::Float32());
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("nodevar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                     dataSet.GetCellSet(),
                     result.GetData());
 
@@ -64,7 +64,7 @@ void TestCellAverageRegular2D()
   std::cout << "Testing CellAverage Worklet on 2D strucutred data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet1();
+  vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
 
   vtkm::cont::Field result("avgvals",
                            1,
@@ -73,14 +73,14 @@ void TestCellAverageRegular2D()
                            vtkm::Float32());
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("nodevar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                     dataSet.GetCellSet(),
                     result.GetData());
 
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle =
       result.GetData().CastToArrayHandle(vtkm::Float32(), VTKM_DEFAULT_STORAGE_TAG());
 
-  vtkm::Float32 expected[2] = { 20.1333f, 35.2f };
+  vtkm::Float32 expected[2] = { 30.1f, 40.1f };
   for (int i = 0; i < 2; ++i)
     {
     VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i),
@@ -102,7 +102,7 @@ void TestCellAverageExplicit()
                            vtkm::Float32());
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("nodevar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                     dataSet.GetCellSet(),
                     result.GetData());
 

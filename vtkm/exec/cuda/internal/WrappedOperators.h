@@ -21,23 +21,16 @@
 #define vtk_m_exec_cuda_internal_WrappedOperators_h
 
 #include <vtkm/Types.h>
+#include <vtkm/BinaryPredicates.h>
 #include <vtkm/Pair.h>
 #include <vtkm/internal/ExportMacros.h>
 #include <vtkm/exec/cuda/internal/IteratorFromArrayPortal.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
-#if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif // gcc || clang
-
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cuda/memory.h>
-
-#if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#pragma GCC diagnostic pop
-#endif // gcc || clang
+#include <boost/type_traits/remove_const.hpp>
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
 namespace exec {
@@ -48,9 +41,16 @@ namespace internal {
 // wrapped operator with complex value types such as
 // PortalValue which happen when passed an input array that
 // is implicit.
-template<typename ResultType, typename Function>
-  struct WrappedBinaryOperator
+template<typename T_, typename Function>
+struct WrappedBinaryOperator
 {
+  typedef typename boost::remove_const<T_>::type T;
+
+  //make typedefs that thust expects binary operators to have
+  typedef T first_argument_type;
+  typedef T second_argument_type;
+  typedef T result_type;
+
   Function m_f;
 
   VTKM_EXEC_EXPORT
@@ -63,61 +63,128 @@ template<typename ResultType, typename Function>
     : m_f(f)
   {}
 
-  template<typename T, typename U>
-  VTKM_EXEC_EXPORT ResultType operator()(const T &x, const U &y) const
+  VTKM_EXEC_EXPORT T operator()(const T &x, const T &y) const
   {
     return m_f(x, y);
   }
 
-  template<typename T, typename U>
-  VTKM_EXEC_EXPORT ResultType operator()(const T &x,
-                                         const PortalValue<U> &y) const
+
+  template<typename U>
+  VTKM_EXEC_EXPORT T operator()(const T &x,
+                                const PortalValue<U> &y) const
   {
-    typedef typename PortalValue<U>::ValueType ValueType;
-    return m_f(x, (ValueType)y);
+    return m_f(x, (T)y);
   }
 
-  template<typename T, typename U>
-  VTKM_EXEC_EXPORT ResultType operator()(const PortalValue<T> &x,
-                                         const U &y) const
+  template<typename U>
+  VTKM_EXEC_EXPORT T operator()(const PortalValue<U> &x,
+                                const T &y) const
   {
-    typedef typename PortalValue<T>::ValueType ValueType;
-    return m_f((ValueType)x, y);
+    return m_f((T)x, y);
   }
 
-  template<typename T, typename U>
-  VTKM_EXEC_EXPORT ResultType operator()(const PortalValue<T> &x,
-                                         const PortalValue<U> &y) const
+  template<typename U, typename V>
+  VTKM_EXEC_EXPORT T operator()(const PortalValue<U> &x,
+                                const PortalValue<V> &y) const
   {
-    typedef typename PortalValue<T>::ValueType ValueTypeT;
-    typedef typename PortalValue<U>::ValueType ValueTypeU;
-    return m_f((ValueTypeT)x, (ValueTypeU)y);
+    return m_f((T)x, (T)y);
   }
 
-  template<typename T>
-  VTKM_EXEC_EXPORT ResultType operator()(const thrust::system::cuda::pointer<T> x,
-                                         const T* y) const
+  VTKM_EXEC_EXPORT T operator()(const thrust::system::cuda::pointer<T> x,
+                                const T* y) const
   {
     return m_f(*x, *y);
   }
 
-  template<typename T>
-  VTKM_EXEC_EXPORT ResultType operator()(const thrust::system::cuda::pointer<T> x,
-                                         const T& y) const
+  VTKM_EXEC_EXPORT T operator()(const thrust::system::cuda::pointer<T> x,
+                                const T& y) const
   {
     return m_f(*x, y);
   }
 
-  template<typename T>
-  VTKM_EXEC_EXPORT ResultType operator()(const T& x,
-                                         const thrust::system::cuda::pointer<T> y) const
+  VTKM_EXEC_EXPORT T operator()(const T& x,
+                                const thrust::system::cuda::pointer<T> y) const
   {
     return m_f(x, *y);
   }
 
-  template<typename T>
-  VTKM_EXEC_EXPORT ResultType operator()(const thrust::system::cuda::pointer<T> x,
-                                         const thrust::system::cuda::pointer<T> y) const
+  VTKM_EXEC_EXPORT T operator()(const thrust::system::cuda::pointer<T> x,
+                                const thrust::system::cuda::pointer<T> y) const
+  {
+    return m_f(*x, *y);
+  }
+
+};
+
+template<typename T_, typename Function>
+struct WrappedBinaryPredicate
+{
+  typedef typename boost::remove_const<T_>::type T;
+
+  //make typedefs that thust expects binary operators to have
+  typedef T first_argument_type;
+  typedef T second_argument_type;
+  typedef T result_type;
+
+  Function m_f;
+
+  VTKM_EXEC_EXPORT
+  WrappedBinaryPredicate()
+    : m_f()
+  {}
+
+  VTKM_CONT_EXPORT
+  WrappedBinaryPredicate(const Function &f)
+    : m_f(f)
+  {}
+
+  VTKM_EXEC_EXPORT bool operator()(const T &x, const T &y) const
+  {
+    return m_f(x, y);
+  }
+
+
+  template<typename U>
+  VTKM_EXEC_EXPORT bool operator()(const T &x,
+                                   const PortalValue<U> &y) const
+  {
+    return m_f(x, (T)y);
+  }
+
+  template<typename U>
+  VTKM_EXEC_EXPORT bool operator()(const PortalValue<U> &x,
+                                   const T &y) const
+  {
+    return m_f((T)x, y);
+  }
+
+  template<typename U, typename V>
+  VTKM_EXEC_EXPORT bool operator()(const PortalValue<U> &x,
+                                   const PortalValue<V> &y) const
+  {
+    return m_f((T)x, (T)y);
+  }
+
+  VTKM_EXEC_EXPORT bool operator()(const thrust::system::cuda::pointer<T> x,
+                                   const T* y) const
+  {
+    return m_f(*x, *y);
+  }
+
+  VTKM_EXEC_EXPORT bool operator()(const thrust::system::cuda::pointer<T> x,
+                                   const T& y) const
+  {
+    return m_f(*x, y);
+  }
+
+  VTKM_EXEC_EXPORT bool operator()(const T& x,
+                                   const thrust::system::cuda::pointer<T> y) const
+  {
+    return m_f(x, *y);
+  }
+
+  VTKM_EXEC_EXPORT bool operator()(const thrust::system::cuda::pointer<T> x,
+                                   const thrust::system::cuda::pointer<T> y) const
   {
     return m_f(*x, *y);
   }
@@ -128,6 +195,20 @@ template<typename ResultType, typename Function>
 }
 }
 } //namespace vtkm::exec::cuda::internal
+
+namespace thrust
+{
+namespace detail
+{
+//So for thrust 1.8.0 - 1.8.2 the inclusive_scan has a bug when accumulating
+//values when the binary operators states it is not commutative. At the
+//same time the is_commutative condition is used to perform faster paths. So
+//We state that all WrappedBinaryOperator are commutative.
+template< typename T, typename F>
+struct is_commutative< vtkm::exec::cuda::internal::WrappedBinaryOperator<T, F> > :
+      public thrust::detail::is_arithmetic<T> { };
+}
+}
 
 
 #endif //vtk_m_exec_cuda_internal_WrappedOperators_h

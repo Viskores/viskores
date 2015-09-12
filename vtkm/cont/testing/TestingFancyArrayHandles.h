@@ -23,6 +23,7 @@
 #define vtk_m_cont_testing_TestingFancyArrayHandles_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
@@ -452,6 +453,34 @@ private:
     }
   };
 
+  struct TestCastAsInput
+  {
+    template<typename CastToType>
+    VTKM_CONT_EXPORT
+    void operator()(CastToType vtkmNotUsed(type)) const
+    {
+      typedef vtkm::cont::ArrayHandleCounting<vtkm::Int64> InputArrayType;
+
+      InputArrayType input(0, ARRAY_SIZE);
+      vtkm::cont::ArrayHandleCast<CastToType, InputArrayType> castArray =
+          vtkm::cont::make_ArrayHandleCast(input, CastToType());
+      vtkm::cont::ArrayHandle<CastToType> result;
+
+      vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
+      dispatcher.Invoke(castArray, result);
+
+      // verify results
+      vtkm::Id length = ARRAY_SIZE;
+      for (vtkm::Id i = 0; i < length; ++i)
+      {
+        VTKM_TEST_ASSERT(
+            result.GetPortalConstControl().Get(i) ==
+              static_cast<CastToType>(input.GetPortalConstControl().Get(i)),
+            "Casting ArrayHandle Failed");
+      }
+    }
+  };
+
 
   struct TestZipAsInput
   {
@@ -617,6 +646,12 @@ private:
                          >
   {  };
 
+  struct CastTypesToTest
+    : vtkm::ListTagBase< vtkm::Int32,
+                         vtkm::UInt32
+                       >
+  { };
+
 
   struct TestAll
   {
@@ -665,6 +700,12 @@ private:
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestCountingTransformAsInput(),
                               HandleTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleCast as Input" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestCastAsInput(),
+                              CastTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleZip as Input" << std::endl;

@@ -20,16 +20,13 @@
 #ifndef vtk_m_cont_DataSet_h
 #define vtk_m_cont_DataSet_h
 
-#include <vtkm/CellType.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/Field.h>
+#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/ExplicitConnectivity.h>
-#include <vtkm/RegularConnectivity.h>
-#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/Field.h>
 
 namespace vtkm {
 namespace cont {
@@ -52,16 +49,20 @@ public:
   const vtkm::cont::Field &GetField(vtkm::Id index) const
   {
     VTKM_ASSERT_CONT((index >= 0) &&
-                     (index <= static_cast<vtkm::Id>(this->Fields.size())));
+                     (index < this->GetNumberOfFields()));
     return this->Fields[static_cast<std::size_t>(index)];
   }
 
   VTKM_CONT_EXPORT
-  const vtkm::cont::Field &GetField(const std::string &name) const
+  const vtkm::cont::Field &GetField(const std::string &name,
+      vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY)
+      const
   {
     for (std::size_t i=0; i < this->Fields.size(); ++i)
     {
-      if (this->Fields[i].GetName() == name)
+      if ((assoc == vtkm::cont::Field::ASSOC_ANY ||
+           assoc == this->Fields[i].GetAssociation()) &&
+          this->Fields[i].GetName() == name)
       {
         return this->Fields[i];
       }
@@ -70,17 +71,33 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::cont::DynamicCellSet GetCellSet(vtkm::Id index=0) const
-  {
-    VTKM_ASSERT_CONT((index >= 0) &&
-                     (index <= static_cast<vtkm::Id>(this->CellSets.size())));
-    return this->CellSets[static_cast<std::size_t>(index)];
-  }
-
-  VTKM_CONT_EXPORT
   void AddCoordinateSystem(vtkm::cont::CoordinateSystem cs)
   {
     this->CoordSystems.push_back(cs);
+  }
+
+  VTKM_CONT_EXPORT
+  const vtkm::cont::CoordinateSystem &
+  GetCoordinateSystem(vtkm::Id index=0) const
+  {
+    VTKM_ASSERT_CONT((index >= 0) &&
+                     (index < this->GetNumberOfCoordinateSystems()));
+    return this->CoordSystems[static_cast<std::size_t>(index)];
+  }
+
+  VTKM_CONT_EXPORT
+  const vtkm::cont::CoordinateSystem &
+  GetCoordinateSystem(const std::string &name) const
+  {
+    for (std::size_t i=0; i < this->CoordSystems.size(); ++i)
+    {
+      if (this->CoordSystems[i].GetName() == name)
+      {
+        return this->CoordSystems[i];
+      }
+    }
+    throw vtkm::cont::ErrorControlBadValue(
+          "No coordinate system with requested name");
   }
 
   VTKM_CONT_EXPORT
@@ -98,15 +115,29 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfCellSets() const
+  vtkm::cont::DynamicCellSet GetCellSet(vtkm::Id index=0) const
   {
-    return static_cast<vtkm::Id>(this->CellSets.size());
+    VTKM_ASSERT_CONT((index >= 0) &&
+                     (index < this->GetNumberOfCellSets()));
+    return this->CellSets[static_cast<std::size_t>(index)];
   }
 
   VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfFields() const
+  vtkm::IdComponent GetNumberOfCellSets() const
   {
-    return static_cast<vtkm::Id>(this->Fields.size());
+    return static_cast<vtkm::IdComponent>(this->CellSets.size());
+  }
+
+  VTKM_CONT_EXPORT
+  vtkm::IdComponent GetNumberOfFields() const
+  {
+    return static_cast<vtkm::IdComponent>(this->Fields.size());
+  }
+
+  VTKM_CONT_EXPORT
+  vtkm::IdComponent GetNumberOfCoordinateSystems() const
+  {
+    return static_cast<vtkm::IdComponent>(this->CoordSystems.size());
   }
 
   VTKM_CONT_EXPORT

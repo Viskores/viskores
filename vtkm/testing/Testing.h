@@ -20,16 +20,18 @@
 #ifndef vtk_m_testing_Testing_h
 #define vtk_m_testing_Testing_h
 
+#include <vtkm/CellShape.h>
 #include <vtkm/Pair.h>
 #include <vtkm/TypeListTag.h>
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VecTraits.h>
 
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/static_assert.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
+#include <exception>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -120,6 +122,44 @@ struct TypeName<vtkm::Pair<T,U> >
   }
 };
 
+namespace detail {
+
+template<vtkm::IdComponent cellShapeId>
+struct InternalTryCellShape
+{
+  template<typename FunctionType>
+  void operator()(const FunctionType &function) const {
+    this->PrintAndInvoke(function,
+                         typename vtkm::CellShapeIdToTag<cellShapeId>::valid());
+    InternalTryCellShape<cellShapeId+1>()(function);
+  }
+
+private:
+  template<typename FunctionType>
+  void PrintAndInvoke(const FunctionType &function, boost::true_type) const {
+    typedef typename vtkm::CellShapeIdToTag<cellShapeId>::Tag CellShapeTag;
+    std::cout << "*** "
+              << vtkm::GetCellShapeName(CellShapeTag())
+              << " ***************" << std::endl;
+    function(CellShapeTag());
+  }
+
+  template<typename FunctionType>
+  void PrintAndInvoke(const FunctionType &, boost::false_type) const {
+    // Not a valid cell shape. Do nothing.
+  }
+};
+
+template<>
+struct InternalTryCellShape<vtkm::NUMBER_OF_CELL_SHAPES>
+{
+  template<typename FunctionType>
+  void operator()(const FunctionType &) const {
+    // Done processing cell sets. Do nothing and return.
+  }
+};
+
+} // namespace detail
 
 struct Testing
 {
@@ -214,6 +254,11 @@ public:
                 << error.GetMessage() << std::endl;
       return 1;
     }
+    catch (std::exception error)
+    {
+      std::cout << "***** STL exception throw." << std::endl
+                << error.what() << std::endl;
+    }
     catch (...)
     {
       std::cout << "***** Unidentified exception thrown." << std::endl;
@@ -243,7 +288,7 @@ public:
 
   /// Runs template \p function on all the types in the given list.
   ///
-  template<class FunctionType, class TypeList>
+  template<typename FunctionType, typename TypeList>
   static void TryTypes(const FunctionType &function, TypeList)
   {
     vtkm::ListForEach(InternalPrintTypeAndInvoke<FunctionType>(function),
@@ -255,10 +300,19 @@ public:
   /// the function is supposed to work on some subset of types, then use
   /// \c TryTypes to restrict the call to some other list of types.
   ///
-  template<class FunctionType>
+  template<typename FunctionType>
   static void TryAllTypes(const FunctionType &function)
   {
     TryTypes(function, vtkm::TypeListTagAll());
+  }
+
+  /// Runs templated \p function on all cell shapes defined in VTK-m. This is
+  /// helpful to test templated functions that should work on all cell types.
+  ///
+  template<typename FunctionType>
+  static void TryAllCellShapes(const FunctionType &function)
+  {
+    detail::InternalTryCellShape<0>()(function);
   }
 
 };
@@ -277,10 +331,15 @@ bool test_equal(VectorType1 vector1,
 {
   typedef typename vtkm::VecTraits<VectorType1> Traits1;
   typedef typename vtkm::VecTraits<VectorType2> Traits2;
-  BOOST_STATIC_ASSERT(Traits1::NUM_COMPONENTS == Traits2::NUM_COMPONENTS);
+
+  if (Traits1::GetNumberOfComponents(vector1) !=
+      Traits2::GetNumberOfComponents(vector2))
+  {
+    return false;
+  }
 
   for (vtkm::IdComponent component = 0;
-       component < Traits1::NUM_COMPONENTS;
+       component < Traits1::GetNumberOfComponents(vector1);
        component++)
   {
     vtkm::Float64 value1 =
@@ -339,29 +398,6 @@ bool test_equal(const vtkm::Pair<T1,T2> &pair1,
 {
   return test_equal(pair1.first, pair2.first, tolerance)
       && test_equal(pair1.second, pair2.second, tolerance);
-}
-
-/// Helper function for printing out vectors during testing.
-///
-template<typename T, vtkm::IdComponent Size>
-VTKM_CONT_EXPORT
-std::ostream &operator<<(std::ostream &stream, const vtkm::Vec<T,Size> &vec)
-{
-  stream << "[";
-  for (vtkm::IdComponent component = 0; component < Size-1; component++)
-  {
-    stream << vec[component] << ",";
-  }
-  return stream << vec[Size-1] << "]";
-}
-
-/// Helper function for printing out pairs during testing.
-///
-template<typename T, typename U>
-VTKM_EXEC_CONT_EXPORT
-std::ostream &operator<<(std::ostream &stream, const vtkm::Pair<T,U> &vec)
-{
-  return stream << "[" << vec.first << "," << vec.second << "]";
 }
 
 

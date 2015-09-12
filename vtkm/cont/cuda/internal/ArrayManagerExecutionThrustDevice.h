@@ -25,21 +25,16 @@
 #include <vtkm/cont/Storage.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
-#if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif // gcc || clang
-
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cuda/vector.h>
 #include <thrust/device_malloc_allocator.h>
 #include <thrust/copy.h>
 
-#if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#pragma GCC diagnostic pop
-#endif // gcc || clang
+#include <thrust/system/cuda/execution_policy.h>
 
+VTKM_THIRDPARTY_POST_INCLUDE
+
+#include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
 
 namespace vtkm {
@@ -172,10 +167,17 @@ public:
   void RetrieveOutputData(StorageType *storage) const
   {
     storage->Allocate(static_cast<vtkm::Id>(this->Array.size()));
-    ::thrust::copy(
+    try
+      {
+      ::thrust::copy(
           this->Array.data(),
           this->Array.data() + static_cast<difference_type>(this->Array.size()),
           vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
+      }
+    catch (...)
+    {
+      vtkm::cont::cuda::internal::throwAsVTKmException();
+    }
   }
 
   /// Resizes the device vector.
@@ -219,9 +221,9 @@ private:
             vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst()),
             vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()));
     }
-    catch (std::bad_alloc error)
+    catch (...)
     {
-      throw vtkm::cont::ErrorControlOutOfMemory(error.what());
+      vtkm::cont::cuda::internal::throwAsVTKmException();
     }
   }
 };

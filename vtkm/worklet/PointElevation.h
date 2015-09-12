@@ -23,6 +23,8 @@
 
 #include <vtkm/worklet/WorkletMapField.h>
 
+#include <vtkm/Math.h>
+
 namespace vtkm {
 namespace worklet {
 
@@ -32,7 +34,7 @@ template <typename T>
 VTKM_EXEC_EXPORT
 T clamp(const T& val, const T& min, const T& max)
 {
-  return (val < min) ? min : ((val > max) ? max : val);
+  return vtkm::Min(max, vtkm::Max(min, val));
 }
 
 }
@@ -40,9 +42,8 @@ T clamp(const T& val, const T& min, const T& max)
 class PointElevation : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Scalar>, FieldIn<Scalar>, FieldIn<Scalar>,
-                                FieldOut<Scalar>);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
+  typedef _2 ExecutionSignature(_1);
 
   VTKM_CONT_EXPORT
   PointElevation() : LowPoint(0.0, 0.0, 0.0), HighPoint(0.0, 0.0, 1.0),
@@ -67,18 +68,24 @@ public:
     this->RangeHigh = high;
   }
 
-  template <typename T1, typename T2, typename T3, typename T4>
   VTKM_EXEC_EXPORT
-  void operator()(const T1 &x, const T2 &y, const T3 &z, T4 &elevation) const
+  vtkm::Float64 operator()(const vtkm::Vec<vtkm::Float64,3> &vec) const
   {
     vtkm::Vec<vtkm::Float64, 3> direction = this->HighPoint - this->LowPoint;
-    vtkm::Float64 length = vtkm::dot(direction, direction);
+    vtkm::Float64 lengthSqr = vtkm::dot(direction, direction);
     vtkm::Float64 rangeLength = this->RangeHigh - this->RangeLow;
-    vtkm::Vec<vtkm::Float64, 3> vec = vtkm::make_Vec<vtkm::Float64>(x, y, z) -
-                                      this->LowPoint;
-    vtkm::Float64 s = vtkm::dot(vec, direction) / length;
+    vtkm::Float64 s = vtkm::dot(vec - this->LowPoint, direction) / lengthSqr;
     s = internal::clamp(s, 0.0, 1.0);
-    elevation = static_cast<T4>(this->RangeLow + (s * rangeLength));
+    return this->RangeLow + (s * rangeLength);
+  }
+
+  template <typename T>
+  VTKM_EXEC_EXPORT
+  vtkm::Float64 operator()(const vtkm::Vec<T,3> &vec) const
+  {
+    return (*this)(vtkm::make_Vec(static_cast<vtkm::Float64>(vec[0]),
+                                  static_cast<vtkm::Float64>(vec[1]),
+                                  static_cast<vtkm::Float64>(vec[2])));
   }
 
 private:

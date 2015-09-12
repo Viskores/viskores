@@ -21,7 +21,9 @@
 set(unit_tests
   UnitTestExecutionSignatureTag.cxx
   UnitTestFetchArrayDirectIn.cxx
+  UnitTestFetchArrayDirectInOut.cxx
   UnitTestFetchArrayDirectOut.cxx
+  UnitTestFetchArrayTopologyMapIn.cxx
   UnitTestFetchExecObject.cxx
   UnitTestFetchWorkIndex.cxx
   )

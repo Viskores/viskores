@@ -20,16 +20,16 @@
 #ifndef vtk_m_cont_CellSet_h
 #define vtk_m_cont_CellSet_h
 
-#include <vtkm/CellType.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/LogicalStructure.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <boost/static_assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
 namespace cont {
@@ -56,17 +56,21 @@ public:
     return this->Dimensionality;
   }
 
-  virtual vtkm::Id GetNumCells() const = 0;
+  virtual vtkm::Id GetNumberOfCells() const = 0;
 
-  virtual vtkm::Id GetNumFaces() const
+  virtual vtkm::Id GetNumberOfFaces() const
   {
     return 0;
   }
 
-  virtual vtkm::Id GetNumEdges() const
+  virtual vtkm::Id GetNumberOfEdges() const
   {
     return 0;
   }
+
+  // A cell set does not (necessarily) know the number of points. Nor does a
+  // DataSet. Shouldn't someone know?
+//  virtual vtkm::Id GetNumberOfPoints() const = 0;
 
   virtual void PrintSummary(std::ostream&) const = 0;
 
@@ -79,7 +83,7 @@ protected:
 namespace internal {
 
 /// Checks to see if the given object is a cell set. This check is compatible
-/// with the Boost meta-template programming library(MPL). It contains a
+/// with the Boost meta-template programming library (MPL). It contains a
 /// typedef named \c type that is either boost::mpl::true_ or
 /// boost::mpl::false_. Both of these have a typedef named value with the
 /// respective boolean value.
@@ -90,8 +94,8 @@ struct CellSetCheck
   typedef typename boost::is_base_of<vtkm::cont::CellSet, T>::type type;
 };
 
-#define VTKM_IS_CELL_SET(type) \
-  BOOST_MPL_ASSERT(( ::vtkm::cont::internal::CellSetCheck<type> ))
+#define VTKM_IS_CELL_SET(T) \
+  BOOST_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value)
 
 } // namespace internal
 

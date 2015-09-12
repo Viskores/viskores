@@ -23,18 +23,24 @@
 #include <vtkm/worklet/internal/WorkletBase.h>
 
 #include <vtkm/TypeListTag.h>
+#include <vtkm/TopologyElementTag.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagArrayIn.h>
+#include <vtkm/cont/arg/TransportTagArrayInOut.h>
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
 #include <vtkm/cont/arg/TransportTagTopologyIn.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagTopology.h>
 
+#include <vtkm/exec/arg/CellShape.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
+#include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 #include <vtkm/exec/arg/FetchTagTopologyIn.h>
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
+#include <vtkm/exec/arg/FromCount.h>
+#include <vtkm/exec/arg/FromIndices.h>
 
 namespace vtkm {
 namespace worklet {
@@ -43,16 +49,23 @@ namespace worklet {
 /// inputs and outputs are on the same domain. That is, all the arrays are the
 /// same size.
 ///
+/// TODO: I also suggest having convenience subclasses for common (supported?)
+/// link directions.
+///
+template<typename FromTopology, typename ToTopology>
 class WorkletMapTopology : public vtkm::worklet::internal::WorkletBase
 {
 public:
+  typedef FromTopology FromTopologyType;
+  typedef ToTopology ToTopologyType;
+
   /// \brief A control signature tag for input fields.
   ///
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
   template<typename TypeList = AllTypes>
-  struct FieldDestIn : vtkm::cont::arg::ControlSignatureTagBase {
+  struct FieldInTo : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag;
@@ -64,7 +77,7 @@ public:
   /// the possible value types in the array.
   ///
   template<typename TypeList = AllTypes>
-  struct FieldSrcIn : vtkm::cont::arg::ControlSignatureTagBase {
+  struct FieldInFrom : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayTopologyMapIn FetchTag;
@@ -72,15 +85,10 @@ public:
 
   /// \brief A control signature tag for input connectivity.
   ///
-  /// This tag takes a template argument that is a type list tag that limits
-  /// the possible value types in the array.
-  ///
-  template< vtkm::IdComponent ItemTupleLength>
   struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagTopologyIn TransportTag;
+    typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopology,ToTopology> TransportTag;
     typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
-    static const int ITEM_TUPLE_LENGTH = ItemTupleLength;
   };
 
   /// \brief A control signature tag for output fields.
@@ -89,12 +97,55 @@ public:
   /// the possible value types in the array.
   ///
   template<typename TypeList = AllTypes>
-  struct FieldDestOut : vtkm::cont::arg::ControlSignatureTagBase {
+  struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayOut TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectOut FetchTag;
   };
+
+  /// \brief A control signature tag for input-output (in-place) fields.
+  ///
+  /// This tag takes a template argument that is a type list tag that limits
+  /// the possible value types in the array.
+  ///
+  template<typename TypeList = AllTypes>
+  struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagArrayInOut TransportTag;
+    typedef vtkm::exec::arg::FetchTagArrayDirectInOut FetchTag;
+  };
+
+  /// \brief An execution signature tag for getting the cell shape.
+  ///
+  struct CellShape : vtkm::exec::arg::CellShape {  };
+
+  /// \brief An execution signature tag to get the number of from elements.
+  ///
+  /// In a topology map, there are \em from and \em to topology elements
+  /// specified. The scheduling occurs on the \em to elements, and for each \em
+  /// to element there is some number of incident \em from elements that are
+  /// accessible. This \c ExecutionSignature tag provides the number of these
+  /// \em from elements that are accessible.
+  ///
+  struct FromCount : vtkm::exec::arg::FromCount {  };
+
+  /// \brief An execution signature tag to get the indices of from elements.
+  ///
+  /// In a topology map, there are \em from and \em to topology elements
+  /// specified. The scheduling occurs on the \em to elements, and for each \em
+  /// to element there is some number of incident \em from elements that are
+  /// accessible. This \c ExecutionSignature tag provides the indices of these
+  /// \em from elements that are accessible.
+  ///
+  struct FromIndices : vtkm::exec::arg::FromIndices {  };
 };
+
+/// Convenience base class for worklets that map from Points to Cells.
+///
+class WorkletMapTopologyPointToCell
+ : public WorkletMapTopology<vtkm::TopologyElementTagPoint,
+                             vtkm::TopologyElementTagCell>
+{ };
 
 }
 } // namespace vtkm::worklet

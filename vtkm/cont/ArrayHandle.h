@@ -31,13 +31,13 @@
 #include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/concept_check.hpp>
 #include <boost/mpl/not.hpp>
 #include <boost/smart_ptr/scoped_ptr.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/type_traits/is_base_of.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <vector>
 
@@ -532,7 +532,7 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
 {
     vtkm::Id sz = array.GetNumberOfValues();
     out<<"sz= "<<sz<<" [";
-    if (sz <= 5)
+    if (sz <= 7)
         for (vtkm::Id i = 0 ; i < sz; i++)
         {
             out<<array.GetPortalConstControl().Get(i);
@@ -540,9 +540,9 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
         }
     else
     {
-        out<<array.GetPortalConstControl().Get(0)<<" "<<array.GetPortalConstControl().Get(1);
+        out<<array.GetPortalConstControl().Get(0)<<" "<<array.GetPortalConstControl().Get(1)<<" "<<array.GetPortalConstControl().Get(2);
         out<<" ... ";
-        out<<array.GetPortalConstControl().Get(sz-2)<<" "<<array.GetPortalConstControl().Get(sz-1);
+        out<<array.GetPortalConstControl().Get(sz-3)<<" "<<array.GetPortalConstControl().Get(sz-2)<<" "<<array.GetPortalConstControl().Get(sz-1);
     }
     out<<"]";
 }

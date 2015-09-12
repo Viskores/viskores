@@ -48,6 +48,11 @@ struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
   VTKM_CONT_EXPORT
   ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
   {
+    // TODO: Throw an exception if object.GetNumberOfValues() does not equal
+    // the size passed into this operator. Currently, the size passed into
+    // this method is sometimes wrong (for example with point fields when
+    // mapping on cells).
+
     return object.PrepareForInput(Device());
   }
 };

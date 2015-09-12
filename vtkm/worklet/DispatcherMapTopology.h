@@ -20,10 +20,8 @@
 #ifndef vtk_m_worklet_Dispatcher_MapTopology_h
 #define vtk_m_worklet_Dispatcher_MapTopology_h
 
-#include <vtkm/RegularConnectivity.h>
-
+#include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/ExplicitConnectivity.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
@@ -38,13 +36,13 @@ class DispatcherMapTopology :
     public vtkm::worklet::internal::DispatcherBase<
       DispatcherMapTopology<WorkletType,Device>,
       WorkletType,
-      vtkm::worklet::WorkletMapTopology,
+      vtkm::worklet::template WorkletMapTopology<typename WorkletType::FromTopologyType, typename WorkletType::ToTopologyType>,
       Device>
 {
   typedef vtkm::worklet::internal::DispatcherBase<
     DispatcherMapTopology<WorkletType,Device>,
     WorkletType,
-    vtkm::worklet::WorkletMapTopology,
+    vtkm::worklet::template WorkletMapTopology<typename WorkletType::FromTopologyType, typename WorkletType::ToTopologyType>,
     Device> Superclass;
 
 public:
@@ -73,59 +71,21 @@ public:
     typedef typename ParameterInterface::
         template ParameterType<InputDomainIndex>::type InputDomainType;
 
+    // If you get a compile error on this line, then you have tried to use
+    // something that is not a vtkm::cont::CellSet as the input domain to a
+    // topology operation (that operates on a cell set connection domain).
+    VTKM_IS_CELL_SET(InputDomainType);
+
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
     InputDomainType inputDomain =
         invocation.Parameters.template GetParameter<InputDomainIndex>();
 
-    //we need to now template based on the input domain type. If the input
-    //domain type is a regular or explicit grid we call GetSchedulingDimensions.
-    //but in theory your input domain could be a permutation array
-    this->InvokeBasedOnDomainType(invocation,
-                                  inputDomain.GetNodeToCellConnectivity());
-  }
-
-  template<typename Invocation, typename InputDomainType>
-  VTKM_CONT_EXPORT
-  void InvokeBasedOnDomainType(const Invocation &invocation,
-                               const InputDomainType& domain) const
-  {
-    //presume that the input domain isn't a grid, so call GetNumberOfValues()
-    //this code path is currently not exercised as the InputDomain currently
-    //is required to be Explicit or Regular Connectivity. In the future if
-    //we ever allow the InputDomain and the TopologyDomain to differ, this
-    //invocation will be used
-    this->BasicInvoke(invocation, domain.GetNumberOfValues());
-  }
-
-  template<typename Invocation,
-           typename T,
-           typename U,
-           typename V>
-  VTKM_CONT_EXPORT
-  void InvokeBasedOnDomainType(const Invocation &invocation,
-                               const vtkm::cont::ExplicitConnectivity<T,U,V>& domain) const
-  {
-
-    // For a DispatcherMapTopology, when the inputDomain is some for of
-    // explicit connectivity we call GetSchedulingDimensions which will return
-    // a linear value representing the number of cells to schedule
-    this->BasicInvoke(invocation, domain.GetSchedulingDimensions());
-  }
-
-  template<typename Invocation,
-           vtkm::cont::TopologyType From,
-           vtkm::cont::TopologyType To,
-           vtkm::IdComponent Domain>
-  VTKM_CONT_EXPORT
-  void InvokeBasedOnDomainType(const Invocation &invocation,
-                               const vtkm::RegularConnectivity<From,To,Domain>& domain) const
-  {
-
-    // For a DispatcherMapTopology, the inputDomain is some for of connectivity
-    // so the GetSchedulingDimensions can return a vtkm::Id for linear scheduling,
-    // or a vtkm::Id2 or vtkm::Id3 for 3d block scheduling
-    this->BasicInvoke(invocation, domain.GetSchedulingDimensions());
+    // Now that we have the input domain, we can extract the range of the
+    // scheduling and call BadicInvoke.
+    this->BasicInvoke(invocation,
+                      inputDomain.GetSchedulingRange(
+                            typename WorkletType::ToTopologyType()));
   }
 };
 

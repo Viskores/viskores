@@ -20,8 +20,13 @@
 
 set(headers
   DispatcherBase.h
+  DispatcherBaseDetailInvoke.h
   WorkletBase.h
+  ClipTables.h
   )
+
+set_source_files_properties(DispatcherBaseDetailInvoke.h
+                            PROPERTIES VTKm_CANT_BE_HEADER_TESTED TRUE)
 
 vtkm_declare_headers(${headers})
 

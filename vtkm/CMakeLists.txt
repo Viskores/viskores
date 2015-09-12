@@ -21,19 +21,24 @@
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(headers
-  CellType.h
+  BinaryPredicates.h
+  BinaryOperators.h
+  CellShape.h
+  CellTraits.h
   Extent.h
   ListTag.h
   Math.h
   Matrix.h
   Pair.h
-  RegularConnectivity.h
-  RegularStructure.h
+  TopologyElementTag.h
   TypeListTag.h
   Types.h
   TypeTraits.h
   VectorAnalysis.h
+  VecRectilinearPointCoordinates.h
   VecTraits.h
+  VecVariable.h
+  UnaryPredicates.h
   )
 
 vtkm_pyexpander_generated_file(Math.h)
@@ -44,6 +49,10 @@ vtkm_declare_headers(${headers})
 #first add all the components vtkm that are shared between control and exec
 add_subdirectory(testing)
 add_subdirectory(internal)
+
+if(VTKm_ENABLE_OPENGL_INTEROP)
+  add_subdirectory(opengl)
+endif(VTKm_ENABLE_OPENGL_INTEROP)
 
 #-----------------------------------------------------------------------------
 #add the control and exec folders

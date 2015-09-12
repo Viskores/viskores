@@ -24,27 +24,14 @@
 #include <vtkm/cont/ArrayPortalToIterators.h>
 
 #include <iterator>
-VTKM_BOOST_PRE_INCLUDE
+
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/type_traits/remove_const.hpp>
-VTKM_BOOST_POST_INCLUDE
-
-// Disable warnings we check vtkm for but Thrust does not.
-#if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif // gcc || clang
-#include <thrust/system/cuda/memory.h>
-
-#if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#pragma GCC diagnostic pop
-#endif // gcc || clang
-
-VTKM_BOOST_PRE_INCLUDE
 #include <boost/type_traits/integral_constant.hpp>
 #include <boost/utility/enable_if.hpp>
-VTKM_BOOST_POST_INCLUDE
+
+#include <thrust/system/cuda/memory.h>
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
 namespace exec {
@@ -108,7 +95,7 @@ template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Float64,4
 template<typename T, typename Enable = void>
 struct load_through_texture
 {
-  VTKM_EXEC_EXPORT
+  __device__
   static T get(const thrust::system::cuda::pointer<T>& data)
   {
   return *(data.get());
@@ -121,7 +108,7 @@ struct load_through_texture
 template<typename T>
 struct load_through_texture<T, typename ::boost::enable_if< typename UseScalarTextureLoad<T>::type >::type >
 {
-  VTKM_EXEC_EXPORT
+  __device__
   static T get(const thrust::system::cuda::pointer<T>& data)
   {
   #if __CUDA_ARCH__ >= 350
@@ -137,7 +124,7 @@ struct load_through_texture<T, typename ::boost::enable_if< typename UseScalarTe
 template<typename T>
 struct load_through_texture<T, typename ::boost::enable_if< typename UseVecTextureLoads<T>::type >::type >
 {
-  VTKM_EXEC_EXPORT
+  __device__
   static T get(const thrust::system::cuda::pointer<T>& data)
   {
   #if __CUDA_ARCH__ >= 350
@@ -148,49 +135,49 @@ struct load_through_texture<T, typename ::boost::enable_if< typename UseVecTextu
   #endif
   }
 
-  VTKM_EXEC_EXPORT
+  __device__
   static vtkm::Vec<vtkm::Int32,2> getAs(const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::Int32,2> >& data)
   {
   const int2 temp = __ldg((const int2*)data.get());
   return vtkm::Vec<vtkm::Int32,2>(temp.x, temp.y);
   }
 
-  VTKM_EXEC_EXPORT
+  __device__
   static vtkm::Vec<vtkm::UInt32,2> getAs(const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::UInt32,2> >& data)
   {
   const uint2 temp = __ldg((const uint2*)data.get());
   return vtkm::Vec<vtkm::UInt32,2>(temp.x, temp.y);
   }
 
-  VTKM_EXEC_EXPORT
+  __device__
   static vtkm::Vec<vtkm::Int32,4> getAs(const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::Int32,4> >& data)
   {
   const int4 temp = __ldg((const int4*)data.get());
   return vtkm::Vec<vtkm::Int32,4>(temp.x, temp.y, temp.z, temp.w);
   }
 
-  VTKM_EXEC_EXPORT
+  __device__
   static vtkm::Vec<vtkm::UInt32,4> getAs(const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::UInt32,4> >& data)
   {
   const uint4 temp = __ldg((const uint4*)data.get());
   return vtkm::Vec<vtkm::UInt32,4>(temp.x, temp.y, temp.z, temp.w);
   }
 
-  VTKM_EXEC_EXPORT
+  __device__
   static vtkm::Vec<vtkm::Float32,2> getAs(const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::Float32,2> >& data)
   {
   const float2 temp = __ldg((const float2*)data.get());
   return vtkm::Vec<vtkm::Float32,2>(temp.x, temp.y);
   }
 
-  VTKM_EXEC_EXPORT
+  __device__
   static vtkm::Vec<vtkm::Float32,4> getAs(const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::Float32,4> >& data)
   {
   const float4 temp = __ldg((const float4*)data.get());
   return vtkm::Vec<vtkm::Float32,4>(temp.x, temp.y, temp.z, temp.w);
   }
 
-  VTKM_EXEC_EXPORT
+  __device__
   static vtkm::Vec<vtkm::Float64,2> getAs(const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::Float64,2> >& data)
   {
   const double2 temp = __ldg((const double2*)data.get());
@@ -205,7 +192,7 @@ struct load_through_texture<T, typename ::boost::enable_if< typename UseMultiple
 {
   typedef typename boost::remove_const<T>::type NonConstT;
 
-  VTKM_EXEC_EXPORT
+  __device__
   static T get(const thrust::system::cuda::pointer<T>& data)
   {
   #if __CUDA_ARCH__ >= 350
@@ -216,7 +203,7 @@ struct load_through_texture<T, typename ::boost::enable_if< typename UseMultiple
   #endif
   }
 
-  VTKM_EXEC_EXPORT
+  __device__
   static T getAs(const thrust::system::cuda::pointer<T>& data)
   {
   //we need to fetch each component individually
@@ -272,12 +259,12 @@ public:
     return static_cast<vtkm::Id>( (this->EndIterator - this->BeginIterator) );
   }
 
-  VTKM_EXEC_EXPORT
+  __host__ __device__
   ValueType Get(vtkm::Id index) const {
     return *(this->BeginIterator + index);
   }
 
-  VTKM_EXEC_EXPORT
+  __host__ __device__
   void Set(vtkm::Id index, ValueType value) const {
     *(this->BeginIterator + index) = value;
   }
@@ -330,12 +317,25 @@ public:
     return static_cast<vtkm::Id>( (this->EndIterator - this->BeginIterator) );
   }
 
-  VTKM_EXEC_EXPORT
+  //The __CUDA_ARCH__ define makes sure that the device only signature
+  //only shows up for the device compilation. This allows the nvcc compiler
+  //to have separate host and device code paths for the same method. This
+  //solves the problem of trying to call a device only method from a
+  //device/host method
+#if __CUDA_ARCH__
+  __device__
   ValueType Get(vtkm::Id index) const {
     return vtkm::exec::cuda::internal::load_through_texture<ValueType>::get( this->BeginIterator + index );
   }
+#else
+  __host__
+  ValueType Get(vtkm::Id index) const {
+    return ValueType();
+  }
+#endif
 
-  VTKM_EXEC_EXPORT
+
+  __host__ __device__
   void Set(vtkm::Id index, ValueType value) const {
     *(this->BeginIterator + index) = value;
   }

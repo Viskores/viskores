@@ -36,12 +36,12 @@
 
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
 
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/mpl/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/utility/enable_if.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <sstream>
 

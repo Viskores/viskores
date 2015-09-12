@@ -28,12 +28,14 @@
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 #include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
 
+#include <vtkm/BinaryOperators.h>
+
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/utility/enable_if.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <algorithm>
 #include <numeric>
@@ -193,35 +195,50 @@ public:
     return outputPortal.Get(numberOfValues - 1);
   }
 
-  template<typename T, class CIn, class COut>
+  template<typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT_EXPORT static T ScanExclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
-      vtkm::cont::ArrayHandle<T,COut>& output)
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      BinaryFunctor binaryFunctor,
+      const T& initialValue)
   {
     typedef typename vtkm::cont::ArrayHandle<T,COut>
         ::template ExecutionTypes<Device>::Portal PortalOut;
     typedef typename vtkm::cont::ArrayHandle<T,CIn>
         ::template ExecutionTypes<Device>::PortalConst PortalIn;
 
+    internal::WrappedBinaryOperator<T, BinaryFunctor>
+        wrappedBinaryOp(binaryFunctor);
+
     vtkm::Id numberOfValues = input.GetNumberOfValues();
 
     PortalIn inputPortal = input.PrepareForInput(Device());
     PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
-    if (numberOfValues <= 0) { return vtkm::TypeTraits<T>::ZeroInitialization(); }
-
-    std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
-                     vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
-                     vtkm::cont::ArrayPortalToIteratorBegin(outputPortal));
-
-    T fullSum = outputPortal.Get(numberOfValues - 1);
+    if (numberOfValues <= 0) { return initialValue; }
 
     // Shift right by one
-    std::copy_backward(vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
-                       vtkm::cont::ArrayPortalToIteratorEnd(outputPortal)-1,
+    T lastValue = inputPortal.Get(numberOfValues - 1);
+    std::copy_backward(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
+                       vtkm::cont::ArrayPortalToIteratorEnd(inputPortal) - 1,
                        vtkm::cont::ArrayPortalToIteratorEnd(outputPortal));
-    outputPortal.Set(0, vtkm::TypeTraits<T>::ZeroInitialization());
-    return fullSum;
+    outputPortal.Set(0, initialValue);
+
+    std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
+                     vtkm::cont::ArrayPortalToIteratorEnd(outputPortal),
+                     vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
+                     wrappedBinaryOp);
+
+    return wrappedBinaryOp(outputPortal.Get(numberOfValues - 1), lastValue);
+  }
+
+  template<typename T, class CIn, class COut>
+  VTKM_CONT_EXPORT static T ScanExclusive(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      vtkm::cont::ArrayHandle<T,COut>& output)
+  {
+    return ScanExclusive(input, output, vtkm::Sum(),
+                         vtkm::TypeTraits<T>::ZeroInitialization());
   }
 
 private:

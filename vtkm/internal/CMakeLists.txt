@@ -19,8 +19,10 @@
 ##============================================================================
 
 set(headers
+  ArrayPortalUniformPointCoordinates.h
   ConfigureFor32.h
   ConfigureFor64.h
+  ConnectivityStructuredInternals.h
   ExportMacros.h
   FunctionInterface.h
   FunctionInterfaceDetailPost.h

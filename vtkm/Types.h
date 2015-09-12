@@ -24,12 +24,14 @@
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/mpl/or.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
 #include <boost/type_traits/is_signed.hpp>
 #include <boost/utility/enable_if.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
+
+#include <iostream>
 
 /*!
  * \namespace vtkm
@@ -46,21 +48,10 @@ VTKM_BOOST_POST_INCLUDE
  * Environment. Users of the VTKm Toolkit can use this namespace to access the
  * Control Environment.
  *
- * \namespace vtkm::cuda
- * \brief CUDA implementation.
- *
- * vtkm::cuda includes the code to implement the VTKm for CUDA-based platforms.
- *
- * \namespace vtkm::cuda::cont
+ * \namespace vtkm::cont::cuda
  * \brief CUDA implementation for Control Environment.
  *
- * vtkm::cuda::cont includes the code to implement the VTKm Control Environment
- * for CUDA-based platforms.
- *
- * \namespace vtkm::cuda::exec
- * \brief CUDA implementation for Execution Environment.
- *
- * vtkm::cuda::exec includes the code to implement the VTKm Execution Environment
+ * vtkm::cont::cuda includes the code to implement the VTKm Control Environment
  * for CUDA-based platforms.
  *
  * \namespace vtkm::exec
@@ -70,6 +61,12 @@ VTKM_BOOST_POST_INCLUDE
  * Environment. Worklets typically use classes/apis defined within this
  * namespace alone.
  *
+ * \namespace vtkm::exec::cuda
+ * \brief CUDA implementation for Execution Environment.
+ *
+ * vtkm::exec::cuda includes the code to implement the VTKm Execution Environment
+ * for CUDA-based platforms.
+ *
  * \namespace vtkm::internal
  * \brief VTKm Internal Environment
  *
@@ -77,10 +74,11 @@ VTKM_BOOST_POST_INCLUDE
  * change. This should not be used for projects using VTKm. Instead it servers
  * are a reference for the developers of VTKm.
  *
- * \namespace vtkm::math
- * \brief Utility math functions
+ * \namespace vtkm::opengl
+ * \brief Utility opengl interop functions
  *
- * vtkm::math defines the publicly accessible API for Utility Math functions.
+ * vtkm::opengl defines the publicly accessible API for interoperability between
+ * vtkm and opengl.
  *
  * \namespace vtkm::testing
  * \brief Internal testing classes
@@ -672,6 +670,16 @@ struct BindRightBinaryOp
   }
 };
 
+// Disable conversion warnings for Add, Subtract, Multiply, Divide on GCC only.
+// GCC creates false positive warnings for signed/unsigned char* operations.
+// This occurs because the values are implicitly casted up to int's for the
+// operation, and than  casted back down to char's when return.
+// This causes a false positive warning, even when the values is within
+// the value types range
+#if defined(VTKM_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
 struct Add
 {
   template<typename T>
@@ -717,9 +725,16 @@ struct Negate
   }
 };
 
+#if defined(VTKM_GCC) || defined(VTKM_CLANG)
+#pragma GCC diagnostic pop
+#endif // gcc || clang
+
 } // namespace internal
 
 //-----------------------------------------------------------------------------
+
+// Pre declaration
+template<typename T, vtkm::IdComponent Size> class Vec;
 
 namespace detail {
 
@@ -752,6 +767,21 @@ protected:
   }
 
 public:
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::IdComponent GetNumberOfComponents() const { return NUM_COMPONENTS; }
+
+  template<vtkm::IdComponent OtherSize>
+  VTKM_EXEC_CONT_EXPORT
+  void CopyInto(vtkm::Vec<ComponentType,OtherSize> &dest) const
+  {
+    for (vtkm::IdComponent index = 0;
+         (index < NUM_COMPONENTS) && (index < OtherSize);
+         index++)
+    {
+      dest[index] = (*this)[index];
+    }
+  }
+
   VTKM_EXEC_CONT_EXPORT
   DerivedClass &operator=(const DerivedClass &src)
   {
@@ -950,6 +980,27 @@ public:
   }
 };
 
+// Vectors of size 1 should implicitly convert between the scalar and the
+// vector. Otherwise, it should behave the same.
+template<typename T>
+class Vec<T,1> : public detail::VecBase<T, 1, Vec<T,1> >
+{
+  typedef detail::VecBase<T, 1, Vec<T,1> > Superclass;
+
+public:
+  VTKM_EXEC_CONT_EXPORT Vec() {}
+  VTKM_EXEC_CONT_EXPORT Vec(const T& value) : Superclass(value) {  }
+
+  template<typename OtherType>
+  VTKM_EXEC_CONT_EXPORT Vec(const Vec<OtherType, 1> &src) : Superclass(src) {  }
+
+  VTKM_EXEC_CONT_EXPORT
+  operator T() const
+  {
+    return this->Components[0];
+  }
+};
+
 //-----------------------------------------------------------------------------
 // Specializations for common tuple sizes (with special names).
 
@@ -1101,18 +1152,6 @@ VTK_M_SCALAR_DOT(vtkm::UInt64)
 VTK_M_SCALAR_DOT(vtkm::Float32)
 VTK_M_SCALAR_DOT(vtkm::Float64)
 
-
-/// Predicate that takes a single argument \c x, and returns
-/// True if it isn't the identity of the Type \p T.
-template<typename T>
-struct not_default_constructor
-{
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T &x) const
-  {
-    return (x  != T());
-  }
-};
-
 } // End of namespace vtkm
 
 // Declared outside of vtkm namespace so that the operator works with all code.
@@ -1142,6 +1181,20 @@ operator-(const vtkm::Vec<T,Size> &x)
 {
   return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
         x, vtkm::internal::Negate());
+}
+
+/// Helper function for printing out vectors during testing.
+///
+template<typename T, vtkm::IdComponent Size>
+VTKM_CONT_EXPORT
+std::ostream &operator<<(std::ostream &stream, const vtkm::Vec<T,Size> &vec)
+{
+  stream << "[";
+  for (vtkm::IdComponent component = 0; component < Size-1; component++)
+  {
+    stream << vec[component] << ",";
+  }
+  return stream << vec[Size-1] << "]";
 }
 
 #endif //vtk_m_Types_h

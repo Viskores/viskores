@@ -22,6 +22,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 set(headers
   ArrayHandle.h
+  ArrayHandleCast.h
   ArrayHandleCompositeVector.h
   ArrayHandleConstant.h
   ArrayHandleCounting.h
@@ -44,8 +45,6 @@ set(headers
   DeviceAdapterSerial.h
   DynamicArrayHandle.h
   DynamicCellSet.h
-  DynamicPointCoordinates.h
-  ExplicitConnectivity.h
   Error.h
   ErrorControl.h
   ErrorControlAssert.h
@@ -56,15 +55,11 @@ set(headers
   ErrorExecution.h
   Field.h
   LogicalStructure.h
-  PointCoordinatesArray.h
-  PointCoordinatesListTag.h
-  PointCoordinatesUniform.h
   Storage.h
   StorageBasic.h
   StorageImplicit.h
   StorageListTag.h
   Timer.h
-  TopologyType.h
   )
 
 #-----------------------------------------------------------------------------

@@ -30,10 +30,10 @@
 #include <vtkm/Types.h>
 #include <vtkm/internal/IndexTag.h>
 
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/function_types/function_type.hpp>
 #include <boost/mpl/at.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
 #define VTKM_MAX_FUNCTION_PARAMETERS 10
 

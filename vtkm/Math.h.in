@@ -50,17 +50,17 @@ $# Ignore the following comment. It is meant for the generated file.
 // boost seems to want to undefine those macros so that it can implement the
 // C99 templates and other implementations of the same name. Get around the
 // problem by using the boost version when compiling for a CPU.
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/math/special_functions/sign.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 #include <cmath>
 #define VTKM_USE_BOOST_CLASSIFY
 #define VTKM_USE_BOOST_SIGN
 #endif // !VTKM_CUDA
 
 #if defined(VTKM_MSVC) && !defined(VTKM_CUDA)
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/math/special_functions/acosh.hpp>
 #include <boost/math/special_functions/asinh.hpp>
 #include <boost/math/special_functions/atanh.hpp>
@@ -68,7 +68,7 @@ VTKM_BOOST_PRE_INCLUDE
 #include <boost/math/special_functions/expm1.hpp>
 #include <boost/math/special_functions/log1p.hpp>
 #include <boost/math/special_functions/round.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 #define VTKM_USE_BOOST_MATH
 #if _MSC_VER <= 1600
 #define VTKM_USE_STL_MIN_MAX
@@ -192,12 +192,43 @@ $extend(binary_template_function)
 namespace vtkm {
 
 //-----------------------------------------------------------------------------
+/// Returns the constant 2 times Pi.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 TwoPi()
+{
+  return 6.28318530717958647692528676655900576;
+}
+
 /// Returns the constant Pi.
 ///
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Pi()
 {
   return 3.14159265358979323846264338327950288;
+}
+
+/// Returns the constant Pi halves.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Pi_2()
+{
+  return 1.57079632679489661923132169163975144;
+}
+/// Returns the constant Pi thirds.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Pi_3()
+{
+  return 1.04719755119659774615421446109316762;
+}
+
+/// Returns the constant Pi fourths.
+///
+VTKM_EXEC_CONT_EXPORT
+vtkm::Float64 Pi_4()
+{
+  return 0.78539816339744830961566084581987572;
 }
 
 /// Compute the sine of \p x.

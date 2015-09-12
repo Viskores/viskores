@@ -40,10 +40,21 @@
 #define VTKM_ICC
 #endif
 
+#ifdef __PGI
+#define VTKM_PGI
+#endif
+
 // Several compilers pretend to be GCC but have minor differences. Try to
 // compensate for that.
 #if defined(__GNUC__) && !defined(VTKM_CLANG) && !defined(VTKM_ICC)
 #define VTKM_GCC
+#endif
+
+#if defined(unix) || defined(__unix) || defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#include <unistd.h>
+# ifdef _POSIX_VERSION
+#  define VTKM_POSIX _POSIX_VERSION
+# endif
 #endif
 
 #if !defined(VTKM_USE_DOUBLE_PRECISION) && !defined(VTKM_NO_DOUBLE_PRECISION)
@@ -103,21 +114,26 @@
 # endif
 #endif
 
-// Define a pair of macros, VTKM_BOOST_PRE_INCLUDE and VTKM_BOOST_POST_INCLUDE,
-// that should be wrapped around any #include for a boost header file. Mostly
+// Define a pair of macros, VTKM_THIRDPARTY_PRE_INCLUDE and VTKM_THIRDPARTY_POST_INCLUDE,
+// that should be wrapped around any #include for a boost or thrust header file. Mostly
 // this is used to set pragmas that dissable warnings that VTK-m checks for
-// but boost does not.
-#if defined(VTKM_GCC) || defined(VTKM_CLANG)
-#define VTKM_BOOST_PRE_INCLUDE \
+// but boost and thrust does not.
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
+#define VTKM_THIRDPARTY_PRE_INCLUDE \
   _Pragma("GCC diagnostic push") \
   _Pragma("GCC diagnostic ignored \"-Wconversion\"") \
   _Pragma("GCC diagnostic ignored \"-Wshadow\"") \
   _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
-#define VTKM_BOOST_POST_INCLUDE \
+#define VTKM_THIRDPARTY_POST_INCLUDE \
   _Pragma("GCC diagnostic pop")
 #else
-#define VTKM_BOOST_PRE_INCLUDE
-#define VTKM_BOOST_POST_INCLUDE
+#define VTKM_THIRDPARTY_PRE_INCLUDE
+#define VTKM_THIRDPARTY_POST_INCLUDE
+#endif
+
+//Mark if we are building with interop enabled
+#ifndef VTKM_ENABLE_OPENGL_INTEROP
+#cmakedefine VTKM_ENABLE_OPENGL_INTEROP
 #endif
 
 // Determine whether we will use variadic templates (a new feature in C++11).
@@ -126,9 +142,9 @@
 #if !defined(VTKM_USE_VARIADIC_TEMPLATE) && !defined(VTKM_NO_VARIADIC_TEMPLATE)
 // Currently using Boost to determine support.
 
-VTKM_BOOST_PRE_INCLUDE
+VTKM_THIRDPARTY_PRE_INCLUDE
 # include <boost/config.hpp>
-VTKM_BOOST_POST_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
 
 # if defined(BOOST_HAS_VARIADIC_TMPL)

@@ -20,13 +20,15 @@
 #ifndef vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
 #define vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
 
-#include <vtkm/TypeTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/StorageBasic.h>
+#include <vtkm/BinaryOperators.h>
+#include <vtkm/TypeTraits.h>
+#include <vtkm/UnaryPredicates.h>
 
 #include <vtkm/exec/FunctorBase.h>
 
@@ -693,71 +695,80 @@ public:
   //--------------------------------------------------------------------------
   // Scan Exclusive
 private:
-  template<typename PortalType>
-  struct SetConstantKernel
+  template <typename InPortalType, typename OutPortalType, typename BinaryFunctor>
+  struct InclusiveToExclusiveKernel : vtkm::exec::FunctorBase
   {
-    typedef typename PortalType::ValueType ValueType;
-    PortalType Portal;
-    ValueType Value;
+    typedef typename InPortalType::ValueType ValueType;
+
+    InPortalType InPortal;
+    OutPortalType OutPortal;
+    BinaryFunctor BinaryOperator;
+    ValueType InitialValue;
 
     VTKM_CONT_EXPORT
-    SetConstantKernel(const PortalType &portal, ValueType value)
-      : Portal(portal), Value(value) {  }
+    InclusiveToExclusiveKernel(const InPortalType &inPortal,
+                               const OutPortalType &outPortal,
+                               BinaryFunctor &binaryOperator,
+                               ValueType initialValue)
+      : InPortal(inPortal),
+        OutPortal(outPortal),
+        BinaryOperator(binaryOperator),
+        InitialValue(initialValue)
+     { }
 
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Id index) const
     {
-      this->Portal.Set(index, this->Value);
+      ValueType result = (index == 0) ? this->InitialValue :
+          this->BinaryOperator(this->InitialValue, this->InPortal.Get(index - 1));
+      this->OutPortal.Set(index, result);
     }
-
-    VTKM_CONT_EXPORT
-    void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer &)
-    {  }
   };
 
 public:
-  template<typename T, class CIn, class COut>
+  template<typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT_EXPORT static T ScanExclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
-      vtkm::cont::ArrayHandle<T,COut>& output)
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      BinaryFunctor binaryFunctor,
+      const T& initialValue)
   {
     typedef vtkm::cont::ArrayHandle<T,vtkm::cont::StorageTagBasic>
         TempArrayType;
     typedef vtkm::cont::ArrayHandle<T,COut> OutputArrayType;
 
-    TempArrayType inclusiveScan;
-    T result = DerivedAlgorithm::ScanInclusive(input, inclusiveScan);
-
-    vtkm::Id numValues = inclusiveScan.GetNumberOfValues();
-    if (numValues < 1)
-    {
-      return result;
-    }
-
     typedef typename TempArrayType::template ExecutionTypes<DeviceAdapterTag>
         ::PortalConst SrcPortalType;
-    SrcPortalType srcPortal = inclusiveScan.PrepareForInput(DeviceAdapterTag());
-
     typedef typename OutputArrayType::template ExecutionTypes<DeviceAdapterTag>
         ::Portal DestPortalType;
-    DestPortalType destPortal = output.PrepareForOutput(numValues,
-                                                        DeviceAdapterTag());
 
-    // Set first value in output (always 0).
-    DerivedAlgorithm::Schedule(
-          SetConstantKernel<DestPortalType>(
-                                    destPortal,
-                                    vtkm::TypeTraits<T>::ZeroInitialization()),
-          1);
-    // Shift remaining values over by one.
-    DerivedAlgorithm::Schedule(
-          CopyKernel<SrcPortalType,DestPortalType>(srcPortal,
-                                                   destPortal,
-                                                   0,
-                                                   1),
-          numValues - 1);
+    vtkm::Id numValues = input.GetNumberOfValues();
+    if (numValues <= 0)
+    {
+      return initialValue;
+    }
 
-    return result;
+    TempArrayType inclusiveScan;
+    T result = DerivedAlgorithm::ScanInclusive(input, inclusiveScan, binaryFunctor);
+
+    InclusiveToExclusiveKernel<SrcPortalType, DestPortalType, BinaryFunctor>
+      inclusiveToExclusive(inclusiveScan.PrepareForInput(DeviceAdapterTag()),
+                           output.PrepareForOutput(numValues, DeviceAdapterTag()),
+                           binaryFunctor,
+                           initialValue);
+
+    DerivedAlgorithm::Schedule(inclusiveToExclusive, numValues);
+
+    return binaryFunctor(initialValue, result);
+  }
+
+  template<typename T, class CIn, class COut>
+  VTKM_CONT_EXPORT static T ScanExclusive(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      vtkm::cont::ArrayHandle<T,COut>& output)
+  {
+    return ScanExclusive(input, output, vtkm::Sum(),
+                         vtkm::TypeTraits<T>::ZeroInitialization());
   }
 
   //--------------------------------------------------------------------------
@@ -1184,7 +1195,7 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
       const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
-    ::vtkm::not_default_constructor<U> unary_predicate;
+    ::vtkm::NotZeroInitialized unary_predicate;
     DerivedAlgorithm::StreamCompact(input, stencil, output, unary_predicate);
   }
 

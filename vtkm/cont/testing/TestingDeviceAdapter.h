@@ -21,6 +21,7 @@
 #define vtk_m_cont_testing_TestingDeviceAdapter_h
 
 #include <vtkm/TypeTraits.h>
+#include <vtkm/BinaryPredicates.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -55,50 +56,6 @@ namespace cont {
 namespace testing {
 
 namespace comparison {
-struct SortLess
-{
-  template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a, const T& b) const
-  {
-    return a < b;
-  }
-
-  template<typename T, int N>
-  VTKM_EXEC_EXPORT bool operator()(const vtkm::Vec<T,N>& a,
-                                   const vtkm::Vec<T,N>& b) const
-  {
-    const vtkm::IdComponent SIZE = vtkm::VecTraits<T>::NUM_COMPONENTS;
-    bool valid = true;
-    for(vtkm::IdComponent i=0; (i < SIZE) && valid; ++i)
-    {
-      valid = a[i] < b[i];
-    }
-    return valid;
-  }
-};
-
-struct SortGreater
-{
-  template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& a, const T& b) const
-  {
-    return a > b;
-  }
-
-  template<typename T, int N>
-  VTKM_EXEC_EXPORT bool operator()(const vtkm::Vec<T,N>& a,
-                                   const vtkm::Vec<T,N>& b) const
-  {
-    const vtkm::IdComponent SIZE = vtkm::VecTraits<T>::NUM_COMPONENTS;
-    bool valid = true;
-    for(vtkm::IdComponent i=0; (i < SIZE) && valid; ++i)
-    {
-      valid = a[i] > b[i];
-    }
-    return valid;
-  }
-};
-
 struct MaxValue
 {
   template<typename T>
@@ -753,7 +710,7 @@ private:
     //we would also sort the 'sorted' handle
     IdArrayHandle comp_sorted;
     Algorithm::Copy(sorted, comp_sorted);
-    Algorithm::Sort(comp_sorted,comparison::SortGreater());
+    Algorithm::Sort(comp_sorted,vtkm::SortGreater());
 
     //Validate that sorted and comp_sorted are sorted in the opposite directions
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
@@ -765,13 +722,13 @@ private:
     }
 
     //validate that sorted and comp_sorted are now equal
-    Algorithm::Sort(comp_sorted,comparison::SortLess());
+    Algorithm::Sort(comp_sorted,vtkm::SortLess());
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
     {
       vtkm::Id sorted1 = sorted.GetPortalConstControl().Get(i);
       vtkm::Id sorted2 = comp_sorted.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT(sorted1 == sorted2,
-                       "Got bad sort values when using SortLesser");
+                       "Got bad sort values when using SortLess");
     }
   }
 
@@ -794,7 +751,7 @@ private:
     vtkm::cont::ArrayHandleZip< IdArrayHandle, IdArrayHandle> zipped(unsorted, sorted);
 
     //verify we can use sort with zip handle
-    Algorithm::Sort(zipped, comparison::SortGreater());
+    Algorithm::Sort(zipped, vtkm::SortGreater());
     Algorithm::Sort(zipped);
 
     for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
@@ -813,7 +770,7 @@ private:
                                         IdArrayHandle> perm(index, sorted);
 
     //verify we can use a custom operator sort with permutation handle
-    Algorithm::Sort(perm, comparison::SortGreater());
+    Algorithm::Sort(perm, vtkm::SortGreater());
     for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
     {
       vtkm::Id sorted_value = perm.GetPortalConstControl().Get(i);
@@ -868,7 +825,7 @@ private:
       }
 
     // this will return everything back to what it was before sorting
-    Algorithm::SortByKey(keys,values,comparison::SortGreater());
+    Algorithm::SortByKey(keys,values,vtkm::SortGreater());
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
       {
       //keys should be sorted from ARRAY_SIZE to 1
@@ -918,7 +875,7 @@ private:
 
     IdArrayHandle handle;
     //verify lower bounds work
-    Algorithm::LowerBounds(temp,input,handle,comparison::SortLess());
+    Algorithm::LowerBounds(temp,input,handle,vtkm::SortLess());
 
     // Check to make sure that temp was resized correctly during Unique.
     // (This was a discovered bug at one point.)
@@ -956,7 +913,7 @@ private:
 
     IdArrayHandle handle;
     //verify upper bounds work
-    Algorithm::UpperBounds(temp,input,handle,comparison::SortLess());
+    Algorithm::UpperBounds(temp,input,handle,vtkm::SortLess());
 
     // Check to make sure that temp was resized correctly during Unique.
     // (This was a discovered bug at one point.)
@@ -1439,7 +1396,6 @@ private:
 
 // Enable when Exclusive Scan with custom operator is implemented for all
 // device adaptors
-#if 0
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Exclusive Scan with multiplication operator" << std::endl;
     {
@@ -1476,7 +1432,6 @@ private:
                        "Incorrect results for ScanExclusive");
     }
     }
-#endif
 
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Exclusive Scan with a vtkm::Vec" << std::endl;
