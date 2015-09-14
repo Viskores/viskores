@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_worklet_GaussianSplatter_h
-#define vtk_m_worklet_GaussianSplatter_h
+#ifndef vtk_m_worklet_KernelSplatter_h
+#define vtk_m_worklet_KernelSplatter_h
 
 #include <vtkm/Math.h>
 
@@ -37,6 +37,10 @@
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
+
+#include <vtkm/worklet/kernels/KernelBase.h>
+#include <vtkm/worklet/kernels/Gaussian.h>
+#include <vtkm/worklet/kernels/Spline3rdOrder.h>
 
 #define __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
 
@@ -57,7 +61,7 @@
 #endif
 
 //----------------------------------------------------------------------------
-// Gaussian splatter worklet/filter
+// Kernel splatter worklet/filter
 //----------------------------------------------------------------------------
 namespace vtkm { namespace worklet
 {
@@ -123,8 +127,8 @@ void OutputArrayDebug(const vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::Ar
 #endif
 } // namespace debug
 
-template<typename DeviceAdapter>
-struct GaussianSplatterFilterUniformGrid
+template<typename Kernel, typename DeviceAdapter>
+struct KernelSplatterFilterUniformGrid
 {
     typedef vtkm::cont::ArrayHandle<vtkm::Float64> DoubleHandleType;
     typedef vtkm::cont::ArrayHandle<vtkm::Float32> FloatHandleType;
@@ -170,9 +174,10 @@ struct GaussianSplatterFilterUniformGrid
     class GetFootprint : public vtkm::worklet::WorkletMapField
     {
     private:
-        vtkm::Vec<vtkm::Float64, 3> Origin;
-        vtkm::Vec<vtkm::Float64, 3> Spacing;
+        vtkm::Vec<vtkm::Float64, 3> origin_;
+        vtkm::Vec<vtkm::Float64, 3> spacing_;
         vtkm::Id3 VolumeDimensions;
+        Kernel kernel_;
 
     public:
         typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>,
@@ -183,30 +188,32 @@ struct GaussianSplatterFilterUniformGrid
         GetFootprint(
                 const vtkm::Vec<vtkm::Float64, 3> &o,
                 const vtkm::Vec<vtkm::Float64, 3> &s,
-                const vtkm::Id3 &dim)
-        : Origin(o), Spacing(s),
-          VolumeDimensions(dim) { }
+                const vtkm::Id3 &dim,
+                const Kernel &kernel)
+        : origin_(o), spacing_(s),
+          VolumeDimensions(dim), kernel_(kernel) { }
 
         template<typename T, typename T2>
         VTKM_EXEC_CONT_EXPORT
         void operator()(
-                const T &xValue,
-                const T &yValue,
-                const T &zValue,
-                const T2 &rValue,
+                const T &x,
+                const T &y,
+                const T &z,
+                const T2 &h,
                 vtkm::Vec<vtkm::Float64, 3> &splatPoint,
                 vtkm::Id3 &minFootprint,
                 vtkm::Id3 &maxFootprint,
                 vtkm::Id &footprintSize) const
         {
             PointType splat, min, max;
-            vtkm::Vec<vtkm::Float64, 3> sample = vtkm::make_Vec(xValue, yValue, zValue);
+            vtkm::Vec<vtkm::Float64, 3> sample = vtkm::make_Vec(x, y, z);
             vtkm::Id size = 1;
+            double cutoff = kernel_.maxDistance(h);
             for (int i = 0; i < 3; i++)
             {
-                splat[i] = (sample[i] - this->Origin[i]) / this->Spacing[i];
-                min[i] = static_cast<vtkm::Id>(ceil(static_cast<double>(splat[i]) - rValue));
-                max[i] = static_cast<vtkm::Id>(floor(static_cast<double>(splat[i]) + rValue));
+                splat[i] = (sample[i] - this->origin_[i]) / this->spacing_[i];
+                min[i] = static_cast<vtkm::Id>(ceil(static_cast<double>(splat[i]) - cutoff));
+                max[i] = static_cast<vtkm::Id>(floor(static_cast<double>(splat[i]) + cutoff));
                 if (min[i] < 0) {
                     min[i] = 0;
                 }
@@ -246,35 +253,34 @@ struct GaussianSplatterFilterUniformGrid
     };
 
     //-----------------------------------------------------------------------
-    // Compute the Gaussian splat value of the input neighbour point.
+    // Compute the splat value of the input neighbour point.
     // The voxel Id of this point within the volume is also determined.
-    // @TODO : fix kernel to behave with correct radious, scale exponent etc
     //-----------------------------------------------------------------------
     class GetSplatValue : public vtkm::worklet::WorkletMapField
     {
     private:
-        vtkm::Vec<vtkm::Float64, 3> Spacing;
-        vtkm::Vec<vtkm::Float64, 3> Origin;
+        vtkm::Vec<vtkm::Float64, 3> spacing_;
+        vtkm::Vec<vtkm::Float64, 3> origin_;
         vtkm::Id3 VolumeDim;
         vtkm::Float64 Radius2;
         vtkm::Float64 ExponentFactor;
         vtkm::Float64 ScalingFactor;
+        Kernel        kernel;
 
     public:
-        typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>,
+        typedef void ControlSignature(
+                FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>,
                 FieldIn<>, FieldIn<>, FieldOut<>,
                 FieldOut<>);
-        typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
+        typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
 
         VTKM_CONT_EXPORT
         GetSplatValue(
                 const vtkm::Vec<vtkm::Float64, 3> &orig,
                 const vtkm::Vec<vtkm::Float64, 3> &s,
                 const vtkm::Id3 &dim,
-                const vtkm::Float64 &ef,
-                const vtkm::Float64 &sf)
-        : Spacing(s), Origin(orig), VolumeDim(dim),
-          ExponentFactor(ef), ScalingFactor(sf) {}
+                const Kernel &k)
+        : spacing_(s), origin_(orig), VolumeDim(dim), kernel(k) {}
 
         template<typename T, typename T2, typename P>
         VTKM_EXEC_CONT_EXPORT
@@ -282,7 +288,8 @@ struct GaussianSplatterFilterUniformGrid
                 const vtkm::Vec<P, 3> &splatPoint,
                 const T &minBound,
                 const T &maxBound,
-                const T2 &radius,
+                const T2 &kernel_H,
+                const T2 &scale,
                 const vtkm::Id splatPointId,
                 const vtkm::Id localNeighborId,
                 vtkm::Id &neighborVoxelId,
@@ -295,23 +302,18 @@ struct GaussianSplatterFilterUniformGrid
             vtkm::Id remainder = localNeighborId % divisor;
             vtkm::Id j = remainder / xRange;
             vtkm::Id k = remainder % xRange;
-            vtkm::Float64 radius2 = radius*radius;
-            vtkm::Id3     voxel = minBound + vtkm::make_Vec(k, j, i);
+            // note the order of k,j,i
+            vtkm::Id3 voxel = minBound + vtkm::make_Vec(k, j, i);
             PointType dist = vtkm::make_Vec(
-                    (splatPoint[0] - voxel[0])*Spacing[0],
-                    (splatPoint[1] - voxel[1])*Spacing[0],
-                    (splatPoint[2] - voxel[2])*Spacing[0]
+                    (splatPoint[0] - voxel[0])*spacing_[0],
+                    (splatPoint[1] - voxel[1])*spacing_[0],
+                    (splatPoint[2] - voxel[2])*spacing_[0]
             );
             vtkm::Float64 dist2 = vtkm::dot(dist,dist);
 
-            // Compute Gaussian splat value
-            if (dist2 <= radius2) {
-                splatValue = this->ScalingFactor *
-                        vtkm::Exp((this->ExponentFactor*(dist2) / radius2));
-            }
-            else {
-                splatValue = 0.0;
-            }
+            // Compute splat value using the kernel distance_squared function
+            splatValue = scale*kernel.w2(kernel_H, dist2);
+            //
             neighborVoxelId = (voxel[2] * VolumeDim[0] * VolumeDim[1]) +
                               (voxel[1] * VolumeDim[0]) + voxel[0];
             if (neighborVoxelId<0) neighborVoxelId = -1;
@@ -333,7 +335,6 @@ struct GaussianSplatterFilterUniformGrid
         VTKM_CONT_EXPORT
         UpdateVoxelSplats() {}
 
-
         VTKM_EXEC_CONT_EXPORT
         void operator()(const vtkm::Id &voxelIndex,
                 const vtkm::Float64 &splatValue,
@@ -346,26 +347,31 @@ struct GaussianSplatterFilterUniformGrid
     //-----------------------------------------------------------------------
     // Construct a splatter filter/object
     //
-    // @TODO, get the origin and spacing from the dataset coordinates
+    // @TODO, get the origin_ and spacing_ from the dataset coordinates
     // instead of requiring them to be passed as parameters.
     //-----------------------------------------------------------------------
-    GaussianSplatterFilterUniformGrid(const vtkm::Id3 &dims,
+    KernelSplatterFilterUniformGrid(const vtkm::Id3 &dims,
             vtkm::Vec<vtkm::FloatDefault, 3> origin,
             vtkm::Vec<vtkm::FloatDefault, 3> spacing,
-            const vtkm::cont::DataSet &dataSet) :
-                CDims(dims),
-                Origin(origin),
-                Spacing(spacing),
-                DataSet(dataSet)
+            const vtkm::cont::DataSet &dataset,
+            const Kernel &kernel) :
+                dims_(dims),
+                origin_(origin),
+                spacing_(spacing),
+                dataset_(dataset),
+                kernel_(kernel)
     {
     }
 
     //-----------------------------------------------------------------------
     // class variables for the splat filter
     //-----------------------------------------------------------------------
-    vtkm::Id3           CDims;
-    FloatVec            Origin, Spacing;
-    vtkm::cont::DataSet DataSet;
+    vtkm::Id3           dims_;
+    FloatVec            origin_;
+    FloatVec            spacing_;
+    vtkm::cont::DataSet dataset_;
+    // The kernel used for this filter
+    Kernel              kernel_;
 
     //-----------------------------------------------------------------------
     // Run the filter, given the input params
@@ -376,15 +382,12 @@ struct GaussianSplatterFilterUniformGrid
             const vtkm::cont::ArrayHandle<vtkm::Float64, StorageT> yValues,
             const vtkm::cont::ArrayHandle<vtkm::Float64, StorageT> zValues,
             const vtkm::cont::ArrayHandle<vtkm::Float32, StorageT> rValues,
+            const vtkm::cont::ArrayHandle<vtkm::Float32, StorageT> sValues,
             FloatHandleType scalarSplatOutput)
     {
-        // Define the constants for the algorithm
-        const vtkm::Float64 exponentFactor = -5.0;
-        const vtkm::Float64 scaleFactor = 1.0;
-
         // Number of grid points in the volume bounding box
-        vtkm::Id3 pointDimensions = vtkm::make_Vec(CDims[0]+1, CDims[1]+1, CDims[2]+1);
-        const vtkm::Id numVolumePoints = (CDims[0] + 1) * (CDims[1] + 1) * (CDims[2] + 1);
+        vtkm::Id3 pointDimensions = vtkm::make_Vec(dims_[0]+1, dims_[1]+1, dims_[2]+1);
+        const vtkm::Id numVolumePoints = (dims_[0] + 1) * (dims_[1] + 1) * (dims_[2] + 1);
 
         //---------------------------------------------------------------
         // Get the splat footprint/neighborhood of each sample point, as
@@ -396,7 +399,7 @@ struct GaussianSplatterFilterUniformGrid
         IdHandleType    numNeighbors;
         IdHandleType localNeighborIds;
 
-        GetFootprint footprint_worklet(Origin, Spacing, pointDimensions);
+        GetFootprint footprint_worklet(origin_, spacing_, pointDimensions, kernel_);
         vtkm::worklet::DispatcherMapField<GetFootprint> footprintDispatcher(footprint_worklet);
 
         START_TIMER_BLOCK(GetFootprint)
@@ -489,6 +492,7 @@ struct GaussianSplatterFilterUniformGrid
         VecPermType ptFootprintMins(neighbor2SplatId, footprintMin);
         VecPermType ptFootprintMaxs(neighbor2SplatId, footprintMax);
         FloatPermType radii(neighbor2SplatId, rValues);
+        FloatPermType scale(neighbor2SplatId, sValues);
 
         debug::OutputArrayDebug(radii, "radii");
         debug::OutputArrayDebug(ptSplatPoints,   "ptSplatPoints");
@@ -503,11 +507,10 @@ struct GaussianSplatterFilterUniformGrid
         FloatHandleType splatValues;
 
         GetSplatValue splatterDispatcher_worklet(
-                Origin,
-                Spacing,
+                origin_,
+                spacing_,
                 pointDimensions,
-                exponentFactor,
-                scaleFactor);
+                kernel_);
         vtkm::worklet::DispatcherMapField<GetSplatValue> splatterDispatcher(splatterDispatcher_worklet);
 
         START_TIMER_BLOCK(GetSplatValue)
@@ -516,6 +519,7 @@ struct GaussianSplatterFilterUniformGrid
                 ptFootprintMins,
                 ptFootprintMaxs,
                 radii,
+                scale,
                 neighbor2SplatId,
                 localNeighborIds, neighborVoxelIds, splatValues);
         END_TIMER_BLOCK(GetSplatValue)
@@ -589,10 +593,10 @@ struct GaussianSplatterFilterUniformGrid
         voxelSplatSums.ReleaseResources();
     }
 
-}; //struct GaussianSplatter
+}; //struct KernelSplatter
 
 
 }
 } //namespace vtkm::worklet
 
-#endif //vtk_m_worklet_GaussianSplatter_h
+#endif //vtk_m_worklet_KernelSplatter_h
