@@ -9,6 +9,10 @@ namespace kernels {
 
 // Vector class used in the kernels
 typedef vtkm::Vec<vtkm::Float64, 3> vector_type;
+// Pi compatibility
+#ifndef M_PI
+  #define M_PI vtkm::Pi() 
+#endif
 
 // templated utility to generate expansions at compile time for x^N
 template <int N>
