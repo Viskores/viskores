@@ -26,8 +26,6 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vector>
-
 namespace {
 
 vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dims)
@@ -73,11 +71,13 @@ void TestTetrahedralizeUniformGrid()
   vtkm::Id numberOfCells = dims[0] * dims[1] * dims[2];
   vtkm::Id numberOfVertices = (dims[0] + 1) * (dims[1] + 1) * (dims[2] + 1);
 
-  // Create the output dataset which will get a CellSetExplicit
+  // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::DataSet outDataSet;
   vtkm::cont::CellSetExplicit<> cellSet(numberOfVertices, "cells", 3);
   outDataSet.AddCellSet(cellSet);
+  outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
+  // Convert uniform hexahedra to tetrahedra
   vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> 
                  tetrahedralizeFilter(dims, inDataSet, outDataSet);
   tetrahedralizeFilter.Run();

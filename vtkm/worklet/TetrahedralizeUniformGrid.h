@@ -79,8 +79,6 @@ public:
       // Calculate the type of tetrahedron generated because it alternates
       vtkm::Id indexType = (x + y + z) % 2;
 
-printf("CellID %ld x %ld y %ld z %ld indexType %ld\n", inputCellId, x, y, z, indexType);
-
       // Compute indices for the eight vertices of this cell
       const vtkm::Id i0 = x    + y*(xdim+1) + z * pointsPerLayer;
       const vtkm::Id i1 = i0   + 1;
@@ -93,7 +91,7 @@ printf("CellID %ld x %ld y %ld z %ld indexType %ld\n", inputCellId, x, y, z, ind
 
       // Set the tetrahedra for this cell based on vertex index and index type of cell
       vtkm::Id startIndex = inputCellId * 5 * 4;
-printf("CellID %ld vertex pts %ld %ld %ld %ld %ld %ld %ld %ld STARTINDEX %ld\n", inputCellId, i0, i1, i2, i3, i4, i5, i6, i7, startIndex);
+printf("CellID %ld x %ld y %ld z %ld vertex pts %ld %ld %ld %ld %ld %ld %ld %ld STARTINDEX %ld\n", inputCellId, x, y, z, i0, i1, i2, i3, i4, i5, i6, i7, startIndex);
       if (indexType == 0) {
         this->TetrahedraIndices.Set(startIndex + 0, i0);
         this->TetrahedraIndices.Set(startIndex + 1, i1);

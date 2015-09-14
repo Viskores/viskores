@@ -22,8 +22,11 @@ set(unit_tests
   UnitTestCellAverage.cxx
   UnitTestClipping.cxx
   UnitTestExternalFaces.cxx
+  UnitTestFieldHistogram.cxx
+  UnitTestFieldStatistics.cxx
   UnitTestIsosurfaceUniformGrid.cxx
   UnitTestPointElevation.cxx
+  UnitTestTetrahedralizeUniformGrid.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
