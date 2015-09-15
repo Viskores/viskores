@@ -182,6 +182,11 @@ void idle()
 
 int main(int argc, char** argv)
 {
+  typedef vtkm::cont::internal::DeviceAdapterTraits<DeviceAdapter>
+                                                        DeviceAdapterTraits;
+  std::cout << "Running Hello World example on device adapter: "
+            << DeviceAdapterTraits::GetId() << std::endl;
+
   glewExperimental = GL_TRUE;
   glutInit(&argc, argv);
 
