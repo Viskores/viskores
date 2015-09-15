@@ -17,130 +17,157 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef VTKM_KERNEL_GAUSSIAN_H
-#define VTKM_KERNEL_GAUSSIAN_H
+#ifndef VTKM_KERNEL_SPLINE_3RD_ORDER_H
+#define VTKM_KERNEL_SPLINE_3RD_ORDER_H
 
 #include "KernelBase.h"
 
 //
-// Gaussian kernel.
-// Compact support is achived by truncating the kernel beyond the cutoff radius
-// This implementation uses a factor of 5 between smoothing length and cutoff
+// Spline 3rd Order kernel.
 //
 
 namespace vtkm { namespace worklet {
-namespace kernels {
+namespace splatkernels {
 
 template <int Dimensions>
-struct Gaussian : public KernelBase< Gaussian<Dimensions> >
+struct Spline3rdOrder : public KernelBase< Spline3rdOrder<Dimensions> >
 {
     //---------------------------------------------------------------------
     // Constructor
     // Calculate coefficients used repeatedly when evaluating the kernel
     // value or gradient
-    Gaussian(double smoothingLength)
-    : KernelBase< Gaussian<Dimensions> >(smoothingLength)
+    Spline3rdOrder(double smoothingLength)
+    : KernelBase< Spline3rdOrder<Dimensions> >(smoothingLength)
       {
         Hinverse_   = 1.0/smoothingLength;
         Hinverse2_  = Hinverse_*Hinverse_;
-        maxRadius_  = 5.0*smoothingLength;
+        maxRadius_  = 2.0*smoothingLength;
         maxRadius2_ = maxRadius_*maxRadius_;
         //
-        norm_        = 1.0 / pow(M_PI, static_cast<double>(Dimensions) / 2.0);
+        if (Dimensions==2) {
+            norm_ = 10.0/(7.0*M_PI);
+        }
+        if (Dimensions==3) {
+            norm_ = 1.0/M_PI;
+        }
         scale_W_     = norm_ * power<Dimensions>  (Hinverse_);
-        scale_GradW_ = - 2.0 * power<Dimensions+1>(Hinverse_) / norm_;
+        scale_GradW_ = norm_ * power<Dimensions+1>(Hinverse_);
       }
-
     //---------------------------------------------------------------------
-    // return the multiplier between smoothing length and max cutoff distance
-    /*constexpr */ double getDilationFactor() const { return 5.0; }
-
-    //---------------------------------------------------------------------
-    // compute w(h) for the given distance
+    // Calculates the kernel value for the given distance
     inline double w(double distance) const
     {
-        if (distance<maxDistance()) {
-            // compute r/h
-            double normedDist = distance * Hinverse_;
-            // compute w(h)
-            return scale_W_ * exp(-normedDist * normedDist);
+        // compute Q=(r/h)
+        double Q = distance * Hinverse_;
+        if (Q<1.0) {
+            return scale_W_ *(1.0 - (3.0/2.0)*Q*Q + (3.0/4.0)*Q*Q*Q);
         }
-        return 0.0;
+        else if (Q<2.0) {
+            double q2 = (2.0-Q);
+            return scale_W_ * (1.0/4.0) * (q2*q2*q2);;
+        }
+        else {
+            return 0.0;
+        }
     }
 
     //---------------------------------------------------------------------
-    // compute w(h) for the given squared distance
+    // Calculates the kernel value for the given squared distance
     inline double w2(double distance2) const
     {
-        if (distance2<maxSquaredDistance()) {
-            // compute (r/h)^2
-            double normedDist = distance2 * Hinverse2_;
-            // compute w(h)
-            return scale_W_ * exp(-normedDist);
+        // compute Q
+        double Q = sqrt(distance2) * Hinverse_;
+        if (Q<1.0) {
+            return scale_W_ *(1.0 - (3.0/2.0)*Q*Q + (3.0/4.0)*Q*Q*Q);
         }
-        return 0.0;
+        else if (Q<2.0) {
+            double q2 = (2.0-Q);
+            return scale_W_ * (1.0/4.0) * (q2*q2*q2);;
+        }
+        else {
+            return 0.0;
+        }
     }
 
     //---------------------------------------------------------------------
     // compute w(h) for a variable h kernel
     inline double w(double h, double distance) const
     {
-        if (distance<maxDistance(h)) {
-            double Hinverse = 1.0/h;
-            double scale_W = norm_ * power<Dimensions>(Hinverse);
-            double Q = distance * Hinverse;
-
-            return scale_W * exp(-Q*Q);
+        double Hinverse = 1.0/h;
+        double scale_W = norm_ * power<Dimensions>(Hinverse);
+        double Q = distance * Hinverse;
+        if (Q<1.0) {
+          return scale_W *(1.0 - (3.0/2.0)*Q*Q + (3.0/4.0)*Q*Q*Q);
         }
-        return 0;
+        else if (Q<2.0) {
+          double q2 = (2.0-Q);
+          return scale_W * (1.0/4.0) * (q2*q2*q2);;
+        }
+        else {
+          return 0.0;
+        }
     }
 
     //---------------------------------------------------------------------
     // compute w(h) for a variable h kernel using distance squared
     inline double w2(double h, double distance2) const
     {
-        if (distance2<maxSquaredDistance(h)) {
-            double Hinverse = 1.0/h;
-            double scale_W = norm_ * power<Dimensions>(Hinverse);
-            double Q = distance2 * Hinverse * Hinverse;
-
-            return scale_W * exp(-Q);
+        double Hinverse = 1.0/h;
+        double scale_W = norm_ * power<Dimensions>(Hinverse);
+        double Q = sqrt(distance2) * Hinverse;
+        if (Q<1.0) {
+          return scale_W *(1.0 - (3.0/2.0)*Q*Q + (3.0/4.0)*Q*Q*Q);
         }
-        return 0;
+        else if (Q<2.0) {
+          double q2 = (2.0-Q);
+          return scale_W * (1.0/4.0) * (q2*q2*q2);;
+        }
+        else {
+          return 0.0;
+        }
     }
 
     //---------------------------------------------------------------------
-    // Calculates the kernel derivative for a distance {x,y,z} vector
-    // from the centre
+    // Calculates the kernel derivation for the given distance of two particles. 
+    // The used formula is the derivation of Speith (3.126) for the value
+    // with (3.21) for the direction of the gradient vector.
+    // Be careful: grad W is antisymmetric in r (3.25)!.
     inline vector_type gradW(double distance, const vector_type& pos) const
     {
         double Q = distance * Hinverse_;
-        if (Q != 0.0)
-        {
-            return scale_GradW_ * exp(-Q * Q) * pos;
+        if (Q==0.0) {
+          return vector_type(0.0);
+        }
+        else if (Q<1.0) {
+          return scale_GradW_ * (-3.0*Q + (9.0/4.0)*Q*Q) * pos;
+        }
+        else if (Q<2.0) {
+          double q2 = (2.0-Q);
+          return scale_GradW_ * (-3.0/4.0)*q2*q2 * pos;
         }
         else {
-            return vector_type(0.0);
+          return vector_type(0.0);
         }
     }
 
     //---------------------------------------------------------------------
-    // Calculates the kernel derivative for a distance {x,y,z} vector
-    // from the centre using a variable h
     inline vector_type gradW(double h, double distance, const vector_type& pos) const
     {
         double Hinverse = 1.0/h;
-        double scale_GradW = - 2.0 * power<Dimensions+1>(Hinverse)
-                  / pow(M_PI, static_cast<double>(Dimensions) / 2.0);
+        double scale_GradW = norm_ * power<Dimensions+1>(Hinverse);
         double Q = distance * Hinverse;
-
-        //!!! check this due to the fitting offset
-        if (distance != 0.0)
-        {
-            return scale_GradW * exp(-Q * Q) * pos;
+        if (Q==0.0) {
+          return vector_type(0.0);
+        }
+        else if (Q<1.0) {
+          return scale_GradW * (-3.0*Q + (9.0/4.0)*Q*Q) * pos;
+        }
+        else if (Q<2.0) {
+          double q2 = (2.0-Q);
+          return scale_GradW * (-3.0/4.0)*q2*q2 * pos;
         }
         else {
-            return vector_type(0.0);
+          return vector_type(0.0);
         }
     }
 
@@ -155,7 +182,7 @@ struct Gaussian : public KernelBase< Gaussian<Dimensions> >
     // return the maximum distance at which this variable h kernel is non zero
     inline double maxDistance(double h) const
     {
-        return getDilationFactor()*h;
+        return 2.0*h;
     }
 
     //---------------------------------------------------------------------
@@ -169,8 +196,12 @@ struct Gaussian : public KernelBase< Gaussian<Dimensions> >
     // return the maximum distance at which this kernel is non zero 
     inline double maxSquaredDistance(double h) const
     {
-        return power<2>(getDilationFactor())*h*h;
+        return 4.0*h*h;
     }
+
+    //---------------------------------------------------------------------
+    // return the multiplier between smoothing length and max cutoff distance 
+    inline double getDilationFactor() const { return 2.0; }
 
 private:
     double norm_;

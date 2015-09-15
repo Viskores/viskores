@@ -38,9 +38,9 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/worklet/kernels/KernelBase.h>
-#include <vtkm/worklet/kernels/Gaussian.h>
-#include <vtkm/worklet/kernels/Spline3rdOrder.h>
+#include <vtkm/worklet/splatkernels/KernelBase.h>
+#include <vtkm/worklet/splatkernels/Gaussian.h>
+#include <vtkm/worklet/splatkernels/Spline3rdOrder.h>
 
 #define __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
 

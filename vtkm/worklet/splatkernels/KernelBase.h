@@ -24,7 +24,7 @@
 #include <vtkm/Types.h>
 
 namespace vtkm { namespace worklet {
-namespace kernels {
+namespace splatkernels {
 
 // Vector class used in the kernels
 typedef vtkm::Vec<vtkm::Float64, 3> vector_type;

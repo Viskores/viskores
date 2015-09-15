@@ -21,8 +21,8 @@
 #include <vector>
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/worklet/kernels/Gaussian.h>
-#include <vtkm/worklet/kernels/Spline3rdOrder.h>
+#include <vtkm/worklet/splatkernels/Gaussian.h>
+#include <vtkm/worklet/splatkernels/Spline3rdOrder.h>
 /*
 #include "KernelBox.h"
 #include "KernelCusp.h"
@@ -85,28 +85,28 @@ int TestSplatKernels() {
   std::cout << "Testing Gaussian 3D fixed h kernel integration \n";
   for (int i=0; i<100; ++i) {
     smoothinglength = 0.01 + i*(10.0/100.0);
-    s  = IntegralOfKernel(vtkm::worklet::kernels::Gaussian<3>(smoothinglength));
+    s  = IntegralOfKernel(vtkm::worklet::splatkernels::Gaussian<3>(smoothinglength));
     VTKM_TEST_ASSERT ( fabs(s - 1.0) < eps, "Gaussian 3D integration failure");
   }
 
   std::cout << "Testing Gaussian 3D variable h kernel integration \n";
   for (int i=0; i<100; ++i) {
     smoothinglength = 0.01 + i*(10.0/100.0);
-    s  = IntegralOfKernel(vtkm::worklet::kernels::Gaussian<3>(smoothinglength),smoothinglength);
+    s  = IntegralOfKernel(vtkm::worklet::splatkernels::Gaussian<3>(smoothinglength),smoothinglength);
     VTKM_TEST_ASSERT ( fabs(s - 1.0) < eps, "Gaussian 3D integration failure");
   }
 
-//  s  = IntegralOfKernel(vtkm::worklet::kernels::Gaussian<2>(smoothinglength));
+//  s  = IntegralOfKernel(vtkm::worklet::splatkernels::Gaussian<2>(smoothinglength));
 //  VTKM_TEST_ASSERT ( fabs(s - 1.0) < eps, "Gaussian 2D integration failure");
 
   std::cout << "Testing Spline3rdOrder 3D kernel integration \n";
   for (int i=0; i<100; ++i) {
     smoothinglength = 0.01 + i*(10.0/100.0);
-    s  = IntegralOfKernel(vtkm::worklet::kernels::Spline3rdOrder<3>(smoothinglength));
+    s  = IntegralOfKernel(vtkm::worklet::splatkernels::Spline3rdOrder<3>(smoothinglength));
     VTKM_TEST_ASSERT ( fabs(s - 1.0) < eps, "Spline3rdOrder 3D integration failure");
   }
 
-//  s  = IntegralOfKernel(vtkm::worklet::kernels::Spline3rdOrder<2>(smoothinglength));
+//  s  = IntegralOfKernel(vtkm::worklet::splatkernels::Spline3rdOrder<2>(smoothinglength));
 //  VTKM_TEST_ASSERT ( fabs(s - 1.0) < eps, "Spline3rdOrder 2D integration failure");
 
 /*
