@@ -27,6 +27,7 @@ set(headers
   ArrayHandleConstant.h
   ArrayHandleCounting.h
   ArrayHandleImplicit.h
+  ArrayHandleIndex.h
   ArrayHandlePermutation.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h

@@ -20,7 +20,6 @@
 
 #include <iostream>
 
-#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
