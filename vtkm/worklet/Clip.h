@@ -588,6 +588,7 @@ public:
     vtkm::cont::ArrayHandle<ClipStats> cellSetIndices;
     ClipStats total = Algorithm::ScanExclusive(stats, cellSetIndices,
         ClipStats::SumOp(), zero);
+    stats.ReleaseResources();
 
 
     // Step 2. generate the output cell set
@@ -617,7 +618,7 @@ public:
             vtkm::Id,
             VTKM_DEFAULT_STORAGE_TAG,
             DeviceAdapter>(newPointsConnectivityReverseMap, total.NumberOfNewPoints));
-
+    cellSetIndices.ReleaseResources();
 
     // Step 3. remove duplicates from the list of new points
     vtkm::cont::ArrayHandle<vtkm::worklet::EdgeInterpolation> uniqueNewPoints;
