@@ -33,6 +33,13 @@
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/exec/FunctorBase.h>
 
+#if defined(THRUST_MAJOR_VERSION) && THRUST_MAJOR_VERSION == 1 && \
+    THRUST_MINOR_VERSION == 8 && THRUST_SUBMINOR_VERSION < 3
+// Workaround a bug in thrust 1.8.0 - 1.8.2 scan implementations which produces
+// wrong results
+#include <thrust/detail/type_traits.h>
+#define THRUST_SCAN_WORKAROUND
+#endif
 
 #define COMBINE_LOWERBOUND_AMEND
 
@@ -163,15 +170,18 @@ struct ClipStats
   vtkm::Id NumberOfIndices;
   vtkm::Id NumberOfNewPoints;
 
-  VTKM_EXEC_CONT_EXPORT
-  ClipStats operator+(const ClipStats &cs) const
+  struct SumOp
   {
-    ClipStats sum;
-    sum.NumberOfCells = this->NumberOfCells + cs.NumberOfCells;
-    sum.NumberOfIndices = this->NumberOfIndices + cs.NumberOfIndices;
-    sum.NumberOfNewPoints = this->NumberOfNewPoints + cs.NumberOfNewPoints;
-    return sum;
-  }
+    VTKM_EXEC_CONT_EXPORT
+    ClipStats operator()(const ClipStats &cs1, const ClipStats &cs2) const
+    {
+      ClipStats sum = cs1;
+      sum.NumberOfCells += cs2.NumberOfCells;
+      sum.NumberOfIndices += cs2.NumberOfIndices;
+      sum.NumberOfNewPoints += cs2.NumberOfNewPoints;
+      return sum;
+    }
+  };
 };
 
 struct EdgeInterpolation
@@ -574,8 +584,10 @@ public:
        clipTableIdxs, stats);
 
     // compute offsets for each invocation
+    ClipStats zero = { 0, 0, 0 };
     vtkm::cont::ArrayHandle<ClipStats> cellSetIndices;
-    ClipStats total = Algorithm::ScanExclusive(stats, cellSetIndices);
+    ClipStats total = Algorithm::ScanExclusive(stats, cellSetIndices,
+        ClipStats::SumOp(), zero);
 
 
     // Step 2. generate the output cell set
@@ -667,5 +679,16 @@ private:
 
 }
 } // namespace vtkm::worklet
+
+#if defined(THRUST_SCAN_WORKAROUND)
+namespace thrust {
+namespace detail {
+
+// causes a different code path which does not have the bug
+template<> struct is_integral<vtkm::worklet::ClipStats> : public true_type {};
+
+}
+} // namespace thrust::detail
+#endif
 
 #endif // vtkm_m_worklet_Clip_h
