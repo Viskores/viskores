@@ -27,6 +27,7 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/Extent.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
@@ -652,7 +653,7 @@ public:
       ValueType valuesScattered;
       const vtkm::Id size = values.GetNumberOfValues();
 
-      Copy( make_ArrayHandleCounting(0, keys.GetNumberOfValues()), indexArray);
+      Copy( ArrayHandleIndex(keys.GetNumberOfValues()), indexArray);
 
       ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys,indexArray);
       Sort(zipHandle,KeyCompare<T,vtkm::Id,Compare>(comp));
