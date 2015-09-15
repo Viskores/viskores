@@ -38,7 +38,6 @@ struct vtkm_cuda_policy : thrust::device_execution_policy<vtkm_cuda_policy> {};
 //The purpose of this is that for 32bit types (UInt32,Int32,Float32) thrust
 //will call a super fast radix sort only if the operator is thrust::less
 //or thrust::greater.
-__thrust_hd_warning_disable__
 template<typename T>
 __host__ __device__
   void sort(const vtkm_cuda_policy &exec,
@@ -50,7 +49,6 @@ __host__ __device__
   return thrust::sort(thrust::cuda::par, first, last, thrust::less<T>());
 }
 
-__thrust_hd_warning_disable__
 template<typename T>
 __host__ __device__
   void sort(const vtkm_cuda_policy &exec,
@@ -62,7 +60,6 @@ __host__ __device__
   return thrust::sort(thrust::cuda::par, first, last, thrust::less<T>());
 }
 
-__thrust_hd_warning_disable__
 template<typename T>
 __host__ __device__
   void sort(const vtkm_cuda_policy &exec,
@@ -74,7 +71,6 @@ __host__ __device__
   return thrust::sort(thrust::cuda::par, first, last, thrust::greater<T>());
 }
 
-__thrust_hd_warning_disable__
 template<typename T>
 __host__ __device__
   void sort(const vtkm_cuda_policy &exec,
@@ -86,7 +82,6 @@ __host__ __device__
   return thrust::sort(thrust::cuda::par, first, last, thrust::greater<T>());
 }
 
-__thrust_hd_warning_disable__
 template<typename RandomAccessIterator,
          typename StrictWeakOrdering>
 __host__ __device__
