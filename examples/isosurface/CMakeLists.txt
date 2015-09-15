@@ -29,9 +29,12 @@ if(OPENGL_FOUND AND GLUT_FOUND)
   add_executable(IsosurfaceUniformGrid_SERIAL IsosurfaceUniformGrid.cxx)
   target_include_directories(IsosurfaceUniformGrid_SERIAL PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
   target_link_libraries(IsosurfaceUniformGrid_SERIAL ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
-  
+  set_property(TARGET IsosurfaceUniformGrid_SERIAL
+                 APPEND
+                 PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
+
   if(VTKm_Cuda_FOUND)
-    cuda_add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cxx)
+    cuda_add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cu)
     target_link_libraries(IsosurfaceUniformGrid_CUDA ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
   endif()
 
@@ -39,6 +42,9 @@ if(OPENGL_FOUND AND GLUT_FOUND)
     add_executable(IsosurfaceUniformGrid_TBB IsosurfaceUniformGrid.cxx)
     target_include_directories(IsosurfaceUniformGrid_TBB PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} ${TBB_INCLUDE_DIRS})
     target_link_libraries(IsosurfaceUniformGrid_TBB ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${TBB_LIBRARIES})
+    set_property(TARGET IsosurfaceUniformGrid_TBB
+                 APPEND
+                 PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
   endif()
 
 endif()
