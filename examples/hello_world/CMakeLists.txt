@@ -29,9 +29,6 @@ if(OPENGL_FOUND AND GLUT_FOUND)
   add_executable(HelloWorld_SERIAL HelloWorld.cxx)
   target_include_directories(HelloWorld_SERIAL PRIVATE ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
   target_link_libraries(HelloWorld_SERIAL ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLUT_LIBRARIES})
-  set_property(TARGET HelloWorld_SERIAL
-                 APPEND
-                 PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
 
   if(VTKm_Cuda_FOUND)
     cuda_add_executable(HelloWorld_CUDA HelloWorld.cu)
@@ -42,10 +39,6 @@ if(OPENGL_FOUND AND GLUT_FOUND)
     add_executable(HelloWorld_TBB HelloWorld.cxx)
     target_include_directories(HelloWorld_TBB PRIVATE ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
     target_link_libraries(HelloWorld_TBB ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLUT_LIBRARIES} ${TBB_LIBRARIES})
-
-    set_property(TARGET HelloWorld_TBB
-                 APPEND
-                 PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
   endif()
 
 endif()

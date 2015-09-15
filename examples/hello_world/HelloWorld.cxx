@@ -17,6 +17,13 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+
+//We first check if VTKM_DEVICE_ADAPTER is defined, so that when TBB and CUDA
+//includes this file we use the device adapter that they have set.
+#ifndef VTKM_DEVICE_ADAPTER
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
+#endif
+
 #include <iostream>
 
 #include <vtkm/Math.h>
