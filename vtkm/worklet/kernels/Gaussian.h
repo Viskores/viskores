@@ -34,7 +34,7 @@ struct Gaussian : public KernelBase< Gaussian<Dimensions> >
 
     //---------------------------------------------------------------------
     // return the multiplier between smoothing length and max cutoff distance
-    constexpr double getDilationFactor() const { return 5.0; }
+    /*constexpr */ double getDilationFactor() const { return 5.0; }
 
     //---------------------------------------------------------------------
     // compute w(h) for the given distance
