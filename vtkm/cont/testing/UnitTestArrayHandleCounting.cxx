@@ -54,6 +54,16 @@ public:
     return StringInt(this->Value + rhs.Value);
   }
 
+  StringInt operator*(const StringInt &rhs) const
+  {
+    StringInt result;
+    for (vtkm::Id i = 0; i < rhs; i++)
+    {
+      result = result + *this;
+    }
+    return result;
+  }
+
   bool operator==(const StringInt &other) const
   {
     return this->Value.size() == other.Value.size();
@@ -88,14 +98,14 @@ struct TemplatedTests
 
   typedef typename ArrayHandleType::PortalConstControl PortalType;
 
-  void operator()( const ValueType startingValue )
+  void operator()(const ValueType &startingValue, const ValueType &step)
   {
-    ArrayHandleType arrayConst(startingValue, ARRAY_SIZE);
+    ArrayHandleType arrayConst(startingValue, step, ARRAY_SIZE);
 
-    ArrayHandleType arrayMake = vtkm::cont::make_ArrayHandleCounting(startingValue,ARRAY_SIZE);
+    ArrayHandleType arrayMake = vtkm::cont::make_ArrayHandleCounting(startingValue, step, ARRAY_SIZE);
 
     ArrayHandleType2 arrayHandle =
-      ArrayHandleType2(PortalType(startingValue, ARRAY_SIZE));
+      ArrayHandleType2(PortalType(startingValue, step, ARRAY_SIZE));
 
     VTKM_TEST_ASSERT(arrayConst.GetNumberOfValues() == ARRAY_SIZE,
                      "Counting array using constructor has wrong size.");
@@ -116,28 +126,21 @@ struct TemplatedTests
 
       VTKM_TEST_ASSERT(arrayHandle.GetPortalConstControl().Get(index) == properValue,
                        "Counting array using raw array handle + tag has unexpected value.");
-      ++properValue;
+      properValue = properValue + step;
     }
-  }
-};
-
-struct TestFunctor
-{
-  template <typename T>
-  void operator()(const T t)
-  {
-    TemplatedTests<T> tests;
-    tests(t);
   }
 };
 
 void TestArrayHandleCounting()
 {
-  TestFunctor()(vtkm::Id(0));
-  TestFunctor()(vtkm::Float32(0));
-  TestFunctor()(vtkm::Float64(0));
-  TestFunctor()(StringInt(0));
-  TestFunctor()(StringInt(10));
+  TemplatedTests<vtkm::Id>()(0, 1);
+  TemplatedTests<vtkm::Id>()(8, 2);
+  TemplatedTests<vtkm::Float32>()(0.0f, 1.0f);
+  TemplatedTests<vtkm::Float32>()(3.0f, -0.5f);
+  TemplatedTests<vtkm::Float64>()(0.0, 1.0);
+  TemplatedTests<vtkm::Float64>()(-3.0, 2.0);
+  TemplatedTests<StringInt>()(StringInt(0), StringInt(1));
+  TemplatedTests<StringInt>()(StringInt(10), StringInt(2));
 }
 
 

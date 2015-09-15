@@ -28,6 +28,7 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleZip.h>
@@ -42,58 +43,6 @@
 
 namespace fancy_array_detail
 {
-
-class IncrementBy2
-{
-public:
-  VTKM_EXEC_CONT_EXPORT
-  IncrementBy2(): Value(0)
-  {
-
-  }
-
-  VTKM_EXEC_CONT_EXPORT
-  explicit IncrementBy2(vtkm::Id value): Value(2*value) {  }
-
-  VTKM_EXEC_CONT_EXPORT
-  operator vtkm::Id() const { return this->Value; }
-
-  VTKM_EXEC_CONT_EXPORT
-  IncrementBy2 operator+(const IncrementBy2 &rhs) const
-  {
-    //don't want to trigger the vtkm::Id constructor
-    //when making a copy and cause this to be IncrementBy4
-    IncrementBy2 newValue;
-    newValue.Value = this->Value + rhs.Value;
-    return newValue;
-  }
-
-  VTKM_EXEC_CONT_EXPORT
-  bool operator==(const IncrementBy2 &other) const
-  {
-    return this->Value == other.Value;
-  }
-
-  VTKM_EXEC_CONT_EXPORT
-  IncrementBy2 &operator++()
-  {
-    this->Value++;
-    this->Value++;
-    return *this;
-  }
-
-  VTKM_CONT_EXPORT
-  friend std::ostream& operator<<(std::ostream &os, const IncrementBy2 &v)
-  { os << v.Value; return os; }
-
-
-  vtkm::Id Value;
-};
-
-IncrementBy2 TestValue(vtkm::Id index, IncrementBy2)
-{
-  return IncrementBy2(::TestValue(index, vtkm::Id()));
-}
 
 template<typename ValueType>
 struct IndexSquared
@@ -113,27 +62,9 @@ struct ValueSquared
   VTKM_EXEC_CONT_EXPORT
   ValueType operator()(U u) const
     { return vtkm::dot(u, u); }
-
-  VTKM_EXEC_CONT_EXPORT
-  ValueType operator()( ::fancy_array_detail::IncrementBy2 u) const
-    { return ValueType( vtkm::dot(u.Value, u.Value) ); }
 };
 
 }
-
-VTKM_BASIC_TYPE_VECTOR(::fancy_array_detail::IncrementBy2)
-
-namespace vtkm { namespace testing {
-template<>
-struct TypeName< ::fancy_array_detail::IncrementBy2 >
-{
-  static std::string Name()
-  {
-    return std::string("fancy_array_detail::IncrementBy2");
-  }
-};
-
-} }
 
 namespace vtkm {
 namespace cont {
@@ -247,7 +178,7 @@ private:
       const ValueType start = ValueType(component_value);
 
       vtkm::cont::ArrayHandleCounting< ValueType > counting =
-          vtkm::cont::make_ArrayHandleCounting(start, length);
+          vtkm::cont::make_ArrayHandleCounting(start, ValueType(1), length);
       vtkm::cont::ArrayHandle< ValueType > result;
 
       vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
@@ -322,6 +253,7 @@ private:
 
         KeyHandleType counting =
             vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(start_pos,
+                                                           1,
                                                            counting_length);
 
         ValueHandleType implicit =
@@ -419,9 +351,9 @@ private:
       ComponentType component_value(0);
       const ValueType start = ValueType(component_value);
 
-      vtkm::cont::ArrayHandleCounting< ValueType > counting =
-                                vtkm::cont::make_ArrayHandleCounting(start,
-                                                                     length);
+      vtkm::cont::ArrayHandleCounting< ValueType > counting(start,
+                                                            ValueType(1),
+                                                            length);
 
       vtkm::cont::ArrayHandleTransform<
           OutputValueType,
@@ -459,9 +391,9 @@ private:
     VTKM_CONT_EXPORT
     void operator()(CastToType vtkmNotUsed(type)) const
     {
-      typedef vtkm::cont::ArrayHandleCounting<vtkm::Int64> InputArrayType;
+      typedef vtkm::cont::ArrayHandleIndex InputArrayType;
 
-      InputArrayType input(0, ARRAY_SIZE);
+      InputArrayType input(ARRAY_SIZE);
       vtkm::cont::ArrayHandleCast<CastToType, InputArrayType> castArray =
           vtkm::cont::make_ArrayHandleCast(input, CastToType());
       vtkm::cont::ArrayHandle<CastToType> result;
@@ -556,7 +488,7 @@ private:
       values.Allocate(length*2);
 
       KeyHandleType counting =
-        vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(length, length);
+        vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(length, 1, length);
 
       PermutationHandleType permutation =
         vtkm::cont::make_ArrayHandlePermutation(counting, values);
@@ -641,8 +573,7 @@ private:
                          vtkm::Float32,
                          vtkm::Float64,
                          vtkm::Vec<vtkm::Float64,3>,
-                         vtkm::Vec<vtkm::Float32,4>,
-                         ::fancy_array_detail::IncrementBy2
+                         vtkm::Vec<vtkm::Float32,4>
                          >
   {  };
 
