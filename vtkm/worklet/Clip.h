@@ -41,7 +41,6 @@
 #define THRUST_SCAN_WORKAROUND
 #endif
 
-#define COMBINE_LOWERBOUND_AMEND
 
 namespace vtkm {
 namespace worklet {
@@ -401,8 +400,11 @@ public:
     ClipTablesPortal ClipTables;
   };
 
-// TODO: Profile and choose the better performing implementation
-#if defined(COMBINE_LOWERBOUND_AMEND)
+
+// The following can be done using DeviceAdapterAlgorithm::LowerBounds followed by
+// a worklet for updating connectivity. We are going with a custom worklet, that
+// combines lower-bounds computation and connectivity update, because this is
+// currently faster and uses less memory.
   class AmendConnectivity : public vtkm::exec::FunctorBase
   {
   public:
@@ -455,37 +457,6 @@ public:
     vtkm::Id NewPointsOffset;
     IdPortal Connectivity;
   };
-
-#else
-  class AmendConnectivity : public vtkm::exec::FunctorBase
-  {
-  public:
-    VTKM_CONT_EXPORT
-    AmendConnectivity(IdPortalConst newPointsConnectivityReverseMap,
-                      IdPortalConst connectivityValues,
-                      vtkm::Id newPointsOffset,
-                      IdPortal connectivity)
-      : NewPointsConnectivityReverseMap(newPointsConnectivityReverseMap),
-        ConnectivityValues(connectivityValues),
-        NewPointsOffset(newPointsOffset),
-        Connectivity(connectivity)
-    {
-    }
-
-    VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id idx) const
-    {
-      this->Connectivity.Set(this->NewPointsConnectivityReverseMap.Get(idx),
-                             this->ConnectivityValues.Get(idx) + this->NewPointsOffset);
-    }
-
-  private:
-    IdPortalConst NewPointsConnectivityReverseMap;
-    IdPortalConst ConnectivityValues;
-    vtkm::Id NewPointsOffset;
-    IdPortal Connectivity;
-  };
-#endif
 
 
   class InterpolateField
@@ -633,8 +604,6 @@ public:
 
 
     // Step 4. update the connectivity array with indexes to the new, unique points
-    vtkm::cont::Timer<DeviceAdapter> timer;
-#if defined(COMBINE_LOWERBOUND_AMEND)
     AmendConnectivity computeNewPointsConnectivity(
         newPoints.PrepareForInput(device),
         uniqueNewPoints.PrepareForInput(device),
@@ -642,18 +611,7 @@ public:
         this->NewPointsOffset,
         connectivity.PrepareForInPlace(device));
     Algorithm::Schedule(computeNewPointsConnectivity, total.NumberOfNewPoints);
-#else
-    vtkm::cont::ArrayHandle<vtkm::Id> newPointsIndices;
-    Algorithm::LowerBounds(uniqueNewPoints, newPoints, newPointsIndices,
-                           EdgeInterpolation::LessThanOp());
-    Algorithm::Schedule(
-        AmendConnectivity(newPointsConnectivityReverseMap.PrepareForInput(device),
-                          newPointsIndices.PrepareForInput(device),
-                          this->NewPointsOffset,
-                          connectivity.PrepareForInPlace(device)),
-        total.NumberOfNewPoints);
-#endif
-    std::cout << "step 4 time: " << timer.GetElapsedTime() << std::endl;
+
 
     vtkm::cont::CellSetExplicit<> output;
     output.Fill(shapes, numIndices, connectivity);
