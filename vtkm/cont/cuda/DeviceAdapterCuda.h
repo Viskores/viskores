@@ -21,7 +21,10 @@
 #define vtk_m_cont_cuda_DeviceAdapterCuda_h
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
+
+#ifdef VTKM_ENABLE_CUDA
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmCuda.h>
+#endif
 
 #endif //vtk_m_cont_cuda_DeviceAdapterCuda_h

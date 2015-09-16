@@ -21,7 +21,10 @@
 #define vtk_m_cont_tbb_DeviceAdapterTBB_h
 
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
+
+#ifdef VTKM_ENABLE_TBB
 #include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterAlgorithmTBB.h>
+#endif
 
 #endif //vtk_m_cont_tbb_DeviceAdapterTBB_h

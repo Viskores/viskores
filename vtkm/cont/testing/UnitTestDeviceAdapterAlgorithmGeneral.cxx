@@ -33,7 +33,7 @@
 
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
-VTKM_CREATE_DEVICE_ADAPTER(TestAlgorithmGeneral);
+VTKM_VALID_DEVICE_ADAPTER(TestAlgorithmGeneral);
 
 namespace vtkm {
 namespace cont {
