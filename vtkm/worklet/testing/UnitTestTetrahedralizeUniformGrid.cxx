@@ -34,9 +34,6 @@ vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dims)
 
   const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, dims[2] + 1);
 
-  float mins[3] = {-1.0f, -1.0f, -1.0f};
-  float maxs[3] = {1.0f, 1.0f, 1.0f};
-
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims);
   dataSet.AddCoordinateSystem(
           vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
