@@ -18,6 +18,12 @@
 //  this software.
 //============================================================================
 
+//We first check if VTKM_DEVICE_ADAPTER is defined, so that when TBB and CUDA
+//includes this file we use the device adapter that they have set.
+#ifndef VTKM_DEVICE_ADAPTER
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
+#endif
+
 #include <vtkm/worklet/IsosurfaceUniformGrid.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
@@ -162,7 +168,7 @@ void displayCall()
   qrot.getRotMat(rotationMatrix);
   glMultMatrixf(rotationMatrix);
   glTranslatef(-0.5f, -0.5f, -0.5f);
- 
+
   glColor3f(0.1f, 0.1f, 0.6f);
 
   glBegin(GL_TRIANGLES);
@@ -214,7 +220,10 @@ void mouseCall(int button, int state, int x, int y)
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
 {
-  std::cout << "IsosurfaceUniformGrid Example" << std::endl;
+  typedef vtkm::cont::internal::DeviceAdapterTraits<DeviceAdapter>
+                                                        DeviceAdapterTraits;
+  std::cout << "Running IsosurfaceUniformGrid example on device adapter: "
+            << DeviceAdapterTraits::GetId() << std::endl;
 
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
@@ -227,7 +236,7 @@ int main(int argc, char* argv[])
                         scalarsArray);
 
   std::cout << "Number of output vertices: " << verticesArray.GetNumberOfValues() << std::endl;
- 
+
   lastx = lasty = 0;
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);

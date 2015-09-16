@@ -31,7 +31,7 @@ if(OPENGL_FOUND AND GLUT_FOUND)
   target_link_libraries(HelloWorld_SERIAL ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLUT_LIBRARIES})
 
   if(VTKm_Cuda_FOUND)
-    cuda_add_executable(HelloWorld_CUDA HelloWorld.cxx)
+    cuda_add_executable(HelloWorld_CUDA HelloWorld.cu)
     target_link_libraries(HelloWorld_CUDA ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLUT_LIBRARIES})
   endif()
 
