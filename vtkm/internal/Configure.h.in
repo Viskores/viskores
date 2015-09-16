@@ -131,6 +131,15 @@
 #define VTKM_THIRDPARTY_POST_INCLUDE
 #endif
 
+//Mark if we are building with CUDA enabled
+#ifndef VTKM_ENABLE_CUDA
+#cmakedefine VTKM_ENABLE_CUDA
+#endif
+//Mark if we are building with TBB enabled
+#ifndef VTKM_ENABLE_TBB
+#cmakedefine VTKM_ENABLE_TBB
+#endif
+
 //Mark if we are building with interop enabled
 #ifndef VTKM_ENABLE_OPENGL_INTEROP
 #cmakedefine VTKM_ENABLE_OPENGL_INTEROP
