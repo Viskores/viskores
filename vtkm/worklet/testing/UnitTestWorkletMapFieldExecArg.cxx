@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -76,7 +76,7 @@ struct DoTestWorklet
       inputArray[index] = TestValue(index, T()) + T(100);
     }
 
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> counting(0,ARRAY_SIZE);
+    vtkm::cont::ArrayHandleIndex counting(ARRAY_SIZE);
     vtkm::cont::ArrayHandle<T> inputHandle =
         vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
     vtkm::cont::ArrayHandle<T> outputHandle;

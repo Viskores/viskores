@@ -23,8 +23,8 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/BinaryPredicates.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
@@ -765,8 +765,8 @@ private:
     std::cout << "Sort of a ArrayHandlePermutation" << std::endl;
 
     //verify that we can use ArrayHandlePermutation inplace
-    vtkm::cont::ArrayHandleCounting< vtkm::Id > index(0, ARRAY_SIZE);
-    vtkm::cont::ArrayHandlePermutation< vtkm::cont::ArrayHandleCounting< vtkm::Id >,
+    vtkm::cont::ArrayHandleIndex index(ARRAY_SIZE);
+    vtkm::cont::ArrayHandlePermutation< vtkm::cont::ArrayHandleIndex,
                                         IdArrayHandle> perm(index, sorted);
 
     //verify we can use a custom operator sort with permutation handle

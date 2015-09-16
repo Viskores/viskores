@@ -26,7 +26,7 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 
@@ -71,7 +71,7 @@ void AverageByKey(const vtkm::cont::ArrayHandle<KeyType, KeyInStorage> &keyArray
   typedef vtkm::cont::ArrayHandle<ValueType> ValueArray;
 
   // sort the indexed array
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> indexArray(0, keyArray.GetNumberOfValues());
+  vtkm::cont::ArrayHandleIndex indexArray(keyArray.GetNumberOfValues());
   IdArray indexArraySorted;
   vtkm::cont::ArrayHandle<KeyType> keyArraySorted;
 

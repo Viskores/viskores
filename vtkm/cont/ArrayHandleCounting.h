@@ -42,20 +42,23 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalCounting() :
-    StartingValue(),
+    Start(0),
+    Step(1),
     NumberOfValues(0)
   {  }
 
   VTKM_EXEC_CONT_EXPORT
-  ArrayPortalCounting(ValueType startingValue, vtkm::Id numValues) :
-    StartingValue(startingValue),
+  ArrayPortalCounting(ValueType start, ValueType step, vtkm::Id numValues) :
+    Start(start),
+    Step(step),
     NumberOfValues(numValues)
   {  }
 
   template<typename OtherValueType>
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalCounting(const ArrayPortalCounting<OtherValueType> &src)
-    : StartingValue(src.StartingValue),
+    : Start(src.Start),
+      Step(src.Step),
       NumberOfValues(src.NumberOfValues)
   {  }
 
@@ -64,7 +67,8 @@ public:
   ArrayPortalCounting<ValueType> &operator=(
     const ArrayPortalCounting<OtherValueType> &src)
   {
-    this->StartingValue = src.StartingValue;
+    this->Start= src.Start;
+    this->Step = src.Step;
     this->NumberOfValues = src.NumberOfValues;
     return *this;
   }
@@ -74,12 +78,13 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   ValueType Get(vtkm::Id index) const {
-    return ValueType(StartingValue +
-                     ValueType(static_cast<ComponentType>(index)));
+    return ValueType(this->Start +
+                     this->Step*ValueType(static_cast<ComponentType>(index)));
   }
 
 private:
-  ValueType StartingValue;
+  ValueType Start;
+  ValueType Step;
   vtkm::Id NumberOfValues;
 };
 
@@ -111,8 +116,10 @@ class ArrayHandleCounting
 public:
 
   VTKM_CONT_EXPORT
-  ArrayHandleCounting(CountingValueType startingValue, vtkm::Id length)
-    :Superclass(typename Superclass::PortalConstControl(startingValue, length))
+  ArrayHandleCounting(CountingValueType start,
+                      CountingValueType step,
+                      vtkm::Id length)
+    :Superclass(typename Superclass::PortalConstControl(start, step, length))
   {
   }
 
@@ -125,10 +132,12 @@ public:
 template<typename CountingValueType>
 VTKM_CONT_EXPORT
 vtkm::cont::ArrayHandleCounting<CountingValueType>
-make_ArrayHandleCounting(CountingValueType startingValue,
+make_ArrayHandleCounting(CountingValueType start,
+                         CountingValueType step,
                          vtkm::Id length)
 {
-  return vtkm::cont::ArrayHandleCounting<CountingValueType>(startingValue,
+  return vtkm::cont::ArrayHandleCounting<CountingValueType>(start,
+                                                            step,
                                                             length);
 }
 
