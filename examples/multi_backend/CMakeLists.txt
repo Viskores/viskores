@@ -20,6 +20,14 @@
 ##
 ##=============================================================================
 
-add_subdirectory(hello_world)
-add_subdirectory(isosurface)
-add_subdirectory(multi_backend)
+cmake_minimum_required(VERSION 2.8.11)
+
+if(VTKm_Cuda_FOUND)
+  cuda_add_executable(MultiBackend MultiBackend.cu)
+else()
+  add_executable(MultiBackend MultiBackend.cxx)
+endif()
+
+if(VTKm_TBB_FOUND)
+   target_link_libraries(MultiBackend ${TBB_LIBRARIES})
+endif()
