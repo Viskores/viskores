@@ -30,7 +30,7 @@ namespace vtkm {
 // operation, and than  casted back down to char's when return.
 // This causes a false positive warning, even when the values is within
 // the value types range
-#if defined(VTKM_GCC)
+#if defined(VTKM_GCC) || defined(VTKM_CLANG)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 #endif // gcc || clang
