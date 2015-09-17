@@ -24,11 +24,13 @@ set(headers
   DeviceAdapterTagTBB.h
   )
 
-if("${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}" VERSION_LESS 4.3)
-  if("${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}" VERSION_LESS 4.0)
-    message_error("VTK-m not tested with TBB before version 4.0. Please upgrade your TBB library.")
+if (VTKm_ENABLE_TBB)
+  if("${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}" VERSION_LESS 4.3)
+    if("${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}" VERSION_LESS 4.0)
+      MESSAGE(FATAL_ERROR "VTK-m not tested with TBB before version 4.0. Please upgrade your TBB library.")
+    endif()
   endif()
-  set(headers ${headers} parallel_sort.h)
 endif()
 
+vtkm_declare_headers(parallel_sort.h TESTABLE OFF)
 vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_TBB})
