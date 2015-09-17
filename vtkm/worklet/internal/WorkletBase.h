@@ -32,6 +32,8 @@
 #include <vtkm/cont/arg/TransportTagExecObject.h>
 #include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 
+#include <vtkm/worklet/ScatterIdentity.h>
+
 namespace vtkm {
 namespace worklet {
 namespace internal {
@@ -70,6 +72,17 @@ public:
   /// Default input domain is the first argument. Worklet subclasses can
   /// override this by redefining this type.
   typedef _1 InputDomain;
+
+  /// All worklets must define their scatter operation. The scatter defines
+  /// what output each input contributes to. The default scatter is the
+  /// identity scatter (1-to-1 input to output).
+  typedef vtkm::worklet::ScatterIdentity ScatterType;
+
+  /// In addition to defining the scatter type, the worklet must produce the
+  /// scatter. The default ScatterIdentity has no state, so just return an
+  /// instance.
+  VTKM_CONT_EXPORT
+  ScatterType GetScatter() const { return ScatterType(); }
 
   /// \brief A type list containing the type vtkm::Id.
   ///
