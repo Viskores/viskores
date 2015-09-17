@@ -22,10 +22,10 @@
 
 #include <vtkm/internal/ListTagDetail.h>
 
+#include <vtkm/StaticAssert.h>
 #include <vtkm/internal/ExportMacros.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/static_assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
@@ -48,11 +48,9 @@ struct ListTagCheck
 /// code when a mistake is made.)
 ///
 #define VTKM_IS_LIST_TAG(tag) \
-  VTKM_THIRDPARTY_PRE_INCLUDE \
-  BOOST_STATIC_ASSERT_MSG( \
+  VTKM_STATIC_ASSERT_MSG( \
     ::vtkm::internal::ListTagCheck<tag>::Valid, \
-    "Provided type is not a valid VTK-m list tag.") \
-  VTKM_THIRDPARTY_POST_INCLUDE
+    "Provided type is not a valid VTK-m list tag.")
 
 namespace detail {
 

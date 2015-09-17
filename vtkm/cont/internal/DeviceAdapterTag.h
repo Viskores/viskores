@@ -20,14 +20,11 @@
 #ifndef vtk_m_cont_internal_DeviceAdapterTag_h
 #define vtk_m_cont_internal_DeviceAdapterTag_h
 
+#include <vtkm/StaticAssert.h>
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
 #include <string>
-
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/static_assert.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
 
 #define VTKM_DEVICE_ADAPTER_ERROR     -2
 #define VTKM_DEVICE_ADAPTER_UNDEFINED -1
@@ -86,11 +83,9 @@ struct DeviceAdapterTagCheck
 /// elsewhere in the code when a mistake is made.)
 ///
 #define VTKM_IS_DEVICE_ADAPTER_TAG(tag) \
-  VTKM_THIRDPARTY_PRE_INCLUDE \
-  BOOST_STATIC_ASSERT_MSG( \
+  VTKM_STATIC_ASSERT_MSG( \
       ::vtkm::cont::internal::DeviceAdapterTagCheck<tag>::Valid, \
-      "Provided type is not a valid VTK-m device adapter tag.") \
-  VTKM_THIRDPARTY_POST_INCLUDE
+      "Provided type is not a valid VTK-m device adapter tag.")
 
 //-----------------------------------------------------------------------------
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_SERIAL

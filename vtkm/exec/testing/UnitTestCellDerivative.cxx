@@ -24,6 +24,7 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
 #include <vtkm/CellTraits.h>
+#include <vtkm/StaticAssert.h>
 #include <vtkm/VecVariable.h>
 
 #include <vtkm/testing/Testing.h>
@@ -76,9 +77,7 @@ void GetMinMaxPoints(CellShapeTag,
 {
   // If this line fails, then MAX_POINTS is not large enough to support all
   // cell shapes.
-  VTKM_THIRDPARTY_PRE_INCLUDE
-  BOOST_STATIC_ASSERT((vtkm::CellTraits<CellShapeTag>::NUM_POINTS <= MAX_POINTS));
-  VTKM_THIRDPARTY_POST_INCLUDE
+  VTKM_STATIC_ASSERT((vtkm::CellTraits<CellShapeTag>::NUM_POINTS <= MAX_POINTS));
   minPoints = maxPoints = vtkm::CellTraits<CellShapeTag>::NUM_POINTS;
 }
 

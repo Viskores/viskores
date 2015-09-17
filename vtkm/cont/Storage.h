@@ -28,11 +28,9 @@
 #define VTKM_STORAGE VTKM_STORAGE_BASIC
 #endif
 
-#include <vtkm/internal/ExportMacros.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/static_assert.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <vtkm/StaticAssert.h>
+#include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm {
 namespace cont {
@@ -76,7 +74,7 @@ namespace detail {
 // arguments.
 template<typename T>
 struct UndefinedArrayPortal {
-  BOOST_STATIC_ASSERT(sizeof(T) == static_cast<size_t>(-1));
+  VTKM_STATIC_ASSERT(sizeof(T) == static_cast<size_t>(-1));
 };
 
 } // namespace detail

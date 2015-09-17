@@ -20,6 +20,8 @@
 #ifndef vtk_m_worklet_internal_DispatcherBase_h
 #define vtk_m_worklet_internal_DispatcherBase_h
 
+#include <vtkm/StaticAssert.h>
+
 #include <vtkm/internal/FunctionInterface.h>
 #include <vtkm/internal/Invocation.h>
 
@@ -38,7 +40,6 @@
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/mpl/assert.hpp>
-#include <boost/static_assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/utility/enable_if.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
@@ -264,12 +265,10 @@ private:
       const vtkm::internal::FunctionInterface<Signature> &parameters) const
   {
     typedef vtkm::internal::FunctionInterface<Signature> ParameterInterface;
+    VTKM_STATIC_ASSERT_MSG(ParameterInterface::ARITY == NUM_INVOKE_PARAMS,
+                           "Dispatcher Invoke called with wrong number of arguments.");
 
-    VTKM_THIRDPARTY_PRE_INCLUDE
-    BOOST_STATIC_ASSERT_MSG(ParameterInterface::ARITY == NUM_INVOKE_PARAMS,
-                            "Dispatcher Invoke called with wrong number of arguments.");
     BOOST_MPL_ASSERT(( boost::is_base_of<BaseWorkletType,WorkletType> ));
-    VTKM_THIRDPARTY_POST_INCLUDE
 
     // As we do the dynamic transform, we are also going to check the static
     // type against the TypeCheckTag in the ControlSignature tags. To do this,
