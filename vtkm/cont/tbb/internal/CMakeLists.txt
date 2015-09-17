@@ -31,4 +31,4 @@ if("${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}" VERSION_LESS 4.3)
   set(headers ${headers} parallel_sort.h)
 endif()
 
-vtkm_declare_headers(${headers})
+vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_TBB})

@@ -23,14 +23,18 @@ set(headers
   DeviceAdapterCuda.h
   )
 
-vtkm_disable_troublesome_thrust_warnings()
+#-----------------------------------------------------------------------------
+if (VTKm_ENABLE_CUDA)
+  vtkm_disable_troublesome_thrust_warnings()
+  CUDA_INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+endif()
 
 #-----------------------------------------------------------------------------
-CUDA_INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-
 add_subdirectory(internal)
+vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})
 
 #-----------------------------------------------------------------------------
-vtkm_declare_headers(CUDA ${headers})
+if (VTKm_ENABLE_CUDA)
+  add_subdirectory(testing)
+endif()
 
-add_subdirectory(testing)

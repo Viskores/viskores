@@ -24,6 +24,9 @@ set(headers
 
 add_subdirectory(internal)
 
-vtkm_declare_headers(${headers})
+vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_TBB})
 
-add_subdirectory(testing)
+#-----------------------------------------------------------------------------
+if (VTKm_ENABLE_TBB)
+  add_subdirectory(testing)
+endif()
