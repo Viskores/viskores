@@ -20,23 +20,16 @@
 #ifndef vtk_m_cont_testing_TestingArrayHandles_h
 #define vtk_m_cont_testing_TestingArrayHandles_h
 
-#ifdef VTKM_CUDA
-#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
-#include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
-#endif
-
-#include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
-#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
-#include <vtkm/cont/internal/ArrayManagerExecutionSerial.h>
-#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/TypeTraits.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
+#include <vtkm/cont/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/Testing.h>
+
+#include <boost/type_traits/is_same.hpp>
 #include <algorithm>
 #include <vector>
 
@@ -46,40 +39,6 @@ namespace testing {
 
 namespace array_handle_testing
 {
-  template<typename T, typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT
-  void UseDifferentAdapter(const vtkm::cont::ArrayHandle<T> &handle, 
-                                              T *array, DeviceAdapterTag)
-  {
-    std::stringstream message;
-    message << "Test called CopyInto using the same device adapter." << std::endl
-            << "Expected to be called with a different device adapter. " << std::endl;
-    VTKM_TEST_FAIL(message.str().c_str());
-  }
-#ifdef VTKM_CUDA
-  template<typename T>
-  VTKM_CONT_EXPORT
-  void UseDifferentAdapter(const vtkm::cont::ArrayHandle<T> &handle, 
-                                T *array, vtkm::cont::DeviceAdapterTagCuda)
-  {
-    handle.CopyInto(array, vtkm::cont::DeviceAdapterTagSerial());
-  }
-#endif
-  template<typename T>
-  VTKM_CONT_EXPORT
-  void UseDifferentAdapter(const vtkm::cont::ArrayHandle<T> &handle, 
-                              T *array, vtkm::cont::DeviceAdapterTagSerial)
-  {
-    handle.CopyInto(array, vtkm::cont::DeviceAdapterTagTBB());
-  }
-  template<typename T>
-  VTKM_CONT_EXPORT
-  void UseDifferentAdapter(const vtkm::cont::ArrayHandle<T> &handle, 
-                                T *array, vtkm::cont::DeviceAdapterTagTBB)
-  {
-    handle.CopyInto(array, vtkm::cont::DeviceAdapterTagSerial());
-  }
-
   template<class IteratorType, typename T>
   void CheckValues(IteratorType begin, IteratorType end, T)
   {
@@ -263,7 +222,7 @@ private:
       }
 
       std::cout << "Check CopyInto from execution array" << std::endl;
-      { //Copy the data to the execution environment  
+      { //Copy the data to the execution environment
         vtkm::cont::ArrayHandle<T> result;
         DispatcherPassThrough().Invoke(arrayHandle, result);
 
@@ -273,16 +232,17 @@ private:
         array_handle_testing::CheckValues(array, array+ARRAY_SIZE, T());
       }
 
-      std::cout << "Check using different device adapter" << std::endl;
-      { //Copy the data to the execution environment  
+      if (!boost::is_same<DeviceAdapterTag, vtkm::cont::DeviceAdapterTagSerial>::value)
+      {
+        std::cout << "Check using different device adapter" << std::endl;
+        //Copy the data to the execution environment
         vtkm::cont::ArrayHandle<T> result;
         DispatcherPassThrough().Invoke(arrayHandle, result);
 
         //CopyInto allows you to copy the data even
         //if you request it from a different device adapter
         T array[ARRAY_SIZE];
-        array_handle_testing::UseDifferentAdapter(result, 
-                                              array, DeviceAdapterTag());
+        result.CopyInto(array, vtkm::cont::DeviceAdapterTagSerial());
         array_handle_testing::CheckValues(array, array+ARRAY_SIZE, T());
       }
 
