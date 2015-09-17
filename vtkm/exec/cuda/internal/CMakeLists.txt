@@ -24,13 +24,10 @@ set(headers
   WrappedOperators.h
   )
 
-vtkm_disable_troublesome_thrust_warnings()
-
 #-----------------------------------------------------------------------------
-CUDA_INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+if (VTKm_ENABLE_CUDA)
+  vtkm_disable_troublesome_thrust_warnings()
+  CUDA_INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+endif()
 
-vtkm_declare_headers(CUDA ${headers})
-
-
-#-----------------------------------------------------------------------------
-# add_subdirectory(testing)
+vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})

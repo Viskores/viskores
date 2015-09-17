@@ -61,7 +61,7 @@ struct DeviceAdapterTagCheck
 /// Creates a tag named vtkm::cont::DeviceAdapterTagName and associated MPL
 /// structures to use this tag. Always use this macro (in the base namespace)
 /// when creating a device adapter.
-#define VTKM_CREATE_DEVICE_ADAPTER(Name) \
+#define VTKM_VALID_DEVICE_ADAPTER(Name) \
   namespace vtkm { \
   namespace cont { \
   struct DeviceAdapterTag##Name {  }; \
@@ -71,6 +71,7 @@ struct DeviceAdapterTagCheck
     static DeviceAdapterId GetId() { \
       return DeviceAdapterId(#Name); \
     } \
+    static const bool Valid = true;\
   }; \
   template<> \
   struct DeviceAdapterTagCheck<vtkm::cont::DeviceAdapterTag##Name> { \
@@ -79,6 +80,31 @@ struct DeviceAdapterTagCheck
   } \
   } \
   }
+
+/// Marks the tag named vtkm::cont::DeviceAdapterTagName and associated
+/// structures as valid to use. Always use this macro (in the base namespace)
+/// when creating a device adapter.
+#define VTKM_INVALID_DEVICE_ADAPTER(Name) \
+  namespace vtkm { \
+  namespace cont { \
+  struct DeviceAdapterTag##Name {  }; \
+  namespace internal { \
+  template<> \
+  struct DeviceAdapterTraits<vtkm::cont::DeviceAdapterTag##Name> { \
+    static DeviceAdapterId GetId() { \
+      return DeviceAdapterId(#Name); \
+    } \
+    static const bool Valid = false;\
+  }; \
+  template<> \
+  struct DeviceAdapterTagCheck<vtkm::cont::DeviceAdapterTag##Name> { \
+    static const bool Valid = false; \
+  }; \
+  } \
+  } \
+  }
+
+
 
 /// Checks that the argument is a proper device adapter tag. This is a handy
 /// concept check for functions and classes to make sure that a template

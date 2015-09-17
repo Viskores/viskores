@@ -22,7 +22,13 @@
 
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
-
-VTKM_CREATE_DEVICE_ADAPTER(TBB);
+//We always create the tbb tag when included, but we only mark it as
+//a valid tag when VTKM_ENABLE_TBB is true. This is for easier development
+//of multi-backend systems
+#ifdef VTKM_ENABLE_TBB
+VTKM_VALID_DEVICE_ADAPTER(TBB);
+#else
+VTKM_INVALID_DEVICE_ADAPTER(TBB);
+#endif
 
 #endif //vtk_m_cont_tbb_internal_DeviceAdapterTagTBB_h

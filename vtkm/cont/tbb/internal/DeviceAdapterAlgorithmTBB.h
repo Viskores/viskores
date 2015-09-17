@@ -390,7 +390,7 @@ private:
       this->Functor.SetErrorMessageBuffer(errorMessage);
     }
 
-    VTKM_EXEC_EXPORT
+    VTKM_CONT_EXPORT
     void operator()(const ::tbb::blocked_range<vtkm::Id> &range) const {
       // The TBB device adapter causes array classes to be shared between
       // control and execution environment. This means that it is possible for
@@ -462,7 +462,7 @@ private:
       this->Functor.SetErrorMessageBuffer(errorMessage);
     }
 
-    VTKM_EXEC_EXPORT
+    VTKM_CONT_EXPORT
     void operator()(const ::tbb::blocked_range3d<vtkm::Id> &range) const {
       try
         {
@@ -569,7 +569,7 @@ private:
         OutputPortal(outputPortal)
     {  }
 
-    VTKM_EXEC_EXPORT
+    VTKM_CONT_EXPORT
     void operator()(const ::tbb::blocked_range<vtkm::Id> &range) const
     {
       // The TBB device adapter causes array classes to be shared between

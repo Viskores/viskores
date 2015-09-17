@@ -22,6 +22,6 @@
 
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
-VTKM_CREATE_DEVICE_ADAPTER(Serial);
+VTKM_VALID_DEVICE_ADAPTER(Serial);
 
 #endif //vtk_m_cont_internal_DeviceAdapterTagSerial_h
