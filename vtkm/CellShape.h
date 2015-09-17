@@ -75,9 +75,11 @@ struct CellShapeTagCheck : boost::false_type {  };
 /// tag.
 ///
 #define VTKM_IS_CELL_SHAPE_TAG(tag) \
+  VTKM_THIRDPARTY_PRE_INCLUDE \
   BOOST_STATIC_ASSERT_MSG( \
     ::vtkm::internal::CellShapeTagCheck<tag>::value, \
-    "Provided type is not a valid VTK-m cell shape tag.")
+    "Provided type is not a valid VTK-m cell shape tag.") \
+  VTKM_THIRDPARTY_POST_INCLUDE
 
 /// A traits-like class to get an CellShapeId known at compile time to a tag.
 ///

@@ -62,9 +62,11 @@ struct ControlSignatureTagCheck
 /// get weird errors elsewhere in the code when a mistake is made.)
 ///
 #define VTKM_IS_CONTROL_SIGNATURE_TAG(tag) \
+  VTKM_THIRDPARTY_PRE_INCLUDE \
   BOOST_STATIC_ASSERT_MSG( \
     ::vtkm::cont::arg::internal::ControlSignatureTagCheck<tag>::Valid, \
-    "Provided a type that is not a valid ControlSignature tag.")
+    "Provided a type that is not a valid ControlSignature tag.") \
+  VTKM_THIRDPARTY_POST_INCLUDE
 
 }
 }

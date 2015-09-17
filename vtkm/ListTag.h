@@ -48,9 +48,11 @@ struct ListTagCheck
 /// code when a mistake is made.)
 ///
 #define VTKM_IS_LIST_TAG(tag) \
+  VTKM_THIRDPARTY_PRE_INCLUDE \
   BOOST_STATIC_ASSERT_MSG( \
     ::vtkm::internal::ListTagCheck<tag>::Valid, \
-    "Provided type is not a valid VTK-m list tag.")
+    "Provided type is not a valid VTK-m list tag.") \
+  VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace detail {
 

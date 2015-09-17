@@ -95,7 +95,9 @@ struct CellSetCheck
 };
 
 #define VTKM_IS_CELL_SET(T) \
-  BOOST_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value)
+  VTKM_THIRDPARTY_PRE_INCLUDE \
+  BOOST_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value) \
+  VTKM_THIRDPARTY_POST_INCLUDE
 
 } // namespace internal
 

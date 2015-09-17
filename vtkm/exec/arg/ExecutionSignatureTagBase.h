@@ -64,9 +64,11 @@ struct ExecutionSignatureTagCheck
 /// get weird errors elsewhere in the code when a mistake is made.)
 ///
 #define VTKM_IS_EXECUTION_SIGNATURE_TAG(tag) \
+  VTKM_THIRDPARTY_PRE_INCLUDE \
   BOOST_STATIC_ASSERT_MSG( \
     ::vtkm::exec::arg::internal::ExecutionSignatureTagCheck<tag>::Valid, \
-    "Provided a type that is not a valid ExecutionSignature tag.")
+    "Provided a type that is not a valid ExecutionSignature tag.") \
+  VTKM_THIRDPARTY_POST_INCLUDE
 
 }
 }

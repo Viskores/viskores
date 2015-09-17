@@ -45,7 +45,9 @@ void GetMinMaxPoints(CellShapeTag,
 {
   // If this line fails, then MAX_POINTS is not large enough to support all
   // cell shapes.
+  VTKM_THIRDPARTY_PRE_INCLUDE
   BOOST_STATIC_ASSERT((vtkm::CellTraits<CellShapeTag>::NUM_POINTS <= MAX_POINTS));
+  VTKM_THIRDPARTY_POST_INCLUDE
   minPoints = maxPoints = vtkm::CellTraits<CellShapeTag>::NUM_POINTS;
 }
 

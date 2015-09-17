@@ -86,9 +86,11 @@ struct DeviceAdapterTagCheck
 /// elsewhere in the code when a mistake is made.)
 ///
 #define VTKM_IS_DEVICE_ADAPTER_TAG(tag) \
+  VTKM_THIRDPARTY_PRE_INCLUDE \
   BOOST_STATIC_ASSERT_MSG( \
       ::vtkm::cont::internal::DeviceAdapterTagCheck<tag>::Valid, \
-      "Provided type is not a valid VTK-m device adapter tag.")
+      "Provided type is not a valid VTK-m device adapter tag.") \
+  VTKM_THIRDPARTY_POST_INCLUDE
 
 //-----------------------------------------------------------------------------
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_SERIAL
