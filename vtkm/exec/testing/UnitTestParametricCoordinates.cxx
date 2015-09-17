@@ -22,6 +22,7 @@
 #include <vtkm/exec/ParametricCoordinates.h>
 
 #include <vtkm/CellTraits.h>
+#include <vtkm/StaticAssert.h>
 #include <vtkm/VecVariable.h>
 
 #include <vtkm/testing/Testing.h>
@@ -29,7 +30,6 @@
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
-#include <boost/static_assert.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <time.h>
@@ -48,7 +48,7 @@ void GetMinMaxPoints(CellShapeTag,
 {
   // If this line fails, then MAX_POINTS is not large enough to support all
   // cell shapes.
-  BOOST_STATIC_ASSERT((vtkm::CellTraits<CellShapeTag>::NUM_POINTS <= MAX_POINTS));
+  VTKM_STATIC_ASSERT((vtkm::CellTraits<CellShapeTag>::NUM_POINTS <= MAX_POINTS));
   minPoints = maxPoints = vtkm::CellTraits<CellShapeTag>::NUM_POINTS;
 }
 
