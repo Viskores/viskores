@@ -33,8 +33,10 @@ vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dims)
   vtkm::cont::DataSet dataSet;
 
   const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, dims[2] + 1);
+  const vtkm::Vec<vtkm::Float32, 3> origin = vtkm::make_Vec(0.0f, 0.0f, 0.0f);
+  const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(1.0f/dims[0], 1.0f/dims[1], 1.0f/dims[2]);
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims);
+  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(
           vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
 

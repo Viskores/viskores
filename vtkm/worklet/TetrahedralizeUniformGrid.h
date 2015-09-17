@@ -32,8 +32,6 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/Field.h>
 
-#include "stdio.h"
-
 namespace vtkm {
 namespace worklet {
 
@@ -43,6 +41,10 @@ class TetrahedralizeFilterUniformGrid
 {
 public:
 
+  //
+  // Worklet to turn hexahedra into tetrahedra
+  // Vertices remain the same and each cell is processed with needing topology
+  //
   class TetrahedralizeCell : public vtkm::worklet::WorkletMapField
   {
   public:
@@ -91,7 +93,6 @@ public:
 
       // Set the tetrahedra for this cell based on vertex index and index type of cell
       vtkm::Id startIndex = inputCellId * 5 * 4;
-printf("CellID %ld x %ld y %ld z %ld vertex pts %ld %ld %ld %ld %ld %ld %ld %ld STARTINDEX %ld\n", inputCellId, x, y, z, i0, i1, i2, i3, i4, i5, i6, i7, startIndex);
       if (indexType == 0) {
         this->TetrahedraIndices.Set(startIndex + 0, i0);
         this->TetrahedraIndices.Set(startIndex + 1, i1);
@@ -156,6 +157,9 @@ printf("CellID %ld x %ld y %ld z %ld vertex pts %ld %ld %ld %ld %ld %ld %ld %ld 
     }
   };
 
+  //
+  // Construct the filter to tetrahedralize uniform grid
+  //
   TetrahedralizeFilterUniformGrid(const vtkm::Id3 &cdims,
                                   const vtkm::cont::DataSet &inDataSet,
                                   vtkm::cont::DataSet &outDataSet) :
@@ -168,13 +172,16 @@ printf("CellID %ld x %ld y %ld z %ld vertex pts %ld %ld %ld %ld %ld %ld %ld %ld 
   {
   }
 
-  vtkm::Id3 CDims;
-  vtkm::cont::DataSet InDataSet;
-  vtkm::cont::DataSet OutDataSet;
-  vtkm::Id numberOfVertices;
-  vtkm::Id numberOfInCells;
-  vtkm::Id numberOfOutCells;
+  vtkm::Id3 CDims;                // dimension of uniform grid
+  vtkm::cont::DataSet InDataSet;  // input dataset with structured cell set
+  vtkm::cont::DataSet OutDataSet; // output dataset with explicit cell set
+  vtkm::Id numberOfVertices;      // number of vertices in both datasets
+  vtkm::Id numberOfInCells;       // number of hexahedra in input
+  vtkm::Id numberOfOutCells;      // number of tetrahedra in output
 
+  //
+  // Populate the output dataset with tetrahedra based on input uniform dataset
+  //
   void Run()
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
@@ -186,39 +193,31 @@ printf("CellID %ld x %ld y %ld z %ld vertex pts %ld %ld %ld %ld %ld %ld %ld %ld 
     // Cell indices are just counting array
     vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIndicesArray(0, this->numberOfInCells);
 
-    // Output is 5 tets per hex cell
+    // Output is 5 tets per hex cell so allocate accordingly
     vtkm::cont::ArrayHandle<vtkm::Id> shapes;
     vtkm::cont::ArrayHandle<vtkm::Id> numIndices;
-    vtkm::cont::ArrayHandle<vtkm::Id> conn;
+    vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
+
     shapes.Allocate(static_cast<vtkm::Id>(numberOfOutCells));
     numIndices.Allocate(static_cast<vtkm::Id>(numberOfOutCells));
-    conn.Allocate(static_cast<vtkm::Id>(4 * numberOfOutCells));
+    connectivity.Allocate(static_cast<vtkm::Id>(4 * numberOfOutCells));
 
+    // Fill the arrays of shapes and number of indices needed by the cell set
     for (vtkm::Id j = 0; j < numberOfOutCells; j++) {
       shapes.GetPortalControl().Set(j, static_cast<vtkm::Id>(vtkm::CELL_SHAPE_TETRA));
       numIndices.GetPortalControl().Set(j, 4);
     }
 
-    // Call the TetrahedralizeCell functor to compute the 5 tets belonging to each hex cell
+    // Call the TetrahedralizeCell functor to compute the 5 tets for connectivity
     TetrahedralizeCell tetrahedralizeCell(
-                            this->CDims, 
-                            conn.PrepareForOutput(numberOfOutCells * 4, DeviceAdapter()));
-
+                        this->CDims, 
+                        connectivity.PrepareForOutput(numberOfOutCells * 4, DeviceAdapter()));
     typedef typename vtkm::worklet::DispatcherMapField<TetrahedralizeCell> TetrahedralizeCellDispatcher;
     TetrahedralizeCellDispatcher tetrahedralizeCellDispatcher(tetrahedralizeCell);
-
     tetrahedralizeCellDispatcher.Invoke(cellIndicesArray);
 
     // Add tets to output cellset
-    cellSet.Fill(shapes, numIndices, conn);
-
-    vtkm::Id index = 0;
-    for (vtkm::Id j = 0; j < this->numberOfOutCells; j++) {
-      printf("Cell %ld Shape %ld NumIndices %ld Tet (%ld, %ld, %ld, %ld)\n",
-             j, shapes.GetPortalControl().Get(j), numIndices.GetPortalControl().Get(j),
-             conn.GetPortalControl().Get(index++), conn.GetPortalControl().Get(index++),
-             conn.GetPortalControl().Get(index++), conn.GetPortalControl().Get(index++));
-    }
+    cellSet.Fill(shapes, numIndices, connectivity);
   }
 };
 
