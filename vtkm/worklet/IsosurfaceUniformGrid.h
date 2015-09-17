@@ -23,7 +23,7 @@
 
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -309,7 +309,7 @@ public:
     if (numOutputCells == 0) return;
 
     vtkm::cont::ArrayHandle<vtkm::Id> validCellIndicesArray, inputCellIterationNumber;
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> validCellCountImplicitArray(0, numOutputCells);
+    vtkm::cont::ArrayHandleIndex validCellCountImplicitArray(numOutputCells);
     DeviceAlgorithms::UpperBounds(numOutputTrisPerCell,
                                   validCellCountImplicitArray,
                                   validCellIndicesArray);

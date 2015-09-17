@@ -25,8 +25,8 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
@@ -280,7 +280,8 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> face2CellId;
     vtkm::cont::ArrayHandle<vtkm::Id> localFaceIds;
     localFaceIds.Allocate(static_cast<vtkm::Id>(totalFaces));
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> countingArray(vtkm::Id(0), vtkm::Id(totalFaces));
+    vtkm::cont::ArrayHandleIndex countingArray =
+        vtkm::cont::ArrayHandleIndex(vtkm::Id(totalFaces));
 
 #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
     timer.Reset();

@@ -21,24 +21,33 @@
 ##=============================================================================
 
 cmake_minimum_required(VERSION 2.8.11)
-find_package(OpenGL)
-find_package(GLUT)
-find_package(TBB)
 
-if(OPENGL_FOUND AND GLUT_FOUND)
-  add_executable(IsosurfaceUniformGrid_SERIAL IsosurfaceUniformGrid.cxx)
-  target_include_directories(IsosurfaceUniformGrid_SERIAL PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
-  target_link_libraries(IsosurfaceUniformGrid_SERIAL ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
 
-  if(VTKm_Cuda_FOUND)
-    cuda_add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cu)
-    target_link_libraries(IsosurfaceUniformGrid_CUDA ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
-  endif()
+add_executable(Clipping_SERIAL Clipping.cxx)
+#target_include_directories(Clipping_SERIAL "")
+#target_link_libraries(Clipping_SERIAL "")
+set_property(
+  TARGET Clipping_SERIAL
+  APPEND
+  PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
 
-  if(VTKm_ENABLE_TBB)
-    add_executable(IsosurfaceUniformGrid_TBB IsosurfaceUniformGridTBB.cxx)
-    target_include_directories(IsosurfaceUniformGrid_TBB PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} ${TBB_INCLUDE_DIRS})
-    target_link_libraries(IsosurfaceUniformGrid_TBB ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${TBB_LIBRARIES})
-  endif()
+if(VTKm_Cuda_FOUND)
+  set (cudaSource "${CMAKE_CURRENT_BINARY_DIR}/Clipping.cu")
+  configure_file(Clipping.cxx ${cudaSource} COPYONLY)
 
+  vtkm_setup_nvcc_flags( old_nvcc_flags )
+  cuda_add_executable(Clipping_CUDA ${cudaSource})
+  set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+
+  #target_link_libraries(Clipping_CUDA "")
+endif()
+
+if(VTKm_ENABLE_TBB)
+  add_executable(Clipping_TBB Clipping.cxx)
+  target_include_directories(Clipping_TBB PRIVATE ${TBB_INCLUDE_DIRS})
+  target_link_libraries(Clipping_TBB ${TBB_LIBRARIES})
+  set_property(
+    TARGET Clipping_TBB
+    APPEND
+    PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
 endif()

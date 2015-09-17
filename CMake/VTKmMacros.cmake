@@ -153,17 +153,26 @@ endfunction(vtkm_requires_thrust_to_test)
 # compiled and show up in an IDE.
 function(vtkm_declare_headers)
   set(options CUDA)
-  set(oneValueArgs)
+  set(oneValueArgs TESTABLE)
   set(multiValueArgs)
   cmake_parse_arguments(VTKm_DH "${options}"
     "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
     )
+
+  #The testable keyword allows the caller to turn off the header testing,
+  #mainly used so that backends can be installed even when they can't be
+  #built on the machine.
+  #Since this is an optional property not setting it means you do want testing
+  if(NOT DEFINED VTKm_DH_TESTABLE)
+      set(VTKm_DH_TESTABLE ON)
+  endif()
+
   set(hfiles ${VTKm_DH_UNPARSED_ARGUMENTS})
   vtkm_get_kit_name(name dir_prefix)
 
   #only do header testing if enable testing is turned on
-  if (VTKm_ENABLE_TESTING)
+  if (VTKm_ENABLE_TESTING AND VTKm_DH_TESTABLE)
     vtkm_add_header_build_test(
       "${name}" "${dir_prefix}" "${VTKm_DH_CUDA}" ${hfiles})
   endif()

@@ -142,6 +142,7 @@ struct TransformTests
               << std::endl;
     vtkm::cont::ArrayHandleCounting<InputValueType> counting =
         vtkm::cont::make_ArrayHandleCounting(InputValueType(OutputValueType(0)),
+                                             InputValueType(1),
                                              ARRAY_SIZE);
     CountingTransformHandle countingTransformed =
       vtkm::cont::make_ArrayHandleTransform<OutputValueType>(counting, functor);

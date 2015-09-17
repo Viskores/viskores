@@ -27,6 +27,7 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/Extent.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
@@ -389,7 +390,7 @@ private:
       this->Functor.SetErrorMessageBuffer(errorMessage);
     }
 
-    VTKM_EXEC_EXPORT
+    VTKM_CONT_EXPORT
     void operator()(const ::tbb::blocked_range<vtkm::Id> &range) const {
       // The TBB device adapter causes array classes to be shared between
       // control and execution environment. This means that it is possible for
@@ -461,7 +462,7 @@ private:
       this->Functor.SetErrorMessageBuffer(errorMessage);
     }
 
-    VTKM_EXEC_EXPORT
+    VTKM_CONT_EXPORT
     void operator()(const ::tbb::blocked_range3d<vtkm::Id> &range) const {
       try
         {
@@ -568,7 +569,7 @@ private:
         OutputPortal(outputPortal)
     {  }
 
-    VTKM_EXEC_EXPORT
+    VTKM_CONT_EXPORT
     void operator()(const ::tbb::blocked_range<vtkm::Id> &range) const
     {
       // The TBB device adapter causes array classes to be shared between
@@ -652,7 +653,7 @@ public:
       ValueType valuesScattered;
       const vtkm::Id size = values.GetNumberOfValues();
 
-      Copy( make_ArrayHandleCounting(0, keys.GetNumberOfValues()), indexArray);
+      Copy( ArrayHandleIndex(keys.GetNumberOfValues()), indexArray);
 
       ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys,indexArray);
       Sort(zipHandle,KeyCompare<T,vtkm::Id,Compare>(comp));

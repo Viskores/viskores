@@ -17,18 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_cuda_internal_DeviceAdapterTagCuda_h
-#define vtk_m_cont_cuda_internal_DeviceAdapterTagCuda_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_TBB
 
-//We always create the cuda tag when included, but we only mark it as
-//a valid tag when VTKM_ENABLE_CUDA is true. This is for easier development
-//of multi-backend systems
-#ifdef VTKM_ENABLE_CUDA
-VTKM_VALID_DEVICE_ADAPTER(Cuda);
-#else
-VTKM_INVALID_DEVICE_ADAPTER(Cuda);
-#endif
-
-#endif //vtk_m_cont_cuda_internal_DeviceAdapterTagCuda_h
+#include "IsosurfaceUniformGrid.cxx"
