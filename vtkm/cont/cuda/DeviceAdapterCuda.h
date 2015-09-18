@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 
-#ifdef VTKM_ENABLE_CUDA
+#ifdef VTKM_CUDA
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmCuda.h>
 #endif
