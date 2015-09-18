@@ -191,7 +191,7 @@ public:
       this->OutDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
     // Cell indices are just counting array
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIndicesArray(0, this->numberOfInCells);
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIndicesArray(0, 1, this->numberOfInCells);
 
     // Output is 5 tets per hex cell so allocate accordingly
     vtkm::cont::ArrayHandle<vtkm::Id> shapes;

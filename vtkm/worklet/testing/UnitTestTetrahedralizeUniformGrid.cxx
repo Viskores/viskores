@@ -69,11 +69,13 @@ void TestTetrahedralizeUniformGrid()
   // Set number of cells and vertices in input dataset
   vtkm::Id numberOfCells = dims[0] * dims[1] * dims[2];
   vtkm::Id numberOfVertices = (dims[0] + 1) * (dims[1] + 1) * (dims[2] + 1);
+  std::cout << "Number of input hexahedra " << numberOfCells << std::endl;
+  std::cout << "Number of input vertices " << numberOfVertices << std::endl;
 
   // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::DataSet outDataSet;
-  vtkm::cont::CellSetExplicit<> cellSet(numberOfVertices, "cells", 3);
-  outDataSet.AddCellSet(cellSet);
+  vtkm::cont::CellSetExplicit<> outCellSet(numberOfVertices, "cells", 3);
+  outDataSet.AddCellSet(outCellSet);
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
   // Convert uniform hexahedra to tetrahedra
@@ -81,9 +83,21 @@ void TestTetrahedralizeUniformGrid()
                  tetrahedralizeFilter(dims, inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
+  vtkm::cont::CellSetExplicit<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+  vtkm::cont::CoordinateSystem coordinates = outDataSet.GetCoordinateSystem(0);
+  const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = coordinates.GetData();
+  std::cout << "Number of output tetrahedra " << cellSet.GetNumberOfCells() << std::endl;
+  std::cout << "Number of output vertices " << coordArray.GetNumberOfValues() << std::endl;
+  std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
+
+  vtkm::cont::ArrayHandle<vtkm::Float64> bounds = coordinates.GetBounds(DeviceAdapter());
+  std::cout << "Bounds (" 
+            << bounds.GetPortalControl().Get(0) << "," << bounds.GetPortalControl().Get(1) << ") ("
+            << bounds.GetPortalControl().Get(2) << "," << bounds.GetPortalControl().Get(3) << ") ("
+            << bounds.GetPortalControl().Get(4) << "," << bounds.GetPortalControl().Get(5) << ")" << std::endl;
+
   // Five tets are created for every hex cell
-  VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >().GetNumberOfCells(),
-                   numberOfCells * 5),
+  VTKM_TEST_ASSERT(test_equal(cellSet.GetNumberOfCells(), numberOfCells * 5),
                    "Wrong result for Tetrahedralize filter");
 }
 
