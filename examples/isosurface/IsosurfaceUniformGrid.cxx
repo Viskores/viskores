@@ -98,7 +98,6 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::cont::DataSet dataSet;
 
   const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, dims[2] + 1);
-  const vtkm::Id dim3 = dims[0]*dims[1]*dims[2];
 
   float mins[3] = {-1.0f, -1.0f, -1.0f};
   float maxs[3] = {1.0f, 1.0f, 1.0f};
