@@ -153,6 +153,33 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArray(T)
         vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE));
 }
 
+template<typename ArrayHandleType>
+void CheckCastToArrayHandle(const ArrayHandleType &array)
+{
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+
+  vtkm::cont::DynamicArrayHandle dynamicArray = array;
+
+  ArrayHandleType castArray1;
+  dynamicArray.CastToArrayHandle(castArray1);
+  for (vtkm::Id index = 0; index < array.GetNumberOfValues(); index++)
+  {
+    VTKM_TEST_ASSERT(test_equal(array.GetPortalConstControl().Get(index),
+                                castArray1.GetPortalConstControl().Get(index)),
+                     "Cast array has bad value.");
+  }
+
+  ArrayHandleType castArray2 =
+      dynamicArray.CastToArrayHandle(typename ArrayHandleType::ValueType(),
+                                     typename ArrayHandleType::StorageTag());
+  for (vtkm::Id index = 0; index < array.GetNumberOfValues(); index++)
+  {
+    VTKM_TEST_ASSERT(test_equal(array.GetPortalConstControl().Get(index),
+                                castArray2.GetPortalConstControl().Get(index)),
+                     "Cast array has bad value.");
+  }
+}
+
 template<typename T, typename DynamicArrayType>
 void TryNewInstance(T, DynamicArrayType originalArray)
 {
@@ -306,6 +333,17 @@ void TryUnusualTypeAndStorage()
   std::cout << "  Found instance when storage and type lists were reset." << std:: endl;
 }
 
+void TryCastToArrayHandle()
+{
+  std::cout << "  Normal array handle." << std::endl;
+  vtkm::FloatDefault buffer[ARRAY_SIZE];
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  {
+    buffer[index] = TestValue(index, vtkm::FloatDefault());
+  }
+  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE));
+}
+
 void TestDynamicArrayHandle()
 {
   std::cout << "Try common types with default type lists." << std::endl;
@@ -333,6 +371,9 @@ void TestDynamicArrayHandle()
 
   std::cout << "Try unusual type in unusual storage." << std::endl;
   TryUnusualTypeAndStorage();
+
+  std::cout << "Try CastToArrayHandle" << std::endl;
+  TryCastToArrayHandle();
 }
 
 } // anonymous namespace

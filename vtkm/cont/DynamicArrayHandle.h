@@ -193,8 +193,8 @@ public:
   }
 
   /// Returns this array cast to an ArrayHandle object of the given type and
-  /// storage. Throws ErrorControlBadValue if the cast does not work. Use
-  /// IsTypeAndStorage to check if the cast can happen.
+  /// storage. Throws \c ErrorControlBadValue if the cast does not work. Use
+  /// \c IsTypeAndStorage to check if the cast can happen.
   ///
   template<typename Type, typename Storage>
   VTKM_CONT_EXPORT
@@ -207,6 +207,20 @@ public:
       throw vtkm::cont::ErrorControlBadValue("Bad cast of dynamic array.");
     }
     return container->Array;
+  }
+
+  /// Given a refernce to an ArrayHandle object, casts this array to the
+  /// ArrayHandle's type and sets the given ArrayHandle to this array. Throws
+  /// \c ErrorControlBadValue if the cast does not work. Use \c
+  /// IsTypeAndStorage to check if the cast can happen.
+  ///
+  template<typename ArrayHandleType>
+  VTKM_CONT_EXPORT
+  void CastToArrayHandle(ArrayHandleType &array) const {
+    VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+    typedef typename ArrayHandleType::ValueType ValueType;
+    typedef typename ArrayHandleType::StorageTag StorageTag;
+    array = this->CastToArrayHandle(ValueType(), StorageTag());
   }
 
   /// Changes the types to try casting to when resolving this dynamic array,
