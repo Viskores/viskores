@@ -214,6 +214,46 @@ public:
     }
   }
 
+  /// Copies data into the given iterator for the control environment. This
+  /// method can skip copying into an internally managed control array.
+  ///
+  template <class IteratorType, class DeviceAdapterTag>
+  VTKM_CONT_EXPORT void CopyInto(IteratorType dest, DeviceAdapterTag) const
+  {
+    BOOST_CONCEPT_ASSERT((boost::OutputIterator<IteratorType, ValueType>));
+    BOOST_CONCEPT_ASSERT((boost::ForwardIterator<IteratorType>));
+
+    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
+
+    if (!this->Internals->ControlArrayValid &&
+        !this->Internals->ExecutionArrayValid)
+      {
+      throw vtkm::cont::ErrorControlBadValue(
+        "ArrayHandle has no data to copy into Iterator.");
+      }
+
+    if (!this->Internals->ControlArrayValid &&
+        this->Internals->ExecutionArray->IsDeviceAdapter(DeviceAdapterTag()))
+      {
+        /// Dynamically cast ArrayHandleExecutionManagerBase into a concrete
+        /// class and call CopyInto. The dynamic conversion will be sucessful
+        /// becuase the check to ensure the ExecutionArray is of the type
+        /// DeviceAdapterTag has already passed
+        typedef vtkm::cont::internal::ArrayHandleExecutionManager<
+                                T, StorageTag, DeviceAdapterTag> ConcreteType;
+        ConcreteType *ConcreteExecutionArray =
+                  dynamic_cast<ConcreteType*>(this->Internals->ExecutionArray.get());
+
+        ConcreteExecutionArray->CopyInto(dest);
+      }
+    else
+      {
+      PortalConstControl portal = this->GetPortalConstControl();
+      std::copy(portal.GetIteratorBegin(), portal.GetIteratorBegin() +
+                                            this->GetNumberOfValues(), dest);
+      }
+  }
+
   /// \brief Allocates an array large enough to hold the given number of values.
   ///
   /// The allocation may be done on an already existing array, but can wipe out
