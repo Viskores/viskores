@@ -27,6 +27,8 @@
 #include <vtkm/worklet/IsosurfaceUniformGrid.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
+#include <vtkm/Math.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
 
@@ -96,13 +98,12 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::cont::DataSet dataSet;
 
   const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, dims[2] + 1);
-  const vtkm::Id dim3 = dims[0]*dims[1]*dims[2];
 
   float mins[3] = {-1.0f, -1.0f, -1.0f};
   float maxs[3] = {1.0f, 1.0f, 1.0f};
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(0, vdims[0]*vdims[1]*vdims[2]);
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(0, 1, vdims[0]*vdims[1]*vdims[2]);
   vtkm::worklet::DispatcherMapField<TangleField> tangleFieldDispatcher(TangleField(vdims, mins, maxs));
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);
 
@@ -130,9 +131,9 @@ void initializeGL()
   glEnable(GL_DEPTH_TEST);
   glShadeModel(GL_SMOOTH);
 
-  float white[] = { 0.8, 0.8, 0.8, 1.0 };
-  float black[] = { 0.0, 0.0, 0.0, 1.0 };
-  float lightPos[] = { 10.0, 10.0, 10.5, 1.0 };
+  float white[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+  float black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+  float lightPos[] = { 10.0f, 10.0f, 10.5f, 1.0f };
 
   glLightfv(GL_LIGHT0, GL_AMBIENT, white);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
@@ -172,7 +173,7 @@ void displayCall()
   glColor3f(0.1f, 0.1f, 0.6f);
 
   glBegin(GL_TRIANGLES);
-  for (unsigned int i=0; i<verticesArray.GetNumberOfValues(); i++)
+  for (vtkm::IdComponent i=0; i<verticesArray.GetNumberOfValues(); i++)
   {
     vtkm::Vec<vtkm::Float32, 3> curNormal = normalsArray.GetPortalConstControl().Get(i);
     vtkm::Vec<vtkm::Float32, 3> curVertex = verticesArray.GetPortalConstControl().Get(i);
@@ -194,12 +195,13 @@ void mouseMove(int x, int y)
 
   if (mouse_state == 0)
   {
+    vtkm::Float32 pideg = static_cast<float>(vtkm::Pi()/180.0);
     Quaternion newRotX;
-    newRotX.setEulerAngles(-0.2*dx*M_PI/180.0, 0.0, 0.0);
+    newRotX.setEulerAngles(-0.2f*dx*pideg/180.0f, 0.0f, 0.0f);
     qrot.mul(newRotX);
 
     Quaternion newRotY;
-    newRotY.setEulerAngles(0.0, 0.0, -0.2*dy*M_PI/180.0);
+    newRotY.setEulerAngles(0.0f, 0.0f, -0.2f*dy*pideg/180.0f);
     qrot.mul(newRotY);
   }
   lastx = x;
