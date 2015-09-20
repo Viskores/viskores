@@ -105,13 +105,19 @@ private:
 
   typedef vtkm::cont::ArrayHandle<ValueType,StorageTag> Superclass;
 
+  VTKM_CONT_EXPORT
   ArrayHandleImplicit()
     : Superclass(typename Superclass::PortalConstControl(FunctorType(),0)) {  }
 
+  VTKM_CONT_EXPORT
   ArrayHandleImplicit(FunctorType functor, vtkm::Id length)
     : Superclass(typename Superclass::PortalConstControl(functor,length))
-    {
-    }
+  {  }
+
+  VTKM_CONT_EXPORT
+  ArrayHandleImplicit(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
+    : Superclass(src)
+  {  }
 };
 
 /// make_ArrayHandleImplicit is convenience function to generate an
