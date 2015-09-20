@@ -177,9 +177,14 @@ void CheckCastToArrayHandle(const ArrayHandleType &array)
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
   vtkm::cont::DynamicArrayHandle dynamicArray = array;
+  VTKM_TEST_ASSERT(
+        !dynamicArray.IsArrayHandleType(vtkm::cont::ArrayHandle<std::string>()),
+        "Dynamic array reporting is wrong type.");
 
   ArrayHandleType castArray1;
   dynamicArray.CastToArrayHandle(castArray1);
+  VTKM_TEST_ASSERT(dynamicArray.IsArrayHandleType(castArray1),
+                   "Did not query handle correctly.");
   VTKM_TEST_ASSERT(array == castArray1, "Did not get back same array.");
 
   ArrayHandleType castArray2 =
@@ -391,7 +396,7 @@ void TryCastToArrayHandle()
                            vtkm::Id3(ARRAY_SIZE)));
 
   std::cout << "  Zip array handle." << std::endl;
-//  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleZip(countingArray, array));
+  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleZip(countingArray, array));
 }
 
 void TestDynamicArrayHandle()

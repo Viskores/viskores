@@ -192,6 +192,18 @@ public:
     return (this->TryCastContainer<Type,Storage>() != NULL);
   }
 
+  /// Returns true if this array matches the array handle type passed in.
+  ///
+  template<typename ArrayHandleType>
+  VTKM_CONT_EXPORT
+  bool IsArrayHandleType(const ArrayHandleType &vtkmNotUsed(array))
+  {
+    VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+    typedef typename ArrayHandleType::ValueType ValueType;
+    typedef typename ArrayHandleType::StorageTag StorageTag;
+    return this->IsTypeAndStorage(ValueType(), StorageTag());
+  }
+
   /// Returns this array cast to an ArrayHandle object of the given type and
   /// storage. Throws \c ErrorControlBadValue if the cast does not work. Use
   /// \c IsTypeAndStorage to check if the cast can happen.
