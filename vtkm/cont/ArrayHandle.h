@@ -394,6 +394,20 @@ public:
     return portal;
   }
 
+  /// Like a pointer, two \c ArrayHandles are considered equal if they point
+  /// to the same location in memory.
+  ///
+  VTKM_CONT_EXPORT
+  bool operator==(const ArrayHandle<ValueType,StorageTag> &rhs) const
+  {
+    return (this->Internals.get() == rhs.Internals.get());
+  }
+  VTKM_CONT_EXPORT
+  bool operator!=(const ArrayHandle<ValueType,StorageTag> &rhs) const
+  {
+    return (this->Internals.get() != rhs.Internals.get());
+  }
+
 // private:
   struct InternalStruct
   {
