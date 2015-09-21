@@ -30,6 +30,7 @@ set(headers
   Math.h
   Matrix.h
   Pair.h
+  StaticAssert.h
   TopologyElementTag.h
   TypeListTag.h
   Types.h

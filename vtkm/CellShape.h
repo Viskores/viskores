@@ -20,10 +20,10 @@
 #ifndef vtk_m_CellShape_h
 #define vtk_m_CellShape_h
 
+#include <vtkm/StaticAssert.h>
 #include <vtkm/Types.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/static_assert.hpp>
 #include <boost/type_traits/integral_constant.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
@@ -75,7 +75,7 @@ struct CellShapeTagCheck : boost::false_type {  };
 /// tag.
 ///
 #define VTKM_IS_CELL_SHAPE_TAG(tag) \
-  BOOST_STATIC_ASSERT_MSG( \
+  VTKM_STATIC_ASSERT_MSG( \
     ::vtkm::internal::CellShapeTagCheck<tag>::value, \
     "Provided type is not a valid VTK-m cell shape tag.")
 

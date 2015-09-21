@@ -22,13 +22,10 @@
 #define vtk_m_internal_ConnectivityStructuredInternals_h
 
 #include <vtkm/CellShape.h>
+#include <vtkm/StaticAssert.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecVariable.h>
-
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/static_assert.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
 namespace internal {
@@ -526,8 +523,8 @@ struct ConnectivityStructuredIndexHelper
   // instantiated, because it means someone missed a topology mapping type.
   // We need to create a test which depends on the templated types so
   // it doesn't get picked up without a concrete instantiation.
-  BOOST_STATIC_ASSERT_MSG(sizeof(To) == static_cast<size_t>(-1),
-                          "Missing Specialization for Topologies");
+  VTKM_STATIC_ASSERT_MSG(sizeof(To) == static_cast<size_t>(-1),
+                         "Missing Specialization for Topologies");
 };
 
 template<vtkm::IdComponent Dimension>

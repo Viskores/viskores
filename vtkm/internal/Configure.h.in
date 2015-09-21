@@ -32,7 +32,7 @@
 #define VTKM_MSVC
 #endif
 
-#ifdef ____clang__
+#if defined(____clang__) || defined(__clang__)
 #define VTKM_CLANG
 #endif
 
@@ -119,13 +119,30 @@
 // this is used to set pragmas that dissable warnings that VTK-m checks for
 // but boost and thrust does not.
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
-#define VTKM_THIRDPARTY_PRE_INCLUDE \
-  _Pragma("GCC diagnostic push") \
+
+#define VTK_M_THIRDPARTY_GCC_WARNING_PRAGMAS \
   _Pragma("GCC diagnostic ignored \"-Wconversion\"") \
   _Pragma("GCC diagnostic ignored \"-Wshadow\"") \
   _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
+
+// Newer versions of clang have an unused-local-typedef warning, but not older
+// versions. This checks for the apple version of clang, which is different
+// than other clang compiled versions. If using a non-apple version of clang,
+// you might need to extend this condition.
+#if defined(VTKM_CLANG) && (__apple_build_version__ >= 7000072)
+#define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS \
+  _Pragma("GCC diagnostic ignored \"-Wunused-local-typedef\"")
+#else
+#define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS
+#endif
+
+#define VTKM_THIRDPARTY_PRE_INCLUDE \
+  _Pragma("GCC diagnostic push") \
+  VTK_M_THIRDPARTY_GCC_WARNING_PRAGMAS \
+  VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS
 #define VTKM_THIRDPARTY_POST_INCLUDE \
   _Pragma("GCC diagnostic pop")
+
 #else
 #define VTKM_THIRDPARTY_PRE_INCLUDE
 #define VTKM_THIRDPARTY_POST_INCLUDE

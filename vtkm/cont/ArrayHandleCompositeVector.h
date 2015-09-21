@@ -24,13 +24,10 @@
 #include <vtkm/cont/ErrorControlBadValue.h>
 #include <vtkm/cont/ErrorControlInternal.h>
 
+#include <vtkm/StaticAssert.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/internal/FunctionInterface.h>
-
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/static_assert.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <sstream>
 
@@ -181,7 +178,7 @@ public:
   static const vtkm::IdComponent NUM_COMPONENTS =
       vtkm::VecTraits<ValueType>::NUM_COMPONENTS;
 
-  BOOST_STATIC_ASSERT(NUM_COMPONENTS == PortalTypes::ARITY);
+  VTKM_STATIC_ASSERT(NUM_COMPONENTS == PortalTypes::ARITY);
 
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalCompositeVector() {  }
@@ -236,7 +233,7 @@ public:
   // If you get a compile error here, it means you probably tried to create
   // an ArrayHandleCompositeVector with a return type of a vector with a
   // different number of components than the number of arrays given.
-  BOOST_STATIC_ASSERT(NUM_COMPONENTS == FunctionInterfaceArrays::ARITY);
+  VTKM_STATIC_ASSERT(NUM_COMPONENTS == FunctionInterfaceArrays::ARITY);
 
   VTKM_CONT_EXPORT
   ArrayPortalCompositeVectorCont() : NumberOfValues(0) {  }

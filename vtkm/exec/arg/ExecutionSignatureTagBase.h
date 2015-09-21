@@ -20,10 +20,10 @@
 #ifndef vtk_m_exec_arg_ExecutionSignatureTagBase_h
 #define vtk_m_exec_arg_ExecutionSignatureTagBase_h
 
+#include <vtkm/StaticAssert.h>
 #include <vtkm/internal/ExportMacros.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/static_assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
@@ -64,7 +64,7 @@ struct ExecutionSignatureTagCheck
 /// get weird errors elsewhere in the code when a mistake is made.)
 ///
 #define VTKM_IS_EXECUTION_SIGNATURE_TAG(tag) \
-  BOOST_STATIC_ASSERT_MSG( \
+  VTKM_STATIC_ASSERT_MSG( \
     ::vtkm::exec::arg::internal::ExecutionSignatureTagCheck<tag>::Valid, \
     "Provided a type that is not a valid ExecutionSignature tag.")
 
