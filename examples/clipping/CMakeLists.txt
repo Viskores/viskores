@@ -36,7 +36,10 @@ if(VTKm_Cuda_FOUND)
   configure_file(Clipping.cxx ${cudaSource} COPYONLY)
 
   vtkm_setup_nvcc_flags( old_nvcc_flags )
+  vtkm_disable_troublesome_thrust_warnings()
+
   cuda_add_executable(Clipping_CUDA ${cudaSource})
+
   set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
 
   #target_link_libraries(Clipping_CUDA "")
