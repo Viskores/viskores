@@ -329,7 +329,7 @@ public:
   }
 #else
   __host__
-  ValueType Get(vtkm::Id index) const {
+  ValueType Get(vtkm::Id vtkmNotUsed(index) ) const {
     return ValueType();
   }
 #endif

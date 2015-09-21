@@ -1034,9 +1034,11 @@ public:
 
     functor.SetErrorMessageBuffer(errorMessage);
 
+    const vtkm::Id blockSizeAsId = 128;
     const vtkm::UInt32 blockSize = 128;
     const vtkm::UInt32 maxblocksPerLaunch = GetMaxGridOfThreadBlocks()[0];
-    const vtkm::Id totalBlocks = (numInstances + blockSize - 1) / blockSize;
+    const vtkm::UInt32 totalBlocks = static_cast<vtkm::UInt32>(
+                          (numInstances + blockSizeAsId - 1) / blockSizeAsId);
 
     //Note a cuda launch can only handle at most 2B iterations of a kernel
     //because it holds all of the indexes inside UInt32, so for use to
@@ -1049,7 +1051,7 @@ public:
       }
     else
       {
-      const vtkm::Id numberOfKernelsToRun = blockSize * maxblocksPerLaunch;
+      const vtkm::Id numberOfKernelsToRun = blockSizeAsId * static_cast<vtkm::Id>(maxblocksPerLaunch);
       for(vtkm::Id numberOfKernelsInvoked = 0;
           numberOfKernelsInvoked < numInstances;
           numberOfKernelsInvoked += numberOfKernelsToRun)
