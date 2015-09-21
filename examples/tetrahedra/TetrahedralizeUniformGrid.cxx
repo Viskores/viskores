@@ -32,7 +32,7 @@
 # include <GL/glut.h>
 #endif
 
-#include "quaternion.h"
+#include "../isosurface/quaternion.h"
 
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
