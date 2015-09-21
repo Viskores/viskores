@@ -20,10 +20,10 @@
 #ifndef vtk_m_cont_internal_PointCoordinatesBase_h
 #define vtk_m_cont_internal_PointCoordinatesBase_h
 
+#include <vtkm/StaticAssert.h>
 #include <vtkm/Types.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/static_assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
@@ -32,7 +32,7 @@ VTKM_THIRDPARTY_POST_INCLUDE
 /// argument is actually point coordinates. (You can get weird errors elsewhere
 /// in the code when a mistake is made.)
 #define VTKM_IS_POINT_COORDINATES(pctype) \
-  BOOST_STATIC_ASSERT_MSG( \
+  VTKM_STATIC_ASSERT_MSG( \
       ::vtkm::cont::internal::IsValidPointCoordinates<pctype>::type::value, \
       "Provided type is not a valid VTK-m PointCoordinates type.")
 

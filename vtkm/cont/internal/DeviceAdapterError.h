@@ -27,6 +27,6 @@
 /// point, you have to specify an appropriate DeviceAdapter or else get a
 /// compile error.
 ///
-VTKM_CREATE_DEVICE_ADAPTER(Error);
+VTKM_VALID_DEVICE_ADAPTER(Error);
 
 #endif //vtk_m_cont_internal_DeviceAdapterError_h

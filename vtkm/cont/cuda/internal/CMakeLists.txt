@@ -28,6 +28,9 @@ set(headers
   ThrustExceptionHandler.h
   )
 
-vtkm_declare_headers(CUDA ${headers})
+vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})
 
-add_subdirectory(testing)
+#-----------------------------------------------------------------------------
+if (VTKm_ENABLE_CUDA)
+  add_subdirectory(testing)
+endif()

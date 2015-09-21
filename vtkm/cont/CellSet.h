@@ -20,6 +20,8 @@
 #ifndef vtk_m_cont_CellSet_h
 #define vtk_m_cont_CellSet_h
 
+#include <vtkm/StaticAssert.h>
+
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/LogicalStructure.h>
@@ -27,7 +29,6 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/static_assert.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
@@ -95,7 +96,7 @@ struct CellSetCheck
 };
 
 #define VTKM_IS_CELL_SET(T) \
-  BOOST_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value)
+  VTKM_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value)
 
 } // namespace internal
 

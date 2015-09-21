@@ -21,8 +21,8 @@
 #define vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -1204,11 +1204,7 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
       const vtkm::cont::ArrayHandle<T,CStencil> &stencil,
       vtkm::cont::ArrayHandle<vtkm::Id,COut> &output)
   {
-    typedef vtkm::cont::ArrayHandleCounting<vtkm::Id> CountingHandleType;
-
-    CountingHandleType input =
-        vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0),
-                                            stencil.GetNumberOfValues());
+    vtkm::cont::ArrayHandleIndex input(stencil.GetNumberOfValues());
     DerivedAlgorithm::StreamCompact(input, stencil, output);
   }
 

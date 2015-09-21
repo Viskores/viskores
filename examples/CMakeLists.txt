@@ -20,5 +20,7 @@
 ##
 ##=============================================================================
 
+add_subdirectory(clipping)
 add_subdirectory(hello_world)
 add_subdirectory(isosurface)
+add_subdirectory(multi_backend)

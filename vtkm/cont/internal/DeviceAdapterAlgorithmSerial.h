@@ -397,7 +397,7 @@ public:
       IndexType indexArray;
       ValueType valuesScattered;
 
-      Copy( make_ArrayHandleCounting(0, keys.GetNumberOfValues()), indexArray);
+      Copy( ArrayHandleIndex(keys.GetNumberOfValues()), indexArray);
       SortByKeyDirect(keys, indexArray, wrappedCompare);
       Scatter(values, indexArray, valuesScattered);
       Copy( valuesScattered, values );

@@ -22,7 +22,13 @@
 
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
-
-VTKM_CREATE_DEVICE_ADAPTER(Cuda);
+//We always create the cuda tag when included, but we only mark it as
+//a valid tag when VTKM_ENABLE_CUDA is true. This is for easier development
+//of multi-backend systems
+#ifdef VTKM_ENABLE_CUDA
+VTKM_VALID_DEVICE_ADAPTER(Cuda);
+#else
+VTKM_INVALID_DEVICE_ADAPTER(Cuda);
+#endif
 
 #endif //vtk_m_cont_cuda_internal_DeviceAdapterTagCuda_h

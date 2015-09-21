@@ -20,14 +20,11 @@
 #ifndef vtk_m_cont_internal_DeviceAdapterTag_h
 #define vtk_m_cont_internal_DeviceAdapterTag_h
 
+#include <vtkm/StaticAssert.h>
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
 #include <string>
-
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/static_assert.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
 
 #define VTKM_DEVICE_ADAPTER_ERROR     -2
 #define VTKM_DEVICE_ADAPTER_UNDEFINED -1
@@ -61,7 +58,7 @@ struct DeviceAdapterTagCheck
 /// Creates a tag named vtkm::cont::DeviceAdapterTagName and associated MPL
 /// structures to use this tag. Always use this macro (in the base namespace)
 /// when creating a device adapter.
-#define VTKM_CREATE_DEVICE_ADAPTER(Name) \
+#define VTKM_VALID_DEVICE_ADAPTER(Name) \
   namespace vtkm { \
   namespace cont { \
   struct DeviceAdapterTag##Name {  }; \
@@ -71,6 +68,7 @@ struct DeviceAdapterTagCheck
     static DeviceAdapterId GetId() { \
       return DeviceAdapterId(#Name); \
     } \
+    static const bool Valid = true;\
   }; \
   template<> \
   struct DeviceAdapterTagCheck<vtkm::cont::DeviceAdapterTag##Name> { \
@@ -80,13 +78,38 @@ struct DeviceAdapterTagCheck
   } \
   }
 
+/// Marks the tag named vtkm::cont::DeviceAdapterTagName and associated
+/// structures as valid to use. Always use this macro (in the base namespace)
+/// when creating a device adapter.
+#define VTKM_INVALID_DEVICE_ADAPTER(Name) \
+  namespace vtkm { \
+  namespace cont { \
+  struct DeviceAdapterTag##Name {  }; \
+  namespace internal { \
+  template<> \
+  struct DeviceAdapterTraits<vtkm::cont::DeviceAdapterTag##Name> { \
+    static DeviceAdapterId GetId() { \
+      return DeviceAdapterId(#Name); \
+    } \
+    static const bool Valid = false;\
+  }; \
+  template<> \
+  struct DeviceAdapterTagCheck<vtkm::cont::DeviceAdapterTag##Name> { \
+    static const bool Valid = false; \
+  }; \
+  } \
+  } \
+  }
+
+
+
 /// Checks that the argument is a proper device adapter tag. This is a handy
 /// concept check for functions and classes to make sure that a template
 /// argument is actually a device adapter tag. (You can get weird errors
 /// elsewhere in the code when a mistake is made.)
 ///
 #define VTKM_IS_DEVICE_ADAPTER_TAG(tag) \
-  BOOST_STATIC_ASSERT_MSG( \
+  VTKM_STATIC_ASSERT_MSG( \
       ::vtkm::cont::internal::DeviceAdapterTagCheck<tag>::Valid, \
       "Provided type is not a valid VTK-m device adapter tag.")
 
