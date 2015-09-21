@@ -25,12 +25,14 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
-
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/Field.h>
+
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
+
+#include <vtkm/exec/ExecutionWholeArray.h>
 
 namespace vtkm {
 namespace worklet {
@@ -48,30 +50,26 @@ public:
   class TetrahedralizeCell : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> inputCellId);
-    typedef void ExecutionSignature(_1);
+    typedef void ControlSignature(FieldIn<IdType> inputCellId,
+                                  ExecObject connectivity);
+    typedef void ExecutionSignature(_1,_2);
     typedef _1 InputDomain;
 
     vtkm::Id xdim, ydim, zdim;
     const vtkm::Id cellsPerLayer, pointsPerLayer;
 
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::Portal TetPortalType;
-    TetPortalType TetrahedraIndices;
-
-    template<typename T>
     VTKM_CONT_EXPORT
-    TetrahedralizeCell(const vtkm::Id3 &cdims,
-                       const T& tetrahedraIndices) :
+    TetrahedralizeCell(const vtkm::Id3 &cdims) :
       xdim(cdims[0]), ydim(cdims[1]), zdim(cdims[2]),
       cellsPerLayer(xdim * ydim),
-      pointsPerLayer((xdim+1) * (ydim+1)),
-      TetrahedraIndices(tetrahedraIndices)
+      pointsPerLayer((xdim+1) * (ydim+1))
     {
     }
 
     // Each hexahedron cell produces five tetrahedron cells
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id &inputCellId) const
+    void operator()(vtkm::Id &inputCellId,
+                    vtkm::exec::ExecutionWholeArray<vtkm::Id> &connectivity) const
     {
       // Calculate the i,j,k indices for this input cell id
       const vtkm::Id x = inputCellId % xdim;
@@ -92,67 +90,60 @@ public:
       const vtkm::Id i7 = i3   + pointsPerLayer;
 
       // Set the tetrahedra for this cell based on vertex index and index type of cell
+      // 5 tetrahedra per hexahedron, 4 indices per tetrahedron
       vtkm::Id startIndex = inputCellId * 5 * 4;
       if (indexType == 0) {
-        this->TetrahedraIndices.Set(startIndex + 0, i0);
-        this->TetrahedraIndices.Set(startIndex + 1, i1);
-        this->TetrahedraIndices.Set(startIndex + 2, i3);
-        this->TetrahedraIndices.Set(startIndex + 3, i4);
+        connectivity.Set(startIndex++, i0);
+        connectivity.Set(startIndex++, i1);
+        connectivity.Set(startIndex++, i3);
+        connectivity.Set(startIndex++, i4);
 
-        startIndex += 4;
-        this->TetrahedraIndices.Set(startIndex + 0, i1);
-        this->TetrahedraIndices.Set(startIndex + 1, i4);
-        this->TetrahedraIndices.Set(startIndex + 2, i5);
-        this->TetrahedraIndices.Set(startIndex + 3, i6);
+        connectivity.Set(startIndex++, i1);
+        connectivity.Set(startIndex++, i4);
+        connectivity.Set(startIndex++, i5);
+        connectivity.Set(startIndex++, i6);
 
-        startIndex += 4;
-        this->TetrahedraIndices.Set(startIndex + 0, i1);
-        this->TetrahedraIndices.Set(startIndex + 1, i4);
-        this->TetrahedraIndices.Set(startIndex + 2, i6);
-        this->TetrahedraIndices.Set(startIndex + 3, i3);
+        connectivity.Set(startIndex++, i1);
+        connectivity.Set(startIndex++, i4);
+        connectivity.Set(startIndex++, i6);
+        connectivity.Set(startIndex++, i3);
 
-        startIndex += 4;
-        this->TetrahedraIndices.Set(startIndex + 0, i1);
-        this->TetrahedraIndices.Set(startIndex + 1, i3);
-        this->TetrahedraIndices.Set(startIndex + 2, i6);
-        this->TetrahedraIndices.Set(startIndex + 3, i2);
+        connectivity.Set(startIndex++, i1);
+        connectivity.Set(startIndex++, i3);
+        connectivity.Set(startIndex++, i6);
+        connectivity.Set(startIndex++, i2);
 
-        startIndex += 4;
-        this->TetrahedraIndices.Set(startIndex + 0, i3);
-        this->TetrahedraIndices.Set(startIndex + 1, i6);
-        this->TetrahedraIndices.Set(startIndex + 2, i7);
-        this->TetrahedraIndices.Set(startIndex + 3, i4);
+        connectivity.Set(startIndex++, i3);
+        connectivity.Set(startIndex++, i6);
+        connectivity.Set(startIndex++, i7);
+        connectivity.Set(startIndex++, i4);
 
       } else {
 
-        this->TetrahedraIndices.Set(startIndex + 0, i2);
-        this->TetrahedraIndices.Set(startIndex + 1, i1);
-        this->TetrahedraIndices.Set(startIndex + 2, i5);
-        this->TetrahedraIndices.Set(startIndex + 3, i0);
+        connectivity.Set(startIndex++, i2);
+        connectivity.Set(startIndex++, i1);
+        connectivity.Set(startIndex++, i5);
+        connectivity.Set(startIndex++, i0);
 
-        startIndex += 4;
-        this->TetrahedraIndices.Set(startIndex + 0, i0);
-        this->TetrahedraIndices.Set(startIndex + 1, i2);
-        this->TetrahedraIndices.Set(startIndex + 2, i3);
-        this->TetrahedraIndices.Set(startIndex + 3, i7);
+        connectivity.Set(startIndex++, i0);
+        connectivity.Set(startIndex++, i2);
+        connectivity.Set(startIndex++, i3);
+        connectivity.Set(startIndex++, i7);
 
-        startIndex += 4;
-        this->TetrahedraIndices.Set(startIndex + 0, i2);
-        this->TetrahedraIndices.Set(startIndex + 1, i5);
-        this->TetrahedraIndices.Set(startIndex + 2, i6);
-        this->TetrahedraIndices.Set(startIndex + 3, i7);
+        connectivity.Set(startIndex++, i2);
+        connectivity.Set(startIndex++, i5);
+        connectivity.Set(startIndex++, i6);
+        connectivity.Set(startIndex++, i7);
 
-        startIndex += 4;
-        this->TetrahedraIndices.Set(startIndex + 0, i0);
-        this->TetrahedraIndices.Set(startIndex + 1, i7);
-        this->TetrahedraIndices.Set(startIndex + 2, i4);
-        this->TetrahedraIndices.Set(startIndex + 3, i5);
+        connectivity.Set(startIndex++, i0);
+        connectivity.Set(startIndex++, i7);
+        connectivity.Set(startIndex++, i4);
+        connectivity.Set(startIndex++, i5);
 
-        startIndex += 4;
-        this->TetrahedraIndices.Set(startIndex + 0, i0);
-        this->TetrahedraIndices.Set(startIndex + 1, i2);
-        this->TetrahedraIndices.Set(startIndex + 2, i7);
-        this->TetrahedraIndices.Set(startIndex + 3, i5);
+        connectivity.Set(startIndex++, i0);
+        connectivity.Set(startIndex++, i2);
+        connectivity.Set(startIndex++, i7);
+        connectivity.Set(startIndex++, i5);
       }
     }
   };
@@ -165,19 +156,13 @@ public:
                                   vtkm::cont::DataSet &outDataSet) :
     CDims(cdims),
     InDataSet(inDataSet),
-    OutDataSet(outDataSet),
-    numberOfVertices((cdims[0] + 1) * (cdims[1] + 1) * (cdims[2] + 1)),
-    numberOfInCells(cdims[0] * cdims[1] * cdims[2]),
-    numberOfOutCells(5 * numberOfInCells)
+    OutDataSet(outDataSet)
   {
   }
 
   vtkm::Id3 CDims;                // dimension of uniform grid
   vtkm::cont::DataSet InDataSet;  // input dataset with structured cell set
   vtkm::cont::DataSet OutDataSet; // output dataset with explicit cell set
-  vtkm::Id numberOfVertices;      // number of vertices in both datasets
-  vtkm::Id numberOfInCells;       // number of hexahedra in input
-  vtkm::Id numberOfOutCells;      // number of tetrahedra in output
 
   //
   // Populate the output dataset with tetrahedra based on input uniform dataset
@@ -186,12 +171,17 @@ public:
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
 
+    vtkm::Id numberOfVertices = (this->CDims[0] + 1) * (this->CDims[1] + 1) * (this->CDims[2] + 1);
+    vtkm::Id numberOfInCells = this->CDims[0] * this->CDims[1] * this->CDims[2];
+    vtkm::Id numberOfOutCells = 5 * numberOfInCells;
+    vtkm::Id numberOfTetIndices = 4 * numberOfOutCells;
+
     // Get the cell set from the output data set
     vtkm::cont::CellSetExplicit<> &cellSet = 
       this->OutDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
     // Cell indices are just counting array
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIndicesArray(0, 1, this->numberOfInCells);
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIndicesArray(0, 1, numberOfInCells);
 
     // Output is 5 tets per hex cell so allocate accordingly
     vtkm::cont::ArrayHandle<vtkm::Id> shapes;
@@ -200,7 +190,7 @@ public:
 
     shapes.Allocate(static_cast<vtkm::Id>(numberOfOutCells));
     numIndices.Allocate(static_cast<vtkm::Id>(numberOfOutCells));
-    connectivity.Allocate(static_cast<vtkm::Id>(4 * numberOfOutCells));
+    connectivity.Allocate(static_cast<vtkm::Id>(numberOfTetIndices));
 
     // Fill the arrays of shapes and number of indices needed by the cell set
     for (vtkm::Id j = 0; j < numberOfOutCells; j++) {
@@ -209,12 +199,12 @@ public:
     }
 
     // Call the TetrahedralizeCell functor to compute the 5 tets for connectivity
-    TetrahedralizeCell tetrahedralizeCell(
-                        this->CDims, 
-                        connectivity.PrepareForOutput(numberOfOutCells * 4, DeviceAdapter()));
+    TetrahedralizeCell tetrahedralizeCell(this->CDims);
     typedef typename vtkm::worklet::DispatcherMapField<TetrahedralizeCell> TetrahedralizeCellDispatcher;
     TetrahedralizeCellDispatcher tetrahedralizeCellDispatcher(tetrahedralizeCell);
-    tetrahedralizeCellDispatcher.Invoke(cellIndicesArray);
+    tetrahedralizeCellDispatcher.Invoke(
+                      cellIndicesArray,
+                      vtkm::exec::ExecutionWholeArray<vtkm::Id>(connectivity, numberOfTetIndices));
 
     // Add tets to output cellset
     cellSet.Fill(shapes, numIndices, connectivity);
