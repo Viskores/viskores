@@ -157,7 +157,7 @@ public:
 
     // Get the upper bound of each bin number
     vtkm::cont::ArrayHandle<vtkm::Id> totalCount;
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> binCounter(0, numberOfBins);
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> binCounter(0, 1, numberOfBins);
     DeviceAlgorithms::UpperBounds(binIndex, binCounter, totalCount);
 
     // Difference between adjacent items is the bin count
