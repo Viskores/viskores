@@ -32,37 +32,30 @@
 # include <GL/glut.h>
 #endif
 
-#include "../isosurface/quaternion.h"
-
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 // Default size of the example
-vtkm::Id3 dims(4,4,4);
-vtkm::Id cellsToDisplay = 64;
+vtkm::Id2 dims(4,4);
+vtkm::Id cellsToDisplay = 16;
 
-// Takes input uniform grid and outputs unstructured grid of tets
+// Takes input uniform grid and outputs unstructured grid of triangles
 vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> *tetrahedralizeFilter;
 vtkm::cont::DataSet outDataSet;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
 vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
 
-// OpenGL display variables
-Quaternion qrot;
-int lastx, lasty;
-int mouse_state = 1;
-
 //
 // Construct an input data set with uniform grid of indicated dimensions, origin and spacing
 //
-vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dims)
+vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dims)
 {
   vtkm::cont::DataSet dataSet;
 
   // Place uniform grid on a set physical space so OpenGL drawing is easier
-  const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, dims[2] + 1);
+  const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, 1);
   const vtkm::Vec<vtkm::Float32, 3> origin = vtkm::make_Vec(0.0f, 0.0f, 0.0f);
-  const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(1.0f/dims[0], 1.0f/dims[1], 1.0f/dims[2]);
+  const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(1.0f/dims[0], 1.0f/dims[1], 0.0f);
 
   // Generate coordinate system
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
@@ -70,9 +63,9 @@ vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dims)
           vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
 
   // Generate cell set
-  static const vtkm::IdComponent ndim = 3;
+  static const vtkm::IdComponent ndim = 2;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
-  cellSet.SetPointDimensions(vdims);
+  cellSet.SetPointDimensions(vtkm::make_Vec(dims[0] + 1, dims[1] + 1));
   dataSet.AddCellSet(cellSet);
 
   return dataSet;
@@ -104,31 +97,28 @@ private:
   }
 };
 
+void display(void)
+{
+  glClear(GL_COLOR_BUFFER_BIT);
+  glColor3f(1.0, 1.0, 1.0);
+  glBegin(GL_POLYGON);
+    glVertex3f(0.25, 0.25, 0.0);
+    glVertex3f(0.75, 0.25, 0.0);
+    glVertex3f(0.75, 0.75, 0.0);
+    glVertex3f(0.25, 0.25, 0.0);
+  glEnd();
+  glFlush();
+}
+
 //
 // Initialize the OpenGL state
 //
 void initializeGL()
 {
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-  glEnable(GL_DEPTH_TEST);
-  glShadeModel(GL_SMOOTH);
-
-  float white[] = { 0.8, 0.8, 0.8, 1.0 };
-  float black[] = { 0.0, 0.0, 0.0, 1.0 };
-  float lightPos[] = { 10.0, 10.0, 10.5, 1.0 };
-
-  glLightfv(GL_LIGHT0, GL_AMBIENT, white);
-  glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
-  glLightfv(GL_LIGHT0, GL_SPECULAR, black);
-  glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-
-  glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
-
-  glEnable(GL_LIGHTING);
-  glEnable(GL_LIGHT0);
-  glEnable(GL_NORMALIZE);
-  glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-  glEnable(GL_COLOR_MATERIAL);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(-0.5f, 1.5f, -0.5f, 1.5f, -1.0f, 1.0f);
 }
 
 
@@ -137,24 +127,9 @@ void initializeGL()
 //
 void displayCall()
 {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glEnable(GL_DEPTH_TEST);
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective( 45.0f, 1.0f, 1.0f, 20.0f);
-
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  gluLookAt(0.0f, 0.0f, 3.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
   glLineWidth(3.0f);
 
-  glPushMatrix();
-  float rotationMatrix[16];
-  qrot.getRotMat(rotationMatrix);
-  glMultMatrixf(rotationMatrix);
-  glTranslatef(-0.5f, -0.5f, -0.5f);
- 
   // Get cell set and the number of cells and vertices
   vtkm::cont::CellSetExplicit<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
   vtkm::Id numberOfPoints = cellSet.GetNumberOfPoints();
@@ -168,122 +143,70 @@ void displayCall()
   vertexArray.Allocate(numberOfPoints);
   coordArray.CastAndCall(GetVertexArray());
 
-  // Draw the five tetrahedra belonging to each hexadron
-  vtkm::Id tetra = 0;
-  vtkm::Float32 color[5][3] = {
+  // Draw the two triangles belonging to each quad
+  vtkm::Id triangle = 0;
+  vtkm::Float32 color[4][3] = {
     {1.0f, 0.0f, 0.0f},
     {0.0f, 1.0f, 0.0f},
     {0.0f, 0.0f, 1.0f},
-    {1.0f, 0.0f, 1.0f},
     {1.0f, 1.0f, 0.0f}};
 
-  for (vtkm::Id hex = 0; hex < cellsToDisplay; hex++) {
-    for (vtkm::Id j = 0; j < 5; j++) {
-      vtkm::Id indx = tetra % 5;
+  for (vtkm::Id quad = 0; quad < cellsToDisplay; quad++) {
+    for (vtkm::Id j = 0; j < 2; j++) {
+      vtkm::Id indx = triangle % 4;
       glColor3f(color[indx][0], color[indx][1], color[indx][2]);
 
-      vtkm::Id pointsInCell = cellSet.GetNumberOfPointsInCell(tetra);
-      vtkm::Id cellShape = cellSet.GetCellShape(tetra);
+      vtkm::Id pointsInCell = cellSet.GetNumberOfPointsInCell(triangle);
+      vtkm::Id cellShape = cellSet.GetCellShape(triangle);
 
-      // Get the indices of the vertices that make up this tetrahedron
-      vtkm::Vec<vtkm::Id, 4> tetIndices;
-      cellSet.GetIndices(tetra, tetIndices);
+      // Get the indices of the vertices that make up this triangle
+      vtkm::Vec<vtkm::Id, 3> triIndices;
+      cellSet.GetIndices(triangle, triIndices);
 
-      // Get the vertex points for this tetrahedron
-      vtkm::Vec<vtkm::Float64,3> pt0 = vertexArray.GetPortalConstControl().Get(tetIndices[0]);
-      vtkm::Vec<vtkm::Float64,3> pt1 = vertexArray.GetPortalConstControl().Get(tetIndices[1]);
-      vtkm::Vec<vtkm::Float64,3> pt2 = vertexArray.GetPortalConstControl().Get(tetIndices[2]);
-      vtkm::Vec<vtkm::Float64,3> pt3 = vertexArray.GetPortalConstControl().Get(tetIndices[3]);
+      // Get the vertex points for this triangle
+      vtkm::Vec<vtkm::Float64,3> pt0 = vertexArray.GetPortalConstControl().Get(triIndices[0]);
+      vtkm::Vec<vtkm::Float64,3> pt1 = vertexArray.GetPortalConstControl().Get(triIndices[1]);
+      vtkm::Vec<vtkm::Float64,3> pt2 = vertexArray.GetPortalConstControl().Get(triIndices[2]);
 
-      // Draw the tetrahedron filled with alternating colors
+      // Draw the triangle filled with alternating colors
       glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-      glBegin(GL_TRIANGLE_STRIP);
-      glVertex3d(pt0[0], pt0[1], pt0[2]);
-      glVertex3d(pt1[0], pt1[1], pt1[2]);
-      glVertex3d(pt2[0], pt2[1], pt2[2]);
-      glVertex3d(pt3[0], pt3[1], pt3[2]);
-      glVertex3d(pt0[0], pt0[1], pt0[2]);
-      glVertex3d(pt1[0], pt1[1], pt1[2]);
+      glBegin(GL_TRIANGLES);
+        glVertex3d(pt0[0], pt0[1], pt0[2]);
+        glVertex3d(pt1[0], pt1[1], pt1[2]);
+        glVertex3d(pt2[0], pt2[1], pt2[2]);
       glEnd();
 
-      // Draw the tetrahedron wireframe
-      glColor3f(1.0f, 1.0f, 1.0f);
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-      glBegin(GL_TRIANGLE_STRIP);
-      glVertex3d(pt0[0], pt0[1], pt0[2]);
-      glVertex3d(pt1[0], pt1[1], pt1[2]);
-      glVertex3d(pt2[0], pt2[1], pt2[2]);
-      glVertex3d(pt3[0], pt3[1], pt3[2]);
-      glVertex3d(pt0[0], pt0[1], pt0[2]);
-      glVertex3d(pt1[0], pt1[1], pt1[2]);
-      glEnd();
-
-      tetra++;
+      triangle++;
     }
   }
-
-  glPopMatrix();
-  glutSwapBuffers();
+  glFlush();
 }
-
-
-// Allow rotations of the view
-void mouseMove(int x, int y)
-{
-  int dx = x - lastx;
-  int dy = y - lasty;
-
-  if (mouse_state == 0)
-  {
-    Quaternion newRotX;
-    newRotX.setEulerAngles(-0.2*dx*M_PI/180.0, 0.0, 0.0);
-    qrot.mul(newRotX);
-
-    Quaternion newRotY;
-    newRotY.setEulerAngles(0.0, 0.0, -0.2*dy*M_PI/180.0);
-    qrot.mul(newRotY);
-  }
-  lastx = x;
-  lasty = y;
-
-  glutPostRedisplay();
-}
-
-
-// Respond to mouse button
-void mouseCall(int button, int state, int x, int y)
-{
-  if (button == 0) mouse_state = state;
-  if ((button == 0) && (state == 0)) { lastx = x;  lasty = y; }
-}
-
 
 // Tetrahedralize and render uniform grid example
 int main(int argc, char* argv[])
 {
-  std::cout << "TetrahedralizeUniformGrid Example" << std::endl;
-  std::cout << "Parameters are [xdim ydim zdim [# of cellsToDisplay]]" << std::endl << std::endl;
+  std::cout << "TrianguleUniformGrid Example" << std::endl;
+  std::cout << "Parameters are [xdim ydim [# of cellsToDisplay]]" << std::endl << std::endl;
   
   // Set the problem size and number of cells to display from command line
-  if (argc >= 4) {
+  if (argc >= 3) {
     dims[0] = atoi(argv[1]);
     dims[1] = atoi(argv[2]);
-    dims[2] = atoi(argv[3]);
-    cellsToDisplay = dims[0] * dims[1] * dims[2];
+    cellsToDisplay = dims[0] * dims[1];
   }
-  if (argc == 5) {
-    cellsToDisplay = atoi(argv[4]);
+  if (argc == 4) {
+    cellsToDisplay = atoi(argv[3]);
   }
 
   // Create the input uniform cell set
-  vtkm::cont::DataSet inDataSet = MakeTetrahedralizeTestDataSet(dims);
+  vtkm::cont::DataSet inDataSet = MakeTriangulateTestDataSet(dims);
 
   // Set number of cells and vertices in input dataset
-  vtkm::Id numberOfCells = dims[0] * dims[1] * dims[2];
-  vtkm::Id numberOfVertices = (dims[0] + 1) * (dims[1] + 1) * (dims[2] + 1);
+  vtkm::Id numberOfCells = dims[0] * dims[1];
+  vtkm::Id numberOfVertices = (dims[0] + 1) * (dims[1] + 1);
 
   // Create the output dataset explicit cell set with same coordinate system
-  vtkm::cont::CellSetExplicit<> cellSet(numberOfVertices, "cells", 3);
+  vtkm::cont::CellSetExplicit<> cellSet(numberOfVertices, "cells", 2);
   outDataSet.AddCellSet(cellSet);
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
@@ -293,19 +216,16 @@ int main(int argc, char* argv[])
   tetrahedralizeFilter->Run(dims);
 
   // Render the output dataset of tets
-  lastx = lasty = 0;
   glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+  glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
   glutInitWindowSize(1000, 1000);
+  glutInitWindowPosition(100, 100);
 
-  glutCreateWindow("VTK-m Uniform Tetrahedralize");
+  glutCreateWindow("VTK-m Uniform Triangulate");
 
   initializeGL();
 
   glutDisplayFunc(displayCall);
-
-  glutMotionFunc(mouseMove);
-  glutMouseFunc(mouseCall);
   glutMainLoop();
 
   return 0;
