@@ -123,6 +123,20 @@ public:
   }
 
   VTKM_CONT_EXPORT
+  vtkm::cont::DynamicCellSet GetCellSet(const std::string &name)
+      const
+  {
+    for (std::size_t i=0; i < static_cast<size_t>(this->GetNumberOfCellSets()); ++i)
+    {
+      if (this->CellSets[i].GetCellSet().GetName() == name)
+      {
+        return this->CellSets[i];
+      }
+    }
+    throw vtkm::cont::ErrorControlBadValue("No cell set with requested name");
+  }
+
+  VTKM_CONT_EXPORT
   vtkm::IdComponent GetNumberOfCellSets() const
   {
     return static_cast<vtkm::IdComponent>(this->CellSets.size());
