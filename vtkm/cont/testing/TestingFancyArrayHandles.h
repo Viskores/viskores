@@ -421,8 +421,9 @@ private:
       typedef vtkm::cont::ArrayHandleIndex InputArrayType;
 
       InputArrayType input(ARRAY_SIZE);
-      vtkm::cont::ArrayHandleCast<CastToType, InputArrayType> castArray =
-          vtkm::cont::make_ArrayHandleCast(input, CastToType());
+      vtkm::cont::ArrayHandleCastForInput<CastToType,
+        InputArrayType> castArray =
+          vtkm::cont::make_ArrayHandleCastForInput(input, CastToType());
       vtkm::cont::ArrayHandle<CastToType> result;
 
       vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
