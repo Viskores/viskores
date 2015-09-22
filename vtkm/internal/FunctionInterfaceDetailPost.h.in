@@ -118,6 +118,7 @@ $for(num_params in xrange(0, max_parameters+1))\
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<$template_params(num_params)>
 VTKM_EXEC_CONT_EXPORT
 FunctionInterface<$signature(num_params)>

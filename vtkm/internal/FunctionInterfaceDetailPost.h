@@ -245,6 +245,7 @@ struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10), T
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R>
 VTKM_EXEC_CONT_EXPORT
 FunctionInterface<R()>
@@ -267,6 +268,7 @@ make_FunctionInterface(
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R,
          typename P1>
 VTKM_EXEC_CONT_EXPORT
@@ -292,6 +294,7 @@ make_FunctionInterface(
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R,
          typename P1,
          typename P2>
@@ -320,6 +323,7 @@ make_FunctionInterface(
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R,
          typename P1,
          typename P2,
@@ -351,6 +355,7 @@ make_FunctionInterface(
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R,
          typename P1,
          typename P2,
@@ -385,6 +390,7 @@ make_FunctionInterface(
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R,
          typename P1,
          typename P2,
@@ -422,6 +428,7 @@ make_FunctionInterface(
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R,
          typename P1,
          typename P2,
@@ -462,6 +469,7 @@ make_FunctionInterface(
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R,
          typename P1,
          typename P2,
@@ -505,6 +513,7 @@ make_FunctionInterface(
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R,
          typename P1,
          typename P2,
@@ -551,6 +560,7 @@ make_FunctionInterface(
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R,
          typename P1,
          typename P2,
@@ -600,6 +610,7 @@ make_FunctionInterface(
 ///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
 /// \endcode
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R,
          typename P1,
          typename P2,

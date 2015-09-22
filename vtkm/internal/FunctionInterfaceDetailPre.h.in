@@ -135,6 +135,7 @@ struct ParameterContainerAccess<$(param_index), FunctionSignature> {
         boost::function_types::components<FunctionSignature>, $(param_index)>::type
       ParameterType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   ParameterType
@@ -142,6 +143,7 @@ struct ParameterContainerAccess<$(param_index), FunctionSignature> {
     return parameters.Parameter$(param_index);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   void SetParameter(ParameterContainer<FunctionSignature> &parameters,
@@ -159,6 +161,7 @@ $# Invoke functions need both control and execution versions
 $for(environment in ['Cont', 'Exec'])\
 $# Invoke functions also need to accept const and non-const versions of the functor
 $for(functor_const in ['const ', ''])\
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          $template_params(num_params)>
@@ -181,6 +184,7 @@ $endfor\
 $endif\
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor$comma_if(num_params>0)
          $template_params(num_params,1)>
@@ -216,6 +220,7 @@ struct FunctionInterfaceStaticTransformType;
 $for(num_params in xrange(0, max_parameters))\
 $# Transform functions need both control and execution versions
 $for(environment in ['Cont', 'Exec'])\
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          $template_params(num_params,0,'Original'),
          $template_params(num_params,0,'Transformed')>
@@ -247,6 +252,7 @@ $# ForEach functions need both control and execution versions
 $for(environment in ['Cont', 'Exec'])\
 $# ForEach functions also need to accept const and non-const versions of the FunctionInterface
 $for(function_interface_const in ['const ', ''])\
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          $template_params(num_params)>
 VTKM_$(environment.upper())_EXPORT
