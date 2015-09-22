@@ -39,20 +39,36 @@ namespace worklet {
 struct ScatterIdentity
 {
   typedef vtkm::cont::ArrayHandleIndex OutputToInputMapType;
-  OutputToInputMapType GetOutputToInputMap(vtkm::Id numInputElements) const
+  OutputToInputMapType GetOutputToInputMap(vtkm::Id inputRange) const
   {
-    return OutputToInputMapType(numInputElements);
+    return OutputToInputMapType(inputRange);
+  }
+  OutputToInputMapType GetOutputToInputMap(vtkm::Id2 inputRange) const
+  {
+    return this->GetOutputToInputMap(inputRange[0]*inputRange[1]);
+  }
+  OutputToInputMapType GetOutputToInputMap(vtkm::Id3 inputRange) const
+  {
+    return this->GetOutputToInputMap(inputRange[0]*inputRange[1]*inputRange[2]);
   }
 
   typedef vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> VisitArrayType;
-  VisitArrayType GetVisitArray(vtkm::Id numInputElements) const
+  VisitArrayType GetVisitArray(vtkm::Id inputRange) const
   {
-    return VisitArrayType(1, numInputElements);
+    return VisitArrayType(1, inputRange);
+  }
+  VisitArrayType GetVisitArray(vtkm::Id2 inputRange) const
+  {
+    return this->GetVisitArray(inputRange[0]*inputRange[1]);
+  }
+  VisitArrayType GetVisitArray(vtkm::Id3 inputRange) const
+  {
+    return this->GetVisitArray(inputRange[0]*inputRange[1]*inputRange[2]);
   }
 
-  vtkm::Id GetNumberOfOutputValues(vtkm::Id numInputElements) const
+  vtkm::Id GetOutputRange(vtkm::Id inputRange) const
   {
-    return numInputElements;
+    return inputRange;
   }
 };
 

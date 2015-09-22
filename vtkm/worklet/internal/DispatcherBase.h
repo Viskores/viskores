@@ -477,7 +477,7 @@ private:
   VTKM_CONT_EXPORT
   void InvokeTransportParameters(const Invocation &invocation,
                                  RangeType range,
-                                 DeviceAdapter tag) const
+                                 DeviceAdapter device) const
   {
     // The first step in invoking a worklet is to transport the arguments to
     // the execution environment. The invocation object passed to this function
@@ -499,11 +499,21 @@ private:
     ExecObjectParameters execObjectParameters =
         parameters.StaticTransformCont(TransportFunctorType(range));
 
+    // Get the arrays used for scattering input to output.
+    typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =
+        this->Worklet.GetScatter().GetOutputToInputMap(range);
+    typename WorkletType::ScatterType::VisitArrayType visitArray =
+        this->Worklet.GetScatter().GetVisitArray(range);
+
     // Replace the parameters in the invocation with the execution object and
-    // pass to next step of Invoke.
-    this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters),
-                         range,
-                         tag);
+    // pass to next step of Invoke. Also add the scatter information.
+    this->InvokeSchedule(
+          invocation
+          .ChangeParameters(execObjectParameters)
+          .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
+          .ChangeVisitArray(visitArray.PrepareForInput(device)),
+          range,
+          device);
   }
 
   template<typename Invocation, typename RangeType, typename DeviceAdapter>

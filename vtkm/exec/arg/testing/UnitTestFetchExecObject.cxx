@@ -40,8 +40,6 @@ struct TestExecutionObject : public vtkm::exec::ExecutionObjectBase
   vtkm::Int32 Number;
 };
 
-struct NullParam {  };
-
 template<vtkm::IdComponent ParamIndex, typename Invocation>
 void TryInvocation(const Invocation &invocation)
 {
@@ -81,14 +79,18 @@ void TryParamIndex()
             << std::endl;
 
   typedef vtkm::internal::FunctionInterface<
-      void(NullParam,NullParam,NullParam,NullParam,NullParam)>
+      void(vtkm::internal::NullType,
+           vtkm::internal::NullType,
+           vtkm::internal::NullType,
+           vtkm::internal::NullType,
+           vtkm::internal::NullType)>
       BaseFunctionInterface;
 
   TryInvocation<ParamIndex>(vtkm::internal::make_Invocation<1>(
                               BaseFunctionInterface().Replace<ParamIndex>(
                                 TestExecutionObject(EXPECTED_NUMBER)),
-                              NullParam(),
-                              NullParam()));
+                              vtkm::internal::NullType(),
+                              vtkm::internal::NullType()));
 }
 
 void TestExecObjectFetch()

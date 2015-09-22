@@ -94,8 +94,6 @@ struct ListRoot {  };
 template<typename signature>
 struct ListBase {  };
 
-struct ListParamNull {  };
-
 //-----------------------------------------------------------------------------
 
 template<typename Functor>
@@ -172,7 +170,7 @@ $endfor\
 
 /// A basic tag for a list of typenames. This struct can be subclassed
 /// and still behave like a list tag.
-template<$template_params(max_base_list, default=' = vtkm::detail::ListParamNull')>
+template<$template_params(max_base_list, default=' = vtkm::internal::NullType')>
 struct ListTagBase : detail::ListRoot
 {
   typedef detail::ListBase<void($param_list(max_base_list))> List;

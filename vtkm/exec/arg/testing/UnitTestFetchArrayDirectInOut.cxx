@@ -59,8 +59,6 @@ struct TestPortal
   }
 };
 
-struct NullParam {  };
-
 template<vtkm::IdComponent ParamIndex, typename T>
 struct FetchArrayDirectInTests
 {
@@ -107,14 +105,18 @@ struct FetchArrayDirectInTests
                  << std::endl;
 
     typedef vtkm::internal::FunctionInterface<
-        void(NullParam,NullParam,NullParam,NullParam,NullParam)>
+        void(vtkm::internal::NullType,
+             vtkm::internal::NullType,
+             vtkm::internal::NullType,
+             vtkm::internal::NullType,
+             vtkm::internal::NullType)>
         BaseFunctionInterface;
 
     this->TryInvocation(vtkm::internal::make_Invocation<1>(
                           BaseFunctionInterface().Replace<ParamIndex>(
                             TestPortal<T>()),
-                          NullParam(),
-                          NullParam()));
+                          vtkm::internal::NullType(),
+                          vtkm::internal::NullType()));
   }
 
 };
