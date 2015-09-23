@@ -155,7 +155,7 @@ private:
 };
 
 template<typename FirstHandleType, typename SecondHandleType>
-struct StorageTagZip;
+struct StorageTagZip {  };
 
 /// This helper struct defines the value type for a zip container containing
 /// the given two array handles.
@@ -361,21 +361,26 @@ class ArrayHandleZip
   // template argument is not a valid ArrayHandle type.
   VTKM_IS_ARRAY_HANDLE(SecondHandleType);
 
+public:
   typedef typename internal::ArrayHandleZipTraits<FirstHandleType,
-                                        SecondHandleType>::ValueType VType;
+                                        SecondHandleType>::ValueType ValueType;
   typedef typename internal::ArrayHandleZipTraits<FirstHandleType,
                                         SecondHandleType>::Tag StorageTag;
 
-  typedef vtkm::cont::internal::Storage<VType, StorageTag> StorageType;
+  typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> Superclass;
+
+private:
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
-  typedef vtkm::cont::ArrayHandle<VType, StorageTag> Superclass;
-
   ArrayHandleZip() : Superclass( ) { }
 
   ArrayHandleZip(const FirstHandleType &firstArray,
                  const SecondHandleType &secondArray)
     : Superclass( StorageType( firstArray, secondArray ) ) { }
+
+  ArrayHandleZip(const vtkm::cont::ArrayHandle<ValueType, StorageTag> &src)
+    : Superclass(src) { }
 };
 
 /// A convenience function for creating an ArrayHandleZip. It takes the two

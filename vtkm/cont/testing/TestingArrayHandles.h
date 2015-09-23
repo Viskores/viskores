@@ -327,6 +327,11 @@ private:
                                     TestValue(index, T()) + T(1)),
                          "Did not get result from in place operation.");
       }
+
+      VTKM_TEST_ASSERT(arrayHandle == arrayHandle,
+                       "Array handle does not equal itself.");
+      VTKM_TEST_ASSERT(arrayHandle != vtkm::cont::ArrayHandle<T>(),
+                       "Array handle equals different array.");
     }
   };
 

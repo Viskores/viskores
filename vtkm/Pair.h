@@ -23,7 +23,6 @@
 
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
-#include <vtkm/TypeTraits.h>
 
 #include <iostream>
 #include <utility>
@@ -150,30 +149,7 @@ vtkm::Pair<T1,T2> make_Pair(const T1 &firstSrc, const T2 &secondSrc)
   return vtkm::Pair<T1,T2>(firstSrc, secondSrc);
 }
 
-/// Traits for Pair types.
-///
-template<typename T, typename U>
-struct TypeTraits<vtkm::Pair<T,U> >
-{
-  typedef TypeTraitsUnknownTag NumericTag;
-  typedef TypeTraitsScalarTag DimensionalityTag;
-
-  VTKM_EXEC_CONT_EXPORT
-  static vtkm::Pair<T,U> ZeroInitialization()
-  { return vtkm::make_Pair(TypeTraits<T>::ZeroInitialization(),
-                           TypeTraits<U>::ZeroInitialization()); }
-};
-
 
 } // namespace vtkm
-
-/// Helper function for printing out pairs during testing.
-///
-template<typename T, typename U>
-VTKM_EXEC_CONT_EXPORT
-std::ostream &operator<<(std::ostream &stream, const vtkm::Pair<T,U> &vec)
-{
-  return stream << "[" << vec.first << "," << vec.second << "]";
-}
 
 #endif //vtk_m_Pair_h

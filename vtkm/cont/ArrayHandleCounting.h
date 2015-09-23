@@ -114,6 +114,8 @@ class ArrayHandleCounting
           typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag
           > Superclass;
 public:
+  typedef typename Superclass::ValueType ValueType;
+  typedef typename Superclass::StorageTag StorageTag;
 
   VTKM_CONT_EXPORT
   ArrayHandleCounting(CountingValueType start,
@@ -125,6 +127,10 @@ public:
 
   VTKM_CONT_EXPORT
   ArrayHandleCounting():Superclass() {}
+
+  VTKM_CONT_EXPORT
+  ArrayHandleCounting(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
+    : Superclass(src) {  }
 };
 
 /// A convenience function for creating an ArrayHandleCounting. It takes the

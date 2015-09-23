@@ -23,7 +23,16 @@
 
 #include <vtkm/TypeTraits.h>
 
-#include <vtkm/cont/StorageImplicit.h>
+#include <vtkm/cont/ArrayHandleCast.h>
+#include <vtkm/cont/ArrayHandleCompositeVector.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleImplicit.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleTransform.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/ArrayHandleZip.h>
 
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 
@@ -85,6 +94,15 @@ struct StorageListTagUnusual :
       ArrayHandleWithUnusualStorage<vtkm::Id>::StorageTag,
       ArrayHandleWithUnusualStorage<std::string>::StorageTag>
 {  };
+
+template<typename T>
+struct TestValueFunctor
+{
+  T operator()(vtkm::Id index) const
+  {
+    return TestValue(index, T());
+  }
+};
 
 bool CheckCalled;
 
@@ -151,6 +169,28 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArray(T)
 
   return vtkm::cont::DynamicArrayHandle(
         vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE));
+}
+
+template<typename ArrayHandleType>
+void CheckCastToArrayHandle(const ArrayHandleType &array)
+{
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+
+  vtkm::cont::DynamicArrayHandle dynamicArray = array;
+  VTKM_TEST_ASSERT(
+        !dynamicArray.IsArrayHandleType(vtkm::cont::ArrayHandle<std::string>()),
+        "Dynamic array reporting is wrong type.");
+
+  ArrayHandleType castArray1;
+  dynamicArray.CastToArrayHandle(castArray1);
+  VTKM_TEST_ASSERT(dynamicArray.IsArrayHandleType(castArray1),
+                   "Did not query handle correctly.");
+  VTKM_TEST_ASSERT(array == castArray1, "Did not get back same array.");
+
+  ArrayHandleType castArray2 =
+      dynamicArray.CastToArrayHandle(typename ArrayHandleType::ValueType(),
+                                     typename ArrayHandleType::StorageTag());
+  VTKM_TEST_ASSERT(array == castArray2, "Did not get back same array.");
 }
 
 template<typename T, typename DynamicArrayType>
@@ -306,6 +346,59 @@ void TryUnusualTypeAndStorage()
   std::cout << "  Found instance when storage and type lists were reset." << std:: endl;
 }
 
+void TryCastToArrayHandle()
+{
+  std::cout << "  Normal array handle." << std::endl;
+  vtkm::Id buffer[ARRAY_SIZE];
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  {
+    buffer[index] = TestValue(index, vtkm::Id());
+  }
+  vtkm::cont::ArrayHandle<vtkm::Id> array =
+      vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE);
+  CheckCastToArrayHandle(array);
+
+  std::cout << "  Cast array handle." << std::endl;
+  CheckCastToArrayHandle(
+        vtkm::cont::make_ArrayHandleCast(array, vtkm::FloatDefault()));
+
+  std::cout << "  Composite vector array handle." << std::endl;
+  CheckCastToArrayHandle(
+        vtkm::cont::make_ArrayHandleCompositeVector(array, 0, array, 0));
+
+  std::cout << "  Constant array handle." << std::endl;
+  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleConstant(5, ARRAY_SIZE));
+
+  std::cout << "  Counting array handle." << std::endl;
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> countingArray(
+        ARRAY_SIZE-1, -1, ARRAY_SIZE);
+  CheckCastToArrayHandle(countingArray);
+
+  std::cout << "  Implicit array handle." << std::endl;
+  CheckCastToArrayHandle(
+        vtkm::cont::make_ArrayHandleImplicit<vtkm::FloatDefault>(
+          TestValueFunctor<vtkm::FloatDefault>(), ARRAY_SIZE));
+
+  std::cout << "  Index array handle." << std::endl;
+  CheckCastToArrayHandle(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE));
+
+  std::cout << "  Permutation array handle." << std::endl;
+  CheckCastToArrayHandle(
+        vtkm::cont::make_ArrayHandlePermutation(countingArray, array));
+
+  std::cout << "  Transform array handle." << std::endl;
+  CheckCastToArrayHandle(
+        vtkm::cont::make_ArrayHandleTransform<vtkm::FloatDefault>(
+          countingArray,TestValueFunctor<vtkm::FloatDefault>()));
+
+  std::cout << "  Uniform point coordinates array handle." << std::endl;
+  CheckCastToArrayHandle(vtkm::cont::ArrayHandleUniformPointCoordinates(
+                           vtkm::Id3(ARRAY_SIZE)));
+
+  std::cout << "  Zip array handle." << std::endl;
+  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleZip(countingArray, array));
+}
+
 void TestDynamicArrayHandle()
 {
   std::cout << "Try common types with default type lists." << std::endl;
@@ -333,6 +426,9 @@ void TestDynamicArrayHandle()
 
   std::cout << "Try unusual type in unusual storage." << std::endl;
   TryUnusualTypeAndStorage();
+
+  std::cout << "Try CastToArrayHandle" << std::endl;
+  TryCastToArrayHandle();
 }
 
 } // anonymous namespace

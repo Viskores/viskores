@@ -90,8 +90,8 @@ struct ArrayHandleCheck
       ::vtkm::cont::internal::ArrayHandleBase, T>::type type;
 };
 
-#define VTKM_IS_ARRAY_HANDLE(type) \
-  BOOST_MPL_ASSERT(( ::vtkm::cont::internal::ArrayHandleCheck<type> ))
+#define VTKM_IS_ARRAY_HANDLE(T) \
+  VTKM_STATIC_ASSERT(::vtkm::cont::internal::ArrayHandleCheck<T>::type::value)
 
 } // namespace internal
 
@@ -432,6 +432,20 @@ public:
     this->Internals->ControlArrayValid = false;
 
     return portal;
+  }
+
+  /// Like a pointer, two \c ArrayHandles are considered equal if they point
+  /// to the same location in memory.
+  ///
+  VTKM_CONT_EXPORT
+  bool operator==(const ArrayHandle<ValueType,StorageTag> &rhs) const
+  {
+    return (this->Internals.get() == rhs.Internals.get());
+  }
+  VTKM_CONT_EXPORT
+  bool operator!=(const ArrayHandle<ValueType,StorageTag> &rhs) const
+  {
+    return (this->Internals.get() != rhs.Internals.get());
   }
 
 // private:
