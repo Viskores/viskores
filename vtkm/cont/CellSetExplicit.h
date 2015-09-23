@@ -43,9 +43,22 @@ struct CellSetExplicitConnectivityChooser
 
 } // namespace detail
 
-template<typename ShapeStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
-         typename NumIndicesStorageTag    = VTKM_DEFAULT_STORAGE_TAG,
-         typename ConnectivityStorageTag  = VTKM_DEFAULT_STORAGE_TAG >
+
+#ifndef VTKM_DEFAULT_SHAPE_STORAGE_TAG
+#define VTKM_DEFAULT_SHAPE_STORAGE_TAG VTKM_DEFAULT_STORAGE_TAG
+#endif
+
+#ifndef VTKM_DEFAULT_NUM_INDICES_STORAGE_TAG
+#define VTKM_DEFAULT_NUM_INDICES_STORAGE_TAG VTKM_DEFAULT_STORAGE_TAG
+#endif
+
+#ifndef VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG
+#define VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG VTKM_DEFAULT_STORAGE_TAG
+#endif
+
+template<typename ShapeStorageTag         = VTKM_DEFAULT_SHAPE_STORAGE_TAG,
+         typename NumIndicesStorageTag    = VTKM_DEFAULT_NUM_INDICES_STORAGE_TAG,
+         typename ConnectivityStorageTag  = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG >
 class CellSetExplicit : public CellSet
 {
   template<typename FromTopology, typename ToTopology>
