@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestIsosurfaceUniformGrid.cxx
   UnitTestPointElevation.cxx
   UnitTestSplatKernels.cxx
+  UnitTestTetrahedralizeExplicitGrid.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
