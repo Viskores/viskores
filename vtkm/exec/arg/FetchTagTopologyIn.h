@@ -46,13 +46,12 @@ struct Fetch<
   typedef typename Invocation::ParameterInterface::
       template ParameterType<ParameterIndex>::type ExecObjectType;
 
-  typedef vtkm::Id ValueType;
+  typedef typename ExecObjectType::CellShapeTag ValueType;
 
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
   {
-    return invocation.Parameters.template GetParameter<ParameterIndex>().
-        GetElementShapeType(index);
+    return invocation.Parameters.template GetParameter<ParameterIndex>.GetCellShape(index);
   }
 
   VTKM_EXEC_EXPORT
