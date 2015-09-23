@@ -117,7 +117,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfPointsInCell(vtkm::Id cellIndex) const
+  vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const
   {
     return this->PointToCell.NumIndices.GetPortalConstControl().Get(cellIndex);
   }
@@ -134,7 +134,7 @@ public:
                   vtkm::Vec<vtkm::Id,ItemTupleLength> &ids) const
   {
     this->PointToCell.BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    vtkm::Id numIndices = this->GetNumberOfPointsInCell(index);
+    vtkm::IdComponent numIndices = this->GetNumberOfPointsInCell(index);
     vtkm::Id start =
         this->PointToCell.IndexOffsets.GetPortalConstControl().Get(index);
     for (vtkm::IdComponent i=0; i<numIndices && i<ItemTupleLength; i++)
