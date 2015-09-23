@@ -26,6 +26,7 @@
 #include <vtkm/exec/arg/BasicArg.h>
 #include <vtkm/exec/arg/FetchTagExecObject.h>
 #include <vtkm/exec/arg/ThreadIndicesBasic.h>
+#include <vtkm/exec/arg/VisitIndex.h>
 #include <vtkm/exec/arg/WorkIndex.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
@@ -60,7 +61,12 @@ public:
   struct _9 : Arg<9> {  };
 
   /// \c ExecutionSignature tag for getting the work index.
+  ///
   typedef vtkm::exec::arg::WorkIndex WorkIndex;
+
+  /// \c ExecutionSignature tag for getting the visit index.
+  ///
+  typedef vtkm::exec::arg::VisitIndex VisitIndex;
 
   /// \c ControlSignature tag for execution object inputs.
   struct ExecObject : vtkm::cont::arg::ControlSignatureTagBase {

@@ -47,6 +47,19 @@ struct TestExecObject
   vtkm::Id *Value;
 };
 
+struct MyOutputToInputMapPortal
+{
+  typedef vtkm::Id ValueType;
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Get(vtkm::Id index) const { return index; }
+};
+
+struct MyVisitArrayPortal
+{
+  typedef vtkm::IdComponent ValueType;
+  vtkm::IdComponent Get(vtkm::Id) const { return 1; }
+};
+
 struct TestFetchTagInput {  };
 struct TestFetchTagOutput {  };
 
@@ -78,7 +91,7 @@ struct Fetch<
   VTKM_EXEC_EXPORT
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic &indices,
                  const TestExecObject &execObject) const {
-    return *execObject.Value + 10*indices.GetIndex();
+    return *execObject.Value + 10*indices.GetInputIndex();
   }
 
   VTKM_EXEC_EXPORT
@@ -109,7 +122,7 @@ struct Fetch<
   void Store(const vtkm::exec::arg::ThreadIndicesBasic &indices,
              const TestExecObject &execObject,
              ValueType value) const {
-    *execObject.Value = value + 20*indices.GetIndex();
+    *execObject.Value = value + 20*indices.GetOutputIndex();
   }
 };
 
@@ -141,13 +154,17 @@ typedef vtkm::internal::Invocation<
     ExecutionParameterInterface,
     TestControlInterface,
     TestExecutionInterface1,
-    1> InvocationType1;
+    1,
+    MyOutputToInputMapPortal,
+    MyVisitArrayPortal> InvocationType1;
 
 typedef vtkm::internal::Invocation<
     ExecutionParameterInterface,
     TestControlInterface,
     TestExecutionInterface2,
-    1> InvocationType2;
+    1,
+    MyOutputToInputMapPortal,
+    MyVisitArrayPortal> InvocationType2;
 
 // Not a full worklet, but provides operators that we expect in a worklet.
 struct TestWorkletProxy : vtkm::exec::FunctorBase
@@ -232,7 +249,9 @@ void TestDoWorkletInvoke()
   CallDoWorkletInvokeFunctor(
         vtkm::internal::make_Invocation<1>(execObjects,
                                            TestControlInterface(),
-                                           TestExecutionInterface1()),
+                                           TestExecutionInterface1(),
+                                           MyOutputToInputMapPortal(),
+                                           MyVisitArrayPortal()),
         1);
   VTKM_TEST_ASSERT(inputTestValue == 5, "Input value changed.");
   VTKM_TEST_ASSERT(outputTestValue == inputTestValue + 100 + 30,
@@ -244,7 +263,9 @@ void TestDoWorkletInvoke()
   CallDoWorkletInvokeFunctor(
         vtkm::internal::make_Invocation<1>(execObjects,
                                            TestControlInterface(),
-                                           TestExecutionInterface2()),
+                                           TestExecutionInterface2(),
+                                           MyOutputToInputMapPortal(),
+                                           MyVisitArrayPortal()),
         2);
   VTKM_TEST_ASSERT(inputTestValue == 6, "Input value changed.");
   VTKM_TEST_ASSERT(outputTestValue == inputTestValue + 200 + 30*2,

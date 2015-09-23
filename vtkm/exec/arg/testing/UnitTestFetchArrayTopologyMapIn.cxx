@@ -47,6 +47,22 @@ struct TestPortal
   }
 };
 
+struct TestIndexPortal
+{
+  typedef vtkm::Id ValueType;
+
+  VTKM_EXEC_CONT_EXPORT
+  ValueType Get(vtkm::Id index) const { return index; }
+};
+
+struct TestZeroPortal
+{
+  typedef vtkm::IdComponent ValueType;
+
+  VTKM_EXEC_CONT_EXPORT
+  ValueType Get(vtkm::Id) const { return 0; }
+};
+
 template<vtkm::IdComponent InputDomainIndex,
          vtkm::IdComponent ParamIndex,
          typename T>
@@ -118,7 +134,9 @@ struct FetchArrayTopologyMapInTests
                           .Replace<InputDomainIndex>(connectivity)
                           .template Replace<ParamIndex>(TestPortal<T>()),
                           vtkm::internal::NullType(),
-                          vtkm::internal::NullType()));
+                          vtkm::internal::NullType(),
+                          TestIndexPortal(),
+                          TestZeroPortal()));
   }
 
 };
@@ -191,7 +209,9 @@ void TryStructuredPointCoordinates(
           .Replace<1>(connectivity)
           .template Replace<2>(coordinates),
           vtkm::internal::NullType(),
-          vtkm::internal::NullType())
+          vtkm::internal::NullType(),
+          TestIndexPortal(),
+          TestZeroPortal())
         );
   // Try again with topology in argument 3 and point coordinates in argument 1
   TryStructuredPointCoordinatesInvocation<NumDimensions,1>(
@@ -200,7 +220,9 @@ void TryStructuredPointCoordinates(
           .Replace<3>(connectivity)
           .template Replace<1>(coordinates),
           vtkm::internal::NullType(),
-          vtkm::internal::NullType())
+          vtkm::internal::NullType(),
+          TestIndexPortal(),
+          TestZeroPortal())
         );
 }
 

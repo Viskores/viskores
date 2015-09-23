@@ -34,6 +34,7 @@ set(headers
   FromIndices.h
   ThreadIndicesBasic.h
   ThreadIndicesTopologyMap.h
+  VisitIndex.h
   WorkIndex.h
   )
 

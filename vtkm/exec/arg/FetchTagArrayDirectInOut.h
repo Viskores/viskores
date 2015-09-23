@@ -34,6 +34,15 @@ namespace arg {
 /// indexing, so the thread index given to \c Store is used as the index into
 /// the array.
 ///
+/// When using \c FetchTagArrayDirectInOut with a worklet invocation with a
+/// scatter, it is a bit undefined how the in/out array should be indexed.
+/// Should it be the size of the input arrays and written back there, or
+/// should it be the size of the output arrays and pre-filled with the output.
+/// The implementation indexes based on the output because it is safer. The
+/// output will have a unique index for each worklet instance, so you don't
+/// have to worry about writes stomping on each other (which they would
+/// inevitably do if index as input).
+///
 struct FetchTagArrayDirectInOut {  };
 
 
@@ -51,7 +60,7 @@ struct Fetch<
   ValueType Load(const ThreadIndicesType &indices,
                  const ExecObjectType &arrayPortal) const
   {
-    return arrayPortal.Get(indices.GetIndex());
+    return arrayPortal.Get(indices.GetOutputIndex());
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -60,7 +69,7 @@ struct Fetch<
              const ExecObjectType &arrayPortal,
              const ValueType &value) const
   {
-    arrayPortal.Set(indices.GetIndex(), value);
+    arrayPortal.Set(indices.GetOutputIndex(), value);
   }
 };
 

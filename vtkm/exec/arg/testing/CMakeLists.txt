@@ -17,6 +17,11 @@
 ##  Laboratory (LANL), the U.S. Government retains certain rights in
 ##  this software.
 ##============================================================================
+set(headers
+  ThreadIndicesTesting.h
+  )
+
+vtkm_declare_headers(${headers})
 
 set(unit_tests
   UnitTestExecutionSignatureTag.cxx

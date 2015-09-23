@@ -22,29 +22,27 @@
 
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 
-#include <vtkm/exec/arg/ThreadIndicesBasic.h>
-
-#include <vtkm/internal/FunctionInterface.h>
-#include <vtkm/internal/Invocation.h>
+#include <vtkm/exec/arg/testing/ThreadIndicesTesting.h>
 
 #include <vtkm/testing/Testing.h>
 
 namespace {
 
-template<typename Invocation>
-void TryInvocation(const Invocation &invocation)
+void TestWorkIndexFetch()
 {
+  std::cout << "Trying WorkIndex fetch." << std::endl;
+
   typedef vtkm::exec::arg::Fetch<
       vtkm::exec::arg::FetchTagArrayDirectIn, // Not used but probably common.
       vtkm::exec::arg::AspectTagWorkIndex,
-      vtkm::exec::arg::ThreadIndicesBasic,
+      vtkm::exec::arg::ThreadIndicesTesting,
       vtkm::internal::NullType> FetchType;
 
   FetchType fetch;
 
   for (vtkm::Id index = 0; index < 10; index++)
   {
-    vtkm::exec::arg::ThreadIndicesBasic indices(index, invocation);
+    vtkm::exec::arg::ThreadIndicesTesting indices(index);
 
     vtkm::Id value = fetch.Load(indices, vtkm::internal::NullType());
     VTKM_TEST_ASSERT(value == index,
@@ -55,23 +53,6 @@ void TryInvocation(const Invocation &invocation)
     // This should be a no-op.
     fetch.Store(indices, vtkm::internal::NullType(), value);
   }
-}
-
-void TestWorkIndexFetch()
-{
-  std::cout << "Trying WorkIndex fetch." << std::endl;
-
-  typedef vtkm::internal::FunctionInterface<
-      void(vtkm::internal::NullType,
-           vtkm::internal::NullType,
-           vtkm::internal::NullType,
-           vtkm::internal::NullType,
-           vtkm::internal::NullType)>
-      BaseFunctionInterface;
-
-  TryInvocation(vtkm::internal::make_Invocation<1>(BaseFunctionInterface(),
-                                                   vtkm::internal::NullType(),
-                                                   vtkm::internal::NullType()));
 }
 
 } // anonymous namespace
