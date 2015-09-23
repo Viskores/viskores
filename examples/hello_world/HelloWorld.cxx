@@ -33,6 +33,12 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
+//Suppress warnings about glut being deprecated on OSX
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 //OpenGL Graphics includes
 //glew needs to go before glut
 //that is why this is after the TransferToOpenGL include
@@ -218,4 +224,6 @@ int main(int argc, char** argv)
   glutMainLoop();
 }
 
-
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
+# pragma GCC diagnostic pop
+#endif
