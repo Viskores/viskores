@@ -83,10 +83,11 @@ public:
   {
   public:
     typedef void ControlSignature(FieldInTo<> triangleOffset,
+                                  FieldInTo<> numIndices,
                                   TopologyIn topology,
                                   ExecObject connectivity);
-    typedef void ExecutionSignature(_1,_3, CellShape, FromIndices);
-    typedef _2 InputDomain;
+    typedef void ExecutionSignature(_1,_2,_4, CellShape, FromIndices);
+    typedef _3 InputDomain;
 
     VTKM_CONT_EXPORT
     TriangulateCell() {}
@@ -94,7 +95,8 @@ public:
     // Each cell produces triangles and write result at the offset
     template<typename CellShapeTag, typename CellNodeVecType>
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id &offset,
+    void operator()(const vtkm::Id &offset,
+                    const vtkm::Id &numIndices,
                     vtkm::exec::ExecutionWholeArray<vtkm::Id> &connectivity,
                     CellShapeTag shape,
                     const CellNodeVecType &cellNodeIds) const
@@ -116,7 +118,7 @@ public:
         connectivity.Set(startIndex++, cellNodeIds[3]);
 
       } else if (shape.Id == vtkm::CELL_SHAPE_POLYGON) {
-        for (vtkm::Id tri = 0; tri < 4; tri++) {
+        for (vtkm::Id tri = 0; tri < numIndices-2; tri++) {
           connectivity.Set(startIndex++, cellNodeIds[0]);
           connectivity.Set(startIndex++, cellNodeIds[tri+1]);
           connectivity.Set(startIndex++, cellNodeIds[tri+2]);
@@ -195,6 +197,7 @@ public:
     vtkm::worklet::DispatcherMapTopology<TriangulateCell> triangulateCellDispatcher;
     triangulateCellDispatcher.Invoke(
                       triangleOffset,
+                      inNumIndices,
                       inCellSet,
                       vtkm::exec::ExecutionWholeArray<vtkm::Id>(connectivity, numberOfOutIndices));
 
