@@ -99,13 +99,13 @@ void TestDataSet_Explicit()
   vtkm::Id connectivitySize = 7;
   vtkm::Id numPoints = 5;
 
-  vtkm::Id correctShapes[] = {1, 1, 1, 1, 1};
-  vtkm::Id correctNumIndices[] = {1, 2, 2, 1, 1};
+  vtkm::UInt8 correctShapes[] = {1, 1, 1, 1, 1};
+  vtkm::IdComponent correctNumIndices[] = {1, 2, 2, 1, 1};
   vtkm::Id correctConnectivity[] = {0, 0, 1, 0, 1, 1, 1};
 
-  vtkm::cont::ArrayHandle<vtkm::Id> shapes = cellset.GetShapesArray(
+  vtkm::cont::ArrayHandle<vtkm::UInt8> shapes = cellset.GetShapesArray(
     vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
-  vtkm::cont::ArrayHandle<vtkm::Id> numIndices = cellset.GetNumIndicesArray(
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices = cellset.GetNumIndicesArray(
     vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
   vtkm::cont::ArrayHandle<vtkm::Id> conn = cellset.GetConnectivityArray(
     vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());

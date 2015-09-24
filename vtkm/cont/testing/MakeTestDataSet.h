@@ -131,11 +131,11 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   dataSet.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
   //Add connectivity
-  std::vector<vtkm::Id> shapes;
+  std::vector<vtkm::UInt8> shapes;
   shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
   shapes.push_back(vtkm::CELL_SHAPE_QUAD);
 
-  std::vector<vtkm::Id> numindices;
+  std::vector<vtkm::IdComponent> numindices;
   numindices.push_back(3);
   numindices.push_back(4);
 
