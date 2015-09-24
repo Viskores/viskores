@@ -159,7 +159,7 @@ struct ExternalFaces
       else if (cellType == vtkm::CELL_SHAPE_PYRAMID) return 5;
       else if (cellType == vtkm::CELL_SHAPE_WEDGE) return 5;
       else if (cellType == vtkm::CELL_SHAPE_HEXAHEDRON) return 6;
-      else return -1;
+      else return CELL_SHAPE_EMPTY;
     }
   };
 
@@ -240,12 +240,12 @@ public:
   template <typename StorageT,
             typename StorageU,
             typename StorageV>
-  void run(const vtkm::cont::ArrayHandle<vtkm::Id, StorageT> shapes,
-           const vtkm::cont::ArrayHandle<vtkm::Id, StorageU> numIndices,
-           const vtkm::cont::ArrayHandle<vtkm::Id, StorageV> conn,
-           vtkm::cont::ArrayHandle<vtkm::Id, StorageT> &output_shapes,
-           vtkm::cont::ArrayHandle<vtkm::Id, StorageU> &output_numIndices,
-           vtkm::cont::ArrayHandle<vtkm::Id, StorageV> &output_conn
+  void run(const vtkm::cont::ArrayHandle<vtkm::UInt8, StorageT>       shapes,
+           const vtkm::cont::ArrayHandle<vtkm::IdComponent, StorageU> numIndices,
+           const vtkm::cont::ArrayHandle<vtkm::Id, StorageV>          conn,
+           vtkm::cont::ArrayHandle<vtkm::UInt8, StorageT>             &output_shapes,
+           vtkm::cont::ArrayHandle<vtkm::IdComponent, StorageU>       &output_numIndices,
+           vtkm::cont::ArrayHandle<vtkm::Id, StorageV>                &output_conn
            )
   {
     //Create a worklet to map the number of faces to each cell
@@ -306,24 +306,29 @@ public:
     countingArray.ReleaseResources();
 
     //Extract the point/vertices for each cell face
+    typedef vtkm::cont::ArrayHandle<vtkm::UInt8> UInt8HandleType;
+    typedef vtkm::cont::ArrayHandle<vtkm::IdComponent> IdCompHandleType;
     typedef vtkm::cont::ArrayHandle<vtkm::Id> IdHandleType;
+
     typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, GetConnIndex> IdImplicitType;
-    typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, IdHandleType> IdPermutationType1;
-    typedef vtkm::cont::ArrayHandlePermutation<IdImplicitType, IdHandleType> IdPermutationType2;
+
+    typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, UInt8HandleType>    UInt8PermutationHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, IdCompHandleType>   IdCompPermutationHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<IdImplicitType, IdHandleType> IdPermutationHandleType;
 
 
-    typedef vtkm::cont::CellSetExplicit<IdPermutationType1::StorageTag,
-                                        IdPermutationType1::StorageTag,
-                                        typename IdPermutationType2::StorageTag> PermutedCellSetExplicit;
+    typedef vtkm::cont::CellSetExplicit<UInt8PermutationHandleType::StorageTag,
+                                        IdCompPermutationHandleType::StorageTag,
+                                        typename IdPermutationHandleType::StorageTag> PermutedCellSetExplicit;
 
-    IdPermutationType1 pt1(face2CellId, shapes);
-    IdPermutationType1 pt2(face2CellId, numIndices);
+    UInt8PermutationHandleType pt1(face2CellId, shapes);
+    IdCompPermutationHandleType pt2(face2CellId, numIndices);
 
     //Construct an augmented connectivity output array of length 4*totalFaces
     //Repeat the 4 cell vertices for each cell face: 4763 4763 4763 4763 (cell 1) | 4632 4632...(cell 2)...
     //First, compute indices into the original connectivity array
     IdImplicitType connIndices(GetConnIndex(4, 4), 4*totalFaces);
-    IdPermutationType2 faceConn(connIndices, conn);
+    IdPermutationHandleType faceConn(connIndices, conn);
 
     PermutedCellSetExplicit permutedCellSet;
     permutedCellSet.Fill(pt1, pt2, faceConn);
@@ -405,7 +410,7 @@ public:
     for(int face = 0; face < output_numExtFaces; face++)
     {
       output_shapes.GetPortalControl().Set(face, vtkm::CELL_SHAPE_TRIANGLE);
-      output_numIndices.GetPortalControl().Set(face, static_cast<vtkm::Id>(3));
+      output_numIndices.GetPortalControl().Set(face, static_cast<vtkm::IdComponent>(3));
       output_conn.GetPortalControl().Set(3*face, extFacePortal.Get(face)[0]);
       output_conn.GetPortalControl().Set(3*face + 1, extFacePortal.Get(face)[1]);
       output_conn.GetPortalControl().Set(3*face + 2, extFacePortal.Get(face)[2]);

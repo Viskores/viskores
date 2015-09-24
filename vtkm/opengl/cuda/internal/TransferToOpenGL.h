@@ -79,7 +79,7 @@ public:
   glBindBuffer(this->Type, openGLHandle);
 
   //Allocate the memory and set it as GL_DYNAMIC_DRAW draw
-  const std::size_t size = sizeof(ValueType)* handle.GetNumberOfValues();
+  const vtkm::Id size = static_cast<vtkm::Id>(sizeof(ValueType))* handle.GetNumberOfValues();
   glBufferData(this->Type, size, 0, GL_DYNAMIC_DRAW);
 
   //register the buffer as being used by cuda

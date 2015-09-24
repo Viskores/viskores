@@ -29,7 +29,7 @@ namespace {
 struct NonDefaultCellSetList
     : vtkm::ListTagBase<
         vtkm::cont::CellSetStructured<1>,
-        vtkm::cont::CellSetExplicit<vtkm::cont::ArrayHandleConstant<vtkm::Id>::StorageTag > >
+        vtkm::cont::CellSetExplicit<vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag > >
 {  };
 
 bool CheckCalled;
@@ -127,7 +127,7 @@ void TestDynamicCellSet()
   TryNonDefaultCellSet(vtkm::cont::CellSetStructured<1>());
   std::cout << "*** Explicit Grid Constant Shape ********" << std::endl;
   TryNonDefaultCellSet(vtkm::cont::CellSetExplicit<
-                       vtkm::cont::ArrayHandleConstant<vtkm::Id>::StorageTag>());
+                       vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag>());
 }
 
 } // anonymous namespace

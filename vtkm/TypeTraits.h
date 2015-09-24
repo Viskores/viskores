@@ -125,6 +125,22 @@ struct TypeTraits<vtkm::Vec<T,Size> >
     { return vtkm::Vec<T,Size>( (T()) ); }
 };
 
+/// \brief Traits for Pair types.
+///
+template<typename T, typename U>
+struct TypeTraits<vtkm::Pair<T,U> >
+{
+  typedef TypeTraitsUnknownTag NumericTag;
+  typedef TypeTraitsScalarTag DimensionalityTag;
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Pair<T,U> ZeroInitialization()
+  {
+    return vtkm::Pair<T,U>(TypeTraits<T>::ZeroInitialization(),
+                           TypeTraits<U>::ZeroInitialization());
+  }
+};
+
 } // namespace vtkm
 
 #endif //vtk_m_TypeTraits_h

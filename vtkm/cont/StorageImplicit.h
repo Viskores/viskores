@@ -155,6 +155,17 @@ public:
           "Implicit arrays cannot be used for output.");
   }
 
+  template <class IteratorTypeControl>
+  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
+  {
+    typedef typename StorageType::PortalConstType::IteratorType IteratorType;
+    IteratorType beginIterator = 
+                    this->Storage->GetPortalConst().GetIteratorBegin();
+
+    std::copy(beginIterator, 
+              beginIterator + this->Storage->GetNumberOfValues(), dest);
+  }
+
   VTKM_CONT_EXPORT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {

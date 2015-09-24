@@ -31,6 +31,7 @@ if(OPENGL_FOUND AND GLUT_FOUND)
   target_link_libraries(IsosurfaceUniformGrid_SERIAL ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
 
   if(VTKm_Cuda_FOUND)
+    vtkm_disable_troublesome_thrust_warnings()
     cuda_add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cu)
     target_link_libraries(IsosurfaceUniformGrid_CUDA ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
   endif()

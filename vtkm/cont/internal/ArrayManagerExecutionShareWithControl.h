@@ -93,6 +93,20 @@ public:
     VTKM_ASSERT_CONT(storage == this->Storage);
   }
 
+  /// This methods copies data from the execution array into the given
+  /// iterator.
+  ///
+  template <class IteratorTypeControl>
+  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
+  {
+    typedef typename StorageType::PortalConstType::IteratorType IteratorType;
+    IteratorType beginIterator = 
+                    this->Storage->GetPortalConst().GetIteratorBegin();
+
+    std::copy(beginIterator, 
+              beginIterator + this->Storage->GetNumberOfValues(), dest);
+  }
+
   /// Shrinks the storage.
   ///
   VTKM_CONT_EXPORT

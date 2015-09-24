@@ -199,7 +199,7 @@ void WriteVtkLegacyUnstructuredGrid(const char *fname, const vtkm::cont::DataSet
     vtkm::Vec<vtkm::Id, 8> pointIndices;
     for (vtkm::Id i = 0; i < numCells; ++i)
     {
-      vtkm::Id numCellPoints = cse.GetNumberOfPointsInCell(i);
+      vtkm::IdComponent numCellPoints = cse.GetNumberOfPointsInCell(i);
       idxBuffer.push_back(static_cast<int>(numCellPoints));
       cse.GetIndices(i, pointIndices);
       for (vtkm::IdComponent j = 0; j < numCellPoints; ++j)

@@ -258,6 +258,14 @@ class FunctionInterface
 public:
   typedef FunctionSignature Signature;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  FunctionInterface():
+    Result(),
+    Parameters()
+  {
+
+  }
+
   // the number of parameters as a boost mpl integral constant
   typedef boost::function_types::function_arity<FunctionSignature> SignatureArity;
 

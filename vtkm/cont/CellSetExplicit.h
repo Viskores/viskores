@@ -43,9 +43,22 @@ struct CellSetExplicitConnectivityChooser
 
 } // namespace detail
 
-template<typename ShapeStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
-         typename NumIndicesStorageTag    = VTKM_DEFAULT_STORAGE_TAG,
-         typename ConnectivityStorageTag  = VTKM_DEFAULT_STORAGE_TAG >
+
+#ifndef VTKM_DEFAULT_SHAPE_STORAGE_TAG
+#define VTKM_DEFAULT_SHAPE_STORAGE_TAG VTKM_DEFAULT_STORAGE_TAG
+#endif
+
+#ifndef VTKM_DEFAULT_NUM_INDICES_STORAGE_TAG
+#define VTKM_DEFAULT_NUM_INDICES_STORAGE_TAG VTKM_DEFAULT_STORAGE_TAG
+#endif
+
+#ifndef VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG
+#define VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG VTKM_DEFAULT_STORAGE_TAG
+#endif
+
+template<typename ShapeStorageTag         = VTKM_DEFAULT_SHAPE_STORAGE_TAG,
+         typename NumIndicesStorageTag    = VTKM_DEFAULT_NUM_INDICES_STORAGE_TAG,
+         typename ConnectivityStorageTag  = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG >
 class CellSetExplicit : public CellSet
 {
   template<typename FromTopology, typename ToTopology>
@@ -104,7 +117,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfPointsInCell(vtkm::Id cellIndex) const
+  vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const
   {
     return this->PointToCell.NumIndices.GetPortalConstControl().Get(cellIndex);
   }
@@ -121,7 +134,7 @@ public:
                   vtkm::Vec<vtkm::Id,ItemTupleLength> &ids) const
   {
     this->PointToCell.BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    vtkm::Id numIndices = this->GetNumberOfPointsInCell(index);
+    vtkm::IdComponent numIndices = this->GetNumberOfPointsInCell(index);
     vtkm::Id start =
         this->PointToCell.IndexOffsets.GetPortalConstControl().Get(index);
     for (vtkm::IdComponent i=0; i<numIndices && i<ItemTupleLength; i++)
@@ -142,8 +155,8 @@ public:
 
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_CONT_EXPORT
-  void AddCell(vtkm::IdComponent cellType,
-               int numVertices,
+  void AddCell(vtkm::UInt8 cellType,
+               vtkm::IdComponent numVertices,
                const vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
   {
     this->PointToCell.Shapes.GetPortalControl().Set(this->NumberOfCells, cellType);
@@ -170,17 +183,17 @@ public:
   /// Second method to add cells -- all at once.
   /// Copies the data from the vectors, so they can be released.
   VTKM_CONT_EXPORT
-  void FillViaCopy(const std::vector<vtkm::Id> &cellTypes,
-                   const std::vector<vtkm::Id> &numIndices,
+  void FillViaCopy(const std::vector<vtkm::UInt8> &cellTypes,
+                   const std::vector<vtkm::IdComponent> &numIndices,
                    const std::vector<vtkm::Id> &connectivity)
   {
 
-    this->PointToCell.Shapes.Allocate( static_cast<vtkm::Id>(cellTypes.size()) );
+    this->PointToCell.Shapes.Allocate( static_cast<vtkm::UInt8>(cellTypes.size()) );
     std::copy(cellTypes.begin(), cellTypes.end(),
               vtkm::cont::ArrayPortalToIteratorBegin(
                 this->PointToCell.Shapes.GetPortalControl()));
 
-    this->PointToCell.NumIndices.Allocate( static_cast<vtkm::Id>(numIndices.size()) );
+    this->PointToCell.NumIndices.Allocate( static_cast<vtkm::IdComponent>(numIndices.size()) );
     std::copy(numIndices.begin(), numIndices.end(),
               vtkm::cont::ArrayPortalToIteratorBegin(
                 this->PointToCell.NumIndices.GetPortalControl()));
@@ -197,8 +210,8 @@ public:
   /// Second method to add cells -- all at once.
   /// Assigns the array handles to the explicit connectivity. This is
   /// the way you can fill the memory from another system without copying
-  void Fill(const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &cellTypes,
-            const vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> &numIndices,
+  void Fill(const vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> &cellTypes,
+            const vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> &numIndices,
             const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &connectivity)
   {
     this->PointToCell.Shapes = cellTypes;
@@ -325,8 +338,11 @@ public:
       vtkm::Id cellId = iter->second;
       this->CellToPoint.Connectivity.GetPortalControl().Set(connIndex,cellId);
       ++connIndex;
-      vtkm::Id oldCellCount = this->CellToPoint.NumIndices.GetPortalControl().Get(pointIndex-1);
-      this->CellToPoint.NumIndices.GetPortalControl().Set(pointIndex-1,oldCellCount+1);
+      const vtkm::IdComponent oldCellCount =
+             this->CellToPoint.NumIndices.GetPortalControl().Get(pointIndex-1);
+
+      this->CellToPoint.NumIndices.GetPortalControl().Set(pointIndex-1,
+                                                          oldCellCount+1);
     }
     while (pointIndex < numPoints)
     {
@@ -352,7 +368,7 @@ public:
 
   template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &
+  const vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> &
   GetShapesArray(FromTopology,ToTopology) const
   {
     return this->GetConnectivity(FromTopology(), ToTopology()).Shapes;
@@ -360,7 +376,7 @@ public:
 
   template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> &
+  const vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> &
   GetNumIndicesArray(FromTopology,ToTopology) const
   {
     return this->GetConnectivity(FromTopology(), ToTopology()).NumIndices;
