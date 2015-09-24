@@ -288,7 +288,7 @@ public:
 
     // Determine the number of output cells each input cell will generate
     vtkm::cont::ArrayHandle<vtkm::Id> numOutCellArray;
-    vtkm::Id verticesPerOutCell;
+    vtkm::IdComponent verticesPerOutCell;
     vtkm::UInt8 shapeOutCell;
 
     if (dimensionality == 2) {
@@ -315,13 +315,13 @@ public:
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
-    shapes.Allocate(static_cast<vtkm::UInt8>(numberOfOutCells));
-    numIndices.Allocate(static_cast<vtkm::IdComponent>(numberOfOutCells));
-    connectivity.Allocate(static_cast<vtkm::Id>(numberOfOutIndices));
+    shapes.Allocate(numberOfOutCells);
+    numIndices.Allocate(numberOfOutCells);
+    connectivity.Allocate(numberOfOutIndices);
 
     // Fill the arrays of shapes and number of indices needed by the cell set
     for (vtkm::Id j = 0; j < numberOfOutCells; j++) {
-      shapes.GetPortalControl().Set(j, static_cast<vtkm::UInt8>(shapeOutCell));
+      shapes.GetPortalControl().Set(j, shapeOutCell);
       numIndices.GetPortalControl().Set(j, verticesPerOutCell);
     }
 

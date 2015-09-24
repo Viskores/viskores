@@ -225,7 +225,6 @@ void displayCall()
   coordArray.CastAndCall(GetVertexArray());
 
   // Draw the five tetrahedra belonging to each hexadron
-  vtkm::Id tetra = 0;
   vtkm::Float32 color[5][3] = {
     {1.0f, 0.0f, 0.0f},
     {0.0f, 1.0f, 0.0f},
