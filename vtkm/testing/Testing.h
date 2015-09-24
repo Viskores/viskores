@@ -28,10 +28,6 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VecTraits.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/static_assert.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 #include <exception>
 #include <iostream>
 #include <sstream>

@@ -32,41 +32,40 @@ namespace worklet {
 ///
 /// The \c Scatter classes are responsible for defining how much output is
 /// generated based on some sized input. \c ScatterIdentity establishes a 1 to
-/// 1 mapping from output to input (and vice versa). That is, every input
+/// 1 mapping from input to output (and vice versa). That is, every input
 /// element generates one output element associated with it. This is the
 /// default for basic maps.
 ///
 struct ScatterIdentity
 {
   typedef vtkm::cont::ArrayHandleIndex OutputToInputMapType;
-  OutputToInputMapType GetOutputToInputMap(vtkm::Id inputRange) const
+  VTKM_CONT_EXPORT
+  OutputToInputMapType GetOutputToInputMap(vtkm::Id outputRange) const
   {
-    return OutputToInputMapType(inputRange);
+    return OutputToInputMapType(outputRange);
   }
-  OutputToInputMapType GetOutputToInputMap(vtkm::Id2 inputRange) const
+  VTKM_CONT_EXPORT
+  OutputToInputMapType GetOutputToInputMap(vtkm::Id3 outputRange) const
   {
-    return this->GetOutputToInputMap(inputRange[0]*inputRange[1]);
-  }
-  OutputToInputMapType GetOutputToInputMap(vtkm::Id3 inputRange) const
-  {
-    return this->GetOutputToInputMap(inputRange[0]*inputRange[1]*inputRange[2]);
+    return this->GetOutputToInputMap(
+          outputRange[0]*outputRange[1]*outputRange[2]);
   }
 
   typedef vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> VisitArrayType;
-  VisitArrayType GetVisitArray(vtkm::Id inputRange) const
+  VTKM_CONT_EXPORT
+  VisitArrayType GetVisitArray(vtkm::Id outputRange) const
   {
-    return VisitArrayType(1, inputRange);
+    return VisitArrayType(1, outputRange);
   }
-  VisitArrayType GetVisitArray(vtkm::Id2 inputRange) const
+  VTKM_CONT_EXPORT
+  VisitArrayType GetVisitArray(vtkm::Id3 outputRange) const
   {
-    return this->GetVisitArray(inputRange[0]*inputRange[1]);
-  }
-  VisitArrayType GetVisitArray(vtkm::Id3 inputRange) const
-  {
-    return this->GetVisitArray(inputRange[0]*inputRange[1]*inputRange[2]);
+    return this->GetVisitArray(outputRange[0]*outputRange[1]*outputRange[2]);
   }
 
-  vtkm::Id GetOutputRange(vtkm::Id inputRange) const
+  template<typename RangeType>
+  VTKM_CONT_EXPORT
+  RangeType GetOutputRange(RangeType inputRange) const
   {
     return inputRange;
   }

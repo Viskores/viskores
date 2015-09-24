@@ -33,6 +33,7 @@ set(headers
   IsosurfaceUniformGrid.h
   MarchingCubesDataTables.h
   PointElevation.h
+  ScatterCounting.h
   ScatterIdentity.h
   TetrahedralizeExplicitGrid.h
   TetrahedralizeUniformGrid.h

@@ -441,19 +441,23 @@ protected:
   VTKM_CONT_EXPORT
   void BasicInvoke(const Invocation &invocation,
                    vtkm::Id numInstances,
-                   DeviceAdapter tag) const
+                   DeviceAdapter device) const
   {
-    this->InvokeTransportParameters(invocation, numInstances, tag);
+    this->InvokeTransportParameters(
+          invocation,
+          this->Worklet.GetScatter().GetOutputRange(numInstances),
+          device);
   }
 
   template<typename Invocation, typename DeviceAdapter>
   VTKM_CONT_EXPORT
   void BasicInvoke(const Invocation &invocation,
                    vtkm::Id2 dimensions,
-                   DeviceAdapter tag) const
+                   DeviceAdapter device) const
   {
-    vtkm::Id3 dim3d(dimensions[0], dimensions[1], 1);
-    this->InvokeTransportParameters(invocation, dim3d, tag);
+    this->BasicInvoke(invocation,
+                      vtkm::Id3(dimensions[0], dimensions[1], 1),
+                      device);
   }
 
 
@@ -461,9 +465,12 @@ protected:
   VTKM_CONT_EXPORT
   void BasicInvoke(const Invocation &invocation,
                    vtkm::Id3 dimensions,
-                   DeviceAdapter tag) const
+                   DeviceAdapter device) const
   {
-    this->InvokeTransportParameters(invocation, dimensions, tag);
+    this->InvokeTransportParameters(
+          invocation,
+          this->Worklet.GetScatter().GetOutputRange(dimensions),
+          device);
   }
 
   WorkletType Worklet;
