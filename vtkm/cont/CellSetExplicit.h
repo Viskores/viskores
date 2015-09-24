@@ -340,10 +340,10 @@ public:
     vtkm::Id numPoints = GetNumberOfPoints();
     for (vtkm::Id cell = 0, cindex = 0; cell < numCells; ++cell)
     {
-      vtkm::Id npts = this->PointToCell.NumIndices.GetPortalControl().Get(cell);
+      vtkm::Id npts = this->PointToCell.NumIndices.GetPortalConstControl().Get(cell);
       for (int pt=0; pt<npts; ++pt)
       {
-        vtkm::Id index = this->PointToCell.Connectivity.GetPortalControl().Get(cindex++);
+        vtkm::Id index = this->PointToCell.Connectivity.GetPortalConstControl().Get(cindex++);
         if (index > maxNodeID)
           maxNodeID = index;
         cells_of_nodes.insert(std::pair<vtkm::Id,vtkm::Id>(index,cell));
@@ -374,7 +374,7 @@ public:
       this->CellToPoint.Connectivity.GetPortalControl().Set(connIndex,cellId);
       ++connIndex;
       const vtkm::IdComponent oldCellCount =
-             this->CellToPoint.NumIndices.GetPortalControl().Get(pointIndex-1);
+             this->CellToPoint.NumIndices.GetPortalConstControl().Get(pointIndex-1);
 
       this->CellToPoint.NumIndices.GetPortalControl().Set(pointIndex-1,
                                                           oldCellCount+1);
