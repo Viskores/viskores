@@ -49,6 +49,7 @@ public:
     this->Worklet.SetErrorMessageBuffer(buffer);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
