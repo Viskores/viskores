@@ -314,7 +314,7 @@ public:
 
     typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, UInt8HandleType>    UInt8PermutationHandleType;
     typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, IdCompHandleType>   IdCompPermutationHandleType;
-    typedef vtkm::cont::ArrayHandlePermutation<IdImplicitType, IdCompHandleType> IdPermutationHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<IdImplicitType, IdHandleType> IdPermutationHandleType;
 
 
     typedef vtkm::cont::CellSetExplicit<UInt8PermutationHandleType::StorageTag,

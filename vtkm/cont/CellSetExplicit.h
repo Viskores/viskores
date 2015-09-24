@@ -338,8 +338,11 @@ public:
       vtkm::Id cellId = iter->second;
       this->CellToPoint.Connectivity.GetPortalControl().Set(connIndex,cellId);
       ++connIndex;
-      vtkm::Id oldCellCount = this->CellToPoint.NumIndices.GetPortalControl().Get(pointIndex-1);
-      this->CellToPoint.NumIndices.GetPortalControl().Set(pointIndex-1,oldCellCount+1);
+      const vtkm::IdComponent oldCellCount =
+             this->CellToPoint.NumIndices.GetPortalControl().Get(pointIndex-1);
+
+      this->CellToPoint.NumIndices.GetPortalControl().Set(pointIndex-1,
+                                                          oldCellCount+1);
     }
     while (pointIndex < numPoints)
     {

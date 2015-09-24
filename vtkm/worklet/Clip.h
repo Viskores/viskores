@@ -364,7 +364,7 @@ public:
       for (vtkm::Id cell = 0; cell < numberOfCells; ++cell, ++cellIdx)
       {
         connectivityExplicit.SetCellShape(cellIdx, this->ClipTables.ValueAt(idx++));
-        vtkm::Id numPoints = this->ClipTables.ValueAt(idx++);
+        vtkm::IdComponent numPoints = this->ClipTables.ValueAt(idx++);
         connectivityExplicit.SetNumberOfIndices(cellIdx, numPoints);
         connectivityExplicit.SetIndexOffset(cellIdx, connectivityIdx);
 

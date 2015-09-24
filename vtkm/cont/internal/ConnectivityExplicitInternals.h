@@ -21,6 +21,7 @@
 #define vtk_m_cont_internal_ConnectivityExplicitInternals_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
@@ -71,11 +72,16 @@ struct ConnectivityExplicitInternals
     VTKM_ASSERT_CONT(this->ElementsValid);
     if (!this->IndexOffsetsValid)
     {
+      //We first need to make sure that NumIndices and IndexOffsetArrayType
+      //have the same type so we can call scane exclusive
+      typedef vtkm::cont::ArrayHandleCast< vtkm::Id,
+                                           NumIndicesArrayType > CastedNumIndicesType;
+
       // Although technically we are making changes to this object, the changes
       // are logically consistent with the previous state, so we consider it
       // valid under const.
       vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(
-            this->NumIndices,
+            CastedNumIndicesType(this->NumIndices),
             const_cast<IndexOffsetArrayType&>(this->IndexOffsets));
       const_cast<bool&>(this->IndexOffsetsValid) = true;
     }
