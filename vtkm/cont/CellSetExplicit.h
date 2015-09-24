@@ -77,7 +77,14 @@ class CellSetExplicit : public CellSet
         CellSetExplicitType,
         FromTopology,
         ToTopology>::ConnectivityType ConnectivityType;
+
+    typedef typename ConnectivityType::ShapeArrayType ShapeArrayType;
+    typedef typename ConnectivityType::NumIndicesArrayType NumIndicesArrayType;
+    typedef typename ConnectivityType::ConnectivityArrayType ConnectivityArrayType;
+    typedef typename ConnectivityType::IndexOffsetArrayType IndexOffsetArrayType;
+
   };
+
 
 public:
   typedef vtkm::Id SchedulingRangeType;
@@ -273,14 +280,12 @@ public:
     VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
     VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
 
-    typedef typename
-        ConnectivityChooser<FromTopology,ToTopology>::ConnectivityType
-        ContObjectType;
+    typedef  ConnectivityChooser<FromTopology,ToTopology> ConnectivityTypes;
 
-    typedef typename ContObjectType::ShapeArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst ShapePortalType;
-    typedef typename ContObjectType::NumIndicesArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst IndicePortalType;
-    typedef typename ContObjectType::ConnectivityArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst ConnectivityPortalType;
-    typedef typename ContObjectType::IndexOffsetArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst IndexOffsetPortalType;
+    typedef typename ConnectivityTypes::ShapeArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst ShapePortalType;
+    typedef typename ConnectivityTypes::NumIndicesArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst IndicePortalType;
+    typedef typename ConnectivityTypes::ConnectivityArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst ConnectivityPortalType;
+    typedef typename ConnectivityTypes::IndexOffsetArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst IndexOffsetPortalType;
 
     typedef vtkm::exec::ConnectivityExplicit<ShapePortalType,
                                              IndicePortalType,
@@ -424,7 +429,7 @@ public:
 
   template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> &
+  const typename ConnectivityChooser<FromTopology,ToTopology>::ShapeArrayType &
   GetShapesArray(FromTopology,ToTopology) const
   {
     return this->GetConnectivity(FromTopology(), ToTopology()).Shapes;
@@ -432,7 +437,7 @@ public:
 
   template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> &
+  const typename ConnectivityChooser<FromTopology,ToTopology>::NumIndicesArrayType &
   GetNumIndicesArray(FromTopology,ToTopology) const
   {
     return this->GetConnectivity(FromTopology(), ToTopology()).NumIndices;
@@ -440,7 +445,7 @@ public:
 
   template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &
+  const typename ConnectivityChooser<FromTopology,ToTopology>::ConnectivityArrayType &
   GetConnectivityArray(FromTopology,ToTopology) const
   {
     return this->GetConnectivity(FromTopology(), ToTopology()).Connectivity;
@@ -448,7 +453,7 @@ public:
 
   template<typename FromTopology, typename ToTopology>
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::Id> &
+  const typename ConnectivityChooser<FromTopology,ToTopology>::IndexOffsetArrayType &
   GetIndexOffsetArray(FromTopology,ToTopology) const
   {
     return this->GetConnectivity(FromTopology(), ToTopology()).IndexOffsets;
