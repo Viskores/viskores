@@ -221,94 +221,90 @@ public:
   vtkm::cont::DataSet OutDataSet; // output dataset with explicit cell set
 
   //
-  // Populate the output dataset with triangles based on input uniform dataset
+  // Populate the output dataset with triangles or tetrahedra based on input uniform dataset
   //
-  void Run(const vtkm::Id2 &cdims)
+  void Run()
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
-
-    vtkm::Id numberOfVertices = (cdims[0] + 1) * (cdims[1] + 1);
-    vtkm::Id numberOfInCells = cdims[0] * cdims[1];
-    vtkm::Id numberOfOutCells = 2 * numberOfInCells;
-    vtkm::Id numberOfOutIndices = 3 * numberOfOutCells;
 
     // Get the cell set from the output data set
     vtkm::cont::CellSetExplicit<> &cellSet = 
       this->OutDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
-    // Cell indices are just counting array
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIndicesArray(0, 1, numberOfInCells);
+    // Get dimensionality from the explicit cell set
+    vtkm::IdComponent dim = cellSet.GetDimensionality();
+    vtkm::Id outCellsPerInCell;
+    vtkm::Id verticesPerOutCell;
+    vtkm::UInt8 shapeOutCell;
+    vtkm::Id numberOfVertices;
+    vtkm::Id numberOfInCells;
+    vtkm::Id2 cdims2;
+    vtkm::Id3 cdims3;
 
-    // Output is 5 tets per hex cell so allocate accordingly
-    vtkm::cont::ArrayHandle<vtkm::Id> shapes;
-    vtkm::cont::ArrayHandle<vtkm::Id> numIndices;
-    vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
+    // From the uniform dimension get more information
+    if (dim == 2) {
+      outCellsPerInCell = 2;
+      verticesPerOutCell = 3;
+      shapeOutCell = vtkm::CELL_SHAPE_TRIANGLE;
 
-    shapes.Allocate(static_cast<vtkm::Id>(numberOfOutCells));
-    numIndices.Allocate(static_cast<vtkm::Id>(numberOfOutCells));
-    connectivity.Allocate(static_cast<vtkm::Id>(numberOfOutIndices));
+      vtkm::cont::CellSetStructured<2> &inCellSet = 
+        this->InDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetStructured<2> >();
+      cdims2 = inCellSet.GetSchedulingRange(vtkm::TopologyElementTagCell());
 
-    // Fill the arrays of shapes and number of indices needed by the cell set
-    for (vtkm::Id j = 0; j < numberOfOutCells; j++) {
-      shapes.GetPortalControl().Set(j, static_cast<vtkm::Id>(vtkm::CELL_SHAPE_TRIANGLE));
-      numIndices.GetPortalControl().Set(j, 3);
+      numberOfVertices = (cdims2[0] + 1) * (cdims2[1] + 1);
+      numberOfInCells = cdims2[0] * cdims2[1];
+
+    } else if (dim == 3) {
+      outCellsPerInCell = 5;
+      verticesPerOutCell = 4;
+      shapeOutCell = vtkm::CELL_SHAPE_TETRA;
+
+      vtkm::cont::CellSetStructured<3> &inCellSet = 
+        this->InDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetStructured<3> >();
+      cdims3 = inCellSet.GetSchedulingRange(vtkm::TopologyElementTagCell());
+
+      numberOfVertices = (cdims3[0] + 1) * (cdims3[1] + 1) * (cdims3[2] + 1);
+      numberOfInCells = cdims3[0] * cdims3[1] * cdims3[2];
     }
 
-    // Call the TriangulateCell functor to compute the 2 triangles for connectivity
-    TriangulateCell triangulateCell(cdims);
-    typedef typename vtkm::worklet::DispatcherMapField<TriangulateCell> TriangulateCellDispatcher;
-    TriangulateCellDispatcher triangulateCellDispatcher(triangulateCell);
-    triangulateCellDispatcher.Invoke(
-                      cellIndicesArray,
-                      vtkm::exec::ExecutionWholeArray<vtkm::Id>(connectivity, numberOfOutIndices));
-
-    // Add tets to output cellset
-    cellSet.Fill(shapes, numIndices, connectivity);
-  }
-
-  //
-  // Populate the output dataset with tetrahedra based on input uniform dataset
-  //
-  void Run(const vtkm::Id3 &cdims)
-  {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
-
-    vtkm::Id numberOfVertices = (cdims[0] + 1) * (cdims[1] + 1) * (cdims[2] + 1);
-    vtkm::Id numberOfInCells = cdims[0] * cdims[1] * cdims[2];
-    vtkm::Id numberOfOutCells = 5 * numberOfInCells;
-    vtkm::Id numberOfOutIndices = 4 * numberOfOutCells;
-
-    // Get the cell set from the output data set
-    vtkm::cont::CellSetExplicit<> &cellSet = 
-      this->OutDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+    vtkm::Id numberOfOutCells = outCellsPerInCell * numberOfInCells;
+    vtkm::Id numberOfOutIndices = verticesPerOutCell * numberOfOutCells;
 
     // Cell indices are just counting array
     vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIndicesArray(0, 1, numberOfInCells);
 
-    // Output is 5 tets per hex cell so allocate accordingly
-    vtkm::cont::ArrayHandle<vtkm::Id> shapes;
-    vtkm::cont::ArrayHandle<vtkm::Id> numIndices;
+    // Output dataset depends on dimension and size
+    vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
-    shapes.Allocate(static_cast<vtkm::Id>(numberOfOutCells));
-    numIndices.Allocate(static_cast<vtkm::Id>(numberOfOutCells));
-    connectivity.Allocate(static_cast<vtkm::Id>(numberOfOutIndices));
+    shapes.Allocate(numberOfOutCells);
+    numIndices.Allocate(numberOfOutCells);
+    connectivity.Allocate(numberOfOutIndices);
 
     // Fill the arrays of shapes and number of indices needed by the cell set
     for (vtkm::Id j = 0; j < numberOfOutCells; j++) {
-      shapes.GetPortalControl().Set(j, static_cast<vtkm::Id>(vtkm::CELL_SHAPE_TETRA));
-      numIndices.GetPortalControl().Set(j, 4);
+      shapes.GetPortalControl().Set(j, static_cast<vtkm::UInt8>(shapeOutCell));
+      numIndices.GetPortalControl().Set(j, verticesPerOutCell);
     }
 
-    // Call the TetrahedralizeCell functor to compute the 5 tets for connectivity
-    TetrahedralizeCell tetrahedralizeCell(cdims);
-    typedef typename vtkm::worklet::DispatcherMapField<TetrahedralizeCell> TetrahedralizeCellDispatcher;
-    TetrahedralizeCellDispatcher tetrahedralizeCellDispatcher(tetrahedralizeCell);
-    tetrahedralizeCellDispatcher.Invoke(
+    // Call the TetrahedralizeCell functor to compute tetrahedra or triangles
+    if (dim == 2) {
+      TriangulateCell triangulateCell(cdims2);
+      vtkm::worklet::DispatcherMapField<TriangulateCell> triangulateCellDispatcher(triangulateCell);
+      triangulateCellDispatcher.Invoke(
                       cellIndicesArray,
                       vtkm::exec::ExecutionWholeArray<vtkm::Id>(connectivity, numberOfOutIndices));
 
-    // Add tets to output cellset
+    } else if (dim == 3) {
+      TetrahedralizeCell tetrahedralizeCell(cdims3);
+      vtkm::worklet::DispatcherMapField<TetrahedralizeCell> tetrahedralizeCellDispatcher(tetrahedralizeCell);
+      tetrahedralizeCellDispatcher.Invoke(
+                      cellIndicesArray,
+                      vtkm::exec::ExecutionWholeArray<vtkm::Id>(connectivity, numberOfOutIndices));
+    }
+
+    // Add cells to output cellset
     cellSet.Fill(shapes, numIndices, connectivity);
   }
 };

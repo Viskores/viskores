@@ -106,7 +106,7 @@ void TestUniformGrid2D()
   // Convert uniform hexahedra to tetrahedra
   vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> 
                  tetrahedralizeFilter(inDataSet, outDataSet);
-  tetrahedralizeFilter.Run(dims);
+  tetrahedralizeFilter.Run();
 
   vtkm::cont::CellSetExplicit<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
   vtkm::cont::CoordinateSystem coordinates = outDataSet.GetCoordinateSystem(0);
@@ -156,7 +156,7 @@ void TestUniformGrid3D()
   // Convert uniform hexahedra to tetrahedra
   vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> 
                  tetrahedralizeFilter(inDataSet, outDataSet);
-  tetrahedralizeFilter.Run(dims);
+  tetrahedralizeFilter.Run();
 
   vtkm::cont::CellSetExplicit<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
   vtkm::cont::CoordinateSystem coordinates = outDataSet.GetCoordinateSystem(0);

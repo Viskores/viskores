@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
   // Convert uniform hexahedra to tetrahedra
   tetrahedralizeFilter = new vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter>
                                               (inDataSet, outDataSet);
-  tetrahedralizeFilter->Run(dims);
+  tetrahedralizeFilter->Run();
 
   // Render the output dataset of tets
   glutInit(&argc, argv);
