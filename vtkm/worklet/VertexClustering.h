@@ -97,8 +97,8 @@ template<typename ShapeStorageTag,
 vtkm::cont::CellSetExplicit<
     ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag>
   make_CellSetExplicit(
-      const vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> &cellTypes,
-      const vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> &numIndices,
+      const vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> &cellTypes,
+      const vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> &numIndices,
       const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &connectivity)
 {
   vtkm::cont::CellSetExplicit<
@@ -508,8 +508,8 @@ public:
     output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", 0, repPointArray));
 
     output.AddCellSet(internal::make_CellSetExplicit(
-      vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(vtkm::CELL_SHAPE_TRIANGLE, cells),
-      vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(3, cells),
+      vtkm::cont::make_ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_TRIANGLE, cells),
+      vtkm::cont::make_ArrayHandleConstant<vtkm::IdComponent>(3, cells),
       internal::copyFromVec(pointId3Array, DeviceAdapter())));
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK

@@ -32,16 +32,16 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
   vtkm::cont::CellSetExplicit<> &cellset =
       ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
-  vtkm::cont::ArrayHandle<vtkm::Id> shapes = cellset.GetShapesArray(
+  vtkm::cont::ArrayHandle<vtkm::UInt8> shapes = cellset.GetShapesArray(
     vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
-  vtkm::cont::ArrayHandle<vtkm::Id> numIndices = cellset.GetNumIndicesArray(
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices = cellset.GetNumIndicesArray(
     vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
   vtkm::cont::ArrayHandle<vtkm::Id> conn = cellset.GetConnectivityArray(
     vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
 
-  vtkm::cont::ArrayHandle<vtkm::Id> output_shapes;
-  vtkm::cont::ArrayHandle<vtkm::Id> output_numIndices;
-  vtkm::cont::ArrayHandle<vtkm::Id> output_conn;
+  vtkm::cont::ArrayHandle<vtkm::UInt8>       output_shapes;
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> output_numIndices;
+  vtkm::cont::ArrayHandle<vtkm::Id>          output_conn;
 
   //Run the External Faces worklet
   vtkm::worklet::ExternalFaces<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().run(
@@ -90,13 +90,15 @@ void TestExternalFaces()
 
   //Construct the VTK-m shapes and numIndices connectivity arrays
   const int nCells = 6;  //The tetrahedrons of the cube
-  int cellVerts[nCells][4] = {{4,7,6,3}, {4,6,3,2}, {4,0,3,2},
-                             {4,6,5,2}, {4,5,0,2}, {1,0,5,2}};
+  vtkm::IdComponent cellVerts[nCells][4] = {
+                                            {4,7,6,3}, {4,6,3,2}, {4,0,3,2},
+                                            {4,6,5,2}, {4,5,0,2}, {1,0,5,2}
+                                           };
   vtkm::cont::CellSetExplicit<> cs(nVerts, "cells", nCells);
 
-  vtkm::cont::ArrayHandle<vtkm::Id> shapes;
-  vtkm::cont::ArrayHandle<vtkm::Id> numIndices;
-  vtkm::cont::ArrayHandle<vtkm::Id> conn;
+  vtkm::cont::ArrayHandle<vtkm::UInt8>       shapes;
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
+  vtkm::cont::ArrayHandle<vtkm::Id>          conn;
   shapes.Allocate(static_cast<vtkm::Id>(nCells));
   numIndices.Allocate(static_cast<vtkm::Id>(nCells));
   conn.Allocate(static_cast<vtkm::Id>(4 * nCells));
@@ -104,10 +106,10 @@ void TestExternalFaces()
   int index = 0;
   for(int j = 0; j < nCells; j++)
   {
-    shapes.GetPortalControl().Set(j, static_cast<vtkm::Id>(vtkm::CELL_SHAPE_TETRA));
+    shapes.GetPortalControl().Set(j, static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_TETRA));
     numIndices.GetPortalControl().Set(j, 4);
     for(int k = 0; k < 4; k++)
-      conn.GetPortalControl().Set(index++, static_cast<vtkm::Id>(cellVerts[j][k]));
+      conn.GetPortalControl().Set(index++, cellVerts[j][k]);
   }
 
   cs.Fill(shapes, numIndices, conn);

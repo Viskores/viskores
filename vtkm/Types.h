@@ -1102,6 +1102,11 @@ vtkm::Vec<T,4> make_Vec(const T &x, const T &y, const T &z, const T &w)
   return vtkm::Vec<T,4>(x, y, z, w);
 }
 
+// A pre-declaration of vtkm::Pair so that classes templated on them can refer
+// to it. The actual implementation is in vtkm/Pair.h.
+template<typename U, typename V>
+struct Pair;
+
 template<typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT_EXPORT
 T dot(const vtkm::Vec<T,Size> &a, const vtkm::Vec<T,Size> &b)
@@ -1195,6 +1200,15 @@ std::ostream &operator<<(std::ostream &stream, const vtkm::Vec<T,Size> &vec)
     stream << vec[component] << ",";
   }
   return stream << vec[Size-1] << "]";
+}
+
+/// Helper function for printing out pairs during testing.
+///
+template<typename T, typename U>
+VTKM_EXEC_CONT_EXPORT
+std::ostream &operator<<(std::ostream &stream, const vtkm::Pair<T,U> &vec)
+{
+  return stream << "[" << vec.first << "," << vec.second << "]";
 }
 
 #endif //vtk_m_Types_h

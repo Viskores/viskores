@@ -49,8 +49,14 @@ class ArrayHandleIndex
       Superclass;
 
 public:
+  typedef Superclass::ValueType ValueType;
+  typedef Superclass::StorageTag StorageTag;
+
   ArrayHandleIndex(vtkm::Id length = 0)
     : Superclass(detail::IndexFunctor(), length) {  }
+
+  ArrayHandleIndex(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
+    : Superclass(src) {  }
 };
 
 }

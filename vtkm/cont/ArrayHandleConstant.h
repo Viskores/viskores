@@ -63,9 +63,16 @@ class ArrayHandleConstant
       Superclass;
 
 public:
+  typedef typename Superclass::StorageTag StorageTag;
+
   VTKM_CONT_EXPORT
   ArrayHandleConstant(T value = T(), vtkm::Id numberOfValues = 0)
     : Superclass(detail::ConstantFunctor<T>(value), numberOfValues) {  }
+
+  VTKM_CONT_EXPORT
+  ArrayHandleConstant(const vtkm::cont::ArrayHandle<T,StorageTag> &src)
+    : Superclass(src)
+  {  }
 };
 
 /// make_ArrayHandleImplicit is convenience function to generate an

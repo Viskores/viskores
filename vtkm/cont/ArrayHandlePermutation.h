@@ -385,6 +385,10 @@ public:
   ArrayHandlePermutation(const IndexArrayHandleType &indexArray,
                          const ValueArrayHandleType &valueArray)
     : Superclass(StorageType(indexArray, valueArray)) {  }
+
+  ArrayHandlePermutation(
+      const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
+    : Superclass(src) {  }
 };
 
 /// make_ArrayHandleTransform is convenience function to generate an

@@ -61,6 +61,12 @@ public:
         StorageType(vtkm::internal::ArrayPortalUniformPointCoordinates(
                       dimensions, origin, spacing)))
   {  }
+
+  VTKM_CONT_EXPORT
+  ArrayHandleUniformPointCoordinates(
+      const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
+    : Superclass(src)
+  {  }
 };
 
 }

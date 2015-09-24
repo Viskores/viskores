@@ -37,16 +37,16 @@ class Quaternion
 {
 public:
 	Quaternion() { x = y = z = 0.0; w = 1.0; }
-	Quaternion(double x, double y, double z, double w) : x(x), y(y), z(z), w(w) {};
+	Quaternion(double ax, double ay, double az, double aw) : x(ax), y(ay), z(az), w(aw) {};
 	void set(double ax, double ay, double az, double aw) { x = ax; y = ay; z = az; w = aw; }
 	void normalize()
 	{
-	    float norm = sqrt(x*x + y*y + z*z + w*w);
+	    float norm = static_cast<float>(sqrt(x*x + y*y + z*z + w*w));
 	    if (norm > 0.00001) { x /= norm;  y /= norm;  z /= norm;  w /= norm; }
 	}
 	void mul(Quaternion q)
 	{
-	    float tx, ty, tz, tw;
+	    double tx, ty, tz, tw;
 	    tx = w*q.x + x*q.w + y*q.z - z*q.y;
 	    ty = w*q.y + y*q.w + z*q.x - x*q.z;
 	    tz = w*q.z + z*q.w + x*q.y - y*q.x;
@@ -66,10 +66,21 @@ public:
 
 	void getRotMat(float* m) const
 	{
-	    for (int i=0; i<16; i++) m[i] = 0.0; m[15] = 1.0;
-	    m[0]  = 1 - 2*y*y - 2*z*z;  m[1]  = 2*x*y - 2*z*w;      m[2]  = 2*x*z + 2*y*w;
-	    m[4]  = 2*x*y + 2*z*w;      m[5]  = 1 - 2*x*x - 2*z*z;  m[6]  = 2*y*z - 2*x*w;
-	    m[8]  = 2*x*z - 2*y*w;      m[9]  = 2*y*z + 2*x*w;      m[10] = 1 - 2*x*x - 2*y*y;
+    for (int i=0; i<16; i++) {m[i] = 0.0;}
+
+    m[0]  = static_cast<float>(1.0 - 2.0*y*y - 2.0*z*z);
+    m[1]  = static_cast<float>(2.0*x*y - 2.0*z*w);
+    m[2]  = static_cast<float>(2.0*x*z + 2.0*y*w);
+
+    m[4]  = static_cast<float>(2.0*x*y + 2.0*z*w);
+    m[5]  = static_cast<float>(1.0 - 2.0*x*x - 2.0*z*z);
+    m[6]  = static_cast<float>(2.0*y*z - 2.0*x*w);
+
+    m[8]  = static_cast<float>(2.0*x*z - 2.0*y*w);
+    m[9]  = static_cast<float>(2.0*y*z + 2.0*x*w);
+    m[10] = static_cast<float>(1.0 - 2.0*x*x - 2.0*y*y);
+
+    m[15] = 1.0;
 	}
 
 	double x,y,z,w;

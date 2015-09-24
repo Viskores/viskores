@@ -52,7 +52,7 @@ template<typename T>
   // note that construct is annotated as
   // a __host__ __device__ function
   __host__ __device__
-  void construct(T *p)
+  void construct(T * vtkmNotUsed(p) )
   {
     // no-op
   }
@@ -178,6 +178,19 @@ public:
     {
       vtkm::cont::cuda::internal::throwAsVTKmException();
     }
+  }
+
+  /// Copies the data currently in the device array into the given iterators.
+  /// Although the iterator is supposed to be from the control environment,
+  /// thrust can generally handle iterators for a device as well.
+  ///
+  template <class IteratorTypeControl>
+  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
+  {
+    ::thrust::copy(
+          this->Array.data(),
+          this->Array.data() + static_cast<difference_type>(this->Array.size()),
+          dest);
   }
 
   /// Resizes the device vector.
