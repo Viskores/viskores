@@ -53,6 +53,7 @@ struct Fetch<FetchTag, vtkm::exec::arg::AspectTagFromCount, Invocation, 1>
 {
   typedef vtkm::IdComponent ValueType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
   {

@@ -49,6 +49,7 @@ struct Fetch<
 
   typedef typename ExecObjectType::ValueType ValueType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id index, const Invocation &invocation) const
   {
@@ -56,6 +57,7 @@ struct Fetch<
         Get(index);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void Store(vtkm::Id index,
              const Invocation &invocation,
