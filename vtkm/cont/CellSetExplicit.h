@@ -342,12 +342,12 @@ public:
       return;
     }
 
+
     std::multimap<vtkm::Id,vtkm::Id> cells_of_nodes;
 
     vtkm::Id pairCount = 0;
     vtkm::Id maxNodeID = 0;
     vtkm::Id numCells = GetNumberOfCells();
-    vtkm::Id numPoints = GetNumberOfPoints();
     for (vtkm::Id cell = 0, cindex = 0; cell < numCells; ++cell)
     {
       vtkm::Id npts = this->PointToCell.NumIndices.GetPortalConstControl().Get(cell);
@@ -355,11 +355,20 @@ public:
       {
         vtkm::Id index = this->PointToCell.Connectivity.GetPortalConstControl().Get(cindex++);
         if (index > maxNodeID)
+        {
           maxNodeID = index;
+        }
         cells_of_nodes.insert(std::pair<vtkm::Id,vtkm::Id>(index,cell));
         pairCount++;
       }
     }
+
+    if(GetNumberOfPoints() <= 0)
+    {
+      this->NumberOfPoints = maxNodeID + 1;
+    }
+
+    vtkm::Id numPoints = GetNumberOfPoints();
 
     this->CellToPoint.Shapes.Allocate(numPoints);
     this->CellToPoint.NumIndices.Allocate(numPoints);
@@ -380,9 +389,11 @@ public:
         this->CellToPoint.NumIndices.GetPortalControl().Set(pointIndex,0);
         ++pointIndex;
       }
+
       vtkm::Id cellId = iter->second;
       this->CellToPoint.Connectivity.GetPortalControl().Set(connIndex,cellId);
       ++connIndex;
+
       const vtkm::IdComponent oldCellCount =
              this->CellToPoint.NumIndices.GetPortalConstControl().Get(pointIndex-1);
 
