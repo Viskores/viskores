@@ -211,14 +211,12 @@ void displayCall()
     {1.0f, 0.0f, 0.0f},
     {0.0f, 1.0f, 0.0f},
     {0.0f, 0.0f, 1.0f},
-    {1.0f, 1.0f, 0.0f}};
+    {1.0f, 1.0f, 0.0f}
+  };
 
   for (vtkm::Id triangle = 0; triangle < numberOfCells; triangle++) {
     vtkm::Id indx = triangle % 4;
     glColor3f(color[indx][0], color[indx][1], color[indx][2]);
-
-    vtkm::Id pointsInCell = cellSet.GetNumberOfPointsInCell(triangle);
-    vtkm::Id cellShape = cellSet.GetCellShape(triangle);
 
     // Get the indices of the vertices that make up this triangle
     vtkm::Vec<vtkm::Id, 3> triIndices;
