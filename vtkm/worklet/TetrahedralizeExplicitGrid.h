@@ -61,8 +61,8 @@ public:
     TrianglesPerCell() {}
   
     VTKM_EXEC_EXPORT
-    void operator()(const vtkm::Id &shape, 
-                    const vtkm::Id &numIndices,
+    void operator()(const vtkm::UInt8 &shape, 
+                    const vtkm::IdComponent &numIndices,
                     vtkm::Id &triangleCount) const
     {
       if (shape == vtkm::CELL_SHAPE_TRIANGLE)
@@ -91,8 +91,8 @@ public:
     TetrahedraPerCell() {}
   
     VTKM_EXEC_EXPORT
-    void operator()(const vtkm::Id &shape, 
-                    const vtkm::Id &numIndices,
+    void operator()(const vtkm::UInt8 &shape, 
+                    const vtkm::IdComponent &numIndices,
                     vtkm::Id &tetrahedraCount) const
     {
       if (shape == vtkm::CELL_SHAPE_TETRA)
@@ -279,9 +279,9 @@ public:
     vtkm::Id dimensionality = inCellSet.GetDimensionality();
 
     // Input topology
-    vtkm::cont::ArrayHandle<vtkm::Id> inShapes = inCellSet.GetShapesArray(
+    vtkm::cont::ArrayHandle<vtkm::UInt8> inShapes = inCellSet.GetShapesArray(
       vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
-    vtkm::cont::ArrayHandle<vtkm::Id> inNumIndices = inCellSet.GetNumIndicesArray(
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> inNumIndices = inCellSet.GetNumIndicesArray(
       vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
     vtkm::cont::ArrayHandle<vtkm::Id> inConn = inCellSet.GetConnectivityArray(
       vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
@@ -289,7 +289,7 @@ public:
     // Determine the number of output cells each input cell will generate
     vtkm::cont::ArrayHandle<vtkm::Id> numOutCellArray;
     vtkm::Id verticesPerOutCell;
-    vtkm::Id shapeOutCell;
+    vtkm::UInt8 shapeOutCell;
 
     if (dimensionality == 2) {
       verticesPerOutCell = 3;
@@ -311,17 +311,17 @@ public:
     vtkm::Id numberOfOutIndices = numberOfOutCells * verticesPerOutCell;
 
     // Information needed to build the output cell set
-    vtkm::cont::ArrayHandle<vtkm::Id> shapes;
-    vtkm::cont::ArrayHandle<vtkm::Id> numIndices;
+    vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
-    shapes.Allocate(static_cast<vtkm::Id>(numberOfOutCells));
-    numIndices.Allocate(static_cast<vtkm::Id>(numberOfOutCells));
+    shapes.Allocate(static_cast<vtkm::UInt8>(numberOfOutCells));
+    numIndices.Allocate(static_cast<vtkm::IdComponent>(numberOfOutCells));
     connectivity.Allocate(static_cast<vtkm::Id>(numberOfOutIndices));
 
     // Fill the arrays of shapes and number of indices needed by the cell set
     for (vtkm::Id j = 0; j < numberOfOutCells; j++) {
-      shapes.GetPortalControl().Set(j, static_cast<vtkm::Id>(shapeOutCell));
+      shapes.GetPortalControl().Set(j, static_cast<vtkm::UInt8>(shapeOutCell));
       numIndices.GetPortalControl().Set(j, verticesPerOutCell);
     }
 

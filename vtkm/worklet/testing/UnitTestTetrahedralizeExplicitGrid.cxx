@@ -59,7 +59,7 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
   dataSet.AddCoordinateSystem(
           vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, nVerts));
 
-  std::vector<vtkm::Id> shapes;
+  std::vector<vtkm::UInt8> shapes;
   shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
   shapes.push_back(vtkm::CELL_SHAPE_QUAD);
   shapes.push_back(vtkm::CELL_SHAPE_QUAD);
@@ -68,7 +68,7 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
   shapes.push_back(vtkm::CELL_SHAPE_QUAD);
   shapes.push_back(vtkm::CELL_SHAPE_POLYGON);
 
-  std::vector<vtkm::Id> numindices;
+  std::vector<vtkm::IdComponent> numindices;
   numindices.push_back(3);
   numindices.push_back(4);
   numindices.push_back(4);
@@ -155,13 +155,13 @@ vtkm::cont::DataSet MakeTetrahedralizeExplicitDataSet()
   dataSet.AddCoordinateSystem(
           vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, nVerts));
 
-  std::vector<vtkm::Id> shapes;
+  std::vector<vtkm::UInt8> shapes;
   shapes.push_back(vtkm::CELL_SHAPE_TETRA);
   shapes.push_back(vtkm::CELL_SHAPE_HEXAHEDRON);
   shapes.push_back(vtkm::CELL_SHAPE_WEDGE);
   shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
 
-  std::vector<vtkm::Id> numindices;
+  std::vector<vtkm::IdComponent> numindices;
   numindices.push_back(4);
   numindices.push_back(8);
   numindices.push_back(6);
