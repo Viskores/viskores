@@ -215,19 +215,23 @@ public:
     this->PointToCell.ElementsValid = true;
 
     if(offsets.size() == cellTypes.size())
-      {
+    {
       this->PointToCell.IndexOffsets.Allocate( static_cast<vtkm::Id>(offsets.size()) );
       std::copy(offsets.begin(), offsets.end(),
               vtkm::cont::ArrayPortalToIteratorBegin(
                 this->PointToCell.IndexOffsets.GetPortalControl()));
       this->PointToCell.IndexOffsetsValid = true;
-      }
+    }
     else
-      {
+    {
       this->PointToCell.IndexOffsetsValid = false;
+      if (offsets.size() != 0)
+      {
+        throw vtkm::cont::ErrorControlBadValue(
+             "Explicit cell offsets array unexpected size. "
+             "Use an empty array to automatically generate.");
       }
-
-    this->PointToCell.IndexOffsetsValid = false;
+    }
   }
 
   /// Second method to add cells -- all at once.
@@ -246,14 +250,20 @@ public:
     this->PointToCell.ElementsValid = true;
 
     if(offsets.GetNumberOfValues() == cellTypes.GetNumberOfValues())
-      {
+    {
       this->PointToCell.IndexOffsets = offsets;
       this->PointToCell.IndexOffsetsValid = true;
-      }
+    }
     else
-      {
+    {
       this->PointToCell.IndexOffsetsValid = false;
+      if (offsets.GetNumberOfValues() != 0)
+      {
+        throw vtkm::cont::ErrorControlBadValue(
+             "Explicit cell offsets array unexpected size. "
+             "Use an empty array to automatically generate.");
       }
+    }
   }
 
   template <typename DeviceAdapter, typename FromTopology, typename ToTopology>

@@ -25,10 +25,6 @@
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/utility/enable_if.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 namespace cont {
 namespace internal {
@@ -111,12 +107,12 @@ struct ConnectivityExplicitInternals
     VTKM_ASSERT_CONT(this->ElementsValid);
 
     if(!this->IndexOffsetsValid)
-      {
+    {
       buildIndexOffsets(this->NumIndices,
                         this->IndexOffsets,
                         Device());
       this->IndexOffsetsValid = true;
-      }
+    }
   }
 
   VTKM_CONT_EXPORT
