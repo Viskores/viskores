@@ -45,6 +45,7 @@ set(unit_tests
   UnitTestDataSetRegular.cxx
   UnitTestDataSetExplicit.cxx
   UnitTestDataSetSingleType.cxx
+  UnitTestDataSetPermutation.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDeviceAdapterSerial.cxx
