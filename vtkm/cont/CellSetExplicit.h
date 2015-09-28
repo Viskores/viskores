@@ -244,6 +244,7 @@ public:
   /// Second method to add cells -- all at once.
   /// Assigns the array handles to the explicit connectivity. This is
   /// the way you can fill the memory from another system without copying
+  VTKM_CONT_EXPORT
   void Fill(const vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> &cellTypes,
             const vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> &numIndices,
             const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &connectivity,
