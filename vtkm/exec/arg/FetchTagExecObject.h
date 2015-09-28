@@ -62,6 +62,7 @@ struct Fetch<
 
   typedef ExecObjectType ValueType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   ValueType Load(vtkm::Id vtkmNotUsed(index),
                  const Invocation &invocation) const

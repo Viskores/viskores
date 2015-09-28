@@ -37,6 +37,7 @@ set(headers
   Assert.h
   CellSet.h
   CellSetExplicit.h
+  CellSetSingleType.h
   CellSetListTag.h
   CellSetStructured.h
   CoordinateSystem.h

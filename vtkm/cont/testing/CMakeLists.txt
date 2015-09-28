@@ -44,6 +44,7 @@ set(unit_tests
   UnitTestComputeBoundsSerial.cxx
   UnitTestDataSetRegular.cxx
   UnitTestDataSetExplicit.cxx
+  UnitTestDataSetSingleType.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDeviceAdapterSerial.cxx

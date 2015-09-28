@@ -27,6 +27,7 @@
 #include <vtkm/ListTag.h>
 
 #include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/CellSetStructured.h>
 
 namespace vtkm {
@@ -58,7 +59,9 @@ struct CellSetListTagCommon
         : vtkm::ListTagBase<
             vtkm::cont::CellSetStructured<2>,
             vtkm::cont::CellSetStructured<3>,
-            vtkm::cont::CellSetExplicit<> > {  };
+            vtkm::cont::CellSetExplicit<>,
+            vtkm::cont::CellSetSingleType<>
+            > {  };
 
 }
 } // namespace vtkm::cont
