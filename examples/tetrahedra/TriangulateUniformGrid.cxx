@@ -21,7 +21,6 @@
 #include <vtkm/worklet/TetrahedralizeUniformGrid.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
-#include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -37,10 +36,11 @@ typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 // Default size of the example
 vtkm::Id2 dims(4,4);
 vtkm::Id cellsToDisplay = 16;
+vtkm::Id numberOfInPoints;
 
 // Takes input uniform grid and outputs unstructured grid of triangles
 vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> *tetrahedralizeFilter;
-vtkm::cont::DataSet outDataSet;
+vtkm::cont::DataSet tetDataSet;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
 vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
@@ -48,14 +48,17 @@ vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
 //
 // Construct an input data set with uniform grid of indicated dimensions, origin and spacing
 //
-vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dims)
+vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dim)
 {
   vtkm::cont::DataSet dataSet;
 
   // Place uniform grid on a set physical space so OpenGL drawing is easier
-  const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, 1);
+  const vtkm::Id3 vdims(dim[0] + 1, dim[1] + 1, 1);
   const vtkm::Vec<vtkm::Float32, 3> origin = vtkm::make_Vec(0.0f, 0.0f, 0.0f);
-  const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(1.0f/dims[0], 1.0f/dims[1], 0.0f);
+  const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(
+                                              1.0f/static_cast<vtkm::Float32>(dim[0]),
+                                              1.0f/static_cast<vtkm::Float32>(dim[1]),
+                                              1.0f/static_cast<vtkm::Float32>(dim[2]));
 
   // Generate coordinate system
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
@@ -65,7 +68,7 @@ vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dims)
   // Generate cell set
   static const vtkm::IdComponent ndim = 2;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
-  cellSet.SetPointDimensions(vtkm::make_Vec(dims[0] + 1, dims[1] + 1));
+  cellSet.SetPointDimensions(vtkm::make_Vec(dim[0] + 1, dim[1] + 1));
   dataSet.AddCellSet(cellSet);
 
   return dataSet;
@@ -97,19 +100,6 @@ private:
   }
 };
 
-void display(void)
-{
-  glClear(GL_COLOR_BUFFER_BIT);
-  glColor3f(1.0, 1.0, 1.0);
-  glBegin(GL_POLYGON);
-    glVertex3f(0.25, 0.25, 0.0);
-    glVertex3f(0.75, 0.25, 0.0);
-    glVertex3f(0.75, 0.75, 0.0);
-    glVertex3f(0.25, 0.25, 0.0);
-  glEnd();
-  glFlush();
-}
-
 //
 // Initialize the OpenGL state
 //
@@ -130,34 +120,32 @@ void displayCall()
   glClear(GL_COLOR_BUFFER_BIT);
   glLineWidth(3.0f);
 
-  // Get cell set and the number of cells and vertices
-  vtkm::cont::CellSetExplicit<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
-  vtkm::Id numberOfPoints = cellSet.GetNumberOfPoints();
-
-  // Get the coordinate system and coordinate data
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = 
-                                      outDataSet.GetCoordinateSystem(0).GetData();
+  // Get the cellset, coordinate system and coordinate data
+  vtkm::cont::CellSetSingleType<> &cellSet = tetDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+  const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray = 
+                                      tetDataSet.GetCoordinateSystem(0).GetData();
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
   // So use cast and call on a functor that stores that dynamic array into static array we created
-  vertexArray.Allocate(numberOfPoints);
+  vertexArray.Allocate(numberOfInPoints);
   coordArray.CastAndCall(GetVertexArray());
 
   // Draw the two triangles belonging to each quad
   vtkm::Id triangle = 0;
-  vtkm::Float32 color[4][3] = {
+  vtkm::Float32 color[4][3] =
+  {
     {1.0f, 0.0f, 0.0f},
     {0.0f, 1.0f, 0.0f},
     {0.0f, 0.0f, 1.0f},
-    {1.0f, 1.0f, 0.0f}};
+    {1.0f, 1.0f, 0.0f}
+  };
 
-  for (vtkm::Id quad = 0; quad < cellsToDisplay; quad++) {
-    for (vtkm::Id j = 0; j < 2; j++) {
+  for (vtkm::Id quad = 0; quad < cellsToDisplay; quad++)
+  {
+    for (vtkm::Id j = 0; j < 2; j++)
+    {
       vtkm::Id indx = triangle % 4;
       glColor3f(color[indx][0], color[indx][1], color[indx][2]);
-
-      vtkm::Id pointsInCell = cellSet.GetNumberOfPointsInCell(triangle);
-      vtkm::Id cellShape = cellSet.GetCellShape(triangle);
 
       // Get the indices of the vertices that make up this triangle
       vtkm::Vec<vtkm::Id, 3> triIndices;
@@ -189,30 +177,29 @@ int main(int argc, char* argv[])
   std::cout << "Parameters are [xdim ydim [# of cellsToDisplay]]" << std::endl << std::endl;
   
   // Set the problem size and number of cells to display from command line
-  if (argc >= 3) {
+  if (argc >= 3)
+  {
     dims[0] = atoi(argv[1]);
     dims[1] = atoi(argv[2]);
     cellsToDisplay = dims[0] * dims[1];
   }
-  if (argc == 4) {
+  if (argc == 4)
+  {
     cellsToDisplay = atoi(argv[3]);
   }
+  numberOfInPoints = (dims[0] + 1) * (dims[1] + 1);
 
   // Create the input uniform cell set
   vtkm::cont::DataSet inDataSet = MakeTriangulateTestDataSet(dims);
 
-  // Set number of cells and vertices in input dataset
-  vtkm::Id numberOfCells = dims[0] * dims[1];
-  vtkm::Id numberOfVertices = (dims[0] + 1) * (dims[1] + 1);
-
   // Create the output dataset explicit cell set with same coordinate system
-  vtkm::cont::CellSetExplicit<> cellSet(numberOfVertices, "cells", 2);
-  outDataSet.AddCellSet(cellSet);
-  outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
+  vtkm::cont::CellSetSingleType<> cellSet(vtkm::CellShapeTagTriangle(), "cells");
+  tetDataSet.AddCellSet(cellSet);
+  tetDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
   // Convert uniform hexahedra to tetrahedra
   tetrahedralizeFilter = new vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter>
-                                              (inDataSet, outDataSet);
+                                              (inDataSet, tetDataSet);
   tetrahedralizeFilter->Run();
 
   // Render the output dataset of tets

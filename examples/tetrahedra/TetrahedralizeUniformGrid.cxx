@@ -21,7 +21,6 @@
 #include <vtkm/worklet/TetrahedralizeUniformGrid.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
-#include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -39,10 +38,11 @@ typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 // Default size of the example
 vtkm::Id3 dims(4,4,4);
 vtkm::Id cellsToDisplay = 64;
+vtkm::Id numberOfInPoints;
 
 // Takes input uniform grid and outputs unstructured grid of tets
 vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> *tetrahedralizeFilter;
-vtkm::cont::DataSet outDataSet;
+vtkm::cont::DataSet tetDataSet;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
 vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
@@ -55,14 +55,17 @@ int mouse_state = 1;
 //
 // Construct an input data set with uniform grid of indicated dimensions, origin and spacing
 //
-vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dims)
+vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dim)
 {
   vtkm::cont::DataSet dataSet;
 
   // Place uniform grid on a set physical space so OpenGL drawing is easier
-  const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, dims[2] + 1);
+  const vtkm::Id3 vdims(dim[0] + 1, dim[1] + 1, dim[2] + 1);
   const vtkm::Vec<vtkm::Float32, 3> origin = vtkm::make_Vec(0.0f, 0.0f, 0.0f);
-  const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(1.0f/dims[0], 1.0f/dims[1], 1.0f/dims[2]);
+  const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(
+                                              1.0f/static_cast<vtkm::Float32>(dim[0]),
+                                              1.0f/static_cast<vtkm::Float32>(dim[1]),
+                                              1.0f/static_cast<vtkm::Float32>(dim[2]));
 
   // Generate coordinate system
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
@@ -113,9 +116,9 @@ void initializeGL()
   glEnable(GL_DEPTH_TEST);
   glShadeModel(GL_SMOOTH);
 
-  float white[] = { 0.8, 0.8, 0.8, 1.0 };
-  float black[] = { 0.0, 0.0, 0.0, 1.0 };
-  float lightPos[] = { 10.0, 10.0, 10.5, 1.0 };
+  float white[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+  float black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+  float lightPos[] = { 10.0f, 10.0f, 10.5f, 1.0f };
 
   glLightfv(GL_LIGHT0, GL_AMBIENT, white);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
@@ -155,30 +158,31 @@ void displayCall()
   glMultMatrixf(rotationMatrix);
   glTranslatef(-0.5f, -0.5f, -0.5f);
  
-  // Get cell set and the number of cells and vertices
-  vtkm::cont::CellSetExplicit<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
-  vtkm::Id numberOfPoints = cellSet.GetNumberOfPoints();
-
-  // Get the coordinate system and coordinate data
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = 
-                                      outDataSet.GetCoordinateSystem(0).GetData();
+  // Get the cell set, coordinate system and coordinate data
+  vtkm::cont::CellSetSingleType<> &cellSet = tetDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+  const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray = 
+                                      tetDataSet.GetCoordinateSystem(0).GetData();
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
   // So use cast and call on a functor that stores that dynamic array into static array we created
-  vertexArray.Allocate(numberOfPoints);
+  vertexArray.Allocate(numberOfInPoints);
   coordArray.CastAndCall(GetVertexArray());
 
   // Draw the five tetrahedra belonging to each hexadron
   vtkm::Id tetra = 0;
-  vtkm::Float32 color[5][3] = {
+  vtkm::Float32 color[5][3] =
+  {
     {1.0f, 0.0f, 0.0f},
     {0.0f, 1.0f, 0.0f},
     {0.0f, 0.0f, 1.0f},
     {1.0f, 0.0f, 1.0f},
-    {1.0f, 1.0f, 0.0f}};
+    {1.0f, 1.0f, 0.0f}
+  };
 
-  for (vtkm::Id hex = 0; hex < cellsToDisplay; hex++) {
-    for (vtkm::Id j = 0; j < 5; j++) {
+  for (vtkm::Id hex = 0; hex < cellsToDisplay; hex++)
+  {
+    for (vtkm::Id j = 0; j < 5; j++)
+    {
       vtkm::Id indx = tetra % 5;
       glColor3f(color[indx][0], color[indx][1], color[indx][2]);
 
@@ -265,7 +269,8 @@ int main(int argc, char* argv[])
   std::cout << "Parameters are [xdim ydim zdim [# of cellsToDisplay]]" << std::endl << std::endl;
   
   // Set the problem size and number of cells to display from command line
-  if (argc >= 4) {
+  if (argc >= 4)
+  {
     dims[0] = atoi(argv[1]);
     dims[1] = atoi(argv[2]);
     dims[2] = atoi(argv[3]);
@@ -279,17 +284,16 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSet inDataSet = MakeTetrahedralizeTestDataSet(dims);
 
   // Set number of cells and vertices in input dataset
-  vtkm::Id numberOfCells = dims[0] * dims[1] * dims[2];
-  vtkm::Id numberOfVertices = (dims[0] + 1) * (dims[1] + 1) * (dims[2] + 1);
+  numberOfInPoints = (dims[0] + 1) * (dims[1] + 1) * (dims[2] + 1);
 
   // Create the output dataset explicit cell set with same coordinate system
-  vtkm::cont::CellSetExplicit<> cellSet(numberOfVertices, "cells", 3);
-  outDataSet.AddCellSet(cellSet);
-  outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
+  vtkm::cont::CellSetSingleType<> cellSet(vtkm::CellShapeTagTetra(), "cells");
+  tetDataSet.AddCellSet(cellSet);
+  tetDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
   // Convert uniform hexahedra to tetrahedra
   tetrahedralizeFilter = new vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter>
-                                              (inDataSet, outDataSet);
+                                              (inDataSet, tetDataSet);
   tetrahedralizeFilter->Run();
 
   // Render the output dataset of tets
