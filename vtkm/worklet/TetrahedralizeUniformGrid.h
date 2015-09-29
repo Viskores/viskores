@@ -236,14 +236,12 @@ public:
 
     // Get the cell set from the output data set
     vtkm::cont::CellSetSingleType<> & cellSet =
-      OutDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+      OutDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetSingleType<> >();
 
     // Get dimensionality from the explicit cell set
     vtkm::IdComponent dim = cellSet.GetDimensionality();
     vtkm::Id outCellsPerInCell;
     vtkm::IdComponent verticesPerOutCell;
-    vtkm::UInt8 shapeOutCell;
-    vtkm::Id numberOfVertices;
     vtkm::Id numberOfInCells;
     vtkm::Id2 cdims2;
     vtkm::Id3 cdims3;
@@ -253,13 +251,10 @@ public:
     {
       outCellsPerInCell = 2;
       verticesPerOutCell = 3;
-      shapeOutCell = vtkm::CELL_SHAPE_TRIANGLE;
 
       vtkm::cont::CellSetStructured<2> &inCellSet = 
-        InDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetStructured<2> >();
+        InDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetStructured<2> >();
       cdims2 = inCellSet.GetSchedulingRange(vtkm::TopologyElementTagCell());
-
-      numberOfVertices = (cdims2[0] + 1) * (cdims2[1] + 1);
       numberOfInCells = cdims2[0] * cdims2[1];
 
     }
@@ -267,13 +262,10 @@ public:
     {
       outCellsPerInCell = 5;
       verticesPerOutCell = 4;
-      shapeOutCell = vtkm::CELL_SHAPE_TETRA;
 
       vtkm::cont::CellSetStructured<3> &inCellSet = 
-        InDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetStructured<3> >();
+        InDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetStructured<3> >();
       cdims3 = inCellSet.GetSchedulingRange(vtkm::TopologyElementTagCell());
-
-      numberOfVertices = (cdims3[0] + 1) * (cdims3[1] + 1) * (cdims3[2] + 1);
       numberOfInCells = cdims3[0] * cdims3[1] * cdims3[2];
     }
 
@@ -284,20 +276,8 @@ public:
     vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIndicesArray(0, 1, numberOfInCells);
 
     // Output dataset depends on dimension and size
-    vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-
-    shapes.Allocate(numberOfOutCells);
-    numIndices.Allocate(numberOfOutCells);
     connectivity.Allocate(numberOfOutIndices);
-
-    // Fill the arrays of shapes and number of indices needed by the cell set
-    for (vtkm::Id j = 0; j < numberOfOutCells; j++)
-    {
-      shapes.GetPortalControl().Set(j, static_cast<vtkm::UInt8>(shapeOutCell));
-      numIndices.GetPortalControl().Set(j, verticesPerOutCell);
-    }
 
     // Call the TetrahedralizeCell functor to compute tetrahedra or triangles
     if (dim == 2)
@@ -319,7 +299,6 @@ public:
     }
 
     // Add cells to output cellset
-    //cellSet.Fill(shapes, numIndices, connectivity);
     cellSet.Fill(connectivity);
   }
 };
