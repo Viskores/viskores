@@ -25,6 +25,10 @@
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <boost/type_traits/remove_const.hpp>
+VTKM_THIRDPARTY_POST_INCLUDE
+
 namespace vtkm {
 namespace cont {
 
@@ -37,8 +41,10 @@ public:
   static const vtkm::IdComponent NUM_COMPONENTS = _NUM_COMPONENTS;
   typedef _SourcePortalType SourcePortalType;
 
-  typedef vtkm::Vec<typename SourcePortalType::ValueType, NUM_COMPONENTS>
-      ValueType;
+  typedef typename
+    boost::remove_const<typename SourcePortalType::ValueType>::type
+      ComponentType;
+  typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
