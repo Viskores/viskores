@@ -345,6 +345,20 @@ public:
     : Superclass(StorageType(sourceArray)) {  }
 };
 
+/// \c make_ArrayHandleGroupVec is convenience function to generate an
+/// ArrayHandleGroupVec. It takes in an ArrayHandle and the number of components
+/// (as a specified template parameter), and returns an array handle with
+/// consecutive entries grouped in a Vec.
+///
+template<vtkm::IdComponent NUM_COMPONENTS,
+         typename ArrayHandleType>
+VTKM_CONT_EXPORT
+vtkm::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS>
+make_ArrayHandleGroupVec(const ArrayHandleType &array)
+{
+  return vtkm::cont::ArrayHandleGroupVec<ArrayHandleType,NUM_COMPONENTS>(array);
+}
+
 }
 } // namespace vtkm::cont
 

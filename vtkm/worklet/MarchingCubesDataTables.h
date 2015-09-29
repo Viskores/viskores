@@ -27,7 +27,7 @@ namespace worklet {
 
 namespace internal {
 
-const vtkm::Id numVerticesTable[256] = {
+const vtkm::IdComponent numVerticesTable[256] = {
     0,
     3,
     3,
@@ -287,7 +287,7 @@ const vtkm::Id numVerticesTable[256] = {
 };
 
 
-const vtkm::Id triTable[256*16] =
+const vtkm::IdComponent triTable[256*16] =
 {
 #define X -1
      X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X,
