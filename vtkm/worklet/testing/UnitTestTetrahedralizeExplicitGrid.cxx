@@ -21,9 +21,7 @@
 #include <vtkm/worklet/TetrahedralizeExplicitGrid.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
-#include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
-
 #include <vtkm/cont/testing/Testing.h>
 
 namespace {
@@ -37,7 +35,8 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
 
   const int nVerts = 16;
   typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-  CoordType coordinates[nVerts] = {
+  CoordType coordinates[nVerts] =
+  {
     CoordType(0, 0, 0),   // 0
     CoordType(1, 0, 0),   // 1
     CoordType(2, 0, 0),   // 2
@@ -131,7 +130,8 @@ vtkm::cont::DataSet MakeTetrahedralizeExplicitDataSet()
 
   const int nVerts = 18;
   typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-  CoordType coordinates[nVerts] = {
+  CoordType coordinates[nVerts] =
+  {
     CoordType(0, 0, 0),
     CoordType(1, 0, 0),
     CoordType(2, 0, 0),
@@ -225,7 +225,7 @@ void TestExplicitGrid2D()
 
   // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::DataSet outDataSet;
-  vtkm::cont::CellSetExplicit<> outCellSet(numberOfVertices, "cells", 2);
+  vtkm::cont::CellSetSingleType<> outCellSet(vtkm::CellShapeTagTriangle(), "cells");
   outDataSet.AddCellSet(outCellSet);
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
@@ -234,7 +234,7 @@ void TestExplicitGrid2D()
                  tetrahedralizeFilter(inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
-  vtkm::cont::CellSetExplicit<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+  vtkm::cont::CellSetSingleType<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
   vtkm::cont::CoordinateSystem coordinates = outDataSet.GetCoordinateSystem(0);
   const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = coordinates.GetData();
   std::cout << "Number of output triangles " << cellSet.GetNumberOfCells() << std::endl;
@@ -269,7 +269,7 @@ void TestExplicitGrid3D()
 
   // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::DataSet outDataSet;
-  vtkm::cont::CellSetExplicit<> outCellSet(numberOfVertices, "cells", 3);
+  vtkm::cont::CellSetSingleType<> outCellSet(vtkm::CellShapeTagTetra(), "cells");
   outDataSet.AddCellSet(outCellSet);
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
@@ -278,7 +278,7 @@ void TestExplicitGrid3D()
                  tetrahedralizeFilter(inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
-  vtkm::cont::CellSetExplicit<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+  vtkm::cont::CellSetSingleType<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
   vtkm::cont::CoordinateSystem coordinates = outDataSet.GetCoordinateSystem(0);
   const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = coordinates.GetData();
   std::cout << "Number of output tetrahedra " << cellSet.GetNumberOfCells() << std::endl;

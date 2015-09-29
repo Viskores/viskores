@@ -35,6 +35,7 @@ typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 // Takes input uniform grid and outputs unstructured grid of triangles
 vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter> *tetrahedralizeFilter;
 vtkm::cont::DataSet outDataSet;
+vtkm::Id numberOfInPoints;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
 vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
@@ -159,19 +160,6 @@ private:
   }
 };
 
-void display(void)
-{
-  glClear(GL_COLOR_BUFFER_BIT);
-  glColor3f(1.0, 1.0, 1.0);
-  glBegin(GL_POLYGON);
-    glVertex3f(0.25, 0.25, 0.0);
-    glVertex3f(0.75, 0.25, 0.0);
-    glVertex3f(0.75, 0.75, 0.0);
-    glVertex3f(0.25, 0.25, 0.0);
-  glEnd();
-  glFlush();
-}
-
 //
 // Initialize the OpenGL state
 //
@@ -193,8 +181,8 @@ void displayCall()
   glLineWidth(3.0f);
 
   // Get cell set and the number of cells and vertices
-  vtkm::cont::CellSetExplicit<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
-  vtkm::Id numberOfPoints = cellSet.GetNumberOfPoints();
+  vtkm::cont::CellSetSingleType<> cellSet = 
+              outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
 
   // Get the coordinate system and coordinate data
@@ -203,7 +191,7 @@ void displayCall()
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
   // So use cast and call on a functor that stores that dynamic array into static array we created
-  vertexArray.Allocate(numberOfPoints);
+  vertexArray.Allocate(numberOfInPoints);
   coordArray.CastAndCall(GetVertexArray());
 
   // Draw the two triangles belonging to each quad
@@ -248,10 +236,10 @@ int main(int argc, char* argv[])
   vtkm::cont::CellSetExplicit<> &inCellSet =
       inDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
-  vtkm::Id numberOfVertices = inCellSet.GetNumberOfPoints();
+  numberOfInPoints = inCellSet.GetNumberOfPoints();
 
   // Create the output dataset explicit cell set with same coordinate system
-  vtkm::cont::CellSetExplicit<> cellSet(numberOfVertices, "cells", 2);;
+  vtkm::cont::CellSetSingleType<> cellSet(vtkm::CellShapeTagTriangle(), "cells");;
   outDataSet.AddCellSet(cellSet);
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
