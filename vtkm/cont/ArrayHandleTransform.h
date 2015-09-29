@@ -205,6 +205,11 @@ public:
     return this->Array;
   }
 
+  VTKM_CONT_EXPORT
+  const FunctorType &GetFunctor() const {
+    return this->Functor;
+  }
+
 private:
   ArrayHandleType Array;
   FunctorType Functor;
@@ -237,7 +242,8 @@ public:
       FunctorType> PortalConstExecution;
 
   VTKM_CONT_EXPORT
-  ArrayTransfer(StorageType *storage) : Array(storage->GetArray()) {  }
+  ArrayTransfer(StorageType *storage)
+    : Array(storage->GetArray()), Functor(storage->GetFunctor()) {  }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
@@ -246,7 +252,7 @@ public:
 
   VTKM_CONT_EXPORT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
-    return PortalConstExecution(this->Array.PrepareForInput(Device()));
+    return PortalConstExecution(this->Array.PrepareForInput(Device()), this->Functor);
   }
 
   VTKM_CONT_EXPORT
@@ -283,6 +289,7 @@ public:
 
 private:
   ArrayHandleType Array;
+  FunctorType Functor;
 };
 
 } // namespace internal
