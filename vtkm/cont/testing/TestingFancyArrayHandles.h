@@ -457,7 +457,7 @@ private:
         {
           const ComponentType expectedValue =
               TestValue(totalIndex, ComponentType());
-          VTKM_TEST_ASSERT(result[componentIndex] == expectedValue,
+          VTKM_TEST_ASSERT(test_equal(result[componentIndex], expectedValue),
                            "Result array got wrong value.");
           totalIndex++;
         }
@@ -510,7 +510,7 @@ private:
         {
           const ComponentType result =
               resultArray.GetPortalConstControl().Get(totalIndex);
-          VTKM_TEST_ASSERT(result == expectedValue[componentIndex],
+          VTKM_TEST_ASSERT(test_equal(result, expectedValue[componentIndex]),
                            "Result array got wrong value.");
           totalIndex++;
         }
