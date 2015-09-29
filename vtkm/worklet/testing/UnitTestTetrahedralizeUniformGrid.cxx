@@ -112,9 +112,9 @@ void TestUniformGrid2D()
                  tetrahedralizeFilter(inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
-  vtkm::cont::CellSetSingleType<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+  vtkm::cont::CellSetSingleType<> &cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
   vtkm::cont::CoordinateSystem coordinates = outDataSet.GetCoordinateSystem(0);
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = coordinates.GetData();
+  const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray = coordinates.GetData();
   std::cout << "Number of output triangles " << cellSet.GetNumberOfCells() << std::endl;
   std::cout << "Number of output vertices " << coordArray.GetNumberOfValues() << std::endl;
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
@@ -162,9 +162,9 @@ void TestUniformGrid3D()
                  tetrahedralizeFilter(inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
-  vtkm::cont::CellSetSingleType<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+  vtkm::cont::CellSetSingleType<> &cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
   vtkm::cont::CoordinateSystem coordinates = outDataSet.GetCoordinateSystem(0);
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = coordinates.GetData();
+  const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray = coordinates.GetData();
   std::cout << "Number of output tetrahedra " << cellSet.GetNumberOfCells() << std::endl;
   std::cout << "Number of output vertices " << coordArray.GetNumberOfValues() << std::endl;
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;

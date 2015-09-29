@@ -240,9 +240,9 @@ public:
 
     // Get dimensionality from the explicit cell set
     vtkm::IdComponent dim = cellSet.GetDimensionality();
-    vtkm::Id outCellsPerInCell;
-    vtkm::IdComponent verticesPerOutCell;
-    vtkm::Id numberOfInCells;
+    vtkm::Id outCellsPerInCell = 0;
+    vtkm::IdComponent verticesPerOutCell = 0;
+    vtkm::Id numberOfInCells = 0;
     vtkm::Id2 cdims2;
     vtkm::Id3 cdims3;
 
