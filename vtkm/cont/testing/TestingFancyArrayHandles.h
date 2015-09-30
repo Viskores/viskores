@@ -65,6 +65,35 @@ struct ValueSquared
     { return vtkm::dot(u, u); }
 };
 
+struct ValueScale
+{
+  ValueScale() : Factor()
+  { }
+
+  ValueScale(vtkm::Float64 factor) : Factor(factor)
+  { }
+
+  template<typename ValueType>
+  VTKM_EXEC_CONT_EXPORT
+  ValueType operator()(const ValueType &v) const
+  {
+    typedef vtkm::VecTraits<ValueType> Traits;
+    typedef typename Traits::ComponentType ComponentType;
+
+    ValueType result;
+    for (vtkm::IdComponent i = 0; i < Traits::GetNumberOfComponents(v); ++i)
+    {
+      vtkm::Float64 vi = static_cast<vtkm::Float64>(Traits::GetComponent(v, i));
+      vtkm::Float64 ri = vi * this->Factor;
+      Traits::SetComponent(result, i, static_cast<ComponentType>(ri));
+    }
+    return result;
+  }
+
+private:
+  vtkm::Float64 Factor;
+};
+
 }
 
 namespace vtkm {
@@ -293,19 +322,17 @@ private:
     template< typename ValueType>
     VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
     {
-      typedef typename vtkm::VecTraits<ValueType>::ComponentType OutputValueType;
-      typedef fancy_array_detail::ValueSquared<OutputValueType> FunctorType;
+      typedef fancy_array_detail::ValueScale FunctorType;
 
       const vtkm::Id length = ARRAY_SIZE;
-      FunctorType functor;
+      FunctorType functor(2.0);
 
       vtkm::cont::ArrayHandle<ValueType> input;
       vtkm::cont::ArrayHandleTransform<
-          OutputValueType,
+          ValueType,
           vtkm::cont::ArrayHandle<ValueType>,
           FunctorType> transformed =
-            vtkm::cont::make_ArrayHandleTransform<OutputValueType>(input,
-                                                                   functor);
+            vtkm::cont::make_ArrayHandleTransform<ValueType>(input, functor);
 
       typedef typename vtkm::cont::ArrayHandle<ValueType>::PortalControl Portal;
       input.Allocate(length);
@@ -315,7 +342,7 @@ private:
         portal.Set(i, TestValue(i, ValueType()) );
         }
 
-      vtkm::cont::ArrayHandle< OutputValueType > result;
+      vtkm::cont::ArrayHandle< ValueType > result;
 
       vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
       dispatcher.Invoke(transformed, result);
@@ -323,10 +350,9 @@ private:
     //verify that the control portal works
     for(vtkm::Id i=0; i < length; ++i)
       {
-      const OutputValueType result_v = result.GetPortalConstControl().Get(i);
-      const OutputValueType correct_value = functor(TestValue(i, ValueType()));
-      const OutputValueType control_value =
-          transformed.GetPortalConstControl().Get(i);
+      const ValueType result_v = result.GetPortalConstControl().Get(i);
+      const ValueType correct_value = functor(TestValue(i, ValueType()));
+      const ValueType control_value = transformed.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
                        "Transform Handle Failed");
       VTKM_TEST_ASSERT(test_equal(result_v, control_value),
