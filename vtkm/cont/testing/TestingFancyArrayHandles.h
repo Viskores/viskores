@@ -27,6 +27,7 @@
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -413,6 +414,109 @@ private:
     }
   };
 
+  template<vtkm::IdComponent NUM_COMPONENTS>
+  struct TestGroupVecAsInput
+  {
+    template<typename ComponentType>
+    VTKM_CONT_EXPORT
+    void operator()(ComponentType) const
+    {
+      typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
+
+      ComponentType testValues[ARRAY_SIZE*NUM_COMPONENTS];
+
+      for(vtkm::Id index = 0; index < ARRAY_SIZE*NUM_COMPONENTS; ++index)
+        {
+        testValues[index] = TestValue(index, ComponentType());
+        }
+      vtkm::cont::ArrayHandle<ComponentType> baseArray =
+          vtkm::cont::make_ArrayHandle(testValues, ARRAY_SIZE*NUM_COMPONENTS);
+
+      vtkm::cont::ArrayHandleGroupVec<
+          vtkm::cont::ArrayHandle<ComponentType>, NUM_COMPONENTS> groupArray(
+            baseArray);
+      VTKM_TEST_ASSERT(groupArray.GetNumberOfValues() == ARRAY_SIZE,
+                       "Group array reporting wrong array size.");
+
+      vtkm::cont::ArrayHandle<ValueType> resultArray;
+
+      vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
+      dispatcher.Invoke(groupArray, resultArray);
+
+      VTKM_TEST_ASSERT(resultArray.GetNumberOfValues() == ARRAY_SIZE,
+                       "Got bad result array size.");
+
+      //verify that the control portal works
+      vtkm::Id totalIndex = 0;
+      for(vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+      {
+        const ValueType result = resultArray.GetPortalConstControl().Get(index);
+        for (vtkm::IdComponent componentIndex = 0;
+             componentIndex < NUM_COMPONENTS;
+             componentIndex++)
+        {
+          const ComponentType expectedValue =
+              TestValue(totalIndex, ComponentType());
+          VTKM_TEST_ASSERT(test_equal(result[componentIndex], expectedValue),
+                           "Result array got wrong value.");
+          totalIndex++;
+        }
+      }
+    }
+  };
+
+  template<vtkm::IdComponent NUM_COMPONENTS>
+  struct TestGroupVecAsOutput
+  {
+    template<typename ComponentType>
+    VTKM_CONT_EXPORT
+    void operator()(ComponentType) const
+    {
+      typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
+
+      ValueType testValues[ARRAY_SIZE];
+
+      for(vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+        {
+        testValues[index] = TestValue(index, ValueType());
+        }
+      vtkm::cont::ArrayHandle<ValueType> baseArray =
+          vtkm::cont::make_ArrayHandle(testValues, ARRAY_SIZE);
+
+      vtkm::cont::ArrayHandle<ComponentType> resultArray;
+
+      vtkm::cont::ArrayHandleGroupVec<
+          vtkm::cont::ArrayHandle<ComponentType>, NUM_COMPONENTS> groupArray(
+            resultArray);
+
+      vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
+      dispatcher.Invoke(baseArray, groupArray);
+
+      VTKM_TEST_ASSERT(groupArray.GetNumberOfValues() == ARRAY_SIZE,
+                       "Group array reporting wrong array size.");
+
+      VTKM_TEST_ASSERT(
+            resultArray.GetNumberOfValues() == ARRAY_SIZE*NUM_COMPONENTS,
+            "Got bad result array size.");
+
+      //verify that the control portal works
+      vtkm::Id totalIndex = 0;
+      for(vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+      {
+        const ValueType expectedValue = TestValue(index, ValueType());
+        for (vtkm::IdComponent componentIndex = 0;
+             componentIndex < NUM_COMPONENTS;
+             componentIndex++)
+        {
+          const ComponentType result =
+              resultArray.GetPortalConstControl().Get(totalIndex);
+          VTKM_TEST_ASSERT(test_equal(result, expectedValue[componentIndex]),
+                           "Result array got wrong value.");
+          totalIndex++;
+        }
+      }
+    }
+  };
 
   struct TestZipAsInput
   {
@@ -637,6 +741,30 @@ private:
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestCastAsInput(),
                               CastTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleGroupVec<3> as Input" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecAsInput<3>(),
+                              HandleTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleGroupVec<4> as Input" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecAsInput<4>(),
+                              HandleTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleGroupVec<2> as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecAsOutput<2>(),
+                              vtkm::TypeListTagScalarAll());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleGroupVec<3> as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecAsOutput<3>(),
+                              vtkm::TypeListTagScalarAll());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleZip as Input" << std::endl;

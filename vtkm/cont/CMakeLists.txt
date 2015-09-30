@@ -26,6 +26,7 @@ set(headers
   ArrayHandleCompositeVector.h
   ArrayHandleConstant.h
   ArrayHandleCounting.h
+  ArrayHandleGroupVec.h
   ArrayHandleImplicit.h
   ArrayHandleIndex.h
   ArrayHandlePermutation.h
