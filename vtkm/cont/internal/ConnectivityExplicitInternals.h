@@ -29,14 +29,14 @@ namespace vtkm {
 namespace cont {
 namespace internal {
 
-template<typename NumIndicesStorageTag,
-         typename IndexOffsetStorageTag,
+template<typename NumIndicesArrayType,
+         typename IndexOffsetArrayType,
          typename DeviceAdapterTag>
-void buildIndexOffsets(vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> numIndices,
-                       vtkm::cont::ArrayHandle<vtkm::Id, IndexOffsetStorageTag> offsets,
-                       DeviceAdapterTag)
+void buildIndexOffsets(const NumIndicesArrayType& numIndices,
+                       IndexOffsetArrayType& offsets,
+                       DeviceAdapterTag,
+                       boost::mpl::bool_<true>)
 {
-  typedef vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> NumIndicesArrayType;
   //We first need to make sure that NumIndices and IndexOffsetArrayType
   //have the same type so we can call scane exclusive
   typedef vtkm::cont::ArrayHandleCast< vtkm::Id,
@@ -49,13 +49,13 @@ void buildIndexOffsets(vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStor
   Algorithm::ScanExclusive( CastedNumIndicesType(numIndices), offsets);
 }
 
-template<typename NumIndicesStorageTag,
-         typename ImplicitPortalTag,
+template<typename NumIndicesArrayType,
+         typename IndexOffsetArrayType,
          typename DeviceAdapterTag>
-void buildIndexOffsets(vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag>,
-                       vtkm::cont::ArrayHandle<vtkm::Id,
-                                              vtkm::cont::StorageTagImplicit< ImplicitPortalTag > >,
-                       DeviceAdapterTag)
+void buildIndexOffsets(const NumIndicesArrayType&,
+                       IndexOffsetArrayType&,
+                       DeviceAdapterTag,
+                       boost::mpl::bool_<false>)
 {
   //this is a no-op as the storage for the offsets is an implicit handle
   //and should already be built. This signature exists so that
@@ -63,6 +63,19 @@ void buildIndexOffsets(vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStor
   //try and run Algorithm::ScanExclusive on an implicit array which will
   //cause a compile time failure.
 }
+
+template<typename ArrayHandleIndices,
+         typename ArrayHandleOffsets,
+         typename DeviceAdapterTag>
+void buildIndexOffsets(const ArrayHandleIndices& numIndices,
+                       ArrayHandleOffsets offsets,
+                       DeviceAdapterTag tag)
+{
+  typedef vtkm::cont::internal::IsWriteableArrayHandle<ArrayHandleOffsets,
+                                                       DeviceAdapterTag> IsWriteable;
+  buildIndexOffsets(numIndices, offsets, tag, typename IsWriteable::type());
+}
+
 
 template<typename ShapeStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
          typename NumIndicesStorageTag    = VTKM_DEFAULT_STORAGE_TAG,

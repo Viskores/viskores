@@ -145,9 +145,14 @@ class Storage<T, StorageTagTransform<T, ArrayHandleType, FunctorType > >
 public:
   typedef T ValueType;
 
-  typedef ArrayPortalContTransform<
-      ValueType, typename ArrayHandleType::PortalControl, FunctorType>
-    PortalType;
+  // This is meant to be invalid. Because Transform arrays are read only, you
+  // should only be able to use the const version.
+  struct PortalType
+  {
+    typedef void *ValueType;
+    typedef void *IteratorType;
+  };
+
   typedef ArrayPortalContTransform<
       ValueType, typename ArrayHandleType::PortalConstControl, FunctorType>
     PortalConstType;
@@ -232,10 +237,8 @@ public:
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
 
-  typedef vtkm::exec::internal::ArrayPortalExecTransform<
-      ValueType,
-      typename ArrayHandleType::template ExecutionTypes<Device>::Portal,
-      FunctorType> PortalExecution;
+  //meant to be an invalid writeable execution portal
+  typedef typename StorageType::PortalType PortalExecution;
   typedef vtkm::exec::internal::ArrayPortalExecTransform<
       ValueType,
       typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
