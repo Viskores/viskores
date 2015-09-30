@@ -244,6 +244,7 @@ public:
   /// Second method to add cells -- all at once.
   /// Assigns the array handles to the explicit connectivity. This is
   /// the way you can fill the memory from another system without copying
+  VTKM_CONT_EXPORT
   void Fill(const vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> &cellTypes,
             const vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> &numIndices,
             const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &connectivity,
@@ -352,7 +353,7 @@ public:
 
     vtkm::Id pairCount = 0;
     vtkm::Id maxNodeID = 0;
-    vtkm::Id numCells = GetNumberOfCells();
+    vtkm::Id numCells = this->GetNumberOfCells();
     for (vtkm::Id cell = 0, cindex = 0; cell < numCells; ++cell)
     {
       vtkm::Id npts = this->PointToCell.NumIndices.GetPortalConstControl().Get(cell);
@@ -368,12 +369,12 @@ public:
       }
     }
 
-    if(GetNumberOfPoints() <= 0)
+    if(this->GetNumberOfPoints() <= 0)
     {
       this->NumberOfPoints = maxNodeID + 1;
     }
 
-    vtkm::Id numPoints = GetNumberOfPoints();
+    vtkm::Id numPoints = this->GetNumberOfPoints();
 
     this->CellToPoint.Shapes.Allocate(numPoints);
     this->CellToPoint.NumIndices.Allocate(numPoints);

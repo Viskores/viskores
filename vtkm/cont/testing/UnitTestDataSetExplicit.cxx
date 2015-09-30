@@ -122,6 +122,18 @@ void TestDataSet_Explicit()
         correctConnectivity,
         connectivitySize),
       "Got incorrect conectivity");
+
+
+  //verify that GetIndices works properly
+  vtkm::Id expectedPointIds[4] = {2,1,3,4};
+  vtkm::Vec<vtkm::Id,4> retrievedPointIds;
+  cellset.GetIndices(1, retrievedPointIds);
+  for (vtkm::IdComponent i = 0; i < 4; i++)
+  {
+    VTKM_TEST_ASSERT(
+          retrievedPointIds[i] == expectedPointIds[i],
+          "Incorrect point ID for quad cell");
+  }
 }
 
 }
