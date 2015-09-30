@@ -317,6 +317,8 @@ public:
   void SetPointDimensions(vtkm::Id3 dims)
   {
     this->PointDimensions = dims;
+    this->CellDimensions = dims - vtkm::Id3(1);
+    this->CellDim01 = (dims[0]-1) * (dims[1]-1);
   }
 
   VTKM_EXEC_CONT_EXPORT
@@ -469,13 +471,12 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id3 FlatToLogicalPointIndex(vtkm::Id flatPointIndex) const
   {
-    vtkm::Id3 logicalPointIndex;
-    vtkm::Id pointDims01 = this->PointDimensions[0] * this->PointDimensions[1];
-    logicalPointIndex[2] = flatPointIndex / pointDims01;
-    vtkm::Id indexij = flatPointIndex % pointDims01;
-    logicalPointIndex[1] = indexij / this->PointDimensions[0];
-    logicalPointIndex[0] = indexij % this->PointDimensions[0];
-    return logicalPointIndex;
+    const vtkm::Id pointDims01 = this->PointDimensions[0] * this->PointDimensions[1];
+    const vtkm::Id indexij = flatPointIndex % pointDims01;
+
+    return vtkm::Id3(indexij % this->PointDimensions[0],
+                     indexij / this->PointDimensions[0],
+                     flatPointIndex / pointDims01);
   }
 
   VTKM_EXEC_CONT_EXPORT
@@ -489,14 +490,11 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id3 FlatToLogicalCellIndex(vtkm::Id flatCellIndex) const
   {
-    vtkm::Id3 cellDimensions = this->GetCellDimensions();
-    vtkm::Id3 logicalCellIndex;
-    vtkm::Id cellDims01 = cellDimensions[0] * cellDimensions[1];
-    logicalCellIndex[2] = flatCellIndex / cellDims01;
-    vtkm::Id indexij = flatCellIndex % cellDims01;
-    logicalCellIndex[1] = indexij / cellDimensions[0];
-    logicalCellIndex[0] = indexij % cellDimensions[0];
-    return logicalCellIndex;
+    const vtkm::Id indexij = flatCellIndex % this->CellDim01;
+    return vtkm::Id3(indexij % this->CellDimensions[0],
+                     indexij / this->CellDimensions[0],
+                     flatCellIndex / this->CellDim01
+                     );
   }
 
   VTKM_EXEC_CONT_EXPORT
@@ -510,7 +508,8 @@ public:
 
 private:
   vtkm::Id3 PointDimensions;
-
+  vtkm::Id3 CellDimensions;
+  vtkm::Id  CellDim01;
 };
 
 // We may want to generalize this class depending on how ConnectivityExplicit
