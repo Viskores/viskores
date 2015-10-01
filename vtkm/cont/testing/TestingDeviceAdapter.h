@@ -28,7 +28,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/ErrorControlOutOfMemory.h>
+#include <vtkm/cont/ErrorControlBadAllocation.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
@@ -355,7 +355,7 @@ private:
                      "or the width of vtkm::Id is not large enough to express all "
                      "array sizes.");
     }
-    catch (vtkm::cont::ErrorControlOutOfMemory error)
+    catch (vtkm::cont::ErrorControlBadAllocation error)
     {
       std::cout << "Got the expected error: " << error.GetMessage() << std::endl;
     }

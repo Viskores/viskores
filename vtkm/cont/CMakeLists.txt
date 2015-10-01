@@ -55,7 +55,6 @@ set(headers
   ErrorControlBadType.h
   ErrorControlBadValue.h
   ErrorControlInternal.h
-  ErrorControlOutOfMemory.h
   ErrorExecution.h
   Field.h
   LogicalStructure.h
