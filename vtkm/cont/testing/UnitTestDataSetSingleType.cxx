@@ -23,6 +23,9 @@
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
+#include <vtkm/worklet/CellAverage.h>
+#include <vtkm/worklet/DispatcherMapTopology.h>
+
 namespace {
 
 template<typename T, typename Storage>
@@ -44,7 +47,6 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage> &ah, const T *exp
 
   return true;
 }
-
 
 inline vtkm::cont::DataSet make_SingleTypeDataSet()
 {
@@ -96,13 +98,13 @@ inline vtkm::cont::DataSet make_SingleTypeDataSet()
 void TestDataSet_Explicit()
 {
 
-  vtkm::cont::DataSet ds = make_SingleTypeDataSet();
+  vtkm::cont::DataSet dataSet = make_SingleTypeDataSet();
 
-  ds.PrintSummary(std::cout);
+  dataSet.PrintSummary(std::cout);
 
   //verify that we can get a CellSetSingleType from a dataset
   vtkm::cont::CellSetSingleType<> &cellset =
-      ds.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+      dataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
 
 
   //verify that we can compute the cell to point connectivity
@@ -134,6 +136,21 @@ void TestDataSet_Explicit()
   VTKM_TEST_ASSERT( shapesCellToPoint.GetNumberOfValues() == 5, "Wrong number of shapes");
   VTKM_TEST_ASSERT( numIndicesCellToPoint.GetNumberOfValues() == 5, "Wrong number of indices");
   VTKM_TEST_ASSERT( connCellToPoint.GetNumberOfValues() == 9, "Wrong connectivity length");
+
+
+  //run a basic for-each topology algorithm on this
+  vtkm::cont::ArrayHandle<vtkm::Float32> result;
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
+  dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
+                    cellset,
+                    result);
+
+  vtkm::Float32 expected[3] = { 20.1333f, 30.1667f, 40.2333f };
+  for (int i = 0; i < 3; ++i)
+  {
+    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i),
+        expected[i]), "Wrong result for CellAverage worklet on explicit single type cellset data");
+  }
 
 }
 
