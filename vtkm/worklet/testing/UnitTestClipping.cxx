@@ -67,8 +67,8 @@ vtkm::cont::DataSet MakeTestDatasetExplicit()
     Coord3D(0.0f, 1.0f, 0.0f),
   };
   static vtkm::Float32 values[] = { 1.0, 2.0, 1.0, 0.0 };
-  static vtkm::Id shapes[] = { vtkm::CELL_SHAPE_TRIANGLE, vtkm::CELL_SHAPE_TRIANGLE };
-  static vtkm::Id numInds[] = { 3, 3 };
+  static vtkm::UInt8 shapes[] = { vtkm::CELL_SHAPE_TRIANGLE, vtkm::CELL_SHAPE_TRIANGLE };
+  static vtkm::IdComponent numInds[] = { 3, 3 };
   static vtkm::Id connectivity[] = {  0, 1, 3, 3, 1, 2 };
 
   vtkm::cont::DataSet ds;
@@ -76,8 +76,8 @@ vtkm::cont::DataSet MakeTestDatasetExplicit()
   ds.AddField(vtkm::cont::Field("scalars", 1, vtkm::cont::Field::ASSOC_POINTS, values,
                      numVerts));
 
-  std::vector<vtkm::Id> shapesVec(shapes, shapes + numCells);
-  std::vector<vtkm::Id> numIndsVec(numInds, numInds + numCells);
+  std::vector<vtkm::UInt8> shapesVec(shapes, shapes + numCells);
+  std::vector<vtkm::IdComponent> numIndsVec(numInds, numInds + numCells);
   std::vector<vtkm::Id> connectivityVec(connectivity, connectivity + (numCells * 3));
 
   vtkm::cont::CellSetExplicit<> cs(numVerts, "cells", 3);

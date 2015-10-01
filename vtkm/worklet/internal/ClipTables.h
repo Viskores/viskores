@@ -1687,7 +1687,7 @@ public:
     }
 
     VTKM_EXEC_EXPORT
-    vtkm::Id ValueAt(vtkm::Id idx) const
+    vtkm::UInt8 ValueAt(vtkm::Id idx) const
     {
       return this->ClipTablesDataPortal.Get(idx);
     }

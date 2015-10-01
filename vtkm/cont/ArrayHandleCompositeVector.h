@@ -251,12 +251,14 @@ public:
 
   VTKM_CONT_EXPORT
   ValueType Get(vtkm::Id vtkmNotUsed(index)) const {
-    throw vtkm::cont::ErrorControlInternal("Not implemented.");
+    throw vtkm::cont::ErrorControlInternal(
+          "Const Array Portal not implemented for composite vector.");
   }
 
   VTKM_CONT_EXPORT
   void Set(vtkm::Id vtkmNotUsed(index), ValueType vtkmNotUsed(value)) {
-    throw vtkm::cont::ErrorControlInternal("Not implemented.");
+    throw vtkm::cont::ErrorControlInternal(
+          "Const Array Portal not implemented for composite vector.");
   }
 
 private:
@@ -495,6 +497,7 @@ public:
       typename internal::ArrayHandleCompositeVectorTraits<Signature>::Tag>
     Superclass;
   typedef typename Superclass::ValueType ValueType;
+  typedef typename Superclass::StorageTag StorageTag;
 
   VTKM_CONT_EXPORT
   ArrayHandleCompositeVector() : Superclass() {  }
@@ -504,6 +507,12 @@ public:
       const vtkm::internal::FunctionInterface<Signature> &arrays,
       const ComponentMapType &sourceComponents)
     : Superclass(StorageType(arrays, sourceComponents))
+  {  }
+
+  VTKM_CONT_EXPORT
+  ArrayHandleCompositeVector(
+      const vtkm::cont::ArrayHandle<ValueType, StorageTag> &src)
+    : Superclass(src)
   {  }
 
   /// Template constructors for passing in types. You'll get weird compile

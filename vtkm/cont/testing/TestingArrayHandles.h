@@ -26,7 +26,10 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
+#include <vtkm/cont/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/Testing.h>
+
+#include <boost/type_traits/is_same.hpp>
 #include <algorithm>
 #include <vector>
 
@@ -36,6 +39,27 @@ namespace testing {
 
 namespace array_handle_testing
 {
+  template<class IteratorType, typename T>
+  void CheckValues(IteratorType begin, IteratorType end, T)
+  {
+
+    vtkm::Id index = 0;
+    for (IteratorType iter = begin; iter != end; iter++)
+    {
+      T expectedValue = TestValue(index, T());
+      if (!test_equal(*iter, expectedValue))
+      {
+        std::stringstream message;
+        message << "Got unexpected value in array." << std::endl
+                << "Expected: " << expectedValue
+                << ", Found: " << *iter << std::endl;
+        VTKM_TEST_FAIL(message.str().c_str());
+      }
+
+      index++;
+    }
+  }
+
   template<typename T>
   void CheckArray(const vtkm::cont::ArrayHandle<T> &handle)
   {
@@ -186,6 +210,42 @@ private:
         //can just make sure the allocation didn't throw an exception
       }
 
+      std::cout << "Check CopyInto from control array" << std::endl;
+      { //Release the execution resources so that data is only
+        //in the control environment
+        arrayHandle.ReleaseResourcesExecution();
+
+        //Copy data from handle into iterator
+        T array[ARRAY_SIZE];
+        arrayHandle.CopyInto(array, DeviceAdapterTag());
+        array_handle_testing::CheckValues(array, array+ARRAY_SIZE, T());
+      }
+
+      std::cout << "Check CopyInto from execution array" << std::endl;
+      { //Copy the data to the execution environment
+        vtkm::cont::ArrayHandle<T> result;
+        DispatcherPassThrough().Invoke(arrayHandle, result);
+
+        //Copy data from handle into iterator
+        T array[ARRAY_SIZE];
+        result.CopyInto(array, DeviceAdapterTag());
+        array_handle_testing::CheckValues(array, array+ARRAY_SIZE, T());
+      }
+
+      if (!boost::is_same<DeviceAdapterTag, vtkm::cont::DeviceAdapterTagSerial>::value)
+      {
+        std::cout << "Check using different device adapter" << std::endl;
+        //Copy the data to the execution environment
+        vtkm::cont::ArrayHandle<T> result;
+        DispatcherPassThrough().Invoke(arrayHandle, result);
+
+        //CopyInto allows you to copy the data even
+        //if you request it from a different device adapter
+        T array[ARRAY_SIZE];
+        result.CopyInto(array, vtkm::cont::DeviceAdapterTagSerial());
+        array_handle_testing::CheckValues(array, array+ARRAY_SIZE, T());
+      }
+
       { //as output with a length larger than the memory provided by the user
         //this should fail
         bool gotException = false;
@@ -267,6 +327,11 @@ private:
                                     TestValue(index, T()) + T(1)),
                          "Did not get result from in place operation.");
       }
+
+      VTKM_TEST_ASSERT(arrayHandle == arrayHandle,
+                       "Array handle does not equal itself.");
+      VTKM_TEST_ASSERT(arrayHandle != vtkm::cont::ArrayHandle<T>(),
+                       "Array handle equals different array.");
     }
   };
 

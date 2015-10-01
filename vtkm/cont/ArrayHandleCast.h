@@ -61,11 +61,20 @@ public:
     ArrayHandleType,
     internal::Cast<typename ArrayHandleType::ValueType, ValueType> > SuperClass;
 
+  typedef typename SuperClass::StorageTag StorageTag;
+
+  VTKM_CONT_EXPORT
   ArrayHandleCast() : SuperClass()
   { }
 
+  VTKM_CONT_EXPORT
   ArrayHandleCast(const ArrayHandleType &handle)
     : SuperClass(handle)
+  { }
+
+  VTKM_CONT_EXPORT
+  ArrayHandleCast(const vtkm::cont::ArrayHandle<ValueType, StorageTag> &src)
+    : SuperClass(src)
   { }
 };
 

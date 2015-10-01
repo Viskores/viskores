@@ -233,6 +233,7 @@ struct ParameterContainerAccess<1, FunctionSignature> {
         boost::function_types::components<FunctionSignature>, 1>::type
       ParameterType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   ParameterType
@@ -240,6 +241,7 @@ struct ParameterContainerAccess<1, FunctionSignature> {
     return parameters.Parameter1;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   void SetParameter(ParameterContainer<FunctionSignature> &parameters,
@@ -254,6 +256,7 @@ struct ParameterContainerAccess<2, FunctionSignature> {
         boost::function_types::components<FunctionSignature>, 2>::type
       ParameterType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   ParameterType
@@ -261,6 +264,7 @@ struct ParameterContainerAccess<2, FunctionSignature> {
     return parameters.Parameter2;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   void SetParameter(ParameterContainer<FunctionSignature> &parameters,
@@ -275,6 +279,7 @@ struct ParameterContainerAccess<3, FunctionSignature> {
         boost::function_types::components<FunctionSignature>, 3>::type
       ParameterType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   ParameterType
@@ -282,6 +287,7 @@ struct ParameterContainerAccess<3, FunctionSignature> {
     return parameters.Parameter3;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   void SetParameter(ParameterContainer<FunctionSignature> &parameters,
@@ -296,6 +302,7 @@ struct ParameterContainerAccess<4, FunctionSignature> {
         boost::function_types::components<FunctionSignature>, 4>::type
       ParameterType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   ParameterType
@@ -303,6 +310,7 @@ struct ParameterContainerAccess<4, FunctionSignature> {
     return parameters.Parameter4;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   void SetParameter(ParameterContainer<FunctionSignature> &parameters,
@@ -317,6 +325,7 @@ struct ParameterContainerAccess<5, FunctionSignature> {
         boost::function_types::components<FunctionSignature>, 5>::type
       ParameterType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   ParameterType
@@ -324,6 +333,7 @@ struct ParameterContainerAccess<5, FunctionSignature> {
     return parameters.Parameter5;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   void SetParameter(ParameterContainer<FunctionSignature> &parameters,
@@ -338,6 +348,7 @@ struct ParameterContainerAccess<6, FunctionSignature> {
         boost::function_types::components<FunctionSignature>, 6>::type
       ParameterType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   ParameterType
@@ -345,6 +356,7 @@ struct ParameterContainerAccess<6, FunctionSignature> {
     return parameters.Parameter6;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   void SetParameter(ParameterContainer<FunctionSignature> &parameters,
@@ -359,6 +371,7 @@ struct ParameterContainerAccess<7, FunctionSignature> {
         boost::function_types::components<FunctionSignature>, 7>::type
       ParameterType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   ParameterType
@@ -366,6 +379,7 @@ struct ParameterContainerAccess<7, FunctionSignature> {
     return parameters.Parameter7;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   void SetParameter(ParameterContainer<FunctionSignature> &parameters,
@@ -380,6 +394,7 @@ struct ParameterContainerAccess<8, FunctionSignature> {
         boost::function_types::components<FunctionSignature>, 8>::type
       ParameterType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   ParameterType
@@ -387,6 +402,7 @@ struct ParameterContainerAccess<8, FunctionSignature> {
     return parameters.Parameter8;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   void SetParameter(ParameterContainer<FunctionSignature> &parameters,
@@ -401,6 +417,7 @@ struct ParameterContainerAccess<9, FunctionSignature> {
         boost::function_types::components<FunctionSignature>, 9>::type
       ParameterType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   ParameterType
@@ -408,6 +425,7 @@ struct ParameterContainerAccess<9, FunctionSignature> {
     return parameters.Parameter9;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   void SetParameter(ParameterContainer<FunctionSignature> &parameters,
@@ -422,6 +440,7 @@ struct ParameterContainerAccess<10, FunctionSignature> {
         boost::function_types::components<FunctionSignature>, 10>::type
       ParameterType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   ParameterType
@@ -429,6 +448,7 @@ struct ParameterContainerAccess<10, FunctionSignature> {
     return parameters.Parameter10;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
   void SetParameter(ParameterContainer<FunctionSignature> &parameters,
@@ -440,6 +460,7 @@ struct ParameterContainerAccess<10, FunctionSignature> {
 
 //============================================================================
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R>
@@ -454,6 +475,7 @@ void DoInvokeCont(
   result.Value = transform(f());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor
          >
@@ -469,6 +491,7 @@ void DoInvokeCont(
   f();
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R>
@@ -483,6 +506,7 @@ void DoInvokeCont(
   result.Value = transform(f());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor
          >
@@ -498,6 +522,7 @@ void DoInvokeCont(
   f();
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R>
@@ -512,6 +537,7 @@ void DoInvokeExec(
   result.Value = transform(f());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor
          >
@@ -527,6 +553,7 @@ void DoInvokeExec(
   f();
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R>
@@ -541,6 +568,7 @@ void DoInvokeExec(
   result.Value = transform(f());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor
          >
@@ -556,6 +584,7 @@ void DoInvokeExec(
   f();
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -571,6 +600,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter1)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1>
@@ -585,6 +615,7 @@ void DoInvokeCont(
     transform(parameters.Parameter1));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -600,6 +631,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter1)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1>
@@ -614,6 +646,7 @@ void DoInvokeCont(
     transform(parameters.Parameter1));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -629,6 +662,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter1)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1>
@@ -643,6 +677,7 @@ void DoInvokeExec(
     transform(parameters.Parameter1));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -658,6 +693,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter1)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1>
@@ -672,6 +708,7 @@ void DoInvokeExec(
     transform(parameters.Parameter1));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -689,6 +726,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter2)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -705,6 +743,7 @@ void DoInvokeCont(
     transform(parameters.Parameter2));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -722,6 +761,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter2)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -738,6 +778,7 @@ void DoInvokeCont(
     transform(parameters.Parameter2));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -755,6 +796,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter2)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -771,6 +813,7 @@ void DoInvokeExec(
     transform(parameters.Parameter2));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -788,6 +831,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter2)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -804,6 +848,7 @@ void DoInvokeExec(
     transform(parameters.Parameter2));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -823,6 +868,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter3)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -841,6 +887,7 @@ void DoInvokeCont(
     transform(parameters.Parameter3));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -860,6 +907,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter3)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -878,6 +926,7 @@ void DoInvokeCont(
     transform(parameters.Parameter3));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -897,6 +946,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter3)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -915,6 +965,7 @@ void DoInvokeExec(
     transform(parameters.Parameter3));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -934,6 +985,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter3)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -952,6 +1004,7 @@ void DoInvokeExec(
     transform(parameters.Parameter3));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -973,6 +1026,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter4)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -993,6 +1047,7 @@ void DoInvokeCont(
     transform(parameters.Parameter4));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1014,6 +1069,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter4)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1034,6 +1090,7 @@ void DoInvokeCont(
     transform(parameters.Parameter4));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1055,6 +1112,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter4)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1075,6 +1133,7 @@ void DoInvokeExec(
     transform(parameters.Parameter4));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1096,6 +1155,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter4)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1116,6 +1176,7 @@ void DoInvokeExec(
     transform(parameters.Parameter4));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1139,6 +1200,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter5)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1161,6 +1223,7 @@ void DoInvokeCont(
     transform(parameters.Parameter5));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1184,6 +1247,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter5)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1206,6 +1270,7 @@ void DoInvokeCont(
     transform(parameters.Parameter5));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1229,6 +1294,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter5)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1251,6 +1317,7 @@ void DoInvokeExec(
     transform(parameters.Parameter5));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1274,6 +1341,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter5)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1296,6 +1364,7 @@ void DoInvokeExec(
     transform(parameters.Parameter5));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1321,6 +1390,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter6)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1345,6 +1415,7 @@ void DoInvokeCont(
     transform(parameters.Parameter6));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1370,6 +1441,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter6)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1394,6 +1466,7 @@ void DoInvokeCont(
     transform(parameters.Parameter6));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1419,6 +1492,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter6)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1443,6 +1517,7 @@ void DoInvokeExec(
     transform(parameters.Parameter6));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1468,6 +1543,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter6)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1492,6 +1568,7 @@ void DoInvokeExec(
     transform(parameters.Parameter6));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1519,6 +1596,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter7)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1545,6 +1623,7 @@ void DoInvokeCont(
     transform(parameters.Parameter7));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1572,6 +1651,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter7)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1598,6 +1678,7 @@ void DoInvokeCont(
     transform(parameters.Parameter7));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1625,6 +1706,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter7)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1651,6 +1733,7 @@ void DoInvokeExec(
     transform(parameters.Parameter7));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1678,6 +1761,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter7)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1704,6 +1788,7 @@ void DoInvokeExec(
     transform(parameters.Parameter7));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1733,6 +1818,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter8)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1761,6 +1847,7 @@ void DoInvokeCont(
     transform(parameters.Parameter8));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1790,6 +1877,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter8)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1818,6 +1906,7 @@ void DoInvokeCont(
     transform(parameters.Parameter8));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1847,6 +1936,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter8)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1875,6 +1965,7 @@ void DoInvokeExec(
     transform(parameters.Parameter8));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1904,6 +1995,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter8)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1932,6 +2024,7 @@ void DoInvokeExec(
     transform(parameters.Parameter8));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -1963,6 +2056,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter9)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -1993,6 +2087,7 @@ void DoInvokeCont(
     transform(parameters.Parameter9));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -2024,6 +2119,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter9)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -2054,6 +2150,7 @@ void DoInvokeCont(
     transform(parameters.Parameter9));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -2085,6 +2182,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter9)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -2115,6 +2213,7 @@ void DoInvokeExec(
     transform(parameters.Parameter9));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -2146,6 +2245,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter9)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -2176,6 +2276,7 @@ void DoInvokeExec(
     transform(parameters.Parameter9));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -2209,6 +2310,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter10)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -2241,6 +2343,7 @@ void DoInvokeCont(
     transform(parameters.Parameter10));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -2274,6 +2377,7 @@ void DoInvokeCont(
                              transform(parameters.Parameter10)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -2306,6 +2410,7 @@ void DoInvokeCont(
     transform(parameters.Parameter10));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -2339,6 +2444,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter10)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -2371,6 +2477,7 @@ void DoInvokeExec(
     transform(parameters.Parameter10));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R,
@@ -2404,6 +2511,7 @@ void DoInvokeExec(
                              transform(parameters.Parameter10)));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1,
@@ -2442,6 +2550,7 @@ void DoInvokeExec(
 template<typename OriginalSignature, typename Transform>
 struct FunctionInterfaceStaticTransformType;
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename TransformedR>
@@ -2456,6 +2565,7 @@ void DoStaticTransformCont(
   (void)transformedParameters;
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename TransformedR>
@@ -2470,6 +2580,7 @@ void DoStaticTransformExec(
   (void)transformedParameters;
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2485,6 +2596,7 @@ void DoStaticTransformCont(
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2500,6 +2612,7 @@ void DoStaticTransformExec(
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2519,6 +2632,7 @@ void DoStaticTransformCont(
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2538,6 +2652,7 @@ void DoStaticTransformExec(
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2561,6 +2676,7 @@ void DoStaticTransformCont(
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2584,6 +2700,7 @@ void DoStaticTransformExec(
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2611,6 +2728,7 @@ void DoStaticTransformCont(
     transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2638,6 +2756,7 @@ void DoStaticTransformExec(
     transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2669,6 +2788,7 @@ void DoStaticTransformCont(
     transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2700,6 +2820,7 @@ void DoStaticTransformExec(
     transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2735,6 +2856,7 @@ void DoStaticTransformCont(
     transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2770,6 +2892,7 @@ void DoStaticTransformExec(
     transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2809,6 +2932,7 @@ void DoStaticTransformCont(
     transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2848,6 +2972,7 @@ void DoStaticTransformExec(
     transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2891,6 +3016,7 @@ void DoStaticTransformCont(
     transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2934,6 +3060,7 @@ void DoStaticTransformExec(
     transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -2981,6 +3108,7 @@ void DoStaticTransformCont(
     transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename OriginalP1,
@@ -3031,6 +3159,7 @@ void DoStaticTransformExec(
 
 //============================================================================
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R>
 VTKM_CONT_EXPORT
@@ -3042,6 +3171,7 @@ void DoForEachCont(
   (void)parameters;
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R>
 VTKM_CONT_EXPORT
@@ -3053,6 +3183,7 @@ void DoForEachCont(
   (void)parameters;
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R>
 VTKM_EXEC_EXPORT
@@ -3064,6 +3195,7 @@ void DoForEachExec(
   (void)parameters;
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R>
 VTKM_EXEC_EXPORT
@@ -3075,6 +3207,7 @@ void DoForEachExec(
   (void)parameters;
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1>
@@ -3086,6 +3219,7 @@ void DoForEachCont(
   f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1>
@@ -3097,6 +3231,7 @@ void DoForEachCont(
   f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1>
@@ -3108,6 +3243,7 @@ void DoForEachExec(
   f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1>
@@ -3119,6 +3255,7 @@ void DoForEachExec(
   f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3132,6 +3269,7 @@ void DoForEachCont(
   f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3145,6 +3283,7 @@ void DoForEachCont(
   f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3158,6 +3297,7 @@ void DoForEachExec(
   f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3171,6 +3311,7 @@ void DoForEachExec(
   f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3186,6 +3327,7 @@ void DoForEachCont(
   f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3201,6 +3343,7 @@ void DoForEachCont(
   f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3216,6 +3359,7 @@ void DoForEachExec(
   f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3231,6 +3375,7 @@ void DoForEachExec(
   f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3248,6 +3393,7 @@ void DoForEachCont(
   f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3265,6 +3411,7 @@ void DoForEachCont(
   f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3282,6 +3429,7 @@ void DoForEachExec(
   f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3299,6 +3447,7 @@ void DoForEachExec(
   f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3318,6 +3467,7 @@ void DoForEachCont(
   f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3337,6 +3487,7 @@ void DoForEachCont(
   f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3356,6 +3507,7 @@ void DoForEachExec(
   f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3375,6 +3527,7 @@ void DoForEachExec(
   f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3396,6 +3549,7 @@ void DoForEachCont(
   f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3417,6 +3571,7 @@ void DoForEachCont(
   f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3438,6 +3593,7 @@ void DoForEachExec(
   f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3459,6 +3615,7 @@ void DoForEachExec(
   f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3482,6 +3639,7 @@ void DoForEachCont(
   f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3505,6 +3663,7 @@ void DoForEachCont(
   f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3528,6 +3687,7 @@ void DoForEachExec(
   f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3551,6 +3711,7 @@ void DoForEachExec(
   f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3576,6 +3737,7 @@ void DoForEachCont(
   f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3601,6 +3763,7 @@ void DoForEachCont(
   f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3626,6 +3789,7 @@ void DoForEachExec(
   f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3651,6 +3815,7 @@ void DoForEachExec(
   f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3678,6 +3843,7 @@ void DoForEachCont(
   f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3705,6 +3871,7 @@ void DoForEachCont(
   f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,
@@ -3732,6 +3899,7 @@ void DoForEachExec(
   f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1,

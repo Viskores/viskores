@@ -21,6 +21,7 @@
 #define vtk_m_cont_internal_ConnectivityExplicitInternals_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
@@ -28,24 +29,59 @@ namespace vtkm {
 namespace cont {
 namespace internal {
 
+template<typename NumIndicesStorageTag,
+         typename IndexOffsetStorageTag,
+         typename DeviceAdapterTag>
+void buildIndexOffsets(vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> numIndices,
+                       vtkm::cont::ArrayHandle<vtkm::Id, IndexOffsetStorageTag> offsets,
+                       DeviceAdapterTag)
+{
+  typedef vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> NumIndicesArrayType;
+  //We first need to make sure that NumIndices and IndexOffsetArrayType
+  //have the same type so we can call scane exclusive
+  typedef vtkm::cont::ArrayHandleCast< vtkm::Id,
+                                       NumIndicesArrayType > CastedNumIndicesType;
+
+  // Although technically we are making changes to this object, the changes
+  // are logically consistent with the previous state, so we consider it
+  // valid under const.
+  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
+  Algorithm::ScanExclusive( CastedNumIndicesType(numIndices), offsets);
+}
+
+template<typename NumIndicesStorageTag,
+         typename ImplicitPortalTag,
+         typename DeviceAdapterTag>
+void buildIndexOffsets(vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag>,
+                       vtkm::cont::ArrayHandle<vtkm::Id,
+                                              vtkm::cont::StorageTagImplicit< ImplicitPortalTag > >,
+                       DeviceAdapterTag)
+{
+  //this is a no-op as the storage for the offsets is an implicit handle
+  //and should already be built. This signature exists so that
+  //the compiler doesn't try to generate un-used code that will
+  //try and run Algorithm::ScanExclusive on an implicit array which will
+  //cause a compile time failure.
+}
+
 template<typename ShapeStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
          typename NumIndicesStorageTag    = VTKM_DEFAULT_STORAGE_TAG,
          typename ConnectivityStorageTag  = VTKM_DEFAULT_STORAGE_TAG,
          typename IndexOffsetStorageTag   = VTKM_DEFAULT_STORAGE_TAG>
 struct ConnectivityExplicitInternals
 {
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, ShapeStorageTag> ShapeArrayType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, NumIndicesStorageTag> NumIndicesArrayType;
+  typedef vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> ShapeArrayType;
+  typedef vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> NumIndicesArrayType;
   typedef vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> ConnectivityArrayType;
   typedef vtkm::cont::ArrayHandle<vtkm::Id, IndexOffsetStorageTag> IndexOffsetArrayType;
 
   ShapeArrayType Shapes;
   NumIndicesArrayType NumIndices;
   ConnectivityArrayType Connectivity;
-  IndexOffsetArrayType IndexOffsets;
+  mutable IndexOffsetArrayType IndexOffsets;
 
   bool ElementsValid;
-  bool IndexOffsetsValid;
+  mutable bool IndexOffsetsValid;
 
   VTKM_CONT_EXPORT
   ConnectivityExplicitInternals()
@@ -69,19 +105,13 @@ struct ConnectivityExplicitInternals
   void BuildIndexOffsets(Device) const
   {
     VTKM_ASSERT_CONT(this->ElementsValid);
-    if (!this->IndexOffsetsValid)
+
+    if(!this->IndexOffsetsValid)
     {
-      // Although technically we are making changes to this object, the changes
-      // are logically consistent with the previous state, so we consider it
-      // valid under const.
-      vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(
-            this->NumIndices,
-            const_cast<IndexOffsetArrayType&>(this->IndexOffsets));
-      const_cast<bool&>(this->IndexOffsetsValid) = true;
-    }
-    else
-    {
-      // Index offsets already built. Nothing to do.
+      buildIndexOffsets(this->NumIndices,
+                        this->IndexOffsets,
+                        Device());
+      this->IndexOffsetsValid = true;
     }
   }
 

@@ -131,11 +131,11 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   dataSet.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
   //Add connectivity
-  std::vector<vtkm::Id> shapes;
+  std::vector<vtkm::UInt8> shapes;
   shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
   shapes.push_back(vtkm::CELL_SHAPE_QUAD);
 
-  std::vector<vtkm::Id> numindices;
+  std::vector<vtkm::IdComponent> numindices;
   numindices.push_back(3);
   numindices.push_back(4);
 
@@ -250,19 +250,16 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
   dataSet.AddCoordinateSystem(
         vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, nVerts));
 
-  vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells", 2);
+  vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
+  connectivity.Allocate(nPointIds);
 
-  cellSet.PrepareToAddCells(nPointIds/3, nPointIds);
-  for (vtkm::Id i=0; i<nPointIds/3; i++)
+  for(vtkm::Id i=0; i < nPointIds; ++i)
   {
-    cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE,
-                    3,
-                    make_Vec<vtkm::Id>(pointId[i*3],
-                    pointId[i*3+1],
-                    pointId[i*3+2]));
+    connectivity.GetPortalControl().Set(i, pointId[i]);
   }
-  cellSet.CompleteAddingCells();
-
+  vtkm::cont::CellSetSingleType< > cellSet(vtkm::CellShapeTagTriangle(),
+                                           "cells");
+  cellSet.Fill(connectivity);
   dataSet.AddCellSet(cellSet);
 
   // copy bounds

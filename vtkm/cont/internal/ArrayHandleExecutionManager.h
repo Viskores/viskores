@@ -226,6 +226,12 @@ public:
   ArrayHandleExecutionManager(StorageType *storage)
     : Transfer(storage) {  }
 
+  template<class IteratorTypeControl>
+  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
+  {
+    this->Transfer.CopyInto(dest);
+  }
+
 protected:
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValuesImpl() const

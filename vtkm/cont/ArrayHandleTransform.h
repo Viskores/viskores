@@ -137,7 +137,7 @@ private:
 };
 
 template<typename ValueType, typename ArrayHandleType, typename FunctorType>
-struct StorageTagTransform;
+struct StorageTagTransform {  };
 
 template<typename T, typename ArrayHandleType, typename FunctorType>
 class Storage<T, StorageTagTransform<T, ArrayHandleType, FunctorType > >
@@ -310,18 +310,27 @@ class ArrayHandleTransform
   // template argument is not a valid ArrayHandle type.
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
+public:
   typedef internal::StorageTagTransform<ValueType, ArrayHandleType, FunctorType>
       StorageTag;
+
+private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
  public:
   typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> Superclass;
 
+  VTKM_CONT_EXPORT
   ArrayHandleTransform() : Superclass( ) {  }
 
+  VTKM_CONT_EXPORT
   ArrayHandleTransform(const ArrayHandleType &handle,
                        const FunctorType &functor = FunctorType())
     : Superclass(StorageType(handle, functor)) {  }
+
+  VTKM_CONT_EXPORT
+  ArrayHandleTransform(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
+    : Superclass(src) {  }
 };
 
 /// make_ArrayHandleTransform is convenience function to generate an
