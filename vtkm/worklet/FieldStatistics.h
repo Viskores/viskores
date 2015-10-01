@@ -148,7 +148,7 @@ public:
     DeviceAlgorithms::Sort(tempArray);
 
     FieldPortal tempPortal = tempArray.GetPortalControl();
-    int dataSize = tempPortal.GetNumberOfValues();
+    vtkm::Id dataSize = tempPortal.GetNumberOfValues();
     FieldType numValues = static_cast<FieldType>(dataSize);
 
     // Median

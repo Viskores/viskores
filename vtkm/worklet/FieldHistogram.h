@@ -70,13 +70,13 @@ public:
     typedef void ExecutionSignature(_1,_2);
     typedef _1 InputDomain;
   
-    vtkm::UInt32 numberOfBins;
+    vtkm::Id numberOfBins;
     FieldType minValue;
     FieldType delta;
   
     VTKM_CONT_EXPORT
     SetHistogramBin(
-          vtkm::UInt32 numberOfBins0,
+          vtkm::Id numberOfBins0,
           FieldType minValue0,
           FieldType delta0) :
                   numberOfBins(numberOfBins0),
@@ -86,7 +86,7 @@ public:
     VTKM_EXEC_EXPORT
     void operator()(const FieldType &value, vtkm::Id &binIndex) const
     {
-      binIndex = static_cast<vtkm::UInt32>((value - minValue) / delta);
+      binIndex = static_cast<vtkm::Id>((value - minValue) / delta);
       if (binIndex < 0)
         binIndex = 0;
       if (binIndex >= numberOfBins)
@@ -122,7 +122,7 @@ public:
 
   // Execute the histogram binning filter given data and number of bins
   void Run(vtkm::cont::ArrayHandle<FieldType> fieldArray, 
-           vtkm::UInt32 numberOfBins, 
+           vtkm::Id numberOfBins, 
            FieldType* minValue, 
            FieldType* delta, 
            vtkm::cont::ArrayHandle<vtkm::Id> binArray)
@@ -131,7 +131,7 @@ public:
     typedef typename vtkm::cont::ArrayHandle<FieldType>::PortalConstControl FieldPortal;
     typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl IdPortal;
 
-    int numberOfValues = fieldArray.GetNumberOfValues();
+    vtkm::Id numberOfValues = fieldArray.GetNumberOfValues();
 
     vtkm::cont::ArrayHandle<FieldType> tempArray;
     DeviceAlgorithms::Copy(fieldArray, tempArray);
