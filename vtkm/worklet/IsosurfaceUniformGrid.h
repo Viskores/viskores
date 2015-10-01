@@ -161,7 +161,7 @@ public:
 
       // Interpolate for vertex positions and associated scalar values
       const vtkm::Id triTableOffset =
-          static_cast<vtkm::Id>(cubeindex*16 + visitIndex);
+          static_cast<vtkm::Id>(cubeindex*16 + visitIndex*3);
       for (vtkm::IdComponent triVertex = 0;
            triVertex < 3;
            triVertex++)
