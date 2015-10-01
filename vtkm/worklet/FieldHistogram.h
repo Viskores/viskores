@@ -129,7 +129,6 @@ public:
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
     typedef typename vtkm::cont::ArrayHandle<FieldType>::PortalConstControl FieldPortal;
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl IdPortal;
 
     vtkm::Id numberOfValues = fieldArray.GetNumberOfValues();
 

@@ -53,9 +53,6 @@ public:
   static const vtkm::Id FOURTH = 3;
   static const vtkm::Id NUM_POWERS = 4;
 
-  static const FieldType THREE = static_cast<FieldType>(3.0);
-  static const FieldType FOUR  = static_cast<FieldType>(4.0);
-
   struct StatInfo
   {
     FieldType minimum;
@@ -199,8 +196,8 @@ public:
     // Statistics from the moments
     statinfo.variance = statinfo.centralMoment[SECOND];
     statinfo.stddev = Sqrt(statinfo.variance);
-    statinfo.skewness = statinfo.centralMoment[THIRD] / Pow(statinfo.stddev, THREE);
-    statinfo.kurtosis = statinfo.centralMoment[FOURTH] / Pow(statinfo.stddev, FOUR);
+    statinfo.skewness = statinfo.centralMoment[THIRD] / Pow(statinfo.stddev, static_cast<FieldType>(3.0));
+    statinfo.kurtosis = statinfo.centralMoment[FOURTH] / Pow(statinfo.stddev, static_cast<FieldType>(4.0));
   };
 };
 
