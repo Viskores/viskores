@@ -38,12 +38,12 @@ public:
   typedef _1 InputDomain;
 
   const vtkm::Id xdim, ydim, zdim;
-  const float xmin, ymin, zmin, xmax, ymax, zmax;
+  const vtkm::FloatDefault xmin, ymin, zmin, xmax, ymax, zmax;
   const vtkm::Id cellsPerLayer;
 
   VTKM_CONT_EXPORT
-  TangleField(const vtkm::Id3 dims, const float mins[3], const float maxs[3]) : xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
-              xmin(mins[0]), ymin(mins[1]), zmin(mins[2]), xmax(maxs[0]), ymax(maxs[1]), zmax(maxs[2]), cellsPerLayer((xdim) * (ydim)) { };
+  TangleField(const vtkm::Id3 dims, const vtkm::FloatDefault mins[3], const vtkm::FloatDefault maxs[3]) : xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
+              xmin(mins[0]), ymin(mins[1]), zmin(mins[2]), xmax(maxs[0]), ymax(maxs[1]), zmax(maxs[2]), cellsPerLayer((xdim) * (ydim)) { }
 
   VTKM_EXEC_EXPORT
   void operator()(const vtkm::Id &vertexId, vtkm::Float32 &v) const
@@ -52,9 +52,9 @@ public:
     const vtkm::Id y = (vertexId / (xdim)) % (ydim);
     const vtkm::Id z = vertexId / cellsPerLayer;
 
-    const float fx = static_cast<float>(x) / static_cast<float>(xdim-1);
-    const float fy = static_cast<float>(y) / static_cast<float>(xdim-1);
-    const float fz = static_cast<float>(z) / static_cast<float>(xdim-1);
+    const vtkm::FloatDefault fx = static_cast<vtkm::FloatDefault>(x) / static_cast<vtkm::FloatDefault>(xdim-1);
+    const vtkm::FloatDefault fy = static_cast<vtkm::FloatDefault>(y) / static_cast<vtkm::FloatDefault>(xdim-1);
+    const vtkm::FloatDefault fz = static_cast<vtkm::FloatDefault>(z) / static_cast<vtkm::FloatDefault>(xdim-1);
 
     const vtkm::Float32 xx = 3.0f*(xmin+(xmax-xmin)*(fx));
     const vtkm::Float32 yy = 3.0f*(ymin+(ymax-ymin)*(fy));
@@ -71,15 +71,22 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 
   const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, dims[2] + 1);
 
-  float mins[3] = {-1.0f, -1.0f, -1.0f};
-  float maxs[3] = {1.0f, 1.0f, 1.0f};
+  vtkm::FloatDefault mins[3] = {-1.0f, -1.0f, -1.0f};
+  vtkm::FloatDefault maxs[3] = {1.0f, 1.0f, 1.0f};
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
   vtkm::cont::ArrayHandleIndex vertexCountImplicitArray(vdims[0]*vdims[1]*vdims[2]);
   vtkm::worklet::DispatcherMapField<TangleField> tangleFieldDispatcher(TangleField(vdims, mins, maxs));
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims);
+  vtkm::Vec<vtkm::FloatDefault,3> origin(0.0f, 0.0f, 0.0f);
+  vtkm::Vec<vtkm::FloatDefault,3> spacing(
+        1.0f/static_cast<vtkm::FloatDefault>(dims[0]),
+        1.0f/static_cast<vtkm::FloatDefault>(dims[2]),
+        1.0f/static_cast<vtkm::FloatDefault>(dims[1]));
+
+  vtkm::cont::ArrayHandleUniformPointCoordinates
+      coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(
           vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
 
@@ -115,6 +122,16 @@ void TestIsosurfaceUniformGrid()
                        verticesArray,
                        normalsArray,
                        scalarsArray);
+
+  std::cout << "vertices: ";
+  vtkm::cont::printSummary_ArrayHandle(verticesArray, std::cout);
+  std::cout << std::endl;
+  std::cout << "normals: ";
+  vtkm::cont::printSummary_ArrayHandle(normalsArray, std::cout);
+  std::cout << std::endl;
+  std::cout << "scalars: ";
+  vtkm::cont::printSummary_ArrayHandle(scalarsArray, std::cout);
+  std::cout << std::endl;
 
   VTKM_TEST_ASSERT(test_equal(verticesArray.GetNumberOfValues(), 480),
                    "Wrong result for Isosurface filter");
