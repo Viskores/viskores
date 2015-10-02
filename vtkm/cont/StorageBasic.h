@@ -23,7 +23,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
-#include <vtkm/cont/ErrorControlOutOfMemory.h>
+#include <vtkm/cont/ErrorControlBadAllocation.h>
 #include <vtkm/cont/Storage.h>
 
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
@@ -284,7 +284,7 @@ public:
       this->Array = NULL;
       this->NumberOfValues = 0;
       this->AllocatedSize = 0;
-      throw vtkm::cont::ErrorControlOutOfMemory(
+      throw vtkm::cont::ErrorControlBadAllocation(
         "Could not allocate basic control array.");
     }
 
