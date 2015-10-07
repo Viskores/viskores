@@ -38,9 +38,10 @@ set(headers
   Assert.h
   CellSet.h
   CellSetExplicit.h
-  CellSetSingleType.h
   CellSetListTag.h
+  CellSetSingleType.h
   CellSetStructured.h
+  CellSetPermutation.h
   CoordinateSystem.h
   DataSet.h
   DeviceAdapter.h

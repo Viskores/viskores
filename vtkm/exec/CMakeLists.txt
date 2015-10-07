@@ -24,11 +24,13 @@ set(headers
   CellInterpolate.h
   ConnectivityExplicit.h
   ConnectivityStructured.h
+  ConnectivityStructuredPermuted.h
   ExecutionObjectBase.h
   ExecutionWholeArray.h
   FunctorBase.h
   NewtonsMethod.h
   ParametricCoordinates.h
+
   )
 
 #-----------------------------------------------------------------------------

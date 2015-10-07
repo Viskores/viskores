@@ -89,6 +89,15 @@ class CellSetExplicit : public CellSet
 public:
   typedef vtkm::Id SchedulingRangeType;
 
+  //point to cell is used when iterating cells and asking for point properties
+  typedef ConnectivityChooser< vtkm::TopologyElementTagPoint,
+                               vtkm::TopologyElementTagCell > PointToCellConnectivityType;
+
+  typedef typename PointToCellConnectivityType::ShapeArrayType ShapeArrayType;
+  typedef typename PointToCellConnectivityType::NumIndicesArrayType NumIndicesArrayType;
+  typedef typename PointToCellConnectivityType::ConnectivityArrayType ConnectivityArrayType;
+  typedef typename PointToCellConnectivityType::IndexOffsetArrayType IndexOffsetArrayType;
+
   VTKM_CONT_EXPORT
   CellSetExplicit(vtkm::Id numpoints = 0,
                   const std::string &name = std::string(),
