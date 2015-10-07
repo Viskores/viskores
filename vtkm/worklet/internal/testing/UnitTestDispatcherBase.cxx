@@ -84,40 +84,48 @@ namespace vtkm {
 namespace exec {
 namespace arg {
 
-template<typename Invocation, vtkm::IdComponent ParameterIndex>
-struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault, Invocation, ParameterIndex>
+template<>
+struct Fetch<TestFetchTagInput,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesBasic,
+             TestExecObject>
 {
   typedef vtkm::Id ValueType;
 
   VTKM_EXEC_EXPORT
-  ValueType Load(vtkm::Id index, const Invocation &invocation) const {
-    return invocation.Parameters.
-        template GetParameter<ParameterIndex>().Array[index];
+  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic indices,
+                 const TestExecObject &execObject) const {
+    return execObject.Array[indices.GetIndex()];
   }
 
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id, const Invocation &, ValueType) const {
+  void Store(const vtkm::exec::arg::ThreadIndicesBasic,
+             const TestExecObject &,
+             ValueType) const {
     // No-op
   }
 };
 
-template<typename Invocation, vtkm::IdComponent ParameterIndex>
-struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, Invocation, ParameterIndex>
+template<>
+struct Fetch<TestFetchTagOutput,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesBasic,
+             TestExecObject>
 {
   typedef vtkm::Id ValueType;
 
   VTKM_EXEC_EXPORT
-  ValueType Load(vtkm::Id, const Invocation &) const {
+  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic &,
+                 const TestExecObject &) const {
     // No-op
     return ValueType();
   }
 
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id index,
-             const Invocation &invocation,
+  void Store(const vtkm::exec::arg::ThreadIndicesBasic &indices,
+             const TestExecObject &execObject,
              ValueType value) const {
-    invocation.Parameters.template GetParameter<ParameterIndex>().Array[index] =
-        value;
+    execObject.Array[indices.GetIndex()] = value;
   }
 };
 

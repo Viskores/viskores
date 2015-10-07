@@ -20,6 +20,8 @@
 
 #include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
 
+#include <vtkm/exec/arg/ThreadIndicesBasic.h>
+
 #include <vtkm/internal/FunctionInterface.h>
 #include <vtkm/internal/Invocation.h>
 
@@ -69,8 +71,8 @@ struct FetchArrayDirectInTests
     typedef vtkm::exec::arg::Fetch<
         vtkm::exec::arg::FetchTagArrayDirectInOut,
         vtkm::exec::arg::AspectTagDefault,
-        Invocation,
-        ParamIndex> FetchType;
+        vtkm::exec::arg::ThreadIndicesBasic,
+        TestPortal<T> > FetchType;
 
     FetchType fetch;
 
@@ -78,13 +80,19 @@ struct FetchArrayDirectInTests
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      T value = fetch.Load(index, invocation);
+      vtkm::exec::arg::ThreadIndicesBasic indices(index, invocation);
+
+      T value = fetch.Load(
+            indices, invocation.Parameters.template GetParameter<ParamIndex>());
       VTKM_TEST_ASSERT(test_equal(value, TestValue(index, T())),
                        "Got invalid value from Load.");
 
       value = T(T(2)*value);
 
-      fetch.Store(index, invocation, value);
+      fetch.Store(
+            indices,
+            invocation.Parameters.template GetParameter<ParamIndex>(),
+            value);
     }
 
     VTKM_TEST_ASSERT(g_NumSets == ARRAY_SIZE,

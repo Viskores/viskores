@@ -44,16 +44,13 @@ namespace arg {
 struct FetchTagExecObject {  };
 
 
-template<typename Invocation, vtkm::IdComponent ParameterIndex>
+template<typename ThreadIndicesType, typename ExecObjectType>
 struct Fetch<
     vtkm::exec::arg::FetchTagExecObject,
     vtkm::exec::arg::AspectTagDefault,
-    Invocation,
-    ParameterIndex>
+    ThreadIndicesType,
+    ExecObjectType>
 {
-  typedef typename Invocation::ParameterInterface::
-      template ParameterType<ParameterIndex>::type ExecObjectType;
-
   // If you get a compile error here, it means you tried to use an object that
   // is not an execution object as an argument that is expected to be one. All
   // execution objects are expected to inherit from
@@ -64,14 +61,16 @@ struct Fetch<
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
-  ValueType Load(vtkm::Id vtkmNotUsed(index),
-                 const Invocation &invocation) const
+  ValueType Load(const ThreadIndicesType &vtkmNotUsed(indices),
+                 const ExecObjectType &execObject) const
   {
-    return invocation.Parameters.template GetParameter<ParameterIndex>();
+    return execObject;
   }
 
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id, const Invocation &, const ValueType &) const
+  void Store(const ThreadIndicesType &,
+             const ExecObjectType &,
+             const ValueType &) const
   {
     // Store is a no-op for this fetch.
   }

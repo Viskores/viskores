@@ -22,6 +22,8 @@
 
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 
+#include <vtkm/exec/arg/ThreadIndicesBasic.h>
+
 #include <vtkm/internal/FunctionInterface.h>
 #include <vtkm/internal/Invocation.h>
 
@@ -37,21 +39,23 @@ void TryInvocation(const Invocation &invocation)
   typedef vtkm::exec::arg::Fetch<
       vtkm::exec::arg::FetchTagArrayDirectIn, // Not used but probably common.
       vtkm::exec::arg::AspectTagWorkIndex,
-      Invocation,
-      1> FetchType;
+      vtkm::exec::arg::ThreadIndicesBasic,
+      NullParam> FetchType;
 
   FetchType fetch;
 
   for (vtkm::Id index = 0; index < 10; index++)
   {
-    vtkm::Id value = fetch.Load(index, invocation);
+    vtkm::exec::arg::ThreadIndicesBasic indices(index, invocation);
+
+    vtkm::Id value = fetch.Load(indices, NullParam());
     VTKM_TEST_ASSERT(value == index,
                      "Fetch did not give correct work index.");
 
     value++;
 
     // This should be a no-op.
-    fetch.Store(index, invocation, value);
+    fetch.Store(indices, NullParam(), value);
   }
 }
 

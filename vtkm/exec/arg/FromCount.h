@@ -22,6 +22,7 @@
 
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
+#include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
 namespace vtkm {
 namespace exec {
@@ -48,41 +49,30 @@ struct FromCount : vtkm::exec::arg::ExecutionSignatureTagBase
   typedef vtkm::exec::arg::AspectTagFromCount AspectTag;
 };
 
-template<typename FetchTag, typename Invocation>
-struct Fetch<FetchTag, vtkm::exec::arg::AspectTagFromCount, Invocation, 1>
+template<typename FetchTag,
+         typename ConnectivityType,
+         typename ExecObjectType>
+struct Fetch<FetchTag,
+             vtkm::exec::arg::AspectTagFromCount,
+             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
+             ExecObjectType>
 {
+  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>
+      ThreadIndicesType;
+
   typedef vtkm::IdComponent ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
-  ValueType Load(vtkm::Id index, const Invocation &invocation) const
+  ValueType Load(const ThreadIndicesType &indices, const ExecObjectType &) const
   {
-    // The parameter for the input domain is stored in the Invocation. (It is
-    // also in the worklet, but it is safer to get it from the Invocation
-    // in case some other dispatch operation had to modify it.)
-    const vtkm::IdComponent InputDomainIndex = Invocation::InputDomainIndex;
-
-    // ParameterInterface (from Invocation) is a FunctionInterface type
-    // containing types for all objects passed to the Invoke method (with
-    // some dynamic casting performed so objects like DynamicArrayHandle get
-    // cast to ArrayHandle).
-    typedef typename Invocation::ParameterInterface ParameterInterface;
-
-    // This is the type for the input domain (derived from the last two things
-    // we got from the Invocation).
-    typedef typename ParameterInterface::
-        template ParameterType<InputDomainIndex>::type TopologyType;
-
-    // We can pull the input domain parameter (the data specifying the input
-    // domain) from the invocation object.
-    TopologyType topology =
-        invocation.Parameters.template GetParameter<InputDomainIndex>();
-
-    return topology.GetNumberOfIndices(index);
+    return indices.GetIndicesFrom().GetNumberOfComponents();
   }
 
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id, const Invocation &, const ValueType &) const
+  void Store(const ThreadIndicesType &,
+             const ExecObjectType &,
+             const ValueType &) const
   {
     // Store is a no-op.
   }

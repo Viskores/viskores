@@ -25,6 +25,7 @@
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
 #include <vtkm/exec/arg/FetchTagExecObject.h>
+#include <vtkm/exec/arg/ThreadIndicesBasic.h>
 #include <vtkm/exec/arg/WorkIndex.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
@@ -153,6 +154,19 @@ public:
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
   typedef vtkm::TypeListTagAll AllTypes;
+
+  /// \brief Creates a \c ThreadIndices object.
+  ///
+  /// Worklet types can add additional indices by returning different object
+  /// types.
+  ///
+  template<typename Invocation>
+  VTKM_EXEC_EXPORT
+  vtkm::exec::arg::ThreadIndicesBasic
+  GetThreadIndices(vtkm::Id threadIndex, const Invocation &invocation) const
+  {
+    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex, invocation);
+  }
 };
 
 }

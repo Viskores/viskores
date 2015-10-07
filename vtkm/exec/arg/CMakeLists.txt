@@ -32,6 +32,8 @@ set(headers
   FetchTagTopologyIn.h
   FromCount.h
   FromIndices.h
+  ThreadIndicesBasic.h
+  ThreadIndicesTopologyMap.h
   WorkIndex.h
   )
 

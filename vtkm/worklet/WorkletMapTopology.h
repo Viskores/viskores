@@ -41,6 +41,7 @@
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
 #include <vtkm/exec/arg/FromCount.h>
 #include <vtkm/exec/arg/FromIndices.h>
+#include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
 namespace vtkm {
 namespace worklet {
@@ -138,9 +139,24 @@ public:
   /// \em from elements that are accessible.
   ///
   struct FromIndices : vtkm::exec::arg::FromIndices {  };
+
+  /// Topology map worklets use topology map indices.
+  ///
+  template<typename Invocation>
+  VTKM_EXEC_EXPORT
+  vtkm::exec::arg::ThreadIndicesTopologyMap<typename Invocation::InputDomainType>
+  GetThreadIndices(vtkm::Id threadIndex, const Invocation &invocation) const
+  {
+    return vtkm::exec::arg::ThreadIndicesTopologyMap<typename Invocation::InputDomainType>(
+          threadIndex, invocation);
+  }
 };
 
 /// Convenience base class for worklets that map from Points to Cells.
+///
+/// TODO: Add convenience tags like FieldInPoint, FieldInCell, etc. so that
+/// you don't have to do the mental conversion from "to" and "from" to "cell"
+/// and "point".
 ///
 class WorkletMapTopologyPointToCell
  : public WorkletMapTopology<vtkm::TopologyElementTagPoint,

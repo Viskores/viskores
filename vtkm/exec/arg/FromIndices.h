@@ -22,6 +22,7 @@
 
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
+#include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
 namespace vtkm {
 namespace exec {
@@ -49,39 +50,29 @@ struct FromIndices : vtkm::exec::arg::ExecutionSignatureTagBase
 };
 
 template<typename FetchTag,
-         typename Invocation,
-         vtkm::IdComponent ParameterIndex>
-struct Fetch<
-    FetchTag, vtkm::exec::arg::AspectTagFromIndices, Invocation, ParameterIndex>
+         typename ConnectivityType,
+         typename ExecObjectType>
+struct Fetch<FetchTag,
+             vtkm::exec::arg::AspectTagFromIndices,
+             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
+             ExecObjectType>
 {
-  // The parameter for the input domain is stored in the Invocation. (It is
-  // also in the worklet, but it is safer to get it from the Invocation
-  // in case some other dispatch operation had to modify it.)
-  static const vtkm::IdComponent InputDomainIndex =
-      Invocation::InputDomainIndex;
+  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>
+      ThreadIndicesType;
 
-  // Assuming that this fetch is used in a topology map, which is its
-  // intention, InputDomainIndex points to a connectivity object. Thus,
-  // ConnectivityType is one of the vtkm::exec::Connectivity* classes.
-  typedef typename Invocation::ParameterInterface::
-      template ParameterType<InputDomainIndex>::type ConnectivityType;
-
-  typedef typename ConnectivityType::IndicesType ValueType;
+  typedef typename ThreadIndicesType::IndicesFromType ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
-  ValueType Load(vtkm::Id index, const Invocation &invocation) const
+  ValueType Load(const ThreadIndicesType &indices, const ExecObjectType &) const
   {
-    // We can pull the input domain parameter (the data specifying the input
-    // domain) from the invocation object.
-    const ConnectivityType &connectivity =
-        invocation.Parameters.template GetParameter<InputDomainIndex>();
-
-    return connectivity.GetIndices(index);
+    return indices.GetIndicesFrom();
   }
 
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id, const Invocation &, const ValueType &) const
+  void Store(const ThreadIndicesType &,
+             const ExecObjectType &,
+             const ValueType &) const
   {
     // Store is a no-op.
   }

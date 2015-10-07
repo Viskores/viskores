@@ -157,6 +157,20 @@ struct Invocation
           this->Parameters);
   }
 
+  /// A convenience typedef for the input domain type.
+  ///
+  typedef typename ParameterInterface::
+      template ParameterType<InputDomainIndex>::type InputDomainType;
+
+  /// A convenience method to get the input domain object.
+  ///
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
+  InputDomainType GetInputDomain() const
+  {
+    return this->Parameters.template GetParameter<InputDomainIndex>();
+  }
+
   /// The state of an \c Invocation object holds the parameters of the
   /// invocation.
   ///
