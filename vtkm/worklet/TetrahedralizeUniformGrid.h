@@ -232,8 +232,6 @@ public:
   //
   void Run()
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
-
     // Get the cell set from the output data set
     vtkm::cont::CellSetSingleType<> & cellSet =
       OutDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetSingleType<> >();

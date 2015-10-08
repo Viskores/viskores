@@ -186,9 +186,6 @@ void displayCall()
       vtkm::Id indx = tetra % 5;
       glColor3f(color[indx][0], color[indx][1], color[indx][2]);
 
-      vtkm::Id pointsInCell = cellSet.GetNumberOfPointsInCell(tetra);
-      vtkm::Id cellShape = cellSet.GetCellShape(tetra);
-
       // Get the indices of the vertices that make up this tetrahedron
       vtkm::Vec<vtkm::Id, 4> tetIndices;
       cellSet.GetIndices(tetra, tetIndices);

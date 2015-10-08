@@ -38,7 +38,7 @@ vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dims)
   const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(
                                               1.0f/static_cast<vtkm::Float32>(dims[0]),
                                               1.0f/static_cast<vtkm::Float32>(dims[1]),
-                                              1.0f/static_cast<vtkm::Float32>(dims[2]));
+                                              1.0f);
 
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(
