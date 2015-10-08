@@ -25,10 +25,12 @@
 #include <vtkm/worklet/internal/ClipTables.h>
 
 #include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/ImplicitFunctions.h>
 
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/exec/FunctorBase.h>
@@ -465,86 +467,15 @@ public:
   };
 
 
-  class InterpolateField
-  {
-  public:
-    template <typename T>
-    class Kernel : public vtkm::exec::FunctorBase
-    {
-    public:
-      typedef typename vtkm::cont::ArrayHandle<T>
-        ::template ExecutionTypes<DeviceAdapter>::Portal FieldPortal;
-
-      VTKM_CONT_EXPORT
-      Kernel(EdgeInterpolationPortalConst interpolation,
-             vtkm::Id newPointsOffset,
-             FieldPortal field)
-        : Interpolation(interpolation), NewPointsOffset(newPointsOffset), Field(field)
-      {
-      }
-
-      VTKM_EXEC_EXPORT
-      void operator()(vtkm::Id idx) const
-      {
-        EdgeInterpolation ei = this->Interpolation.Get(idx);
-        T v1 = Field.Get(ei.Vertex1);
-        T v2 = Field.Get(ei.Vertex2);
-        typename VecTraits<T>::ComponentType w =
-            static_cast<typename VecTraits<T>::ComponentType>(ei.Weight);
-        Field.Set(this->NewPointsOffset + idx, (w * (v2 - v1)) + v1);
-      }
-
-    private:
-      EdgeInterpolationPortalConst Interpolation;
-      vtkm::Id NewPointsOffset;
-      FieldPortal Field;
-    };
-
-    template <typename T, typename Storage>
-    VTKM_CONT_EXPORT
-    void operator()(const vtkm::cont::ArrayHandle<T, Storage> &field) const
-    {
-      vtkm::Id count = this->InterpolationArray.GetNumberOfValues();
-
-      vtkm::cont::ArrayHandle<T, VTKM_DEFAULT_STORAGE_TAG> result;
-      internal::ResizeArrayHandle(field, field.GetNumberOfValues() + count,
-                                  result, DeviceAdapter());
-
-      Kernel<T> kernel(
-          this->InterpolationArray.PrepareForInput(DeviceAdapter()),
-          this->NewPointsOffset,
-          result.PrepareForInPlace(DeviceAdapter()));
-
-      Algorithm::Schedule(kernel, count);
-      *(this->Output) = vtkm::cont::DynamicArrayHandle(result);
-    }
-
-    VTKM_CONT_EXPORT
-    InterpolateField(
-        vtkm::cont::ArrayHandle<EdgeInterpolation> interpolationArray,
-        vtkm::Id newPointsOffset,
-        vtkm::cont::DynamicArrayHandle *output)
-      : InterpolationArray(interpolationArray),
-        NewPointsOffset(newPointsOffset),
-        Output(output)
-    {
-    }
-
-  private:
-    vtkm::cont::ArrayHandle<EdgeInterpolation> InterpolationArray;
-    vtkm::Id NewPointsOffset;
-    vtkm::cont::DynamicArrayHandle *Output;
-  };
-
-
 
   Clip()
     : ClipTablesInstance(), NewPointsInterpolation(), NewPointsOffset()
   {
   }
 
+  template <typename ScalarsArrayHandle>
   vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSet &cellSet,
-                                    const vtkm::cont::DynamicArrayHandle &scalars,
+                                    const ScalarsArrayHandle &scalars,
                                     vtkm::Float64 value)
   {
     DeviceAdapter device;
@@ -624,6 +555,120 @@ public:
 
     return output;
   }
+
+  template<typename ImplicitFunction>
+  class ClipWithImplicitFunction
+  {
+  public:
+    VTKM_CONT_EXPORT
+    ClipWithImplicitFunction(Clip *clipper, const vtkm::cont::DynamicCellSet &cellSet,
+      ImplicitFunction function, vtkm::cont::CellSetExplicit<> *result)
+      : Clipper(clipper), CellSet(&cellSet), Function(function), Result(result)
+    { }
+
+    template <typename ArrayHandleType>
+    VTKM_CONT_EXPORT
+    void operator()(const ArrayHandleType &handle) const
+    {
+      vtkm::cont::ArrayHandleTransform<
+        vtkm::FloatDefault,
+        ArrayHandleType,
+        vtkm::ImplicitFunctionValue<ImplicitFunction> > clipScalars(handle,
+                                                                    this->Function);
+
+        *this->Result = this->Clipper->Run(*this->CellSet, clipScalars, 0.0);
+    }
+
+  private:
+    Clip *Clipper;
+    const vtkm::cont::DynamicCellSet *CellSet;
+    const vtkm::ImplicitFunctionValue<ImplicitFunction> Function;
+    vtkm::cont::CellSetExplicit<> *Result;
+  };
+
+  template <typename ImplicitFunction>
+  vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSet &cellSet,
+                                    const ImplicitFunction &clipFunction,
+                                    const vtkm::cont::CoordinateSystem &coords)
+  {
+    vtkm::cont::CellSetExplicit<> output;
+    ClipWithImplicitFunction<ImplicitFunction> clip(this, cellSet, clipFunction,
+                                                    &output);
+    coords.GetData().CastAndCall(clip);
+
+    return output;
+  }
+
+  class InterpolateField
+  {
+  public:
+    template <typename T>
+    class Kernel : public vtkm::exec::FunctorBase
+    {
+    public:
+      typedef typename vtkm::cont::ArrayHandle<T>
+        ::template ExecutionTypes<DeviceAdapter>::Portal FieldPortal;
+
+      VTKM_CONT_EXPORT
+      Kernel(EdgeInterpolationPortalConst interpolation,
+             vtkm::Id newPointsOffset,
+             FieldPortal field)
+        : Interpolation(interpolation), NewPointsOffset(newPointsOffset), Field(field)
+      {
+      }
+
+      VTKM_EXEC_EXPORT
+      void operator()(vtkm::Id idx) const
+      {
+        EdgeInterpolation ei = this->Interpolation.Get(idx);
+        T v1 = Field.Get(ei.Vertex1);
+        T v2 = Field.Get(ei.Vertex2);
+        typename VecTraits<T>::ComponentType w =
+            static_cast<typename VecTraits<T>::ComponentType>(ei.Weight);
+        Field.Set(this->NewPointsOffset + idx, (w * (v2 - v1)) + v1);
+      }
+
+    private:
+      EdgeInterpolationPortalConst Interpolation;
+      vtkm::Id NewPointsOffset;
+      FieldPortal Field;
+    };
+
+    template <typename T, typename Storage>
+    VTKM_CONT_EXPORT
+    void operator()(const vtkm::cont::ArrayHandle<T, Storage> &field) const
+    {
+      vtkm::Id count = this->InterpolationArray.GetNumberOfValues();
+
+      vtkm::cont::ArrayHandle<T, VTKM_DEFAULT_STORAGE_TAG> result;
+      internal::ResizeArrayHandle(field, field.GetNumberOfValues() + count,
+                                  result, DeviceAdapter());
+
+      Kernel<T> kernel(
+          this->InterpolationArray.PrepareForInput(DeviceAdapter()),
+          this->NewPointsOffset,
+          result.PrepareForInPlace(DeviceAdapter()));
+
+      Algorithm::Schedule(kernel, count);
+      *(this->Output) = vtkm::cont::DynamicArrayHandle(result);
+    }
+
+    VTKM_CONT_EXPORT
+    InterpolateField(
+        vtkm::cont::ArrayHandle<EdgeInterpolation> interpolationArray,
+        vtkm::Id newPointsOffset,
+        vtkm::cont::DynamicArrayHandle *output)
+      : InterpolationArray(interpolationArray),
+        NewPointsOffset(newPointsOffset),
+        Output(output)
+    {
+    }
+
+  private:
+    vtkm::cont::ArrayHandle<EdgeInterpolation> InterpolationArray;
+    vtkm::Id NewPointsOffset;
+    vtkm::cont::DynamicArrayHandle *Output;
+  };
 
   template <typename DynamicArrayHandleType>
   vtkm::cont::DynamicArrayHandle ProcessField(
