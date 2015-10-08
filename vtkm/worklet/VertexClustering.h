@@ -91,23 +91,6 @@ private:
   vtkm::cont::DynamicArrayHandle *OutputValues;
 };
 
-template<typename ShapeStorageTag,
-         typename NumIndicesStorageTag,
-         typename ConnectivityStorageTag>
-vtkm::cont::CellSetExplicit<
-    ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag>
-  make_CellSetExplicit(
-      const vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> &cellTypes,
-      const vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> &numIndices,
-      const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &connectivity)
-{
-  vtkm::cont::CellSetExplicit<
-    ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag> cellSet;
-  cellSet.Fill(cellTypes, numIndices, connectivity);
-
-  return cellSet;
-}
-
 } // namespace internal
 
 template<typename DeviceAdapter>
@@ -507,10 +490,10 @@ public:
 
     output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", 0, repPointArray));
 
-    output.AddCellSet(internal::make_CellSetExplicit(
-      vtkm::cont::make_ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_TRIANGLE, cells),
-      vtkm::cont::make_ArrayHandleConstant<vtkm::IdComponent>(3, cells),
-      internal::copyFromVec(pointId3Array, DeviceAdapter())));
+    vtkm::cont::CellSetSingleType< > triangles(vtkm::CellShapeTagTriangle(),
+                                             "cells");
+    triangles.Fill( internal::copyFromVec(pointId3Array, DeviceAdapter()) );
+    output.AddCellSet( triangles );
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     vtkm::Float64 t = timer.GetElapsedTime();

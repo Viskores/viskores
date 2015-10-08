@@ -46,8 +46,9 @@ void CopyFromHandle(
   //synchronizing the control array. Last, we steal the array and pass the
   //iterator to the rendering system
   const vtkm::Id numberOfValues = handle.GetNumberOfValues();
-  const std::size_t size =
-                  sizeof(ValueType) * static_cast<std::size_t>(numberOfValues);
+  const GLsizeiptr size =
+          static_cast<GLsizeiptr>(sizeof(ValueType)) *
+          static_cast<GLsizeiptr>(numberOfValues);
 
   //Copy the data from its specialized Storage container to a basic storage
   vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic> tmpHandle;
@@ -82,8 +83,9 @@ void CopyFromHandle(
   //from the portal to OpenGL to upload to the rendering system
   //This also works because we know that this class isn't used for cuda interop,
   //instead we are specialized
-  const std::size_t size =
-      sizeof(ValueType) * static_cast<std::size_t>(handle.GetNumberOfValues());
+  const GLsizeiptr size =
+      static_cast<GLsizeiptr>(sizeof(ValueType)) *
+          static_cast<GLsizeiptr>(handle.GetNumberOfValues());
 
   //Detach the current buffer
   glBufferData(type, size, 0, GL_DYNAMIC_DRAW);

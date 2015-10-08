@@ -17,25 +17,25 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ErrorControlOutOfMemory_h
-#define vtk_m_cont_ErrorControlOutOfMemory_h
+#ifndef vtk_m_cont_ErrorControlBadAllocation_h
+#define vtk_m_cont_ErrorControlBadAllocation_h
 
 #include <vtkm/cont/ErrorControl.h>
 
 namespace vtkm {
 namespace cont {
 
-/// This class is thrown when a vtkm function or method tries to allocate an
-/// array and fails.
+/// This class is thrown when VTK-m attempts to manipulate memory that it should
+/// not.
 ///
-class ErrorControlOutOfMemory : public ErrorControl
+class ErrorControlBadAllocation : public ErrorControl
 {
 public:
-  ErrorControlOutOfMemory(const std::string &message)
+  ErrorControlBadAllocation(const std::string &message)
     : ErrorControl(message) { }
 };
 
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_cont_ErrorControlOutOfMemory_h
+#endif //vtk_m_cont_ErrorControlBadAllocation_h

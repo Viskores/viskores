@@ -58,7 +58,7 @@ public:
       {
       return this->Superclass::PrepareForInput(updateData);
       }
-    catch (vtkm::cont::ErrorControlOutOfMemory error)
+    catch (vtkm::cont::ErrorControlBadAllocation error)
       {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -77,7 +77,7 @@ public:
       {
       return this->Superclass::PrepareForInPlace(updateData);
       }
-    catch (vtkm::cont::ErrorControlOutOfMemory error)
+    catch (vtkm::cont::ErrorControlBadAllocation error)
       {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -96,7 +96,7 @@ public:
       {
       return this->Superclass::PrepareForOutput(numberOfValues);
       }
-    catch (vtkm::cont::ErrorControlOutOfMemory error)
+    catch (vtkm::cont::ErrorControlBadAllocation error)
       {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();

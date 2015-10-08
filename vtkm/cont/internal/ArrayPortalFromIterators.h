@@ -24,7 +24,7 @@
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/Assert.h>
-#include <vtkm/cont/ErrorControlOutOfMemory.h>
+#include <vtkm/cont/ErrorControlBadAllocation.h>
 
 #include <iterator>
 #include <limits>
@@ -55,7 +55,7 @@ public:
 #ifndef VTKM_USE_64BIT_IDS
     if (numberOfValues > std::numeric_limits<vtkm::Id>::max())
     {
-      throw vtkm::cont::ErrorControlOutOfMemory(
+      throw vtkm::cont::ErrorControlBadAllocation(
         "Distance of iterators larger than maximum array size. "
         "To support larger arrays, try turning on VTKM_USE_64BIT_IDS.");
     }

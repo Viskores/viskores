@@ -17,20 +17,22 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <algorithm>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <stdexcept>
-
-#include <boost/lexical_cast.hpp>
-
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/worklet/Clip.h>
+
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <stdexcept>
+
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <boost/lexical_cast.hpp>
+VTKM_THIRDPARTY_POST_INCLUDE
 
 typedef vtkm::Vec<vtkm::Float32, 3> FloatVec3;
 

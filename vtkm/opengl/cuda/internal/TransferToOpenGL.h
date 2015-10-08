@@ -21,7 +21,7 @@
 #define vtkm_opengl_cuda_internal_TransferToOpenGL_h
 
 #include <vtkm/cont/ErrorExecution.h>
-#include <vtkm/cont/ErrorControlOutOfMemory.h>
+#include <vtkm/cont/ErrorControlBadAllocation.h>
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
@@ -96,7 +96,7 @@ public:
   cError =cudaGraphicsMapResources(1,&cudaResource);
   if(cError != cudaSuccess)
     {
-    throw vtkm::cont::ErrorControlOutOfMemory(
+    throw vtkm::cont::ErrorControlBadAllocation(
             "Could not allocate enough memory in CUDA for OpenGL interop.");
     }
 

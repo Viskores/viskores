@@ -67,13 +67,9 @@ void TestVertexClustering()
       VTKM_TEST_ASSERT(test_equal(p1, p2), "Point Array mismatch");
     }
 
-  typedef vtkm::cont::CellSetExplicit<
-      vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag,
-      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag,
-      VTKM_DEFAULT_STORAGE_TAG> CellSetType;
-
+  typedef vtkm::cont::CellSetSingleType<> CellSetType;
   VTKM_TEST_ASSERT(outDataSet.GetNumberOfCellSets() == 1, "Number of output cellsets mismatch");
-  CellSetType &cellSet = outDataSet.GetCellSet(0).CastTo<CellSetType>();
+  CellSetType cellSet = outDataSet.GetCellSet(0).CastTo<CellSetType>();
   VTKM_TEST_ASSERT(
         cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell()).GetNumberOfValues() == output_pointIds,
         "Number of connectivity array elements mismatch");
