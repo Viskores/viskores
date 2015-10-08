@@ -27,6 +27,7 @@
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -373,6 +374,11 @@ void TryCastToArrayHandle()
   vtkm::cont::ArrayHandleCounting<vtkm::Id> countingArray(
         ARRAY_SIZE-1, -1, ARRAY_SIZE);
   CheckCastToArrayHandle(countingArray);
+
+  std::cout << "  Group vec array handle" << std::endl;
+  vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<vtkm::Id>, 2>
+      groupVecArray(array);
+  CheckCastToArrayHandle(groupVecArray);
 
   std::cout << "  Implicit array handle." << std::endl;
   CheckCastToArrayHandle(

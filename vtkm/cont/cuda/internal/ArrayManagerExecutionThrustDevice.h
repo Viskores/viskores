@@ -21,7 +21,7 @@
 #define vtk_m_cont_cuda_internal_ArrayManagerExecutionThrustDevice_h
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/ErrorControlOutOfMemory.h>
+#include <vtkm/cont/ErrorControlBadAllocation.h>
 #include <vtkm/cont/Storage.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
@@ -153,7 +153,7 @@ public:
       }
     catch (std::bad_alloc error)
       {
-      throw vtkm::cont::ErrorControlOutOfMemory(error.what());
+      throw vtkm::cont::ErrorControlBadAllocation(error.what());
       }
 
     return PortalType(this->Array.data(),

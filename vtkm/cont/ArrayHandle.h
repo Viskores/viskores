@@ -70,6 +70,28 @@ struct IsValidArrayHandle {
     >::type type;
 };
 
+/// Checks to see if the ArrayHandle for the given DeviceAdatper allows
+/// writing, as some ArrayHandles (Implicit) don't support writing.
+/// This check is compatable with the Boost meta-template programming
+/// library (MPL). It contains a typedef named type that is either
+//  boost::mpl::true_ or boost::mpl::false_.
+/// Both of these have a typedef named value with the respective boolean value.
+///
+template<typename ArrayHandle, typename DeviceAdapterTag>
+struct IsWriteableArrayHandle {
+private:
+  typedef typename ArrayHandle:: template ExecutionTypes<
+                                            DeviceAdapterTag > ExecutionTypes;
+  typedef typename ExecutionTypes::Portal::ValueType ValueType;
+
+  //All ArrayHandles that use ImplicitStorage as the final writable location
+  //will have a value type of void*, which is what we are trying to detect
+  typedef typename boost::remove_pointer<ValueType>::type  RawValueType;
+  typedef boost::is_void<RawValueType> IsVoidType;
+public:
+  typedef typename boost::mpl::not_<IsVoidType>::type type;
+};
+
 /// Checks to see if the given object is an array handle. This check is
 /// compatible with the Boost meta-template programming library (MPL). It
 /// contains a typedef named \c type that is either boost::mpl::true_ or
@@ -258,7 +280,7 @@ public:
   ///
   /// The allocation may be done on an already existing array, but can wipe out
   /// any data already in the array. This method can throw
-  /// ErrorControlOutOfMemory if the array cannot be allocated or
+  /// ErrorControlBadAllocation if the array cannot be allocated or
   /// ErrorControlBadValue if the allocation is not feasible (for example, the
   /// array storage is read-only).
   ///

@@ -31,7 +31,7 @@ VTKM_THIRDPARTY_POST_INCLUDE
 // pragmas. However, not all compiler support pragmas in code blocks (although
 // fortunately clang does). Thus, only use these pragmas in the instance where
 // we need it and know we can use it.
-#if defined(VTKM_CLANG) && (__apple_build_version__ >= 7000072)
+#if defined(VTKM_CLANG) && (__apple_build_version__ >= 7000072) && !defined(VTKM_CUDA)
 
 #define VTKM_STATIC_ASSERT(condition) \
   VTKM_THIRDPARTY_PRE_INCLUDE \
