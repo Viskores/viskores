@@ -218,8 +218,6 @@ void TestExplicitGrid2D()
 
   // Create the input uniform cell set
   vtkm::cont::DataSet inDataSet = MakeTriangulateExplicitDataSet();
-  vtkm::cont::CellSetExplicit<> &inCellSet =
-      inDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
   // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::DataSet outDataSet;
@@ -242,8 +240,7 @@ void TestExplicitGrid2D()
   vtkm::cont::ArrayHandle<vtkm::Float64> bounds = coordinates.GetBounds(DeviceAdapter());
   std::cout << "Bounds (" 
             << bounds.GetPortalControl().Get(0) << "," << bounds.GetPortalControl().Get(1) << ") ("
-            << bounds.GetPortalControl().Get(2) << "," << bounds.GetPortalControl().Get(3) << ") ("
-            << bounds.GetPortalControl().Get(4) << "," << bounds.GetPortalControl().Get(5) << ")" << std::endl;
+            << bounds.GetPortalControl().Get(2) << "," << bounds.GetPortalControl().Get(3) << ")" << std::endl;
 
   VTKM_TEST_ASSERT(test_equal(cellSet.GetNumberOfCells(), 14), "Wrong result for Triangulate filter");
 }
@@ -260,8 +257,6 @@ void TestExplicitGrid3D()
 
   // Create the input uniform cell set
   vtkm::cont::DataSet inDataSet = MakeTetrahedralizeExplicitDataSet();
-  vtkm::cont::CellSetExplicit<> &inCellSet =
-      inDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
   // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::DataSet outDataSet;

@@ -25,6 +25,12 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+//Suppress warnings about glut being deprecated on OSX
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 #if defined (__APPLE__)
 # include <GLUT/glut.h>
 #else
@@ -311,21 +317,21 @@ int main(int argc, char* argv[])
 {
   std::cout << "TetrahedralizeExplicitGrid Example" << std::endl;
   
-  // Create the input uniform cell set
-  vtkm::cont::DataSet inDataSet = MakeTetrahedralizeExplicitDataSet();
+  // Create the input explicit cell set
+  vtkm::cont::DataSet expInDataSet = MakeTetrahedralizeExplicitDataSet();
   vtkm::cont::CellSetExplicit<> &inCellSet =
-      inDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+      expInDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
   numberOfInPoints = inCellSet.GetNumberOfPoints();
 
   // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::CellSetSingleType<> cellSet(vtkm::CellShapeTagTetra(), "cells");
   tetOutDataSet.AddCellSet(cellSet);
-  tetOutDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
+  tetOutDataSet.AddCoordinateSystem(expInDataSet.GetCoordinateSystem(0));
 
   // Convert cells to tetrahedra
   vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter>
-                 tetrahedralizeFilter(inDataSet, tetOutDataSet);
+                 tetrahedralizeFilter(expInDataSet, tetOutDataSet);
   tetrahedralizeFilter.Run();
 
   // Render the output dataset of tets
@@ -346,3 +352,7 @@ int main(int argc, char* argv[])
 
   return 0;
 }
+
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
+# pragma GCC diagnostic pop
+#endif
