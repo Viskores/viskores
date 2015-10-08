@@ -292,7 +292,7 @@ public:
 
     // Determine the number of output cells each input cell will generate
     vtkm::cont::ArrayHandle<vtkm::Id> numOutCellArray;
-    vtkm::IdComponent verticesPerOutCell;
+    vtkm::IdComponent verticesPerOutCell = 0;
 
     if (dimensionality == 2)
     {
