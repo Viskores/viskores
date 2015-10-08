@@ -42,7 +42,7 @@ vtkm::Id numberOfInPoints;
 
 // Takes input uniform grid and outputs unstructured grid of tets
 vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter> *tetrahedralizeFilter;
-vtkm::cont::DataSet outDataSet;
+vtkm::cont::DataSet tetOutDataSet;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
 vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
@@ -212,12 +212,12 @@ void displayCall()
  
   // Get cell set and the number of cells and vertices
   vtkm::cont::CellSetSingleType<> cellSet = 
-              outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+              tetOutDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
 
   // Get the coordinate system and coordinate data
   const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = 
-                                      outDataSet.GetCoordinateSystem(0).GetData();
+                                      tetOutDataSet.GetCoordinateSystem(0).GetData();
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
   // So use cast and call on a functor that stores that dynamic array into static array we created
@@ -320,12 +320,12 @@ int main(int argc, char* argv[])
 
   // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::CellSetSingleType<> cellSet(vtkm::CellShapeTagTetra(), "cells");
-  outDataSet.AddCellSet(cellSet);
-  outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
+  tetOutDataSet.AddCellSet(cellSet);
+  tetOutDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
   // Convert cells to tetrahedra
   vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter>
-                 tetrahedralizeFilter(inDataSet, outDataSet);
+                 tetrahedralizeFilter(inDataSet, tetOutDataSet);
   tetrahedralizeFilter.Run();
 
   // Render the output dataset of tets

@@ -221,8 +221,6 @@ void TestExplicitGrid2D()
   vtkm::cont::CellSetExplicit<> &inCellSet =
       inDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
-  vtkm::Id numberOfVertices = inCellSet.GetNumberOfPoints();
-
   // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::DataSet outDataSet;
   vtkm::cont::CellSetSingleType<> outCellSet(vtkm::CellShapeTagTriangle(), "cells");
@@ -264,8 +262,6 @@ void TestExplicitGrid3D()
   vtkm::cont::DataSet inDataSet = MakeTetrahedralizeExplicitDataSet();
   vtkm::cont::CellSetExplicit<> &inCellSet =
       inDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
-
-  vtkm::Id numberOfVertices = inCellSet.GetNumberOfPoints();
 
   // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::DataSet outDataSet;

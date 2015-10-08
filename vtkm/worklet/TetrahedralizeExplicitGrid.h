@@ -279,7 +279,6 @@ public:
       OutDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetSingleType<> >();
 
     // Input dataset vertices and cell counts
-    vtkm::Id numberOfInCells = inCellSet.GetNumberOfCells();
     vtkm::Id dimensionality = inCellSet.GetDimensionality();
 
     // Input topology
