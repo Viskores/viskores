@@ -26,6 +26,7 @@ set(headers
   ArrayHandleCompositeVector.h
   ArrayHandleConstant.h
   ArrayHandleCounting.h
+  ArrayHandleGroupVec.h
   ArrayHandleImplicit.h
   ArrayHandleIndex.h
   ArrayHandlePermutation.h
@@ -37,9 +38,10 @@ set(headers
   Assert.h
   CellSet.h
   CellSetExplicit.h
-  CellSetSingleType.h
   CellSetListTag.h
+  CellSetSingleType.h
   CellSetStructured.h
+  CellSetPermutation.h
   CoordinateSystem.h
   DataSet.h
   DeviceAdapter.h
@@ -50,10 +52,10 @@ set(headers
   Error.h
   ErrorControl.h
   ErrorControlAssert.h
+  ErrorControlBadAllocation.h
   ErrorControlBadType.h
   ErrorControlBadValue.h
   ErrorControlInternal.h
-  ErrorControlOutOfMemory.h
   ErrorExecution.h
   Field.h
   LogicalStructure.h

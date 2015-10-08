@@ -145,9 +145,14 @@ class Storage<T, StorageTagTransform<T, ArrayHandleType, FunctorType > >
 public:
   typedef T ValueType;
 
-  typedef ArrayPortalContTransform<
-      ValueType, typename ArrayHandleType::PortalControl, FunctorType>
-    PortalType;
+  // This is meant to be invalid. Because Transform arrays are read only, you
+  // should only be able to use the const version.
+  struct PortalType
+  {
+    typedef void *ValueType;
+    typedef void *IteratorType;
+  };
+
   typedef ArrayPortalContTransform<
       ValueType, typename ArrayHandleType::PortalConstControl, FunctorType>
     PortalConstType;
@@ -205,6 +210,11 @@ public:
     return this->Array;
   }
 
+  VTKM_CONT_EXPORT
+  const FunctorType &GetFunctor() const {
+    return this->Functor;
+  }
+
 private:
   ArrayHandleType Array;
   FunctorType Functor;
@@ -227,17 +237,16 @@ public:
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
 
-  typedef vtkm::exec::internal::ArrayPortalExecTransform<
-      ValueType,
-      typename ArrayHandleType::template ExecutionTypes<Device>::Portal,
-      FunctorType> PortalExecution;
+  //meant to be an invalid writeable execution portal
+  typedef typename StorageType::PortalType PortalExecution;
   typedef vtkm::exec::internal::ArrayPortalExecTransform<
       ValueType,
       typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
       FunctorType> PortalConstExecution;
 
   VTKM_CONT_EXPORT
-  ArrayTransfer(StorageType *storage) : Array(storage->GetArray()) {  }
+  ArrayTransfer(StorageType *storage)
+    : Array(storage->GetArray()), Functor(storage->GetFunctor()) {  }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
@@ -246,7 +255,7 @@ public:
 
   VTKM_CONT_EXPORT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
-    return PortalConstExecution(this->Array.PrepareForInput(Device()));
+    return PortalConstExecution(this->Array.PrepareForInput(Device()), this->Functor);
   }
 
   VTKM_CONT_EXPORT
@@ -283,6 +292,7 @@ public:
 
 private:
   ArrayHandleType Array;
+  FunctorType Functor;
 };
 
 } // namespace internal

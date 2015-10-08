@@ -67,11 +67,58 @@ public:
   {
   }
 
+  /// First method to add cells -- one at a time.
+  VTKM_CONT_EXPORT
+  void PrepareToAddCells(vtkm::Id numShapes, vtkm::Id connectivityMaxLen)
+  {
+    vtkm::IdComponent numberOfPointsPerCell = this->DetermineNumberOfPoints();
+    const vtkm::UInt8 shapeTypeValue = static_cast<vtkm::UInt8>(this->CellTypeAsId);
+    this->PointToCell.Shapes =
+              vtkm::cont::make_ArrayHandleConstant(shapeTypeValue, numShapes);
+    this->PointToCell.NumIndices =
+              vtkm::cont::make_ArrayHandleConstant(numberOfPointsPerCell,
+                                                   numShapes);
+    this->PointToCell.IndexOffsets =
+              vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0),
+                                                   static_cast<vtkm::Id>(numberOfPointsPerCell),
+                                                   numShapes );
+
+    this->PointToCell.Connectivity.Allocate(connectivityMaxLen);
+
+    this->NumberOfCells = 0;
+    this->ConnectivityLength = 0;
+  }
+
+  /// Second method to add cells -- one at a time.
+  template <vtkm::IdComponent ItemTupleLength>
+  VTKM_CONT_EXPORT
+  void AddCell(vtkm::UInt8 vtkmNotUsed(cellType),
+               vtkm::IdComponent numVertices,
+               const vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+  {
+    for (vtkm::IdComponent i=0; i < numVertices; ++i)
+    {
+      this->PointToCell.Connectivity.GetPortalControl().Set(
+            this->ConnectivityLength+i,ids[i]);
+    }
+    this->NumberOfCells++;
+    this->ConnectivityLength += numVertices;
+  }
+
+  /// Third and final method to add cells -- one at a time.
+  VTKM_CONT_EXPORT
+  void CompleteAddingCells()
+  {
+    this->PointToCell.Connectivity.Shrink(this->ConnectivityLength);
+    this->PointToCell.ElementsValid = true;
+    this->PointToCell.IndexOffsetsValid = true;
+    this->NumberOfCells = this->ConnectivityLength = -1;
+  }
+
   //This is the way you can fill the memory from another system without copying
   VTKM_CONT_EXPORT
   void Fill(const vtkm::cont::ArrayHandle<vtkm::Id> &connectivity)
   {
-
     vtkm::IdComponent numberOfPointsPerCell = this->DetermineNumberOfPoints();
     const vtkm::Id length = connectivity.GetNumberOfValues() / numberOfPointsPerCell;
     const vtkm::UInt8 shapeTypeValue = static_cast<vtkm::UInt8>(this->CellTypeAsId);

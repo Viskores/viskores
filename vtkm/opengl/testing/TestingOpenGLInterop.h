@@ -77,7 +77,7 @@ private:
       {
       vtkm::opengl::TransferToOpenGL(array,handle, DeviceAdapterTag());
       }
-    catch (vtkm::cont::ErrorControlOutOfMemory error)
+    catch (vtkm::cont::ErrorControlBadAllocation error)
       {
       std::cout << error.GetMessage() << std::endl;
       VTKM_TEST_ASSERT(true==false,
@@ -99,7 +99,7 @@ private:
       {
       vtkm::opengl::TransferToOpenGL(array,handle,type, DeviceAdapterTag());
       }
-    catch (vtkm::cont::ErrorControlOutOfMemory error)
+    catch (vtkm::cont::ErrorControlBadAllocation error)
       {
       std::cout << error.GetMessage() << std::endl;
       VTKM_TEST_ASSERT(true==false,
