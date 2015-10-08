@@ -27,6 +27,7 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/ImplicitFunctions.h>
 
 #include <vector>
 
@@ -209,12 +210,66 @@ void TestClippingStrucutred()
 }
 
 template <typename DeviceAdapter>
+void TestClippingWithImplicitFunction()
+{
+  vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
+  vtkm::FloatDefault radius(0.5);
+  vtkm::Sphere sphere(center, radius);
+
+  vtkm::cont::DataSet ds = MakeTestDatasetStructured();
+
+  vtkm::worklet::Clip<DeviceAdapter> clip;
+  vtkm::cont::CellSetExplicit<> outputCellSet =
+      clip.Run(ds.GetCellSet(0), sphere, ds.GetCoordinateSystem("coordinates"));
+
+
+  vtkm::cont::DynamicArrayHandle coords =
+      clip.ProcessField(ds.GetCoordinateSystem("coordinates").GetData());
+  vtkm::cont::DynamicArrayHandle scalars =
+      clip.ProcessField(ds.GetField("scalars").GetData());
+
+  vtkm::Id connectivitySize = 36;
+  vtkm::Id fieldSize = 13;
+  vtkm::Id expectedConnectivity[] = {
+    0,  1,  9,   0,  9, 10,   0, 10,  3,   1,  2,  9,   2, 11,  9,   2,  5, 11,
+    3, 10,  6,  10, 12,  6,  12,  7,  6,  11,  5,  8,  11,  8, 12,   8,  7, 12 };
+  Coord3D expectedCoords[] = {
+    Coord3D(0.0f,  0.0f, 0.0f), Coord3D( 1.0f, 0.0f, 0.0f), Coord3D( 2.0f, 0.0f, 0.0f),
+    Coord3D(0.0f,  1.0f, 0.0f), Coord3D( 1.0f, 1.0f, 0.0f), Coord3D( 2.0f, 1.0f, 0.0f),
+    Coord3D(0.0f,  2.0f, 0.0f), Coord3D( 1.0f, 2.0f, 0.0f), Coord3D( 2.0f, 2.0f, 0.0f),
+    Coord3D(1.0f, 0.75f, 0.0f), Coord3D(0.75f, 1.0f, 0.0f), Coord3D(1.25f, 1.0f, 0.0f),
+    Coord3D(1.0f, 1.25f, 0.0f),
+  };
+  vtkm::Float32 expectedScalars[] = { 1, 1, 1, 1, 0, 1, 1, 1, 1,
+                                      0.25, 0.25, 0.25, 0.25 };
+
+  VTKM_TEST_ASSERT(
+      TestArrayHandle(outputCellSet.GetConnectivityArray(
+        vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell()),
+        expectedConnectivity,
+        connectivitySize),
+      "Got incorrect conectivity");
+
+  VTKM_TEST_ASSERT(
+      TestArrayHandle(coords.CastToArrayHandle(Coord3D(),
+        VTKM_DEFAULT_STORAGE_TAG()), expectedCoords, fieldSize),
+      "Got incorrect coordinates");
+
+  VTKM_TEST_ASSERT(
+      TestArrayHandle(scalars.CastToArrayHandle(vtkm::Float32(),
+        VTKM_DEFAULT_STORAGE_TAG()), expectedScalars, fieldSize),
+      "Got incorrect scalars");
+}
+
+template <typename DeviceAdapter>
 void TestClipping()
 {
   std::cout << "Testing explicit dataset:" << std::endl;
   TestClippingExplicit<DeviceAdapter>();
   std::cout << "Testing structured dataset:" << std::endl;
   TestClippingStrucutred<DeviceAdapter>();
+  std::cout << "Testing clipping with implicit function (sphere):" << std::endl;
+  TestClippingWithImplicitFunction<DeviceAdapter>();
 }
 
 int UnitTestClipping(int, char *[])

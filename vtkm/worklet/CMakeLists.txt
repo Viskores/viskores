@@ -31,6 +31,7 @@ set(headers
   MarchingCubesDataTables.h
   PointElevation.h
   TetrahedralizeExplicitGrid.h
+  TetrahedralizeUniformGrid.h
   VertexClustering.h
   )
 
