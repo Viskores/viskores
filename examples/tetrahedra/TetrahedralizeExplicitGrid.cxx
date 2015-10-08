@@ -41,14 +41,9 @@
 
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
-// Default size of the example
-vtkm::Id3 dims(4,4,4);
-vtkm::Id cellsToDisplay = 64;
-vtkm::Id numberOfInPoints;
-
 // Takes input uniform grid and outputs unstructured grid of tets
-vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter> *tetrahedralizeFilter;
-vtkm::cont::DataSet tetOutDataSet;
+vtkm::cont::DataSet outDataSet;
+vtkm::Id numberOfInPoints;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
 vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
@@ -218,12 +213,12 @@ void displayCall()
  
   // Get cell set and the number of cells and vertices
   vtkm::cont::CellSetSingleType<> cellSet = 
-              tetOutDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+              outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
 
   // Get the coordinate system and coordinate data
   const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = 
-                                      tetOutDataSet.GetCoordinateSystem(0).GetData();
+                                      outDataSet.GetCoordinateSystem(0).GetData();
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
   // So use cast and call on a functor that stores that dynamic array into static array we created
@@ -289,12 +284,13 @@ void mouseMove(int x, int y)
 
   if (mouse_state == 0)
   {
+    vtkm::Float32 pi = static_cast<float>(vtkm::Pi());
     Quaternion newRotX;
-    newRotX.setEulerAngles(-0.2*dx*M_PI/180.0, 0.0, 0.0);
+    newRotX.setEulerAngles(-0.2f * dx * pi / 180.0f, 0.0f, 0.0f);
     qrot.mul(newRotX);
 
     Quaternion newRotY;
-    newRotY.setEulerAngles(0.0, 0.0, -0.2*dy*M_PI/180.0);
+    newRotY.setEulerAngles(0.0f, 0.0f, -0.2f * dy * pi / 180.0f);
     qrot.mul(newRotY);
   }
   lastx = x;
@@ -318,20 +314,20 @@ int main(int argc, char* argv[])
   std::cout << "TetrahedralizeExplicitGrid Example" << std::endl;
   
   // Create the input explicit cell set
-  vtkm::cont::DataSet expInDataSet = MakeTetrahedralizeExplicitDataSet();
+  vtkm::cont::DataSet inDataSet = MakeTetrahedralizeExplicitDataSet();
   vtkm::cont::CellSetExplicit<> &inCellSet =
-      expInDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+      inDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
   numberOfInPoints = inCellSet.GetNumberOfPoints();
 
   // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::CellSetSingleType<> cellSet(vtkm::CellShapeTagTetra(), "cells");
-  tetOutDataSet.AddCellSet(cellSet);
-  tetOutDataSet.AddCoordinateSystem(expInDataSet.GetCoordinateSystem(0));
+  outDataSet.AddCellSet(cellSet);
+  outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
   // Convert cells to tetrahedra
   vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter>
-                 tetrahedralizeFilter(expInDataSet, tetOutDataSet);
+                 tetrahedralizeFilter(inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
   // Render the output dataset of tets
