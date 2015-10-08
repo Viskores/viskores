@@ -25,6 +25,12 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+//Suppress warnings about glut being deprecated on OSX
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 #if defined (__APPLE__)
 # include <GLUT/glut.h>
 #else
@@ -217,3 +223,7 @@ int main(int argc, char* argv[])
 
   return 0;
 }
+
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
+# pragma GCC diagnostic pop
+#endif
