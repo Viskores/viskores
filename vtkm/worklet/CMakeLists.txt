@@ -30,6 +30,7 @@ set(headers
   IsosurfaceUniformGrid.h
   MarchingCubesDataTables.h
   PointElevation.h
+  TetrahedralizeExplicitGrid.h
   TetrahedralizeUniformGrid.h
   VertexClustering.h
   )
