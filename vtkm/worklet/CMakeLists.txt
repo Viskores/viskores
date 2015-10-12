@@ -32,6 +32,7 @@ set(headers
   PointElevation.h
   TetrahedralizeExplicitGrid.h
   TetrahedralizeUniformGrid.h
+  Threshold.h
   VertexClustering.h
   )
 

@@ -27,6 +27,7 @@ set(unit_tests
   UnitTestSplatKernels.cxx
   UnitTestTetrahedralizeExplicitGrid.cxx
   UnitTestTetrahedralizeUniformGrid.cxx
+  UnitTestThreshold.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
