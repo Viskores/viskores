@@ -640,7 +640,7 @@ public:
     {
       vtkm::Id count = this->InterpolationArray.GetNumberOfValues();
 
-      vtkm::cont::ArrayHandle<T, VTKM_DEFAULT_STORAGE_TAG> result;
+      vtkm::cont::ArrayHandle<T> result;
       internal::ResizeArrayHandle(field, field.GetNumberOfValues() + count,
                                   result, DeviceAdapter());
 

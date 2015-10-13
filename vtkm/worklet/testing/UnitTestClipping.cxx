@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -31,11 +32,9 @@
 
 #include <vector>
 
-typedef vtkm::Vec<vtkm::Float32, 3> Coord3D;
-typedef vtkm::Vec<vtkm::Float32, 2> Coord2D;
+typedef vtkm::Vec<vtkm::FloatDefault, 3> Coord3D;
 
 const vtkm::Float32 clipValue = 0.5;
-
 
 template<typename T, typename Storage>
 bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage> &ah, const T *expected,
