@@ -217,11 +217,18 @@ public:
 
     if (numberOfValues <= 0) { return initialValue; }
 
-    // Shift right by one
+    // Shift right by one, by iterating backwards. We are required to iterate
+    //backwards so that the algorithm works correctly when the input and output
+    //are the same array, otherwise you just propagate the first element
+    //to all elements
+    //Note: We explicitly do not use std::copy_backwards for good reason.
+    //The ICC compiler has been found to improperly optimize the copy_backwards
+    //into a standard copy, causing the above issue.
     T lastValue = inputPortal.Get(numberOfValues - 1);
-    std::copy_backward(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
-                       vtkm::cont::ArrayPortalToIteratorEnd(inputPortal) - 1,
-                       vtkm::cont::ArrayPortalToIteratorEnd(outputPortal));
+    for(vtkm::Id i=(numberOfValues-1); i >= 1; --i)
+      {
+      outputPortal.Set(i, inputPortal.Get(i-1));
+      }
     outputPortal.Set(0, initialValue);
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
