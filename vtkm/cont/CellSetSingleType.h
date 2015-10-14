@@ -117,7 +117,8 @@ public:
 
   //This is the way you can fill the memory from another system without copying
   VTKM_CONT_EXPORT
-  void Fill(const vtkm::cont::ArrayHandle<vtkm::Id> &connectivity)
+  void Fill(const vtkm::cont::ArrayHandle<vtkm::Id,
+                                          ConnectivityStorageTag> &connectivity)
   {
     vtkm::IdComponent numberOfPointsPerCell = this->DetermineNumberOfPoints();
     const vtkm::Id length = connectivity.GetNumberOfValues() / numberOfPointsPerCell;
