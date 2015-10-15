@@ -142,10 +142,10 @@ public:
 
   /// Topology map worklets use topology map indices.
   ///
-  template<typename Invocation>
+  template<typename T, typename Invocation>
   VTKM_EXEC_EXPORT
   vtkm::exec::arg::ThreadIndicesTopologyMap<typename Invocation::InputDomainType>
-  GetThreadIndices(vtkm::Id threadIndex, const Invocation &invocation) const
+  GetThreadIndices(const T& threadIndex, const Invocation &invocation) const
   {
     return vtkm::exec::arg::ThreadIndicesTopologyMap<typename Invocation::InputDomainType>(
           threadIndex, invocation);

@@ -20,18 +20,17 @@
 #ifndef vtk_m_cont_tbb_internal_DeviceAdapterAlgorithmTBB_h
 #define vtk_m_cont_tbb_internal_DeviceAdapterAlgorithmTBB_h
 
-
-#include <vtkm/cont/internal/IteratorFromArrayPortal.h>
-#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
-#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
-#include <vtkm/exec/internal/ErrorMessageBuffer.h>
-#include <vtkm/Extent.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
+#include <vtkm/cont/internal/IteratorFromArrayPortal.h>
+#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
+#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
+#include <vtkm/exec/internal/ErrorMessageBuffer.h>
+#include <vtkm/Extent.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/type_traits/remove_reference.hpp>
@@ -466,17 +465,18 @@ private:
     void operator()(const ::tbb::blocked_range3d<vtkm::Id> &range) const {
       try
         {
+        vtkm::Id3 index;
         for( vtkm::Id k=range.pages().begin(); k!=range.pages().end(); ++k)
           {
-          vtkm::Id index = k * this->Dims[1] * this->Dims[0];
-          index += range.rows().begin() * this->Dims[0];
+          index[2] = k;
           for( vtkm::Id j=range.rows().begin(); j!=range.rows().end(); ++j)
             {
+            index[1] = j;
             for( vtkm::Id i=range.cols().begin(); i!=range.cols().end(); ++i)
               {
-              this->Functor(index + i);
+              index[0] = i;
+              this->Functor( index );
               }
-            index += this->Dims[0];
             }
           }
         }
