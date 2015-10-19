@@ -21,10 +21,12 @@
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
 
 #include <vtkm/exec/arg/BasicArg.h>
+#include <vtkm/exec/arg/ThreadIndicesBasic.h>
 
 #include <vtkm/StaticAssert.h>
 
 #include <vtkm/internal/FunctionInterface.h>
+#include <vtkm/internal/Invocation.h>
 
 #include <vtkm/testing/Testing.h>
 
@@ -64,40 +66,50 @@ namespace vtkm {
 namespace exec {
 namespace arg {
 
-template<typename Invocation, vtkm::IdComponent ParameterIndex>
-struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault, Invocation, ParameterIndex>
+template<>
+struct Fetch<
+    TestFetchTagInput,
+    vtkm::exec::arg::AspectTagDefault,
+    vtkm::exec::arg::ThreadIndicesBasic,
+    TestExecObject>
 {
   typedef vtkm::Id ValueType;
 
   VTKM_EXEC_EXPORT
-  ValueType Load(vtkm::Id index, const Invocation &invocation) const {
-    return *invocation.Parameters.
-        template GetParameter<ParameterIndex>().Value + 10*index;
+  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic &indices,
+                 const TestExecObject &execObject) const {
+    return *execObject.Value + 10*indices.GetIndex();
   }
 
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id, const Invocation &, ValueType) const {
+  void Store(const vtkm::exec::arg::ThreadIndicesBasic &,
+             const TestExecObject &,
+             ValueType) const {
     // No-op
   }
 };
 
-template<typename Invocation, vtkm::IdComponent ParameterIndex>
-struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, Invocation, ParameterIndex>
+template<>
+struct Fetch<
+    TestFetchTagOutput,
+    vtkm::exec::arg::AspectTagDefault,
+    vtkm::exec::arg::ThreadIndicesBasic,
+    TestExecObject>
 {
   typedef vtkm::Id ValueType;
 
   VTKM_EXEC_EXPORT
-  ValueType Load(vtkm::Id, const Invocation &) const {
+  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic &,
+                 const TestExecObject &) const {
     // No-op
     return ValueType();
   }
 
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id index,
-             const Invocation &invocation,
+  void Store(const vtkm::exec::arg::ThreadIndicesBasic &indices,
+             const TestExecObject &execObject,
              ValueType value) const {
-    *invocation.Parameters.template GetParameter<ParameterIndex>().Value =
-        value + 20*index;
+    *execObject.Value = value + 20*indices.GetIndex();
   }
 };
 
@@ -151,6 +163,14 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
   {
     return input + 200;
   }
+
+  template<typename Invocation>
+  VTKM_EXEC_EXPORT
+  vtkm::exec::arg::ThreadIndicesBasic
+  GetThreadIndices(vtkm::Id threadIndex, const Invocation &invocation) const
+  {
+    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex, invocation);
+  }
 };
 
 #define ERROR_MESSAGE "Expected worklet error."
@@ -163,21 +183,38 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
   {
     this->RaiseError(ERROR_MESSAGE);
   }
+
+  template<typename Invocation>
+  VTKM_EXEC_EXPORT
+  vtkm::exec::arg::ThreadIndicesBasic
+  GetThreadIndices(vtkm::Id threadIndex, const Invocation &invocation) const
+  {
+    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex, invocation);
+  }
 };
 
 // Check behavior of InvocationToFetch helper class.
 
 VTKM_STATIC_ASSERT(( boost::is_same<
-                        vtkm::exec::internal::detail::InvocationToFetch<InvocationType1,1>::type,
-                        vtkm::exec::arg::Fetch<TestFetchTagInput,vtkm::exec::arg::AspectTagDefault,InvocationType1,1> >::type::value ));
+                        vtkm::exec::internal::detail::InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic,InvocationType1,1>::type,
+                        vtkm::exec::arg::Fetch<TestFetchTagInput,vtkm::exec::arg::AspectTagDefault,vtkm::exec::arg::ThreadIndicesBasic,TestExecObject> >::type::value ));
 
 VTKM_STATIC_ASSERT(( boost::is_same<
-                        vtkm::exec::internal::detail::InvocationToFetch<InvocationType1,2>::type,
-                        vtkm::exec::arg::Fetch<TestFetchTagOutput,vtkm::exec::arg::AspectTagDefault,InvocationType1,2> >::type::value ));
+                        vtkm::exec::internal::detail::InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic,InvocationType1,2>::type,
+                        vtkm::exec::arg::Fetch<TestFetchTagOutput,vtkm::exec::arg::AspectTagDefault,vtkm::exec::arg::ThreadIndicesBasic,TestExecObject> >::type::value ));
 
 VTKM_STATIC_ASSERT(( boost::is_same<
-                        vtkm::exec::internal::detail::InvocationToFetch<InvocationType2,0>::type,
-                        vtkm::exec::arg::Fetch<TestFetchTagOutput,vtkm::exec::arg::AspectTagDefault,InvocationType2,2> >::type::value ));
+                        vtkm::exec::internal::detail::InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic,InvocationType2,0>::type,
+                        vtkm::exec::arg::Fetch<TestFetchTagOutput,vtkm::exec::arg::AspectTagDefault,vtkm::exec::arg::ThreadIndicesBasic,TestExecObject> >::type::value ));
+
+template<typename Invocation>
+void CallDoWorkletInvokeFunctor(const Invocation &invocation, vtkm::Id index)
+{
+  vtkm::exec::internal::detail::DoWorkletInvokeFunctor(
+        TestWorkletProxy(),
+        invocation,
+        vtkm::exec::arg::ThreadIndicesBasic(index, invocation));
+}
 
 void TestDoWorkletInvoke()
 {
@@ -192,8 +229,7 @@ void TestDoWorkletInvoke()
   std::cout << "  Try void return." << std::endl;
   inputTestValue = 5;
   outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
-  vtkm::exec::internal::detail::DoWorkletInvokeFunctor(
-        TestWorkletProxy(),
+  CallDoWorkletInvokeFunctor(
         vtkm::internal::make_Invocation<1>(execObjects,
                                            TestControlInterface(),
                                            TestExecutionInterface1()),
@@ -205,8 +241,7 @@ void TestDoWorkletInvoke()
   std::cout << "  Try return value." << std::endl;
   inputTestValue = 6;
   outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
-  vtkm::exec::internal::detail::DoWorkletInvokeFunctor(
-        TestWorkletProxy(),
+  CallDoWorkletInvokeFunctor(
         vtkm::internal::make_Invocation<1>(execObjects,
                                            TestControlInterface(),
                                            TestExecutionInterface2()),

@@ -141,7 +141,7 @@ struct CellShapeTagGeneric {
   VTKM_EXEC_CONT_EXPORT
   CellShapeTagGeneric(vtkm::IdComponent shape) : Id(shape) {  }
 
-  const vtkm::IdComponent Id;
+  vtkm::IdComponent Id;
 };
 
 

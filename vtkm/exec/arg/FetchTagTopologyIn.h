@@ -22,6 +22,7 @@
 
 #include <vtkm/exec/arg/AspectTagDefault.h>
 #include <vtkm/exec/arg/Fetch.h>
+#include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
 namespace vtkm {
 namespace exec {
@@ -36,27 +37,30 @@ namespace arg {
 struct FetchTagTopologyIn {  };
 
 
-template<typename Invocation, vtkm::IdComponent ParameterIndex>
+template<typename ConnectivityType,
+         typename ExecObjectType>
 struct Fetch<
     vtkm::exec::arg::FetchTagTopologyIn,
     vtkm::exec::arg::AspectTagDefault,
-    Invocation,
-    ParameterIndex>
+    vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
+    ExecObjectType>
 {
-  typedef typename Invocation::ParameterInterface::
-      template ParameterType<ParameterIndex>::type ExecObjectType;
+  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>
+      ThreadIndicesType;
 
-  typedef typename ExecObjectType::CellShapeTag ValueType;
+  typedef typename ThreadIndicesType::CellShapeTag ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
-  ValueType Load(vtkm::Id index, const Invocation &invocation) const
+  ValueType Load(const ThreadIndicesType &indices, const ExecObjectType &) const
   {
-    return invocation.Parameters.template GetParameter<ParameterIndex>.GetCellShape(index);
+    return indices.GetCellShape();
   }
 
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id, const Invocation &, const ValueType &) const
+  void Store(const ThreadIndicesType &,
+             const ExecObjectType &,
+             const ValueType &) const
   {
     // Store is a no-op for this fetch.
   }

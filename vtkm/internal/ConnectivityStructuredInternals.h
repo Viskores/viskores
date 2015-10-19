@@ -209,12 +209,10 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL>
-      GetPointsOfCell(vtkm::Id cellIndex) const
+      GetPointsOfCell(const SchedulingRangeType &logicalCellIndex) const
   {
-    vtkm::Id2 ij = this->FlatToLogicalCellIndex(cellIndex);
-
     vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> pointIds;
-    pointIds[0] = this->LogicalToFlatPointIndex(ij);
+    pointIds[0] = this->LogicalToFlatPointIndex(logicalCellIndex);
     pointIds[1] = pointIds[0] + 1;
     pointIds[2] = pointIds[1] + this->PointDimensions[0];
     pointIds[3] = pointIds[2] - 1;
@@ -222,9 +220,16 @@ public:
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
+  vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL>
+      GetPointsOfCell(vtkm::Id cellIndex) const
   {
-    vtkm::Id2 ij = this->FlatToLogicalPointIndex(pointIndex);
+    return this->GetPointsOfCell(this->FlatToLogicalCellIndex(cellIndex));
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::IdComponent
+  GetNumberOfCellsIncidentOnPoint(const SchedulingRangeType &ij) const
+  {
     return
         (static_cast<vtkm::IdComponent>((ij[0] > 0) && (ij[1] > 0))
          + static_cast<vtkm::IdComponent>((ij[0] < this->PointDimensions[0]-1) && (ij[1] > 0))
@@ -234,12 +239,18 @@ public:
   }
 
   VTKM_EXEC_CONT_EXPORT
+  vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
+  {
+    return this->GetNumberOfCellsIncidentOnPoint(
+          this->FlatToLogicalPointIndex(pointIndex));
+  }
+
+  VTKM_EXEC_CONT_EXPORT
   vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT>
-  GetCellsOfPoint(vtkm::Id pointIndex) const
+  GetCellsOfPoint(const SchedulingRangeType &ij) const
   {
     vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT> cellIds;
 
-    vtkm::Id2 ij = this->FlatToLogicalPointIndex(pointIndex);
     if ((ij[0] > 0) && (ij[1] > 0))
     {
       cellIds.Append(this->LogicalToFlatCellIndex(ij - vtkm::Id2(1,1)));
@@ -258,6 +269,13 @@ public:
     }
 
     return cellIds;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT>
+  GetCellsOfPoint(vtkm::Id pointIndex) const
+  {
+    return this->GetCellsOfPoint(this->FlatToLogicalPointIndex(pointIndex));
   }
 
   VTKM_EXEC_CONT_EXPORT
@@ -365,10 +383,9 @@ public:
   typedef vtkm::CellShapeTagHexahedron CellShapeTag;
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id cellIndex) const
+  vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL>
+  GetPointsOfCell(const SchedulingRangeType &ijk) const
   {
-    vtkm::Id3 ijk = this->FlatToLogicalCellIndex(cellIndex);
-
     vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> pointIds;
     pointIds[0] = (ijk[2] * this->PointDimensions[1] + ijk[1]) * this->PointDimensions[0] + ijk[0];
     pointIds[1] = pointIds[0] + 1;
@@ -383,10 +400,16 @@ public:
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
+  vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL>
+  GetPointsOfCell(vtkm::Id cellIndex) const
   {
-    vtkm::Id3 ijk = this->FlatToLogicalPointIndex(pointIndex);
+    return this->GetPointsOfCell(this->FlatToLogicalCellIndex(cellIndex));
+  }
 
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::IdComponent
+  GetNumberOfCellsIncidentOnPoint(const SchedulingRangeType &ijk) const
+  {
     return (
             static_cast<vtkm::IdComponent>((ijk[0] > 0) && (ijk[1] > 0) && (ijk[2] > 0))
           + static_cast<vtkm::IdComponent>((ijk[0] < this->PointDimensions[0]-1) && (ijk[1] > 0) && (ijk[2] > 0))
@@ -408,12 +431,17 @@ public:
   }
 
   VTKM_EXEC_CONT_EXPORT
+  vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
+  {
+    return this->GetNumberOfCellsIncidentOnPoint(
+          this->FlatToLogicalPointIndex(pointIndex));
+  }
+
+  VTKM_EXEC_CONT_EXPORT
   vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT>
-  GetCellsOfPoint(vtkm::Id pointIndex) const
+  GetCellsOfPoint(const SchedulingRangeType &ijk) const
   {
     vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT> cellIds;
-
-    vtkm::Id3 ijk = this->FlatToLogicalPointIndex(pointIndex);
 
     if ((ijk[0] > 0) && (ijk[1] > 0) && (ijk[2] > 0))
     {
@@ -458,6 +486,13 @@ public:
     }
 
     return cellIds;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT>
+  GetCellsOfPoint(vtkm::Id pointIndex) const
+  {
+    return this->GetCellsOfPoint(this->FlatToLogicalPointIndex(pointIndex));
   }
 
   VTKM_CONT_EXPORT
@@ -532,22 +567,57 @@ struct ConnectivityStructuredIndexHelper<
 {
   typedef vtkm::internal::ConnectivityStructuredInternals<Dimension>
       ConnectivityType;
+  typedef typename ConnectivityType::SchedulingRangeType LogicalIndexType;
 
   typedef vtkm::Vec<vtkm::Id,ConnectivityType::NUM_POINTS_IN_CELL> IndicesType;
 
+  template<typename IndexType>
   VTKM_EXEC_CONT_EXPORT
   static IndicesType GetIndices(const ConnectivityType &connectivity,
-                                vtkm::Id cellIndex)
+                                const IndexType &cellIndex)
   {
     return connectivity.GetPointsOfCell(cellIndex);
   }
 
+  template<typename IndexType>
   VTKM_EXEC_CONT_EXPORT
   static vtkm::IdComponent GetNumberOfIndices(
         const ConnectivityType &connectivity,
-        vtkm::Id vtkmNotUsed(cellIndex))
+        const IndexType &vtkmNotUsed(cellIndex))
   {
     return connectivity.GetNumberOfPointsInCell();
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<vtkm::Id,Dimension>
+  FlatToLogicalFromIndex(const ConnectivityType &connectivity,
+                         vtkm::Id flatFromIndex)
+  {
+    return connectivity.FlatToLogicalPointIndex(flatFromIndex);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Id
+  LogicalToFlatFromIndex(const ConnectivityType &connectivity,
+                         const vtkm::Vec<vtkm::Id,Dimension> &logicalFromIndex)
+  {
+    return connectivity.LogicalToFlatPointIndex(logicalFromIndex);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<vtkm::Id,Dimension>
+  FlatToLogicalToIndex(const ConnectivityType &connectivity,
+                       vtkm::Id flatToIndex)
+  {
+    return connectivity.FlatToLogicalCellIndex(flatToIndex);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Id
+  LogicalToFlatToIndex(const ConnectivityType &connectivity,
+                       const vtkm::Vec<vtkm::Id,Dimension> &logicalToIndex)
+  {
+    return connectivity.LogicalToFlatCellIndex(logicalToIndex);
   }
 };
 
@@ -557,25 +627,58 @@ struct ConnectivityStructuredIndexHelper<
 {
   typedef vtkm::internal::ConnectivityStructuredInternals<Dimension>
       ConnectivityType;
+  typedef typename ConnectivityType::SchedulingRangeType LogicalIndexType;
 
-  // TODO: This needs to change to a Vec-like that supports a max size.
-  // Likewise, all the GetCellsOfPoint methods need to use it as well.
   typedef vtkm::VecVariable<vtkm::Id,ConnectivityType::MAX_CELL_TO_POINT>
       IndicesType;
 
+  template<typename IndexType>
   VTKM_EXEC_CONT_EXPORT
   static IndicesType GetIndices(const ConnectivityType &connectivity,
-                                vtkm::Id pointIndex)
+                                const IndexType &pointIndex)
   {
     return connectivity.GetCellsOfPoint(pointIndex);
   }
 
+  template<typename IndexType>
   VTKM_EXEC_CONT_EXPORT
   static vtkm::IdComponent GetNumberOfIndices(
         const ConnectivityType &connectivity,
-        vtkm::Id pointIndex)
+        const IndexType &pointIndex)
   {
     return connectivity.GetNumberOfCellsIncidentOnPoint(pointIndex);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<vtkm::Id,Dimension>
+  FlatToLogicalFromIndex(const ConnectivityType &connectivity,
+                         vtkm::Id flatFromIndex)
+  {
+    return connectivity.FlatToLogicalCellIndex(flatFromIndex);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Id
+  LogicalToFlatFromIndex(const ConnectivityType &connectivity,
+                         const vtkm::Vec<vtkm::Id,Dimension> &logicalFromIndex)
+  {
+    return connectivity.LogicalToFlatCellIndex(logicalFromIndex);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<vtkm::Id,Dimension>
+  FlatToLogicalToIndex(const ConnectivityType &connectivity,
+                       vtkm::Id flatToIndex)
+  {
+    return connectivity.FlatToLogicalPointIndex(flatToIndex);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Id
+  LogicalToFlatToIndex(const ConnectivityType &connectivity,
+                       const vtkm::Vec<vtkm::Id,Dimension> &logicalToIndex)
+  {
+    return connectivity.LogicalToFlatPointIndex(logicalToIndex);
   }
 };
 

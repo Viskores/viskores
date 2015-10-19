@@ -20,6 +20,8 @@
 
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
 
+#include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
+
 #include <vtkm/internal/FunctionInterface.h>
 #include <vtkm/internal/Invocation.h>
 
@@ -56,15 +58,22 @@ struct FetchArrayTopologyMapInTests
   template<typename Invocation>
   void TryInvocation(const Invocation &invocation) const
   {
+    typedef typename Invocation::InputDomainType ConnectivityType;
+    typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>
+        ThreadIndicesType;
+
     typedef vtkm::exec::arg::Fetch<
         vtkm::exec::arg::FetchTagArrayTopologyMapIn,
         vtkm::exec::arg::AspectTagDefault,
-        Invocation,
-        ParamIndex> FetchType;
+        ThreadIndicesType,
+        TestPortal<T> > FetchType;
 
     FetchType fetch;
 
-    typename FetchType::ValueType value = fetch.Load(0, invocation);
+    ThreadIndicesType indices(0, invocation);
+
+    typename FetchType::ValueType value = fetch.Load(
+          indices, invocation.Parameters.template GetParameter<ParamIndex>());
     VTKM_TEST_ASSERT(value.GetNumberOfComponents() == 8,
                      "Topology fetch got wrong number of components.");
 
@@ -130,24 +139,31 @@ template<vtkm::IdComponent NumDimensions,
          typename Invocation>
 void TryStructuredPointCoordinatesInvocation(const Invocation &invocation)
 {
+  typedef typename Invocation::InputDomainType ConnectivityType;
+  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>
+      ThreadIndicesType;
+
   vtkm::exec::arg::Fetch<
       vtkm::exec::arg::FetchTagArrayTopologyMapIn,
       vtkm::exec::arg::AspectTagDefault,
-      Invocation,
-      ParamIndex> fetch;
+      ThreadIndicesType,
+      vtkm::internal::ArrayPortalUniformPointCoordinates> fetch;
 
   vtkm::Vec<vtkm::FloatDefault,3> origin =
       TestValue(0, vtkm::Vec<vtkm::FloatDefault,3>());
   vtkm::Vec<vtkm::FloatDefault,3> spacing =
       TestValue(1, vtkm::Vec<vtkm::FloatDefault,3>());
 
-  vtkm::VecRectilinearPointCoordinates<NumDimensions> value =
-      fetch.Load(0, invocation);
+  vtkm::VecRectilinearPointCoordinates<NumDimensions> value = fetch.Load(
+        ThreadIndicesType(0, invocation),
+        invocation.Parameters.template GetParameter<ParamIndex>());
   VTKM_TEST_ASSERT(test_equal(value.GetOrigin(), origin), "Bad origin.");
   VTKM_TEST_ASSERT(test_equal(value.GetSpacing(), spacing), "Bad spacing.");
 
   origin[0] += spacing[0];
-  value = fetch.Load(1, invocation);
+  value = fetch.Load(
+        ThreadIndicesType(1, invocation),
+        invocation.Parameters.template GetParameter<ParamIndex>());
   VTKM_TEST_ASSERT(test_equal(value.GetOrigin(), origin), "Bad origin.");
   VTKM_TEST_ASSERT(test_equal(value.GetSpacing(), spacing), "Bad spacing.");
 }

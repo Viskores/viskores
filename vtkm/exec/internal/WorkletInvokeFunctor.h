@@ -53,7 +53,10 @@ public:
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
-    detail::DoWorkletInvokeFunctor(this->Worklet, this->Invocation, index);
+    detail::DoWorkletInvokeFunctor(this->Worklet,
+                                   this->Invocation,
+                                   this->Worklet.GetThreadIndices(
+                                     index, this->Invocation));
   }
 
 private:

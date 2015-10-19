@@ -22,6 +22,7 @@
 
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
+#include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
 namespace vtkm {
 namespace exec {
@@ -43,46 +44,29 @@ struct CellShape : vtkm::exec::arg::ExecutionSignatureTagBase
 };
 
 template<typename FetchTag,
-         typename Invocation,
-         vtkm::IdComponent ParameterIndex>
-struct Fetch<
-    FetchTag, vtkm::exec::arg::AspectTagCellShape, Invocation, ParameterIndex>
+         typename ConnectivityType,
+         typename ExecObjectType>
+struct Fetch<FetchTag,
+             vtkm::exec::arg::AspectTagCellShape,
+             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
+             ExecObjectType>
 {
-  // The parameter for the input domain is stored in the Invocation. (It is
-  // also in the worklet, but it is safer to get it from the Invocation
-  // in case some other dispatch operation had to modify it.)
-  static const vtkm::IdComponent InputDomainIndex =
-      Invocation::InputDomainIndex;
+  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>
+      ThreadIndicesType;
 
-  // ParameterInterface (from Invocation) is a FunctionInterface type
-  // containing types for all objects passed to the Invoke method (with some
-  // dynamic casting performed so objects like DynamicArrayHandle get cast to
-  // ArrayHandle) and then transferred to the execution environment. This
-  // interface contains a set of exec objects.
-  typedef typename Invocation::ParameterInterface ParameterInterface;
-
-  // This is the type for the input domain (derived from the last two things we
-  // got from the Invocation). Assuming the input domain is set up correctly,
-  // this should be one of the vtkm::exec::Connectivity* classes.
-  typedef typename ParameterInterface::
-      template ParameterType<InputDomainIndex>::type ConnectivityType;
-
-  typedef typename ConnectivityType::CellShapeTag ValueType;
+  typedef typename ThreadIndicesType::CellShapeTag ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
-  ValueType Load(vtkm::Id index, const Invocation &invocation) const
+  ValueType Load(const ThreadIndicesType &indices, const ExecObjectType &) const
   {
-    // We can pull the input domain parameter (the data specifying the input
-    // domain) from the invocation object.
-    ConnectivityType connectivity =
-        invocation.Parameters.template GetParameter<InputDomainIndex>();
-
-    return connectivity.GetCellShape(index);
+    return indices.GetCellShape();
   }
 
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id, const Invocation &, const ValueType &) const
+  void Store(const ThreadIndicesType &,
+             const ExecObjectType &,
+             const ValueType &) const
   {
     // Store is a no-op.
   }
