@@ -87,7 +87,7 @@ struct VecFromPortalPermuteTestFunctor
           indices.Append(offset + 2*index);
         }
 
-        VecType vec(indices, portal);
+        VecType vec(&indices, portal);
 
         VTKM_TEST_ASSERT(vec.GetNumberOfComponents() == length,
                          "Wrong length.");

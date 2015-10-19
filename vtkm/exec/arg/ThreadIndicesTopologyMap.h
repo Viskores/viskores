@@ -97,7 +97,22 @@ public:
   /// containing the indices to the "from" elements.
   ///
   VTKM_EXEC_EXPORT
-  IndicesFromType GetIndicesFrom() const { return this->IndicesFrom; }
+  const IndicesFromType &GetIndicesFrom() const { return this->IndicesFrom; }
+
+  /// \brief The input indices of the "from" elements in pointer form.
+  ///
+  /// Returns the same object as GetIndicesFrom except that it returns a
+  /// pointer to the internally held object rather than a reference or copy.
+  /// Since the from indices can be a sizeable Vec (8 entries is common), it is
+  /// best not to have a bunch a copies. Thus, you can pass around a pointer
+  /// instead. However, care should be taken to make sure that this object does
+  /// not go out of scope, at which time the returned pointer becomes invalid.
+  ///
+  VTKM_EXEC_EXPORT
+  const IndicesFromType *GetIndicesFromPointer() const
+  {
+    return &this->IndicesFrom;
+  }
 
   /// \brief The shape of the input cell.
   ///
@@ -276,7 +291,22 @@ public:
   /// containing the indices to the "from" elements.
   ///
   VTKM_EXEC_EXPORT
-  IndicesFromType GetIndicesFrom() const { return this->IndicesFrom; }
+  const IndicesFromType &GetIndicesFrom() const { return this->IndicesFrom; }
+
+  /// \brief The input indices of the "from" elements in pointer form.
+  ///
+  /// Returns the same object as GetIndicesFrom except that it returns a
+  /// pointer to the internally held object rather than a reference or copy.
+  /// Since the from indices can be a sizeable Vec (8 entries is common), it is
+  /// best not to have a bunch a copies. Thus, you can pass around a pointer
+  /// instead. However, care should be taken to make sure that this object does
+  /// not go out of scope, at which time the returned pointer becomes invalid.
+  ///
+  VTKM_EXEC_EXPORT
+  const IndicesFromType *GetIndicesFromPointer() const
+  {
+    return &this->IndicesFrom;
+  }
 
   /// \brief The shape of the input cell.
   ///
