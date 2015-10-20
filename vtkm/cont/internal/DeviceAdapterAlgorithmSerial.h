@@ -258,7 +258,8 @@ private:
       : Functor(functor) {  }
 
     //needed for when calling from schedule on a range
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id index) const
+    template<typename T>
+    VTKM_EXEC_EXPORT void operator()(const T& index) const
     {
       this->Functor(index);
     }
@@ -309,17 +310,18 @@ public:
 
     DeviceAdapterAlgorithm<Device>::ScheduleKernel<Functor> kernel(functor);
 
-    //use a const variable to hint to compiler this doesn't change
+    vtkm::Id3 index;
     for(vtkm::Id k=0; k < rangeMax[2]; ++k)
       {
-      vtkm::Id index = k * rangeMax[1] * rangeMax[0];
+      index[2] = k;
       for(vtkm::Id j=0; j < rangeMax[1]; ++j)
         {
+        index[1] = j;
         for(vtkm::Id i=0; i < rangeMax[0]; ++i)
           {
-          kernel( index + i );
+          index[0] = i;
+          kernel( index );
           }
-        index += rangeMax[0];
         }
       }
 

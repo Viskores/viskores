@@ -340,15 +340,15 @@ public:
   }
 
   VTKM_EXEC_CONT_EXPORT
-  const vtkm::Id3 GetPointDimensions() const
+  const vtkm::Id3& GetPointDimensions() const
   {
     return this->PointDimensions;
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id3 GetCellDimensions() const
+  const vtkm::Id3& GetCellDimensions() const
   {
-    return this->PointDimensions - vtkm::Id3(1);
+    return this->CellDimensions;
   }
 
   VTKM_EXEC_CONT_EXPORT
@@ -359,11 +359,11 @@ public:
 
   //returns an id3 to signal what kind of scheduling to use
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id3 GetSchedulingRange(vtkm::TopologyElementTagCell) const {
+  const vtkm::Id3& GetSchedulingRange(vtkm::TopologyElementTagCell) const {
     return this->GetCellDimensions();
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id3 GetSchedulingRange(vtkm::TopologyElementTagPoint) const {
+  const vtkm::Id3& GetSchedulingRange(vtkm::TopologyElementTagPoint) const {
     return this->GetPointDimensions();
   }
 
@@ -535,10 +535,9 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id LogicalToFlatCellIndex(const vtkm::Id3 &logicalCellIndex) const
   {
-    vtkm::Id3 cellDimensions = this->GetCellDimensions();
     return logicalCellIndex[0]
-        + cellDimensions[0]*(logicalCellIndex[1]
-                                    + cellDimensions[1]*logicalCellIndex[2]);
+        + this->CellDimensions[0]*(logicalCellIndex[1]
+                                    + this->CellDimensions[1]*logicalCellIndex[2]);
   }
 
 private:

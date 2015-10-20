@@ -138,6 +138,18 @@ vtkm::Id3 InflateTo3D(vtkm::Id index)
   return vtkm::Id3(index, 0, 0);
 }
 
+VTKM_EXEC_EXPORT
+vtkm::Id3 Deflate(const vtkm::Id3& index, vtkm::Id3)
+{
+  return index;
+}
+
+VTKM_EXEC_EXPORT
+vtkm::Id2 Deflate(const vtkm::Id3& index, vtkm::Id2)
+{
+  return vtkm::Id2(index[0], index[1]);
+}
+
 } // namespace detail
 
 // Specialization for structured connectivity types.
@@ -146,7 +158,6 @@ template<typename FromTopology,
          vtkm::IdComponent Dimension>
 class ThreadIndicesTopologyMap<
     vtkm::exec::ConnectivityStructured<FromTopology,ToTopology,Dimension> >
-    : public vtkm::exec::arg::ThreadIndicesBasic
 {
   typedef vtkm::exec::arg::ThreadIndicesBasic Superclass;
   typedef vtkm::exec::ConnectivityStructured<FromTopology,ToTopology,Dimension>
@@ -160,7 +171,6 @@ public:
   template<typename Invocation>
   VTKM_EXEC_EXPORT
   ThreadIndicesTopologyMap(vtkm::Id threadIndex, const Invocation &invocation)
-    : Superclass(threadIndex, invocation)
   {
     // The connectivity is stored in the invocation parameter at the given
     // input domain index. If this class is being used correctly, the type
@@ -169,9 +179,33 @@ public:
     // set its input domain incorrectly.
     const ConnectivityType &connectivity = invocation.GetInputDomain();
 
-    this->LogicalIndex = connectivity.FlatToLogicalToIndex(this->GetIndex());
-    this->IndicesFrom = connectivity.GetIndices(this->LogicalIndex);
-    this->CellShape = connectivity.GetCellShape(this->GetIndex());
+    const LogicalIndexType logicalIndex = connectivity.FlatToLogicalToIndex(threadIndex);
+
+    this->Index = threadIndex;
+    this->LogicalIndex = logicalIndex;
+    this->IndicesFrom = connectivity.GetIndices(logicalIndex);
+    this->CellShape = connectivity.GetCellShape(threadIndex);
+  }
+
+  template<typename Invocation>
+  VTKM_EXEC_EXPORT
+  ThreadIndicesTopologyMap(vtkm::Id3 threadIndex, const Invocation &invocation)
+  {
+    // The connectivity is stored in the invocation parameter at the given
+    // input domain index. If this class is being used correctly, the type
+    // of the domain will match the connectivity type used here. If there is
+    // a compile error here about a type mismatch, chances are a worklet has
+    // set its input domain incorrectly.
+    const ConnectivityType &connectivity = invocation.GetInputDomain();
+
+    const LogicalIndexType logicalIndex = detail::Deflate(threadIndex, LogicalIndexType());
+    const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
+
+
+    this->Index = index;
+    this->LogicalIndex = logicalIndex;
+    this->IndicesFrom = connectivity.GetIndices(logicalIndex);
+    this->CellShape = connectivity.GetCellShape(index);
   }
 
   /// \brief The logical index into the input domain.
@@ -183,6 +217,18 @@ public:
   LogicalIndexType GetIndexLogical() const
   {
     return this->LogicalIndex;
+  }
+
+  /// \brief The index into the input domain.
+  ///
+  /// This index refers to the input element (array value, cell, etc.) that
+  /// this thread is being invoked for. This is the typical index used during
+  /// fetches.
+  ///
+  VTKM_EXEC_EXPORT
+  vtkm::Id GetIndex() const
+  {
+    return this->Index;
   }
 
   /// \brief The 3D index into the input domain.
@@ -217,6 +263,7 @@ public:
   CellShapeTag GetCellShape() const { return this->CellShape; }
 
 private:
+  vtkm::Id Index;
   LogicalIndexType LogicalIndex;
   IndicesFromType IndicesFrom;
   CellShapeTag CellShape;

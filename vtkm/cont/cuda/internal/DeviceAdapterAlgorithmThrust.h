@@ -31,9 +31,9 @@
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 
+#include <vtkm/exec/cuda/internal/WrappedOperators.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
-#include <vtkm/exec/cuda/internal/WrappedOperators.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -98,18 +98,16 @@ template<class FunctorType>
 __global__
 void Schedule3DIndexKernel(FunctorType functor, dim3 size)
 {
-  const vtkm::Id x = blockIdx.x*blockDim.x + threadIdx.x;
-  const vtkm::Id y = blockIdx.y*blockDim.y + threadIdx.y;
-  const vtkm::Id z = blockIdx.z*blockDim.z + threadIdx.z;
-
-  if (x >= size.x || y >= size.y || z >= size.z)
+  const vtkm::Id3 index(
+                        blockIdx.x*blockDim.x + threadIdx.x,
+                        blockIdx.y*blockDim.y + threadIdx.y,
+                        blockIdx.z*blockDim.z + threadIdx.z
+                        );
+  if (index[0] >= size.x || index[1] >= size.y || index[2] >= size.z)
     {
     return;
     }
-
-  //now convert back to flat memory
-  const int idx = x + size.x*(y + size.y*z);
-  functor( idx );
+  functor( index );
 }
 
 template<typename T, typename BinaryOperationType >

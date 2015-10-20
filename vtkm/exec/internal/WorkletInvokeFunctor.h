@@ -50,8 +50,9 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename T>
   VTKM_EXEC_EXPORT
-  void operator()(vtkm::Id index) const
+  void operator()(T index) const
   {
     detail::DoWorkletInvokeFunctor(this->Worklet,
                                    this->Invocation,
