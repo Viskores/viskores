@@ -116,6 +116,14 @@ public:
                            this->Array.data() + static_cast<difference_type>(this->Array.size()));
   }
 
+  /// Workaround for nvcc 7.5 compiler warning bug.
+  template<typename DummyType>
+  VTKM_CONT_EXPORT
+  PortalConstType _PrepareForInput(bool updateData)
+  {
+      return this->PrepareForInput(updateData);
+  }
+
   /// Allocates the appropriate size of the array and copies the given data
   /// into the array.
   ///
@@ -133,6 +141,14 @@ public:
 
     return PortalType(this->Array.data(),
                       this->Array.data() + static_cast<difference_type>(this->Array.size()));
+  }
+
+  /// Workaround for nvcc 7.5 compiler warning bug.
+  template<typename DummyType>
+  VTKM_CONT_EXPORT
+  PortalType _PrepareForInPlace(bool updateData)
+  {
+    return this->PrepareForInPlace(updateData);
   }
 
   /// Allocates the array to the given size.
@@ -158,6 +174,14 @@ public:
 
     return PortalType(this->Array.data(),
                       this->Array.data() + static_cast<difference_type>(this->Array.size()));
+  }
+
+  /// Workaround for nvcc 7.5 compiler warning bug.
+  template<typename DummyType>
+  VTKM_CONT_EXPORT
+  PortalType _PrepareForOutput(vtkm::Id numberOfValues)
+  {
+    return this->PrepareForOutput(numberOfValues);
   }
 
   /// Allocates enough space in \c storage and copies the data in the
