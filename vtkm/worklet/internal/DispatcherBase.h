@@ -179,6 +179,17 @@ struct DispatcherBaseDynamicTransformHelper
   }
 };
 
+// A look up helper used by DispatcherBaseTransportFunctor to determine
+//the types independent of the device we are templated on.
+template<typename ControlInterface, vtkm::IdComponent Index>
+struct DispatcherBaseTransportInvokeTypes
+{
+  //Moved out of DispatcherBaseTransportFunctor to reduce code generation
+  typedef typename ControlInterface::template ParameterType<Index>::type
+        ControlSignatureTag;
+  typedef typename ControlSignatureTag::TransportTag TransportTag;
+};
+
 // A functor used in a StaticCast of a FunctionInterface to transport arguments
 // from the control environment to the execution environment.
 template<typename ControlInterface, typename Device>
@@ -198,27 +209,22 @@ struct DispatcherBaseTransportFunctor
   DispatcherBaseTransportFunctor(vtkm::Id3 dimensions)
     : NumInstances(dimensions[0]*dimensions[1]*dimensions[2]) {  }
 
-  template<typename ControlParameter, vtkm::IdComponent Index>
-  struct InvokeTypes {
-    typedef typename ControlInterface::template ParameterType<Index>::type
-        ControlSignatureTag;
-    typedef typename ControlSignatureTag::TransportTag TransportTag;
-    typedef vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device>
-        TransportType;
-  };
 
   template<typename ControlParameter, vtkm::IdComponent Index>
   struct ReturnType {
-    typedef typename InvokeTypes<ControlParameter, Index>::
-        TransportType::ExecObjectType type;
+    typedef typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag TransportTag;
+    typedef typename vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device> TransportType;
+    typedef typename TransportType::ExecObjectType type;
   };
 
   template<typename ControlParameter, vtkm::IdComponent Index>
   VTKM_CONT_EXPORT
   typename ReturnType<ControlParameter, Index>::type
   operator()(const ControlParameter &invokeData,
-             vtkm::internal::IndexTag<Index>) const {
-    typename InvokeTypes<ControlParameter, Index>::TransportType transport;
+             vtkm::internal::IndexTag<Index>) const
+  {
+    typedef typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag TransportTag;
+    vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device> transport;
     return transport(invokeData, this->NumInstances);
   }
 };
@@ -230,12 +236,11 @@ struct DispatcherBaseTransportFunctor
 ///
 template<typename DerivedClass,
          typename WorkletType,
-         typename BaseWorkletType,
-         typename Device>
+         typename BaseWorkletType>
 class DispatcherBase
 {
 private:
-  typedef DispatcherBase<DerivedClass,WorkletType,BaseWorkletType,Device> MyType;
+  typedef DispatcherBase<DerivedClass,WorkletType,BaseWorkletType> MyType;
 
   friend struct detail::DispatcherBaseDynamicTransformHelper<MyType>;
 
@@ -305,27 +310,33 @@ protected:
   VTKM_CONT_EXPORT
   DispatcherBase(const WorkletType &worklet) : Worklet(worklet) {  }
 
-  template<typename Invocation>
+  template<typename Invocation, typename DeviceAdapter>
   VTKM_CONT_EXPORT
-  void BasicInvoke(const Invocation &invocation, vtkm::Id numInstances) const
+  void BasicInvoke(const Invocation &invocation,
+                   vtkm::Id numInstances,
+                   DeviceAdapter tag) const
   {
-    this->InvokeTransportParameters(invocation, numInstances);
+    this->InvokeTransportParameters(invocation, numInstances, tag);
   }
 
-  template<typename Invocation>
+  template<typename Invocation, typename DeviceAdapter>
   VTKM_CONT_EXPORT
-  void BasicInvoke(const Invocation &invocation, vtkm::Id2 dimensions) const
+  void BasicInvoke(const Invocation &invocation,
+                   vtkm::Id2 dimensions,
+                   DeviceAdapter tag) const
   {
     vtkm::Id3 dim3d(dimensions[0], dimensions[1], 1);
-    this->InvokeTransportParameters(invocation, dim3d);
+    this->InvokeTransportParameters(invocation, dim3d, tag);
   }
 
 
-  template<typename Invocation>
+  template<typename Invocation, typename DeviceAdapter>
   VTKM_CONT_EXPORT
-  void BasicInvoke(const Invocation &invocation, vtkm::Id3 dimensions) const
+  void BasicInvoke(const Invocation &invocation,
+                   vtkm::Id3 dimensions,
+                   DeviceAdapter tag) const
   {
-    this->InvokeTransportParameters(invocation, dimensions);
+    this->InvokeTransportParameters(invocation, dimensions, tag);
   }
 
   WorkletType Worklet;
@@ -335,10 +346,11 @@ private:
   DispatcherBase(const MyType &);
   void operator=(const MyType &);
 
-  template<typename Invocation, typename RangeType>
+  template<typename Invocation, typename RangeType, typename DeviceAdapter>
   VTKM_CONT_EXPORT
   void InvokeTransportParameters(const Invocation &invocation,
-                                 RangeType range) const
+                                 RangeType range,
+                                 DeviceAdapter tag) const
   {
     // The first step in invoking a worklet is to transport the arguments to
     // the execution environment. The invocation object passed to this function
@@ -353,7 +365,7 @@ private:
     const ParameterInterfaceType &parameters = invocation.Parameters;
 
     typedef detail::DispatcherBaseTransportFunctor<
-        typename Invocation::ControlInterface, Device> TransportFunctorType;
+        typename Invocation::ControlInterface, DeviceAdapter> TransportFunctorType;
     typedef typename ParameterInterfaceType::template StaticTransformType<
         TransportFunctorType>::type ExecObjectParameters;
 
@@ -363,12 +375,15 @@ private:
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke.
     this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters),
-                         range);
+                         range,
+                         tag);
   }
 
-  template<typename Invocation, typename RangeType>
+  template<typename Invocation, typename RangeType, typename DeviceAdapter>
   VTKM_CONT_EXPORT
-  void InvokeSchedule(const Invocation &invocation, RangeType range) const
+  void InvokeSchedule(const Invocation &invocation,
+                      RangeType range,
+                      DeviceAdapter) const
   {
     // The WorkletInvokeFunctor class handles the magic of fetching values
     // for each instance and calling the worklet's function. So just create
@@ -378,7 +393,7 @@ private:
     WorkletInvokeFunctorType workletFunctor =
         WorkletInvokeFunctorType(this->Worklet, invocation);
 
-    typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
+    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
 
     Algorithm::Schedule(workletFunctor, range);
   }

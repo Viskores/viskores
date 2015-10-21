@@ -36,14 +36,14 @@ class DispatcherMapTopology :
     public vtkm::worklet::internal::DispatcherBase<
       DispatcherMapTopology<WorkletType,Device>,
       WorkletType,
-      vtkm::worklet::template WorkletMapTopology<typename WorkletType::FromTopologyType, typename WorkletType::ToTopologyType>,
-      Device>
+      vtkm::worklet::template WorkletMapTopology<typename WorkletType::FromTopologyType, typename WorkletType::ToTopologyType>
+      >
 {
   typedef vtkm::worklet::internal::DispatcherBase<
     DispatcherMapTopology<WorkletType,Device>,
     WorkletType,
-    vtkm::worklet::template WorkletMapTopology<typename WorkletType::FromTopologyType, typename WorkletType::ToTopologyType>,
-    Device> Superclass;
+    vtkm::worklet::template WorkletMapTopology<typename WorkletType::FromTopologyType, typename WorkletType::ToTopologyType>
+    > Superclass;
 
 public:
   VTKM_CONT_EXPORT
@@ -70,7 +70,8 @@ public:
     // scheduling and call BadicInvoke.
     this->BasicInvoke(invocation,
                       inputDomain.GetSchedulingRange(
-                            typename WorkletType::ToTopologyType()));
+                            typename WorkletType::ToTopologyType()),
+                      Device());
   }
 };
 
