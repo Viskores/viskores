@@ -170,6 +170,18 @@ public:
     this->Internals->ExecutionArrayValid = false;
   }
 
+  /// Copy constructor.
+  ///
+  /// Implemented so that it is defined exclusively in the control environment.
+  /// If there is a separate device for the execution environment (for example,
+  /// with CUDA), then the automatically generated copy constructor could be
+  /// created for all devices, and it would not be valid for all devices.
+  ///
+  VTKM_CONT_EXPORT
+  ArrayHandle(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
+    : Internals(src.Internals)
+  {  }
+
   /// Special constructor for subclass specializations that need to set the
   /// initial state of the control array. When this constructor is used, it
   /// is assumed that the control array is valid.
@@ -180,6 +192,26 @@ public:
     this->Internals->ControlArray = storage;
     this->Internals->ControlArrayValid = true;
     this->Internals->ExecutionArrayValid = false;
+  }
+
+  /// Destructs an empty ArrayHandle.
+  ///
+  /// Implemented so that it is defined exclusively in the control environment.
+  /// If there is a separate device for the execution environment (for example,
+  /// with CUDA), then the automatically generated destructor could be
+  /// created for all devices, and it would not be valid for all devices.
+  ///
+  VTKM_CONT_EXPORT
+  virtual ~ArrayHandle() {  }
+
+  /// \brief Copies an ArrayHandle
+  ///
+  VTKM_CONT_EXPORT
+  vtkm::cont::ArrayHandle<ValueType,StorageTag> &
+  operator=(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
+  {
+    this->Internals = src.Internals;
+    return *this;
   }
 
   /// Get the array portal of the control array.
@@ -482,6 +514,7 @@ public:
     bool ExecutionArrayValid;
   };
 
+  VTKM_CONT_EXPORT
   ArrayHandle(boost::shared_ptr<InternalStruct> i)
     : Internals(i)
   { }

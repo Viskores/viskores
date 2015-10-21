@@ -129,8 +129,16 @@ public:
   ArrayHandleCounting():Superclass() {}
 
   VTKM_CONT_EXPORT
+  ArrayHandleCounting(const ArrayHandleCounting<CountingValueType> &src)
+    : Superclass(src)
+  {  }
+
+  VTKM_CONT_EXPORT
   ArrayHandleCounting(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
     : Superclass(src) {  }
+
+  VTKM_CONT_EXPORT
+  virtual ~ArrayHandleCounting() {  }
 };
 
 /// A convenience function for creating an ArrayHandleCounting. It takes the

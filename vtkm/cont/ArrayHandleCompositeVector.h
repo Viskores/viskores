@@ -503,6 +503,11 @@ public:
   ArrayHandleCompositeVector() : Superclass() {  }
 
   VTKM_CONT_EXPORT
+  ArrayHandleCompositeVector(const ArrayHandleCompositeVector<Signature> &src)
+    : Superclass(src)
+  {  }
+
+  VTKM_CONT_EXPORT
   ArrayHandleCompositeVector(
       const vtkm::internal::FunctionInterface<Signature> &arrays,
       const ComponentMapType &sourceComponents)
@@ -578,6 +583,9 @@ public:
                                     sourceComponent3,
                                     sourceComponent4)))
   {  }
+
+  VTKM_CONT_EXPORT
+  virtual ~ArrayHandleCompositeVector() {  }
 };
 
 /// \brief Get the type for an ArrayHandleCompositeVector

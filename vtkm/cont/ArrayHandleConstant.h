@@ -70,9 +70,17 @@ public:
     : Superclass(detail::ConstantFunctor<T>(value), numberOfValues) {  }
 
   VTKM_CONT_EXPORT
+  ArrayHandleConstant(const ArrayHandleConstant<T> &src)
+    : Superclass(src)
+  {  }
+
+  VTKM_CONT_EXPORT
   ArrayHandleConstant(const vtkm::cont::ArrayHandle<T,StorageTag> &src)
     : Superclass(src)
   {  }
+
+  VTKM_CONT_EXPORT
+  virtual ~ArrayHandleConstant() {  }
 };
 
 /// make_ArrayHandleImplicit is convenience function to generate an

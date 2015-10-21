@@ -373,14 +373,25 @@ private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
+  VTKM_CONT_EXPORT
   ArrayHandleZip() : Superclass( ) { }
 
+  VTKM_CONT_EXPORT
+  ArrayHandleZip(const ArrayHandleZip<FirstHandleType,SecondHandleType> &src)
+    : Superclass(src)
+  {  }
+
+  VTKM_CONT_EXPORT
   ArrayHandleZip(const FirstHandleType &firstArray,
                  const SecondHandleType &secondArray)
     : Superclass( StorageType( firstArray, secondArray ) ) { }
 
+  VTKM_CONT_EXPORT
   ArrayHandleZip(const vtkm::cont::ArrayHandle<ValueType, StorageTag> &src)
     : Superclass(src) { }
+
+  VTKM_CONT_EXPORT
+  virtual ~ArrayHandleZip() {  }
 };
 
 /// A convenience function for creating an ArrayHandleZip. It takes the two

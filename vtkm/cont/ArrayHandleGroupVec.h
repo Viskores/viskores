@@ -341,6 +341,12 @@ public:
   ArrayHandleGroupVec() {  }
 
   VTKM_CONT_EXPORT
+  ArrayHandleGroupVec(
+        const ArrayHandleGroupVec<SourceArrayHandleType,NUM_COMPONENTS> &src)
+    : Superclass(src)
+  {  }
+
+  VTKM_CONT_EXPORT
   ArrayHandleGroupVec(const SourceArrayHandleType &sourceArray)
     : Superclass(StorageType(sourceArray)) {  }
 
@@ -348,6 +354,9 @@ public:
   ArrayHandleGroupVec(
       const vtkm::cont::ArrayHandle<ValueType,StorageTag> &source)
     : Superclass(source) {  }
+
+  VTKM_CONT_EXPORT
+  virtual ~ArrayHandleGroupVec() {  }
 };
 
 }

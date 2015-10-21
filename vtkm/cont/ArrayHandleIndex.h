@@ -52,11 +52,21 @@ public:
   typedef Superclass::ValueType ValueType;
   typedef Superclass::StorageTag StorageTag;
 
+  VTKM_CONT_EXPORT
   ArrayHandleIndex(vtkm::Id length = 0)
     : Superclass(detail::IndexFunctor(), length) {  }
 
+  VTKM_CONT_EXPORT
+  ArrayHandleIndex(const ArrayHandleIndex &src)
+    : Superclass(src)
+  {  }
+
+  VTKM_CONT_EXPORT
   ArrayHandleIndex(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
     : Superclass(src) {  }
+
+  VTKM_CONT_EXPORT
+  virtual ~ArrayHandleIndex() {  }
 };
 
 }

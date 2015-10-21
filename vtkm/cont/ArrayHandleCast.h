@@ -68,6 +68,11 @@ public:
   { }
 
   VTKM_CONT_EXPORT
+  ArrayHandleCast(const ArrayHandleCast<ValueType, ArrayHandleType> &src)
+    : SuperClass(src)
+  { }
+
+  VTKM_CONT_EXPORT
   ArrayHandleCast(const ArrayHandleType &handle)
     : SuperClass(handle)
   { }
@@ -76,6 +81,9 @@ public:
   ArrayHandleCast(const vtkm::cont::ArrayHandle<ValueType, StorageTag> &src)
     : SuperClass(src)
   { }
+
+  VTKM_CONT_EXPORT
+  virtual ~ArrayHandleCast() {  }
 };
 
 /// make_ArrayHandleCast is convenience function to generate an

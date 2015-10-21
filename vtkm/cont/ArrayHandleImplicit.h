@@ -119,6 +119,11 @@ public:
     : Superclass(typename Superclass::PortalConstControl(FunctorType(),0)) {  }
 
   VTKM_CONT_EXPORT
+  ArrayHandleImplicit(const ArrayHandleImplicit<ValueType,FunctorType> &src)
+    : Superclass(src)
+  {  }
+
+  VTKM_CONT_EXPORT
   ArrayHandleImplicit(FunctorType functor, vtkm::Id length)
     : Superclass(typename Superclass::PortalConstControl(functor,length))
   {  }
@@ -127,6 +132,9 @@ public:
   ArrayHandleImplicit(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
     : Superclass(src)
   {  }
+
+  VTKM_CONT_EXPORT
+  virtual ~ArrayHandleImplicit() {  }
 };
 
 /// make_ArrayHandleImplicit is convenience function to generate an

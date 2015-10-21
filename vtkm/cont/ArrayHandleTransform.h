@@ -334,6 +334,12 @@ private:
   ArrayHandleTransform() : Superclass( ) {  }
 
   VTKM_CONT_EXPORT
+  ArrayHandleTransform(
+      const ArrayHandleTransform<ValueType,ArrayHandleType,FunctorType> &src)
+    : Superclass(src)
+  {  }
+
+  VTKM_CONT_EXPORT
   ArrayHandleTransform(const ArrayHandleType &handle,
                        const FunctorType &functor = FunctorType())
     : Superclass(StorageType(handle, functor)) {  }
@@ -341,6 +347,9 @@ private:
   VTKM_CONT_EXPORT
   ArrayHandleTransform(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
     : Superclass(src) {  }
+
+  VTKM_CONT_EXPORT
+  virtual ~ArrayHandleTransform() {  }
 };
 
 /// make_ArrayHandleTransform is convenience function to generate an
