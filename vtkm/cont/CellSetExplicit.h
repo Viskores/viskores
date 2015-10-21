@@ -66,15 +66,16 @@ template<typename ShapeStorageTag         = VTKM_DEFAULT_SHAPE_STORAGE_TAG,
          typename OffsetsStorageTag       = VTKM_DEFAULT_OFFSETS_STORAGE_TAG >
 class CellSetExplicit : public CellSet
 {
+  typedef CellSetExplicit< ShapeStorageTag,
+                           NumIndicesStorageTag,
+                           ConnectivityStorageTag,
+                           OffsetsStorageTag > Thisclass;
+
   template<typename FromTopology, typename ToTopology>
   struct ConnectivityChooser
   {
-    typedef CellSetExplicit< ShapeStorageTag,
-                             NumIndicesStorageTag,
-                             ConnectivityStorageTag,
-                             OffsetsStorageTag > CellSetExplicitType;
     typedef typename detail::CellSetExplicitConnectivityChooser<
-        CellSetExplicitType,
+        Thisclass,
         FromTopology,
         ToTopology>::ConnectivityType ConnectivityType;
 
@@ -117,6 +118,30 @@ public:
       NumberOfPoints(numpoints)
   {
   }
+
+  VTKM_CONT_EXPORT
+  CellSetExplicit(const Thisclass &src)
+    : CellSet(src),
+      PointToCell(src.PointToCell),
+      CellToPoint(src.CellToPoint),
+      ConnectivityLength(src.ConnectivityLength),
+      NumberOfCells(src.NumberOfCells),
+      NumberOfPoints(src.NumberOfPoints)
+  {  }
+
+  VTKM_CONT_EXPORT
+  Thisclass &operator=(const Thisclass &src)
+  {
+    this->CellSet::operator=(src);
+    this->PointToCell = src.PointToCell;
+    this->CellToPoint = src.CellToPoint;
+    this->ConnectivityLength = src.ConnectivityLength;
+    this->NumberOfCells = src.NumberOfCells;
+    this->NumberOfPoints = src.NumberOfPoints;
+    return *this;
+  }
+
+  virtual ~CellSetExplicit() {  }
 
   virtual vtkm::Id GetNumberOfCells() const
   {
