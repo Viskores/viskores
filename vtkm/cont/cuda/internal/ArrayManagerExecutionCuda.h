@@ -55,57 +55,63 @@ public:
   PortalConstType PrepareForInput(bool updateData)
   {
     try
-      {
-      return this->Superclass::PrepareForInput(updateData);
-      }
+    {
+      // This alternate form of PrepareForInput works around an issue
+      // with nvcc 7.5.
+      return this->Superclass::template _PrepareForInput<void>(updateData);
+    }
     catch (vtkm::cont::ErrorControlBadAllocation error)
-      {
+    {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
       if (cudaError == cudaErrorMemoryAllocation)
-        {
+      {
         cudaGetLastError();
-        }
-      throw error;
       }
+      throw error;
+    }
   }
 
   VTKM_CONT_EXPORT
   PortalType PrepareForInPlace(bool updateData)
   {
     try
-      {
-      return this->Superclass::PrepareForInPlace(updateData);
-      }
+    {
+      // This alternate form of PrepareForInPlace works around an issue
+      // with nvcc 7.5.
+      return this->Superclass::template _PrepareForInPlace<void>(updateData);
+    }
     catch (vtkm::cont::ErrorControlBadAllocation error)
-      {
+    {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
       if (cudaError == cudaErrorMemoryAllocation)
-        {
+      {
         cudaGetLastError();
-        }
-      throw error;
       }
+      throw error;
+    }
   }
 
   VTKM_CONT_EXPORT
   PortalType PrepareForOutput(vtkm::Id numberOfValues)
   {
     try
-      {
-      return this->Superclass::PrepareForOutput(numberOfValues);
-      }
+    {
+      // This alternate form of PrepareForOutput works around an issue
+      // with nvcc 7.5.
+      return this->Superclass::template _PrepareForOutput<void>(numberOfValues);
+    }
     catch (vtkm::cont::ErrorControlBadAllocation error)
-      {
+    {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
       if (cudaError == cudaErrorMemoryAllocation)
-        {
+      {
         cudaGetLastError();
-        }
-      throw error;
       }
+      throw error;
+    }
   }
 };
 
