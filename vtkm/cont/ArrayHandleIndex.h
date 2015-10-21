@@ -45,28 +45,14 @@ struct IndexFunctor {
 class ArrayHandleIndex
     : public vtkm::cont::ArrayHandleImplicit<vtkm::Id, detail::IndexFunctor>
 {
-  typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, detail::IndexFunctor>
-      Superclass;
-
 public:
-  typedef Superclass::ValueType ValueType;
-  typedef Superclass::StorageTag StorageTag;
+  VTKM_ARRAY_HANDLE_SUBCLASS_NT(
+      ArrayHandleIndex,
+      (vtkm::cont::ArrayHandleImplicit<vtkm::Id, detail::IndexFunctor>));
 
   VTKM_CONT_EXPORT
-  ArrayHandleIndex(vtkm::Id length = 0)
+  ArrayHandleIndex(vtkm::Id length)
     : Superclass(detail::IndexFunctor(), length) {  }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleIndex(const ArrayHandleIndex &src)
-    : Superclass(src)
-  {  }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleIndex(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
-    : Superclass(src) {  }
-
-  VTKM_CONT_EXPORT
-  virtual ~ArrayHandleIndex() {  }
 };
 
 }

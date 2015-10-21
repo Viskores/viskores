@@ -48,42 +48,26 @@ struct Cast
 /// and a type, it creates a new handle that returns the elements of the array cast
 /// to the specified type.
 ///
-template <typename ValueType, typename ArrayHandleType>
+template <typename T, typename ArrayHandleType>
 class ArrayHandleCast :
   public vtkm::cont::ArrayHandleTransform<
-    ValueType,
+    T,
     ArrayHandleType,
-    internal::Cast<typename ArrayHandleType::ValueType, ValueType> >
+    internal::Cast<typename ArrayHandleType::ValueType, T> >
 {
 public:
-  typedef vtkm::cont::ArrayHandleTransform<
-    ValueType,
-    ArrayHandleType,
-    internal::Cast<typename ArrayHandleType::ValueType, ValueType> > SuperClass;
-
-  typedef typename SuperClass::StorageTag StorageTag;
-
-  VTKM_CONT_EXPORT
-  ArrayHandleCast() : SuperClass()
-  { }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleCast(const ArrayHandleCast<ValueType, ArrayHandleType> &src)
-    : SuperClass(src)
-  { }
+  VTKM_ARRAY_HANDLE_SUBCLASS(
+      ArrayHandleCast,
+      (ArrayHandleCast<T, ArrayHandleType>),
+      (vtkm::cont::ArrayHandleTransform<
+         T,
+         ArrayHandleType,
+         internal::Cast<typename ArrayHandleType::ValueType, T> >));
 
   VTKM_CONT_EXPORT
   ArrayHandleCast(const ArrayHandleType &handle)
-    : SuperClass(handle)
+    : Superclass(handle)
   { }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleCast(const vtkm::cont::ArrayHandle<ValueType, StorageTag> &src)
-    : SuperClass(src)
-  { }
-
-  VTKM_CONT_EXPORT
-  virtual ~ArrayHandleCast() {  }
 };
 
 /// make_ArrayHandleCast is convenience function to generate an

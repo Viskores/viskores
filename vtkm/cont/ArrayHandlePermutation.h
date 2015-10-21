@@ -370,37 +370,23 @@ class ArrayHandlePermutation
   VTKM_IS_ARRAY_HANDLE(ValueArrayHandleType);
 
 public:
-  typedef typename ValueArrayHandleType::ValueType ValueType;
+  VTKM_ARRAY_HANDLE_SUBCLASS(
+      ArrayHandlePermutation,
+      (ArrayHandlePermutation<IndexArrayHandleType,ValueArrayHandleType>),
+      (vtkm::cont::ArrayHandle<
+         typename ValueArrayHandleType::ValueType,
+         internal::StorageTagPermutation<
+           IndexArrayHandleType,ValueArrayHandleType> >));
 
-  typedef internal::StorageTagPermutation<IndexArrayHandleType, ValueArrayHandleType>
-      StorageTag;
+private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag>
       StorageType;
 
  public:
-  typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> Superclass;
-
-  VTKM_CONT_EXPORT
-  ArrayHandlePermutation() : Superclass( ) {  }
-
-  VTKM_CONT_EXPORT
-  ArrayHandlePermutation(
-      const ArrayHandlePermutation<IndexArrayHandleType, ValueArrayHandleType> &src)
-    : Superclass(src)
-  {  }
-
   VTKM_CONT_EXPORT
   ArrayHandlePermutation(const IndexArrayHandleType &indexArray,
                          const ValueArrayHandleType &valueArray)
     : Superclass(StorageType(indexArray, valueArray)) {  }
-
-  VTKM_CONT_EXPORT
-  ArrayHandlePermutation(
-      const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
-    : Superclass(src) {  }
-
-  VTKM_CONT_EXPORT
-  virtual ~ArrayHandlePermutation() {  }
 };
 
 /// make_ArrayHandleTransform is convenience function to generate an

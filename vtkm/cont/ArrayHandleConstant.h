@@ -59,33 +59,20 @@ template<typename T>
 class ArrayHandleConstant
     : public vtkm::cont::ArrayHandleImplicit<T, detail::ConstantFunctor<T> >
 {
-  typedef vtkm::cont::ArrayHandleImplicit<T, detail::ConstantFunctor<T> >
-      Superclass;
-
 public:
-  typedef typename Superclass::StorageTag StorageTag;
+  VTKM_ARRAY_HANDLE_SUBCLASS(
+      ArrayHandleConstant,
+      (ArrayHandleConstant<T>),
+      (vtkm::cont::ArrayHandleImplicit<T, detail::ConstantFunctor<T> >));
 
   VTKM_CONT_EXPORT
-  ArrayHandleConstant(T value = T(), vtkm::Id numberOfValues = 0)
+  ArrayHandleConstant(T value, vtkm::Id numberOfValues = 0)
     : Superclass(detail::ConstantFunctor<T>(value), numberOfValues) {  }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleConstant(const ArrayHandleConstant<T> &src)
-    : Superclass(src)
-  {  }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleConstant(const vtkm::cont::ArrayHandle<T,StorageTag> &src)
-    : Superclass(src)
-  {  }
-
-  VTKM_CONT_EXPORT
-  virtual ~ArrayHandleConstant() {  }
 };
 
 /// make_ArrayHandleImplicit is convenience function to generate an
 /// ArrayHandleImplicit.  It takes a functor and the virtual length of the
-/// arry.
+/// array.
 ///
 template<typename T>
 vtkm::cont::ArrayHandleConstant<T>

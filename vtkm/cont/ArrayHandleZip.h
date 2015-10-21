@@ -170,6 +170,10 @@ struct ArrayHandleZipTraits {
   /// The appropriately templated tag.
   ///
   typedef StorageTagZip<FirstHandleType,SecondHandleType> Tag;
+
+  /// The superclass for ArrayHandleZip.
+  ///
+  typedef vtkm::cont::ArrayHandle<ValueType,Tag> Superclass;
 };
 
 
@@ -348,10 +352,7 @@ private:
 template<typename FirstHandleType,
          typename SecondHandleType>
 class ArrayHandleZip
-    : public vtkm::cont::ArrayHandle<
-  typename internal::ArrayHandleZipTraits<FirstHandleType,SecondHandleType>::ValueType,
-  typename internal::ArrayHandleZipTraits<FirstHandleType,SecondHandleType>::Tag
-  >
+    : public internal::ArrayHandleZipTraits<FirstHandleType,SecondHandleType>::Superclass
 {
   // If the following line gives a compile error, then the FirstHandleType
   // template argument is not a valid ArrayHandle type.
@@ -362,36 +363,20 @@ class ArrayHandleZip
   VTKM_IS_ARRAY_HANDLE(SecondHandleType);
 
 public:
-  typedef typename internal::ArrayHandleZipTraits<FirstHandleType,
-                                        SecondHandleType>::ValueType ValueType;
-  typedef typename internal::ArrayHandleZipTraits<FirstHandleType,
-                                        SecondHandleType>::Tag StorageTag;
-
-  typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> Superclass;
+  VTKM_ARRAY_HANDLE_SUBCLASS(
+      ArrayHandleZip,
+      (ArrayHandleZip<FirstHandleType,SecondHandleType>),
+      (typename internal::ArrayHandleZipTraits<
+         FirstHandleType,SecondHandleType>::Superclass));
 
 private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
   VTKM_CONT_EXPORT
-  ArrayHandleZip() : Superclass( ) { }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleZip(const ArrayHandleZip<FirstHandleType,SecondHandleType> &src)
-    : Superclass(src)
-  {  }
-
-  VTKM_CONT_EXPORT
   ArrayHandleZip(const FirstHandleType &firstArray,
                  const SecondHandleType &secondArray)
     : Superclass( StorageType( firstArray, secondArray ) ) { }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleZip(const vtkm::cont::ArrayHandle<ValueType, StorageTag> &src)
-    : Superclass(src) { }
-
-  VTKM_CONT_EXPORT
-  virtual ~ArrayHandleZip() {  }
 };
 
 /// A convenience function for creating an ArrayHandleZip. It takes the two
