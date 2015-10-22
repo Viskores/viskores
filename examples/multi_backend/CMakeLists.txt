@@ -20,8 +20,6 @@
 ##
 ##=============================================================================
 
-cmake_minimum_required(VERSION 2.8.11)
-
 if(VTKm_Cuda_FOUND)
   cuda_add_executable(MultiBackend MultiBackend.cu)
 else()
