@@ -46,20 +46,9 @@
 namespace vtkm {
 namespace worklet {
 
-/// Base class for worklets that do a simple mapping of field arrays. All
-/// inputs and outputs are on the same domain. That is, all the arrays are the
-/// same size.
-///
-/// TODO: I also suggest having convenience subclasses for common (supported?)
-/// link directions.
-///
-template<typename FromTopology, typename ToTopology>
-class WorkletMapTopology : public vtkm::worklet::internal::WorkletBase
+class WorkletMapTopologyBase : public vtkm::worklet::internal::WorkletBase
 {
 public:
-  typedef FromTopology FromTopologyType;
-  typedef ToTopology ToTopologyType;
-
   /// \brief A control signature tag for input fields.
   ///
   /// This tag takes a template argument that is a type list tag that limits
@@ -82,14 +71,6 @@ public:
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayTopologyMapIn FetchTag;
-  };
-
-  /// \brief A control signature tag for input connectivity.
-  ///
-  struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopology,ToTopology> TransportTag;
-    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
   };
 
   /// \brief A control signature tag for output fields.
@@ -152,16 +133,50 @@ public:
   }
 };
 
+/// Base class for worklets that do a simple mapping of field arrays. All
+/// inputs and outputs are on the same domain. That is, all the arrays are the
+/// same size.
+///
+/// TODO: I also suggest having convenience subclasses for common (supported?)
+/// link directions.
+///
+template<typename FromTopology, typename ToTopology>
+class WorkletMapTopology : public WorkletMapTopologyBase
+{
+public:
+  typedef FromTopology FromTopologyType;
+  typedef ToTopology ToTopologyType;
+
+  /// \brief A control signature tag for input connectivity.
+  ///
+  struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopologyType,ToTopologyType> TransportTag;
+    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
+  };
+
+};
+
 /// Convenience base class for worklets that map from Points to Cells.
 ///
 /// TODO: Add convenience tags like FieldInPoint, FieldInCell, etc. so that
 /// you don't have to do the mental conversion from "to" and "from" to "cell"
 /// and "point".
 ///
-class WorkletMapTopologyPointToCell
- : public WorkletMapTopology<vtkm::TopologyElementTagPoint,
-                             vtkm::TopologyElementTagCell>
-{ };
+class WorkletMapTopologyPointToCell: public WorkletMapTopologyBase
+{
+public:
+  typedef vtkm::TopologyElementTagPoint FromTopologyType;
+  typedef vtkm::TopologyElementTagCell ToTopologyType;
+
+  /// \brief A control signature tag for input connectivity.
+  ///
+  struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopologyType,ToTopologyType> TransportTag;
+    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
+  };
+};
 
 }
 } // namespace vtkm::worklet
