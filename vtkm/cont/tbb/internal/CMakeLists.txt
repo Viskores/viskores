@@ -22,6 +22,7 @@ set(headers
   ArrayManagerExecutionTBB.h
   DeviceAdapterAlgorithmTBB.h
   DeviceAdapterTagTBB.h
+  FunctorsTBB.h
   )
 
 if (VTKm_ENABLE_TBB)
