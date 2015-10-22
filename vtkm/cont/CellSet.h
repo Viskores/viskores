@@ -44,6 +44,22 @@ public:
   {
   }
 
+  VTKM_CONT_EXPORT
+  CellSet(const vtkm::cont::CellSet &src)
+    : Name(src.Name),
+      Dimensionality(src.Dimensionality),
+      LogicalStructure(src.LogicalStructure)
+  {  }
+
+  VTKM_CONT_EXPORT
+  CellSet &operator=(const vtkm::cont::CellSet &src)
+  {
+    this->Name = src.Name;
+    this->Dimensionality = src.Dimensionality;
+    this->LogicalStructure = src.LogicalStructure;
+    return *this;
+  }
+
   virtual ~CellSet()
   {
   }

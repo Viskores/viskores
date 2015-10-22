@@ -117,6 +117,93 @@ struct ArrayHandleCheck
 
 } // namespace internal
 
+namespace detail {
+
+template<typename T> struct GetTypeInParentheses;
+template<typename T>
+struct GetTypeInParentheses<void(T)>
+{
+  typedef T type;
+};
+
+} // namespace detail
+
+// Implementation for VTKM_ARRAY_HANDLE_SUBCLASS macros
+#define VTK_M_ARRAY_HANDLE_SUBCLASS_IMPL(classname, fullclasstype, superclass, typename__) \
+  typedef typename__ vtkm::cont::detail::GetTypeInParentheses<void fullclasstype>::type Thisclass;\
+  typedef typename__ vtkm::cont::detail::GetTypeInParentheses<void superclass>::type Superclass;\
+  \
+  VTKM_IS_ARRAY_HANDLE(Superclass); \
+  \
+  VTKM_CONT_EXPORT \
+  classname() : Superclass() {  } \
+  \
+  VTKM_CONT_EXPORT \
+  classname(const Thisclass &src) : Superclass(src) {  } \
+  \
+  VTKM_CONT_EXPORT \
+  classname(const vtkm::cont::ArrayHandle<typename__ Superclass::ValueType, typename__ Superclass::StorageTag> &src) : Superclass(src) {  } \
+  \
+  VTKM_CONT_EXPORT \
+  virtual ~classname() {  } \
+  \
+  VTKM_CONT_EXPORT \
+  Thisclass &operator=(const Thisclass &src) \
+  { \
+    this->Superclass::operator=(src); \
+    return *this; \
+  } \
+  \
+  typedef typename__ Superclass::ValueType ValueType; \
+  typedef typename__ Superclass::StorageTag StorageTag
+
+/// \brief Macro to make default methods in ArrayHandle subclasses.
+///
+/// This macro defines the default constructors, destructors and assignment
+/// operators for ArrayHandle subclasses that are templates. The ArrayHandle
+/// subclasses are assumed to be empty convenience classes. The macro should be
+/// defined after a \c public: declaration.
+///
+/// This macro takes three arguments. The first argument is the classname.
+/// The second argument is the full class type. The third argument is the
+/// superclass type (either \c ArrayHandle or another sublcass). Because
+/// C macros do not handle template parameters very well (the preprocessor
+/// thinks the template commas are macro argument commas), the second and
+/// third arguments must be wrapped in parentheses.
+///
+/// This macro also defines a Superclass typedef as well as ValueType and
+/// StorageTag.
+///
+/// Note that this macor only works on ArrayHandle subclasses that are
+/// templated. For ArrayHandle sublcasses that are not templates, use
+/// VTKM_ARRAY_HANDLE_SUBCLASS_NT.
+///
+#define VTKM_ARRAY_HANDLE_SUBCLASS(classname, fullclasstype, superclass) \
+  VTK_M_ARRAY_HANDLE_SUBCLASS_IMPL(classname, fullclasstype, superclass, typename)
+
+/// \brief Macro to make default methods in ArrayHandle subclasses.
+///
+/// This macro defines the default constructors, destructors and assignment
+/// operators for ArrayHandle subclasses that are not templates. The
+/// ArrayHandle subclasses are assumed to be empty convenience classes. The
+/// macro should be defined after a \c public: declaration.
+///
+/// This macro takes two arguments. The first argument is the classname. The
+/// second argument is the superclass type (either \c ArrayHandle or another
+/// sublcass). Because C macros do not handle template parameters very well
+/// (the preprocessor thinks the template commas are macro argument commas),
+/// the second argument must be wrapped in parentheses.
+///
+/// This macro also defines a Superclass typedef as well as ValueType and
+/// StorageTag.
+///
+/// Note that this macor only works on ArrayHandle subclasses that are not
+/// templated. For ArrayHandle sublcasses that are are templates, use
+/// VTKM_ARRAY_HANDLE_SUBCLASS.
+///
+#define VTKM_ARRAY_HANDLE_SUBCLASS_NT(classname, superclass) \
+  VTK_M_ARRAY_HANDLE_SUBCLASS_IMPL(classname, (classname), superclass, )
+
 /// \brief Manages an array-worth of data.
 ///
 /// \c ArrayHandle manages as array of data that can be manipulated by VTKm
@@ -170,6 +257,18 @@ public:
     this->Internals->ExecutionArrayValid = false;
   }
 
+  /// Copy constructor.
+  ///
+  /// Implemented so that it is defined exclusively in the control environment.
+  /// If there is a separate device for the execution environment (for example,
+  /// with CUDA), then the automatically generated copy constructor could be
+  /// created for all devices, and it would not be valid for all devices.
+  ///
+  VTKM_CONT_EXPORT
+  ArrayHandle(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
+    : Internals(src.Internals)
+  {  }
+
   /// Special constructor for subclass specializations that need to set the
   /// initial state of the control array. When this constructor is used, it
   /// is assumed that the control array is valid.
@@ -180,6 +279,26 @@ public:
     this->Internals->ControlArray = storage;
     this->Internals->ControlArrayValid = true;
     this->Internals->ExecutionArrayValid = false;
+  }
+
+  /// Destructs an empty ArrayHandle.
+  ///
+  /// Implemented so that it is defined exclusively in the control environment.
+  /// If there is a separate device for the execution environment (for example,
+  /// with CUDA), then the automatically generated destructor could be
+  /// created for all devices, and it would not be valid for all devices.
+  ///
+  VTKM_CONT_EXPORT
+  virtual ~ArrayHandle() {  }
+
+  /// \brief Copies an ArrayHandle
+  ///
+  VTKM_CONT_EXPORT
+  vtkm::cont::ArrayHandle<ValueType,StorageTag> &
+  operator=(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
+  {
+    this->Internals = src.Internals;
+    return *this;
   }
 
   /// Get the array portal of the control array.
@@ -482,6 +601,7 @@ public:
     bool ExecutionArrayValid;
   };
 
+  VTKM_CONT_EXPORT
   ArrayHandle(boost::shared_ptr<InternalStruct> i)
     : Internals(i)
   { }

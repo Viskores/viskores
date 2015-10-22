@@ -35,6 +35,7 @@ template<vtkm::IdComponent DIMENSION>
 class CellSetStructured : public CellSet
 {
 private:
+  typedef vtkm::cont::CellSetStructured<DIMENSION> Thisclass;
   typedef vtkm::internal::ConnectivityStructuredInternals<DIMENSION>
       InternalsType;
 
@@ -49,6 +50,20 @@ public:
   {
   }
 
+  VTKM_CONT_EXPORT
+  CellSetStructured(const Thisclass &src)
+    : CellSet(src), Structure(src.Structure)
+  {  }
+
+  VTKM_CONT_EXPORT
+  Thisclass &operator=(const Thisclass &src)
+  {
+    this->CellSet::operator=(src);
+    this->Structure = src.Structure;
+    return *this;
+  }
+
+  virtual ~CellSetStructured() {  }
 
   virtual vtkm::Id GetNumberOfCells() const
   {
