@@ -257,7 +257,7 @@ public:
   struct TypeClipStats : vtkm::ListTagBase<ClipStats> { };
 
 
-  class ComputeStats : public vtkm::worklet::WorkletMapTopologyPointToCell
+  class ComputeStats : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
@@ -318,7 +318,7 @@ public:
   };
 
 
-  class GenerateCellSet : public vtkm::worklet::WorkletMapTopologyPointToCell
+  class GenerateCellSet : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(TopologyIn topology,

@@ -148,7 +148,7 @@ struct VertexClustering
   };
 
 
-  class MapCellsWorklet: public vtkm::worklet::WorkletMapTopologyPointToCell
+  class MapCellsWorklet: public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(TopologyIn topology,

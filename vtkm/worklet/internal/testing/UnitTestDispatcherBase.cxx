@@ -196,14 +196,12 @@ class TestDispatcher :
     public vtkm::worklet::internal::DispatcherBase<
       TestDispatcher<WorkletType>,
       WorkletType,
-      TestWorkletBase,
-      Device>
+      TestWorkletBase>
 {
   typedef vtkm::worklet::internal::DispatcherBase<
       TestDispatcher<WorkletType>,
       WorkletType,
-      TestWorkletBase,
-      Device> Superclass;
+      TestWorkletBase> Superclass;
   typedef vtkm::internal::FunctionInterface<void(vtkm::Id *, TestExecObjectType, vtkm::Id *)>
       ParameterInterface;
   typedef vtkm::internal::Invocation<
@@ -220,7 +218,7 @@ public:
   void DoInvoke(const Invocation &invocation) const
   {
     std::cout << "In TestDispatcher::DoInvoke()" << std::endl;
-    this->BasicInvoke(invocation, ARRAY_SIZE);
+    this->BasicInvoke(invocation, ARRAY_SIZE, Device());
   }
 
 private:

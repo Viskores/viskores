@@ -40,7 +40,7 @@ public:
   struct BoolType : vtkm::ListTagBase<bool> { };
 
   template <typename UnaryPredicate>
-  class ThresholdByPointField : public vtkm::worklet::WorkletMapTopologyPointToCell
+  class ThresholdByPointField : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
@@ -74,7 +74,7 @@ public:
   };
 
   template <typename UnaryPredicate>
-  class ThresholdByCellField : public vtkm::worklet::WorkletMapTopologyPointToCell
+  class ThresholdByCellField : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(TopologyIn topology,

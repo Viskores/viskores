@@ -46,7 +46,7 @@ class IsosurfaceFilterUniformGrid
 {
 public:
 
-  class ClassifyCell : public vtkm::worklet::WorkletMapTopologyPointToCell
+  class ClassifyCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(FieldInFrom<Scalar> inNodes,

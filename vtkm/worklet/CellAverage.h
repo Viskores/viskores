@@ -28,7 +28,7 @@ namespace worklet {
 
 //simple functor that returns the average point value.
 class CellAverage :
-        public vtkm::worklet::WorkletMapTopologyPointToCell
+        public vtkm::worklet::WorkletMapPointToCell
 {
 public:
   typedef void ControlSignature(FieldInFrom<Scalar> inPoints,

@@ -163,7 +163,7 @@ public:
 /// you don't have to do the mental conversion from "to" and "from" to "cell"
 /// and "point".
 ///
-class WorkletMapTopologyPointToCell: public WorkletMapTopologyBase
+class WorkletMapPointToCell: public WorkletMapTopologyBase
 {
 public:
   typedef vtkm::TopologyElementTagPoint FromTopologyType;
