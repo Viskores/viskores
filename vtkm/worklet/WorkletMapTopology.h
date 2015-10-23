@@ -157,11 +157,7 @@ public:
 
 };
 
-/// Convenience base class for worklets that map from Points to Cells.
-///
-/// TODO: Add convenience tags like FieldInPoint, FieldInCell, etc. so that
-/// you don't have to do the mental conversion from "to" and "from" to "cell"
-/// and "point".
+/// Base class for worklets that map from Points to Cells.
 ///
 class WorkletMapPointToCell: public WorkletMapTopologyBase
 {
@@ -176,6 +172,22 @@ public:
     typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopologyType,ToTopologyType> TransportTag;
     typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
   };
+
+  //While we would love to use templates, that feature is not possible
+  //until c++11 ( alias templates), so we have to replicate that feature
+  //by using inheritance.
+
+  template<typename TypeList = AllTypes >
+  struct FieldInPoint : FieldInFrom<TypeList> { };
+
+  template<typename TypeList = AllTypes >
+  struct FieldInCell : FieldInTo<TypeList> { };
+
+  template<typename TypeList = AllTypes >
+  struct FieldOutCell : FieldOut<TypeList> { };
+
+  template<typename TypeList = AllTypes >
+  struct FieldInOutCell : FieldInOut<TypeList> { };
 };
 
 }

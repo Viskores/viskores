@@ -49,9 +49,9 @@ public:
   class ClassifyCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(FieldInFrom<Scalar> inNodes,
+    typedef void ControlSignature(FieldInPoint<Scalar> inNodes,
                                   TopologyIn topology,
-                                  FieldOut<IdType> outNumVertices);
+                                  FieldOutCell<IdType> outNumVertices);
     typedef void ExecutionSignature(_1, _3);
     typedef _2 InputDomain;
 

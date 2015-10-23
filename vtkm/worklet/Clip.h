@@ -261,9 +261,9 @@ public:
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
-                                  FieldInFrom<Scalar> scalars,
-                                  FieldOut<IdType> clipTableIdxs,
-                                  FieldOut<TypeClipStats> stats);
+                                  FieldInPoint<Scalar> scalars,
+                                  FieldOutCell<IdType> clipTableIdxs,
+                                  FieldOutCell<TypeClipStats> stats);
     typedef void ExecutionSignature(_2, CellShape, FromCount, _3, _4);
 
     VTKM_CONT_EXPORT
@@ -322,9 +322,9 @@ public:
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
-                                  FieldInFrom<Scalar> scalars,
-                                  FieldInTo<IdType> clipTableIdxs,
-                                  FieldInTo<TypeClipStats> cellSetIdxs,
+                                  FieldInPoint<Scalar> scalars,
+                                  FieldInCell<IdType> clipTableIdxs,
+                                  FieldInCell<TypeClipStats> cellSetIdxs,
                                   ExecObject connectivityExplicit,
                                   ExecObject interpolation,
                                   ExecObject newPointsConnectivityReverseMap);

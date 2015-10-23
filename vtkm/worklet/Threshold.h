@@ -44,8 +44,8 @@ public:
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
-                                  FieldInFrom<Scalar> scalars,
-                                  FieldOut<BoolType> passFlags);
+                                  FieldInPoint<Scalar> scalars,
+                                  FieldOutCell<BoolType> passFlags);
 
     typedef _3 ExecutionSignature(_2, FromCount);
 

@@ -31,9 +31,9 @@ class CellAverage :
         public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(FieldInFrom<Scalar> inPoints,
+  typedef void ControlSignature(FieldInPoint<Scalar> inPoints,
                                 TopologyIn topology,
-                                FieldOut<Scalar> outCells);
+                                FieldOutCell<Scalar> outCells);
   typedef void ExecutionSignature(_1, FromCount, _3);
   typedef _2 InputDomain;
 
