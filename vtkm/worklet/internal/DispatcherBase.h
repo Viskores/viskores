@@ -40,6 +40,7 @@
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/mpl/assert.hpp>
+#include <boost/mpl/fold.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/utility/enable_if.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
@@ -69,6 +70,21 @@ inline void PrintFailureMessage(int index, boost::false_type)
           << " when calling Invoke on a dispatcher.";
   throw vtkm::cont::ErrorControlBadType(message.str());
 }
+
+// Is designed as a boost mpl metafunction.
+struct DetermineIfHasDynamicParameter
+{
+  template<typename T, typename U>
+  struct apply
+  {
+    typedef typename vtkm::cont::internal::DynamicTransformTraits<U>::DynamicTag DynamicTag;
+    typedef typename boost::is_same<
+            DynamicTag,
+            vtkm::cont::internal::DynamicTransformTagCastAndCall>::type UType;
+
+    typedef typename boost::mpl::or_<T,UType>::type type;
+  };
+};
 
 // Checks that an argument in a ControlSignature is a valid control signature
 // tag. Causes a compile error otherwise.
@@ -275,6 +291,27 @@ private:
 
     BOOST_MPL_ASSERT(( boost::is_base_of<BaseWorkletType,WorkletType> ));
 
+    //We need to determine if we have the need to do any dynamic
+    //transforms. This is fairly simple of a query. We just need to check
+    //everything in the FunctionInterface and see if any of them have the
+    //proper dynamic trait. Doing this, allows us to generate zero dynamic
+    //check & convert code when we already know all the types. This results
+    //in smaller executables and libraries.
+    typedef boost::function_types::parameter_types<Signature> MPLSignatureForm;
+    typedef typename boost::mpl::fold<
+                                MPLSignatureForm,
+                                boost::mpl::bool_<false>,
+                                detail::DetermineIfHasDynamicParameter>::type HasDynamicTypes;
+    this->StartInvokeDynamic(parameters, HasDynamicTypes() );
+  }
+
+
+  template<typename Signature>
+  VTKM_CONT_EXPORT
+  void StartInvokeDynamic(
+      const vtkm::internal::FunctionInterface<Signature> &parameters,
+      boost::mpl::bool_<true>) const
+  {
     // As we do the dynamic transform, we are also going to check the static
     // type against the TypeCheckTag in the ControlSignature tags. To do this,
     // the check needs access to both the parameter (in the parameters
@@ -287,6 +324,18 @@ private:
     parameters.DynamicTransformCont(
           detail::DispatcherBaseDynamicTransform<ControlInterface>(),
           detail::DispatcherBaseDynamicTransformHelper<MyType>(this));
+  }
+
+  template<typename Signature>
+  VTKM_CONT_EXPORT
+  void StartInvokeDynamic(
+      const vtkm::internal::FunctionInterface<Signature> &parameters,
+      boost::mpl::bool_<false>) const
+  {
+    //Nothing requires a conversion from dynamic to static types, so
+    //we can directly DynamicTransformInvoke as the parameters, and
+    //Signature do not need to be modified.
+    this->DynamicTransformInvoke(parameters);
   }
 
   template<typename Signature>
