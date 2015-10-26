@@ -19,10 +19,15 @@
 ##============================================================================
 
 set(headers
-  ErrorIO.h
+  VTKDataSetReaderBase.h
+  VTKPolyDataReader.h
+  VTKStructuredGridReader.h
+  VTKStructuredPointsReader.h
+  VTKUnstructuredGridReader.h
+  VTKDataSetReader.h
 )
 
 vtkm_declare_headers(${headers})
 
-add_subdirectory(reader)
-add_subdirectory(writers)
+add_subdirectory(internal)
+add_subdirectory(testing)

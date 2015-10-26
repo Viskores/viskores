@@ -19,10 +19,7 @@
 ##============================================================================
 
 set(headers
-  ErrorIO.h
+  TypeInfo.h
 )
 
 vtkm_declare_headers(${headers})
-
-add_subdirectory(reader)
-add_subdirectory(writers)

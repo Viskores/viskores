@@ -18,11 +18,8 @@
 ##  this software.
 ##============================================================================
 
-set(headers
-  ErrorIO.h
+set(unit_tests
+  UnitTestVTKDataSetReader.cxx
 )
 
-vtkm_declare_headers(${headers})
-
-add_subdirectory(reader)
-add_subdirectory(writers)
+vtkm_unit_tests(SOURCES ${unit_tests})
