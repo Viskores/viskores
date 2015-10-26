@@ -165,7 +165,7 @@ struct ExternalFaces
 
 
   //Worklet that identifies the vertices of a cell face
-  class GetFace : public vtkm::worklet::WorkletMapTopologyPointToCell
+  class GetFace : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(FieldInTo<AllTypes> localFaceIds,

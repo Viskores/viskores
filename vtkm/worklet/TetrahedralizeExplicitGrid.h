@@ -59,9 +59,9 @@ public:
 
     VTKM_CONT_EXPORT
     TrianglesPerCell() {}
-  
+
     VTKM_EXEC_EXPORT
-    void operator()(const vtkm::UInt8 &shape, 
+    void operator()(const vtkm::UInt8 &shape,
                     const vtkm::IdComponent &numIndices,
                     vtkm::Id &triangleCount) const
     {
@@ -88,9 +88,9 @@ public:
 
     VTKM_CONT_EXPORT
     TetrahedraPerCell() {}
-  
+
     VTKM_EXEC_EXPORT
-    void operator()(const vtkm::UInt8 &shape, 
+    void operator()(const vtkm::UInt8 &shape,
                     vtkm::Id &tetrahedraCount) const
     {
       if (shape == vtkm::CELL_SHAPE_TETRA)
@@ -109,7 +109,7 @@ public:
   // Worklet to turn cells into triangles
   // Vertices remain the same and each cell is processed with needing topology
   //
-  class TriangulateCell : public vtkm::worklet::WorkletMapTopologyPointToCell
+  class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(FieldInTo<> triangleOffset,
@@ -165,7 +165,7 @@ public:
   // Worklet to turn cells into tetrahedra
   // Vertices remain the same and each cell is processed with needing topology
   //
-  class TetrahedralizeCell : public vtkm::worklet::WorkletMapTopologyPointToCell
+  class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(FieldInTo<> tetraOffset,
@@ -275,7 +275,7 @@ public:
     // Cell sets belonging to input and output datasets
     vtkm::cont::CellSetExplicit<> &inCellSet =
       InDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetExplicit<> >();
-    vtkm::cont::CellSetSingleType<> &cellSet = 
+    vtkm::cont::CellSetSingleType<> &cellSet =
       OutDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetSingleType<> >();
 
     // Input dataset vertices and cell counts

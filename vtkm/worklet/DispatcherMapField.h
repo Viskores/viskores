@@ -35,14 +35,12 @@ class DispatcherMapField :
     public vtkm::worklet::internal::DispatcherBase<
       DispatcherMapField<WorkletType,Device>,
       WorkletType,
-      vtkm::worklet::WorkletMapField,
-      Device>
+      vtkm::worklet::WorkletMapField>
 {
   typedef vtkm::worklet::internal::DispatcherBase<
     DispatcherMapField<WorkletType,Device>,
     WorkletType,
-    vtkm::worklet::WorkletMapField,
-    Device> Superclass;
+    vtkm::worklet::WorkletMapField> Superclass;
 
 public:
   VTKM_CONT_EXPORT
@@ -68,7 +66,7 @@ public:
 
     // A MapField is a pretty straightforward dispatch. Once we know the number
     // of invocations, the superclass can take care of the rest.
-    this->BasicInvoke(invocation, numInstances);
+    this->BasicInvoke(invocation, numInstances, Device());
   }
 
 };

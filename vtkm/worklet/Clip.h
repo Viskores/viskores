@@ -257,13 +257,13 @@ public:
   struct TypeClipStats : vtkm::ListTagBase<ClipStats> { };
 
 
-  class ComputeStats : public vtkm::worklet::WorkletMapTopologyPointToCell
+  class ComputeStats : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
-                                  FieldInFrom<Scalar> scalars,
-                                  FieldOut<IdType> clipTableIdxs,
-                                  FieldOut<TypeClipStats> stats);
+                                  FieldInPoint<Scalar> scalars,
+                                  FieldOutCell<IdType> clipTableIdxs,
+                                  FieldOutCell<TypeClipStats> stats);
     typedef void ExecutionSignature(_2, CellShape, FromCount, _3, _4);
 
     VTKM_CONT_EXPORT
@@ -318,13 +318,13 @@ public:
   };
 
 
-  class GenerateCellSet : public vtkm::worklet::WorkletMapTopologyPointToCell
+  class GenerateCellSet : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
-                                  FieldInFrom<Scalar> scalars,
-                                  FieldInTo<IdType> clipTableIdxs,
-                                  FieldInTo<TypeClipStats> cellSetIdxs,
+                                  FieldInPoint<Scalar> scalars,
+                                  FieldInCell<IdType> clipTableIdxs,
+                                  FieldInCell<TypeClipStats> cellSetIdxs,
                                   ExecObject connectivityExplicit,
                                   ExecObject interpolation,
                                   ExecObject newPointsConnectivityReverseMap);
