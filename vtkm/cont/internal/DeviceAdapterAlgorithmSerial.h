@@ -377,7 +377,7 @@ private:
 
     ZipHandleType zipHandle =
                     vtkm::cont::make_ArrayHandleZip(keys,values);
-    Sort(zipHandle,KeyCompare<T,U,BinaryCompare>(binary_compare));
+    Sort(zipHandle,internal::KeyCompare<T,U,BinaryCompare>(binary_compare));
   }
 
 public:
