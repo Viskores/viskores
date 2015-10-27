@@ -39,7 +39,12 @@
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
+#include <boost/mpl/at.hpp>
 #include <boost/mpl/assert.hpp>
+#include <boost/mpl/fold.hpp>
+#include <boost/mpl/find.hpp>
+#include <boost/mpl/zip_view.hpp>
+#include <boost/mpl/vector.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/utility/enable_if.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
@@ -69,6 +74,65 @@ inline void PrintFailureMessage(int index, boost::false_type)
           << " when calling Invoke on a dispatcher.";
   throw vtkm::cont::ErrorControlBadType(message.str());
 }
+
+// Is designed as a boost mpl binary metafunction.
+struct DetermineIfHasDynamicParameter
+{
+  template<typename T, typename U>
+  struct apply
+  {
+    typedef typename vtkm::cont::internal::DynamicTransformTraits<U>::DynamicTag DynamicTag;
+    typedef typename boost::is_same<
+            DynamicTag,
+            vtkm::cont::internal::DynamicTransformTagCastAndCall>::type UType;
+
+    typedef typename boost::mpl::or_<T,UType>::type type;
+  };
+};
+
+
+template<typename ValueType, typename TagList>
+void NiceInCorrectParameterErrorMessage()
+{
+ VTKM_STATIC_ASSERT_MSG(ValueType() == TagList(),
+                        "Unable to match 'ValueType' to the signature tag 'ControlSignatureTag'" );
+}
+
+template<typename T>
+void ShowInCorrectParameter(boost::mpl::true_, T) {}
+
+template<typename T>
+void ShowInCorrectParameter(boost::mpl::false_, T)
+{
+  typedef typename boost::mpl::deref<T>::type ZipType;
+  typedef typename boost::mpl::at_c<ZipType,0>::type ValueType;
+  typedef typename boost::mpl::at_c<ZipType,1>::type ControlSignatureTag;
+  NiceInCorrectParameterErrorMessage<ValueType,ControlSignatureTag>();
+};
+
+// Is designed as a boost mpl unary metafunction.
+struct DetermineHasInCorrectParameters
+{
+  //When we find parameters that don't match, we set our 'type' to true_
+  //otherwise we are false_
+  template<typename T>
+  struct apply
+  {
+    typedef typename boost::mpl::at_c<T,0>::type ValueType;
+    typedef typename boost::mpl::at_c<T,1>::type ControlSignatureTag;
+
+    typedef typename ControlSignatureTag::TypeCheckTag TypeCheckTag;
+
+    typedef boost::mpl::bool_<
+       vtkm::cont::arg::TypeCheck<TypeCheckTag,ValueType>::value> CanContinueTagType;
+
+    //We need to not the result of CanContinueTagType, because we want to return
+    //true when we have the first parameter that DOES NOT match the control
+    //signature requirements
+    typedef typename boost::mpl::not_< typename CanContinueTagType::type
+                        >::type type;
+  };
+};
 
 // Checks that an argument in a ControlSignature is a valid control signature
 // tag. Causes a compile error otherwise.
@@ -175,7 +239,7 @@ struct DispatcherBaseDynamicTransformHelper
   template<typename FunctionInterface>
   VTKM_CONT_EXPORT
   void operator()(const FunctionInterface &parameters) const {
-    this->Dispatcher->DynamicTransformInvoke(parameters);
+    this->Dispatcher->DynamicTransformInvoke(parameters, boost::mpl::true_() );
   }
 };
 
@@ -275,6 +339,28 @@ private:
 
     BOOST_MPL_ASSERT(( boost::is_base_of<BaseWorkletType,WorkletType> ));
 
+    //We need to determine if we have the need to do any dynamic
+    //transforms. This is fairly simple of a query. We just need to check
+    //everything in the FunctionInterface and see if any of them have the
+    //proper dynamic trait. Doing this, allows us to generate zero dynamic
+    //check & convert code when we already know all the types. This results
+    //in smaller executables and libraries.
+    typedef boost::function_types::parameter_types<Signature> MPLSignatureForm;
+    typedef typename boost::mpl::fold<
+                                MPLSignatureForm,
+                                boost::mpl::false_,
+                                detail::DetermineIfHasDynamicParameter>::type HasDynamicTypes;
+
+    this->StartInvokeDynamic(parameters, HasDynamicTypes() );
+  }
+
+
+  template<typename Signature>
+  VTKM_CONT_EXPORT
+  void StartInvokeDynamic(
+      const vtkm::internal::FunctionInterface<Signature> &parameters,
+      boost::mpl::true_) const
+  {
     // As we do the dynamic transform, we are also going to check the static
     // type against the TypeCheckTag in the ControlSignature tags. To do this,
     // the check needs access to both the parameter (in the parameters
@@ -291,8 +377,41 @@ private:
 
   template<typename Signature>
   VTKM_CONT_EXPORT
+  void StartInvokeDynamic(
+      const vtkm::internal::FunctionInterface<Signature> &parameters,
+      boost::mpl::false_) const
+  {
+    //Nothing requires a conversion from dynamic to static types, so
+    //next we need to verify that each argument's type is correct. If not
+    //we need to throw a nice compile time error
+    typedef boost::function_types::parameter_types<Signature> MPLSignatureForm;
+    typedef typename boost::function_types::parameter_types<
+                          typename WorkletType::ControlSignature > WorkletContSignature;
+
+    typedef boost::mpl::vector< MPLSignatureForm, WorkletContSignature > ZippedSignatures;
+    typedef boost::mpl::zip_view<ZippedSignatures> ZippedView;
+
+    typedef typename boost::mpl::find_if<
+                                ZippedView,
+                                detail::DetermineHasInCorrectParameters>::type LocationOfIncorrectParameter;
+
+    typedef typename boost::is_same< LocationOfIncorrectParameter,
+                                     typename boost::mpl::end< ZippedView>::type >::type HasOnlyCorrectTypes;
+
+    //When HasOnlyCorrectTypes is false we produce an error
+    //message which should state what the parameter type and tag type is
+    //that failed to match.
+    detail::ShowInCorrectParameter(HasOnlyCorrectTypes(),
+                                   LocationOfIncorrectParameter());
+
+    this->DynamicTransformInvoke(parameters, HasOnlyCorrectTypes());
+  }
+
+  template<typename Signature>
+  VTKM_CONT_EXPORT
   void DynamicTransformInvoke(
-      const vtkm::internal::FunctionInterface<Signature> &parameters) const
+      const vtkm::internal::FunctionInterface<Signature> &parameters,
+      boost::mpl::true_ ) const
   {
     // TODO: Check parameters
     static const vtkm::IdComponent INPUT_DOMAIN_INDEX =
@@ -300,6 +419,14 @@ private:
     reinterpret_cast<const DerivedClass *>(this)->DoInvoke(
           vtkm::internal::make_Invocation<INPUT_DOMAIN_INDEX>(
             parameters, ControlInterface(), ExecutionInterface()));
+  }
+
+  template<typename Signature>
+  VTKM_CONT_EXPORT
+  void DynamicTransformInvoke(
+      const vtkm::internal::FunctionInterface<Signature> &,
+      boost::mpl::false_ ) const
+  {
   }
 
 public:
