@@ -445,17 +445,17 @@ private:
     // data on device.
     typedef typename OutputPortal::ValueType ValueType;
 
-    //store the current value in last position array in a separate cuda
-    //memory location, we have size two so that we can store the result
-    ::thrust::system::cuda::vector< ValueType > sum(2);
-
+    //we have size three so that we can store the origin end value, the
+    //new end value, and the sum of those two
+    ::thrust::system::cuda::vector< ValueType > sum(3);
     try
     {
+
+      //store the current value of the last position array in a separate cuda
+      //memory location since the exclusive_scan will overwrite that value
+      //once run
       ::thrust::copy_n(thrust::cuda::par,
-                       IteratorEnd(input) - 1,
-                       1,
-                       sum.begin()
-                       );
+                       IteratorEnd(input) - 1, 1, sum.begin());
 
       vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
                                                         BinaryFunctor> bop(binaryOp);
@@ -469,14 +469,21 @@ private:
                                                   initialValue,
                                                   bop);
 
+      //Store the new value for the end of the array. This is done because
+      //with items such as the transpose array it is unsafe to pass the
+      //portal to the SumExclusiveScan
+      ::thrust::copy_n(thrust::cuda::par,
+                       (end-1), 1, sum.begin()+1);
+
+
       //execute the binaryOp one last time on the device.
-      SumExclusiveScan <<<1,1>>> (sum[0], *(end-1), sum[1], bop);
+      SumExclusiveScan <<<1,1>>> (sum[0], sum[1], sum[2], bop);
     }
     catch(...)
     {
       throwAsVTKmException();
     }
-    return sum[1];
+    return sum[2];
   }
 
   template<class InputPortal, class OutputPortal>
