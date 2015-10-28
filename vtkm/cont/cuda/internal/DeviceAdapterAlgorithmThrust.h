@@ -594,6 +594,11 @@ private:
 
     IteratorType outputBegin = IteratorBegin(output);
 
+    typedef typename StencilPortal::ValueType ValueType;
+
+    vtkm::exec::cuda::internal::WrappedUnaryPredicate<ValueType,
+                                                      UnaryPredicate> up(unary_predicate);
+
     try
     {
       IteratorType newLast = ::thrust::copy_if(thrust::cuda::par,
@@ -601,7 +606,7 @@ private:
                                                valuesEnd,
                                                IteratorBegin(stencil),
                                                outputBegin,
-                                               unary_predicate);
+                                               up);
       return static_cast<vtkm::Id>( ::thrust::distance(outputBegin, newLast) );
     }
     catch(...)
