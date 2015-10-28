@@ -562,85 +562,85 @@ public:
   static VTKM_CONT_EXPORT int Run(int benchmarks){
     std::cout << DIVIDER << "\nRunning DeviceAdapter benchmarks\n";
 
-    // if (benchmarks & LOWER_BOUNDS){
-    //   std::cout << DIVIDER << "\nBenchmarking LowerBounds\n";
-    //   VTKM_RUN_BENCHMARK(LowerBounds5, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(LowerBounds10, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(LowerBounds15, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(LowerBounds20, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(LowerBounds25, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(LowerBounds30, ValueTypes());
-    // }
+    if (benchmarks & LOWER_BOUNDS){
+      std::cout << DIVIDER << "\nBenchmarking LowerBounds\n";
+      VTKM_RUN_BENCHMARK(LowerBounds5, ValueTypes());
+      VTKM_RUN_BENCHMARK(LowerBounds10, ValueTypes());
+      VTKM_RUN_BENCHMARK(LowerBounds15, ValueTypes());
+      VTKM_RUN_BENCHMARK(LowerBounds20, ValueTypes());
+      VTKM_RUN_BENCHMARK(LowerBounds25, ValueTypes());
+      VTKM_RUN_BENCHMARK(LowerBounds30, ValueTypes());
+    }
 
-    // if (benchmarks & REDUCE){
-    //   std::cout << "\n" << DIVIDER << "\nBenchmarking Reduce\n";
-    //   VTKM_RUN_BENCHMARK(Reduce, ValueTypes());
-    // }
+    if (benchmarks & REDUCE){
+      std::cout << "\n" << DIVIDER << "\nBenchmarking Reduce\n";
+      VTKM_RUN_BENCHMARK(Reduce, ValueTypes());
+    }
 
-    // if (benchmarks & REDUCE_BY_KEY){
-    //   std::cout << "\n" << DIVIDER << "\nBenchmarking ReduceByKey\n";
-    //   VTKM_RUN_BENCHMARK(ReduceByKey5, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(ReduceByKey10, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(ReduceByKey15, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(ReduceByKey20, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(ReduceByKey25, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(ReduceByKey30, ValueTypes());
-    // }
+    if (benchmarks & REDUCE_BY_KEY){
+      std::cout << "\n" << DIVIDER << "\nBenchmarking ReduceByKey\n";
+      VTKM_RUN_BENCHMARK(ReduceByKey5, ValueTypes());
+      VTKM_RUN_BENCHMARK(ReduceByKey10, ValueTypes());
+      VTKM_RUN_BENCHMARK(ReduceByKey15, ValueTypes());
+      VTKM_RUN_BENCHMARK(ReduceByKey20, ValueTypes());
+      VTKM_RUN_BENCHMARK(ReduceByKey25, ValueTypes());
+      VTKM_RUN_BENCHMARK(ReduceByKey30, ValueTypes());
+    }
 
-    // if (benchmarks & SCAN_INCLUSIVE){
-    //   std::cout << "\n" << DIVIDER << "\nBenchmarking ScanInclusive\n";
-    //   VTKM_RUN_BENCHMARK(ScanInclusive, ValueTypes());
-    // }
+    if (benchmarks & SCAN_INCLUSIVE){
+      std::cout << "\n" << DIVIDER << "\nBenchmarking ScanInclusive\n";
+      VTKM_RUN_BENCHMARK(ScanInclusive, ValueTypes());
+    }
 
-    // if (benchmarks & SCAN_EXCLUSIVE){
-    //   std::cout << "\n" << DIVIDER << "\nBenchmarking ScanExclusive\n";
-    //   VTKM_RUN_BENCHMARK(ScanExclusive, ValueTypes());
-    // }
+    if (benchmarks & SCAN_EXCLUSIVE){
+      std::cout << "\n" << DIVIDER << "\nBenchmarking ScanExclusive\n";
+      VTKM_RUN_BENCHMARK(ScanExclusive, ValueTypes());
+    }
 
     if (benchmarks & SORT){
       std::cout << "\n" << DIVIDER << "\nBenchmarking Sort\n";
       VTKM_RUN_BENCHMARK(Sort, ValueTypes());
     }
 
-    // if (benchmarks & SORT_BY_KEY){
-    //   std::cout << "\n" << DIVIDER << "\nBenchmarking SortByKey\n";
-    //   VTKM_RUN_BENCHMARK(SortByKey5, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(SortByKey10, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(SortByKey15, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(SortByKey20, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(SortByKey25, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(SortByKey30, ValueTypes());
-    // }
+    if (benchmarks & SORT_BY_KEY){
+      std::cout << "\n" << DIVIDER << "\nBenchmarking SortByKey\n";
+      VTKM_RUN_BENCHMARK(SortByKey5, ValueTypes());
+      VTKM_RUN_BENCHMARK(SortByKey10, ValueTypes());
+      VTKM_RUN_BENCHMARK(SortByKey15, ValueTypes());
+      VTKM_RUN_BENCHMARK(SortByKey20, ValueTypes());
+      VTKM_RUN_BENCHMARK(SortByKey25, ValueTypes());
+      VTKM_RUN_BENCHMARK(SortByKey30, ValueTypes());
+    }
 
-    // if (benchmarks & STREAM_COMPACT){
-    //   std::cout << "\n" << DIVIDER << "\nBenchmarking StreamCompact\n";
-    //   VTKM_RUN_BENCHMARK(StreamCompact5, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(StreamCompact10, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(StreamCompact15, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(StreamCompact20, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(StreamCompact25, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(StreamCompact30, ValueTypes());
-    // }
+    if (benchmarks & STREAM_COMPACT){
+      std::cout << "\n" << DIVIDER << "\nBenchmarking StreamCompact\n";
+      VTKM_RUN_BENCHMARK(StreamCompact5, ValueTypes());
+      VTKM_RUN_BENCHMARK(StreamCompact10, ValueTypes());
+      VTKM_RUN_BENCHMARK(StreamCompact15, ValueTypes());
+      VTKM_RUN_BENCHMARK(StreamCompact20, ValueTypes());
+      VTKM_RUN_BENCHMARK(StreamCompact25, ValueTypes());
+      VTKM_RUN_BENCHMARK(StreamCompact30, ValueTypes());
+    }
 
-    // if (benchmarks & UNIQUE){
-    //   std::cout << "\n" << DIVIDER << "\nBenchmarking Unique\n";
-    //   VTKM_RUN_BENCHMARK(Unique5, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(Unique10, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(Unique15, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(Unique20, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(Unique25, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(Unique30, ValueTypes());
-    // }
+    if (benchmarks & UNIQUE){
+      std::cout << "\n" << DIVIDER << "\nBenchmarking Unique\n";
+      VTKM_RUN_BENCHMARK(Unique5, ValueTypes());
+      VTKM_RUN_BENCHMARK(Unique10, ValueTypes());
+      VTKM_RUN_BENCHMARK(Unique15, ValueTypes());
+      VTKM_RUN_BENCHMARK(Unique20, ValueTypes());
+      VTKM_RUN_BENCHMARK(Unique25, ValueTypes());
+      VTKM_RUN_BENCHMARK(Unique30, ValueTypes());
+    }
 
-    // if (benchmarks & UPPER_BOUNDS){
-    //   std::cout << "\n" << DIVIDER << "\nBenchmarking UpperBounds\n";
-    //   VTKM_RUN_BENCHMARK(UpperBounds5, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(UpperBounds10, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(UpperBounds15, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(UpperBounds20, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(UpperBounds25, ValueTypes());
-    //   VTKM_RUN_BENCHMARK(UpperBounds30, ValueTypes());
-    // }
+    if (benchmarks & UPPER_BOUNDS){
+      std::cout << "\n" << DIVIDER << "\nBenchmarking UpperBounds\n";
+      VTKM_RUN_BENCHMARK(UpperBounds5, ValueTypes());
+      VTKM_RUN_BENCHMARK(UpperBounds10, ValueTypes());
+      VTKM_RUN_BENCHMARK(UpperBounds15, ValueTypes());
+      VTKM_RUN_BENCHMARK(UpperBounds20, ValueTypes());
+      VTKM_RUN_BENCHMARK(UpperBounds25, ValueTypes());
+      VTKM_RUN_BENCHMARK(UpperBounds30, ValueTypes());
+    }
     return 0;
   }
 };
