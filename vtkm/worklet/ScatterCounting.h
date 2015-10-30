@@ -43,20 +43,26 @@ struct ReverseInputToOutputMapKernel : vtkm::exec::FunctorBase
   typedef typename
     vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<Device>::PortalConst
     InputMapType;
-    typedef typename
-      vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<Device>::Portal
-      OutputMapType;
+  typedef typename
+    vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<Device>::Portal
+    OutputMapType;
+  typedef typename
+    vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<Device>::Portal
+    VisitType;
 
   InputMapType InputToOutputMap;
   OutputMapType OutputToInputMap;
+  VisitType Visit;
   vtkm::Id OutputSize;
 
   VTKM_CONT_EXPORT
   ReverseInputToOutputMapKernel(const InputMapType &inputToOutputMap,
                                 const OutputMapType &outputToInputMap,
+                                const VisitType &visit,
                                 vtkm::Id outputSize)
     : InputToOutputMap(inputToOutputMap),
       OutputToInputMap(outputToInputMap),
+      Visit(visit),
       OutputSize(outputSize)
   {  }
 
@@ -74,11 +80,14 @@ struct ReverseInputToOutputMapKernel : vtkm::exec::FunctorBase
     }
     vtkm::Id outputEndIndex = this->InputToOutputMap.Get(inputIndex);
 
+    vtkm::IdComponent visitIndex = 0;
     for (vtkm::Id outputIndex = outputStartIndex;
          outputIndex < outputEndIndex;
          outputIndex++)
     {
       this->OutputToInputMap.Set(outputIndex, inputIndex);
+      this->Visit.Set(outputIndex, visitIndex);
+      visitIndex++;
     }
   }
 };
@@ -219,11 +228,6 @@ private:
       this->BuildOutputToInputMapWithIterate(
             outputSize, inputToOutputMap, Device());
     }
-
-    // This builds the visit indices using a parallel find. A prefix sum by
-    // key could be more efficient, but that is not implemented in the device
-    // adapter at the time of this writing.
-    this->BuildVisitArrayWithFind(Device());
   }
 
   template<typename Device>
@@ -236,6 +240,20 @@ private:
     vtkm::cont::ArrayHandleIndex outputIndices(outputSize);
     vtkm::cont::DeviceAdapterAlgorithm<Device>::UpperBounds(
           inputToOutputMap, outputIndices, this->OutputToInputMap);
+
+    // Do not need this anymore.
+    inputToOutputMap.ReleaseResources();
+
+    vtkm::cont::ArrayHandle<vtkm::Id> startsOfGroups;
+
+    // This find gives the index of the start of a group.
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::LowerBounds(
+          this->OutputToInputMap, this->OutputToInputMap, startsOfGroups);
+
+    detail::SubtractToVisitIndexKernel<Device>
+        kernel(startsOfGroups.PrepareForInput(Device()),
+               this->VisitArray.PrepareForOutput(outputSize, Device()));
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, outputSize);
   }
 
   template<typename Device>
@@ -248,28 +266,11 @@ private:
     detail::ReverseInputToOutputMapKernel<Device>
         kernel(inputToOutputMap.PrepareForInput(Device()),
                this->OutputToInputMap.PrepareForOutput(outputSize, Device()),
+               this->VisitArray.PrepareForOutput(outputSize, Device()),
                outputSize);
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
           kernel, inputToOutputMap.GetNumberOfValues());
-  }
-
-  template<typename Device>
-  VTKM_CONT_EXPORT
-  void BuildVisitArrayWithFind(Device)
-  {
-    vtkm::cont::ArrayHandle<vtkm::Id> startsOfGroups;
-
-    // This find gives the index of the start of a group.
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::LowerBounds(
-          this->OutputToInputMap, this->OutputToInputMap, startsOfGroups);
-
-    vtkm::Id outputSize = this->OutputToInputMap.GetNumberOfValues();
-
-    detail::SubtractToVisitIndexKernel<Device>
-        kernel(startsOfGroups.PrepareForInput(Device()),
-               this->VisitArray.PrepareForOutput(outputSize, Device()));
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, outputSize);
   }
 };
 
