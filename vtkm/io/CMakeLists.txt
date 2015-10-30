@@ -18,6 +18,6 @@
 ##  this software.
 ##============================================================================
 
-add_subdirectory(exporters)
+add_subdirectory(writers)
 
 

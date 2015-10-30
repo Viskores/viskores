@@ -1,4 +1,4 @@
-##============================================================================
+#============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -18,11 +18,8 @@
 ##  this software.
 ##============================================================================
 
-set(headers
-  VTKDataSetExporter.h
-  )
+set(unit_tests
+  UnitTestVTKDataSetWriter.cxx
+ )
 
-vtkm_declare_headers(${headers})
-
-#-----------------------------------------------------------------------------
-add_subdirectory(testing)
+vtkm_unit_tests(SOURCES ${unit_tests})

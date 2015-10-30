@@ -29,66 +29,66 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-#include <vtkm/io/exporters/VTKDataSetExporter.h>
+#include <vtkm/io/writers/VTKDataSetWriter.h>
 
 namespace {
 
-void TestVTKExplicitExport()
+void TestVTKExplicitWrite()
 {
   vtkm::cont::testing::MakeTestDataSet tds;
 
   std::ofstream out1("fileA1.vtk");
-  vtkm::io::exporters::VTKDataSetExporter::Export(out1,
+  vtkm::io::writers::VTKDataSetWriter::Write(out1,
     tds.Make3DExplicitDataSet0());
   out1.close();
 
   // force it to output an explicit grid as points
   std::ofstream out2("fileA2.vtk");
-  vtkm::io::exporters::VTKDataSetExporter::Export(out2,
+  vtkm::io::writers::VTKDataSetWriter::Write(out2,
     tds.Make3DExplicitDataSet0(), -1);
   out2.close();
 
   std::ofstream out3("fileA3.vtk");
-  vtkm::io::exporters::VTKDataSetExporter::Export(out3,
+  vtkm::io::writers::VTKDataSetWriter::Write(out3,
     tds.Make3DExplicitDataSet1());
   out3.close();
 
   std::ofstream out4("fileA4.vtk");
-  vtkm::io::exporters::VTKDataSetExporter::Export(out4,
+  vtkm::io::writers::VTKDataSetWriter::Write(out4,
     tds.Make3DExplicitDataSetCowNose());
   out4.close();
 }
 
-void TestVTKRegularExport()
+void TestVTKRegularWrite()
 {
   vtkm::cont::testing::MakeTestDataSet tds;
 
   std::ofstream out1("fileB1.vtk");
-  vtkm::io::exporters::VTKDataSetExporter::Export(out1,
+  vtkm::io::writers::VTKDataSetWriter::Write(out1,
     tds.Make2DRegularDataSet0());
   out1.close();
 
   std::ofstream out2("fileB2.vtk");
-  vtkm::io::exporters::VTKDataSetExporter::Export(out2,
+  vtkm::io::writers::VTKDataSetWriter::Write(out2,
     tds.Make3DRegularDataSet0());
   out2.close();
 
   // force it to output an explicit grid as points
   std::ofstream out3("fileB3.vtk");
-  vtkm::io::exporters::VTKDataSetExporter::Export(out3,
+  vtkm::io::writers::VTKDataSetWriter::Write(out3,
     tds.Make3DRegularDataSet0(), -1);
   out3.close();
 }
 
-void TestVTKExport()
+void TestVTKWrite()
 {
-  TestVTKExplicitExport();
-  TestVTKRegularExport();
+  TestVTKExplicitWrite();
+  TestVTKRegularWrite();
 }
 
 } //Anonymous namespace
 
-int UnitTestVTKDataSetExporter(int, char *[])
+int UnitTestVTKDataSetWriter(int, char *[])
 {
-  return vtkm::cont::testing::Testing::Run(TestVTKExport);
+  return vtkm::cont::testing::Testing::Run(TestVTKWrite);
 }

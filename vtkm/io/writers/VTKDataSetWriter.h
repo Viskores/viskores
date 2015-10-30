@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_DataSetExporter_h
-#define vtk_m_DataSetExporter_h
+#ifndef vtk_m_DataSetWriter_h
+#define vtk_m_DataSetWriter_h
 
 #include <algorithm>
 #include <cstring>
@@ -162,14 +162,14 @@ namespace vtkm
 {
 namespace io
 {
-namespace exporters
+namespace writers
 {
 
-struct VTKDataSetExporter
+struct VTKDataSetWriter
 {
 private:
-  static void ExportPoints(std::ostream &out,
-                           vtkm::cont::DataSet ds)
+  static void WritePoints(std::ostream &out,
+                          vtkm::cont::DataSet ds)
   {
     ///\todo: support other coordinate systems
     int cindex = 0;
@@ -184,8 +184,8 @@ private:
   }
 
   template <class CellSetType>
-  static void ExportExplicitCells(std::ostream &out,
-                                  CellSetType cs)
+  static void WriteExplicitCells(std::ostream &out,
+                                 CellSetType cs)
   {
     vtkm::Id nCells = cs.GetNumberOfCells();
 
@@ -214,8 +214,8 @@ private:
     }
   }
 
-  static void ExportVertexCells(std::ostream &out,
-                                vtkm::cont::DataSet ds)
+  static void WriteVertexCells(std::ostream &out,
+                               vtkm::cont::DataSet ds)
   {
     vtkm::Id n = ds.GetCoordinateSystem(0).GetData().GetNumberOfValues();
 
@@ -231,8 +231,8 @@ private:
     }
   }
 
-  static void ExportPointFields(std::ostream &out,
-                                vtkm::cont::DataSet ds)
+  static void WritePointFields(std::ostream &out,
+                               vtkm::cont::DataSet ds)
   {
     bool wrote_header = false;
     for (vtkm::Id f = 0; f < ds.GetNumberOfFields(); f++)
@@ -258,9 +258,9 @@ private:
     }
   }
 
-  static void ExportCellFields(std::ostream &out,
-                               vtkm::cont::DataSet ds,
-                               vtkm::cont::DynamicCellSet cs)
+  static void WriteCellFields(std::ostream &out,
+                              vtkm::cont::DataSet ds,
+                              vtkm::cont::DynamicCellSet cs)
   {
     bool wrote_header = false;
     for (vtkm::Id f = 0; f < ds.GetNumberOfFields(); f++)
@@ -288,28 +288,28 @@ private:
     }
   }
 
-  static void ExportDataSetAsPoints(std::ostream &out,
-                                    vtkm::cont::DataSet ds)
+  static void WriteDataSetAsPoints(std::ostream &out,
+                                   vtkm::cont::DataSet ds)
   {
     out << "DATASET UNSTRUCTURED_GRID" << std::endl;
-    ExportPoints(out, ds);
-    ExportVertexCells(out, ds);
+    WritePoints(out, ds);
+    WriteVertexCells(out, ds);
   }
 
   template <class CellSetType>
-  static void ExportDataSetAsUnstructured(std::ostream &out,
-                                          vtkm::cont::DataSet ds,
-                                          CellSetType cs)
+  static void WriteDataSetAsUnstructured(std::ostream &out,
+                                         vtkm::cont::DataSet ds,
+                                         CellSetType cs)
   {
     out << "DATASET UNSTRUCTURED_GRID" << std::endl;
-    ExportPoints(out, ds);
-    ExportExplicitCells(out, cs);
+    WritePoints(out, ds);
+    WriteExplicitCells(out, cs);
   }
 
   template <vtkm::IdComponent DIM>
-  static void ExportDataSetAsStructured(std::ostream &out,
-                                        vtkm::cont::DataSet ds,
-                                        vtkm::cont::CellSetStructured<DIM> cs)
+  static void WriteDataSetAsStructured(std::ostream &out,
+                                       vtkm::cont::DataSet ds,
+                                       vtkm::cont::CellSetStructured<DIM> cs)
   {
     ///\todo: support uniform/rectilinear
     out << "DATASET STRUCTURED_GRID" << std::endl;
@@ -319,11 +319,11 @@ private:
     out << (DIM>1 ? cs.GetPointDimensions()[1] : 1) << " ";
     out << (DIM>2 ? cs.GetPointDimensions()[2] : 1) << std::endl;
 
-    ExportPoints(out, ds);
+    WritePoints(out, ds);
   }
 
 public:
-  static void Export(std::ostream &out, vtkm::cont::DataSet ds, int csindex=0)
+  static void Write(std::ostream &out, vtkm::cont::DataSet ds, int csindex=0)
   {
     VTKM_ASSERT_CONT(csindex < ds.GetNumberOfCellSets());
 
@@ -333,31 +333,31 @@ public:
 
     if (csindex < 0)
     {
-      ExportDataSetAsPoints(out, ds);
-      ExportPointFields(out, ds);
+      WriteDataSetAsPoints(out, ds);
+      WritePointFields(out, ds);
     }
     else
     {
       vtkm::cont::DynamicCellSet cs = ds.GetCellSet(csindex);
       if (cs.IsType<vtkm::cont::CellSetExplicit<> >())
       {
-        ExportDataSetAsUnstructured(out, ds,
+        WriteDataSetAsUnstructured(out, ds,
                                   cs.CastTo<vtkm::cont::CellSetExplicit<> >());
       }
       else if (cs.IsType<vtkm::cont::CellSetStructured<2> >())
       {
-        ExportDataSetAsStructured(out, ds,
+        WriteDataSetAsStructured(out, ds,
                                   cs.CastTo<vtkm::cont::CellSetStructured<2> >());
       }
       else if (cs.IsType<vtkm::cont::CellSetStructured<3> >())
       {
-        ExportDataSetAsStructured(out, ds,
+        WriteDataSetAsStructured(out, ds,
                                   cs.CastTo<vtkm::cont::CellSetStructured<3> >());
       }
       else if (cs.IsType<vtkm::cont::CellSetSingleType<> >())
       {
         // these function just like explicit cell sets
-        ExportDataSetAsUnstructured(out, ds,
+        WriteDataSetAsUnstructured(out, ds,
                                 cs.CastTo<vtkm::cont::CellSetSingleType<> >());
       }
       else
@@ -365,13 +365,13 @@ public:
         VTKM_ASSERT_CONT(false);
       }
 
-      ExportPointFields(out, ds);
-      ExportCellFields(out, ds, cs);
+      WritePointFields(out, ds);
+      WriteCellFields(out, ds, cs);
     }
   }
 
-}; //struct VTKDataSetExporter
+}; //struct VTKDataSetWriter
 
-}}} //namespace vtkm::io::importers
+}}} //namespace vtkm::io::writers
 
-#endif //vtk_m_DataSetExporter_h
+#endif //vtk_m_DataSetWriter_h
