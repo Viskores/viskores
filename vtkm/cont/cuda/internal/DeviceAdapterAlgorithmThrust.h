@@ -371,6 +371,8 @@ private:
     {
       throwAsVTKmException();
     }
+
+    return InputPortal::ValueType();
   }
 
   template<class KeysPortal, class ValuesPortal,
