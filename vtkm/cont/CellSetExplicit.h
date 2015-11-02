@@ -183,13 +183,12 @@ public:
     return this->PointToCell.Shapes.GetPortalConstControl().Get(cellIndex);
   }
 
-  template <typename Device, vtkm::IdComponent ItemTupleLength>
+  template <vtkm::IdComponent ItemTupleLength>
   VTKM_CONT_EXPORT
-  void GetIndices(Device,
-                  vtkm::Id index,
+  void GetIndices(vtkm::Id index,
                   vtkm::Vec<vtkm::Id,ItemTupleLength> &ids) const
   {
-    this->PointToCell.BuildIndexOffsets(Device());
+    this->PointToCell.BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     vtkm::IdComponent numIndices = this->GetNumberOfPointsInCell(index);
     vtkm::Id start =
         this->PointToCell.IndexOffsets.GetPortalConstControl().Get(index);
@@ -430,8 +429,8 @@ public:
     typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
 
     // Sizes of the PointToCell information
-    int numberOfCells = this->GetNumberOfCells();
-    int connectivityLength = this->PointToCell.Connectivity.GetNumberOfValues();
+    vtkm::Id numberOfCells = this->GetNumberOfCells();
+    vtkm::Id connectivityLength = this->PointToCell.Connectivity.GetNumberOfValues();
 
     // PointToCell connectivity will be basis of CellToPoint numIndices
     vtkm::cont::ArrayHandle<vtkm::Id> pointIndices;
@@ -455,7 +454,7 @@ public:
     {
       this->NumberOfPoints = pointIndices.GetPortalControl().Get(connectivityLength - 1) + 1;
     }
-    int numberOfPoints = this->GetNumberOfPoints();
+   vtkm::Id numberOfPoints = this->GetNumberOfPoints();
 
     // CellToPoint numIndices from the now sorted PointToCell connectivity
     vtkm::cont::ArrayHandleConstant<vtkm::Id> numArray(1, connectivityLength);
