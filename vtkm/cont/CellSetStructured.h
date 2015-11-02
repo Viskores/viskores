@@ -80,6 +80,11 @@ public:
     this->Structure.SetPointDimensions(dimensions);
   }
 
+  SchedulingRangeType GetPointDimensions()
+  {
+    return this->Structure.GetPointDimensions();
+  }
+
   VTKM_CONT_EXPORT
   vtkm::IdComponent
   GetNumberOfPointsInCell(vtkm::Id vtkmNotUsed(cellIndex)=0) const
