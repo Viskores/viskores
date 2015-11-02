@@ -22,6 +22,7 @@
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/DeviceAdapterSerial.h>
 
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
