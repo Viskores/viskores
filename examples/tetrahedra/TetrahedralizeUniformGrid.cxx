@@ -18,6 +18,10 @@
 //  this software.
 //============================================================================
 
+#ifndef VTKM_DEVICE_ADAPTER
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
+#endif
+
 #include <vtkm/worklet/TetrahedralizeUniformGrid.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
@@ -87,7 +91,7 @@ vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dim)
   return dataSet;
 }
 
-// 
+//
 // Functor to retrieve vertex locations from the CoordinateSystem
 // Actually need a static cast to ArrayHandle from DynamicArrayHandleCoordinateSystem
 // but haven't been able to figure out what that is
@@ -163,10 +167,10 @@ void displayCall()
   qrot.getRotMat(rotationMatrix);
   glMultMatrixf(rotationMatrix);
   glTranslatef(-0.5f, -0.5f, -0.5f);
- 
+
   // Get the cell set, coordinate system and coordinate data
   vtkm::cont::CellSetSingleType<> &cellSet = tetDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray = 
+  const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray =
                                       tetDataSet.GetCoordinateSystem(0).GetData();
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
@@ -271,7 +275,7 @@ int main(int argc, char* argv[])
 {
   std::cout << "TetrahedralizeUniformGrid Example" << std::endl;
   std::cout << "Parameters are [xdim ydim zdim [# of cellsToDisplay]]" << std::endl << std::endl;
-  
+
   // Set the problem size and number of cells to display from command line
   if (argc >= 4)
   {

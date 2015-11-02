@@ -26,6 +26,7 @@
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
+#include <vtkm/cont/DeviceAdapterSerial.h>
 
 struct GenerateSurfaceWorklet : public vtkm::worklet::WorkletMapField
 {
