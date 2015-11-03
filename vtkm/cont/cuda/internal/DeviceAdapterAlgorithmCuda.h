@@ -24,6 +24,7 @@
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/ErrorControlInternal.h>
 
 // Here are the actual implementation of the algorithms.
 #include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmThrust.h>
@@ -42,6 +43,10 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>
   VTKM_CONT_EXPORT static void Synchronize()
   {
     cudaError_t error = cudaDeviceSynchronize();
+    if (error != cudaSuccess)
+    {
+      throw vtkm::cont::ErrorControlInternal(cudaGetErrorString(error));
+    }
   }
 
 };

@@ -18,6 +18,10 @@
 //  this software.
 //============================================================================
 
+#ifndef VTKM_DEVICE_ADAPTER
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
+#endif
+
 #include <vtkm/worklet/TetrahedralizeExplicitGrid.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
@@ -41,6 +45,8 @@
 
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
+namespace {
+
 // Takes input uniform grid and outputs unstructured grid of tets
 vtkm::cont::DataSet outDataSet;
 vtkm::Id numberOfInPoints;
@@ -52,6 +58,8 @@ vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
 Quaternion qrot;
 int lastx, lasty;
 int mouse_state = 1;
+
+} // anonymous namespace
 
 //
 // Test 3D explicit dataset
@@ -135,7 +143,7 @@ vtkm::cont::DataSet MakeTetrahedralizeExplicitDataSet()
   return dataSet;
 }
 
-// 
+//
 // Functor to retrieve vertex locations from the CoordinateSystem
 // Actually need a static cast to ArrayHandle from DynamicArrayHandleCoordinateSystem
 // but haven't been able to figure out what that is
@@ -210,14 +218,14 @@ void displayCall()
   qrot.getRotMat(rotationMatrix);
   glMultMatrixf(rotationMatrix);
   glTranslatef(-0.5f, -0.5f, -0.5f);
- 
+
   // Get cell set and the number of cells and vertices
-  vtkm::cont::CellSetSingleType<> cellSet = 
+  vtkm::cont::CellSetSingleType<> cellSet =
               outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
 
   // Get the coordinate system and coordinate data
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = 
+  const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray =
                                       outDataSet.GetCoordinateSystem(0).GetData();
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
@@ -279,8 +287,8 @@ void displayCall()
 // Allow rotations of the view
 void mouseMove(int x, int y)
 {
-  int dx = x - lastx;
-  int dy = y - lasty;
+  vtkm::Float32 dx = static_cast<vtkm::Float32>(x - lastx);
+  vtkm::Float32 dy = static_cast<vtkm::Float32>(y - lasty);
 
   if (mouse_state == 0)
   {
@@ -312,7 +320,7 @@ void mouseCall(int button, int state, int x, int y)
 int main(int argc, char* argv[])
 {
   std::cout << "TetrahedralizeExplicitGrid Example" << std::endl;
-  
+
   // Create the input explicit cell set
   vtkm::cont::DataSet inDataSet = MakeTetrahedralizeExplicitDataSet();
   vtkm::cont::CellSetExplicit<> &inCellSet =
