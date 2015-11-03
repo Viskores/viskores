@@ -151,6 +151,38 @@ public:
     this->PermutedCellSet = permutedCellSet;
   }
 
+  template<typename FromTopology, typename ToTopology>
+  VTKM_CONT_EXPORT
+  const ShapeArrayType&
+  GetShapesArray(FromTopology,ToTopology) const
+  {
+    return this->PermutedCellSet.GetShapesArray(FromTopology(), ToTopology());
+  }
+
+  template<typename FromTopology, typename ToTopology>
+  VTKM_CONT_EXPORT
+  const NumIndicesArrayType&
+  GetNumIndicesArray(FromTopology,ToTopology) const
+  {
+    return this->PermutedCellSet.GetNumIndicesArray(FromTopology(),ToTopology());
+  }
+
+  template<typename FromTopology, typename ToTopology>
+  VTKM_CONT_EXPORT
+  const ConnectivityArrayType&
+  GetConnectivityArray(FromTopology,ToTopology) const
+  {
+    return this->PermutedCellSet.GetConnectivityArray(FromTopology(),ToTopology());
+  }
+
+  template<typename FromTopology, typename ToTopology>
+  VTKM_CONT_EXPORT
+  const IndexOffsetArrayType&
+  GetIndexOffsetArray(FromTopology,ToTopology) const
+  {
+    return this->PermutedCellSet.GetIndexOffsetArray(FromTopology(),ToTopology());
+  }
+
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const
   {
