@@ -40,6 +40,14 @@ public:
   }
 
   VTKM_CONT_EXPORT
+  void Clear()
+  {
+    this->CoordSystems.clear();
+    this->Fields.clear();
+    this->CellSets.clear();
+  }
+
+  VTKM_CONT_EXPORT
   void AddField(Field field)
   {
     this->Fields.push_back(field);

@@ -20,6 +20,7 @@
 
 set(headers
   ArrayPortalFromThrust.h
+  ExecutionPolicy.h
   IteratorFromArrayPortal.h
   WrappedOperators.h
   )
