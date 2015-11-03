@@ -31,7 +31,7 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage> &ah, const T *exp
 {
   if (size != ah.GetNumberOfValues())
   {
-    return false;
+      return false;
   }
 
   for (vtkm::Id i = 0; i < size; ++i)
@@ -49,9 +49,7 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage> &ah, const T *exp
 void TestDataSet_Explicit()
 {
   vtkm::cont::testing::MakeTestDataSet tds;
-  vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet1();
-
-  ds.PrintSummary(std::cout);
+  vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet0();
 
   VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");
@@ -66,7 +64,6 @@ void TestDataSet_Explicit()
 
   try
   {
-    //const vtkm::cont::Field &f2 =
     ds.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
   }
   catch (...)
@@ -76,14 +73,11 @@ void TestDataSet_Explicit()
 
   try
   {
-    //const vtkm::cont::Field &f3 =
-    ds.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
-    VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
+      ds.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
   }
-  catch (vtkm::cont::ErrorControlBadValue error)
+  catch (...)
   {
-    std::cout << "Caught expected error for association mismatch: "
-              << std::endl << "    " << error.GetMessage() << std::endl;
+    VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
   }
 
   VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,

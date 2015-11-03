@@ -49,8 +49,6 @@ TwoDimRegularTest()
 
   vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
 
-  dataSet.PrintSummary(std::cout);
-
   typedef vtkm::cont::CellSetStructured<2> CellSetType;
   CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
 
@@ -66,30 +64,22 @@ TwoDimRegularTest()
                    "Incorrect number of cells");
 
   // test various field-getting methods and associations
-  const vtkm::cont::Field &f1 = dataSet.GetField("pointvar");
-  VTKM_TEST_ASSERT(f1.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
-                       "Association of 'pointvar' was not ASSOC_POINTS");
-
   try
   {
-    //const vtkm::cont::Field &f2 =
-    dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+      dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+      VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
   }
 
   try
   {
-    //const vtkm::cont::Field &f3 =
-    dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
-    VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
+    dataSet.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
   }
-  catch (vtkm::cont::ErrorControlBadValue error)
+  catch (...)
   {
-    std::cout << "Caught expected error for association mismatch: "
-              << std::endl << "    " << error.GetMessage() << std::endl;
+      VTKM_TEST_FAIL("Failed to get field 'pointvar' with ASSOC_POINT_SET.");
   }
 
   vtkm::Id numCells = cellSet.GetNumberOfCells();
@@ -167,8 +157,6 @@ ThreeDimRegularTest()
 
   vtkm::cont::DataSet dataSet = testDataSet.Make3DRegularDataSet0();
 
-  dataSet.PrintSummary(std::cout);
-
   typedef vtkm::cont::CellSetStructured<3> CellSetType;
   CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
 
@@ -187,34 +175,25 @@ ThreeDimRegularTest()
   VTKM_TEST_ASSERT(cellSet.GetNumberOfCells() == 4,
                    "Incorrect number of cells");
 
-  // test various field-getting methods and associations
-  const vtkm::cont::Field &f1 = dataSet.GetField("pointvar");
-  VTKM_TEST_ASSERT(f1.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
-                       "Association of 'pointvar' was not ASSOC_POINTS");
-
   try
   {
-    //const vtkm::cont::Field &f2 =
-    dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+      dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+      VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
   }
 
   try
   {
-    //const vtkm::cont::Field &f3 =
-    dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
-    VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
+    dataSet.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
   }
-  catch (vtkm::cont::ErrorControlBadValue error)
+  catch (...)
   {
-    std::cout << "Caught expected error for association mismatch: "
-              << std::endl << "    " << error.GetMessage() << std::endl;
+      VTKM_TEST_FAIL("Failed to get field 'pointvar' with ASSOC_POINT_SET.");
   }
 
-    vtkm::Id numCells = cellSet.GetNumberOfCells();
+  vtkm::Id numCells = cellSet.GetNumberOfCells();
   for (vtkm::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
   {
     VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(cellIndex) == 8,
