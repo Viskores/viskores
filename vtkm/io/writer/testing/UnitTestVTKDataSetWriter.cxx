@@ -49,8 +49,8 @@ void TestVTKExplicitWrite()
   out2.close();
 
   std::ofstream out3("fileA3.vtk");
-  vtkm::io::writer::VTKDataSetWriter::Write(out3,
-    tds.Make3DExplicitDataSet1());
+  vtkm::io::writers::VTKDataSetWriter::Write(out3,
+    tds.Make3DExplicitDataSet0());
   out3.close();
 
   std::ofstream out4("fileA4.vtk");
