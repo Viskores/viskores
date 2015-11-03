@@ -30,10 +30,10 @@ namespace internal {
 /// helper function that guesses what OpenGL buffer type is the best default
 /// given a primitive type. Currently GL_ELEMENT_ARRAY_BUFFER is used for integer
 /// types, and GL_ARRAY_BUFFER is used for everything else
-VTKM_CONT_EXPORT GLenum BufferTypePicker( int )
+VTKM_CONT_EXPORT GLenum BufferTypePicker( vtkm::Int32 )
 { return GL_ELEMENT_ARRAY_BUFFER; }
 
-VTKM_CONT_EXPORT GLenum BufferTypePicker( unsigned int )
+VTKM_CONT_EXPORT GLenum BufferTypePicker( vtkm::UInt32 )
 { return GL_ELEMENT_ARRAY_BUFFER; }
 
 #if VTKM_SIZE_LONG == 8
