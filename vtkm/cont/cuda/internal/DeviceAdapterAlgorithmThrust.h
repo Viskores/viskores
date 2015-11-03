@@ -18,12 +18,11 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_cuda_internal_DeviceAdapterThrust_h
-#define vtk_m_cont_cuda_internal_DeviceAdapterThrust_h
+#ifndef vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmThrust_h
+#define vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmThrust_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorExecution.h>
-#include <vtkm/cont/Timer.h>
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/UnaryPredicates.h>
@@ -1285,4 +1284,4 @@ public:
 }
 } // namespace vtkm::cont::cuda::internal
 
-#endif //vtk_m_cont_cuda_internal_DeviceAdapterThrust_h
+#endif //vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmThrust_h

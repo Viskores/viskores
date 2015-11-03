@@ -26,6 +26,7 @@
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
+#include <vtkm/cont/DeviceAdapterSerial.h>
 
 struct GenerateSurfaceWorklet : public vtkm::worklet::WorkletMapField
 {
@@ -46,8 +47,8 @@ struct GenerateSurfaceWorklet : public vtkm::worklet::WorkletMapField
     output[2] = input[2];
 
     color[0] = 0;
-    color[1] = 160 + static_cast<vtkm::UInt8>(96 * vtkm::Sin( input[0] * 10.f + t ) );
-    color[2] = 160 + static_cast<vtkm::UInt8>(96 * vtkm::Cos( input[2] * 5.f + t ) );
+    color[1] = static_cast<vtkm::UInt8>(160 + (96 * vtkm::Sin(input[0] * 10.f + t)));
+    color[2] = static_cast<vtkm::UInt8>(160 + (96 * vtkm::Cos(input[2] * 5.f + t)));
     color[3] = 255;
   }
 };
