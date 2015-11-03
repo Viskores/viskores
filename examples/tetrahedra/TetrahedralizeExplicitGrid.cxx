@@ -45,6 +45,8 @@
 
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
+namespace {
+
 // Takes input uniform grid and outputs unstructured grid of tets
 vtkm::cont::DataSet outDataSet;
 vtkm::Id numberOfInPoints;
@@ -56,6 +58,8 @@ vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
 Quaternion qrot;
 int lastx, lasty;
 int mouse_state = 1;
+
+} // anonymous namespace
 
 //
 // Test 3D explicit dataset
@@ -283,8 +287,8 @@ void displayCall()
 // Allow rotations of the view
 void mouseMove(int x, int y)
 {
-  int dx = x - lastx;
-  int dy = y - lasty;
+  vtkm::Float32 dx = static_cast<vtkm::Float32>(x - lastx);
+  vtkm::Float32 dy = static_cast<vtkm::Float32>(y - lasty);
 
   if (mouse_state == 0)
   {

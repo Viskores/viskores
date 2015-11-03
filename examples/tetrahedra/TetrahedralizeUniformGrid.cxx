@@ -83,8 +83,7 @@ vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dim)
           vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
 
   // Generate cell set
-  static const vtkm::IdComponent ndim = 3;
-  vtkm::cont::CellSetStructured<ndim> cellSet("cells");
+  vtkm::cont::CellSetStructured<3> cellSet("cells");
   cellSet.SetPointDimensions(vdims);
   dataSet.AddCellSet(cellSet);
 
@@ -241,8 +240,8 @@ void displayCall()
 // Allow rotations of the view
 void mouseMove(int x, int y)
 {
-  int dx = x - lastx;
-  int dy = y - lasty;
+  vtkm::Float32 dx = static_cast<vtkm::Float32>(x - lastx);
+  vtkm::Float32 dy = static_cast<vtkm::Float32>(y - lasty);
 
   if (mouse_state == 0)
   {

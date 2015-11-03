@@ -42,6 +42,8 @@
 
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
+namespace {
+
 // Takes input uniform grid and outputs unstructured grid of triangles
 vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter> *tetrahedralizeFilter;
 vtkm::cont::DataSet outDataSet;
@@ -49,6 +51,8 @@ vtkm::Id numberOfInPoints;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
 vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
+
+} // anonymous namespace
 
 //
 // Construct an input data set with uniform grid of indicated dimensions, origin and spacing

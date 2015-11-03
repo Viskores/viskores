@@ -76,8 +76,7 @@ vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dim)
           vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
 
   // Generate cell set
-  static const vtkm::IdComponent ndim = 2;
-  vtkm::cont::CellSetStructured<ndim> cellSet("cells");
+  vtkm::cont::CellSetStructured<2> cellSet("cells");
   cellSet.SetPointDimensions(vtkm::make_Vec(dim[0] + 1, dim[1] + 1));
   dataSet.AddCellSet(cellSet);
 
