@@ -37,6 +37,50 @@ namespace exec {
 namespace cuda {
 namespace internal {
 
+
+// Unary function object wrapper which can detect and handle calling the
+// wrapped operator with complex value types such as
+// PortalValue which happen when passed an input array that
+// is implicit.
+template<typename T_, typename Function>
+struct  WrappedUnaryPredicate
+{
+  typedef typename boost::remove_const<T_>::type T;
+
+  //make typedefs that thust expects unary operators to have
+  typedef T first_argument_type;
+  typedef bool result_type;
+
+  Function m_f;
+
+  VTKM_EXEC_EXPORT
+  WrappedUnaryPredicate()
+    : m_f()
+  {}
+
+  VTKM_CONT_EXPORT
+  WrappedUnaryPredicate(const Function &f)
+    : m_f(f)
+  {}
+
+  VTKM_EXEC_EXPORT bool operator()(const T &x) const
+  {
+    return m_f(x);
+  }
+
+  template<typename U>
+  VTKM_EXEC_EXPORT bool operator()(const PortalValue<U> &x) const
+  {
+    return m_f((T)x);
+  }
+
+  VTKM_EXEC_EXPORT bool operator()(const thrust::system::cuda::pointer<T> x) const
+  {
+    return m_f(*x);
+  }
+};
+
+
 // Binary function object wrapper which can detect and handle calling the
 // wrapped operator with complex value types such as
 // PortalValue which happen when passed an input array that
@@ -124,7 +168,7 @@ struct WrappedBinaryPredicate
   //make typedefs that thust expects binary operators to have
   typedef T first_argument_type;
   typedef T second_argument_type;
-  typedef T result_type;
+  typedef bool result_type;
 
   Function m_f;
 
