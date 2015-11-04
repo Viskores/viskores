@@ -18,11 +18,11 @@
 //  this software.
 //============================================================================
 
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
 #define BOOST_SP_DISABLE_THREADS
 
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/testing/TestingDataSetExplicit.h>
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
 
