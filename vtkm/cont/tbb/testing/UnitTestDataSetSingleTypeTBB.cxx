@@ -18,12 +18,12 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/DeviceAdapterSerial.h>
-#include <vtkm/cont/testing/TestingDataSetExplicit.h>
+#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
-int UnitTestDataSetExplicit(int, char *[])
+#include <vtkm/cont/testing/TestingDataSetSingleType.h>
+
+int UnitTestDataSetSingleTypeTBB(int, char *[])
 {
-  return vtkm::cont::testing::TestingDataSetExplicit
-         <vtkm::cont::DeviceAdapterTagSerial>::Run();
+  return vtkm::cont::testing::TestingDataSetSingleType
+      <vtkm::cont::DeviceAdapterTagTBB>::Run();
 }
-

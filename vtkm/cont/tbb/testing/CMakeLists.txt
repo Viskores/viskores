@@ -20,6 +20,8 @@
 
 set(unit_tests
   UnitTestComputeBoundsTBB.cxx
+  UnitTestDataSetExplicitTBB.cxx
+  UnitTestDataSetSingleTypeTBB.cxx
   UnitTestDeviceAdapterTBB.cxx
   UnitTestTBBArrayHandle.cxx
   UnitTestTBBArrayHandleFancy.cxx

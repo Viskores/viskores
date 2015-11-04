@@ -18,12 +18,17 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/DeviceAdapterSerial.h>
-#include <vtkm/cont/testing/TestingDataSetExplicit.h>
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
+#define BOOST_SP_DISABLE_THREADS
 
-int UnitTestDataSetExplicit(int, char *[])
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+
+#include <vtkm/cont/testing/TestingDataSetSingleType.h>
+#include <vtkm/cont/cuda/internal/testing/Testing.h>
+
+int UnitTestCudaDataSetSingleType(int, char *[])
 {
-  return vtkm::cont::testing::TestingDataSetExplicit
-         <vtkm::cont::DeviceAdapterTagSerial>::Run();
+  int result = vtkm::cont::testing::TestingDataSetSingleType
+      <vtkm::cont::DeviceAdapterTagCuda>::Run();
+  return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }
-
