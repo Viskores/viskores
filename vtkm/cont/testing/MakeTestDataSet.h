@@ -46,6 +46,8 @@ public:
     VTKM_CONT_EXPORT
     vtkm::cont::DataSet Make3DExplicitDataSet0();
     VTKM_CONT_EXPORT
+    vtkm::cont::DataSet Make3DExplicitDataSet1();
+    VTKM_CONT_EXPORT
     vtkm::cont::DataSet Make3DExplicitDataSetCowNose(double *pBounds = NULL);
 };
 
@@ -135,6 +137,38 @@ MakeTestDataSet::Make3DExplicitDataSet0()
 
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddPointField(dataSet, "pointvar", vars, nVerts);
+  dsf.AddCellField(dataSet, "cellvar", cellvar, 2, "cells");
+
+  return dataSet;
+}
+
+vtkm::cont::DataSet
+MakeTestDataSet::Make3DExplicitDataSet1()
+{
+  vtkm::cont::DataSet dataSet;
+  vtkm::cont::DataSetIterativeBuilderExplicit dsb;
+  vtkm::Id id0, id1, id2, id3, id4;
+  
+  dsb.Begin("coords", "cells");
+  
+  id0 = dsb.AddPoint(0,0,0);
+  id1 = dsb.AddPoint(1,0,0);
+  id2 = dsb.AddPoint(1,1,0);
+  id3 = dsb.AddPoint(2,1,0);
+  id4 = dsb.AddPoint(2,2,0);
+
+  vtkm::Id ids0[3] = {id0, id1, id2};
+  dsb.AddCell(vtkm::CELL_SHAPE_TRIANGLE, ids0, 3);
+
+  vtkm::Id ids1[4] = {id2, id1, id3, id4};
+  dsb.AddCell(vtkm::CELL_SHAPE_QUAD, ids1, 4);
+  dataSet = dsb.Create();
+
+  vtkm::Float32 vars[5] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f};
+  vtkm::Float32 cellvar[2] = {100.1f, 100.2f};
+
+  vtkm::cont::DataSetFieldAdd dsf;
+  dsf.AddPointField(dataSet, "pointvar", vars, 5);
   dsf.AddCellField(dataSet, "cellvar", cellvar, 2, "cells");
 
   return dataSet;

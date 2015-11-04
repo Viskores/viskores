@@ -165,6 +165,95 @@ DataSetBuilderExplicit::Create(const std::vector<vtkm::Vec<T,3> > &coords,
     return dataSet;
 }
 
+class DataSetIterativeBuilderExplicit
+{
+public:
+    VTKM_CONT_EXPORT
+    DataSetIterativeBuilderExplicit() {}
+
+    VTKM_CONT_EXPORT
+    void Begin(const std::string &_coordNm="coords",
+	       const std::string &_cellNm="cells")
+    {
+	coordNm = _coordNm;
+	cellNm = _cellNm;
+        points.resize(0);
+        shapes.resize(0);
+        numIdx.resize(0);
+        connectivity.resize(0);
+    }
+
+    //Define points.
+    VTKM_CONT_EXPORT
+    vtkm::cont::DataSet Create();
+
+    VTKM_CONT_EXPORT
+    vtkm::Id AddPoint(const vtkm::Vec<vtkm::Float32, 3> &pt)
+    {
+	points.push_back(pt);
+	vtkm::Id id = static_cast<vtkm::Id>(points.size());
+	return id;
+    }
+    VTKM_CONT_EXPORT
+    vtkm::Id AddPoint(const vtkm::Float32 &x,
+		      const vtkm::Float32 &y,
+		      const vtkm::Float32 &z=0)
+    {
+	points.push_back(vtkm::make_Vec(x,y,z));
+	vtkm::Id id = static_cast<vtkm::Id>(points.size());
+	return id;
+    }
+
+    template<typename T>
+    VTKM_CONT_EXPORT
+    vtkm::Id AddPoint(const T &x, const T &y, const T &z=0)
+    {
+	return AddPoint(static_cast<vtkm::Float32>(x),
+			static_cast<vtkm::Float32>(y),
+			static_cast<vtkm::Float32>(z));
+    }
+
+    template<typename T>
+    VTKM_CONT_EXPORT
+    vtkm::Id AddPoint(const vtkm::Vec<T,3> &pt)
+    {
+	return AddPoint(static_cast<vtkm::Vec<vtkm::Float32,3> >(pt));
+    }
+
+    //Define cells.
+    VTKM_CONT_EXPORT
+    void AddCell(const vtkm::UInt8 &shape, const std::vector<vtkm::Id> &conn)
+    {
+	shapes.push_back(shape);
+	numIdx.push_back(static_cast<vtkm::IdComponent>(conn.size()));
+	connectivity.insert(connectivity.end(), conn.begin(), conn.end());
+    }
+
+    VTKM_CONT_EXPORT
+    void AddCell(const vtkm::UInt8 &shape, const vtkm::Id *conn, const vtkm::IdComponent &n)
+    {
+        shapes.push_back(shape);
+        numIdx.push_back(n);
+        for (int i = 0; i < n; i++)
+            connectivity.push_back(conn[i]);
+    }
+    
+private:
+    std::string coordNm, cellNm;
+
+    std::vector<vtkm::Vec<vtkm::Float32,3> > points;
+    std::vector<vtkm::UInt8> shapes;
+    std::vector<vtkm::IdComponent> numIdx;
+    std::vector<vtkm::Id> connectivity;
+};
+
+vtkm::cont::DataSet
+DataSetIterativeBuilderExplicit::Create()
+{
+    DataSetBuilderExplicit dsb;
+    return dsb.Create(points, shapes, numIdx, connectivity, coordNm, cellNm);
+}
+
 
 }
 }
