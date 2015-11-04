@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_DataSetWriter_h
-#define vtk_m_DataSetWriter_h
+#ifndef vtk_m_io_writer_DataSetWriter_h
+#define vtk_m_io_writer_DataSetWriter_h
 
 #include <algorithm>
 #include <cstring>
@@ -69,7 +69,7 @@ int CellShapeToVTK(vtkm::Id type)
       //case vtkm::CELL_SHAPE_VOXEL:      return 11;
       case vtkm::CELL_SHAPE_POLYGON:    return 7;
     }
-    
+
     return 0;
 }
 
@@ -162,7 +162,7 @@ namespace vtkm
 {
 namespace io
 {
-namespace writers
+namespace writer
 {
 
 struct VTKDataSetWriter
@@ -372,6 +372,6 @@ public:
 
 }; //struct VTKDataSetWriter
 
-}}} //namespace vtkm::io::writers
+}}} //namespace vtkm::io::writer
 
-#endif //vtk_m_DataSetWriter_h
+#endif //vtk_m_io_writer_DataSetWriter_h
