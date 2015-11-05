@@ -32,6 +32,7 @@ set(headers
   IsosurfaceUniformGrid.h
   MarchingCubesDataTables.h
   PointElevation.h
+  StreamLineUniformGrid.h
   TetrahedralizeExplicitGrid.h
   TetrahedralizeUniformGrid.h
   Threshold.h
