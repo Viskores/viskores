@@ -57,7 +57,7 @@ public:
   public:
     typedef void ControlSignature(FieldInPoint<Scalar> inNodes,
                                   TopologyIn topology,
-                                  FieldOutCell<IdType> outNumVertices,
+                                  FieldOutCell<> outNumVertices,
                                   ExecObject numVerticesTable);
     typedef void ExecutionSignature(_1, _3, _4);
     typedef _2 InputDomain;
@@ -74,7 +74,7 @@ public:
              typename NumVerticesTablePortalType>
     VTKM_EXEC_EXPORT
     void operator()(const InPointVecType &pointValues,
-                    vtkm::Id& numVertices,
+                    vtkm::IdComponent &numVertices,
                     const NumVerticesTablePortalType &numVerticesTable) const
     {
       vtkm::Id caseNumber  = (pointValues[0] > this->Isovalue);
@@ -253,7 +253,7 @@ public:
                                       DeviceAdapter> ClassifyCellDispatcher;
     ClassifyCellDispatcher classifyCellDispatcher(classifyCell);
 
-    vtkm::cont::ArrayHandle<vtkm::Id> numOutputTrisPerCell;
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutputTrisPerCell;
     classifyCellDispatcher.Invoke( field,
                                    this->DataSet.GetCellSet(0),
                                    numOutputTrisPerCell,
