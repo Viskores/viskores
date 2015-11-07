@@ -26,6 +26,8 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
+#include <set>
+
 namespace vtkm {
 namespace cont {
 namespace testing {
@@ -130,10 +132,39 @@ private:
           correctNumIndices,
           numPoints),
         "Got incorrect shapes");
-    VTKM_TEST_ASSERT(TestArrayHandle(conn,
-          correctConnectivity,
-          connectivitySize),
-        "Got incorrect conectivity");
+
+    // Some device adapters have unstable sorts, which may cause the order of
+    // the indices for each point to be different but still correct. Iterate
+    // over all the points and check the connectivity for each one.
+    VTKM_TEST_ASSERT(conn.GetNumberOfValues() == connectivitySize,
+                     "Connectivity array wrong size.");
+    vtkm::Id connectivityIndex = 0;
+    for (vtkm::Id pointIndex = 0; pointIndex < numPoints; pointIndex++)
+    {
+      vtkm::IdComponent numIncidentCells = correctNumIndices[pointIndex];
+      std::set<vtkm::Id> correctIncidentCells;
+      for (vtkm::IdComponent cellIndex = 0;
+           cellIndex < numIncidentCells;
+           cellIndex++)
+      {
+        correctIncidentCells.insert(
+              correctConnectivity[connectivityIndex+cellIndex]);
+      }
+      for (vtkm::IdComponent cellIndex = 0;
+           cellIndex < numIncidentCells;
+           cellIndex++)
+      {
+        vtkm::Id expectedCell =
+            conn.GetPortalConstControl().Get(connectivityIndex+cellIndex);
+        std::set<vtkm::Id>::iterator foundCell =
+            correctIncidentCells.find(expectedCell);
+        VTKM_TEST_ASSERT(
+              foundCell != correctIncidentCells.end(),
+              "An incident cell in the connectivity list is wrong or repeated.");
+        correctIncidentCells.erase(foundCell);
+      }
+      connectivityIndex += numIncidentCells;
+    }
 
 
     //verify that GetIndices works properly
