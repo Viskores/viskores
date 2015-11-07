@@ -25,6 +25,7 @@
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
 #include <vtkm/exec/arg/FetchTagExecObject.h>
+#include <vtkm/exec/arg/ThreadIndices.h>
 #include <vtkm/exec/arg/ThreadIndicesBasic.h>
 #include <vtkm/exec/arg/VisitIndex.h>
 #include <vtkm/exec/arg/WorkIndex.h>
@@ -63,6 +64,10 @@ public:
   /// \c ExecutionSignature tag for getting the work index.
   ///
   typedef vtkm::exec::arg::WorkIndex WorkIndex;
+
+  /// \c ExecutionSignature tag for getting the thread indices.
+  ///
+  typedef vtkm::exec::arg::ThreadIndices ThreadIndices;
 
   /// \c ExecutionSignature tag for getting the visit index.
   ///

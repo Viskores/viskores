@@ -32,6 +32,7 @@ set(headers
   FetchTagTopologyIn.h
   FromCount.h
   FromIndices.h
+  ThreadIndices.h
   ThreadIndicesBasic.h
   ThreadIndicesTopologyMap.h
   VisitIndex.h

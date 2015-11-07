@@ -35,6 +35,7 @@ set(headers
   PointElevation.h
   ScatterCounting.h
   ScatterIdentity.h
+  ScatterUniform.h
   TetrahedralizeExplicitGrid.h
   TetrahedralizeUniformGrid.h
   Threshold.h
