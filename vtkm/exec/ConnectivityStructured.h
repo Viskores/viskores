@@ -88,7 +88,7 @@ public:
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Vec<vtkm::Id,Dimension>
+  SchedulingRangeType
   FlatToLogicalFromIndex(vtkm::Id flatFromIndex) const
   {
     return Helper::FlatToLogicalFromIndex(this->Internals, flatFromIndex);
@@ -96,13 +96,13 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id LogicalToFlatFromIndex(
-      const vtkm::Vec<vtkm::Id,Dimension> &logicalFromIndex) const
+      const SchedulingRangeType &logicalFromIndex) const
   {
     return Helper::LogicalToFlatFromIndex(this->Internals, logicalFromIndex);
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Vec<vtkm::Id,Dimension>
+  SchedulingRangeType
   FlatToLogicalToIndex(vtkm::Id flatToIndex) const
   {
     return Helper::FlatToLogicalToIndex(this->Internals, flatToIndex);
@@ -110,7 +110,7 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id LogicalToFlatToIndex(
-      const vtkm::Vec<vtkm::Id,Dimension> &logicalToIndex) const
+      const SchedulingRangeType &logicalToIndex) const
   {
     return Helper::LogicalToFlatToIndex(this->Internals, logicalToIndex);
   }
