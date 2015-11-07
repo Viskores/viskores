@@ -72,7 +72,7 @@ struct Fetch<FetchTag,
   VTKM_EXEC_EXPORT
   void Store(const ThreadIndicesType &,
              const ExecObjectType &,
-             ValueType &) const
+             const ThreadIndicesType &) const
   {
     // Store is a no-op.
   }
