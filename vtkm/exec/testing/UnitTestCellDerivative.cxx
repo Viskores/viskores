@@ -113,7 +113,7 @@ struct TestDerivativeFunctor
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
       vtkm::Vec<vtkm::FloatDefault,3> wcoords = worldCoordinates[pointIndex];
-      FieldType value = field.GetValue(wcoords);
+      FieldType value = static_cast<FieldType>(field.GetValue(wcoords));
       fieldValues.Append(value);
     }
 

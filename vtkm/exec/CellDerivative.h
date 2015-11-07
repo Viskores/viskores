@@ -279,7 +279,8 @@ void JacobianFor2DCell(const WorldCoordType &wCoords,
                        vtkm::Matrix<JacobianType,2,2> &jacobian,
                        vtkm::CellShapeTagQuad)
 {
-  vtkm::Vec<JacobianType,2> pc(pcoords[0], pcoords[1]);
+  vtkm::Vec<JacobianType,2> pc(static_cast<JacobianType>(pcoords[0]),
+                               static_cast<JacobianType>(pcoords[1]));
   vtkm::Vec<JacobianType,2> rc = vtkm::Vec<JacobianType,2>(1) - pc;
 
   vtkm::Vec<JacobianType,2> wcoords2d;
@@ -434,7 +435,8 @@ ParametricDerivative(const FieldVecType &field,
   typedef typename FieldVecType::ComponentType FieldType;
   typedef vtkm::Vec<FieldType,2> GradientType;
 
-  GradientType pc(pcoords[0], pcoords[1]);
+  GradientType pc(static_cast<FieldType>(pcoords[0]),
+                  static_cast<FieldType>(pcoords[1]));
   GradientType rc = GradientType(1) - pc;
 
   GradientType parametricDerivative(0);

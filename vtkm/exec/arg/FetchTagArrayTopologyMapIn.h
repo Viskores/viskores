@@ -95,6 +95,17 @@ make_VecRectilinearPointCoordinates(
 }
 
 VTKM_EXEC_EXPORT
+vtkm::VecRectilinearPointCoordinates<1>
+make_VecRectilinearPointCoordinates(
+    const vtkm::Vec<vtkm::FloatDefault,3> &origin,
+    const vtkm::Vec<vtkm::FloatDefault,3> &spacing,
+    vtkm::Id logicalId)
+{
+  return make_VecRectilinearPointCoordinates(
+        origin, spacing, vtkm::Vec<vtkm::Id,1>(logicalId));
+}
+
+VTKM_EXEC_EXPORT
 vtkm::VecRectilinearPointCoordinates<2>
 make_VecRectilinearPointCoordinates(
     const vtkm::Vec<vtkm::FloatDefault,3> &origin,
