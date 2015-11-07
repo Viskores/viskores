@@ -35,7 +35,7 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/internal/TriangulateTables.h>
 
 namespace vtkm {
 namespace worklet {
@@ -53,25 +53,22 @@ public:
   {
   public:
     typedef void ControlSignature(FieldIn<> shapes,
-                                  FieldIn<> numIndices,
+                                  FieldIn<> numPoints,
+                                  ExecObject tables,
                                   FieldOut<> triangleCount);
-    typedef _3 ExecutionSignature(_1,_2);
+    typedef _4 ExecutionSignature(_1,_2,_3);
     typedef _1 InputDomain;
 
     VTKM_CONT_EXPORT
     TrianglesPerCell() {}
 
     VTKM_EXEC_EXPORT
-    vtkm::IdComponent operator()(vtkm::UInt8 shape,
-                                 vtkm::IdComponent numIndices) const
+    vtkm::IdComponent operator()(
+        vtkm::UInt8 shape,
+        vtkm::IdComponent numPoints,
+        const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter> &tables) const
     {
-      switch (shape)
-      {
-        case vtkm::CELL_SHAPE_TRIANGLE: return 1;
-        case vtkm::CELL_SHAPE_QUAD:     return 2;
-        case vtkm::CELL_SHAPE_POLYGON:  return numIndices - 2;
-        default: return 0;
-      }
+      return tables.GetCount(vtkm::CellShapeTagGeneric(shape), numPoints);
     }
   };
 
@@ -82,24 +79,20 @@ public:
   {
   public:
     typedef void ControlSignature(FieldIn<> shapes,
+                                  ExecObject tables,
                                   FieldOut<> triangleCount);
-    typedef _2 ExecutionSignature(_1);
+    typedef _3 ExecutionSignature(_1, _2);
     typedef _1 InputDomain;
 
     VTKM_CONT_EXPORT
     TetrahedraPerCell() {}
 
     VTKM_EXEC_EXPORT
-    vtkm::IdComponent operator()(vtkm::UInt8 shape) const
+    vtkm::IdComponent operator()(
+        vtkm::UInt8 shape,
+        const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter> &tables) const
     {
-      switch (shape)
-      {
-        case vtkm::CELL_SHAPE_TETRA: return 1;
-        case vtkm::CELL_SHAPE_HEXAHEDRON: return 5;
-        case vtkm::CELL_SHAPE_WEDGE: return 3;
-        case vtkm::CELL_SHAPE_PYRAMID: return 2;
-        default: return 0;
-      }
+      return tables.GetCount(vtkm::CellShapeTagGeneric(shape));
     }
   };
 
@@ -111,8 +104,9 @@ public:
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
+                                  ExecObject tables,
                                   FieldOutCell<> connectivityOut);
-    typedef void ExecutionSignature(CellShape, PointIndices, _2, VisitIndex);
+    typedef void ExecutionSignature(CellShape, PointIndices, _2, _3, VisitIndex);
     typedef _1 InputDomain;
 
     typedef vtkm::worklet::ScatterCounting ScatterType;
@@ -133,38 +127,18 @@ public:
              typename ConnectivityInVec,
              typename ConnectivityOutVec>
     VTKM_EXEC_EXPORT
-    void operator()(CellShapeTag shape,
-                    const ConnectivityInVec &connectivityIn,
-                    ConnectivityOutVec &connectivityOut,
-                    vtkm::IdComponent visitIndex) const
+    void operator()(
+        CellShapeTag shape,
+        const ConnectivityInVec &connectivityIn,
+        const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter> &tables,
+        ConnectivityOutVec &connectivityOut,
+        vtkm::IdComponent visitIndex) const
     {
-      if (shape.Id == vtkm::CELL_SHAPE_TRIANGLE)
-      {
-        connectivityOut[0] = connectivityIn[0];
-        connectivityOut[1] = connectivityIn[1];
-        connectivityOut[2] = connectivityIn[2];
-      }
-      else if (shape.Id == vtkm::CELL_SHAPE_QUAD)
-      {
-        const static vtkm::IdComponent triIndices[2][3] = {
-          { 0, 1, 2 },
-          { 0, 2, 3 }
-        };
-
-        connectivityOut[0] = connectivityIn[triIndices[visitIndex][0]];
-        connectivityOut[1] = connectivityIn[triIndices[visitIndex][1]];
-        connectivityOut[2] = connectivityIn[triIndices[visitIndex][2]];
-      }
-      else if (shape.Id == vtkm::CELL_SHAPE_POLYGON)
-      {
-        connectivityOut[0] = connectivityIn[0];
-        connectivityOut[1] = connectivityIn[visitIndex+1];
-        connectivityOut[2] = connectivityIn[visitIndex+2];
-      }
-      else
-      {
-        this->RaiseError("Invalid cell in triangulate.");
-      }
+      vtkm::Vec<vtkm::IdComponent,3> triIndices =
+          tables.GetIndices(shape, visitIndex);
+      connectivityOut[0] = connectivityIn[triIndices[0]];
+      connectivityOut[1] = connectivityIn[triIndices[1]];
+      connectivityOut[2] = connectivityIn[triIndices[2]];
     }
 
   private:
@@ -179,8 +153,9 @@ public:
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
+                                  ExecObject tables,
                                   FieldOutCell<> connectivityOut);
-    typedef void ExecutionSignature(CellShape, PointIndices, _2, VisitIndex);
+    typedef void ExecutionSignature(CellShape, PointIndices, _2, _3, VisitIndex);
     typedef _1 InputDomain;
 
     typedef vtkm::worklet::ScatterCounting ScatterType;
@@ -203,56 +178,16 @@ public:
     VTKM_EXEC_EXPORT
     void operator()(CellShapeTag shape,
                     const ConnectivityInVec &connectivityIn,
+                    const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter> &tables,
                     ConnectivityOutVec &connectivityOut,
                     vtkm::IdComponent visitIndex) const
     {
-      if (shape.Id == vtkm::CELL_SHAPE_TRIANGLE)
-      {
-        connectivityOut[0] = connectivityIn[0];
-        connectivityOut[1] = connectivityIn[1];
-        connectivityOut[2] = connectivityIn[2];
-        connectivityOut[3] = connectivityIn[3];
-      }
-      else if (shape.Id == vtkm::CELL_SHAPE_HEXAHEDRON)
-      {
-        const static vtkm::IdComponent tetIndices[5][4] = {
-          { 0, 1, 3, 4 },
-          { 1, 4, 5, 6 },
-          { 1, 4, 6, 3 },
-          { 1, 3, 6, 2 },
-          { 3, 6, 7, 4 }
-        };
-
-        connectivityOut[0] = connectivityIn[tetIndices[visitIndex][0]];
-        connectivityOut[1] = connectivityIn[tetIndices[visitIndex][1]];
-        connectivityOut[2] = connectivityIn[tetIndices[visitIndex][2]];
-        connectivityOut[3] = connectivityIn[tetIndices[visitIndex][3]];
-      }
-      else if (shape.Id == vtkm::CELL_SHAPE_WEDGE)
-      {
-        const static vtkm::IdComponent tetIndices[3][4] = {
-          { 0, 1, 2, 4 },
-          { 3, 4, 5, 2 },
-          { 0, 2, 3, 4 }
-        };
-
-        connectivityOut[0] = connectivityIn[tetIndices[visitIndex][0]];
-        connectivityOut[1] = connectivityIn[tetIndices[visitIndex][1]];
-        connectivityOut[2] = connectivityIn[tetIndices[visitIndex][2]];
-        connectivityOut[3] = connectivityIn[tetIndices[visitIndex][3]];
-      }
-      else if (shape.Id == vtkm::CELL_SHAPE_PYRAMID)
-      {
-        const static vtkm::IdComponent tetIndices[2][4] = {
-          { 0, 1, 2, 4 },
-          { 0, 2, 3, 4 }
-        };
-
-        connectivityOut[0] = connectivityIn[tetIndices[visitIndex][0]];
-        connectivityOut[1] = connectivityIn[tetIndices[visitIndex][1]];
-        connectivityOut[2] = connectivityIn[tetIndices[visitIndex][2]];
-        connectivityOut[3] = connectivityIn[tetIndices[visitIndex][3]];
-      }
+      vtkm::Vec<vtkm::IdComponent,4> tetIndices =
+          tables.GetIndices(shape, visitIndex);
+      connectivityOut[0] = connectivityIn[tetIndices[0]];
+      connectivityOut[1] = connectivityIn[tetIndices[1]];
+      connectivityOut[2] = connectivityIn[tetIndices[2]];
+      connectivityOut[3] = connectivityIn[tetIndices[3]];
     }
 
   private:
@@ -296,11 +231,16 @@ public:
 
     if (dimensionality == 2)
     {
+      vtkm::worklet::internal::TriangulateTables tables;
+
       // Determine the number of output cells each input cell will generate
       vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutCellArray;
       vtkm::worklet::DispatcherMapField<TrianglesPerCell,DeviceAdapter>
           triPerCellDispatcher;
-      triPerCellDispatcher.Invoke(inShapes, inNumIndices, numOutCellArray);
+      triPerCellDispatcher.Invoke(inShapes,
+                                  inNumIndices,
+                                  tables.PrepareForInput(DeviceAdapter()),
+                                  numOutCellArray);
 
       // Build new cells
       TriangulateCell triangulateWorklet(numOutCellArray);
@@ -308,15 +248,20 @@ public:
           triangulateDispatcher(triangulateWorklet);
       triangulateDispatcher.Invoke(
             inCellSet,
+            tables.PrepareForInput(DeviceAdapter()),
             vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
     }
     else if (dimensionality == 3)
     {
+      vtkm::worklet::internal::TetrahedralizeTables tables;
+
       // Determine the number of output cells each input cell will generate
       vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutCellArray;
       vtkm::worklet::DispatcherMapField<TetrahedraPerCell,DeviceAdapter>
           tetPerCellDispatcher;
-      tetPerCellDispatcher.Invoke(inShapes, numOutCellArray);
+      tetPerCellDispatcher.Invoke(inShapes,
+                                  tables.PrepareForInput(DeviceAdapter()),
+                                  numOutCellArray);
 
       // Build new cells
       TetrahedralizeCell tetrahedralizeWorklet(numOutCellArray);
@@ -324,6 +269,7 @@ public:
           tetrahedralizeDispatcher(tetrahedralizeWorklet);
       tetrahedralizeDispatcher.Invoke(
             inCellSet,
+            tables.PrepareForInput(DeviceAdapter()),
             vtkm::cont::make_ArrayHandleGroupVec<4>(outConnectivity));
     }
     else

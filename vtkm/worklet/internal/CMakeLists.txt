@@ -19,10 +19,11 @@
 ##============================================================================
 
 set(headers
+  ClipTables.h
   DispatcherBase.h
   DispatcherBaseDetailInvoke.h
+  TriangulateTables.h
   WorkletBase.h
-  ClipTables.h
   )
 
 set_source_files_properties(DispatcherBaseDetailInvoke.h
