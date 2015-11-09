@@ -244,8 +244,6 @@ public:
 
     // Call the ClassifyCell functor to compute the Marching Cubes case numbers
     // for each cell, and the number of vertices to be generated
-    // TODO: Make the way we pass vertexTableArray and triangleTableArray
-    // conistent.
     ClassifyCell classifyCell(isovalue);
 
     typedef typename vtkm::worklet::DispatcherMapTopology<
