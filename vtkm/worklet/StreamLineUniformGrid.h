@@ -33,8 +33,8 @@
 #include <algorithm>
 #include <vector>
 #include <unistd.h>
-//#define _Debug
-//#define _Debug_2
+#define _Debug
+#define _Debug_2
 
 namespace vtkm {
 namespace worklet {
@@ -45,7 +45,6 @@ namespace internal {
   vtkm::Vec<FieldType, 3> GetVel(vtkm::Id3 index, 
                                  const vtkm::Id &xdim, 
                                  const vtkm::Id &ydim, 
-                                 const vtkm::Id &zdim, 
                                  const PortalType &vec_data)
   {
     vtkm::Id idx = index[2] * ydim * xdim + index[1] * xdim + index[0];
@@ -66,20 +65,20 @@ namespace internal {
     vtkm::Id3 idx000, idx001, idx010, idx011, idx100, idx101, idx110, idx111;
     if (pos[0] < 0.0f)
       pos[0] = 0.0f;
-    if (pos[0] > float(xdim - 1))
-      pos[0] = float(xdim - 1);
+    if (pos[0] > static_cast<FieldType>(xdim - 1))
+      pos[0] = static_cast<FieldType>(xdim - 1);
     if (pos[1] < 0.0f)
       pos[1] = 0.0f;
-    if (pos[1] > float(ydim - 1))
-      pos[1] = float(ydim - 1);
+    if (pos[1] > static_cast<FieldType>(ydim - 1))
+      pos[1] = static_cast<FieldType>(ydim - 1);
     if (pos[2] < 0.0f)
       pos[2] = 0.0f;
-    if (pos[2] > float(zdim - 1))
-      pos[2] = float(zdim - 1);
+    if (pos[2] > static_cast<FieldType>(zdim - 1))
+      pos[2] = static_cast<FieldType>(zdim - 1);
 
-    idx000[0] = int(floor(pos[0]));
-    idx000[1] = int(floor(pos[1]));
-    idx000[2] = int(floor(pos[2]));
+    idx000[0] = static_cast<vtkm::Id>(floor(pos[0]));
+    idx000[1] = static_cast<vtkm::Id>(floor(pos[1]));
+    idx000[2] = static_cast<vtkm::Id>(floor(pos[2]));
 
     idx001 = idx000; idx001[0] = (idx001[0] + 1) <= xdim - 1 ? idx001[0] + 1 : xdim - 1;
     idx010 = idx000; idx010[1] = (idx010[1] + 1) <= ydim - 1 ? idx010[1] + 1 : ydim - 1;
@@ -102,14 +101,14 @@ namespace internal {
 
     //get velocity
     vtkm::Vec<FieldType, 3> v000, v001, v010, v011, v100, v101, v110, v111;
-    v000 = GetVel<FieldType, PortalType>(idx000, xdim, ydim, zdim, vec_data);
-    v001 = GetVel<FieldType, PortalType>(idx001, xdim, ydim, zdim, vec_data);
-    v010 = GetVel<FieldType, PortalType>(idx010, xdim, ydim, zdim, vec_data);
-    v011 = GetVel<FieldType, PortalType>(idx011, xdim, ydim, zdim, vec_data);
-    v100 = GetVel<FieldType, PortalType>(idx100, xdim, ydim, zdim, vec_data);
-    v101 = GetVel<FieldType, PortalType>(idx101, xdim, ydim, zdim, vec_data);
-    v110 = GetVel<FieldType, PortalType>(idx110, xdim, ydim, zdim, vec_data);
-    v111 = GetVel<FieldType, PortalType>(idx111, xdim, ydim, zdim, vec_data);
+    v000 = GetVel<FieldType, PortalType>(idx000, xdim, ydim, vec_data);
+    v001 = GetVel<FieldType, PortalType>(idx001, xdim, ydim, vec_data);
+    v010 = GetVel<FieldType, PortalType>(idx010, xdim, ydim, vec_data);
+    v011 = GetVel<FieldType, PortalType>(idx011, xdim, ydim, vec_data);
+    v100 = GetVel<FieldType, PortalType>(idx100, xdim, ydim, vec_data);
+    v101 = GetVel<FieldType, PortalType>(idx101, xdim, ydim, vec_data);
+    v110 = GetVel<FieldType, PortalType>(idx110, xdim, ydim, vec_data);
+    v111 = GetVel<FieldType, PortalType>(idx111, xdim, ydim, vec_data);
 
 #ifdef _Debug_2
   printf("v000 vel: %d, %d, %d, %f, %f, %f\n", idx000[0], idx000[1], idx000[2], v000[0], v000[1], v000[2]);
@@ -124,7 +123,7 @@ namespace internal {
 
     //interpolation
     vtkm::Vec<FieldType, 3> v00, v01, v10, v11;
-    float a = pos[0] - floor(pos[0]);
+    FieldType a = pos[0] - static_cast<FieldType>(floor(pos[0]));
     v00[0] = (1.0f - a) * v000[0] + a * v001[0];
     v00[1] = (1.0f - a) * v000[1] + a * v001[1];
     v00[2] = (1.0f - a) * v000[2] + a * v001[2];
@@ -142,7 +141,7 @@ namespace internal {
     v11[2] = (1.0f - a) * v110[2] + a * v111[2];
 
     vtkm::Vec<FieldType, 3> v0, v1;
-    a = pos[1] - floor(pos[1]);
+    a = pos[1] - static_cast<FieldType>(floor(pos[1]));
     v0[0] = (1.0f - a) * v00[0] + a * v01[0];
     v0[1] = (1.0f - a) * v00[1] + a * v01[1];
     v0[2] = (1.0f - a) * v00[2] + a * v01[2];
@@ -152,7 +151,7 @@ namespace internal {
     v1[2] = (1.0f - a) * v10[2] + a * v11[2];
 
     vtkm::Vec<FieldType, 3> v;
-    a = pos[2] - floor(pos[2]);
+    a = pos[2] - static_cast<FieldType>(floor(pos[2]));
     v[0] = (1.0f - a) * v0[0] + v1[0];
     v[1] = (1.0f - a) * v0[1] + v1[1];
     v[2] = (1.0f - a) * v0[2] + v1[2];
@@ -166,8 +165,8 @@ class StreamLineUniformGridFilter
 {
 public:
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > FieldHandle;
-  typedef typename FieldHandle::ExecutionTypes<DeviceAdapter>::Portal FieldPortalType;
-  typedef typename FieldHandle::ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
+  typedef typename FieldHandle::template ExecutionTypes<DeviceAdapter>::Portal FieldPortalType;
+  typedef typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
 
   class MakeStreamLines : public vtkm::worklet::WorkletMapField
   {
@@ -327,7 +326,6 @@ public:
   vtkm::Id g_num_seeds;
   vtkm::Id g_max_steps;
 
-  template <typename FieldType>
   void Run(const FieldType t, 
            const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > fieldArray,
            vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > slLists_)
@@ -338,11 +336,11 @@ public:
     for (vtkm::Id i = 0; i < g_num_seeds; i++)
     {
       vtkm::Vec<FieldType, 3> secretSeed;
-      secretSeed[0] = rand() % g_dim[0];
-      secretSeed[1] = rand() % g_dim[1];
-      secretSeed[2] = rand() % g_dim[2];
+      secretSeed[0] = static_cast<FieldType>(rand() % g_dim[0]);
+      secretSeed[1] = static_cast<FieldType>(rand() % g_dim[1]);
+      secretSeed[2] = static_cast<FieldType>(rand() % g_dim[2]);
       seeds.push_back(secretSeed);
-printf("Seed %d = (%f, %f, %f)\n", i, secretSeed[0], secretSeed[1], secretSeed[2]);
+printf("Seed %ld = (%f, %f, %f)\n", i, secretSeed[0], secretSeed[1], secretSeed[2]);
     }
 
     vtkm::cont::ArrayHandleCounting<vtkm::Id> seedIdArray(0, 1, g_num_seeds);
