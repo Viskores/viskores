@@ -57,8 +57,8 @@ public:
   public:
     typedef void ControlSignature(FieldInPoint<Scalar> inNodes,
                                   TopologyIn topology,
-                                  FieldOutCell<> outNumVertices,
-                                  ExecObject numVerticesTable);
+                                  FieldOutCell<> outNumTriangles,
+                                  ExecObject numTrianglesTable);
     typedef void ExecutionSignature(_1, _3, _4);
     typedef _2 InputDomain;
 
@@ -71,11 +71,11 @@ public:
     }
 
     template<typename InPointVecType,
-             typename NumVerticesTablePortalType>
+             typename NumTrianglesTablePortalType>
     VTKM_EXEC_EXPORT
     void operator()(const InPointVecType &pointValues,
-                    vtkm::IdComponent &numVertices,
-                    const NumVerticesTablePortalType &numVerticesTable) const
+                    vtkm::IdComponent &numTriangles,
+                    const NumTrianglesTablePortalType &numTrianglesTable) const
     {
       vtkm::Id caseNumber  = (pointValues[0] > this->Isovalue);
       caseNumber += (pointValues[1] > this->Isovalue)*2;
@@ -85,7 +85,7 @@ public:
       caseNumber += (pointValues[5] > this->Isovalue)*32;
       caseNumber += (pointValues[6] > this->Isovalue)*64;
       caseNumber += (pointValues[7] > this->Isovalue)*128;
-      numVertices = numVerticesTable.Get(caseNumber) / 3;
+      numTriangles = numTrianglesTable.Get(caseNumber);
     }
   };
 
@@ -232,8 +232,8 @@ public:
            vtkm::cont::ArrayHandle<FieldType> scalarsArray)
   {
     // Set up the Marching Cubes case tables
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> vertexTableArray =
-        vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::numVerticesTable,
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numTrianglesTable =
+        vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::numTrianglesTable,
                                      256);
     vtkm::cont::ArrayHandle<vtkm::IdComponent> triangleTableArray =
         vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::triTable,
@@ -255,7 +255,7 @@ public:
     classifyCellDispatcher.Invoke( field,
                                    this->DataSet.GetCellSet(0),
                                    numOutputTrisPerCell,
-                                   TableArrayExecObjectType(vertexTableArray));
+                                   TableArrayExecObjectType(numTrianglesTable));
 
     IsoSurfaceGenerate isosurface(isovalue, numOutputTrisPerCell, DeviceAdapter());
 
