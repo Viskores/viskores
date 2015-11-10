@@ -73,18 +73,19 @@ public:
     template<typename InPointVecType,
              typename NumTrianglesTablePortalType>
     VTKM_EXEC_EXPORT
-    void operator()(const InPointVecType &pointValues,
+    void operator()(const InPointVecType &fieldIn,
                     vtkm::IdComponent &numTriangles,
                     const NumTrianglesTablePortalType &numTrianglesTable) const
     {
-      vtkm::Id caseNumber  = (pointValues[0] > this->Isovalue);
-      caseNumber += (pointValues[1] > this->Isovalue)*2;
-      caseNumber += (pointValues[2] > this->Isovalue)*4;
-      caseNumber += (pointValues[3] > this->Isovalue)*8;
-      caseNumber += (pointValues[4] > this->Isovalue)*16;
-      caseNumber += (pointValues[5] > this->Isovalue)*32;
-      caseNumber += (pointValues[6] > this->Isovalue)*64;
-      caseNumber += (pointValues[7] > this->Isovalue)*128;
+      vtkm::IdComponent caseNumber =
+          (  (fieldIn[0] > this->Isovalue)
+           | (fieldIn[1] > this->Isovalue)<<1
+           | (fieldIn[2] > this->Isovalue)<<2
+           | (fieldIn[3] > this->Isovalue)<<3
+           | (fieldIn[4] > this->Isovalue)<<4
+           | (fieldIn[5] > this->Isovalue)<<5
+           | (fieldIn[6] > this->Isovalue)<<6
+           | (fieldIn[7] > this->Isovalue)<<7 );
       numTriangles = numTrianglesTable.Get(caseNumber);
     }
   };
@@ -149,19 +150,19 @@ public:
                                                     0, 4, 1, 5, 2, 6, 3, 7 };
 
       // Compute the Marching Cubes case number for this cell
-      vtkm::IdComponent cubeindex = 0;
-      cubeindex += (fieldIn[0] > this->Isovalue);
-      cubeindex += (fieldIn[1] > this->Isovalue)*2;
-      cubeindex += (fieldIn[2] > this->Isovalue)*4;
-      cubeindex += (fieldIn[3] > this->Isovalue)*8;
-      cubeindex += (fieldIn[4] > this->Isovalue)*16;
-      cubeindex += (fieldIn[5] > this->Isovalue)*32;
-      cubeindex += (fieldIn[6] > this->Isovalue)*64;
-      cubeindex += (fieldIn[7] > this->Isovalue)*128;
+      vtkm::IdComponent caseNumber =
+          (  (fieldIn[0] > this->Isovalue)
+           | (fieldIn[1] > this->Isovalue)<<1
+           | (fieldIn[2] > this->Isovalue)<<2
+           | (fieldIn[3] > this->Isovalue)<<3
+           | (fieldIn[4] > this->Isovalue)<<4
+           | (fieldIn[5] > this->Isovalue)<<5
+           | (fieldIn[6] > this->Isovalue)<<6
+           | (fieldIn[7] > this->Isovalue)<<7 );
 
       // Interpolate for vertex positions and associated scalar values
       const vtkm::Id triTableOffset =
-          static_cast<vtkm::Id>(cubeindex*16 + visitIndex*3);
+          static_cast<vtkm::Id>(caseNumber*16 + visitIndex*3);
       for (vtkm::IdComponent triVertex = 0;
            triVertex < 3;
            triVertex++)
