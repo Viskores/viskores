@@ -45,6 +45,16 @@ struct TestExecObject
   vtkm::Id *Array;
 };
 
+struct TestExecObjectType : vtkm::exec::ExecutionObjectBase
+{
+  template<typename Functor>
+  void CastAndCall(Functor f) const
+  {
+    f(*this);
+  }
+  vtkm::Id Value;
+};
+
 struct TestTypeCheckTag {  };
 struct TestTransportTag {  };
 struct TestFetchTagInput {  };
@@ -81,43 +91,65 @@ struct Transport<TestTransportTag, vtkm::Id *, Device>
 } // namespace vtkm::cont::arg
 
 namespace vtkm {
+namespace cont {
+namespace internal {
+
+template<>
+struct DynamicTransformTraits< TestExecObjectType >
+{
+  typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
+};
+
+}
+}
+} // namespace vtkm::cont::internal
+
+namespace vtkm {
 namespace exec {
 namespace arg {
 
-template<typename Invocation, vtkm::IdComponent ParameterIndex>
-struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault, Invocation, ParameterIndex>
+template<>
+struct Fetch<TestFetchTagInput,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesBasic,
+             TestExecObject>
 {
   typedef vtkm::Id ValueType;
 
   VTKM_EXEC_EXPORT
-  ValueType Load(vtkm::Id index, const Invocation &invocation) const {
-    return invocation.Parameters.
-        template GetParameter<ParameterIndex>().Array[index];
+  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic indices,
+                 const TestExecObject &execObject) const {
+    return execObject.Array[indices.GetIndex()];
   }
 
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id, const Invocation &, ValueType) const {
+  void Store(const vtkm::exec::arg::ThreadIndicesBasic,
+             const TestExecObject &,
+             ValueType) const {
     // No-op
   }
 };
 
-template<typename Invocation, vtkm::IdComponent ParameterIndex>
-struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, Invocation, ParameterIndex>
+template<>
+struct Fetch<TestFetchTagOutput,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesBasic,
+             TestExecObject>
 {
   typedef vtkm::Id ValueType;
 
   VTKM_EXEC_EXPORT
-  ValueType Load(vtkm::Id, const Invocation &) const {
+  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic &,
+                 const TestExecObject &) const {
     // No-op
     return ValueType();
   }
 
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id index,
-             const Invocation &invocation,
+  void Store(const vtkm::exec::arg::ThreadIndicesBasic &indices,
+             const TestExecObject &execObject,
              ValueType value) const {
-    invocation.Parameters.template GetParameter<ParameterIndex>().Array[index] =
-        value;
+    execObject.Array[indices.GetIndex()] = value;
   }
 };
 
@@ -126,11 +158,6 @@ struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, Invocation, 
 } // vtkm::exec::arg
 
 namespace {
-
-struct TestExecObjectType : vtkm::exec::ExecutionObjectBase
-{
-  vtkm::Id Value;
-};
 
 static const vtkm::Id EXPECTED_EXEC_OBJECT_VALUE = 123;
 
@@ -188,14 +215,12 @@ class TestDispatcher :
     public vtkm::worklet::internal::DispatcherBase<
       TestDispatcher<WorkletType>,
       WorkletType,
-      TestWorkletBase,
-      Device>
+      TestWorkletBase>
 {
   typedef vtkm::worklet::internal::DispatcherBase<
       TestDispatcher<WorkletType>,
       WorkletType,
-      TestWorkletBase,
-      Device> Superclass;
+      TestWorkletBase> Superclass;
   typedef vtkm::internal::FunctionInterface<void(vtkm::Id *, TestExecObjectType, vtkm::Id *)>
       ParameterInterface;
   typedef vtkm::internal::Invocation<
@@ -212,7 +237,7 @@ public:
   void DoInvoke(const Invocation &invocation) const
   {
     std::cout << "In TestDispatcher::DoInvoke()" << std::endl;
-    this->BasicInvoke(invocation, ARRAY_SIZE);
+    this->BasicInvoke(invocation, ARRAY_SIZE, Device());
   }
 
 private:
@@ -246,6 +271,7 @@ void TestBasicInvoke()
   }
 }
 
+
 void TestInvokeWithError()
 {
   std::cout << "Test invoke with error raised" << std::endl;
@@ -276,7 +302,8 @@ void TestInvokeWithError()
   }
 }
 
-void TestInvokeWithBadType()
+
+void TestInvokeWithDynamicAndBadTypes()
 {
   std::cout << "Test invoke with bad type" << std::endl;
 
@@ -301,20 +328,6 @@ void TestInvokeWithBadType()
 
   try
   {
-    std::cout << "  Second argument bad." << std::endl;
-    dispatcher.Invoke(array, NULL, array);
-    VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
-  }
-  catch (vtkm::cont::ErrorControlBadType error)
-  {
-    std::cout << "    Got expected exception." << std::endl;
-    std::cout << "    " << error.GetMessage() << std::endl;
-    VTKM_TEST_ASSERT(error.GetMessage().find(" 2 ") != std::string::npos,
-                     "Parameter index not named in error message.");
-  }
-
-  try
-  {
     std::cout << "  Third argument bad." << std::endl;
     dispatcher.Invoke(array, execObject, NULL);
     VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
@@ -332,7 +345,7 @@ void TestDispatcherBase()
 {
   TestBasicInvoke();
   TestInvokeWithError();
-  TestInvokeWithBadType();
+  TestInvokeWithDynamicAndBadTypes();
 }
 
 } // anonymous namespace

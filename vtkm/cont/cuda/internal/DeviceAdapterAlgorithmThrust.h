@@ -18,12 +18,11 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_cuda_internal_DeviceAdapterThrust_h
-#define vtk_m_cont_cuda_internal_DeviceAdapterThrust_h
+#ifndef vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmThrust_h
+#define vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmThrust_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorExecution.h>
-#include <vtkm/cont/Timer.h>
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/UnaryPredicates.h>
@@ -31,9 +30,9 @@
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 
+#include <vtkm/exec/cuda/internal/WrappedOperators.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
-#include <vtkm/exec/cuda/internal/WrappedOperators.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -98,18 +97,16 @@ template<class FunctorType>
 __global__
 void Schedule3DIndexKernel(FunctorType functor, dim3 size)
 {
-  const vtkm::Id x = blockIdx.x*blockDim.x + threadIdx.x;
-  const vtkm::Id y = blockIdx.y*blockDim.y + threadIdx.y;
-  const vtkm::Id z = blockIdx.z*blockDim.z + threadIdx.z;
-
-  if (x >= size.x || y >= size.y || z >= size.z)
+  const vtkm::Id3 index(
+                        blockIdx.x*blockDim.x + threadIdx.x,
+                        blockIdx.y*blockDim.y + threadIdx.y,
+                        blockIdx.z*blockDim.z + threadIdx.z
+                        );
+  if (index[0] >= size.x || index[1] >= size.y || index[2] >= size.z)
     {
     return;
     }
-
-  //now convert back to flat memory
-  const int idx = x + size.x*(y + size.y*z);
-  functor( idx );
+  functor( index );
 }
 
 template<typename T, typename BinaryOperationType >
@@ -373,6 +370,8 @@ private:
     {
       throwAsVTKmException();
     }
+
+    return typename InputPortal::ValueType();
   }
 
   template<class KeysPortal, class ValuesPortal,
@@ -446,17 +445,17 @@ private:
     // data on device.
     typedef typename OutputPortal::ValueType ValueType;
 
-    //store the current value in last position array in a separate cuda
-    //memory location, we have size two so that we can store the result
-    ::thrust::system::cuda::vector< ValueType > sum(2);
-
+    //we have size three so that we can store the origin end value, the
+    //new end value, and the sum of those two
+    ::thrust::system::cuda::vector< ValueType > sum(3);
     try
     {
+
+      //store the current value of the last position array in a separate cuda
+      //memory location since the exclusive_scan will overwrite that value
+      //once run
       ::thrust::copy_n(thrust::cuda::par,
-                       IteratorEnd(input) - 1,
-                       1,
-                       sum.begin()
-                       );
+                       IteratorEnd(input) - 1, 1, sum.begin());
 
       vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
                                                         BinaryFunctor> bop(binaryOp);
@@ -470,14 +469,21 @@ private:
                                                   initialValue,
                                                   bop);
 
+      //Store the new value for the end of the array. This is done because
+      //with items such as the transpose array it is unsafe to pass the
+      //portal to the SumExclusiveScan
+      ::thrust::copy_n(thrust::cuda::par,
+                       (end-1), 1, sum.begin()+1);
+
+
       //execute the binaryOp one last time on the device.
-      SumExclusiveScan <<<1,1>>> (sum[0], *(end-1), sum[1], bop);
+      SumExclusiveScan <<<1,1>>> (sum[0], sum[1], sum[2], bop);
     }
     catch(...)
     {
       throwAsVTKmException();
     }
-    return sum[1];
+    return sum[2];
   }
 
   template<class InputPortal, class OutputPortal>
@@ -595,6 +601,11 @@ private:
 
     IteratorType outputBegin = IteratorBegin(output);
 
+    typedef typename StencilPortal::ValueType ValueType;
+
+    vtkm::exec::cuda::internal::WrappedUnaryPredicate<ValueType,
+                                                      UnaryPredicate> up(unary_predicate);
+
     try
     {
       IteratorType newLast = ::thrust::copy_if(thrust::cuda::par,
@@ -602,7 +613,7 @@ private:
                                                valuesEnd,
                                                IteratorBegin(stencil),
                                                outputBegin,
-                                               unary_predicate);
+                                               up);
       return static_cast<vtkm::Id>( ::thrust::distance(outputBegin, newLast) );
     }
     catch(...)
@@ -1285,4 +1296,4 @@ public:
 }
 } // namespace vtkm::cont::cuda::internal
 
-#endif //vtk_m_cont_cuda_internal_DeviceAdapterThrust_h
+#endif //vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmThrust_h

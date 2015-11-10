@@ -18,6 +18,10 @@
 //  this software.
 //============================================================================
 
+#ifndef VTKM_DEVICE_ADAPTER
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
+#endif
+
 #include <vtkm/worklet/TetrahedralizeUniformGrid.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
@@ -72,15 +76,14 @@ vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dim)
           vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
 
   // Generate cell set
-  static const vtkm::IdComponent ndim = 2;
-  vtkm::cont::CellSetStructured<ndim> cellSet("cells");
+  vtkm::cont::CellSetStructured<2> cellSet("cells");
   cellSet.SetPointDimensions(vtkm::make_Vec(dim[0] + 1, dim[1] + 1));
   dataSet.AddCellSet(cellSet);
 
   return dataSet;
 }
 
-// 
+//
 // Functor to retrieve vertex locations from the CoordinateSystem
 // Actually need a static cast to ArrayHandle from DynamicArrayHandleCoordinateSystem
 // but haven't been able to figure out what that is
@@ -128,7 +131,7 @@ void displayCall()
 
   // Get the cellset, coordinate system and coordinate data
   vtkm::cont::CellSetSingleType<> &cellSet = tetDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray = 
+  const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray =
                                       tetDataSet.GetCoordinateSystem(0).GetData();
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
@@ -181,7 +184,7 @@ int main(int argc, char* argv[])
 {
   std::cout << "TrianguleUniformGrid Example" << std::endl;
   std::cout << "Parameters are [xdim ydim [# of cellsToDisplay]]" << std::endl << std::endl;
-  
+
   // Set the problem size and number of cells to display from command line
   if (argc >= 3)
   {

@@ -148,12 +148,12 @@ struct VertexClustering
   };
 
 
-  class MapCellsWorklet: public vtkm::worklet::WorkletMapTopologyPointToCell
+  class MapCellsWorklet: public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
-                                  FieldInFrom<IdType> pointClusterIds,
-                                  FieldOut<Id3Type> cellClusterIds);
+                                  FieldInPoint<IdType> pointClusterIds,
+                                  FieldOutCell<Id3Type> cellClusterIds);
     typedef void ExecutionSignature(_2, _3);
 
     VTKM_CONT_EXPORT

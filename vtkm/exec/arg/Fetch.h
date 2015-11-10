@@ -33,13 +33,16 @@ namespace arg {
 /// instance and to store a resulting value back in the object. (Either load
 /// or store can be a no-op.)
 ///
-/// \c Fetch is a templated class with four arguments. The first argument is
-/// a tag declaring the type of fetch, which is usually tied to a particular
-/// type of execution object. The second argument is an aspect tag that
-/// declares what type of data to pull/push. Together, these two tags determine
-/// the mechanism for the fetch. The third argument as an Invocation object
-/// containing the details of the call. The fourth argument identifies the
-/// parameter of the input arguments that is the source of the data.
+/// \c Fetch is a templated class with four arguments. The first argument is a
+/// tag declaring the type of fetch, which is usually tied to a particular type
+/// of execution object. The second argument is an aspect tag that declares
+/// what type of data to pull/push. Together, these two tags determine the
+/// mechanism for the fetch. The third argument is the type of thread indices
+/// used (one of the classes that starts with \c ThreadIndices in the
+/// vtkm::exec::arg namespace), which defines the type of thread-local indices
+/// available during the fetch. The fourth argument is the type of execution
+/// object associated where the fetch (nominally) gets its data from. This
+/// execution object is the data provided by the transport.
 ///
 /// There is no generic implementaiton of \c Fetch. There are partial
 /// specializations of \c Fetch for each mechanism (fetch-aspect tag
@@ -51,19 +54,11 @@ namespace arg {
 ///
 template<typename FetchTag,
          typename AspectTag,
-         typename Invocation,
-         vtkm::IdComponent ParameterIndex>
+         typename ThreadIndicesType,
+         typename ExecObjectType>
 struct Fetch
 #ifdef VTKM_DOXYGEN_ONLY
 {
-  /// \brief The type of the execution object to load and store data (optional).
-  ///
-  /// This is the type of the parameter of the \c Invocation pointed to by
-  /// \c ParameterIndex. Declaring this is optional, but often helpful.
-  ///
-  typedef typename Invocation::ParameterInterface::
-      template ParameterType<ParameterIndex>::type ExecObjectType;
-
   /// \brief The type of value to load and store.
   ///
   /// All \c Fetch specializations are expected to declare a type named \c
@@ -75,26 +70,27 @@ struct Fetch
   /// \brief Load data for a work instance.
   ///
   /// All \c Fetch specializations are expected to have a constant method named
-  /// \c Load that takes a work instance index and an \c Invocation object
-  /// (preferably as a constant reference) and returns the value appropriate
-  /// for the work instance. If there is no actual data to load (for example
-  /// for a write-only fetch), this method can be a no-op and return any value.
+  /// \c Load that takes a \c ThreadIndices object containing thread-local
+  /// indices and an execution object and returns the value appropriate for the
+  /// work instance. If there is no actual data to load (for example for a
+  /// write-only fetch), this method can be a no-op and return any value.
   ///
   VTKM_EXEC_EXPORT
-  ValueType Load(vtkm::Id index, const Invocation &invocation) const;
+  ValueType Load(const ThreadIndicesType &indices,
+                 const ExecObjectType &execObject) const;
 
   /// \brief Store data from a work instance.
   ///
   /// All \c Fetch specializations are expected to have a constant method named
-  /// \c Store that takes a work instance index, a an \c Invocation object
-  /// (preferably as a constant reference), and a value computed by the given
-  /// work instance and stores that value into the execution object associated
-  /// with this fetch. If the store is not applicable (for example for a
-  /// read-only fetch), this method can be a no-op.
+  /// \c Store that takes a \c ThreadIndices object containing thread-local
+  /// indices, an execution object, and a value computed by the worklet call
+  /// and stores that value into the execution object associated with this
+  /// fetch. If the store is not applicable (for example for a read-only
+  /// fetch), this method can be a no-op.
   ///
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id index,
-             const Invocation &invocation,
+  void Store(const ThreadIndicesType &indices,
+             const ExecObjectType &execObject,
              const ValueType &value) const;
 };
 #else // VTKM_DOXYGEN_ONLY

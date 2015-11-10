@@ -326,28 +326,23 @@ class ArrayHandleGroupVec
   VTKM_IS_ARRAY_HANDLE(SourceArrayHandleType);
 
 public:
-  typedef vtkm::cont::internal::StorageTagGroupVec<
-    SourceArrayHandleType, NUM_COMPONENTS> StorageTag;
+  VTKM_ARRAY_HANDLE_SUBCLASS(
+        ArrayHandleGroupVec,
+        (ArrayHandleGroupVec<SourceArrayHandleType, NUM_COMPONENTS>),
+        (vtkm::cont::ArrayHandle<
+           vtkm::Vec<typename SourceArrayHandleType::ValueType, NUM_COMPONENTS>,
+           vtkm::cont::internal::StorageTagGroupVec<
+             SourceArrayHandleType, NUM_COMPONENTS> >));
+
   typedef typename SourceArrayHandleType::ValueType ComponentType;
-  typedef vtkm::cont::ArrayHandle<
-    vtkm::Vec<ComponentType,NUM_COMPONENTS>, StorageTag> Superclass;
-  typedef typename Superclass::ValueType ValueType;
 
 private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
   VTKM_CONT_EXPORT
-  ArrayHandleGroupVec() {  }
-
-  VTKM_CONT_EXPORT
   ArrayHandleGroupVec(const SourceArrayHandleType &sourceArray)
     : Superclass(StorageType(sourceArray)) {  }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleGroupVec(
-      const vtkm::cont::ArrayHandle<ValueType,StorageTag> &source)
-    : Superclass(source) {  }
 };
 
 }

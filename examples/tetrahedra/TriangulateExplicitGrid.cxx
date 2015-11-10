@@ -18,6 +18,10 @@
 //  this software.
 //============================================================================
 
+#ifndef VTKM_DEVICE_ADAPTER
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
+#endif
+
 #include <vtkm/worklet/TetrahedralizeExplicitGrid.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
@@ -38,6 +42,8 @@
 
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
+namespace {
+
 // Takes input uniform grid and outputs unstructured grid of triangles
 vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter> *tetrahedralizeFilter;
 vtkm::cont::DataSet outDataSet;
@@ -45,6 +51,8 @@ vtkm::Id numberOfInPoints;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
 vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
+
+} // anonymous namespace
 
 //
 // Construct an input data set with uniform grid of indicated dimensions, origin and spacing
@@ -140,7 +148,7 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
   return dataSet;
 }
 
-// 
+//
 // Functor to retrieve vertex locations from the CoordinateSystem
 // Actually need a static cast to ArrayHandle from DynamicArrayHandleCoordinateSystem
 // but haven't been able to figure out what that is
@@ -187,12 +195,12 @@ void displayCall()
   glLineWidth(3.0f);
 
   // Get cell set and the number of cells and vertices
-  vtkm::cont::CellSetSingleType<> cellSet = 
+  vtkm::cont::CellSetSingleType<> cellSet =
               outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
 
   // Get the coordinate system and coordinate data
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = 
+  const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray =
                                       outDataSet.GetCoordinateSystem(0).GetData();
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
@@ -236,7 +244,7 @@ void displayCall()
 int main(int argc, char* argv[])
 {
   std::cout << "TrianguleExplicitGrid Example" << std::endl;
-  
+
   // Create the input uniform cell set
   vtkm::cont::DataSet inDataSet = MakeTriangulateExplicitDataSet();
   vtkm::cont::CellSetExplicit<> &inCellSet =

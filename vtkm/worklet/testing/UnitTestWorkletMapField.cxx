@@ -87,7 +87,7 @@ namespace mapfield {
 static const vtkm::Id ARRAY_SIZE = 10;
 
 template<typename WorkletType>
-struct DoTestWorklet
+struct DoStaticTestWorklet
 {
   template<typename T>
   VTKM_CONT_EXPORT
@@ -116,18 +116,55 @@ struct DoTestWorklet
     std::cout << "Check result." << std::endl;
     CheckPortal(outputHandle.GetPortalConstControl());
     CheckPortal(inoutHandle.GetPortalConstControl());
+  }
+};
 
-    std::cout << "Repeat with dynamic arrays." << std::endl;
-    // Clear out output array.
-    outputHandle = vtkm::cont::ArrayHandle<T>();
+template<typename WorkletType>
+struct DoDynamicTestWorklet
+{
+  template<typename T>
+  VTKM_CONT_EXPORT
+  void operator()(T) const
+  {
+    std::cout << "Set up data." << std::endl;
+    T inputArray[ARRAY_SIZE];
+
+    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+    {
+      inputArray[index] = TestValue(index, T()) + T(100);
+    }
+
+    vtkm::cont::ArrayHandle<T> inputHandle =
+        vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> outputHandle;
+    vtkm::cont::ArrayHandle<T> inoutHandle;
+
     vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::
         Copy(inputHandle, inoutHandle);
+
+    std::cout << "Create and run dispatcher with dynamic arrays." << std::endl;
+    vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
+
     vtkm::cont::DynamicArrayHandle inputDynamic(inputHandle);
     vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
     vtkm::cont::DynamicArrayHandle inoutDynamic(inoutHandle);
+
     dispatcher.Invoke(inputDynamic, outputDynamic, inoutDynamic);
+
     CheckPortal(outputHandle.GetPortalConstControl());
     CheckPortal(inoutHandle.GetPortalConstControl());
+  }
+};
+
+template<typename WorkletType>
+struct DoTestWorklet
+{
+  template<typename T>
+  VTKM_CONT_EXPORT
+  void operator()(T t) const
+  {
+    DoStaticTestWorklet<WorkletType>  sw; sw(t);
+    DoDynamicTestWorklet<WorkletType> dw; dw(t);
   }
 };
 
@@ -151,7 +188,8 @@ void TestWorkletMapField()
   std::cout << "--- Sending bad type to worklet." << std::endl;
   try
   {
-    DoTestWorklet< TestMapFieldWorkletLimitedTypes > badWorkletTest;
+    //can only test with dynamic arrays, as static arrays will fail to compile
+    DoDynamicTestWorklet< TestMapFieldWorkletLimitedTypes > badWorkletTest;
     badWorkletTest( vtkm::Vec<vtkm::Float32,3>() );
     VTKM_TEST_FAIL("Did not throw expected error.");
   }

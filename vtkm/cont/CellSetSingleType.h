@@ -45,6 +45,7 @@ class CellSetSingleType  :
     typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag  //IndexOffsetStorageTag
     >
 {
+  typedef vtkm::cont::CellSetSingleType<ConnectivityStorageTag> Thisclass;
   typedef vtkm::cont::CellSetExplicit<
       typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag,
       typename vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag,
@@ -66,6 +67,21 @@ public:
       CellTypeAsId(CellShapeTagEmpty::Id)
   {
   }
+
+  VTKM_CONT_EXPORT
+  CellSetSingleType(const Thisclass &src)
+    : Superclass(src), CellTypeAsId(src.CellTypeAsId)
+  {  }
+
+  VTKM_CONT_EXPORT
+  Thisclass &operator=(const Thisclass &src)
+  {
+    this->Superclass::operator=(src);
+    this->CellTypeAsId = src.CellTypeAsId;
+    return *this;
+  }
+
+  virtual ~CellSetSingleType() {  }
 
   /// First method to add cells -- one at a time.
   VTKM_CONT_EXPORT

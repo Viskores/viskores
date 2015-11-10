@@ -70,6 +70,9 @@ template< typename ValidCellArrayHandleType,
           typename OriginalCellSet >
 class CellSetPermutation : public CellSet
 {
+  typedef vtkm::cont::CellSetPermutation<
+      ValidCellArrayHandleType,OriginalCellSet> Thisclass;
+
 public:
   typedef typename vtkm::cont::internal::CellSetPermutationTraits<
   ValidCellArrayHandleType,OriginalCellSet>::PermutedCellSetType PermutedCellSetType;
@@ -99,6 +102,24 @@ public:
       PermutedCellSet(0, name, dimensionality)
   {
   }
+
+  VTKM_CONT_EXPORT
+  CellSetPermutation(const Thisclass &src)
+    : CellSet(src),
+      ValidCellIds(src.ValidCellIds),
+      PermutedCellSet(src.PermutedCellSet)
+  {  }
+
+  VTKM_CONT_EXPORT
+  Thisclass &operator=(const Thisclass &src)
+  {
+    this->CellSet::operator=(src);
+    this->ValidCellIds = src.ValidCellIds;
+    this->PermutedCellSet = src.PermutedCellSet;
+    return *this;
+  }
+
+  virtual ~CellSetPermutation() {  }
 
   //This is the way you can fill the memory from another system without copying
   VTKM_CONT_EXPORT

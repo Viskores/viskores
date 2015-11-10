@@ -52,19 +52,24 @@ struct WorkIndex : vtkm::exec::arg::ExecutionSignatureTagBase
   typedef vtkm::exec::arg::AspectTagWorkIndex AspectTag;
 };
 
-template<typename FetchTag, typename Invocation>
-struct Fetch<FetchTag, vtkm::exec::arg::AspectTagWorkIndex, Invocation, 1>
+template<typename FetchTag, typename ThreadIndicesType, typename ExecObjectType>
+struct Fetch<FetchTag,
+             vtkm::exec::arg::AspectTagWorkIndex,
+             ThreadIndicesType,
+             ExecObjectType>
 {
   typedef vtkm::Id ValueType;
 
   VTKM_EXEC_EXPORT
-  vtkm::Id Load(vtkm::Id index, const Invocation &) const
+  vtkm::Id Load(const ThreadIndicesType &indices, const ExecObjectType &) const
   {
-    return index;
+    return indices.GetIndex();
   }
 
   VTKM_EXEC_EXPORT
-  void Store(vtkm::Id, const Invocation &, const ValueType &) const
+  void Store(const ThreadIndicesType &,
+             const ExecObjectType &,
+             const ValueType &) const
   {
     // Store is a no-op.
   }

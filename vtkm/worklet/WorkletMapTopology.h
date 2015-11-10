@@ -41,24 +41,14 @@
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
 #include <vtkm/exec/arg/FromCount.h>
 #include <vtkm/exec/arg/FromIndices.h>
+#include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
 namespace vtkm {
 namespace worklet {
 
-/// Base class for worklets that do a simple mapping of field arrays. All
-/// inputs and outputs are on the same domain. That is, all the arrays are the
-/// same size.
-///
-/// TODO: I also suggest having convenience subclasses for common (supported?)
-/// link directions.
-///
-template<typename FromTopology, typename ToTopology>
-class WorkletMapTopology : public vtkm::worklet::internal::WorkletBase
+class WorkletMapTopologyBase : public vtkm::worklet::internal::WorkletBase
 {
 public:
-  typedef FromTopology FromTopologyType;
-  typedef ToTopology ToTopologyType;
-
   /// \brief A control signature tag for input fields.
   ///
   /// This tag takes a template argument that is a type list tag that limits
@@ -81,14 +71,6 @@ public:
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayTopologyMapIn FetchTag;
-  };
-
-  /// \brief A control signature tag for input connectivity.
-  ///
-  struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopology,ToTopology> TransportTag;
-    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
   };
 
   /// \brief A control signature tag for output fields.
@@ -138,14 +120,75 @@ public:
   /// \em from elements that are accessible.
   ///
   struct FromIndices : vtkm::exec::arg::FromIndices {  };
+
+  /// Topology map worklets use topology map indices.
+  ///
+  template<typename T, typename Invocation>
+  VTKM_EXEC_EXPORT
+  vtkm::exec::arg::ThreadIndicesTopologyMap<typename Invocation::InputDomainType>
+  GetThreadIndices(const T& threadIndex, const Invocation &invocation) const
+  {
+    return vtkm::exec::arg::ThreadIndicesTopologyMap<typename Invocation::InputDomainType>(
+          threadIndex, invocation);
+  }
 };
 
-/// Convenience base class for worklets that map from Points to Cells.
+/// Base class for worklets that do a simple mapping of field arrays. All
+/// inputs and outputs are on the same domain. That is, all the arrays are the
+/// same size.
 ///
-class WorkletMapTopologyPointToCell
- : public WorkletMapTopology<vtkm::TopologyElementTagPoint,
-                             vtkm::TopologyElementTagCell>
-{ };
+/// TODO: I also suggest having convenience subclasses for common (supported?)
+/// link directions.
+///
+template<typename FromTopology, typename ToTopology>
+class WorkletMapTopology : public WorkletMapTopologyBase
+{
+public:
+  typedef FromTopology FromTopologyType;
+  typedef ToTopology ToTopologyType;
+
+  /// \brief A control signature tag for input connectivity.
+  ///
+  struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopologyType,ToTopologyType> TransportTag;
+    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
+  };
+
+};
+
+/// Base class for worklets that map from Points to Cells.
+///
+class WorkletMapPointToCell: public WorkletMapTopologyBase
+{
+public:
+  typedef vtkm::TopologyElementTagPoint FromTopologyType;
+  typedef vtkm::TopologyElementTagCell ToTopologyType;
+
+  /// \brief A control signature tag for input connectivity.
+  ///
+  struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopologyType,ToTopologyType> TransportTag;
+    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
+  };
+
+  //While we would love to use templates, that feature is not possible
+  //until c++11 ( alias templates), so we have to replicate that feature
+  //by using inheritance.
+
+  template<typename TypeList = AllTypes >
+  struct FieldInPoint : FieldInFrom<TypeList> { };
+
+  template<typename TypeList = AllTypes >
+  struct FieldInCell : FieldInTo<TypeList> { };
+
+  template<typename TypeList = AllTypes >
+  struct FieldOutCell : FieldOut<TypeList> { };
+
+  template<typename TypeList = AllTypes >
+  struct FieldInOutCell : FieldInOut<TypeList> { };
+};
 
 }
 } // namespace vtkm::worklet

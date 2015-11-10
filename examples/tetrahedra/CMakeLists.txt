@@ -20,11 +20,6 @@
 ##
 ##=============================================================================
 
-cmake_minimum_required(VERSION 2.8.11)
-find_package(OpenGL)
-find_package(GLUT)
-find_package(TBB)
-
 if(OPENGL_FOUND AND GLUT_FOUND)
   add_executable(TetrahedralizeExplicitGrid_SERIAL TetrahedralizeExplicitGrid.cxx)
   target_include_directories(TetrahedralizeExplicitGrid_SERIAL PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
@@ -37,11 +32,11 @@ if(OPENGL_FOUND AND GLUT_FOUND)
   add_executable(TetrahedralizeUniformGrid_SERIAL TetrahedralizeUniformGrid.cxx)
   target_include_directories(TetrahedralizeUniformGrid_SERIAL PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
   target_link_libraries(TetrahedralizeUniformGrid_SERIAL ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
-  
+
   add_executable(TriangulateUniformGrid_SERIAL TriangulateUniformGrid.cxx)
   target_include_directories(TriangulateUniformGrid_SERIAL PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
   target_link_libraries(TriangulateUniformGrid_SERIAL ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
-  
+
   if(VTKm_Cuda_FOUND)
     cuda_add_executable(TetrahedralizeExplicitGrid_CUDA TetrahedralizeExplicitGrid.cu)
     target_link_libraries(TetrahedralizeExplicitGrid_CUDA ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})

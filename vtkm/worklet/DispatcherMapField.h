@@ -35,14 +35,12 @@ class DispatcherMapField :
     public vtkm::worklet::internal::DispatcherBase<
       DispatcherMapField<WorkletType,Device>,
       WorkletType,
-      vtkm::worklet::WorkletMapField,
-      Device>
+      vtkm::worklet::WorkletMapField>
 {
   typedef vtkm::worklet::internal::DispatcherBase<
     DispatcherMapField<WorkletType,Device>,
     WorkletType,
-    vtkm::worklet::WorkletMapField,
-    Device> Superclass;
+    vtkm::worklet::WorkletMapField> Superclass;
 
 public:
   VTKM_CONT_EXPORT
@@ -53,27 +51,12 @@ public:
   VTKM_CONT_EXPORT
   void DoInvoke(const Invocation &invocation) const
   {
-    // The parameter for the input domain is stored in the Invocation. (It is
-    // also in the worklet, but it is safer to get it from the Invocation
-    // in case some other dispatch operation had to modify it.)
-    static const vtkm::IdComponent InputDomainIndex =
-        Invocation::InputDomainIndex;
-
-    // ParameterInterface (from Invocation) is a FunctionInterface type
-    // containing types for all objects passed to the Invoke method (with
-    // some dynamic casting performed so objects like DynamicArrayHandle get
-    // cast to ArrayHandle).
-    typedef typename Invocation::ParameterInterface ParameterInterface;
-
-    // This is the type for the input domain (derived from the last two things
-    // we got from the Invocation).
-    typedef typename ParameterInterface::
-        template ParameterType<InputDomainIndex>::type InputDomainType;
+    // This is the type for the input domain
+    typedef typename Invocation::InputDomainType InputDomainType;
 
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
-    InputDomainType inputDomain =
-        invocation.Parameters.template GetParameter<InputDomainIndex>();
+    InputDomainType inputDomain = invocation.GetInputDomain();
 
     // For a DispatcherMapField, the inputDomain must be an ArrayHandle (or
     // a DynamicArrayHandle that gets cast to one). The size of the domain
@@ -83,7 +66,7 @@ public:
 
     // A MapField is a pretty straightforward dispatch. Once we know the number
     // of invocations, the superclass can take care of the rest.
-    this->BasicInvoke(invocation, numInstances);
+    this->BasicInvoke(invocation, numInstances, Device());
   }
 
 };

@@ -278,6 +278,7 @@ struct ArrayHandleCompositeVectorTraits
   typedef typename vtkm::internal::FunctionInterface<SignatureWithArrays>::ResultType
           ValueType;
   typedef vtkm::cont::internal::Storage<ValueType, Tag> StorageType;
+  typedef vtkm::cont::ArrayHandle<ValueType, Tag> Superclass;
 };
 
 // It may seem weird that this specialization throws an exception for
@@ -482,9 +483,7 @@ private:
 ///
 template<typename Signature>
 class ArrayHandleCompositeVector
-    : public vtkm::cont::ArrayHandle<
-        typename internal::ArrayHandleCompositeVectorTraits<Signature>::ValueType,
-        typename internal::ArrayHandleCompositeVectorTraits<Signature>::Tag>
+    : public internal::ArrayHandleCompositeVectorTraits<Signature>::Superclass
 {
   typedef typename internal::ArrayHandleCompositeVectorTraits<Signature>::StorageType
       StorageType;
@@ -492,27 +491,16 @@ class ArrayHandleCompositeVector
       ComponentMapType;
 
 public:
-  typedef vtkm::cont::ArrayHandle<
-      typename internal::ArrayHandleCompositeVectorTraits<Signature>::ValueType,
-      typename internal::ArrayHandleCompositeVectorTraits<Signature>::Tag>
-    Superclass;
-  typedef typename Superclass::ValueType ValueType;
-  typedef typename Superclass::StorageTag StorageTag;
-
-  VTKM_CONT_EXPORT
-  ArrayHandleCompositeVector() : Superclass() {  }
+  VTKM_ARRAY_HANDLE_SUBCLASS(
+      ArrayHandleCompositeVector,
+      (ArrayHandleCompositeVector<Signature>),
+      (typename internal::ArrayHandleCompositeVectorTraits<Signature>::Superclass));
 
   VTKM_CONT_EXPORT
   ArrayHandleCompositeVector(
       const vtkm::internal::FunctionInterface<Signature> &arrays,
       const ComponentMapType &sourceComponents)
     : Superclass(StorageType(arrays, sourceComponents))
-  {  }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleCompositeVector(
-      const vtkm::cont::ArrayHandle<ValueType, StorageTag> &src)
-    : Superclass(src)
   {  }
 
   /// Template constructors for passing in types. You'll get weird compile

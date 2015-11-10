@@ -183,6 +183,17 @@ public:
         detail::DynamicArrayHandleCopyHelper::GetArrayHandleContainer(src))
   {  }
 
+  VTKM_CONT_EXPORT
+  ~DynamicArrayHandleBase() {  }
+
+  VTKM_CONT_EXPORT
+  vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &
+  operator=(const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &src)
+  {
+    this->ArrayContainer = src.ArrayContainer;
+    return *this;
+  }
+
   /// Returns true if this array is of the provided type and uses the provided
   /// storage.
   ///

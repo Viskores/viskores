@@ -129,17 +129,30 @@ public:
   struct ClearArrayKernel
   {
     VTKM_CONT_EXPORT
-    ClearArrayKernel(const IdPortalType &array) : Array(array) {  }
+    ClearArrayKernel(const IdPortalType &array) : Array(array), Dims() {  }
+
+    VTKM_CONT_EXPORT
+    ClearArrayKernel(const IdPortalType &array,
+                     const vtkm::Id3& dims) : Array(array), Dims(dims) {  }
 
     VTKM_EXEC_EXPORT void operator()(vtkm::Id index) const
     {
       this->Array.Set(index, OFFSET);
     }
 
+    VTKM_EXEC_EXPORT void operator()(vtkm::Id3 index) const
+    {
+      //convert from id3 to id
+      vtkm::Id flatIndex =
+                  index[0]+ this->Dims[0]*(index[1]+ this->Dims[1]*index[2]);
+      this->operator()(flatIndex);
+    }
+
     VTKM_CONT_EXPORT void SetErrorMessageBuffer(
         const vtkm::exec::internal::ErrorMessageBuffer &) {  }
 
     IdPortalType Array;
+    vtkm::Id3 Dims;
   };
 
   struct ClearArrayMapKernel //: public vtkm::exec::WorkletMapField
@@ -158,17 +171,31 @@ public:
   struct AddArrayKernel
   {
     VTKM_CONT_EXPORT
-    AddArrayKernel(const IdPortalType &array) : Array(array) {  }
+    AddArrayKernel(const IdPortalType &array) : Array(array), Dims() {  }
+
+    VTKM_CONT_EXPORT
+    AddArrayKernel(const IdPortalType &array,
+                     const vtkm::Id3& dims) : Array(array), Dims(dims) {  }
+
 
     VTKM_EXEC_EXPORT void operator()(vtkm::Id index) const
     {
       this->Array.Set(index, this->Array.Get(index) + index);
     }
 
+    VTKM_EXEC_EXPORT void operator()(vtkm::Id3 index) const
+    {
+      //convert from id3 to id
+      vtkm::Id flatIndex =
+                  index[0]+ this->Dims[0]*(index[1]+ this->Dims[1]*index[2]);
+      this->operator()(flatIndex);
+    }
+
     VTKM_CONT_EXPORT void SetErrorMessageBuffer(
         const vtkm::exec::internal::ErrorMessageBuffer &) {  }
 
     IdPortalType Array;
+    vtkm::Id3 Dims;
   };
 
   struct OneErrorKernel
@@ -486,11 +513,11 @@ private:
       std::cout << "Running clear." << std::endl;
       Algorithm::Schedule(
             ClearArrayKernel(manager.PrepareForOutput(
-                               DIM_SIZE * DIM_SIZE * DIM_SIZE)),
+                               DIM_SIZE * DIM_SIZE * DIM_SIZE), maxRange),
             maxRange);
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)),
+      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false), maxRange),
                           maxRange);
 
       std::cout << "Checking results." << std::endl;

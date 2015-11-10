@@ -39,7 +39,12 @@
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
+#include <boost/mpl/at.hpp>
 #include <boost/mpl/assert.hpp>
+#include <boost/mpl/fold.hpp>
+#include <boost/mpl/find.hpp>
+#include <boost/mpl/zip_view.hpp>
+#include <boost/mpl/vector.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/utility/enable_if.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
@@ -69,6 +74,65 @@ inline void PrintFailureMessage(int index, boost::false_type)
           << " when calling Invoke on a dispatcher.";
   throw vtkm::cont::ErrorControlBadType(message.str());
 }
+
+// Is designed as a boost mpl binary metafunction.
+struct DetermineIfHasDynamicParameter
+{
+  template<typename T, typename U>
+  struct apply
+  {
+    typedef typename vtkm::cont::internal::DynamicTransformTraits<U>::DynamicTag DynamicTag;
+    typedef typename boost::is_same<
+            DynamicTag,
+            vtkm::cont::internal::DynamicTransformTagCastAndCall>::type UType;
+
+    typedef typename boost::mpl::or_<T,UType>::type type;
+  };
+};
+
+
+template<typename ValueType, typename TagList>
+void NiceInCorrectParameterErrorMessage()
+{
+ VTKM_STATIC_ASSERT_MSG(ValueType() == TagList(),
+                        "Unable to match 'ValueType' to the signature tag 'ControlSignatureTag'" );
+}
+
+template<typename T>
+void ShowInCorrectParameter(boost::mpl::true_, T) {}
+
+template<typename T>
+void ShowInCorrectParameter(boost::mpl::false_, T)
+{
+  typedef typename boost::mpl::deref<T>::type ZipType;
+  typedef typename boost::mpl::at_c<ZipType,0>::type ValueType;
+  typedef typename boost::mpl::at_c<ZipType,1>::type ControlSignatureTag;
+  NiceInCorrectParameterErrorMessage<ValueType,ControlSignatureTag>();
+};
+
+// Is designed as a boost mpl unary metafunction.
+struct DetermineHasInCorrectParameters
+{
+  //When we find parameters that don't match, we set our 'type' to true_
+  //otherwise we are false_
+  template<typename T>
+  struct apply
+  {
+    typedef typename boost::mpl::at_c<T,0>::type ValueType;
+    typedef typename boost::mpl::at_c<T,1>::type ControlSignatureTag;
+
+    typedef typename ControlSignatureTag::TypeCheckTag TypeCheckTag;
+
+    typedef boost::mpl::bool_<
+       vtkm::cont::arg::TypeCheck<TypeCheckTag,ValueType>::value> CanContinueTagType;
+
+    //We need to not the result of CanContinueTagType, because we want to return
+    //true when we have the first parameter that DOES NOT match the control
+    //signature requirements
+    typedef typename boost::mpl::not_< typename CanContinueTagType::type
+                        >::type type;
+  };
+};
 
 // Checks that an argument in a ControlSignature is a valid control signature
 // tag. Causes a compile error otherwise.
@@ -175,8 +239,19 @@ struct DispatcherBaseDynamicTransformHelper
   template<typename FunctionInterface>
   VTKM_CONT_EXPORT
   void operator()(const FunctionInterface &parameters) const {
-    this->Dispatcher->DynamicTransformInvoke(parameters);
+    this->Dispatcher->DynamicTransformInvoke(parameters, boost::mpl::true_() );
   }
+};
+
+// A look up helper used by DispatcherBaseTransportFunctor to determine
+//the types independent of the device we are templated on.
+template<typename ControlInterface, vtkm::IdComponent Index>
+struct DispatcherBaseTransportInvokeTypes
+{
+  //Moved out of DispatcherBaseTransportFunctor to reduce code generation
+  typedef typename ControlInterface::template ParameterType<Index>::type
+        ControlSignatureTag;
+  typedef typename ControlSignatureTag::TransportTag TransportTag;
 };
 
 // A functor used in a StaticCast of a FunctionInterface to transport arguments
@@ -198,27 +273,22 @@ struct DispatcherBaseTransportFunctor
   DispatcherBaseTransportFunctor(vtkm::Id3 dimensions)
     : NumInstances(dimensions[0]*dimensions[1]*dimensions[2]) {  }
 
-  template<typename ControlParameter, vtkm::IdComponent Index>
-  struct InvokeTypes {
-    typedef typename ControlInterface::template ParameterType<Index>::type
-        ControlSignatureTag;
-    typedef typename ControlSignatureTag::TransportTag TransportTag;
-    typedef vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device>
-        TransportType;
-  };
 
   template<typename ControlParameter, vtkm::IdComponent Index>
   struct ReturnType {
-    typedef typename InvokeTypes<ControlParameter, Index>::
-        TransportType::ExecObjectType type;
+    typedef typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag TransportTag;
+    typedef typename vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device> TransportType;
+    typedef typename TransportType::ExecObjectType type;
   };
 
   template<typename ControlParameter, vtkm::IdComponent Index>
   VTKM_CONT_EXPORT
   typename ReturnType<ControlParameter, Index>::type
   operator()(const ControlParameter &invokeData,
-             vtkm::internal::IndexTag<Index>) const {
-    typename InvokeTypes<ControlParameter, Index>::TransportType transport;
+             vtkm::internal::IndexTag<Index>) const
+  {
+    typedef typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag TransportTag;
+    vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device> transport;
     return transport(invokeData, this->NumInstances);
   }
 };
@@ -230,12 +300,11 @@ struct DispatcherBaseTransportFunctor
 ///
 template<typename DerivedClass,
          typename WorkletType,
-         typename BaseWorkletType,
-         typename Device>
+         typename BaseWorkletType>
 class DispatcherBase
 {
 private:
-  typedef DispatcherBase<DerivedClass,WorkletType,BaseWorkletType,Device> MyType;
+  typedef DispatcherBase<DerivedClass,WorkletType,BaseWorkletType> MyType;
 
   friend struct detail::DispatcherBaseDynamicTransformHelper<MyType>;
 
@@ -270,6 +339,28 @@ private:
 
     BOOST_MPL_ASSERT(( boost::is_base_of<BaseWorkletType,WorkletType> ));
 
+    //We need to determine if we have the need to do any dynamic
+    //transforms. This is fairly simple of a query. We just need to check
+    //everything in the FunctionInterface and see if any of them have the
+    //proper dynamic trait. Doing this, allows us to generate zero dynamic
+    //check & convert code when we already know all the types. This results
+    //in smaller executables and libraries.
+    typedef boost::function_types::parameter_types<Signature> MPLSignatureForm;
+    typedef typename boost::mpl::fold<
+                                MPLSignatureForm,
+                                boost::mpl::false_,
+                                detail::DetermineIfHasDynamicParameter>::type HasDynamicTypes;
+
+    this->StartInvokeDynamic(parameters, HasDynamicTypes() );
+  }
+
+
+  template<typename Signature>
+  VTKM_CONT_EXPORT
+  void StartInvokeDynamic(
+      const vtkm::internal::FunctionInterface<Signature> &parameters,
+      boost::mpl::true_) const
+  {
     // As we do the dynamic transform, we are also going to check the static
     // type against the TypeCheckTag in the ControlSignature tags. To do this,
     // the check needs access to both the parameter (in the parameters
@@ -286,8 +377,41 @@ private:
 
   template<typename Signature>
   VTKM_CONT_EXPORT
+  void StartInvokeDynamic(
+      const vtkm::internal::FunctionInterface<Signature> &parameters,
+      boost::mpl::false_) const
+  {
+    //Nothing requires a conversion from dynamic to static types, so
+    //next we need to verify that each argument's type is correct. If not
+    //we need to throw a nice compile time error
+    typedef boost::function_types::parameter_types<Signature> MPLSignatureForm;
+    typedef typename boost::function_types::parameter_types<
+                          typename WorkletType::ControlSignature > WorkletContSignature;
+
+    typedef boost::mpl::vector< MPLSignatureForm, WorkletContSignature > ZippedSignatures;
+    typedef boost::mpl::zip_view<ZippedSignatures> ZippedView;
+
+    typedef typename boost::mpl::find_if<
+                                ZippedView,
+                                detail::DetermineHasInCorrectParameters>::type LocationOfIncorrectParameter;
+
+    typedef typename boost::is_same< LocationOfIncorrectParameter,
+                                     typename boost::mpl::end< ZippedView>::type >::type HasOnlyCorrectTypes;
+
+    //When HasOnlyCorrectTypes is false we produce an error
+    //message which should state what the parameter type and tag type is
+    //that failed to match.
+    detail::ShowInCorrectParameter(HasOnlyCorrectTypes(),
+                                   LocationOfIncorrectParameter());
+
+    this->DynamicTransformInvoke(parameters, HasOnlyCorrectTypes());
+  }
+
+  template<typename Signature>
+  VTKM_CONT_EXPORT
   void DynamicTransformInvoke(
-      const vtkm::internal::FunctionInterface<Signature> &parameters) const
+      const vtkm::internal::FunctionInterface<Signature> &parameters,
+      boost::mpl::true_ ) const
   {
     // TODO: Check parameters
     static const vtkm::IdComponent INPUT_DOMAIN_INDEX =
@@ -295,6 +419,14 @@ private:
     reinterpret_cast<const DerivedClass *>(this)->DoInvoke(
           vtkm::internal::make_Invocation<INPUT_DOMAIN_INDEX>(
             parameters, ControlInterface(), ExecutionInterface()));
+  }
+
+  template<typename Signature>
+  VTKM_CONT_EXPORT
+  void DynamicTransformInvoke(
+      const vtkm::internal::FunctionInterface<Signature> &,
+      boost::mpl::false_ ) const
+  {
   }
 
 public:
@@ -305,27 +437,33 @@ protected:
   VTKM_CONT_EXPORT
   DispatcherBase(const WorkletType &worklet) : Worklet(worklet) {  }
 
-  template<typename Invocation>
+  template<typename Invocation, typename DeviceAdapter>
   VTKM_CONT_EXPORT
-  void BasicInvoke(const Invocation &invocation, vtkm::Id numInstances) const
+  void BasicInvoke(const Invocation &invocation,
+                   vtkm::Id numInstances,
+                   DeviceAdapter tag) const
   {
-    this->InvokeTransportParameters(invocation, numInstances);
+    this->InvokeTransportParameters(invocation, numInstances, tag);
   }
 
-  template<typename Invocation>
+  template<typename Invocation, typename DeviceAdapter>
   VTKM_CONT_EXPORT
-  void BasicInvoke(const Invocation &invocation, vtkm::Id2 dimensions) const
+  void BasicInvoke(const Invocation &invocation,
+                   vtkm::Id2 dimensions,
+                   DeviceAdapter tag) const
   {
     vtkm::Id3 dim3d(dimensions[0], dimensions[1], 1);
-    this->InvokeTransportParameters(invocation, dim3d);
+    this->InvokeTransportParameters(invocation, dim3d, tag);
   }
 
 
-  template<typename Invocation>
+  template<typename Invocation, typename DeviceAdapter>
   VTKM_CONT_EXPORT
-  void BasicInvoke(const Invocation &invocation, vtkm::Id3 dimensions) const
+  void BasicInvoke(const Invocation &invocation,
+                   vtkm::Id3 dimensions,
+                   DeviceAdapter tag) const
   {
-    this->InvokeTransportParameters(invocation, dimensions);
+    this->InvokeTransportParameters(invocation, dimensions, tag);
   }
 
   WorkletType Worklet;
@@ -335,10 +473,11 @@ private:
   DispatcherBase(const MyType &);
   void operator=(const MyType &);
 
-  template<typename Invocation, typename RangeType>
+  template<typename Invocation, typename RangeType, typename DeviceAdapter>
   VTKM_CONT_EXPORT
   void InvokeTransportParameters(const Invocation &invocation,
-                                 RangeType range) const
+                                 RangeType range,
+                                 DeviceAdapter tag) const
   {
     // The first step in invoking a worklet is to transport the arguments to
     // the execution environment. The invocation object passed to this function
@@ -353,7 +492,7 @@ private:
     const ParameterInterfaceType &parameters = invocation.Parameters;
 
     typedef detail::DispatcherBaseTransportFunctor<
-        typename Invocation::ControlInterface, Device> TransportFunctorType;
+        typename Invocation::ControlInterface, DeviceAdapter> TransportFunctorType;
     typedef typename ParameterInterfaceType::template StaticTransformType<
         TransportFunctorType>::type ExecObjectParameters;
 
@@ -363,12 +502,15 @@ private:
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke.
     this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters),
-                         range);
+                         range,
+                         tag);
   }
 
-  template<typename Invocation, typename RangeType>
+  template<typename Invocation, typename RangeType, typename DeviceAdapter>
   VTKM_CONT_EXPORT
-  void InvokeSchedule(const Invocation &invocation, RangeType range) const
+  void InvokeSchedule(const Invocation &invocation,
+                      RangeType range,
+                      DeviceAdapter) const
   {
     // The WorkletInvokeFunctor class handles the magic of fetching values
     // for each instance and calling the worklet's function. So just create
@@ -378,7 +520,7 @@ private:
     WorkletInvokeFunctorType workletFunctor =
         WorkletInvokeFunctorType(this->Worklet, invocation);
 
-    typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
+    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
 
     Algorithm::Schedule(workletFunctor, range);
   }

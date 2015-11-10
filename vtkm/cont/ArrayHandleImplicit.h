@@ -85,6 +85,7 @@ struct ArrayHandleImplicitTraits
   typedef vtkm::cont::StorageTagImplicit<
       vtkm::cont::detail::ArrayPortalImplicit<ValueType,
                                               FunctorType> > StorageTag;
+  typedef vtkm::cont::ArrayHandle<ValueType,StorageTag> Superclass;
 };
 
 } // namespace detail
@@ -97,35 +98,23 @@ struct ArrayHandleImplicitTraits
 /// The functor returns the result of the functor as the value of this
 /// array at that position.
 ///
-template <typename ValueType,
+template <typename T,
           class FunctorType>
 class ArrayHandleImplicit
-    : public vtkm::cont::ArrayHandle <
-          ValueType,
-          typename detail::ArrayHandleImplicitTraits<ValueType,
-                                                     FunctorType>::StorageTag >
+    : public detail::ArrayHandleImplicitTraits<T,FunctorType>::Superclass
 {
 private:
-  typedef typename detail::ArrayHandleImplicitTraits<ValueType,
-                                                     FunctorType> ArrayTraits;
+  typedef typename detail::ArrayHandleImplicitTraits<T,FunctorType> ArrayTraits;
 
 public:
-  typedef typename ArrayTraits::StorageTag StorageTag;
-
-  typedef vtkm::cont::ArrayHandle<ValueType,StorageTag> Superclass;
-
-  VTKM_CONT_EXPORT
-  ArrayHandleImplicit()
-    : Superclass(typename Superclass::PortalConstControl(FunctorType(),0)) {  }
+  VTKM_ARRAY_HANDLE_SUBCLASS(
+      ArrayHandleImplicit,
+      (ArrayHandleImplicit<T,FunctorType>),
+      (typename ArrayTraits::Superclass));
 
   VTKM_CONT_EXPORT
   ArrayHandleImplicit(FunctorType functor, vtkm::Id length)
     : Superclass(typename Superclass::PortalConstControl(functor,length))
-  {  }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleImplicit(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
-    : Superclass(src)
   {  }
 };
 

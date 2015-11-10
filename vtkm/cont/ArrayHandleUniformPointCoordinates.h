@@ -39,19 +39,17 @@ class ArrayHandleUniformPointCoordinates
           vtkm::internal::ArrayPortalUniformPointCoordinates> >
 {
 public:
-  typedef vtkm::Vec<vtkm::FloatDefault,3> ValueType;
-  typedef vtkm::cont::StorageTagImplicit<
-      vtkm::internal::ArrayPortalUniformPointCoordinates> StorageTag;
-
-  typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> Superclass;
+  VTKM_ARRAY_HANDLE_SUBCLASS_NT(
+      ArrayHandleUniformPointCoordinates,
+      (vtkm::cont::ArrayHandle<
+         vtkm::Vec<vtkm::FloatDefault,3>,
+         vtkm::cont::StorageTagImplicit<
+           vtkm::internal::ArrayPortalUniformPointCoordinates> >));
 
 private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
-  VTKM_CONT_EXPORT
-  ArrayHandleUniformPointCoordinates() : Superclass() {  }
-
   VTKM_CONT_EXPORT
   ArrayHandleUniformPointCoordinates(
       vtkm::Id3 dimensions,
@@ -60,12 +58,6 @@ public:
     : Superclass(
         StorageType(vtkm::internal::ArrayPortalUniformPointCoordinates(
                       dimensions, origin, spacing)))
-  {  }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleUniformPointCoordinates(
-      const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
-    : Superclass(src)
   {  }
 };
 

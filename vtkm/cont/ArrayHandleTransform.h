@@ -308,39 +308,32 @@ private:
 /// the functor operator should work in both the control and execution
 /// environments.
 ///
-template <typename ValueType,
+template <typename T,
           typename ArrayHandleType,
           typename FunctorType>
 class ArrayHandleTransform
     : public vtkm::cont::ArrayHandle<
-        ValueType,
-        internal::StorageTagTransform<ValueType, ArrayHandleType, FunctorType> >
+        T, internal::StorageTagTransform<T, ArrayHandleType, FunctorType> >
 {
   // If the following line gives a compile error, then the ArrayHandleType
   // template argument is not a valid ArrayHandle type.
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
 public:
-  typedef internal::StorageTagTransform<ValueType, ArrayHandleType, FunctorType>
-      StorageTag;
+  VTKM_ARRAY_HANDLE_SUBCLASS(
+      ArrayHandleTransform,
+      (ArrayHandleTransform<T,ArrayHandleType,FunctorType>),
+      (vtkm::cont::ArrayHandle<
+         T, internal::StorageTagTransform<T, ArrayHandleType, FunctorType> >));
 
 private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
- public:
-  typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> Superclass;
-
-  VTKM_CONT_EXPORT
-  ArrayHandleTransform() : Superclass( ) {  }
-
+public:
   VTKM_CONT_EXPORT
   ArrayHandleTransform(const ArrayHandleType &handle,
                        const FunctorType &functor = FunctorType())
     : Superclass(StorageType(handle, functor)) {  }
-
-  VTKM_CONT_EXPORT
-  ArrayHandleTransform(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
-    : Superclass(src) {  }
 };
 
 /// make_ArrayHandleTransform is convenience function to generate an

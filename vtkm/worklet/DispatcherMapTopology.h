@@ -36,14 +36,14 @@ class DispatcherMapTopology :
     public vtkm::worklet::internal::DispatcherBase<
       DispatcherMapTopology<WorkletType,Device>,
       WorkletType,
-      vtkm::worklet::template WorkletMapTopology<typename WorkletType::FromTopologyType, typename WorkletType::ToTopologyType>,
-      Device>
+      vtkm::worklet::WorkletMapTopologyBase
+      >
 {
   typedef vtkm::worklet::internal::DispatcherBase<
     DispatcherMapTopology<WorkletType,Device>,
     WorkletType,
-    vtkm::worklet::template WorkletMapTopology<typename WorkletType::FromTopologyType, typename WorkletType::ToTopologyType>,
-    Device> Superclass;
+    vtkm::worklet::WorkletMapTopologyBase
+    > Superclass;
 
 public:
   VTKM_CONT_EXPORT
@@ -54,22 +54,8 @@ public:
   VTKM_CONT_EXPORT
   void DoInvoke(const Invocation &invocation) const
   {
-    // The parameter for the input domain is stored in the Invocation. (It is
-    // also in the worklet, but it is safer to get it from the Invocation
-    // in case some other dispatch operation had to modify it.)
-    static const vtkm::IdComponent InputDomainIndex =
-        Invocation::InputDomainIndex;
-
-    // ParameterInterface (from Invocation) is a FunctionInterface type
-    // containing types for all objects passed to the Invoke method (with
-    // some dynamic casting performed so objects like DynamicArrayHandle get
-    // cast to ArrayHandle).
-    typedef typename Invocation::ParameterInterface ParameterInterface;
-
-    // This is the type for the input domain (derived from the last two things
-    // we got from the Invocation).
-    typedef typename ParameterInterface::
-        template ParameterType<InputDomainIndex>::type InputDomainType;
+    // This is the type for the input domain
+    typedef typename Invocation::InputDomainType InputDomainType;
 
     // If you get a compile error on this line, then you have tried to use
     // something that is not a vtkm::cont::CellSet as the input domain to a
@@ -78,14 +64,14 @@ public:
 
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
-    InputDomainType inputDomain =
-        invocation.Parameters.template GetParameter<InputDomainIndex>();
+    InputDomainType inputDomain = invocation.GetInputDomain();
 
     // Now that we have the input domain, we can extract the range of the
     // scheduling and call BadicInvoke.
     this->BasicInvoke(invocation,
                       inputDomain.GetSchedulingRange(
-                            typename WorkletType::ToTopologyType()));
+                            typename WorkletType::ToTopologyType()),
+                      Device());
   }
 };
 

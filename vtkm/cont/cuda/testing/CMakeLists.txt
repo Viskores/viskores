@@ -22,6 +22,8 @@ set(unit_tests
   UnitTestComputeBoundsCuda.cu
   UnitTestCudaArrayHandle.cu
   UnitTestCudaArrayHandleFancy.cu
+  UnitTestCudaDataSetExplicit.cu
+  UnitTestCudaDataSetSingleType.cu
   UnitTestCudaMath.cu
   UnitTestDeviceAdapterCuda.cu
   )

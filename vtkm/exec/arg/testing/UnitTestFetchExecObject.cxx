@@ -20,6 +20,8 @@
 
 #include <vtkm/exec/arg/FetchTagExecObject.h>
 
+#include <vtkm/exec/arg/ThreadIndicesBasic.h>
+
 #include <vtkm/internal/FunctionInterface.h>
 #include <vtkm/internal/Invocation.h>
 
@@ -46,19 +48,25 @@ void TryInvocation(const Invocation &invocation)
   typedef vtkm::exec::arg::Fetch<
       vtkm::exec::arg::FetchTagExecObject,
       vtkm::exec::arg::AspectTagDefault,
-      Invocation,
-      ParamIndex> FetchType;
+      vtkm::exec::arg::ThreadIndicesBasic,
+      TestExecutionObject> FetchType;
 
   FetchType fetch;
 
-  TestExecutionObject execObject = fetch.Load(0, invocation);
+  vtkm::exec::arg::ThreadIndicesBasic indices(0, invocation);
+
+  TestExecutionObject execObject = fetch.Load(
+        indices, invocation.Parameters.template GetParameter<ParamIndex>());
   VTKM_TEST_ASSERT(execObject.Number == EXPECTED_NUMBER,
                    "Did not load object correctly.");
 
   execObject.Number = -1;
 
   // This should be a no-op.
-  fetch.Store(0, invocation, execObject);
+  fetch.Store(
+        indices,
+        invocation.Parameters.template GetParameter<ParamIndex>(),
+        execObject);
 
   // Data in Invocation should not have changed.
   execObject = invocation.Parameters.template GetParameter<ParamIndex>();

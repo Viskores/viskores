@@ -194,8 +194,8 @@ void displayCall()
 // Allow rotations of the view
 void mouseMove(int x, int y)
 {
-  int dx = x - lastx;
-  int dy = y - lasty;
+  vtkm::Float32 dx = static_cast<vtkm::Float32>(x - lastx);
+  vtkm::Float32 dy = static_cast<vtkm::Float32>(y - lasty);
 
   if (mouse_state == 0)
   {

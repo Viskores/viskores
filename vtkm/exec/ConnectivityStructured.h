@@ -64,8 +64,9 @@ public:
   {
   }
 
+  template<typename IndexType>
   VTKM_EXEC_EXPORT
-  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const {
+  vtkm::IdComponent GetNumberOfIndices(const IndexType &index) const {
     return Helper::GetNumberOfIndices(this->Internals, index);
   }
 
@@ -79,38 +80,39 @@ public:
 
   typedef typename Helper::IndicesType IndicesType;
 
+  template<typename IndexType>
   VTKM_EXEC_EXPORT
-  IndicesType GetIndices(vtkm::Id index) const
+  IndicesType GetIndices(const IndexType &index) const
   {
-    return Helper::GetIndices(this->Internals,index);
+    return Helper::GetIndices(this->Internals, index);
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Vec<vtkm::Id,Dimension>
-  FlatToLogicalPointIndex(vtkm::Id flatPointIndex) const
+  SchedulingRangeType
+  FlatToLogicalFromIndex(vtkm::Id flatFromIndex) const
   {
-    return this->Internals.FlatToLogicalPointIndex(flatPointIndex);
+    return Helper::FlatToLogicalFromIndex(this->Internals, flatFromIndex);
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id LogicalToFlatPointIndex(
-      const vtkm::Vec<vtkm::Id,Dimension> &logicalPointIndex) const
+  vtkm::Id LogicalToFlatFromIndex(
+      const SchedulingRangeType &logicalFromIndex) const
   {
-    return this->Internals.LogicalToFlatPointIndex(logicalPointIndex);
+    return Helper::LogicalToFlatFromIndex(this->Internals, logicalFromIndex);
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Vec<vtkm::Id,Dimension>
-  FlatToLogicalCellIndex(vtkm::Id flatCellIndex) const
+  SchedulingRangeType
+  FlatToLogicalToIndex(vtkm::Id flatToIndex) const
   {
-    return this->Internals.FlatToLogicalCellIndex(flatCellIndex);
+    return Helper::FlatToLogicalToIndex(this->Internals, flatToIndex);
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id LogicalToFlatCellIndex(
-      const vtkm::Vec<vtkm::Id,Dimension> &logicalCellIndex) const
+  vtkm::Id LogicalToFlatToIndex(
+      const SchedulingRangeType &logicalToIndex) const
   {
-    return this->Internals.LogicalToFlatCellIndex(logicalCellIndex);
+    return Helper::LogicalToFlatToIndex(this->Internals, logicalToIndex);
   }
 
 private:

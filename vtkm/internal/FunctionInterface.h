@@ -80,6 +80,7 @@ void SetParameter(ParameterContainer<FunctionSignature> &parameters,
 
 template<vtkm::IdComponent NumToCopy, vtkm::IdComponent ParameterIndex = 1>
 struct FunctionInterfaceCopyParameters {
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
   static
   VTKM_EXEC_CONT_EXPORT

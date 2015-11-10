@@ -117,6 +117,17 @@ public:
         detail::DynamicCellSetCopyHelper::GetCellSetContainer(src))
   {  }
 
+  VTKM_CONT_EXPORT
+  ~DynamicCellSetBase() {  }
+
+  VTKM_CONT_EXPORT
+  vtkm::cont::DynamicCellSetBase<CellSetList> &
+  operator=(const vtkm::cont::DynamicCellSetBase<CellSetList> &src)
+  {
+    this->CellSetContainer = src.CellSetContainer;
+    return *this;
+  }
+
   /// Returns true if this cell set is of the provided type.
   ///
   template<typename CellSetType>

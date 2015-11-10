@@ -60,9 +60,6 @@ public:
   VTKM_EXEC_EXPORT
   vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const
   {
-    // Should the NumIndices array be typed as vtkm::IdComponent instead of
-    // vtkm::Id? (NumIndices is really defined in
-    // vtkm::cont::internal::ConnectivityExplicitInternals.)
     return static_cast<vtkm::IdComponent>(this->NumIndices.Get(index));
   }
 
