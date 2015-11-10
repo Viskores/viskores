@@ -22,6 +22,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <fstream>
 #include <vector>
 #include <math.h>
 
@@ -38,6 +39,20 @@ vtkm::Vec<T,3> Normalize(vtkm::Vec<T,3> v)
     return vtkm::make_Vec(zero, zero, zero);
   else
     return one / magnitude * v;
+}
+
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+void OutputArrayDebug(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &outputArray)
+{
+  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T,3> >::PortalConstControl PortalConstType;
+  std::ofstream out;
+  out.open("sl_trace", std::ofstream::out);
+  for (int i = 0; i < outputArray.GetNumberOfValues(); i++)
+  {
+    vtkm::Vec<T,3> pos = outputArray.GetPortalConstControl().Get(i);
+    out << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+  }
 }
 
 }
@@ -89,6 +104,8 @@ void TestStreamLineUniformGrid()
                  streamLineUniformGridFilter(g_dim, g_num_seeds, g_max_steps); 
 
   streamLineUniformGridFilter.Run(0.5f, fieldArray, streamLineLists);
+
+  OutputArrayDebug(streamLineLists);
 }
 
 int UnitTestStreamLineUniformGrid(int, char *[])
