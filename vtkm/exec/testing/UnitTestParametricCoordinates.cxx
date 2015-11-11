@@ -85,7 +85,7 @@ static void CompareCoordinates(const PointWCoordsType &pointWCoords,
                                                             shape,
                                                             workletProxy);
   VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
-  VTKM_TEST_ASSERT(test_equal(computedWCoords, trueWCoords),
+  VTKM_TEST_ASSERT(test_equal(computedWCoords, trueWCoords, 0.01),
                    "Computed wrong world coords from parametric coords.");
 
   Vector3 computedPCoords
