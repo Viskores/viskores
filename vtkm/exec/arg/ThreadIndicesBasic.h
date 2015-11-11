@@ -44,8 +44,10 @@ class ThreadIndicesBasic
 public:
   template<typename Invocation>
   VTKM_EXEC_EXPORT
-  ThreadIndicesBasic(vtkm::Id threadIndex, const Invocation &)
-    : Index(threadIndex)
+  ThreadIndicesBasic(vtkm::Id threadIndex, const Invocation &invocation)
+    : InputIndex(invocation.OutputToInputMap.Get(threadIndex)),
+      OutputIndex(threadIndex),
+      VisitIndex(invocation.VisitArray.Get(threadIndex))
   {
   }
 
@@ -53,10 +55,10 @@ public:
   ///
   /// This index refers to the input element (array value, cell, etc.) that
   /// this thread is being invoked for. This is the typical index used during
-  /// fetches.
+  /// Fetch::Load.
   ///
   VTKM_EXEC_EXPORT
-  vtkm::Id GetIndex() const { return this->Index; }
+  vtkm::Id GetInputIndex() const { return this->InputIndex; }
 
   /// \brief The 3D index into the input domain.
   ///
@@ -67,10 +69,32 @@ public:
   /// first component with the remaining components set to 0.
   ///
   VTKM_EXEC_EXPORT
-  vtkm::Id3 GetIndex3D() const { return vtkm::Id3(this->GetIndex(), 0, 0); }
+  vtkm::Id3 GetInputIndex3D() const
+  {
+    return vtkm::Id3(this->GetInputIndex(), 0, 0);
+  }
+
+  /// \brief The index into the output domain.
+  ///
+  /// This index refers to the output element (array value, cell, etc.) that
+  /// this thread is creating. This is the typical index used during
+  /// Fetch::Store.
+  ///
+  VTKM_EXEC_EXPORT
+  vtkm::Id GetOutputIndex() const { return this->OutputIndex; }
+
+  /// \brief The visit index.
+  ///
+  /// When multiple output indices have the same input index, they are
+  /// distinguished using the visit index.
+  ///
+  VTKM_EXEC_EXPORT
+  vtkm::IdComponent GetVisitIndex() const { return this->VisitIndex; }
 
 private:
-  vtkm::Id Index;
+  vtkm::Id InputIndex;
+  vtkm::Id OutputIndex;
+  vtkm::IdComponent VisitIndex;
 };
 
 }

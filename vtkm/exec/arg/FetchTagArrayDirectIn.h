@@ -50,7 +50,7 @@ struct Fetch<
   ValueType Load(const ThreadIndicesType &indices,
                  const ExecObjectType &arrayPortal) const
   {
-    return arrayPortal.Get(indices.GetIndex());
+    return arrayPortal.Get(indices.GetInputIndex());
   }
 
   VTKM_EXEC_EXPORT

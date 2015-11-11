@@ -45,12 +45,12 @@ public:
   VecFromPortalPermute() {  }
 
   VTKM_EXEC_EXPORT
-  VecFromPortalPermute(const IndexVecType &indices, const PortalType &portal)
+  VecFromPortalPermute(const IndexVecType *indices, const PortalType &portal)
     : Indices(indices), Portal(portal) {  }
 
   VTKM_EXEC_EXPORT
   vtkm::IdComponent GetNumberOfComponents() const {
-    return this->Indices.GetNumberOfComponents();
+    return this->Indices->GetNumberOfComponents();
   }
 
   template<vtkm::IdComponent DestSize>
@@ -61,18 +61,18 @@ public:
         vtkm::Min(DestSize, this->GetNumberOfComponents());
     for (vtkm::IdComponent index = 0; index < numComponents; index++)
     {
-      dest[index] = this->Portal.Get(this->Indices[index]);
+      dest[index] = (*this)[index];
     }
   }
 
   VTKM_EXEC_EXPORT
   ComponentType operator[](vtkm::IdComponent index) const
   {
-    return this->Portal.Get(this->Indices[index]);
+    return this->Portal.Get((*this->Indices)[index]);
   }
 
 private:
-  IndexVecType Indices;
+  const IndexVecType *Indices;
   PortalType Portal;
 };
 

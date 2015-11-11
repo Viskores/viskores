@@ -34,7 +34,9 @@ namespace internal {
 template<typename _ParameterInterface,
          typename _ControlInterface,
          typename _ExecutionInterface,
-         vtkm::IdComponent _InputDomainIndex>
+         vtkm::IdComponent _InputDomainIndex,
+         typename _OutputToInputMapType = vtkm::internal::NullType,
+         typename _VisitArrayType = vtkm::internal::NullType>
 struct Invocation
 {
   /// \brief The types of the parameters
@@ -68,8 +70,32 @@ struct Invocation
   ///
   static const vtkm::IdComponent InputDomainIndex = _InputDomainIndex;
 
+  /// \brief An array representing the output to input map.
+  ///
+  /// When a worklet is invoked, there is an optional scatter operation that
+  /// allows you to vary the number of outputs each input affects. This is
+  /// represented with a map where each output points to an input that creates
+  /// it.
+  ///
+  typedef _OutputToInputMapType OutputToInputMapType;
+
+  /// \brief An array containing visit indices.
+  ///
+  /// When a worklet is invoked, there is an optinonal scatter operation that
+  /// allows you to vary the number of outputs each input affects. Thus,
+  /// multiple outputs may point to the same input. The visit index uniquely
+  /// identifies which instance each is.
+  ///
+  typedef _VisitArrayType VisitArrayType;
+
   VTKM_CONT_EXPORT
-  Invocation(ParameterInterface parameters) : Parameters(parameters) {  }
+  Invocation(ParameterInterface parameters,
+             OutputToInputMapType outputToInputMap = OutputToInputMapType(),
+             VisitArrayType visitArray = VisitArrayType())
+    : Parameters(parameters),
+      OutputToInputMap(outputToInputMap),
+      VisitArray(visitArray)
+  {  }
 
   /// Defines a new \c Invocation type that is the same as this type except
   /// with the \c Parameters replaced.
@@ -79,7 +105,9 @@ struct Invocation
     typedef Invocation<NewParameterInterface,
                        ControlInterface,
                        ExecutionInterface,
-                       InputDomainIndex> type;
+                       InputDomainIndex,
+                       OutputToInputMapType,
+                       VisitArrayType> type;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -90,7 +118,7 @@ struct Invocation
   typename ChangeParametersType<NewParameterInterface>::type
   ChangeParameters(NewParameterInterface newParameters) const {
     return typename ChangeParametersType<NewParameterInterface>::type(
-          newParameters);
+          newParameters, this->OutputToInputMap, this->VisitArray);
   }
 
   /// Defines a new \c Invocation type that is the same as this type except
@@ -111,7 +139,7 @@ struct Invocation
   typename ChangeControlInterfaceType<NewControlInterface>::type
   ChangeControlInterface(NewControlInterface) const {
     return typename ChangeControlInterfaceType<NewControlInterface>::type(
-          this->Parameters);
+          this->Parameters, this->OutputToInputMap, this->VisitArray);
   }
 
   /// Defines a new \c Invocation type that is the same as this type except
@@ -132,7 +160,7 @@ struct Invocation
   typename ChangeExecutionInterfaceType<NewExecutionInterface>::type
   ChangeExecutionInterface(NewExecutionInterface) const {
     return typename ChangeExecutionInterfaceType<NewExecutionInterface>::type(
-          this->Parameters);
+          this->Parameters, this->OutputToInputMap, this->VisitArray);
   }
 
   /// Defines a new \c Invocation type that is the same as this type except
@@ -154,7 +182,55 @@ struct Invocation
   typename ChangeInputDomainIndexType<NewInputDomainIndex>::type
   ChangeInputDomainIndex() const {
     return typename ChangeInputDomainIndexType<NewInputDomainIndex>::type(
-          this->Parameters);
+          this->Parameters, this->OutputToInputMap, this->VisitArray);
+  }
+
+  /// Defines a new \c Invocation type that is the same as this type except
+  /// with the \c OutputToInputMapType replaced.
+  ///
+  template<typename NewOutputToInputMapType>
+  struct ChangeOutputToInputMapType {
+    typedef Invocation<ParameterInterface,
+                       ControlInterface,
+                       ExecutionInterface,
+                       InputDomainIndex,
+                       NewOutputToInputMapType,
+                       VisitArrayType> type;
+  };
+
+  /// Returns a new \c Invocation that is the same as this one except that the
+  /// \c OutputToInputMap is replaced with that provided.
+  ///
+  template<typename NewOutputToInputMapType>
+  VTKM_CONT_EXPORT
+  typename ChangeOutputToInputMapType<NewOutputToInputMapType>::type
+  ChangeOutputToInputMap(NewOutputToInputMapType newOutputToInputMap) const {
+    return typename ChangeOutputToInputMapType<NewOutputToInputMapType>::type(
+          this->Parameters, newOutputToInputMap, this->VisitArray);
+  }
+
+  /// Defines a new \c Invocation type that is the same as this type except
+  /// with the \c VisitArrayType replaced.
+  ///
+  template<typename NewVisitArrayType>
+  struct ChangeVisitArrayType {
+    typedef Invocation<ParameterInterface,
+                       ControlInterface,
+                       ExecutionInterface,
+                       InputDomainIndex,
+                       OutputToInputMapType,
+                       NewVisitArrayType> type;
+  };
+
+  /// Returns a new \c Invocation that is the same as this one except that the
+  /// \c VisitArray is replaced with that provided.
+  ///
+  template<typename NewVisitArrayType>
+  VTKM_CONT_EXPORT
+  typename ChangeVisitArrayType<NewVisitArrayType>::type
+  ChangeVisitArray(NewVisitArrayType newVisitArray) const {
+    return typename ChangeVisitArrayType<NewVisitArrayType>::type(
+          this->Parameters, this->OutputToInputMap, newVisitArray);
   }
 
   /// A convenience typedef for the input domain type.
@@ -172,13 +248,43 @@ struct Invocation
   }
 
   /// The state of an \c Invocation object holds the parameters of the
-  /// invocation.
+  /// invocation. As well as the output to input map and the visit array.
   ///
   ParameterInterface Parameters;
+  OutputToInputMapType OutputToInputMap;
+  VisitArrayType VisitArray;
 };
 
 /// Convenience function for creating an Invocation object.
 ///
+template<vtkm::IdComponent InputDomainIndex,
+         typename ControlInterface,
+         typename ExecutionInterface,
+         typename ParameterInterface,
+         typename OutputToInputMapType,
+         typename VisitArrayType>
+VTKM_CONT_EXPORT
+vtkm::internal::Invocation<ParameterInterface,
+                           ControlInterface,
+                           ExecutionInterface,
+                           InputDomainIndex,
+                           OutputToInputMapType,
+                           VisitArrayType>
+make_Invocation(const ParameterInterface &params,
+                ControlInterface,
+                ExecutionInterface,
+                OutputToInputMapType outputToInputMap,
+                VisitArrayType visitArray)
+{
+  return vtkm::internal::Invocation<ParameterInterface,
+                                    ControlInterface,
+                                    ExecutionInterface,
+                                    InputDomainIndex,
+                                    OutputToInputMapType,
+                                    VisitArrayType>(params,
+                                                    outputToInputMap,
+                                                    visitArray);
+}
 template<vtkm::IdComponent InputDomainIndex,
          typename ControlInterface,
          typename ExecutionInterface,
@@ -192,10 +298,12 @@ make_Invocation(const ParameterInterface &params,
                 ControlInterface = ControlInterface(),
                 ExecutionInterface = ExecutionInterface())
 {
-  return vtkm::internal::Invocation<ParameterInterface,
-                                    ControlInterface,
-                                    ExecutionInterface,
-                                    InputDomainIndex>(params);
+  return vtkm::internal::make_Invocation<InputDomainIndex>(
+        params,
+        ControlInterface(),
+        ExecutionInterface(),
+        vtkm::internal::NullType(),
+        vtkm::internal::NullType());
 }
 
 }

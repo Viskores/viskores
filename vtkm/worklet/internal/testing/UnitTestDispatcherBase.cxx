@@ -119,7 +119,7 @@ struct Fetch<TestFetchTagInput,
   VTKM_EXEC_EXPORT
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic indices,
                  const TestExecObject &execObject) const {
-    return execObject.Array[indices.GetIndex()];
+    return execObject.Array[indices.GetInputIndex()];
   }
 
   VTKM_EXEC_EXPORT
@@ -149,7 +149,7 @@ struct Fetch<TestFetchTagOutput,
   void Store(const vtkm::exec::arg::ThreadIndicesBasic &indices,
              const TestExecObject &execObject,
              ValueType value) const {
-    execObject.Array[indices.GetIndex()] = value;
+    execObject.Array[indices.GetOutputIndex()] = value;
   }
 };
 
