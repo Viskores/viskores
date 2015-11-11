@@ -71,28 +71,6 @@ public:
   { }
 };
 
-template <typename T, typename ArrayHandleType>
-class ArrayHandleCastForInput :
-  public vtkm::cont::ArrayHandleTransform<
-    T,
-    ArrayHandleType,
-    internal::Cast<typename ArrayHandleType::ValueType, T> >
-{
-public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(
-      ArrayHandleCastForInput,
-      (ArrayHandleCastForInput<T, ArrayHandleType>),
-      (vtkm::cont::ArrayHandleTransform<
-         T,
-         ArrayHandleType,
-         internal::Cast<typename ArrayHandleType::ValueType, T> >));
-
-  VTKM_CONT_EXPORT
-  ArrayHandleCastForInput(const ArrayHandleType &handle)
-    : Superclass(handle)
-  { }
-};
-
 /// make_ArrayHandleCast is convenience function to generate an
 /// ArrayHandleCast.
 ///
@@ -102,13 +80,6 @@ ArrayHandleCast<T, HandleType> make_ArrayHandleCast(const HandleType &handle,
                                                     const T&)
 {
   return ArrayHandleCast<T, HandleType>(handle);
-}
-
-template <typename T, typename HandleType>
-VTKM_CONT_EXPORT
-ArrayHandleCastForInput<T, HandleType> make_ArrayHandleCastForInput(const HandleType &handle,const T&)
-{
-  return ArrayHandleCastForInput<T, HandleType>(handle);
 }
 
 }
