@@ -98,27 +98,6 @@ template <typename T> struct StreamIOType { typedef T Type; };
 template <> struct StreamIOType<vtkm::Int8> { typedef vtkm::Int16 Type; };
 template <> struct StreamIOType<vtkm::UInt8> { typedef vtkm::UInt16 Type; };
 
-template <typename T>
-struct Cast
-{
-public:
-  template <typename FromType>
-  T operator()(const FromType &val) const
-  {
-    return static_cast<T>(val);
-  }
-
-  template <typename ComponentType, vtkm::IdComponent NumComponents>
-  T operator()(const vtkm::Vec<ComponentType, NumComponents> &val)
-  {
-    T result = T();
-    for (vtkm::IdComponent i = 0; i < NumComponents; ++i)
-    {
-      result[i] = static_cast<typename vtkm::VecTraits<T>::ComponentType>(val[i]);
-    }
-    return result;
-  }
-};
 
 // Since Fields and DataSets store data in the default DynamicArrayHandle, convert
 // the data to the closest type supported by default. The following will
@@ -154,12 +133,14 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T> &ve
       std::cerr << "Type " << typeid(T).name() << " is currently unsupported. "
                 << "Converting to " << typeid(CommonType).name() << "." << std::endl;
     }
+
     vtkm::cont::ArrayHandle<CommonType> output;
     output.Allocate(static_cast<vtkm::Id>(vec.size()));
-
-    std::transform(vec.begin(), vec.end(),
-        vtkm::cont::ArrayPortalToIteratorBegin(output.GetPortalControl()),
-        Cast<CommonType>());
+    for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
+    {
+      output.GetPortalControl().Set(i,
+        static_cast<CommonType>(vec[static_cast<std::size_t>(i)]));
+    }
 
     return vtkm::cont::DynamicArrayHandle(output);
     }
@@ -179,10 +160,16 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T> &ve
 
     vtkm::cont::ArrayHandle<CommonType> output;
     output.Allocate(static_cast<vtkm::Id>(vec.size()));
-
-    std::transform(vec.begin(), vec.end(),
-        vtkm::cont::ArrayPortalToIteratorBegin(output.GetPortalControl()),
-        Cast<CommonType>());
+    for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
+    {
+      CommonType outval = CommonType();
+      for (vtkm::IdComponent j = 0; j < vtkm::VecTraits<T>::NUM_COMPONENTS; ++j)
+      {
+        outval[j] = static_cast<OutComponentType>(
+            vtkm::VecTraits<T>::GetComponent(vec[static_cast<std::size_t>(i)], j));
+      }
+      output.GetPortalControl().Set(i, outval);
+    }
 
     return vtkm::cont::DynamicArrayHandle(output);
     }
