@@ -21,37 +21,21 @@
 #define vtk_m_opengl_TransferToOpenGL_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/opengl/BufferState.h>
 #include <vtkm/opengl/internal/TransferToOpenGL.h>
 
 namespace vtkm{
 namespace opengl{
-/// \brief Manages transferring an ArrayHandle to opengl .
-///
-/// \c TransferToOpenGL manages to transfer the contents of an ArrayHandle
-/// to OpenGL as efficiently as possible. Will return the type of array buffer
-/// that we have bound the handle too. Will be GL_ELEMENT_ARRAY_BUFFER for
-/// vtkm::Id, and GL_ARRAY_BUFFER for everything else.
-///
-/// This function keeps the buffer as the active buffer of the returned type.
-///
-/// This function will throw exceptions if the transfer wasn't possible
-///
-template<typename ValueType, class StorageTag, class DeviceAdapterTag>
-VTKM_CONT_EXPORT
-GLenum TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType,StorageTag> handle,
-                        GLuint& openGLHandle,
-                        DeviceAdapterTag)
-{
-  vtkm::opengl::internal::TransferToOpenGL<ValueType, DeviceAdapterTag> toGL;
-  toGL.Transfer(handle,openGLHandle);
-  return toGL.GetType();
-}
+
 
 /// \brief Manages transferring an ArrayHandle to opengl .
 ///
 /// \c TransferToOpenGL manages to transfer the contents of an ArrayHandle
-/// to OpenGL as efficiently as possible. Will use the given \p type as how
-/// to bind the buffer.
+/// to OpenGL as efficiently as possible. Will use the given \p state to determine
+/// what buffer handle to use, and the type to bind the buffer handle too.
+/// If the type of buffer hasn't been determined the transfer will use
+/// deduceAndSetBufferType to do so. Lastly state also holds on to per backend resources
+/// that allow for efficient updating to open gl
 ///
 /// This function keeps the buffer as the active buffer of the input type.
 ///
@@ -60,12 +44,11 @@ GLenum TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType,StorageTag> handle,
 template<typename ValueType, class StorageTag, class DeviceAdapterTag>
 VTKM_CONT_EXPORT
 void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> handle,
-                      GLuint& openGLHandle,
-                      GLenum type,
+                      BufferState& state,
                       DeviceAdapterTag)
 {
-  vtkm::opengl::internal::TransferToOpenGL<ValueType, DeviceAdapterTag> toGL(type);
-  toGL.Transfer(handle,openGLHandle);
+  vtkm::opengl::internal::TransferToOpenGL<ValueType, DeviceAdapterTag> toGL(state);
+  return toGL.Transfer(handle);
 }
 
 }}
