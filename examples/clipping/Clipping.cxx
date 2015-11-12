@@ -60,7 +60,7 @@ inline vtkm::cont::ArrayHandle<vtkm::Float32> LoadBinaryPointDataImpl(
   flipEndianness(&buffer[0], numPoints);
 
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(
-    vtkm::cont::make_ArrayHandleCastForInput(vtkm::cont::make_ArrayHandle(buffer), vtkm::Float32()),
+    vtkm::cont::make_ArrayHandleCast(vtkm::cont::make_ArrayHandle(buffer), vtkm::Float32()),
     result);
 
   return result;
