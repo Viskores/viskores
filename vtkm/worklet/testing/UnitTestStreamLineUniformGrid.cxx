@@ -20,6 +20,7 @@
 
 #include <vtkm/worklet/StreamLineUniformGrid.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <fstream>
@@ -41,22 +42,7 @@ vtkm::Vec<T,3> Normalize(vtkm::Vec<T,3> v)
     return one / magnitude * v;
 }
 
-template<typename T>
-VTKM_EXEC_CONT_EXPORT
-void OutputArrayDebug(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &outputArray)
-{
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T,3> >::PortalConstControl PortalConstType;
-  std::ofstream out;
-  out.open("sl_trace", std::ofstream::out);
-  for (int i = 0; i < outputArray.GetNumberOfValues(); i++)
-  {
-    vtkm::Vec<T,3> pos = outputArray.GetPortalConstControl().Get(i);
-    out << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
-  }
 }
-
-}
-
 
 void TestStreamLineUniformGrid()
 {
@@ -64,48 +50,63 @@ void TestStreamLineUniformGrid()
 
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
-  vtkm::Id g_num_seeds = 25;
-  vtkm::Id g_max_steps = 2000;
-  vtkm::Id g_dim[3];
-  int dim[3];
+  // Parameters for streamlines
+  vtkm::Id numSeeds = 25;
+  vtkm::Id maxSteps = 2000;
+  vtkm::Float32 timeStep = 0.5f;
 
   // Read in the vector data for testing
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
-  std::vector<vtkm::Vec<vtkm::Float32, 3> > field;
-
   FILE * pFile = fopen("/home/pkf/VTKM/VTKM-Fasel/vtk-m/vtkm/worklet/testing/tornado.vec", "rb");
   if (pFile == NULL) perror ("Error opening file");
 
-  fread(dim, sizeof(int), 3, pFile);
-  for (vtkm::Id i = 0; i < 3; i++)
-  {
-    g_dim[i] = static_cast<vtkm::Id>(dim[i]);
-  }
-  vtkm::Id num_elements = g_dim[0] * g_dim[1] * g_dim[2] * 3;
-  std::cout << "Dimension of the data: " << g_dim[0] << "," << g_dim[1] << "," << g_dim[2] << std::endl;
+  // Size of the dataset
+  int dims[3];
+  fread(dims, sizeof(int), 3, pFile);
+  const vtkm::Id3 vdims(dims[0], dims[1], dims[2]);
+  vtkm::Id nElements = vdims[0] * vdims[1] * vdims[2] * 3;
 
-  float* data = new float[num_elements];
-  fread(data, sizeof(float), num_elements, pFile);
-  for (vtkm::Id i = 0; i < num_elements; i++)
+  // Read vector data at each point of the uniform grid and store
+  float* data = new float[nElements];
+  fread(data, sizeof(float), nElements, pFile);
+
+  std::vector<vtkm::Vec<vtkm::Float32, 3> > field;
+  for (vtkm::Id i = 0; i < nElements; i++)
   {
     vtkm::Float32 x = data[i];
     vtkm::Float32 y = data[++i];
     vtkm::Float32 z = data[++i];
-    vtkm::Vec<vtkm::Float32, 3> vec_data(x, y, z);
-    field.push_back(Normalize(vec_data));
+    vtkm::Vec<vtkm::Float32, 3> vecData(x, y, z);
+    field.push_back(Normalize(vecData));
   }
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
   fieldArray = vtkm::cont::make_ArrayHandle(&field[0], field.size());
 
-  // Make the output array
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > streamLineLists;
+  // Construct the input dataset (uniform) to hold the input and set vector data
+  vtkm::cont::DataSet inDataSet;
+  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims);
+  inDataSet.AddCoordinateSystem(
+            vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
+  inDataSet.AddField(vtkm::cont::Field("vecData", 1, vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+
+  vtkm::cont::CellSetStructured<3> inCellSet("cells");
+  inCellSet.SetPointDimensions(vtkm::make_Vec(vdims[0], vdims[1], vdims[2]));
+  inDataSet.AddCellSet(inCellSet);
+
+  // Construct the output dataset (explicit)
+  vtkm::cont::DataSet outDataSet;
+  vtkm::cont::CellSetExplicit<> outCellSet(numSeeds * maxSteps * 2, "cells", 3);
+  outDataSet.AddCellSet(outCellSet);
 
   // Create and run the filter
   vtkm::worklet::StreamLineUniformGridFilter<vtkm::Float32, DeviceAdapter>
-                 streamLineUniformGridFilter(g_dim, g_num_seeds, g_max_steps); 
+                 streamLineUniformGridFilter(inDataSet,
+                                             outDataSet,
+                                             vtkm::worklet::internal::BACKWARD,
+                                             numSeeds, 
+                                             maxSteps, 
+                                             timeStep);
 
-  streamLineUniformGridFilter.Run(0.5f, fieldArray, streamLineLists);
-
-  OutputArrayDebug(streamLineLists);
+  streamLineUniformGridFilter.Run();
 }
 
 int UnitTestStreamLineUniformGrid(int, char *[])
