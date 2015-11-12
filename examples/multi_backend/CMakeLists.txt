@@ -27,5 +27,5 @@ else()
 endif()
 
 if(VTKm_TBB_FOUND)
-   target_link_libraries(MultiBackend ${TBB_LIBRARIES})
+   target_link_libraries(MultiBackend  ${VTKm_LIBRARIES})
 endif()
