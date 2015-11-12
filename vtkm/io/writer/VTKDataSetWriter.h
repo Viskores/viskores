@@ -156,6 +156,69 @@ public:
   }
 };
 
+template <typename T> struct DataTypeName
+{
+  static const char* Name() { return "unknown"; }
+};
+template <> struct DataTypeName<vtkm::Int8>
+{
+  static const char* Name() { return "char"; }
+};
+template <> struct DataTypeName<vtkm::UInt8>
+{
+  static const char* Name() { return "unsigned_char"; }
+};
+template <> struct DataTypeName<vtkm::Int16>
+{
+  static const char* Name() { return "short"; }
+};
+template <> struct DataTypeName<vtkm::UInt16>
+{
+  static const char* Name() { return "unsigned_short"; }
+};
+template <> struct DataTypeName<vtkm::Int32>
+{
+  static const char* Name() { return "int"; }
+};
+template <> struct DataTypeName<vtkm::UInt32>
+{
+  static const char* Name() { return "unsigned_int"; }
+};
+template <> struct DataTypeName<vtkm::Int64>
+{
+  static const char* Name() { return "long"; }
+};
+template <> struct DataTypeName<vtkm::UInt64>
+{
+  static const char* Name() { return "unsigned_long"; }
+};
+template <> struct DataTypeName<vtkm::Float32>
+{
+  static const char* Name() { return "float"; }
+};
+template <> struct DataTypeName<vtkm::Float64>
+{
+  static const char* Name() { return "double"; }
+};
+
+class GetDataTypeName
+{
+public:
+  GetDataTypeName(std::string &name)
+    : Name(&name)
+  { }
+
+  template <typename ArrayHandleType>
+  void operator()(const ArrayHandleType &) const
+  {
+    typedef typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType
+        DataType;
+    *this->Name = DataTypeName<DataType>::Name();
+  }
+private:
+  std::string *Name;
+};
+
 }
 
 namespace vtkm
@@ -179,7 +242,10 @@ private:
 
     vtkm::Id npoints = cdata.GetNumberOfValues();
 
-    out << "POINTS " << npoints << " float" << std::endl;
+    std::string typeName;
+    cdata.CastAndCall(GetDataTypeName(typeName));
+
+    out << "POINTS " << npoints << " " << typeName << " " << std::endl;
     cdata.CastAndCall(OutputPointsFunctor(out));
   }
 
@@ -251,7 +317,10 @@ private:
         out << "POINT_DATA " << npoints << std::endl;
       wrote_header = true;
 
-      out << "SCALARS " << field.GetName() << " float "<< ncomps << std::endl;
+      std::string typeName;
+      field.GetData().CastAndCall(GetDataTypeName(typeName));
+
+      out << "SCALARS " << field.GetName() << " " << typeName << " " << ncomps << std::endl;
       out << "LOOKUP_TABLE default" << std::endl;
 
       field.GetData().CastAndCall(OutputFieldFunctor(out));
@@ -281,7 +350,10 @@ private:
         out << "CELL_DATA " << ncells << std::endl;
       wrote_header = true;
 
-      out << "SCALARS " << field.GetName() << " float "<< ncomps << std::endl;
+      std::string typeName;
+      field.GetData().CastAndCall(GetDataTypeName(typeName));
+
+      out << "SCALARS " << field.GetName() <<  " " << typeName << " " << ncomps << std::endl;
       out << "LOOKUP_TABLE default" << std::endl;
 
       field.GetData().CastAndCall(OutputFieldFunctor(out));

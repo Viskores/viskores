@@ -103,6 +103,20 @@ void swap(T &v1, T &v2)
   v2 = temp;
 }
 
+template <typename T>
+VTKM_EXEC_CONT_EXPORT
+T Scale(const T &val, vtkm::Float64 scale)
+{
+  return static_cast<T>(scale * static_cast<vtkm::Float64>(val));
+}
+
+template <typename T, vtkm::IdComponent NumComponents>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T, NumComponents> Scale(const vtkm::Vec<T, NumComponents> &val,
+                                  vtkm::Float64 scale)
+{
+  return val * scale;
+}
 
 template <typename DeviceAdapter>
 class ExecutionConnectivityExplicit : vtkm::exec::ExecutionObjectBase
@@ -261,7 +275,7 @@ public:
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
-                                  FieldInPoint<Scalar> scalars,
+                                  FieldInPoint<ScalarAll> scalars,
                                   FieldOutCell<IdType> clipTableIdxs,
                                   FieldOutCell<TypeClipStats> stats);
     typedef void ExecutionSignature(_2, CellShape, FromCount, _3, _4);
@@ -322,7 +336,7 @@ public:
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
-                                  FieldInPoint<Scalar> scalars,
+                                  FieldInPoint<ScalarAll> scalars,
                                   FieldInCell<IdType> clipTableIdxs,
                                   FieldInCell<TypeClipStats> cellSetIdxs,
                                   ExecObject connectivityExplicit,
@@ -623,9 +637,8 @@ public:
         EdgeInterpolation ei = this->Interpolation.Get(idx);
         T v1 = Field.Get(ei.Vertex1);
         T v2 = Field.Get(ei.Vertex2);
-        typename VecTraits<T>::ComponentType w =
-            static_cast<typename VecTraits<T>::ComponentType>(ei.Weight);
-        Field.Set(this->NewPointsOffset + idx, (w * (v2 - v1)) + v1);
+        Field.Set(this->NewPointsOffset + idx,
+                  internal::Scale(T(v2 - v1), ei.Weight) + v1);
       }
 
     private:

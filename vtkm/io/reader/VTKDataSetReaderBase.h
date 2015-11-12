@@ -33,11 +33,13 @@
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/smart_ptr/scoped_ptr.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/type_traits/is_same.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <algorithm>
 #include <fstream>
 #include <string>
+#include <typeinfo>
 #include <vector>
 
 
@@ -92,34 +94,92 @@ inline void parseAssert(bool condition)
   }
 }
 
-struct DummyFixed8Type
-{
-  vtkm::UInt8 data;
-};
+template <typename T> struct StreamIOType { typedef T Type; };
+template <> struct StreamIOType<vtkm::Int8> { typedef vtkm::Int16 Type; };
+template <> struct StreamIOType<vtkm::UInt8> { typedef vtkm::UInt16 Type; };
+
+
+// Since Fields and DataSets store data in the default DynamicArrayHandle, convert
+// the data to the closest type supported by default. The following will
+// need to be updated if DynamicArrayHandle or TypeListTagCommon changes.
+template <typename T> struct ClosestCommonType { typedef T Type; };
+template <> struct ClosestCommonType<vtkm::Int8> { typedef vtkm::Int32 Type; };
+template <> struct ClosestCommonType<vtkm::UInt8> { typedef vtkm::Int32 Type; };
+template <> struct ClosestCommonType<vtkm::Int16> { typedef vtkm::Int32 Type; };
+template <> struct ClosestCommonType<vtkm::UInt16> { typedef vtkm::Int32 Type; };
+template <> struct ClosestCommonType<vtkm::UInt32> { typedef vtkm::Int64 Type; };
+template <> struct ClosestCommonType<vtkm::UInt64> { typedef vtkm::Int64 Type; };
+
+template <typename T> struct ClosestFloat { typedef T Type; };
+template <> struct ClosestFloat<vtkm::Int8> { typedef vtkm::Float32 Type; };
+template <> struct ClosestFloat<vtkm::UInt8> { typedef vtkm::Float32 Type; };
+template <> struct ClosestFloat<vtkm::Int16> { typedef vtkm::Float32 Type; };
+template <> struct ClosestFloat<vtkm::UInt16> { typedef vtkm::Float32 Type; };
+template <> struct ClosestFloat<vtkm::Int32> { typedef vtkm::Float64 Type; };
+template <> struct ClosestFloat<vtkm::UInt32> { typedef vtkm::Float64 Type; };
+template <> struct ClosestFloat<vtkm::Int64> { typedef vtkm::Float64 Type; };
+template <> struct ClosestFloat<vtkm::UInt64> { typedef vtkm::Float64 Type; };
 
 template <typename T>
-struct TypeTraits
+vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T> &vec)
 {
-  typedef T AsciiReadType;
-};
+  switch (vtkm::VecTraits<T>::NUM_COMPONENTS)
+  {
+  case 1:
+    {
+    typedef typename ClosestCommonType<T>::Type CommonType;
+    if (!boost::is_same<T, CommonType>::value)
+    {
+      std::cerr << "Type " << typeid(T).name() << " is currently unsupported. "
+                << "Converting to " << typeid(CommonType).name() << "." << std::endl;
+    }
 
-template <>
-struct TypeTraits<vtkm::Int8>
-{
-  typedef vtkm::Int16 AsciiReadType;
-};
+    vtkm::cont::ArrayHandle<CommonType> output;
+    output.Allocate(static_cast<vtkm::Id>(vec.size()));
+    for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
+    {
+      output.GetPortalControl().Set(i,
+        static_cast<CommonType>(vec[static_cast<std::size_t>(i)]));
+    }
 
-template <>
-struct TypeTraits<vtkm::UInt8>
-{
-  typedef vtkm::UInt16 AsciiReadType;
-};
+    return vtkm::cont::DynamicArrayHandle(output);
+    }
+  case 2:
+  case 3:
+    {
+    typedef typename vtkm::VecTraits<T>::ComponentType InComponentType;
+    typedef typename ClosestFloat<InComponentType>::Type OutComponentType;
+    typedef vtkm::Vec<OutComponentType, 3> CommonType;
+    if (!boost::is_same<T, CommonType>::value)
+    {
+      std::cerr << "Type " << typeid(InComponentType).name()
+                << "[" << vtkm::VecTraits<T>::NUM_COMPONENTS << "] "
+                << "is currently unsupported. Converting to "
+                << typeid(OutComponentType).name() << "[3]." << std::endl;
+    }
 
-template <>
-struct TypeTraits<DummyFixed8Type>
-{
-  typedef vtkm::Float32 AsciiReadType;
-};
+    vtkm::cont::ArrayHandle<CommonType> output;
+    output.Allocate(static_cast<vtkm::Id>(vec.size()));
+    for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
+    {
+      CommonType outval = CommonType();
+      for (vtkm::IdComponent j = 0; j < vtkm::VecTraits<T>::NUM_COMPONENTS; ++j)
+      {
+        outval[j] = static_cast<OutComponentType>(
+            vtkm::VecTraits<T>::GetComponent(vec[static_cast<std::size_t>(i)], j));
+      }
+      output.GetPortalControl().Set(i, outval);
+    }
+
+    return vtkm::cont::DynamicArrayHandle(output);
+    }
+  default:
+    {
+    std::cerr << "Only 1, 2, or 3 components supported. Skipping." << std::endl;
+    return vtkm::cont::DynamicArrayHandle(vtkm::cont::ArrayHandle<vtkm::Float32>());
+    }
+  }
+}
 
 } // namespace internal
 
@@ -443,7 +503,7 @@ private:
 
     std::size_t numValues;
     this->DataFile->Stream >> dataName >> numValues >> std::ws;
-    this->SkipArray(numElements * numValues, internal::DummyFixed8Type());
+    this->SkipArray(numElements * numValues, internal::ColorChannel8());
   }
 
   void ReadLookupTable(std::string &dataName)
@@ -453,7 +513,7 @@ private:
 
     std::size_t numEntries;
     this->DataFile->Stream >> dataName >> numEntries >> std::ws;
-    this->SkipArray(numEntries, vtkm::Vec<internal::DummyFixed8Type, 4>());
+    this->SkipArray(numEntries, vtkm::Vec<internal::ColorChannel8, 4>());
   }
 
   void ReadTextureCoordinates(std::size_t numElements, std::string &dataName,
@@ -544,11 +604,7 @@ private:
       std::vector<T> buffer(this->NumElements);
       this->Reader->ReadArray(buffer);
 
-      vtkm::cont::ArrayHandle<T> data;
-      data.Allocate(static_cast<vtkm::Id>(buffer.size()));
-      std::copy(buffer.begin(), buffer.end(),
-                vtkm::cont::ArrayPortalToIteratorBegin(data.GetPortalControl()));
-      *this->Data = vtkm::cont::DynamicArrayHandle(data);
+      *this->Data = internal::CreateDynamicArrayHandle(buffer);
     }
 
     template <typename T>
@@ -602,7 +658,7 @@ private:
       {
         for (vtkm::IdComponent j = 0; j < numComponents; ++j)
         {
-          typename internal::TypeTraits<ComponentType>::AsciiReadType val;
+          typename internal::StreamIOType<ComponentType>::Type val;
           this->DataFile->Stream >> val;
           vtkm::VecTraits<T>::SetComponent(buffer[i], j,
                                            static_cast<ComponentType>(val));
@@ -647,7 +703,7 @@ private:
       {
         for (vtkm::IdComponent j = 0; j < numComponents; ++j)
         {
-          typename internal::TypeTraits<ComponentType>::AsciiReadType val;
+          typename internal::StreamIOType<ComponentType>::Type val;
           this->DataFile->Stream >> val;
         }
       }
@@ -694,7 +750,7 @@ private:
 }
 } // vtkm::io::reader
 
-VTKM_BASIC_TYPE_VECTOR(io::reader::internal::DummyFixed8Type)
+VTKM_BASIC_TYPE_VECTOR(io::reader::internal::ColorChannel8)
 VTKM_BASIC_TYPE_VECTOR(io::reader::internal::DummyBitType)
 
 #endif // vtk_m_io_reader_VTKDataSetReaderBase_h
