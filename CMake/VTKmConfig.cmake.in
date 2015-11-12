@@ -50,10 +50,18 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
 include(VTKmMacros)
 
-vtkm_configure_device(Serial)
+if(VTKm_FIND_REQUIRED)
+  set(vtkm_is_required REQUIRED)
+else()
+  set(vtkm_is_required)
+endif()
+
+vtkm_configure_device(Serial ${vtkm_is_required})
 if(VTKm_ENABLE_CUDA)
   vtkm_configure_device(CUDA)
 endif()
 if(VTKm_ENABLE_TBB)
-  vtkm_configure_device(TBB)
+  # If configured with TBB, the VTK-m header files might choose TBB as the
+  # default device. In that case, the TBB device is required.
+  vtkm_configure_device(TBB ${vtkm_is_required})
 endif()
