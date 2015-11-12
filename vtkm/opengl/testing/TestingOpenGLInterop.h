@@ -75,7 +75,8 @@ private:
   {
     try
       {
-      vtkm::opengl::TransferToOpenGL(array,handle, DeviceAdapterTag());
+      vtkm::opengl::BufferState state(handle);
+      vtkm::opengl::TransferToOpenGL(array, state, DeviceAdapterTag());
       }
     catch (vtkm::cont::ErrorControlBadAllocation error)
       {
@@ -97,7 +98,8 @@ private:
   {
     try
       {
-      vtkm::opengl::TransferToOpenGL(array,handle,type, DeviceAdapterTag());
+      vtkm::opengl::BufferState state(handle, type);
+      vtkm::opengl::TransferToOpenGL(array, state, DeviceAdapterTag());
       }
     catch (vtkm::cont::ErrorControlBadAllocation error)
       {

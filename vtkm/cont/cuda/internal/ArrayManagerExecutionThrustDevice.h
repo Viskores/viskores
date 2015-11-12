@@ -74,7 +74,7 @@ public:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
   typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust< T > PortalType;
-  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< const T > PortalConstType;
+  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< T > PortalConstType;
 
   VTKM_CONT_EXPORT
   ArrayManagerExecutionThrustDevice(StorageType *storage)

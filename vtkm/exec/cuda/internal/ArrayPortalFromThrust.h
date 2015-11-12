@@ -96,7 +96,7 @@ template<typename T, typename Enable = void>
 struct load_through_texture
 {
   __device__
-  static T get(const thrust::system::cuda::pointer<T>& data)
+  static T get(const thrust::system::cuda::pointer<const T>& data)
   {
   return *(data.get());
   }
@@ -109,7 +109,7 @@ template<typename T>
 struct load_through_texture<T, typename ::boost::enable_if< typename UseScalarTextureLoad<T>::type >::type >
 {
   __device__
-  static T get(const thrust::system::cuda::pointer<T>& data)
+  static T get(const thrust::system::cuda::pointer<const T>& data)
   {
   #if __CUDA_ARCH__ >= 350
     // printf("__CUDA_ARCH__ UseScalarTextureLoad");
@@ -125,7 +125,7 @@ template<typename T>
 struct load_through_texture<T, typename ::boost::enable_if< typename UseVecTextureLoads<T>::type >::type >
 {
   __device__
-  static T get(const thrust::system::cuda::pointer<T>& data)
+  static T get(const thrust::system::cuda::pointer<const T>& data)
   {
   #if __CUDA_ARCH__ >= 350
     // printf("__CUDA_ARCH__ UseVecTextureLoads");
@@ -193,7 +193,7 @@ struct load_through_texture<T, typename ::boost::enable_if< typename UseMultiple
   typedef typename boost::remove_const<T>::type NonConstT;
 
   __device__
-  static T get(const thrust::system::cuda::pointer<T>& data)
+  static T get(const thrust::system::cuda::pointer<const T>& data)
   {
   #if __CUDA_ARCH__ >= 350
      // printf("__CUDA_ARCH__ UseMultipleScalarTextureLoads");
@@ -204,7 +204,7 @@ struct load_through_texture<T, typename ::boost::enable_if< typename UseMultiple
   }
 
   __device__
-  static T getAs(const thrust::system::cuda::pointer<T>& data)
+  static T getAs(const thrust::system::cuda::pointer<const T>& data)
   {
   //we need to fetch each component individually
   const vtkm::IdComponent NUM_COMPONENTS= T::NUM_COMPONENTS;
@@ -291,8 +291,8 @@ public:
   VTKM_EXEC_CONT_EXPORT ConstArrayPortalFromThrust() {  }
 
   VTKM_CONT_EXPORT
-  ConstArrayPortalFromThrust(const thrust::system::cuda::pointer< T > begin,
-                             const thrust::system::cuda::pointer< T > end)
+  ConstArrayPortalFromThrust(const thrust::system::cuda::pointer< const T > begin,
+                             const thrust::system::cuda::pointer< const T > end)
     : BeginIterator( begin ),
       EndIterator( end )
   {

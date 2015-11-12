@@ -76,7 +76,11 @@ struct FetchArrayTopologyMapInImplementation
   static ValueType Load(const ThreadIndicesType &indices,
                         const FieldExecObjectType &field)
   {
-    return ValueType(indices.GetIndicesFrom(), field);
+    // It is important that we give the VecFromPortalPermute (ValueType) a
+    // pointer that will stay around during the time the Vec is valid. Thus, we
+    // should make sure that indices is a reference that goes up the stack at
+    // least as far as the returned VecFromPortalPermute is used.
+    return ValueType(indices.GetIndicesFromPointer(), field);
   }
 };
 
@@ -92,6 +96,17 @@ make_VecRectilinearPointCoordinates(
         origin[1],
         origin[2]);
   return vtkm::VecRectilinearPointCoordinates<1>(offsetOrigin, spacing);
+}
+
+VTKM_EXEC_EXPORT
+vtkm::VecRectilinearPointCoordinates<1>
+make_VecRectilinearPointCoordinates(
+    const vtkm::Vec<vtkm::FloatDefault,3> &origin,
+    const vtkm::Vec<vtkm::FloatDefault,3> &spacing,
+    vtkm::Id logicalId)
+{
+  return make_VecRectilinearPointCoordinates(
+        origin, spacing, vtkm::Vec<vtkm::Id,1>(logicalId));
 }
 
 VTKM_EXEC_EXPORT

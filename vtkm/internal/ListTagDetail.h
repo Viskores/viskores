@@ -46,8 +46,6 @@ struct ListRoot {  };
 template<typename signature>
 struct ListBase {  };
 
-struct ListParamNull {  };
-
 //-----------------------------------------------------------------------------
 
 template<typename Functor>
@@ -1151,21 +1149,21 @@ struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13
 
 /// A basic tag for a list of typenames. This struct can be subclassed
 /// and still behave like a list tag.
-template<typename T1 = vtkm::detail::ListParamNull,
-         typename T2 = vtkm::detail::ListParamNull,
-         typename T3 = vtkm::detail::ListParamNull,
-         typename T4 = vtkm::detail::ListParamNull,
-         typename T5 = vtkm::detail::ListParamNull,
-         typename T6 = vtkm::detail::ListParamNull,
-         typename T7 = vtkm::detail::ListParamNull,
-         typename T8 = vtkm::detail::ListParamNull,
-         typename T9 = vtkm::detail::ListParamNull,
-         typename T10 = vtkm::detail::ListParamNull,
-         typename T11 = vtkm::detail::ListParamNull,
-         typename T12 = vtkm::detail::ListParamNull,
-         typename T13 = vtkm::detail::ListParamNull,
-         typename T14 = vtkm::detail::ListParamNull,
-         typename T15 = vtkm::detail::ListParamNull>
+template<typename T1 = vtkm::internal::NullType,
+         typename T2 = vtkm::internal::NullType,
+         typename T3 = vtkm::internal::NullType,
+         typename T4 = vtkm::internal::NullType,
+         typename T5 = vtkm::internal::NullType,
+         typename T6 = vtkm::internal::NullType,
+         typename T7 = vtkm::internal::NullType,
+         typename T8 = vtkm::internal::NullType,
+         typename T9 = vtkm::internal::NullType,
+         typename T10 = vtkm::internal::NullType,
+         typename T11 = vtkm::internal::NullType,
+         typename T12 = vtkm::internal::NullType,
+         typename T13 = vtkm::internal::NullType,
+         typename T14 = vtkm::internal::NullType,
+         typename T15 = vtkm::internal::NullType>
 struct ListTagBase : detail::ListRoot
 {
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15)> List;

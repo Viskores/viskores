@@ -63,7 +63,7 @@ struct Fetch<FetchTag,
   VTKM_EXEC_EXPORT
   vtkm::Id Load(const ThreadIndicesType &indices, const ExecObjectType &) const
   {
-    return indices.GetIndex();
+    return indices.GetOutputIndex();
   }
 
   VTKM_EXEC_EXPORT

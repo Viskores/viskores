@@ -146,6 +146,8 @@ template<typename WorkletType,
          typename ParameterInterface,
          typename ControlInterface,
          vtkm::IdComponent InputDomainIndex,
+         typename OutputToInputMapType,
+         typename VisitArrayType,
          typename ThreadIndicesType,
          $template_params(num_params)>
 VTKM_EXEC_EXPORT
@@ -155,14 +157,18 @@ void DoWorkletInvokeFunctor(
         ParameterInterface,
         ControlInterface,
         vtkm::internal::FunctionInterface<$signature(num_params)>,
-        InputDomainIndex> &invocation,
+        InputDomainIndex,
+        OutputToInputMapType,
+        VisitArrayType> &invocation,
       const ThreadIndicesType &threadIndices)
 {
   typedef vtkm::internal::Invocation<
       ParameterInterface,
       ControlInterface,
       vtkm::internal::FunctionInterface<$signature(num_params)>,
-      InputDomainIndex> Invocation;
+      InputDomainIndex,
+      OutputToInputMapType,
+      VisitArrayType> Invocation;
 $for(param_index in range(1, num_params+1))\
 
   typedef InvocationToFetch<ThreadIndicesType,Invocation,$(param_index)> FetchInfo$(param_index);
@@ -201,6 +207,8 @@ template<typename WorkletType,
          typename ParameterInterface,
          typename ControlInterface,
          vtkm::IdComponent InputDomainIndex,
+         typename OutputToInputMapType,
+         typename VisitArrayType,
          typename ThreadIndicesType,
          $template_params(num_params, start=1)>
 VTKM_EXEC_EXPORT
@@ -210,14 +218,18 @@ void DoWorkletInvokeFunctor(
         ParameterInterface,
         ControlInterface,
         vtkm::internal::FunctionInterface<$signature(num_params, return_type='void')>,
-        InputDomainIndex> &invocation,
+        InputDomainIndex,
+        OutputToInputMapType,
+        VisitArrayType> &invocation,
       const ThreadIndicesType &threadIndices)
 {
   typedef vtkm::internal::Invocation<
       ParameterInterface,
       ControlInterface,
       vtkm::internal::FunctionInterface<$signature(num_params, return_type='void')>,
-      InputDomainIndex> Invocation;
+      InputDomainIndex,
+      OutputToInputMapType,
+      VisitArrayType> Invocation;
 $for(param_index in range(1, num_params+1))\
 
   typedef InvocationToFetch<ThreadIndicesType,Invocation,$(param_index)> FetchInfo$(param_index);

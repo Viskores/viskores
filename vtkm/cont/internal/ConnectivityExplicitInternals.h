@@ -40,7 +40,7 @@ void buildIndexOffsets(const NumIndicesArrayType& numIndices,
   //We first need to make sure that NumIndices and IndexOffsetArrayType
   //have the same type so we can call scane exclusive
   typedef vtkm::cont::ArrayHandleCast< vtkm::Id,
-                                       NumIndicesArrayType > CastedNumIndicesType;
+    NumIndicesArrayType > CastedNumIndicesType;
 
   // Although technically we are making changes to this object, the changes
   // are logically consistent with the previous state, so we consider it

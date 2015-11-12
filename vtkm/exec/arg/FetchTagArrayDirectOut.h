@@ -59,7 +59,7 @@ struct Fetch<
              const ExecObjectType &arrayPortal,
              const ValueType &value) const
   {
-    arrayPortal.Set(indices.GetIndex(), value);
+    arrayPortal.Set(indices.GetOutputIndex(), value);
   }
 };
 

@@ -22,6 +22,7 @@
 
 #include <vtkm/Types.h>
 
+#include <algorithm>
 #include <cassert>
 #include <string>
 
@@ -118,6 +119,7 @@ inline DataType DataTypeId(const std::string &str)
   return type;
 }
 
+
 struct DummyBitType
 {
   // Needs to work with streams' << operator
@@ -126,6 +128,43 @@ struct DummyBitType
     return false;
   }
 };
+
+class ColorChannel8
+{
+public:
+  ColorChannel8() : Data()
+  { }
+  ColorChannel8(vtkm::UInt8 val) : Data(val)
+  { }
+  ColorChannel8(vtkm::Float32 val)
+    : Data(static_cast<vtkm::UInt8>(std::min(std::max(val, 1.0f), 0.0f) * 255))
+  { }
+  operator vtkm::Float32() const
+  {
+    return static_cast<vtkm::Float32>(this->Data)/255.0f;
+  }
+  operator vtkm::UInt8() const
+  {
+    return this->Data;
+  }
+
+private:
+  vtkm::UInt8 Data;
+};
+
+inline std::ostream& operator<<(std::ostream& out, const ColorChannel8 &val)
+{
+  return out << static_cast<vtkm::Float32>(val);
+}
+
+inline std::istream& operator>>(std::istream& in, ColorChannel8 &val)
+{
+  vtkm::Float32 fval;
+  in >> fval;
+  val = ColorChannel8(fval);
+  return in;
+}
+
 
 template <typename T, typename Functor>
 inline void SelectVecTypeAndCall(T, vtkm::IdComponent numComponents, const Functor &functor)
@@ -163,28 +202,28 @@ inline void SelectTypeAndCall(DataType dtype, vtkm::IdComponent numComponents,
     SelectVecTypeAndCall(DummyBitType(), numComponents, functor);
     break;
   case DTYPE_UNSIGNED_CHAR:
-    SelectVecTypeAndCall(vtkm::Int8(), numComponents, functor);
-    break;
-  case DTYPE_CHAR:
     SelectVecTypeAndCall(vtkm::UInt8(), numComponents, functor);
     break;
-  case DTYPE_UNSIGNED_SHORT:
-    SelectVecTypeAndCall(vtkm::Int16(), numComponents, functor);
+  case DTYPE_CHAR:
+    SelectVecTypeAndCall(vtkm::Int8(), numComponents, functor);
     break;
-  case DTYPE_SHORT:
+  case DTYPE_UNSIGNED_SHORT:
     SelectVecTypeAndCall(vtkm::UInt16(), numComponents, functor);
     break;
-  case DTYPE_UNSIGNED_INT:
-    SelectVecTypeAndCall(vtkm::Int32(), numComponents, functor);
+  case DTYPE_SHORT:
+    SelectVecTypeAndCall(vtkm::Int16(), numComponents, functor);
     break;
-  case DTYPE_INT:
+  case DTYPE_UNSIGNED_INT:
     SelectVecTypeAndCall(vtkm::UInt32(), numComponents, functor);
     break;
+  case DTYPE_INT:
+    SelectVecTypeAndCall(vtkm::Int32(), numComponents, functor);
+    break;
   case DTYPE_UNSIGNED_LONG:
-    SelectVecTypeAndCall(vtkm::Int64(), numComponents, functor);
+    SelectVecTypeAndCall(vtkm::UInt64(), numComponents, functor);
     break;
   case DTYPE_LONG:
-    SelectVecTypeAndCall(vtkm::UInt64(), numComponents, functor);
+    SelectVecTypeAndCall(vtkm::Int64(), numComponents, functor);
     break;
   case DTYPE_FLOAT:
     SelectVecTypeAndCall(vtkm::Float32(), numComponents, functor);

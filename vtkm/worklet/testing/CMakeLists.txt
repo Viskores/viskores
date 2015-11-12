@@ -26,6 +26,7 @@ set(unit_tests
   UnitTestFieldStatistics.cxx
   UnitTestIsosurfaceUniformGrid.cxx
   UnitTestPointElevation.cxx
+  UnitTestScatterCounting.cxx
   UnitTestSplatKernels.cxx
   UnitTestStreamLineUniformGrid.cxx
   UnitTestTetrahedralizeExplicitGrid.cxx

@@ -20,10 +20,7 @@
 
 #include <vtkm/exec/arg/FetchTagExecObject.h>
 
-#include <vtkm/exec/arg/ThreadIndicesBasic.h>
-
-#include <vtkm/internal/FunctionInterface.h>
-#include <vtkm/internal/Invocation.h>
+#include <vtkm/exec/arg/testing/ThreadIndicesTesting.h>
 
 #include <vtkm/exec/ExecutionObjectBase.h>
 
@@ -40,64 +37,37 @@ struct TestExecutionObject : public vtkm::exec::ExecutionObjectBase
   vtkm::Int32 Number;
 };
 
-struct NullParam {  };
-
-template<vtkm::IdComponent ParamIndex, typename Invocation>
-void TryInvocation(const Invocation &invocation)
+void TryInvocation()
 {
+  TestExecutionObject execObjectStore(EXPECTED_NUMBER);
+
   typedef vtkm::exec::arg::Fetch<
       vtkm::exec::arg::FetchTagExecObject,
       vtkm::exec::arg::AspectTagDefault,
-      vtkm::exec::arg::ThreadIndicesBasic,
+      vtkm::exec::arg::ThreadIndicesTesting,
       TestExecutionObject> FetchType;
 
   FetchType fetch;
 
-  vtkm::exec::arg::ThreadIndicesBasic indices(0, invocation);
+  vtkm::exec::arg::ThreadIndicesTesting indices(0);
 
-  TestExecutionObject execObject = fetch.Load(
-        indices, invocation.Parameters.template GetParameter<ParamIndex>());
+  TestExecutionObject execObject = fetch.Load(indices, execObjectStore);
   VTKM_TEST_ASSERT(execObject.Number == EXPECTED_NUMBER,
                    "Did not load object correctly.");
 
   execObject.Number = -1;
 
   // This should be a no-op.
-  fetch.Store(
-        indices,
-        invocation.Parameters.template GetParameter<ParamIndex>(),
-        execObject);
+  fetch.Store(indices, execObjectStore, execObject);
 
   // Data in Invocation should not have changed.
-  execObject = invocation.Parameters.template GetParameter<ParamIndex>();
-  VTKM_TEST_ASSERT(execObject.Number == EXPECTED_NUMBER,
+  VTKM_TEST_ASSERT(execObjectStore.Number == EXPECTED_NUMBER,
                    "Fetch changed read-only execution object.");
-}
-
-template<vtkm::IdComponent ParamIndex>
-void TryParamIndex()
-{
-  std::cout << "Trying ExecObject fetch on parameter " << ParamIndex
-            << std::endl;
-
-  typedef vtkm::internal::FunctionInterface<
-      void(NullParam,NullParam,NullParam,NullParam,NullParam)>
-      BaseFunctionInterface;
-
-  TryInvocation<ParamIndex>(vtkm::internal::make_Invocation<1>(
-                              BaseFunctionInterface().Replace<ParamIndex>(
-                                TestExecutionObject(EXPECTED_NUMBER)),
-                              NullParam(),
-                              NullParam()));
 }
 
 void TestExecObjectFetch()
 {
-  TryParamIndex<1>();
-  TryParamIndex<2>();
-  TryParamIndex<3>();
-  TryParamIndex<4>();
-  TryParamIndex<5>();
+  TryInvocation();
 }
 
 } // anonymous namespace

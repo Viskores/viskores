@@ -24,6 +24,8 @@ set(headers
   TestingArrayHandles.h
   TestingComputeBounds.h
   TestingDeviceAdapter.h
+  TestingDataSetExplicit.h
+  TestingDataSetSingleType.h
   TestingFancyArrayHandles.h
   )
 

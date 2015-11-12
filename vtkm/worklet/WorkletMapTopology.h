@@ -188,6 +188,8 @@ public:
 
   template<typename TypeList = AllTypes >
   struct FieldInOutCell : FieldInOut<TypeList> { };
+
+  struct PointIndices : FromIndices { };
 };
 
 }

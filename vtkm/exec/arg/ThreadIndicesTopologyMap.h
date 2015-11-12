@@ -85,8 +85,8 @@ public:
     // set its input domain incorrectly.
     const ConnectivityType &connectivity = invocation.GetInputDomain();
 
-    this->IndicesFrom = connectivity.GetIndices(this->GetIndex());
-    this->CellShape = connectivity.GetCellShape(this->GetIndex());
+    this->IndicesFrom = connectivity.GetIndices(this->GetInputIndex());
+    this->CellShape = connectivity.GetCellShape(this->GetInputIndex());
   }
 
   /// \brief The input indices of the "from" elements.
@@ -97,7 +97,22 @@ public:
   /// containing the indices to the "from" elements.
   ///
   VTKM_EXEC_EXPORT
-  IndicesFromType GetIndicesFrom() const { return this->IndicesFrom; }
+  const IndicesFromType &GetIndicesFrom() const { return this->IndicesFrom; }
+
+  /// \brief The input indices of the "from" elements in pointer form.
+  ///
+  /// Returns the same object as GetIndicesFrom except that it returns a
+  /// pointer to the internally held object rather than a reference or copy.
+  /// Since the from indices can be a sizeable Vec (8 entries is common), it is
+  /// best not to have a bunch a copies. Thus, you can pass around a pointer
+  /// instead. However, care should be taken to make sure that this object does
+  /// not go out of scope, at which time the returned pointer becomes invalid.
+  ///
+  VTKM_EXEC_EXPORT
+  const IndicesFromType *GetIndicesFromPointer() const
+  {
+    return &this->IndicesFrom;
+  }
 
   /// \brief The shape of the input cell.
   ///
@@ -179,12 +194,12 @@ public:
     // set its input domain incorrectly.
     const ConnectivityType &connectivity = invocation.GetInputDomain();
 
-    const LogicalIndexType logicalIndex = connectivity.FlatToLogicalToIndex(threadIndex);
-
-    this->Index = threadIndex;
-    this->LogicalIndex = logicalIndex;
-    this->IndicesFrom = connectivity.GetIndices(logicalIndex);
-    this->CellShape = connectivity.GetCellShape(threadIndex);
+    this->InputIndex = invocation.OutputToInputMap.Get(threadIndex);
+    this->OutputIndex = threadIndex;
+    this->VisitIndex = invocation.VisitArray.Get(threadIndex);
+    this->LogicalIndex = connectivity.FlatToLogicalToIndex(this->InputIndex);
+    this->IndicesFrom = connectivity.GetIndices(this->LogicalIndex);
+    this->CellShape = connectivity.GetCellShape(this->InputIndex);
   }
 
   template<typename Invocation>
@@ -198,11 +213,14 @@ public:
     // set its input domain incorrectly.
     const ConnectivityType &connectivity = invocation.GetInputDomain();
 
-    const LogicalIndexType logicalIndex = detail::Deflate(threadIndex, LogicalIndexType());
+    const LogicalIndexType logicalIndex =
+        detail::Deflate(threadIndex, LogicalIndexType());
     const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
 
-
-    this->Index = index;
+    // We currently only support multidimensional indices on one-to-one input-
+    // to-output mappings. (We don't have a use case otherwise.)
+    this->InputIndex = this->OutputIndex = index;
+    this->VisitIndex = invocation.VisitArray.Get(index);
     this->LogicalIndex = logicalIndex;
     this->IndicesFrom = connectivity.GetIndices(logicalIndex);
     this->CellShape = connectivity.GetCellShape(index);
@@ -226,9 +244,9 @@ public:
   /// fetches.
   ///
   VTKM_EXEC_EXPORT
-  vtkm::Id GetIndex() const
+  vtkm::Id GetInputIndex() const
   {
-    return this->Index;
+    return this->InputIndex;
   }
 
   /// \brief The 3D index into the input domain.
@@ -237,9 +255,32 @@ public:
   /// for the input.
   ///
   VTKM_EXEC_EXPORT
-  vtkm::Id3 GetIndex3D() const
+  vtkm::Id3 GetInputIndex3D() const
   {
     return detail::InflateTo3D(this->GetIndexLogical());
+  }
+
+  /// \brief The index into the output domain.
+  ///
+  /// This index refers to the output element (array value, cell, etc.) that
+  /// this thread is creating. This is the typical index used during
+  /// Fetch::Store.
+  ///
+  VTKM_EXEC_EXPORT
+  vtkm::Id GetOutputIndex() const
+  {
+    return this->OutputIndex;
+  }
+
+  /// \brief The visit index.
+  ///
+  /// When multiple output indices have the same input index, they are
+  /// distinguished using the visit index.
+  ///
+  VTKM_EXEC_EXPORT
+  vtkm::IdComponent GetVisitIndex() const
+  {
+    return this->VisitIndex;
   }
 
   /// \brief The input indices of the "from" elements.
@@ -250,7 +291,22 @@ public:
   /// containing the indices to the "from" elements.
   ///
   VTKM_EXEC_EXPORT
-  IndicesFromType GetIndicesFrom() const { return this->IndicesFrom; }
+  const IndicesFromType &GetIndicesFrom() const { return this->IndicesFrom; }
+
+  /// \brief The input indices of the "from" elements in pointer form.
+  ///
+  /// Returns the same object as GetIndicesFrom except that it returns a
+  /// pointer to the internally held object rather than a reference or copy.
+  /// Since the from indices can be a sizeable Vec (8 entries is common), it is
+  /// best not to have a bunch a copies. Thus, you can pass around a pointer
+  /// instead. However, care should be taken to make sure that this object does
+  /// not go out of scope, at which time the returned pointer becomes invalid.
+  ///
+  VTKM_EXEC_EXPORT
+  const IndicesFromType *GetIndicesFromPointer() const
+  {
+    return &this->IndicesFrom;
+  }
 
   /// \brief The shape of the input cell.
   ///
@@ -263,7 +319,9 @@ public:
   CellShapeTag GetCellShape() const { return this->CellShape; }
 
 private:
-  vtkm::Id Index;
+  vtkm::Id InputIndex;
+  vtkm::Id OutputIndex;
+  vtkm::IdComponent VisitIndex;
   LogicalIndexType LogicalIndex;
   IndicesFromType IndicesFrom;
   CellShapeTag CellShape;
