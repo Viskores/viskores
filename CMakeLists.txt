@@ -112,12 +112,14 @@ endif()
 #-----------------------------------------------------------------------------
 # Set up devices selected.
 vtkm_configure_device(Serial)
-if (VTKm_ENABLE_CUDA)
-  vtkm_configure_device(Cuda)
-endif (VTKm_ENABLE_CUDA)
 if (VTKm_ENABLE_TBB)
-  vtkm_configure_device(TBB)
+  vtkm_configure_device(TBB REQUIRED)
 endif (VTKm_ENABLE_TBB)
+if (VTKm_ENABLE_CUDA)
+  vtkm_configure_device(CUDA REQUIRED)
+  cuda_include_directories(${VTKm_INCLUDE_DIRS})
+endif (VTKm_ENABLE_CUDA)
+include_directories(${VTKm_INCLUDE_DIRS})
 
 #-----------------------------------------------------------------------------
 

@@ -421,7 +421,7 @@ function(vtkm_save_benchmarks)
   #create the benchmarks driver when we are called, since
   #the driver expects the files to be in the same
   #directory as the test driver
-	#TODO: This is probably ok to use for benchmarks as well
+        #TODO: This is probably ok to use for benchmarks as well
   create_test_sourcelist(bench_sources BenchmarkDriver.cxx ${ARGN})
 
   #store the absolute path for the driver and all the test
@@ -553,7 +553,11 @@ macro(vtkm_configure_device device)
   set(VTKm_ENABLE_${device_uppercase} ON)
   include("UseVTKm${device}")
   if(NOT VTKm_${device}_FOUND)
-    message(SEND_ERROR "Could not configure for using VTKm with ${device}")
-  endif(NOT VTKm_${device}_FOUND)
+    if ("${ARGV1}" STREQUAL "REQUIRED")
+      message(SEND_ERROR "Could not configure for using VTKm with ${device}")
+    else()
+      message(STATUS "Could not configure for using VTKm with ${device}")
+    endif()
+  endif()
 endmacro(vtkm_configure_device)
 
