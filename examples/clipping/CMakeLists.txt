@@ -42,8 +42,8 @@ endif()
 
 if(VTKm_ENABLE_TBB)
   add_executable(Clipping_TBB Clipping.cxx)
-  target_include_directories(Clipping_TBB PRIVATE ${TBB_INCLUDE_DIRS})
-  target_link_libraries(Clipping_TBB ${TBB_LIBRARIES})
+  target_include_directories(Clipping_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
+  target_link_libraries(Clipping_TBB ${VTKm_LIBRARIES})
   set_property(
     TARGET Clipping_TBB
     APPEND
