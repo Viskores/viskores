@@ -43,10 +43,10 @@ enum CellShapeIdEnum
   CELL_SHAPE_TRIANGLE           = 5,
   //CELL_SHAPE_TRIANGLE_STRIP   = 6,
   CELL_SHAPE_POLYGON            = 7,
-  //CELL_SHAPE_PIXEL              = 8,
+  //CELL_SHAPE_PIXEL            = 8,
   CELL_SHAPE_QUAD               = 9,
   CELL_SHAPE_TETRA              = 10,
-  //CELL_SHAPE_VOXEL              = 11,
+  //CELL_SHAPE_VOXEL            = 11,
   CELL_SHAPE_HEXAHEDRON         = 12,
   CELL_SHAPE_WEDGE              = 13,
   CELL_SHAPE_PYRAMID            = 14,
@@ -149,7 +149,7 @@ struct CellShapeTagGeneric {
   case vtkm::cellShapeId: \
     { \
       typedef \
-        typename vtkm::CellShapeIdToTag<vtkm::cellShapeId>::Tag CellShapeTag; \
+        vtkm::CellShapeIdToTag<vtkm::cellShapeId>::Tag CellShapeTag; \
       call; \
     } \
     break

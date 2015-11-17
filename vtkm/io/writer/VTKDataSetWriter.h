@@ -33,6 +33,7 @@
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/io/internal/VTKDataSetTypes.h>
 
 namespace {
 #define VTK_EMPTY_CELL     0
@@ -156,51 +157,6 @@ public:
   }
 };
 
-template <typename T> struct DataTypeName
-{
-  static const char* Name() { return "unknown"; }
-};
-template <> struct DataTypeName<vtkm::Int8>
-{
-  static const char* Name() { return "char"; }
-};
-template <> struct DataTypeName<vtkm::UInt8>
-{
-  static const char* Name() { return "unsigned_char"; }
-};
-template <> struct DataTypeName<vtkm::Int16>
-{
-  static const char* Name() { return "short"; }
-};
-template <> struct DataTypeName<vtkm::UInt16>
-{
-  static const char* Name() { return "unsigned_short"; }
-};
-template <> struct DataTypeName<vtkm::Int32>
-{
-  static const char* Name() { return "int"; }
-};
-template <> struct DataTypeName<vtkm::UInt32>
-{
-  static const char* Name() { return "unsigned_int"; }
-};
-template <> struct DataTypeName<vtkm::Int64>
-{
-  static const char* Name() { return "long"; }
-};
-template <> struct DataTypeName<vtkm::UInt64>
-{
-  static const char* Name() { return "unsigned_long"; }
-};
-template <> struct DataTypeName<vtkm::Float32>
-{
-  static const char* Name() { return "float"; }
-};
-template <> struct DataTypeName<vtkm::Float64>
-{
-  static const char* Name() { return "double"; }
-};
-
 class GetDataTypeName
 {
 public:
@@ -213,7 +169,7 @@ public:
   {
     typedef typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType
         DataType;
-    *this->Name = DataTypeName<DataType>::Name();
+    *this->Name = vtkm::io::internal::DataTypeName<DataType>::Name();
   }
 private:
   std::string *Name;

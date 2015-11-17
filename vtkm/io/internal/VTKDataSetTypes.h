@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_io_readers_internal_TypeInfo_h
-#define vtk_m_io_readers_internal_TypeInfo_h
+#ifndef vtk_m_io_internal_VTKDataSetTypes_h
+#define vtk_m_io_internal_VTKDataSetTypes_h
 
 #include <vtkm/Types.h>
 
@@ -28,19 +28,7 @@
 
 namespace vtkm {
 namespace io {
-namespace reader {
 namespace internal {
-
-enum DataSetType
-{
-  DATASET_UNKNOWN = 0,
-  DATASET_STRUCTURED_POINTS,
-  DATASET_STRUCTURED_GRID,
-  DATASET_UNSTRUCTURED_GRID,
-  DATASET_POLYDATA,
-  DATASET_RECTILINEAR_GRID,
-  DATASET_FIELD
-};
 
 enum DataType
 {
@@ -57,34 +45,6 @@ enum DataType
   DTYPE_FLOAT,
   DTYPE_DOUBLE
 };
-
-inline const char* DataSetTypeString(int id)
-{
-  static const char *strings[] = {
-    "",
-    "STRUCTURED_POINTS",
-    "STRUCTURED_GRID",
-    "UNSTRUCTURED_GRID",
-    "POLYDATA",
-    "RECTILINEAR_GRID",
-    "FIELD"
-  };
-  return strings[id];
-}
-
-inline DataSetType DataSetTypeId(const std::string &str)
-{
-  DataSetType type = DATASET_UNKNOWN;
-  for (int id = 1; id < 7; ++id)
-  {
-    if (str == DataSetTypeString(id))
-    {
-      type = static_cast<DataSetType>(id);
-    }
-  }
-
-  return type;
-}
 
 inline const char* DataTypeString(int id)
 {
@@ -166,6 +126,56 @@ inline std::istream& operator>>(std::istream& in, ColorChannel8 &val)
 }
 
 
+template <typename T> struct DataTypeName
+{
+  static const char* Name() { return "unknown"; }
+};
+template <> struct DataTypeName<DummyBitType>
+{
+  static const char* Name() { return "bit"; }
+};
+template <> struct DataTypeName<vtkm::Int8>
+{
+  static const char* Name() { return "char"; }
+};
+template <> struct DataTypeName<vtkm::UInt8>
+{
+  static const char* Name() { return "unsigned_char"; }
+};
+template <> struct DataTypeName<vtkm::Int16>
+{
+  static const char* Name() { return "short"; }
+};
+template <> struct DataTypeName<vtkm::UInt16>
+{
+  static const char* Name() { return "unsigned_short"; }
+};
+template <> struct DataTypeName<vtkm::Int32>
+{
+  static const char* Name() { return "int"; }
+};
+template <> struct DataTypeName<vtkm::UInt32>
+{
+  static const char* Name() { return "unsigned_int"; }
+};
+template <> struct DataTypeName<vtkm::Int64>
+{
+  static const char* Name() { return "long"; }
+};
+template <> struct DataTypeName<vtkm::UInt64>
+{
+  static const char* Name() { return "unsigned_long"; }
+};
+template <> struct DataTypeName<vtkm::Float32>
+{
+  static const char* Name() { return "float"; }
+};
+template <> struct DataTypeName<vtkm::Float64>
+{
+  static const char* Name() { return "double"; }
+};
+
+
 template <typename T, typename Functor>
 inline void SelectVecTypeAndCall(T, vtkm::IdComponent numComponents, const Functor &functor)
 {
@@ -238,7 +248,6 @@ inline void SelectTypeAndCall(DataType dtype, vtkm::IdComponent numComponents,
 
 }
 }
-}
-} // namespace vtkm::io:reader::internal
+} // namespace vtkm::io::internal
 
-#endif // vtk_m_io_readers_internal_TypeInfo_h
+#endif // vtk_m_io_internal_VTKDataSetTypes_h

@@ -36,7 +36,7 @@ public:
 private:
   virtual void Read()
   {
-    if (this->DataFile->Structure != internal::DATASET_UNSTRUCTURED_GRID)
+    if (this->DataFile->Structure != vtkm::io::internal::DATASET_UNSTRUCTURED_GRID)
     {
       throw vtkm::io::ErrorIO("Incorrect DataSet type");
     }
@@ -47,65 +47,35 @@ private:
     this->ReadPoints();
 
     // Read the cellset
-    std::vector<vtkm::Id> connectivity;
-    std::vector<vtkm::IdComponent> numIndices;
-    std::vector<vtkm::UInt8> shapes;
+    vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
+    vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
 
     this->DataFile->Stream >> tag;
     internal::parseAssert(tag == "CELLS");
     this->ReadCells(connectivity, numIndices);
     this->ReadShapes(shapes);
 
-    bool sameShape = true;
-    for (std::size_t i = 1; i < shapes.size(); ++i)
-    {
-      if (shapes[i] != shapes[i - 1])
-      {
-        sameShape = false;
-        break;
-      }
-    }
+    vtkm::cont::ArrayHandle<vtkm::Id> permutation;
+    vtkm::io::internal::FixupCellSet(connectivity, numIndices, shapes, permutation);
+    this->SetCellsPermutation(permutation);
 
-    if (sameShape)
+    if (vtkm::io::internal::IsSingleShape(shapes))
     {
       vtkm::cont::CellSetSingleType<> cs;
-      switch(shapes[0])
+      switch(shapes.GetPortalConstControl().Get(0))
       {
-      case vtkm::CELL_SHAPE_VERTEX:
-        cs = vtkm::cont::CellSetSingleType<>(vtkm::CellShapeTagVertex(), "cells");
-        break;
-      case vtkm::CELL_SHAPE_LINE:
-        cs = vtkm::cont::CellSetSingleType<>(vtkm::CellShapeTagLine(), "cells");
-        break;
-      case vtkm::CELL_SHAPE_TRIANGLE:
-        cs = vtkm::cont::CellSetSingleType<>(vtkm::CellShapeTagTriangle(), "cells");
-        break;
-      case vtkm::CELL_SHAPE_QUAD:
-        cs = vtkm::cont::CellSetSingleType<>(vtkm::CellShapeTagQuad(), "cells");
-        break;
-      case vtkm::CELL_SHAPE_TETRA:
-        cs = vtkm::cont::CellSetSingleType<>(vtkm::CellShapeTagTetra(), "cells");
-        break;
-      case vtkm::CELL_SHAPE_HEXAHEDRON:
-        cs = vtkm::cont::CellSetSingleType<>(vtkm::CellShapeTagHexahedron(), "cells");
-        break;
-      case vtkm::CELL_SHAPE_WEDGE:
-        cs = vtkm::cont::CellSetSingleType<>(vtkm::CellShapeTagWedge(), "cells");
-        break;
-      case vtkm::CELL_SHAPE_PYRAMID:
-        cs = vtkm::cont::CellSetSingleType<>(vtkm::CellShapeTagPyramid(), "cells");
-        break;
+      vtkmGenericCellShapeMacro((cs = vtkm::cont::CellSetSingleType<>(CellShapeTag(), "cells")));
       default:
-        assert(false);
+        break;
       }
-
-      cs.FillViaCopy(connectivity);
+      cs.Fill(connectivity);
       this->DataSet.AddCellSet(cs);
     }
     else
     {
       vtkm::cont::CellSetExplicit<> cs(0, "cells");
-      cs.FillViaCopy(shapes, numIndices, connectivity);
+      cs.Fill(shapes, numIndices, connectivity);
       this->DataSet.AddCellSet(cs);
     }
 

@@ -19,7 +19,10 @@
 ##============================================================================
 
 set(headers
-  TypeInfo.h
+  Endian.h
+  VTKDataSetCells.h
+  VTKDataSetStructures.h
+  VTKDataSetTypes.h
 )
 
 vtkm_declare_headers(${headers})

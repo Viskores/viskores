@@ -20,7 +20,10 @@
 #ifndef vtk_m_io_reader_VTKDataSetReaderBase_h
 #define vtk_m_io_reader_VTKDataSetReaderBase_h
 
-#include <vtkm/io/reader/internal/TypeInfo.h>
+#include <vtkm/io/internal/Endian.h>
+#include <vtkm/io/internal/VTKDataSetCells.h>
+#include <vtkm/io/internal/VTKDataSetStructures.h>
+#include <vtkm/io/internal/VTKDataSetTypes.h>
 
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
@@ -39,7 +42,6 @@ VTKM_THIRDPARTY_POST_INCLUDE
 #include <algorithm>
 #include <fstream>
 #include <string>
-#include <typeinfo>
 #include <vector>
 
 
@@ -55,7 +57,7 @@ struct VTKDataSetFile
   vtkm::Id2 Version;
   std::string Title;
   bool IsBinary;
-  DataSetType Structure;
+  vtkm::io::internal::DataSetStructure Structure;
   std::ifstream Stream;
 };
 
@@ -65,26 +67,10 @@ inline void PrintVTKDataFileSummary(const VTKDataSetFile &df, std::ostream &out)
   out << "\tVersion: " << df.Version[0] << "." << df.Version[0] << std::endl;
   out << "\tTitle: " << df.Title << std::endl;
   out << "\tFormat: " << (df.IsBinary ? "BINARY" : "ASCII") << std::endl;
-  out << "\tDataSet type: " << internal::DataSetTypeString(df.Structure) << std::endl;
+  out << "\tDataSet type: " << vtkm::io::internal::DataSetStructureString(df.Structure)
+      << std::endl;
 }
 
-
-inline bool isLittleEndian()
-{
-  static const vtkm::Int16 i16 = 0x1;
-  const vtkm::Int8 *i8p = reinterpret_cast<const vtkm::Int8*>(&i16);
-  return (*i8p == 1);
-}
-
-template<typename T>
-inline void flipEndianness(std::vector<T> &buffer)
-{
-  for (std::size_t i = 0; i < buffer.size(); ++i)
-  {
-    vtkm::UInt8 *bytes = reinterpret_cast<vtkm::UInt8*>(&buffer[i]);
-    std::reverse(bytes, bytes + sizeof(T));
-  }
-}
 
 inline void parseAssert(bool condition)
 {
@@ -93,6 +79,7 @@ inline void parseAssert(bool condition)
     throw vtkm::io::ErrorIO("Parse Error");
   }
 }
+
 
 template <typename T> struct StreamIOType { typedef T Type; };
 template <> struct StreamIOType<vtkm::Int8> { typedef vtkm::Int16 Type; };
@@ -130,8 +117,10 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T> &ve
     typedef typename ClosestCommonType<T>::Type CommonType;
     if (!boost::is_same<T, CommonType>::value)
     {
-      std::cerr << "Type " << typeid(T).name() << " is currently unsupported. "
-                << "Converting to " << typeid(CommonType).name() << "." << std::endl;
+      std::cerr << "Type " << vtkm::io::internal::DataTypeName<T>::Name()
+                << " is currently unsupported. Converting to "
+                << vtkm::io::internal::DataTypeName<CommonType>::Name() << "."
+                << std::endl;
     }
 
     vtkm::cont::ArrayHandle<CommonType> output;
@@ -152,10 +141,11 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T> &ve
     typedef vtkm::Vec<OutComponentType, 3> CommonType;
     if (!boost::is_same<T, CommonType>::value)
     {
-      std::cerr << "Type " << typeid(InComponentType).name()
+      std::cerr << "Type " << vtkm::io::internal::DataTypeName<InComponentType>::Name()
                 << "[" << vtkm::VecTraits<T>::NUM_COMPONENTS << "] "
                 << "is currently unsupported. Converting to "
-                << typeid(OutComponentType).name() << "[3]." << std::endl;
+                << vtkm::io::internal::DataTypeName<OutComponentType>::Name() << "[3]."
+                << std::endl;
     }
 
     vtkm::cont::ArrayHandle<CommonType> output;
@@ -245,71 +235,51 @@ protected:
         vtkm::cont::CoordinateSystem("coordinates", 1, points));
   }
 
-  void ReadCells(std::vector<vtkm::Id> &connectivity,
-                 std::vector<vtkm::IdComponent> &numIndices)
+  void ReadCells(vtkm::cont::ArrayHandle<vtkm::Id> &connectivity,
+                 vtkm::cont::ArrayHandle<vtkm::IdComponent> &numIndices)
   {
-    std::size_t numCells, numInts;
+    vtkm::Id numCells, numInts;
     this->DataFile->Stream >> numCells >> numInts >> std::ws;
 
-    connectivity.resize(numInts - numCells);
-    numIndices.resize(numCells);
+    connectivity.Allocate(numInts - numCells);
+    numIndices.Allocate(numCells);
 
-    if (this->DataFile->IsBinary)
-    {
-      std::vector<vtkm::Int32> buffer(numInts);
-      this->ReadArray(buffer);
+    std::vector<vtkm::Int32> buffer(static_cast<std::size_t>(numInts));
+    this->ReadArray(buffer);
 
-      vtkm::Int32 *buffp = &buffer[0];
-      vtkm::Id *connp = &connectivity[0];
-      vtkm::IdComponent *indsp = &numIndices[0];
-      for (std::size_t i = 0; i < numCells; ++i)
-      {
-        *indsp = *buffp++;
-        for (vtkm::IdComponent j = 0; j < *indsp; ++j)
-        {
-          *connp++ = *buffp++;
-        }
-        ++indsp;
-      }
-    }
-    else
+    vtkm::Int32 *buffp = &buffer[0];
+    vtkm::cont::ArrayHandle<vtkm::Id>::PortalControl connectivityPortal =
+      connectivity.GetPortalControl();
+    vtkm::cont::ArrayHandle<vtkm::IdComponent>::PortalControl numIndicesPortal =
+      numIndices.GetPortalControl();
+    for (vtkm::Id i = 0, connInd = 0; i < numCells; ++i)
     {
-      vtkm::Id *connp = &connectivity[0];
-      vtkm::IdComponent *indsp = &numIndices[0];
-      for (std::size_t i = 0; i < numCells; ++i)
+      vtkm::IdComponent numInds = static_cast<vtkm::IdComponent>(*buffp++);
+      numIndicesPortal.Set(i, numInds);
+      for (vtkm::IdComponent j = 0; j < numInds; ++j, ++connInd)
       {
-        this->DataFile->Stream >> *indsp;
-        for (vtkm::IdComponent j = 0; j < *indsp; ++j)
-        {
-          this->DataFile->Stream >> *connp++;
-        }
-        ++indsp;
+        connectivityPortal.Set(connInd, static_cast<vtkm::Id>(*buffp++));
       }
-      this->DataFile->Stream >> std::ws;
     }
   }
 
-  void ReadShapes(std::vector<vtkm::UInt8> &shapes)
+  void ReadShapes(vtkm::cont::ArrayHandle<vtkm::UInt8> &shapes)
   {
     std::string tag;
-    std::size_t numCells;
+    vtkm::Id numCells;
     this->DataFile->Stream >> tag >> numCells >> std::ws;
     internal::parseAssert(tag == "CELL_TYPES");
 
-    shapes.resize(numCells);
-    if (this->DataFile->IsBinary)
-    {
-      std::vector<vtkm::Int32> buffer(numCells);
-      this->ReadArray(buffer);
+    shapes.Allocate(numCells);
+    std::vector<vtkm::Int32> buffer(static_cast<std::size_t>(numCells));
+    this->ReadArray(buffer);
 
-      for (std::size_t i = 0; i < numCells; ++i)
-      {
-        shapes[i] = static_cast<vtkm::UInt8>(buffer[i]);
-      }
-    }
-    else
+    vtkm::Int32 *buffp = &buffer[0];
+    vtkm::cont::ArrayHandle<vtkm::UInt8>::PortalControl shapesPortal =
+      shapes.GetPortalControl();
+    for (vtkm::Id i = 0; i < numCells; ++i)
     {
-      this->ReadArray(shapes);
+      shapesPortal.Set(i, static_cast<vtkm::UInt8>(*buffp++));
     }
   }
 
@@ -390,6 +360,7 @@ protected:
             this->DataSet.AddField(vtkm::cont::Field(name, 0, association, data));
             break;
           case vtkm::cont::Field::ASSOC_CELL_SET:
+            data.CastAndCall(PermuteCellData(this->CellsPermutation, data));
             this->DataSet.AddField(
                 vtkm::cont::Field(name, 0, association, "cells", data));
             break;
@@ -399,6 +370,11 @@ protected:
         }
       }
     }
+  }
+
+  void SetCellsPermutation(const vtkm::cont::ArrayHandle<vtkm::Id> &permutation)
+  {
+    this->CellsPermutation = permutation;
   }
 
   void TransferDataFile(VTKDataSetReaderBase &reader)
@@ -459,8 +435,8 @@ private:
     this->DataFile->Stream >> tag >> structStr >> std::ws;
     internal::parseAssert(tag == "DATASET");
 
-    this->DataFile->Structure = internal::DataSetTypeId(structStr);
-    if (this->DataFile->Structure == internal::DATASET_UNKNOWN)
+    this->DataFile->Structure = vtkm::io::internal::DataSetStructureId(structStr);
+    if (this->DataFile->Structure == vtkm::io::internal::DATASET_UNKNOWN)
     {
       throw  vtkm::io::ErrorIO("Unsupported DataSet type.");
     }
@@ -503,7 +479,7 @@ private:
 
     std::size_t numValues;
     this->DataFile->Stream >> dataName >> numValues >> std::ws;
-    this->SkipArray(numElements * numValues, internal::ColorChannel8());
+    this->SkipArray(numElements * numValues, vtkm::io::internal::ColorChannel8());
   }
 
   void ReadLookupTable(std::string &dataName)
@@ -513,7 +489,7 @@ private:
 
     std::size_t numEntries;
     this->DataFile->Stream >> dataName >> numEntries >> std::ws;
-    this->SkipArray(numEntries, vtkm::Vec<internal::ColorChannel8, 4>());
+    this->SkipArray(numEntries, vtkm::Vec<vtkm::io::internal::ColorChannel8, 4>());
   }
 
   void ReadTextureCoordinates(std::size_t numElements, std::string &dataName,
@@ -622,18 +598,18 @@ private:
   void DoSkipDynamicArray(std::string dataType, std::size_t numElements,
                           vtkm::IdComponent numComponents)
   {
-    internal::DataType typeId = internal::DataTypeId(dataType);
-    internal::SelectTypeAndCall(typeId, numComponents,
-                                SkipDynamicArray(this, numElements));
+    vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
+    vtkm::io::internal::SelectTypeAndCall(typeId, numComponents,
+                                          SkipDynamicArray(this, numElements));
   }
 
   void DoReadDynamicArray(std::string dataType, std::size_t numElements,
                           vtkm::IdComponent numComponents,
                           vtkm::cont::DynamicArrayHandle &data)
   {
-    internal::DataType typeId = internal::DataTypeId(dataType);
-    internal::SelectTypeAndCall(typeId, numComponents,
-                                ReadDynamicArray(this, numElements, data));
+    vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
+    vtkm::io::internal::SelectTypeAndCall(typeId, numComponents,
+                                          ReadDynamicArray(this, numElements, data));
   }
 
   template <typename T>
@@ -644,9 +620,9 @@ private:
     {
       this->DataFile->Stream.read(reinterpret_cast<char*>(&buffer[0]),
           static_cast<std::streamsize>(numElements * sizeof(T)));
-      if(internal::isLittleEndian())
+      if(vtkm::io::internal::IsLittleEndian())
       {
-        internal::flipEndianness(buffer);
+        vtkm::io::internal::FlipEndianness(buffer);
       }
     }
     else
@@ -669,19 +645,21 @@ private:
   }
 
   template <vtkm::IdComponent NumComponents>
-  void ReadArray(std::vector<vtkm::Vec<internal::DummyBitType, NumComponents> > &buffer)
+  void ReadArray(std::vector<vtkm::Vec<vtkm::io::internal::DummyBitType,
+                                       NumComponents> > &buffer)
   {
     std::cerr << "Support for data type 'bit' is not implemented. Skipping."
               << std::endl;
-    this->SkipArray(buffer.size(), vtkm::Vec<internal::DummyBitType, NumComponents>());
+    this->SkipArray(buffer.size(), vtkm::Vec<vtkm::io::internal::DummyBitType,
+                    NumComponents>());
     buffer.clear();
   }
 
-  void ReadArray(std::vector<internal::DummyBitType> &buffer)
+  void ReadArray(std::vector<vtkm::io::internal::DummyBitType> &buffer)
   {
     std::cerr << "Support for data type 'bit' is not implemented. Skipping."
               << std::endl;
-    this->SkipArray(buffer.size(), internal::DummyBitType());
+    this->SkipArray(buffer.size(), vtkm::io::internal::DummyBitType());
     buffer.clear();
   }
 
@@ -712,18 +690,20 @@ private:
   }
 
   template <vtkm::IdComponent NumComponents>
-  void SkipArray(std::size_t numElements, vtkm::Vec<internal::DummyBitType, NumComponents>)
+  void SkipArray(std::size_t numElements,
+                 vtkm::Vec<vtkm::io::internal::DummyBitType, NumComponents>)
   {
     this->SkipArray(numElements * static_cast<std::size_t>(NumComponents),
-                    internal::DummyBitType());
+                    vtkm::io::internal::DummyBitType());
   }
 
-  void SkipArray(std::size_t numElements, internal::DummyBitType)
+  void SkipArray(std::size_t numElements, vtkm::io::internal::DummyBitType)
   {
     if (this->DataFile->IsBinary)
     {
       numElements = (numElements + 7) / 8;
-      this->DataFile->Stream.seekg(static_cast<std::streamoff>(numElements), std::ios_base::cur);
+      this->DataFile->Stream.seekg(static_cast<std::streamoff>(numElements),
+                                   std::ios_base::cur);
     }
     else
     {
@@ -736,12 +716,45 @@ private:
     this->DataFile->Stream >> std::ws;
   }
 
+  class PermuteCellData
+  {
+  public:
+    PermuteCellData(const vtkm::cont::ArrayHandle<vtkm::Id> &permutation,
+                    vtkm::cont::DynamicArrayHandle &data)
+      : Permutation(permutation), Data(&data)
+    { }
+
+    template <typename T>
+    void operator()(const vtkm::cont::ArrayHandle<T> &handle) const
+    {
+      vtkm::cont::ArrayHandle<T> out;
+      out.Allocate(this->Permutation.GetNumberOfValues());
+
+      vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl permutationPortal =
+        this->Permutation.GetPortalConstControl();
+      typename vtkm::cont::ArrayHandle<T>::PortalConstControl inPortal =
+        handle.GetPortalConstControl();
+      typename vtkm::cont::ArrayHandle<T>::PortalControl outPortal =
+        out.GetPortalControl();
+      for (vtkm::Id i = 0; i < out.GetNumberOfValues(); ++i)
+      {
+        outPortal.Set(i, inPortal.Get(permutationPortal.Get(i)));
+      }
+      *this->Data = vtkm::cont::DynamicArrayHandle(out);
+    }
+
+  private:
+    const vtkm::cont::ArrayHandle<vtkm::Id> Permutation;
+    vtkm::cont::DynamicArrayHandle *Data;
+  };
+
 protected:
   boost::scoped_ptr<internal::VTKDataSetFile> DataFile;
   vtkm::cont::DataSet DataSet;
 
 private:
   bool Loaded;
+  vtkm::cont::ArrayHandle<vtkm::Id> CellsPermutation;
 
   friend class VTKDataSetReader;
 };
@@ -750,7 +763,7 @@ private:
 }
 } // vtkm::io::reader
 
-VTKM_BASIC_TYPE_VECTOR(io::reader::internal::ColorChannel8)
-VTKM_BASIC_TYPE_VECTOR(io::reader::internal::DummyBitType)
+VTKM_BASIC_TYPE_VECTOR(vtkm::io::internal::ColorChannel8)
+VTKM_BASIC_TYPE_VECTOR(vtkm::io::internal::DummyBitType)
 
 #endif // vtk_m_io_reader_VTKDataSetReaderBase_h

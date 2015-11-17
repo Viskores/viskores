@@ -22,9 +22,42 @@
 
 #include <vtkm/io/reader/VTKDataSetReaderBase.h>
 
+#include <vtkm/cont/ArrayPortalToIterators.h>
+
 namespace vtkm {
 namespace io {
 namespace reader {
+
+namespace internal {
+
+template<typename T>
+inline vtkm::cont::ArrayHandle<T> ConcatinateArrayHandles(
+    const std::vector<vtkm::cont::ArrayHandle<T> > &arrays)
+{
+  vtkm::Id size = 0;
+  for (std::size_t i = 0; i < arrays.size(); ++i)
+  {
+    size += arrays[i].GetNumberOfValues();
+  }
+
+  vtkm::cont::ArrayHandle<T> out;
+  out.Allocate(size);
+
+  typename vtkm::cont::ArrayPortalToIterators<
+      typename vtkm::cont::ArrayHandle<T>::PortalControl>::IteratorType outp =
+      vtkm::cont::ArrayPortalToIteratorBegin(out.GetPortalControl());
+  for (std::size_t i = 0; i < arrays.size(); ++i)
+  {
+    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(arrays[i].GetPortalConstControl()),
+              vtkm::cont::ArrayPortalToIteratorEnd(arrays[i].GetPortalConstControl()),
+              outp);
+    outp += arrays[i].GetNumberOfValues();
+  }
+
+  return out;
+}
+
+} // namespace internal
 
 class VTKPolyDataReader : public VTKDataSetReaderBase
 {
@@ -36,7 +69,7 @@ public:
 private:
   virtual void Read()
   {
-    if (this->DataFile->Structure != internal::DATASET_POLYDATA)
+    if (this->DataFile->Structure != vtkm::io::internal::DATASET_POLYDATA)
     {
       throw vtkm::io::ErrorIO("Incorrect DataSet type");
     }
@@ -47,21 +80,20 @@ private:
     this->ReadPoints();
 
     // Read the cellset
-    std::vector<vtkm::Id> connectivity;
-    std::vector<vtkm::IdComponent> numIndices;
-    std::vector<vtkm::UInt8> shapes;
-    bool sameShape = true;
+    std::vector<vtkm::cont::ArrayHandle<vtkm::Id> > connectivityArrays;
+    std::vector<vtkm::cont::ArrayHandle<vtkm::IdComponent> > numIndicesArrays;
+    std::vector<vtkm::UInt8> shapesBuffer;
     while (!this->DataFile->Stream.eof())
     {
-      vtkm::CellShapeIdEnum shape = vtkm::CELL_SHAPE_EMPTY;
+      vtkm::UInt8 shape = vtkm::CELL_SHAPE_EMPTY;
       this->DataFile->Stream >> tag;
       if (tag == "VERTICES")
       {
-        shape = vtkm::CELL_SHAPE_VERTEX;
+        shape = vtkm::io::internal::CELL_SHAPE_POLY_VERTEX;
       }
       else if (tag == "LINES")
       {
-        shape = vtkm::CELL_SHAPE_LINE;
+        shape = vtkm::io::internal::CELL_SHAPE_POLY_LINE;
       }
       else if (tag == "POLYGONS")
       {
@@ -69,7 +101,7 @@ private:
       }
       else if (tag == "TRIANGLE_STRIPS")
       {
-        std::cerr << "Triangle strips are not supported. Skipping.";
+        shape = vtkm::io::internal::CELL_SHAPE_TRIANGLE_STRIP;
       }
       else
       {
@@ -78,90 +110,47 @@ private:
         break;
       }
 
-      std::size_t prevConnLength = connectivity.size();
-      std::size_t prevNumIndicesLength = numIndices.size();
-      sameShape = (prevNumIndicesLength == 0);
-      this->ReadCells(connectivity, numIndices);
+      vtkm::cont::ArrayHandle<vtkm::Id> cellConnectivity;
+      vtkm::cont::ArrayHandle<vtkm::IdComponent> cellNumIndices;
+      this->ReadCells(cellConnectivity, cellNumIndices);
 
-      std::size_t numNewCells = prevNumIndicesLength - numIndices.size();
-      std::size_t newConnSize = prevConnLength - connectivity.size();
-      switch (shape)
-      {
-      case vtkm::CELL_SHAPE_VERTEX:
-        if (newConnSize != numNewCells)
-        {
-          throw vtkm::io::ErrorIO("POLY_VERTEX not supported");
-        }
-        shapes.insert(shapes.end(), numNewCells, vtkm::CELL_SHAPE_VERTEX);
-        break;
-      case vtkm::CELL_SHAPE_LINE:
-        if (newConnSize != (numNewCells * 2))
-        {
-          throw vtkm::io::ErrorIO("POLY_LINE not supported");
-        }
-        shapes.insert(shapes.end(), numNewCells, vtkm::CELL_SHAPE_LINE);
-        break;
-      case vtkm::CELL_SHAPE_POLYGON:
-        for (std::size_t i = prevNumIndicesLength; i < numIndices.size() - 1; ++i)
-        {
-          switch (numIndices[i])
-          {
-          case 3:
-            shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
-            break;
-          case 4:
-            shapes.push_back(vtkm::CELL_SHAPE_QUAD);
-            break;
-          default:
-            sameShape = false;
-            shapes.push_back(vtkm::CELL_SHAPE_POLYGON);
-            break;
-          }
-          if (i > prevNumIndicesLength && sameShape && shapes[i - 1] != shapes[i])
-          {
-            sameShape = false;
-          }
-        }
-        break;
-      case vtkm::CELL_SHAPE_EMPTY: // TRIANGLE_STRIPS
-        continue;
-      default:
-        assert(false);
-      }
+      connectivityArrays.push_back(cellConnectivity);
+      numIndicesArrays.push_back(cellNumIndices);
+      shapesBuffer.insert(shapesBuffer.end(),
+                          static_cast<std::size_t>(cellNumIndices.GetNumberOfValues()),
+                          shape);
     }
 
-    if (sameShape)
+    vtkm::cont::ArrayHandle<vtkm::Id> connectivity =
+      internal::ConcatinateArrayHandles(connectivityArrays);
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices =
+      internal::ConcatinateArrayHandles(numIndicesArrays);
+    vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
+    shapes.Allocate(static_cast<vtkm::Id>(shapesBuffer.size()));
+    std::copy(shapesBuffer.begin(), shapesBuffer.end(),
+          vtkm::cont::ArrayPortalToIteratorBegin(shapes.GetPortalControl()));
+
+    vtkm::cont::ArrayHandle<vtkm::Id> permutation;
+    vtkm::io::internal::FixupCellSet(connectivity, numIndices, shapes, permutation);
+    this->SetCellsPermutation(permutation);
+
+    if (vtkm::io::internal::IsSingleShape(shapes))
     {
       vtkm::cont::CellSetSingleType<> cs;
-      switch(shapes[0])
+      switch(shapes.GetPortalConstControl().Get(0))
       {
-      case vtkm::CELL_SHAPE_VERTEX:
-        cs = vtkm::cont::CellSetSingleType<>(vtkm::CellShapeTagVertex(),
-                                             "cells");
-        break;
-      case vtkm::CELL_SHAPE_LINE:
-        cs = vtkm::cont::CellSetSingleType<>(vtkm::CellShapeTagLine(),
-                                             "cells");
-        break;
-      case vtkm::CELL_SHAPE_TRIANGLE:
-        cs = vtkm::cont::CellSetSingleType<>(vtkm::CellShapeTagTriangle(),
-                                             "cells");
-        break;
-      case vtkm::CELL_SHAPE_QUAD:
-        cs = vtkm::cont::CellSetSingleType<>(vtkm::CellShapeTagQuad(),
-                                             "cells");
-        break;
+      vtkmGenericCellShapeMacro(
+        (cs = vtkm::cont::CellSetSingleType<>(CellShapeTag(), "cells")));
       default:
-        assert(false);
+        break;
       }
-
-      cs.FillViaCopy(connectivity);
+      cs.Fill(connectivity);
       this->DataSet.AddCellSet(cs);
     }
     else
     {
       vtkm::cont::CellSetExplicit<> cs(0, "cells");
-      cs.FillViaCopy(shapes, numIndices, connectivity);
+      cs.Fill(shapes, numIndices, connectivity);
       this->DataSet.AddCellSet(cs);
     }
 

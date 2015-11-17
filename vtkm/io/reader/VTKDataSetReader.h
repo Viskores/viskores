@@ -70,16 +70,16 @@ private:
   {
     switch (this->DataFile->Structure)
     {
-    case internal::DATASET_STRUCTURED_POINTS:
+    case vtkm::io::internal::DATASET_STRUCTURED_POINTS:
       this->Reader.reset(new VTKStructuredPointsReader(""));
       break;
-    case internal::DATASET_STRUCTURED_GRID:
+    case vtkm::io::internal::DATASET_STRUCTURED_GRID:
       this->Reader.reset(new VTKStructuredGridReader(""));
       break;
-    case internal::DATASET_POLYDATA:
+    case vtkm::io::internal::DATASET_POLYDATA:
       this->Reader.reset(new VTKPolyDataReader(""));
       break;
-    case internal::DATASET_UNSTRUCTURED_GRID:
+    case vtkm::io::internal::DATASET_UNSTRUCTURED_GRID:
       this->Reader.reset(new VTKUnstructuredGridReader(""));
       break;
     default:
