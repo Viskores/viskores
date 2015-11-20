@@ -18,41 +18,61 @@
 ##  this software.
 ##============================================================================
 
-if (VTKm_TBB_initialize_complete)
+if (VTKm_CUDA_initialize_complete)
   return()
-endif (VTKm_TBB_initialize_complete)
+endif (VTKm_CUDA_initialize_complete)
 
 vtkm_configure_device(Base)
 
 if (VTKm_Base_FOUND)
 
-  set(VTKm_TBB_FOUND ${VTKm_ENABLE_TBB})
-  if (NOT VTKm_TBB_FOUND)
-    message(STATUS "This build of VTK-m does not include TBB.")
+  set(VTKm_CUDA_FOUND ${VTKm_ENABLE_CUDA})
+  if (NOT VTKm_CUDA_FOUND)
+    message(STATUS "This build of VTK-m does not include CUDA.")
   endif ()
 
   #---------------------------------------------------------------------------
-  # Find TBB.
+  # Find CUDA library.
   #---------------------------------------------------------------------------
-  if (VTKm_TBB_FOUND)
-    find_package(TBB)
-    if (NOT TBB_FOUND)
-      message(STATUS "TBB not found")
-      set(VTKm_TBB_FOUND)
-    endif ()
-  endif()
+  if (VTKm_CUDA_FOUND)
+    find_package(CUDA)
+    mark_as_advanced(CUDA_BUILD_CUBIN
+                     CUDA_BUILD_EMULATION
+                     CUDA_HOST_COMPILER
+                     CUDA_SDK_ROOT_DIR
+                     CUDA_SEPARABLE_COMPILATION
+                     CUDA_TOOLKIT_ROOT_DIR
+                     CUDA_VERBOSE_BUILD
+                     )
 
-endif ()
+    if (NOT CUDA_FOUND)
+      message(STATUS "CUDA not found")
+      set(VTKm_CUDA_FOUND)
+    endif ()
+  endif ()
+
+  #---------------------------------------------------------------------------
+  # Find Thrust library.
+  #---------------------------------------------------------------------------
+  if (VTKm_CUDA_FOUND)
+    find_package(Thrust)
+
+    if (NOT THRUST_FOUND)
+      message(STATUS "Thrust not found")
+      set(VTKm_CUDA_FOUND)
+    endif ()
+  endif ()
+
+endif () # VTKm_Base_FOUND
 
 #-----------------------------------------------------------------------------
 # Set up all these dependent packages (if they were all found).
 #-----------------------------------------------------------------------------
-if (VTKm_TBB_FOUND)
+if (VTKm_CUDA_FOUND)
   set(VTKm_INCLUDE_DIRS
     ${VTKm_INCLUDE_DIRS}
-    ${TBB_INCLUDE_DIRS}
+    ${THRUST_INCLUDE_DIRS}
     )
-  set(VTKm_LIBRARIES ${TBB_LIBRARIES})
 
-  set(VTKm_TBB_initialize_complete TRUE)
-endif()
+  set(VTKm_CUDA_initialize_complete TRUE)
+endif (VTKm_CUDA_FOUND)

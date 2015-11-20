@@ -175,6 +175,12 @@ namespace internal {
 
 //-----------------------------------------------------------------------------
 
+/// Placeholder class for when a type is not applicable.
+///
+struct NullType {  };
+
+//-----------------------------------------------------------------------------
+
 template<vtkm::IdComponent Size>
 struct VecEquals
 {

@@ -181,15 +181,15 @@ PermutePyramidToHex(const FieldVecType &field)
 //
 
 #define VTKM_ACCUM_JACOBIAN_3D(pointIndex, weight0, weight1, weight2) \
-  jacobian(0,0) += wCoords[pointIndex][0] * (weight0); \
-  jacobian(1,0) += wCoords[pointIndex][1] * (weight0); \
-  jacobian(2,0) += wCoords[pointIndex][2] * (weight0); \
-  jacobian(0,1) += wCoords[pointIndex][0] * (weight1); \
-  jacobian(1,1) += wCoords[pointIndex][1] * (weight1); \
-  jacobian(2,1) += wCoords[pointIndex][2] * (weight1); \
-  jacobian(0,2) += wCoords[pointIndex][0] * (weight2); \
-  jacobian(1,2) += wCoords[pointIndex][1] * (weight2); \
-  jacobian(2,2) += wCoords[pointIndex][2] * (weight2)
+  jacobian(0,0) += static_cast<JacobianType>(wCoords[pointIndex][0] * (weight0)); \
+  jacobian(1,0) += static_cast<JacobianType>(wCoords[pointIndex][1] * (weight0)); \
+  jacobian(2,0) += static_cast<JacobianType>(wCoords[pointIndex][2] * (weight0)); \
+  jacobian(0,1) += static_cast<JacobianType>(wCoords[pointIndex][0] * (weight1)); \
+  jacobian(1,1) += static_cast<JacobianType>(wCoords[pointIndex][1] * (weight1)); \
+  jacobian(2,1) += static_cast<JacobianType>(wCoords[pointIndex][2] * (weight1)); \
+  jacobian(0,2) += static_cast<JacobianType>(wCoords[pointIndex][0] * (weight2)); \
+  jacobian(1,2) += static_cast<JacobianType>(wCoords[pointIndex][1] * (weight2)); \
+  jacobian(2,2) += static_cast<JacobianType>(wCoords[pointIndex][2] * (weight2))
 
 template<typename WorldCoordType,
          typename ParametricCoordType,

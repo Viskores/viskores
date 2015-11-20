@@ -47,7 +47,21 @@ struct TestPortal
   }
 };
 
-struct NullParam {  };
+struct TestIndexPortal
+{
+  typedef vtkm::Id ValueType;
+
+  VTKM_EXEC_CONT_EXPORT
+  ValueType Get(vtkm::Id index) const { return index; }
+};
+
+struct TestZeroPortal
+{
+  typedef vtkm::IdComponent ValueType;
+
+  VTKM_EXEC_CONT_EXPORT
+  ValueType Get(vtkm::Id) const { return 0; }
+};
 
 template<vtkm::IdComponent InputDomainIndex,
          vtkm::IdComponent ParamIndex,
@@ -102,7 +116,11 @@ struct FetchArrayTopologyMapInTests
                  << std::endl;
 
     typedef vtkm::internal::FunctionInterface<
-        void(NullParam,NullParam,NullParam,NullParam,NullParam)>
+        void(vtkm::internal::NullType,
+             vtkm::internal::NullType,
+             vtkm::internal::NullType,
+             vtkm::internal::NullType,
+             vtkm::internal::NullType)>
         BaseFunctionInterface;
 
     vtkm::internal::ConnectivityStructuredInternals<3> connectivityInternals;
@@ -115,8 +133,10 @@ struct FetchArrayTopologyMapInTests
                           BaseFunctionInterface()
                           .Replace<InputDomainIndex>(connectivity)
                           .template Replace<ParamIndex>(TestPortal<T>()),
-                          NullParam(),
-                          NullParam()));
+                          vtkm::internal::NullType(),
+                          vtkm::internal::NullType(),
+                          TestIndexPortal(),
+                          TestZeroPortal()));
   }
 
 };
@@ -175,7 +195,11 @@ void TryStructuredPointCoordinates(
     const vtkm::internal::ArrayPortalUniformPointCoordinates &coordinates)
 {
   typedef vtkm::internal::FunctionInterface<
-      void(NullParam,NullParam,NullParam,NullParam,NullParam)>
+      void(vtkm::internal::NullType,
+           vtkm::internal::NullType,
+           vtkm::internal::NullType,
+           vtkm::internal::NullType,
+           vtkm::internal::NullType)>
       BaseFunctionInterface;
 
   // Try with topology in argument 1 and point coordinates in argument 2
@@ -184,8 +208,10 @@ void TryStructuredPointCoordinates(
           BaseFunctionInterface()
           .Replace<1>(connectivity)
           .template Replace<2>(coordinates),
-          NullParam(),
-          NullParam())
+          vtkm::internal::NullType(),
+          vtkm::internal::NullType(),
+          TestIndexPortal(),
+          TestZeroPortal())
         );
   // Try again with topology in argument 3 and point coordinates in argument 1
   TryStructuredPointCoordinatesInvocation<NumDimensions,1>(
@@ -193,8 +219,10 @@ void TryStructuredPointCoordinates(
           BaseFunctionInterface()
           .Replace<3>(connectivity)
           .template Replace<1>(coordinates),
-          NullParam(),
-          NullParam())
+          vtkm::internal::NullType(),
+          vtkm::internal::NullType(),
+          TestIndexPortal(),
+          TestZeroPortal())
         );
 }
 

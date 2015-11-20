@@ -23,6 +23,7 @@ set(headers
   WorkletMapField.h
   DispatcherMapTopology.h
   WorkletMapTopology.h
+
   AverageByKey.h
   CellAverage.h
   Clip.h
@@ -32,6 +33,9 @@ set(headers
   IsosurfaceUniformGrid.h
   MarchingCubesDataTables.h
   PointElevation.h
+  ScatterCounting.h
+  ScatterIdentity.h
+  ScatterUniform.h
   TetrahedralizeExplicitGrid.h
   TetrahedralizeUniformGrid.h
   Threshold.h

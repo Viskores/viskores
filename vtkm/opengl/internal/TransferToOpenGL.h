@@ -25,7 +25,9 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/opengl/internal/OpenGLHeaders.h>
-#include <vtkm/opengl/internal/BufferTypePicker.h>
+#include <vtkm/opengl/BufferState.h>
+
+
 namespace vtkm {
 namespace opengl {
 namespace internal {
@@ -37,7 +39,7 @@ template<class ValueType, class StorageTag, class DeviceAdapterTag>
 VTKM_CONT_EXPORT
 void CopyFromHandle(
   vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
-  GLenum type,
+  vtkm::opengl::BufferState& state,
   DeviceAdapterTag)
 {
   //Generic implementation that will work no matter what. We copy the data
@@ -61,11 +63,19 @@ void CopyFromHandle(
   //Note that the temporary ArrayHandle is no longer valid after this call
   ValueType* temporaryStorage = tmpHandle.Internals->ControlArray.StealArray();
 
-  //Detach the current buffer
-  glBufferData(type, size, 0, GL_DYNAMIC_DRAW);
+  //Determine if we need to reallocate the buffer
+  state.SetSize(size);
+  const bool resize = state.ShouldRealloc(size);
+  if( resize )
+  {
+    //Allocate the memory and set it as GL_DYNAMIC_DRAW draw
+    glBufferData(state.GetType(), size, 0, GL_DYNAMIC_DRAW);
 
-  //Allocate the memory and set it as static draw and copy into opengl
-  glBufferSubData(type,0,size,temporaryStorage);
+    state.SetCapacity(size);
+  }
+
+  //copy into opengl buffer
+  glBufferSubData(state.GetType(),0,size,temporaryStorage);
 
   delete[] temporaryStorage;
 }
@@ -74,7 +84,7 @@ template<class ValueType, class DeviceAdapterTag>
 VTKM_CONT_EXPORT
 void CopyFromHandle(
   vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic>& handle,
-  GLenum type,
+  vtkm::opengl::BufferState& state,
   DeviceAdapterTag)
 {
   //Specialization given that we are use an C allocated array storage tag
@@ -87,13 +97,21 @@ void CopyFromHandle(
       static_cast<GLsizeiptr>(sizeof(ValueType)) *
           static_cast<GLsizeiptr>(handle.GetNumberOfValues());
 
-  //Detach the current buffer
-  glBufferData(type, size, 0, GL_DYNAMIC_DRAW);
+  //Determine if we need to reallocate the buffer
+  state.SetSize(size);
+  const bool resize = state.ShouldRealloc(size);
+  if( resize )
+  {
+    //Allocate the memory and set it as GL_DYNAMIC_DRAW draw
+    glBufferData(state.GetType(), size, 0, GL_DYNAMIC_DRAW);
+
+    state.SetCapacity(size);
+  }
 
   //Allocate the memory and set it as static draw and copy into opengl
   const ValueType* memory = &(*vtkm::cont::ArrayPortalToIteratorBegin(
                                 handle.PrepareForInput(DeviceAdapterTag())));
-  glBufferSubData(type,0,size,memory);
+  glBufferSubData(state.GetType(),0,size,memory);
 
 }
 
@@ -108,30 +126,28 @@ template<typename ValueType, class DeviceAdapterTag>
 class TransferToOpenGL
 {
 public:
-  VTKM_CONT_EXPORT TransferToOpenGL():
-  Type( vtkm::opengl::internal::BufferTypePicker( ValueType() ) )
-  {}
-
-  VTKM_CONT_EXPORT explicit TransferToOpenGL(GLenum type):
-  Type(type)
-  {}
-
-  VTKM_CONT_EXPORT GLenum GetType() const { return this->Type; }
+  VTKM_CONT_EXPORT explicit TransferToOpenGL(BufferState& state):
+    State(state)
+  {
+    if( !this->State.HasType() )
+    {
+      this->State.DeduceAndSetType( ValueType() );
+    }
+  }
 
   template< typename StorageTag >
   VTKM_CONT_EXPORT
   void Transfer (
-    vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
-    GLuint& openGLHandle ) const
+    vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle) const
   {
   //make a buffer for the handle if the user has forgotten too
-  if(!glIsBuffer(openGLHandle))
-    {
-    glGenBuffers(1,&openGLHandle);
-    }
+  if(!glIsBuffer(*this->State.GetHandle()))
+  {
+    glGenBuffers(1, this->State.GetHandle());
+  }
 
   //bind the buffer to the given buffer type
-  glBindBuffer(this->Type, openGLHandle);
+  glBindBuffer(this->State.GetType(), *this->State.GetHandle());
 
   //transfer the data.
   //the primary concern that we have at this point is data locality and
@@ -147,10 +163,10 @@ public:
   //
   //The end result is that we have CopyFromHandle which does number two
   //from StorageTagBasic, and does the CopyInto for everything else
-  detail::CopyFromHandle(handle, this->Type, DeviceAdapterTag());
+  detail::CopyFromHandle(handle, this->State, DeviceAdapterTag());
   }
 private:
-  GLenum Type;
+  vtkm::opengl::BufferState& State;
 };
 
 }

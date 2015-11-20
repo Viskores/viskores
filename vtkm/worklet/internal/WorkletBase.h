@@ -25,12 +25,16 @@
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
 #include <vtkm/exec/arg/FetchTagExecObject.h>
+#include <vtkm/exec/arg/ThreadIndices.h>
 #include <vtkm/exec/arg/ThreadIndicesBasic.h>
+#include <vtkm/exec/arg/VisitIndex.h>
 #include <vtkm/exec/arg/WorkIndex.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagExecObject.h>
 #include <vtkm/cont/arg/TypeCheckTagExecObject.h>
+
+#include <vtkm/worklet/ScatterIdentity.h>
 
 namespace vtkm {
 namespace worklet {
@@ -58,7 +62,16 @@ public:
   struct _9 : Arg<9> {  };
 
   /// \c ExecutionSignature tag for getting the work index.
+  ///
   typedef vtkm::exec::arg::WorkIndex WorkIndex;
+
+  /// \c ExecutionSignature tag for getting the thread indices.
+  ///
+  typedef vtkm::exec::arg::ThreadIndices ThreadIndices;
+
+  /// \c ExecutionSignature tag for getting the visit index.
+  ///
+  typedef vtkm::exec::arg::VisitIndex VisitIndex;
 
   /// \c ControlSignature tag for execution object inputs.
   struct ExecObject : vtkm::cont::arg::ControlSignatureTagBase {
@@ -70,6 +83,17 @@ public:
   /// Default input domain is the first argument. Worklet subclasses can
   /// override this by redefining this type.
   typedef _1 InputDomain;
+
+  /// All worklets must define their scatter operation. The scatter defines
+  /// what output each input contributes to. The default scatter is the
+  /// identity scatter (1-to-1 input to output).
+  typedef vtkm::worklet::ScatterIdentity ScatterType;
+
+  /// In addition to defining the scatter type, the worklet must produce the
+  /// scatter. The default ScatterIdentity has no state, so just return an
+  /// instance.
+  VTKM_CONT_EXPORT
+  ScatterType GetScatter() const { return ScatterType(); }
 
   /// \brief A type list containing the type vtkm::Id.
   ///

@@ -421,7 +421,8 @@ private:
       typedef vtkm::cont::ArrayHandleIndex InputArrayType;
 
       InputArrayType input(ARRAY_SIZE);
-      vtkm::cont::ArrayHandleCast<CastToType, InputArrayType> castArray =
+      vtkm::cont::ArrayHandleCast<CastToType,
+        InputArrayType> castArray =
           vtkm::cont::make_ArrayHandleCast(input, CastToType());
       vtkm::cont::ArrayHandle<CastToType> result;
 

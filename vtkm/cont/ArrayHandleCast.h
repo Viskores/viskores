@@ -53,18 +53,19 @@ class ArrayHandleCast :
   public vtkm::cont::ArrayHandleTransform<
     T,
     ArrayHandleType,
-    internal::Cast<typename ArrayHandleType::ValueType, T> >
+    internal::Cast<typename ArrayHandleType::ValueType, T>,
+    internal::Cast<T, typename ArrayHandleType::ValueType> >
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-      ArrayHandleCast,
-      (ArrayHandleCast<T, ArrayHandleType>),
-      (vtkm::cont::ArrayHandleTransform<
-         T,
-         ArrayHandleType,
-         internal::Cast<typename ArrayHandleType::ValueType, T> >));
+    ArrayHandleCast,
+    (ArrayHandleCast<T, ArrayHandleType>),
+    (vtkm::cont::ArrayHandleTransform<
+     T,
+     ArrayHandleType,
+     internal::Cast<typename ArrayHandleType::ValueType, T>,
+     internal::Cast<T, typename ArrayHandleType::ValueType> >));
 
-  VTKM_CONT_EXPORT
   ArrayHandleCast(const ArrayHandleType &handle)
     : Superclass(handle)
   { }

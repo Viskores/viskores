@@ -240,19 +240,17 @@ struct WrappedBinaryPredicate
 }
 } //namespace vtkm::exec::cuda::internal
 
-namespace thrust
-{
-namespace detail
-{
-//So for thrust 1.8.0 - 1.8.2 the inclusive_scan has a bug when accumulating
-//values when the binary operators states it is not commutative. At the
-//same time the is_commutative condition is used to perform faster paths. So
-//We state that all WrappedBinaryOperator are commutative.
+namespace thrust { namespace detail {
+//
+// We tell Thrust that our WrappedBinaryOperator is commutative so that we
+// activate numerous fast paths inside thrust which are only available when
+// the binary functor is commutative and the T type is is_arithmetic
+//
+//
 template< typename T, typename F>
 struct is_commutative< vtkm::exec::cuda::internal::WrappedBinaryOperator<T, F> > :
       public thrust::detail::is_arithmetic<T> { };
-}
-}
 
+} } //namespace thrust::detail
 
 #endif //vtk_m_exec_cuda_internal_WrappedOperators_h
