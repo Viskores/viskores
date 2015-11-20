@@ -306,7 +306,7 @@ install(
   FILES
     ${VTKm_SOURCE_DIR}/CMake/UseVTKmSerial.cmake
     ${VTKm_SOURCE_DIR}/CMake/UseVTKmTBB.cmake
-    ${VTKm_SOURCE_DIR}/CMake/UseVTKmCuda.cmake
+    ${VTKm_SOURCE_DIR}/CMake/UseVTKmCUDA.cmake
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
 
