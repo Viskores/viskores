@@ -179,13 +179,13 @@ public:
     const vtkm::Id streammode;
 
     VTKM_CONT_EXPORT
-    MakeStreamLines(const vtkm::Id sMode,
-                    const FieldType tStep, 
+    MakeStreamLines(const FieldType tStep,
+                    const vtkm::Id sMode,
                     const vtkm::Id nSteps, 
                     const vtkm::Id3 dims, 
                     FieldPortalConstType fieldArray) :
-                                  streammode(sMode), 
                                   timestep(tStep), 
+                                  streammode(sMode), 
                                   maxsteps(nSteps), 
                                   vdims(dims), 
                                   planesize(dims[0] * dims[1]),
@@ -364,7 +364,7 @@ public:
       seeds.push_back(seed);
     }
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > seedPosArray = 
-                vtkm::cont::make_ArrayHandle(&seeds[0], seeds.size());
+                vtkm::cont::make_ArrayHandle(&seeds[0], numSeeds);
     vtkm::cont::ArrayHandleCounting<vtkm::Id> seedIdArray(0, 1, numSeeds);
 
     // Number of streams * number of steps * [forward, backward]
@@ -392,8 +392,8 @@ public:
     DeviceAlgorithm::Copy(zeros, validPoint);
 
     // Worklet to make the streamlines
-    MakeStreamLines makeStreamLines(streamMode,
-                                    timeStep,
+    MakeStreamLines makeStreamLines(timeStep,
+                                    streamMode,
                                     maxSteps,
                                     vdims,
                                     fieldArray.PrepareForInput(DeviceAdapter()));

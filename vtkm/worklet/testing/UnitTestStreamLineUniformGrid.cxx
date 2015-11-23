@@ -200,7 +200,7 @@ void TestStreamLineUniformGrid()
     field.push_back(Normalize(vecData));
   }
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(&field[0], field.size());
+  fieldArray = vtkm::cont::make_ArrayHandle(&field[0], nElements);
 
   // Construct the input dataset (uniform) to hold the input and set vector data
   vtkm::cont::DataSet inDataSet;
@@ -223,22 +223,17 @@ void TestStreamLineUniformGrid()
   // Check output
   vtkm::cont::CellSetExplicit<> &outCellSet =
     outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray =
-                                      outDataSet.GetCoordinateSystem(0).GetData();
-
   vtkm::Id numberOfCells = outCellSet.GetNumberOfCells();
-  vtkm::Id numberOfPoints = coordArray.GetNumberOfValues();
-  VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), numSeeds * 2),
+  VTKM_TEST_ASSERT(test_equal(numberOfCells, numSeeds * 2),
                    "Wrong number of cells for stream lines");
-  VTKM_TEST_ASSERT(test_equal(coordArray.GetNumberOfValues(), 57),
-                   "Wrong number of coordinates for stream lines");
 
-  vtkm::Id polyLineCount[10] = {2, 17, 1, 2, 2, 2, 3, 22, 5, 1};
+  vtkm::IdComponent polyLineCount[10] = {2, 17, 1, 2, 2, 2, 3, 22, 5, 1};
 
   for (vtkm::Id polyline = 0; polyline < numberOfCells; polyline++)
   {
     vtkm::Vec<vtkm::Id, 50> polylineIndices;
     vtkm::IdComponent numIndices = outCellSet.GetNumberOfPointsInCell(polyline);
+    std::cout << "PolyLine " << polyline << " #coordinates " << numIndices << std::endl;
     VTKM_TEST_ASSERT(test_equal(numIndices, polyLineCount[polyline]),
                    "Wrong number of coordinates for polyline");
     outCellSet.GetIndices(polyline, polylineIndices);
