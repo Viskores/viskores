@@ -92,6 +92,7 @@ include(CMake/VTKmCompilerExtras.cmake)
 # Configurable Options
 option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
 option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
+option(VTKm_ENABLE_VECTORIZATION "Enable compiler vectorization support" ON)
 option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 
@@ -232,6 +233,11 @@ set(VTKM_USE_64BIT_IDS ${VTKm_USE_64BIT_IDS})
 set(VTKM_ENABLE_CUDA ${VTKm_ENABLE_CUDA})
 set(VTKM_ENABLE_TBB ${VTKm_ENABLE_TBB})
 
+set(VTKM_ENABLE_VECTORIZATION ${VTKm_ENABLE_VECTORIZATION})
+if(VTKm_Vectorization STREQUAL "none")
+  set(VTKM_ENABLE_VECTORIZATION OFF)
+endif()
+
 set(VTKM_ENABLE_OPENGL_INTEROP ${VTKm_ENABLE_OPENGL_INTEROP})
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/vtkm/internal/Configure.h.in
@@ -241,6 +247,8 @@ vtkm_install_headers(
   vtkm/internal ${CMAKE_CURRENT_BINARY_DIR}/vtkm/internal/Configure.h)
 
 unset(VTKM_ENABLE_OPENGL_INTEROP)
+
+unset(VTKM_ENABLE_VECTORIZATION)
 
 unset(VTKM_ENABLE_TBB)
 unset(VTKM_ENABLE_CUDA)
@@ -309,6 +317,14 @@ install(
     ${VTKm_SOURCE_DIR}/CMake/UseVTKmCuda.cmake
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
+
+# Install support files.
+install(
+  FILES
+    ${VTKm_SOURCE_DIR}/CMake/VTKmCompilerOptimizations.cmake
+  DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
+  )
+
 
 
 # Enable CPack packaging
