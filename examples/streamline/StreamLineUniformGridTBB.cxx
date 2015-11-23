@@ -20,4 +20,4 @@
 
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_TBB
 
-#include "SteamLineUniformGrid.cxx"
+#include "StreamLineUniformGrid.cxx"

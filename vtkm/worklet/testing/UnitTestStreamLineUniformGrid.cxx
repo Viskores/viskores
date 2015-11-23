@@ -63,9 +63,9 @@ void TestStreamLineUniformGrid()
   int dims[3];
   fread(dims, sizeof(int), 3, pFile);
   const vtkm::Id3 vdims(dims[0], dims[1], dims[2]);
-  vtkm::Id nElements = vdims[0] * vdims[1] * vdims[2] * 3;
 
   // Read vector data at each point of the uniform grid and store
+  vtkm::Id nElements = vdims[0] * vdims[1] * vdims[2] * 3;
   float* data = new float[nElements];
   fread(data, sizeof(float), nElements, pFile);
 
@@ -84,29 +84,21 @@ void TestStreamLineUniformGrid()
   // Construct the input dataset (uniform) to hold the input and set vector data
   vtkm::cont::DataSet inDataSet;
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims);
-  inDataSet.AddCoordinateSystem(
-            vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
+  inDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
   inDataSet.AddField(vtkm::cont::Field("vecData", 1, vtkm::cont::Field::ASSOC_POINTS, fieldArray));
 
   vtkm::cont::CellSetStructured<3> inCellSet("cells");
   inCellSet.SetPointDimensions(vtkm::make_Vec(vdims[0], vdims[1], vdims[2]));
   inDataSet.AddCellSet(inCellSet);
 
-  // Construct the output dataset (explicit)
-  vtkm::cont::DataSet outDataSet;
-  vtkm::cont::CellSetExplicit<> outCellSet(numSeeds * maxSteps * 2, "cells", 3);
-  outDataSet.AddCellSet(outCellSet);
-
   // Create and run the filter
-  vtkm::worklet::StreamLineUniformGridFilter<vtkm::Float32, DeviceAdapter>
-                 streamLineUniformGridFilter(inDataSet,
-                                             outDataSet,
-                                             vtkm::worklet::internal::BACKWARD,
-                                             numSeeds, 
-                                             maxSteps, 
-                                             timeStep);
+  vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter>
+                 streamLineFilter(vtkm::worklet::internal::BOTH,
+                                  numSeeds, 
+                                  maxSteps, 
+                                  timeStep);
 
-  streamLineUniformGridFilter.Run();
+  vtkm::cont::DataSet outDataSet = streamLineFilter.Run(inDataSet);
 }
 
 int UnitTestStreamLineUniformGrid(int, char *[])

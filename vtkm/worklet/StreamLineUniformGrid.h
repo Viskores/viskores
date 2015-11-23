@@ -30,6 +30,7 @@
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/ScatterUniform.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/exec/ExecutionWholeArray.h>
@@ -68,7 +69,7 @@ namespace internal {
                                  const PortalType &vecdata)
   {
     // Adjust initial position to be within bounding box of grid
-    for (vtkm::Id d = 0; d < 3; d++)
+    for (vtkm::IdComponent d = 0; d < 3; d++)
     {
       if (pos[d] < 0.0f)
         pos[d] = 0.0f;
@@ -143,9 +144,18 @@ namespace internal {
 
 /// \brief Compute the streamline
 template <typename FieldType, typename DeviceAdapter>
-class StreamLineUniformGridFilter
+class StreamLineFilterUniformGrid
 {
 public:
+ struct IsUnity
+  {
+    template<typename T>
+    VTKM_EXEC_CONT_EXPORT bool operator()(const T &x) const
+    {
+        return x == T(1);
+    }
+  };
+
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > FieldHandle;
   typedef typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
 
@@ -155,9 +165,17 @@ public:
     typedef void ControlSignature(FieldIn<IdType> seedId,
                                   FieldIn<> position,
                                   ExecObject numIndices,
+                                  ExecObject validPoint,
                                   ExecObject streamLines);
-    typedef void ExecutionSignature(_1, _2, _3, _4);
+    typedef void ExecutionSignature(_1, _2, _3, _4, _5, VisitIndex);
     typedef _1 InputDomain;
+
+    typedef vtkm::worklet::ScatterUniform ScatterType;
+    VTKM_CONT_EXPORT
+    ScatterType GetScatter() const
+    {
+      return ScatterType(2);
+    }
 
     FieldPortalConstType field;
     const vtkm::Id3 vdims;
@@ -187,154 +205,145 @@ public:
     void operator()(vtkm::Id &seedId, 
                     vtkm::Vec<FieldType, 3> &seedPos,
                     vtkm::exec::ExecutionWholeArray<vtkm::IdComponent> &numIndices,
-                    vtkm::exec::ExecutionWholeArray<vtkm::Vec<FieldType, 3> > &slLists) const
+                    vtkm::exec::ExecutionWholeArray<vtkm::IdComponent> &validPoint,
+                    vtkm::exec::ExecutionWholeArray<vtkm::Vec<FieldType, 3> > &slLists,
+                    vtkm::IdComponent visitIndex) const
     {
-      // Set offset information based on one direction of stream or both
-      vtkm::Id streamfactor = 1;
-      vtkm::Id streamincrement = 0;
-      if (mode == vtkm::worklet::internal::BOTH)
-      {
-        streamfactor = 2;
-        streamincrement = 1;
-      }
-
       // Set initial offset into the output streams array
-      vtkm::Id index = seedId * maxsteps * streamfactor;
-
       vtkm::Vec<FieldType, 3> pos = seedPos;
       vtkm::Vec<FieldType, 3> pre_pos = seedPos;
 
-      bool done = false;
-      vtkm::Id step = 0;
-
       // Forward tracing
-      if (mode == vtkm::worklet::internal::FORWARD ||
-          mode == vtkm::worklet::internal::BOTH)
+      if (visitIndex == 0 &&
+          (mode == vtkm::worklet::internal::FORWARD ||
+           mode == vtkm::worklet::internal::BOTH))
       {
-       slLists.Set(index++, pos);
-       while (done != true && step < maxsteps)
-       {
-        vtkm::Vec<FieldType, 3> vdata, adata, bdata, cdata, ddata;
-        vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
-                                      (pos, vdims, planesize, rowsize, field);
-        for (vtkm::Id d = 0; d < 3; d++)
-        {
-          adata[d] = timestep * vdata[d];
-          pos[d] += adata[d] / 2.0f;
-        }
+        vtkm::Id index = (seedId * 2) * maxsteps;
+        bool done = false;
+        vtkm::Id step = 0;
+        validPoint.Set(index, 1);
+        slLists.Set(index++, pos);
 
-        vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
+        while (done != true && step < maxsteps)
+        {
+          vtkm::Vec<FieldType, 3> vdata, adata, bdata, cdata, ddata;
+          vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
                                       (pos, vdims, planesize, rowsize, field);
-        for (vtkm::Id d = 0; d < 3; d++)
-        {
-          bdata[d] = timestep * vdata[d];
-          pos[d] += bdata[d] / 2.0f;
-        }
+          for (vtkm::IdComponent d = 0; d < 3; d++)
+          {
+            adata[d] = timestep * vdata[d];
+            pos[d] += adata[d] / 2.0f;
+          }
 
-        vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
+          vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
                                       (pos, vdims, planesize, rowsize, field);
-        for (vtkm::Id d = 0; d < 3; d++)
-        {
-          cdata[d] = timestep * vdata[d];
-          pos[d] += cdata[d] / 2.0f;
-        }
+          for (vtkm::IdComponent d = 0; d < 3; d++)
+          {
+            bdata[d] = timestep * vdata[d];
+            pos[d] += bdata[d] / 2.0f;
+          }
 
-        vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
+          vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
                                       (pos, vdims, planesize, rowsize, field);
-        for (vtkm::Id d = 0; d < 3; d++)
-        {
-          ddata[d] = timestep * vdata[d];
-          pos[d] += (adata[d] + (2.0f * bdata[d]) + (2.0f * cdata[d]) + ddata[d]) / 6.0f;
-        }
+          for (vtkm::IdComponent d = 0; d < 3; d++)
+          {
+            cdata[d] = timestep * vdata[d];
+            pos[d] += cdata[d] / 2.0f;
+          }
 
-        if (pos[0] < 0.0f || pos[0] > vdims[0] || 
-            pos[1] < 0.0f || pos[1] > vdims[1] || 
-            pos[2] < 0.0f || pos[2] > vdims[2])
-        {
-          pos = pre_pos;
-          done = true;
-        } else {
-          slLists.Set(index++, pos);
-          pre_pos = pos;
+          vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
+                                      (pos, vdims, planesize, rowsize, field);
+          for (vtkm::IdComponent d = 0; d < 3; d++)
+          {
+            ddata[d] = timestep * vdata[d];
+            pos[d] += (adata[d] + (2.0f * bdata[d]) + (2.0f * cdata[d]) + ddata[d]) / 6.0f;
+          }
+
+          if (pos[0] < 0.0f || pos[0] > vdims[0] || 
+              pos[1] < 0.0f || pos[1] > vdims[1] || 
+              pos[2] < 0.0f || pos[2] > vdims[2])
+          {
+            pos = pre_pos;
+            done = true;
+          } else {
+            validPoint.Set(index, 1);
+            slLists.Set(index++, pos);
+            pre_pos = pos;
+          }
+          step++;
         }
-        step++;
-       }
-       numIndices.Set(seedId * streamfactor, static_cast<vtkm::IdComponent>(step));
+        numIndices.Set(seedId * 2, static_cast<vtkm::IdComponent>(step));
       }
 
-      // Set initial seed position for backward tracing
-      pre_pos = seedPos;
-      pos = seedPos;
-
-      done = false;
-      step = 0;
-
       // Backward tracing
-      if (mode == vtkm::worklet::internal::BACKWARD ||
-          mode == vtkm::worklet::internal::BOTH)
+      if (visitIndex == 1 &&
+          (mode == vtkm::worklet::internal::BACKWARD || 
+           mode == vtkm::worklet::internal::BOTH))
       {
-       slLists.Set(index++, pos);
-       while (done != true && step < maxsteps)
-       {
-        vtkm::Vec<FieldType, 3> vdata, adata, bdata, cdata, ddata;
-        vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
-                                      (pos, vdims, planesize, rowsize, field);
-        for (vtkm::Id d = 0; d < 3; d++)
-        {
-          adata[d] = timestep * (0.0f - vdata[d]);
-          pos[d] += adata[d] / 2.0f;
-        }
+        vtkm::Id index = (seedId * 2 + 1) * maxsteps;
+        bool done = false;
+        vtkm::Id step = 0;
+        validPoint.Set(index, 1);
+        slLists.Set(index++, pos);
 
-        vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
+        while (done != true && step < maxsteps)
+        {
+          vtkm::Vec<FieldType, 3> vdata, adata, bdata, cdata, ddata;
+          vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
                                       (pos, vdims, planesize, rowsize, field);
-        for (vtkm::Id d = 0; d < 3; d++)
-        {
-          bdata[d] = timestep * (0.0f - vdata[d]);
-          pos[d] += bdata[d] / 2.0f;
-        }
+          for (vtkm::IdComponent d = 0; d < 3; d++)
+          {
+            adata[d] = timestep * (0.0f - vdata[d]);
+            pos[d] += adata[d] / 2.0f;
+          }
 
-        vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
+          vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
                                       (pos, vdims, planesize, rowsize, field);
-        for (vtkm::Id d = 0; d < 3; d++)
-        {
-          cdata[d] = timestep * (0.0f - vdata[d]);
-          pos[d] += cdata[d] / 2.0f;
-        }
+          for (vtkm::IdComponent d = 0; d < 3; d++)
+          {
+            bdata[d] = timestep * (0.0f - vdata[d]);
+            pos[d] += bdata[d] / 2.0f;
+          }
 
-        vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
+          vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
                                       (pos, vdims, planesize, rowsize, field);
-        for (vtkm::Id d = 0; d < 3; d++)
-        {
-          ddata[d] = timestep * (0.0f - vdata[d]);
-          pos[d] += (adata[d] + (2.0f * bdata[d]) + (2.0f * cdata[d]) + ddata[d]) / 6.0f;
-        }
+          for (vtkm::IdComponent d = 0; d < 3; d++)
+          {
+            cdata[d] = timestep * (0.0f - vdata[d]);
+            pos[d] += cdata[d] / 2.0f;
+          }
 
-        if (pos[0] < 0.0f || pos[0] > vdims[0] || 
-            pos[1] < 0.0f || pos[1] > vdims[1] || 
-            pos[2] < 0.0f || pos[2] > vdims[2])
-        {
-          pos = pre_pos;
-          done = true;
-        } else {
-          slLists.Set(index++, pos);
-          pre_pos = pos;
+          vdata = internal::VecDataAtPos<FieldType, FieldPortalConstType>
+                                      (pos, vdims, planesize, rowsize, field);
+          for (vtkm::IdComponent d = 0; d < 3; d++)
+          {
+            ddata[d] = timestep * (0.0f - vdata[d]);
+            pos[d] += (adata[d] + (2.0f * bdata[d]) + (2.0f * cdata[d]) + ddata[d]) / 6.0f;
+          }
+
+          if (pos[0] < 0.0f || pos[0] > vdims[0] || 
+              pos[1] < 0.0f || pos[1] > vdims[1] || 
+              pos[2] < 0.0f || pos[2] > vdims[2])
+          {
+            pos = pre_pos;
+            done = true;
+          } else {
+            validPoint.Set(index, 1);
+            slLists.Set(index++, pos);
+            pre_pos = pos;
+          }
+          step++;
         }
-        step++;
-       }
-       numIndices.Set((seedId * streamfactor) + streamincrement, static_cast<vtkm::IdComponent>(step));
+        numIndices.Set((seedId * 2) + 1, static_cast<vtkm::IdComponent>(step));
       }
     }
   };
 
-  StreamLineUniformGridFilter(
-                   const vtkm::cont::DataSet &inDataSet,
-                   vtkm::cont::DataSet &outDataSet,
+  StreamLineFilterUniformGrid(
                    vtkm::Id streammode,
                    vtkm::Id numseeds,
                    vtkm::Id maxsteps,
                    const FieldType timestep) :
-                     InDataSet(inDataSet),
-                     OutDataSet(outDataSet),
                      streamMode(streammode),
                      timeStep(timestep),
                      numSeeds(numseeds),
@@ -342,14 +351,12 @@ public:
   {
   }
 
-  vtkm::cont::DataSet InDataSet;   // input dataset with structured cell set
-  vtkm::cont::DataSet OutDataSet;  // output dataset with explicit cell set
   vtkm::Id streamMode;
   vtkm::Id numSeeds;
   vtkm::Id maxSteps;
   FieldType timeStep;
 
-  void Run()
+  vtkm::cont::DataSet Run(const vtkm::cont::DataSet &InDataSet)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
@@ -361,10 +368,6 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > fieldArray =
       InDataSet.GetField("vecData").GetData().
         CastToArrayHandle<vtkm::Vec<FieldType, 3>, VTKM_DEFAULT_STORAGE_TAG>();
-
-    // Get the cell set from the output dataset
-    vtkm::cont::CellSetExplicit<> &cellSet =
-      OutDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetExplicit<> >();
 
     // Generate random seeds for starting streamlines
     std::vector<vtkm::Vec<FieldType, 3> > seeds;
@@ -381,20 +384,28 @@ public:
     vtkm::cont::ArrayHandleCounting<vtkm::Id> seedIdArray(0, 1, numSeeds);
 
     // Number of streams * number of steps * [forward, backward]
-    vtkm::Id numCells = numSeeds;
-    if (streamMode == vtkm::worklet::internal::BOTH)
-      numCells *= 2;
+    vtkm::Id numCells = numSeeds * 2;
     vtkm::Id maxConnectivityLen = numCells * maxSteps;
 
-    // Declare the empty stream array which will be used to fill the output cell set
+    // Stream array at max size will be filled with stream coordinates
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > streamArray;
     streamArray.Allocate(maxConnectivityLen);
 
-    // Set up output dataset components
-    vtkm::cont::ArrayHandle<vtkm::UInt8> cellTypes;
+    // NumIndices per polyline cell filled in by MakeStreamLines
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
-    cellTypes.Allocate(numCells);
     numIndices.Allocate(numCells);
+
+    // All cells are polylines
+    vtkm::cont::ArrayHandle<vtkm::UInt8> cellTypes;
+    cellTypes.Allocate(numCells);
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> polyLineShape(vtkm::CELL_SHAPE_POLY_LINE, numCells);
+    DeviceAlgorithm::Copy(polyLineShape, cellTypes);
+
+    // Possible maxSteps points but if less use stencil
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> validPoint;
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> zeros(0, maxConnectivityLen);
+    validPoint.Allocate(maxConnectivityLen);
+    DeviceAlgorithm::Copy(zeros, validPoint);
 
     // Worklet to make the streamlines
     MakeStreamLines makeStreamLines(streamMode,
@@ -408,50 +419,34 @@ public:
               seedIdArray, 
               seedPosArray,
               vtkm::exec::ExecutionWholeArray<vtkm::IdComponent>(numIndices, numCells),
+              vtkm::exec::ExecutionWholeArray<vtkm::IdComponent>(validPoint, maxConnectivityLen),
               vtkm::exec::ExecutionWholeArray<vtkm::Vec<FieldType, 3> >(streamArray, maxConnectivityLen));
-
-    for (vtkm::Id cell = 0; cell < numCells; cell++)
-    {
-      vtkm::IdComponent numIndicesInCell = numIndices.GetPortalConstControl().Get(cell);
-printf("Cell %ld Count %ld\n", cell, numIndicesInCell);
-    }
 
     // Size of connectivity based on size of returned streamlines
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndicesOut;
     vtkm::IdComponent connectivityLen = DeviceAlgorithm::ScanExclusive(numIndices, numIndicesOut);
-printf("connectivityLen %ld\n", connectivityLen);
 
-    // Allocate output dataset components
+    // Connectivity is sequential
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> connCount(0, 1, connectivityLen);
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-    connectivity.Allocate(connectivityLen);
-    vtkm::Vec<FieldType, 3> coordinates[connectivityLen];
+    DeviceAlgorithm::Copy(connCount, connectivity);
 
-    // Fill in output data set using stream array
-    vtkm::Id sindex = 0;
-    for (vtkm::Id cell = 0; cell < numCells; cell++)
-    {
-      vtkm::Id numIndicesInCell = numIndices.GetPortalConstControl().Get(cell);
-      cellTypes.GetPortalControl().Set(cell, static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_POLY_LINE));
-      for (vtkm::Id step = 0; step < numIndicesInCell; step++)
-      {
-        coordinates[sindex] = streamArray.GetPortalConstControl().Get(sindex);
-        connectivity.GetPortalControl().Set(sindex, sindex);
-        sindex++;
-      }
-    }
-    cellSet.Fill(cellTypes, numIndices, connectivity);
+    // Compact the stream array so it only has valid points
+    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > coordinates;
+    DeviceAlgorithm::StreamCompact(streamArray,
+                                   validPoint,
+                                   coordinates,
+                                   IsUnity());
 
-    OutDataSet.AddCoordinateSystem(
-               vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, connectivityLen));
+    // Create the output data set
+    vtkm::cont::DataSet OutDataSet;
+    vtkm::cont::CellSetExplicit<> outCellSet;
 
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<FieldType,3> >::PortalConstControl PortalConstType;
-    std::ofstream out;
-    out.open("sl_trace", std::ofstream::out);
-    for (int i = 0; i < connectivityLen; i++)
-    {
-      vtkm::Vec<FieldType,3> pos = coordinates[i];
-      out << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
-    }
+    outCellSet.Fill(cellTypes, numIndices, connectivity);
+    OutDataSet.AddCellSet(outCellSet);
+    OutDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", 0, coordinates));
+
+    return OutDataSet;
   }
 };
 
