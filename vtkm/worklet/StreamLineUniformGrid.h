@@ -35,13 +35,6 @@
 
 #include <vtkm/exec/ExecutionWholeArray.h>
 
-#include <iostream>
-#include <fstream>
-#include <math.h>
-#include <algorithm>
-#include <vector>
-#include <unistd.h>
-
 namespace vtkm {
 
 // Take this out when defined in CellShape.h
@@ -183,17 +176,17 @@ public:
     const FieldType timestep;
     const vtkm::Id planesize;
     const vtkm::Id rowsize;
-    const vtkm::Id mode;
+    const vtkm::Id streammode;
 
     VTKM_CONT_EXPORT
-    MakeStreamLines(const vtkm::Id streamMode,
-                    const FieldType timeStep, 
-                    const vtkm::Id maxSteps, 
+    MakeStreamLines(const vtkm::Id sMode,
+                    const FieldType tStep, 
+                    const vtkm::Id nSteps, 
                     const vtkm::Id3 dims, 
                     FieldPortalConstType fieldArray) :
-                                  mode(streamMode), 
-                                  timestep(timeStep), 
-                                  maxsteps(maxSteps), 
+                                  streammode(sMode), 
+                                  timestep(tStep), 
+                                  maxsteps(nSteps), 
                                   vdims(dims), 
                                   planesize(dims[0] * dims[1]),
                                   rowsize(dims[0]),
@@ -215,8 +208,8 @@ public:
 
       // Forward tracing
       if (visitIndex == 0 &&
-          (mode == vtkm::worklet::internal::FORWARD ||
-           mode == vtkm::worklet::internal::BOTH))
+          (streammode == vtkm::worklet::internal::FORWARD ||
+           streammode == vtkm::worklet::internal::BOTH))
       {
         vtkm::Id index = (seedId * 2) * maxsteps;
         bool done = false;
@@ -277,8 +270,8 @@ public:
 
       // Backward tracing
       if (visitIndex == 1 &&
-          (mode == vtkm::worklet::internal::BACKWARD || 
-           mode == vtkm::worklet::internal::BOTH))
+          (streammode == vtkm::worklet::internal::BACKWARD || 
+           streammode == vtkm::worklet::internal::BOTH))
       {
         vtkm::Id index = (seedId * 2 + 1) * maxsteps;
         bool done = false;
@@ -339,24 +332,15 @@ public:
     }
   };
 
-  StreamLineFilterUniformGrid(
-                   vtkm::Id streammode,
-                   vtkm::Id numseeds,
-                   vtkm::Id maxsteps,
-                   const FieldType timestep) :
-                     streamMode(streammode),
-                     timeStep(timestep),
-                     numSeeds(numseeds),
-                     maxSteps(maxsteps)
+  StreamLineFilterUniformGrid()
   {
   }
 
-  vtkm::Id streamMode;
-  vtkm::Id numSeeds;
-  vtkm::Id maxSteps;
-  FieldType timeStep;
-
-  vtkm::cont::DataSet Run(const vtkm::cont::DataSet &InDataSet)
+  vtkm::cont::DataSet Run(const vtkm::cont::DataSet &InDataSet,
+                          vtkm::Id streamMode,
+                          vtkm::Id numSeeds,
+                          vtkm::Id maxSteps,
+                          FieldType timeStep)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 

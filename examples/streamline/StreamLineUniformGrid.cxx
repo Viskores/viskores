@@ -277,13 +277,12 @@ int main(int argc, char* argv[])
   inDataSet.AddCellSet(inCellSet);
 
   // Create and run the filter
-  streamLineFilter = new vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter>
-                                            (direction,
-                                             nSeeds, 
-                                             nSteps, 
-                                             tStep);
-
-  outDataSet = streamLineFilter->Run(inDataSet);
+  streamLineFilter = new vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter>();
+  outDataSet = streamLineFilter->Run(inDataSet,
+                                     direction,
+                                     nSeeds,
+                                     nSteps,
+                                     tStep);
 
 
   // Render the output dataset of polylines
