@@ -223,7 +223,7 @@ function(vtkm_unit_tests)
     )
 
   #set up what we possibly need to link too.
-  list(APPEND VTKm_UT_LIBRARIES ${TBB_LIBRARIES})
+  list(APPEND VTKm_UT_LIBRARIES ${VTKm_LIBRARIES})
   #set up storage for the include dirs
   set(VTKm_UT_INCLUDE_DIRS )
 
@@ -374,9 +374,7 @@ function(vtkm_worklet_unit_tests device_adapter)
       set(CUDA_NVCC_FLAGS ${old_nvcc_flags} )
     else()
       add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
-      if("${device_adapter}" STREQUAL "VTKM_DEVICE_ADAPTER_TBB")
-        target_link_libraries(${test_prog} ${TBB_LIBRARIES})
-      endif()
+      target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
     endif()
 
     #add a test for each worklet test file. We will inject the device
@@ -421,7 +419,7 @@ function(vtkm_save_benchmarks)
   #create the benchmarks driver when we are called, since
   #the driver expects the files to be in the same
   #directory as the test driver
-	#TODO: This is probably ok to use for benchmarks as well
+        #TODO: This is probably ok to use for benchmarks as well
   create_test_sourcelist(bench_sources BenchmarkDriver.cxx ${ARGN})
 
   #store the absolute path for the driver and all the test
@@ -501,9 +499,7 @@ function(vtkm_benchmarks device_adapter)
       set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
     else()
       add_executable(${benchmark_prog} ${benchmark_drivers} ${benchmark_srcs})
-      if("${device_adapter}" STREQUAL "VTKM_DEVICE_ADAPTER_TBB")
-        target_link_libraries(${benchmark_prog} ${TBB_LIBRARIES})
-      endif()
+      target_link_libraries(${benchmark_prog} ${VTKm_LIBRARIES})
     endif()
 
     if(MSVC)
@@ -553,7 +549,11 @@ macro(vtkm_configure_device device)
   set(VTKm_ENABLE_${device_uppercase} ON)
   include("UseVTKm${device}")
   if(NOT VTKm_${device}_FOUND)
-    message(SEND_ERROR "Could not configure for using VTKm with ${device}")
-  endif(NOT VTKm_${device}_FOUND)
+    if ("${ARGV1}" STREQUAL "REQUIRED")
+      message(SEND_ERROR "Could not configure for using VTKm with ${device}")
+    else()
+      message(STATUS "Could not configure for using VTKm with ${device}")
+    endif()
+  endif()
 endmacro(vtkm_configure_device)
 

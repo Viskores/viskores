@@ -18,6 +18,12 @@
 ##  this software.
 ##============================================================================
 
+# When this file is run by CMake (usually through the find_package command),
+# The following variables will be defined:
+#
+# VTKm_INCLUDE_DIRS - Directories containing VTK-m and dependent headers
+# VTKm_LIBRARIES - The libraries required when using VTK-m
+
 # This file should be installed in the include directory.
 # Find the root directory.
 get_filename_component(_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
@@ -35,6 +41,27 @@ set(VTKm_REQUIRED_BOOST_VERSION "@VTKm_REQUIRED_BOOST_VERSION@")
 
 set(VTKm_CMAKE_MODULE_PATH "@VTKm_CMAKE_MODULE_PATH_CONFIG@")
 
+set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
+set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
+
 # VTKm requires some CMake Find modules not included with CMake, so
 # include the CMake modules distributed with VTKm.
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
+
+include(VTKmMacros)
+
+if(VTKm_FIND_REQUIRED)
+  set(vtkm_is_required REQUIRED)
+else()
+  set(vtkm_is_required)
+endif()
+
+vtkm_configure_device(Serial ${vtkm_is_required})
+if(VTKm_ENABLE_CUDA)
+  vtkm_configure_device(CUDA)
+endif()
+if(VTKm_ENABLE_TBB)
+  # If configured with TBB, the VTK-m header files might choose TBB as the
+  # default device. In that case, the TBB device is required.
+  vtkm_configure_device(TBB ${vtkm_is_required})
+endif()
