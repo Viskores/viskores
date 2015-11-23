@@ -337,8 +337,26 @@ public:
     // error and setting the message buffer as expected.
     try
       {
-      for (vtkm::Id index = range.begin(); index < range.end(); index++)
+      const vtkm::Id start = range.begin();
+      const vtkm::Id end = range.end();
+#ifdef VTKM_ENABLE_VECTORIZATION
+#if defined(VTKM_CLANG)
+    #pragma ivdep
+    #pragma clang loop vectorize(enable) interleave(enable)
+#elif defined(VTKM_ICC)
+    #pragma simd
+#endif
+#endif
+      for (vtkm::Id index = start; index != end; index++)
         {
+
+#ifdef VTKM_ENABLE_VECTORIZATION
+#if defined(VTKM_GCC)
+    #pragma Loop_Optimize (Ivdep, Vector)
+#elif defined(VTKM_ICC)
+    #pragma forceinline recursive
+#endif
+#endif
         this->Functor(index);
         }
       }
@@ -386,8 +404,25 @@ public:
         for( vtkm::Id j=range.rows().begin(); j!=range.rows().end(); ++j)
           {
           index[1] = j;
-          for( vtkm::Id i=range.cols().begin(); i!=range.cols().end(); ++i)
+          const vtkm::Id start =range.cols().begin();
+          const vtkm::Id end = range.cols().end();
+#ifdef VTKM_ENABLE_VECTORIZATION
+#if defined(VTKM_CLANG)
+    #pragma ivdep
+    #pragma clang loop vectorize(enable) interleave(enable)
+#elif defined(VTKM_ICC)
+    #pragma simd
+#endif
+#endif
+          for( vtkm::Id i=start; i != end; ++i)
             {
+#ifdef VTKM_ENABLE_VECTORIZATION
+#if defined(VTKM_GCC)
+    #pragma Loop_Optimize (Ivdep, Vector)
+#elif defined(VTKM_ICC)
+    #pragma forceinline recursive
+#endif
+#endif
             index[0] = i;
             this->Functor( index );
             }
@@ -435,6 +470,13 @@ public:
     // error and setting the message buffer as expected.
     try
       {
+#ifdef VTKM_ENABLE_VECTORIZATION
+#if defined(VTKM_CLANG)
+    #pragma clang loop vectorize(enable)
+#elif defined(VTKM_ICC)
+    #pragma simd
+#endif
+#endif
       for (vtkm::Id i = range.begin(); i < range.end(); i++)
         {
         OutputPortal.Set( i, ValuesPortal.Get(IndexPortal.Get(i)) );
@@ -481,4 +523,3 @@ VTKM_CONT_EXPORT static void ScatterPortal(InputPortalType  inputPortal,
 }
 }
 #endif //vtk_m_cont_tbb_internal_FunctorsTBB_h
-

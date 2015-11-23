@@ -225,8 +225,18 @@ public:
     //The ICC compiler has been found to improperly optimize the copy_backwards
     //into a standard copy, causing the above issue.
     T lastValue = inputPortal.Get(numberOfValues - 1);
+
+#ifdef VTKM_ENABLE_VECTORIZATION
+#if defined(VTKM_CLANG)
+    #pragma ivdep
+    #pragma clang loop vectorize(enable) interleave(enable)
+#elif defined(VTKM_ICC)
+    #pragma simd
+#endif
+#endif
     for(vtkm::Id i=(numberOfValues-1); i >= 1; --i)
       {
+      //nothing for gcc as input & output could be the same
       outputPortal.Set(i, inputPortal.Get(i-1));
       }
     outputPortal.Set(0, initialValue);
@@ -284,8 +294,24 @@ public:
     DeviceAdapterAlgorithm<Device>::ScheduleKernel<Functor> kernel(functor);
 
     const vtkm::Id size = numInstances;
+
+#ifdef VTKM_ENABLE_VECTORIZATION
+#if defined(VTKM_CLANG)
+    #pragma ivdep
+    #pragma clang loop vectorize(enable) interleave(enable)
+#elif defined(VTKM_ICC)
+    #pragma simd
+#endif
+#endif
     for(vtkm::Id i=0; i < size; ++i)
       {
+#ifdef VTKM_ENABLE_VECTORIZATION
+#if defined(VTKM_GCC)
+    #pragma Loop_Optimize (Ivdep, Vector)
+#elif defined(VTKM_ICC)
+    #pragma forceinline recursive
+#endif
+#endif
       kernel(i);
       }
 
@@ -317,8 +343,23 @@ public:
       for(vtkm::Id j=0; j < rangeMax[1]; ++j)
         {
         index[1] = j;
+#ifdef VTKM_ENABLE_VECTORIZATION
+#if defined(VTKM_CLANG)
+    #pragma ivdep
+    #pragma clang loop vectorize(enable) interleave(enable)
+#elif defined(VTKM_ICC)
+    #pragma simd
+#endif
+#endif
         for(vtkm::Id i=0; i < rangeMax[0]; ++i)
           {
+#ifdef VTKM_ENABLE_VECTORIZATION
+#if defined(VTKM_GCC)
+    #pragma Loop_Optimize (Ivdep, Vector)
+#elif defined(VTKM_ICC)
+    #pragma forceinline recursive
+#endif
+#endif
           index[0] = i;
           kernel( index );
           }
@@ -353,6 +394,14 @@ private:
     PortalI indexPortal = index.PrepareForInput(Device());
     PortalVout valuesOutPortal = values_out.PrepareForOutput(n, Device());
 
+#ifdef VTKM_ENABLE_VECTORIZATION
+#if defined(VTKM_CLANG)
+    #pragma ivdep
+    #pragma clang loop vectorize(enable) interleave(enable)
+#elif defined(VTKM_ICC)
+    #pragma simd
+#endif
+#endif
     for (vtkm::Id i=0; i<n; i++)
     {
        valuesOutPortal.Set( i, valuesPortal.Get(indexPortal.Get(i)) );
