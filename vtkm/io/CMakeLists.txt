@@ -24,5 +24,6 @@ set(headers
 
 vtkm_declare_headers(${headers})
 
+add_subdirectory(internal)
 add_subdirectory(reader)
 add_subdirectory(writer)

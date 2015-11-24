@@ -36,7 +36,7 @@ public:
 private:
   virtual void Read()
   {
-    if (this->DataFile->Structure != internal::DATASET_STRUCTURED_POINTS)
+    if (this->DataFile->Structure != vtkm::io::internal::DATASET_STRUCTURED_POINTS)
     {
       throw vtkm::io::ErrorIO("Incorrect DataSet type");
     }

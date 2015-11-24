@@ -36,7 +36,7 @@ public:
 private:
   virtual void Read()
   {
-    if (this->DataFile->Structure != internal::DATASET_STRUCTURED_GRID)
+    if (this->DataFile->Structure != vtkm::io::internal::DATASET_STRUCTURED_GRID)
     {
       throw vtkm::io::ErrorIO("Incorrect DataSet type");
     }
@@ -45,7 +45,6 @@ private:
 
     // Read structured grid specific meta-data
     vtkm::Id3 dim;
-    vtkm::Vec<vtkm::Float32, 3> origin, spacing;
     this->DataFile->Stream >> tag >> dim[0] >> dim[1] >> dim[2] >> std::ws;
     internal::parseAssert(tag == "DIMENSIONS");
 
