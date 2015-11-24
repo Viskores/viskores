@@ -223,21 +223,16 @@ void TestStreamLineUniformGrid()
   // Check output
   vtkm::cont::CellSetExplicit<> &outCellSet =
     outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+  const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray =
+                                      outDataSet.GetCoordinateSystem(0).GetData();
+
   vtkm::Id numberOfCells = outCellSet.GetNumberOfCells();
+  vtkm::Id numberOfPoints = coordArray.GetNumberOfValues();
+  std::cout << "Number of polylines " << numberOfCells << std::endl;
+  std::cout << "Number of coordinates " << numberOfPoints << std::endl;
+
   VTKM_TEST_ASSERT(test_equal(numberOfCells, numSeeds * 2),
                    "Wrong number of cells for stream lines");
-
-  vtkm::IdComponent polyLineCount[10] = {2, 17, 1, 2, 2, 2, 3, 22, 5, 1};
-
-  for (vtkm::Id polyline = 0; polyline < numberOfCells; polyline++)
-  {
-    vtkm::Vec<vtkm::Id, 50> polylineIndices;
-    vtkm::IdComponent numIndices = outCellSet.GetNumberOfPointsInCell(polyline);
-    std::cout << "PolyLine " << polyline << " #coordinates " << numIndices << std::endl;
-    VTKM_TEST_ASSERT(test_equal(numIndices, polyLineCount[polyline]),
-                   "Wrong number of coordinates for polyline");
-    outCellSet.GetIndices(polyline, polylineIndices);
-  }
 }
 
 int UnitTestStreamLineUniformGrid(int, char *[])

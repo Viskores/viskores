@@ -158,10 +158,6 @@ void displayCall()
   vertexArray.Allocate(numberOfPoints);
   coordArray.CastAndCall(GetVertexArray());
 
-  // Write output data for checking
-  std::ofstream out;
-  out.open("sl_trace", std::ofstream::out);
-
   // Each cell is a polyline
   glColor3f(1.0f, 0.0f, 0.0f);
   for (vtkm::Id polyline = 0; polyline < numberOfCells; polyline++)
@@ -175,7 +171,6 @@ void displayCall()
     {
       vtkm::Vec<vtkm::Float32,3> pt = vertexArray.GetPortalConstControl().Get(polylineIndices[i]);
       glVertex3f(pt[0], pt[1], pt[2]);
-      out << pt[0] << " " << pt[1] << " " << pt[2] << std::endl;
     }
     glEnd();
   }
