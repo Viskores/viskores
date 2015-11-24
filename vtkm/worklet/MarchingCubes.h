@@ -54,7 +54,6 @@ public:
   typedef vtkm::cont::ArrayHandle<FieldType> WeightHandle;
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,2> > IdPairHandle;
 
-
   class ClassifyCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
@@ -97,6 +96,10 @@ public:
   class IsosurfaceGenerate : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
+    typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::
+    ExecutionTypes<DeviceAdapter>::PortalConst IdPortalConstType;
+    IdPortalConstType EdgeTable;
+
     typedef void ControlSignature(
         TopologyIn topology, // Cell set
         FieldInPoint<> fieldIn, // Input point field defining the contour
@@ -121,8 +124,11 @@ public:
     VTKM_CONT_EXPORT
     IsosurfaceGenerate(FieldType isovalue,
                        const CountArrayType &countArray,
-                       Device)
-      : Isovalue(isovalue), Scatter(countArray, Device()) {  }
+                       Device,
+                       IdPortalConstType edgeTable) : EdgeTable(edgeTable),
+                                                      Isovalue(isovalue),
+                                                      Scatter(countArray,
+                                                              Device()) {  }
 
     template<typename CellShapeTag,
              typename FieldInType, // Vec-like, one per input point
@@ -146,11 +152,6 @@ public:
         vtkm::IdComponent visitIndex,
         const IndicesVecType &indices) const
     {
-      // Get data for this cell
-      const vtkm::IdComponent verticesForEdge[] = { 0, 1, 1, 2, 3, 2, 0, 3,
-                                                    4, 5, 5, 6, 7, 6, 4, 7,
-                                                    0, 4, 1, 5, 2, 6, 3, 7 };
-
       // Compute the Marching Cubes case number for this cell
       vtkm::IdComponent caseNumber =
           (  (fieldIn[0] > this->Isovalue)
@@ -169,8 +170,10 @@ public:
       {
         const vtkm::IdComponent edgeIndex =
             triTable.Get(triTableOffset + triVertex);
-        const vtkm::IdComponent edgeVertex0 = verticesForEdge[2*edgeIndex + 0];
-        const vtkm::IdComponent edgeVertex1 = verticesForEdge[2*edgeIndex + 1];
+        const vtkm::IdComponent edgeVertex0 =
+          this->EdgeTable.Get(2*edgeIndex + 0);
+        const vtkm::IdComponent edgeVertex1 =
+          this->EdgeTable.Get(2*edgeIndex + 1);
         const FieldType fieldValue0 = fieldIn[edgeVertex0];
         const FieldType fieldValue1 = fieldIn[edgeVertex1];
         const FieldType interpolant =
@@ -236,6 +239,9 @@ public:
            vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3> > normals)
   {
     // Set up the Marching Cubes case tables
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> edgeTable =
+        vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::edgeTable,
+                                     24);
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numTrianglesTable =
         vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::numTrianglesTable,
                                      256);
@@ -264,7 +270,8 @@ public:
 
     IsosurfaceGenerate isosurface(isovalue,
                                   numOutputTrisPerCell,
-                                  DeviceAdapter());
+                                  DeviceAdapter(),
+                                  edgeTable.PrepareForInput(DeviceAdapter()));
 
     vtkm::worklet::DispatcherMapTopology<IsosurfaceGenerate, DeviceAdapter>
         isosurfaceDispatcher(isosurface);
