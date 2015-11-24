@@ -36,6 +36,7 @@ set(headers
   ScatterCounting.h
   ScatterIdentity.h
   ScatterUniform.h
+  StreamLineUniformGrid.h
   TetrahedralizeExplicitGrid.h
   TetrahedralizeUniformGrid.h
   Threshold.h

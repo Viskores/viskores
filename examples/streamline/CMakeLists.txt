@@ -20,9 +20,20 @@
 ##
 ##=============================================================================
 
-add_subdirectory(clipping)
-add_subdirectory(hello_world)
-add_subdirectory(isosurface)
-add_subdirectory(multi_backend)
-add_subdirectory(streamline)
-add_subdirectory(tetrahedra)
+if(OPENGL_FOUND AND GLUT_FOUND)
+  add_executable(StreamLineUniformGrid_SERIAL StreamLineUniformGrid.cxx)
+  target_include_directories(StreamLineUniformGrid_SERIAL PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
+  target_link_libraries(StreamLineUniformGrid_SERIAL ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
+
+  if(VTKm_Cuda_FOUND)
+    cuda_add_executable(StreamLineUniformGrid_CUDA StreamLineUniformGrid.cu)
+    target_link_libraries(StreamLineUniformGrid_CUDA ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
+  endif()
+
+  if(VTKm_ENABLE_TBB)
+    add_executable(StreamLineUniformGrid_TBB StreamLineUniformGridTBB.cxx)
+    target_include_directories(StreamLineUniformGrid_TBB PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} ${TBB_INCLUDE_DIRS})
+    target_link_libraries(StreamLineUniformGrid_TBB ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${TBB_LIBRARIES})
+  endif()
+
+endif()
