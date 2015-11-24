@@ -30,7 +30,7 @@ set(headers
   ExternalFaces.h
   FieldHistogram.h
   FieldStatistics.h
-  IsosurfaceUniformGrid.h
+  MarchingCubes.h
   MarchingCubesDataTables.h
   PointElevation.h
   ScatterCounting.h

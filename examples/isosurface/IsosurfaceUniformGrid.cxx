@@ -24,7 +24,7 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
-#include <vtkm/worklet/IsosurfaceUniformGrid.h>
+#include <vtkm/worklet/MarchingCubes.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/Math.h>
@@ -51,7 +51,7 @@
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 vtkm::Id3 dims(16,16,16);
-vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32, DeviceAdapter> *isosurfaceFilter;
+vtkm::worklet::MarchingCubes<vtkm::Float32, DeviceAdapter> *isosurfaceFilter;
 vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray, normalsArray;
 vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
 Quaternion qrot;
@@ -235,18 +235,26 @@ int main(int argc, char* argv[])
 {
   typedef vtkm::cont::internal::DeviceAdapterTraits<DeviceAdapter>
                                                         DeviceAdapterTraits;
+  typedef vtkm::cont::CellSetStructured<3> CellSet;
+
   std::cout << "Running IsosurfaceUniformGrid example on device adapter: "
             << DeviceAdapterTraits::GetId() << std::endl;
 
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
+  vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
+  dataSet.GetField("nodevar").GetData().CastToArrayHandle(fieldArray);
 
-  isosurfaceFilter = new vtkm::worklet::IsosurfaceFilterUniformGrid<vtkm::Float32, DeviceAdapter>(dims, dataSet);
+  isosurfaceFilter = new vtkm::worklet::MarchingCubes<vtkm::Float32, DeviceAdapter>();
 
   isosurfaceFilter->Run(0.5,
-                        dataSet.GetField("nodevar").GetData(),
+                        dataSet.GetCellSet().CastTo(CellSet()),
+                        dataSet.GetCoordinateSystem(),
+                        fieldArray,
                         verticesArray,
-                        normalsArray,
-                        scalarsArray);
+                        normalsArray);
+
+  isosurfaceFilter->MapFieldOntoIsosurface(fieldArray,
+                                           scalarsArray);
 
   std::cout << "Number of output vertices: " << verticesArray.GetNumberOfValues() << std::endl;
 
