@@ -45,6 +45,13 @@ if (VTKm_Base_FOUND)
 endif ()
 
 #-----------------------------------------------------------------------------
+# Set up the compiler flag optimizations
+#-----------------------------------------------------------------------------
+if(VTKm_ENABLE_VECTORIZATION)
+  include(VTKmCompilerOptimizations)
+endif()
+
+#-----------------------------------------------------------------------------
 # Set up all these dependent packages (if they were all found).
 #-----------------------------------------------------------------------------
 if (VTKm_TBB_FOUND)

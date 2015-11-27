@@ -31,6 +31,13 @@ else () # !VTKm_Base_FOUND
   set(VTKm_Serial_FOUND)
 endif ()
 
+#-----------------------------------------------------------------------------
+# Set up the compiler flag optimizations
+#-----------------------------------------------------------------------------
+if(VTKm_ENABLE_VECTORIZATION)
+  include(VTKmCompilerOptimizations)
+endif()
+
 if (VTKm_Serial_FOUND)
   set(VTKm_Serial_initialize_complete TRUE)
 endif ()

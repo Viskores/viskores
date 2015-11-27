@@ -45,10 +45,19 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
   set(CMAKE_CXX_FLAGS_DEBUG
     "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS_WARN}")
 
-  # Addtional warnings for GCC
+  # Additional warnings for GCC/Clang
   set(CMAKE_CXX_FLAGS_WARN_EXTRA "-Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common")
   if (VTKm_FORCE_ANSI)
     set(CMAKE_CXX_FLAGS_WARN_EXTRA "-ansi ${CMAKE_CXX_FLAGS_WARN_EXTRA}")
+  endif()
+
+  # Additional warnings just for Clang 3.5+, and AppleClang 7+
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+      CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.4)
+    set(CMAKE_CXX_FLAGS_WARN_EXTRA "-Wno-pass-failed ${CMAKE_CXX_FLAGS_WARN_EXTRA}")
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND
+         CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 6.99)
+    set(CMAKE_CXX_FLAGS_WARN_EXTRA "-Wno-pass-failed ${CMAKE_CXX_FLAGS_WARN_EXTRA}")
   endif()
 
   # Set up the debug CXX_FLAGS for extra warnings

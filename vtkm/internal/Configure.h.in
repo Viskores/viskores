@@ -148,6 +148,11 @@
 #define VTKM_THIRDPARTY_POST_INCLUDE
 #endif
 
+//Mark if we are building with vectorization enabled
+#ifndef VTKM_ENABLE_VECTORIZATION
+#cmakedefine VTKM_ENABLE_VECTORIZATION
+#endif
+
 //Mark if we are building with CUDA enabled
 #ifndef VTKM_ENABLE_CUDA
 #cmakedefine VTKM_ENABLE_CUDA

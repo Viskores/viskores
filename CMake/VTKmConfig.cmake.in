@@ -43,6 +43,7 @@ set(VTKm_CMAKE_MODULE_PATH "@VTKm_CMAKE_MODULE_PATH_CONFIG@")
 
 set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
 set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
+set(VTKm_ENABLE_VECTORIZATION "@VTKm_ENABLE_VECTORIZATION@")
 
 # VTKm requires some CMake Find modules not included with CMake, so
 # include the CMake modules distributed with VTKm.
