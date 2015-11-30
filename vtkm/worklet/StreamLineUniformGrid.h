@@ -55,10 +55,10 @@ namespace internal {
   template <typename FieldType, typename PortalType>
   VTKM_EXEC_EXPORT
   vtkm::Vec<FieldType, 3> VecDataAtPos(
-                                 vtkm::Vec<FieldType, 3> pos, 
-                                 const vtkm::Id3 &vdims, 
-                                 const vtkm::Id &planesize, 
-                                 const vtkm::Id &rowsize, 
+                                 vtkm::Vec<FieldType, 3> pos,
+                                 const vtkm::Id3 &vdims,
+                                 const vtkm::Id &planesize,
+                                 const vtkm::Id &rowsize,
                                  const PortalType &vecdata)
   {
     // Adjust initial position to be within bounding box of grid
@@ -181,21 +181,21 @@ public:
     VTKM_CONT_EXPORT
     MakeStreamLines(const FieldType tStep,
                     const vtkm::Id sMode,
-                    const vtkm::Id nSteps, 
-                    const vtkm::Id3 dims, 
+                    const vtkm::Id nSteps,
+                    const vtkm::Id3 dims,
                     FieldPortalConstType fieldArray) :
-                                  timestep(tStep), 
-                                  streammode(sMode), 
-                                  maxsteps(nSteps), 
-                                  vdims(dims), 
+                                  field(fieldArray),
+                                  vdims(dims),
+                                  maxsteps(nSteps),
+                                  timestep(tStep),
                                   planesize(dims[0] * dims[1]),
                                   rowsize(dims[0]),
-                                  field(fieldArray) 
+                                  streammode(sMode)
     {
     }
 
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id &seedId, 
+    void operator()(vtkm::Id &seedId,
                     vtkm::Vec<FieldType, 3> &seedPos,
                     vtkm::exec::ExecutionWholeArray<vtkm::IdComponent> &numIndices,
                     vtkm::exec::ExecutionWholeArray<vtkm::IdComponent> &validPoint,
@@ -252,8 +252,8 @@ public:
             pos[d] += (adata[d] + (2.0f * bdata[d]) + (2.0f * cdata[d]) + ddata[d]) / 6.0f;
           }
 
-          if (pos[0] < 0.0f || pos[0] > vdims[0] || 
-              pos[1] < 0.0f || pos[1] > vdims[1] || 
+          if (pos[0] < 0.0f || pos[0] > vdims[0] ||
+              pos[1] < 0.0f || pos[1] > vdims[1] ||
               pos[2] < 0.0f || pos[2] > vdims[2])
           {
             pos = pre_pos;
@@ -270,7 +270,7 @@ public:
 
       // Backward tracing
       if (visitIndex == 1 &&
-          (streammode == vtkm::worklet::internal::BACKWARD || 
+          (streammode == vtkm::worklet::internal::BACKWARD ||
            streammode == vtkm::worklet::internal::BOTH))
       {
         vtkm::Id index = (seedId * 2 + 1) * maxsteps;
@@ -314,8 +314,8 @@ public:
             pos[d] += (adata[d] + (2.0f * bdata[d]) + (2.0f * cdata[d]) + ddata[d]) / 6.0f;
           }
 
-          if (pos[0] < 0.0f || pos[0] > vdims[0] || 
-              pos[1] < 0.0f || pos[1] > vdims[1] || 
+          if (pos[0] < 0.0f || pos[0] > vdims[0] ||
+              pos[1] < 0.0f || pos[1] > vdims[1] ||
               pos[2] < 0.0f || pos[2] > vdims[2])
           {
             pos = pre_pos;
@@ -363,7 +363,7 @@ public:
       seed[2] = static_cast<FieldType>(rand() % vdims[2]);
       seeds.push_back(seed);
     }
-    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > seedPosArray = 
+    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > seedPosArray =
                 vtkm::cont::make_ArrayHandle(&seeds[0], numSeeds);
     vtkm::cont::ArrayHandleCounting<vtkm::Id> seedIdArray(0, 1, numSeeds);
 
@@ -400,7 +400,7 @@ public:
     typedef typename vtkm::worklet::DispatcherMapField<MakeStreamLines> MakeStreamLinesDispatcher;
     MakeStreamLinesDispatcher makeStreamLinesDispatcher(makeStreamLines);
     makeStreamLinesDispatcher.Invoke(
-              seedIdArray, 
+              seedIdArray,
               seedPosArray,
               vtkm::exec::ExecutionWholeArray<vtkm::IdComponent>(numIndices, numCells),
               vtkm::exec::ExecutionWholeArray<vtkm::IdComponent>(validPoint, maxConnectivityLen),
