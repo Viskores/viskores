@@ -92,7 +92,6 @@ include(CMake/VTKmCompilerExtras.cmake)
 # Configurable Options
 option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
 option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
-option(VTKm_ENABLE_VECTORIZATION "Enable compiler vectorization support" ON)
 option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 
@@ -233,7 +232,7 @@ set(VTKM_USE_64BIT_IDS ${VTKm_USE_64BIT_IDS})
 set(VTKM_ENABLE_CUDA ${VTKm_ENABLE_CUDA})
 set(VTKM_ENABLE_TBB ${VTKm_ENABLE_TBB})
 
-set(VTKM_ENABLE_VECTORIZATION ${VTKm_ENABLE_VECTORIZATION})
+set(VTKM_ENABLE_VECTORIZATION ON)
 if(VTKm_Vectorization STREQUAL "none")
   set(VTKM_ENABLE_VECTORIZATION OFF)
 endif()

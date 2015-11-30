@@ -116,27 +116,24 @@ endif()
 # we are going to require.
 #
 #
-if(VTKm_ENABLE_VECTORIZATION)
-  set(flags)
-  if(VTKm_Vectorization STREQUAL "avx")
-    get_property(flags GLOBAL PROPERTY VTKm_AVX_FLAGS)
-  elseif(VTKm_Vectorization STREQUAL "avx2")
-    get_property(avx GLOBAL PROPERTY VTKm_AVX_FLAGS)
-    get_property(avx2 GLOBAL PROPERTY VTKm_AVX2_FLAGS)
-    set(flags ${avx} ${avx2})
-  elseif(VTKm_Vectorization STREQUAL "avx512")
-    get_property(avx GLOBAL PROPERTY VTKm_AVX_FLAGS)
-    get_property(avx2 GLOBAL PROPERTY VTKm_AVX2_FLAGS)
-    get_property(avx512 GLOBAL PROPERTY VTKm_AVX512_FLAGS)
-    set(flags ${avx} ${avx2} ${avx512})
-  endif()
-
-  #have to specify each compile option separately, can't do them in bulk
-  foreach(flag ${flags})
-
-    add_compile_options( ${flag} )
-  endforeach()
+set(flags)
+if(VTKm_Vectorization STREQUAL "avx")
+  get_property(flags GLOBAL PROPERTY VTKm_AVX_FLAGS)
+elseif(VTKm_Vectorization STREQUAL "avx2")
+  get_property(avx GLOBAL PROPERTY VTKm_AVX_FLAGS)
+  get_property(avx2 GLOBAL PROPERTY VTKm_AVX2_FLAGS)
+  set(flags ${avx} ${avx2})
+elseif(VTKm_Vectorization STREQUAL "avx512")
+  get_property(avx GLOBAL PROPERTY VTKm_AVX_FLAGS)
+  get_property(avx2 GLOBAL PROPERTY VTKm_AVX2_FLAGS)
+  get_property(avx512 GLOBAL PROPERTY VTKm_AVX512_FLAGS)
+  set(flags ${avx} ${avx2} ${avx512})
 endif()
+
+#have to specify each compile option separately, can't do them in bulk
+foreach(flag ${flags})
+  add_compile_options( ${flag} )
+endforeach()
 
 #
 # Lastly we need to setup flags that can be configured into a vtk-m header

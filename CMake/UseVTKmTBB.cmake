@@ -47,9 +47,7 @@ endif ()
 #-----------------------------------------------------------------------------
 # Set up the compiler flag optimizations
 #-----------------------------------------------------------------------------
-if(VTKm_ENABLE_VECTORIZATION)
-  include(VTKmCompilerOptimizations)
-endif()
+include(VTKmCompilerOptimizations)
 
 #-----------------------------------------------------------------------------
 # Set up all these dependent packages (if they were all found).
