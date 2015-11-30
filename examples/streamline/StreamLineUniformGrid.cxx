@@ -145,7 +145,7 @@ void displayCall()
   glTranslatef(-0.5f, -0.5f, -0.5f);
 
   // Get the cell set, coordinate system and coordinate data
-  vtkm::cont::CellSetExplicit<> &cellSet = 
+  vtkm::cont::CellSetExplicit<> &cellSet =
     outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
   const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray =
                                       outDataSet.GetCoordinateSystem(0).GetData();
@@ -247,7 +247,7 @@ int main(int argc, char* argv[])
   // Read vector data at each point of the uniform grid and store
   vtkm::Id nElements = vdims[0] * vdims[1] * vdims[2] * 3;
   float* data = new float[nElements];
-  fread(data, sizeof(float), nElements, pFile);
+  fread(data, sizeof(float), static_cast<std::size_t>(nElements), pFile);
 
   std::vector<vtkm::Vec<vtkm::Float32, 3> > field;
   for (vtkm::Id i = 0; i < nElements; i++)
@@ -259,7 +259,7 @@ int main(int argc, char* argv[])
     field.push_back(Normalize(vecData));
   }
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(&field[0], field.size());
+  fieldArray = vtkm::cont::make_ArrayHandle(field);
 
   // Construct the input dataset (uniform) to hold the input and set vector data
   vtkm::cont::DataSet inDataSet;
