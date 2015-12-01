@@ -43,6 +43,7 @@ set(unit_tests
   UnitTestContTesting.cxx
   UnitTestComputeBoundsSerial.cxx
   UnitTestDataSetRegular.cxx
+  UnitTestDataSetRectilinear.cxx
   UnitTestDataSetExplicit.cxx
   UnitTestDataSetSingleType.cxx
   UnitTestDataSetPermutation.cxx
