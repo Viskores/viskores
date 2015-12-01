@@ -61,7 +61,7 @@ void run_if_valid(vtkm::cont::ArrayHandle< vtkm::Vec< T, 3 > > inHandle,
                   vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::UInt8, 4 > > outColors,
                   DeviceAdapterTag tag)
 {
- typedef vtkm::cont::internal::DeviceAdapterTraits<DeviceAdapterTag>
+ typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>
          DeviceAdapterTraits;
 
   if(DeviceAdapterTraits::Valid)

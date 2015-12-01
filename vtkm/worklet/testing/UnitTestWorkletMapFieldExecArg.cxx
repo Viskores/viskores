@@ -112,7 +112,7 @@ struct DoTestWorklet
 
 void TestWorkletMapFieldExecArg()
 {
-  typedef vtkm::cont::internal::DeviceAdapterTraits<
+  typedef vtkm::cont::DeviceAdapterTraits<
                     VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
   std::cout << "Testing Worklet with ExecutionWholeArray on device adapter: "
             << DeviceAdapterTraits::GetId() << std::endl;

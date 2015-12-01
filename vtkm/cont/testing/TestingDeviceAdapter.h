@@ -283,8 +283,8 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing device adapter tag" << std::endl;
 
-    typedef vtkm::cont::internal::DeviceAdapterTraits<DeviceAdapterTag> Traits;
-    typedef vtkm::cont::internal::DeviceAdapterTraits<
+    typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> Traits;
+    typedef vtkm::cont::DeviceAdapterTraits<
         vtkm::cont::DeviceAdapterTagError> ErrorTraits;
 
     VTKM_TEST_ASSERT(Traits::GetId() == Traits::GetId(),
