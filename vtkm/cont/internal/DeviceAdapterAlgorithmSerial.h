@@ -226,16 +226,10 @@ public:
     //into a standard copy, causing the above issue.
     T lastValue = inputPortal.Get(numberOfValues - 1);
 
-#ifdef VTKM_ENABLE_VECTORIZATION
-#if defined(VTKM_CLANG)
-    #pragma ivdep
-    #pragma clang loop vectorize(enable) interleave(enable)
-#elif defined(VTKM_ICC)
-    #pragma simd
-#endif
-#endif
+VTKM_VECTORIZATION_PRE_LOOP
     for(vtkm::Id i=(numberOfValues-1); i >= 1; --i)
       {
+VTKM_VECTORIZATION_IN_LOOP
       //nothing for gcc as input & output could be the same
       outputPortal.Set(i, inputPortal.Get(i-1));
       }
@@ -295,23 +289,10 @@ public:
 
     const vtkm::Id size = numInstances;
 
-#ifdef VTKM_ENABLE_VECTORIZATION
-#if defined(VTKM_CLANG)
-    #pragma ivdep
-    #pragma clang loop vectorize(enable) interleave(enable)
-#elif defined(VTKM_ICC)
-    #pragma simd
-#endif
-#endif
+VTKM_VECTORIZATION_PRE_LOOP
     for(vtkm::Id i=0; i < size; ++i)
       {
-#ifdef VTKM_ENABLE_VECTORIZATION
-#if defined(VTKM_GCC)
-    #pragma Loop_Optimize (Ivdep, Vector)
-#elif defined(VTKM_ICC)
-    #pragma forceinline recursive
-#endif
-#endif
+VTKM_VECTORIZATION_IN_LOOP
       kernel(i);
       }
 
@@ -343,23 +324,10 @@ public:
       for(vtkm::Id j=0; j < rangeMax[1]; ++j)
         {
         index[1] = j;
-#ifdef VTKM_ENABLE_VECTORIZATION
-#if defined(VTKM_CLANG)
-    #pragma ivdep
-    #pragma clang loop vectorize(enable) interleave(enable)
-#elif defined(VTKM_ICC)
-    #pragma simd
-#endif
-#endif
+VTKM_VECTORIZATION_PRE_LOOP
         for(vtkm::Id i=0; i < rangeMax[0]; ++i)
           {
-#ifdef VTKM_ENABLE_VECTORIZATION
-#if defined(VTKM_GCC)
-    #pragma Loop_Optimize (Ivdep, Vector)
-#elif defined(VTKM_ICC)
-    #pragma forceinline recursive
-#endif
-#endif
+VTKM_VECTORIZATION_IN_LOOP
           index[0] = i;
           kernel( index );
           }
@@ -394,16 +362,10 @@ private:
     PortalI indexPortal = index.PrepareForInput(Device());
     PortalVout valuesOutPortal = values_out.PrepareForOutput(n, Device());
 
-#ifdef VTKM_ENABLE_VECTORIZATION
-#if defined(VTKM_CLANG)
-    #pragma ivdep
-    #pragma clang loop vectorize(enable) interleave(enable)
-#elif defined(VTKM_ICC)
-    #pragma simd
-#endif
-#endif
+VTKM_VECTORIZATION_PRE_LOOP
     for (vtkm::Id i=0; i<n; i++)
     {
+VTKM_VECTORIZATION_IN_LOOP
        valuesOutPortal.Set( i, valuesPortal.Get(indexPortal.Get(i)) );
     }
   }
