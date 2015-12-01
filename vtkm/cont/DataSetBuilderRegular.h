@@ -49,9 +49,9 @@ public:
            T originX, T originY, T spacingX, T spacingY,
            std::string coordNm="coords", std::string cellNm="cells")
     {
-        Create(2, nx,ny,1, originX,originY,0,
-               spacingX,spacingY,1,
-               coordNm, cellNm);
+        return Create(2, nx,ny,1, originX,originY,0,
+		      spacingX,spacingY,1,
+		      coordNm, cellNm);
     }
 
     //3D regular grids.
@@ -83,7 +83,7 @@ private:
            T originX, T originY, T originZ, T spacingX, T spacingY, T spacingZ,
            std::string coordNm, std::string cellNm)
     {
-        VTKM_ASSERT_CONT(nx>1 && ny>1 && ((dim==2 && nz==1)||(dim==3 && nz>1)));
+        VTKM_ASSERT_CONT(nx>1 && ny>1 && ((dim==2 && nz==1)||(dim==3 && nz>=1)));
         vtkm::cont::DataSet dataSet;
 
         vtkm::cont::ArrayHandleUniformPointCoordinates
