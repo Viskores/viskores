@@ -47,6 +47,11 @@ VTKM_THIRDPARTY_POST_INCLUDE
 #define VTKM_USE_BOOST_SIGN
 #endif // !VTKM_CUDA
 
+#if !defined(__CUDA_ARCH__)
+#define VTKM_USE_STL_MIN_MAX
+#include <algorithm>
+#endif
+
 #if defined(VTKM_MSVC) && !defined(VTKM_CUDA)
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/math/special_functions/acosh.hpp>
@@ -58,7 +63,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/math/special_functions/round.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 #define VTKM_USE_BOOST_MATH
-#if _MSC_VER <= 1600
+#if (_MSC_VER <= 1600) && !defined(VTKM_USE_STL_MIN_MAX)
 #define VTKM_USE_STL_MIN_MAX
 #include <algorithm>
 #endif
@@ -1298,7 +1303,7 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y) {
   return (std::max)(x, y);
 }
-#else // !VTKM_USE_BOOST_MATH
+#else // !VTKM_USE_STL_MIN_MAX
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 Max(vtkm::Float32 x, vtkm::Float32 y) {
   return VTKM_SYS_MATH_FUNCTION_32(fmax)(x,y);
@@ -1307,7 +1312,7 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y) {
   return VTKM_SYS_MATH_FUNCTION_64(fmax)(x,y);
 }
-#endif // !VTKM_USE_BOOST_MATH
+#endif // !VTKM_USE_STL_MIN_MAX
 
 /// Returns \p x or \p y, whichever is smaller.
 ///
@@ -1323,7 +1328,7 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y) {
   return (std::min)(x, y);
 }
-#else // !VTKM_USE_BOOST_MATH
+#else // !VTKM_USE_STL_MIN_MAX
 VTKM_EXEC_CONT_EXPORT
 vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y) {
   return VTKM_SYS_MATH_FUNCTION_32(fmin)(x,y);
@@ -1332,7 +1337,7 @@ VTKM_EXEC_CONT_EXPORT
 vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y) {
   return VTKM_SYS_MATH_FUNCTION_64(fmin)(x,y);
 }
-#endif // !VTKM_USE_BOOST_MATH
+#endif // !VTKM_USE_STL_MIN_MAX
 
 namespace detail {
 

@@ -59,6 +59,11 @@ VTKM_THIRDPARTY_POST_INCLUDE
 #define VTKM_USE_BOOST_SIGN
 #endif // !VTKM_CUDA
 
+#if !defined(__CUDA_ARCH__)
+#define VTKM_USE_STL_MIN_MAX
+#include <algorithm>
+#endif
+
 #if defined(VTKM_MSVC) && !defined(VTKM_CUDA)
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/math/special_functions/acosh.hpp>
@@ -70,7 +75,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/math/special_functions/round.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 #define VTKM_USE_BOOST_MATH
-#if _MSC_VER <= 1600
+#if (_MSC_VER <= 1600) && !defined(VTKM_USE_STL_MIN_MAX)
 #define VTKM_USE_STL_MIN_MAX
 #include <algorithm>
 #endif
@@ -442,10 +447,10 @@ T Max(const T &x, const T &y);
 #ifdef VTKM_USE_STL_MIN_MAX
 $binary_template_function('Max', '(std::max)(x, y)')\
 $#
-#else // !VTKM_USE_BOOST_MATH
+#else // !VTKM_USE_STL_MIN_MAX
 $binary_math_function('Max', 'fmax')\
 $#
-#endif // !VTKM_USE_BOOST_MATH
+#endif // !VTKM_USE_STL_MIN_MAX
 
 /// Returns \p x or \p y, whichever is smaller.
 ///
@@ -455,10 +460,10 @@ T Min(const T &x, const T &y);
 #ifdef VTKM_USE_STL_MIN_MAX
 $binary_template_function('Min', '(std::min)(x, y)')\
 $#
-#else // !VTKM_USE_BOOST_MATH
+#else // !VTKM_USE_STL_MIN_MAX
 $binary_math_function('Min', 'fmin')\
 $#
-#endif // !VTKM_USE_BOOST_MATH
+#endif // !VTKM_USE_STL_MIN_MAX
 
 namespace detail {
 
