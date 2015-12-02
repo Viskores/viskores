@@ -339,24 +339,10 @@ public:
       {
       const vtkm::Id start = range.begin();
       const vtkm::Id end = range.end();
-#ifdef VTKM_ENABLE_VECTORIZATION
-#if defined(VTKM_CLANG)
-    #pragma ivdep
-    #pragma clang loop vectorize(enable) interleave(enable)
-#elif defined(VTKM_ICC)
-    #pragma simd
-#endif
-#endif
+VTKM_VECTORIZATION_PRE_LOOP
       for (vtkm::Id index = start; index != end; index++)
         {
-
-#ifdef VTKM_ENABLE_VECTORIZATION
-#if defined(VTKM_GCC)
-    #pragma Loop_Optimize (Ivdep, Vector)
-#elif defined(VTKM_ICC)
-    #pragma forceinline recursive
-#endif
-#endif
+VTKM_VECTORIZATION_IN_LOOP
         this->Functor(index);
         }
       }
@@ -406,23 +392,10 @@ public:
           index[1] = j;
           const vtkm::Id start =range.cols().begin();
           const vtkm::Id end = range.cols().end();
-#ifdef VTKM_ENABLE_VECTORIZATION
-#if defined(VTKM_CLANG)
-    #pragma ivdep
-    #pragma clang loop vectorize(enable) interleave(enable)
-#elif defined(VTKM_ICC)
-    #pragma simd
-#endif
-#endif
+VTKM_VECTORIZATION_PRE_LOOP
           for( vtkm::Id i=start; i != end; ++i)
             {
-#ifdef VTKM_ENABLE_VECTORIZATION
-#if defined(VTKM_GCC)
-    #pragma Loop_Optimize (Ivdep, Vector)
-#elif defined(VTKM_ICC)
-    #pragma forceinline recursive
-#endif
-#endif
+VTKM_VECTORIZATION_IN_LOOP
             index[0] = i;
             this->Functor( index );
             }

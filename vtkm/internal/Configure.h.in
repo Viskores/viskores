@@ -148,9 +148,30 @@
 #define VTKM_THIRDPARTY_POST_INCLUDE
 #endif
 
-//Mark if we are building with vectorization enabled
-#ifndef VTKM_ENABLE_VECTORIZATION
-#cmakedefine VTKM_ENABLE_VECTORIZATION
+// Define a pair of macros, VTKM_VECTORIZATION_PRE_LOOP and VTKM_VECTORIZATION_IN_LOOP,
+// that should be wrapped around any "for"/"while" that you want vectorized.
+// This is used to set per compiler pragmas for vectorization, and to disable
+// any warnings that about vectorization failures.
+#if defined(VTKM_CLANG)
+//clang only needs pre loop
+#define VTKM_VECTORIZATION_PRE_LOOP \
+  _Pragma("clang loop vectorize(enable) interleave(enable)")
+#define VTKM_VECTORIZATION_IN_LOOP
+
+#elif defined(VTKM_ICC)
+//icc needs pre and in loop
+#define VTKM_VECTORIZATION_PRE_LOOP \
+    _Pragma("simd")
+#define VTKM_VECTORIZATION_IN_LOOP \
+    _Pragma("forceinline recursive")
+#elif defined(VTKM_GCC)
+//gcc only needs in loop
+#define VTKM_VECTORIZATION_PRE_LOOP
+    _Pragma("ivdep")
+#define VTKM_VECTORIZATION_IN_LOOP
+#else
+#define VTKM_VECTORIZATION_PRE_LOOP
+#define VTKM_VECTORIZATION_IN_LOOP
 #endif
 
 //Mark if we are building with CUDA enabled
