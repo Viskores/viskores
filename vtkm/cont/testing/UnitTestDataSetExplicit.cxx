@@ -47,7 +47,7 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage> &ah, const T *exp
   return true;
 }
 
-
+template<typename DeviceAdapterTag>
 void TestDataSet_Explicit()
 {
   vtkm::cont::testing::MakeTestDataSet tds;
@@ -89,7 +89,8 @@ void TestDataSet_Explicit()
   vtkm::cont::CellSetExplicit<> &cellset =
       ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
 
-  cellset.BuildConnectivity(vtkm::TopologyElementTagCell(),
+  cellset.BuildConnectivity(DeviceAdapterTag(),
+			    vtkm::TopologyElementTagCell(),
                             vtkm::TopologyElementTagPoint());
 
   vtkm::Id connectivitySize = 7;
