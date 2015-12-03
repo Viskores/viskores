@@ -314,6 +314,7 @@ install(
 install(
   FILES
     ${VTKm_SOURCE_DIR}/CMake/VTKmCompilerOptimizations.cmake
+    ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cxx
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
 
