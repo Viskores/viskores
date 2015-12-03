@@ -148,26 +148,36 @@
 #define VTKM_THIRDPARTY_POST_INCLUDE
 #endif
 
+//Determine if current compiler supports vectorization pragma's
+//if so set the define VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS
+#if ( defined(VTKM_GCC) && ( __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)  ) ) || \
+    ( defined(VTKM_ICC) && (__INTEL_COMPILER >= 1400) ) || \
+    ( defined(VTKM_CLANG) && defined(__apple_build_version__) && (__apple_build_version__ >= 7000000) ) || \
+    ( defined(VTKM_CLANG) && !defined(__apple_build_version__) && (__clang_major__ > 3) ) || \
+    ( defined(VTKM_CLANG) && !defined(__apple_build_version__) && (__clang_major__ == 3 && __clang_minor__ >= 5) )
+#define VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS 1
+#endif
+
+
 // Define a pair of macros, VTKM_VECTORIZATION_PRE_LOOP and VTKM_VECTORIZATION_IN_LOOP,
 // that should be wrapped around any "for"/"while" that you want vectorized.
 // This is used to set per compiler pragmas for vectorization, and to disable
 // any warnings that about vectorization failures.
-#if defined(VTKM_CLANG)
+#if defined(VTKM_CLANG) && defined(VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS)
 //clang only needs pre loop
 #define VTKM_VECTORIZATION_PRE_LOOP \
   _Pragma("clang loop vectorize(enable) interleave(enable)")
 #define VTKM_VECTORIZATION_IN_LOOP
-
-#elif defined(VTKM_ICC)
+#elif defined(VTKM_ICC) && defined(VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS)
 //icc needs pre and in loop
 #define VTKM_VECTORIZATION_PRE_LOOP \
     _Pragma("simd")
 #define VTKM_VECTORIZATION_IN_LOOP \
     _Pragma("forceinline recursive")
-#elif defined(VTKM_GCC)
+#elif defined(VTKM_GCC) && defined(VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS)
 //gcc only needs in loop
 #define VTKM_VECTORIZATION_PRE_LOOP
-    _Pragma("ivdep")
+    _Pragma("ivdep") \
 #define VTKM_VECTORIZATION_IN_LOOP
 #else
 #define VTKM_VECTORIZATION_PRE_LOOP
