@@ -24,7 +24,7 @@ set(unit_tests
   UnitTestExternalFaces.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
-  UnitTestIsosurfaceUniformGrid.cxx
+  UnitTestMarchingCubes.cxx
   UnitTestPointElevation.cxx
   UnitTestScatterCounting.cxx
   UnitTestSplatKernels.cxx
