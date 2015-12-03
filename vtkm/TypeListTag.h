@@ -41,6 +41,10 @@ struct TypeListTagId2 : vtkm::ListTagBase<vtkm::Id2> { };
 ///
 struct TypeListTagId3 : vtkm::ListTagBase<vtkm::Id3> { };
 
+/// A list containing the type vtkm::IdComponent
+///
+struct TypeListTagIdComponent : vtkm::ListTagBase<vtkm::IdComponent> {  };
+
 /// A list containing types used to index arrays. Contains vtkm::Id, vtkm::Id2,
 /// and vtkm::Id3.
 ///

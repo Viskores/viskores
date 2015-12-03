@@ -117,6 +117,12 @@ public:
   /// ControlSignature tags to specify the types of worklet arguments.
   typedef vtkm::TypeListTagId3 Id3Type;
 
+  /// \brief A type list containing the type vtkm::IdComponent.
+  ///
+  /// This is a convenience type to use as template arguments to \c
+  /// ControlSignature tags to specify the types of worklet arguments.
+  typedef vtkm::TypeListTagIdComponent IdComponentType;
+
   /// \brief A list of types commonly used for indexing.
   ///
   /// This is a convenience type to use as template arguments to \c
