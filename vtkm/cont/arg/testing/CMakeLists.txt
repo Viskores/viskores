@@ -24,6 +24,7 @@ set(unit_tests
   UnitTestTransportArrayInOut.cxx
   UnitTestTransportArrayOut.cxx
   UnitTestTransportExecObject.cxx
+  UnitTestTransportWholeArray.cxx
   UnitTestTypeCheckArray.cxx
   UnitTestTypeCheckExecObject.cxx
   )

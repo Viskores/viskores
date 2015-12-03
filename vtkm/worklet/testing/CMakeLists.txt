@@ -34,6 +34,7 @@ set(unit_tests
   UnitTestThreshold.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
+  UnitTestWorkletMapFieldWholeArray.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyRegular.cxx
   UnitTestVertexClustering.cxx
