@@ -142,9 +142,9 @@ void initializeGL()
   glEnable(GL_DEPTH_TEST);
   glShadeModel(GL_SMOOTH);
 
-  vtkm::FloatDefault white[] = { 0.8f, 0.8f, 0.8f, 1.0f };
-  vtkm::FloatDefault black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-  vtkm::FloatDefault lightPos[] = { 10.0f, 10.0f, 10.5f, 1.0f };
+  vtkm::Float32 white[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+  vtkm::Float32 black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+  vtkm::Float32 lightPos[] = { 10.0f, 10.0f, 10.5f, 1.0f };
 
   glLightfv(GL_LIGHT0, GL_AMBIENT, white);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
