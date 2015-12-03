@@ -32,7 +32,8 @@
 #define VTKM_MSVC
 #endif
 
-#if defined(____clang__) || defined(__clang__)
+#if defined(__clang__) && !defined(__INTEL_COMPILER)
+//On OSX the intel compiler uses clang as the front end
 #define VTKM_CLANG
 #endif
 
