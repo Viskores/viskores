@@ -51,13 +51,15 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
     set(CMAKE_CXX_FLAGS_WARN_EXTRA "-ansi ${CMAKE_CXX_FLAGS_WARN_EXTRA}")
   endif()
 
-  # Additional warnings just for Clang 3.5+, and AppleClang 7+
+  # Additional warnings just for Clang 3.5+, and AppleClang 7+ we specify
+  # for all build types, since these failures to vectorize are not limited
+  # to debug builds
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.4)
-    set(CMAKE_CXX_FLAGS_WARN_EXTRA "-Wno-pass-failed ${CMAKE_CXX_FLAGS_WARN_EXTRA}")
+    set(CMAKE_CXX_FLAGS "-Wno-pass-failed ${CMAKE_CXX_FLAGS}")
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND
          CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 6.99)
-    set(CMAKE_CXX_FLAGS_WARN_EXTRA "-Wno-pass-failed ${CMAKE_CXX_FLAGS_WARN_EXTRA}")
+    set(CMAKE_CXX_FLAGS "-Wno-pass-failed ${CMAKE_CXX_FLAGS}")
   endif()
 
   # Set up the debug CXX_FLAGS for extra warnings
@@ -84,5 +86,9 @@ elseif(CMAKE_COMPILER_IS_ICCXX)
   # #pragma warning(disable : 1478), but for warning 1478 it seems to not
   #work. Instead we add it as a definition
   add_definitions("-wd1478")
+  # Likewise to suppress failures about being unable to apply vectorization
+  # to loops, the #pragma warning(disable seems to not work so we add a
+  # a compile define.
+  add_definitions("-wd13379")
 endif()
 
