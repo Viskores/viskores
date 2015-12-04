@@ -86,5 +86,9 @@ elseif(CMAKE_COMPILER_IS_ICCXX)
   # #pragma warning(disable : 1478), but for warning 1478 it seems to not
   #work. Instead we add it as a definition
   add_definitions("-wd1478")
+  # Likewise to suppress failures about being unable to apply vectorization
+  # to loops, the #pragma warning(disable seems to not work so we add a
+  # a compile define.
+  add_definitions("-wd13379")
 endif()
 
