@@ -28,6 +28,8 @@
 namespace vtkm {
 namespace cont {
 
+typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DFA;
+
 class DataSetBuilderRectilinear
 {
 public:
@@ -128,11 +130,11 @@ private:
 	    vtkm::cont::ArrayHandle<T>,
 	    vtkm::cont::ArrayHandle<T>,
 	    vtkm::cont::ArrayHandle<T> > coords;
+
 	vtkm::cont::ArrayHandle<T> Xc, Yc, Zc;
-	
-	vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(X, Xc);
-	vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(Y, Yc);
-	vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(Z, Zc);
+	DFA::Copy(X, Xc);
+	DFA::Copy(Y, Yc);
+	DFA::Copy(Z, Zc);
 	
 	coords = vtkm::cont::make_ArrayHandleCartesianProduct(Xc,Yc,Zc);
         vtkm::cont::CoordinateSystem cs(coordNm, 1, coords);

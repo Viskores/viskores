@@ -36,34 +36,27 @@ class MakeTestDataSet
 {
 public:
     // 2D regular datasets.
-    VTKM_CONT_EXPORT
     vtkm::cont::DataSet Make2DRegularDataSet0();
 
     // 3D regular datasets.
-    VTKM_CONT_EXPORT
     vtkm::cont::DataSet Make3DRegularDataSet0();
 
     //2D rectilinear
-    VTKM_CONT_EXPORT
     vtkm::cont::DataSet Make2DRectilinearDataSet0();
 
     //3D rectilinear
-    VTKM_CONT_EXPORT
     vtkm::cont::DataSet Make3DRectilinearDataSet0();
 
     // 3D explicit datasets.
-    VTKM_CONT_EXPORT
     vtkm::cont::DataSet Make3DExplicitDataSet0();
-    VTKM_CONT_EXPORT
     vtkm::cont::DataSet Make3DExplicitDataSet1();
-    VTKM_CONT_EXPORT
     vtkm::cont::DataSet Make3DExplicitDataSetCowNose(double *pBounds = NULL);
 };
 
 
 //Make a simple 2D, 2 cell regular dataset.
 
-vtkm::cont::DataSet
+inline vtkm::cont::DataSet
 MakeTestDataSet::Make2DRegularDataSet0()
 {
     vtkm::cont::DataSetBuilderRegular dsb;
@@ -81,7 +74,7 @@ MakeTestDataSet::Make2DRegularDataSet0()
     return dataSet;
 }
 
-vtkm::cont::DataSet
+inline vtkm::cont::DataSet
 MakeTestDataSet::Make3DRegularDataSet0()
 {
     vtkm::cont::DataSetBuilderRegular dsb;
@@ -103,7 +96,7 @@ MakeTestDataSet::Make3DRegularDataSet0()
     return dataSet;
 }
 
-vtkm::cont::DataSet
+inline vtkm::cont::DataSet
 MakeTestDataSet::Make2DRectilinearDataSet0()
 {
     vtkm::cont::DataSetBuilderRectilinear dsb;
@@ -133,7 +126,7 @@ MakeTestDataSet::Make2DRectilinearDataSet0()
     return dataSet;
 }
 
-vtkm::cont::DataSet
+inline vtkm::cont::DataSet
 MakeTestDataSet::Make3DRectilinearDataSet0()
 {
     vtkm::cont::DataSetBuilderRectilinear dsb;
@@ -166,7 +159,7 @@ MakeTestDataSet::Make3DRectilinearDataSet0()
     return dataSet;
  }
 
-vtkm::cont::DataSet
+inline vtkm::cont::DataSet
 MakeTestDataSet::Make3DExplicitDataSet0()
 {
   vtkm::cont::DataSet dataSet;
@@ -213,8 +206,8 @@ MakeTestDataSet::Make3DExplicitDataSet0()
 
   return dataSet;
 }
-
-vtkm::cont::DataSet
+    /*
+inline vtkm::cont::DataSet
 MakeTestDataSet::Make3DExplicitDataSet1()
 {
   vtkm::cont::DataSet dataSet;
@@ -245,9 +238,10 @@ MakeTestDataSet::Make3DExplicitDataSet1()
 
   return dataSet;
 }
+    */
 
-/*
-vtkm::cont::DataSet
+
+inline vtkm::cont::DataSet
 MakeTestDataSet::Make3DExplicitDataSet1()
 {
   vtkm::cont::DataSet dataSet;
@@ -292,9 +286,8 @@ MakeTestDataSet::Make3DExplicitDataSet1()
 
   return dataSet;
 }
-*/
 
-vtkm::cont::DataSet
+inline vtkm::cont::DataSet
 MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
 {
   // prepare data array

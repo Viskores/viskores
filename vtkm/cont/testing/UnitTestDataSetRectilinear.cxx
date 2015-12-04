@@ -50,24 +50,6 @@ TwoDimRectilinearTest()
 
   vtkm::cont::DataSet dataSet = testDataSet.Make2DRectilinearDataSet0();
 
-  /*
-  dataSet.PrintSummary(std::cout);
-  vtkm::cont::CoordinateSystem cs = dataSet.GetCoordinateSystem();
-  vtkm::cont::DynamicArrayHandleCoordinateSystem dcs = cs.GetData();
-  vtkm::cont::ArrayHandleCartesianProduct<
-      vtkm::cont::ArrayHandle<vtkm::Float32>,
-      vtkm::cont::ArrayHandle<vtkm::Float32>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > coords;
-  dcs.CastToArrayHandle(coords);
-  vtkm::Id n = dcs.GetNumberOfValues();
-  vtkm::Vec<vtkm::Float32, 3> pt(0,0,0);
-  for (int i = 0; i < n; i++)
-  {
-      pt = coords.GetPortalConstControl().Get(i);
-      std::cout<<i<<": ["<<pt[0]<<" "<<pt[1]<<" "<<pt[2]<<"]"<<std::endl;
-  }
-  */
-
   typedef vtkm::cont::CellSetStructured<2> CellSetType;
   CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
 

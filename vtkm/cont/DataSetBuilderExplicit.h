@@ -27,6 +27,8 @@
 namespace vtkm {
 namespace cont {
 
+typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DFA;
+
 //Coordinates builder??
 //Need a singlecellset handler.
 
@@ -155,13 +157,16 @@ DataSetBuilderExplicit::Create(const std::vector<vtkm::Vec<T,3> > &coords,
     vtkm::cont::DataSet dataSet;
 
     size_t nPts = coords.size();
+    vtkm::cont::ArrayHandle<Vec<T,3> > coordsArray;
+    DFA::Copy(vtkm::cont::make_ArrayHandle(coords), coordsArray);
+
     dataSet.AddCoordinateSystem(
-        vtkm::cont::CoordinateSystem(coordsNm, 1, coords));
+        vtkm::cont::CoordinateSystem(coordsNm, 1, coordsArray));
 
     vtkm::cont::CellSetExplicit<> cellSet((vtkm::Id)nPts, cellNm, 3);
     cellSet.FillViaCopy(shapes, numIndices, connectivity);
     dataSet.AddCellSet(cellSet);
-    
+
     return dataSet;
 }
 
