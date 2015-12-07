@@ -28,6 +28,9 @@ set(headers
   TransportTagArrayOut.h
   TransportTagExecObject.h
   TransportTagTopologyIn.h
+  TransportTagWholeArrayIn.h
+  TransportTagWholeArrayInOut.h
+  TransportTagWholeArrayOut.h
   TypeCheck.h
   TypeCheckTagArray.h
   TypeCheckTagExecObject.h

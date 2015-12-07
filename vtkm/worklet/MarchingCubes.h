@@ -24,7 +24,6 @@
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/exec/CellDerivative.h>
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 
 #include <vtkm/cont/ArrayHandle.h>
@@ -57,10 +56,11 @@ public:
   class ClassifyCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(FieldInPoint<Scalar> inNodes,
-                                  TopologyIn topology,
-                                  FieldOutCell<> outNumTriangles,
-                                  ExecObject numTrianglesTable);
+    typedef void ControlSignature(
+        FieldInPoint<Scalar> inNodes,
+        TopologyIn topology,
+        FieldOutCell<> outNumTriangles,
+        WholeArrayIn<IdComponentType> numTrianglesTable);
     typedef void ExecutionSignature(_1, _3, _4);
     typedef _2 InputDomain;
 
@@ -108,7 +108,7 @@ public:
         FieldOutCell<> interpolationIds,
         FieldOutCell<> vertexOut, // Vertices for output triangles
         FieldOutCell<> normalsOut, // Estimated normals (one per tri vertex)
-        ExecObject TriTable // An array portal with the triangle table
+        WholeArrayIn<IdComponentType> TriTable // An array portal with the triangle table
         );
     typedef void ExecutionSignature(
         CellShape, _2, _3, _4, _5, _6, _7, _8, VisitIndex, FromIndices);
@@ -249,9 +249,6 @@ public:
         vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::triTable,
                                      256*16);
 
-    typedef vtkm::exec::ExecutionWholeArrayConst<vtkm::IdComponent, VTKM_DEFAULT_STORAGE_TAG, DeviceAdapter>
-        TableArrayExecObjectType;
-
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutputTrisPerCell;
 
     // Call the ClassifyCell functor to compute the Marching Cubes case numbers
@@ -266,7 +263,7 @@ public:
     classifyCellDispatcher.Invoke(field,
                                   cellSet,
                                   numOutputTrisPerCell,
-                                  TableArrayExecObjectType(numTrianglesTable));
+                                  numTrianglesTable);
 
     IsosurfaceGenerate isosurface(isovalue,
                                   numOutputTrisPerCell,
@@ -283,7 +280,7 @@ public:
           vtkm::cont::make_ArrayHandleGroupVec<3>(this->InterpolationIds),
           vtkm::cont::make_ArrayHandleGroupVec<3>(vertices),
           vtkm::cont::make_ArrayHandleGroupVec<3>(normals),
-          TableArrayExecObjectType(triangleTableArray));
+          triangleTableArray);
   }
 
   template<typename ArrayHandleIn, typename ArrayHandleOut>
