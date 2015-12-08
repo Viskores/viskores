@@ -138,7 +138,7 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
     dataSet.AddCoordinateSystem(
         vtkm::cont::CoordinateSystem(coordsNm, 1, coords));
 
-    vtkm::cont::CellSetExplicit<> cellSet((vtkm::Id)nPts, cellNm, 3);
+    vtkm::cont::CellSetExplicit<> cellSet((vtkm::Id)nPts, cellNm, 2);
     cellSet.FillViaCopy(shapes, numIndices, connectivity);
     dataSet.AddCellSet(cellSet);
 
@@ -163,7 +163,7 @@ DataSetBuilderExplicit::Create(const std::vector<vtkm::Vec<T,3> > &coords,
     dataSet.AddCoordinateSystem(
         vtkm::cont::CoordinateSystem(coordsNm, 1, coordsArray));
 
-    vtkm::cont::CellSetExplicit<> cellSet((vtkm::Id)nPts, cellNm, 3);
+    vtkm::cont::CellSetExplicit<> cellSet(nPts, cellNm, 2);
     cellSet.FillViaCopy(shapes, numIndices, connectivity);
     dataSet.AddCellSet(cellSet);
 

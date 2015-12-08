@@ -62,8 +62,8 @@ private:
   static void TestDataSet_Explicit()
   {
     vtkm::cont::testing::MakeTestDataSet tds;
-    vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet1();
-
+    vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet0();
+    
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");
 
@@ -161,7 +161,6 @@ private:
       }
       connectivityIndex += numIncidentCells;
     }
-
 
     //verify that GetIndices works properly
     vtkm::Id expectedPointIds[4] = {2,1,3,4};

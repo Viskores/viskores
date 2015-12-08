@@ -233,7 +233,7 @@ TestAvgCellToPoint()
   std::cout<<"Testing AvgCellToPoint worklet"<<std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
+  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet1();
 
   //Run a worklet to populate a point centered field.
   //Here, we're filling it with test values.
