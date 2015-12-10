@@ -51,6 +51,80 @@ if (VTKm_Base_FOUND)
     endif ()
   endif ()
 
+  if(VTKm_CUDA_FOUND)
+  #---------------------------------------------------------------------------
+  # Setup build flags for CUDA
+  #---------------------------------------------------------------------------
+  # Populates CUDA_NVCC_FLAGS with the best set of flags to compile for a
+  # given GPU architecture. The majority of developers should leave the
+  # option at the default of 'native' which uses system introspection to
+  # determine the smallest numerous of virtual and real architectures it
+  # should target.
+  #
+  # The option of 'all' is provided for people generating libraries that
+  # will deployed to any number of machines, it will compile all CUDA code
+  # for all major virtual architectures, guaranteeing that the code will run
+  # anywhere.
+  #
+  #
+  # 1 - native
+  #   - Uses system introspection to determine compile flags
+  # 2 - fermi
+  #   - Uses: --generate-code arch=compute_20,code=compute_20
+  # 3 - kepler
+  #   - Uses: --generate-code arch=compute_30,code=compute_30
+  #   - Uses: --generate-code arch=compute_35,code=compute_35
+  # 4 - maxwell
+  #   - Uses: --generate-code arch=compute_50,code=compute_50
+  #   - Uses: --generate-code arch=compute_52,code=compute_52
+  # 5 - all
+  #   - Uses: --generate-code arch=compute_20,code=compute_20
+  #   - Uses: --generate-code arch=compute_30,code=compute_30
+  #   - Uses: --generate-code arch=compute_35,code=compute_35
+  #   - Uses: --generate-code arch=compute_50,code=compute_50
+  #
+
+    #specify the property
+    set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
+    set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell all)
+
+    #detect what the propery is set too
+    if(VTKm_CUDA_Architecture STREQUAL "native")
+      #run execute_process to do auto_detection
+      execute_process(COMMAND "${CUDA_NVCC_EXECUTABLE}" "--run" "${CMAKE_CURRENT_LIST_DIR}/VTKmDetectCUDAVersion.cxx"
+                      RESULT_VARIABLE ran_properly
+                      OUTPUT_VARIABLE run_output)
+
+      if(ran_properly EQUAL 0)
+        #find the position of the "--generate-code" output. With some compilers such as
+        #msvc we get compile output plus run output. So we need to strip out just the
+        #run output
+        string(FIND "${run_output}" "--generate-code" position)
+        string(SUBSTRING "${run_output}" ${position} -1 run_output)
+        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} ${run_output}")
+      else()
+        message(STATUS "Unable to run \"${CUDA_NVCC_EXECUTABLE}\" to autodetect GPU architecture."
+                       "Falling back to fermi, please manually specify if you want something else.")
+        set(VTKm_CUDA_Architecture "fermi")
+      endif()
+
+    elseif(VTKm_CUDA_Architecture STREQUAL "fermi")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_20,code=compute_20")
+    elseif(VTKm_CUDA_Architecture STREQUAL "kepler")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_30,code=compute_30")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_35,code=compute_35")
+    elseif(VTKm_CUDA_Architecture STREQUAL "maxwell")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_50,code=compute_50")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_52,code=compute_52")
+    elseif(VTKm_CUDA_Architecture STREQUAL "all")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_20,code=compute_20")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_30,code=compute_30")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_35,code=compute_35")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_50,code=compute_50")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_52,code=compute_52")
+    endif()
+  endif()
+
   #---------------------------------------------------------------------------
   # Find Thrust library.
   #---------------------------------------------------------------------------
