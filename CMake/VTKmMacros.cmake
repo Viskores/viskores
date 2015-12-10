@@ -242,7 +242,14 @@ function(vtkm_unit_tests)
     #we use UnitTests_kit_ so that it is an unique key to exclude from coverage
     set(test_prog UnitTests_kit_${kit})
     create_test_sourcelist(TestSources ${test_prog}.cxx ${VTKm_UT_SOURCES})
+
+    #determine the timeout for all the tests based on the backend. CUDA tests
+    #generally require more time because of kernel generation.
+    set(timeout 180)
+
     if (VTKm_UT_CUDA)
+      #specify a longer timeout for cuda
+      set(timeout 360)
 
       vtkm_setup_nvcc_flags( old_nvcc_flags )
 
@@ -277,6 +284,7 @@ function(vtkm_unit_tests)
       add_test(NAME ${tname}
         COMMAND ${test_prog} ${tname}
         )
+      set_tests_properties("${tname}" PROPERTIES TIMEOUT ${timeout})
     endforeach (test)
   endif (VTKm_ENABLE_TESTING)
 
@@ -357,6 +365,13 @@ function(vtkm_worklet_unit_tests device_adapter)
     set(is_cuda TRUE)
   endif()
 
+  #determine the timeout for all the tests based on the backend. CUDA tests
+  #generally require more time because of kernel generation.
+  set(timeout 180)
+  if(is_cuda)
+    set(timeout 360)
+  endif()
+
   if(VTKm_ENABLE_TESTING)
     string(REPLACE "VTKM_DEVICE_ADAPTER_" "" device_type ${device_adapter})
 
@@ -364,6 +379,7 @@ function(vtkm_worklet_unit_tests device_adapter)
 
     #inject the device adapter into the test program name so each one is unique
     set(test_prog WorkletTests_${device_type})
+
 
     if(is_cuda)
       get_property(unit_test_srcs GLOBAL PROPERTY vtkm_worklet_unit_tests_cu_sources )
@@ -385,6 +401,8 @@ function(vtkm_worklet_unit_tests device_adapter)
       add_test(NAME "${tname}${device_type}"
         COMMAND ${test_prog} ${tname}
         )
+
+      set_tests_properties("${tname}${device_type}" PROPERTIES TIMEOUT ${timeout})
     endforeach (test)
 
     if(MSVC)
