@@ -91,7 +91,7 @@ if (VTKm_Base_FOUND)
     #detect what the propery is set too
     if(VTKm_CUDA_Architecture STREQUAL "native")
       #run execute_process to do auto_detection
-      execute_process(COMMAND "${CUDA_NVCC_EXECUTABLE}" "--run" "${CMAKE_CURRENT_LIST_DIR}/VTKmDetectCUDAVersion.cxx"
+      execute_process(COMMAND "${CUDA_NVCC_EXECUTABLE}" "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${CMAKE_CURRENT_LIST_DIR}/VTKmDetectCUDAVersion.cxx"
                       RESULT_VARIABLE ran_properly
                       OUTPUT_VARIABLE run_output)
 
