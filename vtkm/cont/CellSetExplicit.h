@@ -244,7 +244,7 @@ public:
                    const std::vector<vtkm::Id> &offsets = std::vector<vtkm::Id>() )
   {
 
-    this->PointToCell.Shapes.Allocate( static_cast<vtkm::UInt8>(cellTypes.size()) );
+    this->PointToCell.Shapes.Allocate( static_cast<vtkm::Id>(cellTypes.size()) );
     std::copy(cellTypes.begin(), cellTypes.end(),
               vtkm::cont::ArrayPortalToIteratorBegin(
                 this->PointToCell.Shapes.GetPortalControl()));
