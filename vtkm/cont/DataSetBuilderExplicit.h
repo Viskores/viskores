@@ -38,6 +38,35 @@ public:
     VTKM_CONT_EXPORT
     DataSetBuilderExplicit() {}
 
+    //Single cell explicits.
+    template<typename T, typename CellType>
+    VTKM_CONT_EXPORT
+    vtkm::cont::DataSet
+    Create(const std::vector<T> &xVals,
+           const std::vector<T> &yVals,
+           const std::vector<vtkm::Id> &connectivity,
+           const std::string &coordsNm="coords",
+           const std::string &cellNm="cells");
+
+    template<typename T, typename CellType>
+    VTKM_CONT_EXPORT
+    vtkm::cont::DataSet
+    Create(const std::vector<T> &xVals,
+           const std::vector<T> &yVals,
+           const std::vector<T> &zVals,
+           const std::vector<vtkm::Id> &connectivity,
+           const std::string &coordsNm="coords",
+           const std::string &cellNm="cells");
+
+    template<typename T, typename CellType>
+    VTKM_CONT_EXPORT
+    vtkm::cont::DataSet
+    Create(const std::vector<vtkm::Vec<T,3> > &coords,
+           const std::vector<vtkm::Id> &connectivity,
+           const std::string &coordsNm="coords",
+           const std::string &cellNm="cells");
+
+    //Zoo explicit cell
     template<typename T>
     VTKM_CONT_EXPORT
     vtkm::cont::DataSet
@@ -70,9 +99,97 @@ public:
            const std::vector<vtkm::Id> &connectivity,
            const std::string &coordsNm="coords",
            const std::string &cellNm="cells");
-
 private:
 };
+
+template<typename T, typename CellType>
+vtkm::cont::DataSet
+DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
+			       const std::vector<T> &yVals,
+			       const std::vector<vtkm::Id> &connectivity,
+			       const std::string &coordsNm,
+			       const std::string &cellNm)
+{
+    VTKM_CONT_ASSERT(xVals.size() == yVals.size() && xVals.size() > 0);
+    vtkm::cont::DataSet dataSet;
+
+    typedef vtkm::Vec<vtkm::Float32,3> CoordType;
+    std::vector<CoordType> coords(xVals.size());
+    
+    vtkm::Id nPts = static_cast<vtkm::Id>(coords.size());
+    for (size_t i=0; i < nPts; i++)
+    {
+        coords[i][0] = xVals[i];
+        coords[i][1] = yVals[i];
+        coords[i][2] = 0;
+    }
+    dataSet.AddCoordinateSystem(
+        vtkm::cont::CoordinateSystem(coordsNm, 1, coords));
+
+    vtkm::cont::CellSetSingleType< > cellSet(CellType(), cellNm);
+    cellSet.FillViaCopy(connectivity);
+    dataSet.AddCellSet(cellSet);
+
+    return dataSet;
+}
+
+template<typename T, typename CellType>
+vtkm::cont::DataSet
+DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
+			       const std::vector<T> &yVals,
+			       const std::vector<T> &zVals,
+			       const std::vector<vtkm::Id> &connectivity,
+			       const std::string &coordsNm,
+			       const std::string &cellNm)
+{
+    VTKM_CONT_ASSERT(xVals.size() == yVals.size() &&
+                     yVals.size() == zVals.size() &&
+                     xVals.size() > 0);
+    vtkm::cont::DataSet dataSet;
+
+    typedef vtkm::Vec<vtkm::Float32,3> CoordType;
+    std::vector<CoordType> coords(xVals.size());
+    
+    vtkm::Id nPts = static_cast<vtkm::Id>(coords.size());
+    for (size_t i=0; i < nPts; i++)
+    {
+        coords[i][0] = xVals[i];
+        coords[i][1] = yVals[i];
+        coords[i][2] = zVals[i];
+    }
+    dataSet.AddCoordinateSystem(
+        vtkm::cont::CoordinateSystem(coordsNm, 1, coords));
+
+    vtkm::cont::CellSetSingleType< > cellSet(CellType(), cellNm);
+    cellSet.FillViaCopy(connectivity);
+    dataSet.AddCellSet(cellSet);
+
+    return dataSet;
+}
+
+template<typename T, typename CellType>
+vtkm::cont::DataSet
+DataSetBuilderExplicit::Create(const std::vector<vtkm::Vec<T,3> > &coords,
+                               const std::vector<vtkm::Id> &connectivity,
+                               const std::string &coordsNm,
+                               const std::string &cellNm)
+{
+    vtkm::cont::DataSet dataSet;
+
+    vtkm::Id nPts = static_cast<vtkm::Id>(coords.size());
+    vtkm::cont::ArrayHandle<Vec<T,3> > coordsArray;
+    DFA::Copy(vtkm::cont::make_ArrayHandle(coords), coordsArray);
+
+    dataSet.AddCoordinateSystem(
+        vtkm::cont::CoordinateSystem(coordsNm, 1, coordsArray));
+
+    vtkm::cont::CellSetSingleType< > cellSet(CellType(), cellNm);
+    cellSet.FillViaCopy(connectivity);
+    dataSet.AddCellSet(cellSet);
+
+    return dataSet;
+}
+
 
 template<typename T>
 vtkm::cont::DataSet
@@ -91,7 +208,7 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
     typedef vtkm::Vec<vtkm::Float32,3> CoordType;
     std::vector<CoordType> coords(xVals.size());
     
-    size_t nPts = xVals.size();
+    vtkm::Id nPts = static_cast<vtkm::Id>(coords.size());
     for (size_t i=0; i < nPts; i++)
     {
         coords[i][0] = xVals[i];
@@ -101,7 +218,7 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
     dataSet.AddCoordinateSystem(
         vtkm::cont::CoordinateSystem(coordsNm, 1, coords));
 
-    vtkm::cont::CellSetExplicit<> cellSet((vtkm::Id)nPts, cellNm, 2);
+    vtkm::cont::CellSetExplicit<> cellSet(nPts, cellNm, 2);
     cellSet.FillViaCopy(shapes, numIndices, connectivity);
     dataSet.AddCellSet(cellSet);
 
@@ -128,7 +245,7 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
     typedef vtkm::Vec<vtkm::Float32,3> CoordType;
     std::vector<CoordType> coords(xVals.size());
     
-    size_t nPts = xVals.size();
+    vtkm::Id nPts = static_cast<vtkm::Id>(coords.size());
     for (size_t i=0; i < nPts; i++)
     {
         coords[i][0] = xVals[i];
@@ -138,7 +255,7 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
     dataSet.AddCoordinateSystem(
         vtkm::cont::CoordinateSystem(coordsNm, 1, coords));
 
-    vtkm::cont::CellSetExplicit<> cellSet((vtkm::Id)nPts, cellNm, 2);
+    vtkm::cont::CellSetExplicit<> cellSet(nPts, cellNm, 2);
     cellSet.FillViaCopy(shapes, numIndices, connectivity);
     dataSet.AddCellSet(cellSet);
 
@@ -156,7 +273,7 @@ DataSetBuilderExplicit::Create(const std::vector<vtkm::Vec<T,3> > &coords,
 {
     vtkm::cont::DataSet dataSet;
 
-    size_t nPts = coords.size();
+    vtkm::Id nPts = static_cast<vtkm::Id>(coords.size());
     vtkm::cont::ArrayHandle<Vec<T,3> > coordsArray;
     DFA::Copy(vtkm::cont::make_ArrayHandle(coords), coordsArray);
 
