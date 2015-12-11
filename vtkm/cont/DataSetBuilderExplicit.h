@@ -117,7 +117,7 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
     std::vector<CoordType> coords(xVals.size());
     
     vtkm::Id nPts = static_cast<vtkm::Id>(coords.size());
-    for (size_t i=0; i < nPts; i++)
+    for (vtkm::Id i=0; i < nPts; i++)
     {
         coords[i][0] = xVals[i];
         coords[i][1] = yVals[i];
@@ -151,7 +151,7 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
     std::vector<CoordType> coords(xVals.size());
     
     vtkm::Id nPts = static_cast<vtkm::Id>(coords.size());
-    for (size_t i=0; i < nPts; i++)
+    for (vtkm::Id i=0; i < nPts; i++)
     {
         coords[i][0] = xVals[i];
         coords[i][1] = yVals[i];
@@ -209,7 +209,7 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
     std::vector<CoordType> coords(xVals.size());
     
     vtkm::Id nPts = static_cast<vtkm::Id>(coords.size());
-    for (size_t i=0; i < nPts; i++)
+    for (vtkm::Id i=0; i < nPts; i++)
     {
         coords[i][0] = xVals[i];
         coords[i][1] = yVals[i];
@@ -246,7 +246,7 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
     std::vector<CoordType> coords(xVals.size());
     
     vtkm::Id nPts = static_cast<vtkm::Id>(coords.size());
-    for (size_t i=0; i < nPts; i++)
+    for (vtkm::Id i=0; i < nPts; i++)
     {
         coords[i][0] = xVals[i];
         coords[i][1] = yVals[i];
