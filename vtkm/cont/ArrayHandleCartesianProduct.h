@@ -98,10 +98,19 @@ public:
   VTKM_EXEC_EXPORT
   void Set(vtkm::Id index, const ValueType &value) const
   {
-    vtkm::Id i1=0, i2=0, i3=0;
-    this->PortalFirst.Set(i1, value[0]);
-    this->PortalSecond.Set(i2, value[1]);
-    this->PortalThird.Set(i3, value[2]);
+      vtkm::Id dim1 = this->PortalFirst.GetNumberOfValues();
+      vtkm::Id dim2 = this->PortalSecond.GetNumberOfValues();
+      vtkm::Id dim3 = this->PortalThird.GetNumberOfValues();
+      vtkm::Id dim12 = dim1*dim2;
+      vtkm::Id idx12 = index % dim12;
+
+      vtkm::Id i1 = idx12 % dim1;
+      vtkm::Id i2 = idx12 / dim1;
+      vtkm::Id i3 = index / dim12;
+
+      this->PortalFirst.Set(i1, value[0]);
+      this->PortalSecond.Set(i2, value[1]);
+      this->PortalThird.Set(i3, value[2]);
   }
 
   VTKM_EXEC_CONT_EXPORT
@@ -188,7 +197,16 @@ public:
   VTKM_CONT_EXPORT
   void Set(vtkm::Id index, const ValueType &value) const
   {
-      vtkm::Id i1=0, i2=0, i3=0;
+      vtkm::Id dim1 = this->PortalFirst.GetNumberOfValues();
+      vtkm::Id dim2 = this->PortalSecond.GetNumberOfValues();
+      vtkm::Id dim3 = this->PortalThird.GetNumberOfValues();
+      vtkm::Id dim12 = dim1*dim2;
+      vtkm::Id idx12 = index % dim12;
+
+      vtkm::Id i1 = idx12 % dim1;
+      vtkm::Id i2 = idx12 / dim1;
+      vtkm::Id i3 = index / dim12;
+
       this->PortalFirst.Set(i1, value[0]);
       this->PortalSecond.Set(i2, value[1]);
       this->PortalThird.Set(i3, value[2]);
