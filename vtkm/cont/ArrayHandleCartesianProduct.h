@@ -164,7 +164,8 @@ public:
   ///
   template<class OtherV, class OtherP1, class OtherP2, class OtherP3>
   VTKM_CONT_EXPORT
-  ArrayPortalContCartesianProduct(const ArrayPortalContCartesianProduct<OtherV,OtherP1,OtherP2,OtherP3> &src)
+  ArrayPortalContCartesianProduct(const ArrayPortalContCartesianProduct<OtherV,
+				  OtherP1,OtherP2,OtherP3> &src)
     : PortalFirst(src.GetPortalFirst()),
       PortalSecond(src.GetPortalSecond()),
       PortalThird(src.GetPortalThird())
@@ -403,11 +404,9 @@ public:
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
       throw vtkm::cont::ErrorControlBadAllocation("Does not make sense.");
-      /*
-    const vtkm::Id numberOfValues = this->GetNumberOfValues();
-    return PortalExecution(this->FirstArray.PrepareForOutput(numberOfValues, Device()),
-                           this->SecondArray.PrepareForOutput(numberOfValues, Device()));
-      */
+      return PortalExecution(this->FirstArray.PrepareForInput(Device()),
+			     this->SecondArray.PrepareForInPlace(Device()),
+			     this->ThirdArray.PrepareForInPlace(Device()));
   }
 
   VTKM_CONT_EXPORT
@@ -434,7 +433,8 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void ReleaseResources() {
+  void ReleaseResources()
+  {
     this->FirstArray.ReleaseResourcesExecution();
     this->SecondArray.ReleaseResourcesExecution();
     this->ThirdArray.ReleaseResourcesExecution();
