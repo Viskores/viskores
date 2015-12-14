@@ -92,6 +92,7 @@ public:
   VTKM_CONT_EXPORT void Reset()
   {
     cudaEventRecord(this->StartEvent, 0);
+    cudaEventSynchronize(this->StartEvent);
   }
 
   VTKM_CONT_EXPORT vtkm::Float64 GetElapsedTime()
