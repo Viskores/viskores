@@ -93,7 +93,7 @@ void TestCellAverageExplicit()
   std::cout << "Testing CellAverage Worklet on Explicit data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
+  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
   vtkm::cont::Field result("avgvals",
                            1,
@@ -109,11 +109,11 @@ void TestCellAverageExplicit()
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle =
       result.GetData().CastToArrayHandle(vtkm::Float32(), VTKM_DEFAULT_STORAGE_TAG());
 
-  vtkm::Float32 expected[2] = { 30.1f, 40.1f };
+  vtkm::Float32 expected[2] = { 20.1333f, 35.2f };
   for (int i = 0; i < 2; ++i)
     {
     VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i),
-        expected[i]), "Wrong result for CellAverage worklet on 2D regular data");
+        expected[i]), "Wrong result for CellAverage worklet on 3D explicit data");
     }
 }
 
