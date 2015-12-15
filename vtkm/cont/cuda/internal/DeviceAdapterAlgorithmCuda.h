@@ -20,11 +20,11 @@
 #ifndef vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmCuda_h
 #define vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmCuda_h
 
+#include <vtkm/cont/cuda/ErrorControlCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/ErrorControlInternal.h>
 
 #include <vtkm/Math.h>
 
@@ -62,11 +62,7 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>
 
   VTKM_CONT_EXPORT static void Synchronize()
   {
-    cudaError_t error = cudaDeviceSynchronize();
-    if (error != cudaSuccess)
-    {
-      throw vtkm::cont::ErrorControlInternal(cudaGetErrorString(error));
-    }
+    VTKM_CUDA_CALL(cudaDeviceSynchronize());
   }
 
 };
@@ -79,30 +75,30 @@ class DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>
 public:
   VTKM_CONT_EXPORT DeviceAdapterTimerImplementation()
   {
-    cudaEventCreate(&this->StartEvent);
-    cudaEventCreate(&this->EndEvent);
+    VTKM_CUDA_CALL(cudaEventCreate(&this->StartEvent));
+    VTKM_CUDA_CALL(cudaEventCreate(&this->EndEvent));
     this->Reset();
   }
   VTKM_CONT_EXPORT ~DeviceAdapterTimerImplementation()
   {
-    cudaEventDestroy(this->StartEvent);
-    cudaEventDestroy(this->EndEvent);
+    VTKM_CUDA_CALL(cudaEventDestroy(this->StartEvent));
+    VTKM_CUDA_CALL(cudaEventDestroy(this->EndEvent));
   }
 
   VTKM_CONT_EXPORT void Reset()
   {
-    cudaEventRecord(this->StartEvent, 0);
-    cudaEventSynchronize(this->StartEvent);
+    VTKM_CUDA_CALL(cudaEventRecord(this->StartEvent, 0));
+    VTKM_CUDA_CALL(cudaEventSynchronize(this->StartEvent));
   }
 
   VTKM_CONT_EXPORT vtkm::Float64 GetElapsedTime()
   {
-    cudaEventRecord(this->EndEvent, 0);
-    cudaEventSynchronize(this->EndEvent);
+    VTKM_CUDA_CALL(cudaEventRecord(this->EndEvent, 0));
+    VTKM_CUDA_CALL(cudaEventSynchronize(this->EndEvent));
     float elapsedTimeMilliseconds;
-    cudaEventElapsedTime(&elapsedTimeMilliseconds,
-                         this->StartEvent,
-                         this->EndEvent);
+    VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds,
+                                        this->StartEvent,
+                                        this->EndEvent));
     return static_cast<vtkm::Float64>(0.001f*elapsedTimeMilliseconds);
   }
 
@@ -146,7 +142,7 @@ public:
       for (vtkm::Int32 i = 0; i < numDevices; i++)
       {
         cudaDeviceProp prop;
-        cudaGetDeviceProperties(&prop, i);
+        VTKM_CUDA_CALL(cudaGetDeviceProperties(&prop, i));
         const vtkm::Int32 arch = (prop.major * 10) + prop.minor;
         archVersion = vtkm::Max(arch, archVersion);
       }

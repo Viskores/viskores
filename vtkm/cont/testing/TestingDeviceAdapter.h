@@ -405,11 +405,15 @@ private:
 
     vtkm::cont::Timer<DeviceAdapterTag> timer;
 
+    std::cout << "Timer started. Sleeping..." << std::endl;
+
 #ifndef _WIN32
     sleep(1);
 #else
     Sleep(1000);
 #endif
+
+    std::cout << "Woke up. Check time." << std::endl;
 
     vtkm::Float64 elapsedTime = timer.GetElapsedTime();
 
