@@ -285,11 +285,11 @@ DataSetBuilderExplicit::Create(const std::vector<vtkm::Vec<T,3> > &coords,
     return dataSet;
 }
 
-class DataSetIterativeBuilderExplicit
+class DataSetBuilderExplicitIterative
 {
 public:
     VTKM_CONT_EXPORT
-    DataSetIterativeBuilderExplicit() {}
+    DataSetBuilderExplicitIterative() {}
 
     VTKM_CONT_EXPORT
     void Begin(const std::string &_coordNm="coords",
@@ -368,7 +368,7 @@ private:
 };
 
 vtkm::cont::DataSet
-DataSetIterativeBuilderExplicit::Create()
+DataSetBuilderExplicitIterative::Create()
 {
     DataSetBuilderExplicit dsb;
     return dsb.Create(points, shapes, numIdx, connectivity, coordNm, cellNm);
