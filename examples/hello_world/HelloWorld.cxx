@@ -198,7 +198,7 @@ int main(int argc, char** argv)
 {
   typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapter> DeviceAdapterTraits;
   std::cout << "Running Hello World example on device adapter: "
-            << DeviceAdapterTraits::GetId() << std::endl;
+            << DeviceAdapterTraits::GetName() << std::endl;
 
   glewExperimental = GL_TRUE;
   glutInit(&argc, argv);

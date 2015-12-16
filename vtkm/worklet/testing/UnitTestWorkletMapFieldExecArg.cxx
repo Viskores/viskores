@@ -115,7 +115,7 @@ void TestWorkletMapFieldExecArg()
   typedef vtkm::cont::DeviceAdapterTraits<
                     VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
   std::cout << "Testing Worklet with ExecutionWholeArray on device adapter: "
-            << DeviceAdapterTraits::GetId() << std::endl;
+            << DeviceAdapterTraits::GetName() << std::endl;
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(

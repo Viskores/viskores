@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
   typedef vtkm::cont::CellSetStructured<3> CellSet;
 
   std::cout << "Running IsosurfaceUniformGrid example on device adapter: "
-            << DeviceAdapterTraits::GetId() << std::endl;
+            << DeviceAdapterTraits::GetName() << std::endl;
 
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
