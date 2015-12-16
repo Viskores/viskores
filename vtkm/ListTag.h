@@ -49,7 +49,7 @@ struct ListTagCheck
 ///
 #define VTKM_IS_LIST_TAG(tag) \
   VTKM_STATIC_ASSERT_MSG( \
-    ::vtkm::internal::ListTagCheck<tag>::Valid, \
+    (::vtkm::internal::ListTagCheck<tag>::Valid), \
     "Provided type is not a valid VTK-m list tag.")
 
 namespace detail {
