@@ -26,9 +26,9 @@
 //a valid tag when VTKM_ENABLE_TBB is true. This is for easier development
 //of multi-backend systems
 #ifdef VTKM_ENABLE_TBB
-VTKM_VALID_DEVICE_ADAPTER(TBB);
+VTKM_VALID_DEVICE_ADAPTER(TBB, VTKM_DEVICE_ADAPTER_TBB);
 #else
-VTKM_INVALID_DEVICE_ADAPTER(TBB);
+VTKM_INVALID_DEVICE_ADAPTER(TBB, VTKM_DEVICE_ADAPTER_TBB);
 #endif
 
 #endif //vtk_m_cont_tbb_internal_DeviceAdapterTagTBB_h

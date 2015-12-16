@@ -26,9 +26,9 @@
 //a valid tag when VTKM_CUDA is true. This is for easier development
 //of multi-backend systems
 #ifdef VTKM_CUDA
-VTKM_VALID_DEVICE_ADAPTER(Cuda);
+VTKM_VALID_DEVICE_ADAPTER(Cuda, VTKM_DEVICE_ADAPTER_CUDA);
 #else
-VTKM_INVALID_DEVICE_ADAPTER(Cuda);
+VTKM_INVALID_DEVICE_ADAPTER(Cuda, VTKM_DEVICE_ADAPTER_CUDA);
 #endif
 
 #endif //vtk_m_cont_cuda_internal_DeviceAdapterTagCuda_h

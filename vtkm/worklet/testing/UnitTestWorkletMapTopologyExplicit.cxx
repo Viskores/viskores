@@ -139,7 +139,7 @@ void TestWorkletMapTopologyExplicit()
   typedef vtkm::cont::DeviceAdapterTraits<
                     VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
   std::cout << "Testing Topology Worklet ( Explicit ) on device adapter: "
-            << DeviceAdapterTraits::GetId() << std::endl;
+            << DeviceAdapterTraits::GetName() << std::endl;
 
     TestMaxPointOrCell();
     TestAvgPointToCell();

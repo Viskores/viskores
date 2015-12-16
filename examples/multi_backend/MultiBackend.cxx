@@ -69,12 +69,12 @@ void run_if_valid(vtkm::cont::ArrayHandle< vtkm::Vec< T, 3 > > inHandle,
   if(DeviceAdapterTraits::Valid)
     {
     std::cout << "Running a worklet on device adapter: "
-              << DeviceAdapterTraits::GetId() << std::endl;
+              << DeviceAdapterTraits::GetName() << std::endl;
     }
   else
     {
     std::cout << "Unable to run a worklet on device adapter: "
-              << DeviceAdapterTraits::GetId() << std::endl;
+              << DeviceAdapterTraits::GetName() << std::endl;
     }
 
   CanRun<DeviceAdapterTraits::Valid>::run(inHandle,outCoords,outColors,tag);

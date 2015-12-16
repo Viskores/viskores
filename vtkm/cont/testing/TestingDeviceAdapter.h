@@ -292,6 +292,11 @@ private:
                      "Device adapter Id does not equal itself.");
     VTKM_TEST_ASSERT(Traits::GetId() != ErrorTraits::GetId(),
                      "Device adapter Id not distinguishable from others.");
+
+    VTKM_TEST_ASSERT(Traits::GetName() == Traits::GetName(),
+                     "Device adapter Name does not equal itself.");
+    VTKM_TEST_ASSERT(Traits::GetName() != ErrorTraits::GetName(),
+                     "Device adapter Name not distinguishable from others.");
   }
 
   // Note: this test does not actually test to make sure the data is available

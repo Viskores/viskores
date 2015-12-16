@@ -23,6 +23,7 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
+#include <vtkm/Types.h>
 
 #include <string>
 
@@ -49,7 +50,8 @@
 namespace vtkm {
 namespace cont {
 
-typedef std::string DeviceAdapterId;
+typedef vtkm::Int8 DeviceAdapterId;
+typedef std::string DeviceAdapterNameType;
 
 template<typename DeviceAdapter>
 struct DeviceAdapterTraits;
@@ -66,14 +68,17 @@ struct DeviceAdapterTagCheck
 /// Creates a tag named vtkm::cont::DeviceAdapterTagName and associated MPL
 /// structures to use this tag. Always use this macro (in the base namespace)
 /// when creating a device adapter.
-#define VTKM_VALID_DEVICE_ADAPTER(Name) \
+#define VTKM_VALID_DEVICE_ADAPTER(Name, Id) \
   namespace vtkm { \
   namespace cont { \
   struct DeviceAdapterTag##Name {  }; \
   template<> \
   struct DeviceAdapterTraits<vtkm::cont::DeviceAdapterTag##Name> { \
     static DeviceAdapterId GetId() { \
-      return DeviceAdapterId(#Name); \
+      return DeviceAdapterId(Id); \
+    } \
+    static DeviceAdapterNameType GetName() { \
+      return DeviceAdapterNameType(#Name); \
     } \
     static const bool Valid = true;\
   }; \
@@ -85,16 +90,19 @@ struct DeviceAdapterTagCheck
   }
 
 /// Marks the tag named vtkm::cont::DeviceAdapterTagName and associated
-/// structures as valid to use. Always use this macro (in the base namespace)
+/// structures as invalid to use. Always use this macro (in the base namespace)
 /// when creating a device adapter.
-#define VTKM_INVALID_DEVICE_ADAPTER(Name) \
+#define VTKM_INVALID_DEVICE_ADAPTER(Name, Id) \
   namespace vtkm { \
   namespace cont { \
   struct DeviceAdapterTag##Name {  }; \
   template<> \
   struct DeviceAdapterTraits<vtkm::cont::DeviceAdapterTag##Name> { \
     static DeviceAdapterId GetId() { \
-      return DeviceAdapterId(#Name); \
+      return DeviceAdapterId(Id); \
+    } \
+    static DeviceAdapterNameType GetName() { \
+      return DeviceAdapterNameType(#Name); \
     } \
     static const bool Valid = false;\
   }; \
