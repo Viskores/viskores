@@ -21,6 +21,8 @@
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/RuntimeDeviceInformation.h>
+
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -61,7 +63,7 @@ void run_if_valid(vtkm::cont::ArrayHandle< vtkm::Vec< T, 3 > > inHandle,
                   vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::UInt8, 4 > > outColors,
                   DeviceAdapterTag tag)
 {
- typedef vtkm::cont::internal::DeviceAdapterTraits<DeviceAdapterTag>
+ typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>
          DeviceAdapterTraits;
 
   if(DeviceAdapterTraits::Valid)
@@ -104,13 +106,23 @@ struct CanRun<true>
                   vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::UInt8, 4 > > outColors,
                   DeviceAdapterTag)
   {
-  typedef vtkm::worklet::DispatcherMapField<GenerateSurfaceWorklet,
-                                            DeviceAdapterTag> DispatcherType;
 
-  GenerateSurfaceWorklet worklet( 0.05f );
-  DispatcherType(worklet).Invoke( inHandle,
-                                  outCoords,
-                                  outColors);
+  //even though we have support for this device adapter we haven't determined
+  //if we actually have run-time support. This is a significant issue with
+  //the CUDA backend
+  vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtime;
+  const bool haveSupport = runtime.Exists();
+
+  if(haveSupport)
+    {
+    typedef vtkm::worklet::DispatcherMapField<GenerateSurfaceWorklet,
+                                              DeviceAdapterTag> DispatcherType;
+
+    GenerateSurfaceWorklet worklet( 0.05f );
+    DispatcherType(worklet).Invoke( inHandle,
+                                    outCoords,
+                                    outColors);
+    }
   }
 };
 
@@ -149,11 +161,9 @@ int main(int, char**)
   vtkm::cont::ArrayHandle< Uint8Vec4 > color;
 
   //Run the algorithm on all backends that we have compiled support for.
-  run_if_valid(in, out, color, SerialTag());
   run_if_valid(in, out, color, CudaTag());
   run_if_valid(in, out, color, TBBTag());
-
-
+  run_if_valid(in, out, color, SerialTag());
 }
 
 

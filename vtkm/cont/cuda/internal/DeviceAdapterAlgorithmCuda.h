@@ -26,10 +26,30 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorControlInternal.h>
 
+#include <vtkm/Math.h>
+
 // Here are the actual implementation of the algorithms.
 #include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmThrust.h>
 
 #include <cuda.h>
+
+namespace vtkm {
+namespace cont {
+namespace cuda {
+namespace internal {
+
+static
+__global__
+void DetermineIfValidCudaDevice()
+{
+  //used only to see if we can launch kernels. It is possible to have a
+  //CUDA capable device, but still fail to have CUDA support.
+}
+
+}
+}
+}
+}
 
 namespace vtkm {
 namespace cont {
@@ -92,6 +112,80 @@ private:
 
   cudaEvent_t StartEvent;
   cudaEvent_t EndEvent;
+};
+
+/// \brief Class providing a CUDA runtime support detector.
+///
+/// The class provide the actual implementation used by
+/// vtkm::cont::RuntimeDeviceInformation for the CUDA backend.
+///
+/// We will verify at runtime that the machine has at least one CUDA
+/// capable device, and said device is from the 'fermi' (SM_20) generation
+/// or newer.
+///
+template<>
+class DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagCuda>
+{
+public:
+  VTKM_CONT_EXPORT DeviceAdapterRuntimeDetector():
+    NumberOfDevices(0),
+    HighestArchSupported(0)
+  {
+    static bool deviceQueryInit = false;
+    static int numDevices = 0;
+    static int archVersion = 0;
+
+    if(!deviceQueryInit)
+      {
+      deviceQueryInit = true;
+
+      //first query for the number of devices
+      cudaGetDeviceCount(&numDevices);
+
+      for (vtkm::Int32 i = 0; i < numDevices; i++)
+      {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop, i);
+        const vtkm::Int32 arch = (prop.major * 10) + prop.minor;
+        archVersion = vtkm::Max(arch, archVersion);
+      }
+
+      //Make sure we can actually launch a kernel. This could fail for any
+      //of the following reasons:
+      //
+      // 1. cudaErrorInsufficientDriver, caused by out of data drives
+      // 2. cudaErrorDevicesUnavailable, caused by another process locking the
+      //    device or somebody disabling cuda support on the device
+      // 3. cudaErrorNoKernelImageForDevice we built for a compute version
+      //    greater than the device we are running on
+      // Most likely others that I don't even know about
+      vtkm::cont::cuda::internal::DetermineIfValidCudaDevice <<<1,1>>> ();
+      if(cudaSuccess != cudaGetLastError())
+        {
+        numDevices = 0;
+        archVersion = 0;
+        }
+      }
+
+    this->NumberOfDevices = numDevices;
+    this->HighestArchSupported = archVersion;
+  }
+
+  /// Returns true if the given device adapter is supported on the current
+  /// machine.
+  ///
+  /// Only returns true if we have at-least one CUDA capable device of SM_20 or
+  /// greater ( fermi ).
+  ///
+  VTKM_CONT_EXPORT bool Exists() const
+  {
+    //
+    return this->NumberOfDevices > 0 && this->HighestArchSupported >= 20;
+  }
+
+private:
+  vtkm::Int32 NumberOfDevices;
+  vtkm::Int32 HighestArchSupported;
 };
 
 }

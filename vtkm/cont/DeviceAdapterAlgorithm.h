@@ -496,6 +496,33 @@ public:
   }
 };
 
+/// \brief Class providing a device-specific runtime support detector.
+///
+/// The class provide the actual implementation used by
+/// vtkm::cont::RuntimeDeviceInformation.
+///
+/// A default implementation is provided but device adapters which require
+/// physical hardware or other special runtime requirements should provide
+/// one (in conjunction with DeviceAdapterAlgorithm) where appropriate.
+///
+template<class DeviceAdapterTag>
+class DeviceAdapterRuntimeDetector
+{
+public:
+
+  /// Returns true if the given device adapter is supported on the current
+  /// machine.
+  ///
+  /// The default implementation is to return the value of
+  /// vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>::Valid
+  ///
+  VTKM_CONT_EXPORT bool Exists() const
+  {
+    typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> DeviceAdapterTraits;
+    return DeviceAdapterTraits::Valid;
+  }
+};
+
 }
 } // namespace vtkm::cont
 

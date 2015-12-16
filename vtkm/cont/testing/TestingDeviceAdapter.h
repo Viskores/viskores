@@ -30,6 +30,7 @@
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorControlBadAllocation.h>
 #include <vtkm/cont/ErrorExecution.h>
+#include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -283,8 +284,8 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing device adapter tag" << std::endl;
 
-    typedef vtkm::cont::internal::DeviceAdapterTraits<DeviceAdapterTag> Traits;
-    typedef vtkm::cont::internal::DeviceAdapterTraits<
+    typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> Traits;
+    typedef vtkm::cont::DeviceAdapterTraits<
         vtkm::cont::DeviceAdapterTagError> ErrorTraits;
 
     VTKM_TEST_ASSERT(Traits::GetId() == Traits::GetId(),
@@ -413,6 +414,18 @@ private:
                      "Timer did not capture full second wait.");
     VTKM_TEST_ASSERT(elapsedTime < 2.0,
                      "Timer counted too far or system really busy.");
+  }
+
+  VTKM_CONT_EXPORT
+  static void TestRuntime()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing RuntimeDeviceInformation" << std::endl;
+
+    vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtime;
+    const bool valid_runtime = runtime.Exists();
+
+    VTKM_TEST_ASSERT(valid_runtime, "runtime detection failed for device");
   }
 
   static VTKM_CONT_EXPORT void TestAlgorithmSchedule()
@@ -1550,6 +1563,7 @@ private:
       TestArrayManagerExecution();
       TestOutOfMemory();
       TestTimer();
+      TestRuntime();
 
       TestAlgorithmSchedule();
       TestErrorExecution();

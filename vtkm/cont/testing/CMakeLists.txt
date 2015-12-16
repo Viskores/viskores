@@ -53,6 +53,7 @@ set(unit_tests
   UnitTestDeviceAdapterSerial.cxx
   UnitTestDynamicArrayHandle.cxx
   UnitTestDynamicCellSet.cxx
+  UnitTestRuntimeDeviceInformation.cxx
   UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx
   UnitTestStorageListTag.cxx

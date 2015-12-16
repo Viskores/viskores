@@ -161,7 +161,7 @@ public:
   bool IsDeviceAdapter(DeviceAdapter) const
   {
     return this->IsDeviceAdapterImpl(
-             vtkm::cont::internal::DeviceAdapterTraits<DeviceAdapter>::GetId());
+             vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId());
   }
 
 protected:
@@ -183,7 +183,7 @@ protected:
   virtual void ReleaseResourcesImpl() = 0;
 
   virtual bool IsDeviceAdapterImpl(
-    const vtkm::cont::internal::DeviceAdapterId &id) const = 0;
+    const vtkm::cont::DeviceAdapterId &id) const = 0;
 
 private:
   template<typename DeviceAdapter>
@@ -281,7 +281,7 @@ protected:
   VTKM_CONT_EXPORT
   bool IsDeviceAdapterImpl(const DeviceAdapterId &id) const
   {
-    return id == vtkm::cont::internal::DeviceAdapterTraits<DeviceAdapter>::GetId();
+    return id == vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
   }
 
 private:

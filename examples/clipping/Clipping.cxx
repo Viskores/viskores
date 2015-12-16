@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
   std::cout << "Device Adapter Id: "
-            << vtkm::cont::internal::DeviceAdapterTraits<DeviceAdapter>::GetId()
+            << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId()
             << std::endl;
 
   vtkm::io::reader::VTKDataSetReader reader(argv[1]);
