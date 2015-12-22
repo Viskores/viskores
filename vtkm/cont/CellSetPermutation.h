@@ -190,6 +190,12 @@ public:
   }
 
   VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfPoints() const
+  {
+    return this->PermutedCellSet.GetNumberOfPoints();
+  }
+
+  VTKM_CONT_EXPORT
   vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagCell) const
   {
     return this->PermutedCellSet.GetNumberOfCells();
@@ -264,6 +270,12 @@ public:
   vtkm::Id GetNumberOfCells() const
   {
     return this->ValidCellIds.GetNumberOfValues();
+  }
+
+  VTKM_CONT_EXPORT
+  vtkm::Id GetNumberOfPoints() const
+  {
+    return this->FullCellSet.GetNumberOfPoints();
   }
 
   //This is the way you can fill the memory from another system without copying
