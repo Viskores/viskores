@@ -85,9 +85,7 @@ public:
     return 0;
   }
 
-  // A cell set does not (necessarily) know the number of points. Nor does a
-  // DataSet. Shouldn't someone know?
-//  virtual vtkm::Id GetNumberOfPoints() const = 0;
+  virtual vtkm::Id GetNumberOfPoints() const = 0;
 
   virtual void PrintSummary(std::ostream&) const = 0;
 
