@@ -21,6 +21,9 @@
 #ifndef vtk_m_cont_DataSetFieldAdd_h
 #define vtk_m_cont_DataSetFieldAdd_h
 
+#include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Field.h>
+
 namespace vtkm {
 namespace cont {
 
