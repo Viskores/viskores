@@ -59,6 +59,7 @@ set(headers
   ErrorExecution.h
   Field.h
   LogicalStructure.h
+  RuntimeDeviceInformation.h
   Storage.h
   StorageBasic.h
   StorageImplicit.h
