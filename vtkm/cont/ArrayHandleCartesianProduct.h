@@ -83,7 +83,6 @@ public:
   {
       vtkm::Id dim1 = this->PortalFirst.GetNumberOfValues();
       vtkm::Id dim2 = this->PortalSecond.GetNumberOfValues();
-      vtkm::Id dim3 = this->PortalThird.GetNumberOfValues();
       vtkm::Id dim12 = dim1*dim2;
       vtkm::Id idx12 = index % dim12;
       vtkm::Id i1 = idx12 % dim1;
@@ -100,7 +99,6 @@ public:
   {
       vtkm::Id dim1 = this->PortalFirst.GetNumberOfValues();
       vtkm::Id dim2 = this->PortalSecond.GetNumberOfValues();
-      vtkm::Id dim3 = this->PortalThird.GetNumberOfValues();
       vtkm::Id dim12 = dim1*dim2;
       vtkm::Id idx12 = index % dim12;
 
