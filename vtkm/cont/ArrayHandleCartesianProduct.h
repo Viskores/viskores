@@ -74,8 +74,8 @@ public:
   vtkm::Id GetNumberOfValues() const
   {
       return this->PortalFirst.GetNumberOfValues() *
-	  this->PortalSecond.GetNumberOfValue() *
-	  this->PortalThird.GetNumberOfValue();
+	  this->PortalSecond.GetNumberOfValues() *
+	  this->PortalThird.GetNumberOfValues();
   }
 
   VTKM_EXEC_EXPORT
@@ -397,7 +397,8 @@ public:
   VTKM_CONT_EXPORT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
     return PortalConstExecution(this->FirstArray.PrepareForInput(Device()),
-                                this->SecondArray.PrepareForInput(Device()));
+                                this->SecondArray.PrepareForInput(Device()),
+                                this->ThirdArray.PrepareForInput(Device()));
   }
 
   VTKM_CONT_EXPORT
