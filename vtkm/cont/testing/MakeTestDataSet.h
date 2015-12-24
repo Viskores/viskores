@@ -60,7 +60,8 @@ inline vtkm::cont::DataSet
 MakeTestDataSet::Make2DRegularDataSet0()
 {
     vtkm::cont::DataSetBuilderRegular dsb;
-    vtkm::cont::DataSet dataSet = dsb.Create(3,2);
+    vtkm::Id2 dimensions(3,2);
+    vtkm::cont::DataSet dataSet = dsb.Create(dimensions);
 
     vtkm::cont::DataSetFieldAdd dsf;
     const vtkm::Id nVerts = 6;
@@ -78,7 +79,8 @@ inline vtkm::cont::DataSet
 MakeTestDataSet::Make3DRegularDataSet0()
 {
     vtkm::cont::DataSetBuilderRegular dsb;
-    vtkm::cont::DataSet dataSet = dsb.Create(3,2,3);
+    vtkm::Id3 dimensions(3,2,3);
+    vtkm::cont::DataSet dataSet = dsb.Create(dimensions);
 
     vtkm::cont::DataSetFieldAdd dsf;
     const int nVerts = 18;

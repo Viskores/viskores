@@ -36,52 +36,40 @@ public:
     //2D regular grids.
     VTKM_CONT_EXPORT
     vtkm::cont::DataSet
-    Create(vtkm::Id nx, vtkm::Id ny,
+    Create(const vtkm::Id2 &dimensions,
+           const vtkm::Vec<vtkm::FloatDefault,2> &origin = vtkm::Vec<vtkm::FloatDefault,2>(0.0f),
+           const vtkm::Vec<vtkm::FloatDefault,2> &spacing = vtkm::Vec<vtkm::FloatDefault,2>(1.0f),
            std::string coordNm="coords", std::string cellNm="cells")
     {
-        return Create(2, nx, ny, 1, 0,0,0, 1,1,1, coordNm, cellNm);
-    }
-
-    template<typename T>
-    VTKM_CONT_EXPORT
-    vtkm::cont::DataSet
-    Create(vtkm::Id nx, vtkm::Id ny,
-           T originX, T originY, T spacingX, T spacingY,
-           std::string coordNm="coords", std::string cellNm="cells")
-    {
-        return Create(2, nx,ny,1, originX,originY,0,
-		      spacingX,spacingY,1,
-		      coordNm, cellNm);
+        return CreateDS(2,
+                        dimensions[0],dimensions[1],1, origin[0],origin[1],0.0f,
+                        spacing[0],spacing[1],1.0f,
+                        coordNm, cellNm);
     }
 
     //3D regular grids.
     VTKM_CONT_EXPORT
     vtkm::cont::DataSet
-    Create(vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
+    Create(const vtkm::Id3 &dimensions,
+           const vtkm::Vec<vtkm::FloatDefault,3> &origin = vtkm::Vec<vtkm::FloatDefault,3>(0.0f),
+           const vtkm::Vec<vtkm::FloatDefault,3> &spacing = vtkm::Vec<vtkm::FloatDefault,3>(1.0f),
            std::string coordNm="coords", std::string cellNm="cells")
     {
-        return Create(3, nx, ny, nz, 0,0,0, 1,1,1, coordNm, cellNm);
-    }
-
-    template<typename T>
-    VTKM_CONT_EXPORT
-    vtkm::cont::DataSet
-    Create(vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
-           T originX, T originY, T originZ, T spacingX, T spacingY, T spacingZ,
-           std::string coordNm="coords", std::string cellNm="cells")
-    {
-        return Create(3, nx,ny,nz, originX,originY,originZ,
-                      spacingX,spacingY,spacingZ,
-                      coordNm, cellNm);
+        return CreateDS(3,
+                        dimensions[0],dimensions[1],dimensions[2],
+                        origin[0],origin[1],origin[2],
+                        spacing[0],spacing[1],spacing[2],
+                        coordNm, cellNm);
     }
 
 private:
     template<typename T>
     VTKM_CONT_EXPORT
     vtkm::cont::DataSet
-    Create(int dim, vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
-           T originX, T originY, T originZ, T spacingX, T spacingY, T spacingZ,
-           std::string coordNm, std::string cellNm)
+    CreateDS(int dim, vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
+             T originX, T originY, T originZ,
+             T spacingX, T spacingY, T spacingZ,
+             std::string coordNm, std::string cellNm)
     {
         VTKM_ASSERT_CONT(nx>1 && ny>1 && ((dim==2 && nz==1)||(dim==3 && nz>=1)));
         vtkm::cont::DataSet dataSet;
