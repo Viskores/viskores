@@ -56,6 +56,19 @@ public:
 	std::vector<T> zvals(1,0);
 	return Create(2, xvals, yvals, zvals, coordNm, cellNm);
     }
+    template<typename T>
+    VTKM_CONT_EXPORT
+    vtkm::cont::DataSet
+    Create(const vtkm::cont::ArrayHandle<T> &xvals,
+	   const vtkm::cont::ArrayHandle<T> &yvals,
+           std::string coordNm="coords", std::string cellNm="cells")
+    {
+        VTKM_ASSERT_CONT(xvals.size()>1 && yvals.size()>1);
+
+	vtkm::cont::ArrayHandle<T> zvals;
+	DFA::Copy(vtkm::cont::make_ArrayHandle(std::vector<T>(1,0)), zvals);
+	return BuildDataSet(2, xvals,yvals,zvals, coordNm, cellNm);
+    }
 
     //3D grids.
     template<typename T>
@@ -77,6 +90,17 @@ public:
     {
 	return Create(3, xvals, yvals, zvals, coordNm, cellNm);
     }
+    template<typename T>
+    VTKM_CONT_EXPORT
+    vtkm::cont::DataSet
+    Create(const vtkm::cont::ArrayHandle<T> &xvals,
+	   const vtkm::cont::ArrayHandle<T> &yvals,
+	   const vtkm::cont::ArrayHandle<T> &zvals,
+           std::string coordNm="coords", std::string cellNm="cells")
+    {
+        VTKM_ASSERT_CONT(xvals.size()>1 && yvals.size()>1 && zvals.size()>1);
+	return BuildDataSet(2, xvals,yvals,zvals, coordNm, cellNm);
+    }
 
 private:
     template<typename T>
@@ -89,11 +113,12 @@ private:
         VTKM_ASSERT_CONT(nx>1 && ny>1 &&
 			 ((dim==2 && nz==1)||(dim==3 && nz>=1)));
 	
-	vtkm::cont::ArrayHandle<T> X = vtkm::cont::make_ArrayHandle(nx,xvals);
-	vtkm::cont::ArrayHandle<T> Y = vtkm::cont::make_ArrayHandle(ny,yvals);
-	vtkm::cont::ArrayHandle<T> Z = vtkm::cont::make_ArrayHandle(nz,zvals);
+	vtkm::cont::ArrayHandle<T> Xc, Yc, Zc;
+	DFA::Copy(vtkm::cont::make_ArrayHandle(nx,xvals), Xc);
+	DFA::Copy(vtkm::cont::make_ArrayHandle(ny,yvals), Yc);
+	DFA::Copy(vtkm::cont::make_ArrayHandle(nz,zvals), Zc);
 	
-	return BuildDataSet(dim, X,Y,Z, coordNm, cellNm);
+	return BuildDataSet(dim, Xc,Yc,Zc, coordNm, cellNm);
     }
     
     template<typename T>
@@ -108,11 +133,12 @@ private:
         VTKM_ASSERT_CONT(xvals.size()>1 && yvals.size()>1 &&
 			 ((dim==2 && zvals.size()==1)||(dim==3 && zvals.size()>=1)));
 
-	vtkm::cont::ArrayHandle<T> X = vtkm::cont::make_ArrayHandle(xvals);
-	vtkm::cont::ArrayHandle<T> Y = vtkm::cont::make_ArrayHandle(yvals);
-	vtkm::cont::ArrayHandle<T> Z = vtkm::cont::make_ArrayHandle(zvals);
+	vtkm::cont::ArrayHandle<T> Xc, Yc, Zc;
+	DFA::Copy(vtkm::cont::make_ArrayHandle(xvals), Xc);
+	DFA::Copy(vtkm::cont::make_ArrayHandle(yvals), Yc);
+	DFA::Copy(vtkm::cont::make_ArrayHandle(zvals), Zc);
 	
-	return BuildDataSet(dim, X,Y,Z, coordNm, cellNm);
+	return BuildDataSet(dim, Xc,Yc,Zc, coordNm, cellNm);
     }
 
     template<typename T>
