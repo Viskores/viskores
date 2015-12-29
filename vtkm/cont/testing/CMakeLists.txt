@@ -33,6 +33,7 @@ vtkm_declare_headers(${headers})
 
 set(unit_tests
   UnitTestArrayHandle.cxx
+  UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
   UnitTestArrayHandleFancy.cxx

@@ -1,0 +1,109 @@
+//=============================================================================
+//
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 UT-Battelle, LLC.
+//  Copyright 2015 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  the U.S. Government retains certain rights in this software.
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//
+//=============================================================================
+
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Assert.h>
+
+#include <vtkm/cont/testing/Testing.h>
+
+#include <vector>
+
+namespace ArrayHandleCartesianProductNamespace {
+
+typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DFA;
+
+template <typename T>
+void ArrayHandleCPBasic(vtkm::cont::ArrayHandle<T> x,
+			vtkm::cont::ArrayHandle<T> y,
+			vtkm::cont::ArrayHandle<T> z)
+				     
+{
+    vtkm::cont::ArrayHandleCartesianProduct<
+	vtkm::cont::ArrayHandle<T>,
+	vtkm::cont::ArrayHandle<T>,
+	vtkm::cont::ArrayHandle<T> > cpArray;
+    
+    vtkm::Id nx = x.GetNumberOfValues();
+    vtkm::Id ny = y.GetNumberOfValues();
+    vtkm::Id nz = z.GetNumberOfValues();
+    vtkm::Id n = nx*ny*nz;
+
+    cpArray = vtkm::cont::make_ArrayHandleCartesianProduct(x,y,z);
+
+    //Make sure we have the right number of values.
+    VTKM_TEST_ASSERT(cpArray.GetNumberOfValues() == (nx*ny*nz),
+		     "Cartesian array constructor has wrong number of values");
+
+    //Make sure the values are correct.
+    vtkm::Vec<T,3> val;
+    for (vtkm::Id i = 0; i < n; i++)
+    {
+	vtkm::Id idx0 = (i % (nx*ny)) % nx;
+	vtkm::Id idx1 = (i % (nx*ny)) / nx;
+	vtkm::Id idx2 = i / (nx*ny);
+	
+	val = vtkm::Vec<T,3>(x.GetPortalConstControl().Get(idx0),
+			     y.GetPortalConstControl().Get(idx1),
+			     z.GetPortalConstControl().Get(idx2));
+	VTKM_TEST_ASSERT(cpArray.GetPortalConstControl().Get(i) == val,
+			 "Wrong value in array");
+    }
+}
+
+template <typename T>
+void createArr(std::vector<T> &arr, int n)
+{
+    arr.resize(n);
+    for (int i = 0; i < n; i++)
+	arr[i] = static_cast<T>(i);
+}
+
+void
+TestArrayHandleCartesianProduct()
+{
+    int nX = 10, nY = 10, nZ = 10;
+
+    for (int i = 1; i < nX; i++)
+	for (int j = 1; j < nY; j++)
+	    for (int k = 1; k < nZ; k++)
+	    {
+		std::vector<vtkm::Float32> X,Y,Z;
+		createArr(X, nX);
+		createArr(Y, nY);
+		createArr(Z, nZ);
+    
+		vtkm::cont::ArrayHandle<vtkm::Float32> x = vtkm::cont::make_ArrayHandle(X);
+		vtkm::cont::ArrayHandle<vtkm::Float32> y = vtkm::cont::make_ArrayHandle(Y);
+		vtkm::cont::ArrayHandle<vtkm::Float32> z = vtkm::cont::make_ArrayHandle(Z);
+		ArrayHandleCPBasic(x,y,z);
+	    }
+}
+
+} // namespace ArrayHandleCartesianProductNamespace
+
+int UnitTestArrayHandleCartesianProduct(int, char *[])
+{
+    using namespace ArrayHandleCartesianProductNamespace;
+    return vtkm::cont::testing::Testing::Run(TestArrayHandleCartesianProduct);
+}
