@@ -72,6 +72,7 @@ private:
              std::string coordNm, std::string cellNm)
     {
         VTKM_ASSERT_CONT(nx>1 && ny>1 && ((dim==2 && nz==1)||(dim==3 && nz>=1)));
+        VTKM_ASSERT_CONT(spacingX>0 && spacingY>0 && spacingZ>0);
         vtkm::cont::DataSet dataSet;
 
         vtkm::cont::ArrayHandleUniformPointCoordinates

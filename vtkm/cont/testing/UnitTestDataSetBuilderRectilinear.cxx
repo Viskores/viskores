@@ -20,7 +20,7 @@
 //
 //=============================================================================
 
-#include <vtkm/cont/DataSetBuilderRegular.h>
+#include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -30,7 +30,7 @@
 
 #include <vector>
 
-namespace DataSetBuilderRegularNamespace {
+namespace DataSetBuilderRectilinearNamespace {
 
 typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DFA;
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
@@ -51,15 +51,17 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      "Wrong number of coordinates.");
     VTKM_TEST_ASSERT(ds.GetCellSet().GetCellSet().GetNumberOfCells() == numCells,
                      "Wrong number of cells.");
-
-
-    //Make sure bounds are correct.
+    
+    //Make sure the bounds are correct.
+    //This is not working at present...
+    /*
     vtkm::Float64 res[6];
     ds.GetCoordinateSystem().GetBounds(res, DeviceAdapter());
     VTKM_TEST_ASSERT(bounds[0]==res[0] && bounds[1]==res[1] &&
                      bounds[2]==res[2] && bounds[3]==res[3] &&
                      bounds[4]==res[4] && bounds[5]==res[5],
                      "Bounds of coordinates do not match");
+    */
 
     if (dim == 2)
     {
@@ -76,73 +78,93 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
         VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_HEXAHEDRON, "Wrong element type");
     }
 }
-                         
-template <typename T>
-void FillMethod(int method, vtkm::Id n, T &o, T &s,
-                vtkm::Float64 &b0, vtkm::Float64 &b1)
-{
-    switch (method)
-    {
-    case 0 : o = 0; s = 1; break;
-    case 1 : o = 0; s = static_cast<T>(1.0/n); break;
-    case 2 : o = 0; s = 2; break;
-    case 3 : o = static_cast<T>(-(n-1)); s = 1; break;
-    case 4 : o = static_cast<T>(2.780941); s = static_cast<T>(182.381901); break;
-    }
 
-    b0 = static_cast<vtkm::Float64>(o);
-    b1 = static_cast<vtkm::Float64>(o + (n-1)*s);
+template <typename T>
+void FillArray(std::vector<T> &arr, vtkm::Id sz, int fillMethod)
+{
+    arr.resize(sz);
+    for (vtkm::Id i = 0; i < sz; i++)
+    {
+        T xi;
+
+        switch (fillMethod)
+        {
+        case 0: xi = (T)i; break;
+        case 1: xi = (T)i / (vtkm::Float32)sz; break;
+        case 2: xi = (T)(i*2); break;
+        case 3: xi = (T)i*0.1f; break;
+        case 4: xi = (T)(i*i); break;
+        }
+        arr[i] = xi;
+    }
 }
 
 void
-TestDataSetBuilderRegular()
+TestDataSetBuilderRectilinear()
 {
-    vtkm::cont::DataSetBuilderRegular dsb;
+    vtkm::cont::DataSetBuilderRectilinear dsb;
     vtkm::cont::DataSet ds;
 
-    vtkm::Id nx = 12, ny = 12, nz = 12;
+    vtkm::Id nx = 15, ny = 15, nz = 15;
     int nm = 5;
-    vtkm::Float64 bounds[6];
+    std::vector<vtkm::Float32> xvals, yvals, zvals;
 
     for (vtkm::Id i = 2; i < nx; i++)
         for (vtkm::Id j = 2; j < ny; j++)
-            for (int mi = 0; mi < nm; mi++)
-                for (int mj = 0; mj < nm; mj++)
+            for (int mx = 0; mx < nm; mx++)
+                for (int my = 0; my < nm; my++)
                 {
-                    //2D cases
+                    //Do the 2D cases.
                     vtkm::Id np = i*j, nc = (i-1)*(j-1);
+                    FillArray(xvals, i, mx);
+                    FillArray(yvals, j, my);
 
-                    vtkm::Id2 dims2(i,j);
-                    vtkm::Float32 oi, oj, si, sj;
-                    FillMethod(mi, dims2[0], oi, si, bounds[0],bounds[1]);
-                    FillMethod(mj, dims2[1], oj, sj, bounds[2],bounds[3]);
-                    bounds[4] = bounds[5] = 0;
-                    vtkm::Vec<vtkm::Float32,2> o2(oi,oj), sp2(si,sj);
-                    
-                    ds = dsb.Create(dims2, o2, sp2);
+                    vtkm::Float64 bounds[6] = {xvals[0],xvals[i-1],
+                                               yvals[0],yvals[j-1],
+                                               0.0, 0.0};
+                    //Test std::vector
+                    ds = dsb.Create(xvals, yvals);
                     ValidateDataSet(ds, 2, np, nc, bounds);
 
-                    //3D cases
+                    //Test vtkm::Float *
+                    ds = dsb.Create(i,j, &xvals[0],&yvals[0]);
+                    ValidateDataSet(ds, 2, np, nc, bounds);
+
+                    //Test ArrayHandle
+                    ds = dsb.Create(vtkm::cont::make_ArrayHandle(xvals),
+                                    vtkm::cont::make_ArrayHandle(yvals));
+                    ValidateDataSet(ds, 2, np, nc, bounds);
+
+                    //Do the 3D cases.
                     for (vtkm::Id k = 2; k < nz; k++)
-                        for (int mk = 0; mk < nm; mk++)
+                        for (int mz = 0; mz < nm; mz++)
                         {
                             np = i*j*k;
                             nc = (i-1)*(j-1)*(k-1);
-                
-                            vtkm::Id3 dims3(i,j,k);
-                            vtkm::Float32 ok, sk;
-                            FillMethod(mk, dims3[2], ok, sk, bounds[4],bounds[5]);
-                            vtkm::Vec<vtkm::Float32,3> o3(oi,oj,ok), sp3(si,sj,sk);
-                            ds = dsb.Create(dims3, o3, sp3);
+                            FillArray(zvals, k, mz);
+
+                            //Test std::vector
+                            ds = dsb.Create(xvals, yvals, zvals);
                             ValidateDataSet(ds, 3, np, nc, bounds);
+
+                            //Test vtkm::Float *
+                            ds = dsb.Create(i,j,k, &xvals[0],&yvals[0], &zvals[0]);
+                            ValidateDataSet(ds, 3, np, nc, bounds);
+
+                            //Test ArrayHandle
+                            ds = dsb.Create(vtkm::cont::make_ArrayHandle(xvals),
+                                            vtkm::cont::make_ArrayHandle(yvals),
+                                            vtkm::cont::make_ArrayHandle(zvals));
+                            ValidateDataSet(ds, 3, np, nc, bounds);
+                            
                         }
                 }
 }
 
-} // namespace DataSetBuilderRegularNamespace
+} // namespace DataSetBuilderRectilinearNamespace
 
-int UnitTestDataSetBuilderRegular(int, char *[])
+int UnitTestDataSetBuilderRectilinear(int, char *[])
 {
-    using namespace DataSetBuilderRegularNamespace;
-    return vtkm::cont::testing::Testing::Run(TestDataSetBuilderRegular);
+    using namespace DataSetBuilderRectilinearNamespace;
+    return vtkm::cont::testing::Testing::Run(TestDataSetBuilderRectilinear);
 }

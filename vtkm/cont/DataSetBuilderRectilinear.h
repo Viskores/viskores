@@ -63,7 +63,7 @@ public:
 	   const vtkm::cont::ArrayHandle<T> &yvals,
            std::string coordNm="coords", std::string cellNm="cells")
     {
-        VTKM_ASSERT_CONT(xvals.size()>1 && yvals.size()>1);
+        VTKM_ASSERT_CONT(xvals.GetNumberOfValues()>1 && yvals.GetNumberOfValues()>1);
 
 	vtkm::cont::ArrayHandle<T> zvals;
 	DFA::Copy(vtkm::cont::make_ArrayHandle(std::vector<T>(1,0)), zvals);
@@ -98,8 +98,10 @@ public:
 	   const vtkm::cont::ArrayHandle<T> &zvals,
            std::string coordNm="coords", std::string cellNm="cells")
     {
-        VTKM_ASSERT_CONT(xvals.size()>1 && yvals.size()>1 && zvals.size()>1);
-	return BuildDataSet(2, xvals,yvals,zvals, coordNm, cellNm);
+        VTKM_ASSERT_CONT(xvals.GetNumberOfValues()>1 &&
+			 yvals.GetNumberOfValues()>1 &&
+			 zvals.GetNumberOfValues()>1);
+	return BuildDataSet(3, xvals,yvals,zvals, coordNm, cellNm);
     }
 
 private:
@@ -114,9 +116,9 @@ private:
 			 ((dim==2 && nz==1)||(dim==3 && nz>=1)));
 	
 	vtkm::cont::ArrayHandle<T> Xc, Yc, Zc;
-	DFA::Copy(vtkm::cont::make_ArrayHandle(nx,xvals), Xc);
-	DFA::Copy(vtkm::cont::make_ArrayHandle(ny,yvals), Yc);
-	DFA::Copy(vtkm::cont::make_ArrayHandle(nz,zvals), Zc);
+	DFA::Copy(vtkm::cont::make_ArrayHandle(xvals,nx), Xc);
+	DFA::Copy(vtkm::cont::make_ArrayHandle(yvals,ny), Yc);
+	DFA::Copy(vtkm::cont::make_ArrayHandle(zvals,nz), Zc);
 	
 	return BuildDataSet(dim, Xc,Yc,Zc, coordNm, cellNm);
     }

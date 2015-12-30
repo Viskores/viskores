@@ -45,6 +45,7 @@ set(unit_tests
   UnitTestArrayPortalToIterators.cxx
   UnitTestContTesting.cxx
   UnitTestComputeBoundsSerial.cxx
+  UnitTestDataSetBuilderRectilinear.cxx
   UnitTestDataSetBuilderRegular.cxx
   UnitTestDataSetRegular.cxx
   UnitTestDataSetRectilinear.cxx
