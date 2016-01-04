@@ -161,6 +161,11 @@ private:
                                     result.GetPortalConstControl().Get(i);
         VTKM_TEST_ASSERT(test_equal(result_v, vtkm::Vec<ValueType, 3>(value)),
                         "CompositeVector Handle Failed");
+
+        const vtkm::Vec<ValueType, 3> result_c =
+                                    composite.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(test_equal(result_c, vtkm::Vec<ValueType, 3>(value)),
+                        "CompositeVector Handle Failed");
         }
     }
   };
