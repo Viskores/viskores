@@ -95,19 +95,26 @@ public:
   /// \brief Compute isosurface vertices and scalars
   class IsosurfaceGenerate : public vtkm::worklet::WorkletMapPointToCell
   {
+    typedef vtkm::Vec< vtkm::Id2,3 > Vec3Id2;
+    typedef vtkm::Vec< vtkm::Vec<vtkm::Float32,3>, 3 > Vec3FVec3;
+    typedef vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3 > Vec3DVec3;
+
   public:
+    struct InterpolateIdTypes : vtkm::ListTagBase< Vec3Id2 > { };
+    struct Vec3FloatTypes : vtkm::ListTagBase< Vec3FVec3, Vec3DVec3> { };
+
     typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::
     ExecutionTypes<DeviceAdapter>::PortalConst IdPortalConstType;
     IdPortalConstType EdgeTable;
 
     typedef void ControlSignature(
         TopologyIn topology, // Cell set
-        FieldInPoint<> fieldIn, // Input point field defining the contour
+        FieldInPoint<Scalar> fieldIn, // Input point field defining the contour
         FieldInPoint<Vec3> pcoordIn, // Input point coordinates
-        FieldOutCell<> interpolationWeights,
-        FieldOutCell<> interpolationIds,
-        FieldOutCell<> vertexOut, // Vertices for output triangles
-        FieldOutCell<> normalsOut, // Estimated normals (one per tri vertex)
+        FieldOutCell<Vec3> interpolationWeights,
+        FieldOutCell<InterpolateIdTypes> interpolationIds,
+        FieldOutCell<Vec3FloatTypes> vertexOut, // Vertices for output triangles
+        FieldOutCell<Vec3FloatTypes> normalsOut, // Estimated normals (one per tri vertex)
         WholeArrayIn<IdComponentType> TriTable // An array portal with the triangle table
         );
     typedef void ExecutionSignature(
