@@ -137,6 +137,11 @@ struct SubtractToVisitIndexKernel : vtkm::exec::FunctorBase
 ///
 struct ScatterCounting
 {
+  VTKM_CONT_EXPORT
+  ScatterCounting()
+  {
+  }
+
   template<typename CountArrayType, typename Device>
   VTKM_CONT_EXPORT
   ScatterCounting(const CountArrayType &countArray, Device)

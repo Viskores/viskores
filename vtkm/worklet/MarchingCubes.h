@@ -127,15 +127,12 @@ public:
       return this->Scatter;
     }
 
-    template<typename CountArrayType, typename Device>
     VTKM_CONT_EXPORT
     IsosurfaceGenerate(FieldType isovalue,
-                       const CountArrayType &countArray,
-                       Device,
+                       const vtkm::worklet::ScatterCounting& scatter,
                        IdPortalConstType edgeTable) : EdgeTable(edgeTable),
                                                       Isovalue(isovalue),
-                                                      Scatter(countArray,
-                                                              Device()) {  }
+                                                      Scatter(scatter) {  }
 
     template<typename CellShapeTag,
              typename FieldInType, // Vec-like, one per input point
@@ -272,9 +269,9 @@ public:
                                   numOutputTrisPerCell,
                                   numTrianglesTable);
 
+    vtkm::worklet::ScatterCounting scatter(numOutputTrisPerCell, DeviceAdapter());
     IsosurfaceGenerate isosurface(isovalue,
-                                  numOutputTrisPerCell,
-                                  DeviceAdapter(),
+                                  scatter,
                                   edgeTable.PrepareForInput(DeviceAdapter()));
 
     vtkm::worklet::DispatcherMapTopology<IsosurfaceGenerate, DeviceAdapter>
