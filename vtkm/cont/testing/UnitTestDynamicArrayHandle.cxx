@@ -332,6 +332,19 @@ void TryUnusualTypeAndStorage()
     std::cout << "  Caught exception for unrecognized type." << std::endl;
   }
 
+  try
+  {
+    //resetting the string and tag should result in a valid array handle
+    CheckDynamicArray(array.ResetTypeAndStorageLists(TypeListTagString(),
+                                                     StorageListTagUnusual()),
+                      1);
+  }
+  catch (vtkm::cont::ErrorControlBadValue)
+  {
+    VTKM_TEST_FAIL("ResetTypeAndStorageLists should have handled the custom type/storage.");
+  }
+
+
   CheckCalled = false;
   CheckDynamicArray(array
                     .ResetTypeList(TypeListTagString())
@@ -343,6 +356,13 @@ void TryUnusualTypeAndStorage()
   CheckDynamicArray(array
                     .ResetStorageList(StorageListTagUnusual())
                     .ResetTypeList(TypeListTagString()),
+                    1);
+  std::cout << "  Found instance when storage and type lists were reset." << std:: endl;
+
+  CheckCalled = false;
+  CheckDynamicArray(array
+                    .ResetTypeAndStorageLists(TypeListTagString(),
+                                              StorageListTagUnusual()),
                     1);
   std::cout << "  Found instance when storage and type lists were reset." << std:: endl;
 }

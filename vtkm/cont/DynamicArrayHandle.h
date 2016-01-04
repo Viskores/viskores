@@ -276,6 +276,22 @@ public:
     return DynamicArrayHandleBase<TypeList,NewStorageList>(*this);
   }
 
+  /// Changes the value, and array storage types to try casting to when
+  /// resolving this dynamic array. Since C++ does not allow you to actually
+  /// change the template arguments, this method returns a new dynamic array
+  /// object. This method is particularly useful when you have both custom
+  /// types and traits.
+  ///
+  template<typename NewTypeList, typename NewStorageList>
+  VTKM_CONT_EXPORT
+  DynamicArrayHandleBase<NewTypeList,NewStorageList>
+  ResetTypeAndStorageLists(NewTypeList = NewTypeList(),
+                           NewStorageList = NewStorageList()) const {
+    VTKM_IS_LIST_TAG(NewTypeList);
+    VTKM_IS_LIST_TAG(NewStorageList);
+    return DynamicArrayHandleBase<NewTypeList,NewStorageList>(*this);
+  }
+
   /// Attempts to cast the held array to a specific value type and storage,
   /// then call the given functor with the cast array. The types and storage
   /// tried in the cast are those in the lists defined by the TypeList and
