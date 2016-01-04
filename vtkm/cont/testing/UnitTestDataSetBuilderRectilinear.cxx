@@ -38,7 +38,7 @@ typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      int dim,
                      vtkm::Id numPoints, vtkm::Id numCells,
-                     vtkm::Float64 *bounds)
+                     vtkm::Float64 */*bounds*/)
 {
     //Verify basics..
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
@@ -80,10 +80,10 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
 }
 
 template <typename T>
-void FillArray(std::vector<T> &arr, vtkm::Id sz, int fillMethod)
+void FillArray(std::vector<T> &arr, std::size_t sz, int fillMethod)
 {
     arr.resize(sz);
-    for (vtkm::Id i = 0; i < sz; i++)
+    for (size_t i = 0; i < sz; i++)
     {
         T xi;
 
@@ -105,12 +105,12 @@ TestDataSetBuilderRectilinear()
     vtkm::cont::DataSetBuilderRectilinear dsb;
     vtkm::cont::DataSet ds;
 
-    vtkm::Id nx = 15, ny = 15, nz = 15;
+    std::size_t nx = 15, ny = 15, nz = 15;
     int nm = 5;
     std::vector<vtkm::Float32> xvals, yvals, zvals;
 
-    for (vtkm::Id i = 2; i < nx; i++)
-        for (vtkm::Id j = 2; j < ny; j++)
+    for (std::size_t i = 2; i < nx; i++)
+        for (std::size_t j = 2; j < ny; j++)
             for (int mx = 0; mx < nm; mx++)
                 for (int my = 0; my < nm; my++)
                 {
@@ -119,8 +119,8 @@ TestDataSetBuilderRectilinear()
                     FillArray(xvals, i, mx);
                     FillArray(yvals, j, my);
 
-                    vtkm::Float64 bounds[6] = {xvals[0],xvals[i-1],
-                                               yvals[0],yvals[j-1],
+                    vtkm::Float64 bounds[6] = {xvals[0], xvals[i-1],
+                                               yvals[0], yvals[j-1],
                                                0.0, 0.0};
                     //Test std::vector
                     ds = dsb.Create(xvals, yvals);
@@ -136,7 +136,7 @@ TestDataSetBuilderRectilinear()
                     ValidateDataSet(ds, 2, np, nc, bounds);
 
                     //Do the 3D cases.
-                    for (vtkm::Id k = 2; k < nz; k++)
+                    for (std::size_t k = 2; k < nz; k++)
                         for (int mz = 0; mz < nm; mz++)
                         {
                             np = i*j*k;
