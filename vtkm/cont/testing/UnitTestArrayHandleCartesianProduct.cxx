@@ -72,21 +72,21 @@ void ArrayHandleCPBasic(vtkm::cont::ArrayHandle<T> x,
 }
 
 template <typename T>
-void createArr(std::vector<T> &arr, int n)
+void createArr(std::vector<T> &arr, std::size_t n)
 {
     arr.resize(n);
-    for (int i = 0; i < n; i++)
+    for (std::size_t i = 0; i < n; i++)
 	arr[i] = static_cast<T>(i);
 }
 
 void
 TestArrayHandleCartesianProduct()
 {
-    int nX = 10, nY = 10, nZ = 10;
+    std::size_t nX = 10, nY = 10, nZ = 10;
 
-    for (int i = 1; i < nX; i++)
-	for (int j = 1; j < nY; j++)
-	    for (int k = 1; k < nZ; k++)
+    for (std::size_t i = 1; i < nX; i++)
+	for (std::size_t j = 1; j < nY; j++)
+	    for (std::size_t k = 1; k < nZ; k++)
 	    {
 		std::vector<vtkm::Float32> X,Y,Z;
 		createArr(X, nX);
