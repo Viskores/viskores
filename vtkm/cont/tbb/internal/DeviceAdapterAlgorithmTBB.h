@@ -229,7 +229,7 @@ public:
       /// Move value indexes when sorting and reorder the value array at last
 
       typedef vtkm::cont::ArrayHandle<U,StorageU> ValueType;
-      typedef vtkm::cont::ArrayHandle<vtkm::Id,StorageU> IndexType;
+      typedef vtkm::cont::ArrayHandle<vtkm::Id> IndexType;
       typedef vtkm::cont::ArrayHandleZip<KeyType,IndexType> ZipHandleType;
 
       IndexType indexArray;
