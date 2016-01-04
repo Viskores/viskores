@@ -535,6 +535,20 @@ public:
   }
 
   VTKM_CONT_EXPORT
+  Field()
+    : Name(),
+      Order(),
+      Association(),
+      AssocCellSetName(),
+      AssocLogicalDim(),
+      Data(),
+      Bounds(),
+      ModifiedFlag(true)
+  {
+    //Generate an empty field
+  }
+
+  VTKM_CONT_EXPORT
   const std::string &GetName() const
   {
     return this->Name;
