@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  ExplicitTestData.h
   MakeTestDataSet.h
   Testing.h
   TestingArrayHandles.h
@@ -45,6 +46,7 @@ set(unit_tests
   UnitTestArrayPortalToIterators.cxx
   UnitTestContTesting.cxx
   UnitTestComputeBoundsSerial.cxx
+  UnitTestDataSetBuilderExplicit.cxx
   UnitTestDataSetBuilderRectilinear.cxx
   UnitTestDataSetBuilderRegular.cxx
   UnitTestDataSetRegular.cxx

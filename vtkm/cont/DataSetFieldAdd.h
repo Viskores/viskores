@@ -97,6 +97,43 @@ public:
         dataSet.AddField(Field(fieldName, 1, vtkm::cont::Field::ASSOC_CELL_SET,
                                cellSetName, field, n));
     }
+
+    template <typename T, typename Storage>
+    VTKM_CONT_EXPORT
+    void AddCellField(vtkm::cont::DataSet &dataSet,
+                      const std::string &fieldName,
+                      vtkm::cont::ArrayHandle<T, Storage> &field,
+                      vtkm::Id cellSetIndex = 0)
+    {
+      std::string cellSetName =
+          dataSet.GetCellSet(cellSetIndex).GetCellSet().GetName();
+      this->AddCellField(dataSet, fieldName, field, cellSetName);
+    }
+    template<typename T>
+    VTKM_CONT_EXPORT
+    void AddCellField(vtkm::cont::DataSet &dataSet,
+                      const std::string &fieldName,
+                      const std::vector<T> &field,
+                      vtkm::Id cellSetIndex = 0)
+    {
+      std::string cellSetName =
+          dataSet.GetCellSet(cellSetIndex).GetCellSet().GetName();
+      this->AddCellField(dataSet, fieldName, field, cellSetName);
+    }
+
+    template<typename T>
+    VTKM_CONT_EXPORT
+    void AddCellField(vtkm::cont::DataSet &dataSet,
+                      const std::string &fieldName,
+                      const T *field, const vtkm::Id &n,
+                      vtkm::Id cellSetIndex = 0)
+    {
+      std::string cellSetName =
+          dataSet.GetCellSet(cellSetIndex).GetCellSet().GetName();
+      this->AddCellField(dataSet, fieldName, field, n, cellSetName);
+    }
+
+
 };
 
 }
