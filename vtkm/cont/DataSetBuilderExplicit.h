@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/Assert.h>
 
 namespace vtkm {
@@ -183,20 +184,10 @@ DataSetBuilderExplicit::BuildDataSet(const vtkm::cont::ArrayHandle<T> &X,
 		     shapes.GetNumberOfValues() == numIndices.GetNumberOfValues());
 
     vtkm::cont::DataSet dataSet;
-
-    //Temp code until ArrayHandleCompositeVector is fully working...
-    typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-    std::size_t nPts = X.GetNumberOfValues();
-    std::vector<CoordType> coords(nPts);
-
-    for (std::size_t i = 0; i < nPts; i++)
-    {
-	coords[i][0] = X.GetPortalConstControl().Get(i);
-	coords[i][1] = Y.GetPortalConstControl().Get(i);
-	coords[i][2] = Z.GetPortalConstControl().Get(i);
-    }
     dataSet.AddCoordinateSystem(
-        vtkm::cont::CoordinateSystem(coordsNm, 1, coords));
+        vtkm::cont::CoordinateSystem(coordsNm, 1,
+	      make_ArrayHandleCompositeVector(X,0, Y,0, Z,0)));
+    vtkm::Id nPts = X.GetNumberOfValues();
     vtkm::cont::CellSetExplicit<> cellSet(nPts, cellNm, 3);
     
     cellSet.Fill(shapes, numIndices, connectivity);
