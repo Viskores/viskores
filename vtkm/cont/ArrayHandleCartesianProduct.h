@@ -51,8 +51,8 @@ public:
 
   VTKM_CONT_EXPORT
   ArrayPortalExecCartesianProduct(const PortalTypeFirst  &portalfirst,
-	                          const PortalTypeSecond &portalsecond,
-	                          const PortalTypeThird &portalthird)
+                                  const PortalTypeSecond &portalsecond,
+                                  const PortalTypeThird &portalthird)
       : PortalFirst(portalfirst), PortalSecond(portalsecond), PortalThird(portalthird)
   {  }
 
@@ -74,8 +74,8 @@ public:
   vtkm::Id GetNumberOfValues() const
   {
       return this->PortalFirst.GetNumberOfValues() *
-	  this->PortalSecond.GetNumberOfValues() *
-	  this->PortalThird.GetNumberOfValues();
+          this->PortalSecond.GetNumberOfValues() *
+          this->PortalThird.GetNumberOfValues();
   }
 
   VTKM_EXEC_EXPORT
@@ -88,10 +88,10 @@ public:
       vtkm::Id i1 = idx12 % dim1;
       vtkm::Id i2 = idx12 / dim1;
       vtkm::Id i3 = index / dim12;
-      
+
       return vtkm::make_Vec(this->PortalFirst.Get(i1),
-			    this->PortalSecond.Get(i2),
-			    this->PortalThird.Get(i3));
+                            this->PortalSecond.Get(i2),
+                            this->PortalThird.Get(i3));
   }
 
   VTKM_EXEC_EXPORT
@@ -151,8 +151,8 @@ public:
 
   VTKM_CONT_EXPORT
   ArrayPortalContCartesianProduct(const PortalTypeFirst  &portalfirst = PortalTypeFirst(),
-				  const PortalTypeSecond &portalsecond = PortalTypeSecond(),
-				  const PortalTypeSecond &portalthird = PortalTypeThird())
+                                  const PortalTypeSecond &portalsecond = PortalTypeSecond(),
+                                  const PortalTypeSecond &portalthird = PortalTypeThird())
       : PortalFirst(portalfirst), PortalSecond(portalsecond), PortalThird(portalthird)
   {  }
 
@@ -163,7 +163,7 @@ public:
   template<class OtherV, class OtherP1, class OtherP2, class OtherP3>
   VTKM_CONT_EXPORT
   ArrayPortalContCartesianProduct(const ArrayPortalContCartesianProduct<OtherV,
-				  OtherP1,OtherP2,OtherP3> &src)
+                                  OtherP1,OtherP2,OtherP3> &src)
     : PortalFirst(src.GetPortalFirst()),
       PortalSecond(src.GetPortalSecond()),
       PortalThird(src.GetPortalThird())
@@ -173,8 +173,8 @@ public:
   vtkm::Id GetNumberOfValues() const
   {
       return this->PortalFirst.GetNumberOfValues() *
-	  this->PortalSecond.GetNumberOfValues() *
-	  this->PortalThird.GetNumberOfValues();
+          this->PortalSecond.GetNumberOfValues() *
+          this->PortalThird.GetNumberOfValues();
   }
 
   VTKM_CONT_EXPORT
@@ -188,8 +188,8 @@ public:
       vtkm::Id i2 = idx12 / dim1;
       vtkm::Id i3 = index / dim12;
       return vtkm::make_Vec(this->PortalFirst.Get(i1),
-			    this->PortalSecond.Get(i2),
-			    this->PortalThird.Get(i3));
+                            this->PortalSecond.Get(i2),
+                            this->PortalThird.Get(i3));
   }
 
   VTKM_CONT_EXPORT
@@ -259,12 +259,12 @@ public:
 
   typedef ArrayPortalContCartesianProduct< ValueType,
                           typename FirstHandleType::PortalControl,
-			  typename SecondHandleType::PortalControl,
-			  typename ThirdHandleType::PortalControl> PortalType;
+                          typename SecondHandleType::PortalControl,
+                          typename ThirdHandleType::PortalControl> PortalType;
   typedef ArrayPortalContCartesianProduct< ValueType,
                           typename FirstHandleType::PortalConstControl,
-			  typename SecondHandleType::PortalConstControl,
-			  typename ThirdHandleType::PortalConstControl>
+                          typename SecondHandleType::PortalConstControl,
+                          typename ThirdHandleType::PortalConstControl>
                                                                PortalConstType;
 
   VTKM_CONT_EXPORT
@@ -281,24 +281,24 @@ public:
   PortalType GetPortal()
   {
       return PortalType(this->FirstArray.GetPortalControl(),
-			this->SecondArray.GetPortalControl(),
-			this->ThirdArray.GetPortalControl());
+                        this->SecondArray.GetPortalControl(),
+                        this->ThirdArray.GetPortalControl());
   }
 
   VTKM_CONT_EXPORT
   PortalConstType GetPortalConst() const
   {
       return PortalConstType(this->FirstArray.GetPortalConstControl(),
-			     this->SecondArray.GetPortalConstControl(),
-			     this->ThirdArray.GetPortalConstControl());
+                             this->SecondArray.GetPortalConstControl(),
+                             this->ThirdArray.GetPortalConstControl());
   }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const
   {
       return this->FirstArray.GetNumberOfValues() *
-	  this->SecondArray.GetNumberOfValues() *
-	  this->ThirdArray.GetNumberOfValues();
+          this->SecondArray.GetNumberOfValues() *
+          this->ThirdArray.GetNumberOfValues();
   }
 
   VTKM_CONT_EXPORT
@@ -387,9 +387,9 @@ public:
   vtkm::Id GetNumberOfValues() const
   {
     return this->FirstArray.GetNumberOfValues() *
-	this->SecondArray.GetNumberOfValues() *
-	this->ThirdArray.GetNumberOfValues();
-	
+        this->SecondArray.GetNumberOfValues() *
+        this->ThirdArray.GetNumberOfValues();
+
   }
 
   VTKM_CONT_EXPORT
@@ -402,19 +402,17 @@ public:
   VTKM_CONT_EXPORT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
-      throw vtkm::cont::ErrorControlBadAllocation("Does not make sense.");
-      return PortalExecution(this->FirstArray.PrepareForInput(Device()),
-			     this->SecondArray.PrepareForInPlace(Device()),
-			     this->ThirdArray.PrepareForInPlace(Device()));
+    throw vtkm::cont::ErrorControlBadAllocation(
+          "Cannot write to an ArrayHandleCartesianProduct. It does not make "
+          "sense because there is overlap in the data.");
   }
 
   VTKM_CONT_EXPORT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-      throw vtkm::cont::ErrorControlBadAllocation("Does not make sense.");
-      return PortalExecution(this->FirstArray.PrepareForOutput(numberOfValues, Device()),
-			     this->SecondArray.PrepareForOutput(numberOfValues, Device()),
-			     this->ThirdArray.PrepareForOutput(numberOfValues, Device()));
+    throw vtkm::cont::ErrorControlBadAllocation(
+        "Cannot write to an ArrayHandleCartesianProduct. It does not make "
+        "sense because there is overlap in the data.");
   }
 
   VTKM_CONT_EXPORT
@@ -453,7 +451,7 @@ private:
 ///
 template<typename FirstHandleType,
          typename SecondHandleType,
-	 typename ThirdHandleType>
+         typename ThirdHandleType>
 class ArrayHandleCartesianProduct
     : public internal::ArrayHandleCartesianProductTraits<FirstHandleType,SecondHandleType,ThirdHandleType>::Superclass
 {
@@ -476,8 +474,8 @@ private:
 public:
   VTKM_CONT_EXPORT
   ArrayHandleCartesianProduct(const FirstHandleType &firstArray,
-			      const SecondHandleType &secondArray,
-			      const ThirdHandleType &thirdArray)
+                              const SecondHandleType &secondArray,
+                              const ThirdHandleType &thirdArray)
       : Superclass(StorageType(firstArray, secondArray, thirdArray)) { }
 };
 
@@ -488,12 +486,12 @@ template<typename FirstHandleType, typename SecondHandleType, typename ThirdHand
 VTKM_CONT_EXPORT
 vtkm::cont::ArrayHandleCartesianProduct<FirstHandleType,SecondHandleType,ThirdHandleType>
 make_ArrayHandleCartesianProduct(const FirstHandleType &first,
-				 const SecondHandleType &second,
-				 const ThirdHandleType &third)
+                                 const SecondHandleType &second,
+                                 const ThirdHandleType &third)
 {
     return ArrayHandleCartesianProduct<FirstHandleType,
-				       SecondHandleType,
-				       ThirdHandleType>(first, second,third);
+                                       SecondHandleType,
+                                       ThirdHandleType>(first, second,third);
 }
 
 }

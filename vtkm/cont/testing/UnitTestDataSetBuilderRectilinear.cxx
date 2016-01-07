@@ -38,7 +38,7 @@ typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      int dim,
                      vtkm::Id numPoints, vtkm::Id numCells,
-                     vtkm::Float64 *)
+                     vtkm::Float64 *bounds)
 {
     //Verify basics..
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
@@ -53,15 +53,12 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      "Wrong number of cells.");
     
     //Make sure the bounds are correct.
-    //This is not working at present...
-    /*
     vtkm::Float64 res[6];
     ds.GetCoordinateSystem().GetBounds(res, DeviceAdapter());
     VTKM_TEST_ASSERT(test_equal(bounds[0], res[0]) && test_equal(bounds[1], res[1]) &&
 		     test_equal(bounds[2], res[2]) && test_equal(bounds[3], res[3]) &&
 		     test_equal(bounds[4], res[4]) && test_equal(bounds[5], res[5]),
                      "Bounds of coordinates do not match");
-    */
     if (dim == 2)
     {
         typedef vtkm::cont::CellSetStructured<2> CellSetType;
@@ -88,11 +85,11 @@ void FillArray(std::vector<T> &arr, std::size_t sz, int fillMethod)
 
         switch (fillMethod)
         {
-        case 0: xi = (T)i; break;
-        case 1: xi = (T)i / (vtkm::Float32)sz; break;
-        case 2: xi = (T)(i*2); break;
-        case 3: xi = (T)i*0.1f; break;
-        case 4: xi = (T)(i*i); break;
+        case 0: xi = static_cast<T>(i); break;
+        case 1: xi = static_cast<T>(i) / static_cast<vtkm::Float32>(sz-1); break;
+        case 2: xi = static_cast<T>(i*2); break;
+        case 3: xi = static_cast<T>(i*0.1f); break;
+        case 4: xi = static_cast<T>(i*i); break;
         }
         arr[i] = xi;
     }
@@ -142,6 +139,8 @@ RectilinearTests()
                             np = i*j*k;
                             nc = (i-1)*(j-1)*(k-1);
                             FillArray(zvals, k, mz);
+			    bounds[4] = zvals[0];
+			    bounds[5] = zvals[k-1];
 
                             //Test std::vector
                             ds = dsb.Create(xvals, yvals, zvals);
@@ -156,7 +155,6 @@ RectilinearTests()
                                             vtkm::cont::make_ArrayHandle(yvals),
                                             vtkm::cont::make_ArrayHandle(zvals));
                             ValidateDataSet(ds, 3, np, nc, bounds);
-                            
                         }
                 }
 }

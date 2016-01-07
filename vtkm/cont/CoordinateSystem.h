@@ -63,12 +63,12 @@ struct StorageListTagCoordinateSystemDefault
     : vtkm::ListTagJoin<
         VTKM_DEFAULT_STORAGE_LIST_TAG,
     vtkm::ListTagBase<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
-		      detail::ArrayHandleCompositeVectorFloat32_3Default::StorageTag,
-		      detail::ArrayHandleCompositeVectorFloat64_3Default::StorageTag,
-		      vtkm::cont::ArrayHandleCartesianProduct<
-			  vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-			  vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-			  vtkm::cont::ArrayHandle<vtkm::FloatDefault> > > >
+                      detail::ArrayHandleCompositeVectorFloat32_3Default::StorageTag,
+                      detail::ArrayHandleCompositeVectorFloat64_3Default::StorageTag,
+                      vtkm::cont::ArrayHandleCartesianProduct<
+                          vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                          vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                          vtkm::cont::ArrayHandle<vtkm::FloatDefault> >::StorageTag > >
 { };
 
 typedef vtkm::cont::DynamicArrayHandleBase<
