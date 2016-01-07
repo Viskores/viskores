@@ -189,6 +189,8 @@ public:
   template<typename TypeList = AllTypes >
   struct FieldInOutCell : FieldInOut<TypeList> { };
 
+  struct PointCount : FromCount {  };
+
   struct PointIndices : FromIndices { };
 };
 
