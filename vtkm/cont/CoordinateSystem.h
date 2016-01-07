@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/Field.h>
 
 #ifndef VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG
@@ -63,7 +64,11 @@ struct StorageListTagCoordinateSystemDefault
         VTKM_DEFAULT_STORAGE_LIST_TAG,
     vtkm::ListTagBase<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
 		      detail::ArrayHandleCompositeVectorFloat32_3Default::StorageTag,
-		      detail::ArrayHandleCompositeVectorFloat64_3Default::StorageTag> >
+		      detail::ArrayHandleCompositeVectorFloat64_3Default::StorageTag,
+		      vtkm::cont::ArrayHandleCartesianProduct<
+			  vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+			  vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+			  vtkm::cont::ArrayHandle<vtkm::FloatDefault> > > >
 { };
 
 typedef vtkm::cont::DynamicArrayHandleBase<

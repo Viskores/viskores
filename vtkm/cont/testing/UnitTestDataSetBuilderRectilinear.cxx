@@ -38,7 +38,7 @@ typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      int dim,
                      vtkm::Id numPoints, vtkm::Id numCells,
-                     vtkm::Float64 */*bounds*/)
+                     vtkm::Float64 *)
 {
     //Verify basics..
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
@@ -62,7 +62,6 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      bounds[4]==res[4] && bounds[5]==res[5],
                      "Bounds of coordinates do not match");
     */
-
     if (dim == 2)
     {
         typedef vtkm::cont::CellSetStructured<2> CellSetType;
@@ -99,15 +98,16 @@ void FillArray(std::vector<T> &arr, std::size_t sz, int fillMethod)
     }
 }
 
+template <typename T>
 void
-TestDataSetBuilderRectilinear()
+RectilinearTests()
 {
     vtkm::cont::DataSetBuilderRectilinear dsb;
     vtkm::cont::DataSet ds;
 
     std::size_t nx = 15, ny = 15, nz = 15;
     int nm = 5;
-    std::vector<vtkm::Float32> xvals, yvals, zvals;
+    std::vector<T> xvals, yvals, zvals;
 
     for (std::size_t i = 2; i < nx; i++)
         for (std::size_t j = 2; j < ny; j++)
@@ -126,7 +126,7 @@ TestDataSetBuilderRectilinear()
                     ds = dsb.Create(xvals, yvals);
                     ValidateDataSet(ds, 2, np, nc, bounds);
 
-                    //Test vtkm::Float *
+                    //Test T *
                     ds = dsb.Create(i,j, &xvals[0],&yvals[0]);
                     ValidateDataSet(ds, 2, np, nc, bounds);
 
@@ -147,7 +147,7 @@ TestDataSetBuilderRectilinear()
                             ds = dsb.Create(xvals, yvals, zvals);
                             ValidateDataSet(ds, 3, np, nc, bounds);
 
-                            //Test vtkm::Float *
+                            //Test T *
                             ds = dsb.Create(i,j,k, &xvals[0],&yvals[0], &zvals[0]);
                             ValidateDataSet(ds, 3, np, nc, bounds);
 
@@ -159,6 +159,13 @@ TestDataSetBuilderRectilinear()
                             
                         }
                 }
+}
+
+void
+TestDataSetBuilderRectilinear()
+{
+    RectilinearTests<vtkm::Float32>();
+    RectilinearTests<vtkm::Float64>();
 }
 
 } // namespace DataSetBuilderRectilinearNamespace

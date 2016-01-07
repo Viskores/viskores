@@ -47,6 +47,25 @@ public:
 	T zvals = 0;
 	return Create(2, nx,ny, 1, xvals, yvals, &zvals, coordNm, cellNm);
     }
+    
+    template<typename T>
+    VTKM_CONT_EXPORT
+    vtkm::cont::DataSet
+    Create(int dim, vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
+           T *xvals, T *yvals, T *zvals,
+           std::string coordNm, std::string cellNm)
+    {
+        VTKM_ASSERT_CONT(nx>1 && ny>1 &&
+			 ((dim==2 && nz==1)||(dim==3 && nz>=1)));
+	
+	vtkm::cont::ArrayHandle<vtkm::FloatDefault> Xc, Yc, Zc;
+	DFA::Copy(vtkm::cont::make_ArrayHandle(xvals,nx), Xc);
+	DFA::Copy(vtkm::cont::make_ArrayHandle(yvals,ny), Yc);
+	DFA::Copy(vtkm::cont::make_ArrayHandle(zvals,nz), Zc);
+	
+	return BuildDataSet(dim, Xc,Yc,Zc, coordNm, cellNm);
+    }
+
     template<typename T>
     VTKM_CONT_EXPORT
     vtkm::cont::DataSet
@@ -54,7 +73,7 @@ public:
            std::string coordNm="coords", std::string cellNm="cells")
     {
 	std::vector<T> zvals(1,0);
-	return Create(2, xvals, yvals, zvals, coordNm, cellNm);
+	return BuildDataSet(2, xvals,yvals,zvals, coordNm,cellNm);
     }
     template<typename T>
     VTKM_CONT_EXPORT
@@ -88,7 +107,7 @@ public:
 	   const std::vector<T> &zvals,
            std::string coordNm="coords", std::string cellNm="cells")
     {
-	return Create(3, xvals, yvals, zvals, coordNm, cellNm);
+	return BuildDataSet(3, xvals, yvals, zvals, coordNm, cellNm);
     }
     template<typename T>
     VTKM_CONT_EXPORT
@@ -108,34 +127,16 @@ private:
     template<typename T>
     VTKM_CONT_EXPORT
     vtkm::cont::DataSet
-    Create(int dim, vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
-           T *xvals, T *yvals, T *zvals,
-           std::string coordNm, std::string cellNm)
-    {
-        VTKM_ASSERT_CONT(nx>1 && ny>1 &&
-			 ((dim==2 && nz==1)||(dim==3 && nz>=1)));
-	
-	vtkm::cont::ArrayHandle<T> Xc, Yc, Zc;
-	DFA::Copy(vtkm::cont::make_ArrayHandle(xvals,nx), Xc);
-	DFA::Copy(vtkm::cont::make_ArrayHandle(yvals,ny), Yc);
-	DFA::Copy(vtkm::cont::make_ArrayHandle(zvals,nz), Zc);
-	
-	return BuildDataSet(dim, Xc,Yc,Zc, coordNm, cellNm);
-    }
-    
-    template<typename T>
-    VTKM_CONT_EXPORT
-    vtkm::cont::DataSet
-    Create(int dim,
-	   const std::vector<T> &xvals,
-	   const std::vector<T> &yvals,
-	   const std::vector<T> &zvals,
-           std::string coordNm, std::string cellNm)
+    BuildDataSet(int dim,
+		 const std::vector<T> &xvals,
+		 const std::vector<T> &yvals,
+		 const std::vector<T> &zvals,
+		 std::string coordNm, std::string cellNm)
     {
         VTKM_ASSERT_CONT(xvals.size()>1 && yvals.size()>1 &&
 			 ((dim==2 && zvals.size()==1)||(dim==3 && zvals.size()>=1)));
 
-	vtkm::cont::ArrayHandle<T> Xc, Yc, Zc;
+	vtkm::cont::ArrayHandle<vtkm::FloatDefault> Xc, Yc, Zc;
 	DFA::Copy(vtkm::cont::make_ArrayHandle(xvals), Xc);
 	DFA::Copy(vtkm::cont::make_ArrayHandle(yvals), Yc);
 	DFA::Copy(vtkm::cont::make_ArrayHandle(zvals), Zc);
@@ -154,16 +155,17 @@ private:
     {
         vtkm::cont::DataSet dataSet;
 
+	//Convert all coordinates to floatDefault.
 	vtkm::cont::ArrayHandleCartesianProduct<
-	    vtkm::cont::ArrayHandle<T>,
-	    vtkm::cont::ArrayHandle<T>,
-	    vtkm::cont::ArrayHandle<T> > coords;
+	    vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+	    vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+	    vtkm::cont::ArrayHandle<vtkm::FloatDefault> > coords;
 
-	vtkm::cont::ArrayHandle<T> Xc, Yc, Zc;
+	vtkm::cont::ArrayHandle<vtkm::FloatDefault> Xc, Yc, Zc;
 	DFA::Copy(X, Xc);
 	DFA::Copy(Y, Yc);
 	DFA::Copy(Z, Zc);
-	
+
 	coords = vtkm::cont::make_ArrayHandleCartesianProduct(Xc,Yc,Zc);
         vtkm::cont::CoordinateSystem cs(coordNm, 1, coords);
         dataSet.AddCoordinateSystem(cs);
@@ -185,7 +187,6 @@ private:
         }
 
         return dataSet;
-	
     }
 };
 
