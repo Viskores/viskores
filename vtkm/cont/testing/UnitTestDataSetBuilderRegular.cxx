@@ -56,9 +56,9 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
     //Make sure bounds are correct.
     vtkm::Float64 res[6];
     ds.GetCoordinateSystem().GetBounds(res, DeviceAdapter());
-    VTKM_TEST_ASSERT(bounds[0]==res[0] && bounds[1]==res[1] &&
-                     bounds[2]==res[2] && bounds[3]==res[3] &&
-                     bounds[4]==res[4] && bounds[5]==res[5],
+    VTKM_TEST_ASSERT(test_equal(bounds[0], res[0]) && test_equal(bounds[1], res[1]) &&
+		     test_equal(bounds[2], res[2]) && test_equal(bounds[3], res[3]) &&
+		     test_equal(bounds[4], res[4]) && test_equal(bounds[5], res[5]),
                      "Bounds of coordinates do not match");
 
     if (dim == 2)
@@ -94,8 +94,9 @@ void FillMethod(int method, vtkm::Id n, T &o, T &s,
     b1 = static_cast<vtkm::Float64>(o + (n-1)*s);
 }
 
+template <typename T>
 void
-TestDataSetBuilderRegular()
+RegularTests()
 {
     vtkm::cont::DataSetBuilderRegular dsb;
     vtkm::cont::DataSet ds;
@@ -113,11 +114,11 @@ TestDataSetBuilderRegular()
                     vtkm::Id np = i*j, nc = (i-1)*(j-1);
 
                     vtkm::Id2 dims2(i,j);
-                    vtkm::Float32 oi, oj, si, sj;
+                    T oi, oj, si, sj;
                     FillMethod(mi, dims2[0], oi, si, bounds[0],bounds[1]);
                     FillMethod(mj, dims2[1], oj, sj, bounds[2],bounds[3]);
                     bounds[4] = bounds[5] = 0;
-                    vtkm::Vec<vtkm::Float32,2> o2(oi,oj), sp2(si,sj);
+                    vtkm::Vec<T,2> o2(oi,oj), sp2(si,sj);
                     
                     ds = dsb.Create(dims2, o2, sp2);
                     ValidateDataSet(ds, 2, np, nc, bounds);
@@ -130,13 +131,20 @@ TestDataSetBuilderRegular()
                             nc = (i-1)*(j-1)*(k-1);
                 
                             vtkm::Id3 dims3(i,j,k);
-                            vtkm::Float32 ok, sk;
+                            T ok, sk;
                             FillMethod(mk, dims3[2], ok, sk, bounds[4],bounds[5]);
-                            vtkm::Vec<vtkm::Float32,3> o3(oi,oj,ok), sp3(si,sj,sk);
+                            vtkm::Vec<T,3> o3(oi,oj,ok), sp3(si,sj,sk);
                             ds = dsb.Create(dims3, o3, sp3);
                             ValidateDataSet(ds, 3, np, nc, bounds);
                         }
                 }
+}
+
+void
+TestDataSetBuilderRegular()
+{
+    RegularTests<vtkm::Float32>();
+    RegularTests<vtkm::Float64>();
 }
 
 } // namespace DataSetBuilderRegularNamespace

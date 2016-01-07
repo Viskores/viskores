@@ -57,9 +57,9 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
     /*
     vtkm::Float64 res[6];
     ds.GetCoordinateSystem().GetBounds(res, DeviceAdapter());
-    VTKM_TEST_ASSERT(bounds[0]==res[0] && bounds[1]==res[1] &&
-                     bounds[2]==res[2] && bounds[3]==res[3] &&
-                     bounds[4]==res[4] && bounds[5]==res[5],
+    VTKM_TEST_ASSERT(test_equal(bounds[0], res[0]) && test_equal(bounds[1], res[1]) &&
+		     test_equal(bounds[2], res[2]) && test_equal(bounds[3], res[3]) &&
+		     test_equal(bounds[4], res[4]) && test_equal(bounds[5], res[5]),
                      "Bounds of coordinates do not match");
     */
     if (dim == 2)
