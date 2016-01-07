@@ -66,7 +66,7 @@ void ArrayHandleCPBasic(vtkm::cont::ArrayHandle<T> x,
 	val = vtkm::Vec<T,3>(x.GetPortalConstControl().Get(idx0),
 			     y.GetPortalConstControl().Get(idx1),
 			     z.GetPortalConstControl().Get(idx2));
-	VTKM_TEST_ASSERT(cpArray.GetPortalConstControl().Get(i) == val,
+	VTKM_TEST_ASSERT(test_equal(cpArray.GetPortalConstControl().Get(i), val),
 			 "Wrong value in array");
     }
 }
@@ -79,8 +79,9 @@ void createArr(std::vector<T> &arr, std::size_t n)
 	arr[i] = static_cast<T>(i);
 }
 
+template <typename T>
 void
-TestArrayHandleCartesianProduct()
+RunTest()
 {
     std::size_t nX = 10, nY = 10, nZ = 10;
 
@@ -88,16 +89,23 @@ TestArrayHandleCartesianProduct()
 	for (std::size_t j = 1; j < nY; j++)
 	    for (std::size_t k = 1; k < nZ; k++)
 	    {
-		std::vector<vtkm::Float32> X,Y,Z;
+		std::vector<T> X,Y,Z;
 		createArr(X, nX);
 		createArr(Y, nY);
 		createArr(Z, nZ);
     
-		vtkm::cont::ArrayHandle<vtkm::Float32> x = vtkm::cont::make_ArrayHandle(X);
-		vtkm::cont::ArrayHandle<vtkm::Float32> y = vtkm::cont::make_ArrayHandle(Y);
-		vtkm::cont::ArrayHandle<vtkm::Float32> z = vtkm::cont::make_ArrayHandle(Z);
-		ArrayHandleCPBasic(x,y,z);
+		ArrayHandleCPBasic(vtkm::cont::make_ArrayHandle(X),
+				   vtkm::cont::make_ArrayHandle(Y),
+				   vtkm::cont::make_ArrayHandle(Z));
 	    }
+}
+
+void
+TestArrayHandleCartesianProduct()
+{
+    RunTest<vtkm::Float32>();
+    RunTest<vtkm::Float64>();
+    RunTest<vtkm::Id>();
 }
 
 } // namespace ArrayHandleCartesianProductNamespace
