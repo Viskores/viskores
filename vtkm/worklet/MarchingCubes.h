@@ -127,15 +127,14 @@ public:
       return this->Scatter;
     }
 
-    template<typename CountArrayType, typename Device>
     VTKM_CONT_EXPORT
     IsosurfaceGenerate(FieldType isovalue,
-                       const CountArrayType &countArray,
-                       Device,
+                       bool generateNormals,
+                       const vtkm::worklet::ScatterCounting& scatter,
                        IdPortalConstType edgeTable) : EdgeTable(edgeTable),
                                                       Isovalue(isovalue),
-                                                      Scatter(countArray,
-                                                              Device()) {  }
+                                                      GenerateNormals(generateNormals),
+                                                      Scatter(scatter) {  }
 
     template<typename CellShapeTag,
              typename FieldInType, // Vec-like, one per input point
@@ -188,25 +187,35 @@ public:
         vertexOut[triVertex] = vtkm::Lerp(coords[edgeVertex0],
                                           coords[edgeVertex1],
                                           interpolant);
-        const vtkm::Vec<vtkm::FloatDefault,3> edgePCoord0 =
-            vtkm::exec::ParametricCoordinatesPoint(
-              fieldIn.GetNumberOfComponents(), edgeVertex0, shape, *this);
-        const vtkm::Vec<vtkm::FloatDefault,3> edgePCoord1 =
-            vtkm::exec::ParametricCoordinatesPoint(
-              fieldIn.GetNumberOfComponents(), edgeVertex1, shape, *this);
-        const vtkm::Vec<vtkm::FloatDefault,3> interpPCoord =
-            vtkm::Lerp(edgePCoord0, edgePCoord1, interpolant);
-        normalsOut[triVertex] =
-            vtkm::Normal(vtkm::exec::CellDerivative(
-                           fieldIn, coords, interpPCoord, shape, *this));
+
         interpolationIds[triVertex][0] = indices[edgeVertex0];
         interpolationIds[triVertex][1] = indices[edgeVertex1];
         interpolationWeights[triVertex] = interpolant;
+
+        //conditionally do these only if we want to generate normals
+        if(this->GenerateNormals)
+        {
+          const vtkm::Vec<vtkm::FloatDefault,3> edgePCoord0 =
+              vtkm::exec::ParametricCoordinatesPoint(
+                fieldIn.GetNumberOfComponents(), edgeVertex0, shape, *this);
+          const vtkm::Vec<vtkm::FloatDefault,3> edgePCoord1 =
+              vtkm::exec::ParametricCoordinatesPoint(
+                fieldIn.GetNumberOfComponents(), edgeVertex1, shape, *this);
+
+          const vtkm::Vec<vtkm::FloatDefault,3> interpPCoord =
+              vtkm::Lerp(edgePCoord0, edgePCoord1, interpolant);
+
+          normalsOut[triVertex] =
+            vtkm::Normal(vtkm::exec::CellDerivative(
+                           fieldIn, coords, interpPCoord, shape, *this));
+        }
+
       }
     }
 
   private:
     const FieldType Isovalue;
+    bool GenerateNormals;
     ScatterType Scatter;
   };
 
@@ -272,9 +281,10 @@ public:
                                   numOutputTrisPerCell,
                                   numTrianglesTable);
 
+    vtkm::worklet::ScatterCounting scatter(numOutputTrisPerCell, DeviceAdapter());
     IsosurfaceGenerate isosurface(isovalue,
-                                  numOutputTrisPerCell,
-                                  DeviceAdapter(),
+                                  true, //always generate normals.
+                                  scatter,
                                   edgeTable.PrepareForInput(DeviceAdapter()));
 
     vtkm::worklet::DispatcherMapTopology<IsosurfaceGenerate, DeviceAdapter>
