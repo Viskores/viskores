@@ -70,9 +70,11 @@ public:
 
     CellSetType cellset = dataset.GetCellSet(0).CastTo(CellSetType());
 
-    vtkm::worklet::Threshold<DeviceAdapter> threshold;
-    OutCellSetType outCellSet = threshold.Run(cellset, dataset.GetField("pointvar"),
-                                              HasValue(60.1f));
+    vtkm::worklet::Threshold threshold;
+    OutCellSetType outCellSet = threshold.Run(cellset,
+                                              dataset.GetField("pointvar"),
+                                              HasValue(60.1f),
+                                              DeviceAdapter());
     vtkm::cont::Field cellField =
         threshold.ProcessCellField(dataset.GetField("cellvar"));
 
@@ -101,9 +103,11 @@ public:
 
     CellSetType cellset = dataset.GetCellSet(0).CastTo(CellSetType());
 
-    vtkm::worklet::Threshold<DeviceAdapter> threshold;
-    OutCellSetType outCellSet = threshold.Run(cellset, dataset.GetField("pointvar"),
-                                              HasValue(20.1f));
+    vtkm::worklet::Threshold threshold;
+    OutCellSetType outCellSet = threshold.Run(cellset,
+                                              dataset.GetField("pointvar"),
+                                              HasValue(20.1f),
+                                              DeviceAdapter());
     vtkm::cont::Field cellField =
         threshold.ProcessCellField(dataset.GetField("cellvar"));
 
@@ -133,9 +137,11 @@ public:
 
     CellSetType cellset = dataset.GetCellSet(0).CastTo(CellSetType());
 
-    vtkm::worklet::Threshold<DeviceAdapter> threshold;
-    OutCellSetType outCellSet = threshold.Run(cellset, dataset.GetField("cellvar"),
-                                              HasValue(100.1f));
+    vtkm::worklet::Threshold threshold;
+    OutCellSetType outCellSet = threshold.Run(cellset,
+                                              dataset.GetField("cellvar"),
+                                              HasValue(100.1f),
+                                              DeviceAdapter());
     vtkm::cont::Field cellField =
         threshold.ProcessCellField(dataset.GetField("cellvar"));
 
