@@ -246,13 +246,13 @@ public:
 
   MarchingCubes() {}
 
-  template<typename CellSetType,typename StorageTag, typename CoordinateType>
+  template<typename CellSetType,typename StorageTagField,typename StorageTagVertices,typename StorageTagNormals, typename CoordinateType>
   void Run(const float &isovalue,
            const CellSetType& cellSet,
            const vtkm::cont::CoordinateSystem& coordinateSystem,
-           const vtkm::cont::ArrayHandle<FieldType, StorageTag>& field,
-           vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3> > vertices,
-           vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3> > normals)
+           const vtkm::cont::ArrayHandle<FieldType, StorageTagField>& field,
+           vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3>, StorageTagVertices > vertices,
+           vtkm::cont::ArrayHandle< vtkm::Vec<CoordinateType,3>, StorageTagNormals > normals)
   {
     // Set up the Marching Cubes case tables
     vtkm::cont::ArrayHandle<vtkm::IdComponent> edgeTable =
