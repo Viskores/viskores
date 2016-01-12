@@ -188,7 +188,7 @@
 #elif defined(VTKM_GCC) && defined(VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS)
 //gcc only needs in loop
 #define VTKM_VECTORIZATION_PRE_LOOP \
-    _Pragma("ivdep")
+    _Pragma("GCC ivdep")
 #define VTKM_VECTORIZATION_IN_LOOP
 #else
 #define VTKM_VECTORIZATION_PRE_LOOP
