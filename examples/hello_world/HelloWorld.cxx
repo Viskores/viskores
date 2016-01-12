@@ -34,7 +34,7 @@
 #include <vtkm/worklet/WorkletMapField.h>
 
 //Suppress warnings about glut being deprecated on OSX
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
@@ -224,6 +224,6 @@ int main(int argc, char** argv)
   glutMainLoop();
 }
 
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 # pragma GCC diagnostic pop
 #endif
