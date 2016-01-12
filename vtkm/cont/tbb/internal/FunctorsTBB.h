@@ -443,15 +443,10 @@ public:
     // error and setting the message buffer as expected.
     try
       {
-#ifdef VTKM_ENABLE_VECTORIZATION
-#if defined(VTKM_CLANG)
-    #pragma clang loop vectorize(enable)
-#elif defined(VTKM_ICC)
-    #pragma simd
-#endif
-#endif
+VTKM_VECTORIZATION_PRE_LOOP
       for (vtkm::Id i = range.begin(); i < range.end(); i++)
         {
+VTKM_VECTORIZATION_IN_LOOP
         OutputPortal.Set( i, ValuesPortal.Get(IndexPortal.Get(i)) );
         }
       }
