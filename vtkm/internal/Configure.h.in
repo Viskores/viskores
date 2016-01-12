@@ -28,26 +28,29 @@
 #define VTKM_OPENMP
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
+//MSVC 2015+ can use a clang frontend, so we want to label it only as MSVC
+//and not MSVC and clang
 #define VTKM_MSVC
-#endif
 
-#if defined(__clang__) && !defined(__INTEL_COMPILER)
-//On OSX the intel compiler uses clang as the front end
-#define VTKM_CLANG
-#endif
-
-#ifdef __INTEL_COMPILER
+#elif defined(__INTEL_COMPILER)
+//Intel 14+ on OSX uses a clang frontend, so again we want to label them as
+//intel only, and not intel and clang
 #define VTKM_ICC
-#endif
 
-#ifdef __PGI
+#elif defined(__PGI)
+// PGI reports as GNUC as it generates the same ABI, so we need to check for
+// it before gcc.
 #define VTKM_PGI
-#endif
 
+#elif defined(__clang__)
+//Check for clang before GCC, as clang says it is GNUC since it has ABI
+//compliance
+#define VTKM_CLANG
+
+#elif defined(__GNUC__)
 // Several compilers pretend to be GCC but have minor differences. Try to
-// compensate for that.
-#if defined(__GNUC__) && !defined(VTKM_CLANG) && !defined(VTKM_ICC)
+// compensate for that, by checking for those compilers first
 #define VTKM_GCC
 #endif
 
@@ -119,7 +122,7 @@
 // that should be wrapped around any #include for a boost or thrust header file. Mostly
 // this is used to set pragmas that dissable warnings that VTK-m checks for
 // but boost and thrust does not.
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG)) && !defined(VTKM_PGI)
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 
 #define VTK_M_THIRDPARTY_GCC_WARNING_PRAGMAS \
   _Pragma("GCC diagnostic ignored \"-Wconversion\"") \
