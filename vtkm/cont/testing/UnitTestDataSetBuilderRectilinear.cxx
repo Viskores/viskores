@@ -28,9 +28,19 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+#include <boost/static_assert.hpp>
+VTKM_THIRDPARTY_POST_INCLUDE
+
+#include <time.h>
+
 #include <vector>
 
 namespace DataSetBuilderRectilinearNamespace {
+
+boost::mt19937 g_RandomGenerator;
 
 typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DFA;
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
@@ -76,111 +86,130 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
 }
 
 template <typename T>
-void FillArray(std::vector<T> &arr, std::size_t sz, int fillMethod)
+void FillArray(std::vector<T> &arr,
+               vtkm::Id size,
+               vtkm::IdComponent fillMethod)
 {
-    arr.resize(sz);
-    for (size_t i = 0; i < sz; i++)
-    {
-        T xi;
+  arr.resize(static_cast<std::size_t>(size));
+  for (size_t i = 0; i < static_cast<std::size_t>(size); i++)
+  {
+    T xi;
 
-        switch (fillMethod)
-        {
-        case 0: xi = static_cast<T>(i); break;
-        case 1: xi = static_cast<T>(i) / static_cast<vtkm::Float32>(sz-1); break;
-        case 2: xi = static_cast<T>(i*2); break;
-        case 3: xi = static_cast<T>(i*0.1f); break;
-        case 4: xi = static_cast<T>(i*i); break;
-        }
-        arr[i] = xi;
+    switch (fillMethod)
+    {
+      case 0: xi = static_cast<T>(i); break;
+      case 1: xi = static_cast<T>(i) / static_cast<vtkm::Float32>(size-1); break;
+      case 2: xi = static_cast<T>(i*2); break;
+      case 3: xi = static_cast<T>(i*0.1f); break;
+      case 4: xi = static_cast<T>(i*i); break;
     }
+    arr[i] = xi;
+  }
 }
 
 template <typename T>
 void
 RectilinearTests()
 {
-  vtkm::cont::DataSetBuilderRectilinear dsb;
-  vtkm::cont::DataSet ds;
+  const vtkm::Id NUM_TRIALS = 10;
+  const vtkm::Id MAX_DIM_SIZE = 20;
+  const vtkm::Id NUM_FILL_METHODS = 5;
 
-  std::size_t nx = 15, ny = 15, nz = 15;
-  int nm = 5;
-  std::vector<T> xvals, yvals, zvals;
+  vtkm::cont::DataSetBuilderRectilinear dataSetBuilder;
+  vtkm::cont::DataSet dataSet;
 
-  for (std::size_t i = 2; i < nx; i++)
+  boost::random::uniform_int_distribution<vtkm::Id>
+      randomDim(2, MAX_DIM_SIZE);
+  boost::random::uniform_int_distribution<vtkm::IdComponent>
+      randomFill(0, NUM_FILL_METHODS-1);
+
+  for (vtkm::Id trial = 0; trial < NUM_TRIALS; trial++)
   {
-    for (std::size_t j = 2; j < ny; j++)
-    {
-      for (int mx = 0; mx < nm; mx++)
-      {
-        for (int my = 0; my < nm; my++)
-        {
-          //Do the 2D cases.
-          vtkm::Id np = static_cast<vtkm::Id>(i*j);
-          vtkm::Id nc = static_cast<vtkm::Id>((i-1)*(j-1));
-          FillArray(xvals, i, mx);
-          FillArray(yvals, j, my);
+    std::cout << "Trial " << trial << std::endl;
 
-          vtkm::Float64 bounds[6] = {xvals[0], xvals[i-1],
-                                     yvals[0], yvals[j-1],
-                                     0.0, 0.0};
-          //Test std::vector
-          ds = dsb.Create(xvals, yvals);
-          ValidateDataSet(ds, 2, np, nc, bounds);
+    vtkm::Id3 dimensions(randomDim(g_RandomGenerator),
+                         randomDim(g_RandomGenerator),
+                         randomDim(g_RandomGenerator));
+    std::cout << "Dimensions: " << dimensions << std::endl;
 
-          //Test T *
-          ds = dsb.Create(static_cast<vtkm::Id>(i),
-                          static_cast<vtkm::Id>(j),
-                          &xvals[0],
-                          &yvals[0]);
-          ValidateDataSet(ds, 2, np, nc, bounds);
+    vtkm::IdComponent fillMethodX = randomFill(g_RandomGenerator);
+    vtkm::IdComponent fillMethodY = randomFill(g_RandomGenerator);
+    vtkm::IdComponent fillMethodZ = randomFill(g_RandomGenerator);
+    std::cout << "Fill methods: ["
+              << fillMethodX << ","
+              << fillMethodY << ","
+              << fillMethodZ << "]" << std::endl;
 
-          //Test ArrayHandle
-          ds = dsb.Create(vtkm::cont::make_ArrayHandle(xvals),
-                          vtkm::cont::make_ArrayHandle(yvals));
-          ValidateDataSet(ds, 2, np, nc, bounds);
+    std::vector<T> xCoordinates;
+    std::vector<T> yCoordinates;
+    std::vector<T> zCoordinates;
+    FillArray(xCoordinates, dimensions[0], fillMethodX);
+    FillArray(yCoordinates, dimensions[1], fillMethodY);
+    FillArray(zCoordinates, dimensions[2], fillMethodZ);
 
-          //Do the 3D cases.
-          for (std::size_t k = 2; k < nz; k++)
-          {
-            for (int mz = 0; mz < nm; mz++)
-            {
-              np = static_cast<vtkm::Id>(i*j*k);
-              nc = static_cast<vtkm::Id>((i-1)*(j-1)*(k-1));
-              FillArray(zvals, k, mz);
-              bounds[4] = zvals[0];
-              bounds[5] = zvals[k-1];
+    std::cout << "2D cases" << std::endl;
+    vtkm::Id numPoints = dimensions[0]*dimensions[1];
+    vtkm::Id numCells = (dimensions[0]-1)*(dimensions[1]-1);
+    vtkm::Float64 bounds[6] = {
+      xCoordinates.front(), xCoordinates.back(),
+      yCoordinates.front(), yCoordinates.back(),
+      0.0, 0.0
+    };
 
-              //Test std::vector
-              ds = dsb.Create(xvals, yvals, zvals);
-              ValidateDataSet(ds, 3, np, nc, bounds);
+    std::cout << "  Create with std::vector" << std::endl;
+    dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates);
+    ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
 
-              //Test T *
-              ds = dsb.Create(static_cast<vtkm::Id>(i),
-                              static_cast<vtkm::Id>(j),
-                              static_cast<vtkm::Id>(k),
-                              &xvals[0],
-                              &yvals[0],
-                              &zvals[0]);
-              ValidateDataSet(ds, 3, np, nc, bounds);
+    std::cout << "  Create with C array" << std::endl;
+    dataSet = dataSetBuilder.Create(dimensions[0],
+                                    dimensions[1],
+                                    &xCoordinates.front(),
+                                    &yCoordinates.front());
+    ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
 
-              //Test ArrayHandle
-              ds = dsb.Create(vtkm::cont::make_ArrayHandle(xvals),
-                              vtkm::cont::make_ArrayHandle(yvals),
-                              vtkm::cont::make_ArrayHandle(zvals));
-              ValidateDataSet(ds, 3, np, nc, bounds);
-            }
-          }
-        }
-      }
-    }
+    std::cout << "  Create with ArrayHandle" << std::endl;
+    dataSet = dataSetBuilder.Create(vtkm::cont::make_ArrayHandle(xCoordinates),
+                                    vtkm::cont::make_ArrayHandle(yCoordinates));
+    ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
+
+    std::cout << "3D cases" << std::endl;
+    numPoints *= dimensions[2];
+    numCells *= dimensions[2]-1;
+    bounds[4] = zCoordinates.front();
+    bounds[5] = zCoordinates.back();
+
+    std::cout << "  Create with std::vector" << std::endl;
+    dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates, zCoordinates);
+    ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
+
+    std::cout << "  Create with C array" << std::endl;
+    dataSet = dataSetBuilder.Create(dimensions[0],
+                                    dimensions[1],
+                                    dimensions[2],
+                                    &xCoordinates.front(),
+                                    &yCoordinates.front(),
+                                    &zCoordinates.front());
+    ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
+
+    std::cout << "  Create with ArrayHandle" << std::endl;
+    dataSet = dataSetBuilder.Create(vtkm::cont::make_ArrayHandle(xCoordinates),
+                                    vtkm::cont::make_ArrayHandle(yCoordinates),
+                                    vtkm::cont::make_ArrayHandle(zCoordinates));
+    ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
   }
 }
 
 void
 TestDataSetBuilderRectilinear()
 {
-    RectilinearTests<vtkm::Float32>();
-    RectilinearTests<vtkm::Float64>();
+  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(time(NULL));
+  std::cout << "Seed: " << seed << std::endl;
+  g_RandomGenerator.seed(seed);
+
+  std::cout << "======== Float32 ==========================" << std::endl;
+  RectilinearTests<vtkm::Float32>();
+  std::cout << "======== Float64 ==========================" << std::endl;
+  RectilinearTests<vtkm::Float64>();
 }
 
 } // namespace DataSetBuilderRectilinearNamespace
