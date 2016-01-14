@@ -61,20 +61,38 @@ private:
     }
     else
     { //visit way
+      vtkm::Vec< vtkm::Float32, 6 > bounds;
+
       std::string fieldData; int numberOfFields;
       this->DataFile->Stream >> fieldData >> numberOfFields >> std::ws;
-      //currently we only support a single field with name avtOriginalBounds
-      internal::parseAssert(this->DataFile->Stream.good() && numberOfFields == 1);
+      internal::parseAssert(this->DataFile->Stream.good() && numberOfFields > 0);
 
-      std::string fieldName, dataType; int vec_size, num_elements;
-      this->DataFile->Stream >> fieldName >> vec_size >> num_elements >> dataType >> std::ws;
-      internal::parseAssert(this->DataFile->Stream.good() && fieldName == "avtOriginalBounds");
-      internal::parseAssert(vec_size == 1 && num_elements == 6);
+      //parse all the fields, but only store the results of the avtOriginalBounds
+      //field
+      for(int i=0; i < numberOfFields; ++i)
+      {
+        std::string fieldName, dataType; int vec_size, num_elements;
+        this->DataFile->Stream >> fieldName >> vec_size >> num_elements >> dataType >> std::ws;
+        internal::parseAssert(this->DataFile->Stream.good());
 
-      //now we can parse the bounds
-      vtkm::Vec< vtkm::Float32, 6 > bounds;
-      this->DataFile->Stream >> bounds[0] >> bounds[1] >> bounds[2]
-                             >> bounds[3] >> bounds[4] >> bounds[5] >> std::ws;
+        if(fieldName == "avtOriginalBounds")
+        {
+          internal::parseAssert(vec_size == 1 && num_elements == 6);
+          //now we can parse the bounds
+          this->DataFile->Stream >> bounds[0] >> bounds[1] >> bounds[2]
+                                 >> bounds[3] >> bounds[4] >> bounds[5] >> std::ws;
+        }
+        else
+        {
+          //parse and throw away everything
+          double value;
+          for(int j = 0; j < (vec_size*num_elements); ++j)
+            {
+            this->DataFile->Stream >> value;
+            }
+          (void) value;
+        }
+      }
       internal::parseAssert(this->DataFile->Stream.good());
 
       //now we need the spacing
