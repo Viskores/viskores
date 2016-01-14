@@ -93,7 +93,6 @@ private:
 
 } // namespace internal
 
-template<typename DeviceAdapter>
 struct VertexClustering
 {
   struct GridInfo
@@ -176,34 +175,22 @@ struct VertexClustering
   class IndexingWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
-  private:
-    typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::Portal IdPortalType;
-    IdPortalType CidIndexRaw;
-    vtkm::Id Len;
-  public:
-      typedef void ControlSignature(FieldIn<IdType>);
-      typedef void ExecutionSignature(WorkIndex, _1);  // WorkIndex: use vtkm indexing
+      typedef void ControlSignature(FieldIn<IdType>,
+                                    WholeArrayOut<IdType>);
+      typedef void ExecutionSignature(WorkIndex, _1, _2);  // WorkIndex: use vtkm indexing
 
-      VTKM_CONT_EXPORT
-      IndexingWorklet( IdArrayHandle &cidIndexArray, vtkm::Id n ) : Len(n)
-      {
-        this->CidIndexRaw = cidIndexArray.PrepareForOutput(n, DeviceAdapter() );
-      }
-
+      template<typename OutPortalType>
       VTKM_EXEC_EXPORT
-      void operator()(const vtkm::Id &counter, const vtkm::Id &cid) const
+      void operator()(const vtkm::Id &counter,
+                      const vtkm::Id &cid,
+                      const OutPortalType &outPortal) const
       {
-        VTKM_ASSERT_EXEC( cid < this->Len , *this );
-        this->CidIndexRaw.Set(cid, counter);
+        outPortal.Set(cid, counter);
       }
   };
 
   class Cid2PointIdWorklet : public vtkm::worklet::WorkletMapField
   {
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
-    typedef typename IdArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
-    const IdPortalType CidIndexRaw;
     vtkm::Id NPoints;
 
     VTKM_EXEC_EXPORT
@@ -213,17 +200,21 @@ struct VertexClustering
     }
 
   public:
-    typedef void ControlSignature(FieldIn<Id3Type>, FieldOut<Id3Type>);
-    typedef void ExecutionSignature(_1, _2);
+    typedef void ControlSignature(FieldIn<Id3Type>,
+                                  FieldOut<Id3Type>,
+                                  WholeArrayIn<IdType>);
+    typedef void ExecutionSignature(_1, _2, _3);
 
     VTKM_CONT_EXPORT
-    Cid2PointIdWorklet( IdArrayHandle &cidIndexArray, vtkm::Id nPoints )
-      : CidIndexRaw ( cidIndexArray.PrepareForInput(DeviceAdapter()) ),
+    Cid2PointIdWorklet( vtkm::Id nPoints ):
       NPoints(nPoints)
     {}
 
+    template<typename InPortalType>
     VTKM_EXEC_EXPORT
-    void operator()(const vtkm::Id3 &cid3, vtkm::Id3 &pointId3) const
+    void operator()(const vtkm::Id3 &cid3,
+                    vtkm::Id3 &pointId3,
+                    const InPortalType& inPortal) const
     {
       if (cid3[0]==cid3[1] || cid3[0]==cid3[2] || cid3[1]==cid3[2])
       {
@@ -231,10 +222,9 @@ struct VertexClustering
       }
       else
       {
-        pointId3[0] = this->CidIndexRaw.Get( cid3[0] );
-        pointId3[1] = this->CidIndexRaw.Get( cid3[1] );
-        pointId3[2] = this->CidIndexRaw.Get( cid3[2] );
-        VTKM_ASSERT_EXEC( pointId3[0] < this->NPoints && pointId3[1] < this->NPoints && pointId3[2] < this->NPoints, *this );
+        pointId3[0] = inPortal.Get( cid3[0] );
+        pointId3[1] = inPortal.Get( cid3[1] );
+        pointId3[2] = inPortal.Get( cid3[2] );
 
         // Sort triangle point ids so that the same triangle will have the same signature
         // Rotate these ids making the first one the smallest
@@ -317,25 +307,17 @@ struct VertexClustering
     }
   };
 
-  template <typename ValueType>
-  void SortAndUnique(vtkm::cont::ArrayHandle<ValueType> &pointId3Array)
-  {
-    ///
-    /// Unique: Decimate replicated cells
-    ///
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(pointId3Array);
-
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Unique(pointId3Array);
-  }
 
 public:
 
   ///////////////////////////////////////////////////
   /// \brief VertexClustering: Mesh simplification
   ///
+  template<typename DeviceAdapter>
   vtkm::cont::DataSet Run(const vtkm::cont::DynamicCellSet &cellSet,
                           const vtkm::cont::CoordinateSystem &coordinates,
-                          vtkm::Id nDivisions)
+                          vtkm::Id nDivisions,
+                          DeviceAdapter)
   {
     vtkm::Float64 bounds[6];
     coordinates.GetBounds(bounds, DeviceAdapter());
@@ -415,10 +397,12 @@ public:
 
     /// preparation: Get the indexes of the clustered points to prepare for new cell array
     vtkm::cont::ArrayHandle<vtkm::Id> cidIndexArray;
+    cidIndexArray.PrepareForOutput(gridInfo.dim[0]*gridInfo.dim[1]*gridInfo.dim[2],
+                                   DeviceAdapter());
 
-    vtkm::worklet::DispatcherMapField<IndexingWorklet, DeviceAdapter> (
-      IndexingWorklet(cidIndexArray, gridInfo.dim[0]*gridInfo.dim[1]*gridInfo.dim[2]))
-        .Invoke(pointCidArrayReduced);
+    vtkm::worklet::DispatcherMapField<
+                  IndexingWorklet,
+                  DeviceAdapter>().Invoke(pointCidArrayReduced, cidIndexArray);
 
     pointCidArrayReduced.ReleaseResources();
 
@@ -431,7 +415,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id3> pointId3Array;
 
     vtkm::worklet::DispatcherMapField<Cid2PointIdWorklet, DeviceAdapter>(
-        Cid2PointIdWorklet( cidIndexArray, nPoints)).Invoke(cid3Array, pointId3Array);
+        Cid2PointIdWorklet(nPoints)).Invoke(cid3Array, pointId3Array, cidIndexArray);
 
     cid3Array.ReleaseResources();
     cidIndexArray.ReleaseResources();
@@ -452,7 +436,8 @@ public:
     std::cout << "Time before sort and unique with hashing (s): " << timer.GetElapsedTime() << std::endl;
 #endif
 
-      SortAndUnique(pointId3HashArray);
+      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(pointId3HashArray);
+      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Unique(pointId3HashArray);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after sort and unique with hashing (s): " << timer.GetElapsedTime() << std::endl;
@@ -470,7 +455,8 @@ public:
       std::cout << "Time before sort and unique [no hashing] (s): " << timer.GetElapsedTime() << std::endl;
 #endif
 
-      SortAndUnique(pointId3Array);
+      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(pointId3Array);
+      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Unique(pointId3Array);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique [no hashing] (s): " << timer.GetElapsedTime() << std::endl;
