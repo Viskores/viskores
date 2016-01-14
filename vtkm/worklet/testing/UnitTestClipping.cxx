@@ -148,13 +148,17 @@ void TestClippingExplicit()
       "Got incorrect conectivity");
 
   VTKM_TEST_ASSERT(
-      TestArrayHandle(coords.CastToArrayHandle(Coord3D(),
-        VTKM_DEFAULT_STORAGE_TAG()), expectedCoords, fieldSize),
-      "Got incorrect coords");
+      TestArrayHandle(
+          coords.CastToTypeStorage<Coord3D,VTKM_DEFAULT_STORAGE_TAG>(),
+          expectedCoords,
+          fieldSize),
+      "Got incorrect coordinates");
 
   VTKM_TEST_ASSERT(
-      TestArrayHandle(scalars.CastToArrayHandle(vtkm::Float32(),
-        VTKM_DEFAULT_STORAGE_TAG()), expectedScalars, fieldSize),
+      TestArrayHandle(
+          scalars.CastToTypeStorage<vtkm::Float32,VTKM_DEFAULT_STORAGE_TAG>(),
+          expectedScalars,
+          fieldSize),
       "Got incorrect scalars");
 }
 
@@ -195,13 +199,17 @@ void TestClippingStrucutred()
       "Got incorrect conectivity");
 
   VTKM_TEST_ASSERT(
-      TestArrayHandle(coords.CastToArrayHandle(Coord3D(),
-        VTKM_DEFAULT_STORAGE_TAG()), expectedCoords, fieldSize),
-      "Got incorrect coords");
+      TestArrayHandle(
+          coords.CastToTypeStorage<Coord3D,VTKM_DEFAULT_STORAGE_TAG>(),
+          expectedCoords,
+          fieldSize),
+      "Got incorrect coordinates");
 
   VTKM_TEST_ASSERT(
-      TestArrayHandle(scalars.CastToArrayHandle(vtkm::Float32(),
-        VTKM_DEFAULT_STORAGE_TAG()), expectedScalars, fieldSize),
+      TestArrayHandle(
+          scalars.CastToTypeStorage<vtkm::Float32,VTKM_DEFAULT_STORAGE_TAG>(),
+          expectedScalars,
+          fieldSize),
       "Got incorrect scalars");
 }
 
@@ -247,13 +255,17 @@ void TestClippingWithImplicitFunction()
       "Got incorrect conectivity");
 
   VTKM_TEST_ASSERT(
-      TestArrayHandle(coords.CastToArrayHandle(Coord3D(),
-        VTKM_DEFAULT_STORAGE_TAG()), expectedCoords, fieldSize),
-      "Got incorrect coords");
+      TestArrayHandle(
+          coords.CastToTypeStorage<Coord3D,VTKM_DEFAULT_STORAGE_TAG>(),
+          expectedCoords,
+          fieldSize),
+      "Got incorrect coordinates");
 
   VTKM_TEST_ASSERT(
-      TestArrayHandle(scalars.CastToArrayHandle(vtkm::Float32(),
-        VTKM_DEFAULT_STORAGE_TAG()), expectedScalars, fieldSize),
+      TestArrayHandle(
+          scalars.CastToTypeStorage<vtkm::Float32,VTKM_DEFAULT_STORAGE_TAG>(),
+          expectedScalars,
+          fieldSize),
       "Got incorrect scalars");
 }
 

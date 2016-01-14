@@ -200,8 +200,8 @@ void displayCall()
   glTranslatef(-0.5f, -0.5f, -0.5f);
 
   // Get cell set and the number of cells and vertices
-  vtkm::cont::CellSetSingleType<> cellSet =
-              outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+  vtkm::cont::CellSetSingleType<> cellSet;
+  outDataSet.GetCellSet(0).CopyTo(cellSet);
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
 
   // Get the coordinate system and coordinate data
@@ -303,8 +303,8 @@ int main(int argc, char* argv[])
 
   // Create the input explicit cell set
   vtkm::cont::DataSet inDataSet = MakeTetrahedralizeExplicitDataSet();
-  vtkm::cont::CellSetExplicit<> &inCellSet =
-      inDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+  vtkm::cont::CellSetExplicit<> inCellSet;
+  inDataSet.GetCellSet(0).CopyTo(inCellSet);
 
   numberOfInPoints = inCellSet.GetNumberOfPoints();
 

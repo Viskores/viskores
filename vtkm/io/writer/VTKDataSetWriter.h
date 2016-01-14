@@ -369,24 +369,28 @@ public:
       vtkm::cont::DynamicCellSet cs = ds.GetCellSet(csindex);
       if (cs.IsType<vtkm::cont::CellSetExplicit<> >())
       {
-        WriteDataSetAsUnstructured(out, ds,
-                                  cs.CastTo<vtkm::cont::CellSetExplicit<> >());
+        WriteDataSetAsUnstructured(out,
+                                   ds,
+                                   cs.Cast<vtkm::cont::CellSetExplicit<> >());
       }
       else if (cs.IsType<vtkm::cont::CellSetStructured<2> >())
       {
-        WriteDataSetAsStructured(out, ds,
-                                  cs.CastTo<vtkm::cont::CellSetStructured<2> >());
+        WriteDataSetAsStructured(out,
+                                 ds,
+                                 cs.Cast<vtkm::cont::CellSetStructured<2> >());
       }
       else if (cs.IsType<vtkm::cont::CellSetStructured<3> >())
       {
-        WriteDataSetAsStructured(out, ds,
-                                  cs.CastTo<vtkm::cont::CellSetStructured<3> >());
+        WriteDataSetAsStructured(out,
+                                 ds,
+                                 cs.Cast<vtkm::cont::CellSetStructured<3> >());
       }
       else if (cs.IsType<vtkm::cont::CellSetSingleType<> >())
       {
         // these function just like explicit cell sets
-        WriteDataSetAsUnstructured(out, ds,
-                                cs.CastTo<vtkm::cont::CellSetSingleType<> >());
+        WriteDataSetAsUnstructured(out,
+                                   ds,
+                                   cs.Cast<vtkm::cont::CellSetSingleType<> >());
       }
       else
       {

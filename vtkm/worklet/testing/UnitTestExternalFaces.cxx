@@ -30,8 +30,8 @@ namespace {
 vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
 {
 
-  vtkm::cont::CellSetExplicit<> &cellset =
-      ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+  vtkm::cont::CellSetExplicit<> cellset;
+  ds.GetCellSet(0).CopyTo(cellset);
 
   vtkm::cont::ArrayHandle<vtkm::UInt8> shapes = cellset.GetShapesArray(
     vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
@@ -112,8 +112,8 @@ void TestExternalFaces()
 
   //Run the External Faces worklet
   vtkm::cont::DataSet new_ds = RunExternalFaces(ds);
-  vtkm::cont::CellSetExplicit<> &new_cs =
-      new_ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+  vtkm::cont::CellSetExplicit<> new_cs;
+  new_ds.GetCellSet(0).CopyTo(new_cs);
 
   vtkm::Id numExtFaces_out = new_cs.GetNumberOfCells();
 

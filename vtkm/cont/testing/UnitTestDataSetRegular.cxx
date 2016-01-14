@@ -49,8 +49,10 @@ TwoDimRegularTest()
 
   vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
 
-  typedef vtkm::cont::CellSetStructured<2> CellSetType;
-  CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
+  dataSet.PrintSummary(std::cout);
+
+  vtkm::cont::CellSetStructured<2> cellSet;
+  dataSet.GetCellSet(0).CopyTo(cellSet);
 
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1,
                    "Incorrect number of cell sets");
@@ -157,8 +159,10 @@ ThreeDimRegularTest()
 
   vtkm::cont::DataSet dataSet = testDataSet.Make3DRegularDataSet0();
 
-  typedef vtkm::cont::CellSetStructured<3> CellSetType;
-  CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
+  dataSet.PrintSummary(std::cout);
+
+  vtkm::cont::CellSetStructured<3> cellSet;
+  dataSet.GetCellSet(0).CopyTo(cellSet);
 
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1,
                    "Incorrect number of cell sets");

@@ -165,9 +165,18 @@ public:
   ///
   template<typename CellSetType>
   VTKM_CONT_EXPORT
-  bool IsType(CellSetType = CellSetType()) const {
+  bool IsType() const {
     return (detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer)
             != NULL);
+  }
+
+  /// Returns true if this cell set is the same (or equivalent) type as the
+  /// object provided.
+  ///
+  template<typename CellSetType>
+  VTKM_CONT_EXPORT
+  bool IsSameType(const CellSetType &) const {
+    return this->IsType<CellSetType>();
   }
 
   /// Returns the contained cell set as the abstract \c CellSet type.
@@ -178,31 +187,34 @@ public:
           this->CellSetContainer->GetVoidPointer());
   }
 
-  /// Returns this cell set cast to a concrete \c CellSet object of the given
-  /// type. Throws ErrorControlBadValue if the cast does not work. Use
-  /// IsTypeAndStorage to check if the cast can happen.
+  /// Returns this cell set cast to the given \c CellSet type. Throws \c
+  /// ErrorControlBadType if the cast does not work. Use \c IsType to check if
+  /// the cast can happen.
   ///
   template<typename CellSetType>
   VTKM_CONT_EXPORT
-  const CellSetType &CastTo(CellSetType = CellSetType()) const {
-    const CellSetType *cellSet =
+  CellSetType &Cast() const {
+    CellSetType *cellSetPointer =
         detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
-    if (cellSet == NULL)
+    if (cellSetPointer == NULL)
     {
-      throw vtkm::cont::ErrorControlBadValue("Bad cast of dynamic cell set.");
+      throw vtkm::cont::ErrorControlBadType("Bad cast of dynamic cell set.");
     }
-    return *cellSet;
+    return *cellSetPointer;
   }
+
+  /// Given a reference to a concrete \c CellSet object, attempt to downcast
+  /// the contain cell set to the provided type and copy into the given \c
+  /// CellSet object. Throws \c ErrorControlBadType if the cast does not work.
+  /// Use \c IsType to check if the cast can happen.
+  ///
+  /// Note that this is a shallow copy. Any data in associated arrays are not
+  /// copied.
+  ///
   template<typename CellSetType>
   VTKM_CONT_EXPORT
-  CellSetType &CastTo(CellSetType = CellSetType()) {
-    CellSetType *cellSet =
-        detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
-    if (cellSet == NULL)
-    {
-      throw vtkm::cont::ErrorControlBadValue("Bad cast of dynamic cell set.");
-    }
-    return *cellSet;
+  void CopyTo(CellSetType &cellSet) const {
+    cellSet = this->Cast<CellSetType>();
   }
 
   /// Changes the cell set types to try casting to when resolving this dynamic

@@ -48,7 +48,7 @@ vtkm::cont::DataSet Make2DRegularStatDataSet0()
 
     // Create cell scalar
     vtkm::Float32 data[nVerts] = {4,1,10,6,8,2,9,3,5,7};
-    dataSet.AddField(vtkm::cont::Field("data", 1, vtkm::cont::Field::ASSOC_CELL_SET, 
+    dataSet.AddField(vtkm::cont::Field("data", 1, vtkm::cont::Field::ASSOC_CELL_SET,
                            "cells", data, nCells));
 
     vtkm::cont::CellSetStructured<dimension> cellSet("cells");
@@ -298,7 +298,7 @@ vtkm::cont::DataSet Make2DRegularStatDataSet1()
        vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
 
     // Set point scalars
-    dataSet.AddField(vtkm::cont::Field("p_poisson", 1, vtkm::cont::Field::ASSOC_POINTS, 
+    dataSet.AddField(vtkm::cont::Field("p_poisson", 1, vtkm::cont::Field::ASSOC_POINTS,
                             poisson, nVerts));
     dataSet.AddField(vtkm::cont::Field("p_normal", 1, vtkm::cont::Field::ASSOC_POINTS,
                             normal, nVerts));
@@ -361,8 +361,8 @@ void TestFieldSimple()
   vtkm::cont::DataSet ds = Make2DRegularStatDataSet0();
 
   // Cell data
-  vtkm::cont::ArrayHandle<vtkm::Float32> data = 
-    ds.GetField("data").GetData().CastToArrayHandle<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>();
+  vtkm::cont::ArrayHandle<vtkm::Float32> data;
+  ds.GetField("data").GetData().CopyTo(data);
 
   // Run
   vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().Run(data, statinfo);
@@ -392,14 +392,14 @@ void TestFieldStandardDistributions()
   vtkm::cont::DataSet ds = Make2DRegularStatDataSet1();
 
   // Point data
-  vtkm::cont::ArrayHandle<vtkm::Float32> p_poisson = 
-    ds.GetField("p_poisson").GetData().CastToArrayHandle<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>();
-  vtkm::cont::ArrayHandle<vtkm::Float32> p_normal = 
-    ds.GetField("p_normal").GetData().CastToArrayHandle<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>();
-  vtkm::cont::ArrayHandle<vtkm::Float32> p_chiSquare = 
-    ds.GetField("p_chiSquare").GetData().CastToArrayHandle<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>();
-  vtkm::cont::ArrayHandle<vtkm::Float32> p_uniform = 
-    ds.GetField("p_uniform").GetData().CastToArrayHandle<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>();
+  vtkm::cont::ArrayHandle<vtkm::Float32> p_poisson;
+  ds.GetField("p_poisson").GetData().CopyTo(p_poisson);
+  vtkm::cont::ArrayHandle<vtkm::Float32> p_normal;
+  ds.GetField("p_normal").GetData().CopyTo(p_normal);
+  vtkm::cont::ArrayHandle<vtkm::Float32> p_chiSquare;
+  ds.GetField("p_chiSquare").GetData().CopyTo(p_chiSquare);
+  vtkm::cont::ArrayHandle<vtkm::Float32> p_uniform;
+  ds.GetField("p_uniform").GetData().CopyTo(p_uniform);
 
   // Run Poisson data
   vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().Run(p_poisson, statinfo);

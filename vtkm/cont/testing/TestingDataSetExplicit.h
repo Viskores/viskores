@@ -63,7 +63,7 @@ private:
   {
     vtkm::cont::testing::MakeTestDataSet tds;
     vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet0();
-    
+
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");
 
@@ -100,8 +100,9 @@ private:
                    "Incorrect number of coordinate systems");
 
     // test cell-to-point connectivity
-    vtkm::cont::CellSetExplicit<> &cellset =
-      ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+    vtkm::cont::CellSetExplicit<> cellset;
+    ds.GetCellSet(0).CopyTo(cellset);
+
     cellset.BuildConnectivity(DeviceAdapterTag(),
                               vtkm::TopologyElementTagCell(),
                               vtkm::TopologyElementTagPoint());

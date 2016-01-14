@@ -345,13 +345,12 @@ public:
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
     // Get information from input dataset
-    vtkm::cont::CellSetStructured<3> &inCellSet =
-      InDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetStructured<3> >();
+    vtkm::cont::CellSetStructured<3> inCellSet;
+    InDataSet.GetCellSet(0).CopyTo(inCellSet);
     vtkm::Id3 vdims= inCellSet.GetSchedulingRange(vtkm::TopologyElementTagPoint());
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > fieldArray =
-      InDataSet.GetField("vecData").GetData().
-        CastToArrayHandle<vtkm::Vec<FieldType, 3>, VTKM_DEFAULT_STORAGE_TAG>();
+    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > fieldArray;
+    InDataSet.GetField("vecData").GetData().CopyTo(fieldArray);
 
     // Generate random seeds for starting streamlines
     std::vector<vtkm::Vec<FieldType, 3> > seeds;

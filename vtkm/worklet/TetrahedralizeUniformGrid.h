@@ -173,23 +173,23 @@ public:
   void Run()
   {
     // Get the cell set from the output data set
-    vtkm::cont::CellSetSingleType<> & cellSet =
-      OutDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetSingleType<> >();
+    vtkm::cont::CellSetSingleType<> &cellSet =
+        this->OutDataSet.GetCellSet(0).template Cast<vtkm::cont::CellSetSingleType<> >();
 
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
     if (cellSet.GetDimensionality() == 2)
     {
-      vtkm::cont::CellSetStructured<2> &inCellSet =
-        InDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetStructured<2> >();
+      vtkm::cont::CellSetStructured<2> inCellSet;
+      InDataSet.GetCellSet(0).CopyTo(inCellSet);
       vtkm::worklet::DispatcherMapTopology<TriangulateCell,DeviceAdapter> dispatcher;
       dispatcher.Invoke(inCellSet,
                         vtkm::cont::make_ArrayHandleGroupVec<3>(connectivity));
     }
     else if (cellSet.GetDimensionality() == 3)
     {
-      vtkm::cont::CellSetStructured<3> &inCellSet =
-        InDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetStructured<3> >();
+      vtkm::cont::CellSetStructured<3> inCellSet;
+      InDataSet.GetCellSet(0).CopyTo(inCellSet);
       vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell,DeviceAdapter> dispatcher;
       dispatcher.Invoke(inCellSet,
                         vtkm::cont::make_ArrayHandleGroupVec<4>(connectivity));

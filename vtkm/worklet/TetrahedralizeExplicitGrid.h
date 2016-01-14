@@ -212,10 +212,10 @@ public:
   void Run()
   {
     // Cell sets belonging to input and output datasets
-    vtkm::cont::CellSetExplicit<> &inCellSet =
-      InDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetExplicit<> >();
+    vtkm::cont::CellSetExplicit<> inCellSet;
+    InDataSet.GetCellSet(0).CopyTo(inCellSet);
     vtkm::cont::CellSetSingleType<> &cellSet =
-      OutDataSet.GetCellSet(0).template CastTo<vtkm::cont::CellSetSingleType<> >();
+        this->OutDataSet.GetCellSet(0).template Cast<vtkm::cont::CellSetSingleType<> >();
 
     // Input dataset vertices and cell counts
     vtkm::Id dimensionality = inCellSet.GetDimensionality();

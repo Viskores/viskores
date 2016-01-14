@@ -50,8 +50,8 @@ TwoDimRectilinearTest()
 
   vtkm::cont::DataSet dataSet = testDataSet.Make2DRectilinearDataSet0();
 
-  typedef vtkm::cont::CellSetStructured<2> CellSetType;
-  CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
+  vtkm::cont::CellSetStructured<2> cellSet;
+  dataSet.GetCellSet(0).CopyTo(cellSet);
 
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1,
                    "Incorrect number of cell sets");
@@ -176,8 +176,8 @@ ThreeDimRectilinearTest()
   }
   */
 
-  typedef vtkm::cont::CellSetStructured<3> CellSetType;
-  CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
+  vtkm::cont::CellSetStructured<3> cellSet;
+  dataSet.GetCellSet(0).CopyTo(cellSet);
 
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1,
                    "Incorrect number of cell sets");

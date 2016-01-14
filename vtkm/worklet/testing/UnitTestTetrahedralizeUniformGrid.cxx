@@ -108,11 +108,12 @@ void TestUniformGrid2D()
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
   // Convert uniform hexahedra to tetrahedra
-  vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> 
+  vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter>
                  tetrahedralizeFilter(inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
-  vtkm::cont::CellSetSingleType<> &cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+  vtkm::cont::CellSetSingleType<> cellSet;
+  outDataSet.GetCellSet(0).CopyTo(cellSet);
   vtkm::cont::CoordinateSystem coordinates = outDataSet.GetCoordinateSystem(0);
   const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray = coordinates.GetData();
   std::cout << "Number of output triangles " << cellSet.GetNumberOfCells() << std::endl;
@@ -120,7 +121,7 @@ void TestUniformGrid2D()
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
 
   vtkm::cont::ArrayHandle<vtkm::Float64> bounds = coordinates.GetBounds(DeviceAdapter());
-  std::cout << "Bounds (" 
+  std::cout << "Bounds ("
             << bounds.GetPortalControl().Get(0) << "," << bounds.GetPortalControl().Get(1) << ") ("
             << bounds.GetPortalControl().Get(2) << "," << bounds.GetPortalControl().Get(3) << ") ("
             << bounds.GetPortalControl().Get(4) << "," << bounds.GetPortalControl().Get(5) << ")" << std::endl;
@@ -158,11 +159,12 @@ void TestUniformGrid3D()
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
   // Convert uniform hexahedra to tetrahedra
-  vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> 
+  vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter>
                  tetrahedralizeFilter(inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
-  vtkm::cont::CellSetSingleType<> &cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+  vtkm::cont::CellSetSingleType<> cellSet;
+  outDataSet.GetCellSet(0).CopyTo(cellSet);
   vtkm::cont::CoordinateSystem coordinates = outDataSet.GetCoordinateSystem(0);
   const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray = coordinates.GetData();
   std::cout << "Number of output tetrahedra " << cellSet.GetNumberOfCells() << std::endl;
@@ -170,7 +172,7 @@ void TestUniformGrid3D()
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
 
   vtkm::cont::ArrayHandle<vtkm::Float64> bounds = coordinates.GetBounds(DeviceAdapter());
-  std::cout << "Bounds (" 
+  std::cout << "Bounds ("
             << bounds.GetPortalControl().Get(0) << "," << bounds.GetPortalControl().Get(1) << ") ("
             << bounds.GetPortalControl().Get(2) << "," << bounds.GetPortalControl().Get(3) << ") ("
             << bounds.GetPortalControl().Get(4) << "," << bounds.GetPortalControl().Get(5) << ")" << std::endl;

@@ -52,10 +52,8 @@ void TestVertexClustering()
   VTKM_TEST_ASSERT(outDataSet.GetNumberOfCoordinateSystems() == 1,
                    "Number of output coordinate systems mismatch");
   typedef vtkm::Vec<vtkm::Float64, 3> PointType;
-  typedef vtkm::cont::ArrayHandle<PointType > PointArray;
-  PointArray pointArray =
-      outDataSet.GetCoordinateSystem(0).GetData().
-      CastToArrayHandle<PointArray::ValueType, PointArray::StorageTag>();
+  vtkm::cont::ArrayHandle<PointType> pointArray;
+  outDataSet.GetCoordinateSystem(0).GetData().CopyTo(pointArray);
   VTKM_TEST_ASSERT(pointArray.GetNumberOfValues() == output_points,
                    "Number of output points mismatch" );
   for (vtkm::Id i = 0; i < pointArray.GetNumberOfValues(); ++i)
@@ -70,7 +68,8 @@ void TestVertexClustering()
 
   typedef vtkm::cont::CellSetSingleType<> CellSetType;
   VTKM_TEST_ASSERT(outDataSet.GetNumberOfCellSets() == 1, "Number of output cellsets mismatch");
-  CellSetType cellSet = outDataSet.GetCellSet(0).CastTo<CellSetType>();
+  CellSetType cellSet;
+  outDataSet.GetCellSet(0).CopyTo(cellSet);
   VTKM_TEST_ASSERT(
         cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell()).GetNumberOfValues() == output_pointIds,
         "Number of connectivity array elements mismatch");

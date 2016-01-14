@@ -68,7 +68,8 @@ public:
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DRegularDataSet0();
 
-    CellSetType cellset = dataset.GetCellSet(0).CastTo(CellSetType());
+    CellSetType cellset;
+    dataset.GetCellSet(0).CopyTo(cellset);
 
     vtkm::worklet::Threshold threshold;
     OutCellSetType outCellSet = threshold.Run(cellset,
@@ -81,7 +82,7 @@ public:
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 1, "Wrong number of cells");
 
     OutCellFieldArrayHandleType cellFieldArray;
-    cellField.GetData().CastToArrayHandle(cellFieldArray);
+    cellField.GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
                      cellFieldArray.GetPortalConstControl().Get(0) == 200.1f,
@@ -101,7 +102,8 @@ public:
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DRegularDataSet0();
 
-    CellSetType cellset = dataset.GetCellSet(0).CastTo(CellSetType());
+    CellSetType cellset;
+    dataset.GetCellSet(0).CopyTo(cellset);
 
     vtkm::worklet::Threshold threshold;
     OutCellSetType outCellSet = threshold.Run(cellset,
@@ -114,7 +116,7 @@ public:
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 2, "Wrong number of cells");
 
     OutCellFieldArrayHandleType cellFieldArray;
-    cellField.GetData().CastToArrayHandle(cellFieldArray);
+    cellField.GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
                      cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
@@ -135,7 +137,8 @@ public:
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet0();
 
-    CellSetType cellset = dataset.GetCellSet(0).CastTo(CellSetType());
+    CellSetType cellset;
+    dataset.GetCellSet(0).CopyTo(cellset);
 
     vtkm::worklet::Threshold threshold;
     OutCellSetType outCellSet = threshold.Run(cellset,
@@ -148,7 +151,7 @@ public:
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 1, "Wrong number of cells");
 
     OutCellFieldArrayHandleType cellFieldArray;
-    cellField.GetData().CastToArrayHandle(cellFieldArray);
+    cellField.GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
                      cellFieldArray.GetPortalConstControl().Get(0) == 100.1f,

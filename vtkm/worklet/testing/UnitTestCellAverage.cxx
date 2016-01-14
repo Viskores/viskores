@@ -48,8 +48,8 @@ void TestCellAverageRegular3D()
                     dataSet.GetCellSet(),
                     result.GetData());
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle =
-      result.GetData().CastToArrayHandle(vtkm::Float32(), VTKM_DEFAULT_STORAGE_TAG());
+  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
+  result.GetData().CopyTo(resultArrayHandle);
 
   vtkm::Float32 expected[4] = { 60.1875f, 70.2125f, 120.3375f, 130.3625f };
   for (int i = 0; i < 4; ++i)
@@ -77,8 +77,8 @@ void TestCellAverageRegular2D()
                     dataSet.GetCellSet(),
                     result.GetData());
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle =
-      result.GetData().CastToArrayHandle(vtkm::Float32(), VTKM_DEFAULT_STORAGE_TAG());
+  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
+  result.GetData().CopyTo(resultArrayHandle);
 
   vtkm::Float32 expected[2] = { 30.1f, 40.1f };
   for (int i = 0; i < 2; ++i)
@@ -106,8 +106,8 @@ void TestCellAverageExplicit()
                     dataSet.GetCellSet(),
                     result.GetData());
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle =
-      result.GetData().CastToArrayHandle(vtkm::Float32(), VTKM_DEFAULT_STORAGE_TAG());
+  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
+  result.GetData().CopyTo(resultArrayHandle);
 
   vtkm::Float32 expected[2] = { 20.1333f, 35.2f };
   for (int i = 0; i < 2; ++i)

@@ -284,9 +284,9 @@ vtkm::cont::DataSet MakeTestDataSet()
 //
 // Print the histogram result and tally
 //
-void PrintHistogram(vtkm::cont::ArrayHandle<vtkm::Id> bins, 
+void PrintHistogram(vtkm::cont::ArrayHandle<vtkm::Id> bins,
                     vtkm::Id numberOfBins,
-                    vtkm::Float32 minValue, 
+                    vtkm::Float32 minValue,
                     vtkm::Float32 delta)
 {
   vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl binPortal = bins.GetPortalConstControl();
@@ -321,14 +321,14 @@ void TestFieldHistogram()
   vtkm::cont::DataSet ds = MakeTestDataSet();
 
   // Get point data
-  vtkm::cont::ArrayHandle<vtkm::Float32> p_poisson = 
-    ds.GetField("p_poisson").GetData().CastToArrayHandle<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>();
-  vtkm::cont::ArrayHandle<vtkm::Float32> p_normal = 
-    ds.GetField("p_normal").GetData().CastToArrayHandle<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>();
-  vtkm::cont::ArrayHandle<vtkm::Float32> p_chiSquare = 
-    ds.GetField("p_chiSquare").GetData().CastToArrayHandle<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>();
-  vtkm::cont::ArrayHandle<vtkm::Float32> p_uniform = 
-    ds.GetField("p_uniform").GetData().CastToArrayHandle<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>();
+  vtkm::cont::ArrayHandle<vtkm::Float32> p_poisson;
+  ds.GetField("p_poisson").GetData().CopyTo(p_poisson);
+  vtkm::cont::ArrayHandle<vtkm::Float32> p_normal;
+  ds.GetField("p_normal").GetData().CopyTo(p_normal);
+  vtkm::cont::ArrayHandle<vtkm::Float32> p_chiSquare;
+  ds.GetField("p_chiSquare").GetData().CopyTo(p_chiSquare);
+  vtkm::cont::ArrayHandle<vtkm::Float32> p_uniform;
+  ds.GetField("p_uniform").GetData().CopyTo(p_uniform);
 
   // Run data
   vtkm::worklet::FieldHistogram<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().

@@ -185,7 +185,8 @@ void TestExplicitGrid2D()
                  tetrahedralizeFilter(inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
-  vtkm::cont::CellSetSingleType<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+  vtkm::cont::CellSetSingleType<> cellSet;
+  outDataSet.GetCellSet(0).CopyTo(cellSet);
   vtkm::cont::CoordinateSystem coordinates = outDataSet.GetCoordinateSystem(0);
   const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = coordinates.GetData();
   std::cout << "Number of output triangles " << cellSet.GetNumberOfCells() << std::endl;
@@ -224,7 +225,8 @@ void TestExplicitGrid3D()
                  tetrahedralizeFilter(inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
-  vtkm::cont::CellSetSingleType<> cellSet = outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+  vtkm::cont::CellSetSingleType<> cellSet;
+  outDataSet.GetCellSet(0).CopyTo(cellSet);
   vtkm::cont::CoordinateSystem coordinates = outDataSet.GetCoordinateSystem(0);
   const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = coordinates.GetData();
   std::cout << "Number of output tetrahedra " << cellSet.GetNumberOfCells() << std::endl;

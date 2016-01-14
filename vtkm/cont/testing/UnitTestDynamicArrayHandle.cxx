@@ -179,18 +179,18 @@ void CheckCastToArrayHandle(const ArrayHandleType &array)
 
   vtkm::cont::DynamicArrayHandle dynamicArray = array;
   VTKM_TEST_ASSERT(
-        !dynamicArray.IsArrayHandleType(vtkm::cont::ArrayHandle<std::string>()),
+        !dynamicArray.IsArrayHandleType<vtkm::cont::ArrayHandle<std::string> >(),
         "Dynamic array reporting is wrong type.");
 
   ArrayHandleType castArray1;
-  dynamicArray.CastToArrayHandle(castArray1);
-  VTKM_TEST_ASSERT(dynamicArray.IsArrayHandleType(castArray1),
+  dynamicArray.CopyTo(castArray1);
+  VTKM_TEST_ASSERT(dynamicArray.IsSameType(castArray1),
                    "Did not query handle correctly.");
   VTKM_TEST_ASSERT(array == castArray1, "Did not get back same array.");
 
   ArrayHandleType castArray2 =
-      dynamicArray.CastToArrayHandle(typename ArrayHandleType::ValueType(),
-                                     typename ArrayHandleType::StorageTag());
+      dynamicArray.CastToTypeStorage<typename ArrayHandleType::ValueType,
+                                     typename ArrayHandleType::StorageTag>();
   VTKM_TEST_ASSERT(array == castArray2, "Did not get back same array.");
 }
 
@@ -205,8 +205,8 @@ void TryNewInstance(T, DynamicArrayType originalArray)
 
   std::cout << "Get a static instance of the new array (which checks the type)."
             << std::endl;
-  vtkm::cont::ArrayHandle<T> staticArray =
-      newArray.CastToArrayHandle(T(), VTKM_DEFAULT_STORAGE_TAG());
+  vtkm::cont::ArrayHandle<T> staticArray;
+  newArray.CopyTo(staticArray);
 
   std::cout << "Fill the new array with invalid values and make sure the original" << std::endl
             << "is uneffected." << std::endl;
