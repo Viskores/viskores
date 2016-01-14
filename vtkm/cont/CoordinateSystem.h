@@ -21,6 +21,8 @@
 #define vtk_m_cont_CoordinateSystem_h
 
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/ArrayHandleCompositeVector.h>
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/Field.h>
 
 #ifndef VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG
@@ -36,6 +38,22 @@
 namespace vtkm {
 namespace cont {
 
+namespace detail {
+
+typedef vtkm::cont::ArrayHandleCompositeVectorType<
+    vtkm::cont::ArrayHandle<vtkm::Float32>,
+    vtkm::cont::ArrayHandle<vtkm::Float32>,
+    vtkm::cont::ArrayHandle<vtkm::Float32> >::type
+  ArrayHandleCompositeVectorFloat32_3Default;
+
+typedef vtkm::cont::ArrayHandleCompositeVectorType<
+    vtkm::cont::ArrayHandle<vtkm::Float64>,
+    vtkm::cont::ArrayHandle<vtkm::Float64>,
+    vtkm::cont::ArrayHandle<vtkm::Float64> >::type
+  ArrayHandleCompositeVectorFloat64_3Default;
+
+} // namespace detail
+
 /// \brief Default storage list for CoordinateSystem arrays.
 ///
 /// \c VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG is set to this value
@@ -44,7 +62,13 @@ namespace cont {
 struct StorageListTagCoordinateSystemDefault
     : vtkm::ListTagJoin<
         VTKM_DEFAULT_STORAGE_LIST_TAG,
-        vtkm::ListTagBase<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag> >
+    vtkm::ListTagBase<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
+                      detail::ArrayHandleCompositeVectorFloat32_3Default::StorageTag,
+                      detail::ArrayHandleCompositeVectorFloat64_3Default::StorageTag,
+                      vtkm::cont::ArrayHandleCartesianProduct<
+                          vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                          vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                          vtkm::cont::ArrayHandle<vtkm::FloatDefault> >::StorageTag > >
 { };
 
 typedef vtkm::cont::DynamicArrayHandleBase<

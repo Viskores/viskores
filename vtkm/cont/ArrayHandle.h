@@ -736,9 +736,40 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
         }
     else
     {
-        out<<array.GetPortalConstControl().Get(0)<<" "<<array.GetPortalConstControl().Get(1)<<" "<<array.GetPortalConstControl().Get(2);
+        out<<array.GetPortalConstControl().Get(0)<<" ";
+	out<<array.GetPortalConstControl().Get(1)<<" ";
+	out<<array.GetPortalConstControl().Get(2);
         out<<" ... ";
-        out<<array.GetPortalConstControl().Get(sz-3)<<" "<<array.GetPortalConstControl().Get(sz-2)<<" "<<array.GetPortalConstControl().Get(sz-1);
+        out<<array.GetPortalConstControl().Get(sz-3)<<" ";
+	out<<array.GetPortalConstControl().Get(sz-2)<<" ";
+	out<<array.GetPortalConstControl().Get(sz-1);
+    }
+    out<<"]";
+}
+
+template<typename StorageT>
+VTKM_CONT_EXPORT
+void
+printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<vtkm::UInt8,StorageT> &array,
+                         std::ostream &out)
+{
+    vtkm::Id sz = array.GetNumberOfValues();
+    out<<"sz= "<<sz<<" [";
+    if (sz <= 7)
+        for (vtkm::Id i = 0 ; i < sz; i++)
+        {
+            out<<static_cast<int>(array.GetPortalConstControl().Get(i));
+            if (i != (sz-1)) out<<" ";
+        }
+    else
+    {
+        out<<static_cast<int>(array.GetPortalConstControl().Get(0))<<" ";
+	out<<static_cast<int>(array.GetPortalConstControl().Get(1))<<" ";
+	out<<static_cast<int>(array.GetPortalConstControl().Get(2));
+        out<<" ... ";
+        out<<static_cast<int>(array.GetPortalConstControl().Get(sz-3))<<" ";
+	out<<static_cast<int>(array.GetPortalConstControl().Get(sz-2))<<" ";
+	out<<static_cast<int>(array.GetPortalConstControl().Get(sz-1));
     }
     out<<"]";
 }

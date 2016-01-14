@@ -152,7 +152,7 @@ TestMaxPointOrCell()
 {
   std::cout<<"Testing MaxPointOfCell worklet"<<std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet1();
+  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.
@@ -193,7 +193,7 @@ TestAvgPointToCell()
   std::cout<<"Testing AvgPointToCell worklet"<<std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet1();
+  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.

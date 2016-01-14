@@ -129,7 +129,7 @@ public:
       vtkm::cont::ArrayHandle<vtkm::Id>,
       vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
 
-    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
+    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet0();
 
     CellSetType cellset = dataset.GetCellSet(0).CastTo(CellSetType());
 

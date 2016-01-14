@@ -232,6 +232,7 @@ public:
   {
     this->PointToCell.Connectivity.Shrink(ConnectivityLength);
     this->PointToCell.ElementsValid = true;
+    this->PointToCell.IndexOffsetsValid = true;
     this->NumberOfCells = this->ConnectivityLength = -1;
   }
 
@@ -364,6 +365,7 @@ public:
                             NumIndicesStorageTag,
                             ConnectivityStorageTag,
                             OffsetsStorageTag> CSE;
+
     CSE *self = const_cast<CSE*>(this);
 
     self->CreateConnectivity(Device(), FromTopology(), ToTopology());
@@ -420,7 +422,7 @@ public:
     //
     // PointToCell numIndices array using expansion will be
     // transformed into the CellToPoint connectivity array
-    
+
     if (this->CellToPoint.ElementsValid)
     {
       return;
@@ -441,6 +443,7 @@ public:
     cellIndices.Allocate(connectivityLength);
     vtkm::cont::ArrayHandleCounting<vtkm::Id> index(0, 1, numberOfCells);
 
+    this->PointToCell.BuildIndexOffsets(Device());
     vtkm::worklet::DispatcherMapField<ExpandIndices> expandDispatcher;
     expandDispatcher.Invoke(index,
                             this->PointToCell.IndexOffsets,
@@ -454,7 +457,7 @@ public:
     {
       this->NumberOfPoints = pointIndices.GetPortalControl().Get(connectivityLength - 1) + 1;
     }
-   vtkm::Id numberOfPoints = this->GetNumberOfPoints();
+    vtkm::Id numberOfPoints = this->GetNumberOfPoints();
 
     // CellToPoint numIndices from the now sorted PointToCell connectivity
     vtkm::cont::ArrayHandleConstant<vtkm::Id> numArray(1, connectivityLength);

@@ -28,26 +28,27 @@
 
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/CoordinateSystem.h>
 
-static void TwoDimRegularTest();
-static void ThreeDimRegularTest();
+static void TwoDimRectilinearTest();
+static void ThreeDimRectilinearTest();
 
-void TestDataSet_Regular()
+void TestDataSet_Rectilinear()
 {
   std::cout << std::endl;
-  std::cout << "--TestDataSet_Regular--" << std::endl << std::endl;
+  std::cout << "--TestDataSet_Rectilinear--" << std::endl << std::endl;
 
-  TwoDimRegularTest();
-  ThreeDimRegularTest();
+  TwoDimRectilinearTest();
+  ThreeDimRectilinearTest();
 }
 
 static void
-TwoDimRegularTest()
+TwoDimRectilinearTest()
 {
-  std::cout<<"2D Regular data set"<<std::endl;
+  std::cout<<"2D Rectilinear data set"<<std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
 
-  vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
+  vtkm::cont::DataSet dataSet = testDataSet.Make2DRectilinearDataSet0();
 
   typedef vtkm::cont::CellSetStructured<2> CellSetType;
   CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
@@ -150,12 +151,30 @@ TwoDimRegularTest()
 }
 
 static void
-ThreeDimRegularTest()
+ThreeDimRectilinearTest()
 {
-  std::cout<<"3D Regular data set"<<std::endl;
+  std::cout<<"3D Rectilinear data set"<<std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
 
-  vtkm::cont::DataSet dataSet = testDataSet.Make3DRegularDataSet0();
+  vtkm::cont::DataSet dataSet = testDataSet.Make3DRectilinearDataSet0();
+
+  /*
+  dataSet.PrintSummary(std::cout);
+  vtkm::cont::CoordinateSystem cs = dataSet.GetCoordinateSystem();
+  vtkm::cont::DynamicArrayHandleCoordinateSystem dcs = cs.GetData();
+  vtkm::cont::ArrayHandleCartesianProduct<
+      vtkm::cont::ArrayHandle<vtkm::Float32>,
+      vtkm::cont::ArrayHandle<vtkm::Float32>,
+      vtkm::cont::ArrayHandle<vtkm::Float32> > coords;
+  dcs.CastToArrayHandle(coords);
+  vtkm::Id n = dcs.GetNumberOfValues();
+  vtkm::Vec<vtkm::Float32, 3> pt(0,0,0);
+  for (int i = 0; i < n; i++)
+  {
+      pt = coords.GetPortalConstControl().Get(i);
+      std::cout<<i<<": ["<<pt[0]<<" "<<pt[1]<<" "<<pt[2]<<"]"<<std::endl;
+  }
+  */
 
   typedef vtkm::cont::CellSetStructured<3> CellSetType;
   CellSetType cellSet = dataSet.GetCellSet(0).CastTo<CellSetType>();
@@ -247,7 +266,7 @@ ThreeDimRegularTest()
   }
 }
 
-int UnitTestDataSetRegular(int, char *[])
+int UnitTestDataSetRectilinear(int, char *[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDataSet_Regular);
+  return vtkm::cont::testing::Testing::Run(TestDataSet_Rectilinear);
 }

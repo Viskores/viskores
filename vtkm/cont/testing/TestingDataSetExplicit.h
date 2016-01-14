@@ -62,8 +62,8 @@ private:
   static void TestDataSet_Explicit()
   {
     vtkm::cont::testing::MakeTestDataSet tds;
-    vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet1();
-
+    vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet0();
+    
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                        "Incorrect number of cell sets");
 
@@ -74,7 +74,6 @@ private:
     const vtkm::cont::Field &f1 = ds.GetField("pointvar");
     VTKM_TEST_ASSERT(f1.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
                        "Association of 'pointvar' was not ASSOC_POINTS");
-
     try
     {
       //const vtkm::cont::Field &f2 =
@@ -103,12 +102,9 @@ private:
     // test cell-to-point connectivity
     vtkm::cont::CellSetExplicit<> &cellset =
       ds.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
-
     cellset.BuildConnectivity(DeviceAdapterTag(),
                               vtkm::TopologyElementTagCell(),
                               vtkm::TopologyElementTagPoint());
-
-    ds.PrintSummary(std::cout);
 
     vtkm::Id connectivitySize = 7;
     vtkm::Id numPoints = 5;
@@ -165,7 +161,6 @@ private:
       }
       connectivityIndex += numIncidentCells;
     }
-
 
     //verify that GetIndices works properly
     vtkm::Id expectedPointIds[4] = {2,1,3,4};

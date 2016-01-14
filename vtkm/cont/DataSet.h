@@ -75,7 +75,7 @@ public:
         return this->Fields[i];
       }
     }
-    throw vtkm::cont::ErrorControlBadValue("No field with requested name");
+    throw vtkm::cont::ErrorControlBadValue("No field with requested name: "+name);
   }
 
   VTKM_CONT_EXPORT

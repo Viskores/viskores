@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  ExplicitTestData.h
   MakeTestDataSet.h
   Testing.h
   TestingArrayHandles.h
@@ -33,6 +34,7 @@ vtkm_declare_headers(${headers})
 
 set(unit_tests
   UnitTestArrayHandle.cxx
+  UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
   UnitTestArrayHandleFancy.cxx
@@ -44,7 +46,11 @@ set(unit_tests
   UnitTestArrayPortalToIterators.cxx
   UnitTestContTesting.cxx
   UnitTestComputeBoundsSerial.cxx
+  UnitTestDataSetBuilderExplicit.cxx
+  UnitTestDataSetBuilderRectilinear.cxx
+  UnitTestDataSetBuilderRegular.cxx
   UnitTestDataSetRegular.cxx
+  UnitTestDataSetRectilinear.cxx
   UnitTestDataSetExplicit.cxx
   UnitTestDataSetSingleType.cxx
   UnitTestDataSetPermutation.cxx
