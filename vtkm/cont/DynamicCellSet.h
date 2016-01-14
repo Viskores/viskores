@@ -56,6 +56,39 @@ struct DynamicCellSetCopyHelper {
   }
 };
 
+// A simple function to downcast a CellSet encapsulated in a
+// SimplePolymorphicContainerBase to the given subclass of CellSet. If the
+// conversion cannot be done, NULL is returned.
+template<typename CellSetType>
+VTKM_CONT_EXPORT
+CellSetType *
+DynamicCellSetTryCast(
+      vtkm::cont::internal::SimplePolymorphicContainerBase *cellSetContainer)
+{
+  vtkm::cont::internal::SimplePolymorphicContainer<CellSetType> *
+      downcastContainer = dynamic_cast<
+        vtkm::cont::internal::SimplePolymorphicContainer<CellSetType> *>(
+          cellSetContainer);
+  if (downcastContainer != NULL)
+  {
+    return &downcastContainer->Item;
+  }
+  else
+  {
+    return NULL;
+  }
+}
+
+template<typename CellSetType>
+VTKM_CONT_EXPORT
+CellSetType *
+DynamicCellSetTryCast(
+      boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
+      cellSetContainer)
+{
+  return detail::DynamicCellSetTryCast<CellSetType>(cellSetContainer.get());
+}
+
 } // namespace detail
 
 /// \brief Holds a cell set without having to specify concrete type.
@@ -133,7 +166,8 @@ public:
   template<typename CellSetType>
   VTKM_CONT_EXPORT
   bool IsType(CellSetType = CellSetType()) const {
-    return (this->TryCast<CellSetType>() != NULL);
+    return (detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer)
+            != NULL);
   }
 
   /// Returns the contained cell set as the abstract \c CellSet type.
@@ -151,24 +185,24 @@ public:
   template<typename CellSetType>
   VTKM_CONT_EXPORT
   const CellSetType &CastTo(CellSetType = CellSetType()) const {
-    const vtkm::cont::internal::SimplePolymorphicContainer<CellSetType> *
-        container = this->TryCast<CellSetType>();
-    if (container == NULL)
+    const CellSetType *cellSet =
+        detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
+    if (cellSet == NULL)
     {
       throw vtkm::cont::ErrorControlBadValue("Bad cast of dynamic cell set.");
     }
-    return container->Item;
+    return *cellSet;
   }
   template<typename CellSetType>
   VTKM_CONT_EXPORT
   CellSetType &CastTo(CellSetType = CellSetType()) {
-    vtkm::cont::internal::SimplePolymorphicContainer<CellSetType> *
-        container = this->TryCast<CellSetType>();
-    if (container == NULL)
+    CellSetType *cellSet =
+        detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
+    if (cellSet == NULL)
     {
       throw vtkm::cont::ErrorControlBadValue("Bad cast of dynamic cell set.");
     }
-    return container->Item;
+    return *cellSet;
   }
 
   /// Changes the cell set types to try casting to when resolving this dynamic
@@ -217,16 +251,6 @@ private:
       CellSetContainer;
 
   friend struct detail::DynamicCellSetCopyHelper;
-
-  template<typename CellSetType>
-  VTKM_CONT_EXPORT
-  vtkm::cont::internal::SimplePolymorphicContainer<CellSetType> *
-  TryCast() const {
-    return
-        dynamic_cast<
-          vtkm::cont::internal::SimplePolymorphicContainer<CellSetType> *>(
-            this->CellSetContainer.get());
-  }
 };
 
 namespace detail {
@@ -234,22 +258,23 @@ namespace detail {
 template<typename Functor>
 struct DynamicCellSetTryCellSet
 {
-  const vtkm::cont::CellSet *AbstractCellSet;
+  vtkm::cont::internal::SimplePolymorphicContainerBase *CellSetContainer;
   const Functor &Function;
   bool FoundCast;
 
   VTKM_CONT_EXPORT
-  DynamicCellSetTryCellSet(const vtkm::cont::CellSet &cellSet,
-                           const Functor &f)
-    : AbstractCellSet(&cellSet), Function(f), FoundCast(false) {  }
+  DynamicCellSetTryCellSet(
+        vtkm::cont::internal::SimplePolymorphicContainerBase *cellSetContainer,
+        const Functor &f)
+    : CellSetContainer(cellSetContainer), Function(f), FoundCast(false) {  }
 
   template<typename CellSetType>
   VTKM_CONT_EXPORT
   void operator()(CellSetType) {
     if (!this->FoundCast)
     {
-      const CellSetType *cellSet =
-          dynamic_cast<const CellSetType *>(this->AbstractCellSet);
+      CellSetType *cellSet =
+          detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
       if (cellSet != NULL)
       {
         this->Function(*cellSet);
@@ -259,22 +284,6 @@ struct DynamicCellSetTryCellSet
   }
 };
 
-template<typename Functor, typename CellSetTypeList>
-VTKM_CONT_EXPORT
-void CastAndCallCellSet(
-    const Functor &f,
-    const vtkm::cont::DynamicCellSetBase<CellSetTypeList> &cellSet)
-{
-  typedef detail::DynamicCellSetTryCellSet<Functor> TryCellSetType;
-  TryCellSetType tryCellSet = TryCellSetType(cellSet.GetCellSet(), f);
-  vtkm::ListForEach(tryCellSet, CellSetTypeList());
-  if (!tryCellSet.FoundCast)
-  {
-    throw vtkm::cont::ErrorControlBadValue(
-          "Could not find appropriate cast for cell set.");
-  }
-}
-
 } // namespace detail
 
 template<typename CellSetList>
@@ -282,7 +291,14 @@ template<typename Functor>
 VTKM_CONT_EXPORT
 void DynamicCellSetBase<CellSetList>::CastAndCall(const Functor &f) const
 {
-  detail::CastAndCallCellSet(f, *this);
+  typedef detail::DynamicCellSetTryCellSet<Functor> TryCellSetType;
+  TryCellSetType tryCellSet = TryCellSetType(this->CellSetContainer.get(), f);
+  vtkm::ListForEach(tryCellSet, CellSetList());
+  if (!tryCellSet.FoundCast)
+  {
+    throw vtkm::cont::ErrorControlBadValue(
+          "Could not find appropriate cast for cell set.");
+  }
 }
 
 typedef DynamicCellSetBase< VTKM_DEFAULT_CELL_SET_LIST_TAG > DynamicCellSet;
