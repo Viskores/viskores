@@ -41,16 +41,8 @@
 #include <vtkm/worklet/ScatterIdentity.h>
 
 namespace vtkm {
-namespace worklet {
-namespace internal {
+namespace placeholders {
 
-/// Base class for all worklet classes. Worklet classes are subclasses and a
-/// operator() const is added to implement an algorithm in VTK-m. Different
-/// worklets have different calling semantics.
-///
-class WorkletBase : public vtkm::exec::FunctorBase
-{
-public:
   template<int ControlSignatureIndex>
   struct Arg : vtkm::exec::arg::BasicArg<ControlSignatureIndex> {  };
 
@@ -64,6 +56,27 @@ public:
   struct _7 : Arg<7> {  };
   struct _8 : Arg<8> {  };
   struct _9 : Arg<9> {  };
+}
+
+namespace worklet {
+namespace internal {
+
+/// Base class for all worklet classes. Worklet classes are subclasses and a
+/// operator() const is added to implement an algorithm in VTK-m. Different
+/// worklets have different calling semantics.
+///
+class WorkletBase : public vtkm::exec::FunctorBase
+{
+public:
+  typedef vtkm::placeholders::_1 _1;
+  typedef vtkm::placeholders::_2 _2;
+  typedef vtkm::placeholders::_3 _3;
+  typedef vtkm::placeholders::_4 _4;
+  typedef vtkm::placeholders::_5 _5;
+  typedef vtkm::placeholders::_6 _6;
+  typedef vtkm::placeholders::_7 _7;
+  typedef vtkm::placeholders::_8 _8;
+  typedef vtkm::placeholders::_9 _9;
 
   /// \c ExecutionSignature tag for getting the work index.
   ///
