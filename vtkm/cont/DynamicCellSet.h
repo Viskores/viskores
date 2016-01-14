@@ -285,7 +285,7 @@ void DynamicCellSetBase<CellSetList>::CastAndCall(const Functor &f) const
   detail::CastAndCallCellSet(f, *this);
 }
 
-typedef DynamicCellSetBase<vtkm::cont::CellSetListTagCommon> DynamicCellSet;
+typedef DynamicCellSetBase< VTKM_DEFAULT_CELL_SET_LIST_TAG > DynamicCellSet;
 
 namespace internal {
 
