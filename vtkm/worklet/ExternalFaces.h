@@ -39,7 +39,7 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#define __VTKM_EXTERNAL_FACES_BENCHMARK
+// #define __VTKM_EXTERNAL_FACES_BENCHMARK
 
 namespace vtkm
 {
