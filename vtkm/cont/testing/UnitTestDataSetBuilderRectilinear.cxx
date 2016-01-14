@@ -51,13 +51,13 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      "Wrong number of coordinates.");
     VTKM_TEST_ASSERT(ds.GetCellSet().GetCellSet().GetNumberOfCells() == numCells,
                      "Wrong number of cells.");
-    
+
     //Make sure the bounds are correct.
     vtkm::Float64 res[6];
     ds.GetCoordinateSystem().GetBounds(res, DeviceAdapter());
     VTKM_TEST_ASSERT(test_equal(bounds[0], res[0]) && test_equal(bounds[1], res[1]) &&
-		     test_equal(bounds[2], res[2]) && test_equal(bounds[3], res[3]) &&
-		     test_equal(bounds[4], res[4]) && test_equal(bounds[5], res[5]),
+                     test_equal(bounds[2], res[2]) && test_equal(bounds[3], res[3]) &&
+                     test_equal(bounds[4], res[4]) && test_equal(bounds[5], res[5]),
                      "Bounds of coordinates do not match");
     if (dim == 2)
     {
@@ -99,64 +99,81 @@ template <typename T>
 void
 RectilinearTests()
 {
-    vtkm::cont::DataSetBuilderRectilinear dsb;
-    vtkm::cont::DataSet ds;
+  vtkm::cont::DataSetBuilderRectilinear dsb;
+  vtkm::cont::DataSet ds;
 
-    std::size_t nx = 15, ny = 15, nz = 15;
-    int nm = 5;
-    std::vector<T> xvals, yvals, zvals;
+  std::size_t nx = 15, ny = 15, nz = 15;
+  int nm = 5;
+  std::vector<T> xvals, yvals, zvals;
 
-    for (std::size_t i = 2; i < nx; i++)
-        for (std::size_t j = 2; j < ny; j++)
-            for (int mx = 0; mx < nm; mx++)
-                for (int my = 0; my < nm; my++)
-                {
-                    //Do the 2D cases.
-                    vtkm::Id np = i*j, nc = (i-1)*(j-1);
-                    FillArray(xvals, i, mx);
-                    FillArray(yvals, j, my);
+  for (std::size_t i = 2; i < nx; i++)
+  {
+    for (std::size_t j = 2; j < ny; j++)
+    {
+      for (int mx = 0; mx < nm; mx++)
+      {
+        for (int my = 0; my < nm; my++)
+        {
+          //Do the 2D cases.
+          vtkm::Id np = static_cast<vtkm::Id>(i*j);
+          vtkm::Id nc = static_cast<vtkm::Id>((i-1)*(j-1));
+          FillArray(xvals, i, mx);
+          FillArray(yvals, j, my);
 
-                    vtkm::Float64 bounds[6] = {xvals[0], xvals[i-1],
-                                               yvals[0], yvals[j-1],
-                                               0.0, 0.0};
-                    //Test std::vector
-                    ds = dsb.Create(xvals, yvals);
-                    ValidateDataSet(ds, 2, np, nc, bounds);
+          vtkm::Float64 bounds[6] = {xvals[0], xvals[i-1],
+                                     yvals[0], yvals[j-1],
+                                     0.0, 0.0};
+          //Test std::vector
+          ds = dsb.Create(xvals, yvals);
+          ValidateDataSet(ds, 2, np, nc, bounds);
 
-                    //Test T *
-                    ds = dsb.Create(i,j, &xvals[0],&yvals[0]);
-                    ValidateDataSet(ds, 2, np, nc, bounds);
+          //Test T *
+          ds = dsb.Create(static_cast<vtkm::Id>(i),
+                          static_cast<vtkm::Id>(j),
+                          &xvals[0],
+                          &yvals[0]);
+          ValidateDataSet(ds, 2, np, nc, bounds);
 
-                    //Test ArrayHandle
-                    ds = dsb.Create(vtkm::cont::make_ArrayHandle(xvals),
-                                    vtkm::cont::make_ArrayHandle(yvals));
-                    ValidateDataSet(ds, 2, np, nc, bounds);
+          //Test ArrayHandle
+          ds = dsb.Create(vtkm::cont::make_ArrayHandle(xvals),
+                          vtkm::cont::make_ArrayHandle(yvals));
+          ValidateDataSet(ds, 2, np, nc, bounds);
 
-                    //Do the 3D cases.
-                    for (std::size_t k = 2; k < nz; k++)
-                        for (int mz = 0; mz < nm; mz++)
-                        {
-                            np = i*j*k;
-                            nc = (i-1)*(j-1)*(k-1);
-                            FillArray(zvals, k, mz);
-			    bounds[4] = zvals[0];
-			    bounds[5] = zvals[k-1];
+          //Do the 3D cases.
+          for (std::size_t k = 2; k < nz; k++)
+          {
+            for (int mz = 0; mz < nm; mz++)
+            {
+              np = static_cast<vtkm::Id>(i*j*k);
+              nc = static_cast<vtkm::Id>((i-1)*(j-1)*(k-1));
+              FillArray(zvals, k, mz);
+              bounds[4] = zvals[0];
+              bounds[5] = zvals[k-1];
 
-                            //Test std::vector
-                            ds = dsb.Create(xvals, yvals, zvals);
-                            ValidateDataSet(ds, 3, np, nc, bounds);
+              //Test std::vector
+              ds = dsb.Create(xvals, yvals, zvals);
+              ValidateDataSet(ds, 3, np, nc, bounds);
 
-                            //Test T *
-                            ds = dsb.Create(i,j,k, &xvals[0],&yvals[0], &zvals[0]);
-                            ValidateDataSet(ds, 3, np, nc, bounds);
+              //Test T *
+              ds = dsb.Create(static_cast<vtkm::Id>(i),
+                              static_cast<vtkm::Id>(j),
+                              static_cast<vtkm::Id>(k),
+                              &xvals[0],
+                              &yvals[0],
+                              &zvals[0]);
+              ValidateDataSet(ds, 3, np, nc, bounds);
 
-                            //Test ArrayHandle
-                            ds = dsb.Create(vtkm::cont::make_ArrayHandle(xvals),
-                                            vtkm::cont::make_ArrayHandle(yvals),
-                                            vtkm::cont::make_ArrayHandle(zvals));
-                            ValidateDataSet(ds, 3, np, nc, bounds);
-                        }
-                }
+              //Test ArrayHandle
+              ds = dsb.Create(vtkm::cont::make_ArrayHandle(xvals),
+                              vtkm::cont::make_ArrayHandle(yvals),
+                              vtkm::cont::make_ArrayHandle(zvals));
+              ValidateDataSet(ds, 3, np, nc, bounds);
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 void
