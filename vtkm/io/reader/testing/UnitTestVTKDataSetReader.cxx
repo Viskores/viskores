@@ -118,6 +118,28 @@ const char structuredPointsAscii[] =
 "  0   5  10  15  20  25  25  20  15  10   5   0\n"
 "  0   0   0   0   0   0   0   0   0   0   0   0\n";
 
+const char structuredPointsVisItAscii[] =
+"# vtk DataFile Version 3.0\n"
+"Volume example\n"
+"ASCII\n"
+"DATASET STRUCTURED_POINTS\n"
+"FIELD FieldData 1\n"
+"avtOriginalBounds 1 6 double\n"
+"-2 2 -2 2 -2 2 \n"
+"SPACING 1 1 1\n"
+"ORIGIN 0 0 0\n"
+"CELL_DATA 27\n"
+"VECTORS grad float\n"
+"-1 -1 0 0 0 -1 0 0 -1 \n"
+"1 1 0 0 0 -1 0 0 -1 \n"
+"0 0 -1 0 0 -1 0 0 -1 \n"
+"0 0 -1 0 0 -1 0 0 -1 \n"
+"0 0 -1 0 0 -1 0 0 -1 \n"
+"0 0 -1 0 0 -1 0 0 -1 \n"
+"0 0 -1 0 0 -1 0 0 -1 \n"
+"0 0 -1 0 0 -1 0 0 -1 \n"
+"0 0 -1 0 0 -1 0 0 -1 \n";
+
 const char structuredPointsBin[] =
 "# vtk DataFile Version 4.0\n"
 "Volume example\n"
@@ -301,6 +323,26 @@ void TestReadingStructuredPoints(Format format)
                    "Incorrect cellset type");
 }
 
+void TestReadingStructuredPointsVisIt(Format format)
+{
+  if (format == FORMAT_ASCII)
+    {
+    createFile(structuredPointsVisItAscii, sizeof(structuredPointsVisItAscii), testFileName);
+
+    vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
+
+    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 1,
+                     "Incorrect number of fields");
+    VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == 64,
+                     "Incorrect number of points");
+    VTKM_TEST_ASSERT(ds.GetCellSet().GetCellSet().GetNumberOfCells() == 27,
+                     "Incorrect number of cells");
+    VTKM_TEST_ASSERT(ds.GetCellSet().IsType(vtkm::cont::CellSetStructured<3>()),
+                     "Incorrect cellset type");
+    }
+}
+
+
 void TestReadingUnstructuredGrid(Format format)
 {
   (format == FORMAT_ASCII) ?
@@ -327,6 +369,9 @@ void TestReadingVTKDataSet()
   TestReadingPolyData(FORMAT_BINARY);
   std::cout << "Test reading VTK StructuredPoints file in ASCII" << std::endl;
   TestReadingStructuredPoints(FORMAT_ASCII);
+  std::cout << "Test reading VTK/VisIt StructuredPoints file in ASCII" << std::endl;
+  TestReadingStructuredPointsVisIt(FORMAT_ASCII);
+
   std::cout << "Test reading VTK StructuredPoints file in BINARY" << std::endl;
   TestReadingStructuredPoints(FORMAT_BINARY);
   std::cout << "Test reading VTK UnstructuredGrid file in ASCII" << std::endl;

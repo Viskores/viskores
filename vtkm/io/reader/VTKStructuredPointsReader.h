@@ -46,10 +46,48 @@ private:
     // Read structured points specific meta-data
     vtkm::Id3 dim;
     vtkm::Vec<vtkm::Float32, 3> origin, spacing;
-    this->DataFile->Stream >> tag >> dim[0] >> dim[1] >> dim[2] >> std::ws;
-    internal::parseAssert(this->DataFile->Stream.good() && tag == "DIMENSIONS");
-    this->DataFile->Stream >> tag >> spacing[0] >> spacing[1] >> spacing[2] >> std::ws;
-    internal::parseAssert(this->DataFile->Stream.good() && tag == "SPACING");
+
+    //Two ways the file can describe the dimensions. The proper way is by
+    //using the DIMENSIONS keyword, but VisIt written VTK files use a totally
+    //different way
+    this->DataFile->Stream >> tag;
+    if(tag == "DIMENSIONS")
+    { //vtk way
+      this->DataFile->Stream >> dim[0] >> dim[1] >> dim[2] >> std::ws;
+      internal::parseAssert(this->DataFile->Stream.good());
+
+      this->DataFile->Stream >> tag >> spacing[0] >> spacing[1] >> spacing[2] >> std::ws;
+      internal::parseAssert(this->DataFile->Stream.good() && tag == "SPACING");
+    }
+    else
+    { //visit way
+      std::string fieldData; int numberOfFields;
+      this->DataFile->Stream >> fieldData >> numberOfFields >> std::ws;
+      //currently we only support a single field with name avtOriginalBounds
+      internal::parseAssert(this->DataFile->Stream.good() && numberOfFields == 1);
+
+      std::string fieldName, dataType; int vec_size, num_elements;
+      this->DataFile->Stream >> fieldName >> vec_size >> num_elements >> dataType >> std::ws;
+      internal::parseAssert(this->DataFile->Stream.good() && fieldName == "avtOriginalBounds");
+      internal::parseAssert(vec_size == 1 && num_elements == 6);
+
+      //now we can parse the bounds
+      vtkm::Vec< vtkm::Float32, 6 > bounds;
+      this->DataFile->Stream >> bounds[0] >> bounds[1] >> bounds[2]
+                             >> bounds[3] >> bounds[4] >> bounds[5] >> std::ws;
+      internal::parseAssert(this->DataFile->Stream.good());
+
+      //now we need the spacing
+      this->DataFile->Stream >> tag >> spacing[0] >> spacing[1] >> spacing[2] >> std::ws;
+      internal::parseAssert(this->DataFile->Stream.good() && tag == "SPACING");
+
+      //now with spacing and physical bounds we can back compute the dimensions
+      dim[0] = static_cast<vtkm::Id>((bounds[1] - bounds[0]) / spacing[0]);
+      dim[1] = static_cast<vtkm::Id>((bounds[3] - bounds[2]) / spacing[1]);
+      dim[2] = static_cast<vtkm::Id>((bounds[5] - bounds[4]) / spacing[2]);
+    }
+
+
     this->DataFile->Stream >> tag >> origin[0] >> origin[1] >> origin[2] >> std::ws;
     internal::parseAssert(this->DataFile->Stream.good() && tag == "ORIGIN");
 
