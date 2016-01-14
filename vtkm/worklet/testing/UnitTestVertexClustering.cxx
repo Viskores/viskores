@@ -37,10 +37,11 @@ void TestVertexClustering()
   vtkm::cont::DataSet dataSet = maker.Make3DExplicitDataSetCowNose(bounds);
 
   // run
-  vtkm::worklet::VertexClustering<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> clustering;
+  vtkm::worklet::VertexClustering clustering;
   vtkm::cont::DataSet outDataSet = clustering.Run(dataSet.GetCellSet(),
                                                   dataSet.GetCoordinateSystem(),
-                                                  divisions);
+                                                  divisions,
+                                                  VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   // test
   const vtkm::Id output_pointIds = 9;
