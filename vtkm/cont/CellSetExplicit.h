@@ -237,52 +237,6 @@ public:
   }
 
   /// Second method to add cells -- all at once.
-  /// Copies the data from the vectors, so they can be released.
-  VTKM_CONT_EXPORT
-  void FillViaCopy(const std::vector<vtkm::UInt8> &cellTypes,
-                   const std::vector<vtkm::IdComponent> &numIndices,
-                   const std::vector<vtkm::Id> &connectivity,
-                   const std::vector<vtkm::Id> &offsets = std::vector<vtkm::Id>() )
-  {
-
-    this->PointToCell.Shapes.Allocate( static_cast<vtkm::Id>(cellTypes.size()) );
-    std::copy(cellTypes.begin(), cellTypes.end(),
-              vtkm::cont::ArrayPortalToIteratorBegin(
-                this->PointToCell.Shapes.GetPortalControl()));
-
-    this->PointToCell.NumIndices.Allocate( static_cast<vtkm::IdComponent>(numIndices.size()) );
-    std::copy(numIndices.begin(), numIndices.end(),
-              vtkm::cont::ArrayPortalToIteratorBegin(
-                this->PointToCell.NumIndices.GetPortalControl()));
-
-    this->PointToCell.Connectivity.Allocate( static_cast<vtkm::Id>(connectivity.size()) );
-    std::copy(connectivity.begin(), connectivity.end(),
-              vtkm::cont::ArrayPortalToIteratorBegin(
-                this->PointToCell.Connectivity.GetPortalControl()));
-
-    this->PointToCell.ElementsValid = true;
-
-    if(offsets.size() == cellTypes.size())
-    {
-      this->PointToCell.IndexOffsets.Allocate( static_cast<vtkm::Id>(offsets.size()) );
-      std::copy(offsets.begin(), offsets.end(),
-              vtkm::cont::ArrayPortalToIteratorBegin(
-                this->PointToCell.IndexOffsets.GetPortalControl()));
-      this->PointToCell.IndexOffsetsValid = true;
-    }
-    else
-    {
-      this->PointToCell.IndexOffsetsValid = false;
-      if (offsets.size() != 0)
-      {
-        throw vtkm::cont::ErrorControlBadValue(
-             "Explicit cell offsets array unexpected size. "
-             "Use an empty array to automatically generate.");
-      }
-    }
-  }
-
-  /// Second method to add cells -- all at once.
   /// Assigns the array handles to the explicit connectivity. This is
   /// the way you can fill the memory from another system without copying
   VTKM_CONT_EXPORT

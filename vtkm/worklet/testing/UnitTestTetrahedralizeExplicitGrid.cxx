@@ -22,6 +22,7 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace {
@@ -31,32 +32,25 @@ namespace {
 //
 vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
 {
-  vtkm::cont::DataSet dataSet;
-
-  const int nVerts = 16;
   typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-  CoordType coordinates[nVerts] =
-  {
-    CoordType(0, 0, 0),   // 0
-    CoordType(1, 0, 0),   // 1
-    CoordType(2, 0, 0),   // 2
-    CoordType(3, 0, 0),   // 3
-    CoordType(0, 1, 0),   // 4
-    CoordType(1, 1, 0),   // 5
-    CoordType(2, 1, 0),   // 6
-    CoordType(3, 1, 0),   // 7
-    CoordType(0, 2, 0),   // 8
-    CoordType(1, 2, 0),   // 9
-    CoordType(2, 2, 0),   // 10
-    CoordType(3, 2, 0),   // 11
-    CoordType(0, 3, 0),   // 12
-    CoordType(3, 3, 0),   // 13
-    CoordType(1, 4, 0),   // 14
-    CoordType(2, 4, 0),   // 15
-  };
+  std::vector<CoordType> coordinates;
+  coordinates.push_back( CoordType(0, 0, 0) );   // 0
+  coordinates.push_back( CoordType(1, 0, 0) );   // 1
+  coordinates.push_back( CoordType(2, 0, 0) );   // 2
+  coordinates.push_back( CoordType(3, 0, 0) );   // 3
+  coordinates.push_back( CoordType(0, 1, 0) );   // 4
+  coordinates.push_back( CoordType(1, 1, 0) );   // 5
+  coordinates.push_back( CoordType(2, 1, 0) );   // 6
+  coordinates.push_back( CoordType(3, 1, 0) );   // 7
+  coordinates.push_back( CoordType(0, 2, 0) );   // 8
+  coordinates.push_back( CoordType(1, 2, 0) );   // 9
+  coordinates.push_back( CoordType(2, 2, 0) );   // 10
+  coordinates.push_back( CoordType(3, 2, 0) );   // 11
+  coordinates.push_back( CoordType(0, 3, 0) );   // 12
+  coordinates.push_back( CoordType(3, 3, 0) );   // 13
+  coordinates.push_back( CoordType(1, 4, 0) );   // 14
+  coordinates.push_back( CoordType(2, 4, 0) );   // 15
 
-  dataSet.AddCoordinateSystem(
-          vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, nVerts));
 
   std::vector<vtkm::UInt8> shapes;
   shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
@@ -112,13 +106,8 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
   conn.push_back(14);
   conn.push_back(12);
 
-  static const vtkm::IdComponent ndim = 2;
-  vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells", ndim);
-  cellSet.FillViaCopy(shapes, numindices, conn);
-
-  dataSet.AddCellSet(cellSet);
-
-  return dataSet;
+  vtkm::cont::DataSetBuilderExplicit builder;
+  return builder.Create(coordinates, shapes, numindices, conn);
 }
 
 //
@@ -126,34 +115,26 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
 //
 vtkm::cont::DataSet MakeTetrahedralizeExplicitDataSet()
 {
-  vtkm::cont::DataSet dataSet;
-
-  const int nVerts = 18;
   typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-  CoordType coordinates[nVerts] =
-  {
-    CoordType(0, 0, 0),
-    CoordType(1, 0, 0),
-    CoordType(2, 0, 0),
-    CoordType(3, 0, 0),
-    CoordType(0, 1, 0),
-    CoordType(1, 1, 0),
-    CoordType(2, 1, 0),
-    CoordType(2.5, 1, 0),
-    CoordType(0, 2, 0),
-    CoordType(1, 2, 0),
-    CoordType(0.5, 0.5, 1),
-    CoordType(1, 0, 1),
-    CoordType(2, 0, 1),
-    CoordType(3, 0, 1),
-    CoordType(1, 1, 1),
-    CoordType(2, 1, 1),
-    CoordType(2.5, 1, 1),
-    CoordType(0.5, 1.5, 1),
-  };
-
-  dataSet.AddCoordinateSystem(
-          vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, nVerts));
+  std::vector<CoordType> coordinates;
+  coordinates.push_back( CoordType(0, 0, 0) );
+  coordinates.push_back( CoordType(1, 0, 0) );
+  coordinates.push_back( CoordType(2, 0, 0) );
+  coordinates.push_back( CoordType(3, 0, 0) );
+  coordinates.push_back( CoordType(0, 1, 0) );
+  coordinates.push_back( CoordType(1, 1, 0) );
+  coordinates.push_back( CoordType(2, 1, 0) );
+  coordinates.push_back( CoordType(2.5, 1, 0) );
+  coordinates.push_back( CoordType(0, 2, 0) );
+  coordinates.push_back( CoordType(1, 2, 0) );
+  coordinates.push_back( CoordType(0.5, 0.5, 1) );
+  coordinates.push_back( CoordType(1, 0, 1) );
+  coordinates.push_back( CoordType(2, 0, 1) );
+  coordinates.push_back( CoordType(3, 0, 1) );
+  coordinates.push_back( CoordType(1, 1, 1) );
+  coordinates.push_back( CoordType(2, 1, 1) );
+  coordinates.push_back( CoordType(2.5, 1, 1) );
+  coordinates.push_back( CoordType(0.5, 1.5, 1) );
 
   std::vector<vtkm::UInt8> shapes;
   shapes.push_back(vtkm::CELL_SHAPE_TETRA);
@@ -195,13 +176,9 @@ vtkm::cont::DataSet MakeTetrahedralizeExplicitDataSet()
   conn.push_back(8);
   conn.push_back(17);
 
-  static const vtkm::IdComponent ndim = 3;
-  vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells", ndim);
-  cellSet.FillViaCopy(shapes, numindices, conn);
+  vtkm::cont::DataSetBuilderExplicit builder;
+  return builder.Create(coordinates, shapes, numindices, conn);
 
-  dataSet.AddCellSet(cellSet);
-
-  return dataSet;
 }
 
 }
@@ -226,7 +203,7 @@ void TestExplicitGrid2D()
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
   // Convert explicit cells to triangles
-  vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter> 
+  vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter>
                  tetrahedralizeFilter(inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
@@ -238,7 +215,7 @@ void TestExplicitGrid2D()
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
 
   vtkm::cont::ArrayHandle<vtkm::Float64> bounds = coordinates.GetBounds(DeviceAdapter());
-  std::cout << "Bounds (" 
+  std::cout << "Bounds ("
             << bounds.GetPortalControl().Get(0) << "," << bounds.GetPortalControl().Get(1) << ") ("
             << bounds.GetPortalControl().Get(2) << "," << bounds.GetPortalControl().Get(3) << ")" << std::endl;
 
@@ -265,7 +242,7 @@ void TestExplicitGrid3D()
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
   // Convert explicit cells to triangles
-  vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter> 
+  vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter>
                  tetrahedralizeFilter(inDataSet, outDataSet);
   tetrahedralizeFilter.Run();
 
@@ -277,7 +254,7 @@ void TestExplicitGrid3D()
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
 
   vtkm::cont::ArrayHandle<vtkm::Float64> bounds = coordinates.GetBounds(DeviceAdapter());
-  std::cout << "Bounds (" 
+  std::cout << "Bounds ("
             << bounds.GetPortalControl().Get(0) << "," << bounds.GetPortalControl().Get(1) << ") ("
             << bounds.GetPortalControl().Get(2) << "," << bounds.GetPortalControl().Get(3) << ") ("
             << bounds.GetPortalControl().Get(4) << "," << bounds.GetPortalControl().Get(5) << ")" << std::endl;

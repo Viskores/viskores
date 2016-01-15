@@ -25,6 +25,7 @@
 #include <vtkm/worklet/TetrahedralizeExplicitGrid.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -63,27 +64,23 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
 
   const int nVerts = 16;
   typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-  CoordType coordinates[nVerts] = {
-    CoordType(0, 0, 0),   // 0
-    CoordType(1, 0, 0),   // 1
-    CoordType(2, 0, 0),   // 2
-    CoordType(3, 0, 0),   // 3
-    CoordType(0, 1, 0),   // 4
-    CoordType(1, 1, 0),   // 5
-    CoordType(2, 1, 0),   // 6
-    CoordType(3, 1, 0),   // 7
-    CoordType(0, 2, 0),   // 8
-    CoordType(1, 2, 0),   // 9
-    CoordType(2, 2, 0),   // 10
-    CoordType(3, 2, 0),   // 11
-    CoordType(0, 3, 0),   // 12
-    CoordType(3, 3, 0),   // 13
-    CoordType(1, 4, 0),   // 14
-    CoordType(2, 4, 0),   // 15
-  };
-
-  dataSet.AddCoordinateSystem(
-          vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, nVerts));
+  std::vector< CoordType > coordinates;
+  coordinates.push_back( CoordType(0, 0, 0) ); // 0
+  coordinates.push_back( CoordType(1, 0, 0) ); // 1
+  coordinates.push_back( CoordType(2, 0, 0) ); // 2
+  coordinates.push_back( CoordType(3, 0, 0) ); // 3
+  coordinates.push_back( CoordType(0, 1, 0) ); // 4
+  coordinates.push_back( CoordType(1, 1, 0) ); // 5
+  coordinates.push_back( CoordType(2, 1, 0) ); // 6
+  coordinates.push_back( CoordType(3, 1, 0) ); // 7
+  coordinates.push_back( CoordType(0, 2, 0) ); // 8
+  coordinates.push_back( CoordType(1, 2, 0) ); // 9
+  coordinates.push_back( CoordType(2, 2, 0) ); // 10
+  coordinates.push_back( CoordType(3, 2, 0) ); // 11
+  coordinates.push_back( CoordType(0, 3, 0) ); // 12
+  coordinates.push_back( CoordType(3, 3, 0) ); // 13
+  coordinates.push_back( CoordType(1, 4, 0) ); // 14
+  coordinates.push_back( CoordType(2, 4, 0) ); // 15
 
   std::vector<vtkm::UInt8> shapes;
   shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
@@ -139,13 +136,9 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
   conn.push_back(14);
   conn.push_back(12);
 
-  static const vtkm::IdComponent ndim = 2;
-  vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells", ndim);
-  cellSet.FillViaCopy(shapes, numindices, conn);
-
-  dataSet.AddCellSet(cellSet);
-
-  return dataSet;
+  vtkm::cont::DataSet ds;
+  vtkm::cont::DataSetBuilderExplicit builder;
+  return builder.Create(coordinates, shapes, numindices, conn);
 }
 
 //
