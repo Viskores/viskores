@@ -33,7 +33,6 @@
 namespace vtkm {
 namespace worklet {
 
-template <typename DeviceAdapter>
 class Threshold
 {
 public:
@@ -102,10 +101,12 @@ public:
     UnaryPredicate Predicate;
   };
 
-  template <typename CellSetType, typename UnaryPredicate>
+  template <typename CellSetType, typename UnaryPredicate, typename DeviceAdapter>
   vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>, CellSetType>
-  Run(const CellSetType &cellSet, const vtkm::cont::Field &field,
-      const UnaryPredicate &predicate)
+  Run(const CellSetType &cellSet,
+      const vtkm::cont::Field &field,
+      const UnaryPredicate &predicate,
+      DeviceAdapter)
   {
     typedef vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
                                            CellSetType> OutputType;

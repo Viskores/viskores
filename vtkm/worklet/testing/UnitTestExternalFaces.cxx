@@ -44,13 +44,14 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
   vtkm::cont::ArrayHandle<vtkm::Id>          output_conn;
 
   //Run the External Faces worklet
-  vtkm::worklet::ExternalFaces<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().run(
+  vtkm::worklet::ExternalFaces().run(
         shapes,
         numIndices,
         conn,
         output_shapes,
         output_numIndices,
-        output_conn);
+        output_conn,
+        VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   vtkm::cont::DataSet new_ds;
   for(vtkm::IdComponent i=0; i < ds.GetNumberOfCoordinateSystems(); ++i)

@@ -39,14 +39,13 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#define __VTKM_EXTERNAL_FACES_BENCHMARK
+// #define __VTKM_EXTERNAL_FACES_BENCHMARK
 
 namespace vtkm
 {
 namespace worklet
 {
 
-template<typename DeviceAdapter>
 struct ExternalFaces
 {
   //Unary predicate operator
@@ -239,14 +238,15 @@ public:
   /// \param output_pointId3Array: Output point-ids
   template <typename StorageT,
             typename StorageU,
-            typename StorageV>
+            typename StorageV,
+            typename DeviceAdapter>
   void run(const vtkm::cont::ArrayHandle<vtkm::UInt8, StorageT>       shapes,
            const vtkm::cont::ArrayHandle<vtkm::IdComponent, StorageU> numIndices,
            const vtkm::cont::ArrayHandle<vtkm::Id, StorageV>          conn,
            vtkm::cont::ArrayHandle<vtkm::UInt8, StorageT>             &output_shapes,
            vtkm::cont::ArrayHandle<vtkm::IdComponent, StorageU>       &output_numIndices,
-           vtkm::cont::ArrayHandle<vtkm::Id, StorageV>                &output_conn
-           )
+           vtkm::cont::ArrayHandle<vtkm::Id, StorageV>                &output_conn,
+           DeviceAdapter)
   {
     //Create a worklet to map the number of faces to each cell
     vtkm::cont::ArrayHandle<vtkm::Id> facesPerCell;
