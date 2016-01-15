@@ -77,7 +77,7 @@ vtkm::cont::DataSet MakeTestDatasetExplicit()
 
   vtkm::cont::DataSet ds;
   vtkm::cont::DataSetBuilderExplicit builder;
-  ds = builder.Create(coords, vtkm::CellShapeTagTriangle(), connectivity);
+  ds = builder.Create(coords, vtkm::CellShapeTagTriangle(), connectivity, "coords");
 
   std::vector<vtkm::Float32> values;
   values.push_back(1.0);
@@ -124,7 +124,7 @@ void TestClippingExplicit()
 
 
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(ds.GetCoordinateSystem("coordinates").GetData());
+      clip.ProcessField(ds.GetCoordinateSystem("coords").GetData());
   vtkm::cont::DynamicArrayHandle scalars =
       clip.ProcessField(ds.GetField("scalars").GetData());
 
@@ -150,7 +150,7 @@ void TestClippingExplicit()
   VTKM_TEST_ASSERT(
       TestArrayHandle(coords.CastToArrayHandle(Coord3D(),
         VTKM_DEFAULT_STORAGE_TAG()), expectedCoords, fieldSize),
-      "Got incorrect coordinates");
+      "Got incorrect coords");
 
   VTKM_TEST_ASSERT(
       TestArrayHandle(scalars.CastToArrayHandle(vtkm::Float32(),
@@ -169,7 +169,7 @@ void TestClippingStrucutred()
 
 
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(ds.GetCoordinateSystem("coordinates").GetData());
+      clip.ProcessField(ds.GetCoordinateSystem("coords").GetData());
   vtkm::cont::DynamicArrayHandle scalars =
       clip.ProcessField(ds.GetField("scalars").GetData());
 
@@ -197,7 +197,7 @@ void TestClippingStrucutred()
   VTKM_TEST_ASSERT(
       TestArrayHandle(coords.CastToArrayHandle(Coord3D(),
         VTKM_DEFAULT_STORAGE_TAG()), expectedCoords, fieldSize),
-      "Got incorrect coordinates");
+      "Got incorrect coords");
 
   VTKM_TEST_ASSERT(
       TestArrayHandle(scalars.CastToArrayHandle(vtkm::Float32(),
@@ -216,11 +216,11 @@ void TestClippingWithImplicitFunction()
 
   vtkm::worklet::Clip<DeviceAdapter> clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-      clip.Run(ds.GetCellSet(0), sphere, ds.GetCoordinateSystem("coordinates"));
+      clip.Run(ds.GetCellSet(0), sphere, ds.GetCoordinateSystem("coords"));
 
 
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(ds.GetCoordinateSystem("coordinates").GetData());
+      clip.ProcessField(ds.GetCoordinateSystem("coords").GetData());
   vtkm::cont::DynamicArrayHandle scalars =
       clip.ProcessField(ds.GetField("scalars").GetData());
 
@@ -249,7 +249,7 @@ void TestClippingWithImplicitFunction()
   VTKM_TEST_ASSERT(
       TestArrayHandle(coords.CastToArrayHandle(Coord3D(),
         VTKM_DEFAULT_STORAGE_TAG()), expectedCoords, fieldSize),
-      "Got incorrect coordinates");
+      "Got incorrect coords");
 
   VTKM_TEST_ASSERT(
       TestArrayHandle(scalars.CastToArrayHandle(vtkm::Float32(),

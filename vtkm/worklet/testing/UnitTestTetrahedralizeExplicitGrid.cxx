@@ -107,7 +107,7 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
   conn.push_back(12);
 
   vtkm::cont::DataSetBuilderExplicit builder;
-  return builder.Create(coordinates, shapes, numindices, conn);
+  return builder.Create(coordinates, shapes, numindices, conn, 2);
 }
 
 //

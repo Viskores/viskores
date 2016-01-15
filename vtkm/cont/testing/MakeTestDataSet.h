@@ -197,7 +197,7 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   conn.push_back(4);
 
   //Create the dataset.
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, 2, "coordinates", "cells");
 
   vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f};
   vtkm::Float32 cellvar[2] = {100.1f, 100.2f};
