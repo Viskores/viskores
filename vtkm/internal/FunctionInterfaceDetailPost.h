@@ -274,7 +274,7 @@ template<typename R,
 VTKM_EXEC_CONT_EXPORT
 FunctionInterface<R(P1)>
 make_FunctionInterface(
-      P1 p1
+      const P1& p1
       )
 {
   FunctionInterface<R(P1)> fi;
@@ -301,8 +301,8 @@ template<typename R,
 VTKM_EXEC_CONT_EXPORT
 FunctionInterface<R(P1,P2)>
 make_FunctionInterface(
-      P1 p1,
-      P2 p2
+      const P1& p1,
+      const P2& p2
       )
 {
   FunctionInterface<R(P1,P2)> fi;
@@ -331,9 +331,9 @@ template<typename R,
 VTKM_EXEC_CONT_EXPORT
 FunctionInterface<R(P1,P2,P3)>
 make_FunctionInterface(
-      P1 p1,
-      P2 p2,
-      P3 p3
+      const P1& p1,
+      const P2& p2,
+      const P3& p3
       )
 {
   FunctionInterface<R(P1,P2,P3)> fi;
@@ -364,10 +364,10 @@ template<typename R,
 VTKM_EXEC_CONT_EXPORT
 FunctionInterface<R(P1,P2,P3,P4)>
 make_FunctionInterface(
-      P1 p1,
-      P2 p2,
-      P3 p3,
-      P4 p4
+      const P1& p1,
+      const P2& p2,
+      const P3& p3,
+      const P4& p4
       )
 {
   FunctionInterface<R(P1,P2,P3,P4)> fi;
@@ -400,11 +400,11 @@ template<typename R,
 VTKM_EXEC_CONT_EXPORT
 FunctionInterface<R(P1,P2,P3,P4,P5)>
 make_FunctionInterface(
-      P1 p1,
-      P2 p2,
-      P3 p3,
-      P4 p4,
-      P5 p5
+      const P1& p1,
+      const P2& p2,
+      const P3& p3,
+      const P4& p4,
+      const P5& p5
       )
 {
   FunctionInterface<R(P1,P2,P3,P4,P5)> fi;
@@ -439,12 +439,12 @@ template<typename R,
 VTKM_EXEC_CONT_EXPORT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6)>
 make_FunctionInterface(
-      P1 p1,
-      P2 p2,
-      P3 p3,
-      P4 p4,
-      P5 p5,
-      P6 p6
+      const P1& p1,
+      const P2& p2,
+      const P3& p3,
+      const P4& p4,
+      const P5& p5,
+      const P6& p6
       )
 {
   FunctionInterface<R(P1,P2,P3,P4,P5,P6)> fi;
@@ -481,13 +481,13 @@ template<typename R,
 VTKM_EXEC_CONT_EXPORT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7)>
 make_FunctionInterface(
-      P1 p1,
-      P2 p2,
-      P3 p3,
-      P4 p4,
-      P5 p5,
-      P6 p6,
-      P7 p7
+      const P1& p1,
+      const P2& p2,
+      const P3& p3,
+      const P4& p4,
+      const P5& p5,
+      const P6& p6,
+      const P7& p7
       )
 {
   FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7)> fi;
@@ -526,14 +526,14 @@ template<typename R,
 VTKM_EXEC_CONT_EXPORT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8)>
 make_FunctionInterface(
-      P1 p1,
-      P2 p2,
-      P3 p3,
-      P4 p4,
-      P5 p5,
-      P6 p6,
-      P7 p7,
-      P8 p8
+      const P1& p1,
+      const P2& p2,
+      const P3& p3,
+      const P4& p4,
+      const P5& p5,
+      const P6& p6,
+      const P7& p7,
+      const P8& p8
       )
 {
   FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8)> fi;
@@ -574,15 +574,15 @@ template<typename R,
 VTKM_EXEC_CONT_EXPORT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)>
 make_FunctionInterface(
-      P1 p1,
-      P2 p2,
-      P3 p3,
-      P4 p4,
-      P5 p5,
-      P6 p6,
-      P7 p7,
-      P8 p8,
-      P9 p9
+      const P1& p1,
+      const P2& p2,
+      const P3& p3,
+      const P4& p4,
+      const P5& p5,
+      const P6& p6,
+      const P7& p7,
+      const P8& p8,
+      const P9& p9
       )
 {
   FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> fi;
@@ -625,16 +625,16 @@ template<typename R,
 VTKM_EXEC_CONT_EXPORT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)>
 make_FunctionInterface(
-      P1 p1,
-      P2 p2,
-      P3 p3,
-      P4 p4,
-      P5 p5,
-      P6 p6,
-      P7 p7,
-      P8 p8,
-      P9 p9,
-      P10 p10
+      const P1& p1,
+      const P2& p2,
+      const P3& p3,
+      const P4& p4,
+      const P5& p5,
+      const P6& p6,
+      const P7& p7,
+      const P8& p8,
+      const P9& p9,
+      const P10& p10
       )
 {
   FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> fi;

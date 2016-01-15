@@ -64,7 +64,7 @@ struct IdentityFunctor {
 
 template<vtkm::IdComponent ParameterIndex, typename FunctionSignature>
 VTKM_EXEC_CONT_EXPORT
-typename ParameterContainerAccess<ParameterIndex,FunctionSignature>::ParameterType
+const typename ParameterContainerAccess<ParameterIndex,FunctionSignature>::ParameterType &
 GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
   return ParameterContainerAccess<ParameterIndex,FunctionSignature>::GetParameter(parameters);
 }
@@ -347,7 +347,7 @@ public:
   ///
   template<vtkm::IdComponent ParameterIndex>
   VTKM_EXEC_CONT_EXPORT
-  typename ParameterType<ParameterIndex>::type
+  const typename ParameterType<ParameterIndex>::type &
   GetParameter(
       vtkm::internal::IndexTag<ParameterIndex> =
         vtkm::internal::IndexTag<ParameterIndex>()) const {
@@ -394,7 +394,7 @@ public:
   template<vtkm::IdComponent ParameterIndex>
   VTKM_EXEC_CONT_EXPORT
   void SetParameter(
-      typename ParameterType<ParameterIndex>::type parameter,
+      const typename ParameterType<ParameterIndex>::type& parameter,
       vtkm::internal::IndexTag<ParameterIndex> =
         vtkm::internal::IndexTag<ParameterIndex>())
   {
@@ -506,7 +506,7 @@ public:
   template<typename NewType>
   VTKM_CONT_EXPORT
   typename AppendType<NewType>::type
-  Append(NewType newParameter) const {
+  Append(const NewType& newParameter) const {
     typename AppendType<NewType>::type appendedFuncInterface;
     appendedFuncInterface.Copy(*this);
     appendedFuncInterface.template SetParameter<ARITY+1>(newParameter);
@@ -565,7 +565,7 @@ public:
   template<vtkm::IdComponent ParameterIndex, typename NewType>
   VTKM_CONT_EXPORT
   typename ReplaceType<ParameterIndex, NewType>::type
-  Replace(NewType newParameter,
+  Replace(const NewType& newParameter,
           vtkm::internal::IndexTag<ParameterIndex> =
             vtkm::internal::IndexTag<ParameterIndex>()) const {
     typename ReplaceType<ParameterIndex, NewType>::type replacedFuncInterface;
@@ -801,7 +801,7 @@ public:
 
   template<typename T>
   VTKM_CONT_EXPORT
-  void operator()(T newParameter) const
+  void operator()(const T& newParameter) const
   {
     typedef typename vtkm::internal::FunctionInterface<NewFunction>::template AppendType<T>::type
         NextInterfaceType;

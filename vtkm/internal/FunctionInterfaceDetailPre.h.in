@@ -138,7 +138,7 @@ struct ParameterContainerAccess<$(param_index), FunctionSignature> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
-  ParameterType
+  const ParameterType&
   GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter$(param_index);
   }

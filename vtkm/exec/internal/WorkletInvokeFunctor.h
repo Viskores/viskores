@@ -62,7 +62,7 @@ public:
 
 private:
   WorkletType Worklet;
-  InvocationType Invocation;
+  const InvocationType& Invocation;
 };
 
 }

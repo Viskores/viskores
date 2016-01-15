@@ -64,7 +64,7 @@ public:
 
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
-    InputDomainType inputDomain = invocation.GetInputDomain();
+    const InputDomainType &inputDomain = invocation.GetInputDomain();
 
     // Now that we have the input domain, we can extract the range of the
     // scheduling and call BadicInvoke.

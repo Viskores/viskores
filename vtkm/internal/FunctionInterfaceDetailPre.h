@@ -236,7 +236,7 @@ struct ParameterContainerAccess<1, FunctionSignature> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
-  ParameterType
+  const ParameterType&
   GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter1;
   }
@@ -259,7 +259,7 @@ struct ParameterContainerAccess<2, FunctionSignature> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
-  ParameterType
+  const ParameterType&
   GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter2;
   }
@@ -282,7 +282,7 @@ struct ParameterContainerAccess<3, FunctionSignature> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
-  ParameterType
+  const ParameterType&
   GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter3;
   }
@@ -305,7 +305,7 @@ struct ParameterContainerAccess<4, FunctionSignature> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
-  ParameterType
+  const ParameterType&
   GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter4;
   }
@@ -328,7 +328,7 @@ struct ParameterContainerAccess<5, FunctionSignature> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
-  ParameterType
+  const ParameterType&
   GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter5;
   }
@@ -351,7 +351,7 @@ struct ParameterContainerAccess<6, FunctionSignature> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
-  ParameterType
+  const ParameterType&
   GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter6;
   }
@@ -374,7 +374,7 @@ struct ParameterContainerAccess<7, FunctionSignature> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
-  ParameterType
+  const ParameterType&
   GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter7;
   }
@@ -397,7 +397,7 @@ struct ParameterContainerAccess<8, FunctionSignature> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
-  ParameterType
+  const ParameterType&
   GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter8;
   }
@@ -420,7 +420,7 @@ struct ParameterContainerAccess<9, FunctionSignature> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
-  ParameterType
+  const ParameterType&
   GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter9;
   }
@@ -443,7 +443,7 @@ struct ParameterContainerAccess<10, FunctionSignature> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   static
-  ParameterType
+  const ParameterType&
   GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter10;
   }
