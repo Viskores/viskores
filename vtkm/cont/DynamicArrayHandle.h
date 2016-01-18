@@ -425,14 +425,14 @@ namespace detail {
 
 template<typename Functor, typename Type>
 struct DynamicArrayHandleTryStorage {
-  const DynamicArrayHandle& Array;
+  const DynamicArrayHandle* const Array;
   const Functor &Function;
   bool FoundCast;
 
   VTKM_CONT_EXPORT
   DynamicArrayHandleTryStorage(const DynamicArrayHandle &array,
                                const Functor &f)
-    : Array(array), Function(f), FoundCast(false) {  }
+    : Array(&array), Function(f), FoundCast(false) {  }
 
   template<typename Storage>
   VTKM_CONT_EXPORT
@@ -446,9 +446,9 @@ private:
   void DoCast(Storage, boost::mpl::bool_<true>)
   {
     if (!this->FoundCast &&
-        this->Array.template IsTypeAndStorage<Type,Storage>())
+        this->Array->template IsTypeAndStorage<Type,Storage>())
     {
-      this->Function(this->Array.template CastToTypeStorage<Type,Storage>());
+      this->Function(this->Array->template CastToTypeStorage<Type,Storage>());
       this->FoundCast = true;
     }
   }
@@ -462,13 +462,13 @@ private:
 
 template<typename Functor, typename StorageList>
 struct DynamicArrayHandleTryType {
-  const DynamicArrayHandle& Array;
+  const DynamicArrayHandle* const Array;
   const Functor &Function;
   bool FoundCast;
 
   VTKM_CONT_EXPORT
   DynamicArrayHandleTryType(const DynamicArrayHandle &array, const Functor &f)
-    : Array(array), Function(f), FoundCast(false) {  }
+    : Array(&array), Function(f), FoundCast(false) {  }
 
   template<typename Type>
   VTKM_CONT_EXPORT
@@ -476,7 +476,7 @@ struct DynamicArrayHandleTryType {
     if (this->FoundCast) { return; }
     typedef DynamicArrayHandleTryStorage<Functor, Type> TryStorageType;
     TryStorageType tryStorage =
-        TryStorageType(this->Array, this->Function);
+        TryStorageType(*this->Array, this->Function);
     vtkm::ListForEach(tryStorage, StorageList());
     if (tryStorage.FoundCast)
     {
