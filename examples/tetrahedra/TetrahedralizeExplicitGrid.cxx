@@ -67,69 +67,60 @@ int mouse_state = 1;
 //
 vtkm::cont::DataSet MakeTetrahedralizeExplicitDataSet()
 {
-  typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-  std::vector< CoordType > coordinates;
-  coordinates.push_back( CoordType(0, 0, 0) );
-  coordinates.push_back( CoordType(1, 0, 0) );
-  coordinates.push_back( CoordType(2, 0, 0) );
-  coordinates.push_back( CoordType(3, 0, 0) );
-  coordinates.push_back( CoordType(0, 1, 0) );
-  coordinates.push_back( CoordType(1, 1, 0) );
-  coordinates.push_back( CoordType(2, 1, 0) );
-  coordinates.push_back( CoordType(2.5, 1, 0) );
-  coordinates.push_back( CoordType(0, 2, 0) );
-  coordinates.push_back( CoordType(1, 2, 0) );
-  coordinates.push_back( CoordType(0.5, 0.5, 1) );
-  coordinates.push_back( CoordType(1, 0, 1) );
-  coordinates.push_back( CoordType(2, 0, 1) );
-  coordinates.push_back( CoordType(3, 0, 1) );
-  coordinates.push_back( CoordType(1, 1, 1) );
-  coordinates.push_back( CoordType(2, 1, 1) );
-  coordinates.push_back( CoordType(2.5, 1, 1) );
-  coordinates.push_back( CoordType(0.5, 1.5, 1) );
+  vtkm::cont::DataSetBuilderExplicitIterative builder;
+  builder.Begin(3);
 
-  std::vector<vtkm::UInt8> shapes;
-  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
-  shapes.push_back(vtkm::CELL_SHAPE_HEXAHEDRON);
-  shapes.push_back(vtkm::CELL_SHAPE_WEDGE);
-  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  builder.AddPoint( 0, 0, 0);
+  builder.AddPoint( 1, 0, 0);
+  builder.AddPoint( 2, 0, 0);
+  builder.AddPoint( 3, 0, 0);
+  builder.AddPoint( 0, 1, 0);
+  builder.AddPoint( 1, 1, 0);
+  builder.AddPoint( 2, 1, 0);
+  builder.AddPoint( 2.5, 1.0, 0.0);
+  builder.AddPoint( 0, 2, 0);
+  builder.AddPoint( 1, 2, 0);
+  builder.AddPoint( 0.5, 0.5, 1.0);
+  builder.AddPoint( 1, 0, 1);
+  builder.AddPoint( 2, 0, 1);
+  builder.AddPoint( 3, 0, 1);
+  builder.AddPoint( 1, 1, 1);
+  builder.AddPoint( 2, 1, 1);
+  builder.AddPoint( 2.5, 1.0, 1.0);
+  builder.AddPoint( 0.5, 1.5, 1.0);
 
-  std::vector<vtkm::IdComponent> numindices;
-  numindices.push_back(4);
-  numindices.push_back(8);
-  numindices.push_back(6);
-  numindices.push_back(5);
+  builder.AddCell(vtkm::CELL_SHAPE_TETRA);
+  builder.AddCellPoint(0);
+  builder.AddCellPoint(1);
+  builder.AddCellPoint(5);
+  builder.AddCellPoint(10);
 
-  std::vector<vtkm::Id> conn;
-  conn.push_back(0);
-  conn.push_back(1);
-  conn.push_back(5);
-  conn.push_back(10);
+  builder.AddCell(vtkm::CELL_SHAPE_HEXAHEDRON);
+  builder.AddCellPoint(1);
+  builder.AddCellPoint(2);
+  builder.AddCellPoint(6);
+  builder.AddCellPoint(5);
+  builder.AddCellPoint(11);
+  builder.AddCellPoint(12);
+  builder.AddCellPoint(15);
+  builder.AddCellPoint(14);
 
-  conn.push_back(1);
-  conn.push_back(2);
-  conn.push_back(6);
-  conn.push_back(5);
-  conn.push_back(11);
-  conn.push_back(12);
-  conn.push_back(15);
-  conn.push_back(14);
+  builder.AddCell(vtkm::CELL_SHAPE_WEDGE);
+  builder.AddCellPoint(2);
+  builder.AddCellPoint(3);
+  builder.AddCellPoint(7);
+  builder.AddCellPoint(12);
+  builder.AddCellPoint(13);
+  builder.AddCellPoint(16);
 
-  conn.push_back(2);
-  conn.push_back(3);
-  conn.push_back(7);
-  conn.push_back(12);
-  conn.push_back(13);
-  conn.push_back(16);
+  builder.AddCell(vtkm::CELL_SHAPE_PYRAMID);
+  builder.AddCellPoint(4);
+  builder.AddCellPoint(5);
+  builder.AddCellPoint(9);
+  builder.AddCellPoint(8);
+  builder.AddCellPoint(17);
 
-  conn.push_back(4);
-  conn.push_back(5);
-  conn.push_back(9);
-  conn.push_back(8);
-  conn.push_back(17);
-
-  vtkm::cont::DataSetBuilderExplicit builder;
-  return builder.Create(coordinates, shapes, numindices, conn);
+  return builder.Create();
 }
 
 //
