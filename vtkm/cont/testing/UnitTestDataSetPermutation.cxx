@@ -54,27 +54,13 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage> &ah, const T *exp
 
 inline vtkm::cont::DataSet make_SingleTypeDataSet()
 {
-  using vtkm::cont::Field;
-
-  vtkm::cont::DataSet dataSet;
-
-  const int nVerts = 5;
   typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-  CoordType coordinates[nVerts] = {
-    CoordType(0, 0, 0),
-    CoordType(1, 0, 0),
-    CoordType(1, 1, 0),
-    CoordType(2, 1, 0),
-    CoordType(2, 2, 0)
-  };
-
-  //Set coordinate system
-  dataSet.AddCoordinateSystem(
-        vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, nVerts));
-
-  //Set point scalar
-  vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f};
-  dataSet.AddField(Field("pointvar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  std::vector< CoordType > coordinates;
+  coordinates.push_back( CoordType(0, 0, 0) );
+  coordinates.push_back( CoordType(1, 0, 0) );
+  coordinates.push_back( CoordType(1, 1, 0) );
+  coordinates.push_back( CoordType(2, 1, 0) );
+  coordinates.push_back( CoordType(2, 2, 0) );
 
   std::vector<vtkm::Id> conn;
   // First Cell
@@ -90,13 +76,18 @@ inline vtkm::cont::DataSet make_SingleTypeDataSet()
   conn.push_back(3);
   conn.push_back(4);
 
-  vtkm::cont::CellSetSingleType<> cellSet(vtkm::CellShapeTagTriangle(),
-                                          "cells");
-  cellSet.FillViaCopy(conn);
+  vtkm::cont::DataSet ds;
+  vtkm::cont::DataSetBuilderExplicit builder;
+  ds = builder.Create(coordinates, vtkm::CellShapeTagTriangle(), conn);
 
-  dataSet.AddCellSet(cellSet);
+  //Set point scalar
+  const int nVerts = 5;
+  vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f};
 
-  return dataSet;
+  vtkm::cont::DataSetFieldAdd fieldAdder;
+  fieldAdder.AddPointField(ds, "pointvar", vars, nVerts);
+
+  return ds;
 }
 
 void TestDataSet_Explicit()

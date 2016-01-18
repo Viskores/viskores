@@ -93,7 +93,7 @@ void FillArray(std::vector<T> &arr,
   arr.resize(static_cast<std::size_t>(size));
   for (size_t i = 0; i < static_cast<std::size_t>(size); i++)
   {
-    T xi;
+    T xi = static_cast<T>(i);
 
     switch (fillMethod)
     {

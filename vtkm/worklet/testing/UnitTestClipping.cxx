@@ -25,6 +25,9 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
+#include <vtkm/cont/DataSetBuilderRegular.h>
+#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -58,42 +61,39 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage> &ah, const T *exp
 
 vtkm::cont::DataSet MakeTestDatasetExplicit()
 {
-  static const vtkm::Id numVerts = 4;
-  static const vtkm::Id numCells = 2;
-  static const Coord3D coords[numVerts] = {
-    Coord3D(0.0f, 0.0f, 0.0f),
-    Coord3D(1.0f, 0.0f, 0.0f),
-    Coord3D(1.0f, 1.0f, 0.0f),
-    Coord3D(0.0f, 1.0f, 0.0f),
-  };
-  static vtkm::Float32 values[] = { 1.0, 2.0, 1.0, 0.0 };
-  static vtkm::UInt8 shapes[] = { vtkm::CELL_SHAPE_TRIANGLE, vtkm::CELL_SHAPE_TRIANGLE };
-  static vtkm::IdComponent numInds[] = { 3, 3 };
-  static vtkm::Id connectivity[] = {  0, 1, 3, 3, 1, 2 };
+  std::vector<Coord3D> coords;
+  coords.push_back( Coord3D(0.0f, 0.0f, 0.0f) );
+  coords.push_back( Coord3D(1.0f, 0.0f, 0.0f) );
+  coords.push_back( Coord3D(1.0f, 1.0f, 0.0f) );
+  coords.push_back( Coord3D(0.0f, 1.0f, 0.0f) );
+
+  std::vector<vtkm::Id> connectivity;
+  connectivity.push_back(0);
+  connectivity.push_back(1);
+  connectivity.push_back(3);
+  connectivity.push_back(3);
+  connectivity.push_back(1);
+  connectivity.push_back(2);
 
   vtkm::cont::DataSet ds;
-  ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", 1, coords, numVerts));
-  ds.AddField(vtkm::cont::Field("scalars", 1, vtkm::cont::Field::ASSOC_POINTS, values,
-                     numVerts));
+  vtkm::cont::DataSetBuilderExplicit builder;
+  ds = builder.Create(coords, vtkm::CellShapeTagTriangle(), connectivity, "coords");
 
-  std::vector<vtkm::UInt8> shapesVec(shapes, shapes + numCells);
-  std::vector<vtkm::IdComponent> numIndsVec(numInds, numInds + numCells);
-  std::vector<vtkm::Id> connectivityVec(connectivity, connectivity + (numCells * 3));
-
-  vtkm::cont::CellSetExplicit<> cs(numVerts, "cells", 3);
-  cs.FillViaCopy(shapesVec, numIndsVec, connectivityVec);
-
-  ds.AddCellSet(cs);
+  std::vector<vtkm::Float32> values;
+  values.push_back(1.0);
+  values.push_back(2.0);
+  values.push_back(1.0);
+  values.push_back(0.0);
+  vtkm::cont::DataSetFieldAdd fieldAdder;
+  fieldAdder.AddPointField(ds, "scalars", values);
 
   return ds;
 }
 
 vtkm::cont::DataSet MakeTestDatasetStructured()
 {
-  static const vtkm::Vec<vtkm::Float32, 3> origin(0.0f, 0.0f, 0.0f);
-  static const vtkm::Vec<vtkm::Float32, 3> spacing(1.0f, 1.0f, 1.0f);
   static const vtkm::Id xdim = 3, ydim = 3;
-  static const vtkm::Id3 dim(xdim, ydim, 1);
+  static const vtkm::Id2 dim(xdim, ydim);
   static const vtkm::Id numVerts = xdim * ydim;
 
   vtkm::Float32 scalars[numVerts];
@@ -104,14 +104,11 @@ vtkm::cont::DataSet MakeTestDatasetStructured()
   scalars[4] = 0.0f;
 
   vtkm::cont::DataSet ds;
-  ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", 1, dim, origin, spacing));
+  vtkm::cont::DataSetBuilderRegular builder;
+  ds = builder.Create(dim);
 
-  ds.AddField(vtkm::cont::Field("scalars", 1, vtkm::cont::Field::ASSOC_POINTS,
-                                scalars, numVerts));
-
-  vtkm::cont::CellSetStructured<2> cs("cells");
-  cs.SetPointDimensions(vtkm::make_Vec(dim[0], dim[1]));
-  ds.AddCellSet(cs);
+  vtkm::cont::DataSetFieldAdd fieldAdder;
+  fieldAdder.AddPointField(ds, "scalars", scalars, numVerts);
 
   return ds;
 }
@@ -127,7 +124,7 @@ void TestClippingExplicit()
 
 
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(ds.GetCoordinateSystem("coordinates").GetData());
+      clip.ProcessField(ds.GetCoordinateSystem("coords").GetData());
   vtkm::cont::DynamicArrayHandle scalars =
       clip.ProcessField(ds.GetField("scalars").GetData());
 
@@ -153,7 +150,7 @@ void TestClippingExplicit()
   VTKM_TEST_ASSERT(
       TestArrayHandle(coords.CastToArrayHandle(Coord3D(),
         VTKM_DEFAULT_STORAGE_TAG()), expectedCoords, fieldSize),
-      "Got incorrect coordinates");
+      "Got incorrect coords");
 
   VTKM_TEST_ASSERT(
       TestArrayHandle(scalars.CastToArrayHandle(vtkm::Float32(),
@@ -172,7 +169,7 @@ void TestClippingStrucutred()
 
 
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(ds.GetCoordinateSystem("coordinates").GetData());
+      clip.ProcessField(ds.GetCoordinateSystem("coords").GetData());
   vtkm::cont::DynamicArrayHandle scalars =
       clip.ProcessField(ds.GetField("scalars").GetData());
 
@@ -200,7 +197,7 @@ void TestClippingStrucutred()
   VTKM_TEST_ASSERT(
       TestArrayHandle(coords.CastToArrayHandle(Coord3D(),
         VTKM_DEFAULT_STORAGE_TAG()), expectedCoords, fieldSize),
-      "Got incorrect coordinates");
+      "Got incorrect coords");
 
   VTKM_TEST_ASSERT(
       TestArrayHandle(scalars.CastToArrayHandle(vtkm::Float32(),
@@ -219,11 +216,11 @@ void TestClippingWithImplicitFunction()
 
   vtkm::worklet::Clip<DeviceAdapter> clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-      clip.Run(ds.GetCellSet(0), sphere, ds.GetCoordinateSystem("coordinates"));
+      clip.Run(ds.GetCellSet(0), sphere, ds.GetCoordinateSystem("coords"));
 
 
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(ds.GetCoordinateSystem("coordinates").GetData());
+      clip.ProcessField(ds.GetCoordinateSystem("coords").GetData());
   vtkm::cont::DynamicArrayHandle scalars =
       clip.ProcessField(ds.GetField("scalars").GetData());
 
@@ -252,7 +249,7 @@ void TestClippingWithImplicitFunction()
   VTKM_TEST_ASSERT(
       TestArrayHandle(coords.CastToArrayHandle(Coord3D(),
         VTKM_DEFAULT_STORAGE_TAG()), expectedCoords, fieldSize),
-      "Got incorrect coordinates");
+      "Got incorrect coords");
 
   VTKM_TEST_ASSERT(
       TestArrayHandle(scalars.CastToArrayHandle(vtkm::Float32(),

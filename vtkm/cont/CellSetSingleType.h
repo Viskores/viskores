@@ -154,36 +154,6 @@ public:
     this->PointToCell.IndexOffsetsValid = true;
   }
 
-  /// Second method to add cells -- all at once.
-  /// Copies the data from the vectors, so they can be released.
-  VTKM_CONT_EXPORT
-  void FillViaCopy(const std::vector<vtkm::Id> &connectivity)
-  {
-    vtkm::IdComponent numberOfPointsPerCell = this->DetermineNumberOfPoints();
-    const vtkm::Id connectSize = static_cast<vtkm::Id>(connectivity.size());
-
-    const vtkm::Id length = connectSize / numberOfPointsPerCell;
-    const vtkm::UInt8 shapeTypeValue = static_cast<vtkm::UInt8>(this->CellTypeAsId);
-    this->PointToCell.Shapes =
-              vtkm::cont::make_ArrayHandleConstant(shapeTypeValue, length);
-    this->PointToCell.NumIndices =
-              vtkm::cont::make_ArrayHandleConstant(numberOfPointsPerCell,
-                                                   length);
-    this->PointToCell.IndexOffsets =
-              vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0),
-                                                   static_cast<vtkm::Id>(numberOfPointsPerCell),
-                                                   length );
-
-
-    this->PointToCell.Connectivity.Allocate( connectSize  );
-    std::copy(connectivity.begin(), connectivity.end(),
-              vtkm::cont::ArrayPortalToIteratorBegin(
-                this->PointToCell.Connectivity.GetPortalControl()));
-
-    this->PointToCell.ElementsValid = true;
-    this->PointToCell.IndexOffsetsValid = true;
-  }
-
 private:
   template< typename CellShapeTag>
   void DetermineNumberOfPoints(CellShapeTag,

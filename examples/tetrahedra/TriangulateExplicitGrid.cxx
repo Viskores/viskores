@@ -25,6 +25,7 @@
 #include <vtkm/worklet/TetrahedralizeExplicitGrid.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -59,93 +60,69 @@ vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
 //
 vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
 {
-  vtkm::cont::DataSet dataSet;
+  vtkm::cont::DataSetBuilderExplicitIterative builder;
+  builder.Begin(2);
 
-  const int nVerts = 16;
-  typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-  CoordType coordinates[nVerts] = {
-    CoordType(0, 0, 0),   // 0
-    CoordType(1, 0, 0),   // 1
-    CoordType(2, 0, 0),   // 2
-    CoordType(3, 0, 0),   // 3
-    CoordType(0, 1, 0),   // 4
-    CoordType(1, 1, 0),   // 5
-    CoordType(2, 1, 0),   // 6
-    CoordType(3, 1, 0),   // 7
-    CoordType(0, 2, 0),   // 8
-    CoordType(1, 2, 0),   // 9
-    CoordType(2, 2, 0),   // 10
-    CoordType(3, 2, 0),   // 11
-    CoordType(0, 3, 0),   // 12
-    CoordType(3, 3, 0),   // 13
-    CoordType(1, 4, 0),   // 14
-    CoordType(2, 4, 0),   // 15
-  };
+  builder.AddPoint(0, 0, 0); // 0
+  builder.AddPoint(1, 0, 0); // 1
+  builder.AddPoint(2, 0, 0); // 2
+  builder.AddPoint(3, 0, 0); // 3
+  builder.AddPoint(0, 1, 0); // 4
+  builder.AddPoint(1, 1, 0); // 5
+  builder.AddPoint(2, 1, 0); // 6
+  builder.AddPoint(3, 1, 0); // 7
+  builder.AddPoint(0, 2, 0); // 8
+  builder.AddPoint(1, 2, 0); // 9
+  builder.AddPoint(2, 2, 0); // 10
+  builder.AddPoint(3, 2, 0); // 11
+  builder.AddPoint(0, 3, 0); // 12
+  builder.AddPoint(3, 3, 0); // 13
+  builder.AddPoint(1, 4, 0); // 14
+  builder.AddPoint(2, 4, 0); // 15
 
-  dataSet.AddCoordinateSystem(
-          vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, nVerts));
+  builder.AddCell(vtkm::CELL_SHAPE_TRIANGLE);
+  builder.AddCellPoint(0);
+  builder.AddCellPoint(1);
+  builder.AddCellPoint(5);
 
-  std::vector<vtkm::UInt8> shapes;
-  shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
-  shapes.push_back(vtkm::CELL_SHAPE_QUAD);
-  shapes.push_back(vtkm::CELL_SHAPE_QUAD);
-  shapes.push_back(vtkm::CELL_SHAPE_QUAD);
-  shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
-  shapes.push_back(vtkm::CELL_SHAPE_QUAD);
-  shapes.push_back(vtkm::CELL_SHAPE_POLYGON);
+  builder.AddCell(vtkm::CELL_SHAPE_QUAD);
+  builder.AddCellPoint(1);
+  builder.AddCellPoint(2);
+  builder.AddCellPoint(6);
+  builder.AddCellPoint(5);
 
-  std::vector<vtkm::IdComponent> numindices;
-  numindices.push_back(3);
-  numindices.push_back(4);
-  numindices.push_back(4);
-  numindices.push_back(4);
-  numindices.push_back(3);
-  numindices.push_back(4);
-  numindices.push_back(6);
+  builder.AddCell(vtkm::CELL_SHAPE_QUAD);
+  builder.AddCellPoint(5);
+  builder.AddCellPoint(6);
+  builder.AddCellPoint(10);
+  builder.AddCellPoint(9);
 
-  std::vector<vtkm::Id> conn;
-  conn.push_back(0);
-  conn.push_back(1);
-  conn.push_back(5);
+  builder.AddCell(vtkm::CELL_SHAPE_QUAD);
+  builder.AddCellPoint(4);
+  builder.AddCellPoint(5);
+  builder.AddCellPoint(9);
+  builder.AddCellPoint(8);
 
-  conn.push_back(1);
-  conn.push_back(2);
-  conn.push_back(6);
-  conn.push_back(5);
+  builder.AddCell(vtkm::CELL_SHAPE_TRIANGLE);
+  builder.AddCellPoint(2);
+  builder.AddCellPoint(3);
+  builder.AddCellPoint(7);
 
-  conn.push_back(5);
-  conn.push_back(6);
-  conn.push_back(10);
-  conn.push_back(9);
+  builder.AddCell(vtkm::CELL_SHAPE_QUAD);
+  builder.AddCellPoint(6);
+  builder.AddCellPoint(7);
+  builder.AddCellPoint(11);
+  builder.AddCellPoint(10);
 
-  conn.push_back(4);
-  conn.push_back(5);
-  conn.push_back(9);
-  conn.push_back(8);
+  builder.AddCell(vtkm::CELL_SHAPE_POLYGON);
+  builder.AddCellPoint(9);
+  builder.AddCellPoint(10);
+  builder.AddCellPoint(13);
+  builder.AddCellPoint(15);
+  builder.AddCellPoint(14);
+  builder.AddCellPoint(12);
 
-  conn.push_back(2);
-  conn.push_back(3);
-  conn.push_back(7);
-
-  conn.push_back(6);
-  conn.push_back(7);
-  conn.push_back(11);
-  conn.push_back(10);
-
-  conn.push_back(9);
-  conn.push_back(10);
-  conn.push_back(13);
-  conn.push_back(15);
-  conn.push_back(14);
-  conn.push_back(12);
-
-  static const vtkm::IdComponent ndim = 2;
-  vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells", ndim);
-  cellSet.FillViaCopy(shapes, numindices, conn);
-
-  dataSet.AddCellSet(cellSet);
-
-  return dataSet;
+  return builder.Create();
 }
 
 //
