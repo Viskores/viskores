@@ -102,6 +102,7 @@ void FillArray(std::vector<T> &arr,
       case 2: xi = static_cast<T>(i*2); break;
       case 3: xi = static_cast<T>(i*0.1f); break;
       case 4: xi = static_cast<T>(i*i); break;
+      default: VTKM_TEST_FAIL("Bad internal test state: invalid fill method.");
     }
     arr[i] = xi;
   }
