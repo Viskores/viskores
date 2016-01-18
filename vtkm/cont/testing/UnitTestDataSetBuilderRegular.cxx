@@ -73,15 +73,15 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
 
     if (dim == 2)
     {
-        typedef vtkm::cont::CellSetStructured<2> CellSetType;
-        CellSetType cellSet = ds.GetCellSet(0).CastTo<CellSetType>();
+        vtkm::cont::CellSetStructured<2> cellSet;
+        ds.GetCellSet(0).CopyTo(cellSet);
         vtkm::IdComponent shape = cellSet.GetCellShape();
         VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_QUAD, "Wrong element type");
     }
     else if (dim == 3)
     {
-        typedef vtkm::cont::CellSetStructured<3> CellSetType;
-        CellSetType cellSet = ds.GetCellSet(0).CastTo<CellSetType>();
+        vtkm::cont::CellSetStructured<3> cellSet;
+        ds.GetCellSet(0).CopyTo(cellSet);
         vtkm::IdComponent shape = cellSet.GetCellShape();
         VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_HEXAHEDRON, "Wrong element type");
     }

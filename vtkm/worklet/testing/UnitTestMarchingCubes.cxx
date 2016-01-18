@@ -240,9 +240,10 @@ void TestMarchingCubesUniformGrid()
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-  typedef vtkm::cont::CellSetStructured<3> CellSet;
+  vtkm::cont::CellSetStructured<3> cellSet;
+  dataSet.GetCellSet().CopyTo(cellSet);
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  dataSet.GetField("nodevar").GetData().CastToArrayHandle(fieldArray);
+  dataSet.GetField("nodevar").GetData().CopyTo(fieldArray);
 
   vtkm::worklet::MarchingCubes<vtkm::Float32,DeviceAdapter> isosurfaceFilter;
 
@@ -250,7 +251,7 @@ void TestMarchingCubesUniformGrid()
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
   isosurfaceFilter.Run(0.5,
-                       dataSet.GetCellSet().CastTo(CellSet()),
+                       cellSet,
                        dataSet.GetCoordinateSystem(),
                        fieldArray,
                        verticesArray,
@@ -282,7 +283,6 @@ void TestMarchingCubesExplicit()
   typedef vtkm::worklet::MarchingCubes<vtkm::Float32,DeviceTag> MarchingCubes;
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > Vec3Handle;
   typedef vtkm::cont::ArrayHandle<vtkm::Float32> DataHandle;
-  typedef DataSetGenerator::CellSet CellSet;
 
   DataSetGenerator dataSetGenerator;
 
@@ -292,17 +292,19 @@ void TestMarchingCubesExplicit()
   vtkm::cont::DataSet dataSet =
     dataSetGenerator.Make3DRadiantDataSet(Dimension);
 
+  DataSetGenerator::CellSet cellSet;
+  dataSet.GetCellSet().CopyTo(cellSet);
+
   vtkm::cont::Field contourField = dataSet.GetField("distanceToOrigin");
-  DataSetGenerator::DataArrayHandle contourArray = contourField.GetData()
-    .CastToArrayHandle(DataSetGenerator::DataArrayHandle::ValueType(),
-                       DataSetGenerator::DataArrayHandle::StorageTag());
+  DataSetGenerator::DataArrayHandle contourArray;
+  contourField.GetData().CopyTo(contourArray);
   Vec3Handle vertices;
   Vec3Handle normals;
 
   MarchingCubes marchingCubes;
 
   marchingCubes.Run(contourValue,
-                    dataSet.GetCellSet().CastTo(CellSet()),
+                    cellSet,
                     dataSet.GetCoordinateSystem(),
                     contourArray,
                     vertices,
@@ -312,9 +314,8 @@ void TestMarchingCubesExplicit()
 
   vtkm::cont::Field projectedField = dataSet.GetField("distanceToOther");
 
-  DataSetGenerator::DataArrayHandle projectedArray = projectedField.GetData()
-    .CastToArrayHandle(DataSetGenerator::DataArrayHandle::ValueType(),
-                       DataSetGenerator::DataArrayHandle::StorageTag());
+  DataSetGenerator::DataArrayHandle projectedArray;
+  projectedField.GetData().CopyTo(projectedArray);
 
   marchingCubes.MapFieldOntoIsosurface(projectedArray,
                                        scalars);

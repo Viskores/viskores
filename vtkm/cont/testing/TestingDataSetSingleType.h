@@ -106,8 +106,8 @@ private:
     vtkm::cont::DataSet dataSet = make_SingleTypeDataSet();
 
     //verify that we can get a CellSetSingleType from a dataset
-    vtkm::cont::CellSetSingleType<> &cellset =
-        dataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+    vtkm::cont::CellSetSingleType<> cellset;
+    dataSet.GetCellSet(0).CopyTo(cellset);
 
 
     //verify that we can compute the cell to point connectivity

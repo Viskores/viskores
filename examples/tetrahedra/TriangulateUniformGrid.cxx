@@ -130,7 +130,8 @@ void displayCall()
   glLineWidth(3.0f);
 
   // Get the cellset, coordinate system and coordinate data
-  vtkm::cont::CellSetSingleType<> &cellSet = tetDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetSingleType<> >();
+  vtkm::cont::CellSetSingleType<> cellSet;
+  tetDataSet.GetCellSet(0).CopyTo(cellSet);
   const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray =
                                       tetDataSet.GetCoordinateSystem(0).GetData();
 

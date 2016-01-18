@@ -210,8 +210,7 @@ TestMaxPointOrCell()
 
   //make sure we got the right answer.
   vtkm::cont::ArrayHandle<vtkm::Float32> res;
-  res = dataSet.GetField("outcellvar").GetData().
-      CastToArrayHandle(vtkm::Float32(), VTKM_DEFAULT_STORAGE_TAG());
+  dataSet.GetField("outcellvar").GetData().CopyTo(res);
 
   VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1f),
                    "Wrong result for MaxPointOrCell worklet");
@@ -253,8 +252,7 @@ TestAvgPointToCell()
 
   //make sure we got the right answer.
   vtkm::cont::ArrayHandle<vtkm::Float32> res;
-  res = dataSet.GetField("outcellvar").GetData().
-      CastToArrayHandle(vtkm::Float32(), VTKM_DEFAULT_STORAGE_TAG());
+  dataSet.GetField("outcellvar").GetData().CopyTo(res);
 
   VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 30.1f),
                    "Wrong result for PointToCellAverage worklet");
@@ -297,8 +295,7 @@ TestAvgCellToPoint()
 
   //make sure we got the right answer.
   vtkm::cont::ArrayHandle<vtkm::Float32> res;
-  res = dataSet.GetField("outpointvar").GetData().CastToArrayHandle(vtkm::Float32(),
-                                                                    VTKM_DEFAULT_STORAGE_TAG());
+  dataSet.GetField("outpointvar").GetData().CopyTo(res);
 
   VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1f),
                    "Wrong result for CellToPointAverage worklet");

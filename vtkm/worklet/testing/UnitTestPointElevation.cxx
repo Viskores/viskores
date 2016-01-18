@@ -94,12 +94,10 @@ void TestPointElevation()
   dispatcher.Invoke(dataSet.GetCoordinateSystem().GetData(),
                     dataSet.GetField("elevation").GetData());
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > coordinates =
-      dataSet.GetCoordinateSystem().GetData().
-      CastToArrayHandle(vtkm::Vec<vtkm::Float32,3>(),VTKM_DEFAULT_STORAGE_TAG());
-  vtkm::cont::ArrayHandle<vtkm::Float32> result =
-      dataSet.GetField("elevation").GetData().
-      CastToArrayHandle(vtkm::Float32(),VTKM_DEFAULT_STORAGE_TAG());
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > coordinates;
+  dataSet.GetCoordinateSystem().GetData().CopyTo(coordinates);
+  vtkm::cont::ArrayHandle<vtkm::Float32> result;
+  dataSet.GetField("elevation").GetData().CopyTo(result);
 
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {

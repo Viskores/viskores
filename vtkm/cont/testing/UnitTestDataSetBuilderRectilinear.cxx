@@ -71,15 +71,15 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      "Bounds of coordinates do not match");
     if (dim == 2)
     {
-        typedef vtkm::cont::CellSetStructured<2> CellSetType;
-        CellSetType cellSet = ds.GetCellSet(0).CastTo<CellSetType>();
+        vtkm::cont::CellSetStructured<2> cellSet;
+        ds.GetCellSet(0).CopyTo(cellSet);
         vtkm::IdComponent shape = cellSet.GetCellShape();
         VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_QUAD, "Wrong element type");
     }
     else if (dim == 3)
     {
-        typedef vtkm::cont::CellSetStructured<3> CellSetType;
-        CellSetType cellSet = ds.GetCellSet(0).CastTo<CellSetType>();
+        vtkm::cont::CellSetStructured<3> cellSet;
+        ds.GetCellSet(0).CopyTo(cellSet);
         vtkm::IdComponent shape = cellSet.GetCellShape();
         VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_HEXAHEDRON, "Wrong element type");
     }
@@ -102,6 +102,7 @@ void FillArray(std::vector<T> &arr,
       case 2: xi = static_cast<T>(i*2); break;
       case 3: xi = static_cast<T>(i*0.1f); break;
       case 4: xi = static_cast<T>(i*i); break;
+      default: VTKM_TEST_FAIL("Bad internal test state: invalid fill method.");
     }
     arr[i] = xi;
   }

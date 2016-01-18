@@ -42,7 +42,7 @@ vtkm::Vec<T,3> Normalize(vtkm::Vec<T,3> v)
     return one / magnitude * v;
 }
 
-float data[125*3] = 
+float data[125*3] =
 {
 -0.00603248f, -0.0966396f, -0.000732792f,
 0.000530014f, -0.0986189f, -0.000806706f,
@@ -221,8 +221,8 @@ void TestStreamLineUniformGrid()
                                                         timeStep);
 
   // Check output
-  vtkm::cont::CellSetExplicit<> &outCellSet =
-    outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+  vtkm::cont::CellSetExplicit<> outCellSet;
+  outDataSet.GetCellSet(0).CopyTo(outCellSet);
   const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray =
                                       outDataSet.GetCoordinateSystem(0).GetData();
 

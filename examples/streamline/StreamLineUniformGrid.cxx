@@ -145,10 +145,10 @@ void displayCall()
   glTranslatef(-0.5f, -0.5f, -0.5f);
 
   // Get the cell set, coordinate system and coordinate data
-  vtkm::cont::CellSetExplicit<> &cellSet =
-    outDataSet.GetCellSet(0).CastTo<vtkm::cont::CellSetExplicit<> >();
+  vtkm::cont::CellSetExplicit<> cellSet;
+  outDataSet.GetCellSet(0).CopyTo(cellSet);
   const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray =
-                                      outDataSet.GetCoordinateSystem(0).GetData();
+                                    outDataSet.GetCoordinateSystem(0).GetData();
 
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
   vtkm::Id numberOfPoints = coordArray.GetNumberOfValues();

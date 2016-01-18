@@ -241,12 +241,12 @@ int main(int argc, char* argv[])
 
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  dataSet.GetField("nodevar").GetData().CastToArrayHandle(fieldArray);
+  dataSet.GetField("nodevar").GetData().CopyTo(fieldArray);
 
   isosurfaceFilter = new vtkm::worklet::MarchingCubes<vtkm::Float32, DeviceAdapter>();
 
   isosurfaceFilter->Run(0.5,
-                        dataSet.GetCellSet().CastTo(CellSet()),
+                        dataSet.GetCellSet().Cast<CellSet>(),
                         dataSet.GetCoordinateSystem(),
                         fieldArray,
                         verticesArray,

@@ -24,7 +24,7 @@
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorControlBadType.h>
 #include <vtkm/cont/StorageListTag.h>
 
 #include <vtkm/cont/internal/DynamicTransform.h>
@@ -121,6 +121,39 @@ struct DynamicArrayHandleCopyHelper {
   }
 };
 
+// A simple function to downcast an ArrayHandle encapsulated in a
+// PolymorphicArrayHandleContainerBase to the given type of ArrayHandle. If the
+// conversion cannot be done, NULL is returned.
+template<typename Type, typename Storage>
+VTKM_CONT_EXPORT
+vtkm::cont::ArrayHandle<Type,Storage> *
+DynamicArrayHandleTryCast(
+      vtkm::cont::detail::PolymorphicArrayHandleContainerBase *arrayContainer)
+{
+  vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage> *
+      downcastContainer = dynamic_cast<
+        vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage> *>(
+          arrayContainer);
+  if (downcastContainer != NULL)
+  {
+    return &downcastContainer->Array;
+  }
+  else
+  {
+    return NULL;
+  }
+}
+
+template<typename Type, typename Storage>
+VTKM_CONT_EXPORT
+vtkm::cont::ArrayHandle<Type,Storage> *
+DynamicArrayHandleTryCast(
+      boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>
+      arrayContainer)
+{
+  return detail::DynamicArrayHandleTryCast<Type,Storage>(arrayContainer.get());
+}
+
 } // namespace detail
 
 /// \brief Holds an array handle without having to specify template parameters.
@@ -199,51 +232,85 @@ public:
   ///
   template<typename Type, typename Storage>
   VTKM_CONT_EXPORT
-  bool IsTypeAndStorage(Type = Type(), Storage = Storage()) const {
-    return (this->TryCastContainer<Type,Storage>() != NULL);
+  bool IsTypeAndStorage() const {
+    return (
+          detail::DynamicArrayHandleTryCast<Type,Storage>(this->ArrayContainer)
+          != NULL);
   }
 
   /// Returns true if this array matches the array handle type passed in.
   ///
   template<typename ArrayHandleType>
   VTKM_CONT_EXPORT
-  bool IsArrayHandleType(const ArrayHandleType &vtkmNotUsed(array))
+  bool IsArrayHandleType()
   {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
     typedef typename ArrayHandleType::ValueType ValueType;
     typedef typename ArrayHandleType::StorageTag StorageTag;
-    return this->IsTypeAndStorage(ValueType(), StorageTag());
+    return this->IsTypeAndStorage<ValueType,StorageTag>();
+  }
+
+  /// Returns true if the array held in this object is the same (or equivalent)
+  /// type as the object given.
+  ///
+  template<typename ArrayHandleType>
+  VTKM_CONT_EXPORT
+  bool IsSameType(const ArrayHandleType &)
+  {
+    VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+    return this->IsArrayHandleType<ArrayHandleType>();
   }
 
   /// Returns this array cast to an ArrayHandle object of the given type and
-  /// storage. Throws \c ErrorControlBadValue if the cast does not work. Use
+  /// storage. Throws \c ErrorControlBadType if the cast does not work. Use
   /// \c IsTypeAndStorage to check if the cast can happen.
+  ///
   ///
   template<typename Type, typename Storage>
   VTKM_CONT_EXPORT
   vtkm::cont::ArrayHandle<Type, Storage>
-  CastToArrayHandle(Type = Type(), Storage = Storage()) const {
-    vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage> *container
-        = this->TryCastContainer<Type,Storage>();
-    if (container == NULL)
+  CastToTypeStorage() const {
+    vtkm::cont::ArrayHandle<Type, Storage> *downcastArray =
+        detail::DynamicArrayHandleTryCast<Type,Storage>(this->ArrayContainer);
+    if (downcastArray == NULL)
     {
-      throw vtkm::cont::ErrorControlBadValue("Bad cast of dynamic array.");
+      throw vtkm::cont::ErrorControlBadType("Bad cast of dynamic array.");
     }
-    return container->Array;
+    // Technically, this method returns a copy of the \c ArrayHandle. But
+    // because \c ArrayHandle acts like a shared pointer, it is valid to
+    // do the copy.
+    return *downcastArray;
+  }
+
+  /// Returns this array cast to the given \c ArrayHandle type. Throws \c
+  /// ErrorControlBadType if the cast does not work. Use \c IsArrayHandleType
+  /// to check if the cast can happen.
+  ///
+  template<typename ArrayHandleType>
+  VTKM_CONT_EXPORT
+  ArrayHandleType Cast() const {
+    VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+    typedef typename ArrayHandleType::ValueType ValueType;
+    typedef typename ArrayHandleType::StorageTag StorageTag;
+    // Technically, this method returns a copy of the \c ArrayHandle. But
+    // because \c ArrayHandle acts like a shared pointer, it is valid to
+    // do the copy.
+    return this->CastToTypeStorage<ValueType,StorageTag>();
   }
 
   /// Given a refernce to an ArrayHandle object, casts this array to the
   /// ArrayHandle's type and sets the given ArrayHandle to this array. Throws
-  /// \c ErrorControlBadValue if the cast does not work. Use \c
-  /// IsTypeAndStorage to check if the cast can happen.
+  /// \c ErrorControlBadType if the cast does not work. Use \c
+  /// ArrayHandleType to check if the cast can happen.
+  ///
+  /// Note that this is a shallow copy. The data are not copied and a change
+  /// in the data in one array will be reflected in the other.
   ///
   template<typename ArrayHandleType>
   VTKM_CONT_EXPORT
-  void CastToArrayHandle(ArrayHandleType &array) const {
+  void CopyTo(ArrayHandleType &array) const {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-    typedef typename ArrayHandleType::ValueType ValueType;
-    typedef typename ArrayHandleType::StorageTag StorageTag;
-    array = this->CastToArrayHandle(ValueType(), StorageTag());
+    array = this->Cast<ArrayHandleType>();
   }
 
   /// Changes the types to try casting to when resolving this dynamic array,
@@ -348,16 +415,6 @@ private:
     ArrayContainer;
 
   friend struct detail::DynamicArrayHandleCopyHelper;
-
-  template<typename Type, typename Storage>
-  VTKM_CONT_EXPORT
-  vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage> *
-  TryCastContainer() const {
-    return
-        dynamic_cast<
-          vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage> *>(
-            this->ArrayContainer.get());
-  }
 };
 
 typedef vtkm::cont::DynamicArrayHandleBase<
@@ -389,9 +446,9 @@ private:
   void DoCast(Storage, boost::mpl::bool_<true>)
   {
     if (!this->FoundCast &&
-        this->Array.IsTypeAndStorage(Type(), Storage()))
+        this->Array.template IsTypeAndStorage<Type,Storage>())
     {
-      this->Function(this->Array.CastToArrayHandle(Type(), Storage()));
+      this->Function(this->Array.template CastToTypeStorage<Type,Storage>());
       this->FoundCast = true;
     }
   }
