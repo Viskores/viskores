@@ -252,6 +252,9 @@ struct Invocation
   /// The state of an \c Invocation object holds the parameters of the
   /// invocation. As well as the output to input map and the visit array.
   ///
+  /// This is held by const reference so that we don't create a copy of the
+  /// parameters causing each ArrayHandle shared pointer to increment and
+  //  decrement.
   const ParameterInterface& Parameters;
   OutputToInputMapType OutputToInputMap;
   VisitArrayType VisitArray;
