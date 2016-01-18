@@ -312,7 +312,6 @@ DataSetBuilderExplicit::BuildDataSet(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3
 
     dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem(coordsNm,
                                  1, coords));
-    vtkm::Id nPts = static_cast<vtkm::Id>(coords.GetNumberOfValues());
     vtkm::cont::CellSetSingleType<> cellSet(tag, cellNm);
 
     cellSet.Fill(connectivity);
