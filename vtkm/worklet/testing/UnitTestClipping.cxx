@@ -26,7 +26,7 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/cont/DataSetBuilderRegular.h>
+#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Field.h>
@@ -104,7 +104,7 @@ vtkm::cont::DataSet MakeTestDatasetStructured()
   scalars[4] = 0.0f;
 
   vtkm::cont::DataSet ds;
-  vtkm::cont::DataSetBuilderRegular builder;
+  vtkm::cont::DataSetBuilderUniform builder;
   ds = builder.Create(dim);
 
   vtkm::cont::DataSetFieldAdd fieldAdder;

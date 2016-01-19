@@ -30,12 +30,12 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace {
 
-void TestCellAverageRegular3D()
+void TestCellAverageUniform3D()
 {
   std::cout << "Testing CellAverage Worklet on 3D strucutred data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make3DRegularDataSet0();
+  vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
   vtkm::cont::Field result("avgvals",
                            1,
@@ -55,16 +55,16 @@ void TestCellAverageRegular3D()
   for (int i = 0; i < 4; ++i)
     {
     VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i),
-        expected[i]), "Wrong result for CellAverage worklet on 3D regular data");
+        expected[i]), "Wrong result for CellAverage worklet on 3D uniform data");
     }
 }
 
-void TestCellAverageRegular2D()
+void TestCellAverageUniform2D()
 {
   std::cout << "Testing CellAverage Worklet on 2D strucutred data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
+  vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
   vtkm::cont::Field result("avgvals",
                            1,
@@ -84,7 +84,7 @@ void TestCellAverageRegular2D()
   for (int i = 0; i < 2; ++i)
     {
     VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i),
-        expected[i]), "Wrong result for CellAverage worklet on 2D regular data");
+        expected[i]), "Wrong result for CellAverage worklet on 2D uniform data");
     }
 }
 
@@ -120,8 +120,8 @@ void TestCellAverageExplicit()
 
 void TestCellAverage()
 {
-  TestCellAverageRegular2D();
-  TestCellAverageRegular3D();
+  TestCellAverageUniform2D();
+  TestCellAverageUniform3D();
   TestCellAverageExplicit();
 }
 

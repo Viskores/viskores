@@ -55,9 +55,9 @@ template <typename DeviceAdapter>
 class TestingThreshold
 {
 public:
-  void TestRegular2D() const
+  void TestUniform2D() const
   {
-    std::cout << "Testing threshold on 2D regular dataset" << std::endl;
+    std::cout << "Testing threshold on 2D uniform dataset" << std::endl;
 
     typedef vtkm::cont::CellSetStructured<2> CellSetType;
     typedef vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
@@ -66,7 +66,7 @@ public:
       vtkm::cont::ArrayHandle<vtkm::Id>,
       vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
 
-    vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DRegularDataSet0();
+    vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet0();
 
     CellSetType cellset;
     dataset.GetCellSet(0).CopyTo(cellset);
@@ -89,9 +89,9 @@ public:
                      "Wrong cell field data");
   }
 
-  void TestRegular3D() const
+  void TestUniform3D() const
   {
-    std::cout << "Testing threshold on 3D regular dataset" << std::endl;
+    std::cout << "Testing threshold on 3D uniform dataset" << std::endl;
 
     typedef vtkm::cont::CellSetStructured<3> CellSetType;
     typedef vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
@@ -100,7 +100,7 @@ public:
       vtkm::cont::ArrayHandle<vtkm::Id>,
       vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
 
-    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DRegularDataSet0();
+    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet0();
 
     CellSetType cellset;
     dataset.GetCellSet(0).CopyTo(cellset);
@@ -160,8 +160,8 @@ public:
 
   void operator()() const
   {
-    this->TestRegular2D();
-    this->TestRegular3D();
+    this->TestUniform2D();
+    this->TestUniform3D();
     this->TestExplicit3D();
   }
 };

@@ -28,7 +28,7 @@
 //
 // Make a simple 2D, 10 cell dataset
 //
-vtkm::cont::DataSet Make2DRegularStatDataSet0()
+vtkm::cont::DataSet Make2DUniformStatDataSet0()
 {
     vtkm::cont::DataSet dataSet;
 
@@ -53,7 +53,7 @@ vtkm::cont::DataSet Make2DRegularStatDataSet0()
 
     vtkm::cont::CellSetStructured<dimension> cellSet("cells");
 
-    //Set regular structure
+    //Set uniform structure
     cellSet.SetPointDimensions(vtkm::make_Vec(xVerts, yVerts));
     dataSet.AddCellSet(cellSet);
 
@@ -63,7 +63,7 @@ vtkm::cont::DataSet Make2DRegularStatDataSet0()
 //
 // Make a simple 2D, 1000 point dataset populated with stat distributions
 //
-vtkm::cont::DataSet Make2DRegularStatDataSet1()
+vtkm::cont::DataSet Make2DUniformStatDataSet1()
 {
     vtkm::cont::DataSet dataSet;
 
@@ -319,7 +319,7 @@ vtkm::cont::DataSet Make2DRegularStatDataSet1()
 
     vtkm::cont::CellSetStructured<dimension> cellSet("cells");
 
-    //Set regular structure
+    //Set uniform structure
     cellSet.SetPointDimensions(vtkm::make_Vec(xVerts, yVerts));
     dataSet.AddCellSet(cellSet);
 
@@ -350,7 +350,7 @@ void PrintStatInfo(vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DE
 }
 
 //
-// Test simple dataset 2D Regular with 10 cells
+// Test simple dataset 2D Uniform with 10 cells
 //
 void TestFieldSimple()
 {
@@ -358,7 +358,7 @@ void TestFieldSimple()
   vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::StatInfo statinfo;
 
   // Data attached is [1:10]
-  vtkm::cont::DataSet ds = Make2DRegularStatDataSet0();
+  vtkm::cont::DataSet ds = Make2DUniformStatDataSet0();
 
   // Cell data
   vtkm::cont::ArrayHandle<vtkm::Float32> data;
@@ -389,7 +389,7 @@ void TestFieldStandardDistributions()
   vtkm::worklet::FieldStatistics<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::StatInfo statinfo;
 
   // Data attached is the poisson distribution
-  vtkm::cont::DataSet ds = Make2DRegularStatDataSet1();
+  vtkm::cont::DataSet ds = Make2DUniformStatDataSet1();
 
   // Point data
   vtkm::cont::ArrayHandle<vtkm::Float32> p_poisson;
