@@ -177,23 +177,30 @@
 // that should be wrapped around any "for"/"while" that you want vectorized.
 // This is used to set per compiler pragmas for vectorization, and to disable
 // any warnings that about vectorization failures.
-#if defined(VTKM_CLANG) && defined(VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS)
+#if defined(VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS)
+#if defined(VTKM_CLANG)
 //clang only needs pre loop
 #define VTKM_VECTORIZATION_PRE_LOOP \
   _Pragma("clang loop vectorize(enable) interleave(enable)")
 #define VTKM_VECTORIZATION_IN_LOOP
-#elif defined(VTKM_ICC) && defined(VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS)
+#elif defined(VTKM_ICC)
 //icc needs pre and in loop
 #define VTKM_VECTORIZATION_PRE_LOOP \
-    _Pragma("simd")
+  _Pragma("simd")
 #define VTKM_VECTORIZATION_IN_LOOP \
-    _Pragma("forceinline recursive")
-#elif defined(VTKM_GCC) && defined(VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS)
+  _Pragma("forceinline recursive")
+#elif defined(VTKM_GCC)
 //gcc only needs in loop
 #define VTKM_VECTORIZATION_PRE_LOOP \
-    _Pragma("GCC ivdep")
+  _Pragma("GCC ivdep")
 #define VTKM_VECTORIZATION_IN_LOOP
 #else
+// Compiler is unknown so we don't define any vectortization pragmas
+#define VTKM_VECTORIZATION_PRE_LOOP
+#define VTKM_VECTORIZATION_IN_LOOP
+#endif
+#else
+// Compiler doesn't support any vectortization pragmas
 #define VTKM_VECTORIZATION_PRE_LOOP
 #define VTKM_VECTORIZATION_IN_LOOP
 #endif
