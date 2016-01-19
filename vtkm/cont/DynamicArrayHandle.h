@@ -114,7 +114,7 @@ struct DynamicArrayHandleCopyHelper {
   template<typename TypeList, typename StorageList>
   VTKM_CONT_EXPORT
   static
-  boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>
+  const boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>&
   GetArrayHandleContainer(const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &src)
   {
     return src.ArrayContainer;
@@ -148,8 +148,7 @@ template<typename Type, typename Storage>
 VTKM_CONT_EXPORT
 vtkm::cont::ArrayHandle<Type,Storage> *
 DynamicArrayHandleTryCast(
-      boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>
-      arrayContainer)
+  const boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>& arrayContainer)
 {
   return detail::DynamicArrayHandleTryCast<Type,Storage>(arrayContainer.get());
 }

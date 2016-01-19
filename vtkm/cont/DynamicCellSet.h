@@ -49,7 +49,7 @@ struct DynamicCellSetCopyHelper {
   template<typename CellSetList>
   VTKM_CONT_EXPORT
   static
-  boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
+  const boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>&
   GetCellSetContainer(const vtkm::cont::DynamicCellSetBase<CellSetList> &src)
   {
     return src.CellSetContainer;
@@ -83,8 +83,7 @@ template<typename CellSetType>
 VTKM_CONT_EXPORT
 CellSetType *
 DynamicCellSetTryCast(
-      boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
-      cellSetContainer)
+  const boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>& cellSetContainer)
 {
   return detail::DynamicCellSetTryCast<CellSetType>(cellSetContainer.get());
 }
