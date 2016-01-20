@@ -204,13 +204,15 @@ private:
 template<typename ControlInterface>
 struct DispatcherBaseDynamicTransform
 {
+  vtkm::cont::internal::DynamicTransform BasicDynamicTransform;
+
   template<typename InputType,
            typename ContinueFunctor,
            vtkm::IdComponent Index>
   VTKM_CONT_EXPORT
   void operator()(const InputType &input,
                   const ContinueFunctor &continueFunc,
-                  vtkm::internal::IndexTag<Index> indexTag) const
+                  const vtkm::internal::IndexTag<Index>& indexTag) const
   {
     typedef typename ControlInterface::template ParameterType<Index>::type
         ControlSignatureTag;
@@ -219,9 +221,7 @@ struct DispatcherBaseDynamicTransform
         ContinueFunctor, typename ControlSignatureTag::TypeCheckTag, Index>
         TypeCheckFunctor;
 
-    vtkm::cont::internal::DynamicTransform basicDynamicTransform;
-
-    basicDynamicTransform(input, TypeCheckFunctor(continueFunc), indexTag);
+    this->BasicDynamicTransform(input, TypeCheckFunctor(continueFunc), indexTag);
   }
 };
 

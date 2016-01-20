@@ -114,7 +114,7 @@ struct DynamicArrayHandleCopyHelper {
   template<typename TypeList, typename StorageList>
   VTKM_CONT_EXPORT
   static
-  boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>
+  const boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>&
   GetArrayHandleContainer(const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &src)
   {
     return src.ArrayContainer;
@@ -148,8 +148,7 @@ template<typename Type, typename Storage>
 VTKM_CONT_EXPORT
 vtkm::cont::ArrayHandle<Type,Storage> *
 DynamicArrayHandleTryCast(
-      boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>
-      arrayContainer)
+  const boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>& arrayContainer)
 {
   return detail::DynamicArrayHandleTryCast<Type,Storage>(arrayContainer.get());
 }
@@ -425,14 +424,14 @@ namespace detail {
 
 template<typename Functor, typename Type>
 struct DynamicArrayHandleTryStorage {
-  const DynamicArrayHandle Array;
+  const DynamicArrayHandle* const Array;
   const Functor &Function;
   bool FoundCast;
 
   VTKM_CONT_EXPORT
   DynamicArrayHandleTryStorage(const DynamicArrayHandle &array,
                                const Functor &f)
-    : Array(array), Function(f), FoundCast(false) {  }
+    : Array(&array), Function(f), FoundCast(false) {  }
 
   template<typename Storage>
   VTKM_CONT_EXPORT
@@ -446,9 +445,9 @@ private:
   void DoCast(Storage, boost::mpl::bool_<true>)
   {
     if (!this->FoundCast &&
-        this->Array.template IsTypeAndStorage<Type,Storage>())
+        this->Array->template IsTypeAndStorage<Type,Storage>())
     {
-      this->Function(this->Array.template CastToTypeStorage<Type,Storage>());
+      this->Function(this->Array->template CastToTypeStorage<Type,Storage>());
       this->FoundCast = true;
     }
   }
@@ -462,13 +461,13 @@ private:
 
 template<typename Functor, typename StorageList>
 struct DynamicArrayHandleTryType {
-  const DynamicArrayHandle Array;
+  const DynamicArrayHandle* const Array;
   const Functor &Function;
   bool FoundCast;
 
   VTKM_CONT_EXPORT
   DynamicArrayHandleTryType(const DynamicArrayHandle &array, const Functor &f)
-    : Array(array), Function(f), FoundCast(false) {  }
+    : Array(&array), Function(f), FoundCast(false) {  }
 
   template<typename Type>
   VTKM_CONT_EXPORT
@@ -476,7 +475,7 @@ struct DynamicArrayHandleTryType {
     if (this->FoundCast) { return; }
     typedef DynamicArrayHandleTryStorage<Functor, Type> TryStorageType;
     TryStorageType tryStorage =
-        TryStorageType(this->Array, this->Function);
+        TryStorageType(*this->Array, this->Function);
     vtkm::ListForEach(tryStorage, StorageList());
     if (tryStorage.FoundCast)
     {
@@ -496,11 +495,41 @@ void DynamicArrayHandleBase<TypeList,StorageList>::
   VTKM_IS_LIST_TAG(TypeList);
   VTKM_IS_LIST_TAG(StorageList);
   typedef detail::DynamicArrayHandleTryType<Functor, StorageList> TryTypeType;
+
   // We cast this to a DynamicArrayHandle because at this point we are ignoring
   // the type/storage lists in it. There is no sense in adding more unnecessary
   // template cases.
-  TryTypeType tryType = TryTypeType(DynamicArrayHandle(*this), f);
+  // The downside to this approach is that a copy is created, causing an
+  // atomic increment, which affects both performance and library size.
+  // For these reasons we have a specialization of this method to remove
+  // the copy when the type/storage lists are the default
+  DynamicArrayHandle t(*this);
+  TryTypeType tryType = TryTypeType(t, f);
+
   vtkm::ListForEach(tryType, TypeList());
+  if (!tryType.FoundCast)
+  {
+    throw vtkm::cont::ErrorControlBadValue(
+          "Could not find appropriate cast for array in CastAndCall.");
+  }
+}
+
+template<>
+template<typename Functor>
+VTKM_CONT_EXPORT
+void DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG,
+                            VTKM_DEFAULT_STORAGE_LIST_TAG>::
+    CastAndCall(const Functor &f) const
+{
+
+  typedef detail::DynamicArrayHandleTryType<Functor,
+                                            VTKM_DEFAULT_STORAGE_LIST_TAG> TryTypeType;
+
+  // We can remove the copy, as the current DynamicArrayHandle is already
+  // the default one, and no reason to do an atomic increment and increase
+  // library size, and reduce performance
+  TryTypeType tryType = TryTypeType(*this, f);
+  vtkm::ListForEach(tryType, VTKM_DEFAULT_TYPE_LIST_TAG());
   if (!tryType.FoundCast)
   {
     throw vtkm::cont::ErrorControlBadValue(

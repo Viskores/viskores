@@ -62,7 +62,11 @@ public:
 
 private:
   WorkletType Worklet;
-  InvocationType Invocation;
+
+  // This is held by const reference so that we don't create a copy of the
+  // parameters causing each ArrayHandle shared pointer to increment and
+  // decrement.
+  const InvocationType& Invocation;
 };
 
 }

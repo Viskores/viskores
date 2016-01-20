@@ -56,7 +56,7 @@ public:
 
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
-    InputDomainType inputDomain = invocation.GetInputDomain();
+    const InputDomainType &inputDomain = invocation.GetInputDomain();
 
     // For a DispatcherMapField, the inputDomain must be an ArrayHandle (or
     // a DynamicArrayHandle that gets cast to one). The size of the domain

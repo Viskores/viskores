@@ -602,7 +602,7 @@ public:
   };
 
   VTKM_CONT_EXPORT
-  ArrayHandle(boost::shared_ptr<InternalStruct> i)
+  ArrayHandle(const boost::shared_ptr<InternalStruct>& i)
     : Internals(i)
   { }
 
