@@ -75,3 +75,7 @@ add_subdirectory(benchmarking)
 #-----------------------------------------------------------------------------
 #add the io folder
 add_subdirectory(io)
+
+#-----------------------------------------------------------------------------
+#add the rendering folder
+add_subdirectory(rendering)

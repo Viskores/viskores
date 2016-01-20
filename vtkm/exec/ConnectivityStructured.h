@@ -115,6 +115,12 @@ public:
     return Helper::LogicalToFlatToIndex(this->Internals, logicalToIndex);
   }
 
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Vec<vtkm::Id,Dimension> GetPointDimensions() const 
+  {
+    return this->Internals.GetPointDimensions();
+  }
+  
 private:
   InternalsType Internals;
 };
