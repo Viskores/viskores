@@ -74,7 +74,19 @@ private:
       throw vtkm::io::ErrorIO("Incorrect DataSet type");
     }
 
+    //We need to be able to handle VisIt files which dump Field data
+    //at the top of a VTK file
     std::string tag;
+    this->DataFile->Stream >> tag;
+    internal::parseAssert(tag == "POINTS" || tag == "FIELD");
+
+    if(tag == "FIELD")
+    {
+      std::string name;
+      this->ReadFields(name);
+      this->DataFile->Stream >> tag;
+      internal::parseAssert(tag == "POINTS");
+    }
 
     // Read the points
     this->ReadPoints();

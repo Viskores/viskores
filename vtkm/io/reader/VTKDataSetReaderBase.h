@@ -223,10 +223,9 @@ public:
 protected:
   void ReadPoints()
   {
-    std::string tag, dataType;
+    std::string dataType;
     std::size_t numPoints;
-    this->DataFile->Stream >> tag >> numPoints >> dataType >> std::ws;
-    internal::parseAssert(tag == "POINTS");
+    this->DataFile->Stream >> numPoints >> dataType >> std::ws;
 
     vtkm::cont::DynamicArrayHandle points;
     this->DoReadDynamicArray(dataType, numPoints, 3, points);
@@ -450,7 +449,6 @@ private:
     std::string dataType, lookupTableName;
     vtkm::IdComponent numComponents = 1;
     this->DataFile->Stream >> dataName >> dataType;
-
     std::string tag;
     this->DataFile->Stream >> tag;
     if (tag != "LOOKUP_TABLE")
@@ -520,6 +518,9 @@ private:
     this->DoReadDynamicArray(dataType, numElements, 9, data);
   }
 
+protected:
+  //ReadFields needs to be protected so that derived readers can skip
+  //VisIt header fields
   void ReadFields(std::string &dataName)
   {
     std::cerr << "Support for FIELD is not implemented. Skipping."
@@ -539,6 +540,7 @@ private:
     }
   }
 
+private:
   class SkipDynamicArray
   {
   public:
@@ -579,7 +581,6 @@ private:
     {
       std::vector<T> buffer(this->NumElements);
       this->Reader->ReadArray(buffer);
-
       *this->Data = internal::CreateDynamicArrayHandle(buffer);
     }
 
@@ -595,6 +596,9 @@ private:
     vtkm::cont::DynamicArrayHandle *Data;
   };
 
+  //Make the Array parsing methods protected so that derived classes
+  //can call the methods.
+protected:
   void DoSkipDynamicArray(std::string dataType, std::size_t numElements,
                           vtkm::IdComponent numComponents)
   {
@@ -716,6 +720,7 @@ private:
     this->DataFile->Stream >> std::ws;
   }
 
+private:
   class PermuteCellData
   {
   public:

@@ -63,34 +63,28 @@ private:
     { //visit way
       vtkm::Vec< vtkm::Float32, 6 > bounds;
 
-      std::string fieldData; int numberOfFields;
-      this->DataFile->Stream >> fieldData >> numberOfFields >> std::ws;
-      internal::parseAssert(this->DataFile->Stream.good() && numberOfFields > 0);
+      std::string fieldData; int numArrays;
+      this->DataFile->Stream >> fieldData >> numArrays >> std::ws;
+      internal::parseAssert(this->DataFile->Stream.good() && numArrays > 0);
 
-      //parse all the fields, but only store the results of the avtOriginalBounds
-      //field
-      for(int i=0; i < numberOfFields; ++i)
+      for (vtkm::Id i = 0; i < numArrays; ++i)
       {
-        std::string fieldName, dataType; int vec_size, num_elements;
-        this->DataFile->Stream >> fieldName >> vec_size >> num_elements >> dataType >> std::ws;
-        internal::parseAssert(this->DataFile->Stream.good());
+        std::size_t numTuples;
+        vtkm::IdComponent numComponents;
+        std::string arrayName, dataType;
+        this->DataFile->Stream >> arrayName >> numComponents >> numTuples
+                               >> dataType >> std::ws;
 
-        if(fieldName == "avtOriginalBounds")
+        if(arrayName == "avtOriginalBounds")
         {
-          internal::parseAssert(vec_size == 1 && num_elements == 6);
+          internal::parseAssert(numComponents == 1 && numTuples == 6);
           //now we can parse the bounds
           this->DataFile->Stream >> bounds[0] >> bounds[1] >> bounds[2]
                                  >> bounds[3] >> bounds[4] >> bounds[5] >> std::ws;
         }
         else
         {
-          //parse and throw away everything
-          double value;
-          for(int j = 0; j < (vec_size*num_elements); ++j)
-            {
-            this->DataFile->Stream >> value;
-            }
-          (void) value;
+          this->DoSkipDynamicArray(dataType, numTuples, numComponents);
         }
       }
       internal::parseAssert(this->DataFile->Stream.good());
