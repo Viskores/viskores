@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_DataSetBuilderRegular_h
-#define vtk_m_cont_DataSetBuilderRegular_h
+#ifndef vtk_m_cont_DataSetBuilderUniform_h
+#define vtk_m_cont_DataSetBuilderUniform_h
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/CoordinateSystem.h>
@@ -27,13 +27,13 @@
 namespace vtkm {
 namespace cont {
 
-class DataSetBuilderRegular
+class DataSetBuilderUniform
 {
 public:
     VTKM_CONT_EXPORT
-    DataSetBuilderRegular() {}
+    DataSetBuilderUniform() {}
 
-    //2D regular grids.
+    //2D uniform grids.
     VTKM_CONT_EXPORT
     vtkm::cont::DataSet
     Create(const vtkm::Id2 &dimensions,
@@ -47,7 +47,7 @@ public:
                         coordNm, cellNm);
     }
 
-    //3D regular grids.
+    //3D uniform grids.
     VTKM_CONT_EXPORT
     vtkm::cont::DataSet
     Create(const vtkm::Id3 &dimensions,
@@ -79,10 +79,10 @@ private:
             coords(vtkm::Id3(nx, ny, nz),
                    vtkm::Vec<T,3>(originX, originY,originZ),
                    vtkm::Vec<T,3>(spacingX, spacingY,spacingZ));
-    
+
         vtkm::cont::CoordinateSystem cs(coordNm, 1, coords);
         dataSet.AddCoordinateSystem(cs);
-    
+
         if (dim == 2)
         {
             vtkm::cont::CellSetStructured<2> cellSet(cellNm);
@@ -105,4 +105,4 @@ private:
 } // namespace vtkm
 
 
-#endif //vtk_m_cont_DataSetBuilderRegular_h
+#endif //vtk_m_cont_DataSetBuilderUniform_h

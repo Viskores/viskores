@@ -145,7 +145,7 @@ public:
   VTKM_CONT_EXPORT
   void PrintSummary(std::ostream &out) const
   {
-    out<<"   RegularConnectivity<1> ";
+    out<<"   UniformConnectivity<1> ";
     out<<"this->PointDimensions["<<this->PointDimensions<<"] ";
     out<<"\n";
   }
@@ -315,7 +315,7 @@ public:
   VTKM_CONT_EXPORT
   void PrintSummary(std::ostream &out) const
   {
-      out<<"   RegularConnectivity<2> ";
+      out<<"   UniformConnectivity<2> ";
       out<<"pointDim["<<this->PointDimensions[0]<<" "<<this->PointDimensions[1]<<"] ";
       out<<std::endl;
   }
@@ -498,7 +498,7 @@ public:
   VTKM_CONT_EXPORT
   void PrintSummary(std::ostream &out) const
   {
-    out<<"   RegularConnectivity<3> ";
+    out<<"   UniformConnectivity<3> ";
     out<<"pointDim["<<this->PointDimensions[0]<<" "<<this->PointDimensions[1]<<" "<<this->PointDimensions[2]<<"] ";
     out<<std::endl;
   }

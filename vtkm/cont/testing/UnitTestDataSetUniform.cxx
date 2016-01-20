@@ -29,25 +29,25 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-static void TwoDimRegularTest();
-static void ThreeDimRegularTest();
+static void TwoDimUniformTest();
+static void ThreeDimUniformTest();
 
-void TestDataSet_Regular()
+void TestDataSet_Uniform()
 {
   std::cout << std::endl;
-  std::cout << "--TestDataSet_Regular--" << std::endl << std::endl;
+  std::cout << "--TestDataSet_Uniform--" << std::endl << std::endl;
 
-  TwoDimRegularTest();
-  ThreeDimRegularTest();
+  TwoDimUniformTest();
+  ThreeDimUniformTest();
 }
 
 static void
-TwoDimRegularTest()
+TwoDimUniformTest()
 {
-  std::cout<<"2D Regular data set"<<std::endl;
+  std::cout<<"2D Uniform data set"<<std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
 
-  vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
+  vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
   dataSet.PrintSummary(std::cout);
 
@@ -152,12 +152,12 @@ TwoDimRegularTest()
 }
 
 static void
-ThreeDimRegularTest()
+ThreeDimUniformTest()
 {
-  std::cout<<"3D Regular data set"<<std::endl;
+  std::cout<<"3D Uniform data set"<<std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
 
-  vtkm::cont::DataSet dataSet = testDataSet.Make3DRegularDataSet0();
+  vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
   dataSet.PrintSummary(std::cout);
 
@@ -207,7 +207,7 @@ ThreeDimRegularTest()
                      "Incorrect element type.");
   }
 
-  //Test regular connectivity.
+  //Test uniform connectivity.
   vtkm::exec::ConnectivityStructured<
       vtkm::TopologyElementTagPoint,
       vtkm::TopologyElementTagCell,
@@ -251,7 +251,7 @@ ThreeDimRegularTest()
   }
 }
 
-int UnitTestDataSetRegular(int, char *[])
+int UnitTestDataSetUniform(int, char *[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDataSet_Regular);
+  return vtkm::cont::testing::Testing::Run(TestDataSet_Uniform);
 }

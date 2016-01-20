@@ -28,7 +28,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-namespace test_regular {
+namespace test_uniform {
 
 class MaxPointOrCellValue :
     public vtkm::worklet::WorkletMapPointToCell
@@ -162,11 +162,11 @@ static void TestAvgPointToCell();
 static void TestAvgCellToPoint();
 static void TestStructuredUniformPointCoords();
 
-void TestWorkletMapTopologyRegular()
+void TestWorkletMapTopologyUniform()
 {
     typedef vtkm::cont::DeviceAdapterTraits<
         VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
-    std::cout << "Testing Topology Worklet ( Regular ) on device adapter: "
+    std::cout << "Testing Topology Worklet ( Uniform ) on device adapter: "
               << DeviceAdapterTraits::GetName() << std::endl;
 
     TestMaxPointOrCell();
@@ -180,7 +180,7 @@ TestMaxPointOrCell()
 {
   std::cout<<"Testing MaxPointOfCell worklet"<<std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
+  vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.
@@ -197,7 +197,7 @@ TestMaxPointOrCell()
 
   VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 3),
                    "Incorrect number of fields");
-  vtkm::worklet::DispatcherMapTopology< ::test_regular::MaxPointOrCellValue > dispatcher;
+  vtkm::worklet::DispatcherMapTopology< ::test_uniform::MaxPointOrCellValue > dispatcher;
   dispatcher.Invoke(dataSet.GetField("cellvar").GetData(),
                     dataSet.GetField("pointvar").GetData(),
                     // We know that the cell set is a structured 2D grid and
@@ -223,7 +223,7 @@ TestAvgPointToCell()
 {
   std::cout<<"Testing AvgPointToCell worklet"<<std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
+  vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
   //Run a worklet to populate a cell centered field.
   //Here, we're filling it with test values.
@@ -240,7 +240,7 @@ TestAvgPointToCell()
 
   VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 3),
                    "Incorrect number of fields");
-  vtkm::worklet::DispatcherMapTopology< ::test_regular::AveragePointToCellValue > dispatcher;
+  vtkm::worklet::DispatcherMapTopology< ::test_uniform::AveragePointToCellValue > dispatcher;
   dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                     // We know that the cell set is a structured 2D grid and
                     // The worklet does not work with general types because
@@ -266,7 +266,7 @@ TestAvgCellToPoint()
   std::cout<<"Testing AvgCellToPoint worklet"<<std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make2DRegularDataSet0();
+  vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
   //Run a worklet to populate a point centered field.
   //Here, we're filling it with test values.
@@ -283,7 +283,7 @@ TestAvgCellToPoint()
   VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 3),
                    "Incorrect number of fields");
 
-  vtkm::worklet::DispatcherMapTopology< ::test_regular::AverageCellToPointValue > dispatcher;
+  vtkm::worklet::DispatcherMapTopology< ::test_uniform::AverageCellToPointValue > dispatcher;
   dispatcher.Invoke(dataSet.GetField("cellvar").GetData(),
                     // We know that the cell set is a structured 2D grid and
                     // The worklet does not work with general types because
@@ -312,20 +312,20 @@ TestStructuredUniformPointCoords()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
 
   vtkm::worklet::DispatcherMapTopology<
-      ::test_regular::CheckStructuredUniformPointCoords> dispatcher;
+      ::test_uniform::CheckStructuredUniformPointCoords> dispatcher;
 
-  vtkm::cont::DataSet dataSet3D = testDataSet.Make3DRegularDataSet0();
+  vtkm::cont::DataSet dataSet3D = testDataSet.Make3DUniformDataSet0();
   dispatcher.Invoke(dataSet3D.GetCellSet(),
                     dataSet3D.GetCoordinateSystem().GetData());
 
-  vtkm::cont::DataSet dataSet2D = testDataSet.Make2DRegularDataSet0();
+  vtkm::cont::DataSet dataSet2D = testDataSet.Make2DUniformDataSet0();
   dispatcher.Invoke(dataSet2D.GetCellSet(),
                     dataSet2D.GetCoordinateSystem().GetData());
 }
 
 } // anonymous namespace
 
-int UnitTestWorkletMapTopologyRegular(int, char *[])
+int UnitTestWorkletMapTopologyUniform(int, char *[])
 {
-    return vtkm::cont::testing::Testing::Run(TestWorkletMapTopologyRegular);
+    return vtkm::cont::testing::Testing::Run(TestWorkletMapTopologyUniform);
 }

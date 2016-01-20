@@ -36,7 +36,7 @@ set(unit_tests
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapFieldWholeArray.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
-  UnitTestWorkletMapTopologyRegular.cxx
+  UnitTestWorkletMapTopologyUniform.cxx
   UnitTestVertexClustering.cxx
  )
 

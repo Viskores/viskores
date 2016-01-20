@@ -59,31 +59,31 @@ void TestVTKExplicitWrite()
   out4.close();
 }
 
-void TestVTKRegularWrite()
+void TestVTKUniformWrite()
 {
   vtkm::cont::testing::MakeTestDataSet tds;
 
   std::ofstream out1("fileB1.vtk");
   vtkm::io::writer::VTKDataSetWriter::Write(out1,
-    tds.Make2DRegularDataSet0());
+    tds.Make2DUniformDataSet0());
   out1.close();
 
   std::ofstream out2("fileB2.vtk");
   vtkm::io::writer::VTKDataSetWriter::Write(out2,
-    tds.Make3DRegularDataSet0());
+    tds.Make3DUniformDataSet0());
   out2.close();
 
   // force it to output an explicit grid as points
   std::ofstream out3("fileB3.vtk");
   vtkm::io::writer::VTKDataSetWriter::Write(out3,
-    tds.Make3DRegularDataSet0(), -1);
+    tds.Make3DUniformDataSet0(), -1);
   out3.close();
 }
 
 void TestVTKWrite()
 {
   TestVTKExplicitWrite();
-  TestVTKRegularWrite();
+  TestVTKUniformWrite();
 }
 
 } //Anonymous namespace

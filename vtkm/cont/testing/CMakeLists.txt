@@ -48,12 +48,12 @@ set(unit_tests
   UnitTestComputeBoundsSerial.cxx
   UnitTestDataSetBuilderExplicit.cxx
   UnitTestDataSetBuilderRectilinear.cxx
-  UnitTestDataSetBuilderRegular.cxx
-  UnitTestDataSetRegular.cxx
+  UnitTestDataSetBuilderUniform.cxx
   UnitTestDataSetRectilinear.cxx
   UnitTestDataSetExplicit.cxx
   UnitTestDataSetSingleType.cxx
   UnitTestDataSetPermutation.cxx
+  UnitTestDataSetUniform.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDeviceAdapterSerial.cxx

@@ -47,7 +47,7 @@ set(headers
   DataSet.h
   DataSetBuilderExplicit.h
   DataSetBuilderRectilinear.h
-  DataSetBuilderRegular.h
+  DataSetBuilderUniform.h
   DataSetFieldAdd.h
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h

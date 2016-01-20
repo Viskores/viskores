@@ -20,7 +20,7 @@
 //
 //=============================================================================
 
-#include <vtkm/cont/DataSetBuilderRegular.h>
+#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -38,7 +38,7 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <vector>
 
-namespace DataSetBuilderRegularNamespace {
+namespace DataSetBuilderUniformNamespace {
 
 boost::mt19937 g_RandomGenerator;
 
@@ -125,13 +125,13 @@ void FillMethod(vtkm::IdComponent method,
 
 template <typename T>
 void
-RegularTests()
+UniformTests()
 {
   const vtkm::Id NUM_TRIALS = 10;
   const vtkm::Id MAX_DIM_SIZE = 20;
   const vtkm::Id NUM_FILL_METHODS = 5;
 
-  vtkm::cont::DataSetBuilderRegular dataSetBuilder;
+  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
   vtkm::cont::DataSet dataSet;
 
   boost::random::uniform_int_distribution<vtkm::Id>
@@ -195,7 +195,7 @@ RegularTests()
   }
 
 #if 0
-    vtkm::cont::DataSetBuilderRegular dsb;
+    vtkm::cont::DataSetBuilderUniform dsb;
     vtkm::cont::DataSet ds;
 
     vtkm::Id nx = 12, ny = 12, nz = 12;
@@ -239,22 +239,22 @@ RegularTests()
 }
 
 void
-TestDataSetBuilderRegular()
+TestDataSetBuilderUniform()
 {
   vtkm::UInt32 seed = static_cast<vtkm::UInt32>(time(NULL));
   std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 
   std::cout << "======== Float32 ==========================" << std::endl;
-  RegularTests<vtkm::Float32>();
+  UniformTests<vtkm::Float32>();
   std::cout << "======== Float64 ==========================" << std::endl;
-  RegularTests<vtkm::Float64>();
+  UniformTests<vtkm::Float64>();
 }
 
-} // namespace DataSetBuilderRegularNamespace
+} // namespace DataSetBuilderUniformNamespace
 
-int UnitTestDataSetBuilderRegular(int, char *[])
+int UnitTestDataSetBuilderUniform(int, char *[])
 {
-    using namespace DataSetBuilderRegularNamespace;
-    return vtkm::cont::testing::Testing::Run(TestDataSetBuilderRegular);
+    using namespace DataSetBuilderUniformNamespace;
+    return vtkm::cont::testing::Testing::Run(TestDataSetBuilderUniform);
 }
