@@ -64,6 +64,10 @@ TwoDimUniformTest()
                    "Incorrect number of points");
   VTKM_TEST_ASSERT(cellSet.GetNumberOfCells() == 2,
                    "Incorrect number of cells");
+  VTKM_TEST_ASSERT(cellSet.GetPointDimensions() == vtkm::Id2(3,2),
+                   "Incorrect point dimensions");
+  VTKM_TEST_ASSERT(cellSet.GetCellDimensions() == vtkm::Id2(2,1),
+                   "Incorrect cell dimensions");
 
   // test various field-getting methods and associations
   try
@@ -178,6 +182,12 @@ ThreeDimUniformTest()
 
   VTKM_TEST_ASSERT(cellSet.GetNumberOfCells() == 4,
                    "Incorrect number of cells");
+
+  VTKM_TEST_ASSERT(cellSet.GetPointDimensions() == vtkm::Id3(3,2,3),
+                   "Incorrect point dimensions");
+
+  VTKM_TEST_ASSERT(cellSet.GetCellDimensions() == vtkm::Id3(2,1,2),
+                   "Incorrect cell dimensions");
 
   try
   {
