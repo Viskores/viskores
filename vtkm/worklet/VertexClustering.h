@@ -313,14 +313,16 @@ public:
   ///////////////////////////////////////////////////
   /// \brief VertexClustering: Mesh simplification
   ///
-  template<typename DeviceAdapter>
-  vtkm::cont::DataSet Run(const vtkm::cont::DynamicCellSet &cellSet,
-                          const vtkm::cont::CoordinateSystem &coordinates,
-                          vtkm::Id nDivisions,
+  template<typename DynamicCellSetType,
+           typename DynamicCoordinateHandleType,
+           typename DeviceAdapter>
+  vtkm::cont::DataSet Run(const DynamicCellSetType &cellSet,
+                          const DynamicCoordinateHandleType &coordinates,
+                          vtkm::Float64 *bounds,
+                          const vtkm::Id3& nDivisions,
                           DeviceAdapter)
   {
-    vtkm::Float64 bounds[6];
-    coordinates.GetBounds(bounds, DeviceAdapter());
+
 
     /// determine grid resolution for clustering
     GridInfo gridInfo;
@@ -328,16 +330,16 @@ public:
       vtkm::Float64 res[3];
       for (vtkm::IdComponent i=0; i<3; i++)
       {
-        res[i] = (bounds[i*2+1]-bounds[i*2])/nDivisions;
+        res[i] = (bounds[i*2+1]-bounds[i*2])/nDivisions[i];
       }
       gridInfo.grid_width = vtkm::Max(res[0], vtkm::Max(res[1], res[2]));
 
       vtkm::Float64 inv_grid_width = gridInfo.inv_grid_width = vtkm::Float64(1) / gridInfo.grid_width;
 
       //printf("Bounds: %lf, %lf, %lf, %lf, %lf, %lf\n", bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
-      gridInfo.dim[0] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[1]-bounds[0])*inv_grid_width), nDivisions);
-      gridInfo.dim[1] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[3]-bounds[2])*inv_grid_width), nDivisions);
-      gridInfo.dim[2] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[5]-bounds[4])*inv_grid_width), nDivisions);
+      gridInfo.dim[0] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[1]-bounds[0])*inv_grid_width), nDivisions[0]);
+      gridInfo.dim[1] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[3]-bounds[2])*inv_grid_width), nDivisions[1]);
+      gridInfo.dim[2] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[5]-bounds[4])*inv_grid_width), nDivisions[2]);
 
       // center the mesh in the grids
       gridInfo.origin[0] = (bounds[1]+bounds[0])*0.5 - gridInfo.grid_width*(gridInfo.dim[0])*.5;
@@ -359,7 +361,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> pointCidArray;
 
     vtkm::worklet::DispatcherMapField<MapPointsWorklet, DeviceAdapter>(
-        MapPointsWorklet(gridInfo)).Invoke(coordinates.GetData(), pointCidArray);
+        MapPointsWorklet(gridInfo)).Invoke(coordinates, pointCidArray);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time map points (s): " << timer.GetElapsedTime() << std::endl;
@@ -376,7 +378,7 @@ public:
                                        vtkm::cont::ArrayHandle<vtkm::Id>,
                                        DeviceAdapter>
         averageByKey(pointCidArray, pointCidArrayReduced, repPointArray);
-    coordinates.GetData().CastAndCall(averageByKey);
+    coordinates.CastAndCall(averageByKey);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after averaging (s): " << timer.GetElapsedTime() << std::endl;

@@ -31,15 +31,19 @@
 
 void TestVertexClustering()
 {
-  vtkm::Float64 bounds[6];
-  const vtkm::Id divisions = 3;
+  const vtkm::Id3 divisions(3, 3, 3);
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::cont::DataSet dataSet = maker.Make3DExplicitDataSetCowNose(bounds);
+  vtkm::cont::DataSet dataSet = maker.Make3DExplicitDataSetCowNose();
+
+  //compute the bounds before calling the algorithm
+  vtkm::Float64 bounds[6];
+  dataSet.GetCoordinateSystem().GetBounds(bounds, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   // run
   vtkm::worklet::VertexClustering clustering;
   vtkm::cont::DataSet outDataSet = clustering.Run(dataSet.GetCellSet(),
-                                                  dataSet.GetCoordinateSystem(),
+                                                  dataSet.GetCoordinateSystem().GetData(),
+                                                  bounds,
                                                   divisions,
                                                   VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
