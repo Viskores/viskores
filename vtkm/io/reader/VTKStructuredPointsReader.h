@@ -61,7 +61,7 @@ private:
     }
     else
     { //visit way
-      vtkm::Vec< vtkm::Float32, 6 > bounds;
+      std::vector< vtkm::Float32 > bounds(static_cast<std::size_t>(6)); //need have size, not capacity set
 
       std::string fieldData; int numArrays;
       this->DataFile->Stream >> fieldData >> numArrays >> std::ws;
@@ -78,9 +78,8 @@ private:
         if(arrayName == "avtOriginalBounds")
         {
           internal::parseAssert(numComponents == 1 && numTuples == 6);
-          //now we can parse the bounds
-          this->DataFile->Stream >> bounds[0] >> bounds[1] >> bounds[2]
-                                 >> bounds[3] >> bounds[4] >> bounds[5] >> std::ws;
+          //now we can parse the bounds and fill the bounds vector
+          this->ReadArray(bounds);
         }
         else
         {

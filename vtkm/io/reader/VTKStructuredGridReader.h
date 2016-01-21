@@ -46,7 +46,7 @@ private:
     //We need to be able to handle VisIt files which dump Field data
     //at the top of a VTK file
     this->DataFile->Stream >> tag;
-    internal::parseAssert(tag == "DIMENSIONS" || tag == "DIMENSIONS");
+    internal::parseAssert(tag == "FIELD" || tag == "DIMENSIONS");
 
     if(tag == "FIELD")
     {
