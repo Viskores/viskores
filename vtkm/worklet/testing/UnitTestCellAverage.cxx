@@ -37,26 +37,20 @@ void TestCellAverageUniform3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  vtkm::cont::Field result("avgvals",
-                           1,
-                           vtkm::cont::Field::ASSOC_CELL_SET,
-                           std::string("cells"),
-                           vtkm::Float32());
+  vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                     dataSet.GetCellSet(),
-                    result.GetData());
-
-  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  result.GetData().CopyTo(resultArrayHandle);
+                    result);
 
   vtkm::Float32 expected[4] = { 60.1875f, 70.2125f, 120.3375f, 130.3625f };
   for (int i = 0; i < 4; ++i)
-    {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i),
-        expected[i]), "Wrong result for CellAverage worklet on 3D uniform data");
-    }
+  {
+    VTKM_TEST_ASSERT(
+          test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+          "Wrong result for CellAverage worklet on 3D uniform data");
+  }
 }
 
 void TestCellAverageUniform2D()
@@ -66,26 +60,20 @@ void TestCellAverageUniform2D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
-  vtkm::cont::Field result("avgvals",
-                           1,
-                           vtkm::cont::Field::ASSOC_CELL_SET,
-                           std::string("cells"),
-                           vtkm::Float32());
+  vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                     dataSet.GetCellSet(),
-                    result.GetData());
-
-  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  result.GetData().CopyTo(resultArrayHandle);
+                    result);
 
   vtkm::Float32 expected[2] = { 30.1f, 40.1f };
   for (int i = 0; i < 2; ++i)
-    {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i),
-        expected[i]), "Wrong result for CellAverage worklet on 2D uniform data");
-    }
+  {
+    VTKM_TEST_ASSERT(
+          test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+          "Wrong result for CellAverage worklet on 2D uniform data");
+  }
 }
 
 void TestCellAverageExplicit()
@@ -95,26 +83,20 @@ void TestCellAverageExplicit()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
-  vtkm::cont::Field result("avgvals",
-                           1,
-                           vtkm::cont::Field::ASSOC_CELL_SET,
-                           std::string("cells"),
-                           vtkm::Float32());
+  vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                     dataSet.GetCellSet(),
-                    result.GetData());
-
-  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  result.GetData().CopyTo(resultArrayHandle);
+                    result);
 
   vtkm::Float32 expected[2] = { 20.1333f, 35.2f };
   for (int i = 0; i < 2; ++i)
-    {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i),
-        expected[i]), "Wrong result for CellAverage worklet on 3D explicit data");
-    }
+  {
+    VTKM_TEST_ASSERT(
+          test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+          "Wrong result for CellAverage worklet on 3D explicit data");
+  }
 }
 
 
