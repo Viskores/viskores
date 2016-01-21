@@ -30,15 +30,14 @@
 
 namespace test_explicit {
 
-class MaxPointOrCellValue :
-    public vtkm::worklet::WorkletMapPointToCell
+class MaxPointOrCellValue : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
   typedef void ControlSignature(FieldInCell<Scalar> inCells,
                                 FieldInPoint<Scalar> inPoints,
                                 TopologyIn topology,
                                 FieldOutCell<Scalar> outCells);
-  typedef void ExecutionSignature(_1, _4, _2, FromCount, CellShape, FromIndices);
+  typedef void ExecutionSignature(_1, _4, _2, PointCount, CellShape, PointIndices);
   typedef _3 InputDomain;
 
   VTKM_CONT_EXPORT
@@ -48,14 +47,14 @@ public:
            typename OutCellType,
            typename InPointVecType,
            typename CellShapeTag,
-           typename FromIndexType>
+           typename PointIndexType>
   VTKM_EXEC_EXPORT
   void operator()(const InCellType &cellValue,
                   OutCellType &maxValue,
                   const InPointVecType &pointValues,
                   const vtkm::IdComponent &numPoints,
                   const CellShapeTag &vtkmNotUsed(type),
-                  const FromIndexType &vtkmNotUsed(pointIDs)) const
+                  const PointIndexType &vtkmNotUsed(pointIDs)) const
   {
     //simple functor that returns the max of cellValue and pointValue
     maxValue = static_cast<OutCellType>(cellValue);
@@ -67,14 +66,13 @@ public:
   }
 };
 
-class AveragePointToCellValue :
-    public vtkm::worklet::WorkletMapPointToCell
+class AveragePointToCellValue : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
   typedef void ControlSignature(FieldInPoint<Scalar> inPoints,
                                 TopologyIn topology,
                                 FieldOutCell<Scalar> outCells);
-  typedef void ExecutionSignature(_1, _3, FromCount);
+  typedef void ExecutionSignature(_1, _3, PointCount);
   typedef _2 InputDomain;
 
   VTKM_CONT_EXPORT
@@ -96,15 +94,13 @@ public:
   }
 };
 
-class AverageCellToPointValue :
-    public vtkm::worklet::WorkletMapTopology<vtkm::TopologyElementTagCell,
-                                             vtkm::TopologyElementTagPoint>
+class AverageCellToPointValue : public vtkm::worklet::WorkletMapCellToPoint
 {
 public:
-  typedef void ControlSignature(FieldInFrom<Scalar> inCells,
+  typedef void ControlSignature(FieldInCell<Scalar> inCells,
                                 TopologyIn topology,
                                 FieldOut<Scalar> outPoints);
-  typedef void ExecutionSignature(_1, _3, FromCount);
+  typedef void ExecutionSignature(_1, _3, CellCount);
   typedef _2 InputDomain;
 
   VTKM_CONT_EXPORT

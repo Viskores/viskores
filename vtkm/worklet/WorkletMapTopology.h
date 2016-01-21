@@ -194,6 +194,43 @@ public:
   struct PointIndices : FromIndices { };
 };
 
+/// Base class for worklets that map from Cells to Points.
+///
+class WorkletMapCellToPoint: public WorkletMapTopologyBase
+{
+public:
+  typedef vtkm::TopologyElementTagCell FromTopologyType;
+  typedef vtkm::TopologyElementTagPoint ToTopologyType;
+
+  /// \brief A control signature tag for input connectivity.
+  ///
+  struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopologyType,ToTopologyType> TransportTag;
+    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
+  };
+
+  //While we would love to use templates, that feature is not possible
+  //until c++11 ( alias templates), so we have to replicate that feature
+  //by using inheritance.
+
+  template<typename TypeList = AllTypes >
+  struct FieldInCell : FieldInFrom<TypeList> { };
+
+  template<typename TypeList = AllTypes >
+  struct FieldInPoint : FieldInTo<TypeList> { };
+
+  template<typename TypeList = AllTypes >
+  struct FieldOutPoint : FieldOut<TypeList> { };
+
+  template<typename TypeList = AllTypes >
+  struct FieldInOutPoint : FieldInOut<TypeList> { };
+
+  struct CellCount : FromCount {  };
+
+  struct CellIndices : FromIndices { };
+};
+
 }
 } // namespace vtkm::worklet
 
