@@ -35,36 +35,41 @@ public:
 
     //2D uniform grids.
     VTKM_CONT_EXPORT
+    static
     vtkm::cont::DataSet
     Create(const vtkm::Id2 &dimensions,
            const vtkm::Vec<vtkm::FloatDefault,2> &origin = vtkm::Vec<vtkm::FloatDefault,2>(0.0f),
            const vtkm::Vec<vtkm::FloatDefault,2> &spacing = vtkm::Vec<vtkm::FloatDefault,2>(1.0f),
            std::string coordNm="coords", std::string cellNm="cells")
     {
-        return CreateDS(2,
-                        dimensions[0],dimensions[1],1, origin[0],origin[1],0.0f,
-                        spacing[0],spacing[1],1.0f,
-                        coordNm, cellNm);
+      return DataSetBuilderUniform::CreateDS(2,
+                                             dimensions[0],dimensions[1],1,
+                                             origin[0],origin[1],0.0f,
+                                             spacing[0],spacing[1],1.0f,
+                                             coordNm, cellNm);
     }
 
     //3D uniform grids.
     VTKM_CONT_EXPORT
+    static
     vtkm::cont::DataSet
     Create(const vtkm::Id3 &dimensions,
            const vtkm::Vec<vtkm::FloatDefault,3> &origin = vtkm::Vec<vtkm::FloatDefault,3>(0.0f),
            const vtkm::Vec<vtkm::FloatDefault,3> &spacing = vtkm::Vec<vtkm::FloatDefault,3>(1.0f),
            std::string coordNm="coords", std::string cellNm="cells")
     {
-        return CreateDS(3,
-                        dimensions[0],dimensions[1],dimensions[2],
-                        origin[0],origin[1],origin[2],
-                        spacing[0],spacing[1],spacing[2],
-                        coordNm, cellNm);
+      return DataSetBuilderUniform::CreateDS(
+            3,
+            dimensions[0],dimensions[1],dimensions[2],
+            origin[0],origin[1],origin[2],
+            spacing[0],spacing[1],spacing[2],
+            coordNm, cellNm);
     }
 
 private:
     template<typename T>
     VTKM_CONT_EXPORT
+    static
     vtkm::cont::DataSet
     CreateDS(int dim, vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
              T originX, T originY, T originZ,

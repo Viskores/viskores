@@ -178,21 +178,8 @@ TestMaxPointOrCell()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
-  //Run a worklet to populate a cell centered field.
-  //Here, we're filling it with test values.
-  vtkm::cont::Field f("outcellvar",
-                      1,
-                      vtkm::cont::Field::ASSOC_CELL_SET,
-                      std::string("cells"),
-                      vtkm::Float32());
+  vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
-  dataSet.AddField(f);
-
-  VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfCellSets(), 1),
-                   "Incorrect number of cell sets");
-
-  VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 3),
-                   "Incorrect number of fields");
   vtkm::worklet::DispatcherMapTopology< ::test_uniform::MaxPointOrCellValue > dispatcher;
   dispatcher.Invoke(dataSet.GetField("cellvar").GetData(),
                     dataSet.GetField("pointvar").GetData(),
@@ -202,15 +189,13 @@ TestMaxPointOrCell()
                     // part more flexible.
                     dataSet.GetCellSet(0).ResetCellSetList(
                       vtkm::cont::CellSetListTagStructured2D()),
-                    dataSet.GetField("outcellvar").GetData());
+                    result);
 
   //make sure we got the right answer.
-  vtkm::cont::ArrayHandle<vtkm::Float32> res;
-  dataSet.GetField("outcellvar").GetData().CopyTo(res);
 
-  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1f),
+  VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),
                    "Wrong result for MaxPointOrCell worklet");
-  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 200.1f),
+  VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 200.1f),
                    "Wrong result for MaxPointOrCell worklet");
 }
 
@@ -221,21 +206,8 @@ TestAvgPointToCell()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
-  //Run a worklet to populate a cell centered field.
-  //Here, we're filling it with test values.
-  vtkm::cont::Field f("outcellvar",
-                      0,
-                      vtkm::cont::Field::ASSOC_CELL_SET,
-                      std::string("cells"),
-                      vtkm::Float32());
+  vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
-  dataSet.AddField(f);
-
-  VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfCellSets(), 1),
-                   "Incorrect number of cell sets");
-
-  VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 3),
-                   "Incorrect number of fields");
   vtkm::worklet::DispatcherMapTopology< ::test_uniform::AveragePointToCellValue > dispatcher;
   dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                     // We know that the cell set is a structured 2D grid and
@@ -244,15 +216,12 @@ TestAvgPointToCell()
                     // part more flexible.
                     dataSet.GetCellSet(0).ResetCellSetList(
                       vtkm::cont::CellSetListTagStructured2D()),
-                    dataSet.GetField("outcellvar").GetData());
+                    result);
 
   //make sure we got the right answer.
-  vtkm::cont::ArrayHandle<vtkm::Float32> res;
-  dataSet.GetField("outcellvar").GetData().CopyTo(res);
-
-  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 30.1f),
+  VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 30.1f),
                    "Wrong result for PointToCellAverage worklet");
-  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 40.1f),
+  VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 40.1f),
                    "Wrong result for PointToCellAverage worklet");
 }
 
@@ -264,20 +233,7 @@ TestAvgCellToPoint()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
-  //Run a worklet to populate a point centered field.
-  //Here, we're filling it with test values.
-  vtkm::cont::Field f("outpointvar",
-                      1,
-                      vtkm::cont::Field::ASSOC_POINTS,
-                      vtkm::Float32());
-
-  dataSet.AddField(f);
-
-  VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfCellSets(), 1),
-                   "Incorrect number of cell sets");
-
-  VTKM_TEST_ASSERT(test_equal(dataSet.GetNumberOfFields(), 3),
-                   "Incorrect number of fields");
+  vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology< ::test_uniform::AverageCellToPointValue > dispatcher;
   dispatcher.Invoke(dataSet.GetField("cellvar").GetData(),
@@ -287,15 +243,12 @@ TestAvgCellToPoint()
                     // part more flexible.
                     dataSet.GetCellSet(0).ResetCellSetList(
                       vtkm::cont::CellSetListTagStructured2D()),
-                    dataSet.GetField("outpointvar").GetData());
+                    result);
 
   //make sure we got the right answer.
-  vtkm::cont::ArrayHandle<vtkm::Float32> res;
-  dataSet.GetField("outpointvar").GetData().CopyTo(res);
-
-  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(0), 100.1f),
+  VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),
                    "Wrong result for CellToPointAverage worklet");
-  VTKM_TEST_ASSERT(test_equal(res.GetPortalConstControl().Get(1), 150.1f),
+  VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 150.1f),
                    "Wrong result for CellToPointAverage worklet");
 }
 
