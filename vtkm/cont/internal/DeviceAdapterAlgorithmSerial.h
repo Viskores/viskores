@@ -229,8 +229,8 @@ public:
 VTKM_VECTORIZATION_PRE_LOOP
     for(vtkm::Id i=(numberOfValues-1); i >= 1; --i)
       {
-VTKM_VECTORIZATION_IN_LOOP
       //nothing for gcc as input & output could be the same
+VTKM_VECTORIZATION_IN_LOOP
       outputPortal.Set(i, inputPortal.Get(i-1));
       }
     outputPortal.Set(0, initialValue);
@@ -317,19 +317,15 @@ public:
 
     DeviceAdapterAlgorithm<Device>::ScheduleKernel<Functor> kernel(functor);
 
-    vtkm::Id3 index;
     for(vtkm::Id k=0; k < rangeMax[2]; ++k)
       {
-      index[2] = k;
       for(vtkm::Id j=0; j < rangeMax[1]; ++j)
         {
-        index[1] = j;
 VTKM_VECTORIZATION_PRE_LOOP
         for(vtkm::Id i=0; i < rangeMax[0]; ++i)
           {
 VTKM_VECTORIZATION_IN_LOOP
-          index[0] = i;
-          kernel( index );
+          kernel(vtkm::Id3(i, j, k));
           }
         }
       }

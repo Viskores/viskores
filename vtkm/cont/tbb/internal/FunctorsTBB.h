@@ -383,21 +383,17 @@ public:
   void operator()(const ::tbb::blocked_range3d<vtkm::Id> &range) const {
     try
       {
-      vtkm::Id3 index;
       for( vtkm::Id k=range.pages().begin(); k!=range.pages().end(); ++k)
         {
-        index[2] = k;
         for( vtkm::Id j=range.rows().begin(); j!=range.rows().end(); ++j)
           {
-          index[1] = j;
           const vtkm::Id start =range.cols().begin();
           const vtkm::Id end = range.cols().end();
 VTKM_VECTORIZATION_PRE_LOOP
           for( vtkm::Id i=start; i != end; ++i)
             {
 VTKM_VECTORIZATION_IN_LOOP
-            index[0] = i;
-            this->Functor( index );
+            this->Functor(vtkm::Id3(i, j, k));
             }
           }
         }
