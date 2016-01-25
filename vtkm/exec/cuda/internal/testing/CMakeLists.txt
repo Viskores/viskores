@@ -1,7 +1,9 @@
-##============================================================================
+##=============================================================================
+##
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
@@ -12,28 +14,13 @@
 ##
 ##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 ##  the U.S. Government retains certain rights in this software.
-##
 ##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
 ##  Laboratory (LANL), the U.S. Government retains certain rights in
 ##  this software.
-##============================================================================
+##
+##=============================================================================
 
-set(headers
-  ArrayPortalFromThrust.h
-  ExecutionPolicy.h
-  IteratorFromArrayPortal.h
-  WrappedOperators.h
+set(unit_tests
+  UnitTestTextureMemorySupport.cu
   )
-
-#-----------------------------------------------------------------------------
-if (VTKm_ENABLE_CUDA)
-  vtkm_disable_troublesome_thrust_warnings()
-  CUDA_INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-endif()
-
-vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})
-
-#-----------------------------------------------------------------------------
-if (VTKm_ENABLE_CUDA)
-  add_subdirectory(testing)
-endif()
+vtkm_unit_tests(CUDA SOURCES ${unit_tests})
