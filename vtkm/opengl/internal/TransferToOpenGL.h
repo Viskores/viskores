@@ -54,7 +54,16 @@ void CopyFromHandle(
 
   //Copy the data from its specialized Storage container to a basic heap alloc
   ValueType* temporaryStorage = new ValueType[numberOfValues];
+
+#ifdef VTKM_MSVC
+  #pragma warning(disable:4244)
+  #pragma warning(disable:4996)
+#endif
   handle.CopyInto(temporaryStorage, DeviceAdapterTag());
+#ifdef VTKM_MSVC
+  #pragma warning(default:4996)
+  #pragma warning(default:4244)
+#endif
 
   //Determine if we need to reallocate the buffer
   state.SetSize(size);
