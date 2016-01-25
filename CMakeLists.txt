@@ -18,7 +18,7 @@
 ##  this software.
 ##============================================================================
 
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 2.8.12)
 
 #setup policy rules for CMake 3.0 while we have a minimum required of 2.8.X
 if(POLICY CMP0025)

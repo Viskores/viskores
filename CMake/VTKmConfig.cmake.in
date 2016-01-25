@@ -65,3 +65,8 @@ if(VTKm_ENABLE_TBB)
   # default device. In that case, the TBB device is required.
   vtkm_configure_device(TBB ${vtkm_is_required})
 endif()
+
+# Extra compile options that VTKm has generated, such as vectorization settings.
+# This should be specified to any target with the CMake command target_compile_options
+# that uses VTK-m.
+set(VTKm_COMPILE_OPTIONS "@VTKm_COMPILE_OPTIONS@")

@@ -74,7 +74,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   #common flags for the avx instructions for the gcc compiler
   set_property(GLOBAL PROPERTY VTKm_NATIVE_FLAGS -march=native)
   set_property(GLOBAL PROPERTY VTKm_AVX_FLAGS -mavx)
-  set_property(GLOBAL PROPERTY VTKm_AVX2_FLAGS -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
+  set_property(GLOBAL PROPERTY VTKm_AVX2_FLAGS "-mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
 
   if (CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.7 OR
       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.7)
@@ -83,24 +83,24 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
     #if GNU is less than 5.1 you get avx, avx2, and some avx512
     list(APPEND vec_levels avx2 avx512)
-    set_property(GLOBAL PROPERTY VTKm_AVX512_FLAGS -mavx512f -mavx512pf -mavx512er -mavx512cd)
+    set_property(GLOBAL PROPERTY VTKm_AVX512_FLAGS "-mavx512f -mavx512pf -mavx512er -mavx512cd")
   else()
     #if GNU is 5.1+ you get avx, avx2, and more avx512
     list(APPEND vec_levels avx2 avx512)
-    set_property(GLOBAL PROPERTY VTKm_AVX512_FLAGS -mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl -mavx512bw -mavx512dq -mavx512ifma -mavx512vbmi)
+    set_property(GLOBAL PROPERTY VTKm_AVX512_FLAGS "-mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl -mavx512bw -mavx512dq -mavx512ifma -mavx512vbmi")
   endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   list(APPEND vec_levels avx avx2 avx512)
   set_property(GLOBAL PROPERTY VTKm_NATIVE_FLAGS -march=native)
   set_property(GLOBAL PROPERTY VTKm_AVX_FLAGS -mavx)
-  set_property(GLOBAL PROPERTY VTKm_AVX2_FLAGS -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
+  set_property(GLOBAL PROPERTY VTKm_AVX2_FLAGS "-mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
   set_property(GLOBAL PROPERTY VTKm_AVX512_FLAGS -mavx512)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   #While Clang support AVX512, no version of AppleClang has that support yet
   list(APPEND vec_levels avx avx2)
   set_property(GLOBAL PROPERTY VTKm_NATIVE_FLAGS -march=native)
   set_property(GLOBAL PROPERTY VTKm_AVX_FLAGS -mavx)
-  set_property(GLOBAL PROPERTY VTKm_AVX2_FLAGS -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
+  set_property(GLOBAL PROPERTY VTKm_AVX2_FLAGS "-mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
   #I can't find documentation to explicitly state the level of vectorization
   #support I want from the PGI compiler
@@ -141,15 +141,18 @@ elseif(VTKm_Vectorization STREQUAL "avx")
 elseif(VTKm_Vectorization STREQUAL "avx2")
   get_property(avx GLOBAL PROPERTY VTKm_AVX_FLAGS)
   get_property(avx2 GLOBAL PROPERTY VTKm_AVX2_FLAGS)
-  set(flags ${avx} ${avx2})
+  set(flags "${avx} ${avx2}")
 elseif(VTKm_Vectorization STREQUAL "avx512")
   get_property(avx GLOBAL PROPERTY VTKm_AVX_FLAGS)
   get_property(avx2 GLOBAL PROPERTY VTKm_AVX2_FLAGS)
   get_property(avx512 GLOBAL PROPERTY VTKm_AVX512_FLAGS)
-  set(flags ${avx} ${avx2} ${avx512})
+  set(flags "${avx} ${avx2} ${avx512}")
 endif()
 
-#have to specify each compile option separately, can't do them in bulk
-foreach(flag ${flags})
-  add_compile_options( ${flag} )
-endforeach()
+#guard against adding the flags multiple times, which happens when multiple
+#backends include this file
+if(NOT VTKm_Vectorization_flags_added)
+  set(VTKm_Vectorization_flags_added true)
+  set_property(GLOBAL PROPERTY VTKm_Vectorization_FLAGS "${flags}")
+  list(APPEND VTKm_COMPILE_OPTIONS ${flags})
+endif()
