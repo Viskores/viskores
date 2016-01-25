@@ -68,6 +68,13 @@ public:
   {
     return this->Name;
   }
+
+  /// The Dimensionality of the cells inside the cell set.
+  /// Lines = 1
+  /// Triangles, Quads = 2
+  /// Tets, Hexs = 3
+  ///
+  /// Currently
   virtual vtkm::IdComponent GetDimensionality() const
   {
     return this->Dimensionality;
