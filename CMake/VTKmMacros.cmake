@@ -268,6 +268,8 @@ function(vtkm_unit_tests)
 
     target_link_libraries(${test_prog} ${VTKm_UT_LIBRARIES})
 
+    target_compile_options(${test_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
+
     if(MSVC)
       vtkm_setup_msvc_properties(${test_prog})
     endif()
@@ -392,6 +394,9 @@ function(vtkm_worklet_unit_tests device_adapter)
       add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
       target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
     endif()
+
+    #add the specific compile options for this executable
+    target_compile_options(${test_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
     #add a test for each worklet test file. We will inject the device
     #adapter type into the test name so that it is easier to see what
@@ -523,6 +528,9 @@ function(vtkm_benchmarks device_adapter)
     if(MSVC)
       vtkm_setup_msvc_properties(${benchmark_prog})
     endif()
+
+    #add the specific compile options for this executable
+    target_compile_options(${benchmark_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
     #increase warning level if needed, we are going to skip cuda here
     #to remove all the false positive unused function warnings that cuda
