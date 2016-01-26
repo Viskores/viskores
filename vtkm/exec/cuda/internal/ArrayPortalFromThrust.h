@@ -95,6 +95,8 @@ template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Float64,4
 template<typename T, typename Enable = void>
 struct load_through_texture
 {
+  static const vtkm::IdComponent WillUseTexture = 0;
+
   __device__
   static T get(const thrust::system::cuda::pointer<const T>& data)
   {
@@ -106,8 +108,11 @@ struct load_through_texture
 
 // this T type is valid to be loaded through a single texture memory fetch
 template<typename T>
-struct load_through_texture<T, typename ::boost::enable_if< typename UseScalarTextureLoad<T>::type >::type >
+struct load_through_texture<T, typename ::boost::enable_if< typename UseScalarTextureLoad<const T>::type >::type >
 {
+
+  static const vtkm::IdComponent WillUseTexture = 1;
+
   __device__
   static T get(const thrust::system::cuda::pointer<const T>& data)
   {
@@ -122,8 +127,10 @@ struct load_through_texture<T, typename ::boost::enable_if< typename UseScalarTe
 
 // this T type is valid to be loaded through a single vec texture memory fetch
 template<typename T>
-struct load_through_texture<T, typename ::boost::enable_if< typename UseVecTextureLoads<T>::type >::type >
+struct load_through_texture<T, typename ::boost::enable_if< typename UseVecTextureLoads<const T>::type >::type >
 {
+  static const vtkm::IdComponent WillUseTexture = 1;
+
   __device__
   static T get(const thrust::system::cuda::pointer<const T>& data)
   {
@@ -188,8 +195,10 @@ struct load_through_texture<T, typename ::boost::enable_if< typename UseVecTextu
 
 //this T type is valid to be loaded through multiple texture memory fetches
 template<typename T>
-struct load_through_texture<T, typename ::boost::enable_if< typename UseMultipleScalarTextureLoads<T>::type >::type >
+struct load_through_texture<T, typename ::boost::enable_if< typename UseMultipleScalarTextureLoads<const T>::type >::type >
 {
+  static const vtkm::IdComponent WillUseTexture = 1;
+
   typedef typename boost::remove_const<T>::type NonConstT;
 
   __device__
