@@ -25,6 +25,7 @@
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DeviceAdapter.h>
 
 namespace vtkm {
 namespace cont {
@@ -37,9 +38,8 @@ class DataSetBuilderRectilinear
   void CopyInto(const std::vector<T>& input,
                 vtkm::cont::ArrayHandle<U>& output )
   {
-    output.Allocate( static_cast<vtkm::Id>(input.size()) );
-    std::copy( input.begin(), input.end(),
-               ArrayPortalToIteratorBegin(output.GetPortalControl()) );
+    DataSetBuilderRectilinear::CopyInto(
+      vtkm::cont::make_ArrayHandle(input), output);
   }
 
   template<typename T, typename U>
@@ -48,10 +48,9 @@ class DataSetBuilderRectilinear
   void CopyInto(const vtkm::cont::ArrayHandle<T>& input,
                 vtkm::cont::ArrayHandle<U>& output )
   {
-    output.Allocate( input.GetNumberOfValues() );
-    std::copy( ArrayPortalToIteratorBegin(input.GetPortalConstControl()),
-               ArrayPortalToIteratorEnd(input.GetPortalConstControl()),
-               ArrayPortalToIteratorBegin(output.GetPortalControl()) );
+    typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+      Algorithm;
+    Algorithm::Copy(input, output);
   }
 
   template<typename T, typename U>
@@ -60,9 +59,8 @@ class DataSetBuilderRectilinear
   void CopyInto(const T* input, vtkm::Id len,
                 vtkm::cont::ArrayHandle<U>& output )
   {
-    output.Allocate( len );
-    std::copy( input, input+len,
-               output.GetPortalControl().GetIteratorBegin() );
+    DataSetBuilderRectilinear::CopyInto(
+      vtkm::cont::make_ArrayHandle(input, len), output);
   }
 public:
   VTKM_CONT_EXPORT
