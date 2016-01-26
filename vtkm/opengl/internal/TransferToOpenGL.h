@@ -52,16 +52,18 @@ void CopyFromHandle(
           static_cast<GLsizeiptr>(sizeof(ValueType)) *
           static_cast<GLsizeiptr>(numberOfValues);
 
-  //Copy the data from its specialized Storage container to a basic storage
-  vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic> tmpHandle;
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>::Copy(handle, tmpHandle);
+  //Copy the data from its specialized Storage container to a basic heap alloc
+  ValueType* temporaryStorage = new ValueType[numberOfValues];
 
-  //Synchronize the arrays to ensure the most current data is available in the
-  //control environment
-  tmpHandle.SyncControlArray();
-
-  //Note that the temporary ArrayHandle is no longer valid after this call
-  ValueType* temporaryStorage = tmpHandle.Internals->ControlArray.StealArray();
+#ifdef VTKM_MSVC
+  #pragma warning(disable:4244)
+  #pragma warning(disable:4996)
+#endif
+  handle.CopyInto(temporaryStorage, DeviceAdapterTag());
+#ifdef VTKM_MSVC
+  #pragma warning(default:4996)
+  #pragma warning(default:4244)
+#endif
 
   //Determine if we need to reallocate the buffer
   state.SetSize(size);
@@ -89,7 +91,7 @@ void CopyFromHandle(
 {
   //Specialization given that we are use an C allocated array storage tag
   //that allows us to directly hook into the data. We pull the data
-  //back to the control enviornment using PerpareForInput and give an iterator
+  //back to the control environment using PerpareForInput and give an iterator
   //from the portal to OpenGL to upload to the rendering system
   //This also works because we know that this class isn't used for cuda interop,
   //instead we are specialized
