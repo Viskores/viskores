@@ -37,3 +37,4 @@ vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})
 if (VTKm_ENABLE_CUDA)
   add_subdirectory(testing)
 endif()
+

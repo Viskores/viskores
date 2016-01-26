@@ -63,10 +63,11 @@ public:
 private:
   WorkletType Worklet;
 
-  // This is held by const reference so that we don't create a copy of the
-  // parameters causing each ArrayHandle shared pointer to increment and
-  // decrement.
-  const InvocationType& Invocation;
+  // This is held by by value so that when we transfer the invocation object
+  // over to CUDA it gets properly copied to the device. While we want to
+  // hold by reference to reduce the number of copies, it is not possible
+  // currently.
+  const InvocationType Invocation;
 };
 
 }
