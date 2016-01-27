@@ -25,7 +25,7 @@
 #include <vtkm/cont/Assert.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/DeviceAdapterSerial.h>
 
 namespace vtkm {
 namespace cont {
@@ -48,8 +48,8 @@ class DataSetBuilderRectilinear
   void CopyInto(const vtkm::cont::ArrayHandle<T>& input,
                 vtkm::cont::ArrayHandle<U>& output )
   {
-    typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
-      Algorithm;
+    typedef vtkm::cont::DeviceAdapterAlgorithm<
+        vtkm::cont::DeviceAdapterTagSerial> Algorithm;
     Algorithm::Copy(input, output);
   }
 
