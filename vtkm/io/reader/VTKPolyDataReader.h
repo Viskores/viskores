@@ -24,6 +24,8 @@
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
 
+#include "iterator"
+
 namespace vtkm {
 namespace io {
 namespace reader {
@@ -53,7 +55,10 @@ inline vtkm::cont::ArrayHandle<T> ConcatinateArrayHandles(
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(arrays[i].GetPortalConstControl()),
               vtkm::cont::ArrayPortalToIteratorEnd(arrays[i].GetPortalConstControl()),
               outp);
-	  std::advance(outp, static_cast<typename IteratorType::difference_type>(arrays[i].GetNumberOfValues()));
+    typedef typename std::iterator_traits<IteratorType>::difference_type
+        DifferenceType;
+    std::advance(
+          outp, static_cast<DifferenceType>(arrays[i].GetNumberOfValues()));
   }
 
   return out;
