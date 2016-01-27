@@ -70,7 +70,7 @@ public:
   T Get(vtkm::Id index) const { return this->Portal.Get(index); }
 
   VTKM_EXEC_EXPORT
-  void Set(vtkm::Id index, const T& t) const { return this->Portal.Set(index, t); }
+  void Set(vtkm::Id index, const T& t) const { this->Portal.Set(index, t); }
 
 private:
   PortalType Portal;
