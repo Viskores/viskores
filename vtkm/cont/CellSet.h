@@ -72,9 +72,11 @@ public:
   /// The Dimensionality of the cells inside the cell set.
   /// Lines = 1
   /// Triangles, Quads = 2
-  /// Tets, Hexs = 3
+  /// Tets, Hexs, etc = 3
   ///
-  /// Currently
+  /// CellSetExplicit has the ability to contain cells of multiple
+  /// dimensions. These datasets generally report a dimensionality
+  /// of 3.
   virtual vtkm::IdComponent GetDimensionality() const
   {
     return this->Dimensionality;
