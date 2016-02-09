@@ -49,7 +49,9 @@ public:
   VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
-                           vtkm::cont::Field &scalarField)
+                           vtkm::cont::Field &scalarField,
+                           const vtkm::rendering::ColorTable &, //colorTable
+                           vtkm::Float64 *) //scalarBounds=NULL)
   {
     vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
     vtkm::Float64 coordsBounds[6]; // Xmin,Xmax,Ymin..

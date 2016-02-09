@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestSceneRendererOSMesa.cxx
   UnitTestSceneRendererVolume.cxx
  )
  

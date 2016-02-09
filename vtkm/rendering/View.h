@@ -108,6 +108,16 @@ public:
   }
 
   VTKM_CONT_EXPORT
+  void GetRealViewport(vtkm::Float32 &l, vtkm::Float32 &r,
+                       vtkm::Float32 &b, vtkm::Float32 &t)
+  {
+      l = -1;
+      b = -1;
+      r = 1;
+      t = 1;
+  }
+
+  VTKM_CONT_EXPORT
   static void PrintMatrix(const vtkm::Matrix<vtkm::Float32,4,4> &mat)
   {
     std::cout<<mat(0,0)<<","<<mat(0,1)<<","<<mat(0,2)<<","<<mat(0,3)<<std::endl;
@@ -115,6 +125,12 @@ public:
     std::cout<<mat(2,0)<<","<<mat(2,1)<<","<<mat(2,2)<<","<<mat(2,3)<<std::endl;
     std::cout<<mat(3,0)<<","<<mat(3,1)<<","<<mat(3,2)<<","<<mat(3,3)<<std::endl;
   }
+};
+
+class View2D
+{
+public:
+    View2D() {}
 };
 
 }} // namespace vtkm::rendering

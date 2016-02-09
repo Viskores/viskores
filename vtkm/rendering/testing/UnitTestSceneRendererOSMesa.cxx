@@ -18,23 +18,26 @@
 //  this software.
 //============================================================================
 #include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/rendering/SceneRendererVolume.h>
+#include <vtkm/rendering/Window.h>
+#include <vtkm/rendering/RenderSurface.h>
+#include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/Plot.h>
+#include <vtkm/rendering/SceneRendererOSMesa.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 namespace {
 
-void TestSceneRendererVolume()
+void TestSceneRendererOSMesa()
 {
-  
   // test regular grid data set 
   {  
      vtkm::cont::testing::MakeTestDataSet maker;
      vtkm::cont::DataSet regularGrid = maker.Make3DRegularDataSet0();
      regularGrid.PrintSummary(std::cout);
-     vtkm::cont::Field scalarField = regularGrid.GetField("cellvar");
+     vtkm::cont::Field scalarField = regularGrid.GetField("pointvar");
      const vtkm::cont::CoordinateSystem coords = regularGrid.GetCoordinateSystem();
     
-     vtkm::rendering::SceneRendererVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
+     vtkm::rendering::SceneRendererOSMesa<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
      vtkm::rendering::View3D &view = sceneRenderer.GetView();
 
      vtkm::Float64 coordsBounds[6]; // Xmin,Xmax,Ymin..
@@ -60,20 +63,37 @@ void TestSceneRendererVolume()
      view.Height = 500;
      view.Width = 500;
      view.Position = totalExtent * (mag * 2.f);
-
-     vtkm::Float64 scalarBounds[2];
-     scalarField.GetBounds(scalarBounds,
-                           VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
      vtkm::rendering::ColorTable colorTable("thermal");
      sceneRenderer.SetActiveColorTable(colorTable);
-     sceneRenderer.RenderCells(regularGrid.GetCellSet(), coords, scalarField,
-                               colorTable, scalarBounds);
-  } 
 
-}//TestMortonCodes
+     std::cout<<"pos: "<<view.Position<<std::endl;
+     std::cout<<"at_: "<<view.LookAt<<std::endl;
+
+     sceneRenderer.SetView(view);
+     //sceneRenderer.RenderCells(regularGrid.GetCellSet(), coords, scalarField, colorTable);
+
+     //New way.
+     vtkm::rendering::RenderSurfaceOSMesa surface;
+     vtkm::rendering::Scene3D scene;
+     vtkm::rendering::Color bg(0.0f, 1.0f, 0.0f, 1.0f);
+     scene.plots.push_back(vtkm::rendering::Plot(regularGrid.GetCellSet(),
+                                                 coords,
+                                                 scalarField,
+                                                 colorTable));
+
+     vtkm::rendering::Window3D<vtkm::rendering::SceneRendererOSMesa<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+                               vtkm::rendering::RenderSurfaceOSMesa>
+         w(scene, sceneRenderer, surface, bg);
+
+     w.Initialize();
+     w.Paint();
+     std::string fn("output.pnm");
+     w.SaveAs("output.pnm");
+  } 
+}
 
 } //namespace
-int UnitTestSceneRendererVolume(int, char *[])
+int UnitTestSceneRendererOSMesa(int, char *[])
 {
-      return vtkm::cont::testing::Testing::Run(TestSceneRendererVolume);
+      return vtkm::cont::testing::Testing::Run(TestSceneRendererOSMesa);
 }

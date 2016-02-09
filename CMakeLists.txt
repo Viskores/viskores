@@ -66,6 +66,8 @@ if(NOT Boost_FOUND)
   message(FATAL_ERROR "Please specify where to find boost headers (${VTKm_REQUIRED_BOOST_VERSION}+)" )
 endif()
 
+find_package(MESA REQUIRED)
+
 #-----------------------------------------------------------------------------
 # Check for Cxx11 support.
 option(VTKm_FORCE_ANSI

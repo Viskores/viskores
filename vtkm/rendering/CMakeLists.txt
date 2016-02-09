@@ -21,14 +21,21 @@
 set(headers
   Color.h
   ColorTable.h
+  Plot.h
+  RenderSurface.h
+  Scene.h
+  SceneRenderer.h
+  SceneRendererOSMesa.h
   SceneRendererVolume.h
   Triangulator.h
   View.h
+  Window.h
   )
 
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})
 add_subdirectory(raytracing)
+include_directories(${OSMESA_INCLUDE_DIR})
 
 
 

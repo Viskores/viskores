@@ -33,15 +33,17 @@ public:
   VTKM_CONT_EXPORT
   SceneRenderer()
   {
-    BackgroundColor[0] = 1.f;
-    BackgroundColor[1] = 1.f;
-    BackgroundColor[2] = 1.f;
-    BackgroundColor[3] = 1.f;
   }
 
   VTKM_CONT_EXPORT
   virtual ~SceneRenderer()
   {}
+
+  VTKM_CONT_EXPORT
+  virtual void SetView(vtkm::rendering::View3D &v)
+  {
+      View = v;
+  }
 
   VTKM_CONT_EXPORT
   virtual vtkm::rendering::View3D& GetView()
@@ -52,24 +54,50 @@ public:
   VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
-                           vtkm::cont::Field &scalarField) = 0;
+                           vtkm::cont::Field &scalarField, //This should be const
+                           const vtkm::rendering::ColorTable &colorTable,
+                           vtkm::Float64 *scalarBounds=NULL) = 0;
 
   VTKM_CONT_EXPORT
-  virtual void SetActiveColorTable(const ColorTable &colorTable)
+  virtual void SetActiveColorTable(const ColorTable &ct)
   {
-    colorTable.Sample(1024, ColorMap);
+      ct.Sample(1024, ColorMap);
   }
 
+    // needed for volume... Can we have a volume render surface??
   VTKM_CONT_EXPORT
   virtual void SetBackgroundColor(const vtkm::Vec<vtkm::Float32,4> &backgroundColor)
   {
-    BackgroundColor = backgroundColor;
+      BackgroundColor = backgroundColor;
+  }
+  VTKM_CONT_EXPORT
+  virtual void SetBackgroundColor(const vtkm::rendering::Color &backgroundColor)
+  {
+      BackgroundColor[0] = backgroundColor.Components[0];
+      BackgroundColor[1] = backgroundColor.Components[1];
+      BackgroundColor[2] = backgroundColor.Components[2];
+      BackgroundColor[3] = backgroundColor.Components[3];
   }
 
+    VTKM_CONT_EXPORT
+    virtual void Render() {}
+    VTKM_CONT_EXPORT
+    virtual void Finish() {}
+    VTKM_CONT_EXPORT
+    virtual void StartScene()
+    {
+        std::cout<<__LINE__<<": TODO"<<std::endl;
+    }
+    VTKM_CONT_EXPORT
+    virtual void EndScene()
+    {
+        std::cout<<__LINE__<<": TODO"<<std::endl;
+    }
+
 protected:
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
-  vtkm::Vec<vtkm::Float32,4> BackgroundColor;
-  View3D View;
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
+    vtkm::Vec<vtkm::Float32,4> BackgroundColor;
+    View3D View;
 };
 }} //namespace vtkm::rendering
 #endif //vtk_m_rendering_SceneRenderer_h
