@@ -21,9 +21,9 @@
 #define vtk_m_rendering_RenderSurface_h
 
 #include <vtkm/Types.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
 #include <vtkm/rendering/View.h>
-#include <vector>
+#include <vtkm/rendering/Color.h>
+
 #include <GL/osmesa.h>
 #include <GL/gl.h>
 #include <iostream>
@@ -36,7 +36,13 @@ class RenderSurface
 {
 public:
     VTKM_CONT_EXPORT
-    RenderSurface():bgColor(0.0f,0.0f,0.0f,1.0f) {}
+    RenderSurface(int w=1024, int h=1024,
+                  const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
+        : width(w), height(h), bgColor(c)
+    {
+        rgba.resize(width*height*4);
+        zbuff.resize(width*height*4);
+    }
 
     VTKM_CONT_EXPORT
     virtual void Initialize() {}
@@ -48,22 +54,28 @@ public:
     virtual void Finish() {}
 
     VTKM_CONT_EXPORT
+    virtual void SetViewToWorldSpace(vtkm::rendering::View3D &, bool) {}
+    VTKM_CONT_EXPORT
+    void SetViewportClipping(vtkm::rendering::View3D &, bool) {}
+
+    VTKM_CONT_EXPORT
     virtual void SaveAs(const std::string &) {}
 
-    vtkm::Vec<vtkm::Float32,4> bgColor;
+    vtkm::rendering::Color bgColor;
+    int width, height;
+    std::vector<vtkm::Float32> rgba;
+    std::vector<vtkm::Float32> zbuff;
 };
 
 class RenderSurfaceOSMesa : public RenderSurface
 {
 public:
     VTKM_CONT_EXPORT
-    RenderSurfaceOSMesa()
+    RenderSurfaceOSMesa(int w=1024, int h=1024,
+          const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
+        : RenderSurface(w,h,c)
     {
         ctx = NULL;
-        width = 1024;
-        height = 1024;
-        rgba.resize(width*height*4);
-        zbuff.resize(width*height*4);
     }
 
     VTKM_CONT_EXPORT
@@ -80,7 +92,7 @@ public:
     VTKM_CONT_EXPORT
     virtual void Clear()
     {
-        glClearColor(bgColor[0],bgColor[1],bgColor[2], 1.0f);
+        glClearColor(bgColor.Components[0],bgColor.Components[1],bgColor.Components[2], 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     VTKM_CONT_EXPORT
@@ -100,7 +112,7 @@ public:
     }
 
     VTKM_CONT_EXPORT
-    void SetViewToWorldSpace(vtkm::rendering::View3D &v, bool clip)
+    virtual void SetViewToWorldSpace(vtkm::rendering::View3D &v, bool clip)
     {
         vtkm::Float32 oglP[16], oglM[16];
 
@@ -118,7 +130,7 @@ public:
     }
 
     VTKM_CONT_EXPORT
-    void SetViewportClipping(vtkm::rendering::View3D &v, bool clip)
+    virtual void SetViewportClipping(vtkm::rendering::View3D &v, bool clip)
     {
         if (clip)
         {
@@ -170,10 +182,9 @@ public:
             for (int j=0; j < width; j++)
             { 
                 const vtkm::Float32 *tuple = &(rgba[i*width*4 + j*4]);
-                unsigned char r = (unsigned char)(tuple[0]*255);
-                unsigned char g = (unsigned char)(tuple[1]*255);
-                unsigned char b = (unsigned char)(tuple[2]*255);
-                of<<r<<g<<b;
+                of<<(unsigned char)(tuple[0]*255);
+                of<<(unsigned char)(tuple[1]*255);
+                of<<(unsigned char)(tuple[2]*255);
             }
         of.close();
     }
@@ -189,9 +200,6 @@ public:
 
 private:
   OSMesaContext ctx;
-  std::vector<vtkm::Float32> rgba;
-  std::vector<vtkm::Float32> zbuff;
-  int width, height;
 };
 
 }} //namespace vtkm::rendering

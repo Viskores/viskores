@@ -73,9 +73,9 @@ void TestSceneRendererOSMesa()
      //sceneRenderer.RenderCells(regularGrid.GetCellSet(), coords, scalarField, colorTable);
 
      //New way.
-     vtkm::rendering::RenderSurfaceOSMesa surface;
      vtkm::rendering::Scene3D scene;
-     vtkm::rendering::Color bg(0.0f, 1.0f, 0.0f, 1.0f);
+     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
+     vtkm::rendering::RenderSurfaceOSMesa surface(512,512,bg);
      scene.plots.push_back(vtkm::rendering::Plot(regularGrid.GetCellSet(),
                                                  coords,
                                                  scalarField,
@@ -87,7 +87,6 @@ void TestSceneRendererOSMesa()
 
      w.Initialize();
      w.Paint();
-     std::string fn("output.pnm");
      w.SaveAs("output.pnm");
   } 
 }
