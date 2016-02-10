@@ -41,10 +41,13 @@ public:
                     VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     }
 
-    template<typename SceneRendererType>
+    template<typename SceneRendererType, typename SurfaceType>
     VTKM_CONT_EXPORT
-    void Render(SceneRendererType &sr)
+    void Render(SceneRendererType &sr,
+                SurfaceType &)//surface)
     {
+        //??????
+        //feed surface into sr somehow??
         sr.RenderCells(cellSet, coords, scalarField,
                        colorTable, scalarBounds);
     }

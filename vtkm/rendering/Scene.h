@@ -41,15 +41,15 @@ class Scene3D : public Scene
 public:
     Scene3D() {}
     
-    template<typename SceneRendererType>
+    template<typename SceneRendererType, typename SurfaceType>
     VTKM_CONT_EXPORT
-    void Render(SceneRendererType &sceneRenderer)
+    void Render(SceneRendererType &sceneRenderer,
+                SurfaceType &surface)
     {
         for (int i = 0; i < plots.size(); i++)
         {
             sceneRenderer.StartScene();
-
-            plots[i].Render(sceneRenderer);
+            plots[i].Render(sceneRenderer, surface);
             sceneRenderer.EndScene();
         }
     }

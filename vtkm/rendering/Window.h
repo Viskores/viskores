@@ -63,7 +63,7 @@ public:
         surface.Clear();
         SetupForWorldSpace();
         
-        scene.Render(sceneRenderer);
+        scene.Render(sceneRenderer, surface);
         
         surface.Finish();
     }
