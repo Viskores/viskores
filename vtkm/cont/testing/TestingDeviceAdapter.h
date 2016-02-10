@@ -1587,6 +1587,7 @@ private:
 
   static VTKM_CONT_EXPORT void TestAtomicArray()
   {
+    std::cout << "-------------------------------------------" << std::endl;
     // To test the atomics, ARRAY_SIZE number of threads will all increment  
     // a single atomic value.
     std::cout << "Testing Atomic Array with vtkm::Int32" << std::endl;
@@ -1599,7 +1600,6 @@ private:
     Algorithm::Schedule(AtomicKernel<vtkm::Int32>(atomic), ARRAY_SIZE);
     vtkm::Int32 expected = vtkm::Int32(ARRAY_SIZE);
     vtkm::Int32 actual= atomicElement.GetPortalControl().Get(0);
-    std::cout<<"Atomic value "<<actual<<std::endl;
     VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add Int32");
     }
 
@@ -1613,7 +1613,6 @@ private:
     Algorithm::Schedule(AtomicKernel<vtkm::UInt32>(atomic), ARRAY_SIZE);
     vtkm::UInt32 expected = vtkm::UInt32(ARRAY_SIZE);
     vtkm::UInt32 actual= atomicElement.GetPortalControl().Get(0);
-    std::cout<<"Atomic value "<<actual<<std::endl;
     VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add UInt32");
     }
 
@@ -1627,7 +1626,6 @@ private:
     Algorithm::Schedule(AtomicKernel<vtkm::UInt64>(atomic), ARRAY_SIZE);
     vtkm::UInt64 expected = vtkm::UInt64(ARRAY_SIZE);
     vtkm::UInt64 actual= atomicElement.GetPortalControl().Get(0);
-    std::cout<<"Atomic value "<<actual<<std::endl;
     VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add UInt64");
     }
 
@@ -1641,7 +1639,6 @@ private:
     Algorithm::Schedule(AtomicKernel<vtkm::Int64>(atomic), ARRAY_SIZE);
     vtkm::Int64 expected = vtkm::Int64(ARRAY_SIZE);
     vtkm::Int64 actual= atomicElement.GetPortalControl().Get(0);
-    std::cout<<"Atomic value "<<actual<<std::endl;
     VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add Int64");
     }
   }

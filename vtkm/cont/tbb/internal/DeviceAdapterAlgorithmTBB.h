@@ -349,12 +349,6 @@ private:
     return __sync_fetch_and_add(address,value);
   }
 
-  VTKM_EXEC_EXPORT
-  vtkm::UInt32 vtkmAtomicAdd(vtkm::Float32 *address, const vtkm::Float32 &value) const
-  {
-    return __sync_fetch_and_add(address,value);
-  }
-
 };
 
 }

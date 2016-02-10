@@ -729,4 +729,7 @@ private:
   PortalType Portal;
 };
 
+}
+} // namespace vtkm::cont
+
 #endif //vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
