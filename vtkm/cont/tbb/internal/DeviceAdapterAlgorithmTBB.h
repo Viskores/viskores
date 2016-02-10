@@ -297,6 +297,66 @@ private:
   ::tbb::tick_count StartTime;
 };
 
+template<typename T>
+class DeviceAdapterAtomicArrayImplementation<T,vtkm::cont::DeviceAdapterTagTBB>
+{
+public:
+  VTKM_CONT_EXPORT
+  DeviceAdapterAtomicArrayImplementation(
+               vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> handle):
+    Iterators( IteratorsType( handle.PrepareForInPlace(
+                                      vtkm::cont::DeviceAdapterTagTBB())
+                             ) )
+  {
+  }
+
+  VTKM_EXEC_EXPORT
+  T Add(vtkm::Id index, const T& value) const
+  {
+    T* lockedValue; 
+    lockedValue = (Iterators.GetBegin()+index);
+    return vtkmAtomicAdd(lockedValue, value);
+  }
+
+private:
+  typedef typename vtkm::cont::ArrayHandle<T,vtkm::cont::StorageTagBasic>
+        ::template ExecutionTypes<DeviceAdapterTagTBB>::Portal PortalType;
+  typedef vtkm::cont::ArrayPortalToIterators<PortalType> IteratorsType;
+
+  IteratorsType Iterators;
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int32 vtkmAtomicAdd(vtkm::Int32 *address, const vtkm::Int32 &value) const
+  {
+    return __sync_fetch_and_add(address,value);
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int64 vtkmAtomicAdd(vtkm::Int64 *address, const vtkm::Int64 &value) const
+  {
+    return __sync_fetch_and_add(address,value);
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::UInt32 vtkmAtomicAdd(vtkm::UInt32 *address, const vtkm::UInt32 &value) const
+  {
+    return __sync_fetch_and_add(address,value);
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::UInt64 vtkmAtomicAdd(vtkm::UInt64 *address, const vtkm::UInt64 &value) const
+  {
+    return __sync_fetch_and_add(address,value);
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::UInt32 vtkmAtomicAdd(vtkm::Float32 *address, const vtkm::Float32 &value) const
+  {
+    return __sync_fetch_and_add(address,value);
+  }
+
+};
+
 }
 } // namespace vtkm::cont
 

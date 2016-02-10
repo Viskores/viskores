@@ -523,6 +523,14 @@ public:
   }
 };
 
+/// \brief Class providing a device-specific support for atomic operations.
+///
+/// The class provide the actual implementation used by
+/// vtkm::cont::DeviceAdapterAtomicArrayImplementation.
+///
+template<typename T, typename DeviceTag>
+class DeviceAdapterAtomicArrayImplementation;
+
 }
 } // namespace vtkm::cont
 

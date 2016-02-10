@@ -185,6 +185,62 @@ private:
   vtkm::Int32 HighestArchSupported;
 };
 
+/// CUDA contains its own atomic operations
+///
+template<typename T>
+class DeviceAdapterAtomicArrayImplementation<T,vtkm::cont::DeviceAdapterTagCuda>
+{
+public:
+  VTKM_CONT_EXPORT
+  DeviceAdapterAtomicArrayImplementation(
+             vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> handle):
+    Portal( handle.PrepareForInPlace( vtkm::cont::DeviceAdapterTagCuda()) )
+  {
+  }
+
+  inline __device__
+  T Add(vtkm::Id index, const T& value) const
+  {
+    T *lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
+    return vtkmAtomicAdd(lockedValue, value);
+  }
+
+private:
+  typedef typename vtkm::cont::ArrayHandle<T,vtkm::cont::StorageTagBasic>
+        ::template ExecutionTypes<vtkm::cont::DeviceAdapterTagCuda>::Portal PortalType;
+  PortalType Portal;
+
+  inline __device__
+  vtkm::Int64 vtkmAtomicAdd(vtkm::Int64 *address, const vtkm::Int64 &value) const
+  {
+    return atomicAdd((unsigned long long *)address,(unsigned long long) value);
+  }
+
+  inline __device__
+  vtkm::UInt64 vtkmAtomicAdd(vtkm::UInt64 *address, const vtkm::UInt64 &value) const
+  {
+    return atomicAdd((unsigned long long *)address,(unsigned long long) value);
+  }
+  
+  inline __device__
+  vtkm::Float32 vtkmAtomicAdd(vtkm::Float32 *address, const vtkm::Float32 &value) const
+  {
+    return atomicAdd(address,value);
+  }
+
+  inline __device__
+  vtkm::Int32 vtkmAtomicAdd(vtkm::Int32 *address, const vtkm::Int32 &value) const
+  {
+    return atomicAdd(address,value);
+  }
+
+  inline __device__
+  vtkm::UInt32 vtkmAtomicAdd(vtkm::UInt32 *address, const vtkm::UInt32 &value) const
+  {
+    return atomicAdd(address,value);
+  }  
+};
+
 }
 } // namespace vtkm::cont
 

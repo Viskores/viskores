@@ -695,4 +695,38 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
 }
 } // namespace vtkm::cont::internal
 
+namespace vtkm {
+namespace cont {
+/// \brief Class providing a device-specific atomic interface.
+///
+/// The class provide the actual implementation used by vtkm::exec::AtomicArray.
+/// A serial default implementation is provided. But each device will have a different
+/// implementation.
+///
+/// Serial requires no form of atomicity
+///
+template<typename T, typename DeviceTag>
+class DeviceAdapterAtomicArrayImplementation
+{
+public:
+  VTKM_CONT_EXPORT
+  DeviceAdapterAtomicArrayImplementation(vtkm::cont::ArrayHandle<T> handle):
+    Portal( handle.PrepareForInPlace(DeviceTag()) )
+  {
+  }
+
+  VTKM_EXEC_EXPORT
+  T Add(vtkm::Id index, const T& value) const
+  {
+    const T old = this->Portal.Get(index);
+    this->Portal.Set(index, old + value);
+    return old;
+  }
+
+private:
+    typedef typename vtkm::cont::ArrayHandle<T>
+              ::template ExecutionTypes<DeviceTag>::Portal PortalType;
+  PortalType Portal;
+};
+
 #endif //vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h

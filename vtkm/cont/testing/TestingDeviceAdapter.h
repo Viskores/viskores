@@ -39,6 +39,8 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/exec/AtomicArray.h>
+
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -274,6 +276,25 @@ public:
       //binary predicates for unique return true if they are the same
       return true;
     }
+  };
+
+  template<typename T>
+  struct AtomicKernel 
+  {
+    VTKM_CONT_EXPORT
+    AtomicKernel(const vtkm::exec::AtomicArray<T,DeviceAdapterTag> &array)
+    : AArray(array)
+    {  }
+
+    VTKM_EXEC_EXPORT void operator()(vtkm::Id index) const
+    {
+      this->AArray.Add(0, 1);
+    }
+
+    VTKM_CONT_EXPORT void SetErrorMessageBuffer(
+        const vtkm::exec::internal::ErrorMessageBuffer &) {  }
+
+    vtkm::exec::AtomicArray<T,DeviceAdapterTag> AArray;
   };
 
 
@@ -1564,6 +1585,67 @@ private:
 
   }
 
+  static VTKM_CONT_EXPORT void TestAtomicArray()
+  {
+    // To test the atomics, ARRAY_SIZE number of threads will all increment  
+    // a single atomic value.
+    std::cout << "Testing Atomic Array with vtkm::Int32" << std::endl;
+    {
+    std::vector<vtkm::Int32> singleElement;
+    singleElement.push_back(0);
+    vtkm::cont::ArrayHandle<vtkm::Int32> atomicElement = vtkm::cont::make_ArrayHandle(singleElement);
+
+    vtkm::exec::AtomicArray<vtkm::Int32, DeviceAdapterTag> atomic(atomicElement);
+    Algorithm::Schedule(AtomicKernel<vtkm::Int32>(atomic), ARRAY_SIZE);
+    vtkm::Int32 expected = vtkm::Int32(ARRAY_SIZE);
+    vtkm::Int32 actual= atomicElement.GetPortalControl().Get(0);
+    std::cout<<"Atomic value "<<actual<<std::endl;
+    VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add Int32");
+    }
+
+    std::cout << "Testing Atomic Array with vtkm::UInt32" << std::endl;
+    {
+    std::vector<vtkm::UInt32> singleElement;
+    singleElement.push_back(0);
+    vtkm::cont::ArrayHandle<vtkm::UInt32> atomicElement = vtkm::cont::make_ArrayHandle(singleElement);
+
+    vtkm::exec::AtomicArray<vtkm::UInt32, DeviceAdapterTag> atomic(atomicElement);
+    Algorithm::Schedule(AtomicKernel<vtkm::UInt32>(atomic), ARRAY_SIZE);
+    vtkm::UInt32 expected = vtkm::UInt32(ARRAY_SIZE);
+    vtkm::UInt32 actual= atomicElement.GetPortalControl().Get(0);
+    std::cout<<"Atomic value "<<actual<<std::endl;
+    VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add UInt32");
+    }
+
+    std::cout << "Testing Atomic Array with vtkm::UInt64" << std::endl;
+    {
+    std::vector<vtkm::UInt64> singleElement;
+    singleElement.push_back(0);
+    vtkm::cont::ArrayHandle<vtkm::UInt64> atomicElement = vtkm::cont::make_ArrayHandle(singleElement);
+
+    vtkm::exec::AtomicArray<vtkm::UInt64, DeviceAdapterTag> atomic(atomicElement);
+    Algorithm::Schedule(AtomicKernel<vtkm::UInt64>(atomic), ARRAY_SIZE);
+    vtkm::UInt64 expected = vtkm::UInt64(ARRAY_SIZE);
+    vtkm::UInt64 actual= atomicElement.GetPortalControl().Get(0);
+    std::cout<<"Atomic value "<<actual<<std::endl;
+    VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add UInt64");
+    }
+
+    std::cout << "Testing Atomic Array with vtkm::Int64" << std::endl;
+    {
+    std::vector<vtkm::Int64> singleElement;
+    singleElement.push_back(0);
+    vtkm::cont::ArrayHandle<vtkm::Int64> atomicElement = vtkm::cont::make_ArrayHandle(singleElement);
+
+    vtkm::exec::AtomicArray<vtkm::Int64, DeviceAdapterTag> atomic(atomicElement);
+    Algorithm::Schedule(AtomicKernel<vtkm::Int64>(atomic), ARRAY_SIZE);
+    vtkm::Int64 expected = vtkm::Int64(ARRAY_SIZE);
+    vtkm::Int64 actual= atomicElement.GetPortalControl().Get(0);
+    std::cout<<"Atomic value "<<actual<<std::endl;
+    VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add Int64");
+    }
+  }
+
   struct TestAll
   {
     VTKM_CONT_EXPORT void operator()() const
@@ -1605,6 +1687,8 @@ private:
       TestStreamCompact();
 
       TestCopyArraysInDiffTypes();
+
+      TestAtomicArray();
     }
   };
 
