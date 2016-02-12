@@ -86,12 +86,10 @@ public:
     VTKM_CONT_EXPORT
     virtual void StartScene()
     {
-        std::cout<<__LINE__<<": TODO"<<std::endl;
     }
     VTKM_CONT_EXPORT
     virtual void EndScene()
     {
-        std::cout<<__LINE__<<": TODO"<<std::endl;
     }
 
 protected:

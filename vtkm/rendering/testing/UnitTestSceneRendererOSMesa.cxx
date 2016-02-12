@@ -66,9 +66,6 @@ void TestSceneRendererOSMesa()
      vtkm::rendering::ColorTable colorTable("thermal");
      sceneRenderer.SetActiveColorTable(colorTable);
 
-     std::cout<<"pos: "<<view.Position<<std::endl;
-     std::cout<<"at_: "<<view.LookAt<<std::endl;
-
      sceneRenderer.SetView(view);
      //sceneRenderer.RenderCells(regularGrid.GetCellSet(), coords, scalarField, colorTable);
 
