@@ -436,42 +436,18 @@ public:
                                                                      flags, 
                                                                      subset);
     std::cout<<"Number of tris after"<<subset.GetNumberOfValues()<<std::endl;
+    outputIndices = subset;
+    outputTriangles = subset.GetNumberOfValues();
   }
   VTKM_CONT_EXPORT
   void run(const vtkm::cont::DynamicCellSet &cellset,
            vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id,4> > &outputIndices,
            vtkm::Id &outputTriangles)
   {
-    vtkm::cont::CellSetStructured<3> cellSetStructured3D;
-    vtkm::cont::CellSetExplicit<> cellSetExplicit;
-    bool isExplicitCellSet = false;//cellset.IsTypeAndStorage(vtkm::cont::CellSetStructured());
-    bool isStructuredCellSet = false;
-    try
+  
+    if(cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
     {
-      cellSetStructured3D = cellset.CastTo(vtkm::cont::CellSetStructured<3>());
-      isStructuredCellSet = true;
-      std::cout<<"Is structured"<<std::endl;
-    }
-    catch(...)
-    {
-      //do nothing
-      std::cout<<"Not structured"<<std::endl;
-    }
-
-    try
-    {
-      cellSetExplicit = cellset.CastTo(vtkm::cont::CellSetExplicit<>());
-      isExplicitCellSet = true;
-      std::cout<<"Is explicit"<<std::endl;
-    }
-    catch(...)
-    {
-      //do nothing
-      std::cout<<"Not explicit"<<std::endl;
-    }
-
-    if(isStructuredCellSet)
-    {
+      vtkm::cont::CellSetStructured<3> cellSetStructured3D = cellset.Cast<vtkm::cont::CellSetStructured<3> >();
       const vtkm::Id numCells = cellSetStructured3D.GetNumberOfCells();
       std::cout<<"Number of cells "<<numCells<<std::endl;
       vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIdxs(0,1,numCells);
@@ -482,8 +458,9 @@ public:
       printSummary_ArrayHandle(outputIndices, std::cout); std::cout<<"\n";
       outputTriangles = numCells * 12;
     }
-    if(isExplicitCellSet)
+    else if(cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {
+      vtkm::cont::CellSetExplicit<> cellSetExplicit = cellset.Cast<vtkm::cont::CellSetExplicit<> >();
       const vtkm::cont::ArrayHandle<vtkm::UInt8> shapes = cellSetExplicit.GetShapesArray( vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
       const vtkm::cont::ArrayHandle<vtkm::Int32> indices = cellSetExplicit.GetNumIndicesArray( vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
       vtkm::cont::ArrayHandle<vtkm::Id> conn = cellSetExplicit.GetConnectivityArray( vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
@@ -519,6 +496,7 @@ public:
 
       outputTriangles = totalTriangles;
     }
+    else throw vtkm::cont::ErrorControlBadType("Unsupported cell set type for trianglulation");
     //get rid of any triagles we cannot see
     ExternalTrianlges(outputIndices, outputTriangles);
   }
