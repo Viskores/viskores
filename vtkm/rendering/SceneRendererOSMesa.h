@@ -61,7 +61,7 @@ public:
       SetupView();
       
       vtkm::cont::DynamicArrayHandleCoordinateSystem dcoords = coords.GetData();
-      if (!dcoords.IsArrayHandleType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
+      if (!dcoords.IsSameType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
       {
 	  std::cout<<"NOT UNIFORM!"<<std::endl;
 	  return;
@@ -76,11 +76,11 @@ public:
       //printSummary_ArrayHandle(indices, std::cout);
 
       vtkm::cont::ArrayHandle<vtkm::Float32> sf;
-      scalarField.GetData().CastToArrayHandle(sf);
+      sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32> >();
       //printSummary_ArrayHandle(sf, std::cout);
 
       vtkm::cont::ArrayHandleUniformPointCoordinates uVerts;
-      dcoords.CastToArrayHandle(uVerts);
+      uVerts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       vtkm::rendering::ColorTable ct = colorTable;
       vtkm::Float32 sMin = vtkm::Float32(scalarBounds[0]);
       vtkm::Float32 sMax = vtkm::Float32(scalarBounds[1]);

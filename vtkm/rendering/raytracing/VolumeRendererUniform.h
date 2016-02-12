@@ -136,7 +136,7 @@ public:
                                   FieldIn<>,
                                   FieldIn<>,
                                   FieldOut<>,
-                                  ExecObject);
+                                  WholeArrayIn<ScalarRenderingTypes>);
     typedef void ExecutionSignature(_1,
                                     _2,
                                     _3,
@@ -168,13 +168,13 @@ public:
       cellIndices[7] = cellIndices[6] - 1;
     }
 
-    template<typename ScalarType, typename ScalarStorageTag>
+    template<typename ScalarPortalType>
     VTKM_EXEC_EXPORT
     void operator()(const vtkm::Vec<vtkm::Float32,3> &rayDir,
                     const vtkm::Float32 &minDistance,
                     const vtkm::Float32 &maxDistance,
                     vtkm::Vec<vtkm::Float32,4> &color,
-                    vtkm::exec::ExecutionWholeArrayConst<ScalarType, ScalarStorageTag> &scalars) const
+                    ScalarPortalType &scalars) const
     {
       color[0] = 0.f;
       color[1] = 0.f;
@@ -346,7 +346,7 @@ public:
                                   FieldIn<>,
                                   FieldIn<>,
                                   FieldOut<>,
-                                  ExecObject);
+                                  WholeArrayIn<ScalarRenderingTypes>);
     typedef void ExecutionSignature(_1,
                                     _2,
                                     _3,
@@ -367,13 +367,13 @@ public:
       cellId = (cell[2] * CellDimensions[1] + cell[1]) * CellDimensions[0] + cell[0];
     }
 
-    template<typename ScalarType, typename ScalarStorageTag>
+    template<typename ScalarPortalType>
     VTKM_EXEC_EXPORT
     void operator()(const vtkm::Vec<vtkm::Float32,3> &rayDir,
                     const vtkm::Float32 &minDistance,
                     const vtkm::Float32 &maxDistance,
                     vtkm::Vec<vtkm::Float32,4> &color,
-                    vtkm::exec::ExecutionWholeArrayConst<ScalarType, ScalarStorageTag> &scalars) const
+                    const ScalarPortalType &scalars) const
     {
       color[0] = 0.f;
       color[1] = 0.f;
@@ -508,8 +508,8 @@ public:
       vtkm::Float32 zmax = Zmax * invDirz - odirz;
 
 
-      minDistance = fmaxf(fmaxf(fmaxf(fminf(ymin,ymax),fminf(xmin,xmax)),fminf(zmin,zmax)), 0.f);
-      maxDistance = fminf(fminf(fmaxf(ymin,ymax),fmaxf(xmin,xmax)),fmaxf(zmin,zmax));
+      minDistance = vtkm::Max(vtkm::Max(vtkm::Max(vtkm::Min(ymin,ymax),vtkm::Min(xmin,xmax)),vtkm::Min(zmin,zmax)), 0.f);
+      maxDistance = vtkm::Min(vtkm::Min(vtkm::Max(ymin,ymax),vtkm::Max(xmin,xmax)),vtkm::Max(zmin,zmax));
       if(maxDistance < minDistance) 
       {
         minDistance = -1.f; //flag for miss
@@ -574,12 +574,14 @@ public:
   void SetData(const vtkm::cont::ArrayHandleUniformPointCoordinates &coordinates,
                vtkm::cont::Field &scalarField,
                vtkm::Float64 coordsBounds[6],
-               const vtkm::cont::CellSetStructured<3> &cellset)
+               const vtkm::cont::CellSetStructured<3> &cellset,
+               vtkm::Float64 *scalarBounds)
   {
     IsSceneDirty = true;
     Coordinates = coordinates;
     ScalarField = &scalarField;
     Cellset = cellset;
+    ScalarBounds = scalarBounds;
     for (int i = 0; i < 6; ++i)
     {
       BoundingBox[i] = vtkm::Float32(coordsBounds[i]);
@@ -611,84 +613,44 @@ public:
                Rays.MinDistance,
                Rays.MaxDistance);
     
-    vtkm::Float64 scalarBounds[2];
-    ScalarField->GetBounds(scalarBounds, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    
+    bool isSupportedField = (ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS || 
+                             ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET );
+    if(!isSupportedField) throw vtkm::cont::ErrorControlBadValue("Feild not accociated with cell set or points");
     bool isAssocPoints = ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
-
-    if(ScalarField->GetData().IsArrayHandleType( vtkm::cont::ArrayHandle<vtkm::Float32>() ))
+    
+    if(isAssocPoints)
     {
-      vtkm::cont::ArrayHandle<vtkm::Float32> scalarsHandle;
-      ScalarField->GetData().CastToArrayHandle(scalarsHandle);
-
-      if(isAssocPoints)
-      {
-        vtkm::worklet::DispatcherMapField< Sampler >( Sampler( camera.GetPosition(), 
-                                                               ColorMap, 
-                                                               Coordinates,
-                                                               Cellset,
-                                                               vtkm::Float32(scalarBounds[0]),
-                                                               vtkm::Float32(scalarBounds[1]),
-                                                               sampleDistance ))
-          .Invoke( Rays.Dir,
-                   Rays.MinDistance,
-                   Rays.MaxDistance,
-                   RGBA,
-                   vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32>(scalarsHandle));
-      }
-      else
-      {
-        vtkm::worklet::DispatcherMapField< SamplerCellAssoc >( SamplerCellAssoc( camera.GetPosition(), 
-                                                                                 ColorMap, 
-                                                                                 Coordinates,
-                                                                                 Cellset,
-                                                                                 vtkm::Float32(scalarBounds[0]),
-                                                                                 vtkm::Float32(scalarBounds[1]),
-                                                                                 sampleDistance ))
-          .Invoke( Rays.Dir,
-                   Rays.MinDistance,
-                   Rays.MaxDistance,
-                   RGBA,
-                   vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32>(scalarsHandle));
-      }
-      
+      vtkm::worklet::DispatcherMapField< Sampler >( Sampler( camera.GetPosition(), 
+                                                             ColorMap, 
+                                                             Coordinates,
+                                                             Cellset,
+                                                             vtkm::Float32(ScalarBounds[0]),
+                                                             vtkm::Float32(ScalarBounds[1]),
+                                                             sampleDistance ))
+        .Invoke( Rays.Dir,
+                 Rays.MinDistance,
+                 Rays.MaxDistance,
+                 RGBA,
+                 ScalarField->GetData());
     }
-    else if(ScalarField->GetData().IsArrayHandleType( vtkm::cont::ArrayHandle<vtkm::Float64>() ))
+    else
     {
-      vtkm::cont::ArrayHandle<vtkm::Float64> scalarsHandle;
-      ScalarField->GetData().CastToArrayHandle(scalarsHandle);
-      if(isAssocPoints)
-      {
-        vtkm::worklet::DispatcherMapField< Sampler >( Sampler( camera.GetPosition(), 
-                                                               ColorMap, 
-                                                               Coordinates,
-                                                               Cellset,
-                                                               vtkm::Float32(scalarBounds[0]),
-                                                               vtkm::Float32(scalarBounds[1]),
-                                                               sampleDistance ))
-          .Invoke( Rays.Dir,
-                   Rays.MinDistance,
-                   Rays.MaxDistance,
-                   RGBA,
-                   vtkm::exec::ExecutionWholeArrayConst<vtkm::Float64>(scalarsHandle));
-      }
-      else
-      {
-        vtkm::worklet::DispatcherMapField< SamplerCellAssoc >( SamplerCellAssoc( camera.GetPosition(), 
-                                                                                 ColorMap, 
-                                                                                 Coordinates,
-                                                                                 Cellset,
-                                                                                 vtkm::Float32(scalarBounds[0]),
-                                                                                 vtkm::Float32(scalarBounds[1]),
-                                                                                 sampleDistance ))
-          .Invoke( Rays.Dir,
-                   Rays.MinDistance,
-                   Rays.MaxDistance,
-                   RGBA,
-                   vtkm::exec::ExecutionWholeArrayConst<vtkm::Float64>(scalarsHandle));
-      }
+      vtkm::worklet::DispatcherMapField< SamplerCellAssoc >( SamplerCellAssoc( camera.GetPosition(), 
+                                                                               ColorMap, 
+                                                                               Coordinates,
+                                                                               Cellset,
+                                                                               vtkm::Float32(ScalarBounds[0]),
+                                                                               vtkm::Float32(ScalarBounds[1]),
+                                                                               sampleDistance ))
+        .Invoke( Rays.Dir,
+                 Rays.MinDistance,
+                 Rays.MaxDistance,
+                 RGBA,
+                 ScalarField->GetData());
     }
-    vtkm::worklet::DispatcherMapField< CompositeBackground >( CompositeBackground( BackgroundColor ) )
+    
+  
+  vtkm::worklet::DispatcherMapField< CompositeBackground >( CompositeBackground( BackgroundColor ) )
       .Invoke( RGBA );
    VUniWriter::WriteColorBufferVR(RGBA, camera.GetWidth(), camera.GetHeight());
    VUniWriter::WriteDepthBufferVR(Rays, camera.GetWidth(), camera.GetHeight());
@@ -719,6 +681,7 @@ protected:
   vtkm::Float32 BoundingBox[6];
   vtkm::Float32 NumberOfSamples;
   vtkm::Vec<vtkm::Float32,4> BackgroundColor;
+  vtkm::Float64 *ScalarBounds;
 
 };
 }}} //namespace vtkm::rendering::raytracing

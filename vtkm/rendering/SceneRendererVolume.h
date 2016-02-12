@@ -51,7 +51,7 @@ public:
                            const vtkm::cont::CoordinateSystem &coords,
                            vtkm::cont::Field &scalarField,
                            const vtkm::rendering::ColorTable &, //colorTable
-                           vtkm::Float64 *) //scalarBounds=NULL)
+                           vtkm::Float64 *scalarBounds=NULL) //scalarBounds=NULL)
   {
     vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
     vtkm::Float64 coordsBounds[6]; // Xmin,Xmax,Ymin..
@@ -59,7 +59,7 @@ public:
 
     bool isExplicit = false;
     bool isUniform = false;
-    if(!cellset.IsType(vtkm::cont::CellSetStructured<3>()))
+    if(!cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
     {
       std::cerr<<"ERROR cell set type not currently supported\n";
       std::string theType = typeid(cellset).name();
@@ -67,13 +67,14 @@ public:
     }
     else
     {
-      vtkm::cont::CellSetStructured<3> cellSetStructured3D;
-      cellSetStructured3D = cellset.CastTo(vtkm::cont::CellSetStructured<3>());
+      vtkm::cont::CellSetStructured<3> cellSetStructured3D = cellset.Cast<vtkm::cont::CellSetStructured<3> >();
+      std::cout<<"Is structured"<<std::endl;
       vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
-      dynamicCoordsHandle.CastToArrayHandle(vertices);
+      //if(dynamicCoordsHandle.IsArrayHandleType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
+      vertices = dynamicCoordsHandle.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       vtkm::rendering::raytracing::Camera<DeviceAdapter> &camera = Tracer.GetCamera();
       camera.SetParameters(View);
-      Tracer.SetData(vertices, scalarField, coordsBounds, cellSetStructured3D);
+      Tracer.SetData(vertices, scalarField, coordsBounds, cellSetStructured3D, scalarBounds);
       Tracer.SetColorMap(ColorMap);
       std::cout<<"Structured Rendering"<<std::endl;
       Tracer.SetBackgroundColor(this->BackgroundColor);
