@@ -129,7 +129,7 @@ DataSetResult DataSetWithFieldFilter<Derived>::PrepareForExecution(const vtkm::c
                       result);
 
   typedef vtkm::filter::FilterTraits< Derived > Traits;
-  vtkm::filter::Convert(field, policy, Traits()).CastAndCall(functor);
+  vtkm::filter::ApplyPolicy(field, policy, Traits()).CastAndCall(functor);
 
   return result;
 }
@@ -156,7 +156,7 @@ DataSetResult DataSetWithFieldFilter<Derived>::PrepareForExecution(const vtkm::c
                       result);
 
   typedef vtkm::filter::FilterTraits< Derived > Traits;
-  vtkm::filter::Convert(field, policy, Traits()).CastAndCall(functor);
+  vtkm::filter::ApplyPolicy(field, policy, Traits()).CastAndCall(functor);
 
   return result;
 }
@@ -189,7 +189,7 @@ bool DataSetWithFieldFilter<Derived>::MapFieldOntoOutput(DataSetResult& result,
                         valid);
 
     typedef vtkm::filter::FilterTraits< Derived > Traits;
-    vtkm::filter::Convert(field, policy, Traits()).CastAndCall(functor);
+    vtkm::filter::ApplyPolicy(field, policy, Traits()).CastAndCall(functor);
     }
 
   //the bool valid will be modified by the map algorithm to hold if the

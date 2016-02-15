@@ -147,7 +147,7 @@ FieldResult FieldFilter<Derived>::PrepareForExecution(const vtkm::cont::DataSet 
                       result);
 
   typedef vtkm::filter::FilterTraits< Derived > Traits;
-  vtkm::filter::Convert(field, policy, Traits()).CastAndCall(functor);
+  vtkm::filter::ApplyPolicy(field, policy, Traits()).CastAndCall(functor);
   return result;
 }
 
@@ -173,7 +173,7 @@ FieldResult FieldFilter<Derived>::PrepareForExecution(const vtkm::cont::DataSet 
                       result);
 
   typedef vtkm::filter::FilterTraits< Derived > Traits;
-  vtkm::filter::Convert(field, policy, Traits()).CastAndCall(functor);
+  vtkm::filter::ApplyPolicy(field, policy, Traits()).CastAndCall(functor);
   return result;
 }
 

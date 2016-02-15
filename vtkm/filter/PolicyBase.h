@@ -45,8 +45,8 @@ vtkm::cont::DynamicArrayHandleBase<
                                   typename DerivedPolicy::FieldTypeList,
                                   typename DerivedPolicy::FieldStorageList
                                   >
-Convert(const vtkm::cont::Field& field,
-        const vtkm::filter::PolicyBase<DerivedPolicy>&)
+ApplyPolicy(const vtkm::cont::Field& field,
+            const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   typedef typename DerivedPolicy::FieldTypeList TypeList;
   typedef typename DerivedPolicy::FieldStorageList StorageList;
@@ -60,9 +60,9 @@ vtkm::cont::DynamicArrayHandleBase<
                                   typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList,
                                   typename DerivedPolicy::FieldStorageList
                                   >
-Convert(const vtkm::cont::Field& field,
-        const vtkm::filter::PolicyBase<DerivedPolicy>&,
-        const vtkm::filter::FilterTraits<FilterType>&)
+ApplyPolicy(const vtkm::cont::Field& field,
+            const vtkm::filter::PolicyBase<DerivedPolicy>&,
+            const vtkm::filter::FilterTraits<FilterType>&)
 {
   //todo: we need to intersect the policy field type list and the
   //filter traits to the get smallest set of valid types
@@ -79,8 +79,8 @@ vtkm::cont::DynamicArrayHandleBase<
                                   typename DerivedPolicy::CoordinateTypeList,
                                   typename DerivedPolicy::CoordinateStorageList
                                   >
-Convert(const vtkm::cont::CoordinateSystem& coordinates,
-        const vtkm::filter::PolicyBase<DerivedPolicy>&)
+ApplyPolicy(const vtkm::cont::CoordinateSystem& coordinates,
+            const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   typedef typename DerivedPolicy::CoordinateTypeList TypeList;
   typedef typename DerivedPolicy::CoordinateStorageList StorageList;
@@ -94,9 +94,9 @@ vtkm::cont::DynamicArrayHandleBase<
                                   typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList,
                                   typename DerivedPolicy::CoordinateStorageList
                                   >
-Convert(const vtkm::cont::CoordinateSystem& coordinates,
-        const vtkm::filter::PolicyBase<DerivedPolicy>&,
-        const vtkm::filter::FilterTraits<FilterType>&)
+ApplyPolicy(const vtkm::cont::CoordinateSystem& coordinates,
+            const vtkm::filter::PolicyBase<DerivedPolicy>&,
+            const vtkm::filter::FilterTraits<FilterType>&)
 {
   //todo: we need to intersect the policy field type list and the
   //filter traits to the get smallest set of valid types
@@ -110,8 +110,8 @@ Convert(const vtkm::cont::CoordinateSystem& coordinates,
 template<typename DerivedPolicy>
 VTKM_CONT_EXPORT
 vtkm::cont::DynamicCellSetBase< typename DerivedPolicy::CellSetList >
-Convert(const vtkm::cont::DynamicCellSet& cellset,
-        const vtkm::filter::PolicyBase<DerivedPolicy>&)
+ApplyPolicy(const vtkm::cont::DynamicCellSet& cellset,
+            const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   typedef typename DerivedPolicy::CellSetList CellSetList;
   return cellset.ResetCellSetList(CellSetList());

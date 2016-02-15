@@ -326,7 +326,7 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
 
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutputTrisPerCell;
   classifyCellDispatcher.Invoke(field,
-                                vtkm::filter::Convert(cells, policy),
+                                vtkm::filter::ApplyPolicy(cells, policy),
                                 numOutputTrisPerCell,
                                 this->NumTrianglesTable);
 
@@ -342,10 +342,10 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
 
   GenerateDispatcher edgeDispatcher(weightGenerate);
   edgeDispatcher.Invoke(
-        vtkm::filter::Convert(cells, policy),
+        vtkm::filter::ApplyPolicy(cells, policy),
         //cast to a scalar field if not one, as cellderivative only works on those
         make_ScalarField(field),
-        vtkm::filter::Convert(coords, policy),
+        vtkm::filter::ApplyPolicy(coords, policy),
         vtkm::cont::make_ArrayHandleGroupVec<3>(normals),
         vtkm::cont::make_ArrayHandleGroupVec<3>(this->InterpolationWeights),
         vtkm::cont::make_ArrayHandleGroupVec<3>(this->InterpolationIds),
@@ -410,7 +410,8 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
     Algorithm::LowerBounds(unqiueIds, this->InterpolationIds, connectivity);
 
 
-    vtkm::cont::CellSetSingleType< > outputCells( (vtkm::CellShapeTagTriangle()) );
+    CellShapeTagTriangle triangleTag;
+    vtkm::cont::CellSetSingleType< > outputCells( triangleTag );
     outputCells.Fill( connectivity );
     output.AddCellSet( outputCells );
   }
@@ -422,13 +423,14 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
 
     applyFieldDispatcher.Invoke(this->InterpolationIds,
                                 this->InterpolationWeights,
-                                vtkm::filter::Convert(coords, policy),
+                                vtkm::filter::ApplyPolicy(coords, policy),
                                 vertices);
 
     //when we don't merge points, the connectivity array can be represented
     //by a counting array
     typedef typename vtkm::cont::ArrayHandleIndex::StorageTag IndexStorageTag;
-    vtkm::cont::CellSetSingleType< IndexStorageTag > outputCells( (vtkm::CellShapeTagTriangle()) );
+    CellShapeTagTriangle triangleTag;
+    vtkm::cont::CellSetSingleType< IndexStorageTag > outputCells( triangleTag );
     vtkm::cont::ArrayHandleIndex connectivity(vertices.GetNumberOfValues());
     outputCells.Fill( connectivity );
     output.AddCellSet( outputCells );

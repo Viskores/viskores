@@ -114,7 +114,7 @@ vtkm::filter::DataSetResult Threshold::DoExecute(const vtkm::cont::DataSet& inpu
     typedef Worklets::ThresholdByPointField< ThresholdRange > ThresholdWorklet;
     ThresholdWorklet worklet(predicate);
     vtkm::worklet::DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-    dispatcher.Invoke(vtkm::filter::Convert(cells, policy), field, passFlags);
+    dispatcher.Invoke(vtkm::filter::ApplyPolicy(cells, policy), field, passFlags);
   }
   else if(fieldMeta.IsCellField())
   {
@@ -122,7 +122,7 @@ vtkm::filter::DataSetResult Threshold::DoExecute(const vtkm::cont::DataSet& inpu
     typedef Worklets::ThresholdByCellField< ThresholdRange > ThresholdWorklet;
     ThresholdWorklet worklet(predicate);
     vtkm::worklet::DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-    dispatcher.Invoke(vtkm::filter::Convert(cells, policy), field, passFlags);
+    dispatcher.Invoke(vtkm::filter::ApplyPolicy(cells, policy), field, passFlags);
   }
   else
   {
@@ -145,7 +145,7 @@ vtkm::filter::DataSetResult Threshold::DoExecute(const vtkm::cont::DataSet& inpu
   //can use to reduce code duplication, and make it easier to write filters
   //that return complex dataset types.
   AddPermutationCellSet addCellSet(output, this->ValidCellIds);
-  vtkm::filter::Convert(cells, policy).CastAndCall(addCellSet);
+  vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(addCellSet);
 
   //todo: We need to generate a new output policy that replaces
   //the original storage tag with a new storage tag where everything is
