@@ -27,22 +27,27 @@
 namespace
 {
 
-class HasValue
+class ThresholdRange
 {
 public:
   VTKM_CONT_EXPORT
-  HasValue(const vtkm::Float64& value) : Value(value)
+  ThresholdRange(const vtkm::Float64& lower,
+                 const vtkm::Float64& upper) :
+    Lower(lower),
+    Upper(upper)
   { }
 
   template<typename T>
   VTKM_EXEC_EXPORT
   bool operator()(const T& value) const
   {
-    return value == static_cast<T>(this->Value);
+    return value >= static_cast<T>(this->Lower) &&
+           value <= static_cast<T>(this->Upper);
   }
 
 private:
-  vtkm::Float64 Value;
+  vtkm::Float64 Lower;
+  vtkm::Float64 Upper;
 };
 
 class AddPermutationCellSet
@@ -79,7 +84,8 @@ namespace filter {
 //-----------------------------------------------------------------------------
 Threshold::Threshold():
   vtkm::filter::DataSetWithFieldFilter<Threshold>(),
-  ThresholdValue(0),
+  LowerValue(0),
+  UpperValue(0),
   ValidCellIds()
 {
 
@@ -100,12 +106,12 @@ vtkm::filter::DataSetResult Threshold::DoExecute(const vtkm::cont::DataSet& inpu
   const vtkm::cont::DynamicCellSet& cells =
                   input.GetCellSet(this->GetActiveCellSetIndex());
 
-  HasValue predicate( this->GetThresholdValue() );
+  ThresholdRange predicate( this->GetLowerThreshold(), this->GetUpperThreshold() );
   vtkm::cont::ArrayHandle<bool> passFlags;
   if(fieldMeta.IsPointField())
   {
     typedef vtkm::worklet::Threshold Worklets;
-    typedef Worklets::ThresholdByPointField< HasValue > ThresholdWorklet;
+    typedef Worklets::ThresholdByPointField< ThresholdRange > ThresholdWorklet;
     ThresholdWorklet worklet(predicate);
     vtkm::worklet::DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
     dispatcher.Invoke(vtkm::filter::Convert(cells, policy), field, passFlags);
@@ -113,7 +119,7 @@ vtkm::filter::DataSetResult Threshold::DoExecute(const vtkm::cont::DataSet& inpu
   else if(fieldMeta.IsCellField())
   {
     typedef vtkm::worklet::Threshold Worklets;
-    typedef Worklets::ThresholdByCellField< HasValue > ThresholdWorklet;
+    typedef Worklets::ThresholdByCellField< ThresholdRange > ThresholdWorklet;
     ThresholdWorklet worklet(predicate);
     vtkm::worklet::DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
     dispatcher.Invoke(vtkm::filter::Convert(cells, policy), field, passFlags);

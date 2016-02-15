@@ -40,7 +40,8 @@ public:
     vtkm::filter::Threshold threshold;
     vtkm::filter::DataSetResult result;
 
-    threshold.SetThresholdValue(60.1);
+    threshold.SetLowerThreshold(60.1);
+    threshold.SetUpperThreshold(60.1);
     result = threshold.Execute(dataset, dataset.GetField("pointvar"));
 
     threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar") );
@@ -69,7 +70,8 @@ public:
     vtkm::filter::Threshold threshold;
     vtkm::filter::DataSetResult result;
 
-    threshold.SetThresholdValue(20.1);
+    threshold.SetLowerThreshold(20.1);
+    threshold.SetUpperThreshold(20.1);
     result = threshold.Execute(dataset, std::string("pointvar"));
 
     threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar") );
@@ -99,7 +101,8 @@ public:
     vtkm::filter::Threshold threshold;
     vtkm::filter::DataSetResult result;
 
-    threshold.SetThresholdValue(20.1);
+    threshold.SetLowerThreshold(20.1);
+    threshold.SetUpperThreshold(20.1);
     result = threshold.Execute(dataset, std::string("pointvar"));
 
     threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar") );
@@ -129,7 +132,8 @@ public:
     vtkm::filter::Threshold threshold;
     vtkm::filter::DataSetResult result;
 
-    threshold.SetThresholdValue(500.1);
+    threshold.SetLowerThreshold(500.1);
+    threshold.SetUpperThreshold(500.1);
     result = threshold.Execute(dataset, std::string("pointvar"));
 
     VTKM_TEST_ASSERT(result.IsValid(), "threshold algorithm should return true");

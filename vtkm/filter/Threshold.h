@@ -34,10 +34,14 @@ public:
   Threshold();
 
   VTKM_CONT_EXPORT
-  void SetThresholdValue(vtkm::Float64 value){ this->ThresholdValue = value; }
+  void SetLowerThreshold(vtkm::Float64 value){ this->LowerValue = value; }
+  VTKM_CONT_EXPORT
+  void SetUpperThreshold(vtkm::Float64 value){ this->UpperValue = value; }
 
   VTKM_CONT_EXPORT
-  vtkm::Float64 GetThresholdValue() const    { return this->ThresholdValue; }
+  vtkm::Float64 GetLowerThreshold() const    { return this->LowerValue; }
+  VTKM_CONT_EXPORT
+  vtkm::Float64 GetUpperThreshold() const    { return this->UpperValue; }
 
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT_EXPORT
@@ -59,7 +63,8 @@ public:
 
 
 private:
-  double ThresholdValue;
+  double LowerValue;
+  double UpperValue;
   vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
 };
 
