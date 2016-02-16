@@ -92,6 +92,7 @@ public:
     projectionMatrix(2,2) = -(FarPlane + NearPlane)  / (FarPlane - NearPlane);
     projectionMatrix(3,2) = -1.f;
     projectionMatrix(2,3) = -(2.f * FarPlane * NearPlane) / (FarPlane - NearPlane);
+    projectionMatrix(3,3) = 0.f;
     return projectionMatrix;
   }
 
