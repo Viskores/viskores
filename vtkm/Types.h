@@ -126,12 +126,13 @@ typedef unsigned int UInt32;
 #error Could not find a 32-bit integer.
 #endif
 
-#if VTKM_SIZE_LONG == 8
-typedef signed long Int64;
-typedef unsigned long UInt64;
-#elif VTKM_SIZE_LONG_LONG == 8
+//In this order so that we exactly match the logic that exists in VTK
+#if VTKM_SIZE_LONG_LONG == 8
 typedef signed long long Int64;
 typedef unsigned long long UInt64;
+#elif VTKM_SIZE_LONG == 8
+typedef signed long Int64;
+typedef unsigned long UInt64;
 #else
 #error Could not find a 64-bit integer.
 #endif
