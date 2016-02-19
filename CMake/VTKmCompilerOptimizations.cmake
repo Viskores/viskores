@@ -118,8 +118,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0)
     list(APPEND vec_levels avx avx2)
   else()
-    list(APPEND vec_levels avx avx2 avx512)
+    list(APPEND vec_levels avx avx2 avx512 knl)
     set(avx512_flags -xCORE-AVX512)
+    set(knl_flags -xMIC-AVX512)
   endif()
 endif()
 
@@ -127,6 +128,7 @@ set_property(GLOBAL PROPERTY VTKm_NATIVE_FLAGS ${native_flags})
 set_property(GLOBAL PROPERTY VTKm_AVX_FLAGS ${avx_flags})
 set_property(GLOBAL PROPERTY VTKm_AVX2_FLAGS ${avx2_flags})
 set_property(GLOBAL PROPERTY VTKm_AVX512_FLAGS ${avx512_flags})
+set_property(GLOBAL PROPERTY VTKm_KNLAVX512_FLAGS ${knl_flags})
 set(${vec_levels_var} ${vec_levels} PARENT_SCOPE)
 
 endfunction() # set_vectorization_flags_properties
@@ -155,6 +157,8 @@ elseif(VTKm_Vectorization STREQUAL "avx2")
   get_property(flags GLOBAL PROPERTY VTKm_AVX2_FLAGS)
 elseif(VTKm_Vectorization STREQUAL "avx512")
   get_property(flags GLOBAL PROPERTY VTKm_AVX512_FLAGS)
+elseif(VTKm_Vectorization STREQUAL "knl")
+  get_property(flags GLOBAL PROPERTY VTKm_KNLAVX512_FLAGS)
 endif()
 
 #guard against adding the flags multiple times, which happens when multiple
