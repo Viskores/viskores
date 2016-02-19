@@ -64,6 +64,7 @@ int GetHexahedronClassification(const T& values, const U isoValue)
           (values[7] > isoValue) << 7);
 }
 
+// -----------------------------------------------------------------------------
 class ClassifyCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
@@ -101,6 +102,7 @@ public:
 
 /// \brief Compute the weights for each edge that is used to generate
 /// a point in the resulting iso-surface
+// -----------------------------------------------------------------------------
 class EdgeWeightGenerate : public vtkm::worklet::WorkletMapPointToCell
 {
   typedef vtkm::Vec< vtkm::Id2, 3 > Vec3Id2;
@@ -222,7 +224,7 @@ private:
   ScatterType Scatter;
 };
 
-
+// -----------------------------------------------------------------------------
 class ApplyToField : public vtkm::worklet::WorkletMapField
   {
   public:
@@ -355,11 +357,8 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
   //Now that we have the edge interpolation finished we can generate the
   //following:
   //1. Coordinates ( with option to do point merging )
-  //2. Normals
-  //todo: We need to run the coords through out policy and determine
-  //what the output coordinate type should be. We have two problems here
-  //1. What is the type? float32/float64
-  //2. What is the storage backing
+  //
+  //
   vtkm::cont::DataSet output;
   vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::Float32,3> > vertices;
 
@@ -414,6 +413,16 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
     vtkm::cont::CellSetSingleType< > outputCells( triangleTag );
     outputCells.Fill( connectivity );
     output.AddCellSet( outputCells );
+
+
+    ApplyToField applyToField;
+    vtkm::worklet::DispatcherMapField<ApplyToField,
+                                    DeviceAdapter> applyFieldDispatcher(applyToField);
+    applyFieldDispatcher.Invoke(unqiueIds,
+                                this->InterpolationWeights,
+                                vtkm::filter::ApplyPolicy(coords, policy),
+                                vertices);
+
   }
   else
   {
