@@ -20,7 +20,7 @@
 ##
 ##=============================================================================
 
-if(VTKm_Cuda_FOUND)
+if(VTKm_CUDA_FOUND)
   cuda_add_executable(MultiBackend MultiBackend.cu)
 else()
   add_executable(MultiBackend MultiBackend.cxx)

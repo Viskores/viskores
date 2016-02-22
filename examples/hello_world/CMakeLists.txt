@@ -27,7 +27,7 @@ if(OPENGL_FOUND AND GLUT_FOUND)
   target_link_libraries(HelloWorld_SERIAL ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
   target_compile_options(HelloWorld_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
-  if(VTKm_Cuda_FOUND)
+  if(VTKm_CUDA_FOUND)
     vtkm_disable_troublesome_thrust_warnings()
     cuda_add_executable(HelloWorld_CUDA HelloWorld.cu)
     target_link_libraries(HelloWorld_CUDA ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
