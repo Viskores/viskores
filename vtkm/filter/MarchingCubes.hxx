@@ -422,6 +422,7 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
                                 this->InterpolationWeights,
                                 vtkm::filter::ApplyPolicy(coords, policy),
                                 vertices);
+    vtkm::cont::printSummary_ArrayHandle(vertices, std::cout);
 
   }
   else
@@ -436,7 +437,9 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
                                 vertices);
 
     //when we don't merge points, the connectivity array can be represented
-    //by a counting array
+    //by a counting array. The danger of doing it this way is that the output
+    //type is unknown. We should use explicit connectivity, or add this type
+    //to the default output types
     typedef typename vtkm::cont::ArrayHandleIndex::StorageTag IndexStorageTag;
     CellShapeTagTriangle triangleTag;
     vtkm::cont::CellSetSingleType< IndexStorageTag > outputCells( triangleTag );

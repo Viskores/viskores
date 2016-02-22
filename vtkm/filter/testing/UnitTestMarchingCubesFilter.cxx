@@ -273,27 +273,57 @@ void TestMarchingCubesUniformGrid()
   result = mc.Execute( dataSet,
                        dataSet.GetField("nodevar") );
 
-  vtkm::cont::DataSet& outputData = result.GetDataSet();
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
-  //since normals is on we have one field
-  VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
-                   "Wrong number of fields in the output dataset");
+  {
+    vtkm::cont::DataSet& outputData = result.GetDataSet();
+    VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
+                     "Wrong number of cellsets in the output dataset");
+    VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
+                     "Wrong number of coordinate systems in the output dataset");
+    //since normals is on we have one field
+    VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
+                     "Wrong number of fields in the output dataset");
 
-  //Map a field onto the resulting dataset
-  const bool isMapped = mc.MapFieldOntoOutput(result, dataSet.GetField("nodevar"));
-  VTKM_TEST_ASSERT( isMapped, "mapping should pass" );
+    //Map a field onto the resulting dataset
+    const bool isMapped = mc.MapFieldOntoOutput(result, dataSet.GetField("nodevar"));
+    VTKM_TEST_ASSERT( isMapped, "mapping should pass" );
 
-  VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
-                   "Wrong number of fields in the output dataset");
+    VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
+                     "Wrong number of fields in the output dataset");
 
-  //verify that the number of cells is correct
-  //verify that the number of points is correct
+    //verify that the number of points is correct
+    vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
+    VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 402,
+                     "Should have less coordinates than the unmerged version");
 
-  //should have 480 coordinates
-  //should have 160 cells
+    //verify that the number of cells is correct (160)
+    vtkm::cont::DynamicCellSet dcells = outputData.GetCellSet();
+
+    typedef vtkm::cont::CellSetSingleType<> CellSetType;
+    const CellSetType& cells = dcells.Cast<CellSetType>();
+    VTKM_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
+  }
+
+  //Now try with vertex merging disabled
+  mc.SetMergeDuplicatePoints(false);
+  result = mc.Execute( dataSet,
+                       dataSet.GetField("nodevar") );
+
+  {
+    vtkm::cont::DataSet& outputData = result.GetDataSet();
+    vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
+
+    VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 480,
+                     "Should have less coordinates than the unmerged version");
+
+    //verify that the number of cells is correct (160)
+    vtkm::cont::DynamicCellSet dcells = outputData.GetCellSet();
+
+    //todo: this needs to be an explicit storage tag
+    typedef vtkm::cont::ArrayHandleIndex::StorageTag IndexStorageTag;
+    typedef vtkm::cont::CellSetSingleType<IndexStorageTag> CellSetType;
+    const CellSetType& cells = dcells.Cast<CellSetType>();
+    VTKM_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
+  }
 }
 
 void TestMarchingCubesCustomPolicy()
@@ -334,27 +364,15 @@ void TestMarchingCubesCustomPolicy()
                    "Wrong number of fields in the output dataset");
 
 
-  //data arrays
-  // VTKM_TEST_ASSERT(test_equal(vertices.GetNumberOfValues(), 2472),
-  //                  "Wrong vertices result for MarchingCubes filter");
-  // VTKM_TEST_ASSERT(test_equal(normals.GetNumberOfValues(), 2472),
-  //                  "Wrong normals result for MarchingCubes filter");
-  // VTKM_TEST_ASSERT(test_equal(scalars.GetNumberOfValues(), 2472),
-  //                  "Wrong scalars result for MarchingCubes filter");
+  vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
+  VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 414,
+                   "Should have some coordinates");
 }
-
-
-void TestMarchingCubesNonDefaultCoordinates()
-{
-
-}
-
 
 void TestMarchingCubesFilter()
 {
   TestMarchingCubesUniformGrid();
   TestMarchingCubesCustomPolicy();
-  TestMarchingCubesNonDefaultCoordinates();
 }
 
 } // anonymous namespace
