@@ -41,7 +41,7 @@ if(OPENGL_FOUND AND GLUT_FOUND)
   target_link_libraries(TriangulateUniformGrid_SERIAL ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
   target_compile_options(TriangulateUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
-  if(VTKm_Cuda_FOUND)
+  if(VTKm_CUDA_FOUND)
     cuda_add_executable(TetrahedralizeExplicitGrid_CUDA TetrahedralizeExplicitGrid.cu)
     target_link_libraries(TetrahedralizeExplicitGrid_CUDA ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
     target_compile_options(TetrahedralizeExplicitGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
