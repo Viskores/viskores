@@ -422,8 +422,6 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
                                 this->InterpolationWeights,
                                 vtkm::filter::ApplyPolicy(coords, policy),
                                 vertices);
-    vtkm::cont::printSummary_ArrayHandle(vertices, std::cout);
-
   }
   else
   {

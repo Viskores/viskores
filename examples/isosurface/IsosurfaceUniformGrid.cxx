@@ -24,7 +24,7 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
-#include <vtkm/worklet/MarchingCubes.h>
+#include <vtkm/filter/MarchingCubes.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/Math.h>
@@ -48,10 +48,7 @@
 
 #include <vector>
 
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-
-vtkm::Id3 dims(16,16,16);
-vtkm::worklet::MarchingCubes<vtkm::Float32, DeviceAdapter> *isosurfaceFilter;
+vtkm::Id3 dims(256, 256, 256);
 vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray, normalsArray;
 vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
 Quaternion qrot;
@@ -233,27 +230,29 @@ void mouseCall(int button, int state, int x, int y)
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
 {
-  typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapter> DeviceAdapterTraits;
   typedef vtkm::cont::CellSetStructured<3> CellSet;
 
-  std::cout << "Running IsosurfaceUniformGrid example on device adapter: "
-            << DeviceAdapterTraits::GetName() << std::endl;
-
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
-  vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  dataSet.GetField("nodevar").GetData().CopyTo(fieldArray);
 
-  isosurfaceFilter = new vtkm::worklet::MarchingCubes<vtkm::Float32, DeviceAdapter>();
+  vtkm::filter::MarchingCubes filter;
+  filter.SetGenerateNormals(true);
+  filter.SetMergeDuplicatePoints( false );
+  filter.SetIsoValue( 0.5 );
+  vtkm::filter::DataSetResult result = filter.Execute( dataSet,
+                                                       dataSet.GetField("nodevar") );
 
-  isosurfaceFilter->Run(0.5,
-                        dataSet.GetCellSet().Cast<CellSet>(),
-                        dataSet.GetCoordinateSystem(),
-                        fieldArray,
-                        verticesArray,
-                        normalsArray);
+  filter.MapFieldOntoOutput(result, dataSet.GetField("nodevar"));
 
-  isosurfaceFilter->MapFieldOntoIsosurface(fieldArray,
-                                           scalarsArray);
+  //need to extract vertices, normals, and scalars
+  vtkm::cont::DataSet& outputData = result.GetDataSet();
+
+
+  typedef vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > VertType;
+  vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
+
+  verticesArray = coords.GetData().Cast<VertType>();
+  normalsArray = outputData.GetField("normals").GetData().Cast<VertType>();
+  scalarsArray = outputData.GetField("nodevar").GetData().Cast< vtkm::cont::ArrayHandle<vtkm::Float32> >();
 
   std::cout << "Number of output vertices: " << verticesArray.GetNumberOfValues() << std::endl;
 
