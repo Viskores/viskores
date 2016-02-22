@@ -304,6 +304,7 @@ install(
 # Install Use files.
 install(
   FILES
+    ${VTKm_SOURCE_DIR}/CMake/UseVTKmBase.cmake
     ${VTKm_SOURCE_DIR}/CMake/UseVTKmSerial.cmake
     ${VTKm_SOURCE_DIR}/CMake/UseVTKmTBB.cmake
     ${VTKm_SOURCE_DIR}/CMake/UseVTKmCUDA.cmake
@@ -313,6 +314,7 @@ install(
 # Install support files.
 install(
   FILES
+    ${VTKm_SOURCE_DIR}/CMake/VTKmMacros.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmCompilerOptimizations.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cxx
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
