@@ -86,28 +86,37 @@ struct TypeTraits<const T> : TypeTraits<T>
     typedef TypeTraitsRealTag NumericTag; \
     typedef TypeTraitsScalarTag DimensionalityTag; \
     VTKM_EXEC_CONT_EXPORT static T ZeroInitialization() { return T(); } \
-  }
+  };
 
 #define VTKM_BASIC_INTEGER_TYPE(T) \
-  template<> struct TypeTraits<T> { \
+  template<> struct TypeTraits< T > { \
     typedef TypeTraitsIntegerTag NumericTag; \
     typedef TypeTraitsScalarTag DimensionalityTag; \
-    VTKM_EXEC_CONT_EXPORT static T ZeroInitialization() { return T(); } \
-  }
+    VTKM_EXEC_CONT_EXPORT static T ZeroInitialization() \
+      { \
+      typedef T ReturnType; \
+      return ReturnType(); \
+      } \
+  }; \
 
 /// Traits for basic C++ types.
 ///
 
-VTKM_BASIC_REAL_TYPE(vtkm::Float32);
-VTKM_BASIC_REAL_TYPE(vtkm::Float64);
-VTKM_BASIC_INTEGER_TYPE(vtkm::Int8);
-VTKM_BASIC_INTEGER_TYPE(vtkm::UInt8);
-VTKM_BASIC_INTEGER_TYPE(vtkm::Int16);
-VTKM_BASIC_INTEGER_TYPE(vtkm::UInt16);
-VTKM_BASIC_INTEGER_TYPE(vtkm::Int32);
-VTKM_BASIC_INTEGER_TYPE(vtkm::UInt32);
-VTKM_BASIC_INTEGER_TYPE(vtkm::Int64);
-VTKM_BASIC_INTEGER_TYPE(vtkm::UInt64);
+VTKM_BASIC_REAL_TYPE(float)
+VTKM_BASIC_REAL_TYPE(double)
+
+VTKM_BASIC_INTEGER_TYPE(char)
+VTKM_BASIC_INTEGER_TYPE(signed char)
+VTKM_BASIC_INTEGER_TYPE(unsigned char)
+VTKM_BASIC_INTEGER_TYPE(short)
+VTKM_BASIC_INTEGER_TYPE(unsigned short)
+VTKM_BASIC_INTEGER_TYPE(int)
+VTKM_BASIC_INTEGER_TYPE(unsigned int)
+VTKM_BASIC_INTEGER_TYPE(long)
+VTKM_BASIC_INTEGER_TYPE(unsigned long)
+VTKM_BASIC_INTEGER_TYPE(long long)
+VTKM_BASIC_INTEGER_TYPE(unsigned long long)
+
 
 #undef VTKM_BASIC_REAL_TYPE
 #undef VTKM_BASIC_INTEGER_TYPE
