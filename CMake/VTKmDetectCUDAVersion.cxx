@@ -41,9 +41,10 @@ int main(int argc, char **argv)
   arch_to_compute[52] = "compute_52";
   arch_to_compute[53] = "compute_53";
 
+  cudaError_t err;
   int nDevices;
-  cudaGetDeviceCount(&nDevices);
-  if(nDevices == 0)
+  err = cudaGetDeviceCount(&nDevices);
+  if(err != cudaSuccess || nDevices < 1)
   { //return failure if no cuda devices found
     return 1;
   }
@@ -54,7 +55,11 @@ int main(int argc, char **argv)
   for (int i = 0; i < nDevices; i++)
   {
     cudaDeviceProp prop;
-    cudaGetDeviceProperties(&prop, i);
+    err = cudaGetDeviceProperties(&prop, i);
+    if(err != cudaSuccess)
+    {
+      continue;
+    }
 
     //convert 2.1 to 21, 3.5 to 35, etc
     int arch = (prop.major * 10) + prop.minor;
@@ -71,17 +76,17 @@ int main(int argc, char **argv)
     //for is not found
     if(arch_to_compute.find(arch) != arch_to_compute.end() )
     {
-    std::string compute_level = arch_to_compute[arch];
-    std::cout << "--generate-code arch=" << compute_level << ",code=sm_"<< arch << " ";
+      std::string compute_level = arch_to_compute[arch];
+      std::cout << "--generate-code arch=" << compute_level
+                << ",code=sm_"<< arch << " ";
     }
     else
     {
-    //if not found default to known highest arch, and compile to a virtual arch
-    //instead of a known sm.
-    std::map< int, std::string >::const_iterator i = arch_to_compute.end();
-    --i;
-    std::string compute_level = i->second;
-    std::cout << "--generate-code arch=" << compute_level << ",code=" << compute_level << " ";
+      //if not found default to known highest arch, and compile to a virtual
+      //arch instead of a known sm.
+      std::string compute_level = arch_to_compute.rbegin()->second;
+      std::cout << "--generate-code arch=" << compute_level
+                << ",code=" << compute_level << " ";
     }
   }
   return 0;
