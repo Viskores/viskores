@@ -27,8 +27,8 @@
 #include <vector>
 
 namespace vtkm{
-namespace cuda{
 namespace cont {
+namespace cuda{
 
 namespace {
 struct compute_info
