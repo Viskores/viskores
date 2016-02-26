@@ -104,7 +104,7 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  const SourcePortalType &GetPortal() const { this->SourcePortal; }
+  const SourcePortalType &GetPortal() const { return this->SourcePortal; }
 
 private:
   SourcePortalType SourcePortal;
