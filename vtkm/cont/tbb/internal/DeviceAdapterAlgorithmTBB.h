@@ -67,6 +67,9 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #undef NOMINMAX
 #endif
 
+#if defined(VTKM_MSVC)
+#include <Windows.h>
+#endif
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
@@ -328,25 +331,41 @@ private:
   VTKM_EXEC_EXPORT
   vtkm::Int32 vtkmAtomicAdd(vtkm::Int32 *address, const vtkm::Int32 &value) const
   {
+#if defined(VTKM_MSVC)
+    return InterlockedExchangeAdd(address,value);
+#else
     return __sync_fetch_and_add(address,value);
+#endif
   }
 
   VTKM_EXEC_EXPORT
   vtkm::Int64 vtkmAtomicAdd(vtkm::Int64 *address, const vtkm::Int64 &value) const
   {
+#if defined(VTKM_MSVC)
+    return InterlockedExchangeAdd(address,value);
+#else
     return __sync_fetch_and_add(address,value);
+#endif
   }
 
   VTKM_EXEC_EXPORT
   vtkm::UInt32 vtkmAtomicAdd(vtkm::UInt32 *address, const vtkm::UInt32 &value) const
   {
+#if defined(VTKM_MSVC)
+    return InterlockedExchangeAdd64(address,value);
+#else
     return __sync_fetch_and_add(address,value);
+#endif
   }
 
   VTKM_EXEC_EXPORT
   vtkm::UInt64 vtkmAtomicAdd(vtkm::UInt64 *address, const vtkm::UInt64 &value) const
   {
+#if defined(VTKM_MSVC)
+    return InterlockedExchangeAdd64(address,value);
+#else
     return __sync_fetch_and_add(address,value);
+#endif
   }
 
 };
