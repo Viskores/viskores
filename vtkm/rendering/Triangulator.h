@@ -424,9 +424,7 @@ public:
     flags.Allocate(outputTriangles);
     vtkm::worklet::DispatcherMapField< MemSet< vtkm::UInt8 > >( MemSet< vtkm::UInt8>( 1 ) )
       .Invoke( flags );
-    
     //Unique triangles will have a flag = 1
-    std::cout<<"Number of tris "<<outputTriangles<<std::endl;
     vtkm::worklet::DispatcherMapField< UniqueTriangles >()
       .Invoke( vtkm::exec::ExecutionWholeArrayConst< vtkm::Vec<vtkm::Id,4> >(outputIndices),
                vtkm::exec::ExecutionWholeArray< vtkm::UInt8 >(flags));
@@ -435,7 +433,7 @@ public:
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::StreamCompact(outputIndices,
                                                                      flags, 
                                                                      subset);
-    std::cout<<"Number of tris after"<<subset.GetNumberOfValues()<<std::endl;
+    std::cout<<"Number of tris after "<<subset.GetNumberOfValues()<<std::endl;
     outputIndices = subset;
     outputTriangles = subset.GetNumberOfValues();
   }

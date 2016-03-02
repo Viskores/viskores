@@ -422,7 +422,7 @@ MakeTestDataSet::Make3DExplicitDataSet4()
     CoordType(2, 1, 1), //10
     CoordType(2, 1, 0)  //11
   };
-  vtkm::Float64 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.2f, 70.2f, 80.3f, 90.f, 10.f, 11.f, 12.f};
+  vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.2f, 70.2f, 80.3f, 90.f, 10.f, 11.f, 12.f};
 
   dataSet.AddCoordinateSystem(
         vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, nVerts));
@@ -470,7 +470,7 @@ MakeTestDataSet::Make3DExplicitDataSet3()
   vtkm::cont::DataSet dataSet;
 
   const int nVerts = 4;
-  typedef vtkm::Vec<vtkm::Float64,3> CoordType;
+  typedef vtkm::Vec<vtkm::Float32,3> CoordType;
   CoordType coordinates[nVerts] = {
     CoordType(0, 0, 0),
     CoordType(1, 0, 0),

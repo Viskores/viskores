@@ -33,8 +33,6 @@ void TestSceneRendererOSMesa()
   {  
      vtkm::cont::testing::MakeTestDataSet maker;
      vtkm::cont::DataSet regularGrid = maker.Make3DRegularDataSet0();
-     regularGrid.PrintSummary(std::cout);
-     vtkm::cont::Field scalarField = regularGrid.GetField("pointvar");
      const vtkm::cont::CoordinateSystem coords = regularGrid.GetCoordinateSystem();
     
      vtkm::rendering::SceneRendererOSMesa<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
@@ -67,15 +65,20 @@ void TestSceneRendererOSMesa()
      sceneRenderer.SetActiveColorTable(colorTable);
 
      sceneRenderer.SetView(view);
-     //sceneRenderer.RenderCells(regularGrid.GetCellSet(), coords, scalarField, colorTable);
+
+     vtkm::cont::DataSet expDS = maker.Make3DExplicitDataSet4();
 
      //New way.
      vtkm::rendering::Scene3D scene;
      vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
      vtkm::rendering::RenderSurfaceOSMesa surface(512,512,bg);
      scene.plots.push_back(vtkm::rendering::Plot(regularGrid.GetCellSet(),
-                                                 coords,
-                                                 scalarField,
+                                                 regularGrid.GetCoordinateSystem(),
+                                                 regularGrid.GetField("pointvar"),
+                                                 colorTable));
+     scene.plots.push_back(vtkm::rendering::Plot(expDS.GetCellSet(),
+                                                 expDS.GetCoordinateSystem(),
+                                                 expDS.GetField("pointvar"),
                                                  colorTable));
 
      vtkm::rendering::Window3D<vtkm::rendering::SceneRendererOSMesa<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
