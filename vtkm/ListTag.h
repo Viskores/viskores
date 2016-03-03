@@ -32,7 +32,7 @@ namespace vtkm {
 namespace internal {
 
 template<typename ListTag>
-struct ListTagCheck
+struct ListTagCheck : std::is_base_of<vtkm::detail::ListRoot,ListTag>
 {
   static VTKM_CONSTEXPR bool Valid = std::is_base_of<vtkm::detail::ListRoot,
                                                      ListTag>::value;
@@ -47,56 +47,22 @@ struct ListTagCheck
 ///
 #define VTKM_IS_LIST_TAG(tag) \
   VTKM_STATIC_ASSERT_MSG( \
-    (::vtkm::internal::ListTagCheck<tag>::Valid), \
+    (::vtkm::internal::ListTagCheck<tag>::value), \
     "Provided type is not a valid VTK-m list tag.")
 
-namespace detail {
-
-template<typename ListTag1, typename ListTag2>
-struct ListJoin { };
-
-} // namespace detail
 
 /// A special tag for an empty list.
 ///
 struct ListTagEmpty : detail::ListRoot {
-  typedef detail::ListBase<void()> List;
+  using list = vtkm::detail::ListBase<>;
 };
 
 /// A tag that is a construction of two other tags joined together. This struct
 /// can be subclassed and still behave like a list tag.
 template<typename ListTag1, typename ListTag2>
 struct ListTagJoin : detail::ListRoot {
-  typedef detail::ListJoin<ListTag1, ListTag2> List;
+  using list = typename detail::ListJoin<ListTag1,ListTag2>::type;
 };
-
-template<typename Functor, typename ListTag>
-VTKM_CONT_EXPORT
-void ListForEach(Functor &f, ListTag);
-
-template<typename Functor, typename ListTag>
-VTKM_CONT_EXPORT
-void ListForEach(const Functor &f, ListTag);
-
-namespace detail {
-
-template<typename Functor, typename ListTag1, typename ListTag2>
-VTKM_CONT_EXPORT
-void ListForEachImpl(Functor &f, ListJoin<ListTag1, ListTag2>)
-{
-  vtkm::ListForEach(f, ListTag1());
-  vtkm::ListForEach(f, ListTag2());
-}
-
-template<typename Functor, typename ListTag1, typename ListTag2>
-VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &f, ListJoin<ListTag1, ListTag2>)
-{
-  vtkm::ListForEach(f, ListTag1());
-  vtkm::ListForEach(f, ListTag2());
-}
-
-} // namespace detail
 
 /// For each typename represented by the list tag, call the functor with a
 /// default instance of that type.
@@ -106,7 +72,7 @@ VTKM_CONT_EXPORT
 void ListForEach(Functor &f, ListTag)
 {
   VTKM_IS_LIST_TAG(ListTag);
-  detail::ListForEachImpl(f, typename ListTag::List());
+  detail::ListForEachImpl(f, typename ListTag::list());
 }
 
 /// For each typename represented by the list tag, call the functor with a
@@ -117,7 +83,7 @@ VTKM_CONT_EXPORT
 void ListForEach(const Functor &f, ListTag)
 {
   VTKM_IS_LIST_TAG(ListTag);
-  detail::ListForEachImpl(f, typename ListTag::List());
+  detail::ListForEachImpl(f, typename ListTag::list());
 }
 
 /// Checks to see if the given \c Type is in the list pointed to by \c ListTag.
@@ -128,20 +94,10 @@ template<typename ListTag, typename Type>
 struct ListContains
 {
   VTKM_IS_LIST_TAG(ListTag);
-  static const bool value =
-      detail::ListContainsImpl<typename ListTag::List,Type>::value;
+  static constexpr bool value =
+      detail::ListContainsImpl<Type,typename ListTag::list>::value;
 };
 
-namespace detail {
-
-template<typename Type, typename ListTag1, typename ListTag2>
-struct ListContainsImpl<ListJoin<ListTag1,ListTag2>, Type>
-{
-  static const bool value = (vtkm::ListContains<ListTag1,Type>::value ||
-                             vtkm::ListContains<ListTag2,Type>::value);
-};
-
-} // namespace detail
 
 } // namespace vtkm
 

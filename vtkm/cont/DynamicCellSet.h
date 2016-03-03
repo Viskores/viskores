@@ -337,6 +337,7 @@ void DynamicCellSetBase<CellSetList>::CastAndCall(const Functor &f) const
 {
   typedef detail::DynamicCellSetTryCellSet<Functor> TryCellSetType;
   TryCellSetType tryCellSet = TryCellSetType(this->CellSetContainer.get(), f);
+
   vtkm::ListForEach(tryCellSet, CellSetList());
   if (!tryCellSet.FoundCast)
   {

@@ -471,6 +471,7 @@ struct DynamicArrayHandleTryType {
     typedef DynamicArrayHandleTryStorage<Functor, Type> TryStorageType;
     TryStorageType tryStorage =
         TryStorageType(*this->Array, this->Function);
+
     vtkm::ListForEach(tryStorage, StorageList());
     if (tryStorage.FoundCast)
     {
@@ -524,6 +525,7 @@ void DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG,
   // the default one, and no reason to do an atomic increment and increase
   // library size, and reduce performance
   TryTypeType tryType = TryTypeType(*this, f);
+
   vtkm::ListForEach(tryType, VTKM_DEFAULT_TYPE_LIST_TAG());
   if (!tryType.FoundCast)
   {
