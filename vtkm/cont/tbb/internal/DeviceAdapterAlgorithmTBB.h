@@ -316,7 +316,7 @@ public:
   VTKM_EXEC_EXPORT
   T Add(vtkm::Id index, const T& value) const
   {
-    IteratorType::pointer temp = &(*(Iterators.GetBegin()+index));
+    typename IteratorType::pointer temp = &(*(Iterators.GetBegin()+index));
     T* lockedValue = temp;
     return vtkmAtomicAdd(lockedValue, value);
   }
