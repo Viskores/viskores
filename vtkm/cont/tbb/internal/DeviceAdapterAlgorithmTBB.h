@@ -325,7 +325,7 @@ private:
   typedef typename vtkm::cont::ArrayHandle<T,vtkm::cont::StorageTagBasic>
         ::template ExecutionTypes<DeviceAdapterTagTBB>::Portal PortalType;
   typedef vtkm::cont::ArrayPortalToIterators<PortalType> IteratorsType;
-  typedef vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
+  typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
   IteratorsType Iterators;
 
   VTKM_EXEC_EXPORT
