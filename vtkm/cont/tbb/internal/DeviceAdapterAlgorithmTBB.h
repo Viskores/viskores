@@ -316,8 +316,8 @@ public:
   VTKM_EXEC_EXPORT
   T Add(vtkm::Id index, const T& value) const
   {
-    T* lockedValue; 
-    lockedValue = (Iterators.GetBegin()+index);
+    IteratorType::pointer temp = &(*(Iterators.GetBegin()+index));
+    T* lockedValue = temp;
     return vtkmAtomicAdd(lockedValue, value);
   }
 
@@ -325,7 +325,7 @@ private:
   typedef typename vtkm::cont::ArrayHandle<T,vtkm::cont::StorageTagBasic>
         ::template ExecutionTypes<DeviceAdapterTagTBB>::Portal PortalType;
   typedef vtkm::cont::ArrayPortalToIterators<PortalType> IteratorsType;
-
+  typedef vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
   IteratorsType Iterators;
 
   VTKM_EXEC_EXPORT
