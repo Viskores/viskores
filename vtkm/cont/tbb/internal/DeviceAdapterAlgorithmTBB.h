@@ -356,7 +356,7 @@ private:
   VTKM_EXEC_EXPORT
   vtkm::UInt64 vtkmAtomicAdd(vtkm::UInt64 *address, const vtkm::UInt64 &value) const
   {
-    return InterlockedExchangeAdd64(reinterpret_cast<volatile unsigned long long *>(address),value);
+    return InterlockedExchangeAdd64(reinterpret_cast<volatile long long *>(address),value);
   }
 
 #else //gcc built-in atomics
