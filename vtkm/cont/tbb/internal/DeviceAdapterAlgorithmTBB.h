@@ -338,7 +338,7 @@ private:
   {
 #if defined(VTKM_MSVC)
     long msValue = value;
-    long * msPtr = (long *) address;
+    volatile long * msPtr = (volatile long *) address;
     return InterlockedExchangeAdd(msPtr,msValue);
 #else
     return __sync_fetch_and_add(address,value);
@@ -350,7 +350,7 @@ private:
   {
 #if defined(VTKM_MSVC)
     long long msValue = value;
-    long long * msPtr = (long long *) address;
+     volatile long long * msPtr = (volatile long long *) address;
     return InterlockedExchangeAdd64(msPtr,msValue);
 #else
     return __sync_fetch_and_add(address,value);
@@ -362,7 +362,7 @@ private:
   {
 #if defined(VTKM_MSVC)
     unsigned long msValue = value;
-    unsigned long * msPtr = (unsigned long *) address;
+    volatile unsigned long * msPtr = (volatile unsigned long *) address;
     return InterlockedExchangeAdd(msPtr,msValue);
 #else
     return __sync_fetch_and_add(address,value);
@@ -374,7 +374,7 @@ private:
   {
 #if defined(VTKM_MSVC)
     unsigned long long msValue = value;
-    unsigned long long * msPtr = (unsigned long long *) address;
+    volatile unsigned long long * msPtr = (volatile unsigned long long *) address;
     return InterlockedExchangeAdd64(msPtr,msValue);
 #else
     return __sync_fetch_and_add(address,value);
