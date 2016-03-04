@@ -374,7 +374,7 @@ private:
   {
 #if defined(VTKM_MSVC)
     unsigned long long msValue = value;
-    unsigned long long * msPtr = (unsignend long long *) address;
+    unsigned long long * msPtr = (unsigned long long *) address;
     return InterlockedExchangeAdd64(msPtr,msValue);
 #else
     return __sync_fetch_and_add(address,value);
