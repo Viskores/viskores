@@ -100,7 +100,7 @@ public:
     }
 
 #ifdef VTKM_CUDA
-    int id = vtkm::cuda::cont::FindFastestDeviceId();
+    int id = vtkm::cont::cuda::FindFastestDeviceId();
     vtkm::opengl::cuda::SetCudaGLDevice(id);
 #endif
 

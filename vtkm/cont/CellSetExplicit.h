@@ -517,8 +517,10 @@ private:
 
 #undef VTKM_GET_CONNECTIVITY_METHOD
 
+protected:
   // These are used in the AddCell and related methods to incrementally add
-  // cells.
+  // cells. They need to be protected as subclasses of CellSetExplicit
+  // need to set these values when implementing Fill()
   vtkm::Id ConnectivityLength;
   vtkm::Id NumberOfCells;
   vtkm::Id NumberOfPoints;

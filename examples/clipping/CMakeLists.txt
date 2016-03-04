@@ -28,7 +28,7 @@ set_property(
   APPEND
   PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
 
-if(VTKm_Cuda_FOUND)
+if(VTKm_CUDA_FOUND)
   set (cudaSource "${CMAKE_CURRENT_BINARY_DIR}/Clipping.cu")
   configure_file(Clipping.cxx ${cudaSource} COPYONLY)
 

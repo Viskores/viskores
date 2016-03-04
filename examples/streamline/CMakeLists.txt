@@ -26,7 +26,7 @@ if(OPENGL_FOUND AND GLUT_FOUND)
   target_link_libraries(StreamLineUniformGrid_SERIAL ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
   target_compile_options(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
-  if(VTKm_Cuda_FOUND)
+  if(VTKm_CUDA_FOUND)
     cuda_add_executable(StreamLineUniformGrid_CUDA StreamLineUniformGrid.cu)
     target_link_libraries(StreamLineUniformGrid_CUDA ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
     target_compile_options(StreamLineUniformGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})

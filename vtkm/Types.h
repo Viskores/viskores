@@ -126,12 +126,13 @@ typedef unsigned int UInt32;
 #error Could not find a 32-bit integer.
 #endif
 
-#if VTKM_SIZE_LONG == 8
-typedef signed long Int64;
-typedef unsigned long UInt64;
-#elif VTKM_SIZE_LONG_LONG == 8
+//In this order so that we exactly match the logic that exists in VTK
+#if VTKM_SIZE_LONG_LONG == 8
 typedef signed long long Int64;
 typedef unsigned long long UInt64;
+#elif VTKM_SIZE_LONG == 8
+typedef signed long Int64;
+typedef unsigned long UInt64;
 #else
 #error Could not find a 64-bit integer.
 #endif
@@ -653,10 +654,13 @@ struct BindLeftBinaryOp
   VTKM_EXEC_CONT_EXPORT
   BindLeftBinaryOp(const T &leftValue, BinaryOpType binaryOp = BinaryOpType())
     : LeftValue(leftValue), BinaryOp(binaryOp) {  }
+
+  template<typename RightT>
   VTKM_EXEC_CONT_EXPORT
-  ReturnT operator()(const T &rightValue) const
+  ReturnT operator()(const RightT &rightValue) const
   {
-    return static_cast<ReturnT>(this->BinaryOp(this->LeftValue, rightValue));
+    return static_cast<ReturnT>(this->BinaryOp(this->LeftValue,
+                                               static_cast<T>(rightValue)));
   }
 };
 
@@ -669,10 +673,13 @@ struct BindRightBinaryOp
   VTKM_EXEC_CONT_EXPORT
   BindRightBinaryOp(const T &rightValue, BinaryOpType binaryOp = BinaryOpType())
     : RightValue(rightValue), BinaryOp(binaryOp) {  }
+
+  template<typename LeftT>
   VTKM_EXEC_CONT_EXPORT
-  ReturnT operator()(const T &leftValue) const
+  ReturnT operator()(const LeftT &leftValue) const
   {
-    return static_cast<ReturnT>(this->BinaryOp(leftValue, this->RightValue));
+    return static_cast<ReturnT>(this->BinaryOp(static_cast<T>(leftValue),
+                                               this->RightValue));
   }
 };
 
