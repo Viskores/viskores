@@ -373,8 +373,8 @@ private:
   vtkm::UInt64 vtkmAtomicAdd(vtkm::UInt64 *address, const vtkm::UInt64 &value) const
   {
 #if defined(VTKM_MSVC)
-    unsigned long long msValue = value;
-    volatile unsigned long long * msPtr = (volatile unsigned long long *) address;
+    long long msValue = value;
+    volatile long long * msPtr = (volatile long long *) address;
     return InterlockedExchangeAdd64(msPtr,msValue);
 #else
     return __sync_fetch_and_add(address,value);
