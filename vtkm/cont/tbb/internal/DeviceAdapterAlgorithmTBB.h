@@ -337,25 +337,25 @@ private:
 
 #if defined(VTKM_MSVC) //MSVC atomics
   VTKM_EXEC_EXPORT
-  vtkm::Int32 vtkmAtomicAdd(volatile vtkm::Int32 *address, const vtkm::Int32 &value) const
+  vtkm::Int32 vtkmAtomicAdd(volatile long *address, const long &value) const
   {
     return InterlockedExchangeAdd(address,value);
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Int64 vtkmAtomicAdd(volatile vtkm::Int64 *address, const vtkm::Int64 &value) const
+  vtkm::Int64 vtkmAtomicAdd(volatile long long *address, const long long &value) const
   {
     return InterlockedExchangeAdd64(address,value);
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::UInt32 vtkmAtomicAdd(volatile vtkm::UInt32 *address, const vtkm::UInt32 &value) const
+  vtkm::UInt32 vtkmAtomicAdd(volatile unsigned long *address, const unsigned long &value) const
   {
     return InterlockedExchangeAdd(address,value);
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::UInt64 vtkmAtomicAdd(volatile vtkm::UInt64 *address, const vtkm::UInt64 &value) const
+  vtkm::UInt64 vtkmAtomicAdd(volatile unsigned long long *address, const unsigned long long &value) const
   {
     return InterlockedExchangeAdd64(address,value);
   }
