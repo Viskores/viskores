@@ -323,7 +323,6 @@ public:
     lockedValue = temp;
     return vtkmAtomicAdd(lockedValue, value);
 #else
-    T* lockedValue;
     lockedValue = (Iterators.GetBegin()+index);
     return vtkmAtomicAdd(lockedValue, value);
 #endif
