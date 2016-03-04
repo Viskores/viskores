@@ -338,25 +338,25 @@ private:
   VTKM_EXEC_EXPORT
   vtkm::Int32 vtkmAtomicAdd(vtkm::Int32 *address, const vtkm::Int32 &value) const
   {
-    return InterlockedExchangeAdd(static_cast<volatile long *>(address),value);
+    return InterlockedExchangeAdd(reinterpret_cast<volatile long *>(address),value);
   }
 
   VTKM_EXEC_EXPORT
   vtkm::Int64 vtkmAtomicAdd(vtkm::Int64 *address, const vtkm::Int64 &value) const
   {
-    return InterlockedExchangeAdd64(static_cast<volatile long long *>(address),value);
+    return InterlockedExchangeAdd64(reinterpret_cast<volatile long long *>(address),value);
   }
 
   VTKM_EXEC_EXPORT
   vtkm::UInt32 vtkmAtomicAdd(vtkm::UInt32 *address, const vtkm::UInt32 &value) const
   {
-    return InterlockedExchangeAdd(static_cast<volatile unsigned long *>(address),value);
+    return InterlockedExchangeAdd(reinterpret_cast<volatile unsigned long *>(address),value);
   }
 
   VTKM_EXEC_EXPORT
   vtkm::UInt64 vtkmAtomicAdd(vtkm::UInt64 *address, const vtkm::UInt64 &value) const
   {
-    return InterlockedExchangeAdd64(static_cast<volatile unsigned long long *>(address),value);
+    return InterlockedExchangeAdd64(reinterpret_cast<volatile unsigned long long *>(address),value);
   }
 
 #else //gcc built-in atomics

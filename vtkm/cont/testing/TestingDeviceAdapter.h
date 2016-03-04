@@ -288,7 +288,8 @@ public:
 
     VTKM_EXEC_EXPORT void operator()(vtkm::Id index) const
     {
-      this->AArray.Add(0, 1);
+      T value = (T) index;
+      this->AArray.Add(0, value);
     }
 
     VTKM_CONT_EXPORT void SetErrorMessageBuffer(
@@ -1587,6 +1588,8 @@ private:
 
   static VTKM_CONT_EXPORT void TestAtomicArray()
   {
+    vtkm::Int32 atomicCount = 0;
+    for(vtkm::Int32 i = 0; i < ARRAY_SIZE; i++) atomicCount += i;
     std::cout << "-------------------------------------------" << std::endl;
     // To test the atomics, ARRAY_SIZE number of threads will all increment  
     // a single atomic value.
@@ -1598,7 +1601,7 @@ private:
 
     vtkm::exec::AtomicArray<vtkm::Int32, DeviceAdapterTag> atomic(atomicElement);
     Algorithm::Schedule(AtomicKernel<vtkm::Int32>(atomic), ARRAY_SIZE);
-    vtkm::Int32 expected = vtkm::Int32(ARRAY_SIZE);
+    vtkm::Int32 expected = vtkm::Int32(atomicCount);
     vtkm::Int32 actual= atomicElement.GetPortalControl().Get(0);
     VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add Int32");
     }
@@ -1611,7 +1614,7 @@ private:
 
     vtkm::exec::AtomicArray<vtkm::UInt32, DeviceAdapterTag> atomic(atomicElement);
     Algorithm::Schedule(AtomicKernel<vtkm::UInt32>(atomic), ARRAY_SIZE);
-    vtkm::UInt32 expected = vtkm::UInt32(ARRAY_SIZE);
+    vtkm::UInt32 expected = vtkm::UInt32(atomicCount);
     vtkm::UInt32 actual= atomicElement.GetPortalControl().Get(0);
     VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add UInt32");
     }
@@ -1624,7 +1627,7 @@ private:
 
     vtkm::exec::AtomicArray<vtkm::UInt64, DeviceAdapterTag> atomic(atomicElement);
     Algorithm::Schedule(AtomicKernel<vtkm::UInt64>(atomic), ARRAY_SIZE);
-    vtkm::UInt64 expected = vtkm::UInt64(ARRAY_SIZE);
+    vtkm::UInt64 expected = vtkm::UInt64(atomicCount);
     vtkm::UInt64 actual= atomicElement.GetPortalControl().Get(0);
     VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add UInt64");
     }
@@ -1637,7 +1640,7 @@ private:
 
     vtkm::exec::AtomicArray<vtkm::Int64, DeviceAdapterTag> atomic(atomicElement);
     Algorithm::Schedule(AtomicKernel<vtkm::Int64>(atomic), ARRAY_SIZE);
-    vtkm::Int64 expected = vtkm::Int64(ARRAY_SIZE);
+    vtkm::Int64 expected = vtkm::Int64(atomicCount);
     vtkm::Int64 actual= atomicElement.GetPortalControl().Get(0);
     VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add Int64");
     }
