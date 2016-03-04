@@ -316,8 +316,14 @@ public:
   VTKM_EXEC_EXPORT
   T Add(vtkm::Id index, const T& value) const
   {
+    T* lockedValue;
+#if defined(VTKM_MSVC)
+    typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
     typename IteratorType::pointer temp = &(*(Iterators.GetBegin()+index));
-    T* lockedValue = temp;
+    lockedValue = temp;
+#else
+    lockedValue = (Iterators.GetBegin()+index);
+#endif
     return vtkmAtomicAdd(lockedValue, value);
   }
 
@@ -325,14 +331,15 @@ private:
   typedef typename vtkm::cont::ArrayHandle<T,vtkm::cont::StorageTagBasic>
         ::template ExecutionTypes<DeviceAdapterTagTBB>::Portal PortalType;
   typedef vtkm::cont::ArrayPortalToIterators<PortalType> IteratorsType;
-  typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
   IteratorsType Iterators;
 
   VTKM_EXEC_EXPORT
   vtkm::Int32 vtkmAtomicAdd(vtkm::Int32 *address, const vtkm::Int32 &value) const
   {
 #if defined(VTKM_MSVC)
-    return InterlockedExchangeAdd(address,value);
+    long msValue = value;
+    long * msPtr = (long *) address;
+    return InterlockedExchangeAdd(msPtr,msValue);
 #else
     return __sync_fetch_and_add(address,value);
 #endif
@@ -342,7 +349,9 @@ private:
   vtkm::Int64 vtkmAtomicAdd(vtkm::Int64 *address, const vtkm::Int64 &value) const
   {
 #if defined(VTKM_MSVC)
-    return InterlockedExchangeAdd(address,value);
+    long long msValue = value;
+    long long * msPtr = (long long *) address;
+    return InterlockedExchangeAdd64(msPtr,msValue);
 #else
     return __sync_fetch_and_add(address,value);
 #endif
@@ -352,7 +361,9 @@ private:
   vtkm::UInt32 vtkmAtomicAdd(vtkm::UInt32 *address, const vtkm::UInt32 &value) const
   {
 #if defined(VTKM_MSVC)
-    return InterlockedExchangeAdd64(address,value);
+    unsigned long msValue = value;
+    unsinged long * msPtr = (unsigned long *) address;
+    return InterlockedExchangeAdd(msPtr,msValue);
 #else
     return __sync_fetch_and_add(address,value);
 #endif
@@ -362,7 +373,9 @@ private:
   vtkm::UInt64 vtkmAtomicAdd(vtkm::UInt64 *address, const vtkm::UInt64 &value) const
   {
 #if defined(VTKM_MSVC)
-    return InterlockedExchangeAdd64(address,value);
+    unsigned long long msValue = value;
+    unsigned long long * msPtr = (unsigend long long *) address;
+    return InterlockedExchangeAdd64(msPtr,msValue);
 #else
     return __sync_fetch_and_add(address,value);
 #endif
