@@ -316,11 +316,11 @@ public:
   VTKM_EXEC_EXPORT
   T Add(vtkm::Id index, const T& value) const
   {
+    T* lockedValue;
 #if defined(VTKM_MSVC)
-    volatile T* lockedValue;
     typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
     typename IteratorType::pointer temp = &(*(Iterators.GetBegin()+index));
-    lockedValue = static_cast<volatile T*>(temp);
+    lockedValue = temp;
     return vtkmAtomicAdd(lockedValue, value);
 #else
     T* lockedValue;
@@ -337,27 +337,27 @@ private:
 
 #if defined(VTKM_MSVC) //MSVC atomics
   VTKM_EXEC_EXPORT
-  vtkm::Int32 vtkmAtomicAdd(volatile long *address, const long &value) const
+  vtkm::Int32 vtkmAtomicAdd(vtkm::Int32 *address, const vtkm::Int32 &value) const
   {
-    return InterlockedExchangeAdd(address,value);
+    return InterlockedExchangeAdd(static_cast<volatile long *>(address),value);
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Int64 vtkmAtomicAdd(volatile long long *address, const long long &value) const
+  vtkm::Int64 vtkmAtomicAdd(vtkm::Int64 *address, const vtkm::Int64 &value) const
   {
-    return InterlockedExchangeAdd64(address,value);
+    return InterlockedExchangeAdd64(static_cast<volatile long long *>(address),value);
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::UInt32 vtkmAtomicAdd(volatile unsigned long *address, const unsigned long &value) const
+  vtkm::UInt32 vtkmAtomicAdd(vtkm::UInt32 *address, const vtkm::UInt32 &value) const
   {
-    return InterlockedExchangeAdd(address,value);
+    return InterlockedExchangeAdd(static_cast<volatile unsigned long *>(address),value);
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::UInt64 vtkmAtomicAdd(volatile unsigned long long *address, const unsigned long long &value) const
+  vtkm::UInt64 vtkmAtomicAdd(vtkm::UInt64 *address, const vtkm::UInt64 &value) const
   {
-    return InterlockedExchangeAdd64(address,value);
+    return InterlockedExchangeAdd64(static_cast<volatile unsigned long long *>(address),value);
   }
 
 #else //gcc built-in atomics
