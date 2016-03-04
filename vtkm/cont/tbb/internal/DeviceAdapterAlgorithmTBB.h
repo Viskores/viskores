@@ -385,8 +385,8 @@ VTKM_EXEC_EXPORT
   {
     return __sync_fetch_and_add(address,value);
   }
+
 #endif
-  }
 
 };
 
