@@ -383,8 +383,8 @@ VTKM_EXEC_EXPORT
   VTKM_EXEC_EXPORT
   vtkm::UInt64 vtkmAtomicAdd(vtkm::UInt64 *address, const vtkm::UInt64 &value) const
   {
-
     return __sync_fetch_and_add(address,value);
+  }
 #endif
   }
 
