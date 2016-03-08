@@ -206,7 +206,7 @@ public:
   }
 
   inline __device__
-  T CompareAndSwap(vtkm::Int64 *address, const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
+  T CompareAndSwap(vtkm::Id index, const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
   {
     T *lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
     return vtkmCompareAndSwap(lockedValue, newValue, oldValue);
