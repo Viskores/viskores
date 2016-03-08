@@ -723,6 +723,14 @@ public:
     return old;
   }
 
+  VTKM_EXEC_EXPORT
+  T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
+  {
+    const T old = this->Portal.Get(index);
+    if(old == oldValue) this->Portal.Set(index,newValue);
+    return old;
+  }
+
 private:
     typedef typename vtkm::cont::ArrayHandle<T>
               ::template ExecutionTypes<DeviceTag>::Portal PortalType;

@@ -52,6 +52,12 @@ public:
     return this->AtomicImplementation.Add(index,value);
   }
 
+  VTKM_EXEC_EXPORT
+  T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
+  {
+    return this->AtomicImplementation.CompareAndSwap(index,newValue, oldValue);
+  }
+
 private:
     vtkm::cont::DeviceAdapterAtomicArrayImplementation<T,DeviceAdapterTag>
       AtomicImplementation;
