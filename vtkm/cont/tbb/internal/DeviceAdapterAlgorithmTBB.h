@@ -365,13 +365,13 @@ private:
   VTKM_EXEC_EXPORT
   vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32 *address, const vtkm::Int32 &newValue, const vtkm::Int32 &oldValue) const
   {
-    return InterlockedExchangeAdd(reinterpret_cast<volatile long *>(address),newValue,oldValue);
+    return InterlockedCompareExchange(reinterpret_cast<volatile long *>(address),newValue,oldValue);
   }
 
   VTKM_EXEC_EXPORT
   vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64 *address,const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
   {
-    return InterlockedExchangeAdd64(reinterpret_cast<volatile long long *>(address),newValue, oldValue);
+    return InterlockedCompareExchange64(reinterpret_cast<volatile long long *>(address),newValue, oldValue);
   }
 
 #else //gcc built-in atomics
