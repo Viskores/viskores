@@ -209,7 +209,7 @@ public:
   T CompareAndSwap(vtkm::Int64 *address, const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
   {
     T *lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
-    return vtkmCompareAndSwap(lockedValue, oldValue);
+    return vtkmCompareAndSwap(lockedValue, newValue, oldValue);
   }
 
 private:
@@ -238,9 +238,9 @@ private:
   inline __device__
   vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64 *address, const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
   {
-    return atomicCAS(static_cast<vtkm::UInt64*>(address),
-                     static_cast<vtkm::UInt64>(oldValue),
-                     static_cast<vtkm::UInt64>(newValue));
+    return atomicCAS((unsigned long long int*) address,
+                     (unsigned long long int ) oldValue,
+                     (unsigned long long int ) newValue);
   }  
 };
 

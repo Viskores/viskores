@@ -718,23 +718,52 @@ public:
   VTKM_EXEC_EXPORT
   T Add(vtkm::Id index, const T& value) const
   {
-    const T old = this->Portal.Get(index);
-    this->Portal.Set(index, old + value);
-    return old;
+    return vtkmAtomicAdd(index, value);
   }
 
   VTKM_EXEC_EXPORT
   T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
   {
-    const T old = this->Portal.Get(index);
-    if(old == oldValue) this->Portal.Set(index,newValue);
-    return old;
+    return vtkmCompareAndSwap(index, newValue, oldValue);
   }
 
 private:
     typedef typename vtkm::cont::ArrayHandle<T>
               ::template ExecutionTypes<DeviceTag>::Portal PortalType;
   PortalType Portal;
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int32 vtkmAtomicAdd(const vtkm::Id &index, const vtkm::Int32 &value) const
+  {
+    const vtkm::Int32 old = this->Portal.Get(index);
+    this->Portal.Set(index, old + value);
+    return old;
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int64 vtkmAtomicAdd(const vtkm::Id &index, const vtkm::Int64 &value) const
+  {
+    const vtkm::Int64 old = this->Portal.Get(index);
+    this->Portal.Set(index, old + value);
+    return old;
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int32 vtkmCompareAndSwap(const vtkm::Id &index, const vtkm::Int32 &newValue, const vtkm::Int32 &oldValue) const
+  {
+    const vtkm::Int32 old = this->Portal.Get(index);
+    if(old == oldValue) this->Portal.Set(index, newValue);
+    return old;
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int64 vtkmCompareAndSwap(const vtkm::Id &index, const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
+  {
+    const vtkm::Int64 old = this->Portal.Get(index);
+    if(old == oldValue) this->Portal.Set(index, newValue);
+    return old;
+  }
+
 };
 
 }
