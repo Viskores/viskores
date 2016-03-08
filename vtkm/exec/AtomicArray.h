@@ -52,6 +52,11 @@ public:
     return this->AtomicImplementation.Add(index,value);
   }
 
+  //
+  // Compare and Swap is an atomic exchange operation. If the value at 
+  // the index is equal to oldValue, then newValue is written to the index.
+  // The operation was successful if return value is eqaul to oldValue
+  //
   VTKM_EXEC_EXPORT
   T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
   {

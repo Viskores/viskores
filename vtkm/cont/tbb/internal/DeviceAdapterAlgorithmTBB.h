@@ -369,7 +369,7 @@ private:
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64 *address,const vtkm::Int64 &newValue const vtkm::Int64 &oldValue) const
+  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64 *address,const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
   {
     return InterlockedExchangeAdd64(reinterpret_cast<volatile long long *>(address),newValue, oldValue);
   }
