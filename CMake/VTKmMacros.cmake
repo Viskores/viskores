@@ -246,11 +246,11 @@ function(vtkm_unit_tests)
     #determine the timeout for all the tests based on the backend. CUDA tests
     #generally require more time because of kernel generation.
     set(timeout 180)
+    if (VTKm_UT_CUDA)
+      set(timeout 600)
+    endif()
 
     if (VTKm_UT_CUDA)
-      #specify a longer timeout for cuda
-      set(timeout 360)
-
       vtkm_setup_nvcc_flags( old_nvcc_flags )
 
       cuda_add_executable(${test_prog} ${TestSources})
@@ -367,11 +367,13 @@ function(vtkm_worklet_unit_tests device_adapter)
     set(is_cuda TRUE)
   endif()
 
-  #determine the timeout for all the tests based on the backend. CUDA tests
-  #generally require more time because of kernel generation.
+  #determine the timeout for all the tests based on the backend. The first CUDA
+  #worklet test requires way more time because of the overhead to allow the
+  #driver to convert the kernel code from virtual arch to actual arch.
+  #
   set(timeout 180)
   if(is_cuda)
-    set(timeout 360)
+    set(timeout 600)
   endif()
 
   if(VTKm_ENABLE_TESTING)
