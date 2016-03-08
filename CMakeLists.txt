@@ -99,6 +99,7 @@ option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 
 option(VTKm_BUILD_DOCUMENTATION "Build Doxygen documentation" OFF)
 option(VTKm_BUILD_EXAMPLES "Build examples" OFF)
+option(VTKm_BUILD_RENDERING "Build rendering" OFF)
 
 option(VTKm_USE_DOUBLE_PRECISION
   "Use double precision for floating point calculations"

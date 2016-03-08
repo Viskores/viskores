@@ -39,6 +39,5 @@ include_directories(${OSMESA_INCLUDE_DIR})
 
 
 
-
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)
