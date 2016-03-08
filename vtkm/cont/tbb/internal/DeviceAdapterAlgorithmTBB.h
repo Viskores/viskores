@@ -339,7 +339,7 @@ public:
     return vtkmCompareAndSwap(lockedValue, newValue, oldValue);
 #else
     lockedValue = (Iterators.GetBegin()+index);
-    return vtkmCompareAndSwap(lockedValue, newValue, value);
+    return vtkmCompareAndSwap(lockedValue, newValue, oldValue);
 #endif
   }
 
@@ -395,7 +395,7 @@ private:
   }
 
   VTKM_EXEC_EXPORT
-  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64 *address,const vtkm::Int64 &newValue const vtkm::Int64 &oldValue) const
+  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64 *address,const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
   {
     return __sync_val_compare_and_swap(address,oldValue,newValue);
   }

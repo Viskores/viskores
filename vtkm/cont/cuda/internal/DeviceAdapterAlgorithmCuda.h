@@ -209,7 +209,7 @@ public:
   T CompareAndSwap(vtkm::Int64 *address, const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
   {
     T *lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
-    return vtkmCompareAndSwap(lockedValue, value);
+    return vtkmCompareAndSwap(lockedValue, oldValue);
   }
 
 private:
