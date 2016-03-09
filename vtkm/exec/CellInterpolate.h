@@ -276,7 +276,7 @@ CellInterpolate(const FieldVecType &field,
   {
     fieldCenter = fieldCenter + field[pointIndex];
   }
-  fieldCenter = fieldCenter*FieldType(1.0f/numPoints);
+  fieldCenter = fieldCenter*FieldType(1.0f/static_cast<float>(numPoints));
 
   if ((vtkm::Abs(pcoords[0]-0.5f) < 4*vtkm::Epsilon<ParametricCoordType>()) &&
       (vtkm::Abs(pcoords[1]-0.5f) < 4*vtkm::Epsilon<ParametricCoordType>()))
@@ -305,13 +305,13 @@ CellInterpolate(const FieldVecType &field,
   polygonCoords[0][1] = 0.5f;
   polygonCoords[0][2] = 0;
 
-  polygonCoords[1][0] = 0.5f*(vtkm::Cos(deltaAngle*firstPointIndex)+1);
-  polygonCoords[1][1] = 0.5f*(vtkm::Sin(deltaAngle*firstPointIndex)+1);
-  polygonCoords[1][2] = 0;
+  polygonCoords[1][0] = 0.5f*(vtkm::Cos(deltaAngle*static_cast<ParametricCoordType>(firstPointIndex))+1);
+  polygonCoords[1][1] = 0.5f*(vtkm::Sin(deltaAngle*static_cast<ParametricCoordType>(firstPointIndex))+1);
+  polygonCoords[1][2] = 0.0f;
 
-  polygonCoords[2][0] = 0.5f*(vtkm::Cos(deltaAngle*secondPointIndex)+1);
-  polygonCoords[2][1] = 0.5f*(vtkm::Sin(deltaAngle*secondPointIndex)+1);
-  polygonCoords[2][2] = 0;
+  polygonCoords[2][0] = 0.5f*(vtkm::Cos(deltaAngle*static_cast<ParametricCoordType>(secondPointIndex))+1);
+  polygonCoords[2][1] = 0.5f*(vtkm::Sin(deltaAngle*static_cast<ParametricCoordType>(secondPointIndex))+1);
+  polygonCoords[2][2] = 0.0f;
 
   vtkm::Vec<ParametricCoordType,3> trianglePCoords =
       vtkm::exec::internal::ReverseInterpolateTriangle(

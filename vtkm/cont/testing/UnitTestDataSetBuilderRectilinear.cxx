@@ -97,11 +97,11 @@ void FillArray(std::vector<T> &arr,
 
     switch (fillMethod)
     {
-      case 0: xi = static_cast<T>(i); break;
-      case 1: xi = static_cast<T>(i) / static_cast<vtkm::Float32>(size-1); break;
-      case 2: xi = static_cast<T>(i*2); break;
-      case 3: xi = static_cast<T>(i*0.1f); break;
-      case 4: xi = static_cast<T>(i*i); break;
+      case 0: break;
+      case 1: xi /= static_cast<vtkm::Float32>(size-1); break;
+      case 2: xi *= 2; break;
+      case 3: xi *= 0.1f; break;
+      case 4: xi *= xi; break;
       default: VTKM_TEST_FAIL("Bad internal test state: invalid fill method.");
     }
     arr[i] = xi;

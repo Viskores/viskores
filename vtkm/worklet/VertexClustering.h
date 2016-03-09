@@ -330,7 +330,7 @@ public:
       vtkm::Float64 res[3];
       for (vtkm::IdComponent i=0; i<3; i++)
       {
-        res[i] = (bounds[i*2+1]-bounds[i*2])/nDivisions[i];
+        res[i] = (bounds[i*2+1]-bounds[i*2])/static_cast<vtkm::Float64>(nDivisions[i]);
       }
       gridInfo.grid_width = vtkm::Max(res[0], vtkm::Max(res[1], res[2]));
 
@@ -342,9 +342,9 @@ public:
       gridInfo.dim[2] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[5]-bounds[4])*inv_grid_width), nDivisions[2]);
 
       // center the mesh in the grids
-      gridInfo.origin[0] = (bounds[1]+bounds[0])*0.5 - gridInfo.grid_width*(gridInfo.dim[0])*.5;
-      gridInfo.origin[1] = (bounds[3]+bounds[2])*0.5 - gridInfo.grid_width*(gridInfo.dim[1])*.5;
-      gridInfo.origin[2] = (bounds[5]+bounds[4])*0.5 - gridInfo.grid_width*(gridInfo.dim[2])*.5;
+      gridInfo.origin[0] = (bounds[1]+bounds[0])*0.5 - gridInfo.grid_width*static_cast<vtkm::Float64>(gridInfo.dim[0])*.5;
+      gridInfo.origin[1] = (bounds[3]+bounds[2])*0.5 - gridInfo.grid_width*static_cast<vtkm::Float64>(gridInfo.dim[1])*.5;
+      gridInfo.origin[2] = (bounds[5]+bounds[4])*0.5 - gridInfo.grid_width*static_cast<vtkm::Float64>(gridInfo.dim[2])*.5;
     }
 
     //construct the scheduler that will execute all the worklets

@@ -849,8 +849,8 @@ CellDerivative(const FieldVecType &field,
     fieldCenter = fieldCenter + field[pointIndex];
     wcoordCenter = wcoordCenter + wCoords[pointIndex];
   }
-  fieldCenter = fieldCenter*FieldType(1.0f/numPoints);
-  wcoordCenter = wcoordCenter*WCoordType(1.0f/numPoints);
+  fieldCenter = fieldCenter*FieldType(1.0f/static_cast<float>(numPoints));
+  wcoordCenter = wcoordCenter*WCoordType(1.0f/static_cast<float>(numPoints));
 
   ParametricCoordType angle;
   if ((vtkm::Abs(pcoords[0]-0.5f) < 4*vtkm::Epsilon<ParametricCoordType>()) &&

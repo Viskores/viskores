@@ -103,7 +103,7 @@ void FillMethod(vtkm::IdComponent method,
       break;
     case 1:
       origin = 0;
-      spacing = static_cast<T>(1.0/dimensionSize);
+      spacing = static_cast<T>(1.0/static_cast<double>(dimensionSize));
       break;
     case 2:
       origin = 0;
@@ -120,7 +120,7 @@ void FillMethod(vtkm::IdComponent method,
   }
 
   boundsMin = static_cast<vtkm::Float64>(origin);
-  boundsMax = static_cast<vtkm::Float64>(origin + (dimensionSize-1)*spacing);
+  boundsMax = static_cast<vtkm::Float64>(origin + static_cast<T>(dimensionSize-1)*spacing);
 }
 
 template <typename T>
