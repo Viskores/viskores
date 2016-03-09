@@ -28,7 +28,14 @@
 
 namespace
 {
+
+typedef vtkm::Vec< vtkm::Id2, 3 > Vec3Id2;
+typedef vtkm::Vec< vtkm::Vec<vtkm::Float32,3>, 3 > FVec3x3;
+typedef vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3 > DVec3x3;
+
 typedef vtkm::filter::FilterTraits<vtkm::filter::MarchingCubes>::InputFieldTypeList InputTypes;
+struct InterpolateIdTypes : vtkm::ListTagBase< Vec3Id2 > { };
+struct Vec3FloatTypes : vtkm::ListTagBase< FVec3x3, DVec3x3> { };
 
 // -----------------------------------------------------------------------------
 template<typename S>
@@ -99,68 +106,104 @@ public:
     numTriangles = numTrianglesTable.Get(caseNumber);
   }
 };
+/// \brief Used to store data need for the EdgeWeightGenerate worklet.
+/// This information is not passed as part of the arguments to the worklet as
+/// that dramatically increase compile time by 200%
+// -----------------------------------------------------------------------------
+template< typename DeviceAdapter >
+class EdgeWeightGenerateMetaData
+{
+  template<typename FieldType>
+  struct PortalTypes
+  {
+  public:
+    typedef vtkm::cont::ArrayHandle<FieldType> HandleType;
+    typedef typename HandleType::template ExecutionTypes<DeviceAdapter> ExecutionTypes;
+
+    typedef typename ExecutionTypes::Portal Portal;
+    typedef typename ExecutionTypes::PortalConst PortalConst;
+  };
+
+public:
+  typedef vtkm::worklet::ScatterCounting ScatterType;
+
+  VTKM_CONT_EXPORT
+  EdgeWeightGenerateMetaData(
+                     vtkm::Id size,
+                     vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::Float32,3> >& normals,
+                     vtkm::cont::ArrayHandle< vtkm::FloatDefault >& interpWeights,
+                     vtkm::cont::ArrayHandle<vtkm::Id2>& interpIds,
+                     const vtkm::cont::ArrayHandle< vtkm::IdComponent >& edgeTable,
+                     const vtkm::cont::ArrayHandle< vtkm::IdComponent >& numTriTable,
+                     const vtkm::cont::ArrayHandle< vtkm::IdComponent >& triTable,
+                     const vtkm::worklet::ScatterCounting& scatter):
+  NormalPortal( normals.PrepareForOutput( 3*size, DeviceAdapter() ) ),
+  InterpWeightsPortal( interpWeights.PrepareForOutput( 3*size, DeviceAdapter()) ),
+  InterpIdPortal( interpIds.PrepareForOutput( 3*size, DeviceAdapter() ) ),
+  EdgeTable( edgeTable.PrepareForInput(DeviceAdapter()) ),
+  NumTriTable( numTriTable.PrepareForInput(DeviceAdapter()) ),
+  TriTable( triTable.PrepareForInput(DeviceAdapter()) ),
+  Scatter(scatter)
+  {
+  //any way we can easily build an interface so that we don't need to hold
+  //onto a billion portals?
+
+  //Normal and Interp need to be 3 times longer than size as they
+  //are per point of the output triangle
+  }
+
+  typename PortalTypes< vtkm::Vec< vtkm::Float32,3> >::Portal NormalPortal;
+  typename PortalTypes<vtkm::FloatDefault>::Portal InterpWeightsPortal;
+  typename PortalTypes<vtkm::Id2>::Portal InterpIdPortal;
+  typename PortalTypes<vtkm::IdComponent>::PortalConst EdgeTable;
+  typename PortalTypes<vtkm::IdComponent>::PortalConst NumTriTable;
+  typename PortalTypes<vtkm::IdComponent>::PortalConst TriTable;
+  ScatterType Scatter;
+};
 
 /// \brief Compute the weights for each edge that is used to generate
 /// a point in the resulting iso-surface
 // -----------------------------------------------------------------------------
+template<typename DeviceAdapter>
 class EdgeWeightGenerate : public vtkm::worklet::WorkletMapPointToCell
 {
-  typedef vtkm::Vec< vtkm::Id2, 3 > Vec3Id2;
-  typedef vtkm::Vec< vtkm::Vec<vtkm::Float32,3>, 3 > FVec3x3;
-  typedef vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3 > DVec3x3;
-
 public:
-
-  typedef vtkm::worklet::ScatterCounting ScatterType;
-
-  struct InterpolateIdTypes : vtkm::ListTagBase< Vec3Id2 > { };
-  struct Vec3FloatTypes : vtkm::ListTagBase< FVec3x3, DVec3x3> { };
+  typedef typename EdgeWeightGenerateMetaData<DeviceAdapter>::ScatterType ScatterType;
 
   typedef void ControlSignature(
       TopologyIn topology, // Cell set
       FieldInPoint<Scalar> fieldIn, // Input point field defining the contour
-      FieldInPoint<Vec3> pcoordIn, // Input point coordinates
-      FieldOutCell<Vec3FloatTypes> normalsOut, // Estimated normals (one per tri vertex)
-      FieldOutCell<Vec3> interpolationWeights,
-      FieldOutCell<InterpolateIdTypes> interpolationIds,
-      WholeArrayIn<IdComponentType> EdgeTable, // An array portal with the edge table
-      WholeArrayIn<IdComponentType> TriTable // An array portal with the triangle table
+      FieldInPoint<Vec3> pcoordIn // Input point coordinates
       );
-  typedef void ExecutionSignature(
-      CellShape, _2, _3, _4, _5, _6, _7, _8, VisitIndex, FromIndices);
+  typedef void ExecutionSignature(CellShape, _2, _3, WorkIndex, VisitIndex, FromIndices);
 
   typedef _1 InputDomain;
+
 
   VTKM_CONT_EXPORT
   EdgeWeightGenerate(vtkm::Float64 isovalue,
                      bool genNormals,
-                     const vtkm::worklet::ScatterCounting scatter) :
+                     const EdgeWeightGenerateMetaData<DeviceAdapter>& meta) :
     Isovalue(isovalue),
     GenerateNormals(genNormals),
-    Scatter( scatter ) {  }
+    MetaData( meta )
+  {
+  }
 
   template<typename CellShapeTag,
            typename FieldInType, // Vec-like, one per input point
            typename CoordType,
-           typename NormalType,
-           typename WeightType,
-           typename IdType,
-           typename EdgeTablePortalType, // Whole Array portal
-           typename TriTablePortalType, // Whole Array portal
            typename IndicesVecType>
   VTKM_EXEC_EXPORT
   void operator()(
       CellShapeTag shape,
       const FieldInType &fieldIn, // Input point field defining the contour
       const CoordType &coords, // Input point coordinates
-      NormalType &normalsOut, // Estimated normals (one per tri vertex)
-      WeightType &interpolationWeights,
-      IdType &interpolationIds,
-      const EdgeTablePortalType &edgeTable,
-      const TriTablePortalType &triTable,
+      vtkm::Id outputCellId,
       vtkm::IdComponent visitIndex,
       const IndicesVecType &indices) const
   {
+    const vtkm::Id outputPointId = 3 * outputCellId;
     typedef typename vtkm::VecTraits<FieldInType>::ComponentType FieldType;
     const FieldType iso = static_cast<FieldType>(this->Isovalue);
 
@@ -174,23 +217,22 @@ public:
     for (vtkm::IdComponent triVertex = 0; triVertex < 3; triVertex++)
     {
       const vtkm::IdComponent edgeIndex =
-          triTable.Get(triTableOffset + triVertex);
-      const vtkm::IdComponent edgeVertex0 = edgeTable.Get(2*edgeIndex + 0);
-      const vtkm::IdComponent edgeVertex1 = edgeTable.Get(2*edgeIndex + 1);
+          MetaData.TriTable.Get(triTableOffset + triVertex);
+      const vtkm::IdComponent edgeVertex0 = MetaData.EdgeTable.Get(2*edgeIndex + 0);
+      const vtkm::IdComponent edgeVertex1 = MetaData.EdgeTable.Get(2*edgeIndex + 1);
       const FieldType fieldValue0 = fieldIn[edgeVertex0];
       const FieldType fieldValue1 = fieldIn[edgeVertex1];
 
-      interpolationIds[triVertex][0] = indices[edgeVertex0];
-      interpolationIds[triVertex][1] = indices[edgeVertex1];
+      //need to factor in outputCellId
+      MetaData.InterpIdPortal.Set(outputPointId+triVertex,
+              vtkm::make_Vec(indices[edgeVertex0], indices[edgeVertex1]));
 
-      //we need to cast each side of the division to WeightType::ComponentType
-      //so that the interpolation works properly even when iso-contouring
-      //char/uchar fields
-      typedef typename vtkm::VecTraits<WeightType>::ComponentType WType;
-      WType interpolant =
-          static_cast<WType>(iso - fieldValue0) /
-          static_cast<WType>(fieldValue1 - fieldValue0);
-      interpolationWeights[triVertex] = interpolant;
+      vtkm::FloatDefault interpolant =
+          static_cast<vtkm::FloatDefault>(iso - fieldValue0) /
+          static_cast<vtkm::FloatDefault>(fieldValue1 - fieldValue0);
+
+      //need to factor in outputCellId
+      MetaData.InterpWeightsPortal.Set(outputPointId+triVertex, interpolant);
 
       if(this->GenerateNormals)
       {
@@ -204,24 +246,26 @@ public:
         const vtkm::Vec<vtkm::FloatDefault,3> interpPCoord =
             vtkm::Lerp(edgePCoord0, edgePCoord1, interpolant);
 
-        normalsOut[triVertex] =
+        //need to factor in outputCellId
+        MetaData.NormalPortal.Set(outputPointId+triVertex,
           vtkm::Normal(vtkm::exec::CellDerivative(
-                         fieldIn, coords, interpPCoord, shape, *this));
+                         fieldIn, coords, interpPCoord, shape, *this))
+          );
       }
+
     }
   }
 
   VTKM_CONT_EXPORT
   ScatterType GetScatter() const
   {
-    return this->Scatter;
+    return this->MetaData.Scatter;
   }
-
 
 private:
   const vtkm::Float64 Isovalue;
   const bool GenerateNormals;
-  ScatterType Scatter;
+  EdgeWeightGenerateMetaData<DeviceAdapter> MetaData;
 };
 
 // -----------------------------------------------------------------------------
@@ -316,7 +360,7 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
                                       >             ClassifyDispatcher;
 
   typedef typename vtkm::worklet::DispatcherMapTopology<
-                                      EdgeWeightGenerate,
+                                      EdgeWeightGenerate<DeviceAdapter>,
                                       DeviceAdapter
                                       >             GenerateDispatcher;
 
@@ -338,21 +382,28 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
   Vec3HandleType normals;
 
   vtkm::worklet::ScatterCounting scatter(numOutputTrisPerCell, DeviceAdapter());
-  EdgeWeightGenerate weightGenerate(this->IsoValue,
-                                    this->GenerateNormals,
-                                    scatter);
+
+  EdgeWeightGenerateMetaData<DeviceAdapter> metaData(
+                                     scatter.GetOutputRange(numOutputTrisPerCell.GetNumberOfValues()),
+                                     normals,
+                                     this->InterpolationWeights,
+                                     this->InterpolationIds,
+                                     this->EdgeTable,
+                                     this->NumTrianglesTable,
+                                     this->TriangleTable,
+                                     scatter);
+
+  EdgeWeightGenerate<DeviceAdapter> weightGenerate(this->IsoValue,
+                                                    this->GenerateNormals,
+                                                    metaData);
 
   GenerateDispatcher edgeDispatcher(weightGenerate);
   edgeDispatcher.Invoke(
         vtkm::filter::ApplyPolicy(cells, policy),
         //cast to a scalar field if not one, as cellderivative only works on those
         make_ScalarField(field),
-        vtkm::filter::ApplyPolicy(coords, policy),
-        vtkm::cont::make_ArrayHandleGroupVec<3>(normals),
-        vtkm::cont::make_ArrayHandleGroupVec<3>(this->InterpolationWeights),
-        vtkm::cont::make_ArrayHandleGroupVec<3>(this->InterpolationIds),
-        this->EdgeTable,
-        this->TriangleTable);
+        vtkm::filter::ApplyPolicy(coords, policy)
+        );
 
   //Now that we have the edge interpolation finished we can generate the
   //following:
