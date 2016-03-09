@@ -35,6 +35,11 @@ namespace exec {
 /// To construct an AtomicArray you will need to pass in an vtkm::cont::ArrayHandle
 /// that is used as the underlying storage for the AtomicArray
 ///
+/// Supported Operations: add / compare and swap (CAS)
+///                     
+/// Supported Types: 32 / 64 bit signed integers
+///                 
+///
 template<typename T, typename DeviceAdapterTag>
 class AtomicArray : public vtkm::exec::ExecutionObjectBase
 {
