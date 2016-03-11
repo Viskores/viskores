@@ -107,8 +107,11 @@ if (VTKm_Base_FOUND)
                        "Falling back to fermi, please manually specify if you want something else.")
         set(VTKm_CUDA_Architecture "fermi")
       endif()
+    endif()
 
-    elseif(VTKm_CUDA_Architecture STREQUAL "fermi")
+    #since when we are native we can fail, and fall back to "fermi" these have
+    #to happen after, and separately of the native check
+    if(VTKm_CUDA_Architecture STREQUAL "fermi")
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_20,code=compute_20")
     elseif(VTKm_CUDA_Architecture STREQUAL "kepler")
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_30,code=compute_30")
