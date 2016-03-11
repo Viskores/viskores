@@ -67,6 +67,9 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #undef NOMINMAX
 #endif
 
+#if defined(VTKM_MSVC)
+#include <Windows.h>
+#endif
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
@@ -295,6 +298,110 @@ public:
 
 private:
   ::tbb::tick_count StartTime;
+};
+
+template<typename T>
+class DeviceAdapterAtomicArrayImplementation<T,vtkm::cont::DeviceAdapterTagTBB>
+{
+public:
+  VTKM_CONT_EXPORT
+  DeviceAdapterAtomicArrayImplementation(
+               vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> handle):
+    Iterators( IteratorsType( handle.PrepareForInPlace(
+                                      vtkm::cont::DeviceAdapterTagTBB())
+                             ) )
+  {
+  }
+
+  VTKM_EXEC_EXPORT
+  T Add(vtkm::Id index, const T& value) const
+  {
+    T* lockedValue;
+#if defined(VTKM_MSVC)
+    typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
+    typename IteratorType::pointer temp = &(*(Iterators.GetBegin()+index));
+    lockedValue = temp;
+    return vtkmAtomicAdd(lockedValue, value);
+#else
+    lockedValue = (Iterators.GetBegin()+index);
+    return vtkmAtomicAdd(lockedValue, value);
+#endif
+  }
+
+  VTKM_EXEC_EXPORT
+  T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
+  {
+    T* lockedValue;
+#if defined(VTKM_MSVC)
+    typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
+    typename IteratorType::pointer temp = &(*(Iterators.GetBegin()+index));
+    lockedValue = temp;
+    return vtkmCompareAndSwap(lockedValue, newValue, oldValue);
+#else
+    lockedValue = (Iterators.GetBegin()+index);
+    return vtkmCompareAndSwap(lockedValue, newValue, oldValue);
+#endif
+  }
+
+private:
+  typedef typename vtkm::cont::ArrayHandle<T,vtkm::cont::StorageTagBasic>
+        ::template ExecutionTypes<DeviceAdapterTagTBB>::Portal PortalType;
+  typedef vtkm::cont::ArrayPortalToIterators<PortalType> IteratorsType;
+  IteratorsType Iterators;
+
+#if defined(VTKM_MSVC) //MSVC atomics
+  VTKM_EXEC_EXPORT
+  vtkm::Int32 vtkmAtomicAdd(vtkm::Int32 *address, const vtkm::Int32 &value) const
+  {
+    return InterlockedExchangeAdd(reinterpret_cast<volatile long *>(address),value);
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int64 vtkmAtomicAdd(vtkm::Int64 *address, const vtkm::Int64 &value) const
+  {
+    return InterlockedExchangeAdd64(reinterpret_cast<volatile long long *>(address),value);
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32 *address, const vtkm::Int32 &newValue, const vtkm::Int32 &oldValue) const
+  {
+    return InterlockedCompareExchange(reinterpret_cast<volatile long *>(address),newValue,oldValue);
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64 *address,const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
+  {
+    return InterlockedCompareExchange64(reinterpret_cast<volatile long long *>(address),newValue, oldValue);
+  }
+
+#else //gcc built-in atomics
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int32 vtkmAtomicAdd(vtkm::Int32 *address, const vtkm::Int32 &value) const
+  {
+    return __sync_fetch_and_add(address,value);
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int64 vtkmAtomicAdd(vtkm::Int64 *address, const vtkm::Int64 &value) const
+  {
+    return __sync_fetch_and_add(address,value);
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32 *address, const vtkm::Int32 &newValue, const vtkm::Int32 &oldValue) const
+  {
+    return __sync_val_compare_and_swap(address,oldValue, newValue);
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64 *address,const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
+  {
+    return __sync_val_compare_and_swap(address,oldValue,newValue);
+  }
+
+#endif
+
 };
 
 }

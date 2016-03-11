@@ -695,4 +695,78 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
 }
 } // namespace vtkm::cont::internal
 
+namespace vtkm {
+namespace cont {
+/// \brief Class providing a device-specific atomic interface.
+///
+/// The class provide the actual implementation used by vtkm::exec::AtomicArray.
+/// A serial default implementation is provided. But each device will have a different
+/// implementation.
+///
+/// Serial requires no form of atomicity
+///
+template<typename T, typename DeviceTag>
+class DeviceAdapterAtomicArrayImplementation
+{
+public:
+  VTKM_CONT_EXPORT
+  DeviceAdapterAtomicArrayImplementation(vtkm::cont::ArrayHandle<T> handle):
+    Portal( handle.PrepareForInPlace(DeviceTag()) )
+  {
+  }
+
+  VTKM_EXEC_EXPORT
+  T Add(vtkm::Id index, const T& value) const
+  {
+    return vtkmAtomicAdd(index, value);
+  }
+
+  VTKM_EXEC_EXPORT
+  T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
+  {
+    return vtkmCompareAndSwap(index, newValue, oldValue);
+  }
+
+private:
+    typedef typename vtkm::cont::ArrayHandle<T>
+              ::template ExecutionTypes<DeviceTag>::Portal PortalType;
+  PortalType Portal;
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int32 vtkmAtomicAdd(const vtkm::Id &index, const vtkm::Int32 &value) const
+  {
+    const vtkm::Int32 old = this->Portal.Get(index);
+    this->Portal.Set(index, old + value);
+    return old;
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int64 vtkmAtomicAdd(const vtkm::Id &index, const vtkm::Int64 &value) const
+  {
+    const vtkm::Int64 old = this->Portal.Get(index);
+    this->Portal.Set(index, old + value);
+    return old;
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int32 vtkmCompareAndSwap(const vtkm::Id &index, const vtkm::Int32 &newValue, const vtkm::Int32 &oldValue) const
+  {
+    const vtkm::Int32 old = this->Portal.Get(index);
+    if(old == oldValue) this->Portal.Set(index, newValue);
+    return old;
+  }
+
+  VTKM_EXEC_EXPORT
+  vtkm::Int64 vtkmCompareAndSwap(const vtkm::Id &index, const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
+  {
+    const vtkm::Int64 old = this->Portal.Get(index);
+    if(old == oldValue) this->Portal.Set(index, newValue);
+    return old;
+  }
+
+};
+
+}
+} // namespace vtkm::cont
+
 #endif //vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
