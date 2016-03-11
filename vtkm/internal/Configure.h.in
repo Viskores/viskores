@@ -158,14 +158,11 @@
   VTK_M_THRIDPARTY_WARNINGS_POP
 
 #elif (defined(VTKM_MSVC))
-#define VTK_M_THIRDPARTY_WARNINGS_PUSH \
-  _Pragma("push")
-#define VTK_M_THRIDPARTY_WARNINGS_POP \
-  _Pragma("pop")
-#define VTK_M_THIRDPARTY_MSVC_WARNING_PRAGMAS \
-  _Pragma("warning ( disable : 4267 )") \
-#endif
-
+#define VTKM_THIRDPARTY_PRE_INCLUDE \
+  __pragma(warning(push)) \
+  __pragma(warning(disable:4267))
+#define VTKM_THIRDPARTY_POST_INCLUDE \
+  __pragma(warning(pop))
 #else
 #define VTKM_THIRDPARTY_PRE_INCLUDE
 #define VTKM_THIRDPARTY_POST_INCLUDE
