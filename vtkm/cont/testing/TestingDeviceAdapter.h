@@ -279,7 +279,7 @@ public:
   };
 
   template<typename T>
-  struct AtomicKernel 
+  struct AtomicKernel
   {
     VTKM_CONT_EXPORT
     AtomicKernel(const vtkm::exec::AtomicArray<T,DeviceAdapterTag> &array)
@@ -299,7 +299,7 @@ public:
   };
 
   template<typename T>
-  struct AtomicCASKernel 
+  struct AtomicCASKernel
   {
     VTKM_CONT_EXPORT
     AtomicCASKernel(const vtkm::exec::AtomicArray<T,DeviceAdapterTag> &array)
@@ -314,12 +314,12 @@ public:
       //This creates an atomic add using the CAS operatoin
       T assumed = T(0);
       do
-      { 
+      {
         assumed = oldValue;
         oldValue = this->AArray.CompareAndSwap(0, (assumed + value) , assumed);
 
       } while (assumed != oldValue);
-      
+
     }
 
     VTKM_CONT_EXPORT void SetErrorMessageBuffer(
@@ -1621,7 +1621,7 @@ private:
     vtkm::Int32 atomicCount = 0;
     for(vtkm::Int32 i = 0; i < ARRAY_SIZE; i++) atomicCount += i;
     std::cout << "-------------------------------------------" << std::endl;
-    // To test the atomics, ARRAY_SIZE number of threads will all increment  
+    // To test the atomics, ARRAY_SIZE number of threads will all increment
     // a single atomic value.
     std::cout << "Testing Atomic Add with vtkm::Int32" << std::endl;
     {
@@ -1675,7 +1675,7 @@ private:
     VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic CAS Int64");
     }
 
-    
+
   }
 
   struct TestAll
