@@ -106,10 +106,11 @@ struct TestingImplicitFunctions
 
     vtkm::cont::ArrayHandle<FloatDefault>::PortalConstControl portal =
         values.GetPortalConstControl();
+
     bool success = (portal.Get(0) == -(r*r)) &&
-                   (portal.Get(1) == 0.0) &&
-                   (portal.Get(2) == 0.0) &&
-                   (portal.Get(4) == 0.0) &&
+                   test_equal(portal.Get(1), FloatDefault(0.0) ) &&
+                   test_equal(portal.Get(2), FloatDefault(0.0) ) &&
+                   test_equal(portal.Get(4), FloatDefault(0.0) ) &&
                    (portal.Get(3) > 0.0) &&
                    (portal.Get(5) > 0.0) &&
                    (portal.Get(6) > 0.0) &&
@@ -144,7 +145,7 @@ struct TestingImplicitFunctions
         values.GetPortalConstControl();
     bool success = (portal.Get(0) < 0.0) &&
                    (portal.Get(1) < 0.0) &&
-                   (portal.Get(2) == 0.0) &&
+                   test_equal(portal.Get(2), FloatDefault(0.0) ) &&
                    (portal.Get(3) > 0.0) &&
                    (portal.Get(4) > 0.0);
 
