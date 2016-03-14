@@ -42,10 +42,12 @@ public:
            const vtkm::Vec<vtkm::FloatDefault,2> &spacing = vtkm::Vec<vtkm::FloatDefault,2>(1.0f),
            std::string coordNm="coords", std::string cellNm="cells")
     {
+      vtkm::Vec<vtkm::FloatDefault,3> origin3d(origin[0], origin[1], 0.0f);
+      vtkm::Vec<vtkm::FloatDefault,3> spacing3d(spacing[0], spacing[1], 1.0f);
       return DataSetBuilderUniform::CreateDS(2,
                                              dimensions[0],dimensions[1],1,
-                                             origin[0],origin[1],0.0f,
-                                             spacing[0],spacing[1],1.0f,
+                                             origin3d,
+                                             spacing3d,
                                              coordNm, cellNm);
     }
 
@@ -61,29 +63,30 @@ public:
       return DataSetBuilderUniform::CreateDS(
             3,
             dimensions[0],dimensions[1],dimensions[2],
-            origin[0],origin[1],origin[2],
-            spacing[0],spacing[1],spacing[2],
+            origin,
+            spacing,
             coordNm, cellNm);
     }
 
 private:
-    template<typename T>
     VTKM_CONT_EXPORT
     static
     vtkm::cont::DataSet
     CreateDS(int dim, vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
-             T originX, T originY, T originZ,
-             T spacingX, T spacingY, T spacingZ,
+             const vtkm::Vec<vtkm::FloatDefault,3> &origin,
+             const vtkm::Vec<vtkm::FloatDefault,3> &spacing,
              std::string coordNm, std::string cellNm)
     {
         VTKM_ASSERT_CONT(nx>1 && ny>1 && ((dim==2 && nz==1)||(dim==3 && nz>=1)));
-        VTKM_ASSERT_CONT(spacingX>0 && spacingY>0 && spacingZ>0);
+        VTKM_ASSERT_CONT(spacing[0]>0 && spacing[1]>0 && spacing[2]>0);
         vtkm::cont::DataSet dataSet;
 
         vtkm::cont::ArrayHandleUniformPointCoordinates
             coords(vtkm::Id3(nx, ny, nz),
-                   vtkm::Vec<T,3>(originX, originY,originZ),
-                   vtkm::Vec<T,3>(spacingX, spacingY,spacingZ));
+                   origin,
+                   spacing
+                   );
+
 
         vtkm::cont::CoordinateSystem cs(coordNm, 1, coords);
         dataSet.AddCoordinateSystem(cs);
