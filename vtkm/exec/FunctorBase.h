@@ -38,7 +38,7 @@ class FunctorBase
 {
 public:
   VTKM_EXEC_CONT_EXPORT
-  FunctorBase() {  }
+  FunctorBase(): ErrorMessage() {  }
 
   VTKM_EXEC_EXPORT
   void RaiseError(const char *message) const
