@@ -40,27 +40,27 @@ struct ScatterIdentity
 {
   typedef vtkm::cont::ArrayHandleIndex OutputToInputMapType;
   VTKM_CONT_EXPORT
-  OutputToInputMapType GetOutputToInputMap(vtkm::Id outputRange) const
+  OutputToInputMapType GetOutputToInputMap(vtkm::Id inputRange) const
   {
-    return OutputToInputMapType(outputRange);
+    return OutputToInputMapType(inputRange);
   }
   VTKM_CONT_EXPORT
-  OutputToInputMapType GetOutputToInputMap(vtkm::Id3 outputRange) const
+  OutputToInputMapType GetOutputToInputMap(vtkm::Id3 inputRange) const
   {
     return this->GetOutputToInputMap(
-          outputRange[0]*outputRange[1]*outputRange[2]);
+          inputRange[0]*inputRange[1]*inputRange[2]);
   }
 
   typedef vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> VisitArrayType;
   VTKM_CONT_EXPORT
-  VisitArrayType GetVisitArray(vtkm::Id outputRange) const
+  VisitArrayType GetVisitArray(vtkm::Id inputRange) const
   {
-    return VisitArrayType(1, outputRange);
+    return VisitArrayType(1, inputRange);
   }
   VTKM_CONT_EXPORT
-  VisitArrayType GetVisitArray(vtkm::Id3 outputRange) const
+  VisitArrayType GetVisitArray(vtkm::Id3 inputRange) const
   {
-    return this->GetVisitArray(outputRange[0]*outputRange[1]*outputRange[2]);
+    return this->GetVisitArray(inputRange[0]*inputRange[1]*inputRange[2]);
   }
 
   template<typename RangeType>
