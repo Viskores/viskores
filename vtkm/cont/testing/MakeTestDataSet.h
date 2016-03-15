@@ -50,7 +50,7 @@ public:
     // 3D explicit datasets.
     vtkm::cont::DataSet Make3DExplicitDataSet0();
     vtkm::cont::DataSet Make3DExplicitDataSet1();
-    vtkm::cont::DataSet Make3DExplicitDataSetCowNose(double *pBounds = NULL);
+    vtkm::cont::DataSet Make3DExplicitDataSetCowNose();
 };
 
 
@@ -287,7 +287,7 @@ MakeTestDataSet::Make3DExplicitDataSet1()
 }
 
 inline vtkm::cont::DataSet
-MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
+MakeTestDataSet::Make3DExplicitDataSetCowNose()
 {
   // prepare data array
   const int nVerts = 17;
@@ -333,7 +333,6 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
     0, 15, 10,
     7, 6, 0
   };
-  double _bounds[6] = {-0.000169, 0.048088, 0.001378, 0.250062, 0.053925, 0.200755};
 
   // create DataSet
   vtkm::cont::DataSet dataSet;
@@ -351,15 +350,6 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose(double *pBounds)
                                            "cells");
   cellSet.Fill(connectivity);
   dataSet.AddCellSet(cellSet);
-
-  // copy bounds
-  if (pBounds != NULL)
-  {
-    for (vtkm::IdComponent i=0; i<6; i++)
-    {
-      pBounds[i] = _bounds[i];
-    }
-  }
 
   return dataSet;
 }

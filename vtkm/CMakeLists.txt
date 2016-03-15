@@ -66,6 +66,10 @@ add_subdirectory(exec)
 add_subdirectory(worklet)
 
 #-----------------------------------------------------------------------------
+#add the filter folder
+add_subdirectory(filter)
+
+#-----------------------------------------------------------------------------
 #add the benchmarking folder
 add_subdirectory(benchmarking)
 

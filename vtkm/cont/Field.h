@@ -481,7 +481,7 @@ public:
   Field()
     : Name(),
       Order(),
-      Association(),
+      Association(ASSOC_ANY),
       AssocCellSetName(),
       AssocLogicalDim(),
       Data(),
