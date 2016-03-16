@@ -225,14 +225,10 @@ public:
     //The ICC compiler has been found to improperly optimize the copy_backwards
     //into a standard copy, causing the above issue.
     T lastValue = inputPortal.Get(numberOfValues - 1);
-
-VTKM_VECTORIZATION_PRE_LOOP
     for(vtkm::Id i=(numberOfValues-1); i >= 1; --i)
-      {
-      //nothing for gcc as input & output could be the same
-VTKM_VECTORIZATION_IN_LOOP
+    {
       outputPortal.Set(i, inputPortal.Get(i-1));
-      }
+    }
     outputPortal.Set(0, initialValue);
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
@@ -358,11 +354,9 @@ private:
     PortalI indexPortal = index.PrepareForInput(Device());
     PortalVout valuesOutPortal = values_out.PrepareForOutput(n, Device());
 
-VTKM_VECTORIZATION_PRE_LOOP
     for (vtkm::Id i=0; i<n; i++)
     {
-VTKM_VECTORIZATION_IN_LOOP
-       valuesOutPortal.Set( i, valuesPortal.Get(indexPortal.Get(i)) );
+      valuesOutPortal.Set( i, valuesPortal.Get(indexPortal.Get(i)) );
     }
   }
 
