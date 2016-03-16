@@ -193,7 +193,8 @@
 #define VTKM_VECTORIZATION_PRE_LOOP \
   _Pragma("clang loop vectorize(enable) interleave(enable)")
 #define VTKM_VECTORIZATION_IN_LOOP
-#elif defined(VTKM_ICC)
+#elif defined(VTKM_ICC) && defined(NDEBUG)
+//icc can't do vectorization in debug builds
 //icc needs pre and in loop
 #define VTKM_VECTORIZATION_PRE_LOOP \
   _Pragma("simd")
