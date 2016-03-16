@@ -170,8 +170,12 @@
 
 //Determine if current compiler supports vectorization pragma's
 //if so set the define VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS
+//
+//While ICC 14 does support simd pragma, in testing we find that the
+//simd code produces SIGBUS and isn't safe to use.
+//
 #if ( defined(VTKM_GCC) && ( __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)  ) ) || \
-    ( defined(VTKM_ICC) && (__INTEL_COMPILER >= 1400) ) || \
+    ( defined(VTKM_ICC) && (__INTEL_COMPILER >= 1500) ) || \
     ( defined(VTKM_CLANG) && defined(__apple_build_version__) && (__apple_build_version__ >= 7000000) ) || \
     ( defined(VTKM_CLANG) && !defined(__apple_build_version__) && (__clang_major__ > 3) ) || \
     ( defined(VTKM_CLANG) && !defined(__apple_build_version__) && (__clang_major__ == 3 && __clang_minor__ >= 5) )
