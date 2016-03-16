@@ -288,7 +288,7 @@ public:
                 vtkm::NUMBER_OF_CELL_SHAPES)),
       Indices(vtkm::cont::make_ArrayHandle(
                 vtkm::worklet::internal::TetrahedronIndexData,
-                sizeof(vtkm::worklet::internal::TetrahedronIndexData)/sizeof(vtkm::IdComponent)))
+                vtkm::Id(44) ))
   {  }
 
   template<typename Device>
