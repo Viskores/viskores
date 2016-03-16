@@ -155,7 +155,7 @@ public:
                 vtkm::NUMBER_OF_CELL_SHAPES)),
       Indices(vtkm::cont::make_ArrayHandle(
                 vtkm::worklet::internal::TriangleIndexData,
-                sizeof(vtkm::worklet::internal::TriangleIndexData)/sizeof(vtkm::IdComponent)))
+                vtkm::Id(9) ))
   {  }
 
   template<typename Device>
