@@ -18,18 +18,10 @@
 //  this software.
 //============================================================================
 
-#include <algorithm>
-#include <fstream>
-#include <iostream>
-#include <iterator>
-#include <vector>
+#include <vtkm/io/writer/VTKDataSetWriter.h>
 
-#include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
-
-#include <vtkm/io/writer/VTKDataSetWriter.h>
 
 namespace {
 
@@ -37,47 +29,33 @@ void TestVTKExplicitWrite()
 {
   vtkm::cont::testing::MakeTestDataSet tds;
 
-  std::ofstream out1("fileA1.vtk");
-  vtkm::io::writer::VTKDataSetWriter::Write(out1,
-    tds.Make3DExplicitDataSet0());
-  out1.close();
+  vtkm::io::writer::VTKDataSetWriter writer1("fileA1.vtk");
+  writer1.WriteDataSet(tds.Make3DExplicitDataSet0());
 
   // force it to output an explicit grid as points
-  std::ofstream out2("fileA2.vtk");
-  vtkm::io::writer::VTKDataSetWriter::Write(out2,
-    tds.Make3DExplicitDataSet0(), -1);
-  out2.close();
+  vtkm::io::writer::VTKDataSetWriter writer2("fileA2.vtk");
+  writer2.WriteDataSet(tds.Make3DExplicitDataSet0(), -1);
 
-  std::ofstream out3("fileA3.vtk");
-  vtkm::io::writer::VTKDataSetWriter::Write(out3,
-    tds.Make3DExplicitDataSet0());
-  out3.close();
+  vtkm::io::writer::VTKDataSetWriter writer3("fileA3.vtk");
+  writer3.WriteDataSet(tds.Make3DExplicitDataSet0());
 
-  std::ofstream out4("fileA4.vtk");
-  vtkm::io::writer::VTKDataSetWriter::Write(out4,
-    tds.Make3DExplicitDataSetCowNose());
-  out4.close();
+  vtkm::io::writer::VTKDataSetWriter writer4("fileA4.vtk");
+  writer4.WriteDataSet(tds.Make3DExplicitDataSetCowNose());
 }
 
 void TestVTKUniformWrite()
 {
   vtkm::cont::testing::MakeTestDataSet tds;
 
-  std::ofstream out1("fileB1.vtk");
-  vtkm::io::writer::VTKDataSetWriter::Write(out1,
-    tds.Make2DUniformDataSet0());
-  out1.close();
+  vtkm::io::writer::VTKDataSetWriter writer1("fileB1.vtk");
+  writer1.WriteDataSet(tds.Make2DUniformDataSet0());
 
-  std::ofstream out2("fileB2.vtk");
-  vtkm::io::writer::VTKDataSetWriter::Write(out2,
-    tds.Make3DUniformDataSet0());
-  out2.close();
+  vtkm::io::writer::VTKDataSetWriter writer2("fileB2.vtk");
+  writer2.WriteDataSet(tds.Make3DUniformDataSet0());
 
   // force it to output an explicit grid as points
-  std::ofstream out3("fileB3.vtk");
-  vtkm::io::writer::VTKDataSetWriter::Write(out3,
-    tds.Make3DUniformDataSet0(), -1);
-  out3.close();
+  vtkm::io::writer::VTKDataSetWriter writer3("fileB3.vtk");
+  writer3.WriteDataSet(tds.Make3DUniformDataSet0(), -1);
 }
 
 void TestVTKWrite()
