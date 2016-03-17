@@ -105,9 +105,8 @@ int main(int argc, char *argv[])
             << "process scalars: " << processScalarsTime << std::endl
             << "Total: " << totalTime << std::endl;
 
-  std::ofstream outFile(argv[argc - 1]);
-  vtkm::io::writer::VTKDataSetWriter::Write(outFile, output);
-  outFile.close();
+  vtkm::io::writer::VTKDataSetWriter writer(argv[argc - 1]);
+  writer.WriteDataSet(output);
 
   return 0;
 }
