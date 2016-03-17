@@ -410,7 +410,7 @@ public:
 
     try
     {
-      std::ofstream fileStream(this->FileName, std::fstream::trunc);
+      std::ofstream fileStream(this->FileName.c_str(), std::fstream::trunc);
       this->Write(fileStream, dataSet, cellSetIndex);
       fileStream.close();
     }
