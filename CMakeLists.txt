@@ -107,6 +107,8 @@ option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 if (VTKm_ENABLE_TESTING)
   enable_testing()
   include(CTest)
+  configure_file(${VTKm_SOURCE_DIR}/CTestCustom.cmake.in
+    ${VTKm_BINARY_DIR}/CTestCustom.cmake @ONLY)
 endif()
 
 #-----------------------------------------------------------------------------
