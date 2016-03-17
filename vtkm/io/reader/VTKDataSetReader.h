@@ -37,7 +37,7 @@ namespace reader {
 class VTKDataSetReader : public VTKDataSetReaderBase
 {
 public:
-  VTKDataSetReader(const char *fileName)
+  explicit VTKDataSetReader(const char *fileName)
     : VTKDataSetReaderBase(fileName)
   { }
 

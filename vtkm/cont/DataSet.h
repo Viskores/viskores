@@ -62,9 +62,10 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  const vtkm::cont::Field &GetField(const std::string &name,
+  vtkm::Id GetFieldIndex(
+      const std::string &name,
       vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY)
-      const
+    const
   {
     for (std::size_t i=0; i < this->Fields.size(); ++i)
     {
@@ -72,10 +73,18 @@ public:
            assoc == this->Fields[i].GetAssociation()) &&
           this->Fields[i].GetName() == name)
       {
-        return this->Fields[i];
+        return static_cast<vtkm::Id>(i);
       }
     }
     throw vtkm::cont::ErrorControlBadValue("No field with requested name: "+name);
+  }
+
+  VTKM_CONT_EXPORT
+  const vtkm::cont::Field &GetField(const std::string &name,
+      vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY)
+      const
+  {
+    return this->GetField(this->GetFieldIndex(name, assoc));
   }
 
   VTKM_CONT_EXPORT
@@ -94,18 +103,24 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  const vtkm::cont::CoordinateSystem &
-  GetCoordinateSystem(const std::string &name) const
+  vtkm::Id GetCoordinateSystemIndex(const std::string &name) const
   {
     for (std::size_t i=0; i < this->CoordSystems.size(); ++i)
     {
       if (this->CoordSystems[i].GetName() == name)
       {
-        return this->CoordSystems[i];
+        return static_cast<vtkm::Id>(i);
       }
     }
     throw vtkm::cont::ErrorControlBadValue(
           "No coordinate system with requested name");
+  }
+
+  VTKM_CONT_EXPORT
+  const vtkm::cont::CoordinateSystem &
+  GetCoordinateSystem(const std::string &name) const
+  {
+    return this->GetCoordinateSystem(this->GetCoordinateSystemIndex(name));
   }
 
   VTKM_CONT_EXPORT
@@ -131,17 +146,22 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::cont::DynamicCellSet GetCellSet(const std::string &name)
-      const
+  vtkm::Id GetCellSetIndex(const std::string &name) const
   {
     for (std::size_t i=0; i < static_cast<size_t>(this->GetNumberOfCellSets()); ++i)
     {
       if (this->CellSets[i].GetCellSet().GetName() == name)
       {
-        return this->CellSets[i];
+        return static_cast<vtkm::Id>(i);
       }
     }
     throw vtkm::cont::ErrorControlBadValue("No cell set with requested name");
+  }
+
+  VTKM_CONT_EXPORT
+  vtkm::cont::DynamicCellSet GetCellSet(const std::string &name) const
+  {
+    return this->GetCellSet(this->GetCellSetIndex(name));
   }
 
   VTKM_CONT_EXPORT
