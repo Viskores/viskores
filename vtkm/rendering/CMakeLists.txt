@@ -33,6 +33,7 @@ set(headers
   )
 
 #-----------------------------------------------------------------------------
+find_package(MESA REQUIRED)
 vtkm_declare_headers(${headers})
 add_subdirectory(raytracing)
 include_directories(${OSMESA_INCLUDE_DIR})

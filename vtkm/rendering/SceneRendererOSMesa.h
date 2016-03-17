@@ -74,6 +74,21 @@ public:
           eVerts = dcoords.Cast<vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > > ();
           RenderTriangles(numTri, eVerts, indices, sf, colorTable, scalarBounds);
       }
+      else if(dcoords.IsSameType(vtkm::cont::ArrayHandleCartesianProduct<
+                                 vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                 vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                 vtkm::cont::ArrayHandle<vtkm::FloatDefault> >()))
+      {
+          vtkm::cont::ArrayHandleCartesianProduct<
+              vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+              vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+              vtkm::cont::ArrayHandle<vtkm::FloatDefault> > rVerts;
+          rVerts = dcoords.Cast<vtkm::cont::ArrayHandleCartesianProduct<
+                                    vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                    vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                    vtkm::cont::ArrayHandle<vtkm::FloatDefault> > > ();
+          RenderTriangles(numTri, rVerts, indices, sf, colorTable, scalarBounds);
+      }
       glFinish();
       glFlush();
   }
