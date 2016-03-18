@@ -601,23 +601,7 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
   VTKM_CONT_EXPORT static void Unique(
       vtkm::cont::ArrayHandle<T,Storage> &values)
   {
-    vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>
-        stencilArray;
-    vtkm::Id inputSize = values.GetNumberOfValues();
-
-    ClassifyUniqueKernel<
-        typename vtkm::cont::ArrayHandle<T,Storage>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
-        typename vtkm::cont::ArrayHandle<vtkm::Id,vtkm::cont::StorageTagBasic>::template ExecutionTypes<DeviceAdapterTag>::Portal>
-        classifyKernel(values.PrepareForInput(DeviceAdapterTag()),
-                       stencilArray.PrepareForOutput(inputSize, DeviceAdapterTag()));
-    DerivedAlgorithm::Schedule(classifyKernel, inputSize);
-
-    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
-        outputArray;
-
-    DerivedAlgorithm::StreamCompact(values, stencilArray, outputArray);
-
-    DerivedAlgorithm::Copy(outputArray, values);
+    Unique(values, std::equal_to<T>());
   }
 
   template<typename T, class Storage, class BinaryCompare>
@@ -629,13 +613,17 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
         stencilArray;
     vtkm::Id inputSize = values.GetNumberOfValues();
 
+    typedef internal::WrappedBinaryOperator<bool,BinaryCompare> WrappedBOpType;
+    WrappedBOpType wrappedCompare(binary_compare);
+
     ClassifyUniqueComparisonKernel<
         typename vtkm::cont::ArrayHandle<T,Storage>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
         typename vtkm::cont::ArrayHandle<vtkm::Id,vtkm::cont::StorageTagBasic>::template ExecutionTypes<DeviceAdapterTag>::Portal,
-        BinaryCompare>
+        WrappedBOpType>
         classifyKernel(values.PrepareForInput(DeviceAdapterTag()),
                        stencilArray.PrepareForOutput(inputSize, DeviceAdapterTag()),
-                       binary_compare);
+                       wrappedCompare);
+
     DerivedAlgorithm::Schedule(classifyKernel, inputSize);
 
     vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
