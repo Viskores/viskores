@@ -88,7 +88,7 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   dataSet.AddCoordinateSystem(
           vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
 
-  dataSet.AddField(vtkm::cont::Field("nodevar", 1, vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+  dataSet.AddField(vtkm::cont::Field(std::string("nodevar"), 1, vtkm::cont::Field::ASSOC_POINTS, fieldArray));
 
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
@@ -290,16 +290,15 @@ void TestMarchingCubesUniformGrid()
     VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
                      "Wrong number of fields in the output dataset");
 
-    //verify that the number of points is correct
     vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
-    VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 402,
-                     "Should have less coordinates than the unmerged version");
-
-    //verify that the number of cells is correct (160)
     vtkm::cont::DynamicCellSet dcells = outputData.GetCellSet();
-
     typedef vtkm::cont::CellSetSingleType<> CellSetType;
     const CellSetType& cells = dcells.Cast<CellSetType>();
+
+    //verify that the number of points is correct (72)
+    //verify that the number of cells is correct (160)
+    VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 72,
+                     "Should have less coordinates than the unmerged version");
     VTKM_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
   }
 

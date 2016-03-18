@@ -298,6 +298,17 @@ class ApplyToField : public vtkm::worklet::WorkletMapField
 
   };
 
+// -----------------------------------------------------------------------------
+struct FirstValueSame
+{
+  template<typename T, typename U>
+  VTKM_EXEC_CONT_EXPORT bool operator()(const vtkm::Pair<T,U>& a,
+                                        const vtkm::Pair<T,U>& b) const
+  {
+    return (a.first == b.first);
+  }
+};
+
 }
 
 namespace vtkm {
@@ -393,6 +404,7 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
                                      this->TriangleTable,
                                      scatter);
 
+
   EdgeWeightGenerate<DeviceAdapter> weightGenerate(this->IsoValue,
                                                     this->GenerateNormals,
                                                     metaData);
@@ -421,33 +433,37 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
 
     //Do merge duplicate points we need to do the following:
     //1. Copy the interpolation Ids
-    Id2HandleType unqiueIds;
-    Algorithm::Copy(this->InterpolationIds, unqiueIds);
+    Id2HandleType uniqueIds;
+    Algorithm::Copy(this->InterpolationIds, uniqueIds);
 
     if(this->GenerateNormals)
       {
       typedef vtkm::cont::ArrayHandleZip<WeightHandleType, Vec3HandleType> KeyType;
       KeyType keys = vtkm::cont::make_ArrayHandleZip(this->InterpolationWeights, normals);
 
-      //2. now we need to do a sort by key, giving us
-      Algorithm::SortByKey(unqiueIds, keys);
+      //2. now we need to do a sort by key, making duplicate ids be adjacent
+      Algorithm::SortByKey(uniqueIds, keys);
 
       //3. lastly we need to do a unique by key, but since vtkm doesn't
-      // offer that feature, we use a zip handle
+      // offer that feature, we use a zip handle.
+      // We need to use a custom comparison operator as we only want to compare
+      // the id2 which is the first entry in the zip pair
       vtkm::cont::ArrayHandleZip<Id2HandleType, KeyType> zipped =
-                  vtkm::cont::make_ArrayHandleZip(unqiueIds,keys);
-      Algorithm::Unique( zipped );
+                  vtkm::cont::make_ArrayHandleZip(uniqueIds,keys);
+      Algorithm::Unique( zipped, FirstValueSame());
       }
     else
       {
-      //2. now we need to do a sort by key, giving us
-      Algorithm::SortByKey(unqiueIds, this->InterpolationWeights);
+      //2. now we need to do a sort by key, making duplicate ids be adjacent
+      Algorithm::SortByKey(uniqueIds, this->InterpolationWeights);
 
       //3. lastly we need to do a unique by key, but since vtkm doesn't
-      // offer that feature, we use a zip handle
+      // offer that feature, we use a zip handle.
+      // We need to use a custom comparison operator as we only want to compare
+      // the id2 which is the first entry in the zip pair
       vtkm::cont::ArrayHandleZip<Id2HandleType, WeightHandleType> zipped =
-                  vtkm::cont::make_ArrayHandleZip(unqiueIds, this->InterpolationWeights);
-      Algorithm::Unique( zipped );
+                  vtkm::cont::make_ArrayHandleZip(uniqueIds, this->InterpolationWeights);
+      Algorithm::Unique( zipped, FirstValueSame());
       }
 
     //4.
@@ -457,8 +473,12 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
     //value.
     //
     vtkm::cont::ArrayHandle< vtkm::Id> connectivity;
-    Algorithm::LowerBounds(unqiueIds, this->InterpolationIds, connectivity);
+    Algorithm::LowerBounds(uniqueIds, this->InterpolationIds, connectivity);
 
+    //5.
+    //We re-assign the shortened version of unique ids back into the
+    //member variable so that 'DoMapField' will work properly
+    this->InterpolationIds = uniqueIds;
 
     CellShapeTagTriangle triangleTag;
     vtkm::cont::CellSetSingleType< > outputCells( triangleTag );
@@ -469,7 +489,7 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
     ApplyToField applyToField;
     vtkm::worklet::DispatcherMapField<ApplyToField,
                                     DeviceAdapter> applyFieldDispatcher(applyToField);
-    applyFieldDispatcher.Invoke(unqiueIds,
+    applyFieldDispatcher.Invoke(this->InterpolationIds,
                                 this->InterpolationWeights,
                                 vtkm::filter::ApplyPolicy(coords, policy),
                                 vertices);
@@ -535,6 +555,7 @@ bool MarchingCubes::DoMapField(vtkm::filter::DataSetResult& result,
   ApplyToField applyToField;
   vtkm::worklet::DispatcherMapField<ApplyToField,
                                     DeviceAdapter> applyFieldDispatcher(applyToField);
+
 
   //todo: need to use the policy to get the correct storage tag for output
   vtkm::cont::ArrayHandle<T> output;
