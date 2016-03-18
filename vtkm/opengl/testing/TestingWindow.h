@@ -89,7 +89,7 @@ class TestingWindow : public vtkm::opengl::testing::WindowBase<TestingWindow>
 
 #if defined(VTKM_NVIDIA_PTHREAD_WORKAROUND)
   VTKM_CONT_EXPORT int vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug()
-  { return vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug(); }
+  { return ::vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug(); }
 #endif
 
 public:
