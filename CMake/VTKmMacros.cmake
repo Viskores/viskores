@@ -126,6 +126,12 @@ function(vtkm_install_headers dir_prefix)
     )
 endfunction(vtkm_install_headers)
 
+function(vtkm_install_template_sources)
+  vtkm_get_kit_name(name dir_prefix)
+  set(hfiles ${ARGN})
+  vtkm_install_headers("${dir_prefix}" ${hfiles})
+endfunction(vtkm_install_template_sources)
+
 # Declare a list of headers that require thrust to be enabled
 # for them to header tested. In cases of thrust version 1.5 or less
 # we have to make sure openMP is enabled, otherwise we are okay
