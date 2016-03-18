@@ -69,7 +69,7 @@
 // never used and seems very crazy.
 #include <pthread.h>
 #define VTKM_NVIDIA_PTHREAD_WORKAROUND 1
-int vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug()
+static int vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug()
   { return static_cast<int>(pthread_self()); }
 #endif
 
