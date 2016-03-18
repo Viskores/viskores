@@ -50,7 +50,7 @@ set(header_template_sources
 
 vtkm_declare_headers(${headers})
 
-vtkm_install_headers(${header_template_sources})
+vtkm_install_template_sources(${header_template_sources})
 
 add_subdirectory(internal)
 
