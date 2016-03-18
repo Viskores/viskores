@@ -43,10 +43,10 @@ namespace vtkm {
 template<typename ValueType, typename WeightType>
 VTKM_EXEC_CONT_EXPORT
 ValueType Lerp(const ValueType &value0,
-               const ValueType & value1,
+               const ValueType &value1,
                const WeightType &weight)
 {
-  return static_cast<ValueType>(value0 + weight * (value1-value0));
+  return static_cast<ValueType>((WeightType(1)-weight)*value0+weight*value1);
 }
 template<typename ValueType, vtkm::IdComponent N, typename WeightType>
 VTKM_EXEC_CONT_EXPORT
@@ -54,7 +54,7 @@ vtkm::Vec<ValueType,N> Lerp(const vtkm::Vec<ValueType,N> &value0,
                             const vtkm::Vec<ValueType,N> &value1,
                             const WeightType &weight)
 {
-  return value0 + static_cast<ValueType>(weight) * (value1-value0);
+  return (WeightType(1)-weight)*value0+weight*value1;
 }
 template<typename ValueType, vtkm::IdComponent N>
 VTKM_EXEC_CONT_EXPORT
@@ -62,7 +62,8 @@ vtkm::Vec<ValueType,N> Lerp(const vtkm::Vec<ValueType,N> &value0,
                             const vtkm::Vec<ValueType,N> &value1,
                             const vtkm::Vec<ValueType,N> &weight)
 {
-  return value0 + weight * (value1-value0);
+  static const vtkm::Vec<ValueType,N> One(ValueType(1));
+  return (One-weight)*value0+weight*value1;
 }
 
 // ----------------------------------------------------------------------------

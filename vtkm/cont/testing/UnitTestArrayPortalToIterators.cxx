@@ -36,7 +36,7 @@ struct TemplatedTests
 
   static ValueType ExpectedValue(vtkm::Id index, ComponentType value)
   {
-    return ValueType(static_cast<ComponentType>(index) + value);
+    return ValueType(static_cast<ComponentType>(index+static_cast<vtkm::Id>(value)));
   }
 
   class ReadOnlyArrayPortal

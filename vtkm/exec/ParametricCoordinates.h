@@ -802,7 +802,7 @@ WorldCoordinatesToParametricCoordinates(
   {
     wcoordCenter = wcoordCenter + pointWCoords[pointIndex];
   }
-  wcoordCenter = wcoordCenter*WCoordType(1.0f/numPoints);
+  wcoordCenter = wcoordCenter*WCoordType(1.0f/static_cast<float>(numPoints));
 
   // Find the normal vector to the polygon. If the polygon is planar, convex,
   // and in general position, any three points will give a normal in the same

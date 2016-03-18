@@ -411,7 +411,7 @@ template<typename T>
 VTKM_EXEC_CONT_EXPORT
 T TestValue(vtkm::Id index, T, vtkm::TypeTraitsRealTag)
 {
-  return T(0.01*index + 1.001);
+  return T(0.01*static_cast<double>(index) + 1.001);
 }
 
 /// Many tests involve getting and setting values in some index-based structure

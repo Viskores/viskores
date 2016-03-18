@@ -46,7 +46,7 @@ struct DivideWorklet: public vtkm::worklet::WorkletMapField
   void operator()(const ValueType &v, const vtkm::Id &count, ValueType &vout) const
   {
     typedef typename VecTraits<ValueType>::ComponentType ComponentType;
-    vout = v * ComponentType(1./count);
+    vout = v * ComponentType(1./static_cast<double>(count));
   }
 
   template <class T1, class T2>
