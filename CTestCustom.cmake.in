@@ -19,5 +19,5 @@
 ##============================================================================
 
 list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
- "warning: ignoring loop annotation"
+  ".*warning: ignoring loop annotation.*"
 ) 
