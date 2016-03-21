@@ -68,6 +68,7 @@
 // So that is the explanation on why we have the following function which is
 // never used and seems very crazy.
 #include <pthread.h>
+#include <iostream>
 #define VTKM_NVIDIA_PTHREAD_WORKAROUND 1
 static int vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug()
   { return static_cast<int>(pthread_self()); }
@@ -86,12 +87,6 @@ namespace testing{
 ///
 class TestingWindow : public vtkm::opengl::testing::WindowBase<TestingWindow>
 {
-
-#if defined(VTKM_NVIDIA_PTHREAD_WORKAROUND)
-  VTKM_CONT_EXPORT int vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug()
-  { return ::vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug(); }
-#endif
-
 public:
   VTKM_CONT_EXPORT TestingWindow(){};
 
@@ -113,6 +108,9 @@ public:
   {
    if(key == 27) //escape pressed
     {
+#if defined(VTKM_NVIDIA_PTHREAD_WORKAROUND)
+    std::cout << ::vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug();
+#endif
     exit(0);
     }
   }
