@@ -59,14 +59,15 @@
 //
 //
 //  A: Specify 'no-as-needed' to the linker potentially causing over-linking
-//  and a  slow down in link time
+//  and a  slow down in link time.
 //
 //  B: Use a method from pthread, making the linker realize that pthread is
-//  needed.
+//  needed. Note we have to actually call the method so that a linker with
+//  optimizations enabled doesn't remove the function and pthread requirement.
 //
 //
 // So that is the explanation on why we have the following function which is
-// never used and seems very crazy.
+// used once, doesn't look to be useful and seems very crazy.
 #include <pthread.h>
 #include <iostream>
 #define VTKM_NVIDIA_PTHREAD_WORKAROUND 1
