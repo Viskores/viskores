@@ -31,7 +31,6 @@
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 #include <vtkm/cont/tbb/internal/FunctorsTBB.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
-#include <vtkm/Extent.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 
