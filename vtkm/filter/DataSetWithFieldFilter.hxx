@@ -117,13 +117,14 @@ DataSetResult DataSetWithFieldFilter<Derived>::PrepareForExecution(const vtkm::c
                                                          const vtkm::cont::Field &field,
                                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
-  //determine the field type first
+  vtkm::filter::FieldMetadata metaData(field);
   DataSetResult result;
+
   typedef internal::ResolveFieldTypeAndExecute< Derived,  DerivedPolicy,
                                                 DataSetResult > FunctorType;
   FunctorType functor(static_cast<Derived*>(this),
                       input,
-                      vtkm::filter::FieldMetadata(field),
+                      metaData,
                       policy,
                       this->Tracker,
                       result);
@@ -143,6 +144,7 @@ DataSetResult DataSetWithFieldFilter<Derived>::PrepareForExecution(const vtkm::c
 {
   //We have a special signature just for CoordinateSystem, so that we can ask
   //the policy for the storage types and value types just for coordinate systems
+  vtkm::filter::FieldMetadata metaData(field);
 
   //determine the field type first
   DataSetResult result;
@@ -150,7 +152,7 @@ DataSetResult DataSetWithFieldFilter<Derived>::PrepareForExecution(const vtkm::c
                                                 DataSetResult > FunctorType;
   FunctorType functor(static_cast<Derived*>(this),
                       input,
-                      vtkm::filter::FieldMetadata(field),
+                      metaData,
                       policy,
                       this->Tracker,
                       result);
@@ -179,11 +181,12 @@ bool DataSetWithFieldFilter<Derived>::MapFieldOntoOutput(DataSetResult& result,
   bool valid = false;
   if(result.IsValid())
     {
+    vtkm::filter::FieldMetadata metaData(field);
     typedef internal::ResolveFieldTypeAndMap< Derived,
                                               DerivedPolicy > FunctorType;
     FunctorType functor(static_cast<Derived*>(this),
                         result,
-                        vtkm::filter::FieldMetadata(field),
+                        metaData,
                         policy,
                         this->Tracker,
                         valid);

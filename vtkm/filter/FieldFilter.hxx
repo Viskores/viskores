@@ -135,13 +135,14 @@ FieldResult FieldFilter<Derived>::PrepareForExecution(const vtkm::cont::DataSet 
                                                       const vtkm::cont::Field &field,
                                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
-  //determine the field type first
+  vtkm::filter::FieldMetadata metaData(field);
   FieldResult result;
+
   typedef internal::ResolveFieldTypeAndExecute< Derived,  DerivedPolicy,
                                                 FieldResult > FunctorType;
   FunctorType functor(static_cast<Derived*>(this),
                       input,
-                      vtkm::filter::FieldMetadata(field),
+                      metaData,
                       policy,
                       this->Tracker,
                       result);
@@ -161,13 +162,14 @@ FieldResult FieldFilter<Derived>::PrepareForExecution(const vtkm::cont::DataSet 
   //We have a special signature just for CoordinateSystem, so that we can ask
   //the policy for the storage types and value types just for coordinate systems
 
-  //determine the field type first
+  vtkm::filter::FieldMetadata metaData(field);
   FieldResult result;
+
   typedef internal::ResolveFieldTypeAndExecute< Derived, DerivedPolicy,
                                                 FieldResult > FunctorType;
   FunctorType functor(static_cast<Derived*>(this),
                       input,
-                      vtkm::filter::FieldMetadata(field),
+                      metaData,
                       policy,
                       this->Tracker,
                       result);

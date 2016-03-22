@@ -116,11 +116,12 @@ bool DataSetFilter<Derived>::MapFieldOntoOutput(DataSetResult& result,
   bool valid = false;
   if(result.IsValid())
     {
+    vtkm::filter::FieldMetadata metaData(field);
     typedef internal::ResolveFieldTypeAndMap< Derived,
                                               DerivedPolicy > FunctorType;
     FunctorType functor(static_cast<Derived*>(this),
                         result,
-                        vtkm::filter::FieldMetadata(field),
+                        metaData,
                         policy,
                         this->Tracker,
                         valid);
