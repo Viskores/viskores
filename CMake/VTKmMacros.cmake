@@ -245,8 +245,8 @@ function(vtkm_unit_tests)
 
   if (VTKm_ENABLE_TESTING)
     vtkm_get_kit_name(kit)
-    #we use UnitTests_kit_ so that it is an unique key to exclude from coverage
-    set(test_prog UnitTests_kit_${kit})
+    #we use UnitTests_ so that it is an unique key to exclude from coverage
+    set(test_prog UnitTests_${kit})
     create_test_sourcelist(TestSources ${test_prog}.cxx ${VTKm_UT_SOURCES})
 
     #determine the timeout for all the tests based on the backend. CUDA tests
