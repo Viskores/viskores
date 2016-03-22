@@ -67,6 +67,7 @@ void TestSceneRendererOSMesa()
      sceneRenderer.SetView(view);
 
      vtkm::cont::DataSet expDS = maker.Make3DExplicitDataSet4();
+     vtkm::cont::DataSet rectDS = maker.Make3DRectilinearDataSet0();
 
      //New way.
      vtkm::rendering::Scene3D scene;
@@ -80,6 +81,12 @@ void TestSceneRendererOSMesa()
                                                  expDS.GetCoordinateSystem(),
                                                  expDS.GetField("pointvar"),
                                                  colorTable));
+/*
+     scene.plots.push_back(vtkm::rendering::Plot(rectDS.GetCellSet(),
+                                                 rectDS.GetCoordinateSystem(),
+                                                 rectDS.GetField("pointvar"),
+                                                 colorTable));
+*/
 
      vtkm::rendering::Window3D<vtkm::rendering::SceneRendererOSMesa<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                                vtkm::rendering::RenderSurfaceOSMesa>
