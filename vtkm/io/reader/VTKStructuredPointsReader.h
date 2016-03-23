@@ -107,7 +107,7 @@ private:
 
     this->DataSet.AddCellSet(cs);
     this->DataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates",
-        1, dim, origin, spacing));
+        dim, origin, spacing));
 
     // Read points and cell attributes
     this->ReadAttributes();

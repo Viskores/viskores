@@ -42,7 +42,7 @@ vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dims)
 
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(
-          vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
+          vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   static const vtkm::IdComponent ndim = 2;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
@@ -68,7 +68,7 @@ vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dims)
 
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(
-          vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
+          vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");

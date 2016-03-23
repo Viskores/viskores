@@ -88,7 +88,7 @@ private:
                    );
 
 
-        vtkm::cont::CoordinateSystem cs(coordNm, 1, coords);
+        vtkm::cont::CoordinateSystem cs(coordNm, coords);
         dataSet.AddCoordinateSystem(cs);
 
         if (dim == 2)

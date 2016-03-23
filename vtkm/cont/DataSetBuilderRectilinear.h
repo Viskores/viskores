@@ -218,7 +218,7 @@ private:
     DataSetBuilderRectilinear::CopyInto(Z, Zc);
 
     coords = vtkm::cont::make_ArrayHandleCartesianProduct(Xc,Yc,Zc);
-    vtkm::cont::CoordinateSystem cs(coordNm, 1, coords);
+    vtkm::cont::CoordinateSystem cs(coordNm, coords);
     dataSet.AddCoordinateSystem(cs);
 
     if (dim == 2)

@@ -205,8 +205,8 @@ void TestStreamLineUniformGrid()
   // Construct the input dataset (uniform) to hold the input and set vector data
   vtkm::cont::DataSet inDataSet;
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims);
-  inDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
-  inDataSet.AddField(vtkm::cont::Field("vecData", 1, vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+  inDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
+  inDataSet.AddField(vtkm::cont::Field("vecData", vtkm::cont::Field::ASSOC_POINTS, fieldArray));
 
   vtkm::cont::CellSetStructured<3> inCellSet("cells");
   inCellSet.SetPointDimensions(vtkm::make_Vec(vdims[0], vdims[1], vdims[2]));

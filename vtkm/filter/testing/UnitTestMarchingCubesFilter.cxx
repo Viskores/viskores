@@ -86,9 +86,9 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::cont::ArrayHandleUniformPointCoordinates
       coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(
-          vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
+          vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
-  dataSet.AddField(vtkm::cont::Field(std::string("nodevar"), 1, vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+  dataSet.AddField(vtkm::cont::Field(std::string("nodevar"), vtkm::cont::Field::ASSOC_POINTS, fieldArray));
 
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
@@ -239,14 +239,14 @@ vtkm::Float32 spacing = vtkm::Float32(1./dim);
     CubeGridConnectivity(dim));
 
   dataSet.AddCoordinateSystem(
-        vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
+        vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   //Set point scalar
   dataSet.AddField(
-    vtkm::cont::Field("distanceToOrigin", 1,vtkm::cont::Field::ASSOC_POINTS,
+    vtkm::cont::Field("distanceToOrigin", vtkm::cont::Field::ASSOC_POINTS,
                       vtkm::cont::DynamicArrayHandle(distanceToOrigin)));
   dataSet.AddField(
-    vtkm::cont::Field("distanceToOther", 1,vtkm::cont::Field::ASSOC_POINTS,
+    vtkm::cont::Field("distanceToOther", vtkm::cont::Field::ASSOC_POINTS,
                       vtkm::cont::DynamicArrayHandle(distanceToOther)));
 
   CellSet cellSet(HexTag(), "cells");

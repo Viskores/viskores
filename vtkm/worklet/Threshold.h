@@ -175,7 +175,7 @@ public:
     vtkm::cont::DynamicArrayHandle data;
     field.GetData().CastAndCall(PermuteCellData(this->ValidCellIds, data));
 
-    return vtkm::cont::Field(field.GetName(), field.GetOrder(), field.GetAssociation(),
+    return vtkm::cont::Field(field.GetName(), field.GetAssociation(),
                              field.GetAssocCellSet(), data);
   }
 

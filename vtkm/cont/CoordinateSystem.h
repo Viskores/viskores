@@ -83,44 +83,38 @@ class CoordinateSystem : public vtkm::cont::Field
 public:
   VTKM_CONT_EXPORT
   CoordinateSystem(std::string name,
-                   vtkm::IdComponent order,
                    const vtkm::cont::DynamicArrayHandle &data)
-    : Superclass(name, order, ASSOC_POINTS, data) {  }
+    : Superclass(name, ASSOC_POINTS, data) {  }
 
   template<typename T, typename Storage>
   VTKM_CONT_EXPORT
   CoordinateSystem(std::string name,
-                   vtkm::IdComponent order,
                    const ArrayHandle<T, Storage> &data)
-    : Superclass(name, order, ASSOC_POINTS, data) {  }
+    : Superclass(name, ASSOC_POINTS, data) {  }
 
   template<typename T>
   VTKM_CONT_EXPORT
   CoordinateSystem(std::string name,
-                   vtkm::IdComponent order,
                    const std::vector<T> &data)
-    : Superclass(name, order, ASSOC_POINTS, data) {  }
+    : Superclass(name, ASSOC_POINTS, data) {  }
 
   template<typename T>
   VTKM_CONT_EXPORT
   CoordinateSystem(std::string name,
-                   vtkm::IdComponent order,
                    const T *data,
                    vtkm::Id numberOfValues)
-    : Superclass(name, order, ASSOC_POINTS, data, numberOfValues) {  }
+    : Superclass(name, ASSOC_POINTS, data, numberOfValues) {  }
 
   /// This constructor of coordinate system sets up a regular grid of points.
   ///
   VTKM_CONT_EXPORT
   CoordinateSystem(std::string name,
-                   vtkm::IdComponent order,
                    vtkm::Id3 dimensions,
                    vtkm::Vec<vtkm::FloatDefault,3> origin
                      = vtkm::Vec<vtkm::FloatDefault,3>(0.0f, 0.0f, 0.0f),
                    vtkm::Vec<vtkm::FloatDefault,3> spacing
                      = vtkm::Vec<vtkm::FloatDefault,3>(1.0f, 1.0f, 1.0f))
     : Superclass(name,
-                 order,
                  ASSOC_POINTS,
                  vtkm::cont::DynamicArrayHandle(
                    vtkm::cont::ArrayHandleUniformPointCoordinates(dimensions, origin, spacing)))

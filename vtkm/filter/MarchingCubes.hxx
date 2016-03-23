@@ -520,14 +520,14 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
   //no cleanup of the normals is required
   if(this->GenerateNormals)
   {
-    vtkm::cont::Field normalField(std::string("normals"), 1,
+    vtkm::cont::Field normalField(std::string("normals"),
                                   vtkm::cont::Field::ASSOC_POINTS, normals);
     output.AddField( normalField );
   }
 
 
   //add the coordinates to the output dataset
-  vtkm::cont::CoordinateSystem outputCoords("coordinates", 1, vertices);
+  vtkm::cont::CoordinateSystem outputCoords("coordinates", vertices);
   output.AddCoordinateSystem( outputCoords );
 
   //todo: figure out how to pass the fields to interpolate to the Result
