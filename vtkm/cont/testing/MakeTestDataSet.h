@@ -268,7 +268,7 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f};
 
   dataSet.AddCoordinateSystem(
-        vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, nVerts));
+        vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
   vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells", 2);
   cellSet.PrepareToAddCells(2, 7);
   cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
@@ -277,11 +277,11 @@ MakeTestDataSet::Make3DExplicitDataSet1()
   dataSet.AddCellSet(cellSet);
 
   //Set point scalar
-  dataSet.AddField(Field("pointvar", 1, vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  dataSet.AddField(Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = {100.1f, 100.2f};
-  dataSet.AddField(Field("cellvar", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
+  dataSet.AddField(Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
   return dataSet;
 }
@@ -337,7 +337,7 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose()
   // create DataSet
   vtkm::cont::DataSet dataSet;
   dataSet.AddCoordinateSystem(
-        vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, nVerts));
+        vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   connectivity.Allocate(nPointIds);

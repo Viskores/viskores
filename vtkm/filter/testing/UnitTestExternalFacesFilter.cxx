@@ -44,7 +44,7 @@ void TestExternalFacesExplicitGrid()
     };
 
   ds.AddCoordinateSystem(
-    vtkm::cont::CoordinateSystem("coordinates", 1, coordinates, nVerts));
+    vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
 
   //Construct the VTK-m shapes and numIndices connectivity arrays
   const int nCells = 6;  //The tetrahedrons of the cube

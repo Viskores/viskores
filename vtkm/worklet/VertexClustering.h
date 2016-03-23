@@ -476,7 +476,7 @@ public:
     /// output
     vtkm::cont::DataSet output;
 
-    output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", 0, repPointArray));
+    output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", repPointArray));
 
     vtkm::cont::CellSetSingleType< > triangles(vtkm::CellShapeTagTriangle(),
                                              "cells");

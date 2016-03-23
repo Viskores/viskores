@@ -255,7 +255,7 @@ DataSetBuilderExplicit::BuildDataSet(
 
   vtkm::cont::DataSet dataSet;
   dataSet.AddCoordinateSystem(
-      vtkm::cont::CoordinateSystem(coordsNm, 1,
+      vtkm::cont::CoordinateSystem(coordsNm,
       make_ArrayHandleCompositeVector(X,0, Y,0, Z,0)));
   vtkm::Id nPts = X.GetNumberOfValues();
   vtkm::cont::CellSetExplicit<> cellSet(nPts, cellNm, dimensionality);
@@ -304,7 +304,7 @@ DataSetBuilderExplicit::BuildDataSet(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3
   vtkm::cont::DataSet dataSet;
 
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem(coordsNm,
-                               1, coords));
+                               coords));
   vtkm::Id nPts = static_cast<vtkm::Id>(coords.GetNumberOfValues());
   vtkm::cont::CellSetExplicit<> cellSet(nPts, cellNm, dimensionality);
 
@@ -342,7 +342,7 @@ DataSetBuilderExplicit::BuildDataSet(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3
 {
   vtkm::cont::DataSet dataSet;
 
-  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem(coordsNm,1, coords));
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem(coordsNm, coords));
   vtkm::cont::CellSetSingleType<> cellSet(tag, cellNm);
 
   cellSet.Fill(connectivity);
@@ -486,7 +486,7 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
     coords[i][2] = 0;
   }
   dataSet.AddCoordinateSystem(
-      vtkm::cont::CoordinateSystem(coordsNm, 1, coords));
+      vtkm::cont::CoordinateSystem(coordsNm, coords));
 
   vtkm::cont::CellSetSingleType< > cellSet(CellType(), cellNm);
   cellSet.FillViaCopy(connectivity);
@@ -520,7 +520,7 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
     coords[i][2] = zVals[i];
   }
   dataSet.AddCoordinateSystem(
-      vtkm::cont::CoordinateSystem(coordsNm, 1, coords));
+      vtkm::cont::CoordinateSystem(coordsNm, coords));
 
   vtkm::cont::CellSetSingleType< > cellSet(CellType(), cellNm);
   cellSet.FillViaCopy(connectivity);
@@ -542,7 +542,7 @@ DataSetBuilderExplicit::Create(const std::vector<vtkm::Vec<T,3> > &coords,
   CopyInto(coords, coordsArray);
 
   dataSet.AddCoordinateSystem(
-      vtkm::cont::CoordinateSystem(coordsNm, 1, coordsArray));
+      vtkm::cont::CoordinateSystem(coordsNm, coordsArray));
 
   vtkm::cont::CellSetSingleType< > cellSet(CellType(), cellNm);
   cellSet.FillViaCopy(connectivity);

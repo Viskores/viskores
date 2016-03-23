@@ -69,7 +69,7 @@ PointElevation::DoExecute(const vtkm::cont::DataSet &,
   //that the dispatcher should do
   dispatcher.Invoke(field, outArray);
 
-  vtkm::cont::Field outField(this->GetOutputFieldName(), 1,
+  vtkm::cont::Field outField(this->GetOutputFieldName(),
                              vtkm::cont::Field::ASSOC_WHOLE_MESH,
                              outArray);
   return vtkm::filter::FieldResult(outField);

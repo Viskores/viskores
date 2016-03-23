@@ -73,7 +73,7 @@ vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dim)
   // Generate coordinate system
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(
-          vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
+          vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   // Generate cell set
   vtkm::cont::CellSetStructured<2> cellSet("cells");

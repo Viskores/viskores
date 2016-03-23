@@ -231,7 +231,7 @@ protected:
     this->DoReadDynamicArray(dataType, numPoints, 3, points);
 
     this->DataSet.AddCoordinateSystem(
-        vtkm::cont::CoordinateSystem("coordinates", 1, points));
+        vtkm::cont::CoordinateSystem("coordinates", points));
   }
 
   void ReadCells(vtkm::cont::ArrayHandle<vtkm::Id> &connectivity,
@@ -356,12 +356,12 @@ protected:
           switch (association)
           {
           case vtkm::cont::Field::ASSOC_POINTS:
-            this->DataSet.AddField(vtkm::cont::Field(name, 0, association, data));
+            this->DataSet.AddField(vtkm::cont::Field(name, association, data));
             break;
           case vtkm::cont::Field::ASSOC_CELL_SET:
             data.CastAndCall(PermuteCellData(this->CellsPermutation, data));
             this->DataSet.AddField(
-                vtkm::cont::Field(name, 0, association, "cells", data));
+                vtkm::cont::Field(name, association, "cells", data));
             break;
           default:
             break;

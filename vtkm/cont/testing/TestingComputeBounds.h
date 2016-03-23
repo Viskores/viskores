@@ -54,7 +54,7 @@ private:
     const vtkm::Id nvals = 11;
     T data[nvals] = { 1, 2, 3, 4, 5, -5, -4, -3, -2, -1, 0 };
     std::random_shuffle(data, data + nvals);
-    vtkm::cont::Field field("TestField", 1, vtkm::cont::Field::ASSOC_POINTS, data,
+    vtkm::cont::Field field("TestField", vtkm::cont::Field::ASSOC_POINTS, data,
                             nvals);
 
     vtkm::Float64 result[2];
@@ -86,7 +86,7 @@ private:
         fieldData[j][i] = data[j];
       }
     }
-    vtkm::cont::Field field("TestField", 1, vtkm::cont::Field::ASSOC_POINTS, fieldData,
+    vtkm::cont::Field field("TestField", vtkm::cont::Field::ASSOC_POINTS, fieldData,
                             nvals);
 
     vtkm::Float64 result[NumberOfComponents * 2];
@@ -128,7 +128,6 @@ private:
   {
     vtkm::cont::CoordinateSystem field(
           "TestField",
-          1,
           vtkm::Id3(10, 20, 5),
           vtkm::Vec<vtkm::FloatDefault,3>(0.0f,-5.0f,4.0f),
           vtkm::Vec<vtkm::FloatDefault,3>(1.0f,0.5f,2.0f));

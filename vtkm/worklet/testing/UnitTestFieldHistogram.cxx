@@ -258,19 +258,19 @@ vtkm::cont::DataSet MakeTestDataSet()
     vtkm::cont::ArrayHandleUniformPointCoordinates
                   coordinates(vtkm::Id3(xVerts, yVerts, 1));
     dataSet.AddCoordinateSystem(
-       vtkm::cont::CoordinateSystem("coordinates", 1, coordinates));
+       vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
     // Set point scalars
-    dataSet.AddField(vtkm::cont::Field("p_poisson", 1, vtkm::cont::Field::ASSOC_POINTS, poisson, nVerts));
-    dataSet.AddField(vtkm::cont::Field("p_normal", 1, vtkm::cont::Field::ASSOC_POINTS, normal, nVerts));
-    dataSet.AddField(vtkm::cont::Field("p_chiSquare", 1, vtkm::cont::Field::ASSOC_POINTS, chiSquare, nVerts));
-    dataSet.AddField(vtkm::cont::Field("p_uniform", 1, vtkm::cont::Field::ASSOC_POINTS, uniform, nVerts));
+    dataSet.AddField(vtkm::cont::Field("p_poisson", vtkm::cont::Field::ASSOC_POINTS, poisson, nVerts));
+    dataSet.AddField(vtkm::cont::Field("p_normal", vtkm::cont::Field::ASSOC_POINTS, normal, nVerts));
+    dataSet.AddField(vtkm::cont::Field("p_chiSquare", vtkm::cont::Field::ASSOC_POINTS, chiSquare, nVerts));
+    dataSet.AddField(vtkm::cont::Field("p_uniform", vtkm::cont::Field::ASSOC_POINTS, uniform, nVerts));
 
     // Set cell scalars
-    dataSet.AddField(vtkm::cont::Field("c_poisson", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells));
-    dataSet.AddField(vtkm::cont::Field("c_normal", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", normal, nCells));
-    dataSet.AddField(vtkm::cont::Field("c_chiSquare", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", chiSquare, nCells));
-    dataSet.AddField(vtkm::cont::Field("c_uniform", 1, vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells));
+    dataSet.AddField(vtkm::cont::Field("c_poisson", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells));
+    dataSet.AddField(vtkm::cont::Field("c_normal", vtkm::cont::Field::ASSOC_CELL_SET, "cells", normal, nCells));
+    dataSet.AddField(vtkm::cont::Field("c_chiSquare", vtkm::cont::Field::ASSOC_CELL_SET, "cells", chiSquare, nCells));
+    dataSet.AddField(vtkm::cont::Field("c_uniform", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells));
 
     vtkm::cont::CellSetStructured<dimension> cellSet("cells");
 

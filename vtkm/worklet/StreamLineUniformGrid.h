@@ -427,7 +427,7 @@ public:
 
     outCellSet.Fill(cellTypes, numIndices, connectivity);
     OutDataSet.AddCellSet(outCellSet);
-    OutDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", 0, coordinates));
+    OutDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
     return OutDataSet;
   }

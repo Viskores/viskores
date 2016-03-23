@@ -40,7 +40,7 @@ public:
                        const std::string &fieldName,
                        const vtkm::cont::DynamicArrayHandle &field)
     {
-        dataSet.AddField(Field(fieldName, 1, vtkm::cont::Field::ASSOC_POINTS,
+        dataSet.AddField(Field(fieldName, vtkm::cont::Field::ASSOC_POINTS,
                                field));
     }
 
@@ -51,7 +51,7 @@ public:
                        const std::string &fieldName,
                        const vtkm::cont::ArrayHandle<T, Storage> &field)
     {
-        dataSet.AddField(Field(fieldName, 1, vtkm::cont::Field::ASSOC_POINTS,
+        dataSet.AddField(Field(fieldName, vtkm::cont::Field::ASSOC_POINTS,
                                field));
     }
 
@@ -62,7 +62,7 @@ public:
                        const std::string &fieldName,
                        const std::vector<T> &field)
     {
-        dataSet.AddField(Field(fieldName, 1, vtkm::cont::Field::ASSOC_POINTS,
+        dataSet.AddField(Field(fieldName, vtkm::cont::Field::ASSOC_POINTS,
                                field));
     }
 
@@ -73,7 +73,7 @@ public:
                        const std::string &fieldName,
                        const T *field, const vtkm::Id &n)
     {
-        dataSet.AddField(Field(fieldName, 1, vtkm::cont::Field::ASSOC_POINTS,
+        dataSet.AddField(Field(fieldName, vtkm::cont::Field::ASSOC_POINTS,
                                field, n));
     }
 
@@ -85,7 +85,7 @@ public:
                       const vtkm::cont::DynamicArrayHandle &field,
                       const std::string &cellSetName)
     {
-        dataSet.AddField(Field(fieldName, 1, vtkm::cont::Field::ASSOC_CELL_SET,
+        dataSet.AddField(Field(fieldName, vtkm::cont::Field::ASSOC_CELL_SET,
                                cellSetName, field));
     }
 
@@ -97,7 +97,7 @@ public:
                       const vtkm::cont::ArrayHandle<T, Storage> &field,
                       const std::string &cellSetName)
     {
-        dataSet.AddField(Field(fieldName, 1, vtkm::cont::Field::ASSOC_CELL_SET,
+        dataSet.AddField(Field(fieldName, vtkm::cont::Field::ASSOC_CELL_SET,
                                cellSetName, field));
     }
 
@@ -109,7 +109,7 @@ public:
                       const std::vector<T> &field,
                       const std::string &cellSetName)
     {
-        dataSet.AddField(Field(fieldName, 1, vtkm::cont::Field::ASSOC_CELL_SET,
+        dataSet.AddField(Field(fieldName, vtkm::cont::Field::ASSOC_CELL_SET,
                                cellSetName, field));
     }
 
@@ -121,7 +121,7 @@ public:
                       const T *field, const vtkm::Id &n,
                       const std::string &cellSetName)
     {
-        dataSet.AddField(Field(fieldName, 1, vtkm::cont::Field::ASSOC_CELL_SET,
+        dataSet.AddField(Field(fieldName, vtkm::cont::Field::ASSOC_CELL_SET,
                                cellSetName, field, n));
     }
 

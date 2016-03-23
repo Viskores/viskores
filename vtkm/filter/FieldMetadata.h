@@ -34,7 +34,6 @@ public:
   FieldMetadata():
     Name(),
     Association(vtkm::cont::Field::ASSOC_ANY),
-    Order(1),
     CellSetName()
     {
     }
@@ -43,7 +42,6 @@ public:
   FieldMetadata(const vtkm::cont::Field& f):
     Name(f.GetName()),
     Association(f.GetAssociation()),
-    Order(f.GetOrder()),
     CellSetName(f.GetAssocCellSet())
     {
     }
@@ -52,7 +50,6 @@ public:
   FieldMetadata(const vtkm::cont::CoordinateSystem &sys):
     Name(sys.GetName()),
     Association(sys.GetAssociation()),
-    Order(sys.GetOrder()),
     CellSetName(sys.GetAssocCellSet())
     {
     }
@@ -82,19 +79,18 @@ public:
       vtkm::cont::DynamicArrayHandle dhandle(handle);
       if(this->IsCellField())
       {
-        return vtkm::cont::Field(this->Name, this->Order, this->Association,
+        return vtkm::cont::Field(this->Name, this->Association,
                                  this->CellSetName, dhandle);
       }
       else
       {
-        return vtkm::cont::Field(this->Name, this->Order, this->Association, dhandle);
+        return vtkm::cont::Field(this->Name, this->Association, dhandle);
       }
     }
 
 private:
   std::string         Name;  ///< name of field
   vtkm::cont::Field::AssociationEnum   Association;
-  vtkm::IdComponent   Order; ///< 0=(piecewise) constant, 1=linear, 2=quadratic
   std::string         CellSetName;  ///< only populate if assoc is cells
 };
 
