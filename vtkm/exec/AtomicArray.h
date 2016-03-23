@@ -27,18 +27,19 @@
 namespace vtkm {
 namespace exec {
 
-/// A class that can be used to atomically operate on an array of values
-/// safely across multiple instances of the same worklet. This is useful when
-/// you have an algorithm that needs to accumulate values in parallel, but writing
-/// out a value per worklet might be memory prohibitive.
+/// A class that can be used to atomically operate on an array of values safely
+/// across multiple instances of the same worklet. This is useful when you have
+/// an algorithm that needs to accumulate values in parallel, but writing out a
+/// value per worklet might be memory prohibitive.
 ///
-/// To construct an AtomicArray you will need to pass in an vtkm::cont::ArrayHandle
-/// that is used as the underlying storage for the AtomicArray
+/// To construct an AtomicArray you will need to pass in an
+/// vtkm::cont::ArrayHandle that is used as the underlying storage for the
+/// AtomicArray
 ///
 /// Supported Operations: add / compare and swap (CAS)
-///                     
+///
 /// Supported Types: 32 / 64 bit signed integers
-///                 
+///
 ///
 template<typename T, typename DeviceAdapterTag>
 class AtomicArray : public vtkm::exec::ExecutionObjectBase
@@ -58,9 +59,9 @@ public:
   }
 
   //
-  // Compare and Swap is an atomic exchange operation. If the value at 
+  // Compare and Swap is an atomic exchange operation. If the value at
   // the index is equal to oldValue, then newValue is written to the index.
-  // The operation was successful if return value is eqaul to oldValue
+  // The operation was successful if return value is equal to oldValue
   //
   VTKM_EXEC_EXPORT
   T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
