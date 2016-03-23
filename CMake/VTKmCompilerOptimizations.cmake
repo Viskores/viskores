@@ -146,7 +146,7 @@ set_vectorization_flags_properties(vec_levels)
 # We use a combo box style property, so that ccmake and cmake-gui have a
 # nice interface
 #
-set(VTKm_Vectorization "native" CACHE STRING "Level of compiler vectorization support")
+set(VTKm_Vectorization "none" CACHE STRING "Level of compiler vectorization support")
 set_property(CACHE VTKm_Vectorization PROPERTY STRINGS ${vec_levels})
 
 #

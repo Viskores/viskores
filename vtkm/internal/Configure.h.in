@@ -194,12 +194,22 @@
   _Pragma("clang loop vectorize(enable) interleave(enable)")
 #define VTKM_VECTORIZATION_IN_LOOP
 #elif defined(VTKM_ICC) && defined(NDEBUG)
-//icc can't do vectorization in debug builds
+//Note: icc can't do vectorization in debug builds
 //icc needs pre and in loop
-#define VTKM_VECTORIZATION_PRE_LOOP \
-  _Pragma("simd")
-#define VTKM_VECTORIZATION_IN_LOOP \
-  _Pragma("forceinline recursive")
+//For ICC we want ivdep over simd for the following reason:
+//#pragma simd is a more powerful combo of '#pragma vector always' and '#pragma ivdep'
+//The compiler does not check for aliasing or dependencies that might cause
+//incorrect results after vectorization, and it does not protect against illegal
+//memory references. #pragma ivdep overrides potential dependencies, but the
+//compiler still performs a dependency analysis, and will not vectorize if it
+//finds a proven dependency that would affect results. With #pragma simd, the
+//compiler does no such analysis, and tries to vectorize regardless.
+//
+//Final: We are currently disabling all vectorization with ICC
+// in the short-term. Both ivdep and simd cause a horrible decrease in compile
+// time, and generates bad vectorization code.
+#define VTKM_VECTORIZATION_PRE_LOOP
+#define VTKM_VECTORIZATION_IN_LOOP
 #elif defined(VTKM_GCC)
 //gcc only needs in loop
 #define VTKM_VECTORIZATION_PRE_LOOP \
