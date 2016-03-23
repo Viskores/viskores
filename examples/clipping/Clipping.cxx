@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
   vtkm::cont::DynamicArrayHandle coords =
       clip.ProcessField(input.GetCoordinateSystem(0).GetData());
   vtkm::Float64 processCoordinatesTime = timer.GetElapsedTime();
-  output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", 1, coords));
+  output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coords));
 
   timer.Reset();
   for (vtkm::Id i = 0; i < input.GetNumberOfFields(); ++i)
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
     }
     vtkm::cont::DynamicArrayHandle data =
       clip.ProcessField(inField.GetData().ResetTypeList(vtkm::TypeListTagAll()));
-    output.AddField(vtkm::cont::Field(inField.GetName(), 1,
+    output.AddField(vtkm::cont::Field(inField.GetName(),
                     vtkm::cont::Field::ASSOC_POINTS, data));
   }
   vtkm::Float64 processScalarsTime = timer.GetElapsedTime();
