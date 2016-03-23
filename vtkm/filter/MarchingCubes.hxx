@@ -422,15 +422,16 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
   //1. Coordinates ( with option to do point merging )
   //
   //
+  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+
   vtkm::cont::DataSet output;
+  vtkm::cont::ArrayHandle< vtkm::Id > connectivity;
   vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::Float32,3> > vertices;
 
   typedef vtkm::cont::ArrayHandle< vtkm::Id2 > Id2HandleType;
   typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> WeightHandleType;
   if(this->MergeDuplicatePoints)
   {
-    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
-
     //Do merge duplicate points we need to do the following:
     //1. Copy the interpolation Ids
     Id2HandleType uniqueIds;
@@ -472,49 +473,24 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
     //sorted & unique subset, which generates an index value aka the lookup
     //value.
     //
-    vtkm::cont::ArrayHandle< vtkm::Id> connectivity;
     Algorithm::LowerBounds(uniqueIds, this->InterpolationIds, connectivity);
 
     //5.
     //We re-assign the shortened version of unique ids back into the
     //member variable so that 'DoMapField' will work properly
     this->InterpolationIds = uniqueIds;
-
-    CellShapeTagTriangle triangleTag;
-    vtkm::cont::CellSetSingleType< > outputCells( triangleTag );
-    outputCells.Fill( connectivity );
-    output.AddCellSet( outputCells );
-
-
-    ApplyToField applyToField;
-    vtkm::worklet::DispatcherMapField<ApplyToField,
-                                    DeviceAdapter> applyFieldDispatcher(applyToField);
-    applyFieldDispatcher.Invoke(this->InterpolationIds,
-                                this->InterpolationWeights,
-                                vtkm::filter::ApplyPolicy(coords, policy),
-                                vertices);
   }
   else
   {
-    ApplyToField applyToField;
-    vtkm::worklet::DispatcherMapField<ApplyToField,
-                                      DeviceAdapter> applyFieldDispatcher(applyToField);
-
-    applyFieldDispatcher.Invoke(this->InterpolationIds,
-                                this->InterpolationWeights,
-                                vtkm::filter::ApplyPolicy(coords, policy),
-                                vertices);
-
     //when we don't merge points, the connectivity array can be represented
     //by a counting array. The danger of doing it this way is that the output
-    //type is unknown. We should use explicit connectivity, or add this type
-    //to the default output types
-    typedef typename vtkm::cont::ArrayHandleIndex::StorageTag IndexStorageTag;
-    CellShapeTagTriangle triangleTag;
-    vtkm::cont::CellSetSingleType< IndexStorageTag > outputCells( triangleTag );
-    vtkm::cont::ArrayHandleIndex connectivity(vertices.GetNumberOfValues());
-    outputCells.Fill( connectivity );
-    output.AddCellSet( outputCells );
+    //type is unknown. That is why we use a CellSetSingleType with explicit
+    //storage;
+    {
+
+    vtkm::cont::ArrayHandleIndex temp(this->InterpolationIds.GetNumberOfValues());
+    Algorithm::Copy(temp, connectivity);
+    }
   }
 
   //no cleanup of the normals is required
@@ -525,6 +501,22 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
     output.AddField( normalField );
   }
 
+  //assign the connectivity to the cell set
+  CellShapeTagTriangle triangleTag;
+  vtkm::cont::CellSetSingleType< > outputCells( triangleTag );
+  outputCells.Fill( connectivity );
+  output.AddCellSet( outputCells );
+
+
+  //generate the vertices's
+  ApplyToField applyToField;
+  vtkm::worklet::DispatcherMapField<ApplyToField,
+                                    DeviceAdapter> applyFieldDispatcher(applyToField);
+
+  applyFieldDispatcher.Invoke(this->InterpolationIds,
+                              this->InterpolationWeights,
+                              vtkm::filter::ApplyPolicy(coords, policy),
+                              vertices);
 
   //add the coordinates to the output dataset
   vtkm::cont::CoordinateSystem outputCoords("coordinates", vertices);

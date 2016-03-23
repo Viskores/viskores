@@ -317,9 +317,7 @@ void TestMarchingCubesUniformGrid()
     //verify that the number of cells is correct (160)
     vtkm::cont::DynamicCellSet dcells = outputData.GetCellSet();
 
-    //todo: this needs to be an explicit storage tag
-    typedef vtkm::cont::ArrayHandleIndex::StorageTag IndexStorageTag;
-    typedef vtkm::cont::CellSetSingleType<IndexStorageTag> CellSetType;
+    typedef vtkm::cont::CellSetSingleType<> CellSetType;
     const CellSetType& cells = dcells.Cast<CellSetType>();
     VTKM_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
   }
