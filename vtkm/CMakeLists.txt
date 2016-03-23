@@ -25,7 +25,6 @@ set(headers
   BinaryOperators.h
   CellShape.h
   CellTraits.h
-  Extent.h
   ImplicitFunctions.h
   ListTag.h
   Math.h
