@@ -20,12 +20,17 @@
 #ifndef vtk_m_exec_AtomicArray_h
 #define vtk_m_exec_AtomicArray_h
 
+#include <vtkm/ListTag.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/exec/ExecutionObjectBase.h>
 
 namespace vtkm {
 namespace exec {
+
+/// \brief A type list containing types that can be used with an AtomicArray.
+///
+struct AtomicArrayTypeListTag : vtkm::ListTagBase<vtkm::Int32,vtkm::Int64> {  };
 
 /// A class that can be used to atomically operate on an array of values safely
 /// across multiple instances of the same worklet. This is useful when you have
@@ -45,6 +50,13 @@ template<typename T, typename DeviceAdapterTag>
 class AtomicArray : public vtkm::exec::ExecutionObjectBase
 {
 public:
+  typedef T ValueType;
+
+  VTKM_CONT_EXPORT
+  AtomicArray()
+    : AtomicImplementation(vtkm::cont::make_ArrayHandle((T*)NULL, 0))
+  {  }
+
   template<typename StorageType>
   VTKM_CONT_EXPORT
   AtomicArray(vtkm::cont::ArrayHandle<T, StorageType> handle):

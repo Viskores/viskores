@@ -62,13 +62,31 @@ public:
   }
 };
 
+class TestAtomicArrayWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn<>, AtomicArrayInOut<>);
+  typedef void ExecutionSignature(WorkIndex, _2);
+  typedef _1 InputDomain;
+
+  template<typename AtomicArrayType>
+  VTKM_EXEC_EXPORT
+  void operator()(const vtkm::Id &index,
+                  const AtomicArrayType &atomicArray) const
+  {
+    typedef typename AtomicArrayType::ValueType ValueType;
+    atomicArray.Add(0, static_cast<ValueType>(index));
+  }
+};
+
 namespace map_whole_array {
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
-template<typename WorkletType>
-struct DoTestWorklet
+struct DoTestWholeArrayWorklet
 {
+  typedef TestWholeArrayWorklet WorkletType;
+
   // This just demonstrates that the WholeArray tags support dynamic arrays.
   VTKM_CONT_EXPORT
   void CallWorklet(const vtkm::cont::DynamicArrayHandle &inArray,
@@ -112,6 +130,38 @@ struct DoTestWorklet
   }
 };
 
+struct DoTestAtomicArrayWorklet
+{
+  typedef TestAtomicArrayWorklet WorkletType;
+
+  // This just demonstrates that the WholeArray tags support dynamic arrays.
+  VTKM_CONT_EXPORT
+  void CallWorklet(const vtkm::cont::DynamicArrayHandle &inOutArray) const
+  {
+    std::cout << "Create and run dispatcher." << std::endl;
+    vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
+    dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), inOutArray);
+  }
+
+  template<typename T>
+  VTKM_CONT_EXPORT
+  void operator()(T) const
+  {
+    std::cout << "Set up data." << std::endl;
+    T inOutValue = 0;
+
+    vtkm::cont::ArrayHandle<T> inOutHandle =
+        vtkm::cont::make_ArrayHandle(&inOutValue, 1);
+
+    this->CallWorklet(vtkm::cont::DynamicArrayHandle(inOutHandle));
+
+    std::cout << "Check result." << std::endl;
+    T result = inOutHandle.GetPortalConstControl().Get(0);
+    VTKM_TEST_ASSERT(result == ((ARRAY_SIZE+1)*ARRAY_SIZE)/2,
+                     "Got wrong summation in atomic array.");
+  }
+};
+
 void TestWorkletMapFieldExecArg()
 {
   typedef vtkm::cont::DeviceAdapterTraits<
@@ -120,9 +170,12 @@ void TestWorkletMapFieldExecArg()
             << DeviceAdapterTraits::GetName() << std::endl;
 
   std::cout << "--- Worklet accepting all types." << std::endl;
-  vtkm::testing::Testing::TryTypes(
-                         map_whole_array::DoTestWorklet< TestWholeArrayWorklet >(),
-                         vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(map_whole_array::DoTestWholeArrayWorklet(),
+                                   vtkm::TypeListTagCommon());
+
+  std::cout << "--- Worklet accepting atomics." << std::endl;
+  vtkm::testing::Testing::TryTypes(map_whole_array::DoTestAtomicArrayWorklet(),
+                                   vtkm::exec::AtomicArrayTypeListTag());
 
 }
 

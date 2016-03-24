@@ -557,7 +557,7 @@ public:
         && !this->Internals->ExecutionArrayValid)
     {
       throw vtkm::cont::ErrorControlBadValue(
-        "ArrayHandle has no data when PrepareForInput called.");
+        "ArrayHandle has no data when PrepareForInPlace called.");
     }
 
     this->PrepareForDevice(DeviceAdapterTag());
@@ -737,12 +737,12 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
     else
     {
         out<<array.GetPortalConstControl().Get(0)<<" ";
-	out<<array.GetPortalConstControl().Get(1)<<" ";
-	out<<array.GetPortalConstControl().Get(2);
+        out<<array.GetPortalConstControl().Get(1)<<" ";
+        out<<array.GetPortalConstControl().Get(2);
         out<<" ... ";
         out<<array.GetPortalConstControl().Get(sz-3)<<" ";
-	out<<array.GetPortalConstControl().Get(sz-2)<<" ";
-	out<<array.GetPortalConstControl().Get(sz-1);
+        out<<array.GetPortalConstControl().Get(sz-2)<<" ";
+        out<<array.GetPortalConstControl().Get(sz-1);
     }
     out<<"]";
 }
@@ -764,12 +764,12 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<vtkm::UInt8,StorageT> &ar
     else
     {
         out<<static_cast<int>(array.GetPortalConstControl().Get(0))<<" ";
-	out<<static_cast<int>(array.GetPortalConstControl().Get(1))<<" ";
-	out<<static_cast<int>(array.GetPortalConstControl().Get(2));
+        out<<static_cast<int>(array.GetPortalConstControl().Get(1))<<" ";
+        out<<static_cast<int>(array.GetPortalConstControl().Get(2));
         out<<" ... ";
         out<<static_cast<int>(array.GetPortalConstControl().Get(sz-3))<<" ";
-	out<<static_cast<int>(array.GetPortalConstControl().Get(sz-2))<<" ";
-	out<<static_cast<int>(array.GetPortalConstControl().Get(sz-1));
+        out<<static_cast<int>(array.GetPortalConstControl().Get(sz-2))<<" ";
+        out<<static_cast<int>(array.GetPortalConstControl().Get(sz-1));
     }
     out<<"]";
 }
