@@ -51,7 +51,7 @@ struct MaxValue
   {
     return (a > b) ? a : b;
   }
-  
+
 }; //struct MaxValue
 
 struct MinValue
@@ -61,7 +61,7 @@ struct MinValue
   {
     return (a < b) ? a : b;
   }
-  
+
 }; //struct MinValue
 
 }}}//namespace vtkm::rendering::raytracing

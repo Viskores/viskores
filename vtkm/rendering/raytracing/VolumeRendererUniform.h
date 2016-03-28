@@ -1,3 +1,22 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 UT-Battelle, LLC.
+//  Copyright 2015 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//============================================================================
 #ifndef vtk_m_rendering_raytracing_VolumeRendererUniform_h
 #define vtk_m_rendering_raytracing_VolumeRendererUniform_h
 
@@ -26,18 +45,18 @@ static void WriteDepthBufferVR(vtkm::rendering::raytracing::VolumeRay &rays, vtk
     if(rays.MinDistance.GetPortalControl().Get(i) < 0)
     {
       rays.MinDistance.GetPortalControl().Set(i,0);
-    } 
+    }
   }
   vtkm::Float32 maxVal= vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
     ::Reduce(rays.MinDistance,
              0.f,
              vtkm::rendering::raytracing::MaxValue());
-   
+
   vtkm::Float32 minVal= vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
     ::Reduce(rays.MinDistance,
              1e12f,
              vtkm::rendering::raytracing::MinValue());
-                                                                                  
+
   FILE *pnm;
   pnm = fopen("VRDepth.pnm", "w");
   if( !pnm ) std::cout<<"Could not open pnm file\n";
@@ -56,10 +75,10 @@ static void WriteDepthBufferVR(vtkm::rendering::raytracing::VolumeRay &rays, vtk
   fclose(pnm);
 }
 
-static void WriteColorBufferVR(vtkm::rendering::raytracing::ColorBuffer4f &rgba, 
-                      vtkm::Int32 width, 
+static void WriteColorBufferVR(vtkm::rendering::raytracing::ColorBuffer4f &rgba,
+                      vtkm::Int32 width,
                       vtkm::Int32 height)
-{                                                                          
+{
   FILE *pnm;
   pnm = fopen("VRColor.pnm", "w");
   if( !pnm ) std::cout<<"Could not open pnm file\n";
@@ -102,7 +121,7 @@ public:
     UniformConstPortal Coordinates;
     vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,vtkm::TopologyElementTagCell,3> Conn;
   public:
-    VTKM_CONT_EXPORT 
+    VTKM_CONT_EXPORT
     Sampler(vtkm::Vec<vtkm::Float32,3> cameraPosition,
             const ColorArrayHandle &colorMap,
             const UniformArrayHandle &coordinates,
@@ -184,7 +203,7 @@ public:
       //get the initial sample position;
       vtkm::Float32 currentDistance = minDistance + SampleDistance; //Move the ray forward some epsilon
       vtkm::Float32 lastSample = maxDistance - SampleDistance;
-      vtkm::Vec<vtkm::Float32,3> sampleLocation = CameraPosition + currentDistance * rayDir; 
+      vtkm::Vec<vtkm::Float32,3> sampleLocation = CameraPosition + currentDistance * rayDir;
       /*
               7----------6
              /|         /|
@@ -212,7 +231,7 @@ public:
       vtkm::Float32 scalar6minus7 = 0.f;
       vtkm::Float32 scalar7 = 0.f;
       while(currentDistance < lastSample)
-      { 
+      {
         std::cout.precision(10);
 
         //std::cout<<sampleLocation<<" current dist "<<currentDistance<<" max "<<lastSample<<" "<<vtkm::Float32(PointDimensions[0] - 1)<<std::endl;
@@ -222,7 +241,7 @@ public:
         if( tx > 1.f || tx < 0.f) newCell = true;
         if( ty > 1.f || ty < 0.f) newCell = true;
         if( tz > 1.f || tz < 0.f) newCell = true;
-        
+
         if(newCell)
         {
           vtkm::Vec<vtkm::Id,8> cellIndices;
@@ -250,7 +269,7 @@ public:
           tz = (sampleLocation[2] - bottomLeft[2]) * InvSpacing[2];
 
           newCell = false;
-        } 
+        }
 
         vtkm::Float32 lerped76 = scalar7 + tx * scalar6minus7;
         vtkm::Float32 lerped45 = scalar4 + tx * scalar5minus4;
@@ -268,9 +287,9 @@ public:
         //colorIndex = vtkm::Min(ColorMapSize, vtkm::Max(0,colorIndex));
         vtkm::Vec<vtkm::Float32,4> sampleColor = ColorMap.Get(colorIndex);
         //sampleColor[3] = .05f;
-      
+
         //composite
-        sampleColor[3] *= (1.f - color[3]); 
+        sampleColor[3] *= (1.f - color[3]);
         color[0] = color[0] + sampleColor[0] * sampleColor[3];
         color[1] = color[1] + sampleColor[1] * sampleColor[3];
         color[2] = color[2] + sampleColor[2] * sampleColor[3];
@@ -311,7 +330,7 @@ public:
     UniformConstPortal Coordinates;
     vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,vtkm::TopologyElementTagCell,3> Conn;
   public:
-    VTKM_CONT_EXPORT 
+    VTKM_CONT_EXPORT
     SamplerCellAssoc(vtkm::Vec<vtkm::Float32,3> cameraPosition,
                      const ColorArrayHandle &colorMap,
                      const UniformArrayHandle &coordinates,
@@ -383,8 +402,8 @@ public:
       //get the initial sample position;
       vtkm::Float32 currentDistance = minDistance + 0.001f; //Move the ray forward some epsilon
       vtkm::Float32 lastSample = maxDistance - 0.001f;
-      vtkm::Vec<vtkm::Float32,3> sampleLocation = CameraPosition + currentDistance * rayDir; 
-      
+      vtkm::Vec<vtkm::Float32,3> sampleLocation = CameraPosition + currentDistance * rayDir;
+
       /*
               7----------6
              /|         /|
@@ -423,17 +442,17 @@ public:
           ty = (sampleLocation[1] - bottomLeft[1]) * InvSpacing[1];
           tz = (sampleLocation[2] - bottomLeft[2]) * InvSpacing[2];
           newCell = false;
-        } 
+        }
 
         // just repeatably composite
-        vtkm::Float32 alpha = sampleColor[3] * (1.f - color[3]); 
+        vtkm::Float32 alpha = sampleColor[3] * (1.f - color[3]);
         color[0] = color[0] + sampleColor[0] * alpha;
         color[1] = color[1] + sampleColor[1] * alpha;
         color[2] = color[2] + sampleColor[2] * alpha;
         color[3] = alpha + color[3];
         //advance
         currentDistance += SampleDistance;
-        
+
         //std::cout<<" current color "<<color;
         if(color[3] >= 1.f) break;
 
@@ -471,12 +490,12 @@ public:
       Zmax = boundingBox[5];
     }
 
-    VTKM_EXEC_EXPORT 
+    VTKM_EXEC_EXPORT
     vtkm::Float32 rcp(vtkm::Float32 f)  const { return 1.0f/f;}
-    
-    VTKM_EXEC_EXPORT 
+
+    VTKM_EXEC_EXPORT
     vtkm::Float32 rcp_safe(vtkm::Float32 f) const { return rcp((fabs(f) < 1e-8f) ? 1e-8f : f); }
-    
+
     typedef void ControlSignature(FieldIn<>,
                                   FieldOut<>,
                                   FieldOut<>);
@@ -500,8 +519,8 @@ public:
       vtkm::Float32 odiry = CameraPosition[1] * invDiry;
       vtkm::Float32 odirz = CameraPosition[2] * invDirz;
 
-      vtkm::Float32 xmin = Xmin * invDirx - odirx;       
-      vtkm::Float32 ymin = Ymin * invDiry - odiry;         
+      vtkm::Float32 xmin = Xmin * invDirx - odirx;
+      vtkm::Float32 ymin = Ymin * invDiry - odiry;
       vtkm::Float32 zmin = Zmin * invDirz - odirz;
       vtkm::Float32 xmax = Xmax * invDirx - odirx;
       vtkm::Float32 ymax = Ymax * invDiry - odiry;
@@ -510,11 +529,11 @@ public:
 
       minDistance = vtkm::Max(vtkm::Max(vtkm::Max(vtkm::Min(ymin,ymax),vtkm::Min(xmin,xmax)),vtkm::Min(zmin,zmax)), 0.f);
       maxDistance = vtkm::Min(vtkm::Min(vtkm::Max(ymin,ymax),vtkm::Max(xmin,xmax)),vtkm::Max(zmin,zmax));
-      if(maxDistance < minDistance) 
+      if(maxDistance < minDistance)
       {
         minDistance = -1.f; //flag for miss
       }
-      
+
 
     }
   }; //class CalcRayStart
@@ -527,15 +546,15 @@ public:
     CompositeBackground(const vtkm::Vec<vtkm::Float32,4> &backgroundColor)
      : BackgroundColor(backgroundColor)
     {}
-    
+
     typedef void ControlSignature(FieldInOut<>);
     typedef void ExecutionSignature(_1);
     VTKM_EXEC_EXPORT
     void operator()(vtkm::Vec<vtkm::Float32,4> &color) const
     {
-        
+
         if(color[3] >= 1.f) return;
-        vtkm::Float32 alpha = BackgroundColor[3] * (1.f - color[3]); 
+        vtkm::Float32 alpha = BackgroundColor[3] * (1.f - color[3]);
         color[0] = color[0] + BackgroundColor[0] * alpha;
         color[1] = color[1] + BackgroundColor[1] * alpha;
         color[2] = color[2] + BackgroundColor[2] * alpha;
@@ -591,7 +610,7 @@ public:
 
   VTKM_CONT_EXPORT
   void Render()
-  { 
+  {
     if(IsSceneDirty)
     {
       Init();
@@ -612,16 +631,16 @@ public:
       .Invoke( Rays.Dir,
                Rays.MinDistance,
                Rays.MaxDistance);
-    
-    bool isSupportedField = (ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS || 
+
+    bool isSupportedField = (ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
                              ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET );
     if(!isSupportedField) throw vtkm::cont::ErrorControlBadValue("Feild not accociated with cell set or points");
     bool isAssocPoints = ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
-    
+
     if(isAssocPoints)
     {
-      vtkm::worklet::DispatcherMapField< Sampler >( Sampler( camera.GetPosition(), 
-                                                             ColorMap, 
+      vtkm::worklet::DispatcherMapField< Sampler >( Sampler( camera.GetPosition(),
+                                                             ColorMap,
                                                              Coordinates,
                                                              Cellset,
                                                              vtkm::Float32(ScalarBounds[0]),
@@ -635,8 +654,8 @@ public:
     }
     else
     {
-      vtkm::worklet::DispatcherMapField< SamplerCellAssoc >( SamplerCellAssoc( camera.GetPosition(), 
-                                                                               ColorMap, 
+      vtkm::worklet::DispatcherMapField< SamplerCellAssoc >( SamplerCellAssoc( camera.GetPosition(),
+                                                                               ColorMap,
                                                                                Coordinates,
                                                                                Cellset,
                                                                                vtkm::Float32(ScalarBounds[0]),
@@ -648,8 +667,8 @@ public:
                  RGBA,
                  ScalarField->GetData());
     }
-    
-  
+
+
   vtkm::worklet::DispatcherMapField< CompositeBackground >( CompositeBackground( BackgroundColor ) )
       .Invoke( RGBA );
    VUniWriter::WriteColorBufferVR(RGBA, camera.GetWidth(), camera.GetHeight());

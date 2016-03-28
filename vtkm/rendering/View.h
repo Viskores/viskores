@@ -1,3 +1,22 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 UT-Battelle, LLC.
+//  Copyright 2015 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//============================================================================
 #ifndef vtk_m_rendering_View_h
 #define vtk_m_rendering_View_h
 #include <vtkm/Math.h>
@@ -43,7 +62,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::Matrix<vtkm::Float32,4,4> CreateViewMatrix() 
+  vtkm::Matrix<vtkm::Float32,4,4> CreateViewMatrix()
   {
     vtkm::Normalize(Up);
     vtkm::Matrix<vtkm::Float32,4,4> viewMatrix;
@@ -82,13 +101,13 @@ public:
     vtkm::Float32 size = NearPlane * fovRad;
     vtkm::Float32 left = -size * AspectRatio;
     vtkm::Float32 right = size * AspectRatio;
-    vtkm::Float32 bottom = -size; 
+    vtkm::Float32 bottom = -size;
     vtkm::Float32 top = size;
 
     projectionMatrix(0,0) = 2.f * NearPlane / (right - left);
     projectionMatrix(1,1) = 2.f * NearPlane / (top - bottom);
-    projectionMatrix(0,2) = (right + left) / (right - left); 
-    projectionMatrix(1,2) = (top + bottom) / (top - bottom); 
+    projectionMatrix(0,2) = (right + left) / (right - left);
+    projectionMatrix(1,2) = (top + bottom) / (top - bottom);
     projectionMatrix(2,2) = -(FarPlane + NearPlane)  / (FarPlane - NearPlane);
     projectionMatrix(3,2) = -1.f;
     projectionMatrix(2,3) = -(2.f * FarPlane * NearPlane) / (FarPlane - NearPlane);
