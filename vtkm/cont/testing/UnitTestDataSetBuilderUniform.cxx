@@ -117,6 +117,10 @@ void FillMethod(vtkm::IdComponent method,
       origin = static_cast<T>(2.780941);
       spacing = static_cast<T>(182.381901);
       break;
+    default:
+      origin = 0;
+      spacing = 0;
+      break;
   }
 
   boundsMin = static_cast<vtkm::Float64>(origin);
