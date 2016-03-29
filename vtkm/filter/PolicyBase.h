@@ -100,8 +100,7 @@ ApplyPolicy(const vtkm::cont::CoordinateSystem& coordinates,
 {
   //todo: we need to intersect the policy field type list and the
   //filter traits to the get smallest set of valid types
-  typedef typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList TypeList;
-  // typedef typename DerivedPolicy::CoordinateTypeList TypeList;
+  typedef typename DerivedPolicy::CoordinateTypeList TypeList;
   typedef typename DerivedPolicy::CoordinateStorageList StorageList;
   return coordinates.GetData().ResetTypeAndStorageLists(TypeList(),StorageList());
 }
