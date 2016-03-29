@@ -56,6 +56,12 @@ if(VTKm_ENABLE_OPENGL_INTEROP)
 endif(VTKm_ENABLE_OPENGL_INTEROP)
 
 #-----------------------------------------------------------------------------
+# Build rendering
+if(VTKm_BUILD_RENDERING)
+  add_subdirectory(rendering)
+endif(VTKm_BUILD_RENDERING)
+
+#-----------------------------------------------------------------------------
 #add the control and exec folders
 add_subdirectory(cont)
 add_subdirectory(exec)
