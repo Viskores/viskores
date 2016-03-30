@@ -70,7 +70,7 @@ public:
     vtkm::Vec<vtkm::Float32,3> viewDir = Position - LookAt; //looking down the neg z axis
     vtkm::Normalize(viewDir);
     vtkm::Vec<vtkm::Float32,3> right = vtkm::Cross(Up,viewDir);
-    vtkm::Vec<vtkm::Float32,3> ru = vtkm::Cross(right,viewDir);
+    vtkm::Vec<vtkm::Float32,3> ru = vtkm::Cross(viewDir,right);
     vtkm::Normalize(ru);
     vtkm::Normalize(right);
     viewMatrix(0,0) = right[0];
