@@ -32,8 +32,8 @@ namespace vtkm {
 namespace rendering {
 /// \brief Triangulator creates a minimal set of triangles from a cell set.
 ///
-///  This class creates a array of triangle indices from both 3D and 2D 
-///  explicit cell sets. This list can serve as input to opengl and the 
+///  This class creates a array of triangle indices from both 3D and 2D
+///  explicit cell sets. This list can serve as input to opengl and the
 ///  ray tracer scene renderers. TODO: Add regular grid support
 ///
 template<typename DeviceAdapter>
@@ -69,10 +69,10 @@ public:
     CountTriangles(){}
     typedef void ControlSignature(FieldIn<>,
                                   FieldOut<>);
-    typedef void ExecutionSignature(_1, 
+    typedef void ExecutionSignature(_1,
                                     _2);
     VTKM_EXEC_EXPORT
-    void operator()(const vtkm::Id &shapeType, 
+    void operator()(const vtkm::Id &shapeType,
                     vtkm::Id &triangles) const
     {
       if( shapeType == vtkm::CELL_SHAPE_TRIANGLE ) triangles = 1;
@@ -186,7 +186,7 @@ public:
 
   struct IndicesLessThan
   {
-    VTKM_EXEC_CONT_EXPORT 
+    VTKM_EXEC_CONT_EXPORT
     bool operator()(const vtkm::Vec<vtkm::Id,4> &a,
                     const vtkm::Vec<vtkm::Id,4> &b) const
     {
@@ -207,11 +207,11 @@ public:
     typedef void ControlSignature(ExecObject,
                                   ExecObject);
     typedef void ExecutionSignature(_1,_2,WorkIndex);
-    VTKM_EXEC_EXPORT 
+    VTKM_EXEC_EXPORT
     bool IsTwin(const vtkm::Vec<vtkm::Id,4> &a, const vtkm::Vec<vtkm::Id,4> &b) const
     {
       return (a[1] == b[1] && a[2] == b[2] && a[3] == b[3]);
-    } 
+    }
     VTKM_EXEC_EXPORT
     void operator()(vtkm::exec::ExecutionWholeArrayConst<vtkm::Vec<vtkm::Id,4> > &indices,
                     vtkm::exec::ExecutionWholeArray<vtkm::UInt8> &outputFlags,
@@ -258,12 +258,12 @@ public:
     typedef void ControlSignature(FieldIn<>,
                                   FieldIn<>,
                                   FieldIn<>);
-    typedef void ExecutionSignature(_1, 
+    typedef void ExecutionSignature(_1,
                                     _2,
                                     _3,
                                     WorkIndex);
     VTKM_EXEC_EXPORT
-    void operator()(const vtkm::Id &shapeType, 
+    void operator()(const vtkm::Id &shapeType,
                     const vtkm::Id &indexOffset,
                     const vtkm::Id &triangleOffset,
                     const vtkm::Id &cellId) const
@@ -271,16 +271,16 @@ public:
       vtkm::Vec<vtkm::Id,4> triangle;
       if( shapeType == vtkm::CELL_SHAPE_TRIANGLE )
       {
-         
+
          triangle[1] = Indices.Get(indexOffset+0);
          triangle[2] = Indices.Get(indexOffset+1);
          triangle[3] = Indices.Get(indexOffset+2);
          triangle[0] = cellId;
          OutputIndices.Set(triangleOffset, triangle);
       }
-      if( shapeType == vtkm::CELL_SHAPE_QUAD ) 
+      if( shapeType == vtkm::CELL_SHAPE_QUAD )
       {
-        
+
         triangle[1] = Indices.Get(indexOffset+0);
         triangle[2] = Indices.Get(indexOffset+1);
         triangle[3] = Indices.Get(indexOffset+2);
@@ -290,7 +290,7 @@ public:
         triangle[2] = Indices.Get(indexOffset+3);
         OutputIndices.Set(triangleOffset+1, triangle);
       }
-      if( shapeType == vtkm::CELL_SHAPE_TETRA ) 
+      if( shapeType == vtkm::CELL_SHAPE_TETRA )
       {
         // 0-1-2
         triangle[1] = Indices.Get(indexOffset+1);
@@ -357,7 +357,7 @@ public:
         triangle[3] = Indices.Get(indexOffset+0);
         OutputIndices.Set(triangleOffset+11, triangle);
       }
-      if( shapeType == vtkm::CELL_SHAPE_WEDGE ) 
+      if( shapeType == vtkm::CELL_SHAPE_WEDGE )
       {
         // 0-1-2
         triangle[1] = Indices.Get(indexOffset+0);
@@ -381,7 +381,7 @@ public:
         triangle[2] = Indices.Get(indexOffset+1);
         OutputIndices.Set(triangleOffset+5, triangle);
       }
-      if( shapeType == vtkm::CELL_SHAPE_PYRAMID ) 
+      if( shapeType == vtkm::CELL_SHAPE_PYRAMID )
       {
         // 0-1-2
         triangle[1] = Indices.Get(indexOffset+0);
@@ -429,31 +429,31 @@ public:
       .Invoke( vtkm::exec::ExecutionWholeArrayConst< vtkm::Vec<vtkm::Id,4> >(outputIndices),
                vtkm::exec::ExecutionWholeArray< vtkm::UInt8 >(flags));
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > subset; 
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > subset;
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::StreamCompact(outputIndices,
-                                                                     flags, 
+                                                                     flags,
                                                                      subset);
-    std::cout<<"Number of tris after "<<subset.GetNumberOfValues()<<std::endl;
     outputIndices = subset;
     outputTriangles = subset.GetNumberOfValues();
   }
+
   VTKM_CONT_EXPORT
   void run(const vtkm::cont::DynamicCellSet &cellset,
            vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id,4> > &outputIndices,
            vtkm::Id &outputTriangles)
   {
-  
+
     if(cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
     {
       vtkm::cont::CellSetStructured<3> cellSetStructured3D = cellset.Cast<vtkm::cont::CellSetStructured<3> >();
       const vtkm::Id numCells = cellSetStructured3D.GetNumberOfCells();
-      std::cout<<"Number of cells "<<numCells<<std::endl;
+
       vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIdxs(0,1,numCells);
       outputIndices.Allocate(numCells * 12);
       vtkm::worklet::DispatcherMapTopology<TrianglulateStructured>(TrianglulateStructured(outputIndices))
-        .Invoke(cellSetStructured3D, 
+        .Invoke(cellSetStructured3D,
                 cellIdxs);
-      printSummary_ArrayHandle(outputIndices, std::cout); std::cout<<"\n";
+
       outputTriangles = numCells * 12;
     }
     else if(cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
@@ -463,15 +463,14 @@ public:
       const vtkm::cont::ArrayHandle<vtkm::Int32> indices = cellSetExplicit.GetNumIndicesArray( vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
       vtkm::cont::ArrayHandle<vtkm::Id> conn = cellSetExplicit.GetConnectivityArray( vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
       vtkm::cont::ArrayHandle<vtkm::Id> offsets = cellSetExplicit.GetIndexOffsetArray( vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
-      
+
       // We need to somehow force the data set to build the index offsets
       //vtkm::IdComponent c = indices.GetPortalControl().Get(0);
-      vtkm::Vec< vtkm::Id, 3> forceBuildIndices; 
+      vtkm::Vec< vtkm::Id, 3> forceBuildIndices;
       cellSetExplicit.GetIndices(0, forceBuildIndices );
 
-      vtkm::Id numberOfShapes = shapes.GetNumberOfValues();
+
       vtkm::cont::ArrayHandle<vtkm::Id> trianglesPerCell;
-      trianglesPerCell.Allocate(numberOfShapes);
       vtkm::worklet::DispatcherMapField<CountTriangles>( CountTriangles() )
         .Invoke(shapes,
                 trianglesPerCell);
@@ -481,7 +480,6 @@ public:
                                                                                  vtkm::Id(0));
 
       vtkm::cont::ArrayHandle<vtkm::Id> cellOffsets;
-      cellOffsets.Allocate(numberOfShapes);
       vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ScanExclusive(trianglesPerCell,
                                                                        cellOffsets);
       outputIndices.Allocate(totalTriangles);
@@ -494,7 +492,44 @@ public:
 
       outputTriangles = totalTriangles;
     }
-    else throw vtkm::cont::ErrorControlBadType("Unsupported cell set type for trianglulation");
+    else if(cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
+    {
+      typedef vtkm::TopologyElementTagPoint PointTag;
+      typedef vtkm::TopologyElementTagCell CellTag;
+
+      vtkm::cont::CellSetSingleType<> cellSetSingleType = cellset.Cast<vtkm::cont::CellSetSingleType<> >();
+
+      //fetch and see if we are all triangles, that currently is the only
+      //cell set single type we support.
+      vtkm::CellShapeTagTriangle triangleTag;
+      vtkm::Id shapeTypeAsId = cellSetSingleType.GetCellShape(0);
+
+      if(shapeTypeAsId == vtkm::CellShapeTagTriangle::Id)
+        {
+        //generate the outputIndices
+        vtkm::Id totalTriangles = cellSetSingleType.GetNumberOfCells();
+        vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIdxs(0,1,totalTriangles);
+
+        outputIndices.Allocate(totalTriangles);
+        vtkm::worklet::DispatcherMapField<Trianglulate>( Trianglulate(outputIndices,
+                                                                      cellSetSingleType.GetConnectivityArray( PointTag(), CellTag() ),
+                                                                      totalTriangles) )
+        .Invoke(cellSetSingleType.GetShapesArray( PointTag(), CellTag() ),
+                cellSetSingleType.GetIndexOffsetArray( PointTag(), CellTag()),
+                cellIdxs );
+
+        outputTriangles = totalTriangles;
+        }
+      else
+        {
+        throw vtkm::cont::ErrorControlBadType("Unsupported cell type for trianglulation with CellSetSingleType");
+        }
+    }
+    else
+    {
+      throw vtkm::cont::ErrorControlBadType("Unsupported cell set type for trianglulation");
+    }
+
     //get rid of any triagles we cannot see
     ExternalTrianlges(outputIndices, outputTriangles);
   }
