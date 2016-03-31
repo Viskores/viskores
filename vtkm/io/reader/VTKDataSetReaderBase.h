@@ -404,7 +404,7 @@ private:
     char vbuf[vlen];
     this->DataFile->Stream.read(vbuf, vlen - 1);
     vbuf[vlen - 1] = '\0';
-    if (std::string(vbuf) != "# vtk DataFile Version")
+    if (std::string(vbuf) != std::string(vstring))
     {
       throw vtkm::io::ErrorIO("Incorrect file format.");
     }
