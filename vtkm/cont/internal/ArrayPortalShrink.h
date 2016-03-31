@@ -124,7 +124,8 @@ class ArrayPortalToIterators<
       DelegateArrayPortalToIterators;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
   ArrayPortalToIterators(const PortalType &portal)
     : DelegateIterators(portal.GetDelegatePortal()),
       NumberOfValues(portal.GetNumberOfValues())
@@ -132,12 +133,14 @@ public:
 
   typedef typename DelegateArrayPortalToIterators::IteratorType IteratorType;
 
-  VTKM_CONT_EXPORT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
   IteratorType GetBegin() const {
     return this->DelegateIterators.GetBegin();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
   IteratorType GetEnd() const {
     IteratorType iterator = this->GetBegin();
     std::advance(iterator, this->NumberOfValues);

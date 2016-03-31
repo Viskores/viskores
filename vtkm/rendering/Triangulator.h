@@ -501,7 +501,6 @@ public:
 
       //fetch and see if we are all triangles, that currently is the only
       //cell set single type we support.
-      vtkm::CellShapeTagTriangle triangleTag;
       vtkm::Id shapeTypeAsId = cellSetSingleType.GetCellShape(0);
 
       if(shapeTypeAsId == vtkm::CellShapeTagTriangle::Id)

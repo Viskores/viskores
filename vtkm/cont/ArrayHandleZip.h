@@ -40,6 +40,7 @@ public:
   typedef PortalTypeFirst_ PortalTypeFirst;
   typedef PortalTypeSecond_ PortalTypeSecond;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalExecZip()
     : PortalFirst(), PortalSecond()

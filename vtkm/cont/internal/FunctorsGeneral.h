@@ -106,6 +106,7 @@ struct KeyCompare
   KeyCompare(): CompareFunctor() {}
   explicit KeyCompare(BinaryCompare c): CompareFunctor(c) {}
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   bool operator()(const vtkm::Pair<T,U>& a, const vtkm::Pair<T,U>& b) const
   {
@@ -139,6 +140,7 @@ struct ReduceKernel : vtkm::exec::FunctorBase
       PortalLength( portal.GetNumberOfValues() )
   {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   T operator()(vtkm::Id index) const
   {
@@ -194,6 +196,7 @@ struct ReduceStencilGeneration : vtkm::exec::FunctorBase
       KeyState(kstate)
   {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id centerIndex) const
   {
@@ -303,7 +306,8 @@ struct CopyKernel
       OutputOffset(outputOffset)
   {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
   void operator()(vtkm::Id index) const
   {
     typedef typename OutputPortalType::ValueType ValueType;
@@ -333,6 +337,7 @@ struct LowerBoundsKernel
       ValuesPortal(valuesPortal),
       OutputPortal(outputPortal) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
@@ -381,6 +386,7 @@ struct LowerBoundsComparisonKernel
       OutputPortal(outputPortal),
       CompareFunctor(binary_compare) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
@@ -423,6 +429,7 @@ struct SetConstantKernel
   SetConstantKernel(const PortalType &portal, ValueType value)
     : Portal(portal), Value(value) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
@@ -447,6 +454,7 @@ struct BitonicSortMergeKernel : vtkm::exec::FunctorBase
                          vtkm::Id groupSize)
     : Portal(portal), Compare(compare), GroupSize(groupSize) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
@@ -485,6 +493,7 @@ struct BitonicSortCrossoverKernel : vtkm::exec::FunctorBase
                              vtkm::Id groupSize)
     : Portal(portal), Compare(compare), GroupSize(groupSize) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
@@ -528,6 +537,7 @@ struct StencilToIndexFlagKernel
       OutputPortal(outputPortal),
       Predicate(unary_predicate) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
@@ -565,6 +575,7 @@ struct CopyIfKernel
       OutputPortal(outputPortal),
       Predicate(unary_predicate) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
@@ -597,6 +608,7 @@ struct ClassifyUniqueKernel
                        StencilPortalType stencilPortal)
     : InputPortal(inputPortal), StencilPortal(stencilPortal) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
@@ -634,6 +646,7 @@ struct ClassifyUniqueComparisonKernel
     StencilPortal(stencilPortal),
     CompareFunctor(binary_compare) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
@@ -673,6 +686,7 @@ struct UpperBoundsKernel
       ValuesPortal(valuesPortal),
       OutputPortal(outputPortal) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
@@ -721,6 +735,7 @@ struct UpperBoundsKernelComparisonKernel
       OutputPortal(outputPortal),
       CompareFunctor(binary_compare) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
@@ -772,6 +787,7 @@ struct InclusiveToExclusiveKernel : vtkm::exec::FunctorBase
       InitialValue(initialValue)
    { }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {
@@ -800,6 +816,7 @@ struct ScanKernel : vtkm::exec::FunctorBase
       Distance(stride/2)
   {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(vtkm::Id index) const
   {

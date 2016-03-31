@@ -44,6 +44,7 @@ public:
   typedef PortalTypeSecond_ PortalTypeSecond;
   typedef PortalTypeThird_ PortalTypeThird;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalExecCartesianProduct()
   : PortalFirst(), PortalSecond(), PortalThird()
