@@ -142,17 +142,19 @@ CellInterpolate(const FieldVecType &pointFieldValues,
                 vtkm::CellShapeTagGeneric shape,
                 const vtkm::exec::FunctorBase &worklet)
 {
+  typename FieldVecType::ComponentType result;
   switch (shape.Id)
   {
     vtkmGenericCellShapeMacro(
-          return CellInterpolate(pointFieldValues,
-                                 parametricCoords,
-                                 CellShapeTag(),
-                                 worklet));
+          result = CellInterpolate(pointFieldValues,
+                                   parametricCoords,
+                                   CellShapeTag(),
+                                   worklet));
   default:
     worklet.RaiseError("Unknown cell shape sent to interpolate.");
     return typename FieldVecType::ComponentType();
   }
+  return result;
 }
 
 //-----------------------------------------------------------------------------
