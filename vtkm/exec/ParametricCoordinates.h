@@ -664,17 +664,20 @@ WorldCoordinatesToParametricCoordinates(
     vtkm::CellShapeTagGeneric shape,
     const vtkm::exec::FunctorBase &worklet)
 {
+  typename WorldCoordVector::ComponentType result;
   switch (shape.Id)
   {
     vtkmGenericCellShapeMacro(
-          return WorldCoordinatesToParametricCoordinates(pointWCoords,
-                                                         wcoords,
-                                                         CellShapeTag(),
-                                                         worklet));
+          result = WorldCoordinatesToParametricCoordinates(pointWCoords,
+                                                           wcoords,
+                                                           CellShapeTag(),
+                                                           worklet));
     default:
       worklet.RaiseError("Unknown cell shape sent to world 2 parametric.");
       return typename WorldCoordVector::ComponentType();
   }
+
+  return result;
 }
 
 template<typename WorldCoordVector>

@@ -88,7 +88,7 @@ public:
         if (!OSMesaMakeCurrent(ctx, &rgba[0], GL_FLOAT, width, height))
             throw vtkm::cont::ErrorControlBadValue("OSMesa context activation failed.");
     }
-    
+
     VTKM_CONT_EXPORT
     virtual void Clear()
     {
@@ -99,7 +99,7 @@ public:
     virtual void Finish()
     {
         glFinish();
-        
+
         //Copy zbuff into floating point array.
         unsigned int *raw_zbuff;
         int zbytes, w, h;
@@ -136,14 +136,12 @@ public:
         {
             vtkm::Float32 vl, vr, vt, vb;
             v.GetRealViewport(vl,vr,vt,vb);
-            double x = vtkm::Float32(v.Width)*(1.+vl)/2.;
-            double y = vtkm::Float32(v.Height)*(1.+vb)/2.;
-            double a = vtkm::Float32(v.Width)*(vr-vl)/2.;
-            double b = vtkm::Float32(v.Height)*(vt-vb)/2.;
-            glViewport(int(float(v.Width)*(1.+vl)/2.),
-                       int(float(v.Height)*(1.+vb)/2.),
-                       int(float(v.Width)*(vr-vl)/2.),
-                       int(float(v.Height)*(vt-vb)/2.));
+            const vtkm::Float32 x = vtkm::Float32(v.Width)*(1.+vl)/2.;
+            const vtkm::Float32 y = vtkm::Float32(v.Height)*(1.+vb)/2.;
+            const vtkm::Float32 a = vtkm::Float32(v.Width)*(vr-vl)/2.;
+            const vtkm::Float32 b = vtkm::Float32(v.Height)*(vt-vb)/2.;
+
+            glViewport(int(x), int(y), int(a), int(b));
         }
         else
         {
@@ -180,7 +178,7 @@ public:
         of<<"P6"<<std::endl<<width<<" "<<height<<std::endl<<255<<std::endl;
         for (int i=height-1; i>=0; i--)
             for (int j=0; j < width; j++)
-            { 
+            {
                 const vtkm::Float32 *tuple = &(rgba[i*width*4 + j*4]);
                 of<<(unsigned char)(tuple[0]*255);
                 of<<(unsigned char)(tuple[1]*255);

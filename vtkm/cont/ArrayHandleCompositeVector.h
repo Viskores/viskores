@@ -184,9 +184,11 @@ public:
 
   VTKM_STATIC_ASSERT(NUM_COMPONENTS == PortalTypes::ARITY);
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalCompositeVector() {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_CONT_EXPORT
   ArrayPortalCompositeVector(
       const PortalTypes portals,

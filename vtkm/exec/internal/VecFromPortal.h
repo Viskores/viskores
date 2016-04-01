@@ -40,9 +40,11 @@ class VecFromPortal
 public:
   typedef typename PortalType::ValueType ComponentType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   VecFromPortal() : NumComponents(0), Offset(0) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   VecFromPortal(const PortalType &portal,
                 vtkm::IdComponent numComponents = 0,

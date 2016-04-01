@@ -26,8 +26,9 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/ScatterCounting.h>
 
-namespace
-{
+namespace vtkm {
+namespace filter {
+namespace marchingcubes {
 
 typedef vtkm::Vec< vtkm::Id2, 3 > Vec3Id2;
 typedef vtkm::Vec< vtkm::Vec<vtkm::Float32,3>, 3 > FVec3x3;
@@ -311,9 +312,6 @@ struct FirstValueSame
 
 }
 
-namespace vtkm {
-namespace filter {
-
 //-----------------------------------------------------------------------------
 MarchingCubes::MarchingCubes():
   vtkm::filter::DataSetWithFieldFilter<MarchingCubes>(),
@@ -349,6 +347,11 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
                                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                                                      const DeviceAdapter&)
 {
+
+  using vtkm::filter::marchingcubes::ApplyToField;
+  using vtkm::filter::marchingcubes::EdgeWeightGenerate;
+  using vtkm::filter::marchingcubes::EdgeWeightGenerateMetaData;
+  using vtkm::filter::marchingcubes::ClassifyCell;
 
   if(fieldMeta.IsPointField() == false)
   {
@@ -413,7 +416,7 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
   edgeDispatcher.Invoke(
         vtkm::filter::ApplyPolicy(cells, policy),
         //cast to a scalar field if not one, as cellderivative only works on those
-        make_ScalarField(field),
+        marchingcubes::make_ScalarField(field),
         vtkm::filter::ApplyPolicy(coords, policy)
         );
 
@@ -451,7 +454,7 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
       // the id2 which is the first entry in the zip pair
       vtkm::cont::ArrayHandleZip<Id2HandleType, KeyType> zipped =
                   vtkm::cont::make_ArrayHandleZip(uniqueIds,keys);
-      Algorithm::Unique( zipped, FirstValueSame());
+      Algorithm::Unique( zipped, marchingcubes::FirstValueSame());
       }
     else
       {
@@ -464,7 +467,7 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
       // the id2 which is the first entry in the zip pair
       vtkm::cont::ArrayHandleZip<Id2HandleType, WeightHandleType> zipped =
                   vtkm::cont::make_ArrayHandleZip(uniqueIds, this->InterpolationWeights);
-      Algorithm::Unique( zipped, FirstValueSame());
+      Algorithm::Unique( zipped, marchingcubes::FirstValueSame());
       }
 
     //4.
@@ -537,6 +540,8 @@ bool MarchingCubes::DoMapField(vtkm::filter::DataSetResult& result,
                                const vtkm::filter::PolicyBase<DerivedPolicy>&,
                                const DeviceAdapter&)
 {
+  using vtkm::filter::marchingcubes::ApplyToField;
+
   if(fieldMeta.IsPointField() == false)
   {
     //not a point field, we can't map it

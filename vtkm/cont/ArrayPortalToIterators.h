@@ -46,7 +46,8 @@ public:
   /// \c ArrayPortaltoIterators should be constructed with an instance of
   /// the array portal.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
   ArrayPortalToIterators(const PortalType &portal) : Portal(portal) {  }
 
   /// The type of the iterator.
@@ -56,14 +57,16 @@ public:
 
   /// Returns an iterator pointing to the beginning of the ArrayPortal.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
   IteratorType GetBegin() const {
     return vtkm::cont::internal::make_IteratorBegin(this->Portal);
   }
 
   /// Returns an iterator pointing to one past the end of the ArrayPortal.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
   IteratorType GetEnd() const {
     return vtkm::cont::internal::make_IteratorEnd(this->Portal);
   }
@@ -75,7 +78,8 @@ private:
 /// Convienience function for converting an ArrayPortal to a begin iterator.
 ///
 template<typename PortalType>
-VTKM_CONT_EXPORT
+VTKM_SUPPRESS_EXEC_WARNINGS
+VTKM_EXEC_CONT_EXPORT
 typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType
 ArrayPortalToIteratorBegin(const PortalType &portal)
 {
@@ -86,7 +90,8 @@ ArrayPortalToIteratorBegin(const PortalType &portal)
 /// Convienience function for converting an ArrayPortal to an end iterator.
 ///
 template<typename PortalType>
-VTKM_CONT_EXPORT
+VTKM_SUPPRESS_EXEC_WARNINGS
+VTKM_EXEC_CONT_EXPORT
 typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType
 ArrayPortalToIteratorEnd(const PortalType &portal)
 {

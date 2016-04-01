@@ -19,11 +19,14 @@
 ##  this software.
 ##
 ##=============================================================================
+find_package(MESA REQUIRED)
 
-add_subdirectory(clipping)
-add_subdirectory(demo)
-add_subdirectory(hello_world)
-add_subdirectory(isosurface)
-add_subdirectory(multi_backend)
-add_subdirectory(streamline)
-add_subdirectory(tetrahedra)
+if(VTKm_CUDA_FOUND)
+  cuda_add_executable(Demo Demo.cu)
+else()
+  add_executable(Demo Demo.cxx)
+endif()
+
+target_include_directories(Demo PRIVATE ${OSMESA_INCLUDE_DIR})
+target_link_libraries(Demo ${OSMESA_LIBRARY} ${VTKm_LIBRARIES})
+target_compile_options(Demo PRIVATE ${VTKm_COMPILE_OPTIONS})

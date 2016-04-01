@@ -103,6 +103,7 @@ struct ScanInclusiveBody
       OutputPortal(body.OutputPortal),
       BinaryOperation(body.BinaryOperation) {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(const ::tbb::blocked_range<vtkm::Id> &range, ::tbb::pre_scan_tag)
   {
@@ -124,6 +125,7 @@ struct ScanInclusiveBody
     this->Sum = temp;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(const ::tbb::blocked_range<vtkm::Id> &range, ::tbb::final_scan_tag)
   {
@@ -152,12 +154,14 @@ struct ScanInclusiveBody
     this->Sum = temp;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   void reverse_join(const ScanInclusiveBody &left)
   {
     this->Sum = this->BinaryOperation(left.Sum, this->Sum);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   void assign(const ScanInclusiveBody &src)
   {
@@ -199,6 +203,7 @@ struct ScanExclusiveBody
       BinaryOperation(body.BinaryOperation)
   {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(const ::tbb::blocked_range<vtkm::Id> &range, ::tbb::pre_scan_tag)
   {
@@ -217,6 +222,7 @@ struct ScanExclusiveBody
     this->Sum = temp;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void operator()(const ::tbb::blocked_range<vtkm::Id> &range, ::tbb::final_scan_tag)
   {
@@ -246,12 +252,14 @@ struct ScanExclusiveBody
     this->Sum = temp;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   void reverse_join(const ScanExclusiveBody &left)
   {
     this->Sum = this->BinaryOperation(left.Sum, this->Sum);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   void assign(const ScanExclusiveBody &src)
   {
@@ -261,6 +269,7 @@ struct ScanExclusiveBody
 
 template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
+VTKM_SUPPRESS_EXEC_WARNINGS
 VTKM_CONT_EXPORT static
 typename boost::remove_reference<typename OutputPortalType::ValueType>::type
 ScanInclusivePortals(InputPortalType inputPortal,
@@ -285,6 +294,7 @@ ScanInclusivePortals(InputPortalType inputPortal,
 
 template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
+VTKM_SUPPRESS_EXEC_WARNINGS
 VTKM_CONT_EXPORT static
 typename boost::remove_reference<typename OutputPortalType::ValueType>::type
 ScanExclusivePortals(InputPortalType inputPortal,
@@ -466,6 +476,7 @@ private:
 template<typename InputPortalType,
          typename IndexPortalType,
          typename OutputPortalType>
+VTKM_SUPPRESS_EXEC_WARNINGS
 VTKM_CONT_EXPORT static void ScatterPortal(InputPortalType  inputPortal,
                                            IndexPortalType  indexPortal,
                                            OutputPortalType outputPortal)
