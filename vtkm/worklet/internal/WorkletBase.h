@@ -31,11 +31,13 @@
 #include <vtkm/exec/arg/WorkIndex.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
+#include <vtkm/cont/arg/TransportTagAtomicArray.h>
 #include <vtkm/cont/arg/TransportTagExecObject.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayIn.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayInOut.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
+#include <vtkm/cont/arg/TypeCheckTagAtomicArray.h>
 #include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 
 #include <vtkm/worklet/ScatterIdentity.h>
@@ -253,6 +255,25 @@ public:
   struct WholeArrayInOut : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagWholeArrayInOut TransportTag;
+    typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
+  };
+
+  /// \c ControlSignature tag for whole input/output arrays.
+  ///
+  /// The \c AtomicArrayInOut control signature tag specifies an \c ArrayHandle
+  /// passed to the \c Invoke operation of the dispatcher. This is converted to
+  /// a \c vtkm::exec::AtomicArray object and passed to the appropriate worklet
+  /// operator argument with one of the default args. The provided atomic
+  /// operations can be used to resolve concurrency hazards, but have the
+  /// potential to slow the program quite a bit.
+  ///
+  /// The template operator specifies all the potential value types of the
+  /// array. The default value type is all types.
+  ///
+  template<typename TypeList = AllTypes>
+  struct AtomicArrayInOut : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagAtomicArray<TypeList> TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagAtomicArray TransportTag;
     typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
   };
 

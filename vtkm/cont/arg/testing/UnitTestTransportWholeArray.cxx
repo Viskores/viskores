@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/arg/TransportTagAtomicArray.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayIn.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayInOut.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayOut.h>
@@ -26,6 +27,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -89,6 +91,23 @@ struct TestInOutKernel : public vtkm::exec::FunctorBase
   }
 };
 
+template<typename AtomicType>
+struct TestAtomicKernel : public vtkm::exec::FunctorBase
+{
+  VTKM_CONT_EXPORT
+  TestAtomicKernel(const AtomicType &atomicArray)
+    : AtomicArray(atomicArray) {  }
+
+  AtomicType AtomicArray;
+
+  VTKM_EXEC_EXPORT
+  void operator()(vtkm::Id index) const
+  {
+    typedef typename AtomicType::ValueType ValueType;
+    this->AtomicArray.Add(0, static_cast<ValueType>(index));
+  }
+};
+
 template<typename Device>
 struct TryWholeArrayType
 {
@@ -143,10 +162,41 @@ struct TryWholeArrayType
 };
 
 template<typename Device>
+struct TryAtomicArrayType
+{
+  template<typename T>
+  void operator()(T) const
+  {
+    typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
+        ArrayHandleType;
+
+    typedef vtkm::cont::arg::Transport<
+        vtkm::cont::arg::TransportTagAtomicArray, ArrayHandleType, Device>
+        TransportType;
+
+    ArrayHandleType array;
+    array.Allocate(1);
+    array.GetPortalControl().Set(0, 0);
+
+    std::cout << "Check Transport AtomicArray" << std::endl;
+    TestAtomicKernel<typename TransportType::ExecObjectType>
+        kernel(TransportType()(array, -1));
+
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
+
+    T result = array.GetPortalConstControl().Get(0);
+    VTKM_TEST_ASSERT(result == ((ARRAY_SIZE-1)*ARRAY_SIZE)/2,
+                     "Got wrong summation in atomic array.");
+  }
+};
+
+template<typename Device>
 void TryArrayOutTransport(Device)
 {
   vtkm::testing::Testing::TryTypes(TryWholeArrayType<Device>(),
                                    vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(TryAtomicArrayType<Device>(),
+                                   vtkm::exec::AtomicArrayTypeListTag());
 }
 
 void TestWholeArrayTransport()
