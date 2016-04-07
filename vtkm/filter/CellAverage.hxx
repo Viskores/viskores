@@ -50,7 +50,7 @@ vtkm::filter::FieldResult CellAverage::DoExecute(const vtkm::cont::DataSet &inpu
 
   //todo: we need to ask the policy what storage type we should be using
   //If the input is implicit, we should know what to fall back to
-  vtkm::cont::ArrayHandle<T> outArray = field;
+  vtkm::cont::ArrayHandle<T> outArray;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage,
                                        DeviceAdapter > dispatcher(this->Worklet);
