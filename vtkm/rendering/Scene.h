@@ -30,23 +30,19 @@ class Scene
 {
 public:
     std::vector<vtkm::rendering::Plot> plots;
-
-    VTKM_CONT_EXPORT
-    Scene() {}
-
 };
 
 class Scene3D : public Scene
 {
 public:
     Scene3D() {}
-    
+
     template<typename SceneRendererType, typename SurfaceType>
     VTKM_CONT_EXPORT
     void Render(SceneRendererType &sceneRenderer,
                 SurfaceType &surface)
     {
-        for (int i = 0; i < plots.size(); i++)
+        for (std::size_t i = 0; i < plots.size(); i++)
         {
             sceneRenderer.StartScene();
             plots[i].Render(sceneRenderer, surface);
@@ -59,11 +55,11 @@ class Scene2D : public Scene
 {
 public:
     Scene2D() {}
-    
+
     template<typename SceneRendererType>
     VTKM_CONT_EXPORT
-    void Render(vtkm::rendering::View3D &view, 
-                SceneRendererType &sceneRenderer)
+    void Render(vtkm::rendering::View3D &vtkmNotUsed(view),
+                SceneRendererType &vtkmNotUsed(sceneRenderer) )
     {
     }
 };
