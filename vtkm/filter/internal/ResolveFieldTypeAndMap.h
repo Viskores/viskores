@@ -226,4 +226,4 @@ namespace
 }
 }  // namespace vtkm::filter::internal
 
-#endif //vtk_m_filter_internal_ResolveFieldTypeAndExecute_h
+#endif //vtk_m_filter_internal_ResolveFieldTypeAndMap_h

@@ -126,4 +126,4 @@ private:
 
 #include <vtkm/filter/DataSetWithFieldFilter.hxx>
 
-#endif // vtk_m_filter_DataSetFilter_h
+#endif // vtk_m_filter_DataSetWithFieldFilter_h

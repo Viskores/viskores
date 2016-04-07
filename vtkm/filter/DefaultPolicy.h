@@ -45,4 +45,4 @@ public:
 }
 
 
-#endif
+#endif //vtk_m_filter_DefaultPolicy_h
