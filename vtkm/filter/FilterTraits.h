@@ -37,4 +37,4 @@ public:
 }
 }
 
-#endif
+#endif //vtk_m_filter_FilterTraits_h

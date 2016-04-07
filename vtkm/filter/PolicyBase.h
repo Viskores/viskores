@@ -119,4 +119,4 @@ ApplyPolicy(const vtkm::cont::DynamicCellSet& cellset,
 }
 }
 
-#endif
+#endif //vtk_m_filter_PolicyBase_h

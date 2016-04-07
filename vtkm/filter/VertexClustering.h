@@ -65,4 +65,4 @@ private:
 
 #include <vtkm/filter/VertexClustering.hxx>
 
-#endif // vtk_m_filter_Threshold_h
+#endif // vtk_m_filter_VertexClustering_h

@@ -56,4 +56,4 @@ public:
 
 #include <vtkm/filter/ExternalFaces.hxx>
 
-#endif // vtk_m_filter_Threshold_h
+#endif // vtk_m_filter_ExternalFaces_h

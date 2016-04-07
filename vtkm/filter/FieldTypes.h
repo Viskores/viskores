@@ -85,4 +85,4 @@ private:
 }
 
 
-#endif
+#endif //vtk_m_filter_FieldMetadata_h
