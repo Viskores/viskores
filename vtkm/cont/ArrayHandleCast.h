@@ -77,7 +77,7 @@ public:
 template <typename T, typename HandleType>
 VTKM_CONT_EXPORT
 ArrayHandleCast<T, HandleType> make_ArrayHandleCast(const HandleType &handle,
-                                                    const T&)
+                                                    const T& = T())
 {
   return ArrayHandleCast<T, HandleType>(handle);
 }
