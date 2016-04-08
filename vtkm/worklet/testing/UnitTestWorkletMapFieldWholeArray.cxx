@@ -157,7 +157,8 @@ struct DoTestAtomicArrayWorklet
 
     std::cout << "Check result." << std::endl;
     T result = inOutHandle.GetPortalConstControl().Get(0);
-    VTKM_TEST_ASSERT(result == ((ARRAY_SIZE+1)*ARRAY_SIZE)/2,
+
+    VTKM_TEST_ASSERT(result == (ARRAY_SIZE*(ARRAY_SIZE-1))/2,
                      "Got wrong summation in atomic array.");
   }
 };
