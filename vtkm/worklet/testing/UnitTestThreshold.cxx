@@ -60,8 +60,7 @@ public:
     std::cout << "Testing threshold on 2D uniform dataset" << std::endl;
 
     typedef vtkm::cont::CellSetStructured<2> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                           CellSetType> OutCellSetType;
+    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
     typedef vtkm::cont::ArrayHandlePermutation<
       vtkm::cont::ArrayHandle<vtkm::Id>,
       vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
@@ -94,8 +93,7 @@ public:
     std::cout << "Testing threshold on 3D uniform dataset" << std::endl;
 
     typedef vtkm::cont::CellSetStructured<3> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                           CellSetType> OutCellSetType;
+    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
     typedef vtkm::cont::ArrayHandlePermutation<
       vtkm::cont::ArrayHandle<vtkm::Id>,
       vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
@@ -129,8 +127,7 @@ public:
     std::cout << "Testing threshold on 3D explicit dataset" << std::endl;
 
     typedef vtkm::cont::CellSetExplicit<> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                           CellSetType> OutCellSetType;
+    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
     typedef vtkm::cont::ArrayHandlePermutation<
       vtkm::cont::ArrayHandle<vtkm::Id>,
       vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;

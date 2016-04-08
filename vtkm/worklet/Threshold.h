@@ -102,14 +102,13 @@ public:
   };
 
   template <typename CellSetType, typename UnaryPredicate, typename DeviceAdapter>
-  vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>, CellSetType>
+  vtkm::cont::CellSetPermutation< CellSetType >
   Run(const CellSetType &cellSet,
       const vtkm::cont::Field &field,
       const UnaryPredicate &predicate,
       DeviceAdapter)
   {
-    typedef vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                           CellSetType> OutputType;
+    typedef vtkm::cont::CellSetPermutation< CellSetType > OutputType;
 
     vtkm::cont::ArrayHandle<bool> passFlags;
     switch(field.GetAssociation())

@@ -19,8 +19,8 @@
 //============================================================================
 
 
-#ifndef vtk_m_exec_ConnectivityStructuredPermuted_h
-#define vtk_m_exec_ConnectivityStructuredPermuted_h
+#ifndef vtk_m_exec_ConnectivityPermuted_h
+#define vtk_m_exec_ConnectivityPermuted_h
 
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
@@ -30,70 +30,63 @@ namespace vtkm {
 namespace exec {
 
 template<typename PermutationPortal,
-         typename FromTopology,
-         typename ToTopology,
-         vtkm::IdComponent Dimension>
-class ConnectivityStructuredPermuted
+         typename OriginalConnectivity>
+class ConnectivityPermuted
 {
-  VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
-  VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
-
-  typedef vtkm::exec::ConnectivityStructured<FromTopology,
-                                             ToTopology,
-                                             Dimension> StructuredType;
 public:
   typedef vtkm::Id SchedulingRangeType;
 
   VTKM_EXEC_CONT_EXPORT
-  ConnectivityStructuredPermuted():
+  ConnectivityPermuted():
     Portal(),
-    FullStructuredGrid()
+    Connectivity()
   {
 
   }
 
   VTKM_EXEC_CONT_EXPORT
-  ConnectivityStructuredPermuted(const PermutationPortal& portal,
-                                 const StructuredType &src):
+  ConnectivityPermuted(const PermutationPortal& portal,
+                       const OriginalConnectivity &src):
     Portal(portal),
-    FullStructuredGrid(src)
+    Connectivity(src)
   {
   }
 
   VTKM_EXEC_CONT_EXPORT
-  ConnectivityStructuredPermuted(const ConnectivityStructuredPermuted &src):
+  ConnectivityPermuted(const ConnectivityPermuted &src):
     Portal(src.Portal),
-    FullStructuredGrid(src.FullStructuredGrid)
+    Connectivity(src.Connectivity)
   {
   }
 
   VTKM_EXEC_EXPORT
   vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const {
-    return this->FullStructuredGrid.GetNumberOfIndices( this->Portal.Get(index) );
+    return this->Connectivity.GetNumberOfIndices( this->Portal.Get(index) );
   }
 
-  // This needs some thought. What does cell shape mean when the to topology
-  // is not a cell?
-  typedef typename StructuredType::CellShapeTag CellShapeTag;
+
+  typedef typename OriginalConnectivity::CellShapeTag CellShapeTag;
+
   VTKM_EXEC_EXPORT
-  CellShapeTag GetCellShape(vtkm::Id=0) const {
-    return CellShapeTag();
+  CellShapeTag GetCellShape(vtkm::Id index) const {
+    vtkm::Id pIndex = this->Portal.Get(index);
+    return this->Connectivity.GetCellShape( pIndex );
   }
 
-  typedef typename StructuredType::IndicesType IndicesType;
+  typedef typename OriginalConnectivity::IndicesType IndicesType;
 
   VTKM_EXEC_EXPORT
   IndicesType GetIndices(vtkm::Id index) const
   {
-    return this->FullStructuredGrid.GetIndices( this->Portal.Get(index) );
+    return this->Connectivity.GetIndices( this->Portal.Get(index) );
   }
 
 private:
   PermutationPortal Portal;
-  StructuredType FullStructuredGrid;
+  OriginalConnectivity Connectivity;
 };
 
 }
 } // namespace vtkm::exec
 
-#endif //vtk_m_exec_ConnectivityStructuredPermuted_h
+#endif //vtk_m_exec_ConnectivityPermuted_h

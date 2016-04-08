@@ -64,8 +64,7 @@ public:
   template<typename CellSetType>
   void operator()(const CellSetType& cellset ) const
   {
-    typedef vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                           CellSetType> PermutationCellSetType;
+    typedef vtkm::cont::CellSetPermutation<CellSetType> PermutationCellSetType;
 
     PermutationCellSetType permCellSet(*this->ValidIds, cellset,
                                        cellset.GetName(),
