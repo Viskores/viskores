@@ -19,7 +19,8 @@
 ##  this software.
 ##
 ##=============================================================================
-find_package(MESA REQUIRED)
+find_package(MESA)
+if(MESA_FOUND)
 
 if(VTKm_CUDA_FOUND)
   cuda_add_executable(Demo Demo.cu)
@@ -30,3 +31,5 @@ endif()
 target_include_directories(Demo PRIVATE ${OSMESA_INCLUDE_DIR})
 target_link_libraries(Demo ${OSMESA_LIBRARY} ${VTKm_LIBRARIES})
 target_compile_options(Demo PRIVATE ${VTKm_COMPILE_OPTIONS})
+
+endif()

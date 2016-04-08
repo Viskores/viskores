@@ -48,49 +48,49 @@ public:
   VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
 			   const vtkm::cont::CoordinateSystem &coords,
-                           vtkm::cont::Field &scalarField,
-                           const vtkm::rendering::ColorTable &colorTable,
-                           vtkm::Float64 *scalarBounds)
+         vtkm::cont::Field &scalarField,
+         const vtkm::rendering::ColorTable &colorTable,
+         vtkm::Float64 *scalarBounds)
   {
-      vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;
-      vtkm::Id numTri;
-      Triangulator<DeviceAdapter> triangulator;
-      triangulator.run(cellset, indices, numTri);
+    vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;
+    vtkm::Id numTri;
+    Triangulator<DeviceAdapter> triangulator;
+    triangulator.run(cellset, indices, numTri);
 
-      vtkm::cont::ArrayHandle<vtkm::Float32> sf;
-      sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32> >();
+    vtkm::cont::ArrayHandle<vtkm::Float32> sf;
+    sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32> >();
 
-      vtkm::cont::DynamicArrayHandleCoordinateSystem dcoords = coords.GetData();
-      vtkm::cont::ArrayHandleUniformPointCoordinates uVerts;
-      vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > eVerts;
-          
-      if(dcoords.IsSameType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
-      {
-          uVerts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-          RenderTriangles(numTri, uVerts, indices, sf, colorTable, scalarBounds);
-      }
-      else if(dcoords.IsSameType(vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> >()))
-      {
-          eVerts = dcoords.Cast<vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > > ();
-          RenderTriangles(numTri, eVerts, indices, sf, colorTable, scalarBounds);
-      }
-      else if(dcoords.IsSameType(vtkm::cont::ArrayHandleCartesianProduct<
-                                 vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                 vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                 vtkm::cont::ArrayHandle<vtkm::FloatDefault> >()))
-      {
-          vtkm::cont::ArrayHandleCartesianProduct<
-              vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-              vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-              vtkm::cont::ArrayHandle<vtkm::FloatDefault> > rVerts;
-          rVerts = dcoords.Cast<vtkm::cont::ArrayHandleCartesianProduct<
-                                    vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                    vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                    vtkm::cont::ArrayHandle<vtkm::FloatDefault> > > ();
-          RenderTriangles(numTri, rVerts, indices, sf, colorTable, scalarBounds);
-      }
-      glFinish();
-      glFlush();
+    vtkm::cont::DynamicArrayHandleCoordinateSystem dcoords = coords.GetData();
+    vtkm::cont::ArrayHandleUniformPointCoordinates uVerts;
+    vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > eVerts;
+
+    if(dcoords.IsSameType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
+    {
+      uVerts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+      RenderTriangles(numTri, uVerts, indices, sf, colorTable, scalarBounds);
+    }
+    else if(dcoords.IsSameType(vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> >()))
+    {
+      eVerts = dcoords.Cast<vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > > ();
+      RenderTriangles(numTri, eVerts, indices, sf, colorTable, scalarBounds);
+    }
+    else if(dcoords.IsSameType(vtkm::cont::ArrayHandleCartesianProduct<
+                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                               vtkm::cont::ArrayHandle<vtkm::FloatDefault> >()))
+    {
+      vtkm::cont::ArrayHandleCartesianProduct<
+          vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+          vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+          vtkm::cont::ArrayHandle<vtkm::FloatDefault> > rVerts;
+      rVerts = dcoords.Cast<vtkm::cont::ArrayHandleCartesianProduct<
+                                vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                vtkm::cont::ArrayHandle<vtkm::FloatDefault> > > ();
+      RenderTriangles(numTri, rVerts, indices, sf, colorTable, scalarBounds);
+    }
+    glFinish();
+    glFlush();
   }
 
   template <typename PtType>
@@ -101,46 +101,40 @@ public:
                        const vtkm::rendering::ColorTable &ct,
                        vtkm::Float64 *scalarBounds)
   {
-      vtkm::Float32 sMin = vtkm::Float32(scalarBounds[0]);
-      vtkm::Float32 sMax = vtkm::Float32(scalarBounds[1]);
-      vtkm::Float32 sDiff = sMax-sMin;
+    vtkm::Float32 sMin = vtkm::Float32(scalarBounds[0]);
+    vtkm::Float32 sMax = vtkm::Float32(scalarBounds[1]);
+    vtkm::Float32 sDiff = sMax-sMin;
 
-      glBegin(GL_TRIANGLES);
-      for (int i = 0; i < numTri; i++)
-      {
-	  vtkm::Vec<vtkm::Id, 4> idx = indices.GetPortalConstControl().Get(i);
-	  vtkm::Id si = indices.GetPortalConstControl().Get(i)[0];
-	  vtkm::Id i1 = indices.GetPortalConstControl().Get(i)[1];
-	  vtkm::Id i2 = indices.GetPortalConstControl().Get(i)[2];
-	  vtkm::Id i3 = indices.GetPortalConstControl().Get(i)[3];
+    glBegin(GL_TRIANGLES);
+    for (int i = 0; i < numTri; i++)
+    {
+  	  vtkm::Vec<vtkm::Id, 4> idx = indices.GetPortalConstControl().Get(i);
 
-	  vtkm::Vec<vtkm::Float32, 3> p1 = verts.GetPortalConstControl().Get(i1);
-	  vtkm::Vec<vtkm::Float32, 3> p2 = verts.GetPortalConstControl().Get(i2);
-	  vtkm::Vec<vtkm::Float32, 3> p3 = verts.GetPortalConstControl().Get(i3);
-	  
-          vtkm::Float32 s = scalar.GetPortalConstControl().Get(i1);
-          s = (s-sMin)/sDiff;
+  	  vtkm::Vec<vtkm::Float32, 3> p1 = verts.GetPortalConstControl().Get(idx[1]);
+  	  vtkm::Vec<vtkm::Float32, 3> p2 = verts.GetPortalConstControl().Get(idx[2]);
+  	  vtkm::Vec<vtkm::Float32, 3> p3 = verts.GetPortalConstControl().Get(idx[3]);
 
-	  Color color = ct.MapRGB(s);
-	  glColor3fv(color.Components);
-	  glVertex3f(p1[0],p1[1],p1[2]);
-	  
-	  s = scalar.GetPortalConstControl().Get(i2);
-          s = (s-sMin)/sDiff;
-	  color = ct.MapRGB(s);
-	  glColor3fv(color.Components);
-	  glVertex3f(p2[0],p2[1],p2[2]);
+      vtkm::Float32 s = scalar.GetPortalConstControl().Get(i1);
+      s = (s-sMin)/sDiff;
 
-	  s = scalar.GetPortalConstControl().Get(i3);
-          s = (s-sMin)/sDiff;
-	  color = ct.MapRGB(s);
-	  glColor3fv(color.Components);
-	  glVertex3f(p3[0],p3[1],p3[2]);
-      }
-      glEnd();
+  	  Color color = ct.MapRGB(s);
+  	  glColor3fv(color.Components);
+  	  glVertex3f(p1[0],p1[1],p1[2]);
+
+  	  s = scalar.GetPortalConstControl().Get(i2);
+      s = (s-sMin)/sDiff;
+  	  color = ct.MapRGB(s);
+  	  glColor3fv(color.Components);
+  	  glVertex3f(p2[0],p2[1],p2[2]);
+
+  	  s = scalar.GetPortalConstControl().Get(i3);
+      s = (s-sMin)/sDiff;
+  	  color = ct.MapRGB(s);
+  	  glColor3fv(color.Components);
+  	  glVertex3f(p3[0],p3[1],p3[2]);
+    }
+    glEnd();
   }
-
-private:
 };
 
 }} //namespace vtkm::rendering
