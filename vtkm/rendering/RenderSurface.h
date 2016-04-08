@@ -36,7 +36,7 @@ class RenderSurface
 {
 public:
     VTKM_CONT_EXPORT
-    RenderSurface(int w=1024, int h=1024,
+    RenderSurface(std::size_t w=1024, std::size_t h=1024,
                   const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
         : width(w), height(h), bgColor(c)
     {
@@ -61,8 +61,8 @@ public:
     VTKM_CONT_EXPORT
     virtual void SaveAs(const std::string &) {}
 
+    std::size_t width, height;
     vtkm::rendering::Color bgColor;
-    int width, height;
     std::vector<vtkm::Float32> rgba;
     std::vector<vtkm::Float32> zbuff;
 };
@@ -71,7 +71,7 @@ class RenderSurfaceOSMesa : public RenderSurface
 {
 public:
     VTKM_CONT_EXPORT
-    RenderSurfaceOSMesa(int w=1024, int h=1024,
+    RenderSurfaceOSMesa(std::size_t w=1024, std::size_t h=1024,
           const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
         : RenderSurface(w,h,c)
     {
@@ -104,10 +104,10 @@ public:
         unsigned int *raw_zbuff;
         int zbytes, w, h;
         OSMesaGetDepthBuffer(ctx, &w, &h, &zbytes, (void**)&raw_zbuff);
-        if (w!=width || h!=height)
+        if ( w!=int(width) || h!= int(height) )
             throw vtkm::cont::ErrorControlBadValue("Wrong width/height in ZBuffer");
-        int npixels = width*height;
-        for (int i=0; i<npixels; i++)
+        std::size_t npixels = width*height;
+        for (std::size_t i=0; i<npixels; i++)
             zbuff[i] = float(raw_zbuff[i]) / float(UINT_MAX);
     }
 
@@ -136,10 +136,10 @@ public:
         {
             vtkm::Float32 vl, vr, vt, vb;
             v.GetRealViewport(vl,vr,vt,vb);
-            const vtkm::Float32 x = vtkm::Float32(v.Width)*(1.+vl)/2.;
-            const vtkm::Float32 y = vtkm::Float32(v.Height)*(1.+vb)/2.;
-            const vtkm::Float32 a = vtkm::Float32(v.Width)*(vr-vl)/2.;
-            const vtkm::Float32 b = vtkm::Float32(v.Height)*(vt-vb)/2.;
+            const vtkm::Float32 x = vtkm::Float32(v.Width)*(1.f + vl)/2.f;
+            const vtkm::Float32 y = vtkm::Float32(v.Height)*(1.f + vb)/2.f;
+            const vtkm::Float32 a = vtkm::Float32(v.Width)*(vr-vl)/2.f;
+            const vtkm::Float32 b = vtkm::Float32(v.Height)*(vt-vb)/2.f;
 
             glViewport(int(x), int(y), int(a), int(b));
         }
@@ -176,8 +176,8 @@ public:
     {
         std::ofstream of(fileName.c_str());
         of<<"P6"<<std::endl<<width<<" "<<height<<std::endl<<255<<std::endl;
-        for (int i=height-1; i>=0; i--)
-            for (int j=0; j < width; j++)
+        for (std::size_t i=height-1; i>=0; i--)
+            for (std::size_t j=0; j < width; j++)
             {
                 const vtkm::Float32 *tuple = &(rgba[i*width*4 + j*4]);
                 of<<(unsigned char)(tuple[0]*255);
