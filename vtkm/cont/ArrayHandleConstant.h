@@ -70,7 +70,7 @@ public:
     : Superclass(detail::ConstantFunctor<T>(value), numberOfValues) {  }
 };
 
-/// make_ArrayHandleImplicit is convenience function to generate an
+/// make_ArrayHandleConstant is convenience function to generate an
 /// ArrayHandleImplicit.  It takes a functor and the virtual length of the
 /// array.
 ///
