@@ -41,6 +41,7 @@ namespace filter {
 class MarchingCubes : public vtkm::filter::DataSetWithFieldFilter<MarchingCubes>
 {
 public:
+  VTKM_CONT_EXPORT
   MarchingCubes();
 
   VTKM_CONT_EXPORT
