@@ -17,14 +17,14 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_opengl_internal_BufferTypePicker_h
-#define vtk_m_opengl_internal_BufferTypePicker_h
+#ifndef vtk_m_interop_internal_BufferTypePicker_h
+#define vtk_m_interop_internal_BufferTypePicker_h
 
 #include <vtkm/Types.h>
-#include <vtkm/opengl/internal/OpenGLHeaders.h>
+#include <vtkm/interop/internal/OpenGLHeaders.h>
 
 namespace vtkm {
-namespace opengl {
+namespace interop {
 namespace internal {
 
 /// helper function that guesses what OpenGL buffer type is the best default
@@ -53,6 +53,6 @@ VTKM_CONT_EXPORT GLenum BufferTypePicker( T )
 
 }
 }
-} //namespace vtkm::opengl::internal
+} //namespace vtkm::interop::internal
 
-#endif //vtk_m_opengl_internal_BufferTypePicker_h
+#endif //vtk_m_interop_internal_BufferTypePicker_h

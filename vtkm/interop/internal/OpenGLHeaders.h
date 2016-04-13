@@ -17,20 +17,25 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#ifndef vtk_m_interop_internal_OpenGLHeaders_h
+#define vtk_m_interop_internal_OpenGLHeaders_h
 
-//silence boost threading warnings when using cuda
-#define BOOST_SP_DISABLE_THREADS
+#include <vtkm/internal/ExportMacros.h>
 
-//This sets up testing with the cuda device adapter
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/cuda/internal/testing/Testing.h>
+#if defined(__APPLE__)
+# include <GL/glew.h>
+# include <OpenGL/gl.h>
+#else
+# include <GL/glew.h>
+# include <GL/gl.h>
+#endif
 
-#include <vtkm/opengl/testing/TestingOpenGLInterop.h>
+#ifdef VTKM_CUDA
+# include <cuda_runtime.h>
+# include <cuda_gl_interop.h>
+#endif
 
-int UnitTestTransferToOpenGLCuda(int, char *[])
-{
-  int result = 1;
-	result = vtkm::opengl::testing::TestingOpenGLInterop
-                           <vtkm::cont::cuda::DeviceAdapterTagCuda >::Run();
-  return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
-}
+
+
+
+#endif //vtk_m_interop_internal_OpenGLHeaders_h

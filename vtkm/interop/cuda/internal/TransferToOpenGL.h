@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_opengl_cuda_internal_TransferToOpenGL_h
-#define vtkm_opengl_cuda_internal_TransferToOpenGL_h
+#ifndef vtkm_interop_cuda_internal_TransferToOpenGL_h
+#define vtkm_interop_cuda_internal_TransferToOpenGL_h
 
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/ErrorControlBadAllocation.h>
@@ -26,7 +26,7 @@
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
 
-#include <vtkm/opengl/internal/TransferToOpenGL.h>
+#include <vtkm/interop/internal/TransferToOpenGL.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -36,7 +36,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
-namespace opengl {
+namespace interop {
 namespace internal {
 
 /// \brief cuda backend and opengl interop resource management
@@ -44,11 +44,11 @@ namespace internal {
 /// \c TransferResource manages cuda resource binding for a given buffer
 ///
 ///
-class CudaTransferResource : public vtkm::opengl::internal::TransferResource
+class CudaTransferResource : public vtkm::interop::internal::TransferResource
 {
 public:
   CudaTransferResource():
-    vtkm::opengl::internal::TransferResource()
+    vtkm::interop::internal::TransferResource()
   {
     this->Registered = false;
   }
@@ -146,12 +146,12 @@ public:
       this->State.DeduceAndSetType( ValueType() );
     }
 
-    this->Resource = dynamic_cast<vtkm::opengl::internal::CudaTransferResource*>
+    this->Resource = dynamic_cast<vtkm::interop::internal::CudaTransferResource*>
                                 (state.GetResource());
     if( !this->Resource )
     {
-      vtkm::opengl::internal::CudaTransferResource* cudaResource =
-          new vtkm::opengl::internal::CudaTransferResource();
+      vtkm::interop::internal::CudaTransferResource* cudaResource =
+          new vtkm::interop::internal::CudaTransferResource();
 
       //reset the resource to be a cuda resource
       this->State.SetResource( cudaResource );
@@ -219,15 +219,15 @@ public:
 
   }
 private:
-  vtkm::opengl::BufferState& State;
-  vtkm::opengl::internal::CudaTransferResource* Resource;
+  vtkm::interop::BufferState& State;
+  vtkm::interop::internal::CudaTransferResource* Resource;
 };
 
 
 
 }
 }
-} //namespace vtkm::opengl::cuda::internal
+} //namespace vtkm::interop::cuda::internal
 
 
 #endif

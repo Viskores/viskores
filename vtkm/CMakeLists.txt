@@ -52,7 +52,7 @@ add_subdirectory(testing)
 add_subdirectory(internal)
 
 if(VTKm_ENABLE_OPENGL_INTEROP)
-  add_subdirectory(opengl)
+  add_subdirectory(interop)
 endif(VTKm_ENABLE_OPENGL_INTEROP)
 
 #-----------------------------------------------------------------------------

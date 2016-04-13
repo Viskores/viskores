@@ -17,19 +17,19 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_opengl_internal_TransferToOpenGL_h
-#define vtk_m_opengl_internal_TransferToOpenGL_h
+#ifndef vtk_m_interop_internal_TransferToOpenGL_h
+#define vtk_m_interop_internal_TransferToOpenGL_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-#include <vtkm/opengl/internal/OpenGLHeaders.h>
-#include <vtkm/opengl/BufferState.h>
+#include <vtkm/interop/internal/OpenGLHeaders.h>
+#include <vtkm/interop/BufferState.h>
 
 
 namespace vtkm {
-namespace opengl {
+namespace interop {
 namespace internal {
 
 namespace detail
@@ -39,7 +39,7 @@ template<class ValueType, class StorageTag, class DeviceAdapterTag>
 VTKM_CONT_EXPORT
 void CopyFromHandle(
   vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
-  vtkm::opengl::BufferState& state,
+  vtkm::interop::BufferState& state,
   DeviceAdapterTag)
 {
   //Generic implementation that will work no matter what. We copy the data
@@ -86,7 +86,7 @@ template<class ValueType, class DeviceAdapterTag>
 VTKM_CONT_EXPORT
 void CopyFromHandle(
   vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic>& handle,
-  vtkm::opengl::BufferState& state,
+  vtkm::interop::BufferState& state,
   DeviceAdapterTag)
 {
   //Specialization given that we are use an C allocated array storage tag
@@ -168,20 +168,20 @@ public:
   detail::CopyFromHandle(handle, this->State, DeviceAdapterTag());
   }
 private:
-  vtkm::opengl::BufferState& State;
+  vtkm::interop::BufferState& State;
 };
 
 }
 }
-} //namespace vtkm::opengl::internal
+} //namespace vtkm::interop::internal
 
 //-----------------------------------------------------------------------------
 // These includes are intentionally placed here after the declaration of the
 // TransferToOpenGL class, so that people get the correct device adapter
 /// specializations if they exist.
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
-#include <vtkm/opengl/cuda/internal/TransferToOpenGL.h>
+#include <vtkm/interop/cuda/internal/TransferToOpenGL.h>
 #endif
 
 
-#endif //vtk_m_opengl_internal_TransferToOpenGL_h
+#endif //vtk_m_interop_internal_TransferToOpenGL_h

@@ -17,25 +17,39 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_opengl_internal_OpenGLHeaders_h
-#define vtk_m_opengl_internal_OpenGLHeaders_h
+#ifndef vtk_m_cuda_interop_SetOpenGLDevice_h
+#define vtk_m_cuda_interop_SetOpenGLDevice_h
 
-#include <vtkm/internal/ExportMacros.h>
+#include <cuda.h>
+#include <cuda_gl_interop.h>
 
-#if defined(__APPLE__)
-# include <GL/glew.h>
-# include <OpenGL/gl.h>
+#include <vtkm/cont/ErrorExecution.h>
+
+namespace vtkm{
+namespace interop{
+namespace cuda{
+
+static void SetCudaGLDevice(int id)
+{
+//With Cuda 5.0 cudaGLSetGLDevice is deprecated and shouldn't be needed
+//anymore. But it seems that macs still require you to call it or we
+//segfault
+#ifdef __APPLE__
+  cudaError_t cError = cudaGLSetGLDevice(id);
 #else
-# include <GL/glew.h>
-# include <GL/gl.h>
+  cudaError_t cError = cudaSetDevice(id);
 #endif
+  if(cError != cudaSuccess)
+    {
+    std::string cuda_error_msg("Unable to setup cuda/opengl interop. Error: ");
+    cuda_error_msg.append(cudaGetErrorString(cError));
+    throw vtkm::cont::ErrorExecution(cuda_error_msg);
+    }
+}
 
-#ifdef VTKM_CUDA
-# include <cuda_runtime.h>
-# include <cuda_gl_interop.h>
-#endif
 
+}
+}
+} //namespace
 
-
-
-#endif //vtk_m_opengl_internal_OpenGLHeaders_h
+#endif //vtk_m_cuda_interop_SetOpenGLDevice_h

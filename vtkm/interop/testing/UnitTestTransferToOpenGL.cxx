@@ -17,39 +17,14 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cuda_opengl_SetOpenGLDevice_h
-#define vtk_m_cuda_opengl_SetOpenGLDevice_h
 
-#include <cuda.h>
-#include <cuda_gl_interop.h>
 
-#include <vtkm/cont/ErrorExecution.h>
+//This sets up testing with the default device adapter and array container
+#include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/interop/testing/TestingOpenGLInterop.h>
 
-namespace vtkm{
-namespace opengl{
-namespace cuda{
-
-static void SetCudaGLDevice(int id)
+int UnitTestTransferToOpenGL(int, char *[])
 {
-//With Cuda 5.0 cudaGLSetGLDevice is deprecated and shouldn't be needed
-//anymore. But it seems that macs still require you to call it or we
-//segfault
-#ifdef __APPLE__
-  cudaError_t cError = cudaGLSetGLDevice(id);
-#else
-  cudaError_t cError = cudaSetDevice(id);
-#endif
-  if(cError != cudaSuccess)
-    {
-    std::string cuda_error_msg("Unable to setup cuda/opengl interop. Error: ");
-    cuda_error_msg.append(cudaGetErrorString(cError));
-    throw vtkm::cont::ErrorExecution(cuda_error_msg);
-    }
+  return vtkm::interop::testing::TestingOpenGLInterop<
+            vtkm::cont::DeviceAdapterTagSerial >::Run();
 }
-
-
-}
-}
-} //namespace
-
-#endif //vtk_m_cuda_opengl_SetOpenGLDevice_h

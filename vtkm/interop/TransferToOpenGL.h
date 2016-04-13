@@ -17,15 +17,15 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_opengl_TransferToOpenGL_h
-#define vtk_m_opengl_TransferToOpenGL_h
+#ifndef vtk_m_interop_TransferToOpenGL_h
+#define vtk_m_interop_TransferToOpenGL_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/opengl/BufferState.h>
-#include <vtkm/opengl/internal/TransferToOpenGL.h>
+#include <vtkm/interop/BufferState.h>
+#include <vtkm/interop/internal/TransferToOpenGL.h>
 
 namespace vtkm{
-namespace opengl{
+namespace interop{
 
 
 /// \brief Manages transferring an ArrayHandle to opengl .
@@ -47,10 +47,10 @@ void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> handle,
                       BufferState& state,
                       DeviceAdapterTag)
 {
-  vtkm::opengl::internal::TransferToOpenGL<ValueType, DeviceAdapterTag> toGL(state);
+  vtkm::interop::internal::TransferToOpenGL<ValueType, DeviceAdapterTag> toGL(state);
   return toGL.Transfer(handle);
 }
 
 }}
 
-#endif //vtk_m_opengl_TransferToOpenGL_h
+#endif //vtk_m_interop_TransferToOpenGL_h

@@ -17,7 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <vtkm/opengl/internal/BufferTypePicker.h>
+#include <vtkm/interop/internal/BufferTypePicker.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
@@ -29,22 +29,22 @@ void TestBufferTypePicker()
   typedef unsigned int vtkmUint;
   typedef vtkm::FloatDefault T;
 
-  type = vtkm::opengl::internal::BufferTypePicker(vtkm::Id());
+  type = vtkm::interop::internal::BufferTypePicker(vtkm::Id());
   VTKM_TEST_ASSERT(type == GL_ELEMENT_ARRAY_BUFFER, "Bad OpenGL Buffer Type");
-  type = vtkm::opengl::internal::BufferTypePicker(int());
+  type = vtkm::interop::internal::BufferTypePicker(int());
   VTKM_TEST_ASSERT(type == GL_ELEMENT_ARRAY_BUFFER, "Bad OpenGL Buffer Type");
-  type = vtkm::opengl::internal::BufferTypePicker(vtkmUint());
+  type = vtkm::interop::internal::BufferTypePicker(vtkmUint());
   VTKM_TEST_ASSERT(type == GL_ELEMENT_ARRAY_BUFFER, "Bad OpenGL Buffer Type");
 
-  type = vtkm::opengl::internal::BufferTypePicker(vtkm::Vec<T,4>());
+  type = vtkm::interop::internal::BufferTypePicker(vtkm::Vec<T,4>());
   VTKM_TEST_ASSERT(type == GL_ARRAY_BUFFER, "Bad OpenGL Buffer Type");
-  type = vtkm::opengl::internal::BufferTypePicker(vtkm::Vec<T,3>());
+  type = vtkm::interop::internal::BufferTypePicker(vtkm::Vec<T,3>());
   VTKM_TEST_ASSERT(type == GL_ARRAY_BUFFER, "Bad OpenGL Buffer Type");
-  type = vtkm::opengl::internal::BufferTypePicker(vtkm::FloatDefault());
+  type = vtkm::interop::internal::BufferTypePicker(vtkm::FloatDefault());
   VTKM_TEST_ASSERT(type == GL_ARRAY_BUFFER, "Bad OpenGL Buffer Type");
-  type = vtkm::opengl::internal::BufferTypePicker(float());
+  type = vtkm::interop::internal::BufferTypePicker(float());
   VTKM_TEST_ASSERT(type == GL_ARRAY_BUFFER, "Bad OpenGL Buffer Type");
-  type = vtkm::opengl::internal::BufferTypePicker(double());
+  type = vtkm::interop::internal::BufferTypePicker(double());
   VTKM_TEST_ASSERT(type == GL_ARRAY_BUFFER, "Bad OpenGL Buffer Type");
 }
 }

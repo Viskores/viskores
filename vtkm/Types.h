@@ -74,10 +74,10 @@ VTKM_THIRDPARTY_POST_INCLUDE
  * change. This should not be used for projects using VTKm. Instead it servers
  * are a reference for the developers of VTKm.
  *
- * \namespace vtkm::opengl
+ * \namespace vtkm::interop
  * \brief Utility opengl interop functions
  *
- * vtkm::opengl defines the publicly accessible API for interoperability between
+ * vtkm::interop defines the publicly accessible API for interoperability between
  * vtkm and opengl.
  *
  * \namespace vtkm::testing

@@ -29,7 +29,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/opengl/TransferToOpenGL.h>
+#include <vtkm/interop/TransferToOpenGL.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -58,8 +58,8 @@ struct HelloVTKMInterop
   GLuint ProgramId;
   GLuint VAOId;
 
-  vtkm::opengl::BufferState VBOState;
-  vtkm::opengl::BufferState ColorState;
+  vtkm::interop::BufferState VBOState;
+  vtkm::interop::BufferState ColorState;
 
   vtkm::cont::Timer<DeviceAdapter> Timer;
 
@@ -166,8 +166,8 @@ struct HelloVTKMInterop
   GenerateSurfaceWorklet worklet( t );
   DispatcherType(worklet).Invoke( this->InHandle, this->OutCoords, this->OutColors );
 
-  vtkm::opengl::TransferToOpenGL( this->OutCoords, this->VBOState, DeviceAdapter() );
-  vtkm::opengl::TransferToOpenGL( this->OutColors, this->ColorState, DeviceAdapter() );
+  vtkm::interop::TransferToOpenGL( this->OutCoords, this->VBOState, DeviceAdapter() );
+  vtkm::interop::TransferToOpenGL( this->OutColors, this->ColorState, DeviceAdapter() );
 
   this->render();
   if(t > 10)
