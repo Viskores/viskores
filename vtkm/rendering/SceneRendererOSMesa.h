@@ -47,7 +47,7 @@ public:
 
   VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
-			   const vtkm::cont::CoordinateSystem &coords,
+               const vtkm::cont::CoordinateSystem &coords,
          vtkm::cont::Field &scalarField,
          const vtkm::rendering::ColorTable &colorTable,
          vtkm::Float64 *scalarBounds)
@@ -108,30 +108,33 @@ public:
     glBegin(GL_TRIANGLES);
     for (int i = 0; i < numTri; i++)
     {
-  	  vtkm::Vec<vtkm::Id, 4> idx = indices.GetPortalConstControl().Get(i);
+      vtkm::Vec<vtkm::Id, 4> idx = indices.GetPortalConstControl().Get(i);
+      vtkm::Id i1 = idx[1];
+      vtkm::Id i2 = idx[2];
+      vtkm::Id i3 = idx[3];
 
-  	  vtkm::Vec<vtkm::Float32, 3> p1 = verts.GetPortalConstControl().Get(idx[1]);
-  	  vtkm::Vec<vtkm::Float32, 3> p2 = verts.GetPortalConstControl().Get(idx[2]);
-  	  vtkm::Vec<vtkm::Float32, 3> p3 = verts.GetPortalConstControl().Get(idx[3]);
+      vtkm::Vec<vtkm::Float32, 3> p1 = verts.GetPortalConstControl().Get(idx[1]);
+      vtkm::Vec<vtkm::Float32, 3> p2 = verts.GetPortalConstControl().Get(idx[2]);
+      vtkm::Vec<vtkm::Float32, 3> p3 = verts.GetPortalConstControl().Get(idx[3]);
 
       vtkm::Float32 s = scalar.GetPortalConstControl().Get(i1);
       s = (s-sMin)/sDiff;
 
-  	  Color color = ct.MapRGB(s);
-  	  glColor3fv(color.Components);
-  	  glVertex3f(p1[0],p1[1],p1[2]);
+      Color color = ct.MapRGB(s);
+      glColor3fv(color.Components);
+      glVertex3f(p1[0],p1[1],p1[2]);
 
-  	  s = scalar.GetPortalConstControl().Get(i2);
+      s = scalar.GetPortalConstControl().Get(i2);
       s = (s-sMin)/sDiff;
-  	  color = ct.MapRGB(s);
-  	  glColor3fv(color.Components);
-  	  glVertex3f(p2[0],p2[1],p2[2]);
+      color = ct.MapRGB(s);
+      glColor3fv(color.Components);
+      glVertex3f(p2[0],p2[1],p2[2]);
 
-  	  s = scalar.GetPortalConstControl().Get(i3);
+      s = scalar.GetPortalConstControl().Get(i3);
       s = (s-sMin)/sDiff;
-  	  color = ct.MapRGB(s);
-  	  glColor3fv(color.Components);
-  	  glVertex3f(p3[0],p3[1],p3[2]);
+      color = ct.MapRGB(s);
+      glColor3fv(color.Components);
+      glVertex3f(p3[0],p3[1],p3[2]);
     }
     glEnd();
   }
