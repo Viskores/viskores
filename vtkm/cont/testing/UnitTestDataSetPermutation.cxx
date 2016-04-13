@@ -107,8 +107,7 @@ void TestDataSet_Explicit()
   dataSet.GetCellSet(0).CopyTo(cellSet);
 
   //verify that we can create a subset of a singlset
-  typedef vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                    vtkm::cont::CellSetSingleType<> > SubsetType;
+  typedef vtkm::cont::CellSetPermutation< vtkm::cont::CellSetSingleType<> > SubsetType;
   SubsetType subset;
   subset.Fill(validCellIds,cellSet);
 
@@ -158,8 +157,7 @@ void TestDataSet_Structured2D()
   dataSet.GetCellSet(0).CopyTo(cellSet);
 
   //verify that we can create a subset of a 2d UniformDataSet
-  vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                            vtkm::cont::CellSetStructured<2> > subset;
+  vtkm::cont::CellSetPermutation< vtkm::cont::CellSetStructured<2> > subset;
   subset.Fill(validCellIds,cellSet);
 
   subset.PrintSummary(std::cout);
@@ -205,8 +203,7 @@ void TestDataSet_Structured3D()
   dataSet.GetCellSet(0).CopyTo(cellSet);
 
   //verify that we can create a subset of a 2d UniformDataSet
-  vtkm::cont::CellSetPermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                            vtkm::cont::CellSetStructured<3> > subset;
+  vtkm::cont::CellSetPermutation< vtkm::cont::CellSetStructured<3> > subset;
   subset.Fill(validCellIds,cellSet);
 
   subset.PrintSummary(std::cout);
