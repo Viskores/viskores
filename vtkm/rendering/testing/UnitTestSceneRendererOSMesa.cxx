@@ -19,10 +19,10 @@
 //============================================================================
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/rendering/Window.h>
-#include <vtkm/rendering/RenderSurface.h>
+#include <vtkm/rendering/RenderSurfaceOSMesa.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/Plot.h>
-#include <vtkm/rendering/SceneRendererOSMesa.h>
+#include <vtkm/rendering/SceneRendererGL.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 namespace {
@@ -35,7 +35,7 @@ void TestSceneRendererOSMesa()
      vtkm::cont::DataSet regularGrid = maker.Make3DRegularDataSet0();
      const vtkm::cont::CoordinateSystem coords = regularGrid.GetCoordinateSystem();
     
-     vtkm::rendering::SceneRendererOSMesa<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
+     vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
      vtkm::rendering::View3D &view = sceneRenderer.GetView();
 
      vtkm::Float64 coordsBounds[6]; // Xmin,Xmax,Ymin..
@@ -88,7 +88,7 @@ void TestSceneRendererOSMesa()
                                                  colorTable));
 */
 
-     vtkm::rendering::Window3D<vtkm::rendering::SceneRendererOSMesa<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+     vtkm::rendering::Window3D<vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                                vtkm::rendering::RenderSurfaceOSMesa>
          w(scene, sceneRenderer, surface, bg);
 

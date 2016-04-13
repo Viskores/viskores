@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_SceneRendererOSMesa_h
-#define vtk_m_rendering_SceneRendererOSMesa_h
+#ifndef vtk_m_rendering_SceneRendererGL_h
+#define vtk_m_rendering_SceneRendererGL_h
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/CoordinateSystem.h>
@@ -28,7 +28,6 @@
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Triangulator.h>
 
-#include <GL/osmesa.h>
 #include <GL/gl.h>
 #include <stdio.h>
 #include <iostream>
@@ -39,11 +38,11 @@ namespace vtkm {
 namespace rendering {
 
 template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
-class SceneRendererOSMesa : public SceneRenderer
+class SceneRendererGL : public SceneRenderer
 {
 public:
   VTKM_CONT_EXPORT
-  SceneRendererOSMesa() {}
+  SceneRendererGL() {}
 
   VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
@@ -142,4 +141,4 @@ public:
 
 }} //namespace vtkm::rendering
 
-#endif //vtk_m_rendering_SceneRendererOSMesa_h
+#endif //vtk_m_rendering_SceneRendererGL_h
