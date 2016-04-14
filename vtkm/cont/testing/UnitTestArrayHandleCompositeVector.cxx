@@ -27,6 +27,8 @@
 
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/DeviceAdapterSerial.h>
 #include <vtkm/cont/StorageBasic.h>
 
@@ -283,6 +285,38 @@ void TryVector()
   TryVector1(MakeInputArray<vtkm::Vec<vtkm::FloatDefault,3> >(0));
 }
 
+void TrySpecialArrays()
+{
+  std::cout << "Trying special arrays." << std::endl;
+
+  typedef vtkm::cont::ArrayHandleIndex ArrayType1;
+  ArrayType1 array1(ARRAY_SIZE);
+
+  typedef vtkm::cont::ArrayHandleConstant<vtkm::Id> ArrayType2;
+  ArrayType2 array2(295, ARRAY_SIZE);
+
+  typedef vtkm::cont::ArrayHandleCompositeVectorType<ArrayType1,ArrayType2>::type
+      CompositeArrayType;
+
+  CompositeArrayType compositeArray =
+      vtkm::cont::make_ArrayHandleCompositeVector(array1, 0, array2, 0);
+
+  vtkm::cont::printSummary_ArrayHandle(compositeArray, std::cout);
+  std::cout << std::endl;
+
+  VTKM_TEST_ASSERT(compositeArray.GetNumberOfValues() == ARRAY_SIZE,
+                   "Wrong array size.");
+
+  CompositeArrayType::PortalConstControl compositePortal =
+      compositeArray.GetPortalConstControl();
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  {
+    VTKM_TEST_ASSERT(
+          test_equal(compositePortal.Get(index), vtkm::Id2(index,295)),
+          "Bad value.");
+  }
+}
+
 void TestBadArrayLengths() {
   std::cout << "Checking behavior when size of input arrays do not agree."
             << std::endl;
@@ -310,6 +344,8 @@ void TestCompositeVector() {
   TryScalarArray<4>();
 
   TryVector();
+
+  TrySpecialArrays();
 
   TestBadArrayLengths();
 }
