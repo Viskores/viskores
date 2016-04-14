@@ -347,10 +347,8 @@ bool test_equal(VectorType1 vector1,
     {
       continue;
     }
+
     vtkm::Float64 ratio;
-    // The following condition is redundant since the previous check
-    // guarantees neither value will be zero, but the MSVC compiler
-    // sometimes complains about it.
     if ((vtkm::Abs(value2) > tolerance) && (value2 != 0))
     {
       ratio = value1 / value2;
