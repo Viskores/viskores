@@ -75,8 +75,8 @@ public:
         ret = OSMesaGetDepthBuffer(ctx, &w, &h, &zbytes, (void**)&raw_zbuff);
         if (!ret || w!=width || h!=height)
             throw vtkm::cont::ErrorControlBadValue("Wrong width/height in ZBuffer");
-        int npixels = width*height;
-        for (int i=0; i<npixels; i++)
+        std::size_t npixels = width*height;
+        for (std::size_t i=0; i<npixels; i++)
             zbuff[i] = float(raw_zbuff[i]) / float(UINT_MAX);
     }
 
