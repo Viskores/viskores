@@ -18,13 +18,19 @@
 //  this software.
 //============================================================================
 
+//silence boost threading warnings when using cuda
+#define BOOST_SP_DISABLE_THREADS
 
-//This sets up testing with the default device adapter and array container
-#include <vtkm/cont/DeviceAdapterSerial.h>
-#include <vtkm/opengl/testing/TestingOpenGLInterop.h>
+//This sets up testing with the cuda device adapter
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/cuda/internal/testing/Testing.h>
 
-int UnitTestTransferToOpenGL(int, char *[])
+#include <vtkm/interop/testing/TestingOpenGLInterop.h>
+
+int UnitTestTransferToOpenGLCuda(int, char *[])
 {
-  return vtkm::opengl::testing::TestingOpenGLInterop<
-            vtkm::cont::DeviceAdapterTagSerial >::Run();
+  int result = 1;
+	result = vtkm::interop::testing::TestingOpenGLInterop
+                           <vtkm::cont::cuda::DeviceAdapterTagCuda >::Run();
+  return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

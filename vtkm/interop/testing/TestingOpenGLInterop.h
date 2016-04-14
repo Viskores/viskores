@@ -17,16 +17,16 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_opengl_testing_TestingOpenGLInterop_h
-#define vtk_m_opengl_testing_TestingOpenGLInterop_h
+#ifndef vtk_m_interop_testing_TestingOpenGLInterop_h
+#define vtk_m_interop_testing_TestingOpenGLInterop_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/Magnitude.h>
 
-#include <vtkm/opengl/testing/TestingWindow.h>
-#include <vtkm/opengl/TransferToOpenGL.h>
+#include <vtkm/interop/testing/TestingWindow.h>
+#include <vtkm/interop/TransferToOpenGL.h>
 
 #include <vtkm/cont/testing/Testing.h>
 // #include <vtkm/cont/testing/TestingGridGenerator.h>
@@ -37,7 +37,7 @@
 
 
 namespace vtkm {
-namespace opengl {
+namespace interop {
 namespace testing {
 
 /// This class has a single static member, Run, that tests the templated
@@ -75,8 +75,8 @@ private:
   {
     try
       {
-      vtkm::opengl::BufferState state(handle);
-      vtkm::opengl::TransferToOpenGL(array, state, DeviceAdapterTag());
+      vtkm::interop::BufferState state(handle);
+      vtkm::interop::TransferToOpenGL(array, state, DeviceAdapterTag());
       }
     catch (vtkm::cont::ErrorControlBadAllocation error)
       {
@@ -98,8 +98,8 @@ private:
   {
     try
       {
-      vtkm::opengl::BufferState state(handle, type);
-      vtkm::opengl::TransferToOpenGL(array, state, DeviceAdapterTag());
+      vtkm::interop::BufferState state(handle, type);
+      vtkm::interop::TransferToOpenGL(array, state, DeviceAdapterTag());
       }
     catch (vtkm::cont::ErrorControlBadAllocation error)
       {
@@ -124,7 +124,7 @@ private:
   std::vector<T> CopyGLBuffer(GLuint& handle, T t)
   {
     //get the type we used for this buffer.
-    GLenum type = vtkm::opengl::internal::BufferTypePicker(t);
+    GLenum type = vtkm::interop::internal::BufferTypePicker(t);
 
     //bind the buffer to the guessed buffer type, this way
     //we can call CopyGLBuffer no matter what it the active buffer
@@ -179,7 +179,7 @@ private:
 
       temp.ReleaseResources();
       temp = FillArray(tempData,Size*2);
-      GLenum type = vtkm::opengl::internal::BufferTypePicker(t);
+      GLenum type = vtkm::interop::internal::BufferTypePicker(t);
       SafelyTransferArray(temp,GLHandle,type);
       is_buffer = glIsBuffer(GLHandle);
       VTKM_TEST_ASSERT(is_buffer==true,
@@ -282,7 +282,7 @@ public:
   VTKM_CONT_EXPORT static int Run()
     {
     //create a valid openGL context that we can test transfer of data
-    vtkm::opengl::testing::TestingWindow window;
+    vtkm::interop::testing::TestingWindow window;
     window.Init("Testing Window", 300, 300);
 
     //verify that we can transfer basic arrays and constant value arrays to opengl
@@ -303,4 +303,4 @@ public:
 
 } } }
 
-#endif //vtk_m_opengl_testing_TestingOpenGLInterop_h
+#endif //vtk_m_interop_testing_TestingOpenGLInterop_h

@@ -17,11 +17,11 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_opengl_testing_TestingWindow_h
-#define vtk_m_opengl_testing_TestingWindow_h
+#ifndef vtk_m_interop_testing_TestingWindow_h
+#define vtk_m_interop_testing_TestingWindow_h
 
 #include <vtkm/internal/ExportMacros.h>
-#include <vtkm/opengl/testing/WindowBase.h>
+#include <vtkm/interop/testing/WindowBase.h>
 
 #if defined(VTKM_GCC) && defined(VTKM_POSIX) && !defined(__APPLE__)
 //
@@ -77,7 +77,7 @@ static int vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug()
 
 
 namespace vtkm{
-namespace opengl{
+namespace interop{
 namespace testing{
 
 /// \brief Basic Render Window that only makes sure opengl has a valid context
@@ -86,7 +86,7 @@ namespace testing{
 /// has no ability to interact with opengl other than to close down the window
 ///
 ///
-class TestingWindow : public vtkm::opengl::testing::WindowBase<TestingWindow>
+class TestingWindow : public vtkm::interop::testing::WindowBase<TestingWindow>
 {
 public:
   VTKM_CONT_EXPORT TestingWindow(){};
@@ -136,4 +136,4 @@ public:
 }
 }
 }
-#endif //vtk_m_opengl_testing_TestingWindow_h
+#endif //vtk_m_interop_testing_TestingWindow_h

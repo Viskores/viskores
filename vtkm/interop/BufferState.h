@@ -17,19 +17,19 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_opengl_BufferState_h
-#define vtk_m_opengl_BufferState_h
+#ifndef vtk_m_interop_BufferState_h
+#define vtk_m_interop_BufferState_h
 
 //gl headers needs to be buffer anything to do with buffer's
-#include <vtkm/opengl/internal/OpenGLHeaders.h>
-#include <vtkm/opengl/internal/BufferTypePicker.h>
+#include <vtkm/interop/internal/OpenGLHeaders.h>
+#include <vtkm/interop/internal/BufferTypePicker.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/smart_ptr/scoped_ptr.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm{
-namespace opengl{
+namespace interop{
 
 
 namespace internal
@@ -125,7 +125,7 @@ public:
   /// will be GL_ARRAY_BUFFER for everything else.
   template<typename T>
   void DeduceAndSetType(T t)
-    { this->BufferType = vtkm::opengl::internal::BufferTypePicker(t); }
+    { this->BufferType = vtkm::interop::internal::BufferTypePicker(t); }
 
   /// \brief Get the size of the buffer in bytes
   ///
@@ -162,11 +162,11 @@ public:
   void SetCapacity(vtkm::Int64 capacity) { this->CapacityOfBuffer = capacity; }
 
   //Note: This call should only be used internally by vtk-m
-  vtkm::opengl::internal::TransferResource* GetResource()
+  vtkm::interop::internal::TransferResource* GetResource()
     { return this->Resource.get(); }
 
   //Note: This call should only be used internally by vtk-m
-  void SetResource( vtkm::opengl::internal::TransferResource* resource)
+  void SetResource( vtkm::interop::internal::TransferResource* resource)
     { this->Resource.reset(resource); }
 
 
@@ -180,9 +180,9 @@ private:
   vtkm::Int64 SizeOfActiveSection; //must be Int64 as size can be over 2billion
   vtkm::Int64 CapacityOfBuffer; //must be Int64 as size can be over 2billion
   GLuint DefaultGLHandle;
-  boost::scoped_ptr<vtkm::opengl::internal::TransferResource> Resource;
+  boost::scoped_ptr<vtkm::interop::internal::TransferResource> Resource;
 };
 
 }}
 
-#endif //vtk_m_opengl_BufferState_h
+#endif //vtk_m_interop_BufferState_h

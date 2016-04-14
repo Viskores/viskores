@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_m_opengl_testing_WindowBase_h
-#define vtkm_m_opengl_testing_WindowBase_h
+#ifndef vtkm_m_interop_testing_WindowBase_h
+#define vtkm_m_interop_testing_WindowBase_h
 
 //constructs a valid openGL context so that we can verify
 //that vtkm to open gl bindings work
@@ -32,7 +32,7 @@
 
 // OpenGL Graphics includes
 //glew needs to go before glut
-#include <vtkm/opengl/internal/OpenGLHeaders.h>
+#include <vtkm/interop/internal/OpenGLHeaders.h>
 #if defined (__APPLE__)
 # include <GLUT/glut.h>
 #else
@@ -43,14 +43,14 @@
 
 #ifdef VTKM_CUDA
 # include <vtkm/cont/cuda/ChooseCudaDevice.h>
-# include <vtkm/opengl/cuda/SetOpenGLDevice.h>
+# include <vtkm/interop/cuda/SetOpenGLDevice.h>
 #endif
 
 #include <iostream>
 
 
 namespace vtkm{
-namespace opengl{
+namespace interop{
 namespace testing{
 
 namespace internal
@@ -101,7 +101,7 @@ public:
 
 #ifdef VTKM_CUDA
     int id = vtkm::cont::cuda::FindFastestDeviceId();
-    vtkm::opengl::cuda::SetCudaGLDevice(id);
+    vtkm::interop::cuda::SetCudaGLDevice(id);
 #endif
 
   //attach all the glut call backs
@@ -168,4 +168,4 @@ public:
 # pragma GCC diagnostic pop
 #endif
 
-#endif //vtkm_m_opengl_testing_WindowBase_h
+#endif //vtkm_m_interop_testing_WindowBase_h
