@@ -29,7 +29,6 @@ set(headers
   ExecutionObjectBase.h
   ExecutionWholeArray.h
   FunctorBase.h
-  NewtonsMethod.h
   ParametricCoordinates.h
   )
 
