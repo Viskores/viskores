@@ -48,7 +48,7 @@ public:
   VTKM_CONT_EXPORT
   virtual vtkm::rendering::View3D& GetView()
   {
-    return View;
+      return View;
   }
 
   VTKM_CONT_EXPORT
