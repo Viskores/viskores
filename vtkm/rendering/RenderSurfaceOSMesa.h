@@ -73,7 +73,7 @@ public:
         int zbytes, w, h;
         GLboolean ret;
         ret = OSMesaGetDepthBuffer(ctx, &w, &h, &zbytes, (void**)&raw_zbuff);
-        if (!ret || w!=width || h!=height)
+        if (!ret || static_cast<std::size_t>(w)!=width || static_cast<std::size_t>(h)!=height)
             throw vtkm::cont::ErrorControlBadValue("Wrong width/height in ZBuffer");
         std::size_t npixels = width*height;
         for (std::size_t i=0; i<npixels; i++)
