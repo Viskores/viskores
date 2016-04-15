@@ -51,7 +51,7 @@ public:
         if (!ctx)
             throw vtkm::cont::ErrorControlBadValue("OSMesa context creation failed.");
         rgba.resize(width*height*4);
-        if (!OSMesaMakeCurrent(ctx, &rgba[0], GL_FLOAT, width, height))
+        if (!OSMesaMakeCurrent(ctx, &rgba[0], GL_FLOAT, int(width), int(height)))
             throw vtkm::cont::ErrorControlBadValue("OSMesa context activation failed.");
 
         glEnable(GL_DEPTH_TEST);
@@ -145,7 +145,7 @@ public:
     {
         std::ofstream of(fileName.c_str());
         of<<"P6"<<std::endl<<width<<" "<<height<<std::endl<<255<<std::endl;
-        for (int i=height-1; i>=0; i--)
+        for (int i=int(height)-1; i>=0; i--)
             for (std::size_t j=0; j < width; j++)
             { 
                 const vtkm::Float32 *tuple = &(rgba[i*width*4 + j*4]);
