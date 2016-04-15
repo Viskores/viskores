@@ -20,6 +20,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/rendering/Window.h>
 #include <vtkm/rendering/RenderSurfaceOSMesa.h>
+#include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/Plot.h>
 #include <vtkm/rendering/SceneRendererGL.h>
@@ -89,7 +90,8 @@ void TestSceneRendererOSMesa()
 */
 
      vtkm::rendering::Window3D<vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                               vtkm::rendering::RenderSurfaceOSMesa>
+                               vtkm::rendering::RenderSurfaceOSMesa,
+                               vtkm::rendering::WorldAnnotatorGL>
          w(scene, sceneRenderer, surface, bg);
 
      w.Initialize();

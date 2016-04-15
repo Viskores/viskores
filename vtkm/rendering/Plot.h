@@ -39,6 +39,8 @@ public:
     {
         f.GetBounds(scalarBounds,
                     VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+        c.GetBounds(spatialBounds,
+                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     }
 
     template<typename SceneRendererType, typename SurfaceType>
@@ -58,6 +60,7 @@ public:
     vtkm::rendering::ColorTable colorTable;
 
     vtkm::Float64 scalarBounds[2];
+    vtkm::Float64 spatialBounds[6];
 };
 
 }} //namespace vtkm::rendering

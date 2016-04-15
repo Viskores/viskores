@@ -42,13 +42,32 @@ public:
     void Render(SceneRendererType &sceneRenderer,
                 SurfaceType &surface)
     {
+        spatialBounds[0] = spatialBounds[2] = spatialBounds[4] = +FLT_MAX;
+        spatialBounds[1] = spatialBounds[3] = spatialBounds[5] = -FLT_MAX;
+
+        sceneRenderer.StartScene();
         for (std::size_t i = 0; i < plots.size(); i++)
         {
-            sceneRenderer.StartScene();
             plots[i].Render(sceneRenderer, surface);
-            sceneRenderer.EndScene();
+
+            // accumulate all plots' spatial bounds into the scene spatial bounds
+            spatialBounds[0] = std::min(spatialBounds[0], plots[i].spatialBounds[0]);
+            spatialBounds[1] = std::max(spatialBounds[1], plots[i].spatialBounds[1]);
+            spatialBounds[2] = std::min(spatialBounds[2], plots[i].spatialBounds[2]);
+            spatialBounds[3] = std::max(spatialBounds[3], plots[i].spatialBounds[3]);
+            spatialBounds[4] = std::min(spatialBounds[4], plots[i].spatialBounds[4]);
+            spatialBounds[5] = std::max(spatialBounds[5], plots[i].spatialBounds[5]);
         }
+        sceneRenderer.EndScene();
     }
+
+    double *GetSpatialBounds()
+    {
+        return spatialBounds;
+    }
+
+protected:
+    double spatialBounds[6];
 };
 
 class Scene2D : public Scene

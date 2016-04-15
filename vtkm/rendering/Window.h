@@ -25,21 +25,28 @@
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/BoundingBoxAnnotation.h>
 
 namespace vtkm {
 namespace rendering {
 
 // Window2D Window3D
-template<typename SceneRendererType, typename SurfaceType>
+template<typename SceneRendererType,
+         typename SurfaceType,
+         typename WorldAnnotatorType>
 class Window3D
 {
 public:
     Color bgColor;
     vtkm::rendering::Scene3D scene;
+    WorldAnnotatorType worldAnnotator;
     SceneRendererType sceneRenderer;
     SurfaceType surface;
     //vtkm::rendering::View3D view;
-  
+
+    // 3D-specific annotations
+    BoundingBoxAnnotation bbox;
+
     VTKM_CONT_EXPORT
     Window3D(const vtkm::rendering::Scene3D &s,
              const SceneRendererType &sr,
@@ -64,8 +71,18 @@ public:
         SetupForWorldSpace();
         
         scene.Render(sceneRenderer, surface);
-        
+        RenderWorldAnnotations();
+
         surface.Finish();
+    }
+
+    VTKM_CONT_EXPORT
+    void RenderWorldAnnotations()
+    {
+        bbox.SetColor(Color(.5,.5,.5));
+        bbox.SetExtents(scene.GetSpatialBounds());
+        bbox.Render(sceneRenderer.GetView(),
+                    worldAnnotator);
     }
 
     VTKM_CONT_EXPORT
