@@ -51,7 +51,7 @@ public:
         if (!ctx)
             throw vtkm::cont::ErrorControlBadValue("OSMesa context creation failed.");
         rgba.resize(width*height*4);
-        if (!OSMesaMakeCurrent(ctx, &rgba[0], GL_FLOAT, width, height))
+        if (!OSMesaMakeCurrent(ctx, &rgba[0], GL_FLOAT, static_cast<GLsizei>(width), static_cast<GLsizei>(height)))
             throw vtkm::cont::ErrorControlBadValue("OSMesa context activation failed.");
 
         glEnable(GL_DEPTH_TEST);
@@ -81,7 +81,7 @@ public:
     }
 
     VTKM_CONT_EXPORT
-    virtual void SetViewToWorldSpace(vtkm::rendering::View3D &v, bool clip)
+    virtual void SetViewToWorldSpace(vtkm::rendering::View &v, bool clip)
     {
         vtkm::Float32 oglP[16], oglM[16];
 
@@ -89,6 +89,15 @@ public:
         glMatrixMode(GL_PROJECTION);
         glLoadMatrixf(oglP);
 
+        /*
+        std::cout<<"Proj: pos: "<<v.view3d.pos<<std::endl;
+        std::cout<<"       up: "<<v.view3d.up<<std::endl;
+        std::cout<<"   lookAt: "<<v.view3d.lookAt<<std::endl;
+        std::cout<<" near/far: "<<v.view3d.nearPlane<<" "<<v.view3d.farPlane<<std::endl;
+        std::cout<<"      fov: "<<v.view3d.fieldOfView<<std::endl;
+        printMatrix(oglP);
+        */
+        
         CreateOGLMatrix(v.CreateViewMatrix(), oglM);
         glMatrixMode(GL_MODELVIEW);
         glLoadMatrixf(oglM);
@@ -97,24 +106,24 @@ public:
     }
 
     VTKM_CONT_EXPORT
-    virtual void SetViewportClipping(vtkm::rendering::View3D &v, bool clip)
+    virtual void SetViewportClipping(vtkm::rendering::View &v, bool clip)
     {
         if (clip)
         {
             vtkm::Float32 vl, vr, vt, vb;
             v.GetRealViewport(vl,vr,vt,vb);
-            double x = vtkm::Float32(v.Width)*(1.+vl)/2.;
-            double y = vtkm::Float32(v.Height)*(1.+vb)/2.;
-            double a = vtkm::Float32(v.Width)*(vr-vl)/2.;
-            double b = vtkm::Float32(v.Height)*(vt-vb)/2.;
-            glViewport(int(float(v.Width)*(1.+vl)/2.),
-                       int(float(v.Height)*(1.+vb)/2.),
-                       int(float(v.Width)*(vr-vl)/2.),
-                       int(float(v.Height)*(vt-vb)/2.));
+            double x = vtkm::Float32(v.width)*(1.+vl)/2.;
+            double y = vtkm::Float32(v.height)*(1.+vb)/2.;
+            double a = vtkm::Float32(v.width)*(vr-vl)/2.;
+            double b = vtkm::Float32(v.height)*(vt-vb)/2.;
+            glViewport(int(float(v.width)*(1.+vl)/2.),
+                       int(float(v.height)*(1.+vb)/2.),
+                       int(float(v.width)*(vr-vl)/2.),
+                       int(float(v.height)*(vt-vb)/2.));
         }
         else
         {
-            glViewport(0,0, v.Width, v.Height);
+            glViewport(0,0, v.width, v.height);
         }
     }
 
@@ -145,7 +154,8 @@ public:
     {
         std::ofstream of(fileName.c_str());
         of<<"P6"<<std::endl<<width<<" "<<height<<std::endl<<255<<std::endl;
-        for (int i=height-1; i>=0; i--)
+        int hi = static_cast<int>(height);
+        for (int i=hi-1; i>=0; i--)
             for (std::size_t j=0; j < width; j++)
             { 
                 const vtkm::Float32 *tuple = &(rgba[i*width*4 + j*4]);

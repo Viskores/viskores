@@ -46,10 +46,11 @@ public:
 
   VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
-               const vtkm::cont::CoordinateSystem &coords,
-         vtkm::cont::Field &scalarField,
-         const vtkm::rendering::ColorTable &colorTable,
-         vtkm::Float64 *scalarBounds)
+                           const vtkm::cont::CoordinateSystem &coords,
+                           vtkm::cont::Field &scalarField,
+                           const vtkm::rendering::ColorTable &colorTable,
+                           vtkm::rendering::View &,
+                           vtkm::Float64 *scalarBounds)
   {
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;
     vtkm::Id numTri;

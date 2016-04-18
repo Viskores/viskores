@@ -29,6 +29,61 @@
 namespace vtkm {
 namespace rendering {
 
+template<typename SceneType, typename SceneRendererType, typename SurfaceType>
+class Window
+{
+public:
+    SceneType scene;
+    SceneRendererType sceneRenderer;
+    SurfaceType surface;
+    vtkm::rendering::Color bgColor;
+    vtkm::rendering::View view;
+  
+    VTKM_CONT_EXPORT
+    Window(const SceneType &s,
+           const SceneRendererType &sr,
+           const SurfaceType &surf,
+           const vtkm::rendering::View &v,
+           const vtkm::rendering::Color &bg=vtkm::rendering::Color(0,0,0,1)) :
+        scene(s), sceneRenderer(sr), bgColor(bg), surface(surf), view(v)
+    {
+        sceneRenderer.SetBackgroundColor(bgColor);
+    }
+
+    VTKM_CONT_EXPORT
+    void Initialize()
+    {
+        surface.Initialize();
+    }
+
+    VTKM_CONT_EXPORT
+    void Paint()
+    {
+        surface.Activate();
+        surface.Clear();
+        SetupForWorldSpace();
+        
+        scene.Render(sceneRenderer, surface, view);
+        
+        surface.Finish();
+    }
+
+    VTKM_CONT_EXPORT
+    void SaveAs(const std::string &fileName)
+    {
+        surface.SaveAs(fileName);
+    }
+
+private:
+    VTKM_CONT_EXPORT
+    void SetupForWorldSpace(bool viewportClip=true)
+    {
+        //view.SetupMatrices();
+        surface.SetViewToWorldSpace(view, viewportClip);
+    }
+};
+
+#if 0
 // Window2D Window3D
 template<typename SceneRendererType, typename SurfaceType>
 class Window3D
@@ -38,7 +93,7 @@ public:
     vtkm::rendering::Scene3D scene;
     SceneRendererType sceneRenderer;
     SurfaceType surface;
-    //vtkm::rendering::View3D view;
+    vtkm::rendering::View3D view;
   
     VTKM_CONT_EXPORT
     Window3D(const vtkm::rendering::Scene3D &s,
@@ -79,8 +134,7 @@ private:
     void SetupForWorldSpace(bool viewportClip=true)
     {
         //view.SetupMatrices();
-        surface.SetViewToWorldSpace(sceneRenderer.GetView(),
-                                    viewportClip);
+        surface.SetViewToWorldSpace(view,viewportClip);
     }
 };
 
@@ -102,6 +156,7 @@ public:
     {
     }
 };
+#endif
 
 }} //namespace vtkm::rendering
 

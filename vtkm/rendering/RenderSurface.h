@@ -52,9 +52,9 @@ public:
     virtual void Finish() {}
 
     VTKM_CONT_EXPORT
-    virtual void SetViewToWorldSpace(vtkm::rendering::View3D &, bool) {}
+    virtual void SetViewToWorldSpace(vtkm::rendering::View &, bool) {}
     VTKM_CONT_EXPORT
-    void SetViewportClipping(vtkm::rendering::View3D &, bool) {}
+    void SetViewportClipping(vtkm::rendering::View &, bool) {}
 
     VTKM_CONT_EXPORT
     virtual void SaveAs(const std::string &) {}

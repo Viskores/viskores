@@ -21,6 +21,7 @@
 #define vtk_m_rendering_Scene_h
 
 #include <vtkm/rendering/Plot.h>
+#include <vtkm/rendering/View.h>
 #include <vector>
 
 namespace vtkm {
@@ -40,12 +41,13 @@ public:
     template<typename SceneRendererType, typename SurfaceType>
     VTKM_CONT_EXPORT
     void Render(SceneRendererType &sceneRenderer,
-                SurfaceType &surface)
+                SurfaceType &surface,
+                vtkm::rendering::View &view)
     {
         for (std::size_t i = 0; i < plots.size(); i++)
         {
             sceneRenderer.StartScene();
-            plots[i].Render(sceneRenderer, surface);
+            plots[i].Render(sceneRenderer, surface, view);
             sceneRenderer.EndScene();
         }
     }
@@ -56,11 +58,18 @@ class Scene2D : public Scene
 public:
     Scene2D() {}
 
-    template<typename SceneRendererType>
+    template<typename SceneRendererType, typename SurfaceType>
     VTKM_CONT_EXPORT
-    void Render(vtkm::rendering::View3D &vtkmNotUsed(view),
-                SceneRendererType &vtkmNotUsed(sceneRenderer) )
+    void Render(SceneRendererType &sceneRenderer,
+                SurfaceType &surface,
+                vtkm::rendering::View &view)
     {
+        for (std::size_t i = 0; i < plots.size(); i++)
+        {
+            sceneRenderer.StartScene();
+            plots[i].Render(sceneRenderer, surface, view);
+            sceneRenderer.EndScene();
+        }
     }
 };
 

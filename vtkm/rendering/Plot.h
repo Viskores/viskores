@@ -21,6 +21,7 @@
 #define vtk_m_rendering_Plot_h
 
 #include <vtkm/rendering/SceneRenderer.h>
+#include <vtkm/rendering/View.h>
 #include <vector>
 
 namespace vtkm {
@@ -44,12 +45,15 @@ public:
     template<typename SceneRendererType, typename SurfaceType>
     VTKM_CONT_EXPORT
     void Render(SceneRendererType &sr,
-                SurfaceType &)//surface)
+                SurfaceType &, //surface
+                vtkm::rendering::View &view)
     {
         //??????
         //feed surface into sr somehow??
+        //TODO: Get rid of surface.
+        sr.SetActiveColorTable(colorTable);
         sr.RenderCells(cellSet, coords, scalarField,
-                       colorTable, scalarBounds);
+                       colorTable, view, scalarBounds);
     }
     
     vtkm::cont::DynamicCellSet cellSet;
