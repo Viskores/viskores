@@ -22,12 +22,12 @@
 
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
+#include <vtkm/NewtonsMethod.h>
 #include <vtkm/VecRectilinearPointCoordinates.h>
 #include <vtkm/exec/Assert.h>
 #include <vtkm/exec/CellDerivative.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/FunctorBase.h>
-#include <vtkm/exec/NewtonsMethod.h>
 
 namespace vtkm {
 namespace exec {
@@ -644,7 +644,7 @@ WorldCoordinatesToParametricCoordinates3D(
     CellShapeTag,
     const vtkm::exec::FunctorBase &worklet)
 {
-  return vtkm::exec::NewtonsMethod(
+  return vtkm::NewtonsMethod(
         JacobianFunctor3DCell<WorldCoordVector,CellShapeTag>(&pointWCoords),
         CoordinatesFunctor3DCell<WorldCoordVector,CellShapeTag>(&pointWCoords, &worklet),
         wcoords,
@@ -917,7 +917,7 @@ WorldCoordinatesToParametricCoordinates(
         pointWCoords[0], pointWCoords[1], pointWCoords[3]);
 
   Vector2 pcoords =
-      vtkm::exec::NewtonsMethod(
+      vtkm::NewtonsMethod(
         detail::JacobianFunctorQuad<WorldCoordVector,vtkm::CellShapeTagQuad>(&pointWCoords, &space),
         detail::CoordinatesFunctorQuad<WorldCoordVector,vtkm::CellShapeTagQuad>(&pointWCoords, &space, &worklet),
         space.ConvertCoordToSpace(wcoords),

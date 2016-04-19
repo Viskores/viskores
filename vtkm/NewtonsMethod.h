@@ -17,14 +17,13 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_NewtonsMethod_h
-#define vtk_m_exec_NewtonsMethod_h
+#ifndef vtk_m_NewtonsMethod_h
+#define vtk_m_NewtonsMethod_h
 
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
 
 namespace vtkm {
-namespace exec {
 
 /// Uses Newton's method (a.k.a. Newton-Raphson method) to solve a nonlinear
 /// system of equations. This function assumes that the number of variables
@@ -36,11 +35,12 @@ namespace exec {
 /// that evaluates to the desired output, or the closest point found, is
 /// returned.
 ///
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename ScalarType,
          vtkm::IdComponent Size,
          typename JacobianFunctor,
          typename FunctionFunctor>
-VTKM_EXEC_EXPORT
+VTKM_EXEC_CONT_EXPORT
 vtkm::Vec<ScalarType,Size>
 NewtonsMethod(JacobianFunctor jacobianEvaluator,
               FunctionFunctor functionEvaluator,
@@ -92,7 +92,6 @@ NewtonsMethod(JacobianFunctor jacobianEvaluator,
   return x;
 }
 
-}
-} // namespace vtkm::exec
+} // namespace vtkm
 
-#endif //vtk_m_exec_NewtonsMethod_h
+#endif //vtk_m_NewtonsMethod_h

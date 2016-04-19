@@ -29,6 +29,7 @@ set(headers
   ListTag.h
   Math.h
   Matrix.h
+  NewtonsMethod.h
   Pair.h
   StaticAssert.h
   TopologyElementTag.h

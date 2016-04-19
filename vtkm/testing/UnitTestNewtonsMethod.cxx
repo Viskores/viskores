@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/exec/NewtonsMethod.h>
+#include <vtkm/NewtonsMethod.h>
 
 #include <vtkm/testing/Testing.h>
 
@@ -37,7 +37,7 @@ struct EvaluateFunctions
 {
   typedef vtkm::Vec<T,3> Vector3;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   Vector3 operator()(Vector3 x) const
   {
     Vector3 fx;
@@ -53,7 +53,7 @@ struct EvaluateJacobian
   typedef vtkm::Vec<T,3> Vector3;
   typedef vtkm::Matrix<T,3,3> Matrix3x3;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   Matrix3x3 operator()(Vector3 x) const {
     Matrix3x3 jacobian;
     jacobian(0,0) = 2*x[0];  jacobian(0,1) = 2*x[1];  jacobian(0,2) = 2*x[2];
@@ -84,11 +84,11 @@ void TestNewtonsMethodTemplate()
         std::cout << "   " << initialGuess << std::endl;
 
         Vector3 solution =
-            vtkm::exec::NewtonsMethod(EvaluateJacobian<T>(),
-                                      EvaluateFunctions<T>(),
-                                      desiredOutput,
-                                      initialGuess,
-                                      T(1e-6));
+            vtkm::NewtonsMethod(EvaluateJacobian<T>(),
+                                EvaluateFunctions<T>(),
+                                desiredOutput,
+                                initialGuess,
+                                T(1e-6));
 
         VTKM_TEST_ASSERT(test_equal(solution, expected1)
                          || test_equal(solution, expected2),
