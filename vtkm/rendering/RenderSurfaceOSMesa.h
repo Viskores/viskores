@@ -112,14 +112,13 @@ public:
         {
             vtkm::Float32 vl, vr, vt, vb;
             v.GetRealViewport(vl,vr,vt,vb);
-            double x = vtkm::Float32(v.width)*(1.+vl)/2.;
-            double y = vtkm::Float32(v.height)*(1.+vb)/2.;
-            double a = vtkm::Float32(v.width)*(vr-vl)/2.;
-            double b = vtkm::Float32(v.height)*(vt-vb)/2.;
-            glViewport(int(float(v.width)*(1.+vl)/2.),
-                       int(float(v.height)*(1.+vb)/2.),
-                       int(float(v.width)*(vr-vl)/2.),
-                       int(float(v.height)*(vt-vb)/2.));
+            vtkm::Float32 _x = static_cast<vtkm::Float32>(v.width)*(1.f+vl)/2.f;
+            vtkm::Float32 _y = static_cast<vtkm::Float32>(v.height)*(1.f+vb)/2.f;
+            vtkm::Float32 _w = static_cast<vtkm::Float32>(v.width)*(vr-vl)/2.f;
+            vtkm::Float32 _h = static_cast<vtkm::Float32>(v.height)*(vt-vb)/2.f;
+
+            glViewport(static_cast<int>(_x), static_cast<int>(_y),
+                       static_cast<int>(_w), static_cast<int>(_h));
         }
         else
         {
