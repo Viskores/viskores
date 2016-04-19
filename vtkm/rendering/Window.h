@@ -26,6 +26,7 @@
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/BoundingBoxAnnotation.h>
+#include <vtkm/rendering/AxisAnnotation3D.h>
 
 namespace vtkm {
 namespace rendering {
@@ -40,7 +41,7 @@ public:
     SurfaceType surface;
     vtkm::rendering::Color bgColor;
     vtkm::rendering::View view;
-  
+
     VTKM_CONT_EXPORT
     Window(const SceneType &s,
            const SceneRendererType &sr,
@@ -102,6 +103,7 @@ public:
 
     // 3D-specific annotations
     BoundingBoxAnnotation bbox;
+    AxisAnnotation3D xaxis, yaxis, zaxis;
 
     VTKM_CONT_EXPORT
     Window3D(const vtkm::rendering::Scene3D &s,
@@ -136,9 +138,71 @@ public:
     VTKM_CONT_EXPORT
     void RenderWorldAnnotations()
     {
+        double *bnd = scene.GetSpatialBounds();
+        double xmin = bnd[0], xmax = bnd[1];
+        double ymin = bnd[2], ymax = bnd[3];
+        double zmin = bnd[4], zmax = bnd[5];
+        double dx = xmax-xmin, dy = ymax-ymin, dz = zmax-zmin;
+        double size = sqrt(dx*dx + dy*dy + dz*dz);
+
         bbox.SetColor(Color(.5,.5,.5));
         bbox.SetExtents(scene.GetSpatialBounds());
         bbox.Render(view, worldAnnotator);
+
+        ///\todo: set x/y/ztest based on view
+        bool xtest=true, ytest=false, ztest=false;
+
+        double xrel = fabs(dx) / size;
+        double yrel = fabs(dy) / size;
+        double zrel = fabs(dz) / size;
+
+        xaxis.SetAxis(0);
+        xaxis.SetColor(Color(1,1,1));
+        xaxis.SetTickInvert(xtest,ytest,ztest);
+        xaxis.SetWorldPosition(xmin,
+                               ytest ? ymin : ymax,
+                               ztest ? zmin : zmax,
+                               xmax,
+                               ytest ? ymin : ymax,
+                               ztest ? zmin : zmax);
+        xaxis.SetRange(xmin, xmax);
+        xaxis.SetMajorTickSize(size / 40., 0);
+        xaxis.SetMinorTickSize(size / 80., 0);
+        xaxis.SetLabelFontScale(size / 30.);
+        xaxis.SetMoreOrLessTickAdjustment(xrel < .3 ? -1 : 0);
+        xaxis.Render(view, worldAnnotator);
+
+        yaxis.SetAxis(0);
+        yaxis.SetColor(Color(1,1,1));
+        yaxis.SetTickInvert(xtest,ytest,ztest);
+        yaxis.SetWorldPosition(xtest ? xmin : xmax,
+                               ymin,
+                               ztest ? zmin : zmax,
+                               xtest ? xmin : xmax,
+                               ymax,
+                               ztest ? zmin : zmax);
+        yaxis.SetRange(ymin, ymax);
+        yaxis.SetMajorTickSize(size / 40., 0);
+        yaxis.SetMinorTickSize(size / 80., 0);
+        yaxis.SetLabelFontScale(size / 30.);
+        yaxis.SetMoreOrLessTickAdjustment(yrel < .3 ? -1 : 0);
+        yaxis.Render(view, worldAnnotator);
+
+        zaxis.SetAxis(0);
+        zaxis.SetColor(Color(1,1,1));
+        zaxis.SetTickInvert(xtest,ytest,ztest);
+        zaxis.SetWorldPosition(xtest ? xmin : xmax,
+                               ytest ? ymin : ymax,
+                               zmin,
+                               xtest ? xmin : xmax,
+                               ytest ? ymin : ymax,
+                               zmax);
+        zaxis.SetRange(zmin, zmax);
+        zaxis.SetMajorTickSize(size / 40., 0);
+        zaxis.SetMinorTickSize(size / 80., 0);
+        zaxis.SetLabelFontScale(size / 30.);
+        zaxis.SetMoreOrLessTickAdjustment(zrel < .3 ? -1 : 0);
+        zaxis.Render(view, worldAnnotator);
     }
 
     VTKM_CONT_EXPORT
