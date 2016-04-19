@@ -181,12 +181,17 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
     return input + 200;
   }
 
-  template<typename Invocation>
+  template<typename T, typename OutToInArrayType, typename VisitArrayType, typename InputDomainType>
   VTKM_EXEC_EXPORT
   vtkm::exec::arg::ThreadIndicesBasic
-  GetThreadIndices(vtkm::Id threadIndex, const Invocation &invocation) const
+  GetThreadIndices(const T& threadIndex,
+                   const OutToInArrayType& outToIn,
+                   const VisitArrayType& visit,
+                   const InputDomainType &) const
   {
-    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex, invocation);
+    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex,
+                                               outToIn.Get(threadIndex),
+                                               visit.Get(threadIndex) );
   }
 };
 
@@ -201,12 +206,17 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
     this->RaiseError(ERROR_MESSAGE);
   }
 
-  template<typename Invocation>
+  template<typename T, typename OutToInArrayType, typename VisitArrayType, typename InputDomainType>
   VTKM_EXEC_EXPORT
   vtkm::exec::arg::ThreadIndicesBasic
-  GetThreadIndices(vtkm::Id threadIndex, const Invocation &invocation) const
+  GetThreadIndices(const T& threadIndex,
+                   const OutToInArrayType& outToIn,
+                   const VisitArrayType& visit,
+                   const InputDomainType &) const
   {
-    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex, invocation);
+    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex,
+                                               outToIn.Get(threadIndex),
+                                               visit.Get(threadIndex) );
   }
 };
 
@@ -230,7 +240,10 @@ void CallDoWorkletInvokeFunctor(const Invocation &invocation, vtkm::Id index)
   vtkm::exec::internal::detail::DoWorkletInvokeFunctor(
         TestWorkletProxy(),
         invocation,
-        vtkm::exec::arg::ThreadIndicesBasic(index, invocation));
+        vtkm::exec::arg::ThreadIndicesBasic(index,
+                                            invocation.OutputToInputMap.Get(index),
+                                            invocation.VisitArray.Get(index) )
+        );
 }
 
 void TestDoWorkletInvoke()
