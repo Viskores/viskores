@@ -20,6 +20,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/rendering/Window.h>
 #include <vtkm/rendering/RenderSurface.h>
+#include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/Plot.h>
 #include <vtkm/rendering/SceneRendererVolume.h>
@@ -81,9 +82,9 @@ void Render(const vtkm::cont::DataSet &ds,
                                                 vtkm::rendering::ColorTable(ctName)));
 
     //TODO: W/H in window.  bg in window (window sets surface/renderer).
-    vtkm::rendering::Window<vtkm::rendering::Scene3D,
-                            vtkm::rendering::SceneRendererVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                            vtkm::rendering::RenderSurface>
+    vtkm::rendering::Window3D<vtkm::rendering::SceneRendererVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+                              vtkm::rendering::RenderSurface,
+                              vtkm::rendering::WorldAnnotator>
         w(scene, sceneRenderer, surface, view, bg);
     
     w.Initialize();

@@ -25,10 +25,12 @@
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/BoundingBoxAnnotation.h>
 
 namespace vtkm {
 namespace rendering {
 
+#if 0
 template<typename SceneType, typename SceneRendererType, typename SurfaceType>
 class Window
 {
@@ -82,25 +84,32 @@ private:
         surface.SetViewToWorldSpace(view, viewportClip);
     }
 };
-
-#if 0
+#endif
+    
 // Window2D Window3D
-template<typename SceneRendererType, typename SurfaceType>
+template<typename SceneRendererType,
+         typename SurfaceType,
+         typename WorldAnnotatorType>
 class Window3D
 {
 public:
     Color bgColor;
     vtkm::rendering::Scene3D scene;
+    WorldAnnotatorType worldAnnotator;
     SceneRendererType sceneRenderer;
     SurfaceType surface;
-    vtkm::rendering::View3D view;
-  
+    vtkm::rendering::View view;
+
+    // 3D-specific annotations
+    BoundingBoxAnnotation bbox;
+
     VTKM_CONT_EXPORT
     Window3D(const vtkm::rendering::Scene3D &s,
              const SceneRendererType &sr,
              const SurfaceType &surf,
+             const vtkm::rendering::View &v,
              const vtkm::rendering::Color &bg=vtkm::rendering::Color(0,0,0,1)) :
-        scene(s), sceneRenderer(sr), bgColor(bg), surface(surf)
+        scene(s), sceneRenderer(sr), bgColor(bg), surface(surf), view(v)
     {
         sceneRenderer.SetBackgroundColor(bgColor);
     }
@@ -118,9 +127,18 @@ public:
         surface.Clear();
         SetupForWorldSpace();
         
-        scene.Render(sceneRenderer, surface);
-        
+        scene.Render(sceneRenderer, surface, view);
+        RenderWorldAnnotations();
+
         surface.Finish();
+    }
+
+    VTKM_CONT_EXPORT
+    void RenderWorldAnnotations()
+    {
+        bbox.SetColor(Color(.5,.5,.5));
+        bbox.SetExtents(scene.GetSpatialBounds());
+        bbox.Render(view, worldAnnotator);
     }
 
     VTKM_CONT_EXPORT
@@ -139,24 +157,59 @@ private:
 };
 
 
-template<typename SceneRendererType>
+template<typename SceneRendererType,
+         typename SurfaceType>
 class Window2D
 {
 public:
     Color bgColor;
     vtkm::rendering::Scene2D scene;
     SceneRendererType sceneRenderer;
-    vtkm::rendering::View2D view;
+    SurfaceType surface;
+    vtkm::rendering::View view;
   
     VTKM_CONT_EXPORT
     Window2D(const vtkm::rendering::Scene2D &s,
              const SceneRendererType &sr,
+             const SurfaceType &surf,
+             const vtkm::rendering::View &v,
              const vtkm::rendering::Color &bg=vtkm::rendering::Color(0,0,0,1)) :
-        scene(s), sceneRenderer(sr), bgColor(bg)
+        scene(s), sceneRenderer(sr), surface(surf), view(v), bgColor(bg)
     {
+        sceneRenderer.SetBackgroundColor(bgColor);
+    }
+    VTKM_CONT_EXPORT
+    void Initialize()
+    {
+        surface.Initialize();
+    }
+
+    VTKM_CONT_EXPORT
+    void Paint()
+    {
+        surface.Activate();
+        surface.Clear();
+        SetupForWorldSpace();
+        
+        scene.Render(sceneRenderer, surface, view);
+
+        surface.Finish();
+    }
+
+    VTKM_CONT_EXPORT
+    void SaveAs(const std::string &fileName)
+    {
+        surface.SaveAs(fileName);
+    }
+
+private:
+    VTKM_CONT_EXPORT
+    void SetupForWorldSpace(bool viewportClip=true)
+    {
+        //view.SetupMatrices();
+        surface.SetViewToWorldSpace(view,viewportClip);
     }
 };
-#endif
 
 }} //namespace vtkm::rendering
 
