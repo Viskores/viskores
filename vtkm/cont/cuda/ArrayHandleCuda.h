@@ -160,7 +160,7 @@ public:
   VTKM_CONT_EXPORT
   void Shrink(vtkm::Id numberOfValues)
   {
-    VTKM_ASSERT_CONT(numberOfValues <= this->GetNumberOfValues());
+    VTKM_ASSERT(numberOfValues <= this->GetNumberOfValues());
 
     this->NumberOfValues = numberOfValues;
     if (numberOfValues == 0 && this->OwnsResources())

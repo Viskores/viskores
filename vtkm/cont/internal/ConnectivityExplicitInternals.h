@@ -22,7 +22,6 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
-#include <vtkm/cont/Assert.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 namespace vtkm {
@@ -117,7 +116,7 @@ struct ConnectivityExplicitInternals
   VTKM_CONT_EXPORT
   void BuildIndexOffsets(Device) const
   {
-    VTKM_ASSERT_CONT(this->ElementsValid);
+    VTKM_ASSERT(this->ElementsValid);
 
     if(!this->IndexOffsetsValid)
     {

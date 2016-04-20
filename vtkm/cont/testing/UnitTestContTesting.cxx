@@ -21,7 +21,7 @@
 // This meta-test makes sure that the testing environment is properly reporting
 // errors.
 
-#include <vtkm/cont/Assert.h>
+#include <vtkm/Assert.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -37,15 +37,10 @@ void BadTestAssert()
   VTKM_TEST_ASSERT(0 == 1, "I expect this error.");
 }
 
-void BadAssert()
-{
-  VTKM_ASSERT_CONT(0 == 1);
-}
-
 void GoodAssert()
 {
   VTKM_TEST_ASSERT(1 == 1, "Always true.");
-  VTKM_ASSERT_CONT(1 == 1);
+  VTKM_ASSERT(1 == 1);
 }
 
 } // anonymous namespace
@@ -60,20 +55,6 @@ int UnitTestContTesting(int, char *[])
   }
   std::cout << "-------\nThis call should fail." << std::endl;
   if (vtkm::cont::testing::Testing::Run(BadTestAssert) == 0)
-  {
-    std::cout << "Did not get expected fail!" << std::endl;
-    return 1;
-  }
-
-  //VTKM_ASSERT_CONT only is a valid call when you are building with debug
-#ifndef NDEBUG
-  int expectedResult=0;
-#else
-  int expectedResult=1;
-#endif
-
-  std::cout << "-------\nThis call should fail on debug builds." << std::endl;
-  if (vtkm::cont::testing::Testing::Run(BadAssert) == expectedResult)
   {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;

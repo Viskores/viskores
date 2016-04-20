@@ -36,7 +36,6 @@ set(headers
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
-  Assert.h
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h
@@ -56,7 +55,6 @@ set(headers
   DynamicCellSet.h
   Error.h
   ErrorControl.h
-  ErrorControlAssert.h
   ErrorControlBadAllocation.h
   ErrorControlBadType.h
   ErrorControlBadValue.h
