@@ -22,6 +22,7 @@
 #ifndef vtk_m_Matrix_h
 #define vtk_m_Matrix_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/Math.h>
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
@@ -59,6 +60,8 @@ public:
   VTKM_EXEC_CONT_EXPORT
   const vtkm::Vec<ComponentType, NUM_COLUMNS> &
   operator[](vtkm::IdComponent rowIndex) const {
+    VTKM_ASSERT(rowIndex >= 0);
+    VTKM_ASSERT(rowIndex < this->NUM_ROWS);
     return this->Components[rowIndex];
   }
 
@@ -68,6 +71,8 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Vec<ComponentType, NUM_COLUMNS> &
   operator[](vtkm::IdComponent rowIndex) {
+    VTKM_ASSERT(rowIndex >= 0);
+    VTKM_ASSERT(rowIndex < this->NUM_ROWS);
     return this->Components[rowIndex];
   }
 
@@ -77,6 +82,10 @@ public:
   VTKM_EXEC_CONT_EXPORT
   const ComponentType &
   operator()(vtkm::IdComponent rowIndex, vtkm::IdComponent colIndex) const {
+    VTKM_ASSERT(rowIndex >= 0);
+    VTKM_ASSERT(rowIndex < this->NUM_ROWS);
+    VTKM_ASSERT(colIndex >= 0);
+    VTKM_ASSERT(colIndex < this->NUM_COLUMNS);
     return (*this)[rowIndex][colIndex];
   }
 
@@ -86,6 +95,10 @@ public:
   VTKM_EXEC_CONT_EXPORT
   ComponentType &
   operator()(vtkm::IdComponent rowIndex, vtkm::IdComponent colIndex) {
+    VTKM_ASSERT(rowIndex >= 0);
+    VTKM_ASSERT(rowIndex < this->NUM_ROWS);
+    VTKM_ASSERT(colIndex >= 0);
+    VTKM_ASSERT(colIndex < this->NUM_COLUMNS);
     return (*this)[rowIndex][colIndex];
   }
 

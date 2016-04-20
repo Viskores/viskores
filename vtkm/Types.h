@@ -24,6 +24,8 @@
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
+#include <vtkm/Assert.h>
+
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/mpl/or.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
@@ -806,11 +808,15 @@ public:
   VTKM_EXEC_CONT_EXPORT
   const ComponentType &operator[](vtkm::IdComponent idx) const
   {
+    VTKM_ASSERT(idx >= 0);
+    VTKM_ASSERT(idx < this->NUM_COMPONENTS);
     return this->Components[idx];
   }
   VTKM_EXEC_CONT_EXPORT
   ComponentType &operator[](vtkm::IdComponent idx)
   {
+    VTKM_ASSERT(idx >= 0);
+    VTKM_ASSERT(idx < this->NUM_COMPONENTS);
     return this->Components[idx];
   }
 
