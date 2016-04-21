@@ -22,7 +22,6 @@
 
 #include <vtkm/Types.h>
 
-#include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 #include <vtkm/cont/Storage.h>
 

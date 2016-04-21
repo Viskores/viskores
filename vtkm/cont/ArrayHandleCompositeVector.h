@@ -324,13 +324,13 @@ public:
 
   VTKM_CONT_EXPORT
   const FunctionInterfaceWithArrays &GetArrays() const {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return this->Arrays;
   }
 
   VTKM_CONT_EXPORT
   const ComponentMapType &GetSourceComponents() const {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return this->SourceComponents;
   }
 

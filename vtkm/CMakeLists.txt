@@ -21,6 +21,7 @@
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(headers
+  Assert.h
   BinaryPredicates.h
   BinaryOperators.h
   CellShape.h

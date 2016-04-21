@@ -20,6 +20,7 @@
 #ifndef vtk_m_internal_ArrayPortalUniformPointCoordinates_h
 #define vtk_m_internal_ArrayPortalUniformPointCoordinates_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/Types.h>
 
 namespace vtkm {
@@ -70,6 +71,8 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   ValueType Get(vtkm::Id index) const {
+    VTKM_ASSERT(index >= 0);
+    VTKM_ASSERT(index < this->GetNumberOfValues());
     return this->Get(
           vtkm::Id3(index%this->Dimensions[0],
                     (index/this->Dimensions[0])%this->Dimensions[1],
@@ -81,6 +84,10 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   ValueType Get(vtkm::Id3 index) const {
+    VTKM_ASSERT((index[0] >= 0) && (index[1] >= 0) && (index[2] >= 0));
+    VTKM_ASSERT((index[0] < this->Dimensions[0]) &&
+                (index[1] < this->Dimensions[1]) &&
+                (index[2] < this->Dimensions[2]));
     return ValueType(this->Origin[0] + this->Spacing[0] * static_cast<vtkm::FloatDefault>(index[0]),
                      this->Origin[1] + this->Spacing[1] * static_cast<vtkm::FloatDefault>(index[1]),
                      this->Origin[2] + this->Spacing[2] * static_cast<vtkm::FloatDefault>(index[2]));

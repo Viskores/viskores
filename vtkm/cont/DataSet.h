@@ -56,7 +56,7 @@ public:
   VTKM_CONT_EXPORT
   const vtkm::cont::Field &GetField(vtkm::Id index) const
   {
-    VTKM_ASSERT_CONT((index >= 0) &&
+    VTKM_ASSERT((index >= 0) &&
                      (index < this->GetNumberOfFields()));
     return this->Fields[static_cast<std::size_t>(index)];
   }
@@ -97,7 +97,7 @@ public:
   const vtkm::cont::CoordinateSystem &
   GetCoordinateSystem(vtkm::Id index=0) const
   {
-    VTKM_ASSERT_CONT((index >= 0) &&
+    VTKM_ASSERT((index >= 0) &&
                      (index < this->GetNumberOfCoordinateSystems()));
     return this->CoordSystems[static_cast<std::size_t>(index)];
   }
@@ -140,7 +140,7 @@ public:
   VTKM_CONT_EXPORT
   vtkm::cont::DynamicCellSet GetCellSet(vtkm::Id index=0) const
   {
-    VTKM_ASSERT_CONT((index >= 0) &&
+    VTKM_ASSERT((index >= 0) &&
                      (index < this->GetNumberOfCellSets()));
     return this->CellSets[static_cast<std::size_t>(index)];
   }

@@ -122,13 +122,13 @@ bool is_sorted(ForwardIt first, ForwardIt last){
 // Get the value representing the `percent` percentile of the
 // sorted samples using linear interpolation
 vtkm::Float64 PercentileValue(const std::vector<vtkm::Float64> &samples, const vtkm::Float64 percent){
-  VTKM_ASSERT_CONT(!samples.empty());
+  VTKM_ASSERT(!samples.empty());
   if (samples.size() == 1){
     return samples.front();
   }
-  VTKM_ASSERT_CONT(percent >= 0.0);
-  VTKM_ASSERT_CONT(percent <= 100.0);
-  VTKM_ASSERT_CONT(
+  VTKM_ASSERT(percent >= 0.0);
+  VTKM_ASSERT(percent <= 100.0);
+  VTKM_ASSERT(
         vtkm::benchmarking::stats::is_sorted(samples.begin(), samples.end()));
   if (percent == 100.0){
     return samples.back();

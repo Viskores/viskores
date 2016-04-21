@@ -22,8 +22,6 @@
 
 #include <vtkm/Types.h>
 
-#include <vtkm/exec/Assert.h>
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/DataSet.h>
@@ -142,7 +140,7 @@ struct VertexClustering
     void operator()(const PointType &point, vtkm::Id &cid) const
     {
       cid = this->GetClusterId(point);
-      VTKM_ASSERT_EXEC(cid>=0, *this);  // the id could overflow if too many cells
+      VTKM_ASSERT(cid>=0);  // the id could overflow if too many cells
     }
   };
 

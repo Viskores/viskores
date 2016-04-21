@@ -26,6 +26,7 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/ErrorControlBadType.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 #include <vtkm/cont/Field.h>
 
@@ -329,7 +330,7 @@ private:
                     vtkm::cont::DataSet dataSet,
                     vtkm::Id csindex=0)
   {
-    VTKM_ASSERT_CONT(csindex < dataSet.GetNumberOfCellSets());
+    VTKM_ASSERT(csindex < dataSet.GetNumberOfCellSets());
 
     out << "# vtk DataFile Version 3.0" << std::endl;
     out << "vtk output" << std::endl;
@@ -370,7 +371,8 @@ private:
       }
       else
       {
-        VTKM_ASSERT_CONT(false);
+        throw vtkm::cont::ErrorControlBadType(
+              "Could not determine type to write out.");
       }
 
       WritePointFields(out, dataSet);

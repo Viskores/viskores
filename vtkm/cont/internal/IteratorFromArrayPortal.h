@@ -20,9 +20,9 @@
 #ifndef vtk_m_cont_internal_IteratorFromArrayPortal_h
 #define vtk_m_cont_internal_IteratorFromArrayPortal_h
 
-#include <vtkm/cont/ArrayPortal.h>
+#include <vtkm/Assert.h>
 
-#include <vtkm/cont/Assert.h>
+#include <vtkm/cont/ArrayPortal.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/iterator/iterator_facade.hpp>
@@ -135,16 +135,16 @@ private:
   void increment()
   {
     this->Index++;
-    VTKM_ASSERT_CONT(this->Index >= 0);
-    VTKM_ASSERT_CONT(this->Index <= this->Portal.GetNumberOfValues());
+    VTKM_ASSERT(this->Index >= 0);
+    VTKM_ASSERT(this->Index <= this->Portal.GetNumberOfValues());
   }
 
   VTKM_CONT_EXPORT
   void decrement()
   {
     this->Index--;
-    VTKM_ASSERT_CONT(this->Index >= 0);
-    VTKM_ASSERT_CONT(this->Index <= this->Portal.GetNumberOfValues());
+    VTKM_ASSERT(this->Index >= 0);
+    VTKM_ASSERT(this->Index <= this->Portal.GetNumberOfValues());
   }
 
   VTKM_CONT_EXPORT
@@ -152,8 +152,8 @@ private:
       typename IteratorFromArrayPortal<ArrayPortalType>::difference_type delta)
   {
     this->Index += static_cast<vtkm::Id>(delta);
-    VTKM_ASSERT_CONT(this->Index >= 0);
-    VTKM_ASSERT_CONT(this->Index <= this->Portal.GetNumberOfValues());
+    VTKM_ASSERT(this->Index >= 0);
+    VTKM_ASSERT(this->Index <= this->Portal.GetNumberOfValues());
   }
 
   VTKM_CONT_EXPORT

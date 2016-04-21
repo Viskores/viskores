@@ -19,7 +19,6 @@
 ##============================================================================
 
 set(headers
-  Assert.h
   AtomicArray.h
   CellDerivative.h
   CellInterpolate.h

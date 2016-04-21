@@ -20,22 +20,21 @@
 #ifndef vtk_m_cont_ArrayHandleCartesianProduct_h
 #define vtk_m_cont_ArrayHandleCartesianProduct_h
 
+#include <vtkm/Assert.h>
+
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadAllocation.h>
 
 namespace vtkm {
-namespace exec {
 namespace internal {
 
 /// \brief An array portal that acts as a 3D cartesian product of 3 arrays.
-/// for the execution environment
-
+///
 template<typename ValueType_,
          typename PortalTypeFirst_,
          typename PortalTypeSecond_,
          typename PortalTypeThird_>
-class ArrayPortalExecCartesianProduct
+class ArrayPortalCartesianProduct
 {
 public:
   typedef ValueType_ ValueType;
@@ -46,78 +45,90 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  ArrayPortalExecCartesianProduct()
+  ArrayPortalCartesianProduct()
   : PortalFirst(), PortalSecond(), PortalThird()
   {  } //needs to be host and device so that cuda can create lvalue of these
 
   VTKM_CONT_EXPORT
-  ArrayPortalExecCartesianProduct(const PortalTypeFirst  &portalfirst,
-                                  const PortalTypeSecond &portalsecond,
-                                  const PortalTypeThird &portalthird)
+  ArrayPortalCartesianProduct(const PortalTypeFirst  &portalfirst,
+                              const PortalTypeSecond &portalsecond,
+                              const PortalTypeThird &portalthird)
       : PortalFirst(portalfirst), PortalSecond(portalsecond), PortalThird(portalthird)
   {  }
 
-  /// Copy constructor for any other ArrayPortalExecCartesianProduct with an iterator
+  /// Copy constructor for any other ArrayPortalCartesianProduct with an iterator
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
 
   template<class OtherV, class OtherP1, class OtherP2, class OtherP3>
   VTKM_CONT_EXPORT
-  ArrayPortalExecCartesianProduct(const ArrayPortalExecCartesianProduct<OtherV,OtherP1,OtherP2,OtherP3> &src)
+  ArrayPortalCartesianProduct(const ArrayPortalCartesianProduct<OtherV,OtherP1,OtherP2,OtherP3> &src)
     : PortalFirst(src.GetPortalFirst()),
       PortalSecond(src.GetPortalSecond()),
       PortalThird(src.GetPortalThird())
   {  }
 
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const
   {
-      return this->PortalFirst.GetNumberOfValues() *
-          this->PortalSecond.GetNumberOfValues() *
-          this->PortalThird.GetNumberOfValues();
+    return this->PortalFirst.GetNumberOfValues() *
+        this->PortalSecond.GetNumberOfValues() *
+        this->PortalThird.GetNumberOfValues();
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
   ValueType Get(vtkm::Id index) const
   {
-      vtkm::Id dim1 = this->PortalFirst.GetNumberOfValues();
-      vtkm::Id dim2 = this->PortalSecond.GetNumberOfValues();
-      vtkm::Id dim12 = dim1*dim2;
-      vtkm::Id idx12 = index % dim12;
-      vtkm::Id i1 = idx12 % dim1;
-      vtkm::Id i2 = idx12 / dim1;
-      vtkm::Id i3 = index / dim12;
+    VTKM_ASSERT(index >= 0);
+    VTKM_ASSERT(index < this->GetNumberOfValues());
 
-      return vtkm::make_Vec(this->PortalFirst.Get(i1),
-                            this->PortalSecond.Get(i2),
-                            this->PortalThird.Get(i3));
+    vtkm::Id dim1 = this->PortalFirst.GetNumberOfValues();
+    vtkm::Id dim2 = this->PortalSecond.GetNumberOfValues();
+    vtkm::Id dim12 = dim1*dim2;
+    vtkm::Id idx12 = index % dim12;
+    vtkm::Id i1 = idx12 % dim1;
+    vtkm::Id i2 = idx12 / dim1;
+    vtkm::Id i3 = index / dim12;
+
+    return vtkm::make_Vec(this->PortalFirst.Get(i1),
+                          this->PortalSecond.Get(i2),
+                          this->PortalThird.Get(i3));
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
   void Set(vtkm::Id index, const ValueType &value) const
   {
-      vtkm::Id dim1 = this->PortalFirst.GetNumberOfValues();
-      vtkm::Id dim2 = this->PortalSecond.GetNumberOfValues();
-      vtkm::Id dim12 = dim1*dim2;
-      vtkm::Id idx12 = index % dim12;
+    VTKM_ASSERT(index >= 0);
+    VTKM_ASSERT(index < this->GetNumberOfValues());
 
-      vtkm::Id i1 = idx12 % dim1;
-      vtkm::Id i2 = idx12 / dim1;
-      vtkm::Id i3 = index / dim12;
+    vtkm::Id dim1 = this->PortalFirst.GetNumberOfValues();
+    vtkm::Id dim2 = this->PortalSecond.GetNumberOfValues();
+    vtkm::Id dim12 = dim1*dim2;
+    vtkm::Id idx12 = index % dim12;
 
-      this->PortalFirst.Set(i1, value[0]);
-      this->PortalSecond.Set(i2, value[1]);
-      this->PortalThird.Set(i3, value[2]);
+    vtkm::Id i1 = idx12 % dim1;
+    vtkm::Id i2 = idx12 / dim1;
+    vtkm::Id i3 = index / dim12;
+
+    this->PortalFirst.Set(i1, value[0]);
+    this->PortalSecond.Set(i2, value[1]);
+    this->PortalThird.Set(i3, value[2]);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   const PortalTypeFirst &GetFirstPortal() const { return this->PortalFirst; }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   const PortalTypeSecond &GetSecondPortal() const { return this->PortalSecond; }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   const PortalTypeThird &GetThirdPortal() const { return this->PortalThird; }
 
@@ -129,102 +140,13 @@ private:
 };
 
 }
-}
-} // namespace vtkm::exec::internal
+} // namespace vtkm::internal
 
 
 namespace vtkm {
 namespace cont {
 
 namespace internal {
-
-/// \brief An array portal that zips two portals together into a single value
-/// for the control environment
-template<typename ValueType_,
-         typename PortalTypeFirst,
-         typename PortalTypeSecond,
-         typename PortalTypeThird>
-class ArrayPortalContCartesianProduct
-{
-public:
-  typedef ValueType_ ValueType;
-  typedef ValueType_ IteratorType;
-
-  VTKM_CONT_EXPORT
-  ArrayPortalContCartesianProduct(const PortalTypeFirst  &portalfirst = PortalTypeFirst(),
-                                  const PortalTypeSecond &portalsecond = PortalTypeSecond(),
-                                  const PortalTypeSecond &portalthird = PortalTypeThird())
-      : PortalFirst(portalfirst), PortalSecond(portalsecond), PortalThird(portalthird)
-  {  }
-
-  /// Copy constructor for any other ArrayPortalContCartesianProduct with an iterator
-  /// type that can be copied to this iterator type. This allows us to do any
-  /// type casting that the iterators do (like the non-const to const cast).
-  ///
-  template<class OtherV, class OtherP1, class OtherP2, class OtherP3>
-  VTKM_CONT_EXPORT
-  ArrayPortalContCartesianProduct(const ArrayPortalContCartesianProduct<OtherV,
-                                  OtherP1,OtherP2,OtherP3> &src)
-    : PortalFirst(src.GetPortalFirst()),
-      PortalSecond(src.GetPortalSecond()),
-      PortalThird(src.GetPortalThird())
-  {  }
-
-  VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfValues() const
-  {
-      return this->PortalFirst.GetNumberOfValues() *
-          this->PortalSecond.GetNumberOfValues() *
-          this->PortalThird.GetNumberOfValues();
-  }
-
-  VTKM_CONT_EXPORT
-  ValueType Get(vtkm::Id index) const
-  {
-      vtkm::Id dim1 = this->PortalFirst.GetNumberOfValues();
-      vtkm::Id dim2 = this->PortalSecond.GetNumberOfValues();
-      vtkm::Id dim12 = dim1*dim2;
-      vtkm::Id idx12 = index % dim12;
-      vtkm::Id i1 = idx12 % dim1;
-      vtkm::Id i2 = idx12 / dim1;
-      vtkm::Id i3 = index / dim12;
-      return vtkm::make_Vec(this->PortalFirst.Get(i1),
-                            this->PortalSecond.Get(i2),
-                            this->PortalThird.Get(i3));
-  }
-
-  VTKM_CONT_EXPORT
-  void Set(vtkm::Id index, const ValueType &value) const
-  {
-      vtkm::Id dim1 = this->PortalFirst.GetNumberOfValues();
-      vtkm::Id dim2 = this->PortalSecond.GetNumberOfValues();
-      vtkm::Id dim12 = dim1*dim2;
-      vtkm::Id idx12 = index % dim12;
-
-      vtkm::Id i1 = idx12 % dim1;
-      vtkm::Id i2 = idx12 / dim1;
-      vtkm::Id i3 = index / dim12;
-
-      this->PortalFirst.Set(i1, value[0]);
-      this->PortalSecond.Set(i2, value[1]);
-      this->PortalThird.Set(i3, value[2]);
-  }
-
-  VTKM_CONT_EXPORT
-  const PortalTypeFirst &GetFirstPortal() const { return this->PortalFirst; }
-
-  VTKM_CONT_EXPORT
-  const PortalTypeSecond &GetSecondPortal() const { return this->PortalSecond; }
-
-  VTKM_CONT_EXPORT
-  const PortalTypeSecond &GetThirdPortal() const { return this->PortalThird; }
-
-
-private:
-  PortalTypeFirst PortalFirst;
-  PortalTypeSecond PortalSecond;
-  PortalTypeThird PortalThird;
-};
 
 template<typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
 struct StorageTagCartesianProduct {  };
@@ -258,11 +180,11 @@ class Storage<T, StorageTagCartesianProduct<FirstHandleType, SecondHandleType, T
 public:
   typedef T ValueType;
 
-  typedef ArrayPortalContCartesianProduct< ValueType,
+  typedef vtkm::internal::ArrayPortalCartesianProduct< ValueType,
                           typename FirstHandleType::PortalControl,
                           typename SecondHandleType::PortalControl,
                           typename ThirdHandleType::PortalControl> PortalType;
-  typedef ArrayPortalContCartesianProduct< ValueType,
+  typedef vtkm::internal::ArrayPortalCartesianProduct< ValueType,
                           typename FirstHandleType::PortalConstControl,
                           typename SecondHandleType::PortalConstControl,
                           typename ThirdHandleType::PortalConstControl>
@@ -362,14 +284,14 @@ public:
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
 
-  typedef vtkm::exec::internal::ArrayPortalExecCartesianProduct<
+  typedef vtkm::internal::ArrayPortalCartesianProduct<
       ValueType,
       typename FirstHandleType::template ExecutionTypes<Device>::Portal,
       typename SecondHandleType::template ExecutionTypes<Device>::Portal,
       typename ThirdHandleType::template ExecutionTypes<Device>::Portal
       > PortalExecution;
 
-  typedef vtkm::exec::internal::ArrayPortalExecCartesianProduct<
+  typedef vtkm::internal::ArrayPortalCartesianProduct<
       ValueType,
       typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
       typename SecondHandleType::template ExecutionTypes<Device>::PortalConst,

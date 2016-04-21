@@ -22,7 +22,6 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayPortal.h>
-#include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -142,21 +141,21 @@ public:
   VTKM_CONT_EXPORT
   PortalType GetPortal()
   {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return PortalType(this->SourceArray.GetPortalControl());
   }
 
   VTKM_CONT_EXPORT
   PortalConstType GetPortalConst() const
   {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return PortalConstType(this->SourceArray.GetPortalConstControl());
   }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const
   {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     vtkm::Id sourceSize = this->SourceArray.GetNumberOfValues();
     if(sourceSize%NUM_COMPONENTS != 0)
     {
@@ -169,14 +168,14 @@ public:
   VTKM_CONT_EXPORT
   void Allocate(vtkm::Id numberOfValues)
   {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     this->SourceArray.Allocate(numberOfValues*NUM_COMPONENTS);
   }
 
   VTKM_CONT_EXPORT
   void Shrink(vtkm::Id numberOfValues)
   {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     this->SourceArray.Shrink(numberOfValues*NUM_COMPONENTS);
   }
 
@@ -193,7 +192,7 @@ public:
   VTKM_CONT_EXPORT
   const SourceArrayHandleType &GetSourceArray() const
   {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return this->SourceArray;
   }
 

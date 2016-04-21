@@ -20,6 +20,7 @@
 #ifndef vtk_m_VecVariable_h
 #define vtk_m_VecVariable_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/Math.h>
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
@@ -48,6 +49,7 @@ public:
   VecVariable(const vtkm::VecVariable<ComponentType,SrcSize> &src)
     : NumComponents(src.GetNumberOfComponents())
   {
+    VTKM_ASSERT(this->NumComponents <= MaxSize);
     for (vtkm::IdComponent index = 0; index < this->NumComponents; index++)
     {
       this->Data[index] = src[index];
@@ -59,6 +61,7 @@ public:
   VecVariable(const vtkm::Vec<ComponentType,SrcSize> &src)
     : NumComponents(SrcSize)
   {
+    VTKM_ASSERT(this->NumComponents <= MaxSize);
     for (vtkm::IdComponent index = 0; index < this->NumComponents; index++)
     {
       this->Data[index] = src[index];
@@ -96,6 +99,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void Append(ComponentType value)
   {
+    VTKM_ASSERT(this->NumComponents < MaxSize);
     this->Data[this->NumComponents] = value;
     this->NumComponents++;
   }

@@ -20,10 +20,10 @@
 #ifndef vtk_m_cont_internal_ArrayPortalShrink_h
 #define vtk_m_cont_internal_ArrayPortalShrink_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/Assert.h>
 
 #include <iterator>
 
@@ -53,7 +53,7 @@ public:
                                      vtkm::Id numberOfValues)
     : DelegatePortal(delegatePortal), NumberOfValues(numberOfValues)
   {
-    VTKM_ASSERT_CONT(numberOfValues <= delegatePortal.GetNumberOfValues());
+    VTKM_ASSERT(numberOfValues <= delegatePortal.GetNumberOfValues());
   }
 
   /// Copy constructor for any other ArrayPortalShrink with a delegate type
@@ -73,16 +73,16 @@ public:
   VTKM_CONT_EXPORT
   ValueType Get(vtkm::Id index) const
   {
-    VTKM_ASSERT_CONT(index >= 0);
-    VTKM_ASSERT_CONT(index < this->GetNumberOfValues());
+    VTKM_ASSERT(index >= 0);
+    VTKM_ASSERT(index < this->GetNumberOfValues());
     return this->DelegatePortal.Get(index);
   }
 
   VTKM_CONT_EXPORT
   void Set(vtkm::Id index, const ValueType& value) const
   {
-    VTKM_ASSERT_CONT(index >= 0);
-    VTKM_ASSERT_CONT(index < this->GetNumberOfValues());
+    VTKM_ASSERT(index >= 0);
+    VTKM_ASSERT(index < this->GetNumberOfValues());
     this->DelegatePortal.Set(index, value);
   }
 
@@ -92,7 +92,7 @@ public:
   VTKM_CONT_EXPORT
   void Shrink(vtkm::Id numberOfValues)
   {
-    VTKM_ASSERT_CONT(numberOfValues < this->GetNumberOfValues());
+    VTKM_ASSERT(numberOfValues < this->GetNumberOfValues());
     this->NumberOfValues = numberOfValues;
   }
 

@@ -20,9 +20,9 @@
 #ifndef vtk_m_cont_internal_ArrayManagerExecutionShareWithControl_h
 #define vtk_m_cont_internal_ArrayManagerExecutionShareWithControl_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/Types.h>
 
-#include <vtkm/cont/Assert.h>
 #include <vtkm/cont/Storage.h>
 
 #include <algorithm>
@@ -90,7 +90,7 @@ public:
   void RetrieveOutputData(StorageType *storage) const
   {
     (void)storage;
-    VTKM_ASSERT_CONT(storage == this->Storage);
+    VTKM_ASSERT(storage == this->Storage);
   }
 
   /// This methods copies data from the execution array into the given
