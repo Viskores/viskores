@@ -665,6 +665,8 @@ CellDerivative(const FieldVecType &field,
                vtkm::CellShapeTagVertex,
                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
+  (void)field;
+  (void)wCoords;
   VTKM_ASSERT(field.GetNumberOfComponents() == 1);
   VTKM_ASSERT(wCoords.GetNumberOfComponents() == 1);
 
