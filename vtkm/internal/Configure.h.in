@@ -250,7 +250,6 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 # include <boost/config.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
-
 # if defined(BOOST_HAS_VARIADIC_TMPL)
 #  define VTKM_USE_VARIADIC_TEMPLATE 1
 # endif
@@ -258,6 +257,13 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 #if defined(VTKM_USE_VARIADIC_TEMPLATE) && defined(VTKM_NO_VARIADIC_TEMPLATE)
 # error Both VTKM_USE_VARIADIC_TEMPLATE and VTKM_NO_VARIADIC_TEMPLATE defined.  Do not know what to do.
+#endif
+
+//With MSVC the types that we generate cause warning C4503 (long symbol names)
+//this doesn't affect the resulting binary so we just supress that warning
+//
+#ifdef VTKM_MSVC
+#pragma warning(disable:4503)
 #endif
 
 #endif //vtkm_internal_Configure_h
