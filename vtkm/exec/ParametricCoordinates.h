@@ -499,7 +499,7 @@ ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                            CellShapeTag shape,
                            const vtkm::exec::FunctorBase &worklet)
 {
-  vtkm::Vec<vtkm::FloatDefault,3> pcoords;
+  vtkm::Vec<vtkm::FloatDefault,3> pcoords(0);
   ParametricCoordinatesPoint(numPoints, pointIndex, pcoords, shape, worklet);
   return pcoords;
 }
