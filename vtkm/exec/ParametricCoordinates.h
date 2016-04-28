@@ -25,6 +25,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/NewtonsMethod.h>
 #include <vtkm/VecRectilinearPointCoordinates.h>
+#include <vtkm/internal/Assume.h>
 #include <vtkm/exec/CellDerivative.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/FunctorBase.h>
@@ -251,8 +252,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
 {
   (void)numPoints;  // Silence compiler warnings.
   (void)pointIndex; // Silence compiler warnings.
-  VTKM_ASSERT(numPoints == 1);
-  VTKM_ASSERT(pointIndex == 0);
+  VTKM_ASSUME(numPoints == 1);
+  VTKM_ASSUME(pointIndex == 0);
   pcoords[0] = 0;
   pcoords[1] = 0;
   pcoords[2] = 0;
@@ -267,8 +268,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 const vtkm::exec::FunctorBase &)
 {
   (void)numPoints;  // Silence compiler warnings.
-  VTKM_ASSERT(numPoints == 2);
-  VTKM_ASSERT((pointIndex >= 0) && (pointIndex < numPoints));
+  VTKM_ASSUME(numPoints == 2);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 2));
 
   pcoords[0] = static_cast<ParametricCoordType>(pointIndex);
   pcoords[1] = 0;
@@ -284,8 +285,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 const vtkm::exec::FunctorBase &)
 {
   (void)numPoints;  // Silence compiler warnings.
-  VTKM_ASSERT(numPoints == 3);
-  VTKM_ASSERT((pointIndex >= 0) && (pointIndex < numPoints));
+  VTKM_ASSUME(numPoints == 3);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 3));
 
   switch (pointIndex)
   {
@@ -304,8 +305,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::CellShapeTagPolygon,
                                 const vtkm::exec::FunctorBase &worklet)
 {
-  VTKM_ASSERT(numPoints > 0);
-  VTKM_ASSERT((pointIndex >= 0) && (pointIndex < numPoints));
+  VTKM_ASSUME( (numPoints > 0) );
+  VTKM_ASSUME( (pointIndex >= 0) && (pointIndex < numPoints) );
 
   switch (numPoints)
   {
@@ -358,8 +359,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 const vtkm::exec::FunctorBase &)
 {
   (void)numPoints;  // Silence compiler warnings.
-  VTKM_ASSERT(numPoints == 4);
-  VTKM_ASSERT((pointIndex >= 0) && (pointIndex < numPoints));
+  VTKM_ASSUME(numPoints == 4);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 4));
 
   switch (pointIndex)
   {
@@ -380,8 +381,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 const vtkm::exec::FunctorBase &)
 {
   (void)numPoints;  // Silence compiler warnings.
-  VTKM_ASSERT(numPoints == 4);
-  VTKM_ASSERT((pointIndex >= 0) && (pointIndex < numPoints));
+  VTKM_ASSUME(numPoints == 4);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 4));
 
   switch (pointIndex)
   {
@@ -401,8 +402,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 const vtkm::exec::FunctorBase &)
 {
   (void)numPoints;  // Silence compiler warnings.
-  VTKM_ASSERT(numPoints == 8);
-  VTKM_ASSERT((pointIndex >= 0) && (pointIndex < numPoints));
+  VTKM_ASSUME(numPoints == 8);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 8));
 
   switch (pointIndex)
   {
@@ -426,8 +427,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 const vtkm::exec::FunctorBase &)
 {
   (void)numPoints;  // Silence compiler warnings.
-  VTKM_ASSERT(numPoints == 6);
-  VTKM_ASSERT((pointIndex >= 0) && (pointIndex < numPoints));
+  VTKM_ASSUME(numPoints == 6);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 6));
 
   switch (pointIndex)
   {
@@ -449,8 +450,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 const vtkm::exec::FunctorBase &)
 {
   (void)numPoints;  // Silence compiler warnings.
-  VTKM_ASSERT(numPoints == 5);
-  VTKM_ASSERT((pointIndex >= 0) && (pointIndex < numPoints));
+  VTKM_ASSUME(numPoints == 5);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 5));
 
   switch (pointIndex)
   {
@@ -499,7 +500,7 @@ ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                            CellShapeTag shape,
                            const vtkm::exec::FunctorBase &worklet)
 {
-  vtkm::Vec<vtkm::FloatDefault,3> pcoords(0);
+  vtkm::Vec<vtkm::FloatDefault,3> pcoords;
   ParametricCoordinatesPoint(numPoints, pointIndex, pcoords, shape, worklet);
   return pcoords;
 }

@@ -235,7 +235,7 @@ struct TestPCoordsFunctor
     PointWCoordType pointWCoords;
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
-      Vector3 pcoords(0);
+      Vector3 pcoords;
       vtkm::exec::ParametricCoordinatesPoint(
             numPoints, pointIndex, pcoords, CellShapeTag(), workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
