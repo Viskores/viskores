@@ -720,7 +720,8 @@ public:
     T* lockedValue;
 #if defined(VTKM_MSVC)
     typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
-    typename IteratorType::pointer temp = &(*(Iterators.GetBegin()+index));
+    typename IteratorType::pointer temp =
+        &(*(Iterators.GetBegin() + static_cast<std::ptrdiff_t>(index)));
     lockedValue = temp;
     return vtkmAtomicAdd(lockedValue, value);
 #else
@@ -735,7 +736,8 @@ public:
     T* lockedValue;
 #if defined(VTKM_MSVC)
     typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
-    typename IteratorType::pointer temp = &(*(Iterators.GetBegin()+index));
+    typename IteratorType::pointer temp =
+        &(*(Iterators.GetBegin()+static_cast<std::ptrdiff_t>(index)));
     lockedValue = temp;
     return vtkmCompareAndSwap(lockedValue, newValue, oldValue);
 #else
