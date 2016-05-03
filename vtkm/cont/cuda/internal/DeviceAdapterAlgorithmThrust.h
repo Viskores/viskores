@@ -573,7 +573,7 @@ private:
                                                        BinaryCompare> bop(binary_compare);
     try
     {
-      ::thrust::sort_by_key(thrust::cuda::par,
+      ::thrust::sort_by_key(vtkm_cuda_policy(),
                             IteratorBegin(keys),
                             IteratorEnd(keys),
                             IteratorBegin(values),
