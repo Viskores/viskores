@@ -443,19 +443,14 @@ endfunction(vtkm_worklet_unit_tests)
 #
 # vtkm_save_benchmarks( sources )
 #
+#
+# Each benchmark source file needs to implement main(int agrc, char *argv[])
+#
 # notes: will save the sources absolute path as the
 # vtkm_benchmarks_sources global property
 function(vtkm_save_benchmarks)
 
-  #create the benchmarks driver when we are called, since
-  #the driver expects the files to be in the same
-  #directory as the test driver
-        #TODO: This is probably ok to use for benchmarks as well
-  create_test_sourcelist(bench_sources BenchmarkDriver.cxx ${ARGN})
-
-  #store the absolute path for the driver and all the test
-  #files
-  set(driver ${CMAKE_CURRENT_BINARY_DIR}/BenchmarkDriver.cxx)
+  #store the absolute path for all the test files
   set(cxx_sources)
   set(cu_sources)
 
@@ -485,8 +480,6 @@ function(vtkm_save_benchmarks)
                 PROPERTY vtkm_benchmarks_sources ${cxx_sources})
   set_property( GLOBAL APPEND
                 PROPERTY vtkm_benchmarks_cu_sources ${cu_sources})
-  set_property( GLOBAL APPEND
-                PROPERTY vtkm_benchmarks_drivers ${driver})
 
 endfunction(vtkm_save_benchmarks)
 
@@ -504,10 +497,6 @@ function(vtkm_benchmarks device_adapter)
   get_property(benchmark_srcs GLOBAL
                PROPERTY vtkm_benchmarks_sources )
 
-  set(benchmark_drivers)
-  get_property(benchmark_drivers GLOBAL
-               PROPERTY vtkm_benchmarks_drivers )
-
   #detect if we are generating a .cu files
   set(is_cuda FALSE)
   set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
@@ -518,40 +507,51 @@ function(vtkm_benchmarks device_adapter)
   if(VTKm_ENABLE_BENCHMARKS AND VTKm_ENABLE_TESTING)
     string(REPLACE "VTKM_DEVICE_ADAPTER_" "" device_type ${device_adapter})
 
-    vtkm_get_kit_name(kit)
-
-    #inject the device adapter into the benchmark program name so each one is unique
-    set(benchmark_prog Benchmarks_${device_type})
-
     if(is_cuda)
       vtkm_setup_nvcc_flags( old_nvcc_flags )
       get_property(benchmark_srcs GLOBAL PROPERTY vtkm_benchmarks_cu_sources )
-      cuda_add_executable(${benchmark_prog} ${benchmark_drivers} ${benchmark_srcs})
-      set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
-    else()
-      add_executable(${benchmark_prog} ${benchmark_drivers} ${benchmark_srcs})
+    endif()
+
+    foreach( file  ${benchmark_srcs})
+      #inject the device adapter into the benchmark program name so each one is unique
+      message(STATUS "file: ${file}"  )
+      get_filename_component(benchmark_prog ${file} NAME_WE)
+      set(benchmark_prog "${benchmark_prog}_${device_type}")
+
+      if(is_cuda)
+        cuda_add_executable(${benchmark_prog} ${file})
+      else()
+        add_executable(${benchmark_prog} ${file})
+      endif()
+
       target_link_libraries(${benchmark_prog} ${VTKm_LIBRARIES})
-    endif()
 
-    if(MSVC)
-      vtkm_setup_msvc_properties(${benchmark_prog})
-    endif()
+      if(MSVC)
+        vtkm_setup_msvc_properties(${benchmark_prog})
+      endif()
 
-    #add the specific compile options for this executable
-    target_compile_options(${benchmark_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
+      #add the specific compile options for this executable
+      target_compile_options(${benchmark_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
-    #increase warning level if needed, we are going to skip cuda here
-    #to remove all the false positive unused function warnings that cuda
-    #generates
-    if(VTKm_EXTRA_COMPILER_WARNINGS)
+      #increase warning level if needed, we are going to skip cuda here
+      #to remove all the false positive unused function warnings that cuda
+      #generates
+      if(VTKm_EXTRA_COMPILER_WARNINGS)
+        set_property(TARGET ${benchmark_prog}
+                     APPEND PROPERTY COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA} )
+      endif()
+
+      #set the device adapter on the executable
       set_property(TARGET ${benchmark_prog}
-                   APPEND PROPERTY COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA} )
-    endif()
+                   APPEND
+                   PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=${device_adapter}" )
 
-    #set the device adapter on the executable
-    set_property(TARGET ${benchmark_prog}
-                 APPEND
-                 PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=${device_adapter}" )
+
+    endforeach()
+
+    if(is_cuda)
+      set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+    endif()
   endif()
 
 endfunction(vtkm_benchmarks)
