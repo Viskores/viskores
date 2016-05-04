@@ -84,7 +84,11 @@ struct FetchArrayTopologyMapInTests
 
     FetchType fetch;
 
-    ThreadIndicesType indices(0, invocation);
+    ThreadIndicesType indices(0,
+                          invocation.OutputToInputMap,
+                          invocation.VisitArray,
+                          invocation.GetInputDomain()
+                          );
 
     typename FetchType::ValueType value = fetch.Load(
           indices, invocation.Parameters.template GetParameter<ParamIndex>());
@@ -175,14 +179,20 @@ void TryStructuredPointCoordinatesInvocation(const Invocation &invocation)
       TestValue(1, vtkm::Vec<vtkm::FloatDefault,3>());
 
   vtkm::VecRectilinearPointCoordinates<NumDimensions> value = fetch.Load(
-        ThreadIndicesType(0, invocation),
+        ThreadIndicesType(0,
+                          invocation.OutputToInputMap,
+                          invocation.VisitArray,
+                          invocation.GetInputDomain()),
         invocation.Parameters.template GetParameter<ParamIndex>());
   VTKM_TEST_ASSERT(test_equal(value.GetOrigin(), origin), "Bad origin.");
   VTKM_TEST_ASSERT(test_equal(value.GetSpacing(), spacing), "Bad spacing.");
 
   origin[0] += spacing[0];
   value = fetch.Load(
-        ThreadIndicesType(1, invocation),
+        ThreadIndicesType(1,
+                          invocation.OutputToInputMap,
+                          invocation.VisitArray,
+                          invocation.GetInputDomain()),
         invocation.Parameters.template GetParameter<ParamIndex>());
   VTKM_TEST_ASSERT(test_equal(value.GetOrigin(), origin), "Bad origin.");
   VTKM_TEST_ASSERT(test_equal(value.GetSpacing(), spacing), "Bad spacing.");

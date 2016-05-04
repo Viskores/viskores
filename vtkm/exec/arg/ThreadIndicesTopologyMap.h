@@ -72,10 +72,13 @@ public:
   typedef typename ConnectivityType::IndicesType IndicesFromType;
   typedef typename ConnectivityType::CellShapeTag CellShapeTag;
 
-  template<typename Invocation>
+  template<typename OutToInArrayType, typename VisitArrayType>
   VTKM_EXEC_EXPORT
-  ThreadIndicesTopologyMap(vtkm::Id threadIndex, const Invocation &invocation)
-    : Superclass(threadIndex, invocation),
+  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
+                           const OutToInArrayType& inToOut,
+                           const VisitArrayType& visit,
+                           const ConnectivityType& connectivity)
+    : Superclass(threadIndex, inToOut.Get(threadIndex), visit.Get(threadIndex)),
       CellShape(detail::CellShapeInitializer<CellShapeTag>::GetDefault())
   {
     // The connectivity is stored in the invocation parameter at the given
@@ -83,8 +86,6 @@ public:
     // of the domain will match the connectivity type used here. If there is
     // a compile error here about a type mismatch, chances are a worklet has
     // set its input domain incorrectly.
-    const ConnectivityType &connectivity = invocation.GetInputDomain();
-
     this->IndicesFrom = connectivity.GetIndices(this->GetInputIndex());
     this->CellShape = connectivity.GetCellShape(this->GetInputIndex());
   }
@@ -183,44 +184,39 @@ public:
   typedef typename ConnectivityType::CellShapeTag CellShapeTag;
   typedef typename ConnectivityType::SchedulingRangeType LogicalIndexType;
 
-  template<typename Invocation>
+  template<typename OutToInArrayType, typename VisitArrayType>
   VTKM_EXEC_EXPORT
-  ThreadIndicesTopologyMap(vtkm::Id threadIndex, const Invocation &invocation)
+  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
+                           const OutToInArrayType& inToOut,
+                           const VisitArrayType& visit,
+                           const ConnectivityType& connectivity)
   {
-    // The connectivity is stored in the invocation parameter at the given
-    // input domain index. If this class is being used correctly, the type
-    // of the domain will match the connectivity type used here. If there is
-    // a compile error here about a type mismatch, chances are a worklet has
-    // set its input domain incorrectly.
-    const ConnectivityType &connectivity = invocation.GetInputDomain();
 
-    this->InputIndex = invocation.OutputToInputMap.Get(threadIndex);
+    this->InputIndex = inToOut.Get(threadIndex);
     this->OutputIndex = threadIndex;
-    this->VisitIndex = invocation.VisitArray.Get(threadIndex);
+    this->VisitIndex = visit.Get(threadIndex);
     this->LogicalIndex = connectivity.FlatToLogicalToIndex(this->InputIndex);
     this->IndicesFrom = connectivity.GetIndices(this->LogicalIndex);
     this->CellShape = connectivity.GetCellShape(this->InputIndex);
   }
 
-  template<typename Invocation>
+  template<typename OutToInArrayType, typename VisitArrayType>
   VTKM_EXEC_EXPORT
-  ThreadIndicesTopologyMap(vtkm::Id3 threadIndex, const Invocation &invocation)
+  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex,
+                           const OutToInArrayType&,
+                           const VisitArrayType& visit,
+                           const ConnectivityType& connectivity)
   {
-    // The connectivity is stored in the invocation parameter at the given
-    // input domain index. If this class is being used correctly, the type
-    // of the domain will match the connectivity type used here. If there is
-    // a compile error here about a type mismatch, chances are a worklet has
-    // set its input domain incorrectly.
-    const ConnectivityType &connectivity = invocation.GetInputDomain();
-
+    // We currently only support multidimensional indices on one-to-one input-
+    // to-output mappings. (We don't have a use case otherwise.)
+    // that is why the OutToInArrayType is ignored
     const LogicalIndexType logicalIndex =
         detail::Deflate(threadIndex, LogicalIndexType());
     const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
 
-    // We currently only support multidimensional indices on one-to-one input-
-    // to-output mappings. (We don't have a use case otherwise.)
-    this->InputIndex = this->OutputIndex = index;
-    this->VisitIndex = invocation.VisitArray.Get(index);
+    this->InputIndex = index;
+    this->OutputIndex = index;
+    this->VisitIndex = visit.Get(index);
     this->LogicalIndex = logicalIndex;
     this->IndicesFrom = connectivity.GetIndices(logicalIndex);
     this->CellShape = connectivity.GetCellShape(index);

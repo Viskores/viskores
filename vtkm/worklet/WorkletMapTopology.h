@@ -123,13 +123,19 @@ public:
 
   /// Topology map worklets use topology map indices.
   ///
-  template<typename T, typename Invocation>
+  template<typename T, typename OutToInArrayType, typename VisitArrayType, typename InputDomainType>
   VTKM_EXEC_EXPORT
-  vtkm::exec::arg::ThreadIndicesTopologyMap<typename Invocation::InputDomainType>
-  GetThreadIndices(const T& threadIndex, const Invocation &invocation) const
+  vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>
+  GetThreadIndices(const T& threadIndex,
+                   const OutToInArrayType& outToIn,
+                   const VisitArrayType& visit,
+                   const InputDomainType &connectivity) const
   {
-    return vtkm::exec::arg::ThreadIndicesTopologyMap<typename Invocation::InputDomainType>(
-          threadIndex, invocation);
+    return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>(
+          threadIndex,
+          outToIn,
+          visit,
+          connectivity);
   }
 };
 
