@@ -49,6 +49,19 @@ __host__ __device__
   return thrust::sort(thrust::cuda::par, first, last, thrust::less<T>());
 }
 
+template<typename T,
+         typename RandomAccessIterator>
+__host__ __device__
+  void sort_by_key(const vtkm_cuda_policy &exec,
+                   thrust::system::cuda::pointer<T> first,
+                   thrust::system::cuda::pointer<T> last,
+                   RandomAccessIterator values_first,
+                   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, vtkm::SortLess > comp)
+{  //sort for concrete pointers and less than op
+   //this makes sure that we invoke the thrust radix sort and not merge sort
+  return thrust::sort_by_key(thrust::cuda::par, first, last, values_first, thrust::less<T>());
+}
+
 template<typename T>
 __host__ __device__
   void sort(const vtkm_cuda_policy &exec,
@@ -58,6 +71,19 @@ __host__ __device__
 { //sort for concrete pointers and less than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
   return thrust::sort(thrust::cuda::par, first, last, thrust::less<T>());
+}
+
+template<typename T,
+         typename RandomAccessIterator>
+__host__ __device__
+  void sort_by_key(const vtkm_cuda_policy &exec,
+                   thrust::system::cuda::pointer<T> first,
+                   thrust::system::cuda::pointer<T> last,
+                   RandomAccessIterator values_first,
+                   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::less<T> > comp)
+{ //sort for concrete pointers and less than op
+  //this makes sure that we invoke the thrust radix sort and not merge sort
+  return thrust::sort_by_key(thrust::cuda::par, first, last, values_first, thrust::less<T>());
 }
 
 template<typename T>
@@ -71,6 +97,19 @@ __host__ __device__
   return thrust::sort(thrust::cuda::par, first, last, thrust::greater<T>());
 }
 
+template<typename T,
+         typename RandomAccessIterator>
+__host__ __device__
+  void sort_by_key(const vtkm_cuda_policy &exec,
+                   thrust::system::cuda::pointer<T> first,
+                   thrust::system::cuda::pointer<T> last,
+                   RandomAccessIterator values_first,
+                   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, vtkm::SortGreater> comp)
+{ //sort for concrete pointers and greater than op
+  //this makes sure that we invoke the thrust radix sort and not merge sort
+  return thrust::sort_by_key(thrust::cuda::par, first, last, values_first, thrust::greater<T>());
+}
+
 template<typename T>
 __host__ __device__
   void sort(const vtkm_cuda_policy &exec,
@@ -80,6 +119,19 @@ __host__ __device__
 { //sort for concrete pointers and greater than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
   return thrust::sort(thrust::cuda::par, first, last, thrust::greater<T>());
+}
+
+template<typename T,
+         typename RandomAccessIterator>
+__host__ __device__
+  void sort_by_key(const vtkm_cuda_policy &exec,
+                   thrust::system::cuda::pointer<T> first,
+                   thrust::system::cuda::pointer<T> last,
+                   RandomAccessIterator values_first,
+                   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::greater<T> > comp)
+{ //sort for concrete pointers and greater than op
+  //this makes sure that we invoke the thrust radix sort and not merge sort
+  return thrust::sort_by_key(thrust::cuda::par, first, last, values_first, thrust::greater<T>());
 }
 
 template<typename RandomAccessIterator,
@@ -95,6 +147,23 @@ __host__ __device__
   //This most likely will cause thrust to internally determine that
   //the best sort implementation is merge sort.
   return thrust::sort(thrust::cuda::par, first, last, comp);
+}
+
+template<typename RandomAccessIteratorKeys,
+         typename RandomAccessIteratorValues,
+         typename StrictWeakOrdering>
+__host__ __device__
+  void sort_by_key(const vtkm_cuda_policy &exec,
+                   RandomAccessIteratorKeys first,
+                   RandomAccessIteratorKeys last,
+                   RandomAccessIteratorValues values_first,
+                   StrictWeakOrdering comp)
+{
+  //At this point the pointer type is not a cuda pointers and/or
+  //the operator is not an approved less/greater operator.
+  //This most likely will cause thrust to internally determine that
+  //the best sort implementation is merge sort.
+  return thrust::sort_by_key(thrust::cuda::par, first, last, values_first, comp);
 }
 
 
