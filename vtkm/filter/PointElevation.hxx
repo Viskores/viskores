@@ -28,7 +28,7 @@ namespace filter {
 PointElevation::PointElevation():
   Worklet()
 {
-
+  this->SetOutputFieldName("elevation");
 }
 
 //-----------------------------------------------------------------------------

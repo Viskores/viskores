@@ -39,11 +39,12 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
-vtkm::filter::ResultField CellAverage::DoExecute(const vtkm::cont::DataSet &input,
-                                                 const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                                 const vtkm::filter::FieldMetadata&,
-                                                 const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                                 const DeviceAdapter&)
+vtkm::filter::ResultField CellAverage::DoExecute(
+    const vtkm::cont::DataSet &input,
+    const vtkm::cont::ArrayHandle<T, StorageType> &inField,
+    const vtkm::filter::FieldMetadata &fieldMetadata,
+    const vtkm::filter::PolicyBase<DerivedPolicy>&,
+    const DeviceAdapter&)
 {
   vtkm::cont::DynamicCellSet cellSet =
                   input.GetCellSet(this->GetActiveCellSetIndex());
@@ -57,11 +58,18 @@ vtkm::filter::ResultField CellAverage::DoExecute(const vtkm::cont::DataSet &inpu
 
   //todo: we need to use the policy to determine the valid conversions
   //that the dispatcher should do, including the result from GetCellSet
-  dispatcher.Invoke(field, cellSet, outArray);
+  dispatcher.Invoke(inField, cellSet, outArray);
+
+  std::string outputName = this->GetOutputFieldName();
+  if (outputName == "")
+  {
+    // Default name is name of input.
+    outputName = fieldMetadata.GetName();
+  }
 
   return vtkm::filter::ResultField(input,
                                    outArray,
-                                   this->GetOutputFieldName(),
+                                   outputName,
                                    vtkm::cont::Field::ASSOC_CELL_SET,
                                    cellSet.GetCellSet().GetName());
 }
