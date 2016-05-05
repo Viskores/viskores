@@ -166,8 +166,8 @@ public:
                                ytest ? ymin : ymax,
                                ztest ? zmin : zmax);
         xaxis.SetRange(xmin, xmax);
-        xaxis.SetMajorTickSize(size / 40., 0);
-        xaxis.SetMinorTickSize(size / 80., 0);
+        xaxis.SetMajorTickSize(size / 40.f, 0);
+        xaxis.SetMinorTickSize(size / 80.f, 0);
         xaxis.SetLabelFontScale(size / 30.);
         xaxis.SetMoreOrLessTickAdjustment(xrel < .3 ? -1 : 0);
         xaxis.Render(view, worldAnnotator);
@@ -182,8 +182,8 @@ public:
                                ymax,
                                ztest ? zmin : zmax);
         yaxis.SetRange(ymin, ymax);
-        yaxis.SetMajorTickSize(size / 40., 0);
-        yaxis.SetMinorTickSize(size / 80., 0);
+        yaxis.SetMajorTickSize(size / 40.f, 0);
+        yaxis.SetMinorTickSize(size / 80.f, 0);
         yaxis.SetLabelFontScale(size / 30.);
         yaxis.SetMoreOrLessTickAdjustment(yrel < .3 ? -1 : 0);
         yaxis.Render(view, worldAnnotator);
@@ -198,8 +198,8 @@ public:
                                ytest ? ymin : ymax,
                                zmax);
         zaxis.SetRange(zmin, zmax);
-        zaxis.SetMajorTickSize(size / 40., 0);
-        zaxis.SetMinorTickSize(size / 80., 0);
+        zaxis.SetMajorTickSize(size / 40.f, 0);
+        zaxis.SetMinorTickSize(size / 80.f, 0);
         zaxis.SetLabelFontScale(size / 30.);
         zaxis.SetMoreOrLessTickAdjustment(zrel < .3 ? -1 : 0);
         zaxis.Render(view, worldAnnotator);

@@ -151,6 +151,16 @@ private:
         
         return mtx;
     }
+
+    VTKM_CONT_EXPORT
+    vtkm::Matrix<vtkm::Float32,4,4>    
+    CreateTrackball(vtkm::Float32 x1, vtkm::Float32 y1, vtkm::Float32 x2, vtkm::Float32 y2)
+    {
+        vtkm::Matrix<vtkm::Float32,4,4> mtx;
+
+        return mtx;
+    }
+    
                                             
 public:
     enum ViewType { VIEW_2D, VIEW_3D };
@@ -244,7 +254,54 @@ public:
                 r = vr;
             }
         }
-    }    
+    }
+
+    VTKM_CONT_EXPORT
+    vtkm::Vec<vtkm::Float32, 3>
+    MultVector(const vtkm::Matrix<vtkm::Float32,4,4> &mtx, vtkm::Vec<vtkm::Float32, 3> &v)
+    {
+        vtkm::Vec<vtkm::Float32,4> v4(v[0],v[1],v[2], 1);
+        v4 = vtkm::MatrixMultiply(mtx, v4);
+        v[0] = v4[0];
+        v[1] = v4[1];
+        v[2] = v4[2];
+    }
+
+    VTKM_CONT_EXPORT
+    void TrackballRotate(vtkm::Float32 x1, vtkm::Float32 y1, vtkm::Float32 x2, vtkm::Float32 y2)
+    {
+        vtkm::Matrix<vtkm::Float32,4,4> R1 = CreateTrackball(x1,y1, x2,y2);
+        vtkm::Matrix<vtkm::Float32,4,4> T1, T2;
+        vtkm::MatrixIdentity(T1);
+        T1(3,0) = -view3d.lookAt[0];
+        T1(3,1) = -view3d.lookAt[1];
+        T1(3,2) = -view3d.lookAt[2];
+       
+        vtkm::MatrixIdentity(T2);
+        T2(3,0) = view3d.lookAt[0];
+        T2(3,1) = view3d.lookAt[1];
+        T2(3,2) = view3d.lookAt[2];
+
+        vtkm::Matrix<vtkm::Float32,4,4> V1, V2;
+        vtkm::MatrixIdentity(V1);
+        vtkm::MatrixIdentity(V2);
+        V1(0,3) = 0;
+        V1(1,3) = 0;
+        V1(2,3) = 0;
+        vtkm::MatrixTranspose(V2);
+        
+        //MM = T2 * V2 * R1 * V1 * T1;
+        vtkm::Matrix<vtkm::Float32,4,4> MM;
+        MM = vtkm::MatrixMultiply(vtkm::MatrixMultiply(vtkm::MatrixMultiply(vtkm::MatrixMultiply(V1, T1),
+                                                                            R1),
+                                                       V2),
+                                  T2);
+        /*
+        view3d.pos = MultVector(MM, view3d.pos);
+        view3d.lookAt = MultVector(MM, view3d.lookAt);
+        view3d.up = MultVector(MM, view3d.up);
+        */
+    }
 };
 
 }} // namespace vtkm::rendering
