@@ -21,13 +21,13 @@
 #ifndef vtk_m_filter_CellAverage_h
 #define vtk_m_filter_CellAverage_h
 
-#include <vtkm/filter/CellFilter.h>
+#include <vtkm/filter/FilterCell.h>
 #include <vtkm/worklet/CellAverage.h>
 
 namespace vtkm {
 namespace filter {
 
-class CellAverage : public vtkm::filter::CellFilter<CellAverage>
+class CellAverage : public vtkm::filter::FilterCell<CellAverage>
 {
 public:
   VTKM_CONT_EXPORT

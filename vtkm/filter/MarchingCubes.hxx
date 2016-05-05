@@ -314,7 +314,7 @@ struct FirstValueSame
 
 //-----------------------------------------------------------------------------
 MarchingCubes::MarchingCubes():
-  vtkm::filter::DataSetWithFieldFilter<MarchingCubes>(),
+  vtkm::filter::FilterDataSetWithField<MarchingCubes>(),
   IsoValue(0),
   MergeDuplicatePoints(true),
   GenerateNormals(false),

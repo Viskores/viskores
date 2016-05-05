@@ -21,7 +21,7 @@
 #ifndef vtk_m_filter_MarchingCubes_h
 #define vtk_m_filter_MarchingCubes_h
 
-#include <vtkm/filter/DataSetWithFieldFilter.h>
+#include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/MarchingCubes.h>
 
 
@@ -38,7 +38,7 @@ namespace filter {
 *
 */
 
-class MarchingCubes : public vtkm::filter::DataSetWithFieldFilter<MarchingCubes>
+class MarchingCubes : public vtkm::filter::FilterDataSetWithField<MarchingCubes>
 {
 public:
   VTKM_CONT_EXPORT

@@ -82,7 +82,7 @@ namespace filter {
 
 //-----------------------------------------------------------------------------
 Threshold::Threshold():
-  vtkm::filter::DataSetWithFieldFilter<Threshold>(),
+  vtkm::filter::FilterDataSetWithField<Threshold>(),
   LowerValue(0),
   UpperValue(0),
   ValidCellIds()

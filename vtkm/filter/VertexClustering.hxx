@@ -41,7 +41,7 @@ namespace
 
 //-----------------------------------------------------------------------------
 VertexClustering::VertexClustering():
-  vtkm::filter::DataSetFilter<VertexClustering>(),
+  vtkm::filter::FilterDataSet<VertexClustering>(),
   NumberOfDivisions(256, 256, 256)
 {
 

@@ -18,19 +18,37 @@
 //  this software.
 //============================================================================
 
+#ifndef vtk_m_filter_CellFilter_h
+#define vtk_m_filter_CellFilter_h
+
+#include <vtkm/filter/FilterField.h>
+
 namespace vtkm {
 namespace filter {
 
-
-//----------------------------------------------------------------------------
 template<class Derived>
-CellFilter<Derived>::CellFilter():
-  vtkm::filter::FieldFilter< Derived >(),
-  CellSetIndex(0)
+class FilterCell : public vtkm::filter::FilterField< Derived >
 {
+public:
+  VTKM_CONT_EXPORT
+  FilterCell();
+
+  VTKM_CONT_EXPORT
+  void SetActiveCellSet(vtkm::Id index)
+    { this->CellSetIndex = index; }
+
+  VTKM_CONT_EXPORT
+  vtkm::Id GetActiveCellSetIndex() const
+    { return this->CellSetIndex; }
+
+protected:
+  vtkm::Id CellSetIndex;
+};
 
 }
+} // namespace vtkm::filter
 
 
-}
-}
+#include <vtkm/filter/FilterCell.hxx>
+
+#endif // vtk_m_filter_CellFilter_h

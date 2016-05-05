@@ -21,13 +21,13 @@
 #ifndef vtk_m_filter_Threshold_h
 #define vtk_m_filter_Threshold_h
 
-#include <vtkm/filter/DataSetWithFieldFilter.h>
+#include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/Threshold.h>
 
 namespace vtkm {
 namespace filter {
 
-class Threshold : public vtkm::filter::DataSetWithFieldFilter<Threshold>
+class Threshold : public vtkm::filter::FilterDataSetWithField<Threshold>
 {
 public:
   VTKM_CONT_EXPORT

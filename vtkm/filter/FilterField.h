@@ -63,7 +63,7 @@ private:
 };
 
 template<class Derived>
-class FieldFilter
+class FilterField
 {
 public:
   VTKM_CONT_EXPORT
@@ -125,6 +125,6 @@ private:
 } // namespace vtkm::filter
 
 
-#include <vtkm/filter/FieldFilter.hxx>
+#include <vtkm/filter/FilterField.hxx>
 
 #endif // vtk_m_filter_FieldFilter_h

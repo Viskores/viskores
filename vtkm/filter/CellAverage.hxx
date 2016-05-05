@@ -28,7 +28,7 @@ namespace filter {
 
 //-----------------------------------------------------------------------------
 CellAverage::CellAverage():
-  vtkm::filter::CellFilter<CellAverage>(),
+  vtkm::filter::FilterCell<CellAverage>(),
   Worklet()
 {
 

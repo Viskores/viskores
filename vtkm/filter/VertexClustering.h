@@ -21,13 +21,13 @@
 #ifndef vtk_m_filter_VertexClustering_h
 #define vtk_m_filter_VertexClustering_h
 
-#include <vtkm/filter/DataSetFilter.h>
+#include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/VertexClustering.h>
 
 namespace vtkm {
 namespace filter {
 
-class VertexClustering : public vtkm::filter::DataSetFilter<VertexClustering>
+class VertexClustering : public vtkm::filter::FilterDataSet<VertexClustering>
 {
 public:
   VTKM_CONT_EXPORT

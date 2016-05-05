@@ -21,13 +21,13 @@
 #ifndef vtk_m_filter_ExternalFaces_h
 #define vtk_m_filter_ExternalFaces_h
 
-#include <vtkm/filter/DataSetFilter.h>
+#include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/ExternalFaces.h>
 
 namespace vtkm {
 namespace filter {
 
-class ExternalFaces : public vtkm::filter::DataSetFilter<ExternalFaces>
+class ExternalFaces : public vtkm::filter::FilterDataSet<ExternalFaces>
 {
 public:
   VTKM_CONT_EXPORT

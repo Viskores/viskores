@@ -83,7 +83,7 @@ public:
 
 //-----------------------------------------------------------------------------
 ExternalFaces::ExternalFaces():
-  vtkm::filter::DataSetFilter<ExternalFaces>()
+  vtkm::filter::FilterDataSet<ExternalFaces>()
 {
 
 }

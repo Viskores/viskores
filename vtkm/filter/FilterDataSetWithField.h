@@ -26,19 +26,19 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Field.h>
 
+#include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/filter/PolicyBase.h>
-#include <vtkm/filter/DataSetFilter.h>
 #include <vtkm/filter/internal/RuntimeDeviceTracker.h>
 
 namespace vtkm {
 namespace filter {
 
 template<class Derived>
-class DataSetWithFieldFilter
+class FilterDataSetWithField
 {
 public:
   VTKM_CONT_EXPORT
-  DataSetWithFieldFilter();
+  FilterDataSetWithField();
 
   VTKM_CONT_EXPORT
   void SetActiveCellSet(vtkm::Id index)
@@ -124,6 +124,6 @@ private:
 } // namespace vtkm::filter
 
 
-#include <vtkm/filter/DataSetWithFieldFilter.hxx>
+#include <vtkm/filter/FilterDataSetWithField.hxx>
 
 #endif // vtk_m_filter_DataSetWithFieldFilter_h

@@ -60,11 +60,11 @@ private:
 
 
 template<class Derived>
-class DataSetFilter
+class FilterDataSet
 {
 public:
   VTKM_CONT_EXPORT
-  DataSetFilter();
+  FilterDataSet();
 
   VTKM_CONT_EXPORT
   void SetActiveCellSet(vtkm::Id index)
@@ -122,6 +122,6 @@ private:
 } // namespace vtkm::filter
 
 
-#include <vtkm/filter/DataSetFilter.hxx>
+#include <vtkm/filter/FilterDataSet.hxx>
 
 #endif // vtk_m_filter_DataSetFilter_h
