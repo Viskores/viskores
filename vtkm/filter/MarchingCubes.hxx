@@ -341,7 +341,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
-vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& input,
+vtkm::filter::ResultDataSet MarchingCubes::DoExecute(const vtkm::cont::DataSet& input,
                                                      const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                                      const vtkm::filter::FieldMetadata& fieldMeta,
                                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
@@ -357,7 +357,7 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
   {
     //todo: we need to mark this as a failure of input, not a failure
     //of the algorithm
-    return vtkm::filter::DataSetResult();
+    return vtkm::filter::ResultDataSet();
   }
 
   //get the cells and coordinates of the dataset
@@ -526,7 +526,7 @@ vtkm::filter::DataSetResult MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
   output.AddCoordinateSystem( outputCoords );
 
   //todo: figure out how to pass the fields to interpolate to the Result
-  return vtkm::filter::DataSetResult(output);
+  return vtkm::filter::ResultDataSet(output);
 }
 
 //-----------------------------------------------------------------------------
@@ -534,7 +534,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
-bool MarchingCubes::DoMapField(vtkm::filter::DataSetResult& result,
+bool MarchingCubes::DoMapField(vtkm::filter::ResultDataSet& result,
                                const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                const vtkm::filter::FieldMetadata& fieldMeta,
                                const vtkm::filter::PolicyBase<DerivedPolicy>&,

@@ -26,8 +26,8 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Field.h>
 
-#include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/filter/PolicyBase.h>
+#include <vtkm/filter/ResultDataSet.h>
 #include <vtkm/filter/internal/RuntimeDeviceTracker.h>
 
 namespace vtkm {
@@ -57,30 +57,30 @@ public:
     { return this->CoordinateSystemIndex; }
 
   VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input, const std::string &inFieldName);
+  ResultDataSet Execute(const vtkm::cont::DataSet &input, const std::string &inFieldName);
 
   VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input, const vtkm::cont::Field &field);
+  ResultDataSet Execute(const vtkm::cont::DataSet &input, const vtkm::cont::Field &field);
 
   VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input, const vtkm::cont::CoordinateSystem &field);
+  ResultDataSet Execute(const vtkm::cont::DataSet &input, const vtkm::cont::CoordinateSystem &field);
 
 
   template<typename DerivedPolicy>
   VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input,
+  ResultDataSet Execute(const vtkm::cont::DataSet &input,
                         const std::string &inFieldName,
                         const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
 
   template<typename DerivedPolicy>
   VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input,
+  ResultDataSet Execute(const vtkm::cont::DataSet &input,
                         const vtkm::cont::Field &field,
                         const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
 
   template<typename DerivedPolicy>
   VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input,
+  ResultDataSet Execute(const vtkm::cont::DataSet &input,
                         const vtkm::cont::CoordinateSystem &field,
                         const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
 
@@ -91,26 +91,26 @@ public:
   // ASSOC_CELL_SET -> how do we map this?
   // ASSOC_LOGICAL_DIM -> unable to map?
   VTKM_CONT_EXPORT
-  bool MapFieldOntoOutput(DataSetResult& result,
+  bool MapFieldOntoOutput(ResultDataSet& result,
                           const vtkm::cont::Field& field);
 
   template<typename DerivedPolicy>
   VTKM_CONT_EXPORT
-  bool MapFieldOntoOutput(DataSetResult& result,
+  bool MapFieldOntoOutput(ResultDataSet& result,
                           const vtkm::cont::Field& field,
                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
   template<typename DerivedPolicy>
   VTKM_CONT_EXPORT
-  DataSetResult PrepareForExecution(const vtkm::cont::DataSet& input,
+  ResultDataSet PrepareForExecution(const vtkm::cont::DataSet& input,
                                     const vtkm::cont::Field& field,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   //How do we specify float/double coordinate types?
   template<typename DerivedPolicy>
   VTKM_CONT_EXPORT
-  DataSetResult PrepareForExecution(const vtkm::cont::DataSet& input,
+  ResultDataSet PrepareForExecution(const vtkm::cont::DataSet& input,
                                     const vtkm::cont::CoordinateSystem& field,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 

@@ -35,7 +35,7 @@ public:
 
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT_EXPORT
-  vtkm::filter::FieldResult DoExecute(const vtkm::cont::DataSet &input,
+  vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet &input,
                                       const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                       const vtkm::filter::FieldMetadata& fieldMeta,
                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy,

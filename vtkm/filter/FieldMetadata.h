@@ -67,6 +67,10 @@ public:
     {return this->Name; }
 
   VTKM_CONT_EXPORT
+  vtkm::cont::Field::AssociationEnum GetAssociation() const
+    { return this->Association; }
+
+  VTKM_CONT_EXPORT
   const std::string& GetCellSetName() const
     {return this->CellSetName; }
 

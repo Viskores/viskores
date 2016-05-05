@@ -48,7 +48,7 @@ FilterDataSet<Derived>::FilterDataSet():
 
 //-----------------------------------------------------------------------------
 template<typename Derived>
-DataSetResult FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet &input)
+ResultDataSet FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet &input)
 {
   return this->Execute(input, vtkm::filter::DefaultPolicy());
 }
@@ -56,7 +56,7 @@ DataSetResult FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet &input)
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-DataSetResult FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultDataSet FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet &input,
                                               const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
   return this->PrepareForExecution(input, policy);
@@ -66,21 +66,21 @@ DataSetResult FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet &input,
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-DataSetResult FilterDataSet<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
+ResultDataSet FilterDataSet<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
                                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
   typedef vtkm::cont::DeviceAdapterTagCuda CudaTag;
   typedef vtkm::cont::DeviceAdapterTagTBB TBBTag;
   typedef vtkm::cont::DeviceAdapterTagSerial SerialTag;
 
-  DataSetResult result = run_if_valid<DataSetResult>( static_cast<Derived*>(this),
+  ResultDataSet result = run_if_valid<ResultDataSet>( static_cast<Derived*>(this),
                                        input,
                                        policy,
                                        this->Tracker,
                                        CudaTag() );
   if( !result.IsValid() )
   {
-    result = run_if_valid<DataSetResult>( static_cast<Derived*>(this),
+    result = run_if_valid<ResultDataSet>( static_cast<Derived*>(this),
                                        input,
                                        policy,
                                        this->Tracker,
@@ -88,7 +88,7 @@ DataSetResult FilterDataSet<Derived>::PrepareForExecution(const vtkm::cont::Data
   }
   if( !result.IsValid() )
   {
-    result = run_if_valid<DataSetResult>( static_cast<Derived*>(this),
+    result = run_if_valid<ResultDataSet>( static_cast<Derived*>(this),
                                        input,
                                        policy,
                                        this->Tracker,
@@ -100,7 +100,7 @@ DataSetResult FilterDataSet<Derived>::PrepareForExecution(const vtkm::cont::Data
 
 //-----------------------------------------------------------------------------
 template<typename Derived>
-bool FilterDataSet<Derived>::MapFieldOntoOutput(DataSetResult& result,
+bool FilterDataSet<Derived>::MapFieldOntoOutput(ResultDataSet& result,
                                                 const vtkm::cont::Field& field)
 {
   return this->MapFieldOntoOutput(result, field, vtkm::filter::DefaultPolicy());
@@ -109,7 +109,7 @@ bool FilterDataSet<Derived>::MapFieldOntoOutput(DataSetResult& result,
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-bool FilterDataSet<Derived>::MapFieldOntoOutput(DataSetResult& result,
+bool FilterDataSet<Derived>::MapFieldOntoOutput(ResultDataSet& result,
                                                 const vtkm::cont::Field& field,
                                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
@@ -132,7 +132,7 @@ bool FilterDataSet<Derived>::MapFieldOntoOutput(DataSetResult& result,
 
   //the bool valid will be modified by the map algorithm to hold if the
   //mapping occurred or not. If the mapping was good a new field has been
-  //added to the DataSetResult that was passed in.
+  //added to the ResultDataSet that was passed in.
   return valid;
 
 }

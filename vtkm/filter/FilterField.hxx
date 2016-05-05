@@ -36,37 +36,8 @@ namespace filter {
 
 
 //-----------------------------------------------------------------------------
-template<typename T, typename StorageTag>
-bool FieldResult::FieldAs(vtkm::cont::ArrayHandle<T, StorageTag>& dest) const
-{
-  return this->FieldAs(dest, vtkm::filter::DefaultPolicy());
-}
-
-//-----------------------------------------------------------------------------
-template<typename T, typename StorageTag, typename DerivedPolicy>
-bool FieldResult::FieldAs(vtkm::cont::ArrayHandle<T, StorageTag>& dest,
-                          const vtkm::filter::PolicyBase<DerivedPolicy>&) const
-{
-  try
-  {
-    typedef typename DerivedPolicy::FieldTypeList TypeList;
-    typedef typename DerivedPolicy::FieldStorageList StorageList;
-
-    vtkm::cont::DynamicArrayHandle handle = this->Field.GetData();
-    handle.ResetTypeAndStorageLists(TypeList(),StorageList()).CopyTo(dest);
-    return true;
-  }
-  catch(vtkm::cont::Error e)
-  {
-    (void)e;
-  }
-
-  return false;
-}
-
-//-----------------------------------------------------------------------------
 template<typename Derived>
-FieldResult FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
                                           const std::string &inFieldName)
 {
   return this->Execute(input,
@@ -76,7 +47,7 @@ FieldResult FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
 
 //-----------------------------------------------------------------------------
 template<typename Derived>
-FieldResult FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
                                           const vtkm::cont::Field &field)
 {
   return this->Execute(input,
@@ -86,7 +57,7 @@ FieldResult FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
 
 //-----------------------------------------------------------------------------
 template<typename Derived>
-FieldResult FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
                                           const vtkm::cont::CoordinateSystem &field)
 {
   return this->Execute(input,
@@ -97,7 +68,7 @@ FieldResult FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-FieldResult FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
                                           const std::string &inFieldName,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
@@ -109,7 +80,7 @@ FieldResult FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-FieldResult FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
                                           const vtkm::cont::Field &field,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
@@ -119,7 +90,7 @@ FieldResult FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-FieldResult FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
                                           const vtkm::cont::CoordinateSystem &field,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
@@ -131,15 +102,15 @@ FieldResult FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-FieldResult FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
+ResultField FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
                                                       const vtkm::cont::Field &field,
                                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
   vtkm::filter::FieldMetadata metaData(field);
-  FieldResult result;
+  ResultField result;
 
   typedef internal::ResolveFieldTypeAndExecute< Derived,  DerivedPolicy,
-                                                FieldResult > FunctorType;
+                                                ResultField > FunctorType;
   FunctorType functor(static_cast<Derived*>(this),
                       input,
                       metaData,
@@ -155,7 +126,7 @@ FieldResult FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet 
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-FieldResult FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
+ResultField FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
                                                       const vtkm::cont::CoordinateSystem &field,
                                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
@@ -163,10 +134,10 @@ FieldResult FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet 
   //the policy for the storage types and value types just for coordinate systems
 
   vtkm::filter::FieldMetadata metaData(field);
-  FieldResult result;
+  ResultField result;
 
   typedef internal::ResolveFieldTypeAndExecute< Derived, DerivedPolicy,
-                                                FieldResult > FunctorType;
+                                                ResultField > FunctorType;
   FunctorType functor(static_cast<Derived*>(this),
                       input,
                       metaData,

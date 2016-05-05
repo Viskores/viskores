@@ -48,7 +48,7 @@ FilterDataSetWithField<Derived>::FilterDataSetWithField():
 
 //-----------------------------------------------------------------------------
 template<typename Derived>
-DataSetResult FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultDataSet FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet &input,
                                              const std::string &inFieldName)
 {
   return this->Execute(input,
@@ -58,7 +58,7 @@ DataSetResult FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet
 
 //-----------------------------------------------------------------------------
 template<typename Derived>
-DataSetResult FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultDataSet FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet &input,
                                              const vtkm::cont::Field &field)
 {
   return this->Execute(input,
@@ -68,7 +68,7 @@ DataSetResult FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet
 
 //-----------------------------------------------------------------------------
 template<typename Derived>
-DataSetResult FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultDataSet FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet &input,
                                              const vtkm::cont::CoordinateSystem &field)
 {
   return this->Execute(input,
@@ -79,7 +79,7 @@ DataSetResult FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-DataSetResult FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultDataSet FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet &input,
                                              const std::string &inFieldName,
                                              const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
@@ -91,7 +91,7 @@ DataSetResult FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-DataSetResult FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultDataSet FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet &input,
                                              const vtkm::cont::Field &field,
                                              const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
@@ -101,7 +101,7 @@ DataSetResult FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-DataSetResult FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet &input,
+ResultDataSet FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet &input,
                                              const vtkm::cont::CoordinateSystem &field,
                                              const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
@@ -113,15 +113,15 @@ DataSetResult FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-DataSetResult FilterDataSetWithField<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
+ResultDataSet FilterDataSetWithField<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
                                                          const vtkm::cont::Field &field,
                                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
   vtkm::filter::FieldMetadata metaData(field);
-  DataSetResult result;
+  ResultDataSet result;
 
   typedef internal::ResolveFieldTypeAndExecute< Derived,  DerivedPolicy,
-                                                DataSetResult > FunctorType;
+                                                ResultDataSet > FunctorType;
   FunctorType functor(static_cast<Derived*>(this),
                       input,
                       metaData,
@@ -138,7 +138,7 @@ DataSetResult FilterDataSetWithField<Derived>::PrepareForExecution(const vtkm::c
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-DataSetResult FilterDataSetWithField<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
+ResultDataSet FilterDataSetWithField<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
                                                          const vtkm::cont::CoordinateSystem &field,
                                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
@@ -147,9 +147,9 @@ DataSetResult FilterDataSetWithField<Derived>::PrepareForExecution(const vtkm::c
   vtkm::filter::FieldMetadata metaData(field);
 
   //determine the field type first
-  DataSetResult result;
+  ResultDataSet result;
   typedef internal::ResolveFieldTypeAndExecute< Derived, DerivedPolicy,
-                                                DataSetResult > FunctorType;
+                                                ResultDataSet > FunctorType;
   FunctorType functor(static_cast<Derived*>(this),
                       input,
                       metaData,
@@ -165,7 +165,7 @@ DataSetResult FilterDataSetWithField<Derived>::PrepareForExecution(const vtkm::c
 
 //-----------------------------------------------------------------------------
 template<typename Derived>
-bool FilterDataSetWithField<Derived>::MapFieldOntoOutput(DataSetResult& result,
+bool FilterDataSetWithField<Derived>::MapFieldOntoOutput(ResultDataSet& result,
                                                 const vtkm::cont::Field& field)
 {
   return this->MapFieldOntoOutput(result, field, vtkm::filter::DefaultPolicy());
@@ -174,7 +174,7 @@ bool FilterDataSetWithField<Derived>::MapFieldOntoOutput(DataSetResult& result,
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
-bool FilterDataSetWithField<Derived>::MapFieldOntoOutput(DataSetResult& result,
+bool FilterDataSetWithField<Derived>::MapFieldOntoOutput(ResultDataSet& result,
                                                 const vtkm::cont::Field& field,
                                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
@@ -197,7 +197,7 @@ bool FilterDataSetWithField<Derived>::MapFieldOntoOutput(DataSetResult& result,
 
   //the bool valid will be modified by the map algorithm to hold if the
   //mapping occurred or not. If the mapping was good a new field has been
-  //added to the DataSetResult that was passed in.
+  //added to the ResultDataSet that was passed in.
   return valid;
 
 }

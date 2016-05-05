@@ -95,7 +95,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
-vtkm::filter::DataSetResult Threshold::DoExecute(const vtkm::cont::DataSet& input,
+vtkm::filter::ResultDataSet Threshold::DoExecute(const vtkm::cont::DataSet& input,
                                                  const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                                  const vtkm::filter::FieldMetadata& fieldMeta,
                                                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
@@ -127,7 +127,7 @@ vtkm::filter::DataSetResult Threshold::DoExecute(const vtkm::cont::DataSet& inpu
   {
     //todo: we need to mark this as a failure of input, not a failure
     //of the algorithm
-    return vtkm::filter::DataSetResult();
+    return vtkm::filter::ResultDataSet();
   }
 
   typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
@@ -157,7 +157,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
-bool Threshold::DoMapField(vtkm::filter::DataSetResult& result,
+bool Threshold::DoMapField(vtkm::filter::ResultDataSet& result,
                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
                            const vtkm::filter::FieldMetadata& fieldMeta,
                            const vtkm::filter::PolicyBase<DerivedPolicy>&,

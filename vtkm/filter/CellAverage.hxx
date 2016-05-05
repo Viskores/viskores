@@ -39,7 +39,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
-vtkm::filter::FieldResult CellAverage::DoExecute(const vtkm::cont::DataSet &input,
+vtkm::filter::ResultField CellAverage::DoExecute(const vtkm::cont::DataSet &input,
                                                  const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                                  const vtkm::filter::FieldMetadata&,
                                                  const vtkm::filter::PolicyBase<DerivedPolicy>&,
@@ -59,12 +59,11 @@ vtkm::filter::FieldResult CellAverage::DoExecute(const vtkm::cont::DataSet &inpu
   //that the dispatcher should do, including the result from GetCellSet
   dispatcher.Invoke(field, cellSet, outArray);
 
-  vtkm::cont::Field outField(this->GetOutputFieldName(),
-                             vtkm::cont::Field::ASSOC_CELL_SET,
-                             cellSet.GetCellSet().GetName(),
-                             outArray);
-
-  return vtkm::filter::FieldResult(outField);
+  return vtkm::filter::ResultField(input,
+                                   outArray,
+                                   this->GetOutputFieldName(),
+                                   vtkm::cont::Field::ASSOC_CELL_SET,
+                                   cellSet.GetCellSet().GetName());
 }
 
 }

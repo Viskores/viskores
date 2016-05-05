@@ -31,6 +31,9 @@ set(headers
   PointElevation.h
   PolicyBase.h
   PolicyDefault.h
+  ResultBase.h
+  ResultDataSet.h
+  ResultField.h
   Threshold.h
   VertexClustering.h
 )
