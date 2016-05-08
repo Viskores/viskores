@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_filter_DataSetWithFieldFilter_h
-#define vtk_m_filter_DataSetWithFieldFilter_h
+#ifndef vtk_m_filter_DataSetFilter_h
+#define vtk_m_filter_DataSetFilter_h
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
@@ -27,18 +27,19 @@
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/filter/PolicyBase.h>
-#include <vtkm/filter/DataSetFilter.h>
+#include <vtkm/filter/ResultDataSet.h>
 #include <vtkm/filter/internal/RuntimeDeviceTracker.h>
 
 namespace vtkm {
 namespace filter {
 
+
 template<class Derived>
-class DataSetWithFieldFilter
+class FilterDataSet
 {
 public:
   VTKM_CONT_EXPORT
-  DataSetWithFieldFilter();
+  FilterDataSet();
 
   VTKM_CONT_EXPORT
   void SetActiveCellSet(vtkm::Id index)
@@ -57,31 +58,11 @@ public:
     { return this->CoordinateSystemIndex; }
 
   VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input, const std::string &inFieldName);
-
-  VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input, const vtkm::cont::Field &field);
-
-  VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input, const vtkm::cont::CoordinateSystem &field);
-
+  ResultDataSet Execute(const vtkm::cont::DataSet &input);
 
   template<typename DerivedPolicy>
   VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input,
-                        const std::string &inFieldName,
-                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
-
-  template<typename DerivedPolicy>
-  VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input,
-                        const vtkm::cont::Field &field,
-                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
-
-  template<typename DerivedPolicy>
-  VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input,
-                        const vtkm::cont::CoordinateSystem &field,
+  ResultDataSet Execute(const vtkm::cont::DataSet &input,
                         const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
 
   //From the field we can extract the association component
@@ -91,27 +72,19 @@ public:
   // ASSOC_CELL_SET -> how do we map this?
   // ASSOC_LOGICAL_DIM -> unable to map?
   VTKM_CONT_EXPORT
-  bool MapFieldOntoOutput(DataSetResult& result,
+  bool MapFieldOntoOutput(ResultDataSet& result,
                           const vtkm::cont::Field& field);
 
   template<typename DerivedPolicy>
   VTKM_CONT_EXPORT
-  bool MapFieldOntoOutput(DataSetResult& result,
+  bool MapFieldOntoOutput(ResultDataSet& result,
                           const vtkm::cont::Field& field,
                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
   template<typename DerivedPolicy>
   VTKM_CONT_EXPORT
-  DataSetResult PrepareForExecution(const vtkm::cont::DataSet& input,
-                                    const vtkm::cont::Field& field,
-                                    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-  //How do we specify float/double coordinate types?
-  template<typename DerivedPolicy>
-  VTKM_CONT_EXPORT
-  DataSetResult PrepareForExecution(const vtkm::cont::DataSet& input,
-                                    const vtkm::cont::CoordinateSystem& field,
+  ResultDataSet PrepareForExecution(const vtkm::cont::DataSet& input,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   std::string OutputFieldName;
@@ -124,6 +97,6 @@ private:
 } // namespace vtkm::filter
 
 
-#include <vtkm/filter/DataSetWithFieldFilter.hxx>
+#include <vtkm/filter/FilterDataSet.hxx>
 
-#endif // vtk_m_filter_DataSetWithFieldFilter_h
+#endif // vtk_m_filter_DataSetFilter_h

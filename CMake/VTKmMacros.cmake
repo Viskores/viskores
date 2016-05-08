@@ -130,6 +130,10 @@ function(vtkm_install_template_sources)
   vtkm_get_kit_name(name dir_prefix)
   set(hfiles ${ARGN})
   vtkm_install_headers("${dir_prefix}" ${hfiles})
+  # CMake does not add installed files as project files, and template sources
+  # are not declared as source files anywhere, add a fake target here to let
+  # an IDE know that these sources exist.
+  add_custom_target(${name}_template_srcs SOURCES ${hfiles})
 endfunction(vtkm_install_template_sources)
 
 # Declare a list of headers that require thrust to be enabled

@@ -30,7 +30,7 @@
 //forward declarations needed
 namespace vtkm {
 namespace filter {
-  class DataSetResult;
+  class ResultDataSet;
 }
 }
 
@@ -45,7 +45,7 @@ template<typename ClassType,
          typename DeviceAdapterTag
         >
 bool map_if_valid(ClassType* c,
-                        vtkm::filter::DataSetResult& input,
+                        vtkm::filter::ResultDataSet& input,
                         const ArrayType &field,
                         const vtkm::filter::FieldMetadata& fieldMeta,
                         const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
@@ -70,7 +70,7 @@ struct CanMap<false>
            typename DerivedPolicy,
            typename DeviceAdapterTag>
   static bool Run(ClassType*,
-                  vtkm::filter::DataSetResult&,
+                  vtkm::filter::ResultDataSet&,
                   const ArrayType &,
                   const vtkm::filter::FieldMetadata&,
                   const vtkm::filter::PolicyBase<DerivedPolicy>&,
@@ -91,7 +91,7 @@ struct CanMap<true>
            typename DerivedPolicy,
            typename DeviceAdapterTag>
   static bool Run(ClassType* c,
-                  vtkm::filter::DataSetResult& input,
+                  vtkm::filter::ResultDataSet& input,
                   const ArrayType &field,
                   const vtkm::filter::FieldMetadata& fieldMeta,
                   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
@@ -148,7 +148,7 @@ namespace
   struct ResolveFieldTypeAndMap
   {
     Derived* DerivedClass;
-    vtkm::filter::DataSetResult& InputResult;
+    vtkm::filter::ResultDataSet& InputResult;
     const vtkm::filter::FieldMetadata& Metadata;
     const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
     vtkm::filter::internal::RuntimeDeviceTracker& Tracker;
@@ -156,7 +156,7 @@ namespace
 
 
     ResolveFieldTypeAndMap(Derived* derivedClass,
-                           vtkm::filter::DataSetResult& inResult,
+                           vtkm::filter::ResultDataSet& inResult,
                            const vtkm::filter::FieldMetadata& fieldMeta,
                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                            vtkm::filter::internal::RuntimeDeviceTracker& tracker,

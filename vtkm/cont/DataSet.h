@@ -57,8 +57,19 @@ public:
   const vtkm::cont::Field &GetField(vtkm::Id index) const
   {
     VTKM_ASSERT((index >= 0) &&
-                     (index < this->GetNumberOfFields()));
+                (index < this->GetNumberOfFields()));
     return this->Fields[static_cast<std::size_t>(index)];
+  }
+
+  VTKM_CONT_EXPORT
+  bool HasField(
+      const std::string &name,
+      vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY)
+    const
+  {
+    bool found;
+    this->FindFieldIndex(name, assoc, found);
+    return found;
   }
 
   VTKM_CONT_EXPORT
@@ -67,16 +78,17 @@ public:
       vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY)
     const
   {
-    for (std::size_t i=0; i < this->Fields.size(); ++i)
+    bool found;
+    vtkm::Id index = this->FindFieldIndex(name, assoc, found);
+    if (found)
     {
-      if ((assoc == vtkm::cont::Field::ASSOC_ANY ||
-           assoc == this->Fields[i].GetAssociation()) &&
-          this->Fields[i].GetName() == name)
-      {
-        return static_cast<vtkm::Id>(i);
-      }
+      return index;
     }
-    throw vtkm::cont::ErrorControlBadValue("No field with requested name: "+name);
+    else
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "No field with requested name: " + name);
+    }
   }
 
   VTKM_CONT_EXPORT
@@ -103,17 +115,27 @@ public:
   }
 
   VTKM_CONT_EXPORT
+  bool HasCoordinateSystem(const std::string &name) const
+  {
+    bool found;
+    this->FindCoordinateSystemIndex(name, found);
+    return found;
+  }
+
+  VTKM_CONT_EXPORT
   vtkm::Id GetCoordinateSystemIndex(const std::string &name) const
   {
-    for (std::size_t i=0; i < this->CoordSystems.size(); ++i)
+    bool found;
+    vtkm::Id index = this->FindCoordinateSystemIndex(name, found);
+    if (found)
     {
-      if (this->CoordSystems[i].GetName() == name)
-      {
-        return static_cast<vtkm::Id>(i);
-      }
+      return index;
     }
-    throw vtkm::cont::ErrorControlBadValue(
-          "No coordinate system with requested name");
+    else
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "No coordinate system with requested name");
+    }
   }
 
   VTKM_CONT_EXPORT
@@ -146,16 +168,26 @@ public:
   }
 
   VTKM_CONT_EXPORT
+  bool HasCellSet(const std::string &name) const
+  {
+    bool found;
+    this->FindCellSetIndex(name, found);
+    return found;
+  }
+
+  VTKM_CONT_EXPORT
   vtkm::Id GetCellSetIndex(const std::string &name) const
   {
-    for (std::size_t i=0; i < static_cast<size_t>(this->GetNumberOfCellSets()); ++i)
+    bool found;
+    vtkm::Id index = this->FindCellSetIndex(name, found);
+    if (found)
     {
-      if (this->CellSets[i].GetCellSet().GetName() == name)
-      {
-        return static_cast<vtkm::Id>(i);
-      }
+      return index;
     }
-    throw vtkm::cont::ErrorControlBadValue("No cell set with requested name");
+    else
+    {
+      throw vtkm::cont::ErrorControlBadValue("No cell set with requested name");
+    }
   }
 
   VTKM_CONT_EXPORT
@@ -187,21 +219,21 @@ public:
   {
       out<<"DataSet:\n";
       out<<"  CoordSystems["<<this->CoordSystems.size()<<"]\n";
-      for (std::size_t i = 0; i < this->CoordSystems.size(); i++)
+      for (std::size_t index = 0; index < this->CoordSystems.size(); index++)
       {
-        this->CoordSystems[i].PrintSummary(out);
+        this->CoordSystems[index].PrintSummary(out);
       }
 
       out<<"  CellSets["<<this->GetNumberOfCellSets()<<"]\n";
-      for (vtkm::Id i = 0; i < this->GetNumberOfCellSets(); i++)
+      for (vtkm::Id index = 0; index < this->GetNumberOfCellSets(); index++)
       {
-        this->GetCellSet(i).GetCellSet().PrintSummary(out);
+        this->GetCellSet(index).GetCellSet().PrintSummary(out);
       }
 
       out<<"  Fields["<<this->GetNumberOfFields()<<"]\n";
-      for (vtkm::Id i = 0; i < this->GetNumberOfFields(); i++)
+      for (vtkm::Id index = 0; index < this->GetNumberOfFields(); index++)
       {
-        this->GetField(i).PrintSummary(out);
+        this->GetField(index).PrintSummary(out);
       }
   }
 
@@ -209,6 +241,55 @@ private:
   std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
   std::vector<vtkm::cont::Field> Fields;
   std::vector<vtkm::cont::DynamicCellSet> CellSets;
+
+  VTKM_CONT_EXPORT
+  vtkm::Id FindFieldIndex(const std::string &name,
+                          vtkm::cont::Field::AssociationEnum association,
+                          bool &found) const
+  {
+    for (std::size_t index=0; index < this->Fields.size(); ++index)
+    {
+      if ((association == vtkm::cont::Field::ASSOC_ANY ||
+           association == this->Fields[index].GetAssociation()) &&
+          this->Fields[index].GetName() == name)
+      {
+        found= true;
+        return static_cast<vtkm::Id>(index);
+      }
+    }
+    found = false;
+    return -1;
+  }
+
+  VTKM_CONT_EXPORT
+  vtkm::Id FindCoordinateSystemIndex(const std::string &name, bool &found) const
+  {
+    for (std::size_t index=0; index < this->CoordSystems.size(); ++index)
+    {
+      if (this->CoordSystems[index].GetName() == name)
+      {
+        found = true;
+        return static_cast<vtkm::Id>(index);
+      }
+    }
+    found = false;
+    return -1;
+  }
+
+  VTKM_CONT_EXPORT
+  vtkm::Id FindCellSetIndex(const std::string &name, bool &found) const
+  {
+    for (std::size_t index=0; index < static_cast<size_t>(this->GetNumberOfCellSets()); ++index)
+    {
+      if (this->CellSets[index].GetCellSet().GetName() == name)
+      {
+        found = true;
+        return static_cast<vtkm::Id>(index);
+      }
+    }
+    found = false;
+    return -1;
+  }
 };
 
 } // namespace cont

@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_filter_DataSetFilter_h
-#define vtk_m_filter_DataSetFilter_h
+#ifndef vtk_m_filter_DataSetWithFieldFilter_h
+#define vtk_m_filter_DataSetWithFieldFilter_h
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
@@ -27,44 +27,18 @@
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/filter/PolicyBase.h>
+#include <vtkm/filter/ResultDataSet.h>
 #include <vtkm/filter/internal/RuntimeDeviceTracker.h>
 
 namespace vtkm {
 namespace filter {
 
-class DataSetResult
-{
-public:
-  VTKM_CONT_EXPORT
-  DataSetResult(): Valid(false), Data()
-    { }
-
-  VTKM_CONT_EXPORT
-  DataSetResult(const  vtkm::cont::DataSet& ds): Valid(true), Data(ds)
-    { }
-
-  VTKM_CONT_EXPORT
-  bool IsValid() const { return this->Valid; }
-
-  VTKM_CONT_EXPORT
-  const vtkm::cont::DataSet& GetDataSet() const { return this->Data; }
-
-  VTKM_CONT_EXPORT
-  vtkm::cont::DataSet& GetDataSet() { return this->Data; }
-
-private:
-  bool Valid;
-  vtkm::cont::DataSet Data;
-};
-
-
-
 template<class Derived>
-class DataSetFilter
+class FilterDataSetWithField
 {
 public:
   VTKM_CONT_EXPORT
-  DataSetFilter();
+  FilterDataSetWithField();
 
   VTKM_CONT_EXPORT
   void SetActiveCellSet(vtkm::Id index)
@@ -83,11 +57,31 @@ public:
     { return this->CoordinateSystemIndex; }
 
   VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input);
+  ResultDataSet Execute(const vtkm::cont::DataSet &input, const std::string &inFieldName);
+
+  VTKM_CONT_EXPORT
+  ResultDataSet Execute(const vtkm::cont::DataSet &input, const vtkm::cont::Field &field);
+
+  VTKM_CONT_EXPORT
+  ResultDataSet Execute(const vtkm::cont::DataSet &input, const vtkm::cont::CoordinateSystem &field);
+
 
   template<typename DerivedPolicy>
   VTKM_CONT_EXPORT
-  DataSetResult Execute(const vtkm::cont::DataSet &input,
+  ResultDataSet Execute(const vtkm::cont::DataSet &input,
+                        const std::string &inFieldName,
+                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
+
+  template<typename DerivedPolicy>
+  VTKM_CONT_EXPORT
+  ResultDataSet Execute(const vtkm::cont::DataSet &input,
+                        const vtkm::cont::Field &field,
+                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
+
+  template<typename DerivedPolicy>
+  VTKM_CONT_EXPORT
+  ResultDataSet Execute(const vtkm::cont::DataSet &input,
+                        const vtkm::cont::CoordinateSystem &field,
                         const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
 
   //From the field we can extract the association component
@@ -97,19 +91,27 @@ public:
   // ASSOC_CELL_SET -> how do we map this?
   // ASSOC_LOGICAL_DIM -> unable to map?
   VTKM_CONT_EXPORT
-  bool MapFieldOntoOutput(DataSetResult& result,
+  bool MapFieldOntoOutput(ResultDataSet& result,
                           const vtkm::cont::Field& field);
 
   template<typename DerivedPolicy>
   VTKM_CONT_EXPORT
-  bool MapFieldOntoOutput(DataSetResult& result,
+  bool MapFieldOntoOutput(ResultDataSet& result,
                           const vtkm::cont::Field& field,
                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
   template<typename DerivedPolicy>
   VTKM_CONT_EXPORT
-  DataSetResult PrepareForExecution(const vtkm::cont::DataSet& input,
+  ResultDataSet PrepareForExecution(const vtkm::cont::DataSet& input,
+                                    const vtkm::cont::Field& field,
+                                    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+
+  //How do we specify float/double coordinate types?
+  template<typename DerivedPolicy>
+  VTKM_CONT_EXPORT
+  ResultDataSet PrepareForExecution(const vtkm::cont::DataSet& input,
+                                    const vtkm::cont::CoordinateSystem& field,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   std::string OutputFieldName;
@@ -122,6 +124,6 @@ private:
 } // namespace vtkm::filter
 
 
-#include <vtkm/filter/DataSetFilter.hxx>
+#include <vtkm/filter/FilterDataSetWithField.hxx>
 
-#endif // vtk_m_filter_DataSetFilter_h
+#endif // vtk_m_filter_DataSetWithFieldFilter_h
