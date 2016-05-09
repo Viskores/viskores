@@ -54,10 +54,17 @@ public:
     VTKM_CONT_EXPORT
     virtual void SetViewToWorldSpace(vtkm::rendering::View &, bool) {}
     VTKM_CONT_EXPORT
+    virtual void SetViewToScreenSpace(vtkm::rendering::View &, bool) {}
+    VTKM_CONT_EXPORT
     void SetViewportClipping(vtkm::rendering::View &, bool) {}
 
     VTKM_CONT_EXPORT
     virtual void SaveAs(const std::string &) {}
+
+    virtual void AddLine(double, double,
+                         double, double,
+                         float,
+                         Color) {}
 
     vtkm::rendering::Color bgColor;
     std::size_t width, height;

@@ -27,6 +27,7 @@
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/BoundingBoxAnnotation.h>
 #include <vtkm/rendering/AxisAnnotation3D.h>
+#include <vtkm/rendering/AxisAnnotation2D.h>
 
 namespace vtkm {
 namespace rendering {
@@ -132,7 +133,15 @@ public:
         scene.Render(sceneRenderer, surface, view);
         RenderWorldAnnotations();
 
+        SetupForScreenSpace();
+        RenderScreenAnnotations();
+
         surface.Finish();
+    }
+
+    VTKM_CONT_EXPORT
+    void RenderScreenAnnotations()
+    {
     }
 
     VTKM_CONT_EXPORT
@@ -218,20 +227,34 @@ private:
         //view.SetupMatrices();
         surface.SetViewToWorldSpace(view,viewportClip);
     }
+
+    VTKM_CONT_EXPORT
+    void SetupForScreenSpace(bool viewportClip=false)
+    {
+        //view.SetupMatrices();
+        surface.SetViewToScreenSpace(view,viewportClip);
+    }
 };
 
+#include <GL/osmesa.h>
+#include <GL/gl.h>
 
 template<typename SceneRendererType,
-         typename SurfaceType>
+         typename SurfaceType,
+         typename WorldAnnotatorType>
 class Window2D
 {
 public:
     Color bgColor;
     vtkm::rendering::Scene2D scene;
+    WorldAnnotatorType worldAnnotator;
     SceneRendererType sceneRenderer;
     SurfaceType surface;
     vtkm::rendering::View view;
-  
+
+    // 2D-specific annotations
+    AxisAnnotation2D haxis, vaxis;
+
     VTKM_CONT_EXPORT
     Window2D(const vtkm::rendering::Scene2D &s,
              const SceneRendererType &sr,
@@ -256,8 +279,44 @@ public:
         SetupForWorldSpace();
         
         scene.Render(sceneRenderer, surface, view);
+        RenderWorldAnnotations();
+
+        SetupForScreenSpace();
+        RenderScreenAnnotations();
 
         surface.Finish();
+    }
+
+    VTKM_CONT_EXPORT
+    void RenderScreenAnnotations()
+    {
+        vtkm::Float32 vl, vr, vt, vb;
+        view.GetRealViewport(vl,vr,vb,vt);
+
+        haxis.SetColor(Color(1,1,1));
+        haxis.SetScreenPosition(vl,vb, vr,vb);
+        haxis.SetRangeForAutoTicks(view.view2d.left, view.view2d.right);
+        haxis.SetMajorTickSize(0, .05, 1.0);
+        haxis.SetMinorTickSize(0, .02, 1.0);
+        //haxis.SetLabelAlignment(eavlTextAnnotation::HCenter,
+        //                         eavlTextAnnotation::Top);
+        haxis.Render(view, worldAnnotator, surface);
+
+        vtkm::Float32 windowaspect = vtkm::Float32(view.width) / vtkm::Float32(view.height);
+
+        vaxis.SetColor(Color(1,1,1));
+        vaxis.SetScreenPosition(vl,vb, vl,vt);
+        vaxis.SetRangeForAutoTicks(view.view2d.bottom, view.view2d.top);
+        vaxis.SetMajorTickSize(.05 / windowaspect, 0, 1.0);
+        vaxis.SetMinorTickSize(.02 / windowaspect, 0, 1.0);
+        //vaxis.SetLabelAlignment(eavlTextAnnotation::Right,
+        //                         eavlTextAnnotation::VCenter);
+        vaxis.Render(view, worldAnnotator, surface);
+    }
+
+    VTKM_CONT_EXPORT
+    void RenderWorldAnnotations()
+    {
     }
 
     VTKM_CONT_EXPORT
@@ -272,6 +331,13 @@ private:
     {
         //view.SetupMatrices();
         surface.SetViewToWorldSpace(view,viewportClip);
+    }
+
+    VTKM_CONT_EXPORT
+    void SetupForScreenSpace(bool viewportClip=false)
+    {
+        //view.SetupMatrices();
+        surface.SetViewToScreenSpace(view,viewportClip);
     }
 };
 

@@ -76,15 +76,20 @@ void Set2DView(vtkm::rendering::View &view,
     vtkm::Normalize(totalExtent);
 
     view = vtkm::rendering::View(vtkm::rendering::View::VIEW_2D);
-    vtkm::Float32 off = 0.5f;
-    view.view2d.left = static_cast<vtkm::Float32>(coordsBounds[0]) - off;
-    view.view2d.right = static_cast<vtkm::Float32>(coordsBounds[1]) + off;
-    view.view2d.bottom = static_cast<vtkm::Float32>(coordsBounds[2]) - off;
-    view.view2d.top = static_cast<vtkm::Float32>(coordsBounds[3]) + off;
+    view.view2d.left = static_cast<vtkm::Float32>(coordsBounds[0]);
+    view.view2d.right = static_cast<vtkm::Float32>(coordsBounds[1]);
+    view.view2d.bottom = static_cast<vtkm::Float32>(coordsBounds[2]);
+    view.view2d.top = static_cast<vtkm::Float32>(coordsBounds[3]);
     view.nearPlane = 1.f;
     view.farPlane = 100.f;
     view.width = w;
     view.height = h;
+
+    // Give it some space for other annotations like a color bar
+    view.vl = -.7f;
+    view.vr = +.7f;
+    view.vb = -.7f;
+    view.vt = +.7f;
     
     /*
     std::cout<<"View2d:  l/r: "<<view.view2d.left<<" "<<view.view2d.right<<std::endl;
@@ -147,7 +152,8 @@ void Render2D(const vtkm::cont::DataSet &ds,
                                                 ds.GetField(fieldNm),
                                                 vtkm::rendering::ColorTable(ctName)));
     vtkm::rendering::Window2D<vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                              vtkm::rendering::RenderSurfaceOSMesa>
+                              vtkm::rendering::RenderSurfaceOSMesa,
+                              vtkm::rendering::WorldAnnotatorGL>
         w(scene, sceneRenderer, surface, view, bg);
     
     w.Initialize();

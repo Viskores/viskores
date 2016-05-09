@@ -42,7 +42,8 @@ protected:
   double x0, y0, z0,   x1, y1, z1;
   double lower, upper;
   double fontscale;
-  Color color;
+  float  linewidth;
+  Color  color;
   //vector<BillboardTextAnnotation*> labels; ///<\todo: add text back in 
   int moreOrLessTickAdjustment;
 public:
@@ -50,6 +51,10 @@ public:
   {
     axis = 0;
     color = Color(1,1,1);
+    fontscale = 0.05;
+    linewidth = 1.0;
+    color = Color(1,1,1);
+    moreOrLessTickAdjustment = 0;
   }
   virtual ~AxisAnnotation3D()
   {
@@ -96,7 +101,7 @@ public:
     y1 = y1_;
     z1 = z1_;
   }
-  void SetLabelFontScale(float s)
+  void SetLabelFontScale(double s)
   {
     fontscale = s;
 #if 0
@@ -109,10 +114,9 @@ public:
     lower = l;
     upper = u;
   }
-  virtual void Render(View &view,
+  virtual void Render(View &,
                       WorldAnnotator &worldannotator)
   {
-    float linewidth = 1.0;
     bool infront = true;
     worldannotator.AddLine(x0,y0,z0,
                             x1,y1,z1,

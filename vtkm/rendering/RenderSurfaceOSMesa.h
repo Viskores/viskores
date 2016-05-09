@@ -106,12 +106,37 @@ public:
     }
 
     VTKM_CONT_EXPORT
+    virtual void SetViewToScreenSpace(vtkm::rendering::View &v, bool clip)
+    {
+        vtkm::Float32 oglP[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
+        vtkm::Float32 oglM[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
+        
+        oglP[0*4+0] = 1.;
+        oglP[1*4+1] = 1.;
+        oglP[2*4+2] = -1.;
+        oglP[3*4+3] = 1.;
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadMatrixf(oglP);
+
+        oglM[0*4+0] = 1.;
+        oglM[1*4+1] = 1.;
+        oglM[2*4+2] = 1.;
+        oglM[3*4+3] = 1.;
+        
+        glMatrixMode(GL_MODELVIEW);
+        glLoadMatrixf(oglM);
+
+        SetViewportClipping(v, clip);
+    }
+
+    VTKM_CONT_EXPORT
     virtual void SetViewportClipping(vtkm::rendering::View &v, bool clip)
     {
         if (clip)
         {
-            vtkm::Float32 vl, vr, vt, vb;
-            v.GetRealViewport(vl,vr,vt,vb);
+            vtkm::Float32 vl, vr, vb, vt;
+            v.GetRealViewport(vl,vr,vb,vt);
             vtkm::Float32 _x = static_cast<vtkm::Float32>(v.width)*(1.f+vl)/2.f;
             vtkm::Float32 _y = static_cast<vtkm::Float32>(v.height)*(1.f+vb)/2.f;
             vtkm::Float32 _w = static_cast<vtkm::Float32>(v.width)*(vr-vl)/2.f;
@@ -163,6 +188,24 @@ public:
                 of<<(unsigned char)(tuple[2]*255);
             }
         of.close();
+    }
+
+    VTKM_CONT_EXPORT
+    virtual void AddLine(double x0, double y0,
+                         double x1, double y1,
+                         float linewidth,
+                         Color c)
+    {
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_LIGHTING);
+        glColor3fv(c.Components);
+
+        glLineWidth(linewidth);
+
+        glBegin(GL_LINES);
+        glVertex2f(float(x0),float(y0));
+        glVertex2f(float(x1),float(y1));
+        glEnd();
     }
 
     VTKM_CONT_EXPORT
