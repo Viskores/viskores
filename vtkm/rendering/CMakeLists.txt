@@ -24,6 +24,7 @@ set(headers
   Plot.h
   RenderSurface.h
   RenderSurfaceOSMesa.h
+  RenderSurfaceGL.h
   Scene.h
   SceneRenderer.h
   SceneRendererGL.h
