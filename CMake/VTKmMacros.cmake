@@ -518,7 +518,6 @@ function(vtkm_benchmarks device_adapter)
 
     foreach( file  ${benchmark_srcs})
       #inject the device adapter into the benchmark program name so each one is unique
-      message(STATUS "file: ${file}"  )
       get_filename_component(benchmark_prog ${file} NAME_WE)
       set(benchmark_prog "${benchmark_prog}_${device_type}")
 
