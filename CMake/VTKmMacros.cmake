@@ -257,7 +257,7 @@ function(vtkm_unit_tests)
     #generally require more time because of kernel generation.
     set(timeout 180)
     if (VTKm_UT_CUDA)
-      set(timeout 600)
+      set(timeout 1500)
     endif()
 
     if (VTKm_UT_CUDA)
@@ -383,7 +383,7 @@ function(vtkm_worklet_unit_tests device_adapter)
   #
   set(timeout 180)
   if(is_cuda)
-    set(timeout 600)
+    set(timeout 1500)
   endif()
 
   if(VTKm_ENABLE_TESTING)
