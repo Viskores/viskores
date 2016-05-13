@@ -20,13 +20,13 @@
 #ifndef vtk_m_exec_Derivative_h
 #define vtk_m_exec_Derivative_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/VecRectilinearPointCoordinates.h>
 #include <vtkm/VectorAnalysis.h>
 
-#include <vtkm/exec/Assert.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/FunctorBase.h>
 
@@ -663,10 +663,12 @@ CellDerivative(const FieldVecType &field,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &,
                vtkm::CellShapeTagVertex,
-               const vtkm::exec::FunctorBase &worklet)
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 1, worklet);
-  VTKM_ASSERT_EXEC(wCoords.GetNumberOfComponents() == 1, worklet);
+  (void)field;
+  (void)wCoords;
+  VTKM_ASSERT(field.GetNumberOfComponents() == 1);
+  VTKM_ASSERT(wCoords.GetNumberOfComponents() == 1);
 
   typedef vtkm::Vec<typename FieldVecType::ComponentType,3> GradientType;
   return GradientType(0,0,0);
@@ -682,10 +684,10 @@ CellDerivative(const FieldVecType &field,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &vtkmNotUsed(pcoords),
                vtkm::CellShapeTagLine,
-               const vtkm::exec::FunctorBase &worklet)
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 2, worklet);
-  VTKM_ASSERT_EXEC(wCoords.GetNumberOfComponents() == 2, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 2);
+  VTKM_ASSERT(wCoords.GetNumberOfComponents() == 2);
 
   typedef typename FieldVecType::ComponentType FieldType;
   typedef vtkm::Vec<FieldType,3> GradientType;
@@ -709,9 +711,9 @@ CellDerivative(const FieldVecType &field,
                const vtkm::VecRectilinearPointCoordinates<1> &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &vtkmNotUsed(pcoords),
                vtkm::CellShapeTagLine,
-               const vtkm::exec::FunctorBase &worklet)
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 2, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 2);
 
   typedef typename FieldVecType::ComponentType T;
 
@@ -728,10 +730,10 @@ CellDerivative(const FieldVecType &field,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &vtkmNotUsed(pcoords),
                vtkm::CellShapeTagTriangle,
-               const vtkm::exec::FunctorBase &worklet)
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 3, worklet);
-  VTKM_ASSERT_EXEC(wCoords.GetNumberOfComponents() == 3, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 3);
+  VTKM_ASSERT(wCoords.GetNumberOfComponents() == 3);
 
   typedef typename FieldVecType::ComponentType FieldType;
   typedef vtkm::Vec<FieldType,3> GradientType;
@@ -799,12 +801,10 @@ CellDerivative(const FieldVecType &field,
                vtkm::CellShapeTagPolygon,
                const vtkm::exec::FunctorBase &worklet)
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() ==
-                     wCoords.GetNumberOfComponents(),
-                   worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == wCoords.GetNumberOfComponents());
 
   const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
-  VTKM_ASSERT_EXEC(numPoints > 0, worklet);
+  VTKM_ASSERT(numPoints > 0);
 
   switch (field.GetNumberOfComponents())
   {
@@ -910,10 +910,10 @@ CellDerivative(const FieldVecType &field,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &pcoords,
                vtkm::CellShapeTagQuad,
-               const vtkm::exec::FunctorBase &worklet)
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 4, worklet);
-  VTKM_ASSERT_EXEC(wCoords.GetNumberOfComponents() == 4, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 4);
+  VTKM_ASSERT(wCoords.GetNumberOfComponents() == 4);
 
   return detail::CellDerivativeFor2DCell(
         field, wCoords, pcoords, vtkm::CellShapeTagQuad());
@@ -927,9 +927,9 @@ CellDerivative(const FieldVecType &field,
                const vtkm::VecRectilinearPointCoordinates<2> &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &pcoords,
                vtkm::CellShapeTagQuad,
-               const vtkm::exec::FunctorBase &worklet)
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 4, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 4);
 
   typedef typename FieldVecType::ComponentType T;
   typedef vtkm::Vec<T,2> VecT;
@@ -958,10 +958,10 @@ CellDerivative(const FieldVecType &field,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &vtkmNotUsed(pcoords),
                vtkm::CellShapeTagTetra,
-               const vtkm::exec::FunctorBase &worklet)
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 4, worklet);
-  VTKM_ASSERT_EXEC(wCoords.GetNumberOfComponents() == 4, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 4);
+  VTKM_ASSERT(wCoords.GetNumberOfComponents() == 4);
 
   typedef typename FieldVecType::ComponentType FieldType;
   typedef vtkm::Vec<FieldType,3> GradientType;
@@ -1026,10 +1026,10 @@ CellDerivative(const FieldVecType &field,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &pcoords,
                vtkm::CellShapeTagHexahedron,
-               const vtkm::exec::FunctorBase &worklet)
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 8, worklet);
-  VTKM_ASSERT_EXEC(wCoords.GetNumberOfComponents() == 8, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 8);
+  VTKM_ASSERT(wCoords.GetNumberOfComponents() == 8);
 
   return detail::CellDerivativeFor3DCell(
         field, wCoords, pcoords, vtkm::CellShapeTagHexahedron());
@@ -1043,9 +1043,9 @@ CellDerivative(const FieldVecType &field,
                const vtkm::VecRectilinearPointCoordinates<3> &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &pcoords,
                vtkm::CellShapeTagHexahedron,
-               const vtkm::exec::FunctorBase &worklet)
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 8, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 8);
 
   typedef typename FieldVecType::ComponentType T;
   typedef vtkm::Vec<T,3> VecT;
@@ -1078,10 +1078,10 @@ CellDerivative(const FieldVecType &field,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &pcoords,
                vtkm::CellShapeTagWedge,
-               const vtkm::exec::FunctorBase &worklet)
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 6, worklet);
-  VTKM_ASSERT_EXEC(wCoords.GetNumberOfComponents() == 6, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 6);
+  VTKM_ASSERT(wCoords.GetNumberOfComponents() == 6);
 
   return detail::CellDerivativeFor3DCell(
         field, wCoords, pcoords, vtkm::CellShapeTagWedge());
@@ -1098,10 +1098,10 @@ CellDerivative(const FieldVecType &field,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &pcoords,
                vtkm::CellShapeTagPyramid,
-               const vtkm::exec::FunctorBase &worklet)
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 5, worklet);
-  VTKM_ASSERT_EXEC(wCoords.GetNumberOfComponents() == 5, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 5);
+  VTKM_ASSERT(wCoords.GetNumberOfComponents() == 5);
 
   return detail::CellDerivativeFor3DCell(
         field, wCoords, pcoords, vtkm::CellShapeTagPyramid());

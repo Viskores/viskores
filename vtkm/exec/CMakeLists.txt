@@ -19,7 +19,6 @@
 ##============================================================================
 
 set(headers
-  Assert.h
   AtomicArray.h
   CellDerivative.h
   CellInterpolate.h
@@ -29,7 +28,6 @@ set(headers
   ExecutionObjectBase.h
   ExecutionWholeArray.h
   FunctorBase.h
-  NewtonsMethod.h
   ParametricCoordinates.h
   )
 

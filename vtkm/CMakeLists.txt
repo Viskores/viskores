@@ -21,6 +21,7 @@
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(headers
+  Assert.h
   BinaryPredicates.h
   BinaryOperators.h
   CellShape.h
@@ -29,6 +30,7 @@ set(headers
   ListTag.h
   Math.h
   Matrix.h
+  NewtonsMethod.h
   Pair.h
   StaticAssert.h
   TopologyElementTag.h
@@ -52,7 +54,7 @@ add_subdirectory(testing)
 add_subdirectory(internal)
 
 if(VTKm_ENABLE_OPENGL_INTEROP)
-  add_subdirectory(opengl)
+  add_subdirectory(interop)
 endif(VTKm_ENABLE_OPENGL_INTEROP)
 
 #-----------------------------------------------------------------------------

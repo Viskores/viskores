@@ -263,8 +263,8 @@ public:
       Bounds(),
       ModifiedFlag(true)
   {
-    VTKM_ASSERT_CONT(this->Association == ASSOC_WHOLE_MESH ||
-                     this->Association == ASSOC_POINTS);
+    VTKM_ASSERT(this->Association == ASSOC_WHOLE_MESH ||
+                this->Association == ASSOC_POINTS);
   }
 
   template<typename T, typename Storage>
@@ -280,8 +280,8 @@ public:
       Bounds(),
       ModifiedFlag(true)
   {
-    VTKM_ASSERT_CONT((this->Association == ASSOC_WHOLE_MESH) ||
-                     (this->Association == ASSOC_POINTS));
+    VTKM_ASSERT((this->Association == ASSOC_WHOLE_MESH) ||
+                (this->Association == ASSOC_POINTS));
   }
 
   template <typename T>
@@ -296,8 +296,8 @@ public:
       Bounds(),
       ModifiedFlag(true)
   {
-    VTKM_ASSERT_CONT((this->Association == ASSOC_WHOLE_MESH) ||
-                     (this->Association == ASSOC_POINTS));
+    VTKM_ASSERT((this->Association == ASSOC_WHOLE_MESH) ||
+                (this->Association == ASSOC_POINTS));
     this->CopyData(&data[0], static_cast<vtkm::Id>(data.size()));
   }
 
@@ -314,8 +314,8 @@ public:
       Bounds(),
       ModifiedFlag(true)
   {
-    VTKM_ASSERT_CONT((this->Association == ASSOC_WHOLE_MESH) ||
-                     (this->Association == ASSOC_POINTS));
+    VTKM_ASSERT((this->Association == ASSOC_WHOLE_MESH) ||
+                (this->Association == ASSOC_POINTS));
     this->CopyData(data, nvals);
   }
 
@@ -333,7 +333,7 @@ public:
       Bounds(),
       ModifiedFlag(true)
   {
-    VTKM_ASSERT_CONT(this->Association == ASSOC_CELL_SET);
+    VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
   }
 
   template <typename T, typename Storage>
@@ -350,7 +350,7 @@ public:
       Bounds(),
       ModifiedFlag(true)
   {
-    VTKM_ASSERT_CONT(this->Association == ASSOC_CELL_SET);
+    VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
   }
 
   template <typename T>
@@ -366,7 +366,7 @@ public:
       Bounds(),
       ModifiedFlag(true)
   {
-    VTKM_ASSERT_CONT(this->Association == ASSOC_CELL_SET);
+    VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
     this->CopyData(&data[0], static_cast<vtkm::Id>(data.size()));
   }
 
@@ -384,7 +384,7 @@ public:
       Bounds(),
       ModifiedFlag(true)
   {
-    VTKM_ASSERT_CONT(this->Association == ASSOC_CELL_SET);
+    VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
     this->CopyData(data, nvals);
   }
 
@@ -402,7 +402,7 @@ public:
       Bounds(),
       ModifiedFlag(true)
   {
-    VTKM_ASSERT_CONT(this->Association == ASSOC_LOGICAL_DIM);
+    VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
   }
 
   template <typename T, typename Storage>
@@ -418,7 +418,7 @@ public:
       Bounds(),
       ModifiedFlag(true)
   {
-    VTKM_ASSERT_CONT(this->Association == ASSOC_LOGICAL_DIM);
+    VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
   }
 
   template <typename T>
@@ -433,7 +433,7 @@ public:
       Bounds(),
       ModifiedFlag(true)
   {
-    VTKM_ASSERT_CONT(this->Association == ASSOC_LOGICAL_DIM);
+    VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
     this->CopyData(&data[0], static_cast<vtkm::Id>(data.size()));
   }
 
@@ -449,7 +449,7 @@ public:
       Bounds(),
       ModifiedFlag(true)
   {
-    VTKM_ASSERT_CONT(this->Association == ASSOC_LOGICAL_DIM);
+    VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
     CopyData(data, nvals);
   }
 

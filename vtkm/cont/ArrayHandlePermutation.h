@@ -23,7 +23,6 @@
 #define vtk_m_ArrayHandlePermutation_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadType.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 
@@ -132,16 +131,16 @@ public:
   VTKM_CONT_EXPORT
   ValueType Get(vtkm::Id index) const {
     vtkm::Id permutedIndex = this->IndexPortal.Get(index);
-    VTKM_ASSERT_CONT(permutedIndex >= 0);
-    VTKM_ASSERT_CONT(permutedIndex < this->ValuePortal.GetNumberOfValues());
+    VTKM_ASSERT(permutedIndex >= 0);
+    VTKM_ASSERT(permutedIndex < this->ValuePortal.GetNumberOfValues());
     return this->ValuePortal.Get(permutedIndex);
   }
 
   VTKM_CONT_EXPORT
   ValueType Set(vtkm::Id index, const ValueType &value) const {
     vtkm::Id permutedIndex = this->IndexPortal.Get(index);
-    VTKM_ASSERT_CONT(permutedIndex >= 0);
-    VTKM_ASSERT_CONT(permutedIndex < this->ValuePortal.GetNumberOfValues());
+    VTKM_ASSERT(permutedIndex >= 0);
+    VTKM_ASSERT(permutedIndex < this->ValuePortal.GetNumberOfValues());
     return this->ValuePortal.Set(permutedIndex, value);
   }
 
@@ -186,21 +185,21 @@ public:
 
   VTKM_CONT_EXPORT
   PortalType GetPortal() {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return PortalType(this->IndexArray.GetPortalConstControl(),
                       this->ValueArray.GetPortalControl());
   }
 
   VTKM_CONT_EXPORT
   PortalConstType GetPortalConst() const {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return PortalConstType(this->IndexArray.GetPortalConstControl(),
                            this->ValueArray.GetPortalConstControl());
   }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return this->IndexArray.GetNumberOfValues();
   }
 

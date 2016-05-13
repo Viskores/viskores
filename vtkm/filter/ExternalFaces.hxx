@@ -83,7 +83,7 @@ public:
 
 //-----------------------------------------------------------------------------
 ExternalFaces::ExternalFaces():
-  vtkm::filter::DataSetFilter<ExternalFaces>()
+  vtkm::filter::FilterDataSet<ExternalFaces>()
 {
 
 }
@@ -91,7 +91,7 @@ ExternalFaces::ExternalFaces():
 //-----------------------------------------------------------------------------
 template<typename DerivedPolicy,
          typename DeviceAdapter>
-vtkm::filter::DataSetResult ExternalFaces::DoExecute(const vtkm::cont::DataSet& input,
+vtkm::filter::ResultDataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& input,
                                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                                                      const DeviceAdapter&)
 {
@@ -109,13 +109,13 @@ vtkm::filter::DataSetResult ExternalFaces::DoExecute(const vtkm::cont::DataSet& 
 
   if(!workletRan)
     {
-    return vtkm::filter::DataSetResult();
+    return vtkm::filter::ResultDataSet();
     }
 
   //3. add coordinates, etc to the
   output.AddCoordinateSystem(
           input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()) );
-  return vtkm::filter::DataSetResult(output);
+  return vtkm::filter::ResultDataSet(output);
 
 }
 
@@ -124,7 +124,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
-bool ExternalFaces::DoMapField(vtkm::filter::DataSetResult&,
+bool ExternalFaces::DoMapField(vtkm::filter::ResultDataSet&,
                                const vtkm::cont::ArrayHandle<T, StorageType>&,
                                const vtkm::filter::FieldMetadata&,
                                const vtkm::filter::PolicyBase<DerivedPolicy>&,

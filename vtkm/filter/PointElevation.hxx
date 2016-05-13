@@ -28,7 +28,7 @@ namespace filter {
 PointElevation::PointElevation():
   Worklet()
 {
-
+  this->SetOutputFieldName("elevation");
 }
 
 //-----------------------------------------------------------------------------
@@ -54,10 +54,10 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
-vtkm::filter::FieldResult
-PointElevation::DoExecute(const vtkm::cont::DataSet &,
+vtkm::filter::ResultField
+PointElevation::DoExecute(const vtkm::cont::DataSet &inDataSet,
                           const vtkm::cont::ArrayHandle<T,StorageType> &field,
-                          const vtkm::filter::FieldMetadata&,
+                          const vtkm::filter::FieldMetadata &fieldMetadata,
                           const vtkm::filter::PolicyBase<DerivedPolicy>&,
                           const DeviceAdapter&)
 {
@@ -69,10 +69,11 @@ PointElevation::DoExecute(const vtkm::cont::DataSet &,
   //that the dispatcher should do
   dispatcher.Invoke(field, outArray);
 
-  vtkm::cont::Field outField(this->GetOutputFieldName(),
-                             vtkm::cont::Field::ASSOC_WHOLE_MESH,
-                             outArray);
-  return vtkm::filter::FieldResult(outField);
+  return vtkm::filter::ResultField(inDataSet,
+                                   outArray,
+                                   this->GetOutputFieldName(),
+                                   fieldMetadata.GetAssociation(),
+                                   fieldMetadata.GetCellSetName());
 }
 
 }

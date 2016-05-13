@@ -20,11 +20,11 @@
 #ifndef vtk_m_exec_Interpolate_h
 #define vtk_m_exec_Interpolate_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
 #include <vtkm/VecRectilinearPointCoordinates.h>
 #include <vtkm/VectorAnalysis.h>
-#include <vtkm/exec/Assert.h>
 #include <vtkm/exec/FunctorBase.h>
 
 namespace vtkm {
@@ -40,10 +40,9 @@ VTKM_EXEC_EXPORT
 typename WorldCoordVector::ComponentType
 ReverseInterpolateTriangle(
     const WorldCoordVector &pointWCoords,
-    const typename WorldCoordVector::ComponentType &wcoords,
-    const vtkm::exec::FunctorBase &worklet)
+    const typename WorldCoordVector::ComponentType &wcoords)
 {
-  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 3, worklet);
+  VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 3);
 
   // We will solve the world to parametric coordinates problem geometrically.
   // Consider the parallelogram formed by wcoords and p0 of the triangle and
@@ -179,9 +178,9 @@ typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &pointFieldValues,
                 const vtkm::Vec<ParametricCoordType,3>,
                 vtkm::CellShapeTagVertex,
-                const vtkm::exec::FunctorBase &worklet)
+                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(pointFieldValues.GetNumberOfComponents() == 1, worklet);
+  VTKM_ASSERT(pointFieldValues.GetNumberOfComponents() == 1);
   return pointFieldValues[0];
 }
 
@@ -193,9 +192,9 @@ typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &pointFieldValues,
                 const vtkm::Vec<ParametricCoordType,3> &parametricCoords,
                 vtkm::CellShapeTagLine,
-                const vtkm::exec::FunctorBase &worklet)
+                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(pointFieldValues.GetNumberOfComponents() == 2, worklet);
+  VTKM_ASSERT(pointFieldValues.GetNumberOfComponents() == 2);
   return vtkm::Lerp(pointFieldValues[0],
                     pointFieldValues[1],
                     parametricCoords[0]);
@@ -227,9 +226,9 @@ typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
                 vtkm::CellShapeTagTriangle,
-                const vtkm::exec::FunctorBase &worklet)
+                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 3, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 3);
   typedef typename FieldVecType::ComponentType T;
   return static_cast<T>(  (field[0] * (1 - pcoords[0] - pcoords[1]))
                         + (field[1] * pcoords[0])
@@ -247,7 +246,7 @@ CellInterpolate(const FieldVecType &field,
                 const vtkm::exec::FunctorBase &worklet)
 {
   const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
-  VTKM_ASSERT_EXEC(numPoints > 0, worklet);
+  VTKM_ASSERT(numPoints > 0);
   switch (numPoints)
   {
     case 1:
@@ -316,8 +315,7 @@ CellInterpolate(const FieldVecType &field,
   polygonCoords[2][2] = 0.0f;
 
   vtkm::Vec<ParametricCoordType,3> trianglePCoords =
-      vtkm::exec::internal::ReverseInterpolateTriangle(
-        polygonCoords, pcoords, worklet);
+      vtkm::exec::internal::ReverseInterpolateTriangle(polygonCoords, pcoords);
 
   // Set up parameters for triangle that pcoords is in
   vtkm::Vec<FieldType,3> triangleField;
@@ -340,9 +338,9 @@ typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
                 vtkm::CellShapeTagQuad,
-                const vtkm::exec::FunctorBase &worklet)
+                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 4, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 4);
 
   typedef typename FieldVecType::ComponentType T;
 
@@ -378,9 +376,9 @@ typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
                 vtkm::CellShapeTagTetra,
-                const vtkm::exec::FunctorBase &worklet)
+                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 4, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 4);
   typedef typename FieldVecType::ComponentType T;
   return static_cast<T>(  (field[0] * (1-pcoords[0]-pcoords[1]-pcoords[2]))
                         + (field[1] * pcoords[0])
@@ -396,9 +394,9 @@ typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
                 vtkm::CellShapeTagHexahedron,
-                const vtkm::exec::FunctorBase &worklet)
+                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 8, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 8);
 
   typedef typename FieldVecType::ComponentType T;
 
@@ -437,9 +435,9 @@ typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
                 vtkm::CellShapeTagWedge,
-                const vtkm::exec::FunctorBase &worklet)
+                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 6, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 6);
 
   typedef typename FieldVecType::ComponentType T;
 
@@ -462,9 +460,9 @@ typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
                 vtkm::CellShapeTagPyramid,
-                const vtkm::exec::FunctorBase &worklet)
+                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(field.GetNumberOfComponents() == 5, worklet);
+  VTKM_ASSERT(field.GetNumberOfComponents() == 5);
 
   typedef typename FieldVecType::ComponentType T;
 

@@ -20,14 +20,15 @@
 #ifndef vtk_m_exec_ParametricCoordinates_h
 #define vtk_m_exec_ParametricCoordinates_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
+#include <vtkm/NewtonsMethod.h>
 #include <vtkm/VecRectilinearPointCoordinates.h>
-#include <vtkm/exec/Assert.h>
+#include <vtkm/internal/Assume.h>
 #include <vtkm/exec/CellDerivative.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/FunctorBase.h>
-#include <vtkm/exec/NewtonsMethod.h>
 
 namespace vtkm {
 namespace exec {
@@ -38,9 +39,10 @@ VTKM_EXEC_EXPORT
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagEmpty,
-                                 const vtkm::exec::FunctorBase &worklet)
+                                 const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 0, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSERT(numPoints == 0);
   pcoords[0] = 0;
   pcoords[1] = 0;
   pcoords[2] = 0;
@@ -51,9 +53,10 @@ VTKM_EXEC_EXPORT
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagVertex,
-                                 const vtkm::exec::FunctorBase &worklet)
+                                 const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 1, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSERT(numPoints == 1);
   pcoords[0] = 0;
   pcoords[1] = 0;
   pcoords[2] = 0;
@@ -64,9 +67,10 @@ VTKM_EXEC_EXPORT
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagLine,
-                                 const vtkm::exec::FunctorBase &worklet)
+                                 const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 2, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSERT(numPoints == 2);
   pcoords[0] = 0.5;
   pcoords[1] = 0;
   pcoords[2] = 0;
@@ -77,9 +81,10 @@ VTKM_EXEC_EXPORT
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagTriangle,
-                                 const vtkm::exec::FunctorBase &worklet)
+                                 const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 3, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSERT(numPoints == 3);
   pcoords[0] = static_cast<ParametricCoordType>(1.0/3.0);
   pcoords[1] = static_cast<ParametricCoordType>(1.0/3.0);
   pcoords[2] = 0;
@@ -92,7 +97,7 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::CellShapeTagPolygon,
                                  const vtkm::exec::FunctorBase &worklet)
 {
-  VTKM_ASSERT_EXEC(numPoints > 0, worklet);
+  VTKM_ASSERT(numPoints > 0);
   switch (numPoints)
   {
     case 1:
@@ -120,9 +125,10 @@ VTKM_EXEC_EXPORT
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagQuad,
-                                 const vtkm::exec::FunctorBase &worklet)
+                                 const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 4, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSERT(numPoints == 4);
   pcoords[0] = 0.5;
   pcoords[1] = 0.5;
   pcoords[2] = 0;
@@ -133,9 +139,10 @@ VTKM_EXEC_EXPORT
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagTetra,
-                                 const vtkm::exec::FunctorBase &worklet)
+                                 const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 4, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSERT(numPoints == 4);
   pcoords[0] = 0.25;
   pcoords[1] = 0.25;
   pcoords[2] = 0.25;
@@ -146,9 +153,10 @@ VTKM_EXEC_EXPORT
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagHexahedron,
-                                 const vtkm::exec::FunctorBase &worklet)
+                                 const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 8, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSERT(numPoints == 8);
   pcoords[0] = 0.5;
   pcoords[1] = 0.5;
   pcoords[2] = 0.5;
@@ -159,9 +167,10 @@ VTKM_EXEC_EXPORT
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagWedge,
-                                 const vtkm::exec::FunctorBase &worklet)
+                                 const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 6, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSERT(numPoints == 6);
   pcoords[0] = static_cast<ParametricCoordType>(1.0/3.0);
   pcoords[1] = static_cast<ParametricCoordType>(1.0/3.0);
   pcoords[2] = 0.5;
@@ -172,9 +181,10 @@ VTKM_EXEC_EXPORT
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagPyramid,
-                                 const vtkm::exec::FunctorBase &worklet)
+                                 const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 5, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSERT(numPoints == 5);
   pcoords[0] = 0.5;
   pcoords[1] = 0.5;
   pcoords[2] = static_cast<ParametricCoordType>(0.2);
@@ -238,10 +248,12 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
                                 vtkm::CellShapeTagVertex,
-                                const vtkm::exec::FunctorBase &worklet)
+                                const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 1, worklet);
-  VTKM_ASSERT_EXEC(pointIndex == 0, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  (void)pointIndex; // Silence compiler warnings.
+  VTKM_ASSUME(numPoints == 1);
+  VTKM_ASSUME(pointIndex == 0);
   pcoords[0] = 0;
   pcoords[1] = 0;
   pcoords[2] = 0;
@@ -253,10 +265,11 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
                                 vtkm::CellShapeTagLine,
-                                const vtkm::exec::FunctorBase &worklet)
+                                const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 2, worklet);
-  VTKM_ASSERT_EXEC((pointIndex >= 0) && (pointIndex < 2), worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSUME(numPoints == 2);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 2));
 
   pcoords[0] = static_cast<ParametricCoordType>(pointIndex);
   pcoords[1] = 0;
@@ -269,18 +282,17 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
                                 vtkm::CellShapeTagTriangle,
-                                const vtkm::exec::FunctorBase &worklet)
+                                const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 3, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSUME(numPoints == 3);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 3));
 
   switch (pointIndex)
   {
     case 0: pcoords[0] = 0; pcoords[1] = 0; break;
     case 1: pcoords[0] = 1; pcoords[1] = 0; break;
     case 2: pcoords[0] = 0; pcoords[1] = 1; break;
-    default: worklet.RaiseError("Bad point index.");
-      pcoords[0] = pcoords[1] = pcoords[2] = 0;
-      break;
   }
   pcoords[2] = 0;
 }
@@ -293,7 +305,8 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::CellShapeTagPolygon,
                                 const vtkm::exec::FunctorBase &worklet)
 {
-  VTKM_ASSERT_EXEC(numPoints > 0, worklet);
+  VTKM_ASSUME( (numPoints > 0) );
+  VTKM_ASSUME( (pointIndex >= 0) && (pointIndex < numPoints) );
 
   switch (numPoints)
   {
@@ -343,9 +356,11 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
                                 vtkm::CellShapeTagQuad,
-                                const vtkm::exec::FunctorBase &worklet)
+                                const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 4, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSUME(numPoints == 4);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 4));
 
   switch (pointIndex)
   {
@@ -353,10 +368,6 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
     case 1: pcoords[0] = 1; pcoords[1] = 0; break;
     case 2: pcoords[0] = 1; pcoords[1] = 1; break;
     case 3: pcoords[0] = 0; pcoords[1] = 1; break;
-    default:
-      worklet.RaiseError("Bad point index.");
-      pcoords[0] = pcoords[1] = pcoords[2] = 0;
-      break;
   }
   pcoords[2] = 0;
 }
@@ -367,9 +378,11 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
                                 vtkm::CellShapeTagTetra,
-                                const vtkm::exec::FunctorBase &worklet)
+                                const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 4, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSUME(numPoints == 4);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 4));
 
   switch (pointIndex)
   {
@@ -377,10 +390,6 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
     case 1: pcoords[0] = 1; pcoords[1] = 0; pcoords[2] = 0; break;
     case 2: pcoords[0] = 0; pcoords[1] = 1; pcoords[2] = 0; break;
     case 3: pcoords[0] = 0; pcoords[1] = 0; pcoords[2] = 1; break;
-    default:
-      worklet.RaiseError("Bad point index.");
-      pcoords[0] = pcoords[1] = pcoords[2] = 0;
-      break;
   }
 }
 
@@ -390,9 +399,11 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
                                 vtkm::CellShapeTagHexahedron,
-                                const vtkm::exec::FunctorBase &worklet)
+                                const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 8, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSUME(numPoints == 8);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 8));
 
   switch (pointIndex)
   {
@@ -404,10 +415,6 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
     case 5: pcoords[0] = 1; pcoords[1] = 0; pcoords[2] = 1; break;
     case 6: pcoords[0] = 1; pcoords[1] = 1; pcoords[2] = 1; break;
     case 7: pcoords[0] = 0; pcoords[1] = 1; pcoords[2] = 1; break;
-    default:
-      worklet.RaiseError("Bad point index.");
-      pcoords[0] = pcoords[1] = pcoords[2] = 0;
-      break;
   }
 }
 
@@ -417,9 +424,11 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
                                 vtkm::CellShapeTagWedge,
-                                const vtkm::exec::FunctorBase &worklet)
+                                const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 6, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSUME(numPoints == 6);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 6));
 
   switch (pointIndex)
   {
@@ -429,10 +438,6 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
     case 3: pcoords[0] = 0; pcoords[1] = 0; pcoords[2] = 1; break;
     case 4: pcoords[0] = 0; pcoords[1] = 1; pcoords[2] = 1; break;
     case 5: pcoords[0] = 1; pcoords[1] = 0; pcoords[2] = 1; break;
-    default:
-      worklet.RaiseError("Bad point index.");
-      pcoords[0] = pcoords[1] = pcoords[2] = 0;
-      break;
   }
 }
 
@@ -442,9 +447,11 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
                                 vtkm::CellShapeTagPyramid,
-                                const vtkm::exec::FunctorBase &worklet)
+                                const vtkm::exec::FunctorBase &)
 {
-  VTKM_ASSERT_EXEC(numPoints == 5, worklet);
+  (void)numPoints;  // Silence compiler warnings.
+  VTKM_ASSUME(numPoints == 5);
+  VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 5));
 
   switch (pointIndex)
   {
@@ -453,10 +460,6 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
     case 2: pcoords[0] = 1; pcoords[1] = 1; pcoords[2] = 0; break;
     case 3: pcoords[0] = 0; pcoords[1] = 1; pcoords[2] = 0; break;
     case 4: pcoords[0] = 0.5; pcoords[1] = 0.5; pcoords[2] = 1; break;
-    default:
-      worklet.RaiseError("Bad point index.");
-      pcoords[0] = pcoords[1] = pcoords[2] = 0;
-      break;
   }
 }
 
@@ -644,7 +647,7 @@ WorldCoordinatesToParametricCoordinates3D(
     CellShapeTag,
     const vtkm::exec::FunctorBase &worklet)
 {
-  return vtkm::exec::NewtonsMethod(
+  return vtkm::NewtonsMethod(
         JacobianFunctor3DCell<WorldCoordVector,CellShapeTag>(&pointWCoords),
         CoordinatesFunctor3DCell<WorldCoordVector,CellShapeTag>(&pointWCoords, &worklet),
         wcoords,
@@ -700,9 +703,10 @@ WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
     const typename WorldCoordVector::ComponentType &,
     vtkm::CellShapeTagVertex,
-    const vtkm::exec::FunctorBase &worklet)
+    const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 1, worklet);
+  (void)pointWCoords; // Silence compiler warnings.
+  VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 1);
   return typename WorldCoordVector::ComponentType(0, 0, 0);
 }
 
@@ -713,9 +717,9 @@ WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
     const typename WorldCoordVector::ComponentType &wcoords,
     vtkm::CellShapeTagLine,
-    const vtkm::exec::FunctorBase &worklet)
+    const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 2, worklet);
+  VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 2);
 
   // Because this is a line, there is only one vaild parametric coordinate. Let
   // vec be the vector from the first point to the second point
@@ -754,10 +758,10 @@ WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
     const typename WorldCoordVector::ComponentType &wcoords,
     vtkm::CellShapeTagTriangle,
-    const vtkm::exec::FunctorBase &worklet)
+    const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
   return vtkm::exec::internal::ReverseInterpolateTriangle(
-        pointWCoords, wcoords, worklet);
+        pointWCoords, wcoords);
 }
 
 template<typename WorldCoordVector>
@@ -770,7 +774,7 @@ WorldCoordinatesToParametricCoordinates(
     const vtkm::exec::FunctorBase &worklet)
 {
   const vtkm::IdComponent numPoints = pointWCoords.GetNumberOfComponents();
-  VTKM_ASSERT_EXEC(numPoints > 0, worklet);
+  VTKM_ASSERT(numPoints > 0);
   switch (numPoints)
   {
     case 1:
@@ -905,7 +909,7 @@ WorldCoordinatesToParametricCoordinates(
     vtkm::CellShapeTagQuad,
     const vtkm::exec::FunctorBase &worklet)
 {
-  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 4, worklet);
+  VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 4);
 
   typedef typename WorldCoordVector::ComponentType::ComponentType T;
   typedef vtkm::Vec<T,2> Vector2;
@@ -917,7 +921,7 @@ WorldCoordinatesToParametricCoordinates(
         pointWCoords[0], pointWCoords[1], pointWCoords[3]);
 
   Vector2 pcoords =
-      vtkm::exec::NewtonsMethod(
+      vtkm::NewtonsMethod(
         detail::JacobianFunctorQuad<WorldCoordVector,vtkm::CellShapeTagQuad>(&pointWCoords, &space),
         detail::CoordinatesFunctorQuad<WorldCoordVector,vtkm::CellShapeTagQuad>(&pointWCoords, &space, &worklet),
         space.ConvertCoordToSpace(wcoords),
@@ -944,9 +948,9 @@ WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
     const typename WorldCoordVector::ComponentType &wcoords,
     vtkm::CellShapeTagTetra,
-    const vtkm::exec::FunctorBase &worklet)
+    const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 4, worklet);
+  VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 4);
 
   // We solve the world to parametric coordinates problem for tetrahedra
   // similarly to that for triangles. Before understanding this code, you
@@ -1002,7 +1006,7 @@ WorldCoordinatesToParametricCoordinates(
     vtkm::CellShapeTagHexahedron,
     const vtkm::exec::FunctorBase &worklet)
 {
-  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 8, worklet);
+  VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 8);
 
   return detail::WorldCoordinatesToParametricCoordinates3D(
         pointWCoords, wcoords, vtkm::CellShapeTagHexahedron(), worklet);
@@ -1028,7 +1032,7 @@ WorldCoordinatesToParametricCoordinates(
     vtkm::CellShapeTagWedge,
     const vtkm::exec::FunctorBase &worklet)
 {
-  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 6, worklet);
+  VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 6);
 
   return detail::WorldCoordinatesToParametricCoordinates3D(
         pointWCoords, wcoords, vtkm::CellShapeTagWedge(), worklet);
@@ -1044,7 +1048,7 @@ WorldCoordinatesToParametricCoordinates(
     vtkm::CellShapeTagPyramid,
     const vtkm::exec::FunctorBase &worklet)
 {
-  VTKM_ASSERT_EXEC(pointWCoords.GetNumberOfComponents() == 5, worklet);
+  VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 5);
 
   return detail::WorldCoordinatesToParametricCoordinates3D(
         pointWCoords, wcoords, vtkm::CellShapeTagPyramid(), worklet);

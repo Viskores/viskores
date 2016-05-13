@@ -299,7 +299,7 @@ public:
         ConnectivityChooser<FromTopology,ToTopology>::ConnectivityType
         &connectivity = this->GetConnectivity(FromTopology(), ToTopology());
 
-    VTKM_ASSERT_CONT(connectivity.ElementsValid);
+    VTKM_ASSERT(connectivity.ElementsValid);
 
     typedef typename
         ExecutionTypes<Device,FromTopology,ToTopology>::ExecObjectType

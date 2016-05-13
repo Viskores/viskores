@@ -282,25 +282,17 @@ public:
   /// Worklet types can add additional indices by returning different object
   /// types.
   ///
-  template<typename Invocation>
+  template<typename T, typename OutToInArrayType, typename VisitArrayType, typename InputDomainType>
   VTKM_EXEC_EXPORT
   vtkm::exec::arg::ThreadIndicesBasic
-  GetThreadIndices(vtkm::Id threadIndex, const Invocation &invocation) const
+  GetThreadIndices(const T& threadIndex,
+                   const OutToInArrayType& outToIn,
+                   const VisitArrayType& visit,
+                   const InputDomainType &) const
   {
-    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex, invocation);
-  }
-
-  /// \brief Creates a \c ThreadIndices object.
-  ///
-  /// Worklet types can add additional indices by returning different object
-  /// types.
-  ///
-  template<typename T, typename Invocation>
-  VTKM_EXEC_EXPORT
-  vtkm::exec::arg::ThreadIndicesBasic
-  GetThreadIndices(const T& threadIndex, const Invocation &invocation) const
-  {
-    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex, invocation);
+    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex,
+                                               outToIn.Get(threadIndex),
+                                               visit.Get(threadIndex) );
   }
 };
 

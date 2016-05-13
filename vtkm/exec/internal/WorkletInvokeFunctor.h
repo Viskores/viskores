@@ -56,8 +56,11 @@ public:
   {
     detail::DoWorkletInvokeFunctor(this->Worklet,
                                    this->Invocation,
-                                   this->Worklet.GetThreadIndices(
-                                     index, this->Invocation));
+                                   this->Worklet.GetThreadIndices(index,
+                                                                  this->Invocation.OutputToInputMap,
+                                                                  this->Invocation.VisitArray,
+                                                                  this->Invocation.GetInputDomain())
+                                   );
   }
 
 private:

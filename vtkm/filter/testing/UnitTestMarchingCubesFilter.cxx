@@ -264,7 +264,7 @@ void TestMarchingCubesUniformGrid()
   vtkm::Id3 dims(4,4,4);
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
-  vtkm::filter::DataSetResult result;
+  vtkm::filter::ResultDataSet result;
   vtkm::filter::MarchingCubes mc;
 
   mc.SetGenerateNormals(true);
@@ -274,7 +274,7 @@ void TestMarchingCubesUniformGrid()
                        dataSet.GetField("nodevar") );
 
   {
-    vtkm::cont::DataSet& outputData = result.GetDataSet();
+    const vtkm::cont::DataSet& outputData = result.GetDataSet();
     VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
                      "Wrong number of cellsets in the output dataset");
     VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
@@ -308,7 +308,7 @@ void TestMarchingCubesUniformGrid()
                        dataSet.GetField("nodevar") );
 
   {
-    vtkm::cont::DataSet& outputData = result.GetDataSet();
+    const vtkm::cont::DataSet& outputData = result.GetDataSet();
     vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
 
     VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 480,
@@ -336,7 +336,7 @@ void TestMarchingCubesCustomPolicy()
 
   vtkm::cont::Field contourField = dataSet.GetField("distanceToOrigin");
 
-  vtkm::filter::DataSetResult result;
+  vtkm::filter::ResultDataSet result;
   vtkm::filter::MarchingCubes mc;
 
   mc.SetGenerateNormals( false );
@@ -352,7 +352,7 @@ void TestMarchingCubesCustomPolicy()
   mc.MapFieldOntoOutput(result, projectedField, RadiantDataSetPolicy());
   mc.MapFieldOntoOutput(result, contourField, RadiantDataSetPolicy());
 
-  vtkm::cont::DataSet& outputData = result.GetDataSet();
+  const vtkm::cont::DataSet& outputData = result.GetDataSet();
   VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
                    "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,

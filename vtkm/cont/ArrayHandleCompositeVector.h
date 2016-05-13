@@ -324,13 +324,13 @@ public:
 
   VTKM_CONT_EXPORT
   const FunctionInterfaceWithArrays &GetArrays() const {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return this->Arrays;
   }
 
   VTKM_CONT_EXPORT
   const ComponentMapType &GetSourceComponents() const {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return this->SourceComponents;
   }
 
@@ -547,6 +547,10 @@ template<typename ArrayHandleType1,
          typename ArrayHandleType4 = void>
 struct ArrayHandleCompositeVectorType
 {
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType2);
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType3);
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType4);
 private:
   typedef typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType
       ComponentType;
@@ -562,6 +566,9 @@ template<typename ArrayHandleType1,
 struct ArrayHandleCompositeVectorType<
     ArrayHandleType1,ArrayHandleType2,ArrayHandleType3>
 {
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType2);
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType3);
 private:
   typedef typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType
       ComponentType;
@@ -575,6 +582,8 @@ template<typename ArrayHandleType1,
          typename ArrayHandleType2>
 struct ArrayHandleCompositeVectorType<ArrayHandleType1,ArrayHandleType2>
 {
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType2);
 private:
   typedef typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType
       ComponentType;
@@ -587,6 +596,7 @@ public:
 template<typename ArrayHandleType1>
 struct ArrayHandleCompositeVectorType<ArrayHandleType1>
 {
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
 private:
   typedef typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType
       ComponentType;
@@ -609,83 +619,84 @@ make_ArrayHandleCompositeVector(
       vtkm::cont::ArrayHandle<ValueType1,Storage1> >::type(array1,
                                                            sourceComponent1);
 }
-template<typename ValueType1, typename Storage1,
-         typename ValueType2, typename Storage2>
+template<typename ArrayHandleType1>
 VTKM_CONT_EXPORT
-typename ArrayHandleCompositeVectorType<
-  vtkm::cont::ArrayHandle<ValueType1,Storage1>,
-  vtkm::cont::ArrayHandle<ValueType2,Storage2> >::type
-make_ArrayHandleCompositeVector(
-    const vtkm::cont::ArrayHandle<ValueType1,Storage1> &array1,
-    vtkm::IdComponent sourceComponent1,
-    const vtkm::cont::ArrayHandle<ValueType2,Storage2> &array2,
-    vtkm::IdComponent sourceComponent2)
+typename ArrayHandleCompositeVectorType<ArrayHandleType1>::type
+make_ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
+                                vtkm::IdComponent sourceComponent1)
 {
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
   return typename ArrayHandleCompositeVectorType<
-      vtkm::cont::ArrayHandle<ValueType1,Storage1>,
-      vtkm::cont::ArrayHandle<ValueType2,Storage2> >::type(array1,
-                                                           sourceComponent1,
-                                                           array2,
-                                                           sourceComponent2);
+      ArrayHandleType1>::type(array1, sourceComponent1);
 }
-template<typename ValueType1, typename Storage1,
-         typename ValueType2, typename Storage2,
-         typename ValueType3, typename Storage3>
+template<typename ArrayHandleType1,
+         typename ArrayHandleType2>
 VTKM_CONT_EXPORT
 typename ArrayHandleCompositeVectorType<
-  vtkm::cont::ArrayHandle<ValueType1,Storage1>,
-  vtkm::cont::ArrayHandle<ValueType2,Storage2>,
-  vtkm::cont::ArrayHandle<ValueType3,Storage3> >::type
-make_ArrayHandleCompositeVector(
-    const vtkm::cont::ArrayHandle<ValueType1,Storage1> &array1,
-    vtkm::IdComponent sourceComponent1,
-    const vtkm::cont::ArrayHandle<ValueType2,Storage2> &array2,
-    vtkm::IdComponent sourceComponent2,
-    const vtkm::cont::ArrayHandle<ValueType3,Storage3> &array3,
-    vtkm::IdComponent sourceComponent3)
+  ArrayHandleType1, ArrayHandleType2>::type
+make_ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
+                                vtkm::IdComponent sourceComponent1,
+                                const ArrayHandleType2 &array2,
+                                vtkm::IdComponent sourceComponent2)
 {
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType2);
   return typename ArrayHandleCompositeVectorType<
-      vtkm::cont::ArrayHandle<ValueType1,Storage1>,
-      vtkm::cont::ArrayHandle<ValueType2,Storage2>,
-      vtkm::cont::ArrayHandle<ValueType3,Storage3> >::type(array1,
-                                                           sourceComponent1,
-                                                           array2,
-                                                           sourceComponent2,
-                                                           array3,
-                                                           sourceComponent3);
+      ArrayHandleType1,
+      ArrayHandleType2>::type(array1, sourceComponent1,
+                              array2, sourceComponent2);
 }
-template<typename ValueType1, typename Storage1,
-         typename ValueType2, typename Storage2,
-         typename ValueType3, typename Storage3,
-         typename ValueType4, typename Storage4>
+template<typename ArrayHandleType1,
+         typename ArrayHandleType2,
+         typename ArrayHandleType3>
 VTKM_CONT_EXPORT
 typename ArrayHandleCompositeVectorType<
-  vtkm::cont::ArrayHandle<ValueType1,Storage1>,
-  vtkm::cont::ArrayHandle<ValueType2,Storage2>,
-  vtkm::cont::ArrayHandle<ValueType3,Storage3>,
-  vtkm::cont::ArrayHandle<ValueType4,Storage4> >::type
-make_ArrayHandleCompositeVector(
-    const vtkm::cont::ArrayHandle<ValueType1,Storage1> &array1,
-    vtkm::IdComponent sourceComponent1,
-    const vtkm::cont::ArrayHandle<ValueType2,Storage2> &array2,
-    vtkm::IdComponent sourceComponent2,
-    const vtkm::cont::ArrayHandle<ValueType3,Storage3> &array3,
-    vtkm::IdComponent sourceComponent3,
-    const vtkm::cont::ArrayHandle<ValueType4,Storage4> &array4,
-    vtkm::IdComponent sourceComponent4)
+  ArrayHandleType1, ArrayHandleType2, ArrayHandleType3>::type
+make_ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
+                                vtkm::IdComponent sourceComponent1,
+                                const ArrayHandleType2 &array2,
+                                vtkm::IdComponent sourceComponent2,
+                                const ArrayHandleType3 &array3,
+                                vtkm::IdComponent sourceComponent3)
 {
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType2);
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType3);
   return typename ArrayHandleCompositeVectorType<
-      vtkm::cont::ArrayHandle<ValueType1,Storage1>,
-      vtkm::cont::ArrayHandle<ValueType2,Storage2>,
-      vtkm::cont::ArrayHandle<ValueType3,Storage3>,
-      vtkm::cont::ArrayHandle<ValueType4,Storage4> >::type(array1,
-                                                           sourceComponent1,
-                                                           array2,
-                                                           sourceComponent2,
-                                                           array3,
-                                                           sourceComponent3,
-                                                           array4,
-                                                           sourceComponent4);
+      ArrayHandleType1,
+      ArrayHandleType2,
+      ArrayHandleType3>::type(array1, sourceComponent1,
+                              array2, sourceComponent2,
+                              array3, sourceComponent3);
+}
+template<typename ArrayHandleType1,
+         typename ArrayHandleType2,
+         typename ArrayHandleType3,
+         typename ArrayHandleType4>
+VTKM_CONT_EXPORT
+typename ArrayHandleCompositeVectorType<
+  ArrayHandleType1, ArrayHandleType2, ArrayHandleType3, ArrayHandleType4>::type
+make_ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
+                                vtkm::IdComponent sourceComponent1,
+                                const ArrayHandleType2 &array2,
+                                vtkm::IdComponent sourceComponent2,
+                                const ArrayHandleType3 &array3,
+                                vtkm::IdComponent sourceComponent3,
+                                const ArrayHandleType4 &array4,
+                                vtkm::IdComponent sourceComponent4)
+{
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType2);
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType3);
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType4);
+  return typename ArrayHandleCompositeVectorType<
+      ArrayHandleType1,
+      ArrayHandleType2,
+      ArrayHandleType3,
+      ArrayHandleType4>::type(array1, sourceComponent1,
+                              array2, sourceComponent2,
+                              array3, sourceComponent3,
+                              array4, sourceComponent4);
 }
 
 }

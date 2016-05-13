@@ -348,7 +348,7 @@ private:
         ::template ExecutionTypes<Device>::Portal PortalVout;
 
     const vtkm::Id n = values.GetNumberOfValues();
-    VTKM_ASSERT_CONT(n == index.GetNumberOfValues() );
+    VTKM_ASSERT(n == index.GetNumberOfValues() );
 
     PortalVIn valuesPortal = values.PrepareForInput(Device());
     PortalI indexPortal = index.PrepareForInput(Device());

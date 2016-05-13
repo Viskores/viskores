@@ -260,7 +260,7 @@ public:
       vtkm::cont::ArrayHandle<U,VOut> &values_output,
       BinaryFunctor binary_functor)
   {
-    VTKM_ASSERT_CONT(keys.GetNumberOfValues() == values.GetNumberOfValues());
+    VTKM_ASSERT(keys.GetNumberOfValues() == values.GetNumberOfValues());
     const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
 
     if(numberOfKeys <= 1)
@@ -525,7 +525,7 @@ public:
       vtkm::cont::ArrayHandle<T,COut>& output,
       UnaryPredicate unary_predicate)
   {
-    VTKM_ASSERT_CONT(input.GetNumberOfValues() == stencil.GetNumberOfValues());
+    VTKM_ASSERT(input.GetNumberOfValues() == stencil.GetNumberOfValues());
     vtkm::Id arrayLength = stencil.GetNumberOfValues();
 
     typedef vtkm::cont::ArrayHandle<
@@ -720,7 +720,8 @@ public:
     T* lockedValue;
 #if defined(VTKM_MSVC)
     typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
-    typename IteratorType::pointer temp = &(*(Iterators.GetBegin()+index));
+    typename IteratorType::pointer temp =
+        &(*(Iterators.GetBegin() + static_cast<std::ptrdiff_t>(index)));
     lockedValue = temp;
     return vtkmAtomicAdd(lockedValue, value);
 #else
@@ -735,7 +736,8 @@ public:
     T* lockedValue;
 #if defined(VTKM_MSVC)
     typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
-    typename IteratorType::pointer temp = &(*(Iterators.GetBegin()+index));
+    typename IteratorType::pointer temp =
+        &(*(Iterators.GetBegin()+static_cast<std::ptrdiff_t>(index)));
     lockedValue = temp;
     return vtkmCompareAndSwap(lockedValue, newValue, oldValue);
 #else

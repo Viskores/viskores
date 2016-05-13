@@ -21,7 +21,6 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/Assert.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -40,7 +39,7 @@ public:
   StringInt() {}
   StringInt(vtkm::Id v)
   {
-    VTKM_ASSERT_CONT(v >= 0);
+    VTKM_ASSERT(v >= 0);
     for (vtkm::Id i = 0; i < v; i++)
     {
       ++(*this);

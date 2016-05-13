@@ -23,7 +23,6 @@
 #define vtk_m_cont_ArrayHandleTransform_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadType.h>
 #include <vtkm/cont/ErrorControlInternal.h>
 
@@ -264,21 +263,21 @@ public:
 
   VTKM_CONT_EXPORT
   PortalType GetPortal() {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return PortalType(this->Array.GetPortalControl(),
                       this->Functor);
   }
 
   VTKM_CONT_EXPORT
   PortalConstType GetPortalConst() const {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return PortalConstType(this->Array.GetPortalConstControl(),
                            this->Functor);
   }
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return this->Array.GetNumberOfValues();
   }
 
@@ -303,7 +302,7 @@ public:
 
   VTKM_CONT_EXPORT
   const ArrayHandleType &GetArray() const {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return this->Array;
   }
 
@@ -344,7 +343,7 @@ public:
 
   VTKM_CONT_EXPORT
   PortalType GetPortal() {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return PortalType(this->Array.GetPortalControl(),
                       this->Functor,
                       this->InverseFunctor);
@@ -352,7 +351,7 @@ public:
 
   VTKM_CONT_EXPORT
   PortalConstType GetPortalConst() const {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return PortalConstType(this->Array.GetPortalConstControl(),
                            this->Functor,
                            this->InverseFunctor);
@@ -360,7 +359,7 @@ public:
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return this->Array.GetNumberOfValues();
   }
 
@@ -383,7 +382,7 @@ public:
 
   VTKM_CONT_EXPORT
   const ArrayHandleType &GetArray() const {
-    VTKM_ASSERT_CONT(this->Valid);
+    VTKM_ASSERT(this->Valid);
     return this->Array;
   }
 

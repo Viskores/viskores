@@ -20,9 +20,8 @@
 #ifndef vtk_m_cont_DataSetBuilderUniform_h
 #define vtk_m_cont_DataSetBuilderUniform_h
 
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/Assert.h>
+#include <vtkm/cont/DataSet.h>
 
 namespace vtkm {
 namespace cont {
@@ -77,8 +76,8 @@ private:
              const vtkm::Vec<vtkm::FloatDefault,3> &spacing,
              std::string coordNm, std::string cellNm)
     {
-        VTKM_ASSERT_CONT(nx>1 && ny>1 && ((dim==2 && nz==1)||(dim==3 && nz>=1)));
-        VTKM_ASSERT_CONT(spacing[0]>0 && spacing[1]>0 && spacing[2]>0);
+        VTKM_ASSERT(nx>1 && ny>1 && ((dim==2 && nz==1)||(dim==3 && nz>=1)));
+        VTKM_ASSERT(spacing[0]>0 && spacing[1]>0 && spacing[2]>0);
         vtkm::cont::DataSet dataSet;
 
         vtkm::cont::ArrayHandleUniformPointCoordinates
