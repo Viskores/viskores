@@ -368,7 +368,7 @@ public:
   }
 
   static const vtkm::IdComponent NUM_POINTS_IN_CELL = 8;
-  static const vtkm::IdComponent MAX_CELL_TO_POINT = 6;
+  static const vtkm::IdComponent MAX_CELL_TO_POINT = 8;
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const

@@ -77,7 +77,7 @@ void TestExternalFacesExplicitGrid()
 
   //Run the External Faces filter
   vtkm::filter::ExternalFaces externalFaces;
-  vtkm::filter::DataSetResult result = externalFaces.Execute(ds);
+  vtkm::filter::ResultDataSet result = externalFaces.Execute(ds);
 
   //Validate the number of external faces (output) returned by the worklet
   VTKM_TEST_ASSERT(result.IsValid(), "Results should be valid");

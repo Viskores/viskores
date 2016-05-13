@@ -20,8 +20,8 @@
 #ifndef vtk_m_cont_StorageBasic_h
 #define vtk_m_cont_StorageBasic_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/Types.h>
-#include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 #include <vtkm/cont/ErrorControlBadAllocation.h>
 #include <vtkm/cont/Storage.h>
@@ -230,7 +230,7 @@ public:
   {
     if (this->NumberOfValues > 0)
     {
-      VTKM_ASSERT_CONT(this->Array != NULL);
+      VTKM_ASSERT(this->Array != NULL);
       if (this->DeallocateOnRelease)
       {
         AllocatorType allocator;
@@ -243,7 +243,7 @@ public:
     }
     else
     {
-      VTKM_ASSERT_CONT(this->Array == NULL);
+      VTKM_ASSERT(this->Array == NULL);
     }
   }
 
@@ -275,7 +275,7 @@ public:
       else
       {
         // ReleaseResources should have already set AllocatedSize to 0.
-        VTKM_ASSERT_CONT(this->AllocatedSize == 0);
+        VTKM_ASSERT(this->AllocatedSize == 0);
       }
     }
     catch (std::bad_alloc err)

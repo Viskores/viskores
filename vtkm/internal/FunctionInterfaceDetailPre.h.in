@@ -124,35 +124,78 @@ $endfor\
 $endfor\
 
 //============================================================================
+template< typename FS, int Index>
+struct AtType
+{
+    typedef boost::function_types::components<FS> ParamterTypes;
+    typedef typename boost::mpl::at_c<ParamterTypes, Index>::type type;
+};
 
-template<int ParameterIndex, typename FunctionSignature>
+
+//============================================================================
+
+template<int ParameterIndex>
 struct ParameterContainerAccess;
 
 $for(param_index in range(1, max_parameters+1))\
-template<typename FunctionSignature>
-struct ParameterContainerAccess<$(param_index), FunctionSignature> {
-  typedef typename boost::mpl::at_c<
-        boost::function_types::components<FunctionSignature>, $(param_index)>::type
-      ParameterType;
+template<>
+struct ParameterContainerAccess<$(param_index)> {
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  const ParameterType&
-  GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
+  const typename AtType<FunctionSignature, $(param_index)>::type &
+  Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter$(param_index);
   }
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                    const ParameterType &value) {
+  void Set(ParameterContainer<FunctionSignature> &parameters,
+           const typename AtType<FunctionSignature, $(param_index)>::type &value) {
     parameters.Parameter$(param_index) = value;
   }
 };
 
 $endfor\
+
+//============================================================================
+template<vtkm::IdComponent NumToCopy>
+struct CopyAllParameters;
+
+
+$for(num_params in range(1, max_parameters+1))\
+template<>
+struct CopyAllParameters<$(num_params)> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
+  {
+$for(param_index in range(1, num_params+1))\
+    dest.Parameter$(param_index) = src.Parameter$(param_index);
+$endfor\
+  }
+
+};
+$endfor\
+
+template<>
+struct CopyAllParameters<0> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &)
+  {
+    // Nothing to copy.
+  }
+};
+
 
 //============================================================================
 

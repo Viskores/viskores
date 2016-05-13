@@ -250,7 +250,6 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 # include <boost/config.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
-
 # if defined(BOOST_HAS_VARIADIC_TMPL)
 #  define VTKM_USE_VARIADIC_TEMPLATE 1
 # endif
@@ -258,6 +257,27 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 #if defined(VTKM_USE_VARIADIC_TEMPLATE) && defined(VTKM_NO_VARIADIC_TEMPLATE)
 # error Both VTKM_USE_VARIADIC_TEMPLATE and VTKM_NO_VARIADIC_TEMPLATE defined.  Do not know what to do.
+#endif
+
+#ifdef VTKM_MSVC
+//With MSVC the types that we generate cause warning C4503 (long symbol names)
+//this doesn't affect the resulting binary so we just supress that warning
+//
+#pragma warning(disable:4503)
+
+//MSVC has a warning for using "unsafe" algorithms such as fill_n that can
+//easily overrun the end of unchecked pointers. The problem is that there
+//are lots of valid uses of these algorithms, and the signal that this is
+//a valid use is MSVC-specific. Even less fortunate is the fact that if
+//another header violates the warning, it is impossible to suppress it
+//because it happens in a system header file (xutility), which was included
+//far before the actual offending code occured. Even less fortunate than
+//that, a boost header we (indirectly) use sets off this warning, cannot
+//be suppressed, and is not going to be fixed
+//(https://svn.boost.org/trac/boost/ticket/11426). The best solution is to
+//turn off this problematic warning for everybody.
+//
+#pragma warning(disable:4996)
 #endif
 
 #endif //vtkm_internal_Configure_h

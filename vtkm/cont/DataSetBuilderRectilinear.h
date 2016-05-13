@@ -22,7 +22,6 @@
 
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/Assert.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterSerial.h>
@@ -88,8 +87,8 @@ public:
          T *xvals, T *yvals, T *zvals,
          std::string coordNm, std::string cellNm)
   {
-    VTKM_ASSERT_CONT(nx>1 && ny>1 &&
-                     ((dim==2 && nz==1)||(dim==3 && nz>=1)));
+    VTKM_ASSERT(nx>1 && ny>1 &&
+                ((dim==2 && nz==1)||(dim==3 && nz>=1)));
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> Xc, Yc, Zc;
     DataSetBuilderRectilinear::CopyInto(xvals,nx,Xc);
@@ -120,7 +119,7 @@ public:
          const vtkm::cont::ArrayHandle<T> &yvals,
          std::string coordNm="coords", std::string cellNm="cells")
   {
-    VTKM_ASSERT_CONT(xvals.GetNumberOfValues()>1 && yvals.GetNumberOfValues()>1);
+    VTKM_ASSERT(xvals.GetNumberOfValues()>1 && yvals.GetNumberOfValues()>1);
 
     vtkm::cont::ArrayHandle<T> zvals;
     zvals.Allocate(1);
@@ -164,7 +163,7 @@ public:
          const vtkm::cont::ArrayHandle<T> &zvals,
          std::string coordNm="coords", std::string cellNm="cells")
   {
-    VTKM_ASSERT_CONT(xvals.GetNumberOfValues()>1 &&
+    VTKM_ASSERT(xvals.GetNumberOfValues()>1 &&
     yvals.GetNumberOfValues()>1 &&
     zvals.GetNumberOfValues()>1);
     return DataSetBuilderRectilinear::BuildDataSet(
@@ -182,8 +181,8 @@ private:
                const std::vector<T> &zvals,
                std::string coordNm, std::string cellNm)
   {
-    VTKM_ASSERT_CONT(xvals.size()>1 && yvals.size()>1 &&
-                     ((dim==2 && zvals.size()==1)||(dim==3 && zvals.size()>=1)));
+    VTKM_ASSERT(xvals.size()>1 && yvals.size()>1 &&
+                ((dim==2 && zvals.size()==1)||(dim==3 && zvals.size()>=1)));
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> Xc, Yc, Zc;
     DataSetBuilderRectilinear::CopyInto(xvals, Xc);

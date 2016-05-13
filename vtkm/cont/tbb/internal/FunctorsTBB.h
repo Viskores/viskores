@@ -23,6 +23,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/Error.h>
 #include <vtkm/cont/internal/FunctorsGeneral.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
@@ -482,7 +483,7 @@ VTKM_CONT_EXPORT static void ScatterPortal(InputPortalType  inputPortal,
                                            OutputPortalType outputPortal)
 {
   const vtkm::Id size = inputPortal.GetNumberOfValues();
-  VTKM_ASSERT_CONT(size == indexPortal.GetNumberOfValues() );
+  VTKM_ASSERT(size == indexPortal.GetNumberOfValues() );
 
   ScatterKernel<InputPortalType,
                 IndexPortalType,

@@ -223,7 +223,7 @@ public:
   {
     // The operation will succeed even if this assertion fails, but this
     // is still supposed to be a precondition to Shrink.
-    VTKM_ASSERT_CONT(numberOfValues <= static_cast<vtkm::Id>(this->Array.size()));
+    VTKM_ASSERT(numberOfValues <= static_cast<vtkm::Id>(this->Array.size()));
 
     this->Array.resize(static_cast<vtkm::UInt64>(numberOfValues));
   }

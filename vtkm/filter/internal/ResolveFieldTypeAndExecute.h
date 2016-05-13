@@ -150,13 +150,6 @@ struct CanExecute<ReturnType,true>
       //another device adapter
       std::cerr << "caught ErrorControlBadValue : " << e.GetMessage() << std::endl;
     }
-    catch(vtkm::cont::ErrorControlAssert e)
-    {
-      //assert occurred, generally caused by going out of bounds on an array
-      //this won't be solved by trying a different device adapter
-      //so stop the filter
-      std::cerr << "caught ErrorControlAssert : " << e.GetMessage() << std::endl;
-    }
     catch(vtkm::cont::Error e)
     {
       //general errors should be caught and let us try the next device adapter.
@@ -203,13 +196,6 @@ struct CanExecute<ReturnType,true>
       //bad value errors should stop the filter, instead of deferring to
       //another device adapter
       std::cerr << "caught ErrorControlBadValue : " << e.GetMessage() << std::endl;
-    }
-    catch(vtkm::cont::ErrorControlAssert e)
-    {
-      //assert occurred, generally caused by going out of bounds on an array
-      //this won't be solved by trying a different device adapter
-      //so stop the filter
-      std::cerr << "caught ErrorControlAssert : " << e.GetMessage() << std::endl;
     }
     catch(vtkm::cont::Error e)
     {

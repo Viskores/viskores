@@ -20,28 +20,31 @@
 
 set(headers
   CellAverage.h
-  CellFilter.h
-  DataSetFilter.h
-  DataSetWithFieldFilter.h
-  DefaultPolicy.h
   ExternalFaces.h
-  FieldFilter.h
   FieldMetadata.h
+  FilterCell.h
+  FilterDataSet.h
+  FilterDataSetWithField.h
+  FilterField.h
   FilterTraits.h
   MarchingCubes.h
   PointElevation.h
   PolicyBase.h
+  PolicyDefault.h
+  ResultBase.h
+  ResultDataSet.h
+  ResultField.h
   Threshold.h
   VertexClustering.h
 )
 
 set(header_template_sources
   CellAverage.hxx
-  CellFilter.hxx
-  DataSetFilter.hxx
-  DataSetWithFieldFilter.hxx
   ExternalFaces.hxx
-  FieldFilter.hxx
+  FilterCell.hxx
+  FilterDataSet.hxx
+  FilterDataSetWithField.hxx
+  FilterField.hxx
   MarchingCubes.hxx
   PointElevation.hxx
   Threshold.hxx

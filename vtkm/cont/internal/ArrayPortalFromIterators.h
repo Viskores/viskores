@@ -20,10 +20,10 @@
 #ifndef vtk_m_cont_internal_ArrayPortalFromIterators_h
 #define vtk_m_cont_internal_ArrayPortalFromIterators_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadAllocation.h>
 
 #include <iterator>
@@ -54,7 +54,7 @@ public:
   {
     typename std::iterator_traits<IteratorT>::difference_type numberOfValues =
       std::distance(begin, end);
-    VTKM_ASSERT_CONT(numberOfValues >= 0);
+    VTKM_ASSERT(numberOfValues >= 0);
 #ifndef VTKM_USE_64BIT_IDS
     if (numberOfValues > std::numeric_limits<vtkm::Id>::max())
     {
@@ -111,8 +111,8 @@ private:
   VTKM_EXEC_CONT_EXPORT
   IteratorT IteratorAt(vtkm::Id index) const
   {
-    VTKM_ASSERT_CONT(index >= 0);
-    VTKM_ASSERT_CONT(index < this->GetNumberOfValues());
+    VTKM_ASSERT(index >= 0);
+    VTKM_ASSERT(index < this->GetNumberOfValues());
 
     return this->BeginIterator + index;
   }

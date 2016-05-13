@@ -31,12 +31,17 @@ void TestCellAverageRegular3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  vtkm::filter::FieldResult result;
+  vtkm::filter::ResultField result;
   vtkm::filter::CellAverage cavg;
   cavg.SetOutputFieldName("avgvals");
 
   result = cavg.Execute( dataSet, dataSet.GetField("pointvar"));
 
+  VTKM_TEST_ASSERT(result.GetField().GetName() == "avgvals",
+                   "Field was given the wrong name.");
+  VTKM_TEST_ASSERT(result.GetField().GetAssociation() ==
+                   vtkm::cont::Field::ASSOC_CELL_SET,
+                   "Field was given the wrong association.");
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   const bool valid = result.FieldAs(resultArrayHandle);
 
@@ -58,12 +63,17 @@ void TestCellAverageRegular2D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
-  vtkm::filter::FieldResult result;
+  vtkm::filter::ResultField result;
   vtkm::filter::CellAverage cavg;
-  cavg.SetOutputFieldName("avgvals");
 
   result = cavg.Execute( dataSet, dataSet.GetField("pointvar"));
 
+  // If no name is given, should have the same name as the input.
+  VTKM_TEST_ASSERT(result.GetField().GetName() == "pointvar",
+                   "Field was given the wrong name.");
+  VTKM_TEST_ASSERT(result.GetField().GetAssociation() ==
+                   vtkm::cont::Field::ASSOC_CELL_SET,
+                   "Field was given the wrong association.");
   vtkm::cont::Field resultField = result.GetField();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   resultField.GetData().CopyTo(resultArrayHandle);
@@ -86,12 +96,17 @@ void TestCellAverageExplicit()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
-  vtkm::filter::FieldResult result;
+  vtkm::filter::ResultField result;
   vtkm::filter::CellAverage cavg;
-  cavg.SetOutputFieldName("avgvals");
 
   result = cavg.Execute( dataSet, dataSet.GetField("pointvar"));
 
+  // If no name is given, should have the same name as the input.
+  VTKM_TEST_ASSERT(result.GetField().GetName() == "pointvar",
+                   "Field was given the wrong name.");
+  VTKM_TEST_ASSERT(result.GetField().GetAssociation() ==
+                   vtkm::cont::Field::ASSOC_CELL_SET,
+                   "Field was given the wrong association.");
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   const bool valid = result.FieldAs(resultArrayHandle);
 

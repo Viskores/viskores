@@ -24,6 +24,8 @@
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
+#include <vtkm/Assert.h>
+
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/mpl/or.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
@@ -74,10 +76,10 @@ VTKM_THIRDPARTY_POST_INCLUDE
  * change. This should not be used for projects using VTKm. Instead it servers
  * are a reference for the developers of VTKm.
  *
- * \namespace vtkm::opengl
+ * \namespace vtkm::interop
  * \brief Utility opengl interop functions
  *
- * vtkm::opengl defines the publicly accessible API for interoperability between
+ * vtkm::interop defines the publicly accessible API for interoperability between
  * vtkm and opengl.
  *
  * \namespace vtkm::testing
@@ -806,11 +808,15 @@ public:
   VTKM_EXEC_CONT_EXPORT
   const ComponentType &operator[](vtkm::IdComponent idx) const
   {
+    VTKM_ASSERT(idx >= 0);
+    VTKM_ASSERT(idx < this->NUM_COMPONENTS);
     return this->Components[idx];
   }
   VTKM_EXEC_CONT_EXPORT
   ComponentType &operator[](vtkm::IdComponent idx)
   {
+    VTKM_ASSERT(idx >= 0);
+    VTKM_ASSERT(idx < this->NUM_COMPONENTS);
     return this->Components[idx];
   }
 

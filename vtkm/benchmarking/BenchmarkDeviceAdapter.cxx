@@ -27,7 +27,7 @@
 #include <string>
 #include <cctype>
 
-int BenchmarkDeviceAdapter(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   int benchmarks = 0;
   if (argc < 2){
@@ -73,6 +73,8 @@ int BenchmarkDeviceAdapter(int argc, char *argv[])
       }
     }
   }
+
+  //now actually execute the benchmarks
   return vtkm::benchmarking::BenchmarkDeviceAdapter
     <VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Run(benchmarks);
 }

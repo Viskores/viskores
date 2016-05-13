@@ -400,9 +400,10 @@ private:
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
                                                       BinaryFunctor> bop(binary_functor);
 
+
     try
     {
-      result_iterators = ::thrust::reduce_by_key(thrust::cuda::par,
+      result_iterators = ::thrust::reduce_by_key(vtkm_cuda_policy(),
                                                  IteratorBegin(keys),
                                                  IteratorEnd(keys),
                                                  IteratorBegin(values),
@@ -573,7 +574,7 @@ private:
                                                        BinaryCompare> bop(binary_compare);
     try
     {
-      ::thrust::sort_by_key(thrust::cuda::par,
+      ::thrust::sort_by_key(vtkm_cuda_policy(),
                             IteratorBegin(keys),
                             IteratorEnd(keys),
                             IteratorBegin(values),

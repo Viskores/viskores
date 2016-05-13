@@ -223,237 +223,411 @@ struct ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> {
 
 
 //============================================================================
+template< typename FS, int Index>
+struct AtType
+{
+    typedef boost::function_types::components<FS> ParamterTypes;
+    typedef typename boost::mpl::at_c<ParamterTypes, Index>::type type;
+};
 
-template<int ParameterIndex, typename FunctionSignature>
+
+//============================================================================
+
+template<int ParameterIndex>
 struct ParameterContainerAccess;
 
-template<typename FunctionSignature>
-struct ParameterContainerAccess<1, FunctionSignature> {
-  typedef typename boost::mpl::at_c<
-        boost::function_types::components<FunctionSignature>, 1>::type
-      ParameterType;
+template<>
+struct ParameterContainerAccess<1> {
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  const ParameterType&
-  GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
+  const typename AtType<FunctionSignature, 1>::type &
+  Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter1;
   }
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                    const ParameterType &value) {
+  void Set(ParameterContainer<FunctionSignature> &parameters,
+           const typename AtType<FunctionSignature, 1>::type &value) {
     parameters.Parameter1 = value;
   }
 };
 
-template<typename FunctionSignature>
-struct ParameterContainerAccess<2, FunctionSignature> {
-  typedef typename boost::mpl::at_c<
-        boost::function_types::components<FunctionSignature>, 2>::type
-      ParameterType;
+template<>
+struct ParameterContainerAccess<2> {
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  const ParameterType&
-  GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
+  const typename AtType<FunctionSignature, 2>::type &
+  Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter2;
   }
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                    const ParameterType &value) {
+  void Set(ParameterContainer<FunctionSignature> &parameters,
+           const typename AtType<FunctionSignature, 2>::type &value) {
     parameters.Parameter2 = value;
   }
 };
 
-template<typename FunctionSignature>
-struct ParameterContainerAccess<3, FunctionSignature> {
-  typedef typename boost::mpl::at_c<
-        boost::function_types::components<FunctionSignature>, 3>::type
-      ParameterType;
+template<>
+struct ParameterContainerAccess<3> {
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  const ParameterType&
-  GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
+  const typename AtType<FunctionSignature, 3>::type &
+  Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter3;
   }
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                    const ParameterType &value) {
+  void Set(ParameterContainer<FunctionSignature> &parameters,
+           const typename AtType<FunctionSignature, 3>::type &value) {
     parameters.Parameter3 = value;
   }
 };
 
-template<typename FunctionSignature>
-struct ParameterContainerAccess<4, FunctionSignature> {
-  typedef typename boost::mpl::at_c<
-        boost::function_types::components<FunctionSignature>, 4>::type
-      ParameterType;
+template<>
+struct ParameterContainerAccess<4> {
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  const ParameterType&
-  GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
+  const typename AtType<FunctionSignature, 4>::type &
+  Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter4;
   }
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                    const ParameterType &value) {
+  void Set(ParameterContainer<FunctionSignature> &parameters,
+           const typename AtType<FunctionSignature, 4>::type &value) {
     parameters.Parameter4 = value;
   }
 };
 
-template<typename FunctionSignature>
-struct ParameterContainerAccess<5, FunctionSignature> {
-  typedef typename boost::mpl::at_c<
-        boost::function_types::components<FunctionSignature>, 5>::type
-      ParameterType;
+template<>
+struct ParameterContainerAccess<5> {
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  const ParameterType&
-  GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
+  const typename AtType<FunctionSignature, 5>::type &
+  Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter5;
   }
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                    const ParameterType &value) {
+  void Set(ParameterContainer<FunctionSignature> &parameters,
+           const typename AtType<FunctionSignature, 5>::type &value) {
     parameters.Parameter5 = value;
   }
 };
 
-template<typename FunctionSignature>
-struct ParameterContainerAccess<6, FunctionSignature> {
-  typedef typename boost::mpl::at_c<
-        boost::function_types::components<FunctionSignature>, 6>::type
-      ParameterType;
+template<>
+struct ParameterContainerAccess<6> {
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  const ParameterType&
-  GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
+  const typename AtType<FunctionSignature, 6>::type &
+  Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter6;
   }
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                    const ParameterType &value) {
+  void Set(ParameterContainer<FunctionSignature> &parameters,
+           const typename AtType<FunctionSignature, 6>::type &value) {
     parameters.Parameter6 = value;
   }
 };
 
-template<typename FunctionSignature>
-struct ParameterContainerAccess<7, FunctionSignature> {
-  typedef typename boost::mpl::at_c<
-        boost::function_types::components<FunctionSignature>, 7>::type
-      ParameterType;
+template<>
+struct ParameterContainerAccess<7> {
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  const ParameterType&
-  GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
+  const typename AtType<FunctionSignature, 7>::type &
+  Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter7;
   }
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                    const ParameterType &value) {
+  void Set(ParameterContainer<FunctionSignature> &parameters,
+           const typename AtType<FunctionSignature, 7>::type &value) {
     parameters.Parameter7 = value;
   }
 };
 
-template<typename FunctionSignature>
-struct ParameterContainerAccess<8, FunctionSignature> {
-  typedef typename boost::mpl::at_c<
-        boost::function_types::components<FunctionSignature>, 8>::type
-      ParameterType;
+template<>
+struct ParameterContainerAccess<8> {
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  const ParameterType&
-  GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
+  const typename AtType<FunctionSignature, 8>::type &
+  Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter8;
   }
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                    const ParameterType &value) {
+  void Set(ParameterContainer<FunctionSignature> &parameters,
+           const typename AtType<FunctionSignature, 8>::type &value) {
     parameters.Parameter8 = value;
   }
 };
 
-template<typename FunctionSignature>
-struct ParameterContainerAccess<9, FunctionSignature> {
-  typedef typename boost::mpl::at_c<
-        boost::function_types::components<FunctionSignature>, 9>::type
-      ParameterType;
+template<>
+struct ParameterContainerAccess<9> {
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  const ParameterType&
-  GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
+  const typename AtType<FunctionSignature, 9>::type &
+  Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter9;
   }
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                    const ParameterType &value) {
+  void Set(ParameterContainer<FunctionSignature> &parameters,
+           const typename AtType<FunctionSignature, 9>::type &value) {
     parameters.Parameter9 = value;
   }
 };
 
-template<typename FunctionSignature>
-struct ParameterContainerAccess<10, FunctionSignature> {
-  typedef typename boost::mpl::at_c<
-        boost::function_types::components<FunctionSignature>, 10>::type
-      ParameterType;
+template<>
+struct ParameterContainerAccess<10> {
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  const ParameterType&
-  GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
+  const typename AtType<FunctionSignature, 10>::type &
+  Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter10;
   }
 
+  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  static
-  void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                    const ParameterType &value) {
+  void Set(ParameterContainer<FunctionSignature> &parameters,
+           const typename AtType<FunctionSignature, 10>::type &value) {
     parameters.Parameter10 = value;
+  }
+};
+
+
+//============================================================================
+template<vtkm::IdComponent NumToCopy>
+struct CopyAllParameters;
+
+
+template<>
+struct CopyAllParameters<1> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
+  {
+    dest.Parameter1 = src.Parameter1;
+  }
+
+};
+template<>
+struct CopyAllParameters<2> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+  }
+
+};
+template<>
+struct CopyAllParameters<3> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+  }
+
+};
+template<>
+struct CopyAllParameters<4> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+  }
+
+};
+template<>
+struct CopyAllParameters<5> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+  }
+
+};
+template<>
+struct CopyAllParameters<6> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+  }
+
+};
+template<>
+struct CopyAllParameters<7> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+  }
+
+};
+template<>
+struct CopyAllParameters<8> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+  }
+
+};
+template<>
+struct CopyAllParameters<9> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+    dest.Parameter9 = src.Parameter9;
+  }
+
+};
+template<>
+struct CopyAllParameters<10> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+    dest.Parameter9 = src.Parameter9;
+    dest.Parameter10 = src.Parameter10;
+  }
+
+};
+
+template<>
+struct CopyAllParameters<0> {
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT_EXPORT
+  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &,
+            const vtkm::internal::detail::ParameterContainer<SrcSignature> &)
+  {
+    // Nothing to copy.
   }
 };
 

@@ -42,12 +42,11 @@ namespace arg {
 class ThreadIndicesBasic
 {
 public:
-  template<typename Invocation>
   VTKM_EXEC_EXPORT
-  ThreadIndicesBasic(vtkm::Id threadIndex, const Invocation &invocation)
-    : InputIndex(invocation.OutputToInputMap.Get(threadIndex)),
+  ThreadIndicesBasic(vtkm::Id threadIndex, vtkm::Id inIndex, vtkm::IdComponent visitIndex)
+    : InputIndex(inIndex),
       OutputIndex(threadIndex),
-      VisitIndex(invocation.VisitArray.Get(threadIndex))
+      VisitIndex(visitIndex)
   {
   }
 

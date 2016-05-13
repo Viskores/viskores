@@ -20,9 +20,9 @@
 #ifndef vtk_m_cont_ArrayHandle_h
 #define vtk_m_cont_ArrayHandle_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/Types.h>
 
-#include <vtkm/cont/Assert.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 #include <vtkm/cont/ErrorControlInternal.h>
 #include <vtkm/cont/Storage.h>
@@ -444,7 +444,7 @@ public:
         "ArrayHandle::Shrink cannot be used to grow array.");
     }
 
-    VTKM_ASSERT_CONT(this->GetNumberOfValues() == numberOfValues);
+    VTKM_ASSERT(this->GetNumberOfValues() == numberOfValues);
   }
 
   /// Releases any resources being used in the execution environment (that are
@@ -640,8 +640,8 @@ public:
         }
       }
 
-    VTKM_ASSERT_CONT(this->Internals->ExecutionArray == NULL);
-    VTKM_ASSERT_CONT(!this->Internals->ExecutionArrayValid);
+    VTKM_ASSERT(this->Internals->ExecutionArray == NULL);
+    VTKM_ASSERT(!this->Internals->ExecutionArrayValid);
     // Need to change some state that does not change the logical state from
     // an external point of view.
     InternalStruct *internals

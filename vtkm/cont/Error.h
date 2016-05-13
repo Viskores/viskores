@@ -34,7 +34,10 @@ namespace cont {
 class Error
 {
 public:
+//See note about GetMessage macro below.
+#ifndef GetMessage
   const std::string &GetMessage() const { return this->Message; }
+#endif
 
 //GetMessage is a macro defined by <windows.h> to redirrect to
 //GetMessageA or W depending on if you are using ansi or unicode.

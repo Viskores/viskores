@@ -219,7 +219,7 @@ public:
 
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
-    VTKM_ASSERT_CONT(this->FirstArray.GetNumberOfValues()
+    VTKM_ASSERT(this->FirstArray.GetNumberOfValues()
                      == this->SecondArray.GetNumberOfValues());
     return this->FirstArray.GetNumberOfValues();
   }
@@ -295,7 +295,7 @@ public:
   VTKM_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const
   {
-    VTKM_ASSERT_CONT( this->FirstArray.GetNumberOfValues()
+    VTKM_ASSERT( this->FirstArray.GetNumberOfValues()
                       == this->SecondArray.GetNumberOfValues() );
     return this->FirstArray.GetNumberOfValues();
   }

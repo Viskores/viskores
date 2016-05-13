@@ -39,6 +39,8 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/mpl/insert.hpp>
 #include <boost/mpl/less.hpp>
 #include <boost/mpl/push_back.hpp>
+#include <boost/mpl/joint_view.hpp>
+#include <boost/mpl/single_view.hpp>
 #include <boost/utility/enable_if.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
@@ -61,21 +63,6 @@ struct IdentityFunctor {
   const T &operator()(const T &x) const { return x; }
 };
 
-
-template<vtkm::IdComponent ParameterIndex, typename FunctionSignature>
-VTKM_EXEC_CONT_EXPORT
-const typename ParameterContainerAccess<ParameterIndex,FunctionSignature>::ParameterType &
-GetParameter(const ParameterContainer<FunctionSignature> &parameters) {
-  return ParameterContainerAccess<ParameterIndex,FunctionSignature>::GetParameter(parameters);
-}
-
-template<vtkm::IdComponent ParameterIndex, typename FunctionSignature>
-VTKM_EXEC_CONT_EXPORT
-void SetParameter(ParameterContainer<FunctionSignature> &parameters,
-                  const typename ParameterContainerAccess<ParameterIndex,FunctionSignature>::ParameterType &value) {
-  return ParameterContainerAccess<ParameterIndex,FunctionSignature>::SetParameter(parameters, value);
-}
-
 // These functions exist to help copy components of a FunctionInterface.
 
 template<vtkm::IdComponent NumToCopy, vtkm::IdComponent ParameterIndex = 1>
@@ -87,8 +74,8 @@ struct FunctionInterfaceCopyParameters {
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
-    vtkm::internal::detail::SetParameter<ParameterIndex>(
-          dest,vtkm::internal::detail::GetParameter<ParameterIndex>(src));
+    ParameterContainerAccess<ParameterIndex> pca;
+    pca.Set( dest, pca.Get(src) );
    FunctionInterfaceCopyParameters<NumToCopy-1,ParameterIndex+1>::Copy(dest, src);
   }
 };
@@ -273,12 +260,13 @@ public:
   typedef typename boost::function_types::result_type<FunctionSignature>::type
       ResultType;
 
+  typedef typename boost::function_types::components<FunctionSignature> FunctionSignatureComponents;
+
   template<vtkm::IdComponent ParameterIndex>
   struct ParameterType {
-    typedef typename boost::mpl::at_c<
-        boost::function_types::components<FunctionSignature>,
-        ParameterIndex>::type type;
+    typedef typename detail::AtType<FunctionSignature, ParameterIndex>::type type;
   };
+
   static const bool RETURN_VALID = FunctionInterfaceReturnContainer<ResultType>::VALID;
 
   /// The number of parameters in this \c Function Interface.
@@ -351,7 +339,7 @@ public:
   GetParameter(
       vtkm::internal::IndexTag<ParameterIndex> =
         vtkm::internal::IndexTag<ParameterIndex>()) const {
-    return detail::GetParameter<ParameterIndex>(this->Parameters);
+    return (detail::ParameterContainerAccess<ParameterIndex>()).Get(this->Parameters);
   }
 
   /// Sets the value for the parameter of the given index. Parameters are
@@ -398,7 +386,7 @@ public:
       vtkm::internal::IndexTag<ParameterIndex> =
         vtkm::internal::IndexTag<ParameterIndex>())
   {
-    detail::SetParameter<ParameterIndex>(this->Parameters, parameter);
+    return (detail::ParameterContainerAccess<ParameterIndex>()).Set(this->Parameters, parameter);
   }
 
   /// Copies the parameters and return values from the given \c
@@ -411,9 +399,16 @@ public:
   void Copy(const FunctionInterface<SrcFunctionSignature> &src)
   {
     this->Result = src.GetReturnValueSafe();
-    detail::FunctionInterfaceCopyParameters<
-        boost::static_unsigned_min<ARITY, FunctionInterface<SrcFunctionSignature>::ARITY>::value>::
-        Copy(this->Parameters, src.Parameters);
+    typedef boost::static_unsigned_min< ARITY,
+          FunctionInterface<SrcFunctionSignature>::ARITY > MinArity;
+
+    (detail::CopyAllParameters<MinArity::value>()).Copy(this->Parameters, src.Parameters);
+  }
+
+  void Copy(const FunctionInterface<FunctionSignature> &src)
+  { //optimized version for assignment/copy
+    this->Result = src.GetReturnValueSafe();
+    this->Parameters = src.Parameters;
   }
 
   /// Invoke a function \c f using the arguments stored in this
@@ -488,15 +483,14 @@ public:
 
   template<typename NewType>
   struct AppendType {
-    typedef FunctionInterface<
-        typename boost::function_types::function_type<
-          typename boost::mpl::push_back<
-            boost::function_types::components<FunctionSignature>,
-            NewType
-          >::type
-        >::type
-      > type;
+  private:
+    typedef boost::mpl::single_view<NewType> NewTypeSeq;
+    typedef boost::mpl::joint_view<FunctionSignatureComponents, NewTypeSeq> JointType;
+    typedef boost::function_types::function_type<JointType> FuntionType;
+  public:
+    typedef FunctionInterface< typename FuntionType::type > type;
   };
+
 
   /// Returns a new \c FunctionInterface with all the parameters of this \c
   /// FunctionInterface and the given method argument appended to these
@@ -506,8 +500,11 @@ public:
   template<typename NewType>
   VTKM_CONT_EXPORT
   typename AppendType<NewType>::type
-  Append(const NewType& newParameter) const {
-    typename AppendType<NewType>::type appendedFuncInterface;
+  Append(const NewType& newParameter) const
+  {
+    typedef typename AppendType<NewType>::type AppendInterfaceType;
+
+    AppendInterfaceType appendedFuncInterface;
     appendedFuncInterface.Copy(*this);
     appendedFuncInterface.template SetParameter<ARITY+1>(newParameter);
     return appendedFuncInterface;
@@ -515,9 +512,8 @@ public:
 
   template<vtkm::IdComponent ParameterIndex, typename NewType>
   class ReplaceType {
-    typedef boost::function_types::components<FunctionSignature> ThisFunctionComponents;
-    typedef typename boost::mpl::advance_c<typename boost::mpl::begin<ThisFunctionComponents>::type, ParameterIndex>::type ToRemovePos;
-    typedef typename boost::mpl::erase<ThisFunctionComponents, ToRemovePos>::type ComponentRemoved;
+    typedef typename boost::mpl::advance_c<typename boost::mpl::begin<FunctionSignatureComponents>::type, ParameterIndex>::type ToRemovePos;
+    typedef typename boost::mpl::erase<FunctionSignatureComponents, ToRemovePos>::type ComponentRemoved;
     typedef typename boost::mpl::advance_c<typename boost::mpl::begin<ComponentRemoved>::type, ParameterIndex>::type ToInsertPos;
     typedef typename boost::mpl::insert<ComponentRemoved, ToInsertPos, NewType>::type ComponentInserted;
     typedef typename boost::function_types::function_type<ComponentInserted>::type NewSignature;
@@ -567,11 +563,16 @@ public:
   typename ReplaceType<ParameterIndex, NewType>::type
   Replace(const NewType& newParameter,
           vtkm::internal::IndexTag<ParameterIndex> =
-            vtkm::internal::IndexTag<ParameterIndex>()) const {
+            vtkm::internal::IndexTag<ParameterIndex>()) const
+  {
+
     typename ReplaceType<ParameterIndex, NewType>::type replacedFuncInterface;
+
     detail::FunctionInterfaceCopyParameters<ParameterIndex-1>::
         Copy(replacedFuncInterface.Parameters, this->Parameters);
+
     replacedFuncInterface.template SetParameter<ParameterIndex>(newParameter);
+
     detail::FunctionInterfaceCopyParameters<ARITY-ParameterIndex,ParameterIndex+1>::
         Copy(replacedFuncInterface.Parameters, this->Parameters);
     return replacedFuncInterface;
@@ -803,8 +804,12 @@ public:
   VTKM_CONT_EXPORT
   void operator()(const T& newParameter) const
   {
-    typedef typename vtkm::internal::FunctionInterface<NewFunction>::template AppendType<T>::type
-        NextInterfaceType;
+    typedef typename FunctionInterface<NewFunction>::FunctionSignatureComponents NewFSigComp;
+
+    typedef boost::mpl::single_view<T> NewTypeSeq;
+    typedef boost::mpl::joint_view<NewFSigComp, NewTypeSeq> JointType;
+    typedef boost::function_types::function_type<JointType> FuntionType;
+    typedef FunctionInterface< typename FuntionType::type > NextInterfaceType;
 
     //Determine if we should do the next transform, and if so convert from
     //boost mpl to boost::true_type/false_type ( for readability of sigs)

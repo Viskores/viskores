@@ -22,7 +22,6 @@
 
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/Assert.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 
@@ -215,9 +214,9 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
                                const std::string &coordsNm,
                                const std::string &cellNm)
 {
-  VTKM_ASSERT_CONT(xVals.size() == yVals.size() &&
-                   yVals.size() == zVals.size() &&
-                   xVals.size() > 0);
+  VTKM_ASSERT(xVals.size() == yVals.size() &&
+              yVals.size() == zVals.size() &&
+              xVals.size() > 0);
 
   vtkm::cont::ArrayHandle<T> Xc, Yc, Zc;
   DataSetBuilderExplicit::CopyInto(xVals, Xc);
@@ -248,7 +247,7 @@ DataSetBuilderExplicit::BuildDataSet(
     const std::string &coordsNm,
     const std::string &cellNm)
 {
-  VTKM_ASSERT_CONT(X.GetNumberOfValues() == Y.GetNumberOfValues() &&
+  VTKM_ASSERT(X.GetNumberOfValues() == Y.GetNumberOfValues() &&
                   Y.GetNumberOfValues() == Z.GetNumberOfValues() &&
                   X.GetNumberOfValues() > 0 &&
                   shapes.GetNumberOfValues() == numIndices.GetNumberOfValues());
@@ -440,7 +439,7 @@ public:
   VTKM_CONT_EXPORT
   void AddCellPoint(vtkm::Id pointIndex)
   {
-    VTKM_ASSERT_CONT(this->numIdx.size() > 0);
+    VTKM_ASSERT(this->numIdx.size() > 0);
     this->connectivity.push_back(pointIndex);
     this->numIdx.back() += 1;
   }

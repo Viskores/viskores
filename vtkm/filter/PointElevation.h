@@ -21,14 +21,14 @@
 #ifndef vtk_m_filter_PointElevation_h
 #define vtk_m_filter_PointElevation_h
 
-#include <vtkm/filter/FieldFilter.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/PointElevation.h>
 
 
 namespace vtkm {
 namespace filter {
 
-class PointElevation : public vtkm::filter::FieldFilter<PointElevation>
+class PointElevation : public vtkm::filter::FilterField<PointElevation>
 {
 public:
   VTKM_CONT_EXPORT
@@ -46,7 +46,7 @@ public:
 
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT_EXPORT
-  vtkm::filter::FieldResult DoExecute(const vtkm::cont::DataSet &input,
+  vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet &input,
                                       const vtkm::cont::ArrayHandle<T, StorageType> &field,
                                       const vtkm::filter::FieldMetadata& fieldMeta,
                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
