@@ -236,9 +236,6 @@ private:
     }
 };
 
-#include <GL/osmesa.h>
-#include <GL/gl.h>
-
 template<typename SceneRendererType,
          typename SurfaceType,
          typename WorldAnnotatorType>
