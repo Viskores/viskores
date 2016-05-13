@@ -262,7 +262,7 @@ MakeTestDataSet::Make3DExplicitDataSet0()
   conn.push_back(4);
 
   //Create the dataset.
-  dataSet = dsb.Create(coords, shapes, numindices, conn, 2, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
 
   vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f};
   vtkm::Float32 cellvar[2] = {100.1f, 100.2f};
@@ -334,7 +334,7 @@ MakeTestDataSet::Make3DExplicitDataSet1()
 
   dataSet.AddCoordinateSystem(
         vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
-  vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells", 2);
+  vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells");
   cellSet.PrepareToAddCells(2, 7);
   cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
   cellSet.AddCell(vtkm::CELL_SHAPE_QUAD, 4, make_Vec<vtkm::Id>(2,1,3,4));

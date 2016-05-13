@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_TetrahedralizeExplicitGrid_h
-#define vtk_m_worklet_TetrahedralizeExplicitGrid_h
+#ifndef vtk_m_worklet_TriangulateExplicitGrid_h
+#define vtk_m_worklet_TriangulateExplicitGrid_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
@@ -40,41 +40,43 @@
 namespace vtkm {
 namespace worklet {
 
-/// \brief Compute the tetrahedralize cells for an explicit grid data set
+/// \brief Compute the triangulate cells for an explicit grid data set
 template <typename DeviceAdapter>
-class TetrahedralizeFilterExplicitGrid
+class TriangulateFilterExplicitGrid
 {
 public:
 
   //
-  // Worklet to count the number of tetrahedra generated per cell
+  // Worklet to count the number of triangles generated per cell
   //
-  class TetrahedraPerCell : public vtkm::worklet::WorkletMapField
+  class TrianglesPerCell : public vtkm::worklet::WorkletMapField
   {
   public:
     typedef void ControlSignature(FieldIn<> shapes,
+                                  FieldIn<> numPoints,
                                   ExecObject tables,
-                                  FieldOut<> tetrahedronCount);
-    typedef _3 ExecutionSignature(_1, _2);
+                                  FieldOut<> triangleCount);
+    typedef _4 ExecutionSignature(_1,_2,_3);
     typedef _1 InputDomain;
 
     VTKM_CONT_EXPORT
-    TetrahedraPerCell() {}
+    TrianglesPerCell() {}
 
     VTKM_EXEC_EXPORT
     vtkm::IdComponent operator()(
         vtkm::UInt8 shape,
-        const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter> &tables) const
+        vtkm::IdComponent numPoints,
+        const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter> &tables) const
     {
-      return tables.GetCount(vtkm::CellShapeTagGeneric(shape));
+      return tables.GetCount(vtkm::CellShapeTagGeneric(shape), numPoints);
     }
   };
 
   //
-  // Worklet to turn cells into tetrahedra
+  // Worklet to turn cells into triangles
   // Vertices remain the same and each cell is processed with needing topology
   //
-  class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
+  class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
@@ -90,29 +92,29 @@ public:
       return this->Scatter;
     }
 
-    template<typename CellArrayType>
+    template<typename CountArrayType>
     VTKM_CONT_EXPORT
-    TetrahedralizeCell(const CellArrayType &cellArray)
-      : Scatter(cellArray, DeviceAdapter())
+    TriangulateCell(const CountArrayType &countArray)
+      : Scatter(countArray, DeviceAdapter())
     {  }
 
-    // Each cell produces tetrahedra and write result at the offset
+    // Each cell produces triangles and write result at the offset
     template<typename CellShapeTag,
              typename ConnectivityInVec,
              typename ConnectivityOutVec>
     VTKM_EXEC_EXPORT
-    void operator()(CellShapeTag shape,
-                    const ConnectivityInVec &connectivityIn,
-                    const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter> &tables,
-                    ConnectivityOutVec &connectivityOut,
-                    vtkm::IdComponent visitIndex) const
+    void operator()(
+        CellShapeTag shape,
+        const ConnectivityInVec &connectivityIn,
+        const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter> &tables,
+        ConnectivityOutVec &connectivityOut,
+        vtkm::IdComponent visitIndex) const
     {
-      vtkm::Vec<vtkm::IdComponent,4> tetIndices =
+      vtkm::Vec<vtkm::IdComponent,3> triIndices =
           tables.GetIndices(shape, visitIndex);
-      connectivityOut[0] = connectivityIn[tetIndices[0]];
-      connectivityOut[1] = connectivityIn[tetIndices[1]];
-      connectivityOut[2] = connectivityIn[tetIndices[2]];
-      connectivityOut[3] = connectivityIn[tetIndices[3]];
+      connectivityOut[0] = connectivityIn[triIndices[0]];
+      connectivityOut[1] = connectivityIn[triIndices[1]];
+      connectivityOut[2] = connectivityIn[triIndices[2]];
     }
 
   private:
@@ -120,9 +122,9 @@ public:
   };
 
   //
-  // Construct the filter to tetrahedralize explicit grid
+  // Construct the filter to triangulate explicit grid
   //
-  TetrahedralizeFilterExplicitGrid(const vtkm::cont::DataSet &inDataSet,
+  TriangulateFilterExplicitGrid(const vtkm::cont::DataSet &inDataSet,
                                          vtkm::cont::DataSet &outDataSet) :
     InDataSet(inDataSet),
     OutDataSet(outDataSet)
@@ -132,7 +134,7 @@ public:
   vtkm::cont::DataSet OutDataSet; // output dataset with explicit cell set
 
   //
-  // Populate the output dataset with tetrahedra based on input explicit dataset
+  // Populate the output dataset with triangles based on input explicit dataset
   //
   void Run()
   {
@@ -151,24 +153,25 @@ public:
     // Output topology
     vtkm::cont::ArrayHandle<vtkm::Id> outConnectivity;
 
-    vtkm::worklet::internal::TetrahedralizeTables tables;
+    vtkm::worklet::internal::TriangulateTables tables;
 
     // Determine the number of output cells each input cell will generate
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutCellArray;
-    vtkm::worklet::DispatcherMapField<TetrahedraPerCell,DeviceAdapter>
-        tetPerCellDispatcher;
-    tetPerCellDispatcher.Invoke(inShapes,
+    vtkm::worklet::DispatcherMapField<TrianglesPerCell,DeviceAdapter>
+        triPerCellDispatcher;
+    triPerCellDispatcher.Invoke(inShapes,
+                                inNumIndices,
                                 tables.PrepareForInput(DeviceAdapter()),
                                 numOutCellArray);
 
     // Build new cells
-    TetrahedralizeCell tetrahedralizeWorklet(numOutCellArray);
-    vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell,DeviceAdapter>
-        tetrahedralizeDispatcher(tetrahedralizeWorklet);
-    tetrahedralizeDispatcher.Invoke(
+    TriangulateCell triangulateWorklet(numOutCellArray);
+    vtkm::worklet::DispatcherMapTopology<TriangulateCell,DeviceAdapter>
+        triangulateDispatcher(triangulateWorklet);
+    triangulateDispatcher.Invoke(
           inCellSet,
           tables.PrepareForInput(DeviceAdapter()),
-          vtkm::cont::make_ArrayHandleGroupVec<4>(outConnectivity));
+          vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
 
     // Add cells to output cellset
     cellSet.Fill(outConnectivity);
@@ -178,4 +181,4 @@ public:
 }
 } // namespace vtkm::worklet
 
-#endif // vtk_m_worklet_TetrahedralizeExplicitGrid_h
+#endif // vtk_m_worklet_TriangulateExplicitGrid_h

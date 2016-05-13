@@ -52,7 +52,7 @@ void TestExternalFacesExplicitGrid()
                                             {4,7,6,3}, {4,6,3,2}, {4,0,3,2},
                                             {4,6,5,2}, {4,5,0,2}, {1,0,5,2}
                                            };
-  vtkm::cont::CellSetExplicit<> cs(nVerts, "cells", nCells);
+  vtkm::cont::CellSetExplicit<> cs(nVerts, "cells");
 
   vtkm::cont::ArrayHandle<vtkm::UInt8>       shapes;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;

@@ -19,6 +19,7 @@
 //============================================================================
 
 #include <vtkm/worklet/TetrahedralizeExplicitGrid.h>
+#include <vtkm/worklet/TriangulateExplicitGrid.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/cont/DataSet.h>
@@ -33,7 +34,7 @@ namespace {
 vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
 {
   vtkm::cont::DataSetBuilderExplicitIterative builder;
-  builder.Begin(2);
+  builder.Begin();
 
   builder.AddPoint(0, 0, 0);   // 0
   builder.AddPoint(1, 0, 0);   // 1
@@ -103,7 +104,7 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
 vtkm::cont::DataSet MakeTetrahedralizeExplicitDataSet()
 {
   vtkm::cont::DataSetBuilderExplicitIterative builder;
-  builder.Begin(3);
+  builder.Begin();
 
   builder.AddPoint(0, 0, 0);
   builder.AddPoint(1, 0, 0);
@@ -168,7 +169,7 @@ vtkm::cont::DataSet MakeTetrahedralizeExplicitDataSet()
 //
 void TestExplicitGrid2D()
 {
-  std::cout << "Testing TriangulationExplicitGrid Filter" << std::endl;
+  std::cout << "Testing TriangulateExplicitGrid Filter" << std::endl;
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
   // Create the input uniform cell set
@@ -181,9 +182,9 @@ void TestExplicitGrid2D()
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
   // Convert explicit cells to triangles
-  vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter>
-                 tetrahedralizeFilter(inDataSet, outDataSet);
-  tetrahedralizeFilter.Run();
+  vtkm::worklet::TriangulateFilterExplicitGrid<DeviceAdapter>
+                 triangulateFilter(inDataSet, outDataSet);
+  triangulateFilter.Run();
 
   vtkm::cont::CellSetSingleType<> cellSet;
   outDataSet.GetCellSet(0).CopyTo(cellSet);

@@ -39,6 +39,8 @@ set(headers
   StreamLineUniformGrid.h
   TetrahedralizeExplicitGrid.h
   TetrahedralizeUniformGrid.h
+  TriangulateExplicitGrid.h
+  TriangulateUniformGrid.h
   Threshold.h
   VertexClustering.h
   )

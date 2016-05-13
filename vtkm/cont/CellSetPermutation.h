@@ -41,18 +41,16 @@ public:
   VTKM_CONT_EXPORT
   CellSetGeneralPermutation(const PermutationArrayHandleType& validCellIds,
                             const OriginalCellSet& cellset,
-                            const std::string &name,
-                            vtkm::IdComponent dimensionality)
-    : CellSet(name,dimensionality),
+                            const std::string &name)
+    : CellSet(name),
       ValidCellIds(validCellIds),
       FullCellSet(cellset)
   {
   }
 
   VTKM_CONT_EXPORT
-  CellSetGeneralPermutation(const std::string &name,
-                            vtkm::IdComponent dimensionality)
-    : CellSet(name,dimensionality),
+  CellSetGeneralPermutation(const std::string &name)
+    : CellSet(name),
       ValidCellIds(),
       FullCellSet()
   {
@@ -140,16 +138,14 @@ public:
   VTKM_CONT_EXPORT
   CellSetPermutation(const PermutationArrayHandleType& validCellIds,
                      const OriginalCellSet& cellset,
-                     const std::string &name = std::string(),
-                     vtkm::IdComponent dimensionality = 3)
-    : ParentType(validCellIds, cellset, name, dimensionality)
+                     const std::string &name = std::string())
+    : ParentType(validCellIds, cellset, name)
   {
   }
 
   VTKM_CONT_EXPORT
-  CellSetPermutation(const std::string &name = std::string(),
-                     vtkm::IdComponent dimensionality = 3)
-    :  ParentType(name, dimensionality)
+  CellSetPermutation(const std::string &name = std::string())
+    :  ParentType(name)
   {
   }
 
