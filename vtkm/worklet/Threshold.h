@@ -140,8 +140,7 @@ public:
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>
         ::StreamCompact(passFlags, this->ValidCellIds);
 
-    return OutputType(this->ValidCellIds, cellSet, cellSet.GetName(),
-                      cellSet.GetDimensionality());
+    return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
   }
 
   class PermuteCellData

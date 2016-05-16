@@ -39,15 +39,14 @@ class CellSet
 {
 public:
   VTKM_CONT_EXPORT
-  CellSet(const std::string &name, vtkm::IdComponent dimensionality)
-    : Name(name), Dimensionality(dimensionality), LogicalStructure()
+  CellSet(const std::string &name)
+    : Name(name), LogicalStructure()
   {
   }
 
   VTKM_CONT_EXPORT
   CellSet(const vtkm::cont::CellSet &src)
     : Name(src.Name),
-      Dimensionality(src.Dimensionality),
       LogicalStructure(src.LogicalStructure)
   {  }
 
@@ -55,7 +54,6 @@ public:
   CellSet &operator=(const vtkm::cont::CellSet &src)
   {
     this->Name = src.Name;
-    this->Dimensionality = src.Dimensionality;
     this->LogicalStructure = src.LogicalStructure;
     return *this;
   }
@@ -67,19 +65,6 @@ public:
   virtual std::string GetName() const
   {
     return this->Name;
-  }
-
-  /// The Dimensionality of the cells inside the cell set.
-  /// Lines = 1
-  /// Triangles, Quads = 2
-  /// Tets, Hexs, etc = 3
-  ///
-  /// CellSetExplicit has the ability to contain cells of multiple
-  /// dimensions. These datasets generally report a dimensionality
-  /// of 3.
-  virtual vtkm::IdComponent GetDimensionality() const
-  {
-    return this->Dimensionality;
   }
 
   virtual vtkm::Id GetNumberOfCells() const = 0;
@@ -100,7 +85,6 @@ public:
 
 protected:
     std::string Name;
-    vtkm::IdComponent Dimensionality;
     vtkm::cont::LogicalStructure LogicalStructure;
 };
 

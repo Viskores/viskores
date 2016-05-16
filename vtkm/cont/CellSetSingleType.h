@@ -56,14 +56,14 @@ public:
   template<typename CellShapeTag>
   VTKM_CONT_EXPORT
   CellSetSingleType(CellShapeTag, const std::string &name = std::string())
-    : Superclass(0, name, vtkm::CellTraits<CellShapeTag>::TOPOLOGICAL_DIMENSIONS),
+    : Superclass(0, name),
       CellTypeAsId(CellShapeTag::Id)
   {
   }
 
   VTKM_CONT_EXPORT
   CellSetSingleType(const std::string &name = std::string())
-    : Superclass(0, name, vtkm::CellTraits<CellShapeTagEmpty>::TOPOLOGICAL_DIMENSIONS),
+    : Superclass(0, name),
       CellTypeAsId(CellShapeTagEmpty::Id)
   {
   }

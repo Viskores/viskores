@@ -19,6 +19,7 @@
 //============================================================================
 
 #include <vtkm/worklet/TetrahedralizeUniformGrid.h>
+#include <vtkm/worklet/TriangulateUniformGrid.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/cont/DataSet.h>
@@ -107,10 +108,10 @@ void TestUniformGrid2D()
   outDataSet.AddCellSet(outCellSet);
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
-  // Convert uniform hexahedra to tetrahedra
-  vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter>
-                 tetrahedralizeFilter(inDataSet, outDataSet);
-  tetrahedralizeFilter.Run();
+  // Convert uniform quadrilaterals to triangles
+  vtkm::worklet::TriangulateFilterUniformGrid<DeviceAdapter>
+                 triangulateFilter(inDataSet, outDataSet);
+  triangulateFilter.Run();
 
   vtkm::cont::CellSetSingleType<> cellSet;
   outDataSet.GetCellSet(0).CopyTo(cellSet);

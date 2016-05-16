@@ -46,7 +46,7 @@ public:
 
   VTKM_CONT_EXPORT
   CellSetStructured(const std::string &name = std::string())
-    : CellSet(name,Dimension)
+    : CellSet(name)
   {
   }
 
@@ -130,8 +130,7 @@ public:
 
   virtual void PrintSummary(std::ostream &out) const
   {
-      out << "  StructuredCellSet: " << this->GetName()
-          << " dim= " << this->GetDimensionality() << std::endl;
+      out << "  StructuredCellSet: " << this->GetName() << std::endl;
       this->Structure.PrintSummary(out);
   }
 
