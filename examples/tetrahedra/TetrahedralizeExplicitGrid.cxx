@@ -68,7 +68,7 @@ int mouse_state = 1;
 vtkm::cont::DataSet MakeTetrahedralizeExplicitDataSet()
 {
   vtkm::cont::DataSetBuilderExplicitIterative builder;
-  builder.Begin(3);
+  builder.Begin();
 
   builder.AddPoint( 0, 0, 0);
   builder.AddPoint( 1, 0, 0);

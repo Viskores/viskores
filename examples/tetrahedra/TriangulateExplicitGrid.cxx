@@ -61,7 +61,7 @@ vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
 vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
 {
   vtkm::cont::DataSetBuilderExplicitIterative builder;
-  builder.Begin(2);
+  builder.Begin();
 
   builder.AddPoint(0, 0, 0); // 0
   builder.AddPoint(1, 0, 0); // 1

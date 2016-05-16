@@ -67,8 +67,7 @@ public:
     typedef vtkm::cont::CellSetPermutation<CellSetType> PermutationCellSetType;
 
     PermutationCellSetType permCellSet(*this->ValidIds, cellset,
-                                       cellset.GetName(),
-                                       cellset.GetDimensionality());
+                                       cellset.GetName());
 
     this->Output->AddCellSet(permCellSet);
   }

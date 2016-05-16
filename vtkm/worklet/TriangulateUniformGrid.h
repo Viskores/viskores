@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_TetrahedralizeUniformGrid_h
-#define vtk_m_worklet_TetrahedralizeUniformGrid_h
+#ifndef vtk_m_worklet_TriangulateUniformGrid_h
+#define vtk_m_worklet_TriangulateUniformGrid_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
@@ -41,81 +41,59 @@ namespace worklet {
 namespace detail {
 
 VTKM_EXEC_CONSTANT_EXPORT
-const static vtkm::IdComponent StructuredTetrahedronIndices[2][5][4] = {
-  {
-    { 0, 1, 3, 4 },
-    { 1, 4, 5, 6 },
-    { 1, 4, 6, 3 },
-    { 1, 3, 6, 2 },
-    { 3, 6, 7, 4 }
-  },
-  {
-    { 2, 1, 5, 0 },
-    { 0, 2, 3, 7 },
-    { 2, 5, 6, 7 },
-    { 0, 7, 4, 5 },
-    { 0, 2, 7, 5 }
-  }
+const static vtkm::IdComponent StructuredTriangleIndices[2][3] = {
+  { 0, 1, 2 },
+  { 0, 2, 3 }
 };
 
 } // namespace detail
 
-/// \brief Compute the tetrahedralize cells for a uniform grid data set
+/// \brief Compute the triangulate cells for a uniform grid data set
 template <typename DeviceAdapter>
-class TetrahedralizeFilterUniformGrid
+class TriangulateFilterUniformGrid
 {
 public:
 
   //
-  // Worklet to turn hexahedra into tetrahedra
+  // Worklet to turn quads into triangles
   // Vertices remain the same and each cell is processed with needing topology
   //
-  class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
+  class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
     typedef void ControlSignature(TopologyIn topology,
                                   FieldOutCell<> connectivityOut);
-    typedef void ExecutionSignature(PointIndices, _2, ThreadIndices);
+    typedef void ExecutionSignature(PointIndices, _2, VisitIndex);
     typedef _1 InputDomain;
 
     typedef vtkm::worklet::ScatterUniform ScatterType;
     VTKM_CONT_EXPORT
     ScatterType GetScatter() const
     {
-      return ScatterType(5);
+      return ScatterType(2);
     }
 
     VTKM_CONT_EXPORT
-    TetrahedralizeCell()
+    TriangulateCell()
     {  }
 
-    // Each hexahedron cell produces five tetrahedron cells
-    template<typename ConnectivityInVec,
-             typename ConnectivityOutVec,
-             typename ThreadIndicesType>
+    // Each quad cell produces 2 triangle cells
+    template<typename ConnectivityInVec, typename ConnectivityOutVec>
     VTKM_EXEC_EXPORT
     void operator()(const ConnectivityInVec &connectivityIn,
                     ConnectivityOutVec &connectivityOut,
-                    const ThreadIndicesType threadIndices) const
+                    vtkm::IdComponent visitIndex) const
     {
-      vtkm::Id3 inputIndex = threadIndices.GetInputIndex3D();
-
-      // Calculate the type of tetrahedron generated because it alternates
-      vtkm::Id indexType = (inputIndex[0] + inputIndex[1] + inputIndex[2]) % 2;
-
-      vtkm::IdComponent visitIndex = threadIndices.GetVisitIndex();
-
-      connectivityOut[0] = connectivityIn[detail::StructuredTetrahedronIndices[indexType][visitIndex][0]];
-      connectivityOut[1] = connectivityIn[detail::StructuredTetrahedronIndices[indexType][visitIndex][1]];
-      connectivityOut[2] = connectivityIn[detail::StructuredTetrahedronIndices[indexType][visitIndex][2]];
-      connectivityOut[3] = connectivityIn[detail::StructuredTetrahedronIndices[indexType][visitIndex][3]];
+      connectivityOut[0] = connectivityIn[detail::StructuredTriangleIndices[visitIndex][0]];
+      connectivityOut[1] = connectivityIn[detail::StructuredTriangleIndices[visitIndex][1]];
+      connectivityOut[2] = connectivityIn[detail::StructuredTriangleIndices[visitIndex][2]];
     }
   };
 
   //
-  // Construct the filter to tetrahedralize uniform grid
+  // Construct the filter to triangulate uniform grid
   //
-  TetrahedralizeFilterUniformGrid(const vtkm::cont::DataSet &inDataSet,
+  TriangulateFilterUniformGrid(const vtkm::cont::DataSet &inDataSet,
                                   vtkm::cont::DataSet &outDataSet) :
     InDataSet(inDataSet),
     OutDataSet(outDataSet)
@@ -126,7 +104,7 @@ public:
   vtkm::cont::DataSet OutDataSet; // output dataset with explicit cell set
 
   //
-  // Populate the output dataset with tetrahedra based on input uniform dataset
+  // Populate the output dataset with triangles based on input uniform dataset
   //
   void Run()
   {
@@ -136,11 +114,11 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
-    vtkm::cont::CellSetStructured<3> inCellSet;
+    vtkm::cont::CellSetStructured<2> inCellSet;
     InDataSet.GetCellSet(0).CopyTo(inCellSet);
-    vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell,DeviceAdapter> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<TriangulateCell,DeviceAdapter> dispatcher;
     dispatcher.Invoke(inCellSet,
-                      vtkm::cont::make_ArrayHandleGroupVec<4>(connectivity));
+                      vtkm::cont::make_ArrayHandleGroupVec<3>(connectivity));
 
     // Add cells to output cellset
     cellSet.Fill(connectivity);
@@ -150,4 +128,4 @@ public:
 }
 } // namespace vtkm::worklet
 
-#endif // vtk_m_worklet_TetrahedralizeUniformGrid_h
+#endif // vtk_m_worklet_TriangulateUniformGrid_h

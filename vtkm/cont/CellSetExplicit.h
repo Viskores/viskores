@@ -107,9 +107,8 @@ public:
 
   VTKM_CONT_EXPORT
   CellSetExplicit(vtkm::Id numpoints = 0,
-                  const std::string &name = std::string(),
-                  vtkm::IdComponent dimensionality = 3)
-    : CellSet(name, dimensionality),
+                  const std::string &name = std::string())
+    : CellSet(name),
       ConnectivityLength(-1),
       NumberOfCells(-1),
       NumberOfPoints(numpoints)
@@ -117,8 +116,8 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  CellSetExplicit(vtkm::Id numpoints, int dimensionality)
-    : CellSet(std::string(), dimensionality),
+  CellSetExplicit(vtkm::Id numpoints)
+    : CellSet(std::string()),
       ConnectivityLength(-1),
       NumberOfCells(-1),
       NumberOfPoints(numpoints)
@@ -438,8 +437,7 @@ public:
 
   virtual void PrintSummary(std::ostream &out) const
   {
-      out << "   ExplicitCellSet: " << this->Name
-          << " dim= " << this->Dimensionality << std::endl;
+      out << "   ExplicitCellSet: " << this->Name << std::endl;
       out << "   PointToCell: " << std::endl;
       this->PointToCell.PrintSummary(out);
       out << "   CellToPoint: " << std::endl;
