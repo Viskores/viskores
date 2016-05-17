@@ -21,7 +21,7 @@
 set(unit_tests
   UnitTestSceneRendererOSMesa.cxx
   UnitTestSceneRendererVolume.cxx
- )
+)
 
 VTKM_unit_tests(SOURCES ${unit_tests}
                 LIBRARIES ${OSMESA_LIBRARY})

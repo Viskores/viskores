@@ -21,6 +21,7 @@
 #define vtk_m_rendering_Scene_h
 
 #include <vtkm/rendering/Plot.h>
+#include <vtkm/rendering/View.h>
 #include <vector>
 
 namespace vtkm {
@@ -40,15 +41,35 @@ public:
     template<typename SceneRendererType, typename SurfaceType>
     VTKM_CONT_EXPORT
     void Render(SceneRendererType &sceneRenderer,
-                SurfaceType &surface)
+                SurfaceType &surface,
+                vtkm::rendering::View &view)
     {
+        spatialBounds[0] = spatialBounds[2] = spatialBounds[4] = +FLT_MAX;
+        spatialBounds[1] = spatialBounds[3] = spatialBounds[5] = -FLT_MAX;
+
+        sceneRenderer.StartScene();
         for (std::size_t i = 0; i < plots.size(); i++)
         {
-            sceneRenderer.StartScene();
-            plots[i].Render(sceneRenderer, surface);
-            sceneRenderer.EndScene();
+            plots[i].Render(sceneRenderer, surface, view);
+
+            // accumulate all plots' spatial bounds into the scene spatial bounds
+            spatialBounds[0] = std::min(spatialBounds[0], plots[i].spatialBounds[0]);
+            spatialBounds[1] = std::max(spatialBounds[1], plots[i].spatialBounds[1]);
+            spatialBounds[2] = std::min(spatialBounds[2], plots[i].spatialBounds[2]);
+            spatialBounds[3] = std::max(spatialBounds[3], plots[i].spatialBounds[3]);
+            spatialBounds[4] = std::min(spatialBounds[4], plots[i].spatialBounds[4]);
+            spatialBounds[5] = std::max(spatialBounds[5], plots[i].spatialBounds[5]);
         }
+        sceneRenderer.EndScene();
     }
+
+    double *GetSpatialBounds()
+    {
+        return spatialBounds;
+    }
+
+protected:
+    double spatialBounds[6];
 };
 
 class Scene2D : public Scene
@@ -56,11 +77,18 @@ class Scene2D : public Scene
 public:
     Scene2D() {}
 
-    template<typename SceneRendererType>
+    template<typename SceneRendererType, typename SurfaceType>
     VTKM_CONT_EXPORT
-    void Render(vtkm::rendering::View3D &vtkmNotUsed(view),
-                SceneRendererType &vtkmNotUsed(sceneRenderer) )
+    void Render(SceneRendererType &sceneRenderer,
+                SurfaceType &surface,
+                vtkm::rendering::View &view)
     {
+        for (std::size_t i = 0; i < plots.size(); i++)
+        {
+            sceneRenderer.StartScene();
+            plots[i].Render(sceneRenderer, surface, view);
+            sceneRenderer.EndScene();
+        }
     }
 };
 

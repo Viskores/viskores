@@ -23,9 +23,11 @@ set(headers
   ColorTable.h
   Plot.h
   RenderSurface.h
+  RenderSurfaceOSMesa.h
+  RenderSurfaceGL.h
   Scene.h
   SceneRenderer.h
-  SceneRendererOSMesa.h
+  SceneRendererGL.h
   SceneRendererVolume.h
   Triangulator.h
   View.h

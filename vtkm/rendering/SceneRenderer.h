@@ -40,22 +40,11 @@ public:
   {}
 
   VTKM_CONT_EXPORT
-  virtual void SetView(vtkm::rendering::View3D &v)
-  {
-      View = v;
-  }
-
-  VTKM_CONT_EXPORT
-  virtual vtkm::rendering::View3D& GetView()
-  {
-    return View;
-  }
-
-  VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
                            vtkm::cont::Field &scalarField, //This should be const
                            const vtkm::rendering::ColorTable &colorTable,
+                           vtkm::rendering::View &view,
                            vtkm::Float64 *scalarBounds=NULL) = 0;
 
   VTKM_CONT_EXPORT
@@ -95,7 +84,6 @@ public:
 protected:
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
     vtkm::Vec<vtkm::Float32,4> BackgroundColor;
-    View3D View;
 };
 }} //namespace vtkm::rendering
 #endif //vtk_m_rendering_SceneRenderer_h

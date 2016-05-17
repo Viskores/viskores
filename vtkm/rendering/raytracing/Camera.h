@@ -149,14 +149,14 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void SetParameters(View3D &view)
+  void SetParameters(View &view)
   {
-    this->SetUp(view.Up);
-    this->SetLookAt(view.LookAt);
-    this->SetPosition(view.Position);
-    this->SetFieldOfView(view.FieldOfView);
-    this->SetHeight(view.Height);
-    this->SetWidth(view.Width);
+    this->SetUp(view.view3d.up);
+    this->SetLookAt(view.view3d.lookAt);
+    this->SetPosition(view.view3d.pos);
+    this->SetFieldOfView(view.view3d.fieldOfView);
+    this->SetHeight(view.height);
+    this->SetWidth(view.width);
   }
 
 

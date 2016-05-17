@@ -19,6 +19,7 @@
 //============================================================================
 #ifndef vtk_m_rendering_SceneRendererVolume_h
 #define vtk_m_rendering_SceneRendererVolume_h
+
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Triangulator.h>
 #include <vtkm/rendering/SceneRenderer.h>
@@ -51,6 +52,7 @@ public:
                            const vtkm::cont::CoordinateSystem &coords,
                            vtkm::cont::Field &scalarField,
                            const vtkm::rendering::ColorTable &, //colorTable
+                           vtkm::rendering::View &view,
                            vtkm::Float64 *scalarBounds=NULL) //scalarBounds=NULL)
   {
     vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
@@ -73,7 +75,7 @@ public:
       //if(dynamicCoordsHandle.IsArrayHandleType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
       vertices = dynamicCoordsHandle.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       vtkm::rendering::raytracing::Camera<DeviceAdapter> &camera = Tracer.GetCamera();
-      camera.SetParameters(View);
+      camera.SetParameters(view);
       Tracer.SetData(vertices, scalarField, coordsBounds, cellSetStructured3D, scalarBounds);
       Tracer.SetColorMap(ColorMap);
       std::cout<<"Structured Rendering"<<std::endl;
