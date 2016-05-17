@@ -79,7 +79,7 @@ public:
   class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(TopologyIn topology,
+    typedef void ControlSignature(CellSetIn cellset,
                                   ExecObject tables,
                                   FieldOutCell<> connectivityOut);
     typedef void ExecutionSignature(CellShape, PointIndices, _2, _3, VisitIndex);

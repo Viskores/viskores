@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_arg_FetchTagTopologyIn_h
-#define vtk_m_exec_arg_FetchTagTopologyIn_h
+#ifndef vtk_m_exec_arg_FetchTagCellSetIn_h
+#define vtk_m_exec_arg_FetchTagCellSetIn_h
 
 #include <vtkm/exec/arg/AspectTagDefault.h>
 #include <vtkm/exec/arg/Fetch.h>
@@ -30,17 +30,17 @@ namespace arg {
 
 /// \brief \c Fetch tag for getting topology information.
 ///
-/// \c FetchTagTopologyIn is a tag used with the \c Fetch class to retreive
+/// \c FetchTagCellSetIn is a tag used with the \c Fetch class to retreive
 /// values from a topology object.  This default parameter returns
 /// the basis topology type, i.e. cell type in a \c WorkletCellMap.
 ///
-struct FetchTagTopologyIn {  };
+struct FetchTagCellSetIn {  };
 
 
 template<typename ConnectivityType,
          typename ExecObjectType>
 struct Fetch<
-    vtkm::exec::arg::FetchTagTopologyIn,
+    vtkm::exec::arg::FetchTagCellSetIn,
     vtkm::exec::arg::AspectTagDefault,
     vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
     ExecObjectType>
@@ -70,4 +70,4 @@ struct Fetch<
 }
 } // namespace vtkm::exec::arg
 
-#endif //vtk_m_exec_arg_FetchTagTopologyIn_h
+#endif //vtk_m_exec_arg_FetchTagCellSetIn_h

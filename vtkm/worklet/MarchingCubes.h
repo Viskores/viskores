@@ -58,7 +58,7 @@ public:
   public:
     typedef void ControlSignature(
         FieldInPoint<Scalar> inNodes,
-        TopologyIn topology,
+        CellSetIn cellset,
         FieldOutCell<> outNumTriangles,
         WholeArrayIn<IdComponentType> numTrianglesTable);
     typedef void ExecutionSignature(_1, _3, _4);
@@ -108,7 +108,7 @@ public:
     IdPortalConstType EdgeTable;
 
     typedef void ControlSignature(
-        TopologyIn topology, // Cell set
+        CellSetIn cellset, // Cell set
         FieldInPoint<Scalar> fieldIn, // Input point field defining the contour
         FieldInPoint<Vec3> pcoordIn, // Input point coordinates
         FieldOutCell<Vec3> interpolationWeights,

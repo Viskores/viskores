@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_arg_TransportTagTopologyIn_h
-#define vtk_m_cont_arg_TransportTagTopologyIn_h
+#ifndef vtk_m_cont_arg_TransportTagCellSetIn_h
+#define vtk_m_cont_arg_TransportTagCellSetIn_h
 
 #include <vtkm/Types.h>
 
@@ -32,16 +32,16 @@ namespace arg {
 
 /// \brief \c Transport tag for input arrays.
 ///
-/// \c TransportTagTopologyIn is a tag used with the \c Transport class to
+/// \c TransportTagCellSetIn is a tag used with the \c Transport class to
 /// transport topology objects for input data.
 ///
 template<typename FromTopology,typename ToTopology>
-struct TransportTagTopologyIn {  };
+struct TransportTagCellSetIn {  };
 
 template<typename FromTopology,
          typename ToTopology,
          typename ContObjectType, typename Device>
-struct Transport<vtkm::cont::arg::TransportTagTopologyIn<FromTopology,ToTopology>, ContObjectType, Device>
+struct Transport<vtkm::cont::arg::TransportTagCellSetIn<FromTopology,ToTopology>, ContObjectType, Device>
 {
   VTKM_IS_CELL_SET(ContObjectType);
 
@@ -64,4 +64,4 @@ struct Transport<vtkm::cont::arg::TransportTagTopologyIn<FromTopology,ToTopology
 }
 } // namespace vtkm::cont::arg
 
-#endif //vtk_m_cont_arg_TransportTagTopologyIn_h
+#endif //vtk_m_cont_arg_TransportTagCellSetIn_h

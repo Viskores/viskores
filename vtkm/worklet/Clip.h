@@ -274,7 +274,7 @@ public:
   class ComputeStats : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(TopologyIn topology,
+    typedef void ControlSignature(CellSetIn cellset,
                                   FieldInPoint<ScalarAll> scalars,
                                   FieldOutCell<IdType> clipTableIdxs,
                                   FieldOutCell<TypeClipStats> stats);
@@ -335,7 +335,7 @@ public:
   class GenerateCellSet : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(TopologyIn topology,
+    typedef void ControlSignature(CellSetIn cellset,
                                   FieldInPoint<ScalarAll> scalars,
                                   FieldInCell<IdType> clipTableIdxs,
                                   FieldInCell<TypeClipStats> cellSetIdxs,
