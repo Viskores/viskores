@@ -173,7 +173,7 @@ template<typename T,
          typename OutputIterator2,
          typename BinaryPredicate,
          typename BinaryFunction>
-__host__
+__host__ __device__
   ::thrust::pair<OutputIterator1,OutputIterator2>
   reduce_by_key(const vtkm_cuda_policy &exec,
                 thrust::system::cuda::pointer<T> keys_first,
@@ -187,34 +187,12 @@ __host__
 {
 #if defined(__CUDACC_VER__) && (__CUDACC_VER__ >= 70500) && (__CUDACC_VER__ < 80000)
   ::thrust::pair<OutputIterator1,OutputIterator2> result = thrust::reduce_by_key(thrust::cuda::par, keys_first.get(), keys_last.get(), values_first, keys_output, values_output, binary_pred, binary_op);
+
+  //only sync if we are being invoked from the host
+#ifndef  __CUDA_ARCH__
   cudaDeviceSynchronize();
-  return result;
-#else
-  return thrust::reduce_by_key(thrust::cuda::par, keys_first, keys_last, values_first, keys_output, values_output, binary_pred, binary_op);
 #endif
-}
 
-template<typename InputIterator1,
-         typename InputIterator2,
-         typename OutputIterator1,
-         typename OutputIterator2,
-         typename BinaryPredicate,
-         typename BinaryFunction>
-__host__
-  ::thrust::pair<OutputIterator1,OutputIterator2>
-  reduce_by_key(const vtkm_cuda_policy &exec,
-                InputIterator1 keys_first,
-                InputIterator1 keys_last,
-                InputIterator2 values_first,
-                OutputIterator1 keys_output,
-                OutputIterator2 values_output,
-                BinaryPredicate binary_pred,
-                BinaryFunction binary_op)
-
-{
-#if defined(__CUDACC_VER__) && (__CUDACC_VER__ >= 70500) && (__CUDACC_VER__ < 80000)
-  ::thrust::pair<OutputIterator1,OutputIterator2> result = thrust::reduce_by_key(thrust::cuda::par, keys_first, keys_last, values_first, keys_output, values_output, binary_pred, binary_op);
-  cudaDeviceSynchronize();
   return result;
 #else
   return thrust::reduce_by_key(thrust::cuda::par, keys_first, keys_last, values_first, keys_output, values_output, binary_pred, binary_op);
