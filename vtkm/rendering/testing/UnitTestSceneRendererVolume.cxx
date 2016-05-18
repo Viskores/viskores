@@ -72,14 +72,18 @@ void Render(const vtkm::cont::DataSet &ds,
     
     vtkm::rendering::View view;
     Set3DView(view, coords, W, H);
-
+  
+    vtkm::rendering::ColorTable colorTable(ctName);
+    colorTable.AddAlphaControlPoint(0.0f, .01f);
+    colorTable.AddAlphaControlPoint(1.0f, .01f);
+    
     vtkm::rendering::Scene3D scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceRayTracer surface(W,H,bg);
     scene.plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
                                                 ds.GetCoordinateSystem(),
                                                 ds.GetField(fieldNm),
-                                                vtkm::rendering::ColorTable(ctName)));
+                                                colorTable));
 
     //TODO: W/H in window.  bg in window (window sets surface/renderer).
     vtkm::rendering::Window3D<vtkm::rendering::SceneRendererVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,

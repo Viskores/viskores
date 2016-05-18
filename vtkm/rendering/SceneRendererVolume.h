@@ -23,7 +23,7 @@
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Triangulator.h>
 #include <vtkm/rendering/SceneRenderer.h>
-#include <vtkm/rendering/raytracing/VolumeRendererUniform.h>
+#include <vtkm/rendering/raytracing/VolumeRendererStructured.h>
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/RenderSurfaceRayTracer.h>
 #include <vtkm/rendering/View.h>
@@ -36,7 +36,7 @@ template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class SceneRendererVolume : public SceneRenderer
 { 
 protected:
-  vtkm::rendering::raytracing::VolumeRendererUniform<DeviceAdapter>  Tracer;
+  vtkm::rendering::raytracing::VolumeRendererStructured<DeviceAdapter>  Tracer;
   RenderSurfaceRayTracer *Surface;
 public:
   VTKM_CONT_EXPORT

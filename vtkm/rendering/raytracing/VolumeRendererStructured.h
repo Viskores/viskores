@@ -1,5 +1,5 @@
-#ifndef vtk_m_rendering_raytracing_VolumeRendererUniform_h
-#define vtk_m_rendering_raytracing_VolumeRendererUniform_h
+#ifndef vtk_m_rendering_raytracing_VolumeRendererStructured_h
+#define vtk_m_rendering_raytracing_VolumeRendererStructured_h
 
 #include <math.h>
 #include <iostream>
@@ -18,7 +18,7 @@ namespace rendering{
 namespace raytracing{
   
 template< typename DeviceAdapter>
-class VolumeRendererUniform
+class VolumeRendererStructured
 {
 public:
   typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
@@ -281,7 +281,6 @@ public:
       InvSpacing[2] = 1.f / spacing[2];
       if((maxScalar - minScalar) != 0.f) InverseDeltaScalar = 1.f / (maxScalar - minScalar);
       else InverseDeltaScalar = minScalar;
-      std::cout<<" max   and min "<<maxScalar<<" "<<minScalar<<" "<<InverseDeltaScalar<<std::endl;
     }
     typedef void ControlSignature(FieldIn<>,
                                   FieldIn<>,
@@ -376,7 +375,6 @@ public:
         //advance
         currentDistance += SampleDistance;
         
-        //std::cout<<" current color "<<color;
         if(color[3] >= 1.f) break;
         tx = (sampleLocation[0] - bottomLeft[0]) * InvSpacing[0];
         ty = (sampleLocation[1] - bottomLeft[1]) * InvSpacing[1];
@@ -687,7 +685,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                     const vtkm::Float32 &maxDistance,
                     vtkm::Vec<vtkm::Float32,4> &color,
                     ScalarPortalType &scalars) const
-    { std::cout<<"Here\n";
+    { 
       color[0] = 0.f;
       color[1] = 0.f;
       color[2] = 0.f;
@@ -785,8 +783,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
         vtkm::Id colorIndex = vtkm::Id(finalScalar * ColorMapSize);
         //colorIndex = vtkm::Min(ColorMapSize, vtkm::Max(0,colorIndex));
         vtkm::Vec<vtkm::Float32,4> sampleColor = ColorMap.Get(colorIndex);
-        //sampleColor[3] = .05f;
-      
+    
         //composite
         sampleColor[3] *= (1.f - color[3]); 
         color[0] = color[0] + sampleColor[0] * sampleColor[3];
@@ -906,7 +903,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
   }; //class CompositeBackground
 
   VTKM_CONT_EXPORT
-  VolumeRendererUniform()
+  VolumeRendererStructured()
   {
     IsSceneDirty = false;
     IsUniformDataSet = true;
@@ -979,7 +976,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
     bool isAssocPoints = ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
     if(IsUniformDataSet)
     {
-    std::cout<<"DDDDDDDDDD\n";
+
       vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
       vertices = Coordinates.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       if(isAssocPoints)
@@ -1015,7 +1012,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
      }
      else
      {
-     std::cout<<"XXXXXXXXXXXX\n";
+
         CartesianArrayHandle vertices;
         vertices = Coordinates.Cast<CartesianArrayHandle>();
         if(isAssocPoints)
@@ -1076,7 +1073,6 @@ protected:
   bool IsUniformDataSet;
   VolumeRay<DeviceAdapter> Rays;
   Camera<DeviceAdapter> camera;
-  //vtkm::cont::ArrayHandleUniformPointCoordinates Coordinates;
   vtkm::cont::DynamicArrayHandleCoordinateSystem Coordinates;
   vtkm::cont::CellSetStructured<3> Cellset;
   vtkm::cont::Field *ScalarField;
