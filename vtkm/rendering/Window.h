@@ -28,6 +28,7 @@
 #include <vtkm/rendering/BoundingBoxAnnotation.h>
 #include <vtkm/rendering/AxisAnnotation3D.h>
 #include <vtkm/rendering/AxisAnnotation2D.h>
+#include <vtkm/rendering/ColorBarAnnotation.h>
 
 namespace vtkm {
 namespace rendering {
@@ -105,6 +106,7 @@ public:
     // 3D-specific annotations
     BoundingBoxAnnotation bbox;
     AxisAnnotation3D xaxis, yaxis, zaxis;
+    ColorBarAnnotation colorbar;
 
     VTKM_CONT_EXPORT
     Window3D(const vtkm::rendering::Scene3D &s,
@@ -142,6 +144,15 @@ public:
     VTKM_CONT_EXPORT
     void RenderScreenAnnotations()
     {
+        if (scene.plots.size() > 0)
+        {
+            double vmin = scene.plots[0].scalarBounds[0];
+            double vmax = scene.plots[0].scalarBounds[1];
+            //colorbar.SetAxisColor(eavlColor::white);
+            colorbar.SetRange(vmin, vmax, 5);
+            colorbar.SetColorTable(scene.plots[0].colorTable);
+            colorbar.Render(view, worldAnnotator, surface);
+        }
     }
 
     VTKM_CONT_EXPORT
@@ -251,6 +262,7 @@ public:
 
     // 2D-specific annotations
     AxisAnnotation2D haxis, vaxis;
+    ColorBarAnnotation colorbar;
 
     VTKM_CONT_EXPORT
     Window2D(const vtkm::rendering::Scene2D &s,
@@ -309,6 +321,16 @@ public:
         //vaxis.SetLabelAlignment(eavlTextAnnotation::Right,
         //                         eavlTextAnnotation::VCenter);
         vaxis.Render(view, worldAnnotator, surface);
+
+        if (scene.plots.size() > 0)
+        {
+            double vmin = scene.plots[0].scalarBounds[0];
+            double vmax = scene.plots[0].scalarBounds[1];
+            //colorbar.SetAxisColor(eavlColor::white);
+            colorbar.SetRange(vmin, vmax, 5);
+            colorbar.SetColorTable(scene.plots[0].colorTable);
+            colorbar.Render(view, worldAnnotator, surface);
+        }
     }
 
     VTKM_CONT_EXPORT

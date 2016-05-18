@@ -23,6 +23,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Color.h>
+#include <vtkm/rendering/ColorTable.h>
 
 #include <iostream>
 #include <fstream>
@@ -65,6 +66,10 @@ public:
                          double, double,
                          float,
                          Color) {}
+    virtual void AddColorBar(float, float, 
+                             float, float,
+                             const ColorTable &,
+                             bool) {}
 
     vtkm::rendering::Color bgColor;
     std::size_t width, height;
