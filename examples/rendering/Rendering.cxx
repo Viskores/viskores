@@ -40,27 +40,27 @@
 # include <GL/glut.h>
 #endif
 
-#include "quaternion.h"
-#include <vector>
-
 #include <vtkm/rendering/Window.h>
 #include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/rendering/RenderSurfaceGL.h>
 #include <vtkm/rendering/SceneRendererGL.h>
 #include <vtkm/rendering/ColorTable.h>
 
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray, normalsArray;
-vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
-vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
-vtkm::cont::DataSet ds;
-
 vtkm::rendering::Window3D<vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                           vtkm::rendering::RenderSurfaceGL,
                           vtkm::rendering::WorldAnnotatorGL> *window = NULL;
 
-Quaternion qrot;
-int lastx, lasty;
-int mouse_state = 1;
+const vtkm::Int32 W = 512, H = 512;
+int buttonStates[3] = {GLUT_UP, GLUT_UP, GLUT_UP};
+bool shiftKey = false;
+int lastx=-1, lasty=-1;
+
+void
+reshape(int, int)
+{
+    //Don't allow resizing window.
+    glutReshapeWindow(W,H);
+}
 
 // Render the output using simple OpenGL
 void displayCall()
@@ -69,62 +69,32 @@ void displayCall()
     glutSwapBuffers();
 }
 
-static vtkm::Vec<vtkm::Float32, 3>
-MultVector(const vtkm::Matrix<vtkm::Float32,4,4> &mtx, vtkm::Vec<vtkm::Float32, 3> &v)
-{
-    vtkm::Vec<vtkm::Float32,4> v4(v[0],v[1],v[2], 1);
-    v4 = vtkm::MatrixMultiply(mtx, v4);
-    v[0] = v4[0];
-    v[1] = v4[1];
-    v[2] = v4[2];
-    return v;
-}
-
 // Allow rotations of the view
 void mouseMove(int x, int y)
 {
-    vtkm::Float32 dx = static_cast<vtkm::Float32>(x-lastx);
-    vtkm::Float32 dy = static_cast<vtkm::Float32>(y-lasty);
+    //std::cout<<"MOUSE MOVE: "<<x<<" "<<y<<std::endl;
 
-    if (mouse_state == 0)
+    //Map to XY
+    y = window->view.height-y;
+    
+    if (lastx != -1 && lasty != -1)
     {
-        vtkm::Float32 pideg = static_cast<vtkm::Float32>(vtkm::Pi_2());
-        Quaternion newRotX;
-        newRotX.setEulerAngles(-0.2f*dx*pideg/180.0f, 0.0f, 0.0f);
-        qrot.mul(newRotX);
+        vtkm::Float32 x1 = ((lastx*2.0f)/window->view.width) - 1.0f;
+        vtkm::Float32 y1 = ((lasty*2.0f)/window->view.height) - 1.0f;
+        vtkm::Float32 x2 = ((x*2.0f)/window->view.width) - 1.0f;
+        vtkm::Float32 y2 = ((y*2.0f)/window->view.height) - 1.0f;
 
-        Quaternion newRotY;
-        newRotY.setEulerAngles(0.0f, 0.0f, -0.2f*dy*pideg/180.0f);
-        qrot.mul(newRotY);
+        if (buttonStates[0] == GLUT_DOWN)
+        {
+            if (shiftKey)
+                window->view.Pan3D(x2-x1, y2-y1);
+            else
+                window->view.TrackballRotate(x1,y1, x2,y2);
+        }
+        else if (buttonStates[1] == GLUT_DOWN)
+            window->view.Zoom3D(y2-y1);
     }
 
-    vtkm::Float32 m[16];
-    qrot.getRotMat(m);
-    vtkm::Matrix<vtkm::Float32,4,4> mtx;
-    mtx(0,0) = m[0];
-    mtx(1,0) = m[1];
-    mtx(2,0) = m[2];
-    mtx(3,0) = m[3];
-
-    mtx(0,1) = m[4];
-    mtx(1,1) = m[5];
-    mtx(2,1) = m[6];
-    mtx(3,1) = m[7];
-
-    mtx(0,2) = m[8];
-    mtx(1,2) = m[9];
-    mtx(2,2) = m[10];
-    mtx(3,2) = m[11];
-
-    mtx(0,3) = m[12];
-    mtx(1,3) = m[13];
-    mtx(2,3) = m[14];
-    mtx(3,3) = m[15];
-
-    window->view.view3d.pos = MultVector(mtx, window->view.view3d.pos);
-    window->view.view3d.up = MultVector(mtx, window->view.view3d.up);
-    //window->view.view3d.lookAt = MultVector(mtx, window->view.view3d.lookAt);
-    
     lastx = x;
     lasty = y;
     glutPostRedisplay();
@@ -134,12 +104,17 @@ void mouseMove(int x, int y)
 // Respond to mouse button
 void mouseCall(int button, int state, int x, int y)
 {
-    if (button == 0)
-        mouse_state = state;
-    if ((button == 0) && (state == 0))
+    int modifiers = glutGetModifiers();
+    shiftKey = modifiers & GLUT_ACTIVE_SHIFT;
+    buttonStates[button] = state;
+
+    //std::cout<<"Buttons: "<<buttonStates[0]<<" "<<buttonStates[1]<<" "<<buttonStates[2]<<" SHIFT= "<<shiftKey<<std::endl;
+
+    //mouse down, reset.
+    if (buttonStates[button] == GLUT_DOWN)
     {
-        lastx = x;
-        lasty = y;
+        lastx = -1;
+        lasty = -1;
     }
 }
 
@@ -166,24 +141,16 @@ void Set3DView(vtkm::rendering::View &view,
     view.farPlane = 100.f;
     view.width = w;
     view.height = h;
-    
-    /*
-    std::cout<<"View3d:  pos: "<<view.view3d.pos<<std::endl;
-    std::cout<<"      lookAt: "<<view.view3d.lookAt<<std::endl;
-    std::cout<<"          up: "<<view.view3d.up<<std::endl;
-    std::cout<<"near/far/fov: "<<view.nearPlane<<"/"<<view.farPlane<<" "<<view.view3d.fieldOfView<<std::endl;
-    std::cout<<"         w/h: "<<view.width<<"/"<<view.height<<std::endl;
-    */
 }
 
 // Compute and render an isosurface for a uniform grid example
-int main(int argc, char* argv[])
+int
+main(int argc, char* argv[])
 {
     vtkm::cont::testing::MakeTestDataSet maker;
-    ds = maker.Make3DUniformDataSet0();
+    vtkm::cont::DataSet ds = maker.Make3DUniformDataSet0();
     
-    lastx = lasty = 0;
-    const vtkm::Int32 W = 512, H = 512;
+    lastx = lasty = -1;
     
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
@@ -192,6 +159,7 @@ int main(int argc, char* argv[])
     glutDisplayFunc(displayCall);
     glutMotionFunc(mouseMove);
     glutMouseFunc(mouseCall);
+    glutReshapeFunc(reshape);
 
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
     

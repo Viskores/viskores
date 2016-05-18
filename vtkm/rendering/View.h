@@ -26,19 +26,32 @@
 namespace vtkm {
 namespace rendering {
 
+static void printMtx(const std::string &nm, const vtkm::Matrix<vtkm::Float32,4,4> &mtx)
+{
+    std::cout<<nm<<": ["<<std::endl;
+    for (int i = 0; i < 4; i++)
+        std::cout<<"  "<<mtx(0,i)<<" "<<mtx(1,i)<<" "<<mtx(2,i)<<" "<<mtx(3,i)<<std::endl;
+    std::cout<<"]"<<std::endl;    
+}
+static void printVec(const std::string &nm, const vtkm::Vec<vtkm::Float32,3> &v)
+{
+    std::cout<<nm<<" ["<<v[0]<<" "<<v[1]<<" "<<v[2]<<"]"<<std::endl;
+}
+
 class View
 {
     class View3D
     {
     public:
         VTKM_CONT_EXPORT
-        View3D() : fieldOfView(0.f)
+        View3D() : fieldOfView(0.f), xpan(0), ypan(0), zoom(1)
         {}
         
         VTKM_CONT_EXPORT
         vtkm::Matrix<vtkm::Float32,4,4> CreateViewMatrix()
         {
-            return View::ViewMtx(pos, lookAt, up);
+            vtkm::Matrix<vtkm::Float32,4,4> V = View::ViewMtx(pos, lookAt, up);
+            return V;
         }
 
         VTKM_CONT_EXPORT
@@ -67,12 +80,18 @@ class View
             mtx(3,2) = -1.f;
             mtx(2,3) = -(2.f * farPlane * nearPlane) / (farPlane - nearPlane);
             mtx(3,3) = 0.f;
+
+            vtkm::Matrix<vtkm::Float32,4,4> T, Z;
+            T = View::TranslateMtx(xpan, ypan, 0);
+            Z = View::ScaleMtx(zoom, zoom, 1);
+            mtx = vtkm::MatrixMultiply(Z, vtkm::MatrixMultiply(T, mtx));
             return mtx;
         }
         
         
         vtkm::Vec<vtkm::Float32,3> up, lookAt, pos;
         vtkm::Float32 fieldOfView;
+        vtkm::Float32 xpan, ypan, zoom;
     };
 
     class View2D
@@ -152,11 +171,103 @@ private:
         return mtx;
     }
 
+    static VTKM_CONT_EXPORT    
+    vtkm::Matrix<vtkm::Float32,4,4> ScaleMtx(const vtkm::Vec<vtkm::Float32,3> &v)
+    {
+        return ScaleMtx(v[0], v[1], v[2]);
+    }
+    static VTKM_CONT_EXPORT    
+    vtkm::Matrix<vtkm::Float32,4,4> ScaleMtx(const vtkm::Float32 &s) {return ScaleMtx(s,s,s);}
+    
+    static VTKM_CONT_EXPORT    
+    vtkm::Matrix<vtkm::Float32,4,4> ScaleMtx(const vtkm::Float32 &x,
+                                             const vtkm::Float32 &y,
+                                             const vtkm::Float32 &z)
+    {
+        vtkm::Matrix<vtkm::Float32,4,4> S;
+        vtkm::MatrixIdentity(S);
+        S(0,0) = x;
+        S(1,1) = y;
+        S(2,2) = z;
+        return S;
+    }    
+
+    static VTKM_CONT_EXPORT    
+    vtkm::Matrix<vtkm::Float32,4,4> TranslateMtx(const vtkm::Vec<vtkm::Float32,3> &v)
+    {
+        return TranslateMtx(v[0], v[1], v[2]);
+    }
+    
+    static VTKM_CONT_EXPORT    
+    vtkm::Matrix<vtkm::Float32,4,4> TranslateMtx(const vtkm::Float32 &x,
+                                                 const vtkm::Float32 &y,
+                                                 const vtkm::Float32 &z)
+    {
+        vtkm::Matrix<vtkm::Float32,4,4> T;
+        vtkm::MatrixIdentity(T);
+        T(0,3) = x;
+        T(1,3) = y;
+        T(2,3) = z;
+        return T;
+    }
+
     VTKM_CONT_EXPORT
     vtkm::Matrix<vtkm::Float32,4,4>    
-    CreateTrackball(vtkm::Float32 x1, vtkm::Float32 y1, vtkm::Float32 x2, vtkm::Float32 y2)
+    CreateTrackball(vtkm::Float32 p1x, vtkm::Float32 p1y, vtkm::Float32 p2x, vtkm::Float32 p2y)
     {
+        const vtkm::Float32 RADIUS = 0.80f; //z value at x = y = 0.0
+        const vtkm::Float32 COMPRESSION = 3.5f; // multipliers for x and y.
+        const vtkm::Float32 AR3 = RADIUS*RADIUS*RADIUS;
+        
         vtkm::Matrix<vtkm::Float32,4,4> mtx;
+
+        vtkm::MatrixIdentity(mtx);
+        if (p1x==p2x && p1y==p2y)
+            return mtx;
+        
+        vtkm::Vec<vtkm::Float32, 3> p1(p1x,p1y, AR3/((p1x*p1x+p1y*p1y)*COMPRESSION+AR3));
+        vtkm::Vec<vtkm::Float32, 3> p2(p2x,p2y, AR3/((p2x*p2x+p2y*p2y)*COMPRESSION+AR3));
+        vtkm::Vec<vtkm::Float32, 3> axis = vtkm::Normal(vtkm::Cross(p2,p1));
+        //std::cout<<"Axis: "<<axis[0]<<" "<<axis[1]<<" "<<axis[2]<<std::endl;
+        
+        vtkm::Vec<vtkm::Float32, 3> p2_p1(p2[0]-p1[0], p2[1]-p1[1], p2[2]-p1[2]);
+        vtkm::Float32 t = vtkm::Magnitude(p2_p1);
+        t = vtkm::Min(vtkm::Max(t, -1.0f), 1.0f);
+        vtkm::Float32 phi = static_cast<vtkm::Float32>(-2.0f*asin(t/(2.0f*RADIUS)));
+        vtkm::Float32 val = static_cast<vtkm::Float32>(sin(phi/2.0f));
+        axis[0] *= val;
+        axis[1] *= val;
+        axis[2] *= val;
+
+        //quaternion
+        vtkm::Float32 q[4] = {axis[0], axis[1], axis[2], static_cast<vtkm::Float32>(cos(phi/2.0f))};
+        
+        // normalize quaternion to unit magnitude
+        t =  1.0f / static_cast<vtkm::Float32>(sqrt(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]));
+        q[0] *= t;
+        q[1] *= t;
+        q[2] *= t;
+        q[3] *= t;
+
+        /*
+        std::cout<<"P1: "<<p1[0]<<" "<<p1[1]<<" "<<p1[2]<<std::endl;
+        std::cout<<"P2: "<<p2[0]<<" "<<p2[1]<<" "<<p2[2]<<std::endl;                
+        std::cout<<"T= "<<t<<std::endl;
+        std::cout<<"PHI= "<<phi<<std::endl;
+        std::cout<<"QUAT: "<<q[0]<<" "<<q[1]<<" "<<q[2]<<" "<<q[3]<<std::endl;
+        */
+        
+        mtx(0,0) = 1 - 2 * (q[1]*q[1] + q[2]*q[2]);
+        mtx(0,1) = 2 * (q[0]*q[1] + q[2]*q[3]);
+        mtx(0,2) = (2 * (q[2]*q[0] - q[1]*q[3]) );
+
+        mtx(1,0) = 2 * (q[0]*q[1] - q[2]*q[3]);
+        mtx(1,1) = 1 - 2 * (q[2]*q[2] + q[0]*q[0]);
+        mtx(1,2) = (2 * (q[1]*q[2] + q[0]*q[3]) );
+
+        mtx(2,0) = (2 * (q[2]*q[0] + q[1]*q[3]) );
+        mtx(2,1) = (2 * (q[1]*q[2] - q[0]*q[3]) );
+        mtx(2,2) = (1 - 2 * (q[1]*q[1] + q[0]*q[0]) );
 
         return mtx;
     }
@@ -265,41 +376,81 @@ public:
         v[0] = v4[0];
         v[1] = v4[1];
         v[2] = v4[2];
+        return v;
     }
+
+    VTKM_CONT_EXPORT
+    void Pan3D(vtkm::Float32 dx, vtkm::Float32 dy)
+    {
+        //std::cout<<"Pan3d: "<<dx<<" "<<dy<<std::endl;
+        view3d.xpan += dx;
+        view3d.ypan += dy;
+    }
+
+    VTKM_CONT_EXPORT
+    void Zoom3D(vtkm::Float32 zoom)
+    {
+        vtkm::Float32 factor = powf(4, zoom);
+        //std::cout<<"Zoom3D: "<<zoom<<" --> "<<factor<<std::endl;
+        view3d.zoom *= factor;
+        view3d.xpan *= factor;
+        view3d.ypan *= factor;
+    }    
 
     VTKM_CONT_EXPORT
     void TrackballRotate(vtkm::Float32 x1, vtkm::Float32 y1, vtkm::Float32 x2, vtkm::Float32 y2)
     {
+        /*
+        std::cout<<std::endl;
+        std::cout<<"*****************************************************************"<<std::endl;
+        std::cout<<x1<<" "<<y1<<" --> "<<x2<<" "<<y2<<std::endl;
+        printVec("pos", view3d.pos);
+        printVec("at", view3d.lookAt);
+        printVec("up", view3d.up);
+        std::cout<<"*****************************************************************"<<std::endl;        
+        */
         vtkm::Matrix<vtkm::Float32,4,4> R1 = CreateTrackball(x1,y1, x2,y2);
-        vtkm::Matrix<vtkm::Float32,4,4> T1, T2;
-        vtkm::MatrixIdentity(T1);
-        T1(3,0) = -view3d.lookAt[0];
-        T1(3,1) = -view3d.lookAt[1];
-        T1(3,2) = -view3d.lookAt[2];
-       
-        vtkm::MatrixIdentity(T2);
-        T2(3,0) = view3d.lookAt[0];
-        T2(3,1) = view3d.lookAt[1];
-        T2(3,2) = view3d.lookAt[2];
 
-        vtkm::Matrix<vtkm::Float32,4,4> V1, V2;
-        vtkm::MatrixIdentity(V1);
-        vtkm::MatrixIdentity(V2);
+        //Translate mtx
+        vtkm::Matrix<vtkm::Float32,4,4> T1 = View::TranslateMtx(-view3d.lookAt);        
+        //vtkm::MatrixIdentity(T1);
+        //T1(0,3) = -view3d.lookAt[0];
+        //T1(1,3) = -view3d.lookAt[1];
+        //T1(2,3) = -view3d.lookAt[2];
+
+        //Translate mtx
+        vtkm::Matrix<vtkm::Float32,4,4> T2 = View::TranslateMtx(view3d.lookAt);
+        //T2(0,3) = view3d.lookAt[0];
+        //T2(1,3) = view3d.lookAt[1];
+        //T2(2,3) = view3d.lookAt[2];
+
+        vtkm::Matrix<vtkm::Float32,4,4> V1 = CreateViewMatrix();
         V1(0,3) = 0;
         V1(1,3) = 0;
         V1(2,3) = 0;
-        vtkm::MatrixTranspose(V2);
+
+        vtkm::Matrix<vtkm::Float32,4,4> V2 = vtkm::MatrixTranspose(V1);        
         
         //MM = T2 * V2 * R1 * V1 * T1;
         vtkm::Matrix<vtkm::Float32,4,4> MM;
-        MM = vtkm::MatrixMultiply(vtkm::MatrixMultiply(vtkm::MatrixMultiply(vtkm::MatrixMultiply(V1, T1),
-                                                                            R1),
-                                                       V2),
-                                  T2);
-        /*
+        MM = vtkm::MatrixMultiply(T2,
+                                  vtkm::MatrixMultiply(V2,
+                                                       vtkm::MatrixMultiply(R1,
+                                                                            vtkm::MatrixMultiply(V1,T1))));
         view3d.pos = MultVector(MM, view3d.pos);
         view3d.lookAt = MultVector(MM, view3d.lookAt);
         view3d.up = MultVector(MM, view3d.up);
+        
+        /*
+        printMtx("T1", T1);
+        printMtx("T2", T2);
+        printMtx("V1", V1);
+        printMtx("V2", V2);
+        printMtx("R1", R1);
+        printMtx("MM", MM);        
+        printVec("pos", view3d.pos);
+        printVec("at", view3d.lookAt);
+        printVec("up", view3d.up);         
         */
     }
 };
