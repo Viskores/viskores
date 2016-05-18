@@ -35,67 +35,6 @@
 namespace vtkm {
 namespace rendering{
 namespace raytracing{
-class VUniWriter
-{
-public:
-static void WriteDepthBufferVR(vtkm::rendering::raytracing::VolumeRay &rays, vtkm::Int32 width, vtkm::Int32 height)
-{
-  for(vtkm::Int32 i = 0; i < height* width; i++)
-  {
-    if(rays.MinDistance.GetPortalControl().Get(i) < 0)
-    {
-      rays.MinDistance.GetPortalControl().Set(i,0);
-    }
-  }
-  vtkm::Float32 maxVal= vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
-    ::Reduce(rays.MinDistance,
-             0.f,
-             vtkm::rendering::raytracing::MaxValue());
-
-  vtkm::Float32 minVal= vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
-    ::Reduce(rays.MinDistance,
-             1e12f,
-             vtkm::rendering::raytracing::MinValue());
-
-  FILE *pnm;
-  pnm = fopen("VRDepth.pnm", "w");
-  if( !pnm ) std::cout<<"Could not open pnm file\n";
-  fprintf(pnm, "P%c %d %d 255\n",'6', width, height);
-  vtkm::Int32 size = height * width;
-  unsigned char pixel[3];
-  for(int i = 0; i < size; i++)
-  {
-    vtkm::Float32 d = rays.MinDistance.GetPortalControl().Get(i);
-    d = (d - minVal) / (maxVal);
-    pixel[0] = (unsigned char) (d*255.f);
-    pixel[1] = pixel[0];
-    pixel[2] = pixel[0];
-    fwrite(pixel, sizeof(unsigned char), 3, pnm);
-  }
-  fclose(pnm);
-}
-
-static void WriteColorBufferVR(vtkm::rendering::raytracing::ColorBuffer4f &rgba,
-                      vtkm::Int32 width,
-                      vtkm::Int32 height)
-{
-  FILE *pnm;
-  pnm = fopen("VRColor.pnm", "w");
-  if( !pnm ) std::cout<<"Could not open pnm file\n";
-  fprintf(pnm, "P%c %d %d 255\n",'6', width, height);
-  vtkm::Int32 size = height * width;
-  unsigned char pixel[3];
-  for(int i = 0; i < size; i++)
-  {
-    vtkm::Vec<vtkm::Float32,4> color = rgba.GetPortalControl().Get(i);
-    pixel[0] = (unsigned char) (color[3] * color[0]*255.f);
-    pixel[1] = (unsigned char) (color[3] * color[1]*255.f);
-    pixel[2] = (unsigned char) (color[3] * color[2]*255.f);
-    fwrite(pixel, sizeof(unsigned char), 3, pnm);
-  }
-  fclose(pnm);
-}
-};
 template< typename DeviceAdapter>
 class VolumeRendererUniform
 {
@@ -671,8 +610,6 @@ public:
 
   vtkm::worklet::DispatcherMapField< CompositeBackground >( CompositeBackground( BackgroundColor ) )
       .Invoke( RGBA );
-   VUniWriter::WriteColorBufferVR(RGBA, camera.GetWidth(), camera.GetHeight());
-   VUniWriter::WriteDepthBufferVR(Rays, camera.GetWidth(), camera.GetHeight());
   } //Render
 
   VTKM_CONT_EXPORT
@@ -690,7 +627,7 @@ public:
 protected:
   bool IsSceneDirty;
   bool IsUniformDataSet;
-  VolumeRay Rays;
+  VolumeRay<DeviceAdapter> Rays;
   Camera<DeviceAdapter> camera;
   vtkm::cont::ArrayHandleUniformPointCoordinates Coordinates;
   vtkm::cont::CellSetStructured<3> Cellset;

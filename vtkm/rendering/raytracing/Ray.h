@@ -26,7 +26,21 @@ namespace vtkm {
 namespace rendering {
 namespace raytracing {
 
-class Ray
+class RayBase
+{
+public:
+  VTKM_CONT_EXPORT
+  RayBase()
+  {
+  }
+
+  VTKM_CONT_EXPORT
+  virtual ~RayBase(){}
+  VTKM_CONT_EXPORT
+  virtual void resize(const vtkm::Int32 newSize){}
+};
+template<typename DeviceAdapter>
+class Ray : public RayBase
 {
 public:
 
@@ -98,32 +112,32 @@ public:
                                                         DirZ, inComp[2]);
   }
   VTKM_CONT_EXPORT
-  Ray( const vtkm::Int32 size )
+  Ray( const vtkm::Int32 size)
   {
     NumRays = size;
 
-    IntersectionX.Allocate( NumRays );
-    IntersectionY.Allocate( NumRays );
-    IntersectionZ.Allocate( NumRays );
+    IntersectionX.PrepareForOutput( NumRays, DeviceAdapter() );
+    IntersectionY.PrepareForOutput( NumRays , DeviceAdapter() );
+    IntersectionZ.PrepareForOutput( NumRays , DeviceAdapter() );
 
-    NormalX.Allocate( NumRays );
-    NormalY.Allocate( NumRays );
-    NormalZ.Allocate( NumRays );
+    NormalX.PrepareForOutput( NumRays , DeviceAdapter() );
+    NormalY.PrepareForOutput( NumRays , DeviceAdapter() );
+    NormalZ.PrepareForOutput( NumRays , DeviceAdapter() );
 
-    OriginX.Allocate( NumRays );
-    OriginY.Allocate( NumRays );
-    OriginZ.Allocate( NumRays );
+    OriginX.PrepareForOutput( NumRays , DeviceAdapter() );
+    OriginY.PrepareForOutput( NumRays , DeviceAdapter() );
+    OriginZ.PrepareForOutput( NumRays , DeviceAdapter() );
 
-    DirX.Allocate( NumRays );
-    DirY.Allocate( NumRays );
-    DirZ.Allocate( NumRays );
+    DirX.PrepareForOutput( NumRays , DeviceAdapter() );
+    DirY.PrepareForOutput( NumRays , DeviceAdapter() );
+    DirZ.PrepareForOutput( NumRays , DeviceAdapter() );
 
-    U.Allocate( NumRays );
-    V.Allocate( NumRays );
-    Distance.Allocate( NumRays );
-    Scalar.Allocate( NumRays );
+    U.PrepareForOutput( NumRays , DeviceAdapter() );
+    V.PrepareForOutput( NumRays , DeviceAdapter() );
+    Distance.PrepareForOutput( NumRays , DeviceAdapter() );
+    Scalar.PrepareForOutput( NumRays , DeviceAdapter() );
 
-    HitIdx.Allocate( NumRays );
+    HitIdx.PrepareForOutput( NumRays , DeviceAdapter() );
 
     vtkm::IdComponent inComp[3];
     inComp[0] = 0; 
@@ -147,39 +161,39 @@ public:
                                                         DirZ, inComp[2]);
   }
   VTKM_CONT_EXPORT
-  void resize( const vtkm::Int32 newSize )
+  virtual void resize( const vtkm::Int32 newSize)
   {
     if(newSize == NumRays) return; //nothing to do
 
     NumRays = newSize;
 
-    IntersectionX.Allocate( NumRays );
-    IntersectionY.Allocate( NumRays );
-    IntersectionZ.Allocate( NumRays );
+    IntersectionX.PrepareForOutput( NumRays , DeviceAdapter() );
+    IntersectionY.PrepareForOutput( NumRays , DeviceAdapter() );
+    IntersectionZ.PrepareForOutput( NumRays , DeviceAdapter() );
 
-    NormalX.Allocate( NumRays );
-    NormalY.Allocate( NumRays );
-    NormalZ.Allocate( NumRays );
+    NormalX.PrepareForOutput( NumRays , DeviceAdapter() );
+    NormalY.PrepareForOutput( NumRays , DeviceAdapter() );
+    NormalZ.PrepareForOutput( NumRays , DeviceAdapter() );
 
-    OriginX.Allocate( NumRays );
-    OriginY.Allocate( NumRays );
-    OriginZ.Allocate( NumRays );
+    OriginX.PrepareForOutput( NumRays , DeviceAdapter() );
+    OriginY.PrepareForOutput( NumRays , DeviceAdapter() );
+    OriginZ.PrepareForOutput( NumRays , DeviceAdapter() );
 
-    DirX.Allocate( NumRays );
-    DirY.Allocate( NumRays );
-    DirZ.Allocate( NumRays );
+    DirX.PrepareForOutput( NumRays , DeviceAdapter() );
+    DirY.PrepareForOutput( NumRays , DeviceAdapter() );
+    DirZ.PrepareForOutput( NumRays , DeviceAdapter() );
 
-    U.Allocate( NumRays );
-    V.Allocate( NumRays );
-    Distance.Allocate( NumRays );
-    Scalar.Allocate( NumRays );
+    U.PrepareForOutput( NumRays , DeviceAdapter() );
+    V.PrepareForOutput( NumRays , DeviceAdapter() );
+    Distance.PrepareForOutput( NumRays , DeviceAdapter() );
+    Scalar.PrepareForOutput( NumRays , DeviceAdapter() );
 
-    HitIdx.Allocate( NumRays );
+    HitIdx.PrepareForOutput( NumRays , DeviceAdapter() );
   }
 
 };// class ray
-
-class VolumeRay
+template<typename DeviceAdapter>
+class VolumeRay : public RayBase
 {
 public:
   
@@ -209,17 +223,17 @@ public:
                                                         DirZ, inComp[2]);
   }
   VTKM_CONT_EXPORT
-  VolumeRay( const vtkm::Int32 size )
+  VolumeRay( const vtkm::Int32 size)
   {
     NumRays = size;
 
-    DirX.Allocate( NumRays );
-    DirY.Allocate( NumRays );
-    DirZ.Allocate( NumRays );
+    DirX.PrepareForOutput( NumRays , DeviceAdapter() );
+    DirY.PrepareForOutput( NumRays , DeviceAdapter() );
+    DirZ.PrepareForOutput( NumRays , DeviceAdapter() );
 
-    MinDistance.Allocate( NumRays );
-    MaxDistance.Allocate( NumRays );
-    HitIndex.Allocate( NumRays );
+    MinDistance.PrepareForOutput( NumRays , DeviceAdapter() );
+    MaxDistance.PrepareForOutput( NumRays , DeviceAdapter() );
+    HitIndex.PrepareForOutput( NumRays , DeviceAdapter() );
 
     vtkm::IdComponent inComp[3];
     inComp[0] = 0; 
@@ -232,19 +246,19 @@ public:
                                                         DirZ, inComp[2]);
   }
   VTKM_CONT_EXPORT
-  void resize( const vtkm::Int32 newSize )
+  virtual void resize( const vtkm::Int32 newSize)
   {
     if(newSize == NumRays) return; //nothing to do
 
     NumRays = newSize;
 
-    DirX.Allocate( NumRays );
-    DirY.Allocate( NumRays );
-    DirZ.Allocate( NumRays );
+    DirX.PrepareForOutput( NumRays , DeviceAdapter() );
+    DirY.PrepareForOutput( NumRays , DeviceAdapter() );
+    DirZ.PrepareForOutput( NumRays , DeviceAdapter() );
 
-    MinDistance.Allocate( NumRays );
-    MaxDistance.Allocate( NumRays );
-    HitIndex.Allocate( NumRays );
+    MinDistance.PrepareForOutput( NumRays , DeviceAdapter() );
+    MaxDistance.PrepareForOutput( NumRays , DeviceAdapter() );
+    HitIndex.PrepareForOutput( NumRays , DeviceAdapter() );
 
   }
 

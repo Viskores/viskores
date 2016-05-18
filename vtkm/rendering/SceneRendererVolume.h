@@ -70,15 +70,12 @@ public:
     else
     {
       vtkm::cont::CellSetStructured<3> cellSetStructured3D = cellset.Cast<vtkm::cont::CellSetStructured<3> >();
-      std::cout<<"Is structured"<<std::endl;
       vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
-      //if(dynamicCoordsHandle.IsArrayHandleType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
       vertices = dynamicCoordsHandle.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       vtkm::rendering::raytracing::Camera<DeviceAdapter> &camera = Tracer.GetCamera();
       camera.SetParameters(view);
       Tracer.SetData(vertices, scalarField, coordsBounds, cellSetStructured3D, scalarBounds);
       Tracer.SetColorMap(ColorMap);
-      std::cout<<"Structured Rendering"<<std::endl;
       Tracer.SetBackgroundColor(this->BackgroundColor);
       Tracer.Render();
     }

@@ -28,6 +28,7 @@ set(headers
   Scene.h
   SceneRenderer.h
   SceneRendererGL.h
+  SceneRendererRayTracer.h
   SceneRendererVolume.h
   Triangulator.h
   View.h

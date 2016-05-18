@@ -47,12 +47,10 @@ public:
     template<typename SceneRendererType, typename SurfaceType>
     VTKM_CONT_EXPORT
     void Render(SceneRendererType &sr,
-                SurfaceType &, //surface
+                SurfaceType &surface, //surface
                 vtkm::rendering::View &view)
     {
-        //??????
-        //feed surface into sr somehow??
-        //TODO: Get rid of surface.
+        sr.SetRenderSurface(&surface);
         sr.SetActiveColorTable(colorTable);
         sr.RenderCells(cellSet, coords, scalarField,
                        colorTable, view, scalarBounds);

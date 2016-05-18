@@ -20,6 +20,7 @@
 
 set(unit_tests
   UnitTestSceneRendererOSMesa.cxx
+  UnitTestSceneRendererRayTracer.cxx
   UnitTestSceneRendererVolume.cxx
 )
 
