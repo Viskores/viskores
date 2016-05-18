@@ -182,6 +182,51 @@ public:
         glEnd();
     }
 
+    virtual void AddColorBar(float x, float y, 
+                             float w, float h,
+                             const ColorTable &ct,
+                             bool horizontal)
+    {
+        const int n = 256;
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_LIGHTING);
+        glBegin(GL_QUADS);
+        for (int i=0; i<n; i++)
+        {
+            float v0 = float(i)/float(n);
+            float v1 = float(i+1)/float(n);
+            Color c0 = ct.MapRGB(v0);
+            Color c1 = ct.MapRGB(v1);
+            if (horizontal)
+            {
+                float x0 = x + w*v0;
+                float x1 = x + w*v1;
+                float y0 = y;
+                float y1 = y + h;
+                glColor3fv(c0.Components);
+                glVertex2f(x0,y0);
+                glVertex2f(x0,y1);
+                glColor3fv(c1.Components);
+                glVertex2f(x1,y1);
+                glVertex2f(x1,y0);
+            }
+            else // vertical
+            {
+                float x0 = x;
+                float x1 = x + w;
+                float y0 = y + h*v0;
+                float y1 = y + h*v1;
+                glColor3fv(c0.Components);
+                glVertex2f(x0,y1);
+                glVertex2f(x1,y1);
+                glColor3fv(c1.Components);
+                glVertex2f(x1,y0);
+                glVertex2f(x0,y0);
+            }
+        }
+        glEnd();
+    }
+
     VTKM_CONT_EXPORT
     void printMatrix(vtkm::Float32 *m)
     {
