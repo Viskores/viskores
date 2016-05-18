@@ -24,6 +24,7 @@
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/Plot.h>
 #include <vtkm/rendering/SceneRendererVolume.h>
+#include <vtkm/rendering/RenderSurfaceRayTracer.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -74,8 +75,7 @@ void Render(const vtkm::cont::DataSet &ds,
 
     vtkm::rendering::Scene3D scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-    vtkm::rendering::RenderSurface surface(W,H,bg);
-
+    vtkm::rendering::RenderSurfaceRayTracer surface(W,H,bg);
     scene.plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
                                                 ds.GetCoordinateSystem(),
                                                 ds.GetField(fieldNm),
@@ -83,7 +83,7 @@ void Render(const vtkm::cont::DataSet &ds,
 
     //TODO: W/H in window.  bg in window (window sets surface/renderer).
     vtkm::rendering::Window3D<vtkm::rendering::SceneRendererVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                              vtkm::rendering::RenderSurface,
+                              vtkm::rendering::RenderSurfaceRayTracer,
                               vtkm::rendering::WorldAnnotator>
         w(scene, sceneRenderer, surface, view, bg);
     
@@ -93,25 +93,19 @@ void Render(const vtkm::cont::DataSet &ds,
     
 }
 
-void RenderRegular()
+void RenderTests()
 {
     vtkm::cont::testing::MakeTestDataSet maker;
-    vtkm::cont::DataSet grid = maker.Make3DRegularDataSet0();
 
-    Render(grid, "pointvar", "thermal", "VRregular.pnm");    
+    //3D tests.
+    Render(maker.Make3DRegularDataSet0(),
+             "pointvar", "thermal", "reg3D.pnm");
+    Render(maker.Make3DRectilinearDataSet0(),
+             "pointvar", "thermal", "rect3D.pnm");
 }
-
-void RenderRectilinear()
-{
-    vtkm::cont::testing::MakeTestDataSet maker;
-    vtkm::cont::DataSet grid = maker.Make3DRectilinearDataSet0();
-
-    Render(grid, "pointvar", "thermal", "VRrectilinear.pnm");
-}    
 
 } //namespace
 int UnitTestSceneRendererVolume(int, char *[])
 {
-    return vtkm::cont::testing::Testing::Run(RenderRegular);
-    return vtkm::cont::testing::Testing::Run(RenderRectilinear);
+    return vtkm::cont::testing::Testing::Run(RenderTests);
 }

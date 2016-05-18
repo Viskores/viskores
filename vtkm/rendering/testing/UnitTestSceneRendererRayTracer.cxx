@@ -91,25 +91,21 @@ void Render(const vtkm::cont::DataSet &ds,
     w.SaveAs(outputFile);
 }
 
-void RenderRegular()
+void RenderTests()
 {
     vtkm::cont::testing::MakeTestDataSet maker;
-    vtkm::cont::DataSet grid = maker.Make3DRegularDataSet0();
 
-    Render(grid, "pointvar", "thermal", "RTregular.pnm");    
+    //3D tests.
+    Render(maker.Make3DRegularDataSet0(),
+             "pointvar", "thermal", "reg3D.pnm");
+    Render(maker.Make3DRectilinearDataSet0(),
+             "pointvar", "thermal", "rect3D.pnm");
+    Render(maker.Make3DExplicitDataSet4(),
+             "pointvar", "thermal", "expl3D.pnm");
 }
-
-void RenderRectilinear()
-{
-    vtkm::cont::testing::MakeTestDataSet maker;
-    vtkm::cont::DataSet grid = maker.Make3DRectilinearDataSet0();
-
-    Render(grid, "pointvar", "thermal", "RTrectilinear.pnm");
-}    
 
 } //namespace
 int UnitTestSceneRendererRayTracer(int, char *[])
 {
-    return vtkm::cont::testing::Testing::Run(RenderRegular);
-    return vtkm::cont::testing::Testing::Run(RenderRectilinear);
+    return vtkm::cont::testing::Testing::Run(RenderTests);
 }

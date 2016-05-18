@@ -26,6 +26,7 @@
 #include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/raytracing/RayTracer.h>
 #include <vtkm/rendering/raytracing/Camera.h>
+#include <vtkm/rendering/RenderSurfaceRayTracer.h>
 #include <vtkm/rendering/View.h>
 namespace vtkm {
 namespace rendering {
@@ -37,7 +38,7 @@ class SceneRendererRayTracer : public SceneRenderer
 protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
   vtkm::rendering::raytracing::RayTracer<DeviceAdapter> Tracer;
-  RenderSurface *Surface;
+  RenderSurfaceRayTracer *Surface;
 public:
   VTKM_CONT_EXPORT
   SceneRendererRayTracer()
@@ -47,7 +48,16 @@ public:
   VTKM_CONT_EXPORT
   void SetRenderSurface(RenderSurface *surface)
   {
-    Surface = surface;
+    if(surface != NULL) 
+    {
+  
+      Surface = dynamic_cast<RenderSurfaceRayTracer*>(surface);
+      if(Surface == NULL)
+      {
+        throw vtkm::cont::ErrorControlBadValue(
+          "Ray Tracer: bad surface type. Must be RenderSurfaceRayTracer");
+      }
+    }
   }
   VTKM_CONT_EXPORT
   void SetActiveColorTable(const ColorTable &colorTable)

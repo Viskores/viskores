@@ -25,6 +25,7 @@
 #include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/raytracing/VolumeRendererUniform.h>
 #include <vtkm/rendering/raytracing/Camera.h>
+#include <vtkm/rendering/RenderSurfaceRayTracer.h>
 #include <vtkm/rendering/View.h>
 
 #include <typeinfo>
@@ -36,15 +37,33 @@ class SceneRendererVolume : public SceneRenderer
 { 
 protected:
   vtkm::rendering::raytracing::VolumeRendererUniform<DeviceAdapter>  Tracer;
+  RenderSurfaceRayTracer *Surface;
 public:
   VTKM_CONT_EXPORT
   SceneRendererVolume()
-  {}
+  {
+    Surface = NULL;
+  }
 
   VTKM_CONT_EXPORT
   void SetNumberOfSamples(const vtkm::Int32 &numSamples)
   {
     Tracer.SetNumberOfSamples(numSamples);
+  }
+    
+  VTKM_CONT_EXPORT
+  void SetRenderSurface(RenderSurface *surface)
+  {
+    if(surface != NULL) 
+    {
+  
+      Surface = dynamic_cast<RenderSurfaceRayTracer*>(surface);
+      if(Surface == NULL)
+      {
+        throw vtkm::cont::ErrorControlBadValue(
+          "Volume Render: bad surface type. Must be RenderSurfaceRayTracer");
+      }
+    }
   }
 
   VTKM_CONT_EXPORT
@@ -70,14 +89,14 @@ public:
     else
     {
       vtkm::cont::CellSetStructured<3> cellSetStructured3D = cellset.Cast<vtkm::cont::CellSetStructured<3> >();
-      vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
-      vertices = dynamicCoordsHandle.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+      //vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
+      //vertices = dynamicCoordsHandle.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       vtkm::rendering::raytracing::Camera<DeviceAdapter> &camera = Tracer.GetCamera();
       camera.SetParameters(view);
-      Tracer.SetData(vertices, scalarField, coordsBounds, cellSetStructured3D, scalarBounds);
+      Tracer.SetData(coords, scalarField, coordsBounds, cellSetStructured3D, scalarBounds);
       Tracer.SetColorMap(ColorMap);
       Tracer.SetBackgroundColor(this->BackgroundColor);
-      Tracer.Render();
+      Tracer.Render(Surface);
     }
     
   }
