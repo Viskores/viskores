@@ -21,7 +21,7 @@
 set(headers
   BoundingVolumeHierarchy.h
   Camera.h
-  RayTracer,h
+  RayTracer.h
   RayTracingTypeDefs.h
   Ray.h
   TriangleIntersector.h
