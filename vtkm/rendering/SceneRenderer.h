@@ -23,7 +23,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/View.h>
-
+#include <vtkm/rendering/RenderSurface.h>
 namespace vtkm {
 namespace rendering {
 
@@ -80,7 +80,9 @@ public:
     virtual void EndScene()
     {
     }
-
+    virtual void SetRenderSurface(RenderSurface *surface) 
+    {
+    }
 protected:
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
     vtkm::Vec<vtkm::Float32,4> BackgroundColor;
