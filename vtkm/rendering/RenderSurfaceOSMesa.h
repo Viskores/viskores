@@ -23,7 +23,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/RenderSurface.h>
+#include <vtkm/rendering/RenderSurfaceGL.h>
 
 #include <GL/osmesa.h>
 #include <GL/gl.h>
@@ -33,13 +33,13 @@
 namespace vtkm {
 namespace rendering {
 
-class RenderSurfaceOSMesa : public RenderSurface
+class RenderSurfaceOSMesa : public RenderSurfaceGL
 {
 public:
     VTKM_CONT_EXPORT
     RenderSurfaceOSMesa(std::size_t w=1024, std::size_t h=1024,
           const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-        : RenderSurface(w,h,c)
+        : RenderSurfaceGL(w,h,c)
     {
         ctx = NULL;
     }

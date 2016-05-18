@@ -26,7 +26,6 @@
 #include <vtkm/rendering/RenderSurface.h>
 
 #include <GL/gl.h>
-#include <GL/glx.h>
 #include <iostream>
 #include <fstream>
 
@@ -41,24 +40,8 @@ public:
           const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
         : RenderSurface(w,h,c)
     {
-        ctx = NULL;
     }
 
-    VTKM_CONT_EXPORT
-    virtual void Initialize()
-    {
-        ctx = glXGetCurrentContext();
-        if (!ctx)
-            throw vtkm::cont::ErrorControlBadValue("GL context creation failed.");
-        rgba.resize(width*height*4);
-        /*
-        if (!OSMesaMakeCurrent(ctx, &rgba[0], GL_FLOAT, static_cast<GLsizei>(width), static_cast<GLsizei>(height)))
-            throw vtkm::cont::ErrorControlBadValue("OSMesa context activation failed.");
-        */
-
-        glEnable(GL_DEPTH_TEST);
-    }
-    
     VTKM_CONT_EXPORT
     virtual void Clear()
     {
@@ -69,20 +52,6 @@ public:
     virtual void Finish()
     {
         glFinish();
-
-
-        /* TODO
-        //Copy zbuff into floating point array.
-        unsigned int *raw_zbuff;
-        int zbytes, w, h;
-        GLboolean ret;
-        ret = OSMesaGetDepthBuffer(ctx, &w, &h, &zbytes, (void**)&raw_zbuff);
-        if (!ret || static_cast<std::size_t>(w)!=width || static_cast<std::size_t>(h)!=height)
-            throw vtkm::cont::ErrorControlBadValue("Wrong width/height in ZBuffer");
-        std::size_t npixels = width*height;
-        for (std::size_t i=0; i<npixels; i++)
-            zbuff[i] = float(raw_zbuff[i]) / float(UINT_MAX);
-        */
     }
 
     VTKM_CONT_EXPORT
@@ -111,12 +80,37 @@ public:
     }
 
     VTKM_CONT_EXPORT
+    virtual void SetViewToScreenSpace(vtkm::rendering::View &v, bool clip)
+    {
+        vtkm::Float32 oglP[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
+        vtkm::Float32 oglM[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
+        
+        oglP[0*4+0] = 1.;
+        oglP[1*4+1] = 1.;
+        oglP[2*4+2] = -1.;
+        oglP[3*4+3] = 1.;
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadMatrixf(oglP);
+
+        oglM[0*4+0] = 1.;
+        oglM[1*4+1] = 1.;
+        oglM[2*4+2] = 1.;
+        oglM[3*4+3] = 1.;
+        
+        glMatrixMode(GL_MODELVIEW);
+        glLoadMatrixf(oglM);
+
+        SetViewportClipping(v, clip);
+    }
+
+    VTKM_CONT_EXPORT
     virtual void SetViewportClipping(vtkm::rendering::View &v, bool clip)
     {
         if (clip)
         {
-            vtkm::Float32 vl, vr, vt, vb;
-            v.GetRealViewport(vl,vr,vt,vb);
+            vtkm::Float32 vl, vr, vb, vt;
+            v.GetRealViewport(vl,vr,vb,vt);
             vtkm::Float32 _x = static_cast<vtkm::Float32>(v.width)*(1.f+vl)/2.f;
             vtkm::Float32 _y = static_cast<vtkm::Float32>(v.height)*(1.f+vb)/2.f;
             vtkm::Float32 _w = static_cast<vtkm::Float32>(v.width)*(vr-vl)/2.f;
@@ -171,6 +165,24 @@ public:
     }
 
     VTKM_CONT_EXPORT
+    virtual void AddLine(double x0, double y0,
+                         double x1, double y1,
+                         float linewidth,
+                         Color c)
+    {
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_LIGHTING);
+        glColor3fv(c.Components);
+
+        glLineWidth(linewidth);
+
+        glBegin(GL_LINES);
+        glVertex2f(float(x0),float(y0));
+        glVertex2f(float(x1),float(y1));
+        glEnd();
+    }
+
+    VTKM_CONT_EXPORT
     void printMatrix(vtkm::Float32 *m)
     {
         std::cout<<"["<<m[0]<<" "<<m[1]<<" "<<m[2]<<" "<<m[3]<<std::endl;
@@ -180,9 +192,8 @@ public:
     }
 
 private:
-  GLXContext ctx;
 };
 
 }} //namespace vtkm::rendering
 
-#endif //vtk_m_rendering_RenderSurfaceOSMesa_h
+#endif //vtk_m_rendering_RenderSurfaceGL_h
