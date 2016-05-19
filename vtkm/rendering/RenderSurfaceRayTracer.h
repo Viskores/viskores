@@ -86,7 +86,7 @@ public:
             for (std::size_t xIndex=0; xIndex < this->Width; xIndex++)
             {
                 const vtkm::Float32 *tuple =
-                    &(this->ColorBuffer[yIndex*this->Width*4 + xIndex*4]);
+                    &(this->ColorBuffer[static_cast<std::size_t>(yIndex)*this->Width*4 + xIndex*4]);
                 of<<(unsigned char)(tuple[0]*255);
                 of<<(unsigned char)(tuple[1]*255);
                 of<<(unsigned char)(tuple[2]*255);
@@ -99,7 +99,8 @@ public:
       this->ColorArray = vtkm::cont::make_ArrayHandle(this->ColorBuffer);
       this->DepthArray = vtkm::cont::make_ArrayHandle(this->DepthBuffer);
       vtkm::worklet::DispatcherMapField< ClearBuffers >(
-            ClearBuffers( this->BackgroundColor, this->Width*this->Height ) )
+            ClearBuffers( this->BackgroundColor,
+                          static_cast<vtkm::Int32>(this->Width*this->Height) ) )
         .Invoke( this->DepthArray,
                  vtkm::exec::ExecutionWholeArray<vtkm::Float32>(this->ColorArray) );
     }

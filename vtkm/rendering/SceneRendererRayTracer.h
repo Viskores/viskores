@@ -34,7 +34,7 @@ namespace rendering {
 //  static bool doOnce = true;
 template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class SceneRendererRayTracer : public SceneRenderer
-{ 
+{
 protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
   vtkm::rendering::raytracing::RayTracer<DeviceAdapter> Tracer;
@@ -48,9 +48,9 @@ public:
   VTKM_CONT_EXPORT
   void SetRenderSurface(RenderSurface *surface)
   {
-    if(surface != NULL) 
+    if(surface != NULL)
     {
-  
+
       Surface = dynamic_cast<RenderSurfaceRayTracer*>(surface);
       if(Surface == NULL)
       {
@@ -69,11 +69,11 @@ public:
   void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                    const vtkm::cont::CoordinateSystem &coords,
                    vtkm::cont::Field &scalarField,
-                   const vtkm::rendering::ColorTable &colorTable,
-                   vtkm::rendering::View &view,                                      
+                   const vtkm::rendering::ColorTable &vtkmNotUsed(colorTable),
+                   vtkm::rendering::View &view,
                    vtkm::Float64 *scalarBounds)
   {
-    
+
     vtkm::cont::Timer<DeviceAdapter> timer;
     const vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  indices;
@@ -86,7 +86,7 @@ public:
 
     Triangulator<DeviceAdapter> triangulator;
     triangulator.run(cellset, indices, numberOfTriangles);//,dynamicCoordsHandle,dataBounds);
-    
+
     Tracer.SetData(dynamicCoordsHandle, indices, scalarField, numberOfTriangles, scalarBounds, dataBounds);
     Tracer.SetColorMap(ColorMap);
     Tracer.SetBackgroundColor(BackgroundColor);

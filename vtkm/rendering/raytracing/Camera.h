@@ -88,8 +88,8 @@ public:
       if(index >=  NumPixels) return;
       vtkm::Float32 depth = (Proj22 + Proj23 / (-inDepth)) / Proj32;
       depth = 0.5f * depth + 0.5f;
-      vtkm::Int32 x = index % SubsetWidth;
-      vtkm::Int32 y = index / SubsetWidth;
+      vtkm::Int32 x = static_cast<vtkm::Int32>(index % SubsetWidth);
+      vtkm::Int32 y = static_cast<vtkm::Int32>(index / SubsetWidth);
       x += Xmin;
       y += Ymin;
       vtkm::Id outIdx = vtkm::Id(y * Width + x);
@@ -586,10 +586,10 @@ private:
     xmax += .001f;
     ymin -= .001f;
     ymax += .001f;
-    xmin = floor(vtkm::Min(vtkm::Max(0.f, xmin),vtkm::Float32(this->Width) ));
-    xmax =  ceil(vtkm::Min(vtkm::Max(0.f, xmax),vtkm::Float32(this->Width) ));
-    ymin = floor(vtkm::Min(vtkm::Max(0.f, ymin),vtkm::Float32(this->Height) ));
-    ymax =  ceil(vtkm::Min(vtkm::Max(0.f, ymax),vtkm::Float32(this->Height) ));
+    xmin = vtkm::Floor(vtkm::Min(vtkm::Max(0.f, xmin),vtkm::Float32(this->Width) ));
+    xmax =  vtkm::Ceil(vtkm::Min(vtkm::Max(0.f, xmax),vtkm::Float32(this->Width) ));
+    ymin = vtkm::Floor(vtkm::Min(vtkm::Max(0.f, ymin),vtkm::Float32(this->Height) ));
+    ymax =  vtkm::Ceil(vtkm::Min(vtkm::Max(0.f, ymax),vtkm::Float32(this->Height) ));
     //printf("Pixel range = (%f,%f,%f), (%f,%f,%f)\n", xmin, ymin,zmin, xmax,ymax,zmax);
     vtkm::Int32 dx = vtkm::Int32(xmax) - vtkm::Int32(xmin);
     vtkm::Int32 dy = vtkm::Int32(ymax) - vtkm::Int32(ymin);

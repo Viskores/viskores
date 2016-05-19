@@ -162,7 +162,7 @@ public:
             for (std::size_t xIndex=0; xIndex < this->Width; xIndex++)
             {
                 const vtkm::Float32 *tuple =
-                    &(this->ColorBuffer[yIndex*this->Width*4 + xIndex*4]);
+                    &(this->ColorBuffer[static_cast<std::size_t>(yIndex)*this->Width*4 + xIndex*4]);
                 of<<(unsigned char)(tuple[0]*255);
                 of<<(unsigned char)(tuple[1]*255);
                 of<<(unsigned char)(tuple[2]*255);
