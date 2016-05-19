@@ -33,45 +33,36 @@
 namespace vtkm {
 namespace rendering {
 
-#if 0
-template<typename SceneType, typename SceneRendererType, typename SurfaceType>
+template<typename SceneRendererType,
+         typename SurfaceType,
+         typename WorldAnnotatorType>
 class Window
 {
 public:
-    SceneType scene;
     SceneRendererType sceneRenderer;
     SurfaceType surface;
-    vtkm::rendering::Color bgColor;
+    Color bgColor;
     vtkm::rendering::View view;
+    WorldAnnotatorType worldAnnotator;
 
-    VTKM_CONT_EXPORT
-    Window(const SceneType &s,
-           const SceneRendererType &sr,
+    Window(const SceneRendererType &sr,
            const SurfaceType &surf,
            const vtkm::rendering::View &v,
            const vtkm::rendering::Color &bg=vtkm::rendering::Color(0,0,0,1)) :
-        scene(s), sceneRenderer(sr), bgColor(bg), surface(surf), view(v)
+        bgColor(bg), view(v), sceneRenderer(sr), surface(surf)
     {
         sceneRenderer.SetBackgroundColor(bgColor);
     }
 
     VTKM_CONT_EXPORT
-    void Initialize()
-    {
-        surface.Initialize();
-    }
+    virtual void Initialize() {surface.Initialize();}
 
     VTKM_CONT_EXPORT
-    void Paint()
-    {
-        surface.Activate();
-        surface.Clear();
-        SetupForWorldSpace();
-        
-        scene.Render(sceneRenderer, surface, view);
-        
-        surface.Finish();
-    }
+    virtual void Paint() = 0;
+    VTKM_CONT_EXPORT
+    virtual void RenderScreenAnnotations() {}
+    VTKM_CONT_EXPORT
+    virtual void RenderWorldAnnotations() {}
 
     VTKM_CONT_EXPORT
     void SaveAs(const std::string &fileName)
@@ -79,29 +70,30 @@ public:
         surface.SaveAs(fileName);
     }
 
-private:
+protected:
     VTKM_CONT_EXPORT
     void SetupForWorldSpace(bool viewportClip=true)
     {
         //view.SetupMatrices();
-        surface.SetViewToWorldSpace(view, viewportClip);
+        surface.SetViewToWorldSpace(view,viewportClip);
+    }
+
+    VTKM_CONT_EXPORT
+    void SetupForScreenSpace(bool viewportClip=false)
+    {
+        //view.SetupMatrices();
+        surface.SetViewToScreenSpace(view,viewportClip);
     }
 };
-#endif
     
 // Window2D Window3D
 template<typename SceneRendererType,
          typename SurfaceType,
          typename WorldAnnotatorType>
-class Window3D
+class Window3D : public Window<SceneRendererType, SurfaceType,WorldAnnotatorType>
 {
 public:
-    Color bgColor;
     vtkm::rendering::Scene3D scene;
-    WorldAnnotatorType worldAnnotator;
-    SceneRendererType sceneRenderer;
-    SurfaceType surface;
-    vtkm::rendering::View view;
 
     // 3D-specific annotations
     BoundingBoxAnnotation bbox;
@@ -114,35 +106,27 @@ public:
              const SurfaceType &surf,
              const vtkm::rendering::View &v,
              const vtkm::rendering::Color &bg=vtkm::rendering::Color(0,0,0,1)) :
-        scene(s), sceneRenderer(sr), bgColor(bg), surface(surf), view(v)
+        Window<SceneRendererType,SurfaceType,WorldAnnotatorType>(sr,surf,v,bg), scene(s)
     {
-        sceneRenderer.SetBackgroundColor(bgColor);
     }
 
     VTKM_CONT_EXPORT
-    void Initialize()
+    virtual void Paint()
     {
-        surface.Initialize();
-    }
-
-    VTKM_CONT_EXPORT
-    void Paint()
-    {
-        surface.Activate();
-        surface.Clear();
-        SetupForWorldSpace();
-        
-        scene.Render(sceneRenderer, surface, view);
+        this->surface.Activate();
+        this->surface.Clear();
+        this->SetupForWorldSpace();
+        scene.Render(this->sceneRenderer, this->surface, this->view);
         RenderWorldAnnotations();
 
-        SetupForScreenSpace();
+        this->SetupForScreenSpace();
         RenderScreenAnnotations();
-
-        surface.Finish();
+        
+        this->surface.Finish();
     }
 
     VTKM_CONT_EXPORT
-    void RenderScreenAnnotations()
+    virtual void RenderScreenAnnotations()
     {
         if (scene.plots.size() > 0)
         {
@@ -151,12 +135,12 @@ public:
             //colorbar.SetAxisColor(eavlColor::white);
             colorbar.SetRange(vmin, vmax, 5);
             colorbar.SetColorTable(scene.plots[0].colorTable);
-            colorbar.Render(view, worldAnnotator, surface);
+            colorbar.Render(this->view, this->worldAnnotator, this->surface);
         }
     }
 
     VTKM_CONT_EXPORT
-    void RenderWorldAnnotations()
+    virtual void RenderWorldAnnotations()
     {
         double *bnd = scene.GetSpatialBounds();
         double xmin = bnd[0], xmax = bnd[1];
@@ -167,7 +151,7 @@ public:
 
         bbox.SetColor(Color(.5,.5,.5));
         bbox.SetExtents(scene.GetSpatialBounds());
-        bbox.Render(view, worldAnnotator);
+        bbox.Render(this->view, this->worldAnnotator);
 
         ///\todo: set x/y/ztest based on view
         bool xtest=true, ytest=false, ztest=false;
@@ -190,7 +174,7 @@ public:
         xaxis.SetMinorTickSize(size / 80.f, 0);
         xaxis.SetLabelFontScale(size / 30.);
         xaxis.SetMoreOrLessTickAdjustment(xrel < .3 ? -1 : 0);
-        xaxis.Render(view, worldAnnotator);
+        xaxis.Render(this->view, this->worldAnnotator);
 
         yaxis.SetAxis(0);
         yaxis.SetColor(Color(1,1,1));
@@ -206,7 +190,7 @@ public:
         yaxis.SetMinorTickSize(size / 80.f, 0);
         yaxis.SetLabelFontScale(size / 30.);
         yaxis.SetMoreOrLessTickAdjustment(yrel < .3 ? -1 : 0);
-        yaxis.Render(view, worldAnnotator);
+        yaxis.Render(this->view, this->worldAnnotator);
 
         zaxis.SetAxis(0);
         zaxis.SetColor(Color(1,1,1));
@@ -222,43 +206,17 @@ public:
         zaxis.SetMinorTickSize(size / 80.f, 0);
         zaxis.SetLabelFontScale(size / 30.);
         zaxis.SetMoreOrLessTickAdjustment(zrel < .3 ? -1 : 0);
-        zaxis.Render(view, worldAnnotator);
-    }
-
-    VTKM_CONT_EXPORT
-    void SaveAs(const std::string &fileName)
-    {
-        surface.SaveAs(fileName);
-    }
-
-private:
-    VTKM_CONT_EXPORT
-    void SetupForWorldSpace(bool viewportClip=true)
-    {
-        //view.SetupMatrices();
-        surface.SetViewToWorldSpace(view,viewportClip);
-    }
-
-    VTKM_CONT_EXPORT
-    void SetupForScreenSpace(bool viewportClip=false)
-    {
-        //view.SetupMatrices();
-        surface.SetViewToScreenSpace(view,viewportClip);
+        zaxis.Render(this->view, this->worldAnnotator);
     }
 };
 
 template<typename SceneRendererType,
          typename SurfaceType,
          typename WorldAnnotatorType>
-class Window2D
+class Window2D : public Window<SceneRendererType, SurfaceType,WorldAnnotatorType>
 {
 public:
-    Color bgColor;
     vtkm::rendering::Scene2D scene;
-    WorldAnnotatorType worldAnnotator;
-    SceneRendererType sceneRenderer;
-    SurfaceType surface;
-    vtkm::rendering::View view;
 
     // 2D-specific annotations
     AxisAnnotation2D haxis, vaxis;
@@ -270,57 +228,51 @@ public:
              const SurfaceType &surf,
              const vtkm::rendering::View &v,
              const vtkm::rendering::Color &bg=vtkm::rendering::Color(0,0,0,1)) :
-        scene(s), sceneRenderer(sr), surface(surf), view(v), bgColor(bg)
+        Window<SceneRendererType,SurfaceType,WorldAnnotatorType>(sr,surf,v,bg), scene(s)        
     {
-        sceneRenderer.SetBackgroundColor(bgColor);
     }
+    
     VTKM_CONT_EXPORT
-    void Initialize()
+    virtual void Paint()
     {
-        surface.Initialize();
-    }
-
-    VTKM_CONT_EXPORT
-    void Paint()
-    {
-        surface.Activate();
-        surface.Clear();
-        SetupForWorldSpace();
+        this->surface.Activate();
+        this->surface.Clear();
+        this->SetupForWorldSpace();
         
-        scene.Render(sceneRenderer, surface, view);
-        RenderWorldAnnotations();
+        scene.Render(this->sceneRenderer, this->surface, this->view);
+        this->RenderWorldAnnotations();
 
-        SetupForScreenSpace();
-        RenderScreenAnnotations();
+        this->SetupForScreenSpace();
+        this->RenderScreenAnnotations();
 
-        surface.Finish();
+        this->surface.Finish();
     }
 
     VTKM_CONT_EXPORT
     void RenderScreenAnnotations()
     {
         vtkm::Float32 vl, vr, vt, vb;
-        view.GetRealViewport(vl,vr,vb,vt);
+        this->view.GetRealViewport(vl,vr,vb,vt);
 
         haxis.SetColor(Color(1,1,1));
         haxis.SetScreenPosition(vl,vb, vr,vb);
-        haxis.SetRangeForAutoTicks(view.view2d.left, view.view2d.right);
+        haxis.SetRangeForAutoTicks(this->view.view2d.left, this->view.view2d.right);
         haxis.SetMajorTickSize(0, .05, 1.0);
         haxis.SetMinorTickSize(0, .02, 1.0);
         //haxis.SetLabelAlignment(eavlTextAnnotation::HCenter,
         //                         eavlTextAnnotation::Top);
-        haxis.Render(view, worldAnnotator, surface);
+        haxis.Render(this->view, this->worldAnnotator, this->surface);
 
-        vtkm::Float32 windowaspect = vtkm::Float32(view.width) / vtkm::Float32(view.height);
+        vtkm::Float32 windowaspect = vtkm::Float32(this->view.width) / vtkm::Float32(this->view.height);
 
         vaxis.SetColor(Color(1,1,1));
         vaxis.SetScreenPosition(vl,vb, vl,vt);
-        vaxis.SetRangeForAutoTicks(view.view2d.bottom, view.view2d.top);
+        vaxis.SetRangeForAutoTicks(this->view.view2d.bottom, this->view.view2d.top);
         vaxis.SetMajorTickSize(.05 / windowaspect, 0, 1.0);
         vaxis.SetMinorTickSize(.02 / windowaspect, 0, 1.0);
         //vaxis.SetLabelAlignment(eavlTextAnnotation::Right,
         //                         eavlTextAnnotation::VCenter);
-        vaxis.Render(view, worldAnnotator, surface);
+        vaxis.Render(this->view, this->worldAnnotator, this->surface);
 
         if (scene.plots.size() > 0)
         {
@@ -329,34 +281,8 @@ public:
             //colorbar.SetAxisColor(eavlColor::white);
             colorbar.SetRange(vmin, vmax, 5);
             colorbar.SetColorTable(scene.plots[0].colorTable);
-            colorbar.Render(view, worldAnnotator, surface);
+            colorbar.Render(this->view, this->worldAnnotator, this->surface);
         }
-    }
-
-    VTKM_CONT_EXPORT
-    void RenderWorldAnnotations()
-    {
-    }
-
-    VTKM_CONT_EXPORT
-    void SaveAs(const std::string &fileName)
-    {
-        surface.SaveAs(fileName);
-    }
-
-private:
-    VTKM_CONT_EXPORT
-    void SetupForWorldSpace(bool viewportClip=true)
-    {
-        //view.SetupMatrices();
-        surface.SetViewToWorldSpace(view,viewportClip);
-    }
-
-    VTKM_CONT_EXPORT
-    void SetupForScreenSpace(bool viewportClip=false)
-    {
-        //view.SetupMatrices();
-        surface.SetViewToScreenSpace(view,viewportClip);
     }
 };
 
