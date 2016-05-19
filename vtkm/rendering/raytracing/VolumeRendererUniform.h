@@ -374,7 +374,7 @@ public:
           LocateCellId(sampleLocation, cellId);
           scalar0 = vtkm::Float32(scalars.Get(cellId));
           scalar0 = (scalar0 - MinScalar) * InverseDeltaScalar;
-          sampleColor = ColorMap.Get(vtkm::Id(scalar0 * ColorMapSize));
+          sampleColor = ColorMap.Get(static_cast<vtkm::Id>(scalar0 * static_cast<vtkm::Float32>(ColorMapSize)));
           sampleColor[3] = .05f;
           vtkm::Vec<vtkm::Float32,3> bottomLeft = Coordinates.Get(cellId);
           tx = (sampleLocation[0] - bottomLeft[0]) * InvSpacing[0];
