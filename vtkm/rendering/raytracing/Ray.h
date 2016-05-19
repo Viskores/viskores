@@ -37,7 +37,7 @@ public:
   VTKM_CONT_EXPORT
   virtual ~RayBase(){}
   VTKM_CONT_EXPORT
-  virtual void resize(const vtkm::Int32 newSize){}
+  virtual void resize(const vtkm::Int32 /*newSize*/){}
 };
 template<typename DeviceAdapter>
 class Ray : public RayBase
