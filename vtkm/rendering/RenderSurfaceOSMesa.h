@@ -77,7 +77,7 @@ public:
             throw vtkm::cont::ErrorControlBadValue("Wrong width/height in ZBuffer");
         std::size_t npixels = width*height;
         for (std::size_t i=0; i<npixels; i++)
-            zbuff[i] = float(raw_zbuff[i]) / float(UINT_MAX);
+            zbuff[i] = static_cast<vtkm::Float32>(raw_zbuff[i]) / static_cast<vtkm::Float32>(UINT_MAX);
     }
 
 private:

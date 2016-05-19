@@ -33,10 +33,10 @@ namespace rendering {
 class WorldAnnotatorGL : public WorldAnnotator
 {
 public:
-  virtual void AddLine(double x0, double y0, double z0,
-                       double x1, double y1, double z1,
-                       float linewidth,
-                       Color c,
+  virtual void AddLine(vtkm::Float64 x0, vtkm::Float64 y0, vtkm::Float64 z0,
+                       vtkm::Float64 x1, vtkm::Float64 y1, vtkm::Float64 z1,
+                       vtkm::Float32 linewidth,
+                       const vtkm::rendering::Color &c,
                        bool infront)
   {
     if (infront)

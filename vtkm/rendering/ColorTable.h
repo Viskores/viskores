@@ -78,11 +78,11 @@ class ColorTable
         for (int i=0; i<n; i++)
         {
           vtkm::Vec<vtkm::Float32,4> color;
-          Color c = MapRGB(float(i)/float(n-1));
+          Color c = MapRGB(static_cast<vtkm::Float32>(i)/static_cast<vtkm::Float32>(n-1));
           color[0] = c.Components[0];
           color[1] = c.Components[1];
           color[2] = c.Components[2];
-          color[3] = MapAlpha(float(i)/float(n-1));
+          color[3] = MapAlpha(static_cast<vtkm::Float32>(i)/static_cast<vtkm::Float32>(n-1));
           colors.GetPortalControl().Set(i,color);
         }
     }

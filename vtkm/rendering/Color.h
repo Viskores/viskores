@@ -72,7 +72,7 @@ class Color
       // anyway.  Again, this is not a problem, because it 
       // doesn't really extend the range of floating point 
       // values which map to 255.
-      Components[i] = float(v) / 255.f;
+      Components[i] = static_cast<vtkm::Float32>(v) / 255.f;
       // clamp?
       if (Components[i]<0) Components[i] = 0;
       if (Components[i]>1) Components[i] = 1;

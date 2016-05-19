@@ -130,10 +130,8 @@ public:
     {
         if (scene.plots.size() > 0)
         {
-            double vmin = scene.plots[0].scalarBounds[0];
-            double vmax = scene.plots[0].scalarBounds[1];
             //colorbar.SetAxisColor(eavlColor::white);
-            colorbar.SetRange(vmin, vmax, 5);
+            colorbar.SetRange(scene.plots[0].scalarBounds[0], scene.plots[0].scalarBounds[1], 5);
             colorbar.SetColorTable(scene.plots[0].colorTable);
             colorbar.Render(this->view, this->worldAnnotator, this->surface);
         }
@@ -142,23 +140,23 @@ public:
     VTKM_CONT_EXPORT
     virtual void RenderWorldAnnotations()
     {
-        double *bnd = scene.GetSpatialBounds();
-        double xmin = bnd[0], xmax = bnd[1];
-        double ymin = bnd[2], ymax = bnd[3];
-        double zmin = bnd[4], zmax = bnd[5];
-        double dx = xmax-xmin, dy = ymax-ymin, dz = zmax-zmin;
-        double size = sqrt(dx*dx + dy*dy + dz*dz);
+        vtkm::Float64 *bnd = scene.GetSpatialBounds();
+        vtkm::Float64 xmin = bnd[0], xmax = bnd[1];
+        vtkm::Float64 ymin = bnd[2], ymax = bnd[3];
+        vtkm::Float64 zmin = bnd[4], zmax = bnd[5];
+        vtkm::Float64 dx = xmax-xmin, dy = ymax-ymin, dz = zmax-zmin;
+        vtkm::Float64 size = vtkm::Sqrt(dx*dx + dy*dy + dz*dz);
 
-        bbox.SetColor(Color(.5,.5,.5));
+        bbox.SetColor(Color(.5f,.5f,.5f));
         bbox.SetExtents(scene.GetSpatialBounds());
         bbox.Render(this->view, this->worldAnnotator);
 
         ///\todo: set x/y/ztest based on view
         bool xtest=true, ytest=false, ztest=false;
 
-        double xrel = fabs(dx) / size;
-        double yrel = fabs(dy) / size;
-        double zrel = fabs(dz) / size;
+        vtkm::Float64 xrel = vtkm::Abs(dx) / size;
+        vtkm::Float64 yrel = vtkm::Abs(dy) / size;
+        vtkm::Float64 zrel = vtkm::Abs(dz) / size;
 
         xaxis.SetAxis(0);
         xaxis.SetColor(Color(1,1,1));
@@ -276,10 +274,8 @@ public:
 
         if (scene.plots.size() > 0)
         {
-            double vmin = scene.plots[0].scalarBounds[0];
-            double vmax = scene.plots[0].scalarBounds[1];
             //colorbar.SetAxisColor(eavlColor::white);
-            colorbar.SetRange(vmin, vmax, 5);
+            colorbar.SetRange(scene.plots[0].scalarBounds[0], scene.plots[0].scalarBounds[1], 5);
             colorbar.SetColorTable(scene.plots[0].colorTable);
             colorbar.Render(this->view, this->worldAnnotator, this->surface);
         }

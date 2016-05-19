@@ -32,10 +32,10 @@ namespace rendering {
 class WorldAnnotator
 {
 public:
-  virtual void AddLine(double, double, double,
-                       double, double, double,
-                       float,
-                       Color,
+  virtual void AddLine(vtkm::Float64, vtkm::Float64, vtkm::Float64,
+                       vtkm::Float64, vtkm::Float64, vtkm::Float64,
+                       vtkm::Float32,
+                       const vtkm::rendering::Color &,
                        bool=false) {}
 };
 

@@ -32,37 +32,37 @@ namespace rendering {
 class ColorBarAnnotation
 {
 protected:
-  ColorTable colortable;
-  AxisAnnotation2D axis;
+  vtkm::rendering::ColorTable colortable;
+    vtkm::rendering::AxisAnnotation2D axis;
 public:
   ColorBarAnnotation()
   {
   }
-  void SetColorTable(ColorTable &ct)
+  void SetColorTable(const vtkm::rendering::ColorTable &ct)
   {
     colortable = ct;
   }
-  void SetRange(double l, double h, int nticks)
+  void SetRange(vtkm::Float64 l, vtkm::Float64 h, int nticks)
   {
-    std::vector<double> pos, prop;
+    std::vector<vtkm::Float64> pos, prop;
     axis.SetMinorTicks(pos, prop); // clear any minor ticks
 
     for (int i=0; i<nticks; ++i)
     {
-      double p = double(i) / double(nticks-1);
-      double v = l + p*(h-l);
+      vtkm::Float64 p = static_cast<vtkm::Float64>(i) / static_cast<vtkm::Float64>(nticks-1);
+      vtkm::Float64 v = l + p*(h-l);
       pos.push_back(v);
       prop.push_back(p);
     }
     axis.SetMajorTicks(pos, prop);
   }
 
-  virtual void Render(View &view,
-                      WorldAnnotator &worldAnnotator,
-                      RenderSurface &renderSurface)
+  virtual void Render(vtkm::rendering::View &view,
+                      vtkm::rendering::WorldAnnotator &worldAnnotator,
+                      vtkm::rendering::RenderSurface &renderSurface)
   {
-    float l = -0.88f, r = +0.88f;
-    float b = +0.87f, t = +0.92f;
+    vtkm::Float32 l = -0.88f, r = +0.88f;
+    vtkm::Float32 b = +0.87f, t = +0.92f;
 
     renderSurface.AddColorBar(l, t, r-l, b-t,
                               colortable, true);

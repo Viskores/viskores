@@ -62,15 +62,6 @@ public:
         CreateOGLMatrix(v.CreateProjectionMatrix(), oglP);
         glMatrixMode(GL_PROJECTION);
         glLoadMatrixf(oglP);
-
-        /*
-        std::cout<<"Proj: pos: "<<v.view3d.pos<<std::endl;
-        std::cout<<"       up: "<<v.view3d.up<<std::endl;
-        std::cout<<"   lookAt: "<<v.view3d.lookAt<<std::endl;
-        std::cout<<" near/far: "<<v.view3d.nearPlane<<" "<<v.view3d.farPlane<<std::endl;
-        std::cout<<"      fov: "<<v.view3d.fieldOfView<<std::endl;
-        printMatrix(oglP);
-        */
         
         CreateOGLMatrix(v.CreateViewMatrix(), oglM);
         glMatrixMode(GL_MODELVIEW);
@@ -164,26 +155,8 @@ public:
         of.close();
     }
 
-    VTKM_CONT_EXPORT
-    virtual void AddLine(double x0, double y0,
-                         double x1, double y1,
-                         float linewidth,
-                         Color c)
-    {
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_LIGHTING);
-        glColor3fv(c.Components);
-
-        glLineWidth(linewidth);
-
-        glBegin(GL_LINES);
-        glVertex2f(float(x0),float(y0));
-        glVertex2f(float(x1),float(y1));
-        glEnd();
-    }
-
-    virtual void AddColorBar(float x, float y, 
-                             float w, float h,
+    virtual void AddColorBar(vtkm::Float32 x, vtkm::Float32 y, 
+                             vtkm::Float32 w, vtkm::Float32 h,
                              const ColorTable &ct,
                              bool horizontal)
     {
@@ -193,16 +166,16 @@ public:
         glBegin(GL_QUADS);
         for (int i=0; i<n; i++)
         {
-            float v0 = float(i)/float(n);
-            float v1 = float(i+1)/float(n);
+            vtkm::Float32 v0 = static_cast<vtkm::Float32>(i)/static_cast<vtkm::Float32>(n);
+            vtkm::Float32 v1 = static_cast<vtkm::Float32>(i+1)/static_cast<vtkm::Float32>(n);
             Color c0 = ct.MapRGB(v0);
             Color c1 = ct.MapRGB(v1);
             if (horizontal)
             {
-                float x0 = x + w*v0;
-                float x1 = x + w*v1;
-                float y0 = y;
-                float y1 = y + h;
+                vtkm::Float32 x0 = x + w*v0;
+                vtkm::Float32 x1 = x + w*v1;
+                vtkm::Float32 y0 = y;
+                vtkm::Float32 y1 = y + h;
                 glColor3fv(c0.Components);
                 glVertex2f(x0,y0);
                 glVertex2f(x0,y1);
@@ -212,10 +185,10 @@ public:
             }
             else // vertical
             {
-                float x0 = x;
-                float x1 = x + w;
-                float y0 = y + h*v0;
-                float y1 = y + h*v1;
+                vtkm::Float32 x0 = x;
+                vtkm::Float32 x1 = x + w;
+                vtkm::Float32 y0 = y + h*v0;
+                vtkm::Float32 y1 = y + h*v1;
                 glColor3fv(c0.Components);
                 glVertex2f(x0,y1);
                 glVertex2f(x1,y1);
@@ -226,17 +199,6 @@ public:
         }
         glEnd();
     }
-
-    VTKM_CONT_EXPORT
-    void printMatrix(vtkm::Float32 *m)
-    {
-        std::cout<<"["<<m[0]<<" "<<m[1]<<" "<<m[2]<<" "<<m[3]<<std::endl;
-        std::cout<<" "<<m[4]<<" "<<m[5]<<" "<<m[6]<<" "<<m[7]<<std::endl;
-        std::cout<<" "<<m[8]<<" "<<m[9]<<" "<<m[10]<<" "<<m[11]<<std::endl;
-        std::cout<<" "<<m[12]<<" "<<m[13]<<" "<<m[14]<<" "<<m[15]<<"]"<<std::endl;
-    }
-
-private:
 };
 
 }} //namespace vtkm::rendering
