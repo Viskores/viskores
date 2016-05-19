@@ -429,9 +429,9 @@ public:
       
         }
         vtkm::Vec<vtkm::Float32,4> fourth4Vec;
-        vtkm::Int32 leftChild = (childVector[0] >= 0) ? childVector[0] * 4 : childVector[0];
+        vtkm::Id leftChild = (childVector[0] >= 0) ? childVector[0] * 4 : childVector[0];
         memcpy(&fourth4Vec[0],&leftChild,4);
-        vtkm::Int32 rightChild = (childVector[1] >= 0) ? childVector[1] * 4 : childVector[1];
+        vtkm::Id rightChild = (childVector[1] >= 0) ? childVector[1] * 4 : childVector[1];
         memcpy(&fourth4Vec[1],&rightChild,4);
         FlatBVH.Set(currentNodeOffset+3,fourth4Vec);
       }
