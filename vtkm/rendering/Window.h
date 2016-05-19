@@ -96,10 +96,10 @@ template<typename SceneRendererType,
 class Window3D
 {
 public:
-    Color bgColor;
     vtkm::rendering::Scene3D scene;
     WorldAnnotatorType worldAnnotator;
     SceneRendererType sceneRenderer;
+    Color bgColor;
     SurfaceType surface;
     vtkm::rendering::View view;
 
@@ -253,12 +253,12 @@ template<typename SceneRendererType,
 class Window2D
 {
 public:
-    Color bgColor;
     vtkm::rendering::Scene2D scene;
     WorldAnnotatorType worldAnnotator;
     SceneRendererType sceneRenderer;
     SurfaceType surface;
     vtkm::rendering::View view;
+    Color bgColor;
 
     // 2D-specific annotations
     AxisAnnotation2D haxis, vaxis;

@@ -128,9 +128,9 @@ public:
                       vtkm::Int32 miny)
     : w(width),
       h(height),
-      SubsetWidth(subsetWidth),
       Minx(minx),
-      Miny(miny)
+      Miny(miny),
+      SubsetWidth(subsetWidth)
     {
       vtkm::Float32 thx = tanf( (fovX*vtkm::Float32(vtkm::Pi())/180.f) *.5f);
       vtkm::Float32 thy = tanf( (fovY*vtkm::Float32(vtkm::Pi())/180.f) *.5f);

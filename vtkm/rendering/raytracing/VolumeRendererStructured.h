@@ -53,17 +53,17 @@ public:
     typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> >  ColorArrayHandle;
     typedef typename ColorArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst ColorArrayPortal;
     //vtkm::Float32 BoundingBox[6];
-    vtkm::Float32 SampleDistance;
     vtkm::Vec<vtkm::Float32,3> CameraPosition;
     vtkm::Vec<vtkm::Float32,3> Origin;
     vtkm::Vec<vtkm::Float32,3> InvSpacing;
     vtkm::Id3 PointDimensions;
-    vtkm::Float32 MinScalar;
-    vtkm::Float32 InverseDeltaScalar;
     ColorArrayPortal ColorMap;
     vtkm::Id ColorMapSize;
     UniformConstPortal Coordinates;
     vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,vtkm::TopologyElementTagCell,3> Conn;
+    vtkm::Float32 MinScalar;
+    vtkm::Float32 SampleDistance;
+    vtkm::Float32 InverseDeltaScalar;
   public:
     VTKM_CONT_EXPORT
     Sampler(vtkm::Vec<vtkm::Float32,3> cameraPosition,
@@ -260,17 +260,17 @@ public:
     typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> >  ColorArrayHandle;
     typedef typename ColorArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst ColorArrayPortal;
     //vtkm::Float32 BoundingBox[6];
-    vtkm::Float32 SampleDistance;
     vtkm::Vec<vtkm::Float32,3> CameraPosition;
     vtkm::Vec<vtkm::Float32,3> Origin;
     vtkm::Vec<vtkm::Float32,3> InvSpacing;
     vtkm::Id3 CellDimensions;
-    vtkm::Float32 MinScalar;
-    vtkm::Float32 InverseDeltaScalar;
     ColorArrayPortal ColorMap;
     vtkm::Id ColorMapSize;
     UniformConstPortal Coordinates;
     vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,vtkm::TopologyElementTagCell,3> Conn;
+    vtkm::Float32 MinScalar;
+    vtkm::Float32 SampleDistance;
+    vtkm::Float32 InverseDeltaScalar;
   public:
     VTKM_CONT_EXPORT
     SamplerCellAssoc(vtkm::Vec<vtkm::Float32,3> cameraPosition,
@@ -413,15 +413,15 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
     typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> >  ColorArrayHandle;
     typedef typename ColorArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst ColorArrayPortal;
     //vtkm::Float32 BoundingBox[6];
-    vtkm::Float32 SampleDistance;
     vtkm::Vec<vtkm::Float32,3> CameraPosition;
     vtkm::Id3 PointDimensions;
-    vtkm::Float32 MinScalar;
-    vtkm::Float32 InverseDeltaScalar;
     ColorArrayPortal ColorMap;
     vtkm::Id ColorMapSize;
     CartesianConstPortal Coordinates;
     vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,vtkm::TopologyElementTagCell,3> Conn;
+    vtkm::Float32 MinScalar;
+    vtkm::Float32 SampleDistance;
+    vtkm::Float32 InverseDeltaScalar;
     DefaultConstHandle CoordPortals[3];
 
   public:
@@ -604,15 +604,15 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
     typedef typename CartesianArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst CartesianConstPortal;
     typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> >  ColorArrayHandle;
     typedef typename ColorArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst ColorArrayPortal;
-    vtkm::Float32 SampleDistance;
     vtkm::Vec<vtkm::Float32,3> CameraPosition;
     vtkm::Id3 PointDimensions;
-    vtkm::Float32 MinScalar;
-    vtkm::Float32 InverseDeltaScalar;
     ColorArrayPortal ColorMap;
     vtkm::Id ColorMapSize;
     CartesianConstPortal Coordinates;
     vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,vtkm::TopologyElementTagCell,3> Conn;
+    vtkm::Float32 MinScalar;
+    vtkm::Float32 SampleDistance;
+    vtkm::Float32 InverseDeltaScalar;
     DefaultConstHandle CoordPortals[3];
 
   public:
