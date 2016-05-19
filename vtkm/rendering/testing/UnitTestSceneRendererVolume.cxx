@@ -36,47 +36,47 @@ void Set3DView(vtkm::rendering::View &view,
 {
     vtkm::Float64 coordsBounds[6]; // Xmin,Xmax,Ymin..
     coords.GetBounds(coordsBounds,VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    //set up a default view  
-    vtkm::Vec<vtkm::Float32,3> totalExtent; 
-    totalExtent[0] = vtkm::Float32(coordsBounds[1] - coordsBounds[0]); 
+    //set up a default view
+    vtkm::Vec<vtkm::Float32,3> totalExtent;
+    totalExtent[0] = vtkm::Float32(coordsBounds[1] - coordsBounds[0]);
     totalExtent[1] = vtkm::Float32(coordsBounds[3] - coordsBounds[2]);
     totalExtent[2] = vtkm::Float32(coordsBounds[5] - coordsBounds[4]);
     vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
     vtkm::Normalize(totalExtent);
 
     view = vtkm::rendering::View(vtkm::rendering::View::VIEW_3D);
-    view.view3d.pos = totalExtent * (mag * 2.f);
-    view.view3d.up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
-    view.view3d.lookAt = totalExtent * (mag * .5f);
-    view.view3d.fieldOfView = 60.f;
-    view.nearPlane = 1.f;
-    view.farPlane = 100.f;
-    view.width = w;
-    view.height = h;
-    
-    std::cout<<"View3d:  pos: "<<view.view3d.pos<<std::endl;
-    std::cout<<"      lookAt: "<<view.view3d.lookAt<<std::endl;
-    std::cout<<"          up: "<<view.view3d.up<<std::endl;
-    std::cout<<"near/far/fov: "<<view.nearPlane<<"/"<<view.farPlane<<" "<<view.view3d.fieldOfView<<std::endl;
-    std::cout<<"         w/h: "<<view.width<<"/"<<view.height<<std::endl;
-}    
+    view.View3d.Position = totalExtent * (mag * 2.f);
+    view.View3d.Up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
+    view.View3d.LookAt = totalExtent * (mag * .5f);
+    view.View3d.FieldOfView = 60.f;
+    view.NearPlane = 1.f;
+    view.FarPlane = 100.f;
+    view.Width = w;
+    view.Height = h;
+
+    std::cout<<"View3d:  pos: "<<view.View3d.Position<<std::endl;
+    std::cout<<"      lookAt: "<<view.View3d.LookAt<<std::endl;
+    std::cout<<"          up: "<<view.View3d.Up<<std::endl;
+    std::cout<<"near/far/fov: "<<view.NearPlane<<"/"<<view.FarPlane<<" "<<view.View3d.FieldOfView<<std::endl;
+    std::cout<<"         w/h: "<<view.Width<<"/"<<view.Height<<std::endl;
+}
 
 void Render(const vtkm::cont::DataSet &ds,
             const std::string &fieldNm,
             const std::string &ctName,
-            const std::string &outputFile)    
+            const std::string &outputFile)
 {
     const vtkm::Int32 W = 512, H = 512;
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
     vtkm::rendering::SceneRendererVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
-    
+
     vtkm::rendering::View view;
     Set3DView(view, coords, W, H);
-  
+
     vtkm::rendering::ColorTable colorTable(ctName);
     colorTable.AddAlphaControlPoint(0.0f, .01f);
     colorTable.AddAlphaControlPoint(1.0f, .01f);
-    
+
     vtkm::rendering::Scene3D scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceRayTracer surface(W,H,bg);
@@ -90,11 +90,11 @@ void Render(const vtkm::cont::DataSet &ds,
                               vtkm::rendering::RenderSurfaceRayTracer,
                               vtkm::rendering::WorldAnnotator>
         w(scene, sceneRenderer, surface, view, bg);
-    
+
     w.Initialize();
     w.Paint();
     w.SaveAs(outputFile);
-    
+
 }
 
 void RenderTests()

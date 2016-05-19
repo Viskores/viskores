@@ -50,7 +50,7 @@ public:
     vtkm::Int32 Xmin;
     vtkm::Int32 Ymin;
     vtkm::Int32 NumPixels;
-    
+
   public:
     VTKM_CONT_EXPORT
     SurfaceConverter(const vtkm::Int32 &width,
@@ -108,7 +108,7 @@ public:
   {
   public:
     vtkm::Int32 w;
-    vtkm::Int32 h; 
+    vtkm::Int32 h;
     vtkm::Int32 Minx;
     vtkm::Int32 Miny;
     vtkm::Int32 SubsetWidth;
@@ -117,17 +117,17 @@ public:
     vtkm::Vec< vtkm::Float32, 3> delta_y;
     VTKM_CONT_EXPORT
     PerspectiveRayGen(vtkm::Int32   width,
-                      vtkm::Int32   height, 
-                      vtkm::Float32 fovX, 
-                      vtkm::Float32 fovY, 
-                      vtkm::Vec< vtkm::Float32, 3> look, 
-                      vtkm::Vec< vtkm::Float32, 3> up, 
+                      vtkm::Int32   height,
+                      vtkm::Float32 fovX,
+                      vtkm::Float32 fovY,
+                      vtkm::Vec< vtkm::Float32, 3> look,
+                      vtkm::Vec< vtkm::Float32, 3> up,
                       vtkm::Float32 _zoom,
                       vtkm::Int32 subsetWidth,
                       vtkm::Int32 minx,
                       vtkm::Int32 miny)
-    : w(width), 
-      h(height), 
+    : w(width),
+      h(height),
       SubsetWidth(subsetWidth),
       Minx(minx),
       Miny(miny)
@@ -160,12 +160,12 @@ public:
                                   FieldOut<>,
                                   FieldOut<> );
 
-    typedef void ExecutionSignature(WorkIndex, 
-                                    _1, 
-                                    _2, 
+    typedef void ExecutionSignature(WorkIndex,
+                                    _1,
+                                    _2,
                                     _3);
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Id idx, 
+    void operator()(vtkm::Id idx,
                     vtkm::Float32 &rayDirX,
                     vtkm::Float32 &rayDirY,
                     vtkm::Float32 &rayDirZ) const
@@ -175,7 +175,7 @@ public:
       int j = vtkm::Int32( idx ) / SubsetWidth;
       i += Minx;
       j += Miny;
-      ray_dir = nlook + delta_x * ((2.f * vtkm::Float32(i) - vtkm::Float32(w)) / 2.0f) 
+      ray_dir = nlook + delta_x * ((2.f * vtkm::Float32(i) - vtkm::Float32(w)) / 2.0f)
                       + delta_y * ((2.f * vtkm::Float32(j) - vtkm::Float32(h)) / 2.0f);
       vtkm::Normalize(ray_dir);
       rayDirX = ray_dir[0];
@@ -216,187 +216,208 @@ public:
   VTKM_CONT_EXPORT
   Camera()
   {
-  	Height = 500;
-  	Width = 500;
-    SubsetWidth = 500;
-    SubsetHeight = 500;
-    SubsetMinX = 0;
-    SubsetMinY = 0;
-  	FovY = 30.f;
-  	FovX = 30.f;
-  	Zoom = 1.f;
-  	Look[0] = 0.f;
-  	Look[1] = 0.f;
-  	Look[2] = -1.f;
-  	LookAt[0] = 0.f;
-  	LookAt[1] = 0.f;
-  	LookAt[2] = -1.f;
-  	Up[0] = 0.f;
-  	Up[1] = 1.f;
-  	Up[2] = 0.f;
-  	Position[0] = 0.f;
-  	Position[1] = 0.f;
-  	Position[2] = 0.f;  
-  	IsViewDirty = true;
-  	IsResDirty = true;
-  	MortonSort = false;
-    FrameBuffer.Allocate(Height * Width);
-    //ImageSubsetModeOn = true;
+    this->Height = 500;
+    this->Width = 500;
+    this->SubsetWidth = 500;
+    this->SubsetHeight = 500;
+    this->SubsetMinX = 0;
+    this->SubsetMinY = 0;
+    this->FovY = 30.f;
+    this->FovX = 30.f;
+    this->Zoom = 1.f;
+    this->Look[0] = 0.f;
+    this->Look[1] = 0.f;
+    this->Look[2] = -1.f;
+    this->LookAt[0] = 0.f;
+    this->LookAt[1] = 0.f;
+    this->LookAt[2] = -1.f;
+    this->Up[0] = 0.f;
+    this->Up[1] = 1.f;
+    this->Up[2] = 0.f;
+    this->Position[0] = 0.f;
+    this->Position[1] = 0.f;
+    this->Position[2] = 0.f;
+    this->IsViewDirty = true;
+    this->IsResDirty = true;
+    this->MortonSort = false;
+    this->FrameBuffer.Allocate(Height * Width);
+    //this->ImageSubsetModeOn = true;
   }
 
   VTKM_CONT_EXPORT
   void SetParameters(View &view)
   {
-    this->SetUp(view.view3d.up);
-    this->SetLookAt(view.view3d.lookAt);
-    this->SetPosition(view.view3d.pos);
-    this->SetFieldOfView(view.view3d.fieldOfView);
-    this->SetHeight(view.height);
-    this->SetWidth(view.width);
-    CameraView = view;
+    this->SetUp(view.View3d.Up);
+    this->SetLookAt(view.View3d.LookAt);
+    this->SetPosition(view.View3d.Position);
+    this->SetFieldOfView(view.View3d.FieldOfView);
+    this->SetHeight(view.Height);
+    this->SetWidth(view.Width);
+    this->CameraView = view;
   }
 
 
   VTKM_CONT_EXPORT
   void SetHeight(const vtkm::Int32 &height)
   {
-  	if(height <= 0)  throw vtkm::cont::ErrorControlBadValue("Camera height must be greater than zero.");
-  	if(Height != height)
-  	{
-  		IsResDirty = true;
-  		Height = height;
-  		this->SetFieldOfView(FovX);
-      CameraView.height = Height;
-  	} 
+    if(height <= 0)
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Camera height must be greater than zero.");
+    }
+    if(Height != height)
+    {
+      this->IsResDirty = true;
+      this->Height = height;
+      this->SetFieldOfView(this->FovX);
+      this->CameraView.Height = this->Height;
+    }
   }
 
   VTKM_CONT_EXPORT
   vtkm::Int32 GetHeight() const
   {
-    return Height;
+    return this->Height;
   }
 
   VTKM_CONT_EXPORT
   void SetWidth(const vtkm::Int32 &width)
   {
-  	if(width <= 0)  throw vtkm::cont::ErrorControlBadValue("Camera width must be greater than zero.");
-  	if(Width != width)
-  	{
-  	  IsResDirty = true;
-  	  Width = width;
-  	  this->SetFieldOfView(FovX); 
-      CameraView.width = Width;
-  	}
+    if(width <= 0)
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Camera width must be greater than zero.");
+    }
+    if(this->Width != width)
+    {
+      this->IsResDirty = true;
+      this->Width = width;
+      this->SetFieldOfView(this->FovX);
+      this->CameraView.Width = this->Width;
+    }
   }
-  
+
   VTKM_CONT_EXPORT
   vtkm::Int32 GetWidth() const
   {
-    return Width;
+    return this->Width;
   }
-  
+
   VTKM_CONT_EXPORT
   void SetZoom(const vtkm::Float32 &zoom)
   {
-    if(zoom <= 0)  throw vtkm::cont::ErrorControlBadValue("Camera zoom must be greater than zero.");
-    if(Zoom != zoom)
+    if(zoom <= 0)
     {
-      IsViewDirty = true;
-      Zoom = zoom;
-    } 
+      throw vtkm::cont::ErrorControlBadValue(
+            "Camera zoom must be greater than zero.");
+    }
+    if(this->Zoom != zoom)
+    {
+      this->IsViewDirty = true;
+      this->Zoom = zoom;
+    }
   }
 
   VTKM_CONT_EXPORT
   vtkm::Float32 GetZoom() const
   {
-    return Zoom;
+    return this->Zoom;
   }
 
   VTKM_CONT_EXPORT
   void SetFieldOfView(const vtkm::Float32 &degrees)
   {
-  	if(degrees <= 0)  throw vtkm::cont::ErrorControlBadValue("Camera feild of view must be greater than zero.");
-  	if(degrees > 180)  throw vtkm::cont::ErrorControlBadValue("Camera feild of view must be less than 180.");
-  	// fov is stored as a half angle
+    if(degrees <= 0)
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Camera feild of view must be greater than zero.");
+    }
+    if(degrees > 180)
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Camera feild of view must be less than 180.");
+    }
+    // fov is stored as a half angle
     // float fovx= 2.f*atan(tan(view.view3d.fov/2.f)*view.w/view.h);
     // fovx*=180.f/M_PI;
     // camera->setFOVY((view.view3d.fov*(180.f/M_PI))/2.f);
     // camera->setFOVX( fovx/2.f );
-    
-  	vtkm::Float32 newFOVY = (vtkm::Float32(Height) / vtkm::Float32(Width)) * degrees;
-  	vtkm::Float32 newFOVX = degrees;
-  	if(newFOVX != FovX) IsViewDirty = true;
-  	if(newFOVY != FovY) IsViewDirty = true;
-  	FovX = newFOVX;
-    FovY = newFOVY;
-    CameraView.view3d.fieldOfView = FovX;
+
+    vtkm::Float32 newFOVY =
+        (vtkm::Float32(this->Height) / vtkm::Float32(this->Width)) * degrees;
+    vtkm::Float32 newFOVX = degrees;
+    if(newFOVX != this->FovX) { this->IsViewDirty = true; }
+    if(newFOVY != this->FovY) { this->IsViewDirty = true; }
+    this->FovX = newFOVX;
+    this->FovY = newFOVY;
+    this->CameraView.View3d.FieldOfView = this->FovX;
   }
 
   VTKM_CONT_EXPORT
   vtkm::Float32 GetFieldOfView() const
   {
-    return FovX;
+    return this->FovX;
   }
 
   VTKM_CONT_EXPORT
   void SetUp(const vtkm::Vec<vtkm::Float32, 3> &up)
   {
-  	if(Up != up)
-  	{
-      Up = up;
-  	  vtkm::Normalize(Up);
-      IsViewDirty = true;
-  	}
+    if(this->Up != up)
+    {
+      this->Up = up;
+      vtkm::Normalize(this->Up);
+      this->IsViewDirty = true;
+    }
   }
 
   VTKM_CONT_EXPORT
   vtkm::Vec<vtkm::Float32, 3> GetUp() const
   {
-    return Up;
+    return this->Up;
   }
 
   VTKM_CONT_EXPORT
   void SetLookAt(const vtkm::Vec<vtkm::Float32, 3> &lookAt)
   {
-    if(LookAt != lookAt)
+    if(this->LookAt != lookAt)
     {
-      LookAt = lookAt;
-      IsViewDirty = true;
+      this->LookAt = lookAt;
+      this->IsViewDirty = true;
     }
   }
 
   VTKM_CONT_EXPORT
   vtkm::Vec<vtkm::Float32, 3> GetLookAt() const
   {
-    return LookAt;
+    return this->LookAt;
   }
 
   VTKM_CONT_EXPORT
   void SetPosition(const vtkm::Vec<vtkm::Float32, 3> &position)
   {
-    if(Position != position)
+    if(this->Position != position)
     {
-      Position = position;
-      IsViewDirty = true;
+      this->Position = position;
+      this->IsViewDirty = true;
     }
   }
 
   VTKM_CONT_EXPORT
   vtkm::Vec<vtkm::Float32, 3> GetPosition() const
   {
-    return Position;
+    return this->Position;
   }
 
   VTKM_CONT_EXPORT
   void ResetIsViewDirty()
   {
-    IsViewDirty = false;
+    this->IsViewDirty = false;
   }
 
   VTKM_CONT_EXPORT
   bool GetIsViewDirty() const
   {
-    return IsViewDirty;
+    return this->IsViewDirty;
   }
 
   VTKM_CONT_EXPORT
@@ -405,19 +426,22 @@ public:
   {
     if(surface == NULL)
     {
-      throw vtkm::cont::ErrorControlBadValue("Camera can not write to NULL surface");
-
+      throw vtkm::cont::ErrorControlBadValue(
+            "Camera can not write to NULL surface");
     }
-    if(Height != vtkm::Int32(surface->height) || 
-       Width != vtkm::Int32(surface->width)) 
+    if(this->Height != vtkm::Int32(surface->height) ||
+       this->Width != vtkm::Int32(surface->width))
+    {
       throw vtkm::cont::ErrorControlBadValue("Camera: suface-view mismatched dims");
-    vtkm::worklet::DispatcherMapField< SurfaceConverter >( SurfaceConverter( Width,
-                                                                             SubsetWidth,
-                                                                             SubsetMinX,
-                                                                             SubsetMinY,
-                                                                             CameraView.CreateProjectionMatrix(),
-                                                                             SubsetWidth * SubsetHeight) )
-        .Invoke( FrameBuffer,
+    }
+    vtkm::worklet::DispatcherMapField< SurfaceConverter >(
+          SurfaceConverter( this->Width,
+                            this->SubsetWidth,
+                            this->SubsetMinX,
+                            this->SubsetMinY,
+                            this->CameraView.CreateProjectionMatrix(),
+                            this->SubsetWidth * this->SubsetHeight) )
+        .Invoke( this->FrameBuffer,
                  distances,
                  vtkm::exec::ExecutionWholeArray<vtkm::Float32>(surface->DepthBuffer),
                  vtkm::exec::ExecutionWholeArray<vtkm::Float32>(surface->ColorBuffer) );
@@ -431,31 +455,32 @@ public:
   void CreateRays(Ray<DeviceAdapter> &rays,
                   vtkm::Float64 *boundingBox = NULL)
   {
-    UpdateDimensions(&rays, boundingBox);
+    this->UpdateDimensions(&rays, boundingBox);
     //Set the origin of the ray back to the camera position
-    vtkm::worklet::DispatcherMapField< MemSet< vtkm::Float32 > >( MemSet< vtkm::Float32>( Position[0] ) )
+    vtkm::worklet::DispatcherMapField< MemSet< vtkm::Float32 > >( MemSet< vtkm::Float32>( this->Position[0] ) )
       .Invoke( rays.OriginX );
 
-    vtkm::worklet::DispatcherMapField< MemSet< vtkm::Float32 > >( MemSet< vtkm::Float32>( Position[1] ) )
+    vtkm::worklet::DispatcherMapField< MemSet< vtkm::Float32 > >( MemSet< vtkm::Float32>( this->Position[1] ) )
       .Invoke( rays.OriginY );
 
-    vtkm::worklet::DispatcherMapField< MemSet< vtkm::Float32 > >( MemSet< vtkm::Float32>( Position[2] ) )
+    vtkm::worklet::DispatcherMapField< MemSet< vtkm::Float32 > >( MemSet< vtkm::Float32>( this->Position[2] ) )
       .Invoke( rays.OriginZ );
 
     //Reset the camera look vector
-    Look = LookAt - Position;
-    vtkm::Normalize(Look);  
+    this->Look = this->LookAt - this->Position;
+    vtkm::Normalize(this->Look);
     //Create the ray direction
-    vtkm::worklet::DispatcherMapField< PerspectiveRayGen >( PerspectiveRayGen(Width, 
-                                                                              Height, 
-                                                                              FovX, 
-                                                                              FovY, 
-                                                                              Look, 
-                                                                              Up, 
-                                                                              Zoom,
-                                                                              SubsetWidth,
-                                                                              SubsetMinX,
-                                                                              SubsetMinY) )
+    vtkm::worklet::DispatcherMapField< PerspectiveRayGen >(
+          PerspectiveRayGen(this->Width,
+                            this->Height,
+                            this->FovX,
+                            this->FovY,
+                            this->Look,
+                            this->Up,
+                            this->Zoom,
+                            this->SubsetWidth,
+                            this->SubsetMinX,
+                            this->SubsetMinY) )
       .Invoke(rays.DirX,
               rays.DirY,
               rays.DirZ); //X Y Z
@@ -473,23 +498,24 @@ public:
   void CreateRays(VolumeRay<DeviceAdapter> &rays,
                   vtkm::Float64 *boundingBox = NULL)
   {
-    
-    UpdateDimensions(&rays, boundingBox);
+
+    this->UpdateDimensions(&rays, boundingBox);
 
     //Reset the camera look vector
-    Look = LookAt - Position;
-    vtkm::Normalize(Look);  
+    this->Look = this->LookAt - this->Position;
+    vtkm::Normalize(this->Look);
     //Create the ray direction
-    vtkm::worklet::DispatcherMapField< PerspectiveRayGen >( PerspectiveRayGen(Width, 
-                                                                              Height, 
-                                                                              FovX, 
-                                                                              FovY, 
-                                                                              Look, 
-                                                                              Up, 
-                                                                              Zoom,
-                                                                              SubsetWidth,
-                                                                              SubsetMinX,
-                                                                              SubsetMinY) )
+    vtkm::worklet::DispatcherMapField< PerspectiveRayGen >(
+          PerspectiveRayGen(this->Width,
+                            this->Height,
+                            this->FovX,
+                            this->FovY,
+                            this->Look,
+                            this->Up,
+                            this->Zoom,
+                            this->SubsetWidth,
+                            this->SubsetMinX,
+                            this->SubsetMinY) )
       .Invoke(rays.DirX,
               rays.DirY,
               rays.DirZ); //X Y Z
@@ -499,7 +525,7 @@ public:
 private:
   VTKM_CONT_EXPORT
   void FindSubset(vtkm::Float64 *bounds)
-  { 
+  {
     vtkm::Float32 x[2], y[2], z[2];
     x[0] = static_cast<vtkm::Float32>(bounds[0]);
     x[1] = static_cast<vtkm::Float32>(bounds[1]);
@@ -508,17 +534,17 @@ private:
     z[0] = static_cast<vtkm::Float32>(bounds[4]);
     z[1] = static_cast<vtkm::Float32>(bounds[5]);
     //Inise the data bounds
-    if(Position[0] >=x[0] && Position[0] <=x[1] &&
-       Position[1] >=y[0] && Position[1] <=y[1] && 
-       Position[2] >=z[0] && Position[2] <=z[1] )
+    if(this->Position[0] >=x[0] && this->Position[0] <=x[1] &&
+       this->Position[1] >=y[0] && this->Position[1] <=y[1] &&
+       this->Position[2] >=z[0] && this->Position[2] <=z[1] )
     {
-      SubsetWidth = Width;
-      SubsetHeight = Height;
-      SubsetMinY = 0;
-      SubsetMinX = 0;
+      this->SubsetWidth = this->Width;
+      this->SubsetHeight = this->Height;
+      this->SubsetMinY = 0;
+      this->SubsetMinX = 0;
       return;
-             
     }
+
     //std::cout<<"Bounds ("<<x[0]<<","<<y[0]<<","<<z[0]<<")-("<<x[1]<<","<<y[1]<<","<<z[1]<<std::endl;
     vtkm::Float32 xmin, ymin, xmax, ymax, zmin, zmax;
     xmin = std::numeric_limits<vtkm::Float32>::max();
@@ -536,7 +562,8 @@ private:
       extentPoint[1] = y[j];
       extentPoint[2] = z[k];
       extentPoint[3] = 1.f;
-      vtkm::Vec<vtkm::Float32,4> transformed = vtkm::MatrixMultiply(ViewProjectionMat,extentPoint);
+      vtkm::Vec<vtkm::Float32,4> transformed =
+          vtkm::MatrixMultiply(this->ViewProjectionMat,extentPoint);
       // perform the perspective divide
       for (vtkm::Int32 a = 0; a < 3; ++a)
       {
@@ -548,7 +575,7 @@ private:
       transformed[2] = (transformed[2] * 0.5f + 0.5f);
       zmin = vtkm::Min(zmin, transformed[2]);
       zmax = vtkm::Max(zmax, transformed[2]);
-      if(transformed[2] < 0 || transformed[2] > 1) continue;
+      if(transformed[2] < 0 || transformed[2] > 1) { continue; }
       xmin = vtkm::Min(xmin, transformed[0]);
       ymin = vtkm::Min(ymin, transformed[1]);
       xmax = vtkm::Max(xmax, transformed[0]);
@@ -559,14 +586,14 @@ private:
     xmax += .001f;
     ymin -= .001f;
     ymax += .001f;
-    xmin = floor(vtkm::Min(vtkm::Max(0.f, xmin),vtkm::Float32(Width) ));
-    xmax =  ceil(vtkm::Min(vtkm::Max(0.f, xmax),vtkm::Float32(Width) ));
-    ymin = floor(vtkm::Min(vtkm::Max(0.f, ymin),vtkm::Float32(Height) ));
-    ymax =  ceil(vtkm::Min(vtkm::Max(0.f, ymax),vtkm::Float32(Height) ));
+    xmin = floor(vtkm::Min(vtkm::Max(0.f, xmin),vtkm::Float32(this->Width) ));
+    xmax =  ceil(vtkm::Min(vtkm::Max(0.f, xmax),vtkm::Float32(this->Width) ));
+    ymin = floor(vtkm::Min(vtkm::Max(0.f, ymin),vtkm::Float32(this->Height) ));
+    ymax =  ceil(vtkm::Min(vtkm::Max(0.f, ymax),vtkm::Float32(this->Height) ));
     //printf("Pixel range = (%f,%f,%f), (%f,%f,%f)\n", xmin, ymin,zmin, xmax,ymax,zmax);
     vtkm::Int32 dx = vtkm::Int32(xmax) - vtkm::Int32(xmin);
     vtkm::Int32 dy = vtkm::Int32(ymax) - vtkm::Int32(ymin);
-    
+
     //
     //  scene is behind the camera
     //
@@ -574,17 +601,17 @@ private:
        xmin >= xmax ||
        ymin >= ymax)
     {
-       SubsetWidth = 1;
-       SubsetHeight = 1;
-       SubsetMinX = 0;
-       SubsetMinY = 0;
+      this->SubsetWidth = 1;
+      this->SubsetHeight = 1;
+      this->SubsetMinX = 0;
+      this->SubsetMinY = 0;
     }
     else
     {
-     SubsetWidth  = dx;
-     SubsetHeight = dy;
-     SubsetMinX = vtkm::Int32(xmin);
-     SubsetMinY = vtkm::Int32(ymin);
+      this->SubsetWidth  = dx;
+      this->SubsetHeight = dy;
+      this->SubsetMinX = vtkm::Int32(xmin);
+      this->SubsetMinY = vtkm::Int32(ymin);
     }
 
   }
@@ -597,34 +624,38 @@ private:
     bool imageSubsetModeOn = boundingBox != NULL;
 
     //Update our ViewProjection matrix
-    ViewProjectionMat 
-      = vtkm::MatrixMultiply(CameraView.CreateProjectionMatrix(),
-                             CameraView.CreateViewMatrix());
+    this->ViewProjectionMat
+      = vtkm::MatrixMultiply(this->CameraView.CreateProjectionMatrix(),
+                             this->CameraView.CreateViewMatrix());
 
     //Find the pixel footprint
-    if(imageSubsetModeOn) FindSubset(boundingBox);
+    if(imageSubsetModeOn)
+    {
+      this->FindSubset(boundingBox);
+    }
 
     //Update the image dimensions
-    if(!imageSubsetModeOn) 
+    if(!imageSubsetModeOn)
     {
-      SubsetWidth = Width;
-      SubsetHeight = Height;
-      SubsetMinY = 0;
-      SubsetMinX = 0;
+      this->SubsetWidth = this->Width;
+      this->SubsetHeight = this->Height;
+      this->SubsetMinY = 0;
+      this->SubsetMinX = 0;
     }
     else
     {
-      if(SubsetWidth != Width) IsResDirty = true;
-      if(SubsetHeight != Height) IsResDirty = true;
+      if(this->SubsetWidth != this->Width) { this->IsResDirty = true; }
+      if(this->SubsetHeight != this->Height) { this->IsResDirty = true; }
     }
     // resize rays and buffers
-    if(IsResDirty)
+    if(this->IsResDirty)
     {
-      rays->resize(SubsetHeight * SubsetWidth);
-      FrameBuffer.PrepareForOutput(SubsetHeight * SubsetWidth, DeviceAdapter());
-    } 
+      rays->resize(this->SubsetHeight * this->SubsetWidth);
+      this->FrameBuffer.PrepareForOutput(this->SubsetHeight * this->SubsetWidth,
+                                         DeviceAdapter());
+    }
 
-    IsResDirty = false;
+    this->IsResDirty = false;
 
   }
 

@@ -35,23 +35,23 @@ void Set3DView(vtkm::rendering::View &view,
 {
     vtkm::Float64 coordsBounds[6]; // Xmin,Xmax,Ymin..
     coords.GetBounds(coordsBounds,VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    //set up a default view  
-    vtkm::Vec<vtkm::Float32,3> totalExtent; 
-    totalExtent[0] = vtkm::Float32(coordsBounds[1] - coordsBounds[0]); 
+    //set up a default view
+    vtkm::Vec<vtkm::Float32,3> totalExtent;
+    totalExtent[0] = vtkm::Float32(coordsBounds[1] - coordsBounds[0]);
     totalExtent[1] = vtkm::Float32(coordsBounds[3] - coordsBounds[2]);
     totalExtent[2] = vtkm::Float32(coordsBounds[5] - coordsBounds[4]);
     vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
     vtkm::Normalize(totalExtent);
 
     view = vtkm::rendering::View(vtkm::rendering::View::VIEW_3D);
-    view.view3d.pos = totalExtent * (mag * 2.f);
-    view.view3d.up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
-    view.view3d.lookAt = totalExtent * (mag * .5f);
-    view.view3d.fieldOfView = 60.f;
-    view.nearPlane = 1.f;
-    view.farPlane = 100.f;
-    view.width = w;
-    view.height = h;
+    view.View3d.Position = totalExtent * (mag * 2.f);
+    view.View3d.Up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
+    view.View3d.LookAt = totalExtent * (mag * .5f);
+    view.View3d.FieldOfView = 60.f;
+    view.NearPlane = 1.f;
+    view.FarPlane = 100.f;
+    view.Width = w;
+    view.Height = h;
     /*
     std::cout<<"View3d:  pos: "<<view.view3d.pos<<std::endl;
     std::cout<<"      lookAt: "<<view.view3d.lookAt<<std::endl;
@@ -67,37 +67,37 @@ void Set2DView(vtkm::rendering::View &view,
 {
     vtkm::Float64 coordsBounds[6]; // Xmin,Xmax,Ymin..
     coords.GetBounds(coordsBounds,VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    //set up a default view  
-    vtkm::Vec<vtkm::Float32,3> totalExtent; 
-    totalExtent[0] = vtkm::Float32(coordsBounds[1] - coordsBounds[0]); 
+    //set up a default view
+    vtkm::Vec<vtkm::Float32,3> totalExtent;
+    totalExtent[0] = vtkm::Float32(coordsBounds[1] - coordsBounds[0]);
     totalExtent[1] = vtkm::Float32(coordsBounds[3] - coordsBounds[2]);
     totalExtent[2] = vtkm::Float32(coordsBounds[5] - coordsBounds[4]);
     vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
     vtkm::Normalize(totalExtent);
 
     view = vtkm::rendering::View(vtkm::rendering::View::VIEW_2D);
-    view.view2d.left = static_cast<vtkm::Float32>(coordsBounds[0]);
-    view.view2d.right = static_cast<vtkm::Float32>(coordsBounds[1]);
-    view.view2d.bottom = static_cast<vtkm::Float32>(coordsBounds[2]);
-    view.view2d.top = static_cast<vtkm::Float32>(coordsBounds[3]);
-    view.nearPlane = 1.f;
-    view.farPlane = 100.f;
-    view.width = w;
-    view.height = h;
+    view.View2d.Left = static_cast<vtkm::Float32>(coordsBounds[0]);
+    view.View2d.Right = static_cast<vtkm::Float32>(coordsBounds[1]);
+    view.View2d.Bottom = static_cast<vtkm::Float32>(coordsBounds[2]);
+    view.View2d.Top = static_cast<vtkm::Float32>(coordsBounds[3]);
+    view.NearPlane = 1.f;
+    view.FarPlane = 100.f;
+    view.Width = w;
+    view.Height = h;
 
     // Give it some space for other annotations like a color bar
-    view.vl = -.7f;
-    view.vr = +.7f;
-    view.vb = -.7f;
-    view.vt = +.7f;
-    
+    view.ViewportLeft = -.7f;
+    view.ViewportRight = +.7f;
+    view.ViewportBottom = -.7f;
+    view.ViewportTop = +.7f;
+
     /*
     std::cout<<"View2d:  l/r: "<<view.view2d.left<<" "<<view.view2d.right<<std::endl;
     std::cout<<"View2d:  b/t: "<<view.view2d.bottom<<" "<<view.view2d.top<<std::endl;
     std::cout<<"    near/far: "<<view.nearPlane<<"/"<<view.farPlane<<std::endl;
     std::cout<<"         w/h: "<<view.width<<"/"<<view.height<<std::endl;
     */
-}    
+}
 
 void Render3D(const vtkm::cont::DataSet &ds,
               const std::string &fieldNm,
@@ -107,7 +107,7 @@ void Render3D(const vtkm::cont::DataSet &ds,
     const vtkm::Int32 W = 512, H = 512;
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
     vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
-    
+
     vtkm::rendering::View view;
     Set3DView(view, coords, W, H);
 
@@ -125,7 +125,7 @@ void Render3D(const vtkm::cont::DataSet &ds,
                               vtkm::rendering::RenderSurfaceOSMesa,
                               vtkm::rendering::WorldAnnotatorGL>
         w(scene, sceneRenderer, surface, view, bg);
-    
+
     w.Initialize();
     w.Paint();
     w.SaveAs(outputFile);
@@ -136,13 +136,13 @@ void Render2D(const vtkm::cont::DataSet &ds,
               const std::string &ctName,
               const std::string &outputFile)
 {
-    const vtkm::Int32 W = 512, H = 512;    
+    const vtkm::Int32 W = 512, H = 512;
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
     vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
 
-    vtkm::rendering::View view;    
+    vtkm::rendering::View view;
     Set2DView(view, coords, W, H);
-    
+
     vtkm::rendering::Scene2D scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceOSMesa surface(W,H,bg);
@@ -155,7 +155,7 @@ void Render2D(const vtkm::cont::DataSet &ds,
                               vtkm::rendering::RenderSurfaceOSMesa,
                               vtkm::rendering::WorldAnnotatorGL>
         w(scene, sceneRenderer, surface, view, bg);
-    
+
     w.Initialize();
     w.Paint();
     w.SaveAs(outputFile);
