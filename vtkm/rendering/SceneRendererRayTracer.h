@@ -59,7 +59,7 @@ public:
   void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                    const vtkm::cont::CoordinateSystem &coords,
                    vtkm::cont::Field &scalarField,
-                   const vtkm::rendering::ColorTable &colorTable,
+                   const vtkm::rendering::ColorTable &/*colorTable*/,
                    vtkm::rendering::View &view,                                      
                    vtkm::Float64 *scalarBounds)
   {
