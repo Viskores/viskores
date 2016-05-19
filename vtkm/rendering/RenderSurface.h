@@ -35,12 +35,12 @@ class RenderSurface
 {
 public:
     VTKM_CONT_EXPORT
-    RenderSurface(std::size_t w=1024, std::size_t h=1024,
-                  const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-        : width(w), height(h), bgColor(c)
+    RenderSurface(std::size_t width=1024, std::size_t height=1024,
+                  const vtkm::rendering::Color &color=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
+        : Width(width), Height(height), BackgroundColor(color)
     {
-        rgba.resize(width*height*4);
-        zbuff.resize(width*height*4);
+      this->ColorBuffer.resize(width*height*4);
+      this->DepthBuffer.resize(width*height);
     }
 
     VTKM_CONT_EXPORT
@@ -65,16 +65,16 @@ public:
     virtual void AddLine(double, double,
                          double, double,
                          float,
-                         Color) {}
-    virtual void AddColorBar(float, float, 
+                         vtkm::rendering::Color) {}
+    virtual void AddColorBar(float, float,
                              float, float,
-                             const ColorTable &,
+                             const vtkm::rendering::ColorTable &,
                              bool) {}
 
-    vtkm::rendering::Color bgColor;
-    std::size_t width, height;
-    std::vector<vtkm::Float32> rgba;
-    std::vector<vtkm::Float32> zbuff;
+    std::size_t Width, Height;
+    vtkm::rendering::Color BackgroundColor;
+    std::vector<vtkm::Float32> ColorBuffer;
+    std::vector<vtkm::Float32> DepthBuffer;
 };
 
 }} //namespace vtkm::rendering

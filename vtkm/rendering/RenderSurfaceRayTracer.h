@@ -37,12 +37,12 @@ class RenderSurfaceRayTracer : public RenderSurface
 {
 public:
     VTKM_CONT_EXPORT
-    RenderSurfaceRayTracer(std::size_t w=1024, std::size_t h=1024,
-                  const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-        : RenderSurface(w,h,c)
+    RenderSurfaceRayTracer(std::size_t width=1024, std::size_t height=1024,
+                  const vtkm::rendering::Color &color=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
+        : RenderSurface(width,height,color)
     {
-      ColorBuffer = vtkm::cont::make_ArrayHandle(rgba);
-      DepthBuffer = vtkm::cont::make_ArrayHandle(zbuff);
+      this->ColorArray = vtkm::cont::make_ArrayHandle(this->ColorBuffer);
+      this->DepthArray = vtkm::cont::make_ArrayHandle(this->DepthBuffer);
     }
 
     class ClearBuffers : public vtkm::worklet::WorkletMapField
@@ -80,12 +80,13 @@ public:
     virtual void SaveAs(const std::string &fileName)
     {
         std::ofstream of(fileName.c_str());
-        of<<"P6"<<std::endl<<width<<" "<<height<<std::endl<<255<<std::endl;
-        int hi = static_cast<int>(height);
-        for (int i=hi-1; i>=0; i--)
-            for (std::size_t j=0; j < width; j++)
-            { 
-                const vtkm::Float32 *tuple = &(rgba[i*width*4 + j*4]);
+        of<<"P6"<<std::endl<<this->Width<<" "<<this->Height<<std::endl<<255<<std::endl;
+        int height = static_cast<int>(this->Height);
+        for (int yIndex=height-1; yIndex>=0; yIndex--)
+            for (std::size_t xIndex=0; xIndex < this->Width; xIndex++)
+            {
+                const vtkm::Float32 *tuple =
+                    &(this->ColorBuffer[yIndex*this->Width*4 + xIndex*4]);
                 of<<(unsigned char)(tuple[0]*255);
                 of<<(unsigned char)(tuple[1]*255);
                 of<<(unsigned char)(tuple[2]*255);
@@ -93,17 +94,18 @@ public:
         of.close();
     }
     VTKM_CONT_EXPORT
-    virtual void Clear() 
+    virtual void Clear()
     {
-      ColorBuffer = vtkm::cont::make_ArrayHandle(rgba);
-      DepthBuffer = vtkm::cont::make_ArrayHandle(zbuff);
-      vtkm::worklet::DispatcherMapField< ClearBuffers >( ClearBuffers( bgColor, width*height ) )
-        .Invoke( DepthBuffer,
-                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(ColorBuffer) );
+      this->ColorArray = vtkm::cont::make_ArrayHandle(this->ColorBuffer);
+      this->DepthArray = vtkm::cont::make_ArrayHandle(this->DepthBuffer);
+      vtkm::worklet::DispatcherMapField< ClearBuffers >(
+            ClearBuffers( this->BackgroundColor, this->Width*this->Height ) )
+        .Invoke( this->DepthArray,
+                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(this->ColorArray) );
     }
 
-    vtkm::cont::ArrayHandle<vtkm::Float32> ColorBuffer;
-    vtkm::cont::ArrayHandle<vtkm::Float32> DepthBuffer;
+    vtkm::cont::ArrayHandle<vtkm::Float32> ColorArray;
+    vtkm::cont::ArrayHandle<vtkm::Float32> DepthArray;
 
 };
 

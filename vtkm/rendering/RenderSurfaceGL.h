@@ -45,7 +45,10 @@ public:
     VTKM_CONT_EXPORT
     virtual void Clear()
     {
-        glClearColor(bgColor.Components[0],bgColor.Components[1],bgColor.Components[2], 1.0f);
+        glClearColor(this->BackgroundColor.Components[0],
+                     this->BackgroundColor.Components[1],
+                     this->BackgroundColor.Components[2],
+                     1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     VTKM_CONT_EXPORT
@@ -151,12 +154,15 @@ public:
     virtual void SaveAs(const std::string &fileName)
     {
         std::ofstream of(fileName.c_str());
-        of<<"P6"<<std::endl<<width<<" "<<height<<std::endl<<255<<std::endl;
-        int hi = static_cast<int>(height);
-        for (int i=hi-1; i>=0; i--)
-            for (std::size_t j=0; j < width; j++)
+        of << "P6" << std::endl
+           << this->Width << " " << this->Height <<std::endl
+           << 255 << std::endl;
+        int height = static_cast<int>(this->Height);
+        for (int yIndex=height-1; yIndex>=0; yIndex--)
+            for (std::size_t xIndex=0; xIndex < this->Width; xIndex++)
             {
-                const vtkm::Float32 *tuple = &(rgba[i*width*4 + j*4]);
+                const vtkm::Float32 *tuple =
+                    &(this->ColorBuffer[yIndex*this->Width*4 + xIndex*4]);
                 of<<(unsigned char)(tuple[0]*255);
                 of<<(unsigned char)(tuple[1]*255);
                 of<<(unsigned char)(tuple[2]*255);

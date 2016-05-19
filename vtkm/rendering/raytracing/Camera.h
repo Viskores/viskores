@@ -429,8 +429,8 @@ public:
       throw vtkm::cont::ErrorControlBadValue(
             "Camera can not write to NULL surface");
     }
-    if(this->Height != vtkm::Int32(surface->height) ||
-       this->Width != vtkm::Int32(surface->width))
+    if(this->Height != vtkm::Int32(surface->Height) ||
+       this->Width != vtkm::Int32(surface->Width))
     {
       throw vtkm::cont::ErrorControlBadValue("Camera: suface-view mismatched dims");
     }
@@ -443,12 +443,12 @@ public:
                             this->SubsetWidth * this->SubsetHeight) )
         .Invoke( this->FrameBuffer,
                  distances,
-                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(surface->DepthBuffer),
-                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(surface->ColorBuffer) );
+                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(surface->DepthArray),
+                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(surface->ColorArray) );
 
     //Force the transfer so the vectors contain data from device
-    surface->ColorBuffer.GetPortalControl().Get(0);
-    surface->DepthBuffer.GetPortalControl().Get(0);
+    surface->ColorArray.GetPortalControl().Get(0);
+    surface->DepthArray.GetPortalControl().Get(0);
   }
 
   VTKM_CONT_EXPORT
