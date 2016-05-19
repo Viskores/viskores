@@ -463,7 +463,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void Render(RenderSurface *surface)
+  void Render(RenderSurfaceRayTracer *surface)
   { 
     vtkm::cont::Timer<DeviceAdapter> renderTimer;
     if(IsSceneDirty)
@@ -493,15 +493,9 @@ public:
                      BackgroundColor);
 
     
-    if(surface != NULL) 
-    {
-      RenderSurfaceRayTracer *rtsurface 
-        = dynamic_cast<RenderSurfaceRayTracer*>(surface);
-      if(rtsurface != NULL) camera.WriteToSurface(rtsurface, Rays.Distance);
-      else throw vtkm::cont::ErrorControlBadValue(
-          "Ray Tracer: bad surface type. Must be RenderSurfaceRayTracer");
+     camera.WriteToSurface(surface, Rays.Distance);
 
-    }
-  } };//class RayTracer
+  }
+};//class RayTracer
 }}}// namespace vtkm::rendering::raytracing 
 #endif //vtk_m_rendering_raytracing_RayTracer_h

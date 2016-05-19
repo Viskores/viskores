@@ -425,7 +425,6 @@ public:
     //Force the transfer so the vectors contain data from device
     surface->ColorBuffer.GetPortalControl().Get(0);
     surface->DepthBuffer.GetPortalControl().Get(0);
-    std::cout<<"W "<<Width<<" "<<surface->width<<" "<<surface->rgba.size()<<"\n";
   }
 
   VTKM_CONT_EXPORT

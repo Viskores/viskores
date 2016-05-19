@@ -58,7 +58,7 @@ class ColorTable
   protected:
     std::string uniquename;
     bool smooth;
-    std::vector<ColorControlPoint> RBGPoints;
+    std::vector<ColorControlPoint> RGBPoints;
     std::vector<AlphaControlPoint> AlphaPoints;
     typedef std::vector<AlphaControlPoint>::size_type AlphaType;
     typedef std::vector<ColorControlPoint>::size_type ColorType;
@@ -88,38 +88,38 @@ class ColorTable
     }
     Color MapRGB(vtkm::Float32 c) const
     {
-      ColorType n = RBGPoints.size(); 
+      ColorType n = RGBPoints.size(); 
       if (n == 0)
           return Color(0.5f, 0.5f, 0.5f);
-      if (n == 1 || c <= RBGPoints[0].Position)
-          return RBGPoints[0].RGBA;
-      if (c >= RBGPoints[n - 1].Position)
-          return RBGPoints[n - 1].RGBA;
+      if (n == 1 || c <= RGBPoints[0].Position)
+          return RGBPoints[0].RGBA;
+      if (c >= RGBPoints[n - 1].Position)
+          return RGBPoints[n - 1].RGBA;
       ColorType second;
       for (second = 1; second < n - 1; second++)
       {
-          if (c < RBGPoints[second].Position)
+          if (c < RGBPoints[second].Position)
               break;
       }
       ColorType first = second - 1;
-      vtkm::Float32 seg = RBGPoints[second].Position-RBGPoints[first].Position;
+      vtkm::Float32 seg = RGBPoints[second].Position-RGBPoints[first].Position;
       vtkm::Float32 alpha;
       if (seg == 0.f)
           alpha = .5f;
       else
-          alpha = (c - RBGPoints[first].Position)/seg;
+          alpha = (c - RGBPoints[first].Position)/seg;
       if (smooth)
       {
-          return Color(RBGPoints[first].RGBA.Components[0] * (1.f-alpha) + RBGPoints[second].RGBA.Components[0] * alpha,
-                           RBGPoints[first].RGBA.Components[1] * (1.f-alpha) + RBGPoints[second].RGBA.Components[1] * alpha,
-                           RBGPoints[first].RGBA.Components[2] * (1.f-alpha) + RBGPoints[second].RGBA.Components[2] * alpha);
+          return Color(RGBPoints[first].RGBA.Components[0] * (1.f-alpha) + RGBPoints[second].RGBA.Components[0] * alpha,
+                           RGBPoints[first].RGBA.Components[1] * (1.f-alpha) + RGBPoints[second].RGBA.Components[1] * alpha,
+                           RGBPoints[first].RGBA.Components[2] * (1.f-alpha) + RGBPoints[second].RGBA.Components[2] * alpha);
       }
       else
       {
         if (alpha < .5)
-          return RBGPoints[first].RGBA;
+          return RGBPoints[first].RGBA;
         else
-          return RBGPoints[second].RGBA;
+          return RGBPoints[second].RGBA;
       }
             
     }
@@ -165,29 +165,32 @@ class ColorTable
     {
     }
     ColorTable(const ColorTable &ct) : 
-        uniquename(ct.uniquename), smooth(ct.smooth), RBGPoints(ct.RBGPoints.begin(), ct.RBGPoints.end())
+        uniquename(ct.uniquename), 
+        smooth(ct.smooth), 
+        RGBPoints(ct.RGBPoints.begin(), ct.RGBPoints.end()),
+        AlphaPoints(ct.AlphaPoints.begin(), ct.AlphaPoints.end())
     {
     }
     void operator=(const ColorTable &ct)
     {
       uniquename = ct.uniquename;
       smooth = ct.smooth;
-      RBGPoints.clear();
-      RBGPoints.insert(RBGPoints.end(), ct.RBGPoints.begin(), ct.RBGPoints.end());
+      RGBPoints.clear();
+      RGBPoints.insert(RGBPoints.end(), ct.RGBPoints.begin(), ct.RGBPoints.end());
       AlphaPoints.insert(AlphaPoints.end(), ct.AlphaPoints.begin(), ct.AlphaPoints.end());
     }
     void Clear()
     {
-        RBGPoints.clear();
+        RGBPoints.clear();
         AlphaPoints.clear();
     }
     void AddControlPoint(vtkm::Float32 position, Color color)
     {
-        RBGPoints.push_back(ColorControlPoint(position, color));
+        RGBPoints.push_back(ColorControlPoint(position, color));
     }
     void AddControlPoint(vtkm::Float32 position, Color color, vtkm::Float32 alpha)
     {
-        RBGPoints.push_back(ColorControlPoint(position, color));
+        RGBPoints.push_back(ColorControlPoint(position, color));
         AlphaPoints.push_back(AlphaControlPoint(position, alpha));
     }
     void AddAlphaControlPoint(vtkm::Float32 position, vtkm::Float32 alpha)
@@ -197,7 +200,7 @@ class ColorTable
     void Reverse()
     {   
         // copy old control points
-        std::vector<ColorControlPoint> tmp(RBGPoints.begin(), RBGPoints.end());
+        std::vector<ColorControlPoint> tmp(RGBPoints.begin(), RGBPoints.end());
         std::vector<AlphaControlPoint> tmpAlpha(AlphaPoints.begin(), AlphaPoints.end());
         Clear();
         vtkm::Int32 vectorSize = vtkm::Int32(tmp.size());
