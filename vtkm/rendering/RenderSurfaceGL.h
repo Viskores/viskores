@@ -45,7 +45,10 @@ public:
     VTKM_CONT_EXPORT
     virtual void Clear()
     {
-        glClearColor(bgColor.Components[0],bgColor.Components[1],bgColor.Components[2], 1.0f);
+        glClearColor(this->BackgroundColor.Components[0],
+                     this->BackgroundColor.Components[1],
+                     this->BackgroundColor.Components[2],
+                     1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     VTKM_CONT_EXPORT
@@ -71,7 +74,7 @@ public:
         std::cout<<"      fov: "<<v.view3d.fieldOfView<<std::endl;
         printMatrix(oglP);
         */
-        
+
         CreateOGLMatrix(v.CreateViewMatrix(), oglM);
         glMatrixMode(GL_MODELVIEW);
         glLoadMatrixf(oglM);
@@ -84,7 +87,7 @@ public:
     {
         vtkm::Float32 oglP[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
         vtkm::Float32 oglM[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
-        
+
         oglP[0*4+0] = 1.;
         oglP[1*4+1] = 1.;
         oglP[2*4+2] = -1.;
@@ -97,7 +100,7 @@ public:
         oglM[1*4+1] = 1.;
         oglM[2*4+2] = 1.;
         oglM[3*4+3] = 1.;
-        
+
         glMatrixMode(GL_MODELVIEW);
         glLoadMatrixf(oglM);
 
@@ -111,17 +114,17 @@ public:
         {
             vtkm::Float32 vl, vr, vb, vt;
             v.GetRealViewport(vl,vr,vb,vt);
-            vtkm::Float32 _x = static_cast<vtkm::Float32>(v.width)*(1.f+vl)/2.f;
-            vtkm::Float32 _y = static_cast<vtkm::Float32>(v.height)*(1.f+vb)/2.f;
-            vtkm::Float32 _w = static_cast<vtkm::Float32>(v.width)*(vr-vl)/2.f;
-            vtkm::Float32 _h = static_cast<vtkm::Float32>(v.height)*(vt-vb)/2.f;
+            vtkm::Float32 _x = static_cast<vtkm::Float32>(v.Width)*(1.f+vl)/2.f;
+            vtkm::Float32 _y = static_cast<vtkm::Float32>(v.Height)*(1.f+vb)/2.f;
+            vtkm::Float32 _w = static_cast<vtkm::Float32>(v.Width)*(vr-vl)/2.f;
+            vtkm::Float32 _h = static_cast<vtkm::Float32>(v.Height)*(vt-vb)/2.f;
 
             glViewport(static_cast<int>(_x), static_cast<int>(_y),
                        static_cast<int>(_w), static_cast<int>(_h));
         }
         else
         {
-            glViewport(0,0, v.width, v.height);
+            glViewport(0,0, v.Width, v.Height);
         }
     }
 
@@ -151,12 +154,15 @@ public:
     virtual void SaveAs(const std::string &fileName)
     {
         std::ofstream of(fileName.c_str());
-        of<<"P6"<<std::endl<<width<<" "<<height<<std::endl<<255<<std::endl;
-        int hi = static_cast<int>(height);
-        for (int i=hi-1; i>=0; i--)
-            for (std::size_t j=0; j < width; j++)
-            { 
-                const vtkm::Float32 *tuple = &(rgba[i*width*4 + j*4]);
+        of << "P6" << std::endl
+           << this->Width << " " << this->Height <<std::endl
+           << 255 << std::endl;
+        int height = static_cast<int>(this->Height);
+        for (int yIndex=height-1; yIndex>=0; yIndex--)
+            for (std::size_t xIndex=0; xIndex < this->Width; xIndex++)
+            {
+                const vtkm::Float32 *tuple =
+                    &(this->ColorBuffer[static_cast<std::size_t>(yIndex)*this->Width*4 + xIndex*4]);
                 of<<(unsigned char)(tuple[0]*255);
                 of<<(unsigned char)(tuple[1]*255);
                 of<<(unsigned char)(tuple[2]*255);
@@ -182,7 +188,7 @@ public:
         glEnd();
     }
 
-    virtual void AddColorBar(float x, float y, 
+    virtual void AddColorBar(float x, float y,
                              float w, float h,
                              const ColorTable &ct,
                              bool horizontal)

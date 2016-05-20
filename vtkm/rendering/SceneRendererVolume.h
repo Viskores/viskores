@@ -34,7 +34,7 @@ namespace vtkm {
 namespace rendering {
 template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class SceneRendererVolume : public SceneRenderer
-{ 
+{
 protected:
   vtkm::rendering::raytracing::VolumeRendererStructured<DeviceAdapter>  Tracer;
   RenderSurfaceRayTracer *Surface;
@@ -50,13 +50,13 @@ public:
   {
     Tracer.SetNumberOfSamples(numSamples);
   }
-    
+
   VTKM_CONT_EXPORT
   void SetRenderSurface(RenderSurface *surface)
   {
-    if(surface != NULL) 
+    if(surface != NULL)
     {
-  
+
       Surface = dynamic_cast<RenderSurfaceRayTracer*>(surface);
       if(Surface == NULL)
       {
@@ -78,13 +78,11 @@ public:
     vtkm::Float64 coordsBounds[6]; // Xmin,Xmax,Ymin..
     coords.GetBounds(coordsBounds,DeviceAdapter());
 
-    bool isExplicit = false;
-    bool isUniform = false;
     if(!cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
     {
       std::cerr<<"ERROR cell set type not currently supported\n";
       std::string theType = typeid(cellset).name();
-      std::cerr<<"Type : "<<theType<<std::endl; 
+      std::cerr<<"Type : "<<theType<<std::endl;
     }
     else
     {
@@ -98,7 +96,7 @@ public:
       Tracer.SetBackgroundColor(this->BackgroundColor);
       Tracer.Render(Surface);
     }
-    
+
   }
 };
 }} //namespace vtkm::rendering
