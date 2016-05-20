@@ -26,6 +26,7 @@
 #include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/raytracing/RayTracer.h>
 #include <vtkm/rendering/raytracing/Camera.h>
+#include <vtkm/rendering/RenderSurfaceRayTracer.h>
 #include <vtkm/rendering/View.h>
 namespace vtkm {
 namespace rendering {
@@ -33,11 +34,11 @@ namespace rendering {
 //  static bool doOnce = true;
 template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class SceneRendererRayTracer : public SceneRenderer
-{ 
+{
 protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
   vtkm::rendering::raytracing::RayTracer<DeviceAdapter> Tracer;
-  RenderSurface *Surface;
+  RenderSurfaceRayTracer *Surface;
 public:
   VTKM_CONT_EXPORT
   SceneRendererRayTracer()
@@ -47,7 +48,16 @@ public:
   VTKM_CONT_EXPORT
   void SetRenderSurface(RenderSurface *surface)
   {
-    Surface = surface;
+    if(surface != NULL)
+    {
+
+      Surface = dynamic_cast<RenderSurfaceRayTracer*>(surface);
+      if(Surface == NULL)
+      {
+        throw vtkm::cont::ErrorControlBadValue(
+          "Ray Tracer: bad surface type. Must be RenderSurfaceRayTracer");
+      }
+    }
   }
   VTKM_CONT_EXPORT
   void SetActiveColorTable(const ColorTable &colorTable)
@@ -59,11 +69,11 @@ public:
   void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                    const vtkm::cont::CoordinateSystem &coords,
                    vtkm::cont::Field &scalarField,
-                   const vtkm::rendering::ColorTable &/*colorTable*/,
-                   vtkm::rendering::View &view,                                      
+                   const vtkm::rendering::ColorTable &vtkmNotUsed(colorTable),
+                   vtkm::rendering::View &view,
                    vtkm::Float64 *scalarBounds)
   {
-    
+
     vtkm::cont::Timer<DeviceAdapter> timer;
     const vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  indices;
@@ -76,7 +86,7 @@ public:
 
     Triangulator<DeviceAdapter> triangulator;
     triangulator.run(cellset, indices, numberOfTriangles);//,dynamicCoordsHandle,dataBounds);
-    
+
     Tracer.SetData(dynamicCoordsHandle, indices, scalarField, numberOfTriangles, scalarBounds, dataBounds);
     Tracer.SetColorMap(ColorMap);
     Tracer.SetBackgroundColor(BackgroundColor);

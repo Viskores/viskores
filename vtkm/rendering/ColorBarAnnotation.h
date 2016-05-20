@@ -33,7 +33,7 @@ class ColorBarAnnotation
 {
 protected:
   vtkm::rendering::ColorTable colortable;
-    vtkm::rendering::AxisAnnotation2D axis;
+  vtkm::rendering::AxisAnnotation2D axis;
 public:
   ColorBarAnnotation()
   {

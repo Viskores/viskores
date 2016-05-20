@@ -55,19 +55,19 @@ public:
     vtkm::Float32 MaxDistance;
     Float4ArrayPortal FlatBVH;
     Int4ArrayPortal Leafs;
-    VTKM_EXEC_EXPORT 
+    VTKM_EXEC_EXPORT
     vtkm::Float32 rcp(vtkm::Float32 f)  const { return 1.0f/f;}
-    VTKM_EXEC_EXPORT 
+    VTKM_EXEC_EXPORT
     vtkm::Float32 rcp_safe(vtkm::Float32 f) const { return rcp((fabs(f) < 1e-8f) ? 1e-8f : f); }
-  public: 
+  public:
     VTKM_CONT_EXPORT
-    Intersector(bool occlusion, 
+    Intersector(bool occlusion,
                 vtkm::Float32 maxDistance,
                 LinearBVH &bvh)
       : Occlusion(occlusion),
         MaxDistance(maxDistance),
-        Leafs( bvh.LeafNodes.PrepareForInput( DeviceAdapter() )),
-        FlatBVH(bvh.FlatBVH.PrepareForInput( DeviceAdapter() ))
+        FlatBVH(bvh.FlatBVH.PrepareForInput( DeviceAdapter() )),
+        Leafs( bvh.LeafNodes.PrepareForInput( DeviceAdapter() ))
     {}
     typedef void ControlSignature(FieldIn<>,
                                   FieldIn<>,
@@ -85,16 +85,16 @@ public:
                                     _7);
     template<typename PointPortalType>
     VTKM_EXEC_EXPORT
-    void operator()(const vtkm::Vec<vtkm::Float32,3> &rayDir, 
-                    const vtkm::Vec<vtkm::Float32,3> &rayOrigin, 
+    void operator()(const vtkm::Vec<vtkm::Float32,3> &rayDir,
+                    const vtkm::Vec<vtkm::Float32,3> &rayOrigin,
                     vtkm::Float32 &distance,
                     vtkm::Float32 &minU,
                     vtkm::Float32 &minV,
                     vtkm::Id &hitIndex,
                     const PointPortalType &points) const
-    { 
+    {
       float minDistance = MaxDistance;
-      hitIndex = -1; 
+      hitIndex = -1;
       float dirx = rayDir[0];
       float diry = rayDir[1];
       float dirz = rayDir[2];
@@ -103,7 +103,7 @@ public:
       float invDiry = rcp_safe(diry);
       float invDirz = rcp_safe(dirz);
       int currentNode;
-    
+
       int todo[64];
       int stackptr = 0;
       int barrier = (int)END_FLAG2;
@@ -117,32 +117,32 @@ public:
       float originDirX = originX * invDirx;
       float originDirY = originY * invDiry;
       float originDirZ = originZ * invDirz;
-      while(currentNode != END_FLAG2) 
-      {  
+      while(currentNode != END_FLAG2)
+      {
         if(currentNode>-1)
-        { 
-          
-          vtkm::Vec<vtkm::Float32,4> first4  = FlatBVH.Get(currentNode);   
-          vtkm::Vec<vtkm::Float32,4> second4 = FlatBVH.Get(currentNode+1); 
-          vtkm::Vec<vtkm::Float32,4> third4  = FlatBVH.Get(currentNode+2); 
+        {
+
+          vtkm::Vec<vtkm::Float32,4> first4  = FlatBVH.Get(currentNode);
+          vtkm::Vec<vtkm::Float32,4> second4 = FlatBVH.Get(currentNode+1);
+          vtkm::Vec<vtkm::Float32,4> third4  = FlatBVH.Get(currentNode+2);
           bool hitLeftChild,hitRightChild;
 
-          vtkm::Float32 xmin0 = first4[0] * invDirx - originDirX;       
-          vtkm::Float32 ymin0 = first4[1] * invDiry - originDirY;         
+          vtkm::Float32 xmin0 = first4[0] * invDirx - originDirX;
+          vtkm::Float32 ymin0 = first4[1] * invDiry - originDirY;
           vtkm::Float32 zmin0 = first4[2] * invDirz - originDirZ;
           vtkm::Float32 xmax0 = first4[3] * invDirx - originDirX;
-          vtkm::Float32 ymax0 = second4[0] * invDiry - originDirY;  
+          vtkm::Float32 ymax0 = second4[0] * invDiry - originDirY;
           vtkm::Float32 zmax0 = second4[1] * invDirz - originDirZ;
 
           vtkm::Float32 min0 = vtkm::Max(vtkm::Max(vtkm::Max(vtkm::Min(ymin0,ymax0),vtkm::Min(xmin0,xmax0)),vtkm::Min(zmin0,zmax0)),0.f);
           vtkm::Float32 max0 = vtkm::Min(vtkm::Min(vtkm::Min(vtkm::Max(ymin0,ymax0),vtkm::Max(xmin0,xmax0)),vtkm::Max(zmin0,zmax0)), minDistance);
           hitLeftChild = ( max0 >= min0 );
 
-          vtkm::Float32 xmin1 = second4[2] * invDirx - originDirX;       
-          vtkm::Float32 ymin1 = second4[3] * invDiry - originDirY;         
+          vtkm::Float32 xmin1 = second4[2] * invDirx - originDirX;
+          vtkm::Float32 ymin1 = second4[3] * invDiry - originDirY;
           vtkm::Float32 zmin1 = third4[0] * invDirz - originDirZ;
           vtkm::Float32 xmax1 = third4[1] * invDirx - originDirX;
-          vtkm::Float32 ymax1 = third4[2] * invDiry - originDirY;  
+          vtkm::Float32 ymax1 = third4[2] * invDiry - originDirY;
           vtkm::Float32 zmax1 = third4[3] * invDirz - originDirZ;
 
           vtkm::Float32 min1 = vtkm::Max(vtkm::Max(vtkm::Max(vtkm::Min(ymin1,ymax1),vtkm::Min(xmin1,xmax1)),vtkm::Min(zmin1,zmax1)),0.f);
@@ -150,11 +150,11 @@ public:
           hitRightChild = ( max1 >= min1 );
 
         if(!hitLeftChild && !hitRightChild)
-        { 
-          currentNode = todo[stackptr]; 
+        {
+          currentNode = todo[stackptr];
           stackptr--;
         }
-        else 
+        else
         {
           vtkm::Vec<vtkm::Float32,4> children  = FlatBVH.Get(currentNode+3); //Children.Get(currentNode);
           vtkm::Int32 leftChild;
@@ -171,24 +171,24 @@ public:
               todo[stackptr] = leftChild;
             }
             else
-            {   
+            {
               stackptr++;
               todo[stackptr] = rightChild;
             }
           }
         }
       } // if inner node
-          
+
       if(currentNode < 0 && currentNode != barrier)//check register usage
-      { 
-        currentNode = -currentNode - 1; //swap the neg address 
+      {
+        currentNode = -currentNode - 1; //swap the neg address
         vtkm::Vec<Int32, 4> leafnode = Leafs.Get(currentNode);
         vtkm::Vec<vtkm::Float32, 3> a = vtkm::Vec<vtkm::Float32,3>(points.Get(leafnode[1]));
         vtkm::Vec<vtkm::Float32, 3> b = vtkm::Vec<vtkm::Float32,3>(points.Get(leafnode[2]));
         vtkm::Vec<vtkm::Float32, 3> c = vtkm::Vec<vtkm::Float32,3>(points.Get(leafnode[3]));
-        
-        vtkm::Vec<vtkm::Float32, 3> e1 = b - a; 
-        vtkm::Vec<vtkm::Float32, 3> e2 = c - a; 
+
+        vtkm::Vec<vtkm::Float32, 3> e1 = b - a;
+        vtkm::Vec<vtkm::Float32, 3> e2 = c - a;
 
 
         vtkm::Vec<vtkm::Float32, 3> p;
@@ -219,9 +219,9 @@ public:
 
               vtkm::Float32 dist = (e2[0] * q[0] + e2[1] * q[1] + e2[2] * q[2]) * dot;
               if((dist > EPSILON2 && dist < minDistance) && !(u + v > 1) )
-              {              
+              {
                 minDistance = dist;
-                hitIndex = currentNode; 
+                hitIndex = currentNode;
                 minU = u;
                 minV = v;
                 if(Occlusion) return;//or set todo to -1
@@ -236,20 +236,20 @@ public:
 
     } //while
     distance = minDistance;
-    
+
   }// ()
 };
 
 
 
   VTKM_CONT_EXPORT
-  void run(Ray<DeviceAdapter> &rays, 
+  void run(Ray<DeviceAdapter> &rays,
            LinearBVH &bvh,
            vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle)
   {
     vtkm::worklet::DispatcherMapField< Intersector >( Intersector( false, 10000000.f, bvh) )
       .Invoke( rays.Dir,
-               rays.Origin, 
+               rays.Origin,
                rays.Distance,
                rays.U,
                rays.V,

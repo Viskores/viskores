@@ -50,34 +50,49 @@ public:
         ctx = OSMesaCreateContextExt(OSMESA_RGBA, 32, 0, 0, NULL);
         if (!ctx)
             throw vtkm::cont::ErrorControlBadValue("OSMesa context creation failed.");
-        rgba.resize(width*height*4);
-        if (!OSMesaMakeCurrent(ctx, &rgba[0], GL_FLOAT, static_cast<GLsizei>(width), static_cast<GLsizei>(height)))
-            throw vtkm::cont::ErrorControlBadValue("OSMesa context activation failed.");
+        this->ColorBuffer.resize(this->Width*this->Height*4);
+        if (!OSMesaMakeCurrent(ctx,
+                               &this->ColorBuffer[0],
+                               GL_FLOAT,
+                               static_cast<GLsizei>(this->Width),
+                               static_cast<GLsizei>(this->Height)))
+        {
+          throw vtkm::cont::ErrorControlBadValue("OSMesa context activation failed.");
+        }
 
         glEnable(GL_DEPTH_TEST);
     }
-    
+
     VTKM_CONT_EXPORT
     virtual void Clear()
     {
-        glClearColor(bgColor.Components[0],bgColor.Components[1],bgColor.Components[2], 1.0f);
+        glClearColor(this->BackgroundColor.Components[0],
+                     this->BackgroundColor.Components[1],
+                     this->BackgroundColor.Components[2],
+                     1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     VTKM_CONT_EXPORT
     virtual void Finish()
     {
         RenderSurfaceGL::Finish();
- 
+
         //Copy zbuff into floating point array.
         unsigned int *raw_zbuff;
         int zbytes, w, h;
         GLboolean ret;
         ret = OSMesaGetDepthBuffer(ctx, &w, &h, &zbytes, (void**)&raw_zbuff);
-        if (!ret || static_cast<std::size_t>(w)!=width || static_cast<std::size_t>(h)!=height)
+        if (!ret ||
+            static_cast<std::size_t>(w)!=this->Width ||
+            static_cast<std::size_t>(h)!=this->Height)
+        {
             throw vtkm::cont::ErrorControlBadValue("Wrong width/height in ZBuffer");
-        std::size_t npixels = width*height;
+        }
+        std::size_t npixels = this->Width*this->Height;
         for (std::size_t i=0; i<npixels; i++)
-            zbuff[i] = static_cast<vtkm::Float32>(raw_zbuff[i]) / static_cast<vtkm::Float32>(UINT_MAX);
+        {
+            this->DepthBuffer[i] = float(raw_zbuff[i]) / float(UINT_MAX);
+        }
     }
 
 private:

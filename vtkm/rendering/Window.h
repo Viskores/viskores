@@ -85,7 +85,7 @@ protected:
         surface.SetViewToScreenSpace(view,viewportClip);
     }
 };
-    
+
 // Window2D Window3D
 template<typename SceneRendererType,
          typename SurfaceType,
@@ -94,7 +94,6 @@ class Window3D : public Window<SceneRendererType, SurfaceType,WorldAnnotatorType
 {
 public:
     vtkm::rendering::Scene3D scene;
-
     // 3D-specific annotations
     BoundingBoxAnnotation bbox;
     AxisAnnotation3D xaxis, yaxis, zaxis;
@@ -215,7 +214,6 @@ class Window2D : public Window<SceneRendererType, SurfaceType,WorldAnnotatorType
 {
 public:
     vtkm::rendering::Scene2D scene;
-
     // 2D-specific annotations
     AxisAnnotation2D haxis, vaxis;
     ColorBarAnnotation colorbar;
@@ -254,18 +252,18 @@ public:
 
         haxis.SetColor(Color(1,1,1));
         haxis.SetScreenPosition(vl,vb, vr,vb);
-        haxis.SetRangeForAutoTicks(this->view.view2d.left, this->view.view2d.right);
+        haxis.SetRangeForAutoTicks(this->view.View2d.Left, this->view.View2d.Right);
         haxis.SetMajorTickSize(0, .05, 1.0);
         haxis.SetMinorTickSize(0, .02, 1.0);
         //haxis.SetLabelAlignment(eavlTextAnnotation::HCenter,
         //                         eavlTextAnnotation::Top);
         haxis.Render(this->view, this->worldAnnotator, this->surface);
 
-        vtkm::Float32 windowaspect = vtkm::Float32(this->view.width) / vtkm::Float32(this->view.height);
+        vtkm::Float32 windowaspect = vtkm::Float32(this->view.Width) / vtkm::Float32(this->view.Height);
 
         vaxis.SetColor(Color(1,1,1));
         vaxis.SetScreenPosition(vl,vb, vl,vt);
-        vaxis.SetRangeForAutoTicks(this->view.view2d.bottom, this->view.view2d.top);
+        vaxis.SetRangeForAutoTicks(this->view.View2d.Bottom, this->view.View2d.Top);
         vaxis.SetMajorTickSize(.05 / windowaspect, 0, 1.0);
         vaxis.SetMinorTickSize(.02 / windowaspect, 0, 1.0);
         //vaxis.SetLabelAlignment(eavlTextAnnotation::Right,

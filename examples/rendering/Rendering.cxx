@@ -75,14 +75,14 @@ void mouseMove(int x, int y)
     //std::cout<<"MOUSE MOVE: "<<x<<" "<<y<<std::endl;
 
     //Map to XY
-    y = window->view.height-y;
+    y = window->view.Height-y;
     
     if (lastx != -1 && lasty != -1)
     {
-        vtkm::Float32 x1 = ((lastx*2.0f)/window->view.width) - 1.0f;
-        vtkm::Float32 y1 = ((lasty*2.0f)/window->view.height) - 1.0f;
-        vtkm::Float32 x2 = ((x*2.0f)/window->view.width) - 1.0f;
-        vtkm::Float32 y2 = ((y*2.0f)/window->view.height) - 1.0f;
+        vtkm::Float32 x1 = ((lastx*2.0f)/window->view.Width) - 1.0f;
+        vtkm::Float32 y1 = ((lasty*2.0f)/window->view.Height) - 1.0f;
+        vtkm::Float32 x2 = ((x*2.0f)/window->view.Width) - 1.0f;
+        vtkm::Float32 y2 = ((y*2.0f)/window->view.Height) - 1.0f;
 
         if (buttonStates[0] == GLUT_DOWN)
         {
@@ -133,14 +133,14 @@ void Set3DView(vtkm::rendering::View &view,
     vtkm::Normalize(totalExtent);
 
     view = vtkm::rendering::View(vtkm::rendering::View::VIEW_3D);
-    view.view3d.pos = totalExtent * (mag * 2.f);
-    view.view3d.up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
-    view.view3d.lookAt = totalExtent * (mag * .5f);
-    view.view3d.fieldOfView = 60.f;
-    view.nearPlane = 1.f;
-    view.farPlane = 100.f;
-    view.width = w;
-    view.height = h;
+    view.View3d.Position = totalExtent * (mag * 2.f);
+    view.View3d.Up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
+    view.View3d.LookAt = totalExtent * (mag * .5f);
+    view.View3d.FieldOfView = 60.f;
+    view.NearPlane = 1.f;
+    view.FarPlane = 100.f;
+    view.Width = w;
+    view.Height = h;
 }
 
 // Compute and render an isosurface for a uniform grid example

@@ -80,7 +80,7 @@ public:
     virtual void EndScene()
     {
     }
-    virtual void SetRenderSurface(RenderSurface */*surface*/)
+    virtual void SetRenderSurface(RenderSurface *vtkmNotUsed(surface))
     {
     }
 protected:

@@ -19,11 +19,14 @@
 ##============================================================================
 
 set(headers
+  BoundingVolumeHierarchy.h
   Camera.h
+  RayTracer.h
   RayTracingTypeDefs.h
   Ray.h
+  TriangleIntersector.h
   Worklets.h
-  VolumeRendererUniform.h
+  VolumeRendererStructured.h
   )
 
 vtkm_declare_headers(${headers})

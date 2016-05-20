@@ -37,7 +37,7 @@ public:
   VTKM_CONT_EXPORT
   virtual ~RayBase(){}
   VTKM_CONT_EXPORT
-  virtual void resize(const vtkm::Int32 /*newSize*/){}
+  virtual void resize(const vtkm::Int32 vtkmNotUsed(newSize)){}
 };
 template<typename DeviceAdapter>
 class Ray : public RayBase
@@ -52,11 +52,11 @@ public:
   vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
                                              vtkm::cont::ArrayHandle<vtkm::Float32>,
                                              vtkm::cont::ArrayHandle<vtkm::Float32> >::type Normal;
-  
+
   vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
                                              vtkm::cont::ArrayHandle<vtkm::Float32>,
                                              vtkm::cont::ArrayHandle<vtkm::Float32> >::type Origin;
-  
+
   vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
                                              vtkm::cont::ArrayHandle<vtkm::Float32>,
                                              vtkm::cont::ArrayHandle<vtkm::Float32> >::type Dir;
@@ -89,15 +89,15 @@ public:
   vtkm::Int32 NumRays;
   VTKM_CONT_EXPORT
   Ray()
-  { 
+  {
     NumRays = 0;
     vtkm::IdComponent inComp[3];
-    inComp[0] = 0; 
-    inComp[1] = 1; 
+    inComp[0] = 0;
+    inComp[1] = 1;
     inComp[2] = 2;
     Intersection = vtkm::cont::make_ArrayHandleCompositeVector( IntersectionX, inComp[0],
                                                                 IntersectionY, inComp[1],
-                                                                IntersectionZ, inComp[2]); 
+                                                                IntersectionZ, inComp[2]);
 
     Normal = vtkm::cont::make_ArrayHandleCompositeVector( NormalX, inComp[0],
                                                           NormalY, inComp[1],
@@ -140,22 +140,22 @@ public:
     HitIdx.PrepareForOutput( NumRays , DeviceAdapter() );
 
     vtkm::IdComponent inComp[3];
-    inComp[0] = 0; 
-    inComp[1] = 1; 
+    inComp[0] = 0;
+    inComp[1] = 1;
     inComp[2] = 2;
 
     Intersection = vtkm::cont::make_ArrayHandleCompositeVector( IntersectionX, inComp[0],
                                                                 IntersectionY, inComp[1],
-                                                                IntersectionZ, inComp[2]); 
-                                                                
+                                                                IntersectionZ, inComp[2]);
+
     Normal = vtkm::cont::make_ArrayHandleCompositeVector( NormalX, inComp[0],
                                                           NormalY, inComp[1],
                                                           NormalZ, inComp[2]);
-                                                          
+
     Origin = vtkm::cont::make_ArrayHandleCompositeVector( OriginX, inComp[0],
                                                           OriginY, inComp[1],
                                                           OriginZ, inComp[2]);
-                                                          
+
     Dir  = vtkm::cont::make_ArrayHandleCompositeVector( DirX, inComp[0],
                                                         DirY, inComp[1],
                                                         DirZ, inComp[2]);
@@ -196,7 +196,7 @@ template<typename DeviceAdapter>
 class VolumeRay : public RayBase
 {
 public:
-  
+
   vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
                                              vtkm::cont::ArrayHandle<vtkm::Float32>,
                                              vtkm::cont::ArrayHandle<vtkm::Float32> >::type Dir;
@@ -211,11 +211,11 @@ public:
   vtkm::Int32 NumRays;
   VTKM_CONT_EXPORT
   VolumeRay()
-  { 
+  {
     NumRays = 0;
     vtkm::IdComponent inComp[3];
-    inComp[0] = 0; 
-    inComp[1] = 1; 
+    inComp[0] = 0;
+    inComp[1] = 1;
     inComp[2] = 2;
 
     Dir  = vtkm::cont::make_ArrayHandleCompositeVector( DirX, inComp[0],
@@ -236,11 +236,11 @@ public:
     HitIndex.PrepareForOutput( NumRays , DeviceAdapter() );
 
     vtkm::IdComponent inComp[3];
-    inComp[0] = 0; 
-    inComp[1] = 1; 
+    inComp[0] = 0;
+    inComp[1] = 1;
     inComp[2] = 2;
 
-                                                          
+
     Dir  = vtkm::cont::make_ArrayHandleCompositeVector( DirX, inComp[0],
                                                         DirY, inComp[1],
                                                         DirZ, inComp[2]);
