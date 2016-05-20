@@ -28,6 +28,7 @@
 #include <vtkm/rendering/RenderSurface.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/rendering/AxisAnnotation.h>
+#include <vtkm/rendering/TextAnnotation.h>
 
 namespace vtkm {
 namespace rendering {
@@ -39,15 +40,15 @@ protected:
   vtkm::Float64 min_tx, min_ty, min_toff;
   vtkm::Float64 x0, y0, x1, y1;
   vtkm::Float64 lower, upper;
-  vtkm::Float64 fontscale;
+  vtkm::Float32 fontscale;
   vtkm::Float32  linewidth;
   vtkm::rendering::Color  color;
   bool   logarithmic;
-#if 0
-  eavlTextAnnotation::HorizontalAlignment halign;
-  eavlTextAnnotation::VerticalAlignment valign;
-  std::vector<eavlTextAnnotation*> labels;
-#endif
+
+  TextAnnotation::HorizontalAlignment halign;
+  TextAnnotation::VerticalAlignment valign;
+  std::vector<TextAnnotation*> labels;
+
 
   std::vector<vtkm::Float64> maj_positions;
   std::vector<vtkm::Float64> maj_proportions;
@@ -55,23 +56,17 @@ protected:
   std::vector<vtkm::Float64> min_positions;
   std::vector<vtkm::Float64> min_proportions;
 
-  ///\todo: Don't need anymore??
-  bool worldSpace;
-
   int moreOrLessTickAdjustment;
 public:
   AxisAnnotation2D() : AxisAnnotation()
   {
-#if 0
-    halign = eavlTextAnnotation::HCenter;
-    valign = eavlTextAnnotation::VCenter;
-#endif
-    fontscale = 0.05;
+    halign = TextAnnotation::HCenter;
+    valign = TextAnnotation::VCenter;
+    fontscale = 0.05f;
     linewidth = 1.0;
     color = Color(1,1,1);
     logarithmic = false;
     moreOrLessTickAdjustment = 0;
-    worldSpace = false;
   }
   virtual ~AxisAnnotation2D()
   {
@@ -82,10 +77,6 @@ public:
     logarithmic = l;
   }
 #endif
-  void SetWorldSpace(bool ws)
-  {
-    worldSpace = ws;
-  }
   void SetMoreOrLessTickAdjustment(int offset)
   {
     moreOrLessTickAdjustment = offset;
@@ -123,21 +114,17 @@ public:
     x1 = x1_;
     y1 = y1_;
   }
-#if 0
-  void SetLabelAlignment(eavlTextAnnotation::HorizontalAlignment h,
-                         eavlTextAnnotation::VerticalAlignment v)
+  void SetLabelAlignment(TextAnnotation::HorizontalAlignment h,
+                         TextAnnotation::VerticalAlignment v)
   {
     halign = h;
     valign = v;
   }
-#endif
-  void SetLabelFontScale(vtkm::Float64 s)
+  void SetLabelFontScale(vtkm::Float32 s)
   {
     fontscale = s;
-#if 0
     for (unsigned int i=0; i<labels.size(); i++)
       labels[i]->SetScale(s);
-#endif
   }
   void SetRangeForAutoTicks(vtkm::Float64 l, vtkm::Float64 u)
   {
@@ -173,33 +160,22 @@ public:
     min_proportions.clear();
     min_proportions.insert(min_proportions.begin(), prop.begin(), prop.end());
   }
-  virtual void Render(View &,
-                      WorldAnnotator &,
+  virtual void Render(View &view,
+                      WorldAnnotator &worldAnnotator,
                       RenderSurface &renderSurface)
   {
     renderSurface.AddLine(x0,y0, x1,y1, linewidth, color);
 
     // major ticks
     unsigned int nmajor = (unsigned int)maj_proportions.size();
-#if 0
     while (labels.size() < nmajor)
     {
-      if (worldSpace)
-      {
-        labels.push_back(new eavlBillboardTextAnnotation(win,"test",
-                                                         color,
-                                                         fontscale,
-                                                         0,0,0, true));
-      }
-      else
-      {
-        labels.push_back(new eavlScreenTextAnnotation(win,"test",
-                                                      color,
-                                                      fontscale,
-                                                      0,0, 0));
-      }
+        labels.push_back(new ScreenTextAnnotation("test",
+                                                  color,
+                                                  fontscale,
+                                                  0,0, 0));
     }
-#endif
+
     for (unsigned int i=0; i<nmajor; ++i)
     {
       vtkm::Float64 xc = x0 + (x1-x0) * maj_proportions[i];
@@ -220,17 +196,12 @@ public:
       char val[256];
       snprintf(val, 256, "%g", maj_positions[i]);
 
-#if 0
       labels[i]->SetText(val);
       //if (fabs(maj_positions[i]) < 1e-10)
       //    labels[i]->SetText("0");
-      if (worldSpace)
-        ((eavlBillboardTextAnnotation*)(labels[i]))->SetPosition(xs,ys,0);
-      else
-        ((eavlScreenTextAnnotation*)(labels[i]))->SetPosition(xs,ys);
+      ((ScreenTextAnnotation*)(labels[i]))->SetPosition(xs,ys);
 
       labels[i]->SetAlignment(halign,valign);
-#endif
     }
 
     // minor ticks
@@ -250,13 +221,12 @@ public:
       }
     }
 
-#if 0
     for (int i=0; i<nmajor; ++i)
     {
-      labels[i]->Render(view);
+      labels[i]->Render(view, worldAnnotator, renderSurface);
+      ///\todo: REMOVE THIS BREAK
+      break;
     }
-#endif
-
   }
 };
 

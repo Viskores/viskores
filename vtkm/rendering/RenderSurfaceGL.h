@@ -249,8 +249,10 @@ public:
 private:
   void RenderText(float scale, float anchorx, float anchory, std::string text)
   {
+    std::cerr << "Doing RenderText ("<<text<<")\n";
     static BitmapFont font = BitmapFontFactory::CreateLiberation2Sans();
     static TextureGL tex;
+    std::cerr << "tex.id="<<tex.id<<"\n";
     if (tex.id == 0)
     {
       std::vector<unsigned char> &rawpngdata = font.GetRawImageData();
@@ -309,6 +311,8 @@ private:
     }
 
     glEnd();
+
+    tex.Disable();
 
     //glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 0);
     glDepthMask(GL_TRUE);

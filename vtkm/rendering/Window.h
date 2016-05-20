@@ -29,6 +29,7 @@
 #include <vtkm/rendering/AxisAnnotation3D.h>
 #include <vtkm/rendering/AxisAnnotation2D.h>
 #include <vtkm/rendering/ColorBarAnnotation.h>
+#include <vtkm/rendering/TextAnnotation.h>
 
 namespace vtkm {
 namespace rendering {
@@ -255,8 +256,8 @@ public:
         haxis.SetRangeForAutoTicks(this->view.View2d.Left, this->view.View2d.Right);
         haxis.SetMajorTickSize(0, .05, 1.0);
         haxis.SetMinorTickSize(0, .02, 1.0);
-        //haxis.SetLabelAlignment(eavlTextAnnotation::HCenter,
-        //                         eavlTextAnnotation::Top);
+        haxis.SetLabelAlignment(TextAnnotation::HCenter,
+                                TextAnnotation::Top);
         haxis.Render(this->view, this->worldAnnotator, this->surface);
 
         vtkm::Float32 windowaspect = vtkm::Float32(this->view.Width) / vtkm::Float32(this->view.Height);
@@ -266,8 +267,8 @@ public:
         vaxis.SetRangeForAutoTicks(this->view.View2d.Bottom, this->view.View2d.Top);
         vaxis.SetMajorTickSize(.05 / windowaspect, 0, 1.0);
         vaxis.SetMinorTickSize(.02 / windowaspect, 0, 1.0);
-        //vaxis.SetLabelAlignment(eavlTextAnnotation::Right,
-        //                         eavlTextAnnotation::VCenter);
+        vaxis.SetLabelAlignment(TextAnnotation::Right,
+                                TextAnnotation::VCenter);
         vaxis.Render(this->view, this->worldAnnotator, this->surface);
 
         if (scene.plots.size() > 0)
@@ -278,12 +279,9 @@ public:
             colorbar.Render(this->view, this->worldAnnotator, this->surface);
         }
 
-        this->surface.AddText(-.9f,-.9f,
-                              .1f,
-                              0,1,
-                              0,0,
-                              Color(1,1,1),
-                              "TEsTinG");
+        ScreenTextAnnotation st("hello", Color(1,1,1), 0.1, 0,0,0);
+        st.SetAlignment(TextAnnotation::Left, TextAnnotation::Top);
+        st.Render(this->view, this->worldAnnotator, this->surface);
     }
 };
 
