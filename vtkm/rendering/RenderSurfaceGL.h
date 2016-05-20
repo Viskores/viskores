@@ -24,6 +24,9 @@
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/RenderSurface.h>
+#include <vtkm/rendering/BitmapFont.h>
+#include <vtkm/rendering/BitmapFontFactory.h>
+#include <vtkm/rendering/TextureGL.h>
 
 #include <GL/gl.h>
 #include <iostream>
@@ -178,6 +181,7 @@ public:
         glEnd();
     }
 
+    VTKM_CONT_EXPORT
     virtual void AddColorBar(vtkm::Float32 x, vtkm::Float32 y, 
                              vtkm::Float32 w, vtkm::Float32 h,                             
                              const vtkm::rendering::ColorTable &ct,
@@ -222,6 +226,94 @@ public:
         }
         glEnd();
     }
+
+
+  VTKM_CONT_EXPORT
+  virtual void AddText(vtkm::Float32 x, vtkm::Float32 y,
+                       vtkm::Float32 scale,
+                       vtkm::Float32 angle,
+                       vtkm::Float32 windowaspect,
+                       vtkm::Float32 anchorx, vtkm::Float32 anchory,
+                       Color color,
+                       std::string text)
+  {
+    glPushMatrix();
+    glTranslatef(x,y,0);
+    glScalef(1.f/windowaspect, 1, 1);
+    glRotatef(angle, 0,0,1);
+    glColor3fv(color.Components);
+    RenderText(scale, anchorx, anchory, text);
+    glPopMatrix();
+  }
+
+private:
+  void RenderText(float scale, float anchorx, float anchory, std::string text)
+  {
+    static BitmapFont font = BitmapFontFactory::CreateLiberation2Sans();
+    static TextureGL tex;
+    if (tex.id == 0)
+    {
+      std::vector<unsigned char> &rawpngdata = font.GetRawImageData();
+
+      std::vector<unsigned char> rgba;
+      unsigned long width, height;
+      int error = decodePNG(rgba, width, height,
+                            &rawpngdata[0], rawpngdata.size());
+      if (error != 0)
+      {
+        return;
+      }
+
+      tex.CreateAlphaFromRGBA(int(width),int(height),rgba);
+    }
+
+
+    tex.Enable();
+
+    glDepthMask(GL_FALSE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glDisable(GL_LIGHTING);
+    //glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, -.5);
+
+    glBegin(GL_QUADS);
+
+    vtkm::Float32 textwidth = font.GetTextWidth(text);
+
+    vtkm::Float32 fx = -(.5f + .5f*anchorx) * textwidth;
+    vtkm::Float32 fy = -(.5f + .5f*anchory);
+    vtkm::Float32 fz = 0;
+    for (unsigned int i=0; i<text.length(); ++i)
+    {
+      char c = text[i];
+      char nextchar = (i < text.length()-1) ? text[i+1] : 0;
+
+      vtkm::Float32 vl,vr,vt,vb;
+      vtkm::Float32 tl,tr,tt,tb;
+      font.GetCharPolygon(c, fx, fy,
+                          vl, vr, vt, vb,
+                          tl, tr, tt, tb, nextchar);
+
+      glTexCoord2f(tl, 1.f-tt);
+      glVertex3f(scale*vl, scale*vt, fz);
+
+      glTexCoord2f(tl, 1.f-tb);
+      glVertex3f(scale*vl, scale*vb, fz);
+
+      glTexCoord2f(tr, 1.f-tb);
+      glVertex3f(scale*vr, scale*vb, fz);
+
+      glTexCoord2f(tr, 1.f-tt);
+      glVertex3f(scale*vr, scale*vt, fz);
+    }
+
+    glEnd();
+
+    //glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 0);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_ALPHA_TEST);
+  }
 };
 
 }} //namespace vtkm::rendering

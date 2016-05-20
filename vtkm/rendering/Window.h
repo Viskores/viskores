@@ -277,6 +277,13 @@ public:
             colorbar.SetColorTable(scene.plots[0].colorTable);
             colorbar.Render(this->view, this->worldAnnotator, this->surface);
         }
+
+        this->surface.AddText(-.9f,-.9f,
+                              .1f,
+                              0,1,
+                              0,0,
+                              Color(1,1,1),
+                              "TEsTinG");
     }
 };
 

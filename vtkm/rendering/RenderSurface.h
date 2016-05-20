@@ -70,6 +70,13 @@ public:
                              vtkm::Float32, vtkm::Float32, 
                              const vtkm::rendering::ColorTable &,
                              bool) {}
+    virtual void AddText(vtkm::Float32, vtkm::Float32,
+                         vtkm::Float32,
+                         vtkm::Float32,
+                         vtkm::Float32,
+                         vtkm::Float32, vtkm::Float32,
+                         Color,
+                         std::string) {}
 
     std::size_t Width, Height;
     vtkm::rendering::Color BackgroundColor;
