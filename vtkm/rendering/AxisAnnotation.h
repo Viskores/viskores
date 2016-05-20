@@ -34,36 +34,36 @@ class AxisAnnotation
 {
 private:
 protected:
-  inline double ffix(double value)
+  inline vtkm::Float64 ffix(vtkm::Float64 value)
   {
     int ivalue = (int)(value);
-    double v = (value - ivalue);
+    vtkm::Float64 v = (value - ivalue);
     if (v > 0.9999)
     {
       ivalue++;
     }
-    return (double) ivalue;
+    return static_cast<vtkm::Float64>(ivalue);
   }
 
-  void CalculateTicks(double lower, double upper, bool minor,
-                      std::vector<double> &positions,
-                      std::vector<double> &proportions,
+  void CalculateTicks(vtkm::Float64 lower, vtkm::Float64 upper, bool minor,
+                      std::vector<vtkm::Float64> &positions,
+                      std::vector<vtkm::Float64> &proportions,
                       int modifyTickQuantity)
   {
     positions.clear();
     proportions.clear();
 
-    double sortedRange[2];
+    vtkm::Float64 sortedRange[2];
     sortedRange[0] = lower < upper ? lower : upper;
     sortedRange[1] = lower > upper ? lower : upper;
 
-    double range = sortedRange[1] - sortedRange[0];
+    vtkm::Float64 range = sortedRange[1] - sortedRange[0];
 
     // Find the integral points.
-    double pow10 = log10(range);
+    vtkm::Float64 pow10 = log10(range);
 
     // Build in numerical tolerance
-    double eps = 10.0e-10;
+    vtkm::Float64 eps = 10.0e-10;
     pow10 += eps;
 
 
@@ -73,7 +73,7 @@ protected:
       pow10 = pow10 - 1.;
     }
 
-    double fxt = pow(10., ffix(pow10));
+    vtkm::Float64 fxt = pow(10., ffix(pow10));
 
     // Find the number of integral points in the interval.
     int numTicks = int(ffix(range/fxt) + 1);
@@ -91,16 +91,16 @@ protected:
     // about a factor of two, use .5/1/2 as the dividers.
     // (We constrain to 1s, 2s, and 5s, for the obvious reason
     // that only those values are factors of 10.....)
-    double divs[5] = { 0.5, 1, 2, 5, 10 };
+    vtkm::Float64 divs[5] = { 0.5, 1, 2, 5, 10 };
     int divindex = (numTicks >= 5) ? 1 : (numTicks >= 3 ? 2 : 3);
     divindex += modifyTickQuantity;
 
-    double div = divs[divindex];
+    vtkm::Float64 div = divs[divindex];
 
     // If there aren't enough major tick points in this decade, use the next
     // decade.
-    double majorStep = fxt / div;
-    double minorStep = (fxt/div) / 10.;
+    vtkm::Float64 majorStep = fxt / div;
+    vtkm::Float64 minorStep = (fxt/div) / 10.;
 
     // When we get too close, we lose the tickmarks. Run some special case code.
     if (numTicks <= 1)
@@ -126,7 +126,7 @@ protected:
 
     // Figure out the first major and minor tick locations, relative to the
     // start of the axis.
-    double majorStart, minorStart;
+    vtkm::Float64 majorStart, minorStart;
     if (sortedRange[0] < 0.)
     {
       majorStart = majorStep*(ffix(sortedRange[0]*(1./majorStep)));
@@ -141,8 +141,8 @@ protected:
     // Create all of the minor ticks
     const int max_count_cutoff = 1000;
     numTicks = 0;
-    double location = minor ? minorStart : majorStart;
-    double step = minor ? minorStep : majorStep;
+    vtkm::Float64 location = minor ? minorStart : majorStart;
+    vtkm::Float64 step = minor ? minorStep : majorStep;
     while (location <= sortedRange[1] && numTicks < max_count_cutoff)
     {
       positions.push_back(location);

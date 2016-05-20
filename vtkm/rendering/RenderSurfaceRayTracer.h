@@ -48,11 +48,11 @@ public:
     class ClearBuffers : public vtkm::worklet::WorkletMapField
     {
         vtkm::rendering::Color ClearColor;
-        vtkm::Int32 NumPixels;
+        vtkm::Id NumPixels;
     public:
       VTKM_CONT_EXPORT
       ClearBuffers(const vtkm::rendering::Color &clearColor,
-                   vtkm::Int32 numPixels)
+                   vtkm::Id numPixels)
       : ClearColor(clearColor),
         NumPixels(numPixels)
       {}

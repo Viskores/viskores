@@ -33,9 +33,9 @@ namespace rendering {
 class BoundingBoxAnnotation
 {
 private:
-  Color color;
-  double dmin[3];
-  double dmax[3];
+  vtkm::rendering::Color color;
+  vtkm::Float64 dmin[3], dmax[3];
+
 public:
   BoundingBoxAnnotation()
   {
@@ -46,15 +46,15 @@ public:
   virtual ~BoundingBoxAnnotation()
   {
   }
-  void SetExtents(double bounds[6])
+  void SetExtents(vtkm::Float64 bounds[6])
   {
     SetExtents(bounds[0], bounds[1],
                bounds[2], bounds[3],
                bounds[4], bounds[5]);
   }
-  void SetExtents(double xmin, double xmax,
-                  double ymin, double ymax,
-                  double zmin, double zmax)
+  void SetExtents(vtkm::Float64 xmin, vtkm::Float64 xmax,
+                  vtkm::Float64 ymin, vtkm::Float64 ymax,
+                  vtkm::Float64 zmin, vtkm::Float64 zmax)
   {
     dmin[0] = xmin;
     dmax[0] = xmax;
@@ -63,16 +63,16 @@ public:
     dmin[2] = zmin;
     dmax[2] = zmax;
   }
-  void SetColor(Color c)
+  void SetColor(vtkm::rendering::Color c)
   {
     color = c;
   }
-  virtual void Render(View &, //view,
+  virtual void Render(vtkm::rendering::View &, //view,
                       WorldAnnotator &annotator)
   {
     //win->SetupForWorldSpace();
 
-    float linewidth = 1.0;
+    vtkm::Float32 linewidth = 1.0;
 
     annotator.AddLine(dmin[0],dmin[1],dmin[2],
                       dmin[0],dmin[1],dmax[2],

@@ -35,15 +35,15 @@ class AxisAnnotation3D : public AxisAnnotation
 {
 private:
 protected:
-  double maj_size, maj_toff;
-  double min_size, min_toff;
+  vtkm::Float64 maj_size, maj_toff;
+  vtkm::Float64 min_size, min_toff;
   int    axis;
-  double invertx, inverty, invertz;
-  double x0, y0, z0,   x1, y1, z1;
-  double lower, upper;
-  double fontscale;
-  float  linewidth;
-  Color  color;
+  vtkm::Float64 invertx, inverty, invertz;
+  vtkm::Float64 x0, y0, z0,   x1, y1, z1;
+  vtkm::Float64 lower, upper;
+  vtkm::Float64 fontscale;
+  vtkm::Float32  linewidth;
+  vtkm::rendering::Color  color;
   //vector<BillboardTextAnnotation*> labels; ///<\todo: add text back in 
   int moreOrLessTickAdjustment;
 public:
@@ -63,7 +63,7 @@ public:
   {
     moreOrLessTickAdjustment = offset;
   }
-  void SetColor(Color c)
+  void SetColor(vtkm::rendering::Color c)
   {
     color = c;
   }
@@ -77,7 +77,7 @@ public:
     inverty = y ? +1 : -1;
     invertz = z ? +1 : -1;
   }
-  void SetMajorTickSize(double size, double offset)
+  void SetMajorTickSize(vtkm::Float64 size, vtkm::Float64 offset)
   {
     /// offset of 0 means the tick is inside the frame
     /// offset of 1 means the tick is outside the frame
@@ -85,13 +85,13 @@ public:
     maj_size = size;
     maj_toff = offset;
   }
-  void SetMinorTickSize(double size, double offset)
+  void SetMinorTickSize(vtkm::Float64 size, vtkm::Float64 offset)
   {
     min_size = size;
     min_toff = offset;
   }
-  void SetWorldPosition(double x0_, double y0_, double z0_,
-                        double x1_, double y1_, double z1_)
+  void SetWorldPosition(vtkm::Float64 x0_, vtkm::Float64 y0_, vtkm::Float64 z0_,
+                        vtkm::Float64 x1_, vtkm::Float64 y1_, vtkm::Float64 z1_)
   {
     x0 = x0_;
     y0 = y0_;
@@ -101,7 +101,7 @@ public:
     y1 = y1_;
     z1 = z1_;
   }
-  void SetLabelFontScale(double s)
+  void SetLabelFontScale(vtkm::Float64 s)
   {
     fontscale = s;
 #if 0
@@ -109,7 +109,7 @@ public:
       labels[i]->SetScale(s);
 #endif
   }
-  void SetRange(double l, double u)
+  void SetRange(vtkm::Float64 l, vtkm::Float64 u)
   {
     lower = l;
     upper = u;
@@ -122,8 +122,8 @@ public:
                             x1,y1,z1,
                             linewidth, color, infront);
 
-    std::vector<double> positions;
-    std::vector<double> proportions;
+    std::vector<vtkm::Float64> positions;
+    std::vector<vtkm::Float64> proportions;
     // major ticks
     CalculateTicks(lower, upper, false, positions, proportions, moreOrLessTickAdjustment);
     unsigned int nmajor = (unsigned int)proportions.size();
@@ -138,12 +138,12 @@ public:
 #endif
     for (unsigned int i=0; i<nmajor; ++i)
     {
-      double xc = x0 + (x1-x0) * proportions[i];
-      double yc = y0 + (y1-y0) * proportions[i];
-      double zc = z0 + (z1-z0) * proportions[i];
+      vtkm::Float64 xc = x0 + (x1-x0) * proportions[i];
+      vtkm::Float64 yc = y0 + (y1-y0) * proportions[i];
+      vtkm::Float64 zc = z0 + (z1-z0) * proportions[i];
       for (int pass=0; pass<=1; pass++)
       {
-        double tx=0, ty=0, tz=0;
+        vtkm::Float64 tx=0, ty=0, tz=0;
         switch (axis)
         {
           case 0: if (pass==0) ty=maj_size; else tz=maj_size; break;
@@ -153,20 +153,20 @@ public:
         tx *= invertx;
         ty *= inverty;
         tz *= invertz;
-        double xs = xc - tx*maj_toff;
-        double xe = xc + tx*(1. - maj_toff);
-        double ys = yc - ty*maj_toff;
-        double ye = yc + ty*(1. - maj_toff);
-        double zs = zc - tz*maj_toff;
-        double ze = zc + tz*(1. - maj_toff);
+        vtkm::Float64 xs = xc - tx*maj_toff;
+        vtkm::Float64 xe = xc + tx*(1. - maj_toff);
+        vtkm::Float64 ys = yc - ty*maj_toff;
+        vtkm::Float64 ye = yc + ty*(1. - maj_toff);
+        vtkm::Float64 zs = zc - tz*maj_toff;
+        vtkm::Float64 ze = zc + tz*(1. - maj_toff);
 
         worldannotator.AddLine(xs,ys,zs,
                                 xe,ye,ze,
                                 linewidth, color, infront);
       }
 
-      double tx=0, ty=0, tz=0;
-      const double s = 0.4;
+      vtkm::Float64 tx=0, ty=0, tz=0;
+      const vtkm::Float64 s = 0.4;
       switch (axis)
       {
         case 0: ty=s*fontscale; tz=s*fontscale; break;
@@ -194,12 +194,12 @@ public:
     unsigned int nminor = (unsigned int)proportions.size();
     for (unsigned int i=0; i<nminor; ++i)
     {
-      double xc = x0 + (x1-x0) * proportions[i];
-      double yc = y0 + (y1-y0) * proportions[i];
-      double zc = z0 + (z1-z0) * proportions[i];
+      vtkm::Float64 xc = x0 + (x1-x0) * proportions[i];
+      vtkm::Float64 yc = y0 + (y1-y0) * proportions[i];
+      vtkm::Float64 zc = z0 + (z1-z0) * proportions[i];
       for (int pass=0; pass<=1; pass++)
       {
-        double tx=0, ty=0, tz=0;
+        vtkm::Float64 tx=0, ty=0, tz=0;
         switch (axis)
         {
           case 0: if (pass==0) ty=min_size; else tz=min_size; break;
@@ -209,12 +209,12 @@ public:
         tx *= invertx;
         ty *= inverty;
         tz *= invertz;
-        double xs = xc - tx*min_toff;
-        double xe = xc + tx*(1. - min_toff);
-        double ys = yc - ty*min_toff;
-        double ye = yc + ty*(1. - min_toff);
-        double zs = zc - tz*min_toff;
-        double ze = zc + tz*(1. - min_toff);
+        vtkm::Float64 xs = xc - tx*min_toff;
+        vtkm::Float64 xe = xc + tx*(1. - min_toff);
+        vtkm::Float64 ys = yc - ty*min_toff;
+        vtkm::Float64 ye = yc + ty*(1. - min_toff);
+        vtkm::Float64 zs = zc - tz*min_toff;
+        vtkm::Float64 ze = zc + tz*(1. - min_toff);
 
         worldannotator.AddLine(xs,ys,zs,
                                xe,ye,ze,

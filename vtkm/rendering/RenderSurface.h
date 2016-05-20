@@ -62,12 +62,12 @@ public:
     VTKM_CONT_EXPORT
     virtual void SaveAs(const std::string &) {}
 
-    virtual void AddLine(double, double,
-                         double, double,
-                         float,
-                         vtkm::rendering::Color) {}
-    virtual void AddColorBar(float, float,
-                             float, float,
+    virtual void AddLine(vtkm::Float64, vtkm::Float64,
+                         vtkm::Float64, vtkm::Float64,
+                         vtkm::Float32,
+                         const vtkm::rendering::Color &) {}
+    virtual void AddColorBar(vtkm::Float32, vtkm::Float32,
+                             vtkm::Float32, vtkm::Float32, 
                              const vtkm::rendering::ColorTable &,
                              bool) {}
 
