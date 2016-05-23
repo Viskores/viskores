@@ -27,6 +27,7 @@
 #include <vtkm/rendering/BitmapFont.h>
 #include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/TextureGL.h>
+#include <vtkm/rendering/MatrixHelpers.h>
 
 #include <GL/gl.h>
 #include <iostream>
@@ -65,10 +66,10 @@ public:
     {
         vtkm::Float32 oglP[16], oglM[16];
 
-        CreateOGLMatrix(v.CreateProjectionMatrix(), oglP);
+        MatrixHelpers::CreateOGLMatrix(v.CreateProjectionMatrix(), oglP);
         glMatrixMode(GL_PROJECTION);
         glLoadMatrixf(oglP);
-        CreateOGLMatrix(v.CreateViewMatrix(), oglM);
+        MatrixHelpers::CreateOGLMatrix(v.CreateViewMatrix(), oglM);
         glMatrixMode(GL_MODELVIEW);
         glLoadMatrixf(oglM);
 
@@ -119,28 +120,6 @@ public:
         {
             glViewport(0,0, v.Width, v.Height);
         }
-    }
-
-    VTKM_CONT_EXPORT
-    void CreateOGLMatrix(const vtkm::Matrix<vtkm::Float32,4,4> &mtx,
-                         vtkm::Float32 *oglM)
-    {
-        oglM[ 0] = mtx[0][0];
-        oglM[ 1] = mtx[1][0];
-        oglM[ 2] = mtx[2][0];
-        oglM[ 3] = mtx[3][0];
-        oglM[ 4] = mtx[0][1];
-        oglM[ 5] = mtx[1][1];
-        oglM[ 6] = mtx[2][1];
-        oglM[ 7] = mtx[3][1];
-        oglM[ 8] = mtx[0][2];
-        oglM[ 9] = mtx[1][2];
-        oglM[10] = mtx[2][2];
-        oglM[11] = mtx[3][2];
-        oglM[12] = mtx[0][3];
-        oglM[13] = mtx[1][3];
-        oglM[14] = mtx[2][3];
-        oglM[15] = mtx[3][3];
     }
 
     VTKM_CONT_EXPORT
@@ -250,7 +229,9 @@ private:
   BitmapFont font;
   TextureGL fontTexture;
 
-  void RenderText(float scale, float anchorx, float anchory, std::string text)
+  void RenderText(vtkm::Float32 scale,
+                  vtkm::Float32 anchorx, vtkm::Float32 anchory,
+                  std::string text)
   {
     if (fontTexture.id == 0)
     {

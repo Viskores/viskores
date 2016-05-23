@@ -22,6 +22,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/VectorAnalysis.h>
+#include <vtkm/rendering/MatrixHelpers.h>
 
 namespace vtkm {
 namespace rendering {
@@ -38,7 +39,7 @@ class View
     VTKM_CONT_EXPORT
     vtkm::Matrix<vtkm::Float32,4,4> CreateViewMatrix()
     {
-      return View::ViewMatrix(this->Position, this->LookAt, this->Up);
+      return MatrixHelpers::ViewMatrix(this->Position, this->LookAt, this->Up);
     }
 
     VTKM_CONT_EXPORT
@@ -69,8 +70,8 @@ class View
       matrix(3,3) = 0.f;
 
       vtkm::Matrix<vtkm::Float32,4,4> T, Z;
-      T = View::TranslateMatrix(this->XPan, this->YPan, 0);
-      Z = View::ScaleMatrix(this->Zoom, this->Zoom, 1);
+      T = MatrixHelpers::TranslateMatrix(this->XPan, this->YPan, 0);
+      Z = MatrixHelpers::ScaleMatrix(this->Zoom, this->Zoom, 1);
       matrix = vtkm::MatrixMultiply(Z, vtkm::MatrixMultiply(T, matrix));
       return matrix;
     }
@@ -101,7 +102,7 @@ class View
       vtkm::Vec<vtkm::Float32,3> position = lookAt;
       position[2] = 1.f;
       vtkm::Vec<vtkm::Float32,3> up(0,1,0);
-      return View::ViewMatrix(position, lookAt, up);
+      return MatrixHelpers::ViewMatrix(position, lookAt, up);
     }
 
     VTKM_CONT_EXPORT
@@ -132,144 +133,6 @@ class View
     vtkm::Float32 Bottom;
     vtkm::Float32 XScale;
   };
-
-private:
-  static VTKM_CONT_EXPORT
-  vtkm::Matrix<vtkm::Float32,4,4> ViewMatrix(const vtkm::Vec<vtkm::Float32,3> &position,
-                                             const vtkm::Vec<vtkm::Float32,3> &lookAt,
-                                             const vtkm::Vec<vtkm::Float32,3> &up)
-  {
-    vtkm::Vec<vtkm::Float32,3> viewDir = position-lookAt;
-    vtkm::Vec<vtkm::Float32,3> right = vtkm::Cross(up,viewDir);
-    vtkm::Vec<vtkm::Float32,3> ru = vtkm::Cross(viewDir,right);
-
-    vtkm::Normalize(viewDir);
-    vtkm::Normalize(right);
-    vtkm::Normalize(ru);
-
-    vtkm::Matrix<vtkm::Float32,4,4> matrix;
-    vtkm::MatrixIdentity(matrix);
-
-    matrix(0,0) = right[0];
-    matrix(0,1) = right[1];
-    matrix(0,2) = right[2];
-    matrix(1,0) = ru[0];
-    matrix(1,1) = ru[1];
-    matrix(1,2) = ru[2];
-    matrix(2,0) = viewDir[0];
-    matrix(2,1) = viewDir[1];
-    matrix(2,2) = viewDir[2];
-
-    matrix(0,3) = -vtkm::dot(right,position);
-    matrix(1,3) = -vtkm::dot(ru,position);
-    matrix(2,3) = -vtkm::dot(viewDir,position);
-
-    return matrix;
-  }
-
-  static VTKM_CONT_EXPORT
-  vtkm::Matrix<vtkm::Float32,4,4> ScaleMatrix(const vtkm::Vec<vtkm::Float32,3> &v)
-  {
-    return ScaleMatrix(v[0], v[1], v[2]);
-  }
-  static VTKM_CONT_EXPORT
-  vtkm::Matrix<vtkm::Float32,4,4> ScaleMatrix(const vtkm::Float32 &s)
-  {
-    return ScaleMatrix(s,s,s);
-  }
-
-  static VTKM_CONT_EXPORT
-  vtkm::Matrix<vtkm::Float32,4,4> ScaleMatrix(const vtkm::Float32 &x,
-                                              const vtkm::Float32 &y,
-                                              const vtkm::Float32 &z)
-  {
-    vtkm::Matrix<vtkm::Float32,4,4> scaleMatrix(0.0f);
-    scaleMatrix(0,0) = x;
-    scaleMatrix(1,1) = y;
-    scaleMatrix(2,2) = z;
-    scaleMatrix(3,3) = 1.0f;
-    return scaleMatrix;
-  }
-
-  static VTKM_CONT_EXPORT
-  vtkm::Matrix<vtkm::Float32,4,4> TranslateMatrix(const vtkm::Vec<vtkm::Float32,3> &v)
-  {
-    return TranslateMatrix(v[0], v[1], v[2]);
-  }
-
-  static VTKM_CONT_EXPORT
-  vtkm::Matrix<vtkm::Float32,4,4> TranslateMatrix(const vtkm::Float32 &x,
-                                                  const vtkm::Float32 &y,
-                                                  const vtkm::Float32 &z)
-  {
-    vtkm::Matrix<vtkm::Float32,4,4> translateMatrix;
-    vtkm::MatrixIdentity(translateMatrix);
-    translateMatrix(0,3) = x;
-    translateMatrix(1,3) = y;
-    translateMatrix(2,3) = z;
-    return translateMatrix;
-  }
-
-  VTKM_CONT_EXPORT
-  vtkm::Matrix<vtkm::Float32,4,4>
-  CreateTrackball(vtkm::Float32 p1x, vtkm::Float32 p1y, vtkm::Float32 p2x, vtkm::Float32 p2y)
-  {
-    const vtkm::Float32 RADIUS = 0.80f; //z value lookAt x = y = 0.0
-    const vtkm::Float32 COMPRESSION = 3.5f; // multipliers for x and y.
-    const vtkm::Float32 AR3 = RADIUS*RADIUS*RADIUS;
-
-    vtkm::Matrix<vtkm::Float32,4,4> matrix;
-
-    vtkm::MatrixIdentity(matrix);
-    if (p1x==p2x && p1y==p2y) { return matrix; }
-
-    vtkm::Vec<vtkm::Float32, 3> p1(p1x,p1y, AR3/((p1x*p1x+p1y*p1y)*COMPRESSION+AR3));
-    vtkm::Vec<vtkm::Float32, 3> p2(p2x,p2y, AR3/((p2x*p2x+p2y*p2y)*COMPRESSION+AR3));
-    vtkm::Vec<vtkm::Float32, 3> axis = vtkm::Normal(vtkm::Cross(p2,p1));
-    //std::cout<<"Axis: "<<axis[0]<<" "<<axis[1]<<" "<<axis[2]<<std::endl;
-
-    vtkm::Vec<vtkm::Float32, 3> p2_p1(p2[0]-p1[0], p2[1]-p1[1], p2[2]-p1[2]);
-    vtkm::Float32 t = vtkm::Magnitude(p2_p1);
-    t = vtkm::Min(vtkm::Max(t, -1.0f), 1.0f);
-    vtkm::Float32 phi = static_cast<vtkm::Float32>(-2.0f*asin(t/(2.0f*RADIUS)));
-    vtkm::Float32 val = static_cast<vtkm::Float32>(sin(phi/2.0f));
-    axis[0] *= val;
-    axis[1] *= val;
-    axis[2] *= val;
-
-    //quaternion
-    vtkm::Float32 q[4] = {axis[0], axis[1], axis[2], static_cast<vtkm::Float32>(cos(phi/2.0f))};
-
-    // normalize quaternion to unit magnitude
-    t =  1.0f / static_cast<vtkm::Float32>(sqrt(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]));
-    q[0] *= t;
-    q[1] *= t;
-    q[2] *= t;
-    q[3] *= t;
-
-    /*
-    std::cout<<"P1: "<<p1[0]<<" "<<p1[1]<<" "<<p1[2]<<std::endl;
-    std::cout<<"P2: "<<p2[0]<<" "<<p2[1]<<" "<<p2[2]<<std::endl;
-    std::cout<<"T= "<<t<<std::endl;
-    std::cout<<"PHI= "<<phi<<std::endl;
-    std::cout<<"QUAT: "<<q[0]<<" "<<q[1]<<" "<<q[2]<<" "<<q[3]<<std::endl;
-    */
-
-    matrix(0,0) = 1 - 2 * (q[1]*q[1] + q[2]*q[2]);
-    matrix(0,1) = 2 * (q[0]*q[1] + q[2]*q[3]);
-    matrix(0,2) = (2 * (q[2]*q[0] - q[1]*q[3]) );
-
-    matrix(1,0) = 2 * (q[0]*q[1] - q[2]*q[3]);
-    matrix(1,1) = 1 - 2 * (q[2]*q[2] + q[0]*q[0]);
-    matrix(1,2) = (2 * (q[1]*q[2] + q[0]*q[3]) );
-
-    matrix(2,0) = (2 * (q[2]*q[0] + q[1]*q[3]) );
-    matrix(2,1) = (2 * (q[1]*q[2] - q[0]*q[3]) );
-    matrix(2,2) = (1 - 2 * (q[1]*q[1] + q[0]*q[0]) );
-
-    return matrix;
-  }
-
 
 public:
   enum ViewTypeEnum { VIEW_2D, VIEW_3D };
@@ -432,17 +295,17 @@ public:
     printVec("up", view3d.up);
     std::cout<<"*****************************************************************"<<std::endl;
     */
-    vtkm::Matrix<vtkm::Float32,4,4> R1 = CreateTrackball(x1,y1, x2,y2);
+    vtkm::Matrix<vtkm::Float32,4,4> R1 = MatrixHelpers::TrackballMatrix(x1,y1, x2,y2);
 
     //Translate matrix
-    vtkm::Matrix<vtkm::Float32,4,4> T1 = View::TranslateMatrix(-this->View3d.LookAt);
+    vtkm::Matrix<vtkm::Float32,4,4> T1 = MatrixHelpers::TranslateMatrix(-this->View3d.LookAt);
     //vtkm::MatrixIdentity(T1);
     //T1(0,3) = -view3d.lookAt[0];
     //T1(1,3) = -view3d.lookAt[1];
     //T1(2,3) = -view3d.lookAt[2];
 
     //Translate matrix
-    vtkm::Matrix<vtkm::Float32,4,4> T2 = View::TranslateMatrix(this->View3d.LookAt);
+    vtkm::Matrix<vtkm::Float32,4,4> T2 = MatrixHelpers::TranslateMatrix(this->View3d.LookAt);
     //T2(0,3) = view3d.lookAt[0];
     //T2(1,3) = view3d.lookAt[1];
     //T2(2,3) = view3d.lookAt[2];

@@ -37,6 +37,13 @@ public:
                        vtkm::Float32,
                        const vtkm::rendering::Color &,
                        bool=false) {}
+  virtual void AddText(vtkm::Float32, vtkm::Float32, vtkm::Float32,
+                       vtkm::Float32, vtkm::Float32, vtkm::Float32,
+                       vtkm::Float32, vtkm::Float32, vtkm::Float32,
+                       vtkm::Float32,
+                       vtkm::Float32, vtkm::Float32,
+                       Color,
+                       std::string) {}
 };
 
 }} //namespace vtkm::rendering

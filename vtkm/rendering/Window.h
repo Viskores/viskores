@@ -151,8 +151,16 @@ public:
         bbox.SetExtents(scene.GetSpatialBounds());
         bbox.Render(this->view, this->worldAnnotator);
 
-        ///\todo: set x/y/ztest based on view
-        bool xtest=true, ytest=false, ztest=false;
+        bool xtest = this->view.View3d.LookAt[0] > this->view.View3d.Position[0];
+        bool ytest = this->view.View3d.LookAt[1] > this->view.View3d.Position[1];
+        bool ztest = this->view.View3d.LookAt[2] > this->view.View3d.Position[2];
+
+        const bool outsideedges = true; // if false, do closesttriad
+        if (outsideedges)
+        {
+            xtest = !xtest;
+            //ytest = !ytest;
+        }
 
         vtkm::Float64 xrel = vtkm::Abs(dx) / size;
         vtkm::Float64 yrel = vtkm::Abs(dy) / size;
@@ -170,11 +178,11 @@ public:
         xaxis.SetRange(xmin, xmax);
         xaxis.SetMajorTickSize(size / 40.f, 0);
         xaxis.SetMinorTickSize(size / 80.f, 0);
-        xaxis.SetLabelFontScale(size / 30.);
+        xaxis.SetLabelFontOffset(vtkm::Float32(size / 15.f));
         xaxis.SetMoreOrLessTickAdjustment(xrel < .3 ? -1 : 0);
-        xaxis.Render(this->view, this->worldAnnotator);
+        xaxis.Render(this->view, this->worldAnnotator, this->surface);
 
-        yaxis.SetAxis(0);
+        yaxis.SetAxis(1);
         yaxis.SetColor(Color(1,1,1));
         yaxis.SetTickInvert(xtest,ytest,ztest);
         yaxis.SetWorldPosition(xtest ? xmin : xmax,
@@ -186,11 +194,11 @@ public:
         yaxis.SetRange(ymin, ymax);
         yaxis.SetMajorTickSize(size / 40.f, 0);
         yaxis.SetMinorTickSize(size / 80.f, 0);
-        yaxis.SetLabelFontScale(size / 30.);
+        yaxis.SetLabelFontOffset(vtkm::Float32(size / 15.f));
         yaxis.SetMoreOrLessTickAdjustment(yrel < .3 ? -1 : 0);
-        yaxis.Render(this->view, this->worldAnnotator);
+        yaxis.Render(this->view, this->worldAnnotator, this->surface);
 
-        zaxis.SetAxis(0);
+        zaxis.SetAxis(2);
         zaxis.SetColor(Color(1,1,1));
         zaxis.SetTickInvert(xtest,ytest,ztest);
         zaxis.SetWorldPosition(xtest ? xmin : xmax,
@@ -202,9 +210,9 @@ public:
         zaxis.SetRange(zmin, zmax);
         zaxis.SetMajorTickSize(size / 40.f, 0);
         zaxis.SetMinorTickSize(size / 80.f, 0);
-        zaxis.SetLabelFontScale(size / 30.);
+        zaxis.SetLabelFontOffset(vtkm::Float32(size / 15.f));
         zaxis.SetMoreOrLessTickAdjustment(zrel < .3 ? -1 : 0);
-        zaxis.Render(this->view, this->worldAnnotator);
+        zaxis.Render(this->view, this->worldAnnotator, this->surface);
     }
 };
 
