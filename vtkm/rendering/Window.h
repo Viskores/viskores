@@ -278,10 +278,6 @@ public:
             colorbar.SetColorTable(scene.plots[0].colorTable);
             colorbar.Render(this->view, this->worldAnnotator, this->surface);
         }
-
-        ScreenTextAnnotation st("hello", Color(1,1,1), 0.1, 0,0,0);
-        st.SetAlignment(TextAnnotation::Left, TextAnnotation::Top);
-        st.Render(this->view, this->worldAnnotator, this->surface);
     }
 };
 

@@ -247,14 +247,14 @@ public:
   }
 
 private:
+  BitmapFont font;
+  TextureGL fontTexture;
+
   void RenderText(float scale, float anchorx, float anchory, std::string text)
   {
-    std::cerr << "Doing RenderText ("<<text<<")\n";
-    static BitmapFont font = BitmapFontFactory::CreateLiberation2Sans();
-    static TextureGL tex;
-    std::cerr << "tex.id="<<tex.id<<"\n";
-    if (tex.id == 0)
+    if (fontTexture.id == 0)
     {
+      font = BitmapFontFactory::CreateLiberation2Sans();
       std::vector<unsigned char> &rawpngdata = font.GetRawImageData();
 
       std::vector<unsigned char> rgba;
@@ -266,11 +266,11 @@ private:
         return;
       }
 
-      tex.CreateAlphaFromRGBA(int(width),int(height),rgba);
+      fontTexture.CreateAlphaFromRGBA(int(width),int(height),rgba);
     }
 
 
-    tex.Enable();
+    fontTexture.Enable();
 
     glDepthMask(GL_FALSE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -312,7 +312,7 @@ private:
 
     glEnd();
 
-    tex.Disable();
+    fontTexture.Disable();
 
     //glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 0);
     glDepthMask(GL_TRUE);

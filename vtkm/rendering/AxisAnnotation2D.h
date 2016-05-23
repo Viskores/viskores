@@ -199,7 +199,8 @@ public:
       labels[i]->SetText(val);
       //if (fabs(maj_positions[i]) < 1e-10)
       //    labels[i]->SetText("0");
-      ((ScreenTextAnnotation*)(labels[i]))->SetPosition(xs,ys);
+      ((ScreenTextAnnotation*)(labels[i]))->SetPosition(vtkm::Float32(xs),
+                                                        vtkm::Float32(ys));
 
       labels[i]->SetAlignment(halign,valign);
     }
@@ -221,11 +222,9 @@ public:
       }
     }
 
-    for (int i=0; i<nmajor; ++i)
+    for (unsigned int i=0; i<nmajor; ++i)
     {
       labels[i]->Render(view, worldAnnotator, renderSurface);
-      ///\todo: REMOVE THIS BREAK
-      break;
     }
   }
 };
