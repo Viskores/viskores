@@ -129,7 +129,6 @@ public:
     vtkm::Float32 WindowAspect = vtkm::Float32(view.Width) /
       vtkm::Float32(view.Height);
 
-    //win->SetupForScreenSpace();
     renderSurface.AddText(x,y,
                           scale,
                           angle,

@@ -286,29 +286,13 @@ public:
   VTKM_CONT_EXPORT
   void TrackballRotate(vtkm::Float32 x1, vtkm::Float32 y1, vtkm::Float32 x2, vtkm::Float32 y2)
   {
-    /*
-    std::cout<<std::endl;
-    std::cout<<"*****************************************************************"<<std::endl;
-    std::cout<<x1<<" "<<y1<<" --> "<<x2<<" "<<y2<<std::endl;
-    printVec("position", view3d.Position);
-    printVec("lookAt", view3d.lookAt);
-    printVec("up", view3d.up);
-    std::cout<<"*****************************************************************"<<std::endl;
-    */
     vtkm::Matrix<vtkm::Float32,4,4> R1 = MatrixHelpers::TrackballMatrix(x1,y1, x2,y2);
 
     //Translate matrix
     vtkm::Matrix<vtkm::Float32,4,4> T1 = MatrixHelpers::TranslateMatrix(-this->View3d.LookAt);
-    //vtkm::MatrixIdentity(T1);
-    //T1(0,3) = -view3d.lookAt[0];
-    //T1(1,3) = -view3d.lookAt[1];
-    //T1(2,3) = -view3d.lookAt[2];
 
     //Translate matrix
     vtkm::Matrix<vtkm::Float32,4,4> T2 = MatrixHelpers::TranslateMatrix(this->View3d.LookAt);
-    //T2(0,3) = view3d.lookAt[0];
-    //T2(1,3) = view3d.lookAt[1];
-    //T2(2,3) = view3d.lookAt[2];
 
     vtkm::Matrix<vtkm::Float32,4,4> V1 = this->CreateViewMatrix();
     V1(0,3) = 0;
@@ -326,18 +310,6 @@ public:
     this->View3d.Position = MultVector(MM, this->View3d.Position);
     this->View3d.LookAt = MultVector(MM, this->View3d.LookAt);
     this->View3d.Up = MultVector(MM, this->View3d.Up);
-
-    /*
-    printMtx("T1", T1);
-    printMtx("T2", T2);
-    printMtx("V1", V1);
-    printMtx("V2", V2);
-    printMtx("R1", R1);
-    printMtx("MM", MM);
-    printVec("position", this->View3d.Position);
-    printVec("lookAt", this->View3d.LookAt);
-    printVec("up", this->View3d.Up);
-    */
   }
 };
 

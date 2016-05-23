@@ -239,7 +239,6 @@ struct MatrixHelpers
     vtkm::Vec<vtkm::Float32, 3> p1(p1x,p1y, AR3/((p1x*p1x+p1y*p1y)*COMPRESSION+AR3));
     vtkm::Vec<vtkm::Float32, 3> p2(p2x,p2y, AR3/((p2x*p2x+p2y*p2y)*COMPRESSION+AR3));
     vtkm::Vec<vtkm::Float32, 3> axis = vtkm::Normal(vtkm::Cross(p2,p1));
-    //std::cout<<"Axis: "<<axis[0]<<" "<<axis[1]<<" "<<axis[2]<<std::endl;
 
     vtkm::Vec<vtkm::Float32, 3> p2_p1(p2[0]-p1[0], p2[1]-p1[1], p2[2]-p1[2]);
     vtkm::Float32 t = vtkm::Magnitude(p2_p1);
@@ -259,14 +258,6 @@ struct MatrixHelpers
     q[1] *= t;
     q[2] *= t;
     q[3] *= t;
-
-    /*
-    std::cout<<"P1: "<<p1[0]<<" "<<p1[1]<<" "<<p1[2]<<std::endl;
-    std::cout<<"P2: "<<p2[0]<<" "<<p2[1]<<" "<<p2[2]<<std::endl;
-    std::cout<<"T= "<<t<<std::endl;
-    std::cout<<"PHI= "<<phi<<std::endl;
-    std::cout<<"QUAT: "<<q[0]<<" "<<q[1]<<" "<<q[2]<<" "<<q[3]<<std::endl;
-    */
 
     matrix(0,0) = 1 - 2 * (q[1]*q[1] + q[2]*q[2]);
     matrix(0,1) = 2 * (q[0]*q[1] + q[2]*q[3]);
