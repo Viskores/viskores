@@ -139,10 +139,10 @@ public:
     if (this->Scene.Plots.size() > 0)
     {
       //this->ColorBarAnnotation.SetAxisColor(eavlColor::white);
-      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].scalarBounds[0],
-                                        this->Scene.Plots[0].scalarBounds[1],
+      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].ScalarBounds[0],
+                                        this->Scene.Plots[0].ScalarBounds[1],
                                         5);
-      this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].colorTable);
+      this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].ColorTable);
       this->ColorBarAnnotation.Render(this->View, this->WorldAnnotator, this->Surface);
     }
   }
@@ -299,10 +299,10 @@ public:
     if (this->Scene.Plots.size() > 0)
     {
       //this->ColorBarAnnotation.SetAxisColor(eavlColor::white);
-      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].scalarBounds[0],
-                                        this->Scene.Plots[0].scalarBounds[1],
+      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].ScalarBounds[0],
+                                        this->Scene.Plots[0].ScalarBounds[1],
                                         5);
-      this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].colorTable);
+      this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].ColorTable);
       this->ColorBarAnnotation.Render(
             this->View, this->WorldAnnotator, this->Surface);
     }

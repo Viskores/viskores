@@ -53,12 +53,12 @@ public:
       this->Plots[i].Render(sceneRenderer, surface, view);
 
       // accumulate all Plots' spatial bounds into the scene spatial bounds
-      this->SpatialBounds[0] = vtkm::Min(this->SpatialBounds[0], this->Plots[i].spatialBounds[0]);
-      this->SpatialBounds[1] = vtkm::Max(this->SpatialBounds[1], this->Plots[i].spatialBounds[1]);
-      this->SpatialBounds[2] = vtkm::Min(this->SpatialBounds[2], this->Plots[i].spatialBounds[2]);
-      this->SpatialBounds[3] = vtkm::Max(this->SpatialBounds[3], this->Plots[i].spatialBounds[3]);
-      this->SpatialBounds[4] = vtkm::Min(this->SpatialBounds[4], this->Plots[i].spatialBounds[4]);
-      this->SpatialBounds[5] = vtkm::Max(this->SpatialBounds[5], this->Plots[i].spatialBounds[5]);
+      this->SpatialBounds[0] = vtkm::Min(this->SpatialBounds[0], this->Plots[i].SpatialBounds[0]);
+      this->SpatialBounds[1] = vtkm::Max(this->SpatialBounds[1], this->Plots[i].SpatialBounds[1]);
+      this->SpatialBounds[2] = vtkm::Min(this->SpatialBounds[2], this->Plots[i].SpatialBounds[2]);
+      this->SpatialBounds[3] = vtkm::Max(this->SpatialBounds[3], this->Plots[i].SpatialBounds[3]);
+      this->SpatialBounds[4] = vtkm::Min(this->SpatialBounds[4], this->Plots[i].SpatialBounds[4]);
+      this->SpatialBounds[5] = vtkm::Max(this->SpatialBounds[5], this->Plots[i].SpatialBounds[5]);
     }
     sceneRenderer.EndScene();
   }
