@@ -32,6 +32,9 @@ class BitmapFontFactory
 public:
   static BitmapFont CreateLiberation2Sans()
   {
+    // This bitmap font was generated from Liberation Sans 2.0
+    // available under the OFL (SIL Open Font License).
+
     const int Liberation2Sans_charmetrics[][8] = {
     {32,-16,14,1,84,32,28,31},
     {33,-7,91,34,7,44,105,29},
