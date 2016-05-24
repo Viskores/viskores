@@ -136,11 +136,13 @@ public:
   VTKM_CONT_EXPORT
   virtual void RenderScreenAnnotations()
   {
-    if (this->Scene.plots.size() > 0)
+    if (this->Scene.Plots.size() > 0)
     {
       //this->ColorBarAnnotation.SetAxisColor(eavlColor::white);
-      this->ColorBarAnnotation.SetRange(this->Scene.plots[0].scalarBounds[0], this->Scene.plots[0].scalarBounds[1], 5);
-      this->ColorBarAnnotation.SetColorTable(this->Scene.plots[0].colorTable);
+      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].scalarBounds[0],
+                                        this->Scene.Plots[0].scalarBounds[1],
+                                        5);
+      this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].colorTable);
       this->ColorBarAnnotation.Render(this->View, this->WorldAnnotator, this->Surface);
     }
   }
@@ -294,13 +296,13 @@ public:
     this->VerticalAxisAnnotation.Render(
           this->View, this->WorldAnnotator, this->Surface);
 
-    if (this->Scene.plots.size() > 0)
+    if (this->Scene.Plots.size() > 0)
     {
       //this->ColorBarAnnotation.SetAxisColor(eavlColor::white);
-      this->ColorBarAnnotation.SetRange(this->Scene.plots[0].scalarBounds[0],
-                                        this->Scene.plots[0].scalarBounds[1],
+      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].scalarBounds[0],
+                                        this->Scene.Plots[0].scalarBounds[1],
                                         5);
-      this->ColorBarAnnotation.SetColorTable(this->Scene.plots[0].colorTable);
+      this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].colorTable);
       this->ColorBarAnnotation.Render(
             this->View, this->WorldAnnotator, this->Surface);
     }

@@ -116,7 +116,7 @@ void Render3D(const vtkm::cont::DataSet &ds,
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceOSMesa surface(W,H,bg);
 
-    scene.plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
+    scene.Plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
                                                 ds.GetCoordinateSystem(),
                                                 ds.GetField(fieldNm),
                                                 vtkm::rendering::ColorTable(ctName)));
@@ -148,7 +148,7 @@ void Render2D(const vtkm::cont::DataSet &ds,
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceOSMesa surface(W,H,bg);
 
-    scene.plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
+    scene.Plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
                                                 ds.GetCoordinateSystem(),
                                                 ds.GetField(fieldNm),
                                                 vtkm::rendering::ColorTable(ctName)));
