@@ -73,7 +73,7 @@ public:
   class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(TopologyIn topology,
+    typedef void ControlSignature(CellSetIn cellset,
                                   FieldOutCell<> connectivityOut);
     typedef void ExecutionSignature(PointIndices, _2, ThreadIndices);
     typedef _1 InputDomain;

@@ -42,7 +42,7 @@ public:
   class ThresholdByPointField : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(TopologyIn topology,
+    typedef void ControlSignature(CellSetIn cellset,
                                   FieldInPoint<Scalar> scalars,
                                   FieldOutCell<BoolType> passFlags);
 
@@ -76,7 +76,7 @@ public:
   class ThresholdByCellField : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(TopologyIn topology,
+    typedef void ControlSignature(CellSetIn cellset,
                                   FieldInTo<Scalar> scalars,
                                   FieldOut<BoolType> passFlags);
 

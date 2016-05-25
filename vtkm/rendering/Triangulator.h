@@ -92,7 +92,7 @@ public:
   private:
     Vec4ArrayPortalType OutputIndices;
   public:
-    typedef void ControlSignature(TopologyIn topology,
+    typedef void ControlSignature(CellSetIn cellset,
                                   FieldInTo<>);
     typedef void ExecutionSignature(FromIndices, _2);
     //typedef _1 InputDomain;

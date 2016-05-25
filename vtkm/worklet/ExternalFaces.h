@@ -168,7 +168,7 @@ struct ExternalFaces
   {
   public:
     typedef void ControlSignature(FieldInTo<AllTypes> localFaceIds,
-                                  TopologyIn topology,
+                                  CellSetIn cellset,
                                   FieldOut<VecCommon> faceVertices
                                   );
     typedef void ExecutionSignature(_1, _3, CellShape, FromIndices);

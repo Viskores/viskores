@@ -29,15 +29,15 @@
 #include <vtkm/cont/arg/TransportTagArrayIn.h>
 #include <vtkm/cont/arg/TransportTagArrayInOut.h>
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
-#include <vtkm/cont/arg/TransportTagTopologyIn.h>
+#include <vtkm/cont/arg/TransportTagCellSetIn.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
-#include <vtkm/cont/arg/TypeCheckTagTopology.h>
+#include <vtkm/cont/arg/TypeCheckTagCellSet.h>
 
 #include <vtkm/exec/arg/CellShape.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
-#include <vtkm/exec/arg/FetchTagTopologyIn.h>
+#include <vtkm/exec/arg/FetchTagCellSetIn.h>
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
 #include <vtkm/exec/arg/FromCount.h>
 #include <vtkm/exec/arg/FromIndices.h>
@@ -155,10 +155,10 @@ public:
 
   /// \brief A control signature tag for input connectivity.
   ///
-  struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopologyType,ToTopologyType> TransportTag;
-    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
+  struct CellSetIn : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagCellSet TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagCellSetIn<FromTopologyType,ToTopologyType> TransportTag;
+    typedef vtkm::exec::arg::FetchTagCellSetIn FetchTag;
   };
 
 };
@@ -173,10 +173,10 @@ public:
 
   /// \brief A control signature tag for input connectivity.
   ///
-  struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopologyType,ToTopologyType> TransportTag;
-    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
+  struct CellSetIn : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagCellSet TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagCellSetIn<FromTopologyType,ToTopologyType> TransportTag;
+    typedef vtkm::exec::arg::FetchTagCellSetIn FetchTag;
   };
 
   //While we would love to use templates, that feature is not possible
@@ -210,10 +210,10 @@ public:
 
   /// \brief A control signature tag for input connectivity.
   ///
-  struct TopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagTopology TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagTopologyIn<FromTopologyType,ToTopologyType> TransportTag;
-    typedef vtkm::exec::arg::FetchTagTopologyIn FetchTag;
+  struct CellSetIn : vtkm::cont::arg::ControlSignatureTagBase {
+    typedef vtkm::cont::arg::TypeCheckTagCellSet TypeCheckTag;
+    typedef vtkm::cont::arg::TransportTagCellSetIn<FromTopologyType,ToTopologyType> TransportTag;
+    typedef vtkm::exec::arg::FetchTagCellSetIn FetchTag;
   };
 
   //While we would love to use templates, that feature is not possible
