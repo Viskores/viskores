@@ -21,9 +21,10 @@
 #define vtk_m_rendering_ColorBarAnnotation_h
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/rendering/AxisAnnotation2D.h>
 #include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/RenderSurface.h>
+#include <vtkm/rendering/View.h>
 
 
 namespace vtkm {

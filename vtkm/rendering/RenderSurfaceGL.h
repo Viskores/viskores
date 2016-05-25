@@ -24,8 +24,8 @@
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/RenderSurface.h>
+#include <vtkm/rendering/internal/OpenGLHeaders.h>
 
-#include <GL/gl.h>
 #include <iostream>
 #include <fstream>
 
@@ -178,8 +178,8 @@ public:
         glEnd();
     }
 
-    virtual void AddColorBar(vtkm::Float32 x, vtkm::Float32 y, 
-                             vtkm::Float32 w, vtkm::Float32 h,                             
+    virtual void AddColorBar(vtkm::Float32 x, vtkm::Float32 y,
+                             vtkm::Float32 w, vtkm::Float32 h,
                              const vtkm::rendering::ColorTable &ct,
                              bool horizontal)
     {

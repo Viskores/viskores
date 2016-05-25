@@ -6,9 +6,9 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
-##  Copyright 2014 Sandia Corporation.
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
+##  Copyright 2016 Sandia Corporation.
+##  Copyright 2016 UT-Battelle, LLC.
+##  Copyright 2016 Los Alamos National Security.
 ##
 ##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 ##  the U.S. Government retains certain rights in this software.
@@ -19,26 +19,60 @@
 ##============================================================================
 
 set(headers
+  AxisAnnotation.h
+  AxisAnnotation2D.h
+  AxisAnnotation3D.h
+  BoundingBoxAnnotation.h
   Color.h
+  ColorBarAnnotation.h
   ColorTable.h
   Plot.h
   RenderSurface.h
-  RenderSurfaceOSMesa.h
-  RenderSurfaceGL.h
+  RenderSurfaceRayTracer.h
   Scene.h
   SceneRenderer.h
-  SceneRendererGL.h
   SceneRendererRayTracer.h
   SceneRendererVolume.h
   Triangulator.h
   View.h
   Window.h
+  WorldAnnotator.h
+  )
+
+set(opengl_headers
+  RenderSurfaceGL.h
+  SceneRendererGL.h
+  WorldAnnotatorGL.h
+  )
+
+set(glx_headers
+  RenderSurfaceGLX.h
+  )
+
+set(osmesa_headers
+  RenderSurfaceOSMesa.h
   )
 
 #-----------------------------------------------------------------------------
-find_package(MESA REQUIRED)
+if(OPENGL_FOUND)
+  set(headers ${headers} ${opengl_headers})
+
+  # Is there a better check for GLX?
+  if (UNIX AND NOT APPLE)
+    set(headers ${headers} ${glx_headers})
+
+    find_package(MESA)
+    if (OSMESA_FOUND)
+      set(headers ${headers} ${glx_headers})
+    endif()
+  endif()
+endif()
+
 vtkm_declare_headers(${headers})
+
+add_subdirectory(internal)
 add_subdirectory(raytracing)
+
 include_directories(${OSMESA_INCLUDE_DIR})
 
 

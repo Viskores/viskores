@@ -27,8 +27,8 @@
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Triangulator.h>
+#include <vtkm/rendering/internal/OpenGLHeaders.h>
 
-#include <GL/gl.h>
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
