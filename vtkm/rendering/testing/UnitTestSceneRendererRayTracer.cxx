@@ -75,7 +75,7 @@ void Render(const vtkm::cont::DataSet &ds,
     vtkm::rendering::Scene3D scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceRayTracer surface(W,H,bg);
-    scene.plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
+    scene.Plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
                                                 ds.GetCoordinateSystem(),
                                                 ds.GetField(fieldNm),
                                                 vtkm::rendering::ColorTable(ctName)));
