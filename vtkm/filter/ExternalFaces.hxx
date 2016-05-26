@@ -105,7 +105,7 @@ vtkm::filter::ResultDataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& 
   vtkm::cont::DataSet output;
   bool workletRan = false;
   ExternalFacesWorkletWrapper<DeviceAdapter> wrapper(output, workletRan);
-  vtkm::filter::ApplyPolicy(cells,policy).CastAndCall( wrapper );
+  vtkm::filter::ApplyPolicyUnstructured(cells,policy).CastAndCall( wrapper );
 
   if(!workletRan)
     {

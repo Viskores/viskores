@@ -108,11 +108,33 @@ ApplyPolicy(const vtkm::cont::CoordinateSystem& coordinates,
 //-----------------------------------------------------------------------------
 template<typename DerivedPolicy>
 VTKM_CONT_EXPORT
-vtkm::cont::DynamicCellSetBase< typename DerivedPolicy::CellSetList >
+vtkm::cont::DynamicCellSetBase< typename DerivedPolicy::AllCellSetList >
 ApplyPolicy(const vtkm::cont::DynamicCellSet& cellset,
             const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  typedef typename DerivedPolicy::CellSetList CellSetList;
+  typedef typename DerivedPolicy::AllCellSetList CellSetList;
+  return cellset.ResetCellSetList(CellSetList());
+}
+
+//-----------------------------------------------------------------------------
+template<typename DerivedPolicy>
+VTKM_CONT_EXPORT
+vtkm::cont::DynamicCellSetBase< typename DerivedPolicy::StructuredCellSetList >
+ApplyPolicyStructured(const vtkm::cont::DynamicCellSet& cellset,
+                      const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  typedef typename DerivedPolicy::StructuredCellSetList CellSetList;
+  return cellset.ResetCellSetList(CellSetList());
+}
+
+//-----------------------------------------------------------------------------
+template<typename DerivedPolicy>
+VTKM_CONT_EXPORT
+vtkm::cont::DynamicCellSetBase< typename DerivedPolicy::UnstructuredCellSetList >
+ApplyPolicyUnstructured(const vtkm::cont::DynamicCellSet& cellset,
+                        const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  typedef typename DerivedPolicy::UnstructuredCellSetList CellSetList;
   return cellset.ResetCellSetList(CellSetList());
 }
 
