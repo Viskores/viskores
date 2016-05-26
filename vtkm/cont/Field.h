@@ -37,198 +37,81 @@ namespace cont {
 
 namespace internal {
 
-template<vtkm::IdComponent NumberOfComponents>
-class InputToOutputTypeTransform
+struct BoundsMin
 {
-public:
-  typedef vtkm::Vec<vtkm::Float64, NumberOfComponents> ResultType;
-  typedef vtkm::Pair<ResultType, ResultType> MinMaxPairType;
-
-  template<typename ValueType>
-  VTKM_EXEC_EXPORT
-  MinMaxPairType operator()(const ValueType &value) const
-  {
-    ResultType input;
-    for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
-    {
-      input[i] = static_cast<vtkm::Float64>(
-          vtkm::VecTraits<ValueType>::GetComponent(value, i));
-    }
-    return make_Pair(input, input);
-  }
+  template<typename T>
+  T operator()(const T& a, const T& b)const { return vtkm::Min(a,b); }
 };
 
-template<vtkm::IdComponent NumberOfComponents>
-class MinMax
+struct BoundsMax
 {
-public:
-  typedef vtkm::Vec<vtkm::Float64, NumberOfComponents> ResultType;
-  typedef vtkm::Pair<ResultType, ResultType> MinMaxPairType;
-
-  VTKM_EXEC_EXPORT
-  MinMaxPairType operator()(const MinMaxPairType &v1, const MinMaxPairType &v2) const
-  {
-    MinMaxPairType result;
-    for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
-    {
-      result.first[i] = vtkm::Min(v1.first[i], v2.first[i]);
-      result.second[i] = vtkm::Max(v1.second[i], v2.second[i]);
-    }
-    return result;
-  }
-};
-
-enum
-{
-  MAX_NUMBER_OF_COMPONENTS = 10
-};
-
-template<vtkm::IdComponent NumberOfComponents, typename ComputeBoundsClass>
-class SelectNumberOfComponents
-{
-public:
-  template<typename TypeList, typename StorageList>
-  static void Execute(
-      vtkm::IdComponent components,
-      const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &data,
-      ArrayHandle<vtkm::Float64> &bounds)
-  {
-    if (components == NumberOfComponents)
-    {
-      ComputeBoundsClass::template CallBody<NumberOfComponents>(data, bounds);
-    }
-    else
-    {
-      SelectNumberOfComponents<NumberOfComponents+1,
-                               ComputeBoundsClass>::Execute(components,
-                                                            data,
-                                                            bounds);
-    }
-  }
-};
-
-template<typename ComputeBoundsClass>
-class SelectNumberOfComponents<MAX_NUMBER_OF_COMPONENTS, ComputeBoundsClass>
-{
-public:
-  template<typename TypeList, typename StorageList>
-  static void Execute(vtkm::IdComponent,
-                      const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &,
-                      ArrayHandle<vtkm::Float64>&)
-  {
-    throw vtkm::cont::ErrorControlInternal(
-        "Number of components in array greater than expected maximum.");
-  }
+  template<typename T>
+  T operator()(const T& a, const T& b)const { return vtkm::Max(a,b); }
 };
 
 
 template<typename DeviceAdapterTag>
 class ComputeBounds
 {
-private:
-  template<vtkm::IdComponent NumberOfComponents>
-  class Body
-  {
-  public:
-    Body(ArrayHandle<vtkm::Float64> *bounds) : Bounds(bounds) {}
-
-    template<typename ArrayHandleType>
-    void operator()(const ArrayHandleType &data) const
-    {
-      typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
-      typedef vtkm::Vec<vtkm::Float64, NumberOfComponents> ResultType;
-      typedef vtkm::Pair<ResultType, ResultType> MinMaxPairType;
-
-      MinMaxPairType initialValue = make_Pair(ResultType(vtkm::Infinity64()),
-                                              ResultType(vtkm::NegativeInfinity64()));
-
-      vtkm::cont::ArrayHandleTransform<MinMaxPairType, ArrayHandleType,
-          InputToOutputTypeTransform<NumberOfComponents> > input(data);
-
-      MinMaxPairType result = Algorithm::Reduce(input, initialValue,
-                                                MinMax<NumberOfComponents>());
-
-      this->Bounds->Allocate(NumberOfComponents * 2);
-      for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
-      {
-        this->Bounds->GetPortalControl().Set(i * 2, result.first[i]);
-        this->Bounds->GetPortalControl().Set(i * 2 + 1, result.second[i]);
-      }
-    }
-
-    // Special implementation for regular point coordinates, which are easy
-    // to determine.
-    void operator()(const vtkm::cont::ArrayHandle<
-                        vtkm::Vec<vtkm::FloatDefault,3>,
-                        vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>
-                      &array)
-    {
-      vtkm::internal::ArrayPortalUniformPointCoordinates portal =
-          array.GetPortalConstControl();
-
-      // In this portal we know that the min value is the first entry and the
-      // max value is the last entry.
-      vtkm::Vec<vtkm::FloatDefault,3> minimum = portal.Get(0);
-      vtkm::Vec<vtkm::FloatDefault,3> maximum =
-          portal.Get(portal.GetNumberOfValues()-1);
-
-      this->Bounds->Allocate(6);
-      vtkm::cont::ArrayHandle<vtkm::Float64>::PortalControl outPortal =
-          this->Bounds->GetPortalControl();
-      outPortal.Set(0, minimum[0]);
-      outPortal.Set(1, maximum[0]);
-      outPortal.Set(2, minimum[1]);
-      outPortal.Set(3, maximum[1]);
-      outPortal.Set(4, minimum[2]);
-      outPortal.Set(5, maximum[2]);
-    }
-
-  private:
-    vtkm::cont::ArrayHandle<vtkm::Float64> *Bounds;
-  };
-
 public:
-  template<vtkm::IdComponent NumberOfComponents,
-           typename TypeList,
-           typename StorageList>
-  static void CallBody(
-      const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList> &data,
-      ArrayHandle<vtkm::Float64> &bounds)
+  ComputeBounds(ArrayHandle<vtkm::Float64>& bounds) : Bounds(&bounds) {}
+
+  template<typename ArrayHandleType>
+  void operator()(const ArrayHandleType &input) const
   {
-    Body<NumberOfComponents> cb(&bounds);
-    data.CastAndCall(cb);
+    typedef typename ArrayHandleType::ValueType ValueType;
+    typedef vtkm::VecTraits<ValueType> VecType;
+    const vtkm::IdComponent NumberOfComponents = VecType::NUM_COMPONENTS;
+
+    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
+
+    //not the greatest way of doing this for performance reasons. But
+    //this implementation should generate the smallest amount of code
+    ValueType initialMin = input.GetPortalConstControl().Get(0);
+    ValueType initialMax = initialMin;
+
+    ValueType minResult = Algorithm::Reduce(input, initialMin, BoundsMin());
+    ValueType maxResult = Algorithm::Reduce(input, initialMax, BoundsMax());
+
+    this->Bounds->Allocate(NumberOfComponents * 2);
+    for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
+    {
+      this->Bounds->GetPortalControl().Set(i * 2,
+            static_cast<vtkm::Float64>(VecType::GetComponent(minResult, i) ) );
+      this->Bounds->GetPortalControl().Set(i * 2 + 1,
+            static_cast<vtkm::Float64>(VecType::GetComponent(maxResult, i) ) );
+    }
   }
 
-  template<typename TypeList, typename StorageList>
-  static void DoCompute(
-      const DynamicArrayHandleBase<TypeList,StorageList> &data,
-      ArrayHandle<vtkm::Float64> &bounds)
+  // Special implementation for regular point coordinates, which are easy
+  // to determine.
+  void operator()(const vtkm::cont::ArrayHandle<
+                      vtkm::Vec<vtkm::FloatDefault,3>,
+                      vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>
+                    &array)
   {
-    typedef ComputeBounds<DeviceAdapterTag> SelfType;
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
+    vtkm::internal::ArrayPortalUniformPointCoordinates portal =
+        array.GetPortalConstControl();
 
-    vtkm::IdComponent numberOfComponents = data.GetNumberOfComponents();
-    switch(numberOfComponents)
-      {
-      case 1:
-        CallBody<1>(data, bounds);
-        break;
-      case 2:
-        CallBody<2>(data, bounds);
-        break;
-      case 3:
-        CallBody<3>(data, bounds);
-        break;
-      case 4:
-        CallBody<4>(data, bounds);
-        break;
-      default:
-        SelectNumberOfComponents<5, SelfType>::Execute(numberOfComponents,
-                                                       data,
-                                                       bounds);
-        break;
-      }
+    // In this portal we know that the min value is the first entry and the
+    // max value is the last entry.
+    vtkm::Vec<vtkm::FloatDefault,3> minimum = portal.Get(0);
+    vtkm::Vec<vtkm::FloatDefault,3> maximum =
+        portal.Get(portal.GetNumberOfValues()-1);
+
+    this->Bounds->Allocate(6);
+    vtkm::cont::ArrayHandle<vtkm::Float64>::PortalControl outPortal =
+        this->Bounds->GetPortalControl();
+    outPortal.Set(0, minimum[0]);
+    outPortal.Set(1, maximum[0]);
+    outPortal.Set(2, minimum[1]);
+    outPortal.Set(3, maximum[1]);
+    outPortal.Set(4, minimum[2]);
+    outPortal.Set(5, maximum[2]);
   }
+
+private:
+    vtkm::cont::ArrayHandle<vtkm::Float64> *Bounds;
 };
 
 } // namespace internal
@@ -498,9 +381,8 @@ public:
   {
     if (this->ModifiedFlag)
     {
-      internal::ComputeBounds<DeviceAdapterTag>::DoCompute(
-          this->Data.ResetTypeList(TypeList()).ResetStorageList(StorageList()),
-          this->Bounds);
+      internal::ComputeBounds<DeviceAdapterTag> computeBounds(this->Bounds);
+      this->Data.ResetTypeAndStorageLists(TypeList(),StorageList()).CastAndCall(computeBounds);
       this->ModifiedFlag = false;
     }
 
