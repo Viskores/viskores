@@ -31,6 +31,7 @@ VTKM_declare_headers(${headers})
 set(unit_tests
   UnitTestBinaryPredicates.cxx
   UnitTestBinaryOperators.cxx
+  UnitTestBounds.cxx
   UnitTestCellShape.cxx
   UnitTestImplicitFunctions.cxx
   UnitTestListTag.cxx

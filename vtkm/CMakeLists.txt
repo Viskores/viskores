@@ -24,6 +24,7 @@ set(headers
   Assert.h
   BinaryPredicates.h
   BinaryOperators.h
+  Bounds.h
   CellShape.h
   CellTraits.h
   ImplicitFunctions.h

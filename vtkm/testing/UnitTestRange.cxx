@@ -43,6 +43,7 @@ void TestRange()
   VTKM_TEST_ASSERT(!unionRange.Contains(0.0), "Contains outside");
   VTKM_TEST_ASSERT(!unionRange.Contains(10), "Contains outside");
   VTKM_TEST_ASSERT(singleValueRange == unionRange, "Union not equal");
+  VTKM_TEST_ASSERT(!(singleValueRange == unionRange), "Union not equal");
 
   std::cout << "Low range." << std::endl;
   vtkm::Range lowRange(-10.0, -5.0);

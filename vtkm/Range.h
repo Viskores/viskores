@@ -29,11 +29,12 @@ namespace vtkm {
 
 /// \brief Represent a continuous scalar range of values.
 ///
-/// A \c vtkm::Range is a helper class for representing a range of floating
-/// point values from a minimum value to a maximum value. This is specified
-/// simply enough with a \c Min and \c Max value.
+/// \c vtkm::Range is a helper class for representing a range of floating point
+/// values from a minimum value to a maximum value. This is specified simply
+/// enough with a \c Min and \c Max value.
 ///
-/// \c Range also contains several helper functions for maintaining the range.
+/// \c Range also contains several helper functions for computing and
+/// maintaining the range.
 ///
 struct Range
 {
@@ -141,7 +142,7 @@ struct Range
   VTKM_EXEC_CONT_EXPORT
   bool operator!=(const vtkm::Range &otherRange) const
   {
-    return ((this->Min != otherRange.Min) && (this->Max != otherRange.Max));
+    return ((this->Min != otherRange.Min) || (this->Max != otherRange.Max));
   }
 };
 
