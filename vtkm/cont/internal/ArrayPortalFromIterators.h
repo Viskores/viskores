@@ -29,15 +29,22 @@
 #include <iterator>
 #include <limits>
 
+#include <boost/type_traits.hpp>
+
 namespace vtkm {
 namespace cont {
 namespace internal {
+
+template<typename IteratorT, typename Enable= void>
+class ArrayPortalFromIterators;
 
 /// This templated implementation of an ArrayPortal allows you to adapt a pair
 /// of begin/end iterators to an ArrayPortal interface.
 ///
 template<class IteratorT>
-class ArrayPortalFromIterators
+class ArrayPortalFromIterators<IteratorT,
+                               typename boost::disable_if<
+                                boost::is_const< typename boost::remove_pointer<IteratorT>::type > >::type>
 {
 public:
   typedef typename std::iterator_traits<IteratorT>::value_type ValueType;
@@ -94,7 +101,84 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void Set(vtkm::Id index, const ValueType& value) const
   {
-    *this->IteratorAt(index) = value;
+    *(this->BeginIterator + index) = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
+  IteratorT GetIteratorBegin() const {
+    return this->BeginIterator;
+  }
+
+private:
+  IteratorT BeginIterator;
+  vtkm::Id NumberOfValues;
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
+  IteratorT IteratorAt(vtkm::Id index) const
+  {
+    VTKM_ASSERT(index >= 0);
+    VTKM_ASSERT(index < this->GetNumberOfValues());
+
+    return this->BeginIterator + index;
+  }
+};
+
+template<class IteratorT>
+class ArrayPortalFromIterators<IteratorT,
+                               typename boost::enable_if<
+                                boost::is_const< typename boost::remove_pointer<IteratorT>::type > >::type>
+{
+public:
+  typedef typename std::iterator_traits<IteratorT>::value_type ValueType;
+  typedef IteratorT IteratorType;
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_CONT_EXPORT
+  ArrayPortalFromIterators() {  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_CONT_EXPORT
+  ArrayPortalFromIterators(IteratorT begin, IteratorT end)
+    : BeginIterator(begin)
+  {
+    typename std::iterator_traits<IteratorT>::difference_type numberOfValues =
+      std::distance(begin, end);
+    VTKM_ASSERT(numberOfValues >= 0);
+#ifndef VTKM_USE_64BIT_IDS
+    if (numberOfValues > std::numeric_limits<vtkm::Id>::max())
+    {
+      throw vtkm::cont::ErrorControlBadAllocation(
+        "Distance of iterators larger than maximum array size. "
+        "To support larger arrays, try turning on VTKM_USE_64BIT_IDS.");
+    }
+#endif // !VTKM_USE_64BIT_IDS
+    this->NumberOfValues = static_cast<vtkm::Id>(numberOfValues);
+  }
+
+  /// Copy constructor for any other ArrayPortalFromIterators with an iterator
+  /// type that can be copied to this iterator type. This allows us to do any
+  /// type casting that the iterators do (like the non-const to const cast).
+  ///
+  template<class OtherIteratorT>
+  VTKM_CONT_EXPORT
+  ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT> &src)
+    : BeginIterator(src.GetIteratorBegin()), NumberOfValues(src.GetNumberOfValues())
+  {  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id GetNumberOfValues() const
+  {
+    return this->NumberOfValues;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
+  ValueType Get(vtkm::Id index) const
+  {
+    return *this->IteratorAt(index);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
