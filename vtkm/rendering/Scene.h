@@ -30,40 +30,59 @@ namespace rendering {
 class Scene
 {
 public:
-  std::vector<vtkm::rendering::Actor> Actors;
+  VTKM_CONT_EXPORT
+  void AddActor(const vtkm::rendering::Actor &actor)
+  {
+    this->Actors.push_back(actor);
+  }
+
+  VTKM_CONT_EXPORT
+  const vtkm::rendering::Actor &GetActor(vtkm::IdComponent index) const
+  {
+    return this->Actors[static_cast<std::size_t>(index)];
+  }
+
+  VTKM_CONT_EXPORT
+  vtkm::IdComponent GetNumberOfActors() const
+  {
+    return static_cast<vtkm::IdComponent>(this->Actors.size());
+  }
 
   Scene() {}
 
-  template<typename MapperType, typename SurfaceType>
+  template<typename MapperType, typename CanvasType>
   VTKM_CONT_EXPORT
   void Render(MapperType &mapper,
-              SurfaceType &surface,
-              vtkm::rendering::Camera &camera)
+              CanvasType &canvas,
+              vtkm::rendering::Camera &camera) const
   {
     vtkm::Bounds bounds;
 
     mapper.StartScene();
-    for (std::size_t i = 0; i < this->Actors.size(); i++)
+    for (vtkm::IdComponent actorIndex = 0;
+         actorIndex < this->GetNumberOfActors();
+         actorIndex++)
     {
-      this->Actors[i].Render(mapper, surface, camera);
+      const vtkm::rendering::Actor &actor = this->GetActor(actorIndex);
+      actor.Render(mapper, canvas, camera);
 
       // accumulate all Actors' spatial bounds into the scene spatial bounds
-      bounds.Include(this->Actors[i].SpatialBounds);
+      bounds.Include(actor.SpatialBounds);
     }
     mapper.EndScene();
 
-    this->SpatialBounds = bounds;
+    const_cast<Scene*>(this)->SpatialBounds = bounds;
   }
 
-  const vtkm::Bounds &GetSpatialBounds()
+  const vtkm::Bounds &GetSpatialBounds() const
   {
     return this->SpatialBounds;
   }
 
-protected:
+private:
+  std::vector<vtkm::rendering::Actor> Actors;
   vtkm::Bounds SpatialBounds;
 };
-
 }} //namespace vtkm::rendering
 
 #endif //vtk_m_rendering_Scene_h

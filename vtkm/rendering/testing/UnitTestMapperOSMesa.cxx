@@ -140,10 +140,10 @@ void Render2D(const vtkm::cont::DataSet &ds,
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::CanvasOSMesa canvas(W,H,bg);
 
-    scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
-                                                  ds.GetCoordinateSystem(),
-                                                  ds.GetField(fieldNm),
-                                                  vtkm::rendering::ColorTable(ctName)));
+    scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
+                                          ds.GetCoordinateSystem(),
+                                          ds.GetField(fieldNm),
+                                          vtkm::rendering::ColorTable(ctName)));
     vtkm::rendering::View2D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                             vtkm::rendering::CanvasOSMesa,
                             vtkm::rendering::WorldAnnotatorGL>

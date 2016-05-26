@@ -80,10 +80,10 @@ void Render(const vtkm::cont::DataSet &ds,
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::CanvasRayTracer canvas(W,H,bg);
-    scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
-                                                  ds.GetCoordinateSystem(),
-                                                  ds.GetField(fieldNm),
-                                                  colorTable));
+    scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
+                                          ds.GetCoordinateSystem(),
+                                          ds.GetField(fieldNm),
+                                          colorTable));
 
     //TODO: W/H in view.  bg in view (view sets canvas/renderer).
     vtkm::rendering::View3D<vtkm::rendering::MapperVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,

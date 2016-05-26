@@ -47,9 +47,9 @@ public:
   VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
-                           vtkm::cont::Field &scalarField,
+                           const vtkm::cont::Field &scalarField,
                            const vtkm::rendering::ColorTable &colorTable,
-                           vtkm::rendering::Camera &,
+                           const vtkm::rendering::Camera &,
                            const vtkm::Range &scalarRange)
   {
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;

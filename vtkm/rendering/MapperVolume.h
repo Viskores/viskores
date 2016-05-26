@@ -69,9 +69,9 @@ public:
   VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
-                           vtkm::cont::Field &scalarField,
+                           const vtkm::cont::Field &scalarField,
                            const vtkm::rendering::ColorTable &, //colorTable
-                           vtkm::rendering::Camera &camera,
+                           const vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange)
   {
 //    vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
@@ -88,11 +88,15 @@ public:
       vtkm::cont::CellSetStructured<3> cellSetStructured3D = cellset.Cast<vtkm::cont::CellSetStructured<3> >();
       //vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
       //vertices = dynamicCoordsHandle.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-      Tracer.GetCamera().SetParameters(camera);
-      Tracer.SetData(coords, scalarField, coordsBounds, cellSetStructured3D, scalarRange);
-      Tracer.SetColorMap(ColorMap);
-      Tracer.SetBackgroundColor(this->BackgroundColor);
-      Tracer.Render(this->Canvas);
+      this->Tracer.GetCamera().SetParameters(camera);
+      this->Tracer.SetData(coords,
+                           scalarField,
+                           coordsBounds,
+                           cellSetStructured3D,
+                           scalarRange);
+      this->Tracer.SetColorMap(this->ColorMap);
+      this->Tracer.SetBackgroundColor(this->BackgroundColor);
+      this->Tracer.Render(this->Canvas);
     }
 
   }

@@ -34,24 +34,24 @@ namespace vtkm {
 namespace rendering {
 
 template<typename MapperType,
-         typename SurfaceType,
+         typename CanvasType,
          typename WorldAnnotatorType>
 class View
 {
 public:
   MapperType Mapper;
-  SurfaceType Surface;
+  CanvasType Canvas;
   vtkm::rendering::Camera Camera;
   Color BackgroundColor;
   WorldAnnotatorType WorldAnnotator;
 
   View(const MapperType &mapper,
-         const SurfaceType &surface,
+         const CanvasType &canvas,
          const vtkm::rendering::Camera &camera,
          const vtkm::rendering::Color &backgroundColor =
            vtkm::rendering::Color(0,0,0,1))
     : Mapper(mapper),
-      Surface(surface),
+      Canvas(canvas),
       Camera(camera),
       BackgroundColor(backgroundColor)
   {
@@ -59,7 +59,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  virtual void Initialize() {this->Surface.Initialize();}
+  virtual void Initialize() {this->Canvas.Initialize();}
 
   VTKM_CONT_EXPORT
   virtual void Paint() = 0;
@@ -71,7 +71,7 @@ public:
   VTKM_CONT_EXPORT
   void SaveAs(const std::string &fileName)
   {
-    this->Surface.SaveAs(fileName);
+    this->Canvas.SaveAs(fileName);
   }
 
 protected:
@@ -79,24 +79,24 @@ protected:
   void SetupForWorldSpace(bool viewportClip=true)
   {
     //this->Camera.SetupMatrices();
-    this->Surface.SetViewToWorldSpace(this->Camera,viewportClip);
+    this->Canvas.SetViewToWorldSpace(this->Camera,viewportClip);
   }
 
   VTKM_CONT_EXPORT
   void SetupForScreenSpace(bool viewportClip=false)
   {
     //this->Camera.SetupMatrices();
-    this->Surface.SetViewToScreenSpace(this->Camera,viewportClip);
+    this->Canvas.SetViewToScreenSpace(this->Camera,viewportClip);
   }
 };
 
 // View2D View3D
 template<typename MapperType,
-         typename SurfaceType,
+         typename CanvasType,
          typename WorldAnnotatorType>
-class View3D : public View<MapperType, SurfaceType,WorldAnnotatorType>
+class View3D : public View<MapperType, CanvasType,WorldAnnotatorType>
 {
-  typedef View<MapperType, SurfaceType,WorldAnnotatorType> Superclass;
+  typedef View<MapperType, CanvasType,WorldAnnotatorType> Superclass;
 public:
   vtkm::rendering::Scene Scene;
   // 3D-specific annotations
@@ -109,11 +109,11 @@ public:
   VTKM_CONT_EXPORT
   View3D(const vtkm::rendering::Scene &scene,
            const MapperType &mapper,
-           const SurfaceType &surface,
+           const CanvasType &canvas,
            const vtkm::rendering::Camera &camera,
            const vtkm::rendering::Color &backgroundColor =
              vtkm::rendering::Color(0,0,0,1))
-    : Superclass(mapper,surface,camera,backgroundColor),
+    : Superclass(mapper,canvas,camera,backgroundColor),
       Scene(scene)
   {
   }
@@ -121,27 +121,27 @@ public:
   VTKM_CONT_EXPORT
   virtual void Paint()
   {
-    this->Surface.Activate();
-    this->Surface.Clear();
+    this->Canvas.Activate();
+    this->Canvas.Clear();
     this->SetupForWorldSpace();
-    this->Scene.Render(this->Mapper, this->Surface, this->Camera);
+    this->Scene.Render(this->Mapper, this->Canvas, this->Camera);
     this->RenderWorldAnnotations();
 
     this->SetupForScreenSpace();
     this->RenderScreenAnnotations();
 
-    this->Surface.Finish();
+    this->Canvas.Finish();
   }
 
   VTKM_CONT_EXPORT
   virtual void RenderScreenAnnotations()
   {
-    if (this->Scene.Actors.size() > 0)
+    if (this->Scene.GetNumberOfActors() > 0)
     {
       //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
-      this->ColorBarAnnotation.SetRange(this->Scene.Actors[0].ScalarRange, 5);
-      this->ColorBarAnnotation.SetColorTable(this->Scene.Actors[0].ColorTable);
-      this->ColorBarAnnotation.Render(this->Camera, this->WorldAnnotator, this->Surface);
+      this->ColorBarAnnotation.SetRange(this->Scene.GetActor(0).ScalarRange, 5);
+      this->ColorBarAnnotation.SetColorTable(this->Scene.GetActor(0).ColorTable);
+      this->ColorBarAnnotation.Render(this->Camera, this->WorldAnnotator, this->Canvas);
     }
   }
 
@@ -188,7 +188,7 @@ public:
     this->XAxisAnnotation.SetMinorTickSize(size / 80.f, 0);
     this->XAxisAnnotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
     this->XAxisAnnotation.SetMoreOrLessTickAdjustment(xrel < .3 ? -1 : 0);
-    this->XAxisAnnotation.Render(this->Camera, this->WorldAnnotator, this->Surface);
+    this->XAxisAnnotation.Render(this->Camera, this->WorldAnnotator, this->Canvas);
 
     this->YAxisAnnotation.SetAxis(1);
     this->YAxisAnnotation.SetColor(Color(1,1,1));
@@ -204,7 +204,7 @@ public:
     this->YAxisAnnotation.SetMinorTickSize(size / 80.f, 0);
     this->YAxisAnnotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
     this->YAxisAnnotation.SetMoreOrLessTickAdjustment(yrel < .3 ? -1 : 0);
-    this->YAxisAnnotation.Render(this->Camera, this->WorldAnnotator, this->Surface);
+    this->YAxisAnnotation.Render(this->Camera, this->WorldAnnotator, this->Canvas);
 
     this->ZAxisAnnotation.SetAxis(2);
     this->ZAxisAnnotation.SetColor(Color(1,1,1));
@@ -220,16 +220,16 @@ public:
     this->ZAxisAnnotation.SetMinorTickSize(size / 80.f, 0);
     this->ZAxisAnnotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
     this->ZAxisAnnotation.SetMoreOrLessTickAdjustment(zrel < .3 ? -1 : 0);
-    this->ZAxisAnnotation.Render(this->Camera, this->WorldAnnotator, this->Surface);
+    this->ZAxisAnnotation.Render(this->Camera, this->WorldAnnotator, this->Canvas);
   }
 };
 
 template<typename MapperType,
-         typename SurfaceType,
+         typename CanvasType,
          typename WorldAnnotatorType>
-class View2D : public View<MapperType, SurfaceType,WorldAnnotatorType>
+class View2D : public View<MapperType, CanvasType,WorldAnnotatorType>
 {
-  typedef View<MapperType, SurfaceType,WorldAnnotatorType> Superclass;
+  typedef View<MapperType, CanvasType,WorldAnnotatorType> Superclass;
 public:
   vtkm::rendering::Scene Scene;
   // 2D-specific annotations
@@ -240,11 +240,11 @@ public:
   VTKM_CONT_EXPORT
   View2D(const vtkm::rendering::Scene &scene,
            const MapperType &mapper,
-           const SurfaceType &surface,
+           const CanvasType &canvas,
            const vtkm::rendering::Camera &camera,
            const vtkm::rendering::Color &backgroundColor =
              vtkm::rendering::Color(0,0,0,1))
-    : Superclass(mapper, surface, camera, backgroundColor),
+    : Superclass(mapper, canvas, camera, backgroundColor),
       Scene(scene)
   {
   }
@@ -252,17 +252,17 @@ public:
   VTKM_CONT_EXPORT
   virtual void Paint()
   {
-    this->Surface.Activate();
-    this->Surface.Clear();
+    this->Canvas.Activate();
+    this->Canvas.Clear();
     this->SetupForWorldSpace();
 
-    this->Scene.Render(this->Mapper, this->Surface, this->Camera);
+    this->Scene.Render(this->Mapper, this->Canvas, this->Camera);
     this->RenderWorldAnnotations();
 
     this->SetupForScreenSpace();
     this->RenderScreenAnnotations();
 
-    this->Surface.Finish();
+    this->Canvas.Finish();
   }
 
   VTKM_CONT_EXPORT
@@ -285,7 +285,7 @@ public:
     this->HorizontalAxisAnnotation.SetLabelAlignment(TextAnnotation::HCenter,
                                                      TextAnnotation::Top);
     this->HorizontalAxisAnnotation.Render(
-          this->Camera, this->WorldAnnotator, this->Surface);
+          this->Camera, this->WorldAnnotator, this->Canvas);
 
     vtkm::Float32 windowaspect =
         vtkm::Float32(this->Camera.Width) / vtkm::Float32(this->Camera.Height);
@@ -300,17 +300,17 @@ public:
     this->VerticalAxisAnnotation.SetLabelAlignment(TextAnnotation::Right,
                                                    TextAnnotation::VCenter);
     this->VerticalAxisAnnotation.Render(
-          this->Camera, this->WorldAnnotator, this->Surface);
+          this->Camera, this->WorldAnnotator, this->Canvas);
 
-    if (this->Scene.Actors.size() > 0)
+    if (this->Scene.GetNumberOfActors() > 0)
     {
       //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
-      this->ColorBarAnnotation.SetRange(this->Scene.Actors[0].ScalarRange.Min,
-                                        this->Scene.Actors[0].ScalarRange.Max,
+      this->ColorBarAnnotation.SetRange(this->Scene.GetActor(0).ScalarRange.Min,
+                                        this->Scene.GetActor(0).ScalarRange.Max,
                                         5);
-      this->ColorBarAnnotation.SetColorTable(this->Scene.Actors[0].ColorTable);
+      this->ColorBarAnnotation.SetColorTable(this->Scene.GetActor(0).ColorTable);
       this->ColorBarAnnotation.Render(
-            this->Camera, this->WorldAnnotator, this->Surface);
+            this->Camera, this->WorldAnnotator, this->Canvas);
     }
   }
 };

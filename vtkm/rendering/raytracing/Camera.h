@@ -245,7 +245,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void SetParameters(vtkm::rendering::Camera &camera)
+  void SetParameters(const vtkm::rendering::Camera &camera)
   {
     this->SetUp(camera.Camera3d.Up);
     this->SetLookAt(camera.Camera3d.LookAt);

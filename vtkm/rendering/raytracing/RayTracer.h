@@ -234,7 +234,7 @@ public:
   void run(Ray<DeviceAdapter> &rays,
            LinearBVH &bvh,
            vtkm::cont::DynamicArrayHandleCoordinateSystem &coordsHandle,
-           vtkm::cont::Field *scalarField,
+           const vtkm::cont::Field *scalarField,
            const vtkm::Range &scalarRange)
   {
     bool isSupportedField = (scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
@@ -404,7 +404,7 @@ protected:
   LinearBVH Bvh;
   Camera<DeviceAdapter> camera;
   vtkm::cont::DynamicArrayHandleCoordinateSystem CoordsHandle;
-  vtkm::cont::Field *ScalarField;
+  const vtkm::cont::Field *ScalarField;
   vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > Indices;
   vtkm::cont::ArrayHandle<vtkm::Float32> Scalars;
   vtkm::Id NumberOfTriangles;
@@ -434,8 +434,8 @@ public:
   VTKM_CONT_EXPORT
   void SetData(const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordsHandle,
                const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  &indices,
-               vtkm::cont::Field &scalarField,
-               vtkm::Id &numberOfTriangles,
+               const vtkm::cont::Field &scalarField,
+               const vtkm::Id &numberOfTriangles,
                const vtkm::Range &scalarRange,
                const vtkm::Bounds &dataBounds)
   {

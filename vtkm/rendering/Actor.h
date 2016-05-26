@@ -54,7 +54,7 @@ public:
   VTKM_CONT_EXPORT
   void Render(MapperType &mapper,
               CanvasType &canvas,
-              vtkm::rendering::Camera &camera)
+              const vtkm::rendering::Camera &camera) const
   {
     mapper.SetCanvas(&canvas);
     mapper.SetActiveColorTable(this->ColorTable);

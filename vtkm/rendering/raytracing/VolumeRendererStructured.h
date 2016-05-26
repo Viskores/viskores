@@ -957,7 +957,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
 
   VTKM_CONT_EXPORT
   void SetData(const vtkm::cont::CoordinateSystem &coords,
-               vtkm::cont::Field &scalarField,
+               const vtkm::cont::Field &scalarField,
                const vtkm::Bounds &coordsBounds,
                const vtkm::cont::CellSetStructured<3> &cellset,
                const vtkm::Range &scalarRange)
@@ -1097,7 +1097,7 @@ protected:
   Camera<DeviceAdapter> camera;
   vtkm::cont::DynamicArrayHandleCoordinateSystem Coordinates;
   vtkm::cont::CellSetStructured<3> Cellset;
-  vtkm::cont::Field *ScalarField;
+  const vtkm::cont::Field *ScalarField;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
   vtkm::Float32 SampleDistance;
   vtkm::Vec<vtkm::Float32,4> BackgroundColor;

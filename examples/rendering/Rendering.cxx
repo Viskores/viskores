@@ -171,10 +171,10 @@ main(int argc, char* argv[])
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::Scene scene;
-    scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
-                                                  ds.GetCoordinateSystem(),
-                                                  ds.GetField("pointvar"),
-                                                  vtkm::rendering::ColorTable("thermal")));
+    scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
+                                          ds.GetCoordinateSystem(),
+                                          ds.GetField("pointvar"),
+                                          vtkm::rendering::ColorTable("thermal")));
 
     //Create vtkm rendering stuff.
     view = new vtkm::rendering::View3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
