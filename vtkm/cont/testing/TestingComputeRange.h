@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_testing_TestingComputeBounds_h
-#define vtk_m_cont_testing_TestingComputeBounds_h
+#ifndef vtk_m_cont_testing_TestingComputeRange_h
+#define vtk_m_cont_testing_TestingComputeRange_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/CoordinateSystem.h>
@@ -45,7 +45,7 @@ struct CustomTypeList : vtkm::ListTagBase<vtkm::Vec<Int32, 3>,
 {};
 
 template <typename DeviceAdapterTag>
-class TestingComputeBounds
+class TestingComputeRange
 {
 private:
   template <typename T>
@@ -57,19 +57,13 @@ private:
     vtkm::cont::Field field("TestField", vtkm::cont::Field::ASSOC_POINTS, data,
                             nvals);
 
-    vtkm::Float64 result[2];
-    field.GetBounds(result, DeviceAdapterTag());
+    vtkm::Range result;
+    field.GetRange(&result, DeviceAdapterTag());
 
-    if (result[0] == -5.0 && result[1] == 5.0)
-    {
-      std::cout << "Success" << std::endl;
-    }
-    else
-    {
-      std::cout << "Expected: -5.0, 5.0; Got: " << result[0] << ", " << result[1]
-                << std::endl;
-      VTKM_TEST_FAIL("Failed");
-    }
+    std::cout << result << std::endl;
+    VTKM_TEST_ASSERT(
+          (test_equal(result.Min, -5.0) && test_equal(result.Max, 5.0)),
+          "Unexpected scalar field range.");
   }
 
   template <typename T, vtkm::Id NumberOfComponents>
@@ -89,38 +83,17 @@ private:
     vtkm::cont::Field field("TestField", vtkm::cont::Field::ASSOC_POINTS, fieldData,
                             nvals);
 
-    vtkm::Float64 result[NumberOfComponents * 2];
-    field.GetBounds(result, DeviceAdapterTag(), CustomTypeList(),
-                    VTKM_DEFAULT_STORAGE_LIST_TAG());
+    vtkm::Range result[NumberOfComponents];
+    field.GetRange(result,
+                   DeviceAdapterTag(),
+                   CustomTypeList(),
+                   VTKM_DEFAULT_STORAGE_LIST_TAG());
 
-    bool success = true;
     for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
-      if (result[i * 2] != -5.0 || result[i * 2 + 1] != 5.0)
-      {
-        success = false;
-        break;
-      }
-    }
-
-    if (success)
-    {
-      std::cout << "Success" << std::endl;
-    }
-    else
-    {
-      std::cout << "Expected: -5.0s and 5.0s; Got: ";
-      for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
-      {
-        std::cout << result[i * 2] << ",";
-      }
-      std::cout << " and ";
-      for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
-      {
-        std::cout << result[i * 2 + 1] << ",";
-      }
-      std::cout << std::endl;
-      VTKM_TEST_FAIL("Failed");
+      VTKM_TEST_ASSERT(
+            (test_equal(result[i].Min, -5.0) && test_equal(result[i].Max, 5.0)),
+            "Unexpected vector field range.");
     }
   }
 
@@ -132,15 +105,14 @@ private:
           vtkm::Vec<vtkm::FloatDefault,3>(0.0f,-5.0f,4.0f),
           vtkm::Vec<vtkm::FloatDefault,3>(1.0f,0.5f,2.0f));
 
-    vtkm::Float64 result[6];
-    field.GetBounds(result, DeviceAdapterTag());
+    vtkm::Bounds result = field.GetBounds(DeviceAdapterTag());
 
-    VTKM_TEST_ASSERT(test_equal(result[0], 0.0), "Min x wrong.");
-    VTKM_TEST_ASSERT(test_equal(result[1], 9.0), "Max x wrong.");
-    VTKM_TEST_ASSERT(test_equal(result[2], -5.0), "Min y wrong.");
-    VTKM_TEST_ASSERT(test_equal(result[3], 4.5), "Max y wrong.");
-    VTKM_TEST_ASSERT(test_equal(result[4], 4.0), "Min z wrong.");
-    VTKM_TEST_ASSERT(test_equal(result[5], 12.0), "Max z wrong.");
+    VTKM_TEST_ASSERT(test_equal(result.X.Min, 0.0), "Min x wrong.");
+    VTKM_TEST_ASSERT(test_equal(result.X.Max, 9.0), "Max x wrong.");
+    VTKM_TEST_ASSERT(test_equal(result.Y.Min, -5.0), "Min y wrong.");
+    VTKM_TEST_ASSERT(test_equal(result.Y.Max, 4.5), "Max y wrong.");
+    VTKM_TEST_ASSERT(test_equal(result.Z.Min, 4.0), "Min z wrong.");
+    VTKM_TEST_ASSERT(test_equal(result.Z.Max, 12.0), "Max z wrong.");
   }
 
   struct TestAll
@@ -148,34 +120,34 @@ private:
     VTKM_CONT_EXPORT void operator()() const
     {
       std::cout << "Testing (Int32, 1)..." << std::endl;
-      TestingComputeBounds::TestScalarField<vtkm::Int32>();
+      TestingComputeRange::TestScalarField<vtkm::Int32>();
       std::cout << "Testing (Int64, 1)..." << std::endl;
-      TestingComputeBounds::TestScalarField<vtkm::Int64>();
+      TestingComputeRange::TestScalarField<vtkm::Int64>();
       std::cout << "Testing (Float32, 1)..." << std::endl;
-      TestingComputeBounds::TestScalarField<vtkm::Float32>();
+      TestingComputeRange::TestScalarField<vtkm::Float32>();
       std::cout << "Testing (Float64, 1)..." << std::endl;
-      TestingComputeBounds::TestScalarField<vtkm::Float64>();
+      TestingComputeRange::TestScalarField<vtkm::Float64>();
 
       std::cout << "Testing (Int32, 3)..." << std::endl;
-      TestingComputeBounds::TestVecField<vtkm::Int32, 3>();
+      TestingComputeRange::TestVecField<vtkm::Int32, 3>();
       std::cout << "Testing (Int64, 3)..." << std::endl;
-      TestingComputeBounds::TestVecField<vtkm::Int64, 3>();
+      TestingComputeRange::TestVecField<vtkm::Int64, 3>();
       std::cout << "Testing (Float32, 3)..." << std::endl;
-      TestingComputeBounds::TestVecField<vtkm::Float32, 3>();
+      TestingComputeRange::TestVecField<vtkm::Float32, 3>();
       std::cout << "Testing (Float64, 3)..." << std::endl;
-      TestingComputeBounds::TestVecField<vtkm::Float64, 3>();
+      TestingComputeRange::TestVecField<vtkm::Float64, 3>();
 
       std::cout << "Testing (Int32, 9)..." << std::endl;
-      TestingComputeBounds::TestVecField<vtkm::Int32, 9>();
+      TestingComputeRange::TestVecField<vtkm::Int32, 9>();
       std::cout << "Testing (Int64, 9)..." << std::endl;
-      TestingComputeBounds::TestVecField<vtkm::Int64, 9>();
+      TestingComputeRange::TestVecField<vtkm::Int64, 9>();
       std::cout << "Testing (Float32, 9)..." << std::endl;
-      TestingComputeBounds::TestVecField<vtkm::Float32, 9>();
+      TestingComputeRange::TestVecField<vtkm::Float32, 9>();
       std::cout << "Testing (Float64, 9)..." << std::endl;
-      TestingComputeBounds::TestVecField<vtkm::Float64, 9>();
+      TestingComputeRange::TestVecField<vtkm::Float64, 9>();
 
       std::cout << "Testing UniformPointCoords..." << std::endl;
-      TestingComputeBounds::TestUniformCoordinateField();
+      TestingComputeRange::TestUniformCoordinateField();
     }
   };
 
@@ -190,4 +162,4 @@ public:
 }
 } // namespace vtkm::cont::testing
 
-#endif //vtk_m_cont_testing_TestingComputeBounds_h
+#endif //vtk_m_cont_testing_TestingComputeRange_h

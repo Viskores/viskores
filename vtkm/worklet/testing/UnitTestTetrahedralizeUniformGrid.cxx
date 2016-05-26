@@ -121,11 +121,8 @@ void TestUniformGrid2D()
   std::cout << "Number of output vertices " << coordArray.GetNumberOfValues() << std::endl;
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
 
-  vtkm::cont::ArrayHandle<vtkm::Float64> bounds = coordinates.GetBounds(DeviceAdapter());
-  std::cout << "Bounds ("
-            << bounds.GetPortalControl().Get(0) << "," << bounds.GetPortalControl().Get(1) << ") ("
-            << bounds.GetPortalControl().Get(2) << "," << bounds.GetPortalControl().Get(3) << ") ("
-            << bounds.GetPortalControl().Get(4) << "," << bounds.GetPortalControl().Get(5) << ")" << std::endl;
+  vtkm::Bounds bounds = coordinates.GetBounds(DeviceAdapter());
+  std::cout << "Bounds " << bounds << std::endl;
 
   // Two triangles are created for every quad cell
   VTKM_TEST_ASSERT(test_equal(cellSet.GetNumberOfCells(), numberOfCells * 2),
@@ -172,11 +169,8 @@ void TestUniformGrid3D()
   std::cout << "Number of output vertices " << coordArray.GetNumberOfValues() << std::endl;
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
 
-  vtkm::cont::ArrayHandle<vtkm::Float64> bounds = coordinates.GetBounds(DeviceAdapter());
-  std::cout << "Bounds ("
-            << bounds.GetPortalControl().Get(0) << "," << bounds.GetPortalControl().Get(1) << ") ("
-            << bounds.GetPortalControl().Get(2) << "," << bounds.GetPortalControl().Get(3) << ") ("
-            << bounds.GetPortalControl().Get(4) << "," << bounds.GetPortalControl().Get(5) << ")" << std::endl;
+  vtkm::Bounds bounds = coordinates.GetBounds(DeviceAdapter());
+  std::cout << "Bounds " << bounds << std::endl;
 
   // Five tets are created for every hex cell
   VTKM_TEST_ASSERT(test_equal(cellSet.GetNumberOfCells(), numberOfCells * 5),

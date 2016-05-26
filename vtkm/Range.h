@@ -87,6 +87,42 @@ struct Range
             (this->Max >= static_cast<vtkm::Float64>(value)));
   }
 
+  /// \b Returns the length of the range.
+  ///
+  /// \c Length computes the distance between the min and max. If the range
+  /// is empty, 0 is returned.
+  ///
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Float64 Length() const
+  {
+    if (this->IsNonEmpty())
+    {
+      return (this->Max - this->Min);
+    }
+    else
+    {
+      return 0.0;
+    }
+  }
+
+  /// \b Returns the center of the range.
+  ///
+  /// \c Center computes the middle value of the range. If the range is empty,
+  /// NaN is returned.
+  ///
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Float64 Center() const
+  {
+    if (this->IsNonEmpty())
+    {
+      return 0.5*(this->Max + this->Min);
+    }
+    else
+    {
+      return vtkm::Nan64();
+    }
+  }
+
   /// \b Expand range to include a value.
   ///
   /// This version of \c Include expands the range just enough to include the
@@ -147,5 +183,13 @@ struct Range
 };
 
 } // namespace vtkm
+
+/// Helper function for printing ranges during testing
+///
+VTKM_CONT_EXPORT
+std::ostream &operator<<(std::ostream &stream, const vtkm::Range &range)
+{
+  return stream << "[" << range.Min << ".." << range.Max << "]";
+}
 
 #endif //vtk_m_Range_h

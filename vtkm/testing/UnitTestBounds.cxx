@@ -35,6 +35,7 @@ void TestBounds()
   std::cout << "Single value bounds." << std::endl;
   vtkm::Bounds singleValueBounds(1.0, 1.0, 2.0, 2.0, 3.0, 3.0);
   VTKM_TEST_ASSERT(singleValueBounds.IsNonEmpty(), "Empty?");
+  VTKM_TEST_ASSERT(test_equal(singleValueBounds.Center(), Vec3(1,2,3)), "Bad center");
   VTKM_TEST_ASSERT(singleValueBounds.Contains(Vec3(1,2,3)), "Contains fail");
   VTKM_TEST_ASSERT(!singleValueBounds.Contains(Vec3(0,0,0)), "Contains fail");
   VTKM_TEST_ASSERT(!singleValueBounds.Contains(Vec3(2,2,2)), "contains fail");
@@ -42,6 +43,7 @@ void TestBounds()
 
   vtkm::Bounds unionBounds = emptyBounds + singleValueBounds;
   VTKM_TEST_ASSERT(unionBounds.IsNonEmpty(), "Empty?");
+  VTKM_TEST_ASSERT(test_equal(unionBounds.Center(), Vec3(1,2,3)), "Bad center");
   VTKM_TEST_ASSERT(unionBounds.Contains(Vec3(1,2,3)), "Contains fail");
   VTKM_TEST_ASSERT(!unionBounds.Contains(Vec3(0,0,0)), "Contains fail");
   VTKM_TEST_ASSERT(!unionBounds.Contains(Vec3(2,2,2)), "contains fail");
@@ -51,6 +53,7 @@ void TestBounds()
   std::cout << "Low bounds." << std::endl;
   vtkm::Bounds lowBounds(Vec3(-10,-5,-1), Vec3(-5, -2, 0));
   VTKM_TEST_ASSERT(lowBounds.IsNonEmpty(), "Empty?");
+  VTKM_TEST_ASSERT(test_equal(lowBounds.Center(), Vec3(-7.5,-3.5,-0.5)), "Bad center");
   VTKM_TEST_ASSERT(!lowBounds.Contains(Vec3(-20)), "Contains fail");
   VTKM_TEST_ASSERT(!lowBounds.Contains(Vec3(-2)), "Contains fail");
   VTKM_TEST_ASSERT(lowBounds.Contains(Vec3(-7,-2,-0.5)), "Contains fail");

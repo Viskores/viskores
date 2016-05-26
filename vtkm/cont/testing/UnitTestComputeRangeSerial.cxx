@@ -20,10 +20,10 @@
 
 #include <vtkm/cont/DeviceAdapterSerial.h>
 
-#include <vtkm/cont/testing/TestingComputeBounds.h>
+#include <vtkm/cont/testing/TestingComputeRange.h>
 
-int UnitTestComputeBoundsSerial(int, char *[])
+int UnitTestComputeRangeSerial(int, char *[])
 {
-  return vtkm::cont::testing::TestingComputeBounds
+  return vtkm::cont::testing::TestingComputeRange
       <vtkm::cont::DeviceAdapterTagSerial>::Run();
 }

@@ -22,11 +22,11 @@
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
-#include <vtkm/cont/testing/TestingComputeBounds.h>
+#include <vtkm/cont/testing/TestingComputeRange.h>
 
-int UnitTestComputeBoundsCuda(int, char *[])
+int UnitTestComputeRangeCuda(int, char *[])
 {
-  int result = vtkm::cont::testing::TestingComputeBounds
+  int result = vtkm::cont::testing::TestingComputeRange
       <vtkm::cont::DeviceAdapterTagCuda>::Run();
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

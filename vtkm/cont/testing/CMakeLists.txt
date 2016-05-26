@@ -23,7 +23,7 @@ set(headers
   MakeTestDataSet.h
   Testing.h
   TestingArrayHandles.h
-  TestingComputeBounds.h
+  TestingComputeRange.h
   TestingDeviceAdapter.h
   TestingDataSetExplicit.h
   TestingDataSetSingleType.h
@@ -45,7 +45,7 @@ set(unit_tests
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestContTesting.cxx
-  UnitTestComputeBoundsSerial.cxx
+  UnitTestComputeRangeSerial.cxx
   UnitTestDataSetBuilderExplicit.cxx
   UnitTestDataSetBuilderRectilinear.cxx
   UnitTestDataSetBuilderUniform.cxx

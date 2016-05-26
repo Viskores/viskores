@@ -50,11 +50,16 @@ struct Bounds
          const vtkm::Range &zRange)
     : X(xRange), Y(yRange), Z(zRange) {  }
 
-  template<typename T>
+  template<typename T1,
+           typename T2,
+           typename T3,
+           typename T4,
+           typename T5,
+           typename T6>
   VTKM_EXEC_CONT_EXPORT
-  Bounds(const T &minX, const T &maxX,
-         const T &minY, const T &maxY,
-         const T &minZ, const T &maxZ)
+  Bounds(const T1 &minX, const T2 &maxX,
+         const T3 &minY, const T4 &maxY,
+         const T5 &minZ, const T6 &maxZ)
     : X(vtkm::Range(minX, maxX)),
       Y(vtkm::Range(minY, maxY)),
       Z(vtkm::Range(minZ, maxZ))
@@ -114,6 +119,19 @@ struct Bounds
     return (this->X.Contains(point[0]) &&
             this->Y.Contains(point[1]) &&
             this->Z.Contains(point[2]));
+  }
+
+  /// \b Returns the center of the range.
+  ///
+  /// \c Center computes the point at the middle of the bounds. If the bounds
+  /// are empty, the results are undefined.
+  ///
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Vec<vtkm::Float64,3> Center() const
+  {
+    return vtkm::Vec<vtkm::Float64,3>(this->X.Center(),
+                                      this->Y.Center(),
+                                      this->Z.Center());
   }
 
   /// \b Expand bounds to include a point.
@@ -182,5 +200,15 @@ struct Bounds
 };
 
 } // namespace vtkm
+
+/// Helper function for printing bounds during testing
+///
+VTKM_CONT_EXPORT
+std::ostream &operator<<(std::ostream &stream, const vtkm::Bounds &bounds)
+{
+  return stream << "{ X:" << bounds.X
+                << ", Y:" << bounds.Y
+                << ", Z:" << bounds.Z << " }";
+}
 
 #endif //vtk_m_Bounds_h

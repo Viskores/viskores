@@ -194,10 +194,8 @@ void TestExplicitGrid2D()
   std::cout << "Number of output vertices " << coordArray.GetNumberOfValues() << std::endl;
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
 
-  vtkm::cont::ArrayHandle<vtkm::Float64> bounds = coordinates.GetBounds(DeviceAdapter());
-  std::cout << "Bounds ("
-            << bounds.GetPortalControl().Get(0) << "," << bounds.GetPortalControl().Get(1) << ") ("
-            << bounds.GetPortalControl().Get(2) << "," << bounds.GetPortalControl().Get(3) << ")" << std::endl;
+  vtkm::Bounds bounds = coordinates.GetBounds(DeviceAdapter());
+  std::cout << "Bounds " << bounds << std::endl;
 
   VTKM_TEST_ASSERT(test_equal(cellSet.GetNumberOfCells(), 14), "Wrong result for Triangulate filter");
 }
@@ -234,11 +232,8 @@ void TestExplicitGrid3D()
   std::cout << "Number of output vertices " << coordArray.GetNumberOfValues() << std::endl;
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
 
-  vtkm::cont::ArrayHandle<vtkm::Float64> bounds = coordinates.GetBounds(DeviceAdapter());
-  std::cout << "Bounds ("
-            << bounds.GetPortalControl().Get(0) << "," << bounds.GetPortalControl().Get(1) << ") ("
-            << bounds.GetPortalControl().Get(2) << "," << bounds.GetPortalControl().Get(3) << ") ("
-            << bounds.GetPortalControl().Get(4) << "," << bounds.GetPortalControl().Get(5) << ")" << std::endl;
+  vtkm::Bounds bounds = coordinates.GetBounds(DeviceAdapter());
+  std::cout << "Bounds " << bounds << std::endl;
 
   VTKM_TEST_ASSERT(test_equal(cellSet.GetNumberOfCells(), 11), "Wrong result for Tetrahedralize filter");
 }

@@ -29,25 +29,32 @@ void TestRange()
   std::cout << "Empty range." << std::endl;
   vtkm::Range emptyRange;
   VTKM_TEST_ASSERT(!emptyRange.IsNonEmpty(), "Non empty range not empty.");
+  VTKM_TEST_ASSERT(test_equal(emptyRange.Length(), 0.0), "Bad length.");
 
   std::cout << "Single value range." << std::endl;
   vtkm::Range singleValueRange(5.0, 5.0);
   VTKM_TEST_ASSERT(singleValueRange.IsNonEmpty(), "Empty?");
+  VTKM_TEST_ASSERT(test_equal(singleValueRange.Length(), 0.0), "Bad length.");
+  VTKM_TEST_ASSERT(test_equal(singleValueRange.Center(), 5), "Bad center.");
   VTKM_TEST_ASSERT(singleValueRange.Contains(5.0), "Does not contain value");
   VTKM_TEST_ASSERT(!singleValueRange.Contains(0.0), "Contains outside");
   VTKM_TEST_ASSERT(!singleValueRange.Contains(10), "Contains outside");
 
   vtkm::Range unionRange = emptyRange + singleValueRange;
   VTKM_TEST_ASSERT(unionRange.IsNonEmpty(), "Empty?");
+  VTKM_TEST_ASSERT(test_equal(unionRange.Length(), 0.0), "Bad length.");
+  VTKM_TEST_ASSERT(test_equal(unionRange.Center(), 5), "Bad center.");
   VTKM_TEST_ASSERT(unionRange.Contains(5.0), "Does not contain value");
   VTKM_TEST_ASSERT(!unionRange.Contains(0.0), "Contains outside");
   VTKM_TEST_ASSERT(!unionRange.Contains(10), "Contains outside");
   VTKM_TEST_ASSERT(singleValueRange == unionRange, "Union not equal");
-  VTKM_TEST_ASSERT(!(singleValueRange == unionRange), "Union not equal");
+  VTKM_TEST_ASSERT(!(singleValueRange != unionRange), "Union not equal");
 
   std::cout << "Low range." << std::endl;
   vtkm::Range lowRange(-10.0, -5.0);
   VTKM_TEST_ASSERT(lowRange.IsNonEmpty(), "Empty?");
+  VTKM_TEST_ASSERT(test_equal(lowRange.Length(), 5.0), "Bad length.");
+  VTKM_TEST_ASSERT(test_equal(lowRange.Center(), -7.5), "Bad center.");
   VTKM_TEST_ASSERT(!lowRange.Contains(-20), "Contains fail");
   VTKM_TEST_ASSERT(lowRange.Contains(-7), "Contains fail");
   VTKM_TEST_ASSERT(!lowRange.Contains(0), "Contains fail");
@@ -55,6 +62,8 @@ void TestRange()
 
   unionRange = singleValueRange + lowRange;
   VTKM_TEST_ASSERT(unionRange.IsNonEmpty(), "Empty?");
+  VTKM_TEST_ASSERT(test_equal(unionRange.Length(), 15.0), "Bad length.");
+  VTKM_TEST_ASSERT(test_equal(unionRange.Center(), -2.5), "Bad center.");
   VTKM_TEST_ASSERT(!unionRange.Contains(-20), "Contains fail");
   VTKM_TEST_ASSERT(unionRange.Contains(-7), "Contains fail");
   VTKM_TEST_ASSERT(unionRange.Contains(0), "Contains fail");
@@ -63,6 +72,8 @@ void TestRange()
   std::cout << "High range." << std::endl;
   vtkm::Range highRange(15.0, 20.0);
   VTKM_TEST_ASSERT(highRange.IsNonEmpty(), "Empty?");
+  VTKM_TEST_ASSERT(test_equal(highRange.Length(), 5.0), "Bad length.");
+  VTKM_TEST_ASSERT(test_equal(highRange.Center(), 17.5), "Bad center.");
   VTKM_TEST_ASSERT(!highRange.Contains(-20), "Contains fail");
   VTKM_TEST_ASSERT(!highRange.Contains(-7), "Contains fail");
   VTKM_TEST_ASSERT(!highRange.Contains(0), "Contains fail");
@@ -72,6 +83,8 @@ void TestRange()
 
   unionRange = highRange.Union(singleValueRange);
   VTKM_TEST_ASSERT(unionRange.IsNonEmpty(), "Empty?");
+  VTKM_TEST_ASSERT(test_equal(unionRange.Length(), 15.0), "Bad length.");
+  VTKM_TEST_ASSERT(test_equal(unionRange.Center(), 12.5), "Bad center.");
   VTKM_TEST_ASSERT(!unionRange.Contains(-20), "Contains fail");
   VTKM_TEST_ASSERT(!unionRange.Contains(-7), "Contains fail");
   VTKM_TEST_ASSERT(!unionRange.Contains(0), "Contains fail");
@@ -81,6 +94,8 @@ void TestRange()
 
   unionRange.Include(-1);
   VTKM_TEST_ASSERT(unionRange.IsNonEmpty(), "Empty?");
+  VTKM_TEST_ASSERT(test_equal(unionRange.Length(), 21.0), "Bad length.");
+  VTKM_TEST_ASSERT(test_equal(unionRange.Center(), 9.5), "Bad center.");
   VTKM_TEST_ASSERT(!unionRange.Contains(-20), "Contains fail");
   VTKM_TEST_ASSERT(!unionRange.Contains(-7), "Contains fail");
   VTKM_TEST_ASSERT(unionRange.Contains(0), "Contains fail");
@@ -90,6 +105,8 @@ void TestRange()
 
   unionRange.Include(lowRange);
   VTKM_TEST_ASSERT(unionRange.IsNonEmpty(), "Empty?");
+  VTKM_TEST_ASSERT(test_equal(unionRange.Length(), 30.0), "Bad length.");
+  VTKM_TEST_ASSERT(test_equal(unionRange.Center(), 5), "Bad center.");
   VTKM_TEST_ASSERT(!unionRange.Contains(-20), "Contains fail");
   VTKM_TEST_ASSERT(unionRange.Contains(-7), "Contains fail");
   VTKM_TEST_ASSERT(unionRange.Contains(0), "Contains fail");
