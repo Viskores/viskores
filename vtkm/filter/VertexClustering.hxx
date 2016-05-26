@@ -62,7 +62,7 @@ vtkm::filter::ResultDataSet VertexClustering::DoExecute(const vtkm::cont::DataSe
   vtkm::Float64 bounds[6];
   compute_bounds(input.GetCoordinateSystem(), bounds, policy, tag);
 
-  vtkm::cont::DataSet outDataSet = clustering.Run(vtkm::filter::ApplyPolicy(input.GetCellSet(), policy),
+  vtkm::cont::DataSet outDataSet = clustering.Run(vtkm::filter::ApplyPolicyUnstructured(input.GetCellSet(), policy),
                                                   vtkm::filter::ApplyPolicy(input.GetCoordinateSystem(), policy),
                                                   bounds,
                                                   this->GetNumberOfDivisions(),

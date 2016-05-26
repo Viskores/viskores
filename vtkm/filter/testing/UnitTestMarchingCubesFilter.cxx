@@ -205,7 +205,7 @@ public:
   struct TypeListTagRadiantCellSetTypes : vtkm::ListTagBase<
                       MakeRadiantDataSet::CellSet > {};
 
-  typedef TypeListTagRadiantCellSetTypes CellSetList;
+  typedef TypeListTagRadiantCellSetTypes AllCellSetList;
 
   typedef vtkm::filter::DefaultPolicy::CoordinateTypeList CoordinateTypeList;
   typedef vtkm::filter::DefaultPolicy::CoordinateStorageList CoordinateStorageList;

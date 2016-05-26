@@ -35,7 +35,9 @@ public:
   typedef VTKM_DEFAULT_TYPE_LIST_TAG    FieldTypeList;
   typedef VTKM_DEFAULT_STORAGE_LIST_TAG FieldStorageList;
 
-  typedef VTKM_DEFAULT_CELL_SET_LIST_TAG CellSetList;
+  typedef vtkm::cont::CellSetListTagStructured StructuredCellSetList;
+  typedef vtkm::cont::CellSetListTagUnstructured UnstructuredCellSetList;
+  typedef VTKM_DEFAULT_CELL_SET_LIST_TAG AllCellSetList;
 
   typedef VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG CoordinateTypeList;
   typedef VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG CoordinateStorageList;

@@ -42,23 +42,38 @@ struct CellSetListTagStructured2D
 struct CellSetListTagStructured3D
         : vtkm::ListTagBase<vtkm::cont::CellSetStructured<3> > {  };
 
-template<typename ShapeStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
-         typename IndexStorageTag         = VTKM_DEFAULT_STORAGE_TAG,
-         typename ConnectivityStorageTag  = VTKM_DEFAULT_STORAGE_TAG >
+template<typename ShapeStorageTag         = VTKM_DEFAULT_SHAPE_STORAGE_TAG,
+         typename NumIndicesStorageTag    = VTKM_DEFAULT_NUM_INDICES_STORAGE_TAG,
+         typename ConnectivityStorageTag  = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
+         typename OffsetsStorageTag       = VTKM_DEFAULT_OFFSETS_STORAGE_TAG >
 struct CellSetListTagExplicit
         : vtkm::ListTagBase<
             vtkm::cont::CellSetExplicit<
               ShapeStorageTag,
-              IndexStorageTag,
-              ConnectivityStorageTag> > {  };
+              NumIndicesStorageTag,
+              ConnectivityStorageTag,
+              OffsetsStorageTag> > {  };
 
 struct CellSetListTagExplicitDefault
         : CellSetListTagExplicit<> {  };
+
 
 struct CellSetListTagCommon
         : vtkm::ListTagBase<
             vtkm::cont::CellSetStructured<2>,
             vtkm::cont::CellSetStructured<3>,
+            vtkm::cont::CellSetExplicit<>,
+            vtkm::cont::CellSetSingleType<>
+            > {  };
+
+struct CellSetListTagStructured
+        : vtkm::ListTagBase<
+            vtkm::cont::CellSetStructured<2>,
+            vtkm::cont::CellSetStructured<3>
+            > {  };
+
+struct CellSetListTagUnstructured
+        : vtkm::ListTagBase<
             vtkm::cont::CellSetExplicit<>,
             vtkm::cont::CellSetSingleType<>
             > {  };
