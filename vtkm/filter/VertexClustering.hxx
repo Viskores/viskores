@@ -32,8 +32,6 @@ namespace
 {
   typedef typename DerivedPolicy::CoordinateTypeList TypeList;
   typedef typename DerivedPolicy::CoordinateStorageList StorageList;
-  //todo: Look at the GetBounds function. It currently generates
-  //a significant amount of code, inflating binary sizes considerably
   coords.GetBounds(bounds, tag, TypeList(), StorageList());
 }
 
