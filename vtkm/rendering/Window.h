@@ -139,9 +139,7 @@ public:
     if (this->Scene.Plots.size() > 0)
     {
       //this->ColorBarAnnotation.SetAxisColor(eavlColor::white);
-      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].ScalarBounds[0],
-                                        this->Scene.Plots[0].ScalarBounds[1],
-                                        5);
+      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].ScalarRange, 5);
       this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].ColorTable);
       this->ColorBarAnnotation.Render(this->View, this->WorldAnnotator, this->Surface);
     }
@@ -150,10 +148,10 @@ public:
   VTKM_CONT_EXPORT
   virtual void RenderWorldAnnotations()
   {
-    vtkm::Float64 *bounds = this->Scene.GetSpatialBounds();
-    vtkm::Float64 xmin = bounds[0], xmax = bounds[1];
-    vtkm::Float64 ymin = bounds[2], ymax = bounds[3];
-    vtkm::Float64 zmin = bounds[4], zmax = bounds[5];
+    vtkm::Bounds bounds = this->Scene.GetSpatialBounds();
+    vtkm::Float64 xmin = bounds.X.Min, xmax = bounds.X.Max;
+    vtkm::Float64 ymin = bounds.Y.Min, ymax = bounds.Y.Max;
+    vtkm::Float64 zmin = bounds.Z.Min, zmax = bounds.Y.Max;
     vtkm::Float64 dx = xmax-xmin, dy = ymax-ymin, dz = zmax-zmin;
     vtkm::Float64 size = vtkm::Sqrt(dx*dx + dy*dy + dz*dz);
 
@@ -299,8 +297,8 @@ public:
     if (this->Scene.Plots.size() > 0)
     {
       //this->ColorBarAnnotation.SetAxisColor(eavlColor::white);
-      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].ScalarBounds[0],
-                                        this->Scene.Plots[0].ScalarBounds[1],
+      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].ScalarRange[0],
+                                        this->Scene.Plots[0].ScalarRange[1],
                                         5);
       this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].ColorTable);
       this->ColorBarAnnotation.Render(

@@ -45,7 +45,7 @@ public:
                            vtkm::cont::Field &scalarField, //This should be const
                            const vtkm::rendering::ColorTable &colorTable,
                            vtkm::rendering::View &view,
-                           vtkm::Float64 *scalarBounds=NULL) = 0;
+                           const vtkm::Range &scalarRange) = 0;
 
   VTKM_CONT_EXPORT
   virtual void SetActiveColorTable(const ColorTable &ct)

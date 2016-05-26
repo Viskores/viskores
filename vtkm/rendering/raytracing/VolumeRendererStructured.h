@@ -840,15 +840,15 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
   public:
     VTKM_CONT_EXPORT
     CalcRayStart(vtkm::Vec<vtkm::Float32,3> cameraPosition,
-                 vtkm::Float32 boundingBox[6])
+                 const vtkm::Bounds boundingBox)
      : CameraPosition(cameraPosition)
     {
-      Xmin = boundingBox[0];
-      Xmax = boundingBox[1];
-      Ymin = boundingBox[2];
-      Ymax = boundingBox[3];
-      Zmin = boundingBox[4];
-      Zmax = boundingBox[5];
+      Xmin = static_cast<vtkm::Float32>(boundingBox.X.Min);
+      Xmax = static_cast<vtkm::Float32>(boundingBox.X.Max);
+      Ymin = static_cast<vtkm::Float32>(boundingBox.Y.Min);
+      Ymax = static_cast<vtkm::Float32>(boundingBox.Y.Max);
+      Zmin = static_cast<vtkm::Float32>(boundingBox.Z.Min);
+      Zmax = static_cast<vtkm::Float32>(boundingBox.Z.Max);
     }
 
     VTKM_EXEC_EXPORT
@@ -953,9 +953,9 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
   VTKM_CONT_EXPORT
   void SetData(const vtkm::cont::CoordinateSystem &coords,
                vtkm::cont::Field &scalarField,
-               vtkm::Float64 coordsBounds[6],
+               const vtkm::Bounds &coordsBounds,
                const vtkm::cont::CellSetStructured<3> &cellset,
-               vtkm::Float64 *scalarBounds)
+               const vtkm::Range &scalarRange)
   {
     if(coords.GetData().IsSameType(CartesianArrayHandle())) IsUniformDataSet = false;
     IsSceneDirty = true;
@@ -963,11 +963,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
     ScalarField = &scalarField;
     DataBounds = coordsBounds;
     Cellset = cellset;
-    ScalarBounds = scalarBounds;
-    for (int i = 0; i < 6; ++i)
-    {
-      BoundingBox[i] = vtkm::Float32(coordsBounds[i]);
-    }
+    ScalarRange = scalarRange;
   }
 
 
@@ -981,13 +977,13 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
     if(SampleDistance <= 0.f)
     {
       vtkm::Vec<vtkm::Float32,3> extent;
-      extent[0] = BoundingBox[1] - BoundingBox[0];
-      extent[1] = BoundingBox[3] - BoundingBox[2];
-      extent[2] = BoundingBox[5] - BoundingBox[4];
+      extent[0] = static_cast<vtkm::Float32>(this->DataBounds.X.Length());
+      extent[1] = static_cast<vtkm::Float32>(this->DataBounds.Y.Length());
+      extent[2] = static_cast<vtkm::Float32>(this->DataBounds.Z.Length());
       SampleDistance = vtkm::Magnitude(extent) / 1000.f;
     }
 
-    vtkm::worklet::DispatcherMapField< CalcRayStart >( CalcRayStart( camera.GetPosition(), BoundingBox ))
+    vtkm::worklet::DispatcherMapField< CalcRayStart >( CalcRayStart( camera.GetPosition(), this->DataBounds ))
       .Invoke( Rays.Dir,
                Rays.MinDistance,
                Rays.MaxDistance);
@@ -1006,8 +1002,8 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                                                                ColorMap,
                                                                vertices,
                                                                Cellset,
-                                                               vtkm::Float32(ScalarBounds[0]),
-                                                               vtkm::Float32(ScalarBounds[1]),
+                                                               vtkm::Float32(ScalarRange.Min),
+                                                               vtkm::Float32(ScalarRange.Max),
                                                                SampleDistance ))
           .Invoke( Rays.Dir,
                    Rays.MinDistance,
@@ -1021,8 +1017,8 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                                                                                  ColorMap,
                                                                                  vertices,
                                                                                  Cellset,
-                                                                                 vtkm::Float32(ScalarBounds[0]),
-                                                                                 vtkm::Float32(ScalarBounds[1]),
+                                                                                 vtkm::Float32(ScalarRange.Min),
+                                                                                 vtkm::Float32(ScalarRange.Max),
                                                                                  SampleDistance ))
           .Invoke( Rays.Dir,
                    Rays.MinDistance,
@@ -1042,8 +1038,8 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                                                                          ColorMap,
                                                                          vertices,
                                                                          Cellset,
-                                                                         vtkm::Float32(ScalarBounds[0]),
-                                                                         vtkm::Float32(ScalarBounds[1]),
+                                                                         vtkm::Float32(ScalarRange.Min),
+                                                                         vtkm::Float32(ScalarRange.Max),
                                                                          SampleDistance ))
             .Invoke( Rays.Dir,
                      Rays.MinDistance,
@@ -1057,8 +1053,8 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                                                                                            ColorMap,
                                                                                            vertices,
                                                                                            Cellset,
-                                                                                           vtkm::Float32(ScalarBounds[0]),
-                                                                                           vtkm::Float32(ScalarBounds[1]),
+                                                                                           vtkm::Float32(ScalarRange.Min),
+                                                                                           vtkm::Float32(ScalarRange.Max),
                                                                                            SampleDistance ))
             .Invoke( Rays.Dir,
                      Rays.MinDistance,
@@ -1098,11 +1094,10 @@ protected:
   vtkm::cont::CellSetStructured<3> Cellset;
   vtkm::cont::Field *ScalarField;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
-  vtkm::Float32 BoundingBox[6];
   vtkm::Float32 SampleDistance;
   vtkm::Vec<vtkm::Float32,4> BackgroundColor;
-  vtkm::Float64 *ScalarBounds;
-  vtkm::Float64 *DataBounds;
+  vtkm::Range ScalarRange;
+  vtkm::Bounds DataBounds;
 
 };
 }}} //namespace vtkm::rendering::raytracing

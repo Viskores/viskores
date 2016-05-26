@@ -72,11 +72,10 @@ public:
                            vtkm::cont::Field &scalarField,
                            const vtkm::rendering::ColorTable &, //colorTable
                            vtkm::rendering::View &view,
-                           vtkm::Float64 *scalarBounds=NULL) //scalarBounds=NULL)
+                           const vtkm::Range &scalarRange)
   {
-    vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
-    vtkm::Float64 coordsBounds[6]; // Xmin,Xmax,Ymin..
-    coords.GetBounds(coordsBounds,DeviceAdapter());
+//    vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
+    vtkm::Bounds coordsBounds = coords.GetBounds(DeviceAdapter());
 
     if(!cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
     {
@@ -91,7 +90,7 @@ public:
       //vertices = dynamicCoordsHandle.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       vtkm::rendering::raytracing::Camera<DeviceAdapter> &camera = Tracer.GetCamera();
       camera.SetParameters(view);
-      Tracer.SetData(coords, scalarField, coordsBounds, cellSetStructured3D, scalarBounds);
+      Tracer.SetData(coords, scalarField, coordsBounds, cellSetStructured3D, scalarRange);
       Tracer.SetColorMap(ColorMap);
       Tracer.SetBackgroundColor(this->BackgroundColor);
       Tracer.Render(Surface);

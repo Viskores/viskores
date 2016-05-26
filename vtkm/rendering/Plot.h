@@ -20,6 +20,7 @@
 #ifndef vtk_m_rendering_Plot_h
 #define vtk_m_rendering_Plot_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/View.h>
 #include <vector>
@@ -41,10 +42,12 @@ public:
       ScalarField(scalarField),
       ColorTable(colorTable)
   {
-    scalarField.GetBounds(this->ScalarBounds,
-                          VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    coordinates.GetBounds(this->SpatialBounds,
-                          VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    VTKM_ASSERT(scalarField.GetData().GetNumberOfComponents() == 1);
+
+    scalarField.GetRange(&this->ScalarRange,
+                         VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    this->SpatialBounds =
+        coordinates.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   }
 
   template<typename SceneRendererType, typename SurfaceType>
@@ -60,7 +63,7 @@ public:
                               this->ScalarField,
                               this->ColorTable,
                               view,
-                              this->ScalarBounds);
+                              this->ScalarRange);
   }
 
   vtkm::cont::DynamicCellSet Cells;
@@ -68,8 +71,8 @@ public:
   vtkm::cont::Field ScalarField;
   vtkm::rendering::ColorTable ColorTable;
 
-  vtkm::Float64 ScalarBounds[2];
-  vtkm::Float64 SpatialBounds[6];
+  vtkm::Range ScalarRange;
+  vtkm::Bounds SpatialBounds;
 };
 
 }} //namespace vtkm::rendering

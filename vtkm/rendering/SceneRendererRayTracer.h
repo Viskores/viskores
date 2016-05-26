@@ -71,7 +71,7 @@ public:
                    vtkm::cont::Field &scalarField,
                    const vtkm::rendering::ColorTable &vtkmNotUsed(colorTable),
                    vtkm::rendering::View &view,
-                   vtkm::Float64 *scalarBounds)
+                   const vtkm::Range &scalarRange)
   {
 
     vtkm::cont::Timer<DeviceAdapter> timer;
@@ -81,13 +81,12 @@ public:
     camera.SetParameters(view);
     vtkm::Id numberOfTriangles;
 
-    vtkm::Float64 dataBounds[6];
-    coords.GetBounds(dataBounds,DeviceAdapter());
+    vtkm::Bounds dataBounds = coords.GetBounds(DeviceAdapter());
 
     Triangulator<DeviceAdapter> triangulator;
     triangulator.run(cellset, indices, numberOfTriangles);//,dynamicCoordsHandle,dataBounds);
 
-    Tracer.SetData(dynamicCoordsHandle, indices, scalarField, numberOfTriangles, scalarBounds, dataBounds);
+    Tracer.SetData(dynamicCoordsHandle, indices, scalarField, numberOfTriangles, scalarRange, dataBounds);
     Tracer.SetColorMap(ColorMap);
     Tracer.SetBackgroundColor(BackgroundColor);
     Tracer.Render(Surface);

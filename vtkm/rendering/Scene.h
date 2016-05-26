@@ -44,8 +44,7 @@ public:
               SurfaceType &surface,
               vtkm::rendering::View &view)
   {
-    this->SpatialBounds[0] = this->SpatialBounds[2] = this->SpatialBounds[4] = +FLT_MAX;
-    this->SpatialBounds[1] = this->SpatialBounds[3] = this->SpatialBounds[5] = -FLT_MAX;
+    vtkm::Bounds bounds;
 
     sceneRenderer.StartScene();
     for (std::size_t i = 0; i < this->Plots.size(); i++)
@@ -53,23 +52,20 @@ public:
       this->Plots[i].Render(sceneRenderer, surface, view);
 
       // accumulate all Plots' spatial bounds into the scene spatial bounds
-      this->SpatialBounds[0] = vtkm::Min(this->SpatialBounds[0], this->Plots[i].SpatialBounds[0]);
-      this->SpatialBounds[1] = vtkm::Max(this->SpatialBounds[1], this->Plots[i].SpatialBounds[1]);
-      this->SpatialBounds[2] = vtkm::Min(this->SpatialBounds[2], this->Plots[i].SpatialBounds[2]);
-      this->SpatialBounds[3] = vtkm::Max(this->SpatialBounds[3], this->Plots[i].SpatialBounds[3]);
-      this->SpatialBounds[4] = vtkm::Min(this->SpatialBounds[4], this->Plots[i].SpatialBounds[4]);
-      this->SpatialBounds[5] = vtkm::Max(this->SpatialBounds[5], this->Plots[i].SpatialBounds[5]);
+      bounds.Include(this->Plots[i].SpatialBounds);
     }
     sceneRenderer.EndScene();
+
+    this->SpatialBounds = bounds;
   }
 
-  vtkm::Float64 *GetSpatialBounds()
+  const vtkm::Bounds &GetSpatialBounds()
   {
     return this->SpatialBounds;
   }
 
 protected:
-  vtkm::Float64 SpatialBounds[6];
+  vtkm::Bounds SpatialBounds;
 };
 
 class Scene2D : public Scene

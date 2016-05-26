@@ -57,6 +57,10 @@ public:
     }
     axis.SetMajorTicks(pos, prop);
   }
+  void SetRange(const vtkm::Range &range, int nticks)
+  {
+    this->SetRange(range.Min, range.Max, nticks);
+  }
 
   virtual void Render(vtkm::rendering::View &view,
                       vtkm::rendering::WorldAnnotator &worldAnnotator,
