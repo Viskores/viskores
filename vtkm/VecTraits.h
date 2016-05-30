@@ -210,11 +210,13 @@ struct VecTraitsBasic {
   typedef VecTraitsTagSingleComponent HasMultipleComponents;
   typedef vtkm::VecTraitsTagSizeStatic IsSizeStatic;
 
+  VTKM_EXEC_CONT_EXPORT
   static vtkm::IdComponent GetNumberOfComponents(const ScalarType &) {
     return 1;
   }
 
-  VTKM_EXEC_CONT_EXPORT static const ComponentType &GetComponent(
+  VTKM_EXEC_CONT_EXPORT
+  static const ComponentType &GetComponent(
       const ScalarType &vector,
       vtkm::IdComponent) {
     return vector;
