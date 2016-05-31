@@ -48,6 +48,21 @@ inline void FlipEndianness(std::vector<T> &buffer)
   }
 }
 
+template<typename T, vtkm::IdComponent N>
+inline void FlipEndianness(std::vector<vtkm::Vec<T,N> > &buffer)
+{
+  vtkm::UInt8 *bytes = reinterpret_cast<vtkm::UInt8*>(&buffer[0]);
+  const std::size_t tsize = sizeof(T);
+  const std::size_t bsize = buffer.size();
+  for (std::size_t i = 0; i < bsize; i++)
+  {
+    for (vtkm::IdComponent j = 0; j < N; j++, bytes+=tsize)
+    {
+      std::reverse(bytes, bytes + tsize);
+    }
+  }
+}
+
 }
 }
 } // vtkm::io::internal
