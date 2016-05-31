@@ -352,7 +352,6 @@ protected:
 
         if (data.GetNumberOfValues() > 0)
         {
-          name = tag + ":" + name;
           switch (association)
           {
           case vtkm::cont::Field::ASSOC_POINTS:
