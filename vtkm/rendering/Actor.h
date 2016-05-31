@@ -36,7 +36,8 @@ public:
   Actor(const vtkm::cont::DynamicCellSet &cells,
         const vtkm::cont::CoordinateSystem &coordinates,
         const vtkm::cont::Field &scalarField,
-        const vtkm::rendering::ColorTable &colorTable)
+        const vtkm::rendering::ColorTable &colorTable =
+          vtkm::rendering::ColorTable("default"))
     : Cells(cells),
       Coordinates(coordinates),
       ScalarField(scalarField),
