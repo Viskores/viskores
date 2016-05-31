@@ -17,13 +17,16 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#define BOOST_SP_DISABLE_THREADS
 
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
-#include <vtkm/cont/testing/TestingComputeBounds.h>
+#include <vtkm/cont/cuda/internal/testing/Testing.h>
+#include <vtkm/cont/testing/TestingComputeRange.h>
 
-int UnitTestComputeBoundsTBB(int, char *[])
+int UnitTestComputeRangeCuda(int, char *[])
 {
-  return vtkm::cont::testing::TestingComputeBounds
-      <vtkm::cont::DeviceAdapterTagTBB>::Run();
+  int result = vtkm::cont::testing::TestingComputeRange
+      <vtkm::cont::DeviceAdapterTagCuda>::Run();
+  return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

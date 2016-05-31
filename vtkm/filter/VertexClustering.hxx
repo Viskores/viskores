@@ -25,16 +25,13 @@ namespace
 {
   template<typename DerivedPolicy,
            typename DeviceAdapter>
-  void compute_bounds(const vtkm::cont::CoordinateSystem& coords,
-                      vtkm::Float64 *bounds,
-                      const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                      const DeviceAdapter& tag)
+  vtkm::Bounds compute_bounds(const vtkm::cont::CoordinateSystem& coords,
+                              const vtkm::filter::PolicyBase<DerivedPolicy>&,
+                              const DeviceAdapter& tag)
 {
   typedef typename DerivedPolicy::CoordinateTypeList TypeList;
   typedef typename DerivedPolicy::CoordinateStorageList StorageList;
-  //todo: Look at the GetBounds function. It currently generates
-  //a significant amount of code, inflating binary sizes considerably
-  coords.GetBounds(bounds, tag, TypeList(), StorageList());
+  return coords.GetBounds(tag, TypeList(), StorageList());
 }
 
 }
@@ -59,10 +56,10 @@ vtkm::filter::ResultDataSet VertexClustering::DoExecute(const vtkm::cont::DataSe
   vtkm::worklet::VertexClustering clustering;
 
   //need to compute bounds first
-  vtkm::Float64 bounds[6];
-  compute_bounds(input.GetCoordinateSystem(), bounds, policy, tag);
+  vtkm::Bounds bounds =
+      compute_bounds(input.GetCoordinateSystem(), policy, tag);
 
-  vtkm::cont::DataSet outDataSet = clustering.Run(vtkm::filter::ApplyPolicy(input.GetCellSet(), policy),
+  vtkm::cont::DataSet outDataSet = clustering.Run(vtkm::filter::ApplyPolicyUnstructured(input.GetCellSet(), policy),
                                                   vtkm::filter::ApplyPolicy(input.GetCoordinateSystem(), policy),
                                                   bounds,
                                                   this->GetNumberOfDivisions(),

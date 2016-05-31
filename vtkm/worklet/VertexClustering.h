@@ -148,7 +148,7 @@ struct VertexClustering
   class MapCellsWorklet: public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(TopologyIn topology,
+    typedef void ControlSignature(CellSetIn cellset,
                                   FieldInPoint<IdType> pointClusterIds,
                                   FieldOutCell<Id3Type> cellClusterIds);
     typedef void ExecutionSignature(_2, _3);
@@ -316,7 +316,7 @@ public:
            typename DeviceAdapter>
   vtkm::cont::DataSet Run(const DynamicCellSetType &cellSet,
                           const DynamicCoordinateHandleType &coordinates,
-                          vtkm::Float64 *bounds,
+                          const vtkm::Bounds &bounds,
                           const vtkm::Id3& nDivisions,
                           DeviceAdapter)
   {
@@ -325,24 +325,24 @@ public:
     /// determine grid resolution for clustering
     GridInfo gridInfo;
     {
-      vtkm::Float64 res[3];
-      for (vtkm::IdComponent i=0; i<3; i++)
-      {
-        res[i] = (bounds[i*2+1]-bounds[i*2])/static_cast<vtkm::Float64>(nDivisions[i]);
-      }
+      vtkm::Vec<vtkm::Float64,3> res(
+            bounds.X.Length()/static_cast<vtkm::Float64>(nDivisions[0]),
+            bounds.Y.Length()/static_cast<vtkm::Float64>(nDivisions[1]),
+            bounds.Z.Length()/static_cast<vtkm::Float64>(nDivisions[2]));
       gridInfo.grid_width = vtkm::Max(res[0], vtkm::Max(res[1], res[2]));
 
       vtkm::Float64 inv_grid_width = gridInfo.inv_grid_width = vtkm::Float64(1) / gridInfo.grid_width;
 
       //printf("Bounds: %lf, %lf, %lf, %lf, %lf, %lf\n", bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
-      gridInfo.dim[0] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[1]-bounds[0])*inv_grid_width), nDivisions[0]);
-      gridInfo.dim[1] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[3]-bounds[2])*inv_grid_width), nDivisions[1]);
-      gridInfo.dim[2] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds[5]-bounds[4])*inv_grid_width), nDivisions[2]);
+      gridInfo.dim[0] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds.X.Length())*inv_grid_width), nDivisions[0]);
+      gridInfo.dim[1] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds.Y.Length())*inv_grid_width), nDivisions[1]);
+      gridInfo.dim[2] = vtkm::Min((vtkm::Id)vtkm::Ceil((bounds.Z.Length())*inv_grid_width), nDivisions[2]);
 
       // center the mesh in the grids
-      gridInfo.origin[0] = (bounds[1]+bounds[0])*0.5 - gridInfo.grid_width*static_cast<vtkm::Float64>(gridInfo.dim[0])*.5;
-      gridInfo.origin[1] = (bounds[3]+bounds[2])*0.5 - gridInfo.grid_width*static_cast<vtkm::Float64>(gridInfo.dim[1])*.5;
-      gridInfo.origin[2] = (bounds[5]+bounds[4])*0.5 - gridInfo.grid_width*static_cast<vtkm::Float64>(gridInfo.dim[2])*.5;
+      vtkm::Vec<vtkm::Float64,3> center = bounds.Center();
+      gridInfo.origin[0] = center[0] - gridInfo.grid_width*static_cast<vtkm::Float64>(gridInfo.dim[0])*.5;
+      gridInfo.origin[1] = center[1] - gridInfo.grid_width*static_cast<vtkm::Float64>(gridInfo.dim[1])*.5;
+      gridInfo.origin[2] = center[2] - gridInfo.grid_width*static_cast<vtkm::Float64>(gridInfo.dim[2])*.5;
     }
 
     //construct the scheduler that will execute all the worklets

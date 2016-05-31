@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2016 Sandia Corporation.
+//  Copyright 2016 UT-Battelle, LLC.
+//  Copyright 2016 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -17,16 +17,14 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#define BOOST_SP_DISABLE_THREADS
 
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#ifndef vtk_m_rendering_internal_OpenGLHeaders_h
+#define vtk_m_rendering_internal_OpenGLHeaders_h
 
-#include <vtkm/cont/cuda/internal/testing/Testing.h>
-#include <vtkm/cont/testing/TestingComputeBounds.h>
+#if defined(__APPLE__)
+# include <OpenGL/gl.h>
+#else
+# include <GL/gl.h>
+#endif
 
-int UnitTestComputeBoundsCuda(int, char *[])
-{
-  int result = vtkm::cont::testing::TestingComputeBounds
-      <vtkm::cont::DeviceAdapterTagCuda>::Run();
-  return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
-}
+#endif //vtk_m_rendering_internal_OpenGLHeaders_h

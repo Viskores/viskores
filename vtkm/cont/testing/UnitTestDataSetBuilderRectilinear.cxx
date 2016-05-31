@@ -47,7 +47,7 @@ typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      int dim,
                      vtkm::Id numPoints, vtkm::Id numCells,
-                     vtkm::Float64 *bounds)
+                     const vtkm::Bounds &bounds)
 {
     //Verify basics..
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
@@ -62,11 +62,8 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      "Wrong number of cells.");
 
     //Make sure the bounds are correct.
-    vtkm::Float64 res[6];
-    ds.GetCoordinateSystem().GetBounds(res, DeviceAdapter());
-    VTKM_TEST_ASSERT(test_equal(bounds[0], res[0]) && test_equal(bounds[1], res[1]) &&
-                     test_equal(bounds[2], res[2]) && test_equal(bounds[3], res[3]) &&
-                     test_equal(bounds[4], res[4]) && test_equal(bounds[5], res[5]),
+    vtkm::Bounds res = ds.GetCoordinateSystem().GetBounds(DeviceAdapter());
+    VTKM_TEST_ASSERT(test_equal(bounds, res),
                      "Bounds of coordinates do not match");
     if (dim == 2)
     {
@@ -150,11 +147,9 @@ RectilinearTests()
     std::cout << "2D cases" << std::endl;
     vtkm::Id numPoints = dimensions[0]*dimensions[1];
     vtkm::Id numCells = (dimensions[0]-1)*(dimensions[1]-1);
-    vtkm::Float64 bounds[6] = {
-      xCoordinates.front(), xCoordinates.back(),
-      yCoordinates.front(), yCoordinates.back(),
-      0.0, 0.0
-    };
+    vtkm::Bounds bounds(xCoordinates.front(), xCoordinates.back(),
+                        yCoordinates.front(), yCoordinates.back(),
+                        0.0, 0.0);
 
     std::cout << "  Create with std::vector" << std::endl;
     dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates);
@@ -175,8 +170,7 @@ RectilinearTests()
     std::cout << "3D cases" << std::endl;
     numPoints *= dimensions[2];
     numCells *= dimensions[2]-1;
-    bounds[4] = zCoordinates.front();
-    bounds[5] = zCoordinates.back();
+    bounds.Z = vtkm::Range(zCoordinates.front(), zCoordinates.back());
 
     std::cout << "  Create with std::vector" << std::endl;
     dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates, zCoordinates);

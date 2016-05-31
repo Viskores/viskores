@@ -35,7 +35,7 @@ class MaxPointOrCellValue : public vtkm::worklet::WorkletMapPointToCell
 public:
   typedef void ControlSignature(FieldInCell<Scalar> inCells,
                                 FieldInPoint<Scalar> inPoints,
-                                TopologyIn topology,
+                                CellSetIn topology,
                                 FieldOutCell<Scalar> outCells);
   typedef void ExecutionSignature(_1, _4, _2, PointCount, CellShape, PointIndices);
   typedef _3 InputDomain;
@@ -70,7 +70,7 @@ class AveragePointToCellValue : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
   typedef void ControlSignature(FieldInPoint<Scalar> inPoints,
-                                TopologyIn topology,
+                                CellSetIn topology,
                                 FieldOutCell<Scalar> outCells);
   typedef void ExecutionSignature(_1, _3, PointCount);
   typedef _2 InputDomain;
@@ -98,7 +98,7 @@ class AverageCellToPointValue : public vtkm::worklet::WorkletMapCellToPoint
 {
 public:
   typedef void ControlSignature(FieldInCell<Scalar> inCells,
-                                TopologyIn topology,
+                                CellSetIn topology,
                                 FieldOut<Scalar> outPoints);
   typedef void ExecutionSignature(_1, _3, CellCount);
   typedef _2 InputDomain;
@@ -125,7 +125,7 @@ public:
 struct CheckStructuredUniformPointCoords
     : public vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(TopologyIn topology,
+  typedef void ControlSignature(CellSetIn topology,
                                 FieldInPoint<Vec3> pointCoords);
   typedef void ExecutionSignature(_2);
 

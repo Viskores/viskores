@@ -61,7 +61,7 @@ public:
   class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(TopologyIn topology,
+    typedef void ControlSignature(CellSetIn cellset,
                                   FieldOutCell<> connectivityOut);
     typedef void ExecutionSignature(PointIndices, _2, VisitIndex);
     typedef _1 InputDomain;

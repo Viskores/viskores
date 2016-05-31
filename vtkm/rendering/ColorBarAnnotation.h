@@ -21,9 +21,10 @@
 #define vtk_m_rendering_ColorBarAnnotation_h
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/rendering/AxisAnnotation2D.h>
 #include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/RenderSurface.h>
+#include <vtkm/rendering/View.h>
 
 
 namespace vtkm {
@@ -55,6 +56,10 @@ public:
       prop.push_back(p);
     }
     axis.SetMajorTicks(pos, prop);
+  }
+  void SetRange(const vtkm::Range &range, int nticks)
+  {
+    this->SetRange(range.Min, range.Max, nticks);
   }
 
   virtual void Render(vtkm::rendering::View &view,

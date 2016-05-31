@@ -75,24 +75,24 @@ void mouseMove(int x, int y)
     //std::cout<<"MOUSE MOVE: "<<x<<" "<<y<<std::endl;
 
     //Map to XY
-    y = window->view.Height-y;
-    
+    y = window->View.Height-y;
+
     if (lastx != -1 && lasty != -1)
     {
-        vtkm::Float32 x1 = ((lastx*2.0f)/window->view.Width) - 1.0f;
-        vtkm::Float32 y1 = ((lasty*2.0f)/window->view.Height) - 1.0f;
-        vtkm::Float32 x2 = ((x*2.0f)/window->view.Width) - 1.0f;
-        vtkm::Float32 y2 = ((y*2.0f)/window->view.Height) - 1.0f;
+        vtkm::Float32 x1 = ((lastx*2.0f)/window->View.Width) - 1.0f;
+        vtkm::Float32 y1 = ((lasty*2.0f)/window->View.Height) - 1.0f;
+        vtkm::Float32 x2 = ((x*2.0f)/window->View.Width) - 1.0f;
+        vtkm::Float32 y2 = ((y*2.0f)/window->View.Height) - 1.0f;
 
         if (buttonStates[0] == GLUT_DOWN)
         {
             if (shiftKey)
-                window->view.Pan3D(x2-x1, y2-y1);
+                window->View.Pan3D(x2-x1, y2-y1);
             else
-                window->view.TrackballRotate(x1,y1, x2,y2);
+                window->View.TrackballRotate(x1,y1, x2,y2);
         }
         else if (buttonStates[1] == GLUT_DOWN)
-            window->view.Zoom3D(y2-y1);
+            window->View.Zoom3D(y2-y1);
     }
 
     lastx = x;
@@ -102,7 +102,7 @@ void mouseMove(int x, int y)
 
 
 // Respond to mouse button
-void mouseCall(int button, int state, int x, int y)
+void mouseCall(int button, int state, int vtkmNotUsed(x), int vtkmNotUsed(y))
 {
     int modifiers = glutGetModifiers();
     shiftKey = modifiers & GLUT_ACTIVE_SHIFT;
@@ -122,13 +122,13 @@ void Set3DView(vtkm::rendering::View &view,
                const vtkm::cont::CoordinateSystem &coords,
                vtkm::Int32 w, vtkm::Int32 h)
 {
-    vtkm::Float64 coordsBounds[6]; // Xmin,Xmax,Ymin..
-    coords.GetBounds(coordsBounds,VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    //set up a default view  
-    vtkm::Vec<vtkm::Float32,3> totalExtent; 
-    totalExtent[0] = vtkm::Float32(coordsBounds[1] - coordsBounds[0]); 
-    totalExtent[1] = vtkm::Float32(coordsBounds[3] - coordsBounds[2]);
-    totalExtent[2] = vtkm::Float32(coordsBounds[5] - coordsBounds[4]);
+    vtkm::Bounds coordsBounds =
+        coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    //set up a default view
+    vtkm::Vec<vtkm::Float32,3> totalExtent;
+    totalExtent[0] = vtkm::Float32(coordsBounds.X.Length());
+    totalExtent[1] = vtkm::Float32(coordsBounds.Y.Length());
+    totalExtent[2] = vtkm::Float32(coordsBounds.Z.Length());
     vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
     vtkm::Normalize(totalExtent);
 
@@ -149,9 +149,9 @@ main(int argc, char* argv[])
 {
     vtkm::cont::testing::MakeTestDataSet maker;
     vtkm::cont::DataSet ds = maker.Make3DUniformDataSet0();
-    
+
     lastx = lasty = -1;
-    
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(W,H);
@@ -162,7 +162,7 @@ main(int argc, char* argv[])
     glutReshapeFunc(reshape);
 
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
-    
+
     vtkm::rendering::View view;
     Set3DView(view, coords, W, H);
 
@@ -171,7 +171,7 @@ main(int argc, char* argv[])
     vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
 
     vtkm::rendering::Scene3D scene;
-    scene.plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
+    scene.Plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
                                                 ds.GetCoordinateSystem(),
                                                 ds.GetField("pointvar"),
                                                 vtkm::rendering::ColorTable("thermal")));
@@ -183,7 +183,7 @@ main(int argc, char* argv[])
                                                                               surface, view, bg);
     window->Initialize();
     glutMainLoop();
-    
+
     return 0;
 }
 

@@ -22,15 +22,17 @@
 
 #include <vtkm/Matrix.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/SceneRenderer.h>
+#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/rendering/BitmapFont.h>
 #include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/TextureGL.h>
 #include <vtkm/rendering/MatrixHelpers.h>
+
+#include <vtkm/rendering/internal/OpenGLHeaders.h>
 
 namespace vtkm {
 namespace rendering {

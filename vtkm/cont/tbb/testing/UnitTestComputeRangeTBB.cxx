@@ -18,12 +18,12 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
-#include <vtkm/cont/testing/TestingComputeBounds.h>
+#include <vtkm/cont/testing/TestingComputeRange.h>
 
-int UnitTestComputeBoundsSerial(int, char *[])
+int UnitTestComputeRangeTBB(int, char *[])
 {
-  return vtkm::cont::testing::TestingComputeBounds
-      <vtkm::cont::DeviceAdapterTagSerial>::Run();
+  return vtkm::cont::testing::TestingComputeRange
+      <vtkm::cont::DeviceAdapterTagTBB>::Run();
 }

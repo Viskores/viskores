@@ -18,33 +18,12 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_filter_DefaultPolicy_h
-#define vtk_m_filter_DefaultPolicy_h
+#include <vtkm/cont/DeviceAdapterSerial.h>
 
-#include <vtkm/filter/PolicyBase.h>
-#include <vtkm/cont/CellSetListTag.h>
-#include <vtkm/cont/StorageListTag.h>
-#include <vtkm/TypeListTag.h>
+#include <vtkm/cont/testing/TestingComputeRange.h>
 
-namespace vtkm {
-namespace filter {
-
-class DefaultPolicy : public vtkm::filter::PolicyBase< DefaultPolicy >
+int UnitTestComputeRangeSerial(int, char *[])
 {
-public:
-  typedef VTKM_DEFAULT_TYPE_LIST_TAG    FieldTypeList;
-  typedef VTKM_DEFAULT_STORAGE_LIST_TAG FieldStorageList;
-
-  typedef vtkm::cont::CellSetListTagStructured StructuredCellSetList;
-  typedef vtkm::cont::CellSetListTagUnstructured UnstructuredCellSetList;
-  typedef VTKM_DEFAULT_CELL_SET_LIST_TAG AllCellSetList;
-
-  typedef VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG CoordinateTypeList;
-  typedef VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG CoordinateStorageList;
-};
-
+  return vtkm::cont::testing::TestingComputeRange
+      <vtkm::cont::DeviceAdapterTagSerial>::Run();
 }
-}
-
-
-#endif //vtk_m_filter_DefaultPolicy_h

@@ -30,66 +30,62 @@ namespace rendering {
 class Scene
 {
 public:
-    std::vector<vtkm::rendering::Plot> plots;
+  std::vector<vtkm::rendering::Plot> Plots;
 };
 
 class Scene3D : public Scene
 {
 public:
-    Scene3D() {}
+  Scene3D() {}
 
-    template<typename SceneRendererType, typename SurfaceType>
-    VTKM_CONT_EXPORT
-    void Render(SceneRendererType &sceneRenderer,
-                SurfaceType &surface,
-                vtkm::rendering::View &view)
+  template<typename SceneRendererType, typename SurfaceType>
+  VTKM_CONT_EXPORT
+  void Render(SceneRendererType &sceneRenderer,
+              SurfaceType &surface,
+              vtkm::rendering::View &view)
+  {
+    vtkm::Bounds bounds;
+
+    sceneRenderer.StartScene();
+    for (std::size_t i = 0; i < this->Plots.size(); i++)
     {
-        spatialBounds[0] = spatialBounds[2] = spatialBounds[4] = +FLT_MAX;
-        spatialBounds[1] = spatialBounds[3] = spatialBounds[5] = -FLT_MAX;
+      this->Plots[i].Render(sceneRenderer, surface, view);
 
-        sceneRenderer.StartScene();
-        for (std::size_t i = 0; i < plots.size(); i++)
-        {
-            plots[i].Render(sceneRenderer, surface, view);
-
-            // accumulate all plots' spatial bounds into the scene spatial bounds
-            spatialBounds[0] = vtkm::Min(spatialBounds[0], plots[i].spatialBounds[0]);
-            spatialBounds[1] = vtkm::Max(spatialBounds[1], plots[i].spatialBounds[1]);
-            spatialBounds[2] = vtkm::Min(spatialBounds[2], plots[i].spatialBounds[2]);
-            spatialBounds[3] = vtkm::Max(spatialBounds[3], plots[i].spatialBounds[3]);
-            spatialBounds[4] = vtkm::Min(spatialBounds[4], plots[i].spatialBounds[4]);
-            spatialBounds[5] = vtkm::Max(spatialBounds[5], plots[i].spatialBounds[5]);
-        }
-        sceneRenderer.EndScene();
+      // accumulate all Plots' spatial bounds into the scene spatial bounds
+      bounds.Include(this->Plots[i].SpatialBounds);
     }
+    sceneRenderer.EndScene();
 
-    vtkm::Float64 *GetSpatialBounds()
-    {
-        return spatialBounds;
-    }
+    this->SpatialBounds = bounds;
+  }
+
+  const vtkm::Bounds &GetSpatialBounds()
+  {
+    return this->SpatialBounds;
+  }
 
 protected:
-    vtkm::Float64 spatialBounds[6];
+  vtkm::Bounds SpatialBounds;
 };
 
 class Scene2D : public Scene
 {
 public:
-    Scene2D() {}
+  Scene2D() {}
 
-    template<typename SceneRendererType, typename SurfaceType>
-    VTKM_CONT_EXPORT
-    void Render(SceneRendererType &sceneRenderer,
-                SurfaceType &surface,
-                vtkm::rendering::View &view)
+  template<typename SceneRendererType, typename SurfaceType>
+  VTKM_CONT_EXPORT
+  void Render(SceneRendererType &sceneRenderer,
+              SurfaceType &surface,
+              vtkm::rendering::View &view)
+  {
+    for (std::size_t i = 0; i < this->Plots.size(); i++)
     {
-        for (std::size_t i = 0; i < plots.size(); i++)
-        {
-            sceneRenderer.StartScene();
-            plots[i].Render(sceneRenderer, surface, view);
-            sceneRenderer.EndScene();
-        }
+      sceneRenderer.StartScene();
+      this->Plots[i].Render(sceneRenderer, surface, view);
+      sceneRenderer.EndScene();
     }
+  }
 };
 
 }} //namespace vtkm::rendering

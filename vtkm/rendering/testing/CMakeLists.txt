@@ -19,10 +19,15 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestSceneRendererOSMesa.cxx
   UnitTestSceneRendererRayTracer.cxx
   UnitTestSceneRendererVolume.cxx
 )
+
+if (OSMESA_FOUND)
+  set(unit_tests ${unit_tests}
+    UnitTestSceneRendererOSMesa.cxx
+    )
+endif()
 
 VTKM_unit_tests(SOURCES ${unit_tests}
                 LIBRARIES ${OSMESA_LIBRARY})

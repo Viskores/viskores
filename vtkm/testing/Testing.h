@@ -20,9 +20,11 @@
 #ifndef vtk_m_testing_Testing_h
 #define vtk_m_testing_Testing_h
 
+#include <vtkm/Bounds.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
 #include <vtkm/Pair.h>
+#include <vtkm/Range.h>
 #include <vtkm/TypeListTag.h>
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
@@ -397,6 +399,29 @@ bool test_equal(const vtkm::Pair<T1,T2> &pair1,
       && test_equal(pair1.second, pair2.second, tolerance);
 }
 
+
+/// Special implementation of test_equal for Ranges.
+///
+VTKM_EXEC_CONT_EXPORT
+bool test_equal(const vtkm::Range &range1,
+                const vtkm::Range &range2,
+                vtkm::Float64 tolerance = 0.0001)
+{
+  return (test_equal(range1.Min, range2.Min, tolerance) &&
+          test_equal(range1.Max, range2.Max, tolerance));
+}
+
+/// Special implementation of test_equal for Bounds.
+///
+VTKM_EXEC_CONT_EXPORT
+bool test_equal(const vtkm::Bounds &bounds1,
+                const vtkm::Bounds &bounds2,
+                vtkm::Float64 tolerance = 0.0001)
+{
+  return (test_equal(bounds1.X, bounds2.X, tolerance) &&
+          test_equal(bounds1.Y, bounds2.Y, tolerance) &&
+          test_equal(bounds1.Z, bounds2.Z, tolerance));
+}
 
 template<typename T>
 VTKM_EXEC_CONT_EXPORT

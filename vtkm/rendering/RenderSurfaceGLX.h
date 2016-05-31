@@ -50,8 +50,8 @@ public:
         ctx = glXGetCurrentContext();
         if (!ctx)
             throw vtkm::cont::ErrorControlBadValue("GL context creation failed.");
-        rgba.resize(width*height*4);
         /*
+        rgba.resize(width*height*4);
         if (!OSMesaMakeCurrent(ctx, &rgba[0], GL_FLOAT, static_cast<GLsizei>(width), static_cast<GLsizei>(height)))
             throw vtkm::cont::ErrorControlBadValue("OSMesa context activation failed.");
         */
@@ -62,7 +62,9 @@ public:
     VTKM_CONT_EXPORT
     virtual void Clear()
     {
-        glClearColor(bgColor.Components[0],bgColor.Components[1],bgColor.Components[2], 1.0f);
+        glClearColor(this->BackgroundColor.Components[0],
+                     this->BackgroundColor.Components[1],
+                     this->BackgroundColor.Components[2], 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     VTKM_CONT_EXPORT

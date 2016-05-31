@@ -28,8 +28,8 @@
 #include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/TextureGL.h>
 #include <vtkm/rendering/MatrixHelpers.h>
+#include <vtkm/rendering/internal/OpenGLHeaders.h>
 
-#include <GL/gl.h>
 #include <iostream>
 #include <fstream>
 

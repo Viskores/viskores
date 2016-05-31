@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_arg_TypeCheckTagTopology_h
-#define vtk_m_cont_arg_TypeCheckTagTopology_h
+#ifndef vtk_m_cont_arg_TypeCheckTagCellSet_h
+#define vtk_m_cont_arg_TypeCheckTagCellSet_h
 
 #include <vtkm/cont/arg/TypeCheck.h>
 
@@ -28,14 +28,14 @@ namespace vtkm {
 namespace cont {
 namespace arg {
 
-/// Check for a topology-like object.
+/// Check for a CellSet-like object.
 ///
-struct TypeCheckTagTopology
+struct TypeCheckTagCellSet
 {
 };
 
 template<typename CellSetType>
-struct TypeCheck<TypeCheckTagTopology, CellSetType>
+struct TypeCheck<TypeCheckTagCellSet, CellSetType>
 {
   static const bool value =
       vtkm::cont::internal::CellSetCheck<CellSetType>::type::value;
@@ -45,4 +45,4 @@ struct TypeCheck<TypeCheckTagTopology, CellSetType>
 }
 } // namespace vtkm::cont::arg
 
-#endif //vtk_m_cont_arg_TypeCheckTagTopology_h
+#endif //vtk_m_cont_arg_TypeCheckTagCellSet_h

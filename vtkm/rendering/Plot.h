@@ -20,6 +20,7 @@
 #ifndef vtk_m_rendering_Plot_h
 #define vtk_m_rendering_Plot_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/View.h>
 #include <vector>
@@ -30,39 +31,48 @@ namespace rendering {
 class Plot
 {
 public:
-    //Plot(points, cells, field, colortable) {}
-    VTKM_CONT_EXPORT
-    Plot(const vtkm::cont::DynamicCellSet &cs,
-         const vtkm::cont::CoordinateSystem &c,
-         const vtkm::cont::Field &f,
-         const vtkm::rendering::ColorTable &ct) :
-        cellSet(cs), coords(c), scalarField(f), colorTable(ct)
-    {
-        f.GetBounds(scalarBounds,
-                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-        c.GetBounds(spatialBounds,
-                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    }
+  //Plot(points, cells, field, colortable) {}
+  VTKM_CONT_EXPORT
+  Plot(const vtkm::cont::DynamicCellSet &cells,
+       const vtkm::cont::CoordinateSystem &coordinates,
+       const vtkm::cont::Field &scalarField,
+       const vtkm::rendering::ColorTable &colorTable)
+    : Cells(cells),
+      Coordinates(coordinates),
+      ScalarField(scalarField),
+      ColorTable(colorTable)
+  {
+    VTKM_ASSERT(scalarField.GetData().GetNumberOfComponents() == 1);
 
-    template<typename SceneRendererType, typename SurfaceType>
-    VTKM_CONT_EXPORT
-    void Render(SceneRendererType &sr,
-                SurfaceType &surface, //surface
-                vtkm::rendering::View &view)
-    {
-        sr.SetRenderSurface(&surface);
-        sr.SetActiveColorTable(colorTable);
-        sr.RenderCells(cellSet, coords, scalarField,
-                       colorTable, view, scalarBounds);
-    }
-    
-    vtkm::cont::DynamicCellSet cellSet;
-    vtkm::cont::CoordinateSystem coords;
-    vtkm::cont::Field scalarField;
-    vtkm::rendering::ColorTable colorTable;
+    scalarField.GetRange(&this->ScalarRange,
+                         VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    this->SpatialBounds =
+        coordinates.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  }
 
-    vtkm::Float64 scalarBounds[2];
-    vtkm::Float64 spatialBounds[6];
+  template<typename SceneRendererType, typename SurfaceType>
+  VTKM_CONT_EXPORT
+  void Render(SceneRendererType &sceneRenderer,
+              SurfaceType &surface,
+              vtkm::rendering::View &view)
+  {
+    sceneRenderer.SetRenderSurface(&surface);
+    sceneRenderer.SetActiveColorTable(this->ColorTable);
+    sceneRenderer.RenderCells(this->Cells,
+                              this->Coordinates,
+                              this->ScalarField,
+                              this->ColorTable,
+                              view,
+                              this->ScalarRange);
+  }
+
+  vtkm::cont::DynamicCellSet Cells;
+  vtkm::cont::CoordinateSystem Coordinates;
+  vtkm::cont::Field ScalarField;
+  vtkm::rendering::ColorTable ColorTable;
+
+  vtkm::Range ScalarRange;
+  vtkm::Bounds SpatialBounds;
 };
 
 }} //namespace vtkm::rendering
