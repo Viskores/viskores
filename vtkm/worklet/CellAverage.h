@@ -34,7 +34,7 @@ public:
   typedef void ControlSignature(FieldInPoint<Scalar> inPoints,
                                 CellSetIn cellset,
                                 FieldOutCell<Scalar> outCells);
-  typedef void ExecutionSignature(_1, FromCount, _3);
+  typedef void ExecutionSignature(_1, PointCount, _3);
   typedef _2 InputDomain;
 
   template<typename PointValueVecType, typename OutType>

@@ -46,7 +46,7 @@ public:
                                   FieldInPoint<Scalar> scalars,
                                   FieldOutCell<BoolType> passFlags);
 
-    typedef _3 ExecutionSignature(_2, FromCount);
+    typedef _3 ExecutionSignature(_2, PointCount);
 
     VTKM_CONT_EXPORT
     ThresholdByPointField() : Predicate() { }

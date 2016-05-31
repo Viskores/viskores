@@ -278,7 +278,7 @@ public:
                                   FieldInPoint<ScalarAll> scalars,
                                   FieldOutCell<IdType> clipTableIdxs,
                                   FieldOutCell<TypeClipStats> stats);
-    typedef void ExecutionSignature(_2, CellShape, FromCount, _3, _4);
+    typedef void ExecutionSignature(_2, CellShape, PointCount, _3, _4);
 
     VTKM_CONT_EXPORT
     ComputeStats(vtkm::Float64 value, const ClipTablesPortal &clipTables)
