@@ -20,8 +20,9 @@
 #ifndef vtk_m_cont_Field_h
 #define vtk_m_cont_Field_h
 
-#include <vtkm/Types.h>
 #include <vtkm/Math.h>
+#include <vtkm/Range.h>
+#include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/ArrayHandle.h>
@@ -37,13 +38,13 @@ namespace cont {
 
 namespace internal {
 
-struct BoundsMin
+struct RangeMin
 {
   template<typename T>
   T operator()(const T& a, const T& b)const { return vtkm::Min(a,b); }
 };
 
-struct BoundsMax
+struct RangeMax
 {
   template<typename T>
   T operator()(const T& a, const T& b)const { return vtkm::Max(a,b); }
@@ -51,10 +52,10 @@ struct BoundsMax
 
 
 template<typename DeviceAdapterTag>
-class ComputeBounds
+class ComputeRange
 {
 public:
-  ComputeBounds(ArrayHandle<vtkm::Float64>& bounds) : Bounds(&bounds) {}
+  ComputeRange(ArrayHandle<vtkm::Range>& range) : Range(&range) {}
 
   template<typename ArrayHandleType>
   void operator()(const ArrayHandleType &input) const
@@ -70,16 +71,15 @@ public:
     ValueType initialMin = input.GetPortalConstControl().Get(0);
     ValueType initialMax = initialMin;
 
-    ValueType minResult = Algorithm::Reduce(input, initialMin, BoundsMin());
-    ValueType maxResult = Algorithm::Reduce(input, initialMax, BoundsMax());
+    ValueType minResult = Algorithm::Reduce(input, initialMin, RangeMin());
+    ValueType maxResult = Algorithm::Reduce(input, initialMax, RangeMax());
 
-    this->Bounds->Allocate(NumberOfComponents * 2);
+    this->Range->Allocate(NumberOfComponents);
     for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
-      this->Bounds->GetPortalControl().Set(i * 2,
-            static_cast<vtkm::Float64>(VecType::GetComponent(minResult, i) ) );
-      this->Bounds->GetPortalControl().Set(i * 2 + 1,
-            static_cast<vtkm::Float64>(VecType::GetComponent(maxResult, i) ) );
+      this->Range->GetPortalControl().Set(
+            i, vtkm::Range(VecType::GetComponent(minResult, i),
+                           VecType::GetComponent(maxResult, i)));
     }
   }
 
@@ -99,19 +99,16 @@ public:
     vtkm::Vec<vtkm::FloatDefault,3> maximum =
         portal.Get(portal.GetNumberOfValues()-1);
 
-    this->Bounds->Allocate(6);
-    vtkm::cont::ArrayHandle<vtkm::Float64>::PortalControl outPortal =
-        this->Bounds->GetPortalControl();
-    outPortal.Set(0, minimum[0]);
-    outPortal.Set(1, maximum[0]);
-    outPortal.Set(2, minimum[1]);
-    outPortal.Set(3, maximum[1]);
-    outPortal.Set(4, minimum[2]);
-    outPortal.Set(5, maximum[2]);
+    this->Range->Allocate(3);
+    vtkm::cont::ArrayHandle<vtkm::Range>::PortalControl outPortal =
+        this->Range->GetPortalControl();
+    outPortal.Set(0, vtkm::Range(minimum[0], maximum[0]));
+    outPortal.Set(1, vtkm::Range(minimum[1], maximum[1]));
+    outPortal.Set(2, vtkm::Range(minimum[2], maximum[2]));
   }
 
 private:
-    vtkm::cont::ArrayHandle<vtkm::Float64> *Bounds;
+    vtkm::cont::ArrayHandle<vtkm::Range> *Range;
 };
 
 } // namespace internal
@@ -143,7 +140,7 @@ public:
       AssocCellSetName(),
       AssocLogicalDim(-1),
       Data(data),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     VTKM_ASSERT(this->Association == ASSOC_WHOLE_MESH ||
@@ -160,7 +157,7 @@ public:
       AssocCellSetName(),
       AssocLogicalDim(-1),
       Data(data),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     VTKM_ASSERT((this->Association == ASSOC_WHOLE_MESH) ||
@@ -176,7 +173,7 @@ public:
       Association(association),
       AssocCellSetName(),
       AssocLogicalDim(-1),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     VTKM_ASSERT((this->Association == ASSOC_WHOLE_MESH) ||
@@ -194,7 +191,7 @@ public:
       Association(association),
       AssocCellSetName(),
       AssocLogicalDim(-1),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     VTKM_ASSERT((this->Association == ASSOC_WHOLE_MESH) ||
@@ -213,7 +210,7 @@ public:
       AssocCellSetName(cellSetName),
       AssocLogicalDim(-1),
       Data(data),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
@@ -230,7 +227,7 @@ public:
       AssocCellSetName(cellSetName),
       AssocLogicalDim(-1),
       Data(data),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
@@ -246,7 +243,7 @@ public:
       Association(association),
       AssocCellSetName(cellSetName),
       AssocLogicalDim(-1),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
@@ -264,7 +261,7 @@ public:
       Association(association),
       AssocCellSetName(cellSetName),
       AssocLogicalDim(-1),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
@@ -282,7 +279,7 @@ public:
       AssocCellSetName(),
       AssocLogicalDim(logicalDim),
       Data(data),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
@@ -298,7 +295,7 @@ public:
       Association(association),
       AssocLogicalDim(logicalDim),
       Data(data),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
@@ -313,7 +310,7 @@ public:
     : Name(name),
       Association(association),
       AssocLogicalDim(logicalDim),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
@@ -329,7 +326,7 @@ public:
     : Name(name),
       Association(association),
       AssocLogicalDim(logicalDim),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
@@ -343,7 +340,7 @@ public:
       AssocCellSetName(),
       AssocLogicalDim(),
       Data(),
-      Bounds(),
+      Range(),
       ModifiedFlag(true)
   {
     //Generate an empty field
@@ -375,67 +372,73 @@ public:
 
   template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::Float64>& GetBounds(DeviceAdapterTag,
-                                                          TypeList,
-                                                          StorageList) const
+  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag,
+                                                       TypeList,
+                                                       StorageList) const
   {
     if (this->ModifiedFlag)
     {
-      internal::ComputeBounds<DeviceAdapterTag> computeBounds(this->Bounds);
-      this->Data.ResetTypeAndStorageLists(TypeList(),StorageList()).CastAndCall(computeBounds);
+      internal::ComputeRange<DeviceAdapterTag> computeRange(this->Range);
+      this->Data.ResetTypeAndStorageLists(TypeList(),StorageList()).CastAndCall(computeRange);
       this->ModifiedFlag = false;
     }
 
-    return this->Bounds;
+    return this->Range;
   }
 
   template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
   VTKM_CONT_EXPORT
-  void GetBounds(vtkm::Float64 *bounds,
-                 DeviceAdapterTag,
-                 TypeList,
-                 StorageList) const
+  void GetRange(vtkm::Range *range,
+                DeviceAdapterTag,
+                TypeList,
+                StorageList) const
   {
-    this->GetBounds(DeviceAdapterTag(), TypeList(), StorageList());
+    this->GetRange(DeviceAdapterTag(), TypeList(), StorageList());
 
-    vtkm::Id length = this->Bounds.GetNumberOfValues();
+    vtkm::Id length = this->Range.GetNumberOfValues();
     for (vtkm::Id i = 0; i < length; ++i)
     {
-      bounds[i] = this->Bounds.GetPortalConstControl().Get(i);
+      range[i] = this->Range.GetPortalConstControl().Get(i);
     }
   }
 
   template<typename DeviceAdapterTag, typename TypeList>
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::Float64>& GetBounds(DeviceAdapterTag,
-                                                          TypeList) const
+  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag,
+                                                       TypeList) const
   {
-    return this->GetBounds(DeviceAdapterTag(), TypeList(),
-                           VTKM_DEFAULT_STORAGE_LIST_TAG());
+    return this->GetRange(DeviceAdapterTag(),
+                          TypeList(),
+                          VTKM_DEFAULT_STORAGE_LIST_TAG());
   }
 
   template<typename DeviceAdapterTag, typename TypeList>
   VTKM_CONT_EXPORT
-  void GetBounds(vtkm::Float64 *bounds, DeviceAdapterTag, TypeList) const
+  void GetRange(vtkm::Range *range, DeviceAdapterTag, TypeList) const
   {
-    this->GetBounds(bounds, DeviceAdapterTag(), TypeList(),
-                    VTKM_DEFAULT_STORAGE_LIST_TAG());
+    this->GetRange(range,
+                   DeviceAdapterTag(),
+                   TypeList(),
+                   VTKM_DEFAULT_STORAGE_LIST_TAG());
   }
 
   template<typename DeviceAdapterTag>
   VTKM_CONT_EXPORT
-  const vtkm::cont::ArrayHandle<vtkm::Float64>& GetBounds(DeviceAdapterTag) const
+  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag) const
   {
-    return this->GetBounds(DeviceAdapterTag(), VTKM_DEFAULT_TYPE_LIST_TAG(),
-                           VTKM_DEFAULT_STORAGE_LIST_TAG());
+    return this->GetRange(DeviceAdapterTag(),
+                          VTKM_DEFAULT_TYPE_LIST_TAG(),
+                          VTKM_DEFAULT_STORAGE_LIST_TAG());
   }
 
   template<typename DeviceAdapterTag>
   VTKM_CONT_EXPORT
-  void GetBounds(vtkm::Float64 *bounds, DeviceAdapterTag) const
+  void GetRange(vtkm::Range *range, DeviceAdapterTag) const
   {
-    this->GetBounds(bounds, DeviceAdapterTag(), VTKM_DEFAULT_TYPE_LIST_TAG(),
-                    VTKM_DEFAULT_STORAGE_LIST_TAG());
+    this->GetRange(range,
+                   DeviceAdapterTag(),
+                   VTKM_DEFAULT_TYPE_LIST_TAG(),
+                   VTKM_DEFAULT_STORAGE_LIST_TAG());
   }
 
   VTKM_CONT_EXPORT
@@ -509,7 +512,7 @@ private:
   vtkm::IdComponent AssocLogicalDim; ///< only populate if assoc is logical dim
 
   vtkm::cont::DynamicArrayHandle Data;
-  mutable vtkm::cont::ArrayHandle<vtkm::Float64> Bounds;
+  mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
   mutable bool ModifiedFlag;
 };
 

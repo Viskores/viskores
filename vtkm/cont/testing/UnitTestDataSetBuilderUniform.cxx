@@ -47,7 +47,7 @@ typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      int dim,
                      vtkm::Id numPoints, vtkm::Id numCells,
-                     vtkm::Float64 *bounds)
+                     vtkm::Bounds bounds)
 {
     //Verify basics..
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
@@ -63,11 +63,8 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
 
 
     //Make sure bounds are correct.
-    vtkm::Float64 res[6];
-    ds.GetCoordinateSystem().GetBounds(res, DeviceAdapter());
-    VTKM_TEST_ASSERT(test_equal(bounds[0], res[0]) && test_equal(bounds[1], res[1]) &&
-                     test_equal(bounds[2], res[2]) && test_equal(bounds[3], res[3]) &&
-                     test_equal(bounds[4], res[4]) && test_equal(bounds[5], res[5]),
+    vtkm::Bounds res = ds.GetCoordinateSystem().GetBounds(DeviceAdapter());
+    VTKM_TEST_ASSERT(test_equal(bounds, res),
                      "Bounds of coordinates do not match");
 
     if (dim == 2)
@@ -87,12 +84,10 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
 }
 
 template <typename T>
-void FillMethod(vtkm::IdComponent method,
-                vtkm::Id dimensionSize,
-                T &origin,
-                T &spacing,
-                vtkm::Float64 &boundsMin,
-                vtkm::Float64 &boundsMax)
+vtkm::Range FillMethod(vtkm::IdComponent method,
+                       vtkm::Id dimensionSize,
+                       T &origin,
+                       T &spacing)
 {
   switch (method)
   {
@@ -122,8 +117,7 @@ void FillMethod(vtkm::IdComponent method,
       break;
   }
 
-  boundsMin = static_cast<vtkm::Float64>(origin);
-  boundsMax = static_cast<vtkm::Float64>(origin + static_cast<T>(dimensionSize-1)*spacing);
+  return vtkm::Range(origin, origin + static_cast<T>(dimensionSize-1)*spacing);
 }
 
 template <typename T>
@@ -161,25 +155,19 @@ UniformTests()
 
     vtkm::Vec<T,3> origin;
     vtkm::Vec<T,3> spacing;
-    vtkm::Float64 bounds[6];
-    FillMethod(fillMethodX,
-               dimensions[0],
-               origin[0],
-               spacing[0],
-               bounds[0],
-               bounds[1]);
-    FillMethod(fillMethodY,
-               dimensions[1],
-               origin[1],
-               spacing[1],
-               bounds[2],
-               bounds[3]);
-    FillMethod(fillMethodZ,
-               dimensions[2],
-               origin[2],
-               spacing[2],
-               bounds[4],
-               bounds[5]);
+    vtkm::Bounds bounds;
+    bounds.X = FillMethod(fillMethodX,
+                          dimensions[0],
+                          origin[0],
+                          spacing[0]);
+    bounds.Y = FillMethod(fillMethodY,
+                          dimensions[1],
+                          origin[1],
+                          spacing[1]);
+    bounds.Z = FillMethod(fillMethodZ,
+                          dimensions[2],
+                          origin[2],
+                          spacing[2]);
 
     std::cout << "3D case" << std::endl;
     vtkm::Id numPoints = dimensions[0]*dimensions[1]*dimensions[2];
@@ -190,7 +178,7 @@ UniformTests()
     std::cout << "2D case" << std::endl;
     numPoints = dimensions[0]*dimensions[1];
     numCells = (dimensions[0]-1)*(dimensions[1]-1);
-    bounds[4] = bounds[5] = 0.0;
+    bounds.Z = vtkm::Range(0, 0);
     dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),
                                     vtkm::Vec<T,2>(origin[0], origin[1]),
                                     vtkm::Vec<T,2>(spacing[0], spacing[1]));

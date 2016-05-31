@@ -453,7 +453,7 @@ public:
 
   VTKM_CONT_EXPORT
   void CreateRays(Ray<DeviceAdapter> &rays,
-                  vtkm::Float64 *boundingBox = NULL)
+                  const vtkm::Bounds boundingBox = vtkm::Bounds())
   {
     this->UpdateDimensions(&rays, boundingBox);
     //Set the origin of the ray back to the camera position
@@ -496,7 +496,7 @@ public:
 
     VTKM_CONT_EXPORT
   void CreateRays(VolumeRay<DeviceAdapter> &rays,
-                  vtkm::Float64 *boundingBox = NULL)
+                  const vtkm::Bounds &boundingBox = vtkm::Bounds())
   {
 
     this->UpdateDimensions(&rays, boundingBox);
@@ -524,15 +524,15 @@ public:
 
 private:
   VTKM_CONT_EXPORT
-  void FindSubset(vtkm::Float64 *bounds)
+  void FindSubset(const vtkm::Bounds &bounds)
   {
     vtkm::Float32 x[2], y[2], z[2];
-    x[0] = static_cast<vtkm::Float32>(bounds[0]);
-    x[1] = static_cast<vtkm::Float32>(bounds[1]);
-    y[0] = static_cast<vtkm::Float32>(bounds[2]);
-    y[1] = static_cast<vtkm::Float32>(bounds[3]);
-    z[0] = static_cast<vtkm::Float32>(bounds[4]);
-    z[1] = static_cast<vtkm::Float32>(bounds[5]);
+    x[0] = static_cast<vtkm::Float32>(bounds.X.Min);
+    x[1] = static_cast<vtkm::Float32>(bounds.X.Max);
+    y[0] = static_cast<vtkm::Float32>(bounds.Y.Min);
+    y[1] = static_cast<vtkm::Float32>(bounds.Y.Max);
+    z[0] = static_cast<vtkm::Float32>(bounds.Z.Min);
+    z[1] = static_cast<vtkm::Float32>(bounds.Z.Max);
     //Inise the data bounds
     if(this->Position[0] >=x[0] && this->Position[0] <=x[1] &&
        this->Position[1] >=y[0] && this->Position[1] <=y[1] &&
@@ -619,10 +619,10 @@ private:
 
   VTKM_CONT_EXPORT
   void UpdateDimensions(RayBase *rays,
-                        vtkm::Float64 *boundingBox = NULL)
+                        const vtkm::Bounds &boundingBox = vtkm::Bounds())
   {
      // If bounds have been provided, only cast rays that could hit the data
-    bool imageSubsetModeOn = boundingBox != NULL;
+    bool imageSubsetModeOn = boundingBox.IsNonEmpty();
 
     //Update our ViewProjection matrix
     this->ViewProjectionMat

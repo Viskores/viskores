@@ -19,7 +19,7 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestComputeBoundsTBB.cxx
+  UnitTestComputeRangeTBB.cxx
   UnitTestDataSetExplicitTBB.cxx
   UnitTestDataSetSingleTypeTBB.cxx
   UnitTestDeviceAdapterTBB.cxx

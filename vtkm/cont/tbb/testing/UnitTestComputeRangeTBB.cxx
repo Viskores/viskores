@@ -20,10 +20,10 @@
 
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
-#include <vtkm/cont/testing/TestingComputeBounds.h>
+#include <vtkm/cont/testing/TestingComputeRange.h>
 
-int UnitTestComputeBoundsTBB(int, char *[])
+int UnitTestComputeRangeTBB(int, char *[])
 {
-  return vtkm::cont::testing::TestingComputeBounds
+  return vtkm::cont::testing::TestingComputeRange
       <vtkm::cont::DeviceAdapterTagTBB>::Run();
 }

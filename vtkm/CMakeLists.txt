@@ -24,6 +24,7 @@ set(headers
   Assert.h
   BinaryPredicates.h
   BinaryOperators.h
+  Bounds.h
   CellShape.h
   CellTraits.h
   ImplicitFunctions.h
@@ -32,6 +33,7 @@ set(headers
   Matrix.h
   NewtonsMethod.h
   Pair.h
+  Range.h
   StaticAssert.h
   TopologyElementTag.h
   TypeListTag.h

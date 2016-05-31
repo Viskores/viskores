@@ -80,9 +80,9 @@ public:
   class CalculateNormals : public vtkm::worklet::WorkletMapField
   {
   private:
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32,4> >  Vec4IntArrayHandle; 
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32,4> >  Vec4IntArrayHandle;
     typedef typename Vec4IntArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IndicesArrayPortal;
-    
+
     IndicesArrayPortal IndicesPortal;
   public:
     VTKM_CONT_EXPORT
@@ -95,7 +95,7 @@ public:
                                   FieldOut<>,
                                   FieldOut<>,
                                   WholeArrayIn<Vec3RenderingTypes>);
-    typedef void ExecutionSignature(_1, 
+    typedef void ExecutionSignature(_1,
                                     _2,
                                     _3,
                                     _4,
@@ -104,14 +104,14 @@ public:
     template<typename PointPortalType>
     VTKM_EXEC_EXPORT
     void operator()(const vtkm::Id &hitIndex,
-                    const vtkm::Vec<vtkm::Float32,3> &rayDir, 
+                    const vtkm::Vec<vtkm::Float32,3> &rayDir,
                     vtkm::Float32 &normalX,
                     vtkm::Float32 &normalY,
                     vtkm::Float32 &normalZ,
                     const PointPortalType &points) const
     {
       if(hitIndex < 0) return;
-      
+
       vtkm::Vec<Int32, 4> indices = IndicesPortal.Get(hitIndex);
       vtkm::Vec<Float32, 3> a = points.Get(indices[1]);
       vtkm::Vec<Float32, 3> b = points.Get(indices[2]);
@@ -130,14 +130,14 @@ public:
   class LerpScalar : public vtkm::worklet::WorkletMapField
   {
   private:
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32,4> >  Vec4IntArrayHandle; 
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32,4> >  Vec4IntArrayHandle;
     typedef typename Vec4IntArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IndicesArrayPortal;
 
     IndicesArrayPortal IndicesPortal;
     vtkm::Float32 MinScalar;
     vtkm::Float32 invDeltaScalar;
   public:
-   
+
     VTKM_CONT_EXPORT
     LerpScalar(const Vec4IntArrayHandle &indices,
                  const vtkm::Float32 &minScalar,
@@ -145,7 +145,7 @@ public:
       : IndicesPortal( indices.PrepareForInput( DeviceAdapter() ) ),
         MinScalar(minScalar)
     {
-      //Make sure the we don't divide by zero on 
+      //Make sure the we don't divide by zero on
       //something like an iso-surface
       if(maxScalar - MinScalar != 0.f) invDeltaScalar = 1.f / (maxScalar - MinScalar);
       else invDeltaScalar = 1.f / minScalar;
@@ -155,23 +155,23 @@ public:
                                   FieldIn<>,
                                   FieldOut<>,
                                   WholeArrayIn<ScalarRenderingTypes>);
-    typedef void ExecutionSignature(_1, 
+    typedef void ExecutionSignature(_1,
                                     _2,
                                     _3,
                                     _4,
                                     _5);
     template<typename ScalarPortalType>
     VTKM_EXEC_EXPORT
-    void operator()(const vtkm::Id &hitIndex, 
+    void operator()(const vtkm::Id &hitIndex,
                     const vtkm::Float32 &u,
                     const vtkm::Float32 &v,
                     vtkm::Float32 &lerpedScalar,
                     const ScalarPortalType &scalars) const
     {
       if(hitIndex < 0) return;
-      
+
       vtkm::Vec<Int32, 4> indices = IndicesPortal.Get(hitIndex);
-      
+
       vtkm::Float32 n = 1.f - u - v;
       vtkm::Float32 aScalar = vtkm::Float32(scalars.Get(indices[1]));
       vtkm::Float32 bScalar = vtkm::Float32(scalars.Get(indices[2]));
@@ -186,14 +186,14 @@ public:
   class NodalScalar : public vtkm::worklet::WorkletMapField
   {
   private:
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32,4> >  Vec4IntArrayHandle; 
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32,4> >  Vec4IntArrayHandle;
     typedef typename Vec4IntArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst IndicesArrayPortal;
 
     IndicesArrayPortal IndicesPortal;
     vtkm::Float32 MinScalar;
     vtkm::Float32 invDeltaScalar;
   public:
-   
+
     VTKM_CONT_EXPORT
     NodalScalar(const Vec4IntArrayHandle &indices,
                 const vtkm::Float32 &minScalar,
@@ -201,7 +201,7 @@ public:
       : IndicesPortal( indices.PrepareForInput( DeviceAdapter() ) ),
         MinScalar(minScalar)
     {
-      //Make sure the we don't divide by zero on 
+      //Make sure the we don't divide by zero on
       //something like an iso-surface
       if(maxScalar - MinScalar != 0.f) invDeltaScalar = 1.f / (maxScalar - MinScalar);
       else invDeltaScalar = 1.f / minScalar;
@@ -209,7 +209,7 @@ public:
     typedef void ControlSignature(FieldIn<>,
                                   FieldOut<>,
                                   WholeArrayIn<ScalarRenderingTypes>);
-    typedef void ExecutionSignature(_1, 
+    typedef void ExecutionSignature(_1,
                                     _2,
                                     _3);
     template<typename ScalarPortalType>
@@ -219,29 +219,29 @@ public:
                     const ScalarPortalType &scalars) const
     {
       if(hitIndex < 0) return;
-      
+
       vtkm::Vec<Int32, 4> indices = IndicesPortal.Get(hitIndex);
-      
+
       //Todo: one normalization
       scalar = vtkm::Float32(scalars.Get(indices[0]));
-      
+
       //normalize
       scalar = (scalar - MinScalar) * invDeltaScalar;
     }
   }; //class LerpScalar
 
   VTKM_CONT_EXPORT
-  void run(Ray<DeviceAdapter> &rays, 
-           LinearBVH &bvh, 
+  void run(Ray<DeviceAdapter> &rays,
+           LinearBVH &bvh,
            vtkm::cont::DynamicArrayHandleCoordinateSystem &coordsHandle,
            vtkm::cont::Field *scalarField,
-           vtkm::Float64 *scalarBounds)
+           const vtkm::Range &scalarRange)
   {
-    bool isSupportedField = (scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS || 
+    bool isSupportedField = (scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
                              scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET );
     if(!isSupportedField) throw vtkm::cont::ErrorControlBadValue("Feild not accociated with cell set or points");
     bool isAssocPoints = scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
-      
+
     vtkm::worklet::DispatcherMapField< CalculateNormals >( CalculateNormals(bvh.LeafNodes) )
       .Invoke(rays.HitIdx,
               rays.Dir,
@@ -249,41 +249,41 @@ public:
               rays.NormalY,
               rays.NormalZ,
               coordsHandle);
-    
+
     if(isAssocPoints)
     {
-      vtkm::worklet::DispatcherMapField< LerpScalar >( LerpScalar(bvh.LeafNodes, 
-                                                               vtkm::Float32(scalarBounds[0]),
-                                                               vtkm::Float32(scalarBounds[1])) )
+      vtkm::worklet::DispatcherMapField< LerpScalar >( LerpScalar(bvh.LeafNodes,
+                                                               vtkm::Float32(scalarRange.Min),
+                                                               vtkm::Float32(scalarRange.Max)) )
         .Invoke(rays.HitIdx,
                 rays.U,
                 rays.V,
                 rays.Scalar,
-                scalarField->GetData()); 
+                scalarField->GetData());
     }
     else
     {
-      vtkm::worklet::DispatcherMapField< NodalScalar >( NodalScalar(bvh.LeafNodes, 
-                                                                    vtkm::Float32(scalarBounds[0]),
-                                                                    vtkm::Float32(scalarBounds[1])) )
+      vtkm::worklet::DispatcherMapField< NodalScalar >( NodalScalar(bvh.LeafNodes,
+                                                                    vtkm::Float32(scalarRange.Min),
+                                                                    vtkm::Float32(scalarRange.Max)) )
         .Invoke(rays.HitIdx,
                 rays.Scalar,
-                scalarField->GetData()); 
-    } 
+                scalarField->GetData());
+    }
   } // Run
-  
+
 }; // Class reflector
 
 template< typename DeviceAdapter>
 class SurfaceColor
-{ 
+{
 public:
   class MapScalarToColor : public vtkm::worklet::WorkletMapField
   {
   private:
     typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> >  ColorArrayHandle;
     typedef typename ColorArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst ColorArrayPortal;
-  
+
     ColorArrayPortal ColorMap;
     vtkm::Int32 ColorMapSize;
     vtkm::Vec<vtkm::Float32,3> LightPosition;
@@ -294,7 +294,7 @@ public:
     vtkm::Vec<vtkm::Float32,3> CameraPosition;
     vtkm::Vec<vtkm::Float32,4> BackgroundColor;
   public:
-    
+
     VTKM_CONT_EXPORT
     MapScalarToColor(const ColorArrayHandle &colorMap,
                      const vtkm::Int32 &colorMapSize,
@@ -324,7 +324,7 @@ public:
                                   FieldIn<>,
                                   FieldIn<>,
                                   FieldOut<>);
-    typedef void ExecutionSignature(_1, 
+    typedef void ExecutionSignature(_1,
                                     _2,
                                     _3,
                                     _4,
@@ -333,7 +333,7 @@ public:
     void operator()(const vtkm::Id &hitIdx,
                     const vtkm::Float32 &scalar,
                     const vtkm::Vec<vtkm::Float32,3> &normal,
-                    const vtkm::Vec<vtkm::Float32,3> &intersection, 
+                    const vtkm::Vec<vtkm::Float32,3> &intersection,
                     vtkm::Vec<vtkm::Float32,4> &color) const
     {
       if(hitIdx < 0) {color = BackgroundColor; return;}
@@ -342,19 +342,19 @@ public:
       vtkm::Normalize(lightDir);
       vtkm::Normalize(viewDir);
 
-      //Diffuse lighting 
+      //Diffuse lighting
       vtkm::Float32 cosTheta = vtkm::dot(-normal,lightDir);
       //clamp tp [0,1]
       cosTheta = vtkm::Min(vtkm::Max(cosTheta, 0.f), 1.f);
 
-      //Specular lighting 
+      //Specular lighting
       vtkm::Vec<vtkm::Float32,3> halfVector = viewDir + lightDir;
       vtkm::Normalize(halfVector);
       vtkm::Float32 cosPhi = vtkm::dot(-normal,halfVector);
-      vtkm::Float32 specularConstant = vtkm::Float32(pow(fmaxf(cosPhi,0.f), SpecularExponent)); 
+      vtkm::Float32 specularConstant = vtkm::Float32(pow(fmaxf(cosPhi,0.f), SpecularExponent));
 
       vtkm::Int32 colorIdx = vtkm::Int32(scalar * vtkm::Float32(ColorMapSize - 1));
-      
+
       //Just in case clamp the value to the valid range
       colorIdx = (colorIdx < 0) ? 0 : colorIdx;
       colorIdx = (colorIdx > ColorMapSize - 1) ? ColorMapSize - 1 : colorIdx;
@@ -363,15 +363,15 @@ public:
       //std::cout<<"CosTheta "<<cosTheta<<" CosPhi "<<cosPhi<<" | ";
       color[0] *= vtkm::Min(LightAbmient[0] + LightDiffuse[0] * cosTheta + LightSpecular[0] * specularConstant, 1.f);
       color[1] *= vtkm::Min(LightAbmient[1] + LightDiffuse[1] * cosTheta + LightSpecular[1] * specularConstant, 1.f);
-      color[2] *= vtkm::Min(LightAbmient[2] + LightDiffuse[2] * cosTheta + LightSpecular[2] * specularConstant, 1.f);  
+      color[2] *= vtkm::Min(LightAbmient[2] + LightDiffuse[2] * cosTheta + LightSpecular[2] * specularConstant, 1.f);
       //color[0] =1.f;
       //std::cout<<color;
     }
   }; //class MapScalarToColor
-  
+
   VTKM_CONT_EXPORT
-  void run(Ray<DeviceAdapter> &rays, 
-           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > &colorMap, 
+  void run(Ray<DeviceAdapter> &rays,
+           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > &colorMap,
            ColorBuffer4f &colorBuffer,
            const vtkm::Vec<vtkm::Float32,3> cameraPosition,
            const vtkm::Vec<vtkm::Float32,4> backgroundColor)
@@ -381,7 +381,7 @@ public:
     // lightPosition[1] = 0.f;
     // lightPosition[2] = -10.f;
     const vtkm::Int32 colorMapSize = vtkm::Int32(colorMap.GetNumberOfValues());
-    vtkm::worklet::DispatcherMapField< MapScalarToColor >( MapScalarToColor(colorMap, 
+    vtkm::worklet::DispatcherMapField< MapScalarToColor >( MapScalarToColor(colorMap,
                                                                             colorMapSize,
                                                                             lightPosition,
                                                                             cameraPosition,
@@ -390,7 +390,7 @@ public:
             rays.Scalar,
             rays.Normal,
             rays.Intersection,
-            colorBuffer); 
+            colorBuffer);
   }
 };// class SurfaceColor
 
@@ -409,8 +409,8 @@ protected:
   vtkm::cont::ArrayHandle<vtkm::Float32> Scalars;
   vtkm::Id NumberOfTriangles;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
-  vtkm::Float64 *ScalarBounds;
-  vtkm::Float64 *DataBounds;
+  vtkm::Range ScalarRange;
+  vtkm::Bounds DataBounds;
   vtkm::Vec<vtkm::Float32,4> BackgroundColor;
 public:
   VTKM_CONT_EXPORT
@@ -436,15 +436,15 @@ public:
                const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  &indices,
                vtkm::cont::Field &scalarField,
                vtkm::Id &numberOfTriangles,
-               vtkm::Float64 *scalarBounds,
-               vtkm::Float64 *dataBounds)
+               const vtkm::Range &scalarRange,
+               const vtkm::Bounds &dataBounds)
   {
     IsSceneDirty = true;
     CoordsHandle = coordsHandle;
     Indices = indices;
     ScalarField = &scalarField;
     NumberOfTriangles = numberOfTriangles;
-    ScalarBounds = scalarBounds;
+    ScalarRange = scalarRange;
     DataBounds = dataBounds;
   }
 
@@ -464,17 +464,17 @@ public:
 
   VTKM_CONT_EXPORT
   void Render(RenderSurfaceRayTracer *surface)
-  { 
+  {
     vtkm::cont::Timer<DeviceAdapter> renderTimer;
     if(IsSceneDirty)
     {
       Init();
     }
-    
+
     TriangleIntersector<DeviceAdapter> intersector;
     intersector.run(Rays, Bvh, CoordsHandle);
     Reflector<DeviceAdapter> reflector;
-    reflector.run(Rays, Bvh, CoordsHandle, ScalarField, ScalarBounds);
+    reflector.run(Rays, Bvh, CoordsHandle, ScalarField, ScalarRange);
     vtkm::worklet::DispatcherMapField< IntersectionPoint >( IntersectionPoint() )
       .Invoke( Rays.HitIdx,
                Rays.Distance,
@@ -484,18 +484,18 @@ public:
                Rays.IntersectionY,
                Rays.IntersectionZ );
 
-    
+
     SurfaceColor<DeviceAdapter> surfaceColor;
-    surfaceColor.run(Rays, 
-                     ColorMap, 
-                     camera.FrameBuffer, 
+    surfaceColor.run(Rays,
+                     ColorMap,
+                     camera.FrameBuffer,
                      camera.GetPosition(),
                      BackgroundColor);
 
-    
+
      camera.WriteToSurface(surface, Rays.Distance);
 
   }
 };//class RayTracer
-}}}// namespace vtkm::rendering::raytracing 
+}}}// namespace vtkm::rendering::raytracing
 #endif //vtk_m_rendering_raytracing_RayTracer_h
