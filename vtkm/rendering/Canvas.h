@@ -35,24 +35,50 @@ class Canvas
 {
 public:
   VTKM_CONT_EXPORT
-  Canvas(std::size_t width=1024,
-         std::size_t height=1024,
+  Canvas(vtkm::Id width=1024,
+         vtkm::Id height=1024,
          const vtkm::rendering::Color &color =
            vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-    : Width(width), Height(height), BackgroundColor(color)
+    : Width(0), Height(0), BackgroundColor(color)
   {
-    this->ColorBuffer.resize(width*height*4);
-    this->DepthBuffer.resize(width*height);
+    this->ResizeBuffers(width, height);
   }
 
   VTKM_CONT_EXPORT
-  virtual void Initialize() {}
+  virtual void Initialize() = 0;
   VTKM_CONT_EXPORT
-  virtual void Activate() {}
+  virtual void Activate() = 0;
   VTKM_CONT_EXPORT
-  virtual void Clear() {}
+  virtual void Clear() = 0;
   VTKM_CONT_EXPORT
-  virtual void Finish() {}
+  virtual void Finish() = 0;
+
+  VTKM_CONT_EXPORT
+  void ResizeBuffers(vtkm::Id width, vtkm::Id height)
+  {
+    VTKM_ASSERT(width >= 0);
+    VTKM_ASSERT(height >= 0);
+
+    vtkm::Id numPixels = width*height;
+    if (this->ColorBuffer.GetNumberOfValues() != numPixels)
+    {
+      this->ColorBuffer.Allocate(numPixels);
+    }
+    if (this->DepthBuffer.GetNumberOfValues() != numPixels)
+    {
+      this->DepthBuffer.Allocate(numPixels);
+    }
+
+    this->Width = width;
+    this->Height = height;
+  }
+
+  // If a subclass uses a system that renderers to different buffers, then
+  // these should be overridden to copy the data to the buffers.
+  VTKM_CONT_EXPORT
+  virtual void RefreshColorBuffer() {  }
+  VTKM_CONT_EXPORT
+  virtual void RefreshDepthBuffer() {  }
 
   VTKM_CONT_EXPORT
   virtual void SetViewToWorldSpace(vtkm::rendering::Camera &, bool) {}
@@ -62,7 +88,26 @@ public:
   void SetViewportClipping(vtkm::rendering::Camera &, bool) {}
 
   VTKM_CONT_EXPORT
-  virtual void SaveAs(const std::string &) {}
+  virtual void SaveAs(const std::string &fileName)
+  {
+    this->RefreshColorBuffer();
+    std::ofstream of(fileName.c_str());
+    of<<"P6"<<std::endl<<this->Width<<" "<<this->Height<<std::endl<<255<<std::endl;
+    ColorBufferType::PortalConstControl colorPortal =
+        this->ColorBuffer.GetPortalConstControl();
+    for (vtkm::Id yIndex=this->Height-1; yIndex>=0; yIndex--)
+    {
+      for (vtkm::Id xIndex=0; xIndex < this->Width; xIndex++)
+      {
+        vtkm::Vec<vtkm::Float32,4> tuple =
+            colorPortal.Get(yIndex*this->Width + xIndex);
+        of<<(unsigned char)(tuple[0]*255);
+        of<<(unsigned char)(tuple[1]*255);
+        of<<(unsigned char)(tuple[2]*255);
+      }
+    }
+    of.close();
+  }
 
   virtual void AddLine(vtkm::Float64, vtkm::Float64,
                        vtkm::Float64, vtkm::Float64,
@@ -80,10 +125,13 @@ public:
                        Color,
                        std::string) {}
 
-  std::size_t Width, Height;
+  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorBufferType;
+  typedef vtkm::cont::ArrayHandle<vtkm::Float32> DepthBufferType;
+
+  vtkm::Id Width, Height;
   vtkm::rendering::Color BackgroundColor;
-  std::vector<vtkm::Float32> ColorBuffer;
-  std::vector<vtkm::Float32> DepthBuffer;
+  ColorBufferType ColorBuffer;
+  DepthBufferType DepthBuffer;
 };
 
 }} //namespace vtkm::rendering

@@ -40,12 +40,26 @@ class CanvasGL : public Canvas
 {
 public:
   VTKM_CONT_EXPORT
-  CanvasGL(std::size_t w=1024,
-           std::size_t h=1024,
-           const vtkm::rendering::Color &c =
+  CanvasGL(const vtkm::rendering::Color &c =
              vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-    : Canvas(w,h,c)
+    : Canvas(0,0,c)
   {
+  }
+
+  VTKM_CONT_EXPORT
+  virtual void Initialize()
+  {
+    // Nothing to initialize
+  }
+
+  VTKM_CONT_EXPORT
+  virtual void Activate()
+  {
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    this->ResizeBuffers(viewport[2], viewport[3]);
+
+    glEnable(GL_DEPTH_TEST);
   }
 
   VTKM_CONT_EXPORT
@@ -57,6 +71,7 @@ public:
                  1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
+
   VTKM_CONT_EXPORT
   virtual void Finish()
   {
@@ -125,23 +140,30 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  virtual void SaveAs(const std::string &fileName)
+  virtual void RefreshColorBuffer()
   {
-    std::ofstream of(fileName.c_str());
-    of << "P6" << std::endl
-       << this->Width << " " << this->Height <<std::endl
-       << 255 << std::endl;
-    int height = static_cast<int>(this->Height);
-    for (int yIndex=height-1; yIndex>=0; yIndex--)
-      for (std::size_t xIndex=0; xIndex < this->Width; xIndex++)
-      {
-        const vtkm::Float32 *tuple =
-          &(this->ColorBuffer[static_cast<std::size_t>(yIndex)*this->Width*4 + xIndex*4]);
-        of<<(unsigned char)(tuple[0]*255);
-        of<<(unsigned char)(tuple[1]*255);
-        of<<(unsigned char)(tuple[2]*255);
-      }
-    of.close();
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    VTKM_ASSERT(viewport[2] == this->Width);
+    VTKM_ASSERT(viewport[3] == this->Height);
+
+    glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3],
+        GL_RGBA, GL_FLOAT,
+        vtkm::cont::ArrayPortalToIteratorBegin(
+          this->ColorBuffer.GetPortalControl()));
+  }
+  VTKM_CONT_EXPORT
+  virtual void RefreshDepthBuffer()
+  {
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    VTKM_ASSERT(viewport[2] == this->Width);
+    VTKM_ASSERT(viewport[3] == this->Height);
+
+    glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3],
+        GL_DEPTH_COMPONENT, GL_FLOAT,
+        vtkm::cont::ArrayPortalToIteratorBegin(
+          this->DepthBuffer.GetPortalControl()));
   }
 
   VTKM_CONT_EXPORT
@@ -152,7 +174,7 @@ public:
   {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
-    glColor3fv(c.Components);
+    glColor3f(c.Components[0], c.Components[1], c.Components[2]);
 
     glLineWidth(linewidth);
 
@@ -184,10 +206,10 @@ public:
         vtkm::Float32 x1 = x + w*v1;
         vtkm::Float32 y0 = y;
         vtkm::Float32 y1 = y + h;
-        glColor3fv(c0.Components);
+        glColor3f(c0.Components[0], c0.Components[1], c0.Components[2]);
         glVertex2f(x0,y0);
         glVertex2f(x0,y1);
-        glColor3fv(c1.Components);
+        glColor3f(c1.Components[0], c1.Components[1], c1.Components[2]);
         glVertex2f(x1,y1);
         glVertex2f(x1,y0);
       }
@@ -197,10 +219,10 @@ public:
         vtkm::Float32 x1 = x + w;
         vtkm::Float32 y0 = y + h*v0;
         vtkm::Float32 y1 = y + h*v1;
-        glColor3fv(c0.Components);
+        glColor3f(c0.Components[0], c0.Components[1], c0.Components[2]);
         glVertex2f(x0,y1);
         glVertex2f(x1,y1);
-        glColor3fv(c1.Components);
+        glColor3f(c1.Components[0], c1.Components[1], c1.Components[2]);
         glVertex2f(x1,y0);
         glVertex2f(x0,y0);
       }
@@ -222,7 +244,7 @@ public:
     glTranslatef(x,y,0);
     glScalef(1.f/windowaspect, 1, 1);
     glRotatef(angle, 0,0,1);
-    glColor3fv(color.Components);
+    glColor3f(color.Components[0], color.Components[1], color.Components[2]);
     RenderText(scale, anchorx, anchory, text);
     glPopMatrix();
   }

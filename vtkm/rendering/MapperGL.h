@@ -121,19 +121,19 @@ public:
       s = (s-sMin)/sDiff;
 
       Color color = ct.MapRGB(s);
-      glColor3fv(color.Components);
+      glColor3f(color.Components[0], color.Components[1], color.Components[2]);
       glVertex3f(p1[0],p1[1],p1[2]);
 
       s = scalar.GetPortalConstControl().Get(i2);
       s = (s-sMin)/sDiff;
       color = ct.MapRGB(s);
-      glColor3fv(color.Components);
+      glColor3f(color.Components[0], color.Components[1], color.Components[2]);
       glVertex3f(p2[0],p2[1],p2[2]);
 
       s = scalar.GetPortalConstControl().Get(i3);
       s = (s-sMin)/sDiff;
       color = ct.MapRGB(s);
-      glColor3fv(color.Components);
+      glColor3f(color.Components[0], color.Components[1], color.Components[2]);
       glVertex3f(p3[0],p3[1],p3[2]);
     }
     glEnd();

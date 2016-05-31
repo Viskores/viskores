@@ -26,14 +26,14 @@ namespace vtkm {
 namespace rendering {
 /// \brief It's a color!
 ///
-/// This class provides the basic representation of a color. This class was 
-/// Ported from EAVL. Originally created by Jeremy Meredith, Dave Pugmire, 
+/// This class provides the basic representation of a color. This class was
+/// Ported from EAVL. Originally created by Jeremy Meredith, Dave Pugmire,
 /// and Sean Ahern.
 ///
 class Color
 {
   public:
-    vtkm::Float32 Components[4];
+    vtkm::Vec<vtkm::Float32,4> Components;
     Color()
     {
       Components[0] = 0;
@@ -41,8 +41,8 @@ class Color
       Components[2] = 0;
       Components[3] = 1;
     }
-    Color(vtkm::Float32 r_, 
-          vtkm::Float32 g_, 
+    Color(vtkm::Float32 r_,
+          vtkm::Float32 g_,
           vtkm::Float32 b_,
           vtkm::Float32 a_ = 1.f)
     {
@@ -69,8 +69,8 @@ class Color
       //
       // Of course, converting in GetComponentAsByte from
       // 1.0 gives 256, so we need to still clamp to 255
-      // anyway.  Again, this is not a problem, because it 
-      // doesn't really extend the range of floating point 
+      // anyway.  Again, this is not a problem, because it
+      // doesn't really extend the range of floating point
       // values which map to 255.
       Components[i] = static_cast<vtkm::Float32>(v) / 255.f;
       // clamp?
@@ -83,12 +83,12 @@ class Color
       // Why?  Well, we need to set glClearColor
       // using floats, but the frame buffer comes
       // back as bytes (and is internally such) in
-      // most cases.  In one example -- parallel 
+      // most cases.  In one example -- parallel
       // compositing -- we need the byte values
       // returned from here to match the byte values
       // returned in the frame buffer.  Though
       // a quick source code inspection of Mesa
-      // led me to believe I should do *255., in 
+      // led me to believe I should do *255., in
       // fact this led to a mismatch.  *256. was
       // actually closer.  (And arguably more correct
       // if you think the byte value 255 should share

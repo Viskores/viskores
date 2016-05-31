@@ -167,7 +167,7 @@ main(int argc, char* argv[])
     Set3DView(camera, coords, W, H);
 
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-    vtkm::rendering::CanvasGL surface(W,H,bg);
+    vtkm::rendering::CanvasGL canvas(bg);
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::Scene scene;
@@ -180,7 +180,7 @@ main(int argc, char* argv[])
     view = new vtkm::rendering::View3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                                        vtkm::rendering::CanvasGL,
                                        vtkm::rendering::WorldAnnotatorGL>(scene, mapper,
-                                                                          surface, camera, bg);
+                                                                          canvas, camera, bg);
     view->Initialize();
     glutMainLoop();
 

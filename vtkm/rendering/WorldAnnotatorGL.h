@@ -50,7 +50,7 @@ public:
     glDisable(GL_LIGHTING);
     glEnable(GL_DEPTH_TEST);
 
-    glColor3fv(c.Components);
+    glColor3f(c.Components[0], c.Components[1], c.Components[2]);
 
     glLineWidth(linewidth);
 
@@ -85,7 +85,7 @@ public:
     MatrixHelpers::CreateOGLMatrix(m, ogl);
     glPushMatrix();
     glMultMatrixf(ogl);
-    glColor3fv(color.Components);
+    glColor3f(color.Components[0], color.Components[1], color.Components[2]);
     RenderText(scale, anchorx, anchory, text);
     glPopMatrix();
   }

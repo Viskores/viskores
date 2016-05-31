@@ -79,11 +79,12 @@ public:
                                     _4,
                                     WorkIndex);
     VTKM_EXEC_EXPORT
-    void operator()(const vtkm::Vec<vtkm::Float32,4> &inColor,
-                    const vtkm::Float32 &inDepth,
-                    vtkm::exec::ExecutionWholeArray<vtkm::Float32> &depthBuffer,
-                    vtkm::exec::ExecutionWholeArray<vtkm::Float32> &colorBuffer,
-                    const vtkm::Id &index) const
+    void operator()(
+        const vtkm::Vec<vtkm::Float32,4> &inColor,
+        const vtkm::Float32 &inDepth,
+        vtkm::exec::ExecutionWholeArray<vtkm::Float32> &depthBuffer,
+        vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32,4> > &colorBuffer,
+        const vtkm::Id &index) const
     {
       if(index >=  NumPixels) return;
       vtkm::Float32 depth = (Proj22 + Proj23 / (-inDepth)) / Proj32;
@@ -95,12 +96,7 @@ public:
       vtkm::Id outIdx = static_cast<vtkm::Id>(y * Width + x);
       //std::cout<<" "<<depth;
       depthBuffer.Set(outIdx, depth);
-
-      outIdx = outIdx * 4;
-      colorBuffer.Set(outIdx + 0, inColor[0]);
-      colorBuffer.Set(outIdx + 1, inColor[1]);
-      colorBuffer.Set(outIdx + 2, inColor[2]);
-      colorBuffer.Set(outIdx + 3, inColor[3]);
+      colorBuffer.Set(outIdx, inColor);
     }
   }; //class SurfaceConverter
 
@@ -443,12 +439,12 @@ public:
                             this->SubsetWidth * this->SubsetHeight) )
         .Invoke( this->FrameBuffer,
                  distances,
-                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(canvas->DepthArray),
-                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(canvas->ColorArray) );
+                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(canvas->DepthBuffer),
+                 vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32,4> >(canvas->ColorBuffer) );
 
     //Force the transfer so the vectors contain data from device
-    canvas->ColorArray.GetPortalControl().Get(0);
-    canvas->DepthArray.GetPortalControl().Get(0);
+    canvas->ColorBuffer.GetPortalControl().Get(0);
+    canvas->DepthBuffer.GetPortalControl().Get(0);
   }
 
   VTKM_CONT_EXPORT
