@@ -22,7 +22,7 @@
 #ifndef vtk_m_TextureGL_h
 #define vtk_m_TextureGL_h
 
-#include <GL/gl.h>
+#include <vtkm/rendering/internal/OpenGLHeaders.h>
 #include <vtkm/rendering/ColorTable.h>
 
 #include <vector>

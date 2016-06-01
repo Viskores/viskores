@@ -24,6 +24,7 @@
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/RenderSurface.h>
+#include <vtkm/rendering/WorldAnnotator.h>
 namespace vtkm {
 namespace rendering {
 
@@ -81,7 +82,7 @@ public:
     // For vertical alignment, "center" is generally the center
     // of only the above-baseline contents of the font, so we
     // use a value slightly off of zero for VCenter.
-    // (We don't use an offset value instead of -1.0 for the 
+    // (We don't use an offset value instead of -1.0 for the
     // bottom value, because generally we want a true minimum
     // extent, e.g. to have text sitting at the bottom of a
     // window, and in that case, we need to keep all the text,
@@ -170,7 +171,7 @@ public:
     P = view.CreateProjectionMatrix();
 
     vtkm::Vec<vtkm::Float32,4> p4w(XPos,YPos,ZPos,1);
-    vtkm::Vec<vtkm::Float32,4> p4s = 
+    vtkm::Vec<vtkm::Float32,4> p4s =
       vtkm::MatrixMultiply(vtkm::MatrixMultiply(P,V), p4w);
 
     renderSurface.SetViewToScreenSpace(view,true);
@@ -207,17 +208,17 @@ public:
     vtkm::Vec<vtkm::Float32,4> right4(1,0,0,0);
     vtkm::Vec<vtkm::Float32,4> up4(0,1,0,0);
 
-    vtkm::Matrix<vtkm::Float32, 4, 4> M = 
-      vtkm::MatrixMultiply(T, 
+    vtkm::Matrix<vtkm::Float32, 4, 4> M =
+      vtkm::MatrixMultiply(T,
       vtkm::MatrixMultiply(SW,
-      vtkm::MatrixMultiply(SV, 
+      vtkm::MatrixMultiply(SV,
                            R)));
 
-    vtkm::Vec<vtkm::Float32,4> new_origin4 = 
+    vtkm::Vec<vtkm::Float32,4> new_origin4 =
       vtkm::MatrixMultiply(M, origin4);
-    vtkm::Vec<vtkm::Float32,4> new_right4 = 
+    vtkm::Vec<vtkm::Float32,4> new_right4 =
       vtkm::MatrixMultiply(M, right4);
-    vtkm::Vec<vtkm::Float32,4> new_up4 = 
+    vtkm::Vec<vtkm::Float32,4> new_up4 =
       vtkm::MatrixMultiply(M, up4);
 
     vtkm::Float32 px = new_origin4[0] / new_origin4[3];
