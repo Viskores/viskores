@@ -22,10 +22,13 @@ set(headers
   AxisAnnotation.h
   AxisAnnotation2D.h
   AxisAnnotation3D.h
+  BitmapFont.h
+  BitmapFontFactory.h
   BoundingBoxAnnotation.h
   Color.h
   ColorBarAnnotation.h
   ColorTable.h
+  MatrixHelpers.h
   Plot.h
   RenderSurface.h
   RenderSurfaceRayTracer.h
@@ -33,6 +36,7 @@ set(headers
   SceneRenderer.h
   SceneRendererRayTracer.h
   SceneRendererVolume.h
+  TextAnnotation.h
   Triangulator.h
   View.h
   Window.h
@@ -42,6 +46,7 @@ set(headers
 set(opengl_headers
   RenderSurfaceGL.h
   SceneRendererGL.h
+  TextureGL.h
   WorldAnnotatorGL.h
   )
 

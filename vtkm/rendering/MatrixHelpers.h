@@ -21,6 +21,7 @@
 #define vtk_m_rendering_MatrixHelpers_h
 
 #include <vtkm/Matrix.h>
+#include <vtkm/VectorAnalysis.h>
 
 namespace vtkm {
 namespace rendering {
@@ -47,7 +48,7 @@ struct MatrixHelpers
     oglM[13] = mtx[1][3];
     oglM[14] = mtx[2][3];
     oglM[15] = mtx[3][3];
-  }    
+  }
 
   static VTKM_CONT_EXPORT
   vtkm::Matrix<vtkm::Float32,4,4> ViewMatrix(const vtkm::Vec<vtkm::Float32,3> &position,
