@@ -17,6 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#include <vtkm/Bounds.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/rendering/Window.h>
 #include <vtkm/rendering/RenderSurfaceOSMesa.h>
@@ -33,13 +34,12 @@ void Set3DView(vtkm::rendering::View &view,
                const vtkm::cont::CoordinateSystem &coords,
                vtkm::Int32 w, vtkm::Int32 h)
 {
-    vtkm::Float64 coordsBounds[6]; // Xmin,Xmax,Ymin..
-    coords.GetBounds(coordsBounds,VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    vtkm::Bounds coordsBounds = coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     //set up a default view
     vtkm::Vec<vtkm::Float32,3> totalExtent;
-    totalExtent[0] = vtkm::Float32(coordsBounds[1] - coordsBounds[0]);
-    totalExtent[1] = vtkm::Float32(coordsBounds[3] - coordsBounds[2]);
-    totalExtent[2] = vtkm::Float32(coordsBounds[5] - coordsBounds[4]);
+    totalExtent[0] = vtkm::Float32(coordsBounds.X.Max - coordsBounds.X.Min);
+    totalExtent[1] = vtkm::Float32(coordsBounds.Y.Max - coordsBounds.Y.Min);
+    totalExtent[2] = vtkm::Float32(coordsBounds.Z.Max - coordsBounds.Z.Min);
     vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
     vtkm::Normalize(totalExtent);
 
@@ -65,22 +65,14 @@ void Set2DView(vtkm::rendering::View &view,
                const vtkm::cont::CoordinateSystem &coords,
                vtkm::Int32 w, vtkm::Int32 h)
 {
-    vtkm::Float64 coordsBounds[6]; // Xmin,Xmax,Ymin..
-    coords.GetBounds(coordsBounds,VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    vtkm::Bounds coordsBounds = coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     //set up a default view
-    // totalExtent does not seem to be used
-//    vtkm::Vec<vtkm::Float32,3> totalExtent;
-//    totalExtent[0] = vtkm::Float32(coordsBounds[1] - coordsBounds[0]);
-//    totalExtent[1] = vtkm::Float32(coordsBounds[3] - coordsBounds[2]);
-//    totalExtent[2] = vtkm::Float32(coordsBounds[5] - coordsBounds[4]);
-//    vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
-//    vtkm::Normalize(totalExtent);
 
     view = vtkm::rendering::View(vtkm::rendering::View::VIEW_2D);
-    view.View2d.Left = static_cast<vtkm::Float32>(coordsBounds[0]);
-    view.View2d.Right = static_cast<vtkm::Float32>(coordsBounds[1]);
-    view.View2d.Bottom = static_cast<vtkm::Float32>(coordsBounds[2]);
-    view.View2d.Top = static_cast<vtkm::Float32>(coordsBounds[3]);
+    view.View2d.Left = static_cast<vtkm::Float32>(coordsBounds.X.Min);
+    view.View2d.Right = static_cast<vtkm::Float32>(coordsBounds.X.Max);
+    view.View2d.Bottom = static_cast<vtkm::Float32>(coordsBounds.Y.Min);
+    view.View2d.Top = static_cast<vtkm::Float32>(coordsBounds.Y.Max);
     view.NearPlane = 1.f;
     view.FarPlane = 100.f;
     view.Width = w;
@@ -112,7 +104,7 @@ void Render3D(const vtkm::cont::DataSet &ds,
     vtkm::rendering::View view;
     Set3DView(view, coords, W, H);
 
-    vtkm::rendering::Scene3D scene;
+    vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceOSMesa surface(W,H,bg);
 
@@ -144,7 +136,7 @@ void Render2D(const vtkm::cont::DataSet &ds,
     vtkm::rendering::View view;
     Set2DView(view, coords, W, H);
 
-    vtkm::rendering::Scene2D scene;
+    vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceOSMesa surface(W,H,bg);
 

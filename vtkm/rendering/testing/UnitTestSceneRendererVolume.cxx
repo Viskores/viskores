@@ -77,7 +77,7 @@ void Render(const vtkm::cont::DataSet &ds,
     colorTable.AddAlphaControlPoint(0.0f, .01f);
     colorTable.AddAlphaControlPoint(1.0f, .01f);
 
-    vtkm::rendering::Scene3D scene;
+    vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceRayTracer surface(W,H,bg);
     scene.Plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),

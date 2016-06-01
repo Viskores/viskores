@@ -170,7 +170,7 @@ main(int argc, char* argv[])
     vtkm::rendering::RenderSurfaceGL surface(W,H,bg);
     vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
 
-    vtkm::rendering::Scene3D scene;
+    vtkm::rendering::Scene scene;
     scene.Plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
                                                 ds.GetCoordinateSystem(),
                                                 ds.GetField("pointvar"),

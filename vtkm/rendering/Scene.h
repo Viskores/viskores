@@ -31,12 +31,8 @@ class Scene
 {
 public:
   std::vector<vtkm::rendering::Plot> Plots;
-};
 
-class Scene3D : public Scene
-{
-public:
-  Scene3D() {}
+  Scene() {}
 
   template<typename SceneRendererType, typename SurfaceType>
   VTKM_CONT_EXPORT
@@ -66,26 +62,6 @@ public:
 
 protected:
   vtkm::Bounds SpatialBounds;
-};
-
-class Scene2D : public Scene
-{
-public:
-  Scene2D() {}
-
-  template<typename SceneRendererType, typename SurfaceType>
-  VTKM_CONT_EXPORT
-  void Render(SceneRendererType &sceneRenderer,
-              SurfaceType &surface,
-              vtkm::rendering::View &view)
-  {
-    for (std::size_t i = 0; i < this->Plots.size(); i++)
-    {
-      sceneRenderer.StartScene();
-      this->Plots[i].Render(sceneRenderer, surface, view);
-      sceneRenderer.EndScene();
-    }
-  }
 };
 
 }} //namespace vtkm::rendering

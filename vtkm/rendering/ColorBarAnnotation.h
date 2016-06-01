@@ -77,6 +77,8 @@ public:
     axis.SetScreenPosition(l,b, r,b);
     axis.SetMajorTickSize(0, .02, 1.0);
     axis.SetMinorTickSize(0,0,0); // no minor ticks
+    axis.SetLabelAlignment(TextAnnotation::HCenter,
+                           TextAnnotation::Top);
     axis.Render(view, worldAnnotator, renderSurface);
   }
 };

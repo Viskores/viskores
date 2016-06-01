@@ -26,6 +26,7 @@
 #include <vtkm/rendering/AxisAnnotation2D.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/ColorBarAnnotation.h>
+#include <vtkm/rendering/TextAnnotation.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/View.h>
@@ -98,16 +99,16 @@ class Window3D : public Window<SceneRendererType, SurfaceType,WorldAnnotatorType
 {
   typedef Window<SceneRendererType, SurfaceType,WorldAnnotatorType> Superclass;
 public:
-  vtkm::rendering::Scene3D Scene;
+  vtkm::rendering::Scene Scene;
   // 3D-specific annotations
   vtkm::rendering::BoundingBoxAnnotation BoxAnnotation;
   vtkm::rendering::AxisAnnotation3D XAxisAnnotation;
   vtkm::rendering::AxisAnnotation3D YAxisAnnotation;
   vtkm::rendering::AxisAnnotation3D ZAxisAnnotation;
-  ColorBarAnnotation ColorBarAnnotation;
+  vtkm::rendering::ColorBarAnnotation ColorBarAnnotation;
 
   VTKM_CONT_EXPORT
-  Window3D(const vtkm::rendering::Scene3D &scene,
+  Window3D(const vtkm::rendering::Scene &scene,
            const SceneRendererType &sceneRenderer,
            const SurfaceType &surface,
            const vtkm::rendering::View &view,
@@ -138,7 +139,7 @@ public:
   {
     if (this->Scene.Plots.size() > 0)
     {
-      //this->ColorBarAnnotation.SetAxisColor(eavlColor::white);
+      //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
       this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].ScalarRange, 5);
       this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].ColorTable);
       this->ColorBarAnnotation.Render(this->View, this->WorldAnnotator, this->Surface);
@@ -151,7 +152,7 @@ public:
     vtkm::Bounds bounds = this->Scene.GetSpatialBounds();
     vtkm::Float64 xmin = bounds.X.Min, xmax = bounds.X.Max;
     vtkm::Float64 ymin = bounds.Y.Min, ymax = bounds.Y.Max;
-    vtkm::Float64 zmin = bounds.Z.Min, zmax = bounds.Y.Max;
+    vtkm::Float64 zmin = bounds.Z.Min, zmax = bounds.Z.Max;
     vtkm::Float64 dx = xmax-xmin, dy = ymax-ymin, dz = zmax-zmin;
     vtkm::Float64 size = vtkm::Sqrt(dx*dx + dy*dy + dz*dz);
 
@@ -159,8 +160,16 @@ public:
     this->BoxAnnotation.SetExtents(this->Scene.GetSpatialBounds());
     this->BoxAnnotation.Render(this->View, this->WorldAnnotator);
 
-    ///\todo: set x/y/ztest based on view
-    bool xtest=true, ytest=false, ztest=false;
+    bool xtest = this->View.View3d.LookAt[0] > this->View.View3d.Position[0];
+    bool ytest = this->View.View3d.LookAt[1] > this->View.View3d.Position[1];
+    bool ztest = this->View.View3d.LookAt[2] > this->View.View3d.Position[2];
+
+    const bool outsideedges = true; // if false, do closesttriad
+    if (outsideedges)
+    {
+      xtest = !xtest;
+      //ytest = !ytest;
+    }
 
     vtkm::Float64 xrel = vtkm::Abs(dx) / size;
     vtkm::Float64 yrel = vtkm::Abs(dy) / size;
@@ -178,11 +187,11 @@ public:
     this->XAxisAnnotation.SetRange(xmin, xmax);
     this->XAxisAnnotation.SetMajorTickSize(size / 40.f, 0);
     this->XAxisAnnotation.SetMinorTickSize(size / 80.f, 0);
-    this->XAxisAnnotation.SetLabelFontScale(size / 30.);
+    this->XAxisAnnotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
     this->XAxisAnnotation.SetMoreOrLessTickAdjustment(xrel < .3 ? -1 : 0);
-    this->XAxisAnnotation.Render(this->View, this->WorldAnnotator);
+    this->XAxisAnnotation.Render(this->View, this->WorldAnnotator, this->Surface);
 
-    this->YAxisAnnotation.SetAxis(0);
+    this->YAxisAnnotation.SetAxis(1);
     this->YAxisAnnotation.SetColor(Color(1,1,1));
     this->YAxisAnnotation.SetTickInvert(xtest,ytest,ztest);
     this->YAxisAnnotation.SetWorldPosition(xtest ? xmin : xmax,
@@ -194,11 +203,11 @@ public:
     this->YAxisAnnotation.SetRange(ymin, ymax);
     this->YAxisAnnotation.SetMajorTickSize(size / 40.f, 0);
     this->YAxisAnnotation.SetMinorTickSize(size / 80.f, 0);
-    this->YAxisAnnotation.SetLabelFontScale(size / 30.);
+    this->YAxisAnnotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
     this->YAxisAnnotation.SetMoreOrLessTickAdjustment(yrel < .3 ? -1 : 0);
-    this->YAxisAnnotation.Render(this->View, this->WorldAnnotator);
+    this->YAxisAnnotation.Render(this->View, this->WorldAnnotator, this->Surface);
 
-    this->ZAxisAnnotation.SetAxis(0);
+    this->ZAxisAnnotation.SetAxis(2);
     this->ZAxisAnnotation.SetColor(Color(1,1,1));
     this->ZAxisAnnotation.SetTickInvert(xtest,ytest,ztest);
     this->ZAxisAnnotation.SetWorldPosition(xtest ? xmin : xmax,
@@ -210,9 +219,9 @@ public:
     this->ZAxisAnnotation.SetRange(zmin, zmax);
     this->ZAxisAnnotation.SetMajorTickSize(size / 40.f, 0);
     this->ZAxisAnnotation.SetMinorTickSize(size / 80.f, 0);
-    this->ZAxisAnnotation.SetLabelFontScale(size / 30.);
+    this->ZAxisAnnotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
     this->ZAxisAnnotation.SetMoreOrLessTickAdjustment(zrel < .3 ? -1 : 0);
-    this->ZAxisAnnotation.Render(this->View, this->WorldAnnotator);
+    this->ZAxisAnnotation.Render(this->View, this->WorldAnnotator, this->Surface);
   }
 };
 
@@ -223,14 +232,14 @@ class Window2D : public Window<SceneRendererType, SurfaceType,WorldAnnotatorType
 {
   typedef Window<SceneRendererType, SurfaceType,WorldAnnotatorType> Superclass;
 public:
-  vtkm::rendering::Scene2D Scene;
+  vtkm::rendering::Scene Scene;
   // 2D-specific annotations
-  AxisAnnotation2D HorizontalAxisAnnotation;
-  AxisAnnotation2D VerticalAxisAnnotation;
-  ColorBarAnnotation ColorBarAnnotation;
+  vtkm::rendering::AxisAnnotation2D HorizontalAxisAnnotation;
+  vtkm::rendering::AxisAnnotation2D VerticalAxisAnnotation;
+  vtkm::rendering::ColorBarAnnotation ColorBarAnnotation;
 
   VTKM_CONT_EXPORT
-  Window2D(const vtkm::rendering::Scene2D &scene,
+  Window2D(const vtkm::rendering::Scene &scene,
            const SceneRendererType &sceneRenderer,
            const SurfaceType &surface,
            const vtkm::rendering::View &view,
@@ -274,8 +283,8 @@ public:
                                                         this->View.View2d.Right);
     this->HorizontalAxisAnnotation.SetMajorTickSize(0, .05, 1.0);
     this->HorizontalAxisAnnotation.SetMinorTickSize(0, .02, 1.0);
-    //this->HorizontalAxisAnnotation.SetLabelAlignment(eavlTextAnnotation::HCenter,
-    //                         eavlTextAnnotation::Top);
+    this->HorizontalAxisAnnotation.SetLabelAlignment(TextAnnotation::HCenter,
+                                                     TextAnnotation::Top);
     this->HorizontalAxisAnnotation.Render(
           this->View, this->WorldAnnotator, this->Surface);
 
@@ -289,16 +298,16 @@ public:
                                                       this->View.View2d.Top);
     this->VerticalAxisAnnotation.SetMajorTickSize(.05 / windowaspect, 0, 1.0);
     this->VerticalAxisAnnotation.SetMinorTickSize(.02 / windowaspect, 0, 1.0);
-    //this->VerticalAxisAnnotation.SetLabelAlignment(eavlTextAnnotation::Right,
-    //                         eavlTextAnnotation::VCenter);
+    this->VerticalAxisAnnotation.SetLabelAlignment(TextAnnotation::Right,
+                                                   TextAnnotation::VCenter);
     this->VerticalAxisAnnotation.Render(
           this->View, this->WorldAnnotator, this->Surface);
 
     if (this->Scene.Plots.size() > 0)
     {
-      //this->ColorBarAnnotation.SetAxisColor(eavlColor::white);
-      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].ScalarRange[0],
-                                        this->Scene.Plots[0].ScalarRange[1],
+      //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
+      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].ScalarRange.Min,
+                                        this->Scene.Plots[0].ScalarRange.Max,
                                         5);
       this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].ColorTable);
       this->ColorBarAnnotation.Render(

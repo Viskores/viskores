@@ -36,64 +36,64 @@ namespace rendering {
 class RenderSurfaceOSMesa : public RenderSurfaceGL
 {
 public:
-    VTKM_CONT_EXPORT
-    RenderSurfaceOSMesa(std::size_t w=1024, std::size_t h=1024,
-          const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-        : RenderSurfaceGL(w,h,c)
+  VTKM_CONT_EXPORT
+  RenderSurfaceOSMesa(std::size_t w=1024, std::size_t h=1024,
+                      const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
+    : RenderSurfaceGL(w,h,c)
+  {
+    ctx = NULL;
+  }
+
+  VTKM_CONT_EXPORT
+  virtual void Initialize()
+  {
+    ctx = OSMesaCreateContextExt(OSMESA_RGBA, 32, 0, 0, NULL);
+    if (!ctx)
+      throw vtkm::cont::ErrorControlBadValue("OSMesa context creation failed.");
+    this->ColorBuffer.resize(this->Width*this->Height*4);
+    if (!OSMesaMakeCurrent(ctx,
+                           &this->ColorBuffer[0],
+                           GL_FLOAT,
+                           static_cast<GLsizei>(this->Width),
+                           static_cast<GLsizei>(this->Height)))
     {
-        ctx = NULL;
+      throw vtkm::cont::ErrorControlBadValue("OSMesa context activation failed.");
     }
 
-    VTKM_CONT_EXPORT
-    virtual void Initialize()
-    {
-        ctx = OSMesaCreateContextExt(OSMESA_RGBA, 32, 0, 0, NULL);
-        if (!ctx)
-            throw vtkm::cont::ErrorControlBadValue("OSMesa context creation failed.");
-        this->ColorBuffer.resize(this->Width*this->Height*4);
-        if (!OSMesaMakeCurrent(ctx,
-                               &this->ColorBuffer[0],
-                               GL_FLOAT,
-                               static_cast<GLsizei>(this->Width),
-                               static_cast<GLsizei>(this->Height)))
-        {
-          throw vtkm::cont::ErrorControlBadValue("OSMesa context activation failed.");
-        }
+    glEnable(GL_DEPTH_TEST);
+  }
 
-        glEnable(GL_DEPTH_TEST);
-    }
+  VTKM_CONT_EXPORT
+  virtual void Clear()
+  {
+    glClearColor(this->BackgroundColor.Components[0],
+                 this->BackgroundColor.Components[1],
+                 this->BackgroundColor.Components[2],
+                 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  }
+  VTKM_CONT_EXPORT
+  virtual void Finish()
+  {
+    RenderSurfaceGL::Finish();
 
-    VTKM_CONT_EXPORT
-    virtual void Clear()
+    //Copy zbuff into floating point array.
+    unsigned int *raw_zbuff;
+    int zbytes, w, h;
+    GLboolean ret;
+    ret = OSMesaGetDepthBuffer(ctx, &w, &h, &zbytes, (void**)&raw_zbuff);
+    if (!ret ||
+        static_cast<std::size_t>(w)!=this->Width ||
+        static_cast<std::size_t>(h)!=this->Height)
     {
-        glClearColor(this->BackgroundColor.Components[0],
-                     this->BackgroundColor.Components[1],
-                     this->BackgroundColor.Components[2],
-                     1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      throw vtkm::cont::ErrorControlBadValue("Wrong width/height in ZBuffer");
     }
-    VTKM_CONT_EXPORT
-    virtual void Finish()
+    std::size_t npixels = this->Width*this->Height;
+    for (std::size_t i=0; i<npixels; i++)
     {
-        RenderSurfaceGL::Finish();
-
-        //Copy zbuff into floating point array.
-        unsigned int *raw_zbuff;
-        int zbytes, w, h;
-        GLboolean ret;
-        ret = OSMesaGetDepthBuffer(ctx, &w, &h, &zbytes, (void**)&raw_zbuff);
-        if (!ret ||
-            static_cast<std::size_t>(w)!=this->Width ||
-            static_cast<std::size_t>(h)!=this->Height)
-        {
-            throw vtkm::cont::ErrorControlBadValue("Wrong width/height in ZBuffer");
-        }
-        std::size_t npixels = this->Width*this->Height;
-        for (std::size_t i=0; i<npixels; i++)
-        {
-            this->DepthBuffer[i] = float(raw_zbuff[i]) / float(UINT_MAX);
-        }
+      this->DepthBuffer[i] = float(raw_zbuff[i]) / float(UINT_MAX);
     }
+  }
 
 private:
   OSMesaContext ctx;

@@ -20,12 +20,17 @@
 #ifndef vtk_m_rendering_WorldAnnotatorGL_h
 #define vtk_m_rendering_WorldAnnotatorGL_h
 
+#include <vtkm/Matrix.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/WorldAnnotator.h>
+#include <vtkm/rendering/BitmapFont.h>
+#include <vtkm/rendering/BitmapFontFactory.h>
+#include <vtkm/rendering/TextureGL.h>
+#include <vtkm/rendering/MatrixHelpers.h>
 
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 
@@ -59,6 +64,107 @@ public:
     if (infront)
       glDepthRange(0,1);
 
+  }
+  virtual void AddText(vtkm::Float32 ox, vtkm::Float32 oy, vtkm::Float32 oz,
+                       vtkm::Float32 rx, vtkm::Float32 ry, vtkm::Float32 rz,
+                       vtkm::Float32 ux, vtkm::Float32 uy, vtkm::Float32 uz,
+                       vtkm::Float32 scale,
+                       vtkm::Float32 anchorx, vtkm::Float32 anchory,
+                       Color color,
+                       std::string text)
+  {
+    vtkm::Vec<vtkm::Float32,3> o(ox,oy,oz);
+    vtkm::Vec<vtkm::Float32,3> r(rx,ry,rz);
+    vtkm::Vec<vtkm::Float32,3> u(ux,uy,uz);
+
+    vtkm::Vec<vtkm::Float32,3> n = vtkm::Cross(r,u);
+    vtkm::Normalize(n);
+
+    vtkm::Matrix<vtkm::Float32,4,4> m;
+    m = MatrixHelpers::WorldMatrix(o, r, u, n);
+
+    vtkm::Float32 ogl[16];
+    MatrixHelpers::CreateOGLMatrix(m, ogl);
+    glPushMatrix();
+    glMultMatrixf(ogl);
+    glColor3fv(color.Components);
+    RenderText(scale, anchorx, anchory, text);
+    glPopMatrix();
+  }
+
+private:
+  BitmapFont Font;
+  TextureGL FontTexture;
+
+  void RenderText(vtkm::Float32 scale,
+                  vtkm::Float32 anchorx, vtkm::Float32 anchory,
+                  std::string text)
+  {
+    if (this->FontTexture.ID == 0)
+    {
+      Font = BitmapFontFactory::CreateLiberation2Sans();
+      std::vector<unsigned char> &rawpngdata = this->Font.GetRawImageData();
+
+      std::vector<unsigned char> rgba;
+      unsigned long width, height;
+      int error = decodePNG(rgba, width, height,
+                            &rawpngdata[0], rawpngdata.size());
+      if (error != 0)
+      {
+        return;
+      }
+
+      this->FontTexture.CreateAlphaFromRGBA(int(width),int(height),rgba);
+    }
+
+
+    this->FontTexture.Enable();
+
+    glDepthMask(GL_FALSE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glDisable(GL_LIGHTING);
+    //glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, -.5);
+
+    glBegin(GL_QUADS);
+
+    vtkm::Float32 textwidth = this->Font.GetTextWidth(text);
+
+    vtkm::Float32 fx = -(.5f + .5f*anchorx) * textwidth;
+    vtkm::Float32 fy = -(.5f + .5f*anchory);
+    vtkm::Float32 fz = 0;
+    for (unsigned int i=0; i<text.length(); ++i)
+    {
+      char c = text[i];
+      char nextchar = (i < text.length()-1) ? text[i+1] : 0;
+
+      vtkm::Float32 vl,vr,vt,vb;
+      vtkm::Float32 tl,tr,tt,tb;
+      this->Font.GetCharPolygon(c, fx, fy,
+                          vl, vr, vt, vb,
+                          tl, tr, tt, tb, nextchar);
+
+      glTexCoord2f(tl, 1.f-tt);
+      glVertex3f(scale*vl, scale*vt, fz);
+
+      glTexCoord2f(tl, 1.f-tb);
+      glVertex3f(scale*vl, scale*vb, fz);
+
+      glTexCoord2f(tr, 1.f-tb);
+      glVertex3f(scale*vr, scale*vb, fz);
+
+      glTexCoord2f(tr, 1.f-tt);
+      glVertex3f(scale*vr, scale*vt, fz);
+    }
+
+    glEnd();
+
+    this->FontTexture.Disable();
+
+    //glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 0);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_ALPHA_TEST);
   }
 };
 
