@@ -104,7 +104,7 @@ void Render3D(const vtkm::cont::DataSet &ds,
     vtkm::rendering::View view;
     Set3DView(view, coords, W, H);
 
-    vtkm::rendering::Scene3D scene;
+    vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceOSMesa surface(W,H,bg);
 
@@ -136,7 +136,7 @@ void Render2D(const vtkm::cont::DataSet &ds,
     vtkm::rendering::View view;
     Set2DView(view, coords, W, H);
 
-    vtkm::rendering::Scene2D scene;
+    vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceOSMesa surface(W,H,bg);
 

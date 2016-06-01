@@ -99,7 +99,7 @@ class Window3D : public Window<SceneRendererType, SurfaceType,WorldAnnotatorType
 {
   typedef Window<SceneRendererType, SurfaceType,WorldAnnotatorType> Superclass;
 public:
-  vtkm::rendering::Scene3D Scene;
+  vtkm::rendering::Scene Scene;
   // 3D-specific annotations
   vtkm::rendering::BoundingBoxAnnotation BoxAnnotation;
   vtkm::rendering::AxisAnnotation3D XAxisAnnotation;
@@ -108,7 +108,7 @@ public:
   vtkm::rendering::ColorBarAnnotation ColorBarAnnotation;
 
   VTKM_CONT_EXPORT
-  Window3D(const vtkm::rendering::Scene3D &scene,
+  Window3D(const vtkm::rendering::Scene &scene,
            const SceneRendererType &sceneRenderer,
            const SurfaceType &surface,
            const vtkm::rendering::View &view,
@@ -232,14 +232,14 @@ class Window2D : public Window<SceneRendererType, SurfaceType,WorldAnnotatorType
 {
   typedef Window<SceneRendererType, SurfaceType,WorldAnnotatorType> Superclass;
 public:
-  vtkm::rendering::Scene2D Scene;
+  vtkm::rendering::Scene Scene;
   // 2D-specific annotations
   vtkm::rendering::AxisAnnotation2D HorizontalAxisAnnotation;
   vtkm::rendering::AxisAnnotation2D VerticalAxisAnnotation;
   vtkm::rendering::ColorBarAnnotation ColorBarAnnotation;
 
   VTKM_CONT_EXPORT
-  Window2D(const vtkm::rendering::Scene2D &scene,
+  Window2D(const vtkm::rendering::Scene &scene,
            const SceneRendererType &sceneRenderer,
            const SurfaceType &surface,
            const vtkm::rendering::View &view,
