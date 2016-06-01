@@ -93,17 +93,17 @@ public:
   }
 
 private:
-  BitmapFont font;
-  TextureGL fontTexture;
+  BitmapFont Font;
+  TextureGL FontTexture;
 
   void RenderText(vtkm::Float32 scale,
                   vtkm::Float32 anchorx, vtkm::Float32 anchory,
                   std::string text)
   {
-    if (fontTexture.id == 0)
+    if (this->FontTexture.ID == 0)
     {
-      font = BitmapFontFactory::CreateLiberation2Sans();
-      std::vector<unsigned char> &rawpngdata = font.GetRawImageData();
+      Font = BitmapFontFactory::CreateLiberation2Sans();
+      std::vector<unsigned char> &rawpngdata = this->Font.GetRawImageData();
 
       std::vector<unsigned char> rgba;
       unsigned long width, height;
@@ -114,11 +114,11 @@ private:
         return;
       }
 
-      fontTexture.CreateAlphaFromRGBA(int(width),int(height),rgba);
+      this->FontTexture.CreateAlphaFromRGBA(int(width),int(height),rgba);
     }
 
 
-    fontTexture.Enable();
+    this->FontTexture.Enable();
 
     glDepthMask(GL_FALSE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -129,7 +129,7 @@ private:
 
     glBegin(GL_QUADS);
 
-    vtkm::Float32 textwidth = font.GetTextWidth(text);
+    vtkm::Float32 textwidth = this->Font.GetTextWidth(text);
 
     vtkm::Float32 fx = -(.5f + .5f*anchorx) * textwidth;
     vtkm::Float32 fy = -(.5f + .5f*anchory);
@@ -141,7 +141,7 @@ private:
 
       vtkm::Float32 vl,vr,vt,vb;
       vtkm::Float32 tl,tr,tt,tb;
-      font.GetCharPolygon(c, fx, fy,
+      this->Font.GetCharPolygon(c, fx, fy,
                           vl, vr, vt, vb,
                           tl, tr, tt, tb, nextchar);
 
@@ -160,7 +160,7 @@ private:
 
     glEnd();
 
-    fontTexture.Disable();
+    this->FontTexture.Disable();
 
     //glTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, 0);
     glDepthMask(GL_TRUE);

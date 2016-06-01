@@ -9553,135 +9553,135 @@ public:
     };
 
     BitmapFont font;
-    font.name      = "Liberation 2 Sans";
-    font.height    = 129;
-    font.ascender  = 102;
-    font.descender = -24;
-    font.imgw      = 1024;
-    font.imgh      = 1024;
-    font.padl      = 16;
-    font.padr      = 16;
-    font.padt      = 14;
-    font.padb      = 14;
-    font.rawimagefiledata.insert(
-        font.rawimagefiledata.begin(),
+    font.Name      = "Liberation 2 Sans";
+    font.Height    = 129;
+    font.Ascender  = 102;
+    font.Descender = -24;
+    font.ImgW      = 1024;
+    font.ImgH      = 1024;
+    font.PadL      = 16;
+    font.PadR      = 16;
+    font.PadT      = 14;
+    font.PadB      = 14;
+    font.RawImageFileData.insert(
+        font.RawImageFileData.begin(),
         Liberation2Sans_rawimage,
         Liberation2Sans_rawimage + Liberation2Sans_imagelength);
     for (int i=0; i<95; i++)
     {
-        font.chars.push_back(BitmapFont::Character(Liberation2Sans_charids[i],
+        font.Chars.push_back(BitmapFont::Character(Liberation2Sans_charids[i],
                                               Liberation2Sans_charmetrics[i]));
-        font.shortmap[Liberation2Sans_charmetrics[i][0]] = i;
+        font.ShortMap[Liberation2Sans_charmetrics[i][0]] = i;
     }
 
     // Character  
-    font.chars[0].kern[65] = -6;
-    font.chars[0].kern[84] = -2;
-    font.chars[0].kern[89] = -2;
+    font.Chars[0].kern[65] = -6;
+    font.Chars[0].kern[84] = -2;
+    font.Chars[0].kern[89] = -2;
     // Character A
-    font.chars[33].kern[32] = -6;
-    font.chars[33].kern[84] = -8;
-    font.chars[33].kern[86] = -8;
-    font.chars[33].kern[87] = -4;
-    font.chars[33].kern[89] = -8;
-    font.chars[33].kern[118] = -2;
-    font.chars[33].kern[119] = -2;
-    font.chars[33].kern[121] = -2;
+    font.Chars[33].kern[32] = -6;
+    font.Chars[33].kern[84] = -8;
+    font.Chars[33].kern[86] = -8;
+    font.Chars[33].kern[87] = -4;
+    font.Chars[33].kern[89] = -8;
+    font.Chars[33].kern[118] = -2;
+    font.Chars[33].kern[119] = -2;
+    font.Chars[33].kern[121] = -2;
     // Character F
-    font.chars[38].kern[44] = -12;
-    font.chars[38].kern[46] = -12;
-    font.chars[38].kern[65] = -6;
+    font.Chars[38].kern[44] = -12;
+    font.Chars[38].kern[46] = -12;
+    font.Chars[38].kern[65] = -6;
     // Character L
-    font.chars[44].kern[32] = -4;
-    font.chars[44].kern[84] = -8;
-    font.chars[44].kern[86] = -8;
-    font.chars[44].kern[87] = -8;
-    font.chars[44].kern[89] = -8;
-    font.chars[44].kern[121] = -4;
+    font.Chars[44].kern[32] = -4;
+    font.Chars[44].kern[84] = -8;
+    font.Chars[44].kern[86] = -8;
+    font.Chars[44].kern[87] = -8;
+    font.Chars[44].kern[89] = -8;
+    font.Chars[44].kern[121] = -4;
     // Character P
-    font.chars[48].kern[32] = -2;
-    font.chars[48].kern[44] = -14;
-    font.chars[48].kern[46] = -14;
-    font.chars[48].kern[65] = -8;
+    font.Chars[48].kern[32] = -2;
+    font.Chars[48].kern[44] = -14;
+    font.Chars[48].kern[46] = -14;
+    font.Chars[48].kern[65] = -8;
     // Character R
-    font.chars[50].kern[84] = -2;
-    font.chars[50].kern[86] = -2;
-    font.chars[50].kern[87] = -2;
-    font.chars[50].kern[89] = -2;
+    font.Chars[50].kern[84] = -2;
+    font.Chars[50].kern[86] = -2;
+    font.Chars[50].kern[87] = -2;
+    font.Chars[50].kern[89] = -2;
     // Character T
-    font.chars[52].kern[32] = -2;
-    font.chars[52].kern[44] = -12;
-    font.chars[52].kern[45] = -6;
-    font.chars[52].kern[46] = -12;
-    font.chars[52].kern[58] = -12;
-    font.chars[52].kern[59] = -12;
-    font.chars[52].kern[65] = -8;
-    font.chars[52].kern[79] = -2;
-    font.chars[52].kern[97] = -12;
-    font.chars[52].kern[99] = -12;
-    font.chars[52].kern[101] = -12;
-    font.chars[52].kern[105] = -4;
-    font.chars[52].kern[111] = -12;
-    font.chars[52].kern[114] = -4;
-    font.chars[52].kern[115] = -12;
-    font.chars[52].kern[117] = -4;
-    font.chars[52].kern[119] = -6;
-    font.chars[52].kern[121] = -6;
+    font.Chars[52].kern[32] = -2;
+    font.Chars[52].kern[44] = -12;
+    font.Chars[52].kern[45] = -6;
+    font.Chars[52].kern[46] = -12;
+    font.Chars[52].kern[58] = -12;
+    font.Chars[52].kern[59] = -12;
+    font.Chars[52].kern[65] = -8;
+    font.Chars[52].kern[79] = -2;
+    font.Chars[52].kern[97] = -12;
+    font.Chars[52].kern[99] = -12;
+    font.Chars[52].kern[101] = -12;
+    font.Chars[52].kern[105] = -4;
+    font.Chars[52].kern[111] = -12;
+    font.Chars[52].kern[114] = -4;
+    font.Chars[52].kern[115] = -12;
+    font.Chars[52].kern[117] = -4;
+    font.Chars[52].kern[119] = -6;
+    font.Chars[52].kern[121] = -6;
     // Character V
-    font.chars[54].kern[44] = -10;
-    font.chars[54].kern[45] = -6;
-    font.chars[54].kern[46] = -10;
-    font.chars[54].kern[58] = -4;
-    font.chars[54].kern[59] = -4;
-    font.chars[54].kern[65] = -8;
-    font.chars[54].kern[97] = -8;
-    font.chars[54].kern[101] = -6;
-    font.chars[54].kern[105] = -2;
-    font.chars[54].kern[111] = -6;
-    font.chars[54].kern[114] = -4;
-    font.chars[54].kern[117] = -4;
-    font.chars[54].kern[121] = -4;
+    font.Chars[54].kern[44] = -10;
+    font.Chars[54].kern[45] = -6;
+    font.Chars[54].kern[46] = -10;
+    font.Chars[54].kern[58] = -4;
+    font.Chars[54].kern[59] = -4;
+    font.Chars[54].kern[65] = -8;
+    font.Chars[54].kern[97] = -8;
+    font.Chars[54].kern[101] = -6;
+    font.Chars[54].kern[105] = -2;
+    font.Chars[54].kern[111] = -6;
+    font.Chars[54].kern[114] = -4;
+    font.Chars[54].kern[117] = -4;
+    font.Chars[54].kern[121] = -4;
     // Character W
-    font.chars[55].kern[44] = -6;
-    font.chars[55].kern[45] = -2;
-    font.chars[55].kern[46] = -6;
-    font.chars[55].kern[58] = -2;
-    font.chars[55].kern[59] = -2;
-    font.chars[55].kern[65] = -4;
-    font.chars[55].kern[97] = -4;
-    font.chars[55].kern[101] = -2;
-    font.chars[55].kern[111] = -2;
-    font.chars[55].kern[114] = -2;
-    font.chars[55].kern[117] = -2;
-    font.chars[55].kern[121] = -1;
+    font.Chars[55].kern[44] = -6;
+    font.Chars[55].kern[45] = -2;
+    font.Chars[55].kern[46] = -6;
+    font.Chars[55].kern[58] = -2;
+    font.Chars[55].kern[59] = -2;
+    font.Chars[55].kern[65] = -4;
+    font.Chars[55].kern[97] = -4;
+    font.Chars[55].kern[101] = -2;
+    font.Chars[55].kern[111] = -2;
+    font.Chars[55].kern[114] = -2;
+    font.Chars[55].kern[117] = -2;
+    font.Chars[55].kern[121] = -1;
     // Character Y
-    font.chars[57].kern[32] = -2;
-    font.chars[57].kern[44] = -14;
-    font.chars[57].kern[45] = -10;
-    font.chars[57].kern[46] = -14;
-    font.chars[57].kern[58] = -6;
-    font.chars[57].kern[59] = -7;
-    font.chars[57].kern[65] = -8;
-    font.chars[57].kern[97] = -8;
-    font.chars[57].kern[101] = -10;
-    font.chars[57].kern[105] = -4;
-    font.chars[57].kern[111] = -10;
-    font.chars[57].kern[112] = -8;
-    font.chars[57].kern[113] = -10;
-    font.chars[57].kern[117] = -6;
-    font.chars[57].kern[118] = -6;
+    font.Chars[57].kern[32] = -2;
+    font.Chars[57].kern[44] = -14;
+    font.Chars[57].kern[45] = -10;
+    font.Chars[57].kern[46] = -14;
+    font.Chars[57].kern[58] = -6;
+    font.Chars[57].kern[59] = -7;
+    font.Chars[57].kern[65] = -8;
+    font.Chars[57].kern[97] = -8;
+    font.Chars[57].kern[101] = -10;
+    font.Chars[57].kern[105] = -4;
+    font.Chars[57].kern[111] = -10;
+    font.Chars[57].kern[112] = -8;
+    font.Chars[57].kern[113] = -10;
+    font.Chars[57].kern[117] = -6;
+    font.Chars[57].kern[118] = -6;
     // Character r
-    font.chars[82].kern[44] = -6;
-    font.chars[82].kern[46] = -6;
+    font.Chars[82].kern[44] = -6;
+    font.Chars[82].kern[46] = -6;
     // Character v
-    font.chars[86].kern[44] = -8;
-    font.chars[86].kern[46] = -8;
+    font.Chars[86].kern[44] = -8;
+    font.Chars[86].kern[46] = -8;
     // Character w
-    font.chars[87].kern[44] = -6;
-    font.chars[87].kern[46] = -6;
+    font.Chars[87].kern[44] = -6;
+    font.Chars[87].kern[46] = -6;
     // Character y
-    font.chars[89].kern[44] = -8;
-    font.chars[89].kern[46] = -8;
+    font.Chars[89].kern[44] = -8;
+    font.Chars[89].kern[46] = -8;
     return font;
   }
 };

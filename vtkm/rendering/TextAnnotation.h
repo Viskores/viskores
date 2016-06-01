@@ -44,38 +44,38 @@ public:
     };
 
 protected:
-  std::string   text;
-  Color         color;
-  vtkm::Float32 scale;
-  vtkm::Float32 anchorx, anchory;
+  std::string   Text;
+  Color         TextColor;
+  vtkm::Float32 Scale;
+  vtkm::Float32 AnchorX, AnchorY;
 
 public:
   TextAnnotation(const std::string &txt, Color c, vtkm::Float32 s)
-    : text(txt), color(c), scale(s)
+    : Text(txt), TextColor(c), Scale(s)
   {
     // default anchor: bottom-left
-    anchorx = -1;
-    anchory = -1;
+    AnchorX = -1;
+    AnchorY = -1;
   }
   virtual ~TextAnnotation()
   {
   }
   void SetText(const std::string &txt)
   {
-    text = txt;
+    Text = txt;
   }
   void SetRawAnchor(vtkm::Float32 h, vtkm::Float32 v)
   {
-    anchorx = h;
-    anchory = v;
+    AnchorX = h;
+    AnchorY = v;
   }
   void SetAlignment(HorizontalAlignment h, VerticalAlignment v)
   {
     switch (h)
     {
-      case Left:    anchorx = -1.0f; break;
-      case HCenter: anchorx =  0.0f; break;
-      case Right:   anchorx = +1.0f; break;
+      case Left:    AnchorX = -1.0f; break;
+      case HCenter: AnchorX =  0.0f; break;
+      case Right:   AnchorX = +1.0f; break;
     }
 
     // For vertical alignment, "center" is generally the center
@@ -89,14 +89,14 @@ public:
     // the bottom of the window.
     switch (v)
     {
-      case Bottom:  anchory = -1.0f;  break;
-      case VCenter: anchory = -0.06f; break;
-      case Top:     anchory = +1.0f;  break;
+      case Bottom:  AnchorY = -1.0f;  break;
+      case VCenter: AnchorY = -0.06f; break;
+      case Top:     AnchorY = +1.0f;  break;
     }
   }
   void SetScale(vtkm::Float32 s)
   {
-    scale = s;
+    Scale = s;
   }
   virtual void Render(View &view,
                       WorldAnnotator &worldAnnotator,
@@ -106,21 +106,21 @@ public:
 class ScreenTextAnnotation : public TextAnnotation
 {
 protected:
-  vtkm::Float32 x,y;
-  vtkm::Float32 angle;
+  vtkm::Float32 XPos,YPos;
+  vtkm::Float32 Angle;
 public:
   ScreenTextAnnotation(const std::string &txt, Color c, vtkm::Float32 s,
                        vtkm::Float32 ox, vtkm::Float32 oy, vtkm::Float32 angleDeg = 0.)
     : TextAnnotation(txt,c,s)
   {
-    x = ox;
-    y = oy;
-    angle = angleDeg;
+    XPos = ox;
+    YPos = oy;
+    Angle = angleDeg;
   }
   void SetPosition(vtkm::Float32 ox, vtkm::Float32 oy)
   {
-    x = ox;
-    y = oy;
+    XPos = ox;
+    YPos = oy;
   }
   virtual void Render(View &view,
                       WorldAnnotator &,
@@ -129,36 +129,36 @@ public:
     vtkm::Float32 WindowAspect = vtkm::Float32(view.Width) /
       vtkm::Float32(view.Height);
 
-    renderSurface.AddText(x,y,
-                          scale,
-                          angle,
+    renderSurface.AddText(XPos,YPos,
+                          Scale,
+                          Angle,
                           WindowAspect,
-                          anchorx, anchory,
-                          color, text);
+                          AnchorX, AnchorY,
+                          TextColor, Text);
   }
 };
 
 class BillboardTextAnnotation : public TextAnnotation
 {
 protected:
-  vtkm::Float32 x,y,z;
-  vtkm::Float32 angle;
+  vtkm::Float32 XPos,YPos,ZPos;
+  vtkm::Float32 Angle;
 public:
   BillboardTextAnnotation(const std::string &txt, Color c, vtkm::Float32 s,
                           vtkm::Float32 ox, vtkm::Float32 oy, vtkm::Float32 oz,
                           vtkm::Float32 angleDeg = 0.)
     : TextAnnotation(txt,c,s)
   {
-    x = ox;
-    y = oy;
-    z = oz;
-    angle = angleDeg;
+    XPos = ox;
+    YPos = oy;
+    ZPos = oz;
+    Angle = angleDeg;
   }
   void SetPosition(vtkm::Float32 ox, vtkm::Float32 oy, vtkm::Float32 oz)
   {
-    x = ox;
-    y = oy;
-    z = oz;
+    XPos = ox;
+    YPos = oy;
+    ZPos = oz;
   }
 
   virtual void Render(View &view,
@@ -169,7 +169,7 @@ public:
     V = view.CreateViewMatrix();
     P = view.CreateProjectionMatrix();
 
-    vtkm::Vec<vtkm::Float32,4> p4w(x,y,z,1);
+    vtkm::Vec<vtkm::Float32,4> p4w(XPos,YPos,ZPos,1);
     vtkm::Vec<vtkm::Float32,4> p4s = 
       vtkm::MatrixMultiply(vtkm::MatrixMultiply(P,V), p4w);
 
@@ -201,7 +201,7 @@ public:
     }
 
     vtkm::Matrix<vtkm::Float32, 4, 4> R;
-    R = MatrixHelpers::RotateZMatrix(angle * 3.14159265f / 180.f);
+    R = MatrixHelpers::RotateZMatrix(Angle * 3.14159265f / 180.f);
 
     vtkm::Vec<vtkm::Float32,4> origin4(0,0,0,1);
     vtkm::Vec<vtkm::Float32,4> right4(1,0,0,0);
@@ -235,9 +235,9 @@ public:
     worldAnnotator.AddText(px,py,pz,
                            rx,ry,rz,
                            ux,uy,uz,
-                           scale,
-                           anchorx, anchory,
-                           color, text);
+                           Scale,
+                           AnchorX, AnchorY,
+                           TextColor, Text);
 
     renderSurface.SetViewToWorldSpace(view,true);
   }

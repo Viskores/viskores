@@ -63,37 +63,35 @@ public:
     }
   };
 
-  std::string name;
-  std::string imgfile;
-  int    height;
-  int    ascender;
-  int    descender;
-  int    imgw, imgh;
-  int    padl, padr, padt, padb;
-  int    shortmap[256];
-  std::vector<Character> chars;
+  std::string Name;
+  std::string ImageFile;
+  int         Height;
+  int         Ascender;
+  int         Descender;
+  int         ImgW, ImgH;
+  int         PadL, PadR, PadT, PadB;
+  int         ShortMap[256];
+  std::vector<Character> Chars;
 
-  void      *userPointer;
-  long long  userLong;
-
-  std::vector<unsigned char> rawimagefiledata;
+  std::vector<unsigned char> RawImageFileData;
 
 public:
   BitmapFont()
   {
     for (int i=0; i<256; ++i)
-      shortmap[i] = 0;
-    padl=padr=padt=padb=0;
-    userPointer = NULL;
-    userLong    = 0;
+      ShortMap[i] = 0;
+    this->PadL=0;
+    this->PadR=0;
+    this->PadT=0;
+    this->PadB=0;
   }
   Character GetChar(char c)
   {
-    return chars[shortmap[(unsigned char)c]];
+    return this->Chars[ShortMap[(unsigned char)c]];
   }
   std::vector<unsigned char> &GetRawImageData()
   {
-    return rawimagefiledata;
+    return this->RawImageFileData;
   }
   vtkm::Float32 GetTextWidth(const std::string &text)
   {
@@ -105,8 +103,8 @@ public:
 
       const bool kerning = true;
       if (kerning && nextchar>0)
-        width += vtkm::Float32(c.kern[int(nextchar)]) / vtkm::Float32(height);
-      width += vtkm::Float32(c.adv) / vtkm::Float32(height);
+        width += vtkm::Float32(c.kern[int(nextchar)]) / vtkm::Float32(this->Height);
+      width += vtkm::Float32(c.adv) / vtkm::Float32(this->Height);
     }
     return width;
   }
@@ -120,22 +118,22 @@ public:
     // By default, the origin for the font is at the
     // baseline.  That's nice, but we'd rather it
     // be at the actual bottom, so create an offset.
-    vtkm::Float32 yoff = -vtkm::Float32(descender) / vtkm::Float32(height);
+    vtkm::Float32 yoff = -vtkm::Float32(this->Descender) / vtkm::Float32(this->Height);
 
-    tl =       vtkm::Float32(c.x +       padl) / vtkm::Float32(imgw);
-    tr =       vtkm::Float32(c.x + c.w - padr) / vtkm::Float32(imgw);
-    tt = 1.f - vtkm::Float32(c.y +       padt) / vtkm::Float32(imgh);
-    tb = 1.f - vtkm::Float32(c.y + c.h - padb) / vtkm::Float32(imgh);
+    tl =       vtkm::Float32(c.x +       this->PadL) / vtkm::Float32(this->ImgW);
+    tr =       vtkm::Float32(c.x + c.w - this->PadR) / vtkm::Float32(this->ImgW);
+    tt = 1.f - vtkm::Float32(c.y +       this->PadT) / vtkm::Float32(this->ImgH);
+    tb = 1.f - vtkm::Float32(c.y + c.h - this->PadB) / vtkm::Float32(this->ImgH);
 
-    vl =        x + vtkm::Float32(c.offx +       padl) / vtkm::Float32(height);
-    vr =        x + vtkm::Float32(c.offx + c.w - padr) / vtkm::Float32(height);
-    vt = yoff + y + vtkm::Float32(c.offy -       padt) / vtkm::Float32(height);
-    vb = yoff + y + vtkm::Float32(c.offy - c.h + padb) / vtkm::Float32(height);
+    vl =        x + vtkm::Float32(c.offx +       this->PadL) / vtkm::Float32(this->Height);
+    vr =        x + vtkm::Float32(c.offx + c.w - this->PadR) / vtkm::Float32(this->Height);
+    vt = yoff + y + vtkm::Float32(c.offy -       this->PadT) / vtkm::Float32(this->Height);
+    vb = yoff + y + vtkm::Float32(c.offy - c.h + this->PadB) / vtkm::Float32(this->Height);
 
     const bool kerning = true;
     if (kerning && nextchar>0)
-      x += vtkm::Float32(c.kern[int(nextchar)]) / vtkm::Float32(height);
-    x += vtkm::Float32(c.adv) / vtkm::Float32(height);
+      x += vtkm::Float32(c.kern[int(nextchar)]) / vtkm::Float32(this->Height);
+    x += vtkm::Float32(c.adv) / vtkm::Float32(this->Height);
   }
 };
 
