@@ -90,7 +90,9 @@ public:
   }
   Character GetChar(char c)
   {
-    return this->Chars[ShortMap[(unsigned char)c]];
+    std::size_t mappedCharIndex =
+        static_cast<std::size_t>(this->ShortMap[(unsigned char)c]);
+    return this->Chars[mappedCharIndex];
   }
   std::vector<unsigned char> &GetRawImageData()
   {
@@ -177,7 +179,8 @@ convert_to_rgba32: optional parameter, true by default.
   works for trusted PNG files. Use LodePNG instead of picoPNG if you need this information.
 return: 0 if success, not 0 if some error occured.
 */
-static int decodePNG(std::vector<unsigned char>& out_image, unsigned long& image_width, unsigned long& image_height, const unsigned char* in_png, std::size_t in_size, bool convert_to_rgba32=true)
+VTKM_CONT_EXPORT
+int decodePNG(std::vector<unsigned char>& out_image, unsigned long& image_width, unsigned long& image_height, const unsigned char* in_png, std::size_t in_size, bool convert_to_rgba32=true)
 {
   // picoPNG version 20101224
   // Copyright (c) 2005-2010 Lode Vandevenne
@@ -409,7 +412,7 @@ static int decodePNG(std::vector<unsigned char>& out_image, unsigned long& image
       std::vector<unsigned char> palette;
     } info;
     int error;
-    void decode(std::vector<unsigned char>& out, const unsigned char* in, std::size_t size, bool convert_to_rgba32)
+    void decode(std::vector<unsigned char>& out, const unsigned char* in, std::size_t size, bool convert_to_rgba32_flag)
     {
       error = 0;
       if(size == 0 || in == 0) { error = 48; return; } //the given data is empty
@@ -513,7 +516,7 @@ static int decodePNG(std::vector<unsigned char>& out_image, unsigned long& image
         for(int i = 0; i < 7; i++)
           adam7Pass(&out_[0], &scanlinen[0], &scanlineo[0], &scanlines[passstart[i]], info.width, pattern[i], pattern[i + 7], pattern[i + 14], pattern[i + 21], passw[i], passh[i], bpp);
       }
-      if(convert_to_rgba32 && (info.colorType != 6 || info.bitDepth != 8)) //conversion needed
+      if(convert_to_rgba32_flag && (info.colorType != 6 || info.bitDepth != 8)) //conversion needed
       {
         std::vector<unsigned char> data = out;
         error = convert(out, &data[0], info, info.width, info.height);
@@ -597,7 +600,7 @@ static int decodePNG(std::vector<unsigned char>& out_image, unsigned long& image
       return result;
     }
     void setBitOfReversedStream(std::size_t& bitp, unsigned char* bits, unsigned long bit) { bits[bitp >> 3] |= (unsigned char)( (bit << (7 - (bitp & 0x7))) ); bitp++; }
-    unsigned long read32bitInt(const unsigned char* buffer) { return (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3]; }
+    unsigned long read32bitInt(const unsigned char* buffer) { return ((unsigned long)buffer[0] << 24) | ((unsigned long)buffer[1] << 16) | ((unsigned long)buffer[2] << 8) | (unsigned long)buffer[3]; }
     int checkColorValidity(unsigned long colorType, unsigned long bd) //return type is a LodePNG error code
     {
       if((colorType == 2 || colorType == 4 || colorType == 6)) { if(!(bd == 8 || bd == 16)) return 37; else return 0; }
