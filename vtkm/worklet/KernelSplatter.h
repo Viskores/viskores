@@ -114,16 +114,22 @@ void OutputArrayDebug(const vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::Ar
 }
 
 #else
-template<typename T, typename S = VTKM_DEFAULT_STORAGE_TAG>
-void OutputArrayDebug(const vtkm::cont::ArrayHandle<T,S> &outputArray, const std::string &name)
+template<typename T, typename S>
+void OutputArrayDebug(
+    const vtkm::cont::ArrayHandle<T,S> &vtkmNotUsed(outputArray),
+    const std::string &vtkmNotUsed(name))
 {}
 //----------------------------------------------------------------------------
 template<typename T, int S>
-void OutputArrayDebug(const vtkm::cont::ArrayHandle< vtkm::Vec<T,S> > &outputArray, const std::string &name)
+void OutputArrayDebug(
+    const vtkm::cont::ArrayHandle< vtkm::Vec<T,S> > &vtkmNotUsed(outputArray),
+    const std::string &vtkmNotUsed(name))
 {}
 //----------------------------------------------------------------------------
 template<typename I, typename T, int S>
-void OutputArrayDebug(const vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S> > > &outputArray, const std::string &name)
+void OutputArrayDebug(
+    const vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S> > > &vtkmNotUsed(outputArray),
+    const std::string &vtkmNotUsed(name))
 {}
 #endif
 } // namespace debug
@@ -155,12 +161,12 @@ struct KernelSplatterFilterUniformGrid
         typedef void ControlSignature(FieldIn<>, FieldOut<>);
         typedef void ExecutionSignature(_1, WorkIndex, _2);
         //
-        VTKM_CONT_EXPORT 
+        VTKM_CONT_EXPORT
         zero_voxel() {}
 
         template<typename T>
         VTKM_EXEC_CONT_EXPORT
-        void operator()(const vtkm::Id &, const vtkm::Id &index, T &voxel_value) const
+        void operator()(const vtkm::Id &, const vtkm::Id &vtkmNotUsed(index), T &voxel_value) const
         {
             voxel_value = T(0);
         }
@@ -221,7 +227,7 @@ struct KernelSplatterFilterUniformGrid
                 if (max[i] >= this->VolumeDimensions[i]) {
                     max[i] = this->VolumeDimensions[i] - 1;
                 }
-                size = size * (1 + max[i] - min[i]);
+                size = static_cast<vtkm::Id>(size * (1 + max[i] - min[i]));
             }
             splatPoint = splat;
             minFootprint = min;
@@ -271,9 +277,9 @@ struct KernelSplatterFilterUniformGrid
     public:
         typedef void ControlSignature(
                 FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>,
-                FieldIn<>, FieldIn<>, FieldOut<>,
+                FieldIn<>, FieldOut<>,
                 FieldOut<>);
-        typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
+        typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
 
         VTKM_CONT_EXPORT
         GetSplatValue(
@@ -291,7 +297,6 @@ struct KernelSplatterFilterUniformGrid
                 const T &maxBound,
                 const T2 &kernel_H,
                 const T2 &scale,
-                const vtkm::Id splatPointId,
                 const vtkm::Id localNeighborId,
                 vtkm::Id &neighborVoxelId,
                 vtkm::Float32 &splatValue) const
@@ -341,7 +346,7 @@ struct KernelSplatterFilterUniformGrid
                 const vtkm::Float64 &splatValue,
                 vtkm::exec::ExecutionWholeArray<vtkm::Float32> &execArg) const
         {
-            execArg.Set(voxelIndex, splatValue);
+            execArg.Set(voxelIndex, static_cast<vtkm::Float32>(splatValue));
         }
     };
 
@@ -521,7 +526,6 @@ struct KernelSplatterFilterUniformGrid
                 ptFootprintMaxs,
                 radii,
                 scale,
-                neighbor2SplatId,
                 localNeighborIds, neighborVoxelIds, splatValues);
         END_TIMER_BLOCK(GetSplatValue)
 
