@@ -445,7 +445,7 @@ endfunction(vtkm_worklet_unit_tests)
 # This is based on vtkm_save_worklet_unit_tests
 # Usage:
 #
-# vtkm_save_benchmarks( sources )
+# vtkm_save_benchmarks( <sources> [HEADERS <headers>] )
 #
 #
 # Each benchmark source file needs to implement main(int agrc, char *argv[])
@@ -458,12 +458,14 @@ function(vtkm_save_benchmarks)
   set(cxx_sources)
   set(cu_sources)
 
+  cmake_parse_arguments(save_benchmarks "" "" "HEADERS" ${ARGN})
+
   #we need to store the absolute source for the file so that
   #we can properly compile it into the benchmark driver. At
   #the same time we want to configure each file into the build
   #directory as a .cu file so that we can compile it with cuda
   #if needed
-  foreach(fname ${ARGN})
+  foreach(fname ${save_benchmarks_UNPARSED_ARGUMENTS})
     set(absPath)
 
     get_filename_component(absPath ${fname} ABSOLUTE)
@@ -484,6 +486,8 @@ function(vtkm_save_benchmarks)
                 PROPERTY vtkm_benchmarks_sources ${cxx_sources})
   set_property( GLOBAL APPEND
                 PROPERTY vtkm_benchmarks_cu_sources ${cu_sources})
+  set_property( GLOBAL APPEND
+                PROPERTY vtkm_benchmarks_headers ${save_benchmarks_HEADERS})
 
 endfunction(vtkm_save_benchmarks)
 
@@ -500,6 +504,10 @@ function(vtkm_benchmarks device_adapter)
   set(benchmark_srcs)
   get_property(benchmark_srcs GLOBAL
                PROPERTY vtkm_benchmarks_sources )
+
+  set(benchmark_headers)
+  get_property(benchmark_headers GLOBAL
+               PROPERTY vtkm_benchmarks_headers )
 
   #detect if we are generating a .cu files
   set(is_cuda FALSE)
@@ -522,10 +530,13 @@ function(vtkm_benchmarks device_adapter)
       set(benchmark_prog "${benchmark_prog}_${device_type}")
 
       if(is_cuda)
-        cuda_add_executable(${benchmark_prog} ${file})
+        cuda_add_executable(${benchmark_prog} ${file} ${benchmark_headers})
       else()
-        add_executable(${benchmark_prog} ${file})
+        add_executable(${benchmark_prog} ${file} ${benchmark_headers})
       endif()
+
+      set_source_files_properties(${benchmark_headers}
+        PROPERTIES HEADER_FILE_ONLY TRUE)
 
       target_link_libraries(${benchmark_prog} ${VTKm_LIBRARIES})
 

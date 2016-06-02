@@ -149,14 +149,19 @@ include_directories(
   )
 
 #-----------------------------------------------------------------------------
-# Add test to check for copyright statement on all source files.
-# Also add test to output system information.
+# Add "meta" tests that check the state of the repository
+# SystemInformation prints out information about the current configuration
+# CopyrightStatement checks that the copyright statement is in all source files
+# SourceInBuild checks that all source files are listed in the build
 if (VTKm_ENABLE_TESTING)
+  add_test(NAME SystemInformation
+    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmSystemInformation.cmake"
+    )
   add_test(NAME CopyrightStatement
     COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckCopyright.cmake"
     )
-  add_test(NAME SystemInformation
-    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmSystemInformation.cmake"
+  add_test(NAME SourceInBuild
+    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckSourceInBuild.cmake"
     )
 endif (VTKm_ENABLE_TESTING)
 
@@ -223,33 +228,6 @@ endif()
 if(VTKm_BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif(VTKm_BUILD_EXAMPLES)
-
-#-----------------------------------------------------------------------------
-# Build the configure file.
-# need to set numerous VTKm cmake properties to the naming convention
-# that we exepect for our C++ defines.
-
-set(VTKM_USE_DOUBLE_PRECISION ${VTKm_USE_DOUBLE_PRECISION})
-set(VTKM_USE_64BIT_IDS ${VTKm_USE_64BIT_IDS})
-
-set(VTKM_ENABLE_CUDA ${VTKm_ENABLE_CUDA})
-set(VTKM_ENABLE_TBB ${VTKm_ENABLE_TBB})
-
-set(VTKM_ENABLE_OPENGL_INTEROP ${VTKm_ENABLE_OPENGL_INTEROP})
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/vtkm/internal/Configure.h.in
-  ${CMAKE_CURRENT_BINARY_DIR}/vtkm/internal/Configure.h
-  @ONLY)
-vtkm_install_headers(
-  vtkm/internal ${CMAKE_CURRENT_BINARY_DIR}/vtkm/internal/Configure.h)
-
-unset(VTKM_ENABLE_OPENGL_INTEROP)
-
-unset(VTKM_ENABLE_TBB)
-unset(VTKM_ENABLE_CUDA)
-
-unset(VTKM_USE_64BIT_IDS)
-unset(VTKM_USE_DOUBLE_PRECISION)
 
 #-----------------------------------------------------------------------------
 # Configuration for build directory.

@@ -36,6 +36,7 @@ struct Spline3rdOrder : public KernelBase< Spline3rdOrder<Dimensions> >
     // Constructor
     // Calculate coefficients used repeatedly when evaluating the kernel
     // value or gradient
+    VTKM_EXEC_CONT_EXPORT
     Spline3rdOrder(double smoothingLength)
     : KernelBase< Spline3rdOrder<Dimensions> >(smoothingLength)
       {
@@ -55,7 +56,8 @@ struct Spline3rdOrder : public KernelBase< Spline3rdOrder<Dimensions> >
       }
     //---------------------------------------------------------------------
     // Calculates the kernel value for the given distance
-    inline double w(double distance) const
+    VTKM_EXEC_CONT_EXPORT
+    double w(double distance) const
     {
         // compute Q=(r/h)
         double Q = distance * Hinverse_;
@@ -73,7 +75,8 @@ struct Spline3rdOrder : public KernelBase< Spline3rdOrder<Dimensions> >
 
     //---------------------------------------------------------------------
     // Calculates the kernel value for the given squared distance
-    inline double w2(double distance2) const
+    VTKM_EXEC_CONT_EXPORT
+    double w2(double distance2) const
     {
         // compute Q
         double Q = sqrt(distance2) * Hinverse_;
@@ -91,7 +94,8 @@ struct Spline3rdOrder : public KernelBase< Spline3rdOrder<Dimensions> >
 
     //---------------------------------------------------------------------
     // compute w(h) for a variable h kernel
-    inline double w(double h, double distance) const
+    VTKM_EXEC_CONT_EXPORT
+    double w(double h, double distance) const
     {
         double Hinverse = 1.0/h;
         double scale_W = norm_ * power<Dimensions>(Hinverse);
@@ -110,7 +114,8 @@ struct Spline3rdOrder : public KernelBase< Spline3rdOrder<Dimensions> >
 
     //---------------------------------------------------------------------
     // compute w(h) for a variable h kernel using distance squared
-    inline double w2(double h, double distance2) const
+    VTKM_EXEC_CONT_EXPORT
+    double w2(double h, double distance2) const
     {
         double Hinverse = 1.0/h;
         double scale_W = norm_ * power<Dimensions>(Hinverse);
@@ -128,11 +133,12 @@ struct Spline3rdOrder : public KernelBase< Spline3rdOrder<Dimensions> >
     }
 
     //---------------------------------------------------------------------
-    // Calculates the kernel derivation for the given distance of two particles. 
+    // Calculates the kernel derivation for the given distance of two particles.
     // The used formula is the derivation of Speith (3.126) for the value
     // with (3.21) for the direction of the gradient vector.
     // Be careful: grad W is antisymmetric in r (3.25)!.
-    inline vector_type gradW(double distance, const vector_type& pos) const
+    VTKM_EXEC_CONT_EXPORT
+    vector_type gradW(double distance, const vector_type& pos) const
     {
         double Q = distance * Hinverse_;
         if (Q==0.0) {
@@ -151,7 +157,8 @@ struct Spline3rdOrder : public KernelBase< Spline3rdOrder<Dimensions> >
     }
 
     //---------------------------------------------------------------------
-    inline vector_type gradW(double h, double distance, const vector_type& pos) const
+    VTKM_EXEC_CONT_EXPORT
+    vector_type gradW(double h, double distance, const vector_type& pos) const
     {
         double Hinverse = 1.0/h;
         double scale_GradW = norm_ * power<Dimensions+1>(Hinverse);
@@ -172,36 +179,41 @@ struct Spline3rdOrder : public KernelBase< Spline3rdOrder<Dimensions> >
     }
 
     //---------------------------------------------------------------------
-    // return the maximum distance at which this kernel is non zero 
-    inline double maxDistance() const
+    // return the maximum distance at which this kernel is non zero
+    VTKM_EXEC_CONT_EXPORT
+    double maxDistance() const
     {
         return maxRadius_;
     }
 
     //---------------------------------------------------------------------
     // return the maximum distance at which this variable h kernel is non zero
-    inline double maxDistance(double h) const
+    VTKM_EXEC_CONT_EXPORT
+    double maxDistance(double h) const
     {
         return 2.0*h;
     }
 
     //---------------------------------------------------------------------
-    // return the maximum distance at which this kernel is non zero 
-    inline double maxSquaredDistance() const
+    // return the maximum distance at which this kernel is non zero
+    VTKM_EXEC_CONT_EXPORT
+    double maxSquaredDistance() const
     {
         return maxRadius2_;
     }
 
     //---------------------------------------------------------------------
-    // return the maximum distance at which this kernel is non zero 
-    inline double maxSquaredDistance(double h) const
+    // return the maximum distance at which this kernel is non zero
+    VTKM_EXEC_CONT_EXPORT
+    double maxSquaredDistance(double h) const
     {
         return 4.0*h*h;
     }
 
     //---------------------------------------------------------------------
-    // return the multiplier between smoothing length and max cutoff distance 
-    inline double getDilationFactor() const { return 2.0; }
+    // return the multiplier between smoothing length and max cutoff distance
+    VTKM_EXEC_CONT_EXPORT
+    double getDilationFactor() const { return 2.0; }
 
 private:
     double norm_;

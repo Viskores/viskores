@@ -18,11 +18,17 @@
 ##  this software.
 ##============================================================================
 
-set(benchmarks
-	BenchmarkDeviceAdapter.cxx
+set(benchmark_srcs
+  BenchmarkDeviceAdapter.cxx
   )
 
-vtkm_save_benchmarks(${benchmarks})
+set(benchmark_headers
+  Benchmarker.h
+  )
+
+vtkm_save_benchmarks(${benchmark_srcs}
+  HEADERS ${benchmark_headers}
+  )
 
 vtkm_benchmarks(VTKM_DEVICE_ADAPTER_SERIAL)
 

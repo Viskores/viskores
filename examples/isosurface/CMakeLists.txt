@@ -21,20 +21,21 @@
 ##=============================================================================
 
 if(OPENGL_FOUND AND GLUT_FOUND)
-  add_executable(IsosurfaceUniformGrid_SERIAL IsosurfaceUniformGrid.cxx)
+  add_executable(IsosurfaceUniformGrid_SERIAL IsosurfaceUniformGrid.cxx quaternion.h)
+  set_source_files_properties(quaternion.h PROPERTIES HEADER_FILE_ONLY TRUE)
   target_include_directories(IsosurfaceUniformGrid_SERIAL PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
   target_link_libraries(IsosurfaceUniformGrid_SERIAL ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
   target_compile_options(IsosurfaceUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   if(VTKm_CUDA_FOUND)
     vtkm_disable_troublesome_thrust_warnings()
-    cuda_add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cu)
+    cuda_add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cu quaternion.h)
     target_link_libraries(IsosurfaceUniformGrid_CUDA ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
     target_compile_options(IsosurfaceUniformGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
   endif()
 
   if(VTKm_ENABLE_TBB)
-    add_executable(IsosurfaceUniformGrid_TBB IsosurfaceUniformGridTBB.cxx)
+    add_executable(IsosurfaceUniformGrid_TBB IsosurfaceUniformGridTBB.cxx quaternion.h)
     target_include_directories(IsosurfaceUniformGrid_TBB PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
     target_link_libraries(IsosurfaceUniformGrid_TBB ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
     target_compile_options(IsosurfaceUniformGrid_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
