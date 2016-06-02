@@ -17,12 +17,12 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_SceneRendererVolume_h
-#define vtk_m_rendering_SceneRendererVolume_h
+#ifndef vtk_m_rendering_MapperVolume_h
+#define vtk_m_rendering_MapperVolume_h
 
 #include <vtkm/rendering/ColorTable.h>
+#include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Triangulator.h>
-#include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/raytracing/VolumeRendererStructured.h>
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/RenderSurfaceRayTracer.h>
@@ -33,14 +33,14 @@
 namespace vtkm {
 namespace rendering {
 template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
-class SceneRendererVolume : public SceneRenderer
+class MapperVolume : public Mapper
 {
 protected:
   vtkm::rendering::raytracing::VolumeRendererStructured<DeviceAdapter>  Tracer;
   RenderSurfaceRayTracer *Surface;
 public:
   VTKM_CONT_EXPORT
-  SceneRendererVolume()
+  MapperVolume()
   {
     Surface = NULL;
   }
@@ -98,4 +98,4 @@ public:
   }
 };
 }} //namespace vtkm::rendering
-#endif //vtk_m_rendering_SceneRendererVolume_h
+#endif //vtk_m_rendering_MapperVolume_h

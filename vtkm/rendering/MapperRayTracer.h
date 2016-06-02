@@ -17,13 +17,13 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_SceneRendererRayTracer_h
-#define vtk_m_rendering_SceneRendererRayTracer_h
+#ifndef vtk_m_rendering_MapperRayTracer_h
+#define vtk_m_rendering_MapperRayTracer_h
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
 #include <vtkm/rendering/ColorTable.h>
+#include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Triangulator.h>
-#include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/raytracing/RayTracer.h>
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/RenderSurfaceRayTracer.h>
@@ -33,7 +33,7 @@ namespace rendering {
 
 //  static bool doOnce = true;
 template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
-class SceneRendererRayTracer : public SceneRenderer
+class MapperRayTracer : public Mapper
 {
 protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
@@ -41,7 +41,7 @@ protected:
   RenderSurfaceRayTracer *Surface;
 public:
   VTKM_CONT_EXPORT
-  SceneRendererRayTracer()
+  MapperRayTracer()
   {
     Surface = NULL;
   }
@@ -92,4 +92,4 @@ public:
   }
 };
 }} //namespace vtkm::rendering
-#endif //vtk_m_rendering_SceneRendererRayTracer_h
+#endif //vtk_m_rendering_MapperRayTracer_h

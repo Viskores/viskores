@@ -29,34 +29,33 @@
 #include <vtkm/rendering/ColorBarAnnotation.h>
 #include <vtkm/rendering/TextAnnotation.h>
 #include <vtkm/rendering/Scene.h>
-#include <vtkm/rendering/SceneRenderer.h>
 
 namespace vtkm {
 namespace rendering {
 
-template<typename SceneRendererType,
+template<typename MapperType,
          typename SurfaceType,
          typename WorldAnnotatorType>
 class Window
 {
 public:
-  SceneRendererType SceneRenderer;
+  MapperType Mapper;
   SurfaceType Surface;
   vtkm::rendering::Camera Camera;
   Color BackgroundColor;
   WorldAnnotatorType WorldAnnotator;
 
-  Window(const SceneRendererType &sceneRenderer,
+  Window(const MapperType &mapper,
          const SurfaceType &surface,
          const vtkm::rendering::Camera &camera,
          const vtkm::rendering::Color &backgroundColor =
            vtkm::rendering::Color(0,0,0,1))
-    : SceneRenderer(sceneRenderer),
+    : Mapper(mapper),
       Surface(surface),
       Camera(camera),
       BackgroundColor(backgroundColor)
   {
-    this->SceneRenderer.SetBackgroundColor(this->BackgroundColor);
+    this->Mapper.SetBackgroundColor(this->BackgroundColor);
   }
 
   VTKM_CONT_EXPORT
@@ -92,12 +91,12 @@ protected:
 };
 
 // Window2D Window3D
-template<typename SceneRendererType,
+template<typename MapperType,
          typename SurfaceType,
          typename WorldAnnotatorType>
-class Window3D : public Window<SceneRendererType, SurfaceType,WorldAnnotatorType>
+class Window3D : public Window<MapperType, SurfaceType,WorldAnnotatorType>
 {
-  typedef Window<SceneRendererType, SurfaceType,WorldAnnotatorType> Superclass;
+  typedef Window<MapperType, SurfaceType,WorldAnnotatorType> Superclass;
 public:
   vtkm::rendering::Scene Scene;
   // 3D-specific annotations
@@ -109,12 +108,12 @@ public:
 
   VTKM_CONT_EXPORT
   Window3D(const vtkm::rendering::Scene &scene,
-           const SceneRendererType &sceneRenderer,
+           const MapperType &mapper,
            const SurfaceType &surface,
            const vtkm::rendering::Camera &camera,
            const vtkm::rendering::Color &backgroundColor =
              vtkm::rendering::Color(0,0,0,1))
-    : Superclass(sceneRenderer,surface,camera,backgroundColor),
+    : Superclass(mapper,surface,camera,backgroundColor),
       Scene(scene)
   {
   }
@@ -125,7 +124,7 @@ public:
     this->Surface.Activate();
     this->Surface.Clear();
     this->SetupForWorldSpace();
-    this->Scene.Render(this->SceneRenderer, this->Surface, this->Camera);
+    this->Scene.Render(this->Mapper, this->Surface, this->Camera);
     this->RenderWorldAnnotations();
 
     this->SetupForScreenSpace();
@@ -225,12 +224,12 @@ public:
   }
 };
 
-template<typename SceneRendererType,
+template<typename MapperType,
          typename SurfaceType,
          typename WorldAnnotatorType>
-class Window2D : public Window<SceneRendererType, SurfaceType,WorldAnnotatorType>
+class Window2D : public Window<MapperType, SurfaceType,WorldAnnotatorType>
 {
-  typedef Window<SceneRendererType, SurfaceType,WorldAnnotatorType> Superclass;
+  typedef Window<MapperType, SurfaceType,WorldAnnotatorType> Superclass;
 public:
   vtkm::rendering::Scene Scene;
   // 2D-specific annotations
@@ -240,12 +239,12 @@ public:
 
   VTKM_CONT_EXPORT
   Window2D(const vtkm::rendering::Scene &scene,
-           const SceneRendererType &sceneRenderer,
+           const MapperType &mapper,
            const SurfaceType &surface,
            const vtkm::rendering::Camera &camera,
            const vtkm::rendering::Color &backgroundColor =
              vtkm::rendering::Color(0,0,0,1))
-    : Superclass(sceneRenderer, surface, camera, backgroundColor),
+    : Superclass(mapper, surface, camera, backgroundColor),
       Scene(scene)
   {
   }
@@ -257,7 +256,7 @@ public:
     this->Surface.Clear();
     this->SetupForWorldSpace();
 
-    this->Scene.Render(this->SceneRenderer, this->Surface, this->Camera);
+    this->Scene.Render(this->Mapper, this->Surface, this->Camera);
     this->RenderWorldAnnotations();
 
     this->SetupForScreenSpace();

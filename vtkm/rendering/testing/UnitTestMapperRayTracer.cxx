@@ -18,11 +18,10 @@
 //  this software.
 //============================================================================
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/rendering/MapperRayTracer.h>
 #include <vtkm/rendering/Plot.h>
-#include <vtkm/rendering/RenderSurface.h>
 #include <vtkm/rendering/RenderSurfaceRayTracer.h>
 #include <vtkm/rendering/Scene.h>
-#include <vtkm/rendering/SceneRendererVolume.h>
 #include <vtkm/rendering/Window.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/cont/DeviceAdapter.h>
@@ -54,7 +53,7 @@ void Set3DView(vtkm::rendering::Camera &camera,
     camera.Width = w;
     camera.Height = h;
 
-    std::cout<<"Camera3d: pos: "<<camera.Camera3d.Position<<std::endl;
+    std::cout<<"Camera3d:  pos: "<<camera.Camera3d.Position<<std::endl;
     std::cout<<"       lookAt: "<<camera.Camera3d.LookAt<<std::endl;
     std::cout<<"           up: "<<camera.Camera3d.Up<<std::endl;
     std::cout<<" near/far/fov: "<<camera.NearPlane<<"/"<<camera.FarPlane<<" "<<camera.Camera3d.FieldOfView<<std::endl;
@@ -68,14 +67,10 @@ void Render(const vtkm::cont::DataSet &ds,
 {
     const vtkm::Int32 W = 512, H = 512;
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
-    vtkm::rendering::SceneRendererVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
+    vtkm::rendering::MapperRayTracer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::Camera camera;
     Set3DView(camera, coords, W, H);
-
-    vtkm::rendering::ColorTable colorTable(ctName);
-    colorTable.AddAlphaControlPoint(0.0f, .01f);
-    colorTable.AddAlphaControlPoint(1.0f, .01f);
 
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
@@ -83,18 +78,17 @@ void Render(const vtkm::cont::DataSet &ds,
     scene.Plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
                                                 ds.GetCoordinateSystem(),
                                                 ds.GetField(fieldNm),
-                                                colorTable));
+                                                vtkm::rendering::ColorTable(ctName)));
 
     //TODO: W/H in window.  bg in window (window sets surface/renderer).
-    vtkm::rendering::Window3D<vtkm::rendering::SceneRendererVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+    vtkm::rendering::Window3D<vtkm::rendering::MapperRayTracer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                               vtkm::rendering::RenderSurfaceRayTracer,
                               vtkm::rendering::WorldAnnotator>
-        w(scene, sceneRenderer, surface, camera, bg);
+        w(scene, mapper, surface, camera, bg);
 
     w.Initialize();
     w.Paint();
     w.SaveAs(outputFile);
-
 }
 
 void RenderTests()
@@ -106,10 +100,12 @@ void RenderTests()
              "pointvar", "thermal", "reg3D.pnm");
     Render(maker.Make3DRectilinearDataSet0(),
              "pointvar", "thermal", "rect3D.pnm");
+    Render(maker.Make3DExplicitDataSet4(),
+             "pointvar", "thermal", "expl3D.pnm");
 }
 
 } //namespace
-int UnitTestSceneRendererVolume(int, char *[])
+int UnitTestMapperRayTracer(int, char *[])
 {
     return vtkm::cont::testing::Testing::Run(RenderTests);
 }

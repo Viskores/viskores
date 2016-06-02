@@ -34,9 +34,9 @@ set(headers
   RenderSurface.h
   RenderSurfaceRayTracer.h
   Scene.h
-  SceneRenderer.h
-  SceneRendererRayTracer.h
-  SceneRendererVolume.h
+  Mapper.h
+  MapperRayTracer.h
+  MapperVolume.h
   TextAnnotation.h
   Triangulator.h
   Window.h
@@ -45,7 +45,7 @@ set(headers
 
 set(opengl_headers
   RenderSurfaceGL.h
-  SceneRendererGL.h
+  MapperGL.h
   TextureGL.h
   WorldAnnotatorGL.h
   )

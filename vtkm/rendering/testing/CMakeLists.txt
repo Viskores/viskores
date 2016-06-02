@@ -19,13 +19,13 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestSceneRendererRayTracer.cxx
-  UnitTestSceneRendererVolume.cxx
+  UnitTestMapperRayTracer.cxx
+  UnitTestMapperVolume.cxx
 )
 
 if (OSMESA_FOUND)
   set(unit_tests ${unit_tests}
-    UnitTestSceneRendererOSMesa.cxx
+    UnitTestMapperOSMesa.cxx
     )
 endif()
 

@@ -22,7 +22,7 @@
 
 #include <vtkm/Assert.h>
 #include <vtkm/rendering/Camera.h>
-#include <vtkm/rendering/SceneRenderer.h>
+#include <vtkm/rendering/Mapper.h>
 #include <vector>
 
 namespace vtkm {
@@ -50,20 +50,20 @@ public:
         coordinates.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   }
 
-  template<typename SceneRendererType, typename SurfaceType>
+  template<typename MapperType, typename SurfaceType>
   VTKM_CONT_EXPORT
-  void Render(SceneRendererType &sceneRenderer,
+  void Render(MapperType &mapper,
               SurfaceType &surface,
               vtkm::rendering::Camera &camera)
   {
-    sceneRenderer.SetRenderSurface(&surface);
-    sceneRenderer.SetActiveColorTable(this->ColorTable);
-    sceneRenderer.RenderCells(this->Cells,
-                              this->Coordinates,
-                              this->ScalarField,
-                              this->ColorTable,
-                              camera,
-                              this->ScalarRange);
+    mapper.SetRenderSurface(&surface);
+    mapper.SetActiveColorTable(this->ColorTable);
+    mapper.RenderCells(this->Cells,
+                       this->Coordinates,
+                       this->ScalarField,
+                       this->ColorTable,
+                       camera,
+                       this->ScalarRange);
   }
 
   vtkm::cont::DynamicCellSet Cells;

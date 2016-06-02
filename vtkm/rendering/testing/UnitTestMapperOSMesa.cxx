@@ -19,12 +19,12 @@
 //============================================================================
 #include <vtkm/Bounds.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/rendering/Window.h>
-#include <vtkm/rendering/RenderSurfaceOSMesa.h>
-#include <vtkm/rendering/WorldAnnotatorGL.h>
-#include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/Plot.h>
-#include <vtkm/rendering/SceneRendererGL.h>
+#include <vtkm/rendering/RenderSurfaceOSMesa.h>
+#include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/Window.h>
+#include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -99,7 +99,7 @@ void Render3D(const vtkm::cont::DataSet &ds,
 {
     const vtkm::Int32 W = 512, H = 512;
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
-    vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
+    vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::View view;
     Set3DView(view, coords, W, H);
@@ -114,10 +114,10 @@ void Render3D(const vtkm::cont::DataSet &ds,
                                                 vtkm::rendering::ColorTable(ctName)));
 
     //TODO: W/H in window.  bg in window (window sets surface/renderer).
-    vtkm::rendering::Window3D<vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+    vtkm::rendering::Window3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                               vtkm::rendering::RenderSurfaceOSMesa,
                               vtkm::rendering::WorldAnnotatorGL>
-        w(scene, sceneRenderer, surface, view, bg);
+        w(scene, mapper, surface, view, bg);
 
     w.Initialize();
     w.Paint();
@@ -131,7 +131,7 @@ void Render2D(const vtkm::cont::DataSet &ds,
 {
     const vtkm::Int32 W = 512, H = 512;
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
-    vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
+    vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::View view;
     Set2DView(view, coords, W, H);
@@ -144,10 +144,10 @@ void Render2D(const vtkm::cont::DataSet &ds,
                                                 ds.GetCoordinateSystem(),
                                                 ds.GetField(fieldNm),
                                                 vtkm::rendering::ColorTable(ctName)));
-    vtkm::rendering::Window2D<vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+    vtkm::rendering::Window2D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                               vtkm::rendering::RenderSurfaceOSMesa,
                               vtkm::rendering::WorldAnnotatorGL>
-        w(scene, sceneRenderer, surface, view, bg);
+        w(scene, mapper, surface, view, bg);
 
     w.Initialize();
     w.Paint();
@@ -173,7 +173,7 @@ void RenderTests()
 }
 } //namespace
 
-int UnitTestSceneRendererOSMesa(int, char *[])
+int UnitTestMapperOSMesa(int, char *[])
 {
     return vtkm::cont::testing::Testing::Run(RenderTests);
 }

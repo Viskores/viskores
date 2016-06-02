@@ -19,11 +19,11 @@
 //============================================================================
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/rendering/Window.h>
-#include <vtkm/rendering/RenderSurface.h>
-#include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/Plot.h>
-#include <vtkm/rendering/SceneRendererOSMesa.h>
+#include <vtkm/rendering/RenderSurfaceOSMesa.h>
+#include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/Window.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -65,13 +65,13 @@ int main(int argc, char* argv[])
     fieldName = "SCALARS:pointvar";
   }
 
-  typedef vtkm::rendering::SceneRendererOSMesa< > SceneRenderer;
+  typedef vtkm::rendering::MapperGL< > Mapper;
   typedef vtkm::rendering::RenderSurfaceOSMesa RenderSurface;
 
   // Set up a view for rendering the input data
   const vtkm::cont::CoordinateSystem coords = inputData.GetCoordinateSystem();
-  SceneRenderer sceneRenderer;
-  vtkm::rendering::View3D &view = sceneRenderer.GetView();
+  Mapper mapper;
+  vtkm::rendering::View3D &view = mapper.GetView();
   vtkm::Float64 coordsBounds[6];
   coords.GetBounds(coordsBounds,VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   vtkm::Vec<vtkm::Float32,3> totalExtent;
@@ -89,8 +89,8 @@ int main(int argc, char* argv[])
   view.Width = 512;
   view.Position = totalExtent * (mag * 2.f);
   vtkm::rendering::ColorTable colorTable("thermal");
-  sceneRenderer.SetActiveColorTable(colorTable);
-  sceneRenderer.SetView(view);
+  mapper.SetActiveColorTable(colorTable);
+  mapper.SetView(view);
 
   // Create a scene for rendering the input data
   vtkm::rendering::Scene3D scene;
@@ -102,10 +102,10 @@ int main(int argc, char* argv[])
                                               colorTable));
 
   // Create a window and use it to render the input data using OS Mesa
-  vtkm::rendering::Window3D<SceneRenderer, RenderSurface> w1(scene,
-                                                             sceneRenderer,
-                                                             surface,
-                                                             bg);
+  vtkm::rendering::Window3D<Mapper, RenderSurface> w1(scene,
+                                                      mapper,
+                                                      surface,
+                                                      bg);
   w1.Initialize();
   w1.Paint();
   w1.SaveAs("demo_input.pnm");
@@ -127,8 +127,8 @@ int main(int argc, char* argv[])
                                               outputData.GetField(fieldName),
                                               colorTable));
 
-  vtkm::rendering::Window3D< SceneRenderer, RenderSurface> w2(scene,
-                                                              sceneRenderer,
+  vtkm::rendering::Window3D< Mapper, RenderSurface> w2(scene,
+                                                              mapper,
                                                               surface,
                                                               bg);
   w2.Initialize();

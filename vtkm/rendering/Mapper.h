@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_SceneRenderer_h
-#define vtk_m_rendering_SceneRenderer_h
+#ifndef vtk_m_rendering_Mapper_h
+#define vtk_m_rendering_Mapper_h
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/Camera.h>
@@ -27,16 +27,16 @@
 namespace vtkm {
 namespace rendering {
 
-class SceneRenderer
+class Mapper
 {
 public:
   VTKM_CONT_EXPORT
-  SceneRenderer()
+  Mapper()
   {
   }
 
   VTKM_CONT_EXPORT
-  virtual ~SceneRenderer()
+  virtual ~Mapper()
   {}
 
   VTKM_CONT_EXPORT
@@ -88,4 +88,4 @@ protected:
     vtkm::Vec<vtkm::Float32,4> BackgroundColor;
 };
 }} //namespace vtkm::rendering
-#endif //vtk_m_rendering_SceneRenderer_h
+#endif //vtk_m_rendering_Mapper_h

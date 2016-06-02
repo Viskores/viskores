@@ -34,23 +34,23 @@ public:
 
   Scene() {}
 
-  template<typename SceneRendererType, typename SurfaceType>
+  template<typename MapperType, typename SurfaceType>
   VTKM_CONT_EXPORT
-  void Render(SceneRendererType &sceneRenderer,
+  void Render(MapperType &mapper,
               SurfaceType &surface,
               vtkm::rendering::Camera &camera)
   {
     vtkm::Bounds bounds;
 
-    sceneRenderer.StartScene();
+    mapper.StartScene();
     for (std::size_t i = 0; i < this->Plots.size(); i++)
     {
-      this->Plots[i].Render(sceneRenderer, surface, camera);
+      this->Plots[i].Render(mapper, surface, camera);
 
       // accumulate all Plots' spatial bounds into the scene spatial bounds
       bounds.Include(this->Plots[i].SpatialBounds);
     }
-    sceneRenderer.EndScene();
+    mapper.EndScene();
 
     this->SpatialBounds = bounds;
   }

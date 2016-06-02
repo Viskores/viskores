@@ -27,7 +27,6 @@
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/MatrixHelpers.h>
 #include <vtkm/rendering/Scene.h>
-#include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/TextureGL.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 

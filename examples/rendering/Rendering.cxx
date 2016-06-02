@@ -43,10 +43,10 @@
 #include <vtkm/rendering/Window.h>
 #include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/rendering/RenderSurfaceGL.h>
-#include <vtkm/rendering/SceneRendererGL.h>
+#include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/ColorTable.h>
 
-vtkm::rendering::Window3D<vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+vtkm::rendering::Window3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                           vtkm::rendering::RenderSurfaceGL,
                           vtkm::rendering::WorldAnnotatorGL> *window = NULL;
 
@@ -168,7 +168,7 @@ main(int argc, char* argv[])
 
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceGL surface(W,H,bg);
-    vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
+    vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::Scene scene;
     scene.Plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
@@ -177,9 +177,9 @@ main(int argc, char* argv[])
                                                 vtkm::rendering::ColorTable("thermal")));
 
     //Create vtkm rendering stuff.
-    window = new vtkm::rendering::Window3D<vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+    window = new vtkm::rendering::Window3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                                            vtkm::rendering::RenderSurfaceGL,
-                                           vtkm::rendering::WorldAnnotatorGL>(scene, sceneRenderer,
+                                           vtkm::rendering::WorldAnnotatorGL>(scene, mapper,
                                                                               surface, camera, bg);
     window->Initialize();
     glutMainLoop();
