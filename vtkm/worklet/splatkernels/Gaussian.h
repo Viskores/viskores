@@ -38,6 +38,7 @@ struct Gaussian : public KernelBase< Gaussian<Dimensions> >
     // Constructor
     // Calculate coefficients used repeatedly when evaluating the kernel
     // value or gradient
+    VTKM_EXEC_CONT_EXPORT
     Gaussian(double smoothingLength)
     : KernelBase< Gaussian<Dimensions> >(smoothingLength)
       {
@@ -57,7 +58,8 @@ struct Gaussian : public KernelBase< Gaussian<Dimensions> >
 
     //---------------------------------------------------------------------
     // compute w(h) for the given distance
-    inline double w(double distance) const
+    VTKM_EXEC_CONT_EXPORT
+    double w(double distance) const
     {
         if (distance<maxDistance()) {
             // compute r/h
@@ -70,7 +72,8 @@ struct Gaussian : public KernelBase< Gaussian<Dimensions> >
 
     //---------------------------------------------------------------------
     // compute w(h) for the given squared distance
-    inline double w2(double distance2) const
+    VTKM_EXEC_CONT_EXPORT
+    double w2(double distance2) const
     {
         if (distance2<maxSquaredDistance()) {
             // compute (r/h)^2
@@ -83,7 +86,8 @@ struct Gaussian : public KernelBase< Gaussian<Dimensions> >
 
     //---------------------------------------------------------------------
     // compute w(h) for a variable h kernel
-    inline double w(double h, double distance) const
+    VTKM_EXEC_CONT_EXPORT
+    double w(double h, double distance) const
     {
         if (distance<maxDistance(h)) {
             double Hinverse = 1.0/h;
@@ -97,7 +101,8 @@ struct Gaussian : public KernelBase< Gaussian<Dimensions> >
 
     //---------------------------------------------------------------------
     // compute w(h) for a variable h kernel using distance squared
-    inline double w2(double h, double distance2) const
+    VTKM_EXEC_CONT_EXPORT
+    double w2(double h, double distance2) const
     {
         if (distance2<maxSquaredDistance(h)) {
             double Hinverse = 1.0/h;
@@ -112,7 +117,8 @@ struct Gaussian : public KernelBase< Gaussian<Dimensions> >
     //---------------------------------------------------------------------
     // Calculates the kernel derivative for a distance {x,y,z} vector
     // from the centre
-    inline vector_type gradW(double distance, const vector_type& pos) const
+    VTKM_EXEC_CONT_EXPORT
+    vector_type gradW(double distance, const vector_type& pos) const
     {
         double Q = distance * Hinverse_;
         if (Q != 0.0)
@@ -127,7 +133,8 @@ struct Gaussian : public KernelBase< Gaussian<Dimensions> >
     //---------------------------------------------------------------------
     // Calculates the kernel derivative for a distance {x,y,z} vector
     // from the centre using a variable h
-    inline vector_type gradW(double h, double distance, const vector_type& pos) const
+    VTKM_EXEC_CONT_EXPORT
+    vector_type gradW(double h, double distance, const vector_type& pos) const
     {
         double Hinverse = 1.0/h;
         double scale_GradW = - 2.0 * power<Dimensions+1>(Hinverse)
@@ -145,29 +152,33 @@ struct Gaussian : public KernelBase< Gaussian<Dimensions> >
     }
 
     //---------------------------------------------------------------------
-    // return the maximum distance at which this kernel is non zero 
-    inline double maxDistance() const
+    // return the maximum distance at which this kernel is non zero
+    VTKM_EXEC_CONT_EXPORT
+    double maxDistance() const
     {
         return maxRadius_;
     }
 
     //---------------------------------------------------------------------
     // return the maximum distance at which this variable h kernel is non zero
-    inline double maxDistance(double h) const
+    VTKM_EXEC_CONT_EXPORT
+    double maxDistance(double h) const
     {
         return getDilationFactor()*h;
     }
 
     //---------------------------------------------------------------------
-    // return the maximum distance at which this kernel is non zero 
-    inline double maxSquaredDistance() const
+    // return the maximum distance at which this kernel is non zero
+    VTKM_EXEC_CONT_EXPORT
+    double maxSquaredDistance() const
     {
         return maxRadius2_;
     }
 
     //---------------------------------------------------------------------
-    // return the maximum distance at which this kernel is non zero 
-    inline double maxSquaredDistance(double h) const
+    // return the maximum distance at which this kernel is non zero
+    VTKM_EXEC_CONT_EXPORT
+    double maxSquaredDistance(double h) const
     {
         return power<2>(getDilationFactor())*h*h;
     }
