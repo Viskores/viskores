@@ -25,6 +25,7 @@ set(headers
   BitmapFont.h
   BitmapFontFactory.h
   BoundingBoxAnnotation.h
+  Camera.h
   Color.h
   ColorBarAnnotation.h
   ColorTable.h
@@ -38,7 +39,6 @@ set(headers
   SceneRendererVolume.h
   TextAnnotation.h
   Triangulator.h
-  View.h
   Window.h
   WorldAnnotator.h
   )

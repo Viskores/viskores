@@ -21,8 +21,8 @@
 #define vtk_m_rendering_TextAnnotation_h
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/RenderSurface.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 namespace vtkm {
@@ -99,7 +99,7 @@ public:
   {
     Scale = s;
   }
-  virtual void Render(View &view,
+  virtual void Render(Camera &camera,
                       WorldAnnotator &worldAnnotator,
                       RenderSurface &renderSurface) = 0;
 };
@@ -123,12 +123,12 @@ public:
     XPos = ox;
     YPos = oy;
   }
-  virtual void Render(View &view,
+  virtual void Render(Camera &camera,
                       WorldAnnotator &,
                       RenderSurface &renderSurface)
   {
-    vtkm::Float32 WindowAspect = vtkm::Float32(view.Width) /
-      vtkm::Float32(view.Height);
+    vtkm::Float32 WindowAspect = vtkm::Float32(camera.Width) /
+      vtkm::Float32(camera.Height);
 
     renderSurface.AddText(XPos,YPos,
                           Scale,
@@ -162,19 +162,19 @@ public:
     ZPos = oz;
   }
 
-  virtual void Render(View &view,
+  virtual void Render(Camera &camera,
                       WorldAnnotator &worldAnnotator,
                       RenderSurface &renderSurface)
   {
     vtkm::Matrix<vtkm::Float32, 4, 4> V, P;
-    V = view.CreateViewMatrix();
-    P = view.CreateProjectionMatrix();
+    V = camera.CreateViewMatrix();
+    P = camera.CreateProjectionMatrix();
 
     vtkm::Vec<vtkm::Float32,4> p4w(XPos,YPos,ZPos,1);
     vtkm::Vec<vtkm::Float32,4> p4s =
       vtkm::MatrixMultiply(vtkm::MatrixMultiply(P,V), p4w);
 
-    renderSurface.SetViewToScreenSpace(view,true);
+    renderSurface.SetViewToScreenSpace(camera,true);
 
     vtkm::Float32 psx = p4s[0] / p4s[3];
     vtkm::Float32 psy = p4s[1] / p4s[3];
@@ -185,7 +185,7 @@ public:
     T = MatrixHelpers::TranslateMatrix(psx,psy,-psz);
 
     vtkm::Float32 WindowAspect =
-      vtkm::Float32(view.Width) / vtkm::Float32(view.Height);
+      vtkm::Float32(camera.Width) / vtkm::Float32(camera.Height);
 
     vtkm::Matrix<vtkm::Float32, 4, 4> SW;
     SW = MatrixHelpers::ScaleMatrix(1.f/WindowAspect, 1, 1);
@@ -195,7 +195,7 @@ public:
     //if view type == 2D?
     {
       vtkm::Float32 vl, vr, vb, vt;
-      view.GetRealViewport(vl,vr,vb,vt);
+      camera.GetRealViewport(vl,vr,vb,vt);
       vtkm::Float32 xs = (vr-vl);
       vtkm::Float32 ys = (vt-vb);
       SV = MatrixHelpers::ScaleMatrix(2.f/xs, 2.f/ys, 1);
@@ -240,7 +240,7 @@ public:
                            AnchorX, AnchorY,
                            TextColor, Text);
 
-    renderSurface.SetViewToWorldSpace(view,true);
+    renderSurface.SetViewToWorldSpace(camera,true);
   }
 };
 

@@ -26,7 +26,7 @@
 #include <vtkm/rendering/raytracing/VolumeRendererStructured.h>
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/RenderSurfaceRayTracer.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/Camera.h>
 
 #include <typeinfo>
 
@@ -71,7 +71,7 @@ public:
                            const vtkm::cont::CoordinateSystem &coords,
                            vtkm::cont::Field &scalarField,
                            const vtkm::rendering::ColorTable &, //colorTable
-                           vtkm::rendering::View &view,
+                           vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange)
   {
 //    vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
@@ -88,8 +88,7 @@ public:
       vtkm::cont::CellSetStructured<3> cellSetStructured3D = cellset.Cast<vtkm::cont::CellSetStructured<3> >();
       //vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
       //vertices = dynamicCoordsHandle.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-      vtkm::rendering::raytracing::Camera<DeviceAdapter> &camera = Tracer.GetCamera();
-      camera.SetParameters(view);
+      Tracer.GetCamera().SetParameters(camera);
       Tracer.SetData(coords, scalarField, coordsBounds, cellSetStructured3D, scalarRange);
       Tracer.SetColorMap(ColorMap);
       Tracer.SetBackgroundColor(this->BackgroundColor);

@@ -69,30 +69,30 @@ void displayCall()
     glutSwapBuffers();
 }
 
-// Allow rotations of the view
+// Allow rotations of the camera
 void mouseMove(int x, int y)
 {
     //std::cout<<"MOUSE MOVE: "<<x<<" "<<y<<std::endl;
 
     //Map to XY
-    y = window->View.Height-y;
+    y = window->Camera.Height-y;
 
     if (lastx != -1 && lasty != -1)
     {
-        vtkm::Float32 x1 = ((lastx*2.0f)/window->View.Width) - 1.0f;
-        vtkm::Float32 y1 = ((lasty*2.0f)/window->View.Height) - 1.0f;
-        vtkm::Float32 x2 = ((x*2.0f)/window->View.Width) - 1.0f;
-        vtkm::Float32 y2 = ((y*2.0f)/window->View.Height) - 1.0f;
+        vtkm::Float32 x1 = ((lastx*2.0f)/window->Camera.Width) - 1.0f;
+        vtkm::Float32 y1 = ((lasty*2.0f)/window->Camera.Height) - 1.0f;
+        vtkm::Float32 x2 = ((x*2.0f)/window->Camera.Width) - 1.0f;
+        vtkm::Float32 y2 = ((y*2.0f)/window->Camera.Height) - 1.0f;
 
         if (buttonStates[0] == GLUT_DOWN)
         {
             if (shiftKey)
-                window->View.Pan3D(x2-x1, y2-y1);
+                window->Camera.Pan3D(x2-x1, y2-y1);
             else
-                window->View.TrackballRotate(x1,y1, x2,y2);
+                window->Camera.TrackballRotate(x1,y1, x2,y2);
         }
         else if (buttonStates[1] == GLUT_DOWN)
-            window->View.Zoom3D(y2-y1);
+            window->Camera.Zoom3D(y2-y1);
     }
 
     lastx = x;
@@ -118,7 +118,7 @@ void mouseCall(int button, int state, int vtkmNotUsed(x), int vtkmNotUsed(y))
     }
 }
 
-void Set3DView(vtkm::rendering::View &view,
+void Set3DView(vtkm::rendering::Camera &camera,
                const vtkm::cont::CoordinateSystem &coords,
                vtkm::Int32 w, vtkm::Int32 h)
 {
@@ -132,15 +132,15 @@ void Set3DView(vtkm::rendering::View &view,
     vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
     vtkm::Normalize(totalExtent);
 
-    view = vtkm::rendering::View(vtkm::rendering::View::VIEW_3D);
-    view.View3d.Position = totalExtent * (mag * 2.f);
-    view.View3d.Up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
-    view.View3d.LookAt = totalExtent * (mag * .5f);
-    view.View3d.FieldOfView = 60.f;
-    view.NearPlane = 1.f;
-    view.FarPlane = 100.f;
-    view.Width = w;
-    view.Height = h;
+    camera = vtkm::rendering::Camera(vtkm::rendering::Camera::VIEW_3D);
+    camera.Camera3d.Position = totalExtent * (mag * 2.f);
+    camera.Camera3d.Up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
+    camera.Camera3d.LookAt = totalExtent * (mag * .5f);
+    camera.Camera3d.FieldOfView = 60.f;
+    camera.NearPlane = 1.f;
+    camera.FarPlane = 100.f;
+    camera.Width = w;
+    camera.Height = h;
 }
 
 // Compute and render an isosurface for a uniform grid example
@@ -163,8 +163,8 @@ main(int argc, char* argv[])
 
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
 
-    vtkm::rendering::View view;
-    Set3DView(view, coords, W, H);
+    vtkm::rendering::Camera camera;
+    Set3DView(camera, coords, W, H);
 
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceGL surface(W,H,bg);
@@ -180,7 +180,7 @@ main(int argc, char* argv[])
     window = new vtkm::rendering::Window3D<vtkm::rendering::SceneRendererGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                                            vtkm::rendering::RenderSurfaceGL,
                                            vtkm::rendering::WorldAnnotatorGL>(scene, sceneRenderer,
-                                                                              surface, view, bg);
+                                                                              surface, camera, bg);
     window->Initialize();
     glutMainLoop();
 

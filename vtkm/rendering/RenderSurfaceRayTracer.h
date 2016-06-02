@@ -22,7 +22,6 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/RenderSurface.h>
 #include <vtkm/worklet/WorkletMapField.h>

@@ -21,7 +21,7 @@
 #define vtk_m_rendering_RenderSurface_h
 
 #include <vtkm/Types.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/ColorTable.h>
 
@@ -53,11 +53,11 @@ public:
   virtual void Finish() {}
 
   VTKM_CONT_EXPORT
-  virtual void SetViewToWorldSpace(vtkm::rendering::View &, bool) {}
+  virtual void SetViewToWorldSpace(vtkm::rendering::Camera &, bool) {}
   VTKM_CONT_EXPORT
-  virtual void SetViewToScreenSpace(vtkm::rendering::View &, bool) {}
+  virtual void SetViewToScreenSpace(vtkm::rendering::Camera &, bool) {}
   VTKM_CONT_EXPORT
-  void SetViewportClipping(vtkm::rendering::View &, bool) {}
+  void SetViewportClipping(vtkm::rendering::Camera &, bool) {}
 
   VTKM_CONT_EXPORT
   virtual void SaveAs(const std::string &) {}
@@ -67,7 +67,7 @@ public:
                        vtkm::Float32,
                        const vtkm::rendering::Color &) {}
   virtual void AddColorBar(vtkm::Float32, vtkm::Float32,
-                           vtkm::Float32, vtkm::Float32, 
+                           vtkm::Float32, vtkm::Float32,
                            const vtkm::rendering::ColorTable &,
                            bool) {}
   virtual void AddText(vtkm::Float32, vtkm::Float32,

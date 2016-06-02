@@ -21,8 +21,8 @@
 #define vtk_m_rendering_SceneRenderer_h
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/RenderSurface.h>
 namespace vtkm {
 namespace rendering {
@@ -44,7 +44,7 @@ public:
                            const vtkm::cont::CoordinateSystem &coords,
                            vtkm::cont::Field &scalarField, //This should be const
                            const vtkm::rendering::ColorTable &colorTable,
-                           vtkm::rendering::View &view,
+                           vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange) = 0;
 
   VTKM_CONT_EXPORT

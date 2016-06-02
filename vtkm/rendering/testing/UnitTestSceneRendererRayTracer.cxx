@@ -29,7 +29,7 @@
 
 namespace {
 
-void Set3DView(vtkm::rendering::View &view,
+void Set3DView(vtkm::rendering::Camera &camera,
                const vtkm::cont::CoordinateSystem &coords,
                vtkm::Int32 w, vtkm::Int32 h)
 {
@@ -43,21 +43,21 @@ void Set3DView(vtkm::rendering::View &view,
     vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
     vtkm::Normalize(totalExtent);
 
-    view = vtkm::rendering::View(vtkm::rendering::View::VIEW_3D);
-    view.View3d.Position = totalExtent * (mag * 2.f);
-    view.View3d.Up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
-    view.View3d.LookAt = totalExtent * (mag * .5f);
-    view.View3d.FieldOfView = 60.f;
-    view.NearPlane = 1.f;
-    view.FarPlane = 100.f;
-    view.Width = w;
-    view.Height = h;
+    camera = vtkm::rendering::Camera(vtkm::rendering::Camera::VIEW_3D);
+    camera.Camera3d.Position = totalExtent * (mag * 2.f);
+    camera.Camera3d.Up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
+    camera.Camera3d.LookAt = totalExtent * (mag * .5f);
+    camera.Camera3d.FieldOfView = 60.f;
+    camera.NearPlane = 1.f;
+    camera.FarPlane = 100.f;
+    camera.Width = w;
+    camera.Height = h;
 
-    std::cout<<"View3d:  pos: "<<view.View3d.Position<<std::endl;
-    std::cout<<"      lookAt: "<<view.View3d.LookAt<<std::endl;
-    std::cout<<"          up: "<<view.View3d.Up<<std::endl;
-    std::cout<<"near/far/fov: "<<view.NearPlane<<"/"<<view.FarPlane<<" "<<view.View3d.FieldOfView<<std::endl;
-    std::cout<<"         w/h: "<<view.Width<<"/"<<view.Height<<std::endl;
+    std::cout<<"Camera3d:  pos: "<<camera.Camera3d.Position<<std::endl;
+    std::cout<<"       lookAt: "<<camera.Camera3d.LookAt<<std::endl;
+    std::cout<<"           up: "<<camera.Camera3d.Up<<std::endl;
+    std::cout<<" near/far/fov: "<<camera.NearPlane<<"/"<<camera.FarPlane<<" "<<camera.Camera3d.FieldOfView<<std::endl;
+    std::cout<<"          w/h: "<<camera.Width<<"/"<<camera.Height<<std::endl;
 }
 
 void Render(const vtkm::cont::DataSet &ds,
@@ -69,8 +69,8 @@ void Render(const vtkm::cont::DataSet &ds,
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
     vtkm::rendering::SceneRendererRayTracer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> sceneRenderer;
 
-    vtkm::rendering::View view;
-    Set3DView(view, coords, W, H);
+    vtkm::rendering::Camera camera;
+    Set3DView(camera, coords, W, H);
 
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
@@ -84,7 +84,7 @@ void Render(const vtkm::cont::DataSet &ds,
     vtkm::rendering::Window3D<vtkm::rendering::SceneRendererRayTracer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                               vtkm::rendering::RenderSurfaceRayTracer,
                               vtkm::rendering::WorldAnnotator>
-        w(scene, sceneRenderer, surface, view, bg);
+        w(scene, sceneRenderer, surface, camera, bg);
 
     w.Initialize();
     w.Paint();

@@ -22,7 +22,7 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
 #include <vtkm/rendering/raytracing/Worklets.h>
@@ -205,7 +205,7 @@ private:
   vtkm::Vec< vtkm::Float32, 3> Up;
   vtkm::Vec< vtkm::Float32, 3> LookAt;
   vtkm::Vec< vtkm::Float32, 3> Position;
-  View CameraView;
+  vtkm::rendering::Camera CameraView;
   vtkm::Matrix<vtkm::Float32,4,4> ViewProjectionMat;
 
 
@@ -245,15 +245,15 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void SetParameters(View &view)
+  void SetParameters(vtkm::rendering::Camera &camera)
   {
-    this->SetUp(view.View3d.Up);
-    this->SetLookAt(view.View3d.LookAt);
-    this->SetPosition(view.View3d.Position);
-    this->SetFieldOfView(view.View3d.FieldOfView);
-    this->SetHeight(view.Height);
-    this->SetWidth(view.Width);
-    this->CameraView = view;
+    this->SetUp(camera.Camera3d.Up);
+    this->SetLookAt(camera.Camera3d.LookAt);
+    this->SetPosition(camera.Camera3d.Position);
+    this->SetFieldOfView(camera.Camera3d.FieldOfView);
+    this->SetHeight(camera.Height);
+    this->SetWidth(camera.Width);
+    this->CameraView = camera;
   }
 
 
@@ -350,7 +350,7 @@ public:
     if(newFOVY != this->FovY) { this->IsViewDirty = true; }
     this->FovX = newFOVX;
     this->FovY = newFOVY;
-    this->CameraView.View3d.FieldOfView = this->FovX;
+    this->CameraView.Camera3d.FieldOfView = this->FovX;
   }
 
   VTKM_CONT_EXPORT

@@ -20,8 +20,8 @@
 #ifndef vtk_m_rendering_Scene_h
 #define vtk_m_rendering_Scene_h
 
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Plot.h>
-#include <vtkm/rendering/View.h>
 #include <vector>
 
 namespace vtkm {
@@ -38,14 +38,14 @@ public:
   VTKM_CONT_EXPORT
   void Render(SceneRendererType &sceneRenderer,
               SurfaceType &surface,
-              vtkm::rendering::View &view)
+              vtkm::rendering::Camera &camera)
   {
     vtkm::Bounds bounds;
 
     sceneRenderer.StartScene();
     for (std::size_t i = 0; i < this->Plots.size(); i++)
     {
-      this->Plots[i].Render(sceneRenderer, surface, view);
+      this->Plots[i].Render(sceneRenderer, surface, camera);
 
       // accumulate all Plots' spatial bounds into the scene spatial bounds
       bounds.Include(this->Plots[i].SpatialBounds);

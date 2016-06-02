@@ -21,7 +21,6 @@
 #define vtk_m_rendering_RenderSurfaceOSMesa_h
 
 #include <vtkm/Types.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/RenderSurfaceGL.h>
 

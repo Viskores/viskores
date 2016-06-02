@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_View_h
-#define vtk_m_rendering_View_h
+#ifndef vtk_m_rendering_Camera_h
+#define vtk_m_rendering_Camera_h
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/VectorAnalysis.h>
@@ -27,13 +27,13 @@
 namespace vtkm {
 namespace rendering {
 
-class View
+class Camera
 {
-  class View3D
+  class Camera3D
   {
   public:
     VTKM_CONT_EXPORT
-    View3D() : FieldOfView(0.f), XPan(0), YPan(0), Zoom(1)
+    Camera3D() : FieldOfView(0.f), XPan(0), YPan(0), Zoom(1)
     {}
 
     VTKM_CONT_EXPORT
@@ -86,11 +86,11 @@ class View
     vtkm::Float32 Zoom;
   };
 
-  class View2D
+  class Camera2D
   {
   public:
     VTKM_CONT_EXPORT
-    View2D() : Left(0.f), Right(0.f), Top(0.f), Bottom(0.f), XScale(1.f)
+    Camera2D() : Left(0.f), Right(0.f), Top(0.f), Bottom(0.f), XScale(1.f)
     {}
 
     VTKM_CONT_EXPORT
@@ -137,8 +137,8 @@ class View
 public:
   enum ViewTypeEnum { VIEW_2D, VIEW_3D };
   ViewTypeEnum ViewType;
-  View3D View3d;
-  View2D View2d;
+  Camera3D Camera3d;
+  Camera2D Camera2d;
 
   vtkm::Int32 Width;
   vtkm::Int32 Height;
@@ -151,7 +151,7 @@ public:
   vtkm::Float32 ViewportTop;
 
   VTKM_CONT_EXPORT
-  View(ViewTypeEnum vtype=View::VIEW_3D)
+  Camera(ViewTypeEnum vtype=Camera::VIEW_3D)
     : ViewType(vtype),
       Width(-1),
       Height(-1),
@@ -166,34 +166,34 @@ public:
   VTKM_CONT_EXPORT
   vtkm::Matrix<vtkm::Float32,4,4> CreateViewMatrix()
   {
-    if (this->ViewType == View::VIEW_3D)
+    if (this->ViewType == Camera::VIEW_3D)
     {
-      return this->View3d.CreateViewMatrix();
+      return this->Camera3d.CreateViewMatrix();
     }
     else
     {
-      return this->View2d.CreateViewMatrix();
+      return this->Camera2d.CreateViewMatrix();
     }
   }
 
   VTKM_CONT_EXPORT
   vtkm::Matrix<vtkm::Float32,4,4> CreateProjectionMatrix()
   {
-    if (this->ViewType == View::VIEW_3D)
+    if (this->ViewType == Camera::VIEW_3D)
     {
-      return this->View3d.CreateProjectionMatrix(
+      return this->Camera3d.CreateProjectionMatrix(
             this->Width, this->Height, this->NearPlane, this->FarPlane);
     }
     else
     {
-      vtkm::Float32 size = vtkm::Abs(this->View2d.Top - this->View2d.Bottom);
+      vtkm::Float32 size = vtkm::Abs(this->Camera2d.Top - this->Camera2d.Bottom);
       vtkm::Float32 left,right,bottom,top;
       this->GetRealViewport(left,right,bottom,top);
       vtkm::Float32 aspect =
           (static_cast<vtkm::Float32>(this->Width)*(right-left)) /
           (static_cast<vtkm::Float32>(this->Height)*(top-bottom));
 
-      return this->View2d.CreateProjectionMatrix(
+      return this->Camera2d.CreateProjectionMatrix(
             size, this->NearPlane, this->FarPlane, aspect);
     }
   }
@@ -202,7 +202,7 @@ public:
   void GetRealViewport(vtkm::Float32 &left, vtkm::Float32 &right,
                        vtkm::Float32 &bottom, vtkm::Float32 &top)
   {
-    if (this->ViewType == View::VIEW_3D)
+    if (this->ViewType == Camera::VIEW_3D)
     {
       left = this->ViewportLeft;
       right = this->ViewportRight;
@@ -214,8 +214,8 @@ public:
       vtkm::Float32 maxvw = (this->ViewportRight-this->ViewportLeft) * static_cast<vtkm::Float32>(this->Width);
       vtkm::Float32 maxvh = (this->ViewportTop-this->ViewportBottom) * static_cast<vtkm::Float32>(this->Height);
       vtkm::Float32 waspect = maxvw / maxvh;
-      vtkm::Float32 daspect = (this->View2d.Right - this->View2d.Left) / (this->View2d.Top - this->View2d.Bottom);
-      daspect *= this->View2d.XScale;
+      vtkm::Float32 daspect = (this->Camera2d.Right - this->Camera2d.Left) / (this->Camera2d.Top - this->Camera2d.Bottom);
+      daspect *= this->Camera2d.XScale;
       //cerr << "waspect="<<waspect << "   \tdaspect="<<daspect<<endl;
       const bool center = true; // if false, anchor to bottom-left
       if (waspect > daspect)
@@ -269,8 +269,8 @@ public:
   void Pan3D(vtkm::Float32 dx, vtkm::Float32 dy)
   {
     //std::cout<<"Pan3d: "<<dx<<" "<<dy<<std::endl;
-    this->View3d.XPan += dx;
-    this->View3d.YPan += dy;
+    this->Camera3d.XPan += dx;
+    this->Camera3d.YPan += dy;
   }
 
   VTKM_CONT_EXPORT
@@ -278,9 +278,9 @@ public:
   {
     vtkm::Float32 factor = powf(4, zoom);
     //std::cout<<"Zoom3D: "<<zoom<<" --> "<<factor<<std::endl;
-    this->View3d.Zoom *= factor;
-    this->View3d.XPan *= factor;
-    this->View3d.YPan *= factor;
+    this->Camera3d.Zoom *= factor;
+    this->Camera3d.XPan *= factor;
+    this->Camera3d.YPan *= factor;
   }
 
   VTKM_CONT_EXPORT
@@ -289,10 +289,10 @@ public:
     vtkm::Matrix<vtkm::Float32,4,4> R1 = MatrixHelpers::TrackballMatrix(x1,y1, x2,y2);
 
     //Translate matrix
-    vtkm::Matrix<vtkm::Float32,4,4> T1 = MatrixHelpers::TranslateMatrix(-this->View3d.LookAt);
+    vtkm::Matrix<vtkm::Float32,4,4> T1 = MatrixHelpers::TranslateMatrix(-this->Camera3d.LookAt);
 
     //Translate matrix
-    vtkm::Matrix<vtkm::Float32,4,4> T2 = MatrixHelpers::TranslateMatrix(this->View3d.LookAt);
+    vtkm::Matrix<vtkm::Float32,4,4> T2 = MatrixHelpers::TranslateMatrix(this->Camera3d.LookAt);
 
     vtkm::Matrix<vtkm::Float32,4,4> V1 = this->CreateViewMatrix();
     V1(0,3) = 0;
@@ -307,12 +307,12 @@ public:
                               vtkm::MatrixMultiply(V2,
                                                    vtkm::MatrixMultiply(R1,
                                                                         vtkm::MatrixMultiply(V1,T1))));
-    this->View3d.Position = MultVector(MM, this->View3d.Position);
-    this->View3d.LookAt = MultVector(MM, this->View3d.LookAt);
-    this->View3d.Up = MultVector(MM, this->View3d.Up);
+    this->Camera3d.Position = MultVector(MM, this->Camera3d.Position);
+    this->Camera3d.LookAt = MultVector(MM, this->Camera3d.LookAt);
+    this->Camera3d.Up = MultVector(MM, this->Camera3d.Up);
   }
 };
 
 }} // namespace vtkm::rendering
 
-#endif // vtk_m_rendering_View_h
+#endif // vtk_m_rendering_Camera_h

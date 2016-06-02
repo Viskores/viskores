@@ -23,9 +23,9 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/rendering/SceneRenderer.h>
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/Triangulator.h>
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 
@@ -49,7 +49,7 @@ public:
                            const vtkm::cont::CoordinateSystem &coords,
                            vtkm::cont::Field &scalarField,
                            const vtkm::rendering::ColorTable &colorTable,
-                           vtkm::rendering::View &,
+                           vtkm::rendering::Camera &,
                            const vtkm::Range &scalarRange)
   {
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;

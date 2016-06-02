@@ -21,8 +21,8 @@
 #define vtk_m_rendering_Plot_h
 
 #include <vtkm/Assert.h>
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/SceneRenderer.h>
-#include <vtkm/rendering/View.h>
 #include <vector>
 
 namespace vtkm {
@@ -54,7 +54,7 @@ public:
   VTKM_CONT_EXPORT
   void Render(SceneRendererType &sceneRenderer,
               SurfaceType &surface,
-              vtkm::rendering::View &view)
+              vtkm::rendering::Camera &camera)
   {
     sceneRenderer.SetRenderSurface(&surface);
     sceneRenderer.SetActiveColorTable(this->ColorTable);
@@ -62,7 +62,7 @@ public:
                               this->Coordinates,
                               this->ScalarField,
                               this->ColorTable,
-                              view,
+                              camera,
                               this->ScalarRange);
   }
 

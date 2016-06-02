@@ -27,7 +27,7 @@
 #include <vtkm/rendering/raytracing/RayTracer.h>
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/RenderSurfaceRayTracer.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/Camera.h>
 namespace vtkm {
 namespace rendering {
 
@@ -70,15 +70,14 @@ public:
                    const vtkm::cont::CoordinateSystem &coords,
                    vtkm::cont::Field &scalarField,
                    const vtkm::rendering::ColorTable &vtkmNotUsed(colorTable),
-                   vtkm::rendering::View &view,
+                   vtkm::rendering::Camera &camera,
                    const vtkm::Range &scalarRange)
   {
 
     vtkm::cont::Timer<DeviceAdapter> timer;
     const vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  indices;
-    vtkm::rendering::raytracing::Camera<DeviceAdapter> &camera = Tracer.GetCamera();
-    camera.SetParameters(view);
+    Tracer.GetCamera().SetParameters(camera);
     vtkm::Id numberOfTriangles;
 
     vtkm::Bounds dataBounds = coords.GetBounds(DeviceAdapter());

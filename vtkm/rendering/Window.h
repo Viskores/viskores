@@ -24,12 +24,12 @@
 #include <vtkm/rendering/BoundingBoxAnnotation.h>
 #include <vtkm/rendering/AxisAnnotation3D.h>
 #include <vtkm/rendering/AxisAnnotation2D.h>
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/ColorBarAnnotation.h>
 #include <vtkm/rendering/TextAnnotation.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/SceneRenderer.h>
-#include <vtkm/rendering/View.h>
 
 namespace vtkm {
 namespace rendering {
@@ -42,18 +42,18 @@ class Window
 public:
   SceneRendererType SceneRenderer;
   SurfaceType Surface;
-  vtkm::rendering::View View;
+  vtkm::rendering::Camera Camera;
   Color BackgroundColor;
   WorldAnnotatorType WorldAnnotator;
 
   Window(const SceneRendererType &sceneRenderer,
          const SurfaceType &surface,
-         const vtkm::rendering::View &view,
+         const vtkm::rendering::Camera &camera,
          const vtkm::rendering::Color &backgroundColor =
            vtkm::rendering::Color(0,0,0,1))
     : SceneRenderer(sceneRenderer),
       Surface(surface),
-      View(view),
+      Camera(camera),
       BackgroundColor(backgroundColor)
   {
     this->SceneRenderer.SetBackgroundColor(this->BackgroundColor);
@@ -79,15 +79,15 @@ protected:
   VTKM_CONT_EXPORT
   void SetupForWorldSpace(bool viewportClip=true)
   {
-    //this->View.SetupMatrices();
-    this->Surface.SetViewToWorldSpace(this->View,viewportClip);
+    //this->Camera.SetupMatrices();
+    this->Surface.SetViewToWorldSpace(this->Camera,viewportClip);
   }
 
   VTKM_CONT_EXPORT
   void SetupForScreenSpace(bool viewportClip=false)
   {
-    //this->View.SetupMatrices();
-    this->Surface.SetViewToScreenSpace(this->View,viewportClip);
+    //this->Camera.SetupMatrices();
+    this->Surface.SetViewToScreenSpace(this->Camera,viewportClip);
   }
 };
 
@@ -111,10 +111,10 @@ public:
   Window3D(const vtkm::rendering::Scene &scene,
            const SceneRendererType &sceneRenderer,
            const SurfaceType &surface,
-           const vtkm::rendering::View &view,
+           const vtkm::rendering::Camera &camera,
            const vtkm::rendering::Color &backgroundColor =
              vtkm::rendering::Color(0,0,0,1))
-    : Superclass(sceneRenderer,surface,view,backgroundColor),
+    : Superclass(sceneRenderer,surface,camera,backgroundColor),
       Scene(scene)
   {
   }
@@ -125,7 +125,7 @@ public:
     this->Surface.Activate();
     this->Surface.Clear();
     this->SetupForWorldSpace();
-    this->Scene.Render(this->SceneRenderer, this->Surface, this->View);
+    this->Scene.Render(this->SceneRenderer, this->Surface, this->Camera);
     this->RenderWorldAnnotations();
 
     this->SetupForScreenSpace();
@@ -142,7 +142,7 @@ public:
       //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
       this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].ScalarRange, 5);
       this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].ColorTable);
-      this->ColorBarAnnotation.Render(this->View, this->WorldAnnotator, this->Surface);
+      this->ColorBarAnnotation.Render(this->Camera, this->WorldAnnotator, this->Surface);
     }
   }
 
@@ -158,11 +158,11 @@ public:
 
     this->BoxAnnotation.SetColor(Color(.5f,.5f,.5f));
     this->BoxAnnotation.SetExtents(this->Scene.GetSpatialBounds());
-    this->BoxAnnotation.Render(this->View, this->WorldAnnotator);
+    this->BoxAnnotation.Render(this->Camera, this->WorldAnnotator);
 
-    bool xtest = this->View.View3d.LookAt[0] > this->View.View3d.Position[0];
-    bool ytest = this->View.View3d.LookAt[1] > this->View.View3d.Position[1];
-    bool ztest = this->View.View3d.LookAt[2] > this->View.View3d.Position[2];
+    bool xtest = this->Camera.Camera3d.LookAt[0] > this->Camera.Camera3d.Position[0];
+    bool ytest = this->Camera.Camera3d.LookAt[1] > this->Camera.Camera3d.Position[1];
+    bool ztest = this->Camera.Camera3d.LookAt[2] > this->Camera.Camera3d.Position[2];
 
     const bool outsideedges = true; // if false, do closesttriad
     if (outsideedges)
@@ -189,7 +189,7 @@ public:
     this->XAxisAnnotation.SetMinorTickSize(size / 80.f, 0);
     this->XAxisAnnotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
     this->XAxisAnnotation.SetMoreOrLessTickAdjustment(xrel < .3 ? -1 : 0);
-    this->XAxisAnnotation.Render(this->View, this->WorldAnnotator, this->Surface);
+    this->XAxisAnnotation.Render(this->Camera, this->WorldAnnotator, this->Surface);
 
     this->YAxisAnnotation.SetAxis(1);
     this->YAxisAnnotation.SetColor(Color(1,1,1));
@@ -205,7 +205,7 @@ public:
     this->YAxisAnnotation.SetMinorTickSize(size / 80.f, 0);
     this->YAxisAnnotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
     this->YAxisAnnotation.SetMoreOrLessTickAdjustment(yrel < .3 ? -1 : 0);
-    this->YAxisAnnotation.Render(this->View, this->WorldAnnotator, this->Surface);
+    this->YAxisAnnotation.Render(this->Camera, this->WorldAnnotator, this->Surface);
 
     this->ZAxisAnnotation.SetAxis(2);
     this->ZAxisAnnotation.SetColor(Color(1,1,1));
@@ -221,7 +221,7 @@ public:
     this->ZAxisAnnotation.SetMinorTickSize(size / 80.f, 0);
     this->ZAxisAnnotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
     this->ZAxisAnnotation.SetMoreOrLessTickAdjustment(zrel < .3 ? -1 : 0);
-    this->ZAxisAnnotation.Render(this->View, this->WorldAnnotator, this->Surface);
+    this->ZAxisAnnotation.Render(this->Camera, this->WorldAnnotator, this->Surface);
   }
 };
 
@@ -242,10 +242,10 @@ public:
   Window2D(const vtkm::rendering::Scene &scene,
            const SceneRendererType &sceneRenderer,
            const SurfaceType &surface,
-           const vtkm::rendering::View &view,
+           const vtkm::rendering::Camera &camera,
            const vtkm::rendering::Color &backgroundColor =
              vtkm::rendering::Color(0,0,0,1))
-    : Superclass(sceneRenderer, surface, view, backgroundColor),
+    : Superclass(sceneRenderer, surface, camera, backgroundColor),
       Scene(scene)
   {
   }
@@ -257,7 +257,7 @@ public:
     this->Surface.Clear();
     this->SetupForWorldSpace();
 
-    this->Scene.Render(this->SceneRenderer, this->Surface, this->View);
+    this->Scene.Render(this->SceneRenderer, this->Surface, this->Camera);
     this->RenderWorldAnnotations();
 
     this->SetupForScreenSpace();
@@ -273,35 +273,35 @@ public:
     vtkm::Float32 viewportRight;
     vtkm::Float32 viewportTop;
     vtkm::Float32 viewportBottom;
-    this->View.GetRealViewport(
+    this->Camera.GetRealViewport(
           viewportLeft, viewportRight, viewportBottom, viewportTop);
 
     this->HorizontalAxisAnnotation.SetColor(vtkm::rendering::Color(1,1,1));
     this->HorizontalAxisAnnotation.SetScreenPosition(
           viewportLeft, viewportBottom, viewportRight, viewportBottom);
-    this->HorizontalAxisAnnotation.SetRangeForAutoTicks(this->View.View2d.Left,
-                                                        this->View.View2d.Right);
+    this->HorizontalAxisAnnotation.SetRangeForAutoTicks(this->Camera.Camera2d.Left,
+                                                        this->Camera.Camera2d.Right);
     this->HorizontalAxisAnnotation.SetMajorTickSize(0, .05, 1.0);
     this->HorizontalAxisAnnotation.SetMinorTickSize(0, .02, 1.0);
     this->HorizontalAxisAnnotation.SetLabelAlignment(TextAnnotation::HCenter,
                                                      TextAnnotation::Top);
     this->HorizontalAxisAnnotation.Render(
-          this->View, this->WorldAnnotator, this->Surface);
+          this->Camera, this->WorldAnnotator, this->Surface);
 
     vtkm::Float32 windowaspect =
-        vtkm::Float32(this->View.Width) / vtkm::Float32(this->View.Height);
+        vtkm::Float32(this->Camera.Width) / vtkm::Float32(this->Camera.Height);
 
     this->VerticalAxisAnnotation.SetColor(Color(1,1,1));
     this->VerticalAxisAnnotation.SetScreenPosition(
           viewportLeft, viewportBottom, viewportLeft, viewportTop);
-    this->VerticalAxisAnnotation.SetRangeForAutoTicks(this->View.View2d.Bottom,
-                                                      this->View.View2d.Top);
+    this->VerticalAxisAnnotation.SetRangeForAutoTicks(this->Camera.Camera2d.Bottom,
+                                                      this->Camera.Camera2d.Top);
     this->VerticalAxisAnnotation.SetMajorTickSize(.05 / windowaspect, 0, 1.0);
     this->VerticalAxisAnnotation.SetMinorTickSize(.02 / windowaspect, 0, 1.0);
     this->VerticalAxisAnnotation.SetLabelAlignment(TextAnnotation::Right,
                                                    TextAnnotation::VCenter);
     this->VerticalAxisAnnotation.Render(
-          this->View, this->WorldAnnotator, this->Surface);
+          this->Camera, this->WorldAnnotator, this->Surface);
 
     if (this->Scene.Plots.size() > 0)
     {
@@ -311,7 +311,7 @@ public:
                                         5);
       this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].ColorTable);
       this->ColorBarAnnotation.Render(
-            this->View, this->WorldAnnotator, this->Surface);
+            this->Camera, this->WorldAnnotator, this->Surface);
     }
   }
 };

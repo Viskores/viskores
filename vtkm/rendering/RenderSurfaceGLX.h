@@ -21,7 +21,6 @@
 #define vtk_m_rendering_RenderSurfaceGLX_h
 
 #include <vtkm/Types.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/RenderSurfaceGL.h>
 
@@ -58,7 +57,7 @@ public:
 
     glEnable(GL_DEPTH_TEST);
   }
-    
+
   VTKM_CONT_EXPORT
   virtual void Clear()
   {

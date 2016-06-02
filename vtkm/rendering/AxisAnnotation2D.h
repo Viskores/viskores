@@ -22,8 +22,8 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/SceneRenderer.h>
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/RenderSurface.h>
 #include <vtkm/rendering/WorldAnnotator.h>
@@ -160,7 +160,7 @@ public:
     min_proportions.clear();
     min_proportions.insert(min_proportions.begin(), prop.begin(), prop.end());
   }
-  virtual void Render(View &view,
+  virtual void Render(Camera &camera,
                       WorldAnnotator &worldAnnotator,
                       RenderSurface &renderSurface)
   {
@@ -224,7 +224,7 @@ public:
 
     for (unsigned int i=0; i<nmajor; ++i)
     {
-      labels[i]->Render(view, worldAnnotator, renderSurface);
+      labels[i]->Render(camera, worldAnnotator, renderSurface);
     }
   }
 };
