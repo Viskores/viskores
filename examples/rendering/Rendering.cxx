@@ -40,15 +40,15 @@
 # include <GL/glut.h>
 #endif
 
-#include <vtkm/rendering/Window.h>
-#include <vtkm/rendering/WorldAnnotatorGL.h>
-#include <vtkm/rendering/RenderSurfaceGL.h>
 #include <vtkm/rendering/MapperGL.h>
+#include <vtkm/rendering/RenderSurfaceGL.h>
+#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/rendering/ColorTable.h>
 
-vtkm::rendering::Window3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+vtkm::rendering::View3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
                           vtkm::rendering::RenderSurfaceGL,
-                          vtkm::rendering::WorldAnnotatorGL> *window = NULL;
+                          vtkm::rendering::WorldAnnotatorGL> *view = NULL;
 
 const vtkm::Int32 W = 512, H = 512;
 int buttonStates[3] = {GLUT_UP, GLUT_UP, GLUT_UP};
@@ -65,7 +65,7 @@ reshape(int, int)
 // Render the output using simple OpenGL
 void displayCall()
 {
-    window->Paint();
+    view->Paint();
     glutSwapBuffers();
 }
 
@@ -75,24 +75,24 @@ void mouseMove(int x, int y)
     //std::cout<<"MOUSE MOVE: "<<x<<" "<<y<<std::endl;
 
     //Map to XY
-    y = window->Camera.Height-y;
+    y = view->Camera.Height-y;
 
     if (lastx != -1 && lasty != -1)
     {
-        vtkm::Float32 x1 = ((lastx*2.0f)/window->Camera.Width) - 1.0f;
-        vtkm::Float32 y1 = ((lasty*2.0f)/window->Camera.Height) - 1.0f;
-        vtkm::Float32 x2 = ((x*2.0f)/window->Camera.Width) - 1.0f;
-        vtkm::Float32 y2 = ((y*2.0f)/window->Camera.Height) - 1.0f;
+        vtkm::Float32 x1 = ((lastx*2.0f)/view->Camera.Width) - 1.0f;
+        vtkm::Float32 y1 = ((lasty*2.0f)/view->Camera.Height) - 1.0f;
+        vtkm::Float32 x2 = ((x*2.0f)/view->Camera.Width) - 1.0f;
+        vtkm::Float32 y2 = ((y*2.0f)/view->Camera.Height) - 1.0f;
 
         if (buttonStates[0] == GLUT_DOWN)
         {
             if (shiftKey)
-                window->Camera.Pan3D(x2-x1, y2-y1);
+                view->Camera.Pan3D(x2-x1, y2-y1);
             else
-                window->Camera.TrackballRotate(x1,y1, x2,y2);
+                view->Camera.TrackballRotate(x1,y1, x2,y2);
         }
         else if (buttonStates[1] == GLUT_DOWN)
-            window->Camera.Zoom3D(y2-y1);
+            view->Camera.Zoom3D(y2-y1);
     }
 
     lastx = x;
@@ -171,17 +171,17 @@ main(int argc, char* argv[])
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::Scene scene;
-    scene.Plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
-                                                ds.GetCoordinateSystem(),
-                                                ds.GetField("pointvar"),
-                                                vtkm::rendering::ColorTable("thermal")));
+    scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
+                                                  ds.GetCoordinateSystem(),
+                                                  ds.GetField("pointvar"),
+                                                  vtkm::rendering::ColorTable("thermal")));
 
     //Create vtkm rendering stuff.
-    window = new vtkm::rendering::Window3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                                           vtkm::rendering::RenderSurfaceGL,
-                                           vtkm::rendering::WorldAnnotatorGL>(scene, mapper,
-                                                                              surface, camera, bg);
-    window->Initialize();
+    view = new vtkm::rendering::View3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+                                       vtkm::rendering::RenderSurfaceGL,
+                                       vtkm::rendering::WorldAnnotatorGL>(scene, mapper,
+                                                                          surface, camera, bg);
+    view->Initialize();
     glutMainLoop();
 
     return 0;

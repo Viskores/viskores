@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  Actor.h
   AxisAnnotation.h
   AxisAnnotation2D.h
   AxisAnnotation3D.h
@@ -30,7 +31,6 @@ set(headers
   ColorBarAnnotation.h
   ColorTable.h
   MatrixHelpers.h
-  Plot.h
   RenderSurface.h
   RenderSurfaceRayTracer.h
   Scene.h
@@ -39,7 +39,7 @@ set(headers
   MapperVolume.h
   TextAnnotation.h
   Triangulator.h
-  Window.h
+  View.h
   WorldAnnotator.h
   )
 

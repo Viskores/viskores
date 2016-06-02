@@ -20,8 +20,8 @@
 #ifndef vtk_m_rendering_Scene_h
 #define vtk_m_rendering_Scene_h
 
+#include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/Camera.h>
-#include <vtkm/rendering/Plot.h>
 #include <vector>
 
 namespace vtkm {
@@ -30,7 +30,7 @@ namespace rendering {
 class Scene
 {
 public:
-  std::vector<vtkm::rendering::Plot> Plots;
+  std::vector<vtkm::rendering::Actor> Actors;
 
   Scene() {}
 
@@ -43,12 +43,12 @@ public:
     vtkm::Bounds bounds;
 
     mapper.StartScene();
-    for (std::size_t i = 0; i < this->Plots.size(); i++)
+    for (std::size_t i = 0; i < this->Actors.size(); i++)
     {
-      this->Plots[i].Render(mapper, surface, camera);
+      this->Actors[i].Render(mapper, surface, camera);
 
-      // accumulate all Plots' spatial bounds into the scene spatial bounds
-      bounds.Include(this->Plots[i].SpatialBounds);
+      // accumulate all Actors' spatial bounds into the scene spatial bounds
+      bounds.Include(this->Actors[i].SpatialBounds);
     }
     mapper.EndScene();
 

@@ -18,12 +18,12 @@
 //  this software.
 //============================================================================
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/MapperVolume.h>
-#include <vtkm/rendering/Plot.h>
 #include <vtkm/rendering/RenderSurface.h>
 #include <vtkm/rendering/RenderSurfaceRayTracer.h>
 #include <vtkm/rendering/Scene.h>
-#include <vtkm/rendering/Window.h>
+#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -80,15 +80,15 @@ void Render(const vtkm::cont::DataSet &ds,
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceRayTracer surface(W,H,bg);
-    scene.Plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
-                                                ds.GetCoordinateSystem(),
-                                                ds.GetField(fieldNm),
-                                                colorTable));
+    scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
+                                                  ds.GetCoordinateSystem(),
+                                                  ds.GetField(fieldNm),
+                                                  colorTable));
 
-    //TODO: W/H in window.  bg in window (window sets surface/renderer).
-    vtkm::rendering::Window3D<vtkm::rendering::MapperVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                              vtkm::rendering::RenderSurfaceRayTracer,
-                              vtkm::rendering::WorldAnnotator>
+    //TODO: W/H in view.  bg in view (view sets surface/renderer).
+    vtkm::rendering::View3D<vtkm::rendering::MapperVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+                            vtkm::rendering::RenderSurfaceRayTracer,
+                            vtkm::rendering::WorldAnnotator>
         w(scene, mapper, surface, camera, bg);
 
     w.Initialize();

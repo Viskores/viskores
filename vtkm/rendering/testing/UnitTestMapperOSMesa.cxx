@@ -19,18 +19,18 @@
 //============================================================================
 #include <vtkm/Bounds.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/MapperGL.h>
-#include <vtkm/rendering/Plot.h>
 #include <vtkm/rendering/RenderSurfaceOSMesa.h>
 #include <vtkm/rendering/Scene.h>
-#include <vtkm/rendering/Window.h>
+#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace {
 
-void Set3DView(vtkm::rendering::View &view,
+void Set3DView(vtkm::rendering::Camera &camera,
                const vtkm::cont::CoordinateSystem &coords,
                vtkm::Int32 w, vtkm::Int32 h)
 {
@@ -43,52 +43,52 @@ void Set3DView(vtkm::rendering::View &view,
     vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
     vtkm::Normalize(totalExtent);
 
-    view = vtkm::rendering::View(vtkm::rendering::View::VIEW_3D);
-    view.View3d.Position = totalExtent * (mag * 2.f);
-    view.View3d.Up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
-    view.View3d.LookAt = totalExtent * (mag * .5f);
-    view.View3d.FieldOfView = 60.f;
-    view.NearPlane = 1.f;
-    view.FarPlane = 100.f;
-    view.Width = w;
-    view.Height = h;
+    camera = vtkm::rendering::Camera(vtkm::rendering::Camera::VIEW_3D);
+    camera.Camera3d.Position = totalExtent * (mag * 2.f);
+    camera.Camera3d.Up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
+    camera.Camera3d.LookAt = totalExtent * (mag * .5f);
+    camera.Camera3d.FieldOfView = 60.f;
+    camera.NearPlane = 1.f;
+    camera.FarPlane = 100.f;
+    camera.Width = w;
+    camera.Height = h;
     /*
-    std::cout<<"View3d:  pos: "<<view.view3d.pos<<std::endl;
-    std::cout<<"      lookAt: "<<view.view3d.lookAt<<std::endl;
-    std::cout<<"          up: "<<view.view3d.up<<std::endl;
-    std::cout<<"near/far/fov: "<<view.nearPlane<<"/"<<view.farPlane<<" "<<view.view3d.fieldOfView<<std::endl;
-    std::cout<<"         w/h: "<<view.width<<"/"<<view.height<<std::endl;
+    std::cout<<"Camera3d: pos: "<<camera.camera3d.pos<<std::endl;
+    std::cout<<"       lookAt: "<<camera.camera3d.lookAt<<std::endl;
+    std::cout<<"           up: "<<camera.camera3d.up<<std::endl;
+    std::cout<<" near/far/fov: "<<camera.nearPlane<<"/"<<camera.farPlane<<" "<<camera.camera3d.fieldOfView<<std::endl;
+    std::cout<<"          w/h: "<<camera.width<<"/"<<camera.height<<std::endl;
     */
 }
 
-void Set2DView(vtkm::rendering::View &view,
+void Set2DView(vtkm::rendering::Camera &camera,
                const vtkm::cont::CoordinateSystem &coords,
                vtkm::Int32 w, vtkm::Int32 h)
 {
     vtkm::Bounds coordsBounds = coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     //set up a default view
 
-    view = vtkm::rendering::View(vtkm::rendering::View::VIEW_2D);
-    view.View2d.Left = static_cast<vtkm::Float32>(coordsBounds.X.Min);
-    view.View2d.Right = static_cast<vtkm::Float32>(coordsBounds.X.Max);
-    view.View2d.Bottom = static_cast<vtkm::Float32>(coordsBounds.Y.Min);
-    view.View2d.Top = static_cast<vtkm::Float32>(coordsBounds.Y.Max);
-    view.NearPlane = 1.f;
-    view.FarPlane = 100.f;
-    view.Width = w;
-    view.Height = h;
+    camera = vtkm::rendering::Camera(vtkm::rendering::Camera::VIEW_2D);
+    camera.Camera2d.Left = static_cast<vtkm::Float32>(coordsBounds.X.Min);
+    camera.Camera2d.Right = static_cast<vtkm::Float32>(coordsBounds.X.Max);
+    camera.Camera2d.Bottom = static_cast<vtkm::Float32>(coordsBounds.Y.Min);
+    camera.Camera2d.Top = static_cast<vtkm::Float32>(coordsBounds.Y.Max);
+    camera.NearPlane = 1.f;
+    camera.FarPlane = 100.f;
+    camera.Width = w;
+    camera.Height = h;
 
     // Give it some space for other annotations like a color bar
-    view.ViewportLeft = -.7f;
-    view.ViewportRight = +.7f;
-    view.ViewportBottom = -.7f;
-    view.ViewportTop = +.7f;
+    camera.ViewportLeft = -.7f;
+    camera.ViewportRight = +.7f;
+    camera.ViewportBottom = -.7f;
+    camera.ViewportTop = +.7f;
 
     /*
-    std::cout<<"View2d:  l/r: "<<view.view2d.left<<" "<<view.view2d.right<<std::endl;
-    std::cout<<"View2d:  b/t: "<<view.view2d.bottom<<" "<<view.view2d.top<<std::endl;
-    std::cout<<"    near/far: "<<view.nearPlane<<"/"<<view.farPlane<<std::endl;
-    std::cout<<"         w/h: "<<view.width<<"/"<<view.height<<std::endl;
+    std::cout<<"Camera2d:  l/r: "<<camera.camera2d.left<<" "<<camera.camera2d.right<<std::endl;
+    std::cout<<"Camera2d:  b/t: "<<camera.camera2d.bottom<<" "<<camera.camera2d.top<<std::endl;
+    std::cout<<"    near/far: "<<camera.nearPlane<<"/"<<camera.farPlane<<std::endl;
+    std::cout<<"         w/h: "<<camera.width<<"/"<<camera.height<<std::endl;
     */
 }
 
@@ -101,23 +101,23 @@ void Render3D(const vtkm::cont::DataSet &ds,
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
-    vtkm::rendering::View view;
-    Set3DView(view, coords, W, H);
+    vtkm::rendering::Camera camera;
+    Set3DView(camera, coords, W, H);
 
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceOSMesa surface(W,H,bg);
 
-    scene.Plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
-                                                ds.GetCoordinateSystem(),
-                                                ds.GetField(fieldNm),
-                                                vtkm::rendering::ColorTable(ctName)));
+    scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
+                                                  ds.GetCoordinateSystem(),
+                                                  ds.GetField(fieldNm),
+                                                  vtkm::rendering::ColorTable(ctName)));
 
-    //TODO: W/H in window.  bg in window (window sets surface/renderer).
-    vtkm::rendering::Window3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                              vtkm::rendering::RenderSurfaceOSMesa,
-                              vtkm::rendering::WorldAnnotatorGL>
-        w(scene, mapper, surface, view, bg);
+    //TODO: W/H in view.  bg in view (view sets surface/renderer).
+    vtkm::rendering::View3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+                            vtkm::rendering::RenderSurfaceOSMesa,
+                            vtkm::rendering::WorldAnnotatorGL>
+        w(scene, mapper, surface, camera, bg);
 
     w.Initialize();
     w.Paint();
@@ -133,21 +133,21 @@ void Render2D(const vtkm::cont::DataSet &ds,
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
-    vtkm::rendering::View view;
-    Set2DView(view, coords, W, H);
+    vtkm::rendering::Camera camera;
+    Set2DView(camera, coords, W, H);
 
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::RenderSurfaceOSMesa surface(W,H,bg);
 
-    scene.Plots.push_back(vtkm::rendering::Plot(ds.GetCellSet(),
-                                                ds.GetCoordinateSystem(),
-                                                ds.GetField(fieldNm),
-                                                vtkm::rendering::ColorTable(ctName)));
-    vtkm::rendering::Window2D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                              vtkm::rendering::RenderSurfaceOSMesa,
-                              vtkm::rendering::WorldAnnotatorGL>
-        w(scene, mapper, surface, view, bg);
+    scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
+                                                  ds.GetCoordinateSystem(),
+                                                  ds.GetField(fieldNm),
+                                                  vtkm::rendering::ColorTable(ctName)));
+    vtkm::rendering::View2D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
+                            vtkm::rendering::RenderSurfaceOSMesa,
+                            vtkm::rendering::WorldAnnotatorGL>
+        w(scene, mapper, surface, camera, bg);
 
     w.Initialize();
     w.Paint();

@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_Window_h
-#define vtk_m_rendering_Window_h
+#ifndef vtk_m_rendering_View_h
+#define vtk_m_rendering_View_h
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/BoundingBoxAnnotation.h>
@@ -36,7 +36,7 @@ namespace rendering {
 template<typename MapperType,
          typename SurfaceType,
          typename WorldAnnotatorType>
-class Window
+class View
 {
 public:
   MapperType Mapper;
@@ -45,7 +45,7 @@ public:
   Color BackgroundColor;
   WorldAnnotatorType WorldAnnotator;
 
-  Window(const MapperType &mapper,
+  View(const MapperType &mapper,
          const SurfaceType &surface,
          const vtkm::rendering::Camera &camera,
          const vtkm::rendering::Color &backgroundColor =
@@ -90,13 +90,13 @@ protected:
   }
 };
 
-// Window2D Window3D
+// View2D View3D
 template<typename MapperType,
          typename SurfaceType,
          typename WorldAnnotatorType>
-class Window3D : public Window<MapperType, SurfaceType,WorldAnnotatorType>
+class View3D : public View<MapperType, SurfaceType,WorldAnnotatorType>
 {
-  typedef Window<MapperType, SurfaceType,WorldAnnotatorType> Superclass;
+  typedef View<MapperType, SurfaceType,WorldAnnotatorType> Superclass;
 public:
   vtkm::rendering::Scene Scene;
   // 3D-specific annotations
@@ -107,7 +107,7 @@ public:
   vtkm::rendering::ColorBarAnnotation ColorBarAnnotation;
 
   VTKM_CONT_EXPORT
-  Window3D(const vtkm::rendering::Scene &scene,
+  View3D(const vtkm::rendering::Scene &scene,
            const MapperType &mapper,
            const SurfaceType &surface,
            const vtkm::rendering::Camera &camera,
@@ -136,11 +136,11 @@ public:
   VTKM_CONT_EXPORT
   virtual void RenderScreenAnnotations()
   {
-    if (this->Scene.Plots.size() > 0)
+    if (this->Scene.Actors.size() > 0)
     {
       //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
-      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].ScalarRange, 5);
-      this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].ColorTable);
+      this->ColorBarAnnotation.SetRange(this->Scene.Actors[0].ScalarRange, 5);
+      this->ColorBarAnnotation.SetColorTable(this->Scene.Actors[0].ColorTable);
       this->ColorBarAnnotation.Render(this->Camera, this->WorldAnnotator, this->Surface);
     }
   }
@@ -227,9 +227,9 @@ public:
 template<typename MapperType,
          typename SurfaceType,
          typename WorldAnnotatorType>
-class Window2D : public Window<MapperType, SurfaceType,WorldAnnotatorType>
+class View2D : public View<MapperType, SurfaceType,WorldAnnotatorType>
 {
-  typedef Window<MapperType, SurfaceType,WorldAnnotatorType> Superclass;
+  typedef View<MapperType, SurfaceType,WorldAnnotatorType> Superclass;
 public:
   vtkm::rendering::Scene Scene;
   // 2D-specific annotations
@@ -238,7 +238,7 @@ public:
   vtkm::rendering::ColorBarAnnotation ColorBarAnnotation;
 
   VTKM_CONT_EXPORT
-  Window2D(const vtkm::rendering::Scene &scene,
+  View2D(const vtkm::rendering::Scene &scene,
            const MapperType &mapper,
            const SurfaceType &surface,
            const vtkm::rendering::Camera &camera,
@@ -302,13 +302,13 @@ public:
     this->VerticalAxisAnnotation.Render(
           this->Camera, this->WorldAnnotator, this->Surface);
 
-    if (this->Scene.Plots.size() > 0)
+    if (this->Scene.Actors.size() > 0)
     {
       //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
-      this->ColorBarAnnotation.SetRange(this->Scene.Plots[0].ScalarRange.Min,
-                                        this->Scene.Plots[0].ScalarRange.Max,
+      this->ColorBarAnnotation.SetRange(this->Scene.Actors[0].ScalarRange.Min,
+                                        this->Scene.Actors[0].ScalarRange.Max,
                                         5);
-      this->ColorBarAnnotation.SetColorTable(this->Scene.Plots[0].ColorTable);
+      this->ColorBarAnnotation.SetColorTable(this->Scene.Actors[0].ColorTable);
       this->ColorBarAnnotation.Render(
             this->Camera, this->WorldAnnotator, this->Surface);
     }
@@ -317,4 +317,4 @@ public:
 
 }} //namespace vtkm::rendering
 
-#endif //vtk_m_rendering_Window_h
+#endif //vtk_m_rendering_View_h
