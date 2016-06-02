@@ -18,8 +18,37 @@
 ##  this software.
 ##============================================================================
 
+#-----------------------------------------------------------------------------
+# Build the configure file.
+# need to set numerous VTKm cmake properties to the naming convention
+# that we exepect for our C++ defines.
+
+set(VTKM_USE_DOUBLE_PRECISION ${VTKm_USE_DOUBLE_PRECISION})
+set(VTKM_USE_64BIT_IDS ${VTKm_USE_64BIT_IDS})
+
+set(VTKM_ENABLE_CUDA ${VTKm_ENABLE_CUDA})
+set(VTKM_ENABLE_TBB ${VTKm_ENABLE_TBB})
+
+set(VTKM_ENABLE_OPENGL_INTEROP ${VTKm_ENABLE_OPENGL_INTEROP})
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/Configure.h
+  @ONLY)
+vtkm_install_headers(
+  vtkm/internal ${CMAKE_CURRENT_BINARY_DIR}/Configure.h)
+
+unset(VTKM_ENABLE_OPENGL_INTEROP)
+
+unset(VTKM_ENABLE_TBB)
+unset(VTKM_ENABLE_CUDA)
+
+unset(VTKM_USE_64BIT_IDS)
+unset(VTKM_USE_DOUBLE_PRECISION)
+
+
 set(headers
   ArrayPortalUniformPointCoordinates.h
+  Assume.h
   ConfigureFor32.h
   ConfigureFor64.h
   ConnectivityStructuredInternals.h
