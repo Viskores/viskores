@@ -20,8 +20,8 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/rendering/Actor.h>
+#include <vtkm/rendering/CanvasOSMesa.h>
 #include <vtkm/rendering/MapperGL.h>
-#include <vtkm/rendering/RenderSurfaceOSMesa.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/cont/DeviceAdapter.h>
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
   }
 
   typedef vtkm::rendering::MapperGL< > Mapper;
-  typedef vtkm::rendering::RenderSurfaceOSMesa RenderSurface;
+  typedef vtkm::rendering::CanvasOSMesa Canvas;
 
   // Set up a camera for rendering the input data
   const vtkm::cont::CoordinateSystem coords = inputData.GetCoordinateSystem();
@@ -95,17 +95,17 @@ int main(int argc, char* argv[])
   // Create a scene for rendering the input data
   vtkm::rendering::Scene3D scene;
   vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-  vtkm::rendering::RenderSurfaceOSMesa surface(512,512,bg);
+  vtkm::rendering::CanvasOSMesa surface(512,512,bg);
   scene.Actors.push_back(vtkm::rendering::Actor(inputData.GetCellSet(),
                                               inputData.GetCoordinateSystem(),
                                               inputData.GetField(fieldName),
                                               colorTable));
 
   // Create a view and use it to render the input data using OS Mesa
-  vtkm::rendering::View3D<Mapper, RenderSurface> view1(scene,
-                                                       mapper,
-                                                       surface,
-                                                       bg);
+  vtkm::rendering::View3D<Mapper, Canvas> view1(scene,
+                                                mapper,
+                                                surface,
+                                                bg);
   view1.Initialize();
   view1.Paint();
   view1.SaveAs("demo_input.pnm");
@@ -127,10 +127,10 @@ int main(int argc, char* argv[])
                                                 outputData.GetField(fieldName),
                                                 colorTable));
 
-  vtkm::rendering::View3D< Mapper, RenderSurface> view2(scene,
-                                                        mapper,
-                                                        surface,
-                                                        bg);
+  vtkm::rendering::View3D< Mapper, Canvas> view2(scene,
+                                                 mapper,
+                                                 surface,
+                                                 bg);
   view2.Initialize();
   view2.Paint();
   view2.SaveAs("demo_output.pnm");

@@ -968,7 +968,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
 
 
   VTKM_CONT_EXPORT
-  void Render(RenderSurfaceRayTracer *surface)
+  void Render(CanvasRayTracer *canvas)
   {
     if(IsSceneDirty)
     {
@@ -1068,7 +1068,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
     vtkm::worklet::DispatcherMapField< CompositeBackground >( CompositeBackground( BackgroundColor ) )
       .Invoke( camera.FrameBuffer );
 
-    camera.WriteToSurface(surface, Rays.MinDistance);
+    camera.WriteToSurface(canvas, Rays.MinDistance);
   } //Render
 
   VTKM_CONT_EXPORT

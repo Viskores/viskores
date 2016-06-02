@@ -20,13 +20,13 @@
 #ifndef vtk_m_rendering_MapperVolume_h
 #define vtk_m_rendering_MapperVolume_h
 
+#include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Triangulator.h>
 #include <vtkm/rendering/raytracing/VolumeRendererStructured.h>
 #include <vtkm/rendering/raytracing/Camera.h>
-#include <vtkm/rendering/RenderSurfaceRayTracer.h>
-#include <vtkm/rendering/Camera.h>
 
 #include <typeinfo>
 
@@ -37,12 +37,12 @@ class MapperVolume : public Mapper
 {
 protected:
   vtkm::rendering::raytracing::VolumeRendererStructured<DeviceAdapter>  Tracer;
-  RenderSurfaceRayTracer *Surface;
+  CanvasRayTracer *Canvas;
 public:
   VTKM_CONT_EXPORT
   MapperVolume()
   {
-    Surface = NULL;
+    this->Canvas = NULL;
   }
 
   VTKM_CONT_EXPORT
@@ -52,16 +52,16 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void SetRenderSurface(RenderSurface *surface)
+  void SetCanvas(vtkm::rendering::Canvas *canvas)
   {
-    if(surface != NULL)
+    if(canvas != NULL)
     {
 
-      Surface = dynamic_cast<RenderSurfaceRayTracer*>(surface);
-      if(Surface == NULL)
+      this->Canvas = dynamic_cast<CanvasRayTracer*>(canvas);
+      if(this->Canvas == NULL)
       {
         throw vtkm::cont::ErrorControlBadValue(
-          "Volume Render: bad surface type. Must be RenderSurfaceRayTracer");
+          "Volume Render: bad canvas type. Must be CanvasRayTracer");
       }
     }
   }
@@ -92,7 +92,7 @@ public:
       Tracer.SetData(coords, scalarField, coordsBounds, cellSetStructured3D, scalarRange);
       Tracer.SetColorMap(ColorMap);
       Tracer.SetBackgroundColor(this->BackgroundColor);
-      Tracer.Render(Surface);
+      Tracer.Render(this->Canvas);
     }
 
   }

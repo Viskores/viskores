@@ -22,8 +22,8 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/RenderSurface.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 namespace vtkm {
 namespace rendering {
@@ -101,7 +101,7 @@ public:
   }
   virtual void Render(Camera &camera,
                       WorldAnnotator &worldAnnotator,
-                      RenderSurface &renderSurface) = 0;
+                      Canvas &canvas) = 0;
 };
 
 class ScreenTextAnnotation : public TextAnnotation
@@ -125,17 +125,17 @@ public:
   }
   virtual void Render(Camera &camera,
                       WorldAnnotator &,
-                      RenderSurface &renderSurface)
+                      Canvas &canvas)
   {
     vtkm::Float32 WindowAspect = vtkm::Float32(camera.Width) /
       vtkm::Float32(camera.Height);
 
-    renderSurface.AddText(XPos,YPos,
-                          Scale,
-                          Angle,
-                          WindowAspect,
-                          AnchorX, AnchorY,
-                          TextColor, Text);
+    canvas.AddText(XPos,YPos,
+                   Scale,
+                   Angle,
+                   WindowAspect,
+                   AnchorX, AnchorY,
+                   TextColor, Text);
   }
 };
 
@@ -164,7 +164,7 @@ public:
 
   virtual void Render(Camera &camera,
                       WorldAnnotator &worldAnnotator,
-                      RenderSurface &renderSurface)
+                      Canvas &canvas)
   {
     vtkm::Matrix<vtkm::Float32, 4, 4> V, P;
     V = camera.CreateViewMatrix();
@@ -174,7 +174,7 @@ public:
     vtkm::Vec<vtkm::Float32,4> p4s =
       vtkm::MatrixMultiply(vtkm::MatrixMultiply(P,V), p4w);
 
-    renderSurface.SetViewToScreenSpace(camera,true);
+    canvas.SetViewToScreenSpace(camera,true);
 
     vtkm::Float32 psx = p4s[0] / p4s[3];
     vtkm::Float32 psy = p4s[1] / p4s[3];
@@ -240,7 +240,7 @@ public:
                            AnchorX, AnchorY,
                            TextColor, Text);
 
-    renderSurface.SetViewToWorldSpace(camera,true);
+    canvas.SetViewToWorldSpace(camera,true);
   }
 };
 

@@ -50,13 +50,13 @@ public:
         coordinates.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   }
 
-  template<typename MapperType, typename SurfaceType>
+  template<typename MapperType, typename CanvasType>
   VTKM_CONT_EXPORT
   void Render(MapperType &mapper,
-              SurfaceType &surface,
+              CanvasType &canvas,
               vtkm::rendering::Camera &camera)
   {
-    mapper.SetRenderSurface(&surface);
+    mapper.SetCanvas(&canvas);
     mapper.SetActiveColorTable(this->ColorTable);
     mapper.RenderCells(this->Cells,
                        this->Coordinates,

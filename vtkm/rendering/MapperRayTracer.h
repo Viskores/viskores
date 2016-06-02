@@ -26,7 +26,7 @@
 #include <vtkm/rendering/Triangulator.h>
 #include <vtkm/rendering/raytracing/RayTracer.h>
 #include <vtkm/rendering/raytracing/Camera.h>
-#include <vtkm/rendering/RenderSurfaceRayTracer.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/Camera.h>
 namespace vtkm {
 namespace rendering {
@@ -38,7 +38,7 @@ class MapperRayTracer : public Mapper
 protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
   vtkm::rendering::raytracing::RayTracer<DeviceAdapter> Tracer;
-  RenderSurfaceRayTracer *Surface;
+  CanvasRayTracer *Surface;
 public:
   VTKM_CONT_EXPORT
   MapperRayTracer()
@@ -46,16 +46,16 @@ public:
     Surface = NULL;
   }
   VTKM_CONT_EXPORT
-  void SetRenderSurface(RenderSurface *surface)
+  void SetCanvas(Canvas *canvas)
   {
-    if(surface != NULL)
+    if(canvas != NULL)
     {
 
-      Surface = dynamic_cast<RenderSurfaceRayTracer*>(surface);
+      Surface = dynamic_cast<CanvasRayTracer*>(canvas);
       if(Surface == NULL)
       {
         throw vtkm::cont::ErrorControlBadValue(
-          "Ray Tracer: bad surface type. Must be RenderSurfaceRayTracer");
+          "Ray Tracer: bad canvas type. Must be CanvasRayTracer");
       }
     }
   }

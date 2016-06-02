@@ -20,8 +20,8 @@
 #include <vtkm/Bounds.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/rendering/Actor.h>
+#include <vtkm/rendering/CanvasOSMesa.h>
 #include <vtkm/rendering/MapperGL.h>
-#include <vtkm/rendering/RenderSurfaceOSMesa.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/WorldAnnotatorGL.h>
@@ -106,18 +106,18 @@ void Render3D(const vtkm::cont::DataSet &ds,
 
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-    vtkm::rendering::RenderSurfaceOSMesa surface(W,H,bg);
+    vtkm::rendering::CanvasOSMesa canvas(W,H,bg);
 
     scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
                                                   ds.GetCoordinateSystem(),
                                                   ds.GetField(fieldNm),
                                                   vtkm::rendering::ColorTable(ctName)));
 
-    //TODO: W/H in view.  bg in view (view sets surface/renderer).
+    //TODO: W/H in view.  bg in view (view sets canvas/renderer).
     vtkm::rendering::View3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                            vtkm::rendering::RenderSurfaceOSMesa,
+                            vtkm::rendering::CanvasOSMesa,
                             vtkm::rendering::WorldAnnotatorGL>
-        w(scene, mapper, surface, camera, bg);
+        w(scene, mapper, canvas, camera, bg);
 
     w.Initialize();
     w.Paint();
@@ -138,16 +138,16 @@ void Render2D(const vtkm::cont::DataSet &ds,
 
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-    vtkm::rendering::RenderSurfaceOSMesa surface(W,H,bg);
+    vtkm::rendering::CanvasOSMesa canvas(W,H,bg);
 
     scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
                                                   ds.GetCoordinateSystem(),
                                                   ds.GetField(fieldNm),
                                                   vtkm::rendering::ColorTable(ctName)));
     vtkm::rendering::View2D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                            vtkm::rendering::RenderSurfaceOSMesa,
+                            vtkm::rendering::CanvasOSMesa,
                             vtkm::rendering::WorldAnnotatorGL>
-        w(scene, mapper, surface, camera, bg);
+        w(scene, mapper, canvas, camera, bg);
 
     w.Initialize();
     w.Paint();

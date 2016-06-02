@@ -120,7 +120,7 @@ public:
   }
   virtual void Render(Camera &camera,
                       WorldAnnotator &worldAnnotator,
-                      RenderSurface &renderSurface)
+                      Canvas &canvas)
   {
     bool infront = true;
     worldAnnotator.AddLine(x0,y0,z0,
@@ -229,7 +229,7 @@ public:
 
     for (unsigned int i=0; i<nmajor; ++i)
     {
-      labels[i]->Render(camera, worldAnnotator, renderSurface);
+      labels[i]->Render(camera, worldAnnotator, canvas);
     }
   }
 };

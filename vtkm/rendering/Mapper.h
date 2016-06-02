@@ -22,8 +22,8 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/RenderSurface.h>
 namespace vtkm {
 namespace rendering {
 
@@ -80,7 +80,7 @@ public:
     virtual void EndScene()
     {
     }
-    virtual void SetRenderSurface(RenderSurface *vtkmNotUsed(surface))
+    virtual void SetCanvas(Canvas *vtkmNotUsed(surface))
     {
     }
 protected:

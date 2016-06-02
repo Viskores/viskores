@@ -17,13 +17,13 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_RenderSurfaceGL_h
-#define vtk_m_rendering_RenderSurfaceGL_h
+#ifndef vtk_m_rendering_CanvasGL_h
+#define vtk_m_rendering_CanvasGL_h
 
 #include <vtkm/Types.h>
 #include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/RenderSurface.h>
 #include <vtkm/rendering/BitmapFont.h>
 #include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/TextureGL.h>
@@ -36,13 +36,15 @@
 namespace vtkm {
 namespace rendering {
 
-class RenderSurfaceGL : public RenderSurface
+class CanvasGL : public Canvas
 {
 public:
   VTKM_CONT_EXPORT
-  RenderSurfaceGL(std::size_t w=1024, std::size_t h=1024,
-                  const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-    : RenderSurface(w,h,c)
+  CanvasGL(std::size_t w=1024,
+           std::size_t h=1024,
+           const vtkm::rendering::Color &c =
+             vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
+    : Canvas(w,h,c)
   {
   }
 
@@ -303,4 +305,4 @@ private:
 
 }} //namespace vtkm::rendering
 
-#endif //vtk_m_rendering_RenderSurfaceGL_h
+#endif //vtk_m_rendering_CanvasGL_h

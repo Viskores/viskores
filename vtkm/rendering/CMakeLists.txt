@@ -27,12 +27,12 @@ set(headers
   BitmapFontFactory.h
   BoundingBoxAnnotation.h
   Camera.h
+  Canvas.h
+  CanvasRayTracer.h
   Color.h
   ColorBarAnnotation.h
   ColorTable.h
   MatrixHelpers.h
-  RenderSurface.h
-  RenderSurfaceRayTracer.h
   Scene.h
   Mapper.h
   MapperRayTracer.h
@@ -44,18 +44,18 @@ set(headers
   )
 
 set(opengl_headers
-  RenderSurfaceGL.h
+  CanvasGL.h
   MapperGL.h
   TextureGL.h
   WorldAnnotatorGL.h
   )
 
 set(glx_headers
-  RenderSurfaceGLX.h
+  CanvasGLX.h
   )
 
 set(osmesa_headers
-  RenderSurfaceOSMesa.h
+  CanvasOSMesa.h
   )
 
 #-----------------------------------------------------------------------------

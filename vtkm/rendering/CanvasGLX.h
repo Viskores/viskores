@@ -17,12 +17,12 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_RenderSurfaceGLX_h
-#define vtk_m_rendering_RenderSurfaceGLX_h
+#ifndef vtk_m_rendering_CanvasGLX_h
+#define vtk_m_rendering_CanvasGLX_h
 
 #include <vtkm/Types.h>
+#include <vtkm/rendering/CanvasGL.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/RenderSurfaceGL.h>
 
 #include <GL/gl.h>
 #include <GL/glx.h>
@@ -32,13 +32,15 @@
 namespace vtkm {
 namespace rendering {
 
-class RenderSurfaceGLX : public RenderSurfaceGL
+class CanvasGLX : public CanvasGL
 {
 public:
   VTKM_CONT_EXPORT
-  RenderSurfaceGLX(std::size_t w=1024, std::size_t h=1024,
-                   const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-    : RenderSurfaceGL(w,h,c)
+  CanvasGLX(std::size_t w=1024,
+            std::size_t h=1024,
+            const vtkm::rendering::Color &c =
+              vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
+    : CanvasGL(w,h,c)
   {
     ctx = NULL;
   }
@@ -69,7 +71,7 @@ public:
   VTKM_CONT_EXPORT
   virtual void Finish()
   {
-    RenderSurfaceGL::Finish();
+    CanvasGL::Finish();
 
 
     /* TODO
@@ -92,4 +94,4 @@ private:
 
 }} //namespace vtkm::rendering
 
-#endif //vtk_m_rendering_RenderSurfaceGLX_h
+#endif //vtk_m_rendering_CanvasGLX_h

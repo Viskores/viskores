@@ -19,8 +19,8 @@
 //============================================================================
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/rendering/Actor.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
-#include <vtkm/rendering/RenderSurfaceRayTracer.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/WorldAnnotator.h>
@@ -74,17 +74,17 @@ void Render(const vtkm::cont::DataSet &ds,
 
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-    vtkm::rendering::RenderSurfaceRayTracer surface(W,H,bg);
+    vtkm::rendering::CanvasRayTracer canvas(W,H,bg);
     scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
                                                   ds.GetCoordinateSystem(),
                                                   ds.GetField(fieldNm),
                                                   vtkm::rendering::ColorTable(ctName)));
 
-    //TODO: W/H in view.  bg in view (view sets surface/renderer).
+    //TODO: W/H in view.  bg in view (view sets canvas/renderer).
     vtkm::rendering::View3D<vtkm::rendering::MapperRayTracer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                            vtkm::rendering::RenderSurfaceRayTracer,
+                            vtkm::rendering::CanvasRayTracer,
                             vtkm::rendering::WorldAnnotator>
-        w(scene, mapper, surface, camera, bg);
+        w(scene, mapper, canvas, camera, bg);
 
     w.Initialize();
     w.Paint();

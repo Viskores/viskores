@@ -40,15 +40,15 @@
 # include <GL/glut.h>
 #endif
 
+#include <vtkm/rendering/CanvasGL.h>
 #include <vtkm/rendering/MapperGL.h>
-#include <vtkm/rendering/RenderSurfaceGL.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/rendering/ColorTable.h>
 
 vtkm::rendering::View3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                          vtkm::rendering::RenderSurfaceGL,
-                          vtkm::rendering::WorldAnnotatorGL> *view = NULL;
+                        vtkm::rendering::CanvasGL,
+                        vtkm::rendering::WorldAnnotatorGL> *view = NULL;
 
 const vtkm::Int32 W = 512, H = 512;
 int buttonStates[3] = {GLUT_UP, GLUT_UP, GLUT_UP};
@@ -167,7 +167,7 @@ main(int argc, char* argv[])
     Set3DView(camera, coords, W, H);
 
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-    vtkm::rendering::RenderSurfaceGL surface(W,H,bg);
+    vtkm::rendering::CanvasGL surface(W,H,bg);
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::Scene scene;
@@ -178,7 +178,7 @@ main(int argc, char* argv[])
 
     //Create vtkm rendering stuff.
     view = new vtkm::rendering::View3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                                       vtkm::rendering::RenderSurfaceGL,
+                                       vtkm::rendering::CanvasGL,
                                        vtkm::rendering::WorldAnnotatorGL>(scene, mapper,
                                                                           surface, camera, bg);
     view->Initialize();

@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_RenderSurface_h
-#define vtk_m_rendering_RenderSurface_h
+#ifndef vtk_m_rendering_Canvas_h
+#define vtk_m_rendering_Canvas_h
 
 #include <vtkm/Types.h>
 #include <vtkm/rendering/Camera.h>
@@ -31,12 +31,14 @@
 namespace vtkm {
 namespace rendering {
 
-class RenderSurface
+class Canvas
 {
 public:
   VTKM_CONT_EXPORT
-  RenderSurface(std::size_t width=1024, std::size_t height=1024,
-                const vtkm::rendering::Color &color=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
+  Canvas(std::size_t width=1024,
+         std::size_t height=1024,
+         const vtkm::rendering::Color &color =
+           vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
     : Width(width), Height(height), BackgroundColor(color)
   {
     this->ColorBuffer.resize(width*height*4);
@@ -86,4 +88,4 @@ public:
 
 }} //namespace vtkm::rendering
 
-#endif //vtk_m_rendering_RenderSurface_h
+#endif //vtk_m_rendering_Canvas_h
