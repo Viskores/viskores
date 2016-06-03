@@ -23,11 +23,13 @@ set(unit_tests
   UnitTestSceneRendererVolume.cxx
 )
 
+set(libs)
 if (OSMESA_FOUND)
   set(unit_tests ${unit_tests}
     UnitTestSceneRendererOSMesa.cxx
     )
+  list(APPEND libs ${OSMESA_INCLUDE_DIR})
 endif()
 
 VTKM_unit_tests(SOURCES ${unit_tests}
-                LIBRARIES ${OSMESA_LIBRARY})
+                LIBRARIES ${libs})
