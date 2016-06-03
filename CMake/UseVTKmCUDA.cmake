@@ -91,9 +91,13 @@ if (VTKm_Base_FOUND)
     #detect what the propery is set too
     if(VTKm_CUDA_Architecture STREQUAL "native")
       #run execute_process to do auto_detection
-      execute_process(COMMAND "${CUDA_NVCC_EXECUTABLE}" "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${CMAKE_CURRENT_LIST_DIR}/VTKmDetectCUDAVersion.cxx"
+      set(command ${CUDA_NVCC_EXECUTABLE})
+      set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${CMAKE_CURRENT_LIST_DIR}/VTKmDetectCUDAVersion.cxx")
+      execute_process(COMMAND ${command} ${args}
                       RESULT_VARIABLE ran_properly
-                      OUTPUT_VARIABLE run_output)
+                      OUTPUT_VARIABLE run_output
+                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+      message(STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
 
       if(ran_properly EQUAL 0)
         #find the position of the "--generate-code" output. With some compilers such as
