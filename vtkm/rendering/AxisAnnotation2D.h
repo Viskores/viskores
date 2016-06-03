@@ -21,11 +21,10 @@
 #define vtk_m_rendering_AxisAnnotation2D_h
 
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/rendering/SceneRenderer.h>
+#include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Scene.h>
-#include <vtkm/rendering/RenderSurface.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/rendering/AxisAnnotation.h>
 #include <vtkm/rendering/TextAnnotation.h>
@@ -160,11 +159,11 @@ public:
     min_proportions.clear();
     min_proportions.insert(min_proportions.begin(), prop.begin(), prop.end());
   }
-  virtual void Render(View &view,
+  virtual void Render(Camera &camera,
                       WorldAnnotator &worldAnnotator,
-                      RenderSurface &renderSurface)
+                      Canvas &canvas)
   {
-    renderSurface.AddLine(x0,y0, x1,y1, linewidth, color);
+    canvas.AddLine(x0,y0, x1,y1, linewidth, color);
 
     // major ticks
     unsigned int nmajor = (unsigned int)maj_proportions.size();
@@ -185,7 +184,7 @@ public:
       vtkm::Float64 ys = yc - maj_ty*maj_toff;
       vtkm::Float64 ye = yc + maj_ty*(1. - maj_toff);
 
-      renderSurface.AddLine(xs,ys, xe,ye, 1.0, color);
+      canvas.AddLine(xs,ys, xe,ye, 1.0, color);
 
       if (maj_ty == 0)
       {
@@ -218,13 +217,13 @@ public:
         vtkm::Float64 ys = yc - min_ty*min_toff;
         vtkm::Float64 ye = yc + min_ty*(1. - min_toff);
 
-        renderSurface.AddLine(xs,ys, xe,ye, 1.0, color);
+        canvas.AddLine(xs,ys, xe,ye, 1.0, color);
       }
     }
 
     for (unsigned int i=0; i<nmajor; ++i)
     {
-      labels[i]->Render(view, worldAnnotator, renderSurface);
+      labels[i]->Render(camera, worldAnnotator, canvas);
     }
   }
 };

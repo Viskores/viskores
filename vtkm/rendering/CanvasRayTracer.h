@@ -17,14 +17,13 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_RenderSurfaceRayTracer_h
-#define vtk_m_rendering_RenderSurfaceRayTracer_h
+#ifndef vtk_m_rendering_CanvasRayTracer_h
+#define vtk_m_rendering_CanvasRayTracer_h
 
 #include <vtkm/Types.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/RenderSurface.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <iostream>
@@ -33,13 +32,15 @@
 namespace vtkm {
 namespace rendering {
 
-class RenderSurfaceRayTracer : public RenderSurface
+class CanvasRayTracer : public Canvas
 {
 public:
   VTKM_CONT_EXPORT
-  RenderSurfaceRayTracer(std::size_t width=1024, std::size_t height=1024,
-                         const vtkm::rendering::Color &color=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-    : RenderSurface(width,height,color)
+  CanvasRayTracer(std::size_t width=1024,
+                  std::size_t height=1024,
+                  const vtkm::rendering::Color &color =
+                    vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
+    : Canvas(width,height,color)
   {
     this->ColorArray = vtkm::cont::make_ArrayHandle(this->ColorBuffer);
     this->DepthArray = vtkm::cont::make_ArrayHandle(this->DepthBuffer);
@@ -112,4 +113,4 @@ public:
 
 }} //namespace vtkm::rendering
 
-#endif //vtk_m_rendering_RenderSurfaceRayTracer_h
+#endif //vtk_m_rendering_CanvasRayTracer_h

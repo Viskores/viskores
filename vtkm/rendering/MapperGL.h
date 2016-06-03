@@ -17,15 +17,15 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_SceneRendererGL_h
-#define vtk_m_rendering_SceneRendererGL_h
+#ifndef vtk_m_rendering_MapperGL_h
+#define vtk_m_rendering_MapperGL_h
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/rendering/SceneRenderer.h>
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Triangulator.h>
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 
@@ -38,18 +38,18 @@ namespace vtkm {
 namespace rendering {
 
 template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
-class SceneRendererGL : public SceneRenderer
+class MapperGL : public Mapper
 {
 public:
   VTKM_CONT_EXPORT
-  SceneRendererGL() {}
+  MapperGL() {}
 
   VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
                            vtkm::cont::Field &scalarField,
                            const vtkm::rendering::ColorTable &colorTable,
-                           vtkm::rendering::View &,
+                           vtkm::rendering::Camera &,
                            const vtkm::Range &scalarRange)
   {
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;
@@ -142,4 +142,4 @@ public:
 
 }} //namespace vtkm::rendering
 
-#endif //vtk_m_rendering_SceneRendererGL_h
+#endif //vtk_m_rendering_MapperGL_h

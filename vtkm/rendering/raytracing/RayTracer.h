@@ -463,7 +463,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void Render(RenderSurfaceRayTracer *surface)
+  void Render(CanvasRayTracer *canvas)
   {
     vtkm::cont::Timer<DeviceAdapter> renderTimer;
     if(IsSceneDirty)
@@ -493,7 +493,7 @@ public:
                      BackgroundColor);
 
 
-     camera.WriteToSurface(surface, Rays.Distance);
+     camera.WriteToSurface(canvas, Rays.Distance);
 
   }
 };//class RayTracer

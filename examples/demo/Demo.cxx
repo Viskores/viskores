@@ -19,11 +19,11 @@
 //============================================================================
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/rendering/Window.h>
-#include <vtkm/rendering/RenderSurface.h>
+#include <vtkm/rendering/Actor.h>
+#include <vtkm/rendering/CanvasOSMesa.h>
+#include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/Scene.h>
-#include <vtkm/rendering/Plot.h>
-#include <vtkm/rendering/SceneRendererOSMesa.h>
+#include <vtkm/rendering/View.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -65,13 +65,13 @@ int main(int argc, char* argv[])
     fieldName = "SCALARS:pointvar";
   }
 
-  typedef vtkm::rendering::SceneRendererOSMesa< > SceneRenderer;
-  typedef vtkm::rendering::RenderSurfaceOSMesa RenderSurface;
+  typedef vtkm::rendering::MapperGL< > Mapper;
+  typedef vtkm::rendering::CanvasOSMesa Canvas;
 
-  // Set up a view for rendering the input data
+  // Set up a camera for rendering the input data
   const vtkm::cont::CoordinateSystem coords = inputData.GetCoordinateSystem();
-  SceneRenderer sceneRenderer;
-  vtkm::rendering::View3D &view = sceneRenderer.GetView();
+  Mapper mapper;
+  vtkm::rendering::Camera3D &camera = mapper.GetCamera();
   vtkm::Float64 coordsBounds[6];
   coords.GetBounds(coordsBounds,VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   vtkm::Vec<vtkm::Float32,3> totalExtent;
@@ -80,35 +80,35 @@ int main(int argc, char* argv[])
   totalExtent[2] = vtkm::Float32(coordsBounds[5] - coordsBounds[4]);
   vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
   vtkm::Normalize(totalExtent);
-  view.LookAt = totalExtent * (mag * .5f);
-  view.Up = vtkm::make_Vec(0.f, 1.f, 0.f);
-  view.NearPlane = 1.f;
-  view.FarPlane = 100.f;
-  view.FieldOfView = 60.f;
-  view.Height = 512;
-  view.Width = 512;
-  view.Position = totalExtent * (mag * 2.f);
+  camera.LookAt = totalExtent * (mag * .5f);
+  camera.Up = vtkm::make_Vec(0.f, 1.f, 0.f);
+  camera.NearPlane = 1.f;
+  camera.FarPlane = 100.f;
+  camera.FieldOfView = 60.f;
+  camera.Height = 512;
+  camera.Width = 512;
+  camera.Position = totalExtent * (mag * 2.f);
   vtkm::rendering::ColorTable colorTable("thermal");
-  sceneRenderer.SetActiveColorTable(colorTable);
-  sceneRenderer.SetView(view);
+  mapper.SetActiveColorTable(colorTable);
+  mapper.SetCamera(camera);
 
   // Create a scene for rendering the input data
   vtkm::rendering::Scene3D scene;
   vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-  vtkm::rendering::RenderSurfaceOSMesa surface(512,512,bg);
-  scene.plots.push_back(vtkm::rendering::Plot(inputData.GetCellSet(),
+  vtkm::rendering::CanvasOSMesa surface(512,512,bg);
+  scene.Actors.push_back(vtkm::rendering::Actor(inputData.GetCellSet(),
                                               inputData.GetCoordinateSystem(),
                                               inputData.GetField(fieldName),
                                               colorTable));
 
-  // Create a window and use it to render the input data using OS Mesa
-  vtkm::rendering::Window3D<SceneRenderer, RenderSurface> w1(scene,
-                                                             sceneRenderer,
-                                                             surface,
-                                                             bg);
-  w1.Initialize();
-  w1.Paint();
-  w1.SaveAs("demo_input.pnm");
+  // Create a view and use it to render the input data using OS Mesa
+  vtkm::rendering::View3D<Mapper, Canvas> view1(scene,
+                                                mapper,
+                                                surface,
+                                                bg);
+  view1.Initialize();
+  view1.Paint();
+  view1.SaveAs("demo_input.pnm");
 
   // Create an isosurface filter
   vtkm::filter::MarchingCubes filter;
@@ -120,20 +120,20 @@ int main(int argc, char* argv[])
   filter.MapFieldOntoOutput(result, inputData.GetField(fieldName));
   vtkm::cont::DataSet& outputData = result.GetDataSet();
   // Render a separate image with the output isosurface
-  std::cout << "about to plot the results of the MarchingCubes filter" << std::endl;
-  scene.plots.clear();
-  scene.plots.push_back(vtkm::rendering::Plot(outputData.GetCellSet(),
-                                              outputData.GetCoordinateSystem(),
-                                              outputData.GetField(fieldName),
-                                              colorTable));
+  std::cout << "about to render the results of the MarchingCubes filter" << std::endl;
+  scene.Actors.clear();
+  scene.Actors.push_back(vtkm::rendering::Actor(outputData.GetCellSet(),
+                                                outputData.GetCoordinateSystem(),
+                                                outputData.GetField(fieldName),
+                                                colorTable));
 
-  vtkm::rendering::Window3D< SceneRenderer, RenderSurface> w2(scene,
-                                                              sceneRenderer,
-                                                              surface,
-                                                              bg);
-  w2.Initialize();
-  w2.Paint();
-  w2.SaveAs("demo_output.pnm");
+  vtkm::rendering::View3D< Mapper, Canvas> view2(scene,
+                                                 mapper,
+                                                 surface,
+                                                 bg);
+  view2.Initialize();
+  view2.Paint();
+  view2.SaveAs("demo_output.pnm");
 
   return 0;
 }

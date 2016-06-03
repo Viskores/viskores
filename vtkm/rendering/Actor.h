@@ -17,26 +17,26 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_Plot_h
-#define vtk_m_rendering_Plot_h
+#ifndef vtk_m_rendering_Actor_h
+#define vtk_m_rendering_Actor_h
 
 #include <vtkm/Assert.h>
-#include <vtkm/rendering/SceneRenderer.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/Mapper.h>
 #include <vector>
 
 namespace vtkm {
 namespace rendering {
 
-class Plot
+class Actor
 {
 public:
-  //Plot(points, cells, field, colortable) {}
+  //Actor(points, cells, field, colortable) {}
   VTKM_CONT_EXPORT
-  Plot(const vtkm::cont::DynamicCellSet &cells,
-       const vtkm::cont::CoordinateSystem &coordinates,
-       const vtkm::cont::Field &scalarField,
-       const vtkm::rendering::ColorTable &colorTable)
+  Actor(const vtkm::cont::DynamicCellSet &cells,
+        const vtkm::cont::CoordinateSystem &coordinates,
+        const vtkm::cont::Field &scalarField,
+        const vtkm::rendering::ColorTable &colorTable)
     : Cells(cells),
       Coordinates(coordinates),
       ScalarField(scalarField),
@@ -50,20 +50,20 @@ public:
         coordinates.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   }
 
-  template<typename SceneRendererType, typename SurfaceType>
+  template<typename MapperType, typename CanvasType>
   VTKM_CONT_EXPORT
-  void Render(SceneRendererType &sceneRenderer,
-              SurfaceType &surface,
-              vtkm::rendering::View &view)
+  void Render(MapperType &mapper,
+              CanvasType &canvas,
+              vtkm::rendering::Camera &camera)
   {
-    sceneRenderer.SetRenderSurface(&surface);
-    sceneRenderer.SetActiveColorTable(this->ColorTable);
-    sceneRenderer.RenderCells(this->Cells,
-                              this->Coordinates,
-                              this->ScalarField,
-                              this->ColorTable,
-                              view,
-                              this->ScalarRange);
+    mapper.SetCanvas(&canvas);
+    mapper.SetActiveColorTable(this->ColorTable);
+    mapper.RenderCells(this->Cells,
+                       this->Coordinates,
+                       this->ScalarField,
+                       this->ColorTable,
+                       camera,
+                       this->ScalarRange);
   }
 
   vtkm::cont::DynamicCellSet Cells;
@@ -77,4 +77,4 @@ public:
 
 }} //namespace vtkm::rendering
 
-#endif //vtk_m_rendering_Plot_h
+#endif //vtk_m_rendering_Actor_h

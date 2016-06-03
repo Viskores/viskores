@@ -21,9 +21,8 @@
 #define vtk_m_rendering_BoundingBoxAnnotation_h
 
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/rendering/SceneRenderer.h>
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 
@@ -60,7 +59,7 @@ public:
   {
     this->Color = c;
   }
-  virtual void Render(vtkm::rendering::View &, //view,
+  virtual void Render(vtkm::rendering::Camera &,
                       WorldAnnotator &annotator)
   {
     //win->SetupForWorldSpace();

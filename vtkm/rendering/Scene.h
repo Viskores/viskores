@@ -20,8 +20,8 @@
 #ifndef vtk_m_rendering_Scene_h
 #define vtk_m_rendering_Scene_h
 
-#include <vtkm/rendering/Plot.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/Actor.h>
+#include <vtkm/rendering/Camera.h>
 #include <vector>
 
 namespace vtkm {
@@ -30,27 +30,27 @@ namespace rendering {
 class Scene
 {
 public:
-  std::vector<vtkm::rendering::Plot> Plots;
+  std::vector<vtkm::rendering::Actor> Actors;
 
   Scene() {}
 
-  template<typename SceneRendererType, typename SurfaceType>
+  template<typename MapperType, typename SurfaceType>
   VTKM_CONT_EXPORT
-  void Render(SceneRendererType &sceneRenderer,
+  void Render(MapperType &mapper,
               SurfaceType &surface,
-              vtkm::rendering::View &view)
+              vtkm::rendering::Camera &camera)
   {
     vtkm::Bounds bounds;
 
-    sceneRenderer.StartScene();
-    for (std::size_t i = 0; i < this->Plots.size(); i++)
+    mapper.StartScene();
+    for (std::size_t i = 0; i < this->Actors.size(); i++)
     {
-      this->Plots[i].Render(sceneRenderer, surface, view);
+      this->Actors[i].Render(mapper, surface, camera);
 
-      // accumulate all Plots' spatial bounds into the scene spatial bounds
-      bounds.Include(this->Plots[i].SpatialBounds);
+      // accumulate all Actors' spatial bounds into the scene spatial bounds
+      bounds.Include(this->Actors[i].SpatialBounds);
     }
-    sceneRenderer.EndScene();
+    mapper.EndScene();
 
     this->SpatialBounds = bounds;
   }

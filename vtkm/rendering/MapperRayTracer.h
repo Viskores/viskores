@@ -17,45 +17,45 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_SceneRendererRayTracer_h
-#define vtk_m_rendering_SceneRendererRayTracer_h
+#ifndef vtk_m_rendering_MapperRayTracer_h
+#define vtk_m_rendering_MapperRayTracer_h
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
 #include <vtkm/rendering/ColorTable.h>
+#include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Triangulator.h>
-#include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/raytracing/RayTracer.h>
 #include <vtkm/rendering/raytracing/Camera.h>
-#include <vtkm/rendering/RenderSurfaceRayTracer.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
+#include <vtkm/rendering/Camera.h>
 namespace vtkm {
 namespace rendering {
 
 //  static bool doOnce = true;
 template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
-class SceneRendererRayTracer : public SceneRenderer
+class MapperRayTracer : public Mapper
 {
 protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
   vtkm::rendering::raytracing::RayTracer<DeviceAdapter> Tracer;
-  RenderSurfaceRayTracer *Surface;
+  CanvasRayTracer *Surface;
 public:
   VTKM_CONT_EXPORT
-  SceneRendererRayTracer()
+  MapperRayTracer()
   {
     Surface = NULL;
   }
   VTKM_CONT_EXPORT
-  void SetRenderSurface(RenderSurface *surface)
+  void SetCanvas(Canvas *canvas)
   {
-    if(surface != NULL)
+    if(canvas != NULL)
     {
 
-      Surface = dynamic_cast<RenderSurfaceRayTracer*>(surface);
+      Surface = dynamic_cast<CanvasRayTracer*>(canvas);
       if(Surface == NULL)
       {
         throw vtkm::cont::ErrorControlBadValue(
-          "Ray Tracer: bad surface type. Must be RenderSurfaceRayTracer");
+          "Ray Tracer: bad canvas type. Must be CanvasRayTracer");
       }
     }
   }
@@ -70,15 +70,14 @@ public:
                    const vtkm::cont::CoordinateSystem &coords,
                    vtkm::cont::Field &scalarField,
                    const vtkm::rendering::ColorTable &vtkmNotUsed(colorTable),
-                   vtkm::rendering::View &view,
+                   vtkm::rendering::Camera &camera,
                    const vtkm::Range &scalarRange)
   {
 
     vtkm::cont::Timer<DeviceAdapter> timer;
     const vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  indices;
-    vtkm::rendering::raytracing::Camera<DeviceAdapter> &camera = Tracer.GetCamera();
-    camera.SetParameters(view);
+    Tracer.GetCamera().SetParameters(camera);
     vtkm::Id numberOfTriangles;
 
     vtkm::Bounds dataBounds = coords.GetBounds(DeviceAdapter());
@@ -93,4 +92,4 @@ public:
   }
 };
 }} //namespace vtkm::rendering
-#endif //vtk_m_rendering_SceneRendererRayTracer_h
+#endif //vtk_m_rendering_MapperRayTracer_h

@@ -21,9 +21,8 @@
 #define vtk_m_rendering_AxisAnnotation3D_h
 
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/rendering/SceneRenderer.h>
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/rendering/AxisAnnotation.h>
@@ -119,9 +118,9 @@ public:
     lower = l;
     upper = u;
   }
-  virtual void Render(View &view,
+  virtual void Render(Camera &camera,
                       WorldAnnotator &worldAnnotator,
-                      RenderSurface &renderSurface)
+                      Canvas &canvas)
   {
     bool infront = true;
     worldAnnotator.AddLine(x0,y0,z0,
@@ -230,7 +229,7 @@ public:
 
     for (unsigned int i=0; i<nmajor; ++i)
     {
-      labels[i]->Render(view, worldAnnotator, renderSurface);
+      labels[i]->Render(camera, worldAnnotator, canvas);
     }
   }
 };

@@ -21,9 +21,7 @@
 #define vtk_m_rendering_WorldAnnotator_h
 
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/Scene.h>
 
 namespace vtkm {

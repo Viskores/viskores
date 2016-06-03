@@ -22,11 +22,11 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
 #include <vtkm/rendering/raytracing/Worklets.h>
-#include <vtkm/rendering/RenderSurfaceRayTracer.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -205,7 +205,7 @@ private:
   vtkm::Vec< vtkm::Float32, 3> Up;
   vtkm::Vec< vtkm::Float32, 3> LookAt;
   vtkm::Vec< vtkm::Float32, 3> Position;
-  View CameraView;
+  vtkm::rendering::Camera CameraView;
   vtkm::Matrix<vtkm::Float32,4,4> ViewProjectionMat;
 
 
@@ -245,15 +245,15 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void SetParameters(View &view)
+  void SetParameters(vtkm::rendering::Camera &camera)
   {
-    this->SetUp(view.View3d.Up);
-    this->SetLookAt(view.View3d.LookAt);
-    this->SetPosition(view.View3d.Position);
-    this->SetFieldOfView(view.View3d.FieldOfView);
-    this->SetHeight(view.Height);
-    this->SetWidth(view.Width);
-    this->CameraView = view;
+    this->SetUp(camera.Camera3d.Up);
+    this->SetLookAt(camera.Camera3d.LookAt);
+    this->SetPosition(camera.Camera3d.Position);
+    this->SetFieldOfView(camera.Camera3d.FieldOfView);
+    this->SetHeight(camera.Height);
+    this->SetWidth(camera.Width);
+    this->CameraView = camera;
   }
 
 
@@ -350,7 +350,7 @@ public:
     if(newFOVY != this->FovY) { this->IsViewDirty = true; }
     this->FovX = newFOVX;
     this->FovY = newFOVY;
-    this->CameraView.View3d.FieldOfView = this->FovX;
+    this->CameraView.Camera3d.FieldOfView = this->FovX;
   }
 
   VTKM_CONT_EXPORT
@@ -421,16 +421,16 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void WriteToSurface(RenderSurfaceRayTracer *surface,
+  void WriteToSurface(CanvasRayTracer *canvas,
                       const vtkm::cont::ArrayHandle<vtkm::Float32> &distances)
   {
-    if(surface == NULL)
+    if(canvas == NULL)
     {
       throw vtkm::cont::ErrorControlBadValue(
-            "Camera can not write to NULL surface");
+            "Camera can not write to NULL canvas");
     }
-    if(this->Height != vtkm::Int32(surface->Height) ||
-       this->Width != vtkm::Int32(surface->Width))
+    if(this->Height != vtkm::Int32(canvas->Height) ||
+       this->Width != vtkm::Int32(canvas->Width))
     {
       throw vtkm::cont::ErrorControlBadValue("Camera: suface-view mismatched dims");
     }
@@ -443,12 +443,12 @@ public:
                             this->SubsetWidth * this->SubsetHeight) )
         .Invoke( this->FrameBuffer,
                  distances,
-                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(surface->DepthArray),
-                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(surface->ColorArray) );
+                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(canvas->DepthArray),
+                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(canvas->ColorArray) );
 
     //Force the transfer so the vectors contain data from device
-    surface->ColorArray.GetPortalControl().Get(0);
-    surface->DepthArray.GetPortalControl().Get(0);
+    canvas->ColorArray.GetPortalControl().Get(0);
+    canvas->DepthArray.GetPortalControl().Get(0);
   }
 
   VTKM_CONT_EXPORT

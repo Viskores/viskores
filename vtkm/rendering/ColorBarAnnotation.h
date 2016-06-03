@@ -22,9 +22,9 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/AxisAnnotation2D.h>
+#include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/RenderSurface.h>
-#include <vtkm/rendering/View.h>
 
 
 namespace vtkm {
@@ -62,14 +62,14 @@ public:
     this->SetRange(range.Min, range.Max, nticks);
   }
 
-  virtual void Render(vtkm::rendering::View &view,
+  virtual void Render(vtkm::rendering::Camera &camera,
                       vtkm::rendering::WorldAnnotator &worldAnnotator,
-                      vtkm::rendering::RenderSurface &renderSurface)
+                      vtkm::rendering::Canvas &canvas)
   {
     vtkm::Float32 l = -0.88f, r = +0.88f;
     vtkm::Float32 b = +0.87f, t = +0.92f;
 
-    renderSurface.AddColorBar(l, t, r-l, b-t,
+    canvas.AddColorBar(l, t, r-l, b-t,
                               colortable, true);
 
     axis.SetColor(Color(1,1,1));
@@ -79,7 +79,7 @@ public:
     axis.SetMinorTickSize(0,0,0); // no minor ticks
     axis.SetLabelAlignment(TextAnnotation::HCenter,
                            TextAnnotation::Top);
-    axis.Render(view, worldAnnotator, renderSurface);
+    axis.Render(camera, worldAnnotator, canvas);
   }
 };
 

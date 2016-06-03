@@ -17,26 +17,26 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_SceneRenderer_h
-#define vtk_m_rendering_SceneRenderer_h
+#ifndef vtk_m_rendering_Mapper_h
+#define vtk_m_rendering_Mapper_h
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/View.h>
-#include <vtkm/rendering/RenderSurface.h>
 namespace vtkm {
 namespace rendering {
 
-class SceneRenderer
+class Mapper
 {
 public:
   VTKM_CONT_EXPORT
-  SceneRenderer()
+  Mapper()
   {
   }
 
   VTKM_CONT_EXPORT
-  virtual ~SceneRenderer()
+  virtual ~Mapper()
   {}
 
   VTKM_CONT_EXPORT
@@ -44,7 +44,7 @@ public:
                            const vtkm::cont::CoordinateSystem &coords,
                            vtkm::cont::Field &scalarField, //This should be const
                            const vtkm::rendering::ColorTable &colorTable,
-                           vtkm::rendering::View &view,
+                           vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange) = 0;
 
   VTKM_CONT_EXPORT
@@ -80,7 +80,7 @@ public:
     virtual void EndScene()
     {
     }
-    virtual void SetRenderSurface(RenderSurface *vtkmNotUsed(surface))
+    virtual void SetCanvas(Canvas *vtkmNotUsed(surface))
     {
     }
 protected:
@@ -88,4 +88,4 @@ protected:
     vtkm::Vec<vtkm::Float32,4> BackgroundColor;
 };
 }} //namespace vtkm::rendering
-#endif //vtk_m_rendering_SceneRenderer_h
+#endif //vtk_m_rendering_Mapper_h

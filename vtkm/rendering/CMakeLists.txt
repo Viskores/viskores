@@ -19,43 +19,43 @@
 ##============================================================================
 
 set(headers
+  Actor.h
   AxisAnnotation.h
   AxisAnnotation2D.h
   AxisAnnotation3D.h
   BitmapFont.h
   BitmapFontFactory.h
   BoundingBoxAnnotation.h
+  Camera.h
+  Canvas.h
+  CanvasRayTracer.h
   Color.h
   ColorBarAnnotation.h
   ColorTable.h
   MatrixHelpers.h
-  Plot.h
-  RenderSurface.h
-  RenderSurfaceRayTracer.h
   Scene.h
-  SceneRenderer.h
-  SceneRendererRayTracer.h
-  SceneRendererVolume.h
+  Mapper.h
+  MapperRayTracer.h
+  MapperVolume.h
   TextAnnotation.h
   Triangulator.h
   View.h
-  Window.h
   WorldAnnotator.h
   )
 
 set(opengl_headers
-  RenderSurfaceGL.h
-  SceneRendererGL.h
+  CanvasGL.h
+  MapperGL.h
   TextureGL.h
   WorldAnnotatorGL.h
   )
 
 set(glx_headers
-  RenderSurfaceGLX.h
+  CanvasGLX.h
   )
 
 set(osmesa_headers
-  RenderSurfaceOSMesa.h
+  CanvasOSMesa.h
   )
 
 #-----------------------------------------------------------------------------

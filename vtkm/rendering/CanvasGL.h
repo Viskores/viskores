@@ -17,13 +17,13 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_RenderSurfaceGL_h
-#define vtk_m_rendering_RenderSurfaceGL_h
+#ifndef vtk_m_rendering_CanvasGL_h
+#define vtk_m_rendering_CanvasGL_h
 
 #include <vtkm/Types.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/RenderSurface.h>
 #include <vtkm/rendering/BitmapFont.h>
 #include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/TextureGL.h>
@@ -36,13 +36,15 @@
 namespace vtkm {
 namespace rendering {
 
-class RenderSurfaceGL : public RenderSurface
+class CanvasGL : public Canvas
 {
 public:
   VTKM_CONT_EXPORT
-  RenderSurfaceGL(std::size_t w=1024, std::size_t h=1024,
-                  const vtkm::rendering::Color &c=vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-    : RenderSurface(w,h,c)
+  CanvasGL(std::size_t w=1024,
+           std::size_t h=1024,
+           const vtkm::rendering::Color &c =
+             vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
+    : Canvas(w,h,c)
   {
   }
 
@@ -62,22 +64,22 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  virtual void SetViewToWorldSpace(vtkm::rendering::View &v, bool clip)
+  virtual void SetViewToWorldSpace(vtkm::rendering::Camera &camera, bool clip)
   {
     vtkm::Float32 oglP[16], oglM[16];
 
-    MatrixHelpers::CreateOGLMatrix(v.CreateProjectionMatrix(), oglP);
+    MatrixHelpers::CreateOGLMatrix(camera.CreateProjectionMatrix(), oglP);
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(oglP);
-    MatrixHelpers::CreateOGLMatrix(v.CreateViewMatrix(), oglM);
+    MatrixHelpers::CreateOGLMatrix(camera.CreateViewMatrix(), oglM);
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(oglM);
 
-    SetViewportClipping(v, clip);
+    SetViewportClipping(camera, clip);
   }
 
   VTKM_CONT_EXPORT
-  virtual void SetViewToScreenSpace(vtkm::rendering::View &v, bool clip)
+  virtual void SetViewToScreenSpace(vtkm::rendering::Camera &camera, bool clip)
   {
     vtkm::Float32 oglP[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
     vtkm::Float32 oglM[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
@@ -98,27 +100,27 @@ public:
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(oglM);
 
-    SetViewportClipping(v, clip);
+    SetViewportClipping(camera, clip);
   }
 
   VTKM_CONT_EXPORT
-  virtual void SetViewportClipping(vtkm::rendering::View &v, bool clip)
+  virtual void SetViewportClipping(vtkm::rendering::Camera &camera, bool clip)
   {
     if (clip)
     {
       vtkm::Float32 vl, vr, vb, vt;
-      v.GetRealViewport(vl,vr,vb,vt);
-      vtkm::Float32 _x = static_cast<vtkm::Float32>(v.Width)*(1.f+vl)/2.f;
-      vtkm::Float32 _y = static_cast<vtkm::Float32>(v.Height)*(1.f+vb)/2.f;
-      vtkm::Float32 _w = static_cast<vtkm::Float32>(v.Width)*(vr-vl)/2.f;
-      vtkm::Float32 _h = static_cast<vtkm::Float32>(v.Height)*(vt-vb)/2.f;
+      camera.GetRealViewport(vl,vr,vb,vt);
+      vtkm::Float32 _x = static_cast<vtkm::Float32>(camera.Width)*(1.f+vl)/2.f;
+      vtkm::Float32 _y = static_cast<vtkm::Float32>(camera.Height)*(1.f+vb)/2.f;
+      vtkm::Float32 _w = static_cast<vtkm::Float32>(camera.Width)*(vr-vl)/2.f;
+      vtkm::Float32 _h = static_cast<vtkm::Float32>(camera.Height)*(vt-vb)/2.f;
 
       glViewport(static_cast<int>(_x), static_cast<int>(_y),
                  static_cast<int>(_w), static_cast<int>(_h));
     }
     else
     {
-      glViewport(0,0, v.Width, v.Height);
+      glViewport(0,0, camera.Width, camera.Height);
     }
   }
 
@@ -161,8 +163,8 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  virtual void AddColorBar(vtkm::Float32 x, vtkm::Float32 y, 
-                           vtkm::Float32 w, vtkm::Float32 h,                             
+  virtual void AddColorBar(vtkm::Float32 x, vtkm::Float32 y,
+                           vtkm::Float32 w, vtkm::Float32 h,
                            const vtkm::rendering::ColorTable &ct,
                            bool horizontal)
   {
@@ -303,4 +305,4 @@ private:
 
 }} //namespace vtkm::rendering
 
-#endif //vtk_m_rendering_RenderSurfaceGL_h
+#endif //vtk_m_rendering_CanvasGL_h

@@ -17,32 +17,32 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_SceneRendererVolume_h
-#define vtk_m_rendering_SceneRendererVolume_h
+#ifndef vtk_m_rendering_MapperVolume_h
+#define vtk_m_rendering_MapperVolume_h
 
+#include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/ColorTable.h>
+#include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Triangulator.h>
-#include <vtkm/rendering/SceneRenderer.h>
 #include <vtkm/rendering/raytracing/VolumeRendererStructured.h>
 #include <vtkm/rendering/raytracing/Camera.h>
-#include <vtkm/rendering/RenderSurfaceRayTracer.h>
-#include <vtkm/rendering/View.h>
 
 #include <typeinfo>
 
 namespace vtkm {
 namespace rendering {
 template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
-class SceneRendererVolume : public SceneRenderer
+class MapperVolume : public Mapper
 {
 protected:
   vtkm::rendering::raytracing::VolumeRendererStructured<DeviceAdapter>  Tracer;
-  RenderSurfaceRayTracer *Surface;
+  CanvasRayTracer *Canvas;
 public:
   VTKM_CONT_EXPORT
-  SceneRendererVolume()
+  MapperVolume()
   {
-    Surface = NULL;
+    this->Canvas = NULL;
   }
 
   VTKM_CONT_EXPORT
@@ -52,16 +52,16 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void SetRenderSurface(RenderSurface *surface)
+  void SetCanvas(vtkm::rendering::Canvas *canvas)
   {
-    if(surface != NULL)
+    if(canvas != NULL)
     {
 
-      Surface = dynamic_cast<RenderSurfaceRayTracer*>(surface);
-      if(Surface == NULL)
+      this->Canvas = dynamic_cast<CanvasRayTracer*>(canvas);
+      if(this->Canvas == NULL)
       {
         throw vtkm::cont::ErrorControlBadValue(
-          "Volume Render: bad surface type. Must be RenderSurfaceRayTracer");
+          "Volume Render: bad canvas type. Must be CanvasRayTracer");
       }
     }
   }
@@ -71,7 +71,7 @@ public:
                            const vtkm::cont::CoordinateSystem &coords,
                            vtkm::cont::Field &scalarField,
                            const vtkm::rendering::ColorTable &, //colorTable
-                           vtkm::rendering::View &view,
+                           vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange)
   {
 //    vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
@@ -88,15 +88,14 @@ public:
       vtkm::cont::CellSetStructured<3> cellSetStructured3D = cellset.Cast<vtkm::cont::CellSetStructured<3> >();
       //vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
       //vertices = dynamicCoordsHandle.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-      vtkm::rendering::raytracing::Camera<DeviceAdapter> &camera = Tracer.GetCamera();
-      camera.SetParameters(view);
+      Tracer.GetCamera().SetParameters(camera);
       Tracer.SetData(coords, scalarField, coordsBounds, cellSetStructured3D, scalarRange);
       Tracer.SetColorMap(ColorMap);
       Tracer.SetBackgroundColor(this->BackgroundColor);
-      Tracer.Render(Surface);
+      Tracer.Render(this->Canvas);
     }
 
   }
 };
 }} //namespace vtkm::rendering
-#endif //vtk_m_rendering_SceneRendererVolume_h
+#endif //vtk_m_rendering_MapperVolume_h
