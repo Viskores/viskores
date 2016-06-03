@@ -273,6 +273,7 @@ public:
     vtkm::Float32 viewportTop;
     vtkm::Float32 viewportBottom;
     this->Camera.GetRealViewport(
+          this->Canvas.Width, this->Canvas.Height,
           viewportLeft, viewportRight, viewportBottom, viewportTop);
 
     this->HorizontalAxisAnnotation.SetColor(vtkm::rendering::Color(1,1,1));

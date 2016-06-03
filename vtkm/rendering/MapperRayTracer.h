@@ -76,7 +76,7 @@ public:
 
     const vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  indices;
-    this->Tracer.GetCamera().SetParameters(camera);
+    this->Tracer.GetCamera().SetParameters(camera, *this->Canvas);
     vtkm::Id numberOfTriangles;
 
     vtkm::Bounds dataBounds = coords.GetBounds(DeviceAdapter());

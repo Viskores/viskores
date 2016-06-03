@@ -75,14 +75,14 @@ void mouseMove(int x, int y)
     //std::cout<<"MOUSE MOVE: "<<x<<" "<<y<<std::endl;
 
     //Map to XY
-    y = view->Camera.Height-y;
+    y = static_cast<int>(view->Canvas.Height-y);
 
     if (lastx != -1 && lasty != -1)
     {
-        vtkm::Float32 x1 = ((lastx*2.0f)/view->Camera.Width) - 1.0f;
-        vtkm::Float32 y1 = ((lasty*2.0f)/view->Camera.Height) - 1.0f;
-        vtkm::Float32 x2 = ((x*2.0f)/view->Camera.Width) - 1.0f;
-        vtkm::Float32 y2 = ((y*2.0f)/view->Camera.Height) - 1.0f;
+        vtkm::Float32 x1 = ((lastx*2.0f)/view->Canvas.Width) - 1.0f;
+        vtkm::Float32 y1 = ((lasty*2.0f)/view->Canvas.Height) - 1.0f;
+        vtkm::Float32 x2 = ((x*2.0f)/view->Canvas.Width) - 1.0f;
+        vtkm::Float32 y2 = ((y*2.0f)/view->Canvas.Height) - 1.0f;
 
         if (buttonStates[0] == GLUT_DOWN)
         {
@@ -119,8 +119,7 @@ void mouseCall(int button, int state, int vtkmNotUsed(x), int vtkmNotUsed(y))
 }
 
 void Set3DView(vtkm::rendering::Camera &camera,
-               const vtkm::cont::CoordinateSystem &coords,
-               vtkm::Int32 w, vtkm::Int32 h)
+               const vtkm::cont::CoordinateSystem &coords)
 {
     vtkm::Bounds coordsBounds =
         coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
@@ -139,8 +138,6 @@ void Set3DView(vtkm::rendering::Camera &camera,
     camera.Camera3d.FieldOfView = 60.f;
     camera.NearPlane = 1.f;
     camera.FarPlane = 100.f;
-    camera.Width = w;
-    camera.Height = h;
 }
 
 // Compute and render an isosurface for a uniform grid example
@@ -164,7 +161,7 @@ main(int argc, char* argv[])
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
 
     vtkm::rendering::Camera camera;
-    Set3DView(camera, coords, W, H);
+    Set3DView(camera, coords);
 
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::CanvasGL canvas(bg);

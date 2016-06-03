@@ -241,14 +241,15 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void SetParameters(const vtkm::rendering::Camera &camera)
+  void SetParameters(const vtkm::rendering::Camera &camera,
+                     const vtkm::rendering::CanvasRayTracer &canvas)
   {
     this->SetUp(camera.Camera3d.Up);
     this->SetLookAt(camera.Camera3d.LookAt);
     this->SetPosition(camera.Camera3d.Position);
     this->SetFieldOfView(camera.Camera3d.FieldOfView);
-    this->SetHeight(camera.Height);
-    this->SetWidth(camera.Width);
+    this->SetHeight(static_cast<vtkm::Int32>(canvas.Height));
+    this->SetWidth(static_cast<vtkm::Int32>(canvas.Width));
     this->CameraView = camera;
   }
 
@@ -266,7 +267,6 @@ public:
       this->IsResDirty = true;
       this->Height = height;
       this->SetFieldOfView(this->FovX);
-      this->CameraView.Height = this->Height;
     }
   }
 
@@ -289,7 +289,6 @@ public:
       this->IsResDirty = true;
       this->Width = width;
       this->SetFieldOfView(this->FovX);
-      this->CameraView.Width = this->Width;
     }
   }
 
@@ -435,7 +434,7 @@ public:
                             this->SubsetWidth,
                             this->SubsetMinX,
                             this->SubsetMinY,
-                            this->CameraView.CreateProjectionMatrix(),
+                            this->CameraView.CreateProjectionMatrix(canvas->Width, canvas->Height),
                             this->SubsetWidth * this->SubsetHeight) )
         .Invoke( this->FrameBuffer,
                  distances,
@@ -622,7 +621,7 @@ private:
 
     //Update our ViewProjection matrix
     this->ViewProjectionMat
-      = vtkm::MatrixMultiply(this->CameraView.CreateProjectionMatrix(),
+      = vtkm::MatrixMultiply(this->CameraView.CreateProjectionMatrix(this->Width, this->Height),
                              this->CameraView.CreateViewMatrix());
 
     //Find the pixel footprint

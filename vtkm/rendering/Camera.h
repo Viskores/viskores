@@ -43,8 +43,8 @@ class Camera
     }
 
     VTKM_CONT_EXPORT
-    vtkm::Matrix<vtkm::Float32,4,4> CreateProjectionMatrix(vtkm::Int32 &width,
-                                                           vtkm::Int32 &height,
+    vtkm::Matrix<vtkm::Float32,4,4> CreateProjectionMatrix(vtkm::Id &width,
+                                                           vtkm::Id &height,
                                                            vtkm::Float32 &nearPlane,
                                                            vtkm::Float32 &farPlane)
     {
@@ -140,8 +140,6 @@ public:
   Camera3D Camera3d;
   Camera2D Camera2d;
 
-  vtkm::Int32 Width;
-  vtkm::Int32 Height;
   vtkm::Float32 NearPlane;
   vtkm::Float32 FarPlane;
 
@@ -153,8 +151,6 @@ public:
   VTKM_CONT_EXPORT
   Camera(ViewTypeEnum vtype=Camera::VIEW_3D)
     : ViewType(vtype),
-      Width(-1),
-      Height(-1),
       NearPlane(0.f),
       FarPlane(1.f),
       ViewportLeft(-1.f),
@@ -177,21 +173,22 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::Matrix<vtkm::Float32,4,4> CreateProjectionMatrix()
+  vtkm::Matrix<vtkm::Float32,4,4> CreateProjectionMatrix(vtkm::Id screenWidth,
+                                                         vtkm::Id screenHeight)
   {
     if (this->ViewType == Camera::VIEW_3D)
     {
       return this->Camera3d.CreateProjectionMatrix(
-            this->Width, this->Height, this->NearPlane, this->FarPlane);
+            screenWidth, screenHeight, this->NearPlane, this->FarPlane);
     }
     else
     {
       vtkm::Float32 size = vtkm::Abs(this->Camera2d.Top - this->Camera2d.Bottom);
       vtkm::Float32 left,right,bottom,top;
-      this->GetRealViewport(left,right,bottom,top);
+      this->GetRealViewport(screenWidth,screenHeight,left,right,bottom,top);
       vtkm::Float32 aspect =
-          (static_cast<vtkm::Float32>(this->Width)*(right-left)) /
-          (static_cast<vtkm::Float32>(this->Height)*(top-bottom));
+          (static_cast<vtkm::Float32>(screenWidth)*(right-left)) /
+          (static_cast<vtkm::Float32>(screenHeight)*(top-bottom));
 
       return this->Camera2d.CreateProjectionMatrix(
             size, this->NearPlane, this->FarPlane, aspect);
@@ -199,7 +196,8 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void GetRealViewport(vtkm::Float32 &left, vtkm::Float32 &right,
+  void GetRealViewport(vtkm::Id screenWidth, vtkm::Id screenHeight,
+                       vtkm::Float32 &left, vtkm::Float32 &right,
                        vtkm::Float32 &bottom, vtkm::Float32 &top)
   {
     if (this->ViewType == Camera::VIEW_3D)
@@ -211,8 +209,8 @@ public:
     }
     else
     {
-      vtkm::Float32 maxvw = (this->ViewportRight-this->ViewportLeft) * static_cast<vtkm::Float32>(this->Width);
-      vtkm::Float32 maxvh = (this->ViewportTop-this->ViewportBottom) * static_cast<vtkm::Float32>(this->Height);
+      vtkm::Float32 maxvw = (this->ViewportRight-this->ViewportLeft) * static_cast<vtkm::Float32>(screenWidth);
+      vtkm::Float32 maxvh = (this->ViewportTop-this->ViewportBottom) * static_cast<vtkm::Float32>(screenHeight);
       vtkm::Float32 waspect = maxvw / maxvh;
       vtkm::Float32 daspect = (this->Camera2d.Right - this->Camera2d.Left) / (this->Camera2d.Top - this->Camera2d.Bottom);
       daspect *= this->Camera2d.XScale;

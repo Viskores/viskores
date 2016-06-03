@@ -83,7 +83,8 @@ public:
   {
     vtkm::Float32 oglP[16], oglM[16];
 
-    MatrixHelpers::CreateOGLMatrix(camera.CreateProjectionMatrix(), oglP);
+    MatrixHelpers::CreateOGLMatrix(
+          camera.CreateProjectionMatrix(this->Width, this->Height), oglP);
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(oglP);
     MatrixHelpers::CreateOGLMatrix(camera.CreateViewMatrix(), oglM);
@@ -124,18 +125,21 @@ public:
     if (clip)
     {
       vtkm::Float32 vl, vr, vb, vt;
-      camera.GetRealViewport(vl,vr,vb,vt);
-      vtkm::Float32 _x = static_cast<vtkm::Float32>(camera.Width)*(1.f+vl)/2.f;
-      vtkm::Float32 _y = static_cast<vtkm::Float32>(camera.Height)*(1.f+vb)/2.f;
-      vtkm::Float32 _w = static_cast<vtkm::Float32>(camera.Width)*(vr-vl)/2.f;
-      vtkm::Float32 _h = static_cast<vtkm::Float32>(camera.Height)*(vt-vb)/2.f;
+      camera.GetRealViewport(this->Width, this->Height, vl,vr,vb,vt);
+      vtkm::Float32 _x = static_cast<vtkm::Float32>(this->Width)*(1.f+vl)/2.f;
+      vtkm::Float32 _y = static_cast<vtkm::Float32>(this->Height)*(1.f+vb)/2.f;
+      vtkm::Float32 _w = static_cast<vtkm::Float32>(this->Width)*(vr-vl)/2.f;
+      vtkm::Float32 _h = static_cast<vtkm::Float32>(this->Height)*(vt-vb)/2.f;
 
-      glViewport(static_cast<int>(_x), static_cast<int>(_y),
-                 static_cast<int>(_w), static_cast<int>(_h));
+      glViewport(static_cast<GLint>(_x), static_cast<GLint>(_y),
+                 static_cast<GLsizei>(_w), static_cast<GLsizei>(_h));
     }
     else
     {
-      glViewport(0,0, camera.Width, camera.Height);
+      glViewport(0,
+                 0,
+                 static_cast<GLsizei>(this->Width),
+                 static_cast<GLsizei>(this->Height));
     }
   }
 

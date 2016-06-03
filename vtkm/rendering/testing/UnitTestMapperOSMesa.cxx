@@ -31,8 +31,7 @@
 namespace {
 
 void Set3DView(vtkm::rendering::Camera &camera,
-               const vtkm::cont::CoordinateSystem &coords,
-               vtkm::Int32 w, vtkm::Int32 h)
+               const vtkm::cont::CoordinateSystem &coords)
 {
     vtkm::Bounds coordsBounds = coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     //set up a default view
@@ -50,8 +49,6 @@ void Set3DView(vtkm::rendering::Camera &camera,
     camera.Camera3d.FieldOfView = 60.f;
     camera.NearPlane = 1.f;
     camera.FarPlane = 100.f;
-    camera.Width = w;
-    camera.Height = h;
     /*
     std::cout<<"Camera3d: pos: "<<camera.camera3d.pos<<std::endl;
     std::cout<<"       lookAt: "<<camera.camera3d.lookAt<<std::endl;
@@ -75,8 +72,6 @@ void Set2DView(vtkm::rendering::Camera &camera,
     camera.Camera2d.Top = static_cast<vtkm::Float32>(coordsBounds.Y.Max);
     camera.NearPlane = 1.f;
     camera.FarPlane = 100.f;
-    camera.Width = w;
-    camera.Height = h;
 
     // Give it some space for other annotations like a color bar
     camera.ViewportLeft = -.7f;
@@ -102,7 +97,7 @@ void Render3D(const vtkm::cont::DataSet &ds,
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::Camera camera;
-    Set3DView(camera, coords, W, H);
+    Set3DView(camera, coords);
 
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);

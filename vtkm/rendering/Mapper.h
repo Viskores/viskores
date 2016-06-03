@@ -80,7 +80,7 @@ public:
     virtual void EndScene()
     {
     }
-    virtual void SetCanvas(Canvas *vtkmNotUsed(surface))
+    virtual void SetCanvas(Canvas *vtkmNotUsed(canvas))
     {
     }
 protected:

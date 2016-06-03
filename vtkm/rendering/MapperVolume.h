@@ -88,7 +88,7 @@ public:
       vtkm::cont::CellSetStructured<3> cellSetStructured3D = cellset.Cast<vtkm::cont::CellSetStructured<3> >();
       //vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
       //vertices = dynamicCoordsHandle.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-      this->Tracer.GetCamera().SetParameters(camera);
+      this->Tracer.GetCamera().SetParameters(camera, *this->Canvas);
       this->Tracer.SetData(coords,
                            scalarField,
                            coordsBounds,
