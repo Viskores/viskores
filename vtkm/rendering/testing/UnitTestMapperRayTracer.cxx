@@ -35,25 +35,8 @@ void Set3DView(vtkm::rendering::Camera &camera,
     vtkm::Bounds coordsBounds =
         coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     //set up a default view
-    vtkm::Vec<vtkm::Float32,3> totalExtent;
-    totalExtent[0] = vtkm::Float32(coordsBounds.X.Length());
-    totalExtent[1] = vtkm::Float32(coordsBounds.Y.Length());
-    totalExtent[2] = vtkm::Float32(coordsBounds.Z.Length());
-    vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
-    vtkm::Normalize(totalExtent);
-
-    camera = vtkm::rendering::Camera(vtkm::rendering::Camera::VIEW_3D);
-    camera.Camera3d.Position = totalExtent * (mag * 2.f);
-    camera.Camera3d.Up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
-    camera.Camera3d.LookAt = totalExtent * (mag * .5f);
-    camera.Camera3d.FieldOfView = 60.f;
-    camera.NearPlane = 1.f;
-    camera.FarPlane = 100.f;
-
-    std::cout<<"Camera3d:  pos: "<<camera.Camera3d.Position<<std::endl;
-    std::cout<<"       lookAt: "<<camera.Camera3d.LookAt<<std::endl;
-    std::cout<<"           up: "<<camera.Camera3d.Up<<std::endl;
-    std::cout<<" near/far/fov: "<<camera.NearPlane<<"/"<<camera.FarPlane<<" "<<camera.Camera3d.FieldOfView<<std::endl;
+    camera = vtkm::rendering::Camera();
+    camera.ResetToBounds(coordsBounds);
 }
 
 void Render(const vtkm::cont::DataSet &ds,

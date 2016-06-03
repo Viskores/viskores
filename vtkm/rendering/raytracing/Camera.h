@@ -244,10 +244,10 @@ public:
   void SetParameters(const vtkm::rendering::Camera &camera,
                      const vtkm::rendering::CanvasRayTracer &canvas)
   {
-    this->SetUp(camera.Camera3d.Up);
-    this->SetLookAt(camera.Camera3d.LookAt);
-    this->SetPosition(camera.Camera3d.Position);
-    this->SetFieldOfView(camera.Camera3d.FieldOfView);
+    this->SetUp(camera.GetViewUp());
+    this->SetLookAt(camera.GetLookAt());
+    this->SetPosition(camera.GetPosition());
+    this->SetFieldOfView(camera.GetFieldOfView());
     this->SetHeight(static_cast<vtkm::Int32>(canvas.Height));
     this->SetWidth(static_cast<vtkm::Int32>(canvas.Width));
     this->CameraView = camera;
@@ -345,7 +345,7 @@ public:
     if(newFOVY != this->FovY) { this->IsViewDirty = true; }
     this->FovX = newFOVX;
     this->FovY = newFOVY;
-    this->CameraView.Camera3d.FieldOfView = this->FovX;
+    this->CameraView.SetFieldOfView(this->FovX);
   }
 
   VTKM_CONT_EXPORT

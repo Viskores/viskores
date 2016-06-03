@@ -159,9 +159,11 @@ public:
     this->BoxAnnotation.SetExtents(this->Scene.GetSpatialBounds());
     this->BoxAnnotation.Render(this->Camera, this->WorldAnnotator);
 
-    bool xtest = this->Camera.Camera3d.LookAt[0] > this->Camera.Camera3d.Position[0];
-    bool ytest = this->Camera.Camera3d.LookAt[1] > this->Camera.Camera3d.Position[1];
-    bool ztest = this->Camera.Camera3d.LookAt[2] > this->Camera.Camera3d.Position[2];
+    vtkm::Vec<vtkm::Float32,3> lookAt = this->Camera.GetLookAt();
+    vtkm::Vec<vtkm::Float32,3> position = this->Camera.GetPosition();
+    bool xtest = lookAt[0] > position[0];
+    bool ytest = lookAt[1] > position[1];
+    bool ztest = lookAt[2] > position[2];
 
     const bool outsideedges = true; // if false, do closesttriad
     if (outsideedges)
