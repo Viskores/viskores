@@ -248,8 +248,8 @@ public:
     this->SetLookAt(camera.GetLookAt());
     this->SetPosition(camera.GetPosition());
     this->SetFieldOfView(camera.GetFieldOfView());
-    this->SetHeight(static_cast<vtkm::Int32>(canvas.Height));
-    this->SetWidth(static_cast<vtkm::Int32>(canvas.Width));
+    this->SetHeight(static_cast<vtkm::Int32>(canvas.GetHeight()));
+    this->SetWidth(static_cast<vtkm::Int32>(canvas.GetWidth()));
     this->CameraView = camera;
   }
 
@@ -424,8 +424,8 @@ public:
       throw vtkm::cont::ErrorControlBadValue(
             "Camera can not write to NULL canvas");
     }
-    if(this->Height != vtkm::Int32(canvas->Height) ||
-       this->Width != vtkm::Int32(canvas->Width))
+    if(this->Height != vtkm::Int32(canvas->GetHeight()) ||
+       this->Width != vtkm::Int32(canvas->GetWidth()))
     {
       throw vtkm::cont::ErrorControlBadValue("Camera: suface-view mismatched dims");
     }
@@ -434,16 +434,16 @@ public:
                             this->SubsetWidth,
                             this->SubsetMinX,
                             this->SubsetMinY,
-                            this->CameraView.CreateProjectionMatrix(canvas->Width, canvas->Height),
+                            this->CameraView.CreateProjectionMatrix(canvas->GetWidth(), canvas->GetHeight()),
                             this->SubsetWidth * this->SubsetHeight) )
         .Invoke( this->FrameBuffer,
                  distances,
-                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(canvas->DepthBuffer),
-                 vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32,4> >(canvas->ColorBuffer) );
+                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(canvas->GetDepthBuffer()),
+                 vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32,4> >(canvas->GetColorBuffer()) );
 
     //Force the transfer so the vectors contain data from device
-    canvas->ColorBuffer.GetPortalControl().Get(0);
-    canvas->DepthBuffer.GetPortalControl().Get(0);
+    canvas->GetColorBuffer().GetPortalControl().Get(0);
+    canvas->GetDepthBuffer().GetPortalControl().Get(0);
   }
 
   VTKM_CONT_EXPORT

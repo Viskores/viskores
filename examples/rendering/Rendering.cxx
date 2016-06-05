@@ -75,14 +75,14 @@ void mouseMove(int x, int y)
     //std::cout<<"MOUSE MOVE: "<<x<<" "<<y<<std::endl;
 
     //Map to XY
-    y = static_cast<int>(view->Canvas.Height-y);
+    y = static_cast<int>(view->Canvas.GetHeight()-y);
 
     if (lastx != -1 && lasty != -1)
     {
-        vtkm::Float32 x1 = ((lastx*2.0f)/view->Canvas.Width) - 1.0f;
-        vtkm::Float32 y1 = ((lasty*2.0f)/view->Canvas.Height) - 1.0f;
-        vtkm::Float32 x2 = ((x*2.0f)/view->Canvas.Width) - 1.0f;
-        vtkm::Float32 y2 = ((y*2.0f)/view->Canvas.Height) - 1.0f;
+        vtkm::Float32 x1 = ((lastx*2.0f)/view->Canvas.GetWidth()) - 1.0f;
+        vtkm::Float32 y1 = ((lasty*2.0f)/view->Canvas.GetHeight()) - 1.0f;
+        vtkm::Float32 x2 = ((x*2.0f)/view->Canvas.GetWidth()) - 1.0f;
+        vtkm::Float32 y2 = ((y*2.0f)/view->Canvas.GetHeight()) - 1.0f;
 
         if (buttonStates[0] == GLUT_DOWN)
         {

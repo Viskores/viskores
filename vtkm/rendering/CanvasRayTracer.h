@@ -71,8 +71,8 @@ public:
   virtual void Clear()
   {
     vtkm::worklet::DispatcherMapField< ClearBuffers >(
-          ClearBuffers( this->BackgroundColor ) )
-      .Invoke( this->ColorBuffer, this->DepthBuffer);
+          ClearBuffers( this->GetBackgroundColor() ) )
+      .Invoke( this->GetColorBuffer(), this->GetDepthBuffer());
   }
 };
 

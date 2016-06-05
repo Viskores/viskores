@@ -55,12 +55,13 @@ public:
       throw vtkm::cont::ErrorControlBadValue("OSMesa context creation failed.");
     }
     vtkm::Vec<vtkm::Float32,4> *colorBuffer =
-        vtkm::cont::ArrayPortalToIteratorBegin(this->ColorBuffer.GetPortalControl());
+        vtkm::cont::ArrayPortalToIteratorBegin(
+                this->GetColorBuffer().GetPortalControl());
     if (!OSMesaMakeCurrent(ctx,
                            reinterpret_cast<vtkm::Float32*>(colorBuffer),
                            GL_FLOAT,
-                           static_cast<GLsizei>(this->Width),
-                           static_cast<GLsizei>(this->Height)))
+                           static_cast<GLsizei>(this->GetWidth()),
+                           static_cast<GLsizei>(this->GetHeight())))
     {
       throw vtkm::cont::ErrorControlBadValue("OSMesa context activation failed.");
     }
@@ -82,9 +83,10 @@ public:
   VTKM_CONT_EXPORT
   virtual void Clear()
   {
-    glClearColor(this->BackgroundColor.Components[0],
-                 this->BackgroundColor.Components[1],
-                 this->BackgroundColor.Components[2],
+    vtkm::rendering::Color backgroundColor = this->GetBackgroundColor();
+    glClearColor(backgroundColor.Components[0],
+                 backgroundColor.Components[1],
+                 backgroundColor.Components[2],
                  1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
@@ -101,14 +103,14 @@ public:
     GLboolean ret;
     ret = OSMesaGetDepthBuffer(ctx, &w, &h, &zbytes, (void**)&raw_zbuff);
     if (!ret ||
-        static_cast<vtkm::Id>(w)!=this->Width ||
-        static_cast<vtkm::Id>(h)!=this->Height)
+        static_cast<vtkm::Id>(w)!=this->GetWidth() ||
+        static_cast<vtkm::Id>(h)!=this->GetHeight())
     {
       throw vtkm::cont::ErrorControlBadValue("Wrong width/height in ZBuffer");
     }
     vtkm::cont::ArrayHandle<vtkm::Float32>::PortalControl depthPortal =
-        this->DepthBuffer.GetPortalControl();
-    vtkm::Id npixels = this->Width*this->Height;
+        this->GetDepthBuffer().GetPortalControl();
+    vtkm::Id npixels = this->GetWidth()*this->GetHeight();
     for (vtkm::Id i=0; i<npixels; i++)
     for (std::size_t i=0; i<npixels; i++)
     {

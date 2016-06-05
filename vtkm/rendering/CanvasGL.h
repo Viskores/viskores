@@ -65,9 +65,10 @@ public:
   VTKM_CONT_EXPORT
   virtual void Clear()
   {
-    glClearColor(this->BackgroundColor.Components[0],
-                 this->BackgroundColor.Components[1],
-                 this->BackgroundColor.Components[2],
+    vtkm::rendering::Color backgroundColor = this->GetBackgroundColor();
+    glClearColor(backgroundColor.Components[0],
+                 backgroundColor.Components[1],
+                 backgroundColor.Components[2],
                  1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
@@ -84,7 +85,9 @@ public:
     vtkm::Float32 oglP[16], oglM[16];
 
     MatrixHelpers::CreateOGLMatrix(
-          camera.CreateProjectionMatrix(this->Width, this->Height), oglP);
+          camera.CreateProjectionMatrix(this->GetWidth(),
+                                        this->GetHeight()),
+          oglP);
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(oglP);
     MatrixHelpers::CreateOGLMatrix(camera.CreateViewMatrix(), oglM);
@@ -125,11 +128,12 @@ public:
     if (clip)
     {
       vtkm::Float32 vl, vr, vb, vt;
-      camera.GetRealViewport(this->Width, this->Height, vl,vr,vb,vt);
-      vtkm::Float32 _x = static_cast<vtkm::Float32>(this->Width)*(1.f+vl)/2.f;
-      vtkm::Float32 _y = static_cast<vtkm::Float32>(this->Height)*(1.f+vb)/2.f;
-      vtkm::Float32 _w = static_cast<vtkm::Float32>(this->Width)*(vr-vl)/2.f;
-      vtkm::Float32 _h = static_cast<vtkm::Float32>(this->Height)*(vt-vb)/2.f;
+      camera.GetRealViewport(this->GetWidth(), this->GetHeight(),
+                             vl,vr,vb,vt);
+      vtkm::Float32 _x = static_cast<vtkm::Float32>(this->GetWidth())*(1.f+vl)/2.f;
+      vtkm::Float32 _y = static_cast<vtkm::Float32>(this->GetHeight())*(1.f+vb)/2.f;
+      vtkm::Float32 _w = static_cast<vtkm::Float32>(this->GetWidth())*(vr-vl)/2.f;
+      vtkm::Float32 _h = static_cast<vtkm::Float32>(this->GetHeight())*(vt-vb)/2.f;
 
       glViewport(static_cast<GLint>(_x), static_cast<GLint>(_y),
                  static_cast<GLsizei>(_w), static_cast<GLsizei>(_h));
@@ -138,8 +142,8 @@ public:
     {
       glViewport(0,
                  0,
-                 static_cast<GLsizei>(this->Width),
-                 static_cast<GLsizei>(this->Height));
+                 static_cast<GLsizei>(this->GetWidth()),
+                 static_cast<GLsizei>(this->GetHeight()));
     }
   }
 
@@ -148,26 +152,26 @@ public:
   {
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
-    VTKM_ASSERT(viewport[2] == this->Width);
-    VTKM_ASSERT(viewport[3] == this->Height);
+    VTKM_ASSERT(viewport[2] == this->GetWidth());
+    VTKM_ASSERT(viewport[3] == this->GetHeight());
 
     glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3],
         GL_RGBA, GL_FLOAT,
         vtkm::cont::ArrayPortalToIteratorBegin(
-          this->ColorBuffer.GetPortalControl()));
+          this->GetColorBuffer().GetPortalControl()));
   }
   VTKM_CONT_EXPORT
   virtual void RefreshDepthBuffer()
   {
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
-    VTKM_ASSERT(viewport[2] == this->Width);
-    VTKM_ASSERT(viewport[3] == this->Height);
+    VTKM_ASSERT(viewport[2] == this->GetWidth());
+    VTKM_ASSERT(viewport[3] == this->GetHeight());
 
     glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3],
         GL_DEPTH_COMPONENT, GL_FLOAT,
         vtkm::cont::ArrayPortalToIteratorBegin(
-          this->DepthBuffer.GetPortalControl()));
+          this->GetDepthBuffer().GetPortalControl()));
   }
 
   VTKM_CONT_EXPORT

@@ -53,6 +53,27 @@ public:
   VTKM_CONT_EXPORT
   virtual void Finish() = 0;
 
+  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorBufferType;
+  typedef vtkm::cont::ArrayHandle<vtkm::Float32> DepthBufferType;
+
+  VTKM_CONT_EXPORT
+  vtkm::Id GetWidth() const { return this->Width; }
+
+  VTKM_CONT_EXPORT
+  vtkm::Id GetHeight() const { return this->Height; }
+
+  VTKM_CONT_EXPORT
+  const ColorBufferType &GetColorBuffer() const { return this->ColorBuffer; }
+
+  VTKM_CONT_EXPORT
+  ColorBufferType &GetColorBuffer() { return this->ColorBuffer; }
+
+  VTKM_CONT_EXPORT
+  const DepthBufferType &GetDepthBuffer() const { return this->DepthBuffer; }
+
+  VTKM_CONT_EXPORT
+  DepthBufferType &GetDepthBuffer() { return this->DepthBuffer; }
+
   VTKM_CONT_EXPORT
   void ResizeBuffers(vtkm::Id width, vtkm::Id height)
   {
@@ -71,6 +92,18 @@ public:
 
     this->Width = width;
     this->Height = height;
+  }
+
+  VTKM_CONT_EXPORT
+  vtkm::rendering::Color GetBackgroundColor() const
+  {
+    return this->BackgroundColor;
+  }
+
+  VTKM_CONT_EXPORT
+  void SetBackgroundColor(const vtkm::rendering::Color &color)
+  {
+    this->BackgroundColor = color;
   }
 
   // If a subclass uses a system that renderers to different buffers, then
@@ -125,10 +158,9 @@ public:
                        Color,
                        std::string) {}
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorBufferType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Float32> DepthBufferType;
-
-  vtkm::Id Width, Height;
+private:
+  vtkm::Id Width;
+  vtkm::Id Height;
   vtkm::rendering::Color BackgroundColor;
   ColorBufferType ColorBuffer;
   DepthBufferType DepthBuffer;
