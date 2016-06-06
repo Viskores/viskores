@@ -24,11 +24,15 @@ set(unit_tests
 )
 
 set(libs)
-if (OSMESA_FOUND)
-  set(unit_tests ${unit_tests}
-    UnitTestMapperOSMesa.cxx
-    )
-  list(APPEND libs ${OSMESA_INCLUDE_DIR})
+if (OPENGL_FOUND)
+  list(APPEND libs ${OPENGL_LIBRARIES})
+
+  if (OSMESA_FOUND)
+    set(unit_tests ${unit_tests}
+      UnitTestMapperOSMesa.cxx
+      )
+    list(APPEND libs ${OSMESA_LIBRARY})
+  endif()
 endif()
 
 VTKM_unit_tests(SOURCES ${unit_tests}
