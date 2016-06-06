@@ -46,9 +46,7 @@
 #include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/rendering/ColorTable.h>
 
-vtkm::rendering::View3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                        vtkm::rendering::CanvasGL,
-                        vtkm::rendering::WorldAnnotatorGL> *view = NULL;
+vtkm::rendering::View3D *view = NULL;
 
 const vtkm::Int32 W = 512, H = 512;
 int buttonStates[3] = {GLUT_UP, GLUT_UP, GLUT_UP};
@@ -74,25 +72,28 @@ void mouseMove(int x, int y)
 {
     //std::cout<<"MOUSE MOVE: "<<x<<" "<<y<<std::endl;
 
+    const vtkm::Id width = view->GetCanvas().GetWidth();
+    const vtkm::Id height = view->GetCanvas().GetHeight();
+
     //Map to XY
-    y = static_cast<int>(view->Canvas.GetHeight()-y);
+    y = static_cast<int>(height-y);
 
     if (lastx != -1 && lasty != -1)
     {
-        vtkm::Float32 x1 = ((lastx*2.0f)/view->Canvas.GetWidth()) - 1.0f;
-        vtkm::Float32 y1 = ((lasty*2.0f)/view->Canvas.GetHeight()) - 1.0f;
-        vtkm::Float32 x2 = ((x*2.0f)/view->Canvas.GetWidth()) - 1.0f;
-        vtkm::Float32 y2 = ((y*2.0f)/view->Canvas.GetHeight()) - 1.0f;
+        vtkm::Float32 x1 = ((lastx*2.0f)/width) - 1.0f;
+        vtkm::Float32 y1 = ((lasty*2.0f)/height) - 1.0f;
+        vtkm::Float32 x2 = ((x*2.0f)/width) - 1.0f;
+        vtkm::Float32 y2 = ((y*2.0f)/height) - 1.0f;
 
         if (buttonStates[0] == GLUT_DOWN)
         {
             if (shiftKey)
-                view->Camera.Pan3D(x2-x1, y2-y1);
+                view->GetCamera().Pan3D(x2-x1, y2-y1);
             else
-                view->Camera.TrackballRotate(x1,y1, x2,y2);
+                view->GetCamera().TrackballRotate(x1,y1, x2,y2);
         }
         else if (buttonStates[1] == GLUT_DOWN)
-            view->Camera.Zoom3D(y2-y1);
+            view->GetCamera().Zoom3D(y2-y1);
     }
 
     lastx = x;
@@ -154,6 +155,7 @@ main(int argc, char* argv[])
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::CanvasGL canvas(bg);
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
+    vtkm::rendering::WorldAnnotatorGL annotator;
 
     vtkm::rendering::Scene scene;
     scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
@@ -162,10 +164,8 @@ main(int argc, char* argv[])
                                           vtkm::rendering::ColorTable("thermal")));
 
     //Create vtkm rendering stuff.
-    view = new vtkm::rendering::View3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                                       vtkm::rendering::CanvasGL,
-                                       vtkm::rendering::WorldAnnotatorGL>(scene, mapper,
-                                                                          canvas, camera, bg);
+    view = new vtkm::rendering::View3D(
+          scene, mapper, canvas, annotator, camera, bg);
     view->Initialize();
     glutMainLoop();
 

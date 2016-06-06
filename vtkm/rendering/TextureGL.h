@@ -47,7 +47,7 @@ public:
     this->Linear2D = true;
     this->LinearMIP = true;
   }
-  void Enable()
+  void Enable() const
   {
     if (this->ID == 0)
       return;
@@ -97,7 +97,7 @@ public:
       glEnable(GL_TEXTURE_2D);
     }
   }
-  void Disable()
+  void Disable() const
   {
     if (this->Dimension == 1)
       glDisable(GL_TEXTURE_1D);

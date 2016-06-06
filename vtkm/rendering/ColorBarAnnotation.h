@@ -62,8 +62,8 @@ public:
     this->SetRange(range.Min, range.Max, nticks);
   }
 
-  virtual void Render(vtkm::rendering::Camera &camera,
-                      vtkm::rendering::WorldAnnotator &worldAnnotator,
+  virtual void Render(const vtkm::rendering::Camera &camera,
+                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
                       vtkm::rendering::Canvas &canvas)
   {
     vtkm::Float32 l = -0.88f, r = +0.88f;

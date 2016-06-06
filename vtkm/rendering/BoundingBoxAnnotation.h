@@ -59,8 +59,8 @@ public:
   {
     this->Color = c;
   }
-  virtual void Render(vtkm::rendering::Camera &,
-                      WorldAnnotator &annotator)
+  virtual void Render(const vtkm::rendering::Camera &,
+                      const WorldAnnotator &annotator)
   {
     //win->SetupForWorldSpace();
 

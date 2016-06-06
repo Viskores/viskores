@@ -42,7 +42,7 @@ public:
                        vtkm::Float64 x1, vtkm::Float64 y1, vtkm::Float64 z1,
                        vtkm::Float32 linewidth,
                        const vtkm::rendering::Color &c,
-                       bool infront)
+                       bool infront) const
   {
     if (infront)
       glDepthRange(-.0001,.9999);
@@ -69,7 +69,7 @@ public:
                        vtkm::Float32 scale,
                        vtkm::Float32 anchorx, vtkm::Float32 anchory,
                        Color color,
-                       std::string text)
+                       std::string text) const
   {
     vtkm::Vec<vtkm::Float32,3> o(ox,oy,oz);
     vtkm::Vec<vtkm::Float32,3> r(rx,ry,rz);
@@ -86,7 +86,7 @@ public:
     glPushMatrix();
     glMultMatrixf(ogl);
     glColor3f(color.Components[0], color.Components[1], color.Components[2]);
-    RenderText(scale, anchorx, anchory, text);
+    this->RenderText(scale, anchorx, anchory, text);
     glPopMatrix();
   }
 
@@ -96,12 +96,19 @@ private:
 
   void RenderText(vtkm::Float32 scale,
                   vtkm::Float32 anchorx, vtkm::Float32 anchory,
-                  std::string text)
+                  std::string text) const
   {
     if (this->FontTexture.ID == 0)
     {
-      Font = BitmapFontFactory::CreateLiberation2Sans();
-      std::vector<unsigned char> &rawpngdata = this->Font.GetRawImageData();
+      // When we load a font, we save a reference to it for the next time we
+      // use it. Although technically we are changing the state, the logical
+      // state does not change, so we go ahead and do it in this const
+      // function.
+      vtkm::rendering::WorldAnnotatorGL *self =
+          const_cast<vtkm::rendering::WorldAnnotatorGL *>(this);
+      self->Font = BitmapFontFactory::CreateLiberation2Sans();
+      const std::vector<unsigned char> &rawpngdata =
+          this->Font.GetRawImageData();
 
       std::vector<unsigned char> rgba;
       unsigned long width, height;
@@ -112,7 +119,7 @@ private:
         return;
       }
 
-      this->FontTexture.CreateAlphaFromRGBA(int(width),int(height),rgba);
+      self->FontTexture.CreateAlphaFromRGBA(int(width),int(height),rgba);
     }
 
 

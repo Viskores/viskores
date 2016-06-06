@@ -114,11 +114,11 @@ public:
   virtual void RefreshDepthBuffer() {  }
 
   VTKM_CONT_EXPORT
-  virtual void SetViewToWorldSpace(vtkm::rendering::Camera &, bool) {}
+  virtual void SetViewToWorldSpace(const vtkm::rendering::Camera &, bool) {}
   VTKM_CONT_EXPORT
-  virtual void SetViewToScreenSpace(vtkm::rendering::Camera &, bool) {}
+  virtual void SetViewToScreenSpace(const vtkm::rendering::Camera &, bool) {}
   VTKM_CONT_EXPORT
-  void SetViewportClipping(vtkm::rendering::Camera &, bool) {}
+  void SetViewportClipping(const vtkm::rendering::Camera &, bool) {}
 
   VTKM_CONT_EXPORT
   virtual void SaveAs(const std::string &fileName)
@@ -145,18 +145,18 @@ public:
   virtual void AddLine(vtkm::Float64, vtkm::Float64,
                        vtkm::Float64, vtkm::Float64,
                        vtkm::Float32,
-                       const vtkm::rendering::Color &) {}
+                       const vtkm::rendering::Color &) const {}
   virtual void AddColorBar(vtkm::Float32, vtkm::Float32,
                            vtkm::Float32, vtkm::Float32,
                            const vtkm::rendering::ColorTable &,
-                           bool) {}
+                           bool) const {}
   virtual void AddText(vtkm::Float32, vtkm::Float32,
                        vtkm::Float32,
                        vtkm::Float32,
                        vtkm::Float32,
                        vtkm::Float32, vtkm::Float32,
                        Color,
-                       std::string) {}
+                       std::string) const {}
 
 private:
   vtkm::Id Width;

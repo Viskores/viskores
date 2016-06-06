@@ -47,6 +47,7 @@ void Render(const vtkm::cont::DataSet &ds,
     const vtkm::Int32 W = 512, H = 512;
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
     vtkm::rendering::MapperRayTracer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
+    vtkm::rendering::WorldAnnotator annotator;
 
     vtkm::rendering::Camera camera;
     Set3DView(camera, coords);
@@ -60,14 +61,11 @@ void Render(const vtkm::cont::DataSet &ds,
                                           vtkm::rendering::ColorTable(ctName)));
 
     //TODO: W/H in view.  bg in view (view sets canvas/renderer).
-    vtkm::rendering::View3D<vtkm::rendering::MapperRayTracer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                            vtkm::rendering::CanvasRayTracer,
-                            vtkm::rendering::WorldAnnotator>
-        w(scene, mapper, canvas, camera, bg);
+    vtkm::rendering::View3D view(scene, mapper, canvas, annotator, camera, bg);
 
-    w.Initialize();
-    w.Paint();
-    w.SaveAs(outputFile);
+    view.Initialize();
+    view.Paint();
+    view.SaveAs(outputFile);
 }
 
 void RenderTests()

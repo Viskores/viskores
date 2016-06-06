@@ -99,9 +99,9 @@ public:
   {
     Scale = s;
   }
-  virtual void Render(Camera &camera,
-                      WorldAnnotator &worldAnnotator,
-                      Canvas &canvas) = 0;
+  virtual void Render(const vtkm::rendering::Camera &camera,
+                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
+                      vtkm::rendering::Canvas &canvas) = 0;
 };
 
 class ScreenTextAnnotation : public TextAnnotation
@@ -123,9 +123,9 @@ public:
     XPos = ox;
     YPos = oy;
   }
-  virtual void Render(Camera &vtkmNotUsed(camera),
-                      WorldAnnotator &,
-                      Canvas &canvas)
+  virtual void Render(const vtkm::rendering::Camera &vtkmNotUsed(camera),
+                      const vtkm::rendering::WorldAnnotator &,
+                      vtkm::rendering::Canvas &canvas)
   {
     vtkm::Float32 WindowAspect = vtkm::Float32(canvas.GetWidth()) /
       vtkm::Float32(canvas.GetHeight());
@@ -162,9 +162,9 @@ public:
     ZPos = oz;
   }
 
-  virtual void Render(Camera &camera,
-                      WorldAnnotator &worldAnnotator,
-                      Canvas &canvas)
+  virtual void Render(const vtkm::rendering::Camera &camera,
+                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
+                      vtkm::rendering::Canvas &canvas)
   {
     vtkm::Matrix<vtkm::Float32, 4, 4> V, P;
     V = camera.CreateViewMatrix();

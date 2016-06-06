@@ -34,14 +34,14 @@ public:
                        vtkm::Float64, vtkm::Float64, vtkm::Float64,
                        vtkm::Float32,
                        const vtkm::rendering::Color &,
-                       bool=false) {}
+                       bool=false) const {}
   virtual void AddText(vtkm::Float32, vtkm::Float32, vtkm::Float32,
                        vtkm::Float32, vtkm::Float32, vtkm::Float32,
                        vtkm::Float32, vtkm::Float32, vtkm::Float32,
                        vtkm::Float32,
                        vtkm::Float32, vtkm::Float32,
                        Color,
-                       std::string) {}
+                       std::string) const {}
 };
 
 }} //namespace vtkm::rendering

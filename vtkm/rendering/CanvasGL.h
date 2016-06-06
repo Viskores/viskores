@@ -80,7 +80,8 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  virtual void SetViewToWorldSpace(vtkm::rendering::Camera &camera, bool clip)
+  virtual void SetViewToWorldSpace(const vtkm::rendering::Camera &camera,
+                                   bool clip)
   {
     vtkm::Float32 oglP[16], oglM[16];
 
@@ -98,7 +99,8 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  virtual void SetViewToScreenSpace(vtkm::rendering::Camera &camera, bool clip)
+  virtual void SetViewToScreenSpace(const vtkm::rendering::Camera &camera,
+                                    bool clip)
   {
     vtkm::Float32 oglP[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
     vtkm::Float32 oglM[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
@@ -123,7 +125,8 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  virtual void SetViewportClipping(vtkm::rendering::Camera &camera, bool clip)
+  virtual void SetViewportClipping(
+      const vtkm::rendering::Camera &camera, bool clip)
   {
     if (clip)
     {
@@ -178,7 +181,7 @@ public:
   virtual void AddLine(vtkm::Float64 x0, vtkm::Float64 y0,
                        vtkm::Float64 x1, vtkm::Float64 y1,
                        vtkm::Float32 linewidth,
-                       const vtkm::rendering::Color &c)
+                       const vtkm::rendering::Color &c) const
   {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
@@ -196,7 +199,7 @@ public:
   virtual void AddColorBar(vtkm::Float32 x, vtkm::Float32 y,
                            vtkm::Float32 w, vtkm::Float32 h,
                            const vtkm::rendering::ColorTable &ct,
-                           bool horizontal)
+                           bool horizontal) const
   {
     const int n = 256;
     glDisable(GL_DEPTH_TEST);
@@ -246,14 +249,14 @@ public:
                        vtkm::Float32 windowaspect,
                        vtkm::Float32 anchorx, vtkm::Float32 anchory,
                        Color color,
-                       std::string text)
+                       std::string text) const
   {
     glPushMatrix();
     glTranslatef(x,y,0);
     glScalef(1.f/windowaspect, 1, 1);
     glRotatef(angle, 0,0,1);
     glColor3f(color.Components[0], color.Components[1], color.Components[2]);
-    RenderText(scale, anchorx, anchory, text);
+    this->RenderText(scale, anchorx, anchory, text);
     glPopMatrix();
   }
 
@@ -263,12 +266,19 @@ private:
 
   void RenderText(vtkm::Float32 scale,
                   vtkm::Float32 anchorx, vtkm::Float32 anchory,
-                  std::string text)
+                  std::string text) const
   {
     if (this->FontTexture.ID == 0)
     {
-      Font = BitmapFontFactory::CreateLiberation2Sans();
-      std::vector<unsigned char> &rawpngdata = this->Font.GetRawImageData();
+      // When we load a font, we save a reference to it for the next time we
+      // use it. Although technically we are changing the state, the logical
+      // state does not change, so we go ahead and do it in this const
+      // function.
+      vtkm::rendering::CanvasGL *self =
+          const_cast<vtkm::rendering::CanvasGL *>(this);
+      self->Font = BitmapFontFactory::CreateLiberation2Sans();
+      const std::vector<unsigned char> &rawpngdata =
+          this->Font.GetRawImageData();
 
       std::vector<unsigned char> rgba;
       unsigned long width, height;
@@ -279,7 +289,7 @@ private:
         return;
       }
 
-      this->FontTexture.CreateAlphaFromRGBA(int(width),int(height),rgba);
+      self->FontTexture.CreateAlphaFromRGBA(int(width),int(height),rgba);
     }
 
 
