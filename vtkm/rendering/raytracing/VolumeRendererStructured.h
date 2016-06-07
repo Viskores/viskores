@@ -681,9 +681,14 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
       {
         for(vtkm::Int32 dim = 0; dim < 3; ++dim)
         {
-          if(rayDir[dim] == 0.f) continue;
-          vtkm::FloatDefault searchDir = (rayDir[dim] > 0.f) ? vtkm::FloatDefault(1.0) : vtkm::FloatDefault(-1.0);
           bool notFound = true;
+          if(rayDir[dim] == 0.f)
+          {
+            // If the ray direction is zero, then the ray does not move from
+            // cell to cell, and is therefore already found.
+            notFound = false;
+          }
+          vtkm::FloatDefault searchDir = (rayDir[dim] > 0.f) ? vtkm::FloatDefault(1.0) : vtkm::FloatDefault(-1.0);
           while(notFound)
           {
             vtkm::Id nextPoint = cell[dim] + static_cast<vtkm::Id>(searchDir);
