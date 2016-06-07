@@ -38,6 +38,12 @@ void Set3DView(vtkm::rendering::Camera &camera,
     //set up a default view
     camera = vtkm::rendering::Camera();
     camera.ResetToBounds(coordsBounds);
+
+    std::cout << "Camera3d: pos: " << camera.GetPosition() << std::endl;
+    std::cout << "       lookAt: " << camera.GetLookAt() << std::endl;
+    std::cout << "           up: " << camera.GetViewUp() << std::endl;
+    std::cout << "     near/far: " << camera.GetClippingRange() << std::endl;
+    std::cout << "  fieldOfView: " << camera.GetFieldOfView() << std::endl;
 }
 
 void Render(const vtkm::cont::DataSet &ds,
