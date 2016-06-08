@@ -87,12 +87,12 @@ void mouseMove(int x, int y)
         if (buttonStates[0] == GLUT_DOWN)
         {
             if (shiftKey)
-                view->GetCamera().Pan3D(x2-x1, y2-y1);
+                view->GetCamera().Pan(x2-x1, y2-y1);
             else
                 view->GetCamera().TrackballRotate(x1,y1, x2,y2);
         }
         else if (buttonStates[1] == GLUT_DOWN)
-            view->GetCamera().Zoom3D(y2-y1);
+            view->GetCamera().Zoom(y2-y1);
     }
 
     lastx = x;
