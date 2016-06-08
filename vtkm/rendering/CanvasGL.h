@@ -28,6 +28,7 @@
 #include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/TextureGL.h>
 #include <vtkm/rendering/MatrixHelpers.h>
+#include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 
 #include <iostream>
@@ -258,6 +259,12 @@ public:
     glColor3f(color.Components[0], color.Components[1], color.Components[2]);
     this->RenderText(scale, anchorx, anchory, text);
     glPopMatrix();
+  }
+
+  VTKM_CONT_EXPORT
+  virtual vtkm::rendering::WorldAnnotator *CreateWorldAnnotator() const
+  {
+    return new vtkm::rendering::WorldAnnotatorGL;
   }
 
 private:

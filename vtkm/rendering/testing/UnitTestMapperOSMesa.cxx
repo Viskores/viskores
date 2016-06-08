@@ -24,7 +24,6 @@
 #include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View.h>
-#include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -46,8 +45,7 @@ void Set3DView(vtkm::rendering::Camera &camera,
 }
 
 void Set2DView(vtkm::rendering::Camera &camera,
-               const vtkm::cont::CoordinateSystem &coords,
-               vtkm::Int32 w, vtkm::Int32 h)
+               const vtkm::cont::CoordinateSystem &coords)
 {
     vtkm::Bounds coordsBounds = coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     //set up a default view
@@ -89,7 +87,6 @@ void Render3D(const vtkm::cont::DataSet &ds,
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::CanvasOSMesa canvas(W,H,bg);
-    vtkm::rendering::WorldAnnotatorGL annotator;
 
     scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
                                                   ds.GetCoordinateSystem(),
@@ -97,12 +94,11 @@ void Render3D(const vtkm::cont::DataSet &ds,
                                                   vtkm::rendering::ColorTable(ctName)));
 
     //TODO: W/H in view.  bg in view (view sets canvas/renderer).
-    vtkm::rendering::View3D
-        w(scene, mapper, canvas, annotator, camera, bg);
+    vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
 
-    w.Initialize();
-    w.Paint();
-    w.SaveAs(outputFile);
+    view.Initialize();
+    view.Paint();
+    view.SaveAs(outputFile);
 }
 
 void Render2D(const vtkm::cont::DataSet &ds,
@@ -115,23 +111,21 @@ void Render2D(const vtkm::cont::DataSet &ds,
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::Camera camera;
-    Set2DView(camera, coords, W, H);
+    Set2DView(camera, coords);
 
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::CanvasOSMesa canvas(W,H,bg);
-    vtkm::rendering::WorldAnnotatorGL annotator;
 
     scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
                                           ds.GetCoordinateSystem(),
                                           ds.GetField(fieldNm),
                                           vtkm::rendering::ColorTable(ctName)));
-    vtkm::rendering::View2D
-        w(scene, mapper, canvas, annotator, camera, bg);
+    vtkm::rendering::View2D view(scene, mapper, canvas, camera, bg);
 
-    w.Initialize();
-    w.Paint();
-    w.SaveAs(outputFile);
+    view.Initialize();
+    view.Paint();
+    view.SaveAs(outputFile);
 
 }
 

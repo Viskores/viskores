@@ -24,6 +24,7 @@
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/ColorTable.h>
+#include <vtkm/rendering/WorldAnnotator.h>
 
 #include <iostream>
 #include <fstream>
@@ -43,6 +44,8 @@ public:
   {
     this->ResizeBuffers(width, height);
   }
+
+  virtual ~Canvas() {  }
 
   VTKM_CONT_EXPORT
   virtual void Initialize() = 0;
@@ -157,6 +160,19 @@ public:
                        vtkm::Float32, vtkm::Float32,
                        Color,
                        std::string) const {}
+
+  /// Creates a WorldAnnotator of a type that is paired with this Canvas. Other
+  /// types of world annotators might work, but this provides a default.
+  ///
+  /// The WorldAnnotator is created with the C++ new keyword (so it should be
+  /// deleted with delete later). A pointer to the created WorldAnnotator is
+  /// returned.
+  ///
+  VTKM_CONT_EXPORT
+  virtual vtkm::rendering::WorldAnnotator *CreateWorldAnnotator() const
+  {
+    return new vtkm::rendering::WorldAnnotator;
+  }
 
 private:
   vtkm::Id Width;

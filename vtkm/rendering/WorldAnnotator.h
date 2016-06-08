@@ -22,7 +22,6 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/Scene.h>
 
 namespace vtkm {
 namespace rendering {
@@ -30,6 +29,8 @@ namespace rendering {
 class WorldAnnotator
 {
 public:
+  virtual ~WorldAnnotator() {  }
+
   virtual void AddLine(vtkm::Float64, vtkm::Float64, vtkm::Float64,
                        vtkm::Float64, vtkm::Float64, vtkm::Float64,
                        vtkm::Float32,

@@ -37,6 +37,24 @@ class View
 {
 public:
   template<typename MapperType,
+           typename CanvasType>
+  View(const vtkm::rendering::Scene &scene,
+       const MapperType &mapper,
+       const CanvasType &canvas,
+       const vtkm::rendering::Camera &camera,
+       const vtkm::rendering::Color &backgroundColor =
+         vtkm::rendering::Color(0,0,0,1))
+    : Scene(scene),
+      MapperPointer(new MapperType(mapper)),
+      CanvasPointer(new CanvasType(canvas)),
+      Camera(camera),
+      BackgroundColor(backgroundColor)
+  {
+    this->MapperPointer->SetBackgroundColor(this->BackgroundColor);
+    this->WorldAnnotatorPointer = this->CanvasPointer->CreateWorldAnnotator();
+  }
+
+  template<typename MapperType,
            typename CanvasType,
            typename WorldAnnotatorType>
   View(const vtkm::rendering::Scene &scene,
@@ -54,6 +72,13 @@ public:
       BackgroundColor(backgroundColor)
   {
     this->MapperPointer->SetBackgroundColor(this->BackgroundColor);
+  }
+
+  virtual ~View()
+  {
+    delete this->MapperPointer;
+    delete this->CanvasPointer;
+    delete this->WorldAnnotatorPointer;
   }
 
   VTKM_CONT_EXPORT
@@ -157,6 +182,19 @@ private:
 class View3D : public vtkm::rendering::View
 {
 public:
+  template<typename MapperType,
+           typename CanvasType>
+  VTKM_CONT_EXPORT
+  View3D(const vtkm::rendering::Scene &scene,
+         const MapperType &mapper,
+         const CanvasType &canvas,
+         const vtkm::rendering::Camera &camera,
+         const vtkm::rendering::Color &backgroundColor =
+           vtkm::rendering::Color(0,0,0,1))
+    : View(scene, mapper, canvas, camera, backgroundColor)
+  {
+  }
+
   template<typename MapperType,
            typename CanvasType,
            typename WorldAnnotatorType>
@@ -296,6 +334,19 @@ private:
 class View2D : public vtkm::rendering::View
 {
 public:
+  template<typename MapperType,
+           typename CanvasType>
+  VTKM_CONT_EXPORT
+  View2D(const vtkm::rendering::Scene &scene,
+         const MapperType &mapper,
+         const CanvasType &canvas,
+         const vtkm::rendering::Camera &camera,
+         const vtkm::rendering::Color &backgroundColor =
+           vtkm::rendering::Color(0,0,0,1))
+    : View(scene, mapper, canvas, camera, backgroundColor)
+  {
+  }
+
   template<typename MapperType,
            typename CanvasType,
            typename WorldAnnotatorType>

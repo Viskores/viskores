@@ -43,7 +43,6 @@
 #include <vtkm/rendering/CanvasGL.h>
 #include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/View.h>
-#include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/rendering/ColorTable.h>
 
 vtkm::rendering::View3D *view = NULL;
@@ -155,7 +154,6 @@ main(int argc, char* argv[])
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::CanvasGL canvas(bg);
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
-    vtkm::rendering::WorldAnnotatorGL annotator;
 
     vtkm::rendering::Scene scene;
     scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
@@ -164,8 +162,7 @@ main(int argc, char* argv[])
                                           vtkm::rendering::ColorTable("thermal")));
 
     //Create vtkm rendering stuff.
-    view = new vtkm::rendering::View3D(
-          scene, mapper, canvas, annotator, camera, bg);
+    view = new vtkm::rendering::View3D(scene, mapper, canvas, camera, bg);
     view->Initialize();
     glutMainLoop();
 
