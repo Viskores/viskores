@@ -22,6 +22,7 @@
 #include <vtkm/Bounds.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
+#include <vtkm/Transform3D.h>
 #include <vtkm/Range.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/rendering/MatrixHelpers.h>
@@ -79,8 +80,8 @@ class Camera
       matrix(3,3) = 0.f;
 
       vtkm::Matrix<vtkm::Float32,4,4> T, Z;
-      T = MatrixHelpers::TranslateMatrix(this->XPan, this->YPan, 0);
-      Z = MatrixHelpers::ScaleMatrix(this->Zoom, this->Zoom, 1);
+      T = vtkm::Transform3DTranslate(this->XPan, this->YPan, 0.f);
+      Z = vtkm::Transform3DScale(this->Zoom, this->Zoom, 1.f);
       matrix = vtkm::MatrixMultiply(Z, vtkm::MatrixMultiply(T, matrix));
       return matrix;
     }
@@ -247,18 +248,6 @@ public:
         right = this->ViewportRight;
       }
     }
-  }
-
-  VTKM_CONT_EXPORT
-  vtkm::Vec<vtkm::Float32, 3>
-  MultVector(const vtkm::Matrix<vtkm::Float32,4,4> &matrix, vtkm::Vec<vtkm::Float32, 3> &v) const
-  {
-    vtkm::Vec<vtkm::Float32,4> v4(v[0],v[1],v[2], 1);
-    v4 = vtkm::MatrixMultiply(matrix, v4);
-    v[0] = v4[0];
-    v[1] = v4[1];
-    v[2] = v4[2];
-    return v;
   }
 
   /// \brief The mode of the camera (2D or 3D).
@@ -496,11 +485,11 @@ public:
 
     //Translate matrix
     vtkm::Matrix<vtkm::Float32,4,4> translate =
-        MatrixHelpers::TranslateMatrix(-this->Camera3D.LookAt);
+        vtkm::Transform3DTranslate(-this->Camera3D.LookAt);
 
     //Translate matrix
     vtkm::Matrix<vtkm::Float32,4,4> inverseTranslate =
-        MatrixHelpers::TranslateMatrix(this->Camera3D.LookAt);
+        vtkm::Transform3DTranslate(this->Camera3D.LookAt);
 
     vtkm::Matrix<vtkm::Float32,4,4> view = this->CreateViewMatrix();
     view(0,3) = 0;
@@ -516,9 +505,12 @@ public:
             inverseView, vtkm::MatrixMultiply(
               rotate, vtkm::MatrixMultiply(
                 view,translate))));
-    this->Camera3D.Position = MultVector(fullTransform, this->Camera3D.Position);
-    this->Camera3D.LookAt = MultVector(fullTransform, this->Camera3D.LookAt);
-    this->Camera3D.ViewUp = MultVector(fullTransform, this->Camera3D.ViewUp);
+    this->Camera3D.Position =
+        vtkm::Transform3DPoint(fullTransform, this->Camera3D.Position);
+    this->Camera3D.LookAt =
+        vtkm::Transform3DPoint(fullTransform, this->Camera3D.LookAt);
+    this->Camera3D.ViewUp =
+        vtkm::Transform3DVector(fullTransform, this->Camera3D.ViewUp);
   }
 
   /// \brief Set up the camera to look at geometry

@@ -182,13 +182,13 @@ public:
 
 
     vtkm::Matrix<vtkm::Float32, 4, 4> T;
-    T = MatrixHelpers::TranslateMatrix(psx,psy,-psz);
+    T = vtkm::Transform3DTranslate(psx,psy,-psz);
 
     vtkm::Float32 WindowAspect =
       vtkm::Float32(canvas.GetWidth()) / vtkm::Float32(canvas.GetHeight());
 
     vtkm::Matrix<vtkm::Float32, 4, 4> SW;
-    SW = MatrixHelpers::ScaleMatrix(1.f/WindowAspect, 1, 1);
+    SW = vtkm::Transform3DScale(1.f/WindowAspect, 1.f, 1.f);
 
     vtkm::Matrix<vtkm::Float32, 4, 4> SV;
     vtkm::MatrixIdentity(SV);
@@ -198,11 +198,11 @@ public:
       camera.GetRealViewport(canvas.GetWidth(),canvas.GetHeight(),vl,vr,vb,vt);
       vtkm::Float32 xs = (vr-vl);
       vtkm::Float32 ys = (vt-vb);
-      SV = MatrixHelpers::ScaleMatrix(2.f/xs, 2.f/ys, 1);
+      SV = vtkm::Transform3DScale(2.f/xs, 2.f/ys, 1.f);
     }
 
     vtkm::Matrix<vtkm::Float32, 4, 4> R;
-    R = MatrixHelpers::RotateZMatrix(Angle * 3.14159265f / 180.f);
+    R = vtkm::Transform3DRotateZ(Angle * 3.14159265f / 180.f);
 
     vtkm::Vec<vtkm::Float32,4> origin4(0,0,0,1);
     vtkm::Vec<vtkm::Float32,4> right4(1,0,0,0);
