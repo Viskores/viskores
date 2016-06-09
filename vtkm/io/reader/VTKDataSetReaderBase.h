@@ -397,7 +397,7 @@ private:
   void ReadHeader()
   {
     char vstring[] = "# vtk DataFile Version";
-    const int vlen = sizeof(vstring);
+    const std::size_t vlen = sizeof(vstring);
 
     // Read version line
     char vbuf[vlen];
