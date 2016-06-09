@@ -39,7 +39,6 @@ public:
   virtual ~Mapper()
   {}
 
-  VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
                            const vtkm::cont::Field &scalarField,

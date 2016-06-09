@@ -50,26 +50,15 @@ void Set2DView(vtkm::rendering::Camera &camera,
     vtkm::Bounds coordsBounds = coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     //set up a default view
 
-    camera = vtkm::rendering::Camera(vtkm::rendering::Camera::VIEW_2D);
-    camera.Camera2d.Left = static_cast<vtkm::Float32>(coordsBounds.X.Min);
-    camera.Camera2d.Right = static_cast<vtkm::Float32>(coordsBounds.X.Max);
-    camera.Camera2d.Bottom = static_cast<vtkm::Float32>(coordsBounds.Y.Min);
-    camera.Camera2d.Top = static_cast<vtkm::Float32>(coordsBounds.Y.Max);
-    camera.NearPlane = 1.f;
-    camera.FarPlane = 100.f;
+    camera = vtkm::rendering::Camera(vtkm::rendering::Camera::MODE_2D);
+    camera.SetViewRange2D(coordsBounds);
+    camera.SetClippingRange(1.f, 100.f);
 
     // Give it some space for other annotations like a color bar
-    camera.ViewportLeft = -.7f;
-    camera.ViewportRight = +.7f;
-    camera.ViewportBottom = -.7f;
-    camera.ViewportTop = +.7f;
+    camera.SetViewport(-0.7f, +0.7f, -0.7f, +0.7f);
 
-    /*
-    std::cout<<"Camera2d:  l/r: "<<camera.camera2d.left<<" "<<camera.camera2d.right<<std::endl;
-    std::cout<<"Camera2d:  b/t: "<<camera.camera2d.bottom<<" "<<camera.camera2d.top<<std::endl;
-    std::cout<<"    near/far: "<<camera.nearPlane<<"/"<<camera.farPlane<<std::endl;
-    std::cout<<"         w/h: "<<camera.width<<"/"<<camera.height<<std::endl;
-    */
+    std::cout << "Camera2D: Viewport: " << camera.GetViewport() << std::endl;
+    std::cout << "     ClippingRange: " << camera.GetClippingRange() << std::endl;
 }
 
 void Render3D(const vtkm::cont::DataSet &ds,
@@ -88,10 +77,10 @@ void Render3D(const vtkm::cont::DataSet &ds,
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::CanvasOSMesa canvas(W,H,bg);
 
-    scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
-                                                  ds.GetCoordinateSystem(),
-                                                  ds.GetField(fieldNm),
-                                                  vtkm::rendering::ColorTable(ctName)));
+    scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
+                                          ds.GetCoordinateSystem(),
+                                          ds.GetField(fieldNm),
+                                          vtkm::rendering::ColorTable(ctName)));
 
     //TODO: W/H in view.  bg in view (view sets canvas/renderer).
     vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);

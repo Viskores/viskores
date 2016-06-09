@@ -37,13 +37,14 @@ class CanvasOSMesa : public CanvasGL
 {
 public:
   VTKM_CONT_EXPORT
-  CanvasOSMesa(vtkm::Id w=1024,
-               vtkm::Id h=1024,
-               const vtkm::rendering::Color &c =
+  CanvasOSMesa(vtkm::Id width=1024,
+               vtkm::Id height=1024,
+               const vtkm::rendering::Color &color =
                  vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-    : CanvasGL(w,h,c)
+    : CanvasGL(color)
   {
     ctx = NULL;
+    this->ResizeBuffers(width, height);
   }
 
   VTKM_CONT_EXPORT

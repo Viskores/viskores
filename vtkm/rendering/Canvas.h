@@ -47,13 +47,9 @@ public:
 
   virtual ~Canvas() {  }
 
-  VTKM_CONT_EXPORT
   virtual void Initialize() = 0;
-  VTKM_CONT_EXPORT
   virtual void Activate() = 0;
-  VTKM_CONT_EXPORT
   virtual void Clear() = 0;
-  VTKM_CONT_EXPORT
   virtual void Finish() = 0;
 
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorBufferType;
