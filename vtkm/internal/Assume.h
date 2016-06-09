@@ -44,7 +44,17 @@
   } while (false) /* do-while prevents extra semicolon warnings */
 
 // VTKM_ASSUME_IMPL is compiler-specific:
-#if defined(VTKM_MSVC) || defined(VTKM_ICC)
+#if defined(VTKM_MSVC)
+//Currently NVCC/VS can generate invalid PTX code when it encounters __assume.
+//So while this issue is being resolved we will disable VTKM_ASSUME when inside
+//CUDA code being built by Visual Studio
+#  if defined(__CUDA_ARCH__)
+#   define VTKM_ASSUME_IMPL(cond) do {} while (false) /* no-op */
+#  else
+#   define VTKM_ASSUME_IMPL(cond) __assume(cond)
+# endif
+
+#elif defined(VTKM_ICC)
 # define VTKM_ASSUME_IMPL(cond) __assume(cond)
 #elif defined(VTKM_GCC) && ( __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5) )
 // Added in 4.5.0:
