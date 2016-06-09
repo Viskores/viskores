@@ -39,12 +39,11 @@ public:
   virtual ~Mapper()
   {}
 
-  VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
-                           vtkm::cont::Field &scalarField, //This should be const
+                           const vtkm::cont::Field &scalarField,
                            const vtkm::rendering::ColorTable &colorTable,
-                           vtkm::rendering::Camera &camera,
+                           const vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange) = 0;
 
   VTKM_CONT_EXPORT
@@ -80,7 +79,7 @@ public:
     virtual void EndScene()
     {
     }
-    virtual void SetCanvas(Canvas *vtkmNotUsed(surface))
+    virtual void SetCanvas(Canvas *vtkmNotUsed(canvas))
     {
     }
 protected:

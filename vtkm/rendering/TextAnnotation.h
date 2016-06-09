@@ -99,9 +99,9 @@ public:
   {
     Scale = s;
   }
-  virtual void Render(Camera &camera,
-                      WorldAnnotator &worldAnnotator,
-                      Canvas &canvas) = 0;
+  virtual void Render(const vtkm::rendering::Camera &camera,
+                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
+                      vtkm::rendering::Canvas &canvas) = 0;
 };
 
 class ScreenTextAnnotation : public TextAnnotation
@@ -123,12 +123,12 @@ public:
     XPos = ox;
     YPos = oy;
   }
-  virtual void Render(Camera &camera,
-                      WorldAnnotator &,
-                      Canvas &canvas)
+  virtual void Render(const vtkm::rendering::Camera &vtkmNotUsed(camera),
+                      const vtkm::rendering::WorldAnnotator &,
+                      vtkm::rendering::Canvas &canvas)
   {
-    vtkm::Float32 WindowAspect = vtkm::Float32(camera.Width) /
-      vtkm::Float32(camera.Height);
+    vtkm::Float32 WindowAspect = vtkm::Float32(canvas.GetWidth()) /
+      vtkm::Float32(canvas.GetHeight());
 
     canvas.AddText(XPos,YPos,
                    Scale,
@@ -162,13 +162,13 @@ public:
     ZPos = oz;
   }
 
-  virtual void Render(Camera &camera,
-                      WorldAnnotator &worldAnnotator,
-                      Canvas &canvas)
+  virtual void Render(const vtkm::rendering::Camera &camera,
+                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
+                      vtkm::rendering::Canvas &canvas)
   {
     vtkm::Matrix<vtkm::Float32, 4, 4> V, P;
     V = camera.CreateViewMatrix();
-    P = camera.CreateProjectionMatrix();
+    P = camera.CreateProjectionMatrix(canvas.GetWidth(), canvas.GetHeight());
 
     vtkm::Vec<vtkm::Float32,4> p4w(XPos,YPos,ZPos,1);
     vtkm::Vec<vtkm::Float32,4> p4s =
@@ -185,7 +185,7 @@ public:
     T = MatrixHelpers::TranslateMatrix(psx,psy,-psz);
 
     vtkm::Float32 WindowAspect =
-      vtkm::Float32(camera.Width) / vtkm::Float32(camera.Height);
+      vtkm::Float32(canvas.GetWidth()) / vtkm::Float32(canvas.GetHeight());
 
     vtkm::Matrix<vtkm::Float32, 4, 4> SW;
     SW = MatrixHelpers::ScaleMatrix(1.f/WindowAspect, 1, 1);
@@ -195,7 +195,7 @@ public:
     //if view type == 2D?
     {
       vtkm::Float32 vl, vr, vb, vt;
-      camera.GetRealViewport(vl,vr,vb,vt);
+      camera.GetRealViewport(canvas.GetWidth(),canvas.GetHeight(),vl,vr,vb,vt);
       vtkm::Float32 xs = (vr-vl);
       vtkm::Float32 ys = (vt-vb);
       SV = MatrixHelpers::ScaleMatrix(2.f/xs, 2.f/ys, 1);

@@ -118,9 +118,9 @@ public:
     lower = l;
     upper = u;
   }
-  virtual void Render(Camera &camera,
-                      WorldAnnotator &worldAnnotator,
-                      Canvas &canvas)
+  virtual void Render(const vtkm::rendering::Camera &camera,
+                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
+                      vtkm::rendering::Canvas &canvas)
   {
     bool infront = true;
     worldAnnotator.AddLine(x0,y0,z0,

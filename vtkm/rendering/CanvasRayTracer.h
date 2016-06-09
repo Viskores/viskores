@@ -36,79 +36,44 @@ class CanvasRayTracer : public Canvas
 {
 public:
   VTKM_CONT_EXPORT
-  CanvasRayTracer(std::size_t width=1024,
-                  std::size_t height=1024,
+  CanvasRayTracer(vtkm::Id width=1024,
+                  vtkm::Id height=1024,
                   const vtkm::rendering::Color &color =
                     vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
     : Canvas(width,height,color)
   {
-    this->ColorArray = vtkm::cont::make_ArrayHandle(this->ColorBuffer);
-    this->DepthArray = vtkm::cont::make_ArrayHandle(this->DepthBuffer);
   }
 
   class ClearBuffers : public vtkm::worklet::WorkletMapField
   {
     vtkm::rendering::Color ClearColor;
-    vtkm::Id NumPixels;
   public:
     VTKM_CONT_EXPORT
-    ClearBuffers(const vtkm::rendering::Color &clearColor,
-                 vtkm::Id numPixels)
-      : ClearColor(clearColor),
-        NumPixels(numPixels)
+    ClearBuffers(const vtkm::rendering::Color &clearColor)
+      : ClearColor(clearColor)
     {}
-    typedef void ControlSignature(FieldOut<>,
-                                  ExecObject);
-    typedef void ExecutionSignature(_1,
-                                    _2,
-                                    WorkIndex);
+    typedef void ControlSignature(FieldOut<>, FieldOut<>);
+    typedef void ExecutionSignature(_1, _2);
     VTKM_EXEC_EXPORT
-    void operator()(vtkm::Float32 &depth,
-                    vtkm::exec::ExecutionWholeArray<vtkm::Float32> &colorBuffer,
-                    const vtkm::Id &index) const
+    void operator()(vtkm::Vec<vtkm::Float32,4> &color,
+                    vtkm::Float32 &depth) const
     {
-      if(index >= NumPixels) return;
+      color = this->ClearColor.Components;
       depth = 1.001f;
-      vtkm::Id offset = index * 4;
-      colorBuffer.Set(offset + 0, ClearColor.Components[0]);
-      colorBuffer.Set(offset + 1, ClearColor.Components[1]);
-      colorBuffer.Set(offset + 2, ClearColor.Components[2]);
-      colorBuffer.Set(offset + 3, ClearColor.Components[3]);
     }
   }; //class ClearBuffers
 
-  VTKM_CONT_EXPORT
-  virtual void SaveAs(const std::string &fileName)
-  {
-    std::ofstream of(fileName.c_str());
-    of<<"P6"<<std::endl<<this->Width<<" "<<this->Height<<std::endl<<255<<std::endl;
-    int height = static_cast<int>(this->Height);
-    for (int yIndex=height-1; yIndex>=0; yIndex--)
-      for (std::size_t xIndex=0; xIndex < this->Width; xIndex++)
-      {
-        const vtkm::Float32 *tuple =
-          &(this->ColorBuffer[static_cast<std::size_t>(yIndex)*this->Width*4 + xIndex*4]);
-        of<<(unsigned char)(tuple[0]*255);
-        of<<(unsigned char)(tuple[1]*255);
-        of<<(unsigned char)(tuple[2]*255);
-      }
-    of.close();
-  }
+  virtual void Initialize() {  }
+  virtual void Activate() {  }
+  virtual void Finish() {  }
+
   VTKM_CONT_EXPORT
   virtual void Clear()
   {
-    this->ColorArray = vtkm::cont::make_ArrayHandle(this->ColorBuffer);
-    this->DepthArray = vtkm::cont::make_ArrayHandle(this->DepthBuffer);
     vtkm::worklet::DispatcherMapField< ClearBuffers >(
-                                                      ClearBuffers( this->BackgroundColor,
-                                                                    static_cast<vtkm::Int32>(this->Width*this->Height) ) )
-      .Invoke( this->DepthArray,
-               vtkm::exec::ExecutionWholeArray<vtkm::Float32>(this->ColorArray) );
+          ClearBuffers( this->GetBackgroundColor() ) )
+      .Invoke( this->GetColorBuffer(), this->GetDepthBuffer());
   }
-
-  vtkm::cont::ArrayHandle<vtkm::Float32> ColorArray;
-  vtkm::cont::ArrayHandle<vtkm::Float32> DepthArray;
-
 };
 
 }} //namespace vtkm::rendering

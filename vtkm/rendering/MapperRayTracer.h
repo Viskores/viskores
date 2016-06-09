@@ -38,21 +38,21 @@ class MapperRayTracer : public Mapper
 protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
   vtkm::rendering::raytracing::RayTracer<DeviceAdapter> Tracer;
-  CanvasRayTracer *Surface;
+  CanvasRayTracer *Canvas;
 public:
   VTKM_CONT_EXPORT
   MapperRayTracer()
   {
-    Surface = NULL;
+    this->Canvas = NULL;
   }
   VTKM_CONT_EXPORT
-  void SetCanvas(Canvas *canvas)
+  void SetCanvas(vtkm::rendering::Canvas *canvas)
   {
     if(canvas != NULL)
     {
 
-      Surface = dynamic_cast<CanvasRayTracer*>(canvas);
-      if(Surface == NULL)
+      this->Canvas = dynamic_cast<CanvasRayTracer*>(canvas);
+      if(this->Canvas == NULL)
       {
         throw vtkm::cont::ErrorControlBadValue(
           "Ray Tracer: bad canvas type. Must be CanvasRayTracer");
@@ -68,16 +68,15 @@ public:
   VTKM_CONT_EXPORT
   void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                    const vtkm::cont::CoordinateSystem &coords,
-                   vtkm::cont::Field &scalarField,
+                   const vtkm::cont::Field &scalarField,
                    const vtkm::rendering::ColorTable &vtkmNotUsed(colorTable),
-                   vtkm::rendering::Camera &camera,
+                   const vtkm::rendering::Camera &camera,
                    const vtkm::Range &scalarRange)
   {
 
-    vtkm::cont::Timer<DeviceAdapter> timer;
     const vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  indices;
-    Tracer.GetCamera().SetParameters(camera);
+    this->Tracer.GetCamera().SetParameters(camera, *this->Canvas);
     vtkm::Id numberOfTriangles;
 
     vtkm::Bounds dataBounds = coords.GetBounds(DeviceAdapter());
@@ -85,10 +84,15 @@ public:
     Triangulator<DeviceAdapter> triangulator;
     triangulator.run(cellset, indices, numberOfTriangles);//,dynamicCoordsHandle,dataBounds);
 
-    Tracer.SetData(dynamicCoordsHandle, indices, scalarField, numberOfTriangles, scalarRange, dataBounds);
-    Tracer.SetColorMap(ColorMap);
-    Tracer.SetBackgroundColor(BackgroundColor);
-    Tracer.Render(Surface);
+    this->Tracer.SetData(dynamicCoordsHandle,
+                         indices,
+                         scalarField,
+                         numberOfTriangles,
+                         scalarRange,
+                         dataBounds);
+    this->Tracer.SetColorMap(this->ColorMap);
+    this->Tracer.SetBackgroundColor(this->BackgroundColor);
+    this->Tracer.Render(this->Canvas);
   }
 };
 }} //namespace vtkm::rendering

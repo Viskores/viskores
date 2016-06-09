@@ -159,9 +159,9 @@ public:
     min_proportions.clear();
     min_proportions.insert(min_proportions.begin(), prop.begin(), prop.end());
   }
-  virtual void Render(Camera &camera,
-                      WorldAnnotator &worldAnnotator,
-                      Canvas &canvas)
+  virtual void Render(const vtkm::rendering::Camera &camera,
+                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
+                      vtkm::rendering::Canvas &canvas)
   {
     canvas.AddLine(x0,y0, x1,y1, linewidth, color);
 

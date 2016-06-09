@@ -36,7 +36,8 @@ public:
   Actor(const vtkm::cont::DynamicCellSet &cells,
         const vtkm::cont::CoordinateSystem &coordinates,
         const vtkm::cont::Field &scalarField,
-        const vtkm::rendering::ColorTable &colorTable)
+        const vtkm::rendering::ColorTable &colorTable =
+          vtkm::rendering::ColorTable("default"))
     : Cells(cells),
       Coordinates(coordinates),
       ScalarField(scalarField),
@@ -54,7 +55,7 @@ public:
   VTKM_CONT_EXPORT
   void Render(MapperType &mapper,
               CanvasType &canvas,
-              vtkm::rendering::Camera &camera)
+              const vtkm::rendering::Camera &camera) const
   {
     mapper.SetCanvas(&canvas);
     mapper.SetActiveColorTable(this->ColorTable);

@@ -22,7 +22,6 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/Scene.h>
 
 namespace vtkm {
 namespace rendering {
@@ -30,18 +29,20 @@ namespace rendering {
 class WorldAnnotator
 {
 public:
+  virtual ~WorldAnnotator() {  }
+
   virtual void AddLine(vtkm::Float64, vtkm::Float64, vtkm::Float64,
                        vtkm::Float64, vtkm::Float64, vtkm::Float64,
                        vtkm::Float32,
                        const vtkm::rendering::Color &,
-                       bool=false) {}
+                       bool=false) const {}
   virtual void AddText(vtkm::Float32, vtkm::Float32, vtkm::Float32,
                        vtkm::Float32, vtkm::Float32, vtkm::Float32,
                        vtkm::Float32, vtkm::Float32, vtkm::Float32,
                        vtkm::Float32,
                        vtkm::Float32, vtkm::Float32,
                        Color,
-                       std::string) {}
+                       std::string) const {}
 };
 
 }} //namespace vtkm::rendering

@@ -24,41 +24,25 @@
 #include <vtkm/rendering/MapperVolume.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View.h>
-#include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace {
 
 void Set3DView(vtkm::rendering::Camera &camera,
-               const vtkm::cont::CoordinateSystem &coords,
-               vtkm::Int32 w, vtkm::Int32 h)
+               const vtkm::cont::CoordinateSystem &coords)
 {
     vtkm::Bounds coordsBounds =
         coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     //set up a default view
-    vtkm::Vec<vtkm::Float32,3> totalExtent;
-    totalExtent[0] = vtkm::Float32(coordsBounds.X.Length());
-    totalExtent[1] = vtkm::Float32(coordsBounds.Y.Length());
-    totalExtent[2] = vtkm::Float32(coordsBounds.Z.Length());
-    vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
-    vtkm::Normalize(totalExtent);
+    camera = vtkm::rendering::Camera();
+    camera.ResetToBounds(coordsBounds);
 
-    camera = vtkm::rendering::Camera(vtkm::rendering::Camera::VIEW_3D);
-    camera.Camera3d.Position = totalExtent * (mag * 2.f);
-    camera.Camera3d.Up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
-    camera.Camera3d.LookAt = totalExtent * (mag * .5f);
-    camera.Camera3d.FieldOfView = 60.f;
-    camera.NearPlane = 1.f;
-    camera.FarPlane = 100.f;
-    camera.Width = w;
-    camera.Height = h;
-
-    std::cout<<"Camera3d: pos: "<<camera.Camera3d.Position<<std::endl;
-    std::cout<<"       lookAt: "<<camera.Camera3d.LookAt<<std::endl;
-    std::cout<<"           up: "<<camera.Camera3d.Up<<std::endl;
-    std::cout<<" near/far/fov: "<<camera.NearPlane<<"/"<<camera.FarPlane<<" "<<camera.Camera3d.FieldOfView<<std::endl;
-    std::cout<<"          w/h: "<<camera.Width<<"/"<<camera.Height<<std::endl;
+    std::cout << "Camera3d: pos: " << camera.GetPosition() << std::endl;
+    std::cout << "       lookAt: " << camera.GetLookAt() << std::endl;
+    std::cout << "           up: " << camera.GetViewUp() << std::endl;
+    std::cout << "     near/far: " << camera.GetClippingRange() << std::endl;
+    std::cout << "  fieldOfView: " << camera.GetFieldOfView() << std::endl;
 }
 
 void Render(const vtkm::cont::DataSet &ds,
@@ -71,7 +55,7 @@ void Render(const vtkm::cont::DataSet &ds,
     vtkm::rendering::MapperVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::Camera camera;
-    Set3DView(camera, coords, W, H);
+    Set3DView(camera, coords);
 
     vtkm::rendering::ColorTable colorTable(ctName);
     colorTable.AddAlphaControlPoint(0.0f, .01f);
@@ -80,20 +64,16 @@ void Render(const vtkm::cont::DataSet &ds,
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::CanvasRayTracer canvas(W,H,bg);
-    scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
-                                                  ds.GetCoordinateSystem(),
-                                                  ds.GetField(fieldNm),
-                                                  colorTable));
+    scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
+                                          ds.GetCoordinateSystem(),
+                                          ds.GetField(fieldNm),
+                                          colorTable));
 
-    //TODO: W/H in view.  bg in view (view sets canvas/renderer).
-    vtkm::rendering::View3D<vtkm::rendering::MapperVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                            vtkm::rendering::CanvasRayTracer,
-                            vtkm::rendering::WorldAnnotator>
-        w(scene, mapper, canvas, camera, bg);
+    vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
 
-    w.Initialize();
-    w.Paint();
-    w.SaveAs(outputFile);
+    view.Initialize();
+    view.Paint();
+    view.SaveAs(outputFile);
 
 }
 

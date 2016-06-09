@@ -88,22 +88,22 @@ public:
     this->PadT=0;
     this->PadB=0;
   }
-  Character GetChar(char c)
+  Character GetChar(char c) const
   {
     std::size_t mappedCharIndex =
         static_cast<std::size_t>(this->ShortMap[(unsigned char)c]);
     return this->Chars[mappedCharIndex];
   }
-  std::vector<unsigned char> &GetRawImageData()
+  const std::vector<unsigned char> &GetRawImageData() const
   {
     return this->RawImageFileData;
   }
-  vtkm::Float32 GetTextWidth(const std::string &text)
+  vtkm::Float32 GetTextWidth(const std::string &text) const
   {
     vtkm::Float32 width = 0;
     for (unsigned int i=0; i<text.length(); ++i)
     {
-      Character c = GetChar(text[i]);
+      Character c = this->GetChar(text[i]);
       char nextchar = (i < text.length()-1) ? text[i+1] : 0;
 
       const bool kerning = true;
@@ -116,9 +116,9 @@ public:
   void GetCharPolygon(char character, vtkm::Float32 &x, vtkm::Float32 &y,
                       vtkm::Float32 &vl, vtkm::Float32 &vr, vtkm::Float32 &vt, vtkm::Float32 &vb,
                       vtkm::Float32 &tl, vtkm::Float32 &tr, vtkm::Float32 &tt, vtkm::Float32 &tb,
-                      char nextchar = 0)
+                      char nextchar = 0) const
   {
-    Character c = GetChar(character);
+    Character c = this->GetChar(character);
 
     // By default, the origin for the font is at the
     // baseline.  That's nice, but we'd rather it

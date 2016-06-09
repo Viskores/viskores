@@ -43,12 +43,9 @@
 #include <vtkm/rendering/CanvasGL.h>
 #include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/View.h>
-#include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/rendering/ColorTable.h>
 
-vtkm::rendering::View3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                        vtkm::rendering::CanvasGL,
-                        vtkm::rendering::WorldAnnotatorGL> *view = NULL;
+vtkm::rendering::View3D *view = NULL;
 
 const vtkm::Int32 W = 512, H = 512;
 int buttonStates[3] = {GLUT_UP, GLUT_UP, GLUT_UP};
@@ -74,25 +71,28 @@ void mouseMove(int x, int y)
 {
     //std::cout<<"MOUSE MOVE: "<<x<<" "<<y<<std::endl;
 
+    const vtkm::Id width = view->GetCanvas().GetWidth();
+    const vtkm::Id height = view->GetCanvas().GetHeight();
+
     //Map to XY
-    y = view->Camera.Height-y;
+    y = static_cast<int>(height-y);
 
     if (lastx != -1 && lasty != -1)
     {
-        vtkm::Float32 x1 = ((lastx*2.0f)/view->Camera.Width) - 1.0f;
-        vtkm::Float32 y1 = ((lasty*2.0f)/view->Camera.Height) - 1.0f;
-        vtkm::Float32 x2 = ((x*2.0f)/view->Camera.Width) - 1.0f;
-        vtkm::Float32 y2 = ((y*2.0f)/view->Camera.Height) - 1.0f;
+        vtkm::Float32 x1 = ((lastx*2.0f)/width) - 1.0f;
+        vtkm::Float32 y1 = ((lasty*2.0f)/height) - 1.0f;
+        vtkm::Float32 x2 = ((x*2.0f)/width) - 1.0f;
+        vtkm::Float32 y2 = ((y*2.0f)/height) - 1.0f;
 
         if (buttonStates[0] == GLUT_DOWN)
         {
             if (shiftKey)
-                view->Camera.Pan3D(x2-x1, y2-y1);
+                view->GetCamera().Pan3D(x2-x1, y2-y1);
             else
-                view->Camera.TrackballRotate(x1,y1, x2,y2);
+                view->GetCamera().TrackballRotate(x1,y1, x2,y2);
         }
         else if (buttonStates[1] == GLUT_DOWN)
-            view->Camera.Zoom3D(y2-y1);
+            view->GetCamera().Zoom3D(y2-y1);
     }
 
     lastx = x;
@@ -119,28 +119,13 @@ void mouseCall(int button, int state, int vtkmNotUsed(x), int vtkmNotUsed(y))
 }
 
 void Set3DView(vtkm::rendering::Camera &camera,
-               const vtkm::cont::CoordinateSystem &coords,
-               vtkm::Int32 w, vtkm::Int32 h)
+               const vtkm::cont::CoordinateSystem &coords)
 {
     vtkm::Bounds coordsBounds =
         coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     //set up a default view
-    vtkm::Vec<vtkm::Float32,3> totalExtent;
-    totalExtent[0] = vtkm::Float32(coordsBounds.X.Length());
-    totalExtent[1] = vtkm::Float32(coordsBounds.Y.Length());
-    totalExtent[2] = vtkm::Float32(coordsBounds.Z.Length());
-    vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
-    vtkm::Normalize(totalExtent);
-
-    camera = vtkm::rendering::Camera(vtkm::rendering::Camera::VIEW_3D);
-    camera.Camera3d.Position = totalExtent * (mag * 2.f);
-    camera.Camera3d.Up = vtkm::Vec<vtkm::Float32,3>(0.f, 1.f, 0.f);
-    camera.Camera3d.LookAt = totalExtent * (mag * .5f);
-    camera.Camera3d.FieldOfView = 60.f;
-    camera.NearPlane = 1.f;
-    camera.FarPlane = 100.f;
-    camera.Width = w;
-    camera.Height = h;
+    camera = vtkm::rendering::Camera();
+    camera.ResetToBounds(coordsBounds);
 }
 
 // Compute and render an isosurface for a uniform grid example
@@ -164,23 +149,20 @@ main(int argc, char* argv[])
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
 
     vtkm::rendering::Camera camera;
-    Set3DView(camera, coords, W, H);
+    Set3DView(camera, coords);
 
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-    vtkm::rendering::CanvasGL surface(W,H,bg);
+    vtkm::rendering::CanvasGL canvas(bg);
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::Scene scene;
-    scene.Actors.push_back(vtkm::rendering::Actor(ds.GetCellSet(),
-                                                  ds.GetCoordinateSystem(),
-                                                  ds.GetField("pointvar"),
-                                                  vtkm::rendering::ColorTable("thermal")));
+    scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
+                                          ds.GetCoordinateSystem(),
+                                          ds.GetField("pointvar"),
+                                          vtkm::rendering::ColorTable("thermal")));
 
     //Create vtkm rendering stuff.
-    view = new vtkm::rendering::View3D<vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>,
-                                       vtkm::rendering::CanvasGL,
-                                       vtkm::rendering::WorldAnnotatorGL>(scene, mapper,
-                                                                          surface, camera, bg);
+    view = new vtkm::rendering::View3D(scene, mapper, canvas, camera, bg);
     view->Initialize();
     glutMainLoop();
 

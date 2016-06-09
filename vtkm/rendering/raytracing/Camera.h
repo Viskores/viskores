@@ -79,11 +79,12 @@ public:
                                     _4,
                                     WorkIndex);
     VTKM_EXEC_EXPORT
-    void operator()(const vtkm::Vec<vtkm::Float32,4> &inColor,
-                    const vtkm::Float32 &inDepth,
-                    vtkm::exec::ExecutionWholeArray<vtkm::Float32> &depthBuffer,
-                    vtkm::exec::ExecutionWholeArray<vtkm::Float32> &colorBuffer,
-                    const vtkm::Id &index) const
+    void operator()(
+        const vtkm::Vec<vtkm::Float32,4> &inColor,
+        const vtkm::Float32 &inDepth,
+        vtkm::exec::ExecutionWholeArray<vtkm::Float32> &depthBuffer,
+        vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32,4> > &colorBuffer,
+        const vtkm::Id &index) const
     {
       if(index >=  NumPixels) return;
       vtkm::Float32 depth = (Proj22 + Proj23 / (-inDepth)) / Proj32;
@@ -95,12 +96,7 @@ public:
       vtkm::Id outIdx = static_cast<vtkm::Id>(y * Width + x);
       //std::cout<<" "<<depth;
       depthBuffer.Set(outIdx, depth);
-
-      outIdx = outIdx * 4;
-      colorBuffer.Set(outIdx + 0, inColor[0]);
-      colorBuffer.Set(outIdx + 1, inColor[1]);
-      colorBuffer.Set(outIdx + 2, inColor[2]);
-      colorBuffer.Set(outIdx + 3, inColor[3]);
+      colorBuffer.Set(outIdx, inColor);
     }
   }; //class SurfaceConverter
 
@@ -245,14 +241,15 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void SetParameters(vtkm::rendering::Camera &camera)
+  void SetParameters(const vtkm::rendering::Camera &camera,
+                     const vtkm::rendering::CanvasRayTracer &canvas)
   {
-    this->SetUp(camera.Camera3d.Up);
-    this->SetLookAt(camera.Camera3d.LookAt);
-    this->SetPosition(camera.Camera3d.Position);
-    this->SetFieldOfView(camera.Camera3d.FieldOfView);
-    this->SetHeight(camera.Height);
-    this->SetWidth(camera.Width);
+    this->SetUp(camera.GetViewUp());
+    this->SetLookAt(camera.GetLookAt());
+    this->SetPosition(camera.GetPosition());
+    this->SetFieldOfView(camera.GetFieldOfView());
+    this->SetHeight(static_cast<vtkm::Int32>(canvas.GetHeight()));
+    this->SetWidth(static_cast<vtkm::Int32>(canvas.GetWidth()));
     this->CameraView = camera;
   }
 
@@ -270,7 +267,6 @@ public:
       this->IsResDirty = true;
       this->Height = height;
       this->SetFieldOfView(this->FovX);
-      this->CameraView.Height = this->Height;
     }
   }
 
@@ -293,7 +289,6 @@ public:
       this->IsResDirty = true;
       this->Width = width;
       this->SetFieldOfView(this->FovX);
-      this->CameraView.Width = this->Width;
     }
   }
 
@@ -350,7 +345,7 @@ public:
     if(newFOVY != this->FovY) { this->IsViewDirty = true; }
     this->FovX = newFOVX;
     this->FovY = newFOVY;
-    this->CameraView.Camera3d.FieldOfView = this->FovX;
+    this->CameraView.SetFieldOfView(this->FovX);
   }
 
   VTKM_CONT_EXPORT
@@ -429,8 +424,8 @@ public:
       throw vtkm::cont::ErrorControlBadValue(
             "Camera can not write to NULL canvas");
     }
-    if(this->Height != vtkm::Int32(canvas->Height) ||
-       this->Width != vtkm::Int32(canvas->Width))
+    if(this->Height != vtkm::Int32(canvas->GetHeight()) ||
+       this->Width != vtkm::Int32(canvas->GetWidth()))
     {
       throw vtkm::cont::ErrorControlBadValue("Camera: suface-view mismatched dims");
     }
@@ -439,16 +434,16 @@ public:
                             this->SubsetWidth,
                             this->SubsetMinX,
                             this->SubsetMinY,
-                            this->CameraView.CreateProjectionMatrix(),
+                            this->CameraView.CreateProjectionMatrix(canvas->GetWidth(), canvas->GetHeight()),
                             this->SubsetWidth * this->SubsetHeight) )
         .Invoke( this->FrameBuffer,
                  distances,
-                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(canvas->DepthArray),
-                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(canvas->ColorArray) );
+                 vtkm::exec::ExecutionWholeArray<vtkm::Float32>(canvas->GetDepthBuffer()),
+                 vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32,4> >(canvas->GetColorBuffer()) );
 
     //Force the transfer so the vectors contain data from device
-    canvas->ColorArray.GetPortalControl().Get(0);
-    canvas->DepthArray.GetPortalControl().Get(0);
+    canvas->GetColorBuffer().GetPortalControl().Get(0);
+    canvas->GetDepthBuffer().GetPortalControl().Get(0);
   }
 
   VTKM_CONT_EXPORT
@@ -626,7 +621,7 @@ private:
 
     //Update our ViewProjection matrix
     this->ViewProjectionMat
-      = vtkm::MatrixMultiply(this->CameraView.CreateProjectionMatrix(),
+      = vtkm::MatrixMultiply(this->CameraView.CreateProjectionMatrix(this->Width, this->Height),
                              this->CameraView.CreateViewMatrix());
 
     //Find the pixel footprint

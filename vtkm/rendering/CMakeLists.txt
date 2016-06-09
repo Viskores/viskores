@@ -50,10 +50,6 @@ set(opengl_headers
   WorldAnnotatorGL.h
   )
 
-set(glx_headers
-  CanvasGLX.h
-  )
-
 set(osmesa_headers
   CanvasOSMesa.h
   )
@@ -63,13 +59,10 @@ set(includes)
 if(OPENGL_FOUND)
   set(headers ${headers} ${opengl_headers})
 
-  # Is there a better check for GLX?
   if (UNIX AND NOT APPLE)
-    set(headers ${headers} ${glx_headers})
-
     find_package(MESA)
     if (OSMESA_FOUND)
-      set(headers ${headers} ${glx_headers})
+      set(headers ${headers} ${osmesa_headers})
       list(APPEND includes ${OSMESA_INCLUDE_DIR})
     endif()
   endif()
