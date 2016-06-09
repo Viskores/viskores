@@ -634,6 +634,27 @@ public:
     this->SetPosition(vtkm::Transform3DPoint(transform, this->GetPosition()));
   }
 
+  /// \brief Move the camera toward or away from the focal point.
+  ///
+  /// Specifically, this divides the camera's distnace from the focal point
+  /// (LookAt) by the given value. Use a value greater than one to dolly in
+  /// toward the focal point, and use a value less than one to dolly-out away
+  /// from the focal point.
+  ///
+  /// Dolly only makes sense for 3D cameras, so the camera mode will be set to
+  /// 3D when this method is called.
+  ///
+  VTKM_CONT_EXPORT
+  void Dolly(vtkm::Float32 value)
+  {
+    if (value <= vtkm::Epsilon32()) { return; }
+
+    vtkm::Vec<vtkm::Float32,3> lookAtToPos =
+        this->GetPosition() - this->GetLookAt();
+
+    this->SetPosition(this->GetLookAt() + (1.0f/value)*lookAtToPos);
+  }
+
   /// \brief The viewable region in the x-y plane
   ///
   /// When the camera is in 2D, it is looking at some region of the x-y plane.
