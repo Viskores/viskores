@@ -204,6 +204,20 @@ public:
       vtkm::IdComponent visitIndex,
       const IndicesVecType &indices) const
   {
+  }
+
+  template<typename FieldInType, // Vec-like, one per input point
+           typename CoordType,
+           typename IndicesVecType>
+  VTKM_EXEC_EXPORT
+  void operator()(
+      vtkm::CellShapeTagHexahedron shape,
+      const FieldInType &fieldIn, // Input point field defining the contour
+      const CoordType &coords, // Input point coordinates
+      vtkm::Id outputCellId,
+      vtkm::IdComponent visitIndex,
+      const IndicesVecType &indices) const
+  {
     const vtkm::Id outputPointId = 3 * outputCellId;
     typedef typename vtkm::VecTraits<FieldInType>::ComponentType FieldType;
     const FieldType iso = static_cast<FieldType>(this->Isovalue);
