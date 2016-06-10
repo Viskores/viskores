@@ -97,7 +97,6 @@ if (VTKm_Base_FOUND)
                       RESULT_VARIABLE ran_properly
                       OUTPUT_VARIABLE run_output
                       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-      message(STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
 
       if(ran_properly EQUAL 0)
         #find the position of the "--generate-code" output. With some compilers such as
