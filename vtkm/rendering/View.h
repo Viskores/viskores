@@ -47,10 +47,9 @@ public:
     : Scene(scene),
       MapperPointer(new MapperType(mapper)),
       CanvasPointer(new CanvasType(canvas)),
-      Camera(camera),
-      BackgroundColor(backgroundColor)
+      Camera(camera)
   {
-    this->MapperPointer->SetBackgroundColor(this->BackgroundColor);
+    this->CanvasPointer->SetBackgroundColor(backgroundColor);
     this->WorldAnnotatorPointer = this->CanvasPointer->CreateWorldAnnotator();
   }
 
@@ -68,10 +67,9 @@ public:
       MapperPointer(new MapperType(mapper)),
       CanvasPointer(new CanvasType(canvas)),
       WorldAnnotatorPointer(new WorldAnnotatorType(annotator)),
-      Camera(camera),
-      BackgroundColor(backgroundColor)
+      Camera(camera)
   {
-    this->MapperPointer->SetBackgroundColor(this->BackgroundColor);
+    this->CanvasPointer->SetBackgroundColor(backgroundColor);
   }
 
   virtual ~View()
@@ -135,7 +133,13 @@ public:
   VTKM_CONT_EXPORT
   const vtkm::rendering::Color &GetBackgroundColor() const
   {
-    return this->BackgroundColor;
+    return this->CanvasPointer->GetBackgroundColor();
+  }
+
+  VTKM_CONT_EXPORT
+  void SetBackgroundColor(const vtkm::rendering::Color &color)
+  {
+    this->CanvasPointer->SetBackgroundColor(color);
   }
 
   VTKM_CONT_EXPORT
@@ -175,7 +179,6 @@ private:
   vtkm::rendering::Canvas *CanvasPointer;
   vtkm::rendering::WorldAnnotator *WorldAnnotatorPointer;
   vtkm::rendering::Camera Camera;
-  Color BackgroundColor;
 };
 
 // View2D View3D

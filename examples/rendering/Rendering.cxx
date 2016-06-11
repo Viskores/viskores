@@ -152,7 +152,7 @@ main(int argc, char* argv[])
     Set3DView(camera, coords);
 
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-    vtkm::rendering::CanvasGL canvas(bg);
+    vtkm::rendering::CanvasGL canvas;
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 
     vtkm::rendering::Scene scene;

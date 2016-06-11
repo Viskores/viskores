@@ -37,10 +37,8 @@ class Canvas
 public:
   VTKM_CONT_EXPORT
   Canvas(vtkm::Id width=1024,
-         vtkm::Id height=1024,
-         const vtkm::rendering::Color &color =
-           vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-    : Width(0), Height(0), BackgroundColor(color)
+         vtkm::Id height=1024)
+    : Width(0), Height(0)
   {
     this->ResizeBuffers(width, height);
   }
@@ -94,7 +92,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  vtkm::rendering::Color GetBackgroundColor() const
+  const vtkm::rendering::Color &GetBackgroundColor() const
   {
     return this->BackgroundColor;
   }
