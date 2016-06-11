@@ -35,18 +35,22 @@ namespace vtkm {
 /// Given a 4x4 transformation matrix and a 3D point, returns the point
 /// transformed by the given matrix in homogeneous coordinates.
 ///
+/// This method ignores any change in the fourth component of the transformed
+/// homogeneous coordinate, assuming that it is always 1 (that is, the last row
+/// of the matrix is 0, 0, 0, 1). This will be true for affine transformations
+/// (such as translate, scale, and rotate), but not for perspective
+/// transformations.
+///
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
 vtkm::Vec<T,3> Transform3DPoint(const vtkm::Matrix<T,4,4> &matrix,
                                 const vtkm::Vec<T,3> &point)
 {
   vtkm::Vec<T,4> homogeneousPoint(point[0], point[1], point[2], T(1));
-  homogeneousPoint = vtkm::MatrixMultiply(matrix, homogeneousPoint);
-  T invW = T(1)/homogeneousPoint[3];
   return vtkm::Vec<T,3>(
-        homogeneousPoint[0]*invW,
-        homogeneousPoint[1]*invW,
-        homogeneousPoint[2]*invW);
+        vtkm::dot(vtkm::MatrixGetRow(matrix,0), homogeneousPoint),
+        vtkm::dot(vtkm::MatrixGetRow(matrix,1), homogeneousPoint),
+        vtkm::dot(vtkm::MatrixGetRow(matrix,2), homogeneousPoint));
 }
 
 /// \brief Transform a 3D point by a transformation matrix.
