@@ -718,7 +718,7 @@ public:
   T Add(vtkm::Id index, const T& value) const
   {
     T* lockedValue;
-#if defined(VTKM_MSVC)
+#if defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL > 0
     typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
     typename IteratorType::pointer temp =
         &(*(Iterators.GetBegin() + static_cast<std::ptrdiff_t>(index)));
@@ -734,7 +734,7 @@ public:
   T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
   {
     T* lockedValue;
-#if defined(VTKM_MSVC)
+#if defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL > 0
     typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
     typename IteratorType::pointer temp =
         &(*(Iterators.GetBegin()+static_cast<std::ptrdiff_t>(index)));
