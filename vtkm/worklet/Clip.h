@@ -638,7 +638,7 @@ public:
         T v1 = Field.Get(ei.Vertex1);
         T v2 = Field.Get(ei.Vertex2);
         Field.Set(this->NewPointsOffset + idx,
-                  internal::Scale(T(v2 - v1), ei.Weight) + v1);
+                  static_cast<T>(internal::Scale(T(v2 - v1), ei.Weight) + v1));
       }
 
     private:
