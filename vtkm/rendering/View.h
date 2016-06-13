@@ -45,10 +45,9 @@ public:
          vtkm::rendering::Color(0,0,0,1))
     : Scene(scene),
       MapperPointer(new MapperType(mapper)),
-      CanvasPointer(new CanvasType(canvas)),
-      BackgroundColor(backgroundColor)
+      CanvasPointer(new CanvasType(canvas))
   {
-    this->MapperPointer->SetBackgroundColor(this->BackgroundColor);
+    this->CanvasPointer->SetBackgroundColor(backgroundColor);
     this->WorldAnnotatorPointer = this->CanvasPointer->CreateWorldAnnotator();
 
     vtkm::Bounds spatialBounds = this->Scene.GetSpatialBounds();
