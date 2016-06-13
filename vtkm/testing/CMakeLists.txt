@@ -41,6 +41,7 @@ set(unit_tests
   UnitTestPair.cxx
   UnitTestRange.cxx
   UnitTestTesting.cxx
+  UnitTestTransform3D.cxx
   UnitTestTypeListTag.cxx
   UnitTestTypes.cxx
   UnitTestTypeTraits.cxx

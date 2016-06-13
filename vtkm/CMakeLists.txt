@@ -36,6 +36,7 @@ set(headers
   Range.h
   StaticAssert.h
   TopologyElementTag.h
+  Transform3D.h
   TypeListTag.h
   Types.h
   TypeTraits.h

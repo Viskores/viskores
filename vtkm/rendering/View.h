@@ -41,6 +41,33 @@ public:
   View(const vtkm::rendering::Scene &scene,
        const MapperType &mapper,
        const CanvasType &canvas,
+       const vtkm::rendering::Color &backgroundColor =
+         vtkm::rendering::Color(0,0,0,1))
+    : Scene(scene),
+      MapperPointer(new MapperType(mapper)),
+      CanvasPointer(new CanvasType(canvas)),
+      BackgroundColor(backgroundColor)
+  {
+    this->MapperPointer->SetBackgroundColor(this->BackgroundColor);
+    this->WorldAnnotatorPointer = this->CanvasPointer->CreateWorldAnnotator();
+
+    vtkm::Bounds spatialBounds = this->Scene.GetSpatialBounds();
+    this->Camera.ResetToBounds(spatialBounds);
+    if (spatialBounds.Z.Length() > 0.0)
+    {
+      this->Camera.SetModeTo3D();
+    }
+    else
+    {
+      this->Camera.SetModeTo2D();
+    }
+  }
+
+  template<typename MapperType,
+           typename CanvasType>
+  View(const vtkm::rendering::Scene &scene,
+       const MapperType &mapper,
+       const CanvasType &canvas,
        const vtkm::rendering::Camera &camera,
        const vtkm::rendering::Color &backgroundColor =
          vtkm::rendering::Color(0,0,0,1))
@@ -182,6 +209,18 @@ private:
 class View3D : public vtkm::rendering::View
 {
 public:
+  template<typename MapperType,
+           typename CanvasType>
+  VTKM_CONT_EXPORT
+  View3D(const vtkm::rendering::Scene &scene,
+         const MapperType &mapper,
+         const CanvasType &canvas,
+         const vtkm::rendering::Color &backgroundColor =
+           vtkm::rendering::Color(0,0,0,1))
+    : View(scene, mapper, canvas, backgroundColor)
+  {
+  }
+
   template<typename MapperType,
            typename CanvasType>
   VTKM_CONT_EXPORT
@@ -334,6 +373,18 @@ private:
 class View2D : public vtkm::rendering::View
 {
 public:
+  template<typename MapperType,
+           typename CanvasType>
+  VTKM_CONT_EXPORT
+  View2D(const vtkm::rendering::Scene &scene,
+         const MapperType &mapper,
+         const CanvasType &canvas,
+         const vtkm::rendering::Color &backgroundColor =
+           vtkm::rendering::Color(0,0,0,1))
+    : View(scene, mapper, canvas, backgroundColor)
+  {
+  }
+
   template<typename MapperType,
            typename CanvasType>
   VTKM_CONT_EXPORT

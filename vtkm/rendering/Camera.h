@@ -22,6 +22,7 @@
 #include <vtkm/Bounds.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
+#include <vtkm/Transform3D.h>
 #include <vtkm/Range.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/rendering/MatrixHelpers.h>
@@ -79,8 +80,8 @@ class Camera
       matrix(3,3) = 0.f;
 
       vtkm::Matrix<vtkm::Float32,4,4> T, Z;
-      T = MatrixHelpers::TranslateMatrix(this->XPan, this->YPan, 0);
-      Z = MatrixHelpers::ScaleMatrix(this->Zoom, this->Zoom, 1);
+      T = vtkm::Transform3DTranslate(this->XPan, this->YPan, 0.f);
+      Z = vtkm::Transform3DScale(this->Zoom, this->Zoom, 1.f);
       matrix = vtkm::MatrixMultiply(Z, vtkm::MatrixMultiply(T, matrix));
       return matrix;
     }
@@ -100,7 +101,14 @@ class Camera
   public:
     VTKM_CONT_EXPORT
     Camera2DStruct()
-      : Left(-1.0f), Right(1.0f), Bottom(-1.0f), Top(1.0f), XScale(1.0f)
+      : Left(-1.0f),
+        Right(1.0f),
+        Bottom(-1.0f),
+        Top(1.0f),
+        XScale(1.0f),
+        XPan(0.0f),
+        YPan(0.0f),
+        Zoom(1.0f)
     {}
 
     VTKM_CONT_EXPORT
@@ -134,6 +142,11 @@ class Camera
       matrix(1,3) = -(top+bottom)/(top-bottom);
       matrix(2,3) = -(far+near)/(far-near);
       matrix(3,3) = 1.f;
+
+      vtkm::Matrix<vtkm::Float32,4,4> T, Z;
+      T = vtkm::Transform3DTranslate(this->XPan, this->YPan, 0.f);
+      Z = vtkm::Transform3DScale(this->Zoom, this->Zoom, 1.f);
+      matrix = vtkm::MatrixMultiply(Z, vtkm::MatrixMultiply(T, matrix));
       return matrix;
     }
 
@@ -142,6 +155,9 @@ class Camera
     vtkm::Float32 Bottom;
     vtkm::Float32 Top;
     vtkm::Float32 XScale;
+    vtkm::Float32 XPan;
+    vtkm::Float32 YPan;
+    vtkm::Float32 Zoom;
   };
 
 public:
@@ -247,18 +263,6 @@ public:
         right = this->ViewportRight;
       }
     }
-  }
-
-  VTKM_CONT_EXPORT
-  vtkm::Vec<vtkm::Float32, 3>
-  MultVector(const vtkm::Matrix<vtkm::Float32,4,4> &matrix, vtkm::Vec<vtkm::Float32, 3> &v) const
-  {
-    vtkm::Vec<vtkm::Float32,4> v4(v[0],v[1],v[2], 1);
-    v4 = vtkm::MatrixMultiply(matrix, v4);
-    v[0] = v4[0];
-    v[1] = v4[1];
-    v[2] = v4[2];
-    return v;
   }
 
   /// \brief The mode of the camera (2D or 3D).
@@ -440,21 +444,20 @@ public:
     this->Camera3D.FieldOfView = fov;
   }
 
-  /// \brief Pans the camera in 3D mode.
-  ///
-  /// Panning the camera in this way changes the mode to 3D.
+  /// \brief Pans the camera
   ///
   VTKM_CONT_EXPORT
-  void Pan3D(vtkm::Float32 dx, vtkm::Float32 dy)
+  void Pan(vtkm::Float32 dx, vtkm::Float32 dy)
   {
-    this->SetModeTo3D();
     this->Camera3D.XPan += dx;
     this->Camera3D.YPan += dy;
+    this->Camera2D.XPan += dx;
+    this->Camera2D.YPan += dy;
   }
   VTKM_CONT_EXPORT
-  void Pan3D(vtkm::Vec<vtkm::Float32,2> direction)
+  void Pan(vtkm::Vec<vtkm::Float32,2> direction)
   {
-    this->Pan3D(direction[0], direction[1]);
+    this->Pan(direction[0], direction[1]);
   }
 
   /// \brief Zooms the camera in or out
@@ -463,16 +466,16 @@ public:
   /// zoom makes the geometry look bigger or closer. Negative zoom has the
   /// opposite effect. A zoom of 0 has no effect.
   ///
-  /// Zooming the camera changes the mode to 3D.
-  ///
   VTKM_CONT_EXPORT
-  void Zoom3D(vtkm::Float32 zoom)
+  void Zoom(vtkm::Float32 zoom)
   {
-    this->SetModeTo3D();
     vtkm::Float32 factor = vtkm::Pow(4.0f, zoom);
     this->Camera3D.Zoom *= factor;
     this->Camera3D.XPan *= factor;
     this->Camera3D.YPan *= factor;
+    this->Camera2D.Zoom *= factor;
+    this->Camera2D.XPan *= factor;
+    this->Camera2D.YPan *= factor;
   }
 
   /// \brief Moves the camera as if a point was dragged along a sphere.
@@ -496,11 +499,11 @@ public:
 
     //Translate matrix
     vtkm::Matrix<vtkm::Float32,4,4> translate =
-        MatrixHelpers::TranslateMatrix(-this->Camera3D.LookAt);
+        vtkm::Transform3DTranslate(-this->Camera3D.LookAt);
 
     //Translate matrix
     vtkm::Matrix<vtkm::Float32,4,4> inverseTranslate =
-        MatrixHelpers::TranslateMatrix(this->Camera3D.LookAt);
+        vtkm::Transform3DTranslate(this->Camera3D.LookAt);
 
     vtkm::Matrix<vtkm::Float32,4,4> view = this->CreateViewMatrix();
     view(0,3) = 0;
@@ -516,9 +519,12 @@ public:
             inverseView, vtkm::MatrixMultiply(
               rotate, vtkm::MatrixMultiply(
                 view,translate))));
-    this->Camera3D.Position = MultVector(fullTransform, this->Camera3D.Position);
-    this->Camera3D.LookAt = MultVector(fullTransform, this->Camera3D.LookAt);
-    this->Camera3D.ViewUp = MultVector(fullTransform, this->Camera3D.ViewUp);
+    this->Camera3D.Position =
+        vtkm::Transform3DPoint(fullTransform, this->Camera3D.Position);
+    this->Camera3D.LookAt =
+        vtkm::Transform3DPoint(fullTransform, this->Camera3D.LookAt);
+    this->Camera3D.ViewUp =
+        vtkm::Transform3DVector(fullTransform, this->Camera3D.ViewUp);
   }
 
   /// \brief Set up the camera to look at geometry
@@ -531,6 +537,10 @@ public:
   VTKM_CONT_EXPORT
   void ResetToBounds(const vtkm::Bounds &dataBounds)
   {
+    // Save camera mode
+    ModeEnum saveMode = this->GetMode();
+
+    // Reset for 3D camera
     vtkm::Vec<vtkm::Float32,3> directionOfProjection =
         this->GetPosition() - this->GetLookAt();
     vtkm::Normalize(directionOfProjection);
@@ -546,6 +556,103 @@ public:
     this->SetPosition(center + directionOfProjection * diagonalLength * 1.0f);
     this->SetFieldOfView(60.0f);
     this->SetClippingRange(1.0f, diagonalLength*10.0f);
+
+    // Reset for 2D camera
+    this->SetViewRange2D(dataBounds);
+
+    // Restore camera mode
+    this->SetMode(saveMode);
+  }
+
+  /// \brief Roll the camera
+  ///
+  /// Rotates the camera around the view direction by the given angle. The
+  /// angle is given in radians.
+  ///
+  /// Roll is currently only supported for 3D cameras.
+  ///
+  VTKM_CONT_EXPORT
+  void Roll(vtkm::Float32 angleRadians)
+  {
+    vtkm::Vec<vtkm::Float32,3> directionOfProjection =
+        this->GetLookAt() - this->GetPosition();
+    vtkm::Matrix<vtkm::Float32,4,4> rotateTransform =
+        vtkm::Transform3DRotate(angleRadians, directionOfProjection);
+
+    this->SetViewUp(vtkm::Transform3DVector(rotateTransform,this->GetViewUp()));
+  }
+
+  /// \brief Rotate the camera about the view up vector centered at the focal point.
+  ///
+  /// Note that the view up vector is whatever was set via SetViewUp, and is
+  /// not necesarily perpendicular to the direction of projection. The angle is
+  /// given in radians.
+  ///
+  /// Azimuth only makes sense for 3D cameras, so the camera mode will be set
+  /// to 3D when this method is called.
+  ///
+  VTKM_CONT_EXPORT
+  void Azimuth(vtkm::Float32 angleRadians)
+  {
+    // Translate to the focal point (LookAt), rotate about view up, and
+    // translate back again.
+    vtkm::Matrix<vtkm::Float32,4,4> transform =
+        vtkm::Transform3DTranslate(this->GetLookAt());
+    transform = vtkm::MatrixMultiply(
+          transform, vtkm::Transform3DRotate(angleRadians, this->GetViewUp()));
+    transform = vtkm::MatrixMultiply(
+          transform, vtkm::Transform3DTranslate(-this->GetLookAt()));
+
+    this->SetPosition(vtkm::Transform3DPoint(transform, this->GetPosition()));
+  }
+
+  /// \brief Rotate the camera vertically around the focal point.
+  ///
+  /// Specifically, this rotates the camera about the cross product of the
+  /// negative of the direction of projection and the view up vector, using the
+  /// focal point (LookAt) as the center of rotation. The angle is given
+  /// in radians.
+  ///
+  /// Elevation only makes sense for 3D cameras, so the camera mode will be set
+  /// to 3D when this method is called.
+  ///
+  VTKM_CONT_EXPORT
+  void Elevation(vtkm::Float32 angleRadians)
+  {
+    vtkm::Vec<vtkm::Float32,3> axisOfRotation =
+        vtkm::Cross(this->GetPosition() - this->GetLookAt(), this->GetViewUp());
+
+    // Translate to the focal point (LookAt), rotate about the defined axis,
+    // and translate back again.
+    vtkm::Matrix<vtkm::Float32,4,4> transform =
+        vtkm::Transform3DTranslate(this->GetLookAt());
+    transform = vtkm::MatrixMultiply(
+          transform, vtkm::Transform3DRotate(angleRadians, axisOfRotation));
+    transform = vtkm::MatrixMultiply(
+          transform, vtkm::Transform3DTranslate(-this->GetLookAt()));
+
+    this->SetPosition(vtkm::Transform3DPoint(transform, this->GetPosition()));
+  }
+
+  /// \brief Move the camera toward or away from the focal point.
+  ///
+  /// Specifically, this divides the camera's distnace from the focal point
+  /// (LookAt) by the given value. Use a value greater than one to dolly in
+  /// toward the focal point, and use a value less than one to dolly-out away
+  /// from the focal point.
+  ///
+  /// Dolly only makes sense for 3D cameras, so the camera mode will be set to
+  /// 3D when this method is called.
+  ///
+  VTKM_CONT_EXPORT
+  void Dolly(vtkm::Float32 value)
+  {
+    if (value <= vtkm::Epsilon32()) { return; }
+
+    vtkm::Vec<vtkm::Float32,3> lookAtToPos =
+        this->GetPosition() - this->GetLookAt();
+
+    this->SetPosition(this->GetLookAt() + (1.0f/value)*lookAtToPos);
   }
 
   /// \brief The viewable region in the x-y plane

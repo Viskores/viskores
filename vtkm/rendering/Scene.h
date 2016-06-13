@@ -56,8 +56,6 @@ public:
               CanvasType &canvas,
               vtkm::rendering::Camera &camera) const
   {
-    vtkm::Bounds bounds;
-
     mapper.StartScene();
     for (vtkm::IdComponent actorIndex = 0;
          actorIndex < this->GetNumberOfActors();
@@ -65,23 +63,26 @@ public:
     {
       const vtkm::rendering::Actor &actor = this->GetActor(actorIndex);
       actor.Render(mapper, canvas, camera);
-
-      // accumulate all Actors' spatial bounds into the scene spatial bounds
-      bounds.Include(actor.SpatialBounds);
     }
     mapper.EndScene();
-
-    const_cast<Scene*>(this)->SpatialBounds = bounds;
   }
 
-  const vtkm::Bounds &GetSpatialBounds() const
+  vtkm::Bounds GetSpatialBounds() const
   {
-    return this->SpatialBounds;
+    vtkm::Bounds bounds;
+    for (vtkm::IdComponent actorIndex = 0;
+         actorIndex < this->GetNumberOfActors();
+         actorIndex++)
+    {
+      // accumulate all Actors' spatial bounds into the scene spatial bounds
+      bounds.Include(this->GetActor(actorIndex).SpatialBounds);
+    }
+
+    return bounds;
   }
 
 private:
   std::vector<vtkm::rendering::Actor> Actors;
-  vtkm::Bounds SpatialBounds;
 };
 }} //namespace vtkm::rendering
 

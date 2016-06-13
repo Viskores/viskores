@@ -87,12 +87,12 @@ void mouseMove(int x, int y)
         if (buttonStates[0] == GLUT_DOWN)
         {
             if (shiftKey)
-                view->GetCamera().Pan3D(x2-x1, y2-y1);
+                view->GetCamera().Pan(x2-x1, y2-y1);
             else
                 view->GetCamera().TrackballRotate(x1,y1, x2,y2);
         }
         else if (buttonStates[1] == GLUT_DOWN)
-            view->GetCamera().Zoom3D(y2-y1);
+            view->GetCamera().Zoom(y2-y1);
     }
 
     lastx = x;
@@ -118,16 +118,6 @@ void mouseCall(int button, int state, int vtkmNotUsed(x), int vtkmNotUsed(y))
     }
 }
 
-void Set3DView(vtkm::rendering::Camera &camera,
-               const vtkm::cont::CoordinateSystem &coords)
-{
-    vtkm::Bounds coordsBounds =
-        coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    //set up a default view
-    camera = vtkm::rendering::Camera();
-    camera.ResetToBounds(coordsBounds);
-}
-
 // Compute and render an isosurface for a uniform grid example
 int
 main(int argc, char* argv[])
@@ -146,11 +136,6 @@ main(int argc, char* argv[])
     glutMouseFunc(mouseCall);
     glutReshapeFunc(reshape);
 
-    const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
-
-    vtkm::rendering::Camera camera;
-    Set3DView(camera, coords);
-
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::CanvasGL canvas(bg);
     vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
@@ -162,7 +147,7 @@ main(int argc, char* argv[])
                                           vtkm::rendering::ColorTable("thermal")));
 
     //Create vtkm rendering stuff.
-    view = new vtkm::rendering::View3D(scene, mapper, canvas, camera, bg);
+    view = new vtkm::rendering::View3D(scene, mapper, canvas, bg);
     view->Initialize();
     glutMainLoop();
 
