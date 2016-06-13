@@ -41,9 +41,8 @@ class CanvasGL : public Canvas
 {
 public:
   VTKM_CONT_EXPORT
-  CanvasGL(const vtkm::rendering::Color &c =
-             vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-    : Canvas(0,0,c)
+  CanvasGL()
+    : Canvas(0,0)
   {
   }
 

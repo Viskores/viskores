@@ -77,7 +77,7 @@ void Render3D(const vtkm::cont::DataSet &ds,
 
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-    vtkm::rendering::CanvasOSMesa canvas(W,H,bg);
+    vtkm::rendering::CanvasOSMesa canvas(W,H);
 
     scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
                                           ds.GetCoordinateSystem(),
@@ -106,7 +106,7 @@ void Render2D(const vtkm::cont::DataSet &ds,
 
     vtkm::rendering::Scene scene;
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-    vtkm::rendering::CanvasOSMesa canvas(W,H,bg);
+    vtkm::rendering::CanvasOSMesa canvas(W,H);
 
     scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
                                           ds.GetCoordinateSystem(),

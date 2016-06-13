@@ -37,10 +37,8 @@ class CanvasRayTracer : public Canvas
 public:
   VTKM_CONT_EXPORT
   CanvasRayTracer(vtkm::Id width=1024,
-                  vtkm::Id height=1024,
-                  const vtkm::rendering::Color &color =
-                    vtkm::rendering::Color(0.0f,0.0f,0.0f,1.0f))
-    : Canvas(width,height,color)
+                  vtkm::Id height=1024)
+    : Canvas(width,height)
   {
   }
 

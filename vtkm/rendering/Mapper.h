@@ -52,39 +52,24 @@ public:
       ct.Sample(1024, ColorMap);
   }
 
-    // needed for volume... Can we have a volume render surface??
   VTKM_CONT_EXPORT
-  virtual void SetBackgroundColor(const vtkm::Vec<vtkm::Float32,4> &backgroundColor)
+  virtual void Render() {}
+  VTKM_CONT_EXPORT
+  virtual void Finish() {}
+  VTKM_CONT_EXPORT
+  virtual void StartScene()
   {
-      BackgroundColor = backgroundColor;
   }
   VTKM_CONT_EXPORT
-  virtual void SetBackgroundColor(const vtkm::rendering::Color &backgroundColor)
+  virtual void EndScene()
   {
-      BackgroundColor[0] = backgroundColor.Components[0];
-      BackgroundColor[1] = backgroundColor.Components[1];
-      BackgroundColor[2] = backgroundColor.Components[2];
-      BackgroundColor[3] = backgroundColor.Components[3];
   }
-
-    VTKM_CONT_EXPORT
-    virtual void Render() {}
-    VTKM_CONT_EXPORT
-    virtual void Finish() {}
-    VTKM_CONT_EXPORT
-    virtual void StartScene()
-    {
-    }
-    VTKM_CONT_EXPORT
-    virtual void EndScene()
-    {
-    }
-    virtual void SetCanvas(Canvas *vtkmNotUsed(canvas))
-    {
-    }
+  virtual void SetCanvas(Canvas *vtkmNotUsed(canvas))
+  {
+  }
 protected:
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
-    vtkm::Vec<vtkm::Float32,4> BackgroundColor;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
+  vtkm::Vec<vtkm::Float32,4> BackgroundColor;
 };
 }} //namespace vtkm::rendering
 #endif //vtk_m_rendering_Mapper_h
