@@ -196,7 +196,7 @@ void TestPCoordsSample(const PointWCoordsType &pointWCoords,
                                                             workletProxy);
     VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
 
-    VTKM_TEST_ASSERT(test_equal(pcoords, computedPCoords, 0.01),
+    VTKM_TEST_ASSERT(test_equal(pcoords, computedPCoords, 0.05),
                      "pcoord/wcoord transform not symmetrical");
   }
 }
