@@ -633,6 +633,14 @@ public:
     // Reset for 2D camera
     this->SetViewRange2D(dataBounds);
 
+    // Reset pan and zoom
+    this->Camera3D.XPan = 0;
+    this->Camera3D.YPan = 0;
+    this->Camera3D.Zoom = 1;
+    this->Camera2D.XPan = 0;
+    this->Camera2D.YPan = 0;
+    this->Camera2D.Zoom = 1;
+
     // Restore camera mode
     this->SetMode(saveMode);
   }
@@ -789,6 +797,10 @@ public:
     this->Camera2D.Right = right;
     this->Camera2D.Bottom = bottom;
     this->Camera2D.Top = top;
+
+    this->Camera2D.XPan = 0;
+    this->Camera2D.YPan = 0;
+    this->Camera2D.Zoom = 1;
   }
   VTKM_CONT_EXPORT
   void SetViewRange2D(vtkm::Float64 left,
