@@ -640,53 +640,53 @@ public:
   /// \brief Roll the camera
   ///
   /// Rotates the camera around the view direction by the given angle. The
-  /// angle is given in radians.
+  /// angle is given in degrees.
   ///
   /// Roll is currently only supported for 3D cameras.
   ///
   VTKM_CONT_EXPORT
-  void Roll(vtkm::Float32 angleRadians)
+  void Roll(vtkm::Float32 angleDegrees)
   {
     vtkm::Vec<vtkm::Float32,3> directionOfProjection =
         this->GetLookAt() - this->GetPosition();
     vtkm::Matrix<vtkm::Float32,4,4> rotateTransform =
-        vtkm::Transform3DRotate(angleRadians, directionOfProjection);
+        vtkm::Transform3DRotate(angleDegrees, directionOfProjection);
 
     this->SetViewUp(vtkm::Transform3DVector(rotateTransform,this->GetViewUp()));
   }
   VTKM_CONT_EXPORT
-  void Roll(vtkm::Float64 angleRadians)
+  void Roll(vtkm::Float64 angleDegrees)
   {
-    this->Roll(static_cast<vtkm::Float32>(angleRadians));
+    this->Roll(static_cast<vtkm::Float32>(angleDegrees));
   }
 
   /// \brief Rotate the camera about the view up vector centered at the focal point.
   ///
   /// Note that the view up vector is whatever was set via SetViewUp, and is
   /// not necesarily perpendicular to the direction of projection. The angle is
-  /// given in radians.
+  /// given in degrees.
   ///
   /// Azimuth only makes sense for 3D cameras, so the camera mode will be set
   /// to 3D when this method is called.
   ///
   VTKM_CONT_EXPORT
-  void Azimuth(vtkm::Float32 angleRadians)
+  void Azimuth(vtkm::Float32 angleDegrees)
   {
     // Translate to the focal point (LookAt), rotate about view up, and
     // translate back again.
     vtkm::Matrix<vtkm::Float32,4,4> transform =
         vtkm::Transform3DTranslate(this->GetLookAt());
     transform = vtkm::MatrixMultiply(
-          transform, vtkm::Transform3DRotate(angleRadians, this->GetViewUp()));
+          transform, vtkm::Transform3DRotate(angleDegrees, this->GetViewUp()));
     transform = vtkm::MatrixMultiply(
           transform, vtkm::Transform3DTranslate(-this->GetLookAt()));
 
     this->SetPosition(vtkm::Transform3DPoint(transform, this->GetPosition()));
   }
   VTKM_CONT_EXPORT
-  void Azimuth(vtkm::Float64 angleRadians)
+  void Azimuth(vtkm::Float64 angleDegrees)
   {
-    this->Azimuth(static_cast<vtkm::Float32>(angleRadians));
+    this->Azimuth(static_cast<vtkm::Float32>(angleDegrees));
   }
 
   /// \brief Rotate the camera vertically around the focal point.
@@ -694,13 +694,13 @@ public:
   /// Specifically, this rotates the camera about the cross product of the
   /// negative of the direction of projection and the view up vector, using the
   /// focal point (LookAt) as the center of rotation. The angle is given
-  /// in radians.
+  /// in degrees.
   ///
   /// Elevation only makes sense for 3D cameras, so the camera mode will be set
   /// to 3D when this method is called.
   ///
   VTKM_CONT_EXPORT
-  void Elevation(vtkm::Float32 angleRadians)
+  void Elevation(vtkm::Float32 angleDegrees)
   {
     vtkm::Vec<vtkm::Float32,3> axisOfRotation =
         vtkm::Cross(this->GetPosition() - this->GetLookAt(), this->GetViewUp());
@@ -710,16 +710,16 @@ public:
     vtkm::Matrix<vtkm::Float32,4,4> transform =
         vtkm::Transform3DTranslate(this->GetLookAt());
     transform = vtkm::MatrixMultiply(
-          transform, vtkm::Transform3DRotate(angleRadians, axisOfRotation));
+          transform, vtkm::Transform3DRotate(angleDegrees, axisOfRotation));
     transform = vtkm::MatrixMultiply(
           transform, vtkm::Transform3DTranslate(-this->GetLookAt()));
 
     this->SetPosition(vtkm::Transform3DPoint(transform, this->GetPosition()));
   }
   VTKM_CONT_EXPORT
-  void Elevation(vtkm::Float64 angleRadians)
+  void Elevation(vtkm::Float64 angleDegrees)
   {
-    this->Elevation(static_cast<vtkm::Float32>(angleRadians));
+    this->Elevation(static_cast<vtkm::Float32>(angleDegrees));
   }
 
   /// \brief Move the camera toward or away from the focal point.
