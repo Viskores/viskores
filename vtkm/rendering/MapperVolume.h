@@ -95,7 +95,8 @@ public:
                            cellSetStructured3D,
                            scalarRange);
       this->Tracer.SetColorMap(this->ColorMap);
-      this->Tracer.SetBackgroundColor(this->BackgroundColor);
+      this->Tracer.SetBackgroundColor(
+            this->Canvas->GetBackgroundColor().Components);
       this->Tracer.Render(this->Canvas);
     }
 

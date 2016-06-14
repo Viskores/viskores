@@ -69,7 +69,6 @@ public:
   }
 protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
-  vtkm::Vec<vtkm::Float32,4> BackgroundColor;
 };
 }} //namespace vtkm::rendering
 #endif //vtk_m_rendering_Mapper_h
