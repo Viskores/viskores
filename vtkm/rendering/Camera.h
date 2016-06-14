@@ -555,7 +555,7 @@ public:
     vtkm::Float32 diagonalLength = vtkm::Magnitude(totalExtent);
     this->SetPosition(center + directionOfProjection * diagonalLength * 1.0f);
     this->SetFieldOfView(60.0f);
-    this->SetClippingRange(1.0f, diagonalLength*10.0f);
+    this->SetClippingRange(0.1f * diagonalLength, diagonalLength*10.0f);
 
     // Reset for 2D camera
     this->SetViewRange2D(dataBounds);
