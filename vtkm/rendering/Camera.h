@@ -317,10 +317,15 @@ public:
     this->FarPlane = farPlane;
   }
   VTKM_CONT_EXPORT
+  void SetClippingRange(vtkm::Float64 nearPlane, vtkm::Float64 farPlane)
+  {
+    this->SetClippingRange(static_cast<vtkm::Float32>(nearPlane),
+                           static_cast<vtkm::Float32>(farPlane));
+  }
+  VTKM_CONT_EXPORT
   void SetClippingRange(const vtkm::Range &nearFarRange)
   {
-    this->SetClippingRange(static_cast<vtkm::Float32>(nearFarRange.Min),
-                           static_cast<vtkm::Float32>(nearFarRange.Max));
+    this->SetClippingRange(nearFarRange.Min, nearFarRange.Max);
   }
 
   /// \brief The viewport of the projection
@@ -336,6 +341,17 @@ public:
                    vtkm::Float32 &right,
                    vtkm::Float32 &bottom,
                    vtkm::Float32 &top) const
+  {
+    left = this->ViewportLeft;
+    right = this->ViewportRight;
+    bottom = this->ViewportBottom;
+    top = this->ViewportTop;
+  }
+  VTKM_CONT_EXPORT
+  void GetViewport(vtkm::Float64 &left,
+                   vtkm::Float64 &right,
+                   vtkm::Float64 &bottom,
+                   vtkm::Float64 &top) const
   {
     left = this->ViewportLeft;
     right = this->ViewportRight;
@@ -364,12 +380,23 @@ public:
     this->ViewportTop = top;
   }
   VTKM_CONT_EXPORT
+  void SetViewport(vtkm::Float64 left,
+                   vtkm::Float64 right,
+                   vtkm::Float64 bottom,
+                   vtkm::Float64 top)
+  {
+    this->SetViewport(static_cast<vtkm::Float32>(left),
+                      static_cast<vtkm::Float32>(right),
+                      static_cast<vtkm::Float32>(bottom),
+                      static_cast<vtkm::Float32>(top));
+  }
+  VTKM_CONT_EXPORT
   void SetViewport(const vtkm::Bounds &viewportBounds)
   {
-    this->SetViewport(static_cast<vtkm::Float32>(viewportBounds.X.Min),
-                      static_cast<vtkm::Float32>(viewportBounds.X.Max),
-                      static_cast<vtkm::Float32>(viewportBounds.Y.Min),
-                      static_cast<vtkm::Float32>(viewportBounds.Y.Max));
+    this->SetViewport(viewportBounds.X.Min,
+                      viewportBounds.X.Max,
+                      viewportBounds.Y.Min,
+                      viewportBounds.Y.Max);
   }
 
   /// \brief The focal point the camera is looking at in 3D mode
@@ -388,6 +415,11 @@ public:
     this->SetModeTo3D();
     this->Camera3D.LookAt = lookAt;
   }
+  VTKM_CONT_EXPORT
+  void SetLookAt(const vtkm::Vec<Float64,3> &lookAt)
+  {
+    this->SetLookAt(vtkm::Vec<Float32,3>(lookAt));
+  }
 
   /// \brief The spatial position of the camera in 3D mode
   ///
@@ -404,6 +436,11 @@ public:
   {
     this->SetModeTo3D();
     this->Camera3D.Position = position;
+  }
+  VTKM_CONT_EXPORT
+  void SetPosition(const vtkm::Vec<vtkm::Float64,3> &position)
+  {
+    this->SetPosition(vtkm::Vec<vtkm::Float32,3>(position));
   }
 
   /// \brief The up orientation of the camera in 3D mode
@@ -424,6 +461,11 @@ public:
     this->SetModeTo3D();
     this->Camera3D.ViewUp = viewUp;
   }
+  VTKM_CONT_EXPORT
+  void SetViewUp(const vtkm::Vec<vtkm::Float64,3> &viewUp)
+  {
+    this->SetViewUp(vtkm::Vec<vtkm::Float32,3>(viewUp));
+  }
 
   /// \brief The field of view angle
   ///
@@ -443,6 +485,11 @@ public:
     this->SetModeTo3D();
     this->Camera3D.FieldOfView = fov;
   }
+  VTKM_CONT_EXPORT
+  void SetFieldOfView(vtkm::Float64 fov)
+  {
+    this->SetFieldOfView(static_cast<vtkm::Float32>(fov));
+  }
 
   /// \brief Pans the camera
   ///
@@ -455,7 +502,17 @@ public:
     this->Camera2D.YPan += dy;
   }
   VTKM_CONT_EXPORT
+  void Pan(vtkm::Float64 dx, vtkm::Float64 dy)
+  {
+    this->Pan(static_cast<vtkm::Float32>(dx), static_cast<vtkm::Float32>(dy));
+  }
+  VTKM_CONT_EXPORT
   void Pan(vtkm::Vec<vtkm::Float32,2> direction)
+  {
+    this->Pan(direction[0], direction[1]);
+  }
+  VTKM_CONT_EXPORT
+  void Pan(vtkm::Vec<vtkm::Float64,2> direction)
   {
     this->Pan(direction[0], direction[1]);
   }
@@ -476,6 +533,11 @@ public:
     this->Camera2D.Zoom *= factor;
     this->Camera2D.XPan *= factor;
     this->Camera2D.YPan *= factor;
+  }
+  VTKM_CONT_EXPORT
+  void Zoom(vtkm::Float64 zoom)
+  {
+    this->Zoom(static_cast<vtkm::Float64>(zoom));
   }
 
   /// \brief Moves the camera as if a point was dragged along a sphere.
@@ -525,6 +587,17 @@ public:
         vtkm::Transform3DPoint(fullTransform, this->Camera3D.LookAt);
     this->Camera3D.ViewUp =
         vtkm::Transform3DVector(fullTransform, this->Camera3D.ViewUp);
+  }
+  VTKM_CONT_EXPORT
+  void TrackballRotate(vtkm::Float64 startX,
+                       vtkm::Float64 startY,
+                       vtkm::Float64 endX,
+                       vtkm::Float64 endY)
+  {
+    this->TrackballRotate(static_cast<vtkm::Float32>(startX),
+                          static_cast<vtkm::Float32>(startY),
+                          static_cast<vtkm::Float32>(endX),
+                          static_cast<vtkm::Float32>(endY));
   }
 
   /// \brief Set up the camera to look at geometry
@@ -581,6 +654,11 @@ public:
 
     this->SetViewUp(vtkm::Transform3DVector(rotateTransform,this->GetViewUp()));
   }
+  VTKM_CONT_EXPORT
+  void Roll(vtkm::Float64 angleRadians)
+  {
+    this->Roll(static_cast<vtkm::Float32>(angleRadians));
+  }
 
   /// \brief Rotate the camera about the view up vector centered at the focal point.
   ///
@@ -604,6 +682,11 @@ public:
           transform, vtkm::Transform3DTranslate(-this->GetLookAt()));
 
     this->SetPosition(vtkm::Transform3DPoint(transform, this->GetPosition()));
+  }
+  VTKM_CONT_EXPORT
+  void Azimuth(vtkm::Float64 angleRadians)
+  {
+    this->Azimuth(static_cast<vtkm::Float32>(angleRadians));
   }
 
   /// \brief Rotate the camera vertically around the focal point.
@@ -633,6 +716,11 @@ public:
 
     this->SetPosition(vtkm::Transform3DPoint(transform, this->GetPosition()));
   }
+  VTKM_CONT_EXPORT
+  void Elevation(vtkm::Float64 angleRadians)
+  {
+    this->Elevation(static_cast<vtkm::Float32>(angleRadians));
+  }
 
   /// \brief Move the camera toward or away from the focal point.
   ///
@@ -653,6 +741,11 @@ public:
         this->GetPosition() - this->GetLookAt();
 
     this->SetPosition(this->GetLookAt() + (1.0f/value)*lookAtToPos);
+  }
+  VTKM_CONT_EXPORT
+  void Dolly(vtkm::Float64 value)
+  {
+    this->Dolly(static_cast<vtkm::Float32>(value));
   }
 
   /// \brief The viewable region in the x-y plane
@@ -698,13 +791,21 @@ public:
     this->Camera2D.Top = top;
   }
   VTKM_CONT_EXPORT
+  void SetViewRange2D(vtkm::Float64 left,
+                      vtkm::Float64 right,
+                      vtkm::Float64 bottom,
+                      vtkm::Float64 top)
+  {
+    this->SetViewRange2D(static_cast<vtkm::Float32>(left),
+                         static_cast<vtkm::Float32>(right),
+                         static_cast<vtkm::Float32>(bottom),
+                         static_cast<vtkm::Float32>(top));
+  }
+  VTKM_CONT_EXPORT
   void SetViewRange2D(const vtkm::Range &xRange,
                       const vtkm::Range &yRange)
   {
-    this->SetViewRange2D(static_cast<vtkm::Float32>(xRange.Min),
-                         static_cast<vtkm::Float32>(xRange.Max),
-                         static_cast<vtkm::Float32>(yRange.Min),
-                         static_cast<vtkm::Float32>(yRange.Max));
+    this->SetViewRange2D(xRange.Min, xRange.Max, yRange.Min, yRange.Max);
   }
   VTKM_CONT_EXPORT
   void SetViewRange2D(const vtkm::Bounds &viewRange)
