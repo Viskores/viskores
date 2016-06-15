@@ -542,12 +542,12 @@ private:
 
     //std::cout<<"Bounds ("<<x[0]<<","<<y[0]<<","<<z[0]<<")-("<<x[1]<<","<<y[1]<<","<<z[1]<<std::endl;
     vtkm::Float32 xmin, ymin, xmax, ymax, zmin, zmax;
-    xmin = std::numeric_limits<vtkm::Float32>::max();
-    ymin = std::numeric_limits<vtkm::Float32>::max();
-    zmin = std::numeric_limits<vtkm::Float32>::max();
-    xmax = std::numeric_limits<vtkm::Float32>::min();
-    ymax = std::numeric_limits<vtkm::Float32>::min();
-    zmax = std::numeric_limits<vtkm::Float32>::min();
+    xmin = vtkm::Infinity32();
+    ymin = vtkm::Infinity32();
+    zmin = vtkm::Infinity32();
+    xmax = vtkm::NegativeInfinity32();
+    ymax = vtkm::NegativeInfinity32();
+    zmax = vtkm::NegativeInfinity32();
     vtkm::Vec<vtkm::Float32,4> extentPoint;
     for (vtkm::Int32 i = 0; i < 2; ++i)
     for (vtkm::Int32 j = 0; j < 2; ++j)

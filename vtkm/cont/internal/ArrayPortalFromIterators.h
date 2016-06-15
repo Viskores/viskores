@@ -63,7 +63,7 @@ public:
       std::distance(begin, end);
     VTKM_ASSERT(numberOfValues >= 0);
 #ifndef VTKM_USE_64BIT_IDS
-    if (numberOfValues > std::numeric_limits<vtkm::Id>::max())
+    if (numberOfValues > (std::numeric_limits<vtkm::Id>::max)())
     {
       throw vtkm::cont::ErrorControlBadAllocation(
         "Distance of iterators larger than maximum array size. "
@@ -147,7 +147,7 @@ public:
       std::distance(begin, end);
     VTKM_ASSERT(numberOfValues >= 0);
 #ifndef VTKM_USE_64BIT_IDS
-    if (numberOfValues > std::numeric_limits<vtkm::Id>::max())
+    if (numberOfValues > (std::numeric_limits<vtkm::Id>::max)())
     {
       throw vtkm::cont::ErrorControlBadAllocation(
         "Distance of iterators larger than maximum array size. "
