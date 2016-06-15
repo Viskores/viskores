@@ -125,8 +125,8 @@ class Camera
 
     VTKM_CONT_EXPORT
     vtkm::Matrix<vtkm::Float32,4,4> CreateProjectionMatrix(vtkm::Float32 size,
-                                                           vtkm::Float32 near,
-                                                           vtkm::Float32 far,
+                                                           vtkm::Float32 znear,
+                                                           vtkm::Float32 zfar,
                                                            vtkm::Float32 aspect) const
     {
       vtkm::Matrix<vtkm::Float32,4,4> matrix(0.f);
@@ -137,10 +137,10 @@ class Camera
 
       matrix(0,0) = 2.f/(right-left);
       matrix(1,1) = 2.f/(top-bottom);
-      matrix(2,2) = -2.f/(far-near);
+      matrix(2,2) = -2.f/(zfar-znear);
       matrix(0,3) = -(right+left)/(right-left);
       matrix(1,3) = -(top+bottom)/(top-bottom);
-      matrix(2,3) = -(far+near)/(far-near);
+      matrix(2,3) = -(zfar+znear)/(zfar-znear);
       matrix(3,3) = 1.f;
 
       vtkm::Matrix<vtkm::Float32,4,4> T, Z;
