@@ -29,6 +29,8 @@
 #include <vtkm/rendering/AxisAnnotation.h>
 #include <vtkm/rendering/TextAnnotation.h>
 
+#include <sstream>
+
 namespace vtkm {
 namespace rendering {
 
@@ -175,6 +177,7 @@ public:
                                                   0,0, 0));
     }
 
+    std::stringstream numberToString;
     for (unsigned int i=0; i<nmajor; ++i)
     {
       vtkm::Float64 xc = x0 + (x1-x0) * maj_proportions[i];
@@ -192,10 +195,10 @@ public:
         xs -= (maj_tx<0?-1.:+1.) * fontscale * .1;
       }
 
-      char val[256];
-      snprintf(val, 256, "%g", maj_positions[i]);
+      numberToString.str("");
+      numberToString << maj_positions[i];
 
-      labels[i]->SetText(val);
+      labels[i]->SetText(numberToString.str());
       //if (fabs(maj_positions[i]) < 1e-10)
       //    labels[i]->SetText("0");
       ((ScreenTextAnnotation*)(labels[i]))->SetPosition(vtkm::Float32(xs),
