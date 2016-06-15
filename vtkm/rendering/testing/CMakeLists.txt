@@ -26,6 +26,13 @@ set(unit_tests
 set(libs)
 if (OPENGL_FOUND)
   list(APPEND libs ${OPENGL_LIBRARIES})
+  if (EGL_FOUND)
+    set(unit_tests ${unit_tests}
+      UnitTestMapperEGL.cxx
+      )
+    list(APPEND libs ${EGL_LIBRARIES})    
+  endif()
+
 
   if (OSMESA_FOUND)
     set(unit_tests ${unit_tests}
