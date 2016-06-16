@@ -160,8 +160,8 @@ public:
 
     glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3],
         GL_RGBA, GL_FLOAT,
-        vtkm::cont::ArrayPortalToIteratorBegin(
-          this->GetColorBuffer().GetPortalControl()));
+        &(*vtkm::cont::ArrayPortalToIteratorBegin(
+            this->GetColorBuffer().GetPortalControl())));
   }
   VTKM_CONT_EXPORT
   virtual void RefreshDepthBuffer()
@@ -173,8 +173,8 @@ public:
 
     glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3],
         GL_DEPTH_COMPONENT, GL_FLOAT,
-        vtkm::cont::ArrayPortalToIteratorBegin(
-          this->GetDepthBuffer().GetPortalControl()));
+        &(*vtkm::cont::ArrayPortalToIteratorBegin(
+            this->GetDepthBuffer().GetPortalControl())));
   }
 
   VTKM_CONT_EXPORT
