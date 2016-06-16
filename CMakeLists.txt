@@ -50,20 +50,21 @@ set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm/cmake")
 
 set(VTKm_REQUIRED_BOOST_VERSION "1.48")
 
-# include some vtkm-specific cmake code.
-include(CMake/VTKmMacros.cmake)
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_SOURCE_DIR}/CMake)
 
-#-----------------------------------------------------------------------------
-# List of Boost features used:
-# * Smart Ptr
-# * Meta programming language
-# We check for boost first, as the device configuration code requires boost
-# to be found
-find_package(BoostHeaders ${VTKm_REQUIRED_BOOST_VERSION} REQUIRED)
-if(NOT Boost_FOUND)
-  message(FATAL_ERROR "Please specify where to find boost headers (${VTKm_REQUIRED_BOOST_VERSION}+)" )
+# include some vtkm-specific cmake code.
+include(VTKmMacros)
+
+set(VTKm_INCLUDE_DIRS
+  ${CMAKE_CURRENT_BINARY_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+
+# Load the base VTK-m configuration, which is required for some of the later
+# config.
+vtkm_configure_component_Base()
+if(NOT VTKm_Base_FOUND)
+  message(SEND_ERROR "Could not load base VTK-m component. Perhaps the Boost headers were not found.")
 endif()
 
 #-----------------------------------------------------------------------------
@@ -114,15 +115,22 @@ endif()
 
 #-----------------------------------------------------------------------------
 # Set up devices selected.
-vtkm_configure_device(Serial)
+vtkm_configure_component_Serial()
+if(NOT VTKm_Serial_FOUND)
+  message(SEND_ERROR "Could not load serial VTK-m component.")
+endif()
 if (VTKm_ENABLE_TBB)
-  vtkm_configure_device(TBB REQUIRED)
+  vtkm_configure_component_TBB()
+  if(NOT VTKm_TBB_FOUND)
+    message(SEND_ERROR "Could not load TBB configuration. If TBB is not available, turn off VTKm_ENABLE_TBB.")
+  endif()
 endif (VTKm_ENABLE_TBB)
 if (VTKm_ENABLE_CUDA)
-  vtkm_configure_device(CUDA REQUIRED)
-  cuda_include_directories(${VTKm_INCLUDE_DIRS})
+  vtkm_configure_component_CUDA()
+  if(NOT VTKm_CUDA_FOUND)
+    message(SEND_ERROR "Could not load CUDA configuration. If CUDA is not available, turn off VTKm_ENABLE_TBB.")
+  endif()
 endif (VTKm_ENABLE_CUDA)
-include_directories(${VTKm_INCLUDE_DIRS})
 
 #-----------------------------------------------------------------------------
 
@@ -142,11 +150,6 @@ set( LIBRARY_OUTPUT_PATH
 mark_as_advanced(
   EXECUTABLE_OUTPUT_PATH
   LIBRARY_OUTPUT_PATH)
-
-include_directories(
-  ${CMAKE_CURRENT_BINARY_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  )
 
 #-----------------------------------------------------------------------------
 # Add "meta" tests that check the state of the repository
@@ -202,12 +205,6 @@ CMAKE_DEPENDENT_OPTION(VTKm_ENABLE_OPENGL_TESTS
                        "Enable OpenGL Interop Render Window Tests"
                        ON "VTKm_ENABLE_OPENGL_INTEROP;GLUT_FOUND" OFF)
 
-#on unix/linux Glew uses pthreads, so we need to find that, and link to it
-#explicitly or else in release mode we get sigsegv on launch
-if(UNIX AND VTKm_ENABLE_OPENGL_INTEROP)
-  find_package(Threads REQUIRED)
-endif()
-
 #-----------------------------------------------------------------------------
 # Find the Python interpreter, which we will use during the build process
 find_package(PythonInterp)
@@ -237,6 +234,14 @@ endif(VTKm_BUILD_EXAMPLES)
 #-----------------------------------------------------------------------------
 # Ready files for find_package
 include(CMakePackageConfigHelpers)
+
+set(VTKm_LOAD_COMPONENTS_COMMANDS)
+foreach(component ${VTKm_AVAILABLE_COMPONENTS})
+  set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
+if(${component} IN_LIST VTKm_FIND_COMPONENTS)
+  vtkm_configure_component_${component}()
+endif()")
+endforeach(component)
 
 configure_package_config_file(
   ${VTKm_SOURCE_DIR}/CMake/VTKmConfig.cmake.in
@@ -274,20 +279,11 @@ install(
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
 
-# Install Use files.
-install(
-  FILES
-    ${VTKm_SOURCE_DIR}/CMake/UseVTKmBase.cmake
-    ${VTKm_SOURCE_DIR}/CMake/UseVTKmSerial.cmake
-    ${VTKm_SOURCE_DIR}/CMake/UseVTKmTBB.cmake
-    ${VTKm_SOURCE_DIR}/CMake/UseVTKmCUDA.cmake
-  DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
-  )
-
 # Install support files.
 install(
   FILES
     ${VTKm_SOURCE_DIR}/CMake/VTKmMacros.cmake
+    ${VTKm_SOURCE_DIR}/CMake/VTKmConfigureComponents.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmCompilerOptimizations.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cxx
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}

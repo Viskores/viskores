@@ -58,16 +58,13 @@ set(osmesa_headers
   )
 
 #-----------------------------------------------------------------------------
-set(includes)
-if(OPENGL_FOUND)
+vtkm_configure_component_OpenGL()
+if(VTKm_OpenGL_FOUND)
   set(headers ${headers} ${opengl_headers})
 
-  if (UNIX AND NOT APPLE)
-    find_package(MESA)
-    if (OSMESA_FOUND)
-      set(headers ${headers} ${osmesa_headers})
-      list(APPEND includes ${OSMESA_INCLUDE_DIR})
-    endif()
+  vtkm_configure_component_OSMesa()
+  if(VTKm_OSMesa_FOUND)
+    set(headers ${headers} ${osmesa_headers})
   endif()
 endif()
 
@@ -75,8 +72,6 @@ vtkm_declare_headers(${headers})
 
 add_subdirectory(internal)
 add_subdirectory(raytracing)
-
-include_directories(${includes})
 
 
 

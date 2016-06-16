@@ -114,6 +114,10 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
                    )
     endif(VTKm_EXTRA_COMPILER_WARNINGS)
   endif ()
+  set_property(TARGET TestBuild_${name} APPEND PROPERTY
+    INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS}
+    )
+  target_link_libraries(TestBuild_${name} ${VTKm_LIBRARIES})
   set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
@@ -233,19 +237,9 @@ function(vtkm_unit_tests)
     ${ARGN}
     )
 
-  #set up what we possibly need to link too.
-  list(APPEND VTKm_UT_LIBRARIES ${VTKm_LIBRARIES})
-  #set up storage for the include dirs
-  set(VTKm_UT_INCLUDE_DIRS )
-
-  if(VTKm_ENABLE_OPENGL_INTEROP)
-    list(APPEND VTKm_UT_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} )
-    list(APPEND VTKm_UT_LIBRARIES ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
-  endif()
-
   if(VTKm_ENABLE_OPENGL_TESTS)
-    list(APPEND VTKm_UT_INCLUDE_DIRS ${GLUT_INCLUDE_DIR} )
-    list(APPEND VTKm_UT_LIBRARIES ${GLUT_LIBRARIES}  )
+    list(APPEND VTKm_INCLUDE_DIRS ${GLUT_INCLUDE_DIR} )
+    list(APPEND VTKm_LIBRARIES ${GLUT_LIBRARIES}  )
   endif()
 
   if (VTKm_ENABLE_TESTING)
@@ -275,9 +269,9 @@ function(vtkm_unit_tests)
     #do it as a property value so we don't pollute the include_directories
     #for any other targets
     set_property(TARGET ${test_prog} APPEND PROPERTY
-        INCLUDE_DIRECTORIES ${VTKm_UT_INCLUDE_DIRS} )
+        INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
 
-    target_link_libraries(${test_prog} ${VTKm_UT_LIBRARIES})
+    target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
 
     target_compile_options(${test_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
@@ -592,17 +586,4 @@ macro(vtkm_disable_troublesome_thrust_warnings_var flags_var)
   set(${flags_var} "${new_flags}")
 endmacro(vtkm_disable_troublesome_thrust_warnings_var)
 
-# Set up configuration for a given device.
-macro(vtkm_configure_device device)
-  string(TOUPPER "${device}" device_uppercase)
-  set(VTKm_ENABLE_${device_uppercase} ON)
-  include("UseVTKm${device}")
-  if(NOT VTKm_${device}_FOUND)
-    if ("${ARGV1}" STREQUAL "REQUIRED")
-      message(SEND_ERROR "Could not configure for using VTKm with ${device}")
-    else()
-      message(STATUS "Could not configure for using VTKm with ${device}")
-    endif()
-  endif()
-endmacro(vtkm_configure_device)
-
+include(VTKmConfigureComponents)
