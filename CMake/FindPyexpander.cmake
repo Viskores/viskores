@@ -28,6 +28,11 @@
 # PYEXPANDER_FOUND   - True if pyexpander is found
 # PYEXPANDER_COMMAND - The pyexpander executable
 #
+# Note that on some platforms (such as Windows), you cannot execute a python
+# script directly. Thus, it could be safer to execute the Python interpreter
+# with PYEXPANDER_COMMAND as an argument. See FindPythonInterp.cmake for help
+# in finding the Python interpreter.
+#
 
 find_program(PYEXPANDER_COMMAND expander.py)
 
