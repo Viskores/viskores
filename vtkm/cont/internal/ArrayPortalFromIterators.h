@@ -220,7 +220,7 @@ class ArrayPortalToIterators<
   typedef vtkm::cont::internal::ArrayPortalFromIterators<_IteratorType>
       PortalType;
 public:
-#ifndef VTKM_MSVC
+#if !defined(VTKM_MSVC) || (defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL == 0)
   typedef _IteratorType IteratorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -231,9 +231,9 @@ public:
   {  }
 
 #else // VTKM_MSVC
-  // The MSVC compiler issues warnings if you use raw pointers with some
-  // operations. To keep the compiler happy (and add some safety checks),
-  // wrap the iterator in a check.
+  // The MSVC compiler issues warnings when using raw pointer math when in
+  // debug mode. To keep the compiler happy (and add some safety checks),
+  // wrap the iterator in checked_array_iterator.
   typedef stdext::checked_array_iterator<_IteratorType> IteratorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -256,7 +256,19 @@ public:
     IteratorType iterator = this->Iterator;
 	typedef typename std::iterator_traits<IteratorType>::difference_type
 		difference_type;
+
+#if !defined(VTKM_MSVC) || (defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL == 0)
     std::advance(iterator, static_cast<difference_type>(this->NumberOfValues));
+#else
+    //Visual Studio checked iterators throw exceptions when you try to advance
+    //NULL iterators even if the advancement length is zero. So instead
+    //don't do the advancement at all
+    if(this->NumberOfValues > 0)
+    {
+      std::advance(iterator, static_cast<difference_type>(this->NumberOfValues));
+    }
+#endif
+
     return iterator;
   }
 
