@@ -77,9 +77,9 @@ public:
   }
   void SetTickInvert(bool x, bool y, bool z)
   {
-    invertx = x ? +1 : -1;
-    inverty = y ? +1 : -1;
-    invertz = z ? +1 : -1;
+    invertx = x ? +1.0f : -1.0f;
+    inverty = y ? +1.0f : -1.0f;
+    invertz = z ? +1.0f : -1.0f;
   }
   void SetMajorTickSize(vtkm::Float64 size, vtkm::Float64 offset)
   {
