@@ -135,18 +135,17 @@ vtkm::Matrix<T,4,4> Transform3DTranslate(const vtkm::Vec<T,3> &v)
 
 /// \brief Returns a rotation matrix.
 ///
-/// Given an angle (in radians) and an axis of rotation, returns a
+/// Given an angle (in degrees) and an axis of rotation, returns a
 /// transformation matrix that rotates around the given axis. The rotation
 /// follows the right-hand rule, so if the vector points toward the user, the
 /// rotation will be counterclockwise.
 ///
-/// Note that, unlike with OpenGL, the angle is given in radians, not degrees.
-///
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Matrix<T,4,4> Transform3DRotate(T angleRadians,
+vtkm::Matrix<T,4,4> Transform3DRotate(T angleDegrees,
                                       const vtkm::Vec<T,3> &axisOfRotation)
 {
+  T angleRadians = static_cast<T>(vtkm::Pi()/180)*angleDegrees;
   const vtkm::Vec<T,3> normAxis = vtkm::Normal(axisOfRotation);
   T sinAngle = vtkm::Sin(angleRadians);
   T cosAngle = vtkm::Cos(angleRadians);
@@ -177,9 +176,9 @@ vtkm::Matrix<T,4,4> Transform3DRotate(T angleRadians,
 }
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Matrix<T,4,4> Transform3DRotate(T angleRadians, T x, T y, T z)
+vtkm::Matrix<T,4,4> Transform3DRotate(T angleDegrees, T x, T y, T z)
 {
-  return vtkm::Transform3DRotate(angleRadians, vtkm::Vec<T,3>(x,y,z));
+  return vtkm::Transform3DRotate(angleDegrees, vtkm::Vec<T,3>(x,y,z));
 }
 
 /// \brief Returns a rotation matrix.
@@ -188,9 +187,9 @@ vtkm::Matrix<T,4,4> Transform3DRotate(T angleRadians, T x, T y, T z)
 ///
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Matrix<T,4,4> Transform3DRotateX(T angleRadians)
+vtkm::Matrix<T,4,4> Transform3DRotateX(T angleDegrees)
 {
-  return vtkm::Transform3DRotate(angleRadians, T(1), T(0), T(0));
+  return vtkm::Transform3DRotate(angleDegrees, T(1), T(0), T(0));
 }
 
 /// \brief Returns a rotation matrix.
@@ -199,9 +198,9 @@ vtkm::Matrix<T,4,4> Transform3DRotateX(T angleRadians)
 ///
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Matrix<T,4,4> Transform3DRotateY(T angleRadians)
+vtkm::Matrix<T,4,4> Transform3DRotateY(T angleDegrees)
 {
-  return vtkm::Transform3DRotate(angleRadians, T(0), T(1), T(0));
+  return vtkm::Transform3DRotate(angleDegrees, T(0), T(1), T(0));
 }
 
 /// \brief Returns a rotation matrix.
@@ -210,9 +209,9 @@ vtkm::Matrix<T,4,4> Transform3DRotateY(T angleRadians)
 ///
 template<typename T>
 VTKM_EXEC_CONT_EXPORT
-vtkm::Matrix<T,4,4> Transform3DRotateZ(T angleRadians)
+vtkm::Matrix<T,4,4> Transform3DRotateZ(T angleDegrees)
 {
-  return vtkm::Transform3DRotate(angleRadians, T(0), T(0), T(1));
+  return vtkm::Transform3DRotate(angleDegrees, T(0), T(0), T(1));
 }
 
 } // namespace vtkm

@@ -115,7 +115,7 @@ struct TransformTests
     Vec startPoint = this->RandomVector();
     std::cout << " Starting point: " << startPoint << std::endl;
 
-    const T ninetyDegrees = T(vtkm::Pi_2());
+    const T ninetyDegrees = T(90);
 
     std::cout << "--Rotate 90 degrees around X" << std::endl;
     Transform rotateX = vtkm::Transform3DRotateX(ninetyDegrees);
