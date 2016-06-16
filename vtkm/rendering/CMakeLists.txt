@@ -49,6 +49,9 @@ set(opengl_headers
   TextureGL.h
   WorldAnnotatorGL.h
   )
+set(egl_headers
+  CanvasEGL.h
+)
 
 set(osmesa_headers
   CanvasOSMesa.h
