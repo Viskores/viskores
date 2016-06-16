@@ -31,11 +31,12 @@ set(VTKM_ENABLE_TBB ${VTKm_ENABLE_TBB})
 
 set(VTKM_ENABLE_OPENGL_INTEROP ${VTKm_ENABLE_OPENGL_INTEROP})
 
+vtkm_get_kit_name(kit_name kit_dir)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
-  ${CMAKE_CURRENT_BINARY_DIR}/Configure.h
+  ${CMAKE_BINARY_DIR}/include/${kit_dir}/Configure.h
   @ONLY)
 vtkm_install_headers(
-  vtkm/internal ${CMAKE_CURRENT_BINARY_DIR}/Configure.h)
+  vtkm/internal ${CMAKE_BINARY_DIR}/include/${kit_dir}/Configure.h)
 
 unset(VTKM_ENABLE_OPENGL_INTEROP)
 

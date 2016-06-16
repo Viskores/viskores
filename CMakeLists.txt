@@ -238,34 +238,19 @@ endif(VTKm_BUILD_EXAMPLES)
 # Ready files for find_package
 include(CMakePackageConfigHelpers)
 
-# Configuration for build directory.
-set(VTKm_INCLUDE_DIRS_CONFIG "${VTKm_SOURCE_DIR};${VTKm_BINARY_DIR}")
-set(VTKm_CMAKE_MODULE_PATH_CONFIG "${VTKm_SOURCE_DIR}/CMake")
-configure_file(
+configure_package_config_file(
   ${VTKm_SOURCE_DIR}/CMake/VTKmConfig.cmake.in
-  ${VTKm_BINARY_DIR}/VTKmConfig.cmake
-  @ONLY IMMEDIATE
+  ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
+  INSTALL_DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
+  PATH_VARS VTKm_INSTALL_INCLUDE_DIR VTKm_INSTALL_CMAKE_MODULE_DIR
   )
 
-# Configuration for install.
-set(VTKm_INCLUDE_DIRS_CONFIG "\${_install_dir}/${VTKm_INSTALL_INCLUDE_DIR}")
-set(VTKm_CMAKE_MODULE_PATH_CONFIG "\${_install_dir}/${VTKm_INSTALL_CMAKE_MODULE_DIR}")
-configure_file(
-  ${VTKm_SOURCE_DIR}/CMake/VTKmConfig.cmake.in
-  ${VTKm_BINARY_DIR}/VTKmConfig.cmake.install
-  @ONLY IMMEDIATE
-  )
-install(FILES ${VTKm_BINARY_DIR}/VTKmConfig.cmake.install
-  DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
-  RENAME VTKmConfig.cmake
-  )
-
-# Create supplemental version configuration file.
 write_basic_package_version_file(
-  ${VTKm_BINARY_DIR}/VTKmConfigVersion.cmake
+  ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
-install(FILES ${VTKm_BINARY_DIR}/VTKmConfigVersion.cmake
+install(
+  FILES ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
   )
 
