@@ -23,9 +23,14 @@
 # version stored in the source code. If the versions are different, an
 # error message is printed with further instructions.
 #
-# To use this script, the CMake variables PYEXPANDER_COMMAND, SOURCE_FILE,
-# and GENERATED_FILE must be defined as the two files to compare. A ".in"
-# is appended to SOURCE_FILE to get the pyexpander input.
+# To use this script, the CMake variables PYTHON_EXECUTABLE PYEXPANDER_COMMAND,
+# SOURCE_FILE, and GENERATED_FILE must be defined as the two files to compare.
+# A ".in" is appended to SOURCE_FILE to get the pyexpander input.
+
+if(NOT PYTHON_EXECUTABLE)
+  message(SEND_ERROR "Variable PYTHON_EXECUTABLE must be set.")
+  return()
+endif()
 
 if(NOT PYEXPANDER_COMMAND)
   message(SEND_ERROR "Variable PYEXPANDER_COMMAND must be set.")
@@ -43,14 +48,14 @@ if(NOT GENERATED_FILE)
 endif()
 
 execute_process(
-  COMMAND ${PYEXPANDER_COMMAND} ${SOURCE_FILE}.in
+  COMMAND ${PYTHON_EXECUTABLE} ${PYEXPANDER_COMMAND} ${SOURCE_FILE}.in
   RESULT_VARIABLE pyexpander_result
   OUTPUT_VARIABLE pyexpander_output
   )
 
-if(${pyexpander_result})
+if(pyexpander_result)
   # If pyexpander returned non-zero, it failed.
-  message(SEND_ERROR "Running pyexpander failed.")
+  message(SEND_ERROR "Running pyexpander failed (${pyexpander_result}).")
   return()
 endif()
 

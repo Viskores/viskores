@@ -127,7 +127,7 @@ struct AlignedAllocator {
     return &r;
   }
   size_type max_size() const {
-    return std::numeric_limits<size_type>::max() / sizeof(T);
+    return (std::numeric_limits<size_type>::max)() / sizeof(T);
   }
   void construct(pointer p, const T &t){
     new(p) T(t);

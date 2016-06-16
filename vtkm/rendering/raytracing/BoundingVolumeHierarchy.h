@@ -783,12 +783,12 @@ public:
             *bvh.zmaxs,
             coordsHandle);
     // Find the extent of all bounding boxes to generate normalization for morton codes
-    vtkm::Vec<vtkm::Float32,3> minExtent(std::numeric_limits<vtkm::Float32>::max(),
-                                         std::numeric_limits<vtkm::Float32>::max(),
-                                         std::numeric_limits<vtkm::Float32>::max());
-    vtkm::Vec<vtkm::Float32,3> maxExtent(std::numeric_limits<vtkm::Float32>::min(),
-                                         std::numeric_limits<vtkm::Float32>::min(),
-                                         std::numeric_limits<vtkm::Float32>::min());
+    vtkm::Vec<vtkm::Float32,3> minExtent(vtkm::Infinity32(),
+                                         vtkm::Infinity32(),
+                                         vtkm::Infinity32());
+    vtkm::Vec<vtkm::Float32,3> maxExtent(vtkm::NegativeInfinity32(),
+                                         vtkm::NegativeInfinity32(),
+                                         vtkm::NegativeInfinity32());
     maxExtent[0] = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Reduce(*bvh.xmaxs,
                                                                              maxExtent[0],
                                                                              MaxValue());

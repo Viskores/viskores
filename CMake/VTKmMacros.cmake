@@ -198,10 +198,11 @@ endfunction(vtkm_declare_worklets)
 
 function(vtkm_pyexpander_generated_file generated_file_name)
   # If pyexpander is available, add targets to build and check
-  if(PYEXPANDER_FOUND)
+  if(PYEXPANDER_FOUND AND PYTHONINTERP_FOUND)
     add_custom_command(
       OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}.checked
       COMMAND ${CMAKE_COMMAND}
+        -DPYTHON_EXECUTABLE=${PYTHON_EXECUTABLE}
         -DPYEXPANDER_COMMAND=${PYEXPANDER_COMMAND}
         -DSOURCE_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}
         -DGENERATED_FILE=${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}

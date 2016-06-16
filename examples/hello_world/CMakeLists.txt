@@ -20,7 +20,7 @@
 ##
 ##=============================================================================
 
-if(OPENGL_FOUND AND GLUT_FOUND)
+if(VTKm_ENABLE_OPENGL_INTEROP AND GLUT_FOUND)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR})
   add_executable(HelloWorld_SERIAL HelloWorld.cxx LoadShaders.h)
   set_source_files_properties(LoadShaders.h PROPERTIES HEADER_FILE_ONLY TRUE)

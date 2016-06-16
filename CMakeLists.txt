@@ -209,6 +209,10 @@ if(UNIX AND VTKm_ENABLE_OPENGL_INTEROP)
 endif()
 
 #-----------------------------------------------------------------------------
+# Find the Python interpreter, which we will use during the build process
+find_package(PythonInterp)
+
+#-----------------------------------------------------------------------------
 # Find Pyexpander in case somebody wants to update the auto generated
 # faux variadic template code
 find_package(Pyexpander)
