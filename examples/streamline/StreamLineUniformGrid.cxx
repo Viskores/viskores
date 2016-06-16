@@ -246,7 +246,7 @@ int main(int argc, char* argv[])
 
   // Read vector data at each point of the uniform grid and store
   vtkm::Id nElements = vdims[0] * vdims[1] * vdims[2] * 3;
-  float* data = new float[nElements];
+  float* data = new float[static_cast<std::size_t>(nElements)];
   fread(data, sizeof(float), static_cast<std::size_t>(nElements), pFile);
 
   std::vector<vtkm::Vec<vtkm::Float32, 3> > field;
