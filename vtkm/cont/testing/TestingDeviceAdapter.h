@@ -1591,6 +1591,75 @@ private:
                      "Did not get expected error message.");
   }
 
+  template <typename T, int N=0>
+  struct TestCopy {};
+
+  template <typename T>
+  struct TestCopy<T> {
+      static T get(vtkm::Id i) { return static_cast<T>(i); }
+  };
+
+  template <typename T, int N>
+  struct TestCopy<vtkm::Vec<T, N> > {
+      static vtkm::Vec<T, N> get(vtkm::Id i) {
+          vtkm::Vec<T, N> temp;
+          for (int j=0; j<N; ++j) {
+            temp[j] = static_cast<T>( OFFSET+(i % 50) );
+          }
+          return temp;
+      }
+  };
+
+  template <typename T>
+  static VTKM_CONT_EXPORT void TestCopyArrays()
+  {
+    T testData[ARRAY_SIZE];
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      testData[i]= TestCopy<T>::get(i);
+    }
+
+    vtkm::cont::ArrayHandle<T> input = vtkm::cont::make_ArrayHandle(testData,
+                                                                    ARRAY_SIZE);
+
+    //make a deep copy of input and place it into temp
+    vtkm::cont::ArrayHandle<T> temp;
+    Algorithm::Copy(input,temp);
+
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      T value = temp.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(value == testData[i], "Got bad value (Copy)");
+    }
+  }
+
+  static VTKM_CONT_EXPORT void TestCopyArraysMany()
+  {
+      std::cout << "-------------------------------------------------" << std::endl;
+      std::cout << "Testing Copy to same array type" << std::endl;
+      TestCopyArrays< vtkm::Vec<vtkm::Float32,4> >();
+      TestCopyArrays< vtkm::Vec<vtkm::Float64,4> >();
+      //
+      TestCopyArrays< vtkm::Vec<vtkm::UInt8,2> >();
+      TestCopyArrays< vtkm::Vec<vtkm::UInt16,2> >();
+      TestCopyArrays< vtkm::Vec<vtkm::UInt32,2> >();
+      TestCopyArrays< vtkm::Vec<vtkm::UInt64,2> >();
+      //
+      TestCopyArrays< vtkm::Float32 >();
+      TestCopyArrays< vtkm::Float64 >();
+      //
+      TestCopyArrays< vtkm::Int8 >();
+      TestCopyArrays< vtkm::Int16 >();
+      TestCopyArrays< vtkm::Int32 >();
+      TestCopyArrays< vtkm::Int64 >();
+      //
+      TestCopyArrays< vtkm::UInt8 >();
+      TestCopyArrays< vtkm::UInt16 >();
+      TestCopyArrays< vtkm::UInt32 >();
+      TestCopyArrays< vtkm::UInt64 >();
+      //
+      TestCopyArrays<vtkm::Id>();
+  }
 
   static VTKM_CONT_EXPORT void TestCopyArraysInDiffTypes()
   {
@@ -1718,6 +1787,7 @@ private:
       TestStreamCompactWithStencil();
       TestStreamCompact();
 
+      TestCopyArraysMany();
       TestCopyArraysInDiffTypes();
 
       TestAtomicArray();

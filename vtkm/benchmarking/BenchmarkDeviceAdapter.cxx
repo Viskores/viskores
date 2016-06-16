@@ -70,9 +70,10 @@ enum BenchmarkName {
   STREAM_COMPACT = 1 << 7,
   UNIQUE = 1 << 8,
   UPPER_BOUNDS = 1 << 9,
+  COPY = 1 << 10,
   ALL = LOWER_BOUNDS | REDUCE | REDUCE_BY_KEY | SCAN_INCLUSIVE
     | SCAN_EXCLUSIVE | SORT | SORT_BY_KEY | STREAM_COMPACT | UNIQUE
-    | UPPER_BOUNDS
+    | UPPER_BOUNDS | COPY
 };
 
 /// This class runs a series of micro-benchmarks to measure
@@ -160,6 +161,39 @@ public:
   };
 
 private:
+  template<typename Value>
+  struct BenchCopy {
+    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+
+    ValueArrayHandle ValueHandle_src;
+    ValueArrayHandle ValueHandle_dst;
+    boost::mt19937 Rng;
+
+    VTKM_CONT_EXPORT
+    BenchCopy(){
+      ValueHandle_src.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
+      ValueHandle_dst.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
+    }
+
+    VTKM_CONT_EXPORT
+    vtkm::Float64 operator()(){
+      for (vtkm::Id i = 0; i < ValueHandle_src.GetNumberOfValues(); ++i){
+          ValueHandle_src.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
+      }
+      Timer timer;
+      Algorithm::Copy(ValueHandle_src,ValueHandle_dst);
+      return timer.GetElapsedTime();
+    }
+
+    VTKM_CONT_EXPORT
+    std::string Description() const {
+      std::stringstream description;
+      description << "Copy " << ARRAY_SIZE << " values";
+      return description.str();
+    }
+  };
+  VTKM_MAKE_BENCHMARK(Copy,  BenchCopy);
+
   template<typename Value>
   struct BenchLowerBounds {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
@@ -561,6 +595,11 @@ public:
   static VTKM_CONT_EXPORT int Run(int benchmarks){
     std::cout << DIVIDER << "\nRunning DeviceAdapter benchmarks\n";
 
+    if (benchmarks & COPY) {
+      std::cout << DIVIDER << "\nBenchmarking Copy\n";
+      VTKM_RUN_BENCHMARK(Copy, ValueTypes());
+    }
+
     if (benchmarks & LOWER_BOUNDS){
       std::cout << DIVIDER << "\nBenchmarking LowerBounds\n";
       VTKM_RUN_BENCHMARK(LowerBounds5, ValueTypes());
@@ -688,6 +727,9 @@ int main(int argc, char *argv[])
       }
       else if (arg == "upperbounds"){
         benchmarks |= vtkm::benchmarking::UPPER_BOUNDS;
+      }
+      else if (arg == "copy"){
+        benchmarks |= vtkm::benchmarking::COPY;
       }
       else {
         std::cout << "Unrecognized benchmark: " << argv[i] << std::endl;
