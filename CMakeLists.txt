@@ -39,7 +39,7 @@ endif()
 
 project (VTKm)
 
-set(VTKm_MAJOR_VERSION 0)
+set(VTKm_MAJOR_VERSION 1)
 set(VTKm_MINOR_VERSION 1)
 set(VTKm_PATCH_VERSION 0)
 set(VTKm_VERSION "${VTKm_MAJOR_VERSION}.${VTKm_MINOR_VERSION}.${VTKm_PATCH_VERSION}")
@@ -235,6 +235,9 @@ if(VTKm_BUILD_EXAMPLES)
 endif(VTKm_BUILD_EXAMPLES)
 
 #-----------------------------------------------------------------------------
+# Ready files for find_package
+include(CMakePackageConfigHelpers)
+
 # Configuration for build directory.
 set(VTKm_INCLUDE_DIRS_CONFIG "${VTKm_SOURCE_DIR};${VTKm_BINARY_DIR}")
 set(VTKm_CMAKE_MODULE_PATH_CONFIG "${VTKm_SOURCE_DIR}/CMake")
@@ -258,11 +261,10 @@ install(FILES ${VTKm_BINARY_DIR}/VTKmConfig.cmake.install
   )
 
 # Create supplemental version configuration file.
-configure_file(
-  ${VTKm_SOURCE_DIR}/CMake/VTKmConfigVersion.cmake.in
+write_basic_package_version_file(
   ${VTKm_BINARY_DIR}/VTKmConfigVersion.cmake
-  @ONLY
-  )
+  VERSION ${VTKm_VERSION}
+  COMPATIBILITY ExactVersion )
 install(FILES ${VTKm_BINARY_DIR}/VTKmConfigVersion.cmake
   DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
   )
