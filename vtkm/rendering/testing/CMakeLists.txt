@@ -18,6 +18,10 @@
 ##  this software.
 ##============================================================================
 
+set(headers
+  RenderTest.h
+)
+
 set(unit_tests
   UnitTestMapperRayTracer.cxx
   UnitTestMapperVolume.cxx
