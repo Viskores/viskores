@@ -38,6 +38,7 @@ set(VTKm_AVAILABLE_COMPONENTS
   Serial
   OpenGL
   OSMesa
+  EGL
   Interop
   TBB
   CUDA
@@ -118,6 +119,18 @@ macro(vtkm_configure_component_OSMesa)
     message(STATUS "OSMesa not supported on this platform.")
   endif()
 endmacro(vtkm_configure_component_OSMesa)
+
+macro(vtkm_configure_component_EGL)
+  vtkm_configure_component_OpenGL()
+
+  find_package(EGL)
+
+  vtkm_finish_configure_component(OSMesa
+    DEPENDENT_VARIABLES VTKm_OpenGL_FOUND EGL_FOUND
+    ADD_INCLUDES ${EGL_INCLUDE_DIR}
+    ADD_LIBRARIES ${EGL_LIBRARY}
+    )
+endmacro(vtkm_configure_component_EGL)
 
 macro(vtkm_configure_component_Interop)
   vtkm_configure_component_OpenGL()

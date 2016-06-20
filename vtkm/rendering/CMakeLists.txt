@@ -66,6 +66,11 @@ if(VTKm_OpenGL_FOUND)
   if(VTKm_OSMesa_FOUND)
     set(headers ${headers} ${osmesa_headers})
   endif()
+
+  vtkm_configure_component_EGL()
+  if(VTKm_EGL_FOUND)
+    set(headers ${headers} ${egl_headers})
+  endif()
 endif()
 
 vtkm_declare_headers(${headers})

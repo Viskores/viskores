@@ -189,7 +189,6 @@ include(CMakeDependentOption)
 find_package(OpenGL)
 find_package(GLEW)
 find_package(GLUT)
-find_package(EGL)
 
 #dependent option reads, value to set, if condition is true, otherwise
 #use last value

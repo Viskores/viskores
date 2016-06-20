@@ -19,17 +19,17 @@
 ##  this software.
 ##
 ##=============================================================================
-find_package(MESA)
-if(MESA_FOUND)
+vtkm_configure_component_OSMESA()
+if(VTKm_OSMESA_FOUND)
 
-if(VTKm_CUDA_FOUND)
-  cuda_add_executable(Demo Demo.cu)
-else()
-  add_executable(Demo Demo.cxx)
-endif()
+  if(VTKm_CUDA_FOUND)
+    cuda_add_executable(Demo Demo.cu)
+  else()
+    add_executable(Demo Demo.cxx)
+  endif()
 
-target_include_directories(Demo PRIVATE ${OSMESA_INCLUDE_DIR})
-target_link_libraries(Demo ${OSMESA_LIBRARY} ${VTKm_LIBRARIES})
-target_compile_options(Demo PRIVATE ${VTKm_COMPILE_OPTIONS})
+  target_include_directories(Demo PRIVATE ${VTKm_INCLUDE_DIRS})
+  target_link_libraries(Demo ${VTKm_LIBRARIES})
+  target_compile_options(Demo PRIVATE ${VTKm_COMPILE_OPTIONS})
 
 endif()
