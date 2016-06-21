@@ -61,6 +61,7 @@ macro(vtkm_finish_configure_component component)
       if(NOT ${var})
         message(STATUS "Failed to configure VTK-m component ${component}: !${var}")
         set(VTKm_${component}_FOUND)
+        break()
       endif()
     endforeach(var)
 
@@ -160,35 +161,40 @@ macro(vtkm_configure_component_Interop)
 endmacro(vtkm_configure_component_Interop)
 
 macro(vtkm_configure_component_TBB)
-  vtkm_configure_component_Base()
+  if(VTKm_ENABLE_TBB)
+    vtkm_configure_component_Base()
 
-  find_package(TBB)
+    find_package(TBB)
+  endif()
 
   vtkm_finish_configure_component(TBB
-    DEPENDENT_VARIABLES VTKm_Base_FOUND VTKm_ENABLE_TBB TBB_FOUND
+    DEPENDENT_VARIABLES VTKm_ENABLE_TBB VTKm_Base_FOUND TBB_FOUND
     ADD_INCLUDES ${TBB_INCLUDE_DIRS}
     ADD_LIBRARIES ${TBB_LIBRARIES}
     )
 endmacro(vtkm_configure_component_TBB)
 
 macro(vtkm_configure_component_CUDA)
-  vtkm_configure_component_Base()
+  if(VTKm_ENABLE_CUDA)
+    vtkm_configure_component_Base()
 
-  find_package(CUDA)
-  mark_as_advanced(
-    CUDA_BUILD_CUBIN
-    CUDA_BUILD_EMULATION
-    CUDA_HOST_COMPILER
-    CUDA_SDK_ROOT_DIR
-    CUDA_SEPARABLE_COMPILATION
-    CUDA_TOOLKIT_ROOT_DIR
-    CUDA_VERBOSE_BUILD
-    )
+    find_package(CUDA)
+    mark_as_advanced(
+      CUDA_BUILD_CUBIN
+      CUDA_BUILD_EMULATION
+      CUDA_HOST_COMPILER
+      CUDA_SDK_ROOT_DIR
+      CUDA_SEPARABLE_COMPILATION
+      CUDA_TOOLKIT_ROOT_DIR
+      CUDA_VERBOSE_BUILD
+      )
 
-  find_package(Thrust)
+    find_package(Thrust)
+  endif()
 
   vtkm_finish_configure_component(CUDA
     DEPENDENT_VARIABLES
+      VTKm_ENABLE_CUDA
       VTKm_Base_FOUND
       CUDA_FOUND
       THRUST_FOUND
