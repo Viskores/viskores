@@ -162,7 +162,8 @@ public:
                     this->Storage->GetPortalConst().GetIteratorBegin();
 
     std::copy(beginIterator, 
-              beginIterator + this->Storage->GetNumberOfValues(), dest);
+              beginIterator + static_cast<std::size_t>(this->Storage->GetNumberOfValues()),
+              dest);
   }
 
   VTKM_CONT_EXPORT

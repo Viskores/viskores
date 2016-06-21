@@ -160,9 +160,9 @@ private:
       //verify that the signature that doesn't have type works
       SafelyTransferArray(temp,GLHandle);
 
-      bool  is_buffer;
+      GLboolean  is_buffer;
       is_buffer = glIsBuffer(GLHandle);
-      VTKM_TEST_ASSERT(is_buffer==true,
+      VTKM_TEST_ASSERT(is_buffer==GL_TRUE,
                     "OpenGL buffer not filled");
 
       std::vector<T> returnedValues = CopyGLBuffer(GLHandle, t);
@@ -182,7 +182,7 @@ private:
       GLenum type = vtkm::interop::internal::BufferTypePicker(t);
       SafelyTransferArray(temp,GLHandle,type);
       is_buffer = glIsBuffer(GLHandle);
-      VTKM_TEST_ASSERT(is_buffer==true,
+      VTKM_TEST_ASSERT(is_buffer==GL_TRUE,
                     "OpenGL buffer not filled");
       returnedValues = CopyGLBuffer(GLHandle, t);
       //verify the results match what is in the array handle
@@ -201,7 +201,7 @@ private:
                                                   static_cast<vtkm::Id>(Size) );
       SafelyTransferArray(constant,GLHandle);
       is_buffer = glIsBuffer(GLHandle);
-      VTKM_TEST_ASSERT(is_buffer==true,
+      VTKM_TEST_ASSERT(is_buffer==GL_TRUE,
                     "OpenGL buffer not filled");
       returnedValues = CopyGLBuffer(GLHandle, constantValue);
       for(std::size_t i=0; i < Size; ++i)
@@ -242,11 +242,11 @@ private:
 
   //   //verify all 3 handles are actually handles
   //   bool  is_buffer = glIsBuffer(this->CoordGLHandle);
-  //   VTKM_TEST_ASSERT(is_buffer==true,
+  //   VTKM_TEST_ASSERT(is_buffer==GL_TRUE,
   //                   "Coordinates OpenGL buffer not filled");
 
   //   is_buffer = glIsBuffer(this->MagnitudeGLHandle);
-  //   VTKM_TEST_ASSERT(is_buffer==true,
+  //   VTKM_TEST_ASSERT(is_buffer==GL_TRUE,
   //                   "Magnitude OpenGL buffer not filled");
 
   //   //now that everything is openGL we have one task left.

@@ -23,6 +23,7 @@
 #include <vtkm/Assert.h>
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 #include <vtkm/cont/ErrorControlInternal.h>
 #include <vtkm/cont/Storage.h>
@@ -390,8 +391,9 @@ public:
     else
       {
       PortalConstControl portal = this->GetPortalConstControl();
-      std::copy(portal.GetIteratorBegin(), portal.GetIteratorBegin() +
-                                            this->GetNumberOfValues(), dest);
+      std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
+                vtkm::cont::ArrayPortalToIteratorEnd(portal),
+                dest);
       }
   }
 
