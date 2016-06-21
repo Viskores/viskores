@@ -399,8 +399,11 @@ function(vtkm_worklet_unit_tests device_adapter)
       set(CUDA_NVCC_FLAGS ${old_nvcc_flags} )
     else()
       add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
-      target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
     endif()
+    set_property(TARGET ${test_prog} APPEND PROPERTY
+      INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS}
+      )
+    target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
 
     #add the specific compile options for this executable
     target_compile_options(${test_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
@@ -533,6 +536,8 @@ function(vtkm_benchmarks device_adapter)
       set_source_files_properties(${benchmark_headers}
         PROPERTIES HEADER_FILE_ONLY TRUE)
 
+      set_property(TARGET ${benchmark_prog} APPEND PROPERTY
+          INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
       target_link_libraries(${benchmark_prog} ${VTKm_LIBRARIES})
 
       if(MSVC)

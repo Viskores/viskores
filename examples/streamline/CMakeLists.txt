@@ -20,22 +20,30 @@
 ##
 ##=============================================================================
 
-if(OPENGL_FOUND AND GLUT_FOUND)
+find_package(GLUT)
+
+vtkm_configure_component_OpenGL()
+vtkm_configure_component_Serial()
+vtkm_configure_component_CUDA()
+vtkm_configure_component_TBB()
+
+if(VTKm_OpenGL_FOUND AND GLUT_FOUND)
   add_executable(StreamLineUniformGrid_SERIAL StreamLineUniformGrid.cxx)
-  target_include_directories(StreamLineUniformGrid_SERIAL PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
-  target_link_libraries(StreamLineUniformGrid_SERIAL ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
+  target_include_directories(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
+  target_link_libraries(StreamLineUniformGrid_SERIAL ${VTKm_LIBRARIES} ${GLUT_LIBRARIES})
   target_compile_options(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   if(VTKm_CUDA_FOUND)
     cuda_add_executable(StreamLineUniformGrid_CUDA StreamLineUniformGrid.cu)
-    target_link_libraries(StreamLineUniformGrid_CUDA ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
+    target_include_directories(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
+    target_link_libraries(StreamLineUniformGrid_CUDA ${VTKm_LIBRARIES} ${GLUT_LIBRARIES})
     target_compile_options(StreamLineUniformGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
   endif()
 
-  if(VTKm_ENABLE_TBB)
+  if(VTKm_TBB_FOUND)
     add_executable(StreamLineUniformGrid_TBB StreamLineUniformGridTBB.cxx)
-    target_include_directories(StreamLineUniformGrid_TBB PRIVATE ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} ${TBB_INCLUDE_DIRS})
-    target_link_libraries(StreamLineUniformGrid_TBB ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${TBB_LIBRARIES})
+    target_include_directories(StreamLineUniformGrid_TBB PRIVATE ${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
+    target_link_libraries(StreamLineUniformGrid_TBB ${VTKm_LIBRARIES} ${GLUT_LIBRARIES})
     target_compile_options(StreamLineUniformGrid_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
   endif()
 

@@ -20,13 +20,18 @@
 ##
 ##=============================================================================
 
+find_package(GLUT)
+
+vtkm_configure_component_Serial()
+vtkm_configure_component_CUDA()
+vtkm_configure_component_TBB()
+
 if(VTKm_CUDA_FOUND)
   cuda_add_executable(MultiBackend MultiBackend.cu)
 else()
   add_executable(MultiBackend MultiBackend.cxx)
 endif()
 
+target_include_directories(MultiBackend PRIVATE ${VTKm_INCLUDE_DIRS})
+target_link_libraries(MultiBackend ${VTKm_LIBRARIES})
 target_compile_options(MultiBackend PRIVATE ${VTKm_COMPILE_OPTIONS})
-if(VTKm_TBB_FOUND)
-   target_link_libraries(MultiBackend  ${VTKm_LIBRARIES})
-endif()

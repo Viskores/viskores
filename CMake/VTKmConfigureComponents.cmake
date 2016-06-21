@@ -47,26 +47,29 @@ set(VTKm_AVAILABLE_COMPONENTS
 #-----------------------------------------------------------------------------
 # Support function for making vtkm_configure_component<name> functions.
 #-----------------------------------------------------------------------------
-function(vtkm_finish_configure_component component)
-  cmake_parse_arguments(VTKm_FCC
-    ""
-    ""
-    "DEPENDENT_VARIABLES;ADD_INCLUDES;ADD_LIBRARIES"
-    ${ARGN}
-    )
-  set(VTKm_${component}_FOUND TRUE PARENT_SCOPE)
-  foreach(var ${VTKm_FCC_DEPENDENT_VARIABLES})
-    if(NOT ${var})
-      message(STATUS "Failed to configure VTK-m component ${component}: !${var}")
-      set(VTKm_${component}_FOUND PARENT_SCOPE)
-    endif()
-  endforeach(var)
+macro(vtkm_finish_configure_component component)
+  if(NOT VTKm_${component}_FOUND)
 
-  if (VTKm_${component}_FOUND)
-    set(VTKm_INCLUDE_DIRS ${VTKm_INCLUDE_DIRS} ${VTKm_FCC_ADD_INCLUDES} PARENT_SCOPE)
-    set(VTKm_LIBRARIES ${VTKm_LIBRARIES} ${VTKm_FCC_ADD_LIBRARIES} PARENT_SCOPE)
+    cmake_parse_arguments(VTKm_FCC
+      ""
+      ""
+      "DEPENDENT_VARIABLES;ADD_INCLUDES;ADD_LIBRARIES"
+      ${ARGN}
+      )
+    set(VTKm_${component}_FOUND TRUE)
+    foreach(var ${VTKm_FCC_DEPENDENT_VARIABLES})
+      if(NOT ${var})
+        message(STATUS "Failed to configure VTK-m component ${component}: !${var}")
+        set(VTKm_${component}_FOUND)
+      endif()
+    endforeach(var)
+
+    if (VTKm_${component}_FOUND)
+      set(VTKm_INCLUDE_DIRS ${VTKm_INCLUDE_DIRS} ${VTKm_FCC_ADD_INCLUDES})
+      set(VTKm_LIBRARIES ${VTKm_LIBRARIES} ${VTKm_FCC_ADD_LIBRARIES})
+    endif()
   endif()
-endfunction()
+endmacro()
 
 #-----------------------------------------------------------------------------
 # The configuration macros
@@ -125,7 +128,7 @@ macro(vtkm_configure_component_EGL)
 
   find_package(EGL)
 
-  vtkm_finish_configure_component(OSMesa
+  vtkm_finish_configure_component(EGL
     DEPENDENT_VARIABLES VTKm_OpenGL_FOUND EGL_FOUND
     ADD_INCLUDES ${EGL_INCLUDE_DIR}
     ADD_LIBRARIES ${EGL_LIBRARY}

@@ -20,25 +20,34 @@
 ##
 ##=============================================================================
 
-if(VTKm_ENABLE_OPENGL_INTEROP AND GLUT_FOUND)
+find_package(GLUT)
+
+vtkm_configure_component_OpenGL()
+vtkm_configure_component_Interop()
+vtkm_configure_component_Serial()
+vtkm_configure_component_CUDA()
+vtkm_configure_component_TBB()
+
+if(VTKm_Interop_FOUND AND VTKm_OpenGL_FOUND AND GLUT_FOUND)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR})
   add_executable(HelloWorld_SERIAL HelloWorld.cxx LoadShaders.h)
   set_source_files_properties(LoadShaders.h PROPERTIES HEADER_FILE_ONLY TRUE)
-  target_include_directories(HelloWorld_SERIAL PRIVATE ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
-  target_link_libraries(HelloWorld_SERIAL ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
+  target_include_directories(HelloWorld_SERIAL PRIVATE ${GLUT_INCLUDE_DIR} ${VTKm_INCLUDE_DIRS})
+  target_link_libraries(HelloWorld_SERIAL ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
   target_compile_options(HelloWorld_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   if(VTKm_CUDA_FOUND)
     vtkm_disable_troublesome_thrust_warnings()
     cuda_add_executable(HelloWorld_CUDA HelloWorld.cu LoadShaders.h)
-    target_link_libraries(HelloWorld_CUDA ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
+    target_include_directories(HelloWorld_CUDA PRIVATE ${GLUT_INCLUDE_DIR} ${VTKm_INCLUDE_DIRS})
+    target_link_libraries(HelloWorld_CUDA ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
     target_compile_options(HelloWorld_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
   endif()
 
   if(VTKm_TBB_FOUND)
     add_executable(HelloWorld_TBB HelloWorldTBB.cxx LoadShaders.h)
-    target_include_directories(HelloWorld_TBB PRIVATE ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
-    target_link_libraries(HelloWorld_TBB ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
+    target_include_directories(HelloWorld_TBB PRIVATE ${GLUT_INCLUDE_DIR} ${VTKm_INCLUDE_DIRS})
+    target_link_libraries(HelloWorld_TBB ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
     target_compile_options(HelloWorld_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
   endif()
 
