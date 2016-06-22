@@ -18,6 +18,11 @@
 ##  this software.
 ##============================================================================
 
+vtkm_configure_component_Interop()
+if(NOT VTKm_Interop_FOUND)
+  message(SEND_ERROR "Could not configure for OpenGL Interop. Either configure necessary subcomponents or turn off VTKm_ENABLE_OPENGL_INTEROP.")
+endif()
+
 set(headers
   BufferState.h
   TransferToOpenGL.h

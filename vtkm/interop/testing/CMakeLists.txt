@@ -24,10 +24,18 @@ set(headers
   WindowBase.h
   )
 
-vtkm_declare_headers(${headers})
-
 set(unit_tests
   UnitTestTransferToOpenGL.cxx
   )
 
-vtkm_unit_tests(SOURCES ${unit_tests})
+# Need glut for these tests
+if(GLUT_FOUND)
+  set(VTKm_INCLUDE_DIRS ${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
+  set(VTKM_LIBRARIES ${VTKm_LIBRARIES} ${GLUT_LIBRARIES})
+
+  vtkm_declare_headers(${headers})
+
+  vtkm_unit_tests(SOURCES ${unit_tests})
+else()
+  message(STATUS "Interop tests disabled. They need GLUT.")
+endif()

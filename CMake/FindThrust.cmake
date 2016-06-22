@@ -45,24 +45,26 @@ if( THRUST_INCLUDE_DIR )
 endif( THRUST_INCLUDE_DIR )
 
 # Find thrust version
-file( STRINGS ${THRUST_INCLUDE_DIR}/thrust/version.h
-  version
-  REGEX "#define THRUST_VERSION[ \t]+([0-9x]+)"
-  )
-string( REGEX REPLACE
-  "#define THRUST_VERSION[ \t]+"
-  ""
-  version
-  "${version}"
-  )
+if (THRUST_INCLUDE_DIR)
+  file( STRINGS ${THRUST_INCLUDE_DIR}/thrust/version.h
+    version
+    REGEX "#define THRUST_VERSION[ \t]+([0-9x]+)"
+    )
+  string( REGEX REPLACE
+    "#define THRUST_VERSION[ \t]+"
+    ""
+    version
+    "${version}"
+    )
 
-string( REGEX MATCH "^[0-9]" major ${version} )
-string( REGEX REPLACE "^${major}00" "" version "${version}" )
-string( REGEX MATCH "^[0-9]" minor ${version} )
-string( REGEX REPLACE "^${minor}0" "" version "${version}" )
-set( THRUST_VERSION "${major}.${minor}.${version}")
-set( THRUST_MAJOR_VERSION "${major}")
-set( THRUST_MINOR_VERSION "${minor}")
+  string( REGEX MATCH "^[0-9]" major ${version} )
+  string( REGEX REPLACE "^${major}00" "" version "${version}" )
+  string( REGEX MATCH "^[0-9]" minor ${version} )
+  string( REGEX REPLACE "^${minor}0" "" version "${version}" )
+  set( THRUST_VERSION "${major}.${minor}.${version}")
+  set( THRUST_MAJOR_VERSION "${major}")
+  set( THRUST_MINOR_VERSION "${minor}")
+endif()
 
 # Check for required components
 include( FindPackageHandleStandardArgs )

@@ -22,6 +22,7 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 #include <vtkm/cont/Storage.h>
 
@@ -157,12 +158,12 @@ public:
   template <class IteratorTypeControl>
   VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
   {
-    typedef typename StorageType::PortalConstType::IteratorType IteratorType;
-    IteratorType beginIterator = 
-                    this->Storage->GetPortalConst().GetIteratorBegin();
+    typedef typename StorageType::PortalConstType PortalType;
+    PortalType portal = this->Storage->GetPortalConst();
 
-    std::copy(beginIterator, 
-              beginIterator + this->Storage->GetNumberOfValues(), dest);
+    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
+              vtkm::cont::ArrayPortalToIteratorEnd(portal),
+              dest);
   }
 
   VTKM_CONT_EXPORT

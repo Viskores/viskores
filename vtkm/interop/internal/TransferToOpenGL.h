@@ -53,7 +53,8 @@ void CopyFromHandle(
           static_cast<GLsizeiptr>(numberOfValues);
 
   //Copy the data from its specialized Storage container to a basic heap alloc
-  ValueType* temporaryStorage = new ValueType[numberOfValues];
+  ValueType* temporaryStorage =
+      new ValueType[static_cast<std::size_t>(numberOfValues)];
 
 #ifdef VTKM_MSVC
   #pragma warning(disable:4244)

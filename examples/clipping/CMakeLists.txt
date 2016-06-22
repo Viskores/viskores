@@ -20,7 +20,13 @@
 ##
 ##=============================================================================
 
+vtkm_configure_component_Serial()
+vtkm_configure_component_CUDA()
+vtkm_configure_component_TBB()
+
 add_executable(Clipping_SERIAL Clipping.cxx)
+target_include_directories(Clipping_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
+target_link_libraries(Clipping_SERIAL ${VTKm_LIBRARIES})
 target_compile_options(Clipping_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
 set_property(
@@ -35,14 +41,19 @@ if(VTKm_CUDA_FOUND)
   vtkm_setup_nvcc_flags( old_nvcc_flags )
   vtkm_disable_troublesome_thrust_warnings()
 
+  # Cuda compiles do not respect target_include_directories
+  cuda_include_directories(${VTKm_INCLUDE_DIRS})
+
   cuda_add_executable(Clipping_CUDA ${cudaSource})
+  target_include_directories(Clipping_CUDA PRIVATE ${VTKm_INCLUDE_DIRS})
+  target_link_libraries(Clipping_CUDA ${VTKm_LIBRARIES})
   target_compile_options(Clipping_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
 
 endif()
 
-if(VTKm_ENABLE_TBB)
+if(VTKm_TBB_FOUND)
   add_executable(Clipping_TBB Clipping.cxx)
   target_include_directories(Clipping_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
   target_link_libraries(Clipping_TBB ${VTKm_LIBRARIES})

@@ -23,24 +23,16 @@ set(unit_tests
   UnitTestMapperVolume.cxx
 )
 
-set(libs)
-if (OPENGL_FOUND)
-  list(APPEND libs ${OPENGL_LIBRARIES})
-  if (EGL_FOUND)
-    set(unit_tests ${unit_tests}
-      UnitTestMapperEGL.cxx
-      )
-    list(APPEND libs ${EGL_LIBRARIES})    
-  endif()
-
-
-  if (OSMESA_FOUND)
-    set(unit_tests ${unit_tests}
-      UnitTestMapperOSMesa.cxx
-      )
-    list(APPEND libs ${OSMESA_LIBRARY})
-  endif()
+if (VTKm_EGL_FOUND)
+  set(unit_tests ${unit_tests}
+    UnitTestMapperEGL.cxx
+    )
 endif()
 
-VTKM_unit_tests(SOURCES ${unit_tests}
-                LIBRARIES ${libs})
+if (VTKm_OSMesa_FOUND)
+  set(unit_tests ${unit_tests}
+    UnitTestMapperOSMesa.cxx
+    )
+endif()
+
+VTKM_unit_tests(SOURCES ${unit_tests})
