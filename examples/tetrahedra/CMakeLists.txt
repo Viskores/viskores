@@ -49,6 +49,9 @@ if(VTKm_OpenGL_FOUND AND GLUT_FOUND)
   target_compile_options(TriangulateUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   if(VTKm_CUDA_FOUND)
+    # Cuda compiles do not respect target_include_directories
+    cuda_include_directories(${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
+
     cuda_add_executable(TetrahedralizeExplicitGrid_CUDA TetrahedralizeExplicitGrid.cu)
     target_include_directories(TetrahedralizeExplicitGrid_CUDA PRIVATE ${GLUT_INCLUDE_DIR} ${VTKm_INCLUDE_DIRS})
     target_link_libraries(TetrahedralizeExplicitGrid_CUDA ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})

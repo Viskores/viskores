@@ -34,6 +34,8 @@ if(VTKm_OpenGL_FOUND AND GLUT_FOUND)
   target_compile_options(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   if(VTKm_CUDA_FOUND)
+    # Cuda compiles do not respect target_include_directories
+    cuda_include_directories(${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
     cuda_add_executable(StreamLineUniformGrid_CUDA StreamLineUniformGrid.cu)
     target_include_directories(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
     target_link_libraries(StreamLineUniformGrid_CUDA ${VTKm_LIBRARIES} ${GLUT_LIBRARIES})

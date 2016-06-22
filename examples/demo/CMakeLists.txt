@@ -23,6 +23,8 @@ vtkm_configure_component_OSMESA()
 if(VTKm_OSMESA_FOUND)
 
   if(VTKm_CUDA_FOUND)
+    # Cuda compiles do not respect target_include_directories
+    cuda_include_directories(${VTKm_INCLUDE_DIRS})
     cuda_add_executable(Demo Demo.cu)
   else()
     add_executable(Demo Demo.cxx)

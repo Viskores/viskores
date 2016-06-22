@@ -33,6 +33,8 @@ if(VTKm_OpenGL_FOUND AND GLUT_FOUND)
 
  # if(VTKm_CUDA_FOUND)
  #   vtkm_disable_troublesome_thrust_warnings()
+ #   # Cuda compiles do not respect target_include_directories
+ #   cuda_include_directories(${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS})
  #   cuda_add_executable(Rendering_CUDA Rendering.cu)
  #   target_include_directories(Rendering_CUDA PRIVATE ${GLUT_INCLUDE_DIR} ${VTKm_INCLUDE_DIRS})
  #   target_link_libraries(Rendering_CUDA ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})

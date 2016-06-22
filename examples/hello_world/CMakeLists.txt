@@ -37,6 +37,8 @@ if(VTKm_Interop_FOUND AND VTKm_OpenGL_FOUND AND GLUT_FOUND)
   target_compile_options(HelloWorld_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   if(VTKm_CUDA_FOUND)
+    # Cuda compiles do not respect target_include_directories
+    cuda_include_directories(${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
     vtkm_disable_troublesome_thrust_warnings()
     cuda_add_executable(HelloWorld_CUDA HelloWorld.cu LoadShaders.h)
     target_include_directories(HelloWorld_CUDA PRIVATE ${GLUT_INCLUDE_DIR} ${VTKm_INCLUDE_DIRS})

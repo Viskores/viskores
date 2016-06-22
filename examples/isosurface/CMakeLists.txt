@@ -36,6 +36,8 @@ if(VTKm_OpenGL_FOUND AND GLUT_FOUND)
 
   if(VTKm_CUDA_FOUND)
     vtkm_disable_troublesome_thrust_warnings()
+    # Cuda compiles do not respect target_include_directories
+    cuda_include_directories(${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
     cuda_add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cu quaternion.h)
     target_link_libraries(IsosurfaceUniformGrid_CUDA ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
     target_compile_options(IsosurfaceUniformGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})

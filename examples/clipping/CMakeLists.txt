@@ -41,6 +41,9 @@ if(VTKm_CUDA_FOUND)
   vtkm_setup_nvcc_flags( old_nvcc_flags )
   vtkm_disable_troublesome_thrust_warnings()
 
+  # Cuda compiles do not respect target_include_directories
+  cuda_include_directories(${VTKm_INCLUDE_DIRS})
+
   cuda_add_executable(Clipping_CUDA ${cudaSource})
   target_include_directories(Clipping_CUDA PRIVATE ${VTKm_INCLUDE_DIRS})
   target_link_libraries(Clipping_CUDA ${VTKm_LIBRARIES})

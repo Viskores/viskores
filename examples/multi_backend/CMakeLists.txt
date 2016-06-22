@@ -27,6 +27,8 @@ vtkm_configure_component_CUDA()
 vtkm_configure_component_TBB()
 
 if(VTKm_CUDA_FOUND)
+  # Cuda compiles do not respect target_include_directories
+  cuda_include_directories(${VTKm_INCLUDE_DIRS})
   cuda_add_executable(MultiBackend MultiBackend.cu)
 else()
   add_executable(MultiBackend MultiBackend.cxx)

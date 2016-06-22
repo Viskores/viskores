@@ -104,6 +104,8 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   #test. this might not happen when everything depends on thrust.
   list(LENGTH cxxfiles cxxfiles_len)
   if (use_cuda AND ${cxxfiles_len} GREATER 0)
+    # Cuda compiles do not respect target_include_directories
+    cuda_include_directories(${VTKm_INCLUDE_DIRS})
     cuda_add_library(TestBuild_${name} ${cxxfiles} ${hfiles})
   elseif (${cxxfiles_len} GREATER 0)
     add_library(TestBuild_${name} ${cxxfiles} ${hfiles})
@@ -114,9 +116,7 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
                    )
     endif(VTKm_EXTRA_COMPILER_WARNINGS)
   endif ()
-  set_property(TARGET TestBuild_${name} APPEND PROPERTY
-    INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS}
-    )
+  target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
   target_link_libraries(TestBuild_${name} ${VTKm_LIBRARIES})
   set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
@@ -258,6 +258,9 @@ function(vtkm_unit_tests)
     if (VTKm_UT_CUDA)
       vtkm_setup_nvcc_flags( old_nvcc_flags )
 
+      # Cuda compiles do not respect target_include_directories
+      cuda_include_directories(${VTKm_INCLUDE_DIRS})
+
       cuda_add_executable(${test_prog} ${TestSources})
 
       set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
@@ -394,6 +397,9 @@ function(vtkm_worklet_unit_tests device_adapter)
       get_property(unit_test_srcs GLOBAL PROPERTY vtkm_worklet_unit_tests_cu_sources )
       vtkm_setup_nvcc_flags( old_nvcc_flags )
 
+      # Cuda compiles do not respect target_include_directories
+      cuda_include_directories(${VTKm_INCLUDE_DIRS})
+
       cuda_add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
 
       set(CUDA_NVCC_FLAGS ${old_nvcc_flags} )
@@ -528,6 +534,9 @@ function(vtkm_benchmarks device_adapter)
       set(benchmark_prog "${benchmark_prog}_${device_type}")
 
       if(is_cuda)
+        # Cuda compiles do not respect target_include_directories
+        cuda_include_directories(${VTKm_INCLUDE_DIRS})
+
         cuda_add_executable(${benchmark_prog} ${file} ${benchmark_headers})
       else()
         add_executable(${benchmark_prog} ${file} ${benchmark_headers})
