@@ -165,7 +165,7 @@ public:
 
     try
       {
-      this->Array.resize(static_cast<vtkm::UInt64>(numberOfValues));
+      this->Array.resize(static_cast<std::size_t>(numberOfValues));
       }
     catch (std::bad_alloc error)
       {
@@ -225,7 +225,7 @@ public:
     // is still supposed to be a precondition to Shrink.
     VTKM_ASSERT(numberOfValues <= static_cast<vtkm::Id>(this->Array.size()));
 
-    this->Array.resize(static_cast<vtkm::UInt64>(numberOfValues));
+    this->Array.resize(static_cast<std::size_t>(numberOfValues));
   }
 
 
