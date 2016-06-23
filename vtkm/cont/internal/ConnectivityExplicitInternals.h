@@ -23,6 +23,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/internal/DeviceAdapterError.h>
 
 namespace vtkm {
 namespace cont {
@@ -124,6 +125,16 @@ struct ConnectivityExplicitInternals
                         this->IndexOffsets,
                         Device());
       this->IndexOffsetsValid = true;
+    }
+  }
+
+  VTKM_CONT_EXPORT
+  void BuildIndexOffsets(vtkm::cont::DeviceAdapterTagError) const
+  {
+    if (!this->IndexOffsetsValid)
+    {
+      throw vtkm::cont::ErrorControlBadType(
+            "Cannot build indices using the error device. Must be created previously.");
     }
   }
 
