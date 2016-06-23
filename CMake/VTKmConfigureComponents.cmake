@@ -280,5 +280,12 @@ macro(vtkm_configure_component_CUDA)
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_50,code=compute_50")
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_52,code=compute_52")
     endif()
+
+    if(WIN32)
+      # On Windows, there is an issue with performing parallel builds with
+      # nvcc. Multiple compiles can attempt to write the same .pdb file. Add
+      # this argument to avoid this problem.
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --compiler-options /FS")
+    endif()
   endif()
 endmacro(vtkm_configure_component_CUDA)
