@@ -242,7 +242,7 @@ macro(vtkm_configure_component_CUDA)
     if(VTKm_CUDA_Architecture STREQUAL "native")
       #run execute_process to do auto_detection
       set(command ${CUDA_NVCC_EXECUTABLE})
-      set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${CMAKE_CURRENT_LIST_DIR}/VTKmDetectCUDAVersion.cxx")
+      set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cxx")
       execute_process(
         COMMAND ${command} ${args}
         RESULT_VARIABLE ran_properly

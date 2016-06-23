@@ -50,7 +50,8 @@ set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm/cmake")
 
 set(VTKm_REQUIRED_BOOST_VERSION "1.48")
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_SOURCE_DIR}/CMake)
+set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
 # include some vtkm-specific cmake code.
 include(VTKmMacros)
