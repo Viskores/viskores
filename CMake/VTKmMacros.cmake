@@ -52,8 +52,11 @@ function(vtkm_setup_nvcc_flags old_flags )
   set(new_flags ${CUDA_NVCC_FLAGS})
   list(APPEND new_flags "-DVTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
   list(APPEND new_flags "-DBOOST_SP_DISABLE_THREADS")
-  list(APPEND new_flags "-w")
-  if(MSVC)
+  if(NOT MSVC)
+    # Unused function warnings don't happen on visual studio, and adding -w
+    # creates warnings of its own.
+    list(APPEND new_flags "-w")
+  else()
     list(APPEND new_flags "--compiler-options;/bigobj")
   endif()
   set(CUDA_NVCC_FLAGS ${new_flags} PARENT_SCOPE)
