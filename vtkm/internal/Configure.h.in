@@ -160,7 +160,9 @@
 #elif (defined(VTKM_MSVC))
 #define VTKM_THIRDPARTY_PRE_INCLUDE \
   __pragma(warning(push)) \
-  __pragma(warning(disable:4267))
+  __pragma(warning(disable:4267)) \
+  __pragma(warning(disable:4244)) \
+  __pragma(warning(disable:4800))
 #define VTKM_THIRDPARTY_POST_INCLUDE \
   __pragma(warning(pop))
 #else
