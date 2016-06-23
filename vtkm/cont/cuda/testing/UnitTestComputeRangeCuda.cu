@@ -17,7 +17,9 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#ifndef BOOST_SP_DISABLE_THREADS
 #define BOOST_SP_DISABLE_THREADS
+#endif
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 

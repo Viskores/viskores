@@ -18,8 +18,13 @@
 //  this software.
 //============================================================================
 
+#ifndef VTKM_DEVICE_ADAPTER
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
+#endif
+
+#ifndef BOOST_SP_DISABLE_THREADS
 #define BOOST_SP_DISABLE_THREADS
+#endif
 
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
