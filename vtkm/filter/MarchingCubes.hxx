@@ -191,19 +191,39 @@ public:
   {
   }
 
-  template<typename CellShapeTag,
-           typename FieldInType, // Vec-like, one per input point
+  template<typename FieldInType, // Vec-like, one per input point
            typename CoordType,
            typename IndicesVecType>
   VTKM_EXEC_EXPORT
   void operator()(
-      CellShapeTag shape,
-      const FieldInType &fieldIn, // Input point field defining the contour
-      const CoordType &coords, // Input point coordinates
+      vtkm::CellShapeTagGeneric shape,
+      const FieldInType & fieldIn, // Input point field defining the contour
+      const CoordType & coords, // Input point coordinates
       vtkm::Id outputCellId,
       vtkm::IdComponent visitIndex,
-      const IndicesVecType &indices) const
-  {
+      const IndicesVecType & indices) const
+  { //covers when we have hexs coming from unstructured data
+    VTKM_ASSUME( shape.Id == CELL_SHAPE_HEXAHEDRON );
+    this->operator()(vtkm::CellShapeTagHexahedron(),
+                     fieldIn,
+                     coords,
+                     outputCellId,
+                     visitIndex,
+                     indices);
+  }
+
+  template<typename FieldInType, // Vec-like, one per input point
+           typename CoordType,
+           typename IndicesVecType>
+  VTKM_EXEC_EXPORT
+  void operator()(
+      CellShapeTagQuad vtkmNotUsed(shape),
+      const FieldInType & vtkmNotUsed(fieldIn), // Input point field defining the contour
+      const CoordType & vtkmNotUsed(coords), // Input point coordinates
+      vtkm::Id vtkmNotUsed(outputCellId),
+      vtkm::IdComponent vtkmNotUsed(visitIndex),
+      const IndicesVecType & vtkmNotUsed(indices) ) const
+  { //covers when we have quads coming from 2d structured data
   }
 
   template<typename FieldInType, // Vec-like, one per input point
@@ -217,7 +237,7 @@ public:
       vtkm::Id outputCellId,
       vtkm::IdComponent visitIndex,
       const IndicesVecType &indices) const
-  {
+  { //covers when we have hexs coming from 3d structured data
     const vtkm::Id outputPointId = 3 * outputCellId;
     typedef typename vtkm::VecTraits<FieldInType>::ComponentType FieldType;
     const FieldType iso = static_cast<FieldType>(this->Isovalue);
