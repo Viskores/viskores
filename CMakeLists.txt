@@ -234,13 +234,19 @@ endif(VTKm_BUILD_EXAMPLES)
 # Ready files for find_package
 include(CMakePackageConfigHelpers)
 
-set(VTKm_LOAD_COMPONENTS_COMMANDS)
+set(VTKm_LOAD_COMPONENTS_COMMANDS"
+foreach(comp \${VTKm_FIND_COMPONENTS})")
+
 foreach(component ${VTKm_AVAILABLE_COMPONENTS})
   set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
-if(${component} IN_LIST VTKm_FIND_COMPONENTS)
-  vtkm_configure_component_${component}()
-endif()")
-endforeach(component)
+  if(\"${component}\" STREQUAL \${comp})
+    vtkm_configure_component_${component}()
+    continue()
+  endif()")
+endforeach()
+
+set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
+endforeach()" )
 
 configure_package_config_file(
   ${VTKm_SOURCE_DIR}/CMake/VTKmConfig.cmake.in
