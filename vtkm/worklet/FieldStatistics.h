@@ -126,7 +126,7 @@ public:
     VTKM_CONT_EXPORT
     SubtractConst(const FieldType& constant0) : constant(constant0) {}
   
-    VTKM_CONT_EXPORT
+    VTKM_EXEC_EXPORT
     FieldType operator()(const FieldType& value) const
     {
       return(value - constant);
@@ -198,7 +198,7 @@ public:
     statinfo.stddev = Sqrt(statinfo.variance);
     statinfo.skewness = statinfo.centralMoment[THIRD] / Pow(statinfo.stddev, static_cast<FieldType>(3.0));
     statinfo.kurtosis = statinfo.centralMoment[FOURTH] / Pow(statinfo.stddev, static_cast<FieldType>(4.0));
-  };
+  }
 };
 
 }
