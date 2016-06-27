@@ -141,16 +141,16 @@ $for(param_index in range(1, max_parameters+1))\
 template<>
 struct ParameterContainerAccess<$(param_index)> {
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   const typename AtType<FunctionSignature, $(param_index)>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter$(param_index);
   }
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<FunctionSignature, $(param_index)>::type &value) {

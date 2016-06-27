@@ -239,16 +239,16 @@ struct ParameterContainerAccess;
 template<>
 struct ParameterContainerAccess<1> {
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   const typename AtType<FunctionSignature, 1>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter1;
   }
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<FunctionSignature, 1>::type &value) {
@@ -259,16 +259,16 @@ struct ParameterContainerAccess<1> {
 template<>
 struct ParameterContainerAccess<2> {
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   const typename AtType<FunctionSignature, 2>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter2;
   }
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<FunctionSignature, 2>::type &value) {
@@ -279,16 +279,16 @@ struct ParameterContainerAccess<2> {
 template<>
 struct ParameterContainerAccess<3> {
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   const typename AtType<FunctionSignature, 3>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter3;
   }
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<FunctionSignature, 3>::type &value) {
@@ -299,16 +299,16 @@ struct ParameterContainerAccess<3> {
 template<>
 struct ParameterContainerAccess<4> {
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   const typename AtType<FunctionSignature, 4>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter4;
   }
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<FunctionSignature, 4>::type &value) {
@@ -319,16 +319,16 @@ struct ParameterContainerAccess<4> {
 template<>
 struct ParameterContainerAccess<5> {
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   const typename AtType<FunctionSignature, 5>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter5;
   }
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<FunctionSignature, 5>::type &value) {
@@ -339,16 +339,16 @@ struct ParameterContainerAccess<5> {
 template<>
 struct ParameterContainerAccess<6> {
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   const typename AtType<FunctionSignature, 6>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter6;
   }
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<FunctionSignature, 6>::type &value) {
@@ -359,16 +359,16 @@ struct ParameterContainerAccess<6> {
 template<>
 struct ParameterContainerAccess<7> {
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   const typename AtType<FunctionSignature, 7>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter7;
   }
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<FunctionSignature, 7>::type &value) {
@@ -379,16 +379,16 @@ struct ParameterContainerAccess<7> {
 template<>
 struct ParameterContainerAccess<8> {
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   const typename AtType<FunctionSignature, 8>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter8;
   }
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<FunctionSignature, 8>::type &value) {
@@ -399,16 +399,16 @@ struct ParameterContainerAccess<8> {
 template<>
 struct ParameterContainerAccess<9> {
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   const typename AtType<FunctionSignature, 9>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter9;
   }
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<FunctionSignature, 9>::type &value) {
@@ -419,16 +419,16 @@ struct ParameterContainerAccess<9> {
 template<>
 struct ParameterContainerAccess<10> {
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   const typename AtType<FunctionSignature, 10>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter10;
   }
 
-  template<typename FunctionSignature>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<FunctionSignature, 10>::type &value) {
