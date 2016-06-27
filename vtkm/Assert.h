@@ -21,6 +21,8 @@
 #ifndef vtk_m_Assert_h
 #define vtk_m_Assert_h
 
+#include <vtkm/internal/Configure.h>
+
 #include <assert.h>
 
 /// \def VTKM_ASSERT(condition)
