@@ -180,7 +180,10 @@ public:
   if( resize )
   {
     //Allocate the memory and set it as GL_DYNAMIC_DRAW draw
-    glBufferData(this->State.GetType(), size, 0, GL_DYNAMIC_DRAW);
+    glBufferData(this->State.GetType(),
+                 static_cast<GLsizeiptr>(size),
+                 0,
+                 GL_DYNAMIC_DRAW);
 
     this->State.SetCapacity(size);
   }

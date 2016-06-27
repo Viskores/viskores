@@ -270,12 +270,16 @@ public:
 
   __host__ __device__
   ValueType Get(vtkm::Id index) const {
-    return *(this->BeginIterator + index);
+    typedef typename ::thrust::iterator_traits<IteratorType>::difference_type
+        SizeType;
+    return *(this->BeginIterator + static_cast<SizeType>(index));
   }
 
   __host__ __device__
   void Set(vtkm::Id index, ValueType value) const {
-    *(this->BeginIterator + index) = value;
+    typedef typename ::thrust::iterator_traits<IteratorType>::difference_type
+        SizeType;
+    *(this->BeginIterator + static_cast<SizeType>(index)) = value;
   }
 
   VTKM_EXEC_CONT_EXPORT

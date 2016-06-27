@@ -242,7 +242,7 @@ macro(vtkm_configure_component_CUDA)
     if(VTKm_CUDA_Architecture STREQUAL "native")
       #run execute_process to do auto_detection
       set(command ${CUDA_NVCC_EXECUTABLE})
-      set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${CMAKE_CURRENT_LIST_DIR}/VTKmDetectCUDAVersion.cxx")
+      set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cxx")
       execute_process(
         COMMAND ${command} ${args}
         RESULT_VARIABLE ran_properly
@@ -279,6 +279,13 @@ macro(vtkm_configure_component_CUDA)
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_35,code=compute_35")
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_50,code=compute_50")
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_52,code=compute_52")
+    endif()
+
+    if(WIN32)
+      # On Windows, there is an issue with performing parallel builds with
+      # nvcc. Multiple compiles can attempt to write the same .pdb file. Add
+      # this argument to avoid this problem.
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --compiler-options /FS")
     endif()
   endif()
 endmacro(vtkm_configure_component_CUDA)

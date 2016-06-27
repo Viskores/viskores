@@ -102,6 +102,27 @@ MakeIteratorBegin(PortalType portal, detail::ThrustIteratorDevicePtrTag)
   return iterators.GetBegin();
 }
 
+template<typename PortalType>
+VTKM_CONT_EXPORT
+typename IteratorTraits<PortalType>::IteratorType
+MakeIteratorEnd(PortalType portal, detail::ThrustIteratorFromArrayPortalTag)
+{
+  vtkm::exec::cuda::internal::IteratorFromArrayPortal<PortalType>
+      iterator(portal);
+  ::thrust::advance(iterator,
+                    static_cast<std::size_t>(portal.GetNumberOfValues()));
+  return iterator;
+}
+
+template<typename PortalType>
+VTKM_CONT_EXPORT
+typename IteratorTraits<PortalType>::IteratorType
+MakeIteratorEnd(PortalType portal, detail::ThrustIteratorDevicePtrTag)
+{
+  vtkm::cont::ArrayPortalToIterators<PortalType> iterators(portal);
+  return iterators.GetEnd();
+}
+
 } // namespace detail
 
 
@@ -120,7 +141,8 @@ VTKM_CONT_EXPORT
 typename detail::IteratorTraits<PortalType>::IteratorType
 IteratorEnd(PortalType portal)
 {
-  return IteratorBegin(portal) + portal.GetNumberOfValues();
+  typedef typename detail::IteratorTraits<PortalType>::Tag IteratorTag;
+  return detail::MakeIteratorEnd(portal, IteratorTag());
 }
 
 }
