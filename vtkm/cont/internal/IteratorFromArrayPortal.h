@@ -88,6 +88,12 @@ class IteratorFromArrayPortal : public
       boost::random_access_traversal_tag,
       detail::IteratorFromArrayPortalValue<ArrayPortalType> >
 {
+  typedef boost::iterator_facade<
+      IteratorFromArrayPortal<ArrayPortalType>,
+      typename ArrayPortalType::ValueType,
+      boost::random_access_traversal_tag,
+      detail::IteratorFromArrayPortalValue<ArrayPortalType> > Superclass;
+
 public:
 
   VTKM_CONT_EXPORT
@@ -148,8 +154,7 @@ private:
   }
 
   VTKM_CONT_EXPORT
-  void advance(
-      typename IteratorFromArrayPortal<ArrayPortalType>::difference_type delta)
+  void advance(typename Superclass::difference_type delta)
   {
     this->Index += static_cast<vtkm::Id>(delta);
     VTKM_ASSERT(this->Index >= 0);
@@ -157,7 +162,7 @@ private:
   }
 
   VTKM_CONT_EXPORT
-  typename IteratorFromArrayPortal<ArrayPortalType>::difference_type
+  typename Superclass::difference_type
   distance_to(const IteratorFromArrayPortal<ArrayPortalType> &other) const
   {
     // Technically, we should probably check that the portals are the same,
