@@ -343,19 +343,21 @@ public:
     typedef void ControlSignature(FieldIn<> cellIndex,
                                   FieldIn<> offset,
                                   FieldIn<> numIndices,
-                                  ExecObject cellIndices);
+                                  WholeArrayOut<> cellIndices);
     typedef void ExecutionSignature(_1,_2,_3,_4);
     typedef _1 InputDomain;
 
     VTKM_CONT_EXPORT
     ExpandIndices() {}
 
+    template<typename PortalType>
     VTKM_EXEC_EXPORT
     void operator()(const vtkm::Id &cellIndex,
                     const vtkm::Id &offset,
                     const vtkm::Id &numIndices,
-                    vtkm::exec::ExecutionWholeArray<vtkm::Id> &cellIndices) const
+                    const PortalType &cellIndices) const
     {
+      VTKM_ASSERT(cellIndices.GetNumberOfValues() >= offset + numIndices);
       vtkm::Id startIndex = offset;
       for (vtkm::Id i = 0; i < numIndices; i++)
       {
@@ -397,11 +399,11 @@ public:
     vtkm::cont::ArrayHandleCounting<vtkm::Id> index(0, 1, numberOfCells);
 
     this->PointToCell.BuildIndexOffsets(Device());
-    vtkm::worklet::DispatcherMapField<ExpandIndices> expandDispatcher;
+    vtkm::worklet::DispatcherMapField<ExpandIndices, Device> expandDispatcher;
     expandDispatcher.Invoke(index,
                             this->PointToCell.IndexOffsets,
                             this->PointToCell.NumIndices,
-                            vtkm::exec::ExecutionWholeArray<vtkm::Id>(cellIndices, connectivityLength));
+                            cellIndices);
 
     // SortByKey where key is PointToCell connectivity and value is the expanded cellIndex
     Algorithm::SortByKey(pointIndices, cellIndices);

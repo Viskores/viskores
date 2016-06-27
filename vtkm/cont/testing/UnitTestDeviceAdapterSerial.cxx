@@ -18,6 +18,9 @@
 //  this software.
 //============================================================================
 
+// Make sure that the tested code is using the device adapter specified. This
+// is important in the long run so we don't, for example, use the CUDA device
+// for a part of an operation where the TBB device was specified.
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
 #include <vtkm/cont/DeviceAdapterSerial.h>

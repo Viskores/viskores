@@ -144,7 +144,8 @@ private:
 
     //run a basic for-each topology algorithm on this
     vtkm::cont::ArrayHandle<vtkm::Float32> result;
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<
+        vtkm::worklet::CellAverage,DeviceAdapterTag> dispatcher;
     dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
                       cellset,
                       result);
