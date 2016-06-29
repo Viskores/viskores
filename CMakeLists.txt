@@ -235,6 +235,10 @@ endif(VTKm_BUILD_EXAMPLES)
 # Ready files for find_package
 include(CMakePackageConfigHelpers)
 
+string(REPLACE ";" " " VTKm_AVAILABLE_COMPONENTS_LIST
+  "${VTKm_AVAILABLE_COMPONENTS}"
+  )
+
 set(VTKm_LOAD_COMPONENTS_COMMANDS "
 foreach(comp \${VTKm_FIND_COMPONENTS})")
 

@@ -18,11 +18,20 @@
 ##  this software.
 ##============================================================================
 
-# When this file is run by CMake (usually through the find_package command),
-# The following variables will be defined:
+# When this file is run by CMake through the find_package command, the
+# following variables will be defined:
 #
 # VTKm_INCLUDE_DIRS - Directories containing VTK-m and dependent headers
 # VTKm_LIBRARIES - The libraries required when using VTK-m
+# VTKm_COMPILE_OPTIONS - Options VTK-m suggests to add to the compiler
+#
+# Note that the VTK-m package supports several components. It is important
+# to request the components being used (as done through find_package arguments).
+# If no components are requested, then the dependent packages will not be
+# found and loaded. The following components are supported:
+#
+# @VTKm_AVAILABLE_COMPONENTS_LIST@
+#
 
 @PACKAGE_INIT@
 
