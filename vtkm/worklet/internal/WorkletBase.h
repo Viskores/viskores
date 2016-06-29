@@ -282,6 +282,7 @@ public:
   /// Worklet types can add additional indices by returning different object
   /// types.
   ///
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename T, typename OutToInArrayType, typename VisitArrayType, typename InputDomainType>
   VTKM_EXEC_EXPORT
   vtkm::exec::arg::ThreadIndicesBasic

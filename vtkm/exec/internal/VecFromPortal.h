@@ -67,6 +67,7 @@ public:
     }
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   ComponentType operator[](vtkm::IdComponent index) const
   {

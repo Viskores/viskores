@@ -123,6 +123,7 @@ public:
 
   /// Topology map worklets use topology map indices.
   ///
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename T, typename OutToInArrayType, typename VisitArrayType, typename InputDomainType>
   VTKM_EXEC_EXPORT
   vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>
