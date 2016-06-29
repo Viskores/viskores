@@ -47,19 +47,27 @@ endfunction(vtkm_get_kit_name)
 #4. Set the compile option /bigobj when using VisualStudio generators.
 #   While we have specified this as target compile flag, those aren't
 #   currently loooked at by FindCUDA, so we have to manually add it ourselves
-function(vtkm_setup_nvcc_flags old_flags )
-  set(${old_flags} ${CUDA_NVCC_FLAGS} PARENT_SCOPE)
-  set(new_flags ${CUDA_NVCC_FLAGS})
-  list(APPEND new_flags "-DVTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  list(APPEND new_flags "-DBOOST_SP_DISABLE_THREADS")
-  if(NOT MSVC)
-    # Unused function warnings don't happen on visual studio, and adding -w
-    # creates warnings of its own.
-    list(APPEND new_flags "-w")
-  else()
-    list(APPEND new_flags "--compiler-options;/bigobj")
+function(vtkm_setup_nvcc_flags old_nvcc_flags old_cxx_flags )
+  set(${old_nvcc_flags} ${CUDA_NVCC_FLAGS} PARENT_SCOPE)
+  set(${old_nvcc_flags} ${CMAKE_CXX_FLAGS} PARENT_SCOPE)
+  set(new_nvcc_flags ${CUDA_NVCC_FLAGS})
+  set(new_cxx_flags ${CMAKE_CXX_FLAGS})
+  list(APPEND new_nvcc_flags "-DVTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
+  list(APPEND new_nvcc_flags "-DBOOST_SP_DISABLE_THREADS")
+  list(APPEND new_nvcc_flags "-w")
+  if(MSVC)
+    list(APPEND new_nvcc_flags "--compiler-options;/bigobj")
+
+    # The MSVC compiler gives a warning about having two incompatiable warning
+    # flags in the command line. So, ironically, adding -w above to remove
+    # warnings makes MSVC give a warning. To get around that, remove all
+    # warning flags from the standard CXX arguments (which are typically passed
+    # to the CUDA compiler).
+    string(REGEX REPLACE "[-/]W[1-4]" "" new_cxx_flags "${new_cxx_flags}")
+    string(REGEX REPLACE "[-/]Wall" "" new_cxx_flags "${new_cxx_flags}")
   endif()
-  set(CUDA_NVCC_FLAGS ${new_flags} PARENT_SCOPE)
+  set(CUDA_NVCC_FLAGS ${new_nvcc_flags} PARENT_SCOPE)
+  set(CMAKE_CXX_FLAGS ${new_cxx_flags} PARENT_SCOPE)
 endfunction(vtkm_setup_nvcc_flags)
 
 #Utility to set MSVC only COMPILE_DEFINITIONS and COMPILE_FLAGS needed to
@@ -259,7 +267,7 @@ function(vtkm_unit_tests)
     endif()
 
     if (VTKm_UT_CUDA)
-      vtkm_setup_nvcc_flags( old_nvcc_flags )
+      vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags )
 
       # Cuda compiles do not respect target_include_directories
       cuda_include_directories(${VTKm_INCLUDE_DIRS})
@@ -267,6 +275,7 @@ function(vtkm_unit_tests)
       cuda_add_executable(${test_prog} ${TestSources})
 
       set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+      set(CMAKE_CXX_FLAGS ${old_cxx_flags})
 
     else (VTKm_UT_CUDA)
       add_executable(${test_prog} ${TestSources})
@@ -398,14 +407,15 @@ function(vtkm_worklet_unit_tests device_adapter)
 
     if(is_cuda)
       get_property(unit_test_srcs GLOBAL PROPERTY vtkm_worklet_unit_tests_cu_sources )
-      vtkm_setup_nvcc_flags( old_nvcc_flags )
+      vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags )
 
       # Cuda compiles do not respect target_include_directories
       cuda_include_directories(${VTKm_INCLUDE_DIRS})
 
       cuda_add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
 
-      set(CUDA_NVCC_FLAGS ${old_nvcc_flags} )
+      set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+      set(CMAKE_CXX_FLAGS ${old_cxx_flags})
     else()
       add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
     endif()
@@ -519,6 +529,7 @@ function(vtkm_benchmarks device_adapter)
   #detect if we are generating a .cu files
   set(is_cuda FALSE)
   set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
+  set(old_cxx_flags ${CMAKE_CXX_FLAGS})
   if("${device_adapter}" STREQUAL "VTKM_DEVICE_ADAPTER_CUDA")
     set(is_cuda TRUE)
   endif()
@@ -527,7 +538,7 @@ function(vtkm_benchmarks device_adapter)
     string(REPLACE "VTKM_DEVICE_ADAPTER_" "" device_type ${device_adapter})
 
     if(is_cuda)
-      vtkm_setup_nvcc_flags( old_nvcc_flags )
+      vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags )
       get_property(benchmark_srcs GLOBAL PROPERTY vtkm_benchmarks_cu_sources )
     endif()
 
@@ -577,6 +588,7 @@ function(vtkm_benchmarks device_adapter)
 
     if(is_cuda)
       set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+      set(CMAKE_CXX_FLAGS ${old_cxx_flags})
     endif()
   endif()
 
