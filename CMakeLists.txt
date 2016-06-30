@@ -246,11 +246,22 @@ foreach(component ${VTKm_AVAILABLE_COMPONENTS})
   set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
   if(\"${component}\" STREQUAL \${comp})
     vtkm_configure_component_${component}()
+    if(VTKm_${component}_FOUND)
+      message(STATUS \"Successfully loaded VTK-m component ${component}\")
+    else()
+      if(VTKm_FIND_REQUIRED_${component})
+        message(\"Could not load REQUIRED VTK-m component ${component}\")
+      else()
+        message(STATUS \"Could not load optional VTK-m component ${component}\")
+      endif()
+    endif()
     continue()
-  endif()")
+  endif()"
+    )
 endforeach()
 
 set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
+  message(WARNING \"No such VTK-m component: \${comp}\")
 endforeach()" )
 
 configure_package_config_file(
