@@ -44,6 +44,14 @@ if (OPENGL_FOUND)
     list(APPEND libs ${GLFW_LIBRARY})
     list(APPEND includes ${GLFW_INCLUDE_DIR})
   endif()
+
+  if (GLUT_FOUND)
+    set(unit_tests ${unit_tests}
+      UnitTestMapperGLUT.cxx
+      )
+    list(APPEND libs ${GLUT_LIBRARY})
+    list(APPEND includes ${GLUT_INCLUDE_DIR})
+  endif()  
   
   if (OSMESA_FOUND)
     set(unit_tests ${unit_tests}
