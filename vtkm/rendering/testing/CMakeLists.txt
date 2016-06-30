@@ -36,8 +36,15 @@ if (OPENGL_FOUND)
       )
     list(APPEND libs ${EGL_LIBRARIES})    
   endif()
-
-
+  
+  if (GLFW_FOUND)
+    set(unit_tests ${unit_tests}
+      UnitTestMapperGLFW.cxx
+      )
+    list(APPEND libs ${GLFW_LIBRARY})
+    list(APPEND includes ${GLFW_INCLUDE_DIR})
+  endif()
+  
   if (OSMESA_FOUND)
     set(unit_tests ${unit_tests}
       UnitTestMapperOSMesa.cxx

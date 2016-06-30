@@ -45,6 +45,11 @@ public:
     : Canvas(0,0)
   {
   }
+    
+  VTKM_CONT_EXPORT
+  CanvasGL(vtkm::Id width, vtkm::Id height) : Canvas(width,height)
+  {
+  }
 
   VTKM_CONT_EXPORT
   virtual void Initialize()
