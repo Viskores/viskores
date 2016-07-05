@@ -36,6 +36,7 @@ class ArrayPortalPermutationExec
 public:
   typedef typename ValuePortalType::ValueType ValueType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   ArrayPortalPermutationExec( )
     : IndexPortal(), ValuePortal() {  }
@@ -63,12 +64,14 @@ public:
     return this->IndexPortal.GetNumberOfValues();
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   ValueType Get(vtkm::Id index) const {
     vtkm::Id permutedIndex = this->IndexPortal.Get(index);
     return this->ValuePortal.Get(permutedIndex);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
   void Set(vtkm::Id index, const ValueType &value) const {
     vtkm::Id permutedIndex = this->IndexPortal.Get(index);

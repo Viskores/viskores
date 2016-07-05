@@ -72,6 +72,7 @@ public:
   typedef typename ConnectivityType::IndicesType IndicesFromType;
   typedef typename ConnectivityType::CellShapeTag CellShapeTag;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename OutToInArrayType, typename VisitArrayType>
   VTKM_EXEC_EXPORT
   ThreadIndicesTopologyMap(vtkm::Id threadIndex,

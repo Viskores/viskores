@@ -41,12 +41,14 @@ namespace internal {
 struct RangeMin
 {
   template<typename T>
+  VTKM_EXEC_EXPORT
   T operator()(const T& a, const T& b)const { return vtkm::Min(a,b); }
 };
 
 struct RangeMax
 {
   template<typename T>
+  VTKM_EXEC_EXPORT
   T operator()(const T& a, const T& b)const { return vtkm::Max(a,b); }
 };
 
