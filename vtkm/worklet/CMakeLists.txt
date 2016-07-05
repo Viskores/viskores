@@ -45,6 +45,7 @@ set(headers
   TriangulateUniformGrid.h
   Threshold.h
   VertexClustering.h
+  Wavelets.h
   )
 
 #-----------------------------------------------------------------------------
