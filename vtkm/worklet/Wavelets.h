@@ -30,67 +30,46 @@ namespace worklet {
 
 namespace internal {
 
-template <typename T>
-VTKM_EXEC_EXPORT
-T clamp(const T& val, const T& min, const T& max)
-{
-  return vtkm::Min(max, vtkm::Max(min, val));
-}
+  //  template <typename T>
+  //  VTKM_EXEC_EXPORT
+  //  T clamp(const T& val, const T& min, const T& max)
+  //  {
+  //    return vtkm::Min(max, vtkm::Max(min, val));
+  //  }
 
 }
 
 class Wavelets : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
+  typedef void ControlSignature(FieldIn<>, FieldOut<>);
   typedef _2 ExecutionSignature(_1);
 
   VTKM_CONT_EXPORT
-  Wavelets() : LowPoint(0.0, 0.0, 0.0), HighPoint(0.0, 0.0, 1.0),
-      RangeLow(0.0), RangeHigh(1.0) {}
+  Wavelets() : magicNum(2.0) {}
 
   VTKM_CONT_EXPORT
-  void SetLowPoint(const vtkm::Vec<vtkm::Float64, 3> &point)
+  void SetMagicNum(const vtkm::Float64 &num)
   {
-    this->LowPoint = point;
+    this->magicNum = num;
   }
 
-  VTKM_CONT_EXPORT
-  void SetHighPoint(const vtkm::Vec<vtkm::Float64, 3> &point)
-  {
-    this->HighPoint = point;
-  }
-
-  VTKM_CONT_EXPORT
-  void SetRange(vtkm::Float64 low, vtkm::Float64 high)
-  {
-    this->RangeLow = low;
-    this->RangeHigh = high;
-  }
 
   VTKM_EXEC_EXPORT
-  vtkm::Float64 operator()(const vtkm::Vec<vtkm::Float64,3> &vec) const
+  vtkm::Float64 operator()(const vtkm::Float64 &inputVal) const
   {
-    vtkm::Vec<vtkm::Float64, 3> direction = this->HighPoint - this->LowPoint;
-    vtkm::Float64 lengthSqr = vtkm::dot(direction, direction);
-    vtkm::Float64 rangeLength = this->RangeHigh - this->RangeLow;
-    vtkm::Float64 s = vtkm::dot(vec - this->LowPoint, direction) / lengthSqr;
-    s = internal::clamp(s, 0.0, 1.0);
-    return this->RangeLow + (s * rangeLength);
+    return inputVal * this->magicNum;
   }
 
   template <typename T>
   VTKM_EXEC_EXPORT
-  vtkm::Float64 operator()(const vtkm::Vec<T,3> &vec) const
+  vtkm::Float64 operator()(const T &inputVal) const
   {
-    return (*this)(vtkm::make_Vec(static_cast<vtkm::Float64>(vec[0]),
-                                  static_cast<vtkm::Float64>(vec[1]),
-                                  static_cast<vtkm::Float64>(vec[2])));
+    return (*this)(static_cast<vtkm::Float64>(inputVal));
   }
 
 private:
-  vtkm::Vec<vtkm::Float64, 3> LowPoint, HighPoint;
-  vtkm::Float64 RangeLow, RangeHigh;
+  vtkm::Float64 magicNum;
 };
 
 }

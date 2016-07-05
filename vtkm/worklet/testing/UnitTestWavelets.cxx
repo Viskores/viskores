@@ -21,86 +21,37 @@
 #include <vtkm/worklet/Wavelets.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
-#include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/cont/DataSet.h>
-
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vector>
 
-namespace {
-
-vtkm::cont::DataSet MakeWaveletsTestDataSet()
-{
-  vtkm::cont::DataSet dataSet;
-
-  std::vector<vtkm::Vec<vtkm::Float32,3> > coordinates;
-  const vtkm::Id dim = 5;
-  for (vtkm::Id j = 0; j < dim; ++j)
-  {
-    vtkm::Float32 z = static_cast<vtkm::Float32>(j) /
-                      static_cast<vtkm::Float32>(dim - 1);
-    for (vtkm::Id i = 0; i < dim; ++i)
-    {
-      vtkm::Float32 x = static_cast<vtkm::Float32>(i) /
-                        static_cast<vtkm::Float32>(dim - 1);
-      vtkm::Float32 y = (x*x + z*z)/2.0f;
-      coordinates.push_back(vtkm::make_Vec(x,y,z));
-    }
-  }
-
-  vtkm::Id numCells = (dim - 1) * (dim - 1);
-  dataSet.AddCoordinateSystem(
-        vtkm::cont::CoordinateSystem("coordinates", coordinates));
-
-  vtkm::cont::CellSetExplicit<> cellSet(vtkm::Id(coordinates.size()), "cells");
-  cellSet.PrepareToAddCells(numCells, numCells * 4);
-  for (vtkm::Id j = 0; j < dim - 1; ++j)
-  {
-    for (vtkm::Id i = 0; i < dim - 1; ++i)
-    {
-      cellSet.AddCell(vtkm::CELL_SHAPE_QUAD,
-                      4,
-                      vtkm::make_Vec<vtkm::Id>(j * dim + i,
-                                               j * dim + i + 1,
-                                               (j + 1) * dim + i + 1,
-                                               (j + 1) * dim + i));
-    }
-  }
-  cellSet.CompleteAddingCells();
-
-  dataSet.AddCellSet(cellSet);
-  return dataSet;
-}
-
-}
 
 void TestWavelets()
 {
   std::cout << "Testing Wavelets Worklet" << std::endl;
 
-  vtkm::cont::DataSet dataSet = MakeWaveletsTestDataSet();
+  vtkm::Id arraySize = 10;
+  std::vector<vtkm::Float32> tmpVector;
+  for( vtkm::Id i = 0; i < arraySize; i++ )
+    tmpVector.push_back(static_cast<vtkm::Float32>(i));
+  
+  vtkm::cont::ArrayHandle<vtkm::Float32> input1DArray = 
+    vtkm::cont::make_ArrayHandle(tmpVector);
+  vtkm::cont::ArrayHandle<vtkm::Float32> output1DArray;
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
-  vtkm::worklet::Wavelets pointElevationWorklet;
-  pointElevationWorklet.SetLowPoint(vtkm::make_Vec<vtkm::Float64>(0.0, 0.0, 0.0));
-  pointElevationWorklet.SetHighPoint(vtkm::make_Vec<vtkm::Float64>(0.0, 1.0, 0.0));
-  pointElevationWorklet.SetRange(0.0, 2.0);
-
+  vtkm::worklet::Wavelets waveletsWorklet;
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Wavelets>
-      dispatcher(pointElevationWorklet);
-  dispatcher.Invoke(dataSet.GetCoordinateSystem().GetData(),
-                    result);
+      dispatcher(waveletsWorklet);
+  dispatcher.Invoke(input1DArray, output1DArray);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > coordinates;
-  dataSet.GetCoordinateSystem().GetData().CopyTo(coordinates);
 
-  for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
+  for (vtkm::Id i = 0; i < output1DArray.GetNumberOfValues(); ++i)
   {
+    std::cout<< output1DArray.GetPortalConstControl().Get(i) << std::endl;
     VTKM_TEST_ASSERT(
-          test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
-                     result.GetPortalConstControl().Get(i)),
+          test_equal( output1DArray.GetPortalConstControl().Get(i), 
+                      static_cast<vtkm::Float32>(i) * 2.0f ),
           "Wrong result for Wavelets worklet");
   }
 }
