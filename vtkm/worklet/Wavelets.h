@@ -28,51 +28,49 @@
 namespace vtkm {
 namespace worklet {
 
-namespace internal {
-
-  //  template <typename T>
-  //  VTKM_EXEC_EXPORT
-  //  T clamp(const T& val, const T& min, const T& max)
-  //  {
-  //    return vtkm::Min(max, vtkm::Max(min, val));
-  //  }
-
-}
-
-class Wavelets : public vtkm::worklet::WorkletMapField
+class Wavelets
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef _2 ExecutionSignature(_1);
-
-  VTKM_CONT_EXPORT
-  Wavelets() : magicNum(2.0) {}
-
-  VTKM_CONT_EXPORT
-  void SetMagicNum(const vtkm::Float64 &num)
+  // helper worklet
+  class ForwardTransform: public vtkm::worklet::WorkletMapField
   {
-    this->magicNum = num;
-  }
+  public:
+    typedef void ControlSignature(WholeArrayIn<ScalarAll>,  // sigIn
+                                  FieldOut<ScalarAll>,      // cA
+                                  FieldOut<ScalarAll>);     // cD
+    typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
+    typedef _1   InputDomain;
+
+    // ForwardTransform constructor
+    VTKM_CONT_EXPORT
+    ForwardTransform() 
+    {
+      magicNum = 2.0;
+      oddlow   = true;
+      oddhigh  = true;
+    }
 
 
-  VTKM_EXEC_EXPORT
-  vtkm::Float64 operator()(const vtkm::Float64 &inputVal) const
-  {
-    return inputVal * this->magicNum;
-  }
+    template <typename T, typename ArrayPortalType>
+    VTKM_EXEC_EXPORT
+    void operator()(const ArrayPortalType &signalIn, 
+                    T &coeffApproximation,
+                    T &coeffDetail,
+                    const vtkm::Id &workIndex) const
+    {
+        vtkm::Float64 tmp  = static_cast<vtkm::Float64>(signalIn.Get(workIndex));
+        coeffApproximation = static_cast<T>( tmp / 2.0 );
+        coeffDetail        = static_cast<T>( tmp * 2.0 );
+    }
 
-  template <typename T>
-  VTKM_EXEC_EXPORT
-  vtkm::Float64 operator()(const T &inputVal) const
-  {
-    return (*this)(static_cast<vtkm::Float64>(inputVal));
-  }
+  private:
+    vtkm::Float64 magicNum;
+    bool oddlow, oddhigh;
+  };  // class ForwardTransform
 
-private:
-  vtkm::Float64 magicNum;
-};
+};    // class Wavelets
 
-}
-} // namespace vtkm::worklet
+}     // namespace worlet
+}     // namespace vtkm
 
 #endif // vtk_m_worklet_Wavelets_h
