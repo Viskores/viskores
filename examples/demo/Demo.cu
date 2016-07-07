@@ -18,5 +18,4 @@
 //  this software.
 //============================================================================
 
-#define BOOST_SP_DISABLE_THREADS
 #include "Demo.cxx"

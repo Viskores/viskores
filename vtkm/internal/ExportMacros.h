@@ -51,28 +51,4 @@
 /// is providing a specialization that does not need that parameter.
 #define vtkmNotUsed(parameter_name)
 
-
-// Check boost support under CUDA
-#ifdef VTKM_CUDA
-#if !defined(BOOST_SP_DISABLE_THREADS) && !defined(BOOST_SP_USE_SPINLOCK) && !defined(BOOST_SP_USE_PTHREADS)
-#warning -------------------------------------------------------------------
-#warning The CUDA compiler (nvcc) has trouble with some of the optimizations
-#warning boost uses for thread saftey.  To get around this, please define
-#warning one of the following macros to specify the thread handling boost
-#warning should use:
-#warning
-#warning   BOOST_SP_DISABLE_THREADS
-#warning   BOOST_SP_USE_SPINLOCK
-#warning   BOOST_SP_USE_PTHREADS
-#warning
-#warning Failure to define one of these for a CUDA build will probably cause
-#warning other annoying warnings and might even cause incorrect code.  Note
-#warning that specifying BOOST_SP_DISABLE_THREADS does not preclude using
-#warning VTKm with a threaded device (like OpenMP).  Specifying one of these
-#warning modes for boost does not effect the scheduling in VTKm.
-#warning -------------------------------------------------------------------
-
-#endif
-#endif
-
 #endif //vtk_m_internal__ExportMacros_h

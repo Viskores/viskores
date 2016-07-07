@@ -124,10 +124,21 @@
 // but boost and thrust does not.
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 
-#define VTK_M_THIRDPARTY_GCC_WARNING_PRAGMAS \
+#define VTK_M_THIRDPARTY_GENERAL_WARNING_PRAGMAS \
   _Pragma("GCC diagnostic ignored \"-Wconversion\"") \
   _Pragma("GCC diagnostic ignored \"-Wshadow\"") \
   _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
+
+// GCC has a unused by set variable warnings that needs to be silenced.
+// Because boost boost::shared_ptr inline assembly causes nvcc to incorrectly
+// generate warnings.
+#if defined(VTKM_GCC)
+#define VTK_M_THIRDPARTY_GCC_WARNING_PRAGMAS \
+  _Pragma("GCC diagnostic ignored \"-Wunused-but-set-variable\"") \
+  _Pragma("GCC diagnostic ignored \"-Wunused-variable\"")
+#else
+#define VTK_M_THIRDPARTY_GCC_WARNING_PRAGMAS
+#endif
 
 // Newer versions of clang have an unused-local-typedef warning, but not older
 // versions. This checks for the apple version of clang, which is different
@@ -152,6 +163,7 @@
 
 #define VTKM_THIRDPARTY_PRE_INCLUDE \
   VTK_M_THIRDPARTY_WARNINGS_PUSH \
+  VTK_M_THIRDPARTY_GENERAL_WARNING_PRAGMAS \
   VTK_M_THIRDPARTY_GCC_WARNING_PRAGMAS \
   VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS
 #define VTKM_THIRDPARTY_POST_INCLUDE \

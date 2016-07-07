@@ -18,8 +18,6 @@
 //  this software.
 //============================================================================
 
-#define BOOST_SP_DISABLE_THREADS
-
 //This file merely exists so that we can simplify the logic for invoking
 //nvcc telling that cuda code exists.
 #include "MultiBackend.cxx"
