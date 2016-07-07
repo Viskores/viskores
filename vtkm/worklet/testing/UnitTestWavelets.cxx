@@ -30,24 +30,33 @@ void TestWavelets()
 {
   std::cout << "Testing Wavelets Worklet" << std::endl;
 
-  vtkm::Id arraySize = 10;
-  std::vector<vtkm::Float32> tmpVector;
+  vtkm::Id arraySize = 18;
+
+  // make input data array handle
+  std::vector<vtkm::Float64> tmpVector;
   for( vtkm::Id i = 0; i < arraySize; i++ )
-    tmpVector.push_back(static_cast<vtkm::Float32>(i));
+    tmpVector.push_back( 0.0 );
  
- 
-  vtkm::cont::ArrayHandle<vtkm::Float32> input1DArray = 
+  vtkm::cont::ArrayHandle<vtkm::Float64> input1DArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
-  vtkm::cont::ArrayHandle<vtkm::Float32> outputArray1;
-/*
-  outputArray1.Allocate( arraySize );
-  vtkm::cont::ArrayHandle<vtkm::Float32> outputArray2;
-  outputArray2.Allocate( arraySize );
-*/
+  vtkm::cont::ArrayHandle<vtkm::Float64> outputArray1;
+
+  // make two filter array handles
+  vtkm::cont::ArrayHandle<vtkm::Float64> lowFilter = 
+//    vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::hm4_44, 9);
+    vtkm::cont::make_ArrayHandle( tmpVector );
+  vtkm::cont::ArrayHandle<vtkm::Float64> highFilter = 
+//    vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::h4, 9);
+    vtkm::cont::make_ArrayHandle( tmpVector );
+
 
   vtkm::worklet::Wavelets::ForwardTransform forwardTransform;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::Wavelets::ForwardTransform> dispatcher(forwardTransform);
-  dispatcher.Invoke(input1DArray, outputArray1);
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::Wavelets::ForwardTransform> 
+    dispatcher(forwardTransform);
+  dispatcher.Invoke(input1DArray, 
+                    lowFilter, 
+                    highFilter,
+                    outputArray1);
 
   std::cerr << "Invoke succeeded" << std::endl;
 

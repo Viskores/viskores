@@ -66,11 +66,12 @@ public:
     typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // sigIn
                                   WholeArrayIn<vtkm::Float64>, // lowFilter
                                   WholeArrayIn<vtkm::Float64>, // highFilter
-                                  FieldOut<ScalarAll>);        // cA in even indices, cD in odd indices
+                                  FieldOut<ScalarAll>);        // cA in even indices, 
+                                                               // cD in odd indices
     typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
     typedef _1   InputDomain;
 
-    typedef vtkm::Float64 FLOAT;
+//    typedef vtkm::Float64 FLOAT;
 
     // ForwardTransform constructor
     VTKM_CONT_EXPORT
@@ -92,12 +93,12 @@ public:
                     OutputCoeffType &coeffOut,
                     const vtkm::Id &workIndex) const
     {
-        FLOAT tmp  = static_cast<FLOAT>(signalIn.Get(workIndex));
-        if( workIndex % 2 == 0 )    // work on cA, approximate coeffs
+        vtkm::Float64 tmp  = static_cast<vtkm::Float64>(signalIn.Get(workIndex));
+        if( workIndex % 2 == 0 )    // calculate cA, approximate coeffs
         {
-          coeffOut = static_cast<OutputCoeffType>( tmpi + lowFilter.Get(0) );
+          coeffOut = static_cast<OutputCoeffType>( tmp + lowFilter.Get(0) );
         }
-        else                        // work on cD, detail coeffs
+        else                        // calculate cD, detail coeffs
         {
           coeffOut = static_cast<OutputCoeffType>( tmp + highFilter.Get(0) );
         }
