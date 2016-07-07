@@ -71,17 +71,37 @@ public:
     typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
     typedef _1   InputDomain;
 
-//    typedef vtkm::Float64 FLOAT;
-
     // ForwardTransform constructor
     VTKM_CONT_EXPORT
     ForwardTransform() 
     {
-      magicNum = 2.0;
-      oddlow   = true;
-      oddhigh  = true;
+      magicNum  = 3.14159265;
+      filterLen = 9;
+      oddlow    = oddhigh = false;
+      xlstart   = xhstart = 0;
     }
 
+    // Specify odd or even for low and high coeffs
+    VTKM_CONT_EXPORT
+    void SetOddness(const bool &odd_low, const bool &odd_high )
+    {
+      this->oddlow  = odd_low;
+      this->xlstart = odd_low ? 1 : 0;
+
+      this->oddhigh = odd_high;
+      this->xhstart = odd_high ? 1 : 0;
+    }
+
+    // Set the filter length
+    VTKM_CONT_EXPORT
+    void SetFilterLength(const vtkm::Id &len )
+    {
+      this->filterLen = len;
+    }
+
+    // Use 64-bit float for internal calculation
+    #define VAL        vtkm::Float64
+    #define MAKEVAL(a) (static_cast<VAL>(a))
 
     template <typename InputSignalPortalType,
               typename FilterPortalType,
@@ -93,20 +113,43 @@ public:
                     OutputCoeffType &coeffOut,
                     const vtkm::Id &workIndex) const
     {
-        vtkm::Float64 tmp  = static_cast<vtkm::Float64>(signalIn.Get( workIndex ));
-        if( workIndex % 2 == 0 )    // calculate cA, approximate coeffs
+      if( workIndex % 2 == 0 )    // calculate cA, approximate coeffs
+      {
+        VAL sum=MAKEVAL(0.0);
+        vtkm::Id xl = xlstart + workIndex;
+        if( xl + filterLen < signalIn.GetNumberOfValues() )
         {
-          coeffOut = static_cast<OutputCoeffType>( tmp + lowFilter.Get( workIndex/2 ) );
+          for( vtkm::Id k = filterLen - 1; k >= 0; k-- )
+            sum += lowFilter.Get(k) * MAKEVAL( signalIn.Get(xl++) );
+          coeffOut = static_cast<OutputCoeffType>( sum );
         }
-        else                        // calculate cD, detail coeffs
+        else
+          coeffOut = static_cast<OutputCoeffType>( magicNum );
+      }
+      else                        // calculate cD, detail coeffs
+      {
+        VAL sum=MAKEVAL(0.0);
+        vtkm::Id xh = xhstart + workIndex - 1;
+        if( xh + filterLen < signalIn.GetNumberOfValues() )
         {
-          coeffOut = static_cast<OutputCoeffType>( tmp + highFilter.Get( (workIndex-1)/2 ) );
+          for( vtkm::Id k = filterLen - 1; k >= 0; k-- )
+            sum += highFilter.Get(k) * MAKEVAL( signalIn.Get(xh++) );
+          coeffOut = static_cast<OutputCoeffType>( sum );
         }
+        else
+          coeffOut = static_cast<OutputCoeffType>( magicNum );
+      }
     }
+
+    #undef MAKEVAL
+    #undef VAL
 
   private:
     vtkm::Float64 magicNum;
+    vtkm::Id      filterLen, xlstart, xhstart;
     bool oddlow, oddhigh;
+
+
   };  // class ForwardTransform
 
 };    // class Wavelets

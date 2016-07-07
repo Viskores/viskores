@@ -30,12 +30,12 @@ void TestWavelets()
 {
   std::cout << "Testing Wavelets Worklet" << std::endl;
 
-  vtkm::Id arraySize = 18;
+  vtkm::Id arraySize = 36;
 
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
   for( vtkm::Id i = 0; i < arraySize; i++ )
-    tmpVector.push_back( 0.0 );
+    tmpVector.push_back( 1.0 );
  
   vtkm::cont::ArrayHandle<vtkm::Float64> input1DArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
@@ -44,10 +44,8 @@ void TestWavelets()
   // make two filter array handles
   vtkm::cont::ArrayHandle<vtkm::Float64> lowFilter = 
     vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::hm4_44, 9);
-//    vtkm::cont::make_ArrayHandle( tmpVector );
   vtkm::cont::ArrayHandle<vtkm::Float64> highFilter = 
     vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::h4, 9);
-//    vtkm::cont::make_ArrayHandle( tmpVector );
 
 
   vtkm::worklet::Wavelets::ForwardTransform forwardTransform;
@@ -57,19 +55,14 @@ void TestWavelets()
                     lowFilter, 
                     highFilter,
                     outputArray1);
-
-  std::cerr << "Invoke succeeded" << std::endl;
+  std::cerr << "Invoke succeeded; output has length: " << 
+    outputArray1.GetNumberOfValues() << std::endl;
 
   for (vtkm::Id i = 0; i < outputArray1.GetNumberOfValues(); ++i)
   {
     std::cout << outputArray1.GetPortalConstControl().Get(i) << ", ";
     if( i % 2 != 0 )
       std::cout << std::endl;
-//             << outputArray2.GetPortalConstControl().Get(i) << std::endl;
-//    VTKM_TEST_ASSERT(
-//          test_equal( output1DArray.GetPortalConstControl().Get(i), 
-//                      static_cast<vtkm::Float32>(i) * 2.0f ),
-//          "Wrong result for Wavelets worklet");
   }
 }
 
