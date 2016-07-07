@@ -28,18 +28,49 @@
 namespace vtkm {
 namespace worklet {
 
+namespace internal{
+
+  const vtkm::Float64 hm4_44[9] = {
+    0.037828455507264,
+    -0.023849465019557,
+    -0.110624404418437,
+    0.377402855612831,
+    0.852698679008894,
+    0.377402855612831,
+    -0.110624404418437,
+    -0.023849465019557,
+    0.037828455507264
+  };
+
+  const vtkm::Float64 h4[9] = {
+    0.0,
+    -0.064538882628697,
+    -0.040689417609164,
+    0.418092273221617,
+    0.788485616405583,
+    0.418092273221617,
+    -0.0406894176091641,
+    -0.0645388826286971,
+    0.0
+  };
+}
+
 class Wavelets
 {
 public:
+
   // helper worklet
   class ForwardTransform: public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(WholeArrayIn<ScalarAll>,  // sigIn
-                                  FieldOut<ScalarAll>,      // cA
-                                  FieldOut<ScalarAll>);     // cD
-    typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
+    typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // sigIn
+                                  WholeArrayIn<vtkm::Float64>, // lowFilter
+                                  WholeArrayIn<vtkm::Float64>, // highFilter
+                                  FieldOut<ScalarAll>);        // cA in even indices, cD in odd indices
+    typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
     typedef _1   InputDomain;
+
+    typedef vtkm::Float64 FLOAT;
 
     // ForwardTransform constructor
     VTKM_CONT_EXPORT
@@ -51,16 +82,25 @@ public:
     }
 
 
-    template <typename T, typename ArrayPortalType>
+    template <typename InputSignalPortalType,
+              typename FilterPortalType,
+              typename OutputCoeffType>
     VTKM_EXEC_EXPORT
-    void operator()(const ArrayPortalType &signalIn, 
-                    T &coeffApproximation,
-                    T &coeffDetail,
+    void operator()(const InputSignalPortalType &signalIn, 
+                    const FilterPortalType      &lowFilter,
+                    const FilterPortalType      &highFilter,
+                    OutputCoeffType &coeffOut,
                     const vtkm::Id &workIndex) const
     {
-        vtkm::Float64 tmp  = static_cast<vtkm::Float64>(signalIn.Get(workIndex));
-        coeffApproximation = static_cast<T>( tmp / 2.0 );
-        coeffDetail        = static_cast<T>( tmp * 2.0 );
+        FLOAT tmp  = static_cast<FLOAT>(signalIn.Get(workIndex));
+        if( workIndex % 2 == 0 )    // work on cA, approximate coeffs
+        {
+          coeffOut = static_cast<OutputCoeffType>( tmpi + lowFilter.Get(0) );
+        }
+        else                        // work on cD, detail coeffs
+        {
+          coeffOut = static_cast<OutputCoeffType>( tmp + highFilter.Get(0) );
+        }
     }
 
   private:

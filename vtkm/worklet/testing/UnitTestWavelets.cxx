@@ -33,26 +33,28 @@ void TestWavelets()
   vtkm::Id arraySize = 10;
   std::vector<vtkm::Float32> tmpVector;
   for( vtkm::Id i = 0; i < arraySize; i++ )
-    tmpVector.push_back(static_cast<vtkm::Float32>(i*2));
+    tmpVector.push_back(static_cast<vtkm::Float32>(i));
  
  
   vtkm::cont::ArrayHandle<vtkm::Float32> input1DArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
   vtkm::cont::ArrayHandle<vtkm::Float32> outputArray1;
+/*
   outputArray1.Allocate( arraySize );
   vtkm::cont::ArrayHandle<vtkm::Float32> outputArray2;
   outputArray2.Allocate( arraySize );
+*/
 
   vtkm::worklet::Wavelets::ForwardTransform forwardTransform;
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Wavelets::ForwardTransform> dispatcher(forwardTransform);
-  dispatcher.Invoke(input1DArray, outputArray1, outputArray2);
+  dispatcher.Invoke(input1DArray, outputArray1);
 
   std::cerr << "Invoke succeeded" << std::endl;
 
   for (vtkm::Id i = 0; i < outputArray1.GetNumberOfValues(); ++i)
   {
-    std::cout<< outputArray1.GetPortalConstControl().Get(i) << ", "
-             << outputArray2.GetPortalConstControl().Get(i) << std::endl;
+    std::cout<< outputArray1.GetPortalConstControl().Get(i) << std::endl;
+//             << outputArray2.GetPortalConstControl().Get(i) << std::endl;
 //    VTKM_TEST_ASSERT(
 //          test_equal( output1DArray.GetPortalConstControl().Get(i), 
 //                      static_cast<vtkm::Float32>(i) * 2.0f ),
