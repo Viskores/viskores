@@ -43,11 +43,11 @@ void TestWavelets()
 
   // make two filter array handles
   vtkm::cont::ArrayHandle<vtkm::Float64> lowFilter = 
-//    vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::hm4_44, 9);
-    vtkm::cont::make_ArrayHandle( tmpVector );
+    vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::hm4_44, 9);
+//    vtkm::cont::make_ArrayHandle( tmpVector );
   vtkm::cont::ArrayHandle<vtkm::Float64> highFilter = 
-//    vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::h4, 9);
-    vtkm::cont::make_ArrayHandle( tmpVector );
+    vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::h4, 9);
+//    vtkm::cont::make_ArrayHandle( tmpVector );
 
 
   vtkm::worklet::Wavelets::ForwardTransform forwardTransform;
@@ -62,7 +62,9 @@ void TestWavelets()
 
   for (vtkm::Id i = 0; i < outputArray1.GetNumberOfValues(); ++i)
   {
-    std::cout<< outputArray1.GetPortalConstControl().Get(i) << std::endl;
+    std::cout << outputArray1.GetPortalConstControl().Get(i) << ", ";
+    if( i % 2 != 0 )
+      std::cout << std::endl;
 //             << outputArray2.GetPortalConstControl().Get(i) << std::endl;
 //    VTKM_TEST_ASSERT(
 //          test_equal( output1DArray.GetPortalConstControl().Get(i), 
