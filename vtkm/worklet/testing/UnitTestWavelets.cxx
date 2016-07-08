@@ -30,12 +30,12 @@ void TestWavelets()
 {
   std::cout << "Testing Wavelets Worklet" << std::endl;
 
-  vtkm::Id arraySize = 36;
+  vtkm::Id signalLen = 20;
 
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
-  for( vtkm::Id i = 0; i < arraySize; i++ )
-    tmpVector.push_back( 1.0 );
+  for( vtkm::Id i = 0; i < signalLen + 9; i++ )
+    tmpVector.push_back( i + 1 );
  
   vtkm::cont::ArrayHandle<vtkm::Float64> input1DArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
