@@ -23,7 +23,6 @@ set(headers
   WorkletMapField.h
   DispatcherMapTopology.h
   WorkletMapTopology.h
-
   AverageByKey.h
   CellAverage.h
   Clip.h
@@ -46,6 +45,7 @@ set(headers
   Threshold.h
   VertexClustering.h
   Wavelets.h
+  WaveletsFilterBanks.h
   )
 
 #-----------------------------------------------------------------------------

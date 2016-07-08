@@ -23,37 +23,12 @@
 
 #include <vtkm/worklet/WorkletMapField.h>
 
+#include <vtkm/worklet/WaveletsFilterBanks.h>
+
 #include <vtkm/Math.h>
 
 namespace vtkm {
 namespace worklet {
-
-namespace internal{
-
-  const vtkm::Float64 hm4_44[9] = {
-    0.037828455507264,
-    -0.023849465019557,
-    -0.110624404418437,
-    0.377402855612831,
-    0.852698679008894,
-    0.377402855612831,
-    -0.110624404418437,
-    -0.023849465019557,
-    0.037828455507264
-  };
-
-  const vtkm::Float64 h4[9] = {
-    0.0,
-    -0.064538882628697,
-    -0.040689417609164,
-    0.418092273221617,
-    0.788485616405583,
-    0.418092273221617,
-    -0.0406894176091641,
-    -0.0645388826286971,
-    0.0
-  };
-}
 
 class Wavelets
 {
