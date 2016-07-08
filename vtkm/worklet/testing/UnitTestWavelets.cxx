@@ -47,7 +47,11 @@ void TestWavelets()
   vtkm::cont::ArrayHandle<vtkm::Float64> highFilter = 
     vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::h4, 9);
 
+	// make a wavelet filter
+	std::string wname = "CDF9/7";
+	vtkm::worklet::Wavelets::Filter CDF97( wname );
 
+	// initialize the worklet
   vtkm::worklet::Wavelets::ForwardTransform forwardTransform;
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Wavelets::ForwardTransform> 
     dispatcher(forwardTransform);

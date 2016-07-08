@@ -34,6 +34,55 @@ class Wavelets
 {
 public:
 
+	// helper class to hold a wavelet filter
+	class Filter
+	{
+  public:
+		// constructor
+		Filter( const std::string &wname )
+		{
+			if( wname.compare("CDF9/7") == 0 )
+			{
+				this->filterLength = 9;
+			}
+			else
+			{
+				this->filterLength = 0;
+				// throw an error here
+			}
+		}
+
+		// destructor
+		virtual ~Filter()
+		{
+			if(  lowDecomposeFilter )		  delete[] lowDecomposeFilter;
+			if( highDecomposeFilter )		  delete[] lowDecomposeFilter;
+			if(  lowReconstructFilter )		delete[] lowDecomposeFilter;
+			if( highReconstructFilter )		delete[] lowDecomposeFilter;
+		}
+
+	protected:
+		vtkm::Id				 filterLength;
+		vtkm::Float64* 	 lowDecomposeFilter;
+		vtkm::Float64* 	highDecomposeFilter;
+		vtkm::Float64*   lowReconstructFilter;
+		vtkm::Float64*	highReconstructFilter;
+
+		void AllocateFilterMemory()
+		{
+			if( this->filterLength == 0 )
+				lowDecomposeFilter = highDecomposeFilter = 
+					lowReconstructFilter = highReconstructFilter = NULL;
+			else
+			{
+				lowDecomposeFilter    = new vtkm::Float64[ this->filterLength ];
+				highDecomposeFilter   = new vtkm::Float64[ this->filterLength ];
+				lowReconstructFilter  = new vtkm::Float64[ this->filterLength ];
+				highReconstructFilter = new vtkm::Float64[ this->filterLength ];
+			}
+		}
+	};
+
   // helper worklet
   class ForwardTransform: public vtkm::worklet::WorkletMapField
   {
@@ -123,7 +172,6 @@ public:
     vtkm::Float64 magicNum;
     vtkm::Id      filterLen, xlstart, xhstart;
     bool oddlow, oddhigh;
-
 
   };  // class ForwardTransform
 
