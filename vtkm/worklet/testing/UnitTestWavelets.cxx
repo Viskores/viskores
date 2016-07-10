@@ -34,7 +34,7 @@ void TestWavelets()
 
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
-  for( vtkm::Id i = 0; i < signalLen + 9; i++ )
+  for( vtkm::Id i = 0; i < signalLen + 8; i++ )
     tmpVector.push_back( i + 1 );
  
   vtkm::cont::ArrayHandle<vtkm::Float64> input1DArray = 
@@ -53,6 +53,9 @@ void TestWavelets()
 
 	// initialize the worklet
   vtkm::worklet::Wavelets::ForwardTransform forwardTransform;
+	forwardTransform.SetFilterLength( 9 );
+	forwardTransform.SetCoeffLength( 10, 10 );
+	forwardTransform.SetOddness( false, true );
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Wavelets::ForwardTransform> 
     dispatcher(forwardTransform);
   dispatcher.Invoke(input1DArray, 

@@ -3,4 +3,4 @@ CXX=clang++
 all: MatWaveDwt
 
 MatWaveDwt: MatWaveDwt.cpp
-	$(CXX) MatWaveDwt.cpp -o MatWaveDwt 
+	$(CXX) -g MatWaveDwt.cpp -o MatWaveDwt 

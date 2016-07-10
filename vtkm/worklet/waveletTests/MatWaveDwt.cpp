@@ -24,24 +24,6 @@ const double h4[9] = {
   0.0
 };
 
-//
-// Perform single-level, 1D forward wavelet transform 
-// (convolution + downsampling)
-//
-//
-// The number of samples computed for both cA and cD is: sigInLen / 2
-//
-// If oddlow is true the odd indexed low pass samples are computed (the first
-// input sample is ignored), else the even samples are computed. This
-// parameter provides control over the centering of the filter. Similar
-// for the oddhigh parameter.
-//
-// sigIn must contain sigInLen + filterLen + 1 samples if oddlow or oddhigh
-// is true, otherwise sigInLen + filterLen samples are required
-//
-// See G. Strang and T. Nguyen, "Wavelets and Filter Banks", chap 8, finite
-// length filters
-//
 void forward_xform (
   const double *sigIn, size_t sigInLen,
   const double *low_filter, const double *high_filter,
@@ -86,8 +68,8 @@ void create_array( double* buf, size_t num )
 int main( int argc, char* argv[] )
 {
   size_t sigLen = 20;
-  double buf[ sigLen ];
-  create_array( buf, sigLen + 9);
+  double buf[ sigLen+8 ];
+  create_array( buf, sigLen+8 );
 
   size_t coeffLen = 10;
   double cA[coeffLen];
@@ -99,7 +81,7 @@ int main( int argc, char* argv[] )
   const double* high_filter = h4;
 
   bool oddlow = false;
-  bool oddhigh = false;
+  bool oddhigh = true;
   
 
   forward_xform( buf, sigLen, low_filter, high_filter, 9, cA, cD, oddlow, oddhigh );
