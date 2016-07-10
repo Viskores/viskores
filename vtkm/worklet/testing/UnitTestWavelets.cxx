@@ -49,7 +49,7 @@ void TestWavelets()
 
 	// make a wavelet filter
 	std::string wname = "CDF9/7";
-	vtkm::worklet::Wavelets::Filter CDF97( wname );
+	vtkm::worklet::WaveletFilter CDF97( wname );
 
 	// initialize the worklet
   vtkm::worklet::Wavelets::ForwardTransform forwardTransform;
