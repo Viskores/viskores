@@ -43,19 +43,19 @@ void TestWavelets()
 
   // make two filter array handles
   vtkm::cont::ArrayHandle<vtkm::Float64> lowFilter = 
-    vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::hm4_44, 9);
+    vtkm::cont::make_ArrayHandle(vtkm::worklet::wavelet::hm4_44, 9);
   vtkm::cont::ArrayHandle<vtkm::Float64> highFilter = 
-    vtkm::cont::make_ArrayHandle(vtkm::worklet::internal::h4, 9);
+    vtkm::cont::make_ArrayHandle(vtkm::worklet::wavelet::h4, 9);
 
-	// make a wavelet filter
-	std::string wname = "CDF9/7";
-	vtkm::worklet::WaveletFilter CDF97( wname );
+  // make a wavelet filter
+  std::string wname = "CDF9/7";
+  vtkm::worklet::wavelet::WaveletFilter CDF97( wname );
 
-	// initialize the worklet
+  // initialize the worklet
   vtkm::worklet::Wavelets::ForwardTransform forwardTransform;
-	forwardTransform.SetFilterLength( 9 );
-	forwardTransform.SetCoeffLength( 10, 10 );
-	forwardTransform.SetOddness( false, true );
+  forwardTransform.SetFilterLength( 9 );
+  forwardTransform.SetCoeffLength( 10, 10 );
+  forwardTransform.SetOddness( false, true );
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Wavelets::ForwardTransform> 
     dispatcher(forwardTransform);
   dispatcher.Invoke(input1DArray, 

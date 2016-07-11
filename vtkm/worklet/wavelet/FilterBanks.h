@@ -20,12 +20,16 @@
 //
 //=============================================================================
 
+#ifndef vtk_m_worklet_wavelet_filterbanks_h
+#define vtk_m_worklet_wavelet_filterbanks_h
+
+
 #include <vtkm/Types.h>
 
 namespace vtkm {
 namespace worklet {
 
-namespace internal {
+namespace wavelet {
 
   const vtkm::Float64 hm4_44[9] = {
     0.037828455507264,
@@ -56,3 +60,4 @@ namespace internal {
 }
 }
 
+#endif
