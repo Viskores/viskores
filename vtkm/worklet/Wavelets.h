@@ -43,6 +43,7 @@ public:
 		this->filterLength = 0;
 		if( wname.compare("CDF9/7") == 0 )
 		{
+			this->symmetricity= true;
 			this->filterLength = 9;
 			AllocateFilterMemory();
 			wrev( vtkm::worklet::internal::hm4_44,      lowDecomposeFilter, filterLength );
@@ -65,7 +66,11 @@ public:
 		if(  highReconstructFilter )		delete[] highReconstructFilter;
 	}
 
+	vtkm::Id GetFilterLength()		{ return this->filterLength; }
+	bool		 isSymmetric()				{ return this->symmetricity;	 }
+
 protected:
+	bool						 symmetricity;
 	vtkm::Id				 filterLength;
 	vtkm::Float64* 	 lowDecomposeFilter;
 	vtkm::Float64* 	 highDecomposeFilter;
@@ -95,14 +100,12 @@ protected:
 			sigOut[count] = sigIn[sigLength - count - 1];
 
 			if (sigLength % 2 == 0) {
-				if (count % 2 != 0) {
+				if (count % 2 != 0) 
 					sigOut[count] = -1.0 * sigOut[count];
-				}
 			}
 			else {
-				if (count % 2 == 0) {
+				if (count % 2 == 0) 
 					sigOut[count] = -1.0 * sigOut[count];
-				}
 			}
 		}
 	}
@@ -114,14 +117,12 @@ protected:
 			sigOut[count] = sigIn[sigLength - count - 1];
 
 			if (sigLength % 2 == 0) {
-				if (count % 2 != 0) {
+				if (count % 2 != 0) 
 					sigOut[count] = -1 * sigOut[count];
-				}
 			}
 			else {
-				if (count % 2 == 0) {
+				if (count % 2 == 0) 
 					sigOut[count] = -1 * sigOut[count];
-				}
 			}
 		}
 
@@ -139,8 +140,127 @@ protected:
 		for (vtkm::Id count = 0; count < sigLength; count++)
 			sigOut[count] = sigIn[count];
 	}
-};	// Finish class Filter
+};	// Finish class WaveletFilter.
 
+
+class WaveletBase
+{
+public:
+	// Constructor
+	WaveletBase( const std::string &w_name )
+	{
+		filter = NULL;
+		this->wmode = PER;
+		this->wname = w_name;
+		if( wname.compare("CDF9/7") == 0 )
+		{
+			this->wmode = SYMW;
+			filter = new vtkm::worklet::WaveletFilter( wname );
+		}
+	}
+
+	// Destructor
+	virtual ~WaveletBase()
+	{
+		if( filter )	
+			delete filter;
+		filter = NULL;
+	}
+
+	// Get the wavelet filter
+	const vtkm::worklet::WaveletFilter* GetWaveletFilter() { return filter; }
+
+	// Returns length of approximation coefficients from a decompostition pass.
+	vtkm::Id GetApproxLength( vtkm::Id sigInLen )
+	{
+		vtkm::Id filterLen = this->filter->GetFilterLength();
+
+		if (this->wmode == PER) 
+			return static_cast<vtkm::Id>(vtkm::Ceil( (static_cast<vtkm::Float64>(sigInLen)) / 2.0 ));
+		else if (this->filter->isSymmetric()) 
+		{
+			if ( (this->wmode == SYMW && (filterLen % 2 != 0)) ||
+				   (this->wmode == SYMH && (filterLen % 2 == 0)) )  
+			{
+				if (sigInLen % 2 != 0)
+					return((sigInLen+1) / 2);
+				else 
+					return((sigInLen) / 2);
+			}
+		}
+
+		return static_cast<vtkm::Id>( vtkm::Floor(
+					 static_cast<vtkm::Float64>(sigInLen + filterLen - 1) / 2.0 ) );
+	}
+
+	// Returns length of detail coefficients from a decompostition pass
+	vtkm::Id GetDetailLength( vtkm::Id sigInLen )
+	{
+		vtkm::Id filterLen = this->filter->GetFilterLength();
+
+		if (this->wmode == PER) 
+			return static_cast<vtkm::Id>(vtkm::Ceil( (static_cast<vtkm::Float64>(sigInLen)) / 2.0 ));
+		else if (this->filter->isSymmetric()) 
+		{
+			if ( (this->wmode == SYMW && (filterLen % 2 != 0)) ||
+				   (this->wmode == SYMH && (filterLen % 2 == 0)) )  
+			{
+				if (sigInLen % 2 != 0)
+					return((sigInLen-1) / 2);
+				else 
+					return((sigInLen) / 2);
+			}
+		}
+
+		return static_cast<vtkm::Id>( vtkm::Floor(
+					 static_cast<vtkm::Float64>(sigInLen + filterLen - 1) / 2.0 ) );
+	}
+
+	// Returns length of coefficients generated in a decompostition pass
+	vtkm::Id GetCoeffLength( vtkm::Id sigInLen )
+	{
+		return( GetApproxLength( sigInLen ) + GetDetailLength( sigInLen ) );
+	}
+	vtkm::Id GetCoeffLength2( vtkm::Id sigInX, vtkm::Id sigInY )
+	{
+		return( GetCoeffLength( sigInX) * GetCoeffLength( sigInY ) );
+	}
+	vtkm::Id GetCoeffLength3( vtkm::Id sigInX, vtkm::Id sigInY, vtkm::Id sigInZ)
+	{
+		return( GetCoeffLength( sigInX) * GetCoeffLength( sigInY ) * GetCoeffLength( sigInZ ) );
+	}
+
+	// Returns maximum wavelet decompostion level
+	vtkm::Id GetWaveletMaxLevel( vtkm::Id s )
+	{
+		return 0;
+	}
+
+protected:
+	enum DwtMode {		// boundary extension modes
+		INVALID = -1,
+		ZPD, 
+		SYMH, 
+		SYMW,
+		ASYMH, ASYMW, SP0, SP1, PPD, PER
+	};
+
+private:
+  DwtMode 													wmode;
+	vtkm::worklet::WaveletFilter* 		filter;
+	std::string 											wname;
+
+	void WaveLengthValidate( vtkm::Id sigInLen, vtkm::Id filterLength, vtkm::Id &level)
+	{
+    // *lev = (int) (log((double) sigInLen / (double) (waveLength)) / log(2.0)) + 1;
+		if( sigInLen < filterLength )
+			level = 0;
+		else
+			level = static_cast<vtkm::Id>( vtkm::Floor( 
+									vtkm::Log2( static_cast<vtkm::Float64>(sigInLen) / 
+															static_cast<vtkm::Float64>(filterLength) ) + 1.0 ) );
+	}
+};	// Finish class WaveletBase.
 
 class Wavelets
 {
