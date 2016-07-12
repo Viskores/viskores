@@ -22,6 +22,7 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/cont/Timer.h>
 
 #include <vector>
 
@@ -30,7 +31,7 @@ void TestWavelets()
 {
   std::cout << "Testing Wavelets Worklet" << std::endl;
 
-  vtkm::Id sigLen = 40;
+  vtkm::Id sigLen = 5000;
 
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
@@ -56,24 +57,32 @@ void TestWavelets()
   forwardTransform.SetFilterLength( 9 );
   forwardTransform.SetCoeffLength( sigLen/2, sigLen/2 );
   forwardTransform.SetOddness( false, true );
+
+  // setup a timer
+  vtkm::cont::Timer<> timer;
+
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Wavelets::ForwardTransform> 
     dispatcher(forwardTransform);
   dispatcher.Invoke(input1DArray, 
                     lowFilter, 
                     highFilter,
                     outputArray1);
-  std::cerr << "Invoke succeeded; output has length: " << 
-    outputArray1.GetNumberOfValues() << std::endl;
 
+  vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
+  std::cerr << "Invoke succeeded; time elapsed = " << elapsedTime << std::endl;
+
+  /*
   for (vtkm::Id i = 0; i < outputArray1.GetNumberOfValues(); ++i)
   {
     std::cout << outputArray1.GetPortalConstControl().Get(i) << ", ";
     if( i % 2 != 0 )
       std::cout << std::endl;
   }
+  */
 }
 
-int UnitTestWavelets(int, char *[])
+int UnitTestWavelets(int argc, char* argv[])
 {
+  std::cout << "argc = " << argc << std::endl;
   return vtkm::cont::testing::Testing::Run(TestWavelets);
 }
