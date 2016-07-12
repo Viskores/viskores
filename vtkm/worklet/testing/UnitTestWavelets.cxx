@@ -35,7 +35,7 @@ void TestWavelets()
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
   for( vtkm::Id i = 0; i < sigLen + 8; i++ )
-    tmpVector.push_back( i + 1 );
+    tmpVector.push_back( static_cast<vtkm::Float64>(i+1) );
  
   vtkm::cont::ArrayHandle<vtkm::Float64> input1DArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
