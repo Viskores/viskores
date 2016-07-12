@@ -31,12 +31,21 @@ void TestWavelets()
 {
   std::cout << "Testing Wavelets Worklet" << std::endl;
 
-  vtkm::Id sigLen = 5000;
+  vtkm::Id sigLen = 20;
+
+  std::cout << "Default test size is 20. " << std::endl;
+  std::cout << "Input a new size to test (in millions)." << std::endl;
+  std::cout << "Input 0 to stick with 20." << std::endl;
+  vtkm::Id tmpIn;
+  vtkm::Id million = 1000000;
+  std::cin >> tmpIn;
+  if( tmpIn != 0 )
+    sigLen = tmpIn * million;
 
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
   for( vtkm::Id i = 0; i < sigLen + 8; i++ )
-    tmpVector.push_back( static_cast<vtkm::Float64>(i+1) );
+    tmpVector.push_back( static_cast<vtkm::Float64>(i%100+1) );
  
   vtkm::cont::ArrayHandle<vtkm::Float64> input1DArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
@@ -59,6 +68,7 @@ void TestWavelets()
   forwardTransform.SetOddness( false, true );
 
   // setup a timer
+  srand (time(NULL));
   vtkm::cont::Timer<> timer;
 
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Wavelets::ForwardTransform> 
@@ -68,21 +78,23 @@ void TestWavelets()
                     highFilter,
                     outputArray1);
 
-  vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
-  std::cerr << "Invoke succeeded; time elapsed = " << elapsedTime << std::endl;
+  vtkm::Id randNum = rand() % sigLen;
+  std::cout << "A random output: " 
+            << outputArray1.GetPortalConstControl().Get(randNum) << std::endl;
 
-  /*
-  for (vtkm::Id i = 0; i < outputArray1.GetNumberOfValues(); ++i)
-  {
-    std::cout << outputArray1.GetPortalConstControl().Get(i) << ", ";
-    if( i % 2 != 0 )
-      std::cout << std::endl;
-  }
-  */
+  vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
+  std::cerr << "Dealing array size " << sigLen/million << " millions takes time " 
+            << elapsedTime << std::endl;
+  if( sigLen < 21 )
+    for (vtkm::Id i = 0; i < outputArray1.GetNumberOfValues(); ++i)
+    {
+      std::cout << outputArray1.GetPortalConstControl().Get(i) << ", ";
+      if( i % 2 != 0 )
+        std::cout << std::endl;
+    }
 }
 
-int UnitTestWavelets(int argc, char* argv[])
+int UnitTestWavelets(int, char* [])
 {
-  std::cout << "argc = " << argc << std::endl;
   return vtkm::cont::testing::Testing::Run(TestWavelets);
 }
