@@ -121,9 +121,16 @@ public:
   }
 
   // Returns maximum wavelet decompostion level
-  vtkm::Id GetWaveletMaxLevel( vtkm::Id s )
+  vtkm::Id GetWaveletMaxLevel( vtkm::Id sigInLen )
   {
-    return 0;
+    if( ! this->filter )
+      return 0;
+    else {
+      vtkm::Id filterLen = this->filter->GetFilterLength(); 
+      vtkm::Id level;
+      this->WaveLengthValidate( sigInLen, filterLen, level );
+      return level;
+    }
   }
 
 protected:

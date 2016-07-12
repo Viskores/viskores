@@ -53,10 +53,10 @@ void forward_xform (
 
 void print_coeffs( const double* cA, const double* cD, size_t num )
 {
-	for( size_t i = 0; i < num; i++ )
-	{
-		std::cout << cA[i] << ",  " << cD[i] << std::endl;
-	}
+  for( size_t i = 0; i < num; i++ )
+  {
+    std::cout << cA[i] << ",  " << cD[i] << std::endl;
+  }
 }
 
 void create_array( double* buf, size_t num )
@@ -67,15 +67,15 @@ void create_array( double* buf, size_t num )
 
 int main( int argc, char* argv[] )
 {
-  size_t sigLen = 20;
+  size_t sigLen = 40;
   double buf[ sigLen+8 ];
   create_array( buf, sigLen+8 );
 
-  size_t coeffLen = 10;
+  size_t coeffLen = sigLen/2;
   double cA[coeffLen];
   double cD[coeffLen];
-	for( size_t i = 0; i < coeffLen; i++ )
-		cA[i] = cD[i] = 3.14159265;
+  for( size_t i = 0; i < coeffLen; i++ )
+    cA[i] = cD[i] = 0.0;
 
   const double* low_filter = hm4_44;
   const double* high_filter = h4;
@@ -86,5 +86,5 @@ int main( int argc, char* argv[] )
 
   forward_xform( buf, sigLen, low_filter, high_filter, 9, cA, cD, oddlow, oddhigh );
 
-  print_coeffs( cA, cD, coeffLen );	
+  print_coeffs( cA, cD, coeffLen );  
 }

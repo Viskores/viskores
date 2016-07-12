@@ -51,7 +51,7 @@ public:
     VTKM_CONT_EXPORT
     ForwardTransform() 
     {
-      magicNum  = 3.14159265;
+      magicNum  = 0.0;
       oddlow    = oddhigh   = true;
       filterLen = approxLen = detailLen = 0;
       this->SetStartPosition();
