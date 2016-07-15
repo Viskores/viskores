@@ -36,9 +36,16 @@ void TestArrayHandleConcatenate()
                                       vtkm::cont::ArrayHandleIndex >
        array3( array1, array2 );
 
-  for (vtkm::Id index = 0; index < array3.GetNumberOfValues(); index++)
+  vtkm::cont::ArrayHandleIndex array4( ARRAY_SIZE );
+  vtkm::cont::ArrayHandleConcatenate< 
+      vtkm::cont::ArrayHandleConcatenate< vtkm::cont::ArrayHandleIndex,   // 1st 
+                                          vtkm::cont::ArrayHandleIndex >, // ArrayHandle
+      vtkm::cont::ArrayHandleIndex >                                  // 2nd ArrayHandle
+          array5( array3, array4 );
+
+  for (vtkm::Id index = 0; index < array5.GetNumberOfValues(); index++)
   {
-    std::cout << array3.GetPortalConstControl().Get( index ) << std::endl; 
+    std::cout << array5.GetPortalConstControl().Get( index ) << std::endl; 
   }
 }
 
