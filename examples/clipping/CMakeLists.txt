@@ -38,7 +38,9 @@ if(VTKm_CUDA_FOUND)
   set (cudaSource "${CMAKE_CURRENT_BINARY_DIR}/Clipping.cu")
   configure_file(Clipping.cxx ${cudaSource} COPYONLY)
 
-  vtkm_setup_nvcc_flags( old_nvcc_flags )
+  set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
+  set(old_cxx_flags ${CMAKE_CXX_FLAGS})
+  vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags)
   vtkm_disable_troublesome_thrust_warnings()
 
   # Cuda compiles do not respect target_include_directories
@@ -50,6 +52,7 @@ if(VTKm_CUDA_FOUND)
   target_compile_options(Clipping_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+  set(CMAKE_CXX_FLAGS ${old_cxx_flags})
 
 endif()
 

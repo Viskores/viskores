@@ -239,15 +239,32 @@ int main(int argc, char* argv[])
   FILE * pFile = fopen(argv[1], "rb");
   if (pFile == NULL) perror ("Error opening file");
 
+  size_t ret_code = 0;
   // Size of the dataset
   int dims[3];
-  fread(dims, sizeof(int), 3, pFile);
+  ret_code = fread(dims, sizeof(int), 3, pFile);
+  if(ret_code != 3)
+    {
+    perror("Error reading size of data");
+    fclose(pFile);
+    return 0;
+    }
   const vtkm::Id3 vdims(dims[0], dims[1], dims[2]);
 
   // Read vector data at each point of the uniform grid and store
   vtkm::Id nElements = vdims[0] * vdims[1] * vdims[2] * 3;
   float* data = new float[static_cast<std::size_t>(nElements)];
-  fread(data, sizeof(float), static_cast<std::size_t>(nElements), pFile);
+  ret_code = fread(data, sizeof(float), static_cast<std::size_t>(nElements), pFile);
+  if( ret_code != static_cast<size_t>(nElements) )
+    {
+    perror("Error reading vector data");
+    fclose(pFile);
+    return 0;
+    }
+
+
+  //We are done with the file now, so release the file descriptor
+  fclose(pFile);
 
   std::vector<vtkm::Vec<vtkm::Float32, 3> > field;
   for (vtkm::Id i = 0; i < nElements; i++)
