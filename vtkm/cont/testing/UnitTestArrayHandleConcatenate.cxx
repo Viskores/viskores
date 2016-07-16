@@ -41,7 +41,10 @@ void TestArrayHandleConcatenate()
       vtkm::cont::ArrayHandleConcatenate< vtkm::cont::ArrayHandleIndex,   // 1st 
                                           vtkm::cont::ArrayHandleIndex >, // ArrayHandle
       vtkm::cont::ArrayHandleIndex >                                  // 2nd ArrayHandle
-          array5( array3, array4 );
+          array5;
+  {
+    array5  = vtkm::cont::make_ArrayHandleConcatenate( array3, array4 );
+  }
 
   for (vtkm::Id index = 0; index < array5.GetNumberOfValues(); index++)
   {

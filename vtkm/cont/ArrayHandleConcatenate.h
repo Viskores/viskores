@@ -301,6 +301,7 @@ private:
   typedef vtkm::cont::internal::Storage< ValueType, StorageTag > StorageType;
 
 public:
+
   VTKM_CONT_EXPORT
   ArrayHandleConcatenate( const ArrayHandleType1 &array1, 
                           const ArrayHandleType2 &array2 )
@@ -309,6 +310,15 @@ public:
 
 };
       
+
+template< typename ArrayHandleType1, typename ArrayHandleType2 >
+VTKM_CONT_EXPORT
+ArrayHandleConcatenate< ArrayHandleType1, ArrayHandleType2 >
+make_ArrayHandleConcatenate( const ArrayHandleType1 &array1, 
+                             const ArrayHandleType2 &array2 )
+{
+  return ArrayHandleConcatenate< ArrayHandleType1, ArrayHandleType2 >( array1, array2 ); 
+}
 
 }
 }   // namespace vtkm::cont
