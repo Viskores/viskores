@@ -32,7 +32,16 @@ namespace worklet {
 
 namespace wavelet {
 
+// protected:
+enum DwtMode {    // boundary extension modes
+  INVALID = -1,
+  ZPD, 
+  SYMH, 
+  SYMW,
+  ASYMH, ASYMW, SP0, SP1, PPD, PER
+};
 
+// Functionalities are similar to MatWaveBase in VAPoR.
 class WaveletBase
 {
 public:
@@ -44,7 +53,7 @@ public:
     this->wname = w_name;
     if( wname.compare("CDF9/7") == 0 )
     {
-      this->wmode = SYMW;
+      this->wmode = SYMW;   // Default extension mode, see MatWaveBase.cpp
       this->filter = new vtkm::worklet::wavelet::WaveletFilter( wname );
     }
   }
@@ -133,17 +142,8 @@ public:
     }
   }
 
-protected:
-  enum DwtMode {    // boundary extension modes
-    INVALID = -1,
-    ZPD, 
-    SYMH, 
-    SYMW,
-    ASYMH, ASYMW, SP0, SP1, PPD, PER
-  };
-
 private:
-  DwtMode                                    wmode;
+  vtkm::worklet::wavelet::DwtMode            wmode;
   vtkm::worklet::wavelet::WaveletFilter*     filter;
   std::string                                wname;
 

@@ -25,6 +25,8 @@
 
 #include <vtkm/worklet/wavelet/WaveletBase.h>
 
+#include <vtkm/cont/ArrayHandleConcatenate.h>
+
 #include <vtkm/Math.h>
 
 namespace vtkm {
@@ -34,8 +36,69 @@ namespace worklet {
 class Wavelets
 {
 public:
+
+  // Extend 1D signal
+  template< typename T, typename ConcatenateArrayType >
+  vtkm::Id Extend1D( const vtkm::cont::ArrayHandle<T> &sigIn,   // Input
+                     ConcatenateArrayType             &sigOut,  // Output
+                     vtkm::Id                         addLen,
+                     vtkm::worklet::wavelet::DwtMode  leftExtMethod,
+                     vtkm::worklet::wavelet::DwtMode  rightExtMethod )
+  { 
+    vtkm::cont::ArrayHandle<T> leftExtend, rightExtend;
+    leftExtend.Allocate( addLen );
+    rightExtend.Allocate( addLen );
+
+    typedef typename vtkm::cont::ArrayHandle<T>     ArrayType;
+    typedef typename ArrayType::PortalControl       PortalType;
+    typedef typename ArrayType::PortalConstControl  PortalConstType;
+
+    typedef typename vtkm::cont::ArrayHandleConcatenate< ArrayType, ArrayType> 
+            ArrayConcat;
+
+    PortalType leftExtendPortal  = leftExtend.GetPortalControl();
+    PortalType rightExtendPortal = rightExtend.GetPortalControl();
+    PortalConstType sigInPortal  = sigIn.GetPortalConstControl();
+    vtkm::Id sigInLen            = sigIn.GetNumberOfValues();
+
+    switch( leftExtMethod )
+    {
+      case vtkm::worklet::wavelet::SYMW:
+      {
+          for( vtkm::Id count = 0; count < addLen; count++ )
+            leftExtendPortal.Set( count, sigInPortal.Get( addLen - count ) );
+          break;
+      }
+      default:
+      {
+        // throw out an error
+        return 1;
+      }
+    }
+
+    switch( rightExtMethod )
+    {
+      case vtkm::worklet::wavelet::SYMW:
+      {
+          for( vtkm::Id count = 0; count < addLen; count++ )
+            rightExtendPortal.Set( count, sigInPortal.Get( sigInLen - count - 2 ) );
+          break;
+      }
+      default:
+      {
+        // throw out an error
+        return 1;
+      }
+    }
+
+    ArrayConcat leftOn( leftExtend, sigIn );    
+    sigOut = vtkm::cont::make_ArrayHandleConcatenate< ArrayConcat, ArrayType >
+                  (leftOn, rightExtend );
+
+    return 0;
+  }
+
   
-  // helper worklet
   class ForwardTransform: public vtkm::worklet::WorkletMapField
   {
   public:
@@ -59,7 +122,7 @@ public:
 
     // Specify odd or even for low and high coeffs
     VTKM_CONT_EXPORT
-    void SetOddness(const bool &odd_low, const bool &odd_high )
+    void SetOddness(bool odd_low, bool odd_high )
     {
       this->oddlow  = odd_low;
       this->oddhigh = odd_high;
@@ -68,14 +131,14 @@ public:
 
     // Set the filter length
     VTKM_CONT_EXPORT
-    void SetFilterLength(const vtkm::Id &len )
+    void SetFilterLength( vtkm::Id len )
     {
       this->filterLen = len;
     }
 
     // Set the outcome coefficient length
     VTKM_CONT_EXPORT
-    void SetCoeffLength(const vtkm::Id &approx_len, const vtkm::Id &detail_len )
+    void SetCoeffLength( vtkm::Id approx_len, vtkm::Id detail_len )
     {
       this->approxLen = approx_len;
       this->detailLen = detail_len;

@@ -27,12 +27,10 @@
 #include <vector>
 
 
-void TestWavelets()
+void TestWavelets( )
 {
-  std::cout << "Testing Wavelets Worklet" << std::endl;
-
   vtkm::Id sigLen = 20;
-
+  std::cout << "Testing Wavelets Worklet" << std::endl;
   std::cout << "Default test size is 20. " << std::endl;
   std::cout << "Input a new size to test (in millions)." << std::endl;
   std::cout << "Input 0 to stick with 20." << std::endl;
@@ -94,7 +92,37 @@ void TestWavelets()
     }
 }
 
+void TestExtend1D()
+{
+  // make input data array handle
+  vtkm::Id sigLen = 20;
+  std::vector<vtkm::Float64> tmpVector;
+  for( vtkm::Id i = 0; i < sigLen; i++ )
+    tmpVector.push_back( static_cast<vtkm::Float64>(i) );
+ 
+  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
+    vtkm::cont::make_ArrayHandle(tmpVector);
+
+  vtkm::worklet::Wavelets w;
+  typedef vtkm::Float64 T;
+  typedef vtkm::cont::ArrayHandle<T>     ArrayType;
+  typedef vtkm::cont::ArrayHandleConcatenate< ArrayType, ArrayType> 
+            ArrayConcat;
+  typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ArrayType > ArrayConcat2;
+  
+  ArrayConcat2 outputArray;
+  w.Extend1D( inputArray, outputArray, 4, 
+      vtkm::worklet::wavelet::SYMW, vtkm::worklet::wavelet::SYMW );
+
+  std::cout << "Start testing Extend1D" << std::endl;
+  for (vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); ++i)
+      std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl;
+  std::cout << "\nFinish testing Extend1D" << std::endl;
+}
+
 int UnitTestWavelets(int, char* [])
 {
+
+  TestExtend1D();
   return vtkm::cont::testing::Testing::Run(TestWavelets);
 }
