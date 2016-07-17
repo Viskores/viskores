@@ -38,9 +38,12 @@ class Wavelets
 public:
 
   // Extend 1D signal
-  template< typename T, typename ConcatenateArrayType >
+  template< typename T >
   vtkm::Id Extend1D( const vtkm::cont::ArrayHandle<T> &sigIn,   // Input
-                     ConcatenateArrayType             &sigOut,  // Output
+                     vtkm::cont::ArrayHandleConcatenate<        // Output
+                        vtkm::cont::ArrayHandleConcatenate< 
+                          vtkm::cont::ArrayHandle<T>, vtkm::cont::ArrayHandle<T> >,
+                        vtkm::cont::ArrayHandle<T> >  &sigOut,
                      vtkm::Id                         addLen,
                      vtkm::worklet::wavelet::DwtMode  leftExtMethod,
                      vtkm::worklet::wavelet::DwtMode  rightExtMethod )
