@@ -66,6 +66,12 @@ public:
 
     switch( leftExtMethod )
     {
+      case vtkm::worklet::wavelet::SYMH:
+      {
+          for( vtkm::Id count = 0; count < addLen; count++ )
+            leftExtendPortal.Set( count, sigInPortal.Get( addLen - count - 1) );
+          break;
+      }
       case vtkm::worklet::wavelet::SYMW:
       {
           for( vtkm::Id count = 0; count < addLen; count++ )
@@ -81,6 +87,12 @@ public:
 
     switch( rightExtMethod )
     {
+      case vtkm::worklet::wavelet::SYMH:
+      {
+          for( vtkm::Id count = 0; count < addLen; count++ )
+            rightExtendPortal.Set( count, sigInPortal.Get( sigInLen - count - 1 ) );
+          break;
+      }
       case vtkm::worklet::wavelet::SYMW:
       {
           for( vtkm::Id count = 0; count < addLen; count++ )

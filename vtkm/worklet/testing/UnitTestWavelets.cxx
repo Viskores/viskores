@@ -47,6 +47,8 @@ void TestWavelets( )
  
   vtkm::cont::ArrayHandle<vtkm::Float64> input1DArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
+
+  // output array handle
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray1;
 
   // make two filter array handles
