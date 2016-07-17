@@ -31,13 +31,13 @@
 
 namespace vtkm {
 namespace worklet {
-
+namespace wavelet {
 
 class Wavelets
 {
 public:
 
-  // Extend 1D signal
+  // Func: Extend 1D signal
   template< typename T >
   vtkm::Id Extend1D( const vtkm::cont::ArrayHandle<T> &sigIn,   // Input
                      vtkm::cont::ArrayHandleConcatenate<        // Output
@@ -45,8 +45,10 @@ public:
                           vtkm::cont::ArrayHandle<T>, vtkm::cont::ArrayHandle<T> >,
                         vtkm::cont::ArrayHandle<T> >  &sigOut,
                      vtkm::Id                         addLen,
-                     vtkm::worklet::wavelet::DwtMode  leftExtMethod,
-                     vtkm::worklet::wavelet::DwtMode  rightExtMethod )
+                     DwtMode  leftExtMethod,
+                     DwtMode  rightExtMethod )
+//                     vtkm::worklet::wavelet::DwtMode  leftExtMethod,
+//                     vtkm::worklet::wavelet::DwtMode  rightExtMethod )
   { 
     vtkm::cont::ArrayHandle<T> leftExtend, rightExtend;
     leftExtend.Allocate( addLen );
@@ -66,13 +68,13 @@ public:
 
     switch( leftExtMethod )
     {
-      case vtkm::worklet::wavelet::SYMH:
+      case SYMH:
       {
           for( vtkm::Id count = 0; count < addLen; count++ )
             leftExtendPortal.Set( count, sigInPortal.Get( addLen - count - 1) );
           break;
       }
-      case vtkm::worklet::wavelet::SYMW:
+      case SYMW:
       {
           for( vtkm::Id count = 0; count < addLen; count++ )
             leftExtendPortal.Set( count, sigInPortal.Get( addLen - count ) );
@@ -87,13 +89,13 @@ public:
 
     switch( rightExtMethod )
     {
-      case vtkm::worklet::wavelet::SYMH:
+      case SYMH:
       {
           for( vtkm::Id count = 0; count < addLen; count++ )
             rightExtendPortal.Set( count, sigInPortal.Get( sigInLen - count - 1 ) );
           break;
       }
-      case vtkm::worklet::wavelet::SYMW:
+      case SYMW:
       {
           for( vtkm::Id count = 0; count < addLen; count++ )
             rightExtendPortal.Set( count, sigInPortal.Get( sigInLen - count - 2 ) );
@@ -113,7 +115,7 @@ public:
     return 0;
   }
 
-  
+  // Func: worklet to perform a simple forward transform
   class ForwardTransform: public vtkm::worklet::WorkletMapField
   {
   public:
@@ -215,15 +217,15 @@ public:
 
   };  // Finish class ForwardTransform
 
-  // Func: Dwt1D. 
+  // Func: discrete wavelet transform 1D
   // It takes care of boundary conditions, etc.
   //template< typename SignalArrayType, typename CoeffArrayType >
   //vtkm::Id Dwt1D( const SignalArrayType &sigIn,     // Input
-  //                vtkm::worklet::wavelet::
   //              )
 
 };    // Finish class Wavelets
 
+}     // Finish namespace wavelet
 }     // Finish namespace worlet
 }     // Finish namespace vtkm
 

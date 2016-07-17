@@ -62,7 +62,7 @@ void TestWavelets( )
   vtkm::worklet::wavelet::WaveletFilter CDF97( wname );
 
   // initialize the worklet
-  vtkm::worklet::Wavelets::ForwardTransform forwardTransform;
+  vtkm::worklet::wavelet::Wavelets::ForwardTransform forwardTransform;
   forwardTransform.SetFilterLength( 9 );
   forwardTransform.SetCoeffLength( sigLen/2, sigLen/2 );
   forwardTransform.SetOddness( false, true );
@@ -71,7 +71,7 @@ void TestWavelets( )
   srand (time(NULL));
   vtkm::cont::Timer<> timer;
 
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::Wavelets::ForwardTransform> 
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelet::Wavelets::ForwardTransform> 
     dispatcher(forwardTransform);
   dispatcher.Invoke(input1DArray, 
                     lowFilter, 
@@ -105,7 +105,7 @@ void TestExtend1D()
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
 
-  vtkm::worklet::Wavelets w;
+  vtkm::worklet::wavelet::Wavelets w;
   typedef vtkm::Float64 T;
   typedef vtkm::cont::ArrayHandle<T>     ArrayType;
   typedef vtkm::cont::ArrayHandleConcatenate< ArrayType, ArrayType> 
