@@ -212,6 +212,13 @@ public:
 
   };  // Finish class ForwardTransform
 
+  // Func: Dwt1D. 
+  // It takes care of boundary conditions, etc.
+  //template< typename SignalArrayType, typename CoeffArrayType >
+  //vtkm::Id Dwt1D( const SignalArrayType &sigIn,     // Input
+  //                vtkm::worklet::wavelet::
+  //              )
+
 };    // Finish class Wavelets
 
 }     // Finish namespace worlet
