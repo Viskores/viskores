@@ -61,17 +61,17 @@ void TestWavelets( )
   std::string wname = "CDF9/7";
   vtkm::worklet::wavelet::WaveletFilter CDF97( wname );
 
-  // initialize the worklet
-  vtkm::worklet::wavelet::Wavelets::ForwardTransform forwardTransform;
+  // initialize a worklet
+  vtkm::worklet::wavelet::WaveletDWT::ForwardTransform forwardTransform;
   forwardTransform.SetFilterLength( 9 );
   forwardTransform.SetCoeffLength( sigLen/2, sigLen/2 );
   forwardTransform.SetOddness( false, true );
 
   // setup a timer
-  srand (time(NULL));
+  srand ((unsigned int)time(NULL));
   vtkm::cont::Timer<> timer;
 
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelet::Wavelets::ForwardTransform> 
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelet::WaveletDWT::ForwardTransform> 
     dispatcher(forwardTransform);
   dispatcher.Invoke(input1DArray, 
                     lowFilter, 
@@ -105,7 +105,7 @@ void TestExtend1D()
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
 
-  vtkm::worklet::wavelet::Wavelets w;
+  vtkm::worklet::wavelet::WaveletDWT w("CDF9/7");
   typedef vtkm::Float64 T;
   typedef vtkm::cont::ArrayHandle<T>     ArrayType;
   typedef vtkm::cont::ArrayHandleConcatenate< ArrayType, ArrayType> 
@@ -122,9 +122,39 @@ void TestExtend1D()
   std::cout << "\nFinish testing Extend1D" << std::endl;
 }
 
+void TestDWT1D()
+{
+  vtkm::Id sigLen = 20;
+  std::cout << "Testing Wavelets Worklet" << std::endl;
+  std::cout << "Default test size is 20. " << std::endl;
+  std::cout << "Input a new size to test (in millions)." << std::endl;
+  std::cout << "Input 0 to stick with 20." << std::endl;
+  vtkm::Id tmpIn;
+  vtkm::Id million = 1000000;
+  std::cin >> tmpIn;
+  if( tmpIn != 0 )
+    sigLen = tmpIn * million;
+
+  // make input data array handle
+  std::vector<vtkm::Float64> tmpVector;
+  for( vtkm::Id i = 0; i < sigLen; i++ )
+    tmpVector.push_back( static_cast<vtkm::Float64>(i%100+1) );
+  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
+    vtkm::cont::make_ArrayHandle(tmpVector);
+
+  vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
+  vtkm::Id L[3];
+
+  vtkm::worklet::wavelet::WaveletDWT waveletdwt( "CDF9/7" );
+  waveletdwt.DWT1D( inputArray, outputArray, L );
+
+}
+
 int UnitTestWavelets(int, char* [])
 {
+  TestDWT1D();
+  //TestExtend1D();
+  //return vtkm::cont::testing::Testing::Run(TestWavelets);
 
-  TestExtend1D();
-  return vtkm::cont::testing::Testing::Run(TestWavelets);
+  return 0;
 }

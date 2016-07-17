@@ -22,6 +22,7 @@
 #define vtk_m_worklet_Wavelets_h
 
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/worklet/wavelet/WaveletBase.h>
 
@@ -33,9 +34,12 @@ namespace vtkm {
 namespace worklet {
 namespace wavelet {
 
-class Wavelets
+class WaveletDWT : public WaveletBase
 {
 public:
+
+  // Constructor
+  WaveletDWT( const std::string &w_name ) : WaveletBase( w_name ) {} 
 
   // Func: Extend 1D signal
   template< typename T >
@@ -45,10 +49,8 @@ public:
                           vtkm::cont::ArrayHandle<T>, vtkm::cont::ArrayHandle<T> >,
                         vtkm::cont::ArrayHandle<T> >  &sigOut,
                      vtkm::Id                         addLen,
-                     DwtMode  leftExtMethod,
-                     DwtMode  rightExtMethod )
-//                     vtkm::worklet::wavelet::DwtMode  leftExtMethod,
-//                     vtkm::worklet::wavelet::DwtMode  rightExtMethod )
+                     DWTMode  leftExtMethod,
+                     DWTMode  rightExtMethod )
   { 
     vtkm::cont::ArrayHandle<T> leftExtend, rightExtend;
     leftExtend.Allocate( addLen );
@@ -115,7 +117,8 @@ public:
     return 0;
   }
 
-  // Func: worklet to perform a simple forward transform
+
+  // Func (worklet): perform a simple forward transform
   class ForwardTransform: public vtkm::worklet::WorkletMapField
   {
   public:
@@ -217,13 +220,103 @@ public:
 
   };  // Finish class ForwardTransform
 
+
   // Func: discrete wavelet transform 1D
   // It takes care of boundary conditions, etc.
-  //template< typename SignalArrayType, typename CoeffArrayType >
-  //vtkm::Id Dwt1D( const SignalArrayType &sigIn,     // Input
-  //              )
+  template< typename SignalArrayType, typename CoeffArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
+                  CoeffArrayType        &sigOut,
+                  //const WaveletFilter*  waveletFilter,
+                  //DWTMode               dwtMode,
+                  vtkm::Id              L[3] )
+  {
+    vtkm::Id sigInLen = sigIn.GetNumberOfValues();
+    if( GetWaveletMaxLevel( sigInLen ) < 1 )
+    {
+      // throw an error
+      std::cerr << "Cannot transform signal of length " << sigInLen << std::endl;
+      return -1;
+    } 
 
-};    // Finish class Wavelets
+    L[0] = this->GetApproxLength( sigInLen );
+    L[1] = this->GetDetailLength( sigInLen );
+    L[2] = sigInLen;
+
+    vtkm::Id filterLen = this->filter->GetFilterLength();
+
+    bool doSymConv = false;
+    if( this->filter->isSymmetric() )
+    {
+      if( ( this->wmode == SYMW && ( filterLen % 2 != 0 ) ) ||
+          ( this->wmode == SYMH && ( filterLen % 2 == 0 ) ) )
+        doSymConv = true;
+    }
+
+    vtkm::Id sigConvolvedLen = L[0] + L[1];     // approx + detail coeffs
+    vtkm::Id addLen;                            // for extension
+    bool oddLow  = true;
+    bool oddHigh = true;
+    if( filterLen %2 != 0 )
+      oddLow = false;
+    if( doSymConv )
+    {
+      addLen = filterLen >> 1;
+      if( sigInLen % 2 != 0 )
+        sigConvolvedLen += 1;
+    }
+    else
+      addLen = filterLen - 1; 
+  
+    vtkm::Id sigExtendedLen = sigInLen + 2 * addLen;
+
+    typedef typename SignalArrayType::ValueType SigInValueType;
+    typedef vtkm::cont::ArrayHandle<SigInValueType>     ArrayType;
+    typedef vtkm::cont::ArrayHandleConcatenate< ArrayType, ArrayType> 
+              ArrayConcat;
+    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ArrayType > ArrayConcat2;
+    
+    ArrayConcat2 sigInExtended;
+    this->Extend1D( sigIn, sigInExtended, addLen, this->wmode, this->wmode ); 
+
+    ArrayType coeffOutTmp;
+
+    
+    // initialize a worklet
+    ForwardTransform forwardTransform;
+    forwardTransform.SetFilterLength( filterLen );
+    forwardTransform.SetCoeffLength( L[0], L[1] );
+    forwardTransform.SetOddness( oddLow, oddHigh );
+
+    // setup a timer
+    //srand ((unsigned int)time(NULL));
+    //vtkm::cont::Timer<> timer;
+
+    vtkm::worklet::DispatcherMapField<ForwardTransform> dispatcher(forwardTransform);
+    dispatcher.Invoke(sigInExtended, 
+                      filter->GetLowDecomposeFilter(), 
+                      filter->GetHighDecomposeFilter(),
+                      coeffOutTmp );
+
+    //vtkm::Id randNum = rand() % sigLen;
+    //std::cout << "A random output: " 
+    //          << outputArray1.GetPortalConstControl().Get(randNum) << std::endl;
+
+    //vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
+    //std::cerr << "Dealing array size " << sigLen/million << " millions takes time " 
+    //          << elapsedTime << std::endl;
+    if( sigInLen < 21 )
+      for (vtkm::Id i = 0; i < coeffOutTmp.GetNumberOfValues(); ++i)
+      {
+        std::cout << coeffOutTmp.GetPortalConstControl().Get(i) << ", ";
+        if( i % 2 != 0 )
+          std::cout << std::endl;
+      }
+  
+    return 0;  
+  }
+
+};    // Finish class WaveletDWT
 
 }     // Finish namespace wavelet
 }     // Finish namespace worlet

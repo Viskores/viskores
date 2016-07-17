@@ -71,6 +71,22 @@ public:
   vtkm::Id GetFilterLength()    { return this->filterLength; }
   bool     isSymmetric()        { return this->symmetricity;   }
 
+  const vtkm::Float64* GetLowDecomposeFilter() const
+  {
+    return lowDecomposeFilter;
+  }
+  const vtkm::Float64* GetHighDecomposeFilter() const
+  {
+    return highDecomposeFilter;
+  }
+  const vtkm::Float64* GetLowReconstructFilter() const
+  {
+    return lowReconstructFilter;
+  }
+  const vtkm::Float64* GetHighReconstructFilter() const
+  {
+    return highReconstructFilter;
+  }
 protected:
   bool              symmetricity;
   vtkm::Id          filterLength;

@@ -33,7 +33,7 @@ namespace worklet {
 namespace wavelet {
 
 // protected:
-enum DwtMode {    // boundary extension modes
+enum DWTMode {    // boundary extension modes
   INVALID = -1,
   ZPD, 
   SYMH, 
@@ -67,7 +67,14 @@ public:
   }
 
   // Get the wavelet filter
-  const vtkm::worklet::wavelet::WaveletFilter* GetWaveletFilter() { return filter; }
+  const WaveletFilter* GetWaveletFilter() 
+  { 
+    if( this->filter == NULL )
+    {
+      // throw an error
+    }
+    return filter; 
+  }
 
   // Returns length of approximation coefficients from a decompostition pass.
   vtkm::Id GetApproxLength( vtkm::Id sigInLen )
@@ -142,10 +149,10 @@ public:
     }
   }
 
-private:
-  vtkm::worklet::wavelet::DwtMode            wmode;
-  vtkm::worklet::wavelet::WaveletFilter*     filter;
-  std::string                                wname;
+protected:
+  DWTMode            wmode;
+  WaveletFilter*     filter;
+  std::string        wname;
 
   void WaveLengthValidate( vtkm::Id sigInLen, vtkm::Id filterLength, vtkm::Id &level)
   {
