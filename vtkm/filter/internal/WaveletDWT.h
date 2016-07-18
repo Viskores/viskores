@@ -29,6 +29,8 @@
 #include <vtkm/worklet/WaveletTransforms.h>
 
 #include <vtkm/cont/ArrayHandleConcatenate.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
 
 #include <vtkm/Math.h>
 
@@ -39,6 +41,7 @@ namespace internal {
 class WaveletDWT : public WaveletBase
 {
 public:
+  typedef vtkm::cont::ArrayHandle< vtkm::Float64 > ArrayType64;  
 
   // Constructor
   WaveletDWT( const std::string &w_name ) : WaveletBase( w_name ) {} 
@@ -123,9 +126,10 @@ public:
 
   // Performs one level of 1D discrete wavelet transform 
   // It takes care of boundary conditions, etc.
-  template< typename SignalArrayType, typename CoeffArrayType >
+  template< typename SignalArrayType >
   vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
-                  CoeffArrayType        &sigOut,
+                  ArrayType64           &cA,        // Approximate Coefficients
+                  ArrayType64           &cD,        // Detail Coefficients
                   vtkm::Id              L[3] )
   {
 
@@ -169,15 +173,17 @@ public:
     vtkm::Id sigExtendedLen = sigInLen + 2 * addLen;
 
     typedef typename SignalArrayType::ValueType SigInValueType;
-    typedef vtkm::cont::ArrayHandle<SigInValueType>     ArrayType;
-    typedef vtkm::cont::ArrayHandleConcatenate< ArrayType, ArrayType> 
+    typedef vtkm::cont::ArrayHandle<SigInValueType>     SigInArrayType;
+    typedef vtkm::cont::ArrayHandleConcatenate< SigInArrayType, SigInArrayType> 
               ArrayConcat;
-    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ArrayType > ArrayConcat2;
+    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, SigInArrayType > ArrayConcat2;
     
     ArrayConcat2 sigInExtended;
     this->Extend1D( sigIn, sigInExtended, addLen, this->wmode, this->wmode ); 
 
-    ArrayType coeffOutTmp;
+    // Coefficients in coeffOutTmp are interleaving, 
+    // e.g. cA are at 0, 2, 4...; cD are at 1, 3, 5...
+    ArrayType64 coeffOutTmp;
 
     
     // initialize a worklet
@@ -186,10 +192,6 @@ public:
     forwardTransform.SetCoeffLength( L[0], L[1] );
     forwardTransform.SetOddness( oddLow, oddHigh );
 
-    // setup a timer
-    //srand ((unsigned int)time(NULL));
-    //vtkm::cont::Timer<> timer;
-
     vtkm::worklet::DispatcherMapField<vtkm::worklet::ForwardTransform> 
         dispatcher(forwardTransform);
     dispatcher.Invoke( sigInExtended, 
@@ -197,20 +199,37 @@ public:
                        filter->GetHighDecomposeFilter(),
                        coeffOutTmp );
 
-    //vtkm::Id randNum = rand() % sigLen;
-    //std::cout << "A random output: " 
-    //          << outputArray1.GetPortalConstControl().Get(randNum) << std::endl;
+    // Separate cA and cD.
+    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id > IdArrayType;
+    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, ArrayType64 > PermutArrayType;
 
-    //vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
-    //std::cerr << "Dealing array size " << sigLen/million << " millions takes time " 
-    //          << elapsedTime << std::endl;
-    if( sigInLen < 21 )
+    IdArrayType approxIndices( 0, 2, L[0] );
+    IdArrayType detailIndices( 1, 2, L[1] );
+    PermutArrayType cATmp = vtkm::cont::make_ArrayHandlePermutation( 
+        approxIndices, coeffOutTmp );
+    PermutArrayType cDTmp = vtkm::cont::make_ArrayHandlePermutation( 
+        detailIndices, coeffOutTmp );
+
+    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(
+        cATmp, cA );
+    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(
+        cDTmp, cD );
+    
+    /*
+    if( sigInLen < 41 )
+    {
+      std::cout << "sigInExtended has length: " << sigInExtended.GetNumberOfValues() << std::endl;
+      std::cout << "coeffOutTmp has length: " << coeffOutTmp.GetNumberOfValues() << std::endl;
+      printf("L[3]: %lld, %lld, %lld\n", L[0], L[1], L[2]);
       for (vtkm::Id i = 0; i < coeffOutTmp.GetNumberOfValues(); ++i)
       {
         std::cout << coeffOutTmp.GetPortalConstControl().Get(i) << ", ";
         if( i % 2 != 0 )
           std::cout << std::endl;
       }
+    }
+    */
+    
  
     return 0;  
   }

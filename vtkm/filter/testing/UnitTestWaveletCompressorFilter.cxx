@@ -21,6 +21,8 @@
 #include <vtkm/filter/internal/WaveletDWT.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/cont/ArrayHandlePermutation.h>
+
 #include <vector>
 
 
@@ -61,7 +63,7 @@ void TestDWT1D()
   std::cout << "Input a new size to test (in millions)." << std::endl;
   std::cout << "Input 0 to stick with 20." << std::endl;
   vtkm::Id tmpIn;
-  vtkm::Id million = 1000000;
+  vtkm::Id million = 1;//1000000;
   std::cin >> tmpIn;
   if( tmpIn != 0 )
     sigLen = tmpIn * million;
@@ -73,11 +75,18 @@ void TestDWT1D()
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
 
-  vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
+  vtkm::cont::ArrayHandle<vtkm::Float64> cA, cD;
   vtkm::Id L[3];
 
   vtkm::filter::internal::WaveletDWT waveletdwt( "CDF9/7" );
-  waveletdwt.DWT1D( inputArray, outputArray, L );
+  waveletdwt.DWT1D( inputArray, cA, cD, L );
+
+  std::cout << "cA: length=" << cA.GetNumberOfValues() << std::endl;
+  for( vtkm::Id i; i < cA.GetNumberOfValues(); i++ )
+    std::cout << cA.GetPortalConstControl().Get(i) << std::endl;
+  std::cout << "cD: length=" << cD.GetNumberOfValues() << std::endl;
+  for( vtkm::Id i; i < cD.GetNumberOfValues(); i++ )
+    std::cout << cD.GetPortalConstControl().Get(i) << std::endl;
 
 }
 
