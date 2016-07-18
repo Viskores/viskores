@@ -18,8 +18,11 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/worklet/Wavelets.h>
+#include <vtkm/worklet/WaveletTransforms.h>
 #include <vtkm/worklet/DispatcherMapField.h>
+
+
+#include <vtkm/filter/internal/FilterBanks.h>
 
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/Timer.h>
@@ -27,7 +30,7 @@
 #include <vector>
 
 
-void TestWavelets( )
+void TestWaveletTransforms( )
 {
   vtkm::Id sigLen = 20;
   std::cout << "Testing Wavelets Worklet" << std::endl;
@@ -53,16 +56,12 @@ void TestWavelets( )
 
   // make two filter array handles
   vtkm::cont::ArrayHandle<vtkm::Float64> lowFilter = 
-    vtkm::cont::make_ArrayHandle(vtkm::worklet::wavelet::hm4_44, 9);
+    vtkm::cont::make_ArrayHandle(vtkm::filter::internal::hm4_44, 9);
   vtkm::cont::ArrayHandle<vtkm::Float64> highFilter = 
-    vtkm::cont::make_ArrayHandle(vtkm::worklet::wavelet::h4, 9);
-
-  // make a wavelet filter
-  std::string wname = "CDF9/7";
-  vtkm::worklet::wavelet::WaveletFilter CDF97( wname );
+    vtkm::cont::make_ArrayHandle(vtkm::filter::internal::h4, 9);
 
   // initialize a worklet
-  vtkm::worklet::wavelet::WaveletDWT::ForwardTransform forwardTransform;
+  vtkm::worklet::ForwardTransform forwardTransform;
   forwardTransform.SetFilterLength( 9 );
   forwardTransform.SetCoeffLength( sigLen/2, sigLen/2 );
   forwardTransform.SetOddness( false, true );
@@ -71,7 +70,7 @@ void TestWavelets( )
   srand ((unsigned int)time(NULL));
   vtkm::cont::Timer<> timer;
 
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelet::WaveletDWT::ForwardTransform> 
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::ForwardTransform> 
     dispatcher(forwardTransform);
   dispatcher.Invoke(input1DArray, 
                     lowFilter, 
@@ -94,6 +93,7 @@ void TestWavelets( )
     }
 }
 
+/*
 void TestExtend1D()
 {
   // make input data array handle
@@ -121,7 +121,9 @@ void TestExtend1D()
       std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl;
   std::cout << "\nFinish testing Extend1D" << std::endl;
 }
+*/
 
+/*
 void TestDWT1D()
 {
   vtkm::Id sigLen = 20;
@@ -149,12 +151,13 @@ void TestDWT1D()
   waveletdwt.DWT1D( inputArray, outputArray, L );
 
 }
+*/
 
-int UnitTestWavelets(int, char* [])
+int UnitTestWaveletTransforms(int, char* [])
 {
-  TestDWT1D();
-  //TestExtend1D();
-  //return vtkm::cont::testing::Testing::Run(TestWavelets);
+  // TestDWT1D();
+  // TestExtend1D();
+  return vtkm::cont::testing::Testing::Run(TestWaveletTransforms);
 
   return 0;
 }
