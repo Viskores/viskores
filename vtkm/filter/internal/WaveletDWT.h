@@ -26,6 +26,8 @@
 
 #include <vtkm/filter/internal/WaveletBase.h>
 
+#include <vtkm/worklet/WaveletTransforms.h>
+
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 
 #include <vtkm/Math.h>
@@ -119,14 +121,11 @@ public:
 
 
 
-/*
-  // Func: discrete wavelet transform 1D
+  // Performs one level of 1D discrete wavelet transform 
   // It takes care of boundary conditions, etc.
   template< typename SignalArrayType, typename CoeffArrayType >
   vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
                   CoeffArrayType        &sigOut,
-                  //const WaveletFilter*  waveletFilter,
-                  //DWTMode               dwtMode,
                   vtkm::Id              L[3] )
   {
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
@@ -181,7 +180,7 @@ public:
 
     
     // initialize a worklet
-    ForwardTransform forwardTransform;
+    vtkm::worklet::ForwardTransform forwardTransform;
     forwardTransform.SetFilterLength( filterLen );
     forwardTransform.SetCoeffLength( L[0], L[1] );
     forwardTransform.SetOddness( oddLow, oddHigh );
@@ -190,7 +189,8 @@ public:
     //srand ((unsigned int)time(NULL));
     //vtkm::cont::Timer<> timer;
 
-    vtkm::worklet::DispatcherMapField<ForwardTransform> dispatcher(forwardTransform);
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::ForwardTransform> 
+        dispatcher(forwardTransform);
     dispatcher.Invoke(sigInExtended, 
                       filter->GetLowDecomposeFilter(), 
                       filter->GetHighDecomposeFilter(),
@@ -213,7 +213,6 @@ public:
   
     return 0;  
   }
-*/
 
 };    // Finish class WaveletDWT
 

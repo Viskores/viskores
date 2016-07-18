@@ -93,65 +93,6 @@ void TestWaveletTransforms( )
     }
 }
 
-/*
-void TestExtend1D()
-{
-  // make input data array handle
-  vtkm::Id sigLen = 20;
-  std::vector<vtkm::Float64> tmpVector;
-  for( vtkm::Id i = 0; i < sigLen; i++ )
-    tmpVector.push_back( static_cast<vtkm::Float64>(i) );
- 
-  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
-    vtkm::cont::make_ArrayHandle(tmpVector);
-
-  vtkm::worklet::wavelet::WaveletDWT w("CDF9/7");
-  typedef vtkm::Float64 T;
-  typedef vtkm::cont::ArrayHandle<T>     ArrayType;
-  typedef vtkm::cont::ArrayHandleConcatenate< ArrayType, ArrayType> 
-            ArrayConcat;
-  typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ArrayType > ArrayConcat2;
-  
-  ArrayConcat2 outputArray;
-  w.Extend1D( inputArray, outputArray, 4, 
-      vtkm::worklet::wavelet::SYMW, vtkm::worklet::wavelet::SYMW );
-
-  std::cout << "Start testing Extend1D" << std::endl;
-  for (vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); ++i)
-      std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl;
-  std::cout << "\nFinish testing Extend1D" << std::endl;
-}
-*/
-
-/*
-void TestDWT1D()
-{
-  vtkm::Id sigLen = 20;
-  std::cout << "Testing Wavelets Worklet" << std::endl;
-  std::cout << "Default test size is 20. " << std::endl;
-  std::cout << "Input a new size to test (in millions)." << std::endl;
-  std::cout << "Input 0 to stick with 20." << std::endl;
-  vtkm::Id tmpIn;
-  vtkm::Id million = 1000000;
-  std::cin >> tmpIn;
-  if( tmpIn != 0 )
-    sigLen = tmpIn * million;
-
-  // make input data array handle
-  std::vector<vtkm::Float64> tmpVector;
-  for( vtkm::Id i = 0; i < sigLen; i++ )
-    tmpVector.push_back( static_cast<vtkm::Float64>(i%100+1) );
-  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
-    vtkm::cont::make_ArrayHandle(tmpVector);
-
-  vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
-  vtkm::Id L[3];
-
-  vtkm::worklet::wavelet::WaveletDWT waveletdwt( "CDF9/7" );
-  waveletdwt.DWT1D( inputArray, outputArray, L );
-
-}
-*/
 
 int UnitTestWaveletTransforms(int, char* [])
 {

@@ -43,6 +43,7 @@ enum DWTMode {    // boundary extension modes
 class WaveletBase
 {
 public:
+
   // Constructor
   WaveletBase( const std::string &w_name )
   {

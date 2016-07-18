@@ -23,9 +23,9 @@ set(headers
   ResolveFieldTypeAndMap.h
   RuntimeDeviceTracker.h
   FilterBanks.h
+  WaveletFilter.h
+  WaveletBase.h
+  WaveletDWT.h
 )
-  #WaveletFilter.h
-  #WaveletBase.h
-  #WaveletDWT.h
 
 vtkm_declare_headers(${headers})
