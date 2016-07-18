@@ -29,7 +29,6 @@
 #include <vtkm/worklet/WaveletTransforms.h>
 
 #include <vtkm/cont/ArrayHandleConcatenate.h>
-#include <vtkm/cont/ArrayHandleConstant.h>
 
 #include <vtkm/Math.h>
 
@@ -191,13 +190,9 @@ public:
     //srand ((unsigned int)time(NULL));
     //vtkm::cont::Timer<> timer;
 
-    // try other types of fancy arrays
-    vtkm::cont::ArrayHandleConstant< vtkm::Float64 > constArray( 3, 
-        sigInExtended.GetNumberOfValues() );
-
     vtkm::worklet::DispatcherMapField<vtkm::worklet::ForwardTransform> 
         dispatcher(forwardTransform);
-    dispatcher.Invoke( constArray, //sigInExtended, 
+    dispatcher.Invoke( sigInExtended, 
                        filter->GetLowDecomposeFilter(),
                        filter->GetHighDecomposeFilter(),
                        coeffOutTmp );

@@ -234,8 +234,8 @@ public:
   VTKM_CONT_EXPORT
   PortalExecution PrepareForInPlace( bool vtkmNotUsed( updateData ) )
   {
-    return PortalExecution( this->array1.PrepareForInput( Device() ),
-                            this->array2.PrepareForInput( Device() ));
+    return PortalExecution( this->array1.PrepareForInPlace( Device() ),
+                            this->array2.PrepareForInPlace( Device() ));
   }
 
   VTKM_CONT_EXPORT
