@@ -21,6 +21,8 @@
 #ifndef vtk_m_filter_internal_waveletfilter_h
 #define vtk_m_filter_internal_waveletfilter_h
 
+#include <vtkm/cont/ArrayHandle.h>
+
 #include <vtkm/filter/internal/FilterBanks.h>
 
 #include <vtkm/Math.h>
@@ -69,6 +71,24 @@ public:
   vtkm::Id GetFilterLength()    { return this->filterLength; }
   bool     isSymmetric()        { return this->symmetricity;   }
 
+  typedef vtkm::cont::ArrayHandle<vtkm::Float64> FilterType;
+  FilterType GetLowDecomposeFilter() const
+  {
+    return vtkm::cont::make_ArrayHandle( lowDecomposeFilter, filterLength );
+  }
+  FilterType GetHighDecomposeFilter() const
+  {
+    return vtkm::cont::make_ArrayHandle( highDecomposeFilter, filterLength );
+  }
+  FilterType GetLowReconstructFilter() const
+  {
+    return vtkm::cont::make_ArrayHandle( lowReconstructFilter, filterLength);
+  }
+  FilterType GetHighReconstructFilter() const
+  {
+    return vtkm::cont::make_ArrayHandle( highReconstructFilter, filterLength );
+  }
+  /*
   const vtkm::Float64* GetLowDecomposeFilter() const
   {
     return lowDecomposeFilter;
@@ -85,6 +105,7 @@ public:
   {
     return highReconstructFilter;
   }
+  */
 protected:
   bool              symmetricity;
   vtkm::Id          filterLength;

@@ -24,8 +24,6 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
-#include <vtkm/cont/ArrayHandleConcatenate.h>
-
 #include <vtkm/Math.h>
 
 namespace vtkm {
