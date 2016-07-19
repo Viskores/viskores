@@ -50,7 +50,6 @@ set(headers
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(splatkernels)
-# add_subdirectory(wavelet)
 
 vtkm_declare_headers(${headers})
 
