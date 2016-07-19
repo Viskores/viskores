@@ -60,7 +60,7 @@ void TestDWT1D()
   vtkm::Id sigLen = 20;
   std::cout << "Testing Wavelets Worklet" << std::endl;
   std::cout << "Default test size is 20. " << std::endl;
-  std::cout << "Input a new size to test (in millions)." << std::endl;
+  std::cout << "Input a new size to test." << std::endl;
   std::cout << "Input 0 to stick with 20." << std::endl;
   vtkm::Id tmpIn;
   vtkm::Id million = 1;//1000000;
@@ -75,19 +75,22 @@ void TestDWT1D()
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
 
-  vtkm::cont::ArrayHandle<vtkm::Float64> cA, cD;
+  vtkm::cont::ArrayHandle<vtkm::Float64> coeffOut;
   vtkm::Id L[3];
 
   vtkm::filter::internal::WaveletDWT waveletdwt( "CDF9/7" );
-  waveletdwt.DWT1D( inputArray, cA, cD, L );
+  waveletdwt.DWT1D( inputArray, coeffOut, L );
 
-  std::cout << "cA: length=" << cA.GetNumberOfValues() << std::endl;
-  for( vtkm::Id i; i < cA.GetNumberOfValues(); i++ )
-    std::cout << cA.GetPortalConstControl().Get(i) << std::endl;
-  std::cout << "cD: length=" << cD.GetNumberOfValues() << std::endl;
-  for( vtkm::Id i; i < cD.GetNumberOfValues(); i++ )
-    std::cout << cD.GetPortalConstControl().Get(i) << std::endl;
-
+  std::cout << "Output Coeff length = " << coeffOut.GetNumberOfValues() << std::endl;
+  printf("L[0] = %lld, L[1] = %lld, L[2] = %lld\n", L[0], L[1], L[2] );
+  for( vtkm::Id i; i < coeffOut.GetNumberOfValues(); i++ )
+  {
+    if( i == 0 )
+      std::cout << "  <-- cA --> " << std::endl;
+    else if( i == L[0] )
+      std::cout << "  <-- cD --> " << std::endl;
+    std::cout << coeffOut.GetPortalConstControl().Get(i) << std::endl;
+  }
 }
 
 void TestWaveletCompressor()

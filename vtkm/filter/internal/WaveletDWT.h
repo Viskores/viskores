@@ -41,10 +41,10 @@ namespace internal {
 class WaveletDWT : public WaveletBase
 {
 public:
-  typedef vtkm::cont::ArrayHandle< vtkm::Float64 > ArrayType64;  
 
   // Constructor
   WaveletDWT( const std::string &w_name ) : WaveletBase( w_name ) {} 
+
 
   // Func: Extend 1D signal
   template< typename T >
@@ -126,10 +126,9 @@ public:
 
   // Performs one level of 1D discrete wavelet transform 
   // It takes care of boundary conditions, etc.
-  template< typename SignalArrayType >
+  template< typename SignalArrayType, typename CoeffArrayType>
   vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
-                  ArrayType64           &cA,        // Approximate Coefficients
-                  ArrayType64           &cD,        // Detail Coefficients
+                  CoeffArrayType        &coeffOut,  // Output: cA followed by cD
                   vtkm::Id              L[3] )
   {
 
@@ -183,7 +182,7 @@ public:
 
     // Coefficients in coeffOutTmp are interleaving, 
     // e.g. cA are at 0, 2, 4...; cD are at 1, 3, 5...
-    ArrayType64 coeffOutTmp;
+    CoeffArrayType coeffOutTmp;
 
     
     // initialize a worklet
@@ -201,7 +200,7 @@ public:
 
     // Separate cA and cD.
     typedef vtkm::cont::ArrayHandleCounting< vtkm::Id > IdArrayType;
-    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, ArrayType64 > PermutArrayType;
+    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, CoeffArrayType > PermutArrayType;
 
     IdArrayType approxIndices( 0, 2, L[0] );
     IdArrayType detailIndices( 1, 2, L[1] );
@@ -210,29 +209,28 @@ public:
     PermutArrayType cDTmp = vtkm::cont::make_ArrayHandlePermutation( 
         detailIndices, coeffOutTmp );
 
+    typedef typename vtkm::cont::ArrayHandleConcatenate< PermutArrayType, PermutArrayType >
+                PermutArrayConcatenated;
+    PermutArrayConcatenated coeffTmp( cATmp, cDTmp );
+
     vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(
-        cATmp, cA );
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(
-        cDTmp, cD );
-    
-    /*
-    if( sigInLen < 41 )
-    {
-      std::cout << "sigInExtended has length: " << sigInExtended.GetNumberOfValues() << std::endl;
-      std::cout << "coeffOutTmp has length: " << coeffOutTmp.GetNumberOfValues() << std::endl;
-      printf("L[3]: %lld, %lld, %lld\n", L[0], L[1], L[2]);
-      for (vtkm::Id i = 0; i < coeffOutTmp.GetNumberOfValues(); ++i)
-      {
-        std::cout << coeffOutTmp.GetPortalConstControl().Get(i) << ", ";
-        if( i % 2 != 0 )
-          std::cout << std::endl;
-      }
-    }
-    */
-    
- 
+        coeffTmp, coeffOut );
+
     return 0;  
   }
+    
+    
+ 
+  // Performs one level of inverse wavelet transform
+  // It takes care of boundary conditions, etc.
+  /*
+  template< typename SignalArrayType, typename CoeffArrayType>
+  vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
+                  CoeffArrayType        &cA,        // Approximate Coefficients
+                  CoeffArrayType        &cD,        // Detail Coefficients
+                  vtkm::Id              L[3] )
+   */
+  
 
 };    // Finish class WaveletDWT
 
