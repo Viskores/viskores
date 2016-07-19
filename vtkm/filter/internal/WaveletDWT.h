@@ -159,11 +159,11 @@ public:
     vtkm::Id addLen;                            // for extension
     bool oddLow  = true;
     bool oddHigh = true;
-    if( filterLen %2 != 0 )
+    if( filterLen % 2 != 0 )
       oddLow = false;
     if( doSymConv )
     {
-      addLen = filterLen >> 1;
+      addLen = filterLen / 2;
       if( sigInLen % 2 != 0 )
         sigConvolvedLen += 1;
     }
