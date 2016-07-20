@@ -47,31 +47,30 @@ public:
 
 
   // Func: Extend 1D signal
-  template< typename T >
-  vtkm::Id Extend1D( const vtkm::cont::ArrayHandle<T>         &sigIn,   // Input
-                     vtkm::cont::ArrayHandleConcatenate<        
-                        vtkm::cont::ArrayHandleConcatenate< 
-                          vtkm::cont::ArrayHandle<T>, vtkm::cont::ArrayHandle<T> >,
-                        vtkm::cont::ArrayHandle<T> >          &sigOut,  // Output
+  template< typename SigInArrayType, typename SigExtendedArrayType >
+  vtkm::Id Extend1D( const SigInArrayType                     &sigIn,   // Input
+                     SigExtendedArrayType                     &sigOut,  // Output
                      vtkm::Id                                 addLen,
                      vtkm::filter::internal::DWTMode          leftExtMethod,
                      vtkm::filter::internal::DWTMode          rightExtMethod )
   { 
-    vtkm::cont::ArrayHandle<T> leftExtend, rightExtend;
+    typedef typename SigInArrayType::ValueType      ValueType;
+    typedef vtkm::cont::ArrayHandle< ValueType >    ExtensionArrayType;
+    ExtensionArrayType leftExtend, rightExtend;
     leftExtend.Allocate( addLen );
     rightExtend.Allocate( addLen );
 
-    typedef typename vtkm::cont::ArrayHandle<T>     ArrayType;
-    typedef typename ArrayType::PortalControl       PortalType;
-    typedef typename ArrayType::PortalConstControl  PortalConstType;
+    typedef typename ExtensionArrayType::PortalControl       PortalType;
+    typedef typename ExtensionArrayType::PortalConstControl  PortalConstType;
+    typedef typename SigInArrayType::PortalConstControl      SigInPortalConstType;
 
-    typedef typename vtkm::cont::ArrayHandleConcatenate< ArrayType, ArrayType> 
+    typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, SigInArrayType> 
             ArrayConcat;
 
-    PortalType leftExtendPortal  = leftExtend.GetPortalControl();
-    PortalType rightExtendPortal = rightExtend.GetPortalControl();
-    PortalConstType sigInPortal  = sigIn.GetPortalConstControl();
-    vtkm::Id sigInLen            = sigIn.GetNumberOfValues();
+    PortalType leftExtendPortal       = leftExtend.GetPortalControl();
+    PortalType rightExtendPortal      = rightExtend.GetPortalControl();
+    SigInPortalConstType sigInPortal  = sigIn.GetPortalConstControl();
+    vtkm::Id sigInLen                 = sigIn.GetNumberOfValues();
 
     switch( leftExtMethod )
     {
@@ -116,11 +115,12 @@ public:
     }
 
     ArrayConcat leftOn( leftExtend, sigIn );    
-    sigOut = vtkm::cont::make_ArrayHandleConcatenate< ArrayConcat, ArrayType >
+    sigOut = vtkm::cont::make_ArrayHandleConcatenate< ArrayConcat, ExtensionArrayType >
                   (leftOn, rightExtend );
 
     return 0;
   }
+
 
 
 
@@ -247,7 +247,7 @@ public:
 
         if( this->wmode == SYMH )
         {
-          cDLeftMode == ASYMH;
+          cDLeftMode = ASYMH;
           if( L[2] % 2 != 0 )
           {
             cARightMode = SYMW;
@@ -273,7 +273,7 @@ public:
     vtkm::Id cATempLen, cDTempLen, reconTempLen;
     vtkm::Id addLen = 0;
     vtkm::Id cDPadLen  = 0;
-    if( doSymConv )
+    if( doSymConv )   // extend cA and cD
     {
       addLen = filterLen / 2;
       if( (L[0] > L[1]) && (this->wmode == SYMH) )
@@ -281,7 +281,7 @@ public:
       cATempLen = L[0] + 2 * addLen;
       cDTempLen = cATempLen;  // even length signal here
     }
-    else
+    else              // not extend cA and cD
     {
       cATempLen = L[0];
       cDTempLen = L[1];
@@ -306,18 +306,28 @@ public:
                 ArrayConcat;
     typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, CoeffArrayTypeTmp > ArrayConcat2;
 
-TODO: need to figure out ways to populate cA appropriately.
 
-    ArrayConcat2 cATemp;
+    ArrayConcat2 cATemp, cDTemp;
 
-    this->Extend1D( sigIn, sigInExtended, addLen, this->wmode, this->wmode ); 
+    /*this->Extend1D( sigIn, sigInExtended, addLen, this->wmode, this->wmode ); */
 
-    if( doSymConv )
+    /*
+    if( doSymConv )   // Actually extend cA and cD
     {
-      this->Extend1D( );
+      this->Extend1D( cA, cATemp, addLen, cALeftMode, cARightMode );
 
+      if( cDPadLen > 0 )  
+      {
+        // Add back the missing final cD: 0.0
+        CoeffArrayTypeTmp singleValArray;
+        singleValArray.Allocate(1);
+        singleValArray.GetPortalControl().Set(0, 0.0);
+        vtkm::cont::ArrayHandleConcatenate< PermutArrayType
+      }
     }
+    */
 
+    return 0;
 
   }   // Finish function IDWT1D
   
