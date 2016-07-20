@@ -3,8 +3,6 @@
 //device backend / system
 #define VTKM_TEST_HEADER_BUILD
 
-#define BOOST_SP_DISABLE_THREADS
-
 #include <@dir_prefix@/@header@>
 
 int Test_Build_For_@headername@()

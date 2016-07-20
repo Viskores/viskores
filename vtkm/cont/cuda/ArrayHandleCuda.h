@@ -315,37 +315,43 @@ private:
 
 namespace vtkm {
 namespace cont {
-namespace cuda {
 
-/// A shortened name for our new array handle. Note: if ArrayHandleCuda is made
-/// as a class that inherits from the below type, template resolution on array
-/// handles that expect two template parameters goes awry (e.g. in the Field
-/// constructor). When c++11 becomes the common convention, this should be
-/// replaced with a templated alias.
+/// ArrayHandleCuda is a specialization of ArrayHandle, which stores an
+/// Array that has already been allocated inside CUDA
 template <typename T>
-struct ArrayHandleCuda
+class ArrayHandleCuda
+    : public vtkm::cont::ArrayHandle <
+          T,
+          vtkm::cont::cuda::StorageTagCuda
+          >
 {
-  typedef vtkm::cont::ArrayHandle<T,vtkm::cont::cuda::StorageTagCuda> type;
+public:
+  VTKM_ARRAY_HANDLE_SUBCLASS(
+      ArrayHandleCuda,
+      (ArrayHandleCuda<T>),
+      (vtkm::cont::ArrayHandle<
+         T,
+         vtkm::cont::cuda::StorageTagCuda
+         >));
+
+  VTKM_CONT_EXPORT
+  ArrayHandleCuda(T *start,vtkm::Id length)
+    :Superclass( vtkm::cont::internal::Storage<T, vtkm::cont::cuda::StorageTagCuda>(start, length))
+  {
+  }
+
 };
 
 /// A convenience function for creating an ArrayHandle from a Cuda pointer.
 ///
 template<typename T>
 VTKM_CONT_EXPORT vtkm::cont::ArrayHandle<T,vtkm::cont::cuda::StorageTagCuda>
-make_ArrayHandle(T *array,vtkm::Id length)
+make_ArrayHandleCuda(T *array,vtkm::Id length)
 {
   typedef vtkm::cont::cuda::StorageTagCuda StorageTag;
-  typedef vtkm::cont::internal::Storage<T,StorageTag> StorageType;
   typedef vtkm::cont::ArrayHandle<T,StorageTag> ArrayHandleType;
-  return ArrayHandleType(StorageType(array, length));
+  return ArrayHandleType(array, length);
 }
-
-} //namespace cuda
-} //namespace cont
-} //namespace vtkm
-
-namespace vtkm {
-namespace cont {
 
 template<typename T>
 VTKM_CONT_EXPORT
@@ -358,6 +364,26 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,
     out<<"sz= "<<sz<<" [(on device)]";
 }
 
+
+} //namespace cont
+} //namespace vtkm
+
+namespace vtkm {
+namespace cont {
+namespace cuda {
+
+template <typename T>
+class ArrayHandle : public vtkm::cont::ArrayHandleCuda<T>
+{
+public:
+  VTKM_CONT_EXPORT
+  ArrayHandle(T *start,vtkm::Id length)
+    : vtkm::cont::ArrayHandleCuda<T>(start, length)
+  {
+  }
+};
+
+} //namespace cuda
 } //namespace cont
 } //namespace vtkm
 
