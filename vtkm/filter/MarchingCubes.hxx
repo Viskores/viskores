@@ -58,21 +58,6 @@ make_ScalarField(const vtkm::cont::ArrayHandle<vtkm::Int8,S>& ah)
 { return vtkm::cont::make_ArrayHandleCast(ah, vtkm::FloatDefault()); }
 
 // -----------------------------------------------------------------------------
-template<typename T, typename U>
-VTKM_EXEC_EXPORT
-int GetHexahedronClassification(const T& values, const U isoValue)
-{
-  return ((values[0] > isoValue)      |
-          (values[1] > isoValue) << 1 |
-          (values[2] > isoValue) << 2 |
-          (values[3] > isoValue) << 3 |
-          (values[4] > isoValue) << 4 |
-          (values[5] > isoValue) << 5 |
-          (values[6] > isoValue) << 6 |
-          (values[7] > isoValue) << 7);
-}
-
-// -----------------------------------------------------------------------------
 class ClassifyCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
