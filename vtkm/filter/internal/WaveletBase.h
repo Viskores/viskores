@@ -149,9 +149,9 @@ public:
   }
 
 protected:
-  DWTMode            wmode;
-  WaveletFilter*     filter;
-  std::string        wname;
+  vtkm::filter::internal::DWTMode           wmode;
+  WaveletFilter*                            filter;
+  std::string                               wname;
 
   void WaveLengthValidate( vtkm::Id sigInLen, vtkm::Id filterLength, vtkm::Id &level)
   {

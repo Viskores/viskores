@@ -48,14 +48,14 @@ public:
 
   // Func: Extend 1D signal
   template< typename T >
-  vtkm::Id Extend1D( const vtkm::cont::ArrayHandle<T> &sigIn,   // Input
-                     vtkm::cont::ArrayHandleConcatenate<        // Output
+  vtkm::Id Extend1D( const vtkm::cont::ArrayHandle<T>         &sigIn,   // Input
+                     vtkm::cont::ArrayHandleConcatenate<        
                         vtkm::cont::ArrayHandleConcatenate< 
                           vtkm::cont::ArrayHandle<T>, vtkm::cont::ArrayHandle<T> >,
-                        vtkm::cont::ArrayHandle<T> >  &sigOut,
-                     vtkm::Id                         addLen,
-                     vtkm::filter::internal::DWTMode  leftExtMethod,
-                     vtkm::filter::internal::DWTMode  rightExtMethod )
+                        vtkm::cont::ArrayHandle<T> >          &sigOut,  // Output
+                     vtkm::Id                                 addLen,
+                     vtkm::filter::internal::DWTMode          leftExtMethod,
+                     vtkm::filter::internal::DWTMode          rightExtMethod )
   { 
     vtkm::cont::ArrayHandle<T> leftExtend, rightExtend;
     leftExtend.Allocate( addLen );
@@ -129,7 +129,7 @@ public:
   template< typename SignalArrayType, typename CoeffArrayType>
   vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
                   CoeffArrayType        &coeffOut,  // Output: cA followed by cD
-                  vtkm::Id              L[3] )
+                  vtkm::Id              L[3] )      // Output: how many cA and cD.
   {
 
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
@@ -143,6 +143,8 @@ public:
     L[0] = this->GetApproxLength( sigInLen );
     L[1] = this->GetDetailLength( sigInLen );
     L[2] = sigInLen;
+
+    VTKM_ASSERT( L[0] + L[1] == L[2] );
 
     vtkm::Id filterLen = this->filter->GetFilterLength();
 
@@ -171,13 +173,14 @@ public:
   
     vtkm::Id sigExtendedLen = sigInLen + 2 * addLen;
 
-    typedef typename SignalArrayType::ValueType SigInValueType;
-    typedef vtkm::cont::ArrayHandle<SigInValueType>     SigInArrayType;
-    typedef vtkm::cont::ArrayHandleConcatenate< SigInArrayType, SigInArrayType> 
-              ArrayConcat;
-    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, SigInArrayType > ArrayConcat2;
-    
+    typedef typename SignalArrayType::ValueType                   SigInValueType;
+    typedef vtkm::cont::ArrayHandle<SigInValueType>               SignalArrayTypeTmp;
+    typedef vtkm::cont::ArrayHandleConcatenate< SignalArrayTypeTmp, SignalArrayTypeTmp> 
+                ArrayConcat;
+    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, SignalArrayTypeTmp > 
+                ArrayConcat2;
     ArrayConcat2 sigInExtended;
+
     this->Extend1D( sigIn, sigInExtended, addLen, this->wmode, this->wmode ); 
 
     // Coefficients in coeffOutTmp are interleaving, 
@@ -204,12 +207,10 @@ public:
 
     IdArrayType approxIndices( 0, 2, L[0] );
     IdArrayType detailIndices( 1, 2, L[1] );
-    PermutArrayType cATmp = vtkm::cont::make_ArrayHandlePermutation( 
-        approxIndices, coeffOutTmp );
-    PermutArrayType cDTmp = vtkm::cont::make_ArrayHandlePermutation( 
-        detailIndices, coeffOutTmp );
+    PermutArrayType cATmp( approxIndices, coeffOutTmp );
+    PermutArrayType cDTmp( detailIndices, coeffOutTmp );
 
-    typedef typename vtkm::cont::ArrayHandleConcatenate< PermutArrayType, PermutArrayType >
+    typedef vtkm::cont::ArrayHandleConcatenate< PermutArrayType, PermutArrayType >
                 PermutArrayConcatenated;
     PermutArrayConcatenated coeffTmp( cATmp, cDTmp );
 
@@ -223,13 +224,102 @@ public:
  
   // Performs one level of inverse wavelet transform
   // It takes care of boundary conditions, etc.
-  /*
-  template< typename SignalArrayType, typename CoeffArrayType>
-  vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
-                  CoeffArrayType        &cA,        // Approximate Coefficients
-                  CoeffArrayType        &cD,        // Detail Coefficients
-                  vtkm::Id              L[3] )
-   */
+  template< typename CoeffArrayType, typename SignalArrayType>
+  vtkm::Id IDWT1D( const CoeffArrayType  &coeffIn,     // Input, cA followed by cD
+                   vtkm::Id              L[3],         // Input, how many cA and cD
+                   SignalArrayType       &sigOut )     // Output
+  {
+    VTKM_ASSERT( coeffIn.GetNumberOfValues() == L[2] );
+
+    vtkm::Id filterLen = this->filter->GetFilterLength();
+    bool doSymConv = false;
+    vtkm::filter::internal::DWTMode cALeftMode  = this->wmode;
+    vtkm::filter::internal::DWTMode cARightMode = this->wmode;
+    vtkm::filter::internal::DWTMode cDLeftMode  = this->wmode;
+    vtkm::filter::internal::DWTMode cDRightMode = this->wmode;
+  
+    if( this->filter->isSymmetric() )
+    {
+      if(( this->wmode == SYMW && (filterLen % 2 != 0) ) || 
+         ( this->wmode == SYMH && (filterLen % 2 == 0) ) )
+      {
+        doSymConv = true;
+
+        if( this->wmode == SYMH )
+        {
+          cDLeftMode == ASYMH;
+          if( L[2] % 2 != 0 )
+          {
+            cARightMode = SYMW;
+            cDRightMode = ASYMW;
+          }
+          else
+            cDRightMode = ASYMH;
+        }
+        else
+        {
+          cDLeftMode = SYMH;
+          if( L[2] % 2 != 0 )
+          {
+            cARightMode = SYMW;
+            cDRightMode = SYMH;
+          }
+          else
+            cARightMode = SYMH;
+        }
+      }
+    } 
+
+    vtkm::Id cATempLen, cDTempLen, reconTempLen;
+    vtkm::Id addLen = 0;
+    vtkm::Id cDPadLen  = 0;
+    if( doSymConv )
+    {
+      addLen = filterLen / 2;
+      if( (L[0] > L[1]) && (this->wmode == SYMH) )
+        cDPadLen = L[0];
+      cATempLen = L[0] + 2 * addLen;
+      cDTempLen = cATempLen;  // even length signal here
+    }
+    else
+    {
+      cATempLen = L[0];
+      cDTempLen = L[1];
+    }
+    reconTempLen = L[2];
+    if( reconTempLen % 2 != 0 )
+      reconTempLen++;
+
+    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >                       IdArrayType;
+    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, CoeffArrayType > PermutArrayType;
+
+    // Separate cA and cD
+    IdArrayType approxIndices( 0,    1, L[0] );
+    IdArrayType detailIndices( L[0], 1, L[1] );
+    PermutArrayType cA( approxIndices, coeffIn );
+    PermutArrayType cD( detailIndices, coeffIn );
+    
+
+    typedef typename CoeffArrayType::ValueType                    CoeffValueType;
+    typedef vtkm::cont::ArrayHandle<CoeffValueType>               CoeffArrayTypeTmp;
+    typedef vtkm::cont::ArrayHandleConcatenate< CoeffArrayTypeTmp, CoeffArrayTypeTmp> 
+                ArrayConcat;
+    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, CoeffArrayTypeTmp > ArrayConcat2;
+
+TODO: need to figure out ways to populate cA appropriately.
+
+    ArrayConcat2 cATemp;
+
+    this->Extend1D( sigIn, sigInExtended, addLen, this->wmode, this->wmode ); 
+
+    if( doSymConv )
+    {
+      this->Extend1D( );
+
+    }
+
+
+  }   // Finish function IDWT1D
   
 
 };    // Finish class WaveletDWT
