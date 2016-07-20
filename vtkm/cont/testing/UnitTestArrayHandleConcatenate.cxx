@@ -52,10 +52,33 @@ void TestArrayHandleConcatenate()
   }
 }
 
+void TestConcatenateEmptyArray()
+{
+  std::vector< vtkm::Float64 > vec;
+  for( vtkm::Id i = 0; i < ARRAY_SIZE; i++ )
+      vec.push_back( i*1.5 );
+  
+   typedef vtkm::Float64                                         CoeffValueType;
+   typedef vtkm::cont::ArrayHandle<CoeffValueType>               CoeffArrayTypeTmp;
+   typedef vtkm::cont::ArrayHandleConcatenate< CoeffArrayTypeTmp, CoeffArrayTypeTmp> 
+               ArrayConcat;
+   typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, CoeffArrayTypeTmp > ArrayConcat2;
+
+  CoeffArrayTypeTmp arr1 = vtkm::cont::make_ArrayHandle( vec );
+  CoeffArrayTypeTmp arr2, arr3;
+  
+  ArrayConcat arrConc( arr2, arr1 );
+  ArrayConcat2 arrConc2( arrConc, arr3 );
+
+  for( vtkm::Id i = 0; i < arrConc2.GetNumberOfValues(); i++ )
+    std::cout << arrConc2.GetPortalConstControl().Get(i) << std::endl; 
+}
+
 } // namespace UnitTestArrayHandleIndexNamespace
 
 int UnitTestArrayHandleConcatenate(int, char *[])
 {
   using namespace UnitTestArrayHandleConcatenateNamespace;
+  //TestConcatenateEmptyArray();
   return vtkm::cont::testing::Testing::Run(TestArrayHandleConcatenate);
 }
