@@ -125,10 +125,13 @@
 // but boost and thrust does not.
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 
+//We include deprecated-declarations to silence auto_ptr deprecation warnings
+//when using older boost versions ( < 1.61 )
 #define VTK_M_THIRDPARTY_GENERAL_WARNING_PRAGMAS \
   _Pragma("GCC diagnostic ignored \"-Wconversion\"") \
   _Pragma("GCC diagnostic ignored \"-Wshadow\"") \
-  _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"") \
+  _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
 
 // GCC has a unused by set variable warnings that needs to be silenced.
 // Because boost boost::shared_ptr inline assembly causes nvcc to incorrectly
