@@ -54,6 +54,7 @@
 #define VTKM_GCC
 #endif
 
+
 #if defined(unix) || defined(__unix) || defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 #include <unistd.h>
 # ifdef _POSIX_VERSION
@@ -255,22 +256,12 @@
 #endif
 
 // Determine whether we will use variadic templates (a new feature in C++11).
-// Currently have VARIADIC_TEMPLATE support off.
-#cmakedefine VTKM_NO_VARIADIC_TEMPLATE
-#if !defined(VTKM_USE_VARIADIC_TEMPLATE) && !defined(VTKM_NO_VARIADIC_TEMPLATE)
-// Currently using Boost to determine support.
-
 VTKM_THIRDPARTY_PRE_INCLUDE
 # include <boost/config.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
-# if defined(BOOST_HAS_VARIADIC_TMPL)
-#  define VTKM_USE_VARIADIC_TEMPLATE 1
-# endif
-#endif
-
-#if defined(VTKM_USE_VARIADIC_TEMPLATE) && defined(VTKM_NO_VARIADIC_TEMPLATE)
-# error Both VTKM_USE_VARIADIC_TEMPLATE and VTKM_NO_VARIADIC_TEMPLATE defined.  Do not know what to do.
+#if __cplusplus >= 201103L || ( defined(VTKM_MSVC) && _MSC_VER >= 1700  )
+#define VTKM_HAVE_CXX_11
 #endif
 
 #ifdef VTKM_MSVC
