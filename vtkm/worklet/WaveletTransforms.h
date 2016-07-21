@@ -137,7 +137,7 @@ class InverseTransformOdd: public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // Input: coeffs 
-                                                             //   cA followed by cD
+                                                             //        cA followed by cD
                                 WholeArrayIn<Scalar>,        // lowFilter
                                 WholeArrayIn<Scalar>,        // highFilter
                                 FieldOut<ScalarAll>);        // output

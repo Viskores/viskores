@@ -55,7 +55,7 @@ void TestExtend1D()
   std::cout << "\nFinish testing Extend1D" << std::endl;
 }
 
-void TestDWT1D()
+void TestDWTIDWT1D()
 {
   vtkm::Id sigLen = 20;
   std::cout << "Testing Wavelets Worklet" << std::endl;
@@ -78,10 +78,12 @@ void TestDWT1D()
   vtkm::cont::ArrayHandle<vtkm::Float64> coeffOut;
   vtkm::Id L[3];
 
+  // Forward Transform
   vtkm::filter::internal::WaveletDWT waveletdwt( "CDF9/7" );
   waveletdwt.DWT1D( inputArray, coeffOut, L );
 
-  std::cout << "Output Coeff length = " << coeffOut.GetNumberOfValues() << std::endl;
+  std::cout << "Forward Wavelet Transform: result coeff length = " << 
+      coeffOut.GetNumberOfValues() << std::endl;
   printf("L[0] = %lld, L[1] = %lld, L[2] = %lld\n", L[0], L[1], L[2] );
   for( vtkm::Id i; i < coeffOut.GetNumberOfValues(); i++ )
   {
@@ -91,13 +93,23 @@ void TestDWT1D()
       std::cout << "  <-- cD --> " << std::endl;
     std::cout << coeffOut.GetPortalConstControl().Get(i) << std::endl;
   }
+
+  // Inverse Transform
+  vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
+  waveletdwt.IDWT1D( coeffOut, L, reconstructArray );
+  std::cout << "Inverse Wavelet Transform: result signal length = " << 
+      reconstructArray.GetNumberOfValues() << std::endl;
+  for( vtkm::Id i; i < reconstructArray.GetNumberOfValues(); i++ )
+  {
+    std::cout << reconstructArray.GetPortalConstControl().Get(i) << std::endl;
+  }
 }
 
 void TestWaveletCompressor()
 {
   std::cout << "Welcome to WaveletCompressorFilter test program :) " << std::endl;
   //TestExtend1D();
-  TestDWT1D();
+  TestDWTIDWT1D();
 }
 
 int UnitTestWaveletCompressorFilter(int, char *[])

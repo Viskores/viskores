@@ -123,7 +123,7 @@ public:
 
 
 
-
+  // Func:
   // Performs one level of 1D discrete wavelet transform 
   // It takes care of boundary conditions, etc.
   template< typename SignalArrayType, typename CoeffArrayType>
@@ -197,8 +197,8 @@ public:
     vtkm::worklet::DispatcherMapField<vtkm::worklet::ForwardTransform> 
         dispatcher(forwardTransform);
     dispatcher.Invoke( sigInExtended, 
-                       filter->GetLowDecomposeFilter(),
-                       filter->GetHighDecomposeFilter(),
+                       this->filter->GetLowDecomposeFilter(),
+                       this->filter->GetHighDecomposeFilter(),
                        coeffOutTmp );
 
     // Separate cA and cD.
@@ -221,7 +221,7 @@ public:
   }
     
     
- 
+  // Func: 
   // Performs one level of inverse wavelet transform
   // It takes care of boundary conditions, etc.
   template< typename CoeffArrayType, typename SignalArrayType>
@@ -301,31 +301,98 @@ public:
     
 
     typedef typename CoeffArrayType::ValueType                    CoeffValueType;
-    typedef vtkm::cont::ArrayHandle<CoeffValueType>               CoeffArrayTypeTmp;
-    typedef vtkm::cont::ArrayHandleConcatenate< CoeffArrayTypeTmp, CoeffArrayTypeTmp> 
+    typedef vtkm::cont::ArrayHandle<CoeffValueType>               ExtensionArrayType;
+    typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, CoeffArrayType > 
                 ArrayConcat;
-    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, CoeffArrayTypeTmp > ArrayConcat2;
-
+    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ExtensionArrayType > ArrayConcat2;
 
     ArrayConcat2 cATemp, cDTemp;
 
     /*this->Extend1D( sigIn, sigInExtended, addLen, this->wmode, this->wmode ); */
 
-    /*
     if( doSymConv )   // Actually extend cA and cD
     {
-      this->Extend1D( cA, cATemp, addLen, cALeftMode, cARightMode );
-
+      { // make a CoeffArrayType to send into Extend1D
+        CoeffArrayType cABasic;
+        vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
+              (cA, cABasic);
+        this->Extend1D( cABasic, cATemp, addLen, cALeftMode, cARightMode );
+      }
       if( cDPadLen > 0 )  
       {
         // Add back the missing final cD: 0.0
-        CoeffArrayTypeTmp singleValArray;
+        ExtensionArrayType singleValArray;
         singleValArray.Allocate(1);
         singleValArray.GetPortalControl().Set(0, 0.0);
-        vtkm::cont::ArrayHandleConcatenate< PermutArrayType
+        vtkm::cont::ArrayHandleConcatenate< PermutArrayType, ExtensionArrayType >
+            cDPad( cD, singleValArray );
+
+        // make a CoeffArrayType to send into Extend1D
+        CoeffArrayType cDBasic;
+        vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
+          ( cDPad, cDBasic );
+        this->Extend1D( cDBasic, cDTemp, addLen, cDLeftMode, cDRightMode );
+      }
+      else
+      {
+        CoeffArrayType cDBasic;
+        vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
+          ( cD, cDBasic );
+        this->Extend1D( cDBasic, cDTemp, addLen, cDLeftMode, cDRightMode );
+      }
+    } // end if( doSymConv )
+    else  // Make cATemp and cDTemp from cA and cD
+    {
+      ExtensionArrayType zeroLenArray;
+      // make correct ArrayHandle for cATemp
+      { 
+        CoeffArrayType cABasic;
+        vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
+              (cA, cABasic);
+        ArrayConcat leftOn( zeroLenArray, cABasic );
+        cATemp = vtkm::cont::make_ArrayHandleConcatenate( leftOn, zeroLenArray );
+      }
+      // make correct ArrayHandle for cDTemp
+      {
+        CoeffArrayType cDBasic;
+        vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
+              (cD, cDBasic);
+        ArrayConcat leftOn( zeroLenArray, cDBasic );
+        cDTemp = vtkm::cont::make_ArrayHandleConcatenate( leftOn, zeroLenArray );
       }
     }
-    */
+
+    if( filterLen % 2 != 0 )
+    {
+      // Concatenate cATemp and cDTemp
+      vtkm::cont::ArrayHandleConcatenate< ArrayConcat2, ArrayConcat2>
+          coeffInExtended( cATemp, cDTemp );
+
+      std::cerr << "cATemp has length: " << cATemp.GetNumberOfValues() << std::endl;
+      for( vtkm::Id i = 0; i < cATemp.GetNumberOfValues(); i++ )
+          std::cout << cATemp.GetPortalConstControl().Get(i) << std::endl;
+      std::cerr << "cDTemp has length: " << cDTemp.GetNumberOfValues() << std::endl;
+      for( vtkm::Id i = 0; i < cATemp.GetNumberOfValues(); i++ )
+          std::cout << cATemp.GetPortalConstControl().Get(i) << std::endl;
+      std::cerr << "coeffIn has length: " << coeffInExtended.GetNumberOfValues() << std::endl;
+
+      // Initialize a worklet
+      vtkm::worklet::InverseTransformOdd inverseXformOdd;
+      inverseXformOdd.SetFilterLength( filterLen );
+      inverseXformOdd.SetCALength( L[0] );
+      vtkm::worklet::DispatcherMapField< vtkm::worklet::InverseTransformOdd >
+          dispatcher( inverseXformOdd );
+      dispatcher.Invoke( coeffInExtended,
+                         this->filter->GetLowReconstructFilter(),
+                         this->filter->GetHighReconstructFilter(),
+                         sigOut );
+
+       // need to take out the first L[2] values to put into sigOut
+    }
+    else
+    {
+      // need to implement the even filter length worklet first
+    }
 
     return 0;
 
