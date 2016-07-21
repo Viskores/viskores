@@ -55,6 +55,16 @@ public:
       this->wmode = SYMW;   // Default extension mode, see MatWaveBase.cpp
       this->filter = new vtkm::filter::internal::WaveletFilter( wname );
     }
+    else if( wname.compare("CDF5/3") == 0 )
+    {
+      this->wmode = SYMW;
+      this->filter = new vtkm::filter::internal::WaveletFilter( wname );
+    }
+    else
+    {
+      std::cerr << "This wavelet kernel is not supported: " << wname << std::endl;
+      // throw an error
+    }
   }
 
   // Destructor

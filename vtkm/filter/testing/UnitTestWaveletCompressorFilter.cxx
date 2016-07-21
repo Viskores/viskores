@@ -79,7 +79,7 @@ void TestDWTIDWT1D()
   vtkm::Id L[3];
 
   // Forward Transform
-  vtkm::filter::internal::WaveletDWT waveletdwt( "CDF9/7" );
+  vtkm::filter::internal::WaveletDWT waveletdwt( "CDF5/3" );
   waveletdwt.DWT1D( inputArray, coeffOut, L );
 
   std::cout << "Forward Wavelet Transform: result coeff length = " << 

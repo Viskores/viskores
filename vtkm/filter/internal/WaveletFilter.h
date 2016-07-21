@@ -53,8 +53,19 @@ public:
       verbatim_copy( vtkm::filter::internal::h4, lowReconstructFilter, filterLength );
       qmf_even( vtkm::filter::internal::hm4_44,  highReconstructFilter, filterLength );
     }
+    else if( wname.compare("CDF5/3") == 0 )
+    {
+      this->symmetricity = true;
+      this->filterLength = 5;
+      this->AllocateFilterMemory();
+      wrev( vtkm::filter::internal::hm2_22,         lowDecomposeFilter, filterLength );
+      qmf_wrev( vtkm::filter::internal::h2+6,       highDecomposeFilter, filterLength );
+      verbatim_copy( vtkm::filter::internal::h2+6,  lowReconstructFilter, filterLength );
+      qmf_even( vtkm::filter::internal::hm2_22,     highReconstructFilter, filterLength );
+    }
     else
     {
+      std::cerr << "Not supported wavelet kernel: " << wname << std::endl;
       // throw an error here
     }
   }
@@ -88,24 +99,7 @@ public:
   {
     return vtkm::cont::make_ArrayHandle( highReconstructFilter, filterLength );
   }
-  /*
-  const vtkm::Float64* GetLowDecomposeFilter() const
-  {
-    return lowDecomposeFilter;
-  }
-  const vtkm::Float64* GetHighDecomposeFilter() const
-  {
-    return highDecomposeFilter;
-  }
-  const vtkm::Float64* GetLowReconstructFilter() const
-  {
-    return lowReconstructFilter;
-  }
-  const vtkm::Float64* GetHighReconstructFilter() const
-  {
-    return highReconstructFilter;
-  }
-  */
+
 protected:
   bool              symmetricity;
   vtkm::Id          filterLength;
