@@ -51,10 +51,10 @@ public:
   vtkm::Float64 GetIsoValue() const    { return this->IsoValue; }
 
   VTKM_CONT_EXPORT
-  void SetMergeDuplicatePoints(bool on) { this->MergeDuplicatePoints = on; }
+  void SetMergeDuplicatePoints(bool on) { this->Worklet.SetMergeDuplicatePoints(on); }
 
   VTKM_CONT_EXPORT
-  bool GetMergeDuplicatePoints() const  { return this->MergeDuplicatePoints; }
+  bool GetMergeDuplicatePoints() const  { return this->Worklet.GetMergeDuplicatePoints(); }
 
   VTKM_CONT_EXPORT
   void SetGenerateNormals(bool on) { this->GenerateNormals = on; }
@@ -82,16 +82,8 @@ public:
 
 private:
   double IsoValue;
-  bool MergeDuplicatePoints;
   bool GenerateNormals;
-
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> EdgeTable;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> NumTrianglesTable;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> TriangleTable;
-
-
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> InterpolationWeights;
-  vtkm::cont::ArrayHandle<vtkm::Id2> InterpolationIds;
+  vtkm::worklet::MarchingCubes Worklet;
 };
 
 template<>
