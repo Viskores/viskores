@@ -36,6 +36,7 @@ set(headers
   ResultField.h
   Threshold.h
   VertexClustering.h
+  WaveletCompressor.h
 )
 
 set(header_template_sources
@@ -49,6 +50,7 @@ set(header_template_sources
   PointElevation.hxx
   Threshold.hxx
   VertexClustering.hxx
+  WaveletCompressor.hxx
 )
 
 vtkm_declare_headers(${headers})
