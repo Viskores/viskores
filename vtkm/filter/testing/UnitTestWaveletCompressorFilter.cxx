@@ -71,7 +71,7 @@ void TestDWTIDWT1D()
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
   for( vtkm::Id i = 0; i < sigLen; i++ )
-    tmpVector.push_back( static_cast<vtkm::Float64>(i%100+1) );
+    tmpVector.push_back( static_cast<vtkm::Float64>( i ) );
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
 

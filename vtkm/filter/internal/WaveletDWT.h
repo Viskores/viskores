@@ -275,11 +275,11 @@ public:
     vtkm::Id cDPadLen  = 0;
     if( doSymConv )   // extend cA and cD
     {
-      addLen = filterLen / 2;
+      addLen = filterLen / 4;
       if( (L[0] > L[1]) && (this->wmode == SYMH) )
         cDPadLen = L[0];
       cATempLen = L[0] + 2 * addLen;
-      cDTempLen = cATempLen;  // even length signal here
+      cDTempLen = cATempLen;  // same length
     }
     else              // not extend cA and cD
     {
@@ -308,14 +308,20 @@ public:
 
     ArrayConcat2 cATemp, cDTemp;
 
-    /*this->Extend1D( sigIn, sigInExtended, addLen, this->wmode, this->wmode ); */
 
     if( doSymConv )   // Actually extend cA and cD
     {
+      #if 0
+      std::cout << "cALeftMode = " << cALeftMode << std::endl;
+      std::cout << "cARightMode = " << cARightMode << std::endl;
+      std::cout << "cDLeftMode = " << cDLeftMode << std::endl;
+      std::cout << "cDRightMode = " << cDRightMode << std::endl;
+      #endif
       { // make a CoeffArrayType to send into Extend1D
         CoeffArrayType cABasic;
         vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
               (cA, cABasic);
+
         this->Extend1D( cABasic, cATemp, addLen, cALeftMode, cARightMode );
       }
       if( cDPadLen > 0 )  
@@ -331,29 +337,47 @@ public:
         CoeffArrayType cDBasic;
         vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
           ( cDPad, cDBasic );
+
         this->Extend1D( cDBasic, cDTemp, addLen, cDLeftMode, cDRightMode );
       }
       else
       {
-        CoeffArrayType cDBasic;
-        vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
-          ( cD, cDBasic );
-        this->Extend1D( cDBasic, cDTemp, addLen, cDLeftMode, cDRightMode );
+        {
+          CoeffArrayType cDBasic;
+          vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
+            ( cD, cDBasic );
+
+          this->Extend1D( cDBasic, cDTemp, addLen, cDLeftMode, cDRightMode );
+        }
+        // Attached an zero if cDTemp is shorter than cDTempLen
+        if( cDTemp.GetNumberOfValues() !=  cDTempLen )
+        {
+          VTKM_ASSERT( cDTemp.GetNumberOfValues() ==  cDTempLen - 1 ); 
+          CoeffArrayType cDBasic;
+          vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
+            ( cDTemp, cDBasic );
+          ExtensionArrayType emptyArray; 
+          ExtensionArrayType singleValArray;
+          singleValArray.Allocate(1);
+          singleValArray.GetPortalControl().Set(0, 0.0);
+          ArrayConcat concat1( emptyArray, cDBasic );
+          cDTemp = vtkm::cont::make_ArrayHandleConcatenate( concat1, singleValArray );
+        }
       }
     } // end if( doSymConv )
     else  // Make cATemp and cDTemp from cA and cD
     {
       ExtensionArrayType zeroLenArray;
-      // make correct ArrayHandle for cATemp
       { 
+        // make correct ArrayHandle for cATemp
         CoeffArrayType cABasic;
         vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
               (cA, cABasic);
         ArrayConcat leftOn( zeroLenArray, cABasic );
         cATemp = vtkm::cont::make_ArrayHandleConcatenate( leftOn, zeroLenArray );
       }
-      // make correct ArrayHandle for cDTemp
       {
+        // make correct ArrayHandle for cDTemp
         CoeffArrayType cDBasic;
         vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
               (cD, cDBasic);
@@ -368,18 +392,19 @@ public:
       vtkm::cont::ArrayHandleConcatenate< ArrayConcat2, ArrayConcat2>
           coeffInExtended( cATemp, cDTemp );
 
+      #if 1
       std::cerr << "cATemp has length: " << cATemp.GetNumberOfValues() << std::endl;
       for( vtkm::Id i = 0; i < cATemp.GetNumberOfValues(); i++ )
           std::cout << cATemp.GetPortalConstControl().Get(i) << std::endl;
       std::cerr << "cDTemp has length: " << cDTemp.GetNumberOfValues() << std::endl;
-      for( vtkm::Id i = 0; i < cATemp.GetNumberOfValues(); i++ )
-          std::cout << cATemp.GetPortalConstControl().Get(i) << std::endl;
-      std::cerr << "coeffIn has length: " << coeffInExtended.GetNumberOfValues() << std::endl;
+      for( vtkm::Id i = 0; i < cDTemp.GetNumberOfValues(); i++ )
+          std::cout << cDTemp.GetPortalConstControl().Get(i) << std::endl;
+      #endif
 
       // Initialize a worklet
       vtkm::worklet::InverseTransformOdd inverseXformOdd;
       inverseXformOdd.SetFilterLength( filterLen );
-      inverseXformOdd.SetCALength( L[0] );
+      inverseXformOdd.SetCALength( L[0], cATempLen );
       vtkm::worklet::DispatcherMapField< vtkm::worklet::InverseTransformOdd >
           dispatcher( inverseXformOdd );
       dispatcher.Invoke( coeffInExtended,
@@ -387,7 +412,7 @@ public:
                          this->filter->GetHighReconstructFilter(),
                          sigOut );
 
-       // need to take out the first L[2] values to put into sigOut
+      sigOut.Shrink( L[2] );
     }
     else
     {

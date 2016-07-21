@@ -163,9 +163,10 @@ public:
 
   // Set cA length
   VTKM_CONT_EXPORT
-  void SetCALength( vtkm::Id len )
+  void SetCALength( vtkm::Id len, vtkm::Id lenExt )
   {
     this->cALen = len;
+    this->cALenExtended = lenExt;
   }
 
   // Use 64-bit float for convolution calculation
@@ -186,28 +187,32 @@ public:
     vtkm::Id k;     // filter indices
 
     VAL sum = 0.0;    
-    xi = (workIndex+1) / 2;
-    if( workIndex % 2 != 0 )
-      k = this->filterLen - 2;
-    else
-      k = this->filterLen - 1;
-    while( k >= 0 )
-    {
-      sum += lowFilter.Get(k) * MAKEVAL( coeffs.Get(xi) );
-      xi++;
-      k -= 2;
-    }
 
-    xi = workIndex / 2;
-    if( workIndex % 2 != 0 )
-      k = this->filterLen - 1;
-    else
-      k = this->filterLen - 2;
-    while( k >= 0 )
+    if( workIndex < 2*cALen )   // valid calculation region
     {
-      sum += highFilter.Get(k) * MAKEVAL( coeffs.Get( xi + this->cALen ) );
-      xi++;
-      k -= 2;
+      xi = (workIndex+1) / 2;
+      if( workIndex % 2 != 0 )
+        k = this->filterLen - 2;
+      else
+        k = this->filterLen - 1;
+      while( k >= 0 )
+      {
+        sum += lowFilter.Get(k) * MAKEVAL( coeffs.Get(xi) );
+        xi++;
+        k -= 2;
+      }
+
+      xi = workIndex / 2;
+      if( workIndex % 2 != 0 )
+        k = this->filterLen - 1;
+      else
+        k = this->filterLen - 2;
+      while( k >= 0 )
+      {
+        sum += highFilter.Get(k) * MAKEVAL( coeffs.Get( xi + this->cALenExtended ) );
+        xi++;
+        k -= 2;
+      }
     }
 
     sigOut = static_cast<OutputSignalType>( sum );
@@ -218,8 +223,9 @@ public:
 
 private:
   vtkm::Float64 magicNum;
-  vtkm::Id filterLen;   // filter length.
-  vtkm::Id cALen;       // Number of cA at the beginning of input array
+  vtkm::Id filterLen;       // filter length.
+  vtkm::Id cALen;           // Number of actual cAs 
+  vtkm::Id cALenExtended;   // Number of extended cA at the beginning of input array
   
 };    // Finish class ForwardTransform
 
