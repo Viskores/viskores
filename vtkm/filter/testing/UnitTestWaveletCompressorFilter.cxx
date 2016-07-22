@@ -18,7 +18,8 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/filter/internal/WaveletDWT.h>
+//#include <vtkm/filter/internal/WaveletDWT.h>
+#include <vtkm/filter/WaveletCompressor.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -105,11 +106,46 @@ void TestDWTIDWT1D()
   }
 }
 
+void TestWaveDecompose()
+{
+  vtkm::Id sigLen = 20;
+  std::cout << "Testing Wavelets Worklet" << std::endl;
+  std::cout << "Default test size is 20. " << std::endl;
+  std::cout << "Input a new size to test." << std::endl;
+  std::cout << "Input 0 to stick with 20." << std::endl;
+  vtkm::Id tmpIn;
+  vtkm::Id million = 1;//1000000;
+  std::cin >> tmpIn;
+  if( tmpIn != 0 )
+    sigLen = tmpIn * million;
+
+  // make input data array handle
+  std::vector<vtkm::Float64> tmpVector;
+  for( vtkm::Id i = 0; i < sigLen; i++ )
+    tmpVector.push_back( static_cast<vtkm::Float64>( i ) );
+  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
+    vtkm::cont::make_ArrayHandle(tmpVector);
+
+  vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
+
+  // Use a WaveletCompressor
+  vtkm::filter::WaveletCompressor compressor("CDF9/7");
+  compressor.WaveDecompose( inputArray, 1, outputArray );
+  
+  std::cout << "Output array has length = " << 
+      outputArray.GetNumberOfValues() << std::endl;
+  for( vtkm::Id i; i < outputArray.GetNumberOfValues(); i++ )
+  {
+    std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl;
+  }
+}
+
 void TestWaveletCompressor()
 {
   std::cout << "Welcome to WaveletCompressorFilter test program :) " << std::endl;
   //TestExtend1D();
-  TestDWTIDWT1D();
+  //TestDWTIDWT1D();
+  TestWaveDecompose();
 }
 
 int UnitTestWaveletCompressorFilter(int, char *[])

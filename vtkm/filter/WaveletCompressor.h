@@ -45,8 +45,9 @@ public:
   template< typename SignalArrayType, typename CoeffArrayType>
   vtkm::Id WaveDecompose( const SignalArrayType     &sigIn,   // Input
                                 vtkm::Id            nLevels,  // n levels of DWT
-                                CoeffArrayType      &coeffOut,
-                                vtkm::Id*           L );      // bookkeeping array;
+                                CoeffArrayType      &coeffOut );
+                                //vtkm::Id            CLength,
+                                //vtkm::Id*           L );      // bookkeeping array;
                                                               // len(L) = nLevels+2
                       
   // Compute the book keeping array L for 1D wavelet decomposition
@@ -59,8 +60,8 @@ public:
 private:
 
   // Compute bookkeeping array L, and length of output array, C
-  vtkm::Id WaveDecomposeSetup( vtkm::Id sigInLen, vtkm::Id nLevels,     // Input
-                               vtkm::Id* CLength, vtkm::Id* L );
+  //vtkm::Id WaveDecomposeSetup( vtkm::Id sigInLen, vtkm::Id nLevels,     // Input
+  //                             vtkm::Id* CLength, vtkm::Id* L );
 
 };    // Finish class WaveletCompressor
 
