@@ -49,6 +49,18 @@ public:
                                 vtkm::Id*           L );      // bookkeeping array;
                                                               // len(L) = nLevels+2
                       
+  // Compute the book keeping array L for 1D wavelet decomposition
+  void ComputeL( vtkm::Id sigInLen, vtkm::Id nLevels, vtkm::Id* L );
+
+  // Compute the length of coefficients
+  vtkm::Id ComputeCoeffLength( const vtkm::Id* L, vtkm::Id nLevels );
+
+
+private:
+
+  // Compute bookkeeping array L, and length of output array, C
+  vtkm::Id WaveDecomposeSetup( vtkm::Id sigInLen, vtkm::Id nLevels,     // Input
+                               vtkm::Id* CLength, vtkm::Id* L );
 
 };    // Finish class WaveletCompressor
 

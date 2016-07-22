@@ -24,7 +24,6 @@ namespace vtkm {
 namespace filter {
 
 
-// Multi-level 1D wavelet decomposition
 template< typename SignalArrayType, typename CoeffArrayType>
 vtkm::Id 
 WaveletCompressor::WaveDecompose( const SignalArrayType   &sigIn,   // Input
@@ -33,10 +32,63 @@ WaveletCompressor::WaveDecompose( const SignalArrayType   &sigIn,   // Input
                                   vtkm::Id*               L )       // bookkeeping array;
                                                                     // len(L) = nLevels+2
 {
+  /*
+  if( nLevels == 0 )  // 0 levels means no transform
+  {
+    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(
+        sigIn, coeffOut );
+    return 0;
+  }
+
+  vtkm::Id len = sigIn.GetNumberOfValues();
+  vtkm::Id cALen = this->GetApproxLength( len );
+  vtkm::Id tlen = 0;
+  vtkm::Id L1d[3];
+  for( vtkm::Id i = n; i > 0; i-- )
+  {
+    tlen += L[i];
+  }
+  */
+
 
   return 0;
 }
+
+vtkm::Id 
+WaveletCompressor::ComputeCoeffLength( const vtkm::Id* L, vtkm::Id nLevels )
+{
+  vtkm::Id sum = L[0];  // 1st level cA
+  for( vtkm::Id i = 1; i <= nLevels; i++ )
+    sum += L[i];
+  return sum;
+}
+  
+void 
+WaveletCompressor::ComputeL( vtkm::Id sigInLen, vtkm::Id nLevels, vtkm::Id* L )
+{
+  L[nLevels+1] = sigInLen;
+  L[nLevels]   = sigInLen;
+  for( vtkm::Id i = nLevels; i > 0; i-- )
+  {
+    L[i-1] = WaveletBase::GetApproxLength( L[i] );
+    L[i]   = WaveletBase::GetDetailLength( L[i] );
+  }
+}
                       
+vtkm::Id 
+WaveletCompressor::WaveDecomposeSetup( vtkm::Id sigInLen, vtkm::Id nLevels,     // Input
+                                       vtkm::Id* CLength, vtkm::Id* L )
+{
+  if( nLevels < 0 || nLevels > WaveletBase::GetWaveletMaxLevel( sigInLen ) )
+  {
+    std::cerr << "nLevel is not supported: " << nLevels << std::endl;
+    // throw an error
+  }
+  this->ComputeL( sigInLen, nLevels, L );
+  *CLength = this->ComputeCoeffLength( L, nLevels );
+
+  return 0;
+}
 
 
 }     // Finish namespace filter

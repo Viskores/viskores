@@ -140,19 +140,19 @@ public:
       return -1;
     } 
 
-    L[0] = this->GetApproxLength( sigInLen );
-    L[1] = this->GetDetailLength( sigInLen );
+    L[0] = WaveletBase::GetApproxLength( sigInLen );
+    L[1] = WaveletBase::GetDetailLength( sigInLen );
     L[2] = sigInLen;
 
     VTKM_ASSERT( L[0] + L[1] == L[2] );
 
-    vtkm::Id filterLen = this->filter->GetFilterLength();
+    vtkm::Id filterLen = WaveletBase::filter->GetFilterLength();
 
     bool doSymConv = false;
-    if( this->filter->isSymmetric() )
+    if( WaveletBase::filter->isSymmetric() )
     {
-      if( ( this->wmode == SYMW && ( filterLen % 2 != 0 ) ) ||
-          ( this->wmode == SYMH && ( filterLen % 2 == 0 ) ) )
+      if( ( WaveletBase::wmode == SYMW && ( filterLen % 2 != 0 ) ) ||
+          ( WaveletBase::wmode == SYMH && ( filterLen % 2 == 0 ) ) )
         doSymConv = true;
     }
 
@@ -181,7 +181,7 @@ public:
                 ArrayConcat2;
     ArrayConcat2 sigInExtended;
 
-    this->Extend1D( sigIn, sigInExtended, addLen, this->wmode, this->wmode ); 
+    this->Extend1D( sigIn, sigInExtended, addLen, WaveletBase::wmode, WaveletBase::wmode ); 
 
     // Coefficients in coeffOutTmp are interleaving, 
     // e.g. cA are at 0, 2, 4...; cD are at 1, 3, 5...
@@ -197,8 +197,8 @@ public:
     vtkm::worklet::DispatcherMapField<vtkm::worklet::ForwardTransform> 
         dispatcher(forwardTransform);
     dispatcher.Invoke( sigInExtended, 
-                       this->filter->GetLowDecomposeFilter(),
-                       this->filter->GetHighDecomposeFilter(),
+                       WaveletBase::filter->GetLowDecomposeFilter(),
+                       WaveletBase::filter->GetHighDecomposeFilter(),
                        coeffOutTmp );
 
     // Separate cA and cD.
@@ -231,21 +231,21 @@ public:
   {
     VTKM_ASSERT( coeffIn.GetNumberOfValues() == L[2] );
 
-    vtkm::Id filterLen = this->filter->GetFilterLength();
+    vtkm::Id filterLen = WaveletBase::filter->GetFilterLength();
     bool doSymConv = false;
-    vtkm::filter::internal::DWTMode cALeftMode  = this->wmode;
-    vtkm::filter::internal::DWTMode cARightMode = this->wmode;
-    vtkm::filter::internal::DWTMode cDLeftMode  = this->wmode;
-    vtkm::filter::internal::DWTMode cDRightMode = this->wmode;
+    vtkm::filter::internal::DWTMode cALeftMode  = WaveletBase::wmode;
+    vtkm::filter::internal::DWTMode cARightMode = WaveletBase::wmode;
+    vtkm::filter::internal::DWTMode cDLeftMode  = WaveletBase::wmode;
+    vtkm::filter::internal::DWTMode cDRightMode = WaveletBase::wmode;
   
-    if( this->filter->isSymmetric() )
+    if( WaveletBase::filter->isSymmetric() )
     {
-      if(( this->wmode == SYMW && (filterLen % 2 != 0) ) || 
-         ( this->wmode == SYMH && (filterLen % 2 == 0) ) )
+      if(( WaveletBase::wmode == SYMW && (filterLen % 2 != 0) ) || 
+         ( WaveletBase::wmode == SYMH && (filterLen % 2 == 0) ) )
       {
         doSymConv = true;
 
-        if( this->wmode == SYMH )
+        if( WaveletBase::wmode == SYMH )
         {
           cDLeftMode = ASYMH;
           if( L[2] % 2 != 0 )
@@ -276,7 +276,7 @@ public:
     if( doSymConv )   // extend cA and cD
     {
       addLen = filterLen / 4;
-      if( (L[0] > L[1]) && (this->wmode == SYMH) )
+      if( (L[0] > L[1]) && (WaveletBase::wmode == SYMH) )
         cDPadLen = L[0];
       cATempLen = L[0] + 2 * addLen;
       cDTempLen = cATempLen;  // same length
@@ -377,7 +377,7 @@ public:
         cATemp = vtkm::cont::make_ArrayHandleConcatenate( leftOn, zeroLenArray );
       }
       {
-        // make correct ArrayHandle for cDTemp
+      // make correct ArrayHandle for cDTemp
         CoeffArrayType cDBasic;
         vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
               (cD, cDBasic);
@@ -408,8 +408,8 @@ public:
       vtkm::worklet::DispatcherMapField< vtkm::worklet::InverseTransformOdd >
           dispatcher( inverseXformOdd );
       dispatcher.Invoke( coeffInExtended,
-                         this->filter->GetLowReconstructFilter(),
-                         this->filter->GetHighReconstructFilter(),
+                         WaveletBase::filter->GetLowReconstructFilter(),
+                         WaveletBase::filter->GetHighReconstructFilter(),
                          sigOut );
 
       sigOut.Shrink( L[2] );
