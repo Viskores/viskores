@@ -311,12 +311,6 @@ public:
 
     if( doSymConv )   // Actually extend cA and cD
     {
-      #if 0
-      std::cout << "cALeftMode = " << cALeftMode << std::endl;
-      std::cout << "cARightMode = " << cARightMode << std::endl;
-      std::cout << "cDLeftMode = " << cDLeftMode << std::endl;
-      std::cout << "cDRightMode = " << cDRightMode << std::endl;
-      #endif
       { // make a CoeffArrayType to send into Extend1D
         CoeffArrayType cABasic;
         vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
