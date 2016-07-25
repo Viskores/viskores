@@ -48,7 +48,6 @@ public:
 
   // Func: Extend 1D signal
   template< typename SigInArrayType, typename SigExtendedArrayType >
-  VTKM_EXEC_CONT_EXPORT
   vtkm::Id Extend1D( const SigInArrayType               &sigIn,   // Input
                      SigExtendedArrayType                     &sigOut,  // Output
                      vtkm::Id                                 addLen,
@@ -131,7 +130,6 @@ public:
   // Performs one level of 1D discrete wavelet transform 
   // It takes care of boundary conditions, etc.
   template< typename SignalArrayType, typename CoeffArrayType>
-  VTKM_EXEC_CONT_EXPORT
   vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
                   CoeffArrayType        &coeffOut,  // Output: cA followed by cD
                   vtkm::Id              L[3] )      // Output: how many cA and cD.

@@ -87,7 +87,9 @@ void TestDWTIDWT1D()
 
   std::cout << "Forward Wavelet Transform: result coeff length = " << 
       coeffOut.GetNumberOfValues() << std::endl;
+  /*
   printf("L[0] = %lld, L[1] = %lld, L[2] = %lld\n", L[0], L[1], L[2] );
+   */
   for( vtkm::Id i; i < coeffOut.GetNumberOfValues(); i++ )
   {
     if( i == 0 )
