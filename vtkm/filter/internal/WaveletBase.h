@@ -165,7 +165,6 @@ protected:
 
   void WaveLengthValidate( vtkm::Id sigInLen, vtkm::Id filterLength, vtkm::Id &level)
   {
-    // *lev = (int) (log((double) sigInLen / (double) (waveLength)) / log(2.0)) + 1;
     if( sigInLen < filterLength )
       level = 0;
     else

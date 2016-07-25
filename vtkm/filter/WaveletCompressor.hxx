@@ -104,6 +104,7 @@ WaveletCompressor::WaveDecompose( const SignalArrayType   &sigIn,   // Input
   #undef VAL
 
   delete[] L;
+
   return 0;
 }
 

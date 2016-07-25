@@ -48,7 +48,8 @@ public:
 
   // Func: Extend 1D signal
   template< typename SigInArrayType, typename SigExtendedArrayType >
-  vtkm::Id Extend1D( const SigInArrayType                     &sigIn,   // Input
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Extend1DConcat( const SigInArrayType               &sigIn,   // Input
                      SigExtendedArrayType                     &sigOut,  // Output
                      vtkm::Id                                 addLen,
                      vtkm::filter::internal::DWTMode          leftExtMethod,
@@ -121,12 +122,38 @@ public:
     return 0;
   }
 
+  // Func: Extend 1D signal
+  template< typename ArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Extend1D( const ArrayType                     &sigIn,   // Input
+                     ArrayType                           &sigOut,  // Output
+                     vtkm::Id                            addLen,
+                     vtkm::filter::internal::DWTMode     leftExtMethod,
+                     vtkm::filter::internal::DWTMode     rightExtMethod )
+  {
+    typedef typename ArrayType::ValueType           ValueType;
+    typedef vtkm::cont::ArrayHandle< ValueType >    ExtensionArrayType;
+    typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, ArrayType> 
+            ArrayConcat;
+    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ExtensionArrayType>
+            ArrayConcat2;
+
+    ArrayConcat2 sigOutTmp;
+    
+    Extend1DConcat( sigIn, sigOutTmp, addLen, leftExtMethod, rightExtMethod );
+    
+    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(
+        sigOutTmp, sigOut );
+
+    return 0;
+  }
 
 
   // Func:
   // Performs one level of 1D discrete wavelet transform 
   // It takes care of boundary conditions, etc.
   template< typename SignalArrayType, typename CoeffArrayType>
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
                   CoeffArrayType        &coeffOut,  // Output: cA followed by cD
                   vtkm::Id              L[3] )      // Output: how many cA and cD.
@@ -221,6 +248,7 @@ public:
   }
     
     
+
   // Func: 
   // Performs one level of inverse wavelet transform
   // It takes care of boundary conditions, etc.
@@ -316,7 +344,7 @@ public:
         vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
               (cA, cABasic);
 
-        this->Extend1D( cABasic, cATemp, addLen, cALeftMode, cARightMode );
+        this->Extend1DConcat( cABasic, cATemp, addLen, cALeftMode, cARightMode );
       }
       if( cDPadLen > 0 )  
       {
@@ -332,7 +360,7 @@ public:
         vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
           ( cDPad, cDBasic );
 
-        this->Extend1D( cDBasic, cDTemp, addLen, cDLeftMode, cDRightMode );
+        this->Extend1DConcat( cDBasic, cDTemp, addLen, cDLeftMode, cDRightMode );
       }
       else
       {

@@ -31,22 +31,24 @@
 void TestExtend1D()
 {
   // make input data array handle
-  vtkm::Id sigLen = 20;
-  std::vector<vtkm::Float64> tmpVector;
-  for( vtkm::Id i = 0; i < sigLen; i++ )
-    tmpVector.push_back( static_cast<vtkm::Float64>(i) );
- 
-  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
-    vtkm::cont::make_ArrayHandle(tmpVector);
-
-  vtkm::filter::internal::WaveletDWT w("CDF9/7");
   typedef vtkm::Float64 T;
   typedef vtkm::cont::ArrayHandle<T>     ArrayType;
+  vtkm::Id sigLen = 20;
+  std::vector<T> tmpVector;
+  for( vtkm::Id i = 0; i < sigLen; i++ )
+    tmpVector.push_back( static_cast<T>(i) );
+ 
+  vtkm::cont::ArrayHandle<T> inputArray = 
+    vtkm::cont::make_ArrayHandle(tmpVector);
+  ArrayType outputArray;
+
+  vtkm::filter::internal::WaveletDWT w("CDF9/7");
+  /*
   typedef vtkm::cont::ArrayHandleConcatenate< ArrayType, ArrayType> 
             ArrayConcat;
   typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ArrayType > ArrayConcat2;
-  
   ArrayConcat2 outputArray;
+  */
   w.Extend1D( inputArray, outputArray, 4, 
       vtkm::filter::internal::SYMW, vtkm::filter::internal::SYMW );
 
@@ -143,9 +145,9 @@ void TestWaveDecompose()
 void TestWaveletCompressor()
 {
   std::cout << "Welcome to WaveletCompressorFilter test program :) " << std::endl;
-  //TestExtend1D();
+  TestExtend1D();
   //TestDWTIDWT1D();
-  TestWaveDecompose();
+  //TestWaveDecompose();
 }
 
 int UnitTestWaveletCompressorFilter(int, char *[])
