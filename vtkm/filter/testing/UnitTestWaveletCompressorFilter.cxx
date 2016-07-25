@@ -82,7 +82,7 @@ void TestDWTIDWT1D()
   vtkm::Id L[3];
 
   // Forward Transform
-  vtkm::filter::internal::WaveletDWT waveletdwt( "CDF5/3" );
+  vtkm::filter::internal::WaveletDWT waveletdwt( "CDF9/7" );
   waveletdwt.DWT1D( inputArray, coeffOut, L );
 
   std::cout << "Forward Wavelet Transform: result coeff length = " << 
@@ -131,23 +131,35 @@ void TestWaveDecompose()
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
 
   // Use a WaveletCompressor
+  vtkm::Id nLevels = 2;
+  vtkm::Id L[ nLevels + 2 ];
   vtkm::filter::WaveletCompressor compressor("CDF9/7");
-  compressor.WaveDecompose( inputArray, 1, outputArray );
+  compressor.WaveDecompose( inputArray, nLevels, outputArray, L );
   
   std::cout << "Output array has length = " << 
       outputArray.GetNumberOfValues() << std::endl;
-  for( vtkm::Id i; i < outputArray.GetNumberOfValues(); i++ )
+  for( vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); i++ )
   {
     std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl;
+  }
+
+  vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
+  compressor.WaveReconstruct( outputArray, nLevels, L, reconstructArray );
+
+  std::cout << "Reconstruct array has length = " << 
+      reconstructArray.GetNumberOfValues() << std::endl;
+  for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
+  {
+    std::cout << reconstructArray.GetPortalConstControl().Get(i) << std::endl;
   }
 }
 
 void TestWaveletCompressor()
 {
   std::cout << "Welcome to WaveletCompressorFilter test program :) " << std::endl;
-  TestExtend1D();
+  //TestExtend1D();
   //TestDWTIDWT1D();
-  //TestWaveDecompose();
+  TestWaveDecompose();
 }
 
 int UnitTestWaveletCompressorFilter(int, char *[])

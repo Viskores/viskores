@@ -44,11 +44,16 @@ public:
   // Multi-level 1D wavelet decomposition
   template< typename SignalArrayType, typename CoeffArrayType>
   vtkm::Id WaveDecompose( const SignalArrayType     &sigIn,   // Input
-                                vtkm::Id            nLevels,  // n levels of DWT
-                                CoeffArrayType      &coeffOut );
-                                //vtkm::Id            CLength,
-                                //vtkm::Id*           L );      // bookkeeping array;
-                                                              // len(L) = nLevels+2
+                                vtkm::Id             nLevels,  // n levels of DWT
+                                CoeffArrayType      &coeffOut,
+                                vtkm::Id*            L );
+
+  // Multi-level 1D wavelet reconstruction
+  template< typename CoeffArrayType, typename SignalArrayType >
+  vtkm::Id WaveReconstruct( const CoeffArrayType     &coeffIn,   // Input
+                                  vtkm::Id           nLevels,    // n levels of DWT
+                                  vtkm::Id*          L,
+                                  SignalArrayType    &sigOut );
                       
   // Compute the book keeping array L for 1D wavelet decomposition
   void ComputeL( vtkm::Id sigInLen, vtkm::Id nLevels, vtkm::Id* L );
@@ -56,12 +61,10 @@ public:
   // Compute the length of coefficients
   vtkm::Id ComputeCoeffLength( const vtkm::Id* L, vtkm::Id nLevels );
 
+  // Compute approximate coefficient length at a specific level
+  vtkm::Id GetApproxLengthLevN( vtkm::Id sigInLen, vtkm::Id levN );
 
-private:
 
-  // Compute bookkeeping array L, and length of output array, C
-  //vtkm::Id WaveDecomposeSetup( vtkm::Id sigInLen, vtkm::Id nLevels,     // Input
-  //                             vtkm::Id* CLength, vtkm::Id* L );
 
 };    // Finish class WaveletCompressor
 

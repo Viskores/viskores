@@ -26,27 +26,27 @@ namespace filter {
 
 template< typename SignalArrayType, typename CoeffArrayType>
 vtkm::Id 
-WaveletCompressor::WaveDecompose( const SignalArrayType   &sigIn,   // Input
-                                  vtkm::Id                nLevels,  // n levels of DWT
-                                  CoeffArrayType          &C )
-                                  //vtkm::Id                CLength,
-                                  //vtkm::Id*               L )       // bookkeeping array;
+WaveletCompressor::WaveDecompose( const SignalArrayType   &sigIn,    // Input
+                                  vtkm::Id                 nLevels,  // n levels of DWT
+                                  CoeffArrayType          &C, 
+                                  vtkm::Id*                L )       // bookkeeping array;
                                                                     // len(L) = nLevels+2
 {
   vtkm::Id sigInLen = sigIn.GetNumberOfValues();
-  if( nLevels < 0 || nLevels > WaveletBase::GetWaveletMaxLevel( sigInLen ) )
+  if( nLevels < 1 || nLevels > WaveletBase::GetWaveletMaxLevel( sigInLen ) )
   {
     std::cerr << "nLevel is not supported: " << nLevels << std::endl;
     // throw an error
   }
+  /*
   if( nLevels == 0 )  // 0 levels means no transform
   {
     vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
         (sigIn, C );
     return 0;
   }
+  */
 
-  vtkm::Id* L = new vtkm::Id[ nLevels + 2 ];  // bookkeeping array;
   this->ComputeL( sigInLen, nLevels, L );
   vtkm::Id CLength = this->ComputeCoeffLength( L, nLevels );
 
@@ -103,10 +103,71 @@ WaveletCompressor::WaveDecompose( const SignalArrayType   &sigIn,   // Input
 
   #undef VAL
 
-  delete[] L;
+  return 0;
+}
+
+
+
+template< typename CoeffArrayType, typename SignalArrayType >
+vtkm::Id 
+WaveletCompressor::WaveReconstruct( const CoeffArrayType     &coeffIn,   // Input
+                                    vtkm::Id                 nLevels,    // n levels of DWT
+                                    vtkm::Id*                L,
+                                    SignalArrayType          &sigOut )
+{
+  VTKM_ASSERT( nLevels > 0 );
+
+  vtkm::Id LLength = nLevels + 2;
+
+  vtkm::Id L1d[3] = {L[0], L[1], 0};
+
+  // Use 64bit floats for intermediate calculation
+  #define VAL        vtkm::Float64
+
+  // Use intermediate arrays
+  typedef vtkm::cont::ArrayHandle< VAL >                                    InterArrayType;
+  typedef typename InterArrayType::PortalControl InterPortalType;
+  typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >                       IdArrayType;
+  typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, InterArrayType > PermutArrayType;
+
+  InterArrayType interArray;
+  vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
+        (coeffIn, interArray );
+
+  for( vtkm::Id i = 1; i <= nLevels; i++ )
+  {
+    L1d[2] = this->GetApproxLengthLevN( L[ LLength-1 ], nLevels-i );
+
+    // Make an input array
+    IdArrayType inputIndices( 0, 1, L1d[2] );
+    PermutArrayType input( inputIndices, interArray ); 
+    
+    // Make an output array
+    InterArrayType output;
+    
+    WaveletDWT::IDWT1D( input, L1d, output );
+
+    // Move output to intermediate array
+    vtkm::cont::ArrayPortalToIterators< InterPortalType > 
+        outputIter( output.GetPortalControl() );
+    vtkm::cont::ArrayPortalToIterators< InterPortalType > 
+        interArrayIter( interArray.GetPortalControl() );
+    std::copy( outputIter.GetBegin(), outputIter.GetEnd(), interArrayIter.GetBegin() );
+
+    L1d[0] = L1d[2];
+    L1d[1] = L[i+1];
+  }
+
+  vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
+        ( interArray, sigOut );
+  
+  #undef VAL
+
 
   return 0;
 }
+
+
 
 vtkm::Id 
 WaveletCompressor::ComputeCoeffLength( const vtkm::Id* L, vtkm::Id nLevels )
@@ -115,6 +176,20 @@ WaveletCompressor::ComputeCoeffLength( const vtkm::Id* L, vtkm::Id nLevels )
   for( vtkm::Id i = 1; i <= nLevels; i++ )
     sum += L[i];
   return sum;
+}
+  
+vtkm::Id 
+WaveletCompressor::GetApproxLengthLevN( vtkm::Id sigInLen, vtkm::Id levN )
+{
+  vtkm::Id cALen = sigInLen;
+  for( vtkm::Id i = 0; i < levN; i++ )
+  {
+    cALen = WaveletBase::GetApproxLength( cALen );
+    if( cALen == 0 )    
+      return cALen;
+  }
+
+  return cALen;
 }
   
 void 
@@ -129,16 +204,6 @@ WaveletCompressor::ComputeL( vtkm::Id sigInLen, vtkm::Id nLevels, vtkm::Id* L )
   }
 }
                       
-/*
-vtkm::Id 
-WaveletCompressor::WaveDecomposeSetup( vtkm::Id sigInLen, vtkm::Id nLevels,     // Input
-                                       vtkm::Id* CLength, vtkm::Id* L )
-{
-
-  return 0;
-}
-*/
-
 
 }     // Finish namespace filter
 }     // Finish namespace vtkm

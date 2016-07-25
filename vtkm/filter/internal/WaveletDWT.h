@@ -358,7 +358,7 @@ public:
           (cD, cDTemp );
     }
 
-    #if 1
+    #if 0
     std::cerr << "cATemp has length: " << cATemp.GetNumberOfValues() << std::endl;
     for( vtkm::Id i = 0; i < cATemp.GetNumberOfValues(); i++ )
         std::cout << cATemp.GetPortalConstControl().Get(i) << std::endl;
