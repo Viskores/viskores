@@ -49,7 +49,7 @@ public:
   // Func: Extend 1D signal
   template< typename SigInArrayType, typename SigExtendedArrayType >
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id Extend1DConcat( const SigInArrayType               &sigIn,   // Input
+  vtkm::Id Extend1D( const SigInArrayType               &sigIn,   // Input
                      SigExtendedArrayType                     &sigOut,  // Output
                      vtkm::Id                                 addLen,
                      vtkm::filter::internal::DWTMode          leftExtMethod,
@@ -67,6 +67,8 @@ public:
 
     typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, SigInArrayType> 
             ArrayConcat;
+    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ExtensionArrayType >  
+            ArrayConcat2;
 
     PortalType leftExtendPortal       = leftExtend.GetPortalControl();
     PortalType rightExtendPortal      = rightExtend.GetPortalControl();
@@ -116,37 +118,13 @@ public:
     }
 
     ArrayConcat leftOn( leftExtend, sigIn );    
-    sigOut = vtkm::cont::make_ArrayHandleConcatenate< ArrayConcat, ExtensionArrayType >
-                  (leftOn, rightExtend );
+    ArrayConcat2 rightOn(leftOn, rightExtend );
+    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
+        ( rightOn, sigOut );
 
     return 0;
   }
 
-  // Func: Extend 1D signal
-  template< typename ArrayType >
-  VTKM_EXEC_CONT_EXPORT
-  vtkm::Id Extend1D( const ArrayType                     &sigIn,   // Input
-                     ArrayType                           &sigOut,  // Output
-                     vtkm::Id                            addLen,
-                     vtkm::filter::internal::DWTMode     leftExtMethod,
-                     vtkm::filter::internal::DWTMode     rightExtMethod )
-  {
-    typedef typename ArrayType::ValueType           ValueType;
-    typedef vtkm::cont::ArrayHandle< ValueType >    ExtensionArrayType;
-    typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, ArrayType> 
-            ArrayConcat;
-    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ExtensionArrayType>
-            ArrayConcat2;
-
-    ArrayConcat2 sigOutTmp;
-    
-    Extend1DConcat( sigIn, sigOutTmp, addLen, leftExtMethod, rightExtMethod );
-    
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(
-        sigOutTmp, sigOut );
-
-    return 0;
-  }
 
 
   // Func:
@@ -201,18 +179,21 @@ public:
     vtkm::Id sigExtendedLen = sigInLen + 2 * addLen;
 
     typedef typename SignalArrayType::ValueType                   SigInValueType;
-    typedef vtkm::cont::ArrayHandle<SigInValueType>               SignalArrayTypeTmp;
-    typedef vtkm::cont::ArrayHandleConcatenate< SignalArrayTypeTmp, SignalArrayTypeTmp> 
+    typedef vtkm::cont::ArrayHandle<SigInValueType>               SignalArrayTypeBasic;
+    typedef vtkm::cont::ArrayHandleConcatenate< SignalArrayTypeBasic, SignalArrayTypeBasic> 
                 ArrayConcat;
-    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, SignalArrayTypeTmp > 
+    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, SignalArrayTypeBasic > 
                 ArrayConcat2;
-    ArrayConcat2 sigInExtended;
+
+    SignalArrayTypeBasic sigInExtended;
 
     this->Extend1D( sigIn, sigInExtended, addLen, WaveletBase::wmode, WaveletBase::wmode ); 
 
     // Coefficients in coeffOutTmp are interleaving, 
     // e.g. cA are at 0, 2, 4...; cD are at 1, 3, 5...
-    CoeffArrayType coeffOutTmp;
+    typedef typename CoeffArrayType::ValueType CoeffOutValueType;
+    typedef vtkm::cont::ArrayHandle< CoeffOutValueType > CoeffOutArrayBasic;
+    CoeffOutArrayBasic coeffOutTmp;
 
     
     // initialize a worklet
@@ -239,10 +220,10 @@ public:
 
     typedef vtkm::cont::ArrayHandleConcatenate< PermutArrayType, PermutArrayType >
                 PermutArrayConcatenated;
-    PermutArrayConcatenated coeffTmp( cATmp, cDTmp );
+    PermutArrayConcatenated coeffOutConcat( cATmp, cDTmp );
 
     vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(
-        coeffTmp, coeffOut );
+        coeffOutConcat, coeffOut );
 
     return 0;  
   }
@@ -329,23 +310,15 @@ public:
     
 
     typedef typename CoeffArrayType::ValueType                    CoeffValueType;
-    typedef vtkm::cont::ArrayHandle<CoeffValueType>               ExtensionArrayType;
-    typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, CoeffArrayType > 
-                ArrayConcat;
-    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ExtensionArrayType > ArrayConcat2;
+    typedef vtkm::cont::ArrayHandle< CoeffValueType >             CoeffArrayBasic;
+    typedef vtkm::cont::ArrayHandle< CoeffValueType >             ExtensionArrayType;
 
-    ArrayConcat2 cATemp, cDTemp;
+    CoeffArrayBasic cATemp, cDTemp;
 
 
     if( doSymConv )   // Actually extend cA and cD
     {
-      { // make a CoeffArrayType to send into Extend1D
-        CoeffArrayType cABasic;
-        vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
-              (cA, cABasic);
-
-        this->Extend1DConcat( cABasic, cATemp, addLen, cALeftMode, cARightMode );
-      }
+      this->Extend1D( cA, cATemp, addLen, cALeftMode, cARightMode );
       if( cDPadLen > 0 )  
       {
         // Add back the missing final cD: 0.0
@@ -355,73 +328,49 @@ public:
         vtkm::cont::ArrayHandleConcatenate< PermutArrayType, ExtensionArrayType >
             cDPad( cD, singleValArray );
 
-        // make a CoeffArrayType to send into Extend1D
-        CoeffArrayType cDBasic;
-        vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
-          ( cDPad, cDBasic );
-
-        this->Extend1DConcat( cDBasic, cDTemp, addLen, cDLeftMode, cDRightMode );
+        this->Extend1D( cDPad, cDTemp, addLen, cDLeftMode, cDRightMode );
       }
       else
       {
-        {
-          CoeffArrayType cDBasic;
-          vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
-            ( cD, cDBasic );
+        this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode );
 
-          this->Extend1D( cDBasic, cDTemp, addLen, cDLeftMode, cDRightMode );
-        }
         // Attached an zero if cDTemp is shorter than cDTempLen
         if( cDTemp.GetNumberOfValues() !=  cDTempLen )
         {
           VTKM_ASSERT( cDTemp.GetNumberOfValues() ==  cDTempLen - 1 ); 
-          CoeffArrayType cDBasic;
-          vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
-            ( cDTemp, cDBasic );
-          ExtensionArrayType emptyArray; 
-          ExtensionArrayType singleValArray;
+          CoeffArrayBasic singleValArray;
           singleValArray.Allocate(1);
           singleValArray.GetPortalControl().Set(0, 0.0);
-          ArrayConcat concat1( emptyArray, cDBasic );
-          cDTemp = vtkm::cont::make_ArrayHandleConcatenate( concat1, singleValArray );
+          vtkm::cont::ArrayHandleConcatenate< CoeffArrayBasic, CoeffArrayBasic>
+              concat1( cDTemp, singleValArray );
+          CoeffArrayBasic cDStorage;
+          vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
+              ( concat1, cDStorage );
+          cDTemp = cDStorage;
         }
       }
     } // end if( doSymConv )
     else  // Make cATemp and cDTemp from cA and cD
     {
-      ExtensionArrayType zeroLenArray;
-      { 
-        // make correct ArrayHandle for cATemp
-        CoeffArrayType cABasic;
-        vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
-              (cA, cABasic);
-        ArrayConcat leftOn( zeroLenArray, cABasic );
-        cATemp = vtkm::cont::make_ArrayHandleConcatenate( leftOn, zeroLenArray );
-      }
-      {
-      // make correct ArrayHandle for cDTemp
-        CoeffArrayType cDBasic;
-        vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
-              (cD, cDBasic);
-        ArrayConcat leftOn( zeroLenArray, cDBasic );
-        cDTemp = vtkm::cont::make_ArrayHandleConcatenate( leftOn, zeroLenArray );
-      }
+      vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
+          (cA, cATemp );
+      vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
+          (cD, cDTemp );
     }
+
+    #if 1
+    std::cerr << "cATemp has length: " << cATemp.GetNumberOfValues() << std::endl;
+    for( vtkm::Id i = 0; i < cATemp.GetNumberOfValues(); i++ )
+        std::cout << cATemp.GetPortalConstControl().Get(i) << std::endl;
+    std::cerr << "cDTemp has length: " << cDTemp.GetNumberOfValues() << std::endl;
+    for( vtkm::Id i = 0; i < cDTemp.GetNumberOfValues(); i++ )
+        std::cout << cDTemp.GetPortalConstControl().Get(i) << std::endl;
+    #endif
 
     if( filterLen % 2 != 0 )
     {
-      // Concatenate cATemp and cDTemp
-      vtkm::cont::ArrayHandleConcatenate< ArrayConcat2, ArrayConcat2>
+      vtkm::cont::ArrayHandleConcatenate< CoeffArrayBasic, CoeffArrayBasic>
           coeffInExtended( cATemp, cDTemp );
-
-      #if 1
-      std::cerr << "cATemp has length: " << cATemp.GetNumberOfValues() << std::endl;
-      for( vtkm::Id i = 0; i < cATemp.GetNumberOfValues(); i++ )
-          std::cout << cATemp.GetPortalConstControl().Get(i) << std::endl;
-      std::cerr << "cDTemp has length: " << cDTemp.GetNumberOfValues() << std::endl;
-      for( vtkm::Id i = 0; i < cDTemp.GetNumberOfValues(); i++ )
-          std::cout << cDTemp.GetPortalConstControl().Get(i) << std::endl;
-      #endif
 
       // Initialize a worklet
       vtkm::worklet::InverseTransformOdd inverseXformOdd;
