@@ -23,6 +23,7 @@
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/Timer.h>
 
 #include <vector>
 
@@ -118,7 +119,7 @@ void TestWaveDecompose()
   std::cout << "Input a new size to test." << std::endl;
   std::cout << "Input 0 to stick with 20." << std::endl;
   vtkm::Id tmpIn;
-  vtkm::Id million = 1;//1000000;
+  vtkm::Id million = 1000000;
   std::cin >> tmpIn;
   if( tmpIn != 0 )
     sigLen = tmpIn * million;
@@ -126,7 +127,7 @@ void TestWaveDecompose()
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
   for( vtkm::Id i = 0; i < sigLen; i++ )
-    tmpVector.push_back( static_cast<vtkm::Float64>( i ) );
+    tmpVector.push_back( vtkm::Sin(static_cast<vtkm::Float64>( i ) ));
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
 
@@ -136,24 +137,54 @@ void TestWaveDecompose()
   vtkm::Id nLevels = 2;
   vtkm::Id L[ nLevels + 2 ];
   vtkm::filter::WaveletCompressor compressor("CDF9/7");
+
+  // User input of decompose levels
+  vtkm::Id maxLevel = compressor.GetWaveletMaxLevel( sigLen );
+  std::cout << "Please input how many wavelet transform levels to perform, between 1 and "
+            << maxLevel << std::endl;
+  vtkm::Id levTemp;
+  std::cin >> levTemp;
+  if( levTemp > 0 && levTemp <= maxLevel )
+    nLevels = levTemp;
+  else
+  {
+    std::cerr << "not valid levels of transforms" << std::endl;
+    exit(1);
+  }
+
+  // Use a timer
+  vtkm::cont::Timer<> timer;
   compressor.WaveDecompose( inputArray, nLevels, outputArray, L );
+  vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
+  std::cout << "Decompose takes time: " << elapsedTime << std::endl;
   
-  std::cout << "Output array has length = " << 
+  #if 0
+  std::cout << "Output coefficients has length = " << 
       outputArray.GetNumberOfValues() << std::endl;
   for( vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); i++ )
   {
     std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl;
   }
+  #endif
 
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
+  timer.Reset();
   compressor.WaveReconstruct( outputArray, nLevels, L, reconstructArray );
+  elapsedTime = timer.GetElapsedTime();  
+  std::cout << "Reconstruction takes time: " << elapsedTime << std::endl;
 
-  std::cout << "Reconstruct array has length = " << 
-      reconstructArray.GetNumberOfValues() << std::endl;
+  //std::cout << "Reconstruct array has length = " << 
+  //    reconstructArray.GetNumberOfValues() << std::endl;
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
-    std::cout << reconstructArray.GetPortalConstControl().Get(i) << std::endl;
+    //std::cout << reconstructArray.GetPortalConstControl().Get(i) << std::endl;
+
+    VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i),
+                                  vtkm::Sin( static_cast<vtkm::Float64>(i) )), 
+                                  "output value not the same..." );
   }
+
+  
 }
 
 void TestWaveletCompressor()

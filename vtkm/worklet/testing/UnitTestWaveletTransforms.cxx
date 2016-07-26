@@ -67,7 +67,6 @@ void TestWaveletTransforms( )
   forwardTransform.SetOddness( false, true );
 
   // setup a timer
-  srand ((unsigned int)time(NULL));
   vtkm::cont::Timer<> timer;
 
   vtkm::worklet::DispatcherMapField<vtkm::worklet::ForwardTransform> 
@@ -77,6 +76,7 @@ void TestWaveletTransforms( )
                     highFilter,
                     outputArray1);
 
+  srand ((unsigned int)time(NULL));
   vtkm::Id randNum = rand() % sigLen;
   std::cout << "A random output: " 
             << outputArray1.GetPortalConstControl().Get(randNum) << std::endl;
