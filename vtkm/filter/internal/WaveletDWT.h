@@ -61,7 +61,6 @@ public:
     rightExtend.Allocate( addLen );
 
     typedef typename ExtensionArrayType::PortalControl       PortalType;
-    typedef typename ExtensionArrayType::PortalConstControl  PortalConstType;
     typedef typename SigInArrayType::PortalConstControl      SigInPortalConstType;
 
     typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, SigInArrayType> 
@@ -178,14 +177,11 @@ public:
 
     typedef typename SignalArrayType::ValueType                   SigInValueType;
     typedef vtkm::cont::ArrayHandle<SigInValueType>               SignalArrayTypeBasic;
-    typedef vtkm::cont::ArrayHandleConcatenate< SignalArrayTypeBasic, SignalArrayTypeBasic> 
-                ArrayConcat;
-    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, SignalArrayTypeBasic > 
-                ArrayConcat2;
 
     SignalArrayTypeBasic sigInExtended;
 
     this->Extend1D( sigIn, sigInExtended, addLen, WaveletBase::wmode, WaveletBase::wmode ); 
+    VTKM_ASSERT( sigInExtended.GetNumberOfValues() == sigExtendedLen );
 
     // Coefficients in coeffOutTmp are interleaving, 
     // e.g. cA are at 0, 2, 4...; cD are at 1, 3, 5...
@@ -233,9 +229,14 @@ public:
   // It takes care of boundary conditions, etc.
   template< typename CoeffArrayType, typename SignalArrayType>
   vtkm::Id IDWT1D( const CoeffArrayType  &coeffIn,     // Input, cA followed by cD
-                   vtkm::Id              L[3],         // Input, how many cA and cD
+                   const vtkm::Id         L[3],         // Input, how many cA and cD
                    SignalArrayType       &sigOut )     // Output
   {
+    #if 0
+    std::cerr << "coeffIn len = " << coeffIn.GetNumberOfValues() << std::endl;
+    std::cerr << L[0] << ", " << L[1] << ",  " << L[2] << std::endl;
+    #endif
+
     VTKM_ASSERT( coeffIn.GetNumberOfValues() == L[2] );
 
     vtkm::Id filterLen = WaveletBase::filter->GetFilterLength();
@@ -380,7 +381,12 @@ public:
                          WaveletBase::filter->GetLowReconstructFilter(),
                          WaveletBase::filter->GetHighReconstructFilter(),
                          sigOut );
+      #if 0
+      std::cerr << "coeffInExtended len = " << coeffInExtended.GetNumberOfValues() << std::endl;
+      std::cerr << sigOut.GetNumberOfValues() << ",  " << L[2] << std::endl;
+      #endif
 
+      VTKM_ASSERT( sigOut.GetNumberOfValues() >= L[2] );
       sigOut.Shrink( L[2] );
     }
     else

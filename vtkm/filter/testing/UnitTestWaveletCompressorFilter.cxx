@@ -135,7 +135,6 @@ void TestWaveDecompose()
 
   // Use a WaveletCompressor
   vtkm::Id nLevels = 2;
-  vtkm::Id L[ nLevels + 2 ];
   vtkm::filter::WaveletCompressor compressor("CDF9/7");
 
   // User input of decompose levels
@@ -151,6 +150,7 @@ void TestWaveDecompose()
     std::cerr << "not valid levels of transforms" << std::endl;
     exit(1);
   }
+  vtkm::Id L[ nLevels + 2 ];
 
   // Use a timer and decompose
   vtkm::cont::Timer<> timer;

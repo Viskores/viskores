@@ -34,7 +34,7 @@
 namespace vtkm {
 namespace filter {
 
-template< typename DeviceAdapter >
+//template< typename DeviceAdapter >
 class WaveletCompressor : public internal::WaveletDWT
 {
 public:
