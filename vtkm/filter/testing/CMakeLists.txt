@@ -26,7 +26,6 @@ set(unit_tests
   UnitTestMarchingCubesFilter.cxx
   UnitTestThresholdFilter.cxx
   UnitTestVertexClusteringFilter.cxx
-  UnitTestWaveletCompressorFilter.cxx
  )
 
 vtkm_unit_tests(SOURCES ${unit_tests})

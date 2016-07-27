@@ -44,12 +44,13 @@ set(headers
   TriangulateUniformGrid.h
   Threshold.h
   VertexClustering.h
-  WaveletTransforms.h
+  WaveletCompressor.h
   )
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(splatkernels)
+add_subdirectory(wavelets)
 
 vtkm_declare_headers(${headers})
 

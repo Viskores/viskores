@@ -28,6 +28,7 @@
 
 namespace vtkm {
 namespace worklet {
+namespace wavelets {
 
 // Worklet: perform a simple forward transform
 class ForwardTransform: public vtkm::worklet::WorkletMapField
@@ -227,9 +228,10 @@ private:
   vtkm::Id cALen;           // Number of actual cAs 
   vtkm::Id cALenExtended;   // Number of extended cA at the beginning of input array
   
-};    // Finish class ForwardTransform
+};    // class ForwardTransform
 
-}     // Finish namespace worlet
-}     // Finish namespace vtkm
+}     // namespace wavelets
+}     // namespace worlet
+}     // namespace vtkm
 
 #endif // vtk_m_worklet_Wavelets_h
