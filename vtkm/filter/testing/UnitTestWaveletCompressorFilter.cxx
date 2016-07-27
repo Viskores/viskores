@@ -111,7 +111,7 @@ void TestDWTIDWT1D()
   }
 }
 
-void TestWaveDecompose()
+void TestWaveDecomposeReconstruct()
 {
   vtkm::Id sigLen = 20;
   std::cout << "Testing Wavelets Worklet" << std::endl;
@@ -179,6 +179,7 @@ void TestWaveDecompose()
 
   //std::cout << "Reconstruct array has length = " << 
   //    reconstructArray.GetNumberOfValues() << std::endl;
+  timer.Reset();
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
     //std::cout << reconstructArray.GetPortalConstControl().Get(i) << std::endl;
@@ -187,9 +188,9 @@ void TestWaveDecompose()
                                   vtkm::Sin( static_cast<vtkm::Float64>(i) )), 
                                   "output value not the same..." );
   }
+  elapsedTime = timer.GetElapsedTime();  
+  std::cout << "Verification takes time: " << elapsedTime << std::endl;
 
-
-  
 }
 
 void TestWaveletCompressor()
@@ -197,7 +198,7 @@ void TestWaveletCompressor()
   std::cout << "Welcome to WaveletCompressorFilter test program :) " << std::endl;
   //TestExtend1D();
   //TestDWTIDWT1D();
-  TestWaveDecompose();
+  TestWaveDecomposeReconstruct();
 }
 
 int UnitTestWaveletCompressorFilter(int, char *[])
