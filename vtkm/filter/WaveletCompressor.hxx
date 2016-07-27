@@ -169,7 +169,20 @@ WaveletCompressor::WaveReconstruct( const CoeffArrayType     &coeffIn,   // Inpu
   return 0;
 }
 
-
+/*
+template< typename CoeffArrayType >
+VTKM_EXEC_CONT_EXPORT
+vtkm::Id 
+WaveletCompressor::SquashCoefficients( CoeffArrayType, &coeffIn,
+                                       vtkm::Id         ratio )
+{
+  typedef typename CoeffArrayType::ValueType ValueType;
+  vtkm::cont::ArrayHandle< ValueType > sortArray;
+  vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
+        ( coeffIn, sortArray );
+  vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Sort( sortArray );
+}
+*/
 
 vtkm::Id 
 WaveletCompressor::ComputeCoeffLength( const vtkm::Id* L, vtkm::Id nLevels )

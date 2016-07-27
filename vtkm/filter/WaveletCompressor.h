@@ -58,17 +58,14 @@ public:
                                   vtkm::Id*          L,
                                   SignalArrayType    &sigOut );
 
-  // In-place Threshold Coefficients
+  // Squash coefficients smaller than a threshold
   /*
   template< typename CoeffArrayType >
-  vtkm::Id SquashCoeffs( CoeffArrayType coeffs )
-  {
-    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
-    Algorithm::Sort( coeffs );
-    
-    return 0;
-  }
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id SquashCoefficients( CoeffArrayType, &coeffIn,
+                               vtkm::Id         ratio );
   */
+
                       
   // Compute the book keeping array L for 1D wavelet decomposition
   void ComputeL( vtkm::Id sigInLen, vtkm::Id nLevels, vtkm::Id* L );
