@@ -152,7 +152,7 @@ void TestWaveDecompose()
     exit(1);
   }
 
-  // Use a timer
+  // Use a timer and decompose
   vtkm::cont::Timer<> timer;
   compressor.WaveDecompose( inputArray, nLevels, outputArray, L );
   vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
@@ -167,6 +167,10 @@ void TestWaveDecompose()
   }
   #endif
 
+  // Sort all coefficients
+  
+
+  // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
   timer.Reset();
   compressor.WaveReconstruct( outputArray, nLevels, L, reconstructArray );
@@ -183,6 +187,7 @@ void TestWaveDecompose()
                                   vtkm::Sin( static_cast<vtkm::Float64>(i) )), 
                                   "output value not the same..." );
   }
+
 
   
 }

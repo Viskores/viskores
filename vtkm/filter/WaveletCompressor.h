@@ -34,6 +34,7 @@
 namespace vtkm {
 namespace filter {
 
+template< typename DeviceAdapter >
 class WaveletCompressor : public internal::WaveletDWT
 {
 public:
@@ -54,6 +55,18 @@ public:
                                   vtkm::Id           nLevels,    // n levels of DWT
                                   vtkm::Id*          L,
                                   SignalArrayType    &sigOut );
+
+  // In-place Threshold Coefficients
+  /*
+  template< typename CoeffArrayType >
+  vtkm::Id SquashCoeffs( CoeffArrayType coeffs )
+  {
+    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+    Algorithm::Sort( coeffs );
+    
+    return 0;
+  }
+  */
                       
   // Compute the book keeping array L for 1D wavelet decomposition
   void ComputeL( vtkm::Id sigInLen, vtkm::Id nLevels, vtkm::Id* L );
