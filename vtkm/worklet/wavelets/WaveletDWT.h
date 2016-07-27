@@ -115,8 +115,9 @@ public:
 
     ArrayConcat leftOn( leftExtend, sigIn );    
     ArrayConcat2 rightOn(leftOn, rightExtend );
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
-        ( rightOn, sigOut );
+    //vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
+    //    ( rightOn, sigOut );
+    WaveletBase::DeviceCopy( rightOn, sigOut );
 
     return 0;
   }

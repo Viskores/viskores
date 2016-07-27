@@ -27,7 +27,7 @@
 #include <vector>
 
 
-
+VTKM_CONT_EXPORT
 void TestExtend1D()
 {
   // make input data array handle
@@ -182,9 +182,9 @@ void TestWaveDecomposeReconstruct()
 void TestWaveletCompressor()
 {
   std::cout << "Welcome to WaveletCompressor test program :) " << std::endl;
-  //TestExtend1D();
+  TestExtend1D();
   //TestDWTIDWT1D();
-  TestWaveDecomposeReconstruct();
+  //TestWaveDecomposeReconstruct();
 }
 
 int UnitTestWaveletCompressor(int, char *[])

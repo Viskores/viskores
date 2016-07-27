@@ -25,6 +25,7 @@
 #include <vtkm/worklet/wavelets/WaveletFilter.h>
 
 #include <vtkm/Math.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 namespace vtkm {
 namespace worklet {
@@ -66,6 +67,16 @@ public:
       // TODO: throw an error
     }
   }
+
+  template< typename ArrayType1, typename ArrayType2 >
+  VTKM_EXEC_EXPORT
+  void DeviceCopy( const ArrayType1 &srcArray, 
+                         ArrayType2 &dstArray)
+  {
+    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
+          ( srcArray, dstArray );
+  }
+  
 
   // Destructor
   virtual ~WaveletBase()
