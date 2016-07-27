@@ -66,7 +66,7 @@ public:
     else
     {
       std::cerr << "Not supported wavelet kernel: " << wname << std::endl;
-      // throw an error here
+      // TODO: throw an error here
     }
   }
 

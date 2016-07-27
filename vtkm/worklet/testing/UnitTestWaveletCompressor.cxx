@@ -43,12 +43,6 @@ void TestExtend1D()
   ArrayType outputArray;
 
   vtkm::worklet::wavelets::WaveletDWT w("CDF9/7");
-  /*
-  typedef vtkm::cont::ArrayHandleConcatenate< ArrayType, ArrayType> 
-            ArrayConcat;
-  typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ArrayType > ArrayConcat2;
-  ArrayConcat2 outputArray;
-  */
   w.Extend1D( inputArray, outputArray, 4, 
       vtkm::worklet::wavelets::SYMW, vtkm::worklet::wavelets::SYMW );
 
@@ -58,7 +52,7 @@ void TestExtend1D()
   std::cout << "\nFinish testing Extend1D" << std::endl;
 }
 
-VTKM_EXEC_CONT_EXPORT
+VTKM_CONT_EXPORT
 void TestDWTIDWT1D()
 {
   vtkm::Id sigLen = 20;
@@ -88,9 +82,7 @@ void TestDWTIDWT1D()
 
   std::cout << "Forward Wavelet Transform: result coeff length = " << 
       coeffOut.GetNumberOfValues() << std::endl;
-  /*
-  printf("L[0] = %lld, L[1] = %lld, L[2] = %lld\n", L[0], L[1], L[2] );
-   */
+
   for( vtkm::Id i; i < coeffOut.GetNumberOfValues(); i++ )
   {
     if( i == 0 )
@@ -111,7 +103,7 @@ void TestDWTIDWT1D()
   }
 }
 
-VTKM_EXEC_CONT_EXPORT
+VTKM_CONT_EXPORT
 void TestWaveDecomposeReconstruct()
 {
   vtkm::Id sigLen = 20;
@@ -151,22 +143,16 @@ void TestWaveDecomposeReconstruct()
     std::cerr << "not valid levels of transforms" << std::endl;
     exit(1);
   }
-  vtkm::Id L[ nLevels + 2 ];
+
+  vtkm::Id* L = new vtkm::Id[ nLevels + 2 ];
 
   // Use a timer and decompose
   vtkm::cont::Timer<> timer;
   compressor.WaveDecompose( inputArray, nLevels, outputArray, L );
+
   vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
   std::cout << "Decompose takes time: " << elapsedTime << std::endl;
   
-  #if 0
-  std::cout << "Output coefficients has length = " << 
-      outputArray.GetNumberOfValues() << std::endl;
-  for( vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); i++ )
-  {
-    std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl;
-  }
-  #endif
 
   // Sort all coefficients
   
@@ -175,22 +161,21 @@ void TestWaveDecomposeReconstruct()
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
   timer.Reset();
   compressor.WaveReconstruct( outputArray, nLevels, L, reconstructArray );
+
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Reconstruction takes time: " << elapsedTime << std::endl;
 
-  //std::cout << "Reconstruct array has length = " << 
-  //    reconstructArray.GetNumberOfValues() << std::endl;
   timer.Reset();
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
-    //std::cout << reconstructArray.GetPortalConstControl().Get(i) << std::endl;
-
     VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i),
                                   vtkm::Sin( static_cast<vtkm::Float64>(i) )), 
                                   "output value not the same..." );
   }
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Verification takes time: " << elapsedTime << std::endl;
+
+  delete[] L;
 
 }
 

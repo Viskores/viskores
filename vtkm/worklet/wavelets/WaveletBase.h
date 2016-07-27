@@ -63,7 +63,7 @@ public:
     else
     {
       std::cerr << "This wavelet kernel is not supported: " << wname << std::endl;
-      // throw an error
+      // TODO: throw an error
     }
   }
 
@@ -80,7 +80,7 @@ public:
   { 
     if( this->filter == NULL )
     {
-      // throw an error
+      // TODO: throw an error
     }
     return filter; 
   }

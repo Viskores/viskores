@@ -23,8 +23,6 @@
 
 #include <vtkm/worklet/wavelets/WaveletDWT.h>
 
-//#include <vtkm/worklet/WaveletTransforms.h>
-
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -34,7 +32,6 @@
 namespace vtkm {
 namespace worklet {
 
-//template< typename DeviceAdapter >
 class WaveletCompressor : public vtkm::worklet::wavelets::WaveletDWT
 {
 public:
@@ -44,17 +41,18 @@ public:
 
   // Multi-level 1D wavelet decomposition
   template< typename SignalArrayType, typename CoeffArrayType>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_CONT_EXPORT
   vtkm::Id WaveDecompose( const SignalArrayType     &sigIn,   // Input
                                 vtkm::Id             nLevels,  // n levels of DWT
                                 CoeffArrayType      &coeffOut,
                                 vtkm::Id*            L )
   {
+
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if( nLevels < 1 || nLevels > WaveletBase::GetWaveletMaxLevel( sigInLen ) )
     {
       std::cerr << "nLevel is not supported: " << nLevels << std::endl;
-      // throw an error
+      // TODO: throw an error
     }
     /*  0 levels means no transform
     if( nLevels == 0 )  
@@ -62,8 +60,7 @@ public:
       vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
           (sigIn, C );
       return 0;
-    }
-    */
+    } */
 
     this->ComputeL( sigInLen, nLevels, L );
     vtkm::Id CLength = this->ComputeCoeffLength( L, nLevels );
@@ -126,7 +123,7 @@ public:
 
   // Multi-level 1D wavelet reconstruction
   template< typename CoeffArrayType, typename SignalArrayType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_CONT_EXPORT
   vtkm::Id WaveReconstruct( const CoeffArrayType     &coeffIn,   // Input
                                   vtkm::Id           nLevels,    // n levels of DWT
                                   vtkm::Id*          L,
@@ -179,7 +176,6 @@ public:
           ( interArray, sigOut );
     
     #undef VAL
-
 
     return 0;
   }

@@ -45,6 +45,7 @@ public:
 
   // Func: Extend 1D signal
   template< typename SigInArrayType, typename SigExtendedArrayType >
+  VTKM_CONT_EXPORT
   vtkm::Id Extend1D( const SigInArrayType               &sigIn,   // Input
                      SigExtendedArrayType                     &sigOut,  // Output
                      vtkm::Id                                 addLen,
@@ -86,7 +87,7 @@ public:
       }
       default:
       {
-        // throw out an error
+        // TODO: throw an error
         return 1;
       }
     }
@@ -107,7 +108,7 @@ public:
       }
       default:
       {
-        // throw out an error
+        // TODO: throw an error
         return 1;
       }
     }
@@ -126,7 +127,7 @@ public:
   // Performs one level of 1D discrete wavelet transform 
   // It takes care of boundary conditions, etc.
   template< typename SignalArrayType, typename CoeffArrayType>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_CONT_EXPORT
   vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
                   CoeffArrayType        &coeffOut,  // Output: cA followed by cD
                   vtkm::Id              L[3] )      // Output: how many cA and cD.
@@ -135,7 +136,7 @@ public:
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if( GetWaveletMaxLevel( sigInLen ) < 1 )
     {
-      // throw an error
+      // TODO: throw an error
       std::cerr << "Cannot transform signal of length " << sigInLen << std::endl;
       return -1;
     } 
@@ -226,16 +227,11 @@ public:
   // Performs one level of inverse wavelet transform
   // It takes care of boundary conditions, etc.
   template< typename CoeffArrayType, typename SignalArrayType>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_CONT_EXPORT
   vtkm::Id IDWT1D( const CoeffArrayType  &coeffIn,     // Input, cA followed by cD
                    const vtkm::Id         L[3],         // Input, how many cA and cD
                    SignalArrayType       &sigOut )     // Output
   {
-    #if 0
-    std::cerr << "coeffIn len = " << coeffIn.GetNumberOfValues() << std::endl;
-    std::cerr << L[0] << ", " << L[1] << ",  " << L[2] << std::endl;
-    #endif
-
     VTKM_ASSERT( coeffIn.GetNumberOfValues() == L[2] );
 
     vtkm::Id filterLen = WaveletBase::filter->GetFilterLength();
@@ -313,7 +309,6 @@ public:
 
     CoeffArrayBasic cATemp, cDTemp;
 
-
     if( doSymConv )   // Actually extend cA and cD
     {
       this->Extend1D( cA, cATemp, addLen, cALeftMode, cARightMode );
@@ -347,7 +342,7 @@ public:
           cDTemp = cDStorage;
         }
       }
-    } // end if( doSymConv )
+    }     // end if( doSymConv )
     else  // Make cATemp and cDTemp from cA and cD
     {
       vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
@@ -356,14 +351,6 @@ public:
           (cD, cDTemp );
     }
 
-    #if 0
-    std::cerr << "cATemp has length: " << cATemp.GetNumberOfValues() << std::endl;
-    for( vtkm::Id i = 0; i < cATemp.GetNumberOfValues(); i++ )
-        std::cout << cATemp.GetPortalConstControl().Get(i) << std::endl;
-    std::cerr << "cDTemp has length: " << cDTemp.GetNumberOfValues() << std::endl;
-    for( vtkm::Id i = 0; i < cDTemp.GetNumberOfValues(); i++ )
-        std::cout << cDTemp.GetPortalConstControl().Get(i) << std::endl;
-    #endif
 
     if( filterLen % 2 != 0 )
     {
@@ -380,17 +367,13 @@ public:
                          WaveletBase::filter->GetLowReconstructFilter(),
                          WaveletBase::filter->GetHighReconstructFilter(),
                          sigOut );
-      #if 0
-      std::cerr << "coeffInExtended len = " << coeffInExtended.GetNumberOfValues() << std::endl;
-      std::cerr << sigOut.GetNumberOfValues() << ",  " << L[2] << std::endl;
-      #endif
 
       VTKM_ASSERT( sigOut.GetNumberOfValues() >= L[2] );
       sigOut.Shrink( L[2] );
     }
     else
     {
-      // need to implement the even filter length worklet first
+      // TODO: need to implement the even filter length worklet first
     }
 
     return 0;

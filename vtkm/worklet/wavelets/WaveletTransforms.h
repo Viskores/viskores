@@ -158,7 +158,7 @@ public:
   VTKM_CONT_EXPORT
   void SetFilterLength( vtkm::Id len )
   {
-    VTKM_ASSERT( len % 2 == 1 );
+    //VTKM_ASSERT( len % 2 == 1 );
     this->filterLen = len;
   }
 
