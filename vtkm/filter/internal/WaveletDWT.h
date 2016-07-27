@@ -129,6 +129,7 @@ public:
   // Performs one level of 1D discrete wavelet transform 
   // It takes care of boundary conditions, etc.
   template< typename SignalArrayType, typename CoeffArrayType>
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
                   CoeffArrayType        &coeffOut,  // Output: cA followed by cD
                   vtkm::Id              L[3] )      // Output: how many cA and cD.
@@ -228,6 +229,7 @@ public:
   // Performs one level of inverse wavelet transform
   // It takes care of boundary conditions, etc.
   template< typename CoeffArrayType, typename SignalArrayType>
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id IDWT1D( const CoeffArrayType  &coeffIn,     // Input, cA followed by cD
                    const vtkm::Id         L[3],         // Input, how many cA and cD
                    SignalArrayType       &sigOut )     // Output

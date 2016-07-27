@@ -44,6 +44,7 @@ public:
 
   // Multi-level 1D wavelet decomposition
   template< typename SignalArrayType, typename CoeffArrayType>
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id WaveDecompose( const SignalArrayType     &sigIn,   // Input
                                 vtkm::Id             nLevels,  // n levels of DWT
                                 CoeffArrayType      &coeffOut,
@@ -51,6 +52,7 @@ public:
 
   // Multi-level 1D wavelet reconstruction
   template< typename CoeffArrayType, typename SignalArrayType >
+  VTKM_EXEC_CONT_EXPORT
   vtkm::Id WaveReconstruct( const CoeffArrayType     &coeffIn,   // Input
                                   vtkm::Id           nLevels,    // n levels of DWT
                                   vtkm::Id*          L,

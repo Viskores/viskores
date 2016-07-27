@@ -59,6 +59,7 @@ void TestExtend1D()
   std::cout << "\nFinish testing Extend1D" << std::endl;
 }
 
+VTKM_EXEC_CONT_EXPORT
 void TestDWTIDWT1D()
 {
   vtkm::Id sigLen = 20;
@@ -111,6 +112,7 @@ void TestDWTIDWT1D()
   }
 }
 
+VTKM_EXEC_CONT_EXPORT
 void TestWaveDecomposeReconstruct()
 {
   vtkm::Id sigLen = 20;

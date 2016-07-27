@@ -25,6 +25,7 @@ namespace filter {
 
 
 template< typename SignalArrayType, typename CoeffArrayType>
+VTKM_EXEC_CONT_EXPORT
 vtkm::Id 
 WaveletCompressor::WaveDecompose( const SignalArrayType   &sigIn,    // Input
                                   vtkm::Id                 nLevels,  // n levels of DWT
@@ -109,6 +110,7 @@ WaveletCompressor::WaveDecompose( const SignalArrayType   &sigIn,    // Input
 
 
 template< typename CoeffArrayType, typename SignalArrayType >
+VTKM_EXEC_CONT_EXPORT
 vtkm::Id 
 WaveletCompressor::WaveReconstruct( const CoeffArrayType     &coeffIn,   // Input
                                     vtkm::Id                 nLevels,    // n levels of DWT
