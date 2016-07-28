@@ -54,7 +54,7 @@ public:
            this->portal2.GetNumberOfValues() ;
   }
   
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   ValueType Get( vtkm::Id index) const
   {
     if( index < this->portal1.GetNumberOfValues() )
@@ -63,7 +63,7 @@ public:
       return this->portal2.Get( index - this->portal1.GetNumberOfValues() );
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   void Set( vtkm::Id index, const ValueType &value ) const
   {
     if( index < this->portal1.GetNumberOfValues() )

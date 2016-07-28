@@ -43,8 +43,11 @@ void TestExtend1D()
   ArrayType outputArray;
 
   vtkm::worklet::wavelets::WaveletDWT w("CDF9/7");
+
   w.Extend1D( inputArray, outputArray, 4, 
       vtkm::worklet::wavelets::SYMW, vtkm::worklet::wavelets::SYMW );
+
+  //w.DeviceCopy( inputArray, outputArray );
 
   std::cout << "Start testing Extend1D" << std::endl;
   for (vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); ++i)
@@ -182,8 +185,8 @@ void TestWaveDecomposeReconstruct()
 void TestWaveletCompressor()
 {
   std::cout << "Welcome to WaveletCompressor test program :) " << std::endl;
-  TestExtend1D();
-  //TestDWTIDWT1D();
+  //TestExtend1D();
+  TestDWTIDWT1D();
   //TestWaveDecomposeReconstruct();
 }
 

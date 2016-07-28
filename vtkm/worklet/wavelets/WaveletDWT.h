@@ -115,8 +115,10 @@ public:
 
     ArrayConcat leftOn( leftExtend, sigIn );    
     ArrayConcat2 rightOn(leftOn, rightExtend );
-    //vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
-    //    ( rightOn, sigOut );
+    /*
+    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
+        ( rightOn, sigOut );
+     */
     WaveletBase::DeviceCopy( rightOn, sigOut );
 
     return 0;
@@ -216,8 +218,11 @@ public:
                 PermutArrayConcatenated;
     PermutArrayConcatenated coeffOutConcat( cATmp, cDTmp );
 
+    /*
     vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(
         coeffOutConcat, coeffOut );
+     */
+    WaveletBase::DeviceCopy( coeffOutConcat, coeffOut );
 
     return 0;  
   }
@@ -338,18 +343,26 @@ public:
           vtkm::cont::ArrayHandleConcatenate< CoeffArrayBasic, CoeffArrayBasic>
               concat1( cDTemp, singleValArray );
           CoeffArrayBasic cDStorage;
+          /*
           vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
               ( concat1, cDStorage );
+           */
+          WaveletBase::DeviceCopy( concat1, cDStorage );
+          
           cDTemp = cDStorage;
         }
       }
     }     // end if( doSymConv )
     else  // Make cATemp and cDTemp from cA and cD
     {
+      /*
       vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
           (cA, cATemp );
       vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
           (cD, cDTemp );
+       */
+      WaveletBase::DeviceCopy( cA, cATemp );
+      WaveletBase::DeviceCopy( cD, cDTemp );
     }
 
 
