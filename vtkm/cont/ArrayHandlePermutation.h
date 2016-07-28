@@ -134,8 +134,8 @@ public:
   VTKM_CONT_EXPORT
   ValueType Get(vtkm::Id index) const {
     vtkm::Id permutedIndex = this->IndexPortal.Get(index);
-    VTKM_ASSERT(permutedIndex >= 0);
-    VTKM_ASSERT(permutedIndex < this->ValuePortal.GetNumberOfValues());
+    //VTKM_ASSERT(permutedIndex >= 0);
+    //VTKM_ASSERT(permutedIndex < this->ValuePortal.GetNumberOfValues());
     return this->ValuePortal.Get(permutedIndex);
   }
 

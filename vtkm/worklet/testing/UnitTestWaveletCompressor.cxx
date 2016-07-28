@@ -47,7 +47,6 @@ void TestExtend1D()
   w.Extend1D( inputArray, outputArray, 4, 
       vtkm::worklet::wavelets::SYMW, vtkm::worklet::wavelets::SYMW );
 
-  //w.DeviceCopy( inputArray, outputArray );
 
   std::cout << "Start testing Extend1D" << std::endl;
   for (vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); ++i)
@@ -60,9 +59,7 @@ void TestDWTIDWT1D()
 {
   vtkm::Id sigLen = 20;
   std::cout << "Testing Wavelets Worklet" << std::endl;
-  std::cout << "Default test size is 20. " << std::endl;
-  std::cout << "Input a new size to test." << std::endl;
-  std::cout << "Input 0 to stick with 20." << std::endl;
+  std::cout << "Input a size to test." << std::endl;
   vtkm::Id tmpIn;
   vtkm::Id million = 1;//1000000;
   std::cin >> tmpIn;
@@ -86,7 +83,7 @@ void TestDWTIDWT1D()
   std::cout << "Forward Wavelet Transform: result coeff length = " << 
       coeffOut.GetNumberOfValues() << std::endl;
 
-  for( vtkm::Id i; i < coeffOut.GetNumberOfValues(); i++ )
+  for( vtkm::Id i = 0; i < coeffOut.GetNumberOfValues(); i++ )
   {
     if( i == 0 )
       std::cout << "  <-- cA --> " << std::endl;
@@ -100,7 +97,7 @@ void TestDWTIDWT1D()
   waveletdwt.IDWT1D( coeffOut, L, reconstructArray );
   std::cout << "Inverse Wavelet Transform: result signal length = " << 
       reconstructArray.GetNumberOfValues() << std::endl;
-  for( vtkm::Id i; i < reconstructArray.GetNumberOfValues(); i++ )
+  for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
     std::cout << reconstructArray.GetPortalConstControl().Get(i) << std::endl;
   }
@@ -186,8 +183,8 @@ void TestWaveletCompressor()
 {
   std::cout << "Welcome to WaveletCompressor test program :) " << std::endl;
   //TestExtend1D();
-  TestDWTIDWT1D();
-  //TestWaveDecomposeReconstruct();
+  //TestDWTIDWT1D();
+  TestWaveDecomposeReconstruct();
 }
 
 int UnitTestWaveletCompressor(int, char *[])
