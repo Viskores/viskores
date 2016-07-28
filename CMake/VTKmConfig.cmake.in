@@ -65,6 +65,13 @@ set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
 set(VTKm_ENABLE_OPENGL_INTEROP "@VTKm_ENABLE_OPENGL_INTEROP@")
 set(VTKm_BUILD_RENDERING "@VTKm_BUILD_RENDERING@")
 
+# The VTKm variables used to configure components and packages silently.
+set(VTKm_CONFIGURE_QUIET "${VTKm_FIND_QUIETLY}")
+set(VTKm_FIND_PACKAGE_QUIETLY "")
+if(VTKm_CONFIGURE_QUIET)
+  set(VTKm_FIND_PACKAGE_QUIETLY "QUIET")
+endif()
+
 # VTKm requires some CMake Find modules not included with CMake, so
 # include the CMake modules distributed with VTKm.
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})

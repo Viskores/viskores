@@ -59,8 +59,10 @@ macro(vtkm_finish_configure_component component)
     set(VTKm_${component}_FOUND TRUE)
     foreach(var ${VTKm_FCC_DEPENDENT_VARIABLES})
       if(NOT ${var})
-        message(STATUS "Failed to configure VTK-m component ${component}: !${var}")
         set(VTKm_${component}_FOUND)
+        if(NOT VTKm_CONFIGURE_QUIET)
+          message(STATUS "Failed to configure VTK-m component ${component}: !${var}")
+        endif()
         break()
       endif()
     endforeach(var)
@@ -79,7 +81,7 @@ endmacro()
 macro(vtkm_configure_component_Base)
   # Find the Boost library.
   if(NOT Boost_FOUND)
-    find_package(BoostHeaders ${VTKm_REQUIRED_BOOST_VERSION})
+    find_package(BoostHeaders ${VTKm_FIND_PACKAGE_QUIETLY} ${VTKm_REQUIRED_BOOST_VERSION})
   endif()
 
   vtkm_finish_configure_component(Base
@@ -99,7 +101,7 @@ endmacro(vtkm_configure_component_Serial)
 macro(vtkm_configure_component_OpenGL)
   vtkm_configure_component_Base()
 
-  find_package(OpenGL)
+  find_package(OpenGL ${VTKm_FIND_PACKAGE_QUIETLY})
 
   vtkm_finish_configure_component(OpenGL
     DEPENDENT_VARIABLES VTKm_Base_FOUND OPENGL_FOUND
@@ -112,14 +114,14 @@ macro(vtkm_configure_component_OSMesa)
   vtkm_configure_component_OpenGL()
 
   if (UNIX AND NOT APPLE)
-    find_package(MESA)
+    find_package(MESA ${VTKm_FIND_PACKAGE_QUIETLY})
 
     vtkm_finish_configure_component(OSMesa
       DEPENDENT_VARIABLES VTKm_OpenGL_FOUND OSMESA_FOUND
       ADD_INCLUDES ${OSMESA_INCLUDE_DIR}
       ADD_LIBRARIES ${OSMESA_LIBRARY}
       )
-  else()
+  elseif(NOT VTKm_CONFIGURE_QUIET)
     message(STATUS "OSMesa not supported on this platform.")
   endif()
 endmacro(vtkm_configure_component_OSMesa)
@@ -127,7 +129,7 @@ endmacro(vtkm_configure_component_OSMesa)
 macro(vtkm_configure_component_EGL)
   vtkm_configure_component_OpenGL()
 
-  find_package(EGL)
+  find_package(EGL ${VTKm_FIND_PACKAGE_QUIETLY})
 
   vtkm_finish_configure_component(EGL
     DEPENDENT_VARIABLES VTKm_OpenGL_FOUND EGL_FOUND
@@ -139,7 +141,7 @@ endmacro(vtkm_configure_component_EGL)
 macro(vtkm_configure_component_Interop)
   vtkm_configure_component_OpenGL()
 
-  find_package(GLEW)
+  find_package(GLEW ${VTKm_FIND_PACKAGE_QUIETLY})
 
   set(vtkm_interop_dependent_vars
     VTKm_OpenGL_FOUND
@@ -149,7 +151,7 @@ macro(vtkm_configure_component_Interop)
   #on unix/linux Glew uses pthreads, so we need to find that, and link to it
   #explicitly or else in release mode we get sigsegv on launch
   if (VTKm_Interop_FOUND AND UNIX)
-    find_package(Threads)
+    find_package(Threads ${VTKm_FIND_PACKAGE_QUIETLY})
     set(vtkm_interop_dependent_vars ${vtkm_interop_dependent_vars} CMAKE_USE_PTHREADS_INIT)
   endif()
 
@@ -164,7 +166,7 @@ macro(vtkm_configure_component_TBB)
   if(VTKm_ENABLE_TBB)
     vtkm_configure_component_Base()
 
-    find_package(TBB)
+    find_package(TBB ${VTKm_FIND_PACKAGE_QUIETLY})
   endif()
 
   vtkm_finish_configure_component(TBB
@@ -178,7 +180,7 @@ macro(vtkm_configure_component_CUDA)
   if(VTKm_ENABLE_CUDA)
     vtkm_configure_component_Base()
 
-    find_package(CUDA)
+    find_package(CUDA ${VTKm_FIND_PACKAGE_QUIETLY})
     mark_as_advanced(
       CUDA_BUILD_CUBIN
       CUDA_BUILD_EMULATION
@@ -189,7 +191,7 @@ macro(vtkm_configure_component_CUDA)
       CUDA_VERBOSE_BUILD
       )
 
-    find_package(Thrust)
+    find_package(Thrust ${VTKm_FIND_PACKAGE_QUIETLY})
   endif()
 
   vtkm_finish_configure_component(CUDA
@@ -257,9 +259,11 @@ macro(vtkm_configure_component_CUDA)
         string(SUBSTRING "${run_output}" ${position} -1 run_output)
         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} ${run_output}")
       else()
-        message(STATUS "Unable to run \"${CUDA_NVCC_EXECUTABLE}\" to autodetect GPU architecture."
-          "Falling back to fermi, please manually specify if you want something else.")
         set(VTKm_CUDA_Architecture "fermi")
+        if(NOT VTKm_CONFIGURE_QUIET)
+          message(STATUS "Unable to run \"${CUDA_NVCC_EXECUTABLE}\" to autodetect GPU architecture."
+            "Falling back to fermi, please manually specify if you want something else.")
+        endif()
       endif()
     endif()
 
