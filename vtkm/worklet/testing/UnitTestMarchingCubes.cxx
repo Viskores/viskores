@@ -245,20 +245,23 @@ void TestMarchingCubesUniformGrid()
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
   dataSet.GetField("nodevar").GetData().CopyTo(fieldArray);
 
-  vtkm::worklet::MarchingCubes<vtkm::Float32,DeviceAdapter> isosurfaceFilter;
+  vtkm::worklet::MarchingCubes isosurfaceFilter;
+  isosurfaceFilter.SetMergeDuplicatePoints(false);
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
-  isosurfaceFilter.Run(0.5,
+  isosurfaceFilter.Run(0.5f,
                        cellSet,
-                       dataSet.GetCoordinateSystem(),
+                       dataSet.GetCoordinateSystem().GetData(),
                        fieldArray,
                        verticesArray,
-                       normalsArray);
+                       normalsArray,
+                       DeviceAdapter());
 
   isosurfaceFilter.MapFieldOntoIsosurface(fieldArray,
-                                          scalarsArray);
+                                          scalarsArray,
+                                          DeviceAdapter());
 
   std::cout << "vertices: ";
   vtkm::cont::printSummary_ArrayHandle(verticesArray, std::cout);
@@ -280,7 +283,6 @@ void TestMarchingCubesExplicit()
 
   typedef MakeRadiantDataSet DataSetGenerator;
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceTag;
-  typedef vtkm::worklet::MarchingCubes<vtkm::Float32,DeviceTag> MarchingCubes;
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > Vec3Handle;
   typedef vtkm::cont::ArrayHandle<vtkm::Float32> DataHandle;
 
@@ -301,14 +303,16 @@ void TestMarchingCubesExplicit()
   Vec3Handle vertices;
   Vec3Handle normals;
 
-  MarchingCubes marchingCubes;
+  vtkm::worklet::MarchingCubes marchingCubes;
+  marchingCubes.SetMergeDuplicatePoints(false);
 
   marchingCubes.Run(contourValue,
                     cellSet,
-                    dataSet.GetCoordinateSystem(),
+                    dataSet.GetCoordinateSystem().GetData(),
                     contourArray,
                     vertices,
-                    normals);
+                    normals,
+                    DeviceTag());
 
   DataHandle scalars;
 
@@ -318,7 +322,8 @@ void TestMarchingCubesExplicit()
   projectedField.GetData().CopyTo(projectedArray);
 
   marchingCubes.MapFieldOntoIsosurface(projectedArray,
-                                       scalars);
+                                       scalars,
+                                       DeviceTag());
 
   std::cout << "vertices: ";
   vtkm::cont::printSummary_ArrayHandle(vertices, std::cout);
