@@ -24,6 +24,7 @@ set(VTKm_CONFIGURE_QUIET TRUE)
 
 add_subdirectory(clipping)
 add_subdirectory(demo)
+add_subdirectory(dynamic_dispatcher)
 add_subdirectory(hello_world)
 add_subdirectory(isosurface)
 add_subdirectory(multi_backend)
@@ -32,3 +33,4 @@ add_subdirectory(tetrahedra)
 if(VTKm_BUILD_RENDERING)
   add_subdirectory(rendering)
 endif(VTKm_BUILD_RENDERING)
+
