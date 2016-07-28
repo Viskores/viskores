@@ -181,12 +181,29 @@ public:
   }
 
   // Squash coefficients smaller than a threshold
-  /*
   template< typename CoeffArrayType >
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id SquashCoefficients( CoeffArrayType, &coeffIn,
-                               vtkm::Id         ratio );
-  */
+  vtkm::Id SquashCoefficients( CoeffArrayType   &coeffIn,
+                               vtkm::Id         ratio )
+  {
+    typedef typename CoeffArrayType::ValueType ValueType;
+    typedef vtkm::cont::ArrayHandle< ValueType > CoeffArrayBasic;
+    CoeffArrayBasic sortedArray;
+    WaveletBase::DeviceCopy( coeffIn, sortedArray );
+    WaveletBase::DeviceSort( sortedArray );
+    
+    vtkm::Id n = vtkm::Ceil( static_cast<vtkm::Float64>(coeffIn.GetNumberOfValues()) / 
+                             static_cast<vtkm::Float64>(ratio) );
+    ValueType threshold = sortedArray.GetPortalConstControl().Get( n );
+    if( threshold < 0.0 )
+      threshold *= -1.0;
+
+    sortedArray.ReleaseResources();
+  
+    
+
+    return 0;
+  }
 
                       
   // Compute the book keeping array L for 1D wavelet decomposition

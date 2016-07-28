@@ -230,6 +230,42 @@ private:
   
 };    // class ForwardTransform
 
+
+template <typename ValueType>
+class ThresholdWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn<ScalarAll>,     
+                                FieldOut<ScalarAll>);        
+                                                             
+  typedef _2 ExecutionSignature( _1 );
+  typedef _1   InputDomain;
+
+
+  // Constructor
+  VTKM_CONT_EXPORT
+  ThresholdWorklet( ValueType t ) 
+  {
+    this->threshold = t;
+    this->negThreshold = t * -1.0;
+  }
+
+  VTKM_EXEC_EXPORT
+  ValueType operator()( const ValueType &coeff ) const
+  {
+    if( coeff > negThreshold && coeff < threshold )
+      return 0.0;
+    else
+      return coeff;
+  }
+
+private:
+  ValueType threshold;
+  ValueType negThreshold;
+
+};    // Finish ThresholdWorklet class
+
+
 }     // namespace wavelets
 }     // namespace worlet
 }     // namespace vtkm

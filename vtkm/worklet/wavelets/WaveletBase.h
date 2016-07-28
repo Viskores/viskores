@@ -69,12 +69,19 @@ public:
   }
 
   template< typename ArrayType1, typename ArrayType2 >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   void DeviceCopy( const ArrayType1 &srcArray, 
                          ArrayType2 &dstArray)
   {
     vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
           ( srcArray, dstArray );
+  }
+  
+  template< typename ArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  void DeviceSort( ArrayType &array )
+  {
+    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Sort( array );
   }
   
 
