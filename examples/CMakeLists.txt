@@ -19,6 +19,8 @@
 ##  this software.
 ##
 ##=============================================================================
+#specify that all examples should be quiet in the detection of components
+set(VTKm_CONFIGURE_QUIET TRUE)
 
 add_subdirectory(clipping)
 add_subdirectory(demo)
