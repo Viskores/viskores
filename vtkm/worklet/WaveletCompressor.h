@@ -225,7 +225,7 @@ public:
   {
     #define VAL        vtkm::Float64
     #define MAKEVAL(a) (static_cast<VAL>(a))
-    VAL VarOrig = DeviceVariance( original );
+    VAL VarOrig = WaveletBase::CalculateVariance( original );
 
     typedef typename ArrayType::ValueType ValueType;
     typedef vtkm::cont::ArrayHandle< ValueType > ArrayBasic;
@@ -237,17 +237,22 @@ public:
     vtkm::worklet::DispatcherMapField< DifferencerWorklet > dispatcher( dw  );
     dispatcher.Invoke( original, reconstruct, errorArray );
 
-    VAL VarErr   = DeviceVariance( errorArray );
+    VAL VarErr   = WaveletBase::CalculateVariance( errorArray );
     VAL snr      = VarOrig / VarErr;
     VAL decibels = 10 * vtkm::Log10( snr );
 
     VAL origMax  = WaveletBase::DeviceMax( original );
     VAL origMin  = WaveletBase::DeviceMin( original );
-    VAL errorMax = WaveletBase::DeviceMin( errorArray );
+    VAL errorMax = WaveletBase::DeviceMaxAbs( errorArray );
     VAL range    = origMax - origMin;
 
     VAL squareSum = WaveletBase::DeviceSquareSum( errorArray );
-    VAL rmse      = vtkm::Sqrt( MAKEVAL(squareSum) / MAKEVAL( errorArray.GetNumberOfValues() ));
+    VAL rmse      = vtkm::Sqrt( MAKEVAL(squareSum) / MAKEVAL(errorArray.GetNumberOfValues()) );
+
+    std::cout << "==squareSum = " << squareSum << std::endl;
+    std::cout << "==printing error array: " << std::endl;
+    for( vtkm::Id i = 0; i < errorArray.GetNumberOfValues(); i++ )
+      std::cout << errorArray.GetPortalControl().Get(i) << std::endl;
 
     std::cout << "Data range      = " << range << std::endl;
     std::cout << "SNR             = " << snr << std::endl;
@@ -260,12 +265,6 @@ public:
     #undef MAKEVAL
     #undef VAL
 
-    /* 
-    for( vtkm::Id i = 0; i < original.GetNumberOfValues(); i++ )
-      std::cout << original.GetPortalConstControl().Get(i) << ",  " <<
-                   reconstruct.GetPortalConstControl().Get(i) << ",  " <<
-                   errorArray.GetPortalConstControl().Get(i) << std::endl;
-     */
     return 0;
   }
 
@@ -304,31 +303,6 @@ public:
 
     return cALen;
   }
-
-  // Calculate variance of an array
-  template< typename ArrayType >
-  VTKM_CONT_EXPORT
-  vtkm::Float64 DeviceVariance( ArrayType &array )
-  {
-    typedef typename ArrayType::ValueType ValueType;
-
-    vtkm::Float64 mean = static_cast<vtkm::Float64>(WaveletBase::DeviceSum( array )) / 
-                         static_cast<vtkm::Float64>(array.GetNumberOfValues());
-    
-    vtkm::cont::ArrayHandle< vtkm::Float64 > squaredDeviation;
-    
-    // Use a worklet
-    typedef vtkm::worklet::wavelets::SquaredDeviation SDWorklet;
-    SDWorklet sdw( mean );
-    vtkm::worklet::DispatcherMapField< SDWorklet > dispatcher( sdw  );
-    dispatcher.Invoke( array, squaredDeviation );
-
-    vtkm::Float64 sdMean = this->DeviceSum( squaredDeviation ) / 
-                           static_cast<vtkm::Float64>( squaredDeviation.GetNumberOfValues() );
-
-    return sdMean;
-  }
-
 
 
 };    // class WaveletCompressor

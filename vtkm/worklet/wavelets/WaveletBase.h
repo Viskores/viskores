@@ -23,6 +23,7 @@
 
 
 #include <vtkm/worklet/wavelets/WaveletFilter.h>
+#include <vtkm/worklet/wavelets/WaveletTransforms.h>
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -68,94 +69,6 @@ public:
     }
   }
 
-  // perform a device copy
-  template< typename ArrayType1, typename ArrayType2 >
-  VTKM_EXEC_CONT_EXPORT
-  void DeviceCopy( const ArrayType1 &srcArray, 
-                         ArrayType2 &dstArray)
-  {
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
-          ( srcArray, dstArray );
-  }
-
-  // Sort by the absolute value on device
-  struct SortLessAbsFunctor
-  { 
-    template< typename T >
-    VTKM_EXEC_CONT_EXPORT 
-    bool operator()(const T& x, const T& y) const 
-    { 
-      return vtkm::Abs(x) < vtkm::Abs(y); 
-    } 
-  }; 
-  template< typename ArrayType >
-  VTKM_EXEC_CONT_EXPORT
-  void DeviceSort( ArrayType &array )
-  {
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Sort
-          ( array, SortLessAbsFunctor() );
-  }
-  
-  // Reduce to the sum of all values on device
-  template< typename ArrayType >
-  VTKM_EXEC_CONT_EXPORT
-  typename ArrayType::ValueType DeviceSum( const ArrayType &array )
-  {
-    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
-              ( array, 0.0 );
-  }
-
-  // Find the max and min of an array
-  struct minFunctor
-  {
-    template< typename FieldType >
-    VTKM_EXEC_CONT_EXPORT
-    FieldType operator()(const FieldType &x, const FieldType &y) const {
-      return Min(x, y);
-    }
-  };
-  struct maxFunctor
-  {
-    template< typename FieldType >
-    VTKM_EXEC_CONT_EXPORT
-    FieldType operator()(const FieldType& x, const FieldType& y) const {
-      return Max(x, y);
-    }
-  };
-  template< typename ArrayType >
-  VTKM_EXEC_CONT_EXPORT
-  typename ArrayType::ValueType DeviceMax( const ArrayType &array )
-  {
-    typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
-    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
-              ( array, initVal, maxFunctor() );
-  }
-  template< typename ArrayType >
-  VTKM_EXEC_CONT_EXPORT
-  typename ArrayType::ValueType DeviceMin( const ArrayType &array )
-  {
-    typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
-    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
-              ( array, initVal, minFunctor() );
-  }
-
-  // Square sum
-  struct squareSumFunctor
-  {
-    template< typename FieldType >
-    VTKM_EXEC_CONT_EXPORT
-    FieldType operator()(const FieldType& x, const FieldType& y) const {
-      return ( x*x + y*y );
-    }
-  };
-  template< typename ArrayType >
-  VTKM_EXEC_CONT_EXPORT
-  typename ArrayType::ValueType DeviceSquareSum( const ArrayType &array )
-  {
-    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
-              ( array, 0.0, squareSumFunctor() );
-  }
-  
 
   // Destructor
   virtual ~WaveletBase()
@@ -247,6 +160,139 @@ public:
       return level;
     }
   }
+
+  // perform a device copy
+  template< typename ArrayType1, typename ArrayType2 >
+  VTKM_EXEC_CONT_EXPORT
+  void DeviceCopy( const ArrayType1 &srcArray, 
+                         ArrayType2 &dstArray)
+  {
+    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
+          ( srcArray, dstArray );
+  }
+
+  // Sort by the absolute value on device
+  struct SortLessAbsFunctor
+  { 
+    template< typename T >
+    VTKM_EXEC_CONT_EXPORT 
+    bool operator()(const T& x, const T& y) const 
+    { 
+      return vtkm::Abs(x) < vtkm::Abs(y); 
+    } 
+  }; 
+  template< typename ArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  void DeviceSort( ArrayType &array )
+  {
+    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Sort
+          ( array, SortLessAbsFunctor() );
+  }
+  
+  // Reduce to the sum of all values on device
+  template< typename ArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  typename ArrayType::ValueType DeviceSum( const ArrayType &array )
+  {
+    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+              ( array, 0.0 );
+  }
+
+  // Find the max and min of an array
+  struct minFunctor
+  {
+    template< typename FieldType >
+    VTKM_EXEC_CONT_EXPORT
+    FieldType operator()(const FieldType &x, const FieldType &y) const {
+      return Min(x, y);
+    }
+  };
+  struct maxFunctor
+  {
+    template< typename FieldType >
+    VTKM_EXEC_CONT_EXPORT
+    FieldType operator()(const FieldType& x, const FieldType& y) const {
+      return Max(x, y);
+    }
+  };
+  template< typename ArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  typename ArrayType::ValueType DeviceMax( const ArrayType &array )
+  {
+    typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
+    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+              ( array, initVal, maxFunctor() );
+  }
+  template< typename ArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  typename ArrayType::ValueType DeviceMin( const ArrayType &array )
+  {
+    typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
+    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+              ( array, initVal, minFunctor() );
+  }
+
+  // Max absolute value of an array
+  struct maxAbsFunctor
+  {
+    template< typename FieldType >
+    VTKM_EXEC_CONT_EXPORT
+    FieldType operator()(const FieldType& x, const FieldType& y) const {
+      return Max( vtkm::Abs(x), vtkm::Abs(y) );
+    }
+  };
+  template< typename ArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  typename ArrayType::ValueType DeviceMaxAbs( const ArrayType &array )
+  {
+    typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
+    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+              ( array, initVal, maxAbsFunctor() );
+  }
+
+  // Square sum
+  // TODO: squareSum is essentially false. Need to think new ways
+  struct squareSumFunctor
+  {
+    template< typename FieldType >
+    VTKM_EXEC_CONT_EXPORT
+    FieldType operator()(const FieldType& x, const FieldType& y) const {
+      return ( x*x + y*y );
+    }
+  };
+  template< typename ArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  typename ArrayType::ValueType DeviceSquareSum( const ArrayType &array )
+  {
+    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+              ( array, 0.0, squareSumFunctor() );
+  }
+  
+
+  // Calculate variance of an array
+  template< typename ArrayType >
+  VTKM_CONT_EXPORT
+  vtkm::Float64 CalculateVariance( ArrayType &array )
+  {
+    typedef typename ArrayType::ValueType ValueType;
+
+    vtkm::Float64 mean = static_cast<vtkm::Float64>(WaveletBase::DeviceSum( array )) / 
+                         static_cast<vtkm::Float64>(array.GetNumberOfValues());
+    
+    vtkm::cont::ArrayHandle< vtkm::Float64 > squaredDeviation;
+    
+    // Use a worklet
+    typedef vtkm::worklet::wavelets::SquaredDeviation SDWorklet;
+    SDWorklet sdw( mean );
+    vtkm::worklet::DispatcherMapField< SDWorklet > dispatcher( sdw  );
+    dispatcher.Invoke( array, squaredDeviation );
+
+    vtkm::Float64 sdMean = this->DeviceSum( squaredDeviation ) / 
+                           static_cast<vtkm::Float64>( squaredDeviation.GetNumberOfValues() );
+
+    return sdMean;
+  }
+
 
 protected:
   vtkm::worklet::wavelets::DWTMode           wmode;
