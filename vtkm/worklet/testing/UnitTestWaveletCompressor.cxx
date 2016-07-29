@@ -120,7 +120,7 @@ void TestWaveDecomposeReconstruct()
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
   for( vtkm::Id i = 0; i < sigLen; i++ )
-    tmpVector.push_back( vtkm::Sin(static_cast<vtkm::Float64>( i ) ));
+    tmpVector.push_back( 100.0 * vtkm::Sin(static_cast<vtkm::Float64>(i)/100.0 ));
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
 
@@ -161,9 +161,11 @@ void TestWaveDecomposeReconstruct()
   std::cin >> cratio;
   VTKM_ASSERT ( cratio >= 1 );
   compressor.SquashCoefficients( outputArray, cratio );
+  /*
   std::cout << "Coefficients after squash: " << std::endl;
   for( vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); i++ )
     std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl; 
+   */
 
 
   // Reconstruct
@@ -174,11 +176,13 @@ void TestWaveDecomposeReconstruct()
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Reconstruction takes time: " << elapsedTime << std::endl;
 
+  compressor.EvaluateReconstruction( inputArray, reconstructArray );
+
   timer.Reset();
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
     VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i),
-                                  vtkm::Sin( static_cast<vtkm::Float64>(i) )), 
+                                  100.0 * vtkm::Sin( static_cast<vtkm::Float64>(i)/100.0 )), 
                                   "output value not the same..." );
   }
   elapsedTime = timer.GetElapsedTime();  

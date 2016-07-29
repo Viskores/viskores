@@ -79,7 +79,7 @@ public:
   }
 
   // Sort by the absolute value on device
-  struct SortLessAbs
+  struct SortLessAbsFunctor
   { 
     template< typename T >
     VTKM_EXEC_CONT_EXPORT 
@@ -93,16 +93,67 @@ public:
   void DeviceSort( ArrayType &array )
   {
     vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Sort
-          ( array, SortLessAbs() );
+          ( array, SortLessAbsFunctor() );
   }
   
   // Reduce to the sum of all values on device
   template< typename ArrayType >
   VTKM_EXEC_CONT_EXPORT
-  typename ArrayType::ValueType DeviceSum( ArrayType &array )
+  typename ArrayType::ValueType DeviceSum( const ArrayType &array )
   {
     return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
-          ( array, 0.0 );
+              ( array, 0.0 );
+  }
+
+  // Find the max and min of an array
+  struct minFunctor
+  {
+    template< typename FieldType >
+    VTKM_EXEC_CONT_EXPORT
+    FieldType operator()(const FieldType &x, const FieldType &y) const {
+      return Min(x, y);
+    }
+  };
+  struct maxFunctor
+  {
+    template< typename FieldType >
+    VTKM_EXEC_CONT_EXPORT
+    FieldType operator()(const FieldType& x, const FieldType& y) const {
+      return Max(x, y);
+    }
+  };
+  template< typename ArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  typename ArrayType::ValueType DeviceMax( const ArrayType &array )
+  {
+    typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
+    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+              ( array, initVal, maxFunctor() );
+  }
+  template< typename ArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  typename ArrayType::ValueType DeviceMin( const ArrayType &array )
+  {
+    typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
+    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+              ( array, initVal, minFunctor() );
+  }
+
+  // Square sum
+  struct squareSumFunctor
+  {
+    template< typename FieldType >
+    VTKM_EXEC_CONT_EXPORT
+    FieldType operator()(const FieldType& x, const FieldType& y) const {
+      return ( x*x + y*y );
+    }
+  };
+  template< typename ArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  typename ArrayType::ValueType DeviceSquareSum( const ArrayType &array )
+  {
+    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+              ( array, 0.0, squareSumFunctor() );
   }
   
 

@@ -44,7 +44,7 @@ public:
 
 
   // Constructor
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   ForwardTransform() 
   {
     magicNum  = 0.0;
@@ -54,7 +54,7 @@ public:
   }
 
   // Specify odd or even for low and high coeffs
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   void SetOddness(bool odd_low, bool odd_high )
   {
     this->oddlow  = odd_low;
@@ -63,14 +63,14 @@ public:
   }
 
   // Set the filter length
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   void SetFilterLength( vtkm::Id len )
   {
     this->filterLen = len;
   }
 
   // Set the outcome coefficient length
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   void SetCoeffLength( vtkm::Id approx_len, vtkm::Id detail_len )
   {
     this->approxLen = approx_len;
@@ -124,7 +124,7 @@ private:
   vtkm::Id xlstart, xhstart;
   bool oddlow, oddhigh;
   
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   void SetStartPosition()
   {
     this->xlstart = this->oddlow  ? 1 : 0;
@@ -146,7 +146,7 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   InverseTransformOdd() 
   {
     magicNum  = 0.0;
@@ -155,7 +155,7 @@ public:
   }
 
   // Set the filter length
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   void SetFilterLength( vtkm::Id len )
   {
     //VTKM_ASSERT( len % 2 == 1 );
@@ -163,7 +163,7 @@ public:
   }
 
   // Set cA length
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   void SetCALength( vtkm::Id len, vtkm::Id lenExt )
   {
     this->cALen = len;
@@ -237,13 +237,13 @@ public:
   typedef void ControlSignature(FieldIn<ScalarAll>,     
                                 FieldOut<ScalarAll>);        
                                                              
-  typedef _2 ExecutionSignature( _1 );
+  typedef _2   ExecutionSignature( _1 );
   typedef _1   InputDomain;
 
 
   // Constructor
   template <typename ValueType>
-  VTKM_CONT_EXPORT
+  VTKM_EXEC_CONT_EXPORT
   ThresholdWorklet( ValueType t ) 
   {
     this->threshold = static_cast<vtkm::Float64>(t);
@@ -264,6 +264,60 @@ public:
 private:
   vtkm::Float64 threshold;
   vtkm::Float64 negThreshold;
+
+};    // Finish ThresholdWorklet class
+
+
+class SquaredDeviation: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn<ScalarAll>,     
+                                FieldOut<ScalarAll>);        
+                                                             
+  typedef _2   ExecutionSignature( _1 );
+  typedef _1   InputDomain;
+
+
+  // Constructor
+  template <typename ValueType>
+  VTKM_EXEC_CONT_EXPORT
+  SquaredDeviation( ValueType t ) 
+  {
+    this->mean = static_cast<vtkm::Float64>(t);
+  }
+
+  template <typename ValueType>
+  VTKM_EXEC_EXPORT
+  ValueType operator()( const ValueType &num ) const
+  {
+    vtkm::Float64 num64 = static_cast<vtkm::Float64>( num );
+    vtkm::Float64 diff = this->mean - num64;
+    return static_cast<ValueType>( diff * diff );
+  }
+
+private:
+  vtkm::Float64 mean;
+
+};    // Finish ThresholdWorklet class
+
+
+class Differencer: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn<ScalarAll>,     
+                                FieldIn<ScalarAll>,
+                                FieldOut<ScalarAll>);        
+                                                             
+  typedef _3   ExecutionSignature( _1, _2 );
+  typedef _1   InputDomain;
+
+
+  template <typename ValueType>
+  VTKM_EXEC_EXPORT
+  ValueType operator()( const ValueType &v1, const ValueType &v2 ) const
+  {
+    return (v1 - v2);
+  }
 
 };    // Finish ThresholdWorklet class
 
