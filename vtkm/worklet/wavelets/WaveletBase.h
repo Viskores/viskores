@@ -249,24 +249,6 @@ public:
     return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
               ( array, initVal, maxAbsFunctor() );
   }
-
-  // Square sum
-  // TODO: squareSum is essentially false. Need to think new ways
-  struct squareSumFunctor
-  {
-    template< typename FieldType >
-    VTKM_EXEC_CONT_EXPORT
-    FieldType operator()(const FieldType& x, const FieldType& y) const {
-      return ( x*x + y*y );
-    }
-  };
-  template< typename ArrayType >
-  VTKM_EXEC_CONT_EXPORT
-  typename ArrayType::ValueType DeviceSquareSum( const ArrayType &array )
-  {
-    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
-              ( array, 0.0, squareSumFunctor() );
-  }
   
 
   // Calculate variance of an array

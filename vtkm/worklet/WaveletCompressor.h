@@ -229,13 +229,18 @@ public:
 
     typedef typename ArrayType::ValueType ValueType;
     typedef vtkm::cont::ArrayHandle< ValueType > ArrayBasic;
-    ArrayBasic errorArray;
+    ArrayBasic errorArray, errorSquare;
 
-    // Use a worklet to calculate point-wise error
+    // Use a worklet to calculate point-wise error, and its square
     typedef vtkm::worklet::wavelets::Differencer DifferencerWorklet;
     DifferencerWorklet dw;
-    vtkm::worklet::DispatcherMapField< DifferencerWorklet > dispatcher( dw  );
-    dispatcher.Invoke( original, reconstruct, errorArray );
+    vtkm::worklet::DispatcherMapField< DifferencerWorklet > dwDispatcher( dw  );
+    dwDispatcher.Invoke( original, reconstruct, errorArray );
+
+    typedef vtkm::worklet::wavelets::SquareWorklet SquareWorklet;
+    SquareWorklet sw;
+    vtkm::worklet::DispatcherMapField< SquareWorklet > swDispatcher( sw );
+    swDispatcher.Invoke( errorArray, errorSquare );
 
     VAL VarErr   = WaveletBase::CalculateVariance( errorArray );
     VAL snr      = VarOrig / VarErr;
@@ -246,21 +251,23 @@ public:
     VAL errorMax = WaveletBase::DeviceMaxAbs( errorArray );
     VAL range    = origMax - origMin;
 
-    VAL squareSum = WaveletBase::DeviceSquareSum( errorArray );
+    VAL squareSum = WaveletBase::DeviceSum( errorSquare );
     VAL rmse      = vtkm::Sqrt( MAKEVAL(squareSum) / MAKEVAL(errorArray.GetNumberOfValues()) );
 
+    /*
     std::cout << "==squareSum = " << squareSum << std::endl;
     std::cout << "==printing error array: " << std::endl;
     for( vtkm::Id i = 0; i < errorArray.GetNumberOfValues(); i++ )
       std::cout << errorArray.GetPortalControl().Get(i) << std::endl;
+     */
 
-    std::cout << "Data range      = " << range << std::endl;
-    std::cout << "SNR             = " << snr << std::endl;
-    std::cout << "SNR in decibels = " << decibels << std::endl;
-    std::cout << "L-infy norm     = " << errorMax 
-              << ", after normalization = " << errorMax / range << std::endl;
-    std::cout << "RMSE            = " << rmse 
-              << ", after normalization = " << rmse / range << std::endl;
+    std::cout << "Data range             = " << range << std::endl;
+    std::cout << "SNR                    = " << snr << std::endl;
+    std::cout << "SNR in decibels        = " << decibels << std::endl;
+    std::cout << "L-infy norm            = " << errorMax 
+              << ", after normalization  = " << errorMax / range << std::endl;
+    std::cout << "RMSE                   = " << rmse 
+              << ", after normalization  = " << rmse / range << std::endl;
 
     #undef MAKEVAL
     #undef VAL

@@ -109,7 +109,7 @@ void TestWaveDecomposeReconstruct()
   vtkm::Id sigLen = 20;
   std::cout << "Testing Wavelets Worklet" << std::endl;
   std::cout << "Default test size is 20. " << std::endl;
-  std::cout << "Input a new size to test." << std::endl;
+  std::cout << "Input a new size to test (in millions)." << std::endl;
   std::cout << "Input 0 to stick with 20." << std::endl;
   vtkm::Id tmpIn;
   vtkm::Id million = 1000000;
@@ -132,7 +132,7 @@ void TestWaveDecomposeReconstruct()
 
   // User input of decompose levels
   vtkm::Id maxLevel = compressor.GetWaveletMaxLevel( sigLen );
-  std::cout << "Please input how many wavelet transform levels to perform, between 1 and "
+  std::cout << "Input how many wavelet transform levels to perform, between 1 and "
             << maxLevel << std::endl;
   vtkm::Id levTemp;
   std::cin >> levTemp;
@@ -143,24 +143,28 @@ void TestWaveDecomposeReconstruct()
     std::cerr << "not valid levels of transforms" << std::endl;
     exit(1);
   }
+  std::cout << "Input a compression ratio ( >=1 )to test. "
+            << "1 means no compression. " << std::endl;
+  vtkm::Id cratio;
+  std::cin >> cratio;
+  VTKM_ASSERT ( cratio >= 1 );
 
   vtkm::Id* L = new vtkm::Id[ nLevels + 2 ];
 
-  // Use a timer and decompose
+  // Decompose
   vtkm::cont::Timer<> timer;
   compressor.WaveDecompose( inputArray, nLevels, outputArray, L );
 
   vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
-  std::cout << "Decompose takes time: " << elapsedTime << std::endl;
+  std::cout << "Decompose time         = " << elapsedTime << std::endl;
   
 
   // Squash small coefficients
-  std::cout << "Input a compression ratio ( >=1 )to test. " << std::endl;
-  std::cout << "1 means no compression, only forward and inverse wavelet transform. " << std::endl;
-  vtkm::Id cratio;
-  std::cin >> cratio;
-  VTKM_ASSERT ( cratio >= 1 );
+  timer.Reset();
   compressor.SquashCoefficients( outputArray, cratio );
+  elapsedTime = timer.GetElapsedTime();  
+  std::cout << "Thresholding time      = " << elapsedTime << std::endl;
+
   /*
   std::cout << "Coefficients after squash: " << std::endl;
   for( vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); i++ )
@@ -172,9 +176,8 @@ void TestWaveDecomposeReconstruct()
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
   timer.Reset();
   compressor.WaveReconstruct( outputArray, nLevels, L, reconstructArray );
-
   elapsedTime = timer.GetElapsedTime();  
-  std::cout << "Reconstruction takes time: " << elapsedTime << std::endl;
+  std::cout << "Reconstruction time    = " << elapsedTime << std::endl;
 
   compressor.EvaluateReconstruction( inputArray, reconstructArray );
 

@@ -265,7 +265,7 @@ private:
   vtkm::Float64 threshold;
   vtkm::Float64 negThreshold;
 
-};    // Finish ThresholdWorklet class
+};    
 
 
 class SquaredDeviation: public vtkm::worklet::WorkletMapField
@@ -298,7 +298,7 @@ public:
 private:
   vtkm::Float64 mean;
 
-};    // Finish ThresholdWorklet class
+};   
 
 
 class Differencer: public vtkm::worklet::WorkletMapField
@@ -319,7 +319,25 @@ public:
     return (v1 - v2);
   }
 
-};    // Finish ThresholdWorklet class
+};   
+
+
+class SquareWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn< ScalarAll>,     
+                                FieldOut<ScalarAll>);        
+                                                             
+  typedef _2   ExecutionSignature( _1 );
+  typedef _1   InputDomain;
+
+  template <typename ValueType>
+  VTKM_EXEC_EXPORT
+  ValueType operator()( const ValueType &v ) const
+  {
+    return (v * v);
+  }
+};    
 
 
 }     // namespace wavelets
