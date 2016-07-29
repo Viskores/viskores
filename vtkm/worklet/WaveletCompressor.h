@@ -182,25 +182,36 @@ public:
 
   // Squash coefficients smaller than a threshold
   template< typename CoeffArrayType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_CONT_EXPORT
   vtkm::Id SquashCoefficients( CoeffArrayType   &coeffIn,
                                vtkm::Id         ratio )
   {
-    typedef typename CoeffArrayType::ValueType ValueType;
-    typedef vtkm::cont::ArrayHandle< ValueType > CoeffArrayBasic;
-    CoeffArrayBasic sortedArray;
-    WaveletBase::DeviceCopy( coeffIn, sortedArray );
-    WaveletBase::DeviceSort( sortedArray );
-    
-    vtkm::Id n = vtkm::Ceil( static_cast<vtkm::Float64>(coeffIn.GetNumberOfValues()) / 
-                             static_cast<vtkm::Float64>(ratio) );
-    ValueType threshold = sortedArray.GetPortalConstControl().Get( n );
-    if( threshold < 0.0 )
-      threshold *= -1.0;
+    if( ratio > 1 )
+    {
+      vtkm::Id coeffLen = coeffIn.GetNumberOfValues();
+      typedef typename CoeffArrayType::ValueType ValueType;
+      typedef vtkm::cont::ArrayHandle< ValueType > CoeffArrayBasic;
+      CoeffArrayBasic sortedArray;
+      WaveletBase::DeviceCopy( coeffIn, sortedArray );
+      WaveletBase::DeviceSort( sortedArray );
+      
+      vtkm::Id n = vtkm::Ceil( static_cast<vtkm::Float64>( coeffLen ) / 
+                               static_cast<vtkm::Float64>( ratio    ) );
+      ValueType threshold = sortedArray.GetPortalConstControl().Get( coeffLen - n );
+      if( threshold < 0.0 )
+        threshold *= -1.0;
 
-    sortedArray.ReleaseResources();
-  
-    
+      sortedArray.ReleaseResources();
+
+      CoeffArrayBasic squashedArray;
+
+      // Initialize a worklet
+      typedef vtkm::worklet::wavelets::ThresholdWorklet ThresholdType;
+      ThresholdType tw( threshold );
+      vtkm::worklet::DispatcherMapField< ThresholdType > dispatcher( tw  );
+      dispatcher.Invoke( coeffIn, squashedArray );
+      coeffIn = squashedArray;
+    } 
 
     return 0;
   }

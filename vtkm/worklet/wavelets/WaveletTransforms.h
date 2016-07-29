@@ -231,7 +231,6 @@ private:
 };    // class ForwardTransform
 
 
-template <typename ValueType>
 class ThresholdWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -243,25 +242,28 @@ public:
 
 
   // Constructor
+  template <typename ValueType>
   VTKM_CONT_EXPORT
   ThresholdWorklet( ValueType t ) 
   {
-    this->threshold = t;
-    this->negThreshold = t * -1.0;
+    this->threshold = static_cast<vtkm::Float64>(t);
+    this->negThreshold = threshold * -1.0;
   }
 
+  template <typename ValueType>
   VTKM_EXEC_EXPORT
   ValueType operator()( const ValueType &coeff ) const
   {
-    if( coeff > negThreshold && coeff < threshold )
+    vtkm::Float64 coeff64 = static_cast<vtkm::Float64>( coeff );
+    if( coeff64 > negThreshold && coeff64 < threshold )
       return 0.0;
     else
       return coeff;
   }
 
 private:
-  ValueType threshold;
-  ValueType negThreshold;
+  vtkm::Float64 threshold;
+  vtkm::Float64 negThreshold;
 
 };    // Finish ThresholdWorklet class
 

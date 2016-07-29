@@ -154,8 +154,17 @@ void TestWaveDecomposeReconstruct()
   std::cout << "Decompose takes time: " << elapsedTime << std::endl;
   
 
-  // Sort all coefficients
-  
+  // Squash small coefficients
+  std::cout << "Input a compression ratio ( >=1 )to test. " << std::endl;
+  std::cout << "1 means no compression, only forward and inverse wavelet transform. " << std::endl;
+  vtkm::Id cratio;
+  std::cin >> cratio;
+  VTKM_ASSERT ( cratio >= 1 );
+  compressor.SquashCoefficients( outputArray, cratio );
+  std::cout << "Coefficients after squash: " << std::endl;
+  for( vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); i++ )
+    std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl; 
+
 
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;

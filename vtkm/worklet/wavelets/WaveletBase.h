@@ -68,6 +68,7 @@ public:
     }
   }
 
+  // perform a device copy
   template< typename ArrayType1, typename ArrayType2 >
   VTKM_EXEC_CONT_EXPORT
   void DeviceCopy( const ArrayType1 &srcArray, 
@@ -76,12 +77,32 @@ public:
     vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
           ( srcArray, dstArray );
   }
-  
+
+  // Sort by the absolute value on device
+  struct SortLessAbs
+  { 
+    template< typename T >
+    VTKM_EXEC_CONT_EXPORT 
+    bool operator()(const T& x, const T& y) const 
+    { 
+      return vtkm::Abs(x) < vtkm::Abs(y); 
+    } 
+  }; 
   template< typename ArrayType >
   VTKM_EXEC_CONT_EXPORT
   void DeviceSort( ArrayType &array )
   {
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Sort( array );
+    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Sort
+          ( array, SortLessAbs() );
+  }
+  
+  // Reduce to the sum of all values on device
+  template< typename ArrayType >
+  VTKM_EXEC_CONT_EXPORT
+  typename ArrayType::ValueType DeviceSum( ArrayType &array )
+  {
+    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+          ( array, 0.0 );
   }
   
 
