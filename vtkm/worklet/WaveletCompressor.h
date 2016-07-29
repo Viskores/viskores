@@ -242,9 +242,18 @@ public:
     vtkm::worklet::DispatcherMapField< SquareWorklet > swDispatcher( sw );
     swDispatcher.Invoke( errorArray, errorSquare );
 
-    VAL VarErr   = WaveletBase::CalculateVariance( errorArray );
-    VAL snr      = VarOrig / VarErr;
-    VAL decibels = 10 * vtkm::Log10( snr );
+    VAL varErr   = WaveletBase::CalculateVariance( errorArray );
+    VAL snr, decibels;
+    if( varErr != 0.0 )
+    {
+        snr      = VarOrig / varErr;
+        decibels = 10 * vtkm::Log10( snr );
+    }
+    else
+    {
+        snr      = vtkm::Infinity64();
+        decibels = vtkm::Infinity64();
+    }
 
     VAL origMax  = WaveletBase::DeviceMax( original );
     VAL origMin  = WaveletBase::DeviceMin( original );
@@ -253,13 +262,6 @@ public:
 
     VAL squareSum = WaveletBase::DeviceSum( errorSquare );
     VAL rmse      = vtkm::Sqrt( MAKEVAL(squareSum) / MAKEVAL(errorArray.GetNumberOfValues()) );
-
-    /*
-    std::cout << "==squareSum = " << squareSum << std::endl;
-    std::cout << "==printing error array: " << std::endl;
-    for( vtkm::Id i = 0; i < errorArray.GetNumberOfValues(); i++ )
-      std::cout << errorArray.GetPortalControl().Get(i) << std::endl;
-     */
 
     std::cout << "Data range             = " << range << std::endl;
     std::cout << "SNR                    = " << snr << std::endl;

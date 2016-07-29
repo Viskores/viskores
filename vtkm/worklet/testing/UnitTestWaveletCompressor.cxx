@@ -28,7 +28,7 @@
 
 
 VTKM_CONT_EXPORT
-void TestExtend1D()
+void DebugExtend1D()
 {
   // make input data array handle
   typedef vtkm::Float64 T;
@@ -55,7 +55,7 @@ void TestExtend1D()
 }
 
 VTKM_CONT_EXPORT
-void TestDWTIDWT1D()
+void DebugDWTIDWT1D()
 {
   vtkm::Id sigLen = 20;
   std::cout << "Testing Wavelets Worklet" << std::endl;
@@ -104,7 +104,7 @@ void TestDWTIDWT1D()
 }
 
 VTKM_CONT_EXPORT
-void TestWaveDecomposeReconstruct()
+void DebugWaveDecomposeReconstruct()
 {
   vtkm::Id sigLen = 20;
   std::cout << "Testing Wavelets Worklet" << std::endl;
@@ -189,7 +189,64 @@ void TestWaveDecomposeReconstruct()
                                   "output value not the same..." );
   }
   elapsedTime = timer.GetElapsedTime();  
-  std::cout << "Verification takes time: " << elapsedTime << std::endl;
+  std::cout << "Verification time      = " << elapsedTime << std::endl;
+
+  delete[] L;
+
+}
+
+
+VTKM_CONT_EXPORT
+void TestWaveDecomposeReconstruct()
+{
+  std::cout << "Testing WaveletCompressor on a 2 million sized array " << std::endl;
+  vtkm::Id million = 1000000;
+  vtkm::Id sigLen = million * 2;
+
+  // make input data array handle
+  std::vector<vtkm::Float64> tmpVector;
+  for( vtkm::Id i = 0; i < sigLen; i++ )
+    tmpVector.push_back( 100.0 * vtkm::Sin(static_cast<vtkm::Float64>(i)/100.0 ));
+  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
+    vtkm::cont::make_ArrayHandle(tmpVector);
+
+  vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
+
+  // Use a WaveletCompressor
+  vtkm::worklet::WaveletCompressor compressor("CDF9/7");
+
+  // User maximum decompose levels, and no compression
+  vtkm::Id maxLevel = compressor.GetWaveletMaxLevel( sigLen );
+  vtkm::Id nLevels = maxLevel;
+  vtkm::Id cratio = 1;;
+
+  vtkm::Id* L = new vtkm::Id[ nLevels + 2 ];
+
+  // Decompose
+  vtkm::cont::Timer<> timer;
+  compressor.WaveDecompose( inputArray, nLevels, outputArray, L );
+
+  vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
+  std::cout << "Decompose time         = " << elapsedTime << std::endl;
+  
+  // Reconstruct
+  vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
+  timer.Reset();
+  compressor.WaveReconstruct( outputArray, nLevels, L, reconstructArray );
+  elapsedTime = timer.GetElapsedTime();  
+  std::cout << "Reconstruction time    = " << elapsedTime << std::endl;
+
+  compressor.EvaluateReconstruction( inputArray, reconstructArray );
+
+  timer.Reset();
+  for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
+  {
+    VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i),
+                                  100.0 * vtkm::Sin( static_cast<vtkm::Float64>(i)/100.0 )), 
+                                  "WaveletCompressor worklet failed..." );
+  }
+  elapsedTime = timer.GetElapsedTime();  
+  std::cout << "Verification time      = " << elapsedTime << std::endl;
 
   delete[] L;
 
@@ -197,9 +254,9 @@ void TestWaveDecomposeReconstruct()
 
 void TestWaveletCompressor()
 {
-  std::cout << "Welcome to WaveletCompressor test program :) " << std::endl;
-  //TestExtend1D();
-  //TestDWTIDWT1D();
+  //DebugExtend1D();
+  //DebugDWTIDWT1D();
+  //DebugWaveDecomposeReconstruct();
   TestWaveDecomposeReconstruct();
 }
 
