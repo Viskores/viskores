@@ -42,10 +42,9 @@ $# Ignore the following comment. It is meant for the generated file.
 #include <vtkm/Types.h>
 #include <vtkm/internal/IndexTag.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/function_types/function_type.hpp>
-#include <boost/mpl/at.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <type_traits>
+
+#include <vtkm/internal/brigand.hpp>
 
 $py(max_parameters=10)\
 #define VTKM_MAX_FUNCTION_PARAMETERS $(max_parameters)
@@ -94,13 +93,13 @@ namespace internal {
 template<typename T>
 struct FunctionInterfaceReturnContainer {
   T Value;
-  static const bool VALID = true;
+  static VTKM_CONSTEXPR bool VALID = true;
 };
 
 template<>
 struct FunctionInterfaceReturnContainer<void> {
   // Nothing to store for void return.
-  static const bool VALID = false;
+  static VTKM_CONSTEXPR bool VALID = false;
 };
 
 namespace detail {
@@ -124,11 +123,51 @@ $endfor\
 $endfor\
 
 //============================================================================
-template< typename FS, int Index>
-struct AtType
+template<typename> struct FunctionSigInfo;
+template<typename R, typename... ArgTypes>
+struct FunctionSigInfo<R(ArgTypes...)>
 {
-    typedef boost::function_types::components<FS> ParamterTypes;
-    typedef typename boost::mpl::at_c<ParamterTypes, Index>::type type;
+  static VTKM_CONSTEXPR std::size_t Arity = sizeof...(ArgTypes);
+  using ArityType = std::integral_constant<int, Arity>;
+
+  using ResultType = R;
+  using Components = brigand::list<R,ArgTypes...>;
+  using Parameters = brigand::list<ArgTypes...>;
+};
+
+template<int, typename> struct AtType;
+template<int Index, typename R, typename... ArgTypes>
+struct AtType<Index, R(ArgTypes...)>
+{
+  using type = brigand::at_c< brigand::list<R,ArgTypes...>, Index>;
+};
+
+template<typename Collection, typename NewType> struct AppendType;
+template<template<typename...> class L, typename T, typename NT, typename... U>
+struct AppendType<L<T, U...>, NT>
+{
+  typedef T type(U...,NT);
+};
+
+template<typename Collection> struct AsSigType;
+template<template<typename...> class L, typename T, typename... U>
+struct AsSigType< L<T, U...> >
+{
+  typedef T type(U...);
+};
+
+template< typename Components,
+          vtkm::IdComponent ParameterIndex,
+          typename NewType >
+class ReplaceType {
+  typedef std::integral_constant<std::size_t, (std::size_t)ParameterIndex> Index;
+  using split = brigand::split_at<Components, Index>;
+  using front = brigand::push_back< brigand::front<split>, NewType >;
+  using back  = brigand::pop_front< brigand::back<split> >;
+
+  using replaced = brigand::append< front, back >;
+public:
+  using type = typename AsSigType< replaced >::type;
 };
 
 
@@ -144,7 +183,7 @@ struct ParameterContainerAccess<$(param_index)> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
-  const typename AtType<FunctionSignature, $(param_index)>::type &
+  const typename AtType<$(param_index), FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter$(param_index);
   }
@@ -153,7 +192,7 @@ struct ParameterContainerAccess<$(param_index)> {
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
-           const typename AtType<FunctionSignature, $(param_index)>::type &value) {
+           const typename AtType<$(param_index), FunctionSignature>::type &value) {
     parameters.Parameter$(param_index) = value;
   }
 };
