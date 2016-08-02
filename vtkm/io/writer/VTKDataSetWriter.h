@@ -265,7 +265,7 @@ private:
       {
         continue;
       }
-      if (field.GetAssocCellSet() != cellSet.GetCellSet().GetName()) {
+      if (field.GetAssocCellSet() != cellSet.GetName()) {
         continue;
       }
 

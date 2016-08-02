@@ -71,7 +71,7 @@ vtkm::filter::ResultField CellAverage::DoExecute(
                                    outArray,
                                    outputName,
                                    vtkm::cont::Field::ASSOC_CELL_SET,
-                                   cellSet.GetCellSet().GetName());
+                                   cellSet.GetName());
 }
 
 }

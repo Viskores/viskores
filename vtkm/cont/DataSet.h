@@ -227,7 +227,7 @@ public:
       out<<"  CellSets["<<this->GetNumberOfCellSets()<<"]\n";
       for (vtkm::Id index = 0; index < this->GetNumberOfCellSets(); index++)
       {
-        this->GetCellSet(index).GetCellSet().PrintSummary(out);
+        this->GetCellSet(index).PrintSummary(out);
       }
 
       out<<"  Fields["<<this->GetNumberOfFields()<<"]\n";
@@ -281,7 +281,7 @@ private:
   {
     for (std::size_t index=0; index < static_cast<size_t>(this->GetNumberOfCellSets()); ++index)
     {
-      if (this->CellSets[index].GetCellSet().GetName() == name)
+      if (this->CellSets[index].GetName() == name)
       {
         found = true;
         return static_cast<vtkm::Id>(index);

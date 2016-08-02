@@ -181,7 +181,7 @@ public:
   /// Returns the contained cell set as the abstract \c CellSet type.
   ///
   VTKM_CONT_EXPORT
-  const vtkm::cont::CellSet &GetCellSet() const {
+  const vtkm::cont::CellSet &CastToBase() const {
     return *reinterpret_cast<const vtkm::cont::CellSet *>(
           this->CellSetContainer->GetVoidPointer());
   }
@@ -256,6 +256,43 @@ public:
     newCellSet.CellSetContainer = this->CellSetContainer->NewInstance();
     return newCellSet;
   }
+
+  VTKM_CONT_EXPORT
+  virtual std::string GetName() const
+  {
+    return this->CastToBase().GetName();
+  }
+
+  VTKM_CONT_EXPORT
+  virtual vtkm::Id GetNumberOfCells() const
+  {
+    return this->CastToBase().GetNumberOfCells();
+  }
+
+  VTKM_CONT_EXPORT
+  virtual vtkm::Id GetNumberOfFaces() const
+  {
+    return this->CastToBase().GetNumberOfFaces();
+  }
+
+  VTKM_CONT_EXPORT
+  virtual vtkm::Id GetNumberOfEdges() const
+  {
+    return this->CastToBase().GetNumberOfEdges();
+  }
+
+  VTKM_CONT_EXPORT
+  virtual vtkm::Id GetNumberOfPoints() const
+  {
+    return this->CastToBase().GetNumberOfPoints();
+  }
+
+  VTKM_CONT_EXPORT
+  virtual void PrintSummary(std::ostream& stream) const
+  {
+    return this->CastToBase().PrintSummary(stream);
+  }
+
 
 private:
   boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>

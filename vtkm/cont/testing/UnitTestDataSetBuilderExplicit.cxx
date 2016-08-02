@@ -59,7 +59,7 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      "Wrong number of coordinate systems.");
     VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == numPoints,
                      "Wrong number of coordinates.");
-    VTKM_TEST_ASSERT(ds.GetCellSet().GetCellSet().GetNumberOfCells() == numCells,
+    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells,
                      "Wrong number of cells.");
 
     //Make sure bounds are correct.
