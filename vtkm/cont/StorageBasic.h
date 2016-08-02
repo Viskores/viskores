@@ -322,6 +322,23 @@ public:
     return PortalConstType(this->Array, this->Array + this->NumberOfValues);
   }
 
+  /// \brief Get a pointer to the underlying data structure.
+  ///
+  /// This method returns the pointer to the array held by this array. The
+  /// memory associated with this array still belongs to the Storage (i.e.
+  /// Storage will eventually deallocate the array).
+  ///
+  VTKM_CONT_EXPORT
+  ValueType *GetArray()
+  {
+    return this->Array;
+  }
+  VTKM_CONT_EXPORT
+  const ValueType *GetArray() const
+  {
+    return this->Array;
+  }
+
   /// \brief Take the reference away from this object.
   ///
   /// This method returns the pointer to the array held by this array. It then
