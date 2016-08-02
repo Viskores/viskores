@@ -406,7 +406,7 @@ public:
   /// array storage is read-only).
   ///
   VTKM_CONT_EXPORT
-  void Allocate(vtkm::Id numberOfValues)
+  void Allocate(vtkm::Id numberOfValues) const
   {
     this->ReleaseResourcesExecutionInternal();
     this->Internals->ControlArray.Allocate(numberOfValues);
@@ -463,7 +463,7 @@ public:
 
   /// Releases all resources in both the control and execution environments.
   ///
-  VTKM_CONT_EXPORT void ReleaseResources()
+  VTKM_CONT_EXPORT void ReleaseResources() const
   {
     this->ReleaseResourcesExecutionInternal();
 
@@ -684,7 +684,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void ReleaseResourcesExecutionInternal()
+  void ReleaseResourcesExecutionInternal() const
   {
     if (this->Internals->ExecutionArrayValid)
     {

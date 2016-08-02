@@ -165,6 +165,7 @@ public:
 
     try
       {
+std::cout << "Resizing output " << numberOfValues << std::endl;
       this->Array.resize(static_cast<std::size_t>(numberOfValues));
       }
     catch (std::bad_alloc error)
@@ -254,6 +255,9 @@ private:
   {
     try
     {
+size_t dist = vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()) -
+              vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst());
+std::cout << "Copying to execution " << dist << std::endl;
       this->Array.assign(
             vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst()),
             vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()));
