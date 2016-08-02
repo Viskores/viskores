@@ -20,8 +20,8 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/rendering/Actor.h>
-#include <vtkm/rendering/CanvasOSMesa.h>
-#include <vtkm/rendering/MapperGL.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
+#include <vtkm/rendering/MapperRayTracer.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/cont/DeviceAdapter.h>
@@ -78,8 +78,8 @@ int main(int argc, char* argv[])
     fieldName = "SCALARS:pointvar";
   }
 
-  typedef vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>  Mapper;
-  typedef vtkm::rendering::CanvasOSMesa Canvas;
+  typedef vtkm::rendering::MapperRayTracer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>  Mapper;
+  typedef vtkm::rendering::CanvasRayTracer Canvas;
 
   // Set up a camera for rendering the input data
   const vtkm::cont::CoordinateSystem coords = inputData.GetCoordinateSystem();
@@ -99,23 +99,15 @@ int main(int argc, char* argv[])
   vtkm::Normalize(totalExtent);
   camera.SetLookAt(totalExtent * (mag * .5f));
   camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
-//  camera.NearPlane = 1.f;
-//  camera.FarPlane = 100.f;
   camera.SetClippingRange(1.f, 100.f);
-//  camera.FieldOfView = 60.f;
   camera.SetFieldOfView(60.f);
-//  camera.Height = 512;
-//  camera.Width = 512;
-//  camera.Position = totalExtent * (mag * 2.f);
   camera.SetPosition(totalExtent * (mag * 2.f));
   vtkm::rendering::ColorTable colorTable("thermal");
-  //mapper.SetActiveColorTable(colorTable);
-  //mapper.SetCamera(camera);
 
   // Create a scene for rendering the input data
   vtkm::rendering::Scene scene;
-  vtkm::rendering::Color bg(1.f, 0.2f, 0.2f, 1.0f);
-  vtkm::rendering::CanvasOSMesa canvas(512,512);
+  vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
+  Canvas canvas(512,512);
 
   makeScene(inputData, colorTable, fieldName, scene);
   // Create a view and use it to render the input data using OS Mesa
@@ -128,29 +120,29 @@ int main(int argc, char* argv[])
   view.Paint();
   view.SaveAs("demo_input.pnm");
 
-//  // Create an isosurface filter
-//  vtkm::filter::MarchingCubes filter;
-//  filter.SetGenerateNormals(false);
-//  filter.SetMergeDuplicatePoints(false);
-//  filter.SetIsoValue(isovalue);
-//  vtkm::filter::ResultDataSet result = filter.Execute( inputData,
-//                                                       inputData.GetField(fieldName) );
-//  filter.MapFieldOntoOutput(result, inputData.GetField(fieldName));
-//  vtkm::cont::DataSet& outputData = result.GetDataSet();
-//  // Render a separate image with the output isosurface
-//  std::cout << "about to render the results of the MarchingCubes filter" << std::endl;
-//  vtkm::rendering::Scene scene2;
-//  makeScene(outputData, colorTable, fieldName, scene2);
+  // Create an isosurface filter
+  vtkm::filter::MarchingCubes filter;
+  filter.SetGenerateNormals(false);
+  filter.SetMergeDuplicatePoints(false);
+  filter.SetIsoValue(isovalue);
+  vtkm::filter::ResultDataSet result = filter.Execute( inputData,
+                                                       inputData.GetField(fieldName) );
+  filter.MapFieldOntoOutput(result, inputData.GetField(fieldName));
+  vtkm::cont::DataSet& outputData = result.GetDataSet();
+  // Render a separate image with the output isosurface
+  std::cout << "about to render the results of the MarchingCubes filter" << std::endl;
+  vtkm::rendering::Scene scene2;
+  makeScene(outputData, colorTable, fieldName, scene2);
 
 
-//  vtkm::rendering::View3D view2(scene2,
-//                                                 mapper,
-//                                                 canvas,
-//                                                 camera,
-//                                                 bg);
-//  view2.Initialize();
-//  view2.Paint();
-//  view2.SaveAs("demo_output.pnm");
+  vtkm::rendering::View3D view2(scene2,
+                                                 mapper,
+                                                 canvas,
+                                                 camera,
+                                                 bg);
+  view2.Initialize();
+  view2.Paint();
+  view2.SaveAs("demo_output.pnm");
 
   return 0;
 }
