@@ -419,12 +419,20 @@ void print_all (GLuint programme) {
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-
+        bool valid = 0;
         GLfloat mvMat[16], pMat[16];
         vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
         vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
-        vtkm::rendering::copyMat(viewM, mvMat);
-        vtkm::rendering::copyMat(projM, pMat);
+        int idx = 0;
+
+        for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 4; j++, idx++){
+                mvMat[idx] = viewM(j,i);
+                pMat[idx] = projM(j,i);
+            }
+
+        //vtkm::rendering::copyMat(viewM, mvMat);
+        //vtkm::rendering::copyMat(projM, pMat);
         //glGetFloatv(GL_MODELVIEW_MATRIX, (float*)mvMat);
         //glGetFloatv(GL_PROJECTION_MATRIX, (float*)pMat);
         for(int i = 0; i < 16;++i) 
@@ -435,8 +443,8 @@ void print_all (GLuint programme) {
           cout<<"\n";
         const char *vertex_shader =
             "#version 400 core\n"
-            "layout(location = 1) in vec3 vertex_position;"
-            "layout(location = 0) in vec3 vertex_color;"
+            "layout(location = 0) in vec3 vertex_position;"
+            "layout(location = 1) in vec3 vertex_color;"
             "out vec3 ourColor;"
             "uniform mat4 mv_matrix;"
             "uniform mat4 p_matrix;"        
@@ -459,9 +467,9 @@ void print_all (GLuint programme) {
         GLuint vs = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vs, 1, &vertex_shader, NULL);
         glCompileShader(vs);
-        GLint isCompiled = 0;
-        cout<<"hi there"<<endl;
-        if(isCompiled == GL_FALSE)
+        GLint params = 0;
+        glGetObjectParameterivARB(vs, GL_OBJECT_COMPILE_STATUS_ARB, &params);
+        if(params == GL_FALSE)
         {
           GLint maxLength = 0;
           glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &maxLength);
@@ -469,14 +477,15 @@ void print_all (GLuint programme) {
           // The maxLength includes the NULL character
           GLchar* strInfoLog = new GLchar[maxLength + 1];
           glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
-          fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
+          fprintf(stderr, "VS: Compilation error in shader : %d %s\n",maxLength,  strInfoLog);
           delete[] strInfoLog;
         }
 
         GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fs, 1, &fragment_shader, NULL);
         glCompileShader(fs);        
-        if(isCompiled == GL_FALSE)
+        glGetObjectParameterivARB(fs, GL_OBJECT_COMPILE_STATUS_ARB, &params);
+        if(params == GL_FALSE)
         {
           GLint maxLength = 0;
           glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &maxLength);
@@ -490,32 +499,35 @@ void print_all (GLuint programme) {
 
         GLuint shader_programme = glCreateProgram();
                       
-        
-        glAttachShader(shader_programme, fs);
-        glAttachShader(shader_programme, vs);
-        
-        // insert location binding code here
-        glBindAttribLocation (shader_programme, 0, "vertex_position");
-        glBindAttribLocation (shader_programme, 1, "vertex_color");
-        glLinkProgram (shader_programme);
-        GLint success;
-        glGetProgramiv(shader_programme, GL_LINK_STATUS, &success);
-        if (!success) cout<<"**********************************************LINK FAILED"<<endl;
-        char log[2048];
-        GLsizei len;
-        glGetProgramInfoLog(shader_programme, 2048, &len, log);
-        cout<<"program info: "<<log<<endl;
-        
-        glUseProgram(shader_programme);
-        GLint mvID = glGetUniformLocation(shader_programme, "mv_matrix");
-        glUniformMatrix4fv(mvID, 1, GL_FALSE, mvMat);
-        GLint pID = glGetUniformLocation(shader_programme, "p_matrix");
-        glUniformMatrix4fv(pID, 1, GL_FALSE, pMat);  
-        print_all(shader_programme);
-        glBindVertexArray(vao);
-        glDrawArrays (GL_TRIANGLES, 0, numTri*3);
-        glUseProgram(0);
-    }    
+        if (shader_programme > 0)
+        {
+
+            glAttachShader(shader_programme, fs);
+            glAttachShader(shader_programme, vs);
+
+            // insert location binding code here
+            glBindAttribLocation (shader_programme, 0, "vertex_position");
+            glBindAttribLocation (shader_programme, 1, "vertex_color");
+            glLinkProgram (shader_programme);
+            GLint success;
+            glGetProgramiv(shader_programme, GL_LINK_STATUS, &success);
+            if (!success) cout<<"**********************************************LINK FAILED"<<endl;
+            char log[2048];
+            GLsizei len;
+            glGetProgramInfoLog(shader_programme, 2048, &len, log);
+            cout<<"program info: "<<log<<endl;
+
+            glUseProgram(shader_programme);
+            GLint mvID = glGetUniformLocation(shader_programme, "mv_matrix");
+            glUniformMatrix4fv(mvID, 1, GL_FALSE, mvMat);
+            GLint pID = glGetUniformLocation(shader_programme, "p_matrix");
+            glUniformMatrix4fv(pID, 1, GL_FALSE, pMat);
+            print_all(shader_programme);
+            glBindVertexArray(vao);
+            glDrawArrays (GL_TRIANGLES, 0, numTri*3);
+            glUseProgram(0);
+        }
+    }
   }
 };
 
