@@ -133,7 +133,7 @@ public:
                       vtkm::Id cellSetIndex = 0)
     {
       std::string cellSetName =
-          dataSet.GetCellSet(cellSetIndex).GetCellSet().GetName();
+          dataSet.GetCellSet(cellSetIndex).GetName();
       DataSetFieldAdd::AddCellField(dataSet, fieldName, field, cellSetName);
     }
     template <typename T, typename Storage>
@@ -145,7 +145,7 @@ public:
                       vtkm::Id cellSetIndex = 0)
     {
       std::string cellSetName =
-          dataSet.GetCellSet(cellSetIndex).GetCellSet().GetName();
+          dataSet.GetCellSet(cellSetIndex).GetName();
       DataSetFieldAdd::AddCellField(dataSet, fieldName, field, cellSetName);
     }
     template<typename T>
@@ -157,7 +157,7 @@ public:
                       vtkm::Id cellSetIndex = 0)
     {
       std::string cellSetName =
-          dataSet.GetCellSet(cellSetIndex).GetCellSet().GetName();
+          dataSet.GetCellSet(cellSetIndex).GetName();
       DataSetFieldAdd::AddCellField(dataSet, fieldName, field, cellSetName);
     }
 
@@ -170,7 +170,7 @@ public:
                       vtkm::Id cellSetIndex = 0)
     {
       std::string cellSetName =
-          dataSet.GetCellSet(cellSetIndex).GetCellSet().GetName();
+          dataSet.GetCellSet(cellSetIndex).GetName();
       DataSetFieldAdd::AddCellField(dataSet, fieldName, field, n, cellSetName);
     }
 
