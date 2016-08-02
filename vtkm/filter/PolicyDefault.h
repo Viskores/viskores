@@ -24,6 +24,9 @@
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/cont/CellSetListTag.h>
 #include <vtkm/cont/StorageListTag.h>
+#include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 #include <vtkm/TypeListTag.h>
 
 namespace vtkm {
@@ -41,6 +44,12 @@ public:
 
   typedef VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG CoordinateTypeList;
   typedef VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG CoordinateStorageList;
+
+  // List of backends to try in sequence (if one fails, the next is attempted).
+  typedef vtkm::ListTagBase<
+    ::vtkm::cont::DeviceAdapterTagCuda,
+    ::vtkm::cont::DeviceAdapterTagTBB,
+    ::vtkm::cont::DeviceAdapterTagSerial> DeviceAdapterList;
 };
 
 }
