@@ -65,57 +65,65 @@ int main(int argc, char* argv[])
     fieldName = "SCALARS:pointvar";
   }
 
-  typedef vtkm::rendering::MapperGL< > Mapper;
+  typedef vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>  Mapper;
   typedef vtkm::rendering::CanvasOSMesa Canvas;
 
   // Set up a camera for rendering the input data
   const vtkm::cont::CoordinateSystem coords = inputData.GetCoordinateSystem();
   Mapper mapper;
-  vtkm::rendering::Camera3D &camera = mapper.GetCamera();
-  vtkm::Float64 coordsBounds[6];
+  vtkm::rendering::Camera camera = vtkm::rendering::Camera();
+
+  //Set3DView
+  vtkm::Bounds coordsBounds = coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   coords.GetBounds(coordsBounds,VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  vtkm::Vec<vtkm::Float32,3> totalExtent;
-  totalExtent[0] = vtkm::Float32(coordsBounds[1] - coordsBounds[0]);
-  totalExtent[1] = vtkm::Float32(coordsBounds[3] - coordsBounds[2]);
-  totalExtent[2] = vtkm::Float32(coordsBounds[5] - coordsBounds[4]);
-  vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
-  vtkm::Normalize(totalExtent);
-  camera.LookAt = totalExtent * (mag * .5f);
-  camera.Up = vtkm::make_Vec(0.f, 1.f, 0.f);
-  camera.NearPlane = 1.f;
-  camera.FarPlane = 100.f;
-  camera.FieldOfView = 60.f;
-  camera.Height = 512;
-  camera.Width = 512;
-  camera.Position = totalExtent * (mag * 2.f);
+
+  camera.ResetToBounds(coordsBounds);
+  camera.Azimuth(45.0f);
+  camera.Elevation(45.0f);
+
+//  vtkm::Vec<vtkm::Float32,3> totalExtent;
+//  totalExtent[0] = vtkm::Float32(coordsBounds[1] - coordsBounds[0]);
+//  totalExtent[1] = vtkm::Float32(coordsBounds[3] - coordsBounds[2]);
+//  totalExtent[2] = vtkm::Float32(coordsBounds[5] - coordsBounds[4]);
+//  vtkm::Float32 mag = vtkm::Magnitude(totalExtent);
+//  vtkm::Normalize(totalExtent);
+//  camera.LookAt = totalExtent * (mag * .5f);
+//  camera.Up = vtkm::make_Vec(0.f, 1.f, 0.f);
+//  camera.NearPlane = 1.f;
+//  camera.FarPlane = 100.f;
+//  camera.FieldOfView = 60.f;
+//  camera.Height = 512;
+//  camera.Width = 512;
+//  camera.Position = totalExtent * (mag * 2.f);
   vtkm::rendering::ColorTable colorTable("thermal");
-  mapper.SetActiveColorTable(colorTable);
-  mapper.SetCamera(camera);
+  //mapper.SetActiveColorTable(colorTable);
+  //mapper.SetCamera(camera);
 
   // Create a scene for rendering the input data
-  vtkm::rendering::Scene3D scene;
+  vtkm::rendering::Scene scene;
   vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-  vtkm::rendering::CanvasOSMesa surface(512,512,bg);
-  scene.Actors.push_back(vtkm::rendering::Actor(inputData.GetCellSet(),
+  vtkm::rendering::CanvasOSMesa canvas(512,512);
+  scene.AddActor(vtkm::rendering::Actor(inputData.GetCellSet(),
                                               inputData.GetCoordinateSystem(),
                                               inputData.GetField(fieldName),
                                               colorTable));
 
   // Create a view and use it to render the input data using OS Mesa
-  vtkm::rendering::View3D<Mapper, Canvas> view1(scene,
+  vtkm::rendering::View3D view(scene,
                                                 mapper,
-                                                surface,
+                                                canvas,
+                                                camera,
                                                 bg);
-  view1.Initialize();
-  view1.Paint();
-  view1.SaveAs("demo_input.pnm");
+  view.Initialize();
+  view.Paint();
+  view.SaveAs("demo_input.pnm");
 
   // Create an isosurface filter
   vtkm::filter::MarchingCubes filter;
   filter.SetGenerateNormals(false);
   filter.SetMergeDuplicatePoints(false);
   filter.SetIsoValue(isovalue);
-  vtkm::filter::DataSetResult result = filter.Execute( inputData,
+  vtkm::filter::ResultDataSet result = filter.Execute( inputData,
                                                        inputData.GetField(fieldName) );
   filter.MapFieldOntoOutput(result, inputData.GetField(fieldName));
   vtkm::cont::DataSet& outputData = result.GetDataSet();
