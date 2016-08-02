@@ -489,9 +489,6 @@ void print_all (GLuint programme) {
             glAttachShader(shader_programme, fs);
             glAttachShader(shader_programme, vs);
 
-            // insert location binding code here
-            glBindAttribLocation (shader_programme, 0, "vertex_position");
-            glBindAttribLocation (shader_programme, 1, "vertex_color");
             glLinkProgram (shader_programme);
             GLint success;
             glGetProgramiv(shader_programme, GL_LINK_STATUS, &success);
