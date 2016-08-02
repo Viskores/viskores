@@ -36,7 +36,8 @@ if (OPENGL_FOUND)
       )
     list(APPEND libs ${EGL_LIBRARIES})    
   endif()
-  
+  #apple needs thes linker flags
+  #-framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo
   if (GLFW_FOUND)
     set(unit_tests ${unit_tests}
       UnitTestMapperGLFW.cxx

@@ -22,8 +22,11 @@
 #define vtk_m_rendering_internal_OpenGLHeaders_h
 
 #if defined(__APPLE__)
+#include <GL/glew.h>
 # include <OpenGL/gl.h>
+
 #else
+#include <GL/glew.h>
 # include <GL/gl.h>
 #endif
 
