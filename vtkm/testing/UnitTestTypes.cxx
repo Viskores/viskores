@@ -113,7 +113,7 @@ void GeneralVecTypeTest(const vtkm::Vec<ComponentType,Size> &)
 
   VTKM_TEST_ASSERT(T::NUM_COMPONENTS == Size,
                    "NUM_COMPONENTS is wrong size.");
- 
+
   //grab the number of elements of T
   T a, b, c;
   ComponentType s(5);
@@ -183,6 +183,11 @@ void GeneralVecTypeTest(const vtkm::Vec<ComponentType,Size> &)
   mult = a * s;
   VTKM_TEST_ASSERT(test_equal(mult, correct_mult),
                    "Tuple and Scalar to not multiply correctly.");
+
+  div = a / ComponentType(2);
+  VTKM_TEST_ASSERT(test_equal(div, b),
+                   "Tuple does not divide by Scalar correctly.");
+
 
   ComponentType d = vtkm::dot(a, b);
   ComponentType correct_d = 0;
@@ -256,6 +261,10 @@ void TypeTest(const vtkm::Vec<Scalar,2> &)
   VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(10, 20)),
                    "Vector and scalar to not multiply correctly.");
 
+  div = a / Scalar(2);
+  VTKM_TEST_ASSERT(test_equal(div, vtkm::make_Vec(1, 2)),
+                   "Vector does not divide by Scalar correctly.");
+
   Scalar d = vtkm::dot(a, b);
   VTKM_TEST_ASSERT(test_equal(d, Scalar(10)), "dot(Vector2) wrong");
 
@@ -317,6 +326,10 @@ void TypeTest(const vtkm::Vec<Scalar,3> &)
   VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(10, 20, 30)),
                    "Vector and scalar to not multiply correctly.");
 
+  div = a / Scalar(2);
+  VTKM_TEST_ASSERT(test_equal(div, b),
+                   "Vector does not divide by Scalar correctly.");
+
   Scalar d = vtkm::dot(a, b);
   VTKM_TEST_ASSERT(test_equal(d, Scalar(28)), "dot(Vector3) wrong");
 
@@ -377,6 +390,10 @@ void TypeTest(const vtkm::Vec<Scalar,4> &)
   mult = a * s;
   VTKM_TEST_ASSERT(test_equal(mult, vtkm::make_Vec(10, 20, 30, 40)),
                    "Vector and scalar to not multiply correctly.");
+
+  div = a / Scalar(2);
+  VTKM_TEST_ASSERT(test_equal(div, b),
+                   "Vector does not divide by Scalar correctly.");
 
   Scalar d = vtkm::dot(a, b);
   VTKM_TEST_ASSERT(test_equal(d, Scalar(60)), "dot(Vector4) wrong");
