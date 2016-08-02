@@ -211,13 +211,6 @@ public:
 
     vtkm::Id L1d[3] = {L[0], L[1], 0};
 
-    // Use intermediate arrays
-    /*
-    typedef vtkm::cont::ArrayHandle< VAL >         InterArrayType;
-    typedef typename InterArrayType::PortalControl InterPortalType;
-    InterArrayType interArray;
-    WaveletBase::DeviceCopy( coeffIn, interArray );
-     */
     typedef typename SignalArrayType::ValueType              OutValueType;
     typedef vtkm::cont::ArrayHandle< OutValueType >          OutArrayBasic;
     typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      IdArrayType;
@@ -236,6 +229,7 @@ public:
       
       // Make an output array
       OutArrayBasic output;
+      output.Allocate( input.GetNumberOfValues() );
       
       WaveletDWT::IDWT1D( input, L1d, output );
 

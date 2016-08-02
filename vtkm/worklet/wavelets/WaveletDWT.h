@@ -277,8 +277,9 @@ public:
     if( reconTempLen % 2 != 0 )
       reconTempLen++;
 
-    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >                       IdArrayType;
-    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, CoeffArrayType > PermutArrayType;
+    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      IdArrayType;
+    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, CoeffArrayType > 
+            PermutArrayType;
 
     // Separate cA and cD
     IdArrayType approxIndices( 0,    1, L[0] );
@@ -321,10 +322,6 @@ public:
           vtkm::cont::ArrayHandleConcatenate< CoeffArrayBasic, CoeffArrayBasic>
               concat1( cDTemp, singleValArray );
           CoeffArrayBasic cDStorage;
-          /*
-          vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
-              ( concat1, cDStorage );
-           */
           WaveletBase::DeviceCopy( concat1, cDStorage );
           
           cDTemp = cDStorage;
@@ -333,16 +330,9 @@ public:
     }     // end if( doSymConv )
     else  // Make cATemp and cDTemp from cA and cD
     {
-      /*
-      vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
-          (cA, cATemp );
-      vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG >::Copy
-          (cD, cDTemp );
-       */
       WaveletBase::DeviceCopy( cA, cATemp );
       WaveletBase::DeviceCopy( cD, cDTemp );
     }
-
 
     if( filterLen % 2 != 0 )
     {
@@ -353,8 +343,8 @@ public:
       vtkm::worklet::wavelets::InverseTransformOdd inverseXformOdd;
       inverseXformOdd.SetFilterLength( filterLen );
       inverseXformOdd.SetCALength( L[0], cATempLen );
-      vtkm::worklet::DispatcherMapField< vtkm::worklet::wavelets::InverseTransformOdd >
-          dispatcher( inverseXformOdd );
+      vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformOdd>
+            dispatcher( inverseXformOdd );
       dispatcher.Invoke( coeffInExtended,
                          WaveletBase::filter->GetLowReconstructFilter(),
                          WaveletBase::filter->GetHighReconstructFilter(),
