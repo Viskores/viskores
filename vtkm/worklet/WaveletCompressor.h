@@ -195,8 +195,9 @@ public:
       WaveletBase::DeviceCopy( coeffIn, sortedArray );
       WaveletBase::DeviceSort( sortedArray );
       
-      vtkm::Id n = vtkm::Ceil( static_cast<vtkm::Float64>( coeffLen ) / 
-                               static_cast<vtkm::Float64>( ratio    ) );
+      vtkm::Id n = static_cast<vtkm::Id>(
+                      vtkm::Ceil( static_cast<vtkm::Float64>( coeffLen ) / 
+                                  static_cast<vtkm::Float64>( ratio    ) ) );
       ValueType threshold = sortedArray.GetPortalConstControl().Get( coeffLen - n );
       if( threshold < 0.0 )
         threshold *= -1.0;

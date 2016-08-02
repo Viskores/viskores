@@ -177,8 +177,8 @@ public:
   
     vtkm::Id sigExtendedLen = sigInLen + 2 * addLen;
 
-    typedef typename SignalArrayType::ValueType                   SigInValueType;
-    typedef vtkm::cont::ArrayHandle<SigInValueType>               SignalArrayTypeBasic;
+    typedef typename SignalArrayType::ValueType             SigInValueType;
+    typedef vtkm::cont::ArrayHandle<SigInValueType>         SignalArrayTypeBasic;
 
     SignalArrayTypeBasic sigInExtended;
 
@@ -198,35 +198,19 @@ public:
     forwardTransform.SetCoeffLength( L[0], L[1] );
     forwardTransform.SetOddness( oddLow, oddHigh );
 
+    coeffOut.Allocate( sigInExtended.GetNumberOfValues() );
     vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform> 
         dispatcher(forwardTransform);
     dispatcher.Invoke( sigInExtended, 
                        WaveletBase::filter->GetLowDecomposeFilter(),
                        WaveletBase::filter->GetHighDecomposeFilter(),
-                       coeffOutTmp );
+                       coeffOut );
 
-    // Separate cA and cD.
-    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id > IdArrayType;
-    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, CoeffArrayType > PermutArrayType;
-
-    IdArrayType approxIndices( 0, 2, L[0] );
-    IdArrayType detailIndices( 1, 2, L[1] );
-    PermutArrayType cATmp( approxIndices, coeffOutTmp );
-    PermutArrayType cDTmp( detailIndices, coeffOutTmp );
-
-    typedef vtkm::cont::ArrayHandleConcatenate< PermutArrayType, PermutArrayType >
-                PermutArrayConcatenated;
-    PermutArrayConcatenated coeffOutConcat( cATmp, cDTmp );
-
-    /*
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(
-        coeffOutConcat, coeffOut );
-     */
-    WaveletBase::DeviceCopy( coeffOutConcat, coeffOut );
-
+    VTKM_ASSERT( L[0] + L[1] <= coeffOut.GetNumberOfValues() );
+    coeffOut.Shrink( L[0] + L[1] );
+    
     return 0;  
   }
-    
     
 
   // Func: 
