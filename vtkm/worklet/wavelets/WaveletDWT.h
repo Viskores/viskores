@@ -182,16 +182,10 @@ public:
 
     SignalArrayTypeBasic sigInExtended;
 
-    this->Extend1D( sigIn, sigInExtended, addLen, WaveletBase::wmode, WaveletBase::wmode ); 
+    this->Extend1D( sigIn, sigInExtended, addLen, 
+                    WaveletBase::wmode, WaveletBase::wmode ); 
     VTKM_ASSERT( sigInExtended.GetNumberOfValues() == sigExtendedLen );
 
-    // Coefficients in coeffOutTmp are interleaving, 
-    // e.g. cA are at 0, 2, 4...; cD are at 1, 3, 5...
-    typedef typename CoeffArrayType::ValueType CoeffOutValueType;
-    typedef vtkm::cont::ArrayHandle< CoeffOutValueType > CoeffOutArrayBasic;
-    CoeffOutArrayBasic coeffOutTmp;
-
-    
     // initialize a worklet
     vtkm::worklet::wavelets::ForwardTransform forwardTransform;
     forwardTransform.SetFilterLength( filterLen );
@@ -210,7 +204,7 @@ public:
     coeffOut.Shrink( L[0] + L[1] );
     
     return 0;  
-  }
+  } // Function DWT1D
     
 
   // Func: 

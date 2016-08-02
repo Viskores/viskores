@@ -39,6 +39,7 @@ public:
   // Constructor
   WaveletCompressor( const std::string &w_name ) : WaveletDWT( w_name ) {} 
 
+#if 0
   // Multi-level 1D wavelet decomposition
   template< typename SignalArrayType, typename CoeffArrayType>
   VTKM_CONT_EXPORT
@@ -54,13 +55,11 @@ public:
       std::cerr << "nLevel is not supported: " << nLevels << std::endl;
       // TODO: throw an error
     }
-    /*  0 levels means no transform
-    if( nLevels == 0 )  
+    if( nLevels == 0 )  //  0 levels means no transform
     {
-      vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
-          (sigIn, C );
+      WaveletBase::DeviceCopy( sigIn, coeffOut );
       return 0;
-    } */
+    }
 
     this->ComputeL( sigInLen, nLevels, L );
     vtkm::Id CLength = this->ComputeCoeffLength( L, nLevels );
@@ -80,12 +79,12 @@ public:
     typedef typename InterArrayType::PortalControl InterPortalType;
     InterArrayType interArray;
     interArray.Allocate( CLength );
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
-          (sigIn, interArray );
+    WaveletBase::DeviceCopy( sigIn, interArray );
 
     // Define a few more types
-    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >                       IdArrayType;
-    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, InterArrayType > PermutArrayType;
+    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      IdArrayType;
+    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, InterArrayType > 
+              PermutArrayType;
 
     for( vtkm::Id i = nLevels; i > 0; i-- )
     {
@@ -113,8 +112,88 @@ public:
       sigInPtr = cptr;
     }
 
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
-          (interArray, coeffOut );
+    WaveletBase::DeviceCopy( interArray, coeffOut );
+
+    #undef VAL
+
+    return 0;
+  }
+#endif
+
+
+  // Multi-level 1D wavelet decomposition
+  template< typename SignalArrayType, typename CoeffArrayType>
+  VTKM_CONT_EXPORT
+  vtkm::Id WaveDecompose( const SignalArrayType     &sigIn,   // Input
+                                vtkm::Id             nLevels,  // n levels of DWT
+                                CoeffArrayType      &coeffOut,
+                                vtkm::Id*            L )
+  {
+
+    vtkm::Id sigInLen = sigIn.GetNumberOfValues();
+    if( nLevels < 1 || nLevels > WaveletBase::GetWaveletMaxLevel( sigInLen ) )
+    {
+      std::cerr << "nLevel is not supported: " << nLevels << std::endl;
+      // TODO: throw an error
+    }
+    if( nLevels == 0 )  //  0 levels means no transform
+    {
+      WaveletBase::DeviceCopy( sigIn, coeffOut );
+      return 0;
+    }
+
+    this->ComputeL( sigInLen, nLevels, L );
+    vtkm::Id CLength = this->ComputeCoeffLength( L, nLevels );
+    VTKM_ASSERT( CLength == sigIn.GetNumberOfValues() );
+
+    // Use 64bit floats for intermediate calculation
+    #define VAL        vtkm::Float64
+
+    vtkm::Id sigInPtr = 0;  // pseudo pointer for the beginning of input array 
+    vtkm::Id len = sigIn.GetNumberOfValues();
+    vtkm::Id cALen = WaveletBase::GetApproxLength( len );
+    vtkm::Id cptr;          // pseudo pointer for the beginning of output array
+    vtkm::Id tlen = 0;
+    vtkm::Id L1d[3];
+
+    // Use an intermediate array
+    typedef typename CoeffArrayType::ValueType          OutputValueType;
+    typedef vtkm::cont::ArrayHandle< OutputValueType >  InterArrayType;
+    typedef typename InterArrayType::PortalControl      InterPortalType;
+
+    // Define a few more types
+    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      IdArrayType;
+    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, CoeffArrayType > 
+              PermutArrayType;
+
+    WaveletBase::DeviceCopy( sigIn, coeffOut );
+
+    for( vtkm::Id i = nLevels; i > 0; i-- )
+    {
+      tlen += L[i];
+      cptr = 0 + CLength - tlen - cALen;
+      
+      // make input array (permutation array)
+      IdArrayType inputIndices( sigInPtr, 1, len );
+      PermutArrayType input( inputIndices, coeffOut ); 
+      // make output array 
+      InterArrayType output;
+
+      WaveletDWT::DWT1D( input, output, L1d );
+
+      // update interArray
+      vtkm::cont::ArrayPortalToIterators< InterPortalType > 
+          outputIter( output.GetPortalControl() );
+      vtkm::cont::ArrayPortalToIterators< InterPortalType > 
+          coeffOutIter( coeffOut.GetPortalControl() );
+      std::copy( outputIter.GetBegin(), outputIter.GetEnd(), 
+                 coeffOutIter.GetBegin() + cptr );
+
+      // update pseudo pointers
+      len = cALen;
+      cALen = WaveletBase::GetApproxLength( cALen );
+      sigInPtr = cptr;
+    }
 
     #undef VAL
 
