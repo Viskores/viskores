@@ -459,9 +459,35 @@ void print_all (GLuint programme) {
         GLuint vs = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vs, 1, &vertex_shader, NULL);
         glCompileShader(vs);
+        GLint isCompiled = 0;
+        cout<<"hi there"<<endl;
+        if(isCompiled == GL_FALSE)
+        {
+          GLint maxLength = 0;
+          glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &maxLength);
+
+          // The maxLength includes the NULL character
+          GLchar* strInfoLog = new GLchar[maxLength + 1];
+          glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
+          fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
+          delete[] strInfoLog;
+        }
+
         GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fs, 1, &fragment_shader, NULL);
         glCompileShader(fs);        
+        if(isCompiled == GL_FALSE)
+        {
+          GLint maxLength = 0;
+          glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &maxLength);
+
+          // The maxLength includes the NULL character
+          GLchar* strInfoLog = new GLchar[maxLength + 1];
+          glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
+          fprintf(stderr, "FS: Compilation error in shader : %s\n", strInfoLog);
+          delete[] strInfoLog;
+        }
+
         GLuint shader_programme = glCreateProgram();
                       
         
