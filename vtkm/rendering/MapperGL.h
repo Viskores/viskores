@@ -39,6 +39,16 @@ using namespace std;
 namespace vtkm {
 namespace rendering {
 
+static void
+copyMat(const vtkm::Matrix<vtkm::Float32,4,4> &mIn,
+        GLfloat *mOut)
+{
+    int idx = 0;
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++, idx++)
+            mOut[idx] = mIn(i,j);
+}
+
 template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class MapperGL : public Mapper
 {
@@ -51,7 +61,7 @@ public:
                            const vtkm::cont::CoordinateSystem &coords,
                            const vtkm::cont::Field &scalarField,
                            const vtkm::rendering::ColorTable &colorTable,
-                           const vtkm::rendering::Camera &,
+                           const vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange)
   {
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;
@@ -69,12 +79,12 @@ public:
     if(dcoords.IsSameType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
     {
       uVerts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-      RenderTriangles(numTri, uVerts, indices, sf, colorTable, scalarRange);
+      RenderTriangles(numTri, uVerts, indices, sf, colorTable, scalarRange, camera);
     }
     else if(dcoords.IsSameType(vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> >()))
     {
       eVerts = dcoords.Cast<vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > > ();
-      RenderTriangles(numTri, eVerts, indices, sf, colorTable, scalarRange);
+      RenderTriangles(numTri, eVerts, indices, sf, colorTable, scalarRange, camera);
     }
     else if(dcoords.IsSameType(vtkm::cont::ArrayHandleCartesianProduct<
                                vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
@@ -89,7 +99,7 @@ public:
                                 vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                 vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                 vtkm::cont::ArrayHandle<vtkm::FloatDefault> > > ();
-      RenderTriangles(numTri, rVerts, indices, sf, colorTable, scalarRange);
+      RenderTriangles(numTri, rVerts, indices, sf, colorTable, scalarRange, camera);
     }
     glFinish();
     glFlush();
@@ -202,7 +212,8 @@ void print_all (GLuint programme) {
                        const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > &indices,
                        const vtkm::cont::ArrayHandle<vtkm::Float32> &scalar,
                        const vtkm::rendering::ColorTable &ct,
-                       const vtkm::Range &scalarRange)
+                       const vtkm::Range &scalarRange,
+                       const vtkm::rendering::Camera &camera)
   {
     glewExperimental = GL_TRUE; 
     glewInit();
@@ -410,8 +421,12 @@ void print_all (GLuint programme) {
         glEnableVertexAttribArray(1);
 
         GLfloat mvMat[16], pMat[16];
-        glGetFloatv(GL_MODELVIEW_MATRIX, (float*)mvMat);
-        glGetFloatv(GL_PROJECTION_MATRIX, (float*)pMat);
+        vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
+        vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
+        vtkm::rendering::copyMat(viewM, mvMat);
+        vtkm::rendering::copyMat(projM, pMat);
+        //glGetFloatv(GL_MODELVIEW_MATRIX, (float*)mvMat);
+        //glGetFloatv(GL_PROJECTION_MATRIX, (float*)pMat);
         for(int i = 0; i < 16;++i) 
           {
             if(i % 4 == 0 && i != 0) cout<<"\n";

@@ -20,6 +20,8 @@
 #include <vtkm/Bounds.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
+#include <vtkm/rendering/internal/OpenGLHeaders.h> //Required for compile....
+
 //Suppress warnings about glut being deprecated on OSX
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 # pragma GCC diagnostic push

@@ -34,6 +34,8 @@
 # pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+#include <vtkm/rendering/internal/OpenGLHeaders.h> //Required for compile....
+
 #if defined (__APPLE__)
 # include <GLUT/glut.h>
 #else
