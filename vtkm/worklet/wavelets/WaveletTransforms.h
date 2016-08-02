@@ -245,7 +245,7 @@ public:
                                                              // cA followed by cD
                                 WholeArrayIn<Scalar>,        // lowFilter
                                 WholeArrayIn<Scalar>,        // highFilter
-                                WholeArrayOut<ScalarAll>);   // output
+                                FieldOut<ScalarAll>);        // output
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
   typedef _1   InputDomain;
 
