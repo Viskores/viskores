@@ -50,9 +50,8 @@ namespace cont {
 /// ArrayPortal objects. It is mostly an internal mechanism. However, an
 /// ArrayPortal can be used to pass constant input data to an ArrayHandle.
 ///
-/// Although this documentation is given for the control environment, there are
-/// instances of an identical concept in the execution environment, although
-/// some features are missing there.
+/// Although portals are defined in the execution environment, they are also
+/// used in the control environment for accessing data on the host.
 ///
 template<typename T>
 class ArrayPortal

@@ -47,46 +47,52 @@ typedef vtkm::cont::internal::NullFunctorType NullFunctorType;
 ///
 template<typename ValueType_, typename PortalType_, typename FunctorType_,
   typename InverseFunctorType_=NullFunctorType>
-class ArrayPortalExecTransform;
+class ArrayPortalTransform;
 
 template<typename ValueType_, typename PortalType_, typename FunctorType_>
-class ArrayPortalExecTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
+class ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
 {
 public:
   typedef PortalType_ PortalType;
   typedef ValueType_ ValueType;
   typedef FunctorType_ FunctorType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  ArrayPortalExecTransform(const PortalType &portal = PortalType(),
+  ArrayPortalTransform(const PortalType &portal = PortalType(),
                        const FunctorType &functor = FunctorType())
     : Portal(portal), Functor(functor)
   {  }
 
-  /// Copy constructor for any other ArrayPortalExecTransform with an iterator
+  /// Copy constructor for any other ArrayPortalTransform with an iterator
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
   template<class OtherV, class OtherP, class OtherF>
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  ArrayPortalExecTransform(const ArrayPortalExecTransform<OtherV,OtherP,OtherF> &src)
+  ArrayPortalTransform(const ArrayPortalTransform<OtherV,OtherP,OtherF> &src)
     : Portal(src.GetPortal()),
       Functor(src.GetFunctor())
   {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
     return this->Portal.GetNumberOfValues();
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
   ValueType Get(vtkm::Id index) const {
     return this->Functor(this->Portal.Get(index));
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   const PortalType &GetPortal() const { return this->Portal; }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   const FunctorType &GetFunctor() const { return this->Functor; }
 
@@ -97,33 +103,37 @@ protected:
 
 template<typename ValueType_, typename PortalType_,
   typename FunctorType_, typename InverseFunctorType_>
-class ArrayPortalExecTransform : public ArrayPortalExecTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
+class ArrayPortalTransform : public ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
 {
 public:
-  typedef ArrayPortalExecTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType> Superclass;
+  typedef ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType> Superclass;
   typedef PortalType_ PortalType;
   typedef ValueType_ ValueType;
   typedef FunctorType_ FunctorType;
   typedef InverseFunctorType_ InverseFunctorType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  ArrayPortalExecTransform(const PortalType &portal = PortalType(),
-                           const FunctorType &functor = FunctorType(),
+  ArrayPortalTransform(const PortalType &portal = PortalType(),
+                       const FunctorType &functor = FunctorType(),
                 const InverseFunctorType& inverseFunctor = InverseFunctorType())
     : Superclass(portal,functor), InverseFunctor(inverseFunctor)
   {  }
 
   template<class OtherV, class OtherP, class OtherF, class OtherInvF>
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  ArrayPortalExecTransform(const ArrayPortalExecTransform<OtherV,OtherP,OtherF,OtherInvF> &src)
+  ArrayPortalTransform(const ArrayPortalTransform<OtherV,OtherP,OtherF,OtherInvF> &src)
     : Superclass(src), InverseFunctor(src.GetInverseFunctor())
   {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT_EXPORT
   void Set(vtkm::Id index, const ValueType& value) const {
     return this->Portal.Set(index,this->InverseFunctor(value));
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   const InverseFunctorType &GetInverseFunctor() const {
     return this->InverseFunctor; }
@@ -143,94 +153,6 @@ namespace cont {
 
 namespace internal {
 
-/// \brief An array portal that transforms a value from another portal.
-///
-template<typename ValueType_, typename PortalType_, typename FunctorType_,
-  typename InverseFunctorType=NullFunctorType>
-class ArrayPortalContTransform;
-
-template<typename ValueType_, typename PortalType_, typename FunctorType_>
-class ArrayPortalContTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
-{
-public:
-  typedef PortalType_ PortalType;
-  typedef ValueType_ ValueType;
-  typedef FunctorType_ FunctorType;
-
-  VTKM_CONT_EXPORT
-  ArrayPortalContTransform(const PortalType &portal = PortalType(),
-                       const FunctorType &functor = FunctorType())
-    : Portal(portal), Functor(functor)
-  {  }
-
-  /// Copy constructor for any other ArrayPortalContTransform with an iterator
-  /// type that can be copied to this iterator type. This allows us to do any
-  /// type casting that the iterators do (like the non-const to const cast).
-  ///
-  template<class OtherV, class OtherP, class OtherF>
-  VTKM_CONT_EXPORT
-  ArrayPortalContTransform(const ArrayPortalContTransform<OtherV,OtherP,OtherF> &src)
-    : Portal(src.GetPortal()),
-      Functor(src.GetFunctor())
-  {  }
-
-  VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfValues() const {
-    return this->Portal.GetNumberOfValues();
-  }
-
-  VTKM_CONT_EXPORT
-  ValueType Get(vtkm::Id index) const {
-    return this->Functor(this->Portal.Get(index));
-  }
-
-  VTKM_CONT_EXPORT
-  const PortalType &GetPortal() const { return this->Portal; }
-
-  VTKM_CONT_EXPORT
-  const FunctorType &GetFunctor() const { return this->Functor; }
-
-protected:
-  PortalType Portal;
-  FunctorType Functor;
-};
-
-template<typename ValueType_, typename PortalType_, typename FunctorType_,
-  typename InverseFunctorType_>
-class ArrayPortalContTransform : public ArrayPortalContTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
-{
-public:
-  typedef ArrayPortalContTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType> Superclass;
-  typedef PortalType_ PortalType;
-  typedef ValueType_ ValueType;
-  typedef FunctorType_ FunctorType;
-  typedef InverseFunctorType_ InverseFunctorType;
-
-  VTKM_CONT_EXPORT
-  ArrayPortalContTransform(const PortalType &portal = PortalType(),
-                           const FunctorType &functor = FunctorType(),
-                           const InverseFunctorType &inverseFunctor = InverseFunctorType())
-    : Superclass(portal,functor), InverseFunctor(inverseFunctor)
-  {  }
-
-  template<class OtherV, class OtherP, class OtherF, class OtherInvF>
-  VTKM_CONT_EXPORT
-  ArrayPortalContTransform(const ArrayPortalContTransform<OtherV,OtherP,OtherF,OtherInvF> &src)
-    : Superclass(src), InverseFunctor(src.GetInverseFunctor())
-  {  }
-
-  VTKM_CONT_EXPORT
-  void Set(vtkm::Id index, const ValueType& value) const {
-    this->Portal.Set(index,this->InverseFunctor(value));
-  }
-
-  VTKM_CONT_EXPORT
-  const InverseFunctorType &GetInverseFunctor() const { return this->InverseFunctor; }
-
-private:
-  InverseFunctorType InverseFunctor;
-};
-
 template<typename ValueType, typename ArrayHandleType, typename FunctorType,
   typename InverseFunctorType=NullFunctorType>
 struct StorageTagTransform {};
@@ -249,7 +171,7 @@ public:
     typedef void *IteratorType;
   };
 
-  typedef ArrayPortalContTransform<
+  typedef vtkm::exec::internal::ArrayPortalTransform<
       ValueType, typename ArrayHandleType::PortalConstControl, FunctorType>
     PortalConstType;
 
@@ -325,10 +247,10 @@ class Storage<T,
 public:
   typedef T ValueType;
 
-  typedef ArrayPortalContTransform<ValueType,
+  typedef vtkm::exec::internal::ArrayPortalTransform<ValueType,
     typename ArrayHandleType::PortalControl, FunctorType, InverseFunctorType>
     PortalType;
-  typedef ArrayPortalContTransform<ValueType,
+  typedef vtkm::exec::internal::ArrayPortalTransform<ValueType,
     typename ArrayHandleType::PortalConstControl,FunctorType,InverseFunctorType>
     PortalConstType;
 
@@ -421,7 +343,7 @@ public:
 
   //meant to be an invalid writeable execution portal
   typedef typename StorageType::PortalType PortalExecution;
-  typedef vtkm::exec::internal::ArrayPortalExecTransform<
+  typedef vtkm::exec::internal::ArrayPortalTransform<
       ValueType,
       typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
       FunctorType> PortalConstExecution;
@@ -496,11 +418,11 @@ public:
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
 
-  typedef vtkm::exec::internal::ArrayPortalExecTransform<
+  typedef vtkm::exec::internal::ArrayPortalTransform<
       ValueType,
       typename ArrayHandleType::template ExecutionTypes<Device>::Portal,
       FunctorType, InverseFunctorType> PortalExecution;
-  typedef vtkm::exec::internal::ArrayPortalExecTransform<
+  typedef vtkm::exec::internal::ArrayPortalTransform<
       ValueType,
       typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
       FunctorType, InverseFunctorType> PortalConstExecution;
