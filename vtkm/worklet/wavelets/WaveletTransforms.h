@@ -241,11 +241,11 @@ private:
 class InverseTransformOdd: public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // Input: coeffs 
-                                                             //        cA followed by cD
+  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // Input: coeffs,
+                                                             // cA followed by cD
                                 WholeArrayIn<Scalar>,        // lowFilter
                                 WholeArrayIn<Scalar>,        // highFilter
-                                FieldOut<ScalarAll>);        // output
+                                WholeArrayOut<ScalarAll>);   // output
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
   typedef _1   InputDomain;
 
@@ -262,7 +262,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void SetFilterLength( vtkm::Id len )
   {
-    //VTKM_ASSERT( len % 2 == 1 );
+    VTKM_ASSERT( len % 2 == 1 );
     this->filterLen = len;
   }
 
@@ -278,14 +278,14 @@ public:
   #define VAL        vtkm::Float64
   #define MAKEVAL(a) (static_cast<VAL>(a))
 
-  template <typename InputCoeffPortalType,
+  template <typename InputPortalType,
             typename FilterPortalType,
-            typename OutputSignalType>
+            typename OutputPortalType>
   VTKM_EXEC_EXPORT
-  void operator()(const InputCoeffPortalType  &coeffs,
+  void operator()(const InputPortalType       &coeffs,
                   const FilterPortalType      &lowFilter,
                   const FilterPortalType      &highFilter,
-                  OutputSignalType            &sigOut,
+                  OutputPortalType            &sigOut,
                   const vtkm::Id &workIndex) const
   {
     vtkm::Id xi;    // coeff indices
@@ -320,7 +320,7 @@ public:
       }
     }
 
-    sigOut = static_cast<OutputSignalType>( sum );
+    sigOut = static_cast<OutputPortalType>( sum );
   }
 
   #undef MAKEVAL
