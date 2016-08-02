@@ -39,16 +39,6 @@ using namespace std;
 namespace vtkm {
 namespace rendering {
 
-static void
-copyMat(const vtkm::Matrix<vtkm::Float32,4,4> &mIn,
-        GLfloat *mOut)
-{
-    int idx = 0;
-    for (int i = 0; i < 4; i++)
-        for (int j = 0; j < 4; j++, idx++)
-            mOut[idx] = mIn(i,j);
-}
-
 template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class MapperGL : public Mapper
 {
@@ -421,18 +411,12 @@ void print_all (GLuint programme) {
         glEnableVertexAttribArray(1);
         bool valid = 0;
         GLfloat mvMat[16], pMat[16];
+        bool validV=1, validP=1;
         vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
         vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
-        int idx = 0;
 
-        for (int i = 0; i < 4; i++)
-            for (int j = 0; j < 4; j++, idx++){
-                mvMat[idx] = viewM(j,i);
-                pMat[idx] = projM(j,i);
-            }
-
-        //vtkm::rendering::copyMat(viewM, mvMat);
-        //vtkm::rendering::copyMat(projM, pMat);
+        MatrixHelpers::CreateOGLMatrix(viewM, mvMat);
+        MatrixHelpers::CreateOGLMatrix(projM, pMat);
         //glGetFloatv(GL_MODELVIEW_MATRIX, (float*)mvMat);
         //glGetFloatv(GL_PROJECTION_MATRIX, (float*)pMat);
         for(int i = 0; i < 16;++i) 
@@ -451,8 +435,8 @@ void print_all (GLuint programme) {
         
             "void main() {"
            "  gl_Position = p_matrix*mv_matrix * vec4(vertex_position, 1.0);"
- //           "  gl_Position = vec4(vertex_color, 1.0);"
- //           "  gl_Position = vec4(vertex_position, 1.0);"
+//           "  gl_Position = vec4(vertex_color, 1.0);"
+//            "  gl_Position = vec4(vertex_position, 1.0);"
             "  ourColor = vertex_color;"
             "}";
         const char *fragment_shader =
