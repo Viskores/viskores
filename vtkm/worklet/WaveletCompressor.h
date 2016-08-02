@@ -146,8 +146,6 @@ public:
     vtkm::Id CLength = this->ComputeCoeffLength( L, nLevels );
     VTKM_ASSERT( CLength == sigIn.GetNumberOfValues() );
 
-    // Use 64bit floats for intermediate calculation
-    #define VAL        vtkm::Float64
 
     vtkm::Id sigInPtr = 0;  // pseudo pointer for the beginning of input array 
     vtkm::Id len = sigIn.GetNumberOfValues();
@@ -195,7 +193,6 @@ public:
       sigInPtr = cptr;
     }
 
-    #undef VAL
 
     return 0;
   }
@@ -214,18 +211,20 @@ public:
 
     vtkm::Id L1d[3] = {L[0], L[1], 0};
 
-    // Use 64bit floats for intermediate calculation
-    #define VAL        vtkm::Float64
-
     // Use intermediate arrays
-    typedef vtkm::cont::ArrayHandle< VAL >                                    InterArrayType;
+    /*
+    typedef vtkm::cont::ArrayHandle< VAL >         InterArrayType;
     typedef typename InterArrayType::PortalControl InterPortalType;
-    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >                       IdArrayType;
-    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, InterArrayType > PermutArrayType;
-
     InterArrayType interArray;
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
-          (coeffIn, interArray );
+    WaveletBase::DeviceCopy( coeffIn, interArray );
+     */
+    typedef typename SignalArrayType::ValueType              OutValueType;
+    typedef vtkm::cont::ArrayHandle< OutValueType >          OutArrayBasic;
+    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      IdArrayType;
+    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, SignalArrayType > 
+                  PermutArrayType;
+
+    WaveletBase::DeviceCopy( coeffIn, sigOut );
 
     for( vtkm::Id i = 1; i <= nLevels; i++ )
     {
@@ -233,28 +232,23 @@ public:
 
       // Make an input array
       IdArrayType inputIndices( 0, 1, L1d[2] );
-      PermutArrayType input( inputIndices, interArray ); 
+      PermutArrayType input( inputIndices, sigOut ); 
       
       // Make an output array
-      InterArrayType output;
+      OutArrayBasic output;
       
       WaveletDWT::IDWT1D( input, L1d, output );
 
       // Move output to intermediate array
-      vtkm::cont::ArrayPortalToIterators< InterPortalType > 
+      vtkm::cont::ArrayPortalToIterators< typename OutArrayBasic::PortalControl > 
           outputIter( output.GetPortalControl() );
-      vtkm::cont::ArrayPortalToIterators< InterPortalType > 
-          interArrayIter( interArray.GetPortalControl() );
-      std::copy( outputIter.GetBegin(), outputIter.GetEnd(), interArrayIter.GetBegin() );
+      vtkm::cont::ArrayPortalToIterators< typename SignalArrayType::PortalControl > 
+          sigOutIter( sigOut.GetPortalControl() );
+      std::copy( outputIter.GetBegin(), outputIter.GetEnd(), sigOutIter.GetBegin() );
 
       L1d[0] = L1d[2];
       L1d[1] = L[i+1];
     }
-
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
-          ( interArray, sigOut );
-    
-    #undef VAL
 
     return 0;
   }
