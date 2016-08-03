@@ -46,17 +46,17 @@ public:
   // Func: Extend 1D signal
   template< typename SigInArrayType, typename SigExtendedArrayType >
   VTKM_CONT_EXPORT
-  vtkm::Id Extend1D( const SigInArrayType               &sigIn,   // Input
+  vtkm::Id Extend1D( const SigInArrayType                     &sigIn,   // Input
                      SigExtendedArrayType                     &sigOut,  // Output
                      vtkm::Id                                 addLen,
-                     vtkm::worklet::wavelets::DWTMode          leftExtMethod,
-                     vtkm::worklet::wavelets::DWTMode          rightExtMethod )
+                     vtkm::worklet::wavelets::DWTMode         leftExtMethod,
+                     vtkm::worklet::wavelets::DWTMode         rightExtMethod, 
+                     bool                                     attachRightZero )
   { 
     typedef typename SigInArrayType::ValueType      ValueType;
     typedef vtkm::cont::ArrayHandle< ValueType >    ExtensionArrayType;
     ExtensionArrayType leftExtend, rightExtend;
     leftExtend.Allocate( addLen );
-    rightExtend.Allocate( addLen );
 
     typedef typename ExtensionArrayType::PortalControl       PortalType;
     typedef typename SigInArrayType::PortalConstControl      SigInPortalConstType;
@@ -67,7 +67,6 @@ public:
             ArrayConcat2;
 
     PortalType leftExtendPortal       = leftExtend.GetPortalControl();
-    PortalType rightExtendPortal      = rightExtend.GetPortalControl();
     SigInPortalConstType sigInPortal  = sigIn.GetPortalConstControl();
     vtkm::Id sigInLen                 = sigIn.GetNumberOfValues();
 
@@ -92,6 +91,12 @@ public:
       }
     }
 
+    if( attachRightZero )
+      rightExtend.Allocate( addLen + 1 );
+    else
+      rightExtend.Allocate( addLen );
+    PortalType rightExtendPortal      = rightExtend.GetPortalControl();
+
     switch( rightExtMethod )
     {
       case vtkm::worklet::wavelets::SYMH:
@@ -113,13 +118,11 @@ public:
       }
     }
 
+    if( attachRightZero )
+      rightExtendPortal.Set( addLen, 0.0 );
+
     ArrayConcat leftOn( leftExtend, sigIn );    
-    ArrayConcat2 rightOn(leftOn, rightExtend );
-    /*
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
-        ( rightOn, sigOut );
-     */
-    WaveletBase::DeviceCopy( rightOn, sigOut );
+    sigOut = vtkm::cont::make_ArrayHandleConcatenate( leftOn, rightExtend );
 
     return 0;
   }
@@ -178,12 +181,18 @@ public:
     vtkm::Id sigExtendedLen = sigInLen + 2 * addLen;
 
     typedef typename SignalArrayType::ValueType             SigInValueType;
-    typedef vtkm::cont::ArrayHandle<SigInValueType>         SignalArrayTypeBasic;
+    typedef vtkm::cont::ArrayHandle<SigInValueType>         SigInBasic;
+    //SigInBasic sigInExtended;
 
-    SignalArrayTypeBasic sigInExtended;
+    typedef vtkm::cont::ArrayHandleConcatenate< SigInBasic, SignalArrayType >
+            ConcatType1;
+    typedef vtkm::cont::ArrayHandleConcatenate< ConcatType1, SigInBasic >
+            ConcatType2;
+
+    ConcatType2 sigInExtended;
 
     this->Extend1D( sigIn, sigInExtended, addLen, 
-                    WaveletBase::wmode, WaveletBase::wmode ); 
+                    WaveletBase::wmode, WaveletBase::wmode, false ); 
     VTKM_ASSERT( sigInExtended.GetNumberOfValues() == sigExtendedLen );
 
     // initialize a worklet
@@ -264,7 +273,7 @@ public:
     {
       addLen = filterLen / 4;
       if( (L[0] > L[1]) && (WaveletBase::wmode == SYMH) )
-        cDPadLen = L[0];
+        cDPadLen = L[0];  // SYMH is rare
       cATempLen = L[0] + 2 * addLen;
       cDTempLen = cATempLen;  // same length
     }
@@ -291,52 +300,53 @@ public:
     typedef typename CoeffArrayType::ValueType                    CoeffValueType;
     typedef vtkm::cont::ArrayHandle< CoeffValueType >             CoeffArrayBasic;
     typedef vtkm::cont::ArrayHandle< CoeffValueType >             ExtensionArrayType;
+    typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, PermutArrayType >
+            Concat1;
+    typedef vtkm::cont::ArrayHandleConcatenate< Concat1, ExtensionArrayType >
+            Concat2;
 
-    CoeffArrayBasic cATemp, cDTemp;
+    Concat2 cATemp, cDTemp;
 
     if( doSymConv )   // Actually extend cA and cD
     {
-      this->Extend1D( cA, cATemp, addLen, cALeftMode, cARightMode );
+      this->Extend1D( cA, cATemp, addLen, cALeftMode, cARightMode, false );
       if( cDPadLen > 0 )  
       {
-        // Add back the missing final cD: 0.0
+        /* Add back the missing final cD: 0.0
+         * This case is unlikely to happen because SYMH is rare. TODO later.
+         *
         ExtensionArrayType singleValArray;
         singleValArray.Allocate(1);
         singleValArray.GetPortalControl().Set(0, 0.0);
         vtkm::cont::ArrayHandleConcatenate< PermutArrayType, ExtensionArrayType >
             cDPad( cD, singleValArray );
-
         this->Extend1D( cDPad, cDTemp, addLen, cDLeftMode, cDRightMode );
+         */
       }
       else
       {
-        this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode );
-
-        // Attached an zero if cDTemp is shorter than cDTempLen
-        if( cDTemp.GetNumberOfValues() !=  cDTempLen )
+        vtkm::Id cDTempLenWouldBe = cD.GetNumberOfValues() + 2 * addLen;
+        if( cDTempLenWouldBe ==  cDTempLen )
+          this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false);
+        else if( cDTempLenWouldBe ==  cDTempLen - 1 )
+          this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, true);
+        else
         {
-          VTKM_ASSERT( cDTemp.GetNumberOfValues() ==  cDTempLen - 1 ); 
-          CoeffArrayBasic singleValArray;
-          singleValArray.Allocate(1);
-          singleValArray.GetPortalControl().Set(0, 0.0);
-          vtkm::cont::ArrayHandleConcatenate< CoeffArrayBasic, CoeffArrayBasic>
-              concat1( cDTemp, singleValArray );
-          CoeffArrayBasic cDStorage;
-          WaveletBase::DeviceCopy( concat1, cDStorage );
-          
-          cDTemp = cDStorage;
+          // throw an error
+          return 1;
         }
       }
-    }     // end if( doSymConv )
-    else  // Make cATemp and cDTemp from cA and cD
-    {
+    }     
+    else  
+    { /* This case is unlikely to happen, so TODO later.
       WaveletBase::DeviceCopy( cA, cATemp );
       WaveletBase::DeviceCopy( cD, cDTemp );
+       */
     }
 
     if( filterLen % 2 != 0 )
     {
-      vtkm::cont::ArrayHandleConcatenate< CoeffArrayBasic, CoeffArrayBasic>
+      vtkm::cont::ArrayHandleConcatenate< Concat2, Concat2>
           coeffInExtended( cATemp, cDTemp );
 
       // Initialize a worklet
