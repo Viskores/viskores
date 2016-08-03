@@ -147,6 +147,8 @@ namespace
   template<typename Derived, typename DerivedPolicy>
   struct ResolveFieldTypeAndMap
   {
+    typedef ResolveFieldTypeAndMap<Derived, DerivedPolicy> Self;
+
     Derived* DerivedClass;
     vtkm::filter::ResultDataSet& InputResult;
     const vtkm::filter::FieldMetadata& Metadata;
@@ -171,46 +173,44 @@ namespace
 
       }
 
+  private:
+
+    template<typename T, typename StorageTag>
+    struct ResolveFieldTypeAndMapForDevice
+    {
+      typedef vtkm::cont::ArrayHandle<T,StorageTag> FieldArrayHandle;
+      ResolveFieldTypeAndMapForDevice(const Self& instance,
+                                      const FieldArrayHandle& field) :
+        Instance(instance), Field(field), Valid(false) {}
+
+      const Self& Instance;
+      const vtkm::cont::ArrayHandle<T,StorageTag>& Field;
+      mutable bool Valid;
+
+      template <typename DeviceAdapterTag>
+      void operator()(DeviceAdapterTag tag) const
+      {
+        if( !this->Valid )
+        {
+          this->Valid = map_if_valid( this->Instance.DerivedClass,
+                                      this->Instance.InputResult,
+                                      this->Field,
+                                      this->Instance.Metadata,
+                                      this->Instance.Policy,
+                                      this->Instance.Tracker,
+                                      tag );
+        }
+      }
+    };
+
+  public:
+
     template<typename T, typename StorageTag>
     void operator()(const vtkm::cont::ArrayHandle<T,StorageTag>& field) const
     {
-      typedef vtkm::cont::DeviceAdapterTagCuda CudaTag;
-      typedef vtkm::cont::DeviceAdapterTagTBB TBBTag;
-      typedef vtkm::cont::DeviceAdapterTagSerial SerialTag;
-
-      bool valid = false;
-
-      {
-        valid = map_if_valid(this->DerivedClass,
-                             this->InputResult,
-                             field,
-                             this->Metadata,
-                             this->Policy,
-                             this->Tracker,
-                             CudaTag() );
-      }
-
-      if( !valid )
-      {
-        valid = map_if_valid(this->DerivedClass,
-                             this->InputResult,
-                             field,
-                             this->Metadata,
-                             this->Policy,
-                             this->Tracker,
-                             TBBTag() );
-      }
-      if( !valid )
-      {
-        valid = map_if_valid(this->DerivedClass,
-                             this->InputResult,
-                             field,
-                             this->Metadata,
-                             this->Policy,
-                             this->Tracker,
-                             SerialTag() );
-      }
-      this->RanProperly = valid;
+      ResolveFieldTypeAndMapForDevice<T, StorageTag> doResolve(*this,field);
+      ListForEach(doResolve, typename DerivedPolicy::DeviceAdapterList());
+      this->RanProperly = doResolve.Valid;
     }
   };
 }
