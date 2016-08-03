@@ -207,11 +207,11 @@ public:
     this->ConnectivityLength = 0;
   }
 
-  template <vtkm::IdComponent ItemTupleLength>
+  template <typename IndexableType>
   VTKM_CONT_EXPORT
   void AddCell(vtkm::UInt8 cellType,
                vtkm::IdComponent numVertices,
-               const vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+               const IndexableType &ids)
   {
     this->PointToCell.Shapes.GetPortalControl().Set(this->NumberOfCells, cellType);
     this->PointToCell.NumIndices.GetPortalControl().Set(this->NumberOfCells, numVertices);
