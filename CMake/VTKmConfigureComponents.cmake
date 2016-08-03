@@ -84,6 +84,11 @@ macro(vtkm_configure_component_Base)
     find_package(BoostHeaders ${VTKm_FIND_PACKAGE_QUIETLY} ${VTKm_REQUIRED_BOOST_VERSION})
   endif()
 
+  # Set up the compiler flag optimizations
+  if (NOT VTKm_Vectorization_flags_added)
+    include(VTKmCompilerOptimizations)
+  endif()
+
   vtkm_finish_configure_component(Base
     DEPENDENT_VARIABLES Boost_FOUND
     ADD_INCLUDES ${Boost_INCLUDE_DIRS}

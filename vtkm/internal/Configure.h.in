@@ -201,7 +201,10 @@
 // that should be wrapped around any "for"/"while" that you want vectorized.
 // This is used to set per compiler pragmas for vectorization, and to disable
 // any warnings that about vectorization failures.
-#if defined(VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS)
+#cmakedefine VTKM_VECTORIZATION_ENABLED
+
+#if defined(VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS) &&\
+    defined(VTKM_VECTORIZATION_ENABLED)
 #if defined(VTKM_CLANG)
 //clang only needs pre loop
 #define VTKM_VECTORIZATION_PRE_LOOP \
