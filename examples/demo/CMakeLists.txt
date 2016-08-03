@@ -20,7 +20,7 @@
 ##
 ##=============================================================================
 vtkm_configure_component_OSMESA()
-if(VTKm_OSMESA_FOUND)
+if(VTKm_OSMesa_FOUND)
 
   if(VTKm_CUDA_FOUND)
     # Cuda compiles do not respect target_include_directories
