@@ -55,78 +55,87 @@ public:
   { 
     typedef typename SigInArrayType::ValueType      ValueType;
     typedef vtkm::cont::ArrayHandle< ValueType >    ExtensionArrayType;
-    ExtensionArrayType leftExtend, rightExtend;
+    ExtensionArrayType                              leftExtend;
     leftExtend.Allocate( addLen );
 
-    typedef typename ExtensionArrayType::PortalControl       PortalType;
-    typedef typename SigInArrayType::PortalConstControl      SigInPortalConstType;
+    vtkm::Id sigInLen = sigIn.GetNumberOfValues();
 
-    typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, SigInArrayType> 
-            ArrayConcat;
-    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ExtensionArrayType >  
-            ArrayConcat2;
-
-    PortalType leftExtendPortal       = leftExtend.GetPortalControl();
-    SigInPortalConstType sigInPortal  = sigIn.GetPortalConstControl();
-    vtkm::Id sigInLen                 = sigIn.GetNumberOfValues();
+    typedef vtkm::worklet::wavelets::LeftSYMHExtentionWorklet  LeftSYMH;
+    typedef vtkm::worklet::wavelets::LeftSYMWExtentionWorklet  LeftSYMW;
+    typedef vtkm::worklet::wavelets::RightSYMHExtentionWorklet RightSYMH;
+    typedef vtkm::worklet::wavelets::RightSYMWExtentionWorklet RightSYMW;
 
     switch( leftExtMethod )
     {
       case vtkm::worklet::wavelets::SYMH:
       {
-          for( vtkm::Id count = 0; count < addLen; count++ )
-            leftExtendPortal.Set( count, sigInPortal.Get( addLen - count - 1) );
+          LeftSYMH worklet( addLen );
+          vtkm::worklet::DispatcherMapField< LeftSYMH > dispatcher( worklet );
+          dispatcher.Invoke( leftExtend, sigIn );
           break;
       }
       case vtkm::worklet::wavelets::SYMW:
       {
-          for( vtkm::Id count = 0; count < addLen; count++ )
-            leftExtendPortal.Set( count, sigInPortal.Get( addLen - count ) );
+          LeftSYMW worklet( addLen );
+          vtkm::worklet::DispatcherMapField< LeftSYMW > dispatcher( worklet );
+          dispatcher.Invoke( leftExtend, sigIn );
           break;
       }
       default:
       {
+        std::cerr << "left extension mode not supported" << std::endl;
         // TODO: throw an error
         return 1;
       }
     }
 
+    ExtensionArrayType rightExtend;
     if( attachRightZero )
       rightExtend.Allocate( addLen + 1 );
     else
       rightExtend.Allocate( addLen );
-    PortalType rightExtendPortal      = rightExtend.GetPortalControl();
 
     switch( rightExtMethod )
     {
       case vtkm::worklet::wavelets::SYMH:
       {
-          for( vtkm::Id count = 0; count < addLen; count++ )
-            rightExtendPortal.Set( count, sigInPortal.Get( sigInLen - count - 1 ) );
+          RightSYMH worklet( sigInLen );
+          vtkm::worklet::DispatcherMapField< RightSYMH > dispatcher( worklet );
+          dispatcher.Invoke( rightExtend, sigIn );
           break;
       }
       case SYMW:
       {
-          for( vtkm::Id count = 0; count < addLen; count++ )
-            rightExtendPortal.Set( count, sigInPortal.Get( sigInLen - count - 2 ) );
+          RightSYMW worklet( sigInLen );
+          vtkm::worklet::DispatcherMapField< RightSYMW > dispatcher( worklet );
+          dispatcher.Invoke( rightExtend, sigIn );
           break;
       }
       default:
       {
+        std::cerr << "right extension mode not supported" << std::endl;
         // TODO: throw an error
         return 1;
       }
     }
 
     if( attachRightZero )
-      rightExtendPortal.Set( addLen, 0.0 );
+    {
+      typedef vtkm::worklet::wavelets::AssignZeroWorklet ZeroWorklet;
+      ZeroWorklet worklet( addLen );
+      vtkm::worklet::DispatcherMapField< ZeroWorklet > dispatcher( worklet );
+      dispatcher.Invoke( rightExtend );
+    }
 
+    typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, SigInArrayType> 
+            ArrayConcat;
+    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ExtensionArrayType >  
+            ArrayConcat2;
     ArrayConcat leftOn( leftExtend, sigIn );    
     sigOut = vtkm::cont::make_ArrayHandleConcatenate( leftOn, rightExtend );
 
     return 0;
   }
-
 
 
   // Func:

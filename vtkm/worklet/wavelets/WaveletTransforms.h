@@ -471,6 +471,144 @@ private:
   vtkm::Id startIdx;
 };
 
+class LeftSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  LeftSYMHExtentionWorklet( vtkm::Id len ) 
+  {
+    this->addLen = len;
+  }
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    portalOut.Set( workIndex, portalIn.Get(this->addLen - workIndex - 1) );
+  }
+
+private:
+  vtkm::Id addLen;
+};
+
+class LeftSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  LeftSYMWExtentionWorklet( vtkm::Id len ) 
+  {
+    this->addLen = len;
+  }
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    portalOut.Set( workIndex, portalIn.Get(this->addLen - workIndex) );
+  }
+
+private:
+  vtkm::Id addLen;
+};
+
+class RightSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  RightSYMHExtentionWorklet ( vtkm::Id sigInl ) 
+  {
+    this->sigInLen = sigInl;
+  }
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    portalOut.Set( workIndex, portalIn.Get(this->sigInLen - workIndex - 1) );
+  }
+
+private:
+  vtkm::Id sigInLen;
+};
+
+class RightSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  RightSYMWExtentionWorklet ( vtkm::Id sigInl ) 
+  {
+    this->sigInLen = sigInl;
+  }
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    portalOut.Set( workIndex, portalIn.Get(this->sigInLen - workIndex - 2) );
+  }
+
+private:
+  vtkm::Id sigInLen;
+};
+
+class AssignZeroWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayInOut< ScalarAll > );
+  typedef void ExecutionSignature( _1, WorkIndex );
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  AssignZeroWorklet( vtkm::Id idx )
+  {
+    this->zeroIdx = idx;
+  }
+
+  template< typename PortalType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalType   &array,
+                   const vtkm::Id     &workIdx ) const
+  {
+    if( workIdx == this->zeroIdx )
+      array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+  }
+
+private:
+  vtkm::Id zeroIdx;
+};
+
 
 }     // namespace wavelets
 }     // namespace worlet
