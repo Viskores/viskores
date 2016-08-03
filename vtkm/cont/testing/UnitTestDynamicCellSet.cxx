@@ -80,8 +80,8 @@ void TryNewInstance(
   VTKM_TEST_ASSERT(newCellSet.template IsType<CellSetType>(),
                    "New cell set wrong type.");
 
-  VTKM_TEST_ASSERT(&originalCellSet.GetCellSet()
-                   != &newCellSet.GetCellSet(),
+  VTKM_TEST_ASSERT(&originalCellSet.CastToBase()
+                   != &newCellSet.CastToBase(),
                    "NewInstance did not make a copy.");
 }
 
