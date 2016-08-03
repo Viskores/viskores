@@ -129,6 +129,10 @@ struct GetTypeInParentheses<void(T)>
 
 } // namespace detail
 
+  //VTKM_CONT_EXPORT \
+  //virtual ~classname() {  } \
+ // \
+
 // Implementation for VTKM_ARRAY_HANDLE_SUBCLASS macros
 #define VTK_M_ARRAY_HANDLE_SUBCLASS_IMPL(classname, fullclasstype, superclass, typename__) \
   typedef typename__ vtkm::cont::detail::GetTypeInParentheses<void fullclasstype>::type Thisclass;\
@@ -144,9 +148,6 @@ struct GetTypeInParentheses<void(T)>
   \
   VTKM_CONT_EXPORT \
   classname(const vtkm::cont::ArrayHandle<typename__ Superclass::ValueType, typename__ Superclass::StorageTag> &src) : Superclass(src) {  } \
-  \
-  VTKM_CONT_EXPORT \
-  virtual ~classname() {  } \
   \
   VTKM_CONT_EXPORT \
   Thisclass &operator=(const Thisclass &src) \

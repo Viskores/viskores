@@ -53,39 +53,20 @@ public:
   {
     // This is the type for the input domain
     typedef typename Invocation::InputDomainType InputDomainType;
-    typedef typename Invocation::OutputDomainType OutputDomainType;
 
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
     const InputDomainType &inputDomain = invocation.GetInputDomain();
-    const OutputDomainType &outputDomain = invocation.GetOutputDomain();
 
     // For a DispatcherMapField, the inputDomain must be an ArrayHandle (or
     // a DynamicArrayHandle that gets cast to one). The size of the domain
     // (number of threads/worklet instances) is equal to the size of the
     // array.
-    vtkm::Id nBlocks = 2;
-    vtkm::Id blockSize = inputDomain.GetNumberOfValues() / nBlocks;
-    outputDomain.Allocate(inputDomain.GetNumberOfValues());
-    
-    for (vtkm::Id block=0; block<nBlocks; block++)
-    {
-      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<vtkm::Float32> > 
-          inputStream(inputDomain, block, blockSize);
-      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<vtkm::Float32> >  
-          outputStream(outputDomain, block, blockSize);
+    vtkm::Id numInstances = inputDomain.GetNumberOfValues();
 
-      // A MapField is a pretty straightforward dispatch. Once we know the number
-      // of invocations, the superclass can take care of the rest.
-      this->BasicInvoke(
-        invocation.ChangeParameters(
-          invocation.Parameters.template Replace<Invocation::InputDomainIndex>(inputStream)
-                               .template Replace<Invocation::OutputDomainIndex>(outputStream)),
-        blockSize,
-        Device());
-
-      outputStream.SyncControlArray();
-    }
+    // A MapField is a pretty straightforward dispatch. Once we know the number
+    // of invocations, the superclass can take care of the rest.
+    this->BasicInvoke(invocation, numInstances, Device());
   }
 
 };

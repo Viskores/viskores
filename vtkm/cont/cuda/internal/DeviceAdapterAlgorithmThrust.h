@@ -1057,6 +1057,7 @@ public:
     //handle datasets larger than 2B, we need to execute multiple kernels
     if(totalBlocks < maxblocksPerLaunch)
       {
+std::cout << "Scheduling " << totalBlocks << " " << blockSize << " " << numInstances << std::endl;
       Schedule1DIndexKernel<Functor> <<<totalBlocks, blockSize>>> (functor,
                                                                    vtkm::Id(0),
                                                                    numInstances);

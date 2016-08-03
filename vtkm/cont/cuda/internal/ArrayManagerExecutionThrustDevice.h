@@ -156,6 +156,9 @@ public:
   VTKM_CONT_EXPORT
   PortalType PrepareForOutput(vtkm::Id numberOfValues)
   {
+if (this->GetNumberOfValues() == 0)
+{
+std::cout << "Preparing for output" << std::endl;
     if (numberOfValues > this->GetNumberOfValues())
     {
       // Resize to 0 first so that you don't have to copy data when resizing
@@ -165,14 +168,13 @@ public:
 
     try
       {
-std::cout << "Resizing output " << numberOfValues << std::endl;
-      this->Array.resize(static_cast<std::size_t>(numberOfValues));
+      this->Array.resize(static_cast<std::size_t>(numberOfValues), 0.0f);
       }
     catch (std::bad_alloc error)
       {
       throw vtkm::cont::ErrorControlBadAllocation(error.what());
       }
-
+}
     return PortalType(this->Array.data(),
                       this->Array.data() + static_cast<difference_type>(this->Array.size()));
   }
@@ -194,6 +196,12 @@ std::cout << "Resizing output " << numberOfValues << std::endl;
     storage->Allocate(static_cast<vtkm::Id>(this->Array.size()));
     try
       {
+cudaDeviceSynchronize();
+std::cout << "Copy data back " << this->Array.size() << std::endl;
+for (unsigned int i=0; i<this->Array.size(); i++)
+  std::cout << this->Array[i] << " ";
+std::cout << std::endl;
+cudaDeviceSynchronize();
       ::thrust::copy(
           this->Array.data(),
           this->Array.data() + static_cast<difference_type>(this->Array.size()),
@@ -255,9 +263,6 @@ private:
   {
     try
     {
-size_t dist = vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()) -
-              vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst());
-std::cout << "Copying to execution " << dist << std::endl;
       this->Array.assign(
             vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst()),
             vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()));

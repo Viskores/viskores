@@ -69,7 +69,6 @@ struct Invocation
   /// index points to the parameter that defines this input domain.
   ///
   static const vtkm::IdComponent InputDomainIndex = _InputDomainIndex;
-  static const vtkm::IdComponent OutputDomainIndex = _InputDomainIndex+1;
 
   /// \brief An array representing the output to input map.
   ///
@@ -240,8 +239,6 @@ struct Invocation
   ///
   typedef typename ParameterInterface::
       template ParameterType<InputDomainIndex>::type InputDomainType;
-  typedef typename ParameterInterface::
-      template ParameterType<OutputDomainIndex>::type OutputDomainType;
 
   /// A convenience method to get the input domain object.
   ///
@@ -251,28 +248,6 @@ struct Invocation
   {
     return this->Parameters.template GetParameter<InputDomainIndex>();
   }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
-  const OutputDomainType& GetOutputDomain() const
-  {
-    return this->Parameters.template GetParameter<OutputDomainIndex>();
-  }
-
-  /*VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
-  InputDomainType& GetInputDomain() const
-  {
-    return this->Parameters.template GetParameter<InputDomainIndex>();
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
-  OutputDomainType& GetOutputDomain() const
-  {
-    return this->Parameters.template GetParameter<OutputDomainIndex>();
-  }*/
-
 
   /// The state of an \c Invocation object holds the parameters of the
   /// invocation. As well as the output to input map and the visit array.
