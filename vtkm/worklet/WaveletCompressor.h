@@ -42,9 +42,9 @@ public:
   // Multi-level 1D wavelet decomposition
   template< typename SignalArrayType, typename CoeffArrayType>
   VTKM_CONT_EXPORT
-  vtkm::Id WaveDecompose( const SignalArrayType     &sigIn,   // Input
+  vtkm::Id WaveDecompose( const SignalArrayType      &sigIn,   // Input
                                 vtkm::Id             nLevels,  // n levels of DWT
-                                CoeffArrayType      &coeffOut,
+                                CoeffArrayType       &coeffOut,
                                 vtkm::Id*            L )
   {
 
@@ -62,11 +62,11 @@ public:
 
     this->ComputeL( sigInLen, nLevels, L );
     vtkm::Id CLength = this->ComputeCoeffLength( L, nLevels );
-    VTKM_ASSERT( CLength == sigIn.GetNumberOfValues() );
+    VTKM_ASSERT( CLength == sigInLen );
 
 
     vtkm::Id sigInPtr = 0;  // pseudo pointer for the beginning of input array 
-    vtkm::Id len = sigIn.GetNumberOfValues();
+    vtkm::Id len = sigInLen;
     vtkm::Id cALen = WaveletBase::GetApproxLength( len );
     vtkm::Id cptr;          // pseudo pointer for the beginning of output array
     vtkm::Id tlen = 0;
@@ -90,20 +90,23 @@ public:
       cptr = 0 + CLength - tlen - cALen;
       
       // make input array (permutation array)
-      IdArrayType inputIndices( sigInPtr, 1, len );
-      PermutArrayType input( inputIndices, coeffOut ); 
+      IdArrayType       inputIndices( sigInPtr, 1, len );
+      PermutArrayType   input( inputIndices, coeffOut ); 
       // make output array 
-      InterArrayType output;
+      InterArrayType    output;
 
       WaveletDWT::DWT1D( input, output, L1d );
 
-      // update interArray
+      // move intermediate results to final array
+      /*
       vtkm::cont::ArrayPortalToIterators< InterPortalType > 
           outputIter( output.GetPortalControl() );
       vtkm::cont::ArrayPortalToIterators< InterPortalType > 
           coeffOutIter( coeffOut.GetPortalControl() );
       std::copy( outputIter.GetBegin(), outputIter.GetEnd(), 
                  coeffOutIter.GetBegin() + cptr );
+       */
+      WaveletBase::DeviceCopyStartX( output, coeffOut, cptr );
 
       // update pseudo pointers
       len = cALen;
@@ -152,11 +155,14 @@ public:
       WaveletDWT::IDWT1D( input, L1d, output );
 
       // Move output to intermediate array
+      /*
       vtkm::cont::ArrayPortalToIterators< typename OutArrayBasic::PortalControl > 
           outputIter( output.GetPortalControl() );
       vtkm::cont::ArrayPortalToIterators< typename SignalArrayType::PortalControl > 
           sigOutIter( sigOut.GetPortalControl() );
       std::copy( outputIter.GetBegin(), outputIter.GetEnd(), sigOutIter.GetBegin() );
+       */
+      WaveletBase::DeviceCopyStartX( output, sigOut, 0 );
 
       L1d[0] = L1d[2];
       L1d[1] = L[i+1];

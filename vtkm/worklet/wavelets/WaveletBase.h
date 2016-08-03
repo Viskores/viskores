@@ -171,6 +171,19 @@ public:
           ( srcArray, dstArray );
   }
 
+  // perform a device copy. The whole 1st array to a certain start location of the 2nd array
+  template< typename ArrayType1, typename ArrayType2 >
+  VTKM_EXEC_CONT_EXPORT
+  void DeviceCopyStartX( const ArrayType1   &srcArray, 
+                               ArrayType2   &dstArray,
+                               vtkm::Id     startIdx)
+  {
+      typedef vtkm::worklet::wavelets::CopyWorklet CopyType;
+      CopyType cp( startIdx );
+      vtkm::worklet::DispatcherMapField< CopyType > dispatcher( cp  );
+      dispatcher.Invoke( srcArray, dstArray );
+  }
+
   // Sort by the absolute value on device
   struct SortLessAbsFunctor
   { 
