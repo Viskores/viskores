@@ -337,37 +337,32 @@ private:
 class ThresholdWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<ScalarAll>,     
-                                FieldOut<ScalarAll>);        
-                                                             
-  typedef _2   ExecutionSignature( _1 );
-  typedef _1   InputDomain;
-
+  typedef void ControlSignature(FieldInOut    <ScalarAll>,  
+                                WholeArrayIn  <ScalarAll>); // sorted version       
+  typedef void  ExecutionSignature( _1, _2 );
+  typedef _1    InputDomain;
 
   // Constructor
-  template <typename ValueType>
   VTKM_EXEC_CONT_EXPORT
-  ThresholdWorklet( ValueType t ) 
+  ThresholdWorklet( vtkm::Id idx ) 
   {
-    this->threshold = static_cast<vtkm::Float64>(t);
-    this->negThreshold = threshold * -1.0;
+    this->thresholdIdx = idx; 
   }
 
-  template <typename ValueType>
+  template <typename ValueType, typename PortalType >
   VTKM_EXEC_EXPORT
-  ValueType operator()( const ValueType &coeff ) const
+  void operator()(       ValueType    &coeffVal,
+                   const PortalType   &sortedArray ) const
   {
-    vtkm::Float64 coeff64 = static_cast<vtkm::Float64>( coeff );
-    if( coeff64 > negThreshold && coeff64 < threshold )
-      return 0.0;
-    else
-      return coeff;
+    ValueType threshold = sortedArray.Get( thresholdIdx );
+    if( threshold < 0 )
+      threshold *= -1.0;
+    if( threshold * -1.0 < coeffVal && coeffVal < threshold )
+      coeffVal = 0.0;
   }
 
 private:
-  vtkm::Float64 threshold;
-  vtkm::Float64 negThreshold;
-
+  vtkm::Id thresholdIdx;
 };    
 
 

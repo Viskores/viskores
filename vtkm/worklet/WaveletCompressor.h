@@ -189,12 +189,15 @@ public:
       vtkm::Id n = static_cast<vtkm::Id>(
                       vtkm::Ceil( static_cast<vtkm::Float64>( coeffLen ) / 
                                   static_cast<vtkm::Float64>( ratio    ) ) );
+      typedef vtkm::worklet::wavelets::ThresholdWorklet ThresholdType;
+      ThresholdType tw( n );
+      vtkm::worklet::DispatcherMapField< ThresholdType > dispatcher( tw  );
+      dispatcher.Invoke( coeffIn, sortedArray );
+      /*
       ValueType threshold = sortedArray.GetPortalConstControl().Get( coeffLen - n );
       if( threshold < 0.0 )
         threshold *= -1.0;
-
       sortedArray.ReleaseResources();
-
       CoeffArrayBasic squashedArray;
 
       // Use a worklet
@@ -203,6 +206,7 @@ public:
       vtkm::worklet::DispatcherMapField< ThresholdType > dispatcher( tw  );
       dispatcher.Invoke( coeffIn, squashedArray );
       coeffIn = squashedArray;
+      */
     } 
 
     return 0;
