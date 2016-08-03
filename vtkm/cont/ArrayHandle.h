@@ -232,10 +232,10 @@ template<
 class ArrayHandle : public internal::ArrayHandleBase
 {
 private:
-  typedef vtkm::cont::internal::Storage<T,StorageTag_> StorageType;
   typedef vtkm::cont::internal::ArrayHandleExecutionManagerBase<T,StorageTag_>
       ExecutionManagerType;
 public:
+  typedef vtkm::cont::internal::Storage<T,StorageTag_> StorageType;
   typedef T ValueType;
   typedef StorageTag_ StorageTag;
   typedef typename StorageType::PortalType PortalControl;
@@ -300,6 +300,38 @@ public:
   {
     this->Internals = src.Internals;
     return *this;
+  }
+
+  /// Get the storage.
+  ///
+  VTKM_CONT_EXPORT StorageType& GetStorage()
+  {
+    this->SyncControlArray();
+    if (this->Internals->ControlArrayValid)
+    {
+      return this->Internals->ControlArray;
+    }
+    else
+    {
+      throw vtkm::cont::ErrorControlInternal(
+        "ArrayHandle::SyncControlArray did not make control array valid.");
+    }
+  }
+
+  /// Get the storage.
+  ///
+  VTKM_CONT_EXPORT const StorageType& GetStorage() const
+  {
+    this->SyncControlArray();
+    if (this->Internals->ControlArrayValid)
+    {
+      return this->Internals->ControlArray;
+    }
+    else
+    {
+      throw vtkm::cont::ErrorControlInternal(
+        "ArrayHandle::SyncControlArray did not make control array valid.");
+    }
   }
 
   /// Get the array portal of the control array.
