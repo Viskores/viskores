@@ -253,7 +253,7 @@ void TestMarchingCubesUniformGrid()
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
   isosurfaceFilter.Run(0.5f,
                        cellSet,
-                       dataSet.GetCoordinateSystem().GetData(),
+                       dataSet.GetCoordinateSystem(),
                        fieldArray,
                        verticesArray,
                        normalsArray,

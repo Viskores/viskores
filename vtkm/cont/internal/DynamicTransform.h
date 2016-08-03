@@ -24,6 +24,7 @@
 
 namespace vtkm {
 namespace cont {
+
 namespace internal {
 
 /// Tag used to identify an object that is a dynamic object that contains a
@@ -54,6 +55,19 @@ struct DynamicTransformTraits {
   /// DynamicTransformTagCastAndCall.
   ///
   typedef vtkm::cont::internal::DynamicTransformTagStatic DynamicTag;
+};
+
+/// A Generic interface to CastAndCall. The default implementation simply calls
+/// DynamicObject's CastAndCall, but specializations of this function exist for
+/// other classes (e.g. Field, CoordinateSystem).
+template<typename DynamicObject, typename Functor>
+struct CastAndCall
+{
+  VTKM_CONT_EXPORT
+  void operator()(const DynamicObject& dynamicObject, const Functor &f)
+  {
+    dynamicObject.CastAndCall(f);
+  }
 };
 
 /// This functor can be used as the transform in the \c DynamicTransformCont
@@ -92,7 +106,8 @@ private:
                    const ContinueFunctor &continueFunc,
                    vtkm::cont::internal::DynamicTransformTagCastAndCall) const
   {
-    dynamicInput.CastAndCall(continueFunc);
+    CastAndCall<InputType, ContinueFunctor> castAndCall;
+    castAndCall(dynamicInput, continueFunc);
   }
 };
 
