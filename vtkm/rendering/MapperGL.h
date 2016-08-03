@@ -240,33 +240,34 @@ public:
     }
     
     GLuint shader_programme = glCreateProgram();
-    glAttachShader(shader_programme, fs);
-    glAttachShader(shader_programme, vs);
-    
-    // insert location binding code here
-    glBindAttribLocation (shader_programme, 0, "vertex_position");
-    glBindAttribLocation (shader_programme, 1, "vertex_color");
-    glLinkProgram (shader_programme);
-    GLint linkStatus;
-    glGetProgramiv(shader_programme, GL_LINK_STATUS, &linkStatus);
-    if (!linkStatus)
+    if (shader_programme > 0)
     {
-        char log[2048];
-        GLsizei len;
-        glGetProgramInfoLog(shader_programme, 2048, &len, log);
-        std::string msg = std::string("Shader program link failed: ")+std::string(log);
-        throw vtkm::cont::ErrorControlBadValue(msg);
-    }
-    
-    glUseProgram(shader_programme);
-    GLint mvID = glGetUniformLocation(shader_programme, "mv_matrix");
-    glUniformMatrix4fv(mvID, 1, GL_FALSE, mvMat);
-    GLint pID = glGetUniformLocation(shader_programme, "p_matrix");
-    glUniformMatrix4fv(pID, 1, GL_FALSE, pMat);  
-    glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(numTri*3));
-    glUseProgram(0);
-  }    
+
+        glAttachShader(shader_programme, fs);
+        glAttachShader(shader_programme, vs);
+
+        glLinkProgram (shader_programme);
+        GLint linkStatus;
+        glGetProgramiv(shader_programme, GL_LINK_STATUS, &linkStatus);
+        if (!linkStatus)
+        {
+            char log[2048];
+            GLsizei len;
+            glGetProgramInfoLog(shader_programme, 2048, &len, log);
+            std::string msg = std::string("Shader program link failed: ")+std::string(log);
+            throw vtkm::cont::ErrorControlBadValue(msg);
+        }
+
+        glUseProgram(shader_programme);
+        GLint mvID = glGetUniformLocation(shader_programme, "mv_matrix");
+        glUniformMatrix4fv(mvID, 1, GL_FALSE, mvMat);
+        GLint pID = glGetUniformLocation(shader_programme, "p_matrix");
+        glUniformMatrix4fv(pID, 1, GL_FALSE, pMat);
+        glBindVertexArray(vao);
+        glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(numTri*3));
+        glUseProgram(0);
+      }
+  }
 };
 
 }} //namespace vtkm::rendering
