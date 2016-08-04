@@ -49,7 +49,7 @@ void TestStreamingSine()
 {
   std::cout << "Testing Streaming Sine" << std::endl;
 
-  const int N = 14;  const int NBlocks = 4;
+  const int N = 25;  const int NBlocks = 4;
   vtkm::cont::ArrayHandle<vtkm::Float32> input, output;
   std::vector<float> data(N), test(N);
   for (unsigned int i=0; i<N; i++)

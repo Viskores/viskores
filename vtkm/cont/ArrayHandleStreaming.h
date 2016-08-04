@@ -211,7 +211,6 @@ public:
                        const vtkm::Id curBlockSize)
      : Superclass(StorageType(inputArray, blockIndex, blockSize, curBlockSize)) 
   { 
-std::cout << "Stream constructor" << std::endl;
     this->GetPortalConstControl().SetBlockIndex(blockIndex);
     this->GetPortalConstControl().SetBlockSize(blockSize);
     this->GetPortalConstControl().SetCurBlockSize(curBlockSize);
