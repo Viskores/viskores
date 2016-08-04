@@ -19,26 +19,26 @@
 ##============================================================================
 
 set(unit_tests
-  #UnitTestCellAverage.cxx
-  #UnitTestClipping.cxx
-  #UnitTestExternalFaces.cxx
-  #UnitTestFieldHistogram.cxx
-  #UnitTestFieldStatistics.cxx
-  #UnitTestMarchingCubes.cxx
-  #UnitTestPointElevation.cxx
-  #UnitTestScatterCounting.cxx
-  #UnitTestSplatKernels.cxx
+  UnitTestCellAverage.cxx
+  UnitTestClipping.cxx
+  UnitTestExternalFaces.cxx
+  UnitTestFieldHistogram.cxx
+  UnitTestFieldStatistics.cxx
+  UnitTestMarchingCubes.cxx
+  UnitTestPointElevation.cxx
+  UnitTestScatterCounting.cxx
+  UnitTestSplatKernels.cxx
   UnitTestStreamingSine.cxx
-  #UnitTestStreamLineUniformGrid.cxx
-  #UnitTestTetrahedralizeExplicitGrid.cxx
-  #UnitTestTetrahedralizeUniformGrid.cxx
-  #UnitTestThreshold.cxx
-  #UnitTestWorkletMapField.cxx
-  #UnitTestWorkletMapFieldExecArg.cxx
-  #UnitTestWorkletMapFieldWholeArray.cxx
-  #UnitTestWorkletMapTopologyExplicit.cxx
-  #UnitTestWorkletMapTopologyUniform.cxx
-  #UnitTestVertexClustering.cxx
+  UnitTestStreamLineUniformGrid.cxx
+  UnitTestTetrahedralizeExplicitGrid.cxx
+  UnitTestTetrahedralizeUniformGrid.cxx
+  UnitTestThreshold.cxx
+  UnitTestWorkletMapField.cxx
+  UnitTestWorkletMapFieldExecArg.cxx
+  UnitTestWorkletMapFieldWholeArray.cxx
+  UnitTestWorkletMapTopologyExplicit.cxx
+  UnitTestWorkletMapTopologyUniform.cxx
+  UnitTestVertexClustering.cxx
  )
 
 vtkm_save_worklet_unit_tests(${unit_tests})
