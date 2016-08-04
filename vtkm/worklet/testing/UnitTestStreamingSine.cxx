@@ -20,6 +20,7 @@
 
 #include <vtkm/cont/ArrayHandleStreaming.h>
 #include <vtkm/worklet/DispatcherStreamingMapField.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -48,7 +49,7 @@ void TestStreamingSine()
 {
   std::cout << "Testing Streaming Sine" << std::endl;
 
-  const int N = 25;  const int NBlocks = 1;
+  const int N = 14;  const int NBlocks = 4;
   vtkm::cont::ArrayHandle<vtkm::Float32> input, output;
   std::vector<float> data(N), test(N);
   for (unsigned int i=0; i<N; i++)

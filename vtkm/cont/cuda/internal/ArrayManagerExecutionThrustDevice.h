@@ -156,8 +156,8 @@ public:
   VTKM_CONT_EXPORT
   PortalType PrepareForOutput(vtkm::Id numberOfValues)
   {
-if (this->GetNumberOfValues() == 0)
-{
+//if (this->GetNumberOfValues() == 0)
+//{
 std::cout << "Preparing for output" << std::endl;
     if (numberOfValues > this->GetNumberOfValues())
     {
@@ -172,9 +172,10 @@ std::cout << "Preparing for output" << std::endl;
       }
     catch (std::bad_alloc error)
       {
+std::cout << "Caught error" << std::endl;
       throw vtkm::cont::ErrorControlBadAllocation(error.what());
       }
-}
+//}
     return PortalType(this->Array.data(),
                       this->Array.data() + static_cast<difference_type>(this->Array.size()));
   }
@@ -261,6 +262,7 @@ private:
   VTKM_CONT_EXPORT
   void CopyToExecution()
   {
+std::cout << "Copy to execution" << std::endl;
     try
     {
       this->Array.assign(

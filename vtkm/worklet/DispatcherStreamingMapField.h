@@ -29,7 +29,6 @@ namespace worklet {
 
 namespace detail {
 
-
 template<typename ControlInterface, typename Device>
 struct DispatcherStreamingMapFieldTransformFunctor
 {
@@ -107,6 +106,7 @@ struct DispatcherStreamingMapFieldTransformFunctor
 };
 
 
+
 template<typename ControlInterface, typename Device>
 struct DispatcherStreamingMapFieldTransferFunctor
 {
@@ -168,6 +168,8 @@ struct DispatcherStreamingMapFieldTransferFunctor
   operator()(const ParameterType &invokeData,
              vtkm::internal::IndexTag<Index>) const
   {
+std::cout << "Calling transfer" << std::endl;
+    invokeData.SyncControlArray();
     return TransformImpl<ParameterType,
       vtkm::cont::internal::ArrayHandleCheck<ParameterType>::type::value>()(invokeData);
   }
@@ -214,6 +216,21 @@ public:
     NumberOfBlocks = numberOfBlocks;
   }
 
+  template<typename Invocation, typename DeviceAdapter>
+  VTKM_CONT_EXPORT
+  void ABasicInvoke(const Invocation &invocation,
+                   vtkm::Id numInstances,
+                   DeviceAdapter device) const
+  {
+       this->BasicInvoke(
+        /*invocation.ChangeParameters(
+          invocation.Parameters.StaticTransformCont(
+              TransformFunctorType(block, blockSize, numberOfInstances, fullSize))),*/
+invocation,
+          numInstances,
+          Device());
+  }
+
   template<typename Invocation>
   VTKM_CONT_EXPORT
   void DoInvoke(const Invocation &invocation) const
@@ -250,14 +267,43 @@ public:
           invocation.Parameters.StaticTransformCont(
               TransformFunctorType(block, blockSize, numberOfInstances, fullSize))));
 */
-      this->BasicInvoke(
+
+        typedef typename Invocation::ParameterInterface ParameterInterfaceType;
+        typedef typename ParameterInterfaceType::StaticTransformType<TransformFunctorType>::type ReportedType;
+        ReportedType newParams = invocation.Parameters.StaticTransformCont(
+            TransformFunctorType(block, blockSize, numberOfInstances, fullSize));
+
+        typedef typename Invocation::ChangeParametersType<ReportedType>::type ChangedType;
+        ChangedType changedParams = invocation.ChangeParameters(newParams);
+
+       std::cout << "Before invoke" << std::endl; 
+
+        this->BasicInvoke(changedParams, numberOfInstances, Device());
+
+        std::cout << "After invoke" << std::endl;
+
+        //Invocation::ChangeParametersType<>::type invocation.ChangeParameters(
+        //  invocation.Parameters.StaticTransformCont(
+        //      TransformFunctorType(block, blockSize, numberOfInstances, fullSize)));
+/*      this->BasicInvoke(
         invocation.ChangeParameters(
           invocation.Parameters.StaticTransformCont(
               TransformFunctorType(block, blockSize, numberOfInstances, fullSize))),
           numberOfInstances,
           Device());
+*/
 
-      invocation.Parameters.StaticTransformCont(TransferFunctorType());
+    typedef typename ChangedType::ParameterInterface ParameterInterfaceType2;
+    const ParameterInterfaceType2 &parameters2 = changedParams.Parameters;
+    typedef typename ParameterInterfaceType2::template StaticTransformType<
+        TransferFunctorType>::type ExecObjectParameters2;
+    ExecObjectParameters2 execObjectParameters =
+        parameters2.StaticTransformCont(TransferFunctorType());
+
+
+
+      //changedParams.StaticTransformCont(TransferFunctorType());
+      //invocation.Parameters.StaticTransformCont(TransferFunctorType());
     }
   }
 

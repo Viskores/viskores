@@ -468,11 +468,13 @@ protected:
                    vtkm::Id3 dimensions,
                    DeviceAdapter device) const
   {
+std::cout << "A0" << std::endl;
     this->InvokeTransportParameters(
           invocation,
           dimensions,
           this->Worklet.GetScatter().GetOutputRange(dimensions),
           device);
+std::cout << "A1" << std::endl;
   }
 
   WorkletType Worklet;
@@ -498,17 +500,18 @@ private:
     // control environment) in a FunctionInterface. Specifically, we use a
     // static transform of the FunctionInterface to call the transport on each
     // argument and return the corresponding execution environment object.
+std::cout << "C0" << std::endl;
     typedef typename Invocation::ParameterInterface ParameterInterfaceType;
     const ParameterInterfaceType &parameters = invocation.Parameters;
-
+std::cout << "C1" << std::endl;
     typedef detail::DispatcherBaseTransportFunctor<
         typename Invocation::ControlInterface, DeviceAdapter> TransportFunctorType;
     typedef typename ParameterInterfaceType::template StaticTransformType<
         TransportFunctorType>::type ExecObjectParameters;
-
+std::cout << "C2" << std::endl;
     ExecObjectParameters execObjectParameters =
         parameters.StaticTransformCont(TransportFunctorType(outputRange));
-
+std::cout << "C3" << std::endl;
     // Get the arrays used for scattering input to output.
     typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =
         this->Worklet.GetScatter().GetOutputToInputMap(inputRange);
@@ -517,6 +520,7 @@ private:
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.
+std::cout << "B0" << std::endl;    
     this->InvokeSchedule(
           invocation
           .ChangeParameters(execObjectParameters)
@@ -524,6 +528,7 @@ private:
           .ChangeVisitArray(visitArray.PrepareForInput(device)),
           outputRange,
           device);
+std::cout << "B1" << std::endl;
   }
 
   template<typename Invocation, typename RangeType, typename DeviceAdapter>

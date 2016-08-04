@@ -129,10 +129,6 @@ struct GetTypeInParentheses<void(T)>
 
 } // namespace detail
 
-  //VTKM_CONT_EXPORT \
-  //virtual ~classname() {  } \
- // \
-
 // Implementation for VTKM_ARRAY_HANDLE_SUBCLASS macros
 #define VTK_M_ARRAY_HANDLE_SUBCLASS_IMPL(classname, fullclasstype, superclass, typename__) \
   typedef typename__ vtkm::cont::detail::GetTypeInParentheses<void fullclasstype>::type Thisclass;\
@@ -148,6 +144,9 @@ struct GetTypeInParentheses<void(T)>
   \
   VTKM_CONT_EXPORT \
   classname(const vtkm::cont::ArrayHandle<typename__ Superclass::ValueType, typename__ Superclass::StorageTag> &src) : Superclass(src) {  } \
+  \
+  VTKM_CONT_EXPORT \
+  virtual ~classname() {  } \
   \
   VTKM_CONT_EXPORT \
   Thisclass &operator=(const Thisclass &src) \
@@ -407,7 +406,7 @@ public:
   /// array storage is read-only).
   ///
   VTKM_CONT_EXPORT
-  void Allocate(vtkm::Id numberOfValues) const
+  void Allocate(vtkm::Id numberOfValues)
   {
     this->ReleaseResourcesExecutionInternal();
     this->Internals->ControlArray.Allocate(numberOfValues);
@@ -464,7 +463,7 @@ public:
 
   /// Releases all resources in both the control and execution environments.
   ///
-  VTKM_CONT_EXPORT void ReleaseResources() const
+  VTKM_CONT_EXPORT void ReleaseResources()
   {
     this->ReleaseResourcesExecutionInternal();
 
@@ -685,7 +684,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void ReleaseResourcesExecutionInternal() const
+  void ReleaseResourcesExecutionInternal()
   {
     if (this->Internals->ExecutionArrayValid)
     {

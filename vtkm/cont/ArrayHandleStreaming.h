@@ -149,7 +149,7 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void AllocateFullArray(vtkm::Id numberOfValues) const {
+  void AllocateFullArray(vtkm::Id numberOfValues) {
     VTKM_ASSERT(this->Valid);
     this->InputArray.Allocate(numberOfValues);
   }
@@ -201,12 +201,6 @@ public:
          typename ArrayHandleInputType::ValueType,
          StorageTagStreaming<ArrayHandleInputType> >));
 
-  ~ArrayHandleStreaming() { 
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
-    DeviceAlgorithms::Synchronize();
-    this->SyncControlArray(); 
-  }
-
 private:
   typedef vtkm::cont::internal::Storage<ValueType,StorageTag> StorageType;
 
@@ -217,13 +211,14 @@ public:
                        const vtkm::Id curBlockSize)
      : Superclass(StorageType(inputArray, blockIndex, blockSize, curBlockSize)) 
   { 
+std::cout << "Stream constructor" << std::endl;
     this->GetPortalConstControl().SetBlockIndex(blockIndex);
     this->GetPortalConstControl().SetBlockSize(blockSize);
     this->GetPortalConstControl().SetCurBlockSize(curBlockSize);
   }
 
   VTKM_CONT_EXPORT
-  void AllocateFullArray(vtkm::Id numberOfValues) const {
+  void AllocateFullArray(vtkm::Id numberOfValues) {
     this->ReleaseResourcesExecutionInternal();
     this->Internals->ControlArray.AllocateFullArray(numberOfValues);
     this->Internals->ControlArrayValid = true;
