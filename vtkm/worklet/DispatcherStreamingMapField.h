@@ -106,32 +106,15 @@ struct DispatcherStreamingMapFieldTransformFunctor
 };
 
 
-
 template<typename ControlInterface, typename Device>
 struct DispatcherStreamingMapFieldTransferFunctor
 {
   VTKM_CONT_EXPORT
   DispatcherStreamingMapFieldTransferFunctor()  {  }
 
-  template<typename ParameterType, bool IsArrayHandle>
-  struct DetermineReturnType;
-
-  template<typename ArrayHandleType>
-  struct DetermineReturnType<ArrayHandleType, true>
-  {
-    typedef vtkm::cont::ArrayHandleStreaming<ArrayHandleType> type;
-  };
-
-  template<typename NotArrayHandleType>
-  struct DetermineReturnType<NotArrayHandleType, false>
-  {
-    typedef NotArrayHandleType type;
-  };
-
   template<typename ParameterType, vtkm::IdComponent Index>
   struct ReturnType {
-    typedef typename DetermineReturnType<ParameterType,
-        vtkm::cont::internal::ArrayHandleCheck<ParameterType>::type::value>::type type;
+    typedef ParameterType type; 
   };
 
   template<typename ParameterType, bool IsArrayHandle>
@@ -141,13 +124,11 @@ struct DispatcherStreamingMapFieldTransferFunctor
   struct TransformImpl<ArrayHandleType, true>
   {
     VTKM_CONT_EXPORT
-    vtkm::cont::ArrayHandleStreaming<ArrayHandleType>
+    ArrayHandleType
     operator()(const ArrayHandleType &array) const
     {
-      vtkm::cont::ArrayHandleStreaming<ArrayHandleType> result =
-          vtkm::cont::ArrayHandleStreaming<ArrayHandleType>(
-          array, 0, 0, 0);
-      return result;
+      array.SyncControlArray();
+      return array;
     }
   };
 
@@ -167,7 +148,6 @@ struct DispatcherStreamingMapFieldTransferFunctor
   operator()(const ParameterType &invokeData,
              vtkm::internal::IndexTag<Index>) const
   {
-    invokeData.SyncControlArray();
     return TransformImpl<ParameterType,
       vtkm::cont::internal::ArrayHandleCheck<ParameterType>::type::value>()(invokeData);
   }
@@ -245,11 +225,9 @@ public:
 
         this->BasicInvoke(changedParams, numberOfInstances, Device());
 
+        // Loop over parameters again to sync results for this block into control array
         typedef typename ChangedType::ParameterInterface ParameterInterfaceType2;
         const ParameterInterfaceType2 &parameters2 = changedParams.Parameters;
-        //typedef typename ParameterInterfaceType2::template StaticTransformType<
-        //  TransferFunctorType>::type ExecObjectParameters2;
-        //ExecObjectParameters2 execObjectParameters =
         parameters2.StaticTransformCont(TransferFunctorType());
     }
   }
