@@ -51,8 +51,7 @@ public:
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if( nLevels < 1 || nLevels > WaveletBase::GetWaveletMaxLevel( sigInLen ) )
     {
-      std::cerr << "nLevel is not supported: " << nLevels << std::endl;
-      // TODO: throw an error
+      throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
     }
     if( nLevels == 0 )  //  0 levels means no transform
     {

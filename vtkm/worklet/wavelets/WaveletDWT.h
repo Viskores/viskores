@@ -83,8 +83,7 @@ public:
       }
       default:
       {
-        std::cerr << "left extension mode not supported" << std::endl;
-        // TODO: throw an error
+        vtkm::cont::ErrorControlInternal("Left extension mode not supported!");
         return 1;
       }
     }
@@ -113,8 +112,7 @@ public:
       }
       default:
       {
-        std::cerr << "right extension mode not supported" << std::endl;
-        // TODO: throw an error
+        vtkm::cont::ErrorControlInternal("Right extension mode not supported!");
         return 1;
       }
     }
@@ -151,8 +149,7 @@ public:
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if( GetWaveletMaxLevel( sigInLen ) < 1 )
     {
-      // TODO: throw an error
-      std::cerr << "Cannot transform signal of length " << sigInLen << std::endl;
+      vtkm::cont::ErrorControlInternal( "Signal is too short to perform DWT!" ); 
       return -1;
     } 
 

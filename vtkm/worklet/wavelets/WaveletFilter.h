@@ -65,8 +65,7 @@ public:
     }
     else
     {
-      std::cerr << "Not supported wavelet kernel: " << wname << std::endl;
-      // TODO: throw an error here
+      vtkm::cont::ErrorControlBadValue("Not supported wavelet kernel type!");
     }
   }
 

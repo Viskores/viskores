@@ -64,8 +64,7 @@ public:
     }
     else
     {
-      std::cerr << "This wavelet kernel is not supported: " << wname << std::endl;
-      // TODO: throw an error
+      vtkm::cont::ErrorControlBadValue("This wavelet kernel is not supported! ");
     }
   }
 
@@ -83,7 +82,7 @@ public:
   { 
     if( this->filter == NULL )
     {
-      // TODO: throw an error
+      vtkm::cont::ErrorControlInternal( "Filter is NULL right now!" );
     }
     return filter; 
   }
