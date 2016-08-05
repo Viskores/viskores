@@ -98,14 +98,6 @@ public:
       WaveletDWT::DWT1D( input, output, L1d );
 
       // move intermediate results to final array
-      /*
-      vtkm::cont::ArrayPortalToIterators< InterPortalType > 
-          outputIter( output.GetPortalControl() );
-      vtkm::cont::ArrayPortalToIterators< InterPortalType > 
-          coeffOutIter( coeffOut.GetPortalControl() );
-      std::copy( outputIter.GetBegin(), outputIter.GetEnd(), 
-                 coeffOutIter.GetBegin() + cptr );
-       */
       WaveletBase::DeviceCopyStartX( output, coeffOut, cptr );
 
       // update pseudo pointers
@@ -155,13 +147,6 @@ public:
       WaveletDWT::IDWT1D( input, L1d, output );
 
       // Move output to intermediate array
-      /*
-      vtkm::cont::ArrayPortalToIterators< typename OutArrayBasic::PortalControl > 
-          outputIter( output.GetPortalControl() );
-      vtkm::cont::ArrayPortalToIterators< typename SignalArrayType::PortalControl > 
-          sigOutIter( sigOut.GetPortalControl() );
-      std::copy( outputIter.GetBegin(), outputIter.GetEnd(), sigOutIter.GetBegin() );
-       */
       WaveletBase::DeviceCopyStartX( output, sigOut, 0 );
 
       L1d[0] = L1d[2];
@@ -193,20 +178,6 @@ public:
       ThresholdType tw( n );
       vtkm::worklet::DispatcherMapField< ThresholdType > dispatcher( tw  );
       dispatcher.Invoke( coeffIn, sortedArray );
-      /*
-      ValueType threshold = sortedArray.GetPortalConstControl().Get( coeffLen - n );
-      if( threshold < 0.0 )
-        threshold *= -1.0;
-      sortedArray.ReleaseResources();
-      CoeffArrayBasic squashedArray;
-
-      // Use a worklet
-      typedef vtkm::worklet::wavelets::ThresholdWorklet ThresholdType;
-      ThresholdType tw( threshold );
-      vtkm::worklet::DispatcherMapField< ThresholdType > dispatcher( tw  );
-      dispatcher.Invoke( coeffIn, squashedArray );
-      coeffIn = squashedArray;
-      */
     } 
 
     return 0;

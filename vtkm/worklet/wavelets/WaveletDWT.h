@@ -322,7 +322,7 @@ public:
       if( cDPadLen > 0 )  
       {
         /* Add back the missing final cD: 0.0
-         * This case is unlikely to happen because SYMH is rare. TODO later.
+         * TODO when SYMH is needed.
          *
         ExtensionArrayType singleValArray;
         singleValArray.Allocate(1);
@@ -347,7 +347,7 @@ public:
       }
     }     
     else  
-    { /* This case is unlikely to happen, so TODO later.
+    { /* TODO when SYMH is needed
       WaveletBase::DeviceCopy( cA, cATemp );
       WaveletBase::DeviceCopy( cD, cDTemp );
        */

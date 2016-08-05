@@ -113,8 +113,6 @@ public:
         coeffOut.Set( outputIdx, static_cast<OutputValueType>(sum) );
       }
     }
-    //else
-      //coeffOut.Set( workIndex, static_cast<OutputValueType>( magicNum ) );
   }
 
   #undef MAKEVAL
@@ -133,105 +131,6 @@ private:
     this->xhstart = this->oddhigh ? 1 : 0;
   }
 };    // Finish class ForwardTransform
-
-#if 0
-// Worklet: perform an inverse transform for odd length, symmetric filters.
-class InverseTransformOdd: public vtkm::worklet::WorkletMapField
-{
-public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // Input: coeffs,
-                                                             // cA followed by cD
-                                WholeArrayIn<Scalar>,        // lowFilter
-                                WholeArrayIn<Scalar>,        // highFilter
-                                FieldOut<ScalarAll>);        // output
-  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
-  typedef _1   InputDomain;
-
-  // Constructor
-  VTKM_EXEC_CONT_EXPORT
-  InverseTransformOdd() 
-  {
-    magicNum  = 0.0;
-    filterLen = 0;
-    cALen = 0;
-  }
-
-  // Set the filter length
-  VTKM_EXEC_CONT_EXPORT
-  void SetFilterLength( vtkm::Id len )
-  {
-    VTKM_ASSERT( len % 2 == 1 );
-    this->filterLen = len;
-  }
-
-  // Set cA length
-  VTKM_EXEC_CONT_EXPORT
-  void SetCALength( vtkm::Id len, vtkm::Id lenExt )
-  {
-    this->cALen = len;
-    this->cALenExtended = lenExt;
-  }
-
-  // Use 64-bit float for convolution calculation
-  #define VAL        vtkm::Float64
-  #define MAKEVAL(a) (static_cast<VAL>(a))
-
-  template <typename InputPortalType,
-            typename FilterPortalType,
-            typename OutputPortalType>
-  VTKM_EXEC_EXPORT
-  void operator()(const InputPortalType       &coeffs,
-                  const FilterPortalType      &lowFilter,
-                  const FilterPortalType      &highFilter,
-                  OutputPortalType            &sigOut,
-                  const vtkm::Id &workIndex) const
-  {
-    vtkm::Id xi;    // coeff indices
-    vtkm::Id k;     // filter indices
-
-    VAL sum = 0.0;    
-
-    if( workIndex < 2*cALen )   // valid calculation region
-    {
-      xi = (workIndex+1) / 2;
-      if( workIndex % 2 != 0 )
-        k = this->filterLen - 2;
-      else
-        k = this->filterLen - 1;
-      while( k >= 0 )
-      {
-        sum += lowFilter.Get(k) * MAKEVAL( coeffs.Get(xi) );
-        xi++;
-        k -= 2;
-      }
-
-      xi = workIndex / 2;
-      if( workIndex % 2 != 0 )
-        k = this->filterLen - 1;
-      else
-        k = this->filterLen - 2;
-      while( k >= 0 )
-      {
-        sum += highFilter.Get(k) * MAKEVAL( coeffs.Get( xi + this->cALenExtended ) );
-        xi++;
-        k -= 2;
-      }
-    }
-
-    sigOut = static_cast<OutputPortalType>( sum );
-  }
-
-  #undef MAKEVAL
-  #undef VAL
-
-private:
-  vtkm::Float64 magicNum;
-  vtkm::Id filterLen;       // filter length.
-  vtkm::Id cALen;           // Number of actual cAs 
-  vtkm::Id cALenExtended;   // Number of extended cA at the beginning of input array
-  
-};    // class ForwardTransform
-#endif
 
 
 // Worklet: perform an inverse transform for odd length, symmetric filters.
