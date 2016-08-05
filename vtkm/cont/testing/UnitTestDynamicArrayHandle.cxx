@@ -152,7 +152,7 @@ void CheckDynamicArray(
 {
   BasicDynamicArrayChecks(array, numComponents);
 
-  array.CastAndCall(CheckFunctor());
+  CastAndCall(array,CheckFunctor());
 
   VTKM_TEST_ASSERT(CheckCalled,
                    "The functor was never called (and apparently a bad value exception not thrown).");

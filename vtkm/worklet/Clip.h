@@ -608,7 +608,7 @@ public:
     vtkm::cont::CellSetExplicit<> output;
     ClipWithImplicitFunction<ImplicitFunction> clip(this, cellSet, clipFunction,
                                                     &output);
-    coords.GetData().CastAndCall(clip);
+    CastAndCall(coords, clip);
 
     return output;
   }
@@ -683,14 +683,14 @@ public:
     vtkm::cont::DynamicArrayHandle *Output;
   };
 
-  template <typename DynamicArrayHandleType>
+  template <typename FieldType>
   vtkm::cont::DynamicArrayHandle ProcessField(
-      const DynamicArrayHandleType &fieldData) const
+      const FieldType &fieldData) const
   {
     vtkm::cont::DynamicArrayHandle output;
-    fieldData.CastAndCall(InterpolateField(this->NewPointsInterpolation,
-                                           this->NewPointsOffset,
-                                           &output));
+    CastAndCall(fieldData, InterpolateField(this->NewPointsInterpolation,
+                                            this->NewPointsOffset,
+                                            &output));
     return output;
   }
 

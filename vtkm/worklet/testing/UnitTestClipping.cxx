@@ -126,9 +126,9 @@ void TestClippingExplicit()
 
 
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(ds.GetCoordinateSystem("coords").GetData());
+      clip.ProcessField(ds.GetCoordinateSystem("coords"));
   vtkm::cont::DynamicArrayHandle scalars =
-      clip.ProcessField(ds.GetField("scalars").GetData());
+      clip.ProcessField(ds.GetField("scalars"));
 
 
   vtkm::Id connectivitySize = 12;
@@ -177,9 +177,9 @@ void TestClippingStrucutred()
 
 
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(ds.GetCoordinateSystem("coords").GetData());
+      clip.ProcessField(ds.GetCoordinateSystem("coords"));
   vtkm::cont::DynamicArrayHandle scalars =
-      clip.ProcessField(ds.GetField("scalars").GetData());
+      clip.ProcessField(ds.GetField("scalars"));
 
   vtkm::Id connectivitySize = 36;
   vtkm::Id fieldSize = 13;
@@ -232,9 +232,9 @@ void TestClippingWithImplicitFunction()
 
 
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(ds.GetCoordinateSystem("coords").GetData());
+      clip.ProcessField(ds.GetCoordinateSystem("coords"));
   vtkm::cont::DynamicArrayHandle scalars =
-      clip.ProcessField(ds.GetField("scalars").GetData());
+      clip.ProcessField(ds.GetField("scalars"));
 
   vtkm::Id connectivitySize = 36;
   vtkm::Id fieldSize = 13;

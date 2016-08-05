@@ -165,10 +165,10 @@ private:
     vtkm::Id npoints = cdata.GetNumberOfValues();
 
     std::string typeName;
-    cdata.CastAndCall(detail::GetDataTypeName(typeName));
+    vtkm::cont::CastAndCall(cdata, detail::GetDataTypeName(typeName));
 
     out << "POINTS " << npoints << " " << typeName << " " << std::endl;
-    cdata.CastAndCall(detail::OutputPointsFunctor(out));
+    vtkm::cont::CastAndCall(cdata, detail::OutputPointsFunctor(out));
   }
 
   template <class CellSetType>
@@ -242,13 +242,13 @@ private:
       }
 
       std::string typeName;
-      field.GetData().CastAndCall(detail::GetDataTypeName(typeName));
+      vtkm::cont::CastAndCall(field, detail::GetDataTypeName(typeName));
 
       out << "SCALARS " << field.GetName() << " "
           << typeName << " " << ncomps << std::endl;
       out << "LOOKUP_TABLE default" << std::endl;
 
-      field.GetData().CastAndCall(detail::OutputFieldFunctor(out));
+      vtkm::cont::CastAndCall(field, detail::OutputFieldFunctor(out));
     }
   }
 
@@ -281,13 +281,13 @@ private:
       }
 
       std::string typeName;
-      field.GetData().CastAndCall(detail::GetDataTypeName(typeName));
+      vtkm::cont::CastAndCall(field, detail::GetDataTypeName(typeName));
 
       out << "SCALARS " << field.GetName() <<  " "
           << typeName << " " << ncomps << std::endl;
       out << "LOOKUP_TABLE default" << std::endl;
 
-      field.GetData().CastAndCall(detail::OutputFieldFunctor(out));
+      vtkm::cont::CastAndCall(field, detail::OutputFieldFunctor(out));
     }
   }
 

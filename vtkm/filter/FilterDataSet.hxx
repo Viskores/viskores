@@ -127,7 +127,8 @@ bool FilterDataSet<Derived>::MapFieldOntoOutput(ResultDataSet& result,
                         valid);
 
     typedef vtkm::filter::FilterTraits< Derived > Traits;
-    vtkm::filter::ApplyPolicy(field, policy, Traits()).CastAndCall(functor);
+    vtkm::cont::CastAndCall( vtkm::filter::ApplyPolicy(field, policy, Traits()),
+                             functor );
     }
 
   //the bool valid will be modified by the map algorithm to hold if the
