@@ -308,7 +308,7 @@ void TestMarchingCubesExplicit()
 
   marchingCubes.Run(contourValue,
                     cellSet,
-                    dataSet.GetCoordinateSystem().GetData(),
+                    dataSet.GetCoordinateSystem(),
                     contourArray,
                     vertices,
                     normals,

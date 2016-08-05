@@ -40,7 +40,7 @@ void TestCellAverageUniform3D()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("pointvar"),
                     dataSet.GetCellSet(),
                     result);
 
@@ -63,7 +63,7 @@ void TestCellAverageUniform2D()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("pointvar"),
                     dataSet.GetCellSet(),
                     result);
 
@@ -86,7 +86,7 @@ void TestCellAverageExplicit()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("pointvar"),
                     dataSet.GetCellSet(),
                     result);
 

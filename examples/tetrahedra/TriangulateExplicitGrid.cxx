@@ -178,7 +178,7 @@ void displayCall()
 
   // Get the coordinate system and coordinate data
   const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray =
-                                      outDataSet.GetCoordinateSystem(0).GetData();
+                                      outDataSet.GetCoordinateSystem(0);
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
   // So use cast and call on a functor that stores that dynamic array into static array we created

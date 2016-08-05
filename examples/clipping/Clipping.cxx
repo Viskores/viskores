@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
   timer.Reset();
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(input.GetCoordinateSystem(0).GetData());
+      clip.ProcessField(input.GetCoordinateSystem(0));
   vtkm::Float64 processCoordinatesTime = timer.GetElapsedTime();
   output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coords));
 

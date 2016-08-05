@@ -119,7 +119,7 @@ public:
 
       ThresholdWorklet worklet(predicate);
       DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-      dispatcher.Invoke(cellSet, field.GetData(), passFlags);
+      dispatcher.Invoke(cellSet, field, passFlags);
       break;
       }
 
@@ -129,7 +129,7 @@ public:
 
       ThresholdWorklet worklet(predicate);
       DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-      dispatcher.Invoke(cellSet, field.GetData(), passFlags);
+      dispatcher.Invoke(cellSet, field, passFlags);
       break;
       }
 

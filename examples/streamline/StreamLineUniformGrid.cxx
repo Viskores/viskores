@@ -148,7 +148,7 @@ void displayCall()
   vtkm::cont::CellSetExplicit<> cellSet;
   outDataSet.GetCellSet(0).CopyTo(cellSet);
   const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray =
-                                    outDataSet.GetCoordinateSystem(0).GetData();
+                                    outDataSet.GetCoordinateSystem(0);
 
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
   vtkm::Id numberOfPoints = coordArray.GetNumberOfValues();

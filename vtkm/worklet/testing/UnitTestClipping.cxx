@@ -120,7 +120,9 @@ void TestClippingExplicit()
 
   vtkm::worklet::Clip<DeviceAdapter> clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-      clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue);
+      clip.Run(ds.GetCellSet(0),
+               ds.GetField("scalars").GetData(),
+               clipValue);
 
 
   vtkm::cont::DynamicArrayHandle coords =
@@ -169,7 +171,9 @@ void TestClippingStrucutred()
 
   vtkm::worklet::Clip<DeviceAdapter> clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-      clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue);
+      clip.Run(ds.GetCellSet(0),
+               ds.GetField("scalars").GetData(),
+               clipValue);
 
 
   vtkm::cont::DynamicArrayHandle coords =
