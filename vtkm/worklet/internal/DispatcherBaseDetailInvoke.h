@@ -26,11 +26,19 @@
 
 // Note that this file is included from the middle of the DispatcherBase.h
 // class to provide the implementation of the Invoke method, which requires
-// variable length template args. If we choose to support C++11 variable
-// template arguments, then this could all be replaced efficiently with a
+// variable length template args. For C++11 this all replaced efficiently with a
 // single method with a variadic template function that calls
 // make_FunctionInterface.
 
+#if defined(VTKM_HAVE_CXX_11)
+  template<typename... ArgTypes>
+  VTKM_CONT_EXPORT
+  void Invoke(ArgTypes... args) const
+  {
+  this->StartInvoke(
+        vtkm::internal::make_FunctionInterface<void>(args...));
+  }
+#else
 
 
 template<typename T1>
@@ -141,3 +149,4 @@ void Invoke(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5, T6 a6, T7 a7, T8 a8, T9 a9) const
         vtkm::internal::make_FunctionInterface<void>(a1,a2,a3,a4,a5,a6,a7,a8,a9));
 }
 
+#endif

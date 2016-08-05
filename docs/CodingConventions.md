@@ -110,7 +110,7 @@ a tab stop is, so it is better to not use them at all.
 
 + Namespaces should not be brought into global scope or the scope of any VTK-M package names- pace with the “using” keyword. It should also be avoided in class, method, and function scopes (fully qualified namespace references are preferred).
 
-+ All code must be valid by the C++03 and C++11 specifications. It must also compile on older compilers that support C++98. Code that uses language features not available in C++98 must have a second implementation that works around the limitations of C++98. The VTKM_FORCE_ANSI turns on a compiler check for ANSI compatibility in gcc and clang compilers.
++ All code must be valid by the C++03 and C++11 specifications. It must also compile on older compilers that support C++98. Code that uses language features not available in C++11 must have a second implementation that works for C++98. The VTKm_ENABLE_CXX11 turns on C++11 compiler flags for gcc, clang, intel and MSVC compilers.
 
 + Limit all lines to 80 characters whenever possible.
 

@@ -69,14 +69,18 @@ if(NOT VTKm_Base_FOUND)
 endif()
 
 #-----------------------------------------------------------------------------
-# Check for Cxx11 support.
-option(VTKm_FORCE_ANSI
- "Turn off compiling any features not compatible with ISO-C++98 (ANSI)." OFF)
-if (NOT VTKm_FORCE_ANSI)
-  include(CMake/CheckCXX11Features.cmake)
-else (NOT VTKm_FORCE_ANSI)
-  set(VTKm_NO_VARIADIC_TEMPLATE TRUE)
-endif ()
+# Add flag to enable C++11 support.
+if (NOT CMAKE_VERSION VERSION_LESS "3.1")
+  option(VTKm_ENABLE_CXX11 "Build VTKm using C++11" ON)
+else()
+  set(VTKm_ENABLE_CXX11 OFF)
+endif()
+# If the user has requested C++11, propagate that information to CMake
+if (VTKm_ENABLE_CXX11)
+  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD_REQUIRED True)
+  set(CMAKE_CXX_EXTENSIONS False)
+endif()
 
 #-----------------------------------------------------------------------------
 # Add supplemental compiler warnings, and GCC visibility support.
