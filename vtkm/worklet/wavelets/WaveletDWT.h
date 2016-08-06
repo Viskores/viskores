@@ -127,8 +127,6 @@ public:
 
     typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, SigInArrayType> 
             ArrayConcat;
-    typedef vtkm::cont::ArrayHandleConcatenate< ArrayConcat, ExtensionArrayType >  
-            ArrayConcat2;
     ArrayConcat leftOn( leftExtend, sigIn );    
     sigOut = vtkm::cont::make_ArrayHandleConcatenate( leftOn, rightExtend );
 
@@ -228,7 +226,7 @@ public:
   template< typename CoeffArrayType, typename SignalArrayType>
   VTKM_CONT_EXPORT
   vtkm::Id IDWT1D( const CoeffArrayType  &coeffIn,     // Input, cA followed by cD
-                   const vtkm::Id         L[3],         // Input, how many cA and cD
+                   const vtkm::Id        L[3],         // Input, how many cA and cD
                    SignalArrayType       &sigOut )     // Output
   {
     VTKM_ASSERT( coeffIn.GetNumberOfValues() == L[2] );
@@ -304,7 +302,6 @@ public:
     
 
     typedef typename CoeffArrayType::ValueType                    CoeffValueType;
-    typedef vtkm::cont::ArrayHandle< CoeffValueType >             CoeffArrayBasic;
     typedef vtkm::cont::ArrayHandle< CoeffValueType >             ExtensionArrayType;
     typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, PermutArrayType >
             Concat1;
@@ -355,6 +352,9 @@ public:
       vtkm::cont::ArrayHandleConcatenate< Concat2, Concat2>
           coeffInExtended( cATemp, cDTemp );
 
+      // Allocate memory for sigOut
+      sigOut.Allocate( coeffInExtended.GetNumberOfValues() );
+
       // Initialize a worklet
       vtkm::worklet::wavelets::InverseTransformOdd inverseXformOdd;
       inverseXformOdd.SetFilterLength( filterLen );
@@ -371,7 +371,7 @@ public:
     }
     else
     {
-      // TODO: need to implement the even filter length worklet first
+      // TODO: implement for even length filter
     }
 
     return 0;

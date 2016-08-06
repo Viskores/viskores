@@ -267,8 +267,6 @@ public:
   VTKM_CONT_EXPORT
   vtkm::Float64 CalculateVariance( ArrayType &array )
   {
-    typedef typename ArrayType::ValueType ValueType;
-
     vtkm::Float64 mean = static_cast<vtkm::Float64>(WaveletBase::DeviceSum( array )) / 
                          static_cast<vtkm::Float64>(array.GetNumberOfValues());
     

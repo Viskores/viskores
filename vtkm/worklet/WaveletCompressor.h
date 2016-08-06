@@ -74,7 +74,6 @@ public:
     // Use an intermediate array
     typedef typename CoeffArrayType::ValueType          OutputValueType;
     typedef vtkm::cont::ArrayHandle< OutputValueType >  InterArrayType;
-    typedef typename InterArrayType::PortalControl      InterPortalType;
 
     // Define a few more types
     typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      IdArrayType;
@@ -141,19 +140,15 @@ public:
       
       // Make an output array
       OutArrayBasic output;
-      output.Allocate( input.GetNumberOfValues() );
       
       WaveletDWT::IDWT1D( input, L1d, output );
+      VTKM_ASSERT( output.GetNumberOfValues() == L1d[2] );
 
       // Move output to intermediate array
       WaveletBase::DeviceCopyStartX( output, sigOut, 0 );
 
       L1d[0] = L1d[2];
       L1d[1] = L[i+1];
-
-      output.ReleaseResources();
-      input.ReleaseResources();
-      inputIndices.ReleaseResources();
     }
 
     return 0;

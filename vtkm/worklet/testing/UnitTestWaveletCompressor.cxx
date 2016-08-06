@@ -26,7 +26,7 @@
 
 #include <vector>
 
-
+/*
 VTKM_CONT_EXPORT
 void DebugExtend1D()
 {
@@ -53,6 +53,7 @@ void DebugExtend1D()
       std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl;
   std::cout << "\nFinish testing Extend1D" << std::endl;
 }
+*/
 
 VTKM_CONT_EXPORT
 void DebugDWTIDWT1D()
@@ -103,6 +104,7 @@ void DebugDWTIDWT1D()
   }
 }
 
+
 VTKM_CONT_EXPORT
 void DebugWaveDecomposeReconstruct()
 {
@@ -112,8 +114,10 @@ void DebugWaveDecomposeReconstruct()
   std::cout << "Input a new size to test (in millions)." << std::endl;
   std::cout << "Input 0 to stick with 20." << std::endl;
   vtkm::Id tmpIn;
-  vtkm::Id million = 1000000;
-  std::cin >> tmpIn;
+  vtkm::Id million   = 1000000;
+  vtkm::Id thousand  = 1000;
+  //std::cin >> tmpIn;
+  tmpIn = 100;
   if( tmpIn != 0 )
     sigLen = tmpIn * million;
 
@@ -135,7 +139,8 @@ void DebugWaveDecomposeReconstruct()
   std::cout << "Input how many wavelet transform levels to perform, between 1 and "
             << maxLevel << std::endl;
   vtkm::Id levTemp;
-  std::cin >> levTemp;
+  //std::cin >> levTemp;
+  levTemp = 17;
   if( levTemp > 0 && levTemp <= maxLevel )
     nLevels = levTemp;
   else
@@ -145,8 +150,9 @@ void DebugWaveDecomposeReconstruct()
   }
   std::cout << "Input a compression ratio ( >=1 )to test. "
             << "1 means no compression. " << std::endl;
-  vtkm::Id cratio;
-  std::cin >> cratio;
+  vtkm::Float64 cratio;
+  //std::cin >> cratio;
+  cratio = 10;
   VTKM_ASSERT ( cratio >= 1 );
 
   vtkm::Id* L = new vtkm::Id[ nLevels + 2 ];
@@ -164,12 +170,6 @@ void DebugWaveDecomposeReconstruct()
   compressor.SquashCoefficients( outputArray, cratio );
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Thresholding time      = " << elapsedTime << std::endl;
-
-  /*
-  std::cout << "Coefficients after squash: " << std::endl;
-  for( vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); i++ )
-    std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl; 
-   */
 
 
   // Reconstruct
@@ -192,7 +192,6 @@ void DebugWaveDecomposeReconstruct()
   std::cout << "Verification time      = " << elapsedTime << std::endl;
 
   delete[] L;
-
 }
 
 
@@ -218,7 +217,6 @@ void TestWaveDecomposeReconstruct()
   // User maximum decompose levels, and no compression
   vtkm::Id maxLevel = compressor.GetWaveletMaxLevel( sigLen );
   vtkm::Id nLevels = maxLevel;
-  vtkm::Id cratio = 1;;
 
   vtkm::Id* L = new vtkm::Id[ nLevels + 2 ];
 
@@ -249,15 +247,14 @@ void TestWaveDecomposeReconstruct()
   std::cout << "Verification time      = " << elapsedTime << std::endl;
 
   delete[] L;
-
 }
 
 void TestWaveletCompressor()
 {
   //DebugExtend1D();
   //DebugDWTIDWT1D();
-  //DebugWaveDecomposeReconstruct();
-  TestWaveDecomposeReconstruct();
+  DebugWaveDecomposeReconstruct();
+  //TestWaveDecomposeReconstruct();
 }
 
 int UnitTestWaveletCompressor(int, char *[])
