@@ -338,7 +338,7 @@ public:
           this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, true);
         else
         {
-          // throw an error
+          vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
           return 1;
         }
       }

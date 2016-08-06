@@ -72,8 +72,7 @@ public:
   // Destructor
   virtual ~WaveletBase()
   {
-    if( filter )  
-      delete filter;
+    if( filter )  delete filter;
     filter = NULL;
   }
 

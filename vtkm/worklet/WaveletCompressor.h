@@ -150,6 +150,10 @@ public:
 
       L1d[0] = L1d[2];
       L1d[1] = L[i+1];
+
+      output.ReleaseResources();
+      input.ReleaseResources();
+      inputIndices.ReleaseResources();
     }
 
     return 0;
@@ -159,7 +163,7 @@ public:
   template< typename CoeffArrayType >
   VTKM_CONT_EXPORT
   vtkm::Id SquashCoefficients( CoeffArrayType   &coeffIn,
-                               vtkm::Id         ratio )
+                               vtkm::Float64    ratio )
   {
     if( ratio > 1 )
     {
@@ -170,9 +174,8 @@ public:
       WaveletBase::DeviceCopy( coeffIn, sortedArray );
       WaveletBase::DeviceSort( sortedArray );
       
-      vtkm::Id n = static_cast<vtkm::Id>(
-                      vtkm::Ceil( static_cast<vtkm::Float64>( coeffLen ) / 
-                                  static_cast<vtkm::Float64>( ratio    ) ) );
+      vtkm::Id n = coeffLen - 
+                   static_cast<vtkm::Id>( static_cast<vtkm::Float64>(coeffLen)/ratio );
       typedef vtkm::worklet::wavelets::ThresholdWorklet ThresholdType;
       ThresholdType tw( n );
       vtkm::worklet::DispatcherMapField< ThresholdType > dispatcher( tw  );
