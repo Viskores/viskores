@@ -253,8 +253,8 @@ void TestWaveletCompressor()
 {
   //DebugExtend1D();
   //DebugDWTIDWT1D();
-  DebugWaveDecomposeReconstruct();
-  //TestWaveDecomposeReconstruct();
+  //DebugWaveDecomposeReconstruct();
+  TestWaveDecomposeReconstruct();
 }
 
 int UnitTestWaveletCompressor(int, char *[])
