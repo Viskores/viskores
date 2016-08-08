@@ -247,27 +247,29 @@ macro(vtkm_configure_component_CUDA)
 
     #detect what the propery is set too
     if(VTKm_CUDA_Architecture STREQUAL "native")
-      #run execute_process to do auto_detection
-      set(command ${CUDA_NVCC_EXECUTABLE})
-      set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cxx")
-      execute_process(
-        COMMAND ${command} ${args}
-        RESULT_VARIABLE ran_properly
-        OUTPUT_VARIABLE run_output
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
-      if(ran_properly EQUAL 0)
-        #find the position of the "--generate-code" output. With some compilers such as
-        #msvc we get compile output plus run output. So we need to strip out just the
-        #run output
-        string(FIND "${run_output}" "--generate-code" position)
-        string(SUBSTRING "${run_output}" ${position} -1 run_output)
-        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} ${run_output}")
-      else()
-        set(VTKm_CUDA_Architecture "fermi")
-        if(NOT VTKm_CONFIGURE_QUIET)
-          message(STATUS "Unable to run \"${CUDA_NVCC_EXECUTABLE}\" to autodetect GPU architecture."
-            "Falling back to fermi, please manually specify if you want something else.")
+      if(NOT VTKM_CUDA_NATIVE_EXE_PROCESS_RAN)
+        #run execute_process to do auto_detection
+        set(command ${CUDA_NVCC_EXECUTABLE})
+        set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cxx")
+        execute_process(
+          COMMAND ${command} ${args}
+          RESULT_VARIABLE ran_properly
+          OUTPUT_VARIABLE run_output
+          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        if(ran_properly EQUAL 0)
+          #find the position of the "--generate-code" output. With some compilers such as
+          #msvc we get compile output plus run output. So we need to strip out just the
+          #run output
+          string(FIND "${run_output}" "--generate-code" position)
+          string(SUBSTRING "${run_output}" ${position} -1 run_output)
+          set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} ${run_output}")
+          set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN TRUE)
+        else()
+          set(VTKm_CUDA_Architecture "fermi")
+          if(NOT VTKm_CONFIGURE_QUIET)
+            message(STATUS "Unable to run \"${CUDA_NVCC_EXECUTABLE}\" to autodetect GPU architecture."
+              "Falling back to fermi, please manually specify if you want something else.")
+          endif()
         endif()
       endif()
     endif()
