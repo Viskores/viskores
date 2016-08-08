@@ -142,6 +142,7 @@ public:
   VTKM_CONT_EXPORT
   void Allocate( vtkm::Id numberOfValues )
   {
+    VTKM_ASSERT( numberOfValues >= 0 );
     VTKM_ASSERT( this->valid );
     throw vtkm::cont::ErrorControlInternal(
             "ArrayHandleConcatenate should not be allocated explicitly.");
