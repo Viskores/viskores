@@ -20,6 +20,8 @@
 
 set(benchmark_srcs
   BenchmarkDeviceAdapter.cxx
+  BenchmarkFieldAlgorithms.cxx
+  BenchmarkTopologyAlgorithms.cxx
   )
 
 set(benchmark_headers
