@@ -155,7 +155,7 @@ macro(vtkm_configure_component_Interop)
     )
   #on unix/linux Glew uses pthreads, so we need to find that, and link to it
   #explicitly or else in release mode we get sigsegv on launch
-  if (VTKm_Interop_FOUND AND UNIX)
+  if (VTKm_ENABLE_OPENGL_INTEROP AND UNIX)
     find_package(Threads ${VTKm_FIND_PACKAGE_QUIETLY})
     set(vtkm_interop_dependent_vars ${vtkm_interop_dependent_vars} CMAKE_USE_PTHREADS_INIT)
   endif()
@@ -163,7 +163,7 @@ macro(vtkm_configure_component_Interop)
   vtkm_finish_configure_component(Interop
     DEPENDENT_VARIABLES ${vtkm_interop_dependent_vars}
     ADD_INCLUDES ${GLEW_INCLUDE_DIRS}
-    ADD_LIBRARIES ${GLEW_LIBRARIES}
+    ADD_LIBRARIES ${GLEW_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
     )
 endmacro(vtkm_configure_component_Interop)
 
