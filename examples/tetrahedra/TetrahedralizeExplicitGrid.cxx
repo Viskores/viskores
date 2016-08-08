@@ -204,14 +204,10 @@ void displayCall()
   outDataSet.GetCellSet(0).CopyTo(cellSet);
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
 
-  // Get the coordinate system and coordinate data
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray =
-                                      outDataSet.GetCoordinateSystem(0).GetData();
-
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
   // So use cast and call on a functor that stores that dynamic array into static array we created
   vertexArray.Allocate(numberOfInPoints);
-  coordArray.CastAndCall(GetVertexArray());
+  vtkm::cont::CastAndCall(outDataSet.GetCoordinateSystem(), GetVertexArray());
 
   // Draw the five tetrahedra belonging to each hexadron
   vtkm::Float32 color[5][3] = {

@@ -1014,7 +1014,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                    Rays.MinDistance,
                    Rays.MaxDistance,
                    camera.FrameBuffer,
-                   ScalarField->GetData());
+                   *ScalarField);
       }
       else
       {
@@ -1029,7 +1029,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                    Rays.MinDistance,
                    Rays.MaxDistance,
                    camera.FrameBuffer,
-                   ScalarField->GetData());
+                   *ScalarField);
       }
      }
      else
@@ -1050,7 +1050,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                      Rays.MinDistance,
                      Rays.MaxDistance,
                      camera.FrameBuffer,
-                     ScalarField->GetData());
+                     *ScalarField);
         }
         else
         {
@@ -1065,7 +1065,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                      Rays.MinDistance,
                      Rays.MaxDistance,
                      camera.FrameBuffer,
-                     ScalarField->GetData());
+                     *ScalarField);
         }
      }
 

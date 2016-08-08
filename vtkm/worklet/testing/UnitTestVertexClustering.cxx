@@ -42,7 +42,7 @@ void TestVertexClustering()
   // run
   vtkm::worklet::VertexClustering clustering;
   vtkm::cont::DataSet outDataSet = clustering.Run(dataSet.GetCellSet(),
-                                                  dataSet.GetCoordinateSystem().GetData(),
+                                                  dataSet.GetCoordinateSystem(),
                                                   bounds,
                                                   divisions,
                                                   VTKM_DEFAULT_DEVICE_ADAPTER_TAG());

@@ -119,7 +119,7 @@ public:
 
       ThresholdWorklet worklet(predicate);
       DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-      dispatcher.Invoke(cellSet, field.GetData(), passFlags);
+      dispatcher.Invoke(cellSet, field, passFlags);
       break;
       }
 
@@ -129,7 +129,7 @@ public:
 
       ThresholdWorklet worklet(predicate);
       DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-      dispatcher.Invoke(cellSet, field.GetData(), passFlags);
+      dispatcher.Invoke(cellSet, field, passFlags);
       break;
       }
 
@@ -171,7 +171,7 @@ public:
     }
 
     vtkm::cont::DynamicArrayHandle data;
-    field.GetData().CastAndCall(PermuteCellData(this->ValidCellIds, data));
+    CastAndCall(field, PermuteCellData(this->ValidCellIds, data));
 
     return vtkm::cont::Field(field.GetName(), field.GetAssociation(),
                              field.GetAssocCellSet(), data);

@@ -154,8 +154,8 @@ TestMaxPointOrCell()
 
   vtkm::worklet::DispatcherMapTopology< ::test_explicit::MaxPointOrCellValue >
       dispatcher;
-  dispatcher.Invoke(dataSet.GetField("cellvar").GetData(),
-                    dataSet.GetField("pointvar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("cellvar"),
+                    dataSet.GetField("pointvar"),
                     dataSet.GetCellSet(0),
                     result);
 
@@ -177,7 +177,7 @@ TestAvgPointToCell()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology< ::test_explicit::AveragePointToCellValue > dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("pointvar"),
                     dataSet.GetCellSet(),
                     result);
 
@@ -200,7 +200,7 @@ TestAvgCellToPoint()
 
 
   vtkm::worklet::DispatcherMapTopology< ::test_explicit::AverageCellToPointValue > dispatcher;
-  dispatcher.Invoke(dataSet.GetField("cellvar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("cellvar"),
                     dataSet.GetCellSet(),
                     result);
 

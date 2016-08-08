@@ -146,7 +146,7 @@ private:
     vtkm::cont::ArrayHandle<vtkm::Float32> result;
     vtkm::worklet::DispatcherMapTopology<
         vtkm::worklet::CellAverage,DeviceAdapterTag> dispatcher;
-    dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
+    dispatcher.Invoke(dataSet.GetField("pointvar"),
                       cellset,
                       result);
 

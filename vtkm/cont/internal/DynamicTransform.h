@@ -25,6 +25,26 @@
 namespace vtkm {
 namespace cont {
 
+template<typename T, typename S> class ArrayHandle;
+
+/// A Generic interface to CastAndCall. The default implementation simply calls
+/// DynamicObject's CastAndCall, but specializations of this function exist for
+/// other classes (e.g. Field, CoordinateSystem, ArrayHandle).
+template<typename DynamicObject, typename Functor>
+void CastAndCall(const DynamicObject& dynamicObject, const Functor &f)
+{
+  dynamicObject.CastAndCall(f);
+}
+
+/// A specialization of CastAndCall for basic ArrayHandle types,
+/// Since the type is already known no deduction is needed.
+/// This specialization is used to simplify numerous worklet algorithms
+template<typename T, typename U, typename Functor>
+void CastAndCall(const vtkm::cont::ArrayHandle<T,U>& handle, const Functor &f)
+{
+  f(handle);
+}
+
 namespace internal {
 
 /// Tag used to identify an object that is a dynamic object that contains a
@@ -55,19 +75,6 @@ struct DynamicTransformTraits {
   /// DynamicTransformTagCastAndCall.
   ///
   typedef vtkm::cont::internal::DynamicTransformTagStatic DynamicTag;
-};
-
-/// A Generic interface to CastAndCall. The default implementation simply calls
-/// DynamicObject's CastAndCall, but specializations of this function exist for
-/// other classes (e.g. Field, CoordinateSystem).
-template<typename DynamicObject, typename Functor>
-struct CastAndCall
-{
-  VTKM_CONT_EXPORT
-  void operator()(const DynamicObject& dynamicObject, const Functor &f)
-  {
-    dynamicObject.CastAndCall(f);
-  }
 };
 
 /// This functor can be used as the transform in the \c DynamicTransformCont
@@ -106,8 +113,7 @@ private:
                    const ContinueFunctor &continueFunc,
                    vtkm::cont::internal::DynamicTransformTagCastAndCall) const
   {
-    CastAndCall<InputType, ContinueFunctor> castAndCall;
-    castAndCall(dynamicInput, continueFunc);
+    CastAndCall(dynamicInput, continueFunc);
   }
 };
 

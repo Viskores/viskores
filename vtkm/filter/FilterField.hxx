@@ -119,7 +119,8 @@ ResultField FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet 
                       result);
 
   typedef vtkm::filter::FilterTraits< Derived > Traits;
-  vtkm::filter::ApplyPolicy(field, policy, Traits()).CastAndCall(functor);
+  vtkm::cont::CastAndCall( vtkm::filter::ApplyPolicy(field, policy, Traits()),
+                           functor );
   return result;
 }
 
@@ -146,7 +147,8 @@ ResultField FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet 
                       result);
 
   typedef vtkm::filter::FilterTraits< Derived > Traits;
-  vtkm::filter::ApplyPolicy(field, policy, Traits()).CastAndCall(functor);
+  vtkm::cont::CastAndCall( vtkm::filter::ApplyPolicy(field, policy, Traits()),
+                           functor );
   return result;
 }
 

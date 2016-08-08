@@ -143,7 +143,8 @@ vtkm::filter::ResultDataSet Threshold::DoExecute(const vtkm::cont::DataSet& inpu
   //can use to reduce code duplication, and make it easier to write filters
   //that return complex dataset types.
   AddPermutationCellSet addCellSet(output, this->ValidCellIds);
-  vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(addCellSet);
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(cells, policy),
+                          addCellSet);
 
   //todo: We need to generate a new output policy that replaces
   //the original storage tag with a new storage tag where everything is
