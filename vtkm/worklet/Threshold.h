@@ -43,7 +43,7 @@ public:
   {
   public:
     typedef void ControlSignature(CellSetIn cellset,
-                                  FieldInPoint<Scalar> scalars,
+                                  FieldInPoint<ScalarAll> scalars,
                                   FieldOutCell<BoolType> passFlags);
 
     typedef _3 ExecutionSignature(_2, PointCount);
