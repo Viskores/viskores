@@ -143,8 +143,8 @@ public:
   void Allocate( vtkm::Id numberOfValues )
   {
     VTKM_ASSERT( this->valid );
-    VTKM_ASSERT( numberOfValues > 0 );
-    // throw an error; not a valid operation for this array handle.
+    throw vtkm::cont::Error(
+            "ArrayHandleConcatenate should not be allocated explicitly.");
   }
 
   VTKM_CONT_EXPORT
