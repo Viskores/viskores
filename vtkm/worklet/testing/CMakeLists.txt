@@ -19,25 +19,25 @@
 ##============================================================================
 
 set(unit_tests
-# UnitTestCellAverage.cxx
-#  UnitTestClipping.cxx
-#  UnitTestExternalFaces.cxx
-#  UnitTestFieldHistogram.cxx
-#  UnitTestFieldStatistics.cxx
-#  UnitTestMarchingCubes.cxx
-#  UnitTestPointElevation.cxx
-#  UnitTestScatterCounting.cxx
-#  UnitTestSplatKernels.cxx
-#  UnitTestStreamLineUniformGrid.cxx
-#  UnitTestTetrahedralizeExplicitGrid.cxx
-#  UnitTestTetrahedralizeUniformGrid.cxx
-#  UnitTestThreshold.cxx
-#  UnitTestWorkletMapField.cxx
-#  UnitTestWorkletMapFieldExecArg.cxx
-#  UnitTestWorkletMapFieldWholeArray.cxx
-#  UnitTestWorkletMapTopologyExplicit.cxx
-#  UnitTestWorkletMapTopologyUniform.cxx
-#  UnitTestVertexClustering.cxx
+  UnitTestCellAverage.cxx
+  UnitTestClipping.cxx
+  UnitTestExternalFaces.cxx
+  UnitTestFieldHistogram.cxx
+  UnitTestFieldStatistics.cxx
+  UnitTestMarchingCubes.cxx
+  UnitTestPointElevation.cxx
+  UnitTestScatterCounting.cxx
+  UnitTestSplatKernels.cxx
+  UnitTestStreamLineUniformGrid.cxx
+  UnitTestTetrahedralizeExplicitGrid.cxx
+  UnitTestTetrahedralizeUniformGrid.cxx
+  UnitTestThreshold.cxx
+  UnitTestWorkletMapField.cxx
+  UnitTestWorkletMapFieldExecArg.cxx
+  UnitTestWorkletMapFieldWholeArray.cxx
+  UnitTestWorkletMapTopologyExplicit.cxx
+  UnitTestWorkletMapTopologyUniform.cxx
+  UnitTestVertexClustering.cxx
   UnitTestWaveletCompressor.cxx
  )
 
