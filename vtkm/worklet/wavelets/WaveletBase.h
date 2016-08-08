@@ -38,7 +38,12 @@ enum DWTMode {    // boundary extension modes
   ZPD, 
   SYMH, 
   SYMW,
-  ASYMH, ASYMW, SP0, SP1, PPD, PER
+  ASYMH, 
+  ASYMW,   
+  SP0, 
+  SP1, 
+  PPD, 
+  PER
 };
 
 // Functionalities are similar to MatWaveBase in VAPoR.

@@ -379,6 +379,97 @@ public:
   }   // function IDWT1D
   
 
+  // Func:
+  // Performs one level of 2D discrete wavelet transform 
+  // It takes care of boundary conditions, etc.
+  // N.B.
+  //  L[0] == L[2]
+  //  L[1] == L[5]
+  //  L[3] == L[7]
+  //  L[4] == L[6]
+  //
+  //      ____L[0]_______L[4]____
+  //      |          |          |
+  // L[1] |  cA      |  cDv     | L[5]
+  //      |  (LL)    |  (HL)    |
+  //      |          |          |
+  //      |---------------------|
+  //      |          |          |
+  //      |  cDh     |  cDd     | L[7]
+  // L[3] |  (LH)    |  (HH)    |
+  //      |          |          |
+  //      |__________|__________|
+  //         L[2]       L[6]
+  //
+#if 0
+  template< typename InputArrayType, typename OutputArrayType>
+  VTKM_CONT_EXPORT
+  vtkm::Id DWT2D( const InputArrayType    &sigIn,     // Input array
+                  vtkm::Id                inXLen,       // Input X length
+                  vtkm::Id                inYLen,       // Input Y length
+                  OutputArrayType         &coeffOut,  // Output coeff array
+                  vtkm::Id                L[10])      // Output coeff layout
+  {
+    vtkm::Id sigInLen = sigIn.GetNumberOfValues();
+    VTKM_ASSERT( sigInLen == inXLen * inYLen );
+
+    L[0] = WaveletBase::GetApproxLength( inXLen );    L[2] = L[0];
+    L[1] = WaveletBase::GetApproxLength( inYLen );    L[5] = L[1];
+    L[3] = WaveletBase::GetDetailLength( inYLen );    L[7] = L[3];
+    L[4] = WaveletBase::GetDetailLength( inXLen );    L[6] = L[4];
+    L[8] = inXLen;                                    L[9] = inYLen;
+
+    typedef typename InputArrayType::ValueType             InputValueType;
+    typedef vtkm::cont::ArrayHandle<SigInValueType>        InputArrayBasic;
+
+    // Transform rows
+    // intermediate storage space
+    vtkm::Id passXLen      =          (L[0]+ L[4]) * inYLen;        // ~whole length
+    vtkm::Id transposeLen  = vtkm::Max(L[0], L[4]) * inYLen;        // ~half length
+    vtkm::Id passYLen      = vtkm::Max(L[0], L[4]) * (L[1] + L[3]); // ~half length
+    InputArrayBasic          buf2d;
+    buf2d.Allocate( passXLen + transposeLen + passYLen );
+
+    // Use pseudo pointers
+    vtkm::Id cAXbuf       = 0;
+    vtkm::Id cDXbuf       = cAXbuf + (L[0] * inYLen );
+    vtkm::Id bufTranspose = cAXbuf + passXLen;
+    vtkm::Id cAYbuf       = bufTranspose + transposeLen;
+    vtkm::Id cDYbuf       = cAYbuf + L[1] * vtkm::Max( L[0], L[4] );
+
+    for(vtkm::Id y = 0; y < inYLen; y++ )
+    {
+      vtkm::Id xL[3];
+      // make input array
+
+    }
+
+    // Transform columns
+
+    return 0;
+  }
+
+
+  // Func:
+  // Performs one level of 3D discrete wavelet transform 
+  // It takes care of boundary conditions, etc.
+  // coeffs are stored in the order: LLL, LLH, LHL, LHH, HLL, HLH, HHL, HHH
+  template< typename InputArrayType, typename OutputArrayType>
+  VTKM_CONT_EXPORT
+  vtkm::Id DWT3D( const InputArrayType    &sigIn,     // Input array
+                  vtkm::Id                XLen,       // Input X length
+                  vtkm::Id                YLen,       // Input Y length
+                  vtkm::Id                ZLen,       // Input Z length
+                  OutputArrayType         &coeffOut,  // Output coeff array
+                  vtkm::Id                L[27])      // Output coeff layout
+  {
+    vtkm::Id sigInLen = sigIn.GetNumberOfValues();
+    VTKM_ASSERT( sigInLen == XLen * YLen * ZLen );
+
+    return 0;
+  }
+#endif 
+
 };    // class WaveletDWT
 
 }     // namespace wavelets
