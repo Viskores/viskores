@@ -45,11 +45,10 @@ public:
   vtkm::Id WaveDecompose( const SignalArrayType      &sigIn,   // Input
                                 vtkm::Id             nLevels,  // n levels of DWT
                                 CoeffArrayType       &coeffOut,
-                                vtkm::Id*            L )
+                                std::vector<vtkm::Id> &L)
   {
-
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
-    if( nLevels < 1 || nLevels > WaveletBase::GetWaveletMaxLevel( sigInLen ) )
+    if( nLevels < 0 || nLevels > WaveletBase::GetWaveletMaxLevel( sigInLen ) )
     {
       throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
     }
@@ -59,6 +58,7 @@ public:
       return 0;
     }
 
+    L.resize( size_t(nLevels + 2) );
     this->ComputeL( sigInLen, nLevels, L );
     vtkm::Id CLength = this->ComputeCoeffLength( L, nLevels );
     VTKM_ASSERT( CLength == sigInLen );
@@ -69,7 +69,7 @@ public:
     vtkm::Id cALen = WaveletBase::GetApproxLength( len );
     vtkm::Id cptr;          // pseudo pointer for the beginning of output array
     vtkm::Id tlen = 0;
-    vtkm::Id L1d[3];
+    std::vector<vtkm::Id> L1d(3, 0);
 
     // Use an intermediate array
     typedef typename CoeffArrayType::ValueType          OutputValueType;
@@ -84,7 +84,7 @@ public:
 
     for( vtkm::Id i = nLevels; i > 0; i-- )
     {
-      tlen += L[i];
+      tlen += L[ size_t(i) ];
       cptr = 0 + CLength - tlen - cALen;
       
       // make input array (permutation array)
@@ -113,14 +113,17 @@ public:
   VTKM_CONT_EXPORT
   vtkm::Id WaveReconstruct( const CoeffArrayType     &coeffIn,   // Input
                                   vtkm::Id           nLevels,    // n levels of DWT
-                                  vtkm::Id*          L,
+                                  std::vector<vtkm::Id> &L,
                                   SignalArrayType    &sigOut )
   {
     VTKM_ASSERT( nLevels > 0 );
-
     vtkm::Id LLength = nLevels + 2;
+    VTKM_ASSERT( vtkm::Id(L.size()) == LLength );
 
-    vtkm::Id L1d[3] = {L[0], L[1], 0};
+    //vtkm::Id L1d[3] = {L[0], L[1], 0};
+    std::vector<vtkm::Id> L1d(3, 0);  // three elements
+    L1d[0] = L[0];
+    L1d[1] = L[1];
 
     typedef typename SignalArrayType::ValueType              OutValueType;
     typedef vtkm::cont::ArrayHandle< OutValueType >          OutArrayBasic;
@@ -132,7 +135,7 @@ public:
 
     for( vtkm::Id i = 1; i <= nLevels; i++ )
     {
-      L1d[2] = this->GetApproxLengthLevN( L[ LLength-1 ], nLevels-i );
+      L1d[2] = this->GetApproxLengthLevN( L[ size_t(LLength-1) ], nLevels-i );
 
       // Make an input array
       IdArrayType inputIndices( 0, 1, L1d[2] );
@@ -148,7 +151,7 @@ public:
       WaveletBase::DeviceCopyStartX( output, sigOut, 0 );
 
       L1d[0] = L1d[2];
-      L1d[1] = L[i+1];
+      L1d[1] = L[ size_t(i+1) ];
     }
 
     return 0;
@@ -243,11 +246,14 @@ public:
 
                       
   // Compute the book keeping array L for 1D wavelet decomposition
-  void ComputeL( vtkm::Id sigInLen, vtkm::Id nLevels, vtkm::Id* L )
+  void ComputeL( vtkm::Id               sigInLen, 
+                 vtkm::Id               nLevels, 
+                 std::vector<vtkm::Id>  &L )
   {
-    L[nLevels+1] = sigInLen;
-    L[nLevels]   = sigInLen;
-    for( vtkm::Id i = nLevels; i > 0; i-- )
+    VTKM_ASSERT( vtkm::Id( L.size() )  == (nLevels + 2) );
+    L[ size_t(nLevels+1) ] = sigInLen;
+    L[ size_t(nLevels)   ] = sigInLen;
+    for( size_t i = size_t(nLevels); i > 0; i-- )
     {
       L[i-1] = WaveletBase::GetApproxLength( L[i] );
       L[i]   = WaveletBase::GetDetailLength( L[i] );
@@ -255,10 +261,12 @@ public:
   }
 
   // Compute the length of coefficients
-  vtkm::Id ComputeCoeffLength( const vtkm::Id* L, vtkm::Id nLevels )
+  vtkm::Id ComputeCoeffLength( std::vector<vtkm::Id> &L,
+                               vtkm::Id nLevels )
   {
-    vtkm::Id sum = L[0];  // 1st level cA
-    for( vtkm::Id i = 1; i <= nLevels; i++ )
+    VTKM_ASSERT( vtkm::Id(L.size()) == (nLevels + 2) );
+    vtkm::Id sum = L[0];        // 1st level cA
+    for( size_t i = 1; i <= size_t(nLevels); i++ )
       sum += L[i];
     return sum;
   }

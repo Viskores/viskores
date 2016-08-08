@@ -141,9 +141,8 @@ public:
   VTKM_CONT_EXPORT
   vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
                   CoeffArrayType        &coeffOut,  // Output: cA followed by cD
-                  vtkm::Id              L[3] )      // Output: how many cA and cD.
+                  std::vector<vtkm::Id> &L )        // Output: how many cA and cD.
   {
-
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if( GetWaveletMaxLevel( sigInLen ) < 1 )
     {
@@ -151,6 +150,7 @@ public:
       return -1;
     } 
 
+    VTKM_ASSERT( L.size() == 3 );
     L[0] = WaveletBase::GetApproxLength( sigInLen );
     L[1] = WaveletBase::GetDetailLength( sigInLen );
     L[2] = sigInLen;
@@ -226,9 +226,10 @@ public:
   template< typename CoeffArrayType, typename SignalArrayType>
   VTKM_CONT_EXPORT
   vtkm::Id IDWT1D( const CoeffArrayType  &coeffIn,     // Input, cA followed by cD
-                   const vtkm::Id        L[3],         // Input, how many cA and cD
+                   std::vector<vtkm::Id> &L,           // Input, how many cA and cD
                    SignalArrayType       &sigOut )     // Output
   {
+    VTKM_ASSERT( L.size() == 3 );
     VTKM_ASSERT( coeffIn.GetNumberOfValues() == L[2] );
 
     vtkm::Id filterLen = WaveletBase::filter->GetFilterLength();

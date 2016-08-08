@@ -62,7 +62,7 @@ void DebugDWTIDWT1D()
   std::cout << "Testing Wavelets Worklet" << std::endl;
   std::cout << "Input a size to test." << std::endl;
   vtkm::Id tmpIn;
-  vtkm::Id million = 1;//1000000;
+  vtkm::Id million = 1000000;
   std::cin >> tmpIn;
   if( tmpIn != 0 )
     sigLen = tmpIn * million;
@@ -75,7 +75,7 @@ void DebugDWTIDWT1D()
     vtkm::cont::make_ArrayHandle(tmpVector);
 
   vtkm::cont::ArrayHandle<vtkm::Float64> coeffOut;
-  vtkm::Id L[3];
+  std::vector<vtkm::Id> L(3, 0);
 
   // Forward Transform
   vtkm::worklet::wavelets::WaveletDWT waveletdwt( "CDF9/7" );
@@ -155,7 +155,7 @@ void DebugWaveDecomposeReconstruct()
   cratio = 10;
   VTKM_ASSERT ( cratio >= 1 );
 
-  vtkm::Id* L = new vtkm::Id[ nLevels + 2 ];
+  std::vector<vtkm::Id> L;
 
   // Decompose
   vtkm::cont::Timer<> timer;
@@ -191,7 +191,6 @@ void DebugWaveDecomposeReconstruct()
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Verification time      = " << elapsedTime << std::endl;
 
-  delete[] L;
 }
 
 
@@ -218,7 +217,7 @@ void TestWaveDecomposeReconstruct()
   vtkm::Id maxLevel = compressor.GetWaveletMaxLevel( sigLen );
   vtkm::Id nLevels = maxLevel;
 
-  vtkm::Id* L = new vtkm::Id[ nLevels + 2 ];
+  std::vector<vtkm::Id> L;
 
   // Decompose
   vtkm::cont::Timer<> timer;
@@ -246,7 +245,6 @@ void TestWaveDecomposeReconstruct()
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Verification time      = " << elapsedTime << std::endl;
 
-  delete[] L;
 }
 
 void TestWaveletCompressor()
