@@ -116,13 +116,13 @@ macro(vtkm_configure_component_OpenGL)
 endmacro(vtkm_configure_component_OpenGL)
 
 macro(vtkm_configure_component_OSMesa)
-  vtkm_configure_component_OpenGL()
+  vtkm_configure_component_Base()
 
   if (UNIX AND NOT APPLE)
     find_package(MESA ${VTKm_FIND_PACKAGE_QUIETLY})
 
     vtkm_finish_configure_component(OSMesa
-      DEPENDENT_VARIABLES VTKm_OpenGL_FOUND OSMESA_FOUND
+      DEPENDENT_VARIABLES OSMESA_FOUND
       ADD_INCLUDES ${OSMESA_INCLUDE_DIR}
       ADD_LIBRARIES ${OSMESA_LIBRARY}
       )

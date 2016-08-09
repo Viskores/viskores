@@ -17,14 +17,13 @@
 ##  Laboratory (LANL), the U.S. Government retains certain rights in
 ##  this software.
 ##============================================================================
+set(unit_tests)
 
-add_subdirectory(osmesa)
-add_subdirectory(egl)
-
-set(unit_tests
-  UnitTestMapperRayTracer.cxx
-  UnitTestMapperVolume.cxx
-)
+vtkm_configure_component_OSMesa()
+if (VTKm_OSMesa_FOUND)
+  set(unit_tests ${unit_tests}
+    UnitTestMapperOSMesa.cxx
+    )
+endif()
 
 VTKm_unit_tests(SOURCES ${unit_tests})
-
