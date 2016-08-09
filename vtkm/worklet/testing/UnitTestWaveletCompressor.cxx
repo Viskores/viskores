@@ -26,36 +26,7 @@
 
 #include <vector>
 
-/*
-VTKM_CONT_EXPORT
-void DebugExtend1D()
-{
-  // make input data array handle
-  typedef vtkm::Float64 T;
-  typedef vtkm::cont::ArrayHandle<T>     ArrayType;
-  vtkm::Id sigLen = 20;
-  std::vector<T> tmpVector;
-  for( vtkm::Id i = 0; i < sigLen; i++ )
-    tmpVector.push_back( static_cast<T>(i) );
- 
-  vtkm::cont::ArrayHandle<T> inputArray = 
-    vtkm::cont::make_ArrayHandle(tmpVector);
-  ArrayType outputArray;
 
-  vtkm::worklet::wavelets::WaveletDWT w("CDF9/7");
-
-  w.Extend1D( inputArray, outputArray, 4, 
-      vtkm::worklet::wavelets::SYMW, vtkm::worklet::wavelets::SYMW );
-
-
-  std::cout << "Start testing Extend1D" << std::endl;
-  for (vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); ++i)
-      std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl;
-  std::cout << "\nFinish testing Extend1D" << std::endl;
-}
-*/
-
-VTKM_CONT_EXPORT
 void DebugDWTIDWT1D()
 {
   vtkm::Id sigLen = 20;
@@ -102,6 +73,49 @@ void DebugDWTIDWT1D()
   {
     std::cout << reconstructArray.GetPortalConstControl().Get(i) << std::endl;
   }
+}
+
+
+void DebugDWTIDWT2D()
+{
+  vtkm::Id sigX = 10;
+  vtkm::Id sigY = 15;  
+  vtkm::Id sigLen = sigX * sigY;
+
+  // make input data array handle
+  std::vector<vtkm::Float64> tmpVector;
+  for( vtkm::Id i = 0; i < sigLen; i++ )
+    tmpVector.push_back( static_cast<vtkm::Float64>( i ) );
+  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
+    vtkm::cont::make_ArrayHandle(tmpVector);
+
+  vtkm::cont::ArrayHandle<vtkm::Float64> coeffOut;
+  std::vector<vtkm::Id> L(10, 0);
+
+  // Forward Transform
+  vtkm::worklet::wavelets::WaveletDWT waveletdwt( "CDF9/7" );
+  waveletdwt.DWT2D( inputArray, sigX, sigY, coeffOut, L );
+
+  for( vtkm::Id i = 0; i < coeffOut.GetNumberOfValues(); i++ )
+  {
+    if( i == 0 )
+      std::cout << "  <-- cA --> " << std::endl;
+    else if( i == L[0] )
+      std::cout << "  <-- cD --> " << std::endl;
+    std::cout << coeffOut.GetPortalConstControl().Get(i) << std::endl;
+  }
+
+  // Inverse Transform
+  /*
+  vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
+  waveletdwt.IDWT1D( coeffOut, L, reconstructArray );
+  std::cout << "Inverse Wavelet Transform: result signal length = " << 
+      reconstructArray.GetNumberOfValues() << std::endl;
+  for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
+  {
+    std::cout << reconstructArray.GetPortalConstControl().Get(i) << std::endl;
+  }
+  */
 }
 
 
@@ -249,10 +263,10 @@ void TestWaveDecomposeReconstruct()
 
 void TestWaveletCompressor()
 {
-  //DebugExtend1D();
   //DebugDWTIDWT1D();
   //DebugWaveDecomposeReconstruct();
-  TestWaveDecomposeReconstruct();
+  DebugDWTIDWT2D();
+  //TestWaveDecomposeReconstruct();
 }
 
 int UnitTestWaveletCompressor(int, char *[])
