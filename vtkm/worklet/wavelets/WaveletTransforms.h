@@ -503,6 +503,56 @@ private:
   vtkm::Id zeroIdx;
 };
 
+class TransposeWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( FieldIn      < ScalarAll >,
+                                 WholeArrayOut< ScalarAll > );
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  TransposeWorklet( vtkm::Id x, vtkm::Id y )
+  {
+    this->inXLen  = x;
+    this->inYLen  = y;
+    this->outXLen = y;
+    this->outYLen = x;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  void GetLogicalDimOfInputMatrix( const vtkm::Id    &idx,    
+                                         vtkm::Id    &x,      
+                                         vtkm::Id    &y ) const     
+  {
+    y = idx / inYLen;
+    x = idx % inYLen;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Get1DIdxOfOutputMatrix( vtkm::Id    &x,      
+                                   vtkm::Id    &y ) const     
+  {
+    return y * outXLen + x;
+  }
+
+  template< typename ValueInType, typename PortalOutType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()( const ValueInType    &valueIn,
+                         PortalOutType  &arrayOut,
+                   const vtkm::Id       &workIdx ) const
+  {
+    vtkm::Id x, y;
+    GetLogicalDimOfInputMatrix( workIdx, x, y );
+    vtkm::Id outputIdx = Get1DIdxOfOutputMatrix( y, x );
+    arrayOut.Set( outputIdx, valueIn );
+  }
+
+private:
+  vtkm::Id inXLen,  inYLen;
+  vtkm::Id outXLen, outYLen;
+};
+
 
 }     // namespace wavelets
 }     // namespace worlet

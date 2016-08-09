@@ -265,7 +265,6 @@ public:
     return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
               ( array, initVal, maxAbsFunctor() );
   }
-  
 
   // Calculate variance of an array
   template< typename ArrayType >
@@ -287,6 +286,20 @@ public:
                            static_cast<vtkm::Float64>( squaredDeviation.GetNumberOfValues() );
 
     return sdMean;
+  }
+
+  // Transpose a matrix in an array
+  template< typename InputArrayType, typename OutputArrayType >
+  void DeviceTranspose( const InputArrayType    &inputArray,
+                             OutputArrayType   &outputArray,
+                                    vtkm::Id   inputX,
+                                    vtkm::Id   inputY )
+  {
+    // use a worklet
+    typedef vtkm::worklet::wavelets::TransposeWorklet TransposeType;
+    TransposeType tw ( inputX, inputY );
+    vtkm::worklet::DispatcherMapField< TransposeType > dispatcher( tw );
+    dispatcher.Invoke( inputArray, outputArray );
   }
 
 

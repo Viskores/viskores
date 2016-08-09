@@ -104,7 +104,6 @@ public:
       sigInPtr = cptr;
     }
 
-
     return 0;
   }
 
