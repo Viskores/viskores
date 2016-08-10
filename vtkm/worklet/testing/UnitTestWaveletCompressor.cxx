@@ -159,7 +159,7 @@ void DebugWaveDecomposeReconstruct()
 
   // Decompose
   vtkm::cont::Timer<> timer;
-  compressor.WaveDecompose( inputArray, nLevels, outputArray, L );
+  compressor.WaveDecompose( inputArray, nLevels, outputArray, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
   vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
   std::cout << "Decompose time         = " << elapsedTime << std::endl;
@@ -167,7 +167,7 @@ void DebugWaveDecomposeReconstruct()
 
   // Squash small coefficients
   timer.Reset();
-  compressor.SquashCoefficients( outputArray, cratio );
+  compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Thresholding time      = " << elapsedTime << std::endl;
 
@@ -175,11 +175,11 @@ void DebugWaveDecomposeReconstruct()
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
   timer.Reset();
-  compressor.WaveReconstruct( outputArray, nLevels, L, reconstructArray );
+  compressor.WaveReconstruct( outputArray, nLevels, L, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Reconstruction time    = " << elapsedTime << std::endl;
 
-  compressor.EvaluateReconstruction( inputArray, reconstructArray );
+  compressor.EvaluateReconstruction( inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
   timer.Reset();
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
@@ -221,7 +221,7 @@ void TestWaveDecomposeReconstruct()
 
   // Decompose
   vtkm::cont::Timer<> timer;
-  compressor.WaveDecompose( inputArray, nLevels, outputArray, L );
+  compressor.WaveDecompose( inputArray, nLevels, outputArray, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
   vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
   std::cout << "Decompose time         = " << elapsedTime << std::endl;
@@ -229,11 +229,11 @@ void TestWaveDecomposeReconstruct()
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
   timer.Reset();
-  compressor.WaveReconstruct( outputArray, nLevels, L, reconstructArray );
+  compressor.WaveReconstruct( outputArray, nLevels, L, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Reconstruction time    = " << elapsedTime << std::endl;
 
-  compressor.EvaluateReconstruction( inputArray, reconstructArray );
+  compressor.EvaluateReconstruction( inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
   timer.Reset();
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )

@@ -40,12 +40,13 @@ public:
   WaveletCompressor( const std::string &w_name ) : WaveletDWT( w_name ) {} 
 
   // Multi-level 1D wavelet decomposition
-  template< typename SignalArrayType, typename CoeffArrayType>
+  template< typename SignalArrayType, typename CoeffArrayType, typename DeviceTag >
   VTKM_CONT_EXPORT
   vtkm::Id WaveDecompose( const SignalArrayType      &sigIn,   // Input
                                 vtkm::Id             nLevels,  // n levels of DWT
                                 CoeffArrayType       &coeffOut,
-                                std::vector<vtkm::Id> &L)
+                                std::vector<vtkm::Id> &L,
+                                DeviceTag                     )
   {
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if( nLevels < 0 || nLevels > WaveletBase::GetWaveletMaxLevel( sigInLen ) )
@@ -54,7 +55,8 @@ public:
     }
     if( nLevels == 0 )  //  0 levels means no transform
     {
-      WaveletBase::DeviceCopy( sigIn, coeffOut );
+      //WaveletBase::DeviceCopy( sigIn, coeffOut, DeviceTag );
+      vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( sigIn, coeffOut );
       return 0;
     }
 
@@ -80,7 +82,8 @@ public:
     typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, CoeffArrayType > 
               PermutArrayType;
 
-    WaveletBase::DeviceCopy( sigIn, coeffOut );
+    //WaveletBase::DeviceCopy( sigIn, coeffOut );
+    vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( sigIn, coeffOut );
 
     for( vtkm::Id i = nLevels; i > 0; i-- )
     {
@@ -108,12 +111,13 @@ public:
   }
 
   // Multi-level 1D wavelet reconstruction
-  template< typename CoeffArrayType, typename SignalArrayType >
+  template< typename CoeffArrayType, typename SignalArrayType, typename DeviceTag >
   VTKM_CONT_EXPORT
   vtkm::Id WaveReconstruct( const CoeffArrayType     &coeffIn,   // Input
                                   vtkm::Id           nLevels,    // n levels of DWT
                                   std::vector<vtkm::Id> &L,
-                                  SignalArrayType    &sigOut )
+                                  SignalArrayType    &sigOut,
+                                  DeviceTag                  )
   {
     VTKM_ASSERT( nLevels > 0 );
     vtkm::Id LLength = nLevels + 2;
@@ -130,7 +134,8 @@ public:
     typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, SignalArrayType > 
                   PermutArrayType;
 
-    WaveletBase::DeviceCopy( coeffIn, sigOut );
+    //WaveletBase::DeviceCopy( coeffIn, sigOut );
+    vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( coeffIn, sigOut );
 
     for( vtkm::Id i = 1; i <= nLevels; i++ )
     {
@@ -157,10 +162,10 @@ public:
   }
 
   // Squash coefficients smaller than a threshold
-  template< typename CoeffArrayType >
-  VTKM_CONT_EXPORT
+  template< typename CoeffArrayType, typename DeviceTag >
   vtkm::Id SquashCoefficients( CoeffArrayType   &coeffIn,
-                               vtkm::Float64    ratio )
+                               vtkm::Float64    ratio,
+                                   DeviceTag            )
   {
     if( ratio > 1 )
     {
@@ -168,8 +173,9 @@ public:
       typedef typename CoeffArrayType::ValueType ValueType;
       typedef vtkm::cont::ArrayHandle< ValueType > CoeffArrayBasic;
       CoeffArrayBasic sortedArray;
-      WaveletBase::DeviceCopy( coeffIn, sortedArray );
-      WaveletBase::DeviceSort( sortedArray );
+      //WaveletBase::DeviceCopy( coeffIn, sortedArray );
+      vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( coeffIn, sortedArray );
+      WaveletBase::DeviceSort( sortedArray, DeviceTag() );
       
       vtkm::Id n = coeffLen - 
                    static_cast<vtkm::Id>( static_cast<vtkm::Float64>(coeffLen)/ratio );
@@ -184,14 +190,14 @@ public:
 
 
   // Report statistics on reconstructed array
-  template< typename ArrayType >
-  VTKM_CONT_EXPORT
+  template< typename ArrayType, typename DeviceTag >
   vtkm::Id EvaluateReconstruction( const ArrayType &original,
-                                   const ArrayType &reconstruct )
+                                   const ArrayType &reconstruct,
+                                         DeviceTag )
   {
     #define VAL        vtkm::Float64
     #define MAKEVAL(a) (static_cast<VAL>(a))
-    VAL VarOrig = WaveletBase::CalculateVariance( original );
+    VAL VarOrig = WaveletBase::DeviceCalculateVariance( original, DeviceTag() );
 
     typedef typename ArrayType::ValueType ValueType;
     typedef vtkm::cont::ArrayHandle< ValueType > ArrayBasic;
@@ -208,7 +214,7 @@ public:
     vtkm::worklet::DispatcherMapField< SquareWorklet > swDispatcher( sw );
     swDispatcher.Invoke( errorArray, errorSquare );
 
-    VAL varErr   = WaveletBase::CalculateVariance( errorArray );
+    VAL varErr   = WaveletBase::DeviceCalculateVariance( errorArray, DeviceTag() );
     VAL snr, decibels;
     if( varErr != 0.0 )
     {
@@ -221,12 +227,12 @@ public:
         decibels = vtkm::Infinity64();
     }
 
-    VAL origMax  = WaveletBase::DeviceMax( original );
-    VAL origMin  = WaveletBase::DeviceMin( original );
-    VAL errorMax = WaveletBase::DeviceMaxAbs( errorArray );
+    VAL origMax  = WaveletBase::DeviceMax( original, DeviceTag() );
+    VAL origMin  = WaveletBase::DeviceMin( original, DeviceTag() );
+    VAL errorMax = WaveletBase::DeviceMaxAbs( errorArray, DeviceTag() );
     VAL range    = origMax - origMin;
 
-    VAL squareSum = WaveletBase::DeviceSum( errorSquare );
+    VAL squareSum = WaveletBase::DeviceSum( errorSquare, DeviceTag() );
     VAL rmse      = vtkm::Sqrt( MAKEVAL(squareSum) / MAKEVAL(errorArray.GetNumberOfValues()) );
 
     std::cout << "Data range             = " << range << std::endl;

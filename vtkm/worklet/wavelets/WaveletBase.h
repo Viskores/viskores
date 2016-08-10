@@ -164,16 +164,6 @@ public:
     }
   }
 
-  // perform a device copy
-  template< typename ArrayType1, typename ArrayType2 >
-  VTKM_EXEC_CONT_EXPORT
-  void DeviceCopy( const ArrayType1 &srcArray, 
-                         ArrayType2 &dstArray)
-  {
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy
-          ( srcArray, dstArray );
-  }
-
   // perform a device copy. The whole 1st array to a certain start location of the 2nd array
   template< typename ArrayType1, typename ArrayType2 >
   VTKM_EXEC_CONT_EXPORT
@@ -197,20 +187,20 @@ public:
       return vtkm::Abs(x) < vtkm::Abs(y); 
     } 
   }; 
-  template< typename ArrayType >
+  template< typename ArrayType, typename DeviceTag >
   VTKM_EXEC_CONT_EXPORT
-  void DeviceSort( ArrayType &array )
+  void DeviceSort( ArrayType &array, DeviceTag )
   {
-    vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Sort
+    vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Sort
           ( array, SortLessAbsFunctor() );
   }
   
   // Reduce to the sum of all values on device
-  template< typename ArrayType >
+  template< typename ArrayType, typename DeviceTag >
   VTKM_EXEC_CONT_EXPORT
-  typename ArrayType::ValueType DeviceSum( const ArrayType &array )
+  typename ArrayType::ValueType DeviceSum( const ArrayType &array, DeviceTag )
   {
-    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+    return vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Reduce
               ( array, 0.0 );
   }
 
@@ -231,20 +221,20 @@ public:
       return Max(x, y);
     }
   };
-  template< typename ArrayType >
+  template< typename ArrayType, typename DeviceTag >
   VTKM_EXEC_CONT_EXPORT
-  typename ArrayType::ValueType DeviceMax( const ArrayType &array )
+  typename ArrayType::ValueType DeviceMax( const ArrayType &array, DeviceTag )
   {
     typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
-    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+    return vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Reduce
               ( array, initVal, maxFunctor() );
   }
-  template< typename ArrayType >
+  template< typename ArrayType, typename DeviceTag >
   VTKM_EXEC_CONT_EXPORT
-  typename ArrayType::ValueType DeviceMin( const ArrayType &array )
+  typename ArrayType::ValueType DeviceMin( const ArrayType &array, DeviceTag )
   {
     typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
-    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+    return vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Reduce
               ( array, initVal, minFunctor() );
   }
 
@@ -257,21 +247,20 @@ public:
       return Max( vtkm::Abs(x), vtkm::Abs(y) );
     }
   };
-  template< typename ArrayType >
+  template< typename ArrayType, typename DeviceTag >
   VTKM_EXEC_CONT_EXPORT
-  typename ArrayType::ValueType DeviceMaxAbs( const ArrayType &array )
+  typename ArrayType::ValueType DeviceMaxAbs( const ArrayType &array, DeviceTag )
   {
     typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
-    return vtkm::cont::DeviceAdapterAlgorithm< VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Reduce
+    return vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Reduce
               ( array, initVal, maxAbsFunctor() );
   }
 
   // Calculate variance of an array
-  template< typename ArrayType >
-  VTKM_CONT_EXPORT
-  vtkm::Float64 CalculateVariance( ArrayType &array )
+  template< typename ArrayType, typename DeviceTag >
+  vtkm::Float64 DeviceCalculateVariance( ArrayType &array, DeviceTag )
   {
-    vtkm::Float64 mean = static_cast<vtkm::Float64>(WaveletBase::DeviceSum( array )) / 
+    vtkm::Float64 mean = static_cast<vtkm::Float64>(this->DeviceSum( array, DeviceTag() )) / 
                          static_cast<vtkm::Float64>(array.GetNumberOfValues());
     
     vtkm::cont::ArrayHandle< vtkm::Float64 > squaredDeviation;
@@ -282,7 +271,7 @@ public:
     vtkm::worklet::DispatcherMapField< SDWorklet > dispatcher( sdw  );
     dispatcher.Invoke( array, squaredDeviation );
 
-    vtkm::Float64 sdMean = this->DeviceSum( squaredDeviation ) / 
+    vtkm::Float64 sdMean = this->DeviceSum( squaredDeviation, DeviceTag() ) / 
                            static_cast<vtkm::Float64>( squaredDeviation.GetNumberOfValues() );
 
     return sdMean;
