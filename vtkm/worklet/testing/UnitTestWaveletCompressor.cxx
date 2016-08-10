@@ -78,7 +78,8 @@ void DebugDWTIDWT1D()
   std::vector<vtkm::Id> L(3, 0);
 
   // Forward Transform
-  vtkm::worklet::wavelets::WaveletDWT waveletdwt( "CDF9/7" );
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  vtkm::worklet::wavelets::WaveletDWT waveletdwt( wname );
   waveletdwt.DWT1D( inputArray, coeffOut, L );
 
   std::cout << "Forward Wavelet Transform: result coeff length = " << 
@@ -132,7 +133,8 @@ void DebugWaveDecomposeReconstruct()
 
   // Use a WaveletCompressor
   vtkm::Id nLevels = 2;
-  vtkm::worklet::WaveletCompressor compressor("CDF9/7");
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  vtkm::worklet::WaveletCompressor compressor( wname );
 
   // User input of decompose levels
   vtkm::Id maxLevel = compressor.GetWaveletMaxLevel( sigLen );
@@ -211,7 +213,8 @@ void TestWaveDecomposeReconstruct()
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
 
   // Use a WaveletCompressor
-  vtkm::worklet::WaveletCompressor compressor("CDF9/7");
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  vtkm::worklet::WaveletCompressor compressor( wname );
 
   // User maximum decompose levels, and no compression
   vtkm::Id maxLevel = compressor.GetWaveletMaxLevel( sigLen );

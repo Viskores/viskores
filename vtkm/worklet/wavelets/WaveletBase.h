@@ -52,53 +52,27 @@ class WaveletBase
 public:
 
   // Constructor
-  WaveletBase( const std::string &w_name )
+  WaveletBase( WaveletName name ) : filter( name ),
+                                    wname ( name )         
   {
-    this->filter = NULL;
-    this->wmode = PER;
-    this->wname = w_name;
-    if( wname.compare("CDF9/7") == 0 )
+    if( this->wname == CDF9_7 )
     {
       this->wmode = SYMW;   // Default extension mode, see MatWaveBase.cpp
-      this->filter = new vtkm::worklet::wavelets::WaveletFilter( wname );
     }
-    else if( wname.compare("CDF5/3") == 0 )
+    else if( this->wname == CDF5_3 )
     {
       this->wmode = SYMW;
-      this->filter = new vtkm::worklet::wavelets::WaveletFilter( wname );
     }
-    else
-    {
-      vtkm::cont::ErrorControlBadValue("This wavelet kernel is not supported! ");
-    }
-  }
-
-
-  // Destructor
-  virtual ~WaveletBase()
-  {
-    if( filter )  delete filter;
-    filter = NULL;
-  }
-
-  // Get the wavelet filter
-  const WaveletFilter* GetWaveletFilter() 
-  { 
-    if( this->filter == NULL )
-    {
-      vtkm::cont::ErrorControlInternal( "Filter is NULL right now!" );
-    }
-    return filter; 
   }
 
   // Returns length of approximation coefficients from a decompostition pass.
   vtkm::Id GetApproxLength( vtkm::Id sigInLen )
   {
-    vtkm::Id filterLen = this->filter->GetFilterLength();
+    vtkm::Id filterLen = this->filter.GetFilterLength();
 
     if (this->wmode == PER) 
       return static_cast<vtkm::Id>(vtkm::Ceil( (static_cast<vtkm::Float64>(sigInLen)) / 2.0 ));
-    else if (this->filter->isSymmetric()) 
+    else if (this->filter.isSymmetric()) 
     {
       if ( (this->wmode == SYMW && (filterLen % 2 != 0)) ||
            (this->wmode == SYMH && (filterLen % 2 == 0)) )  
@@ -117,11 +91,11 @@ public:
   // Returns length of detail coefficients from a decompostition pass
   vtkm::Id GetDetailLength( vtkm::Id sigInLen )
   {
-    vtkm::Id filterLen = this->filter->GetFilterLength();
+    vtkm::Id filterLen = this->filter.GetFilterLength();
 
     if (this->wmode == PER) 
       return static_cast<vtkm::Id>(vtkm::Ceil( (static_cast<vtkm::Float64>(sigInLen)) / 2.0 ));
-    else if (this->filter->isSymmetric()) 
+    else if (this->filter.isSymmetric()) 
     {
       if ( (this->wmode == SYMW && (filterLen % 2 != 0)) ||
            (this->wmode == SYMH && (filterLen % 2 == 0)) )  
@@ -154,14 +128,10 @@ public:
   // Returns maximum wavelet decompostion level
   vtkm::Id GetWaveletMaxLevel( vtkm::Id sigInLen )
   {
-    if( ! this->filter )
-      return 0;
-    else {
-      vtkm::Id filterLen = this->filter->GetFilterLength(); 
-      vtkm::Id level;
-      this->WaveLengthValidate( sigInLen, filterLen, level );
-      return level;
-    }
+    vtkm::Id filterLen = this->filter.GetFilterLength(); 
+    vtkm::Id level;
+    this->WaveLengthValidate( sigInLen, filterLen, level );
+    return level;
   }
 
   // perform a device copy. The whole 1st array to a certain start location of the 2nd array
@@ -293,9 +263,9 @@ public:
 
 
 protected:
-  vtkm::worklet::wavelets::DWTMode           wmode;
-  WaveletFilter*                            filter;
-  std::string                               wname;
+  WaveletName                               wname;
+  DWTMode                                   wmode;
+  WaveletFilter                             filter;
 
   void WaveLengthValidate( vtkm::Id sigInLen, vtkm::Id filterLength, vtkm::Id &level)
   {

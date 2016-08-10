@@ -37,7 +37,7 @@ class WaveletCompressor : public vtkm::worklet::wavelets::WaveletDWT
 public:
 
   // Constructor
-  WaveletCompressor( const std::string &w_name ) : WaveletDWT( w_name ) {} 
+  WaveletCompressor( wavelets::WaveletName wname ) : WaveletDWT( wname ) {} 
 
   // Multi-level 1D wavelet decomposition
   template< typename SignalArrayType, typename CoeffArrayType, typename DeviceTag >
