@@ -36,6 +36,28 @@
 
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
+namespace
+{
+// GCC creates false positive warnings for signed/unsigned char* operations.
+// This occurs because the values are implicitly casted up to int's for the
+// operation, and than  casted back down to char's when return.
+// This causes a false positive warning, even when the values is within
+// the value types range
+#if defined(VTKM_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc
+  template<typename T>
+  T compute_delta(T fieldMinValue, T fieldMaxValue, vtkm::Id num)
+  { typedef vtkm::VecTraits<T> VecType;
+    const T fieldRange = fieldMaxValue - fieldMinValue;
+    return fieldRange / static_cast<typename VecType::ComponentType>(num);
+  }
+#if defined(VTKM_GCC)
+#pragma GCC diagnostic pop
+#endif // gcc
+}
+
 namespace vtkm {
 namespace worklet {
 
@@ -146,11 +168,7 @@ public:
 
     const FieldType fieldMinValue = DeviceAlgorithms::Reduce(fieldArray, initValue, minFunctor());
     const FieldType fieldMaxValue = DeviceAlgorithms::Reduce(fieldArray, initValue, maxFunctor());
-    const FieldType fieldRange = fieldMaxValue - fieldMinValue;
-
-    typedef vtkm::VecTraits<FieldType> VecType;
-    const FieldType fieldDelta = fieldRange /
-                    static_cast<typename VecType::ComponentType>(numberOfBins);
+    const FieldType fieldDelta = compute_delta(fieldMinValue, fieldMaxValue, numberOfBins);
 
     // Worklet fills in the bin belonging to each value
     vtkm::cont::ArrayHandle<vtkm::Id> binIndex;

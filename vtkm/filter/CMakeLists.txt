@@ -27,6 +27,7 @@ set(headers
   FilterDataSetWithField.h
   FilterField.h
   FilterTraits.h
+  Histogram.h
   MarchingCubes.h
   PointElevation.h
   PolicyBase.h
@@ -45,6 +46,7 @@ set(header_template_sources
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx
+  Histogram.hxx
   MarchingCubes.hxx
   PointElevation.hxx
   Threshold.hxx
