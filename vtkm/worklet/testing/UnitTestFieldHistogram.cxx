@@ -286,15 +286,15 @@ vtkm::cont::DataSet MakeTestDataSet()
 //
 void PrintHistogram(vtkm::cont::ArrayHandle<vtkm::Id> bins,
                     vtkm::Id numberOfBins,
-                    vtkm::Float32 minValue,
+                    const vtkm::Range& range,
                     vtkm::Float32 delta)
 {
   vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl binPortal = bins.GetPortalConstControl();
 
   vtkm::Id sum = 0;
   for (vtkm::Id i = 0; i < numberOfBins; i++) {
-    vtkm::Float32 lo = minValue + (static_cast<vtkm::Float32>(i) * delta);
-    vtkm::Float32 hi = lo + delta;
+    vtkm::Float64 lo = range.Min + (static_cast<vtkm::Float64>(i) * delta);
+    vtkm::Float64 hi = lo + delta;
     sum += binPortal.Get(i);
     std::cout << "  BIN[" << i << "] Range[" << lo << ", " << hi << "] = "
               << binPortal.Get(i) << std::endl;
@@ -312,7 +312,7 @@ void TestFieldHistogram()
 {
   // Create the output bin array
   vtkm::Id numberOfBins = 10;
-  vtkm::Float32 minValue;
+  vtkm::Range range;
   vtkm::Float32 delta;
   vtkm::cont::ArrayHandle<vtkm::Id> bins;
   bins.Allocate(numberOfBins);
@@ -330,26 +330,23 @@ void TestFieldHistogram()
   vtkm::cont::ArrayHandle<vtkm::Float32> p_uniform;
   ds.GetField("p_uniform").GetData().CopyTo(p_uniform);
 
+  vtkm::worklet::FieldHistogram histogram;
   // Run data
-  vtkm::worklet::FieldHistogram<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().
-        Run(p_poisson, numberOfBins, &minValue, &delta, bins);
+  histogram.Run(p_poisson, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   std::cout << "Poisson distributed POINT data:" << std::endl;
-  PrintHistogram(bins, numberOfBins, minValue, delta);
+  PrintHistogram(bins, numberOfBins, range, delta);
 
-  vtkm::worklet::FieldHistogram<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().
-        Run(p_normal, numberOfBins, &minValue, &delta, bins);
+  histogram.Run(p_normal, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   std::cout << "Normal distributed POINT data:" << std::endl;
-  PrintHistogram(bins, numberOfBins, minValue, delta);
+  PrintHistogram(bins, numberOfBins, range, delta);
 
-  vtkm::worklet::FieldHistogram<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().
-        Run(p_chiSquare, numberOfBins, &minValue, &delta, bins);
+  histogram.Run(p_chiSquare, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   std::cout << "Chi Square distributed POINT data:" << std::endl;
-  PrintHistogram(bins, numberOfBins, minValue, delta);
+  PrintHistogram(bins, numberOfBins, range, delta);
 
-  vtkm::worklet::FieldHistogram<vtkm::Float32, VTKM_DEFAULT_DEVICE_ADAPTER_TAG>().
-        Run(p_uniform, numberOfBins, &minValue, &delta, bins);
+  histogram.Run(p_uniform, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   std::cout << "Uniform distributed POINT data:" << std::endl;
-  PrintHistogram(bins, numberOfBins, minValue, delta);
+  PrintHistogram(bins, numberOfBins, range, delta);
 } // TestFieldHistogram
 
 
