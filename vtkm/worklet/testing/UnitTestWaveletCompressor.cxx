@@ -25,7 +25,7 @@
 #include <vtkm/cont/Timer.h>
 
 #include <vector>
-
+#include <iomanip>
 
 void DebugDWTIDWT1D()
 {
@@ -98,12 +98,13 @@ void DebugDWTIDWT2D()
 
   for( vtkm::Id i = 0; i < coeffOut.GetNumberOfValues(); i++ )
   {
-    if( i == 0 )
-      std::cout << "  <-- cA --> " << std::endl;
-    else if( i == L[0] )
-      std::cout << "  <-- cD --> " << std::endl;
-    std::cout << coeffOut.GetPortalConstControl().Get(i) << std::endl;
+    std::cout << std::setw( 10 );
+    std::cout << coeffOut.GetPortalConstControl().Get(i) << "\t";
+    if( i % sigX == sigX-1 )   
+      std::cout << std::endl;
   }
+  std::cout << std::endl;
+  
 
   // Inverse Transform
   /*

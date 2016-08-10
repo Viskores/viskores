@@ -423,21 +423,6 @@ public:
     typedef typename InputArrayType::ValueType             InputValueType;
     typedef vtkm::cont::ArrayHandle<InputValueType>        BasicArrayType;
 
-    #if 0
-    // intermediate storage space
-    vtkm::Id passXLen      =          (L[0]+ L[4]) * inYLen;        // ~whole length
-    vtkm::Id transposeLen  = vtkm::Max(L[0], L[4]) * inYLen;        // ~half length
-    vtkm::Id passYLen      = vtkm::Max(L[0], L[4]) * (L[1] + L[3]); // ~half length
-    BasicArrayType  buf2d;
-    buf2d.Allocate( passXLen + transposeLen + passYLen );
-    // Use pseudo pointers
-    vtkm::Id cAXbuf       = 0;
-    vtkm::Id cDXbuf       = cAXbuf + (L[0] * inYLen );
-    vtkm::Id bufTranspose = cAXbuf + passXLen;
-    vtkm::Id cAYbuf       = bufTranspose + transposeLen;
-    vtkm::Id cDYbuf       = cAYbuf + L[1] * vtkm::Max( L[0], L[4] );
-    #endif
-
     // Define a few more types
     typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      CountingArrayType;
     typedef vtkm::cont::ArrayHandlePermutation< CountingArrayType, InputArrayType > 
@@ -450,7 +435,7 @@ public:
     // Transform rows
     //    Storage for coeffs after X transform
     //    Note: DWT1D decides (L[0] + L[4] == inXLen) at line 158
-    //          so resulting coeffs have the same length
+    //          so safe to assume resulting coeffs have the same length
     BasicArrayType afterXBuf;
     afterXBuf.Allocate( sigInLen );
     for(vtkm::Id y = 0; y < inYLen; y++ )
@@ -464,17 +449,6 @@ public:
       this->DWT1D( row, output, xL );
       // copy coeffs to buffer
       WaveletBase::DeviceCopyStartX( output, afterXBuf, y * inXLen );
-
-      #if 0
-      // Separate cA and cD
-      CountingArrayType     cAIndices( 0,     1, xL[0] );
-      CountingArrayType     cDIndices( xL[0], 1, xL[1] );
-      CountingBasicPermute  cA( cAIndices, output );
-      CountingBasicPermute  cD( cDIndices, output );
-      // Copy cA, cD to buf2d
-      WaveletBase::DeviceCopyStartX( cA, buf2d, cAXbuf + L[0]*y );
-      WaveletBase::DeviceCopyStartX( cD, buf2d, cDXbuf + L[4]*y );
-      #endif
     }
 
     // Transform columns
@@ -483,17 +457,18 @@ public:
     for( vtkm::Id x = 0; x < inXLen; x++ )
     {
       // make input, output array
-      CountingArrayType       inputIndices( inYLen*x, inXLen, inYLen );
+      CountingArrayType       inputIndices( x, inXLen, inYLen );
       CountingBasicPermute    column( inputIndices, afterXBuf );
       BasicArrayType          output;
 
       // 1D DWT on a row
       this->DWT1D( column, output, xL );
-      // copy coeffs to buffer, afterYBuf is column major order.
+      // copy coeffs to buffer. afterYBuf is column major order.
       WaveletBase::DeviceCopyStartX( output, afterYBuf, inYLen*x );
     }
 
     // Transpose afterYBuf to output
+    coeffOut.Allocate( sigInLen );
     WaveletBase::DeviceTranspose( afterYBuf, coeffOut, inYLen, inXLen );
 
     return 0;

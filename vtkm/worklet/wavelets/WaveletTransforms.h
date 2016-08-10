@@ -525,8 +525,8 @@ public:
                                          vtkm::Id    &x,      
                                          vtkm::Id    &y ) const     
   {
-    y = idx / inYLen;
-    x = idx % inYLen;
+    x = idx % inXLen;
+    y = idx / inXLen;
   }
 
   VTKM_EXEC_CONT_EXPORT
