@@ -106,8 +106,9 @@ public:
   Run(const CellSetType &cellSet,
       const vtkm::cont::Field &field,
       const UnaryPredicate &predicate,
-      DeviceAdapter)
+      DeviceAdapter device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG() )
   {
+    (void) device;
     typedef vtkm::cont::CellSetPermutation< CellSetType > OutputType;
 
     vtkm::cont::ArrayHandle<bool> passFlags;
