@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 
+
 #ifndef vtk_m_worklet_wavelets_waveletdwt_h
 #define vtk_m_worklet_wavelets_waveletdwt_h
 
@@ -420,10 +421,9 @@ public:
     L[4] = WaveletBase::GetDetailLength( inXLen );    L[6] = L[4];
     L[8] = inXLen;                                    L[9] = inYLen;
 
+    // Define a few types
     typedef typename InputArrayType::ValueType             InputValueType;
     typedef vtkm::cont::ArrayHandle<InputValueType>        BasicArrayType;
-
-    // Define a few more types
     typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      CountingArrayType;
     typedef vtkm::cont::ArrayHandlePermutation< CountingArrayType, InputArrayType > 
               CountingInputPermute;
@@ -470,6 +470,74 @@ public:
     // Transpose afterYBuf to output
     coeffOut.Allocate( sigInLen );
     WaveletBase::DeviceTranspose( afterYBuf, coeffOut, inYLen, inXLen );
+    //coeffOut = afterYBuf;
+
+    return 0;
+  }
+
+  // Perform 1 level inverse wavelet transform
+  template< typename InputArrayType, typename OutputArrayType>
+  VTKM_CONT_EXPORT
+  vtkm::Id IDWT2D( const InputArrayType    &sigIn,     // Input: array
+                   std::vector<vtkm::Id>   &L,         // Input: coeff layout
+                   OutputArrayType         &sigOut)    // Output coeff array
+  {
+    VTKM_ASSERT( L.size() == 10 );
+    vtkm::Id inXLen = L[0] + L[4];   
+    vtkm::Id inYLen = L[1] + L[3];
+    vtkm::Id sigLen = inXLen * inYLen;
+    VTKM_ASSERT( sigLen == sigIn.GetNumberOfValues() );
+
+    // Define a few types
+    typedef typename InputArrayType::ValueType               InputValueType;
+    typedef vtkm::cont::ArrayHandle<InputValueType>          BasicArrayType;
+    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      CountingArrayType;
+    typedef vtkm::cont::ArrayHandlePermutation< CountingArrayType, InputArrayType > 
+              CountingInputPermute;
+    typedef vtkm::cont::ArrayHandlePermutation< CountingArrayType, BasicArrayType > 
+              CountingBasicPermute;
+
+    std::vector<vtkm::Id> xL(3, 0);
+
+    // First IDWT on columns
+    BasicArrayType afterYBuf;
+    afterYBuf.Allocate( sigLen );    
+    // make a bookkeeping array
+    xL[0] = L[1];
+    xL[1] = L[3];
+    xL[2] = L[9];
+
+    for( vtkm::Id x = 0; x < inXLen; x++ )
+    {
+      // make input, output array
+      CountingArrayType       inputIdx( x, inXLen, inYLen );
+      CountingInputPermute    input( inputIdx, sigIn );
+      BasicArrayType          output;
+
+      // perform inverse DWT on a logical column
+      this->IDWT1D( input, xL, output);
+      // copy results to a buffer
+      WaveletBase::DeviceCopyStartX( output, afterYBuf, x * inYLen );
+    }
+
+    // Second IDWT on rows
+    sigOut.Allocate( sigLen );
+    // make a bookkeeping array
+    xL[0] = L[0];
+    xL[1] = L[4];
+    xL[2] = L[8];
+    for( vtkm::Id y = 0; y < inYLen; y++ )
+    {
+      // make input, output array
+      CountingArrayType     inputIdx( y, inYLen, inXLen );
+      CountingBasicPermute  input( inputIdx, afterYBuf );
+      BasicArrayType        output;
+
+      // perform inverse DWT on a logical row
+      this->IDWT1D( input, xL, output);
+      // copy results to a buffer
+      WaveletBase::DeviceCopyStartX( output, sigOut, y * inXLen );
+    }
 
     return 0;
   }

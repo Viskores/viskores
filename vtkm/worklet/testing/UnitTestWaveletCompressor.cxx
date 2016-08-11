@@ -78,8 +78,8 @@ void DebugDWTIDWT1D()
 
 void DebugDWTIDWT2D()
 {
-  vtkm::Id sigX = 10;
-  vtkm::Id sigY = 15;  
+  vtkm::Id sigX = 9;
+  vtkm::Id sigY = 11;  
   vtkm::Id sigLen = sigX * sigY;
 
   // make input data array handle
@@ -100,23 +100,19 @@ void DebugDWTIDWT2D()
   {
     std::cout << std::setw( 10 );
     std::cout << coeffOut.GetPortalConstControl().Get(i) << "\t";
-    if( i % sigX == sigX-1 )   
+    if( i % sigY == sigY-1 )   
       std::cout << std::endl;
   }
   std::cout << std::endl;
   
 
   // Inverse Transform
-  /*
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
-  waveletdwt.IDWT1D( coeffOut, L, reconstructArray );
-  std::cout << "Inverse Wavelet Transform: result signal length = " << 
-      reconstructArray.GetNumberOfValues() << std::endl;
+  waveletdwt.IDWT2D( coeffOut, L, reconstructArray );
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
     std::cout << reconstructArray.GetPortalConstControl().Get(i) << std::endl;
   }
-  */
 }
 
 
