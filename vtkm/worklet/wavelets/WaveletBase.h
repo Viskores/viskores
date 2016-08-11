@@ -52,8 +52,8 @@ class WaveletBase
 public:
 
   // Constructor
-  WaveletBase( WaveletName name ) : filter( name ),
-                                    wname ( name )         
+  WaveletBase( WaveletName name ) : wname ( name ),
+                                    filter( name )
   {
     if( this->wname == CDF9_7 )
     {

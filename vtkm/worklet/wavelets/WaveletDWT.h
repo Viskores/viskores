@@ -40,7 +40,7 @@ class WaveletDWT : public WaveletBase
 public:
 
   // Constructor
-  WaveletDWT( WaveletName wname ) : WaveletBase( wname ) {} 
+  WaveletDWT( WaveletName name ) : WaveletBase( name ) {} 
 
 
   // Func: Extend 1D signal
