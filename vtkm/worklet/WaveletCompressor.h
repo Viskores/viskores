@@ -39,6 +39,7 @@ public:
   // Constructor
   WaveletCompressor( const std::string &w_name ) : WaveletDWT( w_name ) {} 
 
+
   // Multi-level 1D wavelet decomposition
   template< typename SignalArrayType, typename CoeffArrayType>
   VTKM_CONT_EXPORT
@@ -58,11 +59,9 @@ public:
       return 0;
     }
 
-    L.resize( size_t(nLevels + 2) );
-    this->ComputeL( sigInLen, nLevels, L );
+    this->ComputeL( sigInLen, nLevels, L ); // memory for L is allocated by ComputeL().
     vtkm::Id CLength = this->ComputeCoeffLength( L, nLevels );
     VTKM_ASSERT( CLength == sigInLen );
-
 
     vtkm::Id sigInPtr = 0;  // pseudo pointer for the beginning of input array 
     vtkm::Id len = sigInLen;
@@ -106,6 +105,7 @@ public:
 
     return 0;
   }
+
 
   // Multi-level 1D wavelet reconstruction
   template< typename CoeffArrayType, typename SignalArrayType >
@@ -155,6 +155,58 @@ public:
 
     return 0;
   }
+
+
+  // Multi-level 2D wavelet decomposition
+  template< typename InArrayType, typename OutArrayType>
+  VTKM_CONT_EXPORT
+  vtkm::Id WaveDecompose2D( const InArrayType           &sigIn,   // Input
+                                  vtkm::Id              nLevels,  // n levels of DWT
+                                  vtkm::Id              inX,      // Input X dim
+                                  vtkm::Id              inY,      // Input Y dim
+                                  OutArrayType          &coeffOut,
+                                  std::vector<vtkm::Id> &L)
+  {
+    vtkm::Id sigInLen = sigIn.GetNumberOfValues();
+    VTKM_ASSERT( inX * inY == sigInLen );
+    if( nLevels < 0 || nLevels > WaveletBase::GetWaveletMaxLevel( inX ) ||
+                       nLevels > WaveletBase::GetWaveletMaxLevel( inY ) )
+    {
+      throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
+    }
+    if( nLevels == 0 )  //  0 levels means no transform
+    {
+      WaveletBase::DeviceCopy( sigIn, coeffOut );
+      return 0;
+    }
+
+    this->ComputeL2( inX, inY, nLevels, L );
+    vtkm::Id CLength = this->ComputeCoeffLength2( L, nLevels );
+    VTKM_ASSERT( CLength == sigInLen );
+
+    vtkm::Id lenx     = inX;
+    vtkm::Id leny     = inY;
+    vtkm::Id cALenX   = WaveletBase::GetApproxLength( inX );
+    vtkm::Id cALenY   = WaveletBase::GetApproxLength( inY );
+    vtkm::Id tlen     = 0;
+    std::vector<vtkm::Id> L2d(10, 0);
+
+    // use pseudo pointer
+    vtkm::Id sigInPtr = 0;
+    vtkm::Id cptr;
+
+    for( size_t i = static_cast<size_t>(nLevels); i > 0; i-- )
+    {
+      tlen += 
+        (L[ 6*i -4 ] * L[ 6*i -3 ]) +   // cDh
+        (L[ 6*i -2 ] * L[ 6*i -1 ]) +   // cDv
+        (L[ 6*i +0 ] * L[ 6*i +1 ]);    // cDd
+
+      cptr
+    }
+    
+  }
+
 
   // Squash coefficients smaller than a threshold
   template< typename CoeffArrayType >
@@ -246,27 +298,73 @@ public:
                       
   // Compute the book keeping array L for 1D wavelet decomposition
   void ComputeL( vtkm::Id               sigInLen, 
-                 vtkm::Id               nLevels, 
+                 vtkm::Id               nLev, 
                  std::vector<vtkm::Id>  &L )
   {
-    VTKM_ASSERT( vtkm::Id( L.size() )  == (nLevels + 2) );
-    L[ size_t(nLevels+1) ] = sigInLen;
-    L[ size_t(nLevels)   ] = sigInLen;
-    for( size_t i = size_t(nLevels); i > 0; i-- )
+    size_t nLevels = static_cast<size_t>( nLev );   // cast once
+    L.resize( nLevels + 2 );
+    L[ nLevels+1 ] = sigInLen;
+    L[ nLevels   ] = sigInLen;
+    for( size_t i = nLevels; i > 0; i-- )
     {
       L[i-1] = WaveletBase::GetApproxLength( L[i] );
       L[i]   = WaveletBase::GetDetailLength( L[i] );
     }
   }
+  // Compute the book keeping array L for 2D wavelet decomposition
+  void ComputeL2( vtkm::Id               inX,
+                  vtkm::Id               inY,
+                  vtkm::Id               nLev, 
+                  std::vector<vtkm::Id>  &L )
+  {
+    size_t nLevels = static_cast<size_t>( nLev );    
+    L.resize( nLevels*6 + 4 );
+    L[        nLevels*6 + 0 ] = inX;
+    L[        nLevels*6 + 1 ] = inY;
+    L[        nLevels*6 + 2 ] = inX;
+    L[        nLevels*6 + 3 ] = inY;
 
-  // Compute the length of coefficients
+    for( size_t i = nLevels; i > 0; i-- )
+    {
+      // cA
+      L[ i*6 - 6 ] = WaveletBase::GetApproxLength( L[ i*6 + 0 ]);
+      L[ i*6 - 5 ] = WaveletBase::GetApproxLength( L[ i*6 + 1 ]);
+
+      // cDh
+      L[ i*6 - 4 ] = WaveletBase::GetApproxLength( L[ i*6 + 0 ]);
+      L[ i*6 - 3 ] = WaveletBase::GetDetailLength( L[ i*6 + 1 ]);
+
+      // cDv
+      L[ i*6 - 2 ] = WaveletBase::GetDetailLength( L[ i*6 + 0 ]);
+      L[ i*6 - 1 ] = WaveletBase::GetApproxLength( L[ i*6 + 1 ]);
+
+      // cDv - overwrites previous value!
+      L[ i*6 - 0 ] = WaveletBase::GetDetailLength( L[ i*6 + 0 ]);
+      L[ i*6 + 1 ] = WaveletBase::GetDetailLength( L[ i*6 + 1 ]);
+    }
+  }
+
+
+  // Compute the length of coefficients for 1D transforms
   vtkm::Id ComputeCoeffLength( std::vector<vtkm::Id> &L,
                                vtkm::Id nLevels )
   {
-    VTKM_ASSERT( vtkm::Id(L.size()) == (nLevels + 2) );
     vtkm::Id sum = L[0];        // 1st level cA
     for( size_t i = 1; i <= size_t(nLevels); i++ )
       sum += L[i];
+    return sum;
+  }
+  // Compute the length of coefficients for 2D transforms
+  vtkm::Id ComputeCoeffLength2( std::vector<vtkm::Id> &L,
+                               vtkm::Id nLevels )
+  {
+    vtkm::Id sum = (L[0] * L[1]);           // 1st level cA
+    for( size_t i = 1; i <= size_t(nLevels); i++ )
+    {
+      sum += L[ i*6 - 4 ] * L[ i*6 - 3 ];   // cDh
+      sum += L[ i*6 - 2 ] * L[ i*6 - 1 ];   // cDv
+      sum += L[ i*6 - 0 ] * L[ i*6 + 1 ];   // cDd
+    }
     return sum;
   }
 

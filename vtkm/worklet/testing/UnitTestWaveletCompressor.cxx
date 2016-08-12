@@ -100,7 +100,7 @@ void DebugDWTIDWT2D()
   {
     std::cout << std::setw( 10 );
     std::cout << coeffOut.GetPortalConstControl().Get(i) << "\t";
-    if( i % sigY == sigY-1 )   
+    if( i % sigX == sigX-1 )   
       std::cout << std::endl;
   }
   std::cout << std::endl;
