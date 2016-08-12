@@ -47,15 +47,20 @@ void wrev( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength
 // Quadrature mirror filtering operation: helper function to initialize a filter.
 void qmf_even ( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
 {
-  for (vtkm::Id count = 0; count < sigLength; count++) 
+  if( sigLength % 2 == 0 )
   {
-    sigOut[count] = sigIn[sigLength - count - 1];
-
-    if (sigLength % 2 == 0) {
+    for (vtkm::Id count = 0; count < sigLength; count++) 
+    {
+      sigOut[count] = sigIn[sigLength - count - 1];
       if (count % 2 != 0) 
         sigOut[count] = -1.0 * sigOut[count];
     }
-    else {
+  }
+  else
+  {
+    for (vtkm::Id count = 0; count < sigLength; count++) 
+    {
+      sigOut[count] = sigIn[sigLength - count - 1];
       if (count % 2 == 0) 
         sigOut[count] = -1.0 * sigOut[count];
     }
@@ -65,18 +70,7 @@ void qmf_even ( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigL
 // Flipping and QMF at the same time: helper function to initialize a filter.
 void qmf_wrev ( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
 {
-  for (vtkm::Id count = 0; count < sigLength; count++) {
-    sigOut[count] = sigIn[sigLength - count - 1];
-
-    if (sigLength % 2 == 0) {
-      if (count % 2 != 0) 
-        sigOut[count] = -1 * sigOut[count];
-    }
-    else {
-      if (count % 2 == 0) 
-        sigOut[count] = -1 * sigOut[count];
-    }
-  }
+  qmf_even( sigIn, sigOut, sigLength );
 
   vtkm::Float64 tmp;
   for (vtkm::Id count = 0; count < sigLength/2; count++) {
