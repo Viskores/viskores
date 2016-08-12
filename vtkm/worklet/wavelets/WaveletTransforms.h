@@ -147,18 +147,12 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  InverseTransformOdd() 
-  {
-    magicNum  = 0.0;
-    filterLen = 0;
-    cALen = 0;
-  }
+  InverseTransformOdd() : filterLen(0), cALen(0), cALen2(0), cALenExtended(0) {}
 
   // Set the filter length
   VTKM_EXEC_CONT_EXPORT
   void SetFilterLength( vtkm::Id len )
   {
-    VTKM_ASSERT( len % 2 == 1 );
     this->filterLen = len;
   }
 
@@ -166,7 +160,8 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void SetCALength( vtkm::Id len, vtkm::Id lenExt )
   {
-    this->cALen = len;
+    this->cALen         = len;
+    this->cALen2        = len * 2;
     this->cALenExtended = lenExt;
   }
 
@@ -184,39 +179,38 @@ public:
                   OutputPortalType            &sigOut,
                   const vtkm::Id &workIndex) const
   {
-    vtkm::Id xi;    // coeff indices
-    vtkm::Id k;     // filter indices
-
-    if( workIndex < 2*cALen )   // valid calculation region
+    if( workIndex < cALen2 )   // valid calculation region
     {
+      vtkm::Id xi;         // coeff indices
+      vtkm::Id k1, k2;     // indices for low and high filter
       VAL sum = 0.0;    
 
-      xi = (workIndex+1) / 2;
       if( workIndex % 2 != 0 )
-        k = this->filterLen - 2;
-      else
-        k = this->filterLen - 1;
-      while( k >= 0 )
       {
-        sum += lowFilter.Get(k) * MAKEVAL( coeffs.Get(xi) );
-        xi++;
-        k -= 2;
+        k1 = this->filterLen - 2;
+        k2 = this->filterLen - 1;
+      }
+      else
+      {
+        k1 = this->filterLen - 1;
+        k2 = this->filterLen - 2;
+      }
+
+      xi = (workIndex+1) / 2;
+      while( k1 > -1 )  // k1 >= 0
+      {
+        sum += lowFilter.Get(k1) * MAKEVAL( coeffs.Get(xi++) );
+        k1 -= 2;
       }
 
       xi = workIndex / 2;
-      if( workIndex % 2 != 0 )
-        k = this->filterLen - 1;
-      else
-        k = this->filterLen - 2;
-      while( k >= 0 )
+      while( k2 > -1 )  // k2 >= 0
       {
-        sum += highFilter.Get(k) * MAKEVAL( coeffs.Get( xi + this->cALenExtended ) );
-        xi++;
-        k -= 2;
+        sum += highFilter.Get(k2) * MAKEVAL( coeffs.Get( this->cALenExtended + xi++ ) );
+        k2 -= 2;
       }
     
-      sigOut.Set(workIndex, 
-                 static_cast<typename OutputPortalType::ValueType>( sum ) );
+      sigOut.Set(workIndex, static_cast<typename OutputPortalType::ValueType>( sum ) );
     }
 
   }
@@ -225,9 +219,9 @@ public:
   #undef VAL
 
 private:
-  vtkm::Float64 magicNum;
   vtkm::Id filterLen;       // filter length.
   vtkm::Id cALen;           // Number of actual cAs 
+  vtkm::Id cALen2;          //  = cALen * 2
   vtkm::Id cALenExtended;   // Number of extended cA at the beginning of input array
   
 };    // class ForwardTransform
