@@ -50,12 +50,37 @@ struct DeviceAdapterAlgorithm
 {
   /// \brief Copy the contents of one ArrayHandle to another
   ///
-  /// Copies the contents of \c input to \c output. The array \c to will be
-  /// allocated to the appropriate size.
+  /// Copies the contents of \c input to \c output. The array \c output will be
+  /// allocated to the same size of \c input. If output has already been
+  /// allocated we will reallocate and clear any current values.
   ///
   template<typename T, typename U, class CIn, class COut>
   VTKM_CONT_EXPORT static void Copy(const vtkm::cont::ArrayHandle<T,CIn> &input,
                                     vtkm::cont::ArrayHandle<U, COut> &output);
+
+  /// \brief Copy the contents of a section of one ArrayHandle to another
+  ///
+  /// Copies the a range of elements of \c input to \c output. The number of
+  /// elements is determined by \c numberOfElementsToCopy, and initial start
+  /// position is determined by \c inputStartIndex. You can control where
+  /// in the destination the copy should occur by specifying the \c outputIndex
+  ///
+  /// If inputStartIndex + numberOfElementsToCopy is greater than the length
+  /// of \c input we will only copy until we reach the end of the input array
+  ///
+  /// If the \c outputIndex + numberOfElementsToCopy is greater than the
+  /// length of \c output we will reallocate the output array so it can
+  /// fit the number of elements we desire.
+  ///
+  /// \par Requirements:
+  /// \arg \c input must already be sorted
+  ///
+  template<typename T, typename U, class CIn, class COut>
+  VTKM_CONT_EXPORT static bool CopySubRange(const vtkm::cont::ArrayHandle<T,CIn> &input,
+                                            vtkm::Id inputStartIndex,
+                                            vtkm::Id numberOfElementsToCopy,
+                                            vtkm::cont::ArrayHandle<U, COut> &output,
+                                            vtkm::Id outputIndex = 0);
 
   /// \brief Output is the first index in input for each item in values that wouldn't alter the ordering of input
   ///
