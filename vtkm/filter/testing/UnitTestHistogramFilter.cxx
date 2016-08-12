@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/worklet/FieldHistogram.h>
+#include <vtkm/filter/Histogram.h>
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -282,13 +282,19 @@ vtkm::cont::DataSet MakeTestDataSet()
 }
 
 //
-// Print the histogram result and tally
+// Verify the histogram result and tally
 //
-void PrintHistogram(vtkm::cont::ArrayHandle<vtkm::Id> bins,
+void VerifyHistogram(const vtkm::filter::ResultField& result,
                     vtkm::Id numberOfBins,
                     const vtkm::Range& range,
-                    vtkm::Float32 delta)
+                    vtkm::Float64 delta)
 {
+  VTKM_TEST_ASSERT( result.IsValid(), "result should be valid" );
+  VTKM_TEST_ASSERT( result.GetField().GetName() == "histogram",
+                    "Output field has wrong name.");
+
+  vtkm::cont::ArrayHandle<vtkm::Id> bins;
+  result.FieldAs(bins);
   vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl binPortal = bins.GetPortalConstControl();
 
   vtkm::Id sum = 0;
@@ -308,50 +314,48 @@ void PrintHistogram(vtkm::cont::ArrayHandle<vtkm::Id> bins,
 // Create output structure to hold histogram bins
 // Run FieldHistogram filter
 //
-void TestFieldHistogram()
+void TestHistogram()
 {
-  // Create the output bin array
-  vtkm::Id numberOfBins = 10;
+  vtkm::Float64 delta;
   vtkm::Range range;
-  vtkm::Float32 delta;
-  vtkm::cont::ArrayHandle<vtkm::Id> bins;
-  bins.Allocate(numberOfBins);
 
   // Data attached is the poisson distribution
   vtkm::cont::DataSet ds = MakeTestDataSet();
 
-  // Get point data
-  vtkm::cont::ArrayHandle<vtkm::Float32> p_poisson;
-  ds.GetField("p_poisson").GetData().CopyTo(p_poisson);
-  vtkm::cont::ArrayHandle<vtkm::Float32> p_normal;
-  ds.GetField("p_normal").GetData().CopyTo(p_normal);
-  vtkm::cont::ArrayHandle<vtkm::Float32> p_chiSquare;
-  ds.GetField("p_chiSquare").GetData().CopyTo(p_chiSquare);
-  vtkm::cont::ArrayHandle<vtkm::Float32> p_uniform;
-  ds.GetField("p_uniform").GetData().CopyTo(p_uniform);
+  vtkm::filter::ResultField result;
+  vtkm::filter::Histogram histogram;
 
-  vtkm::worklet::FieldHistogram histogram;
   // Run data
-  histogram.Run(p_poisson, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  std::cout << "Poisson distributed POINT data:" << std::endl;
-  PrintHistogram(bins, numberOfBins, range, delta);
+  histogram.SetNumberOfBins(10);
+  result = histogram.Execute(ds, "p_poisson");
+  delta = histogram.GetBinDelta();
+  range = histogram.GetDataRange();
+  VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
 
-  histogram.Run(p_normal, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  std::cout << "Normal distributed POINT data:" << std::endl;
-  PrintHistogram(bins, numberOfBins, range, delta);
 
-  histogram.Run(p_chiSquare, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  std::cout << "Chi Square distributed POINT data:" << std::endl;
-  PrintHistogram(bins, numberOfBins, range, delta);
+  histogram.SetNumberOfBins(100);
+  result = histogram.Execute(ds, "p_normal");
+  delta = histogram.GetBinDelta();
+  range = histogram.GetDataRange();
+  VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
 
-  histogram.Run(p_uniform, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  std::cout << "Uniform distributed POINT data:" << std::endl;
-  PrintHistogram(bins, numberOfBins, range, delta);
+  histogram.SetNumberOfBins(1);
+  result = histogram.Execute(ds, "p_chiSquare");
+  delta = histogram.GetBinDelta();
+  range = histogram.GetDataRange();
+  VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
+
+  histogram.SetNumberOfBins(1000000);
+  result = histogram.Execute(ds, "p_uniform");
+  delta = histogram.GetBinDelta();
+  range = histogram.GetDataRange();
+  VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
+
 } // TestFieldHistogram
 
 
-int UnitTestFieldHistogram(int, char *[])
+int UnitTestHistogramFilter(int, char *[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFieldHistogram);
+  return vtkm::cont::testing::Testing::Run(TestHistogram);
 }
 
