@@ -209,13 +209,10 @@ public:
     coeffOut.Allocate( sigInExtended.GetNumberOfValues() );
     vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform> 
         dispatcher(forwardTransform);
-vtkm::cont::Timer<> timer;
     dispatcher.Invoke( sigInExtended, 
                        WaveletBase::filter.GetLowDecomposeFilter(),
                        WaveletBase::filter.GetHighDecomposeFilter(),
                        coeffOut );
-vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
-std::cout << "----> DWT worklet time         = " << elapsedTime << std::endl;
 
     VTKM_ASSERT( L[0] + L[1] <= coeffOut.GetNumberOfValues() );
     coeffOut.Shrink( L[0] + L[1] );
@@ -366,13 +363,10 @@ std::cout << "----> DWT worklet time         = " << elapsedTime << std::endl;
       inverseXformOdd.SetCALength( L[0], cATempLen );
       vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformOdd>
             dispatcher( inverseXformOdd );
-vtkm::cont::Timer<> timer;
       dispatcher.Invoke( coeffInExtended,
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
                          sigOut );
-vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
-std::cout << "----> IDWT worklet time         = " << elapsedTime << std::endl;
 
       VTKM_ASSERT( sigOut.GetNumberOfValues() >= L[2] );
       sigOut.Shrink( L[2] );
