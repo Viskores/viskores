@@ -20,6 +20,10 @@
 #ifndef vtk_m_rendering_AxisAnnotation3D_h
 #define vtk_m_rendering_AxisAnnotation3D_h
 
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define snprintf _snprintf
+#endif
+
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>

@@ -162,11 +162,10 @@ public:
     glGetIntegerv(GL_VIEWPORT, viewport);
     VTKM_ASSERT(viewport[2] == this->GetWidth());
     VTKM_ASSERT(viewport[3] == this->GetHeight());
-
+    vtkm::Vec<vtkm::Float32, 4> *color_val = &(*(vtkm::cont::ArrayPortalToIteratorBegin(
+      this->GetColorBuffer().GetPortalControl())));
     glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3],
-        GL_RGBA, GL_FLOAT,
-        vtkm::cont::ArrayPortalToIteratorBegin(
-          this->GetColorBuffer().GetPortalControl()));
+      GL_RGBA, GL_FLOAT, color_val);
   }
   VTKM_CONT_EXPORT
   virtual void RefreshDepthBuffer()
@@ -176,10 +175,13 @@ public:
     VTKM_ASSERT(viewport[2] == this->GetWidth());
     VTKM_ASSERT(viewport[3] == this->GetHeight());
 
+    vtkm::Float32 *depth_val = &(*(vtkm::cont::ArrayPortalToIteratorBegin(
+      this->GetDepthBuffer().GetPortalControl())));
+
+    
     glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3],
         GL_DEPTH_COMPONENT, GL_FLOAT,
-        vtkm::cont::ArrayPortalToIteratorBegin(
-          this->GetDepthBuffer().GetPortalControl()));
+        depth_val);
   }
 
   VTKM_CONT_EXPORT
