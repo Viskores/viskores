@@ -158,7 +158,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void SetFilterLength( vtkm::Id len )
   {
-    VTKM_ASSERT( len % 2 == 1 );
+    //VTKM_ASSERT( len % 2 == 1 );
     this->filterLen = len;
   }
 
@@ -312,11 +312,11 @@ public:
   typedef _1   InputDomain;
 
 
-  template <typename ValueType>
+  template <typename ValueType1, typename ValueType2 >
   VTKM_EXEC_EXPORT
-  ValueType operator()( const ValueType &v1, const ValueType &v2 ) const
+  ValueType1 operator()( const ValueType1 &v1, const ValueType2 &v2 ) const
   {
-    return (v1 - v2);
+    return v1 - static_cast<ValueType1>(v2);
   }
 
 };   
@@ -576,7 +576,7 @@ private:
 class RectangleCopyTo : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature( WholeArrayIn < ScalarAll >,    // Input, small rectangle
+  typedef void ControlSignature( FieldIn<       ScalarAll >,    // Input, small rectangle
                                  WholeArrayOut< ScalarAll > );  // Output, big rectangle
   typedef void ExecutionSignature( _1, _2, WorkIndex );
 
@@ -601,21 +601,21 @@ public:
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id Get1DIdxOfOutputRect( vtkm::Id    &x,      
-                                 vtkm::Id    &y ) const     
+  vtkm::Id Get1DIdxOfOutputRect( vtkm::Id    x,      
+                                 vtkm::Id    y ) const     
   {
     return y * outXLen + x;
   }
 
-  template< typename PortalInType, typename PortalOutType >
+  template< typename ValueInType, typename PortalOutType >
   VTKM_EXEC_EXPORT
-  void operator()( const PortalInType   &arrayIn,
+  void operator()( const ValueInType    &valueIn,
                          PortalOutType  &arrayOut,
                    const vtkm::Id       &workIdx ) const
   {
     vtkm::Id xOfIn, yOfIn;
     GetLogicalDimOfInputRect( workIdx, xOfIn, yOfIn );
-    vtkm::Id outputIdx = Get1DIdxOfOutputMatrix( xOfIn+outXStart, yOfIn+outYStart );
+    vtkm::Id outputIdx = Get1DIdxOfOutputRect( xOfIn+outXStart, yOfIn+outYStart );
     arrayOut.Set( outputIdx, valueIn );
   }
 
@@ -623,6 +623,62 @@ private:
   vtkm::Id inXLen,    inYLen;
   vtkm::Id outXLen,   outYLen;
   vtkm::Id outXStart, outYStart;
+};
+
+
+// Worklet:
+// Copys a part of a big rectangle to a small rectangle
+class RectangleCopyFrom : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( FieldInOut<   ScalarAll >,    // small rectangle to be filled
+                                 WholeArrayIn< ScalarAll > );  // big rectangle to read from
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  RectangleCopyFrom( vtkm::Id smallx,    vtkm::Id smally, 
+                     vtkm::Id bigx,      vtkm::Id bigy,
+                     vtkm::Id xStart,    vtkm::Id yStart )
+  {
+    this->smallXLen = smallx;   this->smallYLen = smally;
+    this->bigXLen   = bigx;     this->bigYLen   = bigy;
+    this->bigXStart = xStart;   this->bigYStart = yStart;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  void GetLogicalDimOfSmallRect( const vtkm::Id    &idx,    
+                                       vtkm::Id    &x,      
+                                       vtkm::Id    &y ) const     
+  {
+    x = idx % smallXLen;
+    y = idx / smallXLen;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Get1DIdxOfBigRect( vtkm::Id    x,      
+                              vtkm::Id    y ) const     
+  {
+    return y * bigXLen + x;
+  }
+
+  template< typename ValueType, typename PortalType >
+  VTKM_EXEC_EXPORT
+  void operator()(       ValueType      &value,        
+                   const PortalType     &array,
+                   const vtkm::Id       &workIdx ) const
+  {
+    vtkm::Id xOfValue, yOfValue;
+    GetLogicalDimOfSmallRect( workIdx, xOfValue, yOfValue );
+    vtkm::Id bigRectIdx = Get1DIdxOfBigRect( xOfValue+bigXStart, yOfValue+bigYStart );
+    value = static_cast<ValueType>( array.Get( bigRectIdx ) );
+  }
+
+private:
+  vtkm::Id smallXLen,    smallYLen;
+  vtkm::Id bigXLen,      bigYLen;
+  vtkm::Id bigXStart, bigYStart;
 };
 
 }     // namespace wavelets
