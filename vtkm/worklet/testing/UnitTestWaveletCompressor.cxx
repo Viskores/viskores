@@ -79,8 +79,8 @@ void DebugDWTIDWT1D()
 
 void DebugRectangleCopy()
 {
-  vtkm::Id sigX = 5;
-  vtkm::Id sigY = 7;  
+  vtkm::Id sigX = 12;
+  vtkm::Id sigY = 12;  
   vtkm::Id sigLen = sigX * sigY;
 
   // make input data array handle
@@ -90,34 +90,19 @@ void DebugRectangleCopy()
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
 
-  // make a big rectangle of zeros
-  vtkm::Id bigX = 15;
-  vtkm::Id bigY = 17;
-  std::vector<vtkm::Float64> tmpVector2( bigX * bigY, 0 );
-  vtkm::cont::ArrayHandle<vtkm::Float64> bigArray = 
-    vtkm::cont::make_ArrayHandle(tmpVector2);
+  // make output array
+  vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
   
-  // test copy to
-  vtkm::Id xStart = 9;
-  vtkm::Id yStart = 5;
-  typedef vtkm::worklet::wavelets::RectangleCopyTo  CopyToWorklet;
-  CopyToWorklet cp( sigX, sigY, bigX, bigY, xStart, yStart );
-  vtkm::worklet::DispatcherMapField< CopyToWorklet > dispatcher( cp  );
-  dispatcher.Invoke(inputArray, bigArray);
-
-  // test copy from
-  vtkm::cont::ArrayHandle<vtkm::Float64> copyFromArray;
-  copyFromArray.Allocate( sigX * sigY );
-  typedef vtkm::worklet::wavelets::RectangleCopyFrom  CopyFromWorklet;
-  CopyFromWorklet cpFrom( sigX, sigY, bigX, bigY, xStart, yStart );
-  vtkm::worklet::DispatcherMapField< CopyFromWorklet > dispatcherFrom( cpFrom );
-  dispatcherFrom.Invoke( copyFromArray, bigArray);
+  // make bookkeeping array
+  std::vector<vtkm::Id> L; 
   
+  vtkm::worklet::WaveletCompressor wavelet( "CDF5/3" );
+  wavelet.WaveDecompose2D( inputArray, 2, sigX, sigY, outputArray, L );
 
-  for( vtkm::Id i = 0; i < copyFromArray.GetNumberOfValues(); i++ )
+  for( vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); i++ )
   {
-    std::cout << std::setw( 5 );
-    std::cout << copyFromArray.GetPortalConstControl().Get(i) << "\t";
+    std::cout << std::setw( 10 );
+    std::cout << outputArray.GetPortalConstControl().Get(i) << "\t";
     if( i % sigX == sigX-1 )   
       std::cout << std::endl;
   }
@@ -126,8 +111,8 @@ void DebugRectangleCopy()
 
 void DebugDWTIDWT2D()
 {
-  vtkm::Id sigX = 9;
-  vtkm::Id sigY = 11;  
+  vtkm::Id sigX = 20;
+  vtkm::Id sigY = 20;  
   vtkm::Id sigLen = sigX * sigY;
 
   // make input data array handle
@@ -138,12 +123,14 @@ void DebugDWTIDWT2D()
     vtkm::cont::make_ArrayHandle(tmpVector);
 
   vtkm::cont::ArrayHandle<vtkm::Float64> coeffOut;
-  std::vector<vtkm::Id> L(10, 0);
+  std::vector<vtkm::Id> L;
+  vtkm::Id nlevels = 2;
 
   // Forward Transform
-  vtkm::worklet::wavelets::WaveletDWT waveletdwt( "CDF9/7" );
-  waveletdwt.DWT2D( inputArray, sigX, sigY, coeffOut, L );
+  vtkm::worklet::WaveletCompressor wavelet( "CDF9/7" );
+  wavelet.WaveDecompose2D( inputArray, nlevels, sigX, sigY, coeffOut, L );
 
+/*
   for( vtkm::Id i = 0; i < coeffOut.GetNumberOfValues(); i++ )
   {
     std::cout << std::setw( 10 );
@@ -152,19 +139,20 @@ void DebugDWTIDWT2D()
       std::cout << std::endl;
   }
   std::cout << std::endl;
-  
+*/ 
 
   // Inverse Transform
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
-  waveletdwt.IDWT2D( coeffOut, L, reconstructArray );
+  wavelet.WaveReconstruct2D( coeffOut, nlevels, sigX, sigY, reconstructArray, L );
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
-    std::cout << reconstructArray.GetPortalConstControl().Get(i) << std::endl;
+    std::cout << reconstructArray.GetPortalConstControl().Get(i) << "  ";
+    if( i % sigX == sigX-1 )   
+      std::cout << std::endl;
   }
 }
 
 
-VTKM_CONT_EXPORT
 void DebugWaveDecomposeReconstruct()
 {
   vtkm::Id sigLen = 20;
@@ -310,8 +298,8 @@ void TestWaveletCompressor()
 {
   //DebugDWTIDWT1D();
   //DebugWaveDecomposeReconstruct();
-  //DebugDWTIDWT2D();
-  DebugRectangleCopy();
+  DebugDWTIDWT2D();
+  //DebugRectangleCopy();
   //TestWaveDecomposeReconstruct();
 }
 

@@ -302,6 +302,42 @@ public:
     dispatcher.Invoke( inputArray, outputArray );
   }
 
+  // Copy a small rectangle to a big rectangle
+  template< typename SmallArrayType, typename BigArrayType>
+  void DeviceRectangleCopyTo( const SmallArrayType    &smallRect,
+                                    vtkm::Id          smallX,
+                                    vtkm::Id          smallY,
+                                    BigArrayType      &bigRect,
+                                    vtkm::Id          bigX,
+                                    vtkm::Id          bigY,
+                                    vtkm::Id          startX,
+                                    vtkm::Id          startY )
+  {
+    typedef vtkm::worklet::wavelets::RectangleCopyTo  CopyToWorklet;
+    CopyToWorklet cp( smallX, smallY, bigX, bigY, startX, startY );
+    vtkm::worklet::DispatcherMapField< CopyToWorklet > dispatcher( cp  );
+    dispatcher.Invoke(smallRect, bigRect);
+  }
+
+  // Fill a small rectangle from a portion of a big rectangle
+  template< typename SmallArrayType, typename BigArrayType>
+  void DeviceRectangleCopyFrom(       SmallArrayType    &smallRect,
+                                      vtkm::Id          smallX,
+                                      vtkm::Id          smallY,
+                                const BigArrayType      &bigRect,
+                                      vtkm::Id          bigX,
+                                      vtkm::Id          bigY,
+                                      vtkm::Id          startX,
+                                      vtkm::Id          startY )
+  {
+    smallRect.Allocate( smallX * smallY );
+    typedef vtkm::worklet::wavelets::RectangleCopyFrom  CopyFromWorklet;
+    CopyFromWorklet cpFrom( smallX, smallY, bigX, bigY, startX, startY );
+    vtkm::worklet::DispatcherMapField< CopyFromWorklet > dispatcherFrom( cpFrom );
+    dispatcherFrom.Invoke( smallRect, bigRect );
+  }
+
+
 
 protected:
   vtkm::worklet::wavelets::DWTMode           wmode;

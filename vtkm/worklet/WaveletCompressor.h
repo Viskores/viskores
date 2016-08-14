@@ -184,27 +184,106 @@ public:
     vtkm::Id CLength = this->ComputeCoeffLength2( L, nLevels );
     VTKM_ASSERT( CLength == sigInLen );
 
-    vtkm::Id lenx     = inX;
-    vtkm::Id leny     = inY;
-    vtkm::Id cALenX   = WaveletBase::GetApproxLength( inX );
-    vtkm::Id cALenY   = WaveletBase::GetApproxLength( inY );
-    vtkm::Id tlen     = 0;
+    vtkm::Id currentLenX     = inX;
+    vtkm::Id currentLenY     = inY;
     std::vector<vtkm::Id> L2d(10, 0);
 
-    // use pseudo pointer
-    vtkm::Id sigInPtr = 0;
-    vtkm::Id cptr;
+    WaveletBase::DeviceCopy( sigIn, coeffOut );
 
-    for( size_t i = static_cast<size_t>(nLevels); i > 0; i-- )
+    typedef typename OutArrayType::ValueType          OutValueType;
+    typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
+
+    for( vtkm::Id i = nLevels; i > 0; i-- )
     {
-      tlen += 
-        (L[ 6*i -4 ] * L[ 6*i -3 ]) +   // cDh
-        (L[ 6*i -2 ] * L[ 6*i -1 ]) +   // cDv
-        (L[ 6*i +0 ] * L[ 6*i +1 ]);    // cDd
+      // make temporary input array
+      OutBasicArray tempInput;
+      WaveletBase::DeviceRectangleCopyFrom( tempInput, currentLenX, currentLenY,
+                                            coeffOut,  inX, inY, 0, 0 );
+      //make temporary output array
+      OutBasicArray tempOutput;
 
-      cptr
+      WaveletDWT::DWT2D( tempInput, currentLenX, currentLenY, tempOutput, L2d );
+
+      // copy results to coeffOut
+      WaveletBase::DeviceRectangleCopyTo( tempOutput, currentLenX, currentLenY,
+                                          coeffOut, inX, inY, 0, 0 );
+
+      // update currentLen
+      currentLenX = WaveletBase::GetApproxLength( currentLenX );
+      currentLenY = WaveletBase::GetApproxLength( currentLenY );
     }
     
+    return 0;
+  }
+
+
+  // Multi-level 2D wavelet reconstruction
+  template< typename InArrayType, typename OutArrayType>
+  VTKM_CONT_EXPORT
+  vtkm::Id WaveReconstruct2D( const InArrayType           &arrIn,   // Input
+                                    vtkm::Id              nLevels,  // n levels of DWT
+                                    vtkm::Id              inX,      // Input X dim
+                                    vtkm::Id              inY,      // Input Y dim
+                                    OutArrayType          &arrOut,
+                                    std::vector<vtkm::Id> &L)
+  {
+    vtkm::Id arrInLen = arrIn.GetNumberOfValues();
+    VTKM_ASSERT( inX * inY == arrInLen );
+    if( nLevels < 0 || nLevels > WaveletBase::GetWaveletMaxLevel( inX ) ||
+                       nLevels > WaveletBase::GetWaveletMaxLevel( inY ) )
+    {
+      throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
+    }
+    // fill the output array
+    WaveletBase::DeviceCopy( arrIn, arrOut );
+    if( nLevels == 0 )  //  0 levels means no transform
+    {
+      return 0;
+    }
+    VTKM_ASSERT( vtkm::Id(L.size()) == 6 * nLevels + 4 );
+
+    typedef typename OutArrayType::ValueType          OutValueType;
+    typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
+  
+    std::vector<vtkm::Id> L2d(10, 0);
+    L2d[0]  =   L[0];   
+    L2d[1]  =   L[1];   
+    L2d[2]  =   L[2];   
+    L2d[3]  =   L[3];   
+    L2d[4]  =   L[4];   
+    L2d[5]  =   L[5];   
+    L2d[6]  =   L[6];   
+    L2d[7]  =   L[7];   
+    
+    for( size_t i = 1; i <= static_cast<size_t>(nLevels); i++ )
+    {
+      L2d[8] = L2d[0] + L2d[4];     // This is always true for Biorthogonal wavelets
+      L2d[9] = L2d[1] + L2d[3];     // (same above)
+
+      // make input, output array
+      OutBasicArray tempInput, tempOutput;
+      WaveletBase::DeviceRectangleCopyFrom( tempInput, L2d[8], L2d[9],
+                                            arrOut,  inX, inY, 0, 0 );
+
+      // IDWT
+      WaveletDWT::IDWT2D( tempInput, L2d, tempOutput);
+
+      // copy back reconstructed block
+      WaveletBase::DeviceRectangleCopyTo( tempOutput, L2d[8], L2d[9],
+                                          arrOut, inX, inY, 0, 0 );
+    
+      // update L2d array
+      L2d[0] =  L2d[8];
+      L2d[1] =  L2d[9];
+      L2d[2] = L[6*i+2];
+      L2d[3] = L[6*i+3];
+      L2d[4] = L[6*i+4];
+      L2d[5] = L[6*i+5];
+      L2d[6] = L[6*i+6];
+      L2d[7] = L[6*i+7];
+    }
+
+    return 0;    
   }
 
 
