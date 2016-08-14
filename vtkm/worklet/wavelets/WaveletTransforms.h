@@ -233,6 +233,7 @@ private:
 };    // class ForwardTransform
 
 
+// Worklet:
 class ThresholdWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -265,6 +266,7 @@ private:
 };    
 
 
+// Worklet:
 class SquaredDeviation: public vtkm::worklet::WorkletMapField
 {
 public:
@@ -298,6 +300,7 @@ private:
 };   
 
 
+// Worklet:
 class Differencer: public vtkm::worklet::WorkletMapField
 {
 public:
@@ -319,6 +322,7 @@ public:
 };   
 
 
+// Worklet:
 class SquareWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -337,6 +341,7 @@ public:
 };    
 
 
+// Worklet:
 class CopyWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -353,7 +358,7 @@ public:
   }
 
   template< typename PortalInType, typename PortalOutType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   void operator()( const PortalInType     &portalIn,
                          PortalOutType    &portalOut,
                    const vtkm::Id         &workIndex) const
@@ -365,6 +370,8 @@ private:
   vtkm::Id startIdx;
 };
 
+
+// Worklet:
 class LeftSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -381,7 +388,7 @@ public:
   }
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -393,6 +400,8 @@ private:
   vtkm::Id addLen;
 };
 
+
+// Worklet:
 class LeftSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -409,7 +418,7 @@ public:
   }
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -421,6 +430,8 @@ private:
   vtkm::Id addLen;
 };
 
+
+// Worklet:
 class RightSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -437,7 +448,7 @@ public:
   }
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -449,6 +460,8 @@ private:
   vtkm::Id sigInLen;
 };
 
+
+// Worklet:
 class RightSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -465,7 +478,7 @@ public:
   }
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -477,6 +490,8 @@ private:
   vtkm::Id sigInLen;
 };
 
+
+// Worklet:
 class AssignZeroWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -491,7 +506,7 @@ public:
   }
 
   template< typename PortalType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   void operator()(       PortalType   &array,
                    const vtkm::Id     &workIdx ) const
   {
@@ -503,6 +518,8 @@ private:
   vtkm::Id zeroIdx;
 };
 
+
+// Worklet:
 class TransposeWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -537,7 +554,7 @@ public:
   }
 
   template< typename ValueInType, typename PortalOutType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   void operator()( const ValueInType    &valueIn,
                          PortalOutType  &arrayOut,
                    const vtkm::Id       &workIdx ) const
@@ -553,6 +570,60 @@ private:
   vtkm::Id outXLen, outYLen;
 };
 
+
+// Worklet:
+// Copys a small rectangle to part of a big rectangle
+class RectangleCopyTo : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayIn < ScalarAll >,    // Input, small rectangle
+                                 WholeArrayOut< ScalarAll > );  // Output, big rectangle
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  RectangleCopyTo( vtkm::Id inx,       vtkm::Id iny, 
+                   vtkm::Id outx,      vtkm::Id outy,
+                   vtkm::Id xStart,    vtkm::Id yStart )
+  {
+    this->inXLen    = inx;      this->inYLen    = iny;
+    this->outXLen   = outx;     this->outYLen   = outy;
+    this->outXStart = xStart;   this->outYStart = yStart;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  void GetLogicalDimOfInputRect( const vtkm::Id    &idx,    
+                                       vtkm::Id    &x,      
+                                       vtkm::Id    &y ) const     
+  {
+    x = idx % inXLen;
+    y = idx / inXLen;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Get1DIdxOfOutputRect( vtkm::Id    &x,      
+                                 vtkm::Id    &y ) const     
+  {
+    return y * outXLen + x;
+  }
+
+  template< typename PortalInType, typename PortalOutType >
+  VTKM_EXEC_EXPORT
+  void operator()( const PortalInType   &arrayIn,
+                         PortalOutType  &arrayOut,
+                   const vtkm::Id       &workIdx ) const
+  {
+    vtkm::Id xOfIn, yOfIn;
+    GetLogicalDimOfInputRect( workIdx, xOfIn, yOfIn );
+    vtkm::Id outputIdx = Get1DIdxOfOutputMatrix( xOfIn+outXStart, yOfIn+outYStart );
+    arrayOut.Set( outputIdx, valueIn );
+  }
+
+private:
+  vtkm::Id inXLen,    inYLen;
+  vtkm::Id outXLen,   outYLen;
+  vtkm::Id outXStart, outYStart;
+};
 
 }     // namespace wavelets
 }     // namespace worlet
