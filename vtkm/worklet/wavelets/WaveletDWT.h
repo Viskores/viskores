@@ -71,14 +71,14 @@ public:
 
     switch( leftExtMethod )
     {
-      case vtkm::worklet::wavelets::SYMH:
+      case SYMH:
       {
           LeftSYMH worklet( addLen );
           vtkm::worklet::DispatcherMapField< LeftSYMH > dispatcher( worklet );
           dispatcher.Invoke( leftExtend, sigIn );
           break;
       }
-      case vtkm::worklet::wavelets::SYMW:
+      case SYMW:
       {
           LeftSYMW worklet( addLen );
           vtkm::worklet::DispatcherMapField< LeftSYMW > dispatcher( worklet );
@@ -100,7 +100,7 @@ public:
 
     switch( rightExtMethod )
     {
-      case vtkm::worklet::wavelets::SYMH:
+      case SYMH:
       {
           RightSYMH worklet( sigInLen );
           vtkm::worklet::DispatcherMapField< RightSYMH > dispatcher( worklet );
@@ -136,6 +136,8 @@ public:
             ArrayConcat;
     ArrayConcat leftOn( leftExtend, sigIn );    
     sigOut = vtkm::cont::make_ArrayHandleConcatenate( leftOn, rightExtend );
+
+std::cerr << "Extend1D: output array length: " << sigOut.GetNumberOfValues() << std::endl;
 
     return 0;
   }
@@ -278,12 +280,12 @@ public:
       }
     } 
 
-    vtkm::Id cATempLen, cDTempLen, reconTempLen;
+    vtkm::Id cATempLen, cDTempLen;  //, reconTempLen;
     vtkm::Id addLen = 0;
     vtkm::Id cDPadLen  = 0;
     if( doSymConv )   // extend cA and cD
     {
-      addLen = filterLen / 4;
+      addLen = filterLen / 4;   // addLen == 0 for Haar kernel
       if( (L[0] > L[1]) && (WaveletBase::wmode == SYMH) )
         cDPadLen = L[0];  
       cATempLen = L[0] + 2 * addLen;
@@ -295,9 +297,9 @@ public:
       cDTempLen = L[1];
     }
 
-    reconTempLen = L[2];
+    /* reconTempLen = L[2];
     if( reconTempLen % 2 != 0 )
-      reconTempLen++;
+      reconTempLen++; */
 
     typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      IdArrayType;
     typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, CoeffArrayType > 
@@ -332,11 +334,17 @@ public:
       {
         vtkm::Id cDTempLenWouldBe = L[1] + 2 * addLen;
         if( cDTempLenWouldBe ==  cDTempLen )
+        { std::cout << "case 1 " << std::endl;
           this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, false);
+std::cout << "case 1: cDTemp actual length = " << cDTemp.GetNumberOfValues() << std::endl;
+        }
         else if( cDTempLenWouldBe ==  cDTempLen - 1 )
+        { std::cout << "case 2" << std::endl;
           this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, true );
+        }
         else
         {
+          std::cout << "case 3" << std::endl;
           vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
           return 1;
         }
@@ -357,15 +365,19 @@ public:
                ( cDLeftOn, dummyArray );
     }
 
+    // make sure signal extension went as expected
+    VTKM_ASSERT( cATemp.GetNumberOfValues() == cATempLen );
+std::cout << "cDTemp actual length = " << cDTemp.GetNumberOfValues() << std::endl;
+std::cout << "cDTempLen = " << cDTempLen << std::endl;
+    VTKM_ASSERT( cDTemp.GetNumberOfValues() == cDTempLen );
+
+    vtkm::cont::ArrayHandleConcatenate< Concat2, Concat2>
+        coeffInExtended( cATemp, cDTemp );
+    // Allocate memory for sigOut
+    sigOut.Allocate( cATempLen + cDTempLen );
+
     if( filterLen % 2 != 0 )
     {
-      vtkm::cont::ArrayHandleConcatenate< Concat2, Concat2>
-          coeffInExtended( cATemp, cDTemp );
-
-      // Allocate memory for sigOut
-      sigOut.Allocate( coeffInExtended.GetNumberOfValues() );
-
-      // Initialize a worklet
       vtkm::worklet::wavelets::InverseTransformOdd inverseXformOdd;
       inverseXformOdd.SetFilterLength( filterLen );
       inverseXformOdd.SetCALength( L[0], cATempLen );
@@ -375,14 +387,20 @@ public:
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
                          sigOut );
-
-      VTKM_ASSERT( sigOut.GetNumberOfValues() >= L[2] );
-      sigOut.Shrink( L[2] );
     }
     else
     {
-      // TODO: implement for even length filter
+      vtkm::worklet::wavelets::InverseTransformEven inverseXformEven
+            ( filterLen, L[0], cATempLen, !doSymConv );
+      vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformEven>
+            dispatcher( inverseXformEven );
+      dispatcher.Invoke( coeffInExtended,
+                         WaveletBase::filter.GetLowReconstructFilter(),
+                         WaveletBase::filter.GetHighReconstructFilter(),
+                         sigOut );
     }
+
+    sigOut.Shrink( L[2] );
 
     return 0;
 

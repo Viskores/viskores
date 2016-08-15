@@ -26,34 +26,6 @@
 
 #include <vector>
 
-/*
-VTKM_CONT_EXPORT
-void DebugExtend1D()
-{
-  // make input data array handle
-  typedef vtkm::Float64 T;
-  typedef vtkm::cont::ArrayHandle<T>     ArrayType;
-  vtkm::Id sigLen = 20;
-  std::vector<T> tmpVector;
-  for( vtkm::Id i = 0; i < sigLen; i++ )
-    tmpVector.push_back( static_cast<T>(i) );
- 
-  vtkm::cont::ArrayHandle<T> inputArray = 
-    vtkm::cont::make_ArrayHandle(tmpVector);
-  ArrayType outputArray;
-
-  vtkm::worklet::wavelets::WaveletDWT w("CDF9/7");
-
-  w.Extend1D( inputArray, outputArray, 4, 
-      vtkm::worklet::wavelets::SYMW, vtkm::worklet::wavelets::SYMW );
-
-
-  std::cout << "Start testing Extend1D" << std::endl;
-  for (vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); ++i)
-      std::cout << outputArray.GetPortalConstControl().Get(i) << std::endl;
-  std::cout << "\nFinish testing Extend1D" << std::endl;
-}
-*/
 
 VTKM_CONT_EXPORT
 void DebugDWTIDWT1D()
@@ -78,7 +50,7 @@ void DebugDWTIDWT1D()
   std::vector<vtkm::Id> L(3, 0);
 
   // Forward Transform
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::HAAR;
   vtkm::worklet::wavelets::WaveletDWT waveletdwt( wname );
   waveletdwt.DWT1D( inputArray, coeffOut, L );
 
@@ -253,9 +225,9 @@ void TestWaveDecomposeReconstruct()
 void TestWaveletCompressor()
 {
   //DebugExtend1D();
-  //DebugDWTIDWT1D();
+  DebugDWTIDWT1D();
   //DebugWaveDecomposeReconstruct();
-  TestWaveDecomposeReconstruct();
+  //TestWaveDecomposeReconstruct();
 }
 
 int UnitTestWaveletCompressor(int, char *[])

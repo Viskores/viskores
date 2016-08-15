@@ -222,9 +222,92 @@ private:
   vtkm::Id filterLen;       // filter length.
   vtkm::Id cALen;           // Number of actual cAs 
   vtkm::Id cALen2;          //  = cALen * 2
-  vtkm::Id cALenExtended;   // Number of extended cA at the beginning of input array
+  vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
   
-};    // class ForwardTransform
+};    // class InverseTransformOdd
+
+
+// Worklet: perform an inverse transform for even length, symmetric filters.
+class InverseTransformEven: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // Input: coeffs,
+                                                             // cA followed by cD
+                                WholeArrayIn<Scalar>,        // lowFilter
+                                WholeArrayIn<Scalar>,        // highFilter
+                                WholeArrayOut<ScalarAll>);   // output
+  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  InverseTransformEven( vtkm::Id filtL, vtkm::Id cAL, vtkm::Id cALExt, bool m ) : 
+                        filterLen(filtL), cALen(cAL), cALenExtended(cALExt), matlab(m)
+  { 
+    this->cALen2 = cALen * 2;
+  }
+
+  // Use 64-bit float for convolution calculation
+  #define VAL        vtkm::Float64
+  #define MAKEVAL(a) (static_cast<VAL>(a))
+
+  template <typename InputPortalType,
+            typename FilterPortalType,
+            typename OutputPortalType>
+  VTKM_EXEC_EXPORT
+  void operator()(const InputPortalType       &coeffs,
+                  const FilterPortalType      &lowFilter,
+                  const FilterPortalType      &highFilter,
+                  OutputPortalType            &sigOut,
+                  const vtkm::Id &workIndex) const
+  {
+    if( workIndex < cALen2 )   // valid calculation region
+    {
+      vtkm::Id xi;         // coeff indices
+      vtkm::Id k;          // indices for low and high filter
+      VAL sum = 0.0;    
+
+      if( matlab || (filterLen/2) % 2 != 0 )  // odd length half filter
+      {
+        xi = workIndex / 2;
+        if( workIndex % 2 != 0 )
+          k = filterLen - 1;
+        else
+          k = filterLen - 2;
+      }
+      else
+      {
+        xi = (workIndex + 1) / 2;
+        if( workIndex % 2 != 0 )
+          k = filterLen - 2;
+        else
+          k = filterLen - 1;
+      }
+
+      while( k > -1 )   // k >= 0
+      {
+        sum += lowFilter.Get(k)  * MAKEVAL( coeffs.Get( xi ) ) +               // cA
+               highFilter.Get(k) * MAKEVAL( coeffs.Get( xi + cALenExtended) ); // cD
+        xi++;
+        k -= 2;
+      }
+
+      sigOut.Set(workIndex, static_cast<typename OutputPortalType::ValueType>( sum ) );
+    }
+
+  }
+
+  #undef MAKEVAL
+  #undef VAL
+
+private:
+  vtkm::Id filterLen;       // filter length.
+  vtkm::Id cALen;           // Number of actual cAs 
+  vtkm::Id cALen2;          //  = cALen * 2
+  vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD 
+  bool     matlab;          // followed the naming convention from VAPOR
+  
+};    // class InverseTransformEven
 
 
 class ThresholdWorklet : public vtkm::worklet::WorkletMapField
