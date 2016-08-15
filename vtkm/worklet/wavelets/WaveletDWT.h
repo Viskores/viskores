@@ -52,8 +52,11 @@ public:
                      vtkm::Id                                 addLen,
                      vtkm::worklet::wavelets::DWTMode         leftExtMethod,
                      vtkm::worklet::wavelets::DWTMode         rightExtMethod, 
-                     bool                                     attachRightZero )
+                     bool                                     attachZeroRightLeft, 
+                     bool                                     attachZeroRightRight )
   { 
+    // "right extension" can be attached a zero on either end, but not both ends.
+    VTKM_ASSERT( !attachZeroRightRight || !attachZeroRightLeft );
     typedef typename SigInArrayType::ValueType      ValueType;
     typedef vtkm::cont::ArrayHandle< ValueType >    ExtensionArrayType;
     ExtensionArrayType                              leftExtend;
@@ -90,9 +93,9 @@ public:
     }
 
     ExtensionArrayType rightExtend;
-    if( attachRightZero )
+    if( attachZeroRightRight )
       rightExtend.Allocate( addLen + 1 );
-    else
+    else                  // attachZeroRightLeft mode will attach zero later.
       rightExtend.Allocate( addLen );
 
     switch( rightExtMethod )
@@ -118,12 +121,15 @@ public:
       }
     }
 
-    if( attachRightZero )
+    if( attachZeroRightRight )
+      WaveletBase::DeviceAssignZero( rightExtend, addLen );
+    else if( attachZeroRightLeft )
     {
-      typedef vtkm::worklet::wavelets::AssignZeroWorklet ZeroWorklet;
-      ZeroWorklet worklet( addLen );
-      vtkm::worklet::DispatcherMapField< ZeroWorklet > dispatcher( worklet );
-      dispatcher.Invoke( rightExtend );
+      ExtensionArrayType rightExtendPlusOne;
+      rightExtendPlusOne.Allocate( addLen + 1 );
+      WaveletBase::DeviceCopyStartX( rightExtend, rightExtendPlusOne, 1 );
+      WaveletBase::DeviceAssignZero( rightExtendPlusOne, 0 );
+      rightExtend = rightExtendPlusOne ;
     }
 
     typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, SigInArrayType> 
@@ -197,10 +203,10 @@ public:
     ConcatType2 sigInExtended;
 
     this->Extend1D( sigIn, sigInExtended, addLen, 
-                    WaveletBase::wmode, WaveletBase::wmode, false ); 
+                    WaveletBase::wmode, WaveletBase::wmode, false, false ); 
     VTKM_ASSERT( sigInExtended.GetNumberOfValues() == sigExtendedLen );
 
-    // initialize a worklet
+    // initialize a worklet for forward transform
     vtkm::worklet::wavelets::ForwardTransform forwardTransform;
     forwardTransform.SetFilterLength( filterLen );
     forwardTransform.SetCoeffLength( L[0], L[1] );
@@ -231,7 +237,7 @@ public:
                    SignalArrayType       &sigOut )     // Output
   {
     VTKM_ASSERT( L.size() == 3 );
-    VTKM_ASSERT( coeffIn.GetNumberOfValues() == L[2] );
+    VTKM_ASSERT( L[2] == coeffIn.GetNumberOfValues() );
 
     vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
     bool doSymConv = false;
@@ -279,15 +285,16 @@ public:
     {
       addLen = filterLen / 4;
       if( (L[0] > L[1]) && (WaveletBase::wmode == SYMH) )
-        cDPadLen = L[0];  // SYMH is rare
+        cDPadLen = L[0];  
       cATempLen = L[0] + 2 * addLen;
       cDTempLen = cATempLen;  // same length
     }
     else              // not extend cA and cD
-    {
+    {                 //  (biorthogonal kernels won't come into this case)
       cATempLen = L[0];
       cDTempLen = L[1];
     }
+
     reconTempLen = L[2];
     if( reconTempLen % 2 != 0 )
       reconTempLen++;
@@ -314,27 +321,20 @@ public:
 
     if( doSymConv )   // Actually extend cA and cD
     {
-      this->Extend1D( cA, cATemp, addLen, cALeftMode, cARightMode, false );
+      // first extend cA to be cATemp
+      this->Extend1D( cA, cATemp, addLen, cALeftMode, cARightMode, false, false );
       if( cDPadLen > 0 )  
       {
-        /* Add back the missing final cD: 0.0
-         * TODO when SYMH is needed.
-         *
-        ExtensionArrayType singleValArray;
-        singleValArray.Allocate(1);
-        singleValArray.GetPortalControl().Set(0, 0.0);
-        vtkm::cont::ArrayHandleConcatenate< PermutArrayType, ExtensionArrayType >
-            cDPad( cD, singleValArray );
-        this->Extend1D( cDPad, cDTemp, addLen, cDLeftMode, cDRightMode );
-         */
+        // Add back the missing final cD, 0.0, at the beginning of right extension
+        this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, true, false );
       }
       else
       {
-        vtkm::Id cDTempLenWouldBe = cD.GetNumberOfValues() + 2 * addLen;
+        vtkm::Id cDTempLenWouldBe = L[1] + 2 * addLen;
         if( cDTempLenWouldBe ==  cDTempLen )
-          this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false);
+          this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, false);
         else if( cDTempLenWouldBe ==  cDTempLen - 1 )
-          this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, true);
+          this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, true );
         else
         {
           vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
@@ -342,11 +342,19 @@ public:
         }
       }
     }     
-    else  
-    { /* TODO when SYMH is needed
-      WaveletBase::DeviceCopy( cA, cATemp );
-      WaveletBase::DeviceCopy( cD, cDTemp );
-       */
+    else    // !doSymConv (biorthogonals kernel won't come into this case)
+    { 
+      // make cATemp
+      ExtensionArrayType dummyArray;
+      dummyArray.Allocate(0);
+      Concat1 cALeftOn( dummyArray, cA );
+      cATemp = vtkm::cont::make_ArrayHandleConcatenate< Concat1, ExtensionArrayType >
+               ( cALeftOn, dummyArray );
+      
+      // make cDTemp
+      Concat1 cDLeftOn( dummyArray, cD );
+      cDTemp = vtkm::cont::make_ArrayHandleConcatenate< Concat1, ExtensionArrayType >
+               ( cDLeftOn, dummyArray );
     }
 
     if( filterLen % 2 != 0 )

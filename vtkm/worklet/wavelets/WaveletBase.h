@@ -34,16 +34,10 @@ namespace worklet {
 namespace wavelets {
 
 enum DWTMode {    // boundary extension modes
-  INVALID = -1,
-  ZPD, 
   SYMH, 
   SYMW,
   ASYMH, 
-  ASYMW,   
-  SP0, 
-  SP1, 
-  PPD, 
-  PER
+  ASYMW
 };
 
 // Functionalities are similar to MatWaveBase in VAPoR.
@@ -55,13 +49,14 @@ public:
   WaveletBase( WaveletName name ) : wname ( name ),
                                     filter( name )
   {
-    if( this->wname == CDF9_7 )
+    if( wname == CDF9_7 || wname == BIOR4_4 || 
+        wname == CDF5_3 || wname == BIOR2_2 )
     {
       this->wmode = SYMW;   // Default extension mode, see MatWaveBase.cpp
     }
-    else if( this->wname == CDF5_3 )
+    else if( wname == HAAR || wname == BIOR1_1 )
     {
-      this->wmode = SYMW;
+      this->wmode = SYMH;
     }
   }
 
@@ -70,9 +65,7 @@ public:
   {
     vtkm::Id filterLen = this->filter.GetFilterLength();
 
-    if (this->wmode == PER) 
-      return static_cast<vtkm::Id>(vtkm::Ceil( (static_cast<vtkm::Float64>(sigInLen)) / 2.0 ));
-    else if (this->filter.isSymmetric()) 
+    if (this->filter.isSymmetric()) 
     {
       if ( (this->wmode == SYMW && (filterLen % 2 != 0)) ||
            (this->wmode == SYMH && (filterLen % 2 == 0)) )  
@@ -93,9 +86,7 @@ public:
   {
     vtkm::Id filterLen = this->filter.GetFilterLength();
 
-    if (this->wmode == PER) 
-      return static_cast<vtkm::Id>(vtkm::Ceil( (static_cast<vtkm::Float64>(sigInLen)) / 2.0 ));
-    else if (this->filter.isSymmetric()) 
+    if (this->filter.isSymmetric()) 
     {
       if ( (this->wmode == SYMW && (filterLen % 2 != 0)) ||
            (this->wmode == SYMH && (filterLen % 2 == 0)) )  
@@ -136,7 +127,7 @@ public:
 
   // perform a device copy. The whole 1st array to a certain start location of the 2nd array
   template< typename ArrayType1, typename ArrayType2 >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   void DeviceCopyStartX( const ArrayType1   &srcArray, 
                                ArrayType2   &dstArray,
                                vtkm::Id     startIdx)
@@ -147,18 +138,29 @@ public:
       dispatcher.Invoke( srcArray, dstArray );
   }
 
+  // Assign zero value to a certain location of an array
+  template< typename ArrayType >
+  VTKM_EXEC_EXPORT 
+  void DeviceAssignZero( ArrayType &array, vtkm::Id index )
+  {
+    typedef vtkm::worklet::wavelets::AssignZeroWorklet ZeroWorklet;
+    ZeroWorklet worklet( index );
+    vtkm::worklet::DispatcherMapField< ZeroWorklet > dispatcher( worklet );
+    dispatcher.Invoke( array );
+  }
+
   // Sort by the absolute value on device
   struct SortLessAbsFunctor
   { 
     template< typename T >
-    VTKM_EXEC_CONT_EXPORT 
+    VTKM_EXEC_EXPORT 
     bool operator()(const T& x, const T& y) const 
     { 
       return vtkm::Abs(x) < vtkm::Abs(y); 
     } 
   }; 
   template< typename ArrayType, typename DeviceTag >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   void DeviceSort( ArrayType &array, DeviceTag )
   {
     vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Sort
@@ -167,7 +169,7 @@ public:
   
   // Reduce to the sum of all values on device
   template< typename ArrayType, typename DeviceTag >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   typename ArrayType::ValueType DeviceSum( const ArrayType &array, DeviceTag )
   {
     return vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Reduce
@@ -178,7 +180,7 @@ public:
   struct minFunctor
   {
     template< typename FieldType >
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_EXPORT
     FieldType operator()(const FieldType &x, const FieldType &y) const {
       return Min(x, y);
     }
@@ -186,13 +188,13 @@ public:
   struct maxFunctor
   {
     template< typename FieldType >
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_EXPORT
     FieldType operator()(const FieldType& x, const FieldType& y) const {
       return Max(x, y);
     }
   };
   template< typename ArrayType, typename DeviceTag >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   typename ArrayType::ValueType DeviceMax( const ArrayType &array, DeviceTag )
   {
     typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
@@ -200,7 +202,7 @@ public:
               ( array, initVal, maxFunctor() );
   }
   template< typename ArrayType, typename DeviceTag >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   typename ArrayType::ValueType DeviceMin( const ArrayType &array, DeviceTag )
   {
     typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
@@ -212,13 +214,13 @@ public:
   struct maxAbsFunctor
   {
     template< typename FieldType >
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_EXPORT
     FieldType operator()(const FieldType& x, const FieldType& y) const {
       return Max( vtkm::Abs(x), vtkm::Abs(y) );
     }
   };
   template< typename ArrayType, typename DeviceTag >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_EXPORT
   typename ArrayType::ValueType DeviceMaxAbs( const ArrayType &array, DeviceTag )
   {
     typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
