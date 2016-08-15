@@ -127,7 +127,7 @@ public:
     typedef void ExecutionSignature(_1,_2);
     typedef _1 InputDomain;
 
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
+    typedef vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
     IdPortalType totalCountArray;
 
     VTKM_CONT_EXPORT
