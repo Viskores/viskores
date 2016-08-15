@@ -64,6 +64,7 @@ set(unit_tests
   UnitTestStorageImplicit.cxx
   UnitTestStorageListTag.cxx
   UnitTestTimer.cxx
+  UnitTestTryExecute.cxx
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})

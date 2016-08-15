@@ -50,6 +50,7 @@ set(headers
   DataSetFieldAdd.h
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
+  DeviceAdapterListTag.h
   DeviceAdapterSerial.h
   DynamicArrayHandle.h
   DynamicCellSet.h
@@ -68,6 +69,7 @@ set(headers
   StorageImplicit.h
   StorageListTag.h
   Timer.h
+  TryExecute.h
   )
 
 #-----------------------------------------------------------------------------
