@@ -35,8 +35,10 @@ namespace wavelets {
 enum WaveletName {
   CDF9_7,
   CDF5_3,
+  CDF8_4,
   HAAR,
   BIOR4_4,  // the same as CDF9_7
+  BIOR3_3,  // the same as CDF8_4
   BIOR2_2,  // the same as CDF5_3
   BIOR1_1   // the same as HAAE
 };
@@ -113,6 +115,15 @@ public:
       qmf_wrev( vtkm::worklet::wavelets::h4,      highDecomposeFilter,    filterLength );
       verbatim_copy( vtkm::worklet::wavelets::h4, lowReconstructFilter,   filterLength );
       qmf_even( vtkm::worklet::wavelets::hm4_44,  highReconstructFilter,  filterLength );
+    }
+    else if( wtype == CDF8_4 || wtype == BIOR3_3 )
+    {
+      this->filterLength = 8;
+      this->AllocateFilterMemory();
+      wrev( vtkm::worklet::wavelets::hm3_33,         lowDecomposeFilter,    filterLength );
+      qmf_wrev( vtkm::worklet::wavelets::h3+6,       highDecomposeFilter,   filterLength );
+      verbatim_copy( vtkm::worklet::wavelets::h3+6,  lowReconstructFilter,  filterLength );
+      qmf_even( vtkm::worklet::wavelets::hm3_33,     highReconstructFilter, filterLength );
     }
     else if( wtype == CDF5_3 || wtype == BIOR2_2 )
     {

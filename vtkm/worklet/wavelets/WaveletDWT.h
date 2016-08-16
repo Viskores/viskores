@@ -57,8 +57,10 @@ public:
   { 
     // "right extension" can be attached a zero on either end, but not both ends.
     VTKM_ASSERT( !attachZeroRightRight || !attachZeroRightLeft );
+
     typedef typename SigInArrayType::ValueType      ValueType;
     typedef vtkm::cont::ArrayHandle< ValueType >    ExtensionArrayType;
+
     ExtensionArrayType                              leftExtend;
     leftExtend.Allocate( addLen );
 
@@ -68,6 +70,10 @@ public:
     typedef vtkm::worklet::wavelets::LeftSYMWExtentionWorklet  LeftSYMW;
     typedef vtkm::worklet::wavelets::RightSYMHExtentionWorklet RightSYMH;
     typedef vtkm::worklet::wavelets::RightSYMWExtentionWorklet RightSYMW;
+    typedef vtkm::worklet::wavelets::LeftASYMHExtentionWorklet  LeftASYMH;
+    typedef vtkm::worklet::wavelets::LeftASYMWExtentionWorklet  LeftASYMW;
+    typedef vtkm::worklet::wavelets::RightASYMHExtentionWorklet RightASYMH;
+    typedef vtkm::worklet::wavelets::RightASYMWExtentionWorklet RightASYMW;
 
     switch( leftExtMethod )
     {
@@ -85,6 +91,20 @@ public:
           dispatcher.Invoke( leftExtend, sigIn );
           break;
       }
+      case ASYMH:
+      {
+          LeftASYMH worklet( addLen );
+          vtkm::worklet::DispatcherMapField< LeftASYMH > dispatcher( worklet );
+          dispatcher.Invoke( leftExtend, sigIn );
+          break;
+      }
+      case ASYMW:
+      {
+          LeftASYMW worklet( addLen );
+          vtkm::worklet::DispatcherMapField< LeftASYMW > dispatcher( worklet );
+          dispatcher.Invoke( leftExtend, sigIn );
+          break;
+      }
       default:
       {
         vtkm::cont::ErrorControlInternal("Left extension mode not supported!");
@@ -93,38 +113,105 @@ public:
     }
 
     ExtensionArrayType rightExtend;
-    if( attachZeroRightRight )
-      rightExtend.Allocate( addLen + 1 );
-    else                  // attachZeroRightLeft mode will attach zero later.
+
+    if( !attachZeroRightLeft ) // no attach zero, or only attach on RightRight
+    {
+      // Allocate memory
+      if( attachZeroRightRight )
+        rightExtend.Allocate( addLen + 1 );
+      else                  
+        rightExtend.Allocate( addLen );
+
+      switch( rightExtMethod )
+      {
+        case SYMH:
+        {
+            RightSYMH worklet( sigInLen );
+            vtkm::worklet::DispatcherMapField< RightSYMH > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigIn );
+            break;
+        }
+        case SYMW:
+        {
+            RightSYMW worklet( sigInLen );
+            vtkm::worklet::DispatcherMapField< RightSYMW > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigIn );
+            break;
+        }
+        case ASYMH:
+        {
+            RightASYMH worklet( sigInLen );
+            vtkm::worklet::DispatcherMapField< RightASYMH > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigIn );
+            break;
+        }
+        case ASYMW:
+        {
+            RightASYMW worklet( sigInLen );
+            vtkm::worklet::DispatcherMapField< RightASYMW > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigIn );
+            break;
+        }
+        default:
+        {
+          vtkm::cont::ErrorControlInternal("Right extension mode not supported!");
+          return 1;
+        }
+      }
+      if( attachZeroRightRight )
+        WaveletBase::DeviceAssignZero( rightExtend, addLen );
+    }
+    else    // attachZeroRightLeft mode
+    {
+      typedef vtkm::cont::ArrayHandleConcatenate<SigInArrayType, ExtensionArrayType>
+                                                      ConcatArray;
+      // attach a zero at the end of sigIn
+      ExtensionArrayType      singleValArray;
+      singleValArray.Allocate(1);
+      WaveletBase::DeviceAssignZero( singleValArray, 0 );
+      ConcatArray             sigInPlusOne( sigIn, singleValArray );
+
+      // allocate memory for extension
       rightExtend.Allocate( addLen );
 
-    switch( rightExtMethod )
-    {
-      case SYMH:
+      switch( rightExtMethod )
       {
-          RightSYMH worklet( sigInLen );
-          vtkm::worklet::DispatcherMapField< RightSYMH > dispatcher( worklet );
-          dispatcher.Invoke( rightExtend, sigIn );
-          break;
+        case SYMH:
+        {
+            RightSYMH worklet( sigInLen + 1 );
+            vtkm::worklet::DispatcherMapField< RightSYMH > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigInPlusOne );
+            break;
+        }
+        case SYMW:
+        {
+            RightSYMW worklet( sigInLen + 1 );
+            vtkm::worklet::DispatcherMapField< RightSYMW > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigInPlusOne );
+            break;
+        }
+        case ASYMH:
+        {
+            RightASYMH worklet( sigInLen + 1 );
+            vtkm::worklet::DispatcherMapField< RightASYMH > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigInPlusOne );
+            break;
+        }
+        case ASYMW:
+        {
+            RightASYMW worklet( sigInLen + 1 );
+            vtkm::worklet::DispatcherMapField< RightASYMW > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigInPlusOne );
+            break;
+        }
+        default:
+        {
+          vtkm::cont::ErrorControlInternal("Right extension mode not supported!");
+          return 1;
+        }
       }
-      case SYMW:
-      {
-          RightSYMW worklet( sigInLen );
-          vtkm::worklet::DispatcherMapField< RightSYMW > dispatcher( worklet );
-          dispatcher.Invoke( rightExtend, sigIn );
-          break;
-      }
-      default:
-      {
-        vtkm::cont::ErrorControlInternal("Right extension mode not supported!");
-        return 1;
-      }
-    }
 
-    if( attachZeroRightRight )
-      WaveletBase::DeviceAssignZero( rightExtend, addLen );
-    else if( attachZeroRightLeft )
-    {
+      // make a copy of rightExtend with a zero attached to the left
       ExtensionArrayType rightExtendPlusOne;
       rightExtendPlusOne.Allocate( addLen + 1 );
       WaveletBase::DeviceCopyStartX( rightExtend, rightExtendPlusOne, 1 );
@@ -136,8 +223,6 @@ public:
             ArrayConcat;
     ArrayConcat leftOn( leftExtend, sigIn );    
     sigOut = vtkm::cont::make_ArrayHandleConcatenate( leftOn, rightExtend );
-
-std::cerr << "Extend1D: output array length: " << sigOut.GetNumberOfValues() << std::endl;
 
     return 0;
   }
@@ -288,6 +373,7 @@ std::cerr << "Extend1D: output array length: " << sigOut.GetNumberOfValues() << 
       addLen = filterLen / 4;   // addLen == 0 for Haar kernel
       if( (L[0] > L[1]) && (WaveletBase::wmode == SYMH) )
         cDPadLen = L[0];  
+
       cATempLen = L[0] + 2 * addLen;
       cDTempLen = cATempLen;  // same length
     }
@@ -296,10 +382,6 @@ std::cerr << "Extend1D: output array length: " << sigOut.GetNumberOfValues() << 
       cATempLen = L[0];
       cDTempLen = L[1];
     }
-
-    /* reconTempLen = L[2];
-    if( reconTempLen % 2 != 0 )
-      reconTempLen++; */
 
     typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      IdArrayType;
     typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, CoeffArrayType > 
@@ -325,26 +407,26 @@ std::cerr << "Extend1D: output array length: " << sigOut.GetNumberOfValues() << 
     {
       // first extend cA to be cATemp
       this->Extend1D( cA, cATemp, addLen, cALeftMode, cARightMode, false, false );
+
+      // Then extend cD based on extension needs
       if( cDPadLen > 0 )  
       {
-        // Add back the missing final cD, 0.0, at the beginning of right extension
+        // Add back the missing final cD, 0.0, before doing extension
         this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, true, false );
       }
       else
       {
         vtkm::Id cDTempLenWouldBe = L[1] + 2 * addLen;
         if( cDTempLenWouldBe ==  cDTempLen )
-        { std::cout << "case 1 " << std::endl;
+        { 
           this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, false);
-std::cout << "case 1: cDTemp actual length = " << cDTemp.GetNumberOfValues() << std::endl;
         }
         else if( cDTempLenWouldBe ==  cDTempLen - 1 )
-        { std::cout << "case 2" << std::endl;
+        { 
           this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, true );
         }
         else
         {
-          std::cout << "case 3" << std::endl;
           vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
           return 1;
         }
@@ -367,8 +449,6 @@ std::cout << "case 1: cDTemp actual length = " << cDTemp.GetNumberOfValues() << 
 
     // make sure signal extension went as expected
     VTKM_ASSERT( cATemp.GetNumberOfValues() == cATempLen );
-std::cout << "cDTemp actual length = " << cDTemp.GetNumberOfValues() << std::endl;
-std::cout << "cDTempLen = " << cDTempLen << std::endl;
     VTKM_ASSERT( cDTemp.GetNumberOfValues() == cDTempLen );
 
     vtkm::cont::ArrayHandleConcatenate< Concat2, Concat2>

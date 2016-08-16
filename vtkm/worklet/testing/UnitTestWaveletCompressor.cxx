@@ -27,17 +27,12 @@
 #include <vector>
 
 
-VTKM_CONT_EXPORT
 void DebugDWTIDWT1D()
 {
-  vtkm::Id sigLen = 20;
+  vtkm::Id sigLen = 21;
   std::cout << "Testing Wavelets Worklet" << std::endl;
   std::cout << "Input a size to test." << std::endl;
-  vtkm::Id tmpIn;
-  vtkm::Id million = 1000000;
-  std::cin >> tmpIn;
-  if( tmpIn != 0 )
-    sigLen = tmpIn * million;
+  std::cin >> sigLen;
 
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
@@ -50,7 +45,7 @@ void DebugDWTIDWT1D()
   std::vector<vtkm::Id> L(3, 0);
 
   // Forward Transform
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::HAAR;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF8_4;
   vtkm::worklet::wavelets::WaveletDWT waveletdwt( wname );
   waveletdwt.DWT1D( inputArray, coeffOut, L );
 
@@ -84,20 +79,18 @@ void DebugWaveDecomposeReconstruct()
   vtkm::Id sigLen = 20;
   std::cout << "Testing Wavelets Worklet" << std::endl;
   std::cout << "Default test size is 20. " << std::endl;
-  std::cout << "Input a new size to test (in millions)." << std::endl;
+  std::cout << "Input a new size to test." << std::endl;
   std::cout << "Input 0 to stick with 20." << std::endl;
   vtkm::Id tmpIn;
-  vtkm::Id million   = 1000000;
-  vtkm::Id thousand  = 1000;
-  //std::cin >> tmpIn;
-  tmpIn = 100;
+  std::cin >> tmpIn;
   if( tmpIn != 0 )
-    sigLen = tmpIn * million;
+    sigLen = tmpIn;
 
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
   for( vtkm::Id i = 0; i < sigLen; i++ )
-    tmpVector.push_back( 100.0 * vtkm::Sin(static_cast<vtkm::Float64>(i)/100.0 ));
+    tmpVector.push_back( static_cast<vtkm::Float64>(i) );
+    //tmpVector.push_back( 100.0 * vtkm::Sin(static_cast<vtkm::Float64>(i)/100.0 ));
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
 
@@ -105,7 +98,7 @@ void DebugWaveDecomposeReconstruct()
 
   // Use a WaveletCompressor
   vtkm::Id nLevels = 2;
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF8_4;
   vtkm::worklet::WaveletCompressor compressor( wname );
 
   // User input of decompose levels
@@ -113,8 +106,7 @@ void DebugWaveDecomposeReconstruct()
   std::cout << "Input how many wavelet transform levels to perform, between 1 and "
             << maxLevel << std::endl;
   vtkm::Id levTemp;
-  //std::cin >> levTemp;
-  levTemp = 17;
+  std::cin >> levTemp;
   if( levTemp > 0 && levTemp <= maxLevel )
     nLevels = levTemp;
   else
@@ -125,8 +117,7 @@ void DebugWaveDecomposeReconstruct()
   std::cout << "Input a compression ratio ( >=1 )to test. "
             << "1 means no compression. " << std::endl;
   vtkm::Float64 cratio;
-  //std::cin >> cratio;
-  cratio = 10;
+  std::cin >> cratio;
   VTKM_ASSERT ( cratio >= 1 );
 
   std::vector<vtkm::Id> L;
@@ -138,12 +129,12 @@ void DebugWaveDecomposeReconstruct()
   vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
   std::cout << "Decompose time         = " << elapsedTime << std::endl;
   
-
   // Squash small coefficients
   timer.Reset();
   compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Thresholding time      = " << elapsedTime << std::endl;
+  
 
 
   // Reconstruct
@@ -178,14 +169,16 @@ void TestWaveDecomposeReconstruct()
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
   for( vtkm::Id i = 0; i < sigLen; i++ )
+  {
     tmpVector.push_back( 100.0 * vtkm::Sin(static_cast<vtkm::Float64>(i)/100.0 ));
+  }
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
 
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
 
   // Use a WaveletCompressor
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF8_4;
   vtkm::worklet::WaveletCompressor compressor( wname );
 
   // User maximum decompose levels, and no compression
@@ -224,10 +217,9 @@ void TestWaveDecomposeReconstruct()
 
 void TestWaveletCompressor()
 {
-  //DebugExtend1D();
-  DebugDWTIDWT1D();
+  //DebugDWTIDWT1D();
   //DebugWaveDecomposeReconstruct();
-  //TestWaveDecomposeReconstruct();
+  TestWaveDecomposeReconstruct();
 }
 
 int UnitTestWaveletCompressor(int, char *[])

@@ -54,7 +54,8 @@ public:
     {
       this->wmode = SYMW;   // Default extension mode, see MatWaveBase.cpp
     }
-    else if( wname == HAAR || wname == BIOR1_1 )
+    else if( wname == HAAR   || wname == BIOR1_1 ||
+             wname == CDF8_4 || wname == BIOR3_3 )
     {
       this->wmode = SYMH;
     }

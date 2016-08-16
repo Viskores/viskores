@@ -442,6 +442,8 @@ private:
   vtkm::Id startIdx;
 };
 
+
+// Worklets for signal extension no. 1
 class LeftSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -470,6 +472,8 @@ private:
   vtkm::Id addLen;
 };
 
+
+// Worklets for signal extension no. 2
 class LeftSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -498,6 +502,62 @@ private:
   vtkm::Id addLen;
 };
 
+
+// Worklets for signal extension no. 3
+class LeftASYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  LeftASYMHExtentionWorklet( vtkm::Id len ) : addLen (len) {}
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    portalOut.Set( workIndex, portalIn.Get( addLen - workIndex - 1) * (-1.0) );
+  }
+
+private:
+  vtkm::Id addLen;
+};
+
+
+// Worklets for signal extension no. 4
+class LeftASYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  LeftASYMWExtentionWorklet( vtkm::Id len ) : addLen (len) {}
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    portalOut.Set( workIndex, portalIn.Get( addLen - workIndex ) * (-1.0) );
+  }
+
+private:
+  vtkm::Id addLen;
+};
+
+
+// Worklets for signal extension no. 5
 class RightSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -526,6 +586,8 @@ private:
   vtkm::Id sigInLen;
 };
 
+
+// Worklets for signal extension no. 6
 class RightSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -553,6 +615,61 @@ public:
 private:
   vtkm::Id sigInLen;
 };
+
+
+// Worklets for signal extension no. 7
+class RightASYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  RightASYMHExtentionWorklet ( vtkm::Id sigInl ) : sigInLen( sigInl ) {}
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    portalOut.Set( workIndex, portalIn.Get( sigInLen - workIndex - 1) * (-1.0) );
+  }
+
+private:
+  vtkm::Id sigInLen;
+};
+
+
+// Worklets for signal extension no. 8
+class RightASYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  RightASYMWExtentionWorklet ( vtkm::Id sigInl ) : sigInLen( sigInl ) {}
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    portalOut.Set( workIndex, portalIn.Get( sigInLen - workIndex - 2) * (-1.0) );
+  }
+
+private:
+  vtkm::Id sigInLen;
+};
+
 
 class AssignZeroWorklet : public vtkm::worklet::WorkletMapField
 {
