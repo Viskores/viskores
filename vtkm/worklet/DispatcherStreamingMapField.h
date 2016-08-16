@@ -215,12 +215,13 @@ public:
         numberOfInstances = fullSize - blockSize*block;
 
         typedef typename Invocation::ParameterInterface ParameterInterfaceType;
-        typedef typename ParameterInterfaceType::
+        typedef typename ParameterInterfaceType::template
             StaticTransformType<TransformFunctorType>::type ReportedType;
         ReportedType newParams = invocation.Parameters.StaticTransformCont(
             TransformFunctorType(block, blockSize, numberOfInstances, fullSize));
 
-        typedef typename Invocation::ChangeParametersType<ReportedType>::type ChangedType;
+        typedef typename Invocation::template 
+            ChangeParametersType<ReportedType>::type ChangedType;
         ChangedType changedParams = invocation.ChangeParameters(newParams);
 
         this->BasicInvoke(changedParams, numberOfInstances, Device());
