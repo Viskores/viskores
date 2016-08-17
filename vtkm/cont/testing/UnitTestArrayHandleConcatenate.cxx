@@ -56,7 +56,7 @@ void TestConcatenateEmptyArray()
 {
   std::vector< vtkm::Float64 > vec;
   for( vtkm::Id i = 0; i < ARRAY_SIZE; i++ )
-      vec.push_back( i*1.5 );
+      vec.push_back( vtkm::Float64(i) * 1.5 );
   
    typedef vtkm::Float64                                         CoeffValueType;
    typedef vtkm::cont::ArrayHandle<CoeffValueType>               CoeffArrayTypeTmp;
