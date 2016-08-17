@@ -45,7 +45,7 @@ struct TryExecuteRunIfValid<Functor, Device, false>
 };
 
 template<typename Functor, typename Device>
-struct TryExecuteRunIfValid<Functor, typename Device, true>
+struct TryExecuteRunIfValid<Functor, Device, true>
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
