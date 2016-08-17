@@ -64,38 +64,48 @@ ResultDataSet FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet &input,
 
 
 //-----------------------------------------------------------------------------
+namespace detail {
+template<typename Derived, typename DerivedPolicy>
+struct FilterDataSetPrepareForExecutionFunctor
+{
+  vtkm::filter::ResultDataSet Result;
+  Derived *Self;
+  const vtkm::cont::DataSet &Input;
+  const vtkm::filter::PolicyBase<DerivedPolicy> &Policy;
+
+  VTKM_CONT_EXPORT
+  FilterDataSetPrepareForExecutionFunctor(
+      Derived *self,
+      const vtkm::cont::DataSet &input,
+      const vtkm::filter::PolicyBase<DerivedPolicy> &policy)
+    : Self(self), Input(input), Policy(policy)
+  {  }
+
+  template<typename Device>
+  VTKM_CONT_EXPORT
+  bool operator()(Device)
+  {
+    this->Result = this->Self->DoExecute(this->Input, this->Policy, Device());
+    return this->Result.IsValid();
+  }
+};
+} // namespace detail
+
 template<typename Derived>
 template<typename DerivedPolicy>
-ResultDataSet FilterDataSet<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
-                                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
+ResultDataSet FilterDataSet<Derived>::PrepareForExecution(
+    const vtkm::cont::DataSet &input,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
-  typedef vtkm::cont::DeviceAdapterTagCuda CudaTag;
-  typedef vtkm::cont::DeviceAdapterTagTBB TBBTag;
-  typedef vtkm::cont::DeviceAdapterTagSerial SerialTag;
+  // When we move to C++11, this could probably be an anonymous class
+  detail::FilterDataSetPrepareForExecutionFunctor<Derived, DerivedPolicy>
+      functor(static_cast<Derived*>(this), input, policy);
 
-  ResultDataSet result = run_if_valid<ResultDataSet>( static_cast<Derived*>(this),
-                                       input,
-                                       policy,
-                                       this->Tracker,
-                                       CudaTag() );
-  if( !result.IsValid() )
-  {
-    result = run_if_valid<ResultDataSet>( static_cast<Derived*>(this),
-                                       input,
-                                       policy,
-                                       this->Tracker,
-                                       TBBTag() );
-  }
-  if( !result.IsValid() )
-  {
-    result = run_if_valid<ResultDataSet>( static_cast<Derived*>(this),
-                                       input,
-                                       policy,
-                                       this->Tracker,
-                                       SerialTag() );
-  }
+  vtkm::cont::TryExecute(functor,
+                         this->Tracker,
+                         typename DerivedPolicy::DeviceAdapterList());
 
-  return result;
+  return functor.Result;
 }
 
 //-----------------------------------------------------------------------------

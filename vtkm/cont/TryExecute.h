@@ -21,6 +21,11 @@
 #define vtk_m_cont_TryExecute_h
 
 #include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorControlBadType.h>
+#include <vtkm/cont/ErrorControlBadValue.h>
+
+#include <vtkm/cont/internal/RuntimeDeviceTracker.h>
 
 namespace vtkm {
 namespace cont {
@@ -34,7 +39,9 @@ template<typename Functor, typename Device>
 struct TryExecuteRunIfValid<Functor, Device, false>
 {
   VTKM_CONT_EXPORT
-  static bool Run(Functor &) { return false; }
+  static bool Run(Functor &, vtkm::cont::internal::RuntimeDeviceTracker &) {
+    return false;
+  }
 };
 
 template<typename Functor, typename Device>
@@ -43,31 +50,68 @@ struct TryExecuteRunIfValid<Functor, typename Device, true>
   VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
   VTKM_CONT_EXPORT
-  static bool Run(Functor &functor)
+  static bool Run(Functor &functor,
+                  vtkm::cont::internal::RuntimeDeviceTracker &tracker)
   {
-    try
+    if (tracker.CanRunOn(Device()))
     {
-      return functor(Device());
+      try
+      {
+        return functor(Device());
+      }
+      catch(vtkm::cont::ErrorControlBadAllocation e)
+      {
+        std::cerr << "caught ErrorControlBadAllocation " << e.GetMessage() << std::endl;
+        //currently we only consider OOM errors worth disabling a device for
+        //than we fallback to another device
+        tracker.ReportAllocationFailure(Device(), e);
+      }
+      catch(vtkm::cont::ErrorControlBadType e)
+      {
+        //should bad type errors should stop the execution, instead of
+        //deferring to another device adapter?
+        std::cerr << "caught ErrorControlBadType : " << e.GetMessage() << std::endl;
+      }
+      catch(vtkm::cont::ErrorControlBadValue e)
+      {
+        //should bad value errors should stop the filter, instead of deferring
+        //to another device adapter?
+        std::cerr << "caught ErrorControlBadValue : " << e.GetMessage() << std::endl;
+      }
+      catch(vtkm::cont::Error e)
+      {
+        //general errors should be caught and let us try the next device adapter.
+        std::cerr << "exception is: " << e.GetMessage() << std::endl;
+      }
+      catch (std::exception e)
+      {
+        std::cerr << "caught standard exception: " << e.what() << std::endl;
+      }
+      catch (...)
+      {
+        std::cerr << "unknown exception caught" << std::endl;
+      }
     }
-    catch (...)
-    {
-      return false;
-    }
+
+    // If we are here, then the functor was either never run or failed.
+    return false;
   }
 };
 
 template<typename FunctorType>
 struct TryExecuteImpl
 {
-  // Warning, this is a reference. Make sure referenced object does not go out
-  // of scope.
+  // Warning, these are a references. Make sure referenced objects do not go
+  // out of scope.
   FunctorType &Functor;
+  vtkm::cont::internal::RuntimeDeviceTracker &Tracker;
 
   bool Success;
 
   VTKM_CONT_EXPORT
-  TryExecuteImpl(FunctorType &functor)
-    : Functor(functor), Success(false) {  }
+  TryExecuteImpl(FunctorType &functor,
+                 vtkm::cont::internal::RuntimeDeviceTracker &tracker)
+    : Functor(functor), Tracker(tracker), Success(false) {  }
 
   template<typename Device>
   VTKM_CONT_EXPORT
@@ -79,7 +123,7 @@ struct TryExecuteImpl
 
       this->Success =
           detail::TryExecuteRunIfValid<FunctorType,Device,DeviceTraits::Valid>
-          ::Run(this->Functor);
+          ::Run(this->Functor, this->Tracker);
     }
 
     return this->Success;
@@ -90,7 +134,7 @@ struct TryExecuteImpl
 
 /// \brief Try to execute a functor on a list of devices until one succeeds.
 ///
-/// This function takes a functor an a list of devices. It then tries to run
+/// This function takes a functor and a list of devices. It then tries to run
 /// the functor for each device (in the order given in the list) until the
 /// execution succeeds.
 ///
@@ -98,6 +142,10 @@ struct TryExecuteImpl
 /// the \c DeviceAdapterTag to use. The functor should return a \c bool that is
 /// \c true if the execution succeeds, \c false if it fails. If an exception is
 /// thrown from the functor, then the execution is assumed to have failed.
+///
+/// This function also optionally takes a \c RuntimeDeviceTracker, which will
+/// monitor for certain failures across calls to TryExecute and skip trying
+/// devices with a history of failure.
 ///
 /// This function returns \c true if the functor succeeded on a device,
 /// \c false otherwise.
@@ -107,19 +155,37 @@ struct TryExecuteImpl
 ///
 template<typename Functor, typename DeviceList>
 VTKM_CONT_EXPORT
-bool TryExecute(const Functor &functor, DeviceList)
+bool TryExecute(const Functor &functor,
+                vtkm::cont::internal::RuntimeDeviceTracker &tracker,
+                DeviceList)
 {
-  detail::TryExecuteImpl<const Functor> internals(functor);
+  detail::TryExecuteImpl<const Functor> internals(functor, tracker);
   vtkm::ListForEach(internals, DeviceList());
   return internals.Success;
 }
 template<typename Functor, typename DeviceList>
 VTKM_CONT_EXPORT
-bool TryExecute(Functor &functor, DeviceList)
+bool TryExecute(Functor &functor,
+                vtkm::cont::internal::RuntimeDeviceTracker &tracker,
+                DeviceList)
 {
-  detail::TryExecuteImpl<Functor> internals(functor);
+  detail::TryExecuteImpl<Functor> internals(functor, tracker);
   vtkm::ListForEach(internals, DeviceList());
   return internals.Success;
+}
+template<typename Functor, typename DeviceList>
+VTKM_CONT_EXPORT
+bool TryExecute(const Functor &functor, DeviceList)
+{
+  vtkm::cont::internal::RuntimeDeviceTracker tracker;
+  return vtkm::cont::TryExecute(functor, tracker, DeviceList());
+}
+template<typename Functor, typename DeviceList>
+VTKM_CONT_EXPORT
+bool TryExecute(Functor &functor, DeviceList)
+{
+  vtkm::cont::internal::RuntimeDeviceTracker tracker;
+  return vtkm::cont::TryExecute(functor, tracker, DeviceList());
 }
 template<typename Functor>
 VTKM_CONT_EXPORT
