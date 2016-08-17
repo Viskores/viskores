@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_worklet_Dispatcher_MapField_h
-#define vtk_m_worklet_Dispatcher_MapField_h
+#ifndef vtk_m_worklet_Dispatcher_Streaming_MapField_h
+#define vtk_m_worklet_Dispatcher_Streaming_MapField_h
 
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -241,4 +241,4 @@ protected:
 }
 } // namespace vtkm::worklet
 
-#endif //vtk_m_worklet_Dispatcher_MapField_h
+#endif //vtk_m_worklet_Dispatcher_Streaming_MapField_h
