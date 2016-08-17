@@ -43,57 +43,6 @@ enum WaveletName {
   BIOR1_1   // the same as HAAE
 };
 
-// Flipping operation; helper function to initialize a filter.
-void wrev( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
-{
-  for( vtkm::Id count = 0; count < sigLength; count++)
-    sigOut[count] = sigIn[sigLength - count - 1];
-}
-
-// Quadrature mirror filtering operation: helper function to initialize a filter.
-void qmf_even ( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
-{
-  if( sigLength % 2 == 0 )
-  {
-    for (vtkm::Id count = 0; count < sigLength; count++) 
-    {
-      sigOut[count] = sigIn[sigLength - count - 1];
-      if (count % 2 != 0) 
-        sigOut[count] = -1.0 * sigOut[count];
-    }
-  }
-  else
-  {
-    for (vtkm::Id count = 0; count < sigLength; count++) 
-    {
-      sigOut[count] = sigIn[sigLength - count - 1];
-      if (count % 2 == 0) 
-        sigOut[count] = -1.0 * sigOut[count];
-    }
-  }
-}
-
-// Flipping and QMF at the same time: helper function to initialize a filter.
-void qmf_wrev ( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
-{
-  qmf_even( sigIn, sigOut, sigLength );
-
-  vtkm::Float64 tmp;
-  for (vtkm::Id count = 0; count < sigLength/2; count++) {
-    tmp = sigOut[count];
-    sigOut[count] = sigOut[sigLength - count - 1];
-    sigOut[sigLength - count - 1] = tmp;
-  }
-}
-
-// Verbatim Copying: helper function to initialize a filter.
-void verbatim_copy ( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
-{
-  for (vtkm::Id count = 0; count < sigLength; count++)
-    sigOut[count] = sigIn[count];
-}
-
-
 // Wavelet filter class; 
 // functionally equivalent to WaveFiltBase and its subclasses in VAPoR.
 class WaveletFilter
@@ -111,37 +60,37 @@ public:
     {
       this->filterLength = 9;
       this->AllocateFilterMemory();
-      wrev( vtkm::worklet::wavelets::hm4_44,      lowDecomposeFilter,     filterLength );
-      qmf_wrev( vtkm::worklet::wavelets::h4,      highDecomposeFilter,    filterLength );
-      verbatim_copy( vtkm::worklet::wavelets::h4, lowReconstructFilter,   filterLength );
-      qmf_even( vtkm::worklet::wavelets::hm4_44,  highReconstructFilter,  filterLength );
+      this->wrev( vtkm::worklet::wavelets::hm4_44,      lowDecomposeFilter,     filterLength );
+      this->qmf_wrev( vtkm::worklet::wavelets::h4,      highDecomposeFilter,    filterLength );
+      this->verbatim_copy( vtkm::worklet::wavelets::h4, lowReconstructFilter,   filterLength );
+      this->qmf_even( vtkm::worklet::wavelets::hm4_44,  highReconstructFilter,  filterLength );
     }
     else if( wtype == CDF8_4 || wtype == BIOR3_3 )
     {
       this->filterLength = 8;
       this->AllocateFilterMemory();
-      wrev( vtkm::worklet::wavelets::hm3_33,         lowDecomposeFilter,    filterLength );
-      qmf_wrev( vtkm::worklet::wavelets::h3+6,       highDecomposeFilter,   filterLength );
-      verbatim_copy( vtkm::worklet::wavelets::h3+6,  lowReconstructFilter,  filterLength );
-      qmf_even( vtkm::worklet::wavelets::hm3_33,     highReconstructFilter, filterLength );
+      this->wrev( vtkm::worklet::wavelets::hm3_33,         lowDecomposeFilter,    filterLength );
+      this->qmf_wrev( vtkm::worklet::wavelets::h3+6,       highDecomposeFilter,   filterLength );
+      this->verbatim_copy( vtkm::worklet::wavelets::h3+6,  lowReconstructFilter,  filterLength );
+      this->qmf_even( vtkm::worklet::wavelets::hm3_33,     highReconstructFilter, filterLength );
     }
     else if( wtype == CDF5_3 || wtype == BIOR2_2 )
     {
       this->filterLength = 5;
       this->AllocateFilterMemory();
-      wrev( vtkm::worklet::wavelets::hm2_22,         lowDecomposeFilter,    filterLength );
-      qmf_wrev( vtkm::worklet::wavelets::h2+6,       highDecomposeFilter,   filterLength );
-      verbatim_copy( vtkm::worklet::wavelets::h2+6,  lowReconstructFilter,  filterLength );
-      qmf_even( vtkm::worklet::wavelets::hm2_22,     highReconstructFilter, filterLength );
+      this->wrev( vtkm::worklet::wavelets::hm2_22,         lowDecomposeFilter,    filterLength );
+      this->qmf_wrev( vtkm::worklet::wavelets::h2+6,       highDecomposeFilter,   filterLength );
+      this->verbatim_copy( vtkm::worklet::wavelets::h2+6,  lowReconstructFilter,  filterLength );
+      this->qmf_even( vtkm::worklet::wavelets::hm2_22,     highReconstructFilter, filterLength );
     }
     else if( wtype == HAAR || wtype == BIOR1_1 )
     {
       this->filterLength = 2;
       this->AllocateFilterMemory();
-      wrev( vtkm::worklet::wavelets::hm1_11,         lowDecomposeFilter,    filterLength );
-      qmf_wrev( vtkm::worklet::wavelets::h1+4,       highDecomposeFilter,   filterLength );
-      verbatim_copy( vtkm::worklet::wavelets::h1+4,  lowReconstructFilter,  filterLength );
-      qmf_even( vtkm::worklet::wavelets::hm1_11,     highReconstructFilter, filterLength );
+      this->wrev( vtkm::worklet::wavelets::hm1_11,         lowDecomposeFilter,    filterLength );
+      this->qmf_wrev( vtkm::worklet::wavelets::h1+4,       highDecomposeFilter,   filterLength );
+      this->verbatim_copy( vtkm::worklet::wavelets::h1+4,  lowReconstructFilter,  filterLength );
+      this->qmf_even( vtkm::worklet::wavelets::hm1_11,     highReconstructFilter, filterLength );
     }
   }
 
@@ -192,6 +141,57 @@ private:
     lowReconstructFilter  = highDecomposeFilter   + filterLength;
     highReconstructFilter = lowReconstructFilter  + filterLength;
   }
+
+  // Flipping operation; helper function to initialize a filter.
+  void wrev( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
+  {
+    for( vtkm::Id count = 0; count < sigLength; count++)
+      sigOut[count] = sigIn[sigLength - count - 1];
+  }
+
+  // Quadrature mirror filtering operation: helper function to initialize a filter.
+  void qmf_even ( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
+  {
+    if( sigLength % 2 == 0 )
+    {
+      for (vtkm::Id count = 0; count < sigLength; count++) 
+      {
+        sigOut[count] = sigIn[sigLength - count - 1];
+        if (count % 2 != 0) 
+          sigOut[count] = -1.0 * sigOut[count];
+      }
+    }
+    else
+    {
+      for (vtkm::Id count = 0; count < sigLength; count++) 
+      {
+        sigOut[count] = sigIn[sigLength - count - 1];
+        if (count % 2 == 0) 
+          sigOut[count] = -1.0 * sigOut[count];
+      }
+    }
+  }
+
+  // Flipping and QMF at the same time: helper function to initialize a filter.
+  void qmf_wrev ( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
+  {
+    qmf_even( sigIn, sigOut, sigLength );
+
+    vtkm::Float64 tmp;
+    for (vtkm::Id count = 0; count < sigLength/2; count++) {
+      tmp = sigOut[count];
+      sigOut[count] = sigOut[sigLength - count - 1];
+      sigOut[sigLength - count - 1] = tmp;
+    }
+  }
+
+  // Verbatim Copying: helper function to initialize a filter.
+  void verbatim_copy ( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
+  {
+    for (vtkm::Id count = 0; count < sigLength; count++)
+      sigOut[count] = sigIn[count];
+  }
+
 };    // class WaveletFilter.
 }     // namespace wavelets.
 

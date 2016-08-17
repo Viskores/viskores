@@ -23,6 +23,7 @@
 #define vtk_m_ArrayHandleConcatenate_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <boost/lexical_cast.hpp>
 
 namespace vtkm {
 namespace cont {
@@ -142,10 +143,10 @@ public:
   VTKM_CONT_EXPORT
   void Allocate( vtkm::Id numberOfValues )
   {
-    VTKM_ASSERT( numberOfValues >= 0 );
     VTKM_ASSERT( this->valid );
+    std::string numInStr = boost::lexical_cast<std::string>(numberOfValues);
     throw vtkm::cont::ErrorControlInternal(
-            "ArrayHandleConcatenate should not be allocated explicitly.");
+          "ArrayHandleConcatenate should not be allocated explicitly: " + numInStr);
   }
 
   VTKM_CONT_EXPORT
@@ -242,9 +243,9 @@ public:
   VTKM_CONT_EXPORT
   PortalExecution PrepareForOutput( vtkm::Id numberOfValues )
   {
-    VTKM_ASSERT( numberOfValues > 0 );
+    std::string numInStr = boost::lexical_cast<std::string>(numberOfValues);
     throw vtkm::cont::ErrorControlBadValue(
-            "ArrayHandleConcatenate is derived and read-only.");
+          "ArrayHandleConcatenate is derived and read-only: " + numInStr);
   }
 
   VTKM_CONT_EXPORT
