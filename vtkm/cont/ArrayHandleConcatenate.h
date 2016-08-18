@@ -143,7 +143,6 @@ public:
   void Allocate( vtkm::Id numberOfValues )
   {
     numberOfValues++;   // dummy statement to avoid a warning
-    VTKM_ASSERT( this->valid );
     throw vtkm::cont::ErrorControlInternal(
           "ArrayHandleConcatenate should not be allocated explicitly. " );
   }
@@ -242,8 +241,8 @@ public:
   VTKM_CONT_EXPORT
   PortalExecution PrepareForOutput( vtkm::Id numberOfValues )
   {
-    numberOfValues++;   // dummy statement to get rid of a warning
-    throw vtkm::cont::ErrorControlBadValue(
+    numberOfValues++;   // dummy statement to avoid a warning
+    throw vtkm::cont::ErrorControlInternal(
           "ArrayHandleConcatenate is derived and read-only. " );
   }
 
