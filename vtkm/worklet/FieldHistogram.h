@@ -155,7 +155,7 @@ public:
            vtkm::Range& rangeOfValues,
            FieldType& binDelta,
            vtkm::cont::ArrayHandle<vtkm::Id>& binArray,
-           DeviceAdapter device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG())
+           DeviceAdapter device)
   {
     (void) device;
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
