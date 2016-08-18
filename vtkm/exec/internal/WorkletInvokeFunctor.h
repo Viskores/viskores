@@ -61,7 +61,7 @@ public:
                                                                   this->Invocation.OutputToInputMap,
                                                                   this->Invocation.VisitArray,
                                                                   this->Invocation.GetInputDomain(),
-                                                                  static_cast<T>(GlobalIndexOffset))
+                                                                  GlobalIndexOffset)
                                    );
   }
 
