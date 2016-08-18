@@ -24,10 +24,10 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/internal/RuntimeDeviceTracker.h>
 
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/ResultField.h>
-#include <vtkm/filter/internal/RuntimeDeviceTracker.h>
 
 namespace vtkm {
 namespace filter {
@@ -88,7 +88,7 @@ private:
                                   const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   std::string OutputFieldName;
-  vtkm::filter::internal::RuntimeDeviceTracker Tracker;
+  vtkm::cont::internal::RuntimeDeviceTracker Tracker;
 };
 
 }

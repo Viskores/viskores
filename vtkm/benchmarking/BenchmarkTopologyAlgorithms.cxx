@@ -131,14 +131,14 @@ public:
     typedef typename vtkm::VecTraits<FieldInType>::ComponentType FieldType;
     const FieldType iso = static_cast<FieldType>(this->IsoValue);
 
-    caseNumber= ((fieldIn[0] > this->IsoValue)      |
-                 (fieldIn[1] > this->IsoValue) << 1 |
-                 (fieldIn[2] > this->IsoValue) << 2 |
-                 (fieldIn[3] > this->IsoValue) << 3 |
-                 (fieldIn[4] > this->IsoValue) << 4 |
-                 (fieldIn[5] > this->IsoValue) << 5 |
-                 (fieldIn[6] > this->IsoValue) << 6 |
-                 (fieldIn[7] > this->IsoValue) << 7);
+    caseNumber= ((fieldIn[0] > iso)      |
+                 (fieldIn[1] > iso) << 1 |
+                 (fieldIn[2] > iso) << 2 |
+                 (fieldIn[3] > iso) << 3 |
+                 (fieldIn[4] > iso) << 4 |
+                 (fieldIn[5] > iso) << 5 |
+                 (fieldIn[6] > iso) << 6 |
+                 (fieldIn[7] > iso) << 7);
   }
 };
 

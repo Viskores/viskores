@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2016 Sandia Corporation.
+//  Copyright 2016 UT-Battelle, LLC.
+//  Copyright 2016 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -21,11 +21,12 @@
 #define vtk_m_filter_internal_ResolveFieldTypeAndMap_h
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/internal/RuntimeDeviceTracker.h>
 
 #include <vtkm/filter/FieldMetadata.h>
 #include <vtkm/filter/PolicyBase.h>
-#include <vtkm/filter/internal/RuntimeDeviceTracker.h>
 
 //forward declarations needed
 namespace vtkm {
@@ -34,186 +35,78 @@ namespace filter {
 }
 }
 
-namespace
-{
-
-template<bool> struct CanMap;
-
-template<typename ClassType,
-         typename ArrayType,
-         typename DerivedPolicy,
-         typename DeviceAdapterTag
-        >
-bool map_if_valid(ClassType* c,
-                        vtkm::filter::ResultDataSet& input,
-                        const ArrayType &field,
-                        const vtkm::filter::FieldMetadata& fieldMeta,
-                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                        vtkm::filter::internal::RuntimeDeviceTracker& tracker,
-                        DeviceAdapterTag tag)
-{
-  typedef vtkm::cont::DeviceAdapterTraits<
-                                      DeviceAdapterTag> DeviceAdapterTraits;
-
-  typedef CanMap<DeviceAdapterTraits::Valid> CanMapType;
-  return CanMapType::Run(c,input,field,fieldMeta,policy,tracker,tag);
-}
-
-
-//Implementation that we call on device adapters we don't have support
-//enabled for
-template<>
-struct CanMap<false>
-{
-  template<typename ClassType,
-           typename ArrayType,
-           typename DerivedPolicy,
-           typename DeviceAdapterTag>
-  static bool Run(ClassType*,
-                  vtkm::filter::ResultDataSet&,
-                  const ArrayType &,
-                  const vtkm::filter::FieldMetadata&,
-                  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                  vtkm::filter::internal::RuntimeDeviceTracker&,
-                  DeviceAdapterTag)
-  {
-    return false;
-  }
-};
-
-//Implementation that we call on device adapters we do have support
-//enabled for
-template<>
-struct CanMap<true>
-{
-  template<typename ClassType,
-           typename ArrayType,
-           typename DerivedPolicy,
-           typename DeviceAdapterTag>
-  static bool Run(ClassType* c,
-                  vtkm::filter::ResultDataSet& input,
-                  const ArrayType &field,
-                  const vtkm::filter::FieldMetadata& fieldMeta,
-                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                  vtkm::filter::internal::RuntimeDeviceTracker& tracker,
-                  DeviceAdapterTag tag)
-  {
-  const bool runtime_usable_device = tracker.CanRunOn(tag);
-
-  bool valid = false;
-  if(runtime_usable_device)
-  {
-    try
-    {
-      valid = c->DoMapField(input,field,fieldMeta,policy,tag);
-    }
-    catch(vtkm::cont::ErrorControlBadAllocation e)
-    {
-      std::cerr << "caught ErrorControlBadAllocation " << e.GetMessage() << std::endl;
-      //currently we only consider OOM errors worth disabling a device for
-      //than we fallback to another device
-      tracker.ReportAllocationFailure(tag,e);
-    }
-    catch(vtkm::cont::ErrorControlBadType e)
-    {
-      //bad type errors should stop the filter, instead of deferring to
-      //another device adapter
-      std::cerr << "caught ErrorControlBadType : " << e.GetMessage() << std::endl;
-    }
-    catch(vtkm::cont::ErrorControlBadValue e)
-    {
-      //bad value errors should stop the filter, instead of deferring to
-      //another device adapter
-      std::cerr << "caught ErrorControlBadValue : " << e.GetMessage() << std::endl;
-    }
-    catch(vtkm::cont::Error e)
-    {
-      //general errors should be caught and let us try the next device adapter.
-      std::cerr << "exception is: " << e.GetMessage() << std::endl;
-    }
-  }
-
-  return valid;
-  }
-};
-}
-
 namespace vtkm {
 namespace filter {
 namespace internal {
 
-namespace
+template<typename Derived, typename DerivedPolicy>
+struct ResolveFieldTypeAndMap
 {
-  template<typename Derived, typename DerivedPolicy>
-  struct ResolveFieldTypeAndMap
+  typedef ResolveFieldTypeAndMap<Derived, DerivedPolicy> Self;
+
+  Derived* DerivedClass;
+  vtkm::filter::ResultDataSet& InputResult;
+  const vtkm::filter::FieldMetadata& Metadata;
+  const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
+  vtkm::cont::internal::RuntimeDeviceTracker& Tracker;
+  bool& RanProperly;
+
+
+  ResolveFieldTypeAndMap(Derived* derivedClass,
+                         vtkm::filter::ResultDataSet& inResult,
+                         const vtkm::filter::FieldMetadata& fieldMeta,
+                         const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                         vtkm::cont::internal::RuntimeDeviceTracker& tracker,
+                         bool& ran):
+    DerivedClass(derivedClass),
+    InputResult(inResult),
+    Metadata(fieldMeta),
+    Policy(policy),
+    Tracker(tracker),
+    RanProperly(ran)
   {
-    typedef ResolveFieldTypeAndMap<Derived, DerivedPolicy> Self;
 
-    Derived* DerivedClass;
-    vtkm::filter::ResultDataSet& InputResult;
-    const vtkm::filter::FieldMetadata& Metadata;
-    const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
-    vtkm::filter::internal::RuntimeDeviceTracker& Tracker;
-    bool& RanProperly;
+  }
 
+private:
 
-    ResolveFieldTypeAndMap(Derived* derivedClass,
-                           vtkm::filter::ResultDataSet& inResult,
-                           const vtkm::filter::FieldMetadata& fieldMeta,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                           vtkm::filter::internal::RuntimeDeviceTracker& tracker,
-                           bool& ran):
-      DerivedClass(derivedClass),
-      InputResult(inResult),
-      Metadata(fieldMeta),
-      Policy(policy),
-      Tracker(tracker),
-      RanProperly(ran)
-      {
+  template<typename T, typename StorageTag>
+  struct ResolveFieldTypeAndMapForDevice
+  {
+    typedef vtkm::cont::ArrayHandle<T,StorageTag> FieldArrayHandle;
+    ResolveFieldTypeAndMapForDevice(const Self& instance,
+                                    const FieldArrayHandle& field) :
+      Instance(instance), Field(field), Valid(false) {}
 
-      }
+    const Self& Instance;
+    const vtkm::cont::ArrayHandle<T,StorageTag>& Field;
+    mutable bool Valid;
 
-  private:
-
-    template<typename T, typename StorageTag>
-    struct ResolveFieldTypeAndMapForDevice
+    template <typename DeviceAdapterTag>
+    bool operator()(DeviceAdapterTag tag) const
     {
-      typedef vtkm::cont::ArrayHandle<T,StorageTag> FieldArrayHandle;
-      ResolveFieldTypeAndMapForDevice(const Self& instance,
-                                      const FieldArrayHandle& field) :
-        Instance(instance), Field(field), Valid(false) {}
+      this->Valid =
+          this->Instance.DerivedClass->DoMapField(this->Instance.InputResult,
+                                                  this->Field,
+                                                  this->Instance.Metadata,
+                                                  this->Instance.Policy,
+                                                  tag);
 
-      const Self& Instance;
-      const vtkm::cont::ArrayHandle<T,StorageTag>& Field;
-      mutable bool Valid;
-
-      template <typename DeviceAdapterTag>
-      void operator()(DeviceAdapterTag tag) const
-      {
-        if( !this->Valid )
-        {
-          this->Valid = map_if_valid( this->Instance.DerivedClass,
-                                      this->Instance.InputResult,
-                                      this->Field,
-                                      this->Instance.Metadata,
-                                      this->Instance.Policy,
-                                      this->Instance.Tracker,
-                                      tag );
-        }
-      }
-    };
-
-  public:
-
-    template<typename T, typename StorageTag>
-    void operator()(const vtkm::cont::ArrayHandle<T,StorageTag>& field) const
-    {
-      ResolveFieldTypeAndMapForDevice<T, StorageTag> doResolve(*this,field);
-      ListForEach(doResolve, typename DerivedPolicy::DeviceAdapterList());
-      this->RanProperly = doResolve.Valid;
+      return this->Valid;
     }
   };
-}
+
+public:
+  template<typename T, typename StorageTag>
+  void operator()(const vtkm::cont::ArrayHandle<T,StorageTag>& field) const
+  {
+    ResolveFieldTypeAndMapForDevice<T, StorageTag> doResolve(*this,field);
+    vtkm::cont::TryExecute(doResolve,
+                           this->Tracker,
+                           typename DerivedPolicy::DeviceAdapterList());
+    this->RanProperly = doResolve.Valid;
+  }
+};
 
 }
 }
