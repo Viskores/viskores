@@ -182,6 +182,21 @@ public:
     NumberOfBlocks = numberOfBlocks;
   }
 
+  template<typename Invocation, typename DeviceAdapter>
+  VTKM_CONT_EXPORT
+  void BasicInvoke(const Invocation &invocation,
+                   vtkm::Id numInstances,
+                   vtkm::Id globalIndexOffset,
+                   DeviceAdapter device) const
+  {
+    this->InvokeTransportParameters(
+          invocation,
+          numInstances,
+          globalIndexOffset,
+          this->Worklet.GetScatter().GetOutputRange(numInstances),
+          device);
+  }
+
   template<typename Invocation>
   VTKM_CONT_EXPORT
   void DoInvoke(const Invocation &invocation) const
@@ -213,29 +228,89 @@ public:
       vtkm::Id numberOfInstances = blockSize;
       if (block == NumberOfBlocks-1) 
         numberOfInstances = fullSize - blockSize*block;
+      vtkm::Id globalIndexOffset = blockSize*block;
 
-        typedef typename Invocation::ParameterInterface ParameterInterfaceType;
-        typedef typename ParameterInterfaceType::template
+      typedef typename Invocation::ParameterInterface ParameterInterfaceType;
+      typedef typename ParameterInterfaceType::template
             StaticTransformType<TransformFunctorType>::type ReportedType;
-        ReportedType newParams = invocation.Parameters.StaticTransformCont(
+      ReportedType newParams = invocation.Parameters.StaticTransformCont(
             TransformFunctorType(block, blockSize, numberOfInstances, fullSize));
 
-        typedef typename Invocation::template 
+      typedef typename Invocation::template 
             ChangeParametersType<ReportedType>::type ChangedType;
-        ChangedType changedParams = invocation.ChangeParameters(newParams);
+      ChangedType changedParams = invocation.ChangeParameters(newParams);
 
-        this->BasicInvoke(changedParams, numberOfInstances, Device());
+      this->BasicInvoke(changedParams, numberOfInstances, globalIndexOffset, Device());
 
-        // Loop over parameters again to sync results for this block into control array
-        typedef typename ChangedType::ParameterInterface ParameterInterfaceType2;
-        const ParameterInterfaceType2 &parameters2 = changedParams.Parameters;
-        parameters2.StaticTransformCont(TransferFunctorType());
+      // Loop over parameters again to sync results for this block into control array
+      typedef typename ChangedType::ParameterInterface ParameterInterfaceType2;
+      const ParameterInterfaceType2 &parameters2 = changedParams.Parameters;
+      parameters2.StaticTransformCont(TransferFunctorType());
     }
   }
 
-protected:
-  vtkm::Id NumberOfBlocks;
 
+private:
+
+  template<typename Invocation, typename InputRangeType, typename OutputRangeType, typename DeviceAdapter>
+  VTKM_CONT_EXPORT
+  void InvokeTransportParameters(const Invocation &invocation,
+                                 const InputRangeType& inputRange,
+                                 const InputRangeType& globalIndexOffset,
+                                 const OutputRangeType& outputRange,
+                                 DeviceAdapter device) const
+  {
+    typedef typename Invocation::ParameterInterface ParameterInterfaceType;
+    const ParameterInterfaceType &parameters = invocation.Parameters;
+
+    typedef vtkm::worklet::internal::detail::DispatcherBaseTransportFunctor<
+        typename Invocation::ControlInterface, DeviceAdapter> TransportFunctorType;
+    typedef typename ParameterInterfaceType::template StaticTransformType<
+        TransportFunctorType>::type ExecObjectParameters;
+
+    ExecObjectParameters execObjectParameters =
+        parameters.StaticTransformCont(TransportFunctorType(outputRange));
+
+    // Get the arrays used for scattering input to output.
+    typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =
+        this->Worklet.GetScatter().GetOutputToInputMap(inputRange);
+    typename WorkletType::ScatterType::VisitArrayType visitArray =
+        this->Worklet.GetScatter().GetVisitArray(inputRange);
+
+    // Replace the parameters in the invocation with the execution object and
+    // pass to next step of Invoke. Also add the scatter information.
+    this->InvokeSchedule(
+          invocation
+          .ChangeParameters(execObjectParameters)
+          .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
+          .ChangeVisitArray(visitArray.PrepareForInput(device)),
+          outputRange,
+          globalIndexOffset,
+          device);
+  }
+
+  template<typename Invocation, typename RangeType, typename DeviceAdapter>
+  VTKM_CONT_EXPORT
+  void InvokeSchedule(const Invocation &invocation,
+                      RangeType range,
+                      RangeType globalIndexOffset,
+                      DeviceAdapter) const
+  {
+    // The WorkletInvokeFunctor class handles the magic of fetching values
+    // for each instance and calling the worklet's function. So just create
+    // a WorkletInvokeFunctor and schedule it with the device adapter.
+    typedef vtkm::exec::internal::WorkletInvokeFunctor<WorkletType,Invocation>
+        WorkletInvokeFunctorType;
+    WorkletInvokeFunctorType workletFunctor =
+        WorkletInvokeFunctorType(this->Worklet, invocation, globalIndexOffset);
+
+    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+
+    Algorithm::Schedule(workletFunctor, range);
+  }
+
+
+  vtkm::Id NumberOfBlocks;
 };
 
 }

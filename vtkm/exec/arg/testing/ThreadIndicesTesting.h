@@ -57,6 +57,9 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetVisitIndex() const { return this->VisitIndex; }
 
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id GetGlobalIndex() const { return this->OutputIndex; }
+
 private:
   vtkm::Id InputIndex;
   vtkm::Id OutputIndex;

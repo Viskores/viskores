@@ -280,6 +280,12 @@ public:
     return this->VisitIndex;
   }
 
+  VTKM_EXEC_EXPORT
+  vtkm::Id GetGlobalIndex() const
+  {
+    return this->OutputIndex;
+  }
+
   /// \brief The input indices of the "from" elements.
   ///
   /// A topology map has "from" and "to" elements (for example from points to

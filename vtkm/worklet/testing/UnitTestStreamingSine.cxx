@@ -34,12 +34,12 @@ class SineWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef _2 ExecutionSignature(_1);
+  typedef _2 ExecutionSignature(_1, WorkIndex);
 
   template<typename T>
   VTKM_EXEC_EXPORT
-  T operator()(T x) const {
-    return vtkm::Sin(x);
+  T operator()(T x, vtkm::Id& index) const {
+    return (index + vtkm::Sin(x));
   }
 };
 }
@@ -55,7 +55,7 @@ void TestStreamingSine()
   for (unsigned int i=0; i<N; i++)
   {
     data[i] = 1.0*i;
-    test[i] = sin(data[i]);
+    test[i] = i + sin(data[i]);
   }
   input = vtkm::cont::make_ArrayHandle(data);
 

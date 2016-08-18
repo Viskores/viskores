@@ -130,7 +130,8 @@ public:
   GetThreadIndices(const T& threadIndex,
                    const OutToInArrayType& outToIn,
                    const VisitArrayType& visit,
-                   const InputDomainType &connectivity) const
+                   const InputDomainType &connectivity,
+                   const T& globalThreadIndexOffset) const
   {
     return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>(
           threadIndex,

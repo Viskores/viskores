@@ -38,8 +38,9 @@ class WorkletInvokeFunctor : public vtkm::exec::FunctorBase
 public:
   VTKM_CONT_EXPORT
   WorkletInvokeFunctor(const WorkletType &worklet,
-                       const InvocationType &invocation)
-    : Worklet(worklet), Invocation(invocation) {  }
+                       const InvocationType &invocation,
+                       const vtkm::Id &globalIndexOffset=0)
+    : Worklet(worklet), Invocation(invocation), GlobalIndexOffset(globalIndexOffset) {  }
 
   VTKM_CONT_EXPORT
   void SetErrorMessageBuffer(
@@ -59,7 +60,8 @@ public:
                                    this->Worklet.GetThreadIndices(index,
                                                                   this->Invocation.OutputToInputMap,
                                                                   this->Invocation.VisitArray,
-                                                                  this->Invocation.GetInputDomain())
+                                                                  this->Invocation.GetInputDomain(),
+                                                                  static_cast<T>(GlobalIndexOffset))
                                    );
   }
 
@@ -71,6 +73,7 @@ private:
   // hold by reference to reduce the number of copies, it is not possible
   // currently.
   const InvocationType Invocation;
+  const vtkm::Id GlobalIndexOffset;
 };
 
 }

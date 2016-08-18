@@ -187,7 +187,8 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
   GetThreadIndices(const T& threadIndex,
                    const OutToInArrayType& outToIn,
                    const VisitArrayType& visit,
-                   const InputDomainType &) const
+                   const InputDomainType &,
+                   const T& globalThreadIndexOffset) const
   {
     return vtkm::exec::arg::ThreadIndicesBasic(threadIndex,
                                                outToIn.Get(threadIndex),
@@ -212,7 +213,8 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
   GetThreadIndices(const T& threadIndex,
                    const OutToInArrayType& outToIn,
                    const VisitArrayType& visit,
-                   const InputDomainType &) const
+                   const InputDomainType &,
+                   const T& globalThreadIndexOffset) const
   {
     return vtkm::exec::arg::ThreadIndicesBasic(threadIndex,
                                                outToIn.Get(threadIndex),

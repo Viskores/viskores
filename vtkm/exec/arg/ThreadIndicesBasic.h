@@ -43,10 +43,12 @@ class ThreadIndicesBasic
 {
 public:
   VTKM_EXEC_EXPORT
-  ThreadIndicesBasic(vtkm::Id threadIndex, vtkm::Id inIndex, vtkm::IdComponent visitIndex)
+  ThreadIndicesBasic(vtkm::Id threadIndex, vtkm::Id inIndex, 
+                     vtkm::IdComponent visitIndex, vtkm::Id globalIndexOffset=0)
     : InputIndex(inIndex),
       OutputIndex(threadIndex),
-      VisitIndex(visitIndex)
+      VisitIndex(visitIndex),
+      GlobalIndexOffset(globalIndexOffset)
   {
   }
 
@@ -90,10 +92,17 @@ public:
   VTKM_EXEC_EXPORT
   vtkm::IdComponent GetVisitIndex() const { return this->VisitIndex; }
 
+  /// \brief The global index (for streaming).
+  ///
+  /// Global index (for streaming)
+  VTKM_EXEC_EXPORT
+  vtkm::Id GetGlobalIndex() const { return (this->GlobalIndexOffset + this->OutputIndex); }
+
 private:
   vtkm::Id InputIndex;
   vtkm::Id OutputIndex;
   vtkm::IdComponent VisitIndex;
+  vtkm::Id GlobalIndexOffset;
 };
 
 }
