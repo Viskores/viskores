@@ -36,6 +36,7 @@ set(headers
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
+  ArrayHandleConcatenate.h
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h

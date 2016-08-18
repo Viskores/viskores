@@ -38,6 +38,7 @@ set(unit_tests
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyUniform.cxx
   UnitTestVertexClustering.cxx
+  UnitTestWaveletCompressor.cxx
  )
 
 vtkm_save_worklet_unit_tests(${unit_tests})

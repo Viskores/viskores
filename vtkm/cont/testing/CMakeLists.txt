@@ -43,6 +43,7 @@ set(unit_tests
   UnitTestArrayHandlePermutation.cxx
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
+  UnitTestArrayHandleConcatenate.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestContTesting.cxx
   UnitTestComputeRangeSerial.cxx
