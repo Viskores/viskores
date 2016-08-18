@@ -24,6 +24,6 @@ if (VTKm_EGL_FOUND)
   set(unit_tests ${unit_tests}
    UnitTestMapperEGL.cxx
    )
+  VTKm_unit_tests(SOURCES ${unit_tests})
 endif()
 
-VTKm_unit_tests(SOURCES ${unit_tests})

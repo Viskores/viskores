@@ -24,6 +24,6 @@ if (VTKm_OSMesa_FOUND)
   set(unit_tests ${unit_tests}
     UnitTestMapperOSMesa.cxx
     )
+VTKm_unit_tests(SOURCES ${unit_tests})
 endif()
 
-VTKm_unit_tests(SOURCES ${unit_tests})
