@@ -36,6 +36,7 @@ set(headers
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
   PointCoordinatesBase.h
+  RuntimeDeviceTracker.h
   SimplePolymorphicContainer.h
   StorageError.h
   )

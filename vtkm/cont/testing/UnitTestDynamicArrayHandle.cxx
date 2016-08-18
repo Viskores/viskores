@@ -179,7 +179,7 @@ void CheckCastToArrayHandle(const ArrayHandleType &array)
 
   vtkm::cont::DynamicArrayHandle dynamicArray = array;
   VTKM_TEST_ASSERT(
-        !dynamicArray.IsArrayHandleType<vtkm::cont::ArrayHandle<std::string> >(),
+        !dynamicArray.IsType<vtkm::cont::ArrayHandle<std::string> >(),
         "Dynamic array reporting is wrong type.");
 
   ArrayHandleType castArray1;

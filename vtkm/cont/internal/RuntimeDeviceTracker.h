@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_filter_internal_RuntimeDeviceTracker_h
-#define vtk_m_filter_internal_RuntimeDeviceTracker_h
+#ifndef vtk_m_cont_internal_RuntimeDeviceTracker_h
+#define vtk_m_cont_internal_RuntimeDeviceTracker_h
 
 #include <vtkm/cont/ErrorControlBadAllocation.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
@@ -31,7 +31,7 @@
 #include <cstring>
 
 namespace vtkm {
-namespace filter {
+namespace cont {
 namespace internal {
 
 /// A class that can be used to determine if a given device adapter
@@ -54,6 +54,7 @@ public:
   /// machine.
   ///
   template<typename DeviceAdapterTag>
+  VTKM_CONT_EXPORT
   bool CanRunOn(DeviceAdapterTag) const
   {
     typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> Traits;
@@ -64,6 +65,7 @@ public:
   ///as being unusable for all future invocations of the instance of the filter.
   ///
   template<typename DeviceAdapterTag>
+  VTKM_CONT_EXPORT
   void ReportAllocationFailure(DeviceAdapterTag,
                                const vtkm::cont::ErrorControlBadAllocation&)
   {
@@ -74,6 +76,7 @@ public:
   ///Reset the tracker to its default state.
   /// Will discard any updates caused by reported failures.
   ///
+  VTKM_CONT_EXPORT
   void Reset()
   {
     std::memset(this->RuntimeValid, 0, sizeof(bool)*8 );
@@ -115,6 +118,6 @@ private:
 
 }
 }
-}  // namespace vtkm::filter::internal
+}  // namespace vtkm::cont::internal
 
 #endif //vtk_m_filter_internal_RuntimeDeviceTracker_h

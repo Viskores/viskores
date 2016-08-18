@@ -43,7 +43,7 @@ public:
   {
   public:
     typedef void ControlSignature(CellSetIn cellset,
-                                  FieldInPoint<Scalar> scalars,
+                                  FieldInPoint<ScalarAll> scalars,
                                   FieldOutCell<BoolType> passFlags);
 
     typedef _3 ExecutionSignature(_2, PointCount);
@@ -106,8 +106,9 @@ public:
   Run(const CellSetType &cellSet,
       const vtkm::cont::Field &field,
       const UnaryPredicate &predicate,
-      DeviceAdapter)
+      DeviceAdapter device)
   {
+    (void) device;
     typedef vtkm::cont::CellSetPermutation< CellSetType > OutputType;
 
     vtkm::cont::ArrayHandle<bool> passFlags;

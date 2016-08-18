@@ -491,4 +491,19 @@ void CheckPortal(const PortalType &portal)
   }
 }
 
+/// Sets all the values in a given array portal to be the values returned
+/// by vtkm::testing::TestValue. The ArrayPortal must be allocated first.
+///
+template<typename PortalType>
+VTKM_CONT_EXPORT
+void SetPortal(const PortalType &portal)
+{
+  typedef typename PortalType::ValueType ValueType;
+
+  for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
+  {
+    portal.Set(index, TestValue(index, ValueType()));
+  }
+}
+
 #endif //vtk_m_testing_Testing_h

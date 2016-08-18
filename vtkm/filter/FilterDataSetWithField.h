@@ -25,10 +25,10 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/internal/RuntimeDeviceTracker.h>
 
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/ResultDataSet.h>
-#include <vtkm/filter/internal/RuntimeDeviceTracker.h>
 
 namespace vtkm {
 namespace filter {
@@ -117,7 +117,7 @@ private:
   std::string OutputFieldName;
   vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
-  vtkm::filter::internal::RuntimeDeviceTracker Tracker;
+  vtkm::cont::internal::RuntimeDeviceTracker Tracker;
 };
 
 }

@@ -43,6 +43,7 @@ set(unit_tests
   UnitTestArrayHandlePermutation.cxx
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
+  UnitTestArrayHandleConcatenate.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestContTesting.cxx
   UnitTestComputeRangeSerial.cxx
@@ -64,6 +65,7 @@ set(unit_tests
   UnitTestStorageImplicit.cxx
   UnitTestStorageListTag.cxx
   UnitTestTimer.cxx
+  UnitTestTryExecute.cxx
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})
