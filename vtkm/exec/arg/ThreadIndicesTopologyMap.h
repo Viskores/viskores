@@ -80,7 +80,8 @@ public:
                            const VisitArrayType& visit,
                            const ConnectivityType& connectivity,
 			   vtkm::Id globalThreadIndexOffset)
-    : Superclass(threadIndex, inToOut.Get(threadIndex), visit.Get(threadIndex)),
+    : Superclass(threadIndex, inToOut.Get(threadIndex), visit.Get(threadIndex),
+      globalThreadIndexOffset),
       CellShape(detail::CellShapeInitializer<CellShapeTag>::GetDefault())
   {
     // The connectivity is stored in the invocation parameter at the given
