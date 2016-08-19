@@ -147,18 +147,12 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  InverseTransformOdd() 
-  {
-    magicNum  = 0.0;
-    filterLen = 0;
-    cALen = 0;
-  }
+  InverseTransformOdd() : filterLen(0), cALen(0), cALen2(0), cALenExtended(0) {}
 
   // Set the filter length
   VTKM_EXEC_CONT_EXPORT
   void SetFilterLength( vtkm::Id len )
   {
-    //VTKM_ASSERT( len % 2 == 1 );
     this->filterLen = len;
   }
 
@@ -166,7 +160,8 @@ public:
   VTKM_EXEC_CONT_EXPORT
   void SetCALength( vtkm::Id len, vtkm::Id lenExt )
   {
-    this->cALen = len;
+    this->cALen         = len;
+    this->cALen2        = len * 2;
     this->cALenExtended = lenExt;
   }
 
@@ -184,39 +179,38 @@ public:
                   OutputPortalType            &sigOut,
                   const vtkm::Id &workIndex) const
   {
-    vtkm::Id xi;    // coeff indices
-    vtkm::Id k;     // filter indices
-
-    if( workIndex < 2*cALen )   // valid calculation region
+    if( workIndex < cALen2 )   // valid calculation region
     {
+      vtkm::Id xi;         // coeff indices
+      vtkm::Id k1, k2;     // indices for low and high filter
       VAL sum = 0.0;    
 
-      xi = (workIndex+1) / 2;
       if( workIndex % 2 != 0 )
-        k = this->filterLen - 2;
-      else
-        k = this->filterLen - 1;
-      while( k >= 0 )
       {
-        sum += lowFilter.Get(k) * MAKEVAL( coeffs.Get(xi) );
-        xi++;
-        k -= 2;
+        k1 = this->filterLen - 2;
+        k2 = this->filterLen - 1;
+      }
+      else
+      {
+        k1 = this->filterLen - 1;
+        k2 = this->filterLen - 2;
+      }
+
+      xi = (workIndex+1) / 2;
+      while( k1 > -1 )  // k1 >= 0
+      {
+        sum += lowFilter.Get(k1) * MAKEVAL( coeffs.Get(xi++) );
+        k1 -= 2;
       }
 
       xi = workIndex / 2;
-      if( workIndex % 2 != 0 )
-        k = this->filterLen - 1;
-      else
-        k = this->filterLen - 2;
-      while( k >= 0 )
+      while( k2 > -1 )  // k2 >= 0
       {
-        sum += highFilter.Get(k) * MAKEVAL( coeffs.Get( xi + this->cALenExtended ) );
-        xi++;
-        k -= 2;
+        sum += highFilter.Get(k2) * MAKEVAL( coeffs.Get( this->cALenExtended + xi++ ) );
+        k2 -= 2;
       }
     
-      sigOut.Set(workIndex, 
-                 static_cast<typename OutputPortalType::ValueType>( sum ) );
+      sigOut.Set(workIndex, static_cast<typename OutputPortalType::ValueType>( sum ) );
     }
 
   }
@@ -225,12 +219,95 @@ public:
   #undef VAL
 
 private:
-  vtkm::Float64 magicNum;
   vtkm::Id filterLen;       // filter length.
   vtkm::Id cALen;           // Number of actual cAs 
-  vtkm::Id cALenExtended;   // Number of extended cA at the beginning of input array
+  vtkm::Id cALen2;          //  = cALen * 2
+  vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
   
-};    // class ForwardTransform
+};    // class InverseTransformOdd
+
+
+// Worklet: perform an inverse transform for even length, symmetric filters.
+class InverseTransformEven: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // Input: coeffs,
+                                                             // cA followed by cD
+                                WholeArrayIn<Scalar>,        // lowFilter
+                                WholeArrayIn<Scalar>,        // highFilter
+                                WholeArrayOut<ScalarAll>);   // output
+  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  InverseTransformEven( vtkm::Id filtL, vtkm::Id cAL, vtkm::Id cALExt, bool m ) : 
+                        filterLen(filtL), cALen(cAL), cALenExtended(cALExt), matlab(m)
+  { 
+    this->cALen2 = cALen * 2;
+  }
+
+  // Use 64-bit float for convolution calculation
+  #define VAL        vtkm::Float64
+  #define MAKEVAL(a) (static_cast<VAL>(a))
+
+  template <typename InputPortalType,
+            typename FilterPortalType,
+            typename OutputPortalType>
+  VTKM_EXEC_EXPORT
+  void operator()(const InputPortalType       &coeffs,
+                  const FilterPortalType      &lowFilter,
+                  const FilterPortalType      &highFilter,
+                  OutputPortalType            &sigOut,
+                  const vtkm::Id &workIndex) const
+  {
+    if( workIndex < cALen2 )   // valid calculation region
+    {
+      vtkm::Id xi;         // coeff indices
+      vtkm::Id k;          // indices for low and high filter
+      VAL sum = 0.0;    
+
+      if( matlab || (filterLen/2) % 2 != 0 )  // odd length half filter
+      {
+        xi = workIndex / 2;
+        if( workIndex % 2 != 0 )
+          k = filterLen - 1;
+        else
+          k = filterLen - 2;
+      }
+      else
+      {
+        xi = (workIndex + 1) / 2;
+        if( workIndex % 2 != 0 )
+          k = filterLen - 2;
+        else
+          k = filterLen - 1;
+      }
+
+      while( k > -1 )   // k >= 0
+      {
+        sum += lowFilter.Get(k)  * MAKEVAL( coeffs.Get( xi ) ) +               // cA
+               highFilter.Get(k) * MAKEVAL( coeffs.Get( xi + cALenExtended) ); // cD
+        xi++;
+        k -= 2;
+      }
+
+      sigOut.Set(workIndex, static_cast<typename OutputPortalType::ValueType>( sum ) );
+    }
+
+  }
+
+  #undef MAKEVAL
+  #undef VAL
+
+private:
+  vtkm::Id filterLen;       // filter length.
+  vtkm::Id cALen;           // Number of actual cAs 
+  vtkm::Id cALen2;          //  = cALen * 2
+  vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD 
+  bool     matlab;          // followed the naming convention from VAPOR
+  
+};    // class InverseTransformEven
 
 
 // Worklet:
@@ -371,7 +448,7 @@ private:
 };
 
 
-// Worklet:
+// Worklets for signal extension no. 1
 class LeftSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -401,7 +478,7 @@ private:
 };
 
 
-// Worklet:
+// Worklets for signal extension no. 2
 class LeftSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -431,7 +508,61 @@ private:
 };
 
 
-// Worklet:
+// Worklets for signal extension no. 3
+class LeftASYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  LeftASYMHExtentionWorklet( vtkm::Id len ) : addLen (len) {}
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    portalOut.Set( workIndex, portalIn.Get( addLen - workIndex - 1) * (-1.0) );
+  }
+
+private:
+  vtkm::Id addLen;
+};
+
+
+// Worklets for signal extension no. 4
+class LeftASYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  LeftASYMWExtentionWorklet( vtkm::Id len ) : addLen (len) {}
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    portalOut.Set( workIndex, portalIn.Get( addLen - workIndex ) * (-1.0) );
+  }
+
+private:
+  vtkm::Id addLen;
+};
+
+
+// Worklets for signal extension no. 5
 class RightSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -461,7 +592,7 @@ private:
 };
 
 
-// Worklet:
+// Worklets for signal extension no. 6
 class RightSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -491,7 +622,60 @@ private:
 };
 
 
-// Worklet:
+// Worklets for signal extension no. 7
+class RightASYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  RightASYMHExtentionWorklet ( vtkm::Id sigInl ) : sigInLen( sigInl ) {}
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    portalOut.Set( workIndex, portalIn.Get( sigInLen - workIndex - 1) * (-1.0) );
+  }
+
+private:
+  vtkm::Id sigInLen;
+};
+
+
+// Worklets for signal extension no. 8
+class RightASYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  RightASYMWExtentionWorklet ( vtkm::Id sigInl ) : sigInLen( sigInl ) {}
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    portalOut.Set( workIndex, portalIn.Get( sigInLen - workIndex - 2) * (-1.0) );
+  }
+
+private:
+  vtkm::Id sigInLen;
+};
+
+
 class AssignZeroWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
