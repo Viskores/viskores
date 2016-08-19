@@ -58,19 +58,20 @@ set(osmesa_headers
   )
 
 #-----------------------------------------------------------------------------
-vtkm_configure_component_OpenGL()
-if(VTKm_OpenGL_FOUND)
+find_package(MESA ${VTKm_FIND_PACKAGE_QUIETLY})
+if(OSMESA_FOUND)
+set(headers ${headers} ${osmesa_headers})
+endif()
+
+find_package(OpenGL ${VTKm_FIND_PACKAGE_QUIETLY})
+if(OPENGL_FOUND)
   set(headers ${headers} ${opengl_headers})
 
-  vtkm_configure_component_OSMesa()
-  if(VTKm_OSMesa_FOUND)
-    set(headers ${headers} ${osmesa_headers})
-  endif()
 
-  vtkm_configure_component_EGL()
-  if(VTKm_EGL_FOUND)
-    set(headers ${headers} ${egl_headers})
-  endif()
+  find_package(EGL ${VTKm_FIND_PACKAGE_QUIETLY})
+  if(EGL_FOUND)
+   set(headers ${headers} ${egl_headers})
+ endif()
 endif()
 
 vtkm_declare_headers(${headers})

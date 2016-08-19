@@ -18,13 +18,11 @@
 ##  this software.
 ##============================================================================
 
-add_subdirectory(osmesa)
-add_subdirectory(egl)
-
-set(unit_tests
-  UnitTestMapperRayTracer.cxx
-  UnitTestMapperVolume.cxx
-)
-
-VTKm_unit_tests(SOURCES ${unit_tests})
+vtkm_configure_component_EGL()
+if (VTKm_EGL_FOUND)
+  set(unit_tests ${unit_tests}
+   UnitTestMapperEGL.cxx
+   )
+  VTKm_unit_tests(SOURCES ${unit_tests})
+endif()
 
