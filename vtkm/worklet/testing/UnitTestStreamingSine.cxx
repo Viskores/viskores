@@ -67,14 +67,15 @@ void TestStreamingSine()
   dispatcher.Invoke(input, output);
 
   std::cout << "Output size: " << output.GetNumberOfValues() << std::endl;
-  for (vtkm::UInt32 i = 0; i < output.GetNumberOfValues(); ++i)
+  for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
   {
     std::cout << input.GetPortalConstControl().Get(i) << " " 
               << output.GetPortalConstControl().Get(i) << " "
-              << test[i] << std::endl;
+              << test[static_cast<vtkm::UInt32>(i)] << std::endl;
     VTKM_TEST_ASSERT(
-         test_equal(output.GetPortalConstControl().Get(i), test[i], 0.01f), 
-                    "Wrong result for streaming sine worklet");
+         test_equal(output.GetPortalConstControl().Get(i), 
+                    test[static_cast<vtkm::UInt32>(i)], 0.01f), 
+         "Wrong result for streaming sine worklet");
   }
 
 }
