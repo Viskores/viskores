@@ -39,7 +39,7 @@ public:
   template<typename T>
   VTKM_EXEC_EXPORT
   T operator()(T x, vtkm::Id& index) const {
-    return (index + vtkm::Sin(x));
+    return (static_cast<T>(index) + vtkm::Sin(x));
   }
 };
 }
@@ -49,13 +49,13 @@ void TestStreamingSine()
 {
   std::cout << "Testing Streaming Sine" << std::endl;
 
-  const int N = 25;  const int NBlocks = 4;
+  const vtkm::Id N = 25;  const vtkm::Id NBlocks = 4;
   vtkm::cont::ArrayHandle<vtkm::Float32> input, output;
-  std::vector<float> data(N), test(N);
-  for (unsigned int i=0; i<N; i++)
+  std::vector<vtkm::Float32> data(N), test(N);
+  for (vtkm::UInt32 i=0; i<N; i++)
   {
-    data[i] = 1.0*i;
-    test[i] = i + sin(data[i]);
+    data[i] = static_cast<vtkm::Float32>(i);
+    test[i] = static_cast<vtkm::Float32>(i) + static_cast<vtkm::Float32>(vtkm::Sin(data[i]));
   }
   input = vtkm::cont::make_ArrayHandle(data);
 
@@ -67,7 +67,7 @@ void TestStreamingSine()
   dispatcher.Invoke(input, output);
 
   std::cout << "Output size: " << output.GetNumberOfValues() << std::endl;
-  for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
+  for (vtkm::UInt32 i = 0; i < output.GetNumberOfValues(); ++i)
   {
     std::cout << input.GetPortalConstControl().Get(i) << " " 
               << output.GetPortalConstControl().Get(i) << " "

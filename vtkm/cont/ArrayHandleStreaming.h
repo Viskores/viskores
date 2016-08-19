@@ -108,8 +108,8 @@ public:
 
 private:
   PortalType InputPortal;
-  vtkm::Id BlockSize;
   vtkm::Id BlockIndex;
+  vtkm::Id BlockSize;
   vtkm::Id CurBlockSize;
 };
 
@@ -167,6 +167,7 @@ public:
 
   VTKM_CONT_EXPORT
   void Allocate(vtkm::Id numberOfValues) const {
+    (void)numberOfValues;
     // Do nothing, since we only allocate a streaming array once at the beginning
   }
 
@@ -196,10 +197,10 @@ public:
 
 private:
   ArrayHandleInputType InputArray;
-  bool Valid;
   vtkm::Id BlockSize;
   vtkm::Id BlockIndex;
   vtkm::Id CurBlockSize;
+  bool Valid;
 };
 
 }

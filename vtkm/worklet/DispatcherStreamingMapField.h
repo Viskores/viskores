@@ -23,6 +23,7 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/internal/DispatcherBase.h>
+#include <vtkm/cont/ArrayHandleStreaming.h>
 
 namespace vtkm {
 namespace worklet {
