@@ -18,7 +18,6 @@
 ##  this software.
 ##============================================================================
 
-set(unit_tests)
 vtkm_configure_component_EGL()
 if (VTKm_EGL_FOUND)
   set(unit_tests ${unit_tests}
