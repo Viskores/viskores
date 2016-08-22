@@ -126,26 +126,25 @@ public:
   }
 
   // perform a device copy. The whole 1st array to a certain start location of the 2nd array
-  template< typename ArrayType1, typename ArrayType2 >
-  VTKM_EXEC_EXPORT
+  template< typename ArrayType1, typename ArrayType2, typename DeviceTag >
   void DeviceCopyStartX( const ArrayType1   &srcArray, 
                                ArrayType2   &dstArray,
-                               vtkm::Id     startIdx)
+                               vtkm::Id     startIdx,
+                               DeviceTag                )
   {
       typedef vtkm::worklet::wavelets::CopyWorklet CopyType;
       CopyType cp( startIdx );
-      vtkm::worklet::DispatcherMapField< CopyType > dispatcher( cp  );
+      vtkm::worklet::DispatcherMapField< CopyType, DeviceTag > dispatcher( cp  );
       dispatcher.Invoke( srcArray, dstArray );
   }
 
   // Assign zero value to a certain location of an array
-  template< typename ArrayType >
-  VTKM_EXEC_EXPORT 
-  void DeviceAssignZero( ArrayType &array, vtkm::Id index )
+  template< typename ArrayType, typename DeviceTag >
+  void DeviceAssignZero( ArrayType &array, vtkm::Id index, DeviceTag )
   {
     typedef vtkm::worklet::wavelets::AssignZeroWorklet ZeroWorklet;
     ZeroWorklet worklet( index );
-    vtkm::worklet::DispatcherMapField< ZeroWorklet > dispatcher( worklet );
+    vtkm::worklet::DispatcherMapField< ZeroWorklet, DeviceTag > dispatcher( worklet );
     dispatcher.Invoke( array );
   }
 
@@ -160,7 +159,6 @@ public:
     } 
   }; 
   template< typename ArrayType, typename DeviceTag >
-  VTKM_EXEC_EXPORT
   void DeviceSort( ArrayType &array, DeviceTag )
   {
     vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Sort
@@ -169,7 +167,6 @@ public:
   
   // Reduce to the sum of all values on device
   template< typename ArrayType, typename DeviceTag >
-  VTKM_EXEC_EXPORT
   typename ArrayType::ValueType DeviceSum( const ArrayType &array, DeviceTag )
   {
     return vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Reduce
@@ -190,11 +187,10 @@ public:
     template< typename FieldType >
     VTKM_EXEC_EXPORT
     FieldType operator()(const FieldType& x, const FieldType& y) const {
-      return Max(x, y);
+      return vtkm::Max(x, y);
     }
   };
   template< typename ArrayType, typename DeviceTag >
-  VTKM_EXEC_EXPORT
   typename ArrayType::ValueType DeviceMax( const ArrayType &array, DeviceTag )
   {
     typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
@@ -202,7 +198,6 @@ public:
               ( array, initVal, maxFunctor() );
   }
   template< typename ArrayType, typename DeviceTag >
-  VTKM_EXEC_EXPORT
   typename ArrayType::ValueType DeviceMin( const ArrayType &array, DeviceTag )
   {
     typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
@@ -216,11 +211,10 @@ public:
     template< typename FieldType >
     VTKM_EXEC_EXPORT
     FieldType operator()(const FieldType& x, const FieldType& y) const {
-      return Max( vtkm::Abs(x), vtkm::Abs(y) );
+      return vtkm::Max( vtkm::Abs(x), vtkm::Abs(y) );
     }
   };
   template< typename ArrayType, typename DeviceTag >
-  VTKM_EXEC_EXPORT
   typename ArrayType::ValueType DeviceMaxAbs( const ArrayType &array, DeviceTag )
   {
     typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
@@ -240,7 +234,7 @@ public:
     // Use a worklet
     typedef vtkm::worklet::wavelets::SquaredDeviation SDWorklet;
     SDWorklet sdw( mean );
-    vtkm::worklet::DispatcherMapField< SDWorklet > dispatcher( sdw  );
+    vtkm::worklet::DispatcherMapField< SDWorklet, DeviceTag > dispatcher( sdw  );
     dispatcher.Invoke( array, squaredDeviation );
 
     vtkm::Float64 sdMean = this->DeviceSum( squaredDeviation, DeviceTag() ) / 
@@ -250,21 +244,22 @@ public:
   }
 
   // Transpose a matrix in an array
-  template< typename InputArrayType, typename OutputArrayType >
+  template< typename InputArrayType, typename OutputArrayType, typename DeviceTag >
   void DeviceTranspose( const InputArrayType    &inputArray,
                              OutputArrayType   &outputArray,
                                     vtkm::Id   inputX,
-                                    vtkm::Id   inputY )
+                                    vtkm::Id   inputY,
+                                   DeviceTag            )
   {
     // use a worklet
     typedef vtkm::worklet::wavelets::TransposeWorklet TransposeType;
     TransposeType tw ( inputX, inputY );
-    vtkm::worklet::DispatcherMapField< TransposeType > dispatcher( tw );
+    vtkm::worklet::DispatcherMapField< TransposeType, DeviceTag > dispatcher( tw );
     dispatcher.Invoke( inputArray, outputArray );
   }
 
   // Copy a small rectangle to a big rectangle
-  template< typename SmallArrayType, typename BigArrayType>
+  template< typename SmallArrayType, typename BigArrayType, typename DeviceTag>
   void DeviceRectangleCopyTo( const SmallArrayType    &smallRect,
                                     vtkm::Id          smallX,
                                     vtkm::Id          smallY,
@@ -272,16 +267,17 @@ public:
                                     vtkm::Id          bigX,
                                     vtkm::Id          bigY,
                                     vtkm::Id          startX,
-                                    vtkm::Id          startY )
+                                    vtkm::Id          startY,
+                                    DeviceTag                  )
   {
     typedef vtkm::worklet::wavelets::RectangleCopyTo  CopyToWorklet;
     CopyToWorklet cp( smallX, smallY, bigX, bigY, startX, startY );
-    vtkm::worklet::DispatcherMapField< CopyToWorklet > dispatcher( cp  );
+    vtkm::worklet::DispatcherMapField< CopyToWorklet, DeviceTag > dispatcher( cp  );
     dispatcher.Invoke(smallRect, bigRect);
   }
 
   // Fill a small rectangle from a portion of a big rectangle
-  template< typename SmallArrayType, typename BigArrayType>
+  template< typename SmallArrayType, typename BigArrayType, typename DeviceTag >
   void DeviceRectangleCopyFrom(       SmallArrayType    &smallRect,
                                       vtkm::Id          smallX,
                                       vtkm::Id          smallY,
@@ -289,12 +285,13 @@ public:
                                       vtkm::Id          bigX,
                                       vtkm::Id          bigY,
                                       vtkm::Id          startX,
-                                      vtkm::Id          startY )
+                                      vtkm::Id          startY,
+                                      DeviceTag                      )
   {
-    smallRect.Allocate( smallX * smallY );
+    smallRect.PrepareForOutput( smallX*smallY, DeviceTag() );
     typedef vtkm::worklet::wavelets::RectangleCopyFrom  CopyFromWorklet;
     CopyFromWorklet cpFrom( smallX, smallY, bigX, bigY, startX, startY );
-    vtkm::worklet::DispatcherMapField< CopyFromWorklet > dispatcherFrom( cpFrom );
+    vtkm::worklet::DispatcherMapField< CopyFromWorklet, DeviceTag > dispatcherFrom( cpFrom );
     dispatcherFrom.Invoke( smallRect, bigRect );
   }
 

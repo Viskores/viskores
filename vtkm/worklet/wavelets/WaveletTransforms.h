@@ -862,7 +862,7 @@ public:
 private:
   vtkm::Id smallXLen,    smallYLen;
   vtkm::Id bigXLen,      bigYLen;
-  vtkm::Id bigXStart, bigYStart;
+  vtkm::Id bigXStart,    bigYStart;
 };
 
 }     // namespace wavelets

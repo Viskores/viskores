@@ -46,15 +46,15 @@ public:
 
 
   // Func: Extend 1D signal
-  template< typename SigInArrayType, typename SigExtendedArrayType >
-  VTKM_CONT_EXPORT
+  template< typename SigInArrayType, typename SigExtendedArrayType, typename DeviceTag >
   vtkm::Id Extend1D( const SigInArrayType                     &sigIn,   // Input
                      SigExtendedArrayType                     &sigOut,  // Output
                      vtkm::Id                                 addLen,
                      vtkm::worklet::wavelets::DWTMode         leftExtMethod,
                      vtkm::worklet::wavelets::DWTMode         rightExtMethod, 
                      bool                                     attachZeroRightLeft, 
-                     bool                                     attachZeroRightRight )
+                     bool                                     attachZeroRightRight,
+                     DeviceTag                                                     )
   { 
     // "right extension" can be attached a zero on either end, but not both ends.
     VTKM_ASSERT( !attachZeroRightRight || !attachZeroRightLeft );
@@ -63,7 +63,8 @@ public:
     typedef vtkm::cont::ArrayHandle< ValueType >    ExtensionArrayType;
 
     ExtensionArrayType                              leftExtend;
-    leftExtend.Allocate( addLen );
+    //leftExtend.Allocate( addLen );
+    leftExtend.PrepareForOutput( addLen, DeviceTag() );
 
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
 
@@ -81,28 +82,28 @@ public:
       case SYMH:
       {
           LeftSYMH worklet( addLen );
-          vtkm::worklet::DispatcherMapField< LeftSYMH > dispatcher( worklet );
+          vtkm::worklet::DispatcherMapField< LeftSYMH, DeviceTag > dispatcher( worklet );
           dispatcher.Invoke( leftExtend, sigIn );
           break;
       }
       case SYMW:
       {
           LeftSYMW worklet( addLen );
-          vtkm::worklet::DispatcherMapField< LeftSYMW > dispatcher( worklet );
+          vtkm::worklet::DispatcherMapField< LeftSYMW, DeviceTag > dispatcher( worklet );
           dispatcher.Invoke( leftExtend, sigIn );
           break;
       }
       case ASYMH:
       {
           LeftASYMH worklet( addLen );
-          vtkm::worklet::DispatcherMapField< LeftASYMH > dispatcher( worklet );
+          vtkm::worklet::DispatcherMapField< LeftASYMH, DeviceTag > dispatcher( worklet );
           dispatcher.Invoke( leftExtend, sigIn );
           break;
       }
       case ASYMW:
       {
           LeftASYMW worklet( addLen );
-          vtkm::worklet::DispatcherMapField< LeftASYMW > dispatcher( worklet );
+          vtkm::worklet::DispatcherMapField< LeftASYMW, DeviceTag > dispatcher( worklet );
           dispatcher.Invoke( leftExtend, sigIn );
           break;
       }
@@ -119,37 +120,39 @@ public:
     {
       // Allocate memory
       if( attachZeroRightRight )
-        rightExtend.Allocate( addLen + 1 );
+        rightExtend.PrepareForOutput( addLen+1, DeviceTag() );
+        //rightExtend.Allocate( addLen + 1 );
       else                  
-        rightExtend.Allocate( addLen );
+        rightExtend.PrepareForOutput( addLen, DeviceTag() );
+        //rightExtend.Allocate( addLen );
 
       switch( rightExtMethod )
       {
         case SYMH:
         {
             RightSYMH worklet( sigInLen );
-            vtkm::worklet::DispatcherMapField< RightSYMH > dispatcher( worklet );
+            vtkm::worklet::DispatcherMapField< RightSYMH, DeviceTag > dispatcher( worklet );
             dispatcher.Invoke( rightExtend, sigIn );
             break;
         }
         case SYMW:
         {
             RightSYMW worklet( sigInLen );
-            vtkm::worklet::DispatcherMapField< RightSYMW > dispatcher( worklet );
+            vtkm::worklet::DispatcherMapField< RightSYMW, DeviceTag > dispatcher( worklet );
             dispatcher.Invoke( rightExtend, sigIn );
             break;
         }
         case ASYMH:
         {
             RightASYMH worklet( sigInLen );
-            vtkm::worklet::DispatcherMapField< RightASYMH > dispatcher( worklet );
+            vtkm::worklet::DispatcherMapField< RightASYMH, DeviceTag > dispatcher( worklet );
             dispatcher.Invoke( rightExtend, sigIn );
             break;
         }
         case ASYMW:
         {
             RightASYMW worklet( sigInLen );
-            vtkm::worklet::DispatcherMapField< RightASYMW > dispatcher( worklet );
+            vtkm::worklet::DispatcherMapField< RightASYMW, DeviceTag > dispatcher( worklet );
             dispatcher.Invoke( rightExtend, sigIn );
             break;
         }
@@ -160,7 +163,7 @@ public:
         }
       }
       if( attachZeroRightRight )
-        WaveletBase::DeviceAssignZero( rightExtend, addLen );
+        WaveletBase::DeviceAssignZero( rightExtend, addLen, DeviceTag() );
     }
     else    // attachZeroRightLeft mode
     {
@@ -168,40 +171,42 @@ public:
                                                       ConcatArray;
       // attach a zero at the end of sigIn
       ExtensionArrayType      singleValArray;
-      singleValArray.Allocate(1);
-      WaveletBase::DeviceAssignZero( singleValArray, 0 );
+      //singleValArray.Allocate(1);
+      singleValArray.PrepareForOutput(1, DeviceTag() );
+      WaveletBase::DeviceAssignZero( singleValArray, 0, DeviceTag() );
       ConcatArray             sigInPlusOne( sigIn, singleValArray );
 
       // allocate memory for extension
-      rightExtend.Allocate( addLen );
+      rightExtend.PrepareForOutput( addLen, DeviceTag() );
+      //rightExtend.Allocate( addLen );
 
       switch( rightExtMethod )
       {
         case SYMH:
         {
             RightSYMH worklet( sigInLen + 1 );
-            vtkm::worklet::DispatcherMapField< RightSYMH > dispatcher( worklet );
+            vtkm::worklet::DispatcherMapField< RightSYMH, DeviceTag > dispatcher( worklet );
             dispatcher.Invoke( rightExtend, sigInPlusOne );
             break;
         }
         case SYMW:
         {
             RightSYMW worklet( sigInLen + 1 );
-            vtkm::worklet::DispatcherMapField< RightSYMW > dispatcher( worklet );
+            vtkm::worklet::DispatcherMapField< RightSYMW, DeviceTag > dispatcher( worklet );
             dispatcher.Invoke( rightExtend, sigInPlusOne );
             break;
         }
         case ASYMH:
         {
             RightASYMH worklet( sigInLen + 1 );
-            vtkm::worklet::DispatcherMapField< RightASYMH > dispatcher( worklet );
+            vtkm::worklet::DispatcherMapField< RightASYMH, DeviceTag > dispatcher( worklet );
             dispatcher.Invoke( rightExtend, sigInPlusOne );
             break;
         }
         case ASYMW:
         {
             RightASYMW worklet( sigInLen + 1 );
-            vtkm::worklet::DispatcherMapField< RightASYMW > dispatcher( worklet );
+            vtkm::worklet::DispatcherMapField< RightASYMW, DeviceTag > dispatcher( worklet );
             dispatcher.Invoke( rightExtend, sigInPlusOne );
             break;
         }
@@ -214,9 +219,10 @@ public:
 
       // make a copy of rightExtend with a zero attached to the left
       ExtensionArrayType rightExtendPlusOne;
-      rightExtendPlusOne.Allocate( addLen + 1 );
-      WaveletBase::DeviceCopyStartX( rightExtend, rightExtendPlusOne, 1 );
-      WaveletBase::DeviceAssignZero( rightExtendPlusOne, 0 );
+      rightExtendPlusOne.PrepareForOutput( addLen + 1, DeviceTag() );
+      //rightExtendPlusOne.Allocate( addLen + 1 );
+      WaveletBase::DeviceCopyStartX( rightExtend, rightExtendPlusOne, 1, DeviceTag() );
+      WaveletBase::DeviceAssignZero( rightExtendPlusOne, 0, DeviceTag() );
       rightExtend = rightExtendPlusOne ;
     }
 
@@ -232,11 +238,11 @@ public:
   // Func:
   // Performs one level of 1D discrete wavelet transform 
   // It takes care of boundary conditions, etc.
-  template< typename SignalArrayType, typename CoeffArrayType>
-  VTKM_CONT_EXPORT
+  template< typename SignalArrayType, typename CoeffArrayType, typename DeviceTag>
   vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
                   CoeffArrayType        &coeffOut,  // Output: cA followed by cD
-                  std::vector<vtkm::Id> &L )        // Output: how many cA and cD.
+                  std::vector<vtkm::Id> &L,         // Output: how many cA and cD.
+                  DeviceTag                       )
   {
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if( GetWaveletMaxLevel( sigInLen ) < 1 )
@@ -290,8 +296,8 @@ public:
 
     ConcatType2 sigInExtended;
 
-    this->Extend1D( sigIn, sigInExtended, addLen, 
-                    WaveletBase::wmode, WaveletBase::wmode, false, false ); 
+    this->Extend1D( sigIn, sigInExtended, addLen, WaveletBase::wmode, 
+                    WaveletBase::wmode, false, false, DeviceTag() ); 
     VTKM_ASSERT( sigInExtended.GetNumberOfValues() == sigExtendedLen );
 
     // initialize a worklet for forward transform
@@ -300,8 +306,9 @@ public:
     forwardTransform.SetCoeffLength( L[0], L[1] );
     forwardTransform.SetOddness( oddLow, oddHigh );
 
-    coeffOut.Allocate( sigInExtended.GetNumberOfValues() );
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform> 
+    coeffOut.PrepareForOutput( sigExtendedLen, DeviceTag() );
+    //coeffOut.Allocate( sigInExtended.GetNumberOfValues() );
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform, DeviceTag> 
         dispatcher(forwardTransform);
     dispatcher.Invoke( sigInExtended, 
                        WaveletBase::filter.GetLowDecomposeFilter(),
@@ -318,11 +325,11 @@ public:
   // Func: 
   // Performs one level of inverse wavelet transform
   // It takes care of boundary conditions, etc.
-  template< typename CoeffArrayType, typename SignalArrayType>
-  VTKM_CONT_EXPORT
+  template< typename CoeffArrayType, typename SignalArrayType, typename DeviceTag >
   vtkm::Id IDWT1D( const CoeffArrayType  &coeffIn,     // Input, cA followed by cD
                    std::vector<vtkm::Id> &L,           // Input, how many cA and cD
-                   SignalArrayType       &sigOut )     // Output
+                   SignalArrayType       &sigOut,      // Output
+                   DeviceTag                     )
   {
     VTKM_ASSERT( L.size() == 3 );
     VTKM_ASSERT( L[2] == coeffIn.GetNumberOfValues() );
@@ -407,24 +414,24 @@ public:
     if( doSymConv )   // Actually extend cA and cD
     {
       // first extend cA to be cATemp
-      this->Extend1D( cA, cATemp, addLen, cALeftMode, cARightMode, false, false );
+      this->Extend1D( cA, cATemp, addLen, cALeftMode, cARightMode, false, false, DeviceTag() );
 
       // Then extend cD based on extension needs
       if( cDPadLen > 0 )  
       {
         // Add back the missing final cD, 0.0, before doing extension
-        this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, true, false );
+        this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, true, false, DeviceTag() );
       }
       else
       {
         vtkm::Id cDTempLenWouldBe = L[1] + 2 * addLen;
         if( cDTempLenWouldBe ==  cDTempLen )
         { 
-          this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, false);
+          this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, false, DeviceTag());
         }
         else if( cDTempLenWouldBe ==  cDTempLen - 1 )
         { 
-          this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, true );
+          this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, true , DeviceTag());
         }
         else
         {
@@ -437,7 +444,8 @@ public:
     { 
       // make cATemp
       ExtensionArrayType dummyArray;
-      dummyArray.Allocate(0);
+      dummyArray.PrepareForOutput(0, DeviceTag() );
+      //dummyArray.Allocate(0);
       Concat1 cALeftOn( dummyArray, cA );
       cATemp = vtkm::cont::make_ArrayHandleConcatenate< Concat1, ExtensionArrayType >
                ( cALeftOn, dummyArray );
@@ -455,14 +463,15 @@ public:
     vtkm::cont::ArrayHandleConcatenate< Concat2, Concat2>
         coeffInExtended( cATemp, cDTemp );
     // Allocate memory for sigOut
-    sigOut.Allocate( cATempLen + cDTempLen );
+    sigOut.PrepareForOutput( cATempLen + cDTempLen, DeviceTag() );
+    //sigOut.Allocate( cATempLen + cDTempLen );
 
     if( filterLen % 2 != 0 )
     {
       vtkm::worklet::wavelets::InverseTransformOdd inverseXformOdd;
       inverseXformOdd.SetFilterLength( filterLen );
       inverseXformOdd.SetCALength( L[0], cATempLen );
-      vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformOdd>
+      vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformOdd, DeviceTag>
             dispatcher( inverseXformOdd );
       dispatcher.Invoke( coeffInExtended,
                          WaveletBase::filter.GetLowReconstructFilter(),
@@ -473,7 +482,7 @@ public:
     {
       vtkm::worklet::wavelets::InverseTransformEven inverseXformEven
             ( filterLen, L[0], cATempLen, !doSymConv );
-      vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformEven>
+      vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformEven, DeviceTag>
             dispatcher( inverseXformEven );
       dispatcher.Invoke( coeffInExtended,
                          WaveletBase::filter.GetLowReconstructFilter(),
@@ -484,7 +493,6 @@ public:
     sigOut.Shrink( L[2] );
 
     return 0;
-
   }   // function IDWT1D
   
 
@@ -510,13 +518,13 @@ public:
   //      |__________|__________|
   //         L[2]       L[6]
   //
-  template< typename InputArrayType, typename OutputArrayType>
-  VTKM_CONT_EXPORT
+  template< typename InputArrayType, typename OutputArrayType, typename DeviceTag >
   vtkm::Id DWT2D( const InputArrayType    &sigIn,     // Input array
                   vtkm::Id                inXLen,     // Input X length
                   vtkm::Id                inYLen,     // Input Y length
                   OutputArrayType         &coeffOut,  // Output coeff array
-                  std::vector<vtkm::Id>   &L )        // Output coeff layout
+                  std::vector<vtkm::Id>   &L,         // Output coeff layout
+                  DeviceTag                         )
   {
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     VTKM_ASSERT( sigInLen == inXLen * inYLen );
@@ -544,7 +552,8 @@ public:
     //    Note: DWT1D decides (L[0] + L[4] == inXLen) at line 158
     //          so safe to assume resulting coeffs have the same length
     BasicArrayType afterXBuf;
-    afterXBuf.Allocate( sigInLen );
+    afterXBuf.PrepareForOutput( sigInLen, DeviceTag() );
+    //afterXBuf.Allocate( sigInLen );
     for(vtkm::Id y = 0; y < inYLen; y++ )
     {
       // make input, output array
@@ -553,14 +562,15 @@ public:
       BasicArrayType          output;
     
       // 1D DWT on a row
-      this->DWT1D( row, output, xL );
+      this->DWT1D( row, output, xL, DeviceTag() );
       // copy coeffs to buffer
-      WaveletBase::DeviceCopyStartX( output, afterXBuf, y * inXLen );
+      WaveletBase::DeviceCopyStartX( output, afterXBuf, y * inXLen, DeviceTag() );
     }
 
     // Transform columns
     BasicArrayType afterYBuf;
-    afterYBuf.Allocate( sigInLen );
+    afterYBuf.PrepareForOutput( sigInLen, DeviceTag() );
+    //afterYBuf.Allocate( sigInLen );
     for( vtkm::Id x = 0; x < inXLen; x++ )
     {
       // make input, output array
@@ -569,25 +579,27 @@ public:
       BasicArrayType          output;
 
       // 1D DWT on a row
-      this->DWT1D( column, output, xL );
+      this->DWT1D( column, output, xL, DeviceTag() );
       // copy coeffs to buffer. afterYBuf is column major order.
-      WaveletBase::DeviceCopyStartX( output, afterYBuf, inYLen*x );
+      WaveletBase::DeviceCopyStartX( output, afterYBuf, inYLen*x, DeviceTag() );
     }
 
     // Transpose afterYBuf to output
-    coeffOut.Allocate( sigInLen );
-    WaveletBase::DeviceTranspose( afterYBuf, coeffOut, inYLen, inXLen );
+    coeffOut.PrepareForOutput( sigInLen, DeviceTag() );
+    //coeffOut.Allocate( sigInLen );
+    WaveletBase::DeviceTranspose( afterYBuf, coeffOut, inYLen, inXLen, DeviceTag() );
     //coeffOut = afterYBuf;
 
     return 0;
   }
 
+
   // Perform 1 level inverse wavelet transform
-  template< typename InputArrayType, typename OutputArrayType>
-  VTKM_CONT_EXPORT
+  template< typename InputArrayType, typename OutputArrayType, typename DeviceTag >
   vtkm::Id IDWT2D( const InputArrayType    &sigIn,     // Input: array
                    std::vector<vtkm::Id>   &L,         // Input: coeff layout
-                   OutputArrayType         &sigOut)    // Output coeff array
+                   OutputArrayType         &sigOut,    // Output coeff array
+                   DeviceTag                         )
   {
     VTKM_ASSERT( L.size() == 10 );
     vtkm::Id inXLen = L[0] + L[4];   
@@ -608,7 +620,8 @@ public:
 
     // First IDWT on columns
     BasicArrayType afterYBuf;
-    afterYBuf.Allocate( sigLen );    
+    afterYBuf.PrepareForOutput( sigLen, DeviceTag() );    
+    //afterYBuf.Allocate( sigLen );    
     // make a bookkeeping array
     xL[0] = L[1];
     xL[1] = L[3];
@@ -622,13 +635,14 @@ public:
       BasicArrayType          output;
 
       // perform inverse DWT on a logical column
-      this->IDWT1D( input, xL, output);
+      this->IDWT1D( input, xL, output, DeviceTag() );
       // copy results to a buffer
-      WaveletBase::DeviceCopyStartX( output, afterYBuf, x * inYLen );
+      WaveletBase::DeviceCopyStartX( output, afterYBuf, x * inYLen, DeviceTag() );
     }
 
     // Second IDWT on rows
-    sigOut.Allocate( sigLen );
+    sigOut.PrepareForOutput( sigLen, DeviceTag() );
+    //sigOut.Allocate( sigLen );
     // make a bookkeeping array
     xL[0] = L[0];
     xL[1] = L[4];
@@ -641,9 +655,9 @@ public:
       BasicArrayType        output;
 
       // perform inverse DWT on a logical row
-      this->IDWT1D( input, xL, output);
+      this->IDWT1D( input, xL, output, DeviceTag() );
       // copy results to a buffer
-      WaveletBase::DeviceCopyStartX( output, sigOut, y * inXLen );
+      WaveletBase::DeviceCopyStartX( output, sigOut, y * inXLen, DeviceTag() );
     }
 
     return 0;

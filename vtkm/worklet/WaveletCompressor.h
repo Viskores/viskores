@@ -94,10 +94,10 @@ public:
       // make output array 
       InterArrayType    output;
 
-      WaveletDWT::DWT1D( input, output, L1d );
+      WaveletDWT::DWT1D( input, output, L1d, DeviceTag() );
 
       // move intermediate results to final array
-      WaveletBase::DeviceCopyStartX( output, coeffOut, cptr );
+      WaveletBase::DeviceCopyStartX( output, coeffOut, cptr, DeviceTag() );
 
       // update pseudo pointers
       len = cALen;
@@ -147,11 +147,11 @@ public:
       // Make an output array
       OutArrayBasic output;
       
-      WaveletDWT::IDWT1D( input, L1d, output );
+      WaveletDWT::IDWT1D( input, L1d, output, DeviceTag() );
       VTKM_ASSERT( output.GetNumberOfValues() == L1d[2] );
 
       // Move output to intermediate array
-      WaveletBase::DeviceCopyStartX( output, sigOut, 0 );
+      WaveletBase::DeviceCopyStartX( output, sigOut, 0, DeviceTag() );
 
       L1d[0] = L1d[2];
       L1d[1] = L[ size_t(i+1) ];
@@ -203,15 +203,15 @@ public:
       // make temporary input array
       OutBasicArray tempInput;
       WaveletBase::DeviceRectangleCopyFrom( tempInput, currentLenX, currentLenY,
-                                            coeffOut,  inX, inY, 0, 0 );
+                                            coeffOut,  inX, inY, 0, 0, DeviceTag() );
       //make temporary output array
       OutBasicArray tempOutput;
 
-      WaveletDWT::DWT2D( tempInput, currentLenX, currentLenY, tempOutput, L2d );
+      WaveletDWT::DWT2D( tempInput, currentLenX, currentLenY, tempOutput, L2d, DeviceTag());
 
       // copy results to coeffOut
       WaveletBase::DeviceRectangleCopyTo( tempOutput, currentLenX, currentLenY,
-                                          coeffOut, inX, inY, 0, 0 );
+                                          coeffOut, inX, inY, 0, 0, DeviceTag() );
 
       // update currentLen
       currentLenX = WaveletBase::GetApproxLength( currentLenX );
@@ -269,14 +269,14 @@ public:
       // make input, output array
       OutBasicArray tempInput, tempOutput;
       WaveletBase::DeviceRectangleCopyFrom( tempInput, L2d[8], L2d[9],
-                                            arrOut,  inX, inY, 0, 0 );
+                                            arrOut,  inX, inY, 0, 0, DeviceTag() );
 
       // IDWT
-      WaveletDWT::IDWT2D( tempInput, L2d, tempOutput);
+      WaveletDWT::IDWT2D( tempInput, L2d, tempOutput, DeviceTag() );
 
       // copy back reconstructed block
       WaveletBase::DeviceRectangleCopyTo( tempOutput, L2d[8], L2d[9],
-                                          arrOut, inX, inY, 0, 0 );
+                                          arrOut, inX, inY, 0, 0, DeviceTag() );
     
       // update L2d array
       L2d[0] =  L2d[8];

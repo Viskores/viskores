@@ -47,7 +47,7 @@ void DebugDWTIDWT1D()
   // Forward Transform
   vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF8_4;
   vtkm::worklet::wavelets::WaveletDWT waveletdwt( wname );
-  waveletdwt.DWT1D( inputArray, coeffOut, L );
+  waveletdwt.DWT1D( inputArray, coeffOut, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
   std::cout << "Forward Wavelet Transform: result coeff length = " << 
       coeffOut.GetNumberOfValues() << std::endl;
@@ -63,7 +63,7 @@ void DebugDWTIDWT1D()
 
   // Inverse Transform
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
-  waveletdwt.IDWT1D( coeffOut, L, reconstructArray );
+  waveletdwt.IDWT1D( coeffOut, L, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   std::cout << "Inverse Wavelet Transform: result signal length = " << 
       reconstructArray.GetNumberOfValues() << std::endl;
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
@@ -171,6 +171,7 @@ void TestDecomposeReconstruct2D()
   vtkm::Id XMaxLevel = compressor.GetWaveletMaxLevel( sigX );
   vtkm::Id YMaxLevel = compressor.GetWaveletMaxLevel( sigY );
   vtkm::Id nLevels   = vtkm::Min( XMaxLevel, YMaxLevel );
+  nLevels = 1;
   std::vector<vtkm::Id> L;
 
   // Decompose
@@ -199,7 +200,6 @@ void TestDecomposeReconstruct2D()
   }
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Verification time      = " << elapsedTime << std::endl;
-
 }
 
 
