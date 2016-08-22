@@ -93,8 +93,10 @@ void DebugRectangleCopy()
   // make bookkeeping array
   std::vector<vtkm::Id> L; 
   
-  vtkm::worklet::WaveletCompressor wavelet( "CDF5/3" );
-  wavelet.WaveDecompose2D( inputArray, 2, sigX, sigY, outputArray, L );
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF5_3;
+  vtkm::worklet::WaveletCompressor wavelet( wname );
+  wavelet.WaveDecompose2D( inputArray, 2, sigX, sigY, outputArray, L, 
+                           VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
   for( vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); i++ )
   {
@@ -124,8 +126,10 @@ void DebugDWTIDWT2D()
   vtkm::Id nlevels = 2;
 
   // Forward Transform
-  vtkm::worklet::WaveletCompressor wavelet( "CDF9/7" );
-  wavelet.WaveDecompose2D( inputArray, nlevels, sigX, sigY, coeffOut, L );
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  vtkm::worklet::WaveletCompressor wavelet( wname );
+  wavelet.WaveDecompose2D( inputArray, nlevels, sigX, sigY, coeffOut, L,
+                           VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
 /*
   for( vtkm::Id i = 0; i < coeffOut.GetNumberOfValues(); i++ )
@@ -140,7 +144,8 @@ void DebugDWTIDWT2D()
 
   // Inverse Transform
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
-  wavelet.WaveReconstruct2D( coeffOut, nlevels, sigX, sigY, reconstructArray, L );
+  wavelet.WaveReconstruct2D( coeffOut, nlevels, sigX, sigY, reconstructArray, L,
+                             VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
     std::cout << reconstructArray.GetPortalConstControl().Get(i) << "  ";

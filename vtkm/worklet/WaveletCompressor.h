@@ -56,7 +56,6 @@ public:
     }
     if( nLevels == 0 )  //  0 levels means no transform
     {
-      //WaveletBase::DeviceCopy( sigIn, coeffOut, DeviceTag );
       vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( sigIn, coeffOut );
       return 0;
     }
@@ -163,14 +162,15 @@ public:
 
 
   // Multi-level 2D wavelet decomposition
-  template< typename InArrayType, typename OutArrayType>
+  template< typename InArrayType, typename OutArrayType, typename DeviceTag>
   VTKM_CONT_EXPORT
   vtkm::Id WaveDecompose2D( const InArrayType           &sigIn,   // Input
                                   vtkm::Id              nLevels,  // n levels of DWT
                                   vtkm::Id              inX,      // Input X dim
                                   vtkm::Id              inY,      // Input Y dim
                                   OutArrayType          &coeffOut,
-                                  std::vector<vtkm::Id> &L)
+                                  std::vector<vtkm::Id> &L,
+                                  DeviceTag                       )
   {
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     VTKM_ASSERT( inX * inY == sigInLen );
@@ -181,7 +181,7 @@ public:
     }
     if( nLevels == 0 )  //  0 levels means no transform
     {
-      WaveletBase::DeviceCopy( sigIn, coeffOut );
+      vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( sigIn, coeffOut );
       return 0;
     }
 
@@ -193,7 +193,7 @@ public:
     vtkm::Id currentLenY     = inY;
     std::vector<vtkm::Id> L2d(10, 0);
 
-    WaveletBase::DeviceCopy( sigIn, coeffOut );
+    vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( sigIn, coeffOut );
 
     typedef typename OutArrayType::ValueType          OutValueType;
     typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
@@ -223,14 +223,15 @@ public:
 
 
   // Multi-level 2D wavelet reconstruction
-  template< typename InArrayType, typename OutArrayType>
+  template< typename InArrayType, typename OutArrayType, typename DeviceTag>
   VTKM_CONT_EXPORT
   vtkm::Id WaveReconstruct2D( const InArrayType           &arrIn,   // Input
                                     vtkm::Id              nLevels,  // n levels of DWT
                                     vtkm::Id              inX,      // Input X dim
                                     vtkm::Id              inY,      // Input Y dim
                                     OutArrayType          &arrOut,
-                                    std::vector<vtkm::Id> &L)
+                                    std::vector<vtkm::Id> &L,
+                                    DeviceTag                       )
   {
     vtkm::Id arrInLen = arrIn.GetNumberOfValues();
     VTKM_ASSERT( inX * inY == arrInLen );
@@ -240,7 +241,7 @@ public:
       throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
     }
     // fill the output array
-    WaveletBase::DeviceCopy( arrIn, arrOut );
+    vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( arrIn, arrOut );
     if( nLevels == 0 )  //  0 levels means no transform
     {
       return 0;
@@ -296,7 +297,7 @@ public:
   template< typename CoeffArrayType, typename DeviceTag >
   vtkm::Id SquashCoefficients( CoeffArrayType   &coeffIn,
                                vtkm::Float64    ratio,
-                                   DeviceTag            )
+                               DeviceTag                )
   {
     if( ratio > 1 )
     {
