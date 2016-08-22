@@ -78,8 +78,7 @@ public:
       }
     }
 
-    return static_cast<vtkm::Id>( vtkm::Floor(
-           static_cast<vtkm::Float64>(sigInLen + filterLen - 1) / 2.0 ) );
+    return ((sigInLen + filterLen - 1) / 2);
   }
 
   // Returns length of detail coefficients from a decompostition pass

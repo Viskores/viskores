@@ -108,7 +108,8 @@ void DebugRectangleCopy()
   std::cout << std::endl;
 }
 
-void DebugDWTIDWT2D()
+
+void DebugDecomposeReconstruct2D()
 {
   vtkm::Id sigX = 20;
   vtkm::Id sigY = 20;  
@@ -126,21 +127,11 @@ void DebugDWTIDWT2D()
   vtkm::Id nlevels = 2;
 
   // Forward Transform
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF8_4;
   vtkm::worklet::WaveletCompressor wavelet( wname );
   wavelet.WaveDecompose2D( inputArray, nlevels, sigX, sigY, coeffOut, L,
                            VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
-/*
-  for( vtkm::Id i = 0; i < coeffOut.GetNumberOfValues(); i++ )
-  {
-    std::cout << std::setw( 10 );
-    std::cout << coeffOut.GetPortalConstControl().Get(i) << "\t";
-    if( i % sigX == sigX-1 )   
-      std::cout << std::endl;
-  }
-  std::cout << std::endl;
-*/ 
 
   // Inverse Transform
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
@@ -155,73 +146,45 @@ void DebugDWTIDWT2D()
 }
 
 
-void DebugWaveDecomposeReconstruct()
+void TestDecomposeReconstruct2D()
 {
-  vtkm::Id sigLen = 20;
-  std::cout << "Testing Wavelets Worklet" << std::endl;
-  std::cout << "Default test size is 20. " << std::endl;
-  std::cout << "Input a new size to test." << std::endl;
-  std::cout << "Input 0 to stick with 20." << std::endl;
-  vtkm::Id tmpIn;
-  std::cin >> tmpIn;
-  if( tmpIn != 0 )
-    sigLen = tmpIn;
+  std::cout << "Testing wavelet compressor on 1000x2000 rectangle" << std::endl;
+  vtkm::Id sigX = 1000;
+  vtkm::Id sigY = 2000;  
+  vtkm::Id sigLen = sigX * sigY;
 
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
   for( vtkm::Id i = 0; i < sigLen; i++ )
-    tmpVector.push_back( static_cast<vtkm::Float64>(i) );
-    //tmpVector.push_back( 100.0 * vtkm::Sin(static_cast<vtkm::Float64>(i)/100.0 ));
+  {
+    tmpVector.push_back( 100.0 * vtkm::Sin(static_cast<vtkm::Float64>(i)/100.0 ));
+  }
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
     vtkm::cont::make_ArrayHandle(tmpVector);
 
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
 
   // Use a WaveletCompressor
-  vtkm::Id nLevels = 2;
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF8_4;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
   vtkm::worklet::WaveletCompressor compressor( wname );
 
-  // User input of decompose levels
-  vtkm::Id maxLevel = compressor.GetWaveletMaxLevel( sigLen );
-  std::cout << "Input how many wavelet transform levels to perform, between 1 and "
-            << maxLevel << std::endl;
-  vtkm::Id levTemp;
-  std::cin >> levTemp;
-  if( levTemp > 0 && levTemp <= maxLevel )
-    nLevels = levTemp;
-  else
-  {
-    std::cerr << "not valid levels of transforms" << std::endl;
-    exit(1);
-  }
-  std::cout << "Input a compression ratio ( >=1 )to test. "
-            << "1 means no compression. " << std::endl;
-  vtkm::Float64 cratio;
-  std::cin >> cratio;
-  VTKM_ASSERT ( cratio >= 1 );
-
+  vtkm::Id XMaxLevel = compressor.GetWaveletMaxLevel( sigX );
+  vtkm::Id YMaxLevel = compressor.GetWaveletMaxLevel( sigY );
+  vtkm::Id nLevels   = vtkm::Min( XMaxLevel, YMaxLevel );
   std::vector<vtkm::Id> L;
 
   // Decompose
   vtkm::cont::Timer<> timer;
-  compressor.WaveDecompose( inputArray, nLevels, outputArray, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-
+  compressor.WaveDecompose2D( inputArray, nLevels, sigX, sigY, outputArray, L, 
+                              VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
   std::cout << "Decompose time         = " << elapsedTime << std::endl;
-  
-  // Squash small coefficients
-  timer.Reset();
-  compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime = timer.GetElapsedTime();  
-  std::cout << "Thresholding time      = " << elapsedTime << std::endl;
-  
-
 
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
   timer.Reset();
-  compressor.WaveReconstruct( outputArray, nLevels, L, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  compressor.WaveReconstruct2D( outputArray, nLevels, sigX, sigY, reconstructArray, L,
+                                VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Reconstruction time    = " << elapsedTime << std::endl;
 
@@ -240,8 +203,7 @@ void DebugWaveDecomposeReconstruct()
 }
 
 
-VTKM_CONT_EXPORT
-void TestWaveDecomposeReconstruct()
+void TestDecomposeReconstruct()
 {
   std::cout << "Testing WaveletCompressor on a 2 million sized array " << std::endl;
   vtkm::Id million = 1000000;
@@ -299,10 +261,10 @@ void TestWaveDecomposeReconstruct()
 void TestWaveletCompressor()
 {
   //DebugDWTIDWT1D();
-  //DebugWaveDecomposeReconstruct();
-  DebugDWTIDWT2D();
   //DebugRectangleCopy();
-  //TestWaveDecomposeReconstruct();
+  //DebugDecomposeReconstruct2D();
+  //TestDecomposeReconstruct();
+  TestDecomposeReconstruct2D();
 }
 
 int UnitTestWaveletCompressor(int, char *[])
