@@ -165,7 +165,7 @@ void TestDecomposeReconstruct2D()
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
 
   // Use a WaveletCompressor
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF8_4;
   vtkm::worklet::WaveletCompressor compressor( wname );
 
   vtkm::Id XMaxLevel = compressor.GetWaveletMaxLevel( sigX );

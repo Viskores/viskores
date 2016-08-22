@@ -63,7 +63,6 @@ public:
     typedef vtkm::cont::ArrayHandle< ValueType >    ExtensionArrayType;
 
     ExtensionArrayType                              leftExtend;
-    //leftExtend.Allocate( addLen );
     leftExtend.PrepareForOutput( addLen, DeviceTag() );
 
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
@@ -121,10 +120,8 @@ public:
       // Allocate memory
       if( attachZeroRightRight )
         rightExtend.PrepareForOutput( addLen+1, DeviceTag() );
-        //rightExtend.Allocate( addLen + 1 );
       else                  
         rightExtend.PrepareForOutput( addLen, DeviceTag() );
-        //rightExtend.Allocate( addLen );
 
       switch( rightExtMethod )
       {
@@ -171,14 +168,12 @@ public:
                                                       ConcatArray;
       // attach a zero at the end of sigIn
       ExtensionArrayType      singleValArray;
-      //singleValArray.Allocate(1);
       singleValArray.PrepareForOutput(1, DeviceTag() );
       WaveletBase::DeviceAssignZero( singleValArray, 0, DeviceTag() );
       ConcatArray             sigInPlusOne( sigIn, singleValArray );
 
       // allocate memory for extension
       rightExtend.PrepareForOutput( addLen, DeviceTag() );
-      //rightExtend.Allocate( addLen );
 
       switch( rightExtMethod )
       {
@@ -220,7 +215,6 @@ public:
       // make a copy of rightExtend with a zero attached to the left
       ExtensionArrayType rightExtendPlusOne;
       rightExtendPlusOne.PrepareForOutput( addLen + 1, DeviceTag() );
-      //rightExtendPlusOne.Allocate( addLen + 1 );
       WaveletBase::DeviceCopyStartX( rightExtend, rightExtendPlusOne, 1, DeviceTag() );
       WaveletBase::DeviceAssignZero( rightExtendPlusOne, 0, DeviceTag() );
       rightExtend = rightExtendPlusOne ;
@@ -287,7 +281,6 @@ public:
 
     typedef typename SignalArrayType::ValueType             SigInValueType;
     typedef vtkm::cont::ArrayHandle<SigInValueType>         SigInBasic;
-    //SigInBasic sigInExtended;
 
     typedef vtkm::cont::ArrayHandleConcatenate< SigInBasic, SignalArrayType >
             ConcatType1;
@@ -307,7 +300,6 @@ public:
     forwardTransform.SetOddness( oddLow, oddHigh );
 
     coeffOut.PrepareForOutput( sigExtendedLen, DeviceTag() );
-    //coeffOut.Allocate( sigInExtended.GetNumberOfValues() );
     vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform, DeviceTag> 
         dispatcher(forwardTransform);
     dispatcher.Invoke( sigInExtended, 
@@ -445,7 +437,6 @@ public:
       // make cATemp
       ExtensionArrayType dummyArray;
       dummyArray.PrepareForOutput(0, DeviceTag() );
-      //dummyArray.Allocate(0);
       Concat1 cALeftOn( dummyArray, cA );
       cATemp = vtkm::cont::make_ArrayHandleConcatenate< Concat1, ExtensionArrayType >
                ( cALeftOn, dummyArray );
@@ -464,7 +455,6 @@ public:
         coeffInExtended( cATemp, cDTemp );
     // Allocate memory for sigOut
     sigOut.PrepareForOutput( cATempLen + cDTempLen, DeviceTag() );
-    //sigOut.Allocate( cATempLen + cDTempLen );
 
     if( filterLen % 2 != 0 )
     {
@@ -553,7 +543,6 @@ public:
     //          so safe to assume resulting coeffs have the same length
     BasicArrayType afterXBuf;
     afterXBuf.PrepareForOutput( sigInLen, DeviceTag() );
-    //afterXBuf.Allocate( sigInLen );
     for(vtkm::Id y = 0; y < inYLen; y++ )
     {
       // make input, output array
@@ -570,7 +559,6 @@ public:
     // Transform columns
     BasicArrayType afterYBuf;
     afterYBuf.PrepareForOutput( sigInLen, DeviceTag() );
-    //afterYBuf.Allocate( sigInLen );
     for( vtkm::Id x = 0; x < inXLen; x++ )
     {
       // make input, output array
@@ -586,7 +574,6 @@ public:
 
     // Transpose afterYBuf to output
     coeffOut.PrepareForOutput( sigInLen, DeviceTag() );
-    //coeffOut.Allocate( sigInLen );
     WaveletBase::DeviceTranspose( afterYBuf, coeffOut, inYLen, inXLen, DeviceTag() );
     //coeffOut = afterYBuf;
 
@@ -621,7 +608,7 @@ public:
     // First IDWT on columns
     BasicArrayType afterYBuf;
     afterYBuf.PrepareForOutput( sigLen, DeviceTag() );    
-    //afterYBuf.Allocate( sigLen );    
+
     // make a bookkeeping array
     xL[0] = L[1];
     xL[1] = L[3];
@@ -642,7 +629,7 @@ public:
 
     // Second IDWT on rows
     sigOut.PrepareForOutput( sigLen, DeviceTag() );
-    //sigOut.Allocate( sigLen );
+
     // make a bookkeeping array
     xL[0] = L[0];
     xL[1] = L[4];

@@ -92,6 +92,7 @@ public:
       this->verbatim_copy( vtkm::worklet::wavelets::h1+4,  lowReconstructFilter,  filterLength );
       this->qmf_even( vtkm::worklet::wavelets::hm1_11,     highReconstructFilter, filterLength );
     }
+    this->MakeArrayHandles();
   }
 
   // destructor
@@ -109,21 +110,22 @@ public:
   bool     isSymmetric()        { return symmetricity; }
 
   typedef vtkm::cont::ArrayHandle<vtkm::Float64> FilterType;
-  FilterType GetLowDecomposeFilter() const
+
+  const FilterType& GetLowDecomposeFilter() const
   {
-    return vtkm::cont::make_ArrayHandle( lowDecomposeFilter, filterLength );
+    return lowDecomType;
   }
-  FilterType GetHighDecomposeFilter() const
+  const FilterType& GetHighDecomposeFilter() const
   {
-    return vtkm::cont::make_ArrayHandle( highDecomposeFilter, filterLength );
+    return highDecomType;
   }
-  FilterType GetLowReconstructFilter() const
+  const FilterType& GetLowReconstructFilter() const
   {
-    return vtkm::cont::make_ArrayHandle( lowReconstructFilter, filterLength);
+    return lowReconType;
   }
-  FilterType GetHighReconstructFilter() const
+  const FilterType& GetHighReconstructFilter() const
   {
-    return vtkm::cont::make_ArrayHandle( highReconstructFilter, filterLength );
+    return highReconType;
   }
 
 private:
@@ -133,6 +135,10 @@ private:
   vtkm::Float64*    highDecomposeFilter;
   vtkm::Float64*    lowReconstructFilter;
   vtkm::Float64*    highReconstructFilter;
+  FilterType        lowDecomType;
+  FilterType        highDecomType;
+  FilterType        lowReconType;
+  FilterType        highReconType;
 
   void AllocateFilterMemory()
   {
@@ -140,6 +146,14 @@ private:
     highDecomposeFilter   = lowDecomposeFilter    + filterLength;
     lowReconstructFilter  = highDecomposeFilter   + filterLength;
     highReconstructFilter = lowReconstructFilter  + filterLength;
+  }
+
+  void MakeArrayHandles()
+  {
+    lowDecomType    = vtkm::cont::make_ArrayHandle( lowDecomposeFilter, filterLength );
+    highDecomType   = vtkm::cont::make_ArrayHandle( highDecomposeFilter, filterLength );
+    lowReconType    = vtkm::cont::make_ArrayHandle( lowReconstructFilter, filterLength);
+    highReconType   = vtkm::cont::make_ArrayHandle( highReconstructFilter, filterLength );
   }
 
   // Flipping operation; helper function to initialize a filter.
