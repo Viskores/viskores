@@ -21,6 +21,7 @@
 set(unit_tests
   UnitTestFieldMetadata.cxx
   UnitTestCellAverageFilter.cxx
+  UnitTestClipFilter.cxx
   UnitTestExternalFacesFilter.cxx
   UnitTestHistogramFilter.cxx
   UnitTestMarchingCubesFilter.cxx
