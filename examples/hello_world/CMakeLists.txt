@@ -20,13 +20,19 @@
 ##
 ##=============================================================================
 
-find_package(GLUT)
+#Find the VTK-m package
+find_package(VTKm QUIET REQUIRED COMPONENTS Base)
 
-vtkm_configure_component_OpenGL()
-vtkm_configure_component_Interop()
+#configure the backend components
 vtkm_configure_component_Serial()
 vtkm_configure_component_CUDA()
 vtkm_configure_component_TBB()
+
+#configure the rendering / interop components
+vtkm_configure_component_OpenGL()
+vtkm_configure_component_Interop()
+
+find_package(GLUT)
 
 if(VTKm_Interop_FOUND AND VTKm_OpenGL_FOUND AND GLUT_FOUND)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR})

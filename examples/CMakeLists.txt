@@ -19,8 +19,9 @@
 ##  this software.
 ##
 ##=============================================================================
-#specify that all examples should be quiet in the detection of components
-set(VTKm_CONFIGURE_QUIET TRUE)
+#add the directory that contains the VTK-m config file to the cmake
+#path so that our examples can find VTK-m
+set(CMAKE_PREFIX_PATH ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR})
 
 add_subdirectory(clipping)
 add_subdirectory(demo)

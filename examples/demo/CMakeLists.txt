@@ -19,7 +19,18 @@
 ##  this software.
 ##
 ##=============================================================================
+
+#Find the VTK-m package
+find_package(VTKm QUIET REQUIRED COMPONENTS Base)
+
+#configure the backend components
+vtkm_configure_component_Serial()
+vtkm_configure_component_CUDA()
+vtkm_configure_component_TBB()
+
+#configure the OSMesa component
 vtkm_configure_component_OSMESA()
+
 if(VTKm_OSMesa_FOUND)
 
   if(VTKm_CUDA_FOUND)
@@ -30,8 +41,17 @@ if(VTKm_OSMesa_FOUND)
     add_executable(Demo Demo.cxx)
   endif()
 
+
+  #need to setup the default device adapter.
   target_include_directories(Demo PRIVATE ${VTKm_INCLUDE_DIRS})
   target_link_libraries(Demo ${VTKm_LIBRARIES})
   target_compile_options(Demo PRIVATE ${VTKm_COMPILE_OPTIONS})
+
+  #when we are using TBB pass in the default device adapter as
+  #a compile definition to make sure we build with TBB selected
+  if(VTKm_TBB_FOUND)
+    target_compile_definitions( TARGET Demo
+        PRIVATGE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
+  endif()
 
 endif()

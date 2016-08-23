@@ -20,8 +20,10 @@
 ##
 ##=============================================================================
 
-find_package(GLUT)
+#Find the VTK-m package
+find_package(VTKm QUIET REQUIRED COMPONENTS Base)
 
+#configure the backend components
 vtkm_configure_component_Serial()
 vtkm_configure_component_CUDA()
 vtkm_configure_component_TBB()

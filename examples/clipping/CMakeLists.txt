@@ -19,6 +19,8 @@
 ##  this software.
 ##
 ##=============================================================================
+#Find the VTK-m package
+find_package(VTKm QUIET REQUIRED COMPONENTS Base)
 
 vtkm_configure_component_Serial()
 vtkm_configure_component_CUDA()
