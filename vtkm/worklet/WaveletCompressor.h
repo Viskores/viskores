@@ -80,7 +80,6 @@ public:
     typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, CoeffArrayType > 
               PermutArrayType;
 
-    //WaveletBase::DeviceCopy( sigIn, coeffOut );
     vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( sigIn, coeffOut );
 
     for( vtkm::Id i = nLevels; i > 0; i-- )
@@ -133,7 +132,6 @@ public:
     typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, SignalArrayType > 
                   PermutArrayType;
 
-    //WaveletBase::DeviceCopy( coeffIn, sigOut );
     vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( coeffIn, sigOut );
 
     for( vtkm::Id i = 1; i <= nLevels; i++ )
@@ -305,16 +303,19 @@ public:
       typedef typename CoeffArrayType::ValueType ValueType;
       typedef vtkm::cont::ArrayHandle< ValueType > CoeffArrayBasic;
       CoeffArrayBasic sortedArray;
-      //WaveletBase::DeviceCopy( coeffIn, sortedArray );
       vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( coeffIn, sortedArray );
       WaveletBase::DeviceSort( sortedArray, DeviceTag() );
       
       vtkm::Id n = coeffLen - 
                    static_cast<vtkm::Id>( static_cast<vtkm::Float64>(coeffLen)/ratio );
+      vtkm::Float64 nthVal = static_cast<vtkm::Float64>
+                               (sortedArray.GetPortalConstControl().Get(n));
+      if( nthVal < 0.0 )
+        nthVal *= -1.0;
       typedef vtkm::worklet::wavelets::ThresholdWorklet ThresholdType;
-      ThresholdType tw( n );
-      vtkm::worklet::DispatcherMapField< ThresholdType > dispatcher( tw  );
-      dispatcher.Invoke( coeffIn, sortedArray );
+      ThresholdType tw( nthVal );
+      vtkm::worklet::DispatcherMapField< ThresholdType, DeviceTag > dispatcher( tw );
+      dispatcher.Invoke( coeffIn );
     } 
 
     return 0;
