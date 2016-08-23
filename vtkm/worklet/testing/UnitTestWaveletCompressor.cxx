@@ -164,19 +164,21 @@ void TestDecomposeReconstruct2D()
   vtkm::Id XMaxLevel = compressor.GetWaveletMaxLevel( sigX );
   vtkm::Id YMaxLevel = compressor.GetWaveletMaxLevel( sigY );
   vtkm::Id nLevels   = vtkm::Min( XMaxLevel, YMaxLevel );
-  nLevels = 1;
+  //nLevels = 1;
   std::vector<vtkm::Id> L;
 
   // Decompose
   vtkm::cont::Timer<> timer;
+  vtkm::Float64 computationTime = 
   compressor.WaveDecompose2D( inputArray, nLevels, sigX, sigY, outputArray, L, 
                               VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
   std::cout << "Decompose time         = " << elapsedTime << std::endl;
+  std::cout << "  ->computation time   = " << computationTime << std::endl;
 
   // Squash small coefficients
   timer.Reset();
-  vtkm::Float64 cratio = 10.0;
+  vtkm::Float64 cratio = 1.0;
   compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Squash time            = " << elapsedTime << std::endl;
@@ -184,10 +186,12 @@ void TestDecomposeReconstruct2D()
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
   timer.Reset();
+  computationTime = 
   compressor.WaveReconstruct2D( outputArray, nLevels, sigX, sigY, reconstructArray, L,
                                 VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Reconstruction time    = " << elapsedTime << std::endl;
+  std::cout << "  ->computation time   = " << computationTime << std::endl;
 
   compressor.EvaluateReconstruction( inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 

@@ -44,6 +44,7 @@ public:
   // Constructor
   WaveletDWT( WaveletName name ) : WaveletBase( name ) {} 
 
+  typedef vtkm::Float64 FLOAT_64;
 
   // Func: Extend 1D signal
   template< typename SigInArrayType, typename SigExtendedArrayType, typename DeviceTag >
@@ -233,7 +234,7 @@ public:
   // Performs one level of 1D discrete wavelet transform 
   // It takes care of boundary conditions, etc.
   template< typename SignalArrayType, typename CoeffArrayType, typename DeviceTag>
-  vtkm::Id DWT1D( const SignalArrayType &sigIn,     // Input
+  FLOAT_64 DWT1D( const SignalArrayType &sigIn,     // Input
                   CoeffArrayType        &coeffOut,  // Output: cA followed by cD
                   std::vector<vtkm::Id> &L,         // Output: how many cA and cD.
                   DeviceTag                       )
@@ -302,23 +303,26 @@ public:
     coeffOut.PrepareForOutput( sigExtendedLen, DeviceTag() );
     vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform, DeviceTag> 
         dispatcher(forwardTransform);
+    // put a timer
+    vtkm::cont::Timer<> timer;
     dispatcher.Invoke( sigInExtended, 
                        WaveletBase::filter.GetLowDecomposeFilter(),
                        WaveletBase::filter.GetHighDecomposeFilter(),
                        coeffOut );
+    vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
 
     VTKM_ASSERT( L[0] + L[1] <= coeffOut.GetNumberOfValues() );
     coeffOut.Shrink( L[0] + L[1] );
     
-    return 0;  
-  } // Function DWT1D
+    return elapsedTime;  
+  } 
     
 
   // Func: 
   // Performs one level of inverse wavelet transform
   // It takes care of boundary conditions, etc.
   template< typename CoeffArrayType, typename SignalArrayType, typename DeviceTag >
-  vtkm::Id IDWT1D( const CoeffArrayType  &coeffIn,     // Input, cA followed by cD
+  FLOAT_64 IDWT1D( const CoeffArrayType  &coeffIn,     // Input, cA followed by cD
                    std::vector<vtkm::Id> &L,           // Input, how many cA and cD
                    SignalArrayType       &sigOut,      // Output
                    DeviceTag                     )
@@ -456,6 +460,7 @@ public:
     // Allocate memory for sigOut
     sigOut.PrepareForOutput( cATempLen + cDTempLen, DeviceTag() );
 
+    vtkm::Float64 elapsedTime; 
     if( filterLen % 2 != 0 )
     {
       vtkm::worklet::wavelets::InverseTransformOdd inverseXformOdd;
@@ -463,10 +468,13 @@ public:
       inverseXformOdd.SetCALength( L[0], cATempLen );
       vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformOdd, DeviceTag>
             dispatcher( inverseXformOdd );
+      // use a timer
+      vtkm::cont::Timer<> timer;
       dispatcher.Invoke( coeffInExtended,
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
                          sigOut );
+      elapsedTime = timer.GetElapsedTime();
     }
     else
     {
@@ -474,16 +482,19 @@ public:
             ( filterLen, L[0], cATempLen, !doSymConv );
       vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformEven, DeviceTag>
             dispatcher( inverseXformEven );
+      // use a timer
+      vtkm::cont::Timer<> timer;
       dispatcher.Invoke( coeffInExtended,
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
                          sigOut );
+      elapsedTime = timer.GetElapsedTime();
     }
 
     sigOut.Shrink( L[2] );
 
-    return 0;
-  }   // function IDWT1D
+    return elapsedTime;
+  }   
   
 
   // Func:
@@ -509,7 +520,7 @@ public:
   //         L[2]       L[6]
   //
   template< typename InputArrayType, typename OutputArrayType, typename DeviceTag >
-  vtkm::Id DWT2D( const InputArrayType    &sigIn,     // Input array
+  FLOAT_64 DWT2D( const InputArrayType    &sigIn,     // Input array
                   vtkm::Id                inXLen,     // Input X length
                   vtkm::Id                inYLen,     // Input Y length
                   OutputArrayType         &coeffOut,  // Output coeff array
@@ -543,6 +554,8 @@ public:
     //          so safe to assume resulting coeffs have the same length
     BasicArrayType afterXBuf;
     afterXBuf.PrepareForOutput( sigInLen, DeviceTag() );
+
+    vtkm::Float64 elapsedTime = 0.0;
     for(vtkm::Id y = 0; y < inYLen; y++ )
     {
       // make input, output array
@@ -551,7 +564,7 @@ public:
       BasicArrayType          output;
     
       // 1D DWT on a row
-      this->DWT1D( row, output, xL, DeviceTag() );
+      elapsedTime += this->DWT1D( row, output, xL, DeviceTag() );
       // copy coeffs to buffer
       WaveletBase::DeviceCopyStartX( output, afterXBuf, y * inXLen, DeviceTag() );
     }
@@ -567,7 +580,7 @@ public:
       BasicArrayType          output;
 
       // 1D DWT on a row
-      this->DWT1D( column, output, xL, DeviceTag() );
+      elapsedTime += this->DWT1D( column, output, xL, DeviceTag() );
       // copy coeffs to buffer. afterYBuf is column major order.
       WaveletBase::DeviceCopyStartX( output, afterYBuf, inYLen*x, DeviceTag() );
     }
@@ -577,13 +590,13 @@ public:
     WaveletBase::DeviceTranspose( afterYBuf, coeffOut, inYLen, inXLen, DeviceTag() );
     //coeffOut = afterYBuf;
 
-    return 0;
+    return elapsedTime;
   }
 
 
   // Perform 1 level inverse wavelet transform
   template< typename InputArrayType, typename OutputArrayType, typename DeviceTag >
-  vtkm::Id IDWT2D( const InputArrayType    &sigIn,     // Input: array
+  FLOAT_64 IDWT2D( const InputArrayType    &sigIn,     // Input: array
                    std::vector<vtkm::Id>   &L,         // Input: coeff layout
                    OutputArrayType         &sigOut,    // Output coeff array
                    DeviceTag                         )
@@ -614,6 +627,7 @@ public:
     xL[1] = L[3];
     xL[2] = L[9];
 
+    vtkm::Float64 elapsedTime = 0.0;
     for( vtkm::Id x = 0; x < inXLen; x++ )
     {
       // make input, output array
@@ -622,7 +636,7 @@ public:
       BasicArrayType          output;
 
       // perform inverse DWT on a logical column
-      this->IDWT1D( input, xL, output, DeviceTag() );
+      elapsedTime += this->IDWT1D( input, xL, output, DeviceTag() );
       // copy results to a buffer
       WaveletBase::DeviceCopyStartX( output, afterYBuf, x * inYLen, DeviceTag() );
     }
@@ -642,12 +656,12 @@ public:
       BasicArrayType        output;
 
       // perform inverse DWT on a logical row
-      this->IDWT1D( input, xL, output, DeviceTag() );
+      elapsedTime += this->IDWT1D( input, xL, output, DeviceTag() );
       // copy results to a buffer
       WaveletBase::DeviceCopyStartX( output, sigOut, y * inXLen, DeviceTag() );
     }
 
-    return 0;
+    return elapsedTime;
   }
 
 

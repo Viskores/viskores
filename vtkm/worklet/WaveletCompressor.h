@@ -162,7 +162,7 @@ public:
   // Multi-level 2D wavelet decomposition
   template< typename InArrayType, typename OutArrayType, typename DeviceTag>
   VTKM_CONT_EXPORT
-  vtkm::Id WaveDecompose2D( const InArrayType           &sigIn,   // Input
+  FLOAT_64 WaveDecompose2D( const InArrayType           &sigIn,   // Input
                                   vtkm::Id              nLevels,  // n levels of DWT
                                   vtkm::Id              inX,      // Input X dim
                                   vtkm::Id              inY,      // Input Y dim
@@ -196,6 +196,7 @@ public:
     typedef typename OutArrayType::ValueType          OutValueType;
     typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
 
+    vtkm::Float64 computationTime = 0.0;
     for( vtkm::Id i = nLevels; i > 0; i-- )
     {
       // make temporary input array
@@ -205,6 +206,7 @@ public:
       //make temporary output array
       OutBasicArray tempOutput;
 
+      computationTime +=
       WaveletDWT::DWT2D( tempInput, currentLenX, currentLenY, tempOutput, L2d, DeviceTag());
 
       // copy results to coeffOut
@@ -215,15 +217,15 @@ public:
       currentLenX = WaveletBase::GetApproxLength( currentLenX );
       currentLenY = WaveletBase::GetApproxLength( currentLenY );
     }
-    
-    return 0;
+
+    return computationTime;
   }
 
 
   // Multi-level 2D wavelet reconstruction
   template< typename InArrayType, typename OutArrayType, typename DeviceTag>
   VTKM_CONT_EXPORT
-  vtkm::Id WaveReconstruct2D( const InArrayType           &arrIn,   // Input
+  FLOAT_64 WaveReconstruct2D( const InArrayType           &arrIn,   // Input
                                     vtkm::Id              nLevels,  // n levels of DWT
                                     vtkm::Id              inX,      // Input X dim
                                     vtkm::Id              inY,      // Input Y dim
@@ -259,6 +261,7 @@ public:
     L2d[6]  =   L[6];   
     L2d[7]  =   L[7];   
     
+    vtkm::Float64 computationTime = 0.0;
     for( size_t i = 1; i <= static_cast<size_t>(nLevels); i++ )
     {
       L2d[8] = L2d[0] + L2d[4];     // This is always true for Biorthogonal wavelets
@@ -270,6 +273,7 @@ public:
                                             arrOut,  inX, inY, 0, 0, DeviceTag() );
 
       // IDWT
+      computationTime +=
       WaveletDWT::IDWT2D( tempInput, L2d, tempOutput, DeviceTag() );
 
       // copy back reconstructed block
@@ -287,7 +291,7 @@ public:
       L2d[7] = L[6*i+7];
     }
 
-    return 0;    
+    return computationTime;    
   }
 
 
