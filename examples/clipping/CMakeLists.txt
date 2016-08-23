@@ -20,11 +20,10 @@
 ##
 ##=============================================================================
 #Find the VTK-m package
-find_package(VTKm QUIET REQUIRED COMPONENTS Base)
-
-vtkm_configure_component_Serial()
-vtkm_configure_component_CUDA()
-vtkm_configure_component_TBB()
+find_package(VTKm REQUIRED QUIET
+  COMPONENTS Base
+  OPTIONAL_COMPONENTS Serial Cuda TBB
+  )
 
 add_executable(Clipping_SERIAL Clipping.cxx)
 target_include_directories(Clipping_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})

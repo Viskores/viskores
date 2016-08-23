@@ -21,15 +21,10 @@
 ##=============================================================================
 
 #Find the VTK-m package
-find_package(VTKm QUIET REQUIRED COMPONENTS Base)
-
-#configure the backend components
-vtkm_configure_component_Serial()
-vtkm_configure_component_CUDA()
-vtkm_configure_component_TBB()
-
-#configure the OSMesa component
-vtkm_configure_component_OSMESA()
+find_package(VTKm QUIET REQUIRED
+  COMPONENTS Base
+  OPTIONAL_COMPONENTS Serial Cuda TBB OSMesa
+  )
 
 if(VTKm_OSMesa_FOUND)
 

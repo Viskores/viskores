@@ -21,16 +21,10 @@
 ##=============================================================================
 
 #Find the VTK-m package
-find_package(VTKm QUIET REQUIRED COMPONENTS Base)
-
-#configure the backend components
-vtkm_configure_component_Serial()
-vtkm_configure_component_CUDA()
-vtkm_configure_component_TBB()
-
-#configure the rendering / interop components
-vtkm_configure_component_OpenGL()
-vtkm_configure_component_Interop()
+find_package(VTKm REQUIRED QUIET
+  COMPONENTS Base
+  OPTIONAL_COMPONENTS Serial Cuda TBB OpenGL Interop
+  )
 
 find_package(GLUT)
 

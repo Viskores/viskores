@@ -29,7 +29,10 @@ set(unit_tests
   )
 
 # Need glut for these tests
-if(GLUT_FOUND)
+if(VTKm_ENABLE_OPENGL_TESTS)
+  list(APPEND VTKm_INCLUDE_DIRS ${GLUT_INCLUDE_DIR} )
+  list(APPEND VTKm_LIBRARIES ${GLUT_LIBRARIES}  )
+
   vtkm_declare_headers(${headers})
 
   vtkm_unit_tests(SOURCES ${unit_tests})

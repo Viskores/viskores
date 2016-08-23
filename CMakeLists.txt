@@ -243,7 +243,16 @@ string(REPLACE ";" " " VTKm_AVAILABLE_COMPONENTS_LIST
   "${VTKm_AVAILABLE_COMPONENTS}"
   )
 
-set(VTKm_LOAD_COMPONENTS_COMMANDS "
+set(VTKm_LOAD_COMPONENTS_COMMANDS "# Clear out old FOUND flags")
+foreach(component ${VTKm_AVAILABLE_COMPONENTS})
+  set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
+set(VTKm_${component}_FOUND)"
+    )
+endforeach(component)
+
+set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
+
+# Load each component selected in find_package
 foreach(comp \${VTKm_FIND_COMPONENTS})")
 
 foreach(component ${VTKm_AVAILABLE_COMPONENTS})
