@@ -754,27 +754,21 @@ private:
     }
   };
 
+  struct ScalarTypesToTest
+      : vtkm::ListTagBase<vtkm::UInt8, vtkm::FloatDefault>
+  {  };
 
- struct ZipTypesToTest
+  struct ZipTypesToTest
     : vtkm::ListTagBase< vtkm::Pair< vtkm::UInt8, vtkm::Id >,
-                         vtkm::Pair< vtkm::Int32, vtkm::Vec< vtkm::Float32, 3> >,
-                         vtkm::Pair< vtkm::Float64,  vtkm::Vec< vtkm::UInt8, 4> >,
-                         vtkm::Pair< vtkm::Vec<vtkm::Float32,3>, vtkm::Vec<vtkm::Int8, 4> >,
-                         vtkm::Pair< vtkm::Vec<vtkm::Float64,2>, vtkm::Int32 >
+                         vtkm::Pair< vtkm::Float64,  vtkm::Vec< vtkm::UInt8, 4> >
                          >
   {  };
 
   struct HandleTypesToTest
-    : vtkm::ListTagBase< vtkm::UInt8,
-                         vtkm::UInt32,
-                         vtkm::Int32,
-                         vtkm::Int64,
+    : vtkm::ListTagBase< vtkm::Id,
                          vtkm::Vec<vtkm::Int32,2>,
-                         vtkm::Vec<vtkm::UInt8,4>,
-                         vtkm::Float32,
-                         vtkm::Float64,
-                         vtkm::Vec<vtkm::Float64,3>,
-                         vtkm::Vec<vtkm::Float32,4>
+                         vtkm::FloatDefault,
+                         vtkm::Vec<vtkm::Float64,3>
                          >
   {  };
 
@@ -795,7 +789,7 @@ private:
       std::cout << "Testing ArrayHandleCompositeVector as Input" << std::endl;
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestCompositeAsInput(),
-                              vtkm::TypeListTagScalarAll());
+                              ScalarTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleConstant as Input" << std::endl;
@@ -855,13 +849,13 @@ private:
       std::cout << "Testing ArrayHandleGroupVec<2> as Output" << std::endl;
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecAsOutput<2>(),
-                              vtkm::TypeListTagScalarAll());
+                              ScalarTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleGroupVec<3> as Output" << std::endl;
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecAsOutput<3>(),
-                              vtkm::TypeListTagScalarAll());
+                              ScalarTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleZip as Input" << std::endl;
