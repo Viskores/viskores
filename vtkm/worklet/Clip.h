@@ -49,51 +49,6 @@ namespace worklet {
 
 namespace internal {
 
-// TODO: The following code is meant to be temporary until similar functionality is
-// implemented elsewhere.
-// The current DeviceAdapterAlgorithm::Copy resizes the destination array, and
-// therefore, is not usable for our purpose here.
-template <typename T, typename StorageIn, typename StorageOut, typename DeviceAdapter>
-class CopyArray : public vtkm::exec::FunctorBase
-{
-public:
-  typedef typename vtkm::cont::ArrayHandle<T, StorageIn>
-      ::template ExecutionTypes<DeviceAdapter>::PortalConst SourcePortalType;
-  typedef typename vtkm::cont::ArrayHandle<T, StorageOut>
-      ::template ExecutionTypes<DeviceAdapter>::Portal DestPortalType;
-
-  VTKM_CONT_EXPORT
-  CopyArray(SourcePortalType input, DestPortalType output)
-    : Input(input), Output(output)
-  {
-  }
-
-  VTKM_EXEC_EXPORT
-  void operator()(vtkm::Id idx) const
-  {
-    this->Output.Set(idx, this->Input.Get(idx));
-  }
-
-private:
-  SourcePortalType Input;
-  DestPortalType Output;
-};
-
-template <typename T, typename StorageIn, typename StorageOut, typename DeviceAdapter>
-VTKM_CONT_EXPORT
-void ResizeArrayHandle(const vtkm::cont::ArrayHandle<T, StorageIn> &input,
-                       vtkm::Id size,
-                       vtkm::cont::ArrayHandle<T, StorageOut> &output,
-                       DeviceAdapter)
-{
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
-  output.Allocate(size);
-  CopyArray<T, StorageIn, StorageOut, DeviceAdapter>
-      copyArray(input.PrepareForInput(DeviceAdapter()),
-                output.PrepareForInPlace(DeviceAdapter()));
-  Algorithm::Schedule(copyArray, input.GetNumberOfValues());
-}
-
 template <typename T>
 VTKM_EXEC_CONT_EXPORT
 T Scale(const T &val, vtkm::Float64 scale)
@@ -675,9 +630,11 @@ public:
       vtkm::Id count = this->InterpolationArray.GetNumberOfValues();
 
       vtkm::cont::ArrayHandle<T> result;
-      internal::ResizeArrayHandle(field, field.GetNumberOfValues() + count,
-                                  result, DeviceAdapter());
-
+      result.Allocate(field.GetNumberOfValues()+count);
+      Algorithm::CopySubRange(field,
+                              0,
+                              field.GetNumberOfValues(),
+                              result);
       Kernel<T> kernel(
           this->InterpolationArray.PrepareForInput(DeviceAdapter()),
           this->NewPointsOffset,

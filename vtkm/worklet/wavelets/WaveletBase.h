@@ -34,9 +34,9 @@ namespace worklet {
 namespace wavelets {
 
 enum DWTMode {    // boundary extension modes
-  SYMH, 
+  SYMH,
   SYMW,
-  ASYMH, 
+  ASYMH,
   ASYMW
 };
 
@@ -49,7 +49,7 @@ public:
   WaveletBase( WaveletName name ) : wname ( name ),
                                     filter( name )
   {
-    if( wname == CDF9_7 || wname == BIOR4_4 || 
+    if( wname == CDF9_7 || wname == BIOR4_4 ||
         wname == CDF5_3 || wname == BIOR2_2 )
     {
       this->wmode = SYMW;   // Default extension mode, see MatWaveBase.cpp
@@ -66,14 +66,14 @@ public:
   {
     vtkm::Id filterLen = this->filter.GetFilterLength();
 
-    if (this->filter.isSymmetric()) 
+    if (this->filter.isSymmetric())
     {
       if ( (this->wmode == SYMW && (filterLen % 2 != 0)) ||
-           (this->wmode == SYMH && (filterLen % 2 == 0)) )  
+           (this->wmode == SYMH && (filterLen % 2 == 0)) )
       {
         if (sigInLen % 2 != 0)
           return((sigInLen+1) / 2);
-        else 
+        else
           return((sigInLen) / 2);
       }
     }
@@ -87,14 +87,14 @@ public:
   {
     vtkm::Id filterLen = this->filter.GetFilterLength();
 
-    if (this->filter.isSymmetric()) 
+    if (this->filter.isSymmetric())
     {
       if ( (this->wmode == SYMW && (filterLen % 2 != 0)) ||
-           (this->wmode == SYMH && (filterLen % 2 == 0)) )  
+           (this->wmode == SYMH && (filterLen % 2 == 0)) )
       {
         if (sigInLen % 2 != 0)
           return((sigInLen-1) / 2);
-        else 
+        else
           return((sigInLen) / 2);
       }
     }
@@ -120,29 +120,34 @@ public:
   // Returns maximum wavelet decompostion level
   vtkm::Id GetWaveletMaxLevel( vtkm::Id sigInLen )
   {
-    vtkm::Id filterLen = this->filter.GetFilterLength(); 
+    vtkm::Id filterLen = this->filter.GetFilterLength();
     vtkm::Id level;
     this->WaveLengthValidate( sigInLen, filterLen, level );
     return level;
   }
 
-  // perform a device copy. The whole 1st array to a certain start location of the 2nd array
+  // perform a device copy. The whole 1st array to a certain start location of
+  // the 2nd array
   template< typename ArrayType1, typename ArrayType2 >
   VTKM_EXEC_EXPORT
-  void DeviceCopyStartX( const ArrayType1   &srcArray, 
+  void DeviceCopyStartX( const ArrayType1   &srcArray,
                                ArrayType2   &dstArray,
-                               vtkm::Id     startIdx)
+                               vtkm::Id     outputStartIdx)
   {
-      typedef vtkm::worklet::wavelets::CopyWorklet CopyType;
-      CopyType cp( startIdx );
-      vtkm::worklet::DispatcherMapField< CopyType > dispatcher( cp  );
-      dispatcher.Invoke( srcArray, dstArray );
+    typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceTag;
+    typedef vtkm::cont::DeviceAdapterAlgorithm< DeviceTag > Algorithm;
+
+    Algorithm::CopySubRange(srcArray,
+                            0,
+                            srcArray.GetNumberOfValues(),
+                            dstArray,
+                            outputStartIdx);
   }
 
   // Assign zero value to a certain location of an array
-  template< typename ArrayType >
-  VTKM_EXEC_EXPORT 
-  void DeviceAssignZero( ArrayType &array, vtkm::Id index )
+  template< typename ArrayType>
+  VTKM_EXEC_EXPORT
+  void DeviceAssignZero( ArrayType &array, vtkm::Id index)
   {
     typedef vtkm::worklet::wavelets::AssignZeroWorklet ZeroWorklet;
     ZeroWorklet worklet( index );
@@ -152,14 +157,14 @@ public:
 
   // Sort by the absolute value on device
   struct SortLessAbsFunctor
-  { 
+  {
     template< typename T >
-    VTKM_EXEC_EXPORT 
-    bool operator()(const T& x, const T& y) const 
-    { 
-      return vtkm::Abs(x) < vtkm::Abs(y); 
-    } 
-  }; 
+    VTKM_EXEC_EXPORT
+    bool operator()(const T& x, const T& y) const
+    {
+      return vtkm::Abs(x) < vtkm::Abs(y);
+    }
+  };
   template< typename ArrayType, typename DeviceTag >
   VTKM_EXEC_EXPORT
   void DeviceSort( ArrayType &array, DeviceTag )
@@ -167,7 +172,7 @@ public:
     vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Sort
           ( array, SortLessAbsFunctor() );
   }
-  
+
   // Reduce to the sum of all values on device
   template< typename ArrayType, typename DeviceTag >
   VTKM_EXEC_EXPORT
@@ -233,18 +238,18 @@ public:
   template< typename ArrayType, typename DeviceTag >
   vtkm::Float64 DeviceCalculateVariance( ArrayType &array, DeviceTag )
   {
-    vtkm::Float64 mean = static_cast<vtkm::Float64>(this->DeviceSum( array, DeviceTag() )) / 
+    vtkm::Float64 mean = static_cast<vtkm::Float64>(this->DeviceSum( array, DeviceTag() )) /
                          static_cast<vtkm::Float64>(array.GetNumberOfValues());
-    
+
     vtkm::cont::ArrayHandle< vtkm::Float64 > squaredDeviation;
-    
+
     // Use a worklet
     typedef vtkm::worklet::wavelets::SquaredDeviation SDWorklet;
     SDWorklet sdw( mean );
     vtkm::worklet::DispatcherMapField< SDWorklet > dispatcher( sdw  );
     dispatcher.Invoke( array, squaredDeviation );
 
-    vtkm::Float64 sdMean = this->DeviceSum( squaredDeviation, DeviceTag() ) / 
+    vtkm::Float64 sdMean = this->DeviceSum( squaredDeviation, DeviceTag() ) /
                            static_cast<vtkm::Float64>( squaredDeviation.GetNumberOfValues() );
 
     return sdMean;
@@ -275,8 +280,8 @@ protected:
     if( sigInLen < filterLength )
       level = 0;
     else
-      level = static_cast<vtkm::Id>( vtkm::Floor( 
-                  vtkm::Log2( static_cast<vtkm::Float64>(sigInLen) / 
+      level = static_cast<vtkm::Id>( vtkm::Floor(
+                  vtkm::Log2( static_cast<vtkm::Float64>(sigInLen) /
                               static_cast<vtkm::Float64>(filterLength) ) + 1.0 ) );
   }
 };    // class WaveletBase.
@@ -287,4 +292,4 @@ protected:
 }     // namespace worklet
 }     // namespace vtkm
 
-#endif 
+#endif

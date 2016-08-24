@@ -41,7 +41,7 @@ class WaveletDWT : public WaveletBase
 public:
 
   // Constructor
-  WaveletDWT( WaveletName name ) : WaveletBase( name ) {} 
+  WaveletDWT( WaveletName name ) : WaveletBase( name ) {}
 
 
   // Func: Extend 1D signal
@@ -51,10 +51,10 @@ public:
                      SigExtendedArrayType                     &sigOut,  // Output
                      vtkm::Id                                 addLen,
                      vtkm::worklet::wavelets::DWTMode         leftExtMethod,
-                     vtkm::worklet::wavelets::DWTMode         rightExtMethod, 
-                     bool                                     attachZeroRightLeft, 
+                     vtkm::worklet::wavelets::DWTMode         rightExtMethod,
+                     bool                                     attachZeroRightLeft,
                      bool                                     attachZeroRightRight )
-  { 
+  {
     // "right extension" can be attached a zero on either end, but not both ends.
     VTKM_ASSERT( !attachZeroRightRight || !attachZeroRightLeft );
 
@@ -119,7 +119,7 @@ public:
       // Allocate memory
       if( attachZeroRightRight )
         rightExtend.Allocate( addLen + 1 );
-      else                  
+      else
         rightExtend.Allocate( addLen );
 
       switch( rightExtMethod )
@@ -219,9 +219,9 @@ public:
       rightExtend = rightExtendPlusOne ;
     }
 
-    typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, SigInArrayType> 
+    typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, SigInArrayType>
             ArrayConcat;
-    ArrayConcat leftOn( leftExtend, sigIn );    
+    ArrayConcat leftOn( leftExtend, sigIn );
     sigOut = vtkm::cont::make_ArrayHandleConcatenate( leftOn, rightExtend );
 
     return 0;
@@ -229,7 +229,7 @@ public:
 
 
   // Func:
-  // Performs one level of 1D discrete wavelet transform 
+  // Performs one level of 1D discrete wavelet transform
   // It takes care of boundary conditions, etc.
   template< typename SignalArrayType, typename CoeffArrayType>
   VTKM_CONT_EXPORT
@@ -240,9 +240,9 @@ public:
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if( GetWaveletMaxLevel( sigInLen ) < 1 )
     {
-      vtkm::cont::ErrorControlInternal( "Signal is too short to perform DWT!" ); 
+      vtkm::cont::ErrorControlInternal( "Signal is too short to perform DWT!" );
       return -1;
-    } 
+    }
 
     VTKM_ASSERT( L.size() == 3 );
     L[0] = WaveletBase::GetApproxLength( sigInLen );
@@ -274,8 +274,8 @@ public:
         sigConvolvedLen += 1;
     }
     else
-      addLen = filterLen - 1; 
-  
+      addLen = filterLen - 1;
+
     vtkm::Id sigExtendedLen = sigInLen + 2 * addLen;
 
     typedef typename SignalArrayType::ValueType             SigInValueType;
@@ -289,8 +289,8 @@ public:
 
     ConcatType2 sigInExtended;
 
-    this->Extend1D( sigIn, sigInExtended, addLen, 
-                    WaveletBase::wmode, WaveletBase::wmode, false, false ); 
+    this->Extend1D( sigIn, sigInExtended, addLen,
+                    WaveletBase::wmode, WaveletBase::wmode, false, false );
     VTKM_ASSERT( sigInExtended.GetNumberOfValues() == sigExtendedLen );
 
     // initialize a worklet for forward transform
@@ -300,21 +300,21 @@ public:
     forwardTransform.SetOddness( oddLow, oddHigh );
 
     coeffOut.Allocate( sigInExtended.GetNumberOfValues() );
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform> 
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform>
         dispatcher(forwardTransform);
-    dispatcher.Invoke( sigInExtended, 
+    dispatcher.Invoke( sigInExtended,
                        WaveletBase::filter.GetLowDecomposeFilter(),
                        WaveletBase::filter.GetHighDecomposeFilter(),
                        coeffOut );
 
     VTKM_ASSERT( L[0] + L[1] <= coeffOut.GetNumberOfValues() );
     coeffOut.Shrink( L[0] + L[1] );
-    
-    return 0;  
-  } // Function DWT1D
-    
 
-  // Func: 
+    return 0;
+  } // Function DWT1D
+
+
+  // Func:
   // Performs one level of inverse wavelet transform
   // It takes care of boundary conditions, etc.
   template< typename CoeffArrayType, typename SignalArrayType>
@@ -332,10 +332,10 @@ public:
     vtkm::worklet::wavelets::DWTMode cARightMode = WaveletBase::wmode;
     vtkm::worklet::wavelets::DWTMode cDLeftMode  = WaveletBase::wmode;
     vtkm::worklet::wavelets::DWTMode cDRightMode = WaveletBase::wmode;
-  
+
     if( WaveletBase::filter.isSymmetric() )
     {
-      if(( WaveletBase::wmode == SYMW && (filterLen % 2 != 0) ) || 
+      if(( WaveletBase::wmode == SYMW && (filterLen % 2 != 0) ) ||
          ( WaveletBase::wmode == SYMH && (filterLen % 2 == 0) ) )
       {
         doSymConv = true;
@@ -363,7 +363,7 @@ public:
             cARightMode = SYMH;
         }
       }
-    } 
+    }
 
     vtkm::Id cATempLen, cDTempLen;  //, reconTempLen;
     vtkm::Id addLen = 0;
@@ -372,7 +372,7 @@ public:
     {
       addLen = filterLen / 4;   // addLen == 0 for Haar kernel
       if( (L[0] > L[1]) && (WaveletBase::wmode == SYMH) )
-        cDPadLen = L[0];  
+        cDPadLen = L[0];
 
       cATempLen = L[0] + 2 * addLen;
       cDTempLen = cATempLen;  // same length
@@ -384,7 +384,7 @@ public:
     }
 
     typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      IdArrayType;
-    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, CoeffArrayType > 
+    typedef vtkm::cont::ArrayHandlePermutation< IdArrayType, CoeffArrayType >
             PermutArrayType;
 
     // Separate cA and cD
@@ -392,7 +392,7 @@ public:
     IdArrayType detailIndices( L[0], 1, L[1] );
     PermutArrayType cA( approxIndices, coeffIn );
     PermutArrayType cD( detailIndices, coeffIn );
-    
+
 
     typedef typename CoeffArrayType::ValueType                    CoeffValueType;
     typedef vtkm::cont::ArrayHandle< CoeffValueType >             ExtensionArrayType;
@@ -409,7 +409,7 @@ public:
       this->Extend1D( cA, cATemp, addLen, cALeftMode, cARightMode, false, false );
 
       // Then extend cD based on extension needs
-      if( cDPadLen > 0 )  
+      if( cDPadLen > 0 )
       {
         // Add back the missing final cD, 0.0, before doing extension
         this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, true, false );
@@ -418,11 +418,11 @@ public:
       {
         vtkm::Id cDTempLenWouldBe = L[1] + 2 * addLen;
         if( cDTempLenWouldBe ==  cDTempLen )
-        { 
+        {
           this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, false);
         }
         else if( cDTempLenWouldBe ==  cDTempLen - 1 )
-        { 
+        {
           this->Extend1D( cD, cDTemp, addLen, cDLeftMode, cDRightMode, false, true );
         }
         else
@@ -431,16 +431,16 @@ public:
           return 1;
         }
       }
-    }     
+    }
     else    // !doSymConv (biorthogonals kernel won't come into this case)
-    { 
+    {
       // make cATemp
       ExtensionArrayType dummyArray;
       dummyArray.Allocate(0);
       Concat1 cALeftOn( dummyArray, cA );
       cATemp = vtkm::cont::make_ArrayHandleConcatenate< Concat1, ExtensionArrayType >
                ( cALeftOn, dummyArray );
-      
+
       // make cDTemp
       Concat1 cDLeftOn( dummyArray, cD );
       cDTemp = vtkm::cont::make_ArrayHandleConcatenate< Concat1, ExtensionArrayType >
@@ -485,11 +485,11 @@ public:
     return 0;
 
   }   // function IDWT1D
-  
+
 };    // class WaveletDWT
 
 }     // namespace wavelets
 }     // namespace worklet
 }     // namespace vtkm
 
-#endif 
+#endif
