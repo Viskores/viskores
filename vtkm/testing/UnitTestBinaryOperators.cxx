@@ -88,7 +88,7 @@ struct BinaryOperatorTestFunctor
 
 void TestBinaryOperators()
 {
-  vtkm::testing::Testing::TryAllTypes(BinaryOperatorTestFunctor());
+  vtkm::testing::Testing::TryTypes(BinaryOperatorTestFunctor());
 
   //test BitwiseAnd
   {

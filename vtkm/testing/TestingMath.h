@@ -762,8 +762,8 @@ void RunMathTests()
   std::cout << "Test for scalar and vector types." << std::endl;
   vtkm::testing::Testing::TryTypes(TryScalarVectorFieldTests<Device>(),
                                    vtkm::TypeListTagField());
-  std::cout << "Test for all types." << std::endl;
-  vtkm::testing::Testing::TryAllTypes(TryAllTypesTests<Device>());
+  std::cout << "Test for exemplar types." << std::endl;
+  vtkm::testing::Testing::TryTypes(TryAllTypesTests<Device>());
   std::cout << "Test all Abs types" << std::endl;
   vtkm::testing::Testing::TryTypes(TryAbsTests<Device>(),
                                    TypeListTagAbs());

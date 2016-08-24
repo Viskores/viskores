@@ -441,8 +441,8 @@ void TestDynamicArrayHandle()
   std::cout << "*** vtkm::Vec<Float64,3> **********" << std::endl;
   TryDefaultType(vtkm::Vec<vtkm::Float64,3>());
 
-  std::cout << "Try all VTK-m types." << std::endl;
-  vtkm::testing::Testing::TryAllTypes(TryBasicVTKmType());
+  std::cout << "Try exemplar VTK-m types." << std::endl;
+  vtkm::testing::Testing::TryTypes(TryBasicVTKmType());
 
   std::cout << "Try unusual type." << std::endl;
   TryUnusualType();

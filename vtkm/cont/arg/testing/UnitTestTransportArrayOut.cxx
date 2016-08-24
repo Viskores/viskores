@@ -75,7 +75,7 @@ struct TryArrayOutType
 template<typename Device>
 void TryArrayOutTransport(Device)
 {
-  vtkm::testing::Testing::TryAllTypes(TryArrayOutType<Device>());
+  vtkm::testing::Testing::TryTypes(TryArrayOutType<Device>());
 }
 
 void TestArrayOutTransport()

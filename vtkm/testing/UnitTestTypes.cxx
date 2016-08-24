@@ -479,7 +479,7 @@ void TestTypes()
 {
   CheckTypeSizes();
 
-  vtkm::testing::Testing::TryAllTypes(TypeTestFunctor());
+  vtkm::testing::Testing::TryTypes(TypeTestFunctor());
 
   //try with some custom tuple types
   TypeTestFunctor()( vtkm::Vec<vtkm::FloatDefault,6>() );

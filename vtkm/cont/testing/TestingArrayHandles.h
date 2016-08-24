@@ -339,9 +339,9 @@ private:
     {
     void operator()() const
       {
-      vtkm::testing::Testing::TryAllTypes(VerifyEmptyArrays());
-      vtkm::testing::Testing::TryAllTypes(VerifyUserAllocatedHandle());
-      vtkm::testing::Testing::TryAllTypes(VerifyVTKMAllocatedHandle());
+      vtkm::testing::Testing::TryTypes(VerifyEmptyArrays());
+      vtkm::testing::Testing::TryTypes(VerifyUserAllocatedHandle());
+      vtkm::testing::Testing::TryTypes(VerifyVTKMAllocatedHandle());
       }
     };
 
