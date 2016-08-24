@@ -39,12 +39,11 @@ endfunction(vtkm_get_kit_name)
 #1. Explicitly set the cuda device adapter as a define this is currently
 #   done as a work around since the cuda executable ignores compile
 #   definitions
-#2. Set BOOST_SP_DISABLE_THREADS to disable threading warnings
-#3. Disable unused function warnings
+#2. Disable unused function warnings
 #   the FindCUDA module and helper methods don't read target level
 #   properties so we have to modify CUDA_NVCC_FLAGS  instead of using
 #   target and source level COMPILE_FLAGS and COMPILE_DEFINITIONS
-#4. Set the compile option /bigobj when using VisualStudio generators.
+#3. Set the compile option /bigobj when using VisualStudio generators
 #   While we have specified this as target compile flag, those aren't
 #   currently loooked at by FindCUDA, so we have to manually add it ourselves
 function(vtkm_setup_nvcc_flags old_nvcc_flags old_cxx_flags )
@@ -53,7 +52,6 @@ function(vtkm_setup_nvcc_flags old_nvcc_flags old_cxx_flags )
   set(new_nvcc_flags ${CUDA_NVCC_FLAGS})
   set(new_cxx_flags ${CMAKE_CXX_FLAGS})
   list(APPEND new_nvcc_flags "-DVTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  list(APPEND new_nvcc_flags "-DBOOST_SP_DISABLE_THREADS")
   list(APPEND new_nvcc_flags "-w")
   if(MSVC)
     list(APPEND new_nvcc_flags "--compiler-options;/bigobj")
@@ -116,7 +114,12 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   list(LENGTH cxxfiles cxxfiles_len)
   if (use_cuda AND ${cxxfiles_len} GREATER 0)
     # Cuda compiles do not respect target_include_directories
-    cuda_include_directories(${VTKm_INCLUDE_DIRS})
+    # and we want system includes so we have to hijack cuda
+    # to do it
+    foreach(dir ${VTKm_INCLUDE_DIRS})
+      list(APPEND CUDA_NVCC_INCLUDE_ARGS_USER -isystem ${dir})
+    endforeach()
+
     cuda_add_library(TestBuild_${name} ${cxxfiles} ${hfiles})
   elseif (${cxxfiles_len} GREATER 0)
     add_library(TestBuild_${name} ${cxxfiles} ${hfiles})
@@ -126,8 +129,8 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
                    ${CMAKE_CXX_FLAGS_WARN_EXTRA}
                    )
     endif(VTKm_EXTRA_COMPILER_WARNINGS)
+    target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
   endif ()
-  target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
   target_link_libraries(TestBuild_${name} ${VTKm_LIBRARIES})
   set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE

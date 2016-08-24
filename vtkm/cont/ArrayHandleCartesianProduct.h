@@ -26,6 +26,7 @@
 #include <vtkm/cont/ErrorControlBadAllocation.h>
 
 namespace vtkm {
+namespace exec {
 namespace internal {
 
 /// \brief An array portal that acts as a 3D cartesian product of 3 arrays.
@@ -140,7 +141,8 @@ private:
 };
 
 }
-} // namespace vtkm::internal
+}
+} // namespace vtkm::exec::internal
 
 
 namespace vtkm {
@@ -180,11 +182,11 @@ class Storage<T, StorageTagCartesianProduct<FirstHandleType, SecondHandleType, T
 public:
   typedef T ValueType;
 
-  typedef vtkm::internal::ArrayPortalCartesianProduct< ValueType,
+  typedef vtkm::exec::internal::ArrayPortalCartesianProduct< ValueType,
                           typename FirstHandleType::PortalControl,
                           typename SecondHandleType::PortalControl,
                           typename ThirdHandleType::PortalControl> PortalType;
-  typedef vtkm::internal::ArrayPortalCartesianProduct< ValueType,
+  typedef vtkm::exec::internal::ArrayPortalCartesianProduct< ValueType,
                           typename FirstHandleType::PortalConstControl,
                           typename SecondHandleType::PortalConstControl,
                           typename ThirdHandleType::PortalConstControl>
@@ -284,14 +286,14 @@ public:
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
 
-  typedef vtkm::internal::ArrayPortalCartesianProduct<
+  typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
       ValueType,
       typename FirstHandleType::template ExecutionTypes<Device>::Portal,
       typename SecondHandleType::template ExecutionTypes<Device>::Portal,
       typename ThirdHandleType::template ExecutionTypes<Device>::Portal
       > PortalExecution;
 
-  typedef vtkm::internal::ArrayPortalCartesianProduct<
+  typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
       ValueType,
       typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
       typename SecondHandleType::template ExecutionTypes<Device>::PortalConst,

@@ -20,11 +20,11 @@
 ##
 ##=============================================================================
 
-find_package(GLUT)
-
-vtkm_configure_component_Serial()
-vtkm_configure_component_CUDA()
-vtkm_configure_component_TBB()
+#Find the VTK-m package
+find_package(VTKm REQUIRED QUIET
+  COMPONENTS Base
+  OPTIONAL_COMPONENTS Serial Cuda TBB
+  )
 
 if(VTKm_CUDA_FOUND)
   # Cuda compiles do not respect target_include_directories

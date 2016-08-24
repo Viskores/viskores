@@ -32,7 +32,7 @@ namespace internal {
 template<typename ValueType_,
          typename PortalTypeFirst_,
          typename PortalTypeSecond_>
-class ArrayPortalExecZip
+class ArrayPortalZip
 {
 public:
   typedef ValueType_ ValueType;
@@ -42,23 +42,23 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  ArrayPortalExecZip()
+  ArrayPortalZip()
     : PortalFirst(), PortalSecond()
   {  } //needs to be host and device so that cuda can create lvalue of these
 
   VTKM_CONT_EXPORT
-  ArrayPortalExecZip(const PortalTypeFirst  &portalfirst,
-                     const PortalTypeSecond &portalsecond)
+  ArrayPortalZip(const PortalTypeFirst  &portalfirst,
+                 const PortalTypeSecond &portalsecond)
     : PortalFirst(portalfirst), PortalSecond(portalsecond)
   {  }
 
-  /// Copy constructor for any other ArrayPortalExecZip with an iterator
+  /// Copy constructor for any other ArrayPortalZip with an iterator
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
   template<class OtherV, class OtherF, class OtherS>
   VTKM_CONT_EXPORT
-  ArrayPortalExecZip(const ArrayPortalExecZip<OtherV,OtherF,OtherS> &src)
+  ArrayPortalZip(const ArrayPortalZip<OtherV,OtherF,OtherS> &src)
     : PortalFirst(src.GetFirstPortal()),
       PortalSecond(src.GetSecondPortal())
   {  }
@@ -100,61 +100,6 @@ namespace cont {
 
 namespace internal {
 
-/// \brief An array portal that zips two portals together into a single value
-/// for the control environment
-template<typename ValueType_,
-         typename PortalTypeFirst,
-         typename PortalTypeSecond>
-class ArrayPortalContZip
-{
-public:
-  typedef ValueType_ ValueType;
-  typedef ValueType_ IteratorType;
-
-  VTKM_CONT_EXPORT
-  ArrayPortalContZip(const PortalTypeFirst  &portalfirst = PortalTypeFirst(),
-                 const PortalTypeSecond &portalsecond = PortalTypeSecond())
-    : PortalFirst(portalfirst), PortalSecond(portalsecond)
-  {  }
-
-  /// Copy constructor for any other ArrayPortalContZip with an iterator
-  /// type that can be copied to this iterator type. This allows us to do any
-  /// type casting that the iterators do (like the non-const to const cast).
-  ///
-  template<class OtherV, class OtherF, class OtherS>
-  VTKM_CONT_EXPORT
-  ArrayPortalContZip(const ArrayPortalContZip<OtherV,OtherF,OtherS> &src)
-    : PortalFirst(src.GetFirstPortal()),
-      PortalSecond(src.GetSecondPortal())
-  {  }
-
-  VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfValues() const { return this->PortalFirst.GetNumberOfValues(); }
-
-  VTKM_CONT_EXPORT
-  ValueType Get(vtkm::Id index) const {
-    return vtkm::make_Pair(this->PortalFirst.Get(index),
-                          this->PortalSecond.Get(index));
-  }
-
-  VTKM_CONT_EXPORT
-  void Set(vtkm::Id index, const ValueType &value) const {
-    this->PortalFirst.Set(index, value.first);
-    this->PortalSecond.Set(index, value.second);
-  }
-
-  VTKM_CONT_EXPORT
-  const PortalTypeFirst &GetFirstPortal() const { return this->PortalFirst; }
-
-  VTKM_CONT_EXPORT
-  const PortalTypeSecond &GetSecondPortal() const { return this->PortalSecond; }
-
-
-private:
-  PortalTypeFirst PortalFirst;
-  PortalTypeSecond PortalSecond;
-};
-
 template<typename FirstHandleType, typename SecondHandleType>
 struct StorageTagZip {  };
 
@@ -187,10 +132,10 @@ class Storage<T, StorageTagZip<FirstHandleType, SecondHandleType > >
 public:
   typedef T ValueType;
 
-  typedef ArrayPortalContZip< ValueType,
+  typedef vtkm::exec::internal::ArrayPortalZip< ValueType,
                           typename FirstHandleType::PortalControl,
                           typename SecondHandleType::PortalControl> PortalType;
-  typedef ArrayPortalContZip< ValueType,
+  typedef vtkm::exec::internal::ArrayPortalZip< ValueType,
                           typename FirstHandleType::PortalConstControl,
                           typename SecondHandleType::PortalConstControl>
                                                                PortalConstType;
@@ -273,13 +218,13 @@ public:
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
 
-  typedef vtkm::exec::internal::ArrayPortalExecZip<
+  typedef vtkm::exec::internal::ArrayPortalZip<
       ValueType,
       typename FirstHandleType::template ExecutionTypes<Device>::Portal,
       typename SecondHandleType::template ExecutionTypes<Device>::Portal
       > PortalExecution;
 
-  typedef vtkm::exec::internal::ArrayPortalExecZip<
+  typedef vtkm::exec::internal::ArrayPortalZip<
       ValueType,
       typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
       typename SecondHandleType::template ExecutionTypes<Device>::PortalConst

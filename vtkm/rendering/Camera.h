@@ -537,7 +537,7 @@ public:
   VTKM_CONT_EXPORT
   void Zoom(vtkm::Float64 zoom)
   {
-    this->Zoom(static_cast<vtkm::Float64>(zoom));
+    this->Zoom(static_cast<vtkm::Float32>(zoom));
   }
 
   /// \brief Moves the camera as if a point was dragged along a sphere.

@@ -47,9 +47,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
 
   # Additional warnings for GCC/Clang
   set(CMAKE_CXX_FLAGS_WARN_EXTRA "-Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common")
-  if (VTKm_FORCE_ANSI)
-    set(CMAKE_CXX_FLAGS_WARN_EXTRA "-ansi ${CMAKE_CXX_FLAGS_WARN_EXTRA}")
-  endif()
 
   # Additional warnings just for Clang 3.5+, and AppleClang 7+ we specify
   # for all build types, since these failures to vectorize are not limited

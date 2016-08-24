@@ -358,9 +358,10 @@ protected:
             this->DataSet.AddField(vtkm::cont::Field(name, association, data));
             break;
           case vtkm::cont::Field::ASSOC_CELL_SET:
-            data.CastAndCall(PermuteCellData(this->CellsPermutation, data));
+            vtkm::cont::CastAndCall( data,
+                     PermuteCellData(this->CellsPermutation, data) );
             this->DataSet.AddField(
-                vtkm::cont::Field(name, association, "cells", data));
+                  vtkm::cont::Field(name, association, "cells", data));
             break;
           default:
             break;

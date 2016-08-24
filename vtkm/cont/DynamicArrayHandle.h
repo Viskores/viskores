@@ -241,7 +241,7 @@ public:
   ///
   template<typename ArrayHandleType>
   VTKM_CONT_EXPORT
-  bool IsArrayHandleType()
+  bool IsType()
   {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
     typedef typename ArrayHandleType::ValueType ValueType;
@@ -257,7 +257,7 @@ public:
   bool IsSameType(const ArrayHandleType &)
   {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-    return this->IsArrayHandleType<ArrayHandleType>();
+    return this->IsType<ArrayHandleType>();
   }
 
   /// Returns this array cast to an ArrayHandle object of the given type and
@@ -282,7 +282,7 @@ public:
   }
 
   /// Returns this array cast to the given \c ArrayHandle type. Throws \c
-  /// ErrorControlBadType if the cast does not work. Use \c IsArrayHandleType
+  /// ErrorControlBadType if the cast does not work. Use \c IsType
   /// to check if the cast can happen.
   ///
   template<typename ArrayHandleType>

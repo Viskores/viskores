@@ -1237,6 +1237,37 @@ operator*(const vtkm::Vec<vtkm::Float64, Size> &vec, vtkm::Float64 scalar)
           vtkm::Float64,vtkm::internal::Multiply>(scalar));
 }
 
+template<typename T, vtkm::IdComponent Size>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T, Size> operator/(const vtkm::Vec<T, Size> &vec, T scalar)
+{
+  return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
+        vec,
+        vtkm::internal::BindRightBinaryOp<T,vtkm::internal::Divide>(scalar));
+}
+
+template<typename T, vtkm::IdComponent Size>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T, Size>
+operator/(const vtkm::Vec<T, Size> &vec, vtkm::Float64 scalar)
+{
+  return vtkm::Vec<T, Size>(
+        vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
+          vec,
+          vtkm::internal::BindRightBinaryOp<
+            vtkm::Float64,vtkm::internal::Divide,T>(scalar)));
+}
+
+template<vtkm::IdComponent Size>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<vtkm::Float64, Size>
+operator/(const vtkm::Vec<vtkm::Float64, Size> &vec, vtkm::Float64 scalar)
+{
+  return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
+        vec,
+        vtkm::internal::BindRightBinaryOp<
+          vtkm::Float64,vtkm::internal::Divide>(scalar));
+}
 // The enable_if for this operator is effectively disabling the negate
 // operator for Vec of unsigned integers. Another approach would be
 // to use disable_if<is_unsigned>. That would be more inclusive but would

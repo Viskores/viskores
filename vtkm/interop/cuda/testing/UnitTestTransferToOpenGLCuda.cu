@@ -18,9 +18,6 @@
 //  this software.
 //============================================================================
 
-//silence boost threading warnings when using cuda
-#define BOOST_SP_DISABLE_THREADS
-
 //This sets up testing with the cuda device adapter
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/cuda/internal/testing/Testing.h>

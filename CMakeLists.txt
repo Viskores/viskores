@@ -69,14 +69,18 @@ if(NOT VTKm_Base_FOUND)
 endif()
 
 #-----------------------------------------------------------------------------
-# Check for Cxx11 support.
-option(VTKm_FORCE_ANSI
- "Turn off compiling any features not compatible with ISO-C++98 (ANSI)." OFF)
-if (NOT VTKm_FORCE_ANSI)
-  include(CMake/CheckCXX11Features.cmake)
-else (NOT VTKm_FORCE_ANSI)
-  set(VTKm_NO_VARIADIC_TEMPLATE TRUE)
-endif ()
+# Add flag to enable C++11 support.
+if (NOT CMAKE_VERSION VERSION_LESS "3.1")
+  option(VTKm_ENABLE_CXX11 "Build VTKm using C++11" ON)
+else()
+  set(VTKm_ENABLE_CXX11 OFF)
+endif()
+# If the user has requested C++11, propagate that information to CMake
+if (VTKm_ENABLE_CXX11)
+  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD_REQUIRED True)
+  set(CMAKE_CXX_EXTENSIONS False)
+endif()
 
 #-----------------------------------------------------------------------------
 # Add supplemental compiler warnings, and GCC visibility support.
@@ -226,12 +230,6 @@ if (VTKm_BUILD_DOCUMENTATION)
 endif()
 
 #-----------------------------------------------------------------------------
-# Build examples
-if(VTKm_BUILD_EXAMPLES)
-  add_subdirectory(examples)
-endif(VTKm_BUILD_EXAMPLES)
-
-#-----------------------------------------------------------------------------
 # Ready files for find_package
 include(CMakePackageConfigHelpers)
 
@@ -239,18 +237,40 @@ string(REPLACE ";" " " VTKm_AVAILABLE_COMPONENTS_LIST
   "${VTKm_AVAILABLE_COMPONENTS}"
   )
 
-set(VTKm_LOAD_COMPONENTS_COMMANDS "
+set(VTKm_LOAD_COMPONENTS_COMMANDS "# Clear out old FOUND flags")
+foreach(component ${VTKm_AVAILABLE_COMPONENTS})
+  set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
+set(VTKm_${component}_FOUND)"
+    )
+endforeach(component)
+
+set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
+
+# Load each component selected in find_package
 foreach(comp \${VTKm_FIND_COMPONENTS})")
 
 foreach(component ${VTKm_AVAILABLE_COMPONENTS})
   set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
   if(\"${component}\" STREQUAL \${comp})
     vtkm_configure_component_${component}()
+    if(VTKm_${component}_FOUND AND NOT VTKm_CONFIGURE_QUIET)
+      message(STATUS \"Successfully loaded VTK-m component ${component}\")
+    else()
+      if(VTKm_FIND_REQUIRED_${component} AND NOT VTKm_CONFIGURE_QUIET)
+        message(\"Could not load REQUIRED VTK-m component ${component}\")
+      elseif(NOT VTKm_CONFIGURE_QUIET)
+        message(STATUS \"Could not load optional VTK-m component ${component}\")
+      endif()
+    endif()
     continue()
-  endif()")
+  endif()"
+    )
 endforeach()
 
 set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
+  if(NOT VTKm_CONFIGURE_QUIET)
+    message(WARNING \"No such VTK-m component: \${comp}\")
+  endif()
 endforeach()" )
 
 configure_package_config_file(
@@ -265,7 +285,9 @@ write_basic_package_version_file(
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
 install(
-  FILES ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
+  FILES
+    ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
+    ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
   )
 
@@ -312,3 +334,9 @@ set(CPACK_PACKAGE_FILE_NAME "VTKm-${VTKm_VERSION}")
 set(CPACK_RESOURCE_FILE_LICENSE ${VTKm_SOURCE_DIR}/LICENSE.txt)
 set(CPACK_RESOURCE_FILE_README ${VTKm_SOURCE_DIR}/README.md)
 include(CPack)
+
+#-----------------------------------------------------------------------------
+# Build examples
+if(VTKm_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif(VTKm_BUILD_EXAMPLES)

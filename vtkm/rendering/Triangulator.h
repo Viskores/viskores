@@ -165,10 +165,6 @@ public:
         triangle[3] = cellIndices[0];
         OutputIndices.Set(triangleOffset+11, triangle);
       }
-      else
-      {
-        throw vtkm::cont::ErrorControlBadType("Unsupported dimension for structured trianglulation");
-      }
     }
 
   };

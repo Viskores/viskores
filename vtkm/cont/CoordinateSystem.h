@@ -84,6 +84,9 @@ class CoordinateSystem : public vtkm::cont::Field
 
 public:
   VTKM_CONT_EXPORT
+  CoordinateSystem() : Superclass() {  }
+
+  VTKM_CONT_EXPORT
   CoordinateSystem(std::string name,
                    const vtkm::cont::DynamicArrayHandle &data)
     : Superclass(name, ASSOC_POINTS, data) {  }
@@ -255,10 +258,23 @@ public:
   }
 };
 
+template<typename Functor>
+void CastAndCall(const vtkm::cont::CoordinateSystem& coords, const Functor &f)
+{
+  coords.GetData().CastAndCall(f);
+}
+
+namespace internal {
+
+template<>
+struct DynamicTransformTraits<vtkm::cont::CoordinateSystem>
+{
+  typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
+};
+
+} // namespace internal
 } // namespace cont
 } // namespace vtkm
 
 
 #endif //vtk_m_cont_CoordinateSystem_h
-
-

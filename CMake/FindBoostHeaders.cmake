@@ -157,6 +157,7 @@ set(Boost_FIND_VERSION ${BoostHeaders_FIND_VERSION})
 set(Boost_FIND_VERSION_MAJOR ${BoostHeaders_FIND_VERSION_MAJOR})
 set(Boost_FIND_VERSION_MINOR ${BoostHeaders_FIND_VERSION_MINOR})
 set(Boost_FIND_VERSION_PATCH ${BoostHeaders_FIND_VERSION_PATCH})
+set(Boost_FIND_QUIETLY ${BoostHeaders_FIND_QUIETLY})
 set(Boost_DEBUG ${BoostHeaders_DEBUG})
 
 # Check the version of Boost against the requested version.

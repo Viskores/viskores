@@ -148,6 +148,9 @@ set_vectorization_flags_properties(vec_levels)
 #
 set(VTKm_Vectorization "none" CACHE STRING "Level of compiler vectorization support")
 set_property(CACHE VTKm_Vectorization PROPERTY STRINGS ${vec_levels})
+if (NOT ${VTKm_Vectorization} STREQUAL "none")
+  set(VTKM_VECTORIZATION_ENABLED "ON")
+endif()
 
 #
 # Now that we have set up the options, lets setup the compile flags that

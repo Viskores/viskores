@@ -20,12 +20,13 @@
 ##
 ##=============================================================================
 
-find_package(GLUT)
+#Find the VTK-m package
+find_package(VTKm REQUIRED QUIET
+  COMPONENTS Base
+  OPTIONAL_COMPONENTS Serial Cuda TBB OpenGL
+  )
 
-vtkm_configure_component_OpenGL()
-vtkm_configure_component_Serial()
-vtkm_configure_component_CUDA()
-vtkm_configure_component_TBB()
+find_package(GLUT)
 
 if(VTKm_OpenGL_FOUND AND GLUT_FOUND)
   add_executable(IsosurfaceUniformGrid_SERIAL IsosurfaceUniformGrid.cxx quaternion.h)

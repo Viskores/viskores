@@ -29,6 +29,10 @@
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 #include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/TryExecute.h>
+
+typedef vtkm::Vec< vtkm::Float32, 3 > FloatVec3;
+typedef vtkm::Vec< vtkm::UInt8, 4 > Uint8Vec4;
 
 struct GenerateSurfaceWorklet : public vtkm::worklet::WorkletMapField
 {
@@ -55,76 +59,33 @@ struct GenerateSurfaceWorklet : public vtkm::worklet::WorkletMapField
   }
 };
 
-template<bool> struct CanRun;
-
-template<typename T, typename DeviceAdapterTag>
-void run_if_valid(vtkm::cont::ArrayHandle< vtkm::Vec< T, 3 > > inHandle,
-                  vtkm::cont::ArrayHandle< vtkm::Vec< T, 3 > > outCoords,
-                  vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::UInt8, 4 > > outColors,
-                  DeviceAdapterTag tag)
+struct RunGenerateSurfaceWorklet
 {
- typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>
-         DeviceAdapterTraits;
-
-  if(DeviceAdapterTraits::Valid)
-    {
-    std::cout << "Running a worklet on device adapter: "
-              << DeviceAdapterTraits::GetName() << std::endl;
-    }
-  else
-    {
-    std::cout << "Unable to run a worklet on device adapter: "
-              << DeviceAdapterTraits::GetName() << std::endl;
-    }
-
-  CanRun<DeviceAdapterTraits::Valid>::run(inHandle,outCoords,outColors,tag);
-}
-
-
-//Implementation that we call on device adapters we don't have support
-//enabled for
-template<>
-struct CanRun<false>
-{
-  template<typename T, typename DeviceAdapterTag>
-  static void run(vtkm::cont::ArrayHandle< vtkm::Vec< T, 3 > > vtkmNotUsed(inHandle),
-                  vtkm::cont::ArrayHandle< vtkm::Vec< T, 3 > > vtkmNotUsed(outCoords),
-                  vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::UInt8, 4 > > vtkmNotUsed(outColors),
-                  DeviceAdapterTag)
+  template<typename DeviceAdapterTag>
+  bool operator()(DeviceAdapterTag ) const
   {
-  }
-};
+    //At this point we know we have runtime support
+    typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> DeviceTraits;
 
-//Implementation that we call on device adapters we do have support
-//enabled for
-template<>
-struct CanRun<true>
-{
-  template<typename T, typename DeviceAdapterTag>
-  static void run(vtkm::cont::ArrayHandle< vtkm::Vec< T, 3 > > inHandle,
-                  vtkm::cont::ArrayHandle< vtkm::Vec< T, 3 > > outCoords,
-                  vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::UInt8, 4 > > outColors,
-                  DeviceAdapterTag)
-  {
-
-  //even though we have support for this device adapter we haven't determined
-  //if we actually have run-time support. This is a significant issue with
-  //the CUDA backend
-  vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtime;
-  const bool haveSupport = runtime.Exists();
-
-  if(haveSupport)
-    {
     typedef vtkm::worklet::DispatcherMapField<GenerateSurfaceWorklet,
                                               DeviceAdapterTag> DispatcherType;
 
-    GenerateSurfaceWorklet worklet( 0.05f );
-    DispatcherType(worklet).Invoke( inHandle,
-                                    outCoords,
-                                    outColors);
-    }
+    std::cout << "Running a worklet on device adapter: "
+              << DeviceTraits::GetName() << std::endl;
+
+     GenerateSurfaceWorklet worklet( 0.05f );
+     DispatcherType(worklet).Invoke( this->In,
+                                     this->Out,
+                                     this->Color);
+
+     return true;
   }
+
+  vtkm::cont::ArrayHandle< FloatVec3 > In;
+  vtkm::cont::ArrayHandle< FloatVec3 > Out;
+  vtkm::cont::ArrayHandle< Uint8Vec4 > Color;
 };
+
 
 template<typename T>
 std::vector< vtkm::Vec<T, 3> > make_testData(int size)
@@ -143,27 +104,39 @@ std::vector< vtkm::Vec<T, 3> > make_testData(int size)
   return data;
 }
 
+//This is the list of devices to compile in support for. The order of the
+//devices determines the runtime preference.
+struct DevicesToTry
+    : vtkm::ListTagBase<
+        vtkm::cont::DeviceAdapterTagCuda,
+        vtkm::cont::DeviceAdapterTagTBB,
+        vtkm::cont::DeviceAdapterTagSerial> {  };
+
 
 int main(int, char**)
 {
-  typedef vtkm::Vec< vtkm::Float32, 3 > FloatVec3;
-  typedef vtkm::Vec< vtkm::UInt8, 4 > Uint8Vec4;
-
   std::vector< FloatVec3 > data = make_testData<vtkm::Float32>(1024);
 
-  typedef ::vtkm::cont::DeviceAdapterTagSerial SerialTag;
-  typedef ::vtkm::cont::DeviceAdapterTagTBB TBBTag;
-  typedef ::vtkm::cont::DeviceAdapterTagCuda CudaTag;
-
   //make array handles for the data
-  vtkm::cont::ArrayHandle< FloatVec3 > in = vtkm::cont::make_ArrayHandle(data);
-  vtkm::cont::ArrayHandle< FloatVec3 > out;
-  vtkm::cont::ArrayHandle< Uint8Vec4 > color;
 
-  //Run the algorithm on all backends that we have compiled support for.
-  run_if_valid(in, out, color, CudaTag());
-  run_if_valid(in, out, color, TBBTag());
-  run_if_valid(in, out, color, SerialTag());
+
+  // TryExecutes takes a functor and a list of devices. It then tries to run
+  // the functor for each device (in the order given in the list) until the
+  // execution succeeds. This allows you to compile in support for multiple
+  // devices which have runtime requirements ( GPU / HW Accelerator ) and
+  // correctly choose the best device at runtime.
+  //
+  // The functor parentheses operator should take exactly one argument, which is
+  // the DeviceAdapterTag to use. The functor should return true if the execution
+  // succeeds.
+  //
+  // This function also optionally takes a vtkm::cont::RuntimeDeviceTracker, which
+  // will monitor for certain failures across calls to TryExecute and skip trying
+  // devices with a history of failure.
+  RunGenerateSurfaceWorklet task;
+  task.In = vtkm::cont::make_ArrayHandle(data);
+  vtkm::cont::TryExecute(task, DevicesToTry());
+
 }
 
 

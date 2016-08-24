@@ -20,6 +20,7 @@
 
 set(headers
   CellAverage.h
+  Clip.h
   ExternalFaces.h
   FieldMetadata.h
   FilterCell.h
@@ -27,6 +28,7 @@ set(headers
   FilterDataSetWithField.h
   FilterField.h
   FilterTraits.h
+  Histogram.h
   MarchingCubes.h
   PointElevation.h
   PolicyBase.h
@@ -40,11 +42,13 @@ set(headers
 
 set(header_template_sources
   CellAverage.hxx
+  Clip.hxx
   ExternalFaces.hxx
   FilterCell.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx
+  Histogram.hxx
   MarchingCubes.hxx
   PointElevation.hxx
   Threshold.hxx

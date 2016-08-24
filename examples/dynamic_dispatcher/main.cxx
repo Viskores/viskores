@@ -45,17 +45,17 @@ struct ExampleFieldWorklet : public vtkm::worklet::WorkletMapField
                    V& out_scalar2 ) const
   {
     out_vec = vec * scalar1;
-    out_scalar1 = scalar1 + scalar2;
+    out_scalar1 = static_cast<U>(scalar1 + scalar2);
     out_scalar2 = scalar2;
   }
 
   template<typename T, typename U, typename V, typename W, typename X, typename Y>
   VTKM_EXEC_EXPORT
-  void operator()( const T & vec,
-                   const U & scalar1,
-                   const V& scalar2,
-                   W& out_vec,
-                   X& out_scalar,
+  void operator()( const T &,
+                   const U &,
+                   const V&,
+                   W&,
+                   X&,
                    Y& ) const
   {
   //no-op
@@ -65,6 +65,9 @@ struct ExampleFieldWorklet : public vtkm::worklet::WorkletMapField
 
 int main(int argc, char** argv)
 {
+  (void)argc;
+  (void)argv;
+
   std::vector< vtkm::Vec<vtkm::Float32, 3> > inputVec;
   std::vector< vtkm::Int32 > inputScalar1;
   std::vector< vtkm::Float64 > inputScalar2;
@@ -72,24 +75,19 @@ int main(int argc, char** argv)
   vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32, 3> > handleV =
     vtkm::cont::make_ArrayHandle(inputVec);
 
-  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32, 3> > handleS1 =
-    vtkm::cont::make_ArrayHandle(inputVec);
+  vtkm::cont::ArrayHandle< vtkm::Int32 > handleS1 =
+    vtkm::cont::make_ArrayHandle(inputScalar1);
 
-  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32, 3> > handleS2 =
-    vtkm::cont::make_ArrayHandle(inputVec);
+  vtkm::cont::ArrayHandle< vtkm::Float64 > handleS2 =
+    vtkm::cont::make_ArrayHandle(inputScalar2);
 
   vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32, 3> > handleOV;
-  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32, 3> > handleOS1;
-  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32, 3> > handleOS2;
+  vtkm::cont::ArrayHandle< vtkm::Int32 >   handleOS1;
+  vtkm::cont::ArrayHandle< vtkm::Float64 > handleOS2;
 
-  std::cout << "Making 3 output DynamicArrayHandles " << std::endl;
   vtkm::cont::DynamicArrayHandle out1(handleOV), out2(handleOS1), out3(handleOS2);
 
-  typedef vtkm::worklet::DispatcherMapField<ExampleFieldWorklet> DispatcherType;
-
-  std::cout << "Invoking ExampleFieldWorklet" << std::endl;
-  DispatcherType dispatcher;
-
+  vtkm::worklet::DispatcherMapField<ExampleFieldWorklet> dispatcher;
   dispatcher.Invoke(handleV, handleS1, handleS2, out1, out2, out3);
 
 }

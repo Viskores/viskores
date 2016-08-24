@@ -518,7 +518,21 @@ private:
   mutable bool ModifiedFlag;
 };
 
+template<typename Functor>
+void CastAndCall(const vtkm::cont::Field& field, const Functor &f)
+{
+  field.GetData().CastAndCall(f);
+}
 
+namespace internal {
+template<>
+struct DynamicTransformTraits<vtkm::cont::Field>
+{
+  typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
+};
+
+
+} // namespace internal
 } // namespace cont
 } // namespace vtkm
 

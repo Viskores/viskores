@@ -167,9 +167,15 @@ $endfor\
 } // namespace detail
 
 //-----------------------------------------------------------------------------
-
 /// A basic tag for a list of typenames. This struct can be subclassed
 /// and still behave like a list tag.
+#if defined(VTKM_HAVE_CXX_11)
+template<typename... ArgTypes>
+struct ListTagBase : detail::ListRoot
+{
+  typedef detail::ListBase<void(ArgTypes...)> List;
+};
+#else
 template<$template_params(max_base_list, default=' = vtkm::internal::NullType')>
 struct ListTagBase : detail::ListRoot
 {
@@ -184,6 +190,7 @@ struct ListTagBase<$param_list(num_params)> : detail::ListRoot
 };
 
 $endfor\
+#endif
 
 } // namespace vtkm
 

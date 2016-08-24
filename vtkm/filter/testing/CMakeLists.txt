@@ -21,9 +21,11 @@
 set(unit_tests
   UnitTestFieldMetadata.cxx
   UnitTestCellAverageFilter.cxx
+  UnitTestClipFilter.cxx
   UnitTestExternalFacesFilter.cxx
-  UnitTestPointElevationFilter.cxx
+  UnitTestHistogramFilter.cxx
   UnitTestMarchingCubesFilter.cxx
+  UnitTestPointElevationFilter.cxx
   UnitTestThresholdFilter.cxx
   UnitTestVertexClusteringFilter.cxx
  )
