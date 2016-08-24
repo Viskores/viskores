@@ -230,12 +230,6 @@ if (VTKm_BUILD_DOCUMENTATION)
 endif()
 
 #-----------------------------------------------------------------------------
-# Build examples
-if(VTKm_BUILD_EXAMPLES)
-  add_subdirectory(examples)
-endif(VTKm_BUILD_EXAMPLES)
-
-#-----------------------------------------------------------------------------
 # Ready files for find_package
 include(CMakePackageConfigHelpers)
 
@@ -243,7 +237,16 @@ string(REPLACE ";" " " VTKm_AVAILABLE_COMPONENTS_LIST
   "${VTKm_AVAILABLE_COMPONENTS}"
   )
 
-set(VTKm_LOAD_COMPONENTS_COMMANDS "
+set(VTKm_LOAD_COMPONENTS_COMMANDS "# Clear out old FOUND flags")
+foreach(component ${VTKm_AVAILABLE_COMPONENTS})
+  set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
+set(VTKm_${component}_FOUND)"
+    )
+endforeach(component)
+
+set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
+
+# Load each component selected in find_package
 foreach(comp \${VTKm_FIND_COMPONENTS})")
 
 foreach(component ${VTKm_AVAILABLE_COMPONENTS})
@@ -331,3 +334,9 @@ set(CPACK_PACKAGE_FILE_NAME "VTKm-${VTKm_VERSION}")
 set(CPACK_RESOURCE_FILE_LICENSE ${VTKm_SOURCE_DIR}/LICENSE.txt)
 set(CPACK_RESOURCE_FILE_README ${VTKm_SOURCE_DIR}/README.md)
 include(CPack)
+
+#-----------------------------------------------------------------------------
+# Build examples
+if(VTKm_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif(VTKm_BUILD_EXAMPLES)

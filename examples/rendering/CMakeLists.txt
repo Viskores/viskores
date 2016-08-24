@@ -21,10 +21,10 @@
 ##=============================================================================
 
 #Find the VTK-m package
-find_package(VTKm QUIET REQUIRED COMPONENTS Base)
-
-vtkm_configure_component_OpenGL()
-vtkm_configure_component_Serial()
+find_package(VTKm REQUIRED QUIET
+  COMPONENTS Base
+  OPTIONAL_COMPONENTS Serial OpenGL
+  )
 
 find_package(GLUT)
 

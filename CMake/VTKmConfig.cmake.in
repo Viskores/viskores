@@ -52,6 +52,9 @@ if(VTKm_PACKAGE_IN_BUILD)
   set(VTKm_INCLUDE_DIRS ${VTKm_INCLUDE_DIRS} "@VTKm_SOURCE_DIR@")
 endif()
 
+# Clear out the libraries. We will add more when loading components.
+set(VTKm_LIBRARIES)
+
 set(VTKm_REQUIRED_BOOST_VERSION "@VTKm_REQUIRED_BOOST_VERSION@")
 
 if(NOT VTKm_PACKAGE_IN_BUILD)
