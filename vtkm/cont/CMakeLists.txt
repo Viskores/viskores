@@ -37,6 +37,7 @@ set(headers
   ArrayPortal.h
   ArrayPortalToIterators.h
   ArrayHandleConcatenate.h
+  ArrayHandle2D.h
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h
