@@ -41,8 +41,9 @@ class CanvasGL : public Canvas
 {
 public:
   VTKM_CONT_EXPORT
-  CanvasGL()
-    : Canvas(0,0)
+  CanvasGL(vtkm::Id width=1024,
+           vtkm::Id height=1024)
+    : Canvas(width,height)
   {
   }
 

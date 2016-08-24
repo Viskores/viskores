@@ -39,7 +39,7 @@ public:
   VTKM_CONT_EXPORT
   CanvasEGL(vtkm::Id width=1024,
             vtkm::Id height=1024)
-    : CanvasGL()
+  : CanvasGL(width,height)
   {
     ctx = NULL;
     this->ResizeBuffers(width, height);

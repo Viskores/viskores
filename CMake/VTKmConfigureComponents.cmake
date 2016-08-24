@@ -39,6 +39,7 @@ set(VTKm_AVAILABLE_COMPONENTS
   OpenGL
   OSMesa
   EGL
+  GLFW
   Interop
   TBB
   CUDA
@@ -142,6 +143,18 @@ macro(vtkm_configure_component_EGL)
     ADD_LIBRARIES ${EGL_LIBRARY}
     )
 endmacro(vtkm_configure_component_EGL)
+
+macro(vtkm_configure_component_GLFW)
+  vtkm_configure_component_OpenGL()
+
+  find_package(GLFW ${VTKm_FIND_PACKAGE_QUIETLY})
+
+  vtkm_finish_configure_component(GLFW
+    DEPENDENT_VARIABLES VTKm_OpenGL_FOUND GLFW_FOUND
+    ADD_INCLUDES ${GLFW_INCLUDE_DIR}
+    ADD_LIBRARIES ${GLFW_LIBRARY}
+    )
+endmacro(vtkm_configure_component_GLFW)
 
 macro(vtkm_configure_component_Interop)
   vtkm_configure_component_OpenGL()
