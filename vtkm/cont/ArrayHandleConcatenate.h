@@ -91,6 +91,7 @@ private:
 
 }   // namespace internal
 
+
 template< typename ArrayHandleType1, typename ArrayHandleType2 >
 class StorageTagConcatenate {};
 
@@ -297,7 +298,7 @@ public:
       ( vtkm::cont::ArrayHandle< typename ArrayHandleType1::ValueType, 
             StorageTagConcatenate< ArrayHandleType1, ArrayHandleType2 > > ));
 
-private:
+protected:
   typedef vtkm::cont::internal::Storage< ValueType, StorageTag > StorageType;
 
 public:

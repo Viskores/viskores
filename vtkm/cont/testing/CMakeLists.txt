@@ -44,7 +44,7 @@ set(unit_tests
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleConcatenate.cxx
-  UnitTestArrayHandle2D.cxx
+  UnitTestArrayHandleInterpreter.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestContTesting.cxx
   UnitTestComputeRangeSerial.cxx
