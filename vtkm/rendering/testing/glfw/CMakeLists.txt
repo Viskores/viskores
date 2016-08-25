@@ -18,14 +18,11 @@
 ##  this software.
 ##============================================================================
 
-add_subdirectory(osmesa)
-add_subdirectory(egl)
-add_subdirectory(glfw)
-
-set(unit_tests
-  UnitTestMapperRayTracer.cxx
-  UnitTestMapperVolume.cxx
-)
-
-VTKm_unit_tests(SOURCES ${unit_tests})
+vtkm_configure_component_GLFW()
+if (VTKm_GLFW_FOUND)
+  set(unit_tests ${unit_tests}
+   UnitTestMapperGLFW.cxx
+   )
+  VTKm_unit_tests(SOURCES ${unit_tests})
+endif()
 

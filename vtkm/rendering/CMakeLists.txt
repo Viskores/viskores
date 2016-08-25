@@ -66,12 +66,15 @@ endif()
 find_package(OpenGL ${VTKm_FIND_PACKAGE_QUIETLY})
 if(OPENGL_FOUND)
   set(headers ${headers} ${opengl_headers})
-
-
+  
   find_package(EGL ${VTKm_FIND_PACKAGE_QUIETLY})
   if(EGL_FOUND)
-   set(headers ${headers} ${egl_headers})
- endif()
+    set(headers ${headers} ${egl_headers})
+  endif()
+  find_package(GLFW ${VTKm_FIND_PACKAGE_QUIETLY})
+  if(GLFW_FOUND)
+    set(headers ${headers} ${glfw_headers})
+  endif()
 endif()
 
 vtkm_declare_headers(${headers})
