@@ -760,7 +760,8 @@ private:
 
   struct ZipTypesToTest
     : vtkm::ListTagBase< vtkm::Pair< vtkm::UInt8, vtkm::Id >,
-                         vtkm::Pair< vtkm::Float64,  vtkm::Vec< vtkm::UInt8, 4> >
+                         vtkm::Pair< vtkm::Float64,  vtkm::Vec< vtkm::UInt8, 4> >,
+                         vtkm::Pair< vtkm::Vec<vtkm::Float32,3>, vtkm::Vec<vtkm::Int8, 4> >
                          >
   {  };
 
