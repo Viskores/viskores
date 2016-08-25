@@ -58,21 +58,22 @@ set(osmesa_headers
   )
 
 #-----------------------------------------------------------------------------
-find_package(MESA ${VTKm_FIND_PACKAGE_QUIETLY})
-if(OSMESA_FOUND)
-set(headers ${headers} ${osmesa_headers})
-endif()
-
-find_package(OpenGL ${VTKm_FIND_PACKAGE_QUIETLY})
-if(OPENGL_FOUND)
+vtkm_configure_component_OpenGL()
+if(VTKm_OpenGL_FOUND)
   set(headers ${headers} ${opengl_headers})
   
-  find_package(EGL ${VTKm_FIND_PACKAGE_QUIETLY})
-  if(EGL_FOUND)
+  vtkm_configure_component_OSMesa()
+  if(VTKm_OSMesa_FOUND)
+    set(headers ${headers} ${osmesa_headers})
+  endif()
+
+  vtkm_configure_component_EGL()
+  if(VTKm_EGL_FOUND)
     set(headers ${headers} ${egl_headers})
   endif()
-  find_package(GLFW ${VTKm_FIND_PACKAGE_QUIETLY})
-  if(GLFW_FOUND)
+
+  vtkm_configure_component_GLFW()
+  if(VTKm_GLFW_FOUND)
     set(headers ${headers} ${glfw_headers})
   endif()
 endif()
