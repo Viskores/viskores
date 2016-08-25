@@ -18,9 +18,11 @@
 ##  this software.
 ##============================================================================
 
-add_subdirectory(osmesa)
-add_subdirectory(egl)
-add_subdirectory(glfw)
+set(headers
+  RenderTest.h
+  )
+
+vtkm_declare_headers(${headers})
 
 set(unit_tests
   UnitTestMapperRayTracer.cxx
@@ -28,4 +30,8 @@ set(unit_tests
 )
 
 VTKm_unit_tests(SOURCES ${unit_tests})
+
+add_subdirectory(osmesa)
+add_subdirectory(egl)
+add_subdirectory(glfw)
 
