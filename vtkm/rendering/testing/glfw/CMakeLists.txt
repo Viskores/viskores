@@ -20,7 +20,7 @@
 
 vtkm_configure_component_GLFW()
 if (VTKm_GLFW_FOUND)
-  set(unit_tests ${unit_tests}
+  set(unit_tests
    UnitTestMapperGLFW.cxx
    )
   VTKm_unit_tests(SOURCES ${unit_tests})
