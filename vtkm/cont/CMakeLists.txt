@@ -39,6 +39,7 @@ set(headers
   ArrayHandleConcatenate.h
   ArrayHandleInterpreter.h
   ArrayHandleConcatenate2DTopDown.h
+  ArrayHandleConcatenate2DLeftRight.h
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h

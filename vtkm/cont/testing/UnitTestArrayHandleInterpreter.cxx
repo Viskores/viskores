@@ -20,6 +20,7 @@
 
 #include <vtkm/cont/ArrayHandleInterpreter.h>
 #include <vtkm/cont/ArrayHandleConcatenate2DTopDown.h>
+#include <vtkm/cont/ArrayHandleConcatenate2DLeftRight.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -32,8 +33,8 @@ const vtkm::Id LEN = NX * NY * NZ;
 
 void TestArrayHandleInterpreter()
 {
-  typedef vtkm::cont::ArrayHandleInterpreter<vtkm::Float64> ArrayInterpreter;
-  ArrayInterpreter array1, array2;
+  typedef vtkm::cont::ArrayHandleInterpreter<vtkm::Id> ArrayInterpreter;
+  ArrayInterpreter array1, array2;    // NX x NY
   array1.Allocate( LEN );
   array2.Allocate( LEN );
   
@@ -41,30 +42,61 @@ void TestArrayHandleInterpreter()
   array2.InterpretAs2D( NX, NY );
 
   vtkm::Id val = 0;
-/*
-  for( vtkm::Id k = 0; k < NZ; k++ )
-    for( vtkm::Id j = 0; j < NY; j++ )
-      for( vtkm::Id i = 0; i < NX; i++ )
-      {
-        array1.Set2D( i, j, val++ );
-        array2.Set2D( i, j, val++ );
-      }
-*/
         
   typedef vtkm::cont::ArrayHandleConcatenate2DTopDown
           < ArrayInterpreter, ArrayInterpreter>     Concat2DTopDown;
-  Concat2DTopDown arrayTopDown( array1, array2 );
+  Concat2DTopDown arrayTopDown( array1, array2 );   // NX x 2NY
+  for( vtkm::Id j = 0; j < arrayTopDown.GetDimY(); j++ )
+    for( vtkm::Id i = 0; i < arrayTopDown.GetDimX(); i++ ) 
+    {
+      arrayTopDown.Set2D( i, j, val++ ); 
+    }
 
-  for( vtkm::Id j = 0; j < NY*2; j++ )
-    for( vtkm::Id i = 0; i < NX; i++ ) 
-      arrayTopDown.Set2D( i, j, val++ );
-      //std::cout << arrayTopDown.Get2D(i, j) << std::endl;
+  ArrayInterpreter array3;        // NX x 2NY
+  array3.Allocate( LEN * 2 );
+  val = 0;
+  for( vtkm::Id i = 0; i < array3.GetNumberOfValues(); i++ )
+    array3.GetPortalControl().Set(i, val++ );
+  array3.InterpretAs2D( NX, NY*2 );
 
-  for (vtkm::Id index = 0; index < arrayTopDown.GetNumberOfValues(); index++)
+  typedef vtkm::cont::ArrayHandleConcatenate2DLeftRight
+          < ArrayInterpreter, Concat2DTopDown >     Concat2DLeftRight;
+  Concat2DLeftRight arrayLeftRight( array3, arrayTopDown ); // 2NX x 2NY
+
+  val = 100;
+  for( vtkm::Id j = 0; j < arrayLeftRight.GetDimY(); j++ )
+    for( vtkm::Id i = 0; i < arrayLeftRight.GetDimX(); i++ ) 
+    {
+      arrayLeftRight.Set2D( i, j, val++ ); 
+    }
+
+/*
+  array1.PrintInfo();
+  array2.PrintInfo();
+  array3.PrintInfo();
+  arrayTopDown.PrintInfo();
+  arrayLeftRight.PrintInfo();
+*/
+
+  ArrayInterpreter array4;  // 2NX x NY
+  array4.Allocate( LEN * 2 );
+  val = 0;
+  for( vtkm::Id i = 0; i < array4.GetNumberOfValues(); i++ )
+    array4.GetPortalControl().Set(i, val++ );
+  array4.InterpretAs2D( 2*NX, NY );
+  typedef vtkm::cont::ArrayHandleConcatenate2DTopDown
+          < ArrayInterpreter, Concat2DLeftRight >   Concat2DTopDownV2;
+  Concat2DTopDownV2 topdown2( array4, arrayLeftRight );
+
+  for( vtkm::Id j = 0; j < topdown2.GetDimY(); j++ )
   {
-    std::cout << arrayTopDown.GetPortalConstControl().Get(index) << std::endl;
+    for( vtkm::Id i = 0; i < topdown2.GetDimX(); i++ )
+    {
+      std::cout << topdown2.Get2D( i, j ) << "\t";
+    }
+    std::cout << std::endl;
   }
-  
+
 }
 
 } 
