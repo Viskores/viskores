@@ -285,7 +285,8 @@ public:
     FunctionType Function;
   };
 
-  /// Runs template \p function on all the types in the given list.
+  /// Runs template \p function on all the types in the given list. If no type
+  /// list is given, then an exemplar list of types is used.
   ///
   template<typename FunctionType, typename TypeList>
   static void TryTypes(const FunctionType &function, TypeList)
@@ -294,16 +295,30 @@ public:
                       TypeList());
   }
 
-  /// Runs templated \p function on all the basic types defined in VTK-m. This
-  /// is helpful to test templated functions that should work on all types. If
-  /// the function is supposed to work on some subset of types, then use
-  /// \c TryTypes to restrict the call to some other list of types.
-  ///
+  struct TypeListTagExemplarTypes
+      : vtkm::ListTagBase<vtkm::UInt8,
+                          vtkm::Id,
+                          vtkm::FloatDefault,
+                          vtkm::Vec<vtkm::Float64,3> >
+  {  };
+
   template<typename FunctionType>
-  static void TryAllTypes(const FunctionType &function)
+  static void TryTypes(const FunctionType &function)
   {
-    TryTypes(function, vtkm::TypeListTagAll());
+    TryTypes(function, TypeListTagExemplarTypes());
   }
+
+  // Disabled: This very long list results is very long compile times.
+//  /// Runs templated \p function on all the basic types defined in VTK-m. This
+//  /// is helpful to test templated functions that should work on all types. If
+//  /// the function is supposed to work on some subset of types, then use
+//  /// \c TryTypes to restrict the call to some other list of types.
+//  ///
+//  template<typename FunctionType>
+//  static void TryAllTypes(const FunctionType &function)
+//  {
+//    TryTypes(function, vtkm::TypeListTagAll());
+//  }
 
   /// Runs templated \p function on all cell shapes defined in VTK-m. This is
   /// helpful to test templated functions that should work on all cell types.

@@ -80,7 +80,7 @@ struct BinaryPredicateTestFunctor
 
 void TestBinaryPredicates()
 {
-  vtkm::testing::Testing::TryAllTypes(BinaryPredicateTestFunctor());
+  vtkm::testing::Testing::TryTypes(BinaryPredicateTestFunctor());
 
   //test LogicalAnd
   {

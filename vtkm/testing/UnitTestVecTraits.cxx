@@ -46,7 +46,7 @@ struct TestVecTypeFunctor
 void TestVecTraits()
 {
   TestVecTypeFunctor test;
-  vtkm::testing::Testing::TryAllTypes(test);
+  vtkm::testing::Testing::TryTypes(test);
   std::cout << "vtkm::Vec<vtkm::FloatDefault, 5>" << std::endl;
   test(vtkm::Vec<vtkm::FloatDefault,5>());
 

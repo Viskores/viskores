@@ -79,7 +79,7 @@ struct TryArrayInType
 template<typename Device>
 void TryArrayInTransport(Device)
 {
-  vtkm::testing::Testing::TryAllTypes(TryArrayInType<Device>());
+  vtkm::testing::Testing::TryTypes(TryArrayInType<Device>());
 }
 
 void TestArrayInTransport()

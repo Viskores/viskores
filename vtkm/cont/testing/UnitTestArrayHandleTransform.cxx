@@ -206,8 +206,7 @@ struct TryInputType
 
 void TestArrayHandleTransform()
 {
-//  vtkm::testing::Testing::TryAllTypes(TryInputType());
-  vtkm::testing::Testing::TryTypes(TryInputType(), vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(TryInputType());
 }
 
 
