@@ -117,7 +117,7 @@ macro(vtkm_configure_component_OpenGL)
 endmacro(vtkm_configure_component_OpenGL)
 
 macro(vtkm_configure_component_OSMesa)
-  vtkm_configure_component_Base()
+  vtkm_configure_component_OpenGL()
 
   if (UNIX AND NOT APPLE)
     find_package(MESA ${VTKm_FIND_PACKAGE_QUIETLY})
