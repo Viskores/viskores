@@ -41,6 +41,7 @@ set(VTKm_AVAILABLE_COMPONENTS
   EGL
   GLFW
   Interop
+  Rendering
   TBB
   CUDA
   )
@@ -201,6 +202,19 @@ macro(vtkm_configure_component_Interop)
     ADD_LIBRARIES ${GLEW_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
     )
 endmacro(vtkm_configure_component_Interop)
+
+macro(vtkm_configure_component_Rendering)
+  if(VTKm_BUILD_RENDERING)
+    vtkm_configure_component_OpenGL()
+    vtkm_configure_component_EGL()
+    vtkm_configure_component_OSMesa()
+  endif()
+
+  vtkm_finish_configure_component(Rendering
+    DEPENDENT_VARIABLES VTKm_BUILD_RENDERING VTKm_Base_FOUND
+    ADD_LIBRARIES vtkm_rendering
+    )
+endmacro(vtkm_configure_component_Rendering)
 
 macro(vtkm_configure_component_TBB)
   if(VTKm_ENABLE_TBB)

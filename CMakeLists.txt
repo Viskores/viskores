@@ -46,7 +46,9 @@ set(VTKm_PATCH_VERSION 0)
 set(VTKm_VERSION "${VTKm_MAJOR_VERSION}.${VTKm_MINOR_VERSION}.${VTKm_PATCH_VERSION}")
 
 set(VTKm_INSTALL_INCLUDE_DIR "include")
-set(VTKm_INSTALL_CONFIG_DIR "include")
+set(VTKm_INSTALL_CONFIG_DIR "lib")
+set(VTKm_INSTALL_LIB_DIR "lib")
+set(VTKm_INSTALL_BIN_DIR "bin")
 set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm/cmake")
 
 set(VTKm_REQUIRED_BOOST_VERSION "1.48")
@@ -149,7 +151,7 @@ set( EXECUTABLE_OUTPUT_PATH
 
 ## Set the directory where the libraries will be stored
 set( LIBRARY_OUTPUT_PATH
-  ${PROJECT_BINARY_DIR}/libs
+  ${PROJECT_BINARY_DIR}/lib
   CACHE PATH
   "Directory where all the libraries will be stored"
 )

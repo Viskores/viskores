@@ -43,6 +43,10 @@ set(headers
   WorldAnnotator.h
   )
 
+set(sources
+  AxisAnnotation2D.cxx
+  )
+
 set(opengl_headers
   CanvasGL.h
   MapperGL.h
@@ -79,6 +83,11 @@ if(VTKm_OpenGL_FOUND)
 endif()
 
 vtkm_declare_headers(${headers})
+
+vtkm_library(SOURCES ${sources})
+
+# Subclasses need rendering library
+vtkm_configure_component_Rendering()
 
 add_subdirectory(internal)
 add_subdirectory(raytracing)

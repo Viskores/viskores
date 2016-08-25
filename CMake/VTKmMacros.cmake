@@ -19,6 +19,7 @@
 ##============================================================================
 
 include(CMakeParseArguments)
+include(GenerateExportHeader)
 
 # Utility to build a kit name from the current directory.
 function(vtkm_get_kit_name kitvar)
@@ -551,6 +552,84 @@ function(vtkm_benchmarks device_adapter)
   endif()
 
 endfunction(vtkm_benchmarks)
+
+# Add a VTK-m library. The name of the library will match the "kit" name
+# (e.g. vtkm_rendering) unless the NAME argument is given.
+#
+# vtkm_library(
+#   [NAME <name>]
+#   SOURCES <source_list>
+#   [CUDA]
+#   )
+function(vtkm_library)
+  set(options CUDA)
+  set(oneValueArgs NAME)
+  set(multiValueArgs SOURCES)
+  cmake_parse_arguments(VTKm_LIB
+    "${options}" "${oneValueArgs}" "${multiValueArgs}"
+    ${ARGN}
+    )
+
+  vtkm_get_kit_name(kit dir_prefix)
+  if(VTKm_LIB_NAME)
+    set(lib_name ${VTKm_LIB_NAME})
+  else()
+    set(lib_name ${kit})
+  endif()
+
+  if(VTKm_LIB_CUDA)
+    vtkm_setup_nvcc_flags(old_nvcc_flags old_cxx_flags)
+
+    # Cuda compiles do not respect target_include_directories
+    cuda_include_directories(${VTKm_INCLUDE_DIRS})
+
+    cuda_add_library(${lib_name} ${VTKm_LIB_SOURCES})
+
+    set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+    set(CMAKE_CXX_FLAGS ${old_cxx_flags})
+  else()
+    add_library(${lib_name} ${VTKm_LIB_SOURCES})
+  endif()
+
+  #do it as a property value so we don't pollute the include_directories
+  #for any other targets
+  set_property(TARGET ${lib_name} APPEND PROPERTY
+      INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
+
+  target_link_libraries(${lib_name} ${VTKm_LIBRARIES})
+
+  target_compile_options(${lib_name} PRIVATE ${VTKm_COMPILE_OPTIONS})
+
+  if(MSVC)
+    vtkm_setup_msvc_properties(${lib_name})
+  endif()
+
+  if(VTKm_EXTRA_COMPILER_WARNINGS)
+    set_property(TARGET ${lib_name}
+               APPEND PROPERTY COMPILE_FLAGS
+               ${CMAKE_CXX_FLAGS_WARN_EXTRA}
+               )
+  endif(VTKm_EXTRA_COMPILER_WARNINGS)
+
+  generate_export_header(${lib_name})
+
+  #generate_export_header creates the header in CMAKE_CURRENT_BINARY_DIR.
+  #The build expects it in the install directory.
+  file(COPY
+    ${CMAKE_CURRENT_BINARY_DIR}/${lib_name}_export.h
+    DESTINATION
+      ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
+    )
+
+  install(TARGETS ${lib_name}
+    ARCHIVE DESTINATION ${VTKm_INSTALL_LIB_DIR}
+    LIBRARY DESTINATION ${VTKm_INSTALL_LIB_DIR}
+    RUNTIME DESTINATION ${VTKm_INSTALL_BIN_DIR}
+    )
+  vtkm_install_headers("${dir_prefix}"
+    ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
+    )
+endfunction(vtkm_library)
 
 # The Thrust project is not as careful as the VTKm project in avoiding warnings
 # on shadow variables and unused arguments.  With a real GCC compiler, you

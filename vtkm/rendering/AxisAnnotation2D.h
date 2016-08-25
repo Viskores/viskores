@@ -20,13 +20,18 @@
 #ifndef vtk_m_rendering_AxisAnnotation2D_h
 #define vtk_m_rendering_AxisAnnotation2D_h
 
+#include <vtkm/rendering/vtkm_rendering_export.h>
+
+#include <vtkm/rendering/AxisAnnotation.h>
+#include <vtkm/rendering/Color.h>
+
+#include <vtkm/Range.h>
+
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
-#include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/WorldAnnotator.h>
-#include <vtkm/rendering/AxisAnnotation.h>
 #include <vtkm/rendering/TextAnnotation.h>
 
 #include <sstream>
@@ -37,198 +42,127 @@ namespace rendering {
 class AxisAnnotation2D : public AxisAnnotation
 {
 protected:
-  vtkm::Float64 maj_tx, maj_ty, maj_toff;
-  vtkm::Float64 min_tx, min_ty, min_toff;
-  vtkm::Float64 x0, y0, x1, y1;
-  vtkm::Float64 lower, upper;
-  vtkm::Float32 fontscale;
-  vtkm::Float32  linewidth;
-  vtkm::rendering::Color  color;
-  bool   logarithmic;
+  vtkm::Float64 MajorTickSizeX, MajorTickSizeY, MajorTickOffset;
+  vtkm::Float64 MinorTickSizeX, MinorTickSizeY, MinorTickOffset;
+  vtkm::Float64 PosX0, PosY0, PosX1, PosY1;
+  vtkm::Range TickRange;
+  vtkm::Float32 FontScale;
+  vtkm::Float32 LineWidth;
+  vtkm::rendering::Color Color;
+  bool Logarithmic;
 
-  TextAnnotation::HorizontalAlignment halign;
-  TextAnnotation::VerticalAlignment valign;
-  std::vector<TextAnnotation*> labels;
+  TextAnnotation::HorizontalAlignment AlignH;
+  TextAnnotation::VerticalAlignment AlignV;
+  std::vector<TextAnnotation*> Labels;
 
 
-  std::vector<vtkm::Float64> maj_positions;
-  std::vector<vtkm::Float64> maj_proportions;
+  std::vector<vtkm::Float64> PositionsMajor;
+  std::vector<vtkm::Float64> ProportionsMajor;
 
-  std::vector<vtkm::Float64> min_positions;
-  std::vector<vtkm::Float64> min_proportions;
+  std::vector<vtkm::Float64> PositionsMinor;
+  std::vector<vtkm::Float64> ProportionsMinor;
 
-  int moreOrLessTickAdjustment;
+  int MoreOrLessTickAdjustment;
 public:
-  AxisAnnotation2D() : AxisAnnotation()
-  {
-    halign = TextAnnotation::HCenter;
-    valign = TextAnnotation::VCenter;
-    fontscale = 0.05f;
-    linewidth = 1.0;
-    color = Color(1,1,1);
-    logarithmic = false;
-    moreOrLessTickAdjustment = 0;
-  }
-  virtual ~AxisAnnotation2D()
-  {
-  }
+  VTKM_RENDERING_EXPORT
+  AxisAnnotation2D();
+
+  VTKM_RENDERING_EXPORT
+  virtual ~AxisAnnotation2D();
+
 #if 0
+  VTKM_RENDERING_EXPORT
   void SetLogarithmic(bool l)
   {
-    logarithmic = l;
+    this->Logarithmic = l;
   }
 #endif
+
+  VTKM_RENDERING_EXPORT
   void SetMoreOrLessTickAdjustment(int offset)
   {
-    moreOrLessTickAdjustment = offset;
+    this->MoreOrLessTickAdjustment = offset;
   }
+
+  VTKM_RENDERING_EXPORT
   void SetColor(vtkm::rendering::Color c)
   {
-    color = c;
+    this->Color = c;
   }
+
+  VTKM_RENDERING_EXPORT
   void SetLineWidth(vtkm::Float32 lw)
   {
-    linewidth = lw;
+    this->LineWidth = lw;
   }
+
+  VTKM_RENDERING_EXPORT
   void SetMajorTickSize(vtkm::Float64 xlen, vtkm::Float64 ylen, vtkm::Float64 offset)
   {
     /// offset of 0 means the tick is inside the frame
     /// offset of 1 means the tick is outside the frame
     /// offset of 0.5 means the tick is centered on the frame
-    maj_tx=xlen;
-    maj_ty=ylen;
-    maj_toff = offset;
+    this->MajorTickSizeX=xlen;
+    this->MajorTickSizeY=ylen;
+    this->MajorTickOffset = offset;
   }
+
+  VTKM_RENDERING_EXPORT
   void SetMinorTickSize(vtkm::Float64 xlen, vtkm::Float64 ylen, vtkm::Float64 offset)
   {
-    min_tx=xlen;
-    min_ty=ylen;
-    min_toff = offset;
+    this->MinorTickSizeX=xlen;
+    this->MinorTickSizeY=ylen;
+    this->MinorTickOffset = offset;
   }
-  ///\todo: rename, since it might be screen OR world position?
-  void SetScreenPosition(vtkm::Float64 x0_, vtkm::Float64 y0_,
-                         vtkm::Float64 x1_, vtkm::Float64 y1_)
-  {
-    x0 = x0_;
-    y0 = y0_;
 
-    x1 = x1_;
-    y1 = y1_;
+  ///\todo: rename, since it might be screen OR world position?
+  VTKM_RENDERING_EXPORT
+  void SetScreenPosition(vtkm::Float64 x0, vtkm::Float64 y0,
+                         vtkm::Float64 x1, vtkm::Float64 y1)
+  {
+    this->PosX0 = x0;
+    this->PosY0 = y0;
+
+    this->PosX1 = x1;
+    this->PosY1 = y1;
   }
+
+  VTKM_RENDERING_EXPORT
   void SetLabelAlignment(TextAnnotation::HorizontalAlignment h,
                          TextAnnotation::VerticalAlignment v)
   {
-    halign = h;
-    valign = v;
+    this->AlignH = h;
+    this->AlignV = v;
   }
+
+  VTKM_RENDERING_EXPORT
   void SetLabelFontScale(vtkm::Float32 s)
   {
-    fontscale = s;
-    for (unsigned int i=0; i<labels.size(); i++)
-      labels[i]->SetScale(s);
+    this->FontScale = s;
+    for (unsigned int i=0; i<this->Labels.size(); i++)
+      this->Labels[i]->SetScale(s);
   }
-  void SetRangeForAutoTicks(vtkm::Float64 l, vtkm::Float64 u)
-  {
-    lower = l;
-    upper = u;
 
-#if 0
-    if (logarithmic)
-    {
-      CalculateTicksLogarithmic(lower, upper, false, maj_positions, maj_proportions, moreOrLessTickAdjustment);
-      CalculateTicksLogarithmic(lower, upper, true,  min_positions, min_proportions, moreOrLessTickAdjustment);
-    }
-    else
-#endif
-    {
-      CalculateTicks(lower, upper, false, maj_positions, maj_proportions, moreOrLessTickAdjustment);
-      CalculateTicks(lower, upper, true,  min_positions, min_proportions, moreOrLessTickAdjustment);
-    }
-  }
-  void SetMajorTicks(const std::vector<vtkm::Float64> &pos, const std::vector<vtkm::Float64> &prop)
+  VTKM_RENDERING_EXPORT
+  void SetRangeForAutoTicks(const vtkm::Range &range);
+  VTKM_RENDERING_EXPORT
+  void SetRangeForAutoTicks(vtkm::Float64 lower, vtkm::Float64 upper)
   {
-    maj_positions.clear();
-    maj_positions.insert(maj_positions.begin(), pos.begin(), pos.end());
-
-    maj_proportions.clear();
-    maj_proportions.insert(maj_proportions.begin(), prop.begin(), prop.end());
+    this->SetRangeForAutoTicks(vtkm::Range(lower, upper));
   }
-  void SetMinorTicks(const std::vector<vtkm::Float64> &pos, const std::vector<vtkm::Float64> &prop)
-  {
-    min_positions.clear();
-    min_positions.insert(min_positions.begin(), pos.begin(), pos.end());
 
-    min_proportions.clear();
-    min_proportions.insert(min_proportions.begin(), prop.begin(), prop.end());
-  }
+  VTKM_RENDERING_EXPORT
+  void SetMajorTicks(const std::vector<vtkm::Float64> &pos,
+                     const std::vector<vtkm::Float64> &prop);
+
+  VTKM_RENDERING_EXPORT
+  void SetMinorTicks(const std::vector<vtkm::Float64> &pos,
+                     const std::vector<vtkm::Float64> &prop);
+
+  VTKM_RENDERING_EXPORT
   virtual void Render(const vtkm::rendering::Camera &camera,
                       const vtkm::rendering::WorldAnnotator &worldAnnotator,
-                      vtkm::rendering::Canvas &canvas)
-  {
-    canvas.AddLine(x0,y0, x1,y1, linewidth, color);
-
-    // major ticks
-    unsigned int nmajor = (unsigned int)maj_proportions.size();
-    while (labels.size() < nmajor)
-    {
-        labels.push_back(new ScreenTextAnnotation("test",
-                                                  color,
-                                                  fontscale,
-                                                  0,0, 0));
-    }
-
-    std::stringstream numberToString;
-    for (unsigned int i=0; i<nmajor; ++i)
-    {
-      vtkm::Float64 xc = x0 + (x1-x0) * maj_proportions[i];
-      vtkm::Float64 yc = y0 + (y1-y0) * maj_proportions[i];
-      vtkm::Float64 xs = xc - maj_tx*maj_toff;
-      vtkm::Float64 xe = xc + maj_tx*(1. - maj_toff);
-      vtkm::Float64 ys = yc - maj_ty*maj_toff;
-      vtkm::Float64 ye = yc + maj_ty*(1. - maj_toff);
-
-      canvas.AddLine(xs,ys, xe,ye, 1.0, color);
-
-      if (maj_ty == 0)
-      {
-        // slight shift to space between label and tick
-        xs -= (maj_tx<0?-1.:+1.) * fontscale * .1;
-      }
-
-      numberToString.str("");
-      numberToString << maj_positions[i];
-
-      labels[i]->SetText(numberToString.str());
-      //if (fabs(maj_positions[i]) < 1e-10)
-      //    labels[i]->SetText("0");
-      ((ScreenTextAnnotation*)(labels[i]))->SetPosition(vtkm::Float32(xs),
-                                                        vtkm::Float32(ys));
-
-      labels[i]->SetAlignment(halign,valign);
-    }
-
-    // minor ticks
-    if (min_tx != 0 || min_ty != 0)
-    {
-      unsigned int nminor = (unsigned int)min_proportions.size();
-      for (unsigned int i=0; i<nminor; ++i)
-      {
-        vtkm::Float64 xc = x0 + (x1-x0) * min_proportions[i];
-        vtkm::Float64 yc = y0 + (y1-y0) * min_proportions[i];
-        vtkm::Float64 xs = xc - min_tx*min_toff;
-        vtkm::Float64 xe = xc + min_tx*(1. - min_toff);
-        vtkm::Float64 ys = yc - min_ty*min_toff;
-        vtkm::Float64 ye = yc + min_ty*(1. - min_toff);
-
-        canvas.AddLine(xs,ys, xe,ye, 1.0, color);
-      }
-    }
-
-    for (unsigned int i=0; i<nmajor; ++i)
-    {
-      labels[i]->Render(camera, worldAnnotator, canvas);
-    }
-  }
+                      vtkm::rendering::Canvas &canvas);
 };
 
 }} //namespace vtkm::rendering
