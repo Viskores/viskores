@@ -31,6 +31,14 @@ namespace worklet {
 namespace wavelets {
 
 
+enum DWTMode {    // boundary extension modes
+  SYMH, 
+  SYMW,
+  ASYMH, 
+  ASYMW
+};
+
+
 // Worklet: perform a simple forward transform
 class ForwardTransform: public vtkm::worklet::WorkletMapField
 {
@@ -468,53 +476,6 @@ private:
 };
 
 
-// Worklet for 2D signal extension no. 1
-class LeftSYMHExtentionWorklet2D : public vtkm::worklet::WorkletMapField
-{
-public:
-  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
-                                 WholeArrayIn  < ScalarAll > ); // signal part
-  typedef void ExecutionSignature( _1, _2, WorkIndex );
-  typedef _1   InputDomain;
-  typedef vtkm::Id Id;
-
-  // Constructor
-  VTKM_EXEC_CONT_EXPORT
-  LeftSYMHExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2)
-      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 )   {}
-
-  // Index translation helper
-  VTKM_EXEC_CONT_EXPORT
-  void GetExtLogicalDim( const Id &idx, Id &x, Id &y ) const
-  {
-    x = idx % extDimX;
-    y = idx / extDimX;
-  }
-
-  // Index translation helper
-  VTKM_EXEC_CONT_EXPORT
-  Id GetSignal1DIndex( Id x, Id y ) const
-  {
-    return y * sigDimX + x;
-  }
-
-  template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_EXPORT
-  void operator()(       PortalOutType       &portalOut,
-                   const PortalInType        &portalIn,
-                   const vtkm::Id            &workIndex) const
-  {
-    Id extX, extY;
-    GetExtLogicalDim( workIndex, extX, extY );
-    Id sigX = extDimX - extX - 1;
-    portalOut.Set( workIndex, portalIn.Get( GetSignal1DIndex(sigX, extY) ));
-  }
-
-private:
-  vtkm::Id extDimX, extDimY, sigDimX, sigDimY;
-};
-
-
 // Worklet for signal extension no. 2
 class LeftSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
@@ -593,6 +554,69 @@ public:
 
 private:
   vtkm::Id addLen;
+};
+
+
+// Worklet for 2D signal extension
+class LeftExtentionWorklet2D : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+  typedef vtkm::Id Id;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT 
+  LeftExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2, DWTMode m)
+      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), mode(m)  {}
+
+  // Index translation helper
+  VTKM_EXEC_CONT_EXPORT
+  void GetExtLogicalDim( const Id &idx, Id &x, Id &y ) const
+  {
+    x = idx % extDimX;
+    y = idx / extDimX;
+  }
+
+  // Index translation helper
+  VTKM_EXEC_CONT_EXPORT
+  Id GetSignal1DIndex( Id x, Id y ) const
+  {
+    return y * sigDimX + x;
+  }
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    Id extX, extY;
+    Id sigX;
+    typename PortalOutType::ValueType sym = 1.0;
+    GetExtLogicalDim( workIndex, extX, extY );
+    if      ( mode == SYMH )
+      sigX = extDimX - extX - 1;
+    else if ( mode == SYMW )
+      sigX = extDimX - extX; 
+    else if ( mode == ASYMH )
+    {
+      sigX = extDimX - extX - 1;
+      sym  = -1.0;
+    }
+    else    // mode == ASYMW
+    {
+      sigX = extDimX - extX;
+      sym  = -1.0;
+    }
+    portalOut.Set( workIndex, portalIn.Get( GetSignal1DIndex(sigX, extY) ) * sym );
+  }
+
+private:
+  vtkm::Id extDimX, extDimY, sigDimX, sigDimY;
+  DWTMode  mode;
 };
 
 

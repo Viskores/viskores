@@ -33,13 +33,6 @@ namespace worklet {
 
 namespace wavelets {
 
-enum DWTMode {    // boundary extension modes
-  SYMH, 
-  SYMW,
-  ASYMH, 
-  ASYMW
-};
-
 // Functionalities are similar to MatWaveBase in VAPoR.
 class WaveletBase
 {
