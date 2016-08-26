@@ -22,19 +22,14 @@
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
-#include <vtkm/rendering/AxisAnnotation.h>
-#include <vtkm/rendering/Color.h>
-
 #include <vtkm/Range.h>
-
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/rendering/AxisAnnotation.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
-#include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/rendering/TextAnnotation.h>
-
-#include <sstream>
 
 namespace vtkm {
 namespace rendering {
@@ -160,9 +155,9 @@ public:
                      const std::vector<vtkm::Float64> &prop);
 
   VTKM_RENDERING_EXPORT
-  virtual void Render(const vtkm::rendering::Camera &camera,
-                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
-                      vtkm::rendering::Canvas &canvas);
+  void Render(const vtkm::rendering::Camera &camera,
+              const vtkm::rendering::WorldAnnotator &worldAnnotator,
+              vtkm::rendering::Canvas &canvas) VTKM_OVERRIDE;
 };
 
 }} //namespace vtkm::rendering

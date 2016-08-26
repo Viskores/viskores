@@ -44,7 +44,9 @@ set(headers
   )
 
 set(sources
+  AxisAnnotation.cxx
   AxisAnnotation2D.cxx
+  AxisAnnotation3D.cxx
   )
 
 set(opengl_headers

@@ -20,6 +20,8 @@
 
 #include <vtkm/rendering/AxisAnnotation2D.h>
 
+#include <sstream>
+
 namespace vtkm {
 namespace rendering {
 
@@ -63,14 +65,12 @@ void AxisAnnotation2D::SetRangeForAutoTicks(const Range &range)
   else
 #endif
   {
-    CalculateTicks(this->TickRange.Min,
-                   this->TickRange.Max,
+    CalculateTicks(this->TickRange,
                    false,
                    this->PositionsMajor,
                    this->ProportionsMajor,
                    this->MoreOrLessTickAdjustment);
-    CalculateTicks(this->TickRange.Min,
-                   this->TickRange.Max,
+    CalculateTicks(this->TickRange,
                    true,
                    this->PositionsMinor,
                    this->ProportionsMinor,

@@ -38,55 +38,56 @@ namespace rendering {
 class WorldAnnotatorGL : public WorldAnnotator
 {
 public:
-  virtual void AddLine(vtkm::Float64 x0, vtkm::Float64 y0, vtkm::Float64 z0,
-                       vtkm::Float64 x1, vtkm::Float64 y1, vtkm::Float64 z1,
-                       vtkm::Float32 linewidth,
-                       const vtkm::rendering::Color &c,
-                       bool infront) const
+  virtual void AddLine(const vtkm::Vec<vtkm::Float64,3> &point0,
+                       const vtkm::Vec<vtkm::Float64,3> &point1,
+                       vtkm::Float32 lineWidth,
+                       const vtkm::rendering::Color &color,
+                       bool inFront) const
   {
-    if (infront)
+    if (inFront)
+    {
       glDepthRange(-.0001,.9999);
+    }
 
     glDisable(GL_LIGHTING);
     glEnable(GL_DEPTH_TEST);
 
-    glColor3f(c.Components[0], c.Components[1], c.Components[2]);
+    glColor3f(color.Components[0], color.Components[1], color.Components[2]);
 
-    glLineWidth(linewidth);
+    glLineWidth(lineWidth);
 
     glBegin(GL_LINES);
-    glVertex3d(x0,y0,z0);
-    glVertex3d(x1,y1,z1);
+    glVertex3d(point0[0], point0[1], point0[2]);
+    glVertex3d(point1[0], point1[1], point1[2]);
     glEnd();
 
-    if (infront)
+    if (inFront)
+    {
       glDepthRange(0,1);
+    }
 
   }
-  virtual void AddText(vtkm::Float32 ox, vtkm::Float32 oy, vtkm::Float32 oz,
-                       vtkm::Float32 rx, vtkm::Float32 ry, vtkm::Float32 rz,
-                       vtkm::Float32 ux, vtkm::Float32 uy, vtkm::Float32 uz,
+  virtual void AddText(const vtkm::Vec<vtkm::Float32,3> &origin,
+                       const vtkm::Vec<vtkm::Float32,3> &right,
+                       const vtkm::Vec<vtkm::Float32,3> &up,
                        vtkm::Float32 scale,
-                       vtkm::Float32 anchorx, vtkm::Float32 anchory,
-                       Color color,
-                       std::string text) const
+                       const vtkm::Vec<vtkm::Float32,2> &anchor,
+                       const vtkm::rendering::Color &color,
+                       const std::string &text) const
   {
-    vtkm::Vec<vtkm::Float32,3> o(ox,oy,oz);
-    vtkm::Vec<vtkm::Float32,3> r(rx,ry,rz);
-    vtkm::Vec<vtkm::Float32,3> u(ux,uy,uz);
 
-    vtkm::Vec<vtkm::Float32,3> n = vtkm::Cross(r,u);
+    vtkm::Vec<vtkm::Float32,3> n = vtkm::Cross(right,up);
     vtkm::Normalize(n);
 
     vtkm::Matrix<vtkm::Float32,4,4> m;
-    m = MatrixHelpers::WorldMatrix(o, r, u, n);
+    m = MatrixHelpers::WorldMatrix(origin, right, up, n);
 
     vtkm::Float32 ogl[16];
     MatrixHelpers::CreateOGLMatrix(m, ogl);
     glPushMatrix();
     glMultMatrixf(ogl);
     glColor3f(color.Components[0], color.Components[1], color.Components[2]);
-    this->RenderText(scale, anchorx, anchory, text);
+    this->RenderText(scale, anchor[0], anchor[1], text);
     glPopMatrix();
   }
 

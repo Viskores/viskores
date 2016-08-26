@@ -31,18 +31,54 @@ class WorldAnnotator
 public:
   virtual ~WorldAnnotator() {  }
 
-  virtual void AddLine(vtkm::Float64, vtkm::Float64, vtkm::Float64,
-                       vtkm::Float64, vtkm::Float64, vtkm::Float64,
-                       vtkm::Float32,
-                       const vtkm::rendering::Color &,
-                       bool=false) const {}
-  virtual void AddText(vtkm::Float32, vtkm::Float32, vtkm::Float32,
-                       vtkm::Float32, vtkm::Float32, vtkm::Float32,
-                       vtkm::Float32, vtkm::Float32, vtkm::Float32,
-                       vtkm::Float32,
-                       vtkm::Float32, vtkm::Float32,
-                       Color,
-                       std::string) const {}
+  virtual void AddLine(const vtkm::Vec<vtkm::Float64,3> &vtkmNotUsed(point0),
+                       const vtkm::Vec<vtkm::Float64,3> &vtkmNotUsed(point1),
+                       vtkm::Float32 vtkmNotUsed(lineWidth),
+                       const vtkm::rendering::Color &vtkmNotUsed(color),
+                       bool vtkmNotUsed(inFront) = false) const {}
+  void AddLine(vtkm::Float64 x0, vtkm::Float64 y0, vtkm::Float64 z0,
+               vtkm::Float64 x1, vtkm::Float64 y1, vtkm::Float64 z1,
+               vtkm::Float32 lineWidth,
+               const vtkm::rendering::Color &color,
+               bool inFront = false) const
+  {
+    this->AddLine(vtkm::make_Vec(x0,y0,z0),
+                  vtkm::make_Vec(x1,y1,z1),
+                  lineWidth,
+                  color,
+                  inFront);
+  }
+
+  virtual void AddText(const vtkm::Vec<vtkm::Float32,3> &vtkmNotUsed(origin),
+                       const vtkm::Vec<vtkm::Float32,3> &vtkmNotUsed(right),
+                       const vtkm::Vec<vtkm::Float32,3> &vtkmNotUsed(up),
+                       vtkm::Float32 vtkmNotUsed(scale),
+                       const vtkm::Vec<vtkm::Float32,2> &vtkmNotUsed(anchor),
+                       const vtkm::rendering::Color &vtkmNotUsed(color),
+                       const std::string &vtkmNotUsed(text)) const {  }
+  void AddText(vtkm::Float32 originX,
+               vtkm::Float32 originY,
+               vtkm::Float32 originZ,
+               vtkm::Float32 rightX,
+               vtkm::Float32 rightY,
+               vtkm::Float32 rightZ,
+               vtkm::Float32 upX,
+               vtkm::Float32 upY,
+               vtkm::Float32 upZ,
+               vtkm::Float32 scale,
+               vtkm::Float32 anchorX,
+               vtkm::Float32 anchorY,
+               const vtkm::rendering::Color &color,
+               const std::string &text) const
+  {
+    this->AddText(vtkm::make_Vec(originX, originY, originZ),
+                  vtkm::make_Vec(rightX, rightY, rightZ),
+                  vtkm::make_Vec(upX, upY, upZ),
+                  scale,
+                  vtkm::make_Vec(anchorX, anchorY),
+                  color,
+                  text);
+  }
 };
 
 }} //namespace vtkm::rendering
