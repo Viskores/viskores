@@ -23,10 +23,10 @@
 #Find the VTK-m package
 find_package(VTKm QUIET REQUIRED
   COMPONENTS Base
-  OPTIONAL_COMPONENTS Serial Cuda TBB OSMesa
+  OPTIONAL_COMPONENTS Serial Cuda TBB OSMesa Rendering
   )
 
-if(VTKm_OSMesa_FOUND)
+if(VTKm_OSMesa_FOUND AND VTKm_Rendering_FOUND)
 
   if(VTKm_CUDA_FOUND)
     # Cuda compiles do not respect target_include_directories
