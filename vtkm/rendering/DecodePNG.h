@@ -8,9 +8,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
+//  Copyright 2016 Sandia Corporation.
+//  Copyright 2016 UT-Battelle, LLC.
+//  Copyright 2016 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -19,21 +19,25 @@
 //  this software.
 //
 //=============================================================================
-#ifndef vtk_m_BitmapFontFactory_h
-#define vtk_m_BitmapFontFactory_h
+#ifndef vtk_m_rendering_DecodePNG_h
+#define vtk_m_rendering_DecodePNG_h
 
-#include <vtkm/rendering/BitmapFont.h>
+#include <vtkm/rendering/vtkm_rendering_export.h>
+
+#include <vector>
 
 namespace vtkm {
 namespace rendering {
 
-class BitmapFontFactory
-{
-public:
-  VTKM_RENDERING_EXPORT
-  static vtkm::rendering::BitmapFont CreateLiberation2Sans();
-};
+VTKM_RENDERING_EXPORT
+int DecodePNG(std::vector<unsigned char>& out_image,
+              unsigned long& image_width,
+              unsigned long& image_height,
+              const unsigned char* in_png,
+              std::size_t in_size,
+              bool convert_to_rgba32=true);
 
-}} //namespace vtkm::rendering
+}
+} // vtkm::rendering
 
-#endif
+#endif //vtk_m_rendering_DecodePNG_h

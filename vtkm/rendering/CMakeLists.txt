@@ -32,6 +32,7 @@ set(headers
   Color.h
   ColorBarAnnotation.h
   ColorTable.h
+  DecodePNG.h
   MatrixHelpers.h
   Scene.h
   Mapper.h
@@ -47,6 +48,9 @@ set(sources
   AxisAnnotation.cxx
   AxisAnnotation2D.cxx
   AxisAnnotation3D.cxx
+  BitmapFont.cxx
+  BitmapFontFactory.cxx
+  DecodePNG.cxx
   )
 
 set(opengl_headers

@@ -26,6 +26,7 @@
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/BitmapFont.h>
 #include <vtkm/rendering/BitmapFontFactory.h>
+#include <vtkm/rendering/DecodePNG.h>
 #include <vtkm/rendering/TextureGL.h>
 #include <vtkm/rendering/MatrixHelpers.h>
 #include <vtkm/rendering/WorldAnnotatorGL.h>
@@ -289,8 +290,8 @@ private:
 
       std::vector<unsigned char> rgba;
       unsigned long width, height;
-      int error = decodePNG(rgba, width, height,
-                            &rawpngdata[0], rawpngdata.size());
+      int error = vtkm::rendering::DecodePNG(rgba, width, height,
+                                             &rawpngdata[0], rawpngdata.size());
       if (error != 0)
       {
         return;
