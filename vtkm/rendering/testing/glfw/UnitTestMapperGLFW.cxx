@@ -33,6 +33,7 @@ namespace {
 static const vtkm::Id WIDTH = 512, HEIGHT = 512;
 static vtkm::Id which = 0, NUM_DATASETS = 4;
 static bool done = false;
+static bool batch = false;
 
 static void
 keyCallback(GLFWwindow* vtkmNotUsed(window), int key,
@@ -78,13 +79,26 @@ void RenderTests()
            vtkm::rendering::testing::Render<M,C,V2>(maker.Make2DRectilinearDataSet0(),
                                                     "pointvar", colorTable, "rect2D.pnm");       
        glfwSwapBuffers(window);
+
+       if (batch)
+       {
+         which++;
+         if (which >= NUM_DATASETS) { break; }
+       }
     }
 
     glfwDestroyWindow(window);
 }
 } //namespace
 
-int UnitTestMapperGLFW(int, char *[])
+int UnitTestMapperGLFW(int argc, char *argv[])
 {
-    return vtkm::cont::testing::Testing::Run(RenderTests);
+  if (argc > 1)
+  {
+    if (strcmp(argv[1], "-B") == 0)
+    {
+      batch = true;
+    }
+  }
+  return vtkm::cont::testing::Testing::Run(RenderTests);
 }

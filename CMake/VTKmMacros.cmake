@@ -241,11 +241,12 @@ endfunction(vtkm_pyexpander_generated_file)
 # vtkm_unit_tests(
 #   SOURCES <source_list>
 #   LIBRARIES <dependent_library_list>
+#   TEST_ARGS <argument_list>
 #   )
 function(vtkm_unit_tests)
   set(options CUDA)
   set(oneValueArgs)
-  set(multiValueArgs SOURCES LIBRARIES)
+  set(multiValueArgs SOURCES LIBRARIES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
     "${options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
@@ -307,7 +308,7 @@ function(vtkm_unit_tests)
     foreach (test ${VTKm_UT_SOURCES})
       get_filename_component(tname ${test} NAME_WE)
       add_test(NAME ${tname}
-        COMMAND ${test_prog} ${tname}
+        COMMAND ${test_prog} ${tname} ${VTKm_UT_TEST_ARGS}
         )
       set_tests_properties("${tname}" PROPERTIES TIMEOUT ${timeout})
     endforeach (test)
