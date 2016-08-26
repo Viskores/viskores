@@ -557,7 +557,7 @@ private:
 };
 
 
-// Worklet for 2D signal extension
+// Worklet for 2D signal extension on the left
 class LeftExtentionWorklet2D : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -609,6 +609,69 @@ public:
     else    // mode == ASYMW
     {
       sigX = extDimX - extX;
+      sym  = -1.0;
+    }
+    portalOut.Set( workIndex, portalIn.Get( GetSignal1DIndex(sigX, extY) ) * sym );
+  }
+
+private:
+  vtkm::Id extDimX, extDimY, sigDimX, sigDimY;
+  DWTMode  mode;
+};
+
+
+// Worklet for 2D signal extension on the right
+class RightExtentionWorklet2D : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+  typedef vtkm::Id Id;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT 
+  RightExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2, DWTMode m)
+      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), mode(m)  {}
+
+  // Index translation helper
+  VTKM_EXEC_CONT_EXPORT
+  void GetExtLogicalDim( const Id &idx, Id &x, Id &y ) const
+  {
+    x = idx % extDimX;
+    y = idx / extDimX;
+  }
+
+  // Index translation helper
+  VTKM_EXEC_CONT_EXPORT
+  Id GetSignal1DIndex( Id x, Id y ) const
+  {
+    return y * sigDimX + x;
+  }
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    Id extX, extY;
+    Id sigX;
+    typename PortalOutType::ValueType sym = 1.0;
+    GetExtLogicalDim( workIndex, extX, extY );
+    if      ( mode == SYMH )
+      sigX = sigDimX - extX - 1;
+    else if ( mode == SYMW )
+      sigX = sigDimX - extX - 2; 
+    else if ( mode == ASYMH )
+    {
+      sigX = sigDimX - extX - 1;
+      sym  = -1.0;
+    }
+    else    // mode == ASYMW
+    {
+      sigX = sigDimX - extX - 2;
       sym  = -1.0;
     }
     portalOut.Set( workIndex, portalIn.Get( GetSignal1DIndex(sigX, extY) ) * sym );
