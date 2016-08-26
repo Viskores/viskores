@@ -52,6 +52,7 @@
 #define VTKM_CONSTEXPR constexpr
 #endif
 
+#define VTKM_OVERRIDE override
 
 /// Simple macro to identify a parameter as unused. This allows you to name a
 /// parameter that is not used. There are several instances where you might
