@@ -51,6 +51,8 @@ set(sources
   BitmapFont.cxx
   BitmapFontFactory.cxx
   Camera.cxx
+  Canvas.cxx
+  CanvasRayTracer.cxx
   DecodePNG.cxx
   )
 
@@ -60,32 +62,48 @@ set(opengl_headers
   TextureGL.h
   WorldAnnotatorGL.h
   )
+
+set(opengl_sources
+  CanvasGL.cxx
+  )
+
 set(egl_headers
   CanvasEGL.h
 )
+
+set(egl_sources
+  CanvasEGL.cxx
+  )
 
 set(osmesa_headers
   CanvasOSMesa.h
   )
 
+set(osmesa_sources
+  CanvasOSMesa.cxx
+  )
+
 #-----------------------------------------------------------------------------
 vtkm_configure_component_OpenGL()
 if(VTKm_OpenGL_FOUND)
-  set(headers ${headers} ${opengl_headers})
+  list(APPEND headers ${opengl_headers})
+  list(APPEND sources ${opengl_sources})
   
   vtkm_configure_component_OSMesa()
   if(VTKm_OSMesa_FOUND)
-    set(headers ${headers} ${osmesa_headers})
+    list(APPEND headers ${osmesa_headers})
+    list(APPEND sources ${osmesa_sources})
   endif()
 
   vtkm_configure_component_EGL()
   if(VTKm_EGL_FOUND)
-    set(headers ${headers} ${egl_headers})
+    list(APPEND headers ${egl_headers})
+    list(APPEND sources ${egl_headers})
   endif()
 
   vtkm_configure_component_GLFW()
   if(VTKm_GLFW_FOUND)
-    set(headers ${headers} ${glfw_headers})
+    list(APPEND headers ${glfw_headers})
   endif()
 endif()
 
