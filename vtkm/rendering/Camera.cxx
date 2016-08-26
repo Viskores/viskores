@@ -1,0 +1,349 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 UT-Battelle, LLC.
+//  Copyright 2015 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//============================================================================
+
+#include <vtkm/rendering/Camera.h>
+
+namespace vtkm {
+namespace rendering {
+
+vtkm::Matrix<vtkm::Float32,4,4>
+Camera::Camera3DStruct::CreateViewMatrix() const
+{
+  return MatrixHelpers::ViewMatrix(this->Position, this->LookAt, this->ViewUp);
+}
+
+vtkm::Matrix<vtkm::Float32,4,4>
+Camera::Camera3DStruct::CreateProjectionMatrix(vtkm::Id width,
+                                               vtkm::Id height,
+                                               vtkm::Float32 nearPlane,
+                                               vtkm::Float32 farPlane) const
+{
+  vtkm::Matrix<vtkm::Float32,4,4> matrix;
+  vtkm::MatrixIdentity(matrix);
+
+  vtkm::Float32 AspectRatio = vtkm::Float32(width) / vtkm::Float32(height);
+  vtkm::Float32 fovRad = (this->FieldOfView * 3.1415926f)/180.f;
+  fovRad = vtkm::Tan( fovRad * 0.5f);
+  vtkm::Float32 size = nearPlane * fovRad;
+  vtkm::Float32 left = -size * AspectRatio;
+  vtkm::Float32 right = size * AspectRatio;
+  vtkm::Float32 bottom = -size;
+  vtkm::Float32 top = size;
+
+  matrix(0,0) = 2.f * nearPlane / (right - left);
+  matrix(1,1) = 2.f * nearPlane / (top - bottom);
+  matrix(0,2) = (right + left) / (right - left);
+  matrix(1,2) = (top + bottom) / (top - bottom);
+  matrix(2,2) = -(farPlane + nearPlane)  / (farPlane - nearPlane);
+  matrix(3,2) = -1.f;
+  matrix(2,3) = -(2.f * farPlane * nearPlane) / (farPlane - nearPlane);
+  matrix(3,3) = 0.f;
+
+  vtkm::Matrix<vtkm::Float32,4,4> T, Z;
+  T = vtkm::Transform3DTranslate(this->XPan, this->YPan, 0.f);
+  Z = vtkm::Transform3DScale(this->Zoom, this->Zoom, 1.f);
+  matrix = vtkm::MatrixMultiply(Z, vtkm::MatrixMultiply(T, matrix));
+  return matrix;
+}
+
+//---------------------------------------------------------------------------
+
+vtkm::Matrix<vtkm::Float32,4,4>
+Camera::Camera2DStruct::CreateViewMatrix() const
+{
+  vtkm::Vec<vtkm::Float32,3> lookAt((this->Left + this->Right)/2.f,
+                                    (this->Top + this->Bottom)/2.f,
+                                    0.f);
+  vtkm::Vec<vtkm::Float32,3> position = lookAt;
+  position[2] = 1.f;
+  vtkm::Vec<vtkm::Float32,3> up(0,1,0);
+  return MatrixHelpers::ViewMatrix(position, lookAt, up);
+}
+
+vtkm::Matrix<vtkm::Float32,4,4>
+Camera::Camera2DStruct::CreateProjectionMatrix(vtkm::Float32 size,
+                                               vtkm::Float32 znear,
+                                               vtkm::Float32 zfar,
+                                               vtkm::Float32 aspect) const
+{
+  vtkm::Matrix<vtkm::Float32,4,4> matrix(0.f);
+  vtkm::Float32 left = -size/2.f * aspect;
+  vtkm::Float32 right = size/2.f * aspect;
+  vtkm::Float32 bottom = -size/2.f;
+  vtkm::Float32 top = size/2.f;
+
+  matrix(0,0) = 2.f/(right-left);
+  matrix(1,1) = 2.f/(top-bottom);
+  matrix(2,2) = -2.f/(zfar-znear);
+  matrix(0,3) = -(right+left)/(right-left);
+  matrix(1,3) = -(top+bottom)/(top-bottom);
+  matrix(2,3) = -(zfar+znear)/(zfar-znear);
+  matrix(3,3) = 1.f;
+
+  vtkm::Matrix<vtkm::Float32,4,4> T, Z;
+  T = vtkm::Transform3DTranslate(this->XPan, this->YPan, 0.f);
+  Z = vtkm::Transform3DScale(this->Zoom, this->Zoom, 1.f);
+  matrix = vtkm::MatrixMultiply(Z, vtkm::MatrixMultiply(T, matrix));
+  return matrix;
+}
+
+//---------------------------------------------------------------------------
+
+vtkm::Matrix<vtkm::Float32,4,4>
+Camera::CreateViewMatrix() const
+{
+  if (this->Mode == Camera::MODE_3D)
+  {
+    return this->Camera3D.CreateViewMatrix();
+  }
+  else
+  {
+    return this->Camera2D.CreateViewMatrix();
+  }
+}
+
+vtkm::Matrix<vtkm::Float32,4,4>
+Camera::CreateProjectionMatrix(vtkm::Id screenWidth,
+                               vtkm::Id screenHeight) const
+{
+  if (this->Mode == Camera::MODE_3D)
+  {
+    return this->Camera3D.CreateProjectionMatrix(
+          screenWidth, screenHeight, this->NearPlane, this->FarPlane);
+  }
+  else
+  {
+    vtkm::Float32 size = vtkm::Abs(this->Camera2D.Top - this->Camera2D.Bottom);
+    vtkm::Float32 left,right,bottom,top;
+    this->GetRealViewport(screenWidth,screenHeight,left,right,bottom,top);
+    vtkm::Float32 aspect =
+        (static_cast<vtkm::Float32>(screenWidth)*(right-left)) /
+        (static_cast<vtkm::Float32>(screenHeight)*(top-bottom));
+
+    return this->Camera2D.CreateProjectionMatrix(
+          size, this->NearPlane, this->FarPlane, aspect);
+  }
+}
+
+void Camera::GetRealViewport(vtkm::Id screenWidth,
+                             vtkm::Id screenHeight,
+                             vtkm::Float32 &left,
+                             vtkm::Float32 &right,
+                             vtkm::Float32 &bottom,
+                             vtkm::Float32 &top) const
+{
+  if (this->Mode == Camera::MODE_3D)
+  {
+    left = this->ViewportLeft;
+    right = this->ViewportRight;
+    bottom = this->ViewportBottom;
+    top = this->ViewportTop;
+  }
+  else
+  {
+    vtkm::Float32 maxvw = (this->ViewportRight-this->ViewportLeft) * static_cast<vtkm::Float32>(screenWidth);
+    vtkm::Float32 maxvh = (this->ViewportTop-this->ViewportBottom) * static_cast<vtkm::Float32>(screenHeight);
+    vtkm::Float32 waspect = maxvw / maxvh;
+    vtkm::Float32 daspect = (this->Camera2D.Right - this->Camera2D.Left) / (this->Camera2D.Top - this->Camera2D.Bottom);
+    daspect *= this->Camera2D.XScale;
+    //cerr << "waspect="<<waspect << "   \tdaspect="<<daspect<<endl;
+    const bool center = true; // if false, anchor to bottom-left
+    if (waspect > daspect)
+    {
+      vtkm::Float32 new_w = (this->ViewportRight-this->ViewportLeft) * daspect / waspect;
+      if (center)
+      {
+        left = (this->ViewportLeft+this->ViewportRight)/2.f - new_w/2.f;
+        right = (this->ViewportLeft+this->ViewportRight)/2.f + new_w/2.f;
+      }
+      else
+      {
+        left = this->ViewportLeft;
+        right = this->ViewportLeft + new_w;
+      }
+      bottom = this->ViewportBottom;
+      top = this->ViewportTop;
+    }
+    else
+    {
+      vtkm::Float32 new_h = (this->ViewportTop-this->ViewportBottom) * waspect / daspect;
+      if (center)
+      {
+        bottom = (this->ViewportBottom+this->ViewportTop)/2.f - new_h/2.f;
+        top = (this->ViewportBottom+this->ViewportTop)/2.f + new_h/2.f;
+      }
+      else
+      {
+        bottom = this->ViewportBottom;
+        top = this->ViewportBottom + new_h;
+      }
+      left = this->ViewportLeft;
+      right = this->ViewportRight;
+    }
+  }
+}
+
+void Camera::Pan(vtkm::Float32 dx, vtkm::Float32 dy)
+{
+  this->Camera3D.XPan += dx;
+  this->Camera3D.YPan += dy;
+  this->Camera2D.XPan += dx;
+  this->Camera2D.YPan += dy;
+}
+
+void Camera::Zoom(vtkm::Float32 zoom)
+{
+  vtkm::Float32 factor = vtkm::Pow(4.0f, zoom);
+  this->Camera3D.Zoom *= factor;
+  this->Camera3D.XPan *= factor;
+  this->Camera3D.YPan *= factor;
+  this->Camera2D.Zoom *= factor;
+  this->Camera2D.XPan *= factor;
+  this->Camera2D.YPan *= factor;
+}
+
+void Camera::TrackballRotate(vtkm::Float32 startX,
+                             vtkm::Float32 startY,
+                             vtkm::Float32 endX,
+                             vtkm::Float32 endY)
+{
+  vtkm::Matrix<vtkm::Float32,4,4> rotate =
+      MatrixHelpers::TrackballMatrix(startX,startY, endX,endY);
+
+  //Translate matrix
+  vtkm::Matrix<vtkm::Float32,4,4> translate =
+      vtkm::Transform3DTranslate(-this->Camera3D.LookAt);
+
+  //Translate matrix
+  vtkm::Matrix<vtkm::Float32,4,4> inverseTranslate =
+      vtkm::Transform3DTranslate(this->Camera3D.LookAt);
+
+  vtkm::Matrix<vtkm::Float32,4,4> view = this->CreateViewMatrix();
+  view(0,3) = 0;
+  view(1,3) = 0;
+  view(2,3) = 0;
+
+  vtkm::Matrix<vtkm::Float32,4,4> inverseView = vtkm::MatrixTranspose(view);
+
+  //fullTransform = inverseTranslate * inverseView * rotate * view * translate
+  vtkm::Matrix<vtkm::Float32,4,4> fullTransform;
+  fullTransform = vtkm::MatrixMultiply(
+        inverseTranslate, vtkm::MatrixMultiply(
+          inverseView, vtkm::MatrixMultiply(
+            rotate, vtkm::MatrixMultiply(
+              view,translate))));
+  this->Camera3D.Position =
+      vtkm::Transform3DPoint(fullTransform, this->Camera3D.Position);
+  this->Camera3D.LookAt =
+      vtkm::Transform3DPoint(fullTransform, this->Camera3D.LookAt);
+  this->Camera3D.ViewUp =
+      vtkm::Transform3DVector(fullTransform, this->Camera3D.ViewUp);
+}
+
+void Camera::ResetToBounds(const vtkm::Bounds &dataBounds)
+{
+  // Save camera mode
+  ModeEnum saveMode = this->GetMode();
+
+  // Reset for 3D camera
+  vtkm::Vec<vtkm::Float32,3> directionOfProjection =
+      this->GetPosition() - this->GetLookAt();
+  vtkm::Normalize(directionOfProjection);
+
+  vtkm::Vec<vtkm::Float32,3> center = dataBounds.Center();
+  this->SetLookAt(center);
+
+  vtkm::Vec<vtkm::Float32,3> totalExtent;
+  totalExtent[0] = vtkm::Float32(dataBounds.X.Length());
+  totalExtent[1] = vtkm::Float32(dataBounds.Y.Length());
+  totalExtent[2] = vtkm::Float32(dataBounds.Z.Length());
+  vtkm::Float32 diagonalLength = vtkm::Magnitude(totalExtent);
+  this->SetPosition(center + directionOfProjection * diagonalLength * 1.0f);
+  this->SetFieldOfView(60.0f);
+  this->SetClippingRange(0.1f * diagonalLength, diagonalLength*10.0f);
+
+  // Reset for 2D camera
+  this->SetViewRange2D(dataBounds);
+
+  // Reset pan and zoom
+  this->Camera3D.XPan = 0;
+  this->Camera3D.YPan = 0;
+  this->Camera3D.Zoom = 1;
+  this->Camera2D.XPan = 0;
+  this->Camera2D.YPan = 0;
+  this->Camera2D.Zoom = 1;
+
+  // Restore camera mode
+  this->SetMode(saveMode);
+}
+
+void Camera::Roll(vtkm::Float32 angleDegrees)
+{
+  vtkm::Vec<vtkm::Float32,3> directionOfProjection =
+      this->GetLookAt() - this->GetPosition();
+  vtkm::Matrix<vtkm::Float32,4,4> rotateTransform =
+      vtkm::Transform3DRotate(angleDegrees, directionOfProjection);
+
+  this->SetViewUp(vtkm::Transform3DVector(rotateTransform,this->GetViewUp()));
+}
+
+void Camera::Azimuth(vtkm::Float32 angleDegrees)
+{
+  // Translate to the focal point (LookAt), rotate about view up, and
+  // translate back again.
+  vtkm::Matrix<vtkm::Float32,4,4> transform =
+      vtkm::Transform3DTranslate(this->GetLookAt());
+  transform = vtkm::MatrixMultiply(
+        transform, vtkm::Transform3DRotate(angleDegrees, this->GetViewUp()));
+  transform = vtkm::MatrixMultiply(
+        transform, vtkm::Transform3DTranslate(-this->GetLookAt()));
+
+  this->SetPosition(vtkm::Transform3DPoint(transform, this->GetPosition()));
+}
+
+void Camera::Elevation(vtkm::Float32 angleDegrees)
+{
+  vtkm::Vec<vtkm::Float32,3> axisOfRotation =
+      vtkm::Cross(this->GetPosition() - this->GetLookAt(), this->GetViewUp());
+
+  // Translate to the focal point (LookAt), rotate about the defined axis,
+  // and translate back again.
+  vtkm::Matrix<vtkm::Float32,4,4> transform =
+      vtkm::Transform3DTranslate(this->GetLookAt());
+  transform = vtkm::MatrixMultiply(
+        transform, vtkm::Transform3DRotate(angleDegrees, axisOfRotation));
+  transform = vtkm::MatrixMultiply(
+        transform, vtkm::Transform3DTranslate(-this->GetLookAt()));
+
+  this->SetPosition(vtkm::Transform3DPoint(transform, this->GetPosition()));
+}
+
+void Camera::Dolly(vtkm::Float32 value)
+{
+  if (value <= vtkm::Epsilon32()) { return; }
+
+  vtkm::Vec<vtkm::Float32,3> lookAtToPos =
+      this->GetPosition() - this->GetLookAt();
+
+  this->SetPosition(this->GetLookAt() + (1.0f/value)*lookAtToPos);
+}
+
+}
+} // namespace vtkm::rendering

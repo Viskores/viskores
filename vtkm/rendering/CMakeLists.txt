@@ -50,6 +50,7 @@ set(sources
   AxisAnnotation3D.cxx
   BitmapFont.cxx
   BitmapFontFactory.cxx
+  Camera.cxx
   DecodePNG.cxx
   )
 
