@@ -441,7 +441,7 @@ private:
 };
 
 
-// Worklets for signal extension no. 1
+// Worklet for signal extension no. 1
 class LeftSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -452,10 +452,7 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  LeftSYMHExtentionWorklet( vtkm::Id len ) 
-  {
-    this->addLen = len;
-  }
+  LeftSYMHExtentionWorklet( vtkm::Id len ) : addLen( len ) {}
 
   template< typename PortalOutType, typename PortalInType >
   VTKM_EXEC_EXPORT
@@ -471,7 +468,54 @@ private:
 };
 
 
-// Worklets for signal extension no. 2
+// Worklet for 2D signal extension no. 1
+class LeftSYMHExtentionWorklet2D : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+  typedef vtkm::Id Id;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  LeftSYMHExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2)
+      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 )   {}
+
+  // Index translation helper
+  VTKM_EXEC_CONT_EXPORT
+  void GetExtLogicalDim( const Id &idx, Id &x, Id &y ) const
+  {
+    x = idx % extDimX;
+    y = idx / extDimX;
+  }
+
+  // Index translation helper
+  VTKM_EXEC_CONT_EXPORT
+  Id GetSignal1DIndex( Id x, Id y ) const
+  {
+    return y * sigDimX + x;
+  }
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    Id extX, extY;
+    GetExtLogicalDim( workIndex, extX, extY );
+    Id sigX = extDimX - extX - 1;
+    portalOut.Set( workIndex, portalIn.Get( GetSignal1DIndex(sigX, extY) ));
+  }
+
+private:
+  vtkm::Id extDimX, extDimY, sigDimX, sigDimY;
+};
+
+
+// Worklet for signal extension no. 2
 class LeftSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -482,10 +526,7 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  LeftSYMWExtentionWorklet( vtkm::Id len ) 
-  {
-    this->addLen = len;
-  }
+  LeftSYMWExtentionWorklet( vtkm::Id len ) : addLen( len ) {}
 
   template< typename PortalOutType, typename PortalInType >
   VTKM_EXEC_EXPORT
@@ -501,7 +542,7 @@ private:
 };
 
 
-// Worklets for signal extension no. 3
+// Worklet for signal extension no. 3
 class LeftASYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -528,7 +569,7 @@ private:
 };
 
 
-// Worklets for signal extension no. 4
+// Worklet for signal extension no. 4
 class LeftASYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -555,7 +596,7 @@ private:
 };
 
 
-// Worklets for signal extension no. 5
+// Worklet for signal extension no. 5
 class RightSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -566,10 +607,7 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  RightSYMHExtentionWorklet ( vtkm::Id sigInl ) 
-  {
-    this->sigInLen = sigInl;
-  }
+  RightSYMHExtentionWorklet ( vtkm::Id sigInl ) : sigInLen( sigInl ) {}
 
   template< typename PortalOutType, typename PortalInType >
   VTKM_EXEC_EXPORT
@@ -585,7 +623,7 @@ private:
 };
 
 
-// Worklets for signal extension no. 6
+// Worklet for signal extension no. 6
 class RightSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -596,10 +634,7 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  RightSYMWExtentionWorklet ( vtkm::Id sigInl ) 
-  {
-    this->sigInLen = sigInl;
-  }
+  RightSYMWExtentionWorklet ( vtkm::Id sigInl ) : sigInLen( sigInl ) {}
 
   template< typename PortalOutType, typename PortalInType >
   VTKM_EXEC_EXPORT
@@ -615,7 +650,7 @@ private:
 };
 
 
-// Worklets for signal extension no. 7
+// Worklet for signal extension no. 7
 class RightASYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -642,7 +677,7 @@ private:
 };
 
 
-// Worklets for signal extension no. 8
+// Worklet for signal extension no. 8
 class RightASYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -669,6 +704,7 @@ private:
 };
 
 
+// Worklet
 class AssignZeroWorklet : public vtkm::worklet::WorkletMapField
 {
 public:

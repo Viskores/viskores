@@ -46,6 +46,196 @@ public:
 
   typedef vtkm::Float64 FLOAT_64;
 
+  // Func: Extend 2D signal
+#if 0
+  template< typename SigInArrayType, typename SigExtendedArrayType, typename DeviceTag >
+  vtkm::Id Extend2D( const SigInArrayType                     &sigIn,   // Input
+                     SigExtendedArrayType                     &sigOut,  // Output
+                     vtkm::Id                                 addLen,
+                     vtkm::worklet::wavelets::DWTMode         leftExtMethod,
+                     vtkm::worklet::wavelets::DWTMode         rightExtMethod, 
+                     bool                                     attachZeroRightLeft, 
+                     bool                                     attachZeroRightRight,
+                     DeviceTag                                                     )
+  { 
+    // "right extension" can be attached a zero on either end, but not both ends.
+    VTKM_ASSERT( !attachZeroRightRight || !attachZeroRightLeft );
+
+    vtkm::Id sigInDimX    = sigIn.GetDimX();
+    vtkm::Id sigInDimY    = sigIn.GetDimY();
+    vtkm::Id extendDimX   = addLen;
+    vtkm::Id extendDimY   = sigInDimY;
+
+    typedef typename SigInArrayType::ValueType                 ValueType;
+    typedef vtkm::cont::ArrayHandleInterpreter< ValueType >    ExtendArrayType;
+
+    ExtendArrayType                              leftExtend;
+    leftExtend.PrepareForOutput( extendDimX * extendDimY, DeviceTag() );
+
+    vtkm::Id sigInLen = sigIn.GetNumberOfValues();
+
+    typedef vtkm::worklet::wavelets::LeftSYMHExtentionWorklet  LeftSYMH;
+    typedef vtkm::worklet::wavelets::LeftSYMWExtentionWorklet  LeftSYMW;
+    typedef vtkm::worklet::wavelets::RightSYMHExtentionWorklet RightSYMH;
+    typedef vtkm::worklet::wavelets::RightSYMWExtentionWorklet RightSYMW;
+    typedef vtkm::worklet::wavelets::LeftASYMHExtentionWorklet  LeftASYMH;
+    typedef vtkm::worklet::wavelets::LeftASYMWExtentionWorklet  LeftASYMW;
+    typedef vtkm::worklet::wavelets::RightASYMHExtentionWorklet RightASYMH;
+    typedef vtkm::worklet::wavelets::RightASYMWExtentionWorklet RightASYMW;
+
+    switch( leftExtMethod )
+    {
+      case SYMH:
+      {
+          LeftSYMH worklet( addLen );
+          vtkm::worklet::DispatcherMapField< LeftSYMH, DeviceTag > dispatcher( worklet );
+          dispatcher.Invoke( leftExtend, sigIn );
+          break;
+      }
+      case SYMW:
+      {
+          LeftSYMW worklet( addLen );
+          vtkm::worklet::DispatcherMapField< LeftSYMW, DeviceTag > dispatcher( worklet );
+          dispatcher.Invoke( leftExtend, sigIn );
+          break;
+      }
+      case ASYMH:
+      {
+          LeftASYMH worklet( addLen );
+          vtkm::worklet::DispatcherMapField< LeftASYMH, DeviceTag > dispatcher( worklet );
+          dispatcher.Invoke( leftExtend, sigIn );
+          break;
+      }
+      case ASYMW:
+      {
+          LeftASYMW worklet( addLen );
+          vtkm::worklet::DispatcherMapField< LeftASYMW, DeviceTag > dispatcher( worklet );
+          dispatcher.Invoke( leftExtend, sigIn );
+          break;
+      }
+      default:
+      {
+        vtkm::cont::ErrorControlInternal("Left extension mode not supported!");
+        return 1;
+      }
+    }
+
+    ExtendArrayType rightExtend;
+
+    if( !attachZeroRightLeft ) // no attach zero, or only attach on RightRight
+    {
+      // Allocate memory
+      if( attachZeroRightRight )
+        rightExtend.PrepareForOutput( addLen+1, DeviceTag() );
+      else                  
+        rightExtend.PrepareForOutput( addLen, DeviceTag() );
+
+      switch( rightExtMethod )
+      {
+        case SYMH:
+        {
+            RightSYMH worklet( sigInLen );
+            vtkm::worklet::DispatcherMapField< RightSYMH, DeviceTag > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigIn );
+            break;
+        }
+        case SYMW:
+        {
+            RightSYMW worklet( sigInLen );
+            vtkm::worklet::DispatcherMapField< RightSYMW, DeviceTag > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigIn );
+            break;
+        }
+        case ASYMH:
+        {
+            RightASYMH worklet( sigInLen );
+            vtkm::worklet::DispatcherMapField< RightASYMH, DeviceTag > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigIn );
+            break;
+        }
+        case ASYMW:
+        {
+            RightASYMW worklet( sigInLen );
+            vtkm::worklet::DispatcherMapField< RightASYMW, DeviceTag > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigIn );
+            break;
+        }
+        default:
+        {
+          vtkm::cont::ErrorControlInternal("Right extension mode not supported!");
+          return 1;
+        }
+      }
+      if( attachZeroRightRight )
+        WaveletBase::DeviceAssignZero( rightExtend, addLen, DeviceTag() );
+    }
+    else    // attachZeroRightLeft mode
+    {
+      typedef vtkm::cont::ArrayHandleConcatenate<SigInArrayType, ExtendArrayType>
+                                                      ConcatArray;
+      // attach a zero at the end of sigIn
+      ExtendArrayType      singleValArray;
+      singleValArray.PrepareForOutput(1, DeviceTag() );
+      WaveletBase::DeviceAssignZero( singleValArray, 0, DeviceTag() );
+      ConcatArray             sigInPlusOne( sigIn, singleValArray );
+
+      // allocate memory for extension
+      rightExtend.PrepareForOutput( addLen, DeviceTag() );
+
+      switch( rightExtMethod )
+      {
+        case SYMH:
+        {
+            RightSYMH worklet( sigInLen + 1 );
+            vtkm::worklet::DispatcherMapField< RightSYMH, DeviceTag > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigInPlusOne );
+            break;
+        }
+        case SYMW:
+        {
+            RightSYMW worklet( sigInLen + 1 );
+            vtkm::worklet::DispatcherMapField< RightSYMW, DeviceTag > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigInPlusOne );
+            break;
+        }
+        case ASYMH:
+        {
+            RightASYMH worklet( sigInLen + 1 );
+            vtkm::worklet::DispatcherMapField< RightASYMH, DeviceTag > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigInPlusOne );
+            break;
+        }
+        case ASYMW:
+        {
+            RightASYMW worklet( sigInLen + 1 );
+            vtkm::worklet::DispatcherMapField< RightASYMW, DeviceTag > dispatcher( worklet );
+            dispatcher.Invoke( rightExtend, sigInPlusOne );
+            break;
+        }
+        default:
+        {
+          vtkm::cont::ErrorControlInternal("Right extension mode not supported!");
+          return 1;
+        }
+      }
+
+      // make a copy of rightExtend with a zero attached to the left
+      ExtendArrayType rightExtendPlusOne;
+      rightExtendPlusOne.PrepareForOutput( addLen + 1, DeviceTag() );
+      WaveletBase::DeviceCopyStartX( rightExtend, rightExtendPlusOne, 1, DeviceTag() );
+      WaveletBase::DeviceAssignZero( rightExtendPlusOne, 0, DeviceTag() );
+      rightExtend = rightExtendPlusOne ;
+    }
+
+    typedef vtkm::cont::ArrayHandleConcatenate< ExtendArrayType, SigInArrayType> 
+            ArrayConcat;
+    ArrayConcat leftOn( leftExtend, sigIn );    
+    sigOut = vtkm::cont::make_ArrayHandleConcatenate( leftOn, rightExtend );
+
+    return 0;
+  }
+#endif
+
   // Func: Extend 1D signal
   template< typename SigInArrayType, typename SigExtendedArrayType, typename DeviceTag >
   vtkm::Id Extend1D( const SigInArrayType                     &sigIn,   // Input
@@ -540,7 +730,7 @@ public:
     // Define a few types
     typedef typename InputArrayType::ValueType             InputValueType;
     typedef vtkm::cont::ArrayHandle<InputValueType>        BasicArrayType;
-    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >      CountingArrayType;
+    typedef vtkm::cont::ArrayHandleCounting< vtkm::Id >    CountingArrayType;
     typedef vtkm::cont::ArrayHandlePermutation< CountingArrayType, InputArrayType > 
               CountingInputPermute;
     typedef vtkm::cont::ArrayHandlePermutation< CountingArrayType, BasicArrayType > 

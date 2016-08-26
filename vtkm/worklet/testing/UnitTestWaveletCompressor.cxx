@@ -24,6 +24,10 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/Timer.h>
 
+#include <vtkm/cont/ArrayHandleInterpreter.h>
+#include <vtkm/cont/ArrayHandleConcatenate2DTopDown.h>
+#include <vtkm/cont/ArrayHandleConcatenate2DLeftRight.h>
+
 #include <vector>
 #include <iomanip>
 
@@ -57,6 +61,36 @@ void FillArray( ArrayType& array )
   SineWorklet worklet;
   vtkm::worklet::DispatcherMapField< SineWorklet > dispatcher( worklet );
   dispatcher.Invoke( array );
+}
+
+void Debug2DExtend()
+{
+  vtkm::Id NX = 5;
+  vtkm::Id NY = 4;
+  typedef vtkm::cont::ArrayHandleInterpreter< vtkm::Id >   ArrayInterp;
+  ArrayInterp     left, right;
+  left.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  left.InterpretAs2D( NX, NY );
+  right.PrepareForOutput( 2*NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  right.InterpretAs2D( 2*NX, NY );
+  for( vtkm::Id i = 0; i < 2*NX*NY; i++ )
+    right.GetPortalControl().Set(i, i);
+
+  typedef vtkm::worklet::wavelets::LeftSYMHExtentionWorklet2D  LeftSYMH2D;
+  LeftSYMH2D worklet( NX, NY, 2*NX, NY);
+  vtkm::worklet::DispatcherMapField< LeftSYMH2D, VTKM_DEFAULT_DEVICE_ADAPTER_TAG> 
+      dispatcher( worklet );
+  dispatcher.Invoke( left, right );
+
+  typedef vtkm::cont::ArrayHandleConcatenate2DLeftRight< ArrayInterp, ArrayInterp >
+          ConcatLR;
+  ConcatLR concatLR( left, right );
+  for(   vtkm::Id j = 0; j < concatLR.GetDimY(); j++ )
+  {
+    for( vtkm::Id i = 0; i < concatLR.GetDimX(); i++ )
+      std::cout << concatLR.Get2D( i, j ) << "\t";
+    std::cout << std::endl;
+  }
 }
 
 void DebugDWTIDWT1D()
@@ -266,7 +300,8 @@ void TestWaveletCompressor()
   //DebugDWTIDWT1D();
   //DebugRectangleCopy();
   //TestDecomposeReconstruct1D();
-  TestDecomposeReconstruct2D();
+  //TestDecomposeReconstruct2D();
+  Debug2DExtend();
 }
 
 int UnitTestWaveletCompressor(int, char *[])
