@@ -800,10 +800,7 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  AssignZeroWorklet( vtkm::Id idx )
-  {
-    this->zeroIdx = idx;
-  }
+  AssignZeroWorklet( vtkm::Id idx ) : zeroIdx( idx )  { }
 
   template< typename PortalType >
   VTKM_EXEC_EXPORT
@@ -816,6 +813,42 @@ public:
 
 private:
   vtkm::Id zeroIdx;
+};
+
+
+// Worklet
+class AssignZero2DColumnWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayInOut< ScalarAll > );
+  typedef void ExecutionSignature( _1, WorkIndex );
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  AssignZero2DColumnWorklet( vtkm::Id x, vtkm::Id y, vtkm::Id idx ) 
+        : dimX( x ), dimY( y ), zeroIdx( idx )  { }
+
+  // Index translation helper
+  VTKM_EXEC_CONT_EXPORT
+  void GetLogicalDim( const Id &idx, Id &x, Id &y ) const
+  {
+    x = idx % dimX;
+    y = idx / dimX;
+  }
+
+  template< typename PortalType >
+  VTKM_EXEC_EXPORT
+  void operator()(       PortalType   &array,
+                   const vtkm::Id     &workIdx ) const
+  {
+    vtkm::Id x, y;
+    GetLogicalDim( workIdx, x, y );
+    if( y == zeroIdx )
+      array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+  }
+
+private:
+  vtkm::Id dimX, dimY, zeroIdx;
 };
 
 

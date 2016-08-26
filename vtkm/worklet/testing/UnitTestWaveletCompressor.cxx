@@ -68,27 +68,32 @@ void Debug2DExtend()
   vtkm::Id NX = 5;
   vtkm::Id NY = 4;
   typedef vtkm::cont::ArrayHandleInterpreter< vtkm::Id >   ArrayInterp;
-  ArrayInterp     left, right;
+  ArrayInterp     left, center, right;
   left.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   left.InterpretAs2D( NX, NY );
-  right.PrepareForOutput( 2*NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  right.InterpretAs2D( 2*NX, NY );
+  right.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  right.InterpretAs2D( NX, NY );
+  center.PrepareForOutput( 2*NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  center.InterpretAs2D( 2*NX, NY );
   for( vtkm::Id i = 0; i < 2*NX*NY; i++ )
-    right.GetPortalControl().Set(i, i);
-
-  typedef vtkm::worklet::wavelets::LeftSYMHExtentionWorklet2D  LeftSYMH2D;
-  LeftSYMH2D worklet( NX, NY, 2*NX, NY);
-  vtkm::worklet::DispatcherMapField< LeftSYMH2D, VTKM_DEFAULT_DEVICE_ADAPTER_TAG> 
-      dispatcher( worklet );
-  dispatcher.Invoke( left, right );
+    center.GetPortalControl().Set(i, i);
 
   typedef vtkm::cont::ArrayHandleConcatenate2DLeftRight< ArrayInterp, ArrayInterp >
-          ConcatLR;
-  ConcatLR concatLR( left, right );
-  for(   vtkm::Id j = 0; j < concatLR.GetDimY(); j++ )
+          ConcatLeftOn;
+  typedef vtkm::cont::ArrayHandleConcatenate2DLeftRight< ConcatLeftOn, ArrayInterp >
+          ConcatRightOn;
+  ConcatRightOn output;
+
+  vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::CDF9_7 );
+  vtkm::worklet::wavelets::DWTMode leftMode   = vtkm::worklet::wavelets::SYMH; 
+  vtkm::worklet::wavelets::DWTMode rightMode  = vtkm::worklet::wavelets::SYMH; 
+  dwt.Extend2D( center, output, 4, leftMode, rightMode, false, false, 
+      VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+
+  for(   vtkm::Id j = 0; j < output.GetDimY(); j++ )
   {
-    for( vtkm::Id i = 0; i < concatLR.GetDimX(); i++ )
-      std::cout << concatLR.Get2D( i, j ) << "\t";
+    for( vtkm::Id i = 0; i < output.GetDimX(); i++ )
+      std::cout << output.Get2D( i, j ) << " \t";
     std::cout << std::endl;
   }
 }
