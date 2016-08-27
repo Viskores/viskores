@@ -20,6 +20,8 @@
 #ifndef vtk_m_rendering_ColorBarAnnotation_h
 #define vtk_m_rendering_ColorBarAnnotation_h
 
+#include <vtkm/rendering/vtkm_rendering_export.h>
+
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/AxisAnnotation2D.h>
 #include <vtkm/rendering/Camera.h>
@@ -33,54 +35,34 @@ namespace rendering {
 class ColorBarAnnotation
 {
 protected:
-  vtkm::rendering::ColorTable colortable;
-  vtkm::rendering::AxisAnnotation2D axis;
+  vtkm::rendering::ColorTable ColorTable;
+  vtkm::rendering::AxisAnnotation2D Axis;
+
 public:
+  VTKM_CONT_EXPORT
   ColorBarAnnotation()
   {
   }
-  void SetColorTable(const vtkm::rendering::ColorTable &ct)
-  {
-    colortable = ct;
-  }
-  void SetRange(vtkm::Float64 l, vtkm::Float64 h, int nticks)
-  {
-    std::vector<vtkm::Float64> pos, prop;
-    axis.SetMinorTicks(pos, prop); // clear any minor ticks
 
-    for (int i=0; i<nticks; ++i)
-    {
-      vtkm::Float64 p = static_cast<vtkm::Float64>(i) / static_cast<vtkm::Float64>(nticks-1);
-      vtkm::Float64 v = l + p*(h-l);
-      pos.push_back(v);
-      prop.push_back(p);
-    }
-    axis.SetMajorTicks(pos, prop);
-  }
-  void SetRange(const vtkm::Range &range, int nticks)
+  VTKM_CONT_EXPORT
+  void SetColorTable(const vtkm::rendering::ColorTable &colorTable)
   {
-    this->SetRange(range.Min, range.Max, nticks);
+    this->ColorTable = colorTable;
   }
 
+  VTKM_RENDERING_EXPORT
+  void SetRange(const vtkm::Range &range, vtkm::IdComponent numTicks);
+
+  VTKM_CONT_EXPORT
+  void SetRange(vtkm::Float64 l, vtkm::Float64 h, vtkm::IdComponent numTicks)
+  {
+    this->SetRange(vtkm::Range(l,h), numTicks);
+  }
+
+  VTKM_RENDERING_EXPORT
   virtual void Render(const vtkm::rendering::Camera &camera,
                       const vtkm::rendering::WorldAnnotator &worldAnnotator,
-                      vtkm::rendering::Canvas &canvas)
-  {
-    vtkm::Float32 l = -0.88f, r = +0.88f;
-    vtkm::Float32 b = +0.87f, t = +0.92f;
-
-    canvas.AddColorBar(l, t, r-l, b-t,
-                              colortable, true);
-
-    axis.SetColor(Color(1,1,1));
-    axis.SetLineWidth(1);
-    axis.SetScreenPosition(l,b, r,b);
-    axis.SetMajorTickSize(0, .02, 1.0);
-    axis.SetMinorTickSize(0,0,0); // no minor ticks
-    axis.SetLabelAlignment(TextAnnotation::HCenter,
-                           TextAnnotation::Top);
-    axis.Render(camera, worldAnnotator, canvas);
-  }
+                      vtkm::rendering::Canvas &canvas);
 };
 
 }} //namespace vtkm::rendering

@@ -147,12 +147,12 @@ public:
   }
 
   VTKM_RENDERING_EXPORT
-  void SetMajorTicks(const std::vector<vtkm::Float64> &pos,
-                     const std::vector<vtkm::Float64> &prop);
+  void SetMajorTicks(const std::vector<vtkm::Float64> &positions,
+                     const std::vector<vtkm::Float64> &proportions);
 
   VTKM_RENDERING_EXPORT
-  void SetMinorTicks(const std::vector<vtkm::Float64> &pos,
-                     const std::vector<vtkm::Float64> &prop);
+  void SetMinorTicks(const std::vector<vtkm::Float64> &positions,
+                     const std::vector<vtkm::Float64> &proportions);
 
   VTKM_RENDERING_EXPORT
   void Render(const vtkm::rendering::Camera &camera,

@@ -24,6 +24,7 @@
 #include <vtkm/cont/DataSet.h>
 namespace vtkm {
 namespace rendering {
+
 /// \brief It's a color!
 ///
 /// This class provides the basic representation of a color. This class was
@@ -34,24 +35,27 @@ class Color
 {
   public:
     vtkm::Vec<vtkm::Float32,4> Components;
+
+    VTKM_EXEC_CONT_EXPORT
     Color()
-    {
-      Components[0] = 0;
-      Components[1] = 0;
-      Components[2] = 0;
-      Components[3] = 1;
-    }
+      : Components(0, 0, 0, 1)
+    {    }
+
+    VTKM_EXEC_CONT_EXPORT
     Color(vtkm::Float32 r_,
           vtkm::Float32 g_,
           vtkm::Float32 b_,
           vtkm::Float32 a_ = 1.f)
-    {
-      Components[0] = r_;
-      Components[1] = g_;
-      Components[2] = b_;
-      Components[3] = a_;
-    }
-    inline void SetComponentFromByte(vtkm::Int32 i, vtkm::UInt8 v)
+      : Components(r_, g_, b_, a_)
+    {    }
+
+    VTKM_EXEC_CONT_EXPORT
+    Color(const vtkm::Vec<vtkm::Float32,4> &components)
+      : Components(components)
+    {  }
+
+    VTKM_EXEC_CONT_EXPORT
+    void SetComponentFromByte(vtkm::Int32 i, vtkm::UInt8 v)
     {
       // Note that though GetComponentAsByte below
       // multiplies by 256, we're dividing by 255. here.
@@ -77,7 +81,9 @@ class Color
       if (Components[i]<0) Components[i] = 0;
       if (Components[i]>1) Components[i] = 1;
     }
-    inline vtkm::UInt8 GetComponentAsByte(int i)
+
+    VTKM_EXEC_CONT_EXPORT
+    vtkm::UInt8 GetComponentAsByte(int i)
     {
       // We need this to match what OpenGL/Mesa do.
       // Why?  Well, we need to set glClearColor
@@ -104,6 +110,8 @@ class Color
       // but we have to clamp anyway.
       return vtkm::UInt8((tv < 0) ? 0 : (tv > 255) ? 255 : tv);
     }
+
+    VTKM_EXEC_CONT_EXPORT
     void GetRGBA(vtkm::UInt8 &r, vtkm::UInt8 &g,
                  vtkm::UInt8 &b, vtkm::UInt8 &a)
     {
@@ -112,10 +120,14 @@ class Color
       b = GetComponentAsByte(2);
       a = GetComponentAsByte(3);
     }
+
+    VTKM_EXEC_CONT_EXPORT
     vtkm::Float64 RawBrightness()
     {
       return (Components[0]+Components[1]+Components[2])/3.;
     }
+
+    VTKM_CONT_EXPORT
     friend std::ostream &operator<<(std::ostream &out, const Color &c)
     {
       out << "["<<c.Components[0]<<","<<c.Components[1]<<","<<c.Components[2]<<","<<c.Components[3]<<"]";

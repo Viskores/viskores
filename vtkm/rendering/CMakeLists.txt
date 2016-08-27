@@ -53,6 +53,8 @@ set(sources
   Camera.cxx
   Canvas.cxx
   CanvasRayTracer.cxx
+  ColorBarAnnotation.cxx
+  ColorTable.cxx
   DecodePNG.cxx
   )
 
