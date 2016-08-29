@@ -20,20 +20,13 @@
 #ifndef vtk_m_Types_h
 #define vtk_m_Types_h
 
-
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
 #include <vtkm/Assert.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/mpl/or.hpp>
-#include <boost/type_traits/is_floating_point.hpp>
-#include <boost/type_traits/is_signed.hpp>
-#include <boost/utility/enable_if.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 #include <iostream>
+#include <type_traits>
 
 /*!
  * \namespace vtkm
@@ -1270,16 +1263,15 @@ operator/(const vtkm::Vec<vtkm::Float64, Size> &vec, vtkm::Float64 scalar)
 }
 // The enable_if for this operator is effectively disabling the negate
 // operator for Vec of unsigned integers. Another approach would be
-// to use disable_if<is_unsigned>. That would be more inclusive but would
+// to use enable_if<!is_unsigned>. That would be more inclusive but would
 // also allow other types like Vec<Vec<unsigned> >. If necessary, we could
 // change this implementation to be more inclusive.
 template<typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT_EXPORT
-typename boost::enable_if<
-  typename boost::mpl::or_<
-    typename boost::is_floating_point<T>::type,
-    typename boost::is_signed<T>::type>::type,
-  vtkm::Vec<T,Size> >::type
+typename std::enable_if<
+            (std::is_floating_point<T>::value || std::is_signed<T>::value),
+            vtkm::Vec<T,Size>
+          >::type
 operator-(const vtkm::Vec<T,Size> &x)
 {
   return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(

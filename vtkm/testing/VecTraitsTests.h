@@ -26,10 +26,6 @@
 
 #include <vtkm/testing/Testing.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/type_traits/remove_const.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 namespace testing {
 
@@ -63,11 +59,11 @@ inline void CheckIsStatic(const T &, vtkm::VecTraitsTagSizeVariable)
 /// the Tuple class.
 template <vtkm::IdComponent NUM_COMPONENTS, typename T>
 static void TestVecTypeImpl(
-  const typename boost::remove_const<T>::type &vector)
+  const typename std::remove_const<T>::type &vector)
 {
   typedef typename vtkm::VecTraits<T> Traits;
   typedef typename Traits::ComponentType ComponentType;
-  typedef typename boost::remove_const<T>::type NonConstT;
+  typedef typename std::remove_const<T>::type NonConstT;
 
   CheckIsStatic<NUM_COMPONENTS>(vector, typename Traits::IsSizeStatic());
 

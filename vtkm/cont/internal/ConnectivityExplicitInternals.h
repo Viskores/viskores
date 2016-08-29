@@ -35,7 +35,7 @@ template<typename NumIndicesArrayType,
 void buildIndexOffsets(const NumIndicesArrayType& numIndices,
                        IndexOffsetArrayType& offsets,
                        DeviceAdapterTag,
-                       boost::mpl::bool_<true>)
+                       std::true_type)
 {
   //We first need to make sure that NumIndices and IndexOffsetArrayType
   //have the same type so we can call scane exclusive
@@ -55,7 +55,7 @@ template<typename NumIndicesArrayType,
 void buildIndexOffsets(const NumIndicesArrayType&,
                        IndexOffsetArrayType&,
                        DeviceAdapterTag,
-                       boost::mpl::bool_<false>)
+                       std::false_type)
 {
   //this is a no-op as the storage for the offsets is an implicit handle
   //and should already be built. This signature exists so that

@@ -24,12 +24,9 @@
 #include <vtkm/cont/ArrayPortalToIterators.h>
 
 #include <iterator>
+#include <type_traits>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/type_traits/remove_const.hpp>
-#include <boost/type_traits/integral_constant.hpp>
-#include <boost/utility/enable_if.hpp>
-
 #include <thrust/system/cuda/memory.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
@@ -38,30 +35,30 @@ namespace exec {
 namespace cuda {
 namespace internal {
 
-template<typename T> struct UseScalarTextureLoad            {typedef  boost::false_type type;};
-template<typename T> struct UseVecTextureLoads              {typedef  boost::false_type type;};
-template<typename T> struct UseMultipleScalarTextureLoads   {typedef  boost::false_type type;};
+template<typename T> struct UseScalarTextureLoad : public std::false_type {};
+template<typename T> struct UseVecTextureLoads   : public std::false_type {};
+template<typename T> struct UseMultipleScalarTextureLoads   : public std::false_type {};
 
 //currently CUDA doesn't support texture loading of signed char's so that is why
 //you don't see vtkm::Int8 in any of the lists.
-template<> struct UseScalarTextureLoad< const vtkm::UInt8 >   {typedef boost::true_type type; };
-template<> struct UseScalarTextureLoad< const vtkm::Int16 >   {typedef boost::true_type type; };
-template<> struct UseScalarTextureLoad< const vtkm::UInt16 >  {typedef boost::true_type type; };
-template<> struct UseScalarTextureLoad< const vtkm::Int32 >   {typedef boost::true_type type; };
-template<> struct UseScalarTextureLoad< const vtkm::UInt32 >  {typedef boost::true_type type; };
-template<> struct UseScalarTextureLoad< const vtkm::Float32 > {typedef boost::true_type type; };
-template<> struct UseScalarTextureLoad< const vtkm::Float64 > {typedef boost::true_type type; };
+template<> struct UseScalarTextureLoad< const vtkm::UInt8 >   : std::true_type {};
+template<> struct UseScalarTextureLoad< const vtkm::Int16 >   : std::true_type {};
+template<> struct UseScalarTextureLoad< const vtkm::UInt16 >  : std::true_type {};
+template<> struct UseScalarTextureLoad< const vtkm::Int32 >   : std::true_type {};
+template<> struct UseScalarTextureLoad< const vtkm::UInt32 >  : std::true_type {};
+template<> struct UseScalarTextureLoad< const vtkm::Float32 > : std::true_type {};
+template<> struct UseScalarTextureLoad< const vtkm::Float64 > : std::true_type {};
 
 //CUDA needs vec types converted to CUDA types ( float2, uint2), so we have a special
 //case for these vec texture loads.
-template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::Int32,2> > {typedef boost::true_type type; };
-template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::UInt32,2> > {typedef boost::true_type type; };
-template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::Float32,2> > {typedef boost::true_type type; };
-template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::Float64,2> > {typedef boost::true_type type; };
+template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::Int32,2> > : std::true_type {};
+template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::UInt32,2> > : std::true_type {};
+template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::Float32,2> > : std::true_type {};
+template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::Float64,2> > : std::true_type {};
 
-template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::Int32,4> > {typedef boost::true_type type; };
-template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::UInt32,4> > {typedef boost::true_type type; };
-template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::Float32,4> > {typedef boost::true_type type; };
+template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::Int32,4> > : std::true_type {};
+template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::UInt32,4> > : std::true_type {};
+template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::Float32,4> > : std::true_type {};
 
 
 //CUDA doesn't support loading 3 wide values through a texture unit by default,
@@ -69,26 +66,26 @@ template<> struct UseVecTextureLoads< const vtkm::Vec<vtkm::Float32,4> > {typede
 //currently CUDA doesn't support texture loading of signed char's so that is why
 //you don't see vtkm::Int8 in any of the lists.
 
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt8,2> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Int16,2> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt16,2> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Int64,2> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt64,2> > {typedef boost::true_type type; };
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt8,2> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Int16,2> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt16,2> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Int64,2> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt64,2> > : std::true_type {};
 
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt8,3> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Int16,3> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt16,3> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Int32,3> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt32,3> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Float32,3> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Float64,3> > {typedef boost::true_type type; };
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt8,3> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Int16,3> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt16,3> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Int32,3> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt32,3> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Float32,3> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Float64,3> > : std::true_type {};
 
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt8,4> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Int16,4> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt16,4> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Int64,4> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt64,4> > {typedef boost::true_type type; };
-template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Float64,4> > {typedef boost::true_type type; };
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt8,4> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Int16,4> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt16,4> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Int64,4> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::UInt64,4> > : std::true_type {};
+template<> struct UseMultipleScalarTextureLoads< const vtkm::Vec<vtkm::Float64,4> > : std::true_type {};
 
 
 //this T type is not one that is valid to be loaded through texture memory
@@ -108,7 +105,7 @@ struct load_through_texture
 
 // this T type is valid to be loaded through a single texture memory fetch
 template<typename T>
-struct load_through_texture<T, typename ::boost::enable_if< typename UseScalarTextureLoad<const T>::type >::type >
+struct load_through_texture<T, typename std::enable_if< UseScalarTextureLoad<const T>::value >::type >
 {
 
   static const vtkm::IdComponent WillUseTexture = 1;
@@ -127,7 +124,7 @@ struct load_through_texture<T, typename ::boost::enable_if< typename UseScalarTe
 
 // this T type is valid to be loaded through a single vec texture memory fetch
 template<typename T>
-struct load_through_texture<T, typename ::boost::enable_if< typename UseVecTextureLoads<const T>::type >::type >
+struct load_through_texture<T, typename std::enable_if< UseVecTextureLoads<const T>::value >::type >
 {
   static const vtkm::IdComponent WillUseTexture = 1;
 
@@ -195,11 +192,11 @@ struct load_through_texture<T, typename ::boost::enable_if< typename UseVecTextu
 
 //this T type is valid to be loaded through multiple texture memory fetches
 template<typename T>
-struct load_through_texture<T, typename ::boost::enable_if< typename UseMultipleScalarTextureLoads<const T>::type >::type >
+struct load_through_texture<T, typename std::enable_if< UseMultipleScalarTextureLoads<const T>::value >::type >
 {
   static const vtkm::IdComponent WillUseTexture = 1;
 
-  typedef typename boost::remove_const<T>::type NonConstT;
+  typedef typename std::remove_const<T>::type NonConstT;
 
   __device__
   static T get(const thrust::system::cuda::pointer<const T>& data)

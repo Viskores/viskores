@@ -29,7 +29,6 @@
 #include <vtkm/cont/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <boost/type_traits/is_same.hpp>
 #include <algorithm>
 #include <vector>
 
@@ -232,7 +231,7 @@ private:
         array_handle_testing::CheckValues(array, array+ARRAY_SIZE, T());
       }
 
-      if (!boost::is_same<DeviceAdapterTag, vtkm::cont::DeviceAdapterTagSerial>::value)
+      if (!std::is_same<DeviceAdapterTag, vtkm::cont::DeviceAdapterTagSerial>::value)
       {
         std::cout << "Check using different device adapter" << std::endl;
         //Copy the data to the execution environment

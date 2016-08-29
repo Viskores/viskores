@@ -30,7 +30,6 @@
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
-#include <boost/static_assert.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <time.h>

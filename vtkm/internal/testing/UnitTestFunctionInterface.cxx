@@ -75,7 +75,7 @@ struct GetReferenceFunctor
 {
   template<typename T>
   struct ReturnType {
-    typedef const typename boost::remove_reference<T>::type *type;
+    typedef const typename std::remove_reference<T>::type *type;
   };
 
   template<typename T>

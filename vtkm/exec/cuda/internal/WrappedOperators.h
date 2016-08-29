@@ -29,7 +29,6 @@
 // Disable warnings we check vtkm for but Thrust does not.
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cuda/memory.h>
-#include <boost/type_traits/remove_const.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
@@ -45,7 +44,7 @@ namespace internal {
 template<typename T_, typename Function>
 struct  WrappedUnaryPredicate
 {
-  typedef typename boost::remove_const<T_>::type T;
+  typedef typename std::remove_const<T_>::type T;
 
   //make typedefs that thust expects unary operators to have
   typedef T first_argument_type;
@@ -88,7 +87,7 @@ struct  WrappedUnaryPredicate
 template<typename T_, typename Function>
 struct WrappedBinaryOperator
 {
-  typedef typename boost::remove_const<T_>::type T;
+  typedef typename std::remove_const<T_>::type T;
 
   //make typedefs that thust expects binary operators to have
   typedef T first_argument_type;
@@ -163,7 +162,7 @@ struct WrappedBinaryOperator
 template<typename T_, typename Function>
 struct WrappedBinaryPredicate
 {
-  typedef typename boost::remove_const<T_>::type T;
+  typedef typename std::remove_const<T_>::type T;
 
   //make typedefs that thust expects binary operators to have
   typedef T first_argument_type;

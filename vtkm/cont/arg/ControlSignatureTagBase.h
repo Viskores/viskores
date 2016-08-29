@@ -23,9 +23,7 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/internal/ExportMacros.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/type_traits/is_base_of.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <type_traits>
 
 namespace vtkm {
 namespace cont {
@@ -49,8 +47,8 @@ namespace internal {
 template<typename ControlSignatureTag>
 struct ControlSignatureTagCheck
 {
-  static const bool Valid =
-      boost::is_base_of<
+  static VTKM_CONSTEXPR bool Valid =
+      std::is_base_of<
           vtkm::cont::arg::ControlSignatureTagBase, ControlSignatureTag>::value;
 };
 

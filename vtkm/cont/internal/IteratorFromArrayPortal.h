@@ -213,7 +213,7 @@ namespace boost {
 /// boost::is_reference type check to declare our value class as a reference
 /// type. Even though it is not a true reference type, its operators make it
 /// behave like one.
-///  
+///
 template<typename T>
 struct is_reference<
     vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> >
