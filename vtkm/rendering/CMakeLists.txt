@@ -85,6 +85,12 @@ set(osmesa_sources
   CanvasOSMesa.cxx
   )
 
+# This list of sources has code that uses devices and so might need to be
+# compiled with a device-specific compiler (like CUDA).
+set(device_sources
+  CanvasRayTracer.cxx
+  )
+
 #-----------------------------------------------------------------------------
 vtkm_configure_component_OpenGL()
 if(VTKm_OpenGL_FOUND)
@@ -111,7 +117,17 @@ endif()
 
 vtkm_declare_headers(${headers})
 
-vtkm_library(SOURCES ${sources})
+if (VTKm_ENABLE_CUDA)
+  vtkm_library(
+    SOURCES ${sources}
+    CUDA
+    WRAP_FOR_CUDA ${device_sources}
+    )
+else()
+  vtkm_library(
+    SOURCES ${sources}
+    )
+endif()
 
 # Subclasses need rendering library
 vtkm_configure_component_Rendering()

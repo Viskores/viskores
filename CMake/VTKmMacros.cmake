@@ -553,6 +553,30 @@ function(vtkm_benchmarks device_adapter)
 
 endfunction(vtkm_benchmarks)
 
+# Given a list of *.cxx source files that during configure time are deterimined
+# to have CUDA code, wrap the sources in *.cu files so that they get compiled
+# with nvcc.
+function(vtkm_wrap_sources_for_cuda cuda_source_list_var)
+  set(original_sources ${ARGN})
+
+  set(cuda_sources)
+  foreach(source_file ${original_sources})
+    get_filename_component(source_name ${source_file} NAME_WE)
+    get_filename_component(source_file_path ${source_file} ABSOLUTE)
+    set(wrapped_file ${CMAKE_CURRENT_BINARY_DIR}/${source_name}.cu)
+    configure_file(
+      ${VTKm_SOURCE_DIR}/CMake/WrapCUDASource.cu.in
+      ${wrapped_file}
+      @ONLY)
+    list(APPEND cuda_sources ${wrapped_file})
+  endforeach(source_file)
+
+  set_source_files_properties(${original_sources}
+    PROPERTIES HEADER_FILE_ONLY TRUE
+    )
+  set(${cuda_source_list_var} ${cuda_sources} PARENT_SCOPE)
+endfunction(vtkm_wrap_sources_for_cuda)
+
 # Add a VTK-m library. The name of the library will match the "kit" name
 # (e.g. vtkm_rendering) unless the NAME argument is given.
 #
@@ -560,11 +584,12 @@ endfunction(vtkm_benchmarks)
 #   [NAME <name>]
 #   SOURCES <source_list>
 #   [CUDA]
+#   [WRAP_FOR_CUDA <source_list>]
 #   )
 function(vtkm_library)
   set(options CUDA)
   set(oneValueArgs NAME)
-  set(multiValueArgs SOURCES)
+  set(multiValueArgs SOURCES WRAP_FOR_CUDA)
   cmake_parse_arguments(VTKm_LIB
     "${options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
@@ -580,10 +605,12 @@ function(vtkm_library)
   if(VTKm_LIB_CUDA)
     vtkm_setup_nvcc_flags(old_nvcc_flags old_cxx_flags)
 
+    vtkm_wrap_sources_for_cuda(cuda_sources ${VTKm_LIB_WRAP_FOR_CUDA})
+
     # Cuda compiles do not respect target_include_directories
     cuda_include_directories(${VTKm_INCLUDE_DIRS})
 
-    cuda_add_library(${lib_name} ${VTKm_LIB_SOURCES})
+    cuda_add_library(${lib_name} ${VTKm_LIB_SOURCES} ${cuda_sources})
 
     set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
     set(CMAKE_CXX_FLAGS ${old_cxx_flags})

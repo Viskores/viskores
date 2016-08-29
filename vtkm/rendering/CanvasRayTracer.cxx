@@ -20,6 +20,7 @@
 
 #include <vtkm/rendering/CanvasRayTracer.h>
 
+#include <vtkm/cont/TryExecute.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
@@ -29,7 +30,7 @@
 namespace vtkm {
 namespace rendering {
 
-namespace raytracerworklets {
+namespace internal {
 
 class ClearBuffers : public vtkm::worklet::WorkletMapField
 {
@@ -50,7 +51,34 @@ public:
   }
 }; //class ClearBuffers
 
-} // namespace raytracerworklets
+struct ClearBuffersInvokeFunctor
+{
+  typedef vtkm::rendering::Canvas::ColorBufferType ColorBufferType;
+  typedef vtkm::rendering::Canvas::DepthBufferType DepthBufferType;
+
+  ClearBuffers Worklet;
+  ColorBufferType ColorBuffer;
+  DepthBufferType DepthBuffer;
+
+  ClearBuffersInvokeFunctor(const vtkm::rendering::Color &backgroundColor,
+                            const ColorBufferType &colorBuffer,
+                            const DepthBufferType &depthBuffer)
+    : Worklet(backgroundColor),
+      ColorBuffer(colorBuffer),
+      DepthBuffer(depthBuffer)
+  {  }
+
+  template<typename Device>
+  bool operator()(Device) const
+  {
+    vtkm::worklet::DispatcherMapField<ClearBuffers, Device>
+        dispatcher(this->Worklet);
+    dispatcher.Invoke( this->ColorBuffer, this->DepthBuffer);
+    return true;
+  }
+};
+
+} // namespace internal
 
 CanvasRayTracer::CanvasRayTracer(vtkm::Id width, vtkm::Id height)
   : Canvas(width, height)
@@ -73,13 +101,12 @@ void CanvasRayTracer::Finish()
 
 void CanvasRayTracer::Clear()
 {
-  using raytracerworklets::ClearBuffers;
-
-  // TODO: This should be put in a TryExecute and compiled with CUDA if
-  // available. Perhaps policies should be created, too.
-  vtkm::worklet::DispatcherMapField< ClearBuffers >(
-        ClearBuffers( this->GetBackgroundColor() ) )
-    .Invoke( this->GetColorBuffer(), this->GetDepthBuffer());
+  // TODO: Should the rendering library support policies or some other wayt to
+  // configure with custom devices?
+  vtkm::cont::TryExecute(
+        internal::ClearBuffersInvokeFunctor(this->GetBackgroundColor(),
+                                            this->GetColorBuffer(),
+                                            this->GetDepthBuffer()));
 }
 
 void CanvasRayTracer::AddLine(const vtkm::Vec<vtkm::Float64,2> &,
