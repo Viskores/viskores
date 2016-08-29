@@ -843,7 +843,7 @@ public:
   {
     vtkm::Id x, y;
     GetLogicalDim( workIdx, x, y );
-    if( y == zeroIdx )
+    if( x == zeroIdx )    // assign zero to a column
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
   }
 

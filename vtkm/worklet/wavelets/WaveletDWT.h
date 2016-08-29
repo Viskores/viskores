@@ -85,11 +85,10 @@ public:
     if( !attachZeroRightLeft ) // no attach zero, or only attach on RightRight
     {
       // Allocate memory
-      vtkm::Id extDimXToAlloc = extDimX;
       if( attachZeroRightRight )
-        extDimXToAlloc++;
-      rightExtend.PrepareForOutput( extDimXToAlloc * extDimY, DeviceTag() );
-      rightExtend.InterpretAs2D( extDimXToAlloc, extDimY );
+        extDimX++;
+      rightExtend.PrepareForOutput( extDimX * extDimY, DeviceTag() );
+      rightExtend.InterpretAs2D( extDimX, extDimY );
 
       typedef vtkm::worklet::wavelets::RightExtentionWorklet2D  RightWorkletType;
       RightWorkletType rightWorklet( extDimX, extDimY, sigDimX, sigDimY, rightExtMethod );
@@ -100,11 +99,12 @@ public:
       if( attachZeroRightRight )
       {
         typedef vtkm::worklet::wavelets::AssignZero2DColumnWorklet  AssignZero2DType;
-        AssignZero2DType  zeroWorklet( extDimXToAlloc, extDimY, extDimXToAlloc-1 );
+        AssignZero2DType  zeroWorklet( extDimX, extDimY, extDimX-1 );
         vtkm::worklet::DispatcherMapField< AssignZero2DType, DeviceTag >
               dispatcher3( zeroWorklet );
         dispatcher3.Invoke( rightExtend );
       }
+
     }
     else    // attachZeroRightLeft mode
     {
