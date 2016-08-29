@@ -34,6 +34,7 @@ endif()
 
 #setup policy rules for CMake 3.3 while we have a minimum required of 2.8.X
 if(POLICY CMP0063)
+  cmake_policy(SET CMP0058 NEW)#All dependencies on built targets are declared
   cmake_policy(SET CMP0063 NEW)#Honor visibility properties for all targets
 endif()
 
