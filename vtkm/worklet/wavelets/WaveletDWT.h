@@ -69,6 +69,7 @@ public:
 
     typedef typename SigInArrayType::ValueType                 ValueType;
     typedef vtkm::cont::ArrayHandleInterpreter< ValueType >    ExtendArrayType; 
+
     // Work on left extension
     ExtendArrayType                              leftExtend;
     leftExtend.PrepareForOutput( extDimX * extDimY, DeviceTag() );
@@ -80,6 +81,9 @@ public:
           dispatcher( leftWorklet );
     dispatcher.Invoke( leftExtend, sigIn );
 
+    typedef vtkm::worklet::wavelets::RightExtentionWorklet2D  RightWorkletType;
+    typedef vtkm::worklet::wavelets::AssignZero2DColumnWorklet  AssignZero2DType;
+
     // Work on right extension
     ExtendArrayType rightExtend;
     if( !attachZeroRightLeft ) // no attach zero, or only attach on RightRight
@@ -90,7 +94,6 @@ public:
       rightExtend.PrepareForOutput( extDimX * extDimY, DeviceTag() );
       rightExtend.InterpretAs2D( extDimX, extDimY );
 
-      typedef vtkm::worklet::wavelets::RightExtentionWorklet2D  RightWorkletType;
       RightWorkletType rightWorklet( extDimX, extDimY, sigDimX, sigDimY, rightExtMethod );
       vtkm::worklet::DispatcherMapField< RightWorkletType, DeviceTag > 
             dispatcher2( rightWorklet );
@@ -98,16 +101,52 @@ public:
 
       if( attachZeroRightRight )
       {
-        typedef vtkm::worklet::wavelets::AssignZero2DColumnWorklet  AssignZero2DType;
         AssignZero2DType  zeroWorklet( extDimX, extDimY, extDimX-1 );
         vtkm::worklet::DispatcherMapField< AssignZero2DType, DeviceTag >
               dispatcher3( zeroWorklet );
         dispatcher3.Invoke( rightExtend );
       }
-
     }
     else    // attachZeroRightLeft mode
     {
+      // Allocate memory before attaching 0
+      rightExtend.PrepareForOutput( extDimX * extDimY, DeviceTag() );
+      rightExtend.InterpretAs2D( extDimX, extDimY );
+
+      // make a column of zeros 
+      ExtendArrayType     zeroColumn;
+      zeroColumn.PrepareForOutput( extDimY, DeviceTag() );
+      zeroColumn.InterpretAs2D(1, extDimY );
+      AssignZero2DType  zeroWorklet2( 1, extDimY, 0 );
+      vtkm::worklet::DispatcherMapField< AssignZero2DType, DeviceTag >
+            dispatcher4( zeroWorklet2 );
+      dispatcher4.Invoke( zeroColumn );
+
+      // Attach the zero column with sigIn
+      typedef vtkm::cont::ArrayHandleConcatenate2DLeftRight< SigInArrayType, ExtendArrayType > 
+            SigInConcatZeroType;
+      SigInConcatZeroType sigInConcatZero( sigIn, zeroColumn );
+      
+      // Do the extension based on sigInConcatZero
+      RightWorkletType rightWorklet( extDimX, extDimY, sigDimX+1, sigDimY, rightExtMethod );
+      vtkm::worklet::DispatcherMapField< RightWorkletType, DeviceTag > 
+            dispatcher5( rightWorklet );
+      dispatcher5.Invoke( rightExtend, sigInConcatZero );
+
+      // Make a copy of rightExtend with zeros on the left
+      typedef vtkm::cont::ArrayHandleConcatenate2DLeftRight< ExtendArrayType, ExtendArrayType > 
+            ZeroConcatExtendType;
+      ZeroConcatExtendType zeroConcatExtend ( zeroColumn, rightExtend );
+      ExtendArrayType rightExtend2;
+      extDimX++;
+      rightExtend2.PrepareForOutput( extDimX * extDimY, DeviceTag() );
+      rightExtend2.InterpretAs2D( extDimX, extDimY );
+      WaveletBase::DeviceRectangleCopyTo( zeroConcatExtend, extDimX, extDimY,
+                                          rightExtend2, extDimX, extDimY,
+                                          0, 0, DeviceTag() );
+      rightExtend = rightExtend2;
+      rightExtend.CopyDimInfo( rightExtend2 );
+
 #if 0
       typedef vtkm::cont::ArrayHandleConcatenate<SigInArrayType, ExtendArrayType>
                                                       ConcatArray;
@@ -170,9 +209,12 @@ public:
             ArrayConcat;
     ArrayConcat leftOn( leftExtend, sigIn );    
 
+std::cerr << "rightExtend has num of vals: " << rightExtend.GetNumberOfValues() << std::endl;
+rightExtend.PrintInfo();
     typedef vtkm::cont::ArrayHandleConcatenate2DLeftRight< ArrayConcat, ExtendArrayType > 
             ArrayConcat2;
     ArrayConcat2 rightOn( leftOn, rightExtend );
+std::cerr << "finish making rightOn" << std::endl;
 
     sigOut = rightOn;
     sigOut.CopyDimInfo( rightOn );
