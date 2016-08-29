@@ -60,18 +60,18 @@ SetCamera<vtkm::rendering::View2D>(vtkm::rendering::Camera &camera,
   camera.SetClippingRange(1.f, 100.f);
   camera.SetViewport(-0.7f, +0.7f, -0.7f, +0.7f);            
 }
-    
+
 template <typename MapperType,typename CanvasType, typename ViewType>
 void
 Render(const vtkm::cont::DataSet &ds,
+       const MapperType &mapper,
        const std::string &fieldNm,
        const vtkm::rendering::ColorTable &colorTable,
        const std::string &outputFile)
 {
-    MapperType mapper;
     CanvasType canvas(512,512);
     vtkm::rendering::Scene scene;
-    
+
     scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
                                           ds.GetCoordinateSystem(),
                                           ds.GetField(fieldNm),
@@ -87,6 +87,17 @@ Render(const vtkm::cont::DataSet &ds,
     view.Paint();
     view.SaveAs(outputFile);
 }
+template <typename MapperType,typename CanvasType, typename ViewType>
+void
+Render(const vtkm::cont::DataSet &ds,
+       const std::string &fieldNm,
+       const vtkm::rendering::ColorTable &colorTable,
+       const std::string &outputFile)
+{
+    MapperType mapper;
+    Render<MapperType, CanvasType, ViewType>(ds, mapper, fieldNm, colorTable, outputFile);
+}
+
 
 }}} // namespace vtkm::rendering::testing
 

@@ -34,7 +34,7 @@ namespace {
 static const vtkm::Id WIDTH = 512, HEIGHT = 512;
 static vtkm::Id which = 0, NUM_DATASETS = 4;
 static bool done = false;
-
+static   vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
 static void
 keyCallback(GLFWwindow* vtkmNotUsed(window), int key,
             int vtkmNotUsed(scancode), int action, int vtkmNotUsed(mods))
@@ -56,7 +56,8 @@ void RenderTests()
     
     vtkm::cont::testing::MakeTestDataSet maker;
     vtkm::rendering::ColorTable colorTable("thermal");
-    
+
+
     glfwInit();
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_FALSE);
     GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "GLFW Test", NULL, NULL);
@@ -67,19 +68,19 @@ void RenderTests()
     while (!glfwWindowShouldClose(window) && !done)
     {
        glfwPollEvents();
-
        if (which == 0)
-           vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRegularDataSet0(),
+           vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRegularDataSet0(), mapper,
                                                     "pointvar", colorTable, "reg3D.pnm");
        else if (which == 1)
-           vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRectilinearDataSet0(),
+           vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRectilinearDataSet0(), mapper,
                                                     "pointvar", colorTable, "rect3D.pnm");
-       else if (which == 2)
-           vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DExplicitDataSet4(),
+       else if (which == 2){
+           vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DExplicitDataSet4(), mapper,
                                                     "pointvar", colorTable, "expl3D.pnm");
+       }
        else if (which == 3)
-           vtkm::rendering::testing::Render<M,C,V2>(maker.Make2DRectilinearDataSet0(),
-                                                    "pointvar", colorTable, "rect2D.pnm");       
+           vtkm::rendering::testing::Render<M,C,V2>(maker.Make2DRectilinearDataSet0(), mapper,
+                                                    "pointvar", colorTable, "rect2D.pnm");
        glfwSwapBuffers(window);
     }
 

@@ -44,7 +44,7 @@ class MapperGL : public Mapper
 {
 public:
   VTKM_CONT_EXPORT
-  MapperGL() {}
+  MapperGL() {loaded = false;}
 
   VTKM_CONT_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
@@ -104,160 +104,165 @@ public:
                        const vtkm::Range &scalarRange,
                        const vtkm::rendering::Camera &camera)
   {
-    glewExperimental = GL_TRUE;
-    glewInit();
-    vtkm::Float32 sMin = vtkm::Float32(scalarRange.Min);
-    vtkm::Float32 sMax = vtkm::Float32(scalarRange.Max);
-    vtkm::Float32 sDiff = sMax-sMin;
 
-    vector<float> data, colors;
-    int method = 2;
-    for (int i = 0; i < numTri; i++)
-    {
-      vtkm::Vec<vtkm::Id, 4> idx = indices.GetPortalConstControl().Get(i);
-      vtkm::Id i1 = idx[1];
-      vtkm::Id i2 = idx[2];
-      vtkm::Id i3 = idx[3];
+    if (!loaded){
+        loaded = true;
+        vtkm::Float32 sMin = vtkm::Float32(scalarRange.Min);
+        vtkm::Float32 sMax = vtkm::Float32(scalarRange.Max);
+        vtkm::Float32 sDiff = sMax-sMin;
 
-      vtkm::Vec<vtkm::Float32, 3> p1 = verts.GetPortalConstControl().Get(idx[1]);
-      vtkm::Vec<vtkm::Float32, 3> p2 = verts.GetPortalConstControl().Get(idx[2]);
-      vtkm::Vec<vtkm::Float32, 3> p3 = verts.GetPortalConstControl().Get(idx[3]);
 
-      vtkm::Float32 s;
-      Color color;
-      
-      s = scalar.GetPortalConstControl().Get(i1);
-      s = (s-sMin)/sDiff;
-      color = ct.MapRGB(s);
-      data.push_back(p1[0]);
-      data.push_back(p1[1]);
-      data.push_back(p1[2]);
-      colors.push_back(color.Components[0]);
-      colors.push_back(color.Components[1]);
-      colors.push_back(color.Components[2]);
-
-      s = scalar.GetPortalConstControl().Get(i2);
-      s = (s-sMin)/sDiff;
-      color = ct.MapRGB(s);
-      data.push_back(p2[0]);
-      data.push_back(p2[1]);
-      data.push_back(p2[2]);
-      colors.push_back(color.Components[0]);
-      colors.push_back(color.Components[1]);
-      colors.push_back(color.Components[2]);
-
-      s = scalar.GetPortalConstControl().Get(i3);
-      s = (s-sMin)/sDiff;
-      color = ct.MapRGB(s);
-      data.push_back(p3[0]);
-      data.push_back(p3[1]);
-      data.push_back(p3[2]);
-      colors.push_back(color.Components[0]);
-      colors.push_back(color.Components[1]);
-      colors.push_back(color.Components[2]);
-    }
-
-    GLuint points_vbo = 0;
-    glGenBuffers(1, &points_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
-    GLsizeiptr sz = static_cast<GLsizeiptr>(data.size()*sizeof(float));
-    glBufferData(GL_ARRAY_BUFFER, sz, &data[0], GL_STATIC_DRAW);
-
-    GLuint colours_vbo = 0;
-    glGenBuffers(1, &colours_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
-    sz = static_cast<GLsizeiptr>(colors.size()*sizeof(float));
-    glBufferData(GL_ARRAY_BUFFER, sz, &colors[0], GL_STATIC_DRAW);
-    
-    GLuint vao = 0;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-    glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    GLfloat mvMat[16], pMat[16];
-    vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
-    vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
-
-    MatrixHelpers::CreateOGLMatrix(viewM, mvMat);
-    MatrixHelpers::CreateOGLMatrix(projM, pMat);
-    const char *vertex_shader =
-        "#version 400 core\n"
-        "layout(location = 0) in vec3 vertex_position;"
-        "layout(location = 1) in vec3 vertex_color;"
-        "out vec3 ourColor;"
-        "uniform mat4 mv_matrix;"
-        "uniform mat4 p_matrix;"        
-        
-        "void main() {"
-        "  gl_Position = p_matrix*mv_matrix * vec4(vertex_position, 1.0);"
-        "  ourColor = vertex_color;"
-        "}";
-    const char *fragment_shader =
-        "#version 400 core\n"
-        "in vec3 ourColor;"
-        "out vec4 color;"
-        "void main() {"
-        "  color = vec4 (ourColor, 1.0);"
-        "}";
-
-    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vs, 1, &vertex_shader, NULL);
-    glCompileShader(vs);
-    GLint isCompiled = 0;
-    glGetShaderiv(vs, GL_COMPILE_STATUS, &isCompiled);
-    if(isCompiled == GL_FALSE)
-    {
-        GLint maxLength = 0;
-        glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &maxLength);
-
-        // The maxLength includes the NULL character
-        GLchar *strInfoLog = new GLchar[maxLength + 1];
-        glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
-        fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
-        delete [] strInfoLog;
-    }
-
-    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, &fragment_shader, NULL);
-    glCompileShader(fs);
-    glGetShaderiv(fs, GL_COMPILE_STATUS, &isCompiled);
-    if(isCompiled == GL_FALSE)
-    {
-        GLint maxLength = 0;
-        glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &maxLength);
-        
-        // The maxLength includes the NULL character
-        GLchar *strInfoLog = new GLchar[maxLength + 1];
-        glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
-        fprintf(stderr, "FS: Compilation error in shader : %s\n", strInfoLog);
-        delete [] strInfoLog;
-    }
-    
-    GLuint shader_programme = glCreateProgram();
-    if (shader_programme > 0)
-    {
-
-        glAttachShader(shader_programme, fs);
-        glAttachShader(shader_programme, vs);
-
-        glLinkProgram (shader_programme);
-        GLint linkStatus;
-        glGetProgramiv(shader_programme, GL_LINK_STATUS, &linkStatus);
-        if (!linkStatus)
+        for (int i = 0; i < numTri; i++)
         {
-            char log[2048];
-            GLsizei len;
-            glGetProgramInfoLog(shader_programme, 2048, &len, log);
-            std::string msg = std::string("Shader program link failed: ")+std::string(log);
-            throw vtkm::cont::ErrorControlBadValue(msg);
+          vtkm::Vec<vtkm::Id, 4> idx = indices.GetPortalConstControl().Get(i);
+          vtkm::Id i1 = idx[1];
+          vtkm::Id i2 = idx[2];
+          vtkm::Id i3 = idx[3];
+
+          vtkm::Vec<vtkm::Float32, 3> p1 = verts.GetPortalConstControl().Get(idx[1]);
+          vtkm::Vec<vtkm::Float32, 3> p2 = verts.GetPortalConstControl().Get(idx[2]);
+          vtkm::Vec<vtkm::Float32, 3> p3 = verts.GetPortalConstControl().Get(idx[3]);
+
+          vtkm::Float32 s;
+          Color color;
+
+          s = scalar.GetPortalConstControl().Get(i1);
+          s = (s-sMin)/sDiff;
+          color = ct.MapRGB(s);
+          data.push_back(p1[0]);
+          data.push_back(p1[1]);
+          data.push_back(p1[2]);
+          colors.push_back(color.Components[0]);
+          colors.push_back(color.Components[1]);
+          colors.push_back(color.Components[2]);
+
+          s = scalar.GetPortalConstControl().Get(i2);
+          s = (s-sMin)/sDiff;
+          color = ct.MapRGB(s);
+          data.push_back(p2[0]);
+          data.push_back(p2[1]);
+          data.push_back(p2[2]);
+          colors.push_back(color.Components[0]);
+          colors.push_back(color.Components[1]);
+          colors.push_back(color.Components[2]);
+
+          s = scalar.GetPortalConstControl().Get(i3);
+          s = (s-sMin)/sDiff;
+          color = ct.MapRGB(s);
+          data.push_back(p3[0]);
+          data.push_back(p3[1]);
+          data.push_back(p3[2]);
+          colors.push_back(color.Components[0]);
+          colors.push_back(color.Components[1]);
+          colors.push_back(color.Components[2]);
+        }
+        GLuint points_vbo = 0;
+        glGenBuffers(1, &points_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
+        GLsizeiptr sz = static_cast<GLsizeiptr>(data.size()*sizeof(float));
+        glBufferData(GL_ARRAY_BUFFER, sz, &data[0], GL_STATIC_DRAW);
+
+        GLuint colours_vbo = 0;
+        glGenBuffers(1, &colours_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
+        sz = static_cast<GLsizeiptr>(colors.size()*sizeof(float));
+        glBufferData(GL_ARRAY_BUFFER, sz, &colors[0], GL_STATIC_DRAW);
+
+        vao = 0;
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+        glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+
+        vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
+        vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
+
+        MatrixHelpers::CreateOGLMatrix(viewM, mvMat);
+        MatrixHelpers::CreateOGLMatrix(projM, pMat);
+        const char *vertex_shader =
+            "#version 130\n"
+            "in vec3 vertex_position;"
+            "in vec3 vertex_color;"
+            "out vec3 ourColor;"
+            "uniform mat4 mv_matrix;"
+            "uniform mat4 p_matrix;"
+
+            "void main() {"
+            "  gl_Position = p_matrix*mv_matrix * vec4(vertex_position, 1.0);"
+            "  ourColor = vertex_color;"
+            "}";
+        const char *fragment_shader =
+            "#version 130\n"
+            "in vec3 ourColor;"
+            "out vec4 color;"
+            "void main() {"
+            "  color = vec4 (ourColor, 1.0);"
+            "}";
+
+        GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vs, 1, &vertex_shader, NULL);
+        glCompileShader(vs);
+        GLint isCompiled = 0;
+        glGetShaderiv(vs, GL_COMPILE_STATUS, &isCompiled);
+        if(isCompiled == GL_FALSE)
+        {
+            GLint maxLength = 0;
+            glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &maxLength);
+
+            // The maxLength includes the NULL character
+            GLchar *strInfoLog = new GLchar[maxLength + 1];
+            glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
+            fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
+            delete [] strInfoLog;
         }
 
+        GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fs, 1, &fragment_shader, NULL);
+        glCompileShader(fs);
+        glGetShaderiv(fs, GL_COMPILE_STATUS, &isCompiled);
+        if(isCompiled == GL_FALSE)
+        {
+            GLint maxLength = 0;
+            glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &maxLength);
+
+            // The maxLength includes the NULL character
+            GLchar *strInfoLog = new GLchar[maxLength + 1];
+            glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
+            fprintf(stderr, "FS: Compilation error in shader : %s\n", strInfoLog);
+            delete [] strInfoLog;
+        }
+
+        shader_programme = glCreateProgram();
+        if (shader_programme > 0)
+        {
+
+            glAttachShader(shader_programme, fs);
+            glAttachShader(shader_programme, vs);
+            glBindAttribLocation (shader_programme, 0, "vertex_position");
+            glBindAttribLocation (shader_programme, 1, "vertex_color");
+
+            glLinkProgram (shader_programme);
+            GLint linkStatus;
+            glGetProgramiv(shader_programme, GL_LINK_STATUS, &linkStatus);
+            if (!linkStatus)
+            {
+                char log[2048];
+                GLsizei len;
+                glGetProgramInfoLog(shader_programme, 2048, &len, log);
+                std::string msg = std::string("Shader program link failed: ")+std::string(log);
+                throw vtkm::cont::ErrorControlBadValue(msg);
+            }
+        }
+    }
+
+
+    if (shader_programme > 0)
+    {
         glUseProgram(shader_programme);
         GLint mvID = glGetUniformLocation(shader_programme, "mv_matrix");
         glUniformMatrix4fv(mvID, 1, GL_FALSE, mvMat);
@@ -268,6 +273,12 @@ public:
         glUseProgram(0);
       }
   }
+
+  vector<float> data, colors;
+  GLuint shader_programme;
+  GLfloat mvMat[16], pMat[16];
+  bool loaded;
+  GLuint vao;
 };
 
 }} //namespace vtkm::rendering
