@@ -56,6 +56,11 @@ set(sources
   ColorBarAnnotation.cxx
   ColorTable.cxx
   DecodePNG.cxx
+  Mapper.cxx
+  MapperRayTracer.cxx
+  MapperVolume.cxx
+
+  internal/RunTriangulator.cxx
   )
 
 set(opengl_headers
@@ -67,6 +72,7 @@ set(opengl_headers
 
 set(opengl_sources
   CanvasGL.cxx
+  MapperGL.cxx
   )
 
 set(egl_headers

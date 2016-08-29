@@ -60,6 +60,7 @@ struct ClearBuffersInvokeFunctor
   ColorBufferType ColorBuffer;
   DepthBufferType DepthBuffer;
 
+  VTKM_CONT_EXPORT
   ClearBuffersInvokeFunctor(const vtkm::rendering::Color &backgroundColor,
                             const ColorBufferType &colorBuffer,
                             const DepthBufferType &depthBuffer)
@@ -69,8 +70,11 @@ struct ClearBuffersInvokeFunctor
   {  }
 
   template<typename Device>
+  VTKM_CONT_EXPORT
   bool operator()(Device) const
   {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+
     vtkm::worklet::DispatcherMapField<ClearBuffers, Device>
         dispatcher(this->Worklet);
     dispatcher.Invoke( this->ColorBuffer, this->DepthBuffer);
@@ -101,7 +105,7 @@ void CanvasRayTracer::Finish()
 
 void CanvasRayTracer::Clear()
 {
-  // TODO: Should the rendering library support policies or some other wayt to
+  // TODO: Should the rendering library support policies or some other way to
   // configure with custom devices?
   vtkm::cont::TryExecute(
         internal::ClearBuffersInvokeFunctor(this->GetBackgroundColor(),

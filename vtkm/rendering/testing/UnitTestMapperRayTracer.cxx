@@ -53,7 +53,7 @@ void Render(const vtkm::cont::DataSet &ds,
 {
     const vtkm::Int32 W = 512, H = 512;
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
-    vtkm::rendering::MapperRayTracer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
+    vtkm::rendering::MapperRayTracer mapper;
 
     vtkm::rendering::Camera camera;
     Set3DView(camera, coords);

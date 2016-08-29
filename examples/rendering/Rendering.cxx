@@ -138,7 +138,7 @@ main(int argc, char* argv[])
 
     vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
     vtkm::rendering::CanvasGL canvas;
-    vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
+    vtkm::rendering::MapperGL mapper;
 
     vtkm::rendering::Scene scene;
     scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
