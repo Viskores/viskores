@@ -906,6 +906,7 @@ private:
 
 // Worklet:
 // Copys a small rectangle to part of a big rectangle
+// WARNING: this worklet only supports basic ArrayHandle types.
 class RectangleCopyTo : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -961,6 +962,7 @@ private:
 
 // Worklet:
 // Copys a part of a big rectangle to a small rectangle
+// WARNING: this worklet only supports basic ArrayHandle types.
 class RectangleCopyFrom : public vtkm::worklet::WorkletMapField
 {
 public:

@@ -141,6 +141,18 @@ public:
     dispatcher.Invoke( array );
   }
 
+  // Assign zeros to a certain column to a matrix
+  template< typename ArrayType, typename DeviceTag >
+  void DeviceAssignZero2DColumn( ArrayType &array, vtkm::Id dimX, vtkm::Id dimY, // input
+                                 vtkm::Id colIdx, DeviceTag )           
+  {
+    typedef vtkm::worklet::wavelets::AssignZero2DColumnWorklet  AssignZero2DType;
+    AssignZero2DType  zeroWorklet( dimX, dimY, colIdx );
+    vtkm::worklet::DispatcherMapField< AssignZero2DType, DeviceTag >
+          dispatcher( zeroWorklet );
+    dispatcher.Invoke( array );
+  }
+
   // Sort by the absolute value on device
   struct SortLessAbsFunctor
   { 
