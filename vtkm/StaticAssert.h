@@ -21,34 +21,12 @@
 #define vtk_m_StaticAssert_h
 
 #include <vtkm/internal/Configure.h>
-
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/static_assert.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
-// Newer versions of clang are causing the static assert to issue a warning
-// about unused typedefs. In this case, we want to disable the warnings using
-// pragmas. However, not all compiler support pragmas in code blocks (although
-// fortunately clang does). Thus, only use these pragmas in the instance where
-// we need it and know we can use it.
-#if defined(VTKM_CLANG) && (__apple_build_version__ >= 7000072) && !defined(VTKM_CUDA)
+#include <type_traits>
 
 #define VTKM_STATIC_ASSERT(condition) \
-  VTKM_THIRDPARTY_PRE_INCLUDE \
-  BOOST_STATIC_ASSERT(condition) \
-  VTKM_THIRDPARTY_POST_INCLUDE
+  static_assert( (condition), __FILE__)
 #define VTKM_STATIC_ASSERT_MSG(condition, message) \
-  VTKM_THIRDPARTY_PRE_INCLUDE \
-  BOOST_STATIC_ASSERT_MSG(condition, message) \
-  VTKM_THIRDPARTY_POST_INCLUDE
+  static_assert( (condition), message)
 
-#else
-
-#define VTKM_STATIC_ASSERT(condition) \
-  BOOST_STATIC_ASSERT(condition)
-#define VTKM_STATIC_ASSERT_MSG(condition, message) \
-  BOOST_STATIC_ASSERT_MSG(condition, message)
-
-#endif
 
 #endif //vtk_m_StaticAssert_h
