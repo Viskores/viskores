@@ -261,7 +261,7 @@ public:
     std::advance(iterator, static_cast<difference_type>(this->NumberOfValues));
 #else
     //Visual Studio checked iterators throw exceptions when you try to advance
-    //NULL iterators even if the advancement length is zero. So instead
+    //nullptr iterators even if the advancement length is zero. So instead
     //don't do the advancement at all
     if(this->NumberOfValues > 0)
     {

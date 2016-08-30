@@ -45,7 +45,7 @@
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/ColorTable.h>
 
-vtkm::rendering::View3D *view = NULL;
+vtkm::rendering::View3D *view = nullptr;
 
 const vtkm::Int32 W = 512, H = 512;
 int buttonStates[3] = {GLUT_UP, GLUT_UP, GLUT_UP};

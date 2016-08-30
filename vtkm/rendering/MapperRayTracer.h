@@ -43,16 +43,16 @@ public:
   VTKM_CONT_EXPORT
   MapperRayTracer()
   {
-    this->Canvas = NULL;
+    this->Canvas = nullptr;
   }
   VTKM_CONT_EXPORT
   void SetCanvas(vtkm::rendering::Canvas *canvas)
   {
-    if(canvas != NULL)
+    if(canvas != nullptr)
     {
 
       this->Canvas = dynamic_cast<CanvasRayTracer*>(canvas);
-      if(this->Canvas == NULL)
+      if(this->Canvas == nullptr)
       {
         throw vtkm::cont::ErrorControlBadValue(
           "Ray Tracer: bad canvas type. Must be CanvasRayTracer");

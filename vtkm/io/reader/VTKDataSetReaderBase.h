@@ -378,7 +378,7 @@ protected:
   void TransferDataFile(VTKDataSetReaderBase &reader)
   {
     reader.DataFile.swap(this->DataFile);
-    this->DataFile.reset(NULL);
+    this->DataFile.reset(nullptr);
   }
 
   virtual void CloseFile()

@@ -41,7 +41,7 @@ public:
                vtkm::Id height=1024)
       : CanvasGL(width,height)
   {
-    ctx = NULL;
+    ctx = nullptr;
     this->ResizeBuffers(width, height);
   }
 

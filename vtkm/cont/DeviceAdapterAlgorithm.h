@@ -513,7 +513,7 @@ public:
     retval.Microseconds = 1000*currentTime.millitm;
 #else
     timeval currentTime;
-    gettimeofday(&currentTime, NULL);
+    gettimeofday(&currentTime, nullptr);
     retval.Seconds = currentTime.tv_sec;
     retval.Microseconds = currentTime.tv_usec;
 #endif

@@ -61,9 +61,9 @@ namespace internal {
 
 inline void* alloc_aligned(size_t size, size_t align){
 #if defined(VTKM_MEMALIGN_POSIX)
-  void *mem = NULL;
+  void *mem = nullptr;
   if (posix_memalign(&mem, align, size) != 0){
-    mem = NULL;
+    mem = nullptr;
   }
 #elif defined(VTKM_MEMALIGN_WIN)
   void *mem = _aligned_malloc(size, align);
@@ -72,7 +72,7 @@ inline void* alloc_aligned(size_t size, size_t align){
 #else
   void *mem = malloc(size);
 #endif
-  if (mem == NULL){
+  if (mem == nullptr){
     throw std::bad_alloc();
   }
   return mem;
@@ -174,12 +174,12 @@ public:
 public:
 
   VTKM_CONT_EXPORT
-  Storage(const ValueType *array = NULL, vtkm::Id numberOfValues = 0)
+  Storage(const ValueType *array = nullptr, vtkm::Id numberOfValues = 0)
     : Array(const_cast<ValueType *>(array)),
       NumberOfValues(numberOfValues),
       AllocatedSize(numberOfValues),
       DeallocateOnRelease(false),
-      UserProvidedMemory( array == NULL ? false : true)
+      UserProvidedMemory( array == nullptr ? false : true)
   {
   }
 
@@ -230,20 +230,20 @@ public:
   {
     if (this->NumberOfValues > 0)
     {
-      VTKM_ASSERT(this->Array != NULL);
+      VTKM_ASSERT(this->Array != nullptr);
       if (this->DeallocateOnRelease)
       {
         AllocatorType allocator;
         allocator.deallocate(this->Array,
                              static_cast<std::size_t>(this->AllocatedSize) );
       }
-      this->Array = NULL;
+      this->Array = nullptr;
       this->NumberOfValues = 0;
       this->AllocatedSize = 0;
     }
     else
     {
-      VTKM_ASSERT(this->Array == NULL);
+      VTKM_ASSERT(this->Array == nullptr);
     }
   }
 
@@ -281,7 +281,7 @@ public:
     catch (std::bad_alloc err)
     {
       // Make sureour state is OK.
-      this->Array = NULL;
+      this->Array = nullptr;
       this->NumberOfValues = 0;
       this->AllocatedSize = 0;
       throw vtkm::cont::ErrorControlBadAllocation(
@@ -342,7 +342,7 @@ public:
   /// \brief Take the reference away from this object.
   ///
   /// This method returns the pointer to the array held by this array. It then
-  /// clears the internal array pointer to NULL, thereby ensuring that the
+  /// clears the internal array pointer to nullptr, thereby ensuring that the
   /// Storage will never deallocate the array. This is helpful for taking a
   /// reference for an array created internally by VTK-m and not having to keep
   /// a VTK-m object around. Obviously the caller becomes responsible for
@@ -352,7 +352,7 @@ public:
   ValueType *StealArray()
   {
     ValueType *saveArray =  this->Array;
-    this->Array = NULL;
+    this->Array = nullptr;
     this->NumberOfValues = 0;
     this->AllocatedSize = 0;
     return saveArray;

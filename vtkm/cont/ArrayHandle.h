@@ -647,7 +647,7 @@ public:
   VTKM_CONT_EXPORT
   void PrepareForDevice(DeviceAdapterTag) const
   {
-    if (this->Internals->ExecutionArray != NULL)
+    if (this->Internals->ExecutionArray != nullptr)
     {
       if (this->Internals->ExecutionArray->IsDeviceAdapter(DeviceAdapterTag()))
       {
@@ -672,7 +672,7 @@ public:
         }
       }
 
-    VTKM_ASSERT(this->Internals->ExecutionArray == NULL);
+    VTKM_ASSERT(this->Internals->ExecutionArray == nullptr);
     VTKM_ASSERT(!this->Internals->ExecutionArrayValid);
     // Need to change some state that does not change the logical state from
     // an external point of view.

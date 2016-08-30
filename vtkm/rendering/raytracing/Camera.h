@@ -419,10 +419,10 @@ public:
   void WriteToSurface(CanvasRayTracer *canvas,
                       const vtkm::cont::ArrayHandle<vtkm::Float32> &distances)
   {
-    if(canvas == NULL)
+    if(canvas == nullptr)
     {
       throw vtkm::cont::ErrorControlBadValue(
-            "Camera can not write to NULL canvas");
+            "Camera can not write to nullptr canvas");
     }
     if(this->Height != vtkm::Int32(canvas->GetHeight()) ||
        this->Width != vtkm::Int32(canvas->GetWidth()))

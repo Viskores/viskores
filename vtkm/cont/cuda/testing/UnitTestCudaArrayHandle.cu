@@ -37,12 +37,12 @@ void TestCudaHandle()
 {
   //Verify that we can construct a cuda array handle using the class inside
   //the vtkm::cont::cuda namespace
-  vtkm::cont::cuda::ArrayHandle<vtkm::Id> handleFoo(NULL,0);
+  vtkm::cont::cuda::ArrayHandle<vtkm::Id> handleFoo(nullptr,0);
   vtkm::cont::Field foo("foo", vtkm::cont::Field::ASSOC_CELL_SET , "cellset", handleFoo);
 
   //Verify that we can construct a cuda array handle using the class inside
   //the vtkm::cont namespace
-  vtkm::cont::ArrayHandleCuda< vtkm::Vec< vtkm::Float32, 3> > handleBar(NULL,0);
+  vtkm::cont::ArrayHandleCuda< vtkm::Vec< vtkm::Float32, 3> > handleBar(nullptr,0);
   vtkm::cont::Field bar("bar", vtkm::cont::Field::ASSOC_CELL_SET, "cellset", handleBar);
 }
 

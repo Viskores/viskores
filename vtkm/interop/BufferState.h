@@ -97,7 +97,7 @@ public:
   {
     //don't delete this as it points to user memory, or stack allocated
     //memory inside this object instance
-    this->OpenGLHandle = NULL;
+    this->OpenGLHandle = nullptr;
   }
 
   /// \brief get the OpenGL buffer handle

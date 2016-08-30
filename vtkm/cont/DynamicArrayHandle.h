@@ -123,7 +123,7 @@ struct DynamicArrayHandleCopyHelper {
 
 // A simple function to downcast an ArrayHandle encapsulated in a
 // PolymorphicArrayHandleContainerBase to the given type of ArrayHandle. If the
-// conversion cannot be done, NULL is returned.
+// conversion cannot be done, nullptr is returned.
 template<typename Type, typename Storage>
 VTKM_CONT_EXPORT
 vtkm::cont::ArrayHandle<Type,Storage> *
@@ -134,13 +134,13 @@ DynamicArrayHandleTryCast(
       downcastContainer = dynamic_cast<
         vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage> *>(
           arrayContainer);
-  if (downcastContainer != NULL)
+  if (downcastContainer != nullptr)
   {
     return &downcastContainer->Array;
   }
   else
   {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -234,7 +234,7 @@ public:
   bool IsTypeAndStorage() const {
     return (
           detail::DynamicArrayHandleTryCast<Type,Storage>(this->ArrayContainer)
-          != NULL);
+          != nullptr);
   }
 
   /// Returns true if this array matches the array handle type passed in.
@@ -271,7 +271,7 @@ public:
   CastToTypeStorage() const {
     vtkm::cont::ArrayHandle<Type, Storage> *downcastArray =
         detail::DynamicArrayHandleTryCast<Type,Storage>(this->ArrayContainer);
-    if (downcastArray == NULL)
+    if (downcastArray == nullptr)
     {
       throw vtkm::cont::ErrorControlBadType("Bad cast of dynamic array.");
     }

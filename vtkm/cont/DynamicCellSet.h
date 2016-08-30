@@ -58,7 +58,7 @@ struct DynamicCellSetCopyHelper {
 
 // A simple function to downcast a CellSet encapsulated in a
 // SimplePolymorphicContainerBase to the given subclass of CellSet. If the
-// conversion cannot be done, NULL is returned.
+// conversion cannot be done, nullptr is returned.
 template<typename CellSetType>
 VTKM_CONT_EXPORT
 CellSetType *
@@ -69,13 +69,13 @@ DynamicCellSetTryCast(
       downcastContainer = dynamic_cast<
         vtkm::cont::internal::SimplePolymorphicContainer<CellSetType> *>(
           cellSetContainer);
-  if (downcastContainer != NULL)
+  if (downcastContainer != nullptr)
   {
     return &downcastContainer->Item;
   }
   else
   {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -166,7 +166,7 @@ public:
   VTKM_CONT_EXPORT
   bool IsType() const {
     return (detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer)
-            != NULL);
+            != nullptr);
   }
 
   /// Returns true if this cell set is the same (or equivalent) type as the
@@ -195,7 +195,7 @@ public:
   CellSetType &Cast() const {
     CellSetType *cellSetPointer =
         detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
-    if (cellSetPointer == NULL)
+    if (cellSetPointer == nullptr)
     {
       throw vtkm::cont::ErrorControlBadType("Bad cast of dynamic cell set.");
     }
@@ -323,7 +323,7 @@ struct DynamicCellSetTryCellSet
     {
       CellSetType *cellSet =
           detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
-      if (cellSet != NULL)
+      if (cellSet != nullptr)
       {
         this->Function(*cellSet);
         this->FoundCast = true;
