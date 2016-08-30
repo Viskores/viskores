@@ -29,11 +29,6 @@
 
 #include <vtkm/cont/internal/DynamicTransform.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/smart_ptr/shared_ptr.hpp>
-#include <boost/utility/enable_if.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 namespace cont {
 
@@ -55,7 +50,7 @@ struct PolymorphicArrayHandleContainerBase
 
   virtual void PrintSummary(std::ostream &out) const = 0;
 
-  virtual boost::shared_ptr<PolymorphicArrayHandleContainerBase>
+  virtual std::shared_ptr<PolymorphicArrayHandleContainerBase>
   NewInstance() const = 0;
 };
 
@@ -97,10 +92,10 @@ struct PolymorphicArrayHandleContainer
     vtkm::cont::printSummary_ArrayHandle(this->Array, out);
   }
 
-  virtual boost::shared_ptr<PolymorphicArrayHandleContainerBase>
+  virtual std::shared_ptr<PolymorphicArrayHandleContainerBase>
   NewInstance() const
   {
-    return boost::shared_ptr<PolymorphicArrayHandleContainerBase>(
+    return std::shared_ptr<PolymorphicArrayHandleContainerBase>(
           new PolymorphicArrayHandleContainer<T,Storage>());
   }
 };
@@ -114,7 +109,7 @@ struct DynamicArrayHandleCopyHelper {
   template<typename TypeList, typename StorageList>
   VTKM_CONT_EXPORT
   static
-  const boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>&
+  const std::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>&
   GetArrayHandleContainer(const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &src)
   {
     return src.ArrayContainer;
@@ -148,7 +143,7 @@ template<typename Type, typename Storage>
 VTKM_CONT_EXPORT
 vtkm::cont::ArrayHandle<Type,Storage> *
 DynamicArrayHandleTryCast(
-  const boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>& arrayContainer)
+  const std::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>& arrayContainer)
 {
   return detail::DynamicArrayHandleTryCast<Type,Storage>(arrayContainer.get());
 }
@@ -410,7 +405,7 @@ public:
   }
 
 private:
-  boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>
+  std::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>
     ArrayContainer;
 
   friend struct detail::DynamicArrayHandleCopyHelper;

@@ -24,9 +24,7 @@
 #include <vtkm/interop/internal/OpenGLHeaders.h>
 #include <vtkm/interop/internal/BufferTypePicker.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/smart_ptr/scoped_ptr.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <memory>
 
 namespace vtkm{
 namespace interop{
@@ -67,7 +65,7 @@ public:
     SizeOfActiveSection(0),
     CapacityOfBuffer(0),
     DefaultGLHandle(0),
-    Resource(NULL)
+    Resource()
   {
   }
 
@@ -78,7 +76,7 @@ public:
     SizeOfActiveSection(0),
     CapacityOfBuffer(0),
     DefaultGLHandle(0),
-    Resource(NULL)
+    Resource()
   {
   }
 
@@ -88,7 +86,7 @@ public:
      SizeOfActiveSection(0),
      CapacityOfBuffer(0),
      DefaultGLHandle(0),
-     Resource(NULL)
+     Resource()
   {
     this->OpenGLHandle = &this->DefaultGLHandle;
   }
@@ -180,7 +178,7 @@ private:
   vtkm::Int64 SizeOfActiveSection; //must be Int64 as size can be over 2billion
   vtkm::Int64 CapacityOfBuffer; //must be Int64 as size can be over 2billion
   GLuint DefaultGLHandle;
-  boost::scoped_ptr<vtkm::interop::internal::TransferResource> Resource;
+  std::unique_ptr<vtkm::interop::internal::TransferResource> Resource;
 };
 
 }}

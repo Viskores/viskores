@@ -27,10 +27,6 @@
 #include <vtkm/cont/internal/DynamicTransform.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/smart_ptr/shared_ptr.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 namespace cont {
 
@@ -49,7 +45,7 @@ struct DynamicCellSetCopyHelper {
   template<typename CellSetList>
   VTKM_CONT_EXPORT
   static
-  const boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>&
+  const std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>&
   GetCellSetContainer(const vtkm::cont::DynamicCellSetBase<CellSetList> &src)
   {
     return src.CellSetContainer;
@@ -83,7 +79,7 @@ template<typename CellSetType>
 VTKM_CONT_EXPORT
 CellSetType *
 DynamicCellSetTryCast(
-  const boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>& cellSetContainer)
+  const std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>& cellSetContainer)
 {
   return detail::DynamicCellSetTryCast<CellSetType>(cellSetContainer.get());
 }
@@ -295,7 +291,7 @@ public:
 
 
 private:
-  boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
+  std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
       CellSetContainer;
 
   friend struct detail::DynamicCellSetCopyHelper;

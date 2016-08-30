@@ -34,11 +34,11 @@
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/concept_check.hpp>
-#include <boost/smart_ptr/scoped_ptr.hpp>
-#include <boost/smart_ptr/shared_ptr.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
+#include <memory>
 #include <vector>
+
 
 namespace vtkm {
 namespace cont {
@@ -627,14 +627,14 @@ public:
     StorageType ControlArray;
     bool ControlArrayValid;
 
-    boost::scoped_ptr<
+    std::unique_ptr<
       vtkm::cont::internal::ArrayHandleExecutionManagerBase<
         ValueType,StorageTag> > ExecutionArray;
     bool ExecutionArrayValid;
   };
 
   VTKM_CONT_EXPORT
-  ArrayHandle(const boost::shared_ptr<InternalStruct>& i)
+  ArrayHandle(const std::shared_ptr<InternalStruct>& i)
     : Internals(i)
   { }
 
@@ -723,7 +723,7 @@ public:
     }
   }
 
-  boost::shared_ptr<InternalStruct> Internals;
+  std::shared_ptr<InternalStruct> Internals;
 };
 
 /// A convenience function for creating an ArrayHandle from a standard C array.

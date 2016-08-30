@@ -21,10 +21,7 @@
 #define vtk_m_cont_internal_SimplePolymorphicContainer_h
 
 #include <vtkm/Types.h>
-
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/smart_ptr/shared_ptr.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <memory>
 
 namespace vtkm {
 namespace cont {
@@ -36,7 +33,7 @@ struct SimplePolymorphicContainerBase {
   // This must exist so that subclasses are destroyed correctly.
   virtual ~SimplePolymorphicContainerBase() {  }
 
-  virtual boost::shared_ptr<SimplePolymorphicContainerBase>
+  virtual std::shared_ptr<SimplePolymorphicContainerBase>
   NewInstance() const = 0;
 
   virtual const void *GetVoidPointer() const = 0;
@@ -62,9 +59,9 @@ struct SimplePolymorphicContainer : public SimplePolymorphicContainerBase
   VTKM_CONT_EXPORT
   SimplePolymorphicContainer(const T &src) : Item(src) {  }
 
-  virtual boost::shared_ptr<SimplePolymorphicContainerBase> NewInstance() const
+  virtual std::shared_ptr<SimplePolymorphicContainerBase> NewInstance() const
   {
-    return boost::shared_ptr<SimplePolymorphicContainerBase>(
+    return std::shared_ptr<SimplePolymorphicContainerBase>(
           new SimplePolymorphicContainer<T>());
   }
 
