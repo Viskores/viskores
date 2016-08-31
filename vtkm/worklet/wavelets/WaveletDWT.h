@@ -653,8 +653,6 @@ public:
     BasicArrayType afterXBuf;
     afterXBuf.PrepareForOutput( sigInLen, DeviceTag() );
 
-//std::cout << "true coeffs after extension" << std::endl;
-
     vtkm::Float64 elapsedTime = 0.0;
     for(vtkm::Id y = 0; y < inYLen; y++ )
     {
@@ -668,14 +666,6 @@ public:
       // copy coeffs to buffer
       WaveletBase::DeviceCopyStartX( output, afterXBuf, y * inXLen, DeviceTag() );
     }
-
-#if 0
-for( vtkm::Id i = 0; i < afterXBuf.GetNumberOfValues(); i++ )
-{
-  std::cerr << afterXBuf.GetPortalConstControl().Get(i) << "  ";
-  if( i % inXLen == inXLen-1 )   std::cerr << std::endl;
-}
-#endif 
 
     // Transform columns
     BasicArrayType afterYBuf;
@@ -697,6 +687,14 @@ for( vtkm::Id i = 0; i < afterXBuf.GetNumberOfValues(); i++ )
     coeffOut.PrepareForOutput( sigInLen, DeviceTag() );
     WaveletBase::DeviceTranspose( afterYBuf, inYLen, inXLen, coeffOut, 
                                   inYLen, inXLen, 0, 0, DeviceTag() );
+#if 0
+for( vtkm::Id i = 0; i < afterYBuf.GetNumberOfValues(); i++ )
+{
+  std::cerr << afterYBuf.GetPortalConstControl().Get(i) << "  ";
+  if( i % inYLen == inYLen-1 )   std::cerr << std::endl;
+}
+#endif 
+
 
     return elapsedTime;
   }
@@ -798,19 +796,21 @@ for( vtkm::Id i = 0; i < afterXBuf.GetNumberOfValues(); i++ )
     if( filterLen % 2 != 0 )
       oddLow = false;
     vtkm::Id addLen          = filterLen / 2;
-    vtkm::Id sigExtendedDimX = sigDimX + 2 * addLen;
-    vtkm::Id sigExtendedDimY = sigDimY;
+    vtkm::Id sigExtendedDimX, sigExtendedDimY;
 
     typedef vtkm::cont::ArrayHandleInterpreter<T>   ArrayType;
     ArrayType   sigExtended;
-     
+
+    // First do transform in X direction
+    sigExtendedDimX = sigDimX + 2 * addLen;
+    sigExtendedDimY = sigDimY;
     this->Extend2DLeftRight( sigIn, sigExtended, addLen, WaveletBase::wmode, 
                              WaveletBase::wmode, false, false, DeviceTag()  );
-
     vtkm::Id outDimX = sigDimX;
     vtkm::Id outDimY = sigDimY;
-    coeffOut.PrepareForOutput( outDimX * outDimY, DeviceTag() ); 
-    coeffOut.InterpretAs2D( outDimX, outDimY );
+    ArrayType          afterX;
+    afterX.PrepareForOutput( outDimX * outDimY, DeviceTag() ); 
+    afterX.InterpretAs2D( outDimX, outDimY );
 
     typedef vtkm::worklet::wavelets::ForwardTransform2D ForwardXForm;
     ForwardXForm worklet( filterLen, L[0], oddLow, sigExtendedDimX, sigExtendedDimY,
@@ -819,12 +819,44 @@ for( vtkm::Id i = 0; i < afterXBuf.GetNumberOfValues(); i++ )
     dispatcher.Invoke( sigExtended, 
                        WaveletBase::filter.GetLowDecomposeFilter(),
                        WaveletBase::filter.GetHighDecomposeFilter(),
-                       coeffOut );
+                       afterX );
+    sigExtended.ReleaseResources();
+
+    // Then do transform in Y direction
+    ArrayType        afterXTransposed;
+    afterXTransposed.PrepareForOutput( outDimX * outDimY, DeviceTag() );
+    afterXTransposed.InterpretAs2D( outDimY, outDimX );
+    WaveletBase::DeviceTranspose( afterX, outDimX, outDimY, 
+                                  afterXTransposed, outDimY, outDimX,
+                                  0, 0, DeviceTag() );
+    afterX.ReleaseResources();
+    sigExtendedDimX = sigDimY + 2 * addLen;   // sigExtended holds transposed "afterX"
+    sigExtendedDimY = sigDimX;
+    this->Extend2DLeftRight( afterXTransposed, sigExtended, addLen, 
+                             WaveletBase::wmode, WaveletBase::wmode, 
+                             false, false, DeviceTag() );
+    afterXTransposed.ReleaseResources();
+    ArrayType   afterY;
+    afterY.PrepareForOutput( outDimY * outDimX, DeviceTag() );
+    afterY.InterpretAs2D( outDimY, outDimX );
+    ForwardXForm worklet2( filterLen, L[1], oddLow, sigExtendedDimX, sigExtendedDimY,
+                           outDimY, outDimX );
+    vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher2( worklet2 );
+    dispatcher.Invoke( sigExtended, 
+                       WaveletBase::filter.GetLowDecomposeFilter(),
+                       WaveletBase::filter.GetHighDecomposeFilter(),
+                       afterY );
+    sigExtended.ReleaseResources();
+
+    // Transpose to output
+    coeffOut.PrepareForOutput( outDimX * outDimY, DeviceTag() );
+    coeffOut.InterpretAs2D( outDimX, outDimY );
+    WaveletBase::DeviceTranspose( afterY, outDimY, outDimX,
+                                  coeffOut, outDimX, outDimY,
+                                  0, 0, DeviceTag() );
     return 0;
   }
-
-  
-};    // class WaveletDWT
+};    
 
 }     // namespace wavelets
 }     // namespace worklet

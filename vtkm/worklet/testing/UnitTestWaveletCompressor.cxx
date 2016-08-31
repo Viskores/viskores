@@ -25,8 +25,6 @@
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/cont/ArrayHandleInterpreter.h>
-#include <vtkm/cont/ArrayHandleConcatenate2DTopDown.h>
-#include <vtkm/cont/ArrayHandleConcatenate2DLeftRight.h>
 
 #include <vector>
 #include <iomanip>
@@ -65,37 +63,44 @@ void FillArray( ArrayType& array )
 
 void Debug2DExtend()
 {
-  vtkm::Id NX = 5;
-  vtkm::Id NY = 4;
-  typedef vtkm::cont::ArrayHandleInterpreter< vtkm::Id >   ArrayInterp;
+  vtkm::Id NX = 10;
+  vtkm::Id NY = 11;
+  typedef vtkm::cont::ArrayHandleInterpreter< vtkm::Float64 >   ArrayInterp;
   ArrayInterp     left, center, right;
+/*
   left.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   left.InterpretAs2D( NX, NY );
   right.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   right.InterpretAs2D( NX, NY );
-  center.PrepareForOutput( 2*NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  center.InterpretAs2D( 2*NX, NY );
-  for( vtkm::Id i = 0; i < 2*NX*NY; i++ )
+*/
+  center.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  center.InterpretAs2D( NX, NY );
+  for( vtkm::Id i = 0; i < NX*NY; i++ )
     center.GetPortalControl().Set(i, i);
 
-  typedef vtkm::cont::ArrayHandleConcatenate2DLeftRight< ArrayInterp, ArrayInterp >
-          ConcatLeftOn;
-  typedef vtkm::cont::ArrayHandleConcatenate2DLeftRight< ConcatLeftOn, ArrayInterp >
-          ConcatRightOn;
-  ConcatRightOn output;
+  ArrayInterp output1, output2;
+  std::vector<vtkm::Id> L(10, 0);
 
   vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::CDF9_7 );
-  vtkm::worklet::wavelets::DWTMode leftMode   = vtkm::worklet::wavelets::SYMH; 
-  vtkm::worklet::wavelets::DWTMode rightMode  = vtkm::worklet::wavelets::SYMH; 
-  dwt.Extend2D( center, output, 4, leftMode, rightMode, false, false, 
+std::cout << "true results:" << std::endl;
+  dwt.DWT2D(center, NX, NY, output1, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+/*
+  vtkm::worklet::wavelets::DWTMode leftMode   = vtkm::worklet::wavelets::SYMW; 
+  vtkm::worklet::wavelets::DWTMode rightMode  = vtkm::worklet::wavelets::SYMW; 
+  dwt.Extend2DLeftRight( center, output, 4, leftMode, rightMode, true, false, 
       VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-
-  for(   vtkm::Id j = 0; j < output.GetDimY(); j++ )
+*/
+//  dwt.DWT2Dv2( center, output2, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  
+/*
+std::cout << "test results:" << std::endl;
+  for(   vtkm::Id j = 0; j < output2.GetDimY(); j++ )
   {
-    for( vtkm::Id i = 0; i < output.GetDimX(); i++ )
-      std::cout << output.Get2D( i, j ) << " \t";
+    for( vtkm::Id i = 0; i < output2.GetDimX(); i++ )
+      std::cout << output2.Get2D( i, j ) << "  ";
     std::cout << std::endl;
   }
+*/
 }
 
 void DebugDWTIDWT1D()

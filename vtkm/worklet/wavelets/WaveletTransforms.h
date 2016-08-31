@@ -999,17 +999,14 @@ public:
                     outStartX( out_startx ), outStartY( out_starty )  {}
 
   VTKM_EXEC_CONT_EXPORT
-  void Input1Dto2D( const vtkm::Id    &idx,    
-                       vtkm::Id    &x,      
-                       vtkm::Id    &y ) const     
+  void Input1Dto2D( const vtkm::Id &idx, vtkm::Id &x, vtkm::Id &y ) const     
   {
     x = idx % inXDim;
     y = idx / inXDim;
   }
 
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id Output2Dto1D( vtkm::Id    &x,      
-                                   vtkm::Id    &y ) const     
+  vtkm::Id Output2Dto1D( vtkm::Id &x, vtkm::Id &y ) const     
   {
     return y * outXDim + x;
   }
@@ -1022,13 +1019,15 @@ public:
   {
     vtkm::Id x, y;
     Input1Dto2D( workIdx, x, y );
-    vtkm::Id outputIdx = Output2Dto1D( y, x );
+    vtkm::Id outX = y + outStartX;
+    vtkm::Id outY = x + outStartY;
+    vtkm::Id outputIdx = Output2Dto1D( outX, outY );
     arrayOut.Set( outputIdx, valueIn );
   }
 
 private:
-  vtkm::Id inXDim,  inYDim;
-  vtkm::Id outXDim, outYDim;
+  vtkm::Id inXDim,    inYDim;
+  vtkm::Id outXDim,   outYDim;
   vtkm::Id outStartX, outStartY;
 };
 
