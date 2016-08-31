@@ -24,10 +24,6 @@
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/type_traits/remove_const.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 namespace exec {
 
@@ -41,7 +37,7 @@ public:
   typedef _SourcePortalType SourcePortalType;
 
   typedef typename
-    boost::remove_const<typename SourcePortalType::ValueType>::type
+    std::remove_const<typename SourcePortalType::ValueType>::type
       ComponentType;
   typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
 

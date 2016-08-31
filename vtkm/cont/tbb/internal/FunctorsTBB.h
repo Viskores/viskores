@@ -29,8 +29,6 @@
 
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/type_traits/remove_reference.hpp>
-
 // gcc || clang
 #if  defined(_WIN32)
 // TBB includes windows.h, which clobbers min and max functions so we
@@ -77,8 +75,8 @@ template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
 struct ScanInclusiveBody
 {
-  typedef typename boost::remove_reference<
-      typename OutputPortalType::ValueType>::type ValueType;
+  using ValueType = typename std::remove_reference<
+                        typename OutputPortalType::ValueType>::type;
   ValueType Sum;
   bool FirstCall;
   InputPortalType InputPortal;
@@ -175,8 +173,9 @@ template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
 struct ScanExclusiveBody
 {
-  typedef typename boost::remove_reference<
-      typename OutputPortalType::ValueType>::type ValueType;
+  using ValueType = typename std::remove_reference<
+                        typename OutputPortalType::ValueType>::type;
+
   ValueType Sum;
   ValueType InitialValue;
   InputPortalType InputPortal;
@@ -272,14 +271,14 @@ template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
 VTKM_SUPPRESS_EXEC_WARNINGS
 VTKM_CONT_EXPORT static
-typename boost::remove_reference<typename OutputPortalType::ValueType>::type
+typename std::remove_reference<typename OutputPortalType::ValueType>::type
 ScanInclusivePortals(InputPortalType inputPortal,
                      OutputPortalType outputPortal,
                      BinaryOperationType binaryOperation)
 {
-  typedef typename
-      boost::remove_reference<typename OutputPortalType::ValueType>::type
-      ValueType;
+  using ValueType = typename std::remove_reference<
+                        typename OutputPortalType::ValueType>::type;
+
   typedef internal::WrappedBinaryOperator<ValueType, BinaryOperationType>
       WrappedBinaryOp;
 
@@ -297,16 +296,16 @@ template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
 VTKM_SUPPRESS_EXEC_WARNINGS
 VTKM_CONT_EXPORT static
-typename boost::remove_reference<typename OutputPortalType::ValueType>::type
+typename std::remove_reference<typename OutputPortalType::ValueType>::type
 ScanExclusivePortals(InputPortalType inputPortal,
                      OutputPortalType outputPortal,
                      BinaryOperationType binaryOperation,
-                     typename boost::remove_reference<
+                     typename std::remove_reference<
                          typename OutputPortalType::ValueType>::type initialValue)
 {
-  typedef typename
-      boost::remove_reference<typename OutputPortalType::ValueType>::type
-      ValueType;
+  using ValueType = typename std::remove_reference<
+                        typename OutputPortalType::ValueType>::type;
+
   typedef internal::WrappedBinaryOperator<ValueType, BinaryOperationType>
       WrappedBinaryOp;
 

@@ -34,10 +34,8 @@
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/concept_check.hpp>
-#include <boost/mpl/not.hpp>
 #include <boost/smart_ptr/scoped_ptr.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
-#include <boost/type_traits/is_base_of.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <vector>
@@ -56,48 +54,48 @@ namespace internal {
 class ArrayHandleBase {  };
 
 /// Checks to see if the given type and storage can form a valid array handle
-/// (some storage objects cannot support all types). This check is compatable
-/// with the Boost meta-template programming library (MPL). It contains a
-/// typedef named type that is either boost::mpl::true_ or boost::mpl::false_.
+/// (some storage objects cannot support all types). This check is compatible
+/// with C++11 type_traits. It contains a
+/// typedef named type that is either std::true_type or std::false_type.
 /// Both of these have a typedef named value with the respective boolean value.
 ///
 template<typename T, typename StorageTag>
 struct IsValidArrayHandle {
-  typedef typename boost::mpl::not_<
-    typename boost::is_base_of<
-      vtkm::cont::internal::UndefinedStorage,
-      vtkm::cont::internal::Storage<T,StorageTag>
-      >::type
-    >::type type;
+  //need to add the not
+  using type = std::integral_constant<bool,
+          !( std::is_base_of<
+                          vtkm::cont::internal::UndefinedStorage,
+                          vtkm::cont::internal::Storage<T,StorageTag>
+                          >::value)>;
 };
 
 /// Checks to see if the ArrayHandle for the given DeviceAdatper allows
 /// writing, as some ArrayHandles (Implicit) don't support writing.
-/// This check is compatable with the Boost meta-template programming
-/// library (MPL). It contains a typedef named type that is either
-//  boost::mpl::true_ or boost::mpl::false_.
+/// This check is compatible with the C++11 type_traits.
+/// It contains a typedef named type that is either
+/// std::true_type or std::false_type.
 /// Both of these have a typedef named value with the respective boolean value.
 ///
 template<typename ArrayHandle, typename DeviceAdapterTag>
 struct IsWriteableArrayHandle {
 private:
-  typedef typename ArrayHandle:: template ExecutionTypes<
-                                            DeviceAdapterTag > ExecutionTypes;
-  typedef typename ExecutionTypes::Portal::ValueType ValueType;
+  template<typename T>
+  using ExecutionTypes = typename ArrayHandle::template ExecutionTypes<T>;
+
+  using ValueType = typename ExecutionTypes<DeviceAdapterTag>::Portal::ValueType;
 
   //All ArrayHandles that use ImplicitStorage as the final writable location
   //will have a value type of void*, which is what we are trying to detect
-  typedef typename boost::remove_pointer<ValueType>::type  RawValueType;
-  typedef boost::is_void<RawValueType> IsVoidType;
+  using RawValueType = typename std::remove_pointer<ValueType>::type;
+  using IsVoidType = std::is_void<RawValueType>;
 public:
-  typedef typename boost::mpl::not_<IsVoidType>::type type;
+  using type = std::integral_constant<bool, !IsVoidType::value>;
 };
 
 /// Checks to see if the given object is an array handle. This check is
-/// compatible with the Boost meta-template programming library (MPL). It
-/// contains a typedef named \c type that is either boost::mpl::true_ or
-/// boost::mpl::false_. Both of these have a typedef named value with the
-/// respective boolean value.
+/// compatible with C++11 type_traits. It a typedef named \c type that is
+/// either std::true_type or std::false_type. Both of these have a typedef
+/// named value with the respective boolean value.
 ///
 /// Unlike \c IsValidArrayHandle, if an \c ArrayHandle is used with this
 /// class, then it must be created by the compiler and therefore must already
@@ -109,8 +107,8 @@ public:
 template<typename T>
 struct ArrayHandleCheck
 {
-  typedef typename boost::is_base_of<
-      ::vtkm::cont::internal::ArrayHandleBase, T>::type type;
+  using type = typename std::is_base_of<
+                        ::vtkm::cont::internal::ArrayHandleBase, T>::type;
 };
 
 #define VTKM_IS_ARRAY_HANDLE(T) \

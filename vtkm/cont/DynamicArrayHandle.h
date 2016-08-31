@@ -442,7 +442,7 @@ struct DynamicArrayHandleTryStorage {
 
 private:
   template<typename Storage>
-  void DoCast(Storage, boost::mpl::bool_<true>)
+  void DoCast(Storage, std::true_type)
   {
     if (!this->FoundCast &&
         this->Array->template IsTypeAndStorage<Type,Storage>())
@@ -453,7 +453,7 @@ private:
   }
 
   template<typename Storage>
-  void DoCast(Storage, boost::mpl::bool_<false>)
+  void DoCast(Storage, std::false_type)
   {
     // This type of array handle cannot exist, so do nothing.
   }

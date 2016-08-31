@@ -36,7 +36,6 @@
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/smart_ptr/scoped_ptr.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/type_traits/is_same.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <algorithm>
@@ -115,7 +114,7 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T> &ve
   case 1:
     {
     typedef typename ClosestCommonType<T>::Type CommonType;
-    if (!boost::is_same<T, CommonType>::value)
+    if (!std::is_same<T, CommonType>::value)
     {
       std::cerr << "Type " << vtkm::io::internal::DataTypeName<T>::Name()
                 << " is currently unsupported. Converting to "
@@ -139,7 +138,7 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T> &ve
     typedef typename vtkm::VecTraits<T>::ComponentType InComponentType;
     typedef typename ClosestFloat<InComponentType>::Type OutComponentType;
     typedef vtkm::Vec<OutComponentType, 3> CommonType;
-    if (!boost::is_same<T, CommonType>::value)
+    if (!std::is_same<T, CommonType>::value)
     {
       std::cerr << "Type " << vtkm::io::internal::DataTypeName<InComponentType>::Name()
                 << "[" << vtkm::VecTraits<T>::NUM_COMPONENTS << "] "

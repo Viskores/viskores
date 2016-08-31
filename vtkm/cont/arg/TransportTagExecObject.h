@@ -26,11 +26,6 @@
 
 #include <vtkm/exec/ExecutionObjectBase.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/mpl/assert.hpp>
-#include <boost/type_traits/is_base_of.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 namespace cont {
 namespace arg {
@@ -49,7 +44,9 @@ struct Transport<vtkm::cont::arg::TransportTagExecObject,ContObjectType,Device>
   // is not an execution object as an argument that is expected to be one. All
   // execution objects are expected to inherit from
   // vtkm::exec::ExecutionObjectBase.
-  BOOST_MPL_ASSERT(( boost::is_base_of<vtkm::exec::ExecutionObjectBase, ContObjectType> ));
+  static_assert(
+    std::is_base_of<vtkm::exec::ExecutionObjectBase, ContObjectType>::value,
+    "All execution objects are expected to inherit from vtkm::exec::ExecutionObjectBase");
 
   typedef ContObjectType ExecObjectType;
 

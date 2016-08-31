@@ -26,9 +26,7 @@
 
 #include <vtkm/exec/ExecutionObjectBase.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/type_traits/is_base_of.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <type_traits>
 
 namespace vtkm {
 namespace cont {
@@ -43,8 +41,8 @@ struct TypeCheckTagExecObject {  };
 template<typename Type>
 struct TypeCheck<TypeCheckTagExecObject, Type>
 {
-  static const bool value =
-      boost::is_base_of<vtkm::exec::ExecutionObjectBase, Type>::value;
+  static VTKM_CONSTEXPR bool value =
+      std::is_base_of<vtkm::exec::ExecutionObjectBase, Type>::value;
 };
 
 }

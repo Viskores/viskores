@@ -135,7 +135,7 @@ struct InternalTryCellShape
 
 private:
   template<typename FunctionType>
-  void PrintAndInvoke(const FunctionType &function, boost::true_type) const {
+  void PrintAndInvoke(const FunctionType &function, std::true_type) const {
     typedef typename vtkm::CellShapeIdToTag<cellShapeId>::Tag CellShapeTag;
     std::cout << "*** "
               << vtkm::GetCellShapeName(CellShapeTag())
@@ -144,7 +144,7 @@ private:
   }
 
   template<typename FunctionType>
-  void PrintAndInvoke(const FunctionType &, boost::false_type) const {
+  void PrintAndInvoke(const FunctionType &, std::false_type) const {
     // Not a valid cell shape. Do nothing.
   }
 };

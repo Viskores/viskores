@@ -22,10 +22,6 @@
 
 #include <vtkm/Types.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/type_traits/remove_const.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 
 /// A tag for vectors that are "true" vectors (i.e. have more than one
@@ -103,10 +99,10 @@ struct VecTraits
   /// Returns the value in a given component of the vector.
   ///
   VTKM_EXEC_CONT_EXPORT static const ComponentType &GetComponent(
-      const typename boost::remove_const<VecType>::type &vector,
+      const typename std::remove_const<VecType>::type &vector,
       vtkm::IdComponent component);
   VTKM_EXEC_CONT_EXPORT static ComponentType &GetComponent(
-      typename boost::remove_const<VecType>::type &vector,
+      typename std::remove_const<VecType>::type &vector,
       vtkm::IdComponent component);
 
   /// Changes the value in a given component of the vector.

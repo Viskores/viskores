@@ -29,7 +29,7 @@
 #include <iterator>
 #include <limits>
 
-#include <boost/type_traits.hpp>
+#include <type_traits>
 
 namespace vtkm {
 namespace cont {
@@ -43,8 +43,8 @@ class ArrayPortalFromIterators;
 ///
 template<class IteratorT>
 class ArrayPortalFromIterators<IteratorT,
-                               typename boost::disable_if<
-                                boost::is_const< typename boost::remove_pointer<IteratorT>::type > >::type>
+                               typename std::enable_if<
+                                !std::is_const< typename std::remove_pointer<IteratorT>::type >::value >::type >
 {
 public:
   typedef typename std::iterator_traits<IteratorT>::value_type ValueType;
@@ -127,8 +127,8 @@ private:
 
 template<class IteratorT>
 class ArrayPortalFromIterators<IteratorT,
-                               typename boost::enable_if<
-                                boost::is_const< typename boost::remove_pointer<IteratorT>::type > >::type>
+                               typename std::enable_if<
+                                std::is_const< typename std::remove_pointer<IteratorT>::type >::value >::type >
 {
 public:
   typedef typename std::iterator_traits<IteratorT>::value_type ValueType;
