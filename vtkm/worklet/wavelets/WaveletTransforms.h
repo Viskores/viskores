@@ -993,28 +993,25 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  TransposeWorklet( vtkm::Id x, vtkm::Id y )
+  TransposeWorklet( vtkm::Id inx, vtkm::Id iny, vtkm::Id outx, vtkm::Id outy,
+                    vtkm::Id out_startx, vtkm::Id out_starty )
+                :   inXDim( inx ), inYDim( iny ), outXDim( outx ), outYDim( outy ),
+                    outStartX( out_startx ), outStartY( out_starty )  {}
+
+  VTKM_EXEC_CONT_EXPORT
+  void Input1Dto2D( const vtkm::Id    &idx,    
+                       vtkm::Id    &x,      
+                       vtkm::Id    &y ) const     
   {
-    this->inXLen  = x;
-    this->inYLen  = y;
-    this->outXLen = y;
-    this->outYLen = x;
+    x = idx % inXDim;
+    y = idx / inXDim;
   }
 
   VTKM_EXEC_CONT_EXPORT
-  void GetLogicalDimOfInputMatrix( const vtkm::Id    &idx,    
-                                         vtkm::Id    &x,      
-                                         vtkm::Id    &y ) const     
-  {
-    x = idx % inXLen;
-    y = idx / inXLen;
-  }
-
-  VTKM_EXEC_CONT_EXPORT
-  vtkm::Id Get1DIdxOfOutputMatrix( vtkm::Id    &x,      
+  vtkm::Id Output2Dto1D( vtkm::Id    &x,      
                                    vtkm::Id    &y ) const     
   {
-    return y * outXLen + x;
+    return y * outXDim + x;
   }
 
   template< typename ValueInType, typename PortalOutType >
@@ -1024,14 +1021,15 @@ public:
                    const vtkm::Id       &workIdx ) const
   {
     vtkm::Id x, y;
-    GetLogicalDimOfInputMatrix( workIdx, x, y );
-    vtkm::Id outputIdx = Get1DIdxOfOutputMatrix( y, x );
+    Input1Dto2D( workIdx, x, y );
+    vtkm::Id outputIdx = Output2Dto1D( y, x );
     arrayOut.Set( outputIdx, valueIn );
   }
 
 private:
-  vtkm::Id inXLen,  inYLen;
-  vtkm::Id outXLen, outYLen;
+  vtkm::Id inXDim,  inYDim;
+  vtkm::Id outXDim, outYDim;
+  vtkm::Id outStartX, outStartY;
 };
 
 

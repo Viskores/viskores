@@ -695,7 +695,8 @@ for( vtkm::Id i = 0; i < afterXBuf.GetNumberOfValues(); i++ )
 
     // Transpose afterYBuf to output
     coeffOut.PrepareForOutput( sigInLen, DeviceTag() );
-    WaveletBase::DeviceTranspose( afterYBuf, coeffOut, inYLen, inXLen, DeviceTag() );
+    WaveletBase::DeviceTranspose( afterYBuf, inYLen, inXLen, coeffOut, 
+                                  inYLen, inXLen, 0, 0, DeviceTag() );
 
     return elapsedTime;
   }

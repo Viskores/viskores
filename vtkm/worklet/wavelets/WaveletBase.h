@@ -250,15 +250,20 @@ public:
 
   // Transpose a matrix in an array
   template< typename InputArrayType, typename OutputArrayType, typename DeviceTag >
-  void DeviceTranspose( const InputArrayType    &inputArray,
+  void DeviceTranspose( const InputArrayType   &inputArray,
+                                    vtkm::Id   inputDimX,
+                                    vtkm::Id   inputDimY,
                              OutputArrayType   &outputArray,
-                                    vtkm::Id   inputX,
-                                    vtkm::Id   inputY,
+                                    vtkm::Id   outputDimX,
+                                    vtkm::Id   outputDimY,
+                                    vtkm::Id   outputStartX,
+                                    vtkm::Id   outputStartY,
                                    DeviceTag            )
   {
     // use a worklet
     typedef vtkm::worklet::wavelets::TransposeWorklet TransposeType;
-    TransposeType tw ( inputX, inputY );
+    TransposeType tw ( inputDimX, inputDimY, outputDimX, outputDimY, 
+                       outputStartX, outputStartY );
     vtkm::worklet::DispatcherMapField< TransposeType, DeviceTag > dispatcher( tw );
     dispatcher.Invoke( inputArray, outputArray );
   }
