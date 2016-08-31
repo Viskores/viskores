@@ -65,24 +65,33 @@ public:
     const vtkm::Id sigDimY   = sigIn.GetDimY();
     const vtkm::Id extDimX   = addLen;
     const vtkm::Id extDimY   = sigDimY;
-    vtkm::Id extDimXRight    = extDimX;
+
+    // Allocate output memory, copy signal to output
+    vtkm::Id      outputDimX = 2 * extDimX + sigDimX; 
     if( attachZeroRightRight || attachZeroRightLeft )
-      extDimXRight++;
+      outputDimX++;   // for attached zero
+    const vtkm::Id     outputDimY = sigDimY;
+    sigOut.PrepareForOutput( outputDimX * outputDimY, DeviceTag() );
+    sigOut.InterpretAs2D(    outputDimX, outputDimY );
+    WaveletBase::DeviceRectangleCopyTo( sigIn, sigDimX, sigDimY,
+                                        sigOut, outputDimX, outputDimY,
+                                        extDimX, 0, DeviceTag() );
 
     typedef typename SigInArrayType::ValueType                 ValueType;
     typedef vtkm::cont::ArrayHandleInterpreter< ValueType >    ExtendArrayType; 
-    //typedef typename ExtendArrayType                           OutputArrayType;
 
-    // Work on left extension
+    // Work on left extension, copy result to output
     ExtendArrayType                              leftExtend;
     leftExtend.PrepareForOutput( extDimX * extDimY, DeviceTag() );
     leftExtend.InterpretAs2D( extDimX, extDimY );
-
     typedef vtkm::worklet::wavelets::LeftExtentionWorklet2D  LeftWorkletType;
-    LeftWorkletType leftWorklet( extDimX, extDimY, sigDimX, sigDimY, leftExtMethod );
+    LeftWorkletType leftWorklet( extDimX, extDimY, sigDimX, sigDimY, 0, 0, leftExtMethod );
     vtkm::worklet::DispatcherMapField< LeftWorkletType, DeviceTag > 
           dispatcher( leftWorklet );
     dispatcher.Invoke( leftExtend, sigIn );
+    WaveletBase::DeviceRectangleCopyTo( leftExtend, extDimX, extDimY,
+                                        sigOut, outputDimX, outputDimY,
+                                        0, 0, DeviceTag() );
 
     // Work on right extension
     typedef vtkm::worklet::wavelets::RightExtentionWorklet2D    RightWorkletType;
@@ -90,11 +99,15 @@ public:
     ExtendArrayType rightExtend;
     if( !attachZeroRightLeft ) // no attach zero, or only attach on RightRight
     {
+      vtkm::Id extDimXRight = extDimX;
+      if( attachZeroRightRight )
+        extDimXRight++;
+
       // Allocate memory
       rightExtend.PrepareForOutput( extDimXRight * extDimY, DeviceTag() );
       rightExtend.InterpretAs2D(    extDimXRight,  extDimY );
   
-      RightWorkletType rightWorklet( extDimXRight, extDimY, sigDimX, sigDimY, rightExtMethod );
+      RightWorkletType rightWorklet(extDimXRight, extDimY, sigDimX, sigDimY, 0, 0, rightExtMethod);
       vtkm::worklet::DispatcherMapField< RightWorkletType, DeviceTag > 
             dispatcher2( rightWorklet );
       dispatcher2.Invoke( rightExtend, sigIn );
@@ -102,54 +115,32 @@ public:
       if( attachZeroRightRight )
         WaveletBase::DeviceAssignZero2DColumn( rightExtend, extDimXRight, extDimY,
                                                extDimXRight-1, DeviceTag() );
+
+      WaveletBase::DeviceRectangleCopyTo( rightExtend, extDimXRight, extDimY,
+                                          sigOut, outputDimX, outputDimY,
+                                          extDimX+sigDimX, 0, DeviceTag() );
     }
     else    // attachZeroRightLeft mode. 
     {
-      // Make a copy of sigIn with zeros at right
-      ExtendArrayType   sigIn2;
-      sigIn2.PrepareForOutput( (sigDimX+1) * sigDimY, DeviceTag() );
-      sigIn2.InterpretAs2D(    (sigDimX+1),  sigDimY );
-      WaveletBase::DeviceRectangleCopyTo( sigIn,  sigDimX, sigDimY,
-                                          sigIn2, sigDimX+1, sigDimY,
-                                          0, 0, DeviceTag() );
-      WaveletBase::DeviceAssignZero2DColumn( sigIn2, sigDimX+1, sigDimY, 0, DeviceTag() );
+      // Assign zero to the column right to real signals
+      WaveletBase::DeviceAssignZero2DColumn( sigOut, outputDimX, outputDimY, 
+                                             extDimX+sigDimX, DeviceTag() );
 
-      // Allocate memory for temporary extension space
-      ExtendArrayType rightExtend2;
-      rightExtend2.PrepareForOutput( extDimX * extDimY, DeviceTag() );
-      rightExtend2.InterpretAs2D( extDimX, extDimY );
-      
-      // Do the extension based on sigIn2
-      RightWorkletType rightWorklet( extDimX, extDimY, sigDimX+1, sigDimY, rightExtMethod );
+      // Allocate memory for rightExtend
+      rightExtend.PrepareForOutput( extDimX * extDimY, DeviceTag() );
+      rightExtend.InterpretAs2D( extDimX, extDimY );
+
+      // Do the extension
+      RightWorkletType rightWorklet( extDimX, extDimY, sigDimX+1, sigDimY, extDimX, 0, rightExtMethod );
       vtkm::worklet::DispatcherMapField< RightWorkletType, DeviceTag > 
             dispatcher5( rightWorklet );
-      dispatcher5.Invoke( rightExtend2, sigIn2 );
+      dispatcher5.Invoke( rightExtend, sigOut );
 
-      // Make copy rightExtend2 to rightExtend
-      rightExtend.PrepareForOutput( extDimXRight * extDimY, DeviceTag() );
-      rightExtend.InterpretAs2D( extDimXRight, extDimY );
-      WaveletBase::DeviceAssignZero2DColumn( rightExtend, extDimXRight, extDimY, 
-                                             0, DeviceTag() );
-      WaveletBase::DeviceRectangleCopyTo( rightExtend2, extDimX, extDimY,
-                                          rightExtend,  extDimXRight, extDimY,
-                                          1, 0, DeviceTag() );
+      WaveletBase::DeviceRectangleCopyTo( rightExtend, extDimX, extDimY,
+                                          sigOut, outputDimX, outputDimY,
+                                          extDimX+sigDimX+1, 0, DeviceTag() );
     }
 
-    // Allocate output memory
-    const vtkm::Id     outputDimX = extDimX + sigDimX + extDimXRight; 
-    const vtkm::Id     outputDimY = sigDimY;
-    sigOut.PrepareForOutput( outputDimX * outputDimY, DeviceTag() );
-    sigOut.InterpretAs2D(    outputDimX, outputDimY );
-
-    WaveletBase::DeviceRectangleCopyTo( leftExtend, extDimX, extDimY,
-                                        sigOut, outputDimX, outputDimY,
-                                        0, 0, DeviceTag() );
-    WaveletBase::DeviceRectangleCopyTo( sigIn, sigDimX, sigDimY,
-                                        sigOut, outputDimX, outputDimY,
-                                        extDimX, 0, DeviceTag() );
-    WaveletBase::DeviceRectangleCopyTo( rightExtend, extDimXRight, sigDimY,
-                                        sigOut, outputDimX, outputDimY,
-                                        extDimX+sigDimX, 0, DeviceTag() );
     return 0;
   }
 
@@ -662,6 +653,8 @@ public:
     BasicArrayType afterXBuf;
     afterXBuf.PrepareForOutput( sigInLen, DeviceTag() );
 
+//std::cout << "true coeffs after extension" << std::endl;
+
     vtkm::Float64 elapsedTime = 0.0;
     for(vtkm::Id y = 0; y < inYLen; y++ )
     {
@@ -676,11 +669,13 @@ public:
       WaveletBase::DeviceCopyStartX( output, afterXBuf, y * inXLen, DeviceTag() );
     }
 
+#if 0
 for( vtkm::Id i = 0; i < afterXBuf.GetNumberOfValues(); i++ )
 {
   std::cerr << afterXBuf.GetPortalConstControl().Get(i) << "  ";
   if( i % inXLen == inXLen-1 )   std::cerr << std::endl;
 }
+#endif 
 
     // Transform columns
     BasicArrayType afterYBuf;

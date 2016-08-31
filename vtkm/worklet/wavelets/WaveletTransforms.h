@@ -692,12 +692,13 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT 
-  LeftExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2, DWTMode m)
-      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), mode(m)  {}
+  LeftExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2, Id x3, Id y3, DWTMode m)
+      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), 
+        sigStartX( x3 ), sigStartY( y3), mode(m)  {}
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT
-  void GetExtLogicalDim( const Id &idx, Id &x, Id &y ) const
+  void Ext1Dto2D ( const Id &idx, Id &x, Id &y ) const
   {
     x = idx % extDimX;
     y = idx / extDimX;
@@ -705,7 +706,7 @@ public:
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT
-  Id GetSignal1DIndex( Id x, Id y ) const
+  Id Sig2Dto1D( Id x, Id y ) const
   {
     return y * sigDimX + x;
   }
@@ -719,7 +720,7 @@ public:
     Id extX, extY;
     Id sigX;
     typename PortalOutType::ValueType sym = 1.0;
-    GetExtLogicalDim( workIndex, extX, extY );
+    Ext1Dto2D( workIndex, extX, extY );
     if      ( mode == SYMH )
       sigX = extDimX - extX - 1;
     else if ( mode == SYMW )
@@ -734,11 +735,14 @@ public:
       sigX = extDimX - extX;
       sym  = -1.0;
     }
-    portalOut.Set( workIndex, portalIn.Get( GetSignal1DIndex(sigX, extY) ) * sym );
+    Id sigXReal = sigX + sigStartX;
+    Id sigYReal = extY + sigStartY;
+    portalOut.Set( workIndex, portalIn.Get( Sig2Dto1D(sigXReal, sigYReal) ) * sym );
   }
 
 private:
   vtkm::Id extDimX, extDimY, sigDimX, sigDimY;
+  vtkm::Id sigStartX, sigStartY;
   DWTMode  mode;
 };
 
@@ -755,12 +759,13 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT 
-  RightExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2, DWTMode m)
-      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), mode(m)  {}
+  RightExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2, Id x3, Id y3, DWTMode m)
+      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), 
+        sigStartX( x3 ), sigStartY( y3 ), mode(m)  {}
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT
-  void GetExtLogicalDim( const Id &idx, Id &x, Id &y ) const
+  void Ext1Dto2D( const Id &idx, Id &x, Id &y ) const
   {
     x = idx % extDimX;
     y = idx / extDimX;
@@ -768,7 +773,7 @@ public:
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT
-  Id GetSignal1DIndex( Id x, Id y ) const
+  Id Sig2Dto1D( Id x, Id y ) const
   {
     return y * sigDimX + x;
   }
@@ -782,7 +787,7 @@ public:
     Id extX, extY;
     Id sigX;
     typename PortalOutType::ValueType sym = 1.0;
-    GetExtLogicalDim( workIndex, extX, extY );
+    Ext1Dto2D( workIndex, extX, extY );
     if      ( mode == SYMH )
       sigX = sigDimX - extX - 1;
     else if ( mode == SYMW )
@@ -797,11 +802,14 @@ public:
       sigX = sigDimX - extX - 2;
       sym  = -1.0;
     }
-    portalOut.Set( workIndex, portalIn.Get( GetSignal1DIndex(sigX, extY) ) * sym );
+    Id sigXReal = sigX + sigStartX;
+    Id sigYReal = extY + sigStartY;
+    portalOut.Set( workIndex, portalIn.Get( Sig2Dto1D(sigXReal, sigYReal) ) * sym );
   }
 
 private:
   vtkm::Id extDimX, extDimY, sigDimX, sigDimY;
+  vtkm::Id sigStartX, sigStartY;
   DWTMode  mode;
 };
 
