@@ -95,7 +95,6 @@ public:
 
     // Work on right extension
     typedef vtkm::worklet::wavelets::RightExtentionWorklet2D    RightWorkletType;
-    typedef vtkm::worklet::wavelets::AssignZero2DColumnWorklet  AssignZero2DType;
     ExtendArrayType rightExtend;
     if( !attachZeroRightLeft ) // no attach zero, or only attach on RightRight
     {
@@ -685,16 +684,9 @@ public:
 
     // Transpose afterYBuf to output
     coeffOut.PrepareForOutput( sigInLen, DeviceTag() );
-    WaveletBase::DeviceTranspose( afterYBuf, inYLen, inXLen, coeffOut, 
-                                  inYLen, inXLen, 0, 0, DeviceTag() );
-#if 0
-for( vtkm::Id i = 0; i < afterYBuf.GetNumberOfValues(); i++ )
-{
-  std::cerr << afterYBuf.GetPortalConstControl().Get(i) << "  ";
-  if( i % inYLen == inYLen-1 )   std::cerr << std::endl;
-}
-#endif 
-
+    WaveletBase::DeviceTranspose( afterYBuf, inYLen, inXLen, 
+                                  coeffOut,  inXLen, inYLen, 
+                                  0, 0, DeviceTag() );
 
     return elapsedTime;
   }
@@ -813,6 +805,7 @@ for( vtkm::Id i = 0; i < afterYBuf.GetNumberOfValues(); i++ )
     afterX.InterpretAs2D( outDimX, outDimY );
 
     typedef vtkm::worklet::wavelets::ForwardTransform2D ForwardXForm;
+    {
     ForwardXForm worklet( filterLen, L[0], oddLow, sigExtendedDimX, sigExtendedDimY,
                           outDimX, outDimY );
     vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher( worklet );
@@ -820,6 +813,7 @@ for( vtkm::Id i = 0; i < afterYBuf.GetNumberOfValues(); i++ )
                        WaveletBase::filter.GetLowDecomposeFilter(),
                        WaveletBase::filter.GetHighDecomposeFilter(),
                        afterX );
+    }
     sigExtended.ReleaseResources();
 
     // Then do transform in Y direction
@@ -836,16 +830,19 @@ for( vtkm::Id i = 0; i < afterYBuf.GetNumberOfValues(); i++ )
                              WaveletBase::wmode, WaveletBase::wmode, 
                              false, false, DeviceTag() );
     afterXTransposed.ReleaseResources();
+
     ArrayType   afterY;
     afterY.PrepareForOutput( outDimY * outDimX, DeviceTag() );
     afterY.InterpretAs2D( outDimY, outDimX );
+    {
     ForwardXForm worklet2( filterLen, L[1], oddLow, sigExtendedDimX, sigExtendedDimY,
                            outDimY, outDimX );
     vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher2( worklet2 );
-    dispatcher.Invoke( sigExtended, 
-                       WaveletBase::filter.GetLowDecomposeFilter(),
-                       WaveletBase::filter.GetHighDecomposeFilter(),
-                       afterY );
+    dispatcher2.Invoke( sigExtended, 
+                        WaveletBase::filter.GetLowDecomposeFilter(),
+                        WaveletBase::filter.GetHighDecomposeFilter(),
+                        afterY );
+    }
     sigExtended.ReleaseResources();
 
     // Transpose to output

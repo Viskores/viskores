@@ -138,7 +138,7 @@ private:
     this->xlstart = this->oddlow  ? 1 : 0;
     this->xhstart = this->oddhigh ? 1 : 0;
   }
-};    // Finish class ForwardTransform
+};    
 
 
 // Worklet: perform a simple 2D forward transform
