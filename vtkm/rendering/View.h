@@ -273,8 +273,8 @@ public:
     if (this->GetScene().GetNumberOfActors() > 0)
     {
       //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
-      this->ColorBarAnnotation.SetRange(this->GetScene().GetActor(0).ScalarRange, 5);
-      this->ColorBarAnnotation.SetColorTable(this->GetScene().GetActor(0).ColorTable);
+      this->ColorBarAnnotation.SetRange(this->GetScene().GetActor(0).GetScalarRange(), 5);
+      this->ColorBarAnnotation.SetColorTable(this->GetScene().GetActor(0).GetColorTable());
       this->ColorBarAnnotation.Render(
             this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
     }
@@ -476,10 +476,10 @@ public:
     if (scene.GetNumberOfActors() > 0)
     {
       //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
-      this->ColorBarAnnotation.SetRange(scene.GetActor(0).ScalarRange.Min,
-                                        scene.GetActor(0).ScalarRange.Max,
+      this->ColorBarAnnotation.SetRange(scene.GetActor(0).GetScalarRange().Min,
+                                        scene.GetActor(0).GetScalarRange().Max,
                                         5);
-      this->ColorBarAnnotation.SetColorTable(scene.GetActor(0).ColorTable);
+      this->ColorBarAnnotation.SetColorTable(scene.GetActor(0).GetColorTable());
       this->ColorBarAnnotation.Render(
             this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
     }

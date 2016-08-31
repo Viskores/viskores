@@ -23,7 +23,7 @@
 #include <vtkm/rendering/Mapper.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/smart_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {

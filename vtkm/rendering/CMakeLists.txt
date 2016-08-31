@@ -45,6 +45,7 @@ set(headers
   )
 
 set(sources
+  Actor.cxx
   AxisAnnotation.cxx
   AxisAnnotation2D.cxx
   AxisAnnotation3D.cxx
@@ -59,6 +60,7 @@ set(sources
   Mapper.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx
+  Scene.cxx
 
   internal/RunTriangulator.cxx
   )
