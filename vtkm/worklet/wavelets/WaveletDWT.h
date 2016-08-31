@@ -49,14 +49,14 @@ public:
 
   // Func: Extend 2D signal on left and right sides
   template< typename SigInArrayType, typename SigExtendedArrayType, typename DeviceTag >
-  vtkm::Id Extend2DLeftRight( const SigInArrayType                     &sigIn,   // Input
-                     SigExtendedArrayType                     &sigOut,  // Output
-                     vtkm::Id                                 addLen,
-                     vtkm::worklet::wavelets::DWTMode         leftExtMethod,
-                     vtkm::worklet::wavelets::DWTMode         rightExtMethod, 
-                     bool                                     attachZeroRightLeft, 
-                     bool                                     attachZeroRightRight,
-                     DeviceTag                                                     )
+  vtkm::Id Extend2DLeftRight(const SigInArrayType                     &sigIn,   // Input
+                             SigExtendedArrayType                     &sigOut,  // Output
+                             vtkm::Id                                 addLen,
+                             vtkm::worklet::wavelets::DWTMode         leftExtMethod,
+                             vtkm::worklet::wavelets::DWTMode         rightExtMethod, 
+                             bool                                     attachZeroRightLeft, 
+                             bool                                     attachZeroRightRight,
+                             DeviceTag                                                     )
   { 
     // "right extension" can be attached a zero on either end, but not both ends.
     VTKM_ASSERT( !attachZeroRightRight || !attachZeroRightLeft );
@@ -676,6 +676,12 @@ public:
       WaveletBase::DeviceCopyStartX( output, afterXBuf, y * inXLen, DeviceTag() );
     }
 
+for( vtkm::Id i = 0; i < afterXBuf.GetNumberOfValues(); i++ )
+{
+  std::cerr << afterXBuf.GetPortalConstControl().Get(i) << "  ";
+  if( i % inXLen == inXLen-1 )   std::cerr << std::endl;
+}
+
     // Transform columns
     BasicArrayType afterYBuf;
     afterYBuf.PrepareForOutput( sigInLen, DeviceTag() );
@@ -695,7 +701,6 @@ public:
     // Transpose afterYBuf to output
     coeffOut.PrepareForOutput( sigInLen, DeviceTag() );
     WaveletBase::DeviceTranspose( afterYBuf, coeffOut, inYLen, inXLen, DeviceTag() );
-    //coeffOut = afterYBuf;
 
     return elapsedTime;
   }
@@ -773,24 +778,55 @@ public:
 
 
   // Func:
-  // Performs one level of 3D discrete wavelet transform 
-  // It takes care of boundary conditions, etc.
-  // coeffs are stored in the order: LLL, LLH, LHL, LHH, HLL, HLH, HHL, HHH
-  /* template< typename InputArrayType, typename OutputArrayType>
-  VTKM_CONT_EXPORT
-  vtkm::Id DWT3D( const InputArrayType    &sigIn,     // Input array
-                  vtkm::Id                XLen,       // Input X length
-                  vtkm::Id                YLen,       // Input Y length
-                  vtkm::Id                ZLen,       // Input Z length
-                  OutputArrayType         &coeffOut,  // Output coeff array
-                  vtkm::Id                L[27])      // Output coeff layout
+  // Performs one level of 2D discrete wavelet transform
+  // It takes care of boundary conditions.
+  template< typename T, typename DeviceTag >
+  FLOAT_64 DWT2Dv2( const vtkm::cont::ArrayHandleInterpreter<T>  &sigIn,
+                        vtkm::cont::ArrayHandleInterpreter<T>    &coeffOut,
+                        std::vector<vtkm::Id>   &L,
+                        DeviceTag                     )
   {
-    vtkm::Id sigInLen = sigIn.GetNumberOfValues();
-    VTKM_ASSERT( sigInLen == XLen * YLen * ZLen );
+    vtkm::Id sigDimX = sigIn.GetDimX();
+    vtkm::Id sigDimY = sigIn.GetDimY();
+    VTKM_ASSERT( sigDimX * sigDimY == sigIn.GetNumberOfValues() );
+    
+    VTKM_ASSERT( L.size() == 10 );
+    L[0] = WaveletBase::GetApproxLength( sigDimX );    L[2] = L[0];
+    L[1] = WaveletBase::GetApproxLength( sigDimY );    L[5] = L[1];
+    L[3] = WaveletBase::GetDetailLength( sigDimY );    L[7] = L[3];
+    L[4] = WaveletBase::GetDetailLength( sigDimX );    L[6] = L[4];
+    L[8] = sigDimX;                                    L[9] = sigDimY;
 
+    vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
+    bool oddLow        = true;
+    if( filterLen % 2 != 0 )
+      oddLow = false;
+    vtkm::Id addLen          = filterLen / 2;
+    vtkm::Id sigExtendedDimX = sigDimX + 2 * addLen;
+    vtkm::Id sigExtendedDimY = sigDimY;
+
+    typedef vtkm::cont::ArrayHandleInterpreter<T>   ArrayType;
+    ArrayType   sigExtended;
+     
+    this->Extend2DLeftRight( sigIn, sigExtended, addLen, WaveletBase::wmode, 
+                             WaveletBase::wmode, false, false, DeviceTag()  );
+
+    vtkm::Id outDimX = sigDimX;
+    vtkm::Id outDimY = sigDimY;
+    coeffOut.PrepareForOutput( outDimX * outDimY, DeviceTag() ); 
+    coeffOut.InterpretAs2D( outDimX, outDimY );
+
+    typedef vtkm::worklet::wavelets::ForwardTransform2D ForwardXForm;
+    ForwardXForm worklet( filterLen, L[0], oddLow, sigExtendedDimX, sigExtendedDimY,
+                          outDimX, outDimY );
+    vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher( worklet );
+    dispatcher.Invoke( sigExtended, 
+                       WaveletBase::filter.GetLowDecomposeFilter(),
+                       WaveletBase::filter.GetHighDecomposeFilter(),
+                       coeffOut );
     return 0;
   }
-  */
+
   
 };    // class WaveletDWT
 

@@ -141,6 +141,129 @@ private:
 };    // Finish class ForwardTransform
 
 
+// Worklet: perform a simple 2D forward transform
+class ForwardTransform2D: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // sigIn
+                                WholeArrayIn<Scalar>,        // lowFilter
+                                WholeArrayIn<Scalar>,        // highFilter
+                                WholeArrayOut<ScalarAll>);   // cA followed by cD
+  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  typedef _4   InputDomain;
+
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  ForwardTransform2D( vtkm::Id filter_len, vtkm::Id approx_len, bool odd_low,
+                      vtkm::Id input_dimx, vtkm::Id input_dimy,
+                      vtkm::Id output_dimx, vtkm::Id output_dimy )
+  {
+    magicNum  = 0.0;
+    filterLen = filter_len;
+    approxLen = approx_len;
+    oddlow    = odd_low;
+    inputDimX = input_dimx;
+    inputDimY = input_dimy;
+    outputDimX = output_dimx;
+    outputDimY = output_dimy;
+    this->SetStartPosition();
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  void Input1Dto2D( const vtkm::Id &idx, vtkm::Id &x, vtkm::Id &y ) const     
+  {
+    x = idx % inputDimX;
+    y = idx / inputDimX;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  void Output1Dto2D( const vtkm::Id &idx, vtkm::Id &x, vtkm::Id &y ) const     
+  {
+    x = idx % outputDimX;
+    y = idx / outputDimX;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Input2Dto1D( vtkm::Id &x, vtkm::Id &y ) const     
+  {
+    return y * inputDimX + x;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Output2Dto1D( vtkm::Id &x, vtkm::Id &y ) const     
+  {
+    return y * outputDimX + x;
+  }
+
+  // Use 64-bit float for convolution calculation
+  #define VAL        vtkm::Float64
+  #define MAKEVAL(a) (static_cast<VAL>(a))
+
+  template <typename InputPortalType,
+            typename FilterPortalType,
+            typename OutputPortalType>
+  VTKM_EXEC_EXPORT
+  void operator()(const InputPortalType       &signalIn, 
+                  const FilterPortalType      &lowFilter,
+                  const FilterPortalType      &highFilter,
+                  OutputPortalType            &coeffOut,
+                  const vtkm::Id              &workIndex) const
+  {
+    vtkm::Id outputX, outputY;
+    Output1Dto2D( workIndex, outputX, outputY );
+    vtkm::Id inputX = outputX; 
+    vtkm::Id inputY = outputY;
+    
+    vtkm::Id idx1D;
+    typedef typename OutputPortalType::ValueType OutputValueType;
+    if( inputX % 2 == 0 )  // calculate cA
+    {
+      vtkm::Id xl = xlstart + inputX;
+      VAL sum=MAKEVAL(0.0);
+      for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+      {
+        idx1D = Input2Dto1D( xl, inputY );
+        sum += lowFilter.Get(k) * MAKEVAL( signalIn.Get( idx1D ) );
+        xl++;
+      }
+      vtkm::Id dstX = inputX / 2; // put cA at the beginning 
+      idx1D = Output2Dto1D( dstX, outputY );
+      coeffOut.Set( idx1D, static_cast<OutputValueType>(sum) );
+    }
+    else                      // calculate cD
+    {
+      vtkm::Id xh = xhstart + inputX - 1;
+      VAL sum=MAKEVAL(0.0);
+      for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+      {
+        idx1D = Input2Dto1D( xh, inputY );
+        sum += highFilter.Get(k) * MAKEVAL( signalIn.Get( idx1D ) );
+        xh++;
+      }
+      vtkm::Id dstX = approxLen + (inputX-1) / 2; // put cD after cA
+      idx1D = Output2Dto1D( dstX, outputY );
+      coeffOut.Set( idx1D, static_cast<OutputValueType>(sum) );
+    }
+  }
+
+  #undef MAKEVAL
+  #undef VAL
+
+private:
+  vtkm::Float64 magicNum;
+  vtkm::Id filterLen, approxLen;  // filter and outcome coeff length.
+  bool oddlow;
+  vtkm::Id xlstart, xhstart;
+  vtkm::Id inputDimX,  inputDimY;
+  vtkm::Id outputDimX, outputDimY;
+  
+  VTKM_EXEC_CONT_EXPORT
+  void SetStartPosition()
+  {
+    this->xlstart = this->oddlow  ? 1 : 0;
+    this->xhstart = 1;
+  }
+};    
+
+
 // Worklet: perform an inverse transform for odd length, symmetric filters.
 class InverseTransformOdd: public vtkm::worklet::WorkletMapField
 {
