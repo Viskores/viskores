@@ -134,7 +134,7 @@ endif (VTKm_ENABLE_TBB)
 if (VTKm_ENABLE_CUDA)
   vtkm_configure_component_CUDA()
   if(NOT VTKm_CUDA_FOUND)
-    message(SEND_ERROR "Could not load CUDA configuration. If CUDA is not available, turn off VTKm_ENABLE_TBB.")
+    message(SEND_ERROR "Could not load CUDA configuration. If CUDA is not available, turn off VTKm_ENABLE_CUDA.")
   endif()
 endif (VTKm_ENABLE_CUDA)
 
