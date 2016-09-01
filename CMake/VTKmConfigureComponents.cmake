@@ -225,8 +225,9 @@ macro(vtkm_configure_component_CUDA)
     #---------------------------------------------------------------------------
     # Setup build flags for CUDA to have C++11 support
     #---------------------------------------------------------------------------
-
-    list(APPEND CUDA_NVCC_FLAGS --std c++11)
+    if(NOT MSVC)
+      list(APPEND CUDA_NVCC_FLAGS --std c++11)
+    endif()
 
     #---------------------------------------------------------------------------
     # Populates CUDA_NVCC_FLAGS with the best set of flags to compile for a
