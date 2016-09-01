@@ -434,12 +434,12 @@ public:
     vtkm::worklet::wavelets::DWTMode cDLeftMode  = WaveletBase::wmode;
     vtkm::worklet::wavelets::DWTMode cDRightMode = WaveletBase::wmode;
   
-    if( WaveletBase::filter.isSymmetric() )
+    if( WaveletBase::filter.isSymmetric() ) // this is always true with the 1st 4 filters.
     {
       if(( WaveletBase::wmode == SYMW && (filterLen % 2 != 0) ) || 
          ( WaveletBase::wmode == SYMH && (filterLen % 2 == 0) ) )
       {
-        doSymConv = true;
+        doSymConv = true;   // doSymConv is always true with the 1st 4 filters.
 
         if( WaveletBase::wmode == SYMH )
         {
@@ -813,6 +813,14 @@ public:
                        WaveletBase::filter.GetLowDecomposeFilter(),
                        WaveletBase::filter.GetHighDecomposeFilter(),
                        afterX );
+/*
+    ForwardXForm worklet( filterLen, L[0], oddLow, sigExtendedDimX, sigExtendedDimY,
+                          outDimX, outDimY );
+    worklet.SetFilters( WaveletBase::filter.GetLowDecomposeFilter(),
+                        WaveletBase::filter.GetHighDecomposeFilter() );
+    vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher( worklet );
+    dispatcher.Invoke( sigExtended, afterX );
+*/
     }
     sigExtended.ReleaseResources();
 
@@ -826,6 +834,7 @@ public:
     afterX.ReleaseResources();
     sigExtendedDimX = sigDimY + 2 * addLen;   // sigExtended holds transposed "afterX"
     sigExtendedDimY = sigDimX;
+
     this->Extend2DLeftRight( afterXTransposed, sigExtended, addLen, 
                              WaveletBase::wmode, WaveletBase::wmode, 
                              false, false, DeviceTag() );
@@ -842,6 +851,14 @@ public:
                         WaveletBase::filter.GetLowDecomposeFilter(),
                         WaveletBase::filter.GetHighDecomposeFilter(),
                         afterY );
+/*
+    ForwardXForm worklet2( filterLen, L[1], oddLow, sigExtendedDimX, sigExtendedDimY,
+                           outDimY, outDimX );
+    worklet2.SetFilters( WaveletBase::filter.GetLowDecomposeFilter(),
+                         WaveletBase::filter.GetLowDecomposeFilter() );
+    vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher2( worklet2 );
+    dispatcher2.Invoke( sigExtended, afterY );
+*/
     }
     sigExtended.ReleaseResources();
 

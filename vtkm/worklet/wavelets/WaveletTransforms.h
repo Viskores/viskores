@@ -142,6 +142,133 @@ private:
 
 
 // Worklet: perform a simple 2D forward transform
+// An attempt to have the worklet keep the filters. Not successfuly...
+#if 0
+class ForwardTransform2D: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // sigIn
+                                WholeArrayOut<ScalarAll>);   // cA followed by cD
+  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  typedef _2   InputDomain;
+  
+  typedef vtkm::cont::ArrayHandle< vtkm::Float64 > FilterType;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  ForwardTransform2D( vtkm::Id filter_len, vtkm::Id approx_len, bool odd_low,
+                      vtkm::Id input_dimx, vtkm::Id input_dimy,
+                      vtkm::Id output_dimx, vtkm::Id output_dimy )
+  {
+    filterLen  = filter_len;
+    approxLen  = approx_len;
+    oddlow     = odd_low;
+    inputDimX  = input_dimx;
+    inputDimY  = input_dimy;
+    outputDimX = output_dimx;
+    outputDimY = output_dimy;
+    this->SetStartPosition();
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  void SetFilters( const FilterType &lo_fil, const FilterType &hi_fil )
+  {
+    loFilter = lo_fil;
+    hiFilter = hi_fil;
+  }  
+
+  VTKM_EXEC_CONT_EXPORT
+  void Input1Dto2D( const vtkm::Id &idx, vtkm::Id &x, vtkm::Id &y ) const     
+  {
+    x = idx % inputDimX;
+    y = idx / inputDimX;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  void Output1Dto2D( const vtkm::Id &idx, vtkm::Id &x, vtkm::Id &y ) const     
+  {
+    x = idx % outputDimX;
+    y = idx / outputDimX;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Input2Dto1D( vtkm::Id &x, vtkm::Id &y ) const     
+  {
+    return y * inputDimX + x;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Output2Dto1D( vtkm::Id &x, vtkm::Id &y ) const     
+  {
+    return y * outputDimX + x;
+  }
+
+  // Use 64-bit float for convolution calculation
+  #define VAL        vtkm::Float64
+  #define MAKEVAL(a) (static_cast<VAL>(a))
+
+  template <typename InputPortalType, typename OutputPortalType>
+  VTKM_EXEC_EXPORT
+  void operator()(const InputPortalType       &signalIn, 
+                  OutputPortalType            &coeffOut,
+                  const vtkm::Id              &workIndex) const
+  {
+    vtkm::Id outputX, outputY;
+    Output1Dto2D( workIndex, outputX, outputY );
+    vtkm::Id inputX = outputX; 
+    vtkm::Id inputY = outputY;
+    
+    vtkm::Id idx1D;
+    typedef typename OutputPortalType::ValueType OutputValueType;
+    if( inputX % 2 == 0 )  // calculate cA
+    {
+      vtkm::Id xl = xlstart + inputX;
+      VAL sum=MAKEVAL(0.0);
+      for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+      {
+        idx1D = Input2Dto1D( xl, inputY );
+        sum += loFilter.GetPortalConstControl().Get(k) * MAKEVAL( signalIn.Get( idx1D ) );
+        xl++;
+      }
+      vtkm::Id dstX = inputX / 2; // put cA at the beginning 
+      idx1D = Output2Dto1D( dstX, outputY );
+      coeffOut.Set( idx1D, static_cast<OutputValueType>(sum) );
+    }
+    else                      // calculate cD
+    {
+      vtkm::Id xh = xhstart + inputX - 1;
+      VAL sum=MAKEVAL(0.0);
+      for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+      {
+        idx1D = Input2Dto1D( xh, inputY );
+        sum += hiFilter.GetPortalConstControl().Get(k) * MAKEVAL( signalIn.Get( idx1D ) );
+        xh++;
+      }
+      vtkm::Id dstX = approxLen + (inputX-1) / 2; // put cD after cA
+      idx1D = Output2Dto1D( dstX, outputY );
+      coeffOut.Set( idx1D, static_cast<OutputValueType>(sum) );
+    }
+  }
+
+  #undef MAKEVAL
+  #undef VAL
+
+private:
+  vtkm::Id filterLen, approxLen;    // filter and outcome coeff length.
+  bool oddlow;
+  vtkm::Id xlstart, xhstart;
+  vtkm::Id inputDimX,  inputDimY;   // extended signal
+  vtkm::Id outputDimX, outputDimY;
+  FilterType loFilter, hiFilter;
+  
+  VTKM_EXEC_CONT_EXPORT
+  void SetStartPosition()
+  {
+    this->xlstart = this->oddlow  ? 1 : 0;
+    this->xhstart = 1;
+  }
+};
+#endif 
+
+
+// Worklet: perform a simple 2D forward transform
 class ForwardTransform2D: public vtkm::worklet::WorkletMapField
 {
 public:
@@ -159,12 +286,11 @@ public:
                       vtkm::Id input_dimx, vtkm::Id input_dimy,
                       vtkm::Id output_dimx, vtkm::Id output_dimy )
   {
-    magicNum  = 0.0;
-    filterLen = filter_len;
-    approxLen = approx_len;
-    oddlow    = odd_low;
-    inputDimX = input_dimx;
-    inputDimY = input_dimy;
+    filterLen  = filter_len;
+    approxLen  = approx_len;
+    oddlow     = odd_low;
+    inputDimX  = input_dimx;
+    inputDimY  = input_dimy;
     outputDimX = output_dimx;
     outputDimY = output_dimy;
     this->SetStartPosition();
@@ -248,11 +374,10 @@ public:
   #undef VAL
 
 private:
-  vtkm::Float64 magicNum;
-  vtkm::Id filterLen, approxLen;  // filter and outcome coeff length.
+  vtkm::Id filterLen, approxLen;    // filter and outcome coeff length.
   bool oddlow;
   vtkm::Id xlstart, xhstart;
-  vtkm::Id inputDimX,  inputDimY;
+  vtkm::Id inputDimX,  inputDimY;   // extended signal
   vtkm::Id outputDimX, outputDimY;
   
   VTKM_EXEC_CONT_EXPORT
@@ -261,7 +386,21 @@ private:
     this->xlstart = this->oddlow  ? 1 : 0;
     this->xhstart = 1;
   }
-};    
+};
+
+
+// Worklet: perform a simple 2D inverse transform on odd length filters
+class InverseTransform2D: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayIn< ScalarAll >,
+
+private:
+  vtkm::Id filterLen;
+  vtkm::Id inputDimX, inputDimY, outputDimX, outputDimY;
+  vtkm::Id cALen, cALen2;   // cALen2 == cALen * 2
+  vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
+}
 
 
 // Worklet: perform an inverse transform for odd length, symmetric filters.
@@ -354,8 +493,7 @@ private:
   vtkm::Id cALen;           // Number of actual cAs 
   vtkm::Id cALen2;          //  = cALen * 2
   vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
-  
-};    // class InverseTransformOdd
+};
 
 
 // Worklet: perform an inverse transform for even length, symmetric filters.
@@ -436,9 +574,9 @@ private:
   vtkm::Id cALen;           // Number of actual cAs 
   vtkm::Id cALen2;          //  = cALen * 2
   vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD 
-  bool     matlab;          // followed the naming convention from VAPOR
-  
-};    // class InverseTransformEven
+  bool     matlab;          // followed the naming convention from VAPOR 
+                            // It's always false for the 1st 4 filters.
+};    
 
 
 // Worklet:
