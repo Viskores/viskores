@@ -66,6 +66,7 @@ set(sources
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
   TextAnnotationScreen.cxx
+  WorldAnnotator.cxx
 
   internal/RunTriangulator.cxx
   )
@@ -81,6 +82,7 @@ set(opengl_sources
   CanvasGL.cxx
   MapperGL.cxx
   TextureGL.cxx
+  WorldAnnotatorGL.cxx
   )
 
 set(egl_headers
