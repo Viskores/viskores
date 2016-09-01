@@ -20,6 +20,8 @@
 
 #include <vtkm/rendering/AxisAnnotation2D.h>
 
+#include <vtkm/rendering/TextAnnotationScreen.h>
+
 #include <sstream>
 
 namespace vtkm {
@@ -113,10 +115,12 @@ void AxisAnnotation2D::Render(
   unsigned int nmajor = (unsigned int)this->ProportionsMajor.size();
   while (this->Labels.size() < nmajor)
   {
-      this->Labels.push_back(new ScreenTextAnnotation("test",
-                                                this->Color,
-                                                this->FontScale,
-                                                0,0, 0));
+      this->Labels.push_back(new vtkm::rendering::TextAnnotationScreen(
+                               "test",
+                               this->Color,
+                               this->FontScale,
+                               vtkm::Vec<vtkm::Float32,2>(0,0),
+                               0));
   }
 
   std::stringstream numberToString;
@@ -143,8 +147,8 @@ void AxisAnnotation2D::Render(
     this->Labels[i]->SetText(numberToString.str());
     //if (fabs(this->PositionsMajor[i]) < 1e-10)
     //    this->Labels[i]->SetText("0");
-    ((ScreenTextAnnotation*)(this->Labels[i]))->SetPosition(vtkm::Float32(xs),
-                                                      vtkm::Float32(ys));
+    ((TextAnnotationScreen*)(this->Labels[i]))->SetPosition(vtkm::Float32(xs),
+                                                            vtkm::Float32(ys));
 
     this->Labels[i]->SetAlignment(this->AlignH,this->AlignV);
   }

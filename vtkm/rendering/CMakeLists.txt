@@ -39,6 +39,8 @@ set(headers
   MapperRayTracer.h
   MapperVolume.h
   TextAnnotation.h
+  TextAnnotationBillboard.h
+  TextAnnotationScreen.h
   Triangulator.h
   View.h
   WorldAnnotator.h
@@ -61,6 +63,9 @@ set(sources
   MapperRayTracer.cxx
   MapperVolume.cxx
   Scene.cxx
+  TextAnnotation.cxx
+  TextAnnotationBillboard.cxx
+  TextAnnotationScreen.cxx
 
   internal/RunTriangulator.cxx
   )

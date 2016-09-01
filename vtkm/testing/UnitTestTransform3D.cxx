@@ -185,6 +185,26 @@ struct TransformTests
           test_equal(rotated1, Vec(-startPoint[1],startPoint[0],startPoint[2])),
           "Bad rotate.");
   }
+
+  void CheckPerspective()
+  {
+    std::cout << "--- Checking Perspective" << std::endl;
+
+    Vec startPoint = this->RandomVector();
+    std::cout << " Starting point: " << startPoint << std::endl;
+
+    Transform perspective(0);
+    perspective(0, 0) = 1;
+    perspective(1, 1) = 1;
+    perspective(2, 2) = 1;
+    perspective(3, 2) = 1;
+
+    Vec projected = vtkm::Transform3DPointPerspective(perspective, startPoint);
+    std::cout << " Projected: " << projected << std::endl;
+    VTKM_TEST_ASSERT(
+          test_equal(projected, startPoint/startPoint[2]),
+          "Bad perspective.");
+  }
 };
 
 struct TryTransformsFunctor

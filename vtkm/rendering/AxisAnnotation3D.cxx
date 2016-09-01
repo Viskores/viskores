@@ -74,11 +74,12 @@ void AxisAnnotation3D::Render(const Camera &camera,
   unsigned int nmajor = (unsigned int)proportions.size();
   while (this->Labels.size() < nmajor)
   {
-    this->Labels.push_back(new BillboardTextAnnotation("test",
-                                                 this->Color,
-                                                 vtkm::Float32(this->FontScale),
-                                                 0,0,0,
-                                                 0));
+    this->Labels.push_back(new TextAnnotationBillboard(
+                             "test",
+                             this->Color,
+                             vtkm::Float32(this->FontScale),
+                             vtkm::Vec<vtkm::Float32,3>(0,0,0),
+                             0));
   }
 
   std::stringstream numberToString;

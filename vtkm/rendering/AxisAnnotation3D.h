@@ -29,7 +29,7 @@
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/rendering/AxisAnnotation.h>
-#include <vtkm/rendering/TextAnnotation.h>
+#include <vtkm/rendering/TextAnnotationBillboard.h>
 
 #include <sstream>
 
@@ -50,7 +50,7 @@ protected:
   vtkm::Float32 FontOffset;
   vtkm::Float32 LineWidth;
   vtkm::rendering::Color Color;
-  std::vector<BillboardTextAnnotation*> Labels;
+  std::vector<TextAnnotationBillboard*> Labels;
   int MoreOrLessTickAdjustment;
 public:
 
