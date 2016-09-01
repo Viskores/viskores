@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
 
   // Read in the vector data for testing
   FILE * pFile = fopen(argv[1], "rb");
-  if (pFile == NULL) perror ("Error opening file");
+  if (pFile == nullptr) perror ("Error opening file");
 
   size_t ret_code = 0;
   // Size of the dataset

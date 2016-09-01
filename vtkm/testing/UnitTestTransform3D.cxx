@@ -199,7 +199,7 @@ struct TryTransformsFunctor
 
 void TestTransforms()
 {
-  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(time(NULL));
+  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(time(nullptr));
   std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 

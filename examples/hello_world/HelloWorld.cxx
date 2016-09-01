@@ -180,7 +180,7 @@ struct HelloVTKMInterop
 
 //global static so that glut callback can access it
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-HelloVTKMInterop< DeviceAdapter, vtkm::Float32 >* helloWorld = NULL;
+HelloVTKMInterop< DeviceAdapter, vtkm::Float32 >* helloWorld = nullptr;
 
 // Render the output using simple OpenGL
 void run()

@@ -27,10 +27,6 @@
 #include <vtkm/cont/internal/DynamicTransform.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/smart_ptr/shared_ptr.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 namespace cont {
 
@@ -49,7 +45,7 @@ struct DynamicCellSetCopyHelper {
   template<typename CellSetList>
   VTKM_CONT_EXPORT
   static
-  const boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>&
+  const std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>&
   GetCellSetContainer(const vtkm::cont::DynamicCellSetBase<CellSetList> &src)
   {
     return src.CellSetContainer;
@@ -58,7 +54,7 @@ struct DynamicCellSetCopyHelper {
 
 // A simple function to downcast a CellSet encapsulated in a
 // SimplePolymorphicContainerBase to the given subclass of CellSet. If the
-// conversion cannot be done, NULL is returned.
+// conversion cannot be done, nullptr is returned.
 template<typename CellSetType>
 VTKM_CONT_EXPORT
 CellSetType *
@@ -69,13 +65,13 @@ DynamicCellSetTryCast(
       downcastContainer = dynamic_cast<
         vtkm::cont::internal::SimplePolymorphicContainer<CellSetType> *>(
           cellSetContainer);
-  if (downcastContainer != NULL)
+  if (downcastContainer != nullptr)
   {
     return &downcastContainer->Item;
   }
   else
   {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -83,7 +79,7 @@ template<typename CellSetType>
 VTKM_CONT_EXPORT
 CellSetType *
 DynamicCellSetTryCast(
-  const boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>& cellSetContainer)
+  const std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>& cellSetContainer)
 {
   return detail::DynamicCellSetTryCast<CellSetType>(cellSetContainer.get());
 }
@@ -166,7 +162,7 @@ public:
   VTKM_CONT_EXPORT
   bool IsType() const {
     return (detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer)
-            != NULL);
+            != nullptr);
   }
 
   /// Returns true if this cell set is the same (or equivalent) type as the
@@ -195,7 +191,7 @@ public:
   CellSetType &Cast() const {
     CellSetType *cellSetPointer =
         detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
-    if (cellSetPointer == NULL)
+    if (cellSetPointer == nullptr)
     {
       throw vtkm::cont::ErrorControlBadType("Bad cast of dynamic cell set.");
     }
@@ -295,7 +291,7 @@ public:
 
 
 private:
-  boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
+  std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
       CellSetContainer;
 
   friend struct detail::DynamicCellSetCopyHelper;
@@ -323,7 +319,7 @@ struct DynamicCellSetTryCellSet
     {
       CellSetType *cellSet =
           detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
-      if (cellSet != NULL)
+      if (cellSet != nullptr)
       {
         this->Function(*cellSet);
         this->FoundCast = true;

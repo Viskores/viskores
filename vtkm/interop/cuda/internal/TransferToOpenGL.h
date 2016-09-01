@@ -101,7 +101,7 @@ public:
   {
   //get the mapped pointer
   std::size_t cuda_size;
-  ValueType* pointer = NULL;
+  ValueType* pointer = nullptr;
   cudaError_t cError = cudaGraphicsResourceGetMappedPointer((void **)&pointer,
                                                             &cuda_size,
                                                             this->CudaResource);
@@ -139,7 +139,7 @@ class TransferToOpenGL<ValueType, vtkm::cont::DeviceAdapterTagCuda>
 public:
   VTKM_CONT_EXPORT explicit TransferToOpenGL(BufferState& state):
     State(state),
-    Resource(NULL)
+    Resource(nullptr)
   {
     if( !this->State.HasType() )
     {

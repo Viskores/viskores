@@ -34,7 +34,6 @@
 #include <vtkm/io/ErrorIO.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/smart_ptr/scoped_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
@@ -378,7 +377,7 @@ protected:
   void TransferDataFile(VTKDataSetReaderBase &reader)
   {
     reader.DataFile.swap(this->DataFile);
-    this->DataFile.reset(NULL);
+    this->DataFile.reset(nullptr);
   }
 
   virtual void CloseFile()
@@ -753,7 +752,7 @@ private:
   };
 
 protected:
-  boost::scoped_ptr<internal::VTKDataSetFile> DataFile;
+  std::unique_ptr<internal::VTKDataSetFile> DataFile;
   vtkm::cont::DataSet DataSet;
 
 private:

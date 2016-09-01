@@ -43,7 +43,7 @@ enum WaveletName {
   BIOR1_1   // the same as HAAE
 };
 
-// Wavelet filter class; 
+// Wavelet filter class;
 // functionally equivalent to WaveFiltBase and its subclasses in VAPoR.
 class WaveletFilter
 {
@@ -51,10 +51,10 @@ public:
   // constructor
   WaveletFilter( WaveletName wtype ) : symmetricity(true),
                                        filterLength(0),
-                                       lowDecomposeFilter(NULL),
-                                       highDecomposeFilter(NULL),
-                                       lowReconstructFilter(NULL),
-                                       highReconstructFilter(NULL)
+                                       lowDecomposeFilter(nullptr),
+                                       highDecomposeFilter(nullptr),
+                                       lowReconstructFilter(nullptr),
+                                       highReconstructFilter(nullptr)
   {
     if( wtype == CDF9_7 || wtype == BIOR4_4 )
     {
@@ -100,8 +100,8 @@ public:
     if(  lowDecomposeFilter )
     {
       delete[] lowDecomposeFilter;
-      lowDecomposeFilter    = highDecomposeFilter = 
-      lowReconstructFilter  = highReconstructFilter =  NULL ;
+      lowDecomposeFilter    = highDecomposeFilter =
+      lowReconstructFilter  = highReconstructFilter =  nullptr ;
     }
   }
 
@@ -154,19 +154,19 @@ private:
   {
     if( sigLength % 2 == 0 )
     {
-      for (vtkm::Id count = 0; count < sigLength; count++) 
+      for (vtkm::Id count = 0; count < sigLength; count++)
       {
         sigOut[count] = sigIn[sigLength - count - 1];
-        if (count % 2 != 0) 
+        if (count % 2 != 0)
           sigOut[count] = -1.0 * sigOut[count];
       }
     }
     else
     {
-      for (vtkm::Id count = 0; count < sigLength; count++) 
+      for (vtkm::Id count = 0; count < sigLength; count++)
       {
         sigOut[count] = sigIn[sigLength - count - 1];
-        if (count % 2 == 0) 
+        if (count % 2 == 0)
           sigOut[count] = -1.0 * sigOut[count];
       }
     }
@@ -199,4 +199,4 @@ private:
 }     // namespace worklet
 }     // namespace vtkm
 
-#endif 
+#endif

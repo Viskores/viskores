@@ -41,7 +41,7 @@ public:
             vtkm::Id height=1024)
   : CanvasGL(width,height)
   {
-    ctx = NULL;
+    ctx = nullptr;
     this->ResizeBuffers(width, height);
   }
 
@@ -52,8 +52,8 @@ public:
       throw vtkm::cont::ErrorControlBadValue("Failed to get EGL display");
     EGLint major, minor;
     if (!(eglInitialize(dpy, &major, &minor)))
-      throw vtkm::cont::ErrorControlBadValue("Failed to initialize EGL display");        
-    
+      throw vtkm::cont::ErrorControlBadValue("Failed to initialize EGL display");
+
     const EGLint cfgAttrs[] =
     {
       EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
@@ -64,7 +64,7 @@ public:
       EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
       EGL_NONE
     };
-    
+
     EGLint nCfgs;
     EGLConfig cfg;
     if (!(eglChooseConfig(dpy, cfgAttrs, &cfg, 1, &nCfgs)) || nCfgs == 0)
@@ -76,7 +76,7 @@ public:
       EGL_HEIGHT, static_cast<EGLint>(this->GetHeight()),
       EGL_NONE,
     };
-    
+
     if (!(surf = eglCreatePbufferSurface(dpy, cfg, pbAttrs)))
       throw vtkm::cont::ErrorControlBadValue("Failed to create EGL PBuffer surface");
     eglBindAPI(EGL_OPENGL_API);
@@ -85,7 +85,7 @@ public:
     if (!(eglMakeCurrent(dpy, surf, surf, ctx)))
       throw vtkm::cont::ErrorControlBadValue("Failed to create EGL context current");
   }
-    
+
   VTKM_CONT_EXPORT
   virtual void Activate()
   {

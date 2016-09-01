@@ -1034,8 +1034,8 @@ private:
     {
     const vtkm::Id ERROR_ARRAY_SIZE = 1024;
     static bool errorArrayInit = false;
-    static char* hostPtr = NULL;
-    static char* devicePtr = NULL;
+    static char* hostPtr = nullptr;
+    static char* devicePtr = nullptr;
     if( !errorArrayInit )
       {
       cudaMallocHost( (void**)&hostPtr, ERROR_ARRAY_SIZE, cudaHostAllocMapped );
@@ -1097,7 +1097,7 @@ public:
     //since the memory is pinned we can access it safely on the host
     //without a memcpy
     vtkm::Id errorArraySize = 0;
-    char* hostErrorPtr = NULL;
+    char* hostErrorPtr = nullptr;
     char* deviceErrorPtr = GetPinnedErrorArray(errorArraySize, &hostErrorPtr);
 
     //clear the first character which means that we don't contain an error
@@ -1156,7 +1156,7 @@ public:
     //since the memory is pinned we can access it safely on the host
     //without a memcpy
     vtkm::Id errorArraySize = 0;
-    char* hostErrorPtr = NULL;
+    char* hostErrorPtr = nullptr;
     char* deviceErrorPtr = GetPinnedErrorArray(errorArraySize, &hostErrorPtr);
 
     //clear the first character which means that we don't contain an error
