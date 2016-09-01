@@ -252,7 +252,7 @@ void CanvasGL::RenderText(vtkm::Float32 scale,
                           const vtkm::Vec<vtkm::Float32,2> &anchor,
                           const std::string &text) const
 {
-  if (this->FontTexture.ID == 0)
+  if (!this->FontTexture.Valid())
   {
     // When we load a font, we save a reference to it for the next time we
     // use it. Although technically we are changing the state, the logical

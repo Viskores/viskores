@@ -80,6 +80,7 @@ set(opengl_headers
 set(opengl_sources
   CanvasGL.cxx
   MapperGL.cxx
+  TextureGL.cxx
   )
 
 set(egl_headers
