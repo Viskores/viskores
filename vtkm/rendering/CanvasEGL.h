@@ -53,6 +53,9 @@ public:
   VTKM_RENDERING_EXPORT
   virtual void Activate() VTKM_OVERRIDE;
 
+  VTKM_RENDERING_EXPORT
+  vtkm::rendering::Canvas *NewCopy() const VTKM_OVERRIDE;
+
 private:
   boost::shared_ptr<detail::CanvasEGLInternals> Internals;
 };

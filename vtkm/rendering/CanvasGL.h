@@ -49,6 +49,9 @@ public:
   void Finish() VTKM_OVERRIDE;
 
   VTKM_RENDERING_EXPORT
+  vtkm::rendering::Canvas *NewCopy() const VTKM_OVERRIDE;
+
+  VTKM_RENDERING_EXPORT
   void SetViewToWorldSpace(const vtkm::rendering::Camera &camera,
                            bool clip) VTKM_OVERRIDE;
 
@@ -61,10 +64,10 @@ public:
                            bool clip) VTKM_OVERRIDE;
 
   VTKM_RENDERING_EXPORT
-  void RefreshColorBuffer() VTKM_OVERRIDE;
+  void RefreshColorBuffer() const VTKM_OVERRIDE;
 
   VTKM_RENDERING_EXPORT
-  virtual void RefreshDepthBuffer() VTKM_OVERRIDE;
+  virtual void RefreshDepthBuffer() const VTKM_OVERRIDE;
 
   VTKM_RENDERING_EXPORT
   void AddLine(const vtkm::Vec<vtkm::Float64,2> &point0,

@@ -39,6 +39,15 @@ struct TextureGL::InternalsType
   InternalsType()
     : Id(0), Dimension(0), MIPMap(false), Linear2D(true), LinearMIP(true)
   {  }
+
+  VTKM_CONT_EXPORT
+  ~InternalsType()
+  {
+    if (this->Id != 0)
+    {
+      glDeleteTextures(1, &this->Id);
+    }
+  }
 };
 
 TextureGL::TextureGL()
@@ -46,13 +55,7 @@ TextureGL::TextureGL()
 {  }
 
 TextureGL::~TextureGL()
-{
-  if (this->Internals->Id != 0)
-  {
-    glDeleteTextures(1, &this->Internals->Id);
-  }
-  delete this->Internals;
-}
+{  }
 
 bool TextureGL::Valid() const
 {

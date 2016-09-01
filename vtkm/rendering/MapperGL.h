@@ -50,6 +50,9 @@ public:
   void EndScene() VTKM_OVERRIDE;
   VTKM_RENDERING_EXPORT
   void SetCanvas(vtkm::rendering::Canvas *canvas) VTKM_OVERRIDE;
+
+  VTKM_RENDERING_EXPORT
+  vtkm::rendering::Mapper *NewCopy() const VTKM_OVERRIDE;
 };
 
 }} //namespace vtkm::rendering

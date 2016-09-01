@@ -51,6 +51,9 @@ public:
   VTKM_RENDERING_EXPORT
   virtual void EndScene() VTKM_OVERRIDE;
 
+  VTKM_RENDERING_EXPORT
+  vtkm::rendering::Mapper *NewCopy() const VTKM_OVERRIDE;
+
 private:
   struct InternalsType;
   boost::shared_ptr<InternalsType> Internals;

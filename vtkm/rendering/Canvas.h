@@ -53,6 +53,9 @@ public:
   VTKM_RENDERING_EXPORT
   virtual void Finish() = 0;
 
+  VTKM_RENDERING_EXPORT
+  virtual vtkm::rendering::Canvas *NewCopy() const = 0;
+
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorBufferType;
   typedef vtkm::cont::ArrayHandle<vtkm::Float32> DepthBufferType;
 
@@ -109,9 +112,9 @@ public:
   // If a subclass uses a system that renderers to different buffers, then
   // these should be overridden to copy the data to the buffers.
   VTKM_RENDERING_EXPORT
-  virtual void RefreshColorBuffer() {  }
+  virtual void RefreshColorBuffer() const {  }
   VTKM_RENDERING_EXPORT
-  virtual void RefreshDepthBuffer() {  }
+  virtual void RefreshDepthBuffer() const  {  }
 
   VTKM_RENDERING_EXPORT
   virtual void SetViewToWorldSpace(const vtkm::rendering::Camera &, bool) {}
@@ -121,7 +124,7 @@ public:
   virtual void SetViewportClipping(const vtkm::rendering::Camera &, bool) {}
 
   VTKM_RENDERING_EXPORT
-  virtual void SaveAs(const std::string &fileName);
+  virtual void SaveAs(const std::string &fileName) const;
 
   VTKM_RENDERING_EXPORT
   virtual void AddLine(const vtkm::Vec<vtkm::Float64,2> &point0,

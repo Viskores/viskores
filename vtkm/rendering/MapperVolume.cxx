@@ -192,5 +192,10 @@ void MapperVolume::EndScene()
   // Nothing needs to be done.
 }
 
+vtkm::rendering::Mapper *MapperVolume::NewCopy() const
+{
+  return new vtkm::rendering::MapperVolume(*this);
+}
+
 }
 } // namespace vtkm::rendering

@@ -43,6 +43,8 @@ set(headers
   TextAnnotationScreen.h
   Triangulator.h
   View.h
+  View2D.h
+  View3D.h
   WorldAnnotator.h
   )
 
@@ -66,6 +68,9 @@ set(sources
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
   TextAnnotationScreen.cxx
+  View.cxx
+  View2D.cxx
+  View3D.cxx
   WorldAnnotator.cxx
 
   internal/RunTriangulator.cxx

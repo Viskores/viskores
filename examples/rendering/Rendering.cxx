@@ -42,7 +42,7 @@
 
 #include <vtkm/rendering/CanvasGL.h>
 #include <vtkm/rendering/MapperGL.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/ColorTable.h>
 
 vtkm::rendering::View3D *view = nullptr;

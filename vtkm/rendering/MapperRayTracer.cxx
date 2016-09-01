@@ -187,6 +187,11 @@ void MapperRayTracer::EndScene()
   // Nothing needs to be done.
 }
 
+vtkm::rendering::Mapper *MapperRayTracer::NewCopy() const
+{
+  return new vtkm::rendering::MapperRayTracer(*this);
+}
+
 
 }
 } // vtkm::rendering

@@ -56,6 +56,9 @@ public:
   VTKM_RENDERING_EXPORT
   virtual void SetCanvas(vtkm::rendering::Canvas *canvas) = 0;
 
+  VTKM_RENDERING_EXPORT
+  virtual vtkm::rendering::Mapper *NewCopy() const = 0;
+
 protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
 };

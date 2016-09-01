@@ -66,6 +66,11 @@ void CanvasGL::Finish()
   glFinish();
 }
 
+vtkm::rendering::Canvas *CanvasGL::NewCopy() const
+{
+  return new vtkm::rendering::CanvasGL(*this);
+}
+
 void CanvasGL::SetViewToWorldSpace(const vtkm::rendering::Camera &camera,
                                    bool clip)
 {
@@ -134,7 +139,7 @@ void CanvasGL::SetViewportClipping(const vtkm::rendering::Camera &camera,
   }
 }
 
-void CanvasGL::RefreshColorBuffer()
+void CanvasGL::RefreshColorBuffer() const
 {
   GLint viewport[4];
   glGetIntegerv(GL_VIEWPORT, viewport);
@@ -143,11 +148,11 @@ void CanvasGL::RefreshColorBuffer()
 
   glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3],
       GL_RGBA, GL_FLOAT,
-      &(*vtkm::cont::ArrayPortalToIteratorBegin(
-          this->GetColorBuffer().GetPortalControl())));
+      const_cast<vtkm::Vec<float,4> *>(
+        this->GetColorBuffer().GetStorage().GetArray()));
 }
 
-void CanvasGL::RefreshDepthBuffer()
+void CanvasGL::RefreshDepthBuffer() const
 {
   GLint viewport[4];
   glGetIntegerv(GL_VIEWPORT, viewport);
@@ -156,8 +161,8 @@ void CanvasGL::RefreshDepthBuffer()
 
   glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3],
       GL_DEPTH_COMPONENT, GL_FLOAT,
-      &(*vtkm::cont::ArrayPortalToIteratorBegin(
-          this->GetDepthBuffer().GetPortalControl())));
+      const_cast<vtkm::Float32 *>(
+        this->GetDepthBuffer().GetStorage().GetArray()));
 }
 
 void CanvasGL::AddLine(const vtkm::Vec<vtkm::Float64,2> &point0,

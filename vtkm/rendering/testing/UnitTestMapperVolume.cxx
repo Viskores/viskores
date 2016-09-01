@@ -23,7 +23,7 @@
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperVolume.h>
 #include <vtkm/rendering/Scene.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/View3D.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 

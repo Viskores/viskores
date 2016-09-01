@@ -140,5 +140,10 @@ void MapperGL::SetCanvas(vtkm::rendering::Canvas *)
   // Nothing needs to be done.
 }
 
+vtkm::rendering::Mapper *MapperGL::NewCopy() const
+{
+  return new vtkm::rendering::MapperGL(*this);
+}
+
 }
 } // namespace vtkm::rendering

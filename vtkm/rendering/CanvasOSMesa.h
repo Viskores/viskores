@@ -51,13 +51,16 @@ public:
   virtual void Initialize() VTKM_OVERRIDE;
 
   VTKM_RENDERING_EXPORT
-  virtual void RefreshColorBuffer() VTKM_OVERRIDE;
+  virtual void RefreshColorBuffer() const VTKM_OVERRIDE;
 
   VTKM_RENDERING_EXPORT
   virtual void Activate() VTKM_OVERRIDE;
 
   VTKM_RENDERING_EXPORT
   virtual void Finish() VTKM_OVERRIDE;
+
+  VTKM_RENDERING_EXPORT
+  vtkm::rendering::Canvas *NewCopy() const VTKM_OVERRIDE;
 
 private:
   boost::shared_ptr<detail::CanvasOSMesaInternals> Internals;

@@ -35,7 +35,7 @@ Canvas::Canvas(vtkm::Id width, vtkm::Id height)
 Canvas::~Canvas()
 {  }
 
-void Canvas::SaveAs(const std::string &fileName)
+void Canvas::SaveAs(const std::string &fileName) const
 {
   this->RefreshColorBuffer();
   std::ofstream of(fileName.c_str());

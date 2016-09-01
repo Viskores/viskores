@@ -113,6 +113,11 @@ void CanvasRayTracer::Clear()
                                             this->GetDepthBuffer()));
 }
 
+vtkm::rendering::Canvas *CanvasRayTracer::NewCopy() const
+{
+  return new vtkm::rendering::CanvasRayTracer(*this);
+}
+
 void CanvasRayTracer::AddLine(const vtkm::Vec<vtkm::Float64,2> &,
                               const vtkm::Vec<vtkm::Float64,2> &,
                               vtkm::Float32,

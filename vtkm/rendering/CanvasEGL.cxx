@@ -121,5 +121,10 @@ void CanvasEGL::Activate()
   glEnable(GL_DEPTH_TEST);
 }
 
+vtkm::rendering::Canvas *CanvasEGL::NewCopy() const
+{
+  return new vtkm::rendering::CanvasEGL(*this);
+}
+
 }
 } // namespace vtkm::rendering

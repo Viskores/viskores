@@ -27,7 +27,8 @@
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Scene.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/View2D.h>
+#include <vtkm/rendering/View3D.h>
 #include <vtkm/cont/DeviceAdapter.h>
 
 namespace vtkm {

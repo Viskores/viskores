@@ -47,6 +47,9 @@ public:
   void Clear() VTKM_OVERRIDE;
 
   VTKM_RENDERING_EXPORT
+  vtkm::rendering::Canvas *NewCopy() const VTKM_OVERRIDE;
+
+  VTKM_RENDERING_EXPORT
   void AddLine(const vtkm::Vec<vtkm::Float64,2> &point0,
                const vtkm::Vec<vtkm::Float64,2> &point1,
                vtkm::Float32 linewidth,

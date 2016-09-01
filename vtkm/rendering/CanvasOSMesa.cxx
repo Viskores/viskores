@@ -71,7 +71,7 @@ void CanvasOSMesa::Initialize()
   }
 }
 
-void CanvasOSMesa::RefreshColorBuffer()
+void CanvasOSMesa::RefreshColorBuffer() const
 {
   // Override superclass because our OSMesa implementation renders right
   // to the color buffer.
@@ -108,6 +108,11 @@ void CanvasOSMesa::Finish()
     depthPortal.Set(i, float(raw_zbuff[i]) / float(UINT_MAX));
   }
 #endif
+}
+
+vtkm::rendering::Canvas *CanvasOSMesa::NewCopy() const
+{
+  return new vtkm::rendering::CanvasOSMesa(*this);
 }
 
 }

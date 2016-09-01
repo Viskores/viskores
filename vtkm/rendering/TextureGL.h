@@ -28,13 +28,15 @@
 
 #include <vector>
 
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <boost/shared_ptr.hpp>
+VTKM_THIRDPARTY_POST_INCLUDE
+
 namespace vtkm {
 namespace rendering {
 
 class TextureGL
 {
-public:
-
 public:
   VTKM_RENDERING_EXPORT
   TextureGL();
@@ -57,11 +59,8 @@ public:
                            const std::vector<unsigned char> &rgba);
 
 private:
-  TextureGL(const TextureGL &); // Not implemented
-  void operator=(const TextureGL &); // Not implemented
-
   struct InternalsType;
-  InternalsType *Internals;
+  boost::shared_ptr<InternalsType> Internals;
 };
 
 
