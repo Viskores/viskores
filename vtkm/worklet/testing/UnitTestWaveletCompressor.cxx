@@ -24,8 +24,6 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/cont/ArrayHandleInterpreter.h>
-
 #include <vector>
 #include <iomanip>
 
@@ -65,42 +63,44 @@ void Debug2DExtend()
 {
   vtkm::Id NX = 10;
   vtkm::Id NY = 11;
-  typedef vtkm::cont::ArrayHandleInterpreter< vtkm::Float64 >   ArrayInterp;
-  ArrayInterp     left, center, right;
-/*
-  left.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  left.InterpretAs2D( NX, NY );
-  right.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  right.InterpretAs2D( NX, NY );
-*/
+  typedef vtkm::cont::ArrayHandle< vtkm::Float64 >   ArrayType;
+  ArrayType     left, center, right;
+  
   center.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  center.InterpretAs2D( NX, NY );
   for( vtkm::Id i = 0; i < NX*NY; i++ )
     center.GetPortalControl().Set(i, i);
 
-  ArrayInterp output1, output2;
+  ArrayType output1, output2;
   std::vector<vtkm::Id> L(10, 0);
 
   vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::CDF9_7 );
-std::cout << "true results:" << std::endl;
+
   dwt.DWT2D(center, NX, NY, output1, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-/*
-  vtkm::worklet::wavelets::DWTMode leftMode   = vtkm::worklet::wavelets::SYMW; 
-  vtkm::worklet::wavelets::DWTMode rightMode  = vtkm::worklet::wavelets::SYMW; 
-  dwt.Extend2DLeftRight( center, output, 4, leftMode, rightMode, true, false, 
-      VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-*/
-//  dwt.DWT2Dv2( center, output2, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  
-/*
-std::cout << "test results:" << std::endl;
-  for(   vtkm::Id j = 0; j < output2.GetDimY(); j++ )
+
+  dwt.DWT2Dv2( center, NX, NY, output2, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+
+  for( vtkm::Id i = 0; i < output1.GetNumberOfValues(); i++ )
   {
-    for( vtkm::Id i = 0; i < output2.GetDimX(); i++ )
-      std::cout << output2.Get2D( i, j ) << "  ";
-    std::cout << std::endl;
+    VTKM_TEST_ASSERT( test_equal( output1.GetPortalConstControl().Get(i),
+                                  output2.GetPortalConstControl().Get(i)),
+                                  "WaveletCompressor worklet failed..." );
   }
-*/
+  
+std::cout << "true results:" << std::endl;
+  for( vtkm::Id i = 0; i < output1.GetNumberOfValues(); i++ )
+  {
+    std::cout << output1.GetPortalConstControl().Get(i) << "  ";
+    if( i % NX == NX - 1 )
+      std::cout << std::endl;
+  }
+  
+std::cout << "test results:" << std::endl;
+  for( vtkm::Id i = 0; i < output2.GetNumberOfValues(); i++ )
+  {
+    std::cout << output2.GetPortalConstControl().Get(i) << "  ";
+    if( i % NX == NX - 1 )
+      std::cout << std::endl;
+  }
 }
 
 void DebugDWTIDWT1D()
