@@ -29,6 +29,8 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/random/uniform_real_distribution.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
+#include <ctime>
+
 namespace {
 
 boost::mt19937 g_RandomGenerator;
@@ -199,7 +201,7 @@ struct TryTransformsFunctor
 
 void TestTransforms()
 {
-  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(time(nullptr));
+  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(std::time(nullptr));
   std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 
