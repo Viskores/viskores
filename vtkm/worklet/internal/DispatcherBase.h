@@ -426,8 +426,13 @@ private:
   }
 
 public:
-  // Implementation of the Invoke method is in this generated file.
-#include <vtkm/worklet/internal/DispatcherBaseDetailInvoke.h>
+  template<typename... ArgTypes>
+  VTKM_CONT_EXPORT
+  void Invoke(ArgTypes... args) const
+  {
+  this->StartInvoke(
+        vtkm::internal::make_FunctionInterface<void>(args...));
+  }
 
 protected:
   VTKM_CONT_EXPORT
