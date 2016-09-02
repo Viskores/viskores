@@ -73,17 +73,9 @@ endfunction(vtkm_setup_nvcc_flags)
 function(vtkm_setup_msvc_properties target )
   #disable MSVC CRT and SCL warnings as they recommend using non standard
   #c++ extensions
-  set_property(TARGET ${target}
-               APPEND PROPERTY COMPILE_DEFINITIONS
-               "_SCL_SECURE_NO_WARNINGS"
-               "_CRT_SECURE_NO_WARNINGS"
-               )
+  target_compile_definitions(${target} PRIVATE "_SCL_SECURE_NO_WARNINGS"
+                                               "_CRT_SECURE_NO_WARNINGS")
 
-  #enable large object support so we can have 2^32 addressable sections
-  set_property(TARGET ${target}
-               APPEND PROPERTY COMPILE_FLAGS
-               "/bigobj"
-               )
 endfunction(vtkm_setup_msvc_properties)
 
 # Builds a source file and an executable that does nothing other than
@@ -123,12 +115,6 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     cuda_add_library(TestBuild_${name} ${cxxfiles} ${hfiles})
   elseif (${cxxfiles_len} GREATER 0)
     add_library(TestBuild_${name} ${cxxfiles} ${hfiles})
-    if(VTKm_EXTRA_COMPILER_WARNINGS)
-      set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_FLAGS
-                   ${CMAKE_CXX_FLAGS_WARN_EXTRA}
-                   )
-    endif(VTKm_EXTRA_COMPILER_WARNINGS)
     target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
   endif ()
   target_link_libraries(TestBuild_${name} ${VTKm_LIBRARIES})
@@ -287,8 +273,7 @@ function(vtkm_unit_tests)
 
     #do it as a property value so we don't pollute the include_directories
     #for any other targets
-    set_property(TARGET ${test_prog} APPEND PROPERTY
-        INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
+    target_include_directories(${test_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
 
     target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
 
@@ -297,13 +282,6 @@ function(vtkm_unit_tests)
     if(MSVC)
       vtkm_setup_msvc_properties(${test_prog})
     endif()
-
-    if(VTKm_EXTRA_COMPILER_WARNINGS)
-      set_property(TARGET ${test_prog}
-                 APPEND PROPERTY COMPILE_FLAGS
-                 ${CMAKE_CXX_FLAGS_WARN_EXTRA}
-                 )
-    endif(VTKm_EXTRA_COMPILER_WARNINGS)
 
     foreach (test ${VTKm_UT_SOURCES})
       get_filename_component(tname ${test} NAME_WE)
@@ -423,9 +401,7 @@ function(vtkm_worklet_unit_tests device_adapter)
     else()
       add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
     endif()
-    set_property(TARGET ${test_prog} APPEND PROPERTY
-      INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS}
-      )
+    target_include_directories(${test_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
     target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
 
     #add the specific compile options for this executable
@@ -447,18 +423,8 @@ function(vtkm_worklet_unit_tests device_adapter)
       vtkm_setup_msvc_properties(${test_prog})
     endif()
 
-    #increase warning level if needed, we are going to skip cuda here
-    #to remove all the false positive unused function warnings that cuda
-    #generates
-    if(VTKm_EXTRA_COMPILER_WARNINGS)
-      set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA} )
-    endif()
-
     #set the device adapter on the executable
-    set_property(TARGET ${test_prog}
-                 APPEND
-                 PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=${device_adapter}" )
+    target_compile_definitions(${test_prog} PRIVATE "VTKM_DEVICE_ADAPTER=${device_adapter}")
   endif()
 endfunction(vtkm_worklet_unit_tests)
 
@@ -563,8 +529,7 @@ function(vtkm_benchmarks device_adapter)
       set_source_files_properties(${benchmark_headers}
         PROPERTIES HEADER_FILE_ONLY TRUE)
 
-      set_property(TARGET ${benchmark_prog} APPEND PROPERTY
-          INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
+      target_include_directories(${benchmark_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
       target_link_libraries(${benchmark_prog} ${VTKm_LIBRARIES})
 
       if(MSVC)
@@ -574,19 +539,8 @@ function(vtkm_benchmarks device_adapter)
       #add the specific compile options for this executable
       target_compile_options(${benchmark_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
-      #increase warning level if needed, we are going to skip cuda here
-      #to remove all the false positive unused function warnings that cuda
-      #generates
-      if(VTKm_EXTRA_COMPILER_WARNINGS)
-        set_property(TARGET ${benchmark_prog}
-                     APPEND PROPERTY COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA} )
-      endif()
-
       #set the device adapter on the executable
-      set_property(TARGET ${benchmark_prog}
-                   APPEND
-                   PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=${device_adapter}" )
-
+      target_compile_definitions(${benchmark_prog} PRIVATE "VTKM_DEVICE_ADAPTER=${device_adapter}")
 
     endforeach()
 
