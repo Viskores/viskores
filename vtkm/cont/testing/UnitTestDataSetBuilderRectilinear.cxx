@@ -32,7 +32,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/random/uniform_int_distribution.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
-#include <time.h>
+#include <ctime>
 
 #include <vector>
 
@@ -195,7 +195,7 @@ RectilinearTests()
 void
 TestDataSetBuilderRectilinear()
 {
-  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(time(nullptr));
+  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(std::time(nullptr));
   std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 
