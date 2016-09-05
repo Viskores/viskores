@@ -33,22 +33,22 @@ namespace {
     
 void RenderTests()
 {
-    typedef vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> M;
-    typedef vtkm::rendering::CanvasOSMesa C;
-    typedef vtkm::rendering::View3D V3;
-    typedef vtkm::rendering::View2D V2;
+    typedef vtkm::rendering::MapperGL MapperType;
+    typedef vtkm::rendering::CanvasOSMesa CanvasType;
+    typedef vtkm::rendering::View3D View3DType;
+    typedef vtkm::rendering::View2D View2DType;
 
     vtkm::cont::testing::MakeTestDataSet maker;
     vtkm::rendering::ColorTable colorTable("thermal");    
     
-    vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRegularDataSet0(),
-                                             "pointvar", colorTable, "reg3D.pnm");
-    vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRectilinearDataSet0(),
-                                             "pointvar", colorTable, "rect3D.pnm");
-    vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DExplicitDataSet4(),
-                                             "pointvar", colorTable, "expl3D.pnm");
-    vtkm::rendering::testing::Render<M,C,V2>(maker.Make2DRectilinearDataSet0(),
-                                             "pointvar", colorTable, "rect2D.pnm");
+    vtkm::rendering::testing::Render<MapperType,CanvasType,View3DType>(
+      maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");
+    vtkm::rendering::testing::Render<MapperType,CanvasType,View3DType>(
+      maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
+    vtkm::rendering::testing::Render<MapperType,CanvasType,View3DType>(
+      maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "expl3D.pnm");
+    vtkm::rendering::testing::Render<MapperType,CanvasType,View2DType>(
+      maker.Make2DRectilinearDataSet0(), "pointvar", colorTable, "rect2D.pnm");
 }  
 
 } //namespace
