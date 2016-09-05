@@ -166,7 +166,7 @@ void TextureGL::CreateAlphaFromRGBA(vtkm::Id width,
 #endif
     glTexImage2D(GL_TEXTURE_2D, 0,
                  GL_ALPHA,
-                 width, height,
+                 static_cast<GLsizei>(width), static_cast<GLsizei>(height),
                  0,
                  GL_ALPHA,
                  GL_UNSIGNED_BYTE,
