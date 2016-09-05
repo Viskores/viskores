@@ -918,9 +918,8 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT 
-  LeftExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2, Id x3, Id y3, DWTMode m)
-      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), 
-        sigStartX( x3 ), sigStartY( y3), mode(m)  {}
+  LeftExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2, DWTMode m)
+      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), mode(m)  {}
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT
@@ -961,14 +960,11 @@ public:
       sigX = extDimX - extX;
       sym  = -1.0;
     }
-    Id sigXReal = sigX + sigStartX;
-    Id sigYReal = extY + sigStartY;
-    portalOut.Set( workIndex, portalIn.Get( Sig2Dto1D(sigXReal, sigYReal) ) * sym );
+    portalOut.Set( workIndex, portalIn.Get( Sig2Dto1D(sigX, extY) ) * sym );
   }
 
 private:
   vtkm::Id extDimX, extDimY, sigDimX, sigDimY;
-  vtkm::Id sigStartX, sigStartY;
   DWTMode  mode;
 };
 
@@ -985,9 +981,8 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT 
-  RightExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2, Id x3, Id y3, DWTMode m)
-      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), 
-        sigStartX( x3 ), sigStartY( y3 ), mode(m)  {}
+  RightExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2, DWTMode m)
+      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), mode(m)  {}
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT
@@ -1028,14 +1023,11 @@ public:
       sigX = sigDimX - extX - 2;
       sym  = -1.0;
     }
-    Id sigXReal = sigX + sigStartX;
-    Id sigYReal = extY + sigStartY;
-    portalOut.Set( workIndex, portalIn.Get( Sig2Dto1D(sigXReal, sigYReal) ) * sym );
+    portalOut.Set( workIndex, portalIn.Get( Sig2Dto1D(sigX, extY) ) * sym );
   }
 
 private:
   vtkm::Id extDimX, extDimY, sigDimX, sigDimY;
-  vtkm::Id sigStartX, sigStartY;
   DWTMode  mode;
 };
 
