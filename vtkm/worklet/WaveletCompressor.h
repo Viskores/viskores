@@ -145,7 +145,7 @@ public:
       // Make an output array
       OutArrayBasic output;
       
-      WaveletDWT::IDWT1D( input, L1d, output, DeviceTag() );
+      WaveletDWT::IDWT1D( input, L1d, output, false, DeviceTag() );
       VTKM_ASSERT( output.GetNumberOfValues() == L1d[2] );
 
       // Move output to intermediate array
@@ -207,7 +207,7 @@ public:
       OutBasicArray tempOutput;
 
       computationTime +=
-      WaveletDWT::DWT2D( tempInput, currentLenX, currentLenY, tempOutput, L2d, DeviceTag());
+      WaveletDWT::DWT2Dv2( tempInput, currentLenX, currentLenY, tempOutput, L2d, DeviceTag());
 
       // copy results to coeffOut
       WaveletBase::DeviceRectangleCopyTo( tempOutput, currentLenX, currentLenY,
@@ -274,7 +274,7 @@ public:
 
       // IDWT
       computationTime +=
-      WaveletDWT::IDWT2D( tempInput, L2d, tempOutput, DeviceTag() );
+      WaveletDWT::IDWT2Dv2( tempInput, L2d, tempOutput, DeviceTag() );
 
       // copy back reconstructed block
       WaveletBase::DeviceRectangleCopyTo( tempOutput, L2d[8], L2d[9],

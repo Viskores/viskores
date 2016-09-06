@@ -573,7 +573,6 @@ if( print)
 {
   for( vtkm::Id i = 0; i < coeffInExtended.GetNumberOfValues(); i++ )
     printf( "%.2e  ",coeffInExtended.GetPortalConstControl().Get(i) );
-    //std::cout << coeffInExtended.GetPortalConstControl().Get(i) << "  ";
   std::cout << std::endl;
 }
 
@@ -891,32 +890,103 @@ if( print)
     vtkm::Id inDimY = L[1] + L[3];
     VTKM_ASSERT( inDimX * inDimY == coeffIn.GetNumberOfValues() );
 
-    std::vector<vtkm::Id> xL(3, 0);
     vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
+    typedef vtkm::worklet::wavelets::InverseTransform2DOdd    IdwtOddWorklet;
+    typedef vtkm::worklet::wavelets::InverseTransform2DEven   IdwtEvenWorklet;
 
     // First inverse transform on columns
 
-    // Transpose 
     ArrayInType beforeY, beforeYExtend;
-    beforeY.PrepareForOutput( inDimY * inDimX, DeviceTag() );
+    vtkm::Id beforeYDimX = inDimY;
+    vtkm::Id beforeYDimY = inDimX;
+    beforeY.PrepareForOutput( beforeYDimX * beforeYDimY, DeviceTag() );
     WaveletBase::DeviceTranspose( coeffIn, inDimX, inDimY,
-                                  beforeY, inDimY, inDimX,
+                                  beforeY, beforeYDimX, beforeYDimY,
                                   0, 0, DeviceTag() );
-    vtkm::Id beforeYExtendDimX; 
-    vtkm::Id beforeYExtendDimY = inDimX;
-    this->IDWTHelper( beforeY, L[1], L[3], beforeYExtendDimY, 
-                      beforeYExtend, beforeYExtendDimX, 
+    vtkm::Id cATempLen, beforeYExtendDimX; 
+    vtkm::Id beforeYExtendDimY = beforeYDimY;
+    this->IDWTHelper( beforeY, L[1], L[3], beforeYDimY, 
+                      beforeYExtend, cATempLen, beforeYExtendDimX, 
                       filterLen, wmode, DeviceTag() );
-
-std::cout << "print v2 after extension" << std::endl;
-    for( vtkm::Id i = 0; i < beforeYExtend.GetNumberOfValues(); i++ )
+    beforeY.ReleaseResources();
+    
+    // Inverse transform
+    ArrayInType afterY;
+    vtkm::Id afterYDimX = beforeYDimX;
+    vtkm::Id afterYDimY = beforeYDimY;
+    afterY.PrepareForOutput( afterYDimX * afterYDimY, DeviceTag() );
+    if( filterLen % 2 != 0 )
     {
-      printf("%.2e  ",beforeYExtend.GetPortalConstControl().Get(i)); 
-      //std::cout << beforeYExtend.GetPortalConstControl().Get(i) << "  ";
-      if( i % beforeYExtendDimX == beforeYExtendDimX - 1 )
-        std::cout << std::endl;
+      IdwtOddWorklet worklet( filterLen, beforeYExtendDimX, beforeYExtendDimY, 
+                              afterYDimX, afterYDimY, cATempLen );
+      vtkm::worklet::DispatcherMapField<IdwtOddWorklet, DeviceTag> 
+          dispatcher( worklet );
+      dispatcher.Invoke( beforeYExtend, 
+                         WaveletBase::filter.GetLowReconstructFilter(),
+                         WaveletBase::filter.GetHighReconstructFilter(),
+                         afterY );
     }
-std::cout << "finish printing v2 after extension" << std::endl;
+    else  
+    {
+      IdwtEvenWorklet worklet( filterLen, beforeYExtendDimX, beforeYExtendDimY, 
+                               afterYDimX, afterYDimY, cATempLen );
+      vtkm::worklet::DispatcherMapField<IdwtEvenWorklet, DeviceTag> 
+          dispatcher( worklet );
+      dispatcher.Invoke( beforeYExtend, 
+                         WaveletBase::filter.GetLowReconstructFilter(),
+                         WaveletBase::filter.GetHighReconstructFilter(),
+                         afterY );
+    }
+
+    beforeYExtend.ReleaseResources();
+
+    // Second inverse transform on rows
+    ArrayInType beforeX, beforeXExtend;
+    vtkm::Id beforeXDimX = afterYDimY;
+    vtkm::Id beforeXDimY = afterYDimX;
+    vtkm::Id beforeXExtendDimX;
+    vtkm::Id beforeXExtendDimY = beforeXDimY;    
+
+    beforeX.PrepareForOutput( beforeXDimX * beforeXDimY, DeviceTag() );
+    WaveletBase::DeviceTranspose( afterY, afterYDimX, afterYDimY,
+                                  beforeX, beforeXDimX, beforeXDimY,
+                                  0, 0, DeviceTag() );
+    this->IDWTHelper( beforeX, L[0], L[4], beforeXDimY,
+                      beforeXExtend, cATempLen, beforeXExtendDimX,
+                      filterLen, wmode, DeviceTag() );
+    beforeX.ReleaseResources();
+
+    // Inverse transform
+    ArrayInType afterX;
+    vtkm::Id afterXDimX = beforeXDimX;
+    vtkm::Id afterXDimY = beforeXDimY;
+    afterX.PrepareForOutput( afterXDimX * afterXDimY, DeviceTag() );
+    if( filterLen % 2 != 0 )
+    {
+      IdwtOddWorklet worklet( filterLen, beforeXExtendDimX, beforeXExtendDimY, 
+                              afterXDimX, afterXDimY, cATempLen );
+      vtkm::worklet::DispatcherMapField<IdwtOddWorklet, DeviceTag> 
+          dispatcher( worklet );
+      dispatcher.Invoke( beforeXExtend, 
+                         WaveletBase::filter.GetLowReconstructFilter(),
+                         WaveletBase::filter.GetHighReconstructFilter(),
+                         afterX );
+    }
+    else  
+    {
+      IdwtEvenWorklet worklet( filterLen, beforeXExtendDimX, beforeXExtendDimY, 
+                               afterXDimX, afterXDimY, cATempLen );
+      vtkm::worklet::DispatcherMapField<IdwtEvenWorklet, DeviceTag> 
+          dispatcher( worklet );
+      dispatcher.Invoke( beforeXExtend, 
+                         WaveletBase::filter.GetLowReconstructFilter(),
+                         WaveletBase::filter.GetHighReconstructFilter(),
+                         afterX );
+    }
+
+    sigOut = afterX;
+
+    return 0;
   }
 
 
@@ -928,6 +998,7 @@ std::cout << "finish printing v2 after extension" << std::endl;
                          vtkm::Id                  cDDimX,           // of codffIn
                          vtkm::Id                  inDimY,           // of codffIn
                          ArrayOutType              &coeffExtend,
+                         vtkm::Id                  &cATempLen,       // output
                          vtkm::Id                  &coeffExtendDimX, // output
                          vtkm::Id                  filterLen, 
                          DWTMode                   mode,  
@@ -961,7 +1032,7 @@ std::cout << "finish printing v2 after extension" << std::endl;
         cARight = SYMH;
     } 
     // determine length after extension
-    vtkm::Id cATempLen, cDTempLen;      // X dimension after extension
+    vtkm::Id cDTempLen;                 // cD dimension after extension. cA is passed in
     vtkm::Id cDPadLen  = 0;
     vtkm::Id addLen = filterLen / 4;    // addLen == 0 for Haar kernel
     if( (cADimX > cDDimX) && (mode == SYMH) )
@@ -993,7 +1064,6 @@ std::cout << "finish printing v2 after extension" << std::endl;
     {
       this->Extend2D( cD, cDDimX, cDDimY, cDTemp, addLen,
                       cDLeft, cDRight, true, false, DeviceTag() );
-std::cout << "went here" << std::endl;
     }
     else
     {

@@ -309,12 +309,12 @@ public:
     y = idx / outputDimX;
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id Input2Dto1D( vtkm::Id &x, vtkm::Id &y ) const     
+  vtkm::Id Input2Dto1D( const vtkm::Id &x, const vtkm::Id &y ) const     
   {
     return y * inputDimX + x;
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id Output2Dto1D( vtkm::Id &x, vtkm::Id &y ) const     
+  vtkm::Id Output2Dto1D( const vtkm::Id &x, const vtkm::Id &y ) const     
   {
     return y * outputDimX + x;
   }
@@ -403,10 +403,9 @@ public:
   // Constructor
   VTKM_EXEC_CONT_EXPORT
   InverseTransform2DOdd( vtkm::Id fil_len, vtkm::Id x1, vtkm::Id y1, vtkm::Id x2,
-                         vtkm::Id y2, vtkm::Id cA_len, vtkm::Id cA_len_ext )
+                         vtkm::Id y2, vtkm::Id cA_len_ext )
                       :  filterLen( fil_len ), inputDimX( x1 ), inputDimY( y1 ),
-                         outputDimX( x2 ), outputDimY( y2 ), cALen( cA_len ),
-                         cALen2( cA_len*2 ), cALenExtended( cA_len_ext ) {}
+                         outputDimX( x2 ), outputDimY( y2 ), cALenExtended( cA_len_ext ) {}
 
   VTKM_EXEC_CONT_EXPORT
   void Output1Dto2D( const vtkm::Id &idx, vtkm::Id &x, vtkm::Id &y ) const
@@ -415,14 +414,9 @@ public:
     y = idx / outputDimX;
   }
   VTKM_EXEC_CONT_EXPORT
-  vtkm::Id Input2Dto1D( vtkm::Id &x, vtkm::Id &y ) const     
+  vtkm::Id Input2Dto1D( vtkm::Id x, vtkm::Id y ) const     
   {
     return y * inputDimX + x; 
-  }
-  VTKM_EXEC_CONT_EXPORT
-  vtkm::Id Output2Dto1D( vtkm::Id &x, vtkm::Id &y ) const     
-  {
-    return y * outputDimX + x; 
   }
   
   // Use 64-bit float for convolution calculation
@@ -467,11 +461,9 @@ public:
       k1 -= 2;
     }
     xi = inX / 2;
-    vtkm::Id realXIdx;
     while( k2 > -1 )
     {
-      realXIdx = xi + cALenExtended;
-      sigIdx1D = Input2Dto1D( realXIdx, inY );
+      sigIdx1D = Input2Dto1D( xi + cALenExtended, inY );
       sum += hiFilter.Get(k2) * MAKEVAL( sigIn.Get( sigIdx1D ) );
       xi++;   
       k2 -= 2;
@@ -486,7 +478,6 @@ public:
 private:
   vtkm::Id filterLen;
   vtkm::Id inputDimX, inputDimY, outputDimX, outputDimY;
-  vtkm::Id cALen, cALen2;   // cALen2 == cALen * 2
   vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
 };
 
@@ -582,6 +573,98 @@ private:
   vtkm::Id cALen2;          //  = cALen * 2
   vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
 };
+
+
+// Worklet: perform an inverse transform for even length, symmetric filters.
+class InverseTransform2DEven: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // Input: coeffs,
+                                                             // cA followed by cD
+                                WholeArrayIn<Scalar>,        // lowFilter
+                                WholeArrayIn<Scalar>,        // highFilter
+                                FieldOut<ScalarAll>);        // output
+  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  typedef _4   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  InverseTransform2DEven( vtkm::Id filtL, vtkm::Id x1, vtkm::Id y1, 
+                          vtkm::Id x2, vtkm::Id y2, vtkm::Id cALExt ) : 
+                        filterLen(filtL), inputDimX( x1 ), inputDimY( y1 ),
+                        outputDimX( x2 ), outputDimY( y2 ), cALenExtended(cALExt) {}
+
+  VTKM_EXEC_CONT_EXPORT
+  void Output1Dto2D( const vtkm::Id &idx, vtkm::Id &x, vtkm::Id &y ) const
+  {
+    x = idx % outputDimX;
+    y = idx / outputDimX;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Input2Dto1D( vtkm::Id x, vtkm::Id y ) const     
+  {
+    return y * inputDimX + x; 
+  }
+
+  // Use 64-bit float for convolution calculation
+  #define VAL        vtkm::Float64
+  #define MAKEVAL(a) (static_cast<VAL>(a))
+
+  template <typename InputPortalType,
+            typename FilterPortalType,
+            typename OutputValueType>
+  VTKM_EXEC_EXPORT
+  void operator()(const InputPortalType       &coeffs,
+                  const FilterPortalType      &lowFilter,
+                  const FilterPortalType      &highFilter,
+                  OutputValueType             &sigOut,
+                  const vtkm::Id              &workIndex) const
+  {
+    vtkm::Id outX, outY;
+    Output1Dto2D( workIndex, outX, outY );
+    vtkm::Id inX = outX;
+    vtkm::Id inY = outY;
+    vtkm::Id xi, k;
+    VAL sum = 0.0;    
+
+    if( (filterLen/2) % 2 != 0 )  // odd length half filter
+    {
+      xi = inX / 2;
+      if( inX % 2 != 0 )
+        k = filterLen - 1;
+      else
+        k = filterLen - 2;
+    }
+    else
+    {
+      xi = (inX + 1) / 2;
+      if( inX % 2 != 0 )
+        k = filterLen - 2;
+      else
+        k = filterLen - 1;
+    }
+
+    vtkm::Id cAIdx1D, cDIdx1D; 
+    while( k > -1 )   // k >= 0
+    {
+      cAIdx1D = Input2Dto1D( xi, inY );
+      cDIdx1D = Input2Dto1D( xi + cALenExtended, inY );
+      sum += lowFilter.Get(k)  * MAKEVAL( coeffs.Get( cAIdx1D ) ) +   // cA
+             highFilter.Get(k) * MAKEVAL( coeffs.Get( cDIdx1D ) );    // cD
+      xi++;
+      k -= 2;
+    }
+    sigOut = static_cast<OutputValueType>( sum );
+  }
+
+  #undef MAKEVAL
+  #undef VAL
+
+private:
+  vtkm::Id filterLen;       // filter length.
+  vtkm::Id inputDimX, inputDimY, outputDimX, outputDimY;
+  vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD 
+};    
 
 
 // Worklet: perform an inverse transform for even length, symmetric filters.
