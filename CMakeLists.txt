@@ -114,6 +114,9 @@ option(VTKm_USE_DOUBLE_PRECISION
   )
 option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
+option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
+set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+
 if (VTKm_ENABLE_TESTING)
   enable_testing()
   include(CTest)

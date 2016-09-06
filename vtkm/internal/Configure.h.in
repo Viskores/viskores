@@ -119,6 +119,8 @@
 # endif
 #endif
 
+#cmakedefine VTKm_BUILD_SHARED_LIBS
+
 // Define a pair of macros, VTKM_THIRDPARTY_PRE_INCLUDE and VTKM_THIRDPARTY_POST_INCLUDE,
 // that should be wrapped around any #include for a boost or thrust header file. Mostly
 // this is used to set pragmas that dissable warnings that VTK-m checks for

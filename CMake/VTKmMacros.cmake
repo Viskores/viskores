@@ -627,6 +627,14 @@ function(vtkm_library)
 
   target_compile_options(${lib_name} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
+  # Make sure libraries go to lib directory and dll go to bin directory.
+  # Mostly important on Windows.
+  set_target_properties(${lib_name} PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+    LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+    RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
+    )
+
   if(MSVC)
     vtkm_setup_msvc_properties(${lib_name})
   endif()
