@@ -240,21 +240,23 @@ void TestDecomposeReconstruct2D()
   //nLevels = 1;
   std::cout << "Decomposition levels   = " << nLevels << std::endl;
   std::vector<vtkm::Id> L;
+  vtkm::Float64 computationTime = 0.0;
+  vtkm::Float64 elapsedTime = 0.0;
 
   // Decompose
-  vtkm::cont::Timer<> timer;
-  vtkm::Float64 computationTime = 
+//  vtkm::cont::Timer<> timer;
+  computationTime = 
   compressor.WaveDecompose2D( inputArray, nLevels, sigX, sigY, outputArray, L, 
                               VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
+//  elapsedTime = timer.GetElapsedTime();  
   std::cout << "Decompose time         = " << elapsedTime << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
 
   // Squash small coefficients
-  timer.Reset();
+//  timer.Reset();
   vtkm::Float64 cratio = 1.0;
   compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime = timer.GetElapsedTime();  
+//  elapsedTime = timer.GetElapsedTime();  
   std::cout << "Squash time            = " << elapsedTime << std::endl;
 
   // Reconstruct
