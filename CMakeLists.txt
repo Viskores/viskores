@@ -51,6 +51,8 @@ set(VTKm_INSTALL_LIB_DIR "lib")
 set(VTKm_INSTALL_BIN_DIR "bin")
 set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm/cmake")
 
+set(VTKm_EXPORT_NAME "VTKmTargets")
+
 set(VTKm_REQUIRED_BOOST_VERSION "1.48")
 
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
@@ -283,7 +285,12 @@ configure_package_config_file(
   ${VTKm_SOURCE_DIR}/CMake/VTKmConfig.cmake.in
   ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
   INSTALL_DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
-  PATH_VARS VTKm_INSTALL_INCLUDE_DIR VTKm_INSTALL_CMAKE_MODULE_DIR
+  PATH_VARS
+    VTKm_INSTALL_INCLUDE_DIR
+    VTKm_INSTALL_CONFIG_DIR
+    VTKm_INSTALL_LIB_DIR
+    VTKm_INSTALL_BIN_DIR
+    VTKm_INSTALL_CMAKE_MODULE_DIR
   )
 
 write_basic_package_version_file(
@@ -327,6 +334,14 @@ install(
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
 
+# Create and install exports for external projects
+export(EXPORT ${VTKm_EXPORT_NAME}
+  FILE ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+  )
+install(EXPORT ${VTKm_EXPORT_NAME}
+  DESTINATION ${VTKm_INSTALL_LIB_DIR}
+  FILE VTKmTargets.cmake
+  )
 
 
 # Enable CPack packaging
