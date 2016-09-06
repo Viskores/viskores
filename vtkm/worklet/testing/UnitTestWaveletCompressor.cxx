@@ -63,7 +63,7 @@ void FillArray( ArrayType& array )
 void Debug2DExtend()
 {
   vtkm::Id NX = 10;
-  vtkm::Id NY = 8;
+  vtkm::Id NY = 10;
   typedef vtkm::cont::ArrayHandle< vtkm::Float64 >   ArrayType;
   ArrayType     left, center, right;
   
@@ -74,7 +74,7 @@ void Debug2DExtend()
   ArrayType output1, output2;
   std::vector<vtkm::Id> L(10, 0);
 
-  vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::CDF8_4 );
+  vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::HAAR );
 
   // get true results
   dwt.DWT2D(center, NX, NY, output1, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
@@ -231,14 +231,14 @@ void TestDecomposeReconstruct2D()
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
 
   // Use a WaveletCompressor
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF8_4;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::HAAR;
   vtkm::worklet::WaveletCompressor compressor( wname );
 
   vtkm::Id XMaxLevel = compressor.GetWaveletMaxLevel( sigX );
   vtkm::Id YMaxLevel = compressor.GetWaveletMaxLevel( sigY );
   vtkm::Id nLevels   = vtkm::Min( XMaxLevel, YMaxLevel );
-std::cout << "nLevels = " << nLevels << std::endl;
   //nLevels = 1;
+  std::cout << "Decomposition levels   = " << nLevels << std::endl;
   std::vector<vtkm::Id> L;
 
   // Decompose
@@ -259,29 +259,24 @@ std::cout << "nLevels = " << nLevels << std::endl;
 
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
-  timer.Reset();
+  //timer.Reset();
   computationTime = 
   compressor.WaveReconstruct2D( outputArray, nLevels, sigX, sigY, reconstructArray, L,
                                 VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime = timer.GetElapsedTime();  
+  //elapsedTime = timer.GetElapsedTime();  
   std::cout << "Reconstruction time    = " << elapsedTime << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
 
   compressor.EvaluateReconstruction( inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
-  timer.Reset();
+  //timer.Reset();
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
-    vtkm::Float64 real = inputArray.GetPortalConstControl().Get(i);
-    vtkm::Float64 rect = reconstructArray.GetPortalConstControl().Get(i);
-    vtkm::Float64 diff = real - rect;
-    if( diff < -0.00001 || diff > 0.00001 )
-      std::cout << i << ":  " << real << ",  \t" << rect << std::endl; 
-    //VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i),
-    //                              inputArray.GetPortalConstControl().Get(i) ),
-    //                              "output value not the same..." );
+    VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i),
+                                  inputArray.GetPortalConstControl().Get(i) ),
+                                  "output value not the same..." );
   }
-  elapsedTime = timer.GetElapsedTime();  
+  //elapsedTime = timer.GetElapsedTime();  
   std::cout << "Verification time      = " << elapsedTime << std::endl;
 }
 

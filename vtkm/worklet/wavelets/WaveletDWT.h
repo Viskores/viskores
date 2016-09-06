@@ -144,6 +144,8 @@ public:
       WaveletBase::DeviceRectangleCopyTo( sigIn, sigDimX, sigDimY,
                                           sigOut, outputDimX, outputDimY,
                                           extDimX, 0, DeviceTag() );
+      WaveletBase::DeviceAssignZero2DColumn( sigOut, outputDimX, outputDimY,
+                                             extDimX+sigDimX, DeviceTag() );
       WaveletBase::DeviceRectangleCopyTo( leftExtend, extDimX, extDimY,
                                           sigOut, outputDimX, outputDimY,
                                           0, 0, DeviceTag() );
@@ -435,7 +437,7 @@ public:
   FLOAT_64 IDWT1D( const CoeffArrayType  &coeffIn,     // Input, cA followed by cD
                    std::vector<vtkm::Id> &L,           // Input, how many cA and cD
                    SignalArrayType       &sigOut,      // Output
-bool                  print, // debug use only
+                   bool                  print, // debug use only
                    DeviceTag                     )
   {
     VTKM_ASSERT( L.size() == 3 );
@@ -579,7 +581,7 @@ if( print)
     // Allocate memory for sigOut
     sigOut.PrepareForOutput( cATempLen + cDTempLen, DeviceTag() );
 
-    vtkm::Float64 elapsedTime; 
+    vtkm::Float64 elapsedTime = 0; 
     if( filterLen % 2 != 0 )
     {
       vtkm::worklet::wavelets::InverseTransformOdd inverseXformOdd;
@@ -742,13 +744,11 @@ if( print)
     BasicArrayType afterYBuf;
     afterYBuf.PrepareForOutput( sigLen, DeviceTag() );    
 
-    // make a bookkeeping array
     xL[0] = L[1];
     xL[1] = L[3];
     xL[2] = L[9];
 
     vtkm::Float64 elapsedTime = 0.0;
-
     for( vtkm::Id x = 0; x < inXLen; x++ )
     {
       // make input, output array
@@ -765,7 +765,6 @@ if( print)
     // Second IDWT on rows
     sigOut.PrepareForOutput( sigLen, DeviceTag() );
 
-    // make a bookkeeping array
     xL[0] = L[0];
     xL[1] = L[4];
     xL[2] = L[8];
@@ -827,15 +826,18 @@ if( print)
     ArrayType          afterX;
     afterX.PrepareForOutput( outDimX * outDimY, DeviceTag() ); 
 
+    vtkm::Float64 elapsedTime = 0.0;
     typedef vtkm::worklet::wavelets::ForwardTransform2D ForwardXForm;
     {
     ForwardXForm worklet( filterLen, L[0], oddLow, sigExtendedDimX, sigExtendedDimY,
                           outDimX, outDimY );
     vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher( worklet );
+    vtkm::cont::Timer<> timer;
     dispatcher.Invoke( sigExtended, 
                        WaveletBase::filter.GetLowDecomposeFilter(),
                        WaveletBase::filter.GetHighDecomposeFilter(),
                        afterX );
+    elapsedTime += timer.GetElapsedTime();
     }
     sigExtended.ReleaseResources();
 
@@ -860,10 +862,12 @@ if( print)
     ForwardXForm worklet2( filterLen, L[1], oddLow, sigExtendedDimX, sigExtendedDimY,
                            outDimY, outDimX );
     vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher2( worklet2 );
+    vtkm::cont::Timer<> timer;
     dispatcher2.Invoke( sigExtended, 
                         WaveletBase::filter.GetLowDecomposeFilter(),
                         WaveletBase::filter.GetHighDecomposeFilter(),
                         afterY );
+    elapsedTime += timer.GetElapsedTime();
     }
     sigExtended.ReleaseResources();
 
@@ -872,7 +876,7 @@ if( print)
     WaveletBase::DeviceTranspose( afterY, outDimY, outDimX,
                                   coeffOut, outDimX, outDimY,
                                   0, 0, DeviceTag() );
-    return 0;
+    return elapsedTime;
   }
 
 
@@ -893,9 +897,9 @@ if( print)
     vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
     typedef vtkm::worklet::wavelets::InverseTransform2DOdd    IdwtOddWorklet;
     typedef vtkm::worklet::wavelets::InverseTransform2DEven   IdwtEvenWorklet;
+    vtkm::Float64   elapsedTime = 0.0;
 
     // First inverse transform on columns
-
     ArrayInType beforeY, beforeYExtend;
     vtkm::Id beforeYDimX = inDimY;
     vtkm::Id beforeYDimY = inDimX;
@@ -910,7 +914,6 @@ if( print)
                       filterLen, wmode, DeviceTag() );
     beforeY.ReleaseResources();
     
-    // Inverse transform
     ArrayInType afterY;
     vtkm::Id afterYDimX = beforeYDimX;
     vtkm::Id afterYDimY = beforeYDimY;
@@ -921,10 +924,12 @@ if( print)
                               afterYDimX, afterYDimY, cATempLen );
       vtkm::worklet::DispatcherMapField<IdwtOddWorklet, DeviceTag> 
           dispatcher( worklet );
+      vtkm::cont::Timer<> timer;
       dispatcher.Invoke( beforeYExtend, 
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
                          afterY );
+      elapsedTime += timer.GetElapsedTime();
     }
     else  
     {
@@ -932,10 +937,12 @@ if( print)
                                afterYDimX, afterYDimY, cATempLen );
       vtkm::worklet::DispatcherMapField<IdwtEvenWorklet, DeviceTag> 
           dispatcher( worklet );
+      vtkm::cont::Timer<> timer;
       dispatcher.Invoke( beforeYExtend, 
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
                          afterY );
+      elapsedTime += timer.GetElapsedTime();
     }
 
     beforeYExtend.ReleaseResources();
@@ -956,7 +963,6 @@ if( print)
                       filterLen, wmode, DeviceTag() );
     beforeX.ReleaseResources();
 
-    // Inverse transform
     ArrayInType afterX;
     vtkm::Id afterXDimX = beforeXDimX;
     vtkm::Id afterXDimY = beforeXDimY;
@@ -967,10 +973,12 @@ if( print)
                               afterXDimX, afterXDimY, cATempLen );
       vtkm::worklet::DispatcherMapField<IdwtOddWorklet, DeviceTag> 
           dispatcher( worklet );
+      vtkm::cont::Timer<> timer;
       dispatcher.Invoke( beforeXExtend, 
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
                          afterX );
+      elapsedTime += timer.GetElapsedTime();
     }
     else  
     {
@@ -978,15 +986,17 @@ if( print)
                                afterXDimX, afterXDimY, cATempLen );
       vtkm::worklet::DispatcherMapField<IdwtEvenWorklet, DeviceTag> 
           dispatcher( worklet );
+      vtkm::cont::Timer<> timer;
       dispatcher.Invoke( beforeXExtend, 
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
                          afterX );
+      elapsedTime += timer.GetElapsedTime();
     }
 
     sigOut = afterX;
 
-    return 0;
+    return elapsedTime;
   }
 
 
