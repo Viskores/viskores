@@ -46,6 +46,23 @@ set(VTKm_AVAILABLE_COMPONENTS
   )
 
 #-----------------------------------------------------------------------------
+# Support function for giving status messages on component configurations
+#-----------------------------------------------------------------------------
+set(VTKm_CONFIGURE_COMPONENT_MESSAGES "" CACHE INTERNAL "" FORCE)
+function(vtkm_configure_component_message message_text)
+  if(NOT VTKm_CONFIGURE_QUIET)
+    list(FIND VTKm_CONFIGURE_COMPONENT_MESSAGES "${message_text}" in_list)
+    if(in_list EQUAL -1)
+      message(STATUS "${message_text}")
+      set(VTKm_CONFIGURE_COMPONENT_MESSAGES
+        ${VTKm_CONFIGURE_COMPONENT_MESSAGES}
+        ${message_text}
+        CACHE INTERNAL "" FORCE)
+    endif()
+  endif()
+endfunction(vtkm_configure_component_message)
+
+#-----------------------------------------------------------------------------
 # Support function for making vtkm_configure_component<name> functions.
 #-----------------------------------------------------------------------------
 macro(vtkm_finish_configure_component component)
@@ -61,9 +78,8 @@ macro(vtkm_finish_configure_component component)
     foreach(var ${VTKm_FCC_DEPENDENT_VARIABLES})
       if(NOT ${var})
         set(VTKm_${component}_FOUND)
-        if(NOT VTKm_CONFIGURE_QUIET)
-          message(STATUS "Failed to configure VTK-m component ${component}: !${var}")
-        endif()
+        vtkm_configure_component_message(
+          "Failed to configure VTK-m component ${component}: !${var}")
         break()
       endif()
     endforeach(var)
@@ -133,8 +149,8 @@ macro(vtkm_configure_component_OSMesa)
       ADD_INCLUDES ${OSMESA_INCLUDE_DIR}
       ADD_LIBRARIES ${OSMESA_LIBRARY}
       )
-  elseif(NOT VTKm_CONFIGURE_QUIET)
-    message(STATUS "OSMesa not supported on this platform.")
+  else()
+    vtkm_configure_component_message("OSMesa not supported on this platform.")
   endif()
 endmacro(vtkm_configure_component_OSMesa)
 
@@ -290,10 +306,9 @@ macro(vtkm_configure_component_CUDA)
           set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN TRUE)
         else()
           set(VTKm_CUDA_Architecture "fermi")
-          if(NOT VTKm_CONFIGURE_QUIET)
-            message(STATUS "Unable to run \"${CUDA_NVCC_EXECUTABLE}\" to autodetect GPU architecture."
-              "Falling back to fermi, please manually specify if you want something else.")
-          endif()
+          vtkm_configure_component_message(
+            "Unable to run \"${CUDA_NVCC_EXECUTABLE}\" to autodetect GPU architecture.
+Falling back to fermi, please manually specify if you want something else.")
         endif()
       endif()
     endif()
