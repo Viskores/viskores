@@ -335,14 +335,22 @@ install(
   )
 
 # Create and install exports for external projects
-export(EXPORT ${VTKm_EXPORT_NAME}
-  FILE ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
-  )
-install(EXPORT ${VTKm_EXPORT_NAME}
-  DESTINATION ${VTKm_INSTALL_LIB_DIR}
-  FILE VTKmTargets.cmake
-  )
-
+if(${VTKM_HAS_AT_LEAST_ONE_LIBRARY})
+  export(EXPORT ${VTKm_EXPORT_NAME}
+    FILE ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+    )
+  install(EXPORT ${VTKm_EXPORT_NAME}
+    DESTINATION ${VTKm_INSTALL_LIB_DIR}
+    FILE VTKmTargets.cmake
+    )
+else() # No libraries built
+  file(WRITE ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+    "# This build of VTK-m has no libraries to export targets for"
+    )
+  install(FILES ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+    DESTINATION ${VTKm_INSTALL_LIB_DIR}
+    )
+endif()
 
 # Enable CPack packaging
 set(CPACK_PACKAGE_DESCRIPTION_FILE ${VTKm_SOURCE_DIR}/README.md)
