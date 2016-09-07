@@ -624,7 +624,7 @@ function(vtkm_library)
   set_property(TARGET ${lib_name} APPEND PROPERTY
       INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
 
-  target_link_libraries(${lib_name} ${VTKm_LIBRARIES})
+  target_link_libraries(${lib_name} PUBLIC ${VTKm_LIBRARIES})
 
   target_compile_options(${lib_name} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
@@ -641,10 +641,9 @@ function(vtkm_library)
   endif()
 
   if(VTKm_EXTRA_COMPILER_WARNINGS)
-    set_property(TARGET ${lib_name}
-               APPEND PROPERTY COMPILE_FLAGS
-               ${CMAKE_CXX_FLAGS_WARN_EXTRA}
-               )
+    target_compile_options(${lib_name}
+      PRIVATE ${CMAKE_CXX_FLAGS_WARN_EXTRA}
+      )
   endif(VTKm_EXTRA_COMPILER_WARNINGS)
 
   generate_export_header(${lib_name})
