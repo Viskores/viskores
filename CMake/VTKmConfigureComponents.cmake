@@ -105,7 +105,13 @@ macro(vtkm_configure_component_Serial)
 endmacro(vtkm_configure_component_Serial)
 
 macro(vtkm_configure_component_OpenGL)
-  vtkm_configure_component_Base()
+  # OpenGL configuration "depends" on OSMesa because if OSMesa is used, then it
+  # (sometimes) requires its own version of OpenGL. The find_package for OpenGL
+  # is smart enough to configure this correctly if OSMesa is found first. Thus,
+  # we ensure that OSMesa is configured before OpenGL (assuming you are using
+  # the VTK-m configuration). However, the OpenGL configuration can still
+  # succeed even if the OSMesa configuration fails.
+  vtkm_configure_component_OSMesa()
 
   find_package(OpenGL ${VTKm_FIND_PACKAGE_QUIETLY})
 
@@ -117,7 +123,7 @@ macro(vtkm_configure_component_OpenGL)
 endmacro(vtkm_configure_component_OpenGL)
 
 macro(vtkm_configure_component_OSMesa)
-  vtkm_configure_component_OpenGL()
+  vtkm_configure_component_Base()
 
   if (UNIX AND NOT APPLE)
     find_package(MESA ${VTKm_FIND_PACKAGE_QUIETLY})
