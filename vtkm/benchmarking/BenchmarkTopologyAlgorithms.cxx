@@ -32,9 +32,17 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/benchmarking/Benchmarker.h>
 
+#ifdef VTKM_MSVC
+#pragma warning(disable:4723)
+#endif
+
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/random.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
+
+#ifdef VTKM_MSVC
+#pragma warning(default:4723)
+#endif
 
 #include <string>
 
@@ -171,7 +179,8 @@ private:
       typedef boost::variate_generator<MTGenerator&, ValueRange> Generator;
 
       boost::mt19937 rng;
-      boost::uniform_real<Value> range;
+      boost::uniform_real<Value> range(static_cast<Value>(1.0),
+                                       static_cast<Value>(100.0));
       Generator generator(rng, range);
 
       //cube size is points in each dim
@@ -225,7 +234,8 @@ private:
       typedef boost::variate_generator<MTGenerator&, ValueRange> Generator;
 
       boost::mt19937 rng;
-      boost::uniform_real<Value> range;
+      boost::uniform_real<Value> range(static_cast<Value>(1.0),
+                                       static_cast<Value>(100.0));
       Generator generator(rng, range);
 
       const std::size_t psize = (CUBE_SIZE)*(CUBE_SIZE)*(CUBE_SIZE);
@@ -279,7 +289,8 @@ private:
       typedef boost::variate_generator<MTGenerator&, ValueRange> Generator;
 
       boost::mt19937 rng;
-      boost::uniform_real<Value> range;
+      boost::uniform_real<Value> range(static_cast<Value>(1.0),
+                                       static_cast<Value>(100.0));
       Generator generator(rng, range);
 
       const std::size_t psize = (CUBE_SIZE)*(CUBE_SIZE)*(CUBE_SIZE);
