@@ -48,7 +48,7 @@ public:
 
   // Func: Extend 2D signal on left and right sides
   template< typename SigInArrayType, typename SigExtendedArrayType, typename DeviceTag >
-  vtkm::Id Extend2D(const SigInArrayType                     &sigIn,   // Input
+  vtkm::Id Extend2D(const SigInArrayType                           &sigIn,   // Input
                           vtkm::Id                                 sigDimX,             
                           vtkm::Id                                 sigDimY,
                           SigExtendedArrayType                     &sigOut,  // Output
@@ -59,6 +59,25 @@ public:
                           bool                                     attachZeroRightRight,
                           DeviceTag                                                     )
   {
+    if( addLen == 0 )     // Haar kernel
+    {
+      if( attachZeroRightLeft || attachZeroRightRight )
+      {
+        sigOut.PrepareForOutput( (sigDimX+1) * sigDimY, DeviceTag() );
+        WaveletBase::DeviceRectangleCopyTo( sigIn,  sigDimX,   sigDimY,
+                                            sigOut, sigDimX+1, sigDimY,
+                                            0, 0, DeviceTag() );
+        WaveletBase::DeviceAssignZero2DColumn( sigOut, sigDimX+1, sigDimY,
+                                               sigDimX, DeviceTag() );
+      }
+      else
+      {
+        sigOut.PrepareForOutput( sigDimX * sigDimY, DeviceTag() );
+        vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Copy( sigIn, sigOut );
+      }
+      return 0;
+    }
+
     // "right extension" can be attached a zero on either end, but not both ends.
     VTKM_ASSERT( !attachZeroRightRight || !attachZeroRightLeft );
 
@@ -174,10 +193,30 @@ public:
 
     typedef typename SigInArrayType::ValueType      ValueType;
     typedef vtkm::cont::ArrayHandle< ValueType >    ExtensionArrayType;
+    typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, SigInArrayType> 
+            ArrayConcat;
+    
+    ExtensionArrayType                              leftExtend, rightExtend;
 
-    ExtensionArrayType                              leftExtend;
+    if( addLen == 0 )   // Haar kernel
+    {
+      if( attachZeroRightLeft || attachZeroRightRight )
+      {
+        leftExtend.PrepareForOutput( 0, DeviceTag() );
+        rightExtend.PrepareForOutput(1, DeviceTag() );
+        WaveletBase::DeviceAssignZero( rightExtend, 0, DeviceTag() );
+      }
+      else
+      {
+        leftExtend.PrepareForOutput( 0, DeviceTag() );
+        rightExtend.PrepareForOutput(0, DeviceTag() );
+      }
+      ArrayConcat leftOn( leftExtend, sigIn );    
+      sigOut = vtkm::cont::make_ArrayHandleConcatenate( leftOn, rightExtend );
+      return 0;
+    }
+
     leftExtend.PrepareForOutput( addLen, DeviceTag() );
-
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
 
     typedef vtkm::worklet::wavelets::LeftSYMHExtentionWorklet  LeftSYMH;
@@ -225,8 +264,6 @@ public:
         return 1;
       }
     }
-
-    ExtensionArrayType rightExtend;
 
     if( !attachZeroRightLeft ) // no attach zero, or only attach on RightRight
     {
@@ -333,8 +370,6 @@ public:
       rightExtend = rightExtendPlusOne ;
     }
 
-    typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, SigInArrayType> 
-            ArrayConcat;
     ArrayConcat leftOn( leftExtend, sigIn );    
     sigOut = vtkm::cont::make_ArrayHandleConcatenate( leftOn, rightExtend );
 
@@ -416,7 +451,7 @@ public:
     vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform, DeviceTag> 
         dispatcher(forwardTransform);
     // put a timer
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer<DeviceTag> timer;
     dispatcher.Invoke( sigInExtended, 
                        WaveletBase::filter.GetLowDecomposeFilter(),
                        WaveletBase::filter.GetHighDecomposeFilter(),
@@ -510,7 +545,6 @@ public:
     PermutArrayType cA( approxIndices, coeffIn );
     PermutArrayType cD( detailIndices, coeffIn );
     
-
     typedef typename CoeffArrayType::ValueType                    CoeffValueType;
     typedef vtkm::cont::ArrayHandle< CoeffValueType >             ExtensionArrayType;
     typedef vtkm::cont::ArrayHandleConcatenate< ExtensionArrayType, PermutArrayType >
@@ -549,7 +583,7 @@ public:
         }
       }
     }     
-    else    // !doSymConv (biorthogonals kernel won't come into this case)
+    else    
     { 
       // make cATemp
       ExtensionArrayType dummyArray;
@@ -590,7 +624,7 @@ if( print)
       vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformOdd, DeviceTag>
             dispatcher( inverseXformOdd );
       // use a timer
-      vtkm::cont::Timer<> timer;
+      vtkm::cont::Timer<DeviceTag> timer;
       dispatcher.Invoke( coeffInExtended,
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
@@ -604,7 +638,7 @@ if( print)
       vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformEven, DeviceTag>
             dispatcher( inverseXformEven );
       // use a timer
-      vtkm::cont::Timer<> timer;
+      vtkm::cont::Timer<DeviceTag> timer;
       dispatcher.Invoke( coeffInExtended,
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
@@ -832,7 +866,7 @@ if( print)
     ForwardXForm worklet( filterLen, L[0], oddLow, sigExtendedDimX, sigExtendedDimY,
                           outDimX, outDimY );
     vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher( worklet );
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer<DeviceTag> timer;
     dispatcher.Invoke( sigExtended, 
                        WaveletBase::filter.GetLowDecomposeFilter(),
                        WaveletBase::filter.GetHighDecomposeFilter(),
@@ -862,7 +896,7 @@ if( print)
     ForwardXForm worklet2( filterLen, L[1], oddLow, sigExtendedDimX, sigExtendedDimY,
                            outDimY, outDimX );
     vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher2( worklet2 );
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer<DeviceTag> timer;
     dispatcher2.Invoke( sigExtended, 
                         WaveletBase::filter.GetLowDecomposeFilter(),
                         WaveletBase::filter.GetHighDecomposeFilter(),
@@ -924,7 +958,7 @@ if( print)
                               afterYDimX, afterYDimY, cATempLen );
       vtkm::worklet::DispatcherMapField<IdwtOddWorklet, DeviceTag> 
           dispatcher( worklet );
-      vtkm::cont::Timer<> timer;
+      vtkm::cont::Timer<DeviceTag> timer;
       dispatcher.Invoke( beforeYExtend, 
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
@@ -937,7 +971,7 @@ if( print)
                                afterYDimX, afterYDimY, cATempLen );
       vtkm::worklet::DispatcherMapField<IdwtEvenWorklet, DeviceTag> 
           dispatcher( worklet );
-      vtkm::cont::Timer<> timer;
+      vtkm::cont::Timer<DeviceTag> timer;
       dispatcher.Invoke( beforeYExtend, 
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
@@ -973,7 +1007,7 @@ if( print)
                               afterXDimX, afterXDimY, cATempLen );
       vtkm::worklet::DispatcherMapField<IdwtOddWorklet, DeviceTag> 
           dispatcher( worklet );
-      vtkm::cont::Timer<> timer;
+      vtkm::cont::Timer<DeviceTag> timer;
       dispatcher.Invoke( beforeXExtend, 
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
@@ -986,7 +1020,7 @@ if( print)
                                afterXDimX, afterXDimY, cATempLen );
       vtkm::worklet::DispatcherMapField<IdwtEvenWorklet, DeviceTag> 
           dispatcher( worklet );
-      vtkm::cont::Timer<> timer;
+      vtkm::cont::Timer<DeviceTag> timer;
       dispatcher.Invoke( beforeXExtend, 
                          WaveletBase::filter.GetLowReconstructFilter(),
                          WaveletBase::filter.GetHighReconstructFilter(),
