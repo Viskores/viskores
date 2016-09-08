@@ -620,26 +620,24 @@ if( print)
           ( WaveletBase::filter.GetLowReconstructFilter(),
             WaveletBase::filter.GetHighReconstructFilter(), 
             filterLen, L[0], cATempLen );
-      vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformOdd<DeviceTag>, DeviceTag>
-            dispatcher( inverseXformOdd );
+      vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::
+            InverseTransformOdd<DeviceTag>, DeviceTag> dispatcher( inverseXformOdd );
       // use a timer
       vtkm::cont::Timer<DeviceTag> timer;
-      dispatcher.Invoke( coeffInExtended,
-                         sigOut );
+      dispatcher.Invoke( coeffInExtended, sigOut );
       elapsedTime = timer.GetElapsedTime();
     }
     else
     {
-      vtkm::worklet::wavelets::InverseTransformEven inverseXformEven
-            ( filterLen, L[0], cATempLen, !doSymConv );
-      vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformEven, DeviceTag>
-            dispatcher( inverseXformEven );
+      vtkm::worklet::wavelets::InverseTransformEven<DeviceTag> inverseXformEven
+            ( WaveletBase::filter.GetLowReconstructFilter(),
+              WaveletBase::filter.GetHighReconstructFilter(),
+              filterLen, L[0], cATempLen, !doSymConv );
+      vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::
+            InverseTransformEven<DeviceTag>, DeviceTag> dispatcher( inverseXformEven );
       // use a timer
       vtkm::cont::Timer<DeviceTag> timer;
-      dispatcher.Invoke( coeffInExtended,
-                         WaveletBase::filter.GetLowReconstructFilter(),
-                         WaveletBase::filter.GetHighReconstructFilter(),
-                         sigOut );
+      dispatcher.Invoke( coeffInExtended, sigOut );
       elapsedTime = timer.GetElapsedTime();
     }
 
