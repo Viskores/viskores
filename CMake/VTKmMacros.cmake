@@ -626,7 +626,9 @@ function(vtkm_library)
 
   target_link_libraries(${lib_name} ${VTKm_LIBRARIES})
 
-  target_compile_options(${lib_name} PRIVATE ${VTKm_COMPILE_OPTIONS})
+  set(cxx_args ${VTKm_COMPILE_OPTIONS})
+  separate_arguments(cxx_args)
+  target_compile_options(${lib_name} PRIVATE ${cxx_args})
 
   # Make sure libraries go to lib directory and dll go to bin directory.
   # Mostly important on Windows.
@@ -641,8 +643,10 @@ function(vtkm_library)
   endif()
 
   if(VTKm_EXTRA_COMPILER_WARNINGS)
+    set(cxx_args ${CMAKE_CXX_FLAGS_WARN_EXTRA})
+    separate_arguments(cxx_args)
     target_compile_options(${lib_name}
-      PRIVATE ${CMAKE_CXX_FLAGS_WARN_EXTRA}
+      PRIVATE ${cxx_args}
       )
   endif(VTKm_EXTRA_COMPILER_WARNINGS)
 
