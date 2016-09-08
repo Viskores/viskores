@@ -37,63 +37,39 @@ enum DWTMode {    // boundary extension modes
   ASYMW
 };
 
+
 // Worklet: perform a simple forward transform
+template< typename DeviceTag >
 class ForwardTransform: public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // sigIn
-                                WholeArrayIn<Scalar>,        // lowFilter
-                                WholeArrayIn<Scalar>,        // highFilter
                                 WholeArrayOut<ScalarAll>);   // cA followed by cD
-  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  typedef void ExecutionSignature(_1, _2, WorkIndex);
   typedef _1   InputDomain;
-
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  ForwardTransform() 
-  {
-    magicNum  = 0.0;
-    oddlow    = oddhigh   = true;
-    filterLen = approxLen = detailLen = 0;
-    this->SetStartPosition();
-  }
-
-  // Specify odd or even for low and high coeffs
-  VTKM_EXEC_CONT_EXPORT
-  void SetOddness(bool odd_low, bool odd_high )
-  {
-    this->oddlow  = odd_low;
-    this->oddhigh = odd_high;
-    this->SetStartPosition();
-  }
-
-  // Set the filter length
-  VTKM_EXEC_CONT_EXPORT
-  void SetFilterLength( vtkm::Id len )
-  {
-    this->filterLen = len;
-  }
-
-  // Set the outcome coefficient length
-  VTKM_EXEC_CONT_EXPORT
-  void SetCoeffLength( vtkm::Id approx_len, vtkm::Id detail_len )
-  {
-    this->approxLen = approx_len;
-    this->detailLen = detail_len;
-  }
+  ForwardTransform( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
+                    const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
+                    vtkm::Id filLen, vtkm::Id approx_len, vtkm::Id detail_len,
+                    bool odd_low, bool odd_high )  :
+                    lowFilter(  loFilter.PrepareForInput(DeviceTag()) ), 
+                    highFilter( hiFilter.PrepareForInput(DeviceTag()) ), 
+                    filterLen( filLen ), 
+                    approxLen( approx_len ), 
+                    detailLen( detail_len ),
+                    oddlow   ( odd_low ),
+                    oddhigh  ( odd_high )
+  { this->SetStartPosition(); }
 
   // Use 64-bit float for convolution calculation
   #define VAL        vtkm::Float64
   #define MAKEVAL(a) (static_cast<VAL>(a))
 
-  template <typename InputPortalType,
-            typename FilterPortalType,
-            typename OutputPortalType>
+  template <typename InputPortalType, typename OutputPortalType>
   VTKM_EXEC_EXPORT
   void operator()(const InputPortalType       &signalIn, 
-                  const FilterPortalType      &lowFilter,
-                  const FilterPortalType      &highFilter,
                   OutputPortalType            &coeffOut,
                   const vtkm::Id &workIndex) const
   {
@@ -125,10 +101,11 @@ public:
   #undef VAL
 
 private:
-  vtkm::Float64 magicNum;
+  typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst 
+      lowFilter, highFilter;
   vtkm::Id filterLen, approxLen, detailLen;  // filter and outcome coeff length.
-  vtkm::Id xlstart, xhstart;
   bool oddlow, oddhigh;
+  vtkm::Id xlstart, xhstart;
   
   VTKM_EXEC_CONT_EXPORT
   void SetStartPosition()
@@ -136,7 +113,7 @@ private:
     this->xlstart = this->oddlow  ? 1 : 0;
     this->xhstart = this->oddhigh ? 1 : 0;
   }
-};    
+};
 
 
 // Worklet: perform a simple 2D forward transform

@@ -442,19 +442,17 @@ public:
     VTKM_ASSERT( sigInExtended.GetNumberOfValues() == sigExtendedLen );
 
     // initialize a worklet for forward transform
-    vtkm::worklet::wavelets::ForwardTransform forwardTransform;
-    forwardTransform.SetFilterLength( filterLen );
-    forwardTransform.SetCoeffLength( L[0], L[1] );
-    forwardTransform.SetOddness( oddLow, oddHigh );
+    vtkm::worklet::wavelets::ForwardTransform<DeviceTag> forwardTransform 
+          ( WaveletBase::filter.GetLowDecomposeFilter(),
+            WaveletBase::filter.GetHighDecomposeFilter(),
+            filterLen, L[0], L[1], oddLow, oddHigh );
 
     coeffOut.PrepareForOutput( sigExtendedLen, DeviceTag() );
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform, DeviceTag> 
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::ForwardTransform<DeviceTag>, DeviceTag> 
         dispatcher(forwardTransform);
     // put a timer
     vtkm::cont::Timer<DeviceTag> timer;
     dispatcher.Invoke( sigInExtended, 
-                       WaveletBase::filter.GetLowDecomposeFilter(),
-                       WaveletBase::filter.GetHighDecomposeFilter(),
                        coeffOut );
     vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
 
