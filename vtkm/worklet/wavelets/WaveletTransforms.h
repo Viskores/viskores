@@ -117,32 +117,30 @@ private:
 
 
 // Worklet: perform a simple 2D forward transform
+template< typename DeviceTag >
 class ForwardTransform2D: public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // sigIn
-                                WholeArrayIn<Scalar>,        // lowFilter
-                                WholeArrayIn<Scalar>,        // highFilter
                                 WholeArrayOut<ScalarAll>);   // cA followed by cD
-  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
-  typedef _4   InputDomain;
+  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  typedef _2   InputDomain;
 
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  ForwardTransform2D( vtkm::Id filter_len, vtkm::Id approx_len, bool odd_low,
+  ForwardTransform2D( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
+                      const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
+                      vtkm::Id filter_len, vtkm::Id approx_len,
                       vtkm::Id input_dimx, vtkm::Id input_dimy,
-                      vtkm::Id output_dimx, vtkm::Id output_dimy )
-  {
-    filterLen  = filter_len;
-    approxLen  = approx_len;
-    oddlow     = odd_low;
-    inputDimX  = input_dimx;
-    inputDimY  = input_dimy;
-    outputDimX = output_dimx;
-    outputDimY = output_dimy;
-    this->SetStartPosition();
-  }
+                      vtkm::Id output_dimx, vtkm::Id output_dimy, bool odd_low) :
+                      lowFilter(  loFilter.PrepareForInput( DeviceTag() ) ),
+                      highFilter( hiFilter.PrepareForInput( DeviceTag() ) ),
+                      filterLen(  filter_len ), approxLen(  approx_len ),
+                      inputDimX(  input_dimx ), inputDimY(  input_dimy ),
+                      outputDimX( output_dimx), outputDimY( output_dimy),
+                      oddlow( odd_low )
+  { this->SetStartPosition(); }
 
   VTKM_EXEC_CONT_EXPORT
   void Input1Dto2D( const vtkm::Id &idx, vtkm::Id &x, vtkm::Id &y ) const     
@@ -171,13 +169,9 @@ public:
   #define VAL        vtkm::Float64
   #define MAKEVAL(a) (static_cast<VAL>(a))
 
-  template <typename InputPortalType,
-            typename FilterPortalType,
-            typename OutputPortalType>
+  template <typename InputPortalType, typename OutputPortalType>
   VTKM_EXEC_EXPORT
   void operator()(const InputPortalType       &signalIn, 
-                  const FilterPortalType      &lowFilter,
-                  const FilterPortalType      &highFilter,
                   OutputPortalType            &coeffOut,
                   const vtkm::Id              &workIndex) const
   {
@@ -222,11 +216,13 @@ public:
   #undef VAL
 
 private:
-  vtkm::Id filterLen, approxLen;    // filter and outcome coeff length.
+  typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
+      lowFilter, highFilter;
+  vtkm::Id filterLen, approxLen;
+  vtkm::Id inputDimX,  inputDimY;
+  vtkm::Id outputDimX, outputDimY;
   bool oddlow;
   vtkm::Id xlstart, xhstart;
-  vtkm::Id inputDimX,  inputDimY;   // extended signal
-  vtkm::Id outputDimX, outputDimY;
   
   VTKM_EXEC_CONT_EXPORT
   void SetStartPosition()

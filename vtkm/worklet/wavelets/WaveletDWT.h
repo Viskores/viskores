@@ -855,17 +855,17 @@ if( print)
     ArrayType          afterX;
     afterX.PrepareForOutput( outDimX * outDimY, DeviceTag() ); 
 
-    vtkm::Float64 elapsedTime = 0.0;
-    typedef vtkm::worklet::wavelets::ForwardTransform2D ForwardXForm;
-    {
-    ForwardXForm worklet( filterLen, L[0], oddLow, sigExtendedDimX, sigExtendedDimY,
-                          outDimX, outDimY );
-    vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher( worklet );
     vtkm::cont::Timer<DeviceTag> timer;
-    dispatcher.Invoke( sigExtended, 
-                       WaveletBase::filter.GetLowDecomposeFilter(),
-                       WaveletBase::filter.GetHighDecomposeFilter(),
-                       afterX );
+    vtkm::Float64 elapsedTime = 0.0;
+    typedef vtkm::worklet::wavelets::ForwardTransform2D<DeviceTag> ForwardXForm;
+    {
+    ForwardXForm worklet( WaveletBase::filter.GetLowDecomposeFilter(),
+                          WaveletBase::filter.GetHighDecomposeFilter(),
+                          filterLen, L[0], sigExtendedDimX, sigExtendedDimY,
+                          outDimX, outDimY, oddLow );
+    vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher( worklet );
+    timer.Reset();
+    dispatcher.Invoke( sigExtended, afterX );
     elapsedTime += timer.GetElapsedTime();
     }
     sigExtended.ReleaseResources();
@@ -888,14 +888,13 @@ if( print)
     ArrayType   afterY;
     afterY.PrepareForOutput( outDimY * outDimX, DeviceTag() );
     {
-    ForwardXForm worklet2( filterLen, L[1], oddLow, sigExtendedDimX, sigExtendedDimY,
-                           outDimY, outDimX );
+    ForwardXForm worklet2( WaveletBase::filter.GetLowDecomposeFilter(),
+                           WaveletBase::filter.GetHighDecomposeFilter(),
+                           filterLen, L[1], sigExtendedDimX, sigExtendedDimY,
+                           outDimY, outDimX, oddLow );
     vtkm::worklet::DispatcherMapField< ForwardXForm, DeviceTag > dispatcher2( worklet2 );
-    vtkm::cont::Timer<DeviceTag> timer;
-    dispatcher2.Invoke( sigExtended, 
-                        WaveletBase::filter.GetLowDecomposeFilter(),
-                        WaveletBase::filter.GetHighDecomposeFilter(),
-                        afterY );
+    timer.Reset();
+    dispatcher2.Invoke( sigExtended, afterY );
     elapsedTime += timer.GetElapsedTime();
     }
     sigExtended.ReleaseResources();
