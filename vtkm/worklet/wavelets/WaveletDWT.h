@@ -923,8 +923,8 @@ if( print)
     VTKM_ASSERT( inDimX * inDimY == coeffIn.GetNumberOfValues() );
 
     vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
-    typedef vtkm::worklet::wavelets::InverseTransform2DOdd    IdwtOddWorklet;
-    typedef vtkm::worklet::wavelets::InverseTransform2DEven   IdwtEvenWorklet;
+    typedef vtkm::worklet::wavelets::InverseTransform2DOdd<DeviceTag>    IdwtOddWorklet;
+    typedef vtkm::worklet::wavelets::InverseTransform2DEven<DeviceTag>   IdwtEvenWorklet;
     vtkm::Float64   elapsedTime = 0.0;
 
     // First inverse transform on columns
@@ -948,28 +948,26 @@ if( print)
     afterY.PrepareForOutput( afterYDimX * afterYDimY, DeviceTag() );
     if( filterLen % 2 != 0 )
     {
-      IdwtOddWorklet worklet( filterLen, beforeYExtendDimX, beforeYExtendDimY, 
+      IdwtOddWorklet worklet( WaveletBase::filter.GetLowReconstructFilter(),
+                              WaveletBase::filter.GetHighReconstructFilter(),
+                              filterLen, beforeYExtendDimX, beforeYExtendDimY, 
                               afterYDimX, afterYDimY, cATempLen );
       vtkm::worklet::DispatcherMapField<IdwtOddWorklet, DeviceTag> 
           dispatcher( worklet );
       vtkm::cont::Timer<DeviceTag> timer;
-      dispatcher.Invoke( beforeYExtend, 
-                         WaveletBase::filter.GetLowReconstructFilter(),
-                         WaveletBase::filter.GetHighReconstructFilter(),
-                         afterY );
+      dispatcher.Invoke( beforeYExtend, afterY );
       elapsedTime += timer.GetElapsedTime();
     }
     else  
     {
-      IdwtEvenWorklet worklet( filterLen, beforeYExtendDimX, beforeYExtendDimY, 
+      IdwtEvenWorklet worklet( WaveletBase::filter.GetLowReconstructFilter(),
+                               WaveletBase::filter.GetHighReconstructFilter(),
+                               filterLen, beforeYExtendDimX, beforeYExtendDimY, 
                                afterYDimX, afterYDimY, cATempLen );
       vtkm::worklet::DispatcherMapField<IdwtEvenWorklet, DeviceTag> 
           dispatcher( worklet );
       vtkm::cont::Timer<DeviceTag> timer;
-      dispatcher.Invoke( beforeYExtend, 
-                         WaveletBase::filter.GetLowReconstructFilter(),
-                         WaveletBase::filter.GetHighReconstructFilter(),
-                         afterY );
+      dispatcher.Invoke( beforeYExtend, afterY );
       elapsedTime += timer.GetElapsedTime();
     }
 
@@ -997,28 +995,26 @@ if( print)
     afterX.PrepareForOutput( afterXDimX * afterXDimY, DeviceTag() );
     if( filterLen % 2 != 0 )
     {
-      IdwtOddWorklet worklet( filterLen, beforeXExtendDimX, beforeXExtendDimY, 
+      IdwtOddWorklet worklet( WaveletBase::filter.GetLowReconstructFilter(),
+                              WaveletBase::filter.GetHighReconstructFilter(),
+                              filterLen, beforeXExtendDimX, beforeXExtendDimY, 
                               afterXDimX, afterXDimY, cATempLen );
       vtkm::worklet::DispatcherMapField<IdwtOddWorklet, DeviceTag> 
           dispatcher( worklet );
       vtkm::cont::Timer<DeviceTag> timer;
-      dispatcher.Invoke( beforeXExtend, 
-                         WaveletBase::filter.GetLowReconstructFilter(),
-                         WaveletBase::filter.GetHighReconstructFilter(),
-                         afterX );
+      dispatcher.Invoke( beforeXExtend, afterX );
       elapsedTime += timer.GetElapsedTime();
     }
     else  
     {
-      IdwtEvenWorklet worklet( filterLen, beforeXExtendDimX, beforeXExtendDimY, 
+      IdwtEvenWorklet worklet( WaveletBase::filter.GetLowReconstructFilter(),
+                               WaveletBase::filter.GetHighReconstructFilter(),
+                               filterLen, beforeXExtendDimX, beforeXExtendDimY, 
                                afterXDimX, afterXDimY, cATempLen );
       vtkm::worklet::DispatcherMapField<IdwtEvenWorklet, DeviceTag> 
           dispatcher( worklet );
       vtkm::cont::Timer<DeviceTag> timer;
-      dispatcher.Invoke( beforeXExtend, 
-                         WaveletBase::filter.GetLowReconstructFilter(),
-                         WaveletBase::filter.GetHighReconstructFilter(),
-                         afterX );
+      dispatcher.Invoke( beforeXExtend, afterX );
       elapsedTime += timer.GetElapsedTime();
     }
 
