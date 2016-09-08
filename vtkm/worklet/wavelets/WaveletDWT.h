@@ -616,16 +616,15 @@ if( print)
     vtkm::Float64 elapsedTime = 0; 
     if( filterLen % 2 != 0 )
     {
-      vtkm::worklet::wavelets::InverseTransformOdd inverseXformOdd;
-      inverseXformOdd.SetFilterLength( filterLen );
-      inverseXformOdd.SetCALength( L[0], cATempLen );
-      vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformOdd, DeviceTag>
+      vtkm::worklet::wavelets::InverseTransformOdd<DeviceTag> inverseXformOdd
+          ( WaveletBase::filter.GetLowReconstructFilter(),
+            WaveletBase::filter.GetHighReconstructFilter(), 
+            filterLen, L[0], cATempLen );
+      vtkm::worklet::DispatcherMapField<vtkm::worklet::wavelets::InverseTransformOdd<DeviceTag>, DeviceTag>
             dispatcher( inverseXformOdd );
       // use a timer
       vtkm::cont::Timer<DeviceTag> timer;
       dispatcher.Invoke( coeffInExtended,
-                         WaveletBase::filter.GetLowReconstructFilter(),
-                         WaveletBase::filter.GetHighReconstructFilter(),
                          sigOut );
       elapsedTime = timer.GetElapsedTime();
     }

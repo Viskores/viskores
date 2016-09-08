@@ -330,48 +330,33 @@ private:
 
 
 // Worklet: perform an inverse transform for odd length, symmetric filters.
+template< typename DeviceTag >
 class InverseTransformOdd: public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // Input: coeffs,
                                                              // cA followed by cD
-                                WholeArrayIn<Scalar>,        // lowFilter
-                                WholeArrayIn<Scalar>,        // highFilter
                                 WholeArrayOut<ScalarAll>);   // output
-  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  typedef void ExecutionSignature(_1, _2, WorkIndex);
   typedef _1   InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  InverseTransformOdd() : filterLen(0), cALen(0), cALen2(0), cALenExtended(0) {}
-
-  // Set the filter length
-  VTKM_EXEC_CONT_EXPORT
-  void SetFilterLength( vtkm::Id len )
-  {
-    this->filterLen = len;
-  }
-
-  // Set cA length
-  VTKM_EXEC_CONT_EXPORT
-  void SetCALength( vtkm::Id len, vtkm::Id lenExt )
-  {
-    this->cALen         = len;
-    this->cALen2        = len * 2;
-    this->cALenExtended = lenExt;
-  }
-
+  InverseTransformOdd( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
+                       const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
+                       vtkm::Id filLen, vtkm::Id ca_len, vtkm::Id ext_len ) :
+                       lowFilter(  loFilter.PrepareForInput(DeviceTag()) ),
+                       highFilter( hiFilter.PrepareForInput(DeviceTag()) ),
+                       filterLen( filLen ), cALen( ca_len ),
+                       cALen2( ca_len * 2 ), cALenExtended( ext_len )  {}
+                       
   // Use 64-bit float for convolution calculation
   #define VAL        vtkm::Float64
   #define MAKEVAL(a) (static_cast<VAL>(a))
 
-  template <typename InputPortalType,
-            typename FilterPortalType,
-            typename OutputPortalType>
+  template <typename InputPortalType, typename OutputPortalType>
   VTKM_EXEC_EXPORT
   void operator()(const InputPortalType       &coeffs,
-                  const FilterPortalType      &lowFilter,
-                  const FilterPortalType      &highFilter,
                   OutputPortalType            &sigOut,
                   const vtkm::Id &workIndex) const
   {
@@ -415,6 +400,8 @@ public:
   #undef VAL
 
 private:
+  typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
+      lowFilter, highFilter;
   vtkm::Id filterLen;       // filter length.
   vtkm::Id cALen;           // Number of actual cAs 
   vtkm::Id cALen2;          //  = cALen * 2
