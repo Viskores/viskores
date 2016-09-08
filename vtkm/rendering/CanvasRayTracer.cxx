@@ -88,6 +88,9 @@ CanvasRayTracer::CanvasRayTracer(vtkm::Id width, vtkm::Id height)
   : Canvas(width, height)
 {  }
 
+CanvasRayTracer::~CanvasRayTracer()
+{  }
+
 void CanvasRayTracer::Initialize()
 {
   // Nothing to initialize

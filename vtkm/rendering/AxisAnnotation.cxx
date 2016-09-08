@@ -146,5 +146,11 @@ void AxisAnnotation::CalculateTicks(const vtkm::Range &range,
   }
 }
 
+AxisAnnotation::AxisAnnotation()
+{  }
+
+AxisAnnotation::~AxisAnnotation()
+{  }
+
 }
 } // namespace vtkm::rendering

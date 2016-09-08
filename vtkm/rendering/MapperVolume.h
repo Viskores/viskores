@@ -36,6 +36,9 @@ public:
   MapperVolume();
 
   VTKM_RENDERING_EXPORT
+  ~MapperVolume();
+
+  VTKM_RENDERING_EXPORT
   void SetCanvas(vtkm::rendering::Canvas *canvas) VTKM_OVERRIDE;
 
   VTKM_RENDERING_EXPORT

@@ -37,6 +37,10 @@ CanvasGL::CanvasGL(vtkm::Id width, vtkm::Id height)
 {
 }
 
+CanvasGL::~CanvasGL()
+{
+}
+
 void CanvasGL::Initialize()
 {
   // Nothing to initialize

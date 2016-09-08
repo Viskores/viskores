@@ -35,6 +35,9 @@ public:
                   vtkm::Id height=1024);
 
   VTKM_RENDERING_EXPORT
+  ~CanvasRayTracer();
+
+  VTKM_RENDERING_EXPORT
   void Initialize() VTKM_OVERRIDE;
 
   VTKM_RENDERING_EXPORT

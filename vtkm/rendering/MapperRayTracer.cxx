@@ -80,6 +80,9 @@ MapperRayTracer::MapperRayTracer()
   : Internals(new InternalsType)
 {  }
 
+MapperRayTracer::~MapperRayTracer()
+{  }
+
 void MapperRayTracer::SetCanvas(vtkm::rendering::Canvas *canvas)
 {
   if(canvas != nullptr)

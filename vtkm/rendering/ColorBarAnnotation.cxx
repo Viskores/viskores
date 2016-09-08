@@ -23,6 +23,12 @@
 namespace vtkm {
 namespace rendering {
 
+ColorBarAnnotation::ColorBarAnnotation()
+{  }
+
+ColorBarAnnotation::~ColorBarAnnotation()
+{  }
+
 void ColorBarAnnotation::SetRange(const vtkm::Range &range,
                                   vtkm::IdComponent numTicks)
 {

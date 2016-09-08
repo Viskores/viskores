@@ -38,6 +38,9 @@ public:
   MapperRayTracer();
 
   VTKM_RENDERING_EXPORT
+  ~MapperRayTracer();
+
+  VTKM_RENDERING_EXPORT
   void SetCanvas(vtkm::rendering::Canvas *canvas) VTKM_OVERRIDE;
 
   VTKM_RENDERING_EXPORT

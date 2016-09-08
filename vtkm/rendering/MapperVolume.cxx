@@ -86,6 +86,9 @@ MapperVolume::MapperVolume()
   : Internals(new InternalsType)
 {  }
 
+MapperVolume::~MapperVolume()
+{  }
+
 void MapperVolume::SetCanvas(vtkm::rendering::Canvas *canvas)
 {
   if(canvas != nullptr)

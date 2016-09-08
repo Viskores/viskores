@@ -41,6 +41,12 @@ protected:
 
 public:
   VTKM_RENDERING_EXPORT
+  AxisAnnotation();
+
+  VTKM_RENDERING_EXPORT
+  ~AxisAnnotation();
+
+  VTKM_RENDERING_EXPORT
   virtual void Render(const vtkm::rendering::Camera &camera,
                       const vtkm::rendering::WorldAnnotator &worldAnnotator,
                       vtkm::rendering::Canvas &canvas) = 0;

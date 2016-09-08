@@ -58,7 +58,7 @@ public:
   AxisAnnotation3D();
 
   VTKM_RENDERING_EXPORT
-  virtual ~AxisAnnotation3D();
+  ~AxisAnnotation3D();
 
   VTKM_CONT_EXPORT
   void SetMoreOrLessTickAdjustment(int offset)

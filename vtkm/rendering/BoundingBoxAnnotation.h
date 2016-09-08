@@ -20,10 +20,9 @@
 #ifndef vtk_m_rendering_BoundingBoxAnnotation_h
 #define vtk_m_rendering_BoundingBoxAnnotation_h
 
-#include <vtkm/cont/DataSet.h>
+#include <vtkm/Bounds.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 
 namespace vtkm {
@@ -36,75 +35,39 @@ private:
   vtkm::Bounds Extents;
 
 public:
-  BoundingBoxAnnotation()
-    : Color(0.5, 0.5, 0.5), Extents(-1, 1, -1, 1, -1, 1)
-  {
-  }
-  virtual ~BoundingBoxAnnotation()
-  {
-  }
-  vtkm::Bounds GetExtents() const
+  VTKM_RENDERING_EXPORT
+  BoundingBoxAnnotation();
+
+  VTKM_RENDERING_EXPORT
+  virtual ~BoundingBoxAnnotation();
+
+  VTKM_CONT_EXPORT
+  const vtkm::Bounds &GetExtents() const
   {
     return this->Extents;
   }
+
+  VTKM_CONT_EXPORT
   void SetExtents(const vtkm::Bounds &extents)
   {
     this->Extents = extents;
   }
+
+  VTKM_CONT_EXPORT
   const vtkm::rendering::Color &GetColor() const
   {
     return this->Color;
   }
+
+  VTKM_CONT_EXPORT
   void SetColor(vtkm::rendering::Color c)
   {
     this->Color = c;
   }
+
+  VTKM_RENDERING_EXPORT
   virtual void Render(const vtkm::rendering::Camera &,
-                      const WorldAnnotator &annotator)
-  {
-    //win->SetupForWorldSpace();
-
-    vtkm::Float32 linewidth = 1.0;
-
-    annotator.AddLine(this->Extents.X.Min,this->Extents.Y.Min,this->Extents.Z.Min,
-                      this->Extents.X.Min,this->Extents.Y.Min,this->Extents.Z.Max,
-                      linewidth, this->Color);
-    annotator.AddLine(this->Extents.X.Min,this->Extents.Y.Max,this->Extents.Z.Min,
-                      this->Extents.X.Min,this->Extents.Y.Max,this->Extents.Z.Max,
-                      linewidth, this->Color);
-    annotator.AddLine(this->Extents.X.Max,this->Extents.Y.Min,this->Extents.Z.Min,
-                      this->Extents.X.Max,this->Extents.Y.Min,this->Extents.Z.Max,
-                      linewidth, this->Color);
-    annotator.AddLine(this->Extents.X.Max,this->Extents.Y.Max,this->Extents.Z.Min,
-                      this->Extents.X.Max,this->Extents.Y.Max,this->Extents.Z.Max,
-                      linewidth, this->Color);
-
-    annotator.AddLine(this->Extents.X.Min,this->Extents.Y.Min,this->Extents.Z.Min,
-                      this->Extents.X.Min,this->Extents.Y.Max,this->Extents.Z.Min,
-                      linewidth, this->Color);
-    annotator.AddLine(this->Extents.X.Min,this->Extents.Y.Min,this->Extents.Z.Max,
-                      this->Extents.X.Min,this->Extents.Y.Max,this->Extents.Z.Max,
-                      linewidth, this->Color);
-    annotator.AddLine(this->Extents.X.Max,this->Extents.Y.Min,this->Extents.Z.Min,
-                      this->Extents.X.Max,this->Extents.Y.Max,this->Extents.Z.Min,
-                      linewidth, this->Color);
-    annotator.AddLine(this->Extents.X.Max,this->Extents.Y.Min,this->Extents.Z.Max,
-                      this->Extents.X.Max,this->Extents.Y.Max,this->Extents.Z.Max,
-                      linewidth, this->Color);
-
-    annotator.AddLine(this->Extents.X.Min,this->Extents.Y.Min,this->Extents.Z.Min,
-                      this->Extents.X.Max,this->Extents.Y.Min,this->Extents.Z.Min,
-                      linewidth, this->Color);
-    annotator.AddLine(this->Extents.X.Min,this->Extents.Y.Min,this->Extents.Z.Max,
-                      this->Extents.X.Max,this->Extents.Y.Min,this->Extents.Z.Max,
-                      linewidth, this->Color);
-    annotator.AddLine(this->Extents.X.Min,this->Extents.Y.Max,this->Extents.Z.Min,
-                      this->Extents.X.Max,this->Extents.Y.Max,this->Extents.Z.Min,
-                      linewidth, this->Color);
-    annotator.AddLine(this->Extents.X.Min,this->Extents.Y.Max,this->Extents.Z.Max,
-                      this->Extents.X.Max,this->Extents.Y.Max,this->Extents.Z.Max,
-                      linewidth, this->Color);
-  }
+                      const WorldAnnotator &annotator);
 };
 
 

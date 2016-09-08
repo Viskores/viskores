@@ -55,6 +55,7 @@ set(sources
   AxisAnnotation3D.cxx
   BitmapFont.cxx
   BitmapFontFactory.cxx
+  BoundingBoxAnnotation.cxx
   Camera.cxx
   Canvas.cxx
   CanvasRayTracer.cxx

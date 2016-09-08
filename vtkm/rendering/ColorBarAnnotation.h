@@ -39,10 +39,11 @@ protected:
   vtkm::rendering::AxisAnnotation2D Axis;
 
 public:
-  VTKM_CONT_EXPORT
-  ColorBarAnnotation()
-  {
-  }
+  VTKM_RENDERING_EXPORT
+  ColorBarAnnotation();
+
+  VTKM_RENDERING_EXPORT
+  virtual ~ColorBarAnnotation();
 
   VTKM_CONT_EXPORT
   void SetColorTable(const vtkm::rendering::ColorTable &colorTable)

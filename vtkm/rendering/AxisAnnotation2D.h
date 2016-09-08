@@ -63,7 +63,7 @@ public:
   AxisAnnotation2D();
 
   VTKM_RENDERING_EXPORT
-  virtual ~AxisAnnotation2D();
+  ~AxisAnnotation2D();
 
 #if 0
   VTKM_RENDERING_EXPORT

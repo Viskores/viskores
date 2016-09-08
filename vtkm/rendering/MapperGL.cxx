@@ -78,6 +78,12 @@ void RenderTriangles(vtkm::Id numTri, const PtType &verts,
 
 } // anonymous namespace
 
+MapperGL::MapperGL()
+{  }
+
+MapperGL::~MapperGL()
+{  }
+
 void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
                            const vtkm::cont::Field &scalarField,

@@ -23,6 +23,27 @@
 namespace vtkm {
 namespace rendering {
 
+View2D::View2D(const vtkm::rendering::Scene &scene,
+               const vtkm::rendering::Mapper &mapper,
+               const vtkm::rendering::Canvas &canvas,
+               const vtkm::rendering::Color &backgroundColor)
+  : View(scene, mapper, canvas, backgroundColor)
+{
+}
+
+View2D::View2D(const vtkm::rendering::Scene &scene,
+               const vtkm::rendering::Mapper &mapper,
+               const vtkm::rendering::Canvas &canvas,
+               const vtkm::rendering::Camera &camera,
+               const vtkm::rendering::Color &backgroundColor)
+  : View(scene, mapper, canvas, camera, backgroundColor)
+{
+}
+
+View2D::~View2D()
+{
+}
+
 void View2D::Paint()
 {
   this->GetCanvas().Activate();

@@ -33,8 +33,11 @@ namespace rendering {
 class MapperGL : public Mapper
 {
 public:
-  VTKM_CONT_EXPORT
-  MapperGL() {}
+  VTKM_RENDERING_EXPORT
+  MapperGL();
+
+  VTKM_RENDERING_EXPORT
+  ~MapperGL();
 
   VTKM_RENDERING_EXPORT
   void RenderCells(const vtkm::cont::DynamicCellSet &cellset,

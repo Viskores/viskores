@@ -37,6 +37,9 @@ public:
            vtkm::Id height=1024);
 
   VTKM_RENDERING_EXPORT
+  ~CanvasGL();
+
+  VTKM_RENDERING_EXPORT
   void Initialize() VTKM_OVERRIDE;
 
   VTKM_RENDERING_EXPORT
