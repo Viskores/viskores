@@ -624,7 +624,7 @@ function(vtkm_library)
   set_property(TARGET ${lib_name} APPEND PROPERTY
       INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
 
-  target_link_libraries(${lib_name} PUBLIC ${VTKm_LIBRARIES})
+  target_link_libraries(${lib_name} ${VTKm_LIBRARIES})
 
   target_compile_options(${lib_name} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
