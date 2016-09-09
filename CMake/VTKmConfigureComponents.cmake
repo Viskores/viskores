@@ -130,13 +130,20 @@ macro(vtkm_configure_component_OpenGL)
   # succeed even if the OSMesa configuration fails.
   vtkm_configure_component_OSMesa()
 
-  find_package(OpenGL ${VTKm_FIND_PACKAGE_QUIETLY})
+  if(NOT VTKm_OSMesa_FOUND)
+    find_package(OpenGL ${VTKm_FIND_PACKAGE_QUIETLY})
 
-  vtkm_finish_configure_component(OpenGL
-    DEPENDENT_VARIABLES VTKm_Base_FOUND OPENGL_FOUND
-    ADD_INCLUDES ${OPENGL_INCLUDE_DIR}
-    ADD_LIBRARIES ${OPENGL_LIBRARIES}
-    )
+    vtkm_finish_configure_component(OpenGL
+      DEPENDENT_VARIABLES VTKm_Base_FOUND OPENGL_FOUND
+      ADD_INCLUDES ${OPENGL_INCLUDE_DIR}
+      ADD_LIBRARIES ${OPENGL_LIBRARIES}
+      )
+  else()
+    # OSMesa comes with its own implementation of OpenGL. So if OSMesa has been
+    # found, then simply report that OpenGL has been found and use the includes
+    # and libraries already added for OSMesa.
+    set(VTKm_OpenGL_FOUND TRUE)
+  endif()
 endmacro(vtkm_configure_component_OpenGL)
 
 macro(vtkm_configure_component_OSMesa)
