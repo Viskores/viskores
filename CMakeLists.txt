@@ -46,8 +46,12 @@ set(VTKm_PATCH_VERSION 0)
 set(VTKm_VERSION "${VTKm_MAJOR_VERSION}.${VTKm_MINOR_VERSION}.${VTKm_PATCH_VERSION}")
 
 set(VTKm_INSTALL_INCLUDE_DIR "include")
-set(VTKm_INSTALL_CONFIG_DIR "include")
+set(VTKm_INSTALL_CONFIG_DIR "lib")
+set(VTKm_INSTALL_LIB_DIR "lib")
+set(VTKm_INSTALL_BIN_DIR "bin")
 set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm/cmake")
+
+set(VTKm_EXPORT_NAME "VTKmTargets")
 
 set(VTKm_REQUIRED_BOOST_VERSION "1.48")
 
@@ -112,6 +116,9 @@ option(VTKm_USE_DOUBLE_PRECISION
   )
 option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
+option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
+set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+
 if (VTKm_ENABLE_TESTING)
   enable_testing()
   include(CTest)
@@ -149,7 +156,7 @@ set( EXECUTABLE_OUTPUT_PATH
 
 ## Set the directory where the libraries will be stored
 set( LIBRARY_OUTPUT_PATH
-  ${PROJECT_BINARY_DIR}/libs
+  ${PROJECT_BINARY_DIR}/lib
   CACHE PATH
   "Directory where all the libraries will be stored"
 )
@@ -278,7 +285,12 @@ configure_package_config_file(
   ${VTKm_SOURCE_DIR}/CMake/VTKmConfig.cmake.in
   ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
   INSTALL_DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
-  PATH_VARS VTKm_INSTALL_INCLUDE_DIR VTKm_INSTALL_CMAKE_MODULE_DIR
+  PATH_VARS
+    VTKm_INSTALL_INCLUDE_DIR
+    VTKm_INSTALL_CONFIG_DIR
+    VTKm_INSTALL_LIB_DIR
+    VTKm_INSTALL_BIN_DIR
+    VTKm_INSTALL_CMAKE_MODULE_DIR
   )
 
 write_basic_package_version_file(
@@ -322,7 +334,23 @@ install(
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
 
-
+# Create and install exports for external projects
+if(${VTKM_HAS_AT_LEAST_ONE_LIBRARY})
+  export(EXPORT ${VTKm_EXPORT_NAME}
+    FILE ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+    )
+  install(EXPORT ${VTKm_EXPORT_NAME}
+    DESTINATION ${VTKm_INSTALL_LIB_DIR}
+    FILE VTKmTargets.cmake
+    )
+else() # No libraries built
+  file(WRITE ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+    "# This build of VTK-m has no libraries to export targets for"
+    )
+  install(FILES ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+    DESTINATION ${VTKm_INSTALL_LIB_DIR}
+    )
+endif()
 
 # Enable CPack packaging
 set(CPACK_PACKAGE_DESCRIPTION_FILE ${VTKm_SOURCE_DIR}/README.md)

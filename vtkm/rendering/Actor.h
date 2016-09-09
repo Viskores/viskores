@@ -20,10 +20,15 @@
 #ifndef vtk_m_rendering_Actor_h
 #define vtk_m_rendering_Actor_h
 
-#include <vtkm/Assert.h>
+#include <vtkm/rendering/vtkm_rendering_export.h>
+
 #include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Mapper.h>
-#include <vector>
+
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <boost/shared_ptr.hpp>
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
 namespace rendering {
@@ -31,49 +36,41 @@ namespace rendering {
 class Actor
 {
 public:
-  //Actor(points, cells, field, colortable) {}
-  VTKM_CONT_EXPORT
+  VTKM_RENDERING_EXPORT
   Actor(const vtkm::cont::DynamicCellSet &cells,
         const vtkm::cont::CoordinateSystem &coordinates,
         const vtkm::cont::Field &scalarField,
         const vtkm::rendering::ColorTable &colorTable =
-          vtkm::rendering::ColorTable("default"))
-    : Cells(cells),
-      Coordinates(coordinates),
-      ScalarField(scalarField),
-      ColorTable(colorTable)
-  {
-    VTKM_ASSERT(scalarField.GetData().GetNumberOfComponents() == 1);
+          vtkm::rendering::ColorTable("default"));
 
-    scalarField.GetRange(&this->ScalarRange,
-                         VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-    this->SpatialBounds =
-        coordinates.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  }
+  VTKM_RENDERING_EXPORT
+  void Render(vtkm::rendering::Mapper &mapper,
+              vtkm::rendering::Canvas &canvas,
+              const vtkm::rendering::Camera &camera) const;
 
-  template<typename MapperType, typename CanvasType>
-  VTKM_CONT_EXPORT
-  void Render(MapperType &mapper,
-              CanvasType &canvas,
-              const vtkm::rendering::Camera &camera) const
-  {
-    mapper.SetCanvas(&canvas);
-    mapper.SetActiveColorTable(this->ColorTable);
-    mapper.RenderCells(this->Cells,
-                       this->Coordinates,
-                       this->ScalarField,
-                       this->ColorTable,
-                       camera,
-                       this->ScalarRange);
-  }
+  VTKM_RENDERING_EXPORT
+  const vtkm::cont::DynamicCellSet &GetCells() const;
 
-  vtkm::cont::DynamicCellSet Cells;
-  vtkm::cont::CoordinateSystem Coordinates;
-  vtkm::cont::Field ScalarField;
-  vtkm::rendering::ColorTable ColorTable;
+  VTKM_RENDERING_EXPORT
+  const vtkm::cont::CoordinateSystem &GetCoordiantes() const;
 
-  vtkm::Range ScalarRange;
-  vtkm::Bounds SpatialBounds;
+  VTKM_RENDERING_EXPORT
+  const vtkm::cont::Field &GetScalarField() const;
+
+  VTKM_RENDERING_EXPORT
+  const vtkm::rendering::ColorTable &GetColorTable() const;
+
+  VTKM_RENDERING_EXPORT
+  const vtkm::Range &GetScalarRange() const;
+
+  VTKM_RENDERING_EXPORT
+  const vtkm::Bounds &GetSpatialBounds() const;
+
+private:
+  struct InternalsType;
+  boost::shared_ptr<InternalsType> Internals;
+
+  struct RangeFunctor;
 };
 
 }} //namespace vtkm::rendering

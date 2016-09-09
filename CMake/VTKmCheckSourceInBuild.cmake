@@ -43,11 +43,13 @@ if (NOT VTKm_SOURCE_DIR)
   message(SEND_ERROR "VTKm_SOURCE_DIR not defined.")
 endif (NOT VTKm_SOURCE_DIR)
 
-function(check_directory directory)
+function(check_directory directory parent_CMakeLists_contents)
   message("Checking directory ${directory}...")
 
+  get_filename_component(directory_name "${directory}" NAME)
+
   if(EXISTS "${directory}/CMakeLists.txt")
-    file(READ "${directory}/CMakeLists.txt" CMakeListsContents)
+    file(READ "${directory}/CMakeLists.txt" CMakeLists_contents)
   endif()
 
   foreach (glob_expression ${FILES_TO_CHECK})
@@ -70,14 +72,23 @@ function(check_directory directory)
         # Remove .in suffix. These are generally configured files that generate
         # new files that are actually used in the build.
         string(REGEX REPLACE ".in$" "" file_check "${file}")
-        string(FIND "${CMakeListsContents}" "${file_check}" position)
+        string(FIND "${CMakeLists_contents}" "${file_check}" position)
         if(${position} LESS 0)
-          message(SEND_ERROR
-            "****************************************************************
+          # Check the CMakeLists.txt of the parent directory. Some sources of
+          # internal directories are packaged into libraries in the parent
+          # directory.
+          string(FIND "${parent_CMakeLists_contents}"
+            "${directory_name}/${file_check}"
+            position
+            )
+          if(${position} LESS 0)
+            message(SEND_ERROR
+              "****************************************************************
 ${file_check} is not found in ${directory}/CMakeLists.txt
 This indicates that the file is not part of the build system. Thus it might be missing build targets. All such files should be explicitly handled by CMake.")
-        endif()
-      endif()
+          endif() # Not in parent's CMakeLists.txt
+        endif() # Not in CMakeLists.txt
+      endif() # Not skipped
     endforeach (file)
   endforeach(glob_expression)
 
@@ -86,10 +97,10 @@ This indicates that the file is not part of the build system. Thus it might be m
     "${directory}/*")
   foreach(file ${file_list})
     if(IS_DIRECTORY "${file}")
-      check_directory("${file}")
+      check_directory("${file}" "${CMakeLists_contents}")
     endif()
   endforeach(file)
 endfunction(check_directory)
 
-check_directory("${VTKm_SOURCE_DIR}/vtkm")
-check_directory("${VTKm_SOURCE_DIR}/examples")
+check_directory("${VTKm_SOURCE_DIR}/vtkm" "")
+check_directory("${VTKm_SOURCE_DIR}/examples" "")

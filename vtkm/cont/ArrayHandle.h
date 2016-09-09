@@ -284,7 +284,6 @@ public:
   /// with CUDA), then the automatically generated destructor could be
   /// created for all devices, and it would not be valid for all devices.
   ///
-  VTKM_CONT_EXPORT
   virtual ~ArrayHandle() {  }
 
   /// \brief Copies an ArrayHandle

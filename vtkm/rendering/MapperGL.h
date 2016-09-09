@@ -20,124 +20,42 @@
 #ifndef vtk_m_rendering_MapperGL_h
 #define vtk_m_rendering_MapperGL_h
 
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
-#include <vtkm/rendering/Triangulator.h>
+
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
-
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-
 
 namespace vtkm {
 namespace rendering {
 
-template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class MapperGL : public Mapper
 {
 public:
-  VTKM_CONT_EXPORT
-  MapperGL() {}
+  VTKM_RENDERING_EXPORT
+  MapperGL();
 
-  VTKM_CONT_EXPORT
-  virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
-                           const vtkm::cont::CoordinateSystem &coords,
-                           const vtkm::cont::Field &scalarField,
-                           const vtkm::rendering::ColorTable &colorTable,
-                           const vtkm::rendering::Camera &,
-                           const vtkm::Range &scalarRange)
-  {
-    vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;
-    vtkm::Id numTri;
-    Triangulator<DeviceAdapter> triangulator;
-    triangulator.run(cellset, indices, numTri);
+  VTKM_RENDERING_EXPORT
+  ~MapperGL();
 
-    vtkm::cont::ArrayHandle<vtkm::Float32> sf;
-    sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32> >();
+  VTKM_RENDERING_EXPORT
+  void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
+                   const vtkm::cont::CoordinateSystem &coords,
+                   const vtkm::cont::Field &scalarField,
+                   const vtkm::rendering::ColorTable &colorTable,
+                   const vtkm::rendering::Camera &,
+                   const vtkm::Range &scalarRange) VTKM_OVERRIDE;
 
-    vtkm::cont::DynamicArrayHandleCoordinateSystem dcoords = coords.GetData();
-    vtkm::cont::ArrayHandleUniformPointCoordinates uVerts;
-    vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > eVerts;
+  VTKM_RENDERING_EXPORT
+  void StartScene() VTKM_OVERRIDE;
+  VTKM_RENDERING_EXPORT
+  void EndScene() VTKM_OVERRIDE;
+  VTKM_RENDERING_EXPORT
+  void SetCanvas(vtkm::rendering::Canvas *canvas) VTKM_OVERRIDE;
 
-    if(dcoords.IsSameType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
-    {
-      uVerts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-      RenderTriangles(numTri, uVerts, indices, sf, colorTable, scalarRange);
-    }
-    else if(dcoords.IsSameType(vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> >()))
-    {
-      eVerts = dcoords.Cast<vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > > ();
-      RenderTriangles(numTri, eVerts, indices, sf, colorTable, scalarRange);
-    }
-    else if(dcoords.IsSameType(vtkm::cont::ArrayHandleCartesianProduct<
-                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                               vtkm::cont::ArrayHandle<vtkm::FloatDefault> >()))
-    {
-      vtkm::cont::ArrayHandleCartesianProduct<
-          vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-          vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-          vtkm::cont::ArrayHandle<vtkm::FloatDefault> > rVerts;
-      rVerts = dcoords.Cast<vtkm::cont::ArrayHandleCartesianProduct<
-                                vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                vtkm::cont::ArrayHandle<vtkm::FloatDefault> > > ();
-      RenderTriangles(numTri, rVerts, indices, sf, colorTable, scalarRange);
-    }
-    glFinish();
-    glFlush();
-  }
-
-  template <typename PtType>
-  VTKM_CONT_EXPORT
-  void RenderTriangles(vtkm::Id numTri, const PtType &verts,
-                       const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > &indices,
-                       const vtkm::cont::ArrayHandle<vtkm::Float32> &scalar,
-                       const vtkm::rendering::ColorTable &ct,
-                       const vtkm::Range &scalarRange)
-  {
-    vtkm::Float32 sMin = vtkm::Float32(scalarRange.Min);
-    vtkm::Float32 sMax = vtkm::Float32(scalarRange.Max);
-    vtkm::Float32 sDiff = sMax-sMin;
-
-    glBegin(GL_TRIANGLES);
-    for (int i = 0; i < numTri; i++)
-    {
-      vtkm::Vec<vtkm::Id, 4> idx = indices.GetPortalConstControl().Get(i);
-      vtkm::Id i1 = idx[1];
-      vtkm::Id i2 = idx[2];
-      vtkm::Id i3 = idx[3];
-
-      vtkm::Vec<vtkm::Float32, 3> p1 = verts.GetPortalConstControl().Get(idx[1]);
-      vtkm::Vec<vtkm::Float32, 3> p2 = verts.GetPortalConstControl().Get(idx[2]);
-      vtkm::Vec<vtkm::Float32, 3> p3 = verts.GetPortalConstControl().Get(idx[3]);
-
-      vtkm::Float32 s = scalar.GetPortalConstControl().Get(i1);
-      s = (s-sMin)/sDiff;
-
-      Color color = ct.MapRGB(s);
-      glColor3f(color.Components[0], color.Components[1], color.Components[2]);
-      glVertex3f(p1[0],p1[1],p1[2]);
-
-      s = scalar.GetPortalConstControl().Get(i2);
-      s = (s-sMin)/sDiff;
-      color = ct.MapRGB(s);
-      glColor3f(color.Components[0], color.Components[1], color.Components[2]);
-      glVertex3f(p2[0],p2[1],p2[2]);
-
-      s = scalar.GetPortalConstControl().Get(i3);
-      s = (s-sMin)/sDiff;
-      color = ct.MapRGB(s);
-      glColor3f(color.Components[0], color.Components[1], color.Components[2]);
-      glVertex3f(p3[0],p3[1],p3[2]);
-    }
-    glEnd();
-  }
+  VTKM_RENDERING_EXPORT
+  vtkm::rendering::Mapper *NewCopy() const VTKM_OVERRIDE;
 };
 
 }} //namespace vtkm::rendering

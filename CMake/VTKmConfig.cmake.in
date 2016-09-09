@@ -52,9 +52,6 @@ if(VTKm_PACKAGE_IN_BUILD)
   set(VTKm_INCLUDE_DIRS ${VTKm_INCLUDE_DIRS} "@VTKm_SOURCE_DIR@")
 endif()
 
-# Clear out the libraries. We will add more when loading components.
-set(VTKm_LIBRARIES)
-
 set(VTKm_REQUIRED_BOOST_VERSION "@VTKm_REQUIRED_BOOST_VERSION@")
 
 if(NOT VTKm_PACKAGE_IN_BUILD)
@@ -63,10 +60,20 @@ else()
   set_and_check(VTKm_CMAKE_MODULE_PATH "@VTKm_SOURCE_DIR@/CMake")
 endif()
 
+set(VTKm_BUILD_SHARED_LIBS "@BUILD_SHARED_LIBS@")
 set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
 set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
 set(VTKm_ENABLE_OPENGL_INTEROP "@VTKm_ENABLE_OPENGL_INTEROP@")
 set(VTKm_BUILD_RENDERING "@VTKm_BUILD_RENDERING@")
+
+# Load the library exports, but only if not compiling VTK-m itself
+set_and_check(VTKm_CONFIG_DIR "@PACKAGE_VTKm_INSTALL_CONFIG_DIR@")
+if(NOT "${CMAKE_BINARY_DIR}" STREQUAL "@VTKm_BINARY_DIR@")
+  include(${VTKm_CONFIG_DIR}/VTKmTargets.cmake)
+endif()
+
+# Clear out the libraries. We will add more when loading components.
+set(VTKm_LIBRARIES)
 
 # The VTKm variables used to configure components and packages silently.
 set(VTKm_CONFIGURE_QUIET "${VTKm_FIND_QUIETLY}")
