@@ -142,7 +142,7 @@ endmacro(vtkm_configure_component_OpenGL)
 macro(vtkm_configure_component_OSMesa)
   vtkm_configure_component_Base()
 
-  if (UNIX AND NOT APPLE)
+  if (VTKm_ENABLE_OSMESA)
     find_package(MESA ${VTKm_FIND_PACKAGE_QUIETLY})
 
     vtkm_finish_configure_component(OSMesa
@@ -150,8 +150,6 @@ macro(vtkm_configure_component_OSMesa)
       ADD_INCLUDES ${OSMESA_INCLUDE_DIR}
       ADD_LIBRARIES ${OSMESA_LIBRARY}
       )
-  else()
-    vtkm_configure_component_message("OSMesa not supported on this platform.")
   endif()
 endmacro(vtkm_configure_component_OSMesa)
 
