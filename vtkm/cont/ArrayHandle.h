@@ -32,12 +32,9 @@
 #include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/concept_check.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 #include <memory>
 #include <vector>
+#include <iterator>
 
 
 namespace vtkm {
@@ -388,11 +385,14 @@ public:
   /// Copies data into the given iterator for the control environment. This
   /// method can skip copying into an internally managed control array.
   ///
-  template <class IteratorType, class DeviceAdapterTag>
+  template<typename IteratorType, typename DeviceAdapterTag>
   VTKM_CONT_EXPORT void CopyInto(IteratorType dest, DeviceAdapterTag) const
   {
-    BOOST_CONCEPT_ASSERT((boost::OutputIterator<IteratorType, ValueType>));
-    BOOST_CONCEPT_ASSERT((boost::ForwardIterator<IteratorType>));
+    using pointer_type = typename std::iterator_traits<IteratorType>::pointer;
+    using value_type = typename std::remove_pointer<pointer_type>::type;
+
+    static_assert( !std::is_const<value_type>::value,
+                   "CopyInto requires a non const iterator." );
 
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 

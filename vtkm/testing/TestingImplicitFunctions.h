@@ -30,11 +30,7 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
+#include <random>
 
 namespace vtkm {
 namespace testing {
@@ -43,8 +39,8 @@ namespace {
 
 inline vtkm::FloatDefault GetRandomValue()
 {
-  static boost::random::mt19937 gen;
-  boost::random::uniform_real_distribution<vtkm::FloatDefault> dist(-7.0, 7.0);
+  static std::mt19937 gen;
+  std::uniform_real_distribution<vtkm::FloatDefault> dist(-7.0, 7.0);
   return dist(gen);
 }
 

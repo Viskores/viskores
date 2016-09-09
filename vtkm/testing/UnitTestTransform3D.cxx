@@ -24,36 +24,32 @@
 
 #include <vtkm/testing/Testing.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 #include <ctime>
+#include <random>
 
 namespace {
 
-boost::mt19937 g_RandomGenerator;
+std::mt19937 g_RandomGenerator;
 
 template<typename T>
 struct TransformTests
 {
-  boost::random::uniform_real_distribution<T> RandomDistribution;
+  std::uniform_real_distribution<T> RandomDistribution;
   TransformTests()
     : RandomDistribution(0.0f, 1.0f) {  }
 
-  T RandomNum() const { return this->RandomDistribution(g_RandomGenerator); }
+  T RandomNum() { return this->RandomDistribution(g_RandomGenerator); }
 
   typedef vtkm::Vec<T,3> Vec;
   typedef vtkm::Matrix<T,4,4> Transform;
 
-  Vec RandomVector() const
+  Vec RandomVector()
   {
     Vec vec(this->RandomNum(), this->RandomNum(), this->RandomNum());
     return T(2)*vec - Vec(1);
   }
 
-  void CheckTranslate() const
+  void CheckTranslate()
   {
     std::cout << "--- Checking translate" << std::endl;
 
@@ -81,7 +77,7 @@ struct TransformTests
     VTKM_TEST_ASSERT(test_equal(translated1, startPoint), "Bad translation.");
   }
 
-  void CheckScale() const
+  void CheckScale()
   {
     std::cout << "--- Checking scale" << std::endl;
 
@@ -110,7 +106,7 @@ struct TransformTests
                      "Bad scale.");
   }
 
-  void CheckRotate() const
+  void CheckRotate()
   {
     std::cout << "--- Checking rotate" << std::endl;
 
