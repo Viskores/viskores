@@ -113,7 +113,7 @@ public:
       // Allocate memory
       rightExtend.PrepareForOutput( extDimXRight * extDimY, DeviceTag() );
   
-      RightWorkletType rightWorklet(extDimXRight, extDimY, sigDimX, sigDimY, rightExtMethod);
+      RightWorkletType rightWorklet(false, extDimXRight, extDimY, sigDimX, sigDimY, rightExtMethod);
       vtkm::worklet::DispatcherMapField< RightWorkletType, DeviceTag > 
             dispatcher2( rightWorklet );
       dispatcher2.Invoke( rightExtend, sigIn );
@@ -136,28 +136,22 @@ public:
     }
     else    // attachZeroRightLeft mode. 
     {
-      // Make a copy of sigIn with an extra column
-      ExtendArrayType     sigInWithZero;
-      sigInWithZero.PrepareForOutput( (sigDimX+1) * sigDimY, DeviceTag() );
-      WaveletBase::DeviceRectangleCopyTo( sigIn, sigDimX, sigDimY,
-                                          sigInWithZero, sigDimX+1, sigDimY,
-                                          0, 0, DeviceTag() );
-
-      // Assign zero to the column at the very right 
-      WaveletBase::DeviceAssignZero2DColumn( sigInWithZero, sigDimX+1, sigDimY, 
-                                             sigDimX, DeviceTag() );
-
       // Allocate memory for rightExtend
       rightExtend.PrepareForOutput( extDimX * extDimY, DeviceTag() );
 
       // Do the extension
-      RightWorkletType rightWorklet( extDimX, extDimY, sigDimX+1, sigDimY, rightExtMethod );
+      RightWorkletType rightWorklet( true, extDimX, extDimY, sigDimX, sigDimY, rightExtMethod );
       vtkm::worklet::DispatcherMapField< RightWorkletType, DeviceTag > 
             dispatcher5( rightWorklet );
-      dispatcher5.Invoke( rightExtend, sigInWithZero );
-  
-      sigInWithZero.ReleaseResources();
+      dispatcher5.Invoke( rightExtend, sigIn );
 
+for( vtkm::Id i = 0; i < rightExtend.GetNumberOfValues(); i++ )
+{
+  std::cout << rightExtend.GetPortalConstControl().Get(i) << "  ";
+  if( i % extDimX == extDimX-1 )
+    std::cout << std::endl;
+}
+  
       // Allocate memory for output
       sigOut.PrepareForOutput( outputDimX * outputDimY, DeviceTag() );
       WaveletBase::DeviceRectangleCopyTo( sigIn, sigDimX, sigDimY,

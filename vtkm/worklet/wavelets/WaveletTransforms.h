@@ -894,8 +894,9 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT 
-  RightExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2, DWTMode m)
-      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), mode(m)  {}
+  RightExtentionWorklet2D( bool padZero, Id x1, Id y1, Id x2, Id y2, DWTMode m) :
+        sigPadZero( padZero), extDimX( x1 ), extDimY( y1 ), 
+        sigRealDimX( x2 ), sigRealDimY( y2 ), mode(m)       {}
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT
@@ -909,7 +910,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   Id Sig2Dto1D( Id x, Id y ) const
   {
-    return y * sigDimX + x;
+    return y * sigRealDimX + x;
   }
 
   template< typename PortalOutType, typename PortalInType >
@@ -920,6 +921,9 @@ public:
   {
     Id extX, extY;
     Id sigX;
+    Id sigDimX = sigRealDimX;
+    if( sigPadZero )  // pretent signal is padded a zero at the end
+      sigDimX++;
     typename PortalOutType::ValueType sym = 1.0;
     Ext1Dto2D( workIndex, extX, extY );
     if      ( mode == SYMH )
@@ -936,11 +940,16 @@ public:
       sigX = sigDimX - extX - 2;
       sym  = -1.0;
     }
-    portalOut.Set( workIndex, portalIn.Get( Sig2Dto1D(sigX, extY) ) * sym );
+    if( sigX == sigRealDimX )           // copy from the imaginary zero
+      portalOut.Set( workIndex, 0.0 );
+    else
+      portalOut.Set( workIndex, portalIn.Get( Sig2Dto1D(sigX, extY) ) * sym );
   }
 
 private:
-  vtkm::Id extDimX, extDimY, sigDimX, sigDimY;
+  const bool sigPadZero;                    // if to pretend that signal has zero padded
+  const vtkm::Id extDimX, extDimY;
+  const vtkm::Id sigRealDimX, sigRealDimY;  // real dimX of signal
   DWTMode  mode;
 };
 
