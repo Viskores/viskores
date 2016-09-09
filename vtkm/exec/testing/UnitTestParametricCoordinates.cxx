@@ -27,16 +27,12 @@
 
 #include <vtkm/testing/Testing.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 #include <ctime>
+#include <random>
 
 namespace {
 
-boost::mt19937 g_RandomGenerator;
+std::mt19937 g_RandomGenerator;
 
 static const vtkm::IdComponent MAX_POINTS = 8;
 
@@ -156,7 +152,7 @@ void TestPCoordsSample(const PointWCoordsType &pointWCoords,
 
   const vtkm::IdComponent numPoints = pointWCoords.GetNumberOfComponents();
 
-  boost::random::uniform_real_distribution<vtkm::FloatDefault> randomDist;
+  std::uniform_real_distribution<vtkm::FloatDefault> randomDist;
 
   for (vtkm::IdComponent trial = 0; trial < 5; trial++)
   {
@@ -226,7 +222,7 @@ struct TestPCoordsFunctor
     vtkm::exec::FunctorBase workletProxy;
     workletProxy.SetErrorMessageBuffer(errorMessage);
 
-    boost::random::uniform_real_distribution<T> randomDist(-1,1);
+    std::uniform_real_distribution<T> randomDist(-1,1);
 
     Vector3 sheerVec(randomDist(g_RandomGenerator),
                      randomDist(g_RandomGenerator),
@@ -297,7 +293,7 @@ void TestAllPCoords()
   vtkm::testing::Testing::TryAllCellShapes(TestPCoordsFunctor<vtkm::Float64>());
 
   std::cout << "======== Rectilinear Shapes ===============" << std::endl;
-  boost::random::uniform_real_distribution<vtkm::FloatDefault> randomDist(0.01f,1.0f);
+  std::uniform_real_distribution<vtkm::FloatDefault> randomDist(0.01f,1.0f);
   vtkm::Vec<vtkm::FloatDefault,3> origin(randomDist(g_RandomGenerator),
                                          randomDist(g_RandomGenerator),
                                          randomDist(g_RandomGenerator));
