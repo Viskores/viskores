@@ -101,9 +101,9 @@ public:
   #undef VAL
 
 private:
-  typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst 
-      lowFilter, highFilter;
-  vtkm::Id filterLen, approxLen, detailLen;  // filter and outcome coeff length.
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
+      PortalConst lowFilter, highFilter;
+  const vtkm::Id filterLen, approxLen, detailLen;  // filter and outcome coeff length.
   bool oddlow, oddhigh;
   vtkm::Id xlstart, xhstart;
   
@@ -216,11 +216,11 @@ public:
   #undef VAL
 
 private:
-  typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-      lowFilter, highFilter;
-  vtkm::Id filterLen, approxLen;
-  vtkm::Id inputDimX,  inputDimY;
-  vtkm::Id outputDimX, outputDimY;
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
+      PortalConst lowFilter, highFilter;
+  const vtkm::Id filterLen, approxLen;
+  const vtkm::Id inputDimX,  inputDimY;
+  const vtkm::Id outputDimX, outputDimY;
   bool oddlow;
   vtkm::Id xlstart, xhstart;
   
@@ -318,11 +318,11 @@ public:
   #undef VAL
 
 private:
-  typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-      lowFilter, highFilter;
-  vtkm::Id filterLen;
-  vtkm::Id inputDimX, inputDimY, outputDimX, outputDimY;
-  vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
+      PortalConst lowFilter, highFilter;
+  const vtkm::Id filterLen;
+  const vtkm::Id inputDimX, inputDimY, outputDimX, outputDimY;
+  const vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
 };
 
 
@@ -397,12 +397,12 @@ public:
   #undef VAL
 
 private:
-  typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-      lowFilter, highFilter;
-  vtkm::Id filterLen;       // filter length.
-  vtkm::Id cALen;           // Number of actual cAs 
-  vtkm::Id cALen2;          //  = cALen * 2
-  vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
+      PortalConst lowFilter, highFilter;
+  const vtkm::Id filterLen;       // filter length.
+  const vtkm::Id cALen;           // Number of actual cAs 
+  const vtkm::Id cALen2;          //  = cALen * 2
+  const vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
 };
 
 
@@ -491,11 +491,11 @@ public:
   #undef VAL
 
 private:
-  typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-      lowFilter, highFilter;
-  vtkm::Id filterLen;       // filter length.
-  vtkm::Id inputDimX, inputDimY, outputDimX, outputDimY;
-  vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD 
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
+      PortalConst lowFilter, highFilter;
+  const vtkm::Id filterLen;       // filter length.
+  const vtkm::Id inputDimX, inputDimY, outputDimX, outputDimY;
+  const vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD 
 };    
 
 
@@ -569,12 +569,12 @@ public:
   #undef VAL
 
 private:
-  typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst
-      lowFilter, highFilter;
-  vtkm::Id filterLen;       // filter length.
-  vtkm::Id cALen;           // Number of actual cAs 
-  vtkm::Id cALen2;          //  = cALen * 2
-  vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD 
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
+      PortalConst lowFilter, highFilter;
+  const vtkm::Id filterLen;       // filter length.
+  const vtkm::Id cALen;           // Number of actual cAs 
+  const vtkm::Id cALen2;          //  = cALen * 2
+  const vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD 
   bool     matlab;          // followed the naming convention from VAPOR 
                             // It's always false for the 1st 4 filters.
 };    
