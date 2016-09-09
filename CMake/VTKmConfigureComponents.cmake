@@ -288,11 +288,16 @@ macro(vtkm_configure_component_CUDA)
     #detect what the propery is set too
     if(VTKm_CUDA_Architecture STREQUAL "native")
       if(NOT VTKM_CUDA_NATIVE_EXE_PROCESS_RAN)
+
         #run execute_process to do auto_detection
-        set(command ${CUDA_NVCC_EXECUTABLE})
-        set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cxx")
+        if(CMAKE_GENERATOR MATCHES "Visual Studio")
+          set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cxx")
+        else()
+          set(args "-ccbin" "${CUDA_HOST_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cxx")
+        endif()
+
         execute_process(
-          COMMAND ${command} ${args}
+          COMMAND ${CUDA_NVCC_EXECUTABLE} ${args}
           RESULT_VARIABLE ran_properly
           OUTPUT_VARIABLE run_output
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -303,7 +308,8 @@ macro(vtkm_configure_component_CUDA)
           string(FIND "${run_output}" "--generate-code" position)
           string(SUBSTRING "${run_output}" ${position} -1 run_output)
           set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} ${run_output}")
-          set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN TRUE)
+          set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN TRUE CACHE INTERNAL
+              "We have correctly detected the device type(s) for cuda[native]")
         else()
           set(VTKm_CUDA_Architecture "fermi")
           vtkm_configure_component_message(
