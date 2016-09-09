@@ -26,8 +26,8 @@ find_package(VTKm QUIET REQUIRED
   OPTIONAL_COMPONENTS Serial Cuda TBB OSMesa
   )
 
-if(VTKm_OSMesa_FOUND)
 
+if(VTKm_OSMesa_FOUND)
   if(VTKm_CUDA_FOUND)
     # Cuda compiles do not respect target_include_directories
     cuda_include_directories(${VTKm_INCLUDE_DIRS})
@@ -45,8 +45,8 @@ if(VTKm_OSMesa_FOUND)
   #when we are using TBB pass in the default device adapter as
   #a compile definition to make sure we build with TBB selected
   if(VTKm_TBB_FOUND)
-    target_compile_definitions( TARGET Demo
-        PRIVATGE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
+    target_compile_definitions(Demo
+        PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
   endif()
 
 endif()
