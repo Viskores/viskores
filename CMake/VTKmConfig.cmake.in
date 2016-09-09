@@ -87,6 +87,12 @@ include(VTKmMacros)
 # that uses VTK-m.
 set(VTKm_COMPILE_OPTIONS "@VTKm_COMPILE_OPTIONS@")
 
+# All projects using VTK-m should include the "Base" configuration (otherwise
+# nothing may compile). Make sure the Base configuration is added to
+# VTKm_FIND_COMPONENTS and the component is required.
+set(VTKm_FIND_COMPONENTS "Base" ${VTKm_FIND_COMPONENTS})
+set(VTKm_FIND_REQUIRED_Base TRUE)
+
 # Load the selected components
 @VTKm_LOAD_COMPONENTS_COMMANDS@
 
