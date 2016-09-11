@@ -37,6 +37,230 @@ enum DWTMode {    // boundary extension modes
   ASYMW
 };
 
+enum ExtensionDirection2D {  // which side of a matrix to extend
+  LEFT,
+  RIGHT,
+  TOP,
+  BOTTOM
+};
+
+class IndexTranslator3Matrices
+{
+public:
+  IndexTranslator3Matrices( vtkm::Id x_1, vtkm::Id x_2, vtkm::Id x_3, 
+                            vtkm::Id y_1, vtkm::Id y_2, vtkm::Id y_3, bool mode ) :
+                            x1(x_1), x2(x_2), x3(x_3), 
+                            y1(y_1), y2(y_2), y3(y_3), mode_lr(mode)  {}
+
+  void Translate2Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  // 2D indices as input
+                        vtkm::Id  &mat, vtkm::Id  &idx )  // which matrix, and idx of that matrix
+  {
+    if( mode_lr )   // left-right mode
+    {
+      if( inX < 0 )
+        vtkm::cont::ErrorControlInternal("Invalid index!");
+      else if ( 0 <= inX && inX < x1 )
+      {
+        mat = 0;
+        idx = inY * x1 + inX;
+      } 
+      else if ( x1 <= inX && inX < (x1 + x2) )
+      {
+        mat = 1;
+        idx = inY * x2 + (inX - x1);
+      }
+      else if ( (x1 + x2) <= inX && inX < (x1 + x2 + x3) )
+      {
+        mat = 2;  
+        idx = inY * x3 + (inX - x1 - x2);
+      }
+      else
+        vtkm::cont::ErrorControlInternal("Invalid index!");
+    }
+    else          // top-down mode
+    {
+      if( inY < 0 )
+        vtkm::cont::ErrorControlInternal("Invalid index!");
+      else if ( 0 <= inY && inY < y1 )
+      {
+        mat = 0;
+        idx = inY * x1 + inX;
+      }
+      else if ( y1 <= inY && inY < (y1 + y2) )
+      {
+        mat = 1;
+        idx = (inY - y1) * x1 + inX;
+      }
+      else if ( (y1 + y2) <= inY && inY < (y1 + y2 + y3) )
+      {
+        mat = 2;
+        idx = (inY - y1 - y2) * x1 + inX;
+      }
+      else
+        vtkm::cont::ErrorControlInternal("Invalid index!");
+    }
+  }
+
+private:
+  const vtkm::Id      x1, x2, x3, y1, y2, y3;         // dimensions of 3 matrices.
+  const bool          mode_lr;     // true: left right mode; false: top down mode.
+};
+
+
+class LeftExtensionWorklet2D : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+  typedef vtkm::Id Id;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT 
+  LeftExtensionWorklet2D( Id x1, Id y1, Id x2, Id y2, DWTMode m)
+      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), mode(m)  {}
+
+  // Index translation helper
+  VTKM_EXEC_CONT_EXPORT
+  void Ext1Dto2D ( const Id &idx, Id &x, Id &y ) const
+  {
+    x = idx % extDimX;
+    y = idx / extDimX;
+  }
+
+  // Index translation helper
+  VTKM_EXEC_CONT_EXPORT
+  Id Sig2Dto1D( Id x, Id y ) const
+  {
+    return y * sigDimX + x;
+  }
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    Id extX, extY;
+    Id sigX;
+    typename PortalOutType::ValueType sym = 1.0;
+    Ext1Dto2D( workIndex, extX, extY );
+    if      ( mode == SYMH )
+      sigX = extDimX - extX - 1;
+    else if ( mode == SYMW )
+      sigX = extDimX - extX; 
+    else if ( mode == ASYMH )
+    {
+      sigX = extDimX - extX - 1;
+      sym  = -1.0;
+    }
+    else    // mode == ASYMW
+    {
+      sigX = extDimX - extX;
+      sym  = -1.0;
+    }
+    portalOut.Set( workIndex, portalIn.Get( Sig2Dto1D(sigX, extY) ) * sym );
+  }
+
+private:
+  vtkm::Id extDimX, extDimY, sigDimX, sigDimY;
+  DWTMode  mode;
+};
+
+
+// Worklet for 2D signal extension
+class ExtensionWorklet2D : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+  typedef vtkm::Id Id;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT 
+  ExtensionWorklet2D( Id x1, Id y1, Id x2, Id y2, 
+                      ExtensionDirection2D dir, DWTMode m, bool pad_zero)
+                    : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), 
+                      direction( dir ), mode(m), padZero( pad_zero )  {}
+
+  // Index translation helper
+  VTKM_EXEC_CONT_EXPORT
+  void Ext1Dto2D ( const Id &idx, Id x, Id y ) const
+  {
+    x = idx % extDimX;
+    y = idx / extDimX;
+  }
+
+  // Index translation helper
+  VTKM_EXEC_CONT_EXPORT
+  Id Sig2Dto1D( Id x, Id y ) const
+  {
+    return y * sigDimX + x;
+  }
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC_EXPORT
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    Id extX, extY, sigX, sigY;
+    Ext1Dto2D( workIndex, extX, extY );
+    typename PortalOutType::ValueType sym = 1.0;
+    if( mode == ASYMH || mode == ASYMW )
+      sym = -1.0;
+    if( direction == LEFT )     
+    {
+      sigY = extY;
+      if( mode == SYMH || mode == ASYMH )
+        sigX = extDimX - extX - 1;
+      else    // mode == SYMW || mode == ASYMW
+        sigX = extDimX - extX; 
+    }
+    else if( direction == TOP ) 
+    {
+      sigX = extX;
+      if( mode == SYMH || mode == ASYMH )
+        sigY = extDimY - extY - 1;
+      else    // mode == SYMW || mode == ASYMW
+        sigY = extDimY - extY; 
+    }
+    else if( direction == RIGHT )
+    {
+      sigY = extY;
+      if( mode == SYMH || mode == ASYMH )
+        sigX = sigDimX - extX - 1;
+      else
+        sigX = sigDimX - extX - 2;
+      if( padZero )
+        sigX++;
+    }
+    else  // direction == BOTTOM 
+    {
+      sigX = extX;
+      if( mode == SYMH || mode == ASYMH )
+        sigY = sigDimY - extY - 1;
+      else
+        sigY = sigDimY - extY - 2;
+      if( padZero )
+        sigY++;
+    }
+    if( sigX == sigDimX || sigY == sigDimY )
+      portalOut.Set( workIndex, 0.0 );
+    else
+      portalOut.Set( workIndex, sym * portalIn.Get( Sig2Dto1D(sigX, sigY) ) );
+  }
+
+private:
+  const vtkm::Id              extDimX, extDimY, sigDimX, sigDimY;
+  const ExtensionDirection2D  direction;
+  const DWTMode               mode;
+  const bool                  padZero;  // only applicable when direction is right or bottom.
+};
+
 
 // Worklet: perform a simple forward transform
 template< typename DeviceTag >
@@ -131,10 +355,10 @@ public:
   VTKM_EXEC_CONT_EXPORT
   ForwardTransform2D( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
                       const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
-                      vtkm::Id filter_len, vtkm::Id approx_len,
+                      vtkm::Id filter_len, vtkm::Id approx_len, 
                       vtkm::Id input_dimx, vtkm::Id input_dimy,
-                      vtkm::Id output_dimx, vtkm::Id output_dimy, bool odd_low) :
-                      lowFilter(  loFilter.PrepareForInput( DeviceTag() ) ),
+                      vtkm::Id output_dimx, vtkm::Id output_dimy, bool odd_low )
+                   :  lowFilter(  loFilter.PrepareForInput( DeviceTag() ) ),
                       highFilter( hiFilter.PrepareForInput( DeviceTag() ) ),
                       filterLen(  filter_len ), approxLen(  approx_len ),
                       inputDimX(  input_dimx ), inputDimY(  input_dimy ),
@@ -219,8 +443,7 @@ private:
   const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
       PortalConst lowFilter, highFilter;
   const vtkm::Id filterLen, approxLen;
-  const vtkm::Id inputDimX,  inputDimY;
-  const vtkm::Id outputDimX, outputDimY;
+  const vtkm::Id inputDimX, inputDimY, outputDimX, outputDimY;
   bool oddlow;
   vtkm::Id xlstart, xhstart;
   
@@ -248,8 +471,8 @@ public:
   InverseTransform2DOdd( const vtkm::cont::ArrayHandle<vtkm::Float64> &lo_fil,
                          const vtkm::cont::ArrayHandle<vtkm::Float64> &hi_fil,
                          vtkm::Id fil_len, vtkm::Id x1, vtkm::Id y1, vtkm::Id x2,
-                         vtkm::Id y2, vtkm::Id cA_len_ext )  :
-                         lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
+                         vtkm::Id y2, vtkm::Id cA_len_ext )
+                       : lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
                          highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
                          filterLen( fil_len ), inputDimX( x1 ), inputDimY( y1 ),
                          outputDimX( x2 ), outputDimY( y2 ), cALenExtended( cA_len_ext ) {}
@@ -422,8 +645,8 @@ public:
   InverseTransform2DEven( const vtkm::cont::ArrayHandle<vtkm::Float64> &lo_fil,
                           const vtkm::cont::ArrayHandle<vtkm::Float64> &hi_fil,
                           vtkm::Id filtL, vtkm::Id x1, vtkm::Id y1, 
-                          vtkm::Id x2, vtkm::Id y2, vtkm::Id cALExt ) : 
-                          lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
+                          vtkm::Id x2, vtkm::Id y2, vtkm::Id cALExt )
+                        : lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
                           highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
                           filterLen(filtL), inputDimX( x1 ), inputDimY( y1 ),
                           outputDimX( x2 ), outputDimY( y2 ), cALenExtended(cALExt) {}
@@ -819,71 +1042,8 @@ private:
 };
 
 
-// Worklet for 2D signal extension on the left
-class LeftExtentionWorklet2D : public vtkm::worklet::WorkletMapField
-{
-public:
-  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
-                                 WholeArrayIn  < ScalarAll > ); // signal part
-  typedef void ExecutionSignature( _1, _2, WorkIndex );
-  typedef _1   InputDomain;
-  typedef vtkm::Id Id;
-
-  // Constructor
-  VTKM_EXEC_CONT_EXPORT 
-  LeftExtentionWorklet2D( Id x1, Id y1, Id x2, Id y2, DWTMode m)
-      : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), mode(m)  {}
-
-  // Index translation helper
-  VTKM_EXEC_CONT_EXPORT
-  void Ext1Dto2D ( const Id &idx, Id &x, Id &y ) const
-  {
-    x = idx % extDimX;
-    y = idx / extDimX;
-  }
-
-  // Index translation helper
-  VTKM_EXEC_CONT_EXPORT
-  Id Sig2Dto1D( Id x, Id y ) const
-  {
-    return y * sigDimX + x;
-  }
-
-  template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_EXPORT
-  void operator()(       PortalOutType       &portalOut,
-                   const PortalInType        &portalIn,
-                   const vtkm::Id            &workIndex) const
-  {
-    Id extX, extY;
-    Id sigX;
-    typename PortalOutType::ValueType sym = 1.0;
-    Ext1Dto2D( workIndex, extX, extY );
-    if      ( mode == SYMH )
-      sigX = extDimX - extX - 1;
-    else if ( mode == SYMW )
-      sigX = extDimX - extX; 
-    else if ( mode == ASYMH )
-    {
-      sigX = extDimX - extX - 1;
-      sym  = -1.0;
-    }
-    else    // mode == ASYMW
-    {
-      sigX = extDimX - extX;
-      sym  = -1.0;
-    }
-    portalOut.Set( workIndex, portalIn.Get( Sig2Dto1D(sigX, extY) ) * sym );
-  }
-
-private:
-  vtkm::Id extDimX, extDimY, sigDimX, sigDimY;
-  DWTMode  mode;
-};
-
-
 // Worklet for 2D signal extension on the right
-class RightExtentionWorklet2D : public vtkm::worklet::WorkletMapField
+class RightExtensionWorklet2D : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
@@ -894,7 +1054,7 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT 
-  RightExtentionWorklet2D( bool padZero, Id x1, Id y1, Id x2, Id y2, DWTMode m) :
+  RightExtensionWorklet2D( bool padZero, Id x1, Id y1, Id x2, Id y2, DWTMode m) :
         sigPadZero( padZero), extDimX( x1 ), extDimY( y1 ), 
         sigRealDimX( x2 ), sigRealDimY( y2 ), mode(m)       {}
 

@@ -59,11 +59,60 @@ void FillArray( ArrayType& array )
   dispatcher.Invoke( array );
 }
 
+template< typename ArrayType >
+void Print2DArray( const std::string &str, const ArrayType &arr, vtkm::Id dimX  )
+{
+  std::cout << str << std::endl;
+  for( vtkm::Id i = 0; i < arr.GetNumberOfValues(); i++ )
+  {
+    std::cout << arr.GetPortalConstControl().Get(i) << "  ";
+    if( i % dimX == dimX - 1 )
+      std::cout << std::endl;
+  }
+}
 
-void Debug2DExtend()
+void DebugExtend2D()
 {
   vtkm::Id NX = 10;
   vtkm::Id NY = 10;
+  typedef vtkm::cont::ArrayHandle< vtkm::Float64 >   ArrayType;
+  ArrayType     left1, left2, center, right;
+  
+  center.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  for( vtkm::Id i = 0; i < NX*NY; i++ )
+    center.GetPortalControl().Set(i, i);
+  left1.PrepareForOutput( NX / 2 * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  left2.PrepareForOutput( NX / 2 * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+
+  typedef vtkm::worklet::wavelets::ExtensionWorklet2D       ExtWorklet;
+  typedef vtkm::worklet::wavelets::LeftExtensionWorklet2D   LeftExtWorklet;
+  typedef vtkm::worklet::wavelets::RightExtensionWorklet2D  RightExtWorklet;
+
+  vtkm::worklet::wavelets::ExtensionDirection2D 
+      extDir = vtkm::worklet::wavelets::ExtensionDirection2D::LEFT;
+  vtkm::worklet::wavelets::DWTMode mode = vtkm::worklet::wavelets::SYMH;
+
+  {
+  LeftExtWorklet worklet( NX/2, NY, NX, NY, mode );
+  vtkm::worklet::DispatcherMapField< LeftExtWorklet, VTKM_DEFAULT_DEVICE_ADAPTER_TAG> 
+        dispatcher( worklet );
+  dispatcher.Invoke( left1, center );
+  }
+  Print2DArray( "true results:", left1, NX/2 );
+  {
+  ExtWorklet worklet( NX/2, NY, NX, NY, extDir, mode, false );
+  vtkm::worklet::DispatcherMapField< ExtWorklet, VTKM_DEFAULT_DEVICE_ADAPTER_TAG> 
+        dispatcher( worklet );
+  dispatcher.Invoke( left2, center );
+  }
+  //Print2DArray( "test results:", left2, NX/2 );
+}
+
+
+void DebugDWT2D()
+{
+  vtkm::Id NX = 9;
+  vtkm::Id NY = 9;
   typedef vtkm::cont::ArrayHandle< vtkm::Float64 >   ArrayType;
   ArrayType     left, center, right;
   
@@ -74,7 +123,7 @@ void Debug2DExtend()
   ArrayType output1, output2;
   std::vector<vtkm::Id> L(10, 0);
 
-  vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::HAAR );
+  vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::CDF8_4 );
 
   // get true results
   dwt.DWT2D(center, NX, NY, output1, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
@@ -244,41 +293,41 @@ void TestDecomposeReconstruct2D()
   vtkm::Float64 elapsedTime = 0.0;
 
   // Decompose
-//  vtkm::cont::Timer<> timer;
+  vtkm::cont::Timer<> timer;
   computationTime = 
   compressor.WaveDecompose2D( inputArray, nLevels, sigX, sigY, outputArray, L, 
                               VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-//  elapsedTime = timer.GetElapsedTime();  
+  elapsedTime = timer.GetElapsedTime();  
   std::cout << "Decompose time         = " << elapsedTime << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
 
   // Squash small coefficients
-//  timer.Reset();
+  timer.Reset();
   vtkm::Float64 cratio = 1.0;
   compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-//  elapsedTime = timer.GetElapsedTime();  
+  elapsedTime = timer.GetElapsedTime();  
   std::cout << "Squash time            = " << elapsedTime << std::endl;
 
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
-  //timer.Reset();
+  timer.Reset();
   computationTime = 
   compressor.WaveReconstruct2D( outputArray, nLevels, sigX, sigY, reconstructArray, L,
                                 VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  //elapsedTime = timer.GetElapsedTime();  
+  elapsedTime = timer.GetElapsedTime();  
   std::cout << "Reconstruction time    = " << elapsedTime << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
 
   compressor.EvaluateReconstruction( inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
-  //timer.Reset();
+  timer.Reset();
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
     VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i),
                                   inputArray.GetPortalConstControl().Get(i) ),
                                   "output value not the same..." );
   }
-  //elapsedTime = timer.GetElapsedTime();  
+  elapsedTime = timer.GetElapsedTime();  
   std::cout << "Verification time      = " << elapsedTime << std::endl;
 }
 
@@ -342,8 +391,9 @@ void TestWaveletCompressor()
   //DebugDWTIDWT1D();
   //DebugRectangleCopy();
   //TestDecomposeReconstruct1D();
-  TestDecomposeReconstruct2D();
-  //Debug2DExtend();
+  //TestDecomposeReconstruct2D();
+  //DebugDWT2D();
+  DebugExtend2D();
 }
 
 int UnitTestWaveletCompressor(int, char *[])
