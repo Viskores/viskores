@@ -181,14 +181,14 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT 
-  ExtensionWorklet2D( Id x1, Id y1, Id x2, Id y2, 
-                      ExtensionDirection2D dir, DWTMode m, bool pad_zero)
+  ExtensionWorklet2D( Id x1, Id y1, Id x2, Id y2, DWTMode m,
+                      ExtensionDirection2D dir, bool pad_zero)
                     : extDimX( x1 ), extDimY( y1 ), sigDimX( x2 ), sigDimY( y2 ), 
-                      direction( dir ), mode(m), padZero( pad_zero )  {}
+                      mode(m), direction( dir ), padZero( pad_zero )  {}
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT
-  void Ext1Dto2D ( const Id &idx, Id x, Id y ) const
+  void Ext1Dto2D ( Id idx, Id &x, Id &y ) const
   {
     x = idx % extDimX;
     y = idx / extDimX;
