@@ -113,14 +113,21 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
       list(APPEND CUDA_NVCC_INCLUDE_ARGS_USER -isystem ${dir})
     endforeach()
 
-    cuda_add_library(TestBuild_${name} ${cxxfiles} ${hfiles})
+    cuda_add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
   elseif (${cxxfiles_len} GREATER 0)
-    add_library(TestBuild_${name} ${cxxfiles} ${hfiles})
+    add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
     target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
   endif ()
   target_link_libraries(TestBuild_${name} ${VTKm_LIBRARIES})
   set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
+    )
+  # Send the libraries created for test builds to their own directory so as to
+  # not polute the directory with useful libraries.
+  set_target_properties(TestBuild_${name} PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
+    LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
+    RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
     )
 endfunction(vtkm_add_header_build_test)
 
