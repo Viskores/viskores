@@ -24,9 +24,7 @@
 
 #include <vtkm/rendering/CanvasGL.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/shared_ptr.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <memory>
 
 namespace vtkm {
 namespace rendering {
@@ -63,7 +61,7 @@ public:
   vtkm::rendering::Canvas *NewCopy() const VTKM_OVERRIDE;
 
 private:
-  boost::shared_ptr<detail::CanvasOSMesaInternals> Internals;
+  std::shared_ptr<detail::CanvasOSMesaInternals> Internals;
 };
 
 }} //namespace vtkm::rendering

@@ -26,9 +26,7 @@
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Mapper.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/shared_ptr.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <memory>
 
 namespace vtkm {
 namespace rendering {
@@ -68,7 +66,7 @@ public:
 
 private:
   struct InternalsType;
-  boost::shared_ptr<InternalsType> Internals;
+  std::shared_ptr<InternalsType> Internals;
 
   struct RangeFunctor;
 };

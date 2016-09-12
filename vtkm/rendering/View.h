@@ -28,6 +28,8 @@
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Scene.h>
 
+#include <memory>
+
 namespace vtkm {
 namespace rendering {
 
@@ -137,9 +139,9 @@ protected:
 
 private:
   vtkm::rendering::Scene Scene;
-  boost::shared_ptr<vtkm::rendering::Mapper> MapperPointer;
-  boost::shared_ptr<vtkm::rendering::Canvas> CanvasPointer;
-  boost::shared_ptr<vtkm::rendering::WorldAnnotator> WorldAnnotatorPointer;
+  std::shared_ptr<vtkm::rendering::Mapper> MapperPointer;
+  std::shared_ptr<vtkm::rendering::Canvas> CanvasPointer;
+  std::shared_ptr<vtkm::rendering::WorldAnnotator> WorldAnnotatorPointer;
   vtkm::rendering::Camera Camera;
 };
 

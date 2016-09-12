@@ -27,6 +27,8 @@
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Mapper.h>
 
+#include <memory>
+
 namespace vtkm {
 namespace rendering {
 
@@ -55,7 +57,7 @@ public:
 
 private:
   struct InternalsType;
-  boost::shared_ptr<InternalsType> Internals;
+  std::shared_ptr<InternalsType> Internals;
 };
 }} //namespace vtkm::rendering
 
