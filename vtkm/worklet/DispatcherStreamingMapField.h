@@ -281,14 +281,17 @@ private:
                                 RangeType globalIndexOffset, DeviceAdapter) const
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
 
-    // The WorkletInvokeFunctor class handles the magic of fetching values
-    // for each instance and calling the worklet's function. So just create
-    // a WorkletInvokeFunctor and schedule it with the device adapter.
-    using TaskType = vtkm::exec::internal::TaskSingular<WorkletType, Invocation>;
-    TaskType task = TaskType(this->Worklet, invocation, globalIndexOffset);
-
-    Algorithm::Schedule(task, range);
+    // The TaskType class handles the magic of fetching values
+    // for each instance and calling the worklet's function.
+    // The TaskType will evaluate to one of the following classes:
+    //
+    // vtkm::exec::internal::TaskSingular
+    // vtkm::exec::internal::TaskTiling1D
+    // vtkm::exec::internal::TaskTiling3D
+    auto task = TaskTypes::MakeTask(this->Worklet, invocation, range, globalIndexOffset);
+    Algorithm::ScheduleTask(task, range);
   }
 
   vtkm::Id NumberOfBlocks;

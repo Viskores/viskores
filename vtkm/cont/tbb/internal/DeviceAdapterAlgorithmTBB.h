@@ -30,7 +30,8 @@
 #include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 #include <vtkm/cont/tbb/internal/FunctorsTBB.h>
-#include <vtkm/exec/internal/ErrorMessageBuffer.h>
+
+#include <vtkm/exec/tbb/internal/TaskTiling.h>
 
 namespace vtkm
 {
@@ -99,53 +100,23 @@ public:
       binary_functor, initialValue);
   }
 
+  VTKM_CONT_EXPORT static void ScheduleTask(vtkm::exec::tbb::internal::TaskTiling1D& functor,
+                                            vtkm::Id size);
+  VTKM_CONT_EXPORT static void ScheduleTask(vtkm::exec::tbb::internal::TaskTiling3D& functor,
+                                            vtkm::Id3 size);
+
   template <class FunctorType>
-  VTKM_CONT static void Schedule(FunctorType functor, vtkm::Id numInstances)
+  VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id numInstances)
   {
-    const vtkm::Id MESSAGE_SIZE = 1024;
-    char errorString[MESSAGE_SIZE];
-    errorString[0] = '\0';
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(errorString, MESSAGE_SIZE);
-
-    tbb::ScheduleKernel<FunctorType> kernel(functor);
-    kernel.SetErrorMessageBuffer(errorMessage);
-
-    ::tbb::blocked_range<vtkm::Id> range(0, numInstances, tbb::TBB_GRAIN_SIZE);
-
-    ::tbb::parallel_for(range, kernel);
-
-    if (errorMessage.IsErrorRaised())
-    {
-      throw vtkm::cont::ErrorExecution(errorString);
-    }
+    vtkm::exec::tbb::internal::TaskTiling1D kernel(functor);
+    ScheduleTask(kernel, numInstances);
   }
 
   template <class FunctorType>
-  VTKM_CONT static void Schedule(FunctorType functor, vtkm::Id3 rangeMax)
+  VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id3 rangeMax)
   {
-    static const vtkm::UInt32 TBB_GRAIN_SIZE_3D[3] = { 1, 4, 256 };
-
-    //we need to extract from the functor that uniform grid information
-    const vtkm::Id MESSAGE_SIZE = 1024;
-    char errorString[MESSAGE_SIZE];
-    errorString[0] = '\0';
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(errorString, MESSAGE_SIZE);
-
-    //memory is generally setup in a way that iterating the first range
-    //in the tightest loop has the best cache coherence.
-    ::tbb::blocked_range3d<vtkm::Id> range(0, rangeMax[2], TBB_GRAIN_SIZE_3D[0], 0, rangeMax[1],
-                                           TBB_GRAIN_SIZE_3D[1], 0, rangeMax[0],
-                                           TBB_GRAIN_SIZE_3D[2]);
-
-    tbb::ScheduleKernelId3<FunctorType> kernel(functor);
-    kernel.SetErrorMessageBuffer(errorMessage);
-
-    ::tbb::parallel_for(range, kernel);
-
-    if (errorMessage.IsErrorRaised())
-    {
-      throw vtkm::cont::ErrorExecution(errorString);
-    }
+    vtkm::exec::tbb::internal::TaskTiling3D kernel(functor);
+    ScheduleTask(kernel, rangeMax);
   }
 
   template <typename T, class Container>
@@ -248,6 +219,29 @@ public:
 
 private:
   ::tbb::tick_count StartTime;
+};
+
+template <>
+class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagTBB>
+{
+public:
+  template <typename WorkletType, typename InvocationType>
+  static vtkm::exec::serial::internal::TaskTiling1D MakeTask(const WorkletType& worklet,
+                                                             const InvocationType& invocation,
+                                                             vtkm::Id,
+                                                             vtkm::Id globalIndexOffset = 0)
+  {
+    return vtkm::exec::tbb::internal::TaskTiling1D(worklet, invocation, globalIndexOffset);
+  }
+
+  template <typename WorkletType, typename InvocationType>
+  static vtkm::exec::serial::internal::TaskTiling3D MakeTask(const WorkletType& worklet,
+                                                             const InvocationType& invocation,
+                                                             vtkm::Id3,
+                                                             vtkm::Id globalIndexOffset = 0)
+  {
+    return vtkm::exec::tbb::internal::TaskTiling3D(worklet, invocation, globalIndexOffset);
+  }
 };
 }
 } // namespace vtkm::cont

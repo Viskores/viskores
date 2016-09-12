@@ -241,6 +241,29 @@ private:
                      (unsigned long long int)newValue);
   }
 };
+
+template <>
+class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagCuda>
+{
+public:
+  template <typename WorkletType, typename InvocationType>
+  static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
+    const WorkletType& worklet, const InvocationType& invocation, vtkm::Id,
+    vtkm::Id globalIndexOffset = 0)
+  {
+    using Task = vtkm::exec::internal::TaskSingular<WorkletType, InvocationType>;
+    return Task(worklet, invocation, globalIndexOffset);
+  }
+
+  template <typename WorkletType, typename InvocationType>
+  static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
+    const WorkletType& worklet, const InvocationType& invocation, vtkm::Id3,
+    vtkm::Id globalIndexOffset = 0)
+  {
+    using Task = vtkm::exec::internal::TaskSingular<WorkletType, InvocationType>;
+    return Task(worklet, invocation, globalIndexOffset);
+  }
+};
 }
 } // namespace vtkm::cont
 

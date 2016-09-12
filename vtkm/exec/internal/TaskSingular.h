@@ -36,6 +36,11 @@ namespace exec
 namespace internal
 {
 
+// TaskSingular represents an execution pattern for a worklet
+// that is best expressed in terms of single dimension iteration space. Inside
+// this single dimension no order is preferred.
+//
+//
 template <typename WorkletType, typename InvocationType>
 class TaskSingular : public vtkm::exec::TaskBase
 {
@@ -48,6 +53,7 @@ public:
     , GlobalIndexOffset(globalIndexOffset)
   {
   }
+
   VTKM_CONT
   void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer& buffer)
   {

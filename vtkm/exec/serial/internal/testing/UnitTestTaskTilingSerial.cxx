@@ -17,24 +17,13 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_TaskBase_h
-#define vtk_m_exec_TaskBase_h
 
-#include <vtkm/Types.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/exec/internal/testing/TestingTaskTiling.h>
 
-#include <vtkm/exec/internal/ErrorMessageBuffer.h>
-
-namespace vtkm
-{
-namespace exec
+int UnitTestTaskTilingSerial(int, char* [])
 {
 
-/// Base class for all classes that are used to marshal data from the invocation
-/// parameters to the user worklets when invoked in the execution environment.
-class TaskBase
-{
-};
+  return vtkm::cont::testing::Testing::Run(
+    vtkm::exec::internal::testing::TestTaskTiling<vtkm::cont::DeviceAdapterTagSerial>);
 }
-} // namespace vtkm::exec
-
-#endif //vtk_m_exec_TaskBase_h
