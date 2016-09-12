@@ -122,6 +122,13 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
+  # Send the libraries created for test builds to their own directory so as to
+  # not polute the directory with useful libraries.
+  set_target_properties(TestBuild_${name} PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
+    LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
+    RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
+    )
 endfunction(vtkm_add_header_build_test)
 
 function(vtkm_install_headers dir_prefix)
