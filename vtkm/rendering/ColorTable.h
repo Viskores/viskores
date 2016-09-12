@@ -24,11 +24,7 @@
 
 #include <vtkm/rendering/Color.h>
 
-#include <string>
-
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/shared_ptr.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <memory>
 
 namespace vtkm {
 namespace rendering {
@@ -49,7 +45,7 @@ struct ColorTableInternals;
 class ColorTable
 {
 private:
-  boost::shared_ptr<detail::ColorTableInternals> Internals;
+  std::shared_ptr<detail::ColorTableInternals> Internals;
 
 public:
   VTKM_RENDERING_EXPORT

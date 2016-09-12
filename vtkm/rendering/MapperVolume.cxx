@@ -40,7 +40,7 @@ struct MapperVolume::InternalsType
 {
   vtkm::rendering::CanvasRayTracer *Canvas;
   vtkm::cont::internal::RuntimeDeviceTracker DeviceTracker;
-  boost::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
+  std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
       RayTracerContainer;
 
   VTKM_CONT_EXPORT

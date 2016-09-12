@@ -20,6 +20,7 @@
 
 #include <vtkm/rendering/ColorTable.h>
 
+#include <string>
 #include <vector>
 
 namespace vtkm {
@@ -227,8 +228,7 @@ void ColorTable::Clear()
 
 void ColorTable::Reverse()
 {
-  boost::shared_ptr<detail::ColorTableInternals> oldInternals =
-      this->Internals;
+  std::shared_ptr<detail::ColorTableInternals> oldInternals = this->Internals;
 
   this->Clear();
 

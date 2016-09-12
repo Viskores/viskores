@@ -24,10 +24,6 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/shared_ptr.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace {
 
 void TestCellAverageUniform3D()
