@@ -75,37 +75,37 @@ void DebugExtend2D()
 {
   vtkm::Id NX = 10;
   vtkm::Id NY = 10;
+  vtkm::Id addLen = 4;
   typedef vtkm::cont::ArrayHandle< vtkm::Float64 >   ArrayType;
-  ArrayType     left1, left2, center, right;
+  ArrayType     left1, left2, center, right1, right2;
+  ArrayType     centerExtended;
   
   center.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   for( vtkm::Id i = 0; i < NX*NY; i++ )
     center.GetPortalControl().Set(i, i);
-  left1.PrepareForOutput( NX / 2 * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  left2.PrepareForOutput( NX / 2 * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
   typedef vtkm::worklet::wavelets::ExtensionWorklet2D       ExtWorklet;
   typedef vtkm::worklet::wavelets::LeftExtensionWorklet2D   LeftExtWorklet;
   typedef vtkm::worklet::wavelets::RightExtensionWorklet2D  RightExtWorklet;
 
   vtkm::worklet::wavelets::ExtensionDirection2D 
-      extDir = vtkm::worklet::wavelets::ExtensionDirection2D::LEFT;
-  vtkm::worklet::wavelets::DWTMode mode = vtkm::worklet::wavelets::SYMH;
+      extdirLeft = vtkm::worklet::wavelets::ExtensionDirection2D::LEFT;
+  vtkm::worklet::wavelets::ExtensionDirection2D 
+      extdirRight = vtkm::worklet::wavelets::ExtensionDirection2D::RIGHT;
+  vtkm::worklet::wavelets::DWTMode mode = vtkm::worklet::wavelets::SYMW;
 
+  vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::CDF9_7 );
+
+  // compute real values
   {
-  LeftExtWorklet worklet( NX/2, NY, NX, NY, mode );
-  vtkm::worklet::DispatcherMapField< LeftExtWorklet, VTKM_DEFAULT_DEVICE_ADAPTER_TAG> 
-        dispatcher( worklet );
-  dispatcher.Invoke( left1, center );
+    dwt.Extend2D( center, NX, NY, centerExtended, addLen, mode, mode, false, true,
+                  VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   }
-  Print2DArray( "true results:", left1, NX/2 );
+  // compute test implementation
   {
-  ExtWorklet worklet( NX/2, NY, NX, NY, extDir, mode, false );
-  vtkm::worklet::DispatcherMapField< ExtWorklet, VTKM_DEFAULT_DEVICE_ADAPTER_TAG> 
-        dispatcher( worklet );
-  dispatcher.Invoke( left2, center );
+    dwt.Extend2Dv3( center, NX, NY, left1, right1, addLen, mode, mode, false, true,
+                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   }
-  //Print2DArray( "test results:", left2, NX/2 );
 }
 
 
@@ -120,16 +120,16 @@ void DebugDWT2D()
   for( vtkm::Id i = 0; i < NX*NY; i++ )
     center.GetPortalControl().Set(i, i);
 
-  ArrayType output1, output2;
+  ArrayType output1, output2, output3;
   std::vector<vtkm::Id> L(10, 0);
 
   vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::CDF8_4 );
 
   // get true results
-  dwt.DWT2D(center, NX, NY, output1, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  dwt.DWT2Dv2(center, NX, NY, output1, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   // get test results
-  dwt.DWT2Dv2( center, NX, NY, output2, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  dwt.DWT2Dv3( center, NX, NY, output3, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
   for( vtkm::Id i = 0; i < output1.GetNumberOfValues(); i++ )
   {
@@ -154,6 +154,7 @@ std::cout << "test results after DWT:" << std::endl;
       std::cout << std::endl;
   }
 
+#if 0
 ArrayType   idwt_out1, idwt_out2;
   
   // true results go through IDWT
@@ -178,7 +179,7 @@ std::cout << "test results after IDWT:" << std::endl;
     if( i % NX == NX - 1 )
       std::cout << std::endl;
   }
-
+#endif
 }
 
 void DebugDWTIDWT1D()
@@ -392,8 +393,8 @@ void TestWaveletCompressor()
   //DebugRectangleCopy();
   //TestDecomposeReconstruct1D();
   //TestDecomposeReconstruct2D();
-  //DebugDWT2D();
-  DebugExtend2D();
+  DebugDWT2D();
+  //DebugExtend2D();
 }
 
 int UnitTestWaveletCompressor(int, char *[])

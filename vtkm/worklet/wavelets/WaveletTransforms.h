@@ -52,8 +52,8 @@ public:
                             x1(x_1), x2(x_2), x3(x_3), 
                             y1(y_1), y2(y_2), y3(y_3), mode_lr(mode)  {}
 
-  void Translate2Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  // 2D indices as input
-                        vtkm::Id  &mat, vtkm::Id  &idx )  // which matrix, and idx of that matrix
+  void Translate2Dto1D( vtkm::Id  inX,  vtkm::Id  inY,         // 2D indices as input
+                        vtkm::Id  &mat, vtkm::Id  &idx ) const // which matrix, and idx of that matrix
   {
     if( mode_lr )   // left-right mode
     {
@@ -109,7 +109,7 @@ private:
 
 // Worklet: perform a simple 2D forward transform
 template< typename DeviceTag >
-class ForwardTransform2Dv2: public vtkm::worklet::WorkletMapField
+class ForwardTransform2Dv3: public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // left/top extension
@@ -122,7 +122,7 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  ForwardTransform2Dv2( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
+  ForwardTransform2Dv3( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
                         const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
                         vtkm::Id filter_len, vtkm::Id approx_len, 
                         bool odd_low, bool mode_lr,
@@ -155,7 +155,7 @@ public:
   template <typename InPortalType1, typename InPortalType2, typename InPortalType3 >
   VTKM_EXEC_CONT_EXPORT
   VAL GetVal( const InPortalType1 &portal1, const InPortalType2 &portal2,
-              const InPortalType3 &portal3, vtkm::Id inMatrix, vtkm::Id inIdx )
+              const InPortalType3 &portal3, vtkm::Id inMatrix, vtkm::Id inIdx ) const
   {
     if( inMatrix == 1 )
       return MAKEVAL( portal1.Get(inIdx) );
@@ -164,7 +164,10 @@ public:
     else if( inMatrix == 3 )
       return MAKEVAL( portal3.Get(inIdx) );
     else
+    {
         vtkm::cont::ErrorControlInternal("Invalid matrix index!");
+        return -1;
+    }
   }
   
   template <typename InPortalType1, typename InPortalType2, 
@@ -226,7 +229,7 @@ private:
   const vtkm::Id outDimX, outDimY;
   bool  oddlow;
   bool  modeLR;             // true = left right; false = top down.
-  IndexTranslator3Matrices  translator;
+  const IndexTranslator3Matrices  translator;
   vtkm::Id xlstart, xhstart;
   
   VTKM_EXEC_CONT_EXPORT
