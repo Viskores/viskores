@@ -32,9 +32,11 @@ namespace rendering {
 class CanvasGL : public Canvas
 {
 public:
+
   VTKM_RENDERING_EXPORT
   CanvasGL(vtkm::Id width=1024,
            vtkm::Id height=1024);
+
 
   VTKM_RENDERING_EXPORT
   ~CanvasGL();
@@ -92,6 +94,7 @@ public:
                const vtkm::Vec<vtkm::Float32,2> &anchor,
                const vtkm::rendering::Color & color,
                const std::string &text) const VTKM_OVERRIDE;
+
 
   VTKM_RENDERING_EXPORT
   vtkm::rendering::WorldAnnotator *CreateWorldAnnotator() const VTKM_OVERRIDE;

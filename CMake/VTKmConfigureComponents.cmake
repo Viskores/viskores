@@ -135,7 +135,7 @@ macro(vtkm_configure_component_OpenGL)
   vtkm_finish_configure_component(OpenGL
     DEPENDENT_VARIABLES VTKm_Base_FOUND OPENGL_FOUND
     ADD_INCLUDES ${OPENGL_INCLUDE_DIR}
-    ADD_LIBRARIES ${OPENGL_LIBRARIES}
+    ADD_LIBRARIES ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES}
     )
 endmacro(vtkm_configure_component_OpenGL)
 
