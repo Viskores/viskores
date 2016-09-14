@@ -22,8 +22,7 @@
 
 #Find the VTK-m package
 find_package(VTKm QUIET REQUIRED
-  COMPONENTS Base
-  OPTIONAL_COMPONENTS Serial Cuda TBB OSMesa Rendering
+  OPTIONAL_COMPONENTS Serial CUDA TBB OSMesa Rendering
   )
 
 
