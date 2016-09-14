@@ -33,7 +33,7 @@ namespace {
 
 void RenderTests()
 {
-    typedef vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> M;
+    typedef vtkm::rendering::MapperGL M;
     typedef vtkm::rendering::CanvasEGL C;
     typedef vtkm::rendering::View3D V3;
     typedef vtkm::rendering::View2D V2;
