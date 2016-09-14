@@ -134,11 +134,11 @@ void DebugDWT2D()
   for( vtkm::Id i = 0; i < output1.GetNumberOfValues(); i++ )
   {
     VTKM_TEST_ASSERT( test_equal( output1.GetPortalConstControl().Get(i),
-                                  output2.GetPortalConstControl().Get(i)),
+                                  output3.GetPortalConstControl().Get(i)),
                                   "WaveletCompressor worklet failed..." );
   }
   
-std::cout << "true results after DWT:" << std::endl;
+std::cout << "true results after 2D DWT:" << std::endl;
   for( vtkm::Id i = 0; i < output1.GetNumberOfValues(); i++ )
   {
     std::cout << output1.GetPortalConstControl().Get(i) << "  ";
@@ -146,10 +146,10 @@ std::cout << "true results after DWT:" << std::endl;
       std::cout << std::endl;
   }
   
-std::cout << "test results after DWT:" << std::endl;
-  for( vtkm::Id i = 0; i < output2.GetNumberOfValues(); i++ )
+std::cout << "test results after 2D DWT:" << std::endl;
+  for( vtkm::Id i = 0; i < output3.GetNumberOfValues(); i++ )
   {
-    std::cout << output2.GetPortalConstControl().Get(i) << "  ";
+    std::cout << output3.GetPortalConstControl().Get(i) << "  ";
     if( i % NX == NX - 1 )
       std::cout << std::endl;
   }
