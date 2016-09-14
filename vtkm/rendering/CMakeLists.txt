@@ -137,6 +137,12 @@ if(VTKm_OpenGL_FOUND)
   endif()
 endif()
 
+if(VTKm_ENABLE_OSMESA AND NOT VTKm_OSMesa_FOUND)
+  message(SEND_ERROR "OSMesa was requested by not properly configured.
+Either make sure the OSMesa headers and library are properly found or set
+VTKm_ENABLE_OSMESA to OFF.")
+endif()
+
 vtkm_declare_headers(${headers})
 
 if (VTKm_ENABLE_CUDA)
