@@ -43,6 +43,7 @@ void RenderTriangles(MapperGL &mapper,
 {
 
   if (!mapper.loaded){
+      glewInit();
       mapper.loaded = true;
 
       std::vector<float> data, colors;
