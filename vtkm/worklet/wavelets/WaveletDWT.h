@@ -82,7 +82,7 @@ public:
     typedef typename SigInArrayType::ValueType                 ValueType;
     typedef vtkm::cont::ArrayHandle< ValueType >               ExtendArrayType; 
 
-    // Work on left extension, copy result to output
+    // Work on left extension 
     ExtendArrayType                              leftExtend;
     leftExtend.PrepareForOutput( extDimX * extDimY, DeviceTag() );
     typedef vtkm::worklet::wavelets::LeftExtensionWorklet2D  LeftWorkletType;
@@ -821,14 +821,16 @@ if( print)
                               addLen, sigDimY, sigDimX, sigDimY, addLen, sigDimY );
       vtkm::worklet::DispatcherMapField< ForwardXFormv3, DeviceTag > dispatcher( worklet );
       dispatcher.Invoke( leftExt, sigIn, rightExt, afterX );
-std::cout << "test results afrer DWT on rows: " << std::endl;
+/*std::cout << "test results afrer DWT on rows: " << std::endl;
 for( vtkm::Id i = 0; i < afterX.GetNumberOfValues(); i++ )
 {
   std::cout << afterX.GetPortalConstControl().Get(i) << "  ";
   if( i % sigDimX == sigDimX - 1 )
     std::cout << std::endl;
-}
+}*/
     }
+    leftExt.ReleaseResources();
+    rightExt.ReleaseResources();
 
     // Then do transform in Y direction
     ArrayType        afterXTransposed;
@@ -921,7 +923,7 @@ for( vtkm::Id i = 0; i < afterX.GetNumberOfValues(); i++ )
     timer.Reset();
     dispatcher.Invoke( sigExtended, afterX );
     elapsedTime += timer.GetElapsedTime();
-std::cout << "test results afrer DWT on rows: " << std::endl;
+std::cout << "true results afrer DWT on rows: " << std::endl;
 for( vtkm::Id i = 0; i < afterX.GetNumberOfValues(); i++ )
 {
   std::cout << afterX.GetPortalConstControl().Get(i) << "  ";

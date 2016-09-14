@@ -57,21 +57,19 @@ public:
   {
     if( mode_lr )   // left-right mode
     {
-      if( inX < 0 )
-        vtkm::cont::ErrorControlInternal("Invalid index!");
-      else if ( 0 <= inX && inX < x1 )
+      if ( 0 <= inX && inX < x1 )
       {
-        mat = 0;
+        mat = 1;
         idx = inY * x1 + inX;
       } 
       else if ( x1 <= inX && inX < (x1 + x2) )
       {
-        mat = 1;
+        mat = 2;
         idx = inY * x2 + (inX - x1);
       }
       else if ( (x1 + x2) <= inX && inX < (x1 + x2 + x3) )
       {
-        mat = 2;  
+        mat = 3;  
         idx = inY * x3 + (inX - x1 - x2);
       }
       else
@@ -79,21 +77,19 @@ public:
     }
     else          // top-down mode
     {
-      if( inY < 0 )
-        vtkm::cont::ErrorControlInternal("Invalid index!");
-      else if ( 0 <= inY && inY < y1 )
+      if ( 0 <= inY && inY < y1 )
       {
-        mat = 0;
+        mat = 1;
         idx = inY * x1 + inX;
       }
       else if ( y1 <= inY && inY < (y1 + y2) )
       {
-        mat = 1;
+        mat = 2;
         idx = (inY - y1) * x1 + inX;
       }
       else if ( (y1 + y2) <= inY && inY < (y1 + y2 + y3) )
       {
-        mat = 2;
+        mat = 3;
         idx = (inY - y1 - y2) * x1 + inX;
       }
       else
@@ -179,41 +175,70 @@ public:
                      OutputPortalType       &coeffOut,
                   const vtkm::Id            &workIndex) const
   {
-    vtkm::Id outputX, outputY, output1D;
-    Output1Dto2D( workIndex, outputX, outputY );
-    vtkm::Id inputX = outputX; 
-    vtkm::Id inputY = outputY;
+    vtkm::Id workX, workY, output1D;
+    Output1Dto2D( workIndex, workX, workY );
     vtkm::Id inputMatrix, inputIdx;
     typedef typename OutputPortalType::ValueType OutputValueType;
     
     if( modeLR )
     {
-      if( inputX % 2 == 0 )  // calculate cA
+      if( workX % 2 == 0 )  // calculate cA
       {
-        vtkm::Id xl = xlstart + inputX;
+        vtkm::Id xl = lstart + workX;
         VAL sum = MAKEVAL(0.0);
         for( vtkm::Id k = filterLen - 1; k > -1; k-- )
         {
-          translator.Translate2Dto1D( xl, inputY, inputMatrix, inputIdx );
+          translator.Translate2Dto1D( xl, workY, inputMatrix, inputIdx );
           sum += lowFilter.Get(k) * 
                  GetVal( inPortal1, inPortal2, inPortal3, inputMatrix, inputIdx );
           xl++;
         }
-        output1D = Output2Dto1D( inputX/2, outputY );
+        output1D = Output2Dto1D( workX/2, workY );
         coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
       }
       else                      // calculate cD
       {
-        vtkm::Id xh = xhstart + inputX - 1;
+        vtkm::Id xh = hstart + workX - 1;
         VAL sum=MAKEVAL(0.0);
         for( vtkm::Id k = filterLen - 1; k > -1; k-- )
         {
-          translator.Translate2Dto1D( xh, inputY, inputMatrix, inputIdx );
+          translator.Translate2Dto1D( xh, workY, inputMatrix, inputIdx );
           sum += highFilter.Get(k) * 
                  GetVal( inPortal1, inPortal2, inPortal3, inputMatrix, inputIdx );
           xh++;
         }
-        output1D = Output2Dto1D( (inputX-1)/2 + approxLen, outputY );
+        output1D = Output2Dto1D( (workX-1)/2 + approxLen, workY );
+        coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
+      }
+    }
+    else    // top-down order 
+    {
+      if( workY % 2 == 0 )  // calculate cA
+      {
+        vtkm::Id yl = lstart + workY;
+        VAL sum = MAKEVAL(0.0);
+        for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+        {
+          translator.Translate2Dto1D( workX, yl, inputMatrix, inputIdx );
+          sum += lowFilter.Get(k) * 
+                 GetVal( inPortal1, inPortal2, inPortal3, inputMatrix, inputIdx );
+          yl++;
+        }
+        output1D = Output2Dto1D( workX, workY/2 );
+        coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
+      }
+      else                      // calculate cD
+      {
+        vtkm::Id yh = hstart + workY - 1;
+        VAL sum=MAKEVAL(0.0);
+        for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+        {
+          translator.Translate2Dto1D( workX, yh, inputMatrix, inputIdx );
+          sum += highFilter.Get(k) * 
+                 GetVal( inPortal1, inPortal2, inPortal3, inputMatrix, inputIdx );
+          yh++;
+        }
+        output1D = Output2Dto1D( workX, (workY-1)/2 + approxLen );
         coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
       }
     }
@@ -230,13 +255,13 @@ private:
   bool  oddlow;
   bool  modeLR;             // true = left right; false = top down.
   const IndexTranslator3Matrices  translator;
-  vtkm::Id xlstart, xhstart;
+  vtkm::Id lstart, hstart;
   
   VTKM_EXEC_CONT_EXPORT
   void SetStartPosition()
   {
-    this->xlstart = this->oddlow  ? 1 : 0;
-    this->xhstart = 1;
+    this->lstart = this->oddlow  ? 1 : 0;
+    this->hstart = 1;
   }
 };
 
@@ -328,8 +353,8 @@ public:
 
 private:
   const vtkm::Id              extDimX, extDimY, sigDimX, sigDimY;
-  const ExtensionDirection2D  direction;
   const DWTMode               mode;
+  const ExtensionDirection2D  direction;
   const bool                  padZero;  // only applicable when direction is right or bottom.
 };
 
