@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
     fieldName = "SCALARS:pointvar";
   }
 
-  typedef vtkm::rendering::MapperRayTracer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>  Mapper;
+  typedef vtkm::rendering::MapperRayTracer  Mapper;
   typedef vtkm::rendering::CanvasRayTracer Canvas;
 
   // Set up a camera for rendering the input data
