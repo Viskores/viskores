@@ -128,7 +128,7 @@ if(VTKm_OpenGL_FOUND)
   vtkm_configure_component_EGL()
   if(VTKm_EGL_FOUND)
     list(APPEND headers ${egl_headers})
-    list(APPEND sources ${egl_headers})
+    list(APPEND sources ${egl_sources})
   endif()
 
   vtkm_configure_component_GLFW()
