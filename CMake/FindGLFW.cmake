@@ -99,4 +99,4 @@ find_package_handle_standard_args(GLFW DEFAULT_MSG
     GLFW_LIBRARY
 )
 
-mark_as_advanced( GLFW_FOUND )
+mark_as_advanced( GLFW_INCLUDE_DIR GLFW_LIBRARY )
