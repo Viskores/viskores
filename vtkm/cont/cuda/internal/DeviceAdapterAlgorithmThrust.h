@@ -34,6 +34,11 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
 
+
+
+//#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
+
 // Disable warnings we check vtkm for but Thrust does not.
 VTKM_THIRDPARTY_PRE_INCLUDE
 //our own custom thrust execution policy
@@ -53,6 +58,11 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {
 namespace cont {
+
+template<class DeviceAdapterTag>
+class DeviceAdapterAlgorithm;
+
+
 namespace cuda {
 namespace internal {
 
@@ -267,7 +277,9 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
 /// the correct device adapter tag as the template parameter.
 ///
 template<class DeviceAdapterTag>
-struct DeviceAdapterAlgorithmThrust
+struct DeviceAdapterAlgorithmThrust : vtkm::cont::internal::DeviceAdapterAlgorithmGeneral<
+               vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>,
+               vtkm::cont::DeviceAdapterTagCuda>
 {
   // Because of some funny code conversions in nvcc, kernels for devices have to
   // be public.
@@ -927,7 +939,7 @@ public:
       output.PrepareForOutput(0, DeviceAdapterTag());
       return vtkm::TypeTraits<T>::ZeroInitialization();
       }
-
+    
     //We need call PrepareForInput on the input argument before invoking a
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
@@ -949,7 +961,7 @@ public:
       output.PrepareForOutput(0, DeviceAdapterTag());
       return vtkm::TypeTraits<T>::ZeroInitialization();
       }
-
+    
     //We need call PrepareForInput on the input argument before invoking a
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place

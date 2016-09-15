@@ -21,10 +21,11 @@
 #include <vtkm/cont/ArrayHandleStreaming.h>
 #include <vtkm/worklet/DispatcherStreamingMapField.h>
 #include <vtkm/worklet/DispatcherMapField.h>
-
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vector>
+
 
 namespace vtkm
 {
@@ -47,26 +48,28 @@ public:
 
 void TestStreamingSine()
 {
-  std::cout << "Testing Streaming Sine" << std::endl;
+  // Test the streaming worklet
+  std::cout << "Testing streaming worklet:" << std::endl;
 
   const vtkm::Id N = 25;  const vtkm::Id NBlocks = 4;
-  vtkm::cont::ArrayHandle<vtkm::Float32> input, output;
+  vtkm::cont::ArrayHandle<vtkm::Float32> input, output, summation;
   std::vector<vtkm::Float32> data(N), test(N);
+  vtkm::Float32 testSum = 0.0f;
   for (vtkm::UInt32 i=0; i<N; i++)
   {
     data[i] = static_cast<vtkm::Float32>(i);
     test[i] = static_cast<vtkm::Float32>(i) + static_cast<vtkm::Float32>(vtkm::Sin(data[i]));
+    testSum += test[i];
   }
   input = vtkm::cont::make_ArrayHandle(data);
 
+  typedef typename vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAlgorithms;
   vtkm::worklet::SineWorklet sineWorklet;
   vtkm::worklet::DispatcherStreamingMapField<vtkm::worklet::SineWorklet> 
       dispatcher(sineWorklet);
   dispatcher.SetNumberOfBlocks(NBlocks);
-  
   dispatcher.Invoke(input, output);
 
-  std::cout << "Output size: " << output.GetNumberOfValues() << std::endl;
   for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
   {
     std::cout << input.GetPortalConstControl().Get(i) << " " 
@@ -78,6 +81,23 @@ void TestStreamingSine()
          "Wrong result for streaming sine worklet");
   }
 
+
+  // Test the streaming inclusive scan
+  std::cout << "Testing streaming scan: " << std::endl;
+
+  vtkm::Float32 referenceSum = DeviceAlgorithms::ScanInclusive(input, summation);
+  vtkm::Float32 streamSum = DeviceAlgorithms::StreamingScanInclusive(4, input, output);
+  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 0.01f), "Wrong sum for streaming scan");
+  
+  for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
+  {
+    std::cout << output.GetPortalConstControl().Get(i) << " " 
+              << summation.GetPortalConstControl().Get(i) << std::endl;
+    VTKM_TEST_ASSERT(
+         test_equal(output.GetPortalConstControl().Get(i),
+                    summation.GetPortalConstControl().Get(i), 0.01f),
+         "Wrong result for streaming scan");
+   }
 }
 
 int UnitTestStreamingSine(int, char *[])
