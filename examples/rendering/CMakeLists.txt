@@ -22,7 +22,6 @@
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET
-  COMPONENTS Base
   OPTIONAL_COMPONENTS Serial OpenGL Rendering
   )
 

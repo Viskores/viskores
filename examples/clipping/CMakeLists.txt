@@ -21,8 +21,7 @@
 ##=============================================================================
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET
-  COMPONENTS Base
-  OPTIONAL_COMPONENTS Serial Cuda TBB
+  OPTIONAL_COMPONENTS Serial CUDA TBB
   )
 
 add_executable(Clipping_SERIAL Clipping.cxx)
