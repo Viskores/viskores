@@ -209,14 +209,14 @@ macro(vtkm_configure_component_Interop)
 endmacro(vtkm_configure_component_Interop)
 
 macro(vtkm_configure_component_Rendering)
-  if(VTKm_BUILD_RENDERING)
+  if(VTKm_ENABLE_RENDERING)
     vtkm_configure_component_OpenGL()
     vtkm_configure_component_EGL()
     vtkm_configure_component_OSMesa()
   endif()
 
   vtkm_finish_configure_component(Rendering
-    DEPENDENT_VARIABLES VTKm_BUILD_RENDERING VTKm_Base_FOUND
+    DEPENDENT_VARIABLES VTKm_ENABLE_RENDERING VTKm_Base_FOUND
     ADD_LIBRARIES vtkm_rendering
     )
 endmacro(vtkm_configure_component_Rendering)
