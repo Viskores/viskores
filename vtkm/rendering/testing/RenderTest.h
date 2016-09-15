@@ -64,26 +64,10 @@ SetCamera<vtkm::rendering::View2D>(vtkm::rendering::Camera &camera,
 
 template <typename MapperType,typename CanvasType, typename ViewType>
 void
-Render(const vtkm::cont::DataSet &ds,
-       const MapperType &mapper,
-       const std::string &fieldNm,
-       const vtkm::rendering::ColorTable &colorTable,
+Render(
+       ViewType &view,
        const std::string &outputFile)
 {
-    CanvasType canvas(512,512);
-    vtkm::rendering::Scene scene;
-
-    scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
-                                          ds.GetCoordinateSystem(),
-                                          ds.GetField(fieldNm),
-                                          colorTable));
-    vtkm::rendering::Camera camera;
-    vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-    SetCamera<ViewType>(camera,
-                        ds.GetCoordinateSystem().GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG()));
-
-    ViewType view(scene, mapper, canvas, camera,
-                  vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
     view.Initialize();
     view.Paint();
     view.SaveAs(outputFile);
@@ -96,7 +80,21 @@ Render(const vtkm::cont::DataSet &ds,
        const std::string &outputFile)
 {
     MapperType mapper;
-    Render<MapperType, CanvasType, ViewType>(ds, mapper, fieldNm, colorTable, outputFile);
+    CanvasType canvas(512,512);
+    vtkm::rendering::Scene scene;
+
+    scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
+                                          ds.GetCoordinateSystem(),
+                                          ds.GetField(fieldNm),
+                                          colorTable));
+    vtkm::rendering::Camera camera;
+    SetCamera<ViewType>(camera,
+                        ds.GetCoordinateSystem().GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG()));
+
+    ViewType view(scene, mapper, canvas, camera,
+                  vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+
+    Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 
 

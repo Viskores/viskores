@@ -29,8 +29,9 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/testing/RenderTest.h>
+#include <vtkm/rendering/Color.h>
 #include <cstring>
-
+#include <string>
 namespace {
 static const vtkm::Id WIDTH = 512, HEIGHT = 512;
 static vtkm::Id which = 0, NUM_DATASETS = 4;
@@ -64,22 +65,55 @@ void RenderTests()
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, keyCallback);
     
+    CanvasType canvas[4](512,512);
+    vtkm::rendering::Scene scene[4];
+    vtkm::cont::DataSet ds[4];
+    MapperType mapper[4];
+    vtkm::rendering::Camera camera[4];
+
+    ds[0] = maker.Make3DRegularDataSet0();
+    ds[1] = maker.Make3DRectilinearDataSet0();
+    ds[2] = maker.Make3DExplicitDataSet4();
+    ds[3] = maker.Make2DRectilinearDataSet0();
+
+    std::string fldNames[4];
+    fldNames[0] = "pointvar";
+    fldNames[1] = "pointvar";
+    fldNames[2] = "pointvar";
+    fldNames[3] = "pointvar";
+
+    for (int i=0; i<NUM_DATASETS; i++){
+        scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
+                                              ds[i].GetCoordinateSystem(),
+                                              ds[i].GetField(fldNames[i].c_str()),
+                                              colorTable));
+        vtkm::rendering::testing::SetCamera<View3DType>(camera[i],
+                            ds[i].GetCoordinateSystem().GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG()));
+
+    }
+
+    View3DType view3d0(scene[0], mapper[0], canvas[0], camera[0],
+                  vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+    View3DType view3d1(scene[1], mapper[1], canvas[1], camera[1],
+                  vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+    View3DType view3d2(scene[2], mapper[2], canvas[2], camera[2],
+                  vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+
+    View2DType view2d(scene[3], mapper[3], canvas[3], camera[3],
+                  vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+
     while (!glfwWindowShouldClose(window) && !done)
     {
        glfwPollEvents();
 
        if (which == 0)
-           vtkm::rendering::testing::Render<MapperType,CanvasType,View3DType>(maker.Make3DRegularDataSet0(),
-                                                    "pointvar", colorTable, "reg3D.pnm");
+           vtkm::rendering::testing::Render<MapperType,CanvasType,View3DType>(view3d0,"reg3D.pnm");
        else if (which == 1)
-           vtkm::rendering::testing::Render<MapperType,CanvasType,View3DType>(maker.Make3DRectilinearDataSet0(),
-                                                    "pointvar", colorTable, "rect3D.pnm");
+           vtkm::rendering::testing::Render<MapperType,CanvasType,View3DType>(view3d1,"rect3D.pnm");
        else if (which == 2)
-           vtkm::rendering::testing::Render<MapperType,CanvasType,View3DType>(maker.Make3DExplicitDataSet4(),
-                                                    "pointvar", colorTable, "expl3D.pnm");
+           vtkm::rendering::testing::Render<MapperType,CanvasType,View3DType>(view3d2,"expl3D.pnm");
        else if (which == 3)
-           vtkm::rendering::testing::Render<MapperType,CanvasType,View2DType>(maker.Make2DRectilinearDataSet0(),
-                                                    "pointvar", colorTable, "rect2D.pnm");       
+           vtkm::rendering::testing::Render<MapperType,CanvasType,View2DType>(view2d,"rect2D.pnm");
        glfwSwapBuffers(window);
 
        if (batch)
