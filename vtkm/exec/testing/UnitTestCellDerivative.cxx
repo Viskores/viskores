@@ -29,17 +29,12 @@
 
 #include <vtkm/testing/Testing.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-#include <boost/static_assert.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
-#include <time.h>
+#include <ctime>
+#include <random>
 
 namespace {
 
-boost::mt19937 g_RandomGenerator;
+std::mt19937 g_RandomGenerator;
 
 // Establish simple mapping between world and parametric coordinates.
 // Actuall world/parametric coordinates are in a different test.
@@ -119,7 +114,7 @@ struct TestDerivativeFunctor
 
     std::cout << "    Expected: " << expectedGradient << std::endl;
 
-    boost::random::uniform_real_distribution<vtkm::FloatDefault> randomDist;
+    std::uniform_real_distribution<vtkm::FloatDefault> randomDist;
 
     for (vtkm::IdComponent trial = 0; trial < 5; trial++)
     {
@@ -231,7 +226,7 @@ struct TestDerivativeFunctor
     this->DoTest(shape, numPoints, field, expectedGradient);
 
     std::cout << "Random linear field, " << numPoints << " points" << std::endl;
-    boost::random::uniform_real_distribution<vtkm::Float64> randomDist(-20.0, 20.0);
+    std::uniform_real_distribution<vtkm::Float64> randomDist(-20.0, 20.0);
     field.OriginValue = randomDist(g_RandomGenerator);
     field.Gradient = vtkm::make_Vec(randomDist(g_RandomGenerator),
                                     randomDist(g_RandomGenerator),
@@ -282,7 +277,7 @@ struct TestDerivativeFunctor
 
 void TestDerivative()
 {
-  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(time(NULL));
+  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(std::time(NULL));
   std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 
@@ -291,7 +286,7 @@ void TestDerivative()
   std::cout << "======== Float64 ==========================" << std::endl;
   vtkm::testing::Testing::TryAllCellShapes(TestDerivativeFunctor<vtkm::Float64>());
 
-  boost::random::uniform_real_distribution<vtkm::Float64> randomDist(-20.0, 20.0);
+  std::uniform_real_distribution<vtkm::Float64> randomDist(-20.0, 20.0);
   LinearField field;
   field.OriginValue = randomDist(g_RandomGenerator);
   field.Gradient = vtkm::make_Vec(randomDist(g_RandomGenerator),

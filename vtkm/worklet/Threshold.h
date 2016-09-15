@@ -43,7 +43,7 @@ public:
   {
   public:
     typedef void ControlSignature(CellSetIn cellset,
-                                  FieldInPoint<Scalar> scalars,
+                                  FieldInPoint<ScalarAll> scalars,
                                   FieldOutCell<BoolType> passFlags);
 
     typedef _3 ExecutionSignature(_2, PointCount);
@@ -106,8 +106,9 @@ public:
   Run(const CellSetType &cellSet,
       const vtkm::cont::Field &field,
       const UnaryPredicate &predicate,
-      DeviceAdapter)
+      DeviceAdapter device)
   {
+    (void) device;
     typedef vtkm::cont::CellSetPermutation< CellSetType > OutputType;
 
     vtkm::cont::ArrayHandle<bool> passFlags;
@@ -119,7 +120,7 @@ public:
 
       ThresholdWorklet worklet(predicate);
       DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-      dispatcher.Invoke(cellSet, field.GetData(), passFlags);
+      dispatcher.Invoke(cellSet, field, passFlags);
       break;
       }
 
@@ -129,7 +130,7 @@ public:
 
       ThresholdWorklet worklet(predicate);
       DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-      dispatcher.Invoke(cellSet, field.GetData(), passFlags);
+      dispatcher.Invoke(cellSet, field, passFlags);
       break;
       }
 
@@ -171,7 +172,7 @@ public:
     }
 
     vtkm::cont::DynamicArrayHandle data;
-    field.GetData().CastAndCall(PermuteCellData(this->ValidCellIds, data));
+    CastAndCall(field, PermuteCellData(this->ValidCellIds, data));
 
     return vtkm::cont::Field(field.GetName(), field.GetAssociation(),
                              field.GetAssocCellSet(), data);

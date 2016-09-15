@@ -305,7 +305,6 @@ struct VertexClustering
     }
   };
 
-
 public:
 
   ///////////////////////////////////////////////////
@@ -375,8 +374,10 @@ public:
     internal::AverageByKeyDynamicValue<vtkm::cont::ArrayHandle<vtkm::Id>,
                                        vtkm::cont::ArrayHandle<vtkm::Id>,
                                        DeviceAdapter>
-        averageByKey(pointCidArray, pointCidArrayReduced, repPointArray);
-    coordinates.CastAndCall(averageByKey);
+                      averageByKey(pointCidArray,
+                                   pointCidArrayReduced,
+                                   repPointArray);
+    CastAndCall(coordinates, averageByKey);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after averaging (s): " << timer.GetElapsedTime() << std::endl;

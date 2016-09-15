@@ -90,7 +90,7 @@ void TestPointElevation()
 
   vtkm::worklet::DispatcherMapField<vtkm::worklet::PointElevation>
       dispatcher(pointElevationWorklet);
-  dispatcher.Invoke(dataSet.GetCoordinateSystem().GetData(),
+  dispatcher.Invoke(dataSet.GetCoordinateSystem(),
                     result);
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > coordinates;

@@ -1146,9 +1146,15 @@ struct ListContainsImpl<ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13
 } // namespace detail
 
 //-----------------------------------------------------------------------------
-
 /// A basic tag for a list of typenames. This struct can be subclassed
 /// and still behave like a list tag.
+#if defined(VTKM_HAVE_CXX_11)
+template<typename... ArgTypes>
+struct ListTagBase : detail::ListRoot
+{
+  typedef detail::ListBase<void(ArgTypes...)> List;
+};
+#else
 template<typename T1 = vtkm::internal::NullType,
          typename T2 = vtkm::internal::NullType,
          typename T3 = vtkm::internal::NullType,
@@ -1350,6 +1356,7 @@ struct ListTagBase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14> : detail::Lis
   typedef detail::ListBase<void(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14)> List;
 };
 
+#endif
 
 } // namespace vtkm
 

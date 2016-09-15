@@ -20,12 +20,14 @@
 ##
 ##=============================================================================
 
+#Find the VTK-m package
+find_package(VTKm REQUIRED QUIET
+  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL
+  )
+
+
 find_package(GLUT)
 
-vtkm_configure_component_OpenGL()
-vtkm_configure_component_Serial()
-vtkm_configure_component_CUDA()
-vtkm_configure_component_TBB()
 
 if(VTKm_OpenGL_FOUND AND GLUT_FOUND)
   add_executable(TetrahedralizeExplicitGrid_SERIAL TetrahedralizeExplicitGrid.cxx)

@@ -44,6 +44,16 @@
 
 #define VTKM_CONT_EXPORT inline
 
+// constexpr support was added to VisualStudio 2015 and above. So this makes
+// sure when that we gracefully fall back to just const when using 2013
+#if defined(VTKM_MSVC) && _MSC_VER < 1900
+#define VTKM_CONSTEXPR const
+#else
+#define VTKM_CONSTEXPR constexpr
+#endif
+
+#define VTKM_OVERRIDE override
+
 /// Simple macro to identify a parameter as unused. This allows you to name a
 /// parameter that is not used. There are several instances where you might
 /// want to do this. For example, when using a parameter to overload or

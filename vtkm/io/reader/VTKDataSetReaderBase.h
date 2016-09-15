@@ -34,9 +34,7 @@
 #include <vtkm/io/ErrorIO.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/smart_ptr/scoped_ptr.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/type_traits/is_same.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <algorithm>
@@ -115,7 +113,7 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T> &ve
   case 1:
     {
     typedef typename ClosestCommonType<T>::Type CommonType;
-    if (!boost::is_same<T, CommonType>::value)
+    if (!std::is_same<T, CommonType>::value)
     {
       std::cerr << "Type " << vtkm::io::internal::DataTypeName<T>::Name()
                 << " is currently unsupported. Converting to "
@@ -139,7 +137,7 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T> &ve
     typedef typename vtkm::VecTraits<T>::ComponentType InComponentType;
     typedef typename ClosestFloat<InComponentType>::Type OutComponentType;
     typedef vtkm::Vec<OutComponentType, 3> CommonType;
-    if (!boost::is_same<T, CommonType>::value)
+    if (!std::is_same<T, CommonType>::value)
     {
       std::cerr << "Type " << vtkm::io::internal::DataTypeName<InComponentType>::Name()
                 << "[" << vtkm::VecTraits<T>::NUM_COMPONENTS << "] "
@@ -358,9 +356,10 @@ protected:
             this->DataSet.AddField(vtkm::cont::Field(name, association, data));
             break;
           case vtkm::cont::Field::ASSOC_CELL_SET:
-            data.CastAndCall(PermuteCellData(this->CellsPermutation, data));
+            vtkm::cont::CastAndCall( data,
+                     PermuteCellData(this->CellsPermutation, data) );
             this->DataSet.AddField(
-                vtkm::cont::Field(name, association, "cells", data));
+                  vtkm::cont::Field(name, association, "cells", data));
             break;
           default:
             break;
@@ -378,7 +377,7 @@ protected:
   void TransferDataFile(VTKDataSetReaderBase &reader)
   {
     reader.DataFile.swap(this->DataFile);
-    this->DataFile.reset(NULL);
+    this->DataFile.reset(nullptr);
   }
 
   virtual void CloseFile()
@@ -753,7 +752,7 @@ private:
   };
 
 protected:
-  boost::scoped_ptr<internal::VTKDataSetFile> DataFile;
+  std::unique_ptr<internal::VTKDataSetFile> DataFile;
   vtkm::cont::DataSet DataSet;
 
 private:

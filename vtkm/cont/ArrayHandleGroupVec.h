@@ -24,12 +24,8 @@
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/ErrorControlBadValue.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/type_traits/remove_const.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
-namespace cont {
+namespace exec {
 
 namespace internal {
 
@@ -41,7 +37,7 @@ public:
   typedef _SourcePortalType SourcePortalType;
 
   typedef typename
-    boost::remove_const<typename SourcePortalType::ValueType>::type
+    std::remove_const<typename SourcePortalType::ValueType>::type
       ComponentType;
   typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
 
@@ -109,6 +105,15 @@ private:
   SourcePortalType SourcePortal;
 };
 
+}
+}
+} // namespace vtkm::exec::internal
+
+namespace vtkm {
+namespace cont {
+
+namespace internal {
+
 template<typename SourceArrayHandleType, vtkm::IdComponent NUM_COMPONENTS>
 struct StorageTagGroupVec {  };
 
@@ -124,10 +129,10 @@ class Storage<
 public:
   typedef vtkm::Vec<ComponentType,NUM_COMPONENTS> ValueType;
 
-  typedef vtkm::cont::internal::ArrayPortalGroupVec<
+  typedef vtkm::exec::internal::ArrayPortalGroupVec<
       typename SourceArrayHandleType::PortalControl,
       NUM_COMPONENTS> PortalType;
-  typedef vtkm::cont::internal::ArrayPortalGroupVec<
+  typedef vtkm::exec::internal::ArrayPortalGroupVec<
       typename SourceArrayHandleType::PortalConstControl,
       NUM_COMPONENTS> PortalConstType;
 
@@ -223,11 +228,11 @@ public:
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
 
-  typedef vtkm::cont::internal::ArrayPortalGroupVec<
+  typedef vtkm::exec::internal::ArrayPortalGroupVec<
       typename SourceArrayHandleType::template ExecutionTypes<Device>::Portal,
       NUM_COMPONENTS>
     PortalExecution;
-  typedef vtkm::cont::internal::ArrayPortalGroupVec<
+  typedef vtkm::exec::internal::ArrayPortalGroupVec<
       typename SourceArrayHandleType::template ExecutionTypes<Device>::PortalConst,
       NUM_COMPONENTS>
     PortalConstExecution;

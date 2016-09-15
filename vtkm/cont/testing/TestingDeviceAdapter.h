@@ -1623,14 +1623,114 @@ private:
                                                                     ARRAY_SIZE);
 
     //make a deep copy of input and place it into temp
+    {
     vtkm::cont::ArrayHandle<T> temp;
+    temp.Allocate( ARRAY_SIZE * 2 );
     Algorithm::Copy(input,temp);
+    VTKM_TEST_ASSERT(temp.GetNumberOfValues() == ARRAY_SIZE,
+                     "Copy Needs to Resize Array");
 
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
     {
       T value = temp.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT(value == testData[i], "Got bad value (Copy)");
     }
+    }
+
+    //CopySubRange tests:
+
+    //1. Verify invalid input start position fails
+    {
+    vtkm::cont::ArrayHandle<T> output;
+    bool result = Algorithm::CopySubRange(input, ARRAY_SIZE*4, 1, output);
+    VTKM_TEST_ASSERT(result == false, "CopySubRange when given bad input offset");
+    }
+
+    //2. Verify unallocated output gets allocated
+    {
+    vtkm::cont::ArrayHandle<T> output;
+    bool result = Algorithm::CopySubRange(input, 0, ARRAY_SIZE, output);
+    VTKM_TEST_ASSERT(result == true, "CopySubRange should succeed");
+    VTKM_TEST_ASSERT(output.GetNumberOfValues() == ARRAY_SIZE,
+                     "CopySubRange needs to allocate output");
+    }
+
+    //3. Verify under allocated output gets resized properly
+    {
+    vtkm::cont::ArrayHandle<T> output;
+    output.Allocate(2);
+    bool result = Algorithm::CopySubRange(input, 0, ARRAY_SIZE, output);
+    VTKM_TEST_ASSERT(result == true, "CopySubRange should succeed");
+    VTKM_TEST_ASSERT(output.GetNumberOfValues() == ARRAY_SIZE,
+                     "CopySubRange needs to re-allocate output");
+    }
+
+    //4. Verify invalid input length gets shortened
+    {
+    vtkm::cont::ArrayHandle<T> output;
+    bool result = Algorithm::CopySubRange(input, 10, ARRAY_SIZE, output);
+    VTKM_TEST_ASSERT(result == true, "CopySubRange needs to shorten input range");
+    VTKM_TEST_ASSERT(output.GetNumberOfValues() == (ARRAY_SIZE-10),
+                     "CopySubRange needs to shorten input range");
+    for(vtkm::Id i=0; i < (ARRAY_SIZE-10); ++i)
+    {
+      T value = output.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(value == testData[i+10], "Got bad value (CopySubRange 2)");
+
+    }
+    }
+
+    //5. Verify sub range copy works when copying into a larger output
+    {
+    vtkm::cont::ArrayHandle<T> output;
+    output.Allocate( ARRAY_SIZE * 2 );
+    Algorithm::CopySubRange(input, 0, ARRAY_SIZE, output);
+    Algorithm::CopySubRange(input, 0, ARRAY_SIZE, output, ARRAY_SIZE);
+    VTKM_TEST_ASSERT(output.GetNumberOfValues() == (ARRAY_SIZE*2),
+                     "CopySubRange needs to not resize array");
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      T value = output.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(value == testData[i], "Got bad value (CopySubRange 5)");
+      value = output.GetPortalConstControl().Get(ARRAY_SIZE + i);
+      VTKM_TEST_ASSERT(value == testData[i], "Got bad value (CopySubRange 5)");
+    }
+    }
+
+    //6. Verify that whey sub range needs to reallocate the output it
+    // properly copies the original data instead of clearing it
+    {
+    vtkm::cont::ArrayHandle<T> output;
+    output.Allocate( ARRAY_SIZE );
+    Algorithm::CopySubRange(input, 0, ARRAY_SIZE, output);
+    Algorithm::CopySubRange(input, 0, ARRAY_SIZE, output, ARRAY_SIZE);
+    VTKM_TEST_ASSERT(output.GetNumberOfValues() == (ARRAY_SIZE*2),
+                     "CopySubRange needs too resize Array");
+    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    {
+      T value = output.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT(value == testData[i], "Got bad value (CopySubRange 6)");
+      value = output.GetPortalConstControl().Get(ARRAY_SIZE + i);
+      VTKM_TEST_ASSERT(value == testData[i], "Got bad value (CopySubRange 6)");
+    }
+    }
+
+    {
+    vtkm::cont::ArrayHandle<T> output;
+
+    //7. Verify negative input index returns false
+    bool result = Algorithm::CopySubRange(input, -1, ARRAY_SIZE, output);
+    VTKM_TEST_ASSERT(result == false, "CopySubRange negative index should fail");
+
+    //8. Verify negative input numberOfElementsToCopy returns false
+    result = Algorithm::CopySubRange(input, 0, -ARRAY_SIZE, output);
+    VTKM_TEST_ASSERT(result == false, "CopySubRange negative number elements should fail");
+
+    //9. Verify negative output index return false
+    result = Algorithm::CopySubRange(input, 0, ARRAY_SIZE, output, -2);
+    VTKM_TEST_ASSERT(result == false, "CopySubRange negative output index should fail");
+    }
+
   }
 
   static VTKM_CONT_EXPORT void TestCopyArraysMany()

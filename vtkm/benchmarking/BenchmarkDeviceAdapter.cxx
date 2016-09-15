@@ -33,17 +33,12 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/benchmarking/Benchmarker.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/random.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <algorithm>
-#include <cctype>
 #include <cmath>
-#include <ctime>
-#include <iostream>
-#include <utility>
+#include <random>
 #include <string>
+#include <utility>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -167,7 +162,7 @@ private:
 
     ValueArrayHandle ValueHandle_src;
     ValueArrayHandle ValueHandle_dst;
-    boost::mt19937 Rng;
+    std::mt19937 Rng;
 
     VTKM_CONT_EXPORT
     BenchCopy(){
@@ -362,7 +357,7 @@ private:
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     ValueArrayHandle ValueHandle;
-    boost::mt19937 Rng;
+    std::mt19937 Rng;
 
     VTKM_CONT_EXPORT
     BenchSort(){
@@ -392,7 +387,7 @@ private:
   struct BenchSortByKey {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
-    boost::mt19937 Rng;
+    std::mt19937 Rng;
     vtkm::Id N_KEYS;
     ValueArrayHandle ValueHandle;
     IdArrayHandle KeyHandle;

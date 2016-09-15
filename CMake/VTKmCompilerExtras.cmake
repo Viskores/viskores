@@ -34,6 +34,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   set(CMAKE_COMPILER_IS_ICCXX 1)
 endif()
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  set(CMAKE_COMPILER_IS_MSVCXX 1)
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
 
   include(CheckCXXCompilerFlag)
@@ -47,9 +51,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
 
   # Additional warnings for GCC/Clang
   set(CMAKE_CXX_FLAGS_WARN_EXTRA "-Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common")
-  if (VTKm_FORCE_ANSI)
-    set(CMAKE_CXX_FLAGS_WARN_EXTRA "-ansi ${CMAKE_CXX_FLAGS_WARN_EXTRA}")
-  endif()
 
   # Additional warnings just for Clang 3.5+, and AppleClang 7+ we specify
   # for all build types, since these failures to vectorize are not limited
@@ -90,5 +91,7 @@ elseif(CMAKE_COMPILER_IS_ICCXX)
   # to loops, the #pragma warning(disable seems to not work so we add a
   # a compile define.
   add_definitions("-wd13379")
+elseif (CMAKE_COMPILER_IS_MSVCXX)
+  #enable large object support so we can have 2^32 addressable sections
+  list(APPEND VTKm_COMPILE_OPTIONS "/bigobj")
 endif()
-

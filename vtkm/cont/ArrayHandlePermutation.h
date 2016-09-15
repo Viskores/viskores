@@ -31,18 +31,19 @@ namespace exec {
 namespace internal {
 
 template<typename IndexPortalType, typename ValuePortalType>
-class ArrayPortalPermutationExec
+class ArrayPortalPermutation
 {
 public:
   typedef typename ValuePortalType::ValueType ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  ArrayPortalPermutationExec( )
+  ArrayPortalPermutation( )
     : IndexPortal(), ValuePortal() {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  ArrayPortalPermutationExec(
+  ArrayPortalPermutation(
       const IndexPortalType &indexPortal,
       const ValuePortalType &valuePortal)
     : IndexPortal(indexPortal), ValuePortal(valuePortal) {  }
@@ -53,12 +54,14 @@ public:
   /// const cast).
   ///
   template<typename OtherIP, typename OtherVP>
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
-  ArrayPortalPermutationExec(
-      const ArrayPortalPermutationExec<OtherIP,OtherVP> &src)
+  ArrayPortalPermutation(
+      const ArrayPortalPermutation<OtherIP,OtherVP> &src)
     : IndexPortal(src.GetIndexPortal()), ValuePortal(src.GetValuePortal())
   {  }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfValues() const {
     return this->IndexPortal.GetNumberOfValues();
@@ -78,9 +81,11 @@ public:
     this->ValuePortal.Set(permutedIndex, value);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   const IndexPortalType &GetIndexPortal() const { return this->IndexPortal; }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT_EXPORT
   const ValuePortalType &GetValuePortal() const { return this->ValuePortal; }
 
@@ -98,66 +103,6 @@ namespace cont {
 
 namespace internal {
 
-template<typename IndexPortalType, typename ValuePortalType>
-class ArrayPortalPermutationCont
-{
-public:
-  typedef typename ValuePortalType::ValueType ValueType;
-
-  VTKM_CONT_EXPORT
-  ArrayPortalPermutationCont( )
-    : IndexPortal(), ValuePortal() {  }
-
-  VTKM_CONT_EXPORT
-  ArrayPortalPermutationCont(
-      const IndexPortalType &indexPortal,
-      const ValuePortalType &valuePortal)
-    : IndexPortal(indexPortal), ValuePortal(valuePortal) {  }
-
-  /// Copy constructor for any other ArrayPortalPermutation with delegate
-  /// portal types that can be copied to these portal types. This allows us to
-  /// do any type casting that the delegate portals do (like the non-const to
-  /// const cast).
-  ///
-  template<typename OtherIP, typename OtherVP>
-  VTKM_CONT_EXPORT
-  ArrayPortalPermutationCont(
-      const ArrayPortalPermutationCont<OtherIP,OtherVP> &src)
-    : IndexPortal(src.GetIndexPortal()), ValuePortal(src.GetValuePortal())
-  {  }
-
-  VTKM_CONT_EXPORT
-  vtkm::Id GetNumberOfValues() const {
-    return this->IndexPortal.GetNumberOfValues();
-  }
-
-  VTKM_CONT_EXPORT
-  ValueType Get(vtkm::Id index) const {
-    vtkm::Id permutedIndex = this->IndexPortal.Get(index);
-    VTKM_ASSERT(permutedIndex >= 0);
-    VTKM_ASSERT(permutedIndex < this->ValuePortal.GetNumberOfValues());
-    return this->ValuePortal.Get(permutedIndex);
-  }
-
-  VTKM_CONT_EXPORT
-  ValueType Set(vtkm::Id index, const ValueType &value) const {
-    vtkm::Id permutedIndex = this->IndexPortal.Get(index);
-    VTKM_ASSERT(permutedIndex >= 0);
-    VTKM_ASSERT(permutedIndex < this->ValuePortal.GetNumberOfValues());
-    return this->ValuePortal.Set(permutedIndex, value);
-  }
-
-  VTKM_CONT_EXPORT
-  const IndexPortalType &GetIndexPortal() const { return this->IndexPortal; }
-
-  VTKM_CONT_EXPORT
-  const ValuePortalType &GetValuePortal() const { return this->ValuePortal; }
-
-private:
-  IndexPortalType IndexPortal;
-  ValuePortalType ValuePortal;
-};
-
 template<typename IndexArrayType, typename ValueArrayType>
 struct StorageTagPermutation {  };
 
@@ -172,10 +117,10 @@ class Storage<
 public:
   typedef typename ValueArrayType::ValueType ValueType;
 
-  typedef ArrayPortalPermutationCont<
+  typedef vtkm::exec::internal::ArrayPortalPermutation<
       typename IndexArrayType::PortalConstControl,
       typename ValueArrayType::PortalControl> PortalType;
-  typedef ArrayPortalPermutationCont<
+  typedef vtkm::exec::internal::ArrayPortalPermutation<
       typename IndexArrayType::PortalConstControl,
       typename ValueArrayType::PortalConstControl> PortalConstType;
 
@@ -254,11 +199,11 @@ public:
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
 
-  typedef vtkm::exec::internal::ArrayPortalPermutationExec<
+  typedef vtkm::exec::internal::ArrayPortalPermutation<
       typename IndexArrayType::template ExecutionTypes<Device>::PortalConst,
       typename ValueArrayType::template ExecutionTypes<Device>::Portal>
     PortalExecution;
-  typedef vtkm::exec::internal::ArrayPortalPermutationExec<
+  typedef vtkm::exec::internal::ArrayPortalPermutation<
       typename IndexArrayType::template ExecutionTypes<Device>::PortalConst,
       typename ValueArrayType::template ExecutionTypes<Device>::PortalConst>
     PortalConstExecution;

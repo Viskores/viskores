@@ -132,15 +132,70 @@ public:
   VTKM_CONT_EXPORT static void Copy(const vtkm::cont::ArrayHandle<T, CIn> &input,
                                     vtkm::cont::ArrayHandle<U, COut> &output)
   {
-    vtkm::Id arraySize = input.GetNumberOfValues();
+    typedef  CopyKernel<
+          typename vtkm::cont::ArrayHandle<T,CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
+          typename vtkm::cont::ArrayHandle<U,COut>::template ExecutionTypes<DeviceAdapterTag>::Portal>
+            CopyKernelType;
+    const vtkm::Id inSize = input.GetNumberOfValues();
 
-    CopyKernel<
-        typename vtkm::cont::ArrayHandle<T,CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
-        typename vtkm::cont::ArrayHandle<U,COut>::template ExecutionTypes<DeviceAdapterTag>::Portal>
-        kernel(input.PrepareForInput(DeviceAdapterTag()),
-               output.PrepareForOutput(arraySize, DeviceAdapterTag()));
+    CopyKernelType kernel(input.PrepareForInput(DeviceAdapterTag()),
+                          output.PrepareForOutput(inSize, DeviceAdapterTag()));
+    DerivedAlgorithm::Schedule(kernel, inSize);
+  }
 
-    DerivedAlgorithm::Schedule(kernel, arraySize);
+  //--------------------------------------------------------------------------
+  // CopySubRange
+  template<typename T, typename U, class CIn, class COut>
+  VTKM_CONT_EXPORT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, CIn> &input,
+                                            vtkm::Id inputStartIndex,
+                                            vtkm::Id numberOfElementsToCopy,
+                                            vtkm::cont::ArrayHandle<U, COut> &output,
+                                            vtkm::Id outputIndex=0)
+  {
+    typedef  CopyKernel<
+          typename vtkm::cont::ArrayHandle<T,CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
+          typename vtkm::cont::ArrayHandle<U,COut>::template ExecutionTypes<DeviceAdapterTag>::Portal>
+            CopyKernel;
+
+    const vtkm::Id inSize = input.GetNumberOfValues();
+    if(inputStartIndex < 0 ||
+       numberOfElementsToCopy < 0 ||
+       outputIndex < 0 ||
+       inputStartIndex >= inSize)
+    {  //invalid parameters
+      return false;
+    }
+
+    //determine if the numberOfElementsToCopy needs to be reduced
+    if(inSize < (inputStartIndex + numberOfElementsToCopy))
+      { //adjust the size
+      numberOfElementsToCopy = (inSize - inputStartIndex);
+      }
+
+    const vtkm::Id outSize = output.GetNumberOfValues();
+    const vtkm::Id copyOutEnd = outputIndex + numberOfElementsToCopy;
+    if(outSize < copyOutEnd)
+    { //output is not large enough
+      if(outSize == 0)
+      { //since output has nothing, just need to allocate to correct length
+        output.Allocate(copyOutEnd);
+      }
+      else
+      { //we currently have data in this array, so preserve it in the new
+        //resized array
+        vtkm::cont::ArrayHandle<U, COut> temp;
+        temp.Allocate(copyOutEnd);
+        DerivedAlgorithm::CopySubRange(output, 0, outSize, temp);
+        output = temp;
+      }
+    }
+
+    CopyKernel kernel(input.PrepareForInput(DeviceAdapterTag()),
+                      output.PrepareForInPlace(DeviceAdapterTag()),
+                      inputStartIndex,
+                      outputIndex);
+    DerivedAlgorithm::Schedule(kernel, numberOfElementsToCopy);
+    return true;
   }
 
   //--------------------------------------------------------------------------
@@ -691,6 +746,7 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
 
     DerivedAlgorithm::StreamCompact(values, stencilArray, outputArray);
 
+    values.Allocate(outputArray.GetNumberOfValues());
     DerivedAlgorithm::Copy(outputArray, values);
   }
 

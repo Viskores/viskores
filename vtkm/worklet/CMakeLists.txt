@@ -24,7 +24,6 @@ set(headers
   WorkletMapField.h
   DispatcherMapTopology.h
   WorkletMapTopology.h
-
   AverageByKey.h
   CellAverage.h
   Clip.h
@@ -46,11 +45,13 @@ set(headers
   TriangulateUniformGrid.h
   Threshold.h
   VertexClustering.h
+  WaveletCompressor.h
   )
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(splatkernels)
+add_subdirectory(wavelets)
 
 vtkm_declare_headers(${headers})
 

@@ -24,10 +24,6 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/shared_ptr.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace {
 
 void TestCellAverageUniform3D()
@@ -40,7 +36,7 @@ void TestCellAverageUniform3D()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("pointvar"),
                     dataSet.GetCellSet(),
                     result);
 
@@ -63,7 +59,7 @@ void TestCellAverageUniform2D()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("pointvar"),
                     dataSet.GetCellSet(),
                     result);
 
@@ -86,7 +82,7 @@ void TestCellAverageExplicit()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("pointvar"),
                     dataSet.GetCellSet(),
                     result);
 

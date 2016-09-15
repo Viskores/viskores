@@ -18,21 +18,20 @@
 ##  this software.
 ##============================================================================
 
+set(headers
+  RenderTest.h
+  )
+
+vtkm_declare_headers(${headers})
+
 set(unit_tests
   UnitTestMapperRayTracer.cxx
   UnitTestMapperVolume.cxx
 )
 
-if (VTKm_EGL_FOUND)
-  set(unit_tests ${unit_tests}
-    UnitTestMapperEGL.cxx
-    )
-endif()
+VTKm_unit_tests(SOURCES ${unit_tests})
 
-if (VTKm_OSMesa_FOUND)
-  set(unit_tests ${unit_tests}
-    UnitTestMapperOSMesa.cxx
-    )
-endif()
+add_subdirectory(osmesa)
+add_subdirectory(egl)
+add_subdirectory(glfw)
 
-VTKM_unit_tests(SOURCES ${unit_tests})

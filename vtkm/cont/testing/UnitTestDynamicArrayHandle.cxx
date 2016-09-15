@@ -152,7 +152,7 @@ void CheckDynamicArray(
 {
   BasicDynamicArrayChecks(array, numComponents);
 
-  array.CastAndCall(CheckFunctor());
+  CastAndCall(array,CheckFunctor());
 
   VTKM_TEST_ASSERT(CheckCalled,
                    "The functor was never called (and apparently a bad value exception not thrown).");
@@ -179,7 +179,7 @@ void CheckCastToArrayHandle(const ArrayHandleType &array)
 
   vtkm::cont::DynamicArrayHandle dynamicArray = array;
   VTKM_TEST_ASSERT(
-        !dynamicArray.IsArrayHandleType<vtkm::cont::ArrayHandle<std::string> >(),
+        !dynamicArray.IsType<vtkm::cont::ArrayHandle<std::string> >(),
         "Dynamic array reporting is wrong type.");
 
   ArrayHandleType castArray1;
@@ -441,8 +441,8 @@ void TestDynamicArrayHandle()
   std::cout << "*** vtkm::Vec<Float64,3> **********" << std::endl;
   TryDefaultType(vtkm::Vec<vtkm::Float64,3>());
 
-  std::cout << "Try all VTK-m types." << std::endl;
-  vtkm::testing::Testing::TryAllTypes(TryBasicVTKmType());
+  std::cout << "Try exemplar VTK-m types." << std::endl;
+  vtkm::testing::Testing::TryTypes(TryBasicVTKmType());
 
   std::cout << "Try unusual type." << std::endl;
   TryUnusualType();

@@ -39,10 +39,29 @@ set(VTKm_AVAILABLE_COMPONENTS
   OpenGL
   OSMesa
   EGL
+  GLFW
   Interop
+  Rendering
   TBB
   CUDA
   )
+
+#-----------------------------------------------------------------------------
+# Support function for giving status messages on component configurations
+#-----------------------------------------------------------------------------
+set(VTKm_CONFIGURE_COMPONENT_MESSAGES "" CACHE INTERNAL "" FORCE)
+function(vtkm_configure_component_message message_text)
+  if(NOT VTKm_CONFIGURE_QUIET)
+    list(FIND VTKm_CONFIGURE_COMPONENT_MESSAGES "${message_text}" in_list)
+    if(in_list EQUAL -1)
+      message(STATUS "${message_text}")
+      set(VTKm_CONFIGURE_COMPONENT_MESSAGES
+        ${VTKm_CONFIGURE_COMPONENT_MESSAGES}
+        ${message_text}
+        CACHE INTERNAL "" FORCE)
+    endif()
+  endif()
+endfunction(vtkm_configure_component_message)
 
 #-----------------------------------------------------------------------------
 # Support function for making vtkm_configure_component<name> functions.
@@ -60,9 +79,8 @@ macro(vtkm_finish_configure_component component)
     foreach(var ${VTKm_FCC_DEPENDENT_VARIABLES})
       if(NOT ${var})
         set(VTKm_${component}_FOUND)
-        if(NOT VTKm_CONFIGURE_QUIET)
-          message(STATUS "Failed to configure VTK-m component ${component}: !${var}")
-        endif()
+        vtkm_configure_component_message(
+          "Failed to configure VTK-m component ${component}: !${var}")
         break()
       endif()
     endforeach(var)
@@ -84,6 +102,11 @@ macro(vtkm_configure_component_Base)
     find_package(BoostHeaders ${VTKm_FIND_PACKAGE_QUIETLY} ${VTKm_REQUIRED_BOOST_VERSION})
   endif()
 
+  # Set up the compiler flag optimizations
+  if (NOT VTKm_Vectorization_flags_added)
+    include(VTKmCompilerOptimizations)
+  endif()
+
   vtkm_finish_configure_component(Base
     DEPENDENT_VARIABLES Boost_FOUND
     ADD_INCLUDES ${Boost_INCLUDE_DIRS}
@@ -99,7 +122,13 @@ macro(vtkm_configure_component_Serial)
 endmacro(vtkm_configure_component_Serial)
 
 macro(vtkm_configure_component_OpenGL)
-  vtkm_configure_component_Base()
+  # OpenGL configuration "depends" on OSMesa because if OSMesa is used, then it
+  # (sometimes) requires its own version of OpenGL. The find_package for OpenGL
+  # is smart enough to configure this correctly if OSMesa is found first. Thus,
+  # we ensure that OSMesa is configured before OpenGL (assuming you are using
+  # the VTK-m configuration). However, the OpenGL configuration can still
+  # succeed even if the OSMesa configuration fails.
+  vtkm_configure_component_OSMesa()
 
   find_package(OpenGL ${VTKm_FIND_PACKAGE_QUIETLY})
 
@@ -111,18 +140,18 @@ macro(vtkm_configure_component_OpenGL)
 endmacro(vtkm_configure_component_OpenGL)
 
 macro(vtkm_configure_component_OSMesa)
-  vtkm_configure_component_OpenGL()
+  vtkm_configure_component_Base()
 
   if (UNIX AND NOT APPLE)
     find_package(MESA ${VTKm_FIND_PACKAGE_QUIETLY})
 
     vtkm_finish_configure_component(OSMesa
-      DEPENDENT_VARIABLES VTKm_OpenGL_FOUND OSMESA_FOUND
+      DEPENDENT_VARIABLES OSMESA_FOUND
       ADD_INCLUDES ${OSMESA_INCLUDE_DIR}
       ADD_LIBRARIES ${OSMESA_LIBRARY}
       )
-  elseif(NOT VTKm_CONFIGURE_QUIET)
-    message(STATUS "OSMesa not supported on this platform.")
+  else()
+    vtkm_configure_component_message("OSMesa not supported on this platform.")
   endif()
 endmacro(vtkm_configure_component_OSMesa)
 
@@ -138,6 +167,18 @@ macro(vtkm_configure_component_EGL)
     )
 endmacro(vtkm_configure_component_EGL)
 
+macro(vtkm_configure_component_GLFW)
+  vtkm_configure_component_OpenGL()
+
+  find_package(GLFW ${VTKm_FIND_PACKAGE_QUIETLY})
+
+  vtkm_finish_configure_component(GLFW
+    DEPENDENT_VARIABLES VTKm_OpenGL_FOUND GLFW_FOUND
+    ADD_INCLUDES ${GLFW_INCLUDE_DIR}
+    ADD_LIBRARIES ${GLFW_LIBRARY}
+    )
+endmacro(vtkm_configure_component_GLFW)
+
 macro(vtkm_configure_component_Interop)
   vtkm_configure_component_OpenGL()
 
@@ -150,7 +191,7 @@ macro(vtkm_configure_component_Interop)
     )
   #on unix/linux Glew uses pthreads, so we need to find that, and link to it
   #explicitly or else in release mode we get sigsegv on launch
-  if (VTKm_Interop_FOUND AND UNIX)
+  if (VTKm_ENABLE_OPENGL_INTEROP AND UNIX)
     find_package(Threads ${VTKm_FIND_PACKAGE_QUIETLY})
     set(vtkm_interop_dependent_vars ${vtkm_interop_dependent_vars} CMAKE_USE_PTHREADS_INIT)
   endif()
@@ -158,9 +199,22 @@ macro(vtkm_configure_component_Interop)
   vtkm_finish_configure_component(Interop
     DEPENDENT_VARIABLES ${vtkm_interop_dependent_vars}
     ADD_INCLUDES ${GLEW_INCLUDE_DIRS}
-    ADD_LIBRARIES ${GLEW_LIBRARIES}
+    ADD_LIBRARIES ${GLEW_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
     )
 endmacro(vtkm_configure_component_Interop)
+
+macro(vtkm_configure_component_Rendering)
+  if(VTKm_BUILD_RENDERING)
+    vtkm_configure_component_OpenGL()
+    vtkm_configure_component_EGL()
+    vtkm_configure_component_OSMesa()
+  endif()
+
+  vtkm_finish_configure_component(Rendering
+    DEPENDENT_VARIABLES VTKm_BUILD_RENDERING VTKm_Base_FOUND
+    ADD_LIBRARIES vtkm_rendering
+    )
+endmacro(vtkm_configure_component_Rendering)
 
 macro(vtkm_configure_component_TBB)
   if(VTKm_ENABLE_TBB)
@@ -205,7 +259,12 @@ macro(vtkm_configure_component_CUDA)
 
   if(VTKm_CUDA_FOUND)
     #---------------------------------------------------------------------------
-    # Setup build flags for CUDA
+    # Setup build flags for CUDA to have C++11 support
+    #---------------------------------------------------------------------------
+    if(NOT MSVC)
+      list(APPEND CUDA_NVCC_FLAGS --std c++11)
+    endif()
+
     #---------------------------------------------------------------------------
     # Populates CUDA_NVCC_FLAGS with the best set of flags to compile for a
     # given GPU architecture. The majority of developers should leave the
@@ -242,27 +301,34 @@ macro(vtkm_configure_component_CUDA)
 
     #detect what the propery is set too
     if(VTKm_CUDA_Architecture STREQUAL "native")
-      #run execute_process to do auto_detection
-      set(command ${CUDA_NVCC_EXECUTABLE})
-      set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cxx")
-      execute_process(
-        COMMAND ${command} ${args}
-        RESULT_VARIABLE ran_properly
-        OUTPUT_VARIABLE run_output
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+      if(NOT VTKM_CUDA_NATIVE_EXE_PROCESS_RAN)
 
-      if(ran_properly EQUAL 0)
-        #find the position of the "--generate-code" output. With some compilers such as
-        #msvc we get compile output plus run output. So we need to strip out just the
-        #run output
-        string(FIND "${run_output}" "--generate-code" position)
-        string(SUBSTRING "${run_output}" ${position} -1 run_output)
-        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} ${run_output}")
-      else()
-        set(VTKm_CUDA_Architecture "fermi")
-        if(NOT VTKm_CONFIGURE_QUIET)
-          message(STATUS "Unable to run \"${CUDA_NVCC_EXECUTABLE}\" to autodetect GPU architecture."
-            "Falling back to fermi, please manually specify if you want something else.")
+        #run execute_process to do auto_detection
+        if(CMAKE_GENERATOR MATCHES "Visual Studio")
+          set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cxx")
+        else()
+          set(args "-ccbin" "${CUDA_HOST_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cxx")
+        endif()
+
+        execute_process(
+          COMMAND ${CUDA_NVCC_EXECUTABLE} ${args}
+          RESULT_VARIABLE ran_properly
+          OUTPUT_VARIABLE run_output
+          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        if(ran_properly EQUAL 0)
+          #find the position of the "--generate-code" output. With some compilers such as
+          #msvc we get compile output plus run output. So we need to strip out just the
+          #run output
+          string(FIND "${run_output}" "--generate-code" position)
+          string(SUBSTRING "${run_output}" ${position} -1 run_output)
+          set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} ${run_output}")
+          set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN TRUE CACHE INTERNAL
+              "We have correctly detected the device type(s) for cuda[native]")
+        else()
+          set(VTKm_CUDA_Architecture "fermi")
+          vtkm_configure_component_message(
+            "Unable to run \"${CUDA_NVCC_EXECUTABLE}\" to autodetect GPU architecture.
+Falling back to fermi, please manually specify if you want something else.")
         endif()
       endif()
     endif()

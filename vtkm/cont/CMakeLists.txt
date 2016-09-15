@@ -37,6 +37,7 @@ set(headers
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
+  ArrayHandleConcatenate.h
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h
@@ -51,6 +52,7 @@ set(headers
   DataSetFieldAdd.h
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
+  DeviceAdapterListTag.h
   DeviceAdapterSerial.h
   DynamicArrayHandle.h
   DynamicCellSet.h
@@ -69,6 +71,7 @@ set(headers
   StorageImplicit.h
   StorageListTag.h
   Timer.h
+  TryExecute.h
   )
 
 #-----------------------------------------------------------------------------

@@ -286,7 +286,7 @@ public:
     window.Init("Testing Window", 300, 300);
 
     //verify that we can transfer basic arrays and constant value arrays to opengl
-    vtkm::testing::Testing::TryAllTypes(TransferFunctor());
+    vtkm::testing::Testing::TryTypes(TransferFunctor());
 
     //verify that openGL interop works with all grid types in that we can
     //transfer coordinates / verts and properties to openGL

@@ -63,14 +63,15 @@ int main(int argc, char *argv[])
                                   input.GetField(0);
 
   vtkm::Float32 clipValue = boost::lexical_cast<vtkm::Float32>(argv[argc - 2]);
-  vtkm::worklet::Clip<DeviceAdapter> clip;
+  vtkm::worklet::Clip clip;
 
   vtkm::cont::Timer<DeviceAdapter> total;
   vtkm::cont::Timer<DeviceAdapter> timer;
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(input.GetCellSet(0),
              scalarField.GetData().ResetTypeList(vtkm::TypeListTagScalarAll()),
-             clipValue);
+             clipValue,
+             DeviceAdapter());
   vtkm::Float64 clipTime = timer.GetElapsedTime();
 
   vtkm::cont::DataSet output;
@@ -78,7 +79,7 @@ int main(int argc, char *argv[])
 
   timer.Reset();
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(input.GetCoordinateSystem(0).GetData());
+      clip.ProcessField(input.GetCoordinateSystem(0), DeviceAdapter());
   vtkm::Float64 processCoordinatesTime = timer.GetElapsedTime();
   output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coords));
 
@@ -91,7 +92,8 @@ int main(int argc, char *argv[])
       continue; // clip only supports point fields for now.
     }
     vtkm::cont::DynamicArrayHandle data =
-      clip.ProcessField(inField.GetData().ResetTypeList(vtkm::TypeListTagAll()));
+      clip.ProcessField(inField.GetData().ResetTypeList(vtkm::TypeListTagAll()),
+                        DeviceAdapter());
     output.AddField(vtkm::cont::Field(inField.GetName(),
                     vtkm::cont::Field::ASSOC_POINTS, data));
   }

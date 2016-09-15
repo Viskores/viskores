@@ -25,9 +25,7 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/internal/ExportMacros.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/type_traits/is_base_of.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <type_traits>
 
 namespace vtkm {
 
@@ -36,8 +34,8 @@ namespace internal {
 template<typename ListTag>
 struct ListTagCheck
 {
-  static const bool Valid =
-      boost::is_base_of<vtkm::detail::ListRoot,ListTag>::value;
+  static VTKM_CONSTEXPR bool Valid = std::is_base_of<vtkm::detail::ListRoot,
+                                                     ListTag>::value;
 };
 
 } // namespace internal

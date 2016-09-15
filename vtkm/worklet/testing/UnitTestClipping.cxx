@@ -118,15 +118,18 @@ void TestClippingExplicit()
 {
   vtkm::cont::DataSet ds = MakeTestDatasetExplicit();
 
-  vtkm::worklet::Clip<DeviceAdapter> clip;
+  vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-      clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue);
+      clip.Run(ds.GetCellSet(0),
+               ds.GetField("scalars").GetData(),
+               clipValue,
+               DeviceAdapter());
 
 
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(ds.GetCoordinateSystem("coords").GetData());
+      clip.ProcessField(ds.GetCoordinateSystem("coords"), DeviceAdapter());
   vtkm::cont::DynamicArrayHandle scalars =
-      clip.ProcessField(ds.GetField("scalars").GetData());
+      clip.ProcessField(ds.GetField("scalars"), DeviceAdapter());
 
 
   vtkm::Id connectivitySize = 12;
@@ -167,15 +170,18 @@ void TestClippingStrucutred()
 {
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
-  vtkm::worklet::Clip<DeviceAdapter> clip;
+  vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-      clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue);
+      clip.Run(ds.GetCellSet(0),
+               ds.GetField("scalars").GetData(),
+               clipValue,
+               DeviceAdapter());
 
 
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(ds.GetCoordinateSystem("coords").GetData());
+      clip.ProcessField(ds.GetCoordinateSystem("coords"), DeviceAdapter());
   vtkm::cont::DynamicArrayHandle scalars =
-      clip.ProcessField(ds.GetField("scalars").GetData());
+      clip.ProcessField(ds.GetField("scalars"), DeviceAdapter());
 
   vtkm::Id connectivitySize = 36;
   vtkm::Id fieldSize = 13;
@@ -222,15 +228,18 @@ void TestClippingWithImplicitFunction()
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
-  vtkm::worklet::Clip<DeviceAdapter> clip;
+  vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-      clip.Run(ds.GetCellSet(0), sphere, ds.GetCoordinateSystem("coords"));
+      clip.Run(ds.GetCellSet(0),
+               sphere,
+               ds.GetCoordinateSystem("coords"),
+               DeviceAdapter());
 
 
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(ds.GetCoordinateSystem("coords").GetData());
+      clip.ProcessField(ds.GetCoordinateSystem("coords"), DeviceAdapter());
   vtkm::cont::DynamicArrayHandle scalars =
-      clip.ProcessField(ds.GetField("scalars").GetData());
+      clip.ProcessField(ds.GetField("scalars"), DeviceAdapter());
 
   vtkm::Id connectivitySize = 36;
   vtkm::Id fieldSize = 13;

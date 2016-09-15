@@ -92,6 +92,20 @@ public:
       }
     }
 
+  VTKM_CONT_EXPORT
+  vtkm::cont::Field AsField(const vtkm::cont::DynamicArrayHandle &dhandle) const
+    {
+      if(this->IsCellField())
+      {
+        return vtkm::cont::Field(this->Name, this->Association,
+                                 this->CellSetName, dhandle);
+      }
+      else
+      {
+        return vtkm::cont::Field(this->Name, this->Association, dhandle);
+      }
+    }
+
 private:
   std::string         Name;  ///< name of field
   vtkm::cont::Field::AssociationEnum   Association;

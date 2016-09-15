@@ -60,10 +60,20 @@ else()
   set_and_check(VTKm_CMAKE_MODULE_PATH "@VTKm_SOURCE_DIR@/CMake")
 endif()
 
+set(VTKm_BUILD_SHARED_LIBS "@BUILD_SHARED_LIBS@")
 set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
 set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
 set(VTKm_ENABLE_OPENGL_INTEROP "@VTKm_ENABLE_OPENGL_INTEROP@")
 set(VTKm_BUILD_RENDERING "@VTKm_BUILD_RENDERING@")
+
+# Load the library exports, but only if not compiling VTK-m itself
+set_and_check(VTKm_CONFIG_DIR "@PACKAGE_VTKm_INSTALL_CONFIG_DIR@")
+if(NOT "${CMAKE_BINARY_DIR}" STREQUAL "@VTKm_BINARY_DIR@")
+  include(${VTKm_CONFIG_DIR}/VTKmTargets.cmake)
+endif()
+
+# Clear out the libraries. We will add more when loading components.
+set(VTKm_LIBRARIES)
 
 # The VTKm variables used to configure components and packages silently.
 set(VTKm_CONFIGURE_QUIET "${VTKm_FIND_QUIETLY}")
@@ -83,6 +93,12 @@ include(VTKmMacros)
 # This should be specified to any target with the CMake command target_compile_options
 # that uses VTK-m.
 set(VTKm_COMPILE_OPTIONS "@VTKm_COMPILE_OPTIONS@")
+
+# All projects using VTK-m should include the "Base" configuration (otherwise
+# nothing may compile). Make sure the Base configuration is added to
+# VTKm_FIND_COMPONENTS and the component is required.
+set(VTKm_FIND_COMPONENTS "Base" ${VTKm_FIND_COMPONENTS})
+set(VTKm_FIND_REQUIRED_Base TRUE)
 
 # Load the selected components
 @VTKm_LOAD_COMPONENTS_COMMANDS@

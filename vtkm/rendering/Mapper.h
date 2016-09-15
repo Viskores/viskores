@@ -20,7 +20,6 @@
 #ifndef vtk_m_rendering_Mapper_h
 #define vtk_m_rendering_Mapper_h
 
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/ColorTable.h>
@@ -35,9 +34,10 @@ public:
   {
   }
 
-  VTKM_CONT_EXPORT
-  virtual ~Mapper()
-  {}
+  VTKM_RENDERING_EXPORT
+  virtual ~Mapper();
+
+  VTKM_RENDERING_EXPORT
 
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
@@ -46,27 +46,19 @@ public:
                            const vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange) = 0;
 
-  VTKM_CONT_EXPORT
-  virtual void SetActiveColorTable(const ColorTable &ct)
-  {
-      ct.Sample(1024, ColorMap);
-  }
+  VTKM_RENDERING_EXPORT
+  virtual void SetActiveColorTable(const ColorTable &ct);
 
-  VTKM_CONT_EXPORT
-  virtual void Render() {}
-  VTKM_CONT_EXPORT
-  virtual void Finish() {}
-  VTKM_CONT_EXPORT
-  virtual void StartScene()
-  {
-  }
-  VTKM_CONT_EXPORT
-  virtual void EndScene()
-  {
-  }
-  virtual void SetCanvas(Canvas *vtkmNotUsed(canvas))
-  {
-  }
+  VTKM_RENDERING_EXPORT
+  virtual void StartScene() = 0;
+  VTKM_RENDERING_EXPORT
+  virtual void EndScene() = 0;
+  VTKM_RENDERING_EXPORT
+  virtual void SetCanvas(vtkm::rendering::Canvas *canvas) = 0;
+
+  VTKM_RENDERING_EXPORT
+  virtual vtkm::rendering::Mapper *NewCopy() const = 0;
+
 protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
 };

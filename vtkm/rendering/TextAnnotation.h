@@ -20,11 +20,12 @@
 #ifndef vtk_m_rendering_TextAnnotation_h
 #define vtk_m_rendering_TextAnnotation_h
 
-#include <vtkm/cont/DataSet.h>
+#include <vtkm/rendering/vtkm_rendering_export.h>
+
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
-#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/WorldAnnotator.h>
+
 namespace vtkm {
 namespace rendering {
 
@@ -45,205 +46,50 @@ public:
     };
 
 protected:
-  std::string   Text;
-  Color         TextColor;
-  vtkm::Float32 Scale;
-  vtkm::Float32 AnchorX, AnchorY;
+  std::string                Text;
+  Color                      TextColor;
+  vtkm::Float32              Scale;
+  vtkm::Vec<vtkm::Float32,2> Anchor;
 
 public:
-  TextAnnotation(const std::string &txt, Color c, vtkm::Float32 s)
-    : Text(txt), TextColor(c), Scale(s)
-  {
-    // default anchor: bottom-left
-    AnchorX = -1;
-    AnchorY = -1;
-  }
-  virtual ~TextAnnotation()
-  {
-  }
-  void SetText(const std::string &txt)
-  {
-    Text = txt;
-  }
-  void SetRawAnchor(vtkm::Float32 h, vtkm::Float32 v)
-  {
-    AnchorX = h;
-    AnchorY = v;
-  }
-  void SetAlignment(HorizontalAlignment h, VerticalAlignment v)
-  {
-    switch (h)
-    {
-      case Left:    AnchorX = -1.0f; break;
-      case HCenter: AnchorX =  0.0f; break;
-      case Right:   AnchorX = +1.0f; break;
-    }
+  VTKM_RENDERING_EXPORT
+  TextAnnotation(const std::string &text,
+                 const vtkm::rendering::Color &color,
+                 vtkm::Float32 scalar);
 
-    // For vertical alignment, "center" is generally the center
-    // of only the above-baseline contents of the font, so we
-    // use a value slightly off of zero for VCenter.
-    // (We don't use an offset value instead of -1.0 for the
-    // bottom value, because generally we want a true minimum
-    // extent, e.g. to have text sitting at the bottom of a
-    // window, and in that case, we need to keep all the text,
-    // including parts that descend below the baseline, above
-    // the bottom of the window.
-    switch (v)
-    {
-      case Bottom:  AnchorY = -1.0f;  break;
-      case VCenter: AnchorY = -0.06f; break;
-      case Top:     AnchorY = +1.0f;  break;
-    }
-  }
-  void SetScale(vtkm::Float32 s)
-  {
-    Scale = s;
-  }
+  VTKM_RENDERING_EXPORT
+  virtual ~TextAnnotation();
+
+  VTKM_RENDERING_EXPORT
+  void SetText(const std::string &text);
+
+  VTKM_RENDERING_EXPORT
+  const std::string &GetText() const;
+
+  /// Set the anchor point relative to the box containing the text. The anchor
+  /// is scaled in both directions to the range [-1,1] with -1 at the lower
+  /// left and 1 at the upper right.
+  ///
+  VTKM_RENDERING_EXPORT
+  void SetRawAnchor(const vtkm::Vec<vtkm::Float32,2> &anchor);
+
+  VTKM_RENDERING_EXPORT
+  void SetRawAnchor(vtkm::Float32 h, vtkm::Float32 v);
+
+  VTKM_RENDERING_EXPORT
+  void SetAlignment(HorizontalAlignment h, VerticalAlignment v);
+
+  VTKM_RENDERING_EXPORT
+  void SetScale(vtkm::Float32 scale);
+
+  VTKM_RENDERING_EXPORT
   virtual void Render(const vtkm::rendering::Camera &camera,
                       const vtkm::rendering::WorldAnnotator &worldAnnotator,
-                      vtkm::rendering::Canvas &canvas) = 0;
-};
-
-class ScreenTextAnnotation : public TextAnnotation
-{
-protected:
-  vtkm::Float32 XPos,YPos;
-  vtkm::Float32 Angle;
-public:
-  ScreenTextAnnotation(const std::string &txt, Color c, vtkm::Float32 s,
-                       vtkm::Float32 ox, vtkm::Float32 oy, vtkm::Float32 angleDeg = 0.)
-    : TextAnnotation(txt,c,s)
-  {
-    XPos = ox;
-    YPos = oy;
-    Angle = angleDeg;
-  }
-  void SetPosition(vtkm::Float32 ox, vtkm::Float32 oy)
-  {
-    XPos = ox;
-    YPos = oy;
-  }
-  virtual void Render(const vtkm::rendering::Camera &vtkmNotUsed(camera),
-                      const vtkm::rendering::WorldAnnotator &,
-                      vtkm::rendering::Canvas &canvas)
-  {
-    vtkm::Float32 WindowAspect = vtkm::Float32(canvas.GetWidth()) /
-      vtkm::Float32(canvas.GetHeight());
-
-    canvas.AddText(XPos,YPos,
-                   Scale,
-                   Angle,
-                   WindowAspect,
-                   AnchorX, AnchorY,
-                   TextColor, Text);
-  }
-};
-
-class BillboardTextAnnotation : public TextAnnotation
-{
-protected:
-  vtkm::Float32 XPos,YPos,ZPos;
-  vtkm::Float32 Angle;
-public:
-  BillboardTextAnnotation(const std::string &txt, Color c, vtkm::Float32 s,
-                          vtkm::Float32 ox, vtkm::Float32 oy, vtkm::Float32 oz,
-                          vtkm::Float32 angleDeg = 0.)
-    : TextAnnotation(txt,c,s)
-  {
-    XPos = ox;
-    YPos = oy;
-    ZPos = oz;
-    Angle = angleDeg;
-  }
-  void SetPosition(vtkm::Float32 ox, vtkm::Float32 oy, vtkm::Float32 oz)
-  {
-    XPos = ox;
-    YPos = oy;
-    ZPos = oz;
-  }
-
-  virtual void Render(const vtkm::rendering::Camera &camera,
-                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
-                      vtkm::rendering::Canvas &canvas)
-  {
-    vtkm::Matrix<vtkm::Float32, 4, 4> V, P;
-    V = camera.CreateViewMatrix();
-    P = camera.CreateProjectionMatrix(canvas.GetWidth(), canvas.GetHeight());
-
-    vtkm::Vec<vtkm::Float32,4> p4w(XPos,YPos,ZPos,1);
-    vtkm::Vec<vtkm::Float32,4> p4s =
-      vtkm::MatrixMultiply(vtkm::MatrixMultiply(P,V), p4w);
-
-    canvas.SetViewToScreenSpace(camera,true);
-
-    vtkm::Float32 psx = p4s[0] / p4s[3];
-    vtkm::Float32 psy = p4s[1] / p4s[3];
-    vtkm::Float32 psz = p4s[2] / p4s[3];
-
-
-    vtkm::Matrix<vtkm::Float32, 4, 4> T;
-    T = vtkm::Transform3DTranslate(psx,psy,-psz);
-
-    vtkm::Float32 WindowAspect =
-      vtkm::Float32(canvas.GetWidth()) / vtkm::Float32(canvas.GetHeight());
-
-    vtkm::Matrix<vtkm::Float32, 4, 4> SW;
-    SW = vtkm::Transform3DScale(1.f/WindowAspect, 1.f, 1.f);
-
-    vtkm::Matrix<vtkm::Float32, 4, 4> SV;
-    vtkm::MatrixIdentity(SV);
-    //if view type == 2D?
-    {
-      vtkm::Float32 vl, vr, vb, vt;
-      camera.GetRealViewport(canvas.GetWidth(),canvas.GetHeight(),vl,vr,vb,vt);
-      vtkm::Float32 xs = (vr-vl);
-      vtkm::Float32 ys = (vt-vb);
-      SV = vtkm::Transform3DScale(2.f/xs, 2.f/ys, 1.f);
-    }
-
-    vtkm::Matrix<vtkm::Float32, 4, 4> R;
-    R = vtkm::Transform3DRotateZ(Angle * 3.14159265f / 180.f);
-
-    vtkm::Vec<vtkm::Float32,4> origin4(0,0,0,1);
-    vtkm::Vec<vtkm::Float32,4> right4(1,0,0,0);
-    vtkm::Vec<vtkm::Float32,4> up4(0,1,0,0);
-
-    vtkm::Matrix<vtkm::Float32, 4, 4> M =
-      vtkm::MatrixMultiply(T,
-      vtkm::MatrixMultiply(SW,
-      vtkm::MatrixMultiply(SV,
-                           R)));
-
-    vtkm::Vec<vtkm::Float32,4> new_origin4 =
-      vtkm::MatrixMultiply(M, origin4);
-    vtkm::Vec<vtkm::Float32,4> new_right4 =
-      vtkm::MatrixMultiply(M, right4);
-    vtkm::Vec<vtkm::Float32,4> new_up4 =
-      vtkm::MatrixMultiply(M, up4);
-
-    vtkm::Float32 px = new_origin4[0] / new_origin4[3];
-    vtkm::Float32 py = new_origin4[1] / new_origin4[3];
-    vtkm::Float32 pz = new_origin4[2] / new_origin4[3];
-
-    vtkm::Float32 rx = new_right4[0];
-    vtkm::Float32 ry = new_right4[1];
-    vtkm::Float32 rz = new_right4[2];
-
-    vtkm::Float32 ux = new_up4[0];
-    vtkm::Float32 uy = new_up4[1];
-    vtkm::Float32 uz = new_up4[2];
-
-    worldAnnotator.AddText(px,py,pz,
-                           rx,ry,rz,
-                           ux,uy,uz,
-                           Scale,
-                           AnchorX, AnchorY,
-                           TextColor, Text);
-
-    canvas.SetViewToWorldSpace(camera,true);
-  }
+                      vtkm::rendering::Canvas &canvas) const = 0;
 };
 
 
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
+
 #endif //vtk_m_rendering_TextAnnotation_h

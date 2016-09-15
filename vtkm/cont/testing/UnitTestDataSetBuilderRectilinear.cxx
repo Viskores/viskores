@@ -30,10 +30,9 @@
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
-#include <boost/static_assert.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
-#include <time.h>
+#include <ctime>
 
 #include <vector>
 
@@ -58,7 +57,7 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      "Wrong number of coordinate systems.");
     VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == numPoints,
                      "Wrong number of coordinates.");
-    VTKM_TEST_ASSERT(ds.GetCellSet().GetCellSet().GetNumberOfCells() == numCells,
+    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells,
                      "Wrong number of cells.");
 
     //Make sure the bounds are correct.
@@ -196,7 +195,7 @@ RectilinearTests()
 void
 TestDataSetBuilderRectilinear()
 {
-  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(time(NULL));
+  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(std::time(nullptr));
   std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 

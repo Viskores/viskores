@@ -181,8 +181,8 @@ TestMaxPointOrCell()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology< ::test_uniform::MaxPointOrCellValue > dispatcher;
-  dispatcher.Invoke(dataSet.GetField("cellvar").GetData(),
-                    dataSet.GetField("pointvar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("cellvar"),
+                    dataSet.GetField("pointvar"),
                     // We know that the cell set is a structured 2D grid and
                     // The worklet does not work with general types because
                     // of the way we get cell indices. We need to make that
@@ -209,7 +209,7 @@ TestAvgPointToCell()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology< ::test_uniform::AveragePointToCellValue > dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("pointvar"),
                     // We know that the cell set is a structured 2D grid and
                     // The worklet does not work with general types because
                     // of the way we get cell indices. We need to make that
@@ -236,7 +236,7 @@ TestAvgCellToPoint()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology< ::test_uniform::AverageCellToPointValue > dispatcher;
-  dispatcher.Invoke(dataSet.GetField("cellvar").GetData(),
+  dispatcher.Invoke(dataSet.GetField("cellvar"),
                     // We know that the cell set is a structured 2D grid and
                     // The worklet does not work with general types because
                     // of the way we get cell indices. We need to make that
@@ -265,11 +265,11 @@ TestStructuredUniformPointCoords()
 
   vtkm::cont::DataSet dataSet3D = testDataSet.Make3DUniformDataSet0();
   dispatcher.Invoke(dataSet3D.GetCellSet(),
-                    dataSet3D.GetCoordinateSystem().GetData());
+                    dataSet3D.GetCoordinateSystem());
 
   vtkm::cont::DataSet dataSet2D = testDataSet.Make2DUniformDataSet0();
   dispatcher.Invoke(dataSet2D.GetCellSet(),
-                    dataSet2D.GetCoordinateSystem().GetData());
+                    dataSet2D.GetCoordinateSystem());
 }
 
 } // anonymous namespace

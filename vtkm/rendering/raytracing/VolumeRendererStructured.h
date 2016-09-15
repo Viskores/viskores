@@ -469,7 +469,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
     LocateCell(vtkm::Vec<vtkm::Id,3> &cell,
                const vtkm::Vec<vtkm::Float32,3> &point,
                const vtkm::Vec<vtkm::Float32,3> &rayDir,
-               vtkm::FloatDefault *invSpacing) const
+               vtkm::Float32 *invSpacing) const
       {
         for(vtkm::Int32 dim = 0; dim < 3; ++dim)
         {
@@ -487,7 +487,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
             }
             else notFound = false;
           }
-          invSpacing[dim] = 1.f / (CoordPortals[dim].Get(cell[dim]+1) - CoordPortals[dim].Get(cell[dim]));
+          invSpacing[dim] = 1.f / static_cast<vtkm::Float32>(CoordPortals[dim].Get(cell[dim]+1) - CoordPortals[dim].Get(cell[dim]));
       }
     }
 
@@ -513,7 +513,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
       vtkm::Float32 currentDistance = minDistance + SampleDistance; //Move the ray forward some epsilon
       vtkm::Float32 lastSample = maxDistance - SampleDistance;
       vtkm::Vec<vtkm::Float32,3> sampleLocation = CameraPosition + currentDistance * rayDir;
-      vtkm::FloatDefault invSpacing[3];
+      vtkm::Float32 invSpacing[3];
       vtkm::Vec<vtkm::Id,8> cellIndices;
       /*LocateCell(currentCell,
                  sampleLocation,
@@ -677,7 +677,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
     LocateCell(vtkm::Vec<vtkm::Id,3> &cell,
                const vtkm::Vec<vtkm::Float32,3> &point,
                const vtkm::Vec<vtkm::Float32,3> &rayDir,
-               vtkm::FloatDefault *invSpacing) const
+               vtkm::Float32 *invSpacing) const
       {
         for(vtkm::Int32 dim = 0; dim < 3; ++dim)
         {
@@ -700,7 +700,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
             }
             else notFound = false;
           }
-          invSpacing[dim] = 1.f / (CoordPortals[dim].Get(cell[dim]+1) - CoordPortals[dim].Get(cell[dim]));
+          invSpacing[dim] = 1.f / static_cast<vtkm::Float32>(CoordPortals[dim].Get(cell[dim]+1) - CoordPortals[dim].Get(cell[dim]));
       }
     }
 
@@ -727,7 +727,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
       vtkm::Float32 currentDistance = minDistance + SampleDistance; //Move the ray forward some epsilon
       vtkm::Float32 lastSample = maxDistance - SampleDistance;
       vtkm::Vec<vtkm::Float32,3> sampleLocation = CameraPosition + currentDistance * rayDir;
-      vtkm::FloatDefault invSpacing[3];
+      vtkm::Float32 invSpacing[3];
       vtkm::Vec<vtkm::Id,8> cellIndices;
 
       /*
@@ -1014,7 +1014,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                    Rays.MinDistance,
                    Rays.MaxDistance,
                    camera.FrameBuffer,
-                   ScalarField->GetData());
+                   *ScalarField);
       }
       else
       {
@@ -1029,7 +1029,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                    Rays.MinDistance,
                    Rays.MaxDistance,
                    camera.FrameBuffer,
-                   ScalarField->GetData());
+                   *ScalarField);
       }
      }
      else
@@ -1050,7 +1050,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                      Rays.MinDistance,
                      Rays.MaxDistance,
                      camera.FrameBuffer,
-                     ScalarField->GetData());
+                     *ScalarField);
         }
         else
         {
@@ -1065,7 +1065,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                      Rays.MinDistance,
                      Rays.MaxDistance,
                      camera.FrameBuffer,
-                     ScalarField->GetData());
+                     *ScalarField);
         }
      }
 

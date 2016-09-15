@@ -68,6 +68,12 @@ void CheckDynamicCellSet(
 
   VTKM_TEST_ASSERT(CheckCalled,
                    "The functor was never called (and apparently a bad value exception not thrown).");
+
+  CheckCalled = false;
+  CastAndCall(dynamicCellSet, CheckFunctor<CellSetType>());
+
+  VTKM_TEST_ASSERT(CheckCalled,
+                   "The functor was never called (and apparently a bad value exception not thrown).");
 }
 
 template<typename CellSetType, typename CellSetList>
@@ -80,8 +86,8 @@ void TryNewInstance(
   VTKM_TEST_ASSERT(newCellSet.template IsType<CellSetType>(),
                    "New cell set wrong type.");
 
-  VTKM_TEST_ASSERT(&originalCellSet.GetCellSet()
-                   != &newCellSet.GetCellSet(),
+  VTKM_TEST_ASSERT(&originalCellSet.CastToBase()
+                   != &newCellSet.CastToBase(),
                    "NewInstance did not make a copy.");
 }
 

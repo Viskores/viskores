@@ -259,7 +259,7 @@ public:
                 rays.U,
                 rays.V,
                 rays.Scalar,
-                scalarField->GetData());
+                *scalarField);
     }
     else
     {
@@ -268,7 +268,7 @@ public:
                                                                     vtkm::Float32(scalarRange.Max)) )
         .Invoke(rays.HitIdx,
                 rays.Scalar,
-                scalarField->GetData());
+                *scalarField);
     }
   } // Run
 

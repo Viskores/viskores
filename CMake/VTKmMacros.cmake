@@ -19,6 +19,7 @@
 ##============================================================================
 
 include(CMakeParseArguments)
+include(GenerateExportHeader)
 
 # Utility to build a kit name from the current directory.
 function(vtkm_get_kit_name kitvar)
@@ -73,17 +74,9 @@ endfunction(vtkm_setup_nvcc_flags)
 function(vtkm_setup_msvc_properties target )
   #disable MSVC CRT and SCL warnings as they recommend using non standard
   #c++ extensions
-  set_property(TARGET ${target}
-               APPEND PROPERTY COMPILE_DEFINITIONS
-               "_SCL_SECURE_NO_WARNINGS"
-               "_CRT_SECURE_NO_WARNINGS"
-               )
+  target_compile_definitions(${target} PRIVATE "_SCL_SECURE_NO_WARNINGS"
+                                               "_CRT_SECURE_NO_WARNINGS")
 
-  #enable large object support so we can have 2^32 addressable sections
-  set_property(TARGET ${target}
-               APPEND PROPERTY COMPILE_FLAGS
-               "/bigobj"
-               )
 endfunction(vtkm_setup_msvc_properties)
 
 # Builds a source file and an executable that does nothing other than
@@ -120,20 +113,21 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
       list(APPEND CUDA_NVCC_INCLUDE_ARGS_USER -isystem ${dir})
     endforeach()
 
-    cuda_add_library(TestBuild_${name} ${cxxfiles} ${hfiles})
+    cuda_add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
   elseif (${cxxfiles_len} GREATER 0)
-    add_library(TestBuild_${name} ${cxxfiles} ${hfiles})
-    if(VTKm_EXTRA_COMPILER_WARNINGS)
-      set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_FLAGS
-                   ${CMAKE_CXX_FLAGS_WARN_EXTRA}
-                   )
-    endif(VTKm_EXTRA_COMPILER_WARNINGS)
+    add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
     target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
   endif ()
   target_link_libraries(TestBuild_${name} ${VTKm_LIBRARIES})
   set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
+    )
+  # Send the libraries created for test builds to their own directory so as to
+  # not polute the directory with useful libraries.
+  set_target_properties(TestBuild_${name} PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
+    LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
+    RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
     )
 endfunction(vtkm_add_header_build_test)
 
@@ -241,11 +235,12 @@ endfunction(vtkm_pyexpander_generated_file)
 # vtkm_unit_tests(
 #   SOURCES <source_list>
 #   LIBRARIES <dependent_library_list>
+#   TEST_ARGS <argument_list>
 #   )
 function(vtkm_unit_tests)
   set(options CUDA)
   set(oneValueArgs)
-  set(multiValueArgs SOURCES LIBRARIES)
+  set(multiValueArgs SOURCES LIBRARIES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
     "${options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
@@ -286,8 +281,7 @@ function(vtkm_unit_tests)
 
     #do it as a property value so we don't pollute the include_directories
     #for any other targets
-    set_property(TARGET ${test_prog} APPEND PROPERTY
-        INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
+    target_include_directories(${test_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
 
     target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
 
@@ -297,17 +291,10 @@ function(vtkm_unit_tests)
       vtkm_setup_msvc_properties(${test_prog})
     endif()
 
-    if(VTKm_EXTRA_COMPILER_WARNINGS)
-      set_property(TARGET ${test_prog}
-                 APPEND PROPERTY COMPILE_FLAGS
-                 ${CMAKE_CXX_FLAGS_WARN_EXTRA}
-                 )
-    endif(VTKm_EXTRA_COMPILER_WARNINGS)
-
     foreach (test ${VTKm_UT_SOURCES})
       get_filename_component(tname ${test} NAME_WE)
       add_test(NAME ${tname}
-        COMMAND ${test_prog} ${tname}
+        COMMAND ${test_prog} ${tname} ${VTKm_UT_TEST_ARGS}
         )
       set_tests_properties("${tname}" PROPERTIES TIMEOUT ${timeout})
     endforeach (test)
@@ -422,9 +409,7 @@ function(vtkm_worklet_unit_tests device_adapter)
     else()
       add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
     endif()
-    set_property(TARGET ${test_prog} APPEND PROPERTY
-      INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS}
-      )
+    target_include_directories(${test_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
     target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
 
     #add the specific compile options for this executable
@@ -446,18 +431,8 @@ function(vtkm_worklet_unit_tests device_adapter)
       vtkm_setup_msvc_properties(${test_prog})
     endif()
 
-    #increase warning level if needed, we are going to skip cuda here
-    #to remove all the false positive unused function warnings that cuda
-    #generates
-    if(VTKm_EXTRA_COMPILER_WARNINGS)
-      set_property(TARGET ${test_prog}
-                   APPEND PROPERTY COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA} )
-    endif()
-
     #set the device adapter on the executable
-    set_property(TARGET ${test_prog}
-                 APPEND
-                 PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=${device_adapter}" )
+    target_compile_definitions(${test_prog} PRIVATE "VTKM_DEVICE_ADAPTER=${device_adapter}")
   endif()
 endfunction(vtkm_worklet_unit_tests)
 
@@ -562,8 +537,7 @@ function(vtkm_benchmarks device_adapter)
       set_source_files_properties(${benchmark_headers}
         PROPERTIES HEADER_FILE_ONLY TRUE)
 
-      set_property(TARGET ${benchmark_prog} APPEND PROPERTY
-          INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
+      target_include_directories(${benchmark_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
       target_link_libraries(${benchmark_prog} ${VTKm_LIBRARIES})
 
       if(MSVC)
@@ -573,19 +547,8 @@ function(vtkm_benchmarks device_adapter)
       #add the specific compile options for this executable
       target_compile_options(${benchmark_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
-      #increase warning level if needed, we are going to skip cuda here
-      #to remove all the false positive unused function warnings that cuda
-      #generates
-      if(VTKm_EXTRA_COMPILER_WARNINGS)
-        set_property(TARGET ${benchmark_prog}
-                     APPEND PROPERTY COMPILE_FLAGS ${CMAKE_CXX_FLAGS_WARN_EXTRA} )
-      endif()
-
       #set the device adapter on the executable
-      set_property(TARGET ${benchmark_prog}
-                   APPEND
-                   PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=${device_adapter}" )
-
+      target_compile_definitions(${benchmark_prog} PRIVATE "VTKM_DEVICE_ADAPTER=${device_adapter}")
 
     endforeach()
 
@@ -596,6 +559,125 @@ function(vtkm_benchmarks device_adapter)
   endif()
 
 endfunction(vtkm_benchmarks)
+
+# Given a list of *.cxx source files that during configure time are deterimined
+# to have CUDA code, wrap the sources in *.cu files so that they get compiled
+# with nvcc.
+function(vtkm_wrap_sources_for_cuda cuda_source_list_var)
+  set(original_sources ${ARGN})
+
+  set(cuda_sources)
+  foreach(source_file ${original_sources})
+    get_filename_component(source_name ${source_file} NAME_WE)
+    get_filename_component(source_file_path ${source_file} ABSOLUTE)
+    set(wrapped_file ${CMAKE_CURRENT_BINARY_DIR}/${source_name}.cu)
+    configure_file(
+      ${VTKm_SOURCE_DIR}/CMake/WrapCUDASource.cu.in
+      ${wrapped_file}
+      @ONLY)
+    list(APPEND cuda_sources ${wrapped_file})
+  endforeach(source_file)
+
+  set_source_files_properties(${original_sources}
+    PROPERTIES HEADER_FILE_ONLY TRUE
+    )
+  set(${cuda_source_list_var} ${cuda_sources} PARENT_SCOPE)
+endfunction(vtkm_wrap_sources_for_cuda)
+
+set(VTKM_HAS_AT_LEAST_ONE_LIBRARY FALSE CACHE INTERNAL "" FORCE)
+# Add a VTK-m library. The name of the library will match the "kit" name
+# (e.g. vtkm_rendering) unless the NAME argument is given.
+#
+# vtkm_library(
+#   [NAME <name>]
+#   SOURCES <source_list>
+#   [CUDA]
+#   [WRAP_FOR_CUDA <source_list>]
+#   )
+function(vtkm_library)
+  set(options CUDA)
+  set(oneValueArgs NAME)
+  set(multiValueArgs SOURCES WRAP_FOR_CUDA)
+  cmake_parse_arguments(VTKm_LIB
+    "${options}" "${oneValueArgs}" "${multiValueArgs}"
+    ${ARGN}
+    )
+
+  vtkm_get_kit_name(kit dir_prefix)
+  if(VTKm_LIB_NAME)
+    set(lib_name ${VTKm_LIB_NAME})
+  else()
+    set(lib_name ${kit})
+  endif()
+
+  if(VTKm_LIB_CUDA)
+    vtkm_setup_nvcc_flags(old_nvcc_flags old_cxx_flags)
+
+    vtkm_wrap_sources_for_cuda(cuda_sources ${VTKm_LIB_WRAP_FOR_CUDA})
+
+    # Cuda compiles do not respect target_include_directories
+    cuda_include_directories(${VTKm_INCLUDE_DIRS})
+
+    cuda_add_library(${lib_name} ${VTKm_LIB_SOURCES} ${cuda_sources})
+
+    set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+    set(CMAKE_CXX_FLAGS ${old_cxx_flags})
+  else()
+    add_library(${lib_name} ${VTKm_LIB_SOURCES})
+  endif()
+
+  #do it as a property value so we don't pollute the include_directories
+  #for any other targets
+  set_property(TARGET ${lib_name} APPEND PROPERTY
+      INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
+
+  target_link_libraries(${lib_name} ${VTKm_LIBRARIES})
+
+  set(cxx_args ${VTKm_COMPILE_OPTIONS})
+  separate_arguments(cxx_args)
+  target_compile_options(${lib_name} PRIVATE ${cxx_args})
+
+  # Make sure libraries go to lib directory and dll go to bin directory.
+  # Mostly important on Windows.
+  set_target_properties(${lib_name} PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+    LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+    RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
+    )
+
+  if(MSVC)
+    vtkm_setup_msvc_properties(${lib_name})
+  endif()
+
+  if(VTKm_EXTRA_COMPILER_WARNINGS)
+    set(cxx_args ${CMAKE_CXX_FLAGS_WARN_EXTRA})
+    separate_arguments(cxx_args)
+    target_compile_options(${lib_name}
+      PRIVATE ${cxx_args}
+      )
+  endif(VTKm_EXTRA_COMPILER_WARNINGS)
+
+  generate_export_header(${lib_name})
+
+  #generate_export_header creates the header in CMAKE_CURRENT_BINARY_DIR.
+  #The build expects it in the install directory.
+  file(COPY
+    ${CMAKE_CURRENT_BINARY_DIR}/${lib_name}_export.h
+    DESTINATION
+      ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
+    )
+
+  install(TARGETS ${lib_name}
+    EXPORT ${VTKm_EXPORT_NAME}
+    ARCHIVE DESTINATION ${VTKm_INSTALL_LIB_DIR}
+    LIBRARY DESTINATION ${VTKm_INSTALL_LIB_DIR}
+    RUNTIME DESTINATION ${VTKm_INSTALL_BIN_DIR}
+    )
+  vtkm_install_headers("${dir_prefix}"
+    ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
+    )
+  set(VTKM_HAS_AT_LEAST_ONE_LIBRARY TRUE CACHE INTERNAL "" FORCE)
+endfunction(vtkm_library)
 
 # The Thrust project is not as careful as the VTKm project in avoiding warnings
 # on shadow variables and unused arguments.  With a real GCC compiler, you

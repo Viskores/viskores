@@ -211,7 +211,7 @@ struct TestFunctor
 
 void TestStorageBasic()
 {
-  vtkm::testing::Testing::TryAllTypes(TestFunctor());
+  vtkm::testing::Testing::TryTypes(TestFunctor());
 }
 
 } // Anonymous namespace

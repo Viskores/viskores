@@ -23,7 +23,7 @@
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperVolume.h>
 #include <vtkm/rendering/Scene.h>
-#include <vtkm/rendering/View.h>
+#include <vtkm/rendering/View3D.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -54,7 +54,7 @@ void Render(const vtkm::cont::DataSet &ds,
 {
     const vtkm::Int32 W = 512, H = 512;
     const vtkm::cont::CoordinateSystem coords = ds.GetCoordinateSystem();
-    vtkm::rendering::MapperVolume<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> mapper;
+    vtkm::rendering::MapperVolume mapper;
 
     vtkm::rendering::Camera camera;
     Set3DView(camera, coords);

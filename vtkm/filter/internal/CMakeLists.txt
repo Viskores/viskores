@@ -21,7 +21,6 @@
 set(headers
   ResolveFieldTypeAndExecute.h
   ResolveFieldTypeAndMap.h
-  RuntimeDeviceTracker.h
 )
 
 vtkm_declare_headers(${headers})

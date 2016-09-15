@@ -53,10 +53,33 @@ vtkm::Vec<T,3> Transform3DPoint(const vtkm::Matrix<T,4,4> &matrix,
         vtkm::dot(vtkm::MatrixGetRow(matrix,2), homogeneousPoint));
 }
 
-/// \brief Transform a 3D point by a transformation matrix.
+/// \brief Transform a 3D point by a transformation matrix with perspective.
 ///
 /// Given a 4x4 transformation matrix and a 3D point, returns the point
 /// transformed by the given matrix in homogeneous coordinates.
+///
+/// Unlike Transform3DPoint, this method honors the fourth component of the
+/// transformed homogeneous coordiante. This makes it applicable for perspective
+/// transformations, but requires some more computations.
+///
+template<typename T>
+VTKM_EXEC_CONT_EXPORT
+vtkm::Vec<T,3> Transform3DPointPerspective(const vtkm::Matrix<T,4,4> &matrix,
+                                           const vtkm::Vec<T,3> &point)
+{
+  vtkm::Vec<T,4> homogeneousPoint(point[0], point[1], point[2], T(1));
+  T inverseW = 1/vtkm::dot(vtkm::MatrixGetRow(matrix,3), homogeneousPoint);
+  return vtkm::Vec<T,3>(
+        vtkm::dot(vtkm::MatrixGetRow(matrix,0), homogeneousPoint)*inverseW,
+        vtkm::dot(vtkm::MatrixGetRow(matrix,1), homogeneousPoint)*inverseW,
+        vtkm::dot(vtkm::MatrixGetRow(matrix,2), homogeneousPoint)*inverseW);
+}
+
+/// \brief Transform a 3D vector by a transformation matrix.
+///
+/// Given a 4x4 transformation matrix and a 3D vector, returns the vector
+/// transformed by the given matrix in homogeneous coordinates. Unlike points,
+/// vectors do not get translated.
 ///
 template<typename T>
 VTKM_EXEC_CONT_EXPORT

@@ -18,4 +18,7 @@
 //  this software.
 //============================================================================
 
+//Define the CUDA device adapter as being the default
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
+
 #include "Demo.cxx"

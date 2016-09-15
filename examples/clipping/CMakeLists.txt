@@ -19,20 +19,17 @@
 ##  this software.
 ##
 ##=============================================================================
-
-vtkm_configure_component_Serial()
-vtkm_configure_component_CUDA()
-vtkm_configure_component_TBB()
+#Find the VTK-m package
+find_package(VTKm REQUIRED QUIET
+  OPTIONAL_COMPONENTS Serial CUDA TBB
+  )
 
 add_executable(Clipping_SERIAL Clipping.cxx)
 target_include_directories(Clipping_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
 target_link_libraries(Clipping_SERIAL ${VTKm_LIBRARIES})
 target_compile_options(Clipping_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
-
-set_property(
-  TARGET Clipping_SERIAL
-  APPEND
-  PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
+target_compile_definitions(Clipping_SERIAL PRIVATE
+                           "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
 
 if(VTKm_CUDA_FOUND)
   set (cudaSource "${CMAKE_CURRENT_BINARY_DIR}/Clipping.cu")
@@ -61,8 +58,6 @@ if(VTKm_TBB_FOUND)
   target_include_directories(Clipping_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
   target_link_libraries(Clipping_TBB ${VTKm_LIBRARIES})
   target_compile_options(Clipping_TBB PRIVATE PRIVATE ${VTKm_COMPILE_OPTIONS})
-  set_property(
-    TARGET Clipping_TBB
-    APPEND
-    PROPERTY COMPILE_DEFINITIONS "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
+  target_compile_definitions(Clipping_TBB PRIVATE
+                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
 endif()

@@ -33,6 +33,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -264,6 +265,70 @@ private:
         }
     }
   };
+
+  struct TestConcatenateAsInput
+  {
+    template< typename ValueType>
+    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    {
+      const vtkm::Id length = ARRAY_SIZE;
+
+      typedef ::fancy_array_detail::IndexSquared<ValueType> FunctorType;
+      typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+
+      typedef vtkm::cont::ArrayHandleImplicit< ValueType,
+                                               FunctorType > ValueHandleType;
+      typedef vtkm::cont::ArrayHandle< ValueType >           BasicArrayType;
+      typedef vtkm::cont::ArrayHandleConcatenate< ValueHandleType, BasicArrayType >
+                                                             ConcatenateType;
+
+      FunctorType functor;
+      for( vtkm::Id start_pos = 0; start_pos < (length-10); start_pos+=10)
+      {
+        vtkm::Id implicitLen = length - start_pos;
+        vtkm::Id basicLen    = start_pos;
+    
+        // make an implicit array
+        ValueHandleType implicit =
+            vtkm::cont::make_ArrayHandleImplicit<ValueType>(functor,
+                                                            implicitLen);
+        // make a basic array
+        std::vector< ValueType > basicVec;
+        for( vtkm::Id i = 0; i < basicLen; i++ )
+        {
+          basicVec.push_back( ValueType( static_cast<ComponentType>(i)));
+          basicVec.push_back( ValueType( ComponentType(i) ));
+        }
+        BasicArrayType basic = vtkm::cont::make_ArrayHandle( basicVec );
+
+        // concatenate two arrays together
+        ConcatenateType concatenate = vtkm::cont::make_ArrayHandleConcatenate
+                                            ( implicit, basic );
+
+        vtkm::cont::ArrayHandle< ValueType > result;
+
+        vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
+        dispatcher.Invoke(concatenate, result);
+
+        //verify that the control portal works
+        for(vtkm::Id i=0; i < length; ++i)
+        {
+          const ValueType result_v = result.GetPortalConstControl().Get( i );
+          ValueType correct_value;
+          if( i < implicitLen )
+            correct_value = implicit.GetPortalConstControl().Get( i );
+          else
+            correct_value = basic.GetPortalConstControl().Get( i - implicitLen );
+          const ValueType control_value = concatenate.GetPortalConstControl().Get( i );
+          VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
+                           "ArrayHandleConcatenate as Input Failed");
+          VTKM_TEST_ASSERT(test_equal(result_v, control_value),
+                           "ArrayHandleConcatenate as Input Failed");
+        }
+      }
+    }
+  };
+
 
   struct TestPermutationAsInput
   {
@@ -689,27 +754,22 @@ private:
     }
   };
 
+  struct ScalarTypesToTest
+      : vtkm::ListTagBase<vtkm::UInt8, vtkm::FloatDefault>
+  {  };
 
- struct ZipTypesToTest
+  struct ZipTypesToTest
     : vtkm::ListTagBase< vtkm::Pair< vtkm::UInt8, vtkm::Id >,
-                         vtkm::Pair< vtkm::Int32, vtkm::Vec< vtkm::Float32, 3> >,
                          vtkm::Pair< vtkm::Float64,  vtkm::Vec< vtkm::UInt8, 4> >,
-                         vtkm::Pair< vtkm::Vec<vtkm::Float32,3>, vtkm::Vec<vtkm::Int8, 4> >,
-                         vtkm::Pair< vtkm::Vec<vtkm::Float64,2>, vtkm::Int32 >
+                         vtkm::Pair< vtkm::Vec<vtkm::Float32,3>, vtkm::Vec<vtkm::Int8, 4> >
                          >
   {  };
 
   struct HandleTypesToTest
-    : vtkm::ListTagBase< vtkm::UInt8,
-                         vtkm::UInt32,
-                         vtkm::Int32,
-                         vtkm::Int64,
+    : vtkm::ListTagBase< vtkm::Id,
                          vtkm::Vec<vtkm::Int32,2>,
-                         vtkm::Vec<vtkm::UInt8,4>,
-                         vtkm::Float32,
-                         vtkm::Float64,
-                         vtkm::Vec<vtkm::Float64,3>,
-                         vtkm::Vec<vtkm::Float32,4>
+                         vtkm::FloatDefault,
+                         vtkm::Vec<vtkm::Float64,3>
                          >
   {  };
 
@@ -730,7 +790,7 @@ private:
       std::cout << "Testing ArrayHandleCompositeVector as Input" << std::endl;
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestCompositeAsInput(),
-                              vtkm::TypeListTagScalarAll());
+                              ScalarTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleConstant as Input" << std::endl;
@@ -790,13 +850,13 @@ private:
       std::cout << "Testing ArrayHandleGroupVec<2> as Output" << std::endl;
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecAsOutput<2>(),
-                              vtkm::TypeListTagScalarAll());
+                              ScalarTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleGroupVec<3> as Output" << std::endl;
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecAsOutput<3>(),
-                              vtkm::TypeListTagScalarAll());
+                              ScalarTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleZip as Input" << std::endl;
@@ -815,6 +875,12 @@ private:
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestZipAsOutput(),
                               ZipTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleConcatenate as Input" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestConcatenateAsInput(),
+                              HandleTypesToTest());
     }
   };
   public:

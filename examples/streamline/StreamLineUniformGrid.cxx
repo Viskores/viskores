@@ -148,7 +148,7 @@ void displayCall()
   vtkm::cont::CellSetExplicit<> cellSet;
   outDataSet.GetCellSet(0).CopyTo(cellSet);
   const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray =
-                                    outDataSet.GetCoordinateSystem(0).GetData();
+                                    outDataSet.GetCoordinateSystem().GetData();
 
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
   vtkm::Id numberOfPoints = coordArray.GetNumberOfValues();
@@ -156,7 +156,7 @@ void displayCall()
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
   // So use cast and call on a functor that stores that dynamic array into static array we created
   vertexArray.Allocate(numberOfPoints);
-  coordArray.CastAndCall(GetVertexArray());
+  vtkm::cont::CastAndCall(coordArray, GetVertexArray());
 
   // Each cell is a polyline
   glColor3f(1.0f, 0.0f, 0.0f);
@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
 
   // Read in the vector data for testing
   FILE * pFile = fopen(argv[1], "rb");
-  if (pFile == NULL) perror ("Error opening file");
+  if (pFile == nullptr) perror ("Error opening file");
 
   size_t ret_code = 0;
   // Size of the dataset

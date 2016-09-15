@@ -54,6 +54,7 @@
 #define VTKM_GCC
 #endif
 
+
 #if defined(unix) || defined(__unix) || defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 #include <unistd.h>
 # ifdef _POSIX_VERSION
@@ -124,14 +125,15 @@
 // but boost and thrust does not.
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 
+//We include deprecated-declarations to silence auto_ptr deprecation warnings
+//when using older boost versions ( < 1.61 )
 #define VTK_M_THIRDPARTY_GENERAL_WARNING_PRAGMAS \
   _Pragma("GCC diagnostic ignored \"-Wconversion\"") \
   _Pragma("GCC diagnostic ignored \"-Wshadow\"") \
-  _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"") \
+  _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
 
 // GCC has a unused by set variable warnings that needs to be silenced.
-// Because boost boost::shared_ptr inline assembly causes nvcc to incorrectly
-// generate warnings.
 #if defined(VTKM_GCC)
 #define VTK_M_THIRDPARTY_GCC_WARNING_PRAGMAS \
   _Pragma("GCC diagnostic ignored \"-Wunused-but-set-variable\"") \
@@ -201,7 +203,10 @@
 // that should be wrapped around any "for"/"while" that you want vectorized.
 // This is used to set per compiler pragmas for vectorization, and to disable
 // any warnings that about vectorization failures.
-#if defined(VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS)
+#cmakedefine VTKM_VECTORIZATION_ENABLED
+
+#if defined(VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS) &&\
+    defined(VTKM_VECTORIZATION_ENABLED)
 #if defined(VTKM_CLANG)
 //clang only needs pre loop
 #define VTKM_VECTORIZATION_PRE_LOOP \
@@ -254,23 +259,10 @@
 #cmakedefine VTKM_ENABLE_OPENGL_INTEROP
 #endif
 
-// Determine whether we will use variadic templates (a new feature in C++11).
-// Currently have VARIADIC_TEMPLATE support off.
-#cmakedefine VTKM_NO_VARIADIC_TEMPLATE
-#if !defined(VTKM_USE_VARIADIC_TEMPLATE) && !defined(VTKM_NO_VARIADIC_TEMPLATE)
-// Currently using Boost to determine support.
-
-VTKM_THIRDPARTY_PRE_INCLUDE
-# include <boost/config.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
-# if defined(BOOST_HAS_VARIADIC_TMPL)
-#  define VTKM_USE_VARIADIC_TEMPLATE 1
-# endif
-#endif
-
-#if defined(VTKM_USE_VARIADIC_TEMPLATE) && defined(VTKM_NO_VARIADIC_TEMPLATE)
-# error Both VTKM_USE_VARIADIC_TEMPLATE and VTKM_NO_VARIADIC_TEMPLATE defined.  Do not know what to do.
+#if __cplusplus >= 201103L || ( defined(VTKM_MSVC) && _MSC_VER >= 1800  )
+#define VTKM_HAVE_CXX_11
+#else
+#error "VTK-m requires at least a C++11 compiler"
 #endif
 
 #ifdef VTKM_MSVC
