@@ -43,7 +43,10 @@ void RenderTriangles(MapperGL &mapper,
 {
 
   if (!mapper.loaded){
-      glewInit();
+      GLenum GlewInitResult = glewInit();
+      if (GlewInitResult){
+        std::cout << "ERROR: " << glewGetErrorString(GlewInitResult) << std::endl;
+      }
       mapper.loaded = true;
 
       std::vector<float> data, colors;
@@ -154,11 +157,16 @@ void RenderTriangles(MapperGL &mapper,
           GLint maxLength = 0;
           glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &maxLength);
 
-          // The maxLength includes the NULL character
-          GLchar *strInfoLog = new GLchar[maxLength + 1];
-          glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
-          fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
-          delete [] strInfoLog;
+          if (maxLength <= 0){
+              fprintf(stderr, "VS: Compilation error in shader with no error message\n");
+          }
+          else{
+              // The maxLength includes the NULL character
+              GLchar *strInfoLog = new GLchar[maxLength + 1];
+              glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
+              fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
+              delete [] strInfoLog;
+          }
       }
 
       GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
@@ -170,11 +178,16 @@ void RenderTriangles(MapperGL &mapper,
           GLint maxLength = 0;
           glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &maxLength);
 
-          // The maxLength includes the NULL character
-          GLchar *strInfoLog = new GLchar[maxLength + 1];
-          glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
-          fprintf(stderr, "FS: Compilation error in shader : %s\n", strInfoLog);
-          delete [] strInfoLog;
+          if (maxLength <= 0){
+              fprintf(stderr, "VS: Compilation error in shader with no error message\n");
+          }
+          else{
+              // The maxLength includes the NULL character
+              GLchar *strInfoLog = new GLchar[maxLength + 1];
+              glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
+              fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
+              delete [] strInfoLog;
+          }
       }
 
       mapper.shader_programme = glCreateProgram();
