@@ -63,7 +63,7 @@ void TestStreamingSine()
   }
   input = vtkm::cont::make_ArrayHandle(data);
 
-  typedef typename vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAlgorithms;
+  typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAlgorithms;
   vtkm::worklet::SineWorklet sineWorklet;
   vtkm::worklet::DispatcherStreamingMapField<vtkm::worklet::SineWorklet> 
       dispatcher(sineWorklet);
