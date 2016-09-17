@@ -972,17 +972,17 @@ if( print)
     typedef vtkm::cont::ArrayHandle<typename ArrayInType::ValueType>     BasicArrayType;
     typedef vtkm::worklet::wavelets::InverseTransform2D<DeviceTag>       IDWT2DWorklet;
     typedef vtkm::worklet::DispatcherMapField<IDWT2DWorklet, DeviceTag>  Dispatcher;
+    BasicArrayType        afterY;
 
     // First inverse transform on columns
+    {
     BasicArrayType        ext1, ext2, ext3, ext4;
     vtkm::Id              extDimX = inDimX; 
     vtkm::Id              ext1DimY, ext2DimY, ext3DimY, ext4DimY;
     this->IDWTHelperTD( coeffIn, L[1], L[3], inDimX, ext1, ext2, ext3, ext4,
                         ext1DimY, ext2DimY, ext3DimY, ext4DimY,
                         filterLen, wmode, DeviceTag() );
-    BasicArrayType        afterY;
     afterY.PrepareForOutput( inDimX * inDimY, DeviceTag() );
-    {
     IDWT2DWorklet worklet( WaveletBase::filter.GetLowReconstructFilter(),
                            WaveletBase::filter.GetHighReconstructFilter(),
                            filterLen,
@@ -996,41 +996,29 @@ if( print)
     Dispatcher dispatcher( worklet );
     dispatcher.Invoke( ext1, ext2, ext3, ext4, coeffIn, afterY );
     }
-WaveletBase::Print2DArray("\ntest afterY:", afterY, inDimX );
     
     // Then inverse transform on rows
+    {
+    BasicArrayType     ext1, ext2, ext3, ext4;
     vtkm::Id extDimY = inDimY;
     vtkm::Id ext1DimX, ext2DimX, ext3DimX, ext4DimX;
     this->IDWTHelperLR( afterY, L[0], L[4], inDimY, ext1, ext2, ext3, ext4,
                         ext1DimX, ext2DimX, ext3DimX, ext4DimX,
                         filterLen, wmode, DeviceTag() ); 
     sigOut.PrepareForOutput( inDimX * inDimY, DeviceTag() );
-std::cerr << "start calling worklet" << std::endl;
-    {
-      IDWT2DWorklet worklet( WaveletBase::filter.GetLowReconstructFilter(),
-                             WaveletBase::filter.GetHighReconstructFilter(),
-                             filterLen,
-                             ext1DimX, extDimY,   // ext1
-                             L[0],     inDimY,    // cA
-                             ext2DimX, extDimY,   // ext2
-                             ext3DimX, extDimY,   // ext3
-                             L[4],     inDimY,    // cA
-                             ext4DimX, extDimY,   // ext4
-                             true );              // left-right
-      Dispatcher dispatcher( worklet );
-      dispatcher.Invoke( ext1, ext2, ext3, ext4, afterY, sigOut );
-    }
-std::cerr << "end calling worklet" << std::endl;
-ext1.ReleaseResources();
-std::cerr << "ext1 released" << std::endl;
-ext2.ReleaseResources();
-std::cerr << "ext2 released" << std::endl;
-ext3.ReleaseResources();
-std::cerr << "ext3 released" << std::endl;
-ext4.ReleaseResources();
-std::cerr << "ext4 released" << std::endl;
-afterY.ReleaseResources();
-std::cerr << "afterY released" << std::endl;
+    IDWT2DWorklet worklet( WaveletBase::filter.GetLowReconstructFilter(),
+                           WaveletBase::filter.GetHighReconstructFilter(),
+                           filterLen,
+                           ext1DimX, extDimY,   // ext1
+                           L[0],     inDimY,    // cA
+                           ext2DimX, extDimY,   // ext2
+                           ext3DimX, extDimY,   // ext3
+                           L[4],     inDimY,    // cA
+                           ext4DimX, extDimY,   // ext4
+                           true );              // left-right
+    Dispatcher dispatcher( worklet );
+    dispatcher.Invoke( ext1, ext2, ext3, ext4, afterY, sigOut );
+    } 
 
     return 0;
   }
