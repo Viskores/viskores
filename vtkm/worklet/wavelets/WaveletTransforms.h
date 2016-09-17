@@ -44,13 +44,140 @@ enum ExtensionDirection2D {  // which side of a matrix to extend
   BOTTOM
 };
 
+
+//  ---------------------------------------------------
+//  |      |          |      |      |          |      |
+//  |      |          |      |      |          |      |
+//  | ext1 |    cA    | ext2 | ext3 |    cD    | ext4 |
+//  | (x1) |   (xa)   | (x2) | (x3) |   (xd)   | (x4) |
+//  |      |          |      |      |          |      |
+//  ----------------------------------------------------
+//  matrix1: ext1 
+//  matrix2: ext2 
+//  matrix3: ext3 
+//  matrix4: ext4 
+//  matrix5: cA + cD
+class IndexTranslator6Matrices
+{
+public:
+  IndexTranslator6Matrices( vtkm::Id x_1, vtkm::Id y_1, 
+                            vtkm::Id x_a, vtkm::Id y_a, 
+                            vtkm::Id x_2, vtkm::Id y_2, 
+                            vtkm::Id x_3, vtkm::Id y_3,                             
+                            vtkm::Id x_d, vtkm::Id y_d, 
+                            vtkm::Id x_4, vtkm::Id y_4,
+                            bool mode )
+                         :  x1(x_1), y1(y_1), 
+                            xa(x_a), ya(y_a), 
+                            x2(x_2), y2(y_2), 
+                            x3(x_3), y3(y_3), 
+                            xd(x_d), yd(y_d), 
+                            x4(x_4), y4(y_4), 
+                            modeLR (mode)  
+  {
+    if( modeLR )
+    {
+      xAD = xa + xd;
+      yAD = y1;
+    }
+    else
+    {
+      xAD = x1;
+      yAD = ya + yd;
+    }
+  }
+
+  void Translate2Dto1D( vtkm::Id  inX,  vtkm::Id  inY,         // 2D indices as input
+                        vtkm::Id  &mat, vtkm::Id  &idx ) const // which matrix, and idx of that matrix
+  {
+    if( modeLR )   // left-right mode
+    {
+      if ( 0 <= inX && inX < x1 )
+      {
+        mat = 1;  // ext1
+        idx = inY * x1 + inX;
+      } 
+      else if ( x1 <= inX && inX < (x1 + xa) )
+      {
+        mat = 5;  // cAcD
+        idx = inY * xAD + (inX - x1);
+      }
+      else if ( (x1 + xa) <= inX && inX < (x1 + xa + x2) )
+      {
+        mat = 2;  // ext2
+        idx = inY * x2 + (inX - x1 - xa);
+      }
+      else if ( (x1 + xa + x2) <= inX && inX < (x1 + xa + x2 + x3) )
+      {
+        mat = 3;  // ext3
+        idx = inY * x3 + (inX - x1 - xa - x2);
+      }
+      else if ( (x1 + xa + x2 + x3) <= inX && inX < (x1 + xa + x2 + x3 + xd) )
+      {
+        mat = 5;  // cAcD
+        idx = inY * xAD + (inX - x1 - x2 - x3);
+      }
+      else if ( (x1 + xa + x2 + x3 + xd) <= inX && inX < (x1 + xa + x2 + x3 + xd + x4) )
+      {
+        mat = 4;  // ext4
+        idx = inY * x4 + (inX - x1 - xa - x2 - x3 - xd);
+      }
+      else
+        vtkm::cont::ErrorControlInternal("Invalid index!");
+    }
+    else          // top-down mode
+    {
+      if ( 0 <= inY && inY < y1 )
+      {
+        mat = 1;  // ext1
+        idx = inY * x1 + inX;
+      }
+      else if ( y1 <= inY && inY < (y1 + ya) )
+      {
+        mat = 5;  // cAcD
+        idx = (inY - y1) * x1 + inX;
+      }
+      else if ( (y1 + ya) <= inY && inY < (y1 + ya + y2) )
+      {
+        mat = 2;  // ext2
+        idx = (inY - y1 - ya) * x1 + inX;
+      }
+      else if ( (y1 + ya + y2) <= inY && inY < (y1 + ya + y2 + y3) )
+      {
+        mat = 3;  // ext3
+        idx = (inY - y1 - ya - y2) * x1 + inX;
+      }
+      else if ( (y1 + ya + y2 + y3) <= inY && inY < (y1 + ya + y2 + y3 + yd) )
+      {
+        mat = 5;  // cAcD
+        idx = (inY - y1 - y2 - y3 ) * x1 + inX;
+      }
+      else if ( (y1 + ya + y2 + y3 + yd) <= inY && inY < (y1 + ya + y2 + y3 + yd + y4) )
+      {
+        mat = 4;  // ext4
+        idx = (inY - y1 - ya - y2 - y3 - yd) * x1 + inX;
+      }
+      else
+        vtkm::cont::ErrorControlInternal("Invalid index!");
+    }
+  }
+
+private:
+  const vtkm::Id      x1, y1, xa, ya, x2, y2, x3, y3, xd, yd, x4, y4;
+        vtkm::Id      xAD, yAD;
+  const bool          modeLR ;     // true = left-right mode; false = top-down mode.
+};
+
+
 class IndexTranslator3Matrices
 {
 public:
-  IndexTranslator3Matrices( vtkm::Id x_1, vtkm::Id x_2, vtkm::Id x_3, 
-                            vtkm::Id y_1, vtkm::Id y_2, vtkm::Id y_3, bool mode ) :
-                            x1(x_1), x2(x_2), x3(x_3), 
-                            y1(y_1), y2(y_2), y3(y_3), mode_lr(mode)  {}
+  IndexTranslator3Matrices( vtkm::Id x_1, vtkm::Id y_1, 
+                            vtkm::Id x_2, vtkm::Id y_2, 
+                            vtkm::Id x_3, vtkm::Id y_3, bool mode )
+                         :  x1(x_1), y1(y_1), 
+                            x2(x_2), y2(y_2),
+                            x3(x_3), y3(y_3), mode_lr(mode)  {}
 
   void Translate2Dto1D( vtkm::Id  inX,  vtkm::Id  inY,         // 2D indices as input
                         vtkm::Id  &mat, vtkm::Id  &idx ) const // which matrix, and idx of that matrix
@@ -98,7 +225,7 @@ public:
   }
 
 private:
-  const vtkm::Id      x1, x2, x3, y1, y2, y3;         // dimensions of 3 matrices.
+  const vtkm::Id      x1, y1, x2, y2, x3, y3;
   const bool          mode_lr;     // true: left right mode; false: top down mode.
 };
 
@@ -129,7 +256,7 @@ public:
                         filterLen(  filter_len ), approxLen(  approx_len ),
                         outDimX( x2 ), outDimY( y2 ),
                         oddlow( odd_low ), modeLR( mode_lr ),
-                        translator( x1, x2, x3, y1, y2, y3, mode_lr )
+                        translator( x1, y1, x2, y2, x3, y3, mode_lr )
   { this->SetStartPosition(); }
 
   VTKM_EXEC_CONT_EXPORT
@@ -355,7 +482,7 @@ private:
   const vtkm::Id              extDimX, extDimY, sigDimX, sigDimY;
   const DWTMode               mode;
   const ExtensionDirection2D  direction;
-  const bool                  padZero;  // only applicable when direction is right or bottom.
+  const bool                  padZero;  // treat sigIn as having a column/row zeros
 };
 
 
@@ -422,8 +549,8 @@ public:
   #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
-      PortalConst lowFilter, highFilter;
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::
+        ExecutionTypes<DeviceTag>::PortalConst lowFilter, highFilter;
   const vtkm::Id filterLen, approxLen, detailLen;  // filter and outcome coeff length.
   bool oddlow, oddhigh;
   vtkm::Id xlstart, xhstart;
@@ -437,96 +564,277 @@ private:
 };
 
 
-// Worklet: perform a simple 2D inverse transform on odd length filters
+//  ---------------------------------------------------
+//  |      |          |      |      |          |      |
+//  |      |          |      |      |          |      |
+//  | ext1 |    cA    | ext2 | ext3 |    cD    | ext4 |
+//  | (x1) |   (xa)   | (x2) | (x3) |   (xd)   | (x4) |
+//  |      |          |      |      |          |      |
+//  ----------------------------------------------------
+//  portal1: ext1 
+//  portal2: ext2 
+//  portal3: ext3 
+//  portal4: ext4 
+//  portal5: cA + cD
+
+// Worklet: perform a simple 2D inverse transform 
 template< typename DeviceTag >
-class InverseTransform2DOdd: public vtkm::worklet::WorkletMapField
+class InverseTransform2D: public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature( WholeArrayIn< ScalarAll >, // input extended signal
+  typedef void ControlSignature( WholeArrayIn< ScalarAll >, // ext1
+                                 WholeArrayIn< ScalarAll >, // ext2
+                                 WholeArrayIn< ScalarAll >, // ext3
+                                 WholeArrayIn< ScalarAll >, // ext4
+                                 WholeArrayIn< ScalarAll >, // cA+cD (signal)
                                  FieldOut<     ScalarAll> ); // outptu coeffs
-  typedef void ExecutionSignature( _1, _2, WorkIndex );                                    
-  typedef _2   InputDomain;
+  typedef void ExecutionSignature( _1, _2, _3, _4, _5, _6, WorkIndex );
+  typedef _6   InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  InverseTransform2DOdd( const vtkm::cont::ArrayHandle<vtkm::Float64> &lo_fil,
-                         const vtkm::cont::ArrayHandle<vtkm::Float64> &hi_fil,
-                         vtkm::Id fil_len, vtkm::Id x1, vtkm::Id y1, vtkm::Id x2,
-                         vtkm::Id y2, vtkm::Id cA_len_ext )
-                       : lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
-                         highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
-                         filterLen( fil_len ), inputDimX( x1 ), inputDimY( y1 ),
-                         outputDimX( x2 ), outputDimY( y2 ), cALenExtended( cA_len_ext ) {}
-
+  InverseTransform2D( const vtkm::cont::ArrayHandle<vtkm::Float64> &lo_fil,
+                      const vtkm::cont::ArrayHandle<vtkm::Float64> &hi_fil,
+                      vtkm::Id fil_len, 
+                      vtkm::Id x_1, vtkm::Id y_1,   // ext1 
+                      vtkm::Id x_a, vtkm::Id y_a,   // cA 
+                      vtkm::Id x_2, vtkm::Id y_2,   // ext2
+                      vtkm::Id x_3, vtkm::Id y_3,   // ext3
+                      vtkm::Id x_d, vtkm::Id y_d,   // cD
+                      vtkm::Id x_4, vtkm::Id y_4,   // ext4
+                      bool mode_lr )
+                   :  lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
+                      highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
+                      filterLen( fil_len ), 
+                      translator(x_1, y_1, x_a, y_a, x_2, y_2,
+                                 x_3, y_3, x_d, y_d, x_4, y_4, mode_lr ),
+                      modeLR( mode_lr )   
+  {
+    if( modeLR )
+    {
+      outputDimX = x_a + x_d;
+      outputDimY = y_1;
+      cALenExtended = x_1 + x_a + x_2;
+    }
+    else
+    {
+      outputDimX = x_1;
+      outputDimY = y_a + y_d;
+      cALenExtended = y_1 + y_a + y_2;
+    }
+  }
+                      
   VTKM_EXEC_CONT_EXPORT
-  void Output1Dto2D( const vtkm::Id &idx, vtkm::Id &x, vtkm::Id &y ) const
+  void Output1Dto2D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y ) const
   {
     x = idx % outputDimX;
     y = idx / outputDimX;
-  }
-  VTKM_EXEC_CONT_EXPORT
-  vtkm::Id Input2Dto1D( vtkm::Id x, vtkm::Id y ) const     
-  {
-    return y * inputDimX + x; 
   }
   
   // Use 64-bit float for convolution calculation
   #define VAL        vtkm::Float64
   #define MAKEVAL(a) (static_cast<VAL>(a))
 
-  template< typename InputPortalType, typename OutputValueType >
-  VTKM_EXEC_EXPORT
-  void operator() (const InputPortalType    &sigIn,
-                         OutputValueType    &coeffOut,
-                   const vtkm::Id           &workIdx ) const
+  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
+            typename InPortalType4, typename InPortalTypecAcD >
+  VTKM_EXEC_CONT_EXPORT
+  VAL GetVal( const InPortalType1     &ext1, 
+              const InPortalType2     &ext2,
+              const InPortalType3     &ext3, 
+              const InPortalType4     &ext4,
+              const InPortalTypecAcD  &cAcD, 
+              vtkm::Id inMatrix, vtkm::Id inIdx ) const
   {
-    vtkm::Id outX, outY;
-    Output1Dto2D( workIdx, outX, outY );
-    vtkm::Id inX = outX;
-    vtkm::Id inY = outY;
-
-    vtkm::Id k1, k2;
-    VAL sum = 0.0;
-    if( inX % 2 != 0 )
-    {
-      k1 = filterLen - 2;
-      k2 = filterLen - 1;
-    }
+    if( inMatrix == 1 )
+      return MAKEVAL( ext1.Get(inIdx) );
+    else if( inMatrix == 2 )
+      return MAKEVAL( ext2.Get(inIdx) );
+    else if( inMatrix == 3 )
+      return MAKEVAL( ext3.Get(inIdx) );
+    else if( inMatrix == 4 )
+      return MAKEVAL( ext4.Get(inIdx) );
+    else if( inMatrix == 5 )
+      return MAKEVAL( cAcD.Get(inIdx) );
     else
     {
-      k1 = filterLen - 1;
-      k2 = filterLen - 2;
+        vtkm::cont::ErrorControlInternal("Invalid matrix index!");
+        return -1;
+    }
+  }
+
+  template< typename InPortalType1, typename InPortalType2, typename InPortalType3,
+            typename InPortalType4, typename InPortalTypecAcD,
+            typename OutputValueType >
+  VTKM_EXEC_EXPORT
+  void operator() (const InPortalType1        &portal1,
+                   const InPortalType2        &portal2,
+                   const InPortalType3        &portal3,
+                   const InPortalType4        &portal4,
+                   const InPortalTypecAcD     &portalcAcD,
+                         OutputValueType      &coeffOut,
+                   const vtkm::Id             &workIdx ) const
+  {
+    vtkm::Id workX, workY;
+    vtkm::Id k1, k2, xi, yi, inputMatrix, inputIdx; 
+    Output1Dto2D( workIdx, workX, workY );
+    bool print = false;
+/*if( workX == 8 && workY == 9 )
+{
+  print = true;
+  std::cout << "\ntest convolution output: " << std::endl;
+}*/
+    // left-right, odd filter
+    if( modeLR && (filterLen % 2 != 0) )
+    {
+      if( workX % 2 != 0 )
+      {
+        k1 = filterLen - 2;   k2 = filterLen - 1;
+      }
+      else
+      {
+        k1 = filterLen - 1;   k2 = filterLen - 2;
+      }
+
+      VAL sum = 0.0;
+      xi = (workX + 1) / 2;
+      while( k1 > -1 )
+      {
+        translator.Translate2Dto1D( xi, workY, inputMatrix, inputIdx );
+        sum += lowFilter.Get(k1) * GetVal( portal1, portal2, portal3, portal4, 
+                                           portalcAcD, inputMatrix, inputIdx );
+        xi++;   
+        k1 -= 2;
+      }
+      xi = workX / 2;
+      while( k2 > -1 )
+      {
+        translator.Translate2Dto1D( xi + cALenExtended, workY, inputMatrix, inputIdx );
+        sum += highFilter.Get(k2) * GetVal( portal1, portal2, portal3, portal4,
+                                            portalcAcD, inputMatrix, inputIdx );
+        xi++;   
+        k2 -= 2;
+      }
+      coeffOut = static_cast< OutputValueType> (sum);
     }
 
-    vtkm::Id xi = (inX + 1) / 2;
-    vtkm::Id sigIdx1D;
-    while( k1 > -1 )
+    // top-down, odd filter
+    else if ( !modeLR && (filterLen % 2 != 0) ) 
     {
-      sigIdx1D = Input2Dto1D( xi, inY );
-      sum += lowFilter.Get(k1) * MAKEVAL( sigIn.Get( sigIdx1D ) );
-      xi++;
-      k1 -= 2;
+      if( workY % 2 != 0 )
+      {
+        k1 = filterLen - 2;   k2 = filterLen - 1;
+      }
+      else
+      {
+        k1 = filterLen - 1;   k2 = filterLen - 2;
+      }
+
+      VAL sum = 0.0;
+      yi = (workY + 1) / 2;
+      while( k1 > -1 )
+      {
+        translator.Translate2Dto1D( workX, yi, inputMatrix, inputIdx );
+        sum += lowFilter.Get(k1) * GetVal( portal1, portal2, portal3, portal4,
+                                           portalcAcD, inputMatrix, inputIdx );
+        yi++;
+        k1 -= 2;
+      }
+      yi = workY / 2;
+      while( k2 > -1 )
+      {
+        translator.Translate2Dto1D( workX, yi + cALenExtended, inputMatrix, inputIdx );
+        sum += highFilter.Get(k2) * GetVal( portal1, portal2, portal3, portal4,
+                                            portalcAcD, inputMatrix, inputIdx );
+        yi++;
+        k2 -= 2;
+      }
+      coeffOut = static_cast< OutputValueType >(sum);
     }
-    xi = inX / 2;
-    while( k2 > -1 )
+
+    // left-right, even filter
+    else if( modeLR && (filterLen % 2 == 0) )
     {
-      sigIdx1D = Input2Dto1D( xi + cALenExtended, inY );
-      sum += highFilter.Get(k2) * MAKEVAL( sigIn.Get( sigIdx1D ) );
-      xi++;   
-      k2 -= 2;
+      if( (filterLen/2) % 2 != 0 )  // odd length half filter
+      {
+        xi = workX / 2;
+        if( workX % 2 != 0 )
+          k1 = filterLen - 1;
+        else
+          k1 = filterLen - 2;
+      }
+      else                          // even length half filter
+      {
+        xi = (workX + 1) / 2;
+        if( workX % 2 != 0 )
+          k1 = filterLen - 2;
+        else
+          k1 = filterLen - 1;
+      }
+      VAL cA, cD;
+      VAL sum = 0.0;
+      while( k1 > -1 )
+      {
+        translator.Translate2Dto1D( xi, workY, inputMatrix, inputIdx );
+        cA = GetVal( portal1, portal2, portal3, portal4, portalcAcD, 
+                     inputMatrix, inputIdx );
+        translator.Translate2Dto1D( xi + cALenExtended, workY, inputMatrix, inputIdx );
+        cD = GetVal( portal1, portal2, portal3, portal4, portalcAcD, 
+                     inputMatrix, inputIdx );
+        sum += lowFilter.Get(k1) * cA + highFilter.Get(k1) * cD;
+        xi++;
+        k1 -= 2;
+      }
+      coeffOut = static_cast< OutputValueType >(sum);
     }
-    coeffOut = static_cast< OutputValueType> (sum);
+  
+    // top-down, even filter
+    else
+    {
+      if( (filterLen/2) % 2 != 0 )
+      {
+        yi = workY / 2;
+        if( workY % 2 != 0 )
+          k1 = filterLen - 1;
+        else
+          k1 = filterLen - 2;
+      }
+      else
+      {
+        yi = (workY + 1) / 2;
+        if( workY % 2 != 0 )
+          k1 = filterLen - 2;
+        else
+          k1 = filterLen - 1;
+      }
+      VAL cA, cD;
+      VAL sum = 0.0;
+      while( k1 > -1 )
+      {
+        translator.Translate2Dto1D( workX, yi, inputMatrix, inputIdx );
+        cA = GetVal( portal1, portal2, portal3, portal4, portalcAcD, 
+                     inputMatrix, inputIdx );
+        translator.Translate2Dto1D( workX, yi + cALenExtended, inputMatrix, inputIdx );
+        cD = GetVal( portal1, portal2, portal3, portal4, portalcAcD,
+                     inputMatrix, inputIdx );
+        sum += lowFilter.Get(k1) * cA + highFilter.Get(k1) * cD;
+        yi++;
+        k1 -= 2;
+      }
+      coeffOut = static_cast< OutputValueType >(sum);
+    }
   }
   
   #undef MAKEVAL
   #undef VAL
 
 private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
-      PortalConst lowFilter, highFilter;
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::
+        ExecutionTypes<DeviceTag>::PortalConst lowFilter, highFilter;
   const vtkm::Id filterLen;
-  const vtkm::Id inputDimX, inputDimY, outputDimX, outputDimY;
-  const vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
+        vtkm::Id outputDimX, outputDimY;
+        vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
+  const IndexTranslator6Matrices  translator;
+  const bool modeLR;
 };
 
 
@@ -608,99 +916,6 @@ private:
   const vtkm::Id cALen2;          //  = cALen * 2
   const vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
 };
-
-
-// Worklet: perform an inverse transform for even length, symmetric filters.
-template< typename DeviceTag >
-class InverseTransform2DEven: public vtkm::worklet::WorkletMapField
-{
-public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // Input: coeffs,
-                                                             // cA followed by cD
-                                FieldOut<ScalarAll>);        // output
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _2   InputDomain;
-
-  // Constructor
-  VTKM_EXEC_CONT_EXPORT
-  InverseTransform2DEven( const vtkm::cont::ArrayHandle<vtkm::Float64> &lo_fil,
-                          const vtkm::cont::ArrayHandle<vtkm::Float64> &hi_fil,
-                          vtkm::Id filtL, vtkm::Id x1, vtkm::Id y1, 
-                          vtkm::Id x2, vtkm::Id y2, vtkm::Id cALExt )
-                        : lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
-                          highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
-                          filterLen(filtL), inputDimX( x1 ), inputDimY( y1 ),
-                          outputDimX( x2 ), outputDimY( y2 ), cALenExtended(cALExt) {}
-
-  VTKM_EXEC_CONT_EXPORT
-  void Output1Dto2D( const vtkm::Id &idx, vtkm::Id &x, vtkm::Id &y ) const
-  {
-    x = idx % outputDimX;
-    y = idx / outputDimX;
-  }
-  VTKM_EXEC_CONT_EXPORT
-  vtkm::Id Input2Dto1D( vtkm::Id x, vtkm::Id y ) const     
-  {
-    return y * inputDimX + x; 
-  }
-
-  // Use 64-bit float for convolution calculation
-  #define VAL        vtkm::Float64
-  #define MAKEVAL(a) (static_cast<VAL>(a))
-
-  template <typename InputPortalType, typename OutputValueType>
-  VTKM_EXEC_EXPORT
-  void operator()(const InputPortalType       &coeffs,
-                  OutputValueType             &sigOut,
-                  const vtkm::Id              &workIndex) const
-  {
-    vtkm::Id outX, outY;
-    Output1Dto2D( workIndex, outX, outY );
-    vtkm::Id inX = outX;
-    vtkm::Id inY = outY;
-    vtkm::Id xi, k;
-    VAL sum = 0.0;    
-
-    if( (filterLen/2) % 2 != 0 )  // odd length half filter
-    {
-      xi = inX / 2;
-      if( inX % 2 != 0 )
-        k = filterLen - 1;
-      else
-        k = filterLen - 2;
-    }
-    else
-    {
-      xi = (inX + 1) / 2;
-      if( inX % 2 != 0 )
-        k = filterLen - 2;
-      else
-        k = filterLen - 1;
-    }
-
-    vtkm::Id cAIdx1D, cDIdx1D; 
-    while( k > -1 )   // k >= 0
-    {
-      cAIdx1D = Input2Dto1D( xi, inY );
-      cDIdx1D = Input2Dto1D( xi + cALenExtended, inY );
-      sum += lowFilter.Get(k)  * MAKEVAL( coeffs.Get( cAIdx1D ) ) +   // cA
-             highFilter.Get(k) * MAKEVAL( coeffs.Get( cDIdx1D ) );    // cD
-      xi++;
-      k -= 2;
-    }
-    sigOut = static_cast<OutputValueType>( sum );
-  }
-
-  #undef MAKEVAL
-  #undef VAL
-
-private:
-  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
-      PortalConst lowFilter, highFilter;
-  const vtkm::Id filterLen;       // filter length.
-  const vtkm::Id inputDimX, inputDimY, outputDimX, outputDimY;
-  const vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD 
-};    
 
 
 // Worklet: perform an inverse transform for even length, symmetric filters.
@@ -1229,7 +1444,7 @@ private:
 
 
 // Worklet
-class AssignZero2DColumnWorklet : public vtkm::worklet::WorkletMapField
+class AssignZero2DWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature( WholeArrayInOut< ScalarAll > );
@@ -1237,8 +1452,8 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT
-  AssignZero2DColumnWorklet( vtkm::Id x, vtkm::Id y, vtkm::Id idx ) 
-        : dimX( x ), dimY( y ), zeroIdx( idx )  { }
+  AssignZero2DWorklet( vtkm::Id x, vtkm::Id y, vtkm::Id zero_x, vtkm::Id zero_y )
+        : dimX( x ), dimY( y ), zeroX( zero_x ), zeroY( zero_y )  { }
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT
@@ -1255,12 +1470,18 @@ public:
   {
     vtkm::Id x, y;
     GetLogicalDim( workIdx, x, y );
-    if( x == zeroIdx )    // assign zero to a column
+    if( zeroY < 0 && x == zeroX )    // assign zero to a column
+      array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+    else if( zeroX < 0 && y == zeroY )    // assign zero to a row
+      array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+    else if( x == zeroX && y == zeroY )   // assign zero to an element
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
   }
 
 private:
-  vtkm::Id dimX, dimY, zeroIdx;
+  vtkm::Id dimX, dimY;
+  vtkm::Id zeroX, zeroY;  // element at (zeroX, zeroY) will be assigned zero.
+                          // each becomes a wild card if negative
 };
 
 
@@ -1605,6 +1826,207 @@ private:
     this->xhstart = 1;
   }
 };
+
+/* old implementations */
+// Worklet: perform a simple 2D inverse transform on odd length filters
+template< typename DeviceTag >
+class InverseTransform2DOdd: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayIn< ScalarAll >, // input extended signal
+                                 FieldOut<     ScalarAll> ); // outptu coeffs
+  typedef void ExecutionSignature( _1, _2, WorkIndex );                                    
+  typedef _2   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  InverseTransform2DOdd( const vtkm::cont::ArrayHandle<vtkm::Float64> &lo_fil,
+                         const vtkm::cont::ArrayHandle<vtkm::Float64> &hi_fil,
+                         vtkm::Id fil_len, vtkm::Id x1, vtkm::Id y1, vtkm::Id x2,
+                         vtkm::Id y2, vtkm::Id cA_len_ext )
+                       : lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
+                         highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
+                         filterLen( fil_len ), inputDimX( x1 ), inputDimY( y1 ),
+                         outputDimX( x2 ), outputDimY( y2 ), cALenExtended( cA_len_ext ) {}
+
+  VTKM_EXEC_CONT_EXPORT
+  void Output1Dto2D( const vtkm::Id &idx, vtkm::Id &x, vtkm::Id &y ) const
+  {
+    x = idx % outputDimX;
+    y = idx / outputDimX;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Input2Dto1D( vtkm::Id x, vtkm::Id y ) const     
+  {
+    return y * inputDimX + x; 
+  }
+  
+  // Use 64-bit float for convolution calculation
+  #define VAL        vtkm::Float64
+  #define MAKEVAL(a) (static_cast<VAL>(a))
+
+  template< typename InputPortalType, typename OutputValueType >
+  VTKM_EXEC_EXPORT
+  void operator() (const InputPortalType    &sigIn,
+                         OutputValueType    &coeffOut,
+                   const vtkm::Id           &workIdx ) const
+  {
+    vtkm::Id outX, outY;
+    Output1Dto2D( workIdx, outX, outY );
+    bool print = false;
+/*if( outX == 8 && outY == 9 )
+{
+  print = true;
+  std::cout << "\ntrue convolution: " << std::endl;
+}*/
+    vtkm::Id inX = outX;
+    vtkm::Id inY = outY;
+
+    vtkm::Id k1, k2;
+    VAL sum = 0.0;
+    if( inX % 2 != 0 )
+    {
+      k1 = filterLen - 2;
+      k2 = filterLen - 1;
+    }
+    else
+    {
+      k1 = filterLen - 1;
+      k2 = filterLen - 2;
+    }
+
+    vtkm::Id xi = (inX + 1) / 2;
+    vtkm::Id sigIdx1D;
+if(print)
+  std::cout << "low filter convolution: " << std::endl;
+    while( k1 > -1 )
+    {
+      sigIdx1D = Input2Dto1D( xi, inY );
+      sum += lowFilter.Get(k1) * MAKEVAL( sigIn.Get( sigIdx1D ) );
+      xi++;
+      k1 -= 2;
+if( print )
+  std::cout << sigIn.Get( sigIdx1D ) << std::endl;
+    }
+    xi = inX / 2;
+if(print)
+  std::cout << "high filter convolution: " << std::endl;
+    while( k2 > -1 )
+    {
+      sigIdx1D = Input2Dto1D( xi + cALenExtended, inY );
+      sum += highFilter.Get(k2) * MAKEVAL( sigIn.Get( sigIdx1D ) );
+      xi++;   
+      k2 -= 2;
+if( print )
+  std::cout << sigIn.Get( sigIdx1D ) << std::endl;
+    }
+    coeffOut = static_cast< OutputValueType> (sum);
+if(print)
+  std::cout << "write back: " << sum << std::endl;
+  }
+  
+  #undef MAKEVAL
+  #undef VAL
+
+private:
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
+      PortalConst lowFilter, highFilter;
+  const vtkm::Id filterLen;
+  const vtkm::Id inputDimX, inputDimY, outputDimX, outputDimY;
+  const vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD
+};
+
+// Worklet: perform an inverse transform for even length, symmetric filters.
+template< typename DeviceTag >
+class InverseTransform2DEven: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // Input: coeffs,
+                                                             // cA followed by cD
+                                FieldOut<ScalarAll>);        // output
+  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  typedef _2   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  InverseTransform2DEven( const vtkm::cont::ArrayHandle<vtkm::Float64> &lo_fil,
+                          const vtkm::cont::ArrayHandle<vtkm::Float64> &hi_fil,
+                          vtkm::Id filtL, vtkm::Id x1, vtkm::Id y1, 
+                          vtkm::Id x2, vtkm::Id y2, vtkm::Id cALExt )
+                        : lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
+                          highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
+                          filterLen(filtL), inputDimX( x1 ), inputDimY( y1 ),
+                          outputDimX( x2 ), outputDimY( y2 ), cALenExtended(cALExt) {}
+
+  VTKM_EXEC_CONT_EXPORT
+  void Output1Dto2D( const vtkm::Id &idx, vtkm::Id &x, vtkm::Id &y ) const
+  {
+    x = idx % outputDimX;
+    y = idx / outputDimX;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Input2Dto1D( vtkm::Id x, vtkm::Id y ) const     
+  {
+    return y * inputDimX + x; 
+  }
+
+  // Use 64-bit float for convolution calculation
+  #define VAL        vtkm::Float64
+  #define MAKEVAL(a) (static_cast<VAL>(a))
+
+  template <typename InputPortalType, typename OutputValueType>
+  VTKM_EXEC_EXPORT
+  void operator()(const InputPortalType       &coeffs,
+                  OutputValueType             &sigOut,
+                  const vtkm::Id              &workIndex) const
+  {
+    vtkm::Id outX, outY;
+    Output1Dto2D( workIndex, outX, outY );
+    vtkm::Id inX = outX;
+    vtkm::Id inY = outY;
+    vtkm::Id xi, k;
+    VAL sum = 0.0;    
+
+    if( (filterLen/2) % 2 != 0 )  // odd length half filter
+    {
+      xi = inX / 2;
+      if( inX % 2 != 0 )
+        k = filterLen - 1;
+      else
+        k = filterLen - 2;
+    }
+    else
+    {
+      xi = (inX + 1) / 2;
+      if( inX % 2 != 0 )
+        k = filterLen - 2;
+      else
+        k = filterLen - 1;
+    }
+
+    vtkm::Id cAIdx1D, cDIdx1D; 
+    while( k > -1 )   // k >= 0
+    {
+      cAIdx1D = Input2Dto1D( xi, inY );
+      cDIdx1D = Input2Dto1D( xi + cALenExtended, inY );
+      sum += lowFilter.Get(k)  * MAKEVAL( coeffs.Get( cAIdx1D ) ) +   // cA
+             highFilter.Get(k) * MAKEVAL( coeffs.Get( cDIdx1D ) );    // cD
+      xi++;
+      k -= 2;
+    }
+    sigOut = static_cast<OutputValueType>( sum );
+  }
+
+  #undef MAKEVAL
+  #undef VAL
+
+private:
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
+      PortalConst lowFilter, highFilter;
+  const vtkm::Id filterLen;       // filter length.
+  const vtkm::Id inputDimX, inputDimY, outputDimX, outputDimY;
+  const vtkm::Id cALenExtended;   // Number of cA at the beginning of input, followed by cD 
+};    
 
 }     // namespace wavelets
 }     // namespace worlet

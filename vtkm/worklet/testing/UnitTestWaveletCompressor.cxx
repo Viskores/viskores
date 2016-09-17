@@ -59,18 +59,6 @@ void FillArray( ArrayType& array )
   dispatcher.Invoke( array );
 }
 
-template< typename ArrayType >
-void Print2DArray( const std::string &str, const ArrayType &arr, vtkm::Id dimX  )
-{
-  std::cout << str << std::endl;
-  for( vtkm::Id i = 0; i < arr.GetNumberOfValues(); i++ )
-  {
-    std::cout << arr.GetPortalConstControl().Get(i) << "  ";
-    if( i % dimX == dimX - 1 )
-      std::cout << std::endl;
-  }
-}
-
 void DebugExtend2D()
 {
   vtkm::Id NX = 10;
@@ -103,7 +91,7 @@ void DebugExtend2D()
   }
   // compute test implementation
   {
-    dwt.Extend2Dv3( center, NX, NY, left1, right1, addLen, mode, mode, false, true,
+    dwt.Extend2Dv3( center, NX, NY, left1, right1, addLen, mode, mode, false, true, true,
                     VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   }
 }
@@ -111,8 +99,8 @@ void DebugExtend2D()
 
 void DebugDWT2D()
 {
-  vtkm::Id NX = 9;
-  vtkm::Id NY = 9;
+  vtkm::Id NX = 6;
+  vtkm::Id NY = 5;
   typedef vtkm::cont::ArrayHandle< vtkm::Float64 >   ArrayType;
   ArrayType     left, center, right;
   
@@ -123,7 +111,7 @@ void DebugDWT2D()
   ArrayType output1, output2, output3;
   std::vector<vtkm::Id> L(10, 0);
 
-  vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::CDF8_4 );
+  vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::HAAR );
 
   // get true results
   dwt.DWT2Dv2(center, NX, NY, output1, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
@@ -138,33 +126,19 @@ void DebugDWT2D()
                                   "WaveletCompressor worklet failed..." );
   }
   
-std::cout << "true results after 2D DWT:" << std::endl;
-  for( vtkm::Id i = 0; i < output1.GetNumberOfValues(); i++ )
-  {
-    std::cout << output1.GetPortalConstControl().Get(i) << "  ";
-    if( i % NX == NX - 1 )
-      std::cout << std::endl;
-  }
-  
-std::cout << "test results after 2D DWT:" << std::endl;
-  for( vtkm::Id i = 0; i < output3.GetNumberOfValues(); i++ )
-  {
-    std::cout << output3.GetPortalConstControl().Get(i) << "  ";
-    if( i % NX == NX - 1 )
-      std::cout << std::endl;
-  }
+  dwt.Print2DArray("\ntrue results after 2D DWT:", output1, NX );
+  dwt.Print2DArray("\ntest results after 2D DWT:", output3, NX ); 
 
-#if 0
 ArrayType   idwt_out1, idwt_out2;
   
   // true results go through IDWT
-  dwt.IDWT2D( output1, L, idwt_out1, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  dwt.IDWT2Dv2( output1, L, idwt_out1, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   
   // test results go through IDWT
-  dwt.IDWT2Dv2( output2, L, idwt_out2, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  dwt.IDWT2Dv3( output3, L, idwt_out2, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+std::cerr << "finish IDWT2Dv3" << std::endl;
 
-  
-std::cout << "true results after IDWT:" << std::endl;
+std::cout << "\ntrue results after IDWT:" << std::endl;
   for( vtkm::Id i = 0; i < idwt_out1.GetNumberOfValues(); i++ )
   {
     std::cout << idwt_out1.GetPortalConstControl().Get(i) << "  ";
@@ -172,14 +146,13 @@ std::cout << "true results after IDWT:" << std::endl;
       std::cout << std::endl;
   }
   
-std::cout << "test results after IDWT:" << std::endl;
+std::cout << "\ntest results after IDWT:" << std::endl;
   for( vtkm::Id i = 0; i < idwt_out2.GetNumberOfValues(); i++ )
   {
     std::cout << idwt_out2.GetPortalConstControl().Get(i) << "  ";
     if( i % NX == NX - 1 )
       std::cout << std::endl;
   }
-#endif
 }
 
 void DebugDWTIDWT1D()

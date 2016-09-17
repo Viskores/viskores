@@ -141,13 +141,25 @@ public:
     dispatcher.Invoke( array );
   }
 
+  // Assign zeros to a certain row to a matrix
+  template< typename ArrayType, typename DeviceTag >
+  void DeviceAssignZero2DRow( ArrayType &array, vtkm::Id dimX, vtkm::Id dimY, // input
+                              vtkm::Id rowIdx, DeviceTag )           
+  {
+    typedef vtkm::worklet::wavelets::AssignZero2DWorklet  AssignZero2DType;
+    AssignZero2DType  zeroWorklet( dimX, dimY, -1, rowIdx );
+    vtkm::worklet::DispatcherMapField< AssignZero2DType, DeviceTag >
+          dispatcher( zeroWorklet );
+    dispatcher.Invoke( array );
+  }
+
   // Assign zeros to a certain column to a matrix
   template< typename ArrayType, typename DeviceTag >
   void DeviceAssignZero2DColumn( ArrayType &array, vtkm::Id dimX, vtkm::Id dimY, // input
                                  vtkm::Id colIdx, DeviceTag )           
   {
-    typedef vtkm::worklet::wavelets::AssignZero2DColumnWorklet  AssignZero2DType;
-    AssignZero2DType  zeroWorklet( dimX, dimY, colIdx );
+    typedef vtkm::worklet::wavelets::AssignZero2DWorklet  AssignZero2DType;
+    AssignZero2DType  zeroWorklet( dimX, dimY, colIdx, -1 );
     vtkm::worklet::DispatcherMapField< AssignZero2DType, DeviceTag >
           dispatcher( zeroWorklet );
     dispatcher.Invoke( array );
@@ -305,6 +317,35 @@ public:
     dispatcherFrom.Invoke( smallRect, bigRect );
   }
 
+
+  template< typename ArrayType >
+  void Print2DArray( const std::string &str, const ArrayType &arr, vtkm::Id dimX  )
+  {
+    std::cerr << str << std::endl;
+    for( vtkm::Id i = 0; i < arr.GetNumberOfValues(); i++ )
+    {
+      std::cerr << arr.GetPortalConstControl().Get(i) << "  ";
+      if( i % dimX == dimX - 1 )
+        std::cerr << std::endl;
+    }
+  }
+
+  template< typename ArrayType >
+  void Print2DArrayTransposed( const std::string &str, const ArrayType &arr, 
+                               vtkm::Id dimX, vtkm::Id dimY  )
+  {
+    std::cerr << str << std::endl;
+    ArrayType arrTmp;
+    arrTmp.PrepareForOutput( dimX * dimY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+    this->DeviceTranspose( arr, dimX, dimY, arrTmp, dimY, dimX, 0, 0,
+                           VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+    for( vtkm::Id i = 0; i < arrTmp.GetNumberOfValues(); i++ )
+    {
+      std::cerr << arrTmp.GetPortalConstControl().Get(i) << "  ";
+      if( i % dimY == dimY - 1 )
+        std::cerr << std::endl;
+    }
+  }
 
 
 protected:
