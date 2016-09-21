@@ -603,7 +603,8 @@ protected:
     // special handling 
     if(dataType == "string")
     {
-       const vtkm::Id stringCount = static_cast<vtkm::Id>(numComponents * numElements);
+       const vtkm::Id stringCount = 
+          numComponents * static_cast<vtkm::Id>(numElements));
        for(vtkm::Id i = 0; i < stringCount; ++i)
         {
           std::string trash;
