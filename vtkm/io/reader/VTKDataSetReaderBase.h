@@ -609,9 +609,13 @@ protected:
           this->DataFile->Stream >> trash; 
         }
     }
-    vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
-    vtkm::io::internal::SelectTypeAndCall(typeId, numComponents,
-                                          SkipDynamicArray(this, numElements));
+    else
+    {
+      vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
+      vtkm::io::internal::SelectTypeAndCall(typeId, numComponents,
+                                            SkipDynamicArray(this, numElements));
+    }
+    
   }
 
   void DoReadDynamicArray(std::string dataType, std::size_t numElements,
