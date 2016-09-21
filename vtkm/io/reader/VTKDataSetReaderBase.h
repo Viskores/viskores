@@ -603,7 +603,8 @@ protected:
     // special handling 
     if(dataType == "string")
     {
-       for(int i = 0; i < numComponents * numElements; ++i)
+       const vtkm::Id stringCount = static_cast<vtkm::Id>(numComponents * numElements);
+       for(vtkm::Id i = 0; i < stringCount; ++i)
         {
           std::string trash;
           this->DataFile->Stream >> trash; 
