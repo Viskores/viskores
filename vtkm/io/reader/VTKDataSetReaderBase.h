@@ -533,7 +533,6 @@ protected:
       std::string arrayName, dataType;
       this->DataFile->Stream >> arrayName >> numComponents >> numTuples
                              >> dataType >> std::ws;
-
       this->DoSkipDynamicArray(dataType, numTuples, numComponents);
     }
   }
@@ -600,6 +599,16 @@ protected:
   void DoSkipDynamicArray(std::string dataType, std::size_t numElements,
                           vtkm::IdComponent numComponents)
   {
+    // string is unsupported for SkipDynamicArray, so it requires some
+    // special handling 
+    if(dataType == "string")
+    {
+       for(int i = 0; i < numComponents * numElements; ++i)
+        {
+          std::string trash;
+          this->DataFile->Stream >> trash; 
+        }
+    }
     vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
     vtkm::io::internal::SelectTypeAndCall(typeId, numComponents,
                                           SkipDynamicArray(this, numElements));
