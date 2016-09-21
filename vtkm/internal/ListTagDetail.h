@@ -50,47 +50,173 @@ struct ListJoin
 
 
 //-----------------------------------------------------------------------------
+template<typename Type, typename List> struct ListContainsImpl;
+
+//-----------------------------------------------------------------------------
+template<typename Type>
+struct ListContainsImpl<Type, brigand::empty_sequence >
+{
+  static VTKM_CONSTEXPR bool value = false;
+};
+
+//-----------------------------------------------------------------------------
+template<typename Type,
+         typename T1>
+struct ListContainsImpl<Type, brigand::list<T1> >
+{
+  static VTKM_CONSTEXPR bool value = std::is_same< Type, T1 >::value;
+};
+
+//-----------------------------------------------------------------------------
+template<typename Type,
+         typename T1,
+         typename T2>
+struct ListContainsImpl<Type, brigand::list<T1,T2> >
+{
+  static VTKM_CONSTEXPR bool value = std::is_same< Type, T1 >::value ||
+                                     std::is_same< Type, T2 >::value;
+};
+
+//-----------------------------------------------------------------------------
+template<typename Type,
+         typename T1,
+         typename T2,
+         typename T3>
+struct ListContainsImpl<Type, brigand::list<T1,T2,T3> >
+{
+  static VTKM_CONSTEXPR bool value = std::is_same< Type, T1 >::value ||
+                                     std::is_same< Type, T2 >::value ||
+                                     std::is_same< Type, T3 >::value;
+};
+
+//-----------------------------------------------------------------------------
+template<typename Type,
+         typename T1,
+         typename T2,
+         typename T3,
+         typename T4>
+struct ListContainsImpl<Type, brigand::list<T1,T2,T3,T4> >
+{
+  static VTKM_CONSTEXPR bool value = std::is_same< Type, T1 >::value ||
+                                     std::is_same< Type, T2 >::value ||
+                                     std::is_same< Type, T3 >::value ||
+                                     std::is_same< Type, T4 >::value;
+};
+
+//-----------------------------------------------------------------------------
 template<typename Type, typename List> struct ListContainsImpl
 {
   using find_result = brigand::find< List,
                                      std::is_same< brigand::_1, Type> >;
   using size = brigand::size<find_result>;
-  static constexpr bool value = (size::value != 0);
+  static VTKM_CONSTEXPR bool value = (size::value != 0);
 };
 
 //-----------------------------------------------------------------------------
 template<typename Functor>
 VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &, brigand::empty_sequence) {  }
-
-template<typename Functor, typename... ArgTypes>
-VTKM_CONT_EXPORT
-void ListForEachImpl(const Functor &f, brigand::list<ArgTypes...>)
+void ListForEachImpl(const Functor &, brigand::empty_sequence)
 {
-  brigand::for_each_args( f, ArgTypes()... );
 }
 
-template< typename Functor>
-struct func_wrapper
-{
-  Functor& f;
-
-  func_wrapper(Functor& func): f(func) {}
-
-  template<typename T>
-  void operator()(T&& t)
-    {
-    f(std::forward<T>(t));
-    }
-};
-
-template<typename Functor, typename... ArgTypes>
+template<typename Functor,
+         typename T1>
 VTKM_CONT_EXPORT
-void ListForEachImpl(Functor &f, brigand::list<ArgTypes...>)
+void ListForEachImpl(const Functor &f, brigand::list<T1>)
 {
-  func_wrapper<Functor> wrapper(f);
-  brigand::for_each_args( wrapper, ArgTypes()... );
+  f(T1());
 }
+
+template<typename Functor,
+         typename T1,
+         typename T2>
+VTKM_CONT_EXPORT
+void ListForEachImpl(const Functor &f, brigand::list<T1,T2>)
+{
+  f(T1());
+  f(T2());
+}
+
+template<typename Functor,
+         typename T1,
+         typename T2,
+         typename T3>
+VTKM_CONT_EXPORT
+void ListForEachImpl(const Functor &f, brigand::list<T1,T2,T3>)
+{
+  f(T1());
+  f(T2());
+  f(T3());
+}
+
+template<typename Functor,
+         typename T1,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename... ArgTypes>
+VTKM_CONT_EXPORT
+void ListForEachImpl(const Functor &f, brigand::list<T1,T2,T3,T4,ArgTypes...>)
+{
+  f(T1());
+  f(T2());
+  f(T3());
+  f(T4());
+  ListForEachImpl(f, brigand::list<ArgTypes...>());
+}
+
+template<typename Functor>
+VTKM_CONT_EXPORT
+void ListForEachImpl(Functor &, brigand::empty_sequence)
+{
+}
+
+template<typename Functor,
+         typename T1>
+VTKM_CONT_EXPORT
+void ListForEachImpl(Functor &f, brigand::list<T1>)
+{
+  f(T1());
+}
+
+template<typename Functor,
+         typename T1,
+         typename T2>
+VTKM_CONT_EXPORT
+void ListForEachImpl(Functor &f, brigand::list<T1,T2>)
+{
+  f(T1());
+  f(T2());
+}
+
+template<typename Functor,
+         typename T1,
+         typename T2,
+         typename T3>
+VTKM_CONT_EXPORT
+void ListForEachImpl(Functor &f, brigand::list<T1,T2,T3>)
+{
+  f(T1());
+  f(T2());
+  f(T3());
+}
+
+template<typename Functor,
+         typename T1,
+         typename T2,
+         typename T3,
+         typename T4,
+         typename... ArgTypes>
+VTKM_CONT_EXPORT
+void ListForEachImpl(Functor &f, brigand::list<T1,T2,T3,T4,ArgTypes...>)
+{
+  f(T1());
+  f(T2());
+  f(T3());
+  f(T4());
+  ListForEachImpl(f, brigand::list<ArgTypes...>());
+}
+
 
 } // namespace detail
 

@@ -94,7 +94,7 @@ template<typename ListTag, typename Type>
 struct ListContains
 {
   VTKM_IS_LIST_TAG(ListTag);
-  static constexpr bool value =
+  static VTKM_CONSTEXPR bool value =
       detail::ListContainsImpl<Type,typename ListTag::list>::value;
 };
 
