@@ -128,10 +128,10 @@ void RenderTriangles(MapperGL &mapper,
       MatrixHelpers::CreateOGLMatrix(viewM, mapper.mvMat);
       MatrixHelpers::CreateOGLMatrix(projM, mapper.pMat);
       const char *vertex_shader =
-          "#version 130\n"
-          "in vec3 vertex_position;"
-          "in vec3 vertex_color;"
-          "out vec3 ourColor;"
+          "#version 120\n"
+          "attribute vec3 vertex_position;"
+          "attribute vec3 vertex_color;"
+          "varying vec3 ourColor;"
           "uniform mat4 mv_matrix;"
           "uniform mat4 p_matrix;"
 
@@ -140,11 +140,10 @@ void RenderTriangles(MapperGL &mapper,
           "  ourColor = vertex_color;"
           "}";
       const char *fragment_shader =
-          "#version 130\n"
-          "in vec3 ourColor;"
-          "out vec4 color;"
+          "#version 120\n"
+          "varying vec3 ourColor;"
           "void main() {"
-          "  color = vec4 (ourColor, 1.0);"
+          "  gl_FragColor = vec4 (ourColor, 1.0);"
           "}";
 
       GLuint vs = glCreateShader(GL_VERTEX_SHADER);
