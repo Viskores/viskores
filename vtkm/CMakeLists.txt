@@ -60,9 +60,9 @@ endif(VTKm_ENABLE_OPENGL_INTEROP)
 
 #-----------------------------------------------------------------------------
 # Build rendering
-if(VTKm_BUILD_RENDERING)
+if(VTKm_ENABLE_RENDERING)
   add_subdirectory(rendering)
-endif(VTKm_BUILD_RENDERING)
+endif()
 
 #-----------------------------------------------------------------------------
 #add the control and exec folders
