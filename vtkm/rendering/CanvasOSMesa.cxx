@@ -24,7 +24,17 @@
 #include <vtkm/rendering/CanvasGL.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
+#ifndef GLAPI
+#define GLAPI extern
+#endif
 
+#ifndef GLAPIENTRY
+#define GLAPIENTRY
+#endif
+
+#ifndef APIENTRY
+#define APIENTRY GLAPIENTRY
+#endif
 #include <GL/osmesa.h>
 
 namespace vtkm {
@@ -55,6 +65,7 @@ void CanvasOSMesa::Initialize()
 {
   this->Internals->Context =
       OSMesaCreateContextExt(OSMESA_RGBA, 32, 0, 0, NULL);
+
   if (!this->Internals->Context)
   {
     throw vtkm::cont::ErrorControlBadValue("OSMesa context creation failed.");
@@ -69,6 +80,10 @@ void CanvasOSMesa::Initialize()
   {
     throw vtkm::cont::ErrorControlBadValue("OSMesa context activation failed.");
   }
+
+
+  std::cout << "Ha: " << glGetString(GL_VERSION) << std::endl;
+
 }
 
 void CanvasOSMesa::RefreshColorBuffer() const
