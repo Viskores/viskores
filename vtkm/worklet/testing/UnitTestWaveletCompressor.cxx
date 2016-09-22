@@ -114,7 +114,7 @@ template< typename ArrayType >
 void FillArray2D( ArrayType& array, vtkm::Id dimX, vtkm::Id dimY )
 {
   typedef vtkm::worklet::wavelets::GaussianWorklet2D WorkletType;
-  WorkletType worklet( dimX, dimY, 3200.0, 
+  WorkletType worklet( dimX, dimY, 100.0, 
                        static_cast<vtkm::Float64>(dimX)/2.0, // center
                        static_cast<vtkm::Float64>(dimY)/2.0, // center
                        static_cast<vtkm::Float64>(dimX)/4.0, // spread
@@ -124,7 +124,7 @@ void FillArray2D( ArrayType& array, vtkm::Id dimX, vtkm::Id dimY )
 }
 
 
-void DebugDWT2D()
+void DebugDWTIDWT2D()
 {
   vtkm::Id NX = 4;
   vtkm::Id NY = 4;
@@ -227,45 +227,11 @@ void DebugDWTIDWT1D()
 }
 
 
-void DebugRectangleCopy()
-{
-  vtkm::Id sigX = 12;
-  vtkm::Id sigY = 12;  
-  vtkm::Id sigLen = sigX * sigY;
-
-  // make input data array handle
-  std::vector<vtkm::Float64> tmpVector;
-  for( vtkm::Id i = 0; i < sigLen; i++ )
-    tmpVector.push_back( static_cast<vtkm::Float64>( i ) );
-  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
-    vtkm::cont::make_ArrayHandle(tmpVector);
-
-  // make output array
-  vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
-  
-  // make bookkeeping array
-  std::vector<vtkm::Id> L; 
-  
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF5_3;
-  vtkm::worklet::WaveletCompressor wavelet( wname );
-  wavelet.WaveDecompose2D( inputArray, 2, sigX, sigY, outputArray, L, 
-                           VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-
-  for( vtkm::Id i = 0; i < outputArray.GetNumberOfValues(); i++ )
-  {
-    std::cout << std::setw( 10 );
-    std::cout << outputArray.GetPortalConstControl().Get(i) << "\t";
-    if( i % sigX == sigX-1 )   
-      std::cout << std::endl;
-  }
-  std::cout << std::endl;
-}
-
-
 void TestDecomposeReconstruct2D()
 {
-  vtkm::Id sigX = 32768;
-  vtkm::Id sigY = 32768;  
+  std::cout << "Testing a 1024x1024 square: " << std::endl;
+  vtkm::Id sigX = 1024;
+  vtkm::Id sigY = 1024;  
   //std::cout << "Please input X to test a X^2 square: " << std::endl;
   //std::cin >> sigX;
   //sigY = sigX;
@@ -302,7 +268,7 @@ void TestDecomposeReconstruct2D()
 
   // Squash small coefficients
   timer.Reset();
-  vtkm::Float64 cratio = 100.0;
+  vtkm::Float64 cratio = 1.0;
   compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   elapsedTime2 = timer.GetElapsedTime();  
   std::cout << "Squash time            = " << elapsedTime2 << std::endl;
@@ -323,7 +289,6 @@ void TestDecomposeReconstruct2D()
 
   compressor.EvaluateReconstruction( inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
-  /*
   timer.Reset();
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
@@ -333,7 +298,6 @@ void TestDecomposeReconstruct2D()
   }
   elapsedTime1 = timer.GetElapsedTime();  
   std::cout << "Verification time      = " << elapsedTime1 << std::endl;
-  */
 }
 
 
@@ -383,9 +347,9 @@ void TestDecomposeReconstruct1D()
   timer.Reset();
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
-    VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i),
-                                  100.0 * vtkm::Sin( static_cast<vtkm::Float64>(i)/100.0 )), 
-                                  "WaveletCompressor worklet failed..." );
+    VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i), 
+                                  inputArray.GetPortalConstControl().Get(i)),
+                      "WaveletCompressor worklet failed..." );
   }
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Verification time      = " << elapsedTime << std::endl;
@@ -394,11 +358,9 @@ void TestDecomposeReconstruct1D()
 void TestWaveletCompressor()
 {
   //DebugDWTIDWT1D();
-  //DebugRectangleCopy();
   //TestDecomposeReconstruct1D();
   TestDecomposeReconstruct2D();
-  //DebugDWT2D();
-  //DebugExtend2D();
+  //DebugDWTIDWT2D();
 }
 
 int UnitTestWaveletCompressor(int, char *[])
