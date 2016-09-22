@@ -33,6 +33,7 @@ namespace worklet
 {
 namespace wavelets
 {
+
 class SineWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -46,6 +47,56 @@ public:
     x = vtkm::Sin(vtkm::Float64(workIdx) / 100.0) * 100.0;
   }
 };
+
+class GaussianWorklet2D : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldInOut<>);
+  typedef void ExecutionSignature(_1, WorkIndex);
+
+  VTKM_EXEC_EXPORT
+  GaussianWorklet2D( vtkm::Id dx, vtkm::Id dy, vtkm::Float64 a,
+                     vtkm::Float64 x, vtkm::Float64 y,
+                     vtkm::Float64 sx, vtkm::Float64 xy )
+                  :  dimX( dx ), dimY( dy ), amp (a),
+                     x0( x ), y0( y ),
+                     sigmaX( sx ), sigmaY( xy )  
+  {
+    sigmaX2 = 2 * sigmaX * sigmaX;
+    sigmaY2 = 2 * sigmaY * sigmaY;
+  }
+
+  VTKM_EXEC_EXPORT
+  void Sig1Dto2D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y ) const
+  {
+    x = idx % dimX;
+    y = idx / dimX;
+  }
+  
+  VTKM_EXEC_EXPORT
+  vtkm::Float64 GetGaussian( vtkm::Float64 x, vtkm::Float64 y ) const
+  {
+    vtkm::Float64 power = (x-x0) * (x-x0) / sigmaX2 + (y-y0) * (y-y0) / sigmaY2;
+    return vtkm::Exp( power * -1.0 ) * amp;
+  }
+
+  template<typename T>
+  VTKM_EXEC_EXPORT
+  void operator()(T& val, const vtkm::Id& workIdx) const 
+  {
+    vtkm::Id x, y;
+    Sig1Dto2D( workIdx, x, y );
+    val = GetGaussian( static_cast<vtkm::Float64>(x), static_cast<vtkm::Float64>(y) );
+  }
+
+private:  // see wikipedia page
+  const vtkm::Id        dimX, dimY;       // 2D extent
+  const vtkm::Float64   amp;              // amplitude
+  const vtkm::Float64   x0, y0;           // center
+  const vtkm::Float64   sigmaX, sigmaY;   // spread
+        vtkm::Float64   sigmaX2, sigmaY2; // 2 * sigma * sigma
+};
+
 }
 }
 }
@@ -59,48 +110,24 @@ void FillArray( ArrayType& array )
   dispatcher.Invoke( array );
 }
 
-void DebugExtend2D()
+template< typename ArrayType >
+void FillArray2D( ArrayType& array, vtkm::Id dimX, vtkm::Id dimY )
 {
-  vtkm::Id NX = 10;
-  vtkm::Id NY = 10;
-  vtkm::Id addLen = 4;
-  typedef vtkm::cont::ArrayHandle< vtkm::Float64 >   ArrayType;
-  ArrayType     left1, left2, center, right1, right2;
-  ArrayType     centerExtended;
-  
-  center.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  for( vtkm::Id i = 0; i < NX*NY; i++ )
-    center.GetPortalControl().Set(i, i);
-
-  typedef vtkm::worklet::wavelets::ExtensionWorklet2D       ExtWorklet;
-  typedef vtkm::worklet::wavelets::LeftExtensionWorklet2D   LeftExtWorklet;
-  typedef vtkm::worklet::wavelets::RightExtensionWorklet2D  RightExtWorklet;
-
-  vtkm::worklet::wavelets::ExtensionDirection2D 
-      extdirLeft = vtkm::worklet::wavelets::ExtensionDirection2D::LEFT;
-  vtkm::worklet::wavelets::ExtensionDirection2D 
-      extdirRight = vtkm::worklet::wavelets::ExtensionDirection2D::RIGHT;
-  vtkm::worklet::wavelets::DWTMode mode = vtkm::worklet::wavelets::SYMW;
-
-  vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::CDF9_7 );
-
-  // compute real values
-  {
-    dwt.Extend2D( center, NX, NY, centerExtended, addLen, mode, mode, false, true,
-                  VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  }
-  // compute test implementation
-  {
-    dwt.Extend2Dv3( center, NX, NY, left1, right1, addLen, mode, mode, false, true, true,
-                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  }
+  typedef vtkm::worklet::wavelets::GaussianWorklet2D WorkletType;
+  WorkletType worklet( dimX, dimY, 3200.0, 
+                       static_cast<vtkm::Float64>(dimX)/2.0, // center
+                       static_cast<vtkm::Float64>(dimY)/2.0, // center
+                       static_cast<vtkm::Float64>(dimX)/4.0, // spread
+                       static_cast<vtkm::Float64>(dimY)/4.0);// spread
+  vtkm::worklet::DispatcherMapField< WorkletType > dispatcher( worklet );
+  dispatcher.Invoke( array );
 }
 
 
 void DebugDWT2D()
 {
-  vtkm::Id NX = 6;
-  vtkm::Id NY = 5;
+  vtkm::Id NX = 4;
+  vtkm::Id NY = 4;
   typedef vtkm::cont::ArrayHandle< vtkm::Float64 >   ArrayType;
   ArrayType     left, center, right;
   
@@ -136,7 +163,6 @@ ArrayType   idwt_out1, idwt_out2;
   
   // test results go through IDWT
   dwt.IDWT2Dv3( output3, L, idwt_out2, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-std::cerr << "finish IDWT2Dv3" << std::endl;
 
 std::cout << "\ntrue results after IDWT:" << std::endl;
   for( vtkm::Id i = 0; i < idwt_out1.GetNumberOfValues(); i++ )
@@ -238,23 +264,22 @@ void DebugRectangleCopy()
 
 void TestDecomposeReconstruct2D()
 {
-  vtkm::Id sigX = 1000;
-  vtkm::Id sigY = 2000;  
-  std::cout << "Please input X to test a X^2 square: " << std::endl;
-  std::cin >> sigX;
-  sigY = sigX;
-  //std::cout << "Testing wavelet compressor on 1000x2000 rectangle" << std::endl;
+  vtkm::Id sigX = 32768;
+  vtkm::Id sigY = 32768;  
+  //std::cout << "Please input X to test a X^2 square: " << std::endl;
+  //std::cin >> sigX;
+  //sigY = sigX;
   vtkm::Id sigLen = sigX * sigY;
 
   // make input data array handle
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray;
   inputArray.PrepareForOutput( sigLen, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  FillArray( inputArray );
+  FillArray2D( inputArray, sigX, sigY );
 
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
 
   // Use a WaveletCompressor
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::HAAR;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
   vtkm::worklet::WaveletCompressor compressor( wname );
 
   vtkm::Id XMaxLevel = compressor.GetWaveletMaxLevel( sigX );
@@ -264,23 +289,23 @@ void TestDecomposeReconstruct2D()
   std::cout << "Decomposition levels   = " << nLevels << std::endl;
   std::vector<vtkm::Id> L;
   vtkm::Float64 computationTime = 0.0;
-  vtkm::Float64 elapsedTime = 0.0;
+  vtkm::Float64 elapsedTime1, elapsedTime2, elapsedTime3;
 
   // Decompose
   vtkm::cont::Timer<> timer;
   computationTime = 
   compressor.WaveDecompose2D( inputArray, nLevels, sigX, sigY, outputArray, L, 
                               VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime = timer.GetElapsedTime();  
-  std::cout << "Decompose time         = " << elapsedTime << std::endl;
+  elapsedTime1 = timer.GetElapsedTime();  
+  std::cout << "Decompose time         = " << elapsedTime1 << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
 
   // Squash small coefficients
   timer.Reset();
-  vtkm::Float64 cratio = 1.0;
+  vtkm::Float64 cratio = 100.0;
   compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime = timer.GetElapsedTime();  
-  std::cout << "Squash time            = " << elapsedTime << std::endl;
+  elapsedTime2 = timer.GetElapsedTime();  
+  std::cout << "Squash time            = " << elapsedTime2 << std::endl;
 
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
@@ -288,12 +313,17 @@ void TestDecomposeReconstruct2D()
   computationTime = 
   compressor.WaveReconstruct2D( outputArray, nLevels, sigX, sigY, reconstructArray, L,
                                 VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime = timer.GetElapsedTime();  
-  std::cout << "Reconstruction time    = " << elapsedTime << std::endl;
+  elapsedTime3 = timer.GetElapsedTime();  
+  std::cout << "Reconstruction time    = " << elapsedTime3 << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
+  std::cout << "Total time             = " 
+            << (elapsedTime1 + elapsedTime2 + elapsedTime3) << std::endl;
+  
+  outputArray.ReleaseResources();
 
   compressor.EvaluateReconstruction( inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
+  /*
   timer.Reset();
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
@@ -301,8 +331,9 @@ void TestDecomposeReconstruct2D()
                                   inputArray.GetPortalConstControl().Get(i) ),
                                   "output value not the same..." );
   }
-  elapsedTime = timer.GetElapsedTime();  
-  std::cout << "Verification time      = " << elapsedTime << std::endl;
+  elapsedTime1 = timer.GetElapsedTime();  
+  std::cout << "Verification time      = " << elapsedTime1 << std::endl;
+  */
 }
 
 
@@ -365,8 +396,8 @@ void TestWaveletCompressor()
   //DebugDWTIDWT1D();
   //DebugRectangleCopy();
   //TestDecomposeReconstruct1D();
-  //TestDecomposeReconstruct2D();
-  DebugDWT2D();
+  TestDecomposeReconstruct2D();
+  //DebugDWT2D();
   //DebugExtend2D();
 }
 

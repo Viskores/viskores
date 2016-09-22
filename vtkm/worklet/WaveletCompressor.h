@@ -190,14 +190,22 @@ public:
     vtkm::Id currentLenX     = inX;
     vtkm::Id currentLenY     = inY;
     std::vector<vtkm::Id> L2d(10, 0);
-
-    vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( sigIn, coeffOut );
+    vtkm::Float64 computationTime = 0.0;
 
     typedef typename OutArrayType::ValueType          OutValueType;
     typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
 
-    vtkm::Float64 computationTime = 0.0;
-    for( vtkm::Id i = nLevels; i > 0; i-- )
+    //vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( sigIn, coeffOut );
+
+    // First level transform operates on the input array
+    computationTime +=
+    WaveletDWT::DWT2Dv3( sigIn, currentLenX, currentLenY, coeffOut, L2d, DeviceTag());
+    VTKM_ASSERT( coeffOut.GetNumberOfValues() == currentLenX * currentLenY );
+    currentLenX = WaveletBase::GetApproxLength( currentLenX );
+    currentLenY = WaveletBase::GetApproxLength( currentLenY );
+
+    // Successor transforms operate on a temporary array
+    for( vtkm::Id i = nLevels-1; i > 0; i-- )
     {
       // make temporary input array
       OutBasicArray tempInput;
@@ -207,7 +215,7 @@ public:
       OutBasicArray tempOutput;
 
       computationTime +=
-      WaveletDWT::DWT2Dv2( tempInput, currentLenX, currentLenY, tempOutput, L2d, DeviceTag());
+      WaveletDWT::DWT2Dv3( tempInput, currentLenX, currentLenY, tempOutput, L2d, DeviceTag());
 
       // copy results to coeffOut
       WaveletBase::DeviceRectangleCopyTo( tempOutput, currentLenX, currentLenY,
@@ -240,17 +248,21 @@ public:
     {
       throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
     }
-    // fill the output array
-    vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( arrIn, arrOut );
-    if( nLevels == 0 )  //  0 levels means no transform
-    {
-      return 0;
-    }
-    VTKM_ASSERT( vtkm::Id(L.size()) == 6 * nLevels + 4 );
-
     typedef typename OutArrayType::ValueType          OutValueType;
     typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
+    OutBasicArray                                     outBuffer;
+    vtkm::Float64 computationTime = 0.0;
   
+    if( nLevels == 0 )  //  0 levels means no transform
+    {
+      vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( arrIn, arrOut );
+      return 0;
+    }
+    else
+      vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( arrIn, outBuffer );
+      
+    VTKM_ASSERT( vtkm::Id(L.size()) == 6 * nLevels + 4 );
+
     std::vector<vtkm::Id> L2d(10, 0);
     L2d[0]  =   L[0];   
     L2d[1]  =   L[1];   
@@ -261,8 +273,8 @@ public:
     L2d[6]  =   L[6];   
     L2d[7]  =   L[7];   
     
-    vtkm::Float64 computationTime = 0.0;
-    for( size_t i = 1; i <= static_cast<size_t>(nLevels); i++ )
+    // All transforms but the last operate on temporary arrays
+    for( size_t i = 1; i < static_cast<size_t>(nLevels); i++ )
     {
       L2d[8] = L2d[0] + L2d[4];     // This is always true for Biorthogonal wavelets
       L2d[9] = L2d[1] + L2d[3];     // (same above)
@@ -270,15 +282,15 @@ public:
       // make input, output array
       OutBasicArray tempInput, tempOutput;
       WaveletBase::DeviceRectangleCopyFrom( tempInput, L2d[8], L2d[9],
-                                            arrOut,  inX, inY, 0, 0, DeviceTag() );
+                                            outBuffer,  inX, inY, 0, 0, DeviceTag() );
 
       // IDWT
       computationTime +=
-      WaveletDWT::IDWT2Dv2( tempInput, L2d, tempOutput, DeviceTag() );
+      WaveletDWT::IDWT2Dv3( tempInput, L2d, tempOutput, DeviceTag() );
 
       // copy back reconstructed block
       WaveletBase::DeviceRectangleCopyTo( tempOutput, L2d[8], L2d[9],
-                                          arrOut, inX, inY, 0, 0, DeviceTag() );
+                                          outBuffer, inX, inY, 0, 0, DeviceTag() );
     
       // update L2d array
       L2d[0] =  L2d[8];
@@ -290,6 +302,11 @@ public:
       L2d[6] = L[6*i+6];
       L2d[7] = L[6*i+7];
     }
+
+    // The last transform takes place in place 
+    L2d[8] = L2d[0] + L2d[4];
+    L2d[9] = L2d[1] + L2d[3];
+    computationTime += WaveletDWT::IDWT2Dv3( outBuffer, L2d, arrOut, DeviceTag() );
 
     return computationTime;    
   }
