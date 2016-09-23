@@ -38,6 +38,7 @@
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
 
 #include <limits>
+#include <cstring>
 
 namespace vtkm {
 namespace rendering {

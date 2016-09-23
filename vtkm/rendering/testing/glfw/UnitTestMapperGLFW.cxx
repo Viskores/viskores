@@ -32,6 +32,7 @@
 #include <vtkm/rendering/Color.h>
 #include <cstring>
 #include <string>
+
 namespace {
 static const vtkm::Id WIDTH = 512, HEIGHT = 512;
 static vtkm::Id which = 0, NUM_DATASETS = 4;

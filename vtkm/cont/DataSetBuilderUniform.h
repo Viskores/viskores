@@ -32,6 +32,24 @@ public:
     VTKM_CONT_EXPORT
     DataSetBuilderUniform() {}
 
+    //1D uniform grid
+    VTKM_CONT_EXPORT
+    static
+    vtkm::cont::DataSet
+    Create(const vtkm::Id &dimension,
+           const vtkm::FloatDefault &origin = 0.0f,
+           const vtkm::FloatDefault &spacing = 1.0f,
+           std::string coordNm="coords", std::string cellNm="cells")
+    {
+      vtkm::Vec<vtkm::FloatDefault,3> origin3d(origin, 0.0f, 0.0f);
+      vtkm::Vec<vtkm::FloatDefault,3> spacing3d(spacing, 1.0f, 1.0f);
+      return DataSetBuilderUniform::CreateDS(1,
+                                             dimension,1,1,
+                                             origin3d,
+                                             spacing3d,
+                                             coordNm, cellNm);
+    }    
+
     //2D uniform grids.
     VTKM_CONT_EXPORT
     static
@@ -76,32 +94,38 @@ private:
              const vtkm::Vec<vtkm::FloatDefault,3> &spacing,
              std::string coordNm, std::string cellNm)
     {
-        VTKM_ASSERT(nx>1 && ny>1 && ((dim==2 && nz==1)||(dim==3 && nz>=1)));
+        VTKM_ASSERT((dim==1 && nx>1 && ny==1 && nz==1) ||
+                    (dim==2 && nx>1 && ny>1 && nz==1) ||
+                    (dim==3 && nx>1 && ny>1 && nz>1));
         VTKM_ASSERT(spacing[0]>0 && spacing[1]>0 && spacing[2]>0);
+        
         vtkm::cont::DataSet dataSet;
-
         vtkm::cont::ArrayHandleUniformPointCoordinates
             coords(vtkm::Id3(nx, ny, nz),
-                   origin,
-                   spacing
-                   );
-
-
+                   origin, spacing);
         vtkm::cont::CoordinateSystem cs(coordNm, coords);
         dataSet.AddCoordinateSystem(cs);
 
-        if (dim == 2)
+        if (dim == 1)
+        {
+            vtkm::cont::CellSetStructured<1> cellSet(cellNm);
+            cellSet.SetPointDimensions(nx);
+            dataSet.AddCellSet(cellSet);
+        }
+        else if (dim == 2)
         {
             vtkm::cont::CellSetStructured<2> cellSet(cellNm);
             cellSet.SetPointDimensions(vtkm::make_Vec(nx,ny));
             dataSet.AddCellSet(cellSet);
         }
-        else
+        else if (dim == 3)
         {
             vtkm::cont::CellSetStructured<3> cellSet(cellNm);
             cellSet.SetPointDimensions(vtkm::make_Vec(nx,ny,nz));
             dataSet.AddCellSet(cellSet);
         }
+        else
+            throw vtkm::cont::ErrorControlBadValue("Invalid cell set dimension");
 
         return dataSet;
     }
