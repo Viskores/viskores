@@ -24,6 +24,7 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -60,13 +61,19 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
     VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells,
                      "Wrong number of cells.");
 
-
     //Make sure bounds are correct.
     vtkm::Bounds res = ds.GetCoordinateSystem().GetBounds(DeviceAdapter());
     VTKM_TEST_ASSERT(test_equal(bounds, res),
                      "Bounds of coordinates do not match");
 
-    if (dim == 2)
+    if (dim == 1)
+    {
+        vtkm::cont::CellSetStructured<1> cellSet;
+        ds.GetCellSet(0).CopyTo(cellSet);
+        vtkm::IdComponent shape = cellSet.GetCellShape();
+        VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_LINE, "Wrong element type");
+    }
+    else if (dim == 2)
     {
         vtkm::cont::CellSetStructured<2> cellSet;
         ds.GetCellSet(0).CopyTo(cellSet);
@@ -182,50 +189,15 @@ UniformTests()
                                     vtkm::Vec<T,2>(origin[0], origin[1]),
                                     vtkm::Vec<T,2>(spacing[0], spacing[1]));
     ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
+
+    std::cout << "1D case" <<std::endl;
+    numPoints = dimensions[0];
+    numCells = dimensions[0]-1;
+    bounds.Y = vtkm::Range(0, 0);
+    bounds.Z = vtkm::Range(0, 0);
+    dataSet = dataSetBuilder.Create(dimensions[0], origin[0], spacing[0]);
+    ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
   }
-
-#if 0
-    vtkm::cont::DataSetBuilderUniform dsb;
-    vtkm::cont::DataSet ds;
-
-    vtkm::Id nx = 12, ny = 12, nz = 12;
-    int nm = 5;
-    vtkm::Float64 bounds[6];
-
-    for (vtkm::Id i = 2; i < nx; i++)
-        for (vtkm::Id j = 2; j < ny; j++)
-            for (int mi = 0; mi < nm; mi++)
-                for (int mj = 0; mj < nm; mj++)
-                {
-                    //2D cases
-                    vtkm::Id np = i*j, nc = (i-1)*(j-1);
-
-                    vtkm::Id2 dims2(i,j);
-                    T oi, oj, si, sj;
-                    FillMethod(mi, dims2[0], oi, si, bounds[0],bounds[1]);
-                    FillMethod(mj, dims2[1], oj, sj, bounds[2],bounds[3]);
-                    bounds[4] = bounds[5] = 0;
-                    vtkm::Vec<T,2> o2(oi,oj), sp2(si,sj);
-
-                    ds = dsb.Create(dims2, o2, sp2);
-                    ValidateDataSet(ds, 2, np, nc, bounds);
-
-                    //3D cases
-                    for (vtkm::Id k = 2; k < nz; k++)
-                        for (int mk = 0; mk < nm; mk++)
-                        {
-                            np = i*j*k;
-                            nc = (i-1)*(j-1)*(k-1);
-
-                            vtkm::Id3 dims3(i,j,k);
-                            T ok, sk;
-                            FillMethod(mk, dims3[2], ok, sk, bounds[4],bounds[5]);
-                            vtkm::Vec<T,3> o3(oi,oj,ok), sp3(si,sj,sk);
-                            ds = dsb.Create(dims3, o3, sp3);
-                            ValidateDataSet(ds, 3, np, nc, bounds);
-                        }
-                }
-#endif
 }
 
 void
