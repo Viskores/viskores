@@ -34,10 +34,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/benchmarking/Benchmarker.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/random.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
+#include <random>
 #include <string>
 
 namespace vtkm {
@@ -276,28 +273,19 @@ private:
     VTKM_CONT_EXPORT
     BenchBlackScholes()
     {
-      typedef boost::uniform_real<Value> ValueRange;
-      typedef boost::mt19937 MTGenerator;
-      typedef boost::variate_generator<MTGenerator&, ValueRange> Generator;
-
-      boost::mt19937 rng;
-
-      boost::uniform_real<Value> price_range(Value(5.0f),Value(30.0f));
-      boost::uniform_real<Value> strike_range(Value(1.0f),Value(100.0f));
-      boost::uniform_real<Value> year_range(Value(0.25f),Value(10.0f));
-
-      Generator priceGenerator(rng, price_range);
-      Generator strikeGenerator(rng, strike_range);
-      Generator yearGenerator(rng, year_range);
+      std::mt19937 rng;
+      std::uniform_real_distribution<Value> price_range(Value(5.0f),Value(30.0f));
+      std::uniform_real_distribution<Value> strike_range(Value(1.0f),Value(100.0f));
+      std::uniform_real_distribution<Value> year_range(Value(0.25f),Value(10.0f));
 
       this->price.resize(ARRAY_SIZE);
       this->strike.resize(ARRAY_SIZE);
       this->years.resize(ARRAY_SIZE);
       for(std::size_t i=0; i < ARRAY_SIZE; ++i )
       {
-        this->price[i] = priceGenerator();
-        this->strike[i] = strikeGenerator();
-        this->years[i] = yearGenerator();
+        this->price[i] = price_range(rng);
+        this->strike[i] = strike_range(rng);
+        this->years[i] = year_range(rng);
       }
 
       this->StockPrice = vtkm::cont::make_ArrayHandle(this->price);
@@ -344,20 +332,15 @@ private:
     VTKM_CONT_EXPORT
     BenchMath()
     {
-      typedef boost::uniform_real<Value> ValueRange;
-      typedef boost::mt19937 MTGenerator;
-      typedef boost::variate_generator<MTGenerator&, ValueRange> Generator;
-
-      boost::mt19937 rng;
-      boost::uniform_real<Value> range;
-      Generator generator(rng, range);
+      std::mt19937 rng;
+      std::uniform_real_distribution<Value> range;
 
       this->input.resize(ARRAY_SIZE);
       for(std::size_t i=0; i < ARRAY_SIZE; ++i )
       {
-        this->input[i] = vtkm::Vec<Value, 3>(generator(),
-                                             generator(),
-                                             generator());
+        this->input[i] = vtkm::Vec<Value, 3>(range(rng),
+                                             range(rng),
+                                             range(rng));
       }
 
       this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
@@ -397,20 +380,15 @@ private:
     VTKM_CONT_EXPORT
     BenchFusedMath()
     {
-      typedef boost::uniform_real<Value> ValueRange;
-      typedef boost::mt19937 MTGenerator;
-      typedef boost::variate_generator<MTGenerator&, ValueRange> Generator;
-
-      boost::mt19937 rng;
-      boost::uniform_real<Value> range;
-      Generator generator(rng, range);
+      std::mt19937 rng;
+      std::uniform_real_distribution<Value> range;
 
       this->input.resize(ARRAY_SIZE);
       for(std::size_t i=0; i < ARRAY_SIZE; ++i )
       {
-        this->input[i] = vtkm::Vec<Value, 3>(generator(),
-                                             generator(),
-                                             generator());
+        this->input[i] = vtkm::Vec<Value, 3>(range(rng),
+                                             range(rng),
+                                             range(rng));
       }
 
       this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
@@ -448,16 +426,9 @@ private:
     VTKM_CONT_EXPORT
     BenchEdgeInterp()
     {
-      typedef boost::mt19937 MTGenerator;
-      typedef boost::variate_generator<MTGenerator&, boost::uniform_real<Value> > Generator;
-      typedef boost::variate_generator<MTGenerator&, boost::uniform_real<vtkm::Float32> > WGenerator;
-
-      boost::mt19937 rng;
-      boost::uniform_real<vtkm::Float32> weight_range(0.0f,1.0f);
-      WGenerator wgenerator(rng, weight_range);
-
-      boost::uniform_real<Value> field_range;
-      Generator fgenerator(rng, field_range);
+      std::mt19937 rng;
+      std::uniform_real_distribution<vtkm::Float32> weight_range(0.0f,1.0f);
+      std::uniform_real_distribution<Value> field_range;
 
       //basically the core challenge is to generate an array whose
       //indexing pattern matches that of a edge based algorithm.
@@ -479,13 +450,13 @@ private:
       this->weight.resize( esize );
       for(std::size_t i=0; i < esize; ++i )
       {
-        this->weight[i] = wgenerator();
+        this->weight[i] = weight_range(rng);
       }
 
       this->field.resize( psize );
       for(std::size_t i=0; i < psize; ++i )
       {
-        this->field[i] = fgenerator();
+        this->field[i] = field_range(rng);
       }
 
       this->FieldHandle = vtkm::cont::make_ArrayHandle(this->field);

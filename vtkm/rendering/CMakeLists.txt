@@ -32,15 +32,49 @@ set(headers
   Color.h
   ColorBarAnnotation.h
   ColorTable.h
+  DecodePNG.h
   MatrixHelpers.h
   Scene.h
   Mapper.h
   MapperRayTracer.h
   MapperVolume.h
   TextAnnotation.h
+  TextAnnotationBillboard.h
+  TextAnnotationScreen.h
   Triangulator.h
   View.h
+  View2D.h
+  View3D.h
   WorldAnnotator.h
+  )
+
+set(sources
+  Actor.cxx
+  AxisAnnotation.cxx
+  AxisAnnotation2D.cxx
+  AxisAnnotation3D.cxx
+  BitmapFont.cxx
+  BitmapFontFactory.cxx
+  BoundingBoxAnnotation.cxx
+  Camera.cxx
+  Canvas.cxx
+  CanvasRayTracer.cxx
+  ColorBarAnnotation.cxx
+  ColorTable.cxx
+  DecodePNG.cxx
+  Mapper.cxx
+  MapperRayTracer.cxx
+  MapperVolume.cxx
+  Scene.cxx
+  TextAnnotation.cxx
+  TextAnnotationBillboard.cxx
+  TextAnnotationScreen.cxx
+  View.cxx
+  View2D.cxx
+  View3D.cxx
+  WorldAnnotator.cxx
+
+  internal/RunTriangulator.cxx
   )
 
 set(opengl_headers
@@ -49,32 +83,82 @@ set(opengl_headers
   TextureGL.h
   WorldAnnotatorGL.h
   )
+
+set(opengl_sources
+  CanvasGL.cxx
+  MapperGL.cxx
+  TextureGL.cxx
+  WorldAnnotatorGL.cxx
+  )
+
 set(egl_headers
   CanvasEGL.h
 )
+
+set(egl_sources
+  CanvasEGL.cxx
+  )
 
 set(osmesa_headers
   CanvasOSMesa.h
   )
 
+set(osmesa_sources
+  CanvasOSMesa.cxx
+  )
+
+# This list of sources has code that uses devices and so might need to be
+# compiled with a device-specific compiler (like CUDA).
+set(device_sources
+  CanvasRayTracer.cxx
+  )
+
 #-----------------------------------------------------------------------------
-find_package(MESA ${VTKm_FIND_PACKAGE_QUIETLY})
-if(OSMESA_FOUND)
-set(headers ${headers} ${osmesa_headers})
+vtkm_configure_component_OpenGL()
+if(VTKm_OpenGL_FOUND)
+  list(APPEND headers ${opengl_headers})
+  list(APPEND sources ${opengl_sources})
+  
+  vtkm_configure_component_OSMesa()
+  if(VTKm_OSMesa_FOUND)
+    list(APPEND headers ${osmesa_headers})
+    list(APPEND sources ${osmesa_sources})
+  endif()
+
+  vtkm_configure_component_EGL()
+  if(VTKm_EGL_FOUND)
+    list(APPEND headers ${egl_headers})
+    list(APPEND sources ${egl_sources})
+  endif()
+
+  vtkm_configure_component_GLFW()
+  if(VTKm_GLFW_FOUND)
+    list(APPEND headers ${glfw_headers})
+  endif()
 endif()
 
-find_package(OpenGL ${VTKm_FIND_PACKAGE_QUIETLY})
-if(OPENGL_FOUND)
-  set(headers ${headers} ${opengl_headers})
-
-
-  find_package(EGL ${VTKm_FIND_PACKAGE_QUIETLY})
-  if(EGL_FOUND)
-   set(headers ${headers} ${egl_headers})
- endif()
+if(VTKm_ENABLE_OSMESA AND NOT VTKm_OSMesa_FOUND)
+  message(SEND_ERROR "OSMesa was requested by not properly configured.
+Either make sure the OSMesa headers and library are properly found or set
+VTKm_ENABLE_OSMESA to OFF.")
 endif()
 
 vtkm_declare_headers(${headers})
+
+if (VTKm_ENABLE_CUDA)
+  vtkm_library(
+    SOURCES ${sources}
+    CUDA
+    WRAP_FOR_CUDA ${device_sources}
+    )
+else()
+  vtkm_library(
+    SOURCES ${sources}
+    )
+endif()
+
+# Subclasses need rendering library
+vtkm_configure_component_Rendering()
 
 add_subdirectory(internal)
 add_subdirectory(raytracing)

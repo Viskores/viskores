@@ -276,7 +276,7 @@ private:
   #endif
   template<class InputPortal, class OutputPortal>
   VTKM_CONT_EXPORT static void CopyPortal(const InputPortal &input,
-                                         const OutputPortal &output)
+                                          const OutputPortal &output)
   {
     try
     {
@@ -284,6 +284,26 @@ private:
                      IteratorBegin(input),
                      IteratorEnd(input),
                      IteratorBegin(output));
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
+  }
+
+  template<class InputPortal, class OutputPortal>
+  VTKM_CONT_EXPORT static void CopySubRangePortal(const InputPortal &input,
+                                                  vtkm::Id inputOffset,
+                                                  vtkm::Id size,
+                                                  const OutputPortal &output,
+                                                  vtkm::Id outputOffset)
+  {
+    try
+    {
+      ::thrust::copy_n(thrust::cuda::par,
+                       IteratorBegin(input)+inputOffset,
+                       static_cast<std::size_t>(size),
+                       IteratorBegin(output)+outputOffset);
     }
     catch(...)
     {
@@ -766,15 +786,57 @@ public:
       const vtkm::cont::ArrayHandle<T,SIn> &input,
       vtkm::cont::ArrayHandle<U,SOut> &output)
   {
-    const vtkm::Id numberOfValues = input.GetNumberOfValues();
-
-    //We need call PrepareForInput on the input argument before invoking a
-    //function. The order of execution of parameters of a function is undefined
-    //so we need to make sure input is called before output, or else in-place
-    //use case breaks.
-    input.PrepareForInput(DeviceAdapterTag());
+    const vtkm::Id inSize = input.GetNumberOfValues();
     CopyPortal(input.PrepareForInput(DeviceAdapterTag()),
-               output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
+               output.PrepareForOutput(inSize, DeviceAdapterTag()));
+  }
+
+  template<typename T, typename U, class SIn, class SOut>
+  VTKM_CONT_EXPORT static bool CopySubRange(
+      const vtkm::cont::ArrayHandle<T,SIn> &input,
+      vtkm::Id inputStartIndex,
+      vtkm::Id numberOfElementsToCopy,
+      vtkm::cont::ArrayHandle<U,SOut> &output,
+      vtkm::Id outputIndex = 0)
+  {
+    const vtkm::Id inSize = input.GetNumberOfValues();
+    if(inputStartIndex < 0 ||
+       numberOfElementsToCopy < 0 ||
+       outputIndex < 0 ||
+       inputStartIndex >= inSize)
+    {  //invalid parameters
+      return false;
+    }
+
+    //determine if the numberOfElementsToCopy needs to be reduced
+    if(inSize < (inputStartIndex + numberOfElementsToCopy))
+      { //adjust the size
+      numberOfElementsToCopy = (inSize - inputStartIndex);
+      }
+
+    const vtkm::Id outSize = output.GetNumberOfValues();
+    const vtkm::Id copyOutEnd = outputIndex + numberOfElementsToCopy;
+    if(outSize < copyOutEnd)
+    { //output is not large enough
+      if(outSize == 0)
+      { //since output has nothing, just need to allocate to correct length
+        output.Allocate(copyOutEnd);
+      }
+      else
+      { //we currently have data in this array, so preserve it in the new
+        //resized array
+        vtkm::cont::ArrayHandle<U, SOut> temp;
+        temp.Allocate(copyOutEnd);
+        CopySubRange(output, 0, outSize, temp);
+        output = temp;
+      }
+    }
+    CopySubRangePortal(input.PrepareForInput(DeviceAdapterTag()),
+                       inputStartIndex,
+                       numberOfElementsToCopy,
+                       output.PrepareForInPlace(DeviceAdapterTag()),
+                       outputIndex);
+    return true;
   }
 
   template<typename T, class SIn, class SVal, class SOut>
@@ -972,8 +1034,8 @@ private:
     {
     const vtkm::Id ERROR_ARRAY_SIZE = 1024;
     static bool errorArrayInit = false;
-    static char* hostPtr = NULL;
-    static char* devicePtr = NULL;
+    static char* hostPtr = nullptr;
+    static char* devicePtr = nullptr;
     if( !errorArrayInit )
       {
       cudaMallocHost( (void**)&hostPtr, ERROR_ARRAY_SIZE, cudaHostAllocMapped );
@@ -1035,7 +1097,7 @@ public:
     //since the memory is pinned we can access it safely on the host
     //without a memcpy
     vtkm::Id errorArraySize = 0;
-    char* hostErrorPtr = NULL;
+    char* hostErrorPtr = nullptr;
     char* deviceErrorPtr = GetPinnedErrorArray(errorArraySize, &hostErrorPtr);
 
     //clear the first character which means that we don't contain an error
@@ -1094,7 +1156,7 @@ public:
     //since the memory is pinned we can access it safely on the host
     //without a memcpy
     vtkm::Id errorArraySize = 0;
-    char* hostErrorPtr = NULL;
+    char* hostErrorPtr = nullptr;
     char* deviceErrorPtr = GetPinnedErrorArray(errorArraySize, &hostErrorPtr);
 
     //clear the first character which means that we don't contain an error

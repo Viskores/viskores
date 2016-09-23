@@ -22,10 +22,6 @@
 
 #include <vtkm/Types.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/mpl/assert.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 
 /// \brief A tag used to identify the cell elements in a topology.
@@ -63,44 +59,41 @@ struct TopologyElementTagFace {  };
 
 namespace internal {
 
-/// Checks to see if the given object is a topology element tag. This check is
-/// compatible with the Boost meta-template programing library (MPL). It
-/// contains a typedef named \c type that is either boost::mpl::true_ or
-/// boost::mpl::false_. Both of these have a typedef named value with the
+/// Checks to see if the given object is a topology element tag.This check is
+/// compatible with C++11 type_traits.
+/// It contains a typedef named \c type that is either std::true_type or
+/// std::false_type. Both of these have a typedef named value with the
 /// respective boolean value.
 ///
 template<typename T>
-struct TopologyElementTagCheck
+struct TopologyElementTagCheck : std::false_type
 {
-  typedef boost::mpl::false_ type;
 };
 
 template<>
-struct TopologyElementTagCheck<vtkm::TopologyElementTagCell>
+struct TopologyElementTagCheck<vtkm::TopologyElementTagCell> : std::true_type
 {
-  typedef boost::mpl::true_ type;
 };
 
 template<>
-struct TopologyElementTagCheck<vtkm::TopologyElementTagPoint>
+struct TopologyElementTagCheck<vtkm::TopologyElementTagPoint> : std::true_type
 {
-  typedef boost::mpl::true_ type;
 };
 
 template<>
-struct TopologyElementTagCheck<vtkm::TopologyElementTagEdge>
+struct TopologyElementTagCheck<vtkm::TopologyElementTagEdge> : std::true_type
 {
-  typedef boost::mpl::true_ type;
 };
 
 template<>
-struct TopologyElementTagCheck<vtkm::TopologyElementTagFace>
+struct TopologyElementTagCheck<vtkm::TopologyElementTagFace> : std::true_type
 {
-  typedef boost::mpl::true_ type;
 };
+
 
 #define VTKM_IS_TOPOLOGY_ELEMENT_TAG(type) \
-  BOOST_MPL_ASSERT(( ::vtkm::internal::TopologyElementTagCheck<type> ))
+  static_assert( ::vtkm::internal::TopologyElementTagCheck<type>::value, \
+                  "Invalid Topology Element Tag being used");
 
 } // namespace internal
 

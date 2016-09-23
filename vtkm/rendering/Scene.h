@@ -20,9 +20,14 @@
 #ifndef vtk_m_rendering_Scene_h
 #define vtk_m_rendering_Scene_h
 
+#include <vtkm/rendering/vtkm_rendering_export.h>
+
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/Camera.h>
-#include <vector>
+#include <vtkm/rendering/Canvas.h>
+#include <vtkm/rendering/Mapper.h>
+
+#include <memory>
 
 namespace vtkm {
 namespace rendering {
@@ -30,59 +35,29 @@ namespace rendering {
 class Scene
 {
 public:
-  VTKM_CONT_EXPORT
-  void AddActor(const vtkm::rendering::Actor &actor)
-  {
-    this->Actors.push_back(actor);
-  }
+  VTKM_RENDERING_EXPORT
+  Scene();
 
-  VTKM_CONT_EXPORT
-  const vtkm::rendering::Actor &GetActor(vtkm::IdComponent index) const
-  {
-    return this->Actors[static_cast<std::size_t>(index)];
-  }
+  VTKM_RENDERING_EXPORT
+  void AddActor(const vtkm::rendering::Actor &actor);
 
-  VTKM_CONT_EXPORT
-  vtkm::IdComponent GetNumberOfActors() const
-  {
-    return static_cast<vtkm::IdComponent>(this->Actors.size());
-  }
+  VTKM_RENDERING_EXPORT
+  const vtkm::rendering::Actor &GetActor(vtkm::IdComponent index) const;
 
-  Scene() {}
+  VTKM_RENDERING_EXPORT
+  vtkm::IdComponent GetNumberOfActors() const;
 
-  template<typename MapperType, typename CanvasType>
-  VTKM_CONT_EXPORT
-  void Render(MapperType &mapper,
-              CanvasType &canvas,
-              vtkm::rendering::Camera &camera) const
-  {
-    mapper.StartScene();
-    for (vtkm::IdComponent actorIndex = 0;
-         actorIndex < this->GetNumberOfActors();
-         actorIndex++)
-    {
-      const vtkm::rendering::Actor &actor = this->GetActor(actorIndex);
-      actor.Render(mapper, canvas, camera);
-    }
-    mapper.EndScene();
-  }
+  VTKM_RENDERING_EXPORT
+  void Render(vtkm::rendering::Mapper &mapper,
+              vtkm::rendering::Canvas &canvas,
+              const vtkm::rendering::Camera &camera) const;
 
-  vtkm::Bounds GetSpatialBounds() const
-  {
-    vtkm::Bounds bounds;
-    for (vtkm::IdComponent actorIndex = 0;
-         actorIndex < this->GetNumberOfActors();
-         actorIndex++)
-    {
-      // accumulate all Actors' spatial bounds into the scene spatial bounds
-      bounds.Include(this->GetActor(actorIndex).SpatialBounds);
-    }
-
-    return bounds;
-  }
+  VTKM_RENDERING_EXPORT
+  vtkm::Bounds GetSpatialBounds() const;
 
 private:
-  std::vector<vtkm::rendering::Actor> Actors;
+  struct InternalsType;
+  std::shared_ptr<InternalsType> Internals;
 };
 }} //namespace vtkm::rendering
 

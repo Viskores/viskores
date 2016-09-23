@@ -26,9 +26,7 @@
 #include <vtkm/io/reader/VTKPolyDataReader.h>
 #include <vtkm/io/reader/VTKUnstructuredGridReader.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/smart_ptr/scoped_ptr.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <memory>
 
 namespace vtkm {
 namespace io {
@@ -91,7 +89,7 @@ private:
     this->DataSet = this->Reader->GetDataSet();
   }
 
-  boost::scoped_ptr<VTKDataSetReaderBase> Reader;
+  std::unique_ptr<VTKDataSetReaderBase> Reader;
 };
 
 }

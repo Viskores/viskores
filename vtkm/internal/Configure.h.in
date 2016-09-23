@@ -134,8 +134,6 @@
   _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
 
 // GCC has a unused by set variable warnings that needs to be silenced.
-// Because boost boost::shared_ptr inline assembly causes nvcc to incorrectly
-// generate warnings.
 #if defined(VTKM_GCC)
 #define VTK_M_THIRDPARTY_GCC_WARNING_PRAGMAS \
   _Pragma("GCC diagnostic ignored \"-Wunused-but-set-variable\"") \
@@ -261,13 +259,10 @@
 #cmakedefine VTKM_ENABLE_OPENGL_INTEROP
 #endif
 
-// Determine whether we will use variadic templates (a new feature in C++11).
-VTKM_THIRDPARTY_PRE_INCLUDE
-# include <boost/config.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
-#if __cplusplus >= 201103L || ( defined(VTKM_MSVC) && _MSC_VER >= 1700  )
+#if __cplusplus >= 201103L || ( defined(VTKM_MSVC) && _MSC_VER >= 1800  )
 #define VTKM_HAVE_CXX_11
+#else
+#error "VTK-m requires at least a C++11 compiler"
 #endif
 
 #ifdef VTKM_MSVC

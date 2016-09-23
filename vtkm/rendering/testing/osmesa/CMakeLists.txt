@@ -19,9 +19,9 @@
 ##============================================================================
 vtkm_configure_component_OSMesa()
 if (VTKm_OSMesa_FOUND)
-  set(unit_tests ${unit_tests}
+  set(unit_tests
     UnitTestMapperOSMesa.cxx
     )
-VTKm_unit_tests(SOURCES ${unit_tests})
+  VTKm_unit_tests(SOURCES ${unit_tests})
 endif()
 

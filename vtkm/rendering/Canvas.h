@@ -20,14 +20,13 @@
 #ifndef vtk_m_rendering_Canvas_h
 #define vtk_m_rendering_Canvas_h
 
+#include <vtkm/rendering/vtkm_rendering_export.h>
+
 #include <vtkm/Types.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/WorldAnnotator.h>
-
-#include <iostream>
-#include <fstream>
 
 namespace vtkm {
 namespace rendering {
@@ -35,20 +34,27 @@ namespace rendering {
 class Canvas
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_RENDERING_EXPORT
   Canvas(vtkm::Id width=1024,
-         vtkm::Id height=1024)
-    : Width(0), Height(0)
-  {
-    this->ResizeBuffers(width, height);
-  }
+         vtkm::Id height=1024);
 
-  virtual ~Canvas() {  }
+  VTKM_RENDERING_EXPORT
+  virtual ~Canvas();
 
+  VTKM_RENDERING_EXPORT
   virtual void Initialize() = 0;
+
+  VTKM_RENDERING_EXPORT
   virtual void Activate() = 0;
+
+  VTKM_RENDERING_EXPORT
   virtual void Clear() = 0;
+
+  VTKM_RENDERING_EXPORT
   virtual void Finish() = 0;
+
+  VTKM_RENDERING_EXPORT
+  virtual vtkm::rendering::Canvas *NewCopy() const = 0;
 
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorBufferType;
   typedef vtkm::cont::ArrayHandle<vtkm::Float32> DepthBufferType;
@@ -105,55 +111,83 @@ public:
 
   // If a subclass uses a system that renderers to different buffers, then
   // these should be overridden to copy the data to the buffers.
-  VTKM_CONT_EXPORT
-  virtual void RefreshColorBuffer() {  }
-  VTKM_CONT_EXPORT
-  virtual void RefreshDepthBuffer() {  }
+  VTKM_RENDERING_EXPORT
+  virtual void RefreshColorBuffer() const {  }
+  VTKM_RENDERING_EXPORT
+  virtual void RefreshDepthBuffer() const  {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_RENDERING_EXPORT
   virtual void SetViewToWorldSpace(const vtkm::rendering::Camera &, bool) {}
-  VTKM_CONT_EXPORT
+  VTKM_RENDERING_EXPORT
   virtual void SetViewToScreenSpace(const vtkm::rendering::Camera &, bool) {}
-  VTKM_CONT_EXPORT
-  void SetViewportClipping(const vtkm::rendering::Camera &, bool) {}
+  VTKM_RENDERING_EXPORT
+  virtual void SetViewportClipping(const vtkm::rendering::Camera &, bool) {}
+
+  VTKM_RENDERING_EXPORT
+  virtual void SaveAs(const std::string &fileName) const;
+
+  VTKM_RENDERING_EXPORT
+  virtual void AddLine(const vtkm::Vec<vtkm::Float64,2> &point0,
+                       const vtkm::Vec<vtkm::Float64,2> &point1,
+                       vtkm::Float32 linewidth,
+                       const vtkm::rendering::Color &color) const = 0;
 
   VTKM_CONT_EXPORT
-  virtual void SaveAs(const std::string &fileName)
+  void AddLine(vtkm::Float64 x0, vtkm::Float64 y0,
+               vtkm::Float64 x1, vtkm::Float64 y1,
+               vtkm::Float32 linewidth,
+               const vtkm::rendering::Color &color) const
   {
-    this->RefreshColorBuffer();
-    std::ofstream of(fileName.c_str());
-    of<<"P6"<<std::endl<<this->Width<<" "<<this->Height<<std::endl<<255<<std::endl;
-    ColorBufferType::PortalConstControl colorPortal =
-        this->ColorBuffer.GetPortalConstControl();
-    for (vtkm::Id yIndex=this->Height-1; yIndex>=0; yIndex--)
-    {
-      for (vtkm::Id xIndex=0; xIndex < this->Width; xIndex++)
-      {
-        vtkm::Vec<vtkm::Float32,4> tuple =
-            colorPortal.Get(yIndex*this->Width + xIndex);
-        of<<(unsigned char)(tuple[0]*255);
-        of<<(unsigned char)(tuple[1]*255);
-        of<<(unsigned char)(tuple[2]*255);
-      }
-    }
-    of.close();
+    this->AddLine(vtkm::make_Vec(x0, y0),
+                  vtkm::make_Vec(x1, y1),
+                  linewidth,
+                  color);
   }
 
-  virtual void AddLine(vtkm::Float64, vtkm::Float64,
-                       vtkm::Float64, vtkm::Float64,
-                       vtkm::Float32,
-                       const vtkm::rendering::Color &) const {}
-  virtual void AddColorBar(vtkm::Float32, vtkm::Float32,
-                           vtkm::Float32, vtkm::Float32,
-                           const vtkm::rendering::ColorTable &,
-                           bool) const {}
-  virtual void AddText(vtkm::Float32, vtkm::Float32,
-                       vtkm::Float32,
-                       vtkm::Float32,
-                       vtkm::Float32,
-                       vtkm::Float32, vtkm::Float32,
-                       Color,
-                       std::string) const {}
+  VTKM_RENDERING_EXPORT
+  virtual void AddColorBar(const vtkm::Bounds &bounds,
+                           const vtkm::rendering::ColorTable &colorTable,
+                           bool horizontal) const = 0;
+
+  VTKM_CONT_EXPORT
+  void AddColorBar(vtkm::Float32 x, vtkm::Float32 y,
+                   vtkm::Float32 width, vtkm::Float32 height,
+                   const vtkm::rendering::ColorTable &colorTable,
+                   bool horizontal) const
+  {
+    this->AddColorBar(vtkm::Bounds(vtkm::Range(x, x+width),
+                                   vtkm::Range(y,y+height),
+                                   vtkm::Range(0,0)),
+                      colorTable,
+                      horizontal);
+  }
+
+  VTKM_RENDERING_EXPORT
+  virtual void AddText(const vtkm::Vec<vtkm::Float32,2> &position,
+                       vtkm::Float32 scale,
+                       vtkm::Float32 angle,
+                       vtkm::Float32 windowAspect,
+                       const vtkm::Vec<vtkm::Float32,2> &anchor,
+                       const vtkm::rendering::Color & color,
+                       const std::string &text) const = 0;
+
+  VTKM_CONT_EXPORT
+  void AddText(vtkm::Float32 x, vtkm::Float32 y,
+               vtkm::Float32 scale,
+               vtkm::Float32 angle,
+               vtkm::Float32 windowAspect,
+               vtkm::Float32 anchorX, vtkm::Float32 anchorY,
+               const vtkm::rendering::Color & color,
+               const std::string &text) const
+  {
+    this->AddText(vtkm::make_Vec(x, y),
+                  scale,
+                  angle,
+                  windowAspect,
+                  vtkm::make_Vec(anchorX, anchorY),
+                  color,
+                  text);
+  }
 
   /// Creates a WorldAnnotator of a type that is paired with this Canvas. Other
   /// types of world annotators might work, but this provides a default.
@@ -162,11 +196,8 @@ public:
   /// deleted with delete later). A pointer to the created WorldAnnotator is
   /// returned.
   ///
-  VTKM_CONT_EXPORT
-  virtual vtkm::rendering::WorldAnnotator *CreateWorldAnnotator() const
-  {
-    return new vtkm::rendering::WorldAnnotator;
-  }
+  VTKM_RENDERING_EXPORT
+  virtual vtkm::rendering::WorldAnnotator *CreateWorldAnnotator() const;
 
 private:
   vtkm::Id Width;

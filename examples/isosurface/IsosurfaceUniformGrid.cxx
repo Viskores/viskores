@@ -66,11 +66,11 @@ public:
   typedef _1 InputDomain;
 
   const vtkm::Id xdim, ydim, zdim;
-  const vtkm::FloatDefault xmin, ymin, zmin, xmax, ymax, zmax;
+  const vtkm::Float32 xmin, ymin, zmin, xmax, ymax, zmax;
   const vtkm::Id cellsPerLayer;
 
   VTKM_CONT_EXPORT
-  TangleField(const vtkm::Id3 dims, const vtkm::FloatDefault mins[3], const vtkm::FloatDefault maxs[3]) : xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
+  TangleField(const vtkm::Id3 dims, const vtkm::Float32 mins[3], const vtkm::Float32 maxs[3]) : xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
               xmin(mins[0]), ymin(mins[1]), zmin(mins[2]), xmax(maxs[0]), ymax(maxs[1]), zmax(maxs[2]), cellsPerLayer((xdim) * (ydim)) { };
 
   VTKM_EXEC_EXPORT
@@ -80,9 +80,9 @@ public:
     const vtkm::Id y = (vertexId / (xdim)) % (ydim);
     const vtkm::Id z = vertexId / cellsPerLayer;
 
-    const vtkm::FloatDefault fx = static_cast<vtkm::FloatDefault>(x) / static_cast<vtkm::FloatDefault>(xdim-1);
-    const vtkm::FloatDefault fy = static_cast<vtkm::FloatDefault>(y) / static_cast<vtkm::FloatDefault>(xdim-1);
-    const vtkm::FloatDefault fz = static_cast<vtkm::FloatDefault>(z) / static_cast<vtkm::FloatDefault>(xdim-1);
+    const vtkm::Float32 fx = static_cast<vtkm::Float32>(x) / static_cast<vtkm::Float32>(xdim-1);
+    const vtkm::Float32 fy = static_cast<vtkm::Float32>(y) / static_cast<vtkm::Float32>(xdim-1);
+    const vtkm::Float32 fz = static_cast<vtkm::Float32>(z) / static_cast<vtkm::Float32>(xdim-1);
 
     const vtkm::Float32 xx = 3.0f*(xmin+(xmax-xmin)*(fx));
     const vtkm::Float32 yy = 3.0f*(ymin+(ymax-ymin)*(fy));
@@ -100,8 +100,8 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 
   const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, dims[2] + 1);
 
-  vtkm::FloatDefault mins[3] = {-1.0f, -1.0f, -1.0f};
-  vtkm::FloatDefault maxs[3] = {1.0f, 1.0f, 1.0f};
+  vtkm::Float32 mins[3] = {-1.0f, -1.0f, -1.0f};
+  vtkm::Float32 maxs[3] = {1.0f, 1.0f, 1.0f};
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
   vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(0, 1, vdims[0]*vdims[1]*vdims[2]);

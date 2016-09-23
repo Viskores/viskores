@@ -29,11 +29,6 @@
 
 #include <vtkm/cont/internal/DynamicTransform.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/smart_ptr/shared_ptr.hpp>
-#include <boost/utility/enable_if.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 namespace cont {
 
@@ -55,7 +50,7 @@ struct PolymorphicArrayHandleContainerBase
 
   virtual void PrintSummary(std::ostream &out) const = 0;
 
-  virtual boost::shared_ptr<PolymorphicArrayHandleContainerBase>
+  virtual std::shared_ptr<PolymorphicArrayHandleContainerBase>
   NewInstance() const = 0;
 };
 
@@ -97,10 +92,10 @@ struct PolymorphicArrayHandleContainer
     vtkm::cont::printSummary_ArrayHandle(this->Array, out);
   }
 
-  virtual boost::shared_ptr<PolymorphicArrayHandleContainerBase>
+  virtual std::shared_ptr<PolymorphicArrayHandleContainerBase>
   NewInstance() const
   {
-    return boost::shared_ptr<PolymorphicArrayHandleContainerBase>(
+    return std::shared_ptr<PolymorphicArrayHandleContainerBase>(
           new PolymorphicArrayHandleContainer<T,Storage>());
   }
 };
@@ -114,7 +109,7 @@ struct DynamicArrayHandleCopyHelper {
   template<typename TypeList, typename StorageList>
   VTKM_CONT_EXPORT
   static
-  const boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>&
+  const std::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>&
   GetArrayHandleContainer(const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &src)
   {
     return src.ArrayContainer;
@@ -123,7 +118,7 @@ struct DynamicArrayHandleCopyHelper {
 
 // A simple function to downcast an ArrayHandle encapsulated in a
 // PolymorphicArrayHandleContainerBase to the given type of ArrayHandle. If the
-// conversion cannot be done, NULL is returned.
+// conversion cannot be done, nullptr is returned.
 template<typename Type, typename Storage>
 VTKM_CONT_EXPORT
 vtkm::cont::ArrayHandle<Type,Storage> *
@@ -134,13 +129,13 @@ DynamicArrayHandleTryCast(
       downcastContainer = dynamic_cast<
         vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage> *>(
           arrayContainer);
-  if (downcastContainer != NULL)
+  if (downcastContainer != nullptr)
   {
     return &downcastContainer->Array;
   }
   else
   {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -148,7 +143,7 @@ template<typename Type, typename Storage>
 VTKM_CONT_EXPORT
 vtkm::cont::ArrayHandle<Type,Storage> *
 DynamicArrayHandleTryCast(
-  const boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>& arrayContainer)
+  const std::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>& arrayContainer)
 {
   return detail::DynamicArrayHandleTryCast<Type,Storage>(arrayContainer.get());
 }
@@ -234,7 +229,7 @@ public:
   bool IsTypeAndStorage() const {
     return (
           detail::DynamicArrayHandleTryCast<Type,Storage>(this->ArrayContainer)
-          != NULL);
+          != nullptr);
   }
 
   /// Returns true if this array matches the array handle type passed in.
@@ -271,7 +266,7 @@ public:
   CastToTypeStorage() const {
     vtkm::cont::ArrayHandle<Type, Storage> *downcastArray =
         detail::DynamicArrayHandleTryCast<Type,Storage>(this->ArrayContainer);
-    if (downcastArray == NULL)
+    if (downcastArray == nullptr)
     {
       throw vtkm::cont::ErrorControlBadType("Bad cast of dynamic array.");
     }
@@ -410,7 +405,7 @@ public:
   }
 
 private:
-  boost::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>
+  std::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>
     ArrayContainer;
 
   friend struct detail::DynamicArrayHandleCopyHelper;
@@ -442,7 +437,7 @@ struct DynamicArrayHandleTryStorage {
 
 private:
   template<typename Storage>
-  void DoCast(Storage, boost::mpl::bool_<true>)
+  void DoCast(Storage, std::true_type)
   {
     if (!this->FoundCast &&
         this->Array->template IsTypeAndStorage<Type,Storage>())
@@ -453,7 +448,7 @@ private:
   }
 
   template<typename Storage>
-  void DoCast(Storage, boost::mpl::bool_<false>)
+  void DoCast(Storage, std::false_type)
   {
     // This type of array handle cannot exist, so do nothing.
   }

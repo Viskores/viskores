@@ -20,7 +20,7 @@
 
 vtkm_configure_component_EGL()
 if (VTKm_EGL_FOUND)
-  set(unit_tests ${unit_tests}
+  set(unit_tests
    UnitTestMapperEGL.cxx
    )
   VTKm_unit_tests(SOURCES ${unit_tests})

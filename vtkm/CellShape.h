@@ -23,10 +23,6 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/Types.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/type_traits/integral_constant.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 
 /// CellShapeId identifies the type of each cell. Currently these are designed
@@ -63,10 +59,10 @@ enum CellShapeIdEnum
 namespace internal {
 
 /// A class that can be used to determine if a class is a CellShapeTag or not.
-/// The class will be either boost::true_type or boost::false_type.
+/// The class will be either std::true_type or std::false_type.
 ///
 template<typename T>
-struct CellShapeTagCheck : boost::false_type {  };
+struct CellShapeTagCheck : std::false_type {  };
 
 } // namespace internal
 
@@ -87,7 +83,7 @@ struct CellShapeIdToTag {
   // probably means you are using an ID that does not have a defined cell
   // shape.
 
-  typedef boost::false_type valid;
+  typedef std::false_type valid;
 };
 
 
@@ -100,7 +96,7 @@ struct CellShapeIdToTag {
   }; \
   namespace internal { \
   template<> \
-  struct CellShapeTagCheck<vtkm::CellShapeTag ## name> : boost::true_type {  }; \
+  struct CellShapeTagCheck<vtkm::CellShapeTag ## name> : std::true_type {  }; \
   } \
   VTKM_EXEC_CONT_EXPORT \
   const char *GetCellShapeName(vtkm::CellShapeTag ## name) { \
@@ -108,7 +104,7 @@ struct CellShapeIdToTag {
   } \
   template<> \
   struct CellShapeIdToTag<vtkm::idname> { \
-    typedef boost::true_type valid; \
+    typedef std::true_type valid; \
     typedef vtkm::CellShapeTag ## name Tag; \
   }
 

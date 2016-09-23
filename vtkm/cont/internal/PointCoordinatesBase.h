@@ -23,10 +23,6 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/Types.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/type_traits/is_base_of.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 /// Checks that the argument is a proper \c PointCoordinates class. This is a
 /// handy concept check for functions and classes to make sure that a template
 /// argument is actually point coordinates. (You can get weird errors elsewhere
@@ -61,15 +57,14 @@ public:
   virtual ~PointCoordinatesBase() {  }
 };
 
-/// Checks to see if the given type is a valid point coordinates class. This
-/// check is compatable with the Boost meta-template programming library (MPL).
-/// It contains a typedef named type that is either boost::mpl::true_ or
-/// boost::mpl::false_. Both of these have a typedef named value with the
+/// Checks to see if the given type is a valid point coordinates class.
+/// It contains a typedef named type that is either std::true_type or
+/// std::false_type. Both of these have a typedef named value with the
 /// respective boolean value.
 ///
 template<typename Type>
 struct IsValidPointCoordinates {
-  typedef typename boost::is_base_of<
+  typedef typename std::is_base_of<
         vtkm::cont::internal::PointCoordinatesBase,Type>::type type;
 };
 

@@ -20,6 +20,7 @@
 
 set(headers
   OpenGLHeaders.h
+  RunTriangulator.h
   )
 
 vtkm_declare_headers(${headers})

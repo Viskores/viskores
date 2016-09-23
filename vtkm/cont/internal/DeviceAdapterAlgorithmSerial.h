@@ -32,11 +32,6 @@
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/iterator/counting_iterator.hpp>
-#include <boost/utility/enable_if.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 #include <algorithm>
 #include <numeric>
 

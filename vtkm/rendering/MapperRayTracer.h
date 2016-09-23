@@ -19,82 +19,52 @@
 //============================================================================
 #ifndef vtk_m_rendering_MapperRayTracer_h
 #define vtk_m_rendering_MapperRayTracer_h
-#include <vtkm/cont/Timer.h>
-#include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
+
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
-#include <vtkm/rendering/Triangulator.h>
-#include <vtkm/rendering/raytracing/RayTracer.h>
-#include <vtkm/rendering/raytracing/Camera.h>
-#include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/Camera.h>
+
+#include <memory>
+
 namespace vtkm {
 namespace rendering {
 
-//  static bool doOnce = true;
-template<typename DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class MapperRayTracer : public Mapper
 {
-protected:
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
-  vtkm::rendering::raytracing::RayTracer<DeviceAdapter> Tracer;
-  CanvasRayTracer *Canvas;
 public:
-  VTKM_CONT_EXPORT
-  MapperRayTracer()
-  {
-    this->Canvas = NULL;
-  }
-  VTKM_CONT_EXPORT
-  void SetCanvas(vtkm::rendering::Canvas *canvas)
-  {
-    if(canvas != NULL)
-    {
+  VTKM_RENDERING_EXPORT
+  MapperRayTracer();
 
-      this->Canvas = dynamic_cast<CanvasRayTracer*>(canvas);
-      if(this->Canvas == NULL)
-      {
-        throw vtkm::cont::ErrorControlBadValue(
-          "Ray Tracer: bad canvas type. Must be CanvasRayTracer");
-      }
-    }
-  }
-  VTKM_CONT_EXPORT
-  void SetActiveColorTable(const ColorTable &colorTable)
-  {
-    colorTable.Sample(1024, ColorMap);
-  }
+  VTKM_RENDERING_EXPORT
+  ~MapperRayTracer();
 
-  VTKM_CONT_EXPORT
+  VTKM_RENDERING_EXPORT
+  void SetCanvas(vtkm::rendering::Canvas *canvas) VTKM_OVERRIDE;
+
+  VTKM_RENDERING_EXPORT
   void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                    const vtkm::cont::CoordinateSystem &coords,
                    const vtkm::cont::Field &scalarField,
-                   const vtkm::rendering::ColorTable &vtkmNotUsed(colorTable),
+                   const vtkm::rendering::ColorTable &colorTable,
                    const vtkm::rendering::Camera &camera,
-                   const vtkm::Range &scalarRange)
-  {
+                   const vtkm::Range &scalarRange) VTKM_OVERRIDE;
 
-    const vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
-    vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  indices;
-    this->Tracer.GetCamera().SetParameters(camera, *this->Canvas);
-    vtkm::Id numberOfTriangles;
+  VTKM_RENDERING_EXPORT
+  virtual void StartScene() VTKM_OVERRIDE;
+  VTKM_RENDERING_EXPORT
+  virtual void EndScene() VTKM_OVERRIDE;
 
-    vtkm::Bounds dataBounds = coords.GetBounds(DeviceAdapter());
+  VTKM_RENDERING_EXPORT
+  vtkm::rendering::Mapper *NewCopy() const VTKM_OVERRIDE;
 
-    Triangulator<DeviceAdapter> triangulator;
-    triangulator.run(cellset, indices, numberOfTriangles);//,dynamicCoordsHandle,dataBounds);
+private:
+  struct InternalsType;
+  std::shared_ptr<InternalsType> Internals;
 
-    this->Tracer.SetData(dynamicCoordsHandle,
-                         indices,
-                         scalarField,
-                         numberOfTriangles,
-                         scalarRange,
-                         dataBounds);
-    this->Tracer.SetColorMap(this->ColorMap);
-    this->Tracer.SetBackgroundColor(
-          this->Canvas->GetBackgroundColor().Components);
-    this->Tracer.Render(this->Canvas);
-  }
+  struct RenderFunctor;
 };
-}} //namespace vtkm::rendering
+
+}
+} //namespace vtkm::rendering
+
 #endif //vtk_m_rendering_MapperRayTracer_h

@@ -21,22 +21,36 @@
 #define vtk_m_interop_internal_BufferTypePicker_h
 
 #include <vtkm/Types.h>
+#include <vtkm/TypeTraits.h>
 #include <vtkm/interop/internal/OpenGLHeaders.h>
 
 namespace vtkm {
 namespace interop {
 namespace internal {
 
-/// helper function that guesses what OpenGL buffer type is the best default
-/// given a primitive type. Currently GL_ELEMENT_ARRAY_BUFFER is used for integer
-/// types, and GL_ARRAY_BUFFER is used for everything else
+namespace detail {
+
+template<typename NumericTag, typename DimensionalityTag>
+VTKM_CONT_EXPORT
+GLenum BufferTypePickerImpl(NumericTag, DimensionalityTag)
+{
+  return GL_ARRAY_BUFFER;
+}
+
+VTKM_CONT_EXPORT
+GLenum BufferTypePickerImpl(vtkm::TypeTraitsIntegerTag,
+                            vtkm::TypeTraitsScalarTag)
+{
+  return GL_ELEMENT_ARRAY_BUFFER;
+}
+
+} //namespace detail
+
 VTKM_CONT_EXPORT GLenum BufferTypePicker( vtkm::Int32 )
 { return GL_ELEMENT_ARRAY_BUFFER; }
 
 VTKM_CONT_EXPORT GLenum BufferTypePicker( vtkm::UInt32 )
 { return GL_ELEMENT_ARRAY_BUFFER; }
-
-#if VTKM_SIZE_LONG == 8
 
 VTKM_CONT_EXPORT GLenum BufferTypePicker( vtkm::Int64 )
 { return GL_ELEMENT_ARRAY_BUFFER; }
@@ -44,11 +58,18 @@ VTKM_CONT_EXPORT GLenum BufferTypePicker( vtkm::Int64 )
 VTKM_CONT_EXPORT GLenum BufferTypePicker( vtkm::UInt64 )
 { return GL_ELEMENT_ARRAY_BUFFER; }
 
-#endif
 
+/// helper function that guesses what OpenGL buffer type is the best default
+/// given a primitive type. Currently GL_ELEMENT_ARRAY_BUFFER is used for
+/// integer types, and GL_ARRAY_BUFFER is used for everything else
+///
 template<typename T>
 VTKM_CONT_EXPORT GLenum BufferTypePicker( T )
-{ return GL_ARRAY_BUFFER; }
+{
+  typedef vtkm::TypeTraits<T> Traits;
+  return detail::BufferTypePickerImpl(typename Traits::NumericTag(),
+                                      typename Traits::DimensionalityTag());
+}
 
 
 }

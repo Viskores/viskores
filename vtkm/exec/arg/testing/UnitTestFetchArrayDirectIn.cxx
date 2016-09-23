@@ -87,7 +87,7 @@ struct TryType
 
 void TestExecObjectFetch()
 {
-  vtkm::testing::Testing::TryAllTypes(TryType());
+  vtkm::testing::Testing::TryTypes(TryType());
 }
 
 } // anonymous namespace

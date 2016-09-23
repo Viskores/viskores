@@ -56,7 +56,7 @@ struct UnaryPredicateTestFunctor
 
 void TestUnaryPredicates()
 {
-  vtkm::testing::Testing::TryAllTypes(UnaryPredicateTestFunctor());
+  vtkm::testing::Testing::TryTypes(UnaryPredicateTestFunctor());
 
   //test LogicalNot
   {

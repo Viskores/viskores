@@ -99,7 +99,7 @@ void TestCheckAtomicArray()
 
 void TestCheckArray()
 {
-  vtkm::testing::Testing::TryAllTypes(TryArraysOfType());
+  vtkm::testing::Testing::TryTypes(TryArraysOfType());
 
   std::cout << "Trying some arrays with types that do not match the list."
             << std::endl;

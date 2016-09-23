@@ -22,13 +22,12 @@
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET
-  COMPONENTS Base
-  OPTIONAL_COMPONENTS Serial OpenGL
+  OPTIONAL_COMPONENTS Serial OpenGL Rendering
   )
 
 find_package(GLUT)
 
-if(VTKm_OpenGL_FOUND AND GLUT_FOUND)
+if(VTKm_OpenGL_FOUND AND VTKm_Rendering_FOUND AND GLUT_FOUND)
   add_executable(Rendering_SERIAL Rendering.cxx)
   target_include_directories(Rendering_SERIAL PRIVATE ${GLUT_INCLUDE_DIR} ${VTKm_INCLUDE_DIRS})
   target_link_libraries(Rendering_SERIAL ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})

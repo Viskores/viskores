@@ -32,10 +32,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/benchmarking/Benchmarker.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/random.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
+#include <random>
 #include <string>
 
 namespace vtkm {
@@ -158,6 +155,35 @@ class BenchmarkTopologyAlgorithms {
 
 private:
 
+  template<typename T, typename Enable= void> struct NumberGenerator {};
+
+  template<typename T>
+  struct NumberGenerator<T,
+                         typename std::enable_if<
+                              std::is_floating_point<T>::value
+                          >::type
+                        >
+  {
+    std::mt19937 rng;
+    std::uniform_real_distribution<T> distribution;
+    NumberGenerator(T low, T high): rng(), distribution(low,high) {}
+    T next() { return distribution(rng); }
+  };
+
+  template<typename T>
+  struct NumberGenerator<T,
+                         typename std::enable_if<
+                              !std::is_floating_point<T>::value
+                          >::type
+                        >
+  {
+    std::mt19937 rng;
+    std::uniform_int_distribution<T> distribution;
+
+    NumberGenerator(T low, T high): rng(), distribution(low,high) {}
+    T next() { return distribution(rng); }
+  };
+
   template<typename Value>
   struct BenchCellToPointAvg {
     std::vector< Value > input;
@@ -166,20 +192,14 @@ private:
     VTKM_CONT_EXPORT
     BenchCellToPointAvg()
     {
-      typedef boost::uniform_real<Value> ValueRange;
-      typedef boost::mt19937 MTGenerator;
-      typedef boost::variate_generator<MTGenerator&, ValueRange> Generator;
-
-      boost::mt19937 rng;
-      boost::uniform_real<Value> range;
-      Generator generator(rng, range);
-
+      NumberGenerator<Value> generator(static_cast<Value>(1.0),
+                                       static_cast<Value>(100.0));
       //cube size is points in each dim
       const std::size_t csize = (CUBE_SIZE-1)*(CUBE_SIZE-1)*(CUBE_SIZE-1);
       this->input.resize( csize );
       for(std::size_t i=0; i < csize; ++i )
       {
-        this->input[i] = generator();
+        this->input[i] = generator.next();
       }
       this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
     }
@@ -220,19 +240,14 @@ private:
     VTKM_CONT_EXPORT
     BenchPointToCellAvg()
     {
-      typedef boost::uniform_real<Value> ValueRange;
-      typedef boost::mt19937 MTGenerator;
-      typedef boost::variate_generator<MTGenerator&, ValueRange> Generator;
-
-      boost::mt19937 rng;
-      boost::uniform_real<Value> range;
-      Generator generator(rng, range);
+      NumberGenerator<Value> generator(static_cast<Value>(1.0),
+                                       static_cast<Value>(100.0));
 
       const std::size_t psize = (CUBE_SIZE)*(CUBE_SIZE)*(CUBE_SIZE);
       this->input.resize( psize );
       for(std::size_t i=0; i < psize; ++i )
       {
-        this->input[i] = generator();
+        this->input[i] = generator.next();
       }
       this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
     }
@@ -274,22 +289,17 @@ private:
     VTKM_CONT_EXPORT
     BenchClassification()
     {
-      typedef boost::uniform_real<Value> ValueRange;
-      typedef boost::mt19937 MTGenerator;
-      typedef boost::variate_generator<MTGenerator&, ValueRange> Generator;
-
-      boost::mt19937 rng;
-      boost::uniform_real<Value> range;
-      Generator generator(rng, range);
+      NumberGenerator<Value> generator(static_cast<Value>(1.0),
+                                       static_cast<Value>(100.0));
 
       const std::size_t psize = (CUBE_SIZE)*(CUBE_SIZE)*(CUBE_SIZE);
       this->input.resize( psize );
       for(std::size_t i=0; i < psize; ++i )
       {
-        this->input[i] = generator();
+        this->input[i] = generator.next();
       }
       this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
-      this->IsoValue = generator();
+      this->IsoValue = generator.next();
     }
 
     VTKM_CONT_EXPORT

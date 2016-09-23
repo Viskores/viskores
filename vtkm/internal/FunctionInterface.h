@@ -31,7 +31,6 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/parameter_types.hpp>
 #include <boost/function_types/result_type.hpp>
-#include <boost/integer/static_min_max.hpp>
 #include <boost/mpl/advance.hpp>
 #include <boost/mpl/at.hpp>
 #include <boost/mpl/begin.hpp>
@@ -41,7 +40,6 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <boost/mpl/push_back.hpp>
 #include <boost/mpl/joint_view.hpp>
 #include <boost/mpl/single_view.hpp>
-#include <boost/utility/enable_if.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 
@@ -399,10 +397,12 @@ public:
   void Copy(const FunctionInterface<SrcFunctionSignature> &src)
   {
     this->Result = src.GetReturnValueSafe();
-    typedef boost::static_unsigned_min< ARITY,
-          FunctionInterface<SrcFunctionSignature>::ARITY > MinArity;
 
-    (detail::CopyAllParameters<MinArity::value>()).Copy(this->Parameters, src.Parameters);
+    VTKM_CONSTEXPR vtkm::UInt16 minArity =
+      (ARITY < FunctionInterface<SrcFunctionSignature>::ARITY) ?
+       ARITY : FunctionInterface<SrcFunctionSignature>::ARITY;
+
+    (detail::CopyAllParameters<minArity>()).Copy(this->Parameters, src.Parameters);
   }
 
   void Copy(const FunctionInterface<FunctionSignature> &src)
@@ -812,12 +812,12 @@ public:
     typedef FunctionInterface< typename FuntionType::type > NextInterfaceType;
 
     //Determine if we should do the next transform, and if so convert from
-    //boost mpl to boost::true_type/false_type ( for readability of sigs)
+    //boost mpl to std::true_type/false_type ( for readability of sigs )
     typedef typename boost::mpl::less<
                   typename NextInterfaceType::SignatureArity,
                   typename vtkm::internal::FunctionInterface<OriginalFunction>::SignatureArity
               >::type IsLessType;
-    typedef boost::integral_constant<bool, IsLessType::value > ShouldDoNextTransformType;
+    typedef std::integral_constant<bool, IsLessType::value > ShouldDoNextTransformType;
 
     NextInterfaceType nextInterface = this->NewInterface.Append(newParameter);
     this->DoNextTransform(nextInterface, ShouldDoNextTransformType());
@@ -849,7 +849,7 @@ private:
   void
   DoNextTransform(
       vtkm::internal::FunctionInterface<NextFunction> &nextInterface,
-      boost::true_type) const
+      std::true_type) const
   {
     typedef FunctionInterfaceDynamicTransformContContinue<
         OriginalFunction,NextFunction,TransformFunctor,FinishFunctor> NextContinueType;
@@ -869,7 +869,7 @@ private:
   void
   DoNextTransform(
       vtkm::internal::FunctionInterface<NextFunction> &nextInterface,
-      boost::false_type) const
+      std::false_type) const
   {
     this->Finish(nextInterface);
   }

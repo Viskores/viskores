@@ -37,7 +37,7 @@ static const vtkm::Id ARRAY_SIZE = 10;
 struct TestExecObject
 {
   VTKM_EXEC_CONT_EXPORT
-  TestExecObject() : Array(NULL) {  }
+  TestExecObject() : Array(nullptr) {  }
 
   VTKM_EXEC_CONT_EXPORT
   TestExecObject(vtkm::Id *array) : Array(array) {  }
@@ -315,7 +315,7 @@ void TestInvokeWithDynamicAndBadTypes()
   try
   {
     std::cout << "  First argument bad." << std::endl;
-    dispatcher.Invoke(NULL, execObject, array);
+    dispatcher.Invoke(nullptr, execObject, array);
     VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
   }
   catch (vtkm::cont::ErrorControlBadType error)
@@ -329,7 +329,7 @@ void TestInvokeWithDynamicAndBadTypes()
   try
   {
     std::cout << "  Third argument bad." << std::endl;
-    dispatcher.Invoke(array, execObject, NULL);
+    dispatcher.Invoke(array, execObject, nullptr);
     VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
   }
   catch (vtkm::cont::ErrorControlBadType error)

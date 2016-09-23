@@ -22,8 +22,7 @@
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET
-  COMPONENTS Base
-  OPTIONAL_COMPONENTS Serial Cuda TBB OpenGL
+  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL
   )
 
 find_package(GLUT)

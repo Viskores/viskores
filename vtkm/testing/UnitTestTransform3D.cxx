@@ -24,34 +24,32 @@
 
 #include <vtkm/testing/Testing.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <ctime>
+#include <random>
 
 namespace {
 
-boost::mt19937 g_RandomGenerator;
+std::mt19937 g_RandomGenerator;
 
 template<typename T>
 struct TransformTests
 {
-  boost::random::uniform_real_distribution<T> RandomDistribution;
+  std::uniform_real_distribution<T> RandomDistribution;
   TransformTests()
     : RandomDistribution(0.0f, 1.0f) {  }
 
-  T RandomNum() const { return this->RandomDistribution(g_RandomGenerator); }
+  T RandomNum() { return this->RandomDistribution(g_RandomGenerator); }
 
   typedef vtkm::Vec<T,3> Vec;
   typedef vtkm::Matrix<T,4,4> Transform;
 
-  Vec RandomVector() const
+  Vec RandomVector()
   {
     Vec vec(this->RandomNum(), this->RandomNum(), this->RandomNum());
     return T(2)*vec - Vec(1);
   }
 
-  void CheckTranslate() const
+  void CheckTranslate()
   {
     std::cout << "--- Checking translate" << std::endl;
 
@@ -79,7 +77,7 @@ struct TransformTests
     VTKM_TEST_ASSERT(test_equal(translated1, startPoint), "Bad translation.");
   }
 
-  void CheckScale() const
+  void CheckScale()
   {
     std::cout << "--- Checking scale" << std::endl;
 
@@ -108,7 +106,7 @@ struct TransformTests
                      "Bad scale.");
   }
 
-  void CheckRotate() const
+  void CheckRotate()
   {
     std::cout << "--- Checking rotate" << std::endl;
 
@@ -183,6 +181,26 @@ struct TransformTests
           test_equal(rotated1, Vec(-startPoint[1],startPoint[0],startPoint[2])),
           "Bad rotate.");
   }
+
+  void CheckPerspective()
+  {
+    std::cout << "--- Checking Perspective" << std::endl;
+
+    Vec startPoint = this->RandomVector();
+    std::cout << " Starting point: " << startPoint << std::endl;
+
+    Transform perspective(0);
+    perspective(0, 0) = 1;
+    perspective(1, 1) = 1;
+    perspective(2, 2) = 1;
+    perspective(3, 2) = 1;
+
+    Vec projected = vtkm::Transform3DPointPerspective(perspective, startPoint);
+    std::cout << " Projected: " << projected << std::endl;
+    VTKM_TEST_ASSERT(
+          test_equal(projected, startPoint/startPoint[2]),
+          "Bad perspective.");
+  }
 };
 
 struct TryTransformsFunctor
@@ -199,7 +217,7 @@ struct TryTransformsFunctor
 
 void TestTransforms()
 {
-  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(time(NULL));
+  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(std::time(nullptr));
   std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 
