@@ -26,6 +26,7 @@
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 namespace vtkm {
+namespace cont {
 namespace internal {
 
 template<typename P>
@@ -107,14 +108,11 @@ private:
   vtkm::Id CurBlockSize;
 };
 
-}
-}
+} // internal
 
 template<typename ArrayHandleInputType>
 struct StorageTagStreaming { };
 
-namespace vtkm {
-namespace cont {
 namespace internal {
 
 template<typename ArrayHandleInputType>
@@ -125,9 +123,9 @@ class Storage<
 public:
   typedef typename ArrayHandleInputType::ValueType ValueType;
 
-  typedef vtkm::internal::ArrayPortalStreaming<
+  typedef vtkm::cont::internal::ArrayPortalStreaming<
       typename ArrayHandleInputType::PortalControl> PortalType;
-  typedef vtkm::internal::ArrayPortalStreaming<
+  typedef vtkm::cont::internal::ArrayPortalStreaming<
       typename ArrayHandleInputType::PortalConstControl> PortalConstType;
 
   VTKM_CONT_EXPORT
