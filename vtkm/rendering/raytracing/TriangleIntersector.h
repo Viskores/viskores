@@ -19,6 +19,7 @@
 //============================================================================
 #ifndef vtk_m_rendering_raytracing_TriagnleIntersector_h
 #define vtk_m_rendering_raytracing_TriagnleIntersector_h
+#include <cstring>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/Timer.h>

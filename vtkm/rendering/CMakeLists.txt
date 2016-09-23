@@ -128,13 +128,19 @@ if(VTKm_OpenGL_FOUND)
   vtkm_configure_component_EGL()
   if(VTKm_EGL_FOUND)
     list(APPEND headers ${egl_headers})
-    list(APPEND sources ${egl_headers})
+    list(APPEND sources ${egl_sources})
   endif()
 
   vtkm_configure_component_GLFW()
   if(VTKm_GLFW_FOUND)
     list(APPEND headers ${glfw_headers})
   endif()
+endif()
+
+if(VTKm_ENABLE_OSMESA AND NOT VTKm_OSMesa_FOUND)
+  message(SEND_ERROR "OSMesa was requested by not properly configured.
+Either make sure the OSMesa headers and library are properly found or set
+VTKm_ENABLE_OSMESA to OFF.")
 endif()
 
 vtkm_declare_headers(${headers})

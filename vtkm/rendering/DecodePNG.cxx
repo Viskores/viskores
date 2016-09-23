@@ -38,6 +38,7 @@ namespace rendering {
 //    6. added explicit casts to remove compiler warnings
 //    7. renamed a function argument to avoid a shadowing warning
 //    8. default argument removed (moved to header prototype declaration)
+//    9. initialized info.width/height to remove unititalized value warnings
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
@@ -299,6 +300,7 @@ int DecodePNG(std::vector<unsigned char>& out_image, unsigned long& image_width,
     void decode(std::vector<unsigned char>& out, const unsigned char* in, std::size_t size, bool convert_to_rgba32_flag)
     {
       error = 0;
+      info.width = 0; info.height = 0; //changed if header read successfully
       if(size == 0 || in == 0) { error = 48; return; } //the given data is empty
       readPngHeader(&in[0], size); if(error) return;
       std::size_t pos = 33; //first byte of the first chunk after the header
