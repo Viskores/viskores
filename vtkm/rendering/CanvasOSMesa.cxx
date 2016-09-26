@@ -82,8 +82,6 @@ void CanvasOSMesa::Initialize()
   }
 
 
-  std::cout << "Ha: " << glGetString(GL_VERSION) << std::endl;
-
 }
 
 void CanvasOSMesa::RefreshColorBuffer() const
