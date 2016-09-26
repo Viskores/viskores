@@ -18,25 +18,12 @@
 ##  this software.
 ##============================================================================
 
-cmake_minimum_required(VERSION 2.8.12)
-
-#setup policy rules for CMake 3.0 while we have a minimum required of 2.8.X
-if(POLICY CMP0025)
-  cmake_policy(SET CMP0025 NEW)#Clang and AppleClang are different compiler ids
-  cmake_policy(SET CMP0042 NEW)#Enable RPATH on OSX
-endif()
-
-#setup policy rules for CMake 3.1 while we have a minimum required of 2.8.X
-if(POLICY CMP0054)
-  cmake_policy(SET CMP0053 NEW)#Enable faster parser engine
-  cmake_policy(SET CMP0054 NEW)#simplify if() argument expansion
-endif()
-
-#setup policy rules for CMake 3.3 while we have a minimum required of 2.8.X
-if(POLICY CMP0063)
-  cmake_policy(SET CMP0058 NEW)#All dependencies on built targets are declared
-  cmake_policy(SET CMP0063 NEW)#Honor visibility properties for all targets
-endif()
+#We require CMake 3.3 for Modern CMake which as features such as:
+# - Better custom command support
+# - Better acting if() argument expansion
+# - Support for usage requirements
+# -
+cmake_minimum_required(VERSION 3.3)
 
 project (VTKm)
 
@@ -75,16 +62,11 @@ endif()
 
 #-----------------------------------------------------------------------------
 # Add flag to enable C++11 support.
-if (NOT CMAKE_VERSION VERSION_LESS "3.1")
-  option(VTKm_ENABLE_CXX11 "Build VTKm using C++11" ON)
-else()
-  set(VTKm_ENABLE_CXX11 OFF)
-endif()
-# If the user has requested C++11, propagate that information to CMake
-if (VTKm_ENABLE_CXX11)
-  set(CMAKE_CXX_STANDARD 11)
-  set(CMAKE_CXX_STANDARD_REQUIRED True)
-  set(CMAKE_CXX_EXTENSIONS False)
+# Unless the user has explicitly stated to compile with a different standard
+if (NOT DEFINED CMAKE_CXX_STANDARD)
+   set(CMAKE_CXX_STANDARD 11)
+   set(CMAKE_CXX_STANDARD_REQUIRED True)
+   set(CMAKE_CXX_EXTENSIONS False)
 endif()
 
 #-----------------------------------------------------------------------------
@@ -103,13 +85,13 @@ include(CMake/VTKmCompilerExtras.cmake)
 # Configurable Options
 option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
 option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
+option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
 option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 option(VTKm_ENABLE_OSMESA "Enable creating the OSMesa canvas" OFF)
 
 option(VTKm_BUILD_DOCUMENTATION "Build Doxygen documentation" OFF)
 option(VTKm_BUILD_EXAMPLES "Build examples" OFF)
-option(VTKm_BUILD_RENDERING "Build rendering" OFF)
 
 option(VTKm_USE_DOUBLE_PRECISION
   "Use double precision for floating point calculations"
