@@ -246,6 +246,16 @@ function(vtkm_unit_tests)
     ${ARGN}
     )
 
+  #set up what we possibly need to link too.
+  list(APPEND VTKm_UT_LIBRARIES ${VTKm_LIBRARIES})
+  #set up storage for the include dirs
+  set(VTKm_UT_INCLUDE_DIRS )
+
+  if(VTKm_ENABLE_OPENGL_INTEROP)
+    list(APPEND VTKm_UT_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ${GLFW_INCLUDE_DIR} )
+    list(APPEND VTKm_UT_LIBRARIES ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
+  endif()
+
   if(VTKm_ENABLE_OPENGL_TESTS)
     list(APPEND VTKm_INCLUDE_DIRS ${GLUT_INCLUDE_DIR} )
     list(APPEND VTKm_LIBRARIES ${GLUT_LIBRARIES}  )

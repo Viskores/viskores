@@ -133,11 +133,11 @@ macro(vtkm_configure_component_OpenGL)
   if(NOT VTKm_OSMesa_FOUND)
     find_package(OpenGL ${VTKm_FIND_PACKAGE_QUIETLY})
 
-    vtkm_finish_configure_component(OpenGL
-      DEPENDENT_VARIABLES VTKm_Base_FOUND OPENGL_FOUND
-      ADD_INCLUDES ${OPENGL_INCLUDE_DIR}
-      ADD_LIBRARIES ${OPENGL_LIBRARIES}
-      )
+  vtkm_finish_configure_component(OpenGL
+    DEPENDENT_VARIABLES VTKm_Base_FOUND OPENGL_FOUND
+    ADD_INCLUDES ${OPENGL_INCLUDE_DIR}
+    ADD_LIBRARIES ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES}
+    )
   else()
     # OSMesa comes with its own implementation of OpenGL. So if OSMesa has been
     # found, then simply report that OpenGL has been found and use the includes
@@ -209,15 +209,15 @@ macro(vtkm_configure_component_Interop)
 endmacro(vtkm_configure_component_Interop)
 
 macro(vtkm_configure_component_Rendering)
-  if(VTKm_BUILD_RENDERING)
+  if(VTKm_ENABLE_RENDERING)
     vtkm_configure_component_OpenGL()
     vtkm_configure_component_EGL()
     vtkm_configure_component_OSMesa()
   endif()
 
   vtkm_finish_configure_component(Rendering
-    DEPENDENT_VARIABLES VTKm_BUILD_RENDERING VTKm_Base_FOUND
-    ADD_LIBRARIES vtkm_rendering
+    DEPENDENT_VARIABLES VTKm_ENABLE_RENDERING VTKm_Base_FOUND
+    ADD_LIBRARIES vtkm_rendering ${GLEW_LIBRARIES}
     )
 endmacro(vtkm_configure_component_Rendering)
 
@@ -267,7 +267,9 @@ macro(vtkm_configure_component_CUDA)
     # Setup build flags for CUDA to have C++11 support
     #---------------------------------------------------------------------------
     if(NOT MSVC)
-      list(APPEND CUDA_NVCC_FLAGS --std c++11)
+      if(NOT "--std" IN_LIST CUDA_NVCC_FLAGS)
+        list(APPEND CUDA_NVCC_FLAGS --std c++11)
+      endif()
     endif()
 
     #---------------------------------------------------------------------------
@@ -293,7 +295,10 @@ macro(vtkm_configure_component_CUDA)
     # 4 - maxwell
     #   - Uses: --generate-code arch=compute_50,code=compute_50
     #   - Uses: --generate-code arch=compute_52,code=compute_52
-    # 5 - all
+    # 5 - pascal
+    #   - Uses: --generate-code arch=compute_60,code=compute_60
+    #   - Uses: --generate-code arch=compute_61,code=compute_61
+    # 6 - all
     #   - Uses: --generate-code arch=compute_20,code=compute_20
     #   - Uses: --generate-code arch=compute_30,code=compute_30
     #   - Uses: --generate-code arch=compute_35,code=compute_35
@@ -309,14 +314,14 @@ macro(vtkm_configure_component_CUDA)
 
       if(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT)
         #Use the cached value
-        list(APPEND CUDA_NVCC_FLAG S{VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT})
+        list(APPEND CUDA_NVCC_FLAGS ${VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT})
       else()
 
         #run execute_process to do auto_detection
         if(CMAKE_GENERATOR MATCHES "Visual Studio")
-          set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cxx")
+          set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
         else()
-          set(args "-ccbin" "${CUDA_HOST_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cxx")
+          set(args "-ccbin" "${CUDA_HOST_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
         endif()
 
         execute_process(
@@ -328,10 +333,11 @@ macro(vtkm_configure_component_CUDA)
           #find the position of the "--generate-code" output. With some compilers such as
           #msvc we get compile output plus run output. So we need to strip out just the
           #run output
+          message(STATUS "run_output: ${run_output}")
           string(FIND "${run_output}" "--generate-code" position)
           string(SUBSTRING "${run_output}" ${position} -1 run_output)
 
-          list(APPEND CUDA_NVCC_FLAG S{run_output})
+          list(APPEND CUDA_NVCC_FLAGS ${run_output})
           set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT ${run_output} CACHE INTERNAL
               "device type(s) for cuda[native]")
         else()
@@ -353,12 +359,17 @@ Falling back to fermi, please manually specify if you want something else.")
     elseif(VTKm_CUDA_Architecture STREQUAL "maxwell")
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_50,code=compute_50")
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_52,code=compute_52")
+    elseif(VTKm_CUDA_Architecture STREQUAL "pascal")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_60,code=compute_60")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_61,code=compute_61")
     elseif(VTKm_CUDA_Architecture STREQUAL "all")
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_20,code=compute_20")
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_30,code=compute_30")
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_35,code=compute_35")
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_50,code=compute_50")
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_52,code=compute_52")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_60,code=compute_60")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_61,code=compute_61")
     endif()
 
     if(WIN32)
