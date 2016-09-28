@@ -18,12 +18,14 @@
 //  this software.
 //============================================================================
 
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
+
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
-#include <vtkm/cont/testing/TestingDataSetExplicit.h>
+#include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
-int UnitTestDataSetExplicitTBB(int, char *[])
+int UnitTestTBBDeviceAdapter(int, char *[])
 {
-  return vtkm::cont::testing::TestingDataSetExplicit
+  return vtkm::cont::testing::TestingDeviceAdapter
       <vtkm::cont::DeviceAdapterTagTBB>::Run();
 }
