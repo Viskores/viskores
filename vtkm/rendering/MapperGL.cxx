@@ -23,6 +23,10 @@
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 #include <vtkm/rendering/internal/RunTriangulator.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
+
 #include <vector>
 
 namespace vtkm {
@@ -30,8 +34,127 @@ namespace rendering {
 
 namespace {
 
+struct TypeListTagId4 : vtkm::ListTagBase<vtkm::Vec<Id, 4> > { };
+typedef TypeListTagId4 Id4Type;
 
-template <typename PtType>
+class MapColorAndVertices : public vtkm::worklet::WorkletMapField
+{
+public:
+  const vtkm::rendering::ColorTable ColorTable;
+  const Float32 SDiff, SMin;
+
+  VTKM_CONT_EXPORT
+  MapColorAndVertices(const vtkm::rendering::ColorTable &colorTable, Float32 sMin, Float32 sDiff)
+    : ColorTable(colorTable),
+      SMin(sMin),
+      SDiff(sDiff)
+  {}
+  typedef void ControlSignature(FieldIn<IdType> vertexId, WholeArrayIn<Id4Type> indices, WholeArrayIn<Scalar> scalar, WholeArrayIn<Vec3> verts, WholeArrayOut<Scalar> out_color, WholeArrayOut<Scalar> out_vertices);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+
+  template<typename InputArrayIndexPortalType, typename InputArrayPortalType, typename InputArrayV3PortalType, typename OutputArrayPortalType>
+  VTKM_EXEC_EXPORT
+  void operator()(const vtkm::Id &i, InputArrayIndexPortalType &indices, const InputArrayPortalType &scalar, const InputArrayV3PortalType &verts, OutputArrayPortalType &c_array, OutputArrayPortalType &v_array) const
+  {
+    vtkm::Vec<vtkm::Id, 4> idx = indices.Get(i);
+    vtkm::Id i1 = idx[1];
+    vtkm::Id i2 = idx[2];
+    vtkm::Id i3 = idx[3];
+
+    vtkm::Vec<vtkm::Float32, 3> p1 = verts.Get(idx[1]);
+    vtkm::Vec<vtkm::Float32, 3> p2 = verts.Get(idx[2]);
+    vtkm::Vec<vtkm::Float32, 3> p3 = verts.Get(idx[3]);
+
+    vtkm::Float32 s;
+    Color color;
+
+    const size_t offset = 9;
+
+    s = scalar.Get(i1);
+    s = (s-SMin)/SDiff;
+    color = ColorTable.MapRGB(s);
+    v_array.Set(i*offset, p1[0]);
+    v_array.Set(i*offset+1, p1[1]);
+    v_array.Set(i*offset+2, p1[2]);
+    c_array.Set(i*offset, color.Components[0]);
+    c_array.Set(i*offset+1, color.Components[1]);
+    c_array.Set(i*offset+2, color.Components[2]);
+
+    s = scalar.Get(i2);
+    s = (s-SMin)/SDiff;
+    color = ColorTable.MapRGB(s);
+    v_array.Set(i*offset+3, p2[0]);
+    v_array.Set(i*offset+4, p2[1]);
+    v_array.Set(i*offset+5, p2[2]);
+    c_array.Set(i*offset+3, color.Components[0]);
+    c_array.Set(i*offset+4, color.Components[1]);
+    c_array.Set(i*offset+5, color.Components[2]);
+
+    s = scalar.Get(i3);
+    s = (s-SMin)/SDiff;
+    color = ColorTable.MapRGB(s);
+    v_array.Set(i*offset+6, p3[0]);
+    v_array.Set(i*offset+7, p3[1]);
+    v_array.Set(i*offset+8, p3[2]);
+    c_array.Set(i*offset+6, color.Components[0]);
+    c_array.Set(i*offset+7, color.Components[1]);
+    c_array.Set(i*offset+8, color.Components[2]);
+
+  }
+};
+
+template<typename PtType>
+struct MapColorAndVerticesInvokeFunctor
+{
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4> > TriangleIndices;
+  vtkm::rendering::ColorTable ColorTable;
+  const vtkm::Range ScalarRange;
+  const vtkm::cont::ArrayHandle<Float32> Scalar;
+  const PtType Vertices;
+  vtkm::cont::ArrayHandle<Float32> OutColor;
+  vtkm::cont::ArrayHandle<Float32> OutVertices;
+  MapColorAndVertices Worklet;
+
+  VTKM_CONT_EXPORT
+  MapColorAndVerticesInvokeFunctor(const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > &indices,
+                        const vtkm::rendering::ColorTable &colorTable,
+                        const vtkm::rendering::Camera &camera,
+                        const vtkm::cont::ArrayHandle<Float32> &scalar,
+                        const vtkm::Range &scalarRange,
+                        const PtType &vertices,
+                        Float32 s_min,
+                        Float32 s_max,
+                        vtkm::cont::ArrayHandle<Float32> &out_color,
+                        vtkm::cont::ArrayHandle<Float32> &out_vertices
+                        ):
+    TriangleIndices(indices),
+    ColorTable(colorTable),
+    Scalar(scalar),
+    ScalarRange(scalarRange),
+    Vertices(vertices),
+    Worklet(colorTable, s_min, s_max - s_min),
+
+    OutColor(out_color),
+    OutVertices(out_vertices)
+  {}
+
+  template<typename Device>
+  VTKM_CONT_EXPORT
+  bool operator()(Device) const
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+
+    vtkm::worklet::DispatcherMapField<MapColorAndVertices, Device>
+        dispatcher(this->Worklet);
+
+    vtkm::cont:: ArrayHandleIndex indexArray (this->TriangleIndices.GetNumberOfValues());
+    dispatcher.Invoke(indexArray, this->TriangleIndices, this->Scalar, this->Vertices, this->OutColor, this->OutVertices);
+    return true;
+  }
+};
+
+template<typename PtType>
 VTKM_CONT_EXPORT
 void RenderTriangles(MapperGL &mapper,
                      vtkm::Id numTri, const PtType &verts,
@@ -49,67 +172,42 @@ void RenderTriangles(MapperGL &mapper,
       }
       mapper.loaded = true;
 
-      std::vector<float> data, colors;
       vtkm::Float32 sMin = vtkm::Float32(scalarRange.Min);
       vtkm::Float32 sMax = vtkm::Float32(scalarRange.Max);
-      vtkm::Float32 sDiff = sMax-sMin;
+      vtkm::cont::ArrayHandle<Float32> out_vertices, out_color;
+      out_vertices.Allocate(9*indices.GetNumberOfValues());
+      out_color.Allocate(9*indices.GetNumberOfValues());
 
 
-      for (int i = 0; i < numTri; i++)
-      {
-        vtkm::Vec<vtkm::Id, 4> idx = indices.GetPortalConstControl().Get(i);
-        vtkm::Id i1 = idx[1];
-        vtkm::Id i2 = idx[2];
-        vtkm::Id i3 = idx[3];
+      vtkm::cont::TryExecute(
+            MapColorAndVerticesInvokeFunctor<PtType>(indices,
+                                             ct,
+                                             camera,
+                                             scalar,
+                                             scalarRange,
+                                             verts,
+                                             sMin,
+                                             sMax,
+                                             out_color,
+                                             out_vertices));
 
-        vtkm::Vec<vtkm::Float32, 3> p1 = verts.GetPortalConstControl().Get(idx[1]);
-        vtkm::Vec<vtkm::Float32, 3> p2 = verts.GetPortalConstControl().Get(idx[2]);
-        vtkm::Vec<vtkm::Float32, 3> p3 = verts.GetPortalConstControl().Get(idx[3]);
 
-        vtkm::Float32 s;
-        Color color;
+      size_t vtx_cnt = out_vertices.GetNumberOfValues();
+      Float32 *v_ptr = out_vertices.GetStorage().StealArray();
+      Float32 *c_ptr = out_color.GetStorage().StealArray();
 
-        s = scalar.GetPortalConstControl().Get(i1);
-        s = (s-sMin)/sDiff;
-        color = ct.MapRGB(s);
-        data.push_back(p1[0]);
-        data.push_back(p1[1]);
-        data.push_back(p1[2]);
-        colors.push_back(color.Components[0]);
-        colors.push_back(color.Components[1]);
-        colors.push_back(color.Components[2]);
 
-        s = scalar.GetPortalConstControl().Get(i2);
-        s = (s-sMin)/sDiff;
-        color = ct.MapRGB(s);
-        data.push_back(p2[0]);
-        data.push_back(p2[1]);
-        data.push_back(p2[2]);
-        colors.push_back(color.Components[0]);
-        colors.push_back(color.Components[1]);
-        colors.push_back(color.Components[2]);
-
-        s = scalar.GetPortalConstControl().Get(i3);
-        s = (s-sMin)/sDiff;
-        color = ct.MapRGB(s);
-        data.push_back(p3[0]);
-        data.push_back(p3[1]);
-        data.push_back(p3[2]);
-        colors.push_back(color.Components[0]);
-        colors.push_back(color.Components[1]);
-        colors.push_back(color.Components[2]);
-      }
       GLuint points_vbo = 0;
       glGenBuffers(1, &points_vbo);
       glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
-      GLsizeiptr sz = static_cast<GLsizeiptr>(data.size()*sizeof(float));
-      glBufferData(GL_ARRAY_BUFFER, sz, &data[0], GL_STATIC_DRAW);
+      GLsizeiptr sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(float));
+      glBufferData(GL_ARRAY_BUFFER, sz, v_ptr, GL_STATIC_DRAW);
 
       GLuint colours_vbo = 0;
       glGenBuffers(1, &colours_vbo);
       glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
-      sz = static_cast<GLsizeiptr>(colors.size()*sizeof(float));
-      glBufferData(GL_ARRAY_BUFFER, sz, &colors[0], GL_STATIC_DRAW);
+      sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(float));
+      glBufferData(GL_ARRAY_BUFFER, sz, c_ptr, GL_STATIC_DRAW);
 
       mapper.vao = 0;
       glGenVertexArrays(1, &mapper.vao);
