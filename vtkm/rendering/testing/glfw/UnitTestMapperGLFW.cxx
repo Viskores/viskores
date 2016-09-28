@@ -65,8 +65,9 @@ void RenderTests()
     GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "GLFW Test", NULL, NULL);
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, keyCallback);
-    
-    CanvasType canvas[4](512,512);
+
+    CanvasType canvas[4] = {CanvasType(512,512),CanvasType(512,512),
+                            CanvasType(512,512),CanvasType(512,512)};
     vtkm::rendering::Scene scene[4];
     vtkm::cont::DataSet ds[4];
     MapperType mapper[4];
