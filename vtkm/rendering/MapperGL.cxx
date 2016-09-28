@@ -44,17 +44,31 @@ public:
   const Float32 SDiff, SMin;
 
   VTKM_CONT_EXPORT
-  MapColorAndVertices(const vtkm::rendering::ColorTable &colorTable, Float32 sMin, Float32 sDiff)
+  MapColorAndVertices(const vtkm::rendering::ColorTable &colorTable,
+                      Float32 sMin, Float32 sDiff)
     : ColorTable(colorTable),
       SMin(sMin),
       SDiff(sDiff)
   {}
-  typedef void ControlSignature(FieldIn<IdType> vertexId, WholeArrayIn<Id4Type> indices, WholeArrayIn<Scalar> scalar, WholeArrayIn<Vec3> verts, WholeArrayOut<Scalar> out_color, WholeArrayOut<Scalar> out_vertices);
+  typedef void ControlSignature(FieldIn<IdType> vertexId,
+                                WholeArrayIn<Id4Type> indices,
+                                WholeArrayIn<Scalar> scalar,
+                                WholeArrayIn<Vec3> verts,
+                                WholeArrayOut<Scalar> out_color,
+                                WholeArrayOut<Scalar> out_vertices);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
 
-  template<typename InputArrayIndexPortalType, typename InputArrayPortalType, typename InputArrayV3PortalType, typename OutputArrayPortalType>
+  template<typename InputArrayIndexPortalType,
+           typename InputArrayPortalType,
+           typename InputArrayV3PortalType,
+           typename OutputArrayPortalType>
   VTKM_EXEC_EXPORT
-  void operator()(const vtkm::Id &i, InputArrayIndexPortalType &indices, const InputArrayPortalType &scalar, const InputArrayV3PortalType &verts, OutputArrayPortalType &c_array, OutputArrayPortalType &v_array) const
+  void operator()(const vtkm::Id &i,
+                  InputArrayIndexPortalType &indices,
+                  const InputArrayPortalType &scalar,
+                  const InputArrayV3PortalType &verts,
+                  OutputArrayPortalType &c_array,
+                  OutputArrayPortalType &v_array) const
   {
     vtkm::Vec<vtkm::Id, 4> idx = indices.Get(i);
     vtkm::Id i1 = idx[1];
@@ -99,7 +113,6 @@ public:
     c_array.Set(i*offset+6, color.Components[0]);
     c_array.Set(i*offset+7, color.Components[1]);
     c_array.Set(i*offset+8, color.Components[2]);
-
   }
 };
 
@@ -149,7 +162,8 @@ struct MapColorAndVerticesInvokeFunctor
         dispatcher(this->Worklet);
 
     vtkm::cont:: ArrayHandleIndex indexArray (this->TriangleIndices.GetNumberOfValues());
-    dispatcher.Invoke(indexArray, this->TriangleIndices, this->Scalar, this->Vertices, this->OutColor, this->OutVertices);
+    dispatcher.Invoke(indexArray, this->TriangleIndices, this->Scalar,
+                      this->Vertices, this->OutColor, this->OutVertices);
     return true;
   }
 };
