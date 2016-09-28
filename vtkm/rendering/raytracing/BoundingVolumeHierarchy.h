@@ -27,7 +27,7 @@
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/exec/AtomicArray.h>

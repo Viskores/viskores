@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
-#include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/VecTraits.h>
 

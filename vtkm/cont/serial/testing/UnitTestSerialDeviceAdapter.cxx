@@ -23,12 +23,12 @@
 // for a part of an operation where the TBB device was specified.
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
-#include <vtkm/cont/DeviceAdapterSerial.h>
-#include <vtkm/cont/testing/TestingDataSetSingleType.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
-int UnitTestDataSetSingleType(int, char *[])
+#include <vtkm/cont/testing/TestingDeviceAdapter.h>
+
+int UnitTestSerialDeviceAdapter(int, char *[])
 {
-  return vtkm::cont::testing::TestingDataSetSingleType
-         <vtkm::cont::DeviceAdapterTagSerial>::Run();
+  return vtkm::cont::testing::TestingDeviceAdapter
+      <vtkm::cont::DeviceAdapterTagSerial>::Run();
 }
-

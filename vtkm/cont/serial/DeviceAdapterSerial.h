@@ -17,18 +17,11 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#ifndef vtk_m_cont_serial_DeviceAdapterSerial_h
+#define vtk_m_cont_serial_DeviceAdapterSerial_h
 
-// Make sure that the tested code is using the device adapter specified. This
-// is important in the long run so we don't, for example, use the CUDA device
-// for a part of an operation where the TBB device was specified.
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
+#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
+#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
+#include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
 
-#include <vtkm/cont/DeviceAdapterSerial.h>
-#include <vtkm/cont/testing/TestingArrayHandles.h>
-
-int UnitTestArrayHandle(int, char *[])
-{
-return vtkm::cont::testing::TestingArrayHandles
-         <vtkm::cont::DeviceAdapterTagSerial>::Run();
-}
-
+#endif //vtk_m_cont_serial_DeviceAdapterSerial_h
