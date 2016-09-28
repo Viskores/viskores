@@ -23,27 +23,6 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/internal/IndexTag.h>
-
-
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/function_types/components.hpp>
-#include <boost/function_types/function_arity.hpp>
-#include <boost/function_types/function_type.hpp>
-#include <boost/function_types/parameter_types.hpp>
-#include <boost/function_types/result_type.hpp>
-#include <boost/mpl/advance.hpp>
-#include <boost/mpl/at.hpp>
-#include <boost/mpl/begin.hpp>
-#include <boost/mpl/erase.hpp>
-#include <boost/mpl/insert.hpp>
-#include <boost/mpl/less.hpp>
-#include <boost/mpl/push_back.hpp>
-#include <boost/mpl/joint_view.hpp>
-#include <boost/mpl/single_view.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
-
-
 #include <vtkm/internal/FunctionInterfaceDetailPre.h>
 
 namespace vtkm {
@@ -252,24 +231,23 @@ public:
 
   }
 
-  // the number of parameters as a boost mpl integral constant
-  typedef boost::function_types::function_arity<FunctionSignature> SignatureArity;
-
-  typedef typename boost::function_types::result_type<FunctionSignature>::type
-      ResultType;
-
-  typedef typename boost::function_types::components<FunctionSignature> FunctionSignatureComponents;
+  // the number of parameters as an integral constant
+  typedef detail::FunctionSigInfo<FunctionSignature> SigInfo;
+  typedef typename SigInfo::ArityType SignatureArity;
+  typedef typename SigInfo::ResultType ResultType;
+  typedef typename SigInfo::Components ComponentSig;
+  typedef typename SigInfo::Parameters ParameterSig;
 
   template<vtkm::IdComponent ParameterIndex>
   struct ParameterType {
-    typedef typename detail::AtType<FunctionSignature, ParameterIndex>::type type;
+    typedef typename detail::AtType<ParameterIndex,FunctionSignature>::type type;
   };
 
   static const bool RETURN_VALID = FunctionInterfaceReturnContainer<ResultType>::VALID;
 
   /// The number of parameters in this \c Function Interface.
   ///
-  static const vtkm::IdComponent ARITY = SignatureArity::value;
+  static const vtkm::IdComponent ARITY = SigInfo::Arity;
 
   /// Returns the number of parameters held in this \c FunctionInterface. The
   /// return value is the same as \c ARITY.
@@ -481,17 +459,6 @@ public:
     detail::DoInvokeExec(f, this->Parameters, this->Result, transform);
   }
 
-  template<typename NewType>
-  struct AppendType {
-  private:
-    typedef boost::mpl::single_view<NewType> NewTypeSeq;
-    typedef boost::mpl::joint_view<FunctionSignatureComponents, NewTypeSeq> JointType;
-    typedef boost::function_types::function_type<JointType> FuntionType;
-  public:
-    typedef FunctionInterface< typename FuntionType::type > type;
-  };
-
-
   /// Returns a new \c FunctionInterface with all the parameters of this \c
   /// FunctionInterface and the given method argument appended to these
   /// parameters. The return type can be determined with the \c AppendType
@@ -499,27 +466,16 @@ public:
   ///
   template<typename NewType>
   VTKM_CONT_EXPORT
-  typename AppendType<NewType>::type
+  FunctionInterface < typename detail::AppendType<ComponentSig,NewType>::type >
   Append(const NewType& newParameter) const
   {
-    typedef typename AppendType<NewType>::type AppendInterfaceType;
+    typedef typename detail::AppendType<ComponentSig,NewType>::type AppendSignature;
 
-    AppendInterfaceType appendedFuncInterface;
+    FunctionInterface< AppendSignature > appendedFuncInterface;
     appendedFuncInterface.Copy(*this);
     appendedFuncInterface.template SetParameter<ARITY+1>(newParameter);
     return appendedFuncInterface;
   }
-
-  template<vtkm::IdComponent ParameterIndex, typename NewType>
-  class ReplaceType {
-    typedef typename boost::mpl::advance_c<typename boost::mpl::begin<FunctionSignatureComponents>::type, ParameterIndex>::type ToRemovePos;
-    typedef typename boost::mpl::erase<FunctionSignatureComponents, ToRemovePos>::type ComponentRemoved;
-    typedef typename boost::mpl::advance_c<typename boost::mpl::begin<ComponentRemoved>::type, ParameterIndex>::type ToInsertPos;
-    typedef typename boost::mpl::insert<ComponentRemoved, ToInsertPos, NewType>::type ComponentInserted;
-    typedef typename boost::function_types::function_type<ComponentInserted>::type NewSignature;
-  public:
-    typedef FunctionInterface<NewSignature> type;
-  };
 
   /// Returns a new \c FunctionInterface with all the parameters of this \c
   /// FunctionInterface except that the parameter indexed at the template
@@ -560,13 +516,14 @@ public:
   ///
   template<vtkm::IdComponent ParameterIndex, typename NewType>
   VTKM_CONT_EXPORT
-  typename ReplaceType<ParameterIndex, NewType>::type
+  FunctionInterface < typename detail::ReplaceType<ComponentSig,ParameterIndex, NewType>::type >
   Replace(const NewType& newParameter,
           vtkm::internal::IndexTag<ParameterIndex> =
             vtkm::internal::IndexTag<ParameterIndex>()) const
   {
 
-    typename ReplaceType<ParameterIndex, NewType>::type replacedFuncInterface;
+    typedef typename detail::ReplaceType<ComponentSig,ParameterIndex, NewType>::type ReplaceSigType;
+    FunctionInterface< ReplaceSigType >  replacedFuncInterface;
 
     detail::FunctionInterfaceCopyParameters<ParameterIndex-1>::
         Copy(replacedFuncInterface.Parameters, this->Parameters);
@@ -804,22 +761,20 @@ public:
   VTKM_CONT_EXPORT
   void operator()(const T& newParameter) const
   {
-    typedef typename FunctionInterface<NewFunction>::FunctionSignatureComponents NewFSigComp;
+    typedef typename FunctionInterface<NewFunction>::ComponentSig NewFSigComp;
 
-    typedef boost::mpl::single_view<T> NewTypeSeq;
-    typedef boost::mpl::joint_view<NewFSigComp, NewTypeSeq> JointType;
-    typedef boost::function_types::function_type<JointType> FuntionType;
-    typedef FunctionInterface< typename FuntionType::type > NextInterfaceType;
+    //Determine if we should do the next transform
+    using appended = brigand::push_back<NewFSigComp,T>;
+    using interfaceSig = typename detail::AsSigType<appended>::type;
+    using NextInterfaceType = FunctionInterface< interfaceSig >;
 
-    //Determine if we should do the next transform, and if so convert from
-    //boost mpl to std::true_type/false_type ( for readability of sigs )
-    typedef typename boost::mpl::less<
-                  typename NextInterfaceType::SignatureArity,
-                  typename vtkm::internal::FunctionInterface<OriginalFunction>::SignatureArity
-              >::type IsLessType;
-    typedef std::integral_constant<bool, IsLessType::value > ShouldDoNextTransformType;
+    static VTKM_CONSTEXPR std::size_t newArity = NextInterfaceType::ARITY;
+    static VTKM_CONSTEXPR std::size_t oldArity = detail::FunctionSigInfo<OriginalFunction>::Arity;
+    typedef std::integral_constant<bool,
+                            (newArity < oldArity ) > ShouldDoNextTransformType;
 
     NextInterfaceType nextInterface = this->NewInterface.Append(newParameter);
+
     this->DoNextTransform(nextInterface, ShouldDoNextTransformType());
     this->NewInterface.GetReturnValueSafe()
         = nextInterface.GetReturnValueSafe();
