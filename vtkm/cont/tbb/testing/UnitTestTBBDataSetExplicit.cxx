@@ -17,11 +17,13 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_internal_DeviceAdapterTagSerial_h
-#define vtk_m_cont_internal_DeviceAdapterTagSerial_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
-VTKM_VALID_DEVICE_ADAPTER(Serial, VTKM_DEVICE_ADAPTER_SERIAL);
+#include <vtkm/cont/testing/TestingDataSetExplicit.h>
 
-#endif //vtk_m_cont_internal_DeviceAdapterTagSerial_h
+int UnitTestTBBDataSetExplicit(int, char *[])
+{
+  return vtkm::cont::testing::TestingDataSetExplicit
+      <vtkm::cont::DeviceAdapterTagTBB>::Run();
+}

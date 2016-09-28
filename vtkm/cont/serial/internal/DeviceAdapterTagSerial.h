@@ -17,11 +17,11 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_DeviceAdapterSerial_h
-#define vtk_m_cont_DeviceAdapterSerial_h
+#ifndef vtk_m_cont_serial_internal_DeviceAdapterTagSerial_h
+#define vtk_m_cont_serial_internal_DeviceAdapterTagSerial_h
 
-#include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
-#include <vtkm/cont/internal/ArrayManagerExecutionSerial.h>
-#include <vtkm/cont/internal/DeviceAdapterAlgorithmSerial.h>
+#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
-#endif //vtk_m_cont_DeviceAdapterSerial_h
+VTKM_VALID_DEVICE_ADAPTER(Serial, VTKM_DEVICE_ADAPTER_SERIAL);
+
+#endif //vtk_m_cont_serial_internal_DeviceAdapterTagSerial_h

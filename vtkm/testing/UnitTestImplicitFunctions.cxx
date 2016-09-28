@@ -21,7 +21,7 @@
 //=============================================================================
 
 #include <vtkm/testing/TestingImplicitFunctions.h>
-#include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 int UnitTestImplicitFunctions(int, char *[])
 {

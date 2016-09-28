@@ -19,30 +19,10 @@
 ##============================================================================
 
 set(headers
-  ArrayHandleExecutionManager.h
-  ArrayManagerExecution.h
-  ArrayManagerExecutionShareWithControl.h
-  ArrayPortalFromIterators.h
-  ArrayPortalShrink.h
-  ArrayTransfer.h
-  ConnectivityExplicitInternals.h
-  DeviceAdapterAlgorithmGeneral.h
-  DeviceAdapterError.h
-  DeviceAdapterTag.h
-  DynamicTransform.h
-  FunctorsGeneral.h
-  IteratorFromArrayPortal.h
-  PointCoordinatesBase.h
-  RuntimeDeviceTracker.h
-  SimplePolymorphicContainer.h
-  StorageError.h
+  DeviceAdapterSerial.h
   )
+
+add_subdirectory(internal)
 
 vtkm_declare_headers(${headers})
 
-# These source files are actually compiled in the parent directory.
-# They are in a separate directory to highlight which objects are
-# internal and which are part of the external interface.
-#add_custom_target(vtkmContInternal ALL DEPENDS vtkmCont)
-
-add_subdirectory(testing)
