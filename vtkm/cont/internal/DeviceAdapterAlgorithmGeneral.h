@@ -394,7 +394,7 @@ public:
   // Scan Exclusive
   template<typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT_EXPORT static T ScanExclusive(
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
       vtkm::cont::ArrayHandle<T,COut>& output,
       BinaryFunctor binaryFunctor,
       const T& initialValue)
@@ -430,11 +430,70 @@ public:
 
   template<typename T, class CIn, class COut>
   VTKM_CONT_EXPORT static T ScanExclusive(
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
     return ScanExclusive(input, output, vtkm::Sum(),
                          vtkm::TypeTraits<T>::ZeroInitialization());
+  }
+
+  //--------------------------------------------------------------------------
+  // Streaming exclusive scan
+  template<typename T, class CIn, class COut>
+  VTKM_CONT_EXPORT static T StreamingScanExclusive(
+      const vtkm::Id numBlocks,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      vtkm::cont::ArrayHandle<T,COut>& output)
+  {
+    return DerivedAlgorithm::StreamingScanExclusive(numBlocks,
+                                                    input,
+                                                    output,
+                                                    vtkm::Sum(),
+                                                    vtkm::TypeTraits<T>::ZeroInitialization());
+  }
+
+  template<typename T, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT_EXPORT static T StreamingScanExclusive(
+      const vtkm::Id numBlocks,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      BinaryFunctor binary_functor,
+      const T& initialValue)
+  {
+    vtkm::Id fullSize = input.GetNumberOfValues();
+    vtkm::Id blockSize = fullSize / numBlocks;
+    if (fullSize % numBlocks != 0) blockSize += 1;
+
+    T lastResult;
+    for (vtkm::Id block=0; block<numBlocks; block++)
+    {
+      vtkm::Id numberOfInstances = blockSize;
+      if (block == numBlocks-1)
+        numberOfInstances = fullSize - blockSize*block;
+
+      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,CIn> > streamIn =
+          vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,CIn> >(
+          input, block, blockSize, numberOfInstances);
+
+      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,COut> > streamOut =
+          vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,COut> >(
+          output, block, blockSize, numberOfInstances);
+
+      if (block == 0)
+      {
+        streamIn.AllocateFullArray(fullSize);
+        streamOut.AllocateFullArray(fullSize);
+        lastResult = DerivedAlgorithm::ScanExclusive(streamIn, streamOut, binary_functor, initialValue);
+      }
+      else
+      {
+        lastResult = DerivedAlgorithm::ScanExclusive(streamIn, streamOut, binary_functor, lastResult);
+      }
+
+      streamIn.SyncControlArray();
+      streamOut.SyncControlArray();
+    }
+    return lastResult;
   }
 
   //--------------------------------------------------------------------------
@@ -513,7 +572,7 @@ public:
     vtkm::Id blockSize = fullSize / numBlocks;
     if (fullSize % numBlocks != 0) blockSize += 1;
 
-    T lastResult;
+    T lastResult, originalValue;
     for (vtkm::Id block=0; block<numBlocks; block++)
     {
       vtkm::Id numberOfInstances = blockSize;
@@ -533,12 +592,15 @@ public:
         streamIn.AllocateFullArray(fullSize);
         streamOut.AllocateFullArray(fullSize);
       }
-      else
+      else if (streamIn.GetNumberOfValues() > 0)
       {
-        streamIn.GetPortalControl().Set(0, binary_functor(streamIn.GetPortalConstControl().Get(0), lastResult));
+        originalValue = streamIn.GetPortalConstControl().Get(0);
+        streamIn.GetPortalControl().Set(0, binary_functor(originalValue, lastResult));
       }
 
-      lastResult = DerivedAlgorithm::ScanInclusive(streamIn, streamOut);
+      lastResult = DerivedAlgorithm::ScanInclusive(streamIn, streamOut, binary_functor);
+      if ((block > 0) && (streamIn.GetNumberOfValues() > 0))
+        streamIn.GetPortalControl().Set(0, originalValue);
 
       streamIn.SyncControlArray();
       streamOut.SyncControlArray();
