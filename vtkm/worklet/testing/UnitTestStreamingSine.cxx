@@ -121,6 +121,20 @@ void TestStreamingSine()
   VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 0.01f), "Wrong sum for streaming exclusive scan with binary operator");
   compareArrays(input, output, summation, "Wrong result for streaming exclusive scan with binary operator");
 
+  // Test the streaming reduce
+  std::cout << "Testing streaming reduce: " << std::endl;
+  referenceSum = DeviceAlgorithms::Reduce(input, 0.0f);
+  streamSum = DeviceAlgorithms::StreamingReduce(4, input, 0.0f);
+  std::cout << "Result: " << streamSum << " " << referenceSum << std::endl;
+  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 0.01f), "Wrong sum for streaming reduce");
+
+  // Test the streaming reduce with binary operator
+  std::cout << "Testing streaming reduce with binary operator: " << std::endl;
+  referenceSum = DeviceAlgorithms::Reduce(input, 0.0f, vtkm::Maximum());
+  streamSum = DeviceAlgorithms::StreamingReduce(4, input, 0.0f, vtkm::Maximum());
+  std::cout << "Result: " << streamSum << " " << referenceSum << std::endl;
+  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 0.01f), "Wrong sum for streaming reduce with binary operator");
+
 }
 
 int UnitTestStreamingSine(int, char *[])

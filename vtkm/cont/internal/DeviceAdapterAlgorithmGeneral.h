@@ -307,6 +307,49 @@ public:
   }
 
   //--------------------------------------------------------------------------
+  // Streaming Reduce
+  template<typename T, class CIn>
+  VTKM_CONT_EXPORT static T StreamingReduce(
+      const vtkm::Id numBlocks,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      T initialValue)
+  {
+    return DerivedAlgorithm::StreamingReduce(numBlocks, input, initialValue, vtkm::internal::Add());
+  }
+
+  template<typename T, class CIn, class BinaryFunctor>
+  VTKM_CONT_EXPORT static T StreamingReduce(
+      const vtkm::Id numBlocks,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      T initialValue,
+      BinaryFunctor binary_functor)
+  {
+    vtkm::Id fullSize = input.GetNumberOfValues();
+    vtkm::Id blockSize = fullSize / numBlocks;
+    if (fullSize % numBlocks != 0) blockSize += 1;
+
+    T lastResult;
+    for (vtkm::Id block=0; block<numBlocks; block++)
+    {
+      vtkm::Id numberOfInstances = blockSize;
+      if (block == numBlocks-1)
+        numberOfInstances = fullSize - blockSize*block;
+
+      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,CIn> > streamIn =
+          vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,CIn> >(
+          input, block, blockSize, numberOfInstances);
+
+      if (block == 0)
+        lastResult = DerivedAlgorithm::Reduce(streamIn, initialValue, binary_functor);
+      else
+        lastResult = DerivedAlgorithm::Reduce(streamIn, lastResult, binary_functor);
+    }
+    return lastResult;
+  }
+
+
+
+  //--------------------------------------------------------------------------
   // Reduce By Key
   template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
           class BinaryFunctor>
@@ -490,7 +533,6 @@ public:
         lastResult = DerivedAlgorithm::ScanExclusive(streamIn, streamOut, binary_functor, lastResult);
       }
 
-      streamIn.SyncControlArray();
       streamOut.SyncControlArray();
     }
     return lastResult;
@@ -601,7 +643,6 @@ public:
       if ((block > 0) && (streamIn.GetNumberOfValues() > 0))
         streamIn.GetPortalControl().Set(0, originalValue);
 
-      streamIn.SyncControlArray();
       streamOut.SyncControlArray();
     }
     return lastResult;
