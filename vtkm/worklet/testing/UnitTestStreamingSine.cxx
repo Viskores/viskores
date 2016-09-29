@@ -49,7 +49,7 @@ public:
 
 // Utility method to print input, output, and reference arrays
 template <class T1, class T2, class T3>
-void compareArrays(T1& a1, T2& a2, T3& a3, char* text)
+void compareArrays(T1& a1, T2& a2, T3& a3, char const* text)
 {
   for (vtkm::Id i = 0; i < a1.GetNumberOfValues(); ++i)
   {

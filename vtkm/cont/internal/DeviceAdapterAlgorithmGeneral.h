@@ -589,7 +589,6 @@ public:
 
       if (block == 0) 
       {
-        streamIn.AllocateFullArray(fullSize);
         streamOut.AllocateFullArray(fullSize);
       }
       else if (streamIn.GetNumberOfValues() > 0)
