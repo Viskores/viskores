@@ -23,8 +23,6 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayPortal.h>
 
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-
 namespace vtkm {
 namespace cont {
 namespace internal {
