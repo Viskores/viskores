@@ -320,7 +320,7 @@ install(
     ${VTKm_SOURCE_DIR}/CMake/VTKmMacros.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmConfigureComponents.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmCompilerOptimizations.cmake
-    ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cxx
+    ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cu
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
 
