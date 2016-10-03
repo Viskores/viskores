@@ -61,7 +61,7 @@ set(VTKm_INCLUDE_DIRS
 # This is also exported so that dependent CMake projects can load the same
 # configuration.
 add_library(vtkm INTERFACE)
-target_compile_features(vtkm INTERFACE cxx_constexpr cxx_auto_type)
+target_compile_features(vtkm INTERFACE cxx_auto_type)
 install(TARGETS vtkm EXPORT ${VTKm_EXPORT_NAME})
 
 # Load the base VTK-m configuration, which is required for some of the later
