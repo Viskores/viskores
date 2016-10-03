@@ -22,30 +22,28 @@
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL
+  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL GLUT
   )
 
-find_package(GLUT)
-
-if(VTKm_OpenGL_FOUND AND GLUT_FOUND)
+if(VTKm_OpenGL_FOUND AND VTKm_GLUT_FOUND)
   add_executable(StreamLineUniformGrid_SERIAL StreamLineUniformGrid.cxx)
-  target_include_directories(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
-  target_link_libraries(StreamLineUniformGrid_SERIAL ${VTKm_LIBRARIES} ${GLUT_LIBRARIES})
+  target_include_directories(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
+  target_link_libraries(StreamLineUniformGrid_SERIAL ${VTKm_LIBRARIES})
   target_compile_options(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   if(VTKm_CUDA_FOUND)
     # Cuda compiles do not respect target_include_directories
-    cuda_include_directories(${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
+    cuda_include_directories(${VTKm_INCLUDE_DIRS})
     cuda_add_executable(StreamLineUniformGrid_CUDA StreamLineUniformGrid.cu)
     target_include_directories(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
-    target_link_libraries(StreamLineUniformGrid_CUDA ${VTKm_LIBRARIES} ${GLUT_LIBRARIES})
+    target_link_libraries(StreamLineUniformGrid_CUDA ${VTKm_LIBRARIES})
     target_compile_options(StreamLineUniformGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
   endif()
 
   if(VTKm_TBB_FOUND)
     add_executable(StreamLineUniformGrid_TBB StreamLineUniformGridTBB.cxx)
-    target_include_directories(StreamLineUniformGrid_TBB PRIVATE ${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
-    target_link_libraries(StreamLineUniformGrid_TBB ${VTKm_LIBRARIES} ${GLUT_LIBRARIES})
+    target_include_directories(StreamLineUniformGrid_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
+    target_link_libraries(StreamLineUniformGrid_TBB ${VTKm_LIBRARIES})
     target_compile_options(StreamLineUniformGrid_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
   endif()
 

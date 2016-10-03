@@ -40,6 +40,7 @@ set(VTKm_AVAILABLE_COMPONENTS
   OSMesa
   EGL
   GLFW
+  GLUT
   Interop
   Rendering
   TBB
@@ -189,6 +190,18 @@ macro(vtkm_configure_component_GLFW)
     ADD_LIBRARIES ${GLFW_LIBRARY}
     )
 endmacro(vtkm_configure_component_GLFW)
+
+macro(vtkm_configure_component_GLUT)
+  vtkm_configure_component_OpenGL()
+
+  find_package(GLUT ${VTKm_FIND_PACKAGE_QUIETLY})
+
+  vtkm_finish_configure_component(GLUT
+    DEPENDENT_VARIABLES VTKm_OpenGL_FOUND GLUT_FOUND
+    ADD_INCLUDES ${GLUT_INCLUDE_DIR}
+    ADD_LIBRARIES ${GLUT_LIBRARY}
+    )
+endmacro(vtkm_configure_component_GLUT)
 
 macro(vtkm_configure_component_Interop)
   vtkm_configure_component_OpenGL()
