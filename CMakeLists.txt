@@ -53,6 +53,17 @@ set(VTKm_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
+# Create an "interface" target library. This is not a real library but rather
+# holds CMake configuration that is required for CXX targets that use VTK-m
+# headers. In particular, it makes sure the appropriate C++11 version is being
+# used. (The cxx_constexpr and cxx_auto_type features happen to force C++11.
+# Directly asking for C++11 with this interface is not supported in CMake 3.3.)
+# This is also exported so that dependent CMake projects can load the same
+# configuration.
+add_library(vtkm INTERFACE)
+target_compile_features(vtkm INTERFACE cxx_auto_type)
+install(TARGETS vtkm EXPORT ${VTKm_EXPORT_NAME})
+
 # Load the base VTK-m configuration, which is required for some of the later
 # config.
 vtkm_configure_component_Base()
@@ -61,13 +72,9 @@ if(NOT VTKm_Base_FOUND)
 endif()
 
 #-----------------------------------------------------------------------------
-# Add flag to enable C++11 support.
-# Unless the user has explicitly stated to compile with a different standard
-if (NOT DEFINED CMAKE_CXX_STANDARD)
-   set(CMAKE_CXX_STANDARD 11)
-   set(CMAKE_CXX_STANDARD_REQUIRED True)
-   set(CMAKE_CXX_EXTENSIONS False)
-endif()
+# When using C++11 suport make sure you use the standard C++ extensions rather
+# than compiler-specific versions of the extensions (to preserve portability).
+set(CMAKE_CXX_EXTENSIONS False)
 
 #-----------------------------------------------------------------------------
 # Add supplemental compiler warnings, and GCC visibility support.
@@ -318,22 +325,13 @@ install(
   )
 
 # Create and install exports for external projects
-if(${VTKM_HAS_AT_LEAST_ONE_LIBRARY})
-  export(EXPORT ${VTKm_EXPORT_NAME}
-    FILE ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
-    )
-  install(EXPORT ${VTKm_EXPORT_NAME}
-    DESTINATION ${VTKm_INSTALL_LIB_DIR}
-    FILE VTKmTargets.cmake
-    )
-else() # No libraries built
-  file(WRITE ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
-    "# This build of VTK-m has no libraries to export targets for"
-    )
-  install(FILES ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
-    DESTINATION ${VTKm_INSTALL_LIB_DIR}
-    )
-endif()
+export(EXPORT ${VTKm_EXPORT_NAME}
+  FILE ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+  )
+install(EXPORT ${VTKm_EXPORT_NAME}
+  DESTINATION ${VTKm_INSTALL_LIB_DIR}
+  FILE VTKmTargets.cmake
+  )
 
 # Enable CPack packaging
 set(CPACK_PACKAGE_DESCRIPTION_FILE ${VTKm_SOURCE_DIR}/README.md)

@@ -107,9 +107,15 @@ macro(vtkm_configure_component_Base)
     include(VTKmCompilerOptimizations)
   endif()
 
+  # Check for the existance of the base vtkm target
+  if (TARGET vtkm)
+    set(VTKm_base_vtkm_target_FOUND True)
+  endif()
+
   vtkm_finish_configure_component(Base
-    DEPENDENT_VARIABLES Boost_FOUND
+    DEPENDENT_VARIABLES Boost_FOUND VTKm_base_vtkm_target_FOUND
     ADD_INCLUDES ${Boost_INCLUDE_DIRS}
+    ADD_LIBRARIES vtkm
     )
 endmacro()
 
