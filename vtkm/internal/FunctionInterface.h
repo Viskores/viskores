@@ -459,6 +459,13 @@ public:
     detail::DoInvokeExec(f, this->Parameters, this->Result, transform);
   }
 
+  template<typename NewType>
+  struct AppendType
+  {
+    using type =
+      FunctionInterface<typename detail::AppendType<ComponentSig,NewType>::type>;
+  };
+
   /// Returns a new \c FunctionInterface with all the parameters of this \c
   /// FunctionInterface and the given method argument appended to these
   /// parameters. The return type can be determined with the \c AppendType
@@ -466,7 +473,7 @@ public:
   ///
   template<typename NewType>
   VTKM_CONT_EXPORT
-  FunctionInterface < typename detail::AppendType<ComponentSig,NewType>::type >
+  typename AppendType<NewType>::type
   Append(const NewType& newParameter) const
   {
     typedef typename detail::AppendType<ComponentSig,NewType>::type AppendSignature;
@@ -476,6 +483,13 @@ public:
     appendedFuncInterface.template SetParameter<ARITY+1>(newParameter);
     return appendedFuncInterface;
   }
+
+  template<vtkm::IdComponent ParameterIndex, typename NewType>
+  struct ReplaceType
+  {
+    using type =
+      FunctionInterface < typename detail::ReplaceType<ComponentSig,ParameterIndex, NewType>::type >;
+  };
 
   /// Returns a new \c FunctionInterface with all the parameters of this \c
   /// FunctionInterface except that the parameter indexed at the template
@@ -516,7 +530,7 @@ public:
   ///
   template<vtkm::IdComponent ParameterIndex, typename NewType>
   VTKM_CONT_EXPORT
-  FunctionInterface < typename detail::ReplaceType<ComponentSig,ParameterIndex, NewType>::type >
+  typename ReplaceType<ParameterIndex, NewType>::type
   Replace(const NewType& newParameter,
           vtkm::internal::IndexTag<ParameterIndex> =
             vtkm::internal::IndexTag<ParameterIndex>()) const
