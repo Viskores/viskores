@@ -220,7 +220,7 @@ macro(vtkm_configure_component_GLUT)
   vtkm_finish_configure_component(GLUT
     DEPENDENT_VARIABLES VTKm_OpenGL_FOUND GLUT_FOUND
     ADD_INCLUDES ${GLUT_INCLUDE_DIR}
-    ADD_LIBRARIES ${GLUT_LIBRARY}
+    ADD_LIBRARIES ${GLUT_LIBRARIES}
     )
 endmacro(vtkm_configure_component_GLUT)
 
