@@ -82,7 +82,7 @@ public:
     vtkm::Float32 s;
     Color color;
 
-    const size_t offset = 9;
+    const std::size_t offset = 9;
 
     s = scalar.Get(i1);
     s = (s-SMin)/SDiff;
@@ -132,7 +132,6 @@ struct MapColorAndVerticesInvokeFunctor
   VTKM_CONT_EXPORT
   MapColorAndVerticesInvokeFunctor(const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > &indices,
                         const vtkm::rendering::ColorTable &colorTable,
-                        const vtkm::rendering::Camera &camera,
                         const vtkm::cont::ArrayHandle<Float32> &scalar,
                         const vtkm::Range &scalarRange,
                         const PtType &vertices,
@@ -179,165 +178,163 @@ void RenderTriangles(MapperGL &mapper,
                      const vtkm::rendering::Camera &camera)
 {
 
-  if (!mapper.loaded){
-      GLenum GlewInitResult = glewInit();
-      if (GlewInitResult){
+  if (!mapper.loaded)
+  {
+    GLenum GlewInitResult = glewInit();
+    if (GlewInitResult)
         std::cout << "ERROR: " << glewGetErrorString(GlewInitResult) << std::endl;
+    mapper.loaded = true;
+
+    vtkm::Float32 sMin = vtkm::Float32(scalarRange.Min);
+    vtkm::Float32 sMax = vtkm::Float32(scalarRange.Max);
+    vtkm::cont::ArrayHandle<Float32> out_vertices, out_color;
+    out_vertices.Allocate(9*indices.GetNumberOfValues());
+    out_color.Allocate(9*indices.GetNumberOfValues());
+
+    vtkm::cont::TryExecute(
+        MapColorAndVerticesInvokeFunctor<PtType>(indices,
+                                                 ct,
+                                                 scalar,
+                                                 scalarRange,
+                                                 verts,
+                                                 sMin,
+                                                 sMax,
+                                                 out_color,
+                                                 out_vertices));
+
+    size_t vtx_cnt = out_vertices.GetNumberOfValues();
+    Float32 *v_ptr = out_vertices.GetStorage().StealArray();
+    Float32 *c_ptr = out_color.GetStorage().StealArray();
+
+
+    GLuint points_vbo = 0;
+    glGenBuffers(1, &points_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
+    GLsizeiptr sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(float));
+    glBufferData(GL_ARRAY_BUFFER, sz, v_ptr, GL_STATIC_DRAW);
+
+    GLuint colours_vbo = 0;
+    glGenBuffers(1, &colours_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
+    sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(float));
+    glBufferData(GL_ARRAY_BUFFER, sz, c_ptr, GL_STATIC_DRAW);
+    
+    mapper.vao = 0;
+    glGenVertexArrays(1, &mapper.vao);
+    glBindVertexArray(mapper.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    
+    vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
+    vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
+    
+    MatrixHelpers::CreateOGLMatrix(viewM, mapper.mvMat);
+    MatrixHelpers::CreateOGLMatrix(projM, mapper.pMat);
+    const char *vertex_shader =
+        "#version 120\n"
+        "attribute vec3 vertex_position;"
+        "attribute vec3 vertex_color;"
+        "varying vec3 ourColor;"
+        "uniform mat4 mv_matrix;"
+        "uniform mat4 p_matrix;"
+        
+        "void main() {"
+        "  gl_Position = p_matrix*mv_matrix * vec4(vertex_position, 1.0);"
+        "  ourColor = vertex_color;"
+        "}";
+    const char *fragment_shader =
+        "#version 120\n"
+        "varying vec3 ourColor;"
+        "void main() {"
+        "  gl_FragColor = vec4 (ourColor, 1.0);"
+        "}";
+    
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vs, 1, &vertex_shader, NULL);
+    glCompileShader(vs);
+    GLint isCompiled = 0;
+    glGetShaderiv(vs, GL_COMPILE_STATUS, &isCompiled);
+    if(isCompiled == GL_FALSE)
+    {
+        GLint maxLength = 0;
+        glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &maxLength);
+        
+        if (maxLength <= 0)
+        {
+            fprintf(stderr, "VS: Compilation error in shader with no error message\n");
+        }
+        else
+        {
+            // The maxLength includes the NULL character
+            GLchar *strInfoLog = new GLchar[maxLength + 1];
+            glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
+            fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
+            delete [] strInfoLog;
+        }
+    }
+
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs, 1, &fragment_shader, NULL);
+    glCompileShader(fs);
+    glGetShaderiv(fs, GL_COMPILE_STATUS, &isCompiled);
+    if(isCompiled == GL_FALSE)
+    {
+      GLint maxLength = 0;
+      glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &maxLength);
+        
+      if (maxLength <= 0){
+        fprintf(stderr, "VS: Compilation error in shader with no error message\n");
       }
-      mapper.loaded = true;
-
-      vtkm::Float32 sMin = vtkm::Float32(scalarRange.Min);
-      vtkm::Float32 sMax = vtkm::Float32(scalarRange.Max);
-      vtkm::cont::ArrayHandle<Float32> out_vertices, out_color;
-      out_vertices.Allocate(9*indices.GetNumberOfValues());
-      out_color.Allocate(9*indices.GetNumberOfValues());
-
-
-      vtkm::cont::TryExecute(
-            MapColorAndVerticesInvokeFunctor<PtType>(indices,
-                                             ct,
-                                             camera,
-                                             scalar,
-                                             scalarRange,
-                                             verts,
-                                             sMin,
-                                             sMax,
-                                             out_color,
-                                             out_vertices));
-
-
-      size_t vtx_cnt = out_vertices.GetNumberOfValues();
-      Float32 *v_ptr = out_vertices.GetStorage().StealArray();
-      Float32 *c_ptr = out_color.GetStorage().StealArray();
-
-
-      GLuint points_vbo = 0;
-      glGenBuffers(1, &points_vbo);
-      glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
-      GLsizeiptr sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(float));
-      glBufferData(GL_ARRAY_BUFFER, sz, v_ptr, GL_STATIC_DRAW);
-
-      GLuint colours_vbo = 0;
-      glGenBuffers(1, &colours_vbo);
-      glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
-      sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(float));
-      glBufferData(GL_ARRAY_BUFFER, sz, c_ptr, GL_STATIC_DRAW);
-
-      mapper.vao = 0;
-      glGenVertexArrays(1, &mapper.vao);
-      glBindVertexArray(mapper.vao);
-      glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-      glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
-      glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-
-      glEnableVertexAttribArray(0);
-      glEnableVertexAttribArray(1);
-
-      vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
-      vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
-
-      MatrixHelpers::CreateOGLMatrix(viewM, mapper.mvMat);
-      MatrixHelpers::CreateOGLMatrix(projM, mapper.pMat);
-      const char *vertex_shader =
-          "#version 120\n"
-          "attribute vec3 vertex_position;"
-          "attribute vec3 vertex_color;"
-          "varying vec3 ourColor;"
-          "uniform mat4 mv_matrix;"
-          "uniform mat4 p_matrix;"
-
-          "void main() {"
-          "  gl_Position = p_matrix*mv_matrix * vec4(vertex_position, 1.0);"
-          "  ourColor = vertex_color;"
-          "}";
-      const char *fragment_shader =
-          "#version 120\n"
-          "varying vec3 ourColor;"
-          "void main() {"
-          "  gl_FragColor = vec4 (ourColor, 1.0);"
-          "}";
-
-      GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-      glShaderSource(vs, 1, &vertex_shader, NULL);
-      glCompileShader(vs);
-      GLint isCompiled = 0;
-      glGetShaderiv(vs, GL_COMPILE_STATUS, &isCompiled);
-      if(isCompiled == GL_FALSE)
+      else
       {
-          GLint maxLength = 0;
-          glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &maxLength);
-
-          if (maxLength <= 0){
-              fprintf(stderr, "VS: Compilation error in shader with no error message\n");
-          }
-          else{
-              // The maxLength includes the NULL character
-              GLchar *strInfoLog = new GLchar[maxLength + 1];
-              glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
-              fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
-              delete [] strInfoLog;
-          }
+        // The maxLength includes the NULL character
+          GLchar *strInfoLog = new GLchar[maxLength + 1];
+          glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
+          fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
+          delete [] strInfoLog;
       }
+    }
 
-      GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-      glShaderSource(fs, 1, &fragment_shader, NULL);
-      glCompileShader(fs);
-      glGetShaderiv(fs, GL_COMPILE_STATUS, &isCompiled);
-      if(isCompiled == GL_FALSE)
+    mapper.shader_programme = glCreateProgram();
+    if (mapper.shader_programme > 0)
+    {
+      glAttachShader(mapper.shader_programme, fs);
+      glAttachShader(mapper.shader_programme, vs);
+      glBindAttribLocation (mapper.shader_programme, 0, "vertex_position");
+      glBindAttribLocation (mapper.shader_programme, 1, "vertex_color");
+      
+      glLinkProgram (mapper.shader_programme);
+      GLint linkStatus;
+      glGetProgramiv(mapper.shader_programme, GL_LINK_STATUS, &linkStatus);
+      if (!linkStatus)
       {
-          GLint maxLength = 0;
-          glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &maxLength);
-
-          if (maxLength <= 0){
-              fprintf(stderr, "VS: Compilation error in shader with no error message\n");
-          }
-          else{
-              // The maxLength includes the NULL character
-              GLchar *strInfoLog = new GLchar[maxLength + 1];
-              glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
-              fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
-              delete [] strInfoLog;
-          }
+        char log[2048];
+        GLsizei len;
+        glGetProgramInfoLog(mapper.shader_programme, 2048, &len, log);
+        std::string msg = std::string("Shader program link failed: ")+std::string(log);
+        throw vtkm::cont::ErrorControlBadValue(msg);
       }
-
-      mapper.shader_programme = glCreateProgram();
-      if (mapper.shader_programme > 0)
-      {
-
-          glAttachShader(mapper.shader_programme, fs);
-          glAttachShader(mapper.shader_programme, vs);
-          glBindAttribLocation (mapper.shader_programme, 0, "vertex_position");
-          glBindAttribLocation (mapper.shader_programme, 1, "vertex_color");
-
-          glLinkProgram (mapper.shader_programme);
-          GLint linkStatus;
-          glGetProgramiv(mapper.shader_programme, GL_LINK_STATUS, &linkStatus);
-          if (!linkStatus)
-          {
-              char log[2048];
-              GLsizei len;
-              glGetProgramInfoLog(mapper.shader_programme, 2048, &len, log);
-              std::string msg = std::string("Shader program link failed: ")+std::string(log);
-              throw vtkm::cont::ErrorControlBadValue(msg);
-          }
-      }
+    }
   }
-
 
   if (mapper.shader_programme > 0)
   {
-      glUseProgram(mapper.shader_programme);
-      GLint mvID = glGetUniformLocation(mapper.shader_programme, "mv_matrix");
-      glUniformMatrix4fv(mvID, 1, GL_FALSE, mapper.mvMat);
-      GLint pID = glGetUniformLocation(mapper.shader_programme, "p_matrix");
-      glUniformMatrix4fv(pID, 1, GL_FALSE, mapper.pMat);
-      glBindVertexArray(mapper.vao);
-      glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(numTri*3));
-      glUseProgram(0);
-    }
+    glUseProgram(mapper.shader_programme);
+    GLint mvID = glGetUniformLocation(mapper.shader_programme, "mv_matrix");
+    glUniformMatrix4fv(mvID, 1, GL_FALSE, mapper.mvMat);
+    GLint pID = glGetUniformLocation(mapper.shader_programme, "p_matrix");
+    glUniformMatrix4fv(pID, 1, GL_FALSE, mapper.pMat);
+    glBindVertexArray(mapper.vao);
+    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(numTri*3));
+    glUseProgram(0);
+  }
 }
-
+    
 } // anonymous namespace
 
 MapperGL::MapperGL()
