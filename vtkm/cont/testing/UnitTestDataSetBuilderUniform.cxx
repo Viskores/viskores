@@ -196,8 +196,8 @@ UniformTests()
     bounds.Y = vtkm::Range(0, 0);
     bounds.Z = vtkm::Range(0, 0);
     dataSet = dataSetBuilder.Create(dimensions[0],
-                                    static_cast<T>(origin[0]),
-                                    static_cast<T>(spacing[0]));
+                                    static_cast<vtkm::FloatDefault>(origin[0]),
+                                    static_cast<vtkm::FloatDefault>(spacing[0]));
     ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
   }
 }

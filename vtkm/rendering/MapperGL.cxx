@@ -41,11 +41,11 @@ class MapColorAndVertices : public vtkm::worklet::WorkletMapField
 {
 public:
   const vtkm::rendering::ColorTable ColorTable;
-  const Float32 SDiff, SMin;
+    const vtkm::Float32 SDiff, SMin;
 
   VTKM_CONT_EXPORT
   MapColorAndVertices(const vtkm::rendering::ColorTable &colorTable,
-                      Float32 sMin, Float32 sDiff)
+                      vtkm::Float32 sMin, vtkm::Float32 sDiff)
     : ColorTable(colorTable),
       SMin(sMin),
       SDiff(sDiff)
@@ -80,7 +80,7 @@ public:
     vtkm::Vec<vtkm::Float32, 3> p3 = verts.Get(idx[3]);
 
     vtkm::Float32 s;
-    Color color;
+    vtkm::rendering::Color color;
 
     const std::size_t offset = 9;
 
@@ -123,23 +123,23 @@ struct MapColorAndVerticesInvokeFunctor
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4> > TriangleIndices;
   vtkm::rendering::ColorTable ColorTable;
   const vtkm::Range ScalarRange;
-  const vtkm::cont::ArrayHandle<Float32> Scalar;
+  const vtkm::cont::ArrayHandle<vtkm::Float32> Scalar;
   const PtType Vertices;
-  vtkm::cont::ArrayHandle<Float32> OutColor;
-  vtkm::cont::ArrayHandle<Float32> OutVertices;
+  vtkm::cont::ArrayHandle<vtkm::Float32> OutColor;
+  vtkm::cont::ArrayHandle<vtkm::Float32> OutVertices;
   MapColorAndVertices Worklet;
 
   VTKM_CONT_EXPORT
-  MapColorAndVerticesInvokeFunctor(const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > &indices,
-                        const vtkm::rendering::ColorTable &colorTable,
-                        const vtkm::cont::ArrayHandle<Float32> &scalar,
-                        const vtkm::Range &scalarRange,
-                        const PtType &vertices,
-                        Float32 s_min,
-                        Float32 s_max,
-                        vtkm::cont::ArrayHandle<Float32> &out_color,
-                        vtkm::cont::ArrayHandle<Float32> &out_vertices
-                        ):
+  MapColorAndVerticesInvokeFunctor(
+      const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > &indices,
+      const vtkm::rendering::ColorTable &colorTable,
+      const vtkm::cont::ArrayHandle<Float32> &scalar,
+      const vtkm::Range &scalarRange,
+      const PtType &vertices,
+      vtkm::Float32 s_min,
+      vtkm::Float32 s_max,
+      vtkm::cont::ArrayHandle<Float32> &out_color,
+      vtkm::cont::ArrayHandle<Float32> &out_vertices):
     TriangleIndices(indices),
     ColorTable(colorTable),
     Scalar(scalar),
@@ -202,9 +202,9 @@ void RenderTriangles(MapperGL &mapper,
                                                  out_color,
                                                  out_vertices));
 
-    size_t vtx_cnt = out_vertices.GetNumberOfValues();
-    Float32 *v_ptr = out_vertices.GetStorage().StealArray();
-    Float32 *c_ptr = out_color.GetStorage().StealArray();
+    vtkm::Id vtx_cnt = out_vertices.GetNumberOfValues();
+    vtkm::Float32 *v_ptr = out_vertices.GetStorage().StealArray();
+    vtkm::Float32 *c_ptr = out_color.GetStorage().StealArray();
 
 
     GLuint points_vbo = 0;
