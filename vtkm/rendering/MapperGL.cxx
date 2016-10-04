@@ -210,13 +210,15 @@ void RenderTriangles(MapperGL &mapper,
     GLuint points_vbo = 0;
     glGenBuffers(1, &points_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
-    GLsizeiptr sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(float));
+    std::size_t num = vtx_cnt*sizeof(vtkm::Float32);
+    GLsizeiptr sz = static_cast<GLsizeiptr>(num);
+    //GLsizeiptr sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(vtkm::Float32));
     glBufferData(GL_ARRAY_BUFFER, sz, v_ptr, GL_STATIC_DRAW);
 
     GLuint colours_vbo = 0;
     glGenBuffers(1, &colours_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
-    sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(float));
+    sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(vtkm::Float32));
     glBufferData(GL_ARRAY_BUFFER, sz, c_ptr, GL_STATIC_DRAW);
     
     mapper.vao = 0;
