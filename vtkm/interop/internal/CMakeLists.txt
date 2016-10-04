@@ -27,7 +27,4 @@ set(headers
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})
 
-#we currently don't have to check if we have glut for these tests
-if(VTKm_ENABLE_OPENGL_TESTS)
-	add_subdirectory(testing)
-endif()
+add_subdirectory(testing)

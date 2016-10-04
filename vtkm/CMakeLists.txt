@@ -54,16 +54,6 @@ vtkm_declare_headers(${headers})
 add_subdirectory(testing)
 add_subdirectory(internal)
 
-if(VTKm_ENABLE_OPENGL_INTEROP)
-  add_subdirectory(interop)
-endif(VTKm_ENABLE_OPENGL_INTEROP)
-
-#-----------------------------------------------------------------------------
-# Build rendering
-if(VTKm_ENABLE_RENDERING)
-  add_subdirectory(rendering)
-endif()
-
 #-----------------------------------------------------------------------------
 #add the control and exec folders
 add_subdirectory(cont)
@@ -76,6 +66,14 @@ add_subdirectory(worklet)
 #-----------------------------------------------------------------------------
 #add the filter folder
 add_subdirectory(filter)
+
+#-----------------------------------------------------------------------------
+# Build rendering
+if(VTKm_ENABLE_RENDERING)
+  add_subdirectory(rendering)
+endif()
+
+add_subdirectory(interop)
 
 #-----------------------------------------------------------------------------
 #add the benchmarking folder

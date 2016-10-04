@@ -246,11 +246,6 @@ function(vtkm_unit_tests)
     ${ARGN}
     )
 
-  if(VTKm_ENABLE_OPENGL_TESTS)
-    list(APPEND VTKm_INCLUDE_DIRS ${GLUT_INCLUDE_DIR} )
-    list(APPEND VTKm_LIBRARIES ${GLUT_LIBRARIES}  )
-  endif()
-
   if (VTKm_ENABLE_TESTING)
     vtkm_get_kit_name(kit)
     #we use UnitTests_ so that it is an unique key to exclude from coverage

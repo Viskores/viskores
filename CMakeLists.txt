@@ -184,30 +184,6 @@ check_type_size(long VTKm_SIZE_LONG BUILTIN_TYPES_ONLY)
 check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
 
 #-----------------------------------------------------------------------------
-# Find OpenGL and GLEW, if both are found we can enable
-# the OpenGL Interop support. We use
-include(CMakeDependentOption)
-
-# enable Interop only if we have OpenGL and GLEW
-find_package(OpenGL)
-find_package(GLEW)
-find_package(GLUT)
-
-#dependent option reads, value to set, if condition is true, otherwise
-#use last value
-CMAKE_DEPENDENT_OPTION(VTKm_ENABLE_OPENGL_INTEROP
-                       "Enable OpenGL Interop will require GLEW"
-                       ON "OPENGL_FOUND;GLEW_FOUND" OFF)
-
-#Only enable OpenGL Interop tests if we have Interop enabled
-#and we have GLUT
-#dependent option reads, value to set, if condition is true, otherwise
-#use last value
-CMAKE_DEPENDENT_OPTION(VTKm_ENABLE_OPENGL_TESTS
-                       "Enable OpenGL Interop Render Window Tests"
-                       ON "VTKm_ENABLE_OPENGL_INTEROP;GLUT_FOUND" OFF)
-
-#-----------------------------------------------------------------------------
 # Find the Python interpreter, which we will use during the build process
 find_package(PythonInterp)
 
