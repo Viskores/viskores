@@ -41,7 +41,7 @@ class MapColorAndVertices : public vtkm::worklet::WorkletMapField
 {
 public:
   const vtkm::rendering::ColorTable ColorTable;
-    const vtkm::Float32 SDiff, SMin;
+  const vtkm::Float32 SMin, SDiff;
 
   VTKM_CONT_EXPORT
   MapColorAndVertices(const vtkm::rendering::ColorTable &colorTable,
@@ -122,12 +122,12 @@ struct MapColorAndVerticesInvokeFunctor
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4> > TriangleIndices;
   vtkm::rendering::ColorTable ColorTable;
-  const vtkm::Range ScalarRange;
   const vtkm::cont::ArrayHandle<vtkm::Float32> Scalar;
+  const vtkm::Range ScalarRange;
   const PtType Vertices;
+  MapColorAndVertices Worklet;
   vtkm::cont::ArrayHandle<vtkm::Float32> OutColor;
   vtkm::cont::ArrayHandle<vtkm::Float32> OutVertices;
-  MapColorAndVertices Worklet;
 
   VTKM_CONT_EXPORT
   MapColorAndVerticesInvokeFunctor(
@@ -211,7 +211,7 @@ void RenderTriangles(MapperGL &mapper,
     glGenBuffers(1, &points_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
     //unsigned = int*int
-    vtkm::Id num = vtx_cnt*sizeof(vtkm::Float32);
+    vtkm::Id num = vtx_cnt*static_cast<vtkm::Id>(sizeof(vtkm::Float32));
     //std::size_t num = vtx_cnt*static_cast<vtkm::Id>(sizeof(vtkm::Float32));
     GLsizeiptr sz = static_cast<GLsizeiptr>(num);
     //GLsizeiptr sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(vtkm::Float32));
