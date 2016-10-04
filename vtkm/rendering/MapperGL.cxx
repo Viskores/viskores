@@ -82,7 +82,7 @@ public:
     vtkm::Float32 s;
     vtkm::rendering::Color color;
 
-    const std::size_t offset = 9;
+    const vtkm::Id offset = 9;
 
     s = scalar.Get(i1);
     s = (s-SMin)/SDiff;
