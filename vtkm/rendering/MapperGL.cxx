@@ -206,22 +206,17 @@ void RenderTriangles(MapperGL &mapper,
     vtkm::Float32 *v_ptr = out_vertices.GetStorage().StealArray();
     vtkm::Float32 *c_ptr = out_color.GetStorage().StealArray();
 
-
+    vtkm::Id floatSz = static_cast<vtkm::Id>(sizeof(vtkm::Float32));
+    GLsizeiptr sz = static_cast<GLsizeiptr>(vtx_cnt*floatSz);
+    
     GLuint points_vbo = 0;
     glGenBuffers(1, &points_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
-    //unsigned = int*int
-    vtkm::Id num = vtx_cnt*static_cast<vtkm::Id>(sizeof(vtkm::Float32));
-    //std::size_t num = vtx_cnt*static_cast<vtkm::Id>(sizeof(vtkm::Float32));
-    GLsizeiptr sz = static_cast<GLsizeiptr>(num);
-    //GLsizeiptr sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(vtkm::Float32));
     glBufferData(GL_ARRAY_BUFFER, sz, v_ptr, GL_STATIC_DRAW);
 
     GLuint colours_vbo = 0;
     glGenBuffers(1, &colours_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
-    num = vtx_cnt*static_cast<vtkm::Id>(sizeof(vtkm::Float32));
-    sz = static_cast<GLsizeiptr>(num);
     glBufferData(GL_ARRAY_BUFFER, sz, c_ptr, GL_STATIC_DRAW);
     
     mapper.vao = 0;
@@ -266,21 +261,21 @@ void RenderTriangles(MapperGL &mapper,
     glGetShaderiv(vs, GL_COMPILE_STATUS, &isCompiled);
     if(isCompiled == GL_FALSE)
     {
-        GLint maxLength = 0;
-        glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &maxLength);
-        
-        if (maxLength <= 0)
-        {
-            fprintf(stderr, "VS: Compilation error in shader with no error message\n");
-        }
-        else
-        {
-            // The maxLength includes the NULL character
-            GLchar *strInfoLog = new GLchar[maxLength + 1];
-            glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
-            fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
-            delete [] strInfoLog;
-        }
+      GLint maxLength = 0;
+      glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &maxLength);
+
+      std::string msg;
+      if (maxLength <= 0)
+        msg = "No error message";
+      else
+      {
+        // The maxLength includes the NULL character
+        GLchar *strInfoLog = new GLchar[maxLength + 1];
+        glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
+        msg = std::string(strInfoLog);
+        delete [] strInfoLog;
+      }
+      throw vtkm::cont::ErrorControlBadValue("Shader compile error:"+msg);
     }
 
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
@@ -291,18 +286,19 @@ void RenderTriangles(MapperGL &mapper,
     {
       GLint maxLength = 0;
       glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &maxLength);
-        
-      if (maxLength <= 0){
-        fprintf(stderr, "VS: Compilation error in shader with no error message\n");
-      }
+
+      std::string msg;      
+      if (maxLength <= 0)
+          msg = "No error message";
       else
       {
         // The maxLength includes the NULL character
-          GLchar *strInfoLog = new GLchar[maxLength + 1];
-          glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
-          fprintf(stderr, "VS: Compilation error in shader : %s\n", strInfoLog);
-          delete [] strInfoLog;
+        GLchar *strInfoLog = new GLchar[maxLength + 1];
+        glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
+        msg = std::string(strInfoLog);          
+        delete [] strInfoLog;
       }
+      throw vtkm::cont::ErrorControlBadValue("Shader compile error:"+msg);
     }
 
     mapper.shader_programme = glCreateProgram();
