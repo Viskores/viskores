@@ -195,27 +195,28 @@ public:
     typedef typename OutArrayType::ValueType          OutValueType;
     typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
 
-    //vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( sigIn, coeffOut );
-
-    // First level transform operates on the input array
-    computationTime +=
-    WaveletDWT::DWT2Dv3( sigIn, currentLenX, currentLenY, coeffOut, L2d, DeviceTag());
+    // First level transform operates writes to the output array
+    computationTime += WaveletDWT::DWT2Dv3( sigIn, 
+                                            currentLenX,       currentLenY, 
+                                            0,                 0,
+                                            currentLenX,       currentLenY, 
+                                            coeffOut, L2d, DeviceTag() );
     VTKM_ASSERT( coeffOut.GetNumberOfValues() == currentLenX * currentLenY );
     currentLenX = WaveletBase::GetApproxLength( currentLenX );
     currentLenY = WaveletBase::GetApproxLength( currentLenY );
 
-    // Successor transforms operate on a temporary array
+    // Successor transforms writes to a temporary array
     for( vtkm::Id i = nLevels-1; i > 0; i-- )
     {
-      // make temporary input array
-      OutBasicArray tempInput;
-      WaveletBase::DeviceRectangleCopyFrom( tempInput, currentLenX, currentLenY,
-                                            coeffOut,  inX, inY, 0, 0, DeviceTag() );
       //make temporary output array
       OutBasicArray tempOutput;
 
       computationTime +=
-      WaveletDWT::DWT2Dv3( tempInput, currentLenX, currentLenY, tempOutput, L2d, DeviceTag());
+      WaveletDWT::DWT2Dv3(  coeffOut, 
+                            inX,              inY, 
+                            0,                0,
+                            currentLenX,      currentLenY, 
+                            tempOutput, L2d, DeviceTag() );
 
       // copy results to coeffOut
       WaveletBase::DeviceRectangleCopyTo( tempOutput, currentLenX, currentLenY,

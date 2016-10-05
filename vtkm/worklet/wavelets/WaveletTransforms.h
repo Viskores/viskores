@@ -170,15 +170,38 @@ private:
 };
 
 
+//       ................
+//       .              .
+//  -----.--------------.-----
+//  |    . |          | .    |
+//  |    . |          | .    |
+//  | ext1 |   mat2   | ext2 |
+//  | (x1) |   (x2)   | (x3) |
+//  |    . |          | .    |
+//  -----.--------------.-----
+//       ................
 class IndexTranslator3Matrices
 {
 public:
-  IndexTranslator3Matrices( vtkm::Id x_1, vtkm::Id y_1, 
-                            vtkm::Id x_2, vtkm::Id y_2, 
+  IndexTranslator3Matrices( vtkm::Id x_1,               vtkm::Id y_1, 
+                            vtkm::Id x_2,               vtkm::Id y_2, 
+                            vtkm::Id startx_2,          vtkm::Id starty_2, 
+                            vtkm::Id pretendx_2,        vtkm::Id pretendy_2, 
                             vtkm::Id x_3, vtkm::Id y_3, bool mode )
-                         :  x1(x_1), y1(y_1), 
-                            x2(x_2), y2(y_2),
-                            x3(x_3), y3(y_3), mode_lr(mode)  {}
+                         :  
+                            dimX1(x_1),                 dimY1(y_1), 
+                            dimX2(x_2),                 dimY2(y_2),     // real dimension of 2nd matrix
+                            startX2( startx_2 ),        startY2( starty_2 ),
+                            pretendDimX2( pretendx_2 ), pretendDimY2( pretendy_2 ),
+                            dimX3(x_3),                 dimY3(y_3), 
+                            mode_lr(mode)  
+  {
+    /* printf("ext1   dims         : %lld, %lld\n", dimX1, dimY1);
+    printf("signal dims         : %lld, %lld\n", dimX2, dimY2);
+    printf("signal start        : %lld, %lld\n", startX2, startY2);
+    printf("signal pretend dimx : %lld, %lld\n", pretendDimX2, pretendDimY2);
+    printf("ext2   dims         : %lld, %lld\n", dimX3, dimY3); */
+  }
 
   VTKM_EXEC_CONT_EXPORT
   void Translate2Dto1D( vtkm::Id  inX,  vtkm::Id  inY,         // 2D indices as input
@@ -186,40 +209,40 @@ public:
   {
     if( mode_lr )   // left-right mode
     {
-      if ( 0 <= inX && inX < x1 )
+      if ( 0 <= inX && inX < dimX1 )
       {
         mat = 1;
-        idx = inY * x1 + inX;
+        idx = inY * dimX1 + inX;
       } 
-      else if ( x1 <= inX && inX < (x1 + x2) )
+      else if ( dimX1 <= inX && inX < (dimX1 + pretendDimX2) )
       {
         mat = 2;
-        idx = inY * x2 + (inX - x1);
+        idx = (inY + startY2) * dimX2 + (inX + startX2 - dimX1);
       }
-      else if ( (x1 + x2) <= inX && inX < (x1 + x2 + x3) )
+      else if ( (dimX1 + pretendDimX2) <= inX && inX < (dimX1 + pretendDimX2 + dimX3) )
       {
         mat = 3;  
-        idx = inY * x3 + (inX - x1 - x2);
+        idx = inY * dimX3 + (inX - dimX1 - pretendDimX2);
       }
       else
         vtkm::cont::ErrorControlInternal("Invalid index!");
     }
     else          // top-down mode
     {
-      if ( 0 <= inY && inY < y1 )
+      if ( 0 <= inY && inY < dimY1 )
       {
         mat = 1;
-        idx = inY * x1 + inX;
+        idx = inY * dimX1 + inX;
       }
-      else if ( y1 <= inY && inY < (y1 + y2) )
+      else if ( dimY1 <= inY && inY < (dimY1 + pretendDimY2) )
       {
         mat = 2;
-        idx = (inY - y1) * x1 + inX;
+        idx = (inY + startY2 - dimY1) * dimX2 + inX + startX2;
       }
-      else if ( (y1 + y2) <= inY && inY < (y1 + y2 + y3) )
+      else if ( (dimY1 + pretendDimY2) <= inY && inY < (dimY1 + pretendDimY2 + dimY3) )
       {
         mat = 3;
-        idx = (inY - y1 - y2) * x1 + inX;
+        idx = (inY - dimY1 - pretendDimY2) * dimX3 + inX;
       }
       else
         vtkm::cont::ErrorControlInternal("Invalid index!");
@@ -227,12 +250,184 @@ public:
   }
 
 private:
-  const vtkm::Id      x1, y1, x2, y2, x3, y3;
+  const vtkm::Id      dimX1, dimY1;
+  const vtkm::Id      dimX2, dimY2, startX2, startY2, pretendDimX2, pretendDimY2;
+  const vtkm::Id      dimX3, dimY3;
   const bool          mode_lr;     // true: left right mode; false: top down mode.
 };
 
 
 // Worklet: perform a simple 2D forward transform
+template< typename DeviceTag >
+class ForwardTransform2Dv3: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // left/top extension
+                                WholeArrayIn<ScalarAll>,     // sigIn
+                                WholeArrayIn<ScalarAll>,     // right/bottom extension
+                                WholeArrayOut<ScalarAll>);   // cA followed by cD
+  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  typedef _4   InputDomain;
+
+
+  // Constructor
+  VTKM_EXEC_CONT_EXPORT
+  ForwardTransform2Dv3( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
+                        const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
+                        vtkm::Id filter_len, vtkm::Id approx_len, 
+                        bool odd_low, bool mode_lr,
+                        vtkm::Id x1,        vtkm::Id y1,   // dims of left/top extension
+                        vtkm::Id x2,        vtkm::Id y2,        // dims of signal
+                        vtkm::Id startx2,   vtkm::Id starty2,   // start idx of signal
+                        vtkm::Id pretendx2, vtkm::Id pretendy2, // pretend dims of signal
+                        vtkm::Id x3,        vtkm::Id y3 )  // dims of right/bottom extension
+                   :    
+                        lowFilter(  loFilter.PrepareForInput( DeviceTag() ) ),
+                        highFilter( hiFilter.PrepareForInput( DeviceTag() ) ),
+                        filterLen(  filter_len ), approxLen(  approx_len ),
+                        outDimX( pretendx2 ),   outDimY( pretendy2 ),
+                        oddlow( odd_low ),      modeLR( mode_lr ),
+                        translator( x1,         y1, 
+                                    x2,         y2, 
+                                    startx2,    starty2, 
+                                    pretendx2,  pretendy2, 
+                                    x3,         y3, 
+                                    mode_lr )
+  { this->SetStartPosition(); }
+
+  VTKM_EXEC_CONT_EXPORT
+  void Output1Dto2D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y ) const     
+  {
+    x = idx % outDimX;
+    y = idx / outDimX;
+  }
+  VTKM_EXEC_CONT_EXPORT
+  vtkm::Id Output2Dto1D( vtkm::Id x, vtkm::Id y ) const     
+  {
+    return y * outDimX + x;
+  }
+
+  // Use 64-bit float for convolution calculation
+  #define VAL        vtkm::Float64
+  #define MAKEVAL(a) (static_cast<VAL>(a))
+
+  template <typename InPortalType1, typename InPortalType2, typename InPortalType3 >
+  VTKM_EXEC_CONT_EXPORT
+  VAL GetVal( const InPortalType1 &portal1, const InPortalType2 &portal2,
+              const InPortalType3 &portal3, vtkm::Id inMatrix, vtkm::Id inIdx ) const
+  {
+    if( inMatrix == 1 )
+      return MAKEVAL( portal1.Get(inIdx) );
+    else if( inMatrix == 2 )
+      return MAKEVAL( portal2.Get(inIdx) );
+    else if( inMatrix == 3 )
+      return MAKEVAL( portal3.Get(inIdx) );
+    else
+    {
+        vtkm::cont::ErrorControlInternal("Invalid matrix index!");
+        return -1;
+    }
+  }
+  
+  template <typename InPortalType1, typename InPortalType2, 
+            typename InPortalType3, typename OutputPortalType>
+  VTKM_EXEC_CONT_EXPORT
+  void operator()(const InPortalType1       &inPortal1, // left/top extension
+                  const InPortalType2       &inPortal2, // signal
+                  const InPortalType3       &inPortal3, // right/bottom extension
+                     OutputPortalType       &coeffOut,
+                  const vtkm::Id            &workIndex) const
+  {
+    vtkm::Id workX, workY, output1D;
+    Output1Dto2D( workIndex, workX, workY );
+    vtkm::Id inputMatrix, inputIdx;
+    typedef typename OutputPortalType::ValueType OutputValueType;
+
+    if( modeLR )
+    {
+      if( workX % 2 == 0 )  // calculate cA
+      {
+        vtkm::Id xl = lstart + workX;
+        VAL sum = MAKEVAL(0.0);
+        for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+        {
+          translator.Translate2Dto1D( xl, workY, inputMatrix, inputIdx );
+          sum += lowFilter.Get(k) * 
+                 GetVal( inPortal1, inPortal2, inPortal3, inputMatrix, inputIdx );
+          xl++;
+        }
+        output1D = Output2Dto1D( workX/2, workY );
+        coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
+      }
+      else                      // calculate cD
+      {
+        vtkm::Id xh = hstart + workX - 1;
+        VAL sum=MAKEVAL(0.0);
+        for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+        {
+          translator.Translate2Dto1D( xh, workY, inputMatrix, inputIdx );
+          sum += highFilter.Get(k) * 
+                 GetVal( inPortal1, inPortal2, inPortal3, inputMatrix, inputIdx );
+          xh++;
+        }
+        output1D = Output2Dto1D( (workX-1)/2 + approxLen, workY );
+        coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
+      }
+    }
+    else    // top-down order 
+    {
+      if( workY % 2 == 0 )  // calculate cA
+      {
+        vtkm::Id yl = lstart + workY;
+        VAL sum = MAKEVAL(0.0);
+        for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+        {
+          translator.Translate2Dto1D( workX, yl, inputMatrix, inputIdx );
+          sum += lowFilter.Get(k) * 
+                 GetVal( inPortal1, inPortal2, inPortal3, inputMatrix, inputIdx );
+          yl++;
+        }
+        output1D = Output2Dto1D( workX, workY/2 );
+        coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
+      }
+      else                      // calculate cD
+      {
+        vtkm::Id yh = hstart + workY - 1;
+        VAL sum=MAKEVAL(0.0);
+        for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+        {
+          translator.Translate2Dto1D( workX, yh, inputMatrix, inputIdx );
+          sum += highFilter.Get(k) * 
+                 GetVal( inPortal1, inPortal2, inPortal3, inputMatrix, inputIdx );
+          yh++;
+        }
+        output1D = Output2Dto1D( workX, (workY-1)/2 + approxLen );
+        coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
+      }
+    }
+  }
+
+  #undef MAKEVAL
+  #undef VAL
+
+private:
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::
+      PortalConst lowFilter, highFilter;
+  const vtkm::Id filterLen, approxLen;
+  const vtkm::Id outDimX, outDimY;
+  bool  oddlow;
+  bool  modeLR;             // true = left right; false = top down.
+  const IndexTranslator3Matrices  translator;
+  vtkm::Id lstart, hstart;
+  
+  VTKM_EXEC_CONT_EXPORT
+  void SetStartPosition()
+  {
+    this->lstart = this->oddlow  ? 1 : 0;
+    this->hstart = 1;
+  }
+};
+#if 0
 template< typename DeviceTag >
 class ForwardTransform2Dv3: public vtkm::worklet::WorkletMapField
 {
@@ -393,11 +588,11 @@ private:
     this->hstart = 1;
   }
 };
+#endif
 
 
 // Worklet for 2D signal extension
-// This implementation operates on a small rectangle. Use it after LANL.
-#if 0
+// This implementation operates on a small rectangle.
 class ExtensionWorklet2Dv3 : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -408,15 +603,16 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT_EXPORT 
-  ExtensionWorklet2Dv3( vtkm::Id x1, vtkm::Id y1, 
-                        vtkm::Id x2, vtkm::Id y2, 
-                        vtkm::Id x3, vtkm::Id y3,
-                        vtkm::Id x4, vtkm::Id y4,
+  ExtensionWorklet2Dv3( vtkm::Id extdimX,     vtkm::Id extdimY, 
+                        vtkm::Id sigdimX,     vtkm::Id sigdimY, 
+                        vtkm::Id sigstartX,   vtkm::Id sigstartY,
+                        vtkm::Id sigpretendX, vtkm::Id sigpretendY,
                         DWTMode m, ExtensionDirection2D dir, bool pad_zero)
-                    :   extDimX( x1 ),        extDimY( y1 ), 
-                        sigDimX( x2 ),        sigDimY( y2 ), 
-                        sigPretendDimX( x3 ), sigPretendDimY( y3 ), 
-                        sigStartDimX( x4 ),   sigStartDimY( y4 ), 
+                     : 
+                        extDimX( extdimX ),           extDimY( extdimY ), 
+                        sigDimX( sigdimX ),           sigDimY( sigdimY ), 
+                        sigStartX( sigstartX ),       sigStartY( sigstartY ), 
+                        sigPretendDimX( sigpretendX ), sigPretendDimY( sigpretendY ), 
                         mode(m), direction( dir ), padZero( pad_zero )  {}
 
   // Index translation helper
@@ -502,11 +698,10 @@ private:
   const ExtensionDirection2D  direction;
   const bool                  padZero;  // treat sigIn as having a column/row zeros
 };
-#endif
-// !!! useful code above !!!
 
 
 // Worklet for 2D signal extension
+#if 0
 class ExtensionWorklet2D : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -597,7 +792,7 @@ private:
   const ExtensionDirection2D  direction;
   const bool                  padZero;  // treat sigIn as having a column/row zeros
 };
-
+#endif
 
 // Worklet: perform a simple forward transform
 template< typename DeviceTag >
