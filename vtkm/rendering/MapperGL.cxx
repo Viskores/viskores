@@ -220,7 +220,8 @@ void RenderTriangles(MapperGL &mapper,
     GLuint colours_vbo = 0;
     glGenBuffers(1, &colours_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
-    sz = static_cast<GLsizeiptr>(vtx_cnt*sizeof(vtkm::Float32));
+    num = vtx_cnt*static_cast<vtkm::Id>(sizeof(vtkm::Float32));
+    sz = static_cast<GLsizeiptr>(num);
     glBufferData(GL_ARRAY_BUFFER, sz, c_ptr, GL_STATIC_DRAW);
     
     mapper.vao = 0;
