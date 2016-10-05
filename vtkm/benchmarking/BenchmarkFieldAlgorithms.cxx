@@ -24,6 +24,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/worklet/WorkletMapField.h>
@@ -82,24 +83,28 @@ public:
     const vtkm::Float32       A5 = 1.330274429f;
     const vtkm::Float32       RSQRT2PI = 0.39894228040143267793994605993438f;
 
-    const T K = T(1.0f) / ( T(1.0f) + T(0.2316419f) * vtkm::Abs(d));
+    const vtkm::Float32 df = static_cast<vtkm::Float32>(d);
+    const vtkm::Float32 K = 1.0f / ( 1.0f + 0.2316419f * vtkm::Abs(df));
 
-    T cnd = RSQRT2PI * vtkm::Exp(-0.5f * d * d) *
-    (K * (A1 + K * (A2 + K * (A3 + K * (A4 + K * A5)))));
+    vtkm::Float32 cnd = RSQRT2PI * vtkm::Exp(-0.5f * df * df) *
+                        (K * (A1 + K * (A2 + K * (A3 + K * (A4 + K * A5)))));
 
-    if(d > 0)
+    if(df > 0.0f)
       {
       cnd = 1.0f - cnd;
       }
 
-    return cnd;
+    return static_cast<T>(cnd);
   }
 
-
-  VTKM_EXEC_EXPORT
-  void operator()(const T& stockPrice, const T& optionStrike, const T& optionYears,
-                  T& callResult, T& putResult) const
+  template <typename U, typename V, typename W>
+  VTKM_EXEC_EXPORT void operator()(const U& sp, const V& os, const W& oy,
+                                   T& callResult, T& putResult) const
   {
+  const T stockPrice = static_cast<T>(sp);
+  const T optionStrike = static_cast<T>(os);
+  const T optionYears = static_cast<T>(oy);
+
   // Black-Scholes formula for both call and put
   const T sqrtYears = vtkm::Sqrt(optionYears);
   const T volMultSqY = this->Volatility * sqrtYears;
@@ -123,11 +128,11 @@ public:
   typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
   typedef void ExecutionSignature(_1,_2);
 
-  template<typename T>
+  template<typename T, typename U>
   VTKM_EXEC_EXPORT
-  void operator()(const vtkm::Vec<T,3>& vec, T& result) const
+  void operator()(const vtkm::Vec<T,3>& vec, U& result) const
   {
-    result = vtkm::Magnitude(vec);
+    result = static_cast<U>(vtkm::Magnitude(vec));
   }
 };
 
@@ -137,11 +142,11 @@ public:
   typedef void ControlSignature(FieldIn<Scalar>, FieldOut<Scalar>);
   typedef void ExecutionSignature(_1,_2);
 
-  template<typename T>
+  template<typename T, typename U>
   VTKM_EXEC_EXPORT
-  void operator()(T input, T& output) const
+  void operator()(T input, U& output) const
   {
-    output = input * input;
+    output = static_cast<U>(input * input);
   }
 };
 
@@ -151,11 +156,11 @@ public:
   typedef void ControlSignature(FieldIn<Scalar>, FieldOut<Scalar>);
   typedef void ExecutionSignature(_1,_2);
 
-  template<typename T>
+  template<typename T, typename U>
   VTKM_EXEC_EXPORT
-  void operator()(T input, T& output) const
+  void operator()(T input, U& output) const
   {
-    output = vtkm::Sin(input);
+    output = static_cast<U>(vtkm::Sin(input));
   }
 };
 
@@ -165,11 +170,11 @@ public:
   typedef void ControlSignature(FieldIn<Scalar>, FieldOut<Scalar>);
   typedef void ExecutionSignature(_1,_2);
 
-  template<typename T>
+  template<typename T, typename U>
   VTKM_EXEC_EXPORT
-  void operator()(T input, T& output) const
+  void operator()(T input, U& output) const
   {
-    output = vtkm::Cos(input);
+    output = static_cast<U>(vtkm::Cos(input));
   }
 };
 
@@ -185,6 +190,12 @@ public:
   {
     const T m = vtkm::Magnitude(vec);
     result = vtkm::Cos( vtkm::Sin(m) * vtkm::Sin(m) );
+  }
+
+  template<typename T, typename U>
+  VTKM_EXEC_EXPORT
+  void operator()(const vtkm::Vec<T,3>& vec, U& result) const
+  {
   }
 };
 
@@ -230,20 +241,39 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4);
   typedef _1 InputDomain;
 
-  template <typename WeightType, typename InFieldPortalType, typename OutFieldType>
+  template <typename WeightType, typename T, typename S, typename D>
   VTKM_EXEC_EXPORT
   void operator()(const vtkm::Id2& low_high,
                   const WeightType &weight,
-                  const InFieldPortalType& inPortal,
-                  OutFieldType &result) const
+                  const vtkm::exec::ExecutionWholeArrayConst<T,S,D>& inPortal,
+                  T &result) const
   {
     //fetch the low / high values from inPortal
     result = vtkm::Lerp(inPortal.Get(low_high[0]),
                         inPortal.Get(low_high[1]),
                         weight);
   }
+
+  template <typename WeightType, typename T, typename S, typename D, typename U>
+  VTKM_EXEC_EXPORT
+  void operator()(const vtkm::Id2& low_high,
+                  const WeightType &weight,
+                  const vtkm::exec::ExecutionWholeArrayConst<T,S,D>& inPortal,
+                  U &result) const
+  {
+    //the inPortal and result need to be the same type so this version only
+    //exists to generate code when using dynamic arrays
+  }
 };
 
+struct ValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64>{};
+
+struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32,
+                                            vtkm::Float64,
+                                            vtkm::Vec< vtkm::Float32, 3>,
+                                            vtkm::Vec< vtkm::Float64, 3>
+                                            >{};
+using StorageListTag = ::vtkm::cont::StorageListTagBasic;
 
 /// This class runs a series of micro-benchmarks to measure
 /// performance of different field operations
@@ -251,16 +281,21 @@ template<class DeviceAdapterTag>
 class BenchmarkFieldAlgorithms {
   typedef vtkm::cont::StorageTagBasic StorageTag;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, StorageTag> IdArrayHandle;
-
   typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
 
   typedef vtkm::cont::Timer<DeviceAdapterTag> Timer;
 
+  using ValueDynamicHandle =
+        vtkm::cont::DynamicArrayHandleBase<ValueTypes, StorageListTag>;
+  using InterpDynamicHandle =
+        vtkm::cont::DynamicArrayHandleBase<InterpValueTypes, StorageListTag>;
+  using IdDynamicHandle =
+        vtkm::cont::DynamicArrayHandleBase<vtkm::TypeListTagIndex, StorageListTag>;
+
 private:
   template<typename Value>
   struct BenchBlackScholes {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     ValueArrayHandle StockPrice;
     ValueArrayHandle OptionStrike;
@@ -314,15 +349,53 @@ private:
       return timer.GetElapsedTime();
     }
 
+    virtual std::string Type() const { return std::string("Static"); }
+
     VTKM_CONT_EXPORT
     std::string Description() const {
       std::stringstream description;
-      description << "BlackScholes " << ARRAY_SIZE << " stocks";
+      description << "BlackScholes "
+                  << "[" << this->Type() << "] "
+                  << " with a domain size of: " << ARRAY_SIZE;
       return description.str();
     }
   };
 
+  template<typename Value>
+  struct BenchBlackScholesDynamic : public BenchBlackScholes<Value>  {
+
+    VTKM_CONT_EXPORT
+    vtkm::Float64 operator()()
+    {
+      ValueDynamicHandle dstocks(this->StockPrice);
+      ValueDynamicHandle dstrikes(this->OptionStrike);
+      ValueDynamicHandle doptions(this->OptionYears);
+
+      vtkm::cont::ArrayHandle<Value> callResultHandle, putResultHandle;
+      const Value RISKFREE = 0.02f;
+      const Value VOLATILITY = 0.30f;
+
+      Timer timer;
+      BlackScholes<Value> worklet(RISKFREE, VOLATILITY);
+      vtkm::worklet::DispatcherMapField< BlackScholes<Value> > dispatcher(worklet);
+
+      dispatcher.Invoke(  dstocks,
+                          dstrikes,
+                          doptions,
+                          callResultHandle,
+                          putResultHandle
+                        );
+
+      return timer.GetElapsedTime();
+    }
+
+    virtual std::string Type() const { return std::string("Dynamic"); }
+
+  };
+
   VTKM_MAKE_BENCHMARK(BlackScholes, BenchBlackScholes);
+  VTKM_MAKE_BENCHMARK(BlackScholesDynamic, BenchBlackScholesDynamic);
+
 
   template<typename Value>
   struct BenchMath {
@@ -362,15 +435,50 @@ private:
       return timer.GetElapsedTime();
     }
 
+    virtual std::string Type() const { return std::string("Static"); }
+
     VTKM_CONT_EXPORT
     std::string Description() const {
       std::stringstream description;
-      description << "Magnitude -> Sine -> Square -> Cosine " << ARRAY_SIZE << " values";
+      description << "Magnitude -> Sine -> Square -> Cosine "
+                  << "[" << this->Type() << "] "
+                  << "with a domain size of: " << ARRAY_SIZE;
       return description.str();
     }
   };
 
+  template<typename Value>
+  struct BenchMathDynamic : public BenchMath<Value> {
+
+    VTKM_CONT_EXPORT
+    vtkm::Float64 operator()()
+    {
+      using MathTypes = vtkm::ListTagBase<vtkm::Vec< vtkm::Float32, 3>,
+                                          vtkm::Vec< vtkm::Float64, 3>
+                                          >;
+
+      vtkm::cont::ArrayHandle<Value> temp1;
+      vtkm::cont::ArrayHandle<Value> temp2;
+      vtkm::cont::DynamicArrayHandleBase<MathTypes, StorageListTag> dinput(this->InputHandle);
+      ValueDynamicHandle dtemp1(temp1);
+      ValueDynamicHandle dtemp2(temp2);
+
+      Timer timer;
+
+      vtkm::worklet::DispatcherMapField< Mag >().Invoke(    dinput, dtemp1 );
+      vtkm::worklet::DispatcherMapField< Sin >().Invoke(    dtemp1, dtemp2 );
+      vtkm::worklet::DispatcherMapField< Square >().Invoke( dtemp2, dtemp1 );
+      vtkm::worklet::DispatcherMapField< Cos >().Invoke(    dtemp1, dtemp2 );
+
+      return timer.GetElapsedTime();
+    }
+
+    virtual std::string Type() const { return std::string("Dynamic"); }
+
+  };
+
   VTKM_MAKE_BENCHMARK(Math, BenchMath);
+  VTKM_MAKE_BENCHMARK(MathDynamic, BenchMathDynamic);
 
   template<typename Value>
   struct BenchFusedMath {
@@ -404,15 +512,42 @@ private:
       return timer.GetElapsedTime();
     }
 
+    virtual std::string Type() const { return std::string("Static"); }
+
     VTKM_CONT_EXPORT
     std::string Description() const {
       std::stringstream description;
-      description << "Fused Magnitude -> Sine -> Square -> Cosine " << ARRAY_SIZE << " values";
+      description << "Fused Magnitude -> Sine -> Square -> Cosine "
+                  << "[" << this->Type() << "] "
+                  << "with a domain size of: " << ARRAY_SIZE;
       return description.str();
     }
   };
 
+  template<typename Value>
+  struct BenchFusedMathDynamic : public BenchFusedMath<Value> {
+
+    VTKM_CONT_EXPORT
+    vtkm::Float64 operator()()
+    {
+      using MathTypes = vtkm::ListTagBase<vtkm::Vec< vtkm::Float32, 3>,
+                                          vtkm::Vec< vtkm::Float64, 3>
+                                          >;
+
+      vtkm::cont::DynamicArrayHandleBase<MathTypes, StorageListTag> dinput(this->InputHandle);
+
+      vtkm::cont::ArrayHandle<Value, StorageTag> result;
+
+      Timer timer;
+      vtkm::worklet::DispatcherMapField< FusedMath >().Invoke( dinput, result );
+      return timer.GetElapsedTime();
+    }
+
+    virtual std::string Type() const { return std::string("Dynamic"); }
+  };
+
   VTKM_MAKE_BENCHMARK(FusedMath, BenchFusedMath);
+  VTKM_MAKE_BENCHMARK(FusedMathDynamic, BenchFusedMathDynamic);
 
   template<typename Value>
   struct BenchEdgeInterp {
@@ -420,15 +555,16 @@ private:
     std::vector<Value> field;
 
     vtkm::cont::ArrayHandle< vtkm::Float32, StorageTag> WeightHandle;
-    vtkm::cont::ArrayHandle< Value, StorageTag> FieldHandle;
+    vtkm::cont::ArrayHandle<Value, StorageTag> FieldHandle;
     vtkm::cont::ArrayHandle< vtkm::Id2, StorageTag> EdgePairHandle;
 
     VTKM_CONT_EXPORT
     BenchEdgeInterp()
     {
+      using CT = typename vtkm::VecTraits<Value>::ComponentType;
       std::mt19937 rng;
       std::uniform_real_distribution<vtkm::Float32> weight_range(0.0f,1.0f);
-      std::uniform_real_distribution<Value> field_range;
+      std::uniform_real_distribution<CT> field_range;
 
       //basically the core challenge is to generate an array whose
       //indexing pattern matches that of a edge based algorithm.
@@ -456,7 +592,7 @@ private:
       this->field.resize( psize );
       for(std::size_t i=0; i < psize; ++i )
       {
-        this->field[i] = field_range(rng);
+        this->field[i] = Value(field_range(rng));
       }
 
       this->FieldHandle = vtkm::cont::make_ArrayHandle(this->field);
@@ -478,29 +614,49 @@ private:
       return timer.GetElapsedTime();
     }
 
+    virtual std::string Type() const { return std::string("Static"); }
+
     VTKM_CONT_EXPORT
     std::string Description() const {
       std::stringstream description;
       const std::size_t size = (CUBE_SIZE-1)*(CUBE_SIZE-1)*(CUBE_SIZE-1)*12;
-      description << "Edge Interpolation of an array of " << size << " values";
+      description << "Edge Interpolation "
+                  << "[" << this->Type() << "] "
+                  << "with a domain size of: " << size;
       return description.str();
     }
   };
 
+  template<typename Value>
+  struct BenchEdgeInterpDynamic : public BenchEdgeInterp<Value> {
+
+    VTKM_CONT_EXPORT
+    vtkm::Float64 operator()()
+    {
+      InterpDynamicHandle dfield(this->FieldHandle);
+      InterpDynamicHandle dweight(this->WeightHandle);
+      IdDynamicHandle dedges(this->EdgePairHandle);
+      vtkm::cont::ArrayHandle<Value> result;
+
+      Timer timer;
+      vtkm::worklet::DispatcherMapField<
+          InterpolateField,
+          DeviceAdapterTag>().Invoke(dedges,
+                                     dweight,
+                                     dfield,
+                                     result);
+      return timer.GetElapsedTime();
+    }
+
+    virtual std::string Type() const { return std::string("Dynamic"); }
+  };
+
   VTKM_MAKE_BENCHMARK(EdgeInterp, BenchEdgeInterp);
+  VTKM_MAKE_BENCHMARK(EdgeInterpDynamic, BenchEdgeInterpDynamic);
 
 
 
 public:
-
-  struct ValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64>{};
-
-  struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32,
-                                              vtkm::Float64,
-                                              vtkm::Vec< vtkm::Float32, 3>,
-                                              vtkm::Vec< vtkm::Float64, 3>
-                                              >{};
-
 
   static VTKM_CONT_EXPORT int Run(int benchmarks){
     std::cout << DIVIDER << "\nRunning Field Algorithm benchmarks\n";
@@ -508,21 +664,25 @@ public:
     if (benchmarks & BLACK_SCHOLES) {
       std::cout << DIVIDER << "\nBenchmarking BlackScholes\n";
       VTKM_RUN_BENCHMARK(BlackScholes, ValueTypes());
+      VTKM_RUN_BENCHMARK(BlackScholesDynamic, ValueTypes());
     }
 
     if (benchmarks & MATH){
       std::cout << DIVIDER << "\nBenchmarking Multiple Math Worklets\n";
       VTKM_RUN_BENCHMARK(Math, ValueTypes());
+      VTKM_RUN_BENCHMARK(MathDynamic, ValueTypes());
     }
 
     if (benchmarks & FUSED_MATH){
       std::cout << DIVIDER << "\nBenchmarking Single Fused Math Worklet\n";
       VTKM_RUN_BENCHMARK(FusedMath, ValueTypes());
+      VTKM_RUN_BENCHMARK(FusedMathDynamic, ValueTypes());
     }
 
     if (benchmarks & INTERPOLATE_FIELD){
       std::cout << DIVIDER << "\nBenchmarking Edge Based Field InterpolationWorklet\n";
-      VTKM_RUN_BENCHMARK(EdgeInterp, ValueTypes());
+      VTKM_RUN_BENCHMARK(EdgeInterp, InterpValueTypes());
+      VTKM_RUN_BENCHMARK(EdgeInterpDynamic, InterpValueTypes());
     }
 
     return 0;

@@ -139,7 +139,9 @@ public:
   }
 };
 
-
+struct ValueTypes : vtkm::ListTagBase<vtkm::UInt32, vtkm::Int32, vtkm::Int64,
+                                      vtkm::Float32, vtkm::Float64  >{};
+using StorageListTag = ::vtkm::cont::StorageListTagBasic;
 
 /// This class runs a series of micro-benchmarks to measure
 /// performance of different field operations
@@ -147,11 +149,12 @@ template<class DeviceAdapterTag>
 class BenchmarkTopologyAlgorithms {
   typedef vtkm::cont::StorageTagBasic StorageTag;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, StorageTag> IdArrayHandle;
-
   typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
 
   typedef vtkm::cont::Timer<DeviceAdapterTag> Timer;
+
+  using ValueDynamicHandle =
+        vtkm::cont::DynamicArrayHandleBase<ValueTypes, StorageListTag>;
 
 private:
 
@@ -188,6 +191,7 @@ private:
   struct BenchCellToPointAvg {
     std::vector< Value > input;
     vtkm::cont::ArrayHandle< Value, StorageTag> InputHandle;
+    std::size_t DomainSize;
 
     VTKM_CONT_EXPORT
     BenchCellToPointAvg()
@@ -195,9 +199,9 @@ private:
       NumberGenerator<Value> generator(static_cast<Value>(1.0),
                                        static_cast<Value>(100.0));
       //cube size is points in each dim
-      const std::size_t csize = (CUBE_SIZE-1)*(CUBE_SIZE-1)*(CUBE_SIZE-1);
-      this->input.resize( csize );
-      for(std::size_t i=0; i < csize; ++i )
+      this->DomainSize = (CUBE_SIZE-1)*(CUBE_SIZE-1)*(CUBE_SIZE-1);
+      this->input.resize( DomainSize );
+      for(std::size_t i=0; i < DomainSize; ++i )
       {
         this->input[i] = generator.next();
       }
@@ -221,21 +225,53 @@ private:
       return timer.GetElapsedTime();
     }
 
+    virtual std::string Type() const { return std::string("Static"); }
+
     VTKM_CONT_EXPORT
     std::string Description() const {
-      const std::size_t csize = (CUBE_SIZE-1)*(CUBE_SIZE-1)*(CUBE_SIZE-1);
+
       std::stringstream description;
-      description << "Computing Cell To Point Average for cell " << csize << " values";
+      description << "Computing Cell To Point Average "
+                  << "[" << this->Type() << "] "
+                  << "with a domain size of: " << this->DomainSize;
       return description.str();
     }
   };
 
+  template<typename Value>
+  struct BenchCellToPointAvgDynamic : public BenchCellToPointAvg<Value> {
+
+    VTKM_CONT_EXPORT
+    vtkm::Float64 operator()()
+    {
+      vtkm::cont::CellSetStructured<3> cellSet;
+      cellSet.SetPointDimensions( vtkm::Id3(CUBE_SIZE,CUBE_SIZE,CUBE_SIZE) );
+
+      ValueDynamicHandle dinput(this->InputHandle);
+      vtkm::cont::ArrayHandle<Value,StorageTag> result;
+
+      Timer timer;
+
+      vtkm::worklet::DispatcherMapTopology< AverageCellToPoint > dispatcher;
+
+      dispatcher.Invoke( dinput,
+                         cellSet,
+                         result);
+
+      return timer.GetElapsedTime();
+    }
+
+    virtual std::string Type() const { return std::string("Dynamic"); }
+  };
+
   VTKM_MAKE_BENCHMARK(CellToPointAvg, BenchCellToPointAvg);
+  VTKM_MAKE_BENCHMARK(CellToPointAvgDynamic, BenchCellToPointAvgDynamic);
 
   template<typename Value>
   struct BenchPointToCellAvg {
     std::vector< Value > input;
     vtkm::cont::ArrayHandle< Value, StorageTag> InputHandle;
+    std::size_t DomainSize;
 
     VTKM_CONT_EXPORT
     BenchPointToCellAvg()
@@ -243,9 +279,9 @@ private:
       NumberGenerator<Value> generator(static_cast<Value>(1.0),
                                        static_cast<Value>(100.0));
 
-      const std::size_t psize = (CUBE_SIZE)*(CUBE_SIZE)*(CUBE_SIZE);
-      this->input.resize( psize );
-      for(std::size_t i=0; i < psize; ++i )
+      this->DomainSize = (CUBE_SIZE)*(CUBE_SIZE)*(CUBE_SIZE);
+      this->input.resize( DomainSize );
+      for(std::size_t i=0; i < DomainSize; ++i )
       {
         this->input[i] = generator.next();
       }
@@ -269,22 +305,53 @@ private:
       return timer.GetElapsedTime();
     }
 
+    virtual std::string Type() const { return std::string("Static"); }
+
     VTKM_CONT_EXPORT
     std::string Description() const {
-      const std::size_t psize = (CUBE_SIZE)*(CUBE_SIZE)*(CUBE_SIZE);
+
       std::stringstream description;
-      description << "Computing Point To Cell Average for point " << psize << " values";
+      description << "Computing Point To Cell Average "
+                  << "[" << this->Type() << "] "
+                  << "with a domain size of: " << this->DomainSize;
       return description.str();
     }
   };
 
+  template<typename Value>
+  struct BenchPointToCellAvgDynamic : public BenchPointToCellAvg<Value> {
+
+    VTKM_CONT_EXPORT
+    vtkm::Float64 operator()()
+    {
+      vtkm::cont::CellSetStructured<3> cellSet;
+      cellSet.SetPointDimensions( vtkm::Id3(CUBE_SIZE,CUBE_SIZE,CUBE_SIZE) );
+
+      ValueDynamicHandle dinput(this->InputHandle);
+      vtkm::cont::ArrayHandle<Value,StorageTag> result;
+
+      Timer timer;
+
+      vtkm::worklet::DispatcherMapTopology< AveragePointToCell > dispatcher;
+      dispatcher.Invoke( dinput,
+                         cellSet,
+                         result);
+
+      return timer.GetElapsedTime();
+    }
+
+    virtual std::string Type() const { return std::string("Dynamic"); }
+  };
+
   VTKM_MAKE_BENCHMARK(PointToCellAvg, BenchPointToCellAvg);
+  VTKM_MAKE_BENCHMARK(PointToCellAvgDynamic, BenchPointToCellAvgDynamic);
 
   template<typename Value>
   struct BenchClassification {
     std::vector< Value > input;
     vtkm::cont::ArrayHandle< Value, StorageTag> InputHandle;
     Value IsoValue;
+    size_t DomainSize;
 
     VTKM_CONT_EXPORT
     BenchClassification()
@@ -292,9 +359,9 @@ private:
       NumberGenerator<Value> generator(static_cast<Value>(1.0),
                                        static_cast<Value>(100.0));
 
-      const std::size_t psize = (CUBE_SIZE)*(CUBE_SIZE)*(CUBE_SIZE);
-      this->input.resize( psize );
-      for(std::size_t i=0; i < psize; ++i )
+      this->DomainSize = (CUBE_SIZE)*(CUBE_SIZE)*(CUBE_SIZE);
+      this->input.resize( DomainSize );
+      for(std::size_t i=0; i < DomainSize; ++i )
       {
         this->input[i] = generator.next();
       }
@@ -302,6 +369,41 @@ private:
       this->IsoValue = generator.next();
     }
 
+    VTKM_CONT_EXPORT
+    vtkm::Float64 operator()()
+    {
+      vtkm::cont::CellSetStructured<3> cellSet;
+      cellSet.SetPointDimensions( vtkm::Id3(CUBE_SIZE,CUBE_SIZE,CUBE_SIZE) );
+      vtkm::cont::ArrayHandle< vtkm::IdComponent, StorageTag> result;
+
+      ValueDynamicHandle dinput(this->InputHandle);
+
+      Timer timer;
+
+      Classification<Value> worklet(this->IsoValue);
+      vtkm::worklet::DispatcherMapTopology< Classification<Value> > dispatcher(worklet);
+      dispatcher.Invoke( dinput,
+                         cellSet,
+                         result);
+
+      return timer.GetElapsedTime();
+    }
+
+    virtual std::string Type() const { return std::string("Static"); }
+
+    VTKM_CONT_EXPORT
+    std::string Description() const {
+
+      std::stringstream description;
+      description << "Computing Marching Cubes Classification "
+                  << "[" << this->Type() << "] "
+                  << "with a domain size of: " << this->DomainSize;
+      return description.str();
+    }
+  };
+
+  template<typename Value>
+  struct BenchClassificationDynamic : public BenchClassification<Value> {
     VTKM_CONT_EXPORT
     vtkm::Float64 operator()()
     {
@@ -320,21 +422,13 @@ private:
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
-    std::string Description() const {
-      const std::size_t psize = (CUBE_SIZE)*(CUBE_SIZE)*(CUBE_SIZE);
-      std::stringstream description;
-      description << "Computing Marching Cubes Classification for point " << psize << " values";
-      return description.str();
-    }
+    virtual std::string Type() const { return std::string("Dynamic"); }
   };
 
   VTKM_MAKE_BENCHMARK(Classification, BenchClassification);
+  VTKM_MAKE_BENCHMARK(ClassificationDynamic, BenchClassificationDynamic);
 
 public:
-  struct ValueTypes : vtkm::ListTagBase<vtkm::UInt32, vtkm::Int32, vtkm::Int64,
-                                        vtkm::Float32, vtkm::Float64  >{};
-
 
   static VTKM_CONT_EXPORT int Run(int benchmarks){
     std::cout << DIVIDER << "\nRunning Topology Algorithm benchmarks\n";
@@ -342,16 +436,19 @@ public:
     if (benchmarks & CELL_TO_POINT) {
       std::cout << DIVIDER << "\nBenchmarking Cell To Point Average\n";
       VTKM_RUN_BENCHMARK(CellToPointAvg, ValueTypes());
+      VTKM_RUN_BENCHMARK(CellToPointAvgDynamic, ValueTypes());
     }
 
     if (benchmarks & POINT_TO_CELL){
       std::cout << DIVIDER << "\nBenchmarking Point to Cell Average\n";
       VTKM_RUN_BENCHMARK(PointToCellAvg, ValueTypes());
+      VTKM_RUN_BENCHMARK(PointToCellAvgDynamic, ValueTypes());
     }
 
     if (benchmarks & MC_CLASSIFY){
       std::cout << DIVIDER << "\nBenchmarking Hex/Voxel MC Classification\n";
       VTKM_RUN_BENCHMARK(Classification, ValueTypes());
+      VTKM_RUN_BENCHMARK(ClassificationDynamic, ValueTypes());
     }
 
     return 0;
