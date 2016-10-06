@@ -25,7 +25,6 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/Magnitude.h>
 
-#include <vtkm/interop/testing/TestingWindow.h>
 #include <vtkm/interop/TransferToOpenGL.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -148,6 +147,7 @@ private:
     template <typename T>
     void operator()(const T t) const
     {
+      std::cout << "TransferFunctor" << std::endl;
       const std::size_t Size = 10;
       GLuint GLHandle;
       //verify that T is able to be transfer to openGL.
@@ -281,10 +281,8 @@ private:
 public:
   VTKM_CONT_EXPORT static int Run()
     {
-    //create a valid openGL context that we can test transfer of data
-    vtkm::interop::testing::TestingWindow window;
-    window.Init("Testing Window", 300, 300);
-
+    std::cout << "TestingOpenGLInterop Run() " << std::endl;
+    
     //verify that we can transfer basic arrays and constant value arrays to opengl
     vtkm::testing::Testing::TryTypes(TransferFunctor());
 
