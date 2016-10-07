@@ -20,20 +20,38 @@
 
 set(headers
   TestingOpenGLInterop.h
-  TestingWindow.h
-  WindowBase.h
   )
 
-set(unit_tests
-  UnitTestTransferToOpenGL.cxx
+set(unit_tests)
+
+# So because we are using GLEW to do our
+# GL binding we can only expect one
+# of these transfer tests to work
+#
+#
+set(needs_rendering FALSE)
+if(VTKm_OSMesa_FOUND AND TARGET vtkm_rendering)
+  list(APPEND unit_tests
+    UnitTestTransferOSMesa.cxx
   )
-
-# Need glut for these tests
-vtkm_configure_component_GLUT()
-if(VTKm_GLUT_FOUND)
-  vtkm_declare_headers(${headers})
-
-  vtkm_unit_tests(SOURCES ${unit_tests})
+  set(needs_rendering TRUE)
+elseif(VTKm_EGL_FOUND AND TARGET vtkm_rendering)
+  list(APPEND unit_tests
+    UnitTestTransferEGL.cxx
+  )
+  set(needs_rendering TRUE)
 else()
-  message(STATUS "Interop tests disabled. They need GLUT.")
+  vtkm_configure_component_GLUT()
+  if(VTKm_GLUT_FOUND)
+    list(APPEND unit_tests
+       UnitTestTransferGLUT.cxx
+    )
+  endif()
+endif()
+
+
+vtkm_declare_headers(${headers})
+vtkm_unit_tests(SOURCES ${unit_tests})
+if(needs_rendering)
+  target_link_libraries(UnitTests_vtkm_interop_testing vtkm_rendering)
 endif()
