@@ -524,7 +524,6 @@ public:
 
       if (block == 0)
       {
-        streamIn.AllocateFullArray(fullSize);
         streamOut.AllocateFullArray(fullSize);
         lastResult = DerivedAlgorithm::ScanExclusive(streamIn, streamOut, binary_functor, initialValue);
       }
