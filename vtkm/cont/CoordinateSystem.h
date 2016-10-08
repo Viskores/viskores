@@ -62,15 +62,15 @@ typedef vtkm::cont::ArrayHandleCompositeVectorType<
 /// by default (unless it is defined before including VTK-m headers.
 ///
 struct StorageListTagCoordinateSystemDefault
-    : vtkm::ListTagJoin<
-        VTKM_DEFAULT_STORAGE_LIST_TAG,
-    vtkm::ListTagBase<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
+    : vtkm::ListTagBase<
+                      vtkm::cont::StorageTagBasic,
+                      vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
                       detail::ArrayHandleCompositeVectorFloat32_3Default::StorageTag,
                       detail::ArrayHandleCompositeVectorFloat64_3Default::StorageTag,
                       vtkm::cont::ArrayHandleCartesianProduct<
                           vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                           vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                          vtkm::cont::ArrayHandle<vtkm::FloatDefault> >::StorageTag > >
+                          vtkm::cont::ArrayHandle<vtkm::FloatDefault> >::StorageTag >
 { };
 
 typedef vtkm::cont::DynamicArrayHandleBase<

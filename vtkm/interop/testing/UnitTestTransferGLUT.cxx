@@ -17,11 +17,27 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_interop_testing_TestingWindow_h
-#define vtk_m_interop_testing_TestingWindow_h
 
-#include <vtkm/internal/ExportMacros.h>
-#include <vtkm/interop/testing/WindowBase.h>
+
+//This sets up testing with the default device adapter and array container
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/interop/testing/TestingOpenGLInterop.h>
+
+#include <vtkm/internal/Configure.h>
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+// OpenGL Graphics includes
+//glew needs to go before glut
+#include <vtkm/interop/internal/OpenGLHeaders.h>
+#if defined (__APPLE__)
+# include <GLUT/glut.h>
+#else
+# include <GL/glut.h>
+#endif
+
 
 #if defined(VTKM_GCC) && defined(VTKM_POSIX) && !defined(__APPLE__)
 //
@@ -75,65 +91,28 @@ static int vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug()
   { return static_cast<int>(pthread_self()); }
 #endif
 
-
-namespace vtkm{
-namespace interop{
-namespace testing{
-
-/// \brief Basic Render Window that only makes sure opengl has a valid context
-///
-/// Bare-bones class that fulfullis the requirements of WindowBase but
-/// has no ability to interact with opengl other than to close down the window
-///
-///
-class TestingWindow : public vtkm::interop::testing::WindowBase<TestingWindow>
+int UnitTestTransferGLUT(int argc, char **argv)
 {
-public:
-  VTKM_CONT_EXPORT TestingWindow(){};
+  //get glut to construct a context for us
+  glutInit(&argc, argv);
+  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+  glutInitWindowSize(1024,1024);
+  glutCreateWindow("GLUT test");
 
-  //called after opengl is inited
-  VTKM_CONT_EXPORT void PostInit()
-  {}
+  //get glew to bind all the opengl functions
+  glewInit();
 
-  VTKM_CONT_EXPORT void Display()
-  {}
-
-  VTKM_CONT_EXPORT void Idle()
-  {}
-
-  VTKM_CONT_EXPORT void ChangeSize(int vtkmNotUsed(w), int vtkmNotUsed(h) )
-  {}
-
-  VTKM_CONT_EXPORT void Key(unsigned char key,
-                           int vtkmNotUsed(x), int vtkmNotUsed(y) )
-  {
-   if(key == 27) //escape pressed
+  if(!glewIsSupported("GL_VERSION_2_1"))
     {
-#if defined(VTKM_NVIDIA_PTHREAD_WORKAROUND)
-    std::cout << ::vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug();
-#endif
-    exit(0);
+    std::cerr << glGetString(GL_RENDERER) << std::endl;
+    std::cerr << glGetString(GL_VERSION) << std::endl;
+    return 1;
     }
-  }
 
-  VTKM_CONT_EXPORT void SpecialKey(int vtkmNotUsed(key),
-                                  int vtkmNotUsed(x), int vtkmNotUsed(y) )
-  {}
+#if defined(VTKM_NVIDIA_PTHREAD_WORKAROUND)
+  std::cout << ::vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug();
+#endif
 
-  VTKM_CONT_EXPORT void Mouse(int vtkmNotUsed(button), int vtkmNotUsed(state),
-                             int vtkmNotUsed(x), int vtkmNotUsed(y) )
-  {}
-
-  VTKM_CONT_EXPORT void MouseMove(int vtkmNotUsed(x), int vtkmNotUsed(y) )
-  {}
-
-  VTKM_CONT_EXPORT void PassiveMouseMove(int vtkmNotUsed(x), int vtkmNotUsed(y) )
-  {}
-
-};
-
-
+  return vtkm::interop::testing::TestingOpenGLInterop<
+            vtkm::cont::DeviceAdapterTagSerial >::Run();
 }
-}
-}
-#endif //vtk_m_interop_testing_TestingWindow_h

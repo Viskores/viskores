@@ -47,6 +47,7 @@ struct ExampleFieldWorklet : public vtkm::worklet::WorkletMapField
     out_vec = vec * scalar1;
     out_scalar1 = static_cast<U>(scalar1 + scalar2);
     out_scalar2 = scalar2;
+    std::cout << "hello world" << std::endl;
   }
 
   template<typename T, typename U, typename V, typename W, typename X, typename Y>
@@ -68,9 +69,9 @@ int main(int argc, char** argv)
   (void)argc;
   (void)argv;
 
-  std::vector< vtkm::Vec<vtkm::Float32, 3> > inputVec;
-  std::vector< vtkm::Int32 > inputScalar1;
-  std::vector< vtkm::Float64 > inputScalar2;
+  std::vector< vtkm::Vec<vtkm::Float32, 3> > inputVec(10);
+  std::vector< vtkm::Int32 > inputScalar1(10);
+  std::vector< vtkm::Float64 > inputScalar2(10);
 
   vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32, 3> > handleV =
     vtkm::cont::make_ArrayHandle(inputVec);

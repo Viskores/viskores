@@ -53,7 +53,6 @@ set(headers
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
   DeviceAdapterListTag.h
-  DeviceAdapterSerial.h
   DynamicArrayHandle.h
   DynamicCellSet.h
   Error.h
@@ -80,6 +79,7 @@ add_subdirectory(arg)
 
 vtkm_declare_headers(${impl_headers} ${headers})
 
+add_subdirectory(serial)
 add_subdirectory(cuda)
 add_subdirectory(tbb)
 

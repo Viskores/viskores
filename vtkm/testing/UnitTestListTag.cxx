@@ -136,11 +136,11 @@ void TryList(const vtkm::Vec<int,N> &expected, ListTag)
 void TestLists()
 {
   std::cout << "Valid List Tag Checks" << std::endl;
-  VTKM_TEST_ASSERT(vtkm::internal::ListTagCheck<TestListTag1>::Valid,
+  VTKM_TEST_ASSERT(vtkm::internal::ListTagCheck<TestListTag1>::value,
                    "Failed list tag check");
-  VTKM_TEST_ASSERT(vtkm::internal::ListTagCheck<TestListTagJoin>::Valid,
+  VTKM_TEST_ASSERT(vtkm::internal::ListTagCheck<TestListTagJoin>::value,
                    "Failed list tag check");
-  VTKM_TEST_ASSERT(!vtkm::internal::ListTagCheck<TestClass<1> >::Valid,
+  VTKM_TEST_ASSERT(!vtkm::internal::ListTagCheck<TestClass<1> >::value,
                    "Failed list tag check");
 
   std::cout << "ListTagEmpty" << std::endl;

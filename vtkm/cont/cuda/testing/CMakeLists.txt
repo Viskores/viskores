@@ -19,12 +19,12 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestComputeRangeCuda.cu
   UnitTestCudaArrayHandle.cu
   UnitTestCudaArrayHandleFancy.cu
+  UnitTestCudaComputeRange.cu
   UnitTestCudaDataSetExplicit.cu
   UnitTestCudaDataSetSingleType.cu
+  UnitTestCudaDeviceAdapter.cu
   UnitTestCudaMath.cu
-  UnitTestDeviceAdapterCuda.cu
   )
 vtkm_unit_tests(CUDA SOURCES ${unit_tests})

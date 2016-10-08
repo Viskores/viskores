@@ -18,13 +18,12 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
-//This sets up testing with the default device adapter and array container
-#include <vtkm/cont/DeviceAdapterSerial.h>
-#include <vtkm/interop/testing/TestingOpenGLInterop.h>
+#include <vtkm/cont/testing/TestingDataSetSingleType.h>
 
-int UnitTestTransferToOpenGL(int, char *[])
+int UnitTestTBBDataSetSingleType(int, char *[])
 {
-  return vtkm::interop::testing::TestingOpenGLInterop<
-            vtkm::cont::DeviceAdapterTagSerial >::Run();
+  return vtkm::cont::testing::TestingDataSetSingleType
+      <vtkm::cont::DeviceAdapterTagTBB>::Run();
 }

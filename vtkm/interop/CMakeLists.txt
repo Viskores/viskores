@@ -18,22 +18,33 @@
 ##  this software.
 ##============================================================================
 
-vtkm_configure_component_Interop()
-if(NOT VTKm_Interop_FOUND)
-  message(SEND_ERROR "Could not configure for OpenGL Interop. Either configure necessary subcomponents or turn off VTKm_ENABLE_OPENGL_INTEROP.")
-endif()
+# Determine if we actually want to compile OpenGL Interop.
+# We defer declaration of the option because whether we offer it depends on
+# dependent components that are not loaded in the base directories.
+vtkm_configure_component_OpenGL()
 
-set(headers
-  BufferState.h
-  TransferToOpenGL.h
-  )
+include(CMakeDependentOption)
 
-#-----------------------------------------------------------------------------
-add_subdirectory(internal)
+cmake_dependent_option(
+  VTKm_ENABLE_OPENGL_INTEROP "Enable OpenGL Interop" ON
+  "VTKm_OpenGL_FOUND" OFF)
 
-#-----------------------------------------------------------------------------
-vtkm_declare_headers(${headers})
+if(VTKm_ENABLE_OPENGL_INTEROP)
+  vtkm_configure_component_Interop()
+  if(NOT VTKm_Interop_FOUND)
+    message(SEND_ERROR "Could not configure for OpenGL Interop. Either configure necessary subcomponents or turn off VTKm_ENABLE_OPENGL_INTEROP.")
+  endif()
 
-if(VTKm_ENABLE_OPENGL_TESTS)
+  set(headers
+    BufferState.h
+    TransferToOpenGL.h
+    )
+
+  #-----------------------------------------------------------------------------
+  add_subdirectory(internal)
+
+  #-----------------------------------------------------------------------------
+  vtkm_declare_headers(${headers})
+
   add_subdirectory(testing)
 endif()

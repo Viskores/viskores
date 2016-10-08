@@ -22,31 +22,29 @@
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL
+  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL GLUT
   )
 
-find_package(GLUT)
-
-if(VTKm_OpenGL_FOUND AND GLUT_FOUND)
+if(VTKm_OpenGL_FOUND AND VTKm_GLUT_FOUND)
   add_executable(IsosurfaceUniformGrid_SERIAL IsosurfaceUniformGrid.cxx quaternion.h)
   set_source_files_properties(quaternion.h PROPERTIES HEADER_FILE_ONLY TRUE)
-  target_include_directories(IsosurfaceUniformGrid_SERIAL PRIVATE ${GLUT_INCLUDE_DIR} ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(IsosurfaceUniformGrid_SERIAL ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
+  target_include_directories(IsosurfaceUniformGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
+  target_link_libraries(IsosurfaceUniformGrid_SERIAL ${VTKm_LIBRARIES})
   target_compile_options(IsosurfaceUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   if(VTKm_CUDA_FOUND)
     vtkm_disable_troublesome_thrust_warnings()
     # Cuda compiles do not respect target_include_directories
-    cuda_include_directories(${VTKm_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR})
+    cuda_include_directories(${VTKm_INCLUDE_DIRS})
     cuda_add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cu quaternion.h)
-    target_link_libraries(IsosurfaceUniformGrid_CUDA ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
+    target_link_libraries(IsosurfaceUniformGrid_CUDA ${VTKm_LIBRARIES})
     target_compile_options(IsosurfaceUniformGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
   endif()
 
   if(VTKm_ENABLE_TBB)
     add_executable(IsosurfaceUniformGrid_TBB IsosurfaceUniformGridTBB.cxx quaternion.h)
-    target_include_directories(IsosurfaceUniformGrid_TBB PRIVATE ${GLUT_INCLUDE_DIR} ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(IsosurfaceUniformGrid_TBB ${GLUT_LIBRARIES} ${VTKm_LIBRARIES})
+    target_include_directories(IsosurfaceUniformGrid_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
+    target_link_libraries(IsosurfaceUniformGrid_TBB ${VTKm_LIBRARIES})
     target_compile_options(IsosurfaceUniformGrid_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
   endif()
 

@@ -40,6 +40,7 @@ set(VTKm_AVAILABLE_COMPONENTS
   OSMesa
   EGL
   GLFW
+  GLUT
   Interop
   Rendering
   TBB
@@ -107,9 +108,15 @@ macro(vtkm_configure_component_Base)
     include(VTKmCompilerOptimizations)
   endif()
 
+  # Check for the existance of the base vtkm target
+  if (TARGET vtkm)
+    set(VTKm_base_vtkm_target_FOUND True)
+  endif()
+
   vtkm_finish_configure_component(Base
-    DEPENDENT_VARIABLES Boost_FOUND
+    DEPENDENT_VARIABLES Boost_FOUND VTKm_base_vtkm_target_FOUND
     ADD_INCLUDES ${Boost_INCLUDE_DIRS}
+    ADD_LIBRARIES vtkm
     )
 endmacro()
 
@@ -133,17 +140,38 @@ macro(vtkm_configure_component_OpenGL)
   if(NOT VTKm_OSMesa_FOUND)
     find_package(OpenGL ${VTKm_FIND_PACKAGE_QUIETLY})
 
-    vtkm_finish_configure_component(OpenGL
-      DEPENDENT_VARIABLES VTKm_Base_FOUND OPENGL_FOUND
-      ADD_INCLUDES ${OPENGL_INCLUDE_DIR}
-      ADD_LIBRARIES ${OPENGL_LIBRARIES}
-      )
+    set(vtkm_opengl_dependent_vars VTKm_Base_FOUND OPENGL_FOUND)
+    set(vtkm_opengl_includes ${OPENGL_INCLUDE_DIR})
+    set(vtkm_opengl_libraries ${OPENGL_LIBRARIES})
   else()
     # OSMesa comes with its own implementation of OpenGL. So if OSMesa has been
     # found, then simply report that OpenGL has been found and use the includes
     # and libraries already added for OSMesa.
-    set(VTKm_OpenGL_FOUND TRUE)
+    set(vtkm_opengl_dependent_vars)
+    set(vtkm_opengl_includes)
+    set(vtkm_opengl_libraries)
   endif()
+
+  # Many OpenGL classes in VTK-m require GLEW (too many to try to separate them
+  # out and still get something worth using). So require that too.
+  find_package(GLEW ${VTKm_FIND_PACKAGE_QUIETLY})
+
+  list(APPEND vtkm_opengl_dependent_vars GLEW_FOUND)
+  list(APPEND vtkm_opengl_includes ${GLEW_INCLUDE_DIRS})
+  list(APPEND vtkm_opengl_libraries ${GLEW_LIBRARIES})
+  #on unix/linux Glew uses pthreads, so we need to find that, and link to it
+  #explicitly or else in release mode we get sigsegv on launch
+  if(UNIX)
+    find_package(Threads ${VTKm_FIND_PACKAGE_QUIETLY})
+    list(APPEND vtkm_interop_dependent_vars CMAKE_USE_PTHREADS_INIT)
+    list(APPEND vtkm_opengl_libraries ${CMAKE_THREAD_LIBS_INIT})
+  endif()
+
+  vtkm_finish_configure_component(OpenGL
+    DEPENDENT_VARIABLES ${vtkm_opengl_dependent_vars}
+    ADD_INCLUDES ${vtkm_opengl_includes}
+    ADD_LIBRARIES ${vtkm_opengl_libraries}
+    )
 endmacro(vtkm_configure_component_OpenGL)
 
 macro(vtkm_configure_component_OSMesa)
@@ -184,27 +212,23 @@ macro(vtkm_configure_component_GLFW)
     )
 endmacro(vtkm_configure_component_GLFW)
 
+macro(vtkm_configure_component_GLUT)
+  vtkm_configure_component_OpenGL()
+
+  find_package(GLUT ${VTKm_FIND_PACKAGE_QUIETLY})
+
+  vtkm_finish_configure_component(GLUT
+    DEPENDENT_VARIABLES VTKm_OpenGL_FOUND GLUT_FOUND
+    ADD_INCLUDES ${GLUT_INCLUDE_DIR}
+    ADD_LIBRARIES ${GLUT_LIBRARIES}
+    )
+endmacro(vtkm_configure_component_GLUT)
+
 macro(vtkm_configure_component_Interop)
   vtkm_configure_component_OpenGL()
 
-  find_package(GLEW ${VTKm_FIND_PACKAGE_QUIETLY})
-
-  set(vtkm_interop_dependent_vars
-    VTKm_OpenGL_FOUND
-    VTKm_ENABLE_OPENGL_INTEROP
-    GLEW_FOUND
-    )
-  #on unix/linux Glew uses pthreads, so we need to find that, and link to it
-  #explicitly or else in release mode we get sigsegv on launch
-  if (VTKm_ENABLE_OPENGL_INTEROP AND UNIX)
-    find_package(Threads ${VTKm_FIND_PACKAGE_QUIETLY})
-    set(vtkm_interop_dependent_vars ${vtkm_interop_dependent_vars} CMAKE_USE_PTHREADS_INIT)
-  endif()
-
   vtkm_finish_configure_component(Interop
-    DEPENDENT_VARIABLES ${vtkm_interop_dependent_vars}
-    ADD_INCLUDES ${GLEW_INCLUDE_DIRS}
-    ADD_LIBRARIES ${GLEW_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
+    DEPENDENT_VARIABLES VTKm_OpenGL_FOUND VTKm_ENABLE_OPENGL_INTEROP
     )
 endmacro(vtkm_configure_component_Interop)
 
@@ -266,9 +290,10 @@ macro(vtkm_configure_component_CUDA)
     #---------------------------------------------------------------------------
     # Setup build flags for CUDA to have C++11 support
     #---------------------------------------------------------------------------
-    if(NOT MSVC AND NOT VTKM_CUDA_CXX11_FLAGS_ADDED)
-      list(APPEND CUDA_NVCC_FLAGS --std c++11)
-      set(VTKM_CUDA_CXX11_FLAGS_ADDED TRUE CACHE INTERNAL "cuda C++11 flags added")
+    if(NOT MSVC)
+      if(NOT "--std" IN_LIST CUDA_NVCC_FLAGS)
+        list(APPEND CUDA_NVCC_FLAGS --std c++11)
+      endif()
     endif()
 
     #---------------------------------------------------------------------------
