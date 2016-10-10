@@ -138,7 +138,7 @@ void DebugDWTIDWT2D()
   ArrayType output1, output2, output3;
   std::vector<vtkm::Id> L(10, 0);
 
-  vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::CDF9_7 );
+  vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::HAAR );
 
   // get true results
   dwt.DWT2Dv2(center, NX, NY, output1, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
@@ -164,7 +164,7 @@ std::cerr << "...finish DWT2Dv3..." << std::endl;
   dwt.IDWT2Dv2( output1, L, idwt_out1, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   
   // test results go through IDWT
-  dwt.IDWT2Dv3( output3, L, idwt_out2, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  dwt.IDWT2Dv3( output3, NX, NY, 0, 0, L, idwt_out2, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
 std::cout << "\ntrue results after IDWT:" << std::endl;
   for( vtkm::Id i = 0; i < idwt_out1.GetNumberOfValues(); i++ )
@@ -231,9 +231,9 @@ void DebugDWTIDWT1D()
 
 void TestDecomposeReconstruct2D()
 {
-  std::cout << "Testing a 1024x1024 square: " << std::endl;
-  vtkm::Id sigX = 1024;
-  vtkm::Id sigY = 1024;
+  std::cout << "Testing a 1000x1000 square: " << std::endl;
+  vtkm::Id sigX = 1000;
+  vtkm::Id sigY = 1000;
   //std::cout << "Please input X to test a X^2 square: " << std::endl;
   //std::cin >> sigX;
   //sigY = sigX;
@@ -243,11 +243,13 @@ void TestDecomposeReconstruct2D()
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray;
   inputArray.PrepareForOutput( sigLen, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   FillArray2D( inputArray, sigX, sigY );
+  //for( vtkm::Id i = 0; i < sigLen; i++ )
+  //  inputArray.GetPortalControl().Set(i, (vtkm::Float64) i );
 
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
 
   // Use a WaveletCompressor
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF8_4;
   vtkm::worklet::WaveletCompressor compressor( wname );
 
   vtkm::Id XMaxLevel = compressor.GetWaveletMaxLevel( sigX );

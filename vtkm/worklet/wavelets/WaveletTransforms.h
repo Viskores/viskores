@@ -60,6 +60,123 @@ enum ExtensionDirection2D {  // which side of a matrix to extend
 class IndexTranslator6Matrices
 {
 public:
+  IndexTranslator6Matrices( vtkm::Id x_1,       vtkm::Id y_1, 
+                            vtkm::Id x_a,       vtkm::Id y_a, 
+                            vtkm::Id x_2,       vtkm::Id y_2, 
+                            vtkm::Id x_3,       vtkm::Id y_3,
+                            vtkm::Id x_d,       vtkm::Id y_d, 
+                            vtkm::Id x_4,       vtkm::Id y_4,
+                            vtkm::Id x_5,       vtkm::Id y_5,
+                            vtkm::Id start_x5,  vtkm::Id start_y5,
+                            bool mode )
+                         :  x1(x_1),            y1(y_1), 
+                            xa(x_a),            ya(y_a), 
+                            x2(x_2),            y2(y_2), 
+                            x3(x_3),            y3(y_3), 
+                            xd(x_d),            yd(y_d), 
+                            x4(x_4),            y4(y_4), 
+                            x5(x_5),            y5(y_5), 
+                            startX5(start_x5),  startY5(start_y5), 
+                            modeLR (mode)  
+  {
+    if( modeLR )
+    {
+      pretendX5 = xa + xd;
+      pretendY5 = y1;
+    }
+    else
+    {
+      pretendX5 = x1;
+      pretendY5 = ya + yd;
+    }
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  void Translate2Dto1D( vtkm::Id  inX,  vtkm::Id  inY,         // 2D indices as input
+                        vtkm::Id  &mat, vtkm::Id  &idx ) const // which matrix, and idx of that matrix
+  {
+    if( modeLR )   // left-right mode
+    {
+      if ( 0 <= inX && inX < x1 )
+      {
+        mat = 1;  // ext1
+        idx = inY * x1 + inX;
+      } 
+      else if ( x1 <= inX && inX < (x1 + xa) )
+      {
+        mat = 5;  // cAcD
+        idx = (inY + startY5) * x5 + (inX + startX5 - x1);
+      }
+      else if ( (x1 + xa) <= inX && inX < (x1 + xa + x2) )
+      {
+        mat = 2;  // ext2
+        idx = inY * x2 + (inX - x1 - xa);
+      }
+      else if ( (x1 + xa + x2) <= inX && inX < (x1 + xa + x2 + x3) )
+      {
+        mat = 3;  // ext3
+        idx = inY * x3 + (inX - x1 - xa - x2);
+      }
+      else if ( (x1 + xa + x2 + x3) <= inX && inX < (x1 + xa + x2 + x3 + xd) )
+      {
+        mat = 5;  // cAcD
+        idx = (inY + startY5) * x5 + (inX + startX5 - x1 - x2 - x3);
+      }
+      else if ( (x1 + xa + x2 + x3 + xd) <= inX && inX < (x1 + xa + x2 + x3 + xd + x4) )
+      {
+        mat = 4;  // ext4
+        idx = inY * x4 + (inX - x1 - xa - x2 - x3 - xd);
+      }
+      else
+        vtkm::cont::ErrorControlInternal("Invalid index!");
+    }
+    else          // top-down mode
+    {
+      if ( 0 <= inY && inY < y1 )
+      {
+        mat = 1;  // ext1
+        idx = inY * x1 + inX;
+      }
+      else if ( y1 <= inY && inY < (y1 + ya) )
+      {
+        mat = 5;  // cAcD
+        idx = (inY + startY5 - y1) * x5 + inX + startX5;
+      }
+      else if ( (y1 + ya) <= inY && inY < (y1 + ya + y2) )
+      {
+        mat = 2;  // ext2
+        idx = (inY - y1 - ya) * x1 + inX;
+      }
+      else if ( (y1 + ya + y2) <= inY && inY < (y1 + ya + y2 + y3) )
+      {
+        mat = 3;  // ext3
+        idx = (inY - y1 - ya - y2) * x1 + inX;
+      }
+      else if ( (y1 + ya + y2 + y3) <= inY && inY < (y1 + ya + y2 + y3 + yd) )
+      {
+        mat = 5;  // cAcD
+        idx = (inY + startY5 - y1 - y2 - y3 ) * x5 + inX + startX5;
+      }
+      else if ( (y1 + ya + y2 + y3 + yd) <= inY && inY < (y1 + ya + y2 + y3 + yd + y4) )
+      {
+        mat = 4;  // ext4
+        idx = (inY - y1 - ya - y2 - y3 - yd) * x1 + inX;
+      }
+      else
+        vtkm::cont::ErrorControlInternal("Invalid index!");
+    }
+  }
+
+private:
+  const vtkm::Id      x1, y1, xa, ya, x2, y2, x3, y3, xd, yd, x4, y4;
+        vtkm::Id      x5, y5, startX5, startY5, pretendX5, pretendY5;
+  const bool          modeLR ;     // true = left-right mode; false = top-down mode.
+};
+
+#if 0
+class IndexTranslator6Matrices
+{
+public:
   IndexTranslator6Matrices( vtkm::Id x_1, vtkm::Id y_1, 
                             vtkm::Id x_a, vtkm::Id y_a, 
                             vtkm::Id x_2, vtkm::Id y_2, 
@@ -168,7 +285,7 @@ private:
         vtkm::Id      xAD, yAD;
   const bool          modeLR ;     // true = left-right mode; false = top-down mode.
 };
-
+#endif
 
 //       ................
 //       .              .
@@ -904,18 +1021,21 @@ public:
   InverseTransform2D( const vtkm::cont::ArrayHandle<vtkm::Float64> &lo_fil,
                       const vtkm::cont::ArrayHandle<vtkm::Float64> &hi_fil,
                       vtkm::Id fil_len, 
-                      vtkm::Id x_1, vtkm::Id y_1,   // ext1 
-                      vtkm::Id x_a, vtkm::Id y_a,   // cA 
-                      vtkm::Id x_2, vtkm::Id y_2,   // ext2
-                      vtkm::Id x_3, vtkm::Id y_3,   // ext3
-                      vtkm::Id x_d, vtkm::Id y_d,   // cD
-                      vtkm::Id x_4, vtkm::Id y_4,   // ext4
+                      vtkm::Id x_1,       vtkm::Id y_1,   // ext1 
+                      vtkm::Id x_a,       vtkm::Id y_a,   // cA 
+                      vtkm::Id x_2,       vtkm::Id y_2,   // ext2
+                      vtkm::Id x_3,       vtkm::Id y_3,   // ext3
+                      vtkm::Id x_d,       vtkm::Id y_d,   // cD
+                      vtkm::Id x_4,       vtkm::Id y_4,   // ext4
+                      vtkm::Id x_5,       vtkm::Id y_5,
+                      vtkm::Id startX5,   vtkm::Id startY5,
                       bool mode_lr )
                    :  lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
                       highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
                       filterLen( fil_len ), 
                       translator(x_1, y_1, x_a, y_a, x_2, y_2,
-                                 x_3, y_3, x_d, y_d, x_4, y_4, mode_lr ),
+                                 x_3, y_3, x_d, y_d, x_4, y_4, 
+                                 x_5, y_5, startX5, startY5, mode_lr ),
                       modeLR( mode_lr )   
   {
     if( modeLR )
@@ -1042,8 +1162,9 @@ public:
       while( k1 > -1 )
       {
         translator.Translate2Dto1D( workX, yi, inputMatrix, inputIdx );
-        sum += lowFilter.Get(k1) * GetVal( portal1, portal2, portal3, portal4,
-                                           portalcAcD, inputMatrix, inputIdx );
+        VAL cA =  GetVal( portal1, portal2, portal3, portal4, portalcAcD, inputMatrix, inputIdx );
+//printf("inputM = %lld, inputIdx = %lld, cA = %lf\n", inputMatrix, inputIdx, cA );
+        sum += lowFilter.Get(k1) * cA;
         yi++;
         k1 -= 2;
       }
@@ -1051,8 +1172,9 @@ public:
       while( k2 > -1 )
       {
         translator.Translate2Dto1D( workX, yi + cALenExtended, inputMatrix, inputIdx );
-        sum += highFilter.Get(k2) * GetVal( portal1, portal2, portal3, portal4,
-                                            portalcAcD, inputMatrix, inputIdx );
+        VAL cD = GetVal( portal1, portal2, portal3, portal4, portalcAcD, inputMatrix, inputIdx );
+//printf("inputM = %lld, inputIdx = %lld, cD = %lf\n", inputMatrix, inputIdx, cD );
+        sum += highFilter.Get(k2) * cD;
         yi++;
         k2 -= 2;
       }
