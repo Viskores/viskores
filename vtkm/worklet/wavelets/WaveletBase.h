@@ -38,6 +38,7 @@ class WaveletBase
 {
 public:
 
+
   // Constructor
   WaveletBase( WaveletName name ) : wname ( name ),
                                     filter( name )
@@ -53,6 +54,8 @@ public:
       this->wmode = SYMH;
     }
   }
+
+
 
   // Returns length of approximation coefficients from a decompostition pass.
   vtkm::Id GetApproxLength( vtkm::Id sigInLen )
@@ -73,6 +76,8 @@ public:
 
     return ((sigInLen + filterLen - 1) / 2);
   }
+
+
 
   // Returns length of detail coefficients from a decompostition pass
   vtkm::Id GetDetailLength( vtkm::Id sigInLen )
@@ -95,6 +100,8 @@ public:
            static_cast<vtkm::Float64>(sigInLen + filterLen - 1) / 2.0 ) );
   }
 
+
+
   // Returns length of coefficients generated in a decompostition pass
   vtkm::Id GetCoeffLength( vtkm::Id sigInLen )
   {
@@ -109,6 +116,8 @@ public:
     return( GetCoeffLength( sigInX) * GetCoeffLength( sigInY ) * GetCoeffLength( sigInZ ) );
   }
 
+
+
   // Returns maximum wavelet decompostion level
   vtkm::Id GetWaveletMaxLevel( vtkm::Id sigInLen )
   {
@@ -117,6 +126,8 @@ public:
     this->WaveLengthValidate( sigInLen, filterLen, level );
     return level;
   }
+
+
 
   // perform a device copy. The whole 1st array to a certain start location of the 2nd array
   template< typename ArrayType1, typename ArrayType2, typename DeviceTag >
@@ -131,6 +142,8 @@ public:
       dispatcher.Invoke( srcArray, dstArray );
   }
 
+
+
   // Assign zero value to a certain location of an array
   template< typename ArrayType, typename DeviceTag >
   void DeviceAssignZero( ArrayType &array, vtkm::Id index, DeviceTag )
@@ -140,6 +153,8 @@ public:
     vtkm::worklet::DispatcherMapField< ZeroWorklet, DeviceTag > dispatcher( worklet );
     dispatcher.Invoke( array );
   }
+
+
 
   // Assign zeros to a certain row to a matrix
   template< typename ArrayType, typename DeviceTag >
@@ -153,6 +168,8 @@ public:
     dispatcher.Invoke( array );
   }
 
+
+
   // Assign zeros to a certain column to a matrix
   template< typename ArrayType, typename DeviceTag >
   void DeviceAssignZero2DColumn( ArrayType &array, vtkm::Id dimX, vtkm::Id dimY, // input
@@ -164,6 +181,8 @@ public:
           dispatcher( zeroWorklet );
     dispatcher.Invoke( array );
   }
+
+
 
   // Sort by the absolute value on device
   struct SortLessAbsFunctor
@@ -181,6 +200,8 @@ public:
     vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Sort
           ( array, SortLessAbsFunctor() );
   }
+
+
   
   // Reduce to the sum of all values on device
   template< typename ArrayType, typename DeviceTag >
@@ -190,7 +211,9 @@ public:
               ( array, 0.0 );
   }
 
-  // Find the max and min of an array
+
+
+  // Helper functors for finding the max and min of an array
   struct minFunctor
   {
     template< typename FieldType >
@@ -207,6 +230,10 @@ public:
       return vtkm::Max(x, y);
     }
   };
+  
+
+
+  // Device Min and Max functions
   template< typename ArrayType, typename DeviceTag >
   typename ArrayType::ValueType DeviceMax( const ArrayType &array, DeviceTag )
   {
@@ -221,6 +248,8 @@ public:
     return vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Reduce
               ( array, initVal, minFunctor() );
   }
+
+
 
   // Max absolute value of an array
   struct maxAbsFunctor
@@ -238,6 +267,8 @@ public:
     return vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Reduce
               ( array, initVal, maxAbsFunctor() );
   }
+
+
 
   // Calculate variance of an array
   template< typename ArrayType, typename DeviceTag >
@@ -260,25 +291,7 @@ public:
     return sdMean;
   }
 
-  // Transpose a matrix in an array
-  template< typename InputArrayType, typename OutputArrayType, typename DeviceTag >
-  void DeviceTranspose( const InputArrayType   &inputArray,
-                                    vtkm::Id   inputDimX,
-                                    vtkm::Id   inputDimY,
-                             OutputArrayType   &outputArray,
-                                    vtkm::Id   outputDimX,
-                                    vtkm::Id   outputDimY,
-                                    vtkm::Id   outputStartX,
-                                    vtkm::Id   outputStartY,
-                                   DeviceTag            )
-  {
-    // use a worklet
-    typedef vtkm::worklet::wavelets::TransposeWorklet TransposeType;
-    TransposeType tw ( inputDimX, inputDimY, outputDimX, outputDimY, 
-                       outputStartX, outputStartY );
-    vtkm::worklet::DispatcherMapField< TransposeType, DeviceTag > dispatcher( tw );
-    dispatcher.Invoke( inputArray, outputArray );
-  }
+
 
   // Copy a small rectangle to a big rectangle
   template< typename SmallArrayType, typename BigArrayType, typename DeviceTag>
@@ -297,6 +310,8 @@ public:
     vtkm::worklet::DispatcherMapField< CopyToWorklet, DeviceTag > dispatcher( cp  );
     dispatcher.Invoke(smallRect, bigRect);
   }
+
+
 
   // Fill a small rectangle from a portion of a big rectangle
   template< typename SmallArrayType, typename BigArrayType, typename DeviceTag >
@@ -318,6 +333,7 @@ public:
   }
 
 
+
   template< typename ArrayType >
   void Print2DArray( const std::string &str, const ArrayType &arr, vtkm::Id dimX  )
   {
@@ -330,22 +346,6 @@ public:
     }
   }
 
-  template< typename ArrayType >
-  void Print2DArrayTransposed( const std::string &str, const ArrayType &arr, 
-                               vtkm::Id dimX, vtkm::Id dimY  )
-  {
-    std::cerr << str << std::endl;
-    ArrayType arrTmp;
-    arrTmp.PrepareForOutput( dimX * dimY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-    this->DeviceTranspose( arr, dimX, dimY, arrTmp, dimY, dimX, 0, 0,
-                           VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-    for( vtkm::Id i = 0; i < arrTmp.GetNumberOfValues(); i++ )
-    {
-      std::cerr << arrTmp.GetPortalConstControl().Get(i) << "  ";
-      if( i % dimY == dimY - 1 )
-        std::cerr << std::endl;
-    }
-  }
 
 
 protected:
@@ -362,6 +362,7 @@ protected:
                   vtkm::Log2( static_cast<vtkm::Float64>(sigInLen) / 
                               static_cast<vtkm::Float64>(filterLength) ) + 1.0 ) );
   }
+
 };    // class WaveletBase.
 
 

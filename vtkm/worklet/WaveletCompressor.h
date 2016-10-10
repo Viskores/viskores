@@ -40,6 +40,7 @@ public:
   WaveletCompressor( wavelets::WaveletName name ) : WaveletDWT( name ) {} 
 
 
+
   // Multi-level 1D wavelet decomposition
   template< typename SignalArrayType, typename CoeffArrayType, typename DeviceTag >
   VTKM_CONT_EXPORT
@@ -108,6 +109,7 @@ public:
   }
 
 
+
   // Multi-level 1D wavelet reconstruction
   template< typename CoeffArrayType, typename SignalArrayType, typename DeviceTag >
   VTKM_CONT_EXPORT
@@ -121,7 +123,6 @@ public:
     vtkm::Id LLength = nLevels + 2;
     VTKM_ASSERT( vtkm::Id(L.size()) == LLength );
 
-    //vtkm::Id L1d[3] = {L[0], L[1], 0};
     std::vector<vtkm::Id> L1d(3, 0);  // three elements
     L1d[0] = L[0];
     L1d[1] = L[1];
@@ -145,7 +146,7 @@ public:
       // Make an output array
       OutArrayBasic output;
       
-      WaveletDWT::IDWT1D( input, L1d, output, false, DeviceTag() );
+      WaveletDWT::IDWT1D( input, L1d, output, DeviceTag() );
       VTKM_ASSERT( output.GetNumberOfValues() == L1d[2] );
 
       // Move output to intermediate array
@@ -157,6 +158,7 @@ public:
 
     return 0;
   }
+
 
 
   // Multi-level 2D wavelet decomposition
@@ -196,7 +198,7 @@ public:
     typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
 
     // First level transform operates writes to the output array
-    computationTime += WaveletDWT::DWT2Dv3( sigIn, 
+    computationTime += WaveletDWT::DWT2D  ( sigIn, 
                                             currentLenX,       currentLenY, 
                                             0,                 0,
                                             currentLenX,       currentLenY, 
@@ -208,11 +210,10 @@ public:
     // Successor transforms writes to a temporary array
     for( vtkm::Id i = nLevels-1; i > 0; i-- )
     {
-      //make temporary output array
       OutBasicArray tempOutput;
 
       computationTime +=
-      WaveletDWT::DWT2Dv3(  coeffOut, 
+      WaveletDWT::DWT2D  (  coeffOut, 
                             inX,              inY, 
                             0,                0,
                             currentLenX,      currentLenY, 
@@ -229,6 +230,7 @@ public:
 
     return computationTime;
   }
+
 
 
   // Multi-level 2D wavelet reconstruction
@@ -274,23 +276,17 @@ public:
     L2d[6]  =   L[6];   
     L2d[7]  =   L[7];   
     
-//Print2DArray("\noutBuffer before IDWT:", outBuffer, inX );
-
     // All transforms but the last operate on temporary arrays
     for( size_t i = 1; i < static_cast<size_t>(nLevels); i++ )
     {
       L2d[8] = L2d[0] + L2d[4];     // This is always true for Biorthogonal wavelets
       L2d[9] = L2d[1] + L2d[3];     // (same above)
 
-      // make input, output array
       OutBasicArray  tempOutput;
-      //WaveletBase::DeviceRectangleCopyFrom( tempInput, L2d[8], L2d[9],
-      //                                      outBuffer,  inX, inY, 0, 0, DeviceTag() );
 
       // IDWT
       computationTime +=
-      //WaveletDWT::IDWT2Dv3( tempInput, L2d, tempOutput, DeviceTag() );
-      WaveletDWT::IDWT2Dv3( outBuffer, inX, inY, 0, 0, L2d, tempOutput, DeviceTag() );
+      WaveletDWT::IDWT2D  ( outBuffer, inX, inY, 0, 0, L2d, tempOutput, DeviceTag() );
 
       // copy back reconstructed block
       WaveletBase::DeviceRectangleCopyTo( tempOutput, L2d[8], L2d[9],
@@ -306,17 +302,17 @@ public:
       L2d[6] = L[6*i+6];
       L2d[7] = L[6*i+7];
 
-//Print2DArray("\noutBuffer after one IDWT:", outBuffer, inX );
     }
 
-    // The last transform takes place in place 
+    // The last transform outputs to the final output
     L2d[8] = L2d[0] + L2d[4];
     L2d[9] = L2d[1] + L2d[3];
     computationTime += 
-    WaveletDWT::IDWT2Dv3( outBuffer, inX, inY, 0, 0, L2d, arrOut, DeviceTag() );
+    WaveletDWT::IDWT2D  ( outBuffer, inX, inY, 0, 0, L2d, arrOut, DeviceTag() );
 
     return computationTime;    
   }
+
 
 
   // Squash coefficients smaller than a threshold
@@ -348,6 +344,7 @@ public:
 
     return 0;
   }
+
 
 
   // Report statistics on reconstructed array
@@ -403,12 +400,12 @@ public:
               << ", after normalization  = " << errorMax / range << std::endl;
     std::cout << "RMSE                   = " << rmse 
               << ", after normalization  = " << rmse / range << std::endl;
-
     #undef MAKEVAL
     #undef VAL
 
     return 0;
   }
+
 
                       
   // Compute the book keeping array L for 1D wavelet decomposition
@@ -426,6 +423,9 @@ public:
       L[i]   = WaveletBase::GetDetailLength( L[i] );
     }
   }
+
+
+
   // Compute the book keeping array L for 2D wavelet decomposition
   void ComputeL2( vtkm::Id               inX,
                   vtkm::Id               inY,
@@ -458,6 +458,7 @@ public:
       L[ i*6 + 1 ] = WaveletBase::GetDetailLength( L[ i*6 + 1 ]);
     }
   }
+
 
 
   // Compute the length of coefficients for 1D transforms

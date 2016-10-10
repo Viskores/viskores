@@ -124,138 +124,29 @@ void FillArray2D( ArrayType& array, vtkm::Id dimX, vtkm::Id dimY )
 }
 
 
-void DebugDWTIDWT2D()
-{
-  vtkm::Id NX = 10;
-  vtkm::Id NY = 11;
-  typedef vtkm::cont::ArrayHandle< vtkm::Float64 >   ArrayType;
-  ArrayType     left, center, right;
-  
-  center.PrepareForOutput( NX * NY, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  for( vtkm::Id i = 0; i < NX*NY; i++ )
-    center.GetPortalControl().Set(i, i);
-
-  ArrayType output1, output2, output3;
-  std::vector<vtkm::Id> L(10, 0);
-
-  vtkm::worklet::wavelets::WaveletDWT dwt( vtkm::worklet::wavelets::HAAR );
-
-  // get true results
-  dwt.DWT2Dv2(center, NX, NY, output1, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-
-std::cerr << "...before DWT2Dv3..." << std::endl;
-  // get test results
-  dwt.DWT2Dv3( center, NX, NY, 0, 0, NX, NY, output3, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-std::cerr << "...finish DWT2Dv3..." << std::endl;
-
-  for( vtkm::Id i = 0; i < output1.GetNumberOfValues(); i++ )
-  {
-    VTKM_TEST_ASSERT( test_equal( output1.GetPortalConstControl().Get(i),
-                                  output3.GetPortalConstControl().Get(i)),
-                                  "WaveletCompressor worklet failed..." );
-  }
-  
-//  dwt.Print2DArray("\ntrue results after 2D DWT:", output1, NX );
-//  dwt.Print2DArray("\ntest results after 2D DWT:", output3, NX ); 
-
-  ArrayType   idwt_out1, idwt_out2;
-  
-  // true results go through IDWT
-  dwt.IDWT2Dv2( output1, L, idwt_out1, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  
-  // test results go through IDWT
-  dwt.IDWT2Dv3( output3, NX, NY, 0, 0, L, idwt_out2, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-
-std::cout << "\ntrue results after IDWT:" << std::endl;
-  for( vtkm::Id i = 0; i < idwt_out1.GetNumberOfValues(); i++ )
-  {
-    std::cout << idwt_out1.GetPortalConstControl().Get(i) << "  ";
-    if( i % NX == NX - 1 )
-      std::cout << std::endl;
-  }
-  
-std::cout << "\ntest results after IDWT:" << std::endl;
-  for( vtkm::Id i = 0; i < idwt_out2.GetNumberOfValues(); i++ )
-  {
-    std::cout << idwt_out2.GetPortalConstControl().Get(i) << "  ";
-    if( i % NX == NX - 1 )
-      std::cout << std::endl;
-  }
-}
-
-void DebugDWTIDWT1D()
-{
-  vtkm::Id sigLen = 21;
-  std::cout << "Testing Wavelets Worklet" << std::endl;
-  std::cout << "Input a size to test." << std::endl;
-  std::cin >> sigLen;
-
-  // make input data array handle
-  std::vector<vtkm::Float64> tmpVector;
-  for( vtkm::Id i = 0; i < sigLen; i++ )
-    tmpVector.push_back( static_cast<vtkm::Float64>( i ) );
-  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
-    vtkm::cont::make_ArrayHandle(tmpVector);
-
-  vtkm::cont::ArrayHandle<vtkm::Float64> coeffOut;
-  std::vector<vtkm::Id> L(3, 0);
-
-  // Forward Transform
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF8_4;
-  vtkm::worklet::wavelets::WaveletDWT waveletdwt( wname );
-  waveletdwt.DWT1D( inputArray, coeffOut, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-
-  std::cout << "Forward Wavelet Transform: result coeff length = " << 
-      coeffOut.GetNumberOfValues() << std::endl;
-
-  for( vtkm::Id i = 0; i < coeffOut.GetNumberOfValues(); i++ )
-  {
-    if( i == 0 )
-      std::cout << "  <-- cA --> " << std::endl;
-    else if( i == L[0] )
-      std::cout << "  <-- cD --> " << std::endl;
-    std::cout << coeffOut.GetPortalConstControl().Get(i) << std::endl;
-  }
-
-  // Inverse Transform
-  vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
-  waveletdwt.IDWT1D( coeffOut, L, reconstructArray, false, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  std::cout << "Inverse Wavelet Transform: result signal length = " << 
-      reconstructArray.GetNumberOfValues() << std::endl;
-  for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
-  {
-    std::cout << reconstructArray.GetPortalConstControl().Get(i) << std::endl;
-  }
-}
-
 
 void TestDecomposeReconstruct2D()
 {
-  std::cout << "Testing a 1000x1000 square: " << std::endl;
+  std::cout << "Testing 2D wavelet compressor on a 1000x1000 square: " << std::endl;
   vtkm::Id sigX = 1000;
   vtkm::Id sigY = 1000;
-  //std::cout << "Please input X to test a X^2 square: " << std::endl;
-  //std::cin >> sigX;
-  //sigY = sigX;
   vtkm::Id sigLen = sigX * sigY;
 
   // make input data array handle
   vtkm::cont::ArrayHandle<vtkm::Float64> inputArray;
   inputArray.PrepareForOutput( sigLen, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   FillArray2D( inputArray, sigX, sigY );
-  //for( vtkm::Id i = 0; i < sigLen; i++ )
-  //  inputArray.GetPortalControl().Set(i, (vtkm::Float64) i );
 
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
 
   // Use a WaveletCompressor
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF8_4;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  std::cout << "Wavelet kernel         = CDF 9/7" << std::endl;
   vtkm::worklet::WaveletCompressor compressor( wname );
 
   vtkm::Id XMaxLevel = compressor.GetWaveletMaxLevel( sigX );
   vtkm::Id YMaxLevel = compressor.GetWaveletMaxLevel( sigY );
   vtkm::Id nLevels   = vtkm::Min( XMaxLevel, YMaxLevel );
-  //nLevels = 1;
   std::cout << "Decomposition levels   = " << nLevels << std::endl;
   std::vector<vtkm::Id> L;
   vtkm::Float64 computationTime = 0.0;
@@ -271,11 +162,11 @@ void TestDecomposeReconstruct2D()
   std::cout << "  ->computation time   = " << computationTime << std::endl;
 
   // Squash small coefficients
-  timer.Reset();
-  vtkm::Float64 cratio = 1.0;
+  /* timer.Reset();
+  vtkm::Float64 cratio = 1.0;   // X:1 compression, where X >= 1
   compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   elapsedTime2 = timer.GetElapsedTime();  
-  std::cout << "Squash time            = " << elapsedTime2 << std::endl;
+  std::cout << "Squash time            = " << elapsedTime2 << std::endl; */
 
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
@@ -307,9 +198,9 @@ void TestDecomposeReconstruct2D()
 
 void TestDecomposeReconstruct1D()
 {
-  std::cout << "Testing WaveletCompressor on a 2 million sized array " << std::endl;
+  std::cout << "Testing 1D wavelet compressor  on a 1 million sized array " << std::endl;
   vtkm::Id million = 1000000;
-  vtkm::Id sigLen = million * 2;
+  vtkm::Id sigLen = million * 1;
 
   // make input data array handle
   std::vector<vtkm::Float64> tmpVector;
@@ -323,12 +214,14 @@ void TestDecomposeReconstruct1D()
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
 
   // Use a WaveletCompressor
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF8_4;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  std::cout << "Wavelet kernel         = CDF 9/7" << std::endl;
   vtkm::worklet::WaveletCompressor compressor( wname );
 
   // User maximum decompose levels, and no compression
   vtkm::Id maxLevel = compressor.GetWaveletMaxLevel( sigLen );
   vtkm::Id nLevels = maxLevel;
+  std::cout << "Decomposition levels   = " << nLevels << std::endl;
 
   std::vector<vtkm::Id> L;
 
@@ -361,10 +254,9 @@ void TestDecomposeReconstruct1D()
 
 void TestWaveletCompressor()
 {
-  //DebugDWTIDWT1D();
-  //TestDecomposeReconstruct1D();
+  TestDecomposeReconstruct1D();
+  std::cout << std::endl;
   TestDecomposeReconstruct2D();
-  //DebugDWTIDWT2D();
 }
 
 int UnitTestWaveletCompressor(int, char *[])
