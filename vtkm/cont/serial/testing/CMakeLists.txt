@@ -18,13 +18,12 @@
 ##  this software.
 ##============================================================================
 
-set(headers
-  BufferTypePicker.h
-  OpenGLHeaders.h
-  TransferToOpenGL.h
+set(unit_tests
+  UnitTestSerialArrayHandle.cxx
+  UnitTestSerialArrayHandleFancy.cxx
+  UnitTestSerialComputeRange.cxx
+  UnitTestSerialDataSetExplicit.cxx
+  UnitTestSerialDataSetSingleType.cxx
+  UnitTestSerialDeviceAdapter.cxx
   )
-
-#-----------------------------------------------------------------------------
-vtkm_declare_headers(${headers})
-
-add_subdirectory(testing)
+vtkm_unit_tests(TBB SOURCES ${unit_tests})

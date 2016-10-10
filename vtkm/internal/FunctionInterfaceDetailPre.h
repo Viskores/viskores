@@ -30,10 +30,9 @@
 #include <vtkm/Types.h>
 #include <vtkm/internal/IndexTag.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/function_types/function_type.hpp>
-#include <boost/mpl/at.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <type_traits>
+
+#include <vtkm/internal/brigand.hpp>
 
 #define VTKM_MAX_FUNCTION_PARAMETERS 10
 
@@ -48,13 +47,13 @@ namespace internal {
 template<typename T>
 struct FunctionInterfaceReturnContainer {
   T Value;
-  static const bool VALID = true;
+  static VTKM_CONSTEXPR bool VALID = true;
 };
 
 template<>
 struct FunctionInterfaceReturnContainer<void> {
   // Nothing to store for void return.
-  static const bool VALID = false;
+  static VTKM_CONSTEXPR bool VALID = false;
 };
 
 namespace detail {
@@ -223,11 +222,51 @@ struct ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> {
 
 
 //============================================================================
-template< typename FS, int Index>
-struct AtType
+template<typename> struct FunctionSigInfo;
+template<typename R, typename... ArgTypes>
+struct FunctionSigInfo<R(ArgTypes...)>
 {
-    typedef boost::function_types::components<FS> ParamterTypes;
-    typedef typename boost::mpl::at_c<ParamterTypes, Index>::type type;
+  static VTKM_CONSTEXPR std::size_t Arity = sizeof...(ArgTypes);
+  using ArityType = std::integral_constant<int, Arity>;
+
+  using ResultType = R;
+  using Components = brigand::list<R,ArgTypes...>;
+  using Parameters = brigand::list<ArgTypes...>;
+};
+
+template<int, typename> struct AtType;
+template<int Index, typename R, typename... ArgTypes>
+struct AtType<Index, R(ArgTypes...)>
+{
+  using type = brigand::at_c< brigand::list<R,ArgTypes...>, Index>;
+};
+
+template<typename Collection, typename NewType> struct AppendType;
+template<template<typename...> class L, typename T, typename NT, typename... U>
+struct AppendType<L<T, U...>, NT>
+{
+  typedef T type(U...,NT);
+};
+
+template<typename Collection> struct AsSigType;
+template<template<typename...> class L, typename T, typename... U>
+struct AsSigType< L<T, U...> >
+{
+  typedef T type(U...);
+};
+
+template< typename Components,
+          vtkm::IdComponent ParameterIndex,
+          typename NewType >
+class ReplaceType {
+  typedef std::integral_constant<std::size_t, (std::size_t)ParameterIndex> Index;
+  using split = brigand::split_at<Components, Index>;
+  using front = brigand::push_back< brigand::front<split>, NewType >;
+  using back  = brigand::pop_front< brigand::back<split> >;
+
+  using replaced = brigand::append< front, back >;
+public:
+  using type = typename AsSigType< replaced >::type;
 };
 
 
@@ -242,7 +281,7 @@ struct ParameterContainerAccess<1> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
-  const typename AtType<FunctionSignature, 1>::type &
+  const typename AtType<1, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter1;
   }
@@ -251,7 +290,7 @@ struct ParameterContainerAccess<1> {
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
-           const typename AtType<FunctionSignature, 1>::type &value) {
+           const typename AtType<1, FunctionSignature>::type &value) {
     parameters.Parameter1 = value;
   }
 };
@@ -262,7 +301,7 @@ struct ParameterContainerAccess<2> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
-  const typename AtType<FunctionSignature, 2>::type &
+  const typename AtType<2, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter2;
   }
@@ -271,7 +310,7 @@ struct ParameterContainerAccess<2> {
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
-           const typename AtType<FunctionSignature, 2>::type &value) {
+           const typename AtType<2, FunctionSignature>::type &value) {
     parameters.Parameter2 = value;
   }
 };
@@ -282,7 +321,7 @@ struct ParameterContainerAccess<3> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
-  const typename AtType<FunctionSignature, 3>::type &
+  const typename AtType<3, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter3;
   }
@@ -291,7 +330,7 @@ struct ParameterContainerAccess<3> {
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
-           const typename AtType<FunctionSignature, 3>::type &value) {
+           const typename AtType<3, FunctionSignature>::type &value) {
     parameters.Parameter3 = value;
   }
 };
@@ -302,7 +341,7 @@ struct ParameterContainerAccess<4> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
-  const typename AtType<FunctionSignature, 4>::type &
+  const typename AtType<4, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter4;
   }
@@ -311,7 +350,7 @@ struct ParameterContainerAccess<4> {
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
-           const typename AtType<FunctionSignature, 4>::type &value) {
+           const typename AtType<4, FunctionSignature>::type &value) {
     parameters.Parameter4 = value;
   }
 };
@@ -322,7 +361,7 @@ struct ParameterContainerAccess<5> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
-  const typename AtType<FunctionSignature, 5>::type &
+  const typename AtType<5, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter5;
   }
@@ -331,7 +370,7 @@ struct ParameterContainerAccess<5> {
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
-           const typename AtType<FunctionSignature, 5>::type &value) {
+           const typename AtType<5, FunctionSignature>::type &value) {
     parameters.Parameter5 = value;
   }
 };
@@ -342,7 +381,7 @@ struct ParameterContainerAccess<6> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
-  const typename AtType<FunctionSignature, 6>::type &
+  const typename AtType<6, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter6;
   }
@@ -351,7 +390,7 @@ struct ParameterContainerAccess<6> {
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
-           const typename AtType<FunctionSignature, 6>::type &value) {
+           const typename AtType<6, FunctionSignature>::type &value) {
     parameters.Parameter6 = value;
   }
 };
@@ -362,7 +401,7 @@ struct ParameterContainerAccess<7> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
-  const typename AtType<FunctionSignature, 7>::type &
+  const typename AtType<7, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter7;
   }
@@ -371,7 +410,7 @@ struct ParameterContainerAccess<7> {
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
-           const typename AtType<FunctionSignature, 7>::type &value) {
+           const typename AtType<7, FunctionSignature>::type &value) {
     parameters.Parameter7 = value;
   }
 };
@@ -382,7 +421,7 @@ struct ParameterContainerAccess<8> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
-  const typename AtType<FunctionSignature, 8>::type &
+  const typename AtType<8, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter8;
   }
@@ -391,7 +430,7 @@ struct ParameterContainerAccess<8> {
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
-           const typename AtType<FunctionSignature, 8>::type &value) {
+           const typename AtType<8, FunctionSignature>::type &value) {
     parameters.Parameter8 = value;
   }
 };
@@ -402,7 +441,7 @@ struct ParameterContainerAccess<9> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
-  const typename AtType<FunctionSignature, 9>::type &
+  const typename AtType<9, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter9;
   }
@@ -411,7 +450,7 @@ struct ParameterContainerAccess<9> {
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
-           const typename AtType<FunctionSignature, 9>::type &value) {
+           const typename AtType<9, FunctionSignature>::type &value) {
     parameters.Parameter9 = value;
   }
 };
@@ -422,7 +461,7 @@ struct ParameterContainerAccess<10> {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
-  const typename AtType<FunctionSignature, 10>::type &
+  const typename AtType<10, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter10;
   }
@@ -431,7 +470,7 @@ struct ParameterContainerAccess<10> {
   template<typename FunctionSignature>
   VTKM_EXEC_CONT_EXPORT
   void Set(ParameterContainer<FunctionSignature> &parameters,
-           const typename AtType<FunctionSignature, 10>::type &value) {
+           const typename AtType<10, FunctionSignature>::type &value) {
     parameters.Parameter10 = value;
   }
 };

@@ -128,7 +128,7 @@ struct DeviceAdapterTagCheck
 //-----------------------------------------------------------------------------
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_SERIAL
 
-#include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
+#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 #define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagSerial
 
 #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA

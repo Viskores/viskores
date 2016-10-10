@@ -566,7 +566,7 @@ class DeviceAdapterAtomicArrayImplementation;
 // need.
 
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_SERIAL
-#include <vtkm/cont/internal/DeviceAdapterAlgorithmSerial.h>
+#include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
 #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
 #include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmCuda.h>
 // #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP

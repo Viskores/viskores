@@ -17,18 +17,14 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
-// Make sure that the tested code is using the device adapter specified. This
-// is important in the long run so we don't, for example, use the CUDA device
-// for a part of an operation where the TBB device was specified.
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
-
-#include <vtkm/cont/DeviceAdapterSerial.h>
-
+#include <vtkm/cont/cuda/internal/testing/Testing.h>
 #include <vtkm/cont/testing/TestingComputeRange.h>
 
-int UnitTestComputeRangeSerial(int, char *[])
+int UnitTestCudaComputeRange(int, char *[])
 {
-  return vtkm::cont::testing::TestingComputeRange
-      <vtkm::cont::DeviceAdapterTagSerial>::Run();
+  int result = vtkm::cont::testing::TestingComputeRange
+      <vtkm::cont::DeviceAdapterTagCuda>::Run();
+  return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

@@ -132,7 +132,7 @@ public:
   ///
   template <class IteratorTypeControl>
   VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const;
-  
+
   /// \brief Reduces the size of the array without changing its values.
   ///
   /// This method allows you to resize the array without reallocating it. The
@@ -166,7 +166,7 @@ public:
 // need.
 
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_SERIAL
-#include <vtkm/cont/internal/ArrayManagerExecutionSerial.h>
+#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
 #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 // #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP

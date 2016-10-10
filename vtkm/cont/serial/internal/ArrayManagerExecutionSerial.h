@@ -17,12 +17,12 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_internal_ArrayManagerExecutionSerial_h
-#define vtk_m_cont_internal_ArrayManagerExecutionSerial_h
+#ifndef vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_h
+#define vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_h
 
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/internal/ArrayManagerExecutionShareWithControl.h>
-#include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
+#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 
 namespace vtkm {
 namespace cont {
@@ -49,4 +49,4 @@ public:
 }
 } // namespace vtkm::cont::internal
 
-#endif //vtk_m_cont_internal_ArrayManagerExecutionSerial_h
+#endif //vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_h

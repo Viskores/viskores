@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/exec/ConnectivityStructured.h>
 

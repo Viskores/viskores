@@ -27,18 +27,13 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 #include <ctime>
-
+#include <random>
 #include <vector>
 
 namespace DataSetBuilderRectilinearNamespace {
 
-boost::mt19937 g_RandomGenerator;
+std::mt19937 g_RandomGenerator;
 
 typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DFA;
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
@@ -114,10 +109,8 @@ RectilinearTests()
   vtkm::cont::DataSetBuilderRectilinear dataSetBuilder;
   vtkm::cont::DataSet dataSet;
 
-  boost::random::uniform_int_distribution<vtkm::Id>
-      randomDim(2, MAX_DIM_SIZE);
-  boost::random::uniform_int_distribution<vtkm::IdComponent>
-      randomFill(0, NUM_FILL_METHODS-1);
+  std::uniform_int_distribution<vtkm::Id> randomDim(2,MAX_DIM_SIZE);
+  std::uniform_int_distribution<vtkm::IdComponent> randomFill(0,NUM_FILL_METHODS-1);
 
   for (vtkm::Id trial = 0; trial < NUM_TRIALS; trial++)
   {
