@@ -91,6 +91,7 @@ public:
       pretendX5 = x1;
       pretendY5 = ya + yd;
     }
+    (void)y5;
   }
 
   VTKM_EXEC_CONT_EXPORT
@@ -201,7 +202,10 @@ public:
                             startX2( startx_2 ),        startY2( starty_2 ),
                             pretendDimX2( pretendx_2 ), pretendDimY2( pretendy_2 ),
                             dimX3(x_3),                 dimY3(y_3), 
-                            mode_lr(mode)  { }
+                            mode_lr(mode)  
+  { 
+    (void)dimY2;
+  }
 
   VTKM_EXEC_CONT_EXPORT
   void Translate2Dto1D( vtkm::Id  inX,  vtkm::Id  inY,         // 2D indices as input
@@ -451,7 +455,10 @@ public:
                         sigDimX( sigdimX ),           sigDimY( sigdimY ), 
                         sigStartX( sigstartX ),       sigStartY( sigstartY ), 
                         sigPretendDimX( sigpretendX ), sigPretendDimY( sigpretendY ), 
-                        mode(m), direction( dir ), padZero( pad_zero )  {}
+                        mode(m), direction( dir ), padZero( pad_zero )  
+  {
+    (void)sigDimY;
+  }
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT
@@ -531,7 +538,7 @@ public:
 
 private:
   const vtkm::Id              extDimX, extDimY, sigDimX, sigDimY;
-  const vtkm::Id              sigPretendDimX, sigPretendDimY, sigStartX, sigStartY;
+  const vtkm::Id              sigStartX, sigStartY, sigPretendDimX, sigPretendDimY;
   const DWTMode               mode;
   const ExtensionDirection2D  direction;
   const bool                  padZero;  // treat sigIn as having a column/row zeros
@@ -730,7 +737,6 @@ public:
     vtkm::Id workX, workY;
     vtkm::Id k1, k2, xi, yi, inputMatrix, inputIdx; 
     Output1Dto2D( workIdx, workX, workY );
-    bool print = false;
 
     // left-right, odd filter
     if( modeLR && (filterLen % 2 != 0) )
@@ -1430,7 +1436,10 @@ public:
   // Constructor
   VTKM_EXEC_CONT_EXPORT
   AssignZero2DWorklet( vtkm::Id x, vtkm::Id y, vtkm::Id zero_x, vtkm::Id zero_y )
-        : dimX( x ), dimY( y ), zeroX( zero_x ), zeroY( zero_y )  { }
+        : dimX( x ), dimY( y ), zeroX( zero_x ), zeroY( zero_y )  
+  { 
+    (void) dimY;
+  }
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT

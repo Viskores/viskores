@@ -162,11 +162,11 @@ void TestDecomposeReconstruct2D()
   std::cout << "  ->computation time   = " << computationTime << std::endl;
 
   // Squash small coefficients
-  /* timer.Reset();
+  timer.Reset();
   vtkm::Float64 cratio = 1.0;   // X:1 compression, where X >= 1
   compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   elapsedTime2 = timer.GetElapsedTime();  
-  std::cout << "Squash time            = " << elapsedTime2 << std::endl; */
+  std::cout << "Squash time            = " << elapsedTime2 << std::endl;
 
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
