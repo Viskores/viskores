@@ -944,8 +944,6 @@ public:
       cDPadLen = cADimX;
     cAExtendedDimX = cADimX + 2 * addLen;
     cDExtendedDimX = cAExtendedDimX;
-    typedef vtkm::cont::ArrayHandle<typename ArrayInType::ValueType>
-            BasicArrayType;
 
     // extend cA
     vtkm::Id cADimY = inPretendDimY;
@@ -1049,8 +1047,6 @@ public:
       cDPadLen = cADimY;
     cAExtendedDimY = cADimY + 2 * addLen;
     cDExtendedDimY = cAExtendedDimY;
-    typedef vtkm::cont::ArrayHandle<typename ArrayInType::ValueType>
-            BasicArrayType;
 
     // extend cA
     vtkm::Id cADimX    = inPretendDimX;
