@@ -91,7 +91,7 @@ static int vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug()
   { return static_cast<int>(pthread_self()); }
 #endif
 
-int UnitTestTransferGLUT(int argc, char **argv)
+int UnitTestTransferGLUT(int argc, char *argv[])
 {
   //get glut to construct a context for us
   glutInit(&argc, argv);
