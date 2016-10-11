@@ -141,9 +141,8 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  void Allocate( vtkm::Id numberOfValues )
+  void Allocate( vtkm::Id vtkmNotUsed(numberOfValues) )
   {
-    (void)numberOfValues;   // dummy statement to avoid a warning
     throw vtkm::cont::ErrorControlInternal(
           "ArrayHandleConcatenate should not be allocated explicitly. " );
   }
@@ -240,9 +239,8 @@ public:
   }
 
   VTKM_CONT_EXPORT
-  PortalExecution PrepareForOutput( vtkm::Id numberOfValues )
+  PortalExecution PrepareForOutput( vtkm::Id vtkmNotUsed(numberOfValues) )
   {
-    (void)numberOfValues;   // dummy statement to avoid a warning
     throw vtkm::cont::ErrorControlInternal(
           "ArrayHandleConcatenate is derived and read-only. " );
   }

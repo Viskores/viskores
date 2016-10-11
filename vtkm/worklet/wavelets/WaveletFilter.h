@@ -49,48 +49,48 @@ class WaveletFilter
 {
 public:
   // constructor
-  WaveletFilter( WaveletName wtype ) : symmetricity(true),
-                                       filterLength(0),
-                                       lowDecomposeFilter(nullptr),
-                                       highDecomposeFilter(nullptr),
-                                       lowReconstructFilter(nullptr),
-                                       highReconstructFilter(nullptr)
+  WaveletFilter( WaveletName wtype ) : Symmetricity(true),
+                                       FilterLength(0),
+                                       LowDecomposeFilter(nullptr),
+                                       HighDecomposeFilter(nullptr),
+                                       LowReconstructFilter(nullptr),
+                                       HighReconstructFilter(nullptr)
   {
     if( wtype == CDF9_7 || wtype == BIOR4_4 )
     {
-      this->filterLength = 9;
+      this->FilterLength = 9;
       this->AllocateFilterMemory();
-      this->wrev( vtkm::worklet::wavelets::hm4_44,      lowDecomposeFilter,     filterLength );
-      this->qmf_wrev( vtkm::worklet::wavelets::h4,      highDecomposeFilter,    filterLength );
-      this->verbatim_copy( vtkm::worklet::wavelets::h4, lowReconstructFilter,   filterLength );
-      this->qmf_even( vtkm::worklet::wavelets::hm4_44,  highReconstructFilter,  filterLength );
+      this->wrev( vtkm::worklet::wavelets::hm4_44,      LowDecomposeFilter,     FilterLength );
+      this->qmf_wrev( vtkm::worklet::wavelets::h4,      HighDecomposeFilter,    FilterLength );
+      this->verbatim_copy( vtkm::worklet::wavelets::h4, LowReconstructFilter,   FilterLength );
+      this->qmf_even( vtkm::worklet::wavelets::hm4_44,  HighReconstructFilter,  FilterLength );
     }
     else if( wtype == CDF8_4 || wtype == BIOR3_3 )
     {
-      this->filterLength = 8;
+      this->FilterLength = 8;
       this->AllocateFilterMemory();
-      this->wrev( vtkm::worklet::wavelets::hm3_33,         lowDecomposeFilter,    filterLength );
-      this->qmf_wrev( vtkm::worklet::wavelets::h3+6,       highDecomposeFilter,   filterLength );
-      this->verbatim_copy( vtkm::worklet::wavelets::h3+6,  lowReconstructFilter,  filterLength );
-      this->qmf_even( vtkm::worklet::wavelets::hm3_33,     highReconstructFilter, filterLength );
+      this->wrev( vtkm::worklet::wavelets::hm3_33,         LowDecomposeFilter,    FilterLength );
+      this->qmf_wrev( vtkm::worklet::wavelets::h3+6,       HighDecomposeFilter,   FilterLength );
+      this->verbatim_copy( vtkm::worklet::wavelets::h3+6,  LowReconstructFilter,  FilterLength );
+      this->qmf_even( vtkm::worklet::wavelets::hm3_33,     HighReconstructFilter, FilterLength );
     }
     else if( wtype == CDF5_3 || wtype == BIOR2_2 )
     {
-      this->filterLength = 5;
+      this->FilterLength = 5;
       this->AllocateFilterMemory();
-      this->wrev( vtkm::worklet::wavelets::hm2_22,         lowDecomposeFilter,    filterLength );
-      this->qmf_wrev( vtkm::worklet::wavelets::h2+6,       highDecomposeFilter,   filterLength );
-      this->verbatim_copy( vtkm::worklet::wavelets::h2+6,  lowReconstructFilter,  filterLength );
-      this->qmf_even( vtkm::worklet::wavelets::hm2_22,     highReconstructFilter, filterLength );
+      this->wrev( vtkm::worklet::wavelets::hm2_22,         LowDecomposeFilter,    FilterLength );
+      this->qmf_wrev( vtkm::worklet::wavelets::h2+6,       HighDecomposeFilter,   FilterLength );
+      this->verbatim_copy( vtkm::worklet::wavelets::h2+6,  LowReconstructFilter,  FilterLength );
+      this->qmf_even( vtkm::worklet::wavelets::hm2_22,     HighReconstructFilter, FilterLength );
     }
     else if( wtype == HAAR || wtype == BIOR1_1 )
     {
-      this->filterLength = 2;
+      this->FilterLength = 2;
       this->AllocateFilterMemory();
-      this->wrev( vtkm::worklet::wavelets::hm1_11,         lowDecomposeFilter,    filterLength );
-      this->qmf_wrev( vtkm::worklet::wavelets::h1+4,       highDecomposeFilter,   filterLength );
-      this->verbatim_copy( vtkm::worklet::wavelets::h1+4,  lowReconstructFilter,  filterLength );
-      this->qmf_even( vtkm::worklet::wavelets::hm1_11,     highReconstructFilter, filterLength );
+      this->wrev( vtkm::worklet::wavelets::hm1_11,         LowDecomposeFilter,    FilterLength );
+      this->qmf_wrev( vtkm::worklet::wavelets::h1+4,       HighDecomposeFilter,   FilterLength );
+      this->verbatim_copy( vtkm::worklet::wavelets::h1+4,  LowReconstructFilter,  FilterLength );
+      this->qmf_even( vtkm::worklet::wavelets::hm1_11,     HighReconstructFilter, FilterLength );
     }
     this->MakeArrayHandles();
   }
@@ -98,62 +98,62 @@ public:
   // destructor
   virtual ~WaveletFilter()
   {
-    if(  lowDecomposeFilter )
+    if(  LowDecomposeFilter )
     {
-      delete[] lowDecomposeFilter;
-      lowDecomposeFilter    = highDecomposeFilter =
-      lowReconstructFilter  = highReconstructFilter =  nullptr ;
+      delete[] LowDecomposeFilter;
+      LowDecomposeFilter    = HighDecomposeFilter =
+      LowReconstructFilter  = HighReconstructFilter =  nullptr ;
     }
   }
 
-  vtkm::Id GetFilterLength()    { return filterLength; }
-  bool     isSymmetric()        { return symmetricity; }
+  vtkm::Id GetFilterLength()    { return this->FilterLength; }
+  bool     isSymmetric()        { return this->Symmetricity; }
 
   typedef vtkm::cont::ArrayHandle<vtkm::Float64> FilterType;
 
   const FilterType& GetLowDecomposeFilter() const
   {
-    return lowDecomType;
+    return this->LowDecomType;
   }
   const FilterType& GetHighDecomposeFilter() const
   {
-    return highDecomType;
+    return this->HighDecomType;
   }
   const FilterType& GetLowReconstructFilter() const
   {
-    return lowReconType;
+    return this->LowReconType;
   }
   const FilterType& GetHighReconstructFilter() const
   {
-    return highReconType;
+    return this->HighReconType;
   }
 
 private:
-  bool              symmetricity;
-  vtkm::Id          filterLength;
-  vtkm::Float64*    lowDecomposeFilter;
-  vtkm::Float64*    highDecomposeFilter;
-  vtkm::Float64*    lowReconstructFilter;
-  vtkm::Float64*    highReconstructFilter;
-  FilterType        lowDecomType;
-  FilterType        highDecomType;
-  FilterType        lowReconType;
-  FilterType        highReconType;
+  bool              Symmetricity;
+  vtkm::Id          FilterLength;
+  vtkm::Float64*    LowDecomposeFilter;
+  vtkm::Float64*    HighDecomposeFilter;
+  vtkm::Float64*    LowReconstructFilter;
+  vtkm::Float64*    HighReconstructFilter;
+  FilterType        LowDecomType;
+  FilterType        HighDecomType;
+  FilterType        LowReconType;
+  FilterType        HighReconType;
 
   void AllocateFilterMemory()
   {
-    lowDecomposeFilter    = new vtkm::Float64[ filterLength * 4 ];
-    highDecomposeFilter   = lowDecomposeFilter    + filterLength;
-    lowReconstructFilter  = highDecomposeFilter   + filterLength;
-    highReconstructFilter = lowReconstructFilter  + filterLength;
+    LowDecomposeFilter    = new vtkm::Float64[ FilterLength * 4 ];
+    HighDecomposeFilter   = LowDecomposeFilter    + FilterLength;
+    LowReconstructFilter  = HighDecomposeFilter   + FilterLength;
+    HighReconstructFilter = LowReconstructFilter  + FilterLength;
   }
 
   void MakeArrayHandles()
   {
-    lowDecomType    = vtkm::cont::make_ArrayHandle( lowDecomposeFilter, filterLength );
-    highDecomType   = vtkm::cont::make_ArrayHandle( highDecomposeFilter, filterLength );
-    lowReconType    = vtkm::cont::make_ArrayHandle( lowReconstructFilter, filterLength);
-    highReconType   = vtkm::cont::make_ArrayHandle( highReconstructFilter, filterLength );
+    LowDecomType    = vtkm::cont::make_ArrayHandle( LowDecomposeFilter, FilterLength );
+    HighDecomType   = vtkm::cont::make_ArrayHandle( HighDecomposeFilter, FilterLength );
+    LowReconType    = vtkm::cont::make_ArrayHandle( LowReconstructFilter, FilterLength);
+    HighReconType   = vtkm::cont::make_ArrayHandle( HighReconstructFilter, FilterLength );
   }
 
   // Flipping operation; helper function to initialize a filter.
