@@ -189,7 +189,7 @@ void TestDecomposeReconstruct2D()
   {
     VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i),
                                   inputArray.GetPortalConstControl().Get(i) ),
-                                  "output value not the same..." );
+                      "WaveletCompressor 2D failed..." );
   }
   elapsedTime1 = timer.GetElapsedTime();  
   std::cout << "Verification time      = " << elapsedTime1 << std::endl;
@@ -246,7 +246,7 @@ void TestDecomposeReconstruct1D()
   {
     VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i), 
                                   inputArray.GetPortalConstControl().Get(i)),
-                      "WaveletCompressor worklet failed..." );
+                      "WaveletCompressor 1D failed..." );
   }
   elapsedTime = timer.GetElapsedTime();  
   std::cout << "Verification time      = " << elapsedTime << std::endl;
