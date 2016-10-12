@@ -29,7 +29,7 @@
 
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/testing/Testing.h>

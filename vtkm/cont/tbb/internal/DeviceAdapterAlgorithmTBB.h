@@ -39,8 +39,15 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 // define NOMINMAX to fix that problem. We also include WIN32_LEAN_AND_MEAN
 // to reduce the number of macros and objects windows.h imports as those also
 // can cause conflicts
+// TBB's header include a #pragma comment(lib,"tbb.lib") line to make all
+// consuming
+
+#pragma push_macro("WIN32_LEAN_AND_MEAN")
+#pragma push_macro("NOMINMAX")
+#pragma push_macro("__TBB_NO_IMPLICITLINKAGE")
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+#define __TBB_NO_IMPLICIT_LINKAGE
 #endif
 
 #include <tbb/tbb_stddef.h>
@@ -62,8 +69,9 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 
 #if defined(VTKM_MSVC)
 #include <Windows.h>
-#undef WIN32_LEAN_AND_MEAN
-#undef NOMINMAX
+#pragma pop_macro("WIN32_LEAN_AND_MEAN")
+#pragma pop_macro("NOMINMAX")
+#pragma pop_macro("__TBB_NO_IMPLICITLINKAGE")
 #endif
 
 VTKM_THIRDPARTY_POST_INCLUDE

@@ -24,7 +24,7 @@
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/DeviceAdapter.h>
 
-#include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 

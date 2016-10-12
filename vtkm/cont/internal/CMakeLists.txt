@@ -21,17 +21,14 @@
 set(headers
   ArrayHandleExecutionManager.h
   ArrayManagerExecution.h
-  ArrayManagerExecutionSerial.h
   ArrayManagerExecutionShareWithControl.h
   ArrayPortalFromIterators.h
   ArrayPortalShrink.h
   ArrayTransfer.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
-  DeviceAdapterAlgorithmSerial.h
   DeviceAdapterError.h
   DeviceAdapterTag.h
-  DeviceAdapterTagSerial.h
   DynamicTransform.h
   FunctorsGeneral.h
   IteratorFromArrayPortal.h

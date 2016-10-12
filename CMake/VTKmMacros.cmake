@@ -246,21 +246,6 @@ function(vtkm_unit_tests)
     ${ARGN}
     )
 
-  #set up what we possibly need to link too.
-  list(APPEND VTKm_UT_LIBRARIES ${VTKm_LIBRARIES})
-  #set up storage for the include dirs
-  set(VTKm_UT_INCLUDE_DIRS )
-
-  if(VTKm_ENABLE_OPENGL_INTEROP)
-    list(APPEND VTKm_UT_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR} ${GLFW_INCLUDE_DIR} )
-    list(APPEND VTKm_UT_LIBRARIES ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
-  endif()
-
-  if(VTKm_ENABLE_OPENGL_TESTS)
-    list(APPEND VTKm_INCLUDE_DIRS ${GLUT_INCLUDE_DIR} )
-    list(APPEND VTKm_LIBRARIES ${GLUT_LIBRARIES}  )
-  endif()
-
   if (VTKm_ENABLE_TESTING)
     vtkm_get_kit_name(kit)
     #we use UnitTests_ so that it is an unique key to exclude from coverage
@@ -594,7 +579,6 @@ function(vtkm_wrap_sources_for_cuda cuda_source_list_var)
   set(${cuda_source_list_var} ${cuda_sources} PARENT_SCOPE)
 endfunction(vtkm_wrap_sources_for_cuda)
 
-set(VTKM_HAS_AT_LEAST_ONE_LIBRARY FALSE CACHE INTERNAL "" FORCE)
 # Add a VTK-m library. The name of the library will match the "kit" name
 # (e.g. vtkm_rendering) unless the NAME argument is given.
 #
@@ -686,7 +670,6 @@ function(vtkm_library)
   vtkm_install_headers("${dir_prefix}"
     ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
     )
-  set(VTKM_HAS_AT_LEAST_ONE_LIBRARY TRUE CACHE INTERNAL "" FORCE)
 endfunction(vtkm_library)
 
 # The Thrust project is not as careful as the VTKm project in avoiding warnings

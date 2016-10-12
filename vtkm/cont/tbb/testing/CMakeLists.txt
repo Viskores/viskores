@@ -19,11 +19,11 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestComputeRangeTBB.cxx
-  UnitTestDataSetExplicitTBB.cxx
-  UnitTestDataSetSingleTypeTBB.cxx
-  UnitTestDeviceAdapterTBB.cxx
   UnitTestTBBArrayHandle.cxx
   UnitTestTBBArrayHandleFancy.cxx
+  UnitTestTBBComputeRange.cxx
+  UnitTestTBBDataSetExplicit.cxx
+  UnitTestTBBDataSetSingleType.cxx
+  UnitTestTBBDeviceAdapter.cxx
   )
 vtkm_unit_tests(TBB SOURCES ${unit_tests})
