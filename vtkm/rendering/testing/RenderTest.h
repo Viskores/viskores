@@ -97,7 +97,6 @@ Render(const vtkm::cont::DataSet &ds,
     Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 
-
 }}} // namespace vtkm::rendering::testing
 
 #endif //vtk_m_rendering_testing_RenderTest_h
