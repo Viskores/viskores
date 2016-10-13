@@ -91,6 +91,7 @@ public:
       pretendX5 = x1;
       pretendY5 = ya + yd;
     }
+    (void)y5;
   }
 
   VTKM_EXEC_CONT_EXPORT
@@ -202,7 +203,7 @@ public:
                             pretendDimX2( pretendx_2 ), pretendDimY2( pretendy_2 ),
                             dimX3(x_3),                 dimY3(y_3), 
                             mode_lr(mode)  
-  { }
+  { (void)dimY2; }
 
   VTKM_EXEC_CONT_EXPORT
   void Translate2Dto1D( vtkm::Id  inX,  vtkm::Id  inY,         // 2D indices as input
@@ -453,7 +454,7 @@ public:
                         sigStartX( sigstartX ),       sigStartY( sigstartY ), 
                         sigPretendDimX( sigpretendX ), sigPretendDimY( sigpretendY ), 
                         mode(m), direction( dir ), padZero( pad_zero )  
-  { }
+  { (void)sigDimY; }
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT
@@ -1432,7 +1433,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   AssignZero2DWorklet( vtkm::Id x, vtkm::Id y, vtkm::Id zero_x, vtkm::Id zero_y )
         : dimX( x ), dimY( y ), zeroX( zero_x ), zeroY( zero_y )  
-  { }
+  { (void)dimY; }
 
   // Index translation helper
   VTKM_EXEC_CONT_EXPORT

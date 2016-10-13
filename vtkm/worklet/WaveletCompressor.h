@@ -23,12 +23,6 @@
 
 #include <vtkm/worklet/wavelets/WaveletDWT.h>
 
-//#include <vtkm/cont/ArrayHandleConcatenate.h>
-//#include <vtkm/cont/ArrayHandleCounting.h>
-//#include <vtkm/cont/ArrayHandlePermutation.h>
-
-//#include <vtkm/Math.h>
-
 namespace vtkm {
 namespace worklet {
 
