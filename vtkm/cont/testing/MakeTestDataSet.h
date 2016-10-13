@@ -35,6 +35,9 @@ namespace testing {
 class MakeTestDataSet
 {
 public:
+    // 1D uniform datasets.
+    vtkm::cont::DataSet Make1DUniformDataSet0();
+    
     // 2D uniform datasets.
     vtkm::cont::DataSet Make2DUniformDataSet0();
 
@@ -58,6 +61,28 @@ public:
     vtkm::cont::DataSet Make3DExplicitDataSet4();
     vtkm::cont::DataSet Make3DExplicitDataSetCowNose();
 };
+
+//Make a simple 1D dataset.
+
+inline vtkm::cont::DataSet
+MakeTestDataSet::Make1DUniformDataSet0()
+{
+    vtkm::cont::DataSetBuilderUniform dsb;
+    vtkm::Id dimension = 6;
+    vtkm::cont::DataSet dataSet = dsb.Create(dimension);
+
+    vtkm::cont::DataSetFieldAdd dsf;
+    const vtkm::Id nVerts = 6;
+    vtkm::Float32 var[nVerts] = {10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f};
+
+    dsf.AddPointField(dataSet, "pointvar", var, nVerts);
+
+    const vtkm::Id nCells = 6;
+    vtkm::Float32 cellvar[nCells] = {100.1f, 200.1f, 300.1f, 400.1f, 500.1f};
+    dsf.AddCellField(dataSet, "cellvar", cellvar, nCells, "cells");
+
+    return dataSet;
+}    
 
 
 //Make a simple 2D, 2 cell uniform dataset.

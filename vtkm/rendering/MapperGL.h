@@ -56,6 +56,12 @@ public:
 
   VTKM_RENDERING_EXPORT
   vtkm::rendering::Mapper *NewCopy() const VTKM_OVERRIDE;
+
+
+  GLuint shader_programme;
+  GLfloat mvMat[16], pMat[16];
+  bool loaded;
+  GLuint vao;
 };
 
 }} //namespace vtkm::rendering

@@ -54,5 +54,5 @@ void RenderTests()
 
 int UnitTestMapperEGL(int, char *[])
 {
-    return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests);
 }

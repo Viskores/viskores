@@ -136,12 +136,21 @@ RectilinearTests()
     FillArray(yCoordinates, dimensions[1], fillMethodY);
     FillArray(zCoordinates, dimensions[2], fillMethodZ);
 
+    vtkm::Id numPoints, numCells;
+    vtkm::Bounds bounds(0,0, 0,0, 0,0);
+
+    std::cout << "1D cases" << std::endl;
+    numPoints = dimensions[0];
+    numCells = dimensions[0]-1;
+    bounds.X = vtkm::Range(xCoordinates.front(), xCoordinates.back());
+    std::cout << "  Create with std::vector" << std::endl;
+    dataSet = dataSetBuilder.Create(xCoordinates);
+    ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
+
     std::cout << "2D cases" << std::endl;
-    vtkm::Id numPoints = dimensions[0]*dimensions[1];
-    vtkm::Id numCells = (dimensions[0]-1)*(dimensions[1]-1);
-    vtkm::Bounds bounds(xCoordinates.front(), xCoordinates.back(),
-                        yCoordinates.front(), yCoordinates.back(),
-                        0.0, 0.0);
+    numPoints = dimensions[0]*dimensions[1];
+    numCells = (dimensions[0]-1)*(dimensions[1]-1);
+    bounds.Y = vtkm::Range(yCoordinates.front(), yCoordinates.back());
 
     std::cout << "  Create with std::vector" << std::endl;
     dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates);

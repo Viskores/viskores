@@ -25,6 +25,7 @@
 #include <vtkm/rendering/View3D.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/rendering/testing/RenderTest.h>
 
 namespace {
 
@@ -67,7 +68,6 @@ void Render(const vtkm::cont::DataSet &ds,
                                           vtkm::rendering::ColorTable(ctName)));
 
     vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
-
     view.Initialize();
     view.Paint();
     view.SaveAs(outputFile);
@@ -75,8 +75,8 @@ void Render(const vtkm::cont::DataSet &ds,
 
 void RenderTests()
 {
-    vtkm::cont::testing::MakeTestDataSet maker;
 
+    vtkm::cont::testing::MakeTestDataSet maker;
     //3D tests.
     Render(maker.Make3DRegularDataSet0(),
              "pointvar", "thermal", "reg3D.pnm");
@@ -85,9 +85,9 @@ void RenderTests()
     Render(maker.Make3DExplicitDataSet4(),
              "pointvar", "thermal", "expl3D.pnm");
 }
-
+    
 } //namespace
 int UnitTestMapperRayTracer(int, char *[])
 {
-    return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests);
 }
