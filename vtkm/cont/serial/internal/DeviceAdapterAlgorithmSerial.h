@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_internal_DeviceAdapterAlgorithmSerial_h
-#define vtk_m_cont_internal_DeviceAdapterAlgorithmSerial_h
+#ifndef vtk_m_cont_serial_internal_DeviceAdapterAlgorithmSerial_h
+#define vtk_m_cont_serial_internal_DeviceAdapterAlgorithmSerial_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleZip.h>
@@ -26,7 +26,7 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
-#include <vtkm/cont/internal/DeviceAdapterTagSerial.h>
+#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 
 #include <vtkm/BinaryOperators.h>
 
@@ -265,8 +265,7 @@ private:
 
 public:
   template<class Functor>
-  VTKM_CONT_EXPORT static void Schedule(Functor functor,
-                                        vtkm::Id numInstances)
+  VTKM_CONT_EXPORT static void Schedule(Functor functor, vtkm::Id numInstances)
   {
     const vtkm::Id MESSAGE_SIZE = 1024;
     char errorString[MESSAGE_SIZE];
@@ -293,7 +292,6 @@ VTKM_VECTORIZATION_IN_LOOP
     }
   }
 
-public:
   template<class Functor>
   VTKM_CONT_EXPORT
   static void Schedule(Functor functor, vtkm::Id3 rangeMax)
@@ -307,7 +305,6 @@ public:
     functor.SetErrorMessageBuffer(errorMessage);
 
     DeviceAdapterAlgorithm<Device>::ScheduleKernel<Functor> kernel(functor);
-
     for(vtkm::Id k=0; k < rangeMax[2]; ++k)
       {
       for(vtkm::Id j=0; j < rangeMax[1]; ++j)
@@ -444,4 +441,4 @@ public:
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_cont_internal_DeviceAdapterAlgorithmSerial_h
+#endif //vtk_m_cont_serial_internal_DeviceAdapterAlgorithmSerial_h

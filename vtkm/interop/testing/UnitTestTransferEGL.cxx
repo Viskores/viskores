@@ -17,11 +17,24 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_internal_DeviceAdapterTagSerial_h
-#define vtk_m_cont_internal_DeviceAdapterTagSerial_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
 
-VTKM_VALID_DEVICE_ADAPTER(Serial, VTKM_DEVICE_ADAPTER_SERIAL);
+//This sets up testing with the default device adapter and array container
 
-#endif //vtk_m_cont_internal_DeviceAdapterTagSerial_h
+#include <vtkm/rendering/CanvasEGL.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/interop/testing/TestingOpenGLInterop.h>
+
+int UnitTestTransferEGL(int, char *[])
+{
+  //get egl canvas to construct a context for us
+  vtkm::rendering::CanvasEGL canvas(1024,1024);
+  canvas.Initialize();
+  canvas.Activate();
+
+  //get glew to bind all the opengl functions 
+  glewInit();  
+
+  return vtkm::interop::testing::TestingOpenGLInterop<
+            vtkm::cont::DeviceAdapterTagSerial >::Run();
+}

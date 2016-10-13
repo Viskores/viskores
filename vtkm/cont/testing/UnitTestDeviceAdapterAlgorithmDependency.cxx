@@ -32,7 +32,7 @@
 
 // Important for this test!
 //This file must be included after ArrayHandle.h
-#include <vtkm/cont/DeviceAdapterSerial.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 namespace {
 

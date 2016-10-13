@@ -31,20 +31,13 @@
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/Transport.h>
 #include <vtkm/cont/arg/TypeCheck.h>
-
 #include <vtkm/cont/internal/DynamicTransform.h>
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
-
 #include <vtkm/exec/internal/WorkletInvokeFunctor.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/mpl/at.hpp>
-#include <boost/mpl/fold.hpp>
-#include <boost/mpl/find.hpp>
-#include <boost/mpl/zip_view.hpp>
-#include <boost/mpl/vector.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <vtkm/internal/IntegerSequence.h>
+#include <vtkm/internal/brigand.hpp>
 
 #include <sstream>
 
@@ -72,60 +65,32 @@ inline void PrintFailureMessage(int index, std::false_type)
   throw vtkm::cont::ErrorControlBadType(message.str());
 }
 
-// Is designed as a boost mpl binary metafunction.
+// Is designed as a brigand fold operation.
+template<typename T, typename State>
 struct DetermineIfHasDynamicParameter
 {
-  template<typename T, typename U>
-  struct apply
-  {
-    typedef typename vtkm::cont::internal::DynamicTransformTraits<U>::DynamicTag DynamicTag;
-    typedef typename std::is_same<
+  using DynamicTag = typename vtkm::cont::internal::DynamicTransformTraits<T>::DynamicTag;
+  using isDynamic = typename std::is_same<
             DynamicTag,
-            vtkm::cont::internal::DynamicTransformTagCastAndCall>::type UType;
+            vtkm::cont::internal::DynamicTransformTagCastAndCall>::type;
 
-    typedef std::integral_constant<bool,
-                                   (T::value || UType::value) > type;
-  };
+  using type = std::integral_constant<bool,
+                                      (State::value || isDynamic::value) >;
 };
 
-
-template<typename ValueType, typename TagList>
-void NiceInCorrectParameterErrorMessage()
-{
- VTKM_STATIC_ASSERT_MSG(ValueType() == TagList(),
-                        "Unable to match 'ValueType' to the signature tag 'ControlSignatureTag'" );
-}
-
-template<typename T>
-void ShowInCorrectParameter(std::true_type, T) {}
-
-template<typename T>
-void ShowInCorrectParameter(std::false_type, T)
-{
-  typedef typename boost::mpl::deref<T>::type ZipType;
-  typedef typename boost::mpl::at_c<ZipType,0>::type ValueType;
-  typedef typename boost::mpl::at_c<ZipType,1>::type ControlSignatureTag;
-  NiceInCorrectParameterErrorMessage<ValueType,ControlSignatureTag>();
-};
-
-// Is designed as a boost mpl unary metafunction.
+// Is designed as a brigand fold operation.
+template <typename Index, typename Params, typename SigTypes>
 struct DetermineHasInCorrectParameters
 {
-  //When we find parameters that don't match, we set our 'type' to true_
-  //otherwise we are false_
-  template<typename T>
-  struct apply
-  {
-    using ValueType = typename boost::mpl::at_c<T,0>::type;
-    using ControlSignatureTag = typename boost::mpl::at_c<T,1>::type;
+    using T = typename brigand::at_c<Params,Index::value>;
+    using ControlSignatureTag = typename brigand::at_c<SigTypes,Index::value>;
     using TypeCheckTag = typename ControlSignatureTag::TypeCheckTag;
 
-    //We need to not the result of CanContinueTagType, because we want to return
-    //true when we have the first parameter that DOES NOT match the control
-    //signature requirements
     using type = std::integral_constant< bool,
-                  !vtkm::cont::arg::TypeCheck<TypeCheckTag,ValueType>::value>;
-  };
+                      vtkm::cont::arg::TypeCheck<TypeCheckTag,T>::value >;
+
+    static_assert( type::value,
+                   "Unable to match 'ValueType' to the signature tag 'ControlSignatureTag'");
 };
 
 // Checks that an argument in a ControlSignature is a valid control signature
@@ -327,7 +292,7 @@ private:
   void StartInvoke(
       const vtkm::internal::FunctionInterface<Signature> &parameters) const
   {
-    typedef vtkm::internal::FunctionInterface<Signature> ParameterInterface;
+    using ParameterInterface = vtkm::internal::FunctionInterface<Signature>;
 
     VTKM_STATIC_ASSERT_MSG(ParameterInterface::ARITY == NUM_INVOKE_PARAMS,
                            "Dispatcher Invoke called with wrong number of arguments.");
@@ -341,11 +306,14 @@ private:
     //proper dynamic trait. Doing this, allows us to generate zero dynamic
     //check & convert code when we already know all the types. This results
     //in smaller executables and libraries.
-    typedef boost::function_types::parameter_types<Signature> MPLSignatureForm;
-    typedef typename boost::mpl::fold<
-                                MPLSignatureForm,
-                                std::false_type,
-                                detail::DetermineIfHasDynamicParameter>::type HasDynamicTypes;
+    using ParamTypes = typename ParameterInterface::ParameterSig;
+    using HasDynamicTypes =
+      brigand::fold< ParamTypes,
+                     std::false_type,
+                     detail::DetermineIfHasDynamicParameter< brigand::_element,
+                                                             brigand::_state
+                                                           >
+                     >;
 
     this->StartInvokeDynamic(parameters, HasDynamicTypes() );
   }
@@ -377,30 +345,29 @@ private:
       const vtkm::internal::FunctionInterface<Signature> &parameters,
       std::false_type) const
   {
+    using ParameterInterface = vtkm::internal::FunctionInterface<Signature>;
+
     //Nothing requires a conversion from dynamic to static types, so
     //next we need to verify that each argument's type is correct. If not
     //we need to throw a nice compile time error
-    typedef boost::function_types::parameter_types<Signature> MPLSignatureForm;
-    typedef typename boost::function_types::parameter_types<
-                          typename WorkletType::ControlSignature > WorkletContSignature;
+    using ParamTypes = typename ParameterInterface::ParameterSig;
+    using ContSigTypes = typename vtkm::internal::detail::FunctionSigInfo<
+                            typename WorkletType::ControlSignature>::Parameters;
+    using NumParams = vtkm::internal::MakeIntegerSequence< ParameterInterface::ARITY >;
 
-    typedef boost::mpl::vector< MPLSignatureForm, WorkletContSignature > ZippedSignatures;
-    typedef boost::mpl::zip_view<ZippedSignatures> ZippedView;
+    using isAllValid =
+      brigand::fold< NumParams,
+                     std::true_type,
+                     detail::DetermineHasInCorrectParameters< brigand::_element,
+                                                              ParamTypes,
+                                                              ContSigTypes
+                                                            >
+                     >;
+    //When isAllValid is false we produce a second static_assert
+    //stating that the static transform is not possible
+    static_assert( isAllValid::value, "Unable to match all parameter types" );
 
-    typedef typename boost::mpl::find_if<
-                                ZippedView,
-                                detail::DetermineHasInCorrectParameters>::type LocationOfIncorrectParameter;
-
-    typedef typename std::is_same< LocationOfIncorrectParameter,
-                                   typename boost::mpl::end< ZippedView>::type >::type HasOnlyCorrectTypes;
-
-    //When HasOnlyCorrectTypes is false we produce an error
-    //message which should state what the parameter type and tag type is
-    //that failed to match.
-    detail::ShowInCorrectParameter(HasOnlyCorrectTypes(),
-                                   LocationOfIncorrectParameter());
-
-    this->DynamicTransformInvoke(parameters, HasOnlyCorrectTypes());
+    this->DynamicTransformInvoke(parameters, isAllValid());
   }
 
   template<typename Signature>

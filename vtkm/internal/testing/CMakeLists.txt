@@ -22,5 +22,6 @@ set(unit_tests
   UnitTestConfigureFor32.cxx
   UnitTestConfigureFor64.cxx
   UnitTestFunctionInterface.cxx
+  UnitTestIntegerSequence.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests})

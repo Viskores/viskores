@@ -19,12 +19,12 @@
 ##============================================================================
 
 set(headers
-  BufferTypePicker.h
-  OpenGLHeaders.h
-  TransferToOpenGL.h
+  DeviceAdapterSerial.h
   )
 
-#-----------------------------------------------------------------------------
+add_subdirectory(internal)
+
 vtkm_declare_headers(${headers})
 
+#-----------------------------------------------------------------------------
 add_subdirectory(testing)
