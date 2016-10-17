@@ -425,7 +425,7 @@ public:
 
     Algorithm::ReduceByKey(pointIndices, numArray,
                            uniquePoints, numIndices,
-                           vtkm::internal::Add());
+                          vtkm::Add());
 
     // Set the CellToPoint information
     vtkm::cont::ArrayHandleConstant<vtkm::Id> shapeArray(CELL_SHAPE_VERTEX, numberOfPoints);

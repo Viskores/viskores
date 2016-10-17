@@ -179,7 +179,7 @@ public:
 
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfPoints() const {
-    return vtkm::internal::VecProduct<2>()(this->GetPointDimensions());
+    return vtkm::ReduceProduct(this->GetPointDimensions());
   }
 
   //returns an id2 to signal what kind of scheduling to use
@@ -198,7 +198,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const
   {
-    return vtkm::internal::VecProduct<2>()(this->GetCellDimensions());
+    return vtkm::ReduceProduct(this->GetCellDimensions());
   }
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}
@@ -354,7 +354,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfPoints() const
   {
-    return vtkm::internal::VecProduct<3>()(this->PointDimensions);
+    return vtkm::ReduceProduct(this->PointDimensions);
   }
 
   //returns an id3 to signal what kind of scheduling to use
@@ -373,7 +373,7 @@ public:
   VTKM_EXEC_CONT_EXPORT
   vtkm::Id GetNumberOfCells() const
   {
-    return vtkm::internal::VecProduct<3>()(this->GetCellDimensions());
+    return vtkm::ReduceProduct(this->GetCellDimensions());
   }
   VTKM_EXEC_CONT_EXPORT
   vtkm::IdComponent GetNumberOfPointsInCell() const {return NUM_POINTS_IN_CELL;}

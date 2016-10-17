@@ -93,7 +93,7 @@ void AverageByKey(const vtkm::cont::ArrayHandle<KeyType, KeyInStorage> &keyArray
 
   Algorithm::ReduceByKey( keyArraySorted, inputZipHandle,
                           outputKeyArray, outputZipHandle,
-                          vtkm::internal::Add()  );
+                         vtkm::Add()  );
 
   // get average
   DispatcherMapField<DivideWorklet, DeviceAdapter>().Invoke(sumArray,
