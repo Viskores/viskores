@@ -284,7 +284,10 @@ install(FILES ${VTKm_SOURCE_DIR}/LICENSE.txt
 install(
   FILES
     ${VTKm_SOURCE_DIR}/CMake/FindBoostHeaders.cmake
+    ${VTKm_SOURCE_DIR}/CMake/FindEGL.cmake
     ${VTKm_SOURCE_DIR}/CMake/FindGLEW.cmake
+    ${VTKm_SOURCE_DIR}/CMake/FindGLFW.cmake
+    ${VTKm_SOURCE_DIR}/CMake/FindMESA.cmake
     ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
     ${VTKm_SOURCE_DIR}/CMake/FindThrust.cmake
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
@@ -296,7 +299,7 @@ install(
     ${VTKm_SOURCE_DIR}/CMake/VTKmMacros.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmConfigureComponents.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmCompilerOptimizations.cmake
-    ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cxx
+    ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cu
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
 

@@ -38,7 +38,8 @@ template<typename PortalType>
 class VecFromPortal
 {
 public:
-  typedef typename PortalType::ValueType ComponentType;
+  using ComponentType =
+      typename std::remove_const<typename PortalType::ValueType>::type;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_EXPORT
@@ -56,9 +57,9 @@ public:
     return this->NumComponents;
   }
 
-  template<vtkm::IdComponent DestSize>
+  template<typename T, vtkm::IdComponent DestSize>
   VTKM_EXEC_EXPORT
-  void CopyInto(vtkm::Vec<ComponentType,DestSize> &dest) const
+  void CopyInto(vtkm::Vec<T,DestSize> &dest) const
   {
     vtkm::IdComponent numComponents = vtkm::Min(DestSize, this->NumComponents);
     for (vtkm::IdComponent index = 0; index < numComponents; index++)

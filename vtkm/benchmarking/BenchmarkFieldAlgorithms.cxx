@@ -194,8 +194,9 @@ public:
 
   template<typename T, typename U>
   VTKM_EXEC_EXPORT
-  void operator()(const vtkm::Vec<T,3>& vec, U& result) const
+  void operator()(const vtkm::Vec<T,3>& , U& ) const
   {
+    this->RaiseError("Mixed types unsupported.");
   }
 };
 
@@ -256,13 +257,14 @@ public:
 
   template <typename WeightType, typename T, typename S, typename D, typename U>
   VTKM_EXEC_EXPORT
-  void operator()(const vtkm::Id2& low_high,
-                  const WeightType &weight,
-                  const vtkm::exec::ExecutionWholeArrayConst<T,S,D>& inPortal,
-                  U &result) const
+  void operator()(const vtkm::Id2& ,
+                  const WeightType &,
+                  const vtkm::exec::ExecutionWholeArrayConst<T,S,D>& ,
+                  U &) const
   {
     //the inPortal and result need to be the same type so this version only
     //exists to generate code when using dynamic arrays
+    this->RaiseError("Mixed types unsupported.");
   }
 };
 

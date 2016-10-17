@@ -39,7 +39,9 @@ template<typename IndexVecType, typename PortalType>
 class VecFromPortalPermute
 {
 public:
-  typedef typename PortalType::ValueType ComponentType;
+  using ComponentType =
+      typename std::remove_const<typename PortalType::ValueType>::type;
+
 
   VTKM_EXEC_EXPORT
   VecFromPortalPermute() {  }
