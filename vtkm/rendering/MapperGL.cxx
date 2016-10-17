@@ -230,11 +230,6 @@ void RenderTriangles(MapperGL &mapper,
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     
-    vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
-    vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
-    
-    MatrixHelpers::CreateOGLMatrix(viewM, mapper.mvMat);
-    MatrixHelpers::CreateOGLMatrix(projM, mapper.pMat);
     const char *vertex_shader =
         "#version 120\n"
         "attribute vec3 vertex_position;"
@@ -325,6 +320,12 @@ void RenderTriangles(MapperGL &mapper,
 
   if (mapper.shader_programme > 0)
   {
+    vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
+    vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
+
+    MatrixHelpers::CreateOGLMatrix(viewM, mapper.mvMat);
+    MatrixHelpers::CreateOGLMatrix(projM, mapper.pMat);
+
     glUseProgram(mapper.shader_programme);
     GLint mvID = glGetUniformLocation(mapper.shader_programme, "mv_matrix");
     glUniformMatrix4fv(mvID, 1, GL_FALSE, mapper.mvMat);
