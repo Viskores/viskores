@@ -745,6 +745,7 @@ private:
     template <typename T>
     void operator()(const vtkm::cont::ArrayHandle<T> &handle) const
     {
+      if(this->Permutation.GetNumberOfValues() < 1) return;
       vtkm::cont::ArrayHandle<T> out;
       out.Allocate(this->Permutation.GetNumberOfValues());
 
