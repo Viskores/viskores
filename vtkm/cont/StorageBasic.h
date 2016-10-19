@@ -48,6 +48,9 @@
 #include <malloc.h>
 #endif
 
+#include <cstddef>
+#include <cstdlib>
+
 // Defines the cache line size in bytes to align allocations to
 #define VTKM_CACHE_LINE_SIZE 64
 
@@ -101,8 +104,8 @@ struct AlignedAllocator {
   typedef const T* const_pointer;
   typedef void* void_pointer;
   typedef const void* const_void_pointer;
-  typedef ptrdiff_t difference_type;
-  typedef size_t size_type;
+  typedef std::ptrdiff_t difference_type;
+  typedef std::size_t size_type;
 
   template<typename U>
   struct rebind {
