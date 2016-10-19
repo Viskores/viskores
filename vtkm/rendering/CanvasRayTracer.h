@@ -27,44 +27,34 @@
 namespace vtkm {
 namespace rendering {
 
-class CanvasRayTracer : public Canvas
+class VTKM_RENDERING_EXPORT CanvasRayTracer : public Canvas
 {
 public:
-  VTKM_RENDERING_EXPORT
   CanvasRayTracer(vtkm::Id width=1024,
                   vtkm::Id height=1024);
 
-  VTKM_RENDERING_EXPORT
   ~CanvasRayTracer();
 
-  VTKM_RENDERING_EXPORT
   void Initialize() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void Activate() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void Finish() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void Clear() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   vtkm::rendering::Canvas *NewCopy() const VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void AddLine(const vtkm::Vec<vtkm::Float64,2> &point0,
                const vtkm::Vec<vtkm::Float64,2> &point1,
                vtkm::Float32 linewidth,
                const vtkm::rendering::Color &color) const VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void AddColorBar(const vtkm::Bounds &bounds,
                    const vtkm::rendering::ColorTable &colorTable,
                    bool horizontal) const VTKM_OVERRIDE;
 
 
-  VTKM_RENDERING_EXPORT
   void AddText(const vtkm::Vec<vtkm::Float32,2> &position,
                vtkm::Float32 scale,
                vtkm::Float32 angle,

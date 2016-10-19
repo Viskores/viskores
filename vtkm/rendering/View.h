@@ -33,17 +33,15 @@
 namespace vtkm {
 namespace rendering {
 
-class View
+class VTKM_RENDERING_EXPORT View
 {
 public:
-  VTKM_RENDERING_EXPORT
   View(const vtkm::rendering::Scene &scene,
        const vtkm::rendering::Mapper &mapper,
        const vtkm::rendering::Canvas &canvas,
        const vtkm::rendering::Color &backgroundColor =
          vtkm::rendering::Color(0,0,0,1));
 
-  VTKM_RENDERING_EXPORT
   View(const vtkm::rendering::Scene &scene,
        const vtkm::rendering::Mapper &mapper,
        const vtkm::rendering::Canvas &canvas,
@@ -51,7 +49,6 @@ public:
        const vtkm::rendering::Color &backgroundColor =
          vtkm::rendering::Color(0,0,0,1));
 
-  VTKM_RENDERING_EXPORT
   virtual ~View();
 
   VTKM_CONT_EXPORT
@@ -117,24 +114,17 @@ public:
     this->CanvasPointer->SetBackgroundColor(color);
   }
 
-  VTKM_RENDERING_EXPORT
   virtual void Initialize();
 
-  VTKM_RENDERING_EXPORT
   virtual void Paint() = 0;
-  VTKM_RENDERING_EXPORT
   virtual void RenderScreenAnnotations() = 0;
-  VTKM_RENDERING_EXPORT
   virtual void RenderWorldAnnotations() = 0;
 
-  VTKM_RENDERING_EXPORT
   void SaveAs(const std::string &fileName) const;
 
 protected:
-  VTKM_RENDERING_EXPORT
   void SetupForWorldSpace(bool viewportClip=true);
 
-  VTKM_RENDERING_EXPORT
   void SetupForScreenSpace(bool viewportClip=false);
 
 private:

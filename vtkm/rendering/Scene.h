@@ -32,27 +32,21 @@
 namespace vtkm {
 namespace rendering {
 
-class Scene
+class VTKM_RENDERING_EXPORT Scene
 {
 public:
-  VTKM_RENDERING_EXPORT
   Scene();
 
-  VTKM_RENDERING_EXPORT
   void AddActor(const vtkm::rendering::Actor &actor);
 
-  VTKM_RENDERING_EXPORT
   const vtkm::rendering::Actor &GetActor(vtkm::IdComponent index) const;
 
-  VTKM_RENDERING_EXPORT
   vtkm::IdComponent GetNumberOfActors() const;
 
-  VTKM_RENDERING_EXPORT
   void Render(vtkm::rendering::Mapper &mapper,
               vtkm::rendering::Canvas &canvas,
               const vtkm::rendering::Camera &camera) const;
 
-  VTKM_RENDERING_EXPORT
   vtkm::Bounds GetSpatialBounds() const;
 
 private:

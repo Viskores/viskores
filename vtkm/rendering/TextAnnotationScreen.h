@@ -25,30 +25,25 @@
 namespace vtkm {
 namespace rendering {
 
-class TextAnnotationScreen : public TextAnnotation
+class VTKM_RENDERING_EXPORT TextAnnotationScreen : public TextAnnotation
 {
 protected:
   vtkm::Vec<vtkm::Float32,2> Position;
   vtkm::Float32 Angle;
 
 public:
-  VTKM_RENDERING_EXPORT
   TextAnnotationScreen(const std::string &text,
                        const vtkm::rendering::Color &color,
                        vtkm::Float32 scale,
                        const vtkm::Vec<vtkm::Float32,2> &position,
                        vtkm::Float32 angleDegrees = 0);
 
-  VTKM_RENDERING_EXPORT
   ~TextAnnotationScreen();
 
-  VTKM_RENDERING_EXPORT
   void SetPosition(const vtkm::Vec<vtkm::Float32,2> &position);
 
-  VTKM_RENDERING_EXPORT
   void SetPosition(vtkm::Float32 posx, vtkm::Float32 posy);
 
-  VTKM_RENDERING_EXPORT
   void Render(const vtkm::rendering::Camera &camera,
               const vtkm::rendering::WorldAnnotator &annotator,
               vtkm::rendering::Canvas &canvas) const VTKM_OVERRIDE;

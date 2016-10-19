@@ -42,51 +42,39 @@ struct ColorTableInternals;
 /// and Sean Ahern. This class uses seperate RGB and alpha control points and can
 /// be used as a transfer function.
 ///
-class ColorTable
+class VTKM_RENDERING_EXPORT ColorTable
 {
 private:
   std::shared_ptr<detail::ColorTableInternals> Internals;
 
 public:
-  VTKM_RENDERING_EXPORT
   ColorTable();
 
   /// Constructs a \c ColorTable using the name of a pre-defined color set.
-  VTKM_RENDERING_EXPORT
   ColorTable(const std::string &name);
 
-  VTKM_RENDERING_EXPORT
   const std::string &GetName() const;
 
-  VTKM_RENDERING_EXPORT
   bool GetSmooth() const;
 
-  VTKM_RENDERING_EXPORT
   void Sample(int numSamples,
               vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > &colors) const;
 
-  VTKM_RENDERING_EXPORT
   vtkm::rendering::Color MapRGB(vtkm::Float32 scalar) const;
 
-  VTKM_RENDERING_EXPORT
   vtkm::Float32 MapAlpha(vtkm::Float32 scalar) const;
 
-  VTKM_RENDERING_EXPORT
   void Clear();
 
-  VTKM_RENDERING_EXPORT
   void Reverse();
 
-  VTKM_RENDERING_EXPORT
   void AddControlPoint(vtkm::Float32 position,
                        const vtkm::rendering::Color &color);
 
-  VTKM_RENDERING_EXPORT
   void AddControlPoint(vtkm::Float32 position,
                        const vtkm::rendering::Color &color,
                        vtkm::Float32 alpha);
 
-  VTKM_RENDERING_EXPORT
   void AddAlphaControlPoint(vtkm::Float32 position, vtkm::Float32 alpha);
 };
 }}//namespace vtkm::rendering

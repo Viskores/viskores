@@ -29,64 +29,47 @@
 namespace vtkm {
 namespace rendering {
 
-class CanvasGL : public Canvas
+class VTKM_RENDERING_EXPORT CanvasGL : public Canvas
 {
 public:
-
-  VTKM_RENDERING_EXPORT
   CanvasGL(vtkm::Id width=1024,
            vtkm::Id height=1024);
 
-
-  VTKM_RENDERING_EXPORT
   ~CanvasGL();
 
-  VTKM_RENDERING_EXPORT
   void Initialize() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void Activate() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void Clear() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void Finish() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   vtkm::rendering::Canvas *NewCopy() const VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void SetViewToWorldSpace(const vtkm::rendering::Camera &camera,
                            bool clip) VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void SetViewToScreenSpace(const vtkm::rendering::Camera &camera,
                             bool clip) VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void SetViewportClipping(const vtkm::rendering::Camera &camera,
                            bool clip) VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void RefreshColorBuffer() const VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   virtual void RefreshDepthBuffer() const VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void AddLine(const vtkm::Vec<vtkm::Float64,2> &point0,
                const vtkm::Vec<vtkm::Float64,2> &point1,
                vtkm::Float32 linewidth,
                const vtkm::rendering::Color &color) const VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void AddColorBar(const vtkm::Bounds &bounds,
                    const vtkm::rendering::ColorTable &colorTable,
                    bool horizontal) const VTKM_OVERRIDE;
 
 
-  VTKM_RENDERING_EXPORT
   void AddText(const vtkm::Vec<vtkm::Float32,2> &position,
                vtkm::Float32 scale,
                vtkm::Float32 angle,
@@ -96,14 +79,12 @@ public:
                const std::string &text) const VTKM_OVERRIDE;
 
 
-  VTKM_RENDERING_EXPORT
   vtkm::rendering::WorldAnnotator *CreateWorldAnnotator() const VTKM_OVERRIDE;
 
 private:
   vtkm::rendering::BitmapFont Font;
   vtkm::rendering::TextureGL FontTexture;
 
-  VTKM_RENDERING_EXPORT
   void RenderText(vtkm::Float32 scale,
                   const vtkm::Vec<vtkm::Float32,2> &anchor,
                   const std::string &text) const;
