@@ -182,7 +182,7 @@ struct ParameterContainerAccess<$(param_index)> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const typename AtType<$(param_index), FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter$(param_index);
@@ -190,7 +190,7 @@ struct ParameterContainerAccess<$(param_index)> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<$(param_index), FunctionSignature>::type &value) {
     parameters.Parameter$(param_index) = value;
@@ -210,7 +210,7 @@ struct CopyAllParameters<$(num_params)> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
@@ -227,7 +227,7 @@ struct CopyAllParameters<0> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &)
   {
@@ -247,7 +247,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          $template_params(num_params)>
-VTKM_$(environment.upper())_EXPORT
+VTKM_$(environment.upper())
 void DoInvoke$(environment)(
       $(functor_const)Functor &f,
       ParameterContainer<$signature(num_params)> &parameters,
@@ -270,7 +270,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor$comma_if(num_params>0)
          $template_params(num_params,1)>
-VTKM_$(environment.upper())_EXPORT
+VTKM_$(environment.upper())
 void DoInvoke$(environment)(
       $(functor_const)Functor &f,
       ParameterContainer<$signature(num_params,'void')> &parameters,
@@ -306,7 +306,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          $template_params(num_params,0,'Original'),
          $template_params(num_params,0,'Transformed')>
-VTKM_$(environment.upper())_EXPORT
+VTKM_$(environment.upper())
 void DoStaticTransform$(environment)(
       const Transform &transform,
       const ParameterContainer<$signature(num_params,ptype(0,'Original'),'Original')> &originalParameters,
@@ -337,7 +337,7 @@ $for(function_interface_const in ['const ', ''])\
 VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          $template_params(num_params)>
-VTKM_$(environment.upper())_EXPORT
+VTKM_$(environment.upper())
 void DoForEach$(environment)(
       const Functor &f,
       $(function_interface_const)ParameterContainer<$signature(num_params)> &parameters)

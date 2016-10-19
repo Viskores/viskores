@@ -72,7 +72,7 @@ struct FetchArrayTopologyMapInImplementation
       IndexVecType,PortalType> ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   static ValueType Load(const ThreadIndicesType &indices,
                         const FieldExecObjectType &field)
   {
@@ -84,7 +84,7 @@ struct FetchArrayTopologyMapInImplementation
   }
 };
 
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::VecRectilinearPointCoordinates<1>
 make_VecRectilinearPointCoordinates(
     const vtkm::Vec<vtkm::FloatDefault,3> &origin,
@@ -98,7 +98,7 @@ make_VecRectilinearPointCoordinates(
   return vtkm::VecRectilinearPointCoordinates<1>(offsetOrigin, spacing);
 }
 
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::VecRectilinearPointCoordinates<1>
 make_VecRectilinearPointCoordinates(
     const vtkm::Vec<vtkm::FloatDefault,3> &origin,
@@ -109,7 +109,7 @@ make_VecRectilinearPointCoordinates(
         origin, spacing, vtkm::Vec<vtkm::Id,1>(logicalId));
 }
 
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::VecRectilinearPointCoordinates<2>
 make_VecRectilinearPointCoordinates(
     const vtkm::Vec<vtkm::FloatDefault,3> &origin,
@@ -123,7 +123,7 @@ make_VecRectilinearPointCoordinates(
   return vtkm::VecRectilinearPointCoordinates<2>(offsetOrigin, spacing);
 }
 
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::VecRectilinearPointCoordinates<3>
 make_VecRectilinearPointCoordinates(
     const vtkm::Vec<vtkm::FloatDefault,3> &origin,
@@ -154,7 +154,7 @@ struct FetchArrayTopologyMapInImplementation<
   typedef vtkm::VecRectilinearPointCoordinates<NumDimensions> ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   static ValueType Load(
       const ThreadIndicesType &indices,
       const vtkm::internal::ArrayPortalUniformPointCoordinates &field)
@@ -186,14 +186,14 @@ struct Fetch<
   typedef typename Implementation::ValueType ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType Load(const ThreadIndicesType &indices,
                  const ExecObjectType &field) const
   {
     return Implementation::Load(indices, field);
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Store(const ThreadIndicesType &,
              const ExecObjectType &,
              const ValueType &) const

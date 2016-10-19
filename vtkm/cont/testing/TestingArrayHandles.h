@@ -80,7 +80,7 @@ struct TestingArrayHandles
     typedef _2 ExecutionSignature(_1);
 
     template<class ValueType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     ValueType operator()(const ValueType &inValue) const
     { return inValue; }
 
@@ -90,10 +90,10 @@ struct TestingArrayHandles
   struct AssignTestValue : public vtkm::exec::FunctorBase
   {
     ExecutionPortalType Portal;
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     AssignTestValue(ExecutionPortalType p): Portal(p) {}
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(vtkm::Id index) const
     {
       this->Portal.Set(index, TestValue(index, T()) );
@@ -104,10 +104,10 @@ struct TestingArrayHandles
   struct InplaceFunctor : public vtkm::exec::FunctorBase
   {
     ExecutionPortalType Portal;
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     InplaceFunctor(ExecutionPortalType p): Portal(p) {}
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(vtkm::Id index) const
     {
       this->Portal.Set(index, T(this->Portal.Get(index) + T(1)));
@@ -124,7 +124,7 @@ private:
   struct VerifyEmptyArrays
   {
     template<typename T>
-    VTKM_CONT_EXPORT void operator()(T) const
+    VTKM_CONT void operator()(T) const
     {
       std::cout << "Try operations on empty arrays." << std::endl;
       // After each operation, reinitialize array in case something gets
@@ -150,7 +150,7 @@ private:
   struct VerifyUserAllocatedHandle
   {
     template<typename T>
-    VTKM_CONT_EXPORT void operator()(T) const
+    VTKM_CONT void operator()(T) const
     {
       std::vector<T> buffer(ARRAY_SIZE);
 	  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
@@ -269,7 +269,7 @@ private:
   struct VerifyVTKMAllocatedHandle
   {
     template<typename T>
-    VTKM_CONT_EXPORT void operator()(T) const
+    VTKM_CONT void operator()(T) const
     {
       vtkm::cont::ArrayHandle<T> arrayHandle;
 
@@ -345,7 +345,7 @@ private:
     };
 
 public:
-  static VTKM_CONT_EXPORT int Run()
+  static VTKM_CONT int Run()
   {
     return vtkm::cont::testing::Testing::Run(TryArrayHandleType());
   }

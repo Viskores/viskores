@@ -117,7 +117,7 @@ private:
 
   struct TestAll
   {
-    VTKM_CONT_EXPORT void operator()() const
+    VTKM_CONT void operator()() const
     {
       std::cout << "Testing (Int32, 1)..." << std::endl;
       TestingComputeRange::TestScalarField<vtkm::Int32>();
@@ -152,7 +152,7 @@ private:
   };
 
 public:
-  static VTKM_CONT_EXPORT int Run()
+  static VTKM_CONT int Run()
   {
     return vtkm::cont::testing::Testing::Run(TestAll());
   }

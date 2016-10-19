@@ -34,11 +34,11 @@ struct IteratorFromArrayPortalValue
 {
   typedef typename ArrayPortalType::ValueType ValueType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   IteratorFromArrayPortalValue(const ArrayPortalType &portal, vtkm::Id index)
     : Portal(portal), Index(index) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Swap( IteratorFromArrayPortalValue<ArrayPortalType> &rhs ) throw()
   {
     //we need use the explicit type not a proxy temp object
@@ -49,7 +49,7 @@ struct IteratorFromArrayPortalValue
     rhs = aValue;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   IteratorFromArrayPortalValue<ArrayPortalType> &operator=(
     const IteratorFromArrayPortalValue<ArrayPortalType> &rhs)
   {
@@ -57,14 +57,14 @@ struct IteratorFromArrayPortalValue
     return *this;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ValueType operator=(const ValueType& value)
   {
     this->Portal.Set(this->Index, value);
     return value;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   operator ValueType(void) const
   {
     return this->Portal.Get(this->Index);

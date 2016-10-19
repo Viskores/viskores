@@ -40,7 +40,7 @@ struct Space2D
   Vec3 Basis0;
   Vec3 Basis1;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   Space2D(const Vec3 &origin, const Vec3 &pointFirst, const Vec3 &pointLast)
   {
     this->Origin = origin;
@@ -51,13 +51,13 @@ struct Space2D
     this->Basis1 = vtkm::Normal(vtkm::Cross(this->Basis0, n));
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   Vec2 ConvertCoordToSpace(const Vec3 coord) const {
     Vec3 vec = coord - this->Origin;
     return Vec2(vtkm::dot(vec, this->Basis0), vtkm::dot(vec, this->Basis1));
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   Vec3 ConvertVecFromSpace(const Vec2 vec) const {
     return vec[0]*this->Basis0 + vec[1]*this->Basis1;
   }
@@ -66,7 +66,7 @@ struct Space2D
 // Given a series of point values for a wedge, return a new series of point
 // for a hexahedron that has the same interpolation within the wedge.
 template<typename FieldVecType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,8>
 PermuteWedgeToHex(const FieldVecType &field)
 {
@@ -87,7 +87,7 @@ PermuteWedgeToHex(const FieldVecType &field)
 // Given a series of point values for a pyramid, return a new series of point
 // for a hexahedron that has the same interpolation within the pyramid.
 template<typename FieldVecType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,8>
 PermutePyramidToHex(const FieldVecType &field)
 {
@@ -187,7 +187,7 @@ PermutePyramidToHex(const FieldVecType &field)
 template<typename WorldCoordType,
          typename ParametricCoordType,
          typename JacobianType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void JacobianFor3DCell(const WorldCoordType &wCoords,
                        const vtkm::Vec<ParametricCoordType,3> &pcoords,
                        vtkm::Matrix<JacobianType,3,3> &jacobian,
@@ -203,7 +203,7 @@ void JacobianFor3DCell(const WorldCoordType &wCoords,
 template<typename WorldCoordType,
          typename ParametricCoordType,
          typename JacobianType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void JacobianFor3DCell(const WorldCoordType &wCoords,
                        const vtkm::Vec<ParametricCoordType,3> &pcoords,
                        vtkm::Matrix<JacobianType,3,3> &jacobian,
@@ -227,7 +227,7 @@ void JacobianFor3DCell(const WorldCoordType &wCoords,
 template<typename WorldCoordType,
          typename ParametricCoordType,
          typename JacobianType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void JacobianFor3DCell(const WorldCoordType &wCoords,
                        const vtkm::Vec<ParametricCoordType,3> &pcoords,
                        vtkm::Matrix<JacobianType,3,3> &jacobian,
@@ -263,7 +263,7 @@ void JacobianFor3DCell(const WorldCoordType &wCoords,
 template<typename WorldCoordType,
          typename ParametricCoordType,
          typename JacobianType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void JacobianFor2DCell(const WorldCoordType &wCoords,
                        const vtkm::Vec<ParametricCoordType,3> &pcoords,
                        const vtkm::exec::internal::Space2D<JacobianType> &space,
@@ -286,7 +286,7 @@ void JacobianFor2DCell(const WorldCoordType &wCoords,
 template<typename WorldCoordType,
          typename ParametricCoordType,
          typename JacobianType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void JacobianFor2DCell(const WorldCoordType &wCoords,
                        const vtkm::Vec<ParametricCoordType,3> &pcoords,
                        const vtkm::exec::internal::Space2D<JacobianType> &space,

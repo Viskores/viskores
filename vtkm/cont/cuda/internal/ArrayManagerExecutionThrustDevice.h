@@ -76,14 +76,14 @@ public:
   typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust< T > PortalType;
   typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< T > PortalConstType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayManagerExecutionThrustDevice(StorageType *storage)
     : Storage(storage), Array()
   {
 
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ~ArrayManagerExecutionThrustDevice()
   {
     this->ReleaseResources();
@@ -91,7 +91,7 @@ public:
 
   /// Returns the size of the array.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
     return static_cast<vtkm::Id>(this->Array.size());
   }
@@ -99,7 +99,7 @@ public:
   /// Allocates the appropriate size of the array and copies the given data
   /// into the array.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType PrepareForInput(bool updateData)
   {
     if (updateData)
@@ -118,7 +118,7 @@ public:
 
   /// Workaround for nvcc 7.5 compiler warning bug.
   template<typename DummyType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType _PrepareForInput(bool updateData)
   {
       return this->PrepareForInput(updateData);
@@ -127,7 +127,7 @@ public:
   /// Allocates the appropriate size of the array and copies the given data
   /// into the array.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType PrepareForInPlace(bool updateData)
   {
     if (updateData)
@@ -145,7 +145,7 @@ public:
 
   /// Workaround for nvcc 7.5 compiler warning bug.
   template<typename DummyType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType _PrepareForInPlace(bool updateData)
   {
     return this->PrepareForInPlace(updateData);
@@ -153,7 +153,7 @@ public:
 
   /// Allocates the array to the given size.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType PrepareForOutput(vtkm::Id numberOfValues)
   {
     if (numberOfValues > this->GetNumberOfValues())
@@ -178,7 +178,7 @@ public:
 
   /// Workaround for nvcc 7.5 compiler warning bug.
   template<typename DummyType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType _PrepareForOutput(vtkm::Id numberOfValues)
   {
     return this->PrepareForOutput(numberOfValues);
@@ -187,7 +187,7 @@ public:
   /// Allocates enough space in \c storage and copies the data in the
   /// device vector into it.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType *storage) const
   {
     storage->Allocate(static_cast<vtkm::Id>(this->Array.size()));
@@ -209,7 +209,7 @@ public:
   /// thrust can generally handle iterators for a device as well.
   ///
   template <class IteratorTypeControl>
-  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
+  VTKM_CONT void CopyInto(IteratorTypeControl dest) const
   {
     ::thrust::copy(
           this->Array.data(),
@@ -219,7 +219,7 @@ public:
 
   /// Resizes the device vector.
   ///
-  VTKM_CONT_EXPORT void Shrink(vtkm::Id numberOfValues)
+  VTKM_CONT void Shrink(vtkm::Id numberOfValues)
   {
     // The operation will succeed even if this assertion fails, but this
     // is still supposed to be a precondition to Shrink.
@@ -231,7 +231,7 @@ public:
 
   /// Frees all memory.
   ///
-  VTKM_CONT_EXPORT void ReleaseResources()
+  VTKM_CONT void ReleaseResources()
   {
     this->Array.clear();
     this->Array.shrink_to_fit();
@@ -249,7 +249,7 @@ private:
   ::thrust::system::cuda::vector<ValueType,
                                  UninitializedAllocator<ValueType> > Array;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void CopyToExecution()
   {
     try

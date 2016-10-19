@@ -31,13 +31,13 @@ class MemSet : public vtkm::worklet::WorkletMapField
 {
   T Value;
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   MemSet(T value)
     : Value(value)
   {}
   typedef void ControlSignature(FieldOut<>);
   typedef void ExecutionSignature(_1);
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(T &outValue) const
   {
     outValue = Value;
@@ -47,7 +47,7 @@ public:
 struct MaxValue
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT T operator()(const T& a,const T& b) const
+  VTKM_EXEC_CONT T operator()(const T& a,const T& b) const
   {
     return (a > b) ? a : b;
   }
@@ -57,7 +57,7 @@ struct MaxValue
 struct MinValue
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT T operator()(const T& a,const T& b) const
+  VTKM_EXEC_CONT T operator()(const T& a,const T& b) const
   {
     return (a < b) ? a : b;
   }

@@ -45,7 +45,7 @@ struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
   typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst
       ExecObjectType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
   {
     // TODO: Throw an exception if object.GetNumberOfValues() does not equal

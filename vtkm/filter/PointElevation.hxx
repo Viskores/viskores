@@ -25,6 +25,7 @@ namespace filter {
 
 
 //-----------------------------------------------------------------------------
+inline VTKM_CONT
 PointElevation::PointElevation():
   Worklet()
 {
@@ -32,18 +33,21 @@ PointElevation::PointElevation():
 }
 
 //-----------------------------------------------------------------------------
+inline VTKM_CONT
 void PointElevation::SetLowPoint(vtkm::Float64 x, vtkm::Float64 y, vtkm::Float64 z)
 {
   this->Worklet.SetLowPoint( vtkm::make_Vec(x,y,z) );
 }
 
 //-----------------------------------------------------------------------------
+inline VTKM_CONT
 void PointElevation::SetHighPoint(vtkm::Float64 x, vtkm::Float64 y, vtkm::Float64 z)
 {
   this->Worklet.SetHighPoint( vtkm::make_Vec(x,y,z) );
 }
 
 //-----------------------------------------------------------------------------
+inline VTKM_CONT
 void PointElevation::SetRange(vtkm::Float64 low, vtkm::Float64 high)
 {
   this->Worklet.SetRange(low,high);
@@ -54,6 +58,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
+inline VTKM_CONT
 vtkm::filter::ResultField
 PointElevation::DoExecute(const vtkm::cont::DataSet &inDataSet,
                           const vtkm::cont::ArrayHandle<T,StorageType> &field,

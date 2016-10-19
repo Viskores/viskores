@@ -41,7 +41,7 @@ public:
   typedef void ExecutionSignature(_1, WorkIndex);
 
   template<typename T>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(T& x, const vtkm::Id& workIdx) const 
   {
     x = vtkm::Sin(vtkm::Float64(workIdx) / 100.0) * 100.0;
@@ -54,7 +54,7 @@ public:
   typedef void ControlSignature(FieldInOut<>);
   typedef void ExecutionSignature(_1, WorkIndex);
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   GaussianWorklet2D( vtkm::Id dx, vtkm::Id dy, vtkm::Float64 a,
                      vtkm::Float64 x, vtkm::Float64 y,
                      vtkm::Float64 sx, vtkm::Float64 xy )
@@ -66,14 +66,14 @@ public:
     sigmaY2 = 2 * sigmaY * sigmaY;
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Sig1Dto2D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y ) const
   {
     x = idx % dimX;
     y = idx / dimX;
   }
   
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Float64 GetGaussian( vtkm::Float64 x, vtkm::Float64 y ) const
   {
     vtkm::Float64 power = (x-x0) * (x-x0) / sigmaX2 + (y-y0) * (y-y0) / sigmaY2;
@@ -81,7 +81,7 @@ public:
   }
 
   template<typename T>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(T& val, const vtkm::Id& workIdx) const 
   {
     vtkm::Id x, y;

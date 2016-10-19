@@ -52,7 +52,7 @@ public:
     vtkm::Int32 NumPixels;
 
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     SurfaceConverter(const vtkm::Int32 &width,
                      const vtkm::Int32 &subsetWidth,
                      const vtkm::Int32 &xmin,
@@ -78,7 +78,7 @@ public:
                                     _3,
                                     _4,
                                     WorkIndex);
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(
         const vtkm::Vec<vtkm::Float32,4> &inColor,
         const vtkm::Float32 &inDepth,
@@ -111,7 +111,7 @@ public:
     vtkm::Vec< vtkm::Float32, 3> nlook;// normalized look
     vtkm::Vec< vtkm::Float32, 3> delta_x;
     vtkm::Vec< vtkm::Float32, 3> delta_y;
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     PerspectiveRayGen(vtkm::Int32   width,
                       vtkm::Int32   height,
                       vtkm::Float32 fovX,
@@ -160,7 +160,7 @@ public:
                                     _1,
                                     _2,
                                     _3);
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(vtkm::Id idx,
                     vtkm::Float32 &rayDirX,
                     vtkm::Float32 &rayDirY,
@@ -209,7 +209,7 @@ public:
 
   ColorBuffer4f FrameBuffer;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Camera()
   {
     this->Height = 500;
@@ -240,7 +240,7 @@ public:
     //this->ImageSubsetModeOn = true;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetParameters(const vtkm::rendering::Camera &camera,
                      const vtkm::rendering::CanvasRayTracer &canvas)
   {
@@ -254,7 +254,7 @@ public:
   }
 
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetHeight(const vtkm::Int32 &height)
   {
     if(height <= 0)
@@ -270,13 +270,13 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Int32 GetHeight() const
   {
     return this->Height;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetWidth(const vtkm::Int32 &width)
   {
     if(width <= 0)
@@ -292,13 +292,13 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Int32 GetWidth() const
   {
     return this->Width;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetZoom(const vtkm::Float32 &zoom)
   {
     if(zoom <= 0)
@@ -313,13 +313,13 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Float32 GetZoom() const
   {
     return this->Zoom;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetFieldOfView(const vtkm::Float32 &degrees)
   {
     if(degrees <= 0)
@@ -348,13 +348,13 @@ public:
     this->CameraView.SetFieldOfView(this->FovX);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Float32 GetFieldOfView() const
   {
     return this->FovX;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetUp(const vtkm::Vec<vtkm::Float32, 3> &up)
   {
     if(this->Up != up)
@@ -365,13 +365,13 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Vec<vtkm::Float32, 3> GetUp() const
   {
     return this->Up;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetLookAt(const vtkm::Vec<vtkm::Float32, 3> &lookAt)
   {
     if(this->LookAt != lookAt)
@@ -381,13 +381,13 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Vec<vtkm::Float32, 3> GetLookAt() const
   {
     return this->LookAt;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetPosition(const vtkm::Vec<vtkm::Float32, 3> &position)
   {
     if(this->Position != position)
@@ -397,25 +397,25 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Vec<vtkm::Float32, 3> GetPosition() const
   {
     return this->Position;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ResetIsViewDirty()
   {
     this->IsViewDirty = false;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool GetIsViewDirty() const
   {
     return this->IsViewDirty;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void WriteToSurface(CanvasRayTracer *canvas,
                       const vtkm::cont::ArrayHandle<vtkm::Float32> &distances)
   {
@@ -446,7 +446,7 @@ public:
     canvas->GetDepthBuffer().GetPortalControl().Get(0);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void CreateRays(Ray<DeviceAdapter> &rays,
                   const vtkm::Bounds boundingBox = vtkm::Bounds())
   {
@@ -489,7 +489,7 @@ public:
 
   } //create rays
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
   void CreateRays(VolumeRay<DeviceAdapter> &rays,
                   const vtkm::Bounds &boundingBox = vtkm::Bounds())
   {
@@ -518,7 +518,7 @@ public:
   } //create rays
 
 private:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void FindSubset(const vtkm::Bounds &bounds)
   {
     vtkm::Float32 x[2], y[2], z[2];
@@ -612,7 +612,7 @@ private:
 
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void UpdateDimensions(RayBase *rays,
                         const vtkm::Bounds &boundingBox = vtkm::Bounds())
   {

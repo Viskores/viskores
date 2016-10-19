@@ -56,7 +56,7 @@ struct CellGradient : vtkm::worklet::WorkletMapPointToCell
 
   template <typename CellTagType, typename PointCoordVecType,
     typename FieldInVecType, typename FieldOutType>
-  VTKM_EXEC_EXPORT void operator()(CellTagType shape,
+  VTKM_EXEC void operator()(CellTagType shape,
     vtkm::IdComponent pointCount, const PointCoordVecType& pointCoordinates,
     const FieldInVecType& inputField, FieldOutType& outputField) const
   {
@@ -83,7 +83,7 @@ struct CellGradient : vtkm::worklet::WorkletMapPointToCell
 
   template <typename CellShapeTag, typename PointCoordVecType,
     typename FieldInVecType, typename FieldOutType>
-  VTKM_EXEC_EXPORT void Compute(CellShapeTag shape,
+  VTKM_EXEC void Compute(CellShapeTag shape,
     vtkm::IdComponent pointCount, const PointCoordVecType& wCoords,
     const FieldInVecType& field, FieldOutType& outputField,
     std::true_type) const
@@ -97,7 +97,7 @@ struct CellGradient : vtkm::worklet::WorkletMapPointToCell
             typename PointCoordVecType,
             typename FieldInVecType,
             typename FieldOutType>
-  VTKM_EXEC_EXPORT void Compute(CellShapeTag,
+  VTKM_EXEC void Compute(CellShapeTag,
                                 vtkm::IdComponent,
                                 const PointCoordVecType&,
                                 const FieldInVecType&,

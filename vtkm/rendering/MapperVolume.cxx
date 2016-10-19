@@ -43,13 +43,13 @@ struct MapperVolume::InternalsType
   std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
       RayTracerContainer;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   InternalsType()
     : Canvas(nullptr)
   {  }
 
   template<typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::rendering::raytracing::VolumeRendererStructured<Device> *
   GetRayTracer(Device)
   {
@@ -115,7 +115,7 @@ struct MapperVolume::RenderFunctor
   vtkm::rendering::Camera Camera;
   vtkm::Range ScalarRange;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   RenderFunctor(vtkm::rendering::MapperVolume *self,
                 const vtkm::cont::CellSetStructured<3> cellSet,
                 const vtkm::cont::CoordinateSystem &coordinates,

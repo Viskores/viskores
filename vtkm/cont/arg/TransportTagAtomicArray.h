@@ -51,7 +51,7 @@ struct Transport<
 {
   typedef vtkm::exec::AtomicArray<T, Device> ExecObjectType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecObjectType operator()(
       vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> array,
       vtkm::Id) const

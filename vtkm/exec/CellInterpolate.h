@@ -36,7 +36,7 @@ namespace internal {
 // moved to this header file because it is required to interpolate in a
 // polygon, which is divided into triangles.
 template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 typename WorldCoordVector::ComponentType
 ReverseInterpolateTriangle(
     const WorldCoordVector &pointWCoords,
@@ -134,7 +134,7 @@ ReverseInterpolateTriangle(
 ///
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &pointFieldValues,
                 const vtkm::Vec<ParametricCoordType,3> &parametricCoords,
@@ -159,7 +159,7 @@ CellInterpolate(const FieldVecType &pointFieldValues,
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &,
                 const vtkm::Vec<ParametricCoordType,3> &,
@@ -173,7 +173,7 @@ CellInterpolate(const FieldVecType &,
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &pointFieldValues,
                 const vtkm::Vec<ParametricCoordType,3>,
@@ -187,7 +187,7 @@ CellInterpolate(const FieldVecType &pointFieldValues,
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &pointFieldValues,
                 const vtkm::Vec<ParametricCoordType,3> &parametricCoords,
@@ -201,7 +201,7 @@ CellInterpolate(const FieldVecType &pointFieldValues,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<vtkm::FloatDefault,3>
 CellInterpolate(const vtkm::VecRectilinearPointCoordinates<1> &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -221,7 +221,7 @@ CellInterpolate(const vtkm::VecRectilinearPointCoordinates<1> &field,
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -238,7 +238,7 @@ CellInterpolate(const FieldVecType &field,
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -333,7 +333,7 @@ CellInterpolate(const FieldVecType &field,
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -351,7 +351,7 @@ CellInterpolate(const FieldVecType &field,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<vtkm::FloatDefault,3>
 CellInterpolate(const vtkm::VecRectilinearPointCoordinates<2> &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -371,7 +371,7 @@ CellInterpolate(const vtkm::VecRectilinearPointCoordinates<2> &field,
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -389,7 +389,7 @@ CellInterpolate(const FieldVecType &field,
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -412,7 +412,7 @@ CellInterpolate(const FieldVecType &field,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<vtkm::FloatDefault,3>
 CellInterpolate(const vtkm::VecRectilinearPointCoordinates<3> &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -430,7 +430,7 @@ CellInterpolate(const vtkm::VecRectilinearPointCoordinates<3> &field,
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -455,7 +455,7 @@ CellInterpolate(const FieldVecType &field,
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 typename FieldVecType::ComponentType
 CellInterpolate(const FieldVecType &field,
                 const vtkm::Vec<ParametricCoordType,3> &pcoords,

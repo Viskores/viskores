@@ -50,7 +50,7 @@ struct Transport<vtkm::cont::arg::TransportTagCellSetIn<FromTopology,ToTopology>
           Device,FromTopology,ToTopology>
       ::ExecObjectType ExecObjectType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
   {
     //create CUDA version of connectivity array.

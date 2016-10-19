@@ -131,19 +131,19 @@ struct GetTypeInParentheses<void(T)>
   \
   VTKM_IS_ARRAY_HANDLE(Superclass); \
   \
-  VTKM_CONT_EXPORT \
+  VTKM_CONT \
   classname() : Superclass() {  } \
   \
-  VTKM_CONT_EXPORT \
+  VTKM_CONT \
   classname(const Thisclass &src) : Superclass(src) {  } \
   \
-  VTKM_CONT_EXPORT \
+  VTKM_CONT \
   classname(const vtkm::cont::ArrayHandle<typename__ Superclass::ValueType, typename__ Superclass::StorageTag> &src) : Superclass(src) {  } \
   \
-  VTKM_CONT_EXPORT \
+  VTKM_CONT \
   virtual ~classname() {  } \
   \
-  VTKM_CONT_EXPORT \
+  VTKM_CONT \
   Thisclass &operator=(const Thisclass &src) \
   { \
     this->Superclass::operator=(src); \
@@ -247,7 +247,7 @@ public:
   /// Constructs an empty ArrayHandle. Typically used for output or
   /// intermediate arrays that will be filled by a VTKm algorithm.
   ///
-  VTKM_CONT_EXPORT ArrayHandle() : Internals(new InternalStruct)
+  VTKM_CONT ArrayHandle() : Internals(new InternalStruct)
   {
     this->Internals->ControlArrayValid = false;
     this->Internals->ExecutionArrayValid = false;
@@ -260,7 +260,7 @@ public:
   /// with CUDA), then the automatically generated copy constructor could be
   /// created for all devices, and it would not be valid for all devices.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandle(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
     : Internals(src.Internals)
   {  }
@@ -288,7 +288,7 @@ public:
 
   /// \brief Copies an ArrayHandle
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::cont::ArrayHandle<ValueType,StorageTag> &
   operator=(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
   {
@@ -298,7 +298,7 @@ public:
 
   /// Get the storage.
   ///
-  VTKM_CONT_EXPORT StorageType& GetStorage()
+  VTKM_CONT StorageType& GetStorage()
   {
     this->SyncControlArray();
     if (this->Internals->ControlArrayValid)
@@ -314,7 +314,7 @@ public:
 
   /// Get the storage.
   ///
-  VTKM_CONT_EXPORT const StorageType& GetStorage() const
+  VTKM_CONT const StorageType& GetStorage() const
   {
     this->SyncControlArray();
     if (this->Internals->ControlArrayValid)
@@ -330,7 +330,7 @@ public:
 
   /// Get the array portal of the control array.
   ///
-  VTKM_CONT_EXPORT PortalControl GetPortalControl()
+  VTKM_CONT PortalControl GetPortalControl()
   {
     this->SyncControlArray();
     if (this->Internals->ControlArrayValid)
@@ -350,7 +350,7 @@ public:
 
   /// Get the array portal of the control array.
   ///
-  VTKM_CONT_EXPORT PortalConstControl GetPortalConstControl() const
+  VTKM_CONT PortalConstControl GetPortalConstControl() const
   {
     this->SyncControlArray();
     if (this->Internals->ControlArrayValid)
@@ -366,7 +366,7 @@ public:
 
   /// Returns the number of entries in the array.
   ///
-  VTKM_CONT_EXPORT vtkm::Id GetNumberOfValues() const
+  VTKM_CONT vtkm::Id GetNumberOfValues() const
   {
     if (this->Internals->ControlArrayValid)
     {
@@ -386,7 +386,7 @@ public:
   /// method can skip copying into an internally managed control array.
   ///
   template<typename IteratorType, typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT void CopyInto(IteratorType dest, DeviceAdapterTag) const
+  VTKM_CONT void CopyInto(IteratorType dest, DeviceAdapterTag) const
   {
     using pointer_type = typename std::iterator_traits<IteratorType>::pointer;
     using value_type = typename std::remove_pointer<pointer_type>::type;
@@ -434,7 +434,7 @@ public:
   /// ErrorControlBadValue if the allocation is not feasible (for example, the
   /// array storage is read-only).
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(vtkm::Id numberOfValues)
   {
     this->ReleaseResourcesExecutionInternal();
@@ -481,7 +481,7 @@ public:
   /// Releases any resources being used in the execution environment (that are
   /// not being shared by the control environment).
   ///
-  VTKM_CONT_EXPORT void ReleaseResourcesExecution()
+  VTKM_CONT void ReleaseResourcesExecution()
   {
     // Save any data in the execution environment by making sure it is synced
     // with the control environment.
@@ -492,7 +492,7 @@ public:
 
   /// Releases all resources in both the control and execution environments.
   ///
-  VTKM_CONT_EXPORT void ReleaseResources()
+  VTKM_CONT void ReleaseResources()
   {
     this->ReleaseResourcesExecutionInternal();
 
@@ -510,7 +510,7 @@ public:
   /// execution environment.
   ///
   template<typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ExecutionTypes<DeviceAdapterTag>::PortalConst
   PrepareForInput(DeviceAdapterTag) const
   {
@@ -541,7 +541,7 @@ public:
   /// execution environment.
   ///
   template<typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ExecutionTypes<DeviceAdapterTag>::Portal
   PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag)
   {
@@ -578,7 +578,7 @@ public:
   /// in the execution environment.
   ///
   template<typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ExecutionTypes<DeviceAdapterTag>::Portal
   PrepareForInPlace(DeviceAdapterTag)
   {
@@ -609,12 +609,12 @@ public:
   /// Like a pointer, two \c ArrayHandles are considered equal if they point
   /// to the same location in memory.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool operator==(const ArrayHandle<ValueType,StorageTag> &rhs) const
   {
     return (this->Internals.get() == rhs.Internals.get());
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool operator!=(const ArrayHandle<ValueType,StorageTag> &rhs) const
   {
     return (this->Internals.get() != rhs.Internals.get());
@@ -632,7 +632,7 @@ public:
     bool ExecutionArrayValid;
   };
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandle(const std::shared_ptr<InternalStruct>& i)
     : Internals(i)
   { }
@@ -643,7 +643,7 @@ public:
   /// method is declared const because logically the data does not.
   ///
   template<typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void PrepareForDevice(DeviceAdapterTag) const
   {
     if (this->Internals->ExecutionArray != nullptr)
@@ -688,7 +688,7 @@ public:
   /// Although the internal state of this class can change, the method is
   /// declared const because logically the data does not.
   ///
-  VTKM_CONT_EXPORT void SyncControlArray() const
+  VTKM_CONT void SyncControlArray() const
   {
     if (!this->Internals->ControlArrayValid)
     {
@@ -712,7 +712,7 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResourcesExecutionInternal()
   {
     if (this->Internals->ExecutionArrayValid)
@@ -728,7 +728,7 @@ public:
 /// A convenience function for creating an ArrayHandle from a standard C array.
 ///
 template<typename T>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
 make_ArrayHandle(const T *array,
                  vtkm::Id length)
@@ -744,7 +744,7 @@ make_ArrayHandle(const T *array,
 ///
 template<typename T,
          typename Allocator>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
 make_ArrayHandle(const std::vector<T,Allocator> &array)
 {
@@ -752,7 +752,7 @@ make_ArrayHandle(const std::vector<T,Allocator> &array)
 }
 
 template<typename T, typename StorageT>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void
 printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
                          std::ostream &out)
@@ -779,7 +779,7 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
 }
 
 template<typename StorageT>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void
 printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<vtkm::UInt8,StorageT> &array,
                          std::ostream &out)

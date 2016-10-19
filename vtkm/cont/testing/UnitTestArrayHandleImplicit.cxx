@@ -35,7 +35,7 @@ const vtkm::Id ARRAY_SIZE = 10;
 template<typename ValueType>
 struct IndexSquared
 {
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType operator()(vtkm::Id i) const
   {
     typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;

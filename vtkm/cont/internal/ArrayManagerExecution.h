@@ -76,13 +76,13 @@ public:
   /// objects should be avoided (copy references or pointers only). The
   /// reference can also, of course, be ignored.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayManagerExecution(vtkm::cont::internal::Storage<T,StorageTag> &storage);
 
   /// Returns the number of values stored in the array.  Results are undefined
   /// if data has not been loaded or allocated.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const;
 
   /// Prepares the data for use as input in the execution environment. If the
@@ -91,7 +91,7 @@ public:
   ///
   /// Returns a constant array portal valid in the execution environment.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstExecution PrepareForInput(bool updateData);
 
   /// Prepares the data for use as both input and output in the execution
@@ -100,7 +100,7 @@ public:
   ///
   /// Returns a read-write array portal valid in the execution environment.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution LoadDataForInPlace(bool updateData);
 
   /// Allocates an array in the execution environment of the specified size. If
@@ -110,7 +110,7 @@ public:
   ///
   /// Returns a writable array portal valid in the execution environment.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues);
 
   /// Allocates data in the given Storage and copies data held in the execution
@@ -120,7 +120,7 @@ public:
   /// operation. This method should only be called after PrepareForOutput is
   /// called.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(
       vtkm::cont::internal::Storage<T,StorageTag>* storage) const;
 
@@ -131,7 +131,7 @@ public:
   /// and exeuction have seperate memory spaces).
   ///
   template <class IteratorTypeControl>
-  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const;
+  VTKM_CONT void CopyInto(IteratorTypeControl dest) const;
 
   /// \brief Reduces the size of the array without changing its values.
   ///
@@ -142,13 +142,13 @@ public:
   /// (returned from GetNumberOfValues). That is, this method can only be used
   /// to shorten the array, not lengthen.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues);
 
   /// Frees any resources (i.e. memory) allocated for the exeuction
   /// environment, if any.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources();
 };
 #else // VTKM_DOXGEN_ONLY

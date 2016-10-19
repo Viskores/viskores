@@ -52,25 +52,25 @@ public:
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorBufferType;
   typedef vtkm::cont::ArrayHandle<vtkm::Float32> DepthBufferType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetWidth() const { return this->Width; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetHeight() const { return this->Height; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const ColorBufferType &GetColorBuffer() const { return this->ColorBuffer; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ColorBufferType &GetColorBuffer() { return this->ColorBuffer; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const DepthBufferType &GetDepthBuffer() const { return this->DepthBuffer; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DepthBufferType &GetDepthBuffer() { return this->DepthBuffer; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ResizeBuffers(vtkm::Id width, vtkm::Id height)
   {
     VTKM_ASSERT(width >= 0);
@@ -90,13 +90,13 @@ public:
     this->Height = height;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::rendering::Color &GetBackgroundColor() const
   {
     return this->BackgroundColor;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetBackgroundColor(const vtkm::rendering::Color &color)
   {
     this->BackgroundColor = color;
@@ -118,7 +118,7 @@ public:
                        vtkm::Float32 linewidth,
                        const vtkm::rendering::Color &color) const = 0;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddLine(vtkm::Float64 x0, vtkm::Float64 y0,
                vtkm::Float64 x1, vtkm::Float64 y1,
                vtkm::Float32 linewidth,
@@ -134,7 +134,7 @@ public:
                            const vtkm::rendering::ColorTable &colorTable,
                            bool horizontal) const = 0;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddColorBar(vtkm::Float32 x, vtkm::Float32 y,
                    vtkm::Float32 width, vtkm::Float32 height,
                    const vtkm::rendering::ColorTable &colorTable,
@@ -155,7 +155,7 @@ public:
                        const vtkm::rendering::Color & color,
                        const std::string &text) const = 0;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddText(vtkm::Float32 x, vtkm::Float32 y,
                vtkm::Float32 scale,
                vtkm::Float32 angle,

@@ -35,7 +35,7 @@ namespace exec {
 
 //-----------------------------------------------------------------------------
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagEmpty,
@@ -49,7 +49,7 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagVertex,
@@ -63,7 +63,7 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagLine,
@@ -77,7 +77,7 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagTriangle,
@@ -91,7 +91,7 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagPolygon,
@@ -121,7 +121,7 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagQuad,
@@ -135,7 +135,7 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagTetra,
@@ -149,7 +149,7 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagHexahedron,
@@ -163,7 +163,7 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagWedge,
@@ -177,7 +177,7 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagPyramid,
@@ -195,7 +195,7 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
 /// of points.
 ///
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                                  vtkm::Vec<ParametricCoordType,3> &pcoords,
                                  vtkm::CellShapeTagGeneric shape,
@@ -218,7 +218,7 @@ void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
 /// of points.
 ///
 template<typename CellShapeTag>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::Vec<vtkm::FloatDefault,3>
 ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
                             CellShapeTag shape,
@@ -231,7 +231,7 @@ ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
 
 //-----------------------------------------------------------------------------
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesPoint(vtkm::IdComponent,
                                 vtkm::IdComponent,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -243,7 +243,7 @@ void ParametricCoordinatesPoint(vtkm::IdComponent,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -260,7 +260,7 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -277,7 +277,7 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -298,7 +298,7 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -351,7 +351,7 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -373,7 +373,7 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -394,7 +394,7 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -419,7 +419,7 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -442,7 +442,7 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
 }
 
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -468,7 +468,7 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
 /// the given number of points.
 ///
 template<typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                                 vtkm::IdComponent pointIndex,
                                 vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -493,7 +493,7 @@ void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
 /// the given number of points.
 ///
 template<typename CellShapeTag>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::Vec<vtkm::FloatDefault,3>
 ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
                            vtkm::IdComponent pointIndex,
@@ -507,7 +507,7 @@ ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
 
 //-----------------------------------------------------------------------------
 template<typename WorldCoordVector, typename PCoordType, typename CellShapeTag>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 ParametricCoordinatesToWorldCoordinates(
     const WorldCoordVector &pointWCoords,
@@ -534,14 +534,14 @@ class JacobianFunctorQuad
   const SpaceType *Space;
 
 public:
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   JacobianFunctorQuad(
       const WorldCoordVector *pointWCoords,
       const SpaceType *space)
     : PointWCoords(pointWCoords), Space(space)
   {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   Matrix2x2 operator()(const Vector2 &pcoords) const
   {
     Matrix2x2 jacobian;
@@ -568,7 +568,7 @@ class CoordinatesFunctorQuad
   const vtkm::exec::FunctorBase *Worklet;
 
 public:
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   CoordinatesFunctorQuad(
       const WorldCoordVector *pointWCoords,
       const SpaceType *space,
@@ -576,7 +576,7 @@ public:
     : PointWCoords(pointWCoords), Space(space), Worklet(worklet)
   {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   Vector2 operator()(Vector2 pcoords) const {
     Vector3 pcoords3D(pcoords[0], pcoords[1], 0);
     Vector3 wcoords =
@@ -596,13 +596,13 @@ class JacobianFunctor3DCell
   const WorldCoordVector *PointWCoords;
 
 public:
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   JacobianFunctor3DCell(
       const WorldCoordVector *pointWCoords)
     : PointWCoords(pointWCoords)
   {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   Matrix3x3 operator()(const Vector3 &pcoords) const
   {
     Matrix3x3 jacobian;
@@ -624,13 +624,13 @@ class CoordinatesFunctor3DCell
   const vtkm::exec::FunctorBase *Worklet;
 
 public:
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   CoordinatesFunctor3DCell(const WorldCoordVector *pointWCoords,
                            const vtkm::exec::FunctorBase *worklet)
     : PointWCoords(pointWCoords), Worklet(worklet)
   {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   Vector3 operator()(Vector3 pcoords) const {
     return
         vtkm::exec::ParametricCoordinatesToWorldCoordinates(
@@ -639,7 +639,7 @@ public:
 };
 
 template<typename WorldCoordVector, typename CellShapeTag>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates3D(
     const WorldCoordVector &pointWCoords,
@@ -659,7 +659,7 @@ WorldCoordinatesToParametricCoordinates3D(
 
 //-----------------------------------------------------------------------------
 template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
@@ -684,7 +684,7 @@ WorldCoordinatesToParametricCoordinates(
 }
 
 template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &,
@@ -697,7 +697,7 @@ WorldCoordinatesToParametricCoordinates(
 }
 
 template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
@@ -711,7 +711,7 @@ WorldCoordinatesToParametricCoordinates(
 }
 
 template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
@@ -740,7 +740,7 @@ WorldCoordinatesToParametricCoordinates(
   return Vector3(numerator/denominator, 0, 0);
 }
 
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::Vec<vtkm::FloatDefault,3>
 WorldCoordinatesToParametricCoordinates(
     const vtkm::VecRectilinearPointCoordinates<1> &pointWCoords,
@@ -752,7 +752,7 @@ WorldCoordinatesToParametricCoordinates(
 }
 
 template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
@@ -765,7 +765,7 @@ WorldCoordinatesToParametricCoordinates(
 }
 
 template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
@@ -901,7 +901,7 @@ WorldCoordinatesToParametricCoordinates(
 }
 
 template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
@@ -930,7 +930,7 @@ WorldCoordinatesToParametricCoordinates(
   return Vector3(pcoords[0], pcoords[1], 0);
 }
 
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::Vec<vtkm::FloatDefault,3>
 WorldCoordinatesToParametricCoordinates(
     const vtkm::VecRectilinearPointCoordinates<2> &pointWCoords,
@@ -942,7 +942,7 @@ WorldCoordinatesToParametricCoordinates(
 }
 
 template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
@@ -998,7 +998,7 @@ WorldCoordinatesToParametricCoordinates(
 
 
 template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
@@ -1012,7 +1012,7 @@ WorldCoordinatesToParametricCoordinates(
         pointWCoords, wcoords, vtkm::CellShapeTagHexahedron(), worklet);
 }
 
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::Vec<vtkm::FloatDefault,3>
 WorldCoordinatesToParametricCoordinates(
     const vtkm::VecRectilinearPointCoordinates<3> &pointWCoords,
@@ -1024,7 +1024,7 @@ WorldCoordinatesToParametricCoordinates(
 }
 
 template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,
@@ -1040,7 +1040,7 @@ WorldCoordinatesToParametricCoordinates(
 
 
 template<typename WorldCoordVector>
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(
     const WorldCoordVector &pointWCoords,

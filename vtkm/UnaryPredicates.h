@@ -30,7 +30,7 @@ namespace vtkm {
 struct IsZeroInitialized
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T &x) const
+  VTKM_EXEC_CONT bool operator()(const T &x) const
   {
     return (x  == vtkm::TypeTraits<T>::ZeroInitialization() );
   }
@@ -41,7 +41,7 @@ struct IsZeroInitialized
 struct NotZeroInitialized
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T &x) const
+  VTKM_EXEC_CONT bool operator()(const T &x) const
   {
     return (x  != vtkm::TypeTraits<T>::ZeroInitialization() );
   }
@@ -54,7 +54,7 @@ struct NotZeroInitialized
 struct LogicalNot
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& x) const
+  VTKM_EXEC_CONT bool operator()(const T& x) const
   {
     return !x;
   }

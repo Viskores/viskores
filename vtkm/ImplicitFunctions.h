@@ -29,37 +29,37 @@ namespace vtkm {
 class Plane
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Plane()
     : Origin(FloatDefault(0)),
       Normal(FloatDefault(0), FloatDefault(0), FloatDefault(1))
   { }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   explicit Plane(const vtkm::Vec<FloatDefault, 3> &normal)
     : Origin(FloatDefault(0)),
       Normal(normal)
   { }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Plane(const vtkm::Vec<FloatDefault, 3> &origin,
         const vtkm::Vec<FloatDefault, 3> &normal)
     : Origin(origin), Normal(normal)
   { }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const vtkm::Vec<FloatDefault, 3>& GetOrigin() const
   {
     return this->Origin;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const vtkm::Vec<FloatDefault, 3>& GetNormal() const
   {
     return this->Normal;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FloatDefault Value(FloatDefault x, FloatDefault y, FloatDefault z) const
   {
     return ((x - this->Origin[0]) * this->Normal[0]) +
@@ -67,19 +67,19 @@ public:
            ((z - this->Origin[2]) * this->Normal[2]);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FloatDefault Value(const vtkm::Vec<FloatDefault, 3> &x) const
   {
     return this->Value(x[0], x[1], x[2]);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Vec<FloatDefault, 3> Gradient(FloatDefault, FloatDefault, FloatDefault) const
   {
     return this->Normal;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Vec<FloatDefault, 3> Gradient(const vtkm::Vec<FloatDefault, 3>&) const
   {
     return this->Normal;
@@ -95,32 +95,32 @@ private:
 class Sphere
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Sphere() : Radius(FloatDefault(0.2)), Center(FloatDefault(0))
   { }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   explicit Sphere(FloatDefault radius) : Radius(radius), Center(FloatDefault(0))
   { }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Sphere(vtkm::Vec<FloatDefault, 3> center, FloatDefault radius)
     : Radius(radius), Center(center)
   { }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FloatDefault GetRadius() const
   {
     return this->Radius;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const vtkm::Vec<FloatDefault, 3>& GetCenter() const
   {
     return this->Center;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FloatDefault Value(FloatDefault x, FloatDefault y, FloatDefault z) const
   {
     return ((x - this->Center[0]) * (x - this->Center[0]) +
@@ -129,20 +129,20 @@ public:
            (this->Radius * this->Radius);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FloatDefault Value(const vtkm::Vec<FloatDefault, 3> &x) const
   {
     return this->Value(x[0], x[1], x[2]);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Vec<FloatDefault, 3> Gradient(FloatDefault x, FloatDefault y, FloatDefault z)
     const
   {
     return this->Gradient(vtkm::Vec<FloatDefault, 3>(x, y, z));
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Vec<FloatDefault, 3> Gradient(const vtkm::Vec<FloatDefault, 3> &x) const
   {
     return FloatDefault(2) * (x - this->Center);
@@ -158,23 +158,23 @@ template <typename ImplicitFunction>
 class ImplicitFunctionValue
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ImplicitFunctionValue()
     : Function()
   { }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   explicit ImplicitFunctionValue(const ImplicitFunction &func)
     : Function(func)
   { }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FloatDefault operator()(const vtkm::Vec<FloatDefault, 3> x) const
   {
     return this->Function.Value(x);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FloatDefault operator()(FloatDefault x, FloatDefault y, FloatDefault z) const
   {
     return this->Function.Value(x, y, z);
@@ -190,23 +190,23 @@ template <typename ImplicitFunction>
 class ImplicitFunctionGradient
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ImplicitFunctionGradient()
     : Function()
   { }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   explicit ImplicitFunctionGradient(const ImplicitFunction &func)
     : Function(func)
   { }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FloatDefault operator()(const vtkm::Vec<FloatDefault, 3> x) const
   {
     return this->Function.Gradient(x);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FloatDefault operator()(FloatDefault x, FloatDefault y, FloatDefault z) const
   {
     return this->Function.Gradient(x, y, z);

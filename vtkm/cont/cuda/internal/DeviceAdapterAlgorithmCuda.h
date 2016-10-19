@@ -60,7 +60,7 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>
           vtkm::cont::DeviceAdapterTagCuda>
 {
 
-  VTKM_CONT_EXPORT static void Synchronize()
+  VTKM_CONT static void Synchronize()
   {
     VTKM_CUDA_CALL(cudaDeviceSynchronize());
   }
@@ -73,25 +73,25 @@ template<>
 class DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>
 {
 public:
-  VTKM_CONT_EXPORT DeviceAdapterTimerImplementation()
+  VTKM_CONT DeviceAdapterTimerImplementation()
   {
     VTKM_CUDA_CALL(cudaEventCreate(&this->StartEvent));
     VTKM_CUDA_CALL(cudaEventCreate(&this->EndEvent));
     this->Reset();
   }
-  VTKM_CONT_EXPORT ~DeviceAdapterTimerImplementation()
+  VTKM_CONT ~DeviceAdapterTimerImplementation()
   {
     VTKM_CUDA_CALL(cudaEventDestroy(this->StartEvent));
     VTKM_CUDA_CALL(cudaEventDestroy(this->EndEvent));
   }
 
-  VTKM_CONT_EXPORT void Reset()
+  VTKM_CONT void Reset()
   {
     VTKM_CUDA_CALL(cudaEventRecord(this->StartEvent, 0));
     VTKM_CUDA_CALL(cudaEventSynchronize(this->StartEvent));
   }
 
-  VTKM_CONT_EXPORT vtkm::Float64 GetElapsedTime()
+  VTKM_CONT vtkm::Float64 GetElapsedTime()
   {
     VTKM_CUDA_CALL(cudaEventRecord(this->EndEvent, 0));
     VTKM_CUDA_CALL(cudaEventSynchronize(this->EndEvent));
@@ -124,7 +124,7 @@ template<>
 class DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagCuda>
 {
 public:
-  VTKM_CONT_EXPORT DeviceAdapterRuntimeDetector():
+  VTKM_CONT DeviceAdapterRuntimeDetector():
     NumberOfDevices(0),
     HighestArchSupported(0)
   {
@@ -174,7 +174,7 @@ public:
   /// Only returns true if we have at-least one CUDA capable device of SM_20 or
   /// greater ( fermi ).
   ///
-  VTKM_CONT_EXPORT bool Exists() const
+  VTKM_CONT bool Exists() const
   {
     //
     return this->NumberOfDevices > 0 && this->HighestArchSupported >= 20;
@@ -191,7 +191,7 @@ template<typename T>
 class DeviceAdapterAtomicArrayImplementation<T,vtkm::cont::DeviceAdapterTagCuda>
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DeviceAdapterAtomicArrayImplementation(
              vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> handle):
     Portal( handle.PrepareForInPlace( vtkm::cont::DeviceAdapterTagCuda()) )

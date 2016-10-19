@@ -27,6 +27,7 @@ namespace filter {
 
 
 //-----------------------------------------------------------------------------
+inline VTKM_CONT
 CellAverage::CellAverage():
   vtkm::filter::FilterCell<CellAverage>(),
   Worklet()
@@ -39,6 +40,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
+inline VTKM_CONT
 vtkm::filter::ResultField CellAverage::DoExecute(
     const vtkm::cont::DataSet &input,
     const vtkm::cont::ArrayHandle<T, StorageType> &inField,

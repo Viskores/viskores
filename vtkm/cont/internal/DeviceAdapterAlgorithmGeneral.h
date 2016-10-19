@@ -65,20 +65,20 @@ namespace internal {
 ///                                    DeviceAdapterTagFoo>
 /// {
 ///   template<class Functor>
-///   VTKM_CONT_EXPORT static void Schedule(Functor functor,
+///   VTKM_CONT static void Schedule(Functor functor,
 ///                                        vtkm::Id numInstances)
 ///   {
 ///     ...
 ///   }
 ///
 ///   template<class Functor>
-///   VTKM_CONT_EXPORT static void Schedule(Functor functor,
+///   VTKM_CONT static void Schedule(Functor functor,
 ///                                        vtkm::Id3 maxRange)
 ///   {
 ///     ...
 ///   }
 ///
-///   VTKM_CONT_EXPORT static void Synchronize()
+///   VTKM_CONT static void Synchronize()
 ///   {
 ///     ...
 ///   }
@@ -102,7 +102,7 @@ struct DeviceAdapterAlgorithmGeneral
   // implementations to provide one.
 private:
   template<typename T, class CIn>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static T GetExecutionValue(const vtkm::cont::ArrayHandle<T, CIn> &input,
                              vtkm::Id index)
   {
@@ -129,7 +129,7 @@ public:
   //--------------------------------------------------------------------------
   // Copy
   template<typename T, typename U, class CIn, class COut>
-  VTKM_CONT_EXPORT static void Copy(const vtkm::cont::ArrayHandle<T, CIn> &input,
+  VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn> &input,
                                     vtkm::cont::ArrayHandle<U, COut> &output)
   {
     typedef  CopyKernel<
@@ -146,7 +146,7 @@ public:
   //--------------------------------------------------------------------------
   // CopySubRange
   template<typename T, typename U, class CIn, class COut>
-  VTKM_CONT_EXPORT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, CIn> &input,
+  VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, CIn> &input,
                                             vtkm::Id inputStartIndex,
                                             vtkm::Id numberOfElementsToCopy,
                                             vtkm::cont::ArrayHandle<U, COut> &output,
@@ -201,7 +201,7 @@ public:
   //--------------------------------------------------------------------------
   // Lower Bounds
   template<typename T, class CIn, class CVal, class COut>
-  VTKM_CONT_EXPORT static void LowerBounds(
+  VTKM_CONT static void LowerBounds(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       const vtkm::cont::ArrayHandle<T,CVal> &values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut> &output)
@@ -220,7 +220,7 @@ public:
   }
 
   template<typename T, class CIn, class CVal, class COut, class BinaryCompare>
-  VTKM_CONT_EXPORT static void LowerBounds(
+  VTKM_CONT static void LowerBounds(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       const vtkm::cont::ArrayHandle<T,CVal> &values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut> &output,
@@ -242,7 +242,7 @@ public:
   }
 
   template<class CIn, class COut>
-  VTKM_CONT_EXPORT static void LowerBounds(
+  VTKM_CONT static void LowerBounds(
       const vtkm::cont::ArrayHandle<vtkm::Id,CIn> &input,
       vtkm::cont::ArrayHandle<vtkm::Id,COut> &values_output)
   {
@@ -255,14 +255,14 @@ public:
   //--------------------------------------------------------------------------
   // Reduce
  template<typename T, class CIn>
-  VTKM_CONT_EXPORT static T Reduce(
+  VTKM_CONT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
   {
     return DerivedAlgorithm::Reduce(input, initialValue,vtkm::Add());
   }
 
  template<typename T, class CIn, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T Reduce(
+  VTKM_CONT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       T initialValue,
       BinaryFunctor binary_functor)
@@ -309,7 +309,7 @@ public:
   //--------------------------------------------------------------------------
   // Streaming Reduce
   template<typename T, class CIn>
-  VTKM_CONT_EXPORT static T StreamingReduce(
+  VTKM_CONT static T StreamingReduce(
       const vtkm::Id numBlocks,
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       T initialValue)
@@ -318,7 +318,7 @@ public:
   }
 
   template<typename T, class CIn, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T StreamingReduce(
+  VTKM_CONT static T StreamingReduce(
       const vtkm::Id numBlocks,
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       T initialValue,
@@ -351,7 +351,7 @@ public:
   // Reduce By Key
   template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
           class BinaryFunctor>
-  VTKM_CONT_EXPORT static void ReduceByKey(
+  VTKM_CONT static void ReduceByKey(
       const vtkm::cont::ArrayHandle<T,KIn> &keys,
       const vtkm::cont::ArrayHandle<U,VIn> &values,
       vtkm::cont::ArrayHandle<T,KOut> &keys_output,
@@ -434,7 +434,7 @@ public:
   //--------------------------------------------------------------------------
   // Scan Exclusive
   template<typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T ScanExclusive(
+  VTKM_CONT static T ScanExclusive(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       vtkm::cont::ArrayHandle<T,COut>& output,
       BinaryFunctor binaryFunctor,
@@ -470,7 +470,7 @@ public:
   }
 
   template<typename T, class CIn, class COut>
-  VTKM_CONT_EXPORT static T ScanExclusive(
+  VTKM_CONT static T ScanExclusive(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
@@ -481,7 +481,7 @@ public:
   //--------------------------------------------------------------------------
   // Streaming exclusive scan
   template<typename T, class CIn, class COut>
-  VTKM_CONT_EXPORT static T StreamingScanExclusive(
+  VTKM_CONT static T StreamingScanExclusive(
       const vtkm::Id numBlocks,
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       vtkm::cont::ArrayHandle<T,COut>& output)
@@ -494,7 +494,7 @@ public:
   }
 
   template<typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T StreamingScanExclusive(
+  VTKM_CONT static T StreamingScanExclusive(
       const vtkm::Id numBlocks,
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       vtkm::cont::ArrayHandle<T,COut>& output,
@@ -538,7 +538,7 @@ public:
   //--------------------------------------------------------------------------
   // Scan Inclusive
   template<typename T, class CIn, class COut>
-  VTKM_CONT_EXPORT static T ScanInclusive(
+  VTKM_CONT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
@@ -548,7 +548,7 @@ public:
   }
 
   template<typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T ScanInclusive(
+  VTKM_CONT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output,
       BinaryFunctor binary_functor)
@@ -589,7 +589,7 @@ public:
   //--------------------------------------------------------------------------
   // Sort
   template<typename T, class Storage, class BinaryCompare>
-  VTKM_CONT_EXPORT static void Sort(
+  VTKM_CONT static void Sort(
       vtkm::cont::ArrayHandle<T,Storage> &values,
       BinaryCompare binary_compare)
   {
@@ -624,7 +624,7 @@ public:
   }
 
   template<typename T, class Storage>
-  VTKM_CONT_EXPORT static void Sort(
+  VTKM_CONT static void Sort(
       vtkm::cont::ArrayHandle<T,Storage> &values)
   {
     DerivedAlgorithm::Sort(values, DefaultCompareFunctor());
@@ -635,7 +635,7 @@ public:
 public:
 
   template<typename T, typename U, class StorageT,  class StorageU>
-  VTKM_CONT_EXPORT static void SortByKey(
+  VTKM_CONT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values)
   {
@@ -652,7 +652,7 @@ public:
   }
 
   template<typename T, typename U, class StorageT,  class StorageU, class BinaryCompare>
-  VTKM_CONT_EXPORT static void SortByKey(
+  VTKM_CONT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values,
       BinaryCompare binary_compare)
@@ -674,7 +674,7 @@ public:
   // Stream Compact
   template<typename T, typename U, class CIn, class CStencil,
            class COut, class UnaryPredicate>
-  VTKM_CONT_EXPORT static void StreamCompact(
+  VTKM_CONT static void StreamCompact(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
       vtkm::cont::ArrayHandle<T,COut>& output,
@@ -732,7 +732,7 @@ public:
   }
 
 template<typename T, typename U, class CIn, class CStencil, class COut>
-  VTKM_CONT_EXPORT static void StreamCompact(
+  VTKM_CONT static void StreamCompact(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
       vtkm::cont::ArrayHandle<T,COut>& output)
@@ -742,7 +742,7 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
   }
 
   template<typename T, class CStencil, class COut>
-  VTKM_CONT_EXPORT static void StreamCompact(
+  VTKM_CONT static void StreamCompact(
       const vtkm::cont::ArrayHandle<T,CStencil> &stencil,
       vtkm::cont::ArrayHandle<vtkm::Id,COut> &output)
   {
@@ -753,14 +753,14 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
   //--------------------------------------------------------------------------
   // Unique
   template<typename T, class Storage>
-  VTKM_CONT_EXPORT static void Unique(
+  VTKM_CONT static void Unique(
       vtkm::cont::ArrayHandle<T,Storage> &values)
   {
     Unique(values, std::equal_to<T>());
   }
 
   template<typename T, class Storage, class BinaryCompare>
-  VTKM_CONT_EXPORT static void Unique(
+  VTKM_CONT static void Unique(
       vtkm::cont::ArrayHandle<T,Storage> &values,
       BinaryCompare binary_compare)
   {
@@ -793,7 +793,7 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
   //--------------------------------------------------------------------------
   // Upper bounds
   template<typename T, class CIn, class CVal, class COut>
-  VTKM_CONT_EXPORT static void UpperBounds(
+  VTKM_CONT static void UpperBounds(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       const vtkm::cont::ArrayHandle<T,CVal> &values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut> &output)
@@ -812,7 +812,7 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
   }
 
   template<typename T, class CIn, class CVal, class COut, class BinaryCompare>
-  VTKM_CONT_EXPORT static void UpperBounds(
+  VTKM_CONT static void UpperBounds(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       const vtkm::cont::ArrayHandle<T,CVal> &values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut> &output,
@@ -834,7 +834,7 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
   }
 
   template<class CIn, class COut>
-  VTKM_CONT_EXPORT static void UpperBounds(
+  VTKM_CONT static void UpperBounds(
       const vtkm::cont::ArrayHandle<vtkm::Id,CIn> &input,
       vtkm::cont::ArrayHandle<vtkm::Id,COut> &values_output)
   {
@@ -863,14 +863,14 @@ template<typename T, typename DeviceTag>
 class DeviceAdapterAtomicArrayImplementation
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DeviceAdapterAtomicArrayImplementation(
                vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> handle):
     Iterators( IteratorsType( handle.PrepareForInPlace(DeviceTag()) ) )
   {
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   T Add(vtkm::Id index, const T& value) const
   {
     T* lockedValue;
@@ -886,7 +886,7 @@ public:
 #endif
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
   {
     T* lockedValue;
@@ -909,25 +909,25 @@ private:
   IteratorsType Iterators;
 
 #if defined(VTKM_MSVC) //MSVC atomics
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Int32 vtkmAtomicAdd(vtkm::Int32 *address, const vtkm::Int32 &value) const
   {
     return InterlockedExchangeAdd(reinterpret_cast<volatile long *>(address),value);
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Int64 vtkmAtomicAdd(vtkm::Int64 *address, const vtkm::Int64 &value) const
   {
     return InterlockedExchangeAdd64(reinterpret_cast<volatile long long *>(address),value);
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32 *address, const vtkm::Int32 &newValue, const vtkm::Int32 &oldValue) const
   {
     return InterlockedCompareExchange(reinterpret_cast<volatile long *>(address),newValue,oldValue);
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64 *address,const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
   {
     return InterlockedCompareExchange64(reinterpret_cast<volatile long long *>(address),newValue, oldValue);
@@ -935,25 +935,25 @@ private:
 
 #else //gcc built-in atomics
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Int32 vtkmAtomicAdd(vtkm::Int32 *address, const vtkm::Int32 &value) const
   {
     return __sync_fetch_and_add(address,value);
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Int64 vtkmAtomicAdd(vtkm::Int64 *address, const vtkm::Int64 &value) const
   {
     return __sync_fetch_and_add(address,value);
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32 *address, const vtkm::Int32 &newValue, const vtkm::Int32 &oldValue) const
   {
     return __sync_val_compare_and_swap(address,oldValue, newValue);
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64 *address,const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
   {
     return __sync_val_compare_and_swap(address,oldValue,newValue);

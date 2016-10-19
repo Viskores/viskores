@@ -30,7 +30,7 @@ namespace
 class ThresholdRange
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ThresholdRange(const vtkm::Float64& lower,
                  const vtkm::Float64& upper) :
     Lower(lower),
@@ -38,7 +38,7 @@ public:
   { }
 
   template<typename T>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   bool operator()(const T& value) const
   {
     return value >= static_cast<T>(this->Lower) &&
@@ -80,6 +80,7 @@ namespace vtkm {
 namespace filter {
 
 //-----------------------------------------------------------------------------
+inline VTKM_CONT
 Threshold::Threshold():
   vtkm::filter::FilterDataSetWithField<Threshold>(),
   LowerValue(0),
@@ -94,6 +95,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
+inline VTKM_CONT
 vtkm::filter::ResultDataSet Threshold::DoExecute(const vtkm::cont::DataSet& input,
                                                  const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                                  const vtkm::filter::FieldMetadata& fieldMeta,
@@ -157,6 +159,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
+inline VTKM_CONT
 bool Threshold::DoMapField(vtkm::filter::ResultDataSet& result,
                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
                            const vtkm::filter::FieldMetadata& fieldMeta,

@@ -53,10 +53,10 @@ struct SimplePolymorphicContainer : public SimplePolymorphicContainerBase
 {
   T Item;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   SimplePolymorphicContainer() : Item() {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   SimplePolymorphicContainer(const T &src) : Item(src) {  }
 
   virtual std::shared_ptr<SimplePolymorphicContainerBase> NewInstance() const

@@ -38,7 +38,7 @@ struct DispatcherStreamingMapFieldTransformFunctor
   vtkm::Id CurBlockSize;
   vtkm::Id FullSize;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DispatcherStreamingMapFieldTransformFunctor(
       vtkm::Id blockIndex, vtkm::Id blockSize, vtkm::Id curBlockSize, vtkm::Id fullSize)
     : BlockIndex(blockIndex), BlockSize(blockSize), 
@@ -71,7 +71,7 @@ struct DispatcherStreamingMapFieldTransformFunctor
   template<typename ArrayHandleType>
   struct TransformImpl<ArrayHandleType, true>
   {
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::cont::ArrayHandleStreaming<ArrayHandleType>
     operator()(const ArrayHandleType &array, vtkm::Id blockIndex, 
                vtkm::Id blockSize, vtkm::Id curBlockSize, vtkm::Id fullSize) const
@@ -87,7 +87,7 @@ struct DispatcherStreamingMapFieldTransformFunctor
   template<typename NotArrayHandleType>
   struct TransformImpl<NotArrayHandleType, false>
   {
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     NotArrayHandleType operator()(const NotArrayHandleType &notArray) const
     {
       return notArray;
@@ -95,7 +95,7 @@ struct DispatcherStreamingMapFieldTransformFunctor
   };
 
   template<typename ParameterType, vtkm::IdComponent Index>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ReturnType<ParameterType, Index>::type
   operator()(const ParameterType &invokeData,
              vtkm::internal::IndexTag<Index>) const
@@ -110,7 +110,7 @@ struct DispatcherStreamingMapFieldTransformFunctor
 template<typename ControlInterface, typename Device>
 struct DispatcherStreamingMapFieldTransferFunctor
 {
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DispatcherStreamingMapFieldTransferFunctor()  {  }
 
   template<typename ParameterType, vtkm::IdComponent Index>
@@ -124,7 +124,7 @@ struct DispatcherStreamingMapFieldTransferFunctor
   template<typename ArrayHandleType>
   struct TransformImpl<ArrayHandleType, true>
   {
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ArrayHandleType
     operator()(const ArrayHandleType &array) const
     {
@@ -136,7 +136,7 @@ struct DispatcherStreamingMapFieldTransferFunctor
   template<typename NotArrayHandleType>
   struct TransformImpl<NotArrayHandleType, false>
   {
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     NotArrayHandleType operator()(const NotArrayHandleType &notArray) const
     {
       return notArray;
@@ -144,7 +144,7 @@ struct DispatcherStreamingMapFieldTransferFunctor
   };
 
   template<typename ParameterType, vtkm::IdComponent Index>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ReturnType<ParameterType, Index>::type
   operator()(const ParameterType &invokeData,
              vtkm::internal::IndexTag<Index>) const
@@ -173,18 +173,18 @@ class DispatcherStreamingMapField :
     vtkm::worklet::WorkletMapField> Superclass;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DispatcherStreamingMapField(const WorkletType &worklet = WorkletType())
     : Superclass(worklet), NumberOfBlocks(1) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetNumberOfBlocks(vtkm::Id numberOfBlocks) 
   {
     NumberOfBlocks = numberOfBlocks;
   }
 
   template<typename Invocation, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void BasicInvoke(const Invocation &invocation,
                    vtkm::Id numInstances,
                    vtkm::Id globalIndexOffset,
@@ -199,7 +199,7 @@ public:
   }
 
   template<typename Invocation>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void DoInvoke(const Invocation &invocation) const
   {
     // This is the type for the input domain
@@ -254,7 +254,7 @@ public:
 private:
 
   template<typename Invocation, typename InputRangeType, typename OutputRangeType, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void InvokeTransportParameters(const Invocation &invocation,
                                  const InputRangeType& inputRange,
                                  const InputRangeType& globalIndexOffset,
@@ -291,7 +291,7 @@ private:
   }
 
   template<typename Invocation, typename RangeType, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void InvokeSchedule(const Invocation &invocation,
                       RangeType range,
                       RangeType globalIndexOffset,

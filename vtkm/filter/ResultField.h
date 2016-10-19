@@ -39,14 +39,14 @@ namespace filter {
 class ResultField : public vtkm::filter::ResultBase
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField() {  }
 
   /// Use this constructor if the field has already been added to the data set.
   /// In this case, just tell us what the field name is (and optionally its
   /// association).
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField(const vtkm::cont::DataSet &dataSet,
               const std::string &fieldName,
               vtkm::cont::Field::AssociationEnum fieldAssociation
@@ -62,7 +62,7 @@ public:
   /// Use this constructor if you have build a \c Field object. An output
   /// \c DataSet will be created by adding the field to the input.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField(const vtkm::cont::DataSet &inDataSet,
               const vtkm::cont::Field &field)
     : FieldName(field.GetName()), FieldAssociation(field.GetAssociation())
@@ -86,7 +86,7 @@ public:
   /// for \c ASSOC_WHOLE_MESH and \c ASSOC_POINTS associations.
   ///
   template<typename T, typename Storage>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField(const vtkm::cont::DataSet &inDataSet,
               const vtkm::cont::ArrayHandle<T, Storage> &fieldArray,
               const std::string &fieldName,
@@ -129,7 +129,7 @@ public:
   /// that associated set must also be given. The element set name is ignored
   /// for \c ASSOC_WHOLE_MESH and \c ASSOC_POINTS associations.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField(const vtkm::cont::DataSet &inDataSet,
               const vtkm::cont::DynamicArrayHandle &fieldArray,
               const std::string &fieldName,
@@ -165,14 +165,14 @@ public:
                                             this->FieldAssociation));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::Field &GetField() const
   {
     return this->GetDataSet().GetField(this->FieldName, this->FieldAssociation);
   }
 
   template<typename T, typename Storage>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool FieldAs(vtkm::cont::ArrayHandle<T, Storage> &dest) const
   {
     try

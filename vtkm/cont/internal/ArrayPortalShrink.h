@@ -42,14 +42,14 @@ public:
 
   typedef typename DelegatePortalType::ValueType ValueType;
 
-  VTKM_CONT_EXPORT ArrayPortalShrink() : NumberOfValues(0) {  }
+  VTKM_CONT ArrayPortalShrink() : NumberOfValues(0) {  }
 
-  VTKM_CONT_EXPORT ArrayPortalShrink(const DelegatePortalType &delegatePortal)
+  VTKM_CONT ArrayPortalShrink(const DelegatePortalType &delegatePortal)
     : DelegatePortal(delegatePortal),
       NumberOfValues(delegatePortal.GetNumberOfValues())
   {  }
 
-  VTKM_CONT_EXPORT ArrayPortalShrink(const DelegatePortalType &delegatePortal,
+  VTKM_CONT ArrayPortalShrink(const DelegatePortalType &delegatePortal,
                                      vtkm::Id numberOfValues)
     : DelegatePortal(delegatePortal), NumberOfValues(numberOfValues)
   {
@@ -61,16 +61,16 @@ public:
   /// the delegates can do (like the non-const to const cast).
   ///
   template<class OtherDelegateType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalShrink(const ArrayPortalShrink<OtherDelegateType> &src)
     : DelegatePortal(src.GetDelegatePortal()),
       NumberOfValues(src.GetNumberOfValues())
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ValueType Get(vtkm::Id index) const
   {
     VTKM_ASSERT(index >= 0);
@@ -78,7 +78,7 @@ public:
     return this->DelegatePortal.Get(index);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Set(vtkm::Id index, const ValueType& value) const
   {
     VTKM_ASSERT(index >= 0);
@@ -89,7 +89,7 @@ public:
   /// Special method in this ArrayPortal that allows you to shrink the
   /// (exposed) array.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues)
   {
     VTKM_ASSERT(numberOfValues < this->GetNumberOfValues());
@@ -125,7 +125,7 @@ class ArrayPortalToIterators<
 
 public:
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalToIterators(const PortalType &portal)
     : DelegateIterators(portal.GetDelegatePortal()),
       NumberOfValues(portal.GetNumberOfValues())
@@ -134,13 +134,13 @@ public:
   typedef typename DelegateArrayPortalToIterators::IteratorType IteratorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorType GetBegin() const {
     return this->DelegateIterators.GetBegin();
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorType GetEnd() const {
     IteratorType iterator = this->GetBegin();
     std::advance(iterator, this->NumberOfValues);

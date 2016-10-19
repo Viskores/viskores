@@ -44,13 +44,13 @@ struct TemplatedTests
   public:
     typedef T ValueType;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ReadOnlyArrayPortal(ComponentType value) : Value(value) {  }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ValueType Get(vtkm::Id index) const { return ExpectedValue(index, this->Value); }
 
   private:
@@ -62,13 +62,13 @@ struct TemplatedTests
   public:
     typedef T ValueType;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     WriteOnlyArrayPortal(ComponentType value) : Value(value) {  }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     void Set(vtkm::Id index, const ValueType &value) const {
       VTKM_TEST_ASSERT(value == ExpectedValue(index, this->Value),
                        "Set unexpected value in array portal.");

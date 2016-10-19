@@ -37,7 +37,7 @@ public:
   template<typename InPortalType,
            typename InOutPortalType,
            typename OutPortalType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Id &index,
                   const InPortalType &inPortal,
                   const InOutPortalType &inOutPortal,
@@ -70,7 +70,7 @@ public:
   typedef _1 InputDomain;
 
   template<typename AtomicArrayType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Id &index,
                   const AtomicArrayType &atomicArray) const
   {
@@ -88,7 +88,7 @@ struct DoTestWholeArrayWorklet
   typedef TestWholeArrayWorklet WorkletType;
 
   // This just demonstrates that the WholeArray tags support dynamic arrays.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void CallWorklet(const vtkm::cont::DynamicArrayHandle &inArray,
                    const vtkm::cont::DynamicArrayHandle &inOutArray,
                    const vtkm::cont::DynamicArrayHandle &outArray) const
@@ -99,7 +99,7 @@ struct DoTestWholeArrayWorklet
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(T) const
   {
     std::cout << "Set up data." << std::endl;
@@ -135,7 +135,7 @@ struct DoTestAtomicArrayWorklet
   typedef TestAtomicArrayWorklet WorkletType;
 
   // This just demonstrates that the WholeArray tags support dynamic arrays.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void CallWorklet(const vtkm::cont::DynamicArrayHandle &inOutArray) const
   {
     std::cout << "Create and run dispatcher." << std::endl;
@@ -144,7 +144,7 @@ struct DoTestAtomicArrayWorklet
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(T) const
   {
     std::cout << "Set up data." << std::endl;

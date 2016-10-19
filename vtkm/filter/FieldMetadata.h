@@ -30,7 +30,7 @@ namespace filter {
 class FieldMetadata
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   FieldMetadata():
     Name(),
     Association(vtkm::cont::Field::ASSOC_ANY),
@@ -38,7 +38,7 @@ public:
     {
     }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   FieldMetadata(const vtkm::cont::Field& f):
     Name(f.GetName()),
     Association(f.GetAssociation()),
@@ -46,7 +46,7 @@ public:
     {
     }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   FieldMetadata(const vtkm::cont::CoordinateSystem &sys):
     Name(sys.GetName()),
     Association(sys.GetAssociation()),
@@ -54,28 +54,28 @@ public:
     {
     }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool IsPointField() const
     {return this->Association == vtkm::cont::Field::ASSOC_POINTS; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool IsCellField() const
     {return this->Association == vtkm::cont::Field::ASSOC_CELL_SET; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const std::string& GetName() const
     {return this->Name; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::cont::Field::AssociationEnum GetAssociation() const
     { return this->Association; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const std::string& GetCellSetName() const
     {return this->CellSetName; }
 
   template<typename T, typename StorageTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::cont::Field AsField(const vtkm::cont::ArrayHandle<T,StorageTag> &handle) const
     {
       //Field only handles arrayHandles with default storage tag, so use
@@ -92,7 +92,7 @@ public:
       }
     }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::cont::Field AsField(const vtkm::cont::DynamicArrayHandle &dhandle) const
     {
       if(this->IsCellField())

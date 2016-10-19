@@ -36,10 +36,10 @@ static const vtkm::Id ARRAY_SIZE = 10;
 
 struct TestExecObject
 {
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   TestExecObject() : Array(nullptr) {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   TestExecObject(vtkm::Id *array) : Array(array) {  }
 
   vtkm::Id *Array;
@@ -77,7 +77,7 @@ struct Transport<TestTransportTag, vtkm::Id *, Device>
 {
   typedef TestExecObject ExecObjectType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecObjectType operator()(vtkm::Id *contData, vtkm::Id size) const
   {
     VTKM_TEST_ASSERT(size == ARRAY_SIZE,
@@ -116,13 +116,13 @@ struct Fetch<TestFetchTagInput,
 {
   typedef vtkm::Id ValueType;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic indices,
                  const TestExecObject &execObject) const {
     return execObject.Array[indices.GetInputIndex()];
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Store(const vtkm::exec::arg::ThreadIndicesBasic,
              const TestExecObject &,
              ValueType) const {
@@ -138,14 +138,14 @@ struct Fetch<TestFetchTagOutput,
 {
   typedef vtkm::Id ValueType;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic &,
                  const TestExecObject &) const {
     // No-op
     return ValueType();
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Store(const vtkm::exec::arg::ThreadIndicesBasic &indices,
              const TestExecObject &execObject,
              ValueType value) const {
@@ -182,7 +182,7 @@ public:
   typedef void ControlSignature(TestIn, ExecObject, TestOut);
   typedef _3 ExecutionSignature(_1, _2, WorkIndex);
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id operator()(vtkm::Id value,
                       TestExecObjectType execObject,
                       vtkm::Id index) const
@@ -203,7 +203,7 @@ public:
   typedef void ControlSignature(TestIn, ExecObject, TestOut);
   typedef void ExecutionSignature(_1, _2, _3);
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id, TestExecObjectType, vtkm::Id) const
   {
     this->RaiseError(ERROR_MESSAGE);
@@ -229,11 +229,11 @@ class TestDispatcher :
       typename Superclass::ExecutionInterface,
       1> Invocation;
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TestDispatcher(const WorkletType &worklet = WorkletType())
     : Superclass(worklet) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void DoInvoke(const Invocation &invocation) const
   {
     std::cout << "In TestDispatcher::DoInvoke()" << std::endl;

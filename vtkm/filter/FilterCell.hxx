@@ -24,6 +24,7 @@ namespace filter {
 
 //----------------------------------------------------------------------------
 template<class Derived>
+inline VTKM_CONT
 FilterCell<Derived>::FilterCell():
   vtkm::filter::FilterField< Derived >(),
   CellSetIndex(0)

@@ -72,7 +72,7 @@ public:
   /// also be treated as vectors.
   typedef TypeTraitsUnknownTag DimensionalityTag;
 
-  VTKM_EXEC_CONT_EXPORT static T ZeroInitialization() { return T(); }
+  VTKM_EXEC_CONT static T ZeroInitialization() { return T(); }
 };
 
 // Const types should have the same traits as their non-const counterparts.
@@ -85,14 +85,14 @@ struct TypeTraits<const T> : TypeTraits<T>
   template<> struct TypeTraits<T> { \
     typedef TypeTraitsRealTag NumericTag; \
     typedef TypeTraitsScalarTag DimensionalityTag; \
-    VTKM_EXEC_CONT_EXPORT static T ZeroInitialization() { return T(); } \
+    VTKM_EXEC_CONT static T ZeroInitialization() { return T(); } \
   };
 
 #define VTKM_BASIC_INTEGER_TYPE(T) \
   template<> struct TypeTraits< T > { \
     typedef TypeTraitsIntegerTag NumericTag; \
     typedef TypeTraitsScalarTag DimensionalityTag; \
-    VTKM_EXEC_CONT_EXPORT static T ZeroInitialization() \
+    VTKM_EXEC_CONT static T ZeroInitialization() \
       { \
       typedef T ReturnType; \
       return ReturnType(); \
@@ -129,7 +129,7 @@ struct TypeTraits<vtkm::Vec<T,Size> >
   typedef typename vtkm::TypeTraits<T>::NumericTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<T,Size> ZeroInitialization()
     { return vtkm::Vec<T,Size>( (T()) ); }
 };
@@ -142,7 +142,7 @@ struct TypeTraits<vtkm::Pair<T,U> >
   typedef TypeTraitsUnknownTag NumericTag;
   typedef TypeTraitsScalarTag DimensionalityTag;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Pair<T,U> ZeroInitialization()
   {
     return vtkm::Pair<T,U>(TypeTraits<T>::ZeroInitialization(),

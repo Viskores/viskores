@@ -33,10 +33,10 @@ struct TestPortal
 {
   typedef T ValueType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const {
     VTKM_TEST_ASSERT(index >= 0, "Bad portal index.");
     VTKM_TEST_ASSERT(index < this->GetNumberOfValues(), "Bad portal index.");

@@ -64,14 +64,14 @@ struct Fetch<FetchTag,
 {
   typedef vtkm::IdComponent ValueType;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::IdComponent Load(const ThreadIndicesType &indices,
                          const ExecObjectType &) const
   {
     return indices.GetVisitIndex();
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Store(const ThreadIndicesType &,
              const ExecObjectType &,
              const ValueType &) const

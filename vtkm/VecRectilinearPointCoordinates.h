@@ -53,7 +53,7 @@ struct VecRectilinearPointCoordinatesNumComponents<3>
   static const vtkm::IdComponent NUM_COMPONENTS = 8;
 };
 
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::FloatDefault VecRectilinearPointCoordinatesOffsetTable[8][3] = {
   { 0.0f, 0.0f, 0.0f },
   { 1.0f, 0.0f, 0.0f },
@@ -83,16 +83,16 @@ public:
   static const vtkm::IdComponent NUM_COMPONENTS =
       detail::VecRectilinearPointCoordinatesNumComponents<NumDimensions>::NUM_COMPONENTS;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   VecRectilinearPointCoordinates(ComponentType origin = ComponentType(0,0,0),
                                  ComponentType spacing = ComponentType(1,1,1))
     : Origin(origin), Spacing(spacing) {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::IdComponent GetNumberOfComponents() const { return NUM_COMPONENTS; }
 
   template<vtkm::IdComponent DestSize>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void CopyInto(vtkm::Vec<ComponentType,DestSize> &dest) const
   {
     vtkm::IdComponent numComponents =
@@ -103,7 +103,7 @@ public:
     }
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ComponentType operator[](vtkm::IdComponent index) const
   {
     const vtkm::FloatDefault *offset =
@@ -113,10 +113,10 @@ public:
                          this->Origin[2] + offset[2]*this->Spacing[2]);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const ComponentType &GetOrigin() const { return this->Origin; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const ComponentType &GetSpacing() const { return this->Spacing; }
 
 private:
@@ -133,7 +133,7 @@ struct TypeTraits<vtkm::VecRectilinearPointCoordinates<NumDimensions> >
   typedef vtkm::TypeTraitsRealTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::VecRectilinearPointCoordinates<NumDimensions>
   ZeroInitialization()
   {
@@ -154,12 +154,12 @@ struct VecTraits<vtkm::VecRectilinearPointCoordinates<NumDimensions> >
 
   static const vtkm::IdComponent NUM_COMPONENTS = VecType::NUM_COMPONENTS;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::IdComponent GetNumberOfComponents(const VecType &) {
     return NUM_COMPONENTS;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static ComponentType GetComponent(const VecType &vector,
                                     vtkm::IdComponent componentIndex)
   {
@@ -167,7 +167,7 @@ struct VecTraits<vtkm::VecRectilinearPointCoordinates<NumDimensions> >
   }
 
   template<vtkm::IdComponent destSize>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static void CopyInto(const VecType &src,
                        vtkm::Vec<ComponentType,destSize> &dest)
   {

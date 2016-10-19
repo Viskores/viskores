@@ -37,7 +37,7 @@ struct TestFunctor
   std::vector<TypeId> FoundTypes;
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(T) {
     this->FoundTypes.push_back(GetTypeId(T()));
   }

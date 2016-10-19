@@ -44,18 +44,18 @@ public:
 
   typedef typename InternalsType::SchedulingRangeType SchedulingRangeType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSetStructured(const std::string &name = std::string())
     : CellSet(name)
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSetStructured(const Thisclass &src)
     : CellSet(src), Structure(src.Structure)
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Thisclass &operator=(const Thisclass &src)
   {
     this->CellSet::operator=(src);
@@ -90,21 +90,21 @@ public:
     return this->Structure.GetCellDimensions();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::IdComponent
   GetNumberOfPointsInCell(vtkm::Id vtkmNotUsed(cellIndex)=0) const
   {
     return this->Structure.GetNumberOfPointsInCell();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::IdComponent GetCellShape() const
   {
     return this->Structure.GetCellShape();
   }
 
   template<typename TopologyElement>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   SchedulingRangeType GetSchedulingRange(TopologyElement) const {
     VTKM_IS_TOPOLOGY_ELEMENT_TAG(TopologyElement);
     return this->Structure.GetSchedulingRange(TopologyElement());

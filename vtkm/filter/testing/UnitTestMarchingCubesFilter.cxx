@@ -40,11 +40,11 @@ public:
   const vtkm::FloatDefault xmin, ymin, zmin, xmax, ymax, zmax;
   const vtkm::Id cellsPerLayer;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TangleField(const vtkm::Id3 dims, const vtkm::FloatDefault mins[3], const vtkm::FloatDefault maxs[3]) : xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
               xmin(mins[0]), ymin(mins[1]), zmin(mins[2]), xmax(maxs[0]), ymax(maxs[1]), zmax(maxs[2]), cellsPerLayer((xdim) * (ydim)) { }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Id &vertexId, vtkm::Float32 &v) const
   {
     const vtkm::Id x = vertexId % (xdim);
@@ -101,12 +101,12 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 class EuclideanNorm
 {
 public:
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   EuclideanNorm() : Reference(0.,0.,0.) {}
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   EuclideanNorm(vtkm::Vec<vtkm::Float32,3> reference):Reference(reference) {}
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Float32 operator()(vtkm::Vec<vtkm::Float32,3> v) const
   {
     vtkm::Vec<vtkm::Float32,3> d(v[0]-this->Reference[0],
@@ -122,16 +122,16 @@ private:
 class CubeGridConnectivity
 {
 public:
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   CubeGridConnectivity() : Dimension(1),
                            DimSquared(1),
                            DimPlus1Squared(4) {}
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   CubeGridConnectivity(vtkm::Id dim) : Dimension(dim),
                                        DimSquared(dim*dim),
                                        DimPlus1Squared((dim+1)*(dim+1)) {}
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id vertex) const
   {
     typedef vtkm::CellShapeTagHexahedron HexTag;

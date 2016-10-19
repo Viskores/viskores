@@ -69,7 +69,7 @@ public:
   struct minFunctor
   {
     template< typename FieldType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     FieldType operator()(const FieldType &x, const FieldType &y) const {
       return vtkm::Min(x, y);
     }
@@ -78,7 +78,7 @@ public:
   struct maxFunctor
   {
     template< typename FieldType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     FieldType operator()(const FieldType& x, const FieldType& y) const {
       return vtkm::Max(x, y);
     }
@@ -98,7 +98,7 @@ public:
     FieldType minValue;
     FieldType delta;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     SetHistogramBin(
           vtkm::Id numberOfBins0,
           FieldType minValue0,
@@ -107,7 +107,7 @@ public:
                   minValue(minValue0),
                   delta(delta0) {}
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const FieldType &value, vtkm::Id &binIndex) const
     {
       binIndex = static_cast<vtkm::Id>((value - minValue) / delta);
@@ -130,11 +130,11 @@ public:
     typedef vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
     IdPortalType totalCountArray;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     AdjacentDifference(IdPortalType totalCount) :
                        totalCountArray(totalCount) { }
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id &index, vtkm::Id & difference) const
     {
       if (index == 0)

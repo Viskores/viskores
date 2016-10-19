@@ -98,23 +98,23 @@ struct VecTraits
 
   /// Returns the value in a given component of the vector.
   ///
-  VTKM_EXEC_CONT_EXPORT static const ComponentType &GetComponent(
+  VTKM_EXEC_CONT static const ComponentType &GetComponent(
       const typename std::remove_const<VecType>::type &vector,
       vtkm::IdComponent component);
-  VTKM_EXEC_CONT_EXPORT static ComponentType &GetComponent(
+  VTKM_EXEC_CONT static ComponentType &GetComponent(
       typename std::remove_const<VecType>::type &vector,
       vtkm::IdComponent component);
 
   /// Changes the value in a given component of the vector.
   ///
-  VTKM_EXEC_CONT_EXPORT static void SetComponent(VecType &vector,
+  VTKM_EXEC_CONT static void SetComponent(VecType &vector,
                                                 vtkm::IdComponent component,
                                                 ComponentType value);
 
   /// Copies the components in the given vector into a given Vec object.
   ///
   template<vktm::IdComponent destSize>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static void
   CopyInto(const VecType &src, vtkm::Vec<ComponentType,destSize> &dest);
 };
@@ -144,7 +144,7 @@ struct VecTraits<vtkm::Vec<T,Size> >
 
   /// Number of components in the given vector.
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::IdComponent GetNumberOfComponents(const VecType &) {
     return NUM_COMPONENTS;
   }
@@ -166,20 +166,20 @@ struct VecTraits<vtkm::Vec<T,Size> >
 
   /// Returns the value in a given component of the vector.
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static const ComponentType &GetComponent(const VecType &vector,
                                            vtkm::IdComponent component)
   {
     return vector[component];
   }
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static ComponentType &GetComponent(VecType &vector, vtkm::IdComponent component) {
     return vector[component];
   }
 
   /// Changes the value in a given component of the vector.
   ///
-  VTKM_EXEC_CONT_EXPORT static void SetComponent(VecType &vector,
+  VTKM_EXEC_CONT static void SetComponent(VecType &vector,
                                                 vtkm::IdComponent component,
                                                 ComponentType value) {
     vector[component] = value;
@@ -188,7 +188,7 @@ struct VecTraits<vtkm::Vec<T,Size> >
   /// Converts whatever type this vector is into the standard VTKm Tuple.
   ///
   template<vtkm::IdComponent destSize>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static void
   CopyInto(const VecType &src, vtkm::Vec<ComponentType,destSize> &dest)
   {
@@ -206,30 +206,30 @@ struct VecTraitsBasic {
   typedef VecTraitsTagSingleComponent HasMultipleComponents;
   typedef vtkm::VecTraitsTagSizeStatic IsSizeStatic;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::IdComponent GetNumberOfComponents(const ScalarType &) {
     return 1;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static const ComponentType &GetComponent(
       const ScalarType &vector,
       vtkm::IdComponent) {
     return vector;
   }
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static ComponentType &GetComponent(ScalarType &vector, vtkm::IdComponent) {
     return vector;
   }
 
-  VTKM_EXEC_CONT_EXPORT static void SetComponent(ScalarType &vector,
+  VTKM_EXEC_CONT static void SetComponent(ScalarType &vector,
                                                 vtkm::IdComponent,
                                                 ComponentType value) {
     vector = value;
   }
 
   template<vtkm::IdComponent destSize>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static void CopyInto(const ScalarType &src,
                        vtkm::Vec<ScalarType,destSize> &dest)
   {

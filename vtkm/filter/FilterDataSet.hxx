@@ -37,6 +37,7 @@ namespace filter {
 
 //----------------------------------------------------------------------------
 template<class Derived>
+inline VTKM_CONT
 FilterDataSet<Derived>::FilterDataSet():
   OutputFieldName(),
   CellSetIndex(0),
@@ -48,6 +49,7 @@ FilterDataSet<Derived>::FilterDataSet():
 
 //-----------------------------------------------------------------------------
 template<typename Derived>
+inline VTKM_CONT
 ResultDataSet FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet &input)
 {
   return this->Execute(input, vtkm::filter::DefaultPolicy());
@@ -56,6 +58,7 @@ ResultDataSet FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet &input)
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
+inline VTKM_CONT
 ResultDataSet FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet &input,
                                               const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
 {
@@ -73,7 +76,7 @@ struct FilterDataSetPrepareForExecutionFunctor
   const vtkm::cont::DataSet &Input;
   const vtkm::filter::PolicyBase<DerivedPolicy> &Policy;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   FilterDataSetPrepareForExecutionFunctor(
       Derived *self,
       const vtkm::cont::DataSet &input,
@@ -82,7 +85,7 @@ struct FilterDataSetPrepareForExecutionFunctor
   {  }
 
   template<typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool operator()(Device)
   {
     this->Result = this->Self->DoExecute(this->Input, this->Policy, Device());
@@ -93,6 +96,7 @@ struct FilterDataSetPrepareForExecutionFunctor
 
 template<typename Derived>
 template<typename DerivedPolicy>
+inline VTKM_CONT
 ResultDataSet FilterDataSet<Derived>::PrepareForExecution(
     const vtkm::cont::DataSet &input,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
@@ -110,6 +114,7 @@ ResultDataSet FilterDataSet<Derived>::PrepareForExecution(
 
 //-----------------------------------------------------------------------------
 template<typename Derived>
+inline VTKM_CONT
 bool FilterDataSet<Derived>::MapFieldOntoOutput(ResultDataSet& result,
                                                 const vtkm::cont::Field& field)
 {
@@ -119,6 +124,7 @@ bool FilterDataSet<Derived>::MapFieldOntoOutput(ResultDataSet& result,
 //-----------------------------------------------------------------------------
 template<typename Derived>
 template<typename DerivedPolicy>
+inline VTKM_CONT
 bool FilterDataSet<Derived>::MapFieldOntoOutput(ResultDataSet& result,
                                                 const vtkm::cont::Field& field,
                                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy)

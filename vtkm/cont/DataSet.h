@@ -34,12 +34,12 @@ namespace cont {
 class DataSet
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DataSet()
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Clear()
   {
     this->CoordSystems.clear();
@@ -47,13 +47,13 @@ public:
     this->CellSets.clear();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddField(Field field)
   {
     this->Fields.push_back(field);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::Field &GetField(vtkm::Id index) const
   {
     VTKM_ASSERT((index >= 0) &&
@@ -61,7 +61,7 @@ public:
     return this->Fields[static_cast<std::size_t>(index)];
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool HasField(
       const std::string &name,
       vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY)
@@ -72,7 +72,7 @@ public:
     return found;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetFieldIndex(
       const std::string &name,
       vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY)
@@ -91,7 +91,7 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::Field &GetField(const std::string &name,
       vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY)
       const
@@ -99,13 +99,13 @@ public:
     return this->GetField(this->GetFieldIndex(name, assoc));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddCoordinateSystem(vtkm::cont::CoordinateSystem cs)
   {
     this->CoordSystems.push_back(cs);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::CoordinateSystem &
   GetCoordinateSystem(vtkm::Id index=0) const
   {
@@ -114,7 +114,7 @@ public:
     return this->CoordSystems[static_cast<std::size_t>(index)];
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool HasCoordinateSystem(const std::string &name) const
   {
     bool found;
@@ -122,7 +122,7 @@ public:
     return found;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetCoordinateSystemIndex(const std::string &name) const
   {
     bool found;
@@ -138,28 +138,28 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::CoordinateSystem &
   GetCoordinateSystem(const std::string &name) const
   {
     return this->GetCoordinateSystem(this->GetCoordinateSystemIndex(name));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddCellSet(vtkm::cont::DynamicCellSet cellSet)
   {
     this->CellSets.push_back(cellSet);
   }
 
   template<typename CellSetType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddCellSet(const CellSetType &cellSet)
   {
     VTKM_IS_CELL_SET(CellSetType);
     this->CellSets.push_back(vtkm::cont::DynamicCellSet(cellSet));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::cont::DynamicCellSet GetCellSet(vtkm::Id index=0) const
   {
     VTKM_ASSERT((index >= 0) &&
@@ -167,7 +167,7 @@ public:
     return this->CellSets[static_cast<std::size_t>(index)];
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool HasCellSet(const std::string &name) const
   {
     bool found;
@@ -175,7 +175,7 @@ public:
     return found;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetCellSetIndex(const std::string &name) const
   {
     bool found;
@@ -190,31 +190,31 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::cont::DynamicCellSet GetCellSet(const std::string &name) const
   {
     return this->GetCellSet(this->GetCellSetIndex(name));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::IdComponent GetNumberOfCellSets() const
   {
     return static_cast<vtkm::IdComponent>(this->CellSets.size());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::IdComponent GetNumberOfFields() const
   {
     return static_cast<vtkm::IdComponent>(this->Fields.size());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::IdComponent GetNumberOfCoordinateSystems() const
   {
     return static_cast<vtkm::IdComponent>(this->CoordSystems.size());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void PrintSummary(std::ostream &out) const
   {
       out<<"DataSet:\n";
@@ -242,7 +242,7 @@ private:
   std::vector<vtkm::cont::Field> Fields;
   std::vector<vtkm::cont::DynamicCellSet> CellSets;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id FindFieldIndex(const std::string &name,
                           vtkm::cont::Field::AssociationEnum association,
                           bool &found) const
@@ -261,7 +261,7 @@ private:
     return -1;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id FindCoordinateSystemIndex(const std::string &name, bool &found) const
   {
     for (std::size_t index=0; index < this->CoordSystems.size(); ++index)
@@ -276,7 +276,7 @@ private:
     return -1;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id FindCellSetIndex(const std::string &name, bool &found) const
   {
     for (std::size_t index=0; index < static_cast<size_t>(this->GetNumberOfCellSets()); ++index)

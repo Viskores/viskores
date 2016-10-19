@@ -35,13 +35,13 @@ struct TriangulatorFunctor
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > Indices;
   vtkm::Id NumberOfTriangles;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TriangulatorFunctor(vtkm::cont::DynamicCellSet cellSet)
     : CellSet(cellSet)
   {  }
 
   template<typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool operator()(Device)
   {
     vtkm::rendering::Triangulator<Device> triangulator;

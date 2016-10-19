@@ -43,7 +43,7 @@ struct GenerateSurfaceWorklet : public vtkm::worklet::WorkletMapField
   typedef void ExecutionSignature( _1, _2, _3 );
 
   template<typename T>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()( const vtkm::Vec< T, 3 > & input,
                    vtkm::Vec<T, 3> & output,
                    vtkm::Vec<vtkm::UInt8, 4>& color ) const

@@ -40,7 +40,7 @@ namespace worklet {
 
 namespace detail {
 
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const static vtkm::IdComponent StructuredTriangleIndices[2][3] = {
   { 0, 1, 2 },
   { 0, 2, 3 }
@@ -67,19 +67,19 @@ public:
     typedef _1 InputDomain;
 
     typedef vtkm::worklet::ScatterUniform ScatterType;
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ScatterType GetScatter() const
     {
       return ScatterType(2);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     TriangulateCell()
     {  }
 
     // Each quad cell produces 2 triangle cells
     template<typename ConnectivityInVec, typename ConnectivityOutVec>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const ConnectivityInVec &connectivityIn,
                     ConnectivityOutVec &connectivityOut,
                     vtkm::IdComponent visitIndex) const

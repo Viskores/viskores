@@ -39,7 +39,7 @@ public:
                        const vtkm::rendering::Color &color,
                        bool inFront = false) const;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddLine(vtkm::Float64 x0, vtkm::Float64 y0, vtkm::Float64 z0,
                vtkm::Float64 x1, vtkm::Float64 y1, vtkm::Float64 z1,
                vtkm::Float32 lineWidth,
@@ -61,7 +61,7 @@ public:
                        const vtkm::rendering::Color &color,
                        const std::string &text) const;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddText(vtkm::Float32 originX,
                vtkm::Float32 originY,
                vtkm::Float32 originZ,

@@ -39,13 +39,13 @@ struct MapperRayTracer::InternalsType
   std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
       RayTracerContainer;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   InternalsType()
     : Canvas(nullptr)
   {  }
 
   template<typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::rendering::raytracing::RayTracer<Device> *GetRayTracer(Device)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
@@ -110,7 +110,7 @@ struct MapperRayTracer::RenderFunctor
   vtkm::rendering::Camera Camera;
   vtkm::Range ScalarRange;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   RenderFunctor(vtkm::rendering::MapperRayTracer *self,
                 const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > &indices,
                 vtkm::Id numberOfTriangles,

@@ -114,7 +114,7 @@ public:
   /// In addition to defining the scatter type, the worklet must produce the
   /// scatter. The default ScatterIdentity has no state, so just return an
   /// instance.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ScatterType GetScatter() const { return ScatterType(); }
 
   /// \brief A type list containing the type vtkm::Id.
@@ -305,7 +305,7 @@ public:
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename T, typename OutToInArrayType, typename VisitArrayType, typename InputDomainType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::exec::arg::ThreadIndicesBasic
   GetThreadIndices(const T& threadIndex,
                    const OutToInArrayType& outToIn,

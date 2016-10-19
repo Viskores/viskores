@@ -30,21 +30,21 @@ namespace filter {
 class Threshold : public vtkm::filter::FilterDataSetWithField<Threshold>
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Threshold();
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetLowerThreshold(vtkm::Float64 value){ this->LowerValue = value; }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetUpperThreshold(vtkm::Float64 value){ this->UpperValue = value; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Float64 GetLowerThreshold() const    { return this->LowerValue; }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Float64 GetUpperThreshold() const    { return this->UpperValue; }
 
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
                                         const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                         const vtkm::filter::FieldMetadata& fieldMeta,
@@ -54,7 +54,7 @@ public:
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool DoMapField(vtkm::filter::ResultDataSet& result,
                   const vtkm::cont::ArrayHandle<T, StorageType>& input,
                   const vtkm::filter::FieldMetadata& fieldMeta,

@@ -45,13 +45,13 @@ public:
   typedef typename StorageType::PortalType PortalType;
   typedef typename StorageType::PortalConstType PortalConstType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayManagerExecutionShareWithControl(StorageType *storage)
     : Storage(storage) { }
 
   /// Returns the size of the storage.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return this->Storage->GetNumberOfValues();
@@ -59,7 +59,7 @@ public:
 
   /// Returns the constant portal from the storage.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType PrepareForInput(bool vtkmNotUsed(uploadData)) const
   {
     return this->Storage->GetPortalConst();
@@ -67,7 +67,7 @@ public:
 
   /// Returns the read-write portal from the storage.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType PrepareForInPlace(bool vtkmNotUsed(uploadData))
   {
     return this->Storage->GetPortal();
@@ -75,7 +75,7 @@ public:
 
   /// Allocates data in the storage and return the portal to that.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType PrepareForOutput(vtkm::Id numberOfValues)
   {
     this->Storage->Allocate(numberOfValues);
@@ -86,7 +86,7 @@ public:
   /// this class's portals should already be written to the given \c
   /// controlArray (under correct operation).
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType *storage) const
   {
     (void)storage;
@@ -97,7 +97,7 @@ public:
   /// iterator.
   ///
   template <class IteratorTypeControl>
-  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
+  VTKM_CONT void CopyInto(IteratorTypeControl dest) const
   {
     typedef typename StorageType::PortalConstType::IteratorType IteratorType;
     IteratorType beginIterator = 
@@ -109,7 +109,7 @@ public:
 
   /// Shrinks the storage.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues)
   {
     this->Storage->Shrink(numberOfValues);
@@ -117,7 +117,7 @@ public:
 
   /// A no-op.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() { }
 
 private:

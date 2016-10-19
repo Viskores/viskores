@@ -58,7 +58,7 @@ public:
   typedef FunctorType_ FunctorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalTransform(const PortalType &portal = PortalType(),
                        const FunctorType &functor = FunctorType())
     : Portal(portal), Functor(functor)
@@ -70,30 +70,30 @@ public:
   ///
   template<class OtherV, class OtherP, class OtherF>
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalTransform(const ArrayPortalTransform<OtherV,OtherP,OtherF> &src)
     : Portal(src.GetPortal()),
       Functor(src.GetFunctor())
   {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const {
     return this->Portal.GetNumberOfValues();
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const {
     return this->Functor(this->Portal.Get(index));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const PortalType &GetPortal() const { return this->Portal; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const FunctorType &GetFunctor() const { return this->Functor; }
 
 protected:
@@ -113,7 +113,7 @@ public:
   typedef InverseFunctorType_ InverseFunctorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalTransform(const PortalType &portal = PortalType(),
                        const FunctorType &functor = FunctorType(),
                 const InverseFunctorType& inverseFunctor = InverseFunctorType())
@@ -122,19 +122,19 @@ public:
 
   template<class OtherV, class OtherP, class OtherF, class OtherInvF>
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalTransform(const ArrayPortalTransform<OtherV,OtherP,OtherF,OtherInvF> &src)
     : Superclass(src), InverseFunctor(src.GetInverseFunctor())
   {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType& value) const {
     return this->Portal.Set(index,this->InverseFunctor(value));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const InverseFunctorType &GetInverseFunctor() const {
     return this->InverseFunctor; }
 
@@ -175,60 +175,60 @@ public:
       ValueType, typename ArrayHandleType::PortalConstControl, FunctorType>
     PortalConstType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage() : Valid(false) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage(const ArrayHandleType &array,
           const FunctorType &functor = FunctorType())
     : Array(array), Functor(functor), Valid(true) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType GetPortal() {
     VTKM_ASSERT(this->Valid);
     return PortalType(this->Array.GetPortalControl(),
                       this->Functor);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType GetPortalConst() const {
     VTKM_ASSERT(this->Valid);
     return PortalConstType(this->Array.GetPortalConstControl(),
                            this->Functor);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
     VTKM_ASSERT(this->Valid);
     return this->Array.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues)) {
     throw vtkm::cont::ErrorControlBadType(
           "ArrayHandleTransform is read only. It cannot be allocated.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
     throw vtkm::cont::ErrorControlBadType(
           "ArrayHandleTransform is read only. It cannot shrink.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() {
     // This request is ignored since it is asking to release the resources
     // of the delegate array, which may be used elsewhere. Should the behavior
     // be different?
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const ArrayHandleType &GetArray() const {
     VTKM_ASSERT(this->Valid);
     return this->Array;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const FunctorType &GetFunctor() const {
     return this->Functor;
   }
@@ -254,16 +254,16 @@ public:
     typename ArrayHandleType::PortalConstControl,FunctorType,InverseFunctorType>
     PortalConstType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage() : Valid(false) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage(const ArrayHandleType &array,
           const FunctorType &functor,
           const InverseFunctorType &inverseFunctor)
     : Array(array), Functor(functor), InverseFunctor(inverseFunctor), Valid(true) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType GetPortal() {
     VTKM_ASSERT(this->Valid);
     return PortalType(this->Array.GetPortalControl(),
@@ -271,7 +271,7 @@ public:
                       this->InverseFunctor);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType GetPortalConst() const {
     VTKM_ASSERT(this->Valid);
     return PortalConstType(this->Array.GetPortalConstControl(),
@@ -279,41 +279,41 @@ public:
                            this->InverseFunctor);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
     VTKM_ASSERT(this->Valid);
     return this->Array.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(vtkm::Id numberOfValues) {
     this->Array.Allocate(numberOfValues);
     this->Valid = true;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues) {
     this->Array.Shrink(numberOfValues);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() {
     this->Array.ReleaseResources();
     this->Valid = false;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const ArrayHandleType &GetArray() const {
     VTKM_ASSERT(this->Valid);
     return this->Array;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const FunctorType &GetFunctor() const {
     return this->Functor;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const InverseFunctorType &GetInverseFunctor() const {
     return this->InverseFunctor;
   }
@@ -348,34 +348,34 @@ public:
       typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
       FunctorType> PortalConstExecution;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayTransfer(StorageType *storage)
     : Array(storage->GetArray()), Functor(storage->GetFunctor()) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
     return this->Array.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
     return PortalConstExecution(this->Array.PrepareForInput(Device()), this->Functor);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForInPlace(bool &vtkmNotUsed(updateData)) {
     throw vtkm::cont::ErrorControlBadType(
           "ArrayHandleTransform read only. "
           "Cannot be used for in-place operations.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues)) {
     throw vtkm::cont::ErrorControlBadType(
           "ArrayHandleTransform read only. Cannot be used as output.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const {
     throw vtkm::cont::ErrorControlInternal(
           "ArrayHandleTransform read only. "
@@ -383,13 +383,13 @@ public:
           "data from the execution environment.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
     throw vtkm::cont::ErrorControlBadType(
           "ArrayHandleTransform read only. Cannot shrink.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() {
     this->Array.ReleaseResourcesExecution();
   }
@@ -427,45 +427,45 @@ public:
       typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
       FunctorType, InverseFunctorType> PortalConstExecution;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayTransfer(StorageType *storage)
     : Array(storage->GetArray()),
       Functor(storage->GetFunctor()),
       InverseFunctor(storage->GetInverseFunctor()) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
     return this->Array.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
     return PortalConstExecution(this->Array.PrepareForInput(Device()),this->Functor,this->InverseFunctor);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForInPlace(bool &vtkmNotUsed(updateData)) {
     return PortalExecution(this->Array.PrepareForInPlace(Device()),this->Functor,this->InverseFunctor);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues) {
     return PortalExecution(this->Array.PrepareForOutput(numberOfValues,
                                                         Device()),this->Functor,this->InverseFunctor);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const {
     // Implementation of this method should be unnecessary. The internal
     // array handle should automatically retrieve the output data as necessary.
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues) {
     this->Array.Shrink(numberOfValues);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() {
     this->Array.ReleaseResourcesExecution();
   }
@@ -517,7 +517,7 @@ private:
   typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleTransform(const ArrayHandleType &handle,
                        const FunctorType &functor = FunctorType())
     : Superclass(StorageType(handle, functor)) {  }
@@ -528,7 +528,7 @@ public:
 /// to apply to each element of the Handle.
 
 template <typename T, typename HandleType, typename FunctorType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::ArrayHandleTransform<T, HandleType, FunctorType>
 make_ArrayHandleTransform(HandleType handle, FunctorType functor)
 {
@@ -568,7 +568,7 @@ private:
 };
 
 template <typename T, typename HandleType, typename FunctorType, typename InverseFunctorType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::ArrayHandleTransform<T, HandleType, FunctorType, InverseFunctorType>
 make_ArrayHandleTransform(HandleType handle, FunctorType functor, InverseFunctorType inverseFunctor)
 {

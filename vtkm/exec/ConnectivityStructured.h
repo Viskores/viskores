@@ -45,27 +45,27 @@ class ConnectivityStructured
 public:
   typedef typename InternalsType::SchedulingRangeType SchedulingRangeType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ConnectivityStructured():
     Internals()
   {
 
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ConnectivityStructured(const InternalsType &src):
     Internals(src)
   {
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ConnectivityStructured(const ConnectivityStructured &src):
     Internals(src.Internals)
   {
   }
 
   template<typename IndexType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::IdComponent GetNumberOfIndices(const IndexType &index) const {
     return Helper::GetNumberOfIndices(this->Internals, index);
   }
@@ -73,7 +73,7 @@ public:
   // This needs some thought. What does cell shape mean when the to topology
   // is not a cell?
   typedef typename InternalsType::CellShapeTag CellShapeTag;
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   CellShapeTag GetCellShape(vtkm::Id) const {
     return CellShapeTag();
   }
@@ -81,41 +81,41 @@ public:
   typedef typename Helper::IndicesType IndicesType;
 
   template<typename IndexType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   IndicesType GetIndices(const IndexType &index) const
   {
     return Helper::GetIndices(this->Internals, index);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   SchedulingRangeType
   FlatToLogicalFromIndex(vtkm::Id flatFromIndex) const
   {
     return Helper::FlatToLogicalFromIndex(this->Internals, flatFromIndex);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id LogicalToFlatFromIndex(
       const SchedulingRangeType &logicalFromIndex) const
   {
     return Helper::LogicalToFlatFromIndex(this->Internals, logicalFromIndex);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   SchedulingRangeType
   FlatToLogicalToIndex(vtkm::Id flatToIndex) const
   {
     return Helper::FlatToLogicalToIndex(this->Internals, flatToIndex);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id LogicalToFlatToIndex(
       const SchedulingRangeType &logicalToIndex) const
   {
     return Helper::LogicalToFlatToIndex(this->Internals, logicalToIndex);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Vec<vtkm::Id,Dimension> GetPointDimensions() const
   {
     return this->Internals.GetPointDimensions();

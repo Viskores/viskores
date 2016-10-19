@@ -28,6 +28,7 @@ namespace vtkm {
 namespace filter {
 
 //-----------------------------------------------------------------------------
+inline VTKM_CONT
 Clip::Clip():
   vtkm::filter::FilterDataSetWithField<Clip>(),
   ClipValue(0),
@@ -41,6 +42,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
+inline VTKM_CONT
 vtkm::filter::ResultDataSet Clip::DoExecute(const vtkm::cont::DataSet& input,
                                             const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                             const vtkm::filter::FieldMetadata& fieldMeta,
@@ -86,6 +88,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
+inline VTKM_CONT
 bool Clip::DoMapField(vtkm::filter::ResultDataSet& result,
                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
                            const vtkm::filter::FieldMetadata& fieldMeta,

@@ -48,7 +48,7 @@ struct Transport<vtkm::cont::arg::TransportTagArrayInOut, ContObjectType, Device
   typedef typename ContObjectType::template ExecutionTypes<Device>::Portal
       ExecObjectType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecObjectType operator()(ContObjectType object, vtkm::Id size) const
   {
     if (object.GetNumberOfValues() != size)

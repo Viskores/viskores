@@ -128,12 +128,12 @@ struct DispatcherBaseTypeCheckFunctor
 {
   const ContinueFunctor &Continue;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DispatcherBaseTypeCheckFunctor(const ContinueFunctor &continueFunc)
     : Continue(continueFunc) {  }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(const T &x) const
   {
     typedef std::integral_constant<bool,
@@ -145,14 +145,14 @@ struct DispatcherBaseTypeCheckFunctor
 
 private:
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void WillContinue(const T &x, std::true_type) const
   {
     this->Continue(x);
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void WillContinue(const T&, std::false_type) const
   { }
 };
@@ -168,7 +168,7 @@ struct DispatcherBaseDynamicTransform
   template<typename InputType,
            typename ContinueFunctor,
            vtkm::IdComponent Index>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(const InputType &input,
                   const ContinueFunctor &continueFunc,
                   const vtkm::internal::IndexTag<Index>& indexTag) const
@@ -191,12 +191,12 @@ struct DispatcherBaseDynamicTransformHelper
 {
   const DispatcherBaseType *Dispatcher;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DispatcherBaseDynamicTransformHelper(const DispatcherBaseType *dispatcher)
     : Dispatcher(dispatcher) {  }
 
   template<typename FunctionInterface>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(const FunctionInterface &parameters) const {
     this->Dispatcher->DynamicTransformInvoke(parameters, std::true_type() );
   }
@@ -220,7 +220,7 @@ struct DispatcherBaseTransportFunctor
 {
   vtkm::Id NumInstances;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DispatcherBaseTransportFunctor(vtkm::Id numInstances)
     : NumInstances(numInstances) {  }
 
@@ -228,7 +228,7 @@ struct DispatcherBaseTransportFunctor
   // Chances are we need to allow the transport for each argument to manage
   // 3D indices (for example, allocate a 3D array instead of a 1D array).
   // But for now, just treat all transports as 1D arrays.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DispatcherBaseTransportFunctor(vtkm::Id3 dimensions)
     : NumInstances(dimensions[0]*dimensions[1]*dimensions[2]) {  }
 
@@ -241,7 +241,7 @@ struct DispatcherBaseTransportFunctor
   };
 
   template<typename ControlParameter, vtkm::IdComponent Index>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ReturnType<ControlParameter, Index>::type
   operator()(const ControlParameter &invokeData,
              vtkm::internal::IndexTag<Index>) const
@@ -288,7 +288,7 @@ private:
       ExecutionSignatureCheck;
 
   template<typename Signature>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void StartInvoke(
       const vtkm::internal::FunctionInterface<Signature> &parameters) const
   {
@@ -320,7 +320,7 @@ private:
 
 
   template<typename Signature>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void StartInvokeDynamic(
       const vtkm::internal::FunctionInterface<Signature> &parameters,
       std::true_type) const
@@ -340,7 +340,7 @@ private:
   }
 
   template<typename Signature>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void StartInvokeDynamic(
       const vtkm::internal::FunctionInterface<Signature> &parameters,
       std::false_type) const
@@ -371,7 +371,7 @@ private:
   }
 
   template<typename Signature>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void DynamicTransformInvoke(
       const vtkm::internal::FunctionInterface<Signature> &parameters,
       std::true_type ) const
@@ -385,7 +385,7 @@ private:
   }
 
   template<typename Signature>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void DynamicTransformInvoke(
       const vtkm::internal::FunctionInterface<Signature> &,
       std::false_type ) const
@@ -394,7 +394,7 @@ private:
 
 public:
   template<typename... ArgTypes>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Invoke(ArgTypes... args) const
   {
   this->StartInvoke(
@@ -402,11 +402,11 @@ public:
   }
 
 protected:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DispatcherBase(const WorkletType &worklet) : Worklet(worklet) {  }
 
   template<typename Invocation, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void BasicInvoke(const Invocation &invocation,
                    vtkm::Id numInstances,
                    DeviceAdapter device) const
@@ -419,7 +419,7 @@ protected:
   }
 
   template<typename Invocation, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void BasicInvoke(const Invocation &invocation,
                    vtkm::Id2 dimensions,
                    DeviceAdapter device) const
@@ -431,7 +431,7 @@ protected:
 
 
   template<typename Invocation, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void BasicInvoke(const Invocation &invocation,
                    vtkm::Id3 dimensions,
                    DeviceAdapter device) const
@@ -451,7 +451,7 @@ private:
   void operator=(const MyType &);
 
   template<typename Invocation, typename InputRangeType, typename OutputRangeType, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void InvokeTransportParameters(const Invocation &invocation,
                                  const InputRangeType& inputRange,
                                  const OutputRangeType& outputRange,
@@ -495,7 +495,7 @@ private:
   }
 
   template<typename Invocation, typename RangeType, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void InvokeSchedule(const Invocation &invocation,
                       RangeType range,
                       DeviceAdapter) const

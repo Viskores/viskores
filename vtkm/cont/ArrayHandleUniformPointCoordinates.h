@@ -50,7 +50,7 @@ private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleUniformPointCoordinates(
       vtkm::Id3 dimensions,
       ValueType origin = ValueType(0.0f, 0.0f, 0.0f),

@@ -30,11 +30,11 @@ namespace filter {
 class ExternalFaces : public vtkm::filter::FilterDataSet<ExternalFaces>
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExternalFaces();
 
   template<typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
                                         const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                                         const DeviceAdapter& tag);
@@ -42,7 +42,7 @@ public:
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool DoMapField(vtkm::filter::ResultDataSet& result,
                   const vtkm::cont::ArrayHandle<T, StorageType>& input,
                   const vtkm::filter::FieldMetadata& fieldMeta,

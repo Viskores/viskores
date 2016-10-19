@@ -36,7 +36,7 @@ namespace detail
 {
 
 template<class ValueType, class StorageTag, class DeviceAdapterTag>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void CopyFromHandle(
   vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
   vtkm::interop::BufferState& state,
@@ -84,7 +84,7 @@ void CopyFromHandle(
 }
 
 template<class ValueType, class DeviceAdapterTag>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void CopyFromHandle(
   vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic>& handle,
   vtkm::interop::BufferState& state,
@@ -129,7 +129,7 @@ template<typename ValueType, class DeviceAdapterTag>
 class TransferToOpenGL
 {
 public:
-  VTKM_CONT_EXPORT explicit TransferToOpenGL(BufferState& state):
+  VTKM_CONT explicit TransferToOpenGL(BufferState& state):
     State(state)
   {
     if( !this->State.HasType() )
@@ -139,7 +139,7 @@ public:
   }
 
   template< typename StorageTag >
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Transfer (
     vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle) const
   {

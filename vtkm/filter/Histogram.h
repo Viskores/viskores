@@ -30,26 +30,26 @@ class Histogram : public vtkm::filter::FilterField<Histogram>
 {
 public:
   //Construct a histogram with a default of 10 bins
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Histogram();
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetNumberOfBins(vtkm::Id count){ this->NumberOfBins = count; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfBins() const    { return this->NumberOfBins; }
 
   //Returns the bin delta of the last computed field, be it from DoExecute
   //or from MapField
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Float64 GetBinDelta() const { return this->BinDelta; }
 
   //Returns the the min and max values for that last computed field
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Range GetDataRange() const { return this->DataRange; }
 
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet& input,
                                       const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                       const vtkm::filter::FieldMetadata& fieldMeta,

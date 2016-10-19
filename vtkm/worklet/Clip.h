@@ -50,14 +50,14 @@ namespace worklet {
 namespace internal {
 
 template <typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 T Scale(const T &val, vtkm::Float64 scale)
 {
   return static_cast<T>(scale * static_cast<vtkm::Float64>(val));
 }
 
 template <typename T, vtkm::IdComponent NumComponents>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<T, NumComponents> Scale(const vtkm::Vec<T, NumComponents> &val,
                                   vtkm::Float64 scale)
 {
@@ -78,13 +78,13 @@ private:
       ::template ExecutionTypes<DeviceAdapter>::Portal IdPortal;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecutionConnectivityExplicit()
     : Shapes(), NumIndices(), Connectivity(), IndexOffsets()
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecutionConnectivityExplicit(const UInt8Portal &shapes,
                                 const IdComponentPortal &numIndices,
                                 const IdPortal &connectivity,
@@ -96,25 +96,25 @@ public:
   {
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void SetCellShape(vtkm::Id cellIndex, vtkm::UInt8 shape)
   {
     this->Shapes.Set(cellIndex, shape);
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void SetNumberOfIndices(vtkm::Id cellIndex, vtkm::IdComponent numIndices)
   {
     this->NumIndices.Set(cellIndex, numIndices);
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void SetIndexOffset(vtkm::Id cellIndex, vtkm::Id indexOffset)
   {
     this->IndexOffsets.Set(cellIndex, indexOffset);
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void SetConnectivity(vtkm::Id connectivityIndex, vtkm::Id pointIndex)
   {
     this->Connectivity.Set(connectivityIndex, pointIndex);
@@ -139,7 +139,7 @@ struct ClipStats
 
   struct SumOp
   {
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_CONT
     ClipStats operator()(const ClipStats &cs1, const ClipStats &cs2) const
     {
       ClipStats sum = cs1;
@@ -158,7 +158,7 @@ struct EdgeInterpolation
 
   struct LessThanOp
   {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     bool operator()(const EdgeInterpolation &v1, const EdgeInterpolation &v2) const
     {
       return (v1.Vertex1 < v2.Vertex1) ||
@@ -168,7 +168,7 @@ struct EdgeInterpolation
 
   struct EqualToOp
   {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     bool operator()(const EdgeInterpolation &v1, const EdgeInterpolation &v2) const
     {
       return v1.Vertex1 == v2.Vertex1 && v1.Vertex2 == v2.Vertex2;
@@ -177,7 +177,7 @@ struct EdgeInterpolation
 };
 
 
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 std::ostream& operator<<(std::ostream &out, const ClipStats &val)
 {
   return out << std::endl << "{ Cells: " << val.NumberOfCells
@@ -185,7 +185,7 @@ std::ostream& operator<<(std::ostream &out, const ClipStats &val)
              << ", NewPoints: " << val.NumberOfNewPoints << " }";
 }
 
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 std::ostream& operator<<(std::ostream &out, const EdgeInterpolation &val)
 {
   return out << std::endl << "{ Vertex1: " << val.Vertex1
@@ -209,14 +209,14 @@ public:
                                   FieldOutCell<TypeClipStats> stats);
     typedef void ExecutionSignature(_2, CellShape, PointCount, _3, _4);
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ComputeStats(vtkm::Float64 value, const ClipTablesPortal &clipTables)
       : Value(value), ClipTables(clipTables)
     {
     }
 
     template<typename ScalarsVecType, typename CellShapeTag>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const ScalarsVecType &scalars,
                     CellShapeTag shape,
                     vtkm::Id count,
@@ -276,7 +276,7 @@ public:
                                   WholeArrayInOut< IdType > newPointsConnectivityReverseMap);
     typedef void ExecutionSignature(CellShape, _2, FromIndices, _3, _4, _5, _6, _7);
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     GenerateCellSet(vtkm::Float64 value, const ClipTablesPortal clipTables)
       : Value(value), ClipTables(clipTables)
     {
@@ -287,7 +287,7 @@ public:
              typename IndicesVecType,
              typename InterpolationWholeArrayType,
              typename ReverseMapWholeArrayType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(
         CellShapeTag shape,
         const ScalarsVecType &scalars,
@@ -349,7 +349,7 @@ public:
     }
 
   template<typename T>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void swap(T &v1, T &v2) const
   {
     T temp = v1;
@@ -379,7 +379,7 @@ public:
                                                 EdgeInterpolationPortalConst;
 
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     AmendConnectivity(EdgeInterpolationPortalConst newPoints,
                       EdgeInterpolationPortalConst uniqueNewPoints,
                       IdPortalConst newPointsConnectivityReverseMap,
@@ -393,7 +393,7 @@ public:
     {
     }
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(vtkm::Id idx) const
     {
       EdgeInterpolation current = this->NewPoints.Get(idx);
@@ -524,14 +524,14 @@ public:
   class ClipWithImplicitFunction
   {
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ClipWithImplicitFunction(Clip *clipper, const vtkm::cont::DynamicCellSet &cellSet,
       ImplicitFunction function, vtkm::cont::CellSetExplicit<> *result)
       : Clipper(clipper), CellSet(&cellSet), Function(function), Result(result)
     { }
 
     template <typename ArrayHandleType>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     void operator()(const ArrayHandleType &handle) const
     {
       vtkm::cont::ArrayHandleTransform<
@@ -586,7 +586,7 @@ public:
         ::template ExecutionTypes<DeviceAdapter>::PortalConst
                                                 EdgeInterpolationPortalConst;
 
-      VTKM_CONT_EXPORT
+      VTKM_CONT
       Kernel(EdgeInterpolationPortalConst interpolation,
              vtkm::Id newPointsOffset,
              FieldPortal field)
@@ -594,7 +594,7 @@ public:
       {
       }
 
-      VTKM_EXEC_EXPORT
+      VTKM_EXEC
       void operator()(vtkm::Id idx) const
       {
         EdgeInterpolation ei = this->Interpolation.Get(idx);
@@ -610,7 +610,7 @@ public:
       FieldPortal Field;
     };
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     InterpolateField(
         vtkm::cont::ArrayHandle<EdgeInterpolation> interpolationArray,
         vtkm::Id newPointsOffset,
@@ -622,7 +622,7 @@ public:
     }
 
     template <typename T, typename Storage>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     void operator()(const vtkm::cont::ArrayHandle<T, Storage> &field) const
     {
       typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;

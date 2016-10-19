@@ -32,7 +32,7 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
 
   template<typename T>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const T &in, T &out, T &inout, vtkm::Id workIndex) const
   {
     if (!test_equal(in, TestValue(workIndex, T()) + T(100)))
@@ -48,7 +48,7 @@ public:
   }
 
   template<typename T1, typename T2, typename T3>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const T1 &, const T2 &, const T3 &, vtkm::Id) const
   {
     this->RaiseError("Cannot call this worklet with different types.");
@@ -64,7 +64,7 @@ public:
   typedef _2 ExecutionSignature(_1, _3, WorkIndex);
 
   template<typename T1, typename T3>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   T1 operator()(const T1 &in, T3 &inout, vtkm::Id workIndex) const
   {
     if (!test_equal(in, TestValue(workIndex, T1()) + T1(100)))
@@ -90,7 +90,7 @@ template<typename WorkletType>
 struct DoStaticTestWorklet
 {
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(T) const
   {
     std::cout << "Set up data." << std::endl;
@@ -123,7 +123,7 @@ template<typename WorkletType>
 struct DoDynamicTestWorklet
 {
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(T) const
   {
     std::cout << "Set up data." << std::endl;
@@ -160,7 +160,7 @@ template<typename WorkletType>
 struct DoTestWorklet
 {
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(T t) const
   {
     DoStaticTestWorklet<WorkletType>  sw; sw(t);

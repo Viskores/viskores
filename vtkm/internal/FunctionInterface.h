@@ -32,11 +32,11 @@ namespace detail {
 
 struct IdentityFunctor {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   T &operator()(T &x) const { return x; }
 
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const T &operator()(const T &x) const { return x; }
 };
 
@@ -47,7 +47,7 @@ struct FunctionInterfaceCopyParameters {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
   static
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
@@ -61,7 +61,7 @@ template<vtkm::IdComponent ParameterIndex>
 struct FunctionInterfaceCopyParameters<0, ParameterIndex> {
   template<typename DestSignature, typename SrcSignature>
   static
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &)
   {
@@ -252,14 +252,14 @@ public:
   /// Returns the number of parameters held in this \c FunctionInterface. The
   /// return value is the same as \c ARITY.
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::IdComponent GetArity() const { return ARITY; }
 
   /// Retrieves the return value from the last invocation called. This method
   /// will result in a compiler error if used with a function having a void
   /// return type.
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ResultType GetReturnValue() const { return this->Result.Value; }
 
   /// Retrieves the return value from the last invocation wrapped in a \c
@@ -268,12 +268,12 @@ public:
   /// return is non-void before trying to use it, but using this method can
   /// simplify templated programming.
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const FunctionInterfaceReturnContainer<ResultType> &GetReturnValueSafe() const
   {
     return this->Result;
   }
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FunctionInterfaceReturnContainer<ResultType> &GetReturnValueSafe()
   {
     return this->Result;
@@ -310,7 +310,7 @@ public:
   /// \endcode
   ///
   template<vtkm::IdComponent ParameterIndex>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const typename ParameterType<ParameterIndex>::type &
   GetParameter(
       vtkm::internal::IndexTag<ParameterIndex> =
@@ -356,7 +356,7 @@ public:
   /// template keyword.
   ///
   template<vtkm::IdComponent ParameterIndex>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void SetParameter(
       const typename ParameterType<ParameterIndex>::type& parameter,
       vtkm::internal::IndexTag<ParameterIndex> =
@@ -397,7 +397,7 @@ public:
   /// can be retrieved with GetReturnValue().
   ///
   template<typename Function>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void InvokeCont(const Function &f) {
     detail::DoInvokeCont(f,
                          this->Parameters,
@@ -405,7 +405,7 @@ public:
                          detail::IdentityFunctor());
   }
   template<typename Function>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void InvokeCont(Function &f) {
     detail::DoInvokeCont(f,
                          this->Parameters,
@@ -413,7 +413,7 @@ public:
                          detail::IdentityFunctor());
   }
   template<typename Function>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void InvokeExec(const Function &f) {
     detail::DoInvokeExec(f,
                          this->Parameters,
@@ -421,7 +421,7 @@ public:
                          detail::IdentityFunctor());
   }
   template<typename Function>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void InvokeExec(Function &f) {
     detail::DoInvokeExec(f,
                          this->Parameters,
@@ -439,22 +439,22 @@ public:
   /// FunctionInterface and can be retrieved with GetReturnValue().
   ///
   template<typename Function, typename TransformFunctor>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void InvokeCont(const Function &f, const TransformFunctor &transform) {
     detail::DoInvokeCont(f, this->Parameters, this->Result, transform);
   }
   template<typename Function, typename TransformFunctor>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void InvokeCont(Function &f, const TransformFunctor &transform) {
     detail::DoInvokeCont(f, this->Parameters, this->Result, transform);
   }
   template<typename Function, typename TransformFunctor>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void InvokeExec(const Function &f, const TransformFunctor &transform) {
     detail::DoInvokeExec(f, this->Parameters, this->Result, transform);
   }
   template<typename Function, typename TransformFunctor>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void InvokeExec(Function &f, const TransformFunctor &transform) {
     detail::DoInvokeExec(f, this->Parameters, this->Result, transform);
   }
@@ -472,7 +472,7 @@ public:
   /// template.
   ///
   template<typename NewType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename AppendType<NewType>::type
   Append(const NewType& newParameter) const
   {
@@ -529,7 +529,7 @@ public:
   ///
   ///
   template<vtkm::IdComponent ParameterIndex, typename NewType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ReplaceType<ParameterIndex, NewType>::type
   Replace(const NewType& newParameter,
           vtkm::internal::IndexTag<ParameterIndex> =
@@ -587,7 +587,7 @@ public:
   ///   };
   ///
   ///   template<typename T, vtkm::IdComponent Index>
-  ///   VTKM_CONT_EXPORT
+  ///   VTKM_CONT
   ///   const T *operator()(const T &x, vtkm::internal::IndexTag<Index>) const {
   ///     return &x;
   ///   }
@@ -602,7 +602,7 @@ public:
   /// \endcode
   ///
   template<typename Transform>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename StaticTransformType<Transform>::type
   StaticTransformCont(const Transform &transform) const
   {
@@ -613,7 +613,7 @@ public:
     return newFuncInterface;
   }
   template<typename Transform>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   typename StaticTransformType<Transform>::type
   StaticTransformExec(const Transform &transform) const
   {
@@ -649,7 +649,7 @@ public:
   ///   template<typename InputType,
   ///            typename ContinueFunctor,
   ///            vtkm::IdComponent Index>
-  ///   VTKM_CONT_EXPORT
+  ///   VTKM_CONT
   ///   void operator()(const InputType &input,
   ///                   const ContinueFunctor &continueFunc,
   ///                   vtkm::internal::IndexTag<Index>) const
@@ -658,7 +658,7 @@ public:
   ///   }
   ///
   ///   template<typename ContinueFunctor, vtkm::IdComponent Index>
-  ///   VTKM_CONT_EXPORT
+  ///   VTKM_CONT
   ///   void operator()(const std::string &input,
   ///                   const ContinueFunctor &continueFunc,
   ///                   vtkm::internal::IndexTag<Index>) const
@@ -679,7 +679,7 @@ public:
   ///
   /// struct MyFinishFunctor {
   ///   template<typename FunctionSignature>
-  ///   VTKM_CONT_EXPORT
+  ///   VTKM_CONT
   ///   void operator()(vtkm::internal::FunctionInterface<FunctionSignature> &funcInterface) const
   ///   {
   ///     // Do something
@@ -700,7 +700,7 @@ public:
   /// calling the continue functor.
   ///
   template<typename TransformFunctor, typename FinishFunctor>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void DynamicTransformCont(const TransformFunctor &transform,
                             const FinishFunctor &finish) const {
     typedef detail::FunctionInterfaceDynamicTransformContContinue<
@@ -726,22 +726,22 @@ public:
   /// index of the parameter.
   ///
   template<typename Functor>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ForEachCont(const Functor &f) const {
     detail::DoForEachCont(f, this->Parameters);
   }
   template<typename Functor>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ForEachCont(const Functor &f) {
     detail::DoForEachCont(f, this->Parameters);
   }
   template<typename Functor>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void ForEachExec(const Functor &f) const {
     detail::DoForEachExec(f, this->Parameters);
   }
   template<typename Functor>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void ForEachExec(const Functor &f) {
     detail::DoForEachExec(f, this->Parameters);
   }
@@ -772,7 +772,7 @@ public:
   {  }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(const T& newParameter) const
   {
     typedef typename FunctionInterface<NewFunction>::ComponentSig NewFSigComp;

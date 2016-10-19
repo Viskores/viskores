@@ -42,11 +42,11 @@ public:
   typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalGroupVec() : SourcePortal() {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalGroupVec(const SourcePortalType &sourcePortal)
     : SourcePortal(sourcePortal) {  }
 
@@ -55,20 +55,20 @@ public:
   /// casting that the portals do (like the non-const to const cast).
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename OtherSourcePortalType>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalGroupVec(
       const ArrayPortalGroupVec<OtherSourcePortalType, NUM_COMPONENTS> &src)
     : SourcePortal(src.GetPortal()) {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return this->SourcePortal.GetNumberOfValues()/NUM_COMPONENTS;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
     ValueType result;
@@ -84,7 +84,7 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType &value) const
   {
     vtkm::Id sourceIndex = index*NUM_COMPONENTS;
@@ -98,7 +98,7 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const SourcePortalType &GetPortal() const { return this->SourcePortal; }
 
 private:
@@ -136,28 +136,28 @@ public:
       typename SourceArrayHandleType::PortalConstControl,
       NUM_COMPONENTS> PortalConstType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage() : Valid(false) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage(const SourceArrayHandleType &sourceArray)
     : SourceArray(sourceArray), Valid(true) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
     return PortalType(this->SourceArray.GetPortalControl());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
     return PortalConstType(this->SourceArray.GetPortalConstControl());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     VTKM_ASSERT(this->Valid);
@@ -170,21 +170,21 @@ public:
     return sourceSize/NUM_COMPONENTS;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(vtkm::Id numberOfValues)
   {
     VTKM_ASSERT(this->Valid);
     this->SourceArray.Allocate(numberOfValues*NUM_COMPONENTS);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues)
   {
     VTKM_ASSERT(this->Valid);
     this->SourceArray.Shrink(numberOfValues*NUM_COMPONENTS);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources()
   {
     if (this->Valid)
@@ -194,7 +194,7 @@ public:
   }
 
   // Required for later use in ArrayTransfer class
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const SourceArrayHandleType &GetSourceArray() const
   {
     VTKM_ASSERT(this->Valid);
@@ -237,11 +237,11 @@ public:
       NUM_COMPONENTS>
     PortalConstExecution;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayTransfer(StorageType *storage)
     : SourceArray(storage->GetSourceArray()) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     vtkm::Id sourceSize = this->SourceArray.GetNumberOfValues();
@@ -253,7 +253,7 @@ public:
     return sourceSize/NUM_COMPONENTS;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
     if (this->SourceArray.GetNumberOfValues()%NUM_COMPONENTS != 0)
@@ -264,7 +264,7 @@ public:
     return PortalConstExecution(this->SourceArray.PrepareForInput(Device()));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
     if (this->SourceArray.GetNumberOfValues()%NUM_COMPONENTS != 0)
@@ -275,14 +275,14 @@ public:
     return PortalExecution(this->SourceArray.PrepareForInPlace(Device()));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
     return PortalExecution(this->SourceArray.PrepareForOutput(
                              numberOfValues*NUM_COMPONENTS, Device()));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const
   {
     // Implementation of this method should be unnecessary. The internal
@@ -290,13 +290,13 @@ public:
     // necessary.
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues)
   {
     this->SourceArray.Shrink(numberOfValues*NUM_COMPONENTS);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources()
   {
     this->SourceArray.ReleaseResourcesExecution();
@@ -344,7 +344,7 @@ private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleGroupVec(const SourceArrayHandleType &sourceArray)
     : Superclass(StorageType(sourceArray)) {  }
 };
@@ -356,7 +356,7 @@ public:
 ///
 template<vtkm::IdComponent NUM_COMPONENTS,
          typename ArrayHandleType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS>
 make_ArrayHandleGroupVec(const ArrayHandleType &array)
 {

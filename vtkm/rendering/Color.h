@@ -36,12 +36,12 @@ class Color
   public:
     vtkm::Vec<vtkm::Float32,4> Components;
 
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_CONT
     Color()
       : Components(0, 0, 0, 1)
     {    }
 
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_CONT
     Color(vtkm::Float32 r_,
           vtkm::Float32 g_,
           vtkm::Float32 b_,
@@ -49,12 +49,12 @@ class Color
       : Components(r_, g_, b_, a_)
     {    }
 
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_CONT
     Color(const vtkm::Vec<vtkm::Float32,4> &components)
       : Components(components)
     {  }
 
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_CONT
     void SetComponentFromByte(vtkm::Int32 i, vtkm::UInt8 v)
     {
       // Note that though GetComponentAsByte below
@@ -82,7 +82,7 @@ class Color
       if (Components[i]>1) Components[i] = 1;
     }
 
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_CONT
     vtkm::UInt8 GetComponentAsByte(int i)
     {
       // We need this to match what OpenGL/Mesa do.
@@ -111,7 +111,7 @@ class Color
       return vtkm::UInt8((tv < 0) ? 0 : (tv > 255) ? 255 : tv);
     }
 
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_CONT
     void GetRGBA(vtkm::UInt8 &r, vtkm::UInt8 &g,
                  vtkm::UInt8 &b, vtkm::UInt8 &a)
     {
@@ -121,13 +121,13 @@ class Color
       a = GetComponentAsByte(3);
     }
 
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_CONT
     vtkm::Float64 RawBrightness()
     {
       return (Components[0]+Components[1]+Components[2])/3.;
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     friend std::ostream &operator<<(std::ostream &out, const Color &c)
     {
       out << "["<<c.Components[0]<<","<<c.Components[1]<<","<<c.Components[2]<<","<<c.Components[3]<<"]";

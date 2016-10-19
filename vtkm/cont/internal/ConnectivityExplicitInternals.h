@@ -96,16 +96,16 @@ struct ConnectivityExplicitInternals
   bool ElementsValid;
   mutable bool IndexOffsetsValid;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ConnectivityExplicitInternals()
     : ElementsValid(false), IndexOffsetsValid(false) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfElements() const {
     return this->Shapes.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResourcesExecution() {
     this->Shapes.ReleaseResourcesExecution();
     this->NumIndices.ReleaseResourcesExecution();
@@ -114,7 +114,7 @@ struct ConnectivityExplicitInternals
   }
 
   template<typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void BuildIndexOffsets(Device) const
   {
     VTKM_ASSERT(this->ElementsValid);
@@ -128,7 +128,7 @@ struct ConnectivityExplicitInternals
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void BuildIndexOffsets(vtkm::cont::DeviceAdapterTagError) const
   {
     if (!this->IndexOffsetsValid)
@@ -138,7 +138,7 @@ struct ConnectivityExplicitInternals
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void PrintSummary(std::ostream &out) const
   {
     out <<"     Shapes: ";

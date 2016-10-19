@@ -87,7 +87,7 @@ public:
 
   const Character &GetChar(char c) const;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const std::vector<unsigned char> &GetRawImageData() const
   {
     return this->RawImageFileData;

@@ -41,7 +41,7 @@ namespace vtkm {
 struct Sum
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT T operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
     return x + y;
   }
@@ -53,7 +53,7 @@ struct Sum
 struct Product
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT T operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
     return x * y;
   }
@@ -71,7 +71,7 @@ struct Product
 struct Maximum
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT T operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
     return x < y ? y: x;
   }
@@ -84,7 +84,7 @@ struct Maximum
 struct Minimum
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT T operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
     return x < y ? x: y;
   }
@@ -96,7 +96,7 @@ struct Minimum
 struct BitwiseAnd
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT T operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
     return x & y;
   }
@@ -108,7 +108,7 @@ struct BitwiseAnd
 struct BitwiseOr
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT T operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
     return x | y;
   }
@@ -120,7 +120,7 @@ struct BitwiseOr
 struct BitwiseXor
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT T operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
     return x ^ y;
   }

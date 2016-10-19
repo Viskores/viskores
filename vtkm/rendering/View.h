@@ -51,64 +51,64 @@ public:
 
   virtual ~View();
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::rendering::Scene &GetScene() const { return this->Scene; }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::rendering::Scene &GetScene() { return this->Scene; }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetScene(const vtkm::rendering::Scene &scene) { this->Scene = scene; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::rendering::Mapper &GetMapper() const
   {
     return *this->MapperPointer;
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::rendering::Mapper &GetMapper()
   {
     return *this->MapperPointer;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::rendering::Canvas &GetCanvas() const
   {
     return *this->CanvasPointer;
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::rendering::Canvas &GetCanvas()
   {
     return *this->CanvasPointer;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::rendering::WorldAnnotator &GetWorldAnnotator() const
   {
     return *this->WorldAnnotatorPointer;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::rendering::Camera &GetCamera() const
   {
     return this->Camera;
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::rendering::Camera &GetCamera()
   {
     return this->Camera;
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetCamera(const vtkm::rendering::Camera &camera)
   {
     this->Camera = camera;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::rendering::Color &GetBackgroundColor() const
   {
     return this->CanvasPointer->GetBackgroundColor();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetBackgroundColor(const vtkm::rendering::Color &color)
   {
     this->CanvasPointer->SetBackgroundColor(color);

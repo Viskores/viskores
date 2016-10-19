@@ -82,6 +82,7 @@ public:
 }
 
 //-----------------------------------------------------------------------------
+inline VTKM_CONT
 ExternalFaces::ExternalFaces():
   vtkm::filter::FilterDataSet<ExternalFaces>()
 {
@@ -91,6 +92,7 @@ ExternalFaces::ExternalFaces():
 //-----------------------------------------------------------------------------
 template<typename DerivedPolicy,
          typename DeviceAdapter>
+inline VTKM_CONT
 vtkm::filter::ResultDataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& input,
                                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                                                      const DeviceAdapter&)
@@ -125,6 +127,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
+inline VTKM_CONT
 bool ExternalFaces::DoMapField(vtkm::filter::ResultDataSet&,
                                const vtkm::cont::ArrayHandle<T, StorageType>&,
                                const vtkm::filter::FieldMetadata&,

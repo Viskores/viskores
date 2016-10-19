@@ -56,12 +56,12 @@ public:
     vtkm::Float32 MaxDistance;
     Float4ArrayPortal FlatBVH;
     Int4ArrayPortal Leafs;
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     vtkm::Float32 rcp(vtkm::Float32 f)  const { return 1.0f/f;}
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     vtkm::Float32 rcp_safe(vtkm::Float32 f) const { return rcp((fabs(f) < 1e-8f) ? 1e-8f : f); }
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     Intersector(bool occlusion,
                 vtkm::Float32 maxDistance,
                 LinearBVH &bvh)
@@ -85,7 +85,7 @@ public:
                                     _6,
                                     _7);
     template<typename PointPortalType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Vec<vtkm::Float32,3> &rayDir,
                     const vtkm::Vec<vtkm::Float32,3> &rayOrigin,
                     vtkm::Float32 &distance,
@@ -243,7 +243,7 @@ public:
 
 
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void run(Ray<DeviceAdapter> &rays,
            LinearBVH &bvh,
            vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle)

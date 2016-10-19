@@ -42,7 +42,7 @@ namespace interop{
 /// This function will throw exceptions if the transfer wasn't possible
 ///
 template<typename ValueType, class StorageTag, class DeviceAdapterTag>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> handle,
                       BufferState& state,
                       DeviceAdapterTag)

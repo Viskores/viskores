@@ -89,7 +89,7 @@ template<typename WorkletType,
          typename ThreadIndicesType,
          typename R,
          typename P1>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -146,7 +146,7 @@ template<typename WorkletType,
          typename VisitArrayType,
          typename ThreadIndicesType,
          typename P1>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -198,7 +198,7 @@ template<typename WorkletType,
          typename R,
          typename P1,
          typename P2>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -265,7 +265,7 @@ template<typename WorkletType,
          typename ThreadIndicesType,
          typename P1,
          typename P2>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -327,7 +327,7 @@ template<typename WorkletType,
          typename P1,
          typename P2,
          typename P3>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -404,7 +404,7 @@ template<typename WorkletType,
          typename P1,
          typename P2,
          typename P3>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -476,7 +476,7 @@ template<typename WorkletType,
          typename P2,
          typename P3,
          typename P4>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -563,7 +563,7 @@ template<typename WorkletType,
          typename P2,
          typename P3,
          typename P4>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -645,7 +645,7 @@ template<typename WorkletType,
          typename P3,
          typename P4,
          typename P5>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -742,7 +742,7 @@ template<typename WorkletType,
          typename P3,
          typename P4,
          typename P5>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -834,7 +834,7 @@ template<typename WorkletType,
          typename P4,
          typename P5,
          typename P6>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -941,7 +941,7 @@ template<typename WorkletType,
          typename P4,
          typename P5,
          typename P6>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -1043,7 +1043,7 @@ template<typename WorkletType,
          typename P5,
          typename P6,
          typename P7>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -1160,7 +1160,7 @@ template<typename WorkletType,
          typename P5,
          typename P6,
          typename P7>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -1272,7 +1272,7 @@ template<typename WorkletType,
          typename P6,
          typename P7,
          typename P8>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -1399,7 +1399,7 @@ template<typename WorkletType,
          typename P6,
          typename P7,
          typename P8>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -1521,7 +1521,7 @@ template<typename WorkletType,
          typename P7,
          typename P8,
          typename P9>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -1658,7 +1658,7 @@ template<typename WorkletType,
          typename P7,
          typename P8,
          typename P9>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -1790,7 +1790,7 @@ template<typename WorkletType,
          typename P8,
          typename P9,
          typename P10>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -1937,7 +1937,7 @@ template<typename WorkletType,
          typename P8,
          typename P9,
          typename P10>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<

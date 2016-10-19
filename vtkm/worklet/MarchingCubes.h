@@ -69,7 +69,7 @@ make_ScalarField(const vtkm::cont::ArrayHandle<vtkm::Int8,S>& ah)
 
 // -----------------------------------------------------------------------------
 template<typename T, typename U>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 int GetHexahedronClassification(const T& values, const U isoValue)
 {
   return ((values[0] > isoValue)      |
@@ -99,7 +99,7 @@ public:
 
   T Isovalue;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ClassifyCell(T isovalue) :
     Isovalue(isovalue)
   {
@@ -107,7 +107,7 @@ public:
 
   template<typename FieldInType,
            typename NumTrianglesTablePortalType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const FieldInType &fieldIn,
                   vtkm::IdComponent &numTriangles,
                   const NumTrianglesTablePortalType &numTrianglesTable) const
@@ -150,7 +150,7 @@ class EdgeWeightGenerateMetaData
   };
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   EdgeWeightGenerateMetaData(
                      vtkm::Id size,
                      vtkm::cont::ArrayHandle< vtkm::Vec<ScalarType, 3>, NormalStorageType >& normals,
@@ -205,7 +205,7 @@ public:
   typedef _1 InputDomain;
 
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   EdgeWeightGenerate(vtkm::Float64 isovalue,
                      bool genNormals,
                      const EdgeWeightGenerateMetaData<ScalarType, NormalStorageType, DeviceAdapter>& meta) :
@@ -218,7 +218,7 @@ public:
   template<typename FieldInType, // Vec-like, one per input point
            typename CoordType,
            typename IndicesVecType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(
       vtkm::CellShapeTagGeneric shape,
       const FieldInType & fieldIn, // Input point field defining the contour
@@ -239,7 +239,7 @@ public:
   template<typename FieldInType, // Vec-like, one per input point
            typename CoordType,
            typename IndicesVecType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(
       CellShapeTagQuad vtkmNotUsed(shape),
       const FieldInType & vtkmNotUsed(fieldIn), // Input point field defining the contour
@@ -253,7 +253,7 @@ public:
   template<typename FieldInType, // Vec-like, one per input point
            typename CoordType,
            typename IndicesVecType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(
       vtkm::CellShapeTagHexahedron shape,
       const FieldInType &fieldIn, // Input point field defining the contour
@@ -315,7 +315,7 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ScatterType GetScatter() const
   {
     return this->MetaData.Scatter;
@@ -340,11 +340,11 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4);
   typedef _1 InputDomain;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ApplyToField() {}
 
   template <typename WeightType, typename InFieldPortalType, typename OutFieldType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Id2& low_high,
                   const WeightType &weight,
                   const InFieldPortalType& inPortal,
@@ -361,7 +361,7 @@ public:
 struct FirstValueSame
 {
   template<typename T, typename U>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const vtkm::Pair<T,U>& a,
+  VTKM_EXEC_CONT bool operator()(const vtkm::Pair<T,U>& a,
                                         const vtkm::Pair<T,U>& b) const
   {
     return (a.first == b.first);

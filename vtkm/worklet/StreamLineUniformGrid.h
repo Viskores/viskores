@@ -53,7 +53,7 @@ namespace internal {
 
   // Trilinear interpolation to calculate vector data at position
   template <typename FieldType, typename PortalType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Vec<FieldType, 3> VecDataAtPos(
                                  vtkm::Vec<FieldType, 3> pos,
                                  const vtkm::Id3 &vdims,
@@ -143,7 +143,7 @@ public:
  struct IsUnity
   {
     template<typename T>
-    VTKM_EXEC_CONT_EXPORT bool operator()(const T &x) const
+    VTKM_EXEC_CONT bool operator()(const T &x) const
     {
         return x == T(1);
     }
@@ -164,7 +164,7 @@ public:
     typedef _1 InputDomain;
 
     typedef vtkm::worklet::ScatterUniform ScatterType;
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ScatterType GetScatter() const
     {
       return ScatterType(2);
@@ -178,7 +178,7 @@ public:
     const vtkm::Id rowsize;
     const vtkm::Id streammode;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     MakeStreamLines(const FieldType tStep,
                     const vtkm::Id sMode,
                     const vtkm::Id nSteps,
@@ -194,7 +194,7 @@ public:
     {
     }
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(vtkm::Id &seedId,
                     vtkm::Vec<FieldType, 3> &seedPos,
                     vtkm::exec::ExecutionWholeArray<vtkm::IdComponent> &numIndices,

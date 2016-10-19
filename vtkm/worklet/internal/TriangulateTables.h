@@ -86,11 +86,11 @@ public:
   typedef typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst
       PortalType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   TriangulateTablesExecutionObject()
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TriangulateTablesExecutionObject(const TriangulateArrayHandle &counts,
                                    const TriangulateArrayHandle &offsets,
                                    const TriangulateArrayHandle &indices)
@@ -100,7 +100,7 @@ public:
   {  }
 
   template<typename CellShape>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::IdComponent GetCount(CellShape shape, vtkm::IdComponent numPoints) const
   {
     if (shape.Id == vtkm::CELL_SHAPE_POLYGON)
@@ -114,7 +114,7 @@ public:
   }
 
   template<typename CellShape>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Vec<vtkm::IdComponent, 3>
   GetIndices(CellShape shape, vtkm::IdComponent triangleIndex) const
   {
@@ -145,7 +145,7 @@ private:
 class TriangulateTables
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TriangulateTables()
     : Counts(vtkm::cont::make_ArrayHandle(
                vtkm::worklet::internal::TriangleCountData,
@@ -234,11 +234,11 @@ public:
   typedef typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst
       PortalType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   TetrahedralizeTablesExecutionObject()
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TetrahedralizeTablesExecutionObject(const TriangulateArrayHandle &counts,
                                       const TriangulateArrayHandle &offsets,
                                       const TriangulateArrayHandle &indices)
@@ -248,14 +248,14 @@ public:
   {  }
 
   template<typename CellShape>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::IdComponent GetCount(CellShape shape) const
   {
     return this->Counts.Get(shape.Id);
   }
 
   template<typename CellShape>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Vec<vtkm::IdComponent, 4>
   GetIndices(CellShape shape, vtkm::IdComponent tetrahedronIndex) const
   {
@@ -278,7 +278,7 @@ private:
 class TetrahedralizeTables
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TetrahedralizeTables()
     : Counts(vtkm::cont::make_ArrayHandle(
                vtkm::worklet::internal::TetrahedronCountData,

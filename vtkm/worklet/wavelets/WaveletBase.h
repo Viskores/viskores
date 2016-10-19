@@ -162,7 +162,7 @@ public:
   struct SortLessAbsFunctor
   { 
     template< typename T >
-    VTKM_EXEC_EXPORT 
+    VTKM_EXEC
     bool operator()(const T& x, const T& y) const 
     { 
       return vtkm::Abs(x) < vtkm::Abs(y); 
@@ -191,7 +191,7 @@ public:
   struct minFunctor
   {
     template< typename FieldType >
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     FieldType operator()(const FieldType &x, const FieldType &y) const {
       return Min(x, y);
     }
@@ -199,7 +199,7 @@ public:
   struct maxFunctor
   {
     template< typename FieldType >
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     FieldType operator()(const FieldType& x, const FieldType& y) const {
       return vtkm::Max(x, y);
     }
@@ -229,7 +229,7 @@ public:
   struct maxAbsFunctor
   {
     template< typename FieldType >
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     FieldType operator()(const FieldType& x, const FieldType& y) const {
       return vtkm::Max( vtkm::Abs(x), vtkm::Abs(y) );
     }

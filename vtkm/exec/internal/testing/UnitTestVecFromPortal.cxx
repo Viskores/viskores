@@ -38,10 +38,10 @@ class TestPortal
 public:
   typedef T ValueType;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType Get(vtkm::Id index) const { return TestValue(index, ValueType()); }
 };
 

@@ -27,22 +27,22 @@
   */
 
 #ifdef VTKM_CUDA
-#define VTKM_EXEC_EXPORT inline __device__ __host__
-#define VTKM_EXEC_CONT_EXPORT inline __device__ __host__
+#define VTKM_EXEC __device__ __host__
+#define VTKM_EXEC_CONT __device__ __host__
 #if __CUDAVER__ >= 75000
 #  define VTKM_SUPPRESS_EXEC_WARNINGS #pragma nv_exec_check_disable
 #else
 #  define VTKM_SUPPRESS_EXEC_WARNINGS #pragma hd_warning_disable
 #endif
-#define VTKM_EXEC_CONSTANT_EXPORT __device__ __constant__
+#define VTKM_EXEC_CONSTANT __device__ __constant__
 #else
-#define VTKM_EXEC_EXPORT inline
-#define VTKM_EXEC_CONT_EXPORT inline
+#define VTKM_EXEC
+#define VTKM_EXEC_CONT
 #define VTKM_SUPPRESS_EXEC_WARNINGS
-#define VTKM_EXEC_CONSTANT_EXPORT
+#define VTKM_EXEC_CONSTANT
 #endif
 
-#define VTKM_CONT_EXPORT inline
+#define VTKM_CONT
 
 // constexpr support was added to VisualStudio 2015 and above. So this makes
 // sure when that we gracefully fall back to just const when using 2013

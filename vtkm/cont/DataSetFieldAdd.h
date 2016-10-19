@@ -30,11 +30,11 @@ namespace cont {
 class DataSetFieldAdd
 {
 public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     DataSetFieldAdd() {}
 
     //Point centered fields.
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     void AddPointField(vtkm::cont::DataSet &dataSet,
                        const std::string &fieldName,
@@ -45,7 +45,7 @@ public:
     }
 
     template <typename T, typename Storage>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     void AddPointField(vtkm::cont::DataSet &dataSet,
                        const std::string &fieldName,
@@ -56,7 +56,7 @@ public:
     }
 
     template<typename T>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     void AddPointField(vtkm::cont::DataSet &dataSet,
                        const std::string &fieldName,
@@ -67,7 +67,7 @@ public:
     }
 
     template<typename T>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     void AddPointField(vtkm::cont::DataSet &dataSet,
                        const std::string &fieldName,
@@ -78,7 +78,7 @@ public:
     }
 
     //Cell centered field
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     void AddCellField(vtkm::cont::DataSet &dataSet,
                       const std::string &fieldName,
@@ -90,7 +90,7 @@ public:
     }
 
     template <typename T, typename Storage>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     void AddCellField(vtkm::cont::DataSet &dataSet,
                       const std::string &fieldName,
@@ -102,7 +102,7 @@ public:
     }
 
     template<typename T>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     void AddCellField(vtkm::cont::DataSet &dataSet,
                       const std::string &fieldName,
@@ -114,7 +114,7 @@ public:
     }
 
     template<typename T>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     void AddCellField(vtkm::cont::DataSet &dataSet,
                       const std::string &fieldName,
@@ -125,7 +125,7 @@ public:
                                cellSetName, field, n));
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     void AddCellField(vtkm::cont::DataSet &dataSet,
                       const std::string &fieldName,
@@ -137,7 +137,7 @@ public:
       DataSetFieldAdd::AddCellField(dataSet, fieldName, field, cellSetName);
     }
     template <typename T, typename Storage>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     void AddCellField(vtkm::cont::DataSet &dataSet,
                       const std::string &fieldName,
@@ -149,7 +149,7 @@ public:
       DataSetFieldAdd::AddCellField(dataSet, fieldName, field, cellSetName);
     }
     template<typename T>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     void AddCellField(vtkm::cont::DataSet &dataSet,
                       const std::string &fieldName,
@@ -162,7 +162,7 @@ public:
     }
 
     template<typename T>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     void AddCellField(vtkm::cont::DataSet &dataSet,
                       const std::string &fieldName,

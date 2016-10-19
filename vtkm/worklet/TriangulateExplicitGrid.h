@@ -59,10 +59,10 @@ public:
     typedef _4 ExecutionSignature(_1,_2,_3);
     typedef _1 InputDomain;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     TrianglesPerCell() {}
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     vtkm::IdComponent operator()(
         vtkm::UInt8 shape,
         vtkm::IdComponent numPoints,
@@ -86,14 +86,14 @@ public:
     typedef _1 InputDomain;
 
     typedef vtkm::worklet::ScatterCounting ScatterType;
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ScatterType GetScatter() const
     {
       return this->Scatter;
     }
 
     template<typename CountArrayType>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     TriangulateCell(const CountArrayType &countArray)
       : Scatter(countArray, DeviceAdapter())
     {  }
@@ -102,7 +102,7 @@ public:
     template<typename CellShapeTag,
              typename ConnectivityInVec,
              typename ConnectivityOutVec>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(
         CellShapeTag shape,
         const ConnectivityInVec &connectivityIn,

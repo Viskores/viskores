@@ -55,7 +55,7 @@ struct DeviceAdapterAlgorithm
   /// allocated we will reallocate and clear any current values.
   ///
   template<typename T, typename U, class CIn, class COut>
-  VTKM_CONT_EXPORT static void Copy(const vtkm::cont::ArrayHandle<T,CIn> &input,
+  VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T,CIn> &input,
                                     vtkm::cont::ArrayHandle<U, COut> &output);
 
   /// \brief Copy the contents of a section of one ArrayHandle to another
@@ -76,7 +76,7 @@ struct DeviceAdapterAlgorithm
   /// \arg \c input must already be sorted
   ///
   template<typename T, typename U, class CIn, class COut>
-  VTKM_CONT_EXPORT static bool CopySubRange(const vtkm::cont::ArrayHandle<T,CIn> &input,
+  VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T,CIn> &input,
                                             vtkm::Id inputStartIndex,
                                             vtkm::Id numberOfElementsToCopy,
                                             vtkm::cont::ArrayHandle<U, COut> &output,
@@ -92,7 +92,7 @@ struct DeviceAdapterAlgorithm
   /// \arg \c input must already be sorted
   ///
   template<typename T, class CIn, class CVal, class COut>
-  VTKM_CONT_EXPORT static void LowerBounds(
+  VTKM_CONT static void LowerBounds(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       const vtkm::cont::ArrayHandle<T,CVal>& values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut>& output);
@@ -108,7 +108,7 @@ struct DeviceAdapterAlgorithm
   /// \arg \c input must already be sorted
   ///
   template<typename T, class CIn, class CVal, class COut, class BinaryCompare>
-  VTKM_CONT_EXPORT static void LowerBounds(
+  VTKM_CONT static void LowerBounds(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       const vtkm::cont::ArrayHandle<T,CVal>& values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut>& output,
@@ -122,7 +122,7 @@ struct DeviceAdapterAlgorithm
   /// arrays is limited to vtkm::Id.
   ///
   template<class CIn, class COut>
-  VTKM_CONT_EXPORT static void LowerBounds(
+  VTKM_CONT static void LowerBounds(
       const vtkm::cont::ArrayHandle<vtkm::Id,CIn>& input,
       vtkm::cont::ArrayHandle<vtkm::Id,COut>& values_output);
 
@@ -136,7 +136,7 @@ struct DeviceAdapterAlgorithm
   ///
   /// \return The total sum.
   template<typename T, class CIn>
-  VTKM_CONT_EXPORT static T Reduce(
+  VTKM_CONT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       T initialValue);
 
@@ -151,7 +151,7 @@ struct DeviceAdapterAlgorithm
   ///
   /// \return The total sum.
   template<typename T, class CIn, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T Reduce(
+  VTKM_CONT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       T initialValue,
       BinaryFunctor binary_functor);
@@ -168,7 +168,7 @@ struct DeviceAdapterAlgorithm
            class CKeyIn,  class CValIn,
            class CKeyOut, class CValOut,
            class BinaryFunctor >
-  VTKM_CONT_EXPORT static void ReduceByKey(
+  VTKM_CONT static void ReduceByKey(
       const vtkm::cont::ArrayHandle<T,CKeyIn> &keys,
       const vtkm::cont::ArrayHandle<U,CValIn> &values,
       vtkm::cont::ArrayHandle<T,CKeyOut>& keys_output,
@@ -188,7 +188,7 @@ struct DeviceAdapterAlgorithm
   /// \return The total sum.
   ///
   template<typename T, class CIn, class COut>
-  VTKM_CONT_EXPORT static T ScanInclusive(
+  VTKM_CONT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output);
 
@@ -199,7 +199,7 @@ struct DeviceAdapterAlgorithm
   /// \return The total sum.
   ///
   template<typename T, class CIn, class COut>
-  VTKM_CONT_EXPORT static T StreamingScanInclusive(
+  VTKM_CONT static T StreamingScanInclusive(
       const vtkm::Id numBlocks,
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output);
@@ -217,7 +217,7 @@ struct DeviceAdapterAlgorithm
   /// \return The total sum.
   ///
   template<typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T ScanInclusive(
+  VTKM_CONT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output,
       BinaryFunctor binary_functor);
@@ -229,7 +229,7 @@ struct DeviceAdapterAlgorithm
   /// \return The total sum.
   ///
   template<typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T StreamingScanInclusive(
+  VTKM_CONT static T StreamingScanInclusive(
       const vtkm::Id numBlocks,
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output,
@@ -248,7 +248,7 @@ struct DeviceAdapterAlgorithm
   /// \return The total sum.
   ///
   template<typename T, class CIn, class COut>
-  VTKM_CONT_EXPORT static T ScanExclusive(
+  VTKM_CONT static T ScanExclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output);
 
@@ -270,7 +270,7 @@ struct DeviceAdapterAlgorithm
   /// in the range [0, \c numInstances].
   ///
   template<class Functor>
-  VTKM_CONT_EXPORT static void Schedule(Functor functor,
+  VTKM_CONT static void Schedule(Functor functor,
                                         vtkm::Id numInstances);
 
   /// \brief Schedule many instances of a function to run on concurrent threads.
@@ -296,7 +296,7 @@ struct DeviceAdapterAlgorithm
   /// rangeMax[0]*rangeMax[1]*rangeMax[2])</tt> were called.
   ///
   template<class Functor, class IndiceType>
-  VTKM_CONT_EXPORT static void Schedule(Functor functor,
+  VTKM_CONT static void Schedule(Functor functor,
                                         vtkm::Id3 rangeMax);
 
   /// \brief Unstable ascending sort of input array.
@@ -305,7 +305,7 @@ struct DeviceAdapterAlgorithm
   /// guarantee stability
   ///
   template<typename T, class Storage>
-  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage> &values);
+  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T,Storage> &values);
 
   /// \brief Unstable ascending sort of input array.
   ///
@@ -315,7 +315,7 @@ struct DeviceAdapterAlgorithm
   /// BinaryCompare should be a strict weak ordering comparison operator
   ///
   template<typename T, class Storage, class BinaryCompare>
-  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage> &values,
+  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T,Storage> &values,
                                     BinaryCompare binary_compare);
 
   /// \brief Unstable ascending sort of keys and values.
@@ -324,7 +324,7 @@ struct DeviceAdapterAlgorithm
   /// on the values of keys.
   ///
   template<typename T, typename U, class StorageT,  class StorageU>
-  VTKM_CONT_EXPORT static void SortByKey(
+  VTKM_CONT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values);
 
@@ -336,7 +336,7 @@ struct DeviceAdapterAlgorithm
   /// BinaryCompare should be a strict weak ordering comparison operator
   ///
   template<typename T, typename U, class StorageT,  class StorageU, class BinaryCompare>
-  VTKM_CONT_EXPORT static void SortByKey(
+  VTKM_CONT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values,
       BinaryCompare binary_compare)
@@ -352,7 +352,7 @@ struct DeviceAdapterAlgorithm
   /// compaction algorithm.
   ///
   template<typename T, class CStencil, class COut>
-  VTKM_CONT_EXPORT static void StreamCompact(
+  VTKM_CONT static void StreamCompact(
       const vtkm::cont::ArrayHandle<T,CStencil> &stencil,
       vtkm::cont::ArrayHandle<vtkm::Id,COut> &output);
 
@@ -368,7 +368,7 @@ struct DeviceAdapterAlgorithm
   /// algorithm.
   ///
   template<typename T, typename U, class CIn, class CStencil, class COut>
-  VTKM_CONT_EXPORT static void StreamCompact(
+  VTKM_CONT static void StreamCompact(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
       vtkm::cont::ArrayHandle<T,COut> &output);
@@ -386,7 +386,7 @@ struct DeviceAdapterAlgorithm
   ///
   template<typename T, typename U, class CIn, class CStencil,
            class COut, class UnaryPredicate>
-  VTKM_CONT_EXPORT static void StreamCompact(
+  VTKM_CONT static void StreamCompact(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
       vtkm::cont::ArrayHandle<T,COut> &output,
@@ -396,7 +396,7 @@ struct DeviceAdapterAlgorithm
   ///
   /// Waits for any asynchronous operations running on the device to complete.
   ///
-  VTKM_CONT_EXPORT static void Synchronize();
+  VTKM_CONT static void Synchronize();
 
   /// \brief Reduce an array to only the unique values it contains
   ///
@@ -406,7 +406,7 @@ struct DeviceAdapterAlgorithm
   /// be modified by this operation.
   ///
   template<typename T, class Storage>
-  VTKM_CONT_EXPORT static void Unique(
+  VTKM_CONT static void Unique(
       vtkm::cont::ArrayHandle<T,Storage>& values);
 
   /// \brief Reduce an array to only the unique values it contains
@@ -420,7 +420,7 @@ struct DeviceAdapterAlgorithm
   /// is unique. The predicate must return true if the two items are the same.
   ///
   template<typename T, class Storage, class BinaryCompare>
-  VTKM_CONT_EXPORT static void Unique(
+  VTKM_CONT static void Unique(
       vtkm::cont::ArrayHandle<T,Storage>& values,
       BinaryCompare binary_compare);
 
@@ -434,7 +434,7 @@ struct DeviceAdapterAlgorithm
   /// \arg \c input must already be sorted
   ///
   template<typename T, class CIn, class CVal, class COut>
-  VTKM_CONT_EXPORT static void UpperBounds(
+  VTKM_CONT static void UpperBounds(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       const vtkm::cont::ArrayHandle<T,CVal>& values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut>& output);
@@ -450,7 +450,7 @@ struct DeviceAdapterAlgorithm
   /// \arg \c input must already be sorted
   ///
   template<typename T, class CIn, class CVal, class COut, class BinaryCompare>
-  VTKM_CONT_EXPORT static void UpperBounds(
+  VTKM_CONT static void UpperBounds(
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       const vtkm::cont::ArrayHandle<T,CVal>& values,
       vtkm::cont::ArrayHandle<vtkm::Id,COut>& output,
@@ -464,7 +464,7 @@ struct DeviceAdapterAlgorithm
   /// of the arrays is limited to vtkm::Id.
   ///
   template<class CIn, class COut>
-  VTKM_CONT_EXPORT static void UpperBounds(
+  VTKM_CONT static void UpperBounds(
       const vtkm::cont::ArrayHandle<vtkm::Id,CIn>& input,
       vtkm::cont::ArrayHandle<vtkm::Id,COut>& values_output);
 };
@@ -486,7 +486,7 @@ public:
   /// When a timer is constructed, all threads are synchronized and the
   /// current time is marked so that GetElapsedTime returns the number of
   /// seconds elapsed since the construction.
-  VTKM_CONT_EXPORT DeviceAdapterTimerImplementation()
+  VTKM_CONT DeviceAdapterTimerImplementation()
   {
     this->Reset();
   }
@@ -495,7 +495,7 @@ public:
   /// number of seconds elapsed since the call to this. This method
   /// synchronizes all asynchronous operations.
   ///
-  VTKM_CONT_EXPORT void Reset()
+  VTKM_CONT void Reset()
   {
     this->StartTime = this->GetCurrentTime();
   }
@@ -506,7 +506,7 @@ public:
   /// number of times to get the progressive time. This method synchronizes all
   /// asynchronous operations.
   ///
-  VTKM_CONT_EXPORT vtkm::Float64 GetElapsedTime()
+  VTKM_CONT vtkm::Float64 GetElapsedTime()
   {
     TimeStamp currentTime = this->GetCurrentTime();
 
@@ -525,7 +525,7 @@ public:
   };
   TimeStamp StartTime;
 
-  VTKM_CONT_EXPORT TimeStamp GetCurrentTime()
+  VTKM_CONT TimeStamp GetCurrentTime()
   {
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>
         ::Synchronize();
@@ -566,7 +566,7 @@ public:
   /// The default implementation is to return the value of
   /// vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>::Valid
   ///
-  VTKM_CONT_EXPORT bool Exists() const
+  VTKM_CONT bool Exists() const
   {
     typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> DeviceAdapterTraits;
     return DeviceAdapterTraits::Valid;

@@ -98,7 +98,7 @@ struct CellShapeIdToTag {
   template<> \
   struct CellShapeTagCheck<vtkm::CellShapeTag ## name> : std::true_type {  }; \
   } \
-  VTKM_EXEC_CONT_EXPORT \
+  static inline VTKM_EXEC_CONT \
   const char *GetCellShapeName(vtkm::CellShapeTag ## name) { \
     return #name; \
   } \
@@ -134,7 +134,7 @@ VTKM_DEFINE_CELL_TAG(Pyramid, CELL_SHAPE_PYRAMID);
 /// \c vtkmGenericCellShapeMacro to specialize on the cell type.
 ///
 struct CellShapeTagGeneric {
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   CellShapeTagGeneric(vtkm::IdComponent shape) : Id(shape) {  }
 
   vtkm::IdComponent Id;
@@ -163,7 +163,7 @@ struct CellShapeTagGeneric {
 ///
 /// \code{.cpp}
 /// template<typename WorkletType>
-/// VTKM_EXEC_EXPORT
+/// VTKM_EXEC
 /// void MyCellOperation(vtkm::CellShapeTagGeneric cellShape,
 ///                      const vtkm::exec::FunctorBase &worklet)
 /// {

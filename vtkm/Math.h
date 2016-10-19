@@ -61,7 +61,7 @@ namespace vtkm {
 //-----------------------------------------------------------------------------
 /// Returns the constant 2 times Pi.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 TwoPi()
 {
   return 6.28318530717958647692528676655900576;
@@ -69,7 +69,7 @@ vtkm::Float64 TwoPi()
 
 /// Returns the constant Pi.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Pi()
 {
   return 3.14159265358979323846264338327950288;
@@ -77,14 +77,14 @@ vtkm::Float64 Pi()
 
 /// Returns the constant Pi halves.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Pi_2()
 {
   return 1.57079632679489661923132169163975144;
 }
 /// Returns the constant Pi thirds.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Pi_3()
 {
   return 1.04719755119659774615421446109316762;
@@ -92,7 +92,7 @@ vtkm::Float64 Pi_3()
 
 /// Returns the constant Pi fourths.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Pi_4()
 {
   return 0.78539816339744830961566084581987572;
@@ -100,7 +100,7 @@ vtkm::Float64 Pi_4()
 
 /// Compute the sine of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Sin(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(sin)(x);
@@ -108,7 +108,7 @@ vtkm::Float32 Sin(vtkm::Float32 x) {
   return std::sin(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Sin(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(sin)(x);
@@ -117,7 +117,7 @@ vtkm::Float64 Sin(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Sin(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -127,7 +127,7 @@ vtkm::Vec<T,N> Sin(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Sin(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Sin(x[0]),
                         vtkm::Sin(x[1]),
@@ -135,14 +135,14 @@ vtkm::Vec<T,4> Sin(const vtkm::Vec<T,4> &x) {
                         vtkm::Sin(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Sin(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Sin(x[0]),
                         vtkm::Sin(x[1]),
                         vtkm::Sin(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Sin(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Sin(x[0]),
                         vtkm::Sin(x[1]));
@@ -150,7 +150,7 @@ vtkm::Vec<T,2> Sin(const vtkm::Vec<T,2> &x) {
 
 /// Compute the cosine of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Cos(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(cos)(x);
@@ -158,7 +158,7 @@ vtkm::Float32 Cos(vtkm::Float32 x) {
   return std::cos(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Cos(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(cos)(x);
@@ -167,7 +167,7 @@ vtkm::Float64 Cos(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Cos(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -177,7 +177,7 @@ vtkm::Vec<T,N> Cos(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Cos(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Cos(x[0]),
                         vtkm::Cos(x[1]),
@@ -185,14 +185,14 @@ vtkm::Vec<T,4> Cos(const vtkm::Vec<T,4> &x) {
                         vtkm::Cos(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Cos(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Cos(x[0]),
                         vtkm::Cos(x[1]),
                         vtkm::Cos(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Cos(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Cos(x[0]),
                         vtkm::Cos(x[1]));
@@ -200,7 +200,7 @@ vtkm::Vec<T,2> Cos(const vtkm::Vec<T,2> &x) {
 
 /// Compute the tangent of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Tan(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(tan)(x);
@@ -208,7 +208,7 @@ vtkm::Float32 Tan(vtkm::Float32 x) {
   return std::tan(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Tan(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(tan)(x);
@@ -217,7 +217,7 @@ vtkm::Float64 Tan(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Tan(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -227,7 +227,7 @@ vtkm::Vec<T,N> Tan(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Tan(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Tan(x[0]),
                         vtkm::Tan(x[1]),
@@ -235,14 +235,14 @@ vtkm::Vec<T,4> Tan(const vtkm::Vec<T,4> &x) {
                         vtkm::Tan(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Tan(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Tan(x[0]),
                         vtkm::Tan(x[1]),
                         vtkm::Tan(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Tan(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Tan(x[0]),
                         vtkm::Tan(x[1]));
@@ -250,7 +250,7 @@ vtkm::Vec<T,2> Tan(const vtkm::Vec<T,2> &x) {
 
 /// Compute the arc sine of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 ASin(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(asin)(x);
@@ -258,7 +258,7 @@ vtkm::Float32 ASin(vtkm::Float32 x) {
   return std::asin(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 ASin(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(asin)(x);
@@ -267,7 +267,7 @@ vtkm::Float64 ASin(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> ASin(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -277,7 +277,7 @@ vtkm::Vec<T,N> ASin(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> ASin(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::ASin(x[0]),
                         vtkm::ASin(x[1]),
@@ -285,14 +285,14 @@ vtkm::Vec<T,4> ASin(const vtkm::Vec<T,4> &x) {
                         vtkm::ASin(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> ASin(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::ASin(x[0]),
                         vtkm::ASin(x[1]),
                         vtkm::ASin(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> ASin(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::ASin(x[0]),
                         vtkm::ASin(x[1]));
@@ -300,7 +300,7 @@ vtkm::Vec<T,2> ASin(const vtkm::Vec<T,2> &x) {
 
 /// Compute the arc cosine of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 ACos(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(acos)(x);
@@ -308,7 +308,7 @@ vtkm::Float32 ACos(vtkm::Float32 x) {
   return std::acos(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 ACos(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(acos)(x);
@@ -317,7 +317,7 @@ vtkm::Float64 ACos(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> ACos(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -327,7 +327,7 @@ vtkm::Vec<T,N> ACos(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> ACos(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::ACos(x[0]),
                         vtkm::ACos(x[1]),
@@ -335,14 +335,14 @@ vtkm::Vec<T,4> ACos(const vtkm::Vec<T,4> &x) {
                         vtkm::ACos(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> ACos(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::ACos(x[0]),
                         vtkm::ACos(x[1]),
                         vtkm::ACos(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> ACos(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::ACos(x[0]),
                         vtkm::ACos(x[1]));
@@ -350,7 +350,7 @@ vtkm::Vec<T,2> ACos(const vtkm::Vec<T,2> &x) {
 
 /// Compute the arc tangent of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 ATan(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(atan)(x);
@@ -358,7 +358,7 @@ vtkm::Float32 ATan(vtkm::Float32 x) {
   return std::atan(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 ATan(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(atan)(x);
@@ -367,7 +367,7 @@ vtkm::Float64 ATan(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> ATan(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -377,7 +377,7 @@ vtkm::Vec<T,N> ATan(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> ATan(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::ATan(x[0]),
                         vtkm::ATan(x[1]),
@@ -385,14 +385,14 @@ vtkm::Vec<T,4> ATan(const vtkm::Vec<T,4> &x) {
                         vtkm::ATan(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> ATan(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::ATan(x[0]),
                         vtkm::ATan(x[1]),
                         vtkm::ATan(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> ATan(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::ATan(x[0]),
                         vtkm::ATan(x[1]));
@@ -401,7 +401,7 @@ vtkm::Vec<T,2> ATan(const vtkm::Vec<T,2> &x) {
 /// Compute the arc tangent of \p x / \p y using the signs of both arguments
 /// to determine the quadrant of the return value.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 ATan2(vtkm::Float32 x, vtkm::Float32 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(atan2)(x,y);
@@ -409,7 +409,7 @@ vtkm::Float32 ATan2(vtkm::Float32 x, vtkm::Float32 y) {
   return std::atan2(x,y);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 ATan2(vtkm::Float64 x, vtkm::Float64 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(atan2)(x,y);
@@ -420,7 +420,7 @@ vtkm::Float64 ATan2(vtkm::Float64 x, vtkm::Float64 y) {
 
 /// Compute the hyperbolic sine of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 SinH(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(sinh)(x);
@@ -428,7 +428,7 @@ vtkm::Float32 SinH(vtkm::Float32 x) {
   return std::sinh(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 SinH(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(sinh)(x);
@@ -437,7 +437,7 @@ vtkm::Float64 SinH(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> SinH(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -447,7 +447,7 @@ vtkm::Vec<T,N> SinH(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> SinH(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::SinH(x[0]),
                         vtkm::SinH(x[1]),
@@ -455,14 +455,14 @@ vtkm::Vec<T,4> SinH(const vtkm::Vec<T,4> &x) {
                         vtkm::SinH(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> SinH(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::SinH(x[0]),
                         vtkm::SinH(x[1]),
                         vtkm::SinH(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> SinH(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::SinH(x[0]),
                         vtkm::SinH(x[1]));
@@ -470,7 +470,7 @@ vtkm::Vec<T,2> SinH(const vtkm::Vec<T,2> &x) {
 
 /// Compute the hyperbolic cosine of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 CosH(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(cosh)(x);
@@ -478,7 +478,7 @@ vtkm::Float32 CosH(vtkm::Float32 x) {
   return std::cosh(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 CosH(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(cosh)(x);
@@ -487,7 +487,7 @@ vtkm::Float64 CosH(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> CosH(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -497,7 +497,7 @@ vtkm::Vec<T,N> CosH(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> CosH(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::CosH(x[0]),
                         vtkm::CosH(x[1]),
@@ -505,14 +505,14 @@ vtkm::Vec<T,4> CosH(const vtkm::Vec<T,4> &x) {
                         vtkm::CosH(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> CosH(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::CosH(x[0]),
                         vtkm::CosH(x[1]),
                         vtkm::CosH(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> CosH(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::CosH(x[0]),
                         vtkm::CosH(x[1]));
@@ -520,7 +520,7 @@ vtkm::Vec<T,2> CosH(const vtkm::Vec<T,2> &x) {
 
 /// Compute the hyperbolic tangent of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 TanH(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(tanh)(x);
@@ -528,7 +528,7 @@ vtkm::Float32 TanH(vtkm::Float32 x) {
   return std::tanh(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 TanH(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(tanh)(x);
@@ -537,7 +537,7 @@ vtkm::Float64 TanH(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> TanH(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -547,7 +547,7 @@ vtkm::Vec<T,N> TanH(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> TanH(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::TanH(x[0]),
                         vtkm::TanH(x[1]),
@@ -555,14 +555,14 @@ vtkm::Vec<T,4> TanH(const vtkm::Vec<T,4> &x) {
                         vtkm::TanH(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> TanH(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::TanH(x[0]),
                         vtkm::TanH(x[1]),
                         vtkm::TanH(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> TanH(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::TanH(x[0]),
                         vtkm::TanH(x[1]));
@@ -570,7 +570,7 @@ vtkm::Vec<T,2> TanH(const vtkm::Vec<T,2> &x) {
 
 /// Compute the hyperbolic arc sine of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 ASinH(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(asinh)(x);
@@ -578,7 +578,7 @@ vtkm::Float32 ASinH(vtkm::Float32 x) {
   return std::asinh(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 ASinH(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(asinh)(x);
@@ -587,7 +587,7 @@ vtkm::Float64 ASinH(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> ASinH(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -597,7 +597,7 @@ vtkm::Vec<T,N> ASinH(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> ASinH(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::ASinH(x[0]),
                         vtkm::ASinH(x[1]),
@@ -605,14 +605,14 @@ vtkm::Vec<T,4> ASinH(const vtkm::Vec<T,4> &x) {
                         vtkm::ASinH(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> ASinH(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::ASinH(x[0]),
                         vtkm::ASinH(x[1]),
                         vtkm::ASinH(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> ASinH(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::ASinH(x[0]),
                         vtkm::ASinH(x[1]));
@@ -620,7 +620,7 @@ vtkm::Vec<T,2> ASinH(const vtkm::Vec<T,2> &x) {
 
 /// Compute the hyperbolic arc cosine of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 ACosH(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(acosh)(x);
@@ -628,7 +628,7 @@ vtkm::Float32 ACosH(vtkm::Float32 x) {
   return std::acosh(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 ACosH(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(acosh)(x);
@@ -637,7 +637,7 @@ vtkm::Float64 ACosH(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> ACosH(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -647,7 +647,7 @@ vtkm::Vec<T,N> ACosH(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> ACosH(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::ACosH(x[0]),
                         vtkm::ACosH(x[1]),
@@ -655,14 +655,14 @@ vtkm::Vec<T,4> ACosH(const vtkm::Vec<T,4> &x) {
                         vtkm::ACosH(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> ACosH(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::ACosH(x[0]),
                         vtkm::ACosH(x[1]),
                         vtkm::ACosH(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> ACosH(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::ACosH(x[0]),
                         vtkm::ACosH(x[1]));
@@ -670,7 +670,7 @@ vtkm::Vec<T,2> ACosH(const vtkm::Vec<T,2> &x) {
 
 /// Compute the hyperbolic arc tangent of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 ATanH(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(atanh)(x);
@@ -678,7 +678,7 @@ vtkm::Float32 ATanH(vtkm::Float32 x) {
   return std::atanh(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 ATanH(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(atanh)(x);
@@ -687,7 +687,7 @@ vtkm::Float64 ATanH(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> ATanH(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -697,7 +697,7 @@ vtkm::Vec<T,N> ATanH(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> ATanH(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::ATanH(x[0]),
                         vtkm::ATanH(x[1]),
@@ -705,14 +705,14 @@ vtkm::Vec<T,4> ATanH(const vtkm::Vec<T,4> &x) {
                         vtkm::ATanH(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> ATanH(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::ATanH(x[0]),
                         vtkm::ATanH(x[1]),
                         vtkm::ATanH(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> ATanH(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::ATanH(x[0]),
                         vtkm::ATanH(x[1]));
@@ -721,7 +721,7 @@ vtkm::Vec<T,2> ATanH(const vtkm::Vec<T,2> &x) {
 //-----------------------------------------------------------------------------
 /// Computes \p x raised to the power of \p y.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Pow(vtkm::Float32 x, vtkm::Float32 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(pow)(x,y);
@@ -729,7 +729,7 @@ vtkm::Float32 Pow(vtkm::Float32 x, vtkm::Float32 y) {
   return std::pow(x,y);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Pow(vtkm::Float64 x, vtkm::Float64 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(pow)(x,y);
@@ -740,7 +740,7 @@ vtkm::Float64 Pow(vtkm::Float64 x, vtkm::Float64 y) {
 
 /// Compute the square root of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Sqrt(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(sqrt)(x);
@@ -748,7 +748,7 @@ vtkm::Float32 Sqrt(vtkm::Float32 x) {
   return std::sqrt(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Sqrt(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(sqrt)(x);
@@ -757,7 +757,7 @@ vtkm::Float64 Sqrt(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Sqrt(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -767,7 +767,7 @@ vtkm::Vec<T,N> Sqrt(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Sqrt(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Sqrt(x[0]),
                         vtkm::Sqrt(x[1]),
@@ -775,14 +775,14 @@ vtkm::Vec<T,4> Sqrt(const vtkm::Vec<T,4> &x) {
                         vtkm::Sqrt(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Sqrt(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Sqrt(x[0]),
                         vtkm::Sqrt(x[1]),
                         vtkm::Sqrt(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Sqrt(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Sqrt(x[0]),
                         vtkm::Sqrt(x[1]));
@@ -794,27 +794,27 @@ vtkm::Vec<T,2> Sqrt(const vtkm::Vec<T,2> &x) {
 /// should use this function whenever dividing by the square root.
 ///
 #ifdef VTKM_CUDA
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 RSqrt(vtkm::Float32 x) {
   return rsqrtf(x);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 RSqrt(vtkm::Float64 x) {
   return rsqrt(x);
 }
 #else // !VTKM_CUDA
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 RSqrt(vtkm::Float32 x) {
   return 1/vtkm::Sqrt(x);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 RSqrt(vtkm::Float64 x) {
   return 1/vtkm::Sqrt(x);
 }
 #endif // !VTKM_CUDA
 
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> RSqrt(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -824,7 +824,7 @@ vtkm::Vec<T,N> RSqrt(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> RSqrt(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::RSqrt(x[0]),
                         vtkm::RSqrt(x[1]),
@@ -832,14 +832,14 @@ vtkm::Vec<T,4> RSqrt(const vtkm::Vec<T,4> &x) {
                         vtkm::RSqrt(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> RSqrt(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::RSqrt(x[0]),
                         vtkm::RSqrt(x[1]),
                         vtkm::RSqrt(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> RSqrt(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::RSqrt(x[0]),
                         vtkm::RSqrt(x[1]));
@@ -847,7 +847,7 @@ vtkm::Vec<T,2> RSqrt(const vtkm::Vec<T,2> &x) {
 
 /// Compute the cube root of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Cbrt(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(cbrt)(x);
@@ -855,7 +855,7 @@ vtkm::Float32 Cbrt(vtkm::Float32 x) {
   return std::cbrt(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Cbrt(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(cbrt)(x);
@@ -864,7 +864,7 @@ vtkm::Float64 Cbrt(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Cbrt(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -874,7 +874,7 @@ vtkm::Vec<T,N> Cbrt(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Cbrt(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Cbrt(x[0]),
                         vtkm::Cbrt(x[1]),
@@ -882,14 +882,14 @@ vtkm::Vec<T,4> Cbrt(const vtkm::Vec<T,4> &x) {
                         vtkm::Cbrt(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Cbrt(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Cbrt(x[0]),
                         vtkm::Cbrt(x[1]),
                         vtkm::Cbrt(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Cbrt(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Cbrt(x[0]),
                         vtkm::Cbrt(x[1]));
@@ -901,27 +901,27 @@ vtkm::Vec<T,2> Cbrt(const vtkm::Vec<T,2> &x) {
 /// should use this function whenever dividing by the cube root.
 ///
 #ifdef VTKM_CUDA
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 RCbrt(vtkm::Float32 x) {
   return rcbrtf(x);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 RCbrt(vtkm::Float64 x) {
   return rcbrt(x);
 }
 #else // !VTKM_CUDA
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 RCbrt(vtkm::Float32 x) {
   return 1/vtkm::Cbrt(x);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 RCbrt(vtkm::Float64 x) {
   return 1/vtkm::Cbrt(x);
 }
 #endif // !VTKM_CUDA
 
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> RCbrt(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -931,7 +931,7 @@ vtkm::Vec<T,N> RCbrt(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> RCbrt(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::RCbrt(x[0]),
                         vtkm::RCbrt(x[1]),
@@ -939,14 +939,14 @@ vtkm::Vec<T,4> RCbrt(const vtkm::Vec<T,4> &x) {
                         vtkm::RCbrt(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> RCbrt(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::RCbrt(x[0]),
                         vtkm::RCbrt(x[1]),
                         vtkm::RCbrt(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> RCbrt(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::RCbrt(x[0]),
                         vtkm::RCbrt(x[1]));
@@ -954,7 +954,7 @@ vtkm::Vec<T,2> RCbrt(const vtkm::Vec<T,2> &x) {
 
 /// Computes e**\p x, the base-e exponential of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Exp(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(exp)(x);
@@ -962,7 +962,7 @@ vtkm::Float32 Exp(vtkm::Float32 x) {
   return std::exp(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Exp(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(exp)(x);
@@ -971,7 +971,7 @@ vtkm::Float64 Exp(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Exp(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -981,7 +981,7 @@ vtkm::Vec<T,N> Exp(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Exp(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Exp(x[0]),
                         vtkm::Exp(x[1]),
@@ -989,14 +989,14 @@ vtkm::Vec<T,4> Exp(const vtkm::Vec<T,4> &x) {
                         vtkm::Exp(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Exp(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Exp(x[0]),
                         vtkm::Exp(x[1]),
                         vtkm::Exp(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Exp(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Exp(x[0]),
                         vtkm::Exp(x[1]));
@@ -1004,7 +1004,7 @@ vtkm::Vec<T,2> Exp(const vtkm::Vec<T,2> &x) {
 
 /// Computes 2**\p x, the base-2 exponential of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Exp2(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(exp2)(x);
@@ -1012,7 +1012,7 @@ vtkm::Float32 Exp2(vtkm::Float32 x) {
   return std::exp2(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Exp2(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(exp2)(x);
@@ -1021,7 +1021,7 @@ vtkm::Float64 Exp2(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Exp2(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -1031,7 +1031,7 @@ vtkm::Vec<T,N> Exp2(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Exp2(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Exp2(x[0]),
                         vtkm::Exp2(x[1]),
@@ -1039,14 +1039,14 @@ vtkm::Vec<T,4> Exp2(const vtkm::Vec<T,4> &x) {
                         vtkm::Exp2(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Exp2(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Exp2(x[0]),
                         vtkm::Exp2(x[1]),
                         vtkm::Exp2(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Exp2(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Exp2(x[0]),
                         vtkm::Exp2(x[1]));
@@ -1055,7 +1055,7 @@ vtkm::Vec<T,2> Exp2(const vtkm::Vec<T,2> &x) {
 /// Computes (e**\p x) - 1, the of base-e exponental of \p x then minus 1. The
 /// accuracy of this function is good even for very small values of x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 ExpM1(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(expm1)(x);
@@ -1063,7 +1063,7 @@ vtkm::Float32 ExpM1(vtkm::Float32 x) {
   return std::expm1(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 ExpM1(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(expm1)(x);
@@ -1072,7 +1072,7 @@ vtkm::Float64 ExpM1(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> ExpM1(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -1082,7 +1082,7 @@ vtkm::Vec<T,N> ExpM1(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> ExpM1(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::ExpM1(x[0]),
                         vtkm::ExpM1(x[1]),
@@ -1090,14 +1090,14 @@ vtkm::Vec<T,4> ExpM1(const vtkm::Vec<T,4> &x) {
                         vtkm::ExpM1(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> ExpM1(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::ExpM1(x[0]),
                         vtkm::ExpM1(x[1]),
                         vtkm::ExpM1(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> ExpM1(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::ExpM1(x[0]),
                         vtkm::ExpM1(x[1]));
@@ -1106,27 +1106,27 @@ vtkm::Vec<T,2> ExpM1(const vtkm::Vec<T,2> &x) {
 /// Computes 10**\p x, the base-10 exponential of \p x.
 ///
 #ifdef VTKM_CUDA
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Exp10(vtkm::Float32 x) {
   return exp10f(x);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Exp10(vtkm::Float64 x) {
   return exp10(x);
 }
 #else // !VTKM_CUDA
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Exp10(vtkm::Float32 x) {
   return vtkm::Pow(10, x);;
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Exp10(vtkm::Float64 x) {
   return vtkm::Pow(10, x);;
 }
 #endif // !VTKM_CUDA
 
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Exp10(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -1136,7 +1136,7 @@ vtkm::Vec<T,N> Exp10(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Exp10(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Exp10(x[0]),
                         vtkm::Exp10(x[1]),
@@ -1144,14 +1144,14 @@ vtkm::Vec<T,4> Exp10(const vtkm::Vec<T,4> &x) {
                         vtkm::Exp10(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Exp10(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Exp10(x[0]),
                         vtkm::Exp10(x[1]),
                         vtkm::Exp10(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Exp10(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Exp10(x[0]),
                         vtkm::Exp10(x[1]));
@@ -1159,7 +1159,7 @@ vtkm::Vec<T,2> Exp10(const vtkm::Vec<T,2> &x) {
 
 /// Computes the natural logarithm of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Log(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(log)(x);
@@ -1167,7 +1167,7 @@ vtkm::Float32 Log(vtkm::Float32 x) {
   return std::log(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Log(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(log)(x);
@@ -1176,7 +1176,7 @@ vtkm::Float64 Log(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Log(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -1186,7 +1186,7 @@ vtkm::Vec<T,N> Log(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Log(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Log(x[0]),
                         vtkm::Log(x[1]),
@@ -1194,14 +1194,14 @@ vtkm::Vec<T,4> Log(const vtkm::Vec<T,4> &x) {
                         vtkm::Log(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Log(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Log(x[0]),
                         vtkm::Log(x[1]),
                         vtkm::Log(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Log(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Log(x[0]),
                         vtkm::Log(x[1]));
@@ -1209,7 +1209,7 @@ vtkm::Vec<T,2> Log(const vtkm::Vec<T,2> &x) {
 
 /// Computes the logarithm base 2 of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Log2(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(log2)(x);
@@ -1217,7 +1217,7 @@ vtkm::Float32 Log2(vtkm::Float32 x) {
   return std::log2(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Log2(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(log2)(x);
@@ -1226,7 +1226,7 @@ vtkm::Float64 Log2(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Log2(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -1236,7 +1236,7 @@ vtkm::Vec<T,N> Log2(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Log2(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Log2(x[0]),
                         vtkm::Log2(x[1]),
@@ -1244,14 +1244,14 @@ vtkm::Vec<T,4> Log2(const vtkm::Vec<T,4> &x) {
                         vtkm::Log2(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Log2(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Log2(x[0]),
                         vtkm::Log2(x[1]),
                         vtkm::Log2(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Log2(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Log2(x[0]),
                         vtkm::Log2(x[1]));
@@ -1259,7 +1259,7 @@ vtkm::Vec<T,2> Log2(const vtkm::Vec<T,2> &x) {
 
 /// Computes the logarithm base 10 of \p x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Log10(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(log10)(x);
@@ -1267,7 +1267,7 @@ vtkm::Float32 Log10(vtkm::Float32 x) {
   return std::log10(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Log10(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(log10)(x);
@@ -1276,7 +1276,7 @@ vtkm::Float64 Log10(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Log10(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -1286,7 +1286,7 @@ vtkm::Vec<T,N> Log10(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Log10(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Log10(x[0]),
                         vtkm::Log10(x[1]),
@@ -1294,14 +1294,14 @@ vtkm::Vec<T,4> Log10(const vtkm::Vec<T,4> &x) {
                         vtkm::Log10(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Log10(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Log10(x[0]),
                         vtkm::Log10(x[1]),
                         vtkm::Log10(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Log10(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Log10(x[0]),
                         vtkm::Log10(x[1]));
@@ -1309,7 +1309,7 @@ vtkm::Vec<T,2> Log10(const vtkm::Vec<T,2> &x) {
 
 /// Computes the value of log(1+x) accurately for very small values of x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Log1P(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(log1p)(x);
@@ -1317,7 +1317,7 @@ vtkm::Float32 Log1P(vtkm::Float32 x) {
   return std::log1p(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Log1P(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(log1p)(x);
@@ -1326,7 +1326,7 @@ vtkm::Float64 Log1P(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Log1P(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -1336,7 +1336,7 @@ vtkm::Vec<T,N> Log1P(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Log1P(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Log1P(x[0]),
                         vtkm::Log1P(x[1]),
@@ -1344,14 +1344,14 @@ vtkm::Vec<T,4> Log1P(const vtkm::Vec<T,4> &x) {
                         vtkm::Log1P(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Log1P(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Log1P(x[0]),
                         vtkm::Log1P(x[1]),
                         vtkm::Log1P(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Log1P(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Log1P(x[0]),
                         vtkm::Log1P(x[1]));
@@ -1361,19 +1361,19 @@ vtkm::Vec<T,2> Log1P(const vtkm::Vec<T,2> &x) {
 /// Returns \p x or \p y, whichever is larger.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Max(const T &x, const T &y);
 #ifdef VTKM_USE_STL
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Max(vtkm::Float32 x, vtkm::Float32 y) {
   return (std::max)(x, y);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y) {
   return (std::max)(x, y);
 }
 #else // !VTKM_USE_STL
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Max(vtkm::Float32 x, vtkm::Float32 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(fmax)(x,y);
@@ -1381,7 +1381,7 @@ vtkm::Float32 Max(vtkm::Float32 x, vtkm::Float32 y) {
   return std::fmax(x,y);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(fmax)(x,y);
@@ -1394,19 +1394,19 @@ vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y) {
 /// Returns \p x or \p y, whichever is smaller.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Min(const T &x, const T &y);
 #ifdef VTKM_USE_STL
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y) {
   return (std::min)(x, y);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y) {
   return (std::min)(x, y);
 }
 #else // !VTKM_USE_STL
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(fmin)(x,y);
@@ -1414,7 +1414,7 @@ vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y) {
   return std::fmin(x,y);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(fmin)(x,y);
@@ -1427,14 +1427,14 @@ vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y) {
 namespace detail {
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Max(T x, T y, vtkm::TypeTraitsScalarTag)
 {
   return (x < y) ? y : x;
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Max(const T &x, const T &y, vtkm::TypeTraitsVectorTag)
 {
   typedef vtkm::VecTraits<T> Traits;
@@ -1450,14 +1450,14 @@ T Max(const T &x, const T &y, vtkm::TypeTraitsVectorTag)
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Min(T x, T y, vtkm::TypeTraitsScalarTag)
 {
   return (x < y) ? x : y;
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Min(const T &x, const T &y, vtkm::TypeTraitsVectorTag)
 {
   typedef vtkm::VecTraits<T> Traits;
@@ -1477,7 +1477,7 @@ T Min(const T &x, const T &y, vtkm::TypeTraitsVectorTag)
 /// Returns \p x or \p y, whichever is larger.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Max(const T &x, const T &y) {
   return detail::Max(x, y, typename vtkm::TypeTraits<T>::DimensionalityTag());
 }
@@ -1485,7 +1485,7 @@ T Max(const T &x, const T &y) {
 /// Returns \p x or \p y, whichever is smaller.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Min(const T &x, const T &y) {
   return detail::Min(x, y, typename vtkm::TypeTraits<T>::DimensionalityTag());
 }
@@ -1526,25 +1526,25 @@ struct FloatLimits<vtkm::Float32>
 {
   typedef vtkm::detail::IEEE754Bits32 BitsType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float32 Nan() {
     BitsType nan = {VTKM_NAN_BITS_32};
     return nan.scalar;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float32 Infinity() {
     BitsType inf = {VTKM_INF_BITS_32};
     return inf.scalar;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float32 NegativeInfinity() {
     BitsType neginf = {VTKM_NEG_INF_BITS_32};
     return neginf.scalar;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float32 Epsilon() {
     return VTKM_EPSILON_32;
   }
@@ -1555,25 +1555,25 @@ struct FloatLimits< vtkm::Vec<vtkm::Float32,N> >
 {
   typedef vtkm::detail::IEEE754Bits32 BitsType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float32,N> Nan() {
     BitsType nan = {VTKM_NAN_BITS_32};
     return vtkm::Vec<vtkm::Float32,N>(nan.scalar);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float32,N> Infinity() {
     BitsType inf = {VTKM_INF_BITS_32};
     return vtkm::Vec<vtkm::Float32,N>(inf.scalar);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float32,N> NegativeInfinity() {
     BitsType neginf = {VTKM_NEG_INF_BITS_32};
     return vtkm::Vec<vtkm::Float32,N>(neginf.scalar);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float32,N> Epsilon() {
     return vtkm::Vec<vtkm::Float32,N>(VTKM_EPSILON_32);
   }
@@ -1584,25 +1584,25 @@ struct FloatLimits<vtkm::Float64>
 {
   typedef vtkm::detail::IEEE754Bits64 BitsType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float64 Nan() {
     BitsType nan = {VTKM_NAN_BITS_64};
     return nan.scalar;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float64 Infinity() {
     BitsType inf = {VTKM_INF_BITS_64};
     return inf.scalar;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float64 NegativeInfinity() {
     BitsType neginf = {VTKM_NEG_INF_BITS_64};
     return neginf.scalar;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float64 Epsilon() {
     return VTKM_EPSILON_64;
   }
@@ -1613,25 +1613,25 @@ struct FloatLimits< vtkm::Vec<vtkm::Float64,N> >
 {
   typedef vtkm::detail::IEEE754Bits64 BitsType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float64,N> Nan() {
     BitsType nan = {VTKM_NAN_BITS_64};
     return vtkm::Vec<vtkm::Float64,N>(nan.scalar);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float64,N> Infinity() {
     BitsType inf = {VTKM_INF_BITS_64};
     return vtkm::Vec<vtkm::Float64,N>(inf.scalar);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float64,N> NegativeInfinity() {
     BitsType neginf = {VTKM_NEG_INF_BITS_64};
     return vtkm::Vec<vtkm::Float64,N>(neginf.scalar);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float64,N> Epsilon() {
     return vtkm::Vec<vtkm::Float64,N>(VTKM_EPSILON_64);
   }
@@ -1651,7 +1651,7 @@ struct FloatLimits< vtkm::Vec<vtkm::Float64,N> >
 /// Returns the representation for not-a-number (NaN).
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Nan()
 {
   return detail::FloatLimits<T>::Nan();
@@ -1660,7 +1660,7 @@ T Nan()
 /// Returns the representation for infinity.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Infinity()
 {
   return detail::FloatLimits<T>::Infinity();
@@ -1669,7 +1669,7 @@ T Infinity()
 /// Returns the representation for negative infinity.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T NegativeInfinity()
 {
   return detail::FloatLimits<T>::NegativeInfinity();
@@ -1679,7 +1679,7 @@ T NegativeInfinity()
 /// that is representable.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Epsilon()
 {
   return detail::FloatLimits<T>::Epsilon();
@@ -1690,7 +1690,7 @@ T Epsilon()
 /// Returns the representation for not-a-number (NaN).
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Nan()
 {
   return std::numeric_limits<T>::quiet_NaN();
@@ -1699,7 +1699,7 @@ T Nan()
 /// Returns the representation for infinity.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Infinity()
 {
   return std::numeric_limits<T>::infinity();
@@ -1708,7 +1708,7 @@ T Infinity()
 /// Returns the representation for negative infinity.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T NegativeInfinity()
 {
   return -std::numeric_limits<T>::infinity();
@@ -1718,7 +1718,7 @@ T NegativeInfinity()
 /// that is representable.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Epsilon()
 {
   return std::numeric_limits<T>::epsilon();
@@ -1727,39 +1727,39 @@ T Epsilon()
 
 /// Returns the representation for not-a-number (NaN).
 ///
-VTKM_EXEC_CONT_EXPORT vtkm::Float32 Nan32() {
+static inline VTKM_EXEC_CONT vtkm::Float32 Nan32() {
   return vtkm::Nan<vtkm::Float32>();
 }
-VTKM_EXEC_CONT_EXPORT vtkm::Float64 Nan64() {
+static inline VTKM_EXEC_CONT vtkm::Float64 Nan64() {
   return vtkm::Nan<vtkm::Float64>();
 }
 
 /// Returns the representation for infinity.
 ///
-VTKM_EXEC_CONT_EXPORT vtkm::Float32 Infinity32() {
+static inline VTKM_EXEC_CONT vtkm::Float32 Infinity32() {
   return vtkm::Infinity<vtkm::Float32>();
 }
-VTKM_EXEC_CONT_EXPORT vtkm::Float64 Infinity64() {
+static inline VTKM_EXEC_CONT vtkm::Float64 Infinity64() {
   return vtkm::Infinity<vtkm::Float64>();
 }
 
 /// Returns the representation for negative infinity.
 ///
-VTKM_EXEC_CONT_EXPORT vtkm::Float32 NegativeInfinity32() {
+static inline VTKM_EXEC_CONT vtkm::Float32 NegativeInfinity32() {
   return vtkm::NegativeInfinity<vtkm::Float32>();
 }
-VTKM_EXEC_CONT_EXPORT vtkm::Float64 NegativeInfinity64() {
+static inline VTKM_EXEC_CONT vtkm::Float64 NegativeInfinity64() {
   return vtkm::NegativeInfinity<vtkm::Float64>();
 }
 
 /// Returns the difference between 1 and the least value greater than 1
 /// that is representable.
 ///
-VTKM_EXEC_CONT_EXPORT vtkm::Float32 Epsilon32()
+static inline VTKM_EXEC_CONT vtkm::Float32 Epsilon32()
 {
   return vtkm::Epsilon<vtkm::Float32>();
 }
-VTKM_EXEC_CONT_EXPORT vtkm::Float64 Epsilon64()
+static inline VTKM_EXEC_CONT vtkm::Float64 Epsilon64()
 {
   return vtkm::Epsilon<vtkm::Float64>();
 }
@@ -1768,7 +1768,7 @@ VTKM_EXEC_CONT_EXPORT vtkm::Float64 Epsilon64()
 /// Returns true if \p x is not a number.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 bool IsNan(T x)
 {
   using std::isnan;
@@ -1778,7 +1778,7 @@ bool IsNan(T x)
 /// Returns true if \p x is positive or negative infinity.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 bool IsInf(T x)
 {
   using std::isinf;
@@ -1788,7 +1788,7 @@ bool IsInf(T x)
 /// Returns true if \p x is a normal number (not NaN or infinite).
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 bool IsFinite(T x)
 {
   using std::isfinite;
@@ -1798,7 +1798,7 @@ bool IsFinite(T x)
 //-----------------------------------------------------------------------------
 /// Round \p x to the smallest integer value not less than x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Ceil(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(ceil)(x);
@@ -1806,7 +1806,7 @@ vtkm::Float32 Ceil(vtkm::Float32 x) {
   return std::ceil(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Ceil(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(ceil)(x);
@@ -1815,7 +1815,7 @@ vtkm::Float64 Ceil(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Ceil(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -1825,7 +1825,7 @@ vtkm::Vec<T,N> Ceil(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Ceil(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Ceil(x[0]),
                         vtkm::Ceil(x[1]),
@@ -1833,14 +1833,14 @@ vtkm::Vec<T,4> Ceil(const vtkm::Vec<T,4> &x) {
                         vtkm::Ceil(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Ceil(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Ceil(x[0]),
                         vtkm::Ceil(x[1]),
                         vtkm::Ceil(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Ceil(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Ceil(x[0]),
                         vtkm::Ceil(x[1]));
@@ -1848,7 +1848,7 @@ vtkm::Vec<T,2> Ceil(const vtkm::Vec<T,2> &x) {
 
 /// Round \p x to the largest integer value not greater than x.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Floor(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(floor)(x);
@@ -1856,7 +1856,7 @@ vtkm::Float32 Floor(vtkm::Float32 x) {
   return std::floor(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Floor(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(floor)(x);
@@ -1865,7 +1865,7 @@ vtkm::Float64 Floor(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Floor(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -1875,7 +1875,7 @@ vtkm::Vec<T,N> Floor(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Floor(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Floor(x[0]),
                         vtkm::Floor(x[1]),
@@ -1883,14 +1883,14 @@ vtkm::Vec<T,4> Floor(const vtkm::Vec<T,4> &x) {
                         vtkm::Floor(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Floor(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Floor(x[0]),
                         vtkm::Floor(x[1]),
                         vtkm::Floor(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Floor(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Floor(x[0]),
                         vtkm::Floor(x[1]));
@@ -1898,7 +1898,7 @@ vtkm::Vec<T,2> Floor(const vtkm::Vec<T,2> &x) {
 
 /// Round \p x to the nearest integral value.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Round(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(round)(x);
@@ -1906,7 +1906,7 @@ vtkm::Float32 Round(vtkm::Float32 x) {
   return std::round(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Round(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(round)(x);
@@ -1915,7 +1915,7 @@ vtkm::Float64 Round(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Round(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -1925,7 +1925,7 @@ vtkm::Vec<T,N> Round(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Round(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Round(x[0]),
                         vtkm::Round(x[1]),
@@ -1933,14 +1933,14 @@ vtkm::Vec<T,4> Round(const vtkm::Vec<T,4> &x) {
                         vtkm::Round(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Round(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Round(x[0]),
                         vtkm::Round(x[1]),
                         vtkm::Round(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Round(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Round(x[0]),
                         vtkm::Round(x[1]));
@@ -1952,7 +1952,7 @@ vtkm::Vec<T,2> Round(const vtkm::Vec<T,2> &x) {
 /// numerator divided by \p denominator rounded towards zero to an integer. For
 /// example, <tt>FMod(6.5, 2.3)</tt> returns 1.9, which is 6.5 - 2*2.3.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 FMod(vtkm::Float32 x, vtkm::Float32 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(fmod)(x,y);
@@ -1960,7 +1960,7 @@ vtkm::Float32 FMod(vtkm::Float32 x, vtkm::Float32 y) {
   return std::fmod(x,y);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 FMod(vtkm::Float64 x, vtkm::Float64 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(fmod)(x,y);
@@ -1977,14 +1977,14 @@ vtkm::Float64 FMod(vtkm::Float64 x, vtkm::Float64 y) {
 ///
 #ifdef VTKM_MSVC
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Remainder(T numerator, T denominator)
 {
   T quotient = vtkm::Round(numerator/denominator);
   return numerator - quotient*denominator;
 }
 #else // !VTKM_MSVC
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Remainder(vtkm::Float32 x, vtkm::Float32 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(remainder)(x,y);
@@ -1992,7 +1992,7 @@ vtkm::Float32 Remainder(vtkm::Float32 x, vtkm::Float32 y) {
   return std::remainder(x,y);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Remainder(vtkm::Float64 x, vtkm::Float64 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(remainder)(x,y);
@@ -2007,7 +2007,7 @@ vtkm::Float64 Remainder(vtkm::Float64 x, vtkm::Float64 y) {
 /// get that remainder.
 ///
 template<typename QType>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 RemainderQuotient(vtkm::Float32 numerator,
                                 vtkm::Float32 denominator,
                                 QType &quotient)
@@ -2018,7 +2018,7 @@ vtkm::Float32 RemainderQuotient(vtkm::Float32 numerator,
   return result;
 }
 template<typename QType>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 RemainderQuotient(vtkm::Float64 numerator,
                                 vtkm::Float64 denominator,
                                 QType &quotient)
@@ -2032,12 +2032,12 @@ vtkm::Float64 RemainderQuotient(vtkm::Float64 numerator,
 /// Gets the integral and fractional parts of \c x. The return value is the
 /// fractional part and \c integral is set to the integral part.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 ModF(vtkm::Float32 x, vtkm::Float32 &integral)
 {
   return std::modf(x, &integral);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64 &integral)
 {
   return std::modf(x, &integral);
@@ -2047,7 +2047,7 @@ vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64 &integral)
 /// Return the absolute value of \p x. That is, return \p x if it is positive or
 /// \p -x if it is negative.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Int32 Abs(vtkm::Int32 x)
 {
 #if VTKM_SIZE_INT == 4
@@ -2056,7 +2056,7 @@ vtkm::Int32 Abs(vtkm::Int32 x)
 #error Unknown size of Int32.
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Int64 Abs(vtkm::Int64 x)
 {
 #if VTKM_SIZE_LONG == 8
@@ -2067,7 +2067,7 @@ vtkm::Int64 Abs(vtkm::Int64 x)
 #error Unknown size of Int64.
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Abs(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(fabs)(x);
@@ -2075,7 +2075,7 @@ vtkm::Float32 Abs(vtkm::Float32 x) {
   return std::fabs(x);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Abs(vtkm::Float64 x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(fabs)(x);
@@ -2084,7 +2084,7 @@ vtkm::Float64 Abs(vtkm::Float64 x) {
 #endif
 }
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> Abs(const vtkm::Vec<T,N> &x) {
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -2094,7 +2094,7 @@ vtkm::Vec<T,N> Abs(const vtkm::Vec<T,N> &x) {
   return result;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> Abs(const vtkm::Vec<T,4> &x) {
   return vtkm::Vec<T,4>(vtkm::Abs(x[0]),
                         vtkm::Abs(x[1]),
@@ -2102,14 +2102,14 @@ vtkm::Vec<T,4> Abs(const vtkm::Vec<T,4> &x) {
                         vtkm::Abs(x[3]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> Abs(const vtkm::Vec<T,3> &x) {
   return vtkm::Vec<T,3>(vtkm::Abs(x[0]),
                         vtkm::Abs(x[1]),
                         vtkm::Abs(x[2]));
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> Abs(const vtkm::Vec<T,2> &x) {
   return vtkm::Vec<T,2>(vtkm::Abs(x[0]),
                         vtkm::Abs(x[1]));
@@ -2117,13 +2117,13 @@ vtkm::Vec<T,2> Abs(const vtkm::Vec<T,2> &x) {
 
 /// Returns a nonzero value if \p x is negative.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Int32 SignBit(vtkm::Float32 x) {
 
   using std::signbit;
   return static_cast<vtkm::Int32>(signbit(x));
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Int32 SignBit(vtkm::Float64 x) {
 
   using std::signbit;
@@ -2132,11 +2132,11 @@ vtkm::Int32 SignBit(vtkm::Float64 x) {
 
 /// Returns true if \p x is less than zero, false otherwise.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 bool IsNegative(vtkm::Float32 x) {
   return (vtkm::SignBit(x) != 0);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 bool IsNegative(vtkm::Float64 x) {
   return (vtkm::SignBit(x) != 0);
 }
@@ -2144,7 +2144,7 @@ bool IsNegative(vtkm::Float64 x) {
 /// Copies the sign of \p y onto \p x.  If \p y is positive, returns Abs(\p x).
 /// If \p y is negative, returns -Abs(\p x).
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 CopySign(vtkm::Float32 x, vtkm::Float32 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_32(copysign)(x,y);
@@ -2152,7 +2152,7 @@ vtkm::Float32 CopySign(vtkm::Float32 x, vtkm::Float32 y) {
   return std::copysign(x,y);
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 CopySign(vtkm::Float64 x, vtkm::Float64 y) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(copysign)(x,y);
@@ -2162,7 +2162,7 @@ vtkm::Float64 CopySign(vtkm::Float64 x, vtkm::Float64 y) {
 }
 
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> CopySign(const vtkm::Vec<T,N> &x, const vtkm::Vec<T,N> &y)
 {
   vtkm::Vec<T,N> result;

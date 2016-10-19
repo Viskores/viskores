@@ -50,14 +50,14 @@ private:
 public:
 
  template<typename T, class CIn>
-  VTKM_CONT_EXPORT static T Reduce(
+  VTKM_CONT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
   {
     return Reduce(input, initialValue,vtkm::Add());
   }
 
  template<typename T, class CIn, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T Reduce(
+  VTKM_CONT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       T initialValue,
       BinaryFunctor binary_functor)
@@ -75,7 +75,7 @@ public:
 
   template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
           class BinaryFunctor>
-  VTKM_CONT_EXPORT static void ReduceByKey(
+  VTKM_CONT static void ReduceByKey(
       const vtkm::cont::ArrayHandle<T,KIn> &keys,
       const vtkm::cont::ArrayHandle<U,VIn> &values,
       vtkm::cont::ArrayHandle<T,KOut> &keys_output,
@@ -136,7 +136,7 @@ public:
   }
 
   template<typename T, class CIn, class COut>
-  VTKM_CONT_EXPORT static T ScanInclusive(
+  VTKM_CONT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
@@ -161,7 +161,7 @@ public:
   }
 
   template<typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T ScanInclusive(
+  VTKM_CONT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output,
       BinaryFunctor binary_functor)
@@ -191,7 +191,7 @@ public:
   }
 
   template<typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T ScanExclusive(
+  VTKM_CONT static T ScanExclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output,
       BinaryFunctor binaryFunctor,
@@ -235,7 +235,7 @@ public:
   }
 
   template<typename T, class CIn, class COut>
-  VTKM_CONT_EXPORT static T ScanExclusive(
+  VTKM_CONT static T ScanExclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
@@ -254,7 +254,7 @@ private:
 
     //needed for when calling from schedule on a range
     template<typename T>
-    VTKM_EXEC_EXPORT void operator()(const T& index) const
+    VTKM_EXEC void operator()(const T& index) const
     {
       this->Functor(index);
     }
@@ -265,7 +265,7 @@ private:
 
 public:
   template<class Functor>
-  VTKM_CONT_EXPORT static void Schedule(Functor functor, vtkm::Id numInstances)
+  VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
   {
     const vtkm::Id MESSAGE_SIZE = 1024;
     char errorString[MESSAGE_SIZE];
@@ -293,7 +293,7 @@ VTKM_VECTORIZATION_IN_LOOP
   }
 
   template<class Functor>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static void Schedule(Functor functor, vtkm::Id3 rangeMax)
   {
     const vtkm::Id MESSAGE_SIZE = 1024;
@@ -326,7 +326,7 @@ VTKM_VECTORIZATION_IN_LOOP
 
 private:
   template<typename Vin, typename I, typename Vout, class StorageVin,  class StorageI, class StorageVout>
-  VTKM_CONT_EXPORT static void Scatter(
+  VTKM_CONT static void Scatter(
       vtkm::cont::ArrayHandle<Vin,StorageVin> &values,
       vtkm::cont::ArrayHandle<I,StorageI> &index,
       vtkm::cont::ArrayHandle<Vout,StorageVout> &values_out
@@ -355,7 +355,7 @@ private:
 private:
   /// Reorder the value array along with the sorting algorithm
   template<typename T, typename U, class StorageT,  class StorageU, class BinaryCompare>
-  VTKM_CONT_EXPORT static void SortByKeyDirect(
+  VTKM_CONT static void SortByKeyDirect(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values,
       BinaryCompare binary_compare)
@@ -375,7 +375,7 @@ private:
 
 public:
   template<typename T, typename U, class StorageT,  class StorageU>
-  VTKM_CONT_EXPORT static void SortByKey(
+  VTKM_CONT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values)
   {
@@ -383,7 +383,7 @@ public:
   }
 
   template<typename T, typename U, class StorageT,  class StorageU, class BinaryCompare>
-  VTKM_CONT_EXPORT static void SortByKey(
+  VTKM_CONT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values,
       const BinaryCompare &binary_compare)
@@ -411,13 +411,13 @@ public:
   }
 
   template<typename T, class Storage>
-  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage>& values)
+  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T,Storage>& values)
   {
     Sort(values, std::less<T>());
   }
 
   template<typename T, class Storage, class BinaryCompare>
-  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T,Storage>& values,
+  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T,Storage>& values,
                                     BinaryCompare binary_compare)
   {
     typedef typename vtkm::cont::ArrayHandle<T,Storage>
@@ -431,7 +431,7 @@ public:
     std::sort(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
   }
 
-  VTKM_CONT_EXPORT static void Synchronize()
+  VTKM_CONT static void Synchronize()
   {
     // Nothing to do. This device is serial and has no asynchronous operations.
   }

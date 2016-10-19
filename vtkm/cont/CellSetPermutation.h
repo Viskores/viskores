@@ -38,7 +38,7 @@ template< typename OriginalCellSet, typename PermutationArrayHandleType >
 class CellSetGeneralPermutation : public CellSet
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSetGeneralPermutation(const PermutationArrayHandleType& validCellIds,
                             const OriginalCellSet& cellset,
                             const std::string &name)
@@ -48,7 +48,7 @@ public:
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSetGeneralPermutation(const std::string &name)
     : CellSet(name),
       ValidCellIds(),
@@ -56,20 +56,20 @@ public:
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfCells() const
   {
     return this->ValidCellIds.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfPoints() const
   {
     return this->FullCellSet.GetNumberOfPoints();
   }
 
   //This is the way you can fill the memory from another system without copying
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Fill(const PermutationArrayHandleType &validCellIds,
             const OriginalCellSet& cellset)
   {
@@ -78,7 +78,7 @@ public:
   }
 
   template<typename TopologyElement>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetSchedulingRange(TopologyElement) const {
     VTKM_IS_TOPOLOGY_ELEMENT_TAG(TopologyElement);
     return this->ValidCellIds.GetNumberOfValues();
@@ -135,7 +135,7 @@ class CellSetPermutation : public vtkm::cont::internal::CellSetGeneralPermutatio
   typedef typename vtkm::cont::internal::CellSetGeneralPermutation<
       OriginalCellSet, PermutationArrayHandleType> ParentType;
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSetPermutation(const PermutationArrayHandleType& validCellIds,
                      const OriginalCellSet& cellset,
                      const std::string &name = std::string())
@@ -143,7 +143,7 @@ public:
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSetPermutation(const std::string &name = std::string())
     :  ParentType(name)
   {

@@ -69,11 +69,11 @@ public:
   const vtkm::Float32 xmin, ymin, zmin, xmax, ymax, zmax;
   const vtkm::Id cellsPerLayer;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TangleField(const vtkm::Id3 dims, const vtkm::Float32 mins[3], const vtkm::Float32 maxs[3]) : xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
               xmin(mins[0]), ymin(mins[1]), zmin(mins[2]), xmax(maxs[0]), ymax(maxs[1]), zmax(maxs[2]), cellsPerLayer((xdim) * (ydim)) { };
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Id &vertexId, vtkm::Float32 &v) const
   {
     const vtkm::Id x = vertexId % (xdim);

@@ -37,12 +37,12 @@ public:
   typedef typename ValuePortalType::ValueType ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalPermutation( )
     : IndexPortal(), ValuePortal() {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalPermutation(
       const IndexPortalType &indexPortal,
       const ValuePortalType &valuePortal)
@@ -55,38 +55,38 @@ public:
   ///
   template<typename OtherIP, typename OtherVP>
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalPermutation(
       const ArrayPortalPermutation<OtherIP,OtherVP> &src)
     : IndexPortal(src.GetIndexPortal()), ValuePortal(src.GetValuePortal())
   {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const {
     return this->IndexPortal.GetNumberOfValues();
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType Get(vtkm::Id index) const {
     vtkm::Id permutedIndex = this->IndexPortal.Get(index);
     return this->ValuePortal.Get(permutedIndex);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Set(vtkm::Id index, const ValueType &value) const {
     vtkm::Id permutedIndex = this->IndexPortal.Get(index);
     this->ValuePortal.Set(permutedIndex, value);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const IndexPortalType &GetIndexPortal() const { return this->IndexPortal; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const ValuePortalType &GetValuePortal() const { return this->ValuePortal; }
 
 private:
@@ -124,56 +124,56 @@ public:
       typename IndexArrayType::PortalConstControl,
       typename ValueArrayType::PortalConstControl> PortalConstType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage() : Valid(false) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage(const IndexArrayType &indexArray, const ValueArrayType &valueArray)
     : IndexArray(indexArray), ValueArray(valueArray), Valid(true) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType GetPortal() {
     VTKM_ASSERT(this->Valid);
     return PortalType(this->IndexArray.GetPortalConstControl(),
                       this->ValueArray.GetPortalControl());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType GetPortalConst() const {
     VTKM_ASSERT(this->Valid);
     return PortalConstType(this->IndexArray.GetPortalConstControl(),
                            this->ValueArray.GetPortalConstControl());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
     VTKM_ASSERT(this->Valid);
     return this->IndexArray.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues)) {
     throw vtkm::cont::ErrorControlBadType(
           "ArrayHandlePermutation cannot be allocated.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
     throw vtkm::cont::ErrorControlBadType(
           "ArrayHandlePermutation cannot shrink.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() {
     // This request is ignored since it is asking to release the resources
     // of the delegate array, which may be used elsewhere. Should the behavior
     // be different?
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const IndexArrayType &GetIndexArray() const { return this->IndexArray; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const ValueArrayType &GetValueArray() const { return this->ValueArray; }
 
 private:
@@ -208,29 +208,29 @@ public:
       typename ValueArrayType::template ExecutionTypes<Device>::PortalConst>
     PortalConstExecution;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayTransfer(StorageType *storage)
     : IndexArray(storage->GetIndexArray()),
       ValueArray(storage->GetValueArray()) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
     return this->IndexArray.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
     return PortalConstExecution(this->IndexArray.PrepareForInput(Device()),
                                 this->ValueArray.PrepareForInput(Device()));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData)) {
     return PortalExecution(this->IndexArray.PrepareForInput(Device()),
                            this->ValueArray.PrepareForInPlace(Device()));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
     if (numberOfValues != this->GetNumberOfValues()) {
@@ -256,20 +256,20 @@ public:
                              this->ValueArray.GetNumberOfValues(), Device()));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const {
     // Implementation of this method should be unnecessary. The internal
     // array handles should automatically retrieve the output data as
     // necessary.
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
     throw vtkm::cont::ErrorControlBadType(
           "ArrayHandlePermutation cannot shrink.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() {
     this->IndexArray.ReleaseResourcesExecution();
     this->ValueArray.ReleaseResourcesExecution();
@@ -330,7 +330,7 @@ private:
       StorageType;
 
  public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandlePermutation(const IndexArrayHandleType &indexArray,
                          const ValueArrayHandleType &valueArray)
     : Superclass(StorageType(indexArray, valueArray)) {  }
@@ -341,7 +341,7 @@ private:
 /// to apply to each element of the Handle.
 
 template <typename IndexArrayHandleType, typename ValueArrayHandleType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::ArrayHandlePermutation<IndexArrayHandleType, ValueArrayHandleType>
 make_ArrayHandlePermutation(IndexArrayHandleType indexArray,
                             ValueArrayHandleType valueArray)

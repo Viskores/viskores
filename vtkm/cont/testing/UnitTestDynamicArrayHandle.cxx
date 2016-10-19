@@ -69,10 +69,10 @@ struct UnusualPortal
 {
   typedef T ValueType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const {
     return TestValue(index, ValueType());
   }
@@ -85,7 +85,7 @@ class ArrayHandleWithUnusualStorage
   typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagImplicit<UnusualPortal<T> > >
       Superclass;
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleWithUnusualStorage()
     : Superclass(typename Superclass::PortalConstControl()) {  }
 };

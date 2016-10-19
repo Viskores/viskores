@@ -66,37 +66,37 @@ public:
     typedef void *IteratorType;
   };
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage(const PortalConstType &portal = PortalConstType())
     : Portal(portal) {  }
 
   // All these methods do nothing but raise errors.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType GetPortal()
   {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     return this->Portal;
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return this->Portal.GetNumberOfValues();
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources()
   {
   }
@@ -120,35 +120,35 @@ public:
   typedef PortalControl PortalExecution;
   typedef PortalConstControl PortalConstExecution;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayTransfer(StorageType *storage) : Storage(storage) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return this->Storage->GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
     return this->Storage->GetPortalConst();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Implicit arrays cannot be used for output or in place.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Implicit arrays cannot be used for output.");
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType *vtkmNotUsed(controlArray)) const
   {
     throw vtkm::cont::ErrorControlBadValue(
@@ -156,7 +156,7 @@ public:
   }
 
   template <class IteratorTypeControl>
-  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
+  VTKM_CONT void CopyInto(IteratorTypeControl dest) const
   {
     typedef typename StorageType::PortalConstType PortalType;
     PortalType portal = this->Storage->GetPortalConst();
@@ -166,13 +166,13 @@ public:
               dest);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue("Implicit arrays cannot be resized.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() {  }
 
 private:

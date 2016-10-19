@@ -48,16 +48,16 @@ public:
 
     typedef _3 ExecutionSignature(_2, PointCount);
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ThresholdByPointField() : Predicate() { }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     explicit ThresholdByPointField(const UnaryPredicate &predicate)
       : Predicate(predicate)
     { }
 
     template<typename ScalarsVecType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     bool operator()(const ScalarsVecType &scalars, vtkm::Id count) const
     {
       bool pass = false;
@@ -82,16 +82,16 @@ public:
 
     typedef _3 ExecutionSignature(_2);
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ThresholdByCellField() : Predicate() { }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     explicit ThresholdByCellField(const UnaryPredicate &predicate)
       : Predicate(predicate)
     { }
 
     template<typename ScalarType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     bool operator()(const ScalarType &scalar) const
     {
       return this->Predicate(scalar);

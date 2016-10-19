@@ -46,27 +46,27 @@ public:
   typedef ValueType_ ValueType;
   typedef FunctorType_ FunctorType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalImplicit() :
     Functor(),
     NumberOfValues(0) {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalImplicit(FunctorType f, vtkm::Id numValues) :
     Functor(f),
     NumberOfValues(numValues)
   {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const { return this->Functor(index); }
 
   typedef vtkm::cont::internal::IteratorFromArrayPortal<
       ArrayPortalImplicit<ValueType,FunctorType> > IteratorType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   IteratorType GetIteratorBegin() const
   {
     return IteratorType(*this);
@@ -112,7 +112,7 @@ public:
       (ArrayHandleImplicit<T,FunctorType>),
       (typename ArrayTraits::Superclass));
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleImplicit(FunctorType functor, vtkm::Id length)
     : Superclass(typename Superclass::PortalConstControl(functor,length))
   {  }
@@ -123,7 +123,7 @@ public:
 /// arry.
 
 template <typename T, typename FunctorType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::ArrayHandleImplicit<T, FunctorType>
 make_ArrayHandleImplicit(FunctorType functor, vtkm::Id length)
 {

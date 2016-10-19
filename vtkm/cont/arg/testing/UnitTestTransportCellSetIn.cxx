@@ -37,7 +37,7 @@ struct TestKernel : public vtkm::exec::FunctorBase
 {
   CellSetInType CellSet;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id) const
   {
   if (this->CellSet.GetNumberOfElements() != 2)

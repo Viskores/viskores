@@ -43,20 +43,20 @@ public:
       typename std::remove_const<typename PortalType::ValueType>::type;
 
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   VecFromPortalPermute() {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   VecFromPortalPermute(const IndexVecType *indices, const PortalType &portal)
     : Indices(indices), Portal(portal) {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::IdComponent GetNumberOfComponents() const {
     return this->Indices->GetNumberOfComponents();
   }
 
   template<vtkm::IdComponent DestSize>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void CopyInto(vtkm::Vec<ComponentType,DestSize> &dest) const
   {
     vtkm::IdComponent numComponents =
@@ -68,7 +68,7 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ComponentType operator[](vtkm::IdComponent index) const
   {
     return this->Portal.Get((*this->Indices)[index]);
@@ -101,7 +101,7 @@ public:
   typedef typename vtkm::TypeTraits<ComponentType>::NumericTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   static VecType ZeroInitialization()
   {
     return VecType();
@@ -119,12 +119,12 @@ struct VecTraits<
   typedef vtkm::VecTraitsTagMultipleComponents HasMultipleComponents;
   typedef vtkm::VecTraitsTagSizeVariable IsSizeStatic;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   static vtkm::IdComponent GetNumberOfComponents(const VecType &vector) {
     return vector.GetNumberOfComponents();
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   static ComponentType GetComponent(const VecType &vector,
                                     vtkm::IdComponent componentIndex)
   {
@@ -132,7 +132,7 @@ struct VecTraits<
   }
 
   template<vtkm::IdComponent destSize>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   static void CopyInto(const VecType &src,
                        vtkm::Vec<ComponentType,destSize> &dest)
   {

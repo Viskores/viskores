@@ -75,7 +75,7 @@ struct Fetch
   /// work instance. If there is no actual data to load (for example for a
   /// write-only fetch), this method can be a no-op and return any value.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType Load(const ThreadIndicesType &indices,
                  const ExecObjectType &execObject) const;
 
@@ -88,7 +88,7 @@ struct Fetch
   /// fetch. If the store is not applicable (for example for a read-only
   /// fetch), this method can be a no-op.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Store(const ThreadIndicesType &indices,
              const ExecObjectType &execObject,
              const ValueType &value) const;

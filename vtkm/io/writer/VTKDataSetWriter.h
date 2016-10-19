@@ -53,7 +53,7 @@ private:
   std::ostream &out;
 
   template <typename PortalType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Output(const PortalType &portal) const
   {
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
@@ -79,13 +79,13 @@ private:
   }
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   OutputPointsFunctor(std::ostream &o) : out(o)
   {
   }
 
   template <typename T, typename Storage>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(const vtkm::cont::ArrayHandle<T,Storage > &array) const
   {
     this->Output(array.GetPortalConstControl());
@@ -98,7 +98,7 @@ private:
   std::ostream &out;
 
   template <typename PortalType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Output(const PortalType &portal) const
   {
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
@@ -117,13 +117,13 @@ private:
     }
   }
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   OutputFieldFunctor(std::ostream &o) : out(o)
   {
   }
 
   template <typename T, typename Storage>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(const vtkm::cont::ArrayHandle<T,Storage > &array) const
   {
     this->Output(array.GetPortalConstControl());
@@ -381,11 +381,11 @@ private:
   }
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   explicit VTKDataSetWriter(const std::string &filename)
     : FileName(filename) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void WriteDataSet(vtkm::cont::DataSet dataSet,
                     vtkm::Id cellSetIndex = 0) const
   {
@@ -422,7 +422,7 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void WriteDataSet(vtkm::cont::DataSet dataSet,
                     const std::string &cellSetName)
   {

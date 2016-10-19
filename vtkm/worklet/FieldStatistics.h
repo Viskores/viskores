@@ -69,7 +69,7 @@ public:
 
   struct minFunctor
   {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     FieldType operator()(const FieldType &x, const FieldType &y) const {
       return Min(x, y);
     }
@@ -77,7 +77,7 @@ public:
 
   struct maxFunctor
   {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     FieldType operator()(const FieldType& x, const FieldType& y) const {
       return Max(x, y);
     }
@@ -96,10 +96,10 @@ public:
   
     vtkm::Id numPowers;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     CalculatePowers(vtkm::Id num) : numPowers(num) {}
   
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const FieldType& value, 
                     FieldType &pow1,
                     FieldType &pow2,
@@ -123,10 +123,10 @@ public:
   
     FieldType constant;
   
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     SubtractConst(const FieldType& constant0) : constant(constant0) {}
   
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     FieldType operator()(const FieldType& value) const
     {
       return(value - constant);

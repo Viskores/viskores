@@ -30,7 +30,7 @@ namespace vtkm {
 struct Equal
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
   {
     return x == y;
   }
@@ -42,7 +42,7 @@ struct Equal
 struct NotEqual
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
   {
     return x != y;
   }
@@ -54,7 +54,7 @@ struct NotEqual
 struct SortLess
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
   {
     return x < y;
   }
@@ -67,7 +67,7 @@ struct SortLess
 struct SortGreater
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
   {
     return y < x;
   }
@@ -80,7 +80,7 @@ struct SortGreater
 struct LogicalAnd
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
   {
     return x && y;
   }
@@ -93,7 +93,7 @@ struct LogicalAnd
 struct LogicalOr
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT bool operator()(const T& x, const T& y) const
+  VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
   {
     return x || y;
   }

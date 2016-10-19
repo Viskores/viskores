@@ -50,7 +50,7 @@ struct Transport<vtkm::cont::arg::TransportTagExecObject,ContObjectType,Device>
 
   typedef ContObjectType ExecObjectType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
   {
     return object;

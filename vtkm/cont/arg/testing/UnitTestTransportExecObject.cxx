@@ -40,7 +40,7 @@ struct TestKernel : public vtkm::exec::FunctorBase
 {
   TestExecutionObject Object;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id) const
   {
     if (this->Object.Number != EXPECTED_NUMBER)

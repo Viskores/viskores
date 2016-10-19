@@ -96,10 +96,10 @@ public:
 
     PortalType Output;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     FillTestValueKernel(PortalType out) : Output(out){}
 
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id i) const {
+    VTKM_EXEC void operator()(vtkm::Id i) const {
       Output.Set(i, TestValue(i, Value()));
     }
   };
@@ -113,10 +113,10 @@ public:
     PortalType Output;
     const vtkm::Id IdScale;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     FillScaledTestValueKernel(vtkm::Id id_scale, PortalType out) : Output(out), IdScale(id_scale) {}
 
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id i) const {
+    VTKM_EXEC void operator()(vtkm::Id i) const {
       Output.Set(i, TestValue(i * IdScale, Value()));
     }
   };
@@ -130,10 +130,10 @@ public:
     PortalType Output;
     const vtkm::Id Modulus;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     FillModuloTestValueKernel(vtkm::Id modulus, PortalType out) : Output(out), Modulus(modulus) {}
 
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id i) const {
+    VTKM_EXEC void operator()(vtkm::Id i) const {
       Output.Set(i, TestValue(i % Modulus, Value()));
     }
   };
@@ -147,10 +147,10 @@ public:
     PortalType Output;
     const vtkm::Id Modulus;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     FillBinaryTestValueKernel(vtkm::Id modulus, PortalType out) : Output(out), Modulus(modulus) {}
 
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id i) const {
+    VTKM_EXEC void operator()(vtkm::Id i) const {
       Output.Set(i, i % Modulus == 0 ? TestValue(vtkm::Id(1), Value()) : Value());
     }
   };
@@ -164,13 +164,13 @@ private:
     ValueArrayHandle ValueHandle_dst;
     std::mt19937 Rng;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchCopy(){
       ValueHandle_src.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
       ValueHandle_dst.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()(){
       for (vtkm::Id i = 0; i < ValueHandle_src.GetNumberOfValues(); ++i){
           ValueHandle_src.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
@@ -180,7 +180,7 @@ private:
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "Copy " << ARRAY_SIZE << " values";
@@ -197,7 +197,7 @@ private:
     ValueArrayHandle InputHandle, ValueHandle;
     IdArrayHandle OutHandle;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchLowerBounds(vtkm::Id value_percent) : N_VALS((ARRAY_SIZE * value_percent) / 100)
     {
       Algorithm::Schedule(FillTestValueKernel<Value>(
@@ -206,14 +206,14 @@ private:
             ValueHandle.PrepareForOutput(N_VALS, DeviceAdapterTag())), N_VALS);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()(){
       Timer timer;
       Algorithm::LowerBounds(InputHandle, ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "LowerBounds on " << ARRAY_SIZE << " input and "
@@ -234,20 +234,20 @@ private:
 
     ValueArrayHandle InputHandle;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchReduce(){
       Algorithm::Schedule(FillTestValueKernel<Value>(
             InputHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()(){
       Timer timer;
       Algorithm::Reduce(InputHandle, Value());
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "Reduce on " << ARRAY_SIZE << " values";
@@ -264,7 +264,7 @@ private:
     ValueArrayHandle ValueHandle, ValuesOut;
     IdArrayHandle KeyHandle, KeysOut;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchReduceByKey(vtkm::Id key_percent) : N_KEYS((ARRAY_SIZE * key_percent) / 100)
     {
       Algorithm::Schedule(FillTestValueKernel<Value>(
@@ -274,7 +274,7 @@ private:
       Algorithm::SortByKey(KeyHandle, ValueHandle);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()(){
       Timer timer;
       Algorithm::ReduceByKey(KeyHandle, ValueHandle, KeysOut, ValuesOut,
@@ -282,7 +282,7 @@ private:
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "ReduceByKey on " << ARRAY_SIZE
@@ -302,20 +302,20 @@ private:
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
     ValueArrayHandle ValueHandle, OutHandle;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchScanInclusive(){
       Algorithm::Schedule(FillTestValueKernel<Value>(
             ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()(){
       Timer timer;
       Algorithm::ScanInclusive(ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "ScanInclusive on " << ARRAY_SIZE << " values";
@@ -330,20 +330,20 @@ private:
 
     ValueArrayHandle ValueHandle, OutHandle;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchScanExclusive(){
       Algorithm::Schedule(FillTestValueKernel<Value>(
             ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()(){
       Timer timer;
       Algorithm::ScanExclusive(ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "ScanExclusive on " << ARRAY_SIZE << " values";
@@ -359,12 +359,12 @@ private:
     ValueArrayHandle ValueHandle;
     std::mt19937 Rng;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchSort(){
       ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()(){
       for (vtkm::Id i = 0; i < ValueHandle.GetNumberOfValues(); ++i){
         ValueHandle.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
@@ -374,7 +374,7 @@ private:
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "Sort on " << ARRAY_SIZE << " random values";
@@ -392,12 +392,12 @@ private:
     ValueArrayHandle ValueHandle;
     IdArrayHandle KeyHandle;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchSortByKey(vtkm::Id percent_key) : N_KEYS((ARRAY_SIZE * percent_key) / 100){
       ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()(){
       for (vtkm::Id i = 0; i < ValueHandle.GetNumberOfValues(); ++i){
         ValueHandle.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
@@ -409,7 +409,7 @@ private:
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "SortByKey on " << ARRAY_SIZE
@@ -432,7 +432,7 @@ private:
     ValueArrayHandle ValueHandle;
     IdArrayHandle OutHandle;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchStreamCompact(vtkm::Id percent_valid) : N_VALID((ARRAY_SIZE * percent_valid) / 100)
     {
       vtkm::Id modulo = ARRAY_SIZE / N_VALID;
@@ -440,14 +440,14 @@ private:
             ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()() {
       Timer timer;
       Algorithm::StreamCompact(ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "StreamCompact on " << ARRAY_SIZE << " "
@@ -471,7 +471,7 @@ private:
     ValueArrayHandle ValueHandle;
     IdArrayHandle StencilHandle, OutHandle;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchStreamCompactStencil(vtkm::Id percent_valid) : N_VALID((ARRAY_SIZE * percent_valid) / 100)
     {
       vtkm::Id modulo = ARRAY_SIZE / N_VALID;
@@ -481,14 +481,14 @@ private:
             StencilHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()() {
       Timer timer;
       Algorithm::StreamCompact(ValueHandle, StencilHandle, OutHandle);
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "StreamCompactStencil on " << ARRAY_SIZE << " "
@@ -511,11 +511,11 @@ private:
     const vtkm::Id N_VALID;
     ValueArrayHandle ValueHandle;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchUnique(vtkm::Id percent_valid) : N_VALID((ARRAY_SIZE * percent_valid) / 100)
     {}
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()(){
       Algorithm::Schedule(FillModuloTestValueKernel<Value>(N_VALID,
             ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
@@ -525,7 +525,7 @@ private:
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "Unique on " << ARRAY_SIZE << " values with "
@@ -548,7 +548,7 @@ private:
     ValueArrayHandle InputHandle, ValueHandle;
     IdArrayHandle OutHandle;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchUpperBounds(vtkm::Id percent_vals) : N_VALS((ARRAY_SIZE * percent_vals) / 100)
     {
       Algorithm::Schedule(FillTestValueKernel<Value>(
@@ -557,14 +557,14 @@ private:
             ValueHandle.PrepareForOutput(N_VALS, DeviceAdapterTag())), N_VALS);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()(){
       Timer timer;
       Algorithm::UpperBounds(InputHandle, ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "UpperBounds on " << ARRAY_SIZE << " input and "
@@ -587,7 +587,7 @@ public:
                                         vtkm::Float64, vtkm::Vec<vtkm::Float64, 3>,
                                         vtkm::Vec<vtkm::Float32, 4> >{};
 
-  static VTKM_CONT_EXPORT int Run(int benchmarks){
+  static VTKM_CONT int Run(int benchmarks){
     std::cout << DIVIDER << "\nRunning DeviceAdapter benchmarks\n";
 
     if (benchmarks & COPY) {

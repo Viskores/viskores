@@ -42,29 +42,29 @@ public:
   /// Returns true if these results are from a successful execution of a
   /// filter.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool IsValid() const { return this->Valid; }
 
   /// Returns the results of the filter in terms of a \c DataSet.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::DataSet &GetDataSet() const { return this->Data; }
 
 protected:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultBase(): Valid(false) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultBase(const vtkm::cont::DataSet &dataSet)
     : Valid(true), Data(dataSet) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetValid(bool valid)
   {
     this->Valid = valid;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetDataSet(const vtkm::cont::DataSet &dataSet)
   {
     this->Data = dataSet;
@@ -73,7 +73,7 @@ protected:
 
   /// Returns a writable reference to the data set.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::cont::DataSet &GetDataSetReference()
   {
     return this->Data;

@@ -29,6 +29,7 @@ namespace vtkm {
 namespace filter {
 
 //-----------------------------------------------------------------------------
+inline VTKM_CONT
 MarchingCubes::MarchingCubes():
   vtkm::filter::FilterDataSetWithField<MarchingCubes>(),
   IsoValue(0),
@@ -43,6 +44,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
+inline VTKM_CONT
 vtkm::filter::ResultDataSet MarchingCubes::DoExecute(const vtkm::cont::DataSet& input,
                                                      const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                                      const vtkm::filter::FieldMetadata& fieldMeta,
@@ -122,6 +124,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
+inline VTKM_CONT
 bool MarchingCubes::DoMapField(vtkm::filter::ResultDataSet& result,
                                const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                const vtkm::filter::FieldMetadata& fieldMeta,

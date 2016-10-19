@@ -40,7 +40,7 @@ public:
   typedef typename Superclass::PortalType PortalType;
   typedef typename Superclass::PortalConstType PortalConstType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayManagerExecution(typename Superclass::StorageType *storage)
     : Superclass(storage) {  }
 };

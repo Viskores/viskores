@@ -55,7 +55,7 @@ struct ReverseInputToOutputMapKernel : vtkm::exec::FunctorBase
   VisitType Visit;
   vtkm::Id OutputSize;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ReverseInputToOutputMapKernel(const InputMapType &inputToOutputMap,
                                 const OutputMapType &outputToInputMap,
                                 const VisitType &visit,
@@ -66,7 +66,7 @@ struct ReverseInputToOutputMapKernel : vtkm::exec::FunctorBase
       OutputSize(outputSize)
   {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id inputIndex) const
   {
     vtkm::Id outputStartIndex;
@@ -105,13 +105,13 @@ struct SubtractToVisitIndexKernel : vtkm::exec::FunctorBase
   StartsOfGroupsType StartsOfGroups;
   VisitType Visit;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   SubtractToVisitIndexKernel(const StartsOfGroupsType &startsOfGroups,
                              const VisitType &visit)
     : StartsOfGroups(startsOfGroups), Visit(visit)
   {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id inputIndex) const
   {
     vtkm::Id startOfGroup = this->StartsOfGroups.Get(inputIndex);
@@ -138,7 +138,7 @@ struct SubtractToVisitIndexKernel : vtkm::exec::FunctorBase
 struct ScatterCounting
 {
   template<typename CountArrayType, typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ScatterCounting(const CountArrayType &countArray, Device)
   {
     this->BuildArrays(countArray, Device());
@@ -146,7 +146,7 @@ struct ScatterCounting
 
   typedef vtkm::cont::ArrayHandle<vtkm::Id> OutputToInputMapType;
   template<typename RangeType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   OutputToInputMapType GetOutputToInputMap(RangeType) const
   {
     return this->OutputToInputMap;
@@ -154,13 +154,13 @@ struct ScatterCounting
 
   typedef vtkm::cont::ArrayHandle<vtkm::IdComponent> VisitArrayType;
   template<typename RangeType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   VisitArrayType GetVisitArray(RangeType) const
   {
     return this->VisitArray;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetOutputRange(vtkm::Id inputRange) const
   {
     if (inputRange != this->InputRange)
@@ -174,7 +174,7 @@ struct ScatterCounting
     }
     return this->VisitArray.GetNumberOfValues();
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetOutputRange(vtkm::Id3 inputRange) const
   {
     return this->GetOutputRange(inputRange[0]*inputRange[1]*inputRange[2]);
@@ -186,7 +186,7 @@ private:
   VisitArrayType VisitArray;
 
   template<typename CountArrayType, typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void BuildArrays(const CountArrayType &count, Device)
   {
     VTKM_IS_ARRAY_HANDLE(CountArrayType);
@@ -231,7 +231,7 @@ private:
   }
 
   template<typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void BuildOutputToInputMapWithFind(
       vtkm::Id outputSize,
       vtkm::cont::ArrayHandle<vtkm::Id> inputToOutputMap,
@@ -257,7 +257,7 @@ private:
   }
 
   template<typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void BuildOutputToInputMapWithIterate(
       vtkm::Id outputSize,
       vtkm::cont::ArrayHandle<vtkm::Id> inputToOutputMap,

@@ -39,25 +39,25 @@ public:
 
   virtual ~BoundingBoxAnnotation();
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::Bounds &GetExtents() const
   {
     return this->Extents;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetExtents(const vtkm::Bounds &extents)
   {
     this->Extents = extents;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::rendering::Color &GetColor() const
   {
     return this->Color;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetColor(vtkm::rendering::Color c)
   {
     this->Color = c;

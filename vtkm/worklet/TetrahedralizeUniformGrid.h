@@ -40,7 +40,7 @@ namespace worklet {
 
 namespace detail {
 
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const static vtkm::IdComponent StructuredTetrahedronIndices[2][5][4] = {
   {
     { 0, 1, 3, 4 },
@@ -79,13 +79,13 @@ public:
     typedef _1 InputDomain;
 
     typedef vtkm::worklet::ScatterUniform ScatterType;
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ScatterType GetScatter() const
     {
       return ScatterType(5);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     TetrahedralizeCell()
     {  }
 
@@ -93,7 +93,7 @@ public:
     template<typename ConnectivityInVec,
              typename ConnectivityOutVec,
              typename ThreadIndicesType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const ConnectivityInVec &connectivityIn,
                     ConnectivityOutVec &connectivityOut,
                     const ThreadIndicesType threadIndices) const

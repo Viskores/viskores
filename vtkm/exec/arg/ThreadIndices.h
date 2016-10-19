@@ -62,14 +62,14 @@ struct Fetch<FetchTag,
 {
   typedef const ThreadIndicesType &ValueType;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   const ThreadIndicesType &
   Load(const ThreadIndicesType &indices, const ExecObjectType &) const
   {
     return indices;
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Store(const ThreadIndicesType &,
              const ExecObjectType &,
              const ThreadIndicesType &) const

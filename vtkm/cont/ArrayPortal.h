@@ -64,18 +64,18 @@ public:
   /// The total number of values in the array. They are index from 0 to
   /// GetNumberOfValues()-1.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const;
 
   /// Gets a value from the array.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ValueType Get(vtkm::Id index) const;
 
   /// Sets a value in the array. This function may not exist for an ArrayPortal
   /// pointing to a const array.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Set(vtkm::Id index, const ValueType &value) const;
 };
 

@@ -58,7 +58,7 @@ struct Transport<
   typedef vtkm::exec::ExecutionWholeArray<ValueType, StorageTag, Device>
       ExecObjectType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecObjectType operator()(ContObjectType array, vtkm::Id) const
   {
     // Note: we ignore the size of the domain because the randomly accessed

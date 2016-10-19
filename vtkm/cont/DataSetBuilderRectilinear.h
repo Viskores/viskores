@@ -32,7 +32,7 @@ namespace cont {
 class DataSetBuilderRectilinear
 {
   template<typename T, typename U>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   void CopyInto(const std::vector<T>& input,
                 vtkm::cont::ArrayHandle<U>& output )
@@ -42,7 +42,7 @@ class DataSetBuilderRectilinear
   }
 
   template<typename T, typename U>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   void CopyInto(const vtkm::cont::ArrayHandle<T>& input,
                 vtkm::cont::ArrayHandle<U>& output )
@@ -53,7 +53,7 @@ class DataSetBuilderRectilinear
   }
 
   template<typename T, typename U>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   void CopyInto(const T* input, vtkm::Id len,
                 vtkm::cont::ArrayHandle<U>& output )
@@ -62,12 +62,12 @@ class DataSetBuilderRectilinear
       vtkm::cont::make_ArrayHandle(input, len), output);
   }
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DataSetBuilderRectilinear() {}
 
   //1D grids.
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const std::vector<T> &xvals,
@@ -79,7 +79,7 @@ public:
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(vtkm::Id nx, T *xvals,
@@ -91,7 +91,7 @@ public:
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const vtkm::cont::ArrayHandle<T> &xvals,
@@ -108,7 +108,7 @@ public:
 
   //2D grids.
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const std::vector<T> &xvals, const std::vector<T> &yvals,
@@ -120,7 +120,7 @@ public:
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(vtkm::Id nx, vtkm::Id ny,
@@ -133,7 +133,7 @@ public:
   }
   
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const vtkm::cont::ArrayHandle<T> &xvals,
@@ -149,7 +149,7 @@ public:
 
   //3D grids.
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
@@ -161,7 +161,7 @@ public:
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const std::vector<T> &xvals,
@@ -174,7 +174,7 @@ public:
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const vtkm::cont::ArrayHandle<T> &xvals,
@@ -188,7 +188,7 @@ public:
 
 private:
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   BuildDataSet(int dim,
@@ -211,7 +211,7 @@ private:
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   BuildDataSet(int dim, vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
@@ -232,7 +232,7 @@ private:
   }    
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   BuildDataSet(int dim,

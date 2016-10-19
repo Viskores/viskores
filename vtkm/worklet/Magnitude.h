@@ -34,7 +34,7 @@ public:
   typedef void ExecutionSignature(_1, _2);
 
   template<typename T>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Vec<T,3> &inValue,
                     T &outValue) const
   {

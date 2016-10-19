@@ -41,7 +41,7 @@ namespace vtkm {
 /// extrapolates. If w=0 => v0 is returned if w=1 => v1 is returned.
 ///
 template<typename ValueType, typename WeightType>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 ValueType Lerp(const ValueType &value0,
                const ValueType &value1,
                const WeightType &weight)
@@ -49,7 +49,7 @@ ValueType Lerp(const ValueType &value0,
   return static_cast<ValueType>((WeightType(1)-weight)*value0+weight*value1);
 }
 template<typename ValueType, vtkm::IdComponent N, typename WeightType>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<ValueType,N> Lerp(const vtkm::Vec<ValueType,N> &value0,
                             const vtkm::Vec<ValueType,N> &value1,
                             const WeightType &weight)
@@ -57,7 +57,7 @@ vtkm::Vec<ValueType,N> Lerp(const vtkm::Vec<ValueType,N> &value0,
   return (WeightType(1)-weight)*value0+weight*value1;
 }
 template<typename ValueType, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<ValueType,N> Lerp(const vtkm::Vec<ValueType,N> &value0,
                             const vtkm::Vec<ValueType,N> &value1,
                             const vtkm::Vec<ValueType,N> &weight)
@@ -74,7 +74,7 @@ vtkm::Vec<ValueType,N> Lerp(const vtkm::Vec<ValueType,N> &value0,
 /// when possible.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 typename vtkm::VecTraits<T>::ComponentType
 MagnitudeSquared(const T &x)
 {
@@ -84,14 +84,14 @@ MagnitudeSquared(const T &x)
 // ----------------------------------------------------------------------------
 namespace detail {
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 T MagnitudeTemplate(T x, vtkm::TypeTraitsScalarTag)
 {
   return vtkm::Abs(x);
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 typename vtkm::VecTraits<T>::ComponentType
 MagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 {
@@ -108,7 +108,7 @@ MagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 /// actually plan to divide by the magnitude.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 typename vtkm::VecTraits<T>::ComponentType
 Magnitude(const T &x)
 {
@@ -119,14 +119,14 @@ Magnitude(const T &x)
 // ----------------------------------------------------------------------------
 namespace detail {
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 T RMagnitudeTemplate(T x, vtkm::TypeTraitsScalarTag)
 {
   return T(1)/vtkm::Abs(x);
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 typename vtkm::VecTraits<T>::ComponentType
 RMagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 {
@@ -140,7 +140,7 @@ RMagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 /// as fast as MagnitudeSquared.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 typename vtkm::VecTraits<T>::ComponentType
 RMagnitude(const T &x)
 {
@@ -151,14 +151,14 @@ RMagnitude(const T &x)
 // ----------------------------------------------------------------------------
 namespace detail {
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 T NormalTemplate(T x, vtkm::TypeTraitsScalarTag)
 {
   return vtkm::CopySign(T(1), x);
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 T NormalTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 {
   return vtkm::RMagnitude(x)*x;
@@ -170,7 +170,7 @@ T NormalTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 /// The resulting vector points in the same direction but has unit length.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 T Normal(const T &x)
 {
   return detail::NormalTemplate(
@@ -183,7 +183,7 @@ T Normal(const T &x)
 /// The given vector is scaled to be unit length.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 void Normalize(T &x)
 {
   x = vtkm::Normal(x);
@@ -193,7 +193,7 @@ void Normalize(T &x)
 /// \brief Find the cross product of two vectors.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<T,3> Cross(const vtkm::Vec<T,3> &x, const vtkm::Vec<T,3> &y)
 {
   return vtkm::Vec<T,3>(x[1]*y[2] - x[2]*y[1],
@@ -209,7 +209,7 @@ vtkm::Vec<T,3> Cross(const vtkm::Vec<T,3> &x, const vtkm::Vec<T,3> &y)
 /// to that triangle/plane.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<T,3> TriangleNormal(const vtkm::Vec<T,3> &a,
                               const vtkm::Vec<T,3> &b,
                               const vtkm::Vec<T,3> &c)

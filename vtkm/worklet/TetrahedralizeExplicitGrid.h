@@ -58,10 +58,10 @@ public:
     typedef _3 ExecutionSignature(_1, _2);
     typedef _1 InputDomain;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     TetrahedraPerCell() {}
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     vtkm::IdComponent operator()(
         vtkm::UInt8 shape,
         const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter> &tables) const
@@ -84,14 +84,14 @@ public:
     typedef _1 InputDomain;
 
     typedef vtkm::worklet::ScatterCounting ScatterType;
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ScatterType GetScatter() const
     {
       return this->Scatter;
     }
 
     template<typename CellArrayType>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     TetrahedralizeCell(const CellArrayType &cellArray)
       : Scatter(cellArray, DeviceAdapter())
     {  }
@@ -100,7 +100,7 @@ public:
     template<typename CellShapeTag,
              typename ConnectivityInVec,
              typename ConnectivityOutVec>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(CellShapeTag shape,
                     const ConnectivityInVec &connectivityIn,
                     const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter> &tables,

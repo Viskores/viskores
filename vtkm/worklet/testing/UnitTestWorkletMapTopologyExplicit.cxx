@@ -40,7 +40,7 @@ public:
   typedef void ExecutionSignature(_1, _4, _2, PointCount, CellShape, PointIndices);
   typedef _3 InputDomain;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   MaxPointOrCellValue() { }
 
   template<typename InCellType,
@@ -48,7 +48,7 @@ public:
            typename InPointVecType,
            typename CellShapeTag,
            typename PointIndexType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const InCellType &cellValue,
                   OutCellType &maxValue,
                   const InPointVecType &pointValues,
@@ -75,11 +75,11 @@ public:
   typedef void ExecutionSignature(_1, _3, PointCount);
   typedef _2 InputDomain;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   AveragePointToCellValue() { }
 
   template<typename PointVecType, typename OutType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const PointVecType &pointValues,
                   OutType &avgVal,
                   const vtkm::IdComponent &numPoints) const
@@ -103,11 +103,11 @@ public:
   typedef void ExecutionSignature(_1, _3, CellCount);
   typedef _2 InputDomain;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   AverageCellToPointValue() { }
 
   template<typename CellVecType, typename OutType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const CellVecType &cellValues,
                   OutType &avgVal,
                   const vtkm::IdComponent &numCellIDs) const

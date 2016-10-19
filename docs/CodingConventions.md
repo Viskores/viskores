@@ -120,6 +120,6 @@ a tab stop is, so it is better to not use them at all.
 
 + Use vtkm::Scalar in lieu of float or double to represent data for computation and use vtkm::Id in lieu of int or long for data structure indices. This future-proofs code against changes in precision of the architecture. The indices of vtkm::Tuple are an exception. Using int to reference vtkm::Tuple (and other related classes like vtkm::exec::CellField and vtkm::math::Matrix) indices are acceptable as it is unreasonable to make these vectors longer than the precision of int.
 
-+ All functions and methods defined within the VTK-M toolkit should be declared with VTKM_CONT_EXPORT, VTKM_EXEC_EXPORT, or VTKM_EXEC_CONT_EXPORT.
++ All functions and methods defined within the VTK-M toolkit should be declared with VTKM_CONT, VTKM_EXEC, or VTKM_EXEC_CONT.
 
 We should note that although these conventions impose a strict statute on VTK-M coding, these rules (other than those involving licensing and copyright) are not meant to be dogmatic. Examples can be found in the existing code that break these conventions, particularly when the conventions stand in the way of readability (which is the point in having them in the first place). For example, it is often the case that it is more readable for a complicated typedef to stretch a few characters past 80 even if it pushes past the end of a display.

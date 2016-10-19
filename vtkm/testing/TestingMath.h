@@ -43,57 +43,57 @@
 namespace UnitTestMathNamespace {
 
 const vtkm::IdComponent NUM_NUMBERS = 5;
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 NumberList[NUM_NUMBERS] = { 0.25, 0.5, 1.0, 2.0, 3.75 };
 
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 AngleList[NUM_NUMBERS] =
   { 0.643501108793284,  // angle for 3, 4, 5 triangle.
     0.78539816339745,   // pi/4
     0.5235987755983,    // pi/6
     1.0471975511966,    // pi/3
     0.0 };
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 OppositeList[NUM_NUMBERS] =   { 3.0, 1.0, 1.0, 1.732050807568877 /*sqrt(3)*/, 0.0 };
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 AdjacentList[NUM_NUMBERS] =   { 4.0, 1.0, 1.732050807568877 /*sqrt(3)*/, 1.0, 1.0 };
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 HypotenuseList[NUM_NUMBERS] = { 5.0, 1.414213562373095 /*sqrt(2)*/, 2.0, 2.0, 1.0 };
 
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 NumeratorList[NUM_NUMBERS] =   { 6.5, 5.8, 9.3, 77.0, 0.1 };
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 DenominatorList[NUM_NUMBERS] = { 2.3, 1.6, 3.1, 19.0, 0.4 };
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 FModRemainderList[NUM_NUMBERS]={ 1.9, 1.0, 0.0,  1.0, 0.1 };
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 RemainderList[NUM_NUMBERS] =   {-0.4,-0.6, 0.0,  1.0, 0.1 };
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Int64   QuotientList[NUM_NUMBERS] =    { 3  , 4  , 3  ,  4  , 0   };
 
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 XList[NUM_NUMBERS] =           {4.6, 0.1, 73.4, 55.0, 3.75 };
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 FractionalList[NUM_NUMBERS] =  {0.6, 0.1,  0.4,  0.0, 0.75 };
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 FloorList[NUM_NUMBERS] =       {4.0, 0.0, 73.0, 55.0, 3.0  };
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 CeilList[NUM_NUMBERS] =        {5.0, 1.0, 74.0, 55.0, 4.0  };
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 const vtkm::Float64 RoundList[NUM_NUMBERS] =       {5.0, 0.0, 73.0, 55.0, 4.0  };
 
 //-----------------------------------------------------------------------------
 template<typename T>
 struct ScalarFieldTests : public vtkm::exec::FunctorBase
 {
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestPi() const
   {
 //    std::cout << "Testing Pi" << std::endl;
     VTKM_MATH_ASSERT(test_equal(vtkm::Pi(), 3.14159265), "Pi not correct.");
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestArcTan2() const
   {
 //    std::cout << "Testing arc tan 2" << std::endl;
@@ -122,7 +122,7 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
                      "ATan2 Quadrant 4");
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestPow() const
   {
 //    std::cout << "Running power tests." << std::endl;
@@ -135,7 +135,7 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
       }
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestLog2() const
   {
 //    std::cout << "Testing Log2" << std::endl;
@@ -147,7 +147,7 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
           "Bad value from Log2");
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestNonFinites() const
   {
 //    std::cout << "Testing non-finites." << std::endl;
@@ -200,7 +200,7 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
     VTKM_MATH_ASSERT(vtkm::IsFinite(epsilon), "Bad finite check.");
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestRemainders() const
   {
 //    std::cout << "Testing remainders." << std::endl;
@@ -224,7 +224,7 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
     }
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestRound() const
   {
 //    std::cout << "Testing round." << std::endl;
@@ -250,7 +250,7 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
     }
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestIsNegative() const
   {
 //    std::cout << "Testing SignBit and IsNegative." << std::endl;
@@ -275,7 +275,7 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
     VTKM_MATH_ASSERT(vtkm::IsNegative(x), "IsNegative wrong for -0.02.");
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id) const
   {
     this->TestPi();
@@ -310,7 +310,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     NUM_COMPONENTS = Traits::NUM_COMPONENTS
   };
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestTriangleTrig() const
   {
 //    std::cout << "Testing normal trig functions." << std::endl;
@@ -372,7 +372,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     }
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestHyperbolicTrig() const
   {
 //    std::cout << "Testing hyperbolic trig functions." << std::endl;
@@ -416,7 +416,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   template<typename FunctionType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void RaiseToTest(FunctionType function,
                    ComponentType exponent) const
   {
@@ -444,10 +444,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   struct SqrtFunctor {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     VectorType operator()(VectorType x) const { return vtkm::Sqrt(x); }
   };
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestSqrt() const
   {
 //    std::cout << "  Testing Sqrt" << std::endl;
@@ -455,10 +455,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   struct RSqrtFunctor {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     VectorType operator()(VectorType x) const {return vtkm::RSqrt(x);}
   };
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestRSqrt() const
   {
 //    std::cout << "  Testing RSqrt"<< std::endl;
@@ -466,10 +466,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   struct CbrtFunctor {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     VectorType operator()(VectorType x) const { return vtkm::Cbrt(x); }
   };
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestCbrt() const
   {
 //    std::cout << "  Testing Cbrt" << std::endl;
@@ -477,10 +477,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   struct RCbrtFunctor {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     VectorType operator()(VectorType x) const {return vtkm::RCbrt(x);}
   };
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestRCbrt() const
   {
 //    std::cout << "  Testing RCbrt" << std::endl;
@@ -488,7 +488,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   template<typename FunctionType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void RaiseByTest(FunctionType function,
                    ComponentType base,
                    ComponentType exponentbias = 0.0,
@@ -520,10 +520,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   struct ExpFunctor {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     VectorType operator()(VectorType x) const {return vtkm::Exp(x);}
   };
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestExp() const
   {
 //    std::cout << "  Testing Exp" << std::endl;
@@ -531,10 +531,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   struct Exp2Functor {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     VectorType operator()(VectorType x) const {return vtkm::Exp2(x);}
   };
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestExp2() const
   {
 //    std::cout << "  Testing Exp2" << std::endl;
@@ -542,10 +542,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   struct ExpM1Functor {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     VectorType operator()(VectorType x) const {return vtkm::ExpM1(x);}
   };
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestExpM1() const
   {
 //    std::cout << "  Testing ExpM1" << std::endl;
@@ -556,10 +556,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   struct Exp10Functor {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     VectorType operator()(VectorType x) const {return vtkm::Exp10(x);}
   };
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestExp10() const
   {
 //    std::cout << "  Testing Exp10" << std::endl;
@@ -567,7 +567,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   template<typename FunctionType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void LogBaseTest(FunctionType function,
                    ComponentType base,
                    ComponentType bias=0.0) const
@@ -599,10 +599,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   struct LogFunctor {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     VectorType operator()(VectorType x) const {return vtkm::Log(x);}
   };
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestLog() const
   {
 //    std::cout << "  Testing Log" << std::endl;
@@ -610,10 +610,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   struct Log10Functor {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     VectorType operator()(VectorType x) const {return vtkm::Log10(x);}
   };
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestLog10() const
   {
 //    std::cout << "  Testing Log10" << std::endl;
@@ -621,10 +621,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   struct Log1PFunctor {
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     VectorType operator()(VectorType x) const {return vtkm::Log1P(x);}
   };
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestLog1P() const
   {
 //    std::cout << "  Testing Log1P" << std::endl;
@@ -633,7 +633,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
                 1.0);
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestCopySign() const
   {
 //    std::cout << "Testing CopySign." << std::endl;
@@ -653,7 +653,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
                      "CopySign failed.");
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id) const
   {
     this->TestTriangleTrig();
@@ -688,7 +688,7 @@ struct TryScalarVectorFieldTests
 template<typename T>
 struct AllTypesTests : public vtkm::exec::FunctorBase
 {
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void TestMinMax() const
   {
     T low = TestValue(2, T());
@@ -710,7 +710,7 @@ struct AllTypesTests : public vtkm::exec::FunctorBase
     VTKM_MATH_ASSERT(test_equal(vtkm::Max(mixed2, mixed1), high), "Wrong max.");
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id) const
   {
     this->TestMinMax();
@@ -732,7 +732,7 @@ struct TryAllTypesTests
 template<typename T>
 struct AbsTests : public vtkm::exec::FunctorBase
 {
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id index) const {
 //    std::cout << "Testing Abs." << std::endl;
     T positive = TestValue(index, T());  // Assuming all TestValues positive.

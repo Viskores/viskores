@@ -30,7 +30,7 @@ namespace cont {
 namespace detail {
 
 struct IndexFunctor {
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id index) const { return index; }
 };
 
@@ -50,7 +50,7 @@ public:
       ArrayHandleIndex,
       (vtkm::cont::ArrayHandleImplicit<vtkm::Id, detail::IndexFunctor>));
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleIndex(vtkm::Id length)
     : Superclass(detail::IndexFunctor(), length) {  }
 };

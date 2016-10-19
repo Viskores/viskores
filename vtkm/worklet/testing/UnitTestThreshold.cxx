@@ -34,12 +34,12 @@ namespace {
 class HasValue
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   HasValue(vtkm::Float32 value) : Value(value)
   { }
 
   template <typename ScalarType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   bool operator()(ScalarType value) const
   {
     return static_cast<vtkm::Float32>(value) == this->Value;

@@ -51,13 +51,13 @@ public:
 
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id GetNumberOfElements() const
   {
     return this->Shapes.GetNumberOfValues();
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const
   {
     return static_cast<vtkm::IdComponent>(this->NumIndices.Get(index));
@@ -65,7 +65,7 @@ public:
 
   typedef vtkm::CellShapeTagGeneric CellShapeTag;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   CellShapeTag GetCellShape(vtkm::Id index) const
   {
     // Likewise, should Shapes be vtkm::Id or something smaller?
@@ -80,7 +80,7 @@ public:
   /// loads the indices lazily out of the connectivity array. This prevents
   /// us from having to know the number of indices at compile time.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   IndicesType GetIndices(vtkm::Id index) const
   {
     vtkm::Id offset = this->IndexOffset.Get(index);

@@ -42,19 +42,19 @@ class ExecutionWholeArray : public vtkm::exec::ExecutionObjectBase
   typedef typename HandleType::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecutionWholeArray( ):
     Portal( )
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecutionWholeArray( HandleType& handle ):
     Portal( handle.PrepareForInPlace( DeviceAdapterTag()) )
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecutionWholeArray( HandleType& handle,
                        vtkm::Id length ):
     Portal( handle.PrepareForOutput( length, DeviceAdapterTag()) )
@@ -63,13 +63,13 @@ public:
 
   typedef typename PortalType::ValueType ValueType;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   T Get(vtkm::Id index) const { return this->Portal.Get(index); }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Set(vtkm::Id index, const T& t) const { this->Portal.Set(index, t); }
 
 private:
@@ -91,13 +91,13 @@ class ExecutionWholeArrayConst : public vtkm::exec::ExecutionObjectBase
   typedef typename HandleType::template ExecutionTypes<DeviceAdapterTag>::PortalConst PortalType;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecutionWholeArrayConst( ):
     Portal( )
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecutionWholeArrayConst( const HandleType& handle):
     Portal( handle.PrepareForInput( DeviceAdapterTag() ) )
   {
@@ -105,10 +105,10 @@ public:
 
   typedef typename PortalType::ValueType ValueType;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   T Get(vtkm::Id index) const { return this->Portal.Get(index); }
 
 private:

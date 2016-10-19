@@ -35,7 +35,7 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4);
 
   template<typename T, typename StorageTag>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Id &index,
                   const vtkm::exec::ExecutionWholeArrayConst<T,StorageTag> &execIn,
                   vtkm::exec::ExecutionWholeArray<T,StorageTag> &execOut,
@@ -50,7 +50,7 @@ public:
   }
 
   template<typename T1, typename T2, typename T3>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Id &, const T1 &, const T2 &, const T3&) const
   {
     this->RaiseError("Cannot call this worklet with different types.");
@@ -65,7 +65,7 @@ template<typename WorkletType>
 struct DoTestWorklet
 {
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(T) const
   {
     std::cout << "Set up data." << std::endl;

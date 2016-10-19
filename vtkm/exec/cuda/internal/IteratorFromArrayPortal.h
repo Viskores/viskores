@@ -41,11 +41,11 @@ struct PortalValue
 {
   typedef typename ArrayPortalType::ValueType ValueType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   PortalValue(const ArrayPortalType &portal, vtkm::Id index)
     : Portal(portal), Index(index) {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Swap( PortalValue<ArrayPortalType> &rhs ) throw()
   {
     //we need use the explicit type not a proxy temp object
@@ -56,7 +56,7 @@ struct PortalValue
     rhs = aValue;
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   PortalValue<ArrayPortalType> &operator=(
     const PortalValue<ArrayPortalType> &rhs)
   {
@@ -64,14 +64,14 @@ struct PortalValue
     return *this;
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType operator=(const ValueType& value) const
   {
     this->Portal.Set(this->Index, value);
     return value;
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   operator ValueType(void) const
   {
     return this->Portal.Get(this->Index);
@@ -93,16 +93,16 @@ class IteratorFromArrayPortal : public
 {
 public:
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorFromArrayPortal()
     : Portal(), Index(0) { }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   explicit IteratorFromArrayPortal(const ArrayPortalType &portal,
                                    vtkm::Id index = 0)
     : Portal(portal), Index(index) {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   PortalValue<ArrayPortalType>
   operator[](std::ptrdiff_t idx) const //NEEDS to be signed
   {
@@ -117,14 +117,14 @@ private:
   // Implementation for ::thrust iterator_facade
   friend class ::thrust::iterator_core_access;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   PortalValue<ArrayPortalType> dereference() const
   {
     return PortalValue<ArrayPortalType>(this->Portal,
            this->Index);
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   bool equal(const IteratorFromArrayPortal<ArrayPortalType> &other) const
   {
     // Technically, we should probably check that the portals are the same,
@@ -134,25 +134,25 @@ private:
     return (this->Index == other.Index);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void increment()
   {
     this->Index++;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void decrement()
   {
     this->Index--;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void advance(std::ptrdiff_t delta)
   {
     this->Index += static_cast<vtkm::Id>(delta);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   std::ptrdiff_t
   distance_to(const IteratorFromArrayPortal<ArrayPortalType> &other) const
   {

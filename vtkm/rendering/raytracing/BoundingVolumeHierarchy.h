@@ -56,11 +56,11 @@ public:
   vtkm::Vec<Float32, 3> ExtentMin;
   vtkm::Vec<Float32, 3> ExtentMax;
   vtkm::Id LeafCount;
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   LinearBVH()
   {}
   template<typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(const vtkm::Id &leafCount,
                 DeviceAdapter deviceAdapter)
   {
@@ -84,11 +84,11 @@ public:
   class CountingIterator : public vtkm::worklet::WorkletMapField
   {
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     CountingIterator(){}
     typedef void ControlSignature(FieldOut<>);
     typedef void ExecutionSignature(WorkIndex, _1);
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id &index, vtkm::Id &outId) const
     {
       outId = index;
@@ -98,7 +98,7 @@ public:
   class FindAABBs : public vtkm::worklet::WorkletMapField
   {
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     FindAABBs() {}
     typedef void ControlSignature(FieldIn<>,
                                   FieldOut<>,
@@ -117,7 +117,7 @@ public:
                                     _7,
                                     _8);
     template<typename PointPortalType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Vec<vtkm::Id,4> indices,
                     vtkm::Float32 &xmin,
                     vtkm::Float32 &ymin,
@@ -164,7 +164,7 @@ public:
     PortalConst InputPortal;
     Portal      OutputPortal;
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     GatherFloat32(const FloatArrayHandle &inputPortal,
                   FloatArrayHandle &outputPortal,
                   const vtkm::Id &size)
@@ -174,7 +174,7 @@ public:
     }
     typedef void ControlSignature(FieldIn<>);
     typedef void ExecutionSignature(WorkIndex, _1);
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id &outIndex, const vtkm::Id &inIndex) const
     {
       OutputPortal.Set(outIndex, InputPortal.Get(inIndex));
@@ -192,7 +192,7 @@ public:
     PortalConst InputPortal;
     Portal      OutputPortal;
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     GatherVecCast(const Vec4IdArrayHandle &inputPortal,
                  Vec4IntArrayHandle &outputPortal,
                  const vtkm::Id &size)
@@ -202,7 +202,7 @@ public:
     }
     typedef void ControlSignature(FieldIn<>);
     typedef void ExecutionSignature(WorkIndex, _1);
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id &outIndex, const vtkm::Id &inIndex) const
     {
       OutputPortal.Set(outIndex, InputPortal.Get(inIndex));
@@ -226,7 +226,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id>      leftChild;
     vtkm::cont::ArrayHandle<vtkm::Id>      rightChild;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BVHData(vtkm::Id numPrimitives)
       : NumPrimitives(numPrimitives)
     {
@@ -246,7 +246,7 @@ public:
 
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ~BVHData()
     {
       //
@@ -258,12 +258,12 @@ public:
       delete zmaxs;
 
     }
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Id GetNumberOfPrimitives() const
     {
       return NumPrimitives;
     }
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Id GetNumberOfInnerNodes() const
     {
       return InnerNodeCount;
@@ -298,7 +298,7 @@ public:
     //Int8ArrayPortal CountersPortal;
     vtkm::exec::AtomicArray<vtkm::Int32,DeviceAdapter> Counters;
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     PropagateAABBs(IdArrayHandle &parents,
                    IdArrayHandle &leftChildren,
                    IdArrayHandle &rightChildren,
@@ -328,7 +328,7 @@ public:
                                     _5,
                                     _6);
     template<typename StrorageType>
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_CONT
     void operator()(const vtkm::Id workIndex,
                     const vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32, StrorageType> &xmin,
                     const vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32, StrorageType> &ymin,
@@ -447,7 +447,7 @@ public:
     vtkm::Vec<vtkm::Float32,3> MinCoordinate;
 
     //expands 10-bit unsigned int into 30 bits
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     vtkm::UInt32 ExpandBits(vtkm::UInt32 x) const
     {
       x = (x * 0x00010001u) & 0xFF0000FFu;
@@ -458,7 +458,7 @@ public:
     }
     //Returns 30 bit morton code for coordinates for
     //coordinates in the unit cude
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     vtkm::UInt32 Morton3D(vtkm::Float32 &x,
                           vtkm::Float32 &y,
                           vtkm::Float32 &z) const
@@ -476,7 +476,7 @@ public:
     }
 
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     MortonCodeAABB(const vtkm::Vec<vtkm::Float32,3> &inverseExtent,
                    const vtkm::Vec<vtkm::Float32,3> &minCoordinate)
       : InverseExtent(inverseExtent),
@@ -498,7 +498,7 @@ public:
                                     _7);
     typedef _7 InputDomain;
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Float32 &xmin,
                     const vtkm::Float32 &ymin,
                     const vtkm::Float32 &zmin,
@@ -536,7 +536,7 @@ public:
     vtkm::Id LeafCount;
     vtkm::Id InnerCount;
     //TODO: get instrinsic support
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     vtkm::Int32 CountLeadingZeros(vtkm::UInt32 &x) const
     {
       vtkm::UInt32 y;
@@ -555,7 +555,7 @@ public:
     //
     // returns count of the largest binary prefix
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     vtkm::Int32 delta(const vtkm::Int32 &a,
                       const vtkm::Int32 &b) const
     {
@@ -576,7 +576,7 @@ public:
       return count;
     }
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     TreeBuilder(const UIntArrayHandle &mortonCodesHandle,
                 IdArrayHandle &parentHandle,
                 const vtkm::Id &leafCount)
@@ -591,7 +591,7 @@ public:
     typedef void ExecutionSignature(WorkIndex,
                                     _1,
                                     _2);
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id &index,
                     vtkm::Id &leftChild,
                     vtkm::Id &rightChild) const
@@ -660,10 +660,10 @@ public:
 
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   LinearBVHBuilder() {}
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SortAABBS(BVHData &bvh,
                  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id,4> > &triangleIndices,
                  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Int32,4> > &outputTriangleIndices)
@@ -765,7 +765,7 @@ public:
   } // method SortAABBs
 
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void run(vtkm::cont::DynamicArrayHandleCoordinateSystem &coordsHandle,
            vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  &triangleIndices,
            const vtkm::Id &numberOfTriangles,
