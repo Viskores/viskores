@@ -308,6 +308,7 @@ public:
 
   //--------------------------------------------------------------------------
   // Streaming Reduce
+ #if 0
   template<typename T, class CIn>
   VTKM_CONT_EXPORT static T StreamingReduce(
       const vtkm::Id numBlocks,
@@ -316,9 +317,9 @@ public:
   {
     return DerivedAlgorithm::StreamingReduce(numBlocks, input, initialValue, vtkm::internal::Add());
   }
-
+#endif
   template<typename T, class CIn, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T StreamingReduce(
+  VTKM_CONT_EXPORT /*static*/ T StreamingReduce(
       const vtkm::Id numBlocks,
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       T initialValue,
@@ -479,7 +480,7 @@ public:
     return ScanExclusive(input, output, vtkm::Sum(),
                          vtkm::TypeTraits<T>::ZeroInitialization());
   }
-
+#if 0
   //--------------------------------------------------------------------------
   // Streaming exclusive scan
   template<typename T, class CIn, class COut>
@@ -536,7 +537,7 @@ public:
     }
     return lastResult;
   }
-
+#endif
   //--------------------------------------------------------------------------
   // Scan Inclusive
   template<typename T, class CIn, class COut>
@@ -587,7 +588,7 @@ public:
 
     return GetExecutionValue(output, numValues-1);
   }
-
+#if 0
   //--------------------------------------------------------------------------
   // Streaming inclusive scan
   template<typename T, class CIn, class COut>
@@ -646,7 +647,7 @@ public:
     }
     return lastResult;
   }
-
+#endif
   //--------------------------------------------------------------------------
   // Sort
   template<typename T, class Storage, class BinaryCompare>
