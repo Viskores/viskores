@@ -222,7 +222,7 @@ vtkm::Float32 spacing = vtkm::Float32(1./dim);
     vtkm::cont::Field("distanceToOther", vtkm::cont::Field::ASSOC_POINTS,
                       vtkm::cont::DynamicArrayHandle(distanceToOther)));
 
-  CellSet cellSet(HexTag(), "cells");
+  CellSet cellSet(HexTag(), (dim+1)*(dim+1)*(dim+1), "cells");
   cellSet.Fill(connectivity);
 
   dataSet.AddCellSet(cellSet);

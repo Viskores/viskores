@@ -293,7 +293,8 @@ int main(int argc, char* argv[])
   numberOfInPoints = (dims[0] + 1) * (dims[1] + 1) * (dims[2] + 1);
 
   // Create the output dataset explicit cell set with same coordinate system
-  vtkm::cont::CellSetSingleType<> cellSet(vtkm::CellShapeTagTetra(), "cells");
+  vtkm::cont::CellSetSingleType<> cellSet(
+    vtkm::CellShapeTagTetra(), numberOfInPoints, "cells");
   tetDataSet.AddCellSet(cellSet);
   tetDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 

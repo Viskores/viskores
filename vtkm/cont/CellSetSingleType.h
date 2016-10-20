@@ -53,11 +53,28 @@ class CellSetSingleType  :
       typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag > Superclass;
 
 public:
+
+  template<typename CellShapeTag>
+  VTKM_CONT_EXPORT
+  CellSetSingleType(CellShapeTag, vtkm::Id numpoints, const std::string &name = std::string())
+    : Superclass(numpoints, name),
+      CellTypeAsId(CellShapeTag::Id)
+  {
+  }
+
   template<typename CellShapeTag>
   VTKM_CONT_EXPORT
   CellSetSingleType(CellShapeTag, const std::string &name = std::string())
     : Superclass(0, name),
       CellTypeAsId(CellShapeTag::Id)
+  {
+  }
+
+  VTKM_CONT_EXPORT
+  CellSetSingleType(vtkm::Id numpoints,
+                    const std::string &name = std::string())
+    : Superclass(numpoints, name),
+      CellTypeAsId(CellShapeTagEmpty::Id)
   {
   }
 
