@@ -290,6 +290,7 @@ public:
     typedef vtkm::cont::ArrayHandle<
                                     T,
                                     vtkm::cont::StorageTagBasic> TempArrayType;
+
 /*
     ReduceKernelType kernel(input.PrepareForInput( DeviceAdapterTag() ),
                             binary_functor);
