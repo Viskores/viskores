@@ -259,7 +259,9 @@
 #cmakedefine VTKM_ENABLE_OPENGL_INTEROP
 #endif
 
-#if __cplusplus >= 201103L || ( defined(VTKM_MSVC) && _MSC_VER >= 1800  )
+#if __cplusplus >= 201103L || \
+    ( defined(VTKM_MSVC) && _MSC_VER >= 1800  ) || \
+    ( defined(VTKM_ICC)  && defined(__INTEL_CXX11_MODE__) )
 #define VTKM_HAVE_CXX_11
 #else
 #error "VTK-m requires at least a C++11 compiler"
