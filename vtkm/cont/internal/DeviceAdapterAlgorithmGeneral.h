@@ -290,7 +290,7 @@ public:
     typedef vtkm::cont::ArrayHandle<
                                     T,
                                     vtkm::cont::StorageTagBasic> TempArrayType;
-
+/*
     ReduceKernelType kernel(input.PrepareForInput( DeviceAdapterTag() ),
                             binary_functor);
 
@@ -304,6 +304,8 @@ public:
                                                    inclusiveScanStorage,
                                                    binary_functor);
     return binary_functor(initialValue, scanResult);
+*/
+return initialValue;
   }
 
   //--------------------------------------------------------------------------
@@ -340,10 +342,10 @@ public:
           vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,CIn> >(
           input, block, blockSize, numberOfInstances);
 
-      /*if (block == 0)
+      //if (block == 0)
         lastResult = DerivedAlgorithm::Reduce(streamIn, initialValue, binary_functor);
-      else
-        lastResult = DerivedAlgorithm::Reduce(streamIn, lastResult, binary_functor);*/
+      //else
+      //  lastResult = DerivedAlgorithm::Reduce(streamIn, lastResult, binary_functor);
     }
     return lastResult;
   }
