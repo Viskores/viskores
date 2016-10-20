@@ -317,7 +317,7 @@ public:
   {
     return DerivedAlgorithm::StreamingReduce(numBlocks, input, initialValue, vtkm::internal::Add());
   }
-
+#endif
   template<typename T, class CIn, class BinaryFunctor>
   VTKM_CONT_EXPORT /*static*/ T StreamingReduce(
       const vtkm::Id numBlocks,
@@ -340,14 +340,14 @@ public:
           vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,CIn> >(
           input, block, blockSize, numberOfInstances);
 
-      if (block == 0)
+      /*if (block == 0)
         lastResult = DerivedAlgorithm::Reduce(streamIn, initialValue, binary_functor);
       else
-        lastResult = DerivedAlgorithm::Reduce(streamIn, lastResult, binary_functor);
+        lastResult = DerivedAlgorithm::Reduce(streamIn, lastResult, binary_functor);*/
     }
     return lastResult;
   }
-#endif
+//#endif
 
 
   //--------------------------------------------------------------------------
