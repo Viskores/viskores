@@ -31,29 +31,22 @@
 namespace vtkm {
 namespace rendering {
 
-class Canvas
+class VTKM_RENDERING_EXPORT Canvas
 {
 public:
-  VTKM_RENDERING_EXPORT
   Canvas(vtkm::Id width=1024,
          vtkm::Id height=1024);
 
-  VTKM_RENDERING_EXPORT
   virtual ~Canvas();
 
-  VTKM_RENDERING_EXPORT
   virtual void Initialize() = 0;
 
-  VTKM_RENDERING_EXPORT
   virtual void Activate() = 0;
 
-  VTKM_RENDERING_EXPORT
   virtual void Clear() = 0;
 
-  VTKM_RENDERING_EXPORT
   virtual void Finish() = 0;
 
-  VTKM_RENDERING_EXPORT
   virtual vtkm::rendering::Canvas *NewCopy() const = 0;
 
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorBufferType;
@@ -111,22 +104,15 @@ public:
 
   // If a subclass uses a system that renderers to different buffers, then
   // these should be overridden to copy the data to the buffers.
-  VTKM_RENDERING_EXPORT
   virtual void RefreshColorBuffer() const {  }
-  VTKM_RENDERING_EXPORT
   virtual void RefreshDepthBuffer() const  {  }
 
-  VTKM_RENDERING_EXPORT
   virtual void SetViewToWorldSpace(const vtkm::rendering::Camera &, bool) {}
-  VTKM_RENDERING_EXPORT
   virtual void SetViewToScreenSpace(const vtkm::rendering::Camera &, bool) {}
-  VTKM_RENDERING_EXPORT
   virtual void SetViewportClipping(const vtkm::rendering::Camera &, bool) {}
 
-  VTKM_RENDERING_EXPORT
   virtual void SaveAs(const std::string &fileName) const;
 
-  VTKM_RENDERING_EXPORT
   virtual void AddLine(const vtkm::Vec<vtkm::Float64,2> &point0,
                        const vtkm::Vec<vtkm::Float64,2> &point1,
                        vtkm::Float32 linewidth,
@@ -144,7 +130,6 @@ public:
                   color);
   }
 
-  VTKM_RENDERING_EXPORT
   virtual void AddColorBar(const vtkm::Bounds &bounds,
                            const vtkm::rendering::ColorTable &colorTable,
                            bool horizontal) const = 0;
@@ -162,7 +147,6 @@ public:
                       horizontal);
   }
 
-  VTKM_RENDERING_EXPORT
   virtual void AddText(const vtkm::Vec<vtkm::Float32,2> &position,
                        vtkm::Float32 scale,
                        vtkm::Float32 angle,
@@ -196,7 +180,6 @@ public:
   /// deleted with delete later). A pointer to the created WorldAnnotator is
   /// returned.
   ///
-  VTKM_RENDERING_EXPORT
   virtual vtkm::rendering::WorldAnnotator *CreateWorldAnnotator() const;
 
 private:

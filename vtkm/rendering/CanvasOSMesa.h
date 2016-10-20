@@ -35,29 +35,22 @@ struct CanvasOSMesaInternals;
 
 } // namespace detail
 
-class CanvasOSMesa : public CanvasGL
+class VTKM_RENDERING_EXPORT CanvasOSMesa : public CanvasGL
 {
 public:
-  VTKM_RENDERING_EXPORT
   CanvasOSMesa(vtkm::Id width=1024,
                vtkm::Id height=1024);
 
-  VTKM_RENDERING_EXPORT
   ~CanvasOSMesa();
 
-  VTKM_RENDERING_EXPORT
   virtual void Initialize() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   virtual void RefreshColorBuffer() const VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   virtual void Activate() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   virtual void Finish() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   vtkm::rendering::Canvas *NewCopy() const VTKM_OVERRIDE;
 
 private:

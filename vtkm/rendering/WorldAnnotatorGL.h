@@ -28,20 +28,17 @@
 namespace vtkm {
 namespace rendering {
 
-class WorldAnnotatorGL : public WorldAnnotator
+class VTKM_RENDERING_EXPORT WorldAnnotatorGL : public WorldAnnotator
 {
 public:
-  VTKM_RENDERING_EXPORT
   ~WorldAnnotatorGL();
 
-  VTKM_RENDERING_EXPORT
   void AddLine(const vtkm::Vec<vtkm::Float64,3> &point0,
                const vtkm::Vec<vtkm::Float64,3> &point1,
                vtkm::Float32 lineWidth,
                const vtkm::rendering::Color &color,
                bool inFront) const VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void AddText(const vtkm::Vec<vtkm::Float32,3> &origin,
                        const vtkm::Vec<vtkm::Float32,3> &right,
                        const vtkm::Vec<vtkm::Float32,3> &up,

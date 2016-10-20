@@ -33,7 +33,7 @@
 namespace vtkm {
 namespace rendering {
 
-class Camera
+class VTKM_RENDERING_EXPORT Camera
 {
   struct Camera3DStruct
   {
@@ -49,11 +49,9 @@ class Camera
         Zoom(1.0f)
     {}
 
-    VTKM_RENDERING_EXPORT
     vtkm::Matrix<vtkm::Float32,4,4>
     CreateViewMatrix() const;
 
-    VTKM_RENDERING_EXPORT
     vtkm::Matrix<vtkm::Float32,4,4>
     CreateProjectionMatrix(vtkm::Id width,
                            vtkm::Id height,
@@ -70,7 +68,7 @@ class Camera
     vtkm::Float32 Zoom;
   };
 
-  struct Camera2DStruct
+  struct VTKM_RENDERING_EXPORT Camera2DStruct
   {
   public:
     VTKM_CONT_EXPORT
@@ -85,11 +83,9 @@ class Camera
         Zoom(1.0f)
     {}
 
-    VTKM_RENDERING_EXPORT
     vtkm::Matrix<vtkm::Float32,4,4>
     CreateViewMatrix() const;
 
-    VTKM_RENDERING_EXPORT
     vtkm::Matrix<vtkm::Float32,4,4>
     CreateProjectionMatrix(vtkm::Float32 size,
                            vtkm::Float32 znear,
@@ -119,15 +115,12 @@ public:
       ViewportTop(1.0f)
   {}
 
-  VTKM_RENDERING_EXPORT
   vtkm::Matrix<vtkm::Float32,4,4>
   CreateViewMatrix() const;
 
-  VTKM_RENDERING_EXPORT
   vtkm::Matrix<vtkm::Float32,4,4>
   CreateProjectionMatrix(vtkm::Id screenWidth, vtkm::Id screenHeight) const;
 
-  VTKM_RENDERING_EXPORT
   void GetRealViewport(vtkm::Id screenWidth, vtkm::Id screenHeight,
                        vtkm::Float32 &left, vtkm::Float32 &right,
                        vtkm::Float32 &bottom, vtkm::Float32 &top) const;
@@ -360,7 +353,6 @@ public:
 
   /// \brief Pans the camera
   ///
-  VTKM_RENDERING_EXPORT
   void Pan(vtkm::Float32 dx, vtkm::Float32 dy);
 
   /// \brief Pans the camera
@@ -387,7 +379,6 @@ public:
   /// zoom makes the geometry look bigger or closer. Negative zoom has the
   /// opposite effect. A zoom of 0 has no effect.
   ///
-  VTKM_RENDERING_EXPORT
   void Zoom(vtkm::Float32 zoom);
 
   VTKM_CONT_EXPORT
@@ -406,7 +397,6 @@ public:
   ///
   /// \c TrackballRotate changes the mode to 3D.
   ///
-  VTKM_RENDERING_EXPORT
   void TrackballRotate(vtkm::Float32 startX,
                        vtkm::Float32 startY,
                        vtkm::Float32 endX,
@@ -431,7 +421,6 @@ public:
   /// the camera so that it is looking at this region in space. The view
   /// direction is preserved.
   ///
-  VTKM_RENDERING_EXPORT
   void ResetToBounds(const vtkm::Bounds &dataBounds);
 
   /// \brief Roll the camera
@@ -441,7 +430,6 @@ public:
   ///
   /// Roll is currently only supported for 3D cameras.
   ///
-  VTKM_RENDERING_EXPORT
   void Roll(vtkm::Float32 angleDegrees);
 
   VTKM_CONT_EXPORT
@@ -459,7 +447,6 @@ public:
   /// Azimuth only makes sense for 3D cameras, so the camera mode will be set
   /// to 3D when this method is called.
   ///
-  VTKM_RENDERING_EXPORT
   void Azimuth(vtkm::Float32 angleDegrees);
 
   VTKM_CONT_EXPORT
@@ -478,7 +465,6 @@ public:
   /// Elevation only makes sense for 3D cameras, so the camera mode will be set
   /// to 3D when this method is called.
   ///
-  VTKM_RENDERING_EXPORT
   void Elevation(vtkm::Float32 angleDegrees);
 
   VTKM_CONT_EXPORT
@@ -497,7 +483,6 @@ public:
   /// Dolly only makes sense for 3D cameras, so the camera mode will be set to
   /// 3D when this method is called.
   ///
-  VTKM_RENDERING_EXPORT
   void Dolly(vtkm::Float32 value);
 
   VTKM_CONT_EXPORT

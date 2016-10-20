@@ -30,16 +30,13 @@
 namespace vtkm {
 namespace rendering {
 
-class MapperGL : public Mapper
+class VTKM_RENDERING_EXPORT MapperGL : public Mapper
 {
 public:
-  VTKM_RENDERING_EXPORT
   MapperGL();
 
-  VTKM_RENDERING_EXPORT
   ~MapperGL();
 
-  VTKM_RENDERING_EXPORT
   void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                    const vtkm::cont::CoordinateSystem &coords,
                    const vtkm::cont::Field &scalarField,
@@ -47,14 +44,10 @@ public:
                    const vtkm::rendering::Camera &,
                    const vtkm::Range &scalarRange) VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   void StartScene() VTKM_OVERRIDE;
-  VTKM_RENDERING_EXPORT
   void EndScene() VTKM_OVERRIDE;
-  VTKM_RENDERING_EXPORT
   void SetCanvas(vtkm::rendering::Canvas *canvas) VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   vtkm::rendering::Mapper *NewCopy() const VTKM_OVERRIDE;
 
 

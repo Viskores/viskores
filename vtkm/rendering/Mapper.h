@@ -26,18 +26,15 @@
 namespace vtkm {
 namespace rendering {
 
-class Mapper
+class VTKM_RENDERING_EXPORT Mapper
 {
 public:
-  VTKM_CONT_EXPORT
   Mapper()
   {
   }
 
-  VTKM_RENDERING_EXPORT
   virtual ~Mapper();
 
-  VTKM_RENDERING_EXPORT
 
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
@@ -46,17 +43,12 @@ public:
                            const vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange) = 0;
 
-  VTKM_RENDERING_EXPORT
   virtual void SetActiveColorTable(const ColorTable &ct);
 
-  VTKM_RENDERING_EXPORT
   virtual void StartScene() = 0;
-  VTKM_RENDERING_EXPORT
   virtual void EndScene() = 0;
-  VTKM_RENDERING_EXPORT
   virtual void SetCanvas(vtkm::rendering::Canvas *canvas) = 0;
 
-  VTKM_RENDERING_EXPORT
   virtual vtkm::rendering::Mapper *NewCopy() const = 0;
 
 protected:

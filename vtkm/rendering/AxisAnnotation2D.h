@@ -34,7 +34,7 @@
 namespace vtkm {
 namespace rendering {
 
-class AxisAnnotation2D : public AxisAnnotation
+class VTKM_RENDERING_EXPORT AxisAnnotation2D : public AxisAnnotation
 {
 protected:
   vtkm::Float64 MajorTickSizeX, MajorTickSizeY, MajorTickOffset;
@@ -59,39 +59,32 @@ protected:
 
   int MoreOrLessTickAdjustment;
 public:
-  VTKM_RENDERING_EXPORT
   AxisAnnotation2D();
 
-  VTKM_RENDERING_EXPORT
   ~AxisAnnotation2D();
 
 #if 0
-  VTKM_RENDERING_EXPORT
   void SetLogarithmic(bool l)
   {
     this->Logarithmic = l;
   }
 #endif
 
-  VTKM_RENDERING_EXPORT
   void SetMoreOrLessTickAdjustment(int offset)
   {
     this->MoreOrLessTickAdjustment = offset;
   }
 
-  VTKM_RENDERING_EXPORT
   void SetColor(vtkm::rendering::Color c)
   {
     this->Color = c;
   }
 
-  VTKM_RENDERING_EXPORT
   void SetLineWidth(vtkm::Float32 lw)
   {
     this->LineWidth = lw;
   }
 
-  VTKM_RENDERING_EXPORT
   void SetMajorTickSize(vtkm::Float64 xlen, vtkm::Float64 ylen, vtkm::Float64 offset)
   {
     /// offset of 0 means the tick is inside the frame
@@ -102,7 +95,6 @@ public:
     this->MajorTickOffset = offset;
   }
 
-  VTKM_RENDERING_EXPORT
   void SetMinorTickSize(vtkm::Float64 xlen, vtkm::Float64 ylen, vtkm::Float64 offset)
   {
     this->MinorTickSizeX=xlen;
@@ -111,7 +103,6 @@ public:
   }
 
   ///\todo: rename, since it might be screen OR world position?
-  VTKM_RENDERING_EXPORT
   void SetScreenPosition(vtkm::Float64 x0, vtkm::Float64 y0,
                          vtkm::Float64 x1, vtkm::Float64 y1)
   {
@@ -122,7 +113,6 @@ public:
     this->PosY1 = y1;
   }
 
-  VTKM_RENDERING_EXPORT
   void SetLabelAlignment(TextAnnotation::HorizontalAlignment h,
                          TextAnnotation::VerticalAlignment v)
   {
@@ -130,7 +120,6 @@ public:
     this->AlignV = v;
   }
 
-  VTKM_RENDERING_EXPORT
   void SetLabelFontScale(vtkm::Float32 s)
   {
     this->FontScale = s;
@@ -138,23 +127,18 @@ public:
       this->Labels[i]->SetScale(s);
   }
 
-  VTKM_RENDERING_EXPORT
   void SetRangeForAutoTicks(const vtkm::Range &range);
-  VTKM_RENDERING_EXPORT
   void SetRangeForAutoTicks(vtkm::Float64 lower, vtkm::Float64 upper)
   {
     this->SetRangeForAutoTicks(vtkm::Range(lower, upper));
   }
 
-  VTKM_RENDERING_EXPORT
   void SetMajorTicks(const std::vector<vtkm::Float64> &positions,
                      const std::vector<vtkm::Float64> &proportions);
 
-  VTKM_RENDERING_EXPORT
   void SetMinorTicks(const std::vector<vtkm::Float64> &positions,
                      const std::vector<vtkm::Float64> &proportions);
 
-  VTKM_RENDERING_EXPORT
   void Render(const vtkm::rendering::Camera &camera,
               const vtkm::rendering::WorldAnnotator &worldAnnotator,
               vtkm::rendering::Canvas &canvas) VTKM_OVERRIDE;

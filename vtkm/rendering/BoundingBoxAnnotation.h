@@ -28,17 +28,15 @@
 namespace vtkm {
 namespace rendering {
 
-class BoundingBoxAnnotation
+class VTKM_RENDERING_EXPORT BoundingBoxAnnotation
 {
 private:
   vtkm::rendering::Color Color;
   vtkm::Bounds Extents;
 
 public:
-  VTKM_RENDERING_EXPORT
   BoundingBoxAnnotation();
 
-  VTKM_RENDERING_EXPORT
   virtual ~BoundingBoxAnnotation();
 
   VTKM_CONT_EXPORT
@@ -65,7 +63,6 @@ public:
     this->Color = c;
   }
 
-  VTKM_RENDERING_EXPORT
   virtual void Render(const vtkm::rendering::Camera &,
                       const WorldAnnotator &annotator);
 };
