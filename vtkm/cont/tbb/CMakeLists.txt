@@ -28,5 +28,5 @@ vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_TBB})
 
 #-----------------------------------------------------------------------------
 if (VTKm_ENABLE_TBB)
-  add_subdirectory(testing)
+#  add_subdirectory(testing)
 endif()

@@ -51,7 +51,7 @@ vtkm_declare_headers(${headers})
 
 #-----------------------------------------------------------------------------
 #first add all the components vtkm that are shared between control and exec
-add_subdirectory(testing)
+#add_subdirectory(testing)
 add_subdirectory(internal)
 
 #-----------------------------------------------------------------------------
@@ -70,14 +70,14 @@ add_subdirectory(filter)
 #-----------------------------------------------------------------------------
 # Build rendering
 if(VTKm_ENABLE_RENDERING)
-  add_subdirectory(rendering)
+#  add_subdirectory(rendering)
 endif()
 
 add_subdirectory(interop)
 
 #-----------------------------------------------------------------------------
 #add the benchmarking folder
-add_subdirectory(benchmarking)
+#add_subdirectory(benchmarking)
 
 #-----------------------------------------------------------------------------
 #add the io folder

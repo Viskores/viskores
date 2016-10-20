@@ -27,4 +27,4 @@ add_subdirectory(internal)
 vtkm_declare_headers(${headers})
 
 #-----------------------------------------------------------------------------
-add_subdirectory(testing)
+#add_subdirectory(testing)
