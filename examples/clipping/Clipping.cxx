@@ -32,10 +32,6 @@
 #include <string>
 #include <stdexcept>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/lexical_cast.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 typedef vtkm::Vec<vtkm::Float32, 3> FloatVec3;
 
 
@@ -62,7 +58,7 @@ int main(int argc, char *argv[])
                                   input.GetField(argv[2]) :
                                   input.GetField(0);
 
-  vtkm::Float32 clipValue = boost::lexical_cast<vtkm::Float32>(argv[argc - 2]);
+  vtkm::Float32 clipValue = std::stof(argv[argc - 2]);
   vtkm::worklet::Clip clip;
 
   vtkm::cont::Timer<DeviceAdapter> total;

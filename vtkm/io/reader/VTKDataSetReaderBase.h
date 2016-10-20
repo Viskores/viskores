@@ -33,10 +33,6 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/io/ErrorIO.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/lexical_cast.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 #include <algorithm>
 #include <fstream>
 #include <string>
@@ -453,9 +449,9 @@ private:
     {
       try
       {
-        numComponents = boost::lexical_cast<vtkm::IdComponent>(tag);
+        numComponents = std::stoi(tag);
       }
-      catch (boost::bad_lexical_cast &)
+      catch (std::invalid_argument &)
       {
         internal::parseAssert(false);
       }
@@ -600,15 +596,15 @@ protected:
                           vtkm::IdComponent numComponents)
   {
     // string is unsupported for SkipDynamicArray, so it requires some
-    // special handling 
+    // special handling
     if(dataType == "string")
     {
-       const vtkm::Id stringCount = 
+       const vtkm::Id stringCount =
           numComponents * static_cast<vtkm::Id>(numElements);
        for(vtkm::Id i = 0; i < stringCount; ++i)
         {
           std::string trash;
-          this->DataFile->Stream >> trash; 
+          this->DataFile->Stream >> trash;
         }
     }
     else
@@ -617,7 +613,7 @@ protected:
       vtkm::io::internal::SelectTypeAndCall(typeId, numComponents,
                                             SkipDynamicArray(this, numElements));
     }
-    
+
   }
 
   void DoReadDynamicArray(std::string dataType, std::size_t numElements,
