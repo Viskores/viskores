@@ -291,7 +291,7 @@ public:
                                     T,
                                     vtkm::cont::StorageTagBasic> TempArrayType;
 
-/*
+//#if 0
     ReduceKernelType kernel(input.PrepareForInput( DeviceAdapterTag() ),
                             binary_functor);
 
@@ -305,8 +305,8 @@ public:
                                                    inclusiveScanStorage,
                                                    binary_functor);
     return binary_functor(initialValue, scanResult);
-*/
-return initialValue;
+//#endif
+//return initialValue;
   }
 
   //--------------------------------------------------------------------------
