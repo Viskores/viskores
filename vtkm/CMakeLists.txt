@@ -77,7 +77,7 @@ add_subdirectory(interop)
 
 #-----------------------------------------------------------------------------
 #add the benchmarking folder
-#add_subdirectory(benchmarking)
+add_subdirectory(benchmarking)
 
 #-----------------------------------------------------------------------------
 #add the io folder
