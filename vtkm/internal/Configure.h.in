@@ -120,18 +120,15 @@
 #endif
 
 // Define a pair of macros, VTKM_THIRDPARTY_PRE_INCLUDE and VTKM_THIRDPARTY_POST_INCLUDE,
-// that should be wrapped around any #include for a boost or thrust header file. Mostly
+// that should be wrapped around any #include for a tbb or thrust header file. Mostly
 // this is used to set pragmas that dissable warnings that VTK-m checks for
-// but boost and thrust does not.
+// but tbb and thrust does not.
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 
-//We include deprecated-declarations to silence auto_ptr deprecation warnings
-//when using older boost versions ( < 1.61 )
 #define VTK_M_THIRDPARTY_GENERAL_WARNING_PRAGMAS \
   _Pragma("GCC diagnostic ignored \"-Wconversion\"") \
   _Pragma("GCC diagnostic ignored \"-Wshadow\"") \
-  _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"") \
-  _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
 
 // GCC has a unused by set variable warnings that needs to be silenced.
 #if defined(VTKM_GCC)
