@@ -591,7 +591,7 @@ public:
 
     return GetExecutionValue(output, numValues-1);
   }
-//#if 0
+#if 0
   //--------------------------------------------------------------------------
   // Streaming inclusive scan
   template<typename T, class CIn, class COut>
@@ -650,7 +650,7 @@ public:
     }
     return lastResult;
   }
-//#endif
+#endif
   //--------------------------------------------------------------------------
   // Sort
   template<typename T, class Storage, class BinaryCompare>

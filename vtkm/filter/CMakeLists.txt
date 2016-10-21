@@ -62,5 +62,5 @@ vtkm_install_template_sources(${header_template_sources})
 add_subdirectory(internal)
 
 #-----------------------------------------------------------------------------
-#add_subdirectory(testing)
+add_subdirectory(testing)
 

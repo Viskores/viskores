@@ -43,4 +43,4 @@ add_subdirectory(cuda)
 
 
 #-----------------------------------------------------------------------------
-#add_subdirectory(testing)
+add_subdirectory(testing)

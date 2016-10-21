@@ -30,5 +30,5 @@ vtkm_declare_headers(CUDA ${headers})
 add_subdirectory(internal)
 
 if(VTKm_ENABLE_OPENGL_TESTS)
-#  add_subdirectory(testing)
+  add_subdirectory(testing)
 endif()
