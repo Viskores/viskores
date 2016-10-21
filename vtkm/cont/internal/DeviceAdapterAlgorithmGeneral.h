@@ -591,7 +591,7 @@ public:
 
     return GetExecutionValue(output, numValues-1);
   }
-#if 0
+//#if 0
   //--------------------------------------------------------------------------
   // Streaming inclusive scan
   template<typename T, class CIn, class COut>
@@ -639,18 +639,18 @@ public:
       else if (streamIn.GetNumberOfValues() > 0)
       {
         originalValue = streamIn.GetPortalConstControl().Get(0);
-        streamIn.GetPortalControl().Set(0, binary_functor(originalValue, lastResult));
+        //streamIn.GetPortalControl().Set(0, binary_functor(originalValue, lastResult));
       }
 
       lastResult = DerivedAlgorithm::ScanInclusive(streamIn, streamOut, binary_functor);
-      if ((block > 0) && (streamIn.GetNumberOfValues() > 0))
-        streamIn.GetPortalControl().Set(0, originalValue);
+      //if ((block > 0) && (streamIn.GetNumberOfValues() > 0))
+        //streamIn.GetPortalControl().Set(0, originalValue);
 
       streamOut.SyncControlArray();
     }
     return lastResult;
   }
-#endif
+//#endif
   //--------------------------------------------------------------------------
   // Sort
   template<typename T, class Storage, class BinaryCompare>
