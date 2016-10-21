@@ -483,7 +483,7 @@ public:
     return ScanExclusive(input, output, vtkm::Sum(),
                          vtkm::TypeTraits<T>::ZeroInitialization());
   }
-#if 0
+//#if 0
   //--------------------------------------------------------------------------
   // Streaming exclusive scan
   template<typename T, class CIn, class COut>
@@ -540,7 +540,7 @@ public:
     }
     return lastResult;
   }
-#endif
+//#endif
   //--------------------------------------------------------------------------
   // Scan Inclusive
   template<typename T, class CIn, class COut>
