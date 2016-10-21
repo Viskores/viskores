@@ -84,4 +84,4 @@ add_subdirectory(cuda)
 add_subdirectory(tbb)
 
 #-----------------------------------------------------------------------------
-#add_subdirectory(testing)
+add_subdirectory(testing)
