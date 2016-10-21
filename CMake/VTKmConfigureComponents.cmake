@@ -98,11 +98,6 @@ endmacro()
 #-----------------------------------------------------------------------------
 
 macro(vtkm_configure_component_Base)
-  # Find the Boost library.
-  if(NOT Boost_FOUND)
-    find_package(BoostHeaders ${VTKm_FIND_PACKAGE_QUIETLY} ${VTKm_REQUIRED_BOOST_VERSION})
-  endif()
-
   # Set up the compiler flag optimizations
   if (NOT VTKm_Vectorization_flags_added)
     include(VTKmCompilerOptimizations)
@@ -114,8 +109,7 @@ macro(vtkm_configure_component_Base)
   endif()
 
   vtkm_finish_configure_component(Base
-    DEPENDENT_VARIABLES Boost_FOUND VTKm_base_vtkm_target_FOUND
-    ADD_INCLUDES ${Boost_INCLUDE_DIRS}
+    DEPENDENT_VARIABLES VTKm_base_vtkm_target_FOUND
     ADD_LIBRARIES vtkm
     )
 endmacro()

@@ -40,8 +40,6 @@ set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm/cmake")
 
 set(VTKm_EXPORT_NAME "VTKmTargets")
 
-set(VTKm_REQUIRED_BOOST_VERSION "1.48")
-
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
@@ -68,7 +66,7 @@ install(TARGETS vtkm EXPORT ${VTKm_EXPORT_NAME})
 # config.
 vtkm_configure_component_Base()
 if(NOT VTKm_Base_FOUND)
-  message(SEND_ERROR "Could not load base VTK-m component. Perhaps the Boost headers were not found.")
+  message(SEND_ERROR "Could not load base VTK-m component.")
 endif()
 
 #-----------------------------------------------------------------------------
@@ -283,7 +281,6 @@ install(FILES ${VTKm_SOURCE_DIR}/LICENSE.txt
 # Install helper configure files.
 install(
   FILES
-    ${VTKm_SOURCE_DIR}/CMake/FindBoostHeaders.cmake
     ${VTKm_SOURCE_DIR}/CMake/FindEGL.cmake
     ${VTKm_SOURCE_DIR}/CMake/FindGLEW.cmake
     ${VTKm_SOURCE_DIR}/CMake/FindGLFW.cmake
