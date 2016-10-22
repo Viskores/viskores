@@ -76,12 +76,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
     set(CMAKE_CXX_FLAGS_DEBUG
       "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS_WARN_EXTRA}")
   endif()
-elseif(CMAKE_COMPILER_IS_PGIXX)
-  #PGI and boost do not play well together when it comes to detected float128
-  #support. The primary issue is that Boost believes that PGI supports __float128
-  #because it is reporting itself as GCC, but it actually doesn't.
-  #our workaround for this is to manually explicitly disable float128
-  add_definitions("-DBOOST_MATH_DISABLE_FLOAT128=1")
 elseif(CMAKE_COMPILER_IS_ICCXX)
   #Intel compiler offers header level suppression in the form of
   # #pragma warning(disable : 1478), but for warning 1478 it seems to not

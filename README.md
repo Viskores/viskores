@@ -9,12 +9,15 @@ VTK-m is a toolkit of scientific visualization algorithms for emerging processor
 
 The VTK-m repository is located at [https://gitlab.kitware.com/vtk/vtk-m](https://gitlab.kitware.com/vtk/vtk-m)
 
-VTK-m dependencies are:
+VTK-m required dependencies are:
 
++  [CMake 3.3](http://www.cmake.org/download/)
 
-+  [CMake 3.0](http://www.cmake.org/download/)
-+  [Boost 1.52.0](http://www.boost.org) or greater
-+  [Cuda Toolkit 6+](https://developer.nvidia.com/cuda-toolkit) or [Thrust 1.7+](https://thrust.github.com)
+VTK-m optional dependencies are:
+
++  [Cuda Toolkit 7+](https://developer.nvidia.com/cuda-toolkit)
++  [TBB](https://www.threadingbuildingblocks.org/)
+
 
 ```
 git clone https://gitlab.kitware.com/vtk/vtk-m.git vtkm
