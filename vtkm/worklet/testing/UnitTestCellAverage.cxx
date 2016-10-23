@@ -51,7 +51,7 @@ void TestCellAverageUniform3D()
 
 void TestCellAverageUniform2D()
 {
-  std::cout << "Testing CellAverage Worklet on 2D strucutred data" << std::endl;
+  std::cout << "Testing CellAverage Worklet on 2D structured data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
@@ -64,6 +64,7 @@ void TestCellAverageUniform2D()
                     result);
 
   vtkm::Float32 expected[2] = { 30.1f, 40.1f };
+  std::cout << std::endl;
   for (int i = 0; i < 2; ++i)
   {
     VTKM_TEST_ASSERT(
