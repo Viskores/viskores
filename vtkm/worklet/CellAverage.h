@@ -64,6 +64,7 @@ public:
 
 private:
   template<typename PointValueVecType, typename OutType>
+  VTKM_EXEC_EXPORT
   void DoAverage(const PointValueVecType &pointValues,
                  const vtkm::IdComponent &numPoints,
                  OutType &average,
@@ -82,6 +83,7 @@ private:
   template<typename PointValueVecType,
            typename OutType,
            vtkm::IdComponent VecSize>
+  VTKM_EXEC_EXPORT
   void DoAverage(const PointValueVecType &pointValues,
                  const vtkm::IdComponent &numPoints,
                  OutType &average,
@@ -101,6 +103,7 @@ private:
            typename OutType,
            vtkm::IdComponent InVecSize,
            vtkm::IdComponent OutVecSize>
+  VTKM_EXEC_EXPORT
   void DoAverage(const PointValueVecType &vtkmNotUsed(pointValues),
                  const vtkm::IdComponent &vtkmNotUsed(numPoints),
                  OutType &vtkmNotUsed(average),
