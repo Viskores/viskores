@@ -179,70 +179,6 @@ struct NullType
 
 //-----------------------------------------------------------------------------
 template <vtkm::IdComponent Size>
-struct AssignScalarToVec
-{
-  template<typename VectorType, typename ComponentType>
-  VTKM_EXEC_CONT_EXPORT
-  void operator()(VectorType &dest, const ComponentType &src)
-  {
-    for (vtkm::IdComponent i = 0; i < Size; ++i)
-    {
-      dest[i] = src;
-    }
-  }
-};
-
-template<>
-struct AssignScalarToVec<1>
-{
-  template<typename VectorType, typename ComponentType>
-  VTKM_EXEC_CONT_EXPORT
-  void operator()(VectorType &dest, const ComponentType &src)
-  {
-    dest[0] = src;
-  }
-};
-
-template<>
-struct AssignScalarToVec<2>
-{
-  template<typename VectorType, typename ComponentType>
-  VTKM_EXEC_CONT_EXPORT
-  void operator()(VectorType &dest, const ComponentType &src)
-  {
-    dest[0] = src;
-    dest[1] = src;
-  }
-};
-
-template<>
-struct AssignScalarToVec<3>
-{
-  template<typename VectorType, typename ComponentType>
-  VTKM_EXEC_CONT_EXPORT
-  void operator()(VectorType &dest, const ComponentType &src)
-  {
-    dest[0] = src;
-    dest[1] = src;
-    dest[2] = src;
-  }
-};
-
-template<>
-struct AssignScalarToVec<4>
-{
-  template<typename VectorType, typename ComponentType>
-  VTKM_EXEC_CONT_EXPORT
-  void operator()(VectorType &dest, const ComponentType &src)
-  {
-    dest[0] = src;
-    dest[1] = src;
-    dest[2] = src;
-    dest[3] = src;
-  }
-};
-
-template <vtkm::IdComponent Size>
 struct VecComponentWiseUnaryOperation
 {
   template<typename T, typename UnaryOpType>
@@ -427,8 +363,10 @@ protected:
   VTKM_EXEC_CONT_EXPORT
   explicit VecBase(const ComponentType& value)
   {
-    vtkm::internal::AssignScalarToVec<NUM_COMPONENTS>()(
-      this->Components, value);
+    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    {
+      this->Components[i] = value;
+    }
   }
 
   template <typename OtherValueType, typename OtherDerivedType>
