@@ -91,9 +91,9 @@ ApplyPolicy(const vtkm::cont::CoordinateSystem& coordinates,
 template<typename DerivedPolicy, typename FilterType>
 VTKM_CONT_EXPORT
 vtkm::cont::DynamicArrayHandleBase<
-                                  typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList,
-                                  typename DerivedPolicy::CoordinateStorageList
-                                  >
+    typename DerivedPolicy::CoordinateTypeList,
+    typename DerivedPolicy::CoordinateStorageList
+    >
 ApplyPolicy(const vtkm::cont::CoordinateSystem& coordinates,
             const vtkm::filter::PolicyBase<DerivedPolicy>&,
             const vtkm::filter::FilterTraits<FilterType>&)
