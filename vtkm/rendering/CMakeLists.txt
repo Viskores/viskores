@@ -130,11 +130,6 @@ if(VTKm_OpenGL_FOUND)
     list(APPEND headers ${egl_headers})
     list(APPEND sources ${egl_sources})
   endif()
-
-  vtkm_configure_component_GLFW()
-  if(VTKm_GLFW_FOUND)
-    list(APPEND headers ${glfw_headers})
-  endif()
 endif()
 
 if(VTKm_ENABLE_OSMESA AND NOT VTKm_OSMesa_FOUND)
