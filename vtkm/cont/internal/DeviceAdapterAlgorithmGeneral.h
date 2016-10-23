@@ -291,7 +291,6 @@ public:
                                     T,
                                     vtkm::cont::StorageTagBasic> TempArrayType;
 
-//#if 0
     ReduceKernelType kernel(input.PrepareForInput( DeviceAdapterTag() ),
                             binary_functor);
 
@@ -305,13 +304,10 @@ public:
                                                    inclusiveScanStorage,
                                                    binary_functor);
     return binary_functor(initialValue, scanResult);
-//#endif
-//return initialValue;
   }
 
   //--------------------------------------------------------------------------
   // Streaming Reduce
-// #if 0
   template<typename T, class CIn>
   VTKM_CONT_EXPORT static T StreamingReduce(
       const vtkm::Id numBlocks,
@@ -320,7 +316,7 @@ public:
   {
     return DerivedAlgorithm::StreamingReduce(numBlocks, input, initialValue, vtkm::internal::Add());
   }
-//#endif
+
   template<typename T, class CIn, class BinaryFunctor>
   VTKM_CONT_EXPORT static T StreamingReduce(
       const vtkm::Id numBlocks,
@@ -350,8 +346,6 @@ public:
     }
     return lastResult;
   }
-//#endif
-
 
   //--------------------------------------------------------------------------
   // Reduce By Key
@@ -483,7 +477,7 @@ public:
     return ScanExclusive(input, output, vtkm::Sum(),
                          vtkm::TypeTraits<T>::ZeroInitialization());
   }
-//#if 0
+
   //--------------------------------------------------------------------------
   // Streaming exclusive scan
   template<typename T, class CIn, class COut>
@@ -540,7 +534,7 @@ public:
     }
     return lastResult;
   }
-//#endif
+
   //--------------------------------------------------------------------------
   // Scan Inclusive
   template<typename T, class CIn, class COut>
@@ -591,7 +585,7 @@ public:
 
     return GetExecutionValue(output, numValues-1);
   }
-//#if 0
+
   //--------------------------------------------------------------------------
   // Streaming inclusive scan
   template<typename T, class CIn, class COut>
@@ -650,7 +644,7 @@ public:
     }
     return lastResult;
   }
-//#endif
+
   //--------------------------------------------------------------------------
   // Sort
   template<typename T, class Storage, class BinaryCompare>
