@@ -90,13 +90,14 @@ private:
                  std::integral_constant<vtkm::IdComponent,VecSize>,
                  std::integral_constant<vtkm::IdComponent,VecSize>) const
   {
+    using OutComponentType = typename vtkm::VecTraits<OutType>::ComponentType;
     OutType sum = OutType(pointValues[0]);
     for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
       {
       sum = sum + OutType(pointValues[pointIndex]);
       }
 
-    average = sum / OutType(numPoints);
+    average = sum / OutType(static_cast<OutComponentType>(numPoints));
   }
 
   template<typename PointValueVecType,
