@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_internal_VecFromPortalPermute_h
-#define vtk_m_exec_internal_VecFromPortalPermute_h
+#ifndef vtk_m_VecFromPortal_h
+#define vtk_m_VecFromPortal_h
 
 #include <vtkm/Math.h>
 #include <vtkm/Types.h>
@@ -26,113 +26,103 @@
 #include <vtkm/VecTraits.h>
 
 namespace vtkm {
-namespace exec {
-namespace internal {
 
-/// \brief A short vector from an ArrayPortal and a vector of indices.
+/// \brief A short variable-length array from a window in an ArrayPortal.
 ///
-/// The \c VecFromPortalPermute class is a Vec-like class that holds an array
-/// portal and a second Vec-like containing indices into the array. Each value
-/// of this vector is the value from the array with the respective index.
+/// The \c VecFromPortal class is a Vec-like class that holds an array portal
+/// and exposes a small window of that portal as if it were a \c Vec.
 ///
-template<typename IndexVecType, typename PortalType>
-class VecFromPortalPermute
+template<typename PortalType>
+class VecFromPortal
 {
 public:
   using ComponentType =
       typename std::remove_const<typename PortalType::ValueType>::type;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  VecFromPortal() : NumComponents(0), Offset(0) {  }
 
-  VTKM_EXEC
-  VecFromPortalPermute() {  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  VecFromPortal(const PortalType &portal,
+                vtkm::IdComponent numComponents = 0,
+                vtkm::Id offset = 0)
+    : Portal(portal), NumComponents(numComponents), Offset(offset) {  }
 
-  VTKM_EXEC
-  VecFromPortalPermute(const IndexVecType *indices, const PortalType &portal)
-    : Indices(indices), Portal(portal) {  }
-
-  VTKM_EXEC
+  VTKM_EXEC_CONT
   vtkm::IdComponent GetNumberOfComponents() const {
-    return this->Indices->GetNumberOfComponents();
+    return this->NumComponents;
   }
 
-  template<vtkm::IdComponent DestSize>
-  VTKM_EXEC
-  void CopyInto(vtkm::Vec<ComponentType,DestSize> &dest) const
+  template<typename T, vtkm::IdComponent DestSize>
+  VTKM_EXEC_CONT
+  void CopyInto(vtkm::Vec<T,DestSize> &dest) const
   {
-    vtkm::IdComponent numComponents =
-        vtkm::Min(DestSize, this->GetNumberOfComponents());
+    vtkm::IdComponent numComponents = vtkm::Min(DestSize, this->NumComponents);
     for (vtkm::IdComponent index = 0; index < numComponents; index++)
     {
-      dest[index] = (*this)[index];
+      dest[index] = this->Portal.Get(index + this->Offset);
     }
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
+  VTKM_EXEC_CONT
   ComponentType operator[](vtkm::IdComponent index) const
   {
-    return this->Portal.Get((*this->Indices)[index]);
+    return this->Portal.Get(index + this->Offset);
   }
 
 private:
-  const IndexVecType *Indices;
   PortalType Portal;
+  vtkm::IdComponent NumComponents;
+  vtkm::Id Offset;
 };
 
-}
-}
-} // namespace vtkm::exec::internal
-
-// Implementations of traits classes, which by definition are in the vtkm
-// namespace.
-
-namespace vtkm {
-
-template<typename IndexVecType, typename PortalType>
-struct TypeTraits<
-    vtkm::exec::internal::VecFromPortalPermute<IndexVecType,PortalType> >
+template<typename PortalType>
+struct TypeTraits<vtkm::VecFromPortal<PortalType> >
 {
 private:
-  typedef vtkm::exec::internal::VecFromPortalPermute<IndexVecType,PortalType>
-      VecType;
   typedef typename PortalType::ValueType ComponentType;
 
 public:
   typedef typename vtkm::TypeTraits<ComponentType>::NumericTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;
 
-  VTKM_EXEC
-  static VecType ZeroInitialization()
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  static vtkm::VecFromPortal<PortalType> ZeroInitialization()
   {
-    return VecType();
+    return vtkm::VecFromPortal<PortalType>();
   }
 };
 
-template<typename IndexVecType, typename PortalType>
-struct VecTraits<
-    vtkm::exec::internal::VecFromPortalPermute<IndexVecType,PortalType> >
+template<typename PortalType>
+struct VecTraits<vtkm::VecFromPortal<PortalType> >
 {
-  typedef vtkm::exec::internal::VecFromPortalPermute<IndexVecType,PortalType>
-      VecType;
+  typedef vtkm::VecFromPortal<PortalType> VecType;
 
   typedef typename VecType::ComponentType ComponentType;
   typedef vtkm::VecTraitsTagMultipleComponents HasMultipleComponents;
   typedef vtkm::VecTraitsTagSizeVariable IsSizeStatic;
 
-  VTKM_EXEC
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
   static vtkm::IdComponent GetNumberOfComponents(const VecType &vector) {
     return vector.GetNumberOfComponents();
   }
 
-  VTKM_EXEC
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
   static ComponentType GetComponent(const VecType &vector,
                                     vtkm::IdComponent componentIndex)
   {
     return vector[componentIndex];
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template<vtkm::IdComponent destSize>
-  VTKM_EXEC
+  VTKM_EXEC_CONT
   static void CopyInto(const VecType &src,
                        vtkm::Vec<ComponentType,destSize> &dest)
   {
@@ -142,4 +132,4 @@ struct VecTraits<
 
 } // namespace vtkm
 
-#endif //vtk_m_exec_internal_VecFromPortalPermute_h
+#endif //vtk_m_VecFromPortal_h

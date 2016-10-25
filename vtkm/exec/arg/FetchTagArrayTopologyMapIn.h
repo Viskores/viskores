@@ -31,7 +31,7 @@
 #include <vtkm/exec/ConnectivityStructured.h>
 #include <vtkm/VecRectilinearPointCoordinates.h>
 
-#include <vtkm/exec/internal/VecFromPortalPermute.h>
+#include <vtkm/VecFromPortalPermute.h>
 
 namespace vtkm {
 namespace exec {
@@ -68,8 +68,7 @@ struct FetchArrayTopologyMapInImplementation
   // The FieldExecObjectType is expected to behave like an ArrayPortal.
   typedef FieldExecObjectType PortalType;
 
-  typedef vtkm::exec::internal::VecFromPortalPermute<
-      IndexVecType,PortalType> ValueType;
+  using ValueType = vtkm::VecFromPortalPermute<IndexVecType,PortalType>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC

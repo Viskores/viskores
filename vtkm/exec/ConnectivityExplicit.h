@@ -23,7 +23,7 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
 
-#include <vtkm/exec/internal/VecFromPortal.h>
+#include <vtkm/VecFromPortal.h>
 
 namespace vtkm {
 namespace exec {
@@ -72,8 +72,7 @@ public:
     return CellShapeTag(static_cast<vtkm::IdComponent>(this->Shapes.Get(index)));
   }
 
-  typedef vtkm::exec::internal::VecFromPortal<ConnectivityPortalType>
-      IndicesType;
+  using IndicesType = vtkm::VecFromPortal<ConnectivityPortalType>;
 
   /// Returns a Vec-like object containing the indices for the given index.
   /// The object returned is not an actual array, but rather an object that
