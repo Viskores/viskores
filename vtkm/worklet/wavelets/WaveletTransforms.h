@@ -1450,7 +1450,7 @@ public:
   {
     vtkm::Id x, y;
     GetLogicalDim( workIdx, x, y );
-    if( zeroY < 0 && x == zeroX )    // assign zero to a column
+    if( zeroY < 0 && x == zeroX )         // assign zero to a column
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
     else if( zeroX < 0 && y == zeroY )    // assign zero to a row
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );

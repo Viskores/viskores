@@ -163,12 +163,19 @@ public:
                                 ext2Method, dir, false );
       DispatcherType dispatcher( worklet );
       dispatcher.Invoke( ext2, sigIn );
-      if( modeLR )
-        WaveletBase::DeviceAssignZero2DColumn( ext2, extDimX, extDimY,
-                                               extDimX-1, DeviceTag() );
-      else
-        WaveletBase::DeviceAssignZero2DRow( ext2, extDimX, extDimY,
-                                            extDimY-1, DeviceTag() );
+      /* Pad a zero at the end of cDTemp, when cDTemp is forced to have the same
+         length as cATemp. For example, with odd length signal, cA is 1 element
+         longer than cD.  
+       */
+      /* Update 10/24/2016: the extra element of cD shouldn't be zero, just be 
+       * whatever it extends to be.
+       * if( modeLR )
+       *   WaveletBase::DeviceAssignZero2DColumn( ext2, extDimX, extDimY,
+       *                                          extDimX-1, DeviceTag() );
+       * else
+       *   WaveletBase::DeviceAssignZero2DRow( ext2, extDimX, extDimY,
+       *                                       extDimY-1, DeviceTag() );
+       */
     }
     else  // pretendSigPaddedZero
     {
@@ -804,8 +811,6 @@ public:
                            vtkm::Id                               inDimY,
                            vtkm::Id                               inStartX,
                            vtkm::Id                               inStartY,
-                           //vtkm::Id                               inPretendDimX,
-                           //vtkm::Id                               inPretendDimY,
                      const std::vector<vtkm::Id>                  &L,
                            ArrayOutType                           &sigOut,
                            DeviceTag                                      )
