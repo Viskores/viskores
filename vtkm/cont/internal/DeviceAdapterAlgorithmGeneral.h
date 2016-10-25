@@ -611,7 +611,7 @@ public:
     vtkm::Id blockSize = fullSize / numBlocks;
     if (fullSize % numBlocks != 0) blockSize += 1;
 
-    T lastResult, originalValue;
+    T lastResult; //, originalValue;
     for (vtkm::Id block=0; block<numBlocks; block++)
     {
       vtkm::Id numberOfInstances = blockSize;
@@ -632,7 +632,7 @@ public:
       }
       else if (streamIn.GetNumberOfValues() > 0)
       {
-        originalValue = streamIn.GetPortalConstControl().Get(0);
+        //originalValue = streamIn.GetPortalConstControl().Get(0);
         //streamIn.GetPortalControl().Set(0, binary_functor(originalValue, lastResult));
       }
 
