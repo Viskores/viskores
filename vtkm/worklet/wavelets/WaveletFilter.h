@@ -157,53 +157,53 @@ private:
   }
 
   // Flipping operation; helper function to initialize a filter.
-  void wrev( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
+  void wrev( const vtkm::Float64* arrIn, vtkm::Float64* arrOut, vtkm::Id length )
   {
-    for( vtkm::Id count = 0; count < sigLength; count++)
-      sigOut[count] = sigIn[sigLength - count - 1];
+    for( vtkm::Id count = 0; count < length; count++)
+      arrOut[count] = arrIn[length - count - 1];
   }
 
   // Quadrature mirror filtering operation: helper function to initialize a filter.
-  void qmf_even ( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
+  void qmf_even ( const vtkm::Float64* arrIn, vtkm::Float64* arrOut, vtkm::Id length )
   {
-    if( sigLength % 2 == 0 )
+    if( length % 2 == 0 )
     {
-      for (vtkm::Id count = 0; count < sigLength; count++)
+      for (vtkm::Id count = 0; count < length; count++)
       {
-        sigOut[count] = sigIn[sigLength - count - 1];
+        arrOut[count] = arrIn[length - count - 1];
         if (count % 2 != 0)
-          sigOut[count] = -1.0 * sigOut[count];
+          arrOut[count] = -1.0 * arrOut[count];
       }
     }
     else
     {
-      for (vtkm::Id count = 0; count < sigLength; count++)
+      for (vtkm::Id count = 0; count < length; count++)
       {
-        sigOut[count] = sigIn[sigLength - count - 1];
+        arrOut[count] = arrIn[length - count - 1];
         if (count % 2 == 0)
-          sigOut[count] = -1.0 * sigOut[count];
+          arrOut[count] = -1.0 * arrOut[count];
       }
     }
   }
 
   // Flipping and QMF at the same time: helper function to initialize a filter.
-  void qmf_wrev ( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
+  void qmf_wrev ( const vtkm::Float64* arrIn, vtkm::Float64* arrOut, vtkm::Id length )
   {
-    qmf_even( sigIn, sigOut, sigLength );
+    qmf_even( arrIn, arrOut, length );
 
     vtkm::Float64 tmp;
-    for (vtkm::Id count = 0; count < sigLength/2; count++) {
-      tmp = sigOut[count];
-      sigOut[count] = sigOut[sigLength - count - 1];
-      sigOut[sigLength - count - 1] = tmp;
+    for (vtkm::Id count = 0; count < length/2; count++) {
+      tmp = arrOut[count];
+      arrOut[count] = arrOut[length - count - 1];
+      arrOut[length - count - 1] = tmp;
     }
   }
 
   // Verbatim Copying: helper function to initialize a filter.
-  void verbatim_copy ( const vtkm::Float64* sigIn, vtkm::Float64* sigOut, vtkm::Id sigLength )
+  void verbatim_copy ( const vtkm::Float64* arrIn, vtkm::Float64* arrOut, vtkm::Id length )
   {
-    for (vtkm::Id count = 0; count < sigLength; count++)
-      sigOut[count] = sigIn[count];
+    for (vtkm::Id count = 0; count < length; count++)
+      arrOut[count] = arrIn[count];
   }
 
 };    // class WaveletFilter.
