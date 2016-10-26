@@ -56,50 +56,24 @@ public:
   }
 
 
-
   // Returns length of approximation coefficients from a decompostition pass.
   vtkm::Id GetApproxLength( vtkm::Id sigInLen )
   {
-    vtkm::Id filterLen = this->filter.GetFilterLength();
-
-    if (this->filter.isSymmetric()) 
-    {
-      if ( (this->wmode == SYMW && (filterLen % 2 != 0)) ||
-           (this->wmode == SYMH && (filterLen % 2 == 0)) )  
-      {
-        if (sigInLen % 2 != 0)
-          return((sigInLen+1) / 2);
-        else 
-          return((sigInLen) / 2);
-      }
-    }
-
-    return ((sigInLen + filterLen - 1) / 2);
+    if (sigInLen % 2 != 0)
+      return((sigInLen+1) / 2);
+    else 
+      return((sigInLen) / 2);
   }
-
 
 
   // Returns length of detail coefficients from a decompostition pass
   vtkm::Id GetDetailLength( vtkm::Id sigInLen )
   {
-    vtkm::Id filterLen = this->filter.GetFilterLength();
-
-    if (this->filter.isSymmetric()) 
-    {
-      if ( (this->wmode == SYMW && (filterLen % 2 != 0)) ||
-           (this->wmode == SYMH && (filterLen % 2 == 0)) )  
-      {
-        if (sigInLen % 2 != 0)
-          return((sigInLen-1) / 2);
-        else 
-          return((sigInLen) / 2);
-      }
-    }
-
-    return static_cast<vtkm::Id>( vtkm::Floor(
-           static_cast<vtkm::Float64>(sigInLen + filterLen - 1) / 2.0 ) );
+    if (sigInLen % 2 != 0)
+      return((sigInLen-1) / 2);
+    else 
+      return((sigInLen) / 2);
   }
-
 
 
   // Returns length of coefficients generated in a decompostition pass
