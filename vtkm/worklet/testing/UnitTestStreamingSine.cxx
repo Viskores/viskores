@@ -97,14 +97,14 @@ void TestStreamingSine()
   std::cout << "Testing streaming inclusive scan: " << std::endl;
   referenceSum = DeviceAlgorithms::ScanInclusive(input, summation);
   streamSum = DeviceAlgorithms::StreamingScanInclusive(4, input, output);
-  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 10000000.01f), "Wrong sum for streaming inclusive scan");
+  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 1000000.01f), "Wrong sum for streaming inclusive scan");
   //compareArrays(input, output, summation, "Wrong result for streaming inclusive scan");
 
   // Test the streaming inclusive scan with binary operator
   std::cout << "Testing streaming inclusive scan with binary operator: " << std::endl;
   referenceSum = DeviceAlgorithms::ScanInclusive(input, summation, vtkm::Maximum());
   streamSum = DeviceAlgorithms::StreamingScanInclusive(4, input, output, vtkm::Maximum());
-  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 10000000.01f), "Wrong sum for streaming inclusive scan with binary operator");
+  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 1000000.01f), "Wrong sum for streaming inclusive scan with binary operator");
   //compareArrays(input, output, summation, "Wrong result for streaming inclusive scan with binary operator");
 
   // Test the streaming exclusive scan
