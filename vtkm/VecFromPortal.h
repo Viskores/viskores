@@ -25,6 +25,8 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/internal/ArrayPortalValueReference.h>
+
 namespace vtkm {
 
 /// \brief A short variable-length array from a window in an ArrayPortal.
@@ -68,9 +70,11 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ComponentType operator[](vtkm::IdComponent index) const
+  vtkm::internal::ArrayPortalValueReference<PortalType>
+  operator[](vtkm::IdComponent index) const
   {
-    return this->Portal.Get(index + this->Offset);
+    return vtkm::internal::ArrayPortalValueReference<PortalType>(
+          this->Portal, index + this->Offset);
   }
 
 private:

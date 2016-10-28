@@ -25,15 +25,16 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
+#include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
+#include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleZip.h>
-#include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -113,16 +114,16 @@ private:
 
 public:
   struct PassThrough : public vtkm::worklet::WorkletMapField
-{
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef _2 ExecutionSignature(_1);
+  {
+    typedef void ControlSignature(FieldIn<>, FieldOut<>);
+    typedef _2 ExecutionSignature(_1);
 
-  template<class ValueType>
-  VTKM_EXEC
-  ValueType operator()(const ValueType &inValue) const
-  { return inValue; }
+    template<class ValueType>
+    VTKM_EXEC
+    ValueType operator()(const ValueType &inValue) const
+    { return inValue; }
 
-};
+  };
 
 
 private:
@@ -615,6 +616,124 @@ private:
     }
   };
 
+  // GroupVecVariable is a bit strange because it supports values of different
+  // lengths, so a simple pass through worklet will not work. Use custom
+  // worklets.
+  struct GroupVariableInputWorklet : public vtkm::worklet::WorkletMapField
+  {
+    typedef void ControlSignature(FieldIn<>);
+    typedef void ExecutionSignature(_1, WorkIndex);
+
+    template<typename InputType>
+    VTKM_EXEC
+    void operator()(const InputType &input, vtkm::Id workIndex) const
+    {
+      using ComponentType = typename InputType::ComponentType;
+      vtkm::IdComponent expectedSize =
+          static_cast<vtkm::IdComponent>(workIndex + 1);
+      if (expectedSize != input.GetNumberOfComponents())
+      {
+        this->RaiseError("Got unexpected number of components.");
+      }
+
+      vtkm::Id valueIndex = workIndex*(workIndex+1)/2;
+      for (vtkm::IdComponent componentIndex = 0;
+           componentIndex < expectedSize;
+           componentIndex++)
+      {
+        ComponentType expectedValue = TestValue(valueIndex, ComponentType());
+        if (expectedValue != input[componentIndex])
+        {
+          this->RaiseError("Got bad value in GroupVariableInputWorklet.");
+        }
+        valueIndex++;
+      }
+    }
+  };
+
+  struct TestGroupVecVariableAsInput
+  {
+    template<typename ComponentType>
+    VTKM_CONT
+    void operator()(ComponentType) const
+    {
+      vtkm::Id sourceArraySize;
+
+      vtkm::cont::ArrayHandleCounting<vtkm::IdComponent>
+          numComponentsArray(1, 1, ARRAY_SIZE);
+      vtkm::cont::ArrayHandle<vtkm::Id> offsetsArray =
+          vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray,
+                                                    sourceArraySize);
+
+      vtkm::cont::ArrayHandle<ComponentType> sourceArray;
+      sourceArray.Allocate(sourceArraySize);
+      SetPortal(sourceArray.GetPortalControl());
+
+      vtkm::worklet::DispatcherMapField<GroupVariableInputWorklet,DeviceAdapterTag> dispatcher;
+      dispatcher.Invoke(
+            vtkm::cont::make_ArrayHandleGroupVecVariable(
+              sourceArray, offsetsArray));
+    }
+  };
+
+  // GroupVecVariable is a bit strange because it supports values of different
+  // lengths, so a simple pass through worklet will not work. Use custom
+  // worklets.
+  struct GroupVariableOutputWorklet : public vtkm::worklet::WorkletMapField
+  {
+    typedef void ControlSignature(FieldIn<>, FieldOut<>);
+    typedef void ExecutionSignature(_2, WorkIndex);
+
+    template<typename OutputType>
+    VTKM_EXEC
+    void operator()(OutputType &output, vtkm::Id workIndex) const
+    {
+      using ComponentType = typename OutputType::ComponentType;
+      vtkm::IdComponent expectedSize =
+          static_cast<vtkm::IdComponent>(workIndex + 1);
+      if (expectedSize != output.GetNumberOfComponents())
+      {
+        this->RaiseError("Got unexpected number of components.");
+      }
+
+      vtkm::Id valueIndex = workIndex*(workIndex+1)/2;
+      for (vtkm::IdComponent componentIndex = 0;
+           componentIndex < expectedSize;
+           componentIndex++)
+      {
+        output[componentIndex] = TestValue(valueIndex, ComponentType());
+        valueIndex++;
+      }
+    }
+  };
+
+  struct TestGroupVecVariableAsOutput
+  {
+    template<typename ComponentType>
+    VTKM_CONT
+    void operator()(ComponentType) const
+    {
+      vtkm::Id sourceArraySize;
+
+      vtkm::cont::ArrayHandleCounting<vtkm::IdComponent>
+          numComponentsArray(1, 1, ARRAY_SIZE);
+      vtkm::cont::ArrayHandle<vtkm::Id> offsetsArray =
+          vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray,
+                                                    sourceArraySize);
+
+      vtkm::cont::ArrayHandle<ComponentType> sourceArray;
+      sourceArray.Allocate(sourceArraySize);
+
+      vtkm::worklet::DispatcherMapField<GroupVariableOutputWorklet,DeviceAdapterTag> dispatcher;
+      dispatcher.Invoke(
+            vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
+            vtkm::cont::make_ArrayHandleGroupVecVariable(
+              sourceArray, offsetsArray));
+
+      CheckPortal(sourceArray.GetPortalConstControl());
+    }
+  };
+
   struct TestZipAsInput
   {
     template< typename KeyType, typename ValueType >
@@ -857,6 +976,18 @@ private:
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecAsOutput<3>(),
                               ScalarTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleGroupVecVariable as Input" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+            TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecVariableAsInput(),
+            ScalarTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleGroupVecVariable as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+            TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecVariableAsOutput(),
+            ScalarTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleZip as Input" << std::endl;
