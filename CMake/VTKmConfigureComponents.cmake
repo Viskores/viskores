@@ -235,7 +235,7 @@ macro(vtkm_configure_component_Rendering)
 
   vtkm_finish_configure_component(Rendering
     DEPENDENT_VARIABLES VTKm_ENABLE_RENDERING VTKm_Base_FOUND
-    ADD_LIBRARIES vtkm_rendering ${GLEW_LIBRARIES}
+    ADD_LIBRARIES vtkm_rendering
     )
 endmacro(vtkm_configure_component_Rendering)
 
