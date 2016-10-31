@@ -1199,7 +1199,7 @@ private:
                             values,
                             keysOut,
                             valuesOut,
-                            vtkm::internal::Add() );
+                           vtkm::Add() );
 
     VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
                     "Got wrong number of output keys");
@@ -1240,7 +1240,7 @@ private:
                             values,
                             keysOut,
                             valuesOut,
-                            vtkm::internal::Multiply() );
+                            vtkm::Multiply() );
 
     VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
                     "Got wrong number of output keys");
@@ -1303,7 +1303,7 @@ private:
                         valuesZip,
                         keysOut,
                         valuesOutZip,
-                        vtkm::internal::Add() );
+                       vtkm::Add() );
 
     VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
                 "Got wrong number of output keys");
@@ -1372,7 +1372,7 @@ private:
                                                                    ARRAY_SIZE);
 
     vtkm::Float64 product = Algorithm::ScanInclusive(array, array,
-                                                     vtkm::internal::Multiply());
+                                                     vtkm::Multiply());
 
     VTKM_TEST_ASSERT(product == 0.0f, "ScanInclusive product result not 0.0");
     for (vtkm::Id i = 0; i < mid; ++i)
@@ -1514,7 +1514,7 @@ private:
 
     vtkm::Float64 initialValue = 2.00;
     vtkm::Float64 product = Algorithm::ScanExclusive(array, array,
-        vtkm::internal::Multiply(), initialValue);
+        vtkm::Multiply(), initialValue);
 
     VTKM_TEST_ASSERT(product == 0.0f, "ScanExclusive product result not 0.0");
     VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(0) == initialValue,

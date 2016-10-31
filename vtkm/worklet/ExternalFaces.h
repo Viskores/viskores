@@ -372,7 +372,7 @@ public:
                                                                    ones,
                                                                    uniqueFaceVertices,
                                                                    uniqueFaceCounts,
-                                                                   vtkm::internal::Add());
+                                                                  vtkm::Add());
 #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
     std::cout << "ReduceByKey_Adapter," << timer.GetElapsedTime() << "\n";
 #endif

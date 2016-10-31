@@ -256,7 +256,7 @@ public:
   VTKM_CONT_EXPORT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
   {
-    return DerivedAlgorithm::Reduce(input, initialValue, vtkm::internal::Add());
+    return DerivedAlgorithm::Reduce(input, initialValue,vtkm::Add());
   }
 
  template<typename T, class CIn, class BinaryFunctor>
@@ -444,7 +444,7 @@ public:
   {
     return DerivedAlgorithm::ScanInclusive(input,
                                             output,
-                                            vtkm::internal::Add());
+                                           vtkm::Add());
   }
 
   template<typename T, class CIn, class COut, class BinaryFunctor>

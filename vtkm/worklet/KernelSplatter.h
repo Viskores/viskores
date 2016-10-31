@@ -561,7 +561,7 @@ struct KernelSplatterFilterUniformGrid
                 splatValues,
                 uniqueVoxelIds,
                 voxelSplatSums,
-                vtkm::internal::Add());
+               vtkm::Add());
         END_TIMER_BLOCK(ReduceByKey)
 
         debug::OutputArrayDebug(neighborVoxelIds, "neighborVoxelIds");

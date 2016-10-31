@@ -53,7 +53,7 @@ public:
   VTKM_CONT_EXPORT static T Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
   {
-    return Reduce(input, initialValue, vtkm::internal::Add());
+    return Reduce(input, initialValue,vtkm::Add());
   }
 
  template<typename T, class CIn, class BinaryFunctor>

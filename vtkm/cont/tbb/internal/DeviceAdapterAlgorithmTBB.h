@@ -94,7 +94,7 @@ public:
     return tbb::ScanInclusivePortals(
           input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
           output.PrepareForOutput(input.GetNumberOfValues(),
-              vtkm::cont::DeviceAdapterTagTBB()), vtkm::internal::Add());
+              vtkm::cont::DeviceAdapterTagTBB()),vtkm::Add());
   }
 
   template<typename T, class CIn, class COut, class BinaryFunctor>
@@ -118,7 +118,7 @@ public:
           input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
           output.PrepareForOutput(input.GetNumberOfValues(),
             vtkm::cont::DeviceAdapterTagTBB()),
-          vtkm::internal::Add(), vtkm::TypeTraits<T>::ZeroInitialization());
+         vtkm::Add(), vtkm::TypeTraits<T>::ZeroInitialization());
   }
 
   template<typename T, class CIn, class COut, class BinaryFunctor>
