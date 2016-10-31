@@ -301,6 +301,7 @@ int DecodePNG(std::vector<unsigned char>& out_image, unsigned long& image_width,
     {
       error = 0;
       info.width = 0; info.height = 0; //changed if header read successfully
+      info.key_r = info.key_g = info.key_b = 0;
       if(size == 0 || in == 0) { error = 48; return; } //the given data is empty
       readPngHeader(&in[0], size); if(error) return;
       std::size_t pos = 33; //first byte of the first chunk after the header
