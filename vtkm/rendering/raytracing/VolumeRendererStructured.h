@@ -221,7 +221,7 @@ public:
         //normalize scalar
         finalScalar = (finalScalar - MinScalar) * InverseDeltaScalar;
 
-        vtkm::Id colorIndex = vtkm::Id(finalScalar * ColorMapSize);
+        vtkm::Id colorIndex = static_cast<vtkm::Id>(finalScalar) * ColorMapSize;
         //colorIndex = vtkm::Min(ColorMapSize, vtkm::Max(0,colorIndex));
         vtkm::Vec<vtkm::Float32,4> sampleColor = ColorMap.Get(colorIndex);
         //sampleColor[3] = .05f;
