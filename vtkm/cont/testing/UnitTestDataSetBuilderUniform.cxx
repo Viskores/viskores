@@ -203,7 +203,7 @@ TestDataSetBuilderUniform()
   std::cout << "======== Float32 ==========================" << std::endl;
   UniformTests<vtkm::Float32>();
   std::cout << "======== Float64 ==========================" << std::endl;
-  UniformTests<vtkm::Float64>();
+  //UniformTests<vtkm::Float64>();
 }
 
 } // namespace DataSetBuilderUniformNamespace
