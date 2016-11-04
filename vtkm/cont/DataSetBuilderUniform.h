@@ -33,48 +33,68 @@ public:
     DataSetBuilderUniform() {}
 
     //1D uniform grid
+    template <typename T>
     VTKM_CONT_EXPORT
     static
     vtkm::cont::DataSet
     Create(const vtkm::Id &dimension,
-           const vtkm::FloatDefault &origin = 0.0f,
-           const vtkm::FloatDefault &spacing = 1.0f,
+           const T &origin, const T &spacing,
            std::string coordNm="coords", std::string cellNm="cells")
     {
-      vtkm::Vec<vtkm::FloatDefault,3> origin3d(origin, 0.0f, 0.0f);
-      vtkm::Vec<vtkm::FloatDefault,3> spacing3d(spacing, 1.0f, 1.0f);
+      vtkm::Vec<T,3> origin3d(origin, 0, 0);
+      vtkm::Vec<T,3> spacing3d(spacing, 1, 1);
       return DataSetBuilderUniform::CreateDS(1,
                                              dimension,1,1,
                                              origin3d,
                                              spacing3d,
                                              coordNm, cellNm);
-    }    
+    }
+    
+    VTKM_CONT_EXPORT
+    static
+    vtkm::cont::DataSet
+    Create(const vtkm::Id &dimension,
+           std::string coordNm="coords", std::string cellNm="cells")
+    {
+        vtkm::FloatDefault origin(0), spacing(1);
+        return Create(dimension, origin, spacing, coordNm, cellNm);
+    }
 
     //2D uniform grids.
+    template <typename T>
     VTKM_CONT_EXPORT
     static
     vtkm::cont::DataSet
     Create(const vtkm::Id2 &dimensions,
-           const vtkm::Vec<vtkm::FloatDefault,2> &origin = vtkm::Vec<vtkm::FloatDefault,2>(0.0f),
-           const vtkm::Vec<vtkm::FloatDefault,2> &spacing = vtkm::Vec<vtkm::FloatDefault,2>(1.0f),
+           const vtkm::Vec<T,2> &origin, const vtkm::Vec<T,2> &spacing,
            std::string coordNm="coords", std::string cellNm="cells")
     {
-      vtkm::Vec<vtkm::FloatDefault,3> origin3d(origin[0], origin[1], 0.0f);
-      vtkm::Vec<vtkm::FloatDefault,3> spacing3d(spacing[0], spacing[1], 1.0f);
+      vtkm::Vec<T,3> origin3d(origin[0], origin[1], 0);
+      vtkm::Vec<T,3> spacing3d(spacing[0], spacing[1], 1);
       return DataSetBuilderUniform::CreateDS(2,
                                              dimensions[0],dimensions[1],1,
                                              origin3d,
                                              spacing3d,
                                              coordNm, cellNm);
     }
+    
+    VTKM_CONT_EXPORT
+    static
+    vtkm::cont::DataSet
+    Create(const vtkm::Id2 &dimensions,
+           std::string coordNm="coords", std::string cellNm="cells")
+    {
+        vtkm::Vec<vtkm::FloatDefault,2> origin(0), spacing(1);
+        return Create(dimensions, origin, spacing, coordNm, cellNm);
+    }
 
     //3D uniform grids.
+    template <typename T>    
     VTKM_CONT_EXPORT
     static
     vtkm::cont::DataSet
     Create(const vtkm::Id3 &dimensions,
-           const vtkm::Vec<vtkm::FloatDefault,3> &origin = vtkm::Vec<vtkm::FloatDefault,3>(0.0f),
-           const vtkm::Vec<vtkm::FloatDefault,3> &spacing = vtkm::Vec<vtkm::FloatDefault,3>(1.0f),
+           const vtkm::Vec<T,3> &origin, const vtkm::Vec<T,3> &spacing,
            std::string coordNm="coords", std::string cellNm="cells")
     {
       return DataSetBuilderUniform::CreateDS(
@@ -84,6 +104,16 @@ public:
             spacing,
             coordNm, cellNm);
     }
+    
+    VTKM_CONT_EXPORT
+    static
+    vtkm::cont::DataSet
+    Create(const vtkm::Id3 &dimensions,
+           std::string coordNm="coords", std::string cellNm="cells")
+    {
+      vtkm::Vec<vtkm::FloatDefault,3> origin(0), spacing(1);
+      return Create(dimensions, origin, spacing, coordNm, cellNm);
+    }    
 
 private:
     VTKM_CONT_EXPORT
