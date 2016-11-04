@@ -87,8 +87,7 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
 template <typename T>
 vtkm::Range FillMethod(vtkm::IdComponent method,
                        vtkm::Id dimensionSize,
-                       T &origin,
-                       T &spacing)
+                       T &origin, T &spacing)
 {
   switch (method)
   {
