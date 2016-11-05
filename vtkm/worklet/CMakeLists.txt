@@ -36,6 +36,7 @@ set(headers
   MarchingCubes.h
   MarchingCubesDataTables.h
   PointElevation.h
+  RemoveUnusedPoints.h
   ScatterCounting.h
   ScatterIdentity.h
   ScatterUniform.h

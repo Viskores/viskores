@@ -40,15 +40,12 @@ namespace detail {
 template<typename Device>
 struct ReverseInputToOutputMapKernel : vtkm::exec::FunctorBase
 {
-  typedef typename
-    vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<Device>::PortalConst
-    InputMapType;
-  typedef typename
-    vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<Device>::Portal
-    OutputMapType;
-  typedef typename
-    vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<Device>::Portal
-    VisitType;
+  using InputMapType = typename
+    vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<Device>::PortalConst;
+  using OutputMapType = typename
+    vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<Device>::Portal;
+  using VisitType = typename
+    vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<Device>::Portal;
 
   InputMapType InputToOutputMap;
   OutputMapType OutputToInputMap;
@@ -95,12 +92,10 @@ struct ReverseInputToOutputMapKernel : vtkm::exec::FunctorBase
 template<typename Device>
 struct SubtractToVisitIndexKernel : vtkm::exec::FunctorBase
 {
-  typedef typename
-    vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<Device>::PortalConst
-    StartsOfGroupsType;
-  typedef typename
-    vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<Device>::Portal
-    VisitType;
+  using StartsOfGroupsType = typename
+    vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<Device>::PortalConst;
+  using VisitType = typename
+    vtkm::cont::ArrayHandle<vtkm::IdComponent>::ExecutionTypes<Device>::Portal;
 
   StartsOfGroupsType StartsOfGroups;
   VisitType Visit;
@@ -121,6 +116,37 @@ struct SubtractToVisitIndexKernel : vtkm::exec::FunctorBase
   }
 };
 
+template<typename Device>
+struct AdjustMapByOne : vtkm::exec::FunctorBase
+{
+  using OffByOnePortalType = typename
+    vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<Device>::PortalConst;
+  using CorrectedPortalType = typename
+    vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<Device>::Portal;
+
+  OffByOnePortalType MapOffByOne;
+  CorrectedPortalType MapCorrected;
+
+  VTKM_CONT
+  AdjustMapByOne(const OffByOnePortalType &mapOffByOne,
+                 const CorrectedPortalType &mapCorrected)
+    : MapOffByOne(mapOffByOne), MapCorrected(mapCorrected)
+  {  }
+
+  VTKM_EXEC
+  void operator()(vtkm::Id index) const
+  {
+    if (index != 0)
+    {
+      this->MapCorrected.Set(index, this->MapOffByOne.Get(index-1));
+    }
+    else
+    {
+      this->MapCorrected.Set(0, 0);
+    }
+  }
+};
+
 } // namespace detail
 
 /// \brief A scatter that maps input to some numbers of output.
@@ -137,14 +163,24 @@ struct SubtractToVisitIndexKernel : vtkm::exec::FunctorBase
 ///
 struct ScatterCounting
 {
+  /// Construct a \c ScatterCounting object using an array of counts for the
+  /// number of outputs for each input. Part of the construction requires
+  /// generating an input to output map, but this map is not needed for the
+  /// operations of \c ScatterCounting, so by default it is deleted. However,
+  /// other users might make use of it, so you can instruct the constructor
+  /// to save the input to output map.
+  ///
   template<typename CountArrayType, typename Device>
   VTKM_CONT
-  ScatterCounting(const CountArrayType &countArray, Device)
+  ScatterCounting(const CountArrayType &countArray,
+                  Device,
+                  bool saveInputToOutputMap = false)
   {
-    this->BuildArrays(countArray, Device());
+    this->BuildArrays(countArray, Device(), saveInputToOutputMap);
   }
 
   typedef vtkm::cont::ArrayHandle<vtkm::Id> OutputToInputMapType;
+
   template<typename RangeType>
   VTKM_CONT
   OutputToInputMapType GetOutputToInputMap(RangeType) const
@@ -180,33 +216,48 @@ struct ScatterCounting
     return this->GetOutputRange(inputRange[0]*inputRange[1]*inputRange[2]);
   }
 
+  VTKM_CONT
+  OutputToInputMapType GetOutputToInputMap() const
+  {
+    return this->OutputToInputMap;
+  }
+
+  /// This array will not be valid unless explicitly instructed to be saved.
+  /// (See documentation for the constructor.)
+  ///
+  VTKM_CONT
+  vtkm::cont::ArrayHandle<vtkm::Id> GetInputToOutputMap() const
+  {
+    return this->InputToOutputMap;
+  }
+
 private:
   vtkm::Id InputRange;
+  vtkm::cont::ArrayHandle<vtkm::Id> InputToOutputMap;
   OutputToInputMapType OutputToInputMap;
   VisitArrayType VisitArray;
 
   template<typename CountArrayType, typename Device>
   VTKM_CONT
-  void BuildArrays(const CountArrayType &count, Device)
+  void BuildArrays(const CountArrayType &count,
+                   Device,
+                   bool saveInputToOutputMap)
   {
     VTKM_IS_ARRAY_HANDLE(CountArrayType);
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
     this->InputRange = count.GetNumberOfValues();
 
-    // Currently we are treating the input to output map as a temporary
-    // variable. However, it is possible that this could, be useful elsewhere,
-    // so we may want to save this and make it available.
-    //
     // The input to output map is actually built off by one. The first entry
     // is actually for the second value. The last entry is the total number of
     // output. This off-by-one is so that an upper bound find will work when
-    // building the output to input map.
-    vtkm::cont::ArrayHandle<vtkm::Id> inputToOutputMap;
+    // building the output to input map. Later we will either correct the
+    // map or delete it.
+    vtkm::cont::ArrayHandle<vtkm::Id> inputToOutputMapOffByOne;
     vtkm::Id outputSize =
         vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanInclusive(
           vtkm::cont::make_ArrayHandleCast(count, vtkm::Id()),
-          inputToOutputMap);
+          inputToOutputMapOffByOne);
 
     // We have implemented two different ways to compute the output to input
     // map. The first way is to use a binary search on each output index into
@@ -221,12 +272,24 @@ private:
     if (outputSize < this->InputRange)
     {
       this->BuildOutputToInputMapWithFind(
-            outputSize, inputToOutputMap, Device());
+            outputSize, inputToOutputMapOffByOne, Device());
     }
     else
     {
       this->BuildOutputToInputMapWithIterate(
-            outputSize, inputToOutputMap, Device());
+            outputSize, inputToOutputMapOffByOne, Device());
+    }
+
+    if (saveInputToOutputMap)
+    {
+      // Since we are saving it, correct the input to output map.
+      detail::AdjustMapByOne<Device>
+          kernel(inputToOutputMapOffByOne.PrepareForInput(Device()),
+                 this->InputToOutputMap.PrepareForOutput(this->InputRange,
+                                                         Device()));
+
+      vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
+            kernel, this->InputRange);
     }
   }
 
@@ -234,15 +297,12 @@ private:
   VTKM_CONT
   void BuildOutputToInputMapWithFind(
       vtkm::Id outputSize,
-      vtkm::cont::ArrayHandle<vtkm::Id> inputToOutputMap,
+      vtkm::cont::ArrayHandle<vtkm::Id> inputToOutputMapOffByOne,
       Device)
   {
     vtkm::cont::ArrayHandleIndex outputIndices(outputSize);
     vtkm::cont::DeviceAdapterAlgorithm<Device>::UpperBounds(
-          inputToOutputMap, outputIndices, this->OutputToInputMap);
-
-    // Do not need this anymore.
-    inputToOutputMap.ReleaseResources();
+          inputToOutputMapOffByOne, outputIndices, this->OutputToInputMap);
 
     vtkm::cont::ArrayHandle<vtkm::Id> startsOfGroups;
 
@@ -260,17 +320,17 @@ private:
   VTKM_CONT
   void BuildOutputToInputMapWithIterate(
       vtkm::Id outputSize,
-      vtkm::cont::ArrayHandle<vtkm::Id> inputToOutputMap,
+      vtkm::cont::ArrayHandle<vtkm::Id> inputToOutputMapOffByOne,
       Device)
   {
     detail::ReverseInputToOutputMapKernel<Device>
-        kernel(inputToOutputMap.PrepareForInput(Device()),
+        kernel(inputToOutputMapOffByOne.PrepareForInput(Device()),
                this->OutputToInputMap.PrepareForOutput(outputSize, Device()),
                this->VisitArray.PrepareForOutput(outputSize, Device()),
                outputSize);
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
-          kernel, inputToOutputMap.GetNumberOfValues());
+          kernel, inputToOutputMapOffByOne.GetNumberOfValues());
   }
 };
 
