@@ -68,8 +68,7 @@ public:
   VTKM_EXEC
   CellShapeTag GetCellShape(vtkm::Id index) const
   {
-    // Likewise, should Shapes be vtkm::Id or something smaller?
-    return CellShapeTag(static_cast<vtkm::IdComponent>(this->Shapes.Get(index)));
+    return CellShapeTag(this->Shapes.Get(index));
   }
 
   using IndicesType = vtkm::VecFromPortal<ConnectivityPortalType>;
