@@ -132,6 +132,9 @@ template< typename OriginalCellSet,
           typename PermutationArrayHandleType = vtkm::cont::ArrayHandle< vtkm::Id, VTKM_DEFAULT_CELLSET_PERMUTATION_STORAGE_TAG > >
 class CellSetPermutation : public vtkm::cont::internal::CellSetGeneralPermutation<OriginalCellSet, PermutationArrayHandleType>
 {
+  VTKM_IS_CELL_SET(OriginalCellSet);
+  VTKM_IS_ARRAY_HANDLE(PermutationArrayHandleType);
+
   typedef typename vtkm::cont::internal::CellSetGeneralPermutation<
       OriginalCellSet, PermutationArrayHandleType> ParentType;
 public:
@@ -150,6 +153,32 @@ public:
   }
 
 };
+
+template<typename OriginalCellSet, typename PermutationArrayHandleType>
+vtkm::cont::CellSetPermutation<OriginalCellSet,PermutationArrayHandleType>
+make_CellSetPermutation(const PermutationArrayHandleType &cellIndexMap,
+                        const OriginalCellSet &cellSet,
+                        const std::string &name)
+{
+  VTKM_IS_CELL_SET(OriginalCellSet);
+  VTKM_IS_ARRAY_HANDLE(PermutationArrayHandleType);
+
+  return vtkm::cont::CellSetPermutation<
+      OriginalCellSet,PermutationArrayHandleType>(
+        cellIndexMap, cellSet, name);
+}
+
+template<typename OriginalCellSet, typename PermutationArrayHandleType>
+vtkm::cont::CellSetPermutation<OriginalCellSet,PermutationArrayHandleType>
+make_CellSetPermutation(const PermutationArrayHandleType &cellIndexMap,
+                        const OriginalCellSet &cellSet)
+{
+  VTKM_IS_CELL_SET(OriginalCellSet);
+  VTKM_IS_ARRAY_HANDLE(PermutationArrayHandleType);
+
+  return vtkm::cont::make_CellSetPermutation(
+        cellIndexMap, cellSet, cellSet.GetName());
+}
 
 }
 } // namespace vtkm::cont

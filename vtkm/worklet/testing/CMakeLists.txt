@@ -20,6 +20,7 @@
 
 set(unit_tests
   UnitTestCellAverage.cxx
+  UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx
   UnitTestClipping.cxx
   UnitTestExternalFaces.cxx

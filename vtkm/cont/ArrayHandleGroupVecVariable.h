@@ -443,11 +443,12 @@ make_ArrayHandleGroupVecVariable(const SourceArrayHandleType &sourceArray,
 
 namespace detail {
 
-template<typename NumComponentsArrayType>
+template<typename NumComponentsArrayType,
+         typename OffsetsArrayType>
 struct ConvertNumComponentsToOffsetsFunctor
 {
   const NumComponentsArrayType NumComponentsArray;
-  vtkm::cont::ArrayHandle<vtkm::Id> OffsetsArray;
+  OffsetsArrayType OffsetsArray;
   vtkm::Id SourceArraySize;
 
   VTKM_CONT
@@ -468,16 +469,19 @@ struct ConvertNumComponentsToOffsetsFunctor
   }
 };
 
-template<typename NumComponentsArrayType>
+template<typename NumComponentsArrayType,
+         typename OffsetsArrayType>
 VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Id>
-DoConvertNumComponentsToOffsets(const NumComponentsArrayType &numComponentsArray,
-                                vtkm::Id &sourceArraySize)
+void DoConvertNumComponentsToOffsets(
+    const NumComponentsArrayType &numComponentsArray,
+    OffsetsArrayType &offsetsArray,
+    vtkm::Id &sourceArraySize)
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
+  VTKM_IS_ARRAY_HANDLE(OffsetsArrayType);
 
-  detail::ConvertNumComponentsToOffsetsFunctor<NumComponentsArrayType>
-      functor(numComponentsArray);
+  detail::ConvertNumComponentsToOffsetsFunctor<
+      NumComponentsArrayType,OffsetsArrayType> functor(numComponentsArray);
   bool success = vtkm::cont::TryExecute(functor);
 
   if (!success)
@@ -488,7 +492,7 @@ DoConvertNumComponentsToOffsets(const NumComponentsArrayType &numComponentsArray
   }
 
   sourceArraySize = functor.SourceArraySize;
-  return functor.OffsetsArray;
+  offsetsArray = functor.OffsetsArray;
 }
 
 } // namespace detail
@@ -501,6 +505,32 @@ DoConvertNumComponentsToOffsets(const NumComponentsArrayType &numComponentsArray
 /// If an optional second parameter is given, the expected size of the source
 /// values array is returned in it.
 ///
+template<typename NumComponentsArrayType,
+         typename OffsetsStorage>
+VTKM_CONT
+void ConvertNumComponentsToOffsets(
+    const NumComponentsArrayType &numComponentsArray,
+    vtkm::cont::ArrayHandle<vtkm::Id,OffsetsStorage> &offsetsArray,
+    vtkm::Id &sourceArraySize)
+{
+  VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
+
+  detail::DoConvertNumComponentsToOffsets(
+        vtkm::cont::make_ArrayHandleCast<vtkm::Id>(numComponentsArray),
+        offsetsArray,
+        sourceArraySize);
+}
+template<typename NumComponentsArrayType,
+         typename OffsetsStorage>
+VTKM_CONT
+void ConvertNumComponentsToOffsets(
+    const NumComponentsArrayType &numComponentsArray,
+    vtkm::cont::ArrayHandle<vtkm::Id,OffsetsStorage> &offsetsArray)
+{
+  vtkm::Id dummy;
+  vtkm::cont::ConvertNumComponentsToOffsets(
+        numComponentsArray, offsetsArray, dummy);
+}
 template<typename NumComponentsArrayType>
 VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Id>
@@ -509,19 +539,10 @@ ConvertNumComponentsToOffsets(const NumComponentsArrayType &numComponentsArray,
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
 
-  return detail::DoConvertNumComponentsToOffsets(
-        vtkm::cont::make_ArrayHandleCast<vtkm::Id>(numComponentsArray),
-        sourceArraySize);
-}
-template<typename StorageTag>
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Id>
-ConvertNumComponentsToOffsets(
-    const vtkm::cont::ArrayHandle<vtkm::Id,StorageTag> &numComponentsArray,
-    vtkm::Id &sourceArraySize)
-{
-  return detail::DoConvertNumComponentsToOffsets(numComponentsArray,
-                                                 sourceArraySize);
+  vtkm::cont::ArrayHandle<vtkm::Id> offsetsArray;
+  vtkm::cont::ConvertNumComponentsToOffsets(
+        numComponentsArray, offsetsArray, sourceArraySize);
+  return offsetsArray;
 }
 template<typename NumComponentsArrayType>
 VTKM_CONT
@@ -529,7 +550,7 @@ vtkm::cont::ArrayHandle<vtkm::Id>
 ConvertNumComponentsToOffsets(const NumComponentsArrayType &numComponentsArray)
 {
   vtkm::Id dummy;
-  return ConvertNumComponentsToOffsets(numComponentsArray, dummy);
+  return vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, dummy);
 }
 
 }

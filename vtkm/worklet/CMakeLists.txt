@@ -26,6 +26,7 @@ set(headers
   WorkletMapTopology.h
   AverageByKey.h
   CellAverage.h
+  CellDeepCopy.h
   Clip.h
   ExternalFaces.h
   FieldHistogram.h
