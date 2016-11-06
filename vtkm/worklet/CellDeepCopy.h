@@ -23,6 +23,7 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
@@ -87,7 +88,7 @@ struct CellDeepCopy
       vtkm::cont::CellSetExplicit<ShapeStorage,NumIndicesStorage,ConnectivityStorage,OffsetsStorage> &outCellSet,
       Device)
   {
-    VTKM_IS_CELL_SET(InCellSetType);
+    VTKM_IS_DYNAMIC_OR_STATIC_CELL_SET(InCellSetType);
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent,NumIndicesStorage> numIndices;
 
@@ -120,7 +121,7 @@ struct CellDeepCopy
   static vtkm::cont::CellSetExplicit<>
   Run(const InCellSetType &inCellSet, Device)
   {
-    VTKM_IS_CELL_SET(InCellSetType);
+    VTKM_IS_DYNAMIC_OR_STATIC_CELL_SET(InCellSetType);
 
     vtkm::cont::CellSetExplicit<> outCellSet;
     Run(inCellSet, outCellSet, Device());

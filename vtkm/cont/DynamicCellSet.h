@@ -359,6 +359,34 @@ struct DynamicTransformTraits<
 
 } // namespace internal
 
+namespace internal {
+
+/// Checks to see if the given object is a dynamic cell set. It contains a
+/// typedef named \c type that is either std::true_type or std::false_type.
+/// Both of these have a typedef named value with the respective boolean value.
+///
+template<typename T>
+struct DynamicCellSetCheck
+{
+  using type = std::false_type;
+};
+
+template<typename CellSetList>
+struct DynamicCellSetCheck<vtkm::cont::DynamicCellSetBase<CellSetList> >
+{
+  using type = std::true_type;
+};
+
+#define VTKM_IS_DYNAMIC_CELL_SET(T) \
+  VTKM_STATIC_ASSERT(::vtkm::cont::internal::DynamicCellSetCheck<T>::type::value)
+
+#define VTKM_IS_DYNAMIC_OR_STATIC_CELL_SET(T) \
+  VTKM_STATIC_ASSERT( \
+      ::vtkm::cont::internal::CellSetCheck<T>::type::value || \
+      ::vtkm::cont::internal::DynamicCellSetCheck<T>::type::value)
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 
