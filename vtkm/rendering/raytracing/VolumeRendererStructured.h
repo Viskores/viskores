@@ -155,7 +155,7 @@ public:
             |/         |/     |/
             0----------1      |__ x
       */
-      vtkm::Vec<vtkm::Float32,3> bottomLeft(0);
+      vtkm::Vec<vtkm::Float32,3> bottomLeft(0,0,0);
       bool newCell = true;
       //check to see if we left the cell
       vtkm::Float32 tx = 0.f;
@@ -364,8 +364,8 @@ public:
       vtkm::Float32 ty = 2.f;
       vtkm::Float32 tz = 2.f;
       vtkm::Float32 scalar0 = 0.f;
-      vtkm::Vec<vtkm::Float32,4> sampleColor;
-      vtkm::Vec<vtkm::Float32,3> bottomLeft;
+      vtkm::Vec<vtkm::Float32,4> sampleColor(0,0,0,0);
+      vtkm::Vec<vtkm::Float32,3> bottomLeft(0,0,0);
       while(currentDistance < lastSample)
       {
         if( tx > 1.f ) newCell = true;
@@ -531,7 +531,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
             |/         |/     |/
             0----------1      |__ x
       */
-      vtkm::Vec<vtkm::Float32,3> bottomLeft;
+      vtkm::Vec<vtkm::Float32,3> bottomLeft(0,0,0);
       bool newCell = true;
       //check to see if we left the cell
       vtkm::Float32 tx = 0.f;
