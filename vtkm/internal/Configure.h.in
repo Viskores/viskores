@@ -283,6 +283,17 @@
 //turn off this problematic warning for everybody.
 //
 #pragma warning(disable:4996)
+
+//In VTK-m libraries, we are typically exporting (with declspec) classes rather
+//than the independent methods within the class. When you are exporting to a
+//dll in MSVC and the class contains a field that is not similarly exported,
+//then you get a warning. This is generally not an issue for our use since we
+//are really only using classes from the standard library and distributed with
+//VTK-m itself. The only sane way to fix the issue is to just disable the
+//warning.
+//
+#pragma warning(disable:4251)
+
 #endif
 
 #endif //vtkm_internal_Configure_h
