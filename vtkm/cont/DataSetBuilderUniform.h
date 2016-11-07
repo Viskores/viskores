@@ -28,7 +28,7 @@ namespace cont {
 
 class DataSetBuilderUniform
 {
-    typedef typename vtkm::Vec<vtkm::FloatDefault,3> VecType;
+    typedef vtkm::Vec<vtkm::FloatDefault,3> VecType;
 public:
     VTKM_CONT_EXPORT
     DataSetBuilderUniform() {}
