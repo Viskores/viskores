@@ -742,7 +742,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
             |/         |/     |/
             0----------1      |__ x
       */
-      vtkm::Vec<vtkm::Float32,3> bottomLeft;
+      vtkm::Vec<vtkm::Float32,3> bottomLeft(0,0,0);
       bool newCell = true;
       //check to see if we left the cell
       vtkm::Float32 tx = 0.f;
