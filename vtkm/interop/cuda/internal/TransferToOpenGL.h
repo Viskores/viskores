@@ -113,7 +113,7 @@ public:
   }
 
   //assert that cuda_size is the same size as the buffer we created in OpenGL
-  VTKM_ASSERT(cuda_size >= desiredSize);
+  VTKM_ASSERT(cuda_size >= static_cast<std::size_t>(desiredSize));
   return pointer;
   }
 
