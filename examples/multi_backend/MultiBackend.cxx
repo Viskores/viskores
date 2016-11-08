@@ -96,9 +96,9 @@ std::vector< vtkm::Vec<T, 3> > make_testData(int size)
     {
     for (int j = 0; j < size; ++j )
       {
-      data.push_back( vtkm::Vec<T,3>( 2.f * i / size - 1.f,
-                                      0.f,
-                                      2.f * j / size - 1.f ) );
+        data.push_back( vtkm::Vec<T,3>(2.f*static_cast<T>(i/size)-1.f,
+                                       0.f,
+                                       2.f*static_cast<T>(j/size)-1.f));
       }
     }
   return data;

@@ -155,7 +155,7 @@ public:
             |/         |/     |/
             0----------1      |__ x
       */
-      vtkm::Vec<vtkm::Float32,3> bottomLeft(0);
+      vtkm::Vec<vtkm::Float32,3> bottomLeft(0,0,0);
       bool newCell = true;
       //check to see if we left the cell
       vtkm::Float32 tx = 0.f;
@@ -364,8 +364,8 @@ public:
       vtkm::Float32 ty = 2.f;
       vtkm::Float32 tz = 2.f;
       vtkm::Float32 scalar0 = 0.f;
-      vtkm::Vec<vtkm::Float32,4> sampleColor;
-      vtkm::Vec<vtkm::Float32,3> bottomLeft;
+      vtkm::Vec<vtkm::Float32,4> sampleColor(0,0,0,0);
+      vtkm::Vec<vtkm::Float32,3> bottomLeft(0,0,0);
       while(currentDistance < lastSample)
       {
         if( tx > 1.f ) newCell = true;
@@ -379,7 +379,8 @@ public:
           LocateCellId(sampleLocation, cellId);
           scalar0 = vtkm::Float32(scalars.Get(cellId));
           vtkm::Float32 normalScalar = (scalar0 - MinScalar) * InverseDeltaScalar;
-          sampleColor = ColorMap.Get(vtkm::Id(normalScalar * ColorMapSize));
+          sampleColor = ColorMap.Get(static_cast<vtkm::Id>(normalScalar *
+                                         static_cast<vtkm::Float32>(ColorMapSize)));
           bottomLeft = Coordinates.Get(cellId);
           tx = (sampleLocation[0] - bottomLeft[0]) * InvSpacing[0];
           ty = (sampleLocation[1] - bottomLeft[1]) * InvSpacing[1];
@@ -530,7 +531,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
             |/         |/     |/
             0----------1      |__ x
       */
-      vtkm::Vec<vtkm::Float32,3> bottomLeft;
+      vtkm::Vec<vtkm::Float32,3> bottomLeft(0,0,0);
       bool newCell = true;
       //check to see if we left the cell
       vtkm::Float32 tx = 0.f;
@@ -569,7 +570,9 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
         //normalize scalar
         scalar0 = (scalar0 - MinScalar) * InverseDeltaScalar;
 
-        vtkm::Id colorIndex = vtkm::Id(scalar0 * ColorMapSize);
+        vtkm::Id colorIndex;
+        colorIndex = static_cast<vtkm::Id>(scalar0 *
+                                           static_cast<vtkm::Float32>(ColorMapSize));
         colorIndex = vtkm::Min(ColorMapSize, vtkm::Max(vtkm::Id(0),colorIndex));
         vtkm::Vec<vtkm::Float32,4> sampleColor = ColorMap.Get(colorIndex);
         //sampleColor[3] = .05f;
@@ -739,7 +742,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
             |/         |/     |/
             0----------1      |__ x
       */
-      vtkm::Vec<vtkm::Float32,3> bottomLeft;
+      vtkm::Vec<vtkm::Float32,3> bottomLeft(0,0,0);
       bool newCell = true;
       //check to see if we left the cell
       vtkm::Float32 tx = 0.f;
@@ -806,7 +809,9 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
         //normalize scalar
         finalScalar = (finalScalar - MinScalar) * InverseDeltaScalar;
 
-        vtkm::Id colorIndex = vtkm::Id(finalScalar * ColorMapSize);
+        vtkm::Id colorIndex;
+        colorIndex = static_cast<vtkm::Id>(finalScalar *
+                                           static_cast<vtkm::Float32>(ColorMapSize));
         //colorIndex = vtkm::Min(ColorMapSize, vtkm::Max(0,colorIndex));
         vtkm::Vec<vtkm::Float32,4> sampleColor = ColorMap.Get(colorIndex);
 

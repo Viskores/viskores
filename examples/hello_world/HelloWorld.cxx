@@ -86,9 +86,9 @@ struct HelloVTKMInterop
     {
       for (int j = 0; j < dim; ++j )
       {
-      this->InputData.push_back( vtkm::Vec<T,3>( 2.f * i / dim - 1.f,
-                                        0.f,
-                                        2.f * j / dim - 1.f ) );
+        this->InputData.push_back(vtkm::Vec<T,3>(2.f*static_cast<T>(i/dim)-1.f,
+                                                 0.f,
+                                                 2.f*static_cast<T>(j/dim)-1.f));
       }
     }
 
@@ -151,8 +151,8 @@ struct HelloVTKMInterop
       output[2] = input[2];
 
       color[0] = 0;
-      color[1] = 160 + static_cast<vtkm::UInt8>(96 * vtkm::Sin( input[0] * 10.f + t ) );
-      color[2] = 160 + static_cast<vtkm::UInt8>(96 * vtkm::Cos( input[2] * 5.f + t ) );
+      color[1] = static_cast<vtkm::UInt8>(160 + 96*vtkm::Sin(input[0]*10.f+t));
+      color[2] = static_cast<vtkm::UInt8>(160 + 96*vtkm::Cos(input[2]*5.f+t));
       color[3] = 255;
     }
   };
