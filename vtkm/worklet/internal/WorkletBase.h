@@ -283,17 +283,18 @@ public:
 
   /// \c ControlSignature tag for whole input topology.
   ///
-  /// The \c WholeTopologyIn control signature tag specifies an \c CellSet
+  /// The \c WholeCellSetIn control signature tag specifies an \c CellSet
   /// passed to the \c Invoke operation of the dispatcher. This is converted to
   /// a \c vtkm::exec::Connectivity* object and passed to the appropriate worklet
   /// operator argument with one of the default args. This can be used to
   /// global lookup for arbitrary topology information
-  struct WholeTopologyIn : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::TopologyElementTagPoint FromTopologyType;
-    typedef vtkm::TopologyElementTagCell ToTopologyType;
 
+  using Cell = vtkm::TopologyElementTagCell;
+  using Point = vtkm::TopologyElementTagPoint;
+  template<typename FromType=Point, typename ToType=Cell>
+  struct WholeCellSetIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagCellSet TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagCellSetIn<FromTopologyType,ToTopologyType> TransportTag;
+    typedef vtkm::cont::arg::TransportTagCellSetIn<FromType,ToType> TransportTag;
     typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
   };
 
