@@ -314,7 +314,7 @@ public:
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       T initialValue)
   {
-    return DerivedAlgorithm::StreamingReduce(numBlocks, input, initialValue, vtkm::internal::Add());
+    return DerivedAlgorithm::StreamingReduce(numBlocks, input, initialValue, vtkm::Add());
   }
 
   template<typename T, class CIn, class BinaryFunctor>
@@ -597,7 +597,7 @@ public:
     return DerivedAlgorithm::StreamingScanInclusive(numBlocks,
                                                     input,
                                                     output,
-                                                    vtkm::internal::Add());
+                                                    vtkm::Add());
   }
 
   template<typename T, class CIn, class COut, class BinaryFunctor>
