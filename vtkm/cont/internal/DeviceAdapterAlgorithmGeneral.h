@@ -587,65 +587,6 @@ public:
   }
 
   //--------------------------------------------------------------------------
-  // Streaming inclusive scan
-  template<typename T, class CIn, class COut>
-  VTKM_CONT_EXPORT static T StreamingScanInclusive(
-      const vtkm::Id numBlocks,
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
-      vtkm::cont::ArrayHandle<T,COut>& output)
-  {
-    return DerivedAlgorithm::StreamingScanInclusive(numBlocks,
-                                                    input,
-                                                    output,
-                                                    vtkm::Add());
-  }
-
-  template<typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T StreamingScanInclusive(
-      const vtkm::Id numBlocks,
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
-      vtkm::cont::ArrayHandle<T,COut>& output,
-      BinaryFunctor binary_functor)
-  {
-    vtkm::Id fullSize = input.GetNumberOfValues();
-    vtkm::Id blockSize = fullSize / numBlocks;
-    if (fullSize % numBlocks != 0) blockSize += 1;
-
-    T lastResult; //, originalValue;
-    for (vtkm::Id block=0; block<numBlocks; block++)
-    {
-      vtkm::Id numberOfInstances = blockSize;
-      if (block == numBlocks-1)
-        numberOfInstances = fullSize - blockSize*block;
-
-      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,CIn> > streamIn =
-          vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,CIn> >(
-          input, block, blockSize, numberOfInstances);
-
-      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,COut> > streamOut =
-          vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,COut> >(
-          output, block, blockSize, numberOfInstances);
-
-      if (block == 0) 
-      {
-        streamOut.AllocateFullArray(fullSize);
-      }
-      else if (streamIn.GetNumberOfValues() > 0)
-      {
-        //originalValue = streamIn.GetPortalConstControl().Get(0);
-        //streamIn.GetPortalControl().Set(0, binary_functor(originalValue, lastResult));
-      }
-
-      lastResult = DerivedAlgorithm::ScanInclusive(streamIn, streamOut, binary_functor);
-      //if ((block > 0) && (streamIn.GetNumberOfValues() > 0))
-        //streamIn.GetPortalControl().Set(0, originalValue);
-
-      streamOut.SyncControlArray();
-    }
-    return lastResult;
-  }
-
-  //--------------------------------------------------------------------------
   // Sort
   template<typename T, class Storage, class BinaryCompare>
   VTKM_CONT_EXPORT static void Sort(
