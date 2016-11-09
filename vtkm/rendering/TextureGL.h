@@ -32,25 +32,19 @@
 namespace vtkm {
 namespace rendering {
 
-class TextureGL
+class VTKM_RENDERING_EXPORT TextureGL
 {
 public:
-  VTKM_RENDERING_EXPORT
   TextureGL();
 
-  VTKM_RENDERING_EXPORT
   ~TextureGL();
 
-  VTKM_RENDERING_EXPORT
   bool Valid() const;
 
-  VTKM_RENDERING_EXPORT
   void Enable() const;
 
-  VTKM_RENDERING_EXPORT
   void Disable() const;
 
-  VTKM_RENDERING_EXPORT
   void CreateAlphaFromRGBA(vtkm::Id width,
                            vtkm::Id height,
                            const std::vector<unsigned char> &rgba);

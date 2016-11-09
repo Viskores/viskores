@@ -71,20 +71,18 @@ void displayCall()
 // Allow rotations of the camera
 void mouseMove(int x, int y)
 {
-    //std::cout<<"MOUSE MOVE: "<<x<<" "<<y<<std::endl;
-
     const vtkm::Id width = view->GetCanvas().GetWidth();
     const vtkm::Id height = view->GetCanvas().GetHeight();
-
+    
     //Map to XY
     y = static_cast<int>(height-y);
-
+    
     if (lastx != -1 && lasty != -1)
     {
-        vtkm::Float32 x1 = ((lastx*2.0f)/width) - 1.0f;
-        vtkm::Float32 y1 = ((lasty*2.0f)/height) - 1.0f;
-        vtkm::Float32 x2 = ((x*2.0f)/width) - 1.0f;
-        vtkm::Float32 y2 = ((y*2.0f)/height) - 1.0f;
+        vtkm::Float32 x1 = vtkm::Float32(lastx*2)/vtkm::Float32(width) - 1.0f;
+        vtkm::Float32 y1 = vtkm::Float32(lasty*2)/vtkm::Float32(height) - 1.0f;
+        vtkm::Float32 x2 = vtkm::Float32(x*2)/vtkm::Float32(width) - 1.0f;
+        vtkm::Float32 y2 = vtkm::Float32(y*2)/vtkm::Float32(height) - 1.0f;
 
         if (buttonStates[0] == GLUT_DOWN)
         {

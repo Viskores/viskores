@@ -28,13 +28,11 @@
 namespace vtkm {
 namespace rendering {
 
-class WorldAnnotator
+class VTKM_RENDERING_EXPORT WorldAnnotator
 {
 public:
-  VTKM_RENDERING_EXPORT
   virtual ~WorldAnnotator();
 
-  VTKM_RENDERING_EXPORT
   virtual void AddLine(const vtkm::Vec<vtkm::Float64,3> &point0,
                        const vtkm::Vec<vtkm::Float64,3> &point1,
                        vtkm::Float32 lineWidth,
@@ -55,7 +53,6 @@ public:
                   inFront);
   }
 
-  VTKM_RENDERING_EXPORT
   virtual void AddText(const vtkm::Vec<vtkm::Float32,3> &origin,
                        const vtkm::Vec<vtkm::Float32,3> &right,
                        const vtkm::Vec<vtkm::Float32,3> &up,

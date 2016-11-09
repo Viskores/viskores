@@ -83,6 +83,8 @@ struct TemplatedTests
     IteratorType end = vtkm::cont::internal::make_IteratorEnd(portal);
     VTKM_TEST_ASSERT(std::distance(begin, end) == ARRAY_SIZE,
                      "Distance between begin and end incorrect.");
+    VTKM_TEST_ASSERT(std::distance(end, begin) == -ARRAY_SIZE,
+                     "Distance between begin and end incorrect.");
 
     std::cout << "    Check forward iteration." << std::endl;
     VTKM_TEST_ASSERT(CheckIterator(begin, end, ORIGINAL_VALUE()),

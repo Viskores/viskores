@@ -159,7 +159,7 @@ private:
       switch(shapes.GetPortalConstControl().Get(0))
       {
       vtkmGenericCellShapeMacro(
-        (cs = vtkm::cont::CellSetSingleType<>(CellShapeTag(), "cells")));
+        (cs = vtkm::cont::CellSetSingleType<>(CellShapeTag(), 0, "cells")));
       default:
         break;
       }

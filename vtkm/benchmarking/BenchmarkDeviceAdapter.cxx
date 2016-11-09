@@ -278,7 +278,7 @@ private:
     vtkm::Float64 operator()(){
       Timer timer;
       Algorithm::ReduceByKey(KeyHandle, ValueHandle, KeysOut, ValuesOut,
-          vtkm::internal::Add());
+         vtkm::Add());
       return timer.GetElapsedTime();
     }
 

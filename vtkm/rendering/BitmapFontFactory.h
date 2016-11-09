@@ -27,10 +27,9 @@
 namespace vtkm {
 namespace rendering {
 
-class BitmapFontFactory
+class VTKM_RENDERING_EXPORT BitmapFontFactory
 {
 public:
-  VTKM_RENDERING_EXPORT
   static vtkm::rendering::BitmapFont CreateLiberation2Sans();
 };
 

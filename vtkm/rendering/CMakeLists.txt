@@ -118,7 +118,7 @@ vtkm_configure_component_OpenGL()
 if(VTKm_OpenGL_FOUND)
   list(APPEND headers ${opengl_headers})
   list(APPEND sources ${opengl_sources})
-  
+
   vtkm_configure_component_OSMesa()
   if(VTKm_OSMesa_FOUND)
     list(APPEND headers ${osmesa_headers})
@@ -131,40 +131,34 @@ if(VTKm_OpenGL_FOUND)
     list(APPEND sources ${egl_sources})
   endif()
 
-  vtkm_configure_component_GLFW()
-  if(VTKm_GLFW_FOUND)
-    list(APPEND headers ${glfw_headers})
+  if(VTKm_ENABLE_OSMESA AND NOT VTKm_OSMesa_FOUND)
+    message(SEND_ERROR "OSMesa was requested by not properly configured.
+  Either make sure the OSMesa headers and library are properly found or set
+  VTKm_ENABLE_OSMESA to OFF.")
   endif()
-endif()
 
-if(VTKm_ENABLE_OSMESA AND NOT VTKm_OSMesa_FOUND)
-  message(SEND_ERROR "OSMesa was requested by not properly configured.
-Either make sure the OSMesa headers and library are properly found or set
-VTKm_ENABLE_OSMESA to OFF.")
-endif()
+  vtkm_declare_headers(${headers})
 
-vtkm_declare_headers(${headers})
+  if (VTKm_ENABLE_CUDA)
+    vtkm_library(
+      SOURCES ${sources}
+      CUDA
+      WRAP_FOR_CUDA ${device_sources}
+      )
+  else()
+    vtkm_library(
+      SOURCES ${sources}
+      )
+  endif()
 
-if (VTKm_ENABLE_CUDA)
-  vtkm_library(
-    SOURCES ${sources}
-    CUDA
-    WRAP_FOR_CUDA ${device_sources}
-    )
-else()
-  vtkm_library(
-    SOURCES ${sources}
-    )
-endif()
+  # Subclasses need rendering library
+  vtkm_configure_component_Rendering()
 
-# Subclasses need rendering library
-vtkm_configure_component_Rendering()
-
-add_subdirectory(internal)
-add_subdirectory(raytracing)
+  add_subdirectory(internal)
+  add_subdirectory(raytracing)
 
 
+  #-----------------------------------------------------------------------------
+  add_subdirectory(testing)
 
-
-#-----------------------------------------------------------------------------
-add_subdirectory(testing)
+endif() #opengl found

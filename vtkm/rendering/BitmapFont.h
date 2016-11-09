@@ -32,7 +32,7 @@
 namespace vtkm {
 namespace rendering {
 
-class BitmapFont
+class VTKM_RENDERING_EXPORT BitmapFont
 {
 public:
   struct Character
@@ -83,10 +83,8 @@ public:
   std::vector<unsigned char> RawImageFileData;
 
 public:
-  VTKM_RENDERING_EXPORT
   BitmapFont();
 
-  VTKM_RENDERING_EXPORT
   const Character &GetChar(char c) const;
 
   VTKM_CONT_EXPORT
@@ -95,7 +93,6 @@ public:
     return this->RawImageFileData;
   }
 
-  VTKM_RENDERING_EXPORT
   vtkm::Float32 GetTextWidth(const std::string &text) const;
 
   void GetCharPolygon(char character, vtkm::Float32 &x, vtkm::Float32 &y,

@@ -31,37 +31,29 @@
 namespace vtkm {
 namespace rendering {
 
-class Actor
+class VTKM_RENDERING_EXPORT Actor
 {
 public:
-  VTKM_RENDERING_EXPORT
   Actor(const vtkm::cont::DynamicCellSet &cells,
         const vtkm::cont::CoordinateSystem &coordinates,
         const vtkm::cont::Field &scalarField,
         const vtkm::rendering::ColorTable &colorTable =
           vtkm::rendering::ColorTable("default"));
 
-  VTKM_RENDERING_EXPORT
   void Render(vtkm::rendering::Mapper &mapper,
               vtkm::rendering::Canvas &canvas,
               const vtkm::rendering::Camera &camera) const;
 
-  VTKM_RENDERING_EXPORT
   const vtkm::cont::DynamicCellSet &GetCells() const;
 
-  VTKM_RENDERING_EXPORT
   const vtkm::cont::CoordinateSystem &GetCoordiantes() const;
 
-  VTKM_RENDERING_EXPORT
   const vtkm::cont::Field &GetScalarField() const;
 
-  VTKM_RENDERING_EXPORT
   const vtkm::rendering::ColorTable &GetColorTable() const;
 
-  VTKM_RENDERING_EXPORT
   const vtkm::Range &GetScalarRange() const;
 
-  VTKM_RENDERING_EXPORT
   const vtkm::Bounds &GetSpatialBounds() const;
 
 private:

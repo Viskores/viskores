@@ -18,8 +18,6 @@
 ##  this software.
 ##============================================================================
 
-include_directories(${Boost_INCLUDE_DIRS})
-
 set(headers
   ControlSignatureTagBase.h
   Transport.h

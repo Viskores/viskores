@@ -32,17 +32,15 @@
 namespace vtkm {
 namespace rendering {
 
-class ColorBarAnnotation
+class VTKM_RENDERING_EXPORT ColorBarAnnotation
 {
 protected:
   vtkm::rendering::ColorTable ColorTable;
   vtkm::rendering::AxisAnnotation2D Axis;
 
 public:
-  VTKM_RENDERING_EXPORT
   ColorBarAnnotation();
 
-  VTKM_RENDERING_EXPORT
   virtual ~ColorBarAnnotation();
 
   VTKM_CONT_EXPORT
@@ -51,7 +49,6 @@ public:
     this->ColorTable = colorTable;
   }
 
-  VTKM_RENDERING_EXPORT
   void SetRange(const vtkm::Range &range, vtkm::IdComponent numTicks);
 
   VTKM_CONT_EXPORT
@@ -60,7 +57,6 @@ public:
     this->SetRange(vtkm::Range(l,h), numTicks);
   }
 
-  VTKM_RENDERING_EXPORT
   virtual void Render(const vtkm::rendering::Camera &camera,
                       const vtkm::rendering::WorldAnnotator &worldAnnotator,
                       vtkm::rendering::Canvas &canvas);

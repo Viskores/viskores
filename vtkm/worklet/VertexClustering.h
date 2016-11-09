@@ -478,7 +478,7 @@ public:
     output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", repPointArray));
 
     vtkm::cont::CellSetSingleType< > triangles(vtkm::CellShapeTagTriangle(),
-                                             "cells");
+                                               0, "cells");
     triangles.Fill( internal::copyFromVec(pointId3Array, DeviceAdapter()) );
     output.AddCellSet( triangles );
 

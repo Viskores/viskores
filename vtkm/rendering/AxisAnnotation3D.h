@@ -40,7 +40,7 @@
 namespace vtkm {
 namespace rendering {
 
-class AxisAnnotation3D : public AxisAnnotation
+class VTKM_RENDERING_EXPORT AxisAnnotation3D : public AxisAnnotation
 {
 private:
 protected:
@@ -58,10 +58,8 @@ protected:
   int MoreOrLessTickAdjustment;
 public:
 
-  VTKM_RENDERING_EXPORT
   AxisAnnotation3D();
 
-  VTKM_RENDERING_EXPORT
   ~AxisAnnotation3D();
 
   VTKM_CONT_EXPORT
@@ -82,7 +80,6 @@ public:
     this->Axis = a;
   }
 
-  VTKM_RENDERING_EXPORT
   void SetTickInvert(bool x, bool y, bool z);
 
   /// offset of 0 means the tick is inside the frame
@@ -116,22 +113,18 @@ public:
     this->SetWorldPosition(vtkm::make_Vec(x0,y0,z0), vtkm::make_Vec(x1,y1,z1));
   }
 
-  VTKM_RENDERING_EXPORT
   void SetLabelFontScale(vtkm::Float64 s);
 
-  VTKM_RENDERING_EXPORT
   void SetLabelFontOffset(vtkm::Float32 off)
   {
     this->FontOffset = off;
   }
 
-  VTKM_RENDERING_EXPORT
   void SetRange(const vtkm::Range &range)
   {
     this->Range = range;
   }
 
-  VTKM_RENDERING_EXPORT
   void SetRange(vtkm::Float64 lower, vtkm::Float64 upper)
   {
     this->SetRange(vtkm::Range(lower, upper));

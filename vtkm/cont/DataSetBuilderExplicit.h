@@ -330,7 +330,7 @@ DataSetBuilderExplicit::BuildDataSet(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3
   vtkm::cont::DataSet dataSet;
 
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem(coordsNm, coords));
-  vtkm::cont::CellSetSingleType<> cellSet(tag, cellNm);
+  vtkm::cont::CellSetSingleType<> cellSet(tag, coords.GetNumberOfValues(), cellNm);
 
   cellSet.Fill(connectivity);
   dataSet.AddCellSet(cellSet);

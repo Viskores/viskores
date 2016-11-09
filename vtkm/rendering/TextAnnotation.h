@@ -29,7 +29,7 @@
 namespace vtkm {
 namespace rendering {
 
-class TextAnnotation
+class VTKM_RENDERING_EXPORT TextAnnotation
 {
 public:
   enum HorizontalAlignment
@@ -52,37 +52,28 @@ protected:
   vtkm::Vec<vtkm::Float32,2> Anchor;
 
 public:
-  VTKM_RENDERING_EXPORT
   TextAnnotation(const std::string &text,
                  const vtkm::rendering::Color &color,
                  vtkm::Float32 scalar);
 
-  VTKM_RENDERING_EXPORT
   virtual ~TextAnnotation();
 
-  VTKM_RENDERING_EXPORT
   void SetText(const std::string &text);
 
-  VTKM_RENDERING_EXPORT
   const std::string &GetText() const;
 
   /// Set the anchor point relative to the box containing the text. The anchor
   /// is scaled in both directions to the range [-1,1] with -1 at the lower
   /// left and 1 at the upper right.
   ///
-  VTKM_RENDERING_EXPORT
   void SetRawAnchor(const vtkm::Vec<vtkm::Float32,2> &anchor);
 
-  VTKM_RENDERING_EXPORT
   void SetRawAnchor(vtkm::Float32 h, vtkm::Float32 v);
 
-  VTKM_RENDERING_EXPORT
   void SetAlignment(HorizontalAlignment h, VerticalAlignment v);
 
-  VTKM_RENDERING_EXPORT
   void SetScale(vtkm::Float32 scale);
 
-  VTKM_RENDERING_EXPORT
   virtual void Render(const vtkm::rendering::Camera &camera,
                       const vtkm::rendering::WorldAnnotator &worldAnnotator,
                       vtkm::rendering::Canvas &canvas) const = 0;

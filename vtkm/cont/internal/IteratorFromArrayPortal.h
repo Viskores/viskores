@@ -24,10 +24,6 @@
 
 #include <vtkm/cont/ArrayPortal.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <boost/iterator/iterator_facade.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 namespace cont {
 namespace internal {
@@ -81,97 +77,91 @@ struct IteratorFromArrayPortalValue
 } // namespace detail
 
 template<class ArrayPortalType>
-class IteratorFromArrayPortal : public
-    boost::iterator_facade<
-      IteratorFromArrayPortal<ArrayPortalType>,
-      typename ArrayPortalType::ValueType,
-      boost::random_access_traversal_tag,
-      detail::IteratorFromArrayPortalValue<ArrayPortalType> >
+class IteratorFromArrayPortal
 {
-  typedef boost::iterator_facade<
-      IteratorFromArrayPortal<ArrayPortalType>,
-      typename ArrayPortalType::ValueType,
-      boost::random_access_traversal_tag,
-      detail::IteratorFromArrayPortalValue<ArrayPortalType> > Superclass;
-
 public:
+  using value_type =
+    typename std::remove_const<typename ArrayPortalType::ValueType>::type;
+  using reference = detail::IteratorFromArrayPortalValue<ArrayPortalType>;
+  using pointer = typename std::add_pointer<value_type>::type;
 
-  VTKM_CONT_EXPORT
+  using difference_type = std::ptrdiff_t;
+
+  using iterator_category = std::random_access_iterator_tag;
+
+  using iter = IteratorFromArrayPortal<ArrayPortalType>;
+
   IteratorFromArrayPortal()
     : Portal(), Index(0) { }
 
-  VTKM_CONT_EXPORT
   explicit IteratorFromArrayPortal(const ArrayPortalType &portal,
                                    vtkm::Id index = 0)
-    : Portal(portal), Index(index) {  }
-
-  VTKM_CONT_EXPORT
-  detail::IteratorFromArrayPortalValue<ArrayPortalType>
-  operator[](std::ptrdiff_t idx) const //NEEDS to be signed
+    : Portal(portal), Index(index)
   {
-    return detail::IteratorFromArrayPortalValue<ArrayPortalType>(this->Portal,
-           this->Index + static_cast<vtkm::Id>(idx) );
+    VTKM_ASSERT(index >= 0);
+    VTKM_ASSERT(index <= portal.GetNumberOfValues());
   }
 
-private:
-  ArrayPortalType Portal;
-  vtkm::Id Index;
-
-  // Implementation for boost iterator_facade
-  friend class boost::iterator_core_access;
-
-  VTKM_CONT_EXPORT
-  detail::IteratorFromArrayPortalValue<ArrayPortalType> dereference() const
+  reference operator*() const
   {
-    return detail::IteratorFromArrayPortalValue<ArrayPortalType>(this->Portal,
-           this->Index);
+    return reference(this->Portal,this->Index);
   }
 
-  VTKM_CONT_EXPORT
-  bool equal(const IteratorFromArrayPortal<ArrayPortalType> &other) const
+  reference operator->() const
   {
-    // Technically, we should probably check that the portals are the same,
-    // but the portal interface does not specify an equal operator.  It is
-    // by its nature undefined what happens when comparing iterators from
-    // different portals anyway.
-    return (this->Index == other.Index);
+    return reference(this->Portal, this->Index);
   }
 
-  VTKM_CONT_EXPORT
-  void increment()
+  reference operator[](difference_type idx) const
+  {
+    return reference(this->Portal, this->Index + static_cast<vtkm::Id>(idx) );
+  }
+
+  iter& operator++()
   {
     this->Index++;
-    VTKM_ASSERT(this->Index >= 0);
     VTKM_ASSERT(this->Index <= this->Portal.GetNumberOfValues());
+    return *this;
   }
 
-  VTKM_CONT_EXPORT
-  void decrement()
+  iter operator++(int)
+  {
+    return iter(this->Portal, this->Index++);
+  }
+
+  iter& operator--()
   {
     this->Index--;
     VTKM_ASSERT(this->Index >= 0);
-    VTKM_ASSERT(this->Index <= this->Portal.GetNumberOfValues());
+    return *this;
   }
 
-  VTKM_CONT_EXPORT
-  void advance(typename Superclass::difference_type delta)
+  iter operator--(int)
   {
-    this->Index += static_cast<vtkm::Id>(delta);
+    return iter(this->Portal, this->Index--);
+  }
+
+  iter& operator+=(difference_type n)
+  {
+    this->Index += static_cast<vtkm::Id>(n);
+    VTKM_ASSERT(this->Index <= this->Portal.GetNumberOfValues());
+    return *this;
+  }
+
+  iter& operator-=(difference_type n)
+  {
+    this->Index += static_cast<vtkm::Id>(n);
     VTKM_ASSERT(this->Index >= 0);
-    VTKM_ASSERT(this->Index <= this->Portal.GetNumberOfValues());
+    return *this;
   }
 
-  VTKM_CONT_EXPORT
-  typename Superclass::difference_type
-  distance_to(const IteratorFromArrayPortal<ArrayPortalType> &other) const
+  iter operator-(difference_type n) const
   {
-    // Technically, we should probably check that the portals are the same,
-    // but the portal interface does not specify an equal operator.  It is
-    // by its nature undefined what happens when comparing iterators from
-    // different portals anyway.
-    return static_cast<typename IteratorFromArrayPortal<ArrayPortalType>::difference_type>(
-        other.Index - this->Index);
+    return iter(this->Portal, this->Index - static_cast<vtkm::Id>(n));
   }
+
+  ArrayPortalType Portal;
+  vtkm::Id Index;
 };
 
 template<class ArrayPortalType>
@@ -190,7 +180,7 @@ IteratorFromArrayPortal<ArrayPortalType> make_IteratorEnd(
 }
 
 
-//implementat a custom swap function, since the std::swap won't work
+//implement a custom swap function, since the std::swap won't work
 //since we return RValues instead of Lvalues
 template<typename T>
 void swap( vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> a,
@@ -199,26 +189,84 @@ void swap( vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> a,
   a.Swap(b);
 }
 
+
+template <typename PortalType>
+bool
+operator==(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+{
+  return lhs.Index == rhs.Index;
+}
+
+template <typename PortalType>
+bool
+operator!=(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+{
+  return lhs.Index != rhs.Index;
+}
+
+template <typename PortalType>
+bool
+operator<(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+{
+  return lhs.Index < rhs.Index;
+}
+
+template <typename PortalType>
+bool
+operator<=(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+{
+  return lhs.Index <= rhs.Index;
+}
+
+template <typename PortalType>
+bool
+operator>(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+{
+  return lhs.Index > rhs.Index;
+}
+
+template <typename PortalType>
+bool
+operator>=(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+{
+  return lhs.Index >= rhs.Index;
+}
+
+template <typename PortalType>
+std::ptrdiff_t
+operator-(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+{
+  return lhs.Index - rhs.Index;
+}
+
+template <typename PortalType>
+vtkm::cont::internal::IteratorFromArrayPortal<PortalType>
+operator+(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& iter,
+  std::ptrdiff_t n)
+{
+  return vtkm::cont::internal::IteratorFromArrayPortal<PortalType>(
+    iter.Portal, iter.Index + static_cast<vtkm::Id>(n));
+}
+
+template <typename PortalType>
+vtkm::cont::internal::IteratorFromArrayPortal<PortalType>
+operator+(std::ptrdiff_t n,
+  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& iter)
+{
+  return vtkm::cont::internal::IteratorFromArrayPortal<PortalType>(
+    iter.Portal, iter.Index + static_cast<vtkm::Id>(n));
+}
+
 }
 }
 } // namespace vtkm::cont::internal
 
-namespace boost {
-
-/// The boost::iterator_facade lets you redefine the reference type, which is
-/// good since you cannot set an array portal from a reference in general.
-/// However, the iterator_facade then checks to see if the reference type is an
-/// actual reference, and if it is not it can set up some rather restrictive
-/// traits that we do not want. To get around this, specialize the
-/// boost::is_reference type check to declare our value class as a reference
-/// type. Even though it is not a true reference type, its operators make it
-/// behave like one.
-///
-template<typename T>
-struct is_reference<
-    vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> >
-  : public boost::true_type {  };
-
-} // namespace boost
 
 #endif //vtk_m_cont_internal_IteratorFromArrayPortal_h

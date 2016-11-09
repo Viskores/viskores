@@ -35,23 +35,18 @@ struct CanvasEGLInternals;
 
 }
 
-class CanvasEGL : public CanvasGL
+class VTKM_RENDERING_EXPORT CanvasEGL : public CanvasGL
 {
 public:
-  VTKM_RENDERING_EXPORT
   CanvasEGL(vtkm::Id width=1024,
             vtkm::Id height=1024);
 
-  VTKM_RENDERING_EXPORT
   ~CanvasEGL();
 
-  VTKM_RENDERING_EXPORT
   virtual void Initialize() VTKM_OVERRIDE;
-    
-  VTKM_RENDERING_EXPORT
+
   virtual void Activate() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   vtkm::rendering::Canvas *NewCopy() const VTKM_OVERRIDE;
 
 private:

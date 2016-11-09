@@ -87,8 +87,7 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
 template <typename T>
 vtkm::Range FillMethod(vtkm::IdComponent method,
                        vtkm::Id dimensionSize,
-                       T &origin,
-                       T &spacing)
+                       T &origin, T &spacing)
 {
   switch (method)
   {
@@ -188,9 +187,7 @@ UniformTests()
     numCells = dimensions[0]-1;
     bounds.Y = vtkm::Range(0, 0);
     bounds.Z = vtkm::Range(0, 0);
-    dataSet = dataSetBuilder.Create(dimensions[0],
-                                    static_cast<vtkm::FloatDefault>(origin[0]),
-                                    static_cast<vtkm::FloatDefault>(spacing[0]));
+    dataSet = dataSetBuilder.Create(dimensions[0], origin[0], spacing[0]);
     ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
   }
 }

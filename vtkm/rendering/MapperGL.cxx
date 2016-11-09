@@ -119,7 +119,6 @@ public:
 template<typename PtType>
 struct MapColorAndVerticesInvokeFunctor
 {
-
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4> > TriangleIndices;
   vtkm::rendering::ColorTable ColorTable;
   const vtkm::cont::ArrayHandle<vtkm::Float32> Scalar;
@@ -177,7 +176,6 @@ void RenderTriangles(MapperGL &mapper,
                      const vtkm::Range &scalarRange,
                      const vtkm::rendering::Camera &camera)
 {
-
   if (!mapper.loaded)
   {
     GLenum GlewInitResult = glewInit();
@@ -187,7 +185,7 @@ void RenderTriangles(MapperGL &mapper,
 
     vtkm::Float32 sMin = vtkm::Float32(scalarRange.Min);
     vtkm::Float32 sMax = vtkm::Float32(scalarRange.Max);
-    vtkm::cont::ArrayHandle<Float32> out_vertices, out_color;
+    vtkm::cont::ArrayHandle<vtkm::Float32> out_vertices, out_color;
     out_vertices.Allocate(9*indices.GetNumberOfValues());
     out_color.Allocate(9*indices.GetNumberOfValues());
 
@@ -230,11 +228,6 @@ void RenderTriangles(MapperGL &mapper,
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     
-    vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
-    vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
-    
-    MatrixHelpers::CreateOGLMatrix(viewM, mapper.mvMat);
-    MatrixHelpers::CreateOGLMatrix(projM, mapper.pMat);
     const char *vertex_shader =
         "#version 120\n"
         "attribute vec3 vertex_position;"
@@ -325,6 +318,12 @@ void RenderTriangles(MapperGL &mapper,
 
   if (mapper.shader_programme > 0)
   {
+    vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
+    vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
+
+    MatrixHelpers::CreateOGLMatrix(viewM, mapper.mvMat);
+    MatrixHelpers::CreateOGLMatrix(projM, mapper.pMat);
+
     glUseProgram(mapper.shader_programme);
     GLint mvID = glGetUniformLocation(mapper.shader_programme, "mv_matrix");
     glUniformMatrix4fv(mvID, 1, GL_FALSE, mapper.mvMat);

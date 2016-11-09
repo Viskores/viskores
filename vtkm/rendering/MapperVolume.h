@@ -27,19 +27,15 @@
 namespace vtkm {
 namespace rendering {
 
-class MapperVolume : public Mapper
+class VTKM_RENDERING_EXPORT MapperVolume : public Mapper
 {
 public:
-  VTKM_RENDERING_EXPORT
   MapperVolume();
 
-  VTKM_RENDERING_EXPORT
   ~MapperVolume();
 
-  VTKM_RENDERING_EXPORT
   void SetCanvas(vtkm::rendering::Canvas *canvas) VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
                            const vtkm::cont::Field &scalarField,
@@ -47,12 +43,9 @@ public:
                            const vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange) VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   virtual void StartScene() VTKM_OVERRIDE;
-  VTKM_RENDERING_EXPORT
   virtual void EndScene() VTKM_OVERRIDE;
 
-  VTKM_RENDERING_EXPORT
   vtkm::rendering::Mapper *NewCopy() const VTKM_OVERRIDE;
 
 private:

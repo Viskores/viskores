@@ -120,18 +120,15 @@
 #endif
 
 // Define a pair of macros, VTKM_THIRDPARTY_PRE_INCLUDE and VTKM_THIRDPARTY_POST_INCLUDE,
-// that should be wrapped around any #include for a boost or thrust header file. Mostly
+// that should be wrapped around any #include for a tbb or thrust header file. Mostly
 // this is used to set pragmas that dissable warnings that VTK-m checks for
-// but boost and thrust does not.
+// but tbb and thrust does not.
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 
-//We include deprecated-declarations to silence auto_ptr deprecation warnings
-//when using older boost versions ( < 1.61 )
 #define VTK_M_THIRDPARTY_GENERAL_WARNING_PRAGMAS \
   _Pragma("GCC diagnostic ignored \"-Wconversion\"") \
   _Pragma("GCC diagnostic ignored \"-Wshadow\"") \
-  _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"") \
-  _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
 
 // GCC has a unused by set variable warnings that needs to be silenced.
 #if defined(VTKM_GCC)
@@ -259,7 +256,9 @@
 #cmakedefine VTKM_ENABLE_OPENGL_INTEROP
 #endif
 
-#if __cplusplus >= 201103L || ( defined(VTKM_MSVC) && _MSC_VER >= 1800  )
+#if __cplusplus >= 201103L || \
+    ( defined(VTKM_MSVC) && _MSC_VER >= 1800  ) || \
+    ( defined(VTKM_ICC)  && defined(__INTEL_CXX11_MODE__) )
 #define VTKM_HAVE_CXX_11
 #else
 #error "VTK-m requires at least a C++11 compiler"
@@ -284,6 +283,17 @@
 //turn off this problematic warning for everybody.
 //
 #pragma warning(disable:4996)
+
+//In VTK-m libraries, we are typically exporting (with declspec) classes rather
+//than the independent methods within the class. When you are exporting to a
+//dll in MSVC and the class contains a field that is not similarly exported,
+//then you get a warning. This is generally not an issue for our use since we
+//are really only using classes from the standard library and distributed with
+//VTK-m itself. The only sane way to fix the issue is to just disable the
+//warning.
+//
+#pragma warning(disable:4251)
+
 #endif
 
 #endif //vtkm_internal_Configure_h
