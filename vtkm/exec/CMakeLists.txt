@@ -28,6 +28,7 @@ set(headers
   ExecutionObjectBase.h
   ExecutionWholeArray.h
   FunctorBase.h
+  Jacobian.h
   ParametricCoordinates.h
   )
 

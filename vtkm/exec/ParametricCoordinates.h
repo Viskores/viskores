@@ -26,9 +26,9 @@
 #include <vtkm/NewtonsMethod.h>
 #include <vtkm/VecRectilinearPointCoordinates.h>
 #include <vtkm/internal/Assume.h>
-#include <vtkm/exec/CellDerivative.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/FunctorBase.h>
+#include <vtkm/exec/Jacobian.h>
 
 namespace vtkm {
 namespace exec {
@@ -545,7 +545,7 @@ public:
   Matrix2x2 operator()(const Vector2 &pcoords) const
   {
     Matrix2x2 jacobian;
-    vtkm::exec::internal::JacobianFor2DCell(
+    vtkm::exec::JacobianFor2DCell(
           *this->PointWCoords,
           vtkm::Vec<T,3>(pcoords[0],pcoords[1],0),
           *this->Space,
@@ -606,10 +606,10 @@ public:
   Matrix3x3 operator()(const Vector3 &pcoords) const
   {
     Matrix3x3 jacobian;
-    vtkm::exec::internal::JacobianFor3DCell(*this->PointWCoords,
-                                            pcoords,
-                                            jacobian,
-                                            CellShapeTag());
+    vtkm::exec::JacobianFor3DCell(*this->PointWCoords,
+                                  pcoords,
+                                  jacobian,
+                                  CellShapeTag());
     return jacobian;
   }
 };

@@ -28,315 +28,18 @@
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/exec/CellInterpolate.h>
+#include <vtkm/exec/Jacobian.h>
 #include <vtkm/exec/FunctorBase.h>
 
 namespace vtkm {
 namespace exec {
 
-namespace internal {
-
 // The derivative for a 2D polygon in 3D space is underdetermined since there
 // is no information in the direction perpendicular to the polygon. To compute
 // derivatives for general polygons, we build a 2D space for the polygon's
 // plane and solve the derivative there.
-template<typename T>
-struct Space2D
-{
-  typedef vtkm::Vec<T,3> Vec3;
-  typedef vtkm::Vec<T,2> Vec2;
 
-  Vec3 Origin;
-  Vec3 Basis0;
-  Vec3 Basis1;
-
-  VTKM_EXEC_EXPORT
-  Space2D(const Vec3 &origin, const Vec3 &pointFirst, const Vec3 &pointLast)
-  {
-    this->Origin = origin;
-
-    this->Basis0 = vtkm::Normal(pointFirst - this->Origin);
-
-    Vec3 n = vtkm::Cross(this->Basis0, pointLast - this->Origin);
-    this->Basis1 = vtkm::Normal(vtkm::Cross(this->Basis0, n));
-  }
-
-  VTKM_EXEC_EXPORT
-  Vec2 ConvertCoordToSpace(const Vec3 coord) const {
-    Vec3 vec = coord - this->Origin;
-    return Vec2(vtkm::dot(vec, this->Basis0), vtkm::dot(vec, this->Basis1));
-  }
-
-  VTKM_EXEC_EXPORT
-  Vec3 ConvertVecFromSpace(const Vec2 vec) const {
-    return vec[0]*this->Basis0 + vec[1]*this->Basis1;
-  }
-};
-
-#define VTKM_DERIVATIVE_WEIGHTS_HEXAHEDRON(pc, rc, call) \
-  call(0, -rc[1]*rc[2], -rc[0]*rc[2], -rc[0]*rc[1]); \
-  call(1,  rc[1]*rc[2], -pc[0]*rc[2], -pc[0]*rc[1]); \
-  call(2,  pc[1]*rc[2],  pc[0]*rc[2], -pc[0]*pc[1]); \
-  call(3, -pc[1]*rc[2],  rc[0]*rc[2], -rc[0]*pc[1]); \
-  call(4, -rc[1]*pc[2], -rc[0]*pc[2],  rc[0]*rc[1]); \
-  call(5,  rc[1]*pc[2], -pc[0]*pc[2],  pc[0]*rc[1]); \
-  call(6,  pc[1]*pc[2],  pc[0]*pc[2],  pc[0]*pc[1]); \
-  call(7, -pc[1]*pc[2],  rc[0]*pc[2],  rc[0]*pc[1])
-
-#define VTKM_DERIVATIVE_WEIGHTS_VOXEL(pc, rc, call) \
-  call(0, -rc[1]*rc[2], -rc[0]*rc[2], -rc[0]*rc[1]); \
-  call(1,  rc[1]*rc[2], -pc[0]*rc[2], -pc[0]*rc[1]); \
-  call(2, -pc[1]*rc[2],  rc[0]*rc[2], -rc[0]*pc[1]); \
-  call(3,  pc[1]*rc[2],  pc[0]*rc[2], -pc[0]*pc[1]); \
-  call(4, -rc[1]*pc[2], -rc[0]*pc[2],  rc[0]*rc[1]); \
-  call(5,  rc[1]*pc[2], -pc[0]*pc[2],  pc[0]*rc[1]); \
-  call(6, -pc[1]*pc[2],  rc[0]*pc[2],  rc[0]*pc[1]); \
-  call(7,  pc[1]*pc[2],  pc[0]*pc[2],  pc[0]*pc[1])
-
-#define VTKM_DERIVATIVE_WEIGHTS_WEDGE(pc, rc, call) \
-  call(0, -rc[2], -rc[2], -1.0f+pc[0]+pc[1]); \
-  call(1,   0.0f,  rc[2],            -pc[1]); \
-  call(2,  rc[2],   0.0f,            -pc[0]); \
-  call(3, -pc[2], -pc[2],  1.0f-pc[0]-pc[1]); \
-  call(4,   0.0f,  pc[2],             pc[1]); \
-  call(5,  pc[2],   0.0f,             pc[0])
-
-#define VTKM_DERIVATIVE_WEIGHTS_PYRAMID(pc, rc, call) \
-  call(0, -rc[1]*rc[2], -rc[0]*rc[2], -rc[0]*rc[1]); \
-  call(1,  rc[1]*rc[2], -pc[0]*rc[2], -pc[0]*rc[1]); \
-  call(2,  pc[1]*rc[2],  pc[0]*rc[2], -pc[0]*pc[1]); \
-  call(3, -pc[1]*rc[2],  rc[0]*rc[2], -rc[0]*pc[1]); \
-  call(3,         0.0f,         0.0f,         1.0f)
-
-
-#define VTKM_DERIVATIVE_WEIGHTS_QUAD(pc, rc, call) \
-  call(0, -rc[1], -rc[0]); \
-  call(1,  rc[1], -pc[0]); \
-  call(2,  pc[1],  pc[0]); \
-  call(3, -pc[1],  rc[0])
-
-#define VTKM_DERIVATIVE_WEIGHTS_PIXEL(pc, rc, call) \
-  call(0, -rc[1], -rc[0]); \
-  call(1,  rc[1], -pc[0]); \
-  call(2, -pc[1],  rc[0]); \
-  call(3,  pc[1],  pc[0])
-
-// Given a series of point values for a wedge, return a new series of point
-// for a hexahedron that has the same interpolation within the wedge.
-template<typename FieldVecType>
-VTKM_EXEC_EXPORT
-vtkm::Vec<typename FieldVecType::ComponentType,8>
-PermuteWedgeToHex(const FieldVecType &field)
-{
-  vtkm::Vec<typename FieldVecType::ComponentType,8> hexField;
-
-  hexField[0] = field[0];
-  hexField[1] = field[2];
-  hexField[2] = field[2] + field[1] - field[0];
-  hexField[3] = field[1];
-  hexField[4] = field[3];
-  hexField[5] = field[5];
-  hexField[6] = field[5] + field[4] - field[3];
-  hexField[7] = field[4];
-
-  return hexField;
-}
-
-// Given a series of point values for a pyramid, return a new series of point
-// for a hexahedron that has the same interpolation within the pyramid.
-template<typename FieldVecType>
-VTKM_EXEC_EXPORT
-vtkm::Vec<typename FieldVecType::ComponentType,8>
-PermutePyramidToHex(const FieldVecType &field)
-{
-  typedef typename FieldVecType::ComponentType T;
-
-  vtkm::Vec<T,8> hexField;
-
-  T baseCenter = T(0.25f)*(field[0]+field[1]+field[2]+field[3]);
-
-  hexField[0] = field[0];
-  hexField[1] = field[1];
-  hexField[2] = field[2];
-  hexField[3] = field[3];
-  hexField[4] = field[4]+(field[0]-baseCenter);
-  hexField[5] = field[4]+(field[1]-baseCenter);
-  hexField[6] = field[4]+(field[2]-baseCenter);
-  hexField[7] = field[4]+(field[3]-baseCenter);
-
-  return hexField;
-}
-
-//-----------------------------------------------------------------------------
-// This returns the Jacobian of a hexahedron's (or other 3D cell's) coordinates
-// with respect to parametric coordinates. Explicitly, this is (d is partial
-// derivative):
-//
-//   |                     |
-//   | dx/du  dx/dv  dx/dw |
-//   |                     |
-//   | dy/du  dy/dv  dy/dw |
-//   |                     |
-//   | dz/du  dz/dv  dz/dw |
-//   |                     |
-//
-
-#define VTKM_ACCUM_JACOBIAN_3D(pointIndex, weight0, weight1, weight2) \
-  jacobian(0,0) += static_cast<JacobianType>(wCoords[pointIndex][0] * (weight0)); \
-  jacobian(1,0) += static_cast<JacobianType>(wCoords[pointIndex][1] * (weight0)); \
-  jacobian(2,0) += static_cast<JacobianType>(wCoords[pointIndex][2] * (weight0)); \
-  jacobian(0,1) += static_cast<JacobianType>(wCoords[pointIndex][0] * (weight1)); \
-  jacobian(1,1) += static_cast<JacobianType>(wCoords[pointIndex][1] * (weight1)); \
-  jacobian(2,1) += static_cast<JacobianType>(wCoords[pointIndex][2] * (weight1)); \
-  jacobian(0,2) += static_cast<JacobianType>(wCoords[pointIndex][0] * (weight2)); \
-  jacobian(1,2) += static_cast<JacobianType>(wCoords[pointIndex][1] * (weight2)); \
-  jacobian(2,2) += static_cast<JacobianType>(wCoords[pointIndex][2] * (weight2))
-
-template<typename WorldCoordType,
-         typename ParametricCoordType,
-         typename JacobianType>
-VTKM_EXEC_EXPORT
-void JacobianFor3DCell(const WorldCoordType &wCoords,
-                       const vtkm::Vec<ParametricCoordType,3> &pcoords,
-                       vtkm::Matrix<JacobianType,3,3> &jacobian,
-                       vtkm::CellShapeTagHexahedron)
-{
-  vtkm::Vec<JacobianType,3> pc(pcoords);
-  vtkm::Vec<JacobianType,3> rc = vtkm::Vec<JacobianType,3>(1) - pc;
-
-  jacobian = vtkm::Matrix<JacobianType,3,3>(0);
-  VTKM_DERIVATIVE_WEIGHTS_HEXAHEDRON(pc, rc, VTKM_ACCUM_JACOBIAN_3D);
-}
-
-template<typename WorldCoordType,
-         typename ParametricCoordType,
-         typename JacobianType>
-VTKM_EXEC_EXPORT
-void JacobianFor3DCell(const WorldCoordType &wCoords,
-                       const vtkm::Vec<ParametricCoordType,3> &pcoords,
-                       vtkm::Matrix<JacobianType,3,3> &jacobian,
-                       vtkm::CellShapeTagWedge)
-{
-#if 0
-  // This is not working. Just leverage the hexahedron code that is working.
-  vtkm::Vec<JacobianType,3> pc(pcoords);
-  vtkm::Vec<JacobianType,3> rc = vtkm::Vec<JacobianType,3>(1) - pc;
-
-  jacobian = vtkm::Matrix<JacobianType,3,3>(0);
-  VTKM_DERIVATIVE_WEIGHTS_WEDGE(pc, rc, VTKM_ACCUM_JACOBIAN_3D);
-#else
-  JacobianFor3DCell(vtkm::exec::internal::PermuteWedgeToHex(wCoords),
-                    pcoords,
-                    jacobian,
-                    vtkm::CellShapeTagHexahedron());
-#endif
-}
-
-template<typename WorldCoordType,
-         typename ParametricCoordType,
-         typename JacobianType>
-VTKM_EXEC_EXPORT
-void JacobianFor3DCell(const WorldCoordType &wCoords,
-                       const vtkm::Vec<ParametricCoordType,3> &pcoords,
-                       vtkm::Matrix<JacobianType,3,3> &jacobian,
-                       vtkm::CellShapeTagPyramid)
-{
-#if 0
-  // This is not working. Just leverage the hexahedron code that is working.
-  vtkm::Vec<JacobianType,3> pc(pcoords);
-  vtkm::Vec<JacobianType,3> rc = vtkm::Vec<JacobianType,3>(1) - pc;
-
-  jacobian = vtkm::Matrix<JacobianType,3,3>(0);
-  VTKM_DERIVATIVE_WEIGHTS_PYRAMID(pc, rc, VTKM_ACCUM_JACOBIAN_3D);
-#else
-  JacobianFor3DCell(vtkm::exec::internal::PermutePyramidToHex(wCoords),
-                    pcoords,
-                    jacobian,
-                    vtkm::CellShapeTagHexahedron());
-#endif
-}
-
-#undef VTKM_ACCUM_JACOBIAN_3D
-
-// Derivatives in quadrilaterals are computed in much the same way as
-// hexahedra.  Review the documentation for hexahedra derivatives for details
-// on the math.  The major difference is that the equations are performed in
-// a 2D space built with make_SpaceForQuadrilateral.
-
-#define VTKM_ACCUM_JACOBIAN_2D(pointIndex, weight0, weight1) \
-  wcoords2d = space.ConvertCoordToSpace(wCoords[pointIndex]); \
-  jacobian(0,0) += wcoords2d[0] * (weight0); \
-  jacobian(1,0) += wcoords2d[1] * (weight0); \
-  jacobian(0,1) += wcoords2d[0] * (weight1); \
-  jacobian(1,1) += wcoords2d[1] * (weight1)
-
-template<typename WorldCoordType,
-         typename ParametricCoordType,
-         typename JacobianType>
-VTKM_EXEC_EXPORT
-void JacobianFor2DCell(const WorldCoordType &wCoords,
-                       const vtkm::Vec<ParametricCoordType,3> &pcoords,
-                       const vtkm::exec::internal::Space2D<JacobianType> &space,
-                       vtkm::Matrix<JacobianType,2,2> &jacobian,
-                       vtkm::CellShapeTagQuad)
-{
-  vtkm::Vec<JacobianType,2> pc(static_cast<JacobianType>(pcoords[0]),
-                               static_cast<JacobianType>(pcoords[1]));
-  vtkm::Vec<JacobianType,2> rc = vtkm::Vec<JacobianType,2>(1) - pc;
-
-  vtkm::Vec<JacobianType,2> wcoords2d;
-  jacobian = vtkm::Matrix<JacobianType,2,2>(0);
-  VTKM_DERIVATIVE_WEIGHTS_QUAD(pc, rc, VTKM_ACCUM_JACOBIAN_2D);
-}
-
-#if 0
-// This code doesn't work, so I'm bailing on it. Instead, I'm just grabbing a
-// triangle and finding the derivative of that. If you can do better, please
-// implement it.
-template<typename WorldCoordType,
-         typename ParametricCoordType,
-         typename JacobianType>
-VTKM_EXEC_EXPORT
-void JacobianFor2DCell(const WorldCoordType &wCoords,
-                       const vtkm::Vec<ParametricCoordType,3> &pcoords,
-                       const vtkm::exec::internal::Space2D<JacobianType> &space,
-                       vtkm::Matrix<JacobianType,2,2> &jacobian,
-                       vtkm::CellShapeTagPolygon)
-{
-  const vtkm::IdComponent numPoints = wCoords.GetNumberOfComponents();
-  vtkm::Vec<JacobianType,2> pc(pcoords[0], pcoords[1]);
-  JacobianType deltaAngle = static_cast<JacobianType>(2*vtkm::Pi()/numPoints);
-
-  jacobian = vtkm::Matrix<JacobianType,2,2>(0);
-  for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
-  {
-    JacobianType angle = pointIndex*deltaAngle;
-    vtkm::Vec<JacobianType,2> nodePCoords(0.5f*(vtkm::Cos(angle)+1),
-                                          0.5f*(vtkm::Sin(angle)+1));
-
-    // This is the vector pointing from the user provided parametric coordinate
-    // to the node at pointIndex in parametric space.
-    vtkm::Vec<JacobianType,2> pvec = nodePCoords - pc;
-
-    // The weight (the derivative of the interpolation factor) happens to be
-    // pvec scaled by the cube root of pvec's magnitude.
-    JacobianType magSqr = vtkm::MagnitudeSquared(pvec);
-    JacobianType invMag = vtkm::RSqrt(magSqr);
-    JacobianType scale = invMag*invMag*invMag;
-    vtkm::Vec<JacobianType,2> weight = scale*pvec;
-
-    vtkm::Vec<JacobianType,2> wcoords2d =
-        space.ConvertCoordToSpace(wCoords[pointIndex]);
-    jacobian(0,0) += wcoords2d[0] * weight[0];
-    jacobian(1,0) += wcoords2d[1] * weight[0];
-    jacobian(0,1) += wcoords2d[0] * weight[1];
-    jacobian(1,1) += wcoords2d[1] * weight[1];
-  }
-}
-#endif
-
-#undef VTKM_ACCUM_JACOBIAN_2D
-
-
+namespace {
 #define VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(pointIndex,weight0,weight1,weight2)\
   parametricDerivative[0] += field[pointIndex] * weight0; \
   parametricDerivative[1] += field[pointIndex] * weight1; \
@@ -359,8 +62,14 @@ ParametricDerivative(const FieldVecType &field,
   GradientType rc = GradientType(1) - pc;
 
   GradientType parametricDerivative(0);
-  VTKM_DERIVATIVE_WEIGHTS_HEXAHEDRON(pc,rc,VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D);
-
+  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(0, -rc[1]*rc[2], -rc[0]*rc[2], -rc[0]*rc[1]);
+  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(1,  rc[1]*rc[2], -pc[0]*rc[2], -pc[0]*rc[1]);
+  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(2,  pc[1]*rc[2],  pc[0]*rc[2], -pc[0]*pc[1]);
+  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(3, -pc[1]*rc[2],  rc[0]*rc[2], -rc[0]*pc[1]);
+  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(4, -rc[1]*pc[2], -rc[0]*pc[2],  rc[0]*rc[1]);
+  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(5,  rc[1]*pc[2], -pc[0]*pc[2],  pc[0]*rc[1]);
+  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(6,  pc[1]*pc[2],  pc[0]*pc[2],  pc[0]*pc[1]);
+  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(7, -pc[1]*pc[2],  rc[0]*pc[2],  rc[0]*pc[1]);
   return parametricDerivative;
 }
 
@@ -440,7 +149,10 @@ ParametricDerivative(const FieldVecType &field,
   GradientType rc = GradientType(1) - pc;
 
   GradientType parametricDerivative(0);
-  VTKM_DERIVATIVE_WEIGHTS_QUAD(pc, rc, VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D);
+  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D(0, -rc[1], -rc[0]);
+  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D(1,  rc[1], -pc[0]);
+  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D(2,  pc[1],  pc[0]);
+  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D(3, -pc[1],  rc[0]);
 
   return parametricDerivative;
 }
@@ -493,15 +205,7 @@ ParametricDerivative(const FieldVecType &field,
 
 #undef VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D
 
-#undef VTKM_DERIVATIVE_WEIGHTS_HEXAHEDRON
-#undef VTKM_DERIVATIVE_WEIGHTS_VOXEL
-#undef VTKM_DERIVATIVE_WEIGHTS_WEDGE
-#undef VTKM_DERIVATIVE_WEIGHTS_PYRAMID
-#undef VTKM_DERIVATIVE_WEIGHTS_QUAD
-#undef VTKM_DERIVATIVE_WEIGHTS_PIXEL
-
-
-} // namespace internal
+} // namespace unnamed
 
 namespace detail {
 
@@ -522,12 +226,12 @@ CellDerivativeFor3DCell(const FieldVecType &field,
   // For reasons that should become apparent in a moment, we actually want
   // the transpose of the Jacobian.
   vtkm::Matrix<FieldType,3,3> jacobianTranspose;
-  vtkm::exec::internal::JacobianFor3DCell(
+  vtkm::exec::JacobianFor3DCell(
         wCoords, pcoords, jacobianTranspose, CellShapeTag());
   jacobianTranspose = vtkm::MatrixTranspose(jacobianTranspose);
 
   GradientType parametricDerivative =
-      vtkm::exec::internal::ParametricDerivative(field,pcoords,CellShapeTag());
+      ParametricDerivative(field,pcoords,CellShapeTag());
 
   // If we write out the matrices below, it should become clear that the
   // Jacobian transpose times the field derivative in world space equals
@@ -571,14 +275,14 @@ CellDerivativeFor2DCell(const FieldVecType &field,
   // For reasons that should become apparent in a moment, we actually want
   // the transpose of the Jacobian.
   vtkm::Matrix<FieldType,2,2> jacobianTranspose;
-  vtkm::exec::internal::JacobianFor2DCell(
+  vtkm::exec::JacobianFor2DCell(
         wCoords, pcoords, space, jacobianTranspose, CellShapeTag());
   jacobianTranspose = vtkm::MatrixTranspose(jacobianTranspose);
 
   // Find the derivative of the field in parametric coordinate space. That is,
   // find the vector [ds/du, ds/dv].
   vtkm::Vec<FieldType,2> parametricDerivative =
-      vtkm::exec::internal::ParametricDerivative(field,pcoords,CellShapeTag());
+      ParametricDerivative(field,pcoords,CellShapeTag());
 
   // If we write out the matrices below, it should become clear that the
   // Jacobian transpose times the field derivative in world space equals
@@ -721,22 +425,14 @@ CellDerivative(const FieldVecType &field,
 }
 
 //-----------------------------------------------------------------------------
-template<typename FieldVecType,
-         typename WorldCoordType,
-         typename ParametricCoordType>
+template<typename ValueType,
+         typename WCoordType>
 VTKM_EXEC_EXPORT
-vtkm::Vec<typename FieldVecType::ComponentType,3>
-CellDerivative(const FieldVecType &field,
-               const WorldCoordType &wCoords,
-               const vtkm::Vec<ParametricCoordType,3> &vtkmNotUsed(pcoords),
-               vtkm::CellShapeTagTriangle,
-               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
+vtkm::Vec<ValueType,3>
+TriangleDerivative(const vtkm::Vec<ValueType, 3> &field,
+                   const vtkm::Vec<WCoordType, 3> &wCoords)
 {
-  VTKM_ASSERT(field.GetNumberOfComponents() == 3);
-  VTKM_ASSERT(wCoords.GetNumberOfComponents() == 3);
-
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef vtkm::Vec<FieldType,3> GradientType;
+  typedef vtkm::Vec<ValueType,3> GradientType;
 
   // The scalar values of the three points in a triangle completely specify a
   // linear field (with constant gradient) assuming the field is constant in
@@ -766,7 +462,7 @@ CellDerivative(const FieldVecType &field,
   GradientType v1 = wCoords[2] - wCoords[0];
   GradientType n = vtkm::Cross(v0, v1);
 
-  vtkm::Matrix<FieldType,3,3> A;
+  vtkm::Matrix<ValueType,3,3> A;
   vtkm::MatrixSetRow(A, 0, v0);
   vtkm::MatrixSetRow(A, 1, v1);
   vtkm::MatrixSetRow(A, 2, n);
@@ -787,6 +483,111 @@ CellDerivative(const FieldVecType &field,
   bool valid;
 
   return vtkm::SolveLinearSystem(A, b, valid);
+}
+
+//-----------------------------------------------------------------------------
+template<typename FieldVecType,
+         typename WorldCoordType,
+         typename ParametricCoordType>
+VTKM_EXEC_EXPORT
+vtkm::Vec<typename FieldVecType::ComponentType,3>
+CellDerivative(const FieldVecType &inputField,
+               const WorldCoordType &wCoords,
+               const vtkm::Vec<ParametricCoordType,3> &vtkmNotUsed(pcoords),
+               vtkm::CellShapeTagTriangle,
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
+{
+  VTKM_ASSERT(inputField.GetNumberOfComponents() == 3);
+  VTKM_ASSERT(wCoords.GetNumberOfComponents() == 3);
+
+  using ValueType = typename FieldVecType::ComponentType;
+  using WCoordType = typename WorldCoordType::ComponentType;
+  vtkm::Vec<ValueType, 3> field; inputField.CopyInto(field);
+  vtkm::Vec<WCoordType, 3> wpoints; wCoords.CopyInto(wpoints);
+  return TriangleDerivative(field, wpoints);
+}
+
+//-----------------------------------------------------------------------------
+template <typename ParametricCoordType>
+VTKM_EXEC_EXPORT void
+PolygonComputeIndices(const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::IdComponent numPoints, vtkm::IdComponent& firstPointIndex,
+  vtkm::IdComponent& secondPointIndex)
+{
+  ParametricCoordType angle;
+  if ((vtkm::Abs(pcoords[0]-0.5f) < 4*vtkm::Epsilon<ParametricCoordType>()) &&
+      (vtkm::Abs(pcoords[1]-0.5f) < 4*vtkm::Epsilon<ParametricCoordType>()))
+  {
+    angle = 0;
+  }
+  else
+  {
+    angle = vtkm::ATan2(pcoords[1]-0.5f, pcoords[0]-0.5f);
+    if (angle < 0)
+    {
+      angle += static_cast<ParametricCoordType>(2*vtkm::Pi());
+    }
+  }
+
+  const ParametricCoordType deltaAngle =
+      static_cast<ParametricCoordType>(2*vtkm::Pi()/numPoints);
+  firstPointIndex =
+      static_cast<vtkm::IdComponent>(vtkm::Floor(angle/deltaAngle));
+  secondPointIndex = firstPointIndex + 1;
+  if (secondPointIndex == numPoints)
+  {
+    secondPointIndex = 0;
+  }
+}
+
+//-----------------------------------------------------------------------------
+template<typename FieldVecType,
+         typename WorldCoordType>
+VTKM_EXEC_EXPORT
+vtkm::Vec<typename FieldVecType::ComponentType,3>
+PolygonDerivative(const FieldVecType &field,
+                  const WorldCoordType &wCoords,
+                  vtkm::IdComponent numPoints,
+                  vtkm::IdComponent firstPointIndex,
+                  vtkm::IdComponent secondPointIndex)
+{
+  // If we are here, then there are 5 or more points on this polygon.
+
+  // Arrange the points such that they are on the circle circumscribed in the
+  // unit square from 0 to 1. That is, the point are on the circle centered at
+  // coordinate 0.5,0.5 with radius 0.5. The polygon is divided into regions
+  // defined by they triangle fan formed by the points around the center. This
+  // is C0 continuous but not necessarily C1 continuous. It is also possible to
+  // have a non 1 to 1 mapping between parametric coordinates world coordinates
+  // if the polygon is not planar or convex.
+
+  typedef typename FieldVecType::ComponentType FieldType;
+  typedef typename WorldCoordType::ComponentType WCoordType;
+
+  // Find the interpolation for the center point.
+  FieldType fieldCenter = field[0];
+  WCoordType wcoordCenter = wCoords[0];
+  for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; pointIndex++)
+  {
+    fieldCenter = fieldCenter + field[pointIndex];
+    wcoordCenter = wcoordCenter + wCoords[pointIndex];
+  }
+  fieldCenter = fieldCenter*FieldType(1.0f/static_cast<float>(numPoints));
+  wcoordCenter = wcoordCenter*WCoordType(1.0f/static_cast<float>(numPoints));
+
+  // Set up parameters for triangle that pcoords is in
+  vtkm::Vec<FieldType,3> triangleField( fieldCenter,
+                                        field[firstPointIndex],
+                                        field[secondPointIndex]);
+
+  vtkm::Vec<WCoordType,3> triangleWCoords( wcoordCenter,
+                                           wCoords[firstPointIndex],
+                                           wCoords[secondPointIndex] );
+
+  // Now use the triangle derivative. pcoords is actually invalid for the
+  // triangle, but that does not matter as the derivative for a triangle does
+  // not depend on it.
+  return TriangleDerivative(triangleField, triangleWCoords);
 }
 
 //-----------------------------------------------------------------------------
@@ -830,74 +631,9 @@ CellDerivative(const FieldVecType &field,
                                   worklet);
   }
 
-  // If we are here, then there are 5 or more points on this polygon.
-
-  // Arrange the points such that they are on the circle circumscribed in the
-  // unit square from 0 to 1. That is, the point are on the circle centered at
-  // coordinate 0.5,0.5 with radius 0.5. The polygon is divided into regions
-  // defined by they triangle fan formed by the points around the center. This
-  // is C0 continuous but not necessarily C1 continuous. It is also possible to
-  // have a non 1 to 1 mapping between parametric coordinates world coordinates
-  // if the polygon is not planar or convex.
-
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef typename WorldCoordType::ComponentType WCoordType;
-
-  // Find the interpolation for the center point.
-  FieldType fieldCenter = field[0];
-  WCoordType wcoordCenter = wCoords[0];
-  for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; pointIndex++)
-  {
-    fieldCenter = fieldCenter + field[pointIndex];
-    wcoordCenter = wcoordCenter + wCoords[pointIndex];
-  }
-  fieldCenter = fieldCenter*FieldType(1.0f/static_cast<float>(numPoints));
-  wcoordCenter = wcoordCenter*WCoordType(1.0f/static_cast<float>(numPoints));
-
-  ParametricCoordType angle;
-  if ((vtkm::Abs(pcoords[0]-0.5f) < 4*vtkm::Epsilon<ParametricCoordType>()) &&
-      (vtkm::Abs(pcoords[1]-0.5f) < 4*vtkm::Epsilon<ParametricCoordType>()))
-  {
-    angle = 0;
-  }
-  else
-  {
-    angle = vtkm::ATan2(pcoords[1]-0.5f, pcoords[0]-0.5f);
-    if (angle < 0)
-    {
-      angle += static_cast<ParametricCoordType>(2*vtkm::Pi());
-    }
-  }
-
-  const ParametricCoordType deltaAngle =
-      static_cast<ParametricCoordType>(2*vtkm::Pi()/numPoints);
-  vtkm::IdComponent firstPointIndex =
-      static_cast<vtkm::IdComponent>(vtkm::Floor(angle/deltaAngle));
-  vtkm::IdComponent secondPointIndex = firstPointIndex + 1;
-  if (secondPointIndex == numPoints)
-  {
-    secondPointIndex = 0;
-  }
-
-  // Set up parameters for triangle that pcoords is in
-  vtkm::Vec<FieldType,3> triangleField;
-  triangleField[0] = fieldCenter;
-  triangleField[1] = field[firstPointIndex];
-  triangleField[2] = field[secondPointIndex];
-
-  vtkm::Vec<WCoordType,3> triangleWCoords;
-  triangleWCoords[0] = wcoordCenter;
-  triangleWCoords[1] = wCoords[firstPointIndex];
-  triangleWCoords[2] = wCoords[secondPointIndex];
-
-  // Now use the triangle derivative. pcoords is actually invalid for the
-  // triangle, but that does not matter as the derivative for a triangle does
-  // not depend on it.
-  return vtkm::exec::CellDerivative(triangleField,
-                                    triangleWCoords,
-                                    pcoords,
-                                    vtkm::CellShapeTagTriangle(),
-                                    worklet);
+  vtkm::IdComponent firstPointIndex, secondPointIndex;
+  PolygonComputeIndices(pcoords,numPoints,firstPointIndex,secondPointIndex);
+  return PolygonDerivative(field, wCoords, numPoints, firstPointIndex, secondPointIndex);
 }
 
 //-----------------------------------------------------------------------------
@@ -906,17 +642,22 @@ template<typename FieldVecType,
          typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 vtkm::Vec<typename FieldVecType::ComponentType,3>
-CellDerivative(const FieldVecType &field,
+CellDerivative(const FieldVecType &inputField,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &pcoords,
                vtkm::CellShapeTagQuad,
                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT(field.GetNumberOfComponents() == 4);
+  VTKM_ASSERT(inputField.GetNumberOfComponents() == 4);
   VTKM_ASSERT(wCoords.GetNumberOfComponents() == 4);
 
+  using ValueType = typename FieldVecType::ComponentType;
+  using WCoordType = typename WorldCoordType::ComponentType;
+  vtkm::Vec<ValueType, 4> field; inputField.CopyInto(field);
+  vtkm::Vec<WCoordType, 4> wpoints; wCoords.CopyInto(wpoints);
+
   return detail::CellDerivativeFor2DCell(
-        field, wCoords, pcoords, vtkm::CellShapeTagQuad());
+        field, wpoints, pcoords, vtkm::CellShapeTagQuad());
 }
 
 template<typename FieldVecType,
@@ -949,22 +690,14 @@ CellDerivative(const FieldVecType &field,
 }
 
 //-----------------------------------------------------------------------------
-template<typename FieldVecType,
-         typename WorldCoordType,
-         typename ParametricCoordType>
+template<typename ValueType,
+         typename WorldCoordType>
 VTKM_EXEC_EXPORT
-vtkm::Vec<typename FieldVecType::ComponentType,3>
-CellDerivative(const FieldVecType &field,
-               const WorldCoordType &wCoords,
-               const vtkm::Vec<ParametricCoordType,3> &vtkmNotUsed(pcoords),
-               vtkm::CellShapeTagTetra,
-               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
+vtkm::Vec<ValueType,3>
+TetraDerivative(const vtkm::Vec<ValueType,4> &field,
+                const vtkm::Vec<WorldCoordType,4> &wCoords)
 {
-  VTKM_ASSERT(field.GetNumberOfComponents() == 4);
-  VTKM_ASSERT(wCoords.GetNumberOfComponents() == 4);
-
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef vtkm::Vec<FieldType,3> GradientType;
+  typedef vtkm::Vec<ValueType,3> GradientType;
 
   // The scalar values of the four points in a tetrahedron completely specify a
   // linear field (with constant gradient). The field, defined by the 3-vector
@@ -993,7 +726,7 @@ CellDerivative(const FieldVecType &field,
   GradientType v1 = wCoords[2] - wCoords[0];
   GradientType v2 = wCoords[3] - wCoords[0];
 
-  vtkm::Matrix<FieldType,3,3> A;
+  vtkm::Matrix<ValueType,3,3> A;
   vtkm::MatrixSetRow(A, 0, v0);
   vtkm::MatrixSetRow(A, 1, v1);
   vtkm::MatrixSetRow(A, 2, v2);
@@ -1022,17 +755,44 @@ template<typename FieldVecType,
          typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 vtkm::Vec<typename FieldVecType::ComponentType,3>
-CellDerivative(const FieldVecType &field,
+CellDerivative(const FieldVecType &inputField,
+               const WorldCoordType &wCoords,
+               const vtkm::Vec<ParametricCoordType,3> &vtkmNotUsed(pcoords),
+               vtkm::CellShapeTagTetra,
+               const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
+{
+  VTKM_ASSERT(inputField.GetNumberOfComponents() == 4);
+  VTKM_ASSERT(wCoords.GetNumberOfComponents() == 4);
+
+  using ValueType = typename FieldVecType::ComponentType;
+  using WCoordType = typename WorldCoordType::ComponentType;
+  vtkm::Vec<ValueType, 4> field; inputField.CopyInto(field);
+  vtkm::Vec<WCoordType, 4> wpoints; wCoords.CopyInto(wpoints);
+  return TetraDerivative(field, wpoints);
+}
+
+//-----------------------------------------------------------------------------
+template<typename FieldVecType,
+         typename WorldCoordType,
+         typename ParametricCoordType>
+VTKM_EXEC_EXPORT
+vtkm::Vec<typename FieldVecType::ComponentType,3>
+CellDerivative(const FieldVecType &inputField,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &pcoords,
                vtkm::CellShapeTagHexahedron,
                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT(field.GetNumberOfComponents() == 8);
+  VTKM_ASSERT(inputField.GetNumberOfComponents() == 8);
   VTKM_ASSERT(wCoords.GetNumberOfComponents() == 8);
 
+  using ValueType = typename FieldVecType::ComponentType;
+  using WCoordType = typename WorldCoordType::ComponentType;
+  vtkm::Vec<ValueType, 8> field; inputField.CopyInto(field);
+  vtkm::Vec<WCoordType, 8> wpoints; wCoords.CopyInto(wpoints);
+
   return detail::CellDerivativeFor3DCell(
-        field, wCoords, pcoords, vtkm::CellShapeTagHexahedron());
+        field, wpoints, pcoords, vtkm::CellShapeTagHexahedron());
 }
 
 template<typename FieldVecType,
@@ -1074,17 +834,22 @@ template<typename FieldVecType,
          typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 vtkm::Vec<typename FieldVecType::ComponentType,3>
-CellDerivative(const FieldVecType &field,
+CellDerivative(const FieldVecType &inputField,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &pcoords,
                vtkm::CellShapeTagWedge,
                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT(field.GetNumberOfComponents() == 6);
+  VTKM_ASSERT(inputField.GetNumberOfComponents() == 6);
   VTKM_ASSERT(wCoords.GetNumberOfComponents() == 6);
 
+  using ValueType = typename FieldVecType::ComponentType;
+  using WCoordType = typename WorldCoordType::ComponentType;
+  vtkm::Vec<ValueType, 6> field; inputField.CopyInto(field);
+  vtkm::Vec<WCoordType, 6> wpoints; wCoords.CopyInto(wpoints);
+
   return detail::CellDerivativeFor3DCell(
-        field, wCoords, pcoords, vtkm::CellShapeTagWedge());
+        field, wpoints, pcoords, vtkm::CellShapeTagWedge());
 }
 
 
@@ -1094,17 +859,22 @@ template<typename FieldVecType,
          typename ParametricCoordType>
 VTKM_EXEC_EXPORT
 vtkm::Vec<typename FieldVecType::ComponentType,3>
-CellDerivative(const FieldVecType &field,
+CellDerivative(const FieldVecType &inputField,
                const WorldCoordType &wCoords,
                const vtkm::Vec<ParametricCoordType,3> &pcoords,
                vtkm::CellShapeTagPyramid,
                const vtkm::exec::FunctorBase &vtkmNotUsed(worklet))
 {
-  VTKM_ASSERT(field.GetNumberOfComponents() == 5);
+  VTKM_ASSERT(inputField.GetNumberOfComponents() == 5);
   VTKM_ASSERT(wCoords.GetNumberOfComponents() == 5);
 
+  using ValueType = typename FieldVecType::ComponentType;
+  using WCoordType = typename WorldCoordType::ComponentType;
+  vtkm::Vec<ValueType, 5> field; inputField.CopyInto(field);
+  vtkm::Vec<WCoordType, 5> wpoints; wCoords.CopyInto(wpoints);
+
   return detail::CellDerivativeFor3DCell(
-        field, wCoords, pcoords, vtkm::CellShapeTagPyramid());
+        field, wpoints, pcoords, vtkm::CellShapeTagPyramid());
 }
 
 
