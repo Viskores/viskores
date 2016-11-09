@@ -20,6 +20,7 @@
 
 set(headers
   DispatcherMapField.h
+  DispatcherStreamingMapField.h
   WorkletMapField.h
   DispatcherMapTopology.h
   WorkletMapTopology.h

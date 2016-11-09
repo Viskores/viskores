@@ -78,8 +78,10 @@ public:
   ThreadIndicesTopologyMap(vtkm::Id threadIndex,
                            const OutToInArrayType& inToOut,
                            const VisitArrayType& visit,
-                           const ConnectivityType& connectivity)
-    : Superclass(threadIndex, inToOut.Get(threadIndex), visit.Get(threadIndex)),
+                           const ConnectivityType& connectivity,
+			   vtkm::Id globalThreadIndexOffset)
+    : Superclass(threadIndex, inToOut.Get(threadIndex), visit.Get(threadIndex),
+      globalThreadIndexOffset),
       CellShape(detail::CellShapeInitializer<CellShapeTag>::GetDefault())
   {
     // The connectivity is stored in the invocation parameter at the given
@@ -190,7 +192,8 @@ public:
   ThreadIndicesTopologyMap(vtkm::Id threadIndex,
                            const OutToInArrayType& inToOut,
                            const VisitArrayType& visit,
-                           const ConnectivityType& connectivity)
+                           const ConnectivityType& connectivity,
+			   vtkm::Id globalThreadIndexOffset=0)
   {
 
     this->InputIndex = inToOut.Get(threadIndex);
@@ -199,6 +202,7 @@ public:
     this->LogicalIndex = connectivity.FlatToLogicalToIndex(this->InputIndex);
     this->IndicesFrom = connectivity.GetIndices(this->LogicalIndex);
     this->CellShape = connectivity.GetCellShape(this->InputIndex);
+    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
   template<typename OutToInArrayType, typename VisitArrayType>
@@ -206,7 +210,8 @@ public:
   ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex,
                            const OutToInArrayType&,
                            const VisitArrayType& visit,
-                           const ConnectivityType& connectivity)
+                           const ConnectivityType& connectivity,
+                           const vtkm::Id globalThreadIndexOffset=0)
   {
     // We currently only support multidimensional indices on one-to-one input-
     // to-output mappings. (We don't have a use case otherwise.)
@@ -221,6 +226,7 @@ public:
     this->LogicalIndex = logicalIndex;
     this->IndicesFrom = connectivity.GetIndices(logicalIndex);
     this->CellShape = connectivity.GetCellShape(index);
+    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
   /// \brief The logical index into the input domain.
@@ -280,6 +286,12 @@ public:
     return this->VisitIndex;
   }
 
+  VTKM_EXEC_EXPORT
+  vtkm::Id GetGlobalIndex() const
+  {
+    return (this->GlobalThreadIndexOffset + this->OutputIndex);
+  }
+
   /// \brief The input indices of the "from" elements.
   ///
   /// A topology map has "from" and "to" elements (for example from points to
@@ -322,6 +334,7 @@ private:
   LogicalIndexType LogicalIndex;
   IndicesFromType IndicesFrom;
   CellShapeTag CellShape;
+  vtkm::Id GlobalThreadIndexOffset;
 };
 
 }

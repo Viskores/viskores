@@ -17,9 +17,11 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+
 #ifndef vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
 #define vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
 
+#include <vtkm/cont/ArrayHandleStreaming.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
@@ -305,6 +307,47 @@ public:
   }
 
   //--------------------------------------------------------------------------
+  // Streaming Reduce
+  template<typename T, class CIn>
+  VTKM_CONT_EXPORT static T StreamingReduce(
+      const vtkm::Id numBlocks,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      T initialValue)
+  {
+    return DerivedAlgorithm::StreamingReduce(numBlocks, input, initialValue, vtkm::Add());
+  }
+
+  template<typename T, class CIn, class BinaryFunctor>
+  VTKM_CONT_EXPORT static T StreamingReduce(
+      const vtkm::Id numBlocks,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      T initialValue,
+      BinaryFunctor binary_functor)
+  {
+    vtkm::Id fullSize = input.GetNumberOfValues();
+    vtkm::Id blockSize = fullSize / numBlocks;
+    if (fullSize % numBlocks != 0) blockSize += 1;
+
+    T lastResult;
+    for (vtkm::Id block=0; block<numBlocks; block++)
+    {
+      vtkm::Id numberOfInstances = blockSize;
+      if (block == numBlocks-1)
+        numberOfInstances = fullSize - blockSize*block;
+
+      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,CIn> > streamIn =
+          vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,CIn> >(
+          input, block, blockSize, numberOfInstances);
+
+      if (block == 0)
+        lastResult = DerivedAlgorithm::Reduce(streamIn, initialValue, binary_functor);
+      else
+        lastResult = DerivedAlgorithm::Reduce(streamIn, lastResult, binary_functor);
+    }
+    return lastResult;
+  }
+
+  //--------------------------------------------------------------------------
   // Reduce By Key
   template<typename T, typename U, class KIn, class VIn, class KOut, class VOut,
           class BinaryFunctor>
@@ -392,7 +435,7 @@ public:
   // Scan Exclusive
   template<typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT_EXPORT static T ScanExclusive(
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
       vtkm::cont::ArrayHandle<T,COut>& output,
       BinaryFunctor binaryFunctor,
       const T& initialValue)
@@ -428,11 +471,68 @@ public:
 
   template<typename T, class CIn, class COut>
   VTKM_CONT_EXPORT static T ScanExclusive(
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
     return ScanExclusive(input, output, vtkm::Sum(),
                          vtkm::TypeTraits<T>::ZeroInitialization());
+  }
+
+  //--------------------------------------------------------------------------
+  // Streaming exclusive scan
+  template<typename T, class CIn, class COut>
+  VTKM_CONT_EXPORT static T StreamingScanExclusive(
+      const vtkm::Id numBlocks,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      vtkm::cont::ArrayHandle<T,COut>& output)
+  {
+    return DerivedAlgorithm::StreamingScanExclusive(numBlocks,
+                                                    input,
+                                                    output,
+                                                    vtkm::Sum(),
+                                                    vtkm::TypeTraits<T>::ZeroInitialization());
+  }
+
+  template<typename T, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT_EXPORT static T StreamingScanExclusive(
+      const vtkm::Id numBlocks,
+      const vtkm::cont::ArrayHandle<T,CIn>& input,
+      vtkm::cont::ArrayHandle<T,COut>& output,
+      BinaryFunctor binary_functor,
+      const T& initialValue)
+  {
+    vtkm::Id fullSize = input.GetNumberOfValues();
+    vtkm::Id blockSize = fullSize / numBlocks;
+    if (fullSize % numBlocks != 0) blockSize += 1;
+
+    T lastResult;
+    for (vtkm::Id block=0; block<numBlocks; block++)
+    {
+      vtkm::Id numberOfInstances = blockSize;
+      if (block == numBlocks-1)
+        numberOfInstances = fullSize - blockSize*block;
+
+      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,CIn> > streamIn =
+          vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,CIn> >(
+          input, block, blockSize, numberOfInstances);
+
+      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,COut> > streamOut =
+          vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T,COut> >(
+          output, block, blockSize, numberOfInstances);
+
+      if (block == 0)
+      {
+        streamOut.AllocateFullArray(fullSize);
+        lastResult = DerivedAlgorithm::ScanExclusive(streamIn, streamOut, binary_functor, initialValue);
+      }
+      else
+      {
+        lastResult = DerivedAlgorithm::ScanExclusive(streamIn, streamOut, binary_functor, lastResult);
+      }
+
+      streamOut.SyncControlArray();
+    }
+    return lastResult;
   }
 
   //--------------------------------------------------------------------------

@@ -177,17 +177,20 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
     return input + 200;
   }
 
-  template<typename T, typename OutToInArrayType, typename VisitArrayType, typename InputDomainType>
+  template<typename T, typename OutToInArrayType, typename VisitArrayType, 
+           typename InputDomainType, typename G>
   VTKM_EXEC_EXPORT
   vtkm::exec::arg::ThreadIndicesBasic
   GetThreadIndices(const T& threadIndex,
                    const OutToInArrayType& outToIn,
                    const VisitArrayType& visit,
-                   const InputDomainType &) const
+                   const InputDomainType &,
+                   const G& globalThreadIndexOffset) const
   {
     return vtkm::exec::arg::ThreadIndicesBasic(threadIndex,
                                                outToIn.Get(threadIndex),
-                                               visit.Get(threadIndex) );
+                                               visit.Get(threadIndex),
+                                               globalThreadIndexOffset );
   }
 };
 
@@ -202,17 +205,20 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
     this->RaiseError(ERROR_MESSAGE);
   }
 
-  template<typename T, typename OutToInArrayType, typename VisitArrayType, typename InputDomainType>
+  template<typename T, typename OutToInArrayType, typename VisitArrayType, 
+           typename InputDomainType, typename G>
   VTKM_EXEC_EXPORT
   vtkm::exec::arg::ThreadIndicesBasic
   GetThreadIndices(const T& threadIndex,
                    const OutToInArrayType& outToIn,
                    const VisitArrayType& visit,
-                   const InputDomainType &) const
+                   const InputDomainType &,
+                   const G& globalThreadIndexOffset) const
   {
     return vtkm::exec::arg::ThreadIndicesBasic(threadIndex,
                                                outToIn.Get(threadIndex),
-                                               visit.Get(threadIndex) );
+                                               visit.Get(threadIndex), 
+                                               globalThreadIndexOffset );
   }
 };
 

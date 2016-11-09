@@ -289,11 +289,13 @@ public:
   GetThreadIndices(const T& threadIndex,
                    const OutToInArrayType& outToIn,
                    const VisitArrayType& visit,
-                   const InputDomainType &) const
+                   const InputDomainType &,
+                   const T& globalThreadIndexOffset=0) const
   {
     return vtkm::exec::arg::ThreadIndicesBasic(threadIndex,
                                                outToIn.Get(threadIndex),
-                                               visit.Get(threadIndex) );
+                                               visit.Get(threadIndex),
+                                               globalThreadIndexOffset );
   }
 };
 

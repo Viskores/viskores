@@ -28,6 +28,7 @@ set(unit_tests
   UnitTestPointElevation.cxx
   UnitTestScatterCounting.cxx
   UnitTestSplatKernels.cxx
+  UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx
   UnitTestTetrahedralizeExplicitGrid.cxx
   UnitTestTetrahedralizeUniformGrid.cxx
