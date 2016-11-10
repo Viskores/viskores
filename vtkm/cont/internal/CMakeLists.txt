@@ -32,7 +32,6 @@ set(headers
   DynamicTransform.h
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
-  PointCoordinatesBase.h
   RuntimeDeviceTracker.h
   SimplePolymorphicContainer.h
   StorageError.h
