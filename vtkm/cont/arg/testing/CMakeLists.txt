@@ -23,9 +23,11 @@ set(unit_tests
   UnitTestTransportArrayIn.cxx
   UnitTestTransportArrayInOut.cxx
   UnitTestTransportArrayOut.cxx
+  UnitTestTransportCellSetIn.cxx
   UnitTestTransportExecObject.cxx
   UnitTestTransportWholeArray.cxx
   UnitTestTypeCheckArray.cxx
+  UnitTestTypeCheckCellSet.cxx
   UnitTestTypeCheckExecObject.cxx
   )
 

@@ -1,0 +1,119 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//============================================================================
+
+#include <vtkm/cont/arg/TransportTagCellSetIn.h>
+
+#include <vtkm/cont/CellSetExplicit.h>
+
+#include <vtkm/exec/FunctorBase.h>
+
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+
+#include <vtkm/cont/testing/Testing.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
+
+
+namespace {
+
+template<typename CellSetInType>
+struct TestKernel : public vtkm::exec::FunctorBase
+{
+  CellSetInType CellSet;
+
+  VTKM_EXEC_EXPORT
+  void operator()(vtkm::Id) const
+  {
+  if (this->CellSet.GetNumberOfElements() != 2)
+    {
+      this->RaiseError("Got bad number of shapes in exec cellset object.");
+    }
+
+  if (this->CellSet.GetNumberOfIndices(0) != 3 ||
+      this->CellSet.GetNumberOfIndices(1) != 4 )
+    {
+      this->RaiseError("Got bad number of Indices in exec cellset object.");
+    }
+
+  if (this->CellSet.GetCellShape(0).Id != 5 ||
+      this->CellSet.GetCellShape(1).Id != 9 )
+    {
+      this->RaiseError("Got bad cell shape in exec cellset object.");
+    }
+  }
+};
+
+template<typename Device>
+void TransportWholeCellSetIn(Device)
+{
+  //build a fake cell set
+  const int nVerts = 5;
+  typedef vtkm::Vec<vtkm::Float32,3> CoordType;
+  std::vector<CoordType> coords(nVerts);
+
+  coords[0] = CoordType(0, 0, 0);
+  coords[1] = CoordType(1, 0, 0);
+  coords[2] = CoordType(1, 1, 0);
+  coords[3] = CoordType(2, 1, 0);
+  coords[4] = CoordType(2, 2, 0);
+  CoordType coordinates[nVerts] = {
+    CoordType(0, 0, 0),
+    CoordType(1, 0, 0),
+    CoordType(1, 1, 0),
+    CoordType(2, 1, 0),
+    CoordType(2, 2, 0)
+  };
+
+  vtkm::cont::CellSetExplicit<> contObject(nVerts, "cells");
+  contObject.PrepareToAddCells(2, 7);
+  contObject.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, vtkm::make_Vec<vtkm::Id>(0,1,2));
+  contObject.AddCell(vtkm::CELL_SHAPE_QUAD, 4, vtkm::make_Vec<vtkm::Id>(2,1,3,4));
+  contObject.CompleteAddingCells();
+
+  typedef vtkm::TopologyElementTagPoint FromType;
+  typedef vtkm::TopologyElementTagCell ToType;
+
+  typedef typename  vtkm::cont::CellSetExplicit<>
+      ::template ExecutionTypes< Device, FromType, ToType >
+      ::ExecObjectType ExecObjectType;
+
+  vtkm::cont::arg::Transport<
+      vtkm::cont::arg::TransportTagCellSetIn<FromType,ToType>,
+      vtkm::cont::CellSetExplicit<>,
+      Device>
+      transport;
+
+  TestKernel<ExecObjectType> kernel;
+  kernel.CellSet = transport(contObject, 1);
+
+  vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, 1);
+}
+
+void UnitTestCellSetIn()
+{
+  std::cout << "Trying CellSetIn transport with serial device." << std::endl;
+  TransportWholeCellSetIn(vtkm::cont::DeviceAdapterTagSerial());
+}
+
+} // Anonymous namespace
+
+int UnitTestTransportCellSetIn(int, char *[])
+{
+  return vtkm::cont::testing::Testing::Run(UnitTestCellSetIn);
+}
