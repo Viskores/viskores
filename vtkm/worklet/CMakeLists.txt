@@ -30,6 +30,7 @@ set(headers
   ExternalFaces.h
   FieldHistogram.h
   FieldStatistics.h
+  Gradient.h
   KernelSplatter.h
   Magnitude.h
   MarchingCubes.h
