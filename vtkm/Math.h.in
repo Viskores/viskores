@@ -566,6 +566,35 @@ struct FloatLimits<vtkm::Float32>
   }
 };
 
+template<int N>
+struct FloatLimits< vtkm::Vec<vtkm::Float32,N> >
+{
+  typedef vtkm::detail::IEEE754Bits32 BitsType;
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<vtkm::Float32,N> Nan() {
+    BitsType nan = {VTKM_NAN_BITS_32};
+    return vtkm::Vec<vtkm::Float32,N>(nan.scalar);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<vtkm::Float32,N> Infinity() {
+    BitsType inf = {VTKM_INF_BITS_32};
+    return vtkm::Vec<vtkm::Float32,N>(inf.scalar);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<vtkm::Float32,N> NegativeInfinity() {
+    BitsType neginf = {VTKM_NEG_INF_BITS_32};
+    return vtkm::Vec<vtkm::Float32,N>(neginf.scalar);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<vtkm::Float32,N> Epsilon() {
+    return vtkm::Vec<vtkm::Float32,N>(VTKM_EPSILON_32);
+  }
+};
+
 template<>
 struct FloatLimits<vtkm::Float64>
 {
@@ -592,6 +621,35 @@ struct FloatLimits<vtkm::Float64>
   VTKM_EXEC_CONT_EXPORT
   static vtkm::Float64 Epsilon() {
     return VTKM_EPSILON_64;
+  }
+};
+
+template<int N>
+struct FloatLimits< vtkm::Vec<vtkm::Float64,N> >
+{
+  typedef vtkm::detail::IEEE754Bits64 BitsType;
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<vtkm::Float64,N> Nan() {
+    BitsType nan = {VTKM_NAN_BITS_64};
+    return vtkm::Vec<vtkm::Float64,N>(nan.scalar);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<vtkm::Float64,N> Infinity() {
+    BitsType inf = {VTKM_INF_BITS_64};
+    return vtkm::Vec<vtkm::Float64,N>(inf.scalar);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<vtkm::Float64,N> NegativeInfinity() {
+    BitsType neginf = {VTKM_NEG_INF_BITS_64};
+    return vtkm::Vec<vtkm::Float64,N>(neginf.scalar);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  static vtkm::Vec<vtkm::Float64,N> Epsilon() {
+    return vtkm::Vec<vtkm::Float64,N>(VTKM_EPSILON_64);
   }
 };
 
