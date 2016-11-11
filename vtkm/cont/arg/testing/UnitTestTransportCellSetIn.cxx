@@ -64,22 +64,6 @@ void TransportWholeCellSetIn(Device)
 {
   //build a fake cell set
   const int nVerts = 5;
-  typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-  std::vector<CoordType> coords(nVerts);
-
-  coords[0] = CoordType(0, 0, 0);
-  coords[1] = CoordType(1, 0, 0);
-  coords[2] = CoordType(1, 1, 0);
-  coords[3] = CoordType(2, 1, 0);
-  coords[4] = CoordType(2, 2, 0);
-  CoordType coordinates[nVerts] = {
-    CoordType(0, 0, 0),
-    CoordType(1, 0, 0),
-    CoordType(1, 1, 0),
-    CoordType(2, 1, 0),
-    CoordType(2, 2, 0)
-  };
-
   vtkm::cont::CellSetExplicit<> contObject(nVerts, "cells");
   contObject.PrepareToAddCells(2, 7);
   contObject.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, vtkm::make_Vec<vtkm::Id>(0,1,2));
