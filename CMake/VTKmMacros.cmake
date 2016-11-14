@@ -82,53 +82,53 @@ endfunction(vtkm_setup_msvc_properties)
 # Builds a source file and an executable that does nothing other than
 # compile the given header files.
 function(vtkm_add_header_build_test name dir_prefix use_cuda)
-#  set(hfiles ${ARGN})
-#  if (use_cuda)
-#    set(suffix ".cu")
-#  else (use_cuda)
-#    set(suffix ".cxx")
-#  endif (use_cuda)
-#  set(cxxfiles)
-#  foreach (header ${ARGN})
-#    get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
-#
-#    if( NOT cant_be_tested )
-#      string(REPLACE "${CMAKE_CURRENT_BINARY_DIR}" "" header "${header}")
-#      get_filename_component(headername ${header} NAME_WE)
-#      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}${suffix})
-#      configure_file(${VTKm_SOURCE_DIR}/CMake/TestBuild.cxx.in ${src} @ONLY)
-#      list(APPEND cxxfiles ${src})
-#    endif()
+  set(hfiles ${ARGN})
+  if (use_cuda)
+    set(suffix ".cu")
+  else (use_cuda)
+    set(suffix ".cxx")
+  endif (use_cuda)
+  set(cxxfiles)
+  foreach (header ${ARGN})
+    get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
 
-#  endforeach (header)
+    if( NOT cant_be_tested )
+      string(REPLACE "${CMAKE_CURRENT_BINARY_DIR}" "" header "${header}")
+      get_filename_component(headername ${header} NAME_WE)
+      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}${suffix})
+      configure_file(${VTKm_SOURCE_DIR}/CMake/TestBuild.cxx.in ${src} @ONLY)
+      list(APPEND cxxfiles ${src})
+    endif()
+
+  endforeach (header)
 
   #only attempt to add a test build executable if we have any headers to
   #test. this might not happen when everything depends on thrust.
-#  list(LENGTH cxxfiles cxxfiles_len)
-#  if (use_cuda AND ${cxxfiles_len} GREATER 0)
+  list(LENGTH cxxfiles cxxfiles_len)
+  if (use_cuda AND ${cxxfiles_len} GREATER 0)
     # Cuda compiles do not respect target_include_directories
     # and we want system includes so we have to hijack cuda
     # to do it
-#    foreach(dir ${VTKm_INCLUDE_DIRS})
-#      list(APPEND CUDA_NVCC_INCLUDE_ARGS_USER -isystem ${dir})
-#    endforeach()
+    foreach(dir ${VTKm_INCLUDE_DIRS})
+      list(APPEND CUDA_NVCC_INCLUDE_ARGS_USER -isystem ${dir})
+    endforeach()
 
-#    cuda_add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
-#  elseif (${cxxfiles_len} GREATER 0)
-#    add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
-#    target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
-#  endif ()
-#  target_link_libraries(TestBuild_${name} ${VTKm_LIBRARIES})
-#  set_source_files_properties(${hfiles}
-#    PROPERTIES HEADER_FILE_ONLY TRUE
-#    )
+    cuda_add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
+  elseif (${cxxfiles_len} GREATER 0)
+    add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
+    target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
+  endif ()
+  target_link_libraries(TestBuild_${name} ${VTKm_LIBRARIES})
+  set_source_files_properties(${hfiles}
+    PROPERTIES HEADER_FILE_ONLY TRUE
+    )
   # Send the libraries created for test builds to their own directory so as to
   # not polute the directory with useful libraries.
-#  set_target_properties(TestBuild_${name} PROPERTIES
-#    ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
-#    LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
-#    RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
-#    )
+  set_target_properties(TestBuild_${name} PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
+    LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
+    RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
+    )
 endfunction(vtkm_add_header_build_test)
 
 function(vtkm_install_headers dir_prefix)
