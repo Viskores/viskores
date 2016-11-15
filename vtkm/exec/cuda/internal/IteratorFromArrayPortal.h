@@ -65,7 +65,7 @@ struct PortalValue
   }
 
   VTKM_EXEC_EXPORT
-  ValueType operator=(const ValueType& value)
+  ValueType operator=(const ValueType& value) const
   {
     this->Portal.Set(this->Index, value);
     return value;
