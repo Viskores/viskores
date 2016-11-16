@@ -347,6 +347,22 @@ namespace detail {
 
 /// Base implementation of all Vec classes.
 ///
+// Disable conversion warnings for Add, Subtract, Multiply, Divide on GCC only.
+// GCC creates false positive warnings for signed/unsigned char* operations.
+// This occurs because the values are implicitly casted up to int's for the
+// operation, and than  casted back down to char's when return.
+// This causes a false positive warning, even when the values is within
+// the value types range
+//
+// NVCC 7.5 and below does not recognize this pragma inside of class body,
+// so put them before entering the class.
+//
+#if (defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8))
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif    // gcc || clang
+#endif    // use cuda < 8
 template <typename T, vtkm::IdComponent Size, typename DerivedClass>
 class VecBase
 {
@@ -469,16 +485,12 @@ public:
     return result;
   }
 
-// Disable conversion warnings for Add, Subtract, Multiply, Divide on GCC only.
-// GCC creates false positive warnings for signed/unsigned char* operations.
-// This occurs because the values are implicitly casted up to int's for the
-// operation, and than  casted back down to char's when return.
-// This causes a false positive warning, even when the values is within
-// the value types range
+#if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
-#endif // gcc || clang
+#endif    // gcc || clang
+#endif    // not using cuda < 8
 
   VTKM_EXEC_CONT_EXPORT
   DerivedClass operator+(const DerivedClass& other) const
@@ -564,10 +576,11 @@ public:
     return *static_cast<DerivedClass*>(this);
   }
 
+#if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic pop
-#endif // gcc || clang
-
+#endif    // gcc || clang
+#endif    // not using cuda < 8
 
   VTKM_EXEC_CONT_EXPORT
   ComponentType* GetPointer()
@@ -584,6 +597,9 @@ public:
 protected:
   ComponentType Components[NUM_COMPONENTS];
 };
+#if (defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8))
+#pragma GCC diagnostic pop
+#endif    // use cuda < 8
 
 } // namespace detail
 
