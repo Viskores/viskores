@@ -354,7 +354,7 @@ namespace detail {
 // This causes a false positive warning, even when the values is within
 // the value types range
 //
-// NVCC 7.5 and below does not recognize this pragma inside of class body,
+// NVCC 7.5 and below does not recognize this pragma inside of class bodies,
 // so put them before entering the class.
 //
 #if (defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8))
@@ -598,7 +598,9 @@ protected:
   ComponentType Components[NUM_COMPONENTS];
 };
 #if (defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8))
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic pop
+#endif    // gcc || clang
 #endif    // use cuda < 8
 
 } // namespace detail
