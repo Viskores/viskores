@@ -492,6 +492,16 @@ public:
   }
 
   VTKM_EXEC_CONT_EXPORT
+  DerivedClass& operator+=(const DerivedClass& other)
+  {
+    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    {
+      this->Components[i] += other[i];
+    }
+    return *static_cast<DerivedClass*>(this);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
   DerivedClass operator-(const DerivedClass& other) const
   {
     DerivedClass result;
@@ -500,6 +510,16 @@ public:
       result[i] = this->Components[i] - other[i];
     }
     return result;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  DerivedClass& operator-=(const DerivedClass& other)
+  {
+    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    {
+      this->Components[i] -= other[i];
+    }
+    return *static_cast<DerivedClass*>(this);
   }
 
   VTKM_EXEC_CONT_EXPORT
@@ -514,6 +534,16 @@ public:
   }
 
   VTKM_EXEC_CONT_EXPORT
+  DerivedClass& operator*=(const DerivedClass& other)
+  {
+    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    {
+      this->Components[i] *= other[i];
+    }
+    return *static_cast<DerivedClass*>(this);
+  }
+
+  VTKM_EXEC_CONT_EXPORT
   DerivedClass operator/(const DerivedClass& other) const
   {
     DerivedClass result;
@@ -522,6 +552,16 @@ public:
       result[i] = this->Components[i] / other[i];
     }
     return result;
+  }
+
+  VTKM_EXEC_CONT_EXPORT
+  DerivedClass& operator/=(const DerivedClass& other)
+  {
+    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    {
+      this->Components[i] /= other[i];
+    }
+    return *static_cast<DerivedClass*>(this);
   }
 
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))

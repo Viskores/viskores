@@ -35,14 +35,20 @@ namespace worklet {
 struct GradientOutTypes
     : vtkm::ListTagBase<
                         vtkm::Vec<vtkm::Float32,3>,
-                        vtkm::Vec<vtkm::Float64,3>
+                        vtkm::Vec<vtkm::Float64,3>,
+                        vtkm::Vec< vtkm::Vec<vtkm::Float32,2>, 3>,
+                        vtkm::Vec< vtkm::Vec<vtkm::Float64,2>, 3>,
+                        vtkm::Vec< vtkm::Vec<vtkm::Float32,3>, 3>,
+                        vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3>,
+                        vtkm::Vec< vtkm::Vec<vtkm::Float32,4>, 3>,
+                        vtkm::Vec< vtkm::Vec<vtkm::Float64,4>, 3>
                         >
 {  };
 struct CellGradient : vtkm::worklet::WorkletMapPointToCell
 {
   typedef void ControlSignature(CellSetIn,
                                 FieldInPoint<Vec3> pointCoordinates,
-                                FieldInPoint<Scalar> inputField,
+                                FieldInPoint<FieldCommon> inputField,
                                 FieldOutCell<GradientOutTypes> outputField);
 
   typedef void ExecutionSignature(CellShape, PointCount, _2, _3, _4);
@@ -64,8 +70,8 @@ struct CellGradient : vtkm::worklet::WorkletMapPointToCell
     using InValueType = typename FieldInVecType::ComponentType;
     using InDimensionTag = typename TypeTraits<InValueType>::DimensionalityTag;
 
-    //grad the dimension tag for the output component type
-    using OutValueType = typename VecTraits<typename FieldOutType::ComponentType>::ComponentType;
+    //grab the dimension tag for the output component type
+    using OutValueType = typename FieldOutType::ComponentType;
     using OutDimensionTag = typename TypeTraits<OutValueType>::DimensionalityTag;
 
     //Verify that input and output dimension tags match
@@ -99,6 +105,20 @@ struct CellGradient : vtkm::worklet::WorkletMapPointToCell
                                 std::false_type) const
   {
   //this is invalid
+  // std::cout << "calling invalid compute" << std::endl;
+  // using InValueType = typename FieldInVecType::ComponentType;
+  // using InDimensionTag = typename TypeTraits<InValueType>::DimensionalityTag;
+
+  // using OutValueType = typename VecTraits<typename FieldOutType::ComponentType>::ComponentType;
+  // using OutDimensionTag = typename TypeTraits<OutValueType>::DimensionalityTag;
+
+  // std::cout << typeid(InDimensionTag).name() << '\n';
+  // std::cout << typeid(FieldInVecType).name() << '\n';
+
+  // std::cout << typeid(OutDimensionTag).name() << '\n';
+  // std::cout << typeid(FieldOutType).name() << '\n';
+
+  // std::cout << std::endl;
   }
 };
 

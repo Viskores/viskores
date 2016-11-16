@@ -59,9 +59,9 @@ ParametricDerivative(const FieldVecType &field,
   typedef vtkm::Vec<FieldType,3> GradientType;
 
   GradientType pc(pcoords);
-  GradientType rc = GradientType(1) - pc;
+  GradientType rc = GradientType(FieldType(1)) - pc;
 
-  GradientType parametricDerivative(0);
+  GradientType parametricDerivative(FieldType(0));
   VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(0, -rc[1]*rc[2], -rc[0]*rc[2], -rc[0]*rc[1]);
   VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(1,  rc[1]*rc[2], -pc[0]*rc[2], -pc[0]*rc[1]);
   VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(2,  pc[1]*rc[2],  pc[0]*rc[2], -pc[0]*pc[1]);
@@ -146,9 +146,9 @@ ParametricDerivative(const FieldVecType &field,
 
   GradientType pc(static_cast<FieldType>(pcoords[0]),
                   static_cast<FieldType>(pcoords[1]));
-  GradientType rc = GradientType(1) - pc;
+  GradientType rc = GradientType(FieldType(1)) - pc;
 
-  GradientType parametricDerivative(0);
+  GradientType parametricDerivative(FieldType(0));
   VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D(0, -rc[1], -rc[0]);
   VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D(1,  rc[1], -pc[0]);
   VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D(2,  pc[1],  pc[0]);
@@ -375,7 +375,7 @@ CellDerivative(const FieldVecType &field,
   VTKM_ASSERT(wCoords.GetNumberOfComponents() == 1);
 
   typedef vtkm::Vec<typename FieldVecType::ComponentType,3> GradientType;
-  return GradientType(0,0,0);
+  return vtkm::TypeTraits<GradientType>::ZeroInitialization();
 }
 
 //-----------------------------------------------------------------------------
@@ -467,7 +467,7 @@ TriangleDerivative(const vtkm::Vec<ValueType, 3> &field,
   vtkm::MatrixSetRow(A, 1, v1);
   vtkm::MatrixSetRow(A, 2, n);
 
-  GradientType b(field[1] - field[0], field[2] - field[0], 0);
+  GradientType b(field[1] - field[0], field[2] - field[0], ValueType(0));
 
   // If we want to later change this method to take the gradient of multiple
   // values (for example, to find the Jacobian of a vector field), then there
@@ -677,7 +677,7 @@ CellDerivative(const FieldVecType &field,
 
   VecT pc(static_cast<T>(pcoords[0]),
           static_cast<T>(pcoords[1]));
-  VecT rc = VecT(1) - pc;
+  VecT rc = VecT(T(1)) - pc;
 
   VecT sum =  field[0]*VecT(-rc[1], -rc[0]);
   sum = sum + field[1]*VecT( rc[1], -pc[0]);
@@ -686,7 +686,7 @@ CellDerivative(const FieldVecType &field,
 
   return vtkm::Vec<T,3>(sum[0]/wCoords.GetSpacing()[0],
                         sum[1]/wCoords.GetSpacing()[1],
-                        0);
+                        T(0));
 }
 
 //-----------------------------------------------------------------------------
@@ -813,7 +813,7 @@ CellDerivative(const FieldVecType &field,
   VecT pc(static_cast<T>(pcoords[0]),
           static_cast<T>(pcoords[1]),
           static_cast<T>(pcoords[2]));
-  VecT rc = VecT(1) - pc;
+  VecT rc = VecT(T(1)) - pc;
 
   VecT sum =  field[0]*VecT(-rc[1]*rc[2], -rc[0]*rc[2], -rc[0]*rc[1]);
   sum = sum + field[1]*VecT( rc[1]*rc[2], -pc[0]*rc[2], -pc[0]*rc[1]);

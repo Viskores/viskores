@@ -78,6 +78,62 @@ void TestCellGradientUniform3D()
           test_equal(result.GetPortalConstControl().Get(i), expected[i]),
           "Wrong result for CellGradient worklet on 3D uniform data");
   }
+
+}
+
+void TestCellGradientUniform3DWithVectorField()
+{
+  std::cout << "Testing CellGradient Worklet with a vector field on 3D strucutred data" << std::endl;
+  vtkm::cont::testing::MakeTestDataSet testDataSet;
+  vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
+
+  //Verify that we can compute the gradient of a 3 component vector
+  const int nVerts = 18;
+  vtkm::Float64 vars[nVerts] = {10.1, 20.1, 30.1, 40.1, 50.2,
+                                60.2, 70.2, 80.2, 90.3, 100.3,
+                                110.3, 120.3, 130.4, 140.4,
+                                150.4, 160.4, 170.5, 180.5};
+  std::vector< vtkm::Vec<vtkm::Float64,3> > vec(18);
+  for(std::size_t i=0; i < vec.size(); ++i)
+  {
+    vec[i] = vtkm::make_Vec(vars[i],vars[i],vars[i]);
+  }
+  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float64,3> > input =
+    vtkm::cont::make_ArrayHandle(vec);
+
+  //we need to add Vec3 array to the dataset
+  vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3> > result;
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellGradient> dispatcher;
+  dispatcher.Invoke(dataSet.GetCellSet(),
+                    dataSet.GetCoordinateSystem(),
+                    input,
+                    result);
+
+  vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3> expected[4] = {
+    { {10.025,10.025,10.025}, {30.075,30.075,30.075}, {60.125,60.125,60.125} },
+    { {10.025,10.025,10.025}, {30.075,30.075,30.075}, {60.125,60.125,60.125} },
+    { {10.025,10.025,10.025}, {30.075,30.075,30.075}, {60.175,60.175,60.175} },
+    { {10.025,10.025,10.025}, {30.075,30.075,30.075}, {60.175,60.175,60.175} }
+    };
+  for (int i = 0; i < 4; ++i)
+  {
+    vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3> e = expected[i];
+    vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3> r = result.GetPortalConstControl().Get(i);
+
+    std::cout << "0: " << e[0] << " " << r[0] << std::endl;
+    std::cout << "1: " << e[1] << " " << r[1] << std::endl;
+    std::cout << "2: " << e[2] << " " << r[2] << std::endl;
+    VTKM_TEST_ASSERT(
+          test_equal(e[0],r[0]),
+          "Wrong result for vec field CellGradient worklet on 3D uniform data");
+    VTKM_TEST_ASSERT(
+          test_equal(e[1],r[1]),
+          "Wrong result for vec field CellGradient worklet on 3D uniform data");
+    VTKM_TEST_ASSERT(
+          test_equal(e[2],r[2]),
+          "Wrong result for vec field CellGradient worklet on 3D uniform data");
+  }
+
 }
 
 void TestCellGradientExplicit()
@@ -109,6 +165,7 @@ void TestCellGradient()
 {
   TestCellGradientUniform2D();
   TestCellGradientUniform3D();
+  TestCellGradientUniform3DWithVectorField();
   TestCellGradientExplicit();
 }
 

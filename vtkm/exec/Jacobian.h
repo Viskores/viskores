@@ -194,9 +194,9 @@ void JacobianFor3DCell(const WorldCoordType &wCoords,
                        vtkm::CellShapeTagHexahedron)
 {
   vtkm::Vec<JacobianType,3> pc(pcoords);
-  vtkm::Vec<JacobianType,3> rc = vtkm::Vec<JacobianType,3>(1) - pc;
+  vtkm::Vec<JacobianType,3> rc = vtkm::Vec<JacobianType,3>(JacobianType(1)) - pc;
 
-  jacobian = vtkm::Matrix<JacobianType,3,3>(0);
+  jacobian = vtkm::Matrix<JacobianType,3,3>(JacobianType(0));
   VTKM_DERIVATIVE_WEIGHTS_HEXAHEDRON(pc, rc, VTKM_ACCUM_JACOBIAN_3D);
 }
 
@@ -272,10 +272,10 @@ void JacobianFor2DCell(const WorldCoordType &wCoords,
 {
   vtkm::Vec<JacobianType,2> pc(static_cast<JacobianType>(pcoords[0]),
                                static_cast<JacobianType>(pcoords[1]));
-  vtkm::Vec<JacobianType,2> rc = vtkm::Vec<JacobianType,2>(1) - pc;
+  vtkm::Vec<JacobianType,2> rc = vtkm::Vec<JacobianType,2>(JacobianType(1)) - pc;
 
   vtkm::Vec<JacobianType,2> wcoords2d;
-  jacobian = vtkm::Matrix<JacobianType,2,2>(0);
+  jacobian = vtkm::Matrix<JacobianType,2,2>(JacobianType(0));
   VTKM_DERIVATIVE_WEIGHTS_QUAD(pc, rc, VTKM_ACCUM_JACOBIAN_2D);
 }
 

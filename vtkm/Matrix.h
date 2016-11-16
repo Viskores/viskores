@@ -387,7 +387,7 @@ void MatrixLUPFactor(vtkm::Matrix<T,Size,Size> &A,
   {
     permutation[index] = index;
   }
-  inversionParity = 1;
+  inversionParity = T(1);
   valid = true;
 
   for (vtkm::IdComponent rowIndex = 0; rowIndex < Size; rowIndex++)
