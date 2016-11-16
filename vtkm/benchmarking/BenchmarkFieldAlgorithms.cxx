@@ -73,7 +73,7 @@ public:
   {
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   T CumulativeNormalDistribution(T d) const
   {
     const vtkm::Float32       A1 = 0.31938153f;
@@ -98,7 +98,7 @@ public:
   }
 
   template <typename U, typename V, typename W>
-  VTKM_EXEC_EXPORT void operator()(const U& sp, const V& os, const W& oy,
+  VTKM_EXEC void operator()(const U& sp, const V& os, const W& oy,
                                    T& callResult, T& putResult) const
   {
   const T stockPrice = static_cast<T>(sp);
@@ -129,7 +129,7 @@ public:
   typedef void ExecutionSignature(_1,_2);
 
   template<typename T, typename U>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Vec<T,3>& vec, U& result) const
   {
     result = static_cast<U>(vtkm::Magnitude(vec));
@@ -143,7 +143,7 @@ public:
   typedef void ExecutionSignature(_1,_2);
 
   template<typename T, typename U>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(T input, U& output) const
   {
     output = static_cast<U>(input * input);
@@ -157,7 +157,7 @@ public:
   typedef void ExecutionSignature(_1,_2);
 
   template<typename T, typename U>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(T input, U& output) const
   {
     output = static_cast<U>(vtkm::Sin(input));
@@ -171,7 +171,7 @@ public:
   typedef void ExecutionSignature(_1,_2);
 
   template<typename T, typename U>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(T input, U& output) const
   {
     output = static_cast<U>(vtkm::Cos(input));
@@ -185,7 +185,7 @@ public:
   typedef void ExecutionSignature(_1,_2);
 
   template<typename T>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Vec<T,3>& vec, T& result) const
   {
     const T m = vtkm::Magnitude(vec);
@@ -193,7 +193,7 @@ public:
   }
 
   template<typename T, typename U>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Vec<T,3>& , U& ) const
   {
     this->RaiseError("Mixed types unsupported.");
@@ -210,7 +210,7 @@ public:
   template<typename ConnectivityInVec,
            typename ThreadIndicesType,
            typename IdPairTableType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const ConnectivityInVec &connectivity,
                   const ThreadIndicesType threadIndices,
                   const IdPairTableType &edgeIds) const
@@ -243,7 +243,7 @@ public:
   typedef _1 InputDomain;
 
   template <typename WeightType, typename T, typename S, typename D>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Id2& low_high,
                   const WeightType &weight,
                   const vtkm::exec::ExecutionWholeArrayConst<T,S,D>& inPortal,
@@ -256,7 +256,7 @@ public:
   }
 
   template <typename WeightType, typename T, typename S, typename D, typename U>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Id2& ,
                   const WeightType &,
                   const vtkm::exec::ExecutionWholeArrayConst<T,S,D>& ,
@@ -307,7 +307,7 @@ private:
     std::vector<Value> strike;
     std::vector<Value> years;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchBlackScholes()
     {
       std::mt19937 rng;
@@ -330,7 +330,7 @@ private:
       this->OptionYears = vtkm::cont::make_ArrayHandle(this->years);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::ArrayHandle<Value> callResultHandle, putResultHandle;
@@ -353,7 +353,7 @@ private:
 
     virtual std::string Type() const { return std::string("Static"); }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "BlackScholes "
@@ -366,7 +366,7 @@ private:
   template<typename Value>
   struct BenchBlackScholesDynamic : public BenchBlackScholes<Value>  {
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       ValueDynamicHandle dstocks(this->StockPrice);
@@ -404,7 +404,7 @@ private:
     std::vector< vtkm::Vec<Value, 3> > input;
     vtkm::cont::ArrayHandle< vtkm::Vec<Value, 3>, StorageTag> InputHandle;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchMath()
     {
       std::mt19937 rng;
@@ -421,7 +421,7 @@ private:
       this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::ArrayHandle<Value> tempHandle1;
@@ -439,7 +439,7 @@ private:
 
     virtual std::string Type() const { return std::string("Static"); }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "Magnitude -> Sine -> Square -> Cosine "
@@ -452,7 +452,7 @@ private:
   template<typename Value>
   struct BenchMathDynamic : public BenchMath<Value> {
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       using MathTypes = vtkm::ListTagBase<vtkm::Vec< vtkm::Float32, 3>,
@@ -487,7 +487,7 @@ private:
     std::vector< vtkm::Vec<Value, 3> > input;
     vtkm::cont::ArrayHandle< vtkm::Vec<Value, 3>, StorageTag> InputHandle;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchFusedMath()
     {
       std::mt19937 rng;
@@ -504,7 +504,7 @@ private:
       this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::ArrayHandle<Value> result;
@@ -516,7 +516,7 @@ private:
 
     virtual std::string Type() const { return std::string("Static"); }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       description << "Fused Magnitude -> Sine -> Square -> Cosine "
@@ -529,7 +529,7 @@ private:
   template<typename Value>
   struct BenchFusedMathDynamic : public BenchFusedMath<Value> {
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       using MathTypes = vtkm::ListTagBase<vtkm::Vec< vtkm::Float32, 3>,
@@ -560,7 +560,7 @@ private:
     vtkm::cont::ArrayHandle<Value, StorageTag> FieldHandle;
     vtkm::cont::ArrayHandle< vtkm::Id2, StorageTag> EdgePairHandle;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchEdgeInterp()
     {
       using CT = typename vtkm::VecTraits<Value>::ComponentType;
@@ -601,7 +601,7 @@ private:
       this->WeightHandle = vtkm::cont::make_ArrayHandle(this->weight);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::ArrayHandle<Value> result;
@@ -618,7 +618,7 @@ private:
 
     virtual std::string Type() const { return std::string("Static"); }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
       std::stringstream description;
       const std::size_t size = (CUBE_SIZE-1)*(CUBE_SIZE-1)*(CUBE_SIZE-1)*12;
@@ -632,7 +632,7 @@ private:
   template<typename Value>
   struct BenchEdgeInterpDynamic : public BenchEdgeInterp<Value> {
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       InterpDynamicHandle dfield(this->FieldHandle);
@@ -660,7 +660,7 @@ private:
 
 public:
 
-  static VTKM_CONT_EXPORT int Run(int benchmarks){
+  static VTKM_CONT int Run(int benchmarks){
     std::cout << DIVIDER << "\nRunning Field Algorithm benchmarks\n";
 
     if (benchmarks & BLACK_SCHOLES) {

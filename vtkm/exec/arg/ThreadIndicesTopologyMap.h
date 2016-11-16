@@ -37,14 +37,14 @@ namespace detail {
 template<typename CellShapeTag>
 struct CellShapeInitializer
 {
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static CellShapeTag GetDefault() { return CellShapeTag(); }
 };
 
 template<>
 struct CellShapeInitializer<vtkm::CellShapeTagGeneric>
 {
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::CellShapeTagGeneric GetDefault()
   {
     return vtkm::CellShapeTagGeneric(vtkm::CELL_SHAPE_EMPTY);
@@ -74,7 +74,7 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename OutToInArrayType, typename VisitArrayType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ThreadIndicesTopologyMap(vtkm::Id threadIndex,
                            const OutToInArrayType& inToOut,
                            const VisitArrayType& visit,
@@ -100,7 +100,7 @@ public:
   /// but can be several "from" element. This method returns a Vec-like object
   /// containing the indices to the "from" elements.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   const IndicesFromType &GetIndicesFrom() const { return this->IndicesFrom; }
 
   /// \brief The input indices of the "from" elements in pointer form.
@@ -112,7 +112,7 @@ public:
   /// instead. However, care should be taken to make sure that this object does
   /// not go out of scope, at which time the returned pointer becomes invalid.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   const IndicesFromType *GetIndicesFromPointer() const
   {
     return &this->IndicesFrom;
@@ -125,7 +125,7 @@ public:
   /// index, it defines the meaning of the indices, so we put it here. (That
   /// and this class is the only convenient place to store it.)
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   CellShapeTag GetCellShape() const { return this->CellShape; }
 
 private:
@@ -136,34 +136,34 @@ private:
 namespace detail {
 
 // Helper function to increase an index to 3D.
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::Id3 InflateTo3D(vtkm::Id3 index) { return index; }
 
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::Id3 InflateTo3D(vtkm::Id2 index)
 {
   return vtkm::Id3(index[0], index[1], 0);
 }
 
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::Id3 InflateTo3D(vtkm::Vec<vtkm::Id,1> index)
 {
   return vtkm::Id3(index[0], 0, 0);
 }
 
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::Id3 InflateTo3D(vtkm::Id index)
 {
   return vtkm::Id3(index, 0, 0);
 }
 
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::Id3 Deflate(const vtkm::Id3& index, vtkm::Id3)
 {
   return index;
 }
 
-VTKM_EXEC_EXPORT
+static inline VTKM_EXEC
 vtkm::Id2 Deflate(const vtkm::Id3& index, vtkm::Id2)
 {
   return vtkm::Id2(index[0], index[1]);
@@ -188,7 +188,7 @@ public:
   typedef typename ConnectivityType::SchedulingRangeType LogicalIndexType;
 
   template<typename OutToInArrayType, typename VisitArrayType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ThreadIndicesTopologyMap(vtkm::Id threadIndex,
                            const OutToInArrayType& inToOut,
                            const VisitArrayType& visit,
@@ -206,7 +206,7 @@ public:
   }
 
   template<typename OutToInArrayType, typename VisitArrayType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex,
                            const OutToInArrayType&,
                            const VisitArrayType& visit,
@@ -234,7 +234,7 @@ public:
   /// This is similar to \c GetIndex3D except the Vec size matches the actual
   /// dimensions of the data.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   LogicalIndexType GetIndexLogical() const
   {
     return this->LogicalIndex;
@@ -246,7 +246,7 @@ public:
   /// this thread is being invoked for. This is the typical index used during
   /// fetches.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id GetInputIndex() const
   {
     return this->InputIndex;
@@ -257,7 +257,7 @@ public:
   /// Overloads the implementation in the base class to return the 3D index
   /// for the input.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id3 GetInputIndex3D() const
   {
     return detail::InflateTo3D(this->GetIndexLogical());
@@ -269,7 +269,7 @@ public:
   /// this thread is creating. This is the typical index used during
   /// Fetch::Store.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id GetOutputIndex() const
   {
     return this->OutputIndex;
@@ -280,13 +280,13 @@ public:
   /// When multiple output indices have the same input index, they are
   /// distinguished using the visit index.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::IdComponent GetVisitIndex() const
   {
     return this->VisitIndex;
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id GetGlobalIndex() const
   {
     return (this->GlobalThreadIndexOffset + this->OutputIndex);
@@ -299,7 +299,7 @@ public:
   /// but can be several "from" element. This method returns a Vec-like object
   /// containing the indices to the "from" elements.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   const IndicesFromType &GetIndicesFrom() const { return this->IndicesFrom; }
 
   /// \brief The input indices of the "from" elements in pointer form.
@@ -311,7 +311,7 @@ public:
   /// instead. However, care should be taken to make sure that this object does
   /// not go out of scope, at which time the returned pointer becomes invalid.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   const IndicesFromType *GetIndicesFromPointer() const
   {
     return &this->IndicesFrom;
@@ -324,7 +324,7 @@ public:
   /// index, it defines the meaning of the indices, so we put it here. (That
   /// and this class is the only convenient place to store it.)
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   CellShapeTag GetCellShape() const { return this->CellShape; }
 
 private:

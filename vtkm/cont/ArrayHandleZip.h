@@ -41,12 +41,12 @@ public:
   typedef PortalTypeSecond_ PortalTypeSecond;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalZip()
     : PortalFirst(), PortalSecond()
   {  } //needs to be host and device so that cuda can create lvalue of these
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalZip(const PortalTypeFirst  &portalfirst,
                  const PortalTypeSecond &portalsecond)
     : PortalFirst(portalfirst), PortalSecond(portalsecond)
@@ -57,31 +57,31 @@ public:
   /// type casting that the iterators do (like the non-const to const cast).
   ///
   template<class OtherV, class OtherF, class OtherS>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalZip(const ArrayPortalZip<OtherV,OtherF,OtherS> &src)
     : PortalFirst(src.GetFirstPortal()),
       PortalSecond(src.GetSecondPortal())
   {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->PortalFirst.GetNumberOfValues(); }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType Get(vtkm::Id index) const {
     return vtkm::make_Pair(this->PortalFirst.Get(index),
                           this->PortalSecond.Get(index));
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Set(vtkm::Id index, const ValueType &value) const {
     this->PortalFirst.Set(index, value.first);
     this->PortalSecond.Set(index, value.second);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const PortalTypeFirst &GetFirstPortal() const { return this->PortalFirst; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const PortalTypeSecond &GetSecondPortal() const { return this->PortalSecond; }
 
 
@@ -140,59 +140,59 @@ public:
                           typename SecondHandleType::PortalConstControl>
                                                                PortalConstType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage() : FirstArray(), SecondArray() {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage(const FirstHandleType &farray, const SecondHandleType &sarray)
     : FirstArray(farray), SecondArray(sarray)
   {
 
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType GetPortal() {
     return PortalType(this->FirstArray.GetPortalControl(),
                       this->SecondArray.GetPortalControl());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType GetPortalConst() const {
     return PortalConstType(this->FirstArray.GetPortalConstControl(),
                            this->SecondArray.GetPortalConstControl());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
     VTKM_ASSERT(this->FirstArray.GetNumberOfValues()
                      == this->SecondArray.GetNumberOfValues());
     return this->FirstArray.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(vtkm::Id numberOfValues) {
     this->FirstArray.Allocate(numberOfValues);
     this->SecondArray.Allocate(numberOfValues);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues) {
     this->FirstArray.Shrink(numberOfValues);
     this->SecondArray.Shrink(numberOfValues);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() {
     // This request is ignored since it is asking to release the resources
     // of the two zipped array, which may be used elsewhere.
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const FirstHandleType &GetFirstArray() const {
     return this->FirstArray;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const SecondHandleType &GetSecondArray() const {
     return this->SecondArray;
   }
@@ -230,14 +230,14 @@ public:
       typename SecondHandleType::template ExecutionTypes<Device>::PortalConst
       > PortalConstExecution;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayTransfer(StorageType *storage)
     :  FirstArray(storage->GetFirstArray()),
        SecondArray(storage->GetSecondArray())
     {  }
 
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     VTKM_ASSERT( this->FirstArray.GetNumberOfValues()
@@ -245,40 +245,40 @@ public:
     return this->FirstArray.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
     return PortalConstExecution(this->FirstArray.PrepareForInput(Device()),
                                 this->SecondArray.PrepareForInput(Device()));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData)) {
     const vtkm::Id numberOfValues = this->GetNumberOfValues();
     return PortalExecution(this->FirstArray.PrepareForOutput(numberOfValues, Device()),
                            this->SecondArray.PrepareForOutput(numberOfValues, Device()));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
     return PortalExecution( this->FirstArray.PrepareForOutput(numberOfValues, Device()),
                             this->SecondArray.PrepareForOutput(numberOfValues, Device()) );
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const {
     // Implementation of this method should be unnecessary. The internal
     // first and second array handles should automatically retrieve the
     // output data as necessary.
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues) {
     this->FirstArray.Shrink(numberOfValues);
     this->SecondArray.Shrink(numberOfValues);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() {
     this->FirstArray.ReleaseResourcesExecution();
     this->SecondArray.ReleaseResourcesExecution();
@@ -319,7 +319,7 @@ private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleZip(const FirstHandleType &firstArray,
                  const SecondHandleType &secondArray)
     : Superclass( StorageType( firstArray, secondArray ) ) { }
@@ -329,7 +329,7 @@ public:
 /// arrays to be zipped together.
 ///
 template<typename FirstHandleType, typename SecondHandleType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::ArrayHandleZip<FirstHandleType,SecondHandleType>
 make_ArrayHandleZip(const FirstHandleType &first,
                     const SecondHandleType &second)

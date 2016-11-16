@@ -43,7 +43,7 @@ public:
 
   virtual ~ColorBarAnnotation();
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetColorTable(const vtkm::rendering::ColorTable &colorTable)
   {
     this->ColorTable = colorTable;
@@ -51,7 +51,7 @@ public:
 
   void SetRange(const vtkm::Range &range, vtkm::IdComponent numTicks);
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetRange(vtkm::Float64 l, vtkm::Float64 h, vtkm::IdComponent numTicks)
   {
     this->SetRange(vtkm::Range(l,h), numTicks);

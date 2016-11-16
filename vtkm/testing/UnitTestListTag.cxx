@@ -60,7 +60,7 @@ struct MutableFunctor
   std::vector<int> FoundTypes;
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(T) {
     this->FoundTypes.push_back(T::NUMBER);
   }
@@ -75,7 +75,7 @@ struct ConstantFunctor
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(T) const {
     g_FoundType.push_back(T::NUMBER);
   }

@@ -48,20 +48,20 @@ struct CompositeVectorSwizzleFunctor
   // Caution! This is a reference.
   const ComponentMapType &SourceComponents;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   CompositeVectorSwizzleFunctor(const ComponentMapType &sourceComponents)
     : SourceComponents(sourceComponents) {  }
 
   // Currently only supporting 1-4 components.
   template<typename T1>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType operator()(const T1 &p1) const {
     return ValueType(
           vtkm::VecTraits<T1>::GetComponent(p1, this->SourceComponents[0]));
   }
 
   template<typename T1, typename T2>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType operator()(const T1 &p1, const T2 &p2) const {
     return ValueType(
           vtkm::VecTraits<T1>::GetComponent(p1, this->SourceComponents[0]),
@@ -69,7 +69,7 @@ struct CompositeVectorSwizzleFunctor
   }
 
   template<typename T1, typename T2, typename T3>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType operator()(const T1 &p1, const T2 &p2, const T3 &p3) const {
     return ValueType(
           vtkm::VecTraits<T1>::GetComponent(p1, this->SourceComponents[0]),
@@ -78,7 +78,7 @@ struct CompositeVectorSwizzleFunctor
   }
 
   template<typename T1, typename T2, typename T3, typename T4>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType operator()(const T1 &p1,
                        const T2 &p2,
                        const T3 &p3,
@@ -96,19 +96,19 @@ struct CompositeVectorPullValueFunctor
 {
   vtkm::Id Index;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   CompositeVectorPullValueFunctor(vtkm::Id index) : Index(index) {  }
 
   // This form is to pull values out of array arguments.
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename PortalType>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   typename PortalType::ValueType operator()(const PortalType &portal) const {
     return portal.Get(this->Index);
   }
 
   // This form is an identity to pass the return value back.
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const ReturnValueType &operator()(const ReturnValueType &value) const {
     return value;
   }
@@ -121,7 +121,7 @@ struct CompositeVectorArrayToPortalCont {
   };
 
   template<typename ArrayHandleType, vtkm::IdComponent Index>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ReturnType<ArrayHandleType, Index>::type
   operator()(const ArrayHandleType &array,
              vtkm::internal::IndexTag<Index>) const {
@@ -138,7 +138,7 @@ struct CompositeVectorArrayToPortalExec {
   };
 
   template<typename ArrayHandleType, vtkm::IdComponent Index>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ReturnType<ArrayHandleType, Index>::type
   operator()(const ArrayHandleType &array,
              vtkm::internal::IndexTag<Index>) const {
@@ -185,24 +185,24 @@ public:
   VTKM_STATIC_ASSERT(NUM_COMPONENTS == PortalTypes::ARITY);
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalCompositeVector() {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalCompositeVector(
       const PortalTypes portals,
       vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS> sourceComponents)
     : Portals(portals), SourceComponents(sourceComponents) {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const {
     return this->Portals.template GetParameter<1>().GetNumberOfValues();
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const {
     // This might be inefficient because we are copying all the portals only
     // because they are coupled with the return value.
@@ -257,10 +257,10 @@ public:
   typedef PortalType PortalConstType;
   typedef typename PortalType::ValueType ValueType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage() : Valid(false) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage(const FunctionInterfaceWithArrays &arrays,
           const ComponentMapType &sourceComponents)
     : Arrays(arrays), SourceComponents(sourceComponents), Valid(true)
@@ -269,13 +269,13 @@ public:
           detail::CheckArraySizeFunctor(this->GetNumberOfValues()));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType GetPortal() {
     throw vtkm::cont::ErrorControlBadValue(
           "Composite vector arrays are read only.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType GetPortalConst() const {
     if (!this->Valid)
     {
@@ -287,7 +287,7 @@ public:
                            this->SourceComponents);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
     if (!this->Valid)
     {
@@ -297,7 +297,7 @@ public:
     return this->Arrays.template GetParameter<1>().GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues)) {
     throw vtkm::cont::ErrorControlInternal(
 
@@ -308,13 +308,13 @@ public:
           "directly used.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
     throw vtkm::cont::ErrorControlBadValue(
           "Composite vector arrays are read-only.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() {
     if (this->Valid)
     {
@@ -322,13 +322,13 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const FunctionInterfaceWithArrays &GetArrays() const {
     VTKM_ASSERT(this->Valid);
     return this->Arrays;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const ComponentMapType &GetSourceComponents() const {
     VTKM_ASSERT(this->Valid);
     return this->SourceComponents;
@@ -369,15 +369,15 @@ public:
   typedef ArrayPortalCompositeVector<SignatureWithPortals> PortalExecution;
   typedef ArrayPortalCompositeVector<SignatureWithPortals> PortalConstExecution;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayTransfer(StorageType *storage) : Storage(storage) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
     return this->Storage->GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) const
   {
     return
@@ -387,7 +387,7 @@ public:
           this->Storage->GetSourceComponents());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
     // It may be the case a composite vector could be used for in place
@@ -396,7 +396,7 @@ public:
           "Composite vector arrays cannot be used for output or in place.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     // It may be the case a composite vector could be used for output if you
@@ -406,21 +406,21 @@ public:
           "Composite vector arrays cannot be used for output.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Composite vector arrays cannot be used for output.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadValue(
           "Composite vector arrays cannot be resized.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() {
     this->Storage->ReleaseResources();
   }
@@ -456,7 +456,7 @@ public:
       (ArrayHandleCompositeVector<Signature>),
       (typename internal::ArrayHandleCompositeVectorTraits<Signature>::Superclass));
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleCompositeVector(
       const vtkm::internal::FunctionInterface<Signature> &arrays,
       const ComponentMapType &sourceComponents)
@@ -468,7 +468,7 @@ public:
   /// signature.
   ///
   template<typename ArrayHandleType1>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
                              vtkm::IdComponent sourceComponent1)
     : Superclass(StorageType(
@@ -477,7 +477,7 @@ public:
   {  }
   template<typename ArrayHandleType1,
            typename ArrayHandleType2>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
                              vtkm::IdComponent sourceComponent1,
                              const ArrayHandleType2 &array2,
@@ -491,7 +491,7 @@ public:
   template<typename ArrayHandleType1,
            typename ArrayHandleType2,
            typename ArrayHandleType3>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
                              vtkm::IdComponent sourceComponent1,
                              const ArrayHandleType2 &array2,
@@ -509,7 +509,7 @@ public:
            typename ArrayHandleType2,
            typename ArrayHandleType3,
            typename ArrayHandleType4>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
                              vtkm::IdComponent sourceComponent1,
                              const ArrayHandleType2 &array2,
@@ -608,7 +608,7 @@ public:
 /// Create a composite vector array from other arrays.
 ///
 template<typename ValueType1, typename Storage1>
-VTKM_CONT_EXPORT
+VTKM_CONT
 typename ArrayHandleCompositeVectorType<
   vtkm::cont::ArrayHandle<ValueType1,Storage1> >::type
 make_ArrayHandleCompositeVector(
@@ -620,7 +620,7 @@ make_ArrayHandleCompositeVector(
                                                            sourceComponent1);
 }
 template<typename ArrayHandleType1>
-VTKM_CONT_EXPORT
+VTKM_CONT
 typename ArrayHandleCompositeVectorType<ArrayHandleType1>::type
 make_ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
                                 vtkm::IdComponent sourceComponent1)
@@ -631,7 +631,7 @@ make_ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
 }
 template<typename ArrayHandleType1,
          typename ArrayHandleType2>
-VTKM_CONT_EXPORT
+VTKM_CONT
 typename ArrayHandleCompositeVectorType<
   ArrayHandleType1, ArrayHandleType2>::type
 make_ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
@@ -649,7 +649,7 @@ make_ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
 template<typename ArrayHandleType1,
          typename ArrayHandleType2,
          typename ArrayHandleType3>
-VTKM_CONT_EXPORT
+VTKM_CONT
 typename ArrayHandleCompositeVectorType<
   ArrayHandleType1, ArrayHandleType2, ArrayHandleType3>::type
 make_ArrayHandleCompositeVector(const ArrayHandleType1 &array1,
@@ -673,7 +673,7 @@ template<typename ArrayHandleType1,
          typename ArrayHandleType2,
          typename ArrayHandleType3,
          typename ArrayHandleType4>
-VTKM_CONT_EXPORT
+VTKM_CONT
 typename ArrayHandleCompositeVectorType<
   ArrayHandleType1, ArrayHandleType2, ArrayHandleType3, ArrayHandleType4>::type
 make_ArrayHandleCompositeVector(const ArrayHandleType1 &array1,

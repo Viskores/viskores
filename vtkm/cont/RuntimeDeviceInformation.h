@@ -35,13 +35,13 @@ template<class Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class RuntimeDeviceInformation
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   RuntimeDeviceInformation() : RuntimeImplementation() {  }
 
   /// Returns true if the given device adapter is supported on the current
   /// machine.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool Exists() const
   {
     return this->RuntimeImplementation.Exists();

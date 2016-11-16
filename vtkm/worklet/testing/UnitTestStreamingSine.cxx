@@ -38,7 +38,7 @@ public:
   typedef _2 ExecutionSignature(_1, WorkIndex);
 
   template<typename T>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   T operator()(T x, vtkm::Id& index) const {
     return (static_cast<T>(index) + vtkm::Sin(x));
   }

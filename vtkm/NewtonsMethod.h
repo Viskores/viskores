@@ -40,7 +40,7 @@ template<typename ScalarType,
          vtkm::IdComponent Size,
          typename JacobianFunctor,
          typename FunctionFunctor>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<ScalarType,Size>
 NewtonsMethod(JacobianFunctor jacobianEvaluator,
               FunctionFunctor functionEvaluator,

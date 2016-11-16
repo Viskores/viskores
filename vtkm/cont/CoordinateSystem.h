@@ -83,28 +83,28 @@ class CoordinateSystem : public vtkm::cont::Field
   typedef vtkm::cont::Field Superclass;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CoordinateSystem() : Superclass() {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CoordinateSystem(std::string name,
                    const vtkm::cont::DynamicArrayHandle &data)
     : Superclass(name, ASSOC_POINTS, data) {  }
 
   template<typename T, typename Storage>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CoordinateSystem(std::string name,
                    const ArrayHandle<T, Storage> &data)
     : Superclass(name, ASSOC_POINTS, data) {  }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CoordinateSystem(std::string name,
                    const std::vector<T> &data)
     : Superclass(name, ASSOC_POINTS, data) {  }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CoordinateSystem(std::string name,
                    const T *data,
                    vtkm::Id numberOfValues)
@@ -112,7 +112,7 @@ public:
 
   /// This constructor of coordinate system sets up a regular grid of points.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CoordinateSystem(std::string name,
                    vtkm::Id3 dimensions,
                    vtkm::Vec<vtkm::FloatDefault,3> origin
@@ -125,14 +125,14 @@ public:
                    vtkm::cont::ArrayHandleUniformPointCoordinates(dimensions, origin, spacing)))
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::cont::DynamicArrayHandleCoordinateSystem GetData() const
   {
     return vtkm::cont::DynamicArrayHandleCoordinateSystem(
           this->Superclass::GetData());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::cont::DynamicArrayHandleCoordinateSystem GetData()
   {
     return vtkm::cont::DynamicArrayHandleCoordinateSystem(
@@ -140,7 +140,7 @@ public:
   }
 
   template<typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void GetRange(vtkm::Range *range, DeviceAdapterTag) const
   {
     this->Superclass::GetRange(
@@ -151,7 +151,7 @@ public:
   }
 
   template<typename DeviceAdapterTag, typename TypeList>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void GetRange(vtkm::Range *range, DeviceAdapterTag, TypeList) const
   {
     this->Superclass::GetRange(
@@ -162,7 +162,7 @@ public:
   }
 
   template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void GetRange(vtkm::Range *range, DeviceAdapterTag, TypeList, StorageList) const
   {
     this->Superclass::GetRange(
@@ -173,7 +173,7 @@ public:
   }
 
   template<typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag) const
   {
     return this->Superclass::GetRange(
@@ -183,7 +183,7 @@ public:
   }
 
   template<typename DeviceAdapterTag, typename TypeList>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag,
                                                        TypeList) const
   {
@@ -194,7 +194,7 @@ public:
   }
 
   template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag,
                                                        TypeList,
                                                        StorageList) const
@@ -206,7 +206,7 @@ public:
   }
 
   template<typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Bounds GetBounds(DeviceAdapterTag) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
@@ -217,7 +217,7 @@ public:
   }
 
   template<typename DeviceAdapterTag, typename TypeList>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Bounds GetBounds(DeviceAdapterTag, TypeList) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
@@ -229,7 +229,7 @@ public:
   }
 
   template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Bounds GetBounds(DeviceAdapterTag, TypeList, StorageList) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
@@ -250,7 +250,7 @@ public:
   }
 
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   virtual void PrintSummary(std::ostream &out) const
   {
     out << "    Coordinate System ";

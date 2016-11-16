@@ -41,18 +41,18 @@
  * template<typename Value>
  * struct BenchSilly {
  *   // Setup anything that doesn't need to change per run in the constructor
- *   VTKM_CONT_EXPORT BenchSilly(){}
+ *   VTKM_CONT BenchSilly(){}
  *
  *   // The overloaded call operator will run the operations being timed and
  *   // return the execution time
- *   VTKM_CONT_EXPORT
+ *   VTKM_CONT
  *   vtkm::Float64 operator()(){
  *     return 0.05;
  *   }
  *
  *   // The benchmark must also provide a method describing itself, this is
  *   // used when printing out run time statistics
- *   VTKM_CONT_EXPORT
+ *   VTKM_CONT
  *   std::string Description() const {
  *     return "A silly benchmark";
  *   }
@@ -88,7 +88,7 @@
 #define VTKM_MAKE_BENCHMARK(Name, Bench, ...) \
   struct MakeBench##Name { \
     template<typename Value> \
-    VTKM_CONT_EXPORT \
+    VTKM_CONT \
     Bench<Value> operator()(const Value vtkmNotUsed(v)) const { \
       return Bench<Value>(__VA_ARGS__); \
     } \
@@ -207,7 +207,7 @@ struct Benchmarker {
   Benchmarker() : MAX_RUNTIME(30), MAX_ITERATIONS(500){}
 
   template<typename Functor>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(Functor func) const {
     std::vector<vtkm::Float64> samples;
     // Do a warm-up run. If the benchmark allocates any additional memory
@@ -244,11 +244,11 @@ class InternalPrintTypeAndBench {
   MakerFunctor Maker;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   InternalPrintTypeAndBench(MakerFunctor maker) : Maker(maker) {}
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(T t) const {
     std::cout << "*** "
               << vtkm::testing::TypeName<T>::Name()
@@ -259,7 +259,7 @@ public:
 };
 
 template<class MakerFunctor, class TypeList>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void BenchmarkTypes(const MakerFunctor &maker, TypeList){
   vtkm::ListForEach(InternalPrintTypeAndBench<MakerFunctor>(maker), TypeList());
 }

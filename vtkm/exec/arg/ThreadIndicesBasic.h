@@ -42,7 +42,7 @@ namespace arg {
 class ThreadIndicesBasic
 {
 public:
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ThreadIndicesBasic(vtkm::Id threadIndex, vtkm::Id inIndex, 
                      vtkm::IdComponent visitIndex, vtkm::Id globalThreadIndexOffset=0)
     : InputIndex(inIndex),
@@ -58,7 +58,7 @@ public:
   /// this thread is being invoked for. This is the typical index used during
   /// Fetch::Load.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id GetInputIndex() const { return this->InputIndex; }
 
   /// \brief The 3D index into the input domain.
@@ -69,7 +69,7 @@ public:
   /// indexing is just one dimensional, the result will have the index in the
   /// first component with the remaining components set to 0.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id3 GetInputIndex3D() const
   {
     return vtkm::Id3(this->GetInputIndex(), 0, 0);
@@ -81,7 +81,7 @@ public:
   /// this thread is creating. This is the typical index used during
   /// Fetch::Store.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id GetOutputIndex() const { return this->OutputIndex; }
 
   /// \brief The visit index.
@@ -89,13 +89,13 @@ public:
   /// When multiple output indices have the same input index, they are
   /// distinguished using the visit index.
   ///
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::IdComponent GetVisitIndex() const { return this->VisitIndex; }
 
   /// \brief The global index (for streaming).
   ///
   /// Global index (for streaming)
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->OutputIndex); }
 
 private:

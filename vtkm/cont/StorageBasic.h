@@ -176,7 +176,7 @@ public:
 
 public:
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage(const ValueType *array = nullptr, vtkm::Id numberOfValues = 0)
     : Array(const_cast<ValueType *>(array)),
       NumberOfValues(numberOfValues),
@@ -186,13 +186,13 @@ public:
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ~Storage()
   {
     this->ReleaseResources();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage(const Storage<ValueType, StorageTagBasic> &src)
     : Array(src.Array),
       NumberOfValues(src.NumberOfValues),
@@ -208,7 +208,7 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage &operator=(const Storage<ValueType, StorageTagBasic> &src)
   {
     if (src.DeallocateOnRelease)
@@ -228,7 +228,7 @@ public:
     return *this;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources()
   {
     if (this->NumberOfValues > 0)
@@ -250,7 +250,7 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(vtkm::Id numberOfValues)
   {
     if (numberOfValues <= this->AllocatedSize)
@@ -295,13 +295,13 @@ public:
     this->UserProvidedMemory = false;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return this->NumberOfValues;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues)
   {
     if (numberOfValues > this->GetNumberOfValues())
@@ -313,13 +313,13 @@ public:
     this->NumberOfValues = numberOfValues;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType GetPortal()
   {
     return PortalType(this->Array, this->Array + this->NumberOfValues);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     return PortalConstType(this->Array, this->Array + this->NumberOfValues);
@@ -331,12 +331,12 @@ public:
   /// memory associated with this array still belongs to the Storage (i.e.
   /// Storage will eventually deallocate the array).
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ValueType *GetArray()
   {
     return this->Array;
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const ValueType *GetArray() const
   {
     return this->Array;
@@ -351,7 +351,7 @@ public:
   /// a VTK-m object around. Obviously the caller becomes responsible for
   /// destroying the memory.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ValueType *StealArray()
   {
     ValueType *saveArray =  this->Array;

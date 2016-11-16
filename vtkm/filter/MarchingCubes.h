@@ -41,29 +41,29 @@ namespace filter {
 class MarchingCubes : public vtkm::filter::FilterDataSetWithField<MarchingCubes>
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   MarchingCubes();
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetIsoValue(vtkm::Float64 value){ this->IsoValue = value; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Float64 GetIsoValue() const    { return this->IsoValue; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetMergeDuplicatePoints(bool on) { this->Worklet.SetMergeDuplicatePoints(on); }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool GetMergeDuplicatePoints() const  { return this->Worklet.GetMergeDuplicatePoints(); }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetGenerateNormals(bool on) { this->GenerateNormals = on; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool GetGenerateNormals() const  { return this->GenerateNormals; }
 
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
                                         const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                         const vtkm::filter::FieldMetadata& fieldMeta,
@@ -73,7 +73,7 @@ public:
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool DoMapField(vtkm::filter::ResultDataSet& result,
                   const vtkm::cont::ArrayHandle<T, StorageType>& input,
                   const vtkm::filter::FieldMetadata& fieldMeta,

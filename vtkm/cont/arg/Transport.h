@@ -65,7 +65,7 @@ struct Transport
   /// operator also has a second argument that is the size of the dispatch that
   /// can be used, for example, to allocate data for an output array.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ExecObjectType operator()(const ContObjectType contData, vtkm::Id size) const;
 };
 #else // VTKM_DOXYGEN_ONLY

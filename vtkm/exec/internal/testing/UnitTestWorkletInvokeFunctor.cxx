@@ -34,10 +34,10 @@ namespace {
 
 struct TestExecObject
 {
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   TestExecObject() : Value(NULL) {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   TestExecObject(vtkm::Id *value) : Value(value) {  }
 
   vtkm::Id *Value;
@@ -46,7 +46,7 @@ struct TestExecObject
 struct MyOutputToInputMapPortal
 {
   typedef vtkm::Id ValueType;
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id Get(vtkm::Id index) const { return index; }
 };
 
@@ -84,13 +84,13 @@ struct Fetch<
 {
   typedef vtkm::Id ValueType;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic &indices,
                  const TestExecObject &execObject) const {
     return *execObject.Value + 10*indices.GetInputIndex();
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Store(const vtkm::exec::arg::ThreadIndicesBasic &,
              const TestExecObject &,
              ValueType) const {
@@ -107,14 +107,14 @@ struct Fetch<
 {
   typedef vtkm::Id ValueType;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic &,
                  const TestExecObject &) const {
     // No-op
     return ValueType();
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Store(const vtkm::exec::arg::ThreadIndicesBasic &indices,
              const TestExecObject &execObject,
              ValueType value) const {
@@ -165,13 +165,13 @@ typedef vtkm::internal::Invocation<
 // Not a full worklet, but provides operators that we expect in a worklet.
 struct TestWorkletProxy : vtkm::exec::FunctorBase
 {
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id input, vtkm::Id &output) const
   {
     output = input + 100;
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id operator()(vtkm::Id input) const
   {
     return input + 200;
@@ -179,7 +179,7 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
 
   template<typename T, typename OutToInArrayType, typename VisitArrayType, 
            typename InputDomainType, typename G>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::exec::arg::ThreadIndicesBasic
   GetThreadIndices(const T& threadIndex,
                    const OutToInArrayType& outToIn,
@@ -199,7 +199,7 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
 // Not a full worklet, but provides operators that we expect in a worklet.
 struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
 {
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id, vtkm::Id) const
   {
     this->RaiseError(ERROR_MESSAGE);
@@ -207,7 +207,7 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
 
   template<typename T, typename OutToInArrayType, typename VisitArrayType, 
            typename InputDomainType, typename G>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::exec::arg::ThreadIndicesBasic
   GetThreadIndices(const T& threadIndex,
                    const OutToInArrayType& outToIn,

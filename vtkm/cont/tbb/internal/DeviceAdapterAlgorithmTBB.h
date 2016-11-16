@@ -87,7 +87,7 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB> :
 {
 public:
   template<typename T, class CIn, class COut>
-  VTKM_CONT_EXPORT static T ScanInclusive(
+  VTKM_CONT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut> &output)
   {
@@ -98,7 +98,7 @@ public:
   }
 
   template<typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T ScanInclusive(
+  VTKM_CONT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut> &output,
       BinaryFunctor binary_functor)
@@ -110,7 +110,7 @@ public:
   }
 
   template<typename T, class CIn, class COut>
-  VTKM_CONT_EXPORT static T ScanExclusive(
+  VTKM_CONT static T ScanExclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut> &output)
   {
@@ -122,7 +122,7 @@ public:
   }
 
   template<typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT_EXPORT static T ScanExclusive(
+  VTKM_CONT static T ScanExclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut> &output,
       BinaryFunctor binary_functor,
@@ -135,7 +135,7 @@ public:
   }
 
   template<class FunctorType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static void Schedule(FunctorType functor, vtkm::Id numInstances)
   {
     const vtkm::Id MESSAGE_SIZE = 1024;
@@ -158,7 +158,7 @@ public:
   }
 
   template<class FunctorType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static void Schedule(FunctorType functor,
                        vtkm::Id3 rangeMax)
   {
@@ -187,7 +187,7 @@ public:
   }
 
   template<typename T, class Container>
-  VTKM_CONT_EXPORT static void Sort(
+  VTKM_CONT static void Sort(
       vtkm::cont::ArrayHandle<T,Container> &values)
   {
     //this is required to get sort to work with zip handles
@@ -196,7 +196,7 @@ public:
   }
 
   template<typename T, class Container, class BinaryCompare>
-  VTKM_CONT_EXPORT static void Sort(
+  VTKM_CONT static void Sort(
       vtkm::cont::ArrayHandle<T,Container> &values, BinaryCompare binary_compare)
   {
     typedef typename vtkm::cont::ArrayHandle<T,Container>::template
@@ -214,7 +214,7 @@ public:
   }
 
   template<typename T, typename U, class StorageT,  class StorageU>
-  VTKM_CONT_EXPORT static void SortByKey(
+  VTKM_CONT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT> &keys,
       vtkm::cont::ArrayHandle<U,StorageU> &values)
   {
@@ -224,7 +224,7 @@ public:
   template<typename T, typename U,
            class StorageT, class StorageU,
            class Compare>
-  VTKM_CONT_EXPORT static void SortByKey(
+  VTKM_CONT static void SortByKey(
       vtkm::cont::ArrayHandle<T,StorageT>& keys,
       vtkm::cont::ArrayHandle<U,StorageU>& values,
       Compare comp)
@@ -265,7 +265,7 @@ public:
     }
   }
 
-  VTKM_CONT_EXPORT static void Synchronize()
+  VTKM_CONT static void Synchronize()
   {
     // Nothing to do. This device schedules all of its operations using a
     // split/join paradigm. This means that the if the control threaad is
@@ -281,17 +281,17 @@ template<>
 class DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagTBB>
 {
 public:
-  VTKM_CONT_EXPORT DeviceAdapterTimerImplementation()
+  VTKM_CONT DeviceAdapterTimerImplementation()
   {
     this->Reset();
   }
-  VTKM_CONT_EXPORT void Reset()
+  VTKM_CONT void Reset()
   {
     vtkm::cont::DeviceAdapterAlgorithm<
         vtkm::cont::DeviceAdapterTagTBB>::Synchronize();
     this->StartTime = ::tbb::tick_count::now();
   }
-  VTKM_CONT_EXPORT vtkm::Float64 GetElapsedTime()
+  VTKM_CONT vtkm::Float64 GetElapsedTime()
   {
     vtkm::cont::DeviceAdapterAlgorithm<
         vtkm::cont::DeviceAdapterTagTBB>::Synchronize();

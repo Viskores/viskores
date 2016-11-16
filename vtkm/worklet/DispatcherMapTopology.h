@@ -46,12 +46,12 @@ class DispatcherMapTopology :
     > Superclass;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DispatcherMapTopology(const WorkletType &worklet = WorkletType())
     : Superclass(worklet) {  }
 
   template<typename Invocation>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void DoInvoke(const Invocation &invocation) const
   {
     // This is the type for the input domain

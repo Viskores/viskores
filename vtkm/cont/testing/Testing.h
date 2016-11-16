@@ -32,7 +32,7 @@ struct Testing
 {
 public:
   template<class Func>
-  static VTKM_CONT_EXPORT int Run(Func function)
+  static VTKM_CONT int Run(Func function)
   {
     try
     {

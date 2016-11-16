@@ -133,7 +133,7 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
 struct GetVertexArray
 {
   template <typename ArrayHandleType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(ArrayHandleType array) const
   {
     this->GetVertexPortal(array.GetPortalConstControl());
@@ -141,7 +141,7 @@ struct GetVertexArray
 
 private:
   template <typename PortalType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void GetVertexPortal(const PortalType &portal) const
   {
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)

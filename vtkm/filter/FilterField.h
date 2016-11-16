@@ -36,38 +36,38 @@ template<class Derived>
 class FilterField
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetOutputFieldName( const std::string& name )
     { this->OutputFieldName = name; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const std::string& GetOutputFieldName() const
     { return this->OutputFieldName; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField Execute(const vtkm::cont::DataSet &input, const std::string &inFieldName);
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField Execute(const vtkm::cont::DataSet &input, const vtkm::cont::Field &field);
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField Execute(const vtkm::cont::DataSet &input, const vtkm::cont::CoordinateSystem &field);
 
 
   template<typename DerivedPolicy>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField Execute(const vtkm::cont::DataSet &input,
                       const std::string &inFieldName,
                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
 
   template<typename DerivedPolicy>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField Execute(const vtkm::cont::DataSet &input,
                       const vtkm::cont::Field &field,
                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
 
   template<typename DerivedPolicy>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField Execute(const vtkm::cont::DataSet &input,
                       const vtkm::cont::CoordinateSystem &field,
                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
@@ -76,13 +76,13 @@ public:
 private:
 
   template<typename DerivedPolicy>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField PrepareForExecution(const vtkm::cont::DataSet& input,
                                   const vtkm::cont::Field& field,
                                   const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template<typename DerivedPolicy>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultField PrepareForExecution(const vtkm::cont::DataSet& input,
                                   const vtkm::cont::CoordinateSystem& field,
                                   const vtkm::filter::PolicyBase<DerivedPolicy>& policy);

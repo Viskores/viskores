@@ -31,31 +31,31 @@ namespace internal {
 namespace detail {
 
 template<typename NumericTag, typename DimensionalityTag>
-VTKM_CONT_EXPORT
+static inline VTKM_CONT
 GLenum BufferTypePickerImpl(NumericTag, DimensionalityTag)
 {
   return GL_ARRAY_BUFFER;
 }
 
-VTKM_CONT_EXPORT
-GLenum BufferTypePickerImpl(vtkm::TypeTraitsIntegerTag,
-                            vtkm::TypeTraitsScalarTag)
+VTKM_CONT
+static inline GLenum BufferTypePickerImpl(vtkm::TypeTraitsIntegerTag,
+                                          vtkm::TypeTraitsScalarTag)
 {
   return GL_ELEMENT_ARRAY_BUFFER;
 }
 
 } //namespace detail
 
-VTKM_CONT_EXPORT GLenum BufferTypePicker( vtkm::Int32 )
+static inline VTKM_CONT GLenum BufferTypePicker( vtkm::Int32 )
 { return GL_ELEMENT_ARRAY_BUFFER; }
 
-VTKM_CONT_EXPORT GLenum BufferTypePicker( vtkm::UInt32 )
+static inline VTKM_CONT GLenum BufferTypePicker( vtkm::UInt32 )
 { return GL_ELEMENT_ARRAY_BUFFER; }
 
-VTKM_CONT_EXPORT GLenum BufferTypePicker( vtkm::Int64 )
+static inline VTKM_CONT GLenum BufferTypePicker( vtkm::Int64 )
 { return GL_ELEMENT_ARRAY_BUFFER; }
 
-VTKM_CONT_EXPORT GLenum BufferTypePicker( vtkm::UInt64 )
+static inline VTKM_CONT GLenum BufferTypePicker( vtkm::UInt64 )
 { return GL_ELEMENT_ARRAY_BUFFER; }
 
 
@@ -64,7 +64,7 @@ VTKM_CONT_EXPORT GLenum BufferTypePicker( vtkm::UInt64 )
 /// integer types, and GL_ARRAY_BUFFER is used for everything else
 ///
 template<typename T>
-VTKM_CONT_EXPORT GLenum BufferTypePicker( T )
+static inline VTKM_CONT GLenum BufferTypePicker( T )
 {
   typedef vtkm::TypeTraits<T> Traits;
   return detail::BufferTypePickerImpl(typename Traits::NumericTag(),

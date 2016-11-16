@@ -41,14 +41,14 @@ namespace internal {
 struct RangeMin
 {
   template<typename T>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   T operator()(const T& a, const T& b)const { return vtkm::Min(a,b); }
 };
 
 struct RangeMax
 {
   template<typename T>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   T operator()(const T& a, const T& b)const { return vtkm::Max(a,b); }
 };
 
@@ -133,7 +133,7 @@ public:
   };
 
   /// constructors for points / whole mesh
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field(std::string name,
         AssociationEnum association,
         const vtkm::cont::DynamicArrayHandle &data)
@@ -150,7 +150,7 @@ public:
   }
 
   template<typename T, typename Storage>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field(std::string name,
         AssociationEnum association,
         const ArrayHandle<T, Storage> &data)
@@ -167,7 +167,7 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field(std::string name,
         AssociationEnum association,
         const std::vector<T> &data)
@@ -184,7 +184,7 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field(std::string name,
         AssociationEnum association,
         const T *data,
@@ -202,7 +202,7 @@ public:
   }
 
   /// constructors for cell set associations
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field(std::string name,
         AssociationEnum association,
         const std::string& cellSetName,
@@ -219,7 +219,7 @@ public:
   }
 
   template <typename T, typename Storage>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field(std::string name,
         AssociationEnum association,
         const std::string& cellSetName,
@@ -236,7 +236,7 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field(std::string name,
         AssociationEnum association,
         const std::string& cellSetName,
@@ -253,7 +253,7 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field(std::string name,
         AssociationEnum association,
         const std::string& cellSetName,
@@ -271,7 +271,7 @@ public:
   }
 
   /// constructors for logical dimension associations
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field(std::string name,
         AssociationEnum association,
         vtkm::IdComponent logicalDim,
@@ -288,7 +288,7 @@ public:
   }
 
   template <typename T, typename Storage>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field(std::string name,
         AssociationEnum association,
         vtkm::IdComponent logicalDim,
@@ -304,7 +304,7 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field(std::string name,
         AssociationEnum association,
         vtkm::IdComponent logicalDim,
@@ -320,7 +320,7 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field(std::string name,
         AssociationEnum association,
         vtkm::IdComponent logicalDim,
@@ -335,7 +335,7 @@ public:
     CopyData(data, nvals);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Field()
     : Name(),
       Association(ASSOC_ANY),
@@ -348,32 +348,32 @@ public:
     //Generate an empty field
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const std::string &GetName() const
   {
     return this->Name;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   AssociationEnum GetAssociation() const
   {
     return this->Association;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   std::string GetAssocCellSet() const
   {
     return this->AssocCellSetName;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::IdComponent GetAssocLogicalDim() const
   {
     return this->AssocLogicalDim;
   }
 
   template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag,
                                                        TypeList,
                                                        StorageList) const
@@ -389,7 +389,7 @@ public:
   }
 
   template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void GetRange(vtkm::Range *range,
                 DeviceAdapterTag,
                 TypeList,
@@ -405,7 +405,7 @@ public:
   }
 
   template<typename DeviceAdapterTag, typename TypeList>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag,
                                                        TypeList) const
   {
@@ -415,7 +415,7 @@ public:
   }
 
   template<typename DeviceAdapterTag, typename TypeList>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void GetRange(vtkm::Range *range, DeviceAdapterTag, TypeList) const
   {
     this->GetRange(range,
@@ -425,7 +425,7 @@ public:
   }
 
   template<typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag) const
   {
     return this->GetRange(DeviceAdapterTag(),
@@ -434,7 +434,7 @@ public:
   }
 
   template<typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void GetRange(vtkm::Range *range, DeviceAdapterTag) const
   {
     this->GetRange(range,
@@ -443,13 +443,13 @@ public:
                    VTKM_DEFAULT_STORAGE_LIST_TAG());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::DynamicArrayHandle &GetData() const
   {
     return this->Data;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::cont::DynamicArrayHandle &GetData()
   {
     this->ModifiedFlag = true;
@@ -457,14 +457,14 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetData(const vtkm::cont::ArrayHandle<T> &newdata)
   {
     this->Data = newdata;
     this->ModifiedFlag = true;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetData(const vtkm::cont::DynamicArrayHandle &newdata)
   {
     this->Data = newdata;
@@ -472,7 +472,7 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void CopyData(const T *ptr, vtkm::Id nvals)
   {
     //allocate main memory using an array handle
@@ -489,7 +489,7 @@ public:
     this->ModifiedFlag = true;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   virtual void PrintSummary(std::ostream &out) const
   {
       out<<"   "<<this->Name;

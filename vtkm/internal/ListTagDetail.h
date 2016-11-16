@@ -114,14 +114,14 @@ template<typename Type, typename List> struct ListContainsImpl
 
 //-----------------------------------------------------------------------------
 template<typename Functor>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void ListForEachImpl(const Functor &, brigand::empty_sequence)
 {
 }
 
 template<typename Functor,
          typename T1>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void ListForEachImpl(const Functor &f, brigand::list<T1>)
 {
   f(T1());
@@ -130,7 +130,7 @@ void ListForEachImpl(const Functor &f, brigand::list<T1>)
 template<typename Functor,
          typename T1,
          typename T2>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void ListForEachImpl(const Functor &f, brigand::list<T1,T2>)
 {
   f(T1());
@@ -141,7 +141,7 @@ template<typename Functor,
          typename T1,
          typename T2,
          typename T3>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void ListForEachImpl(const Functor &f, brigand::list<T1,T2,T3>)
 {
   f(T1());
@@ -155,7 +155,7 @@ template<typename Functor,
          typename T3,
          typename T4,
          typename... ArgTypes>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void ListForEachImpl(const Functor &f, brigand::list<T1,T2,T3,T4,ArgTypes...>)
 {
   f(T1());
@@ -166,14 +166,14 @@ void ListForEachImpl(const Functor &f, brigand::list<T1,T2,T3,T4,ArgTypes...>)
 }
 
 template<typename Functor>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void ListForEachImpl(Functor &, brigand::empty_sequence)
 {
 }
 
 template<typename Functor,
          typename T1>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void ListForEachImpl(Functor &f, brigand::list<T1>)
 {
   f(T1());
@@ -182,7 +182,7 @@ void ListForEachImpl(Functor &f, brigand::list<T1>)
 template<typename Functor,
          typename T1,
          typename T2>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void ListForEachImpl(Functor &f, brigand::list<T1,T2>)
 {
   f(T1());
@@ -193,7 +193,7 @@ template<typename Functor,
          typename T1,
          typename T2,
          typename T3>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void ListForEachImpl(Functor &f, brigand::list<T1,T2,T3>)
 {
   f(T1());
@@ -207,7 +207,7 @@ template<typename Functor,
          typename T3,
          typename T4,
          typename... ArgTypes>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void ListForEachImpl(Functor &f, brigand::list<T1,T2,T3,T4,ArgTypes...>)
 {
   f(T1());

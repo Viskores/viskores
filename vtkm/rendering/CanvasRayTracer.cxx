@@ -36,13 +36,13 @@ class ClearBuffers : public vtkm::worklet::WorkletMapField
 {
   vtkm::rendering::Color ClearColor;
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ClearBuffers(const vtkm::rendering::Color &clearColor)
     : ClearColor(clearColor)
   {}
   typedef void ControlSignature(FieldOut<>, FieldOut<>);
   typedef void ExecutionSignature(_1, _2);
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Vec<vtkm::Float32,4> &color,
                   vtkm::Float32 &depth) const
   {
@@ -60,7 +60,7 @@ struct ClearBuffersInvokeFunctor
   ColorBufferType ColorBuffer;
   DepthBufferType DepthBuffer;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ClearBuffersInvokeFunctor(const vtkm::rendering::Color &backgroundColor,
                             const ColorBufferType &colorBuffer,
                             const DepthBufferType &depthBuffer)
@@ -70,7 +70,7 @@ struct ClearBuffersInvokeFunctor
   {  }
 
   template<typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool operator()(Device) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);

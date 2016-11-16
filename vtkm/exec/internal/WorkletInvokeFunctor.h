@@ -36,13 +36,13 @@ template<typename WorkletType, typename InvocationType>
 class WorkletInvokeFunctor : public vtkm::exec::FunctorBase
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   WorkletInvokeFunctor(const WorkletType &worklet,
                        const InvocationType &invocation,
                        const vtkm::Id &globalIndexOffset=0)
     : Worklet(worklet), Invocation(invocation), GlobalIndexOffset(globalIndexOffset) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetErrorMessageBuffer(
       const vtkm::exec::internal::ErrorMessageBuffer &buffer)
   {
@@ -52,7 +52,7 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename T>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(T index) const
   {
     detail::DoWorkletInvokeFunctor(this->Worklet,

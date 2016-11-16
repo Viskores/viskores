@@ -32,7 +32,7 @@ namespace internal {
 struct Testing
 {
 public:
-  static VTKM_CONT_EXPORT int CheckCudaBeforeExit(int result)
+  static VTKM_CONT int CheckCudaBeforeExit(int result)
   {
     cudaError_t cudaError = cudaPeekAtLastError();
     if (cudaError != cudaSuccess)
@@ -49,7 +49,7 @@ public:
   }
 
   template<class Func>
-  static VTKM_CONT_EXPORT int Run(Func function)
+  static VTKM_CONT int Run(Func function)
   {
     int result = vtkm::cont::testing::Testing::Run(function);
     return CheckCudaBeforeExit(result);

@@ -51,11 +51,11 @@ public:
   typedef IteratorT IteratorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalFromIterators() {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalFromIterators(IteratorT begin, IteratorT end)
     : BeginIterator(begin)
   {
@@ -78,34 +78,34 @@ public:
   /// type casting that the iterators do (like the non-const to const cast).
   ///
   template<class OtherIteratorT>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT> &src)
     : BeginIterator(src.GetIteratorBegin()), NumberOfValues(src.GetNumberOfValues())
   {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return this->NumberOfValues;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
     return *this->IteratorAt(index);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType& value) const
   {
     *(this->BeginIterator + index) = value;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorT GetIteratorBegin() const {
     return this->BeginIterator;
   }
@@ -115,7 +115,7 @@ private:
   vtkm::Id NumberOfValues;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorT IteratorAt(vtkm::Id index) const
   {
     VTKM_ASSERT(index >= 0);
@@ -135,11 +135,11 @@ public:
   typedef IteratorT IteratorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalFromIterators() {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalFromIterators(IteratorT begin, IteratorT end)
     : BeginIterator(begin)
   {
@@ -162,27 +162,27 @@ public:
   /// type casting that the iterators do (like the non-const to const cast).
   ///
   template<class OtherIteratorT>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT> &src)
     : BeginIterator(src.GetIteratorBegin()), NumberOfValues(src.GetNumberOfValues())
   {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return this->NumberOfValues;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
     return *this->IteratorAt(index);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorT GetIteratorBegin() const {
     return this->BeginIterator;
   }
@@ -192,7 +192,7 @@ private:
   vtkm::Id NumberOfValues;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorT IteratorAt(vtkm::Id index) const
   {
     VTKM_ASSERT(index >= 0);
@@ -224,7 +224,7 @@ public:
   typedef _IteratorType IteratorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalToIterators(const PortalType &portal)
     : Iterator(portal.GetIteratorBegin()),
       NumberOfValues(portal.GetNumberOfValues())
@@ -237,7 +237,7 @@ public:
   typedef stdext::checked_array_iterator<_IteratorType> IteratorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalToIterators(const PortalType &portal)
     : Iterator(portal.GetIteratorBegin(),
 	           static_cast<size_t>(portal.GetNumberOfValues())),
@@ -247,11 +247,11 @@ public:
 #endif // VTKM_MSVC
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorType GetBegin() const { return this->Iterator; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorType GetEnd() const {
     IteratorType iterator = this->Iterator;
 	typedef typename std::iterator_traits<IteratorType>::difference_type

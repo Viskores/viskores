@@ -41,11 +41,11 @@ class VecVariable
 public:
   typedef T ComponentType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   VecVariable() : NumComponents(0) {  }
 
   template<vtkm::IdComponent SrcSize>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   VecVariable(const vtkm::VecVariable<ComponentType,SrcSize> &src)
     : NumComponents(src.GetNumberOfComponents())
   {
@@ -57,7 +57,7 @@ public:
   }
 
   template<vtkm::IdComponent SrcSize>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   VecVariable(const vtkm::Vec<ComponentType,SrcSize> &src)
     : NumComponents(SrcSize)
   {
@@ -68,13 +68,13 @@ public:
     }
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::IdComponent GetNumberOfComponents() const {
     return this->NumComponents;
   }
 
   template<vtkm::IdComponent DestSize>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void CopyInto(vtkm::Vec<ComponentType,DestSize> &dest) const
   {
     vtkm::IdComponent numComponents = vtkm::Min(DestSize, this->NumComponents);
@@ -84,19 +84,19 @@ public:
     }
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const ComponentType &operator[](vtkm::IdComponent index) const
   {
     return this->Data[index];
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ComponentType &operator[](vtkm::IdComponent index)
   {
     return this->Data[index];
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Append(ComponentType value)
   {
     VTKM_ASSERT(this->NumComponents < MaxSize);
@@ -115,7 +115,7 @@ struct TypeTraits<vtkm::VecVariable<T,MaxSize> >
   typedef typename vtkm::TypeTraits<T>::NumericTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::VecVariable<T,MaxSize> ZeroInitialization()
   {
     return vtkm::VecVariable<T,MaxSize>();
@@ -131,25 +131,25 @@ struct VecTraits<vtkm::VecVariable<T,MaxSize> >
   typedef vtkm::VecTraitsTagMultipleComponents HasMultipleComponents;
   typedef vtkm::VecTraitsTagSizeVariable IsSizeStatic;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::IdComponent GetNumberOfComponents(const VecType &vector) {
     return vector.GetNumberOfComponents();
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static const ComponentType &GetComponent(const VecType &vector,
                                            vtkm::IdComponent componentIndex)
   {
     return vector[componentIndex];
   }
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static ComponentType &GetComponent(VecType &vector,
                                      vtkm::IdComponent componentIndex)
   {
     return vector[componentIndex];
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static void SetComponent(VecType &vector,
                            vtkm::IdComponent componentIndex,
                            const ComponentType &value)
@@ -158,7 +158,7 @@ struct VecTraits<vtkm::VecVariable<T,MaxSize> >
   }
 
   template<vtkm::IdComponent destSize>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static void CopyInto(const VecType &src,
                        vtkm::Vec<ComponentType,destSize> &dest)
   {

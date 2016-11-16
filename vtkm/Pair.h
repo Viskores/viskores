@@ -63,24 +63,24 @@ struct Pair
   ///
   SecondType second;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   Pair() : first(), second() {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   Pair(const FirstType &firstSrc, const SecondType &secondSrc)
     : first(firstSrc), second(secondSrc) {  }
 
   template <typename U1, typename U2>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   Pair(const vtkm::Pair<U1,U2> &src)
     : first(src.first), second(src.second) {  }
 
   template <typename U1, typename U2>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   Pair(const std::pair<U1,U2> &src)
     : first(src.first), second(src.second) {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Pair<FirstType,SecondType> &
   operator=(const vtkm::Pair<FirstType,SecondType> &src) {
     this->first = src.first;
@@ -88,12 +88,12 @@ struct Pair
     return *this;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   bool operator==(const vtkm::Pair<FirstType,SecondType> &other) const {
     return ((this->first == other.first) && (this->second == other.second));
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   bool operator!=(const vtkm::Pair<FirstType,SecondType> &other) const {
     return !(*this == other);
   }
@@ -101,7 +101,7 @@ struct Pair
   /// Tests ordering on the first object, and then on the second object if the
   /// first are equal.
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   bool operator<(const vtkm::Pair<FirstType,SecondType> &other) const {
     return ((this->first < other.first)
             || (!(other.first < this->first) && (this->second < other.second)));
@@ -110,7 +110,7 @@ struct Pair
   /// Tests ordering on the first object, and then on the second object if the
   /// first are equal.
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   bool operator>(const vtkm::Pair<FirstType,SecondType> &other) const {
     return (other < *this);
   }
@@ -118,7 +118,7 @@ struct Pair
   /// Tests ordering on the first object, and then on the second object if the
   /// first are equal.
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   bool operator<=(const vtkm::Pair<FirstType,SecondType> &other) const {
     return !(other < *this);
   }
@@ -126,7 +126,7 @@ struct Pair
   /// Tests ordering on the first object, and then on the second object if the
   /// first are equal.
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   bool operator>=(const vtkm::Pair<FirstType,SecondType> &other) const {
     return !(*this < other);
   }
@@ -136,14 +136,14 @@ struct Pair
 /// This is done by adding the two objects separately.
 /// Useful for Reduce operation on a zipped array
 template<typename T, typename U>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Pair<T, U> operator+(const vtkm::Pair<T, U>& a, const vtkm::Pair<T, U> &b)
 {
     return vtkm::Pair<T,U>(a.first + b.first, a.second + b.second);
 }
 
 template <typename T1, typename T2>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Pair<T1,T2> make_Pair(const T1 &firstSrc, const T2 &secondSrc)
 {
   return vtkm::Pair<T1,T2>(firstSrc, secondSrc);

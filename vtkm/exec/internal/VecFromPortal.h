@@ -42,23 +42,23 @@ public:
       typename std::remove_const<typename PortalType::ValueType>::type;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   VecFromPortal() : NumComponents(0), Offset(0) {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   VecFromPortal(const PortalType &portal,
                 vtkm::IdComponent numComponents = 0,
                 vtkm::Id offset = 0)
     : Portal(portal), NumComponents(numComponents), Offset(offset) {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::IdComponent GetNumberOfComponents() const {
     return this->NumComponents;
   }
 
   template<typename T, vtkm::IdComponent DestSize>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void CopyInto(vtkm::Vec<T,DestSize> &dest) const
   {
     vtkm::IdComponent numComponents = vtkm::Min(DestSize, this->NumComponents);
@@ -69,7 +69,7 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ComponentType operator[](vtkm::IdComponent index) const
   {
     return this->Portal.Get(index + this->Offset);
@@ -100,7 +100,7 @@ public:
   typedef typename vtkm::TypeTraits<ComponentType>::NumericTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   static vtkm::exec::internal::VecFromPortal<PortalType> ZeroInitialization()
   {
     return vtkm::exec::internal::VecFromPortal<PortalType>();
@@ -116,12 +116,12 @@ struct VecTraits<vtkm::exec::internal::VecFromPortal<PortalType> >
   typedef vtkm::VecTraitsTagMultipleComponents HasMultipleComponents;
   typedef vtkm::VecTraitsTagSizeVariable IsSizeStatic;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   static vtkm::IdComponent GetNumberOfComponents(const VecType &vector) {
     return vector.GetNumberOfComponents();
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   static ComponentType GetComponent(const VecType &vector,
                                     vtkm::IdComponent componentIndex)
   {
@@ -129,7 +129,7 @@ struct VecTraits<vtkm::exec::internal::VecFromPortal<PortalType> >
   }
 
   template<vtkm::IdComponent destSize>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   static void CopyInto(const VecType &src,
                        vtkm::Vec<ComponentType,destSize> &dest)
   {

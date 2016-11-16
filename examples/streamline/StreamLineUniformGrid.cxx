@@ -76,7 +76,7 @@ int mouse_state = 1;
 struct GetVertexArray
 {
   template <typename ArrayHandleType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(ArrayHandleType array) const
   {
     this->GetVertexPortal(array.GetPortalConstControl());
@@ -84,7 +84,7 @@ struct GetVertexArray
 
 private:
   template <typename PortalType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void GetVertexPortal(const PortalType &portal) const
   {
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
@@ -212,7 +212,7 @@ void mouseCall(int button, int state, int x, int y)
 namespace {
 
 template <typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<T,3> Normalize(vtkm::Vec<T,3> v)
 {
   T magnitude = static_cast<T>(sqrt(vtkm::dot(v, v)));

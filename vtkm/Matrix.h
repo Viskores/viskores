@@ -47,17 +47,17 @@ public:
   static const vtkm::IdComponent NUM_ROWS = NumRow;
   static const vtkm::IdComponent NUM_COLUMNS = NumCol;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   Matrix() { }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   explicit Matrix(const ComponentType &value)
     : Components(vtkm::Vec<ComponentType, NUM_COLUMNS>(value)) { }
 
   /// Brackets are used to reference a matrix like a 2D array (i.e.
   /// matrix[row][column]).
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const vtkm::Vec<ComponentType, NUM_COLUMNS> &
   operator[](vtkm::IdComponent rowIndex) const {
     VTKM_ASSERT(rowIndex >= 0);
@@ -68,7 +68,7 @@ public:
   /// Brackets are used to referens a matrix like a 2D array i.e.
   /// matrix[row][column].
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Vec<ComponentType, NUM_COLUMNS> &
   operator[](vtkm::IdComponent rowIndex) {
     VTKM_ASSERT(rowIndex >= 0);
@@ -79,7 +79,7 @@ public:
   /// Parentheses are used to reference a matrix using mathematical tuple
   /// notation i.e. matrix(row,column).
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const ComponentType &
   operator()(vtkm::IdComponent rowIndex, vtkm::IdComponent colIndex) const {
     VTKM_ASSERT(rowIndex >= 0);
@@ -92,7 +92,7 @@ public:
   /// Parentheses are used to reference a matrix using mathematical tuple
   /// notation i.e. matrix(row,column).
   ///
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ComponentType &
   operator()(vtkm::IdComponent rowIndex, vtkm::IdComponent colIndex) {
     VTKM_ASSERT(rowIndex >= 0);
@@ -110,7 +110,7 @@ private:
 /// matrix.
 ///
 template<typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 const vtkm::Vec<T, NumCol> &MatrixGetRow(
     const vtkm::Matrix<T,NumRow,NumCol> &matrix, vtkm::IdComponent rowIndex)
 {
@@ -121,7 +121,7 @@ const vtkm::Vec<T, NumCol> &MatrixGetRow(
 /// matrix.  Might not be as efficient as the \c MatrixGetRow function.
 ///
 template<typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<T, NumRow> MatrixGetColumn(
     const vtkm::Matrix<T,NumRow,NumCol> &matrix, vtkm::IdComponent columnIndex)
 {
@@ -136,7 +136,7 @@ vtkm::Vec<T, NumRow> MatrixGetColumn(
 /// Convenience function for setting a row of a matrix.
 ///
 template<typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 void MatrixSetRow(vtkm::Matrix<T,NumRow,NumCol> &matrix,
                   vtkm::IdComponent rowIndex,
                   const vtkm::Vec<T,NumCol> &rowValues)
@@ -147,7 +147,7 @@ void MatrixSetRow(vtkm::Matrix<T,NumRow,NumCol> &matrix,
 /// Convenience function for setting a column of a matrix.
 ///
 template<typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 void MatrixSetColumn(vtkm::Matrix<T,NumRow,NumCol> &matrix,
                      vtkm::IdComponent columnIndex,
                      const vtkm::Vec<T,NumRow> &columnValues)
@@ -164,7 +164,7 @@ template<typename T,
          vtkm::IdComponent NumRow,
          vtkm::IdComponent NumCol,
          vtkm::IdComponent NumInternal>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,NumRow,NumCol> MatrixMultiply(
     const vtkm::Matrix<T,NumRow,NumInternal> &leftFactor,
     const vtkm::Matrix<T,NumInternal,NumCol> &rightFactor)
@@ -191,7 +191,7 @@ vtkm::Matrix<T,NumRow,NumCol> MatrixMultiply(
 /// Standard matrix-vector multiplication.
 ///
 template<typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<T,NumRow> MatrixMultiply(
     const vtkm::Matrix<T,NumRow,NumCol> &leftFactor,
     const vtkm::Vec<T,NumCol> &rightFactor)
@@ -208,7 +208,7 @@ vtkm::Vec<T,NumRow> MatrixMultiply(
 /// Standard vector-matrix multiplication
 ///
 template<typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<T,NumCol> MatrixMultiply(
     const vtkm::Vec<T,NumRow> &leftFactor,
     const vtkm::Matrix<T,NumRow,NumCol> &rightFactor)
@@ -226,7 +226,7 @@ vtkm::Vec<T,NumCol> MatrixMultiply(
 /// Returns the identity matrix.
 ///
 template<typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,Size,Size> MatrixIdentity()
 {
   vtkm::Matrix<T,Size,Size> result(T(0));
@@ -240,7 +240,7 @@ vtkm::Matrix<T,Size,Size> MatrixIdentity()
 /// Fills the given matrix with the identity matrix.
 ///
 template<typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 void MatrixIdentity(vtkm::Matrix<T,Size,Size> &matrix)
 {
   matrix = vtkm::MatrixIdentity<T,Size>();
@@ -249,7 +249,7 @@ void MatrixIdentity(vtkm::Matrix<T,Size,Size> &matrix)
 /// Returns the transpose of the given matrix.
 ///
 template<typename T, vtkm::IdComponent NumRows, vtkm::IdComponent NumCols>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,NumCols,NumRows> MatrixTranspose(
     const vtkm::Matrix<T,NumRows,NumCols> &matrix)
 {
@@ -274,7 +274,7 @@ namespace detail {
 
 // Used with MatrixLUPFactor.
 template<typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 void MatrixLUPFactorFindPivot(vtkm::Matrix<T,Size,Size> &A,
                               vtkm::Vec<vtkm::IdComponent,Size> &permutation,
                               vtkm::IdComponent topCornerIndex,
@@ -318,7 +318,7 @@ void MatrixLUPFactorFindPivot(vtkm::Matrix<T,Size,Size> &A,
 
 // Used with MatrixLUPFactor
 template<typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 void MatrixLUPFactorFindUpperTriangleElements(vtkm::Matrix<T,Size,Size> &A,
                                               vtkm::IdComponent topCornerIndex)
 {
@@ -376,7 +376,7 @@ void MatrixLUPFactorFindUpperTriangleElements(vtkm::Matrix<T,Size,Size> &A,
 /// Otherwise, valid is set to false and the result is indeterminant.
 ///
 template<typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 void MatrixLUPFactor(vtkm::Matrix<T,Size,Size> &A,
                      vtkm::Vec<vtkm::IdComponent,Size> &permutation,
                      T &inversionParity,
@@ -402,7 +402,7 @@ void MatrixLUPFactor(vtkm::Matrix<T,Size,Size> &A,
 /// matrices calculated by MatrixLUPFactor from A. The x matrix is returned.
 ///
 template<typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<T,Size>
 MatrixLUPSolve(const vtkm::Matrix<T,Size,Size> &LU,
                     const vtkm::Vec<vtkm::IdComponent,Size> &permutation,
@@ -448,7 +448,7 @@ MatrixLUPSolve(const vtkm::Matrix<T,Size,Size> &LU,
 /// is set to true, false otherwise.
 ///
 template<typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<T,Size> SolveLinearSystem(const vtkm::Matrix<T,Size,Size> &A,
                                     const vtkm::Vec<T,Size> &b,
                                     bool &valid)
@@ -467,7 +467,7 @@ vtkm::Vec<T,Size> SolveLinearSystem(const vtkm::Matrix<T,Size,Size> &A,
 /// the inverse will not be correct and valid will be set to false.
 ///
 template<typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,Size,Size> MatrixInverse(const vtkm::Matrix<T,Size,Size> &A,
                                         bool &valid)
 {
@@ -495,7 +495,7 @@ vtkm::Matrix<T,Size,Size> MatrixInverse(const vtkm::Matrix<T,Size,Size> &A,
 /// Compute the determinant of a matrix.
 ///
 template<typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 T MatrixDeterminant(const vtkm::Matrix<T,Size,Size> &A)
 {
   // First, we will make an LUP-factorization to help us.
@@ -524,21 +524,21 @@ T MatrixDeterminant(const vtkm::Matrix<T,Size,Size> &A)
 // Specializations for common small determinants.
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 T MatrixDeterminant(const vtkm::Matrix<T,1,1> &A)
 {
   return A(0,0);
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 T MatrixDeterminant(const vtkm::Matrix<T,2,2> &A)
 {
   return A(0,0)*A(1,1) - A(1,0)*A(0,1);
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 T MatrixDeterminant(const vtkm::Matrix<T,3,3> &A)
 {
   return A(0,0) * A(1,1) * A(2,2) + A(1,0) * A(2,1) * A(0,2) +
@@ -572,26 +572,26 @@ public:
   typedef vtkm::VecTraitsTagMultipleComponents HasMultipleComponents;
   typedef vtkm::VecTraitsTagSizeStatic IsSizeStatic;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::IdComponent GetNumberOfComponents(const MatrixType &) {
     return NUM_COMPONENTS;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static const ComponentType &GetComponent(const MatrixType &matrix,
                                            vtkm::IdComponent component) {
     vtkm::IdComponent colIndex = component % NumCol;
     vtkm::IdComponent rowIndex = component / NumCol;
     return matrix(rowIndex,colIndex);
   }
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static ComponentType &GetComponent(MatrixType &matrix,
                                      vtkm::IdComponent component) {
     vtkm::IdComponent colIndex = component % NumCol;
     vtkm::IdComponent rowIndex = component / NumCol;
     return matrix(rowIndex,colIndex);
   }
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static void SetComponent(MatrixType &matrix,
                            vtkm::IdComponent component,
                            T value)
@@ -606,7 +606,7 @@ public:
 // Basic comparison operators.
 
 template<typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 bool operator==(const vtkm::Matrix<T,NumRow,NumCol> &a,
                 const vtkm::Matrix<T,NumRow,NumCol> &b)
 {
@@ -620,7 +620,7 @@ bool operator==(const vtkm::Matrix<T,NumRow,NumCol> &a,
   return true;
 }
 template<typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 bool operator!=(const vtkm::Matrix<T,NumRow,NumCol> &a,
                 const vtkm::Matrix<T,NumRow,NumCol> &b)
 {

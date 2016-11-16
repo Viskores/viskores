@@ -50,13 +50,13 @@ public:
   {
     T Value;
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     MemSet(T value)
       : Value(value)
     {}
     typedef void ControlSignature(FieldOut<>);
     typedef void ExecutionSignature(_1);
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(T &outValue) const
     {
       outValue = Value;
@@ -65,13 +65,13 @@ public:
   class CountTriangles : public vtkm::worklet::WorkletMapField
   {
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     CountTriangles(){}
     typedef void ControlSignature(FieldIn<>,
                                   FieldOut<>);
     typedef void ExecutionSignature(_1,
                                     _2);
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id &shapeType,
                     vtkm::Id &triangles) const
     {
@@ -96,7 +96,7 @@ public:
                                   FieldInTo<>);
     typedef void ExecutionSignature(FromIndices, _2);
     //typedef _1 InputDomain;
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     TrianglulateStructured(vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id,4> > &outputIndices)
     {
       this->OutputIndices = outputIndices.PrepareForOutput(outputIndices.GetNumberOfValues(), DeviceAdapter() );
@@ -104,7 +104,7 @@ public:
 
     //TODO: Remove the if/then with templates.
     template<typename CellNodeVecType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const CellNodeVecType &cellIndices,
                     const vtkm::Id &cellIndex) const
     {
@@ -172,11 +172,11 @@ public:
   class IndicesSort : public vtkm::worklet::WorkletMapField
   {
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     IndicesSort(){}
     typedef void ControlSignature(FieldInOut<>);
     typedef void ExecutionSignature(_1);
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()( vtkm::Vec<vtkm::Id,4> &triangleIndices) const
     {
       // first field contains the id of the cell the
@@ -205,7 +205,7 @@ public:
 
   struct IndicesLessThan
   {
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_CONT
     bool operator()(const vtkm::Vec<vtkm::Id,4> &a,
                     const vtkm::Vec<vtkm::Id,4> &b) const
     {
@@ -221,17 +221,17 @@ public:
   class UniqueTriangles : public vtkm::worklet::WorkletMapField
   {
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     UniqueTriangles(){}
     typedef void ControlSignature(ExecObject,
                                   ExecObject);
     typedef void ExecutionSignature(_1,_2,WorkIndex);
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     bool IsTwin(const vtkm::Vec<vtkm::Id,4> &a, const vtkm::Vec<vtkm::Id,4> &b) const
     {
       return (a[1] == b[1] && a[2] == b[2] && a[3] == b[3]);
     }
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(vtkm::exec::ExecutionWholeArrayConst<vtkm::Vec<vtkm::Id,4> > &indices,
                     vtkm::exec::ExecutionWholeArray<vtkm::UInt8> &outputFlags,
                     const vtkm::Id &index) const
@@ -260,7 +260,7 @@ public:
     vtkm::Int32 WEDGE_INDICES;
     vtkm::Int32 PYRAMID_INDICES;
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     Trianglulate(vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id,4> > &outputIndices,
                  const vtkm::cont::ArrayHandle<vtkm::Id> &indices,
                  const vtkm::Id &size)
@@ -281,7 +281,7 @@ public:
                                     _2,
                                     _3,
                                     WorkIndex);
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id &shapeType,
                     const vtkm::Id &indexOffset,
                     const vtkm::Id &triangleOffset,
@@ -428,10 +428,10 @@ public:
   }; //class Trianglulate
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Triangulator() {}
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ExternalTrianlges(vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id,4> > &outputIndices,
                          vtkm::Id &outputTriangles)
   {
@@ -456,7 +456,7 @@ public:
     outputTriangles = subset.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Run(const vtkm::cont::DynamicCellSet &cellset,
            vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id,4> > &outputIndices,
            vtkm::Id &outputTriangles)

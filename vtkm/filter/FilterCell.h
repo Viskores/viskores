@@ -30,14 +30,14 @@ template<class Derived>
 class FilterCell : public vtkm::filter::FilterField< Derived >
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   FilterCell();
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetActiveCellSet(vtkm::Id index)
     { this->CellSetIndex = index; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetActiveCellSetIndex() const
     { return this->CellSetIndex; }
 

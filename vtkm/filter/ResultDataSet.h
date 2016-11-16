@@ -39,20 +39,20 @@ namespace filter {
 class ResultDataSet : public vtkm::filter::ResultBase
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultDataSet() {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ResultDataSet(const vtkm::cont::DataSet &dataSet)
     : ResultBase(dataSet) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::cont::DataSet &GetDataSet() const
   {
     return this->ResultBase::GetDataSet();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::cont::DataSet &GetDataSet()
   {
     return this->ResultBase::GetDataSetReference();

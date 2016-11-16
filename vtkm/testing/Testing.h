@@ -166,12 +166,12 @@ public:
   class TestFailure
   {
   public:
-    VTKM_CONT_EXPORT TestFailure(const std::string &file,
+    VTKM_CONT TestFailure(const std::string &file,
                                  vtkm::Id line,
                                  const std::string &message)
       : File(file), Line(line), Message(message) { }
 
-    VTKM_CONT_EXPORT TestFailure(const std::string &file,
+    VTKM_CONT TestFailure(const std::string &file,
                                  vtkm::Id line,
                                  const std::string &message,
                                  const std::string &condition)
@@ -183,9 +183,9 @@ public:
       this->Message.append(")");
     }
 
-    VTKM_CONT_EXPORT const std::string &GetFile() const { return this->File; }
-    VTKM_CONT_EXPORT vtkm::Id GetLine() const { return this->Line; }
-    VTKM_CONT_EXPORT const std::string &GetMessage() const
+    VTKM_CONT const std::string &GetFile() const { return this->File; }
+    VTKM_CONT vtkm::Id GetLine() const { return this->Line; }
+    VTKM_CONT const std::string &GetMessage() const
     {
       return this->Message;
     }
@@ -195,7 +195,7 @@ public:
     std::string Message;
   };
 
-  static VTKM_CONT_EXPORT void Assert(bool condition,
+  static VTKM_CONT void Assert(bool condition,
                                       const std::string &file,
                                       vtkm::Id line,
                                       const std::string &message,
@@ -240,7 +240,7 @@ public:
   /// \endcode
   ///
   template<class Func>
-  static VTKM_CONT_EXPORT int Run(Func function)
+  static VTKM_CONT int Run(Func function)
   {
     try
     {
@@ -338,7 +338,7 @@ public:
 /// variance due to floating point numerical inaccuracies.
 ///
 template<typename VectorType1, typename VectorType2>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 bool test_equal(VectorType1 vector1,
                 VectorType2 vector2,
                 vtkm::Float64 tolerance = 0.0001)
@@ -395,7 +395,7 @@ bool test_equal(VectorType1 vector1,
 /// Special implementation of test_equal for strings, which don't fit a model
 /// of fixed length vectors of numbers.
 ///
-VTKM_CONT_EXPORT
+static inline VTKM_CONT
 bool test_equal(const std::string &string1, const std::string &string2)
 {
   return string1 == string2;
@@ -405,7 +405,7 @@ bool test_equal(const std::string &string1, const std::string &string2)
 /// than a vector of numbers of the same type.
 ///
 template<typename T1, typename T2, typename T3, typename T4>
-VTKM_CONT_EXPORT
+static inline VTKM_CONT
 bool test_equal(const vtkm::Pair<T1,T2> &pair1,
                 const vtkm::Pair<T3,T4> &pair2,
                 vtkm::Float64 tolerance = 0.0001)
@@ -417,7 +417,7 @@ bool test_equal(const vtkm::Pair<T1,T2> &pair1,
 
 /// Special implementation of test_equal for Ranges.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 bool test_equal(const vtkm::Range &range1,
                 const vtkm::Range &range2,
                 vtkm::Float64 tolerance = 0.0001)
@@ -428,7 +428,7 @@ bool test_equal(const vtkm::Range &range1,
 
 /// Special implementation of test_equal for Bounds.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 bool test_equal(const vtkm::Bounds &bounds1,
                 const vtkm::Bounds &bounds2,
                 vtkm::Float64 tolerance = 0.0001)
@@ -439,14 +439,14 @@ bool test_equal(const vtkm::Bounds &bounds1,
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
 {
   return T(index*100);
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T TestValue(vtkm::Id index, T, vtkm::TypeTraitsRealTag)
 {
   return T(0.01*static_cast<double>(index) + 1.001);
@@ -458,14 +458,14 @@ T TestValue(vtkm::Id index, T, vtkm::TypeTraitsRealTag)
 /// given type. Different types might give different values.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T TestValue(vtkm::Id index, T)
 {
   return TestValue(index, T(), typename vtkm::TypeTraits<T>::NumericTag());
 }
 
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> TestValue(vtkm::Id index, vtkm::Vec<T,N>) {
   vtkm::Vec<T,N> value;
   for (vtkm::IdComponent i = 0; i < N; i++)
@@ -475,7 +475,7 @@ vtkm::Vec<T,N> TestValue(vtkm::Id index, vtkm::Vec<T,N>) {
   return value;
 }
 
-VTKM_CONT_EXPORT
+static inline VTKM_CONT
 std::string TestValue(vtkm::Id index, std::string) {
   std::stringstream stream;
   stream << index;
@@ -486,7 +486,7 @@ std::string TestValue(vtkm::Id index, std::string) {
 /// returned by vtkm::testing::TestValue.
 ///
 template<typename PortalType>
-VTKM_CONT_EXPORT
+static inline VTKM_CONT
 void CheckPortal(const PortalType &portal)
 {
   typedef typename PortalType::ValueType ValueType;
@@ -510,7 +510,7 @@ void CheckPortal(const PortalType &portal)
 /// by vtkm::testing::TestValue. The ArrayPortal must be allocated first.
 ///
 template<typename PortalType>
-VTKM_CONT_EXPORT
+static inline VTKM_CONT
 void SetPortal(const PortalType &portal)
 {
   typedef typename PortalType::ValueType ValueType;

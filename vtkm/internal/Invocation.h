@@ -90,7 +90,7 @@ struct Invocation
 
   /// \brief Default Invocation constructors that holds the given parameters
   /// by reference.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Invocation(const ParameterInterface& parameters,
              OutputToInputMapType outputToInputMap = OutputToInputMapType(),
              VisitArrayType visitArray = VisitArrayType())
@@ -116,7 +116,7 @@ struct Invocation
   /// \c Parameters are replaced with those provided.
   ///
   template<typename NewParameterInterface>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ChangeParametersType<NewParameterInterface>::type
   ChangeParameters(const NewParameterInterface& newParameters) const {
     return typename ChangeParametersType<NewParameterInterface>::type(
@@ -180,7 +180,7 @@ struct Invocation
   /// \c InputDomainIndex is changed to the static number given.
   ///
   template<vtkm::IdComponent NewInputDomainIndex>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   typename ChangeInputDomainIndexType<NewInputDomainIndex>::type
   ChangeInputDomainIndex() const {
     return typename ChangeInputDomainIndexType<NewInputDomainIndex>::type(
@@ -204,7 +204,7 @@ struct Invocation
   /// \c OutputToInputMap is replaced with that provided.
   ///
   template<typename NewOutputToInputMapType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ChangeOutputToInputMapType<NewOutputToInputMapType>::type
   ChangeOutputToInputMap(NewOutputToInputMapType newOutputToInputMap) const {
     return typename ChangeOutputToInputMapType<NewOutputToInputMapType>::type(
@@ -228,7 +228,7 @@ struct Invocation
   /// \c VisitArray is replaced with that provided.
   ///
   template<typename NewVisitArrayType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ChangeVisitArrayType<NewVisitArrayType>::type
   ChangeVisitArray(NewVisitArrayType newVisitArray) const {
     return typename ChangeVisitArrayType<NewVisitArrayType>::type(
@@ -243,7 +243,7 @@ struct Invocation
   /// A convenience method to get the input domain object.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const InputDomainType& GetInputDomain() const
   {
     return this->Parameters.template GetParameter<InputDomainIndex>();
@@ -269,7 +269,7 @@ template<vtkm::IdComponent InputDomainIndex,
          typename ParameterInterface,
          typename OutputToInputMapType,
          typename VisitArrayType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::internal::Invocation<ParameterInterface,
                            ControlInterface,
                            ExecutionInterface,
@@ -295,7 +295,7 @@ template<vtkm::IdComponent InputDomainIndex,
          typename ControlInterface,
          typename ExecutionInterface,
          typename ParameterInterface>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::internal::Invocation<ParameterInterface,
                            ControlInterface,
                            ExecutionInterface,

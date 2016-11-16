@@ -29,6 +29,7 @@ namespace rendering {
 class VTKM_RENDERING_EXPORT Mapper
 {
 public:
+  VTKM_CONT
   Mapper()
   {
   }

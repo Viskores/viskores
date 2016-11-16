@@ -35,12 +35,12 @@ struct FunctorModulus
 {
   vtkm::IdComponent Modulus;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FunctorModulus(vtkm::IdComponent modulus = 1)
     : Modulus(modulus)
   {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::IdComponent operator()(vtkm::Id index) const
   {
     return static_cast<vtkm::IdComponent>(index % this->Modulus);
@@ -51,12 +51,12 @@ struct FunctorDiv
 {
   vtkm::Id Divisor;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FunctorDiv(vtkm::Id divisor = 1)
     : Divisor(divisor)
   {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id index) const
   {
     return index / this->Divisor;
@@ -75,17 +75,17 @@ struct FunctorDiv
 ///
 struct ScatterUniform
 {
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ScatterUniform(vtkm::IdComponent numOutputsPerInput)
     : NumOutputsPerInput(numOutputsPerInput)
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetOutputRange(vtkm::Id inputRange) const
   {
     return inputRange * this->NumOutputsPerInput;
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetOutputRange(vtkm::Id3 inputRange) const
   {
     return this->GetOutputRange(inputRange[0]*inputRange[1]*inputRange[2]);
@@ -94,7 +94,7 @@ struct ScatterUniform
   typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, detail::FunctorDiv>
       OutputToInputMapType;
   template<typename RangeType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   OutputToInputMapType GetOutputToInputMap(RangeType inputRange) const
   {
     return OutputToInputMapType(detail::FunctorDiv(this->NumOutputsPerInput),
@@ -104,7 +104,7 @@ struct ScatterUniform
   typedef vtkm::cont::ArrayHandleImplicit<vtkm::IdComponent, detail::FunctorModulus>
       VisitArrayType;
   template<typename RangeType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   VisitArrayType GetVisitArray(RangeType inputRange) const
   {
     return VisitArrayType(detail::FunctorModulus(this->NumOutputsPerInput),

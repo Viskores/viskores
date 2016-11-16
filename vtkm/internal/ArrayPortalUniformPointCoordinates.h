@@ -33,10 +33,10 @@ class ArrayPortalUniformPointCoordinates
 public:
   typedef vtkm::Vec<vtkm::FloatDefault,3> ValueType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalUniformPointCoordinates() : NumberOfValues(0) {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalUniformPointCoordinates(vtkm::Id3 dimensions,
                                      ValueType origin,
                                      ValueType spacing)
@@ -46,7 +46,7 @@ public:
       Spacing(spacing)
   {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalUniformPointCoordinates(
       const ArrayPortalUniformPointCoordinates &src)
     : Dimensions(src.Dimensions),
@@ -55,7 +55,7 @@ public:
       Spacing(src.Spacing)
   {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalUniformPointCoordinates &
   operator=(const ArrayPortalUniformPointCoordinates &src)
   {
@@ -66,10 +66,10 @@ public:
     return *this;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const {
     VTKM_ASSERT(index >= 0);
     VTKM_ASSERT(index < this->GetNumberOfValues());
@@ -79,10 +79,10 @@ public:
                     index/(this->Dimensions[0]*this->Dimensions[1])));
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id3 GetRange3() const { return this->Dimensions; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id3 index) const {
     VTKM_ASSERT((index[0] >= 0) && (index[1] >= 0) && (index[2] >= 0));
     VTKM_ASSERT((index[0] < this->Dimensions[0]) &&
@@ -93,13 +93,13 @@ public:
                      this->Origin[2] + this->Spacing[2] * static_cast<vtkm::FloatDefault>(index[2]));
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const vtkm::Id3 &GetDimensions() const { return this->Dimensions; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const ValueType &GetOrigin() const { return this->Origin; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const ValueType &GetSpacing() const { return this->Spacing; }
 
 private:

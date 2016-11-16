@@ -42,7 +42,7 @@ namespace vtkm {
 /// transformations.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<T,3> Transform3DPoint(const vtkm::Matrix<T,4,4> &matrix,
                                 const vtkm::Vec<T,3> &point)
 {
@@ -63,7 +63,7 @@ vtkm::Vec<T,3> Transform3DPoint(const vtkm::Matrix<T,4,4> &matrix,
 /// transformations, but requires some more computations.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<T,3> Transform3DPointPerspective(const vtkm::Matrix<T,4,4> &matrix,
                                            const vtkm::Vec<T,3> &point)
 {
@@ -82,7 +82,7 @@ vtkm::Vec<T,3> Transform3DPointPerspective(const vtkm::Matrix<T,4,4> &matrix,
 /// vectors do not get translated.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Vec<T,3> Transform3DVector(const vtkm::Matrix<T,4,4> &matrix,
                                  const vtkm::Vec<T,3> &vector)
 {
@@ -100,7 +100,7 @@ vtkm::Vec<T,3> Transform3DVector(const vtkm::Matrix<T,4,4> &matrix,
 /// transformation matrix for those scales.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,4,4>
 Transform3DScale(const T &scaleX, const T &scaleY, const T &scaleZ)
 {
@@ -118,7 +118,7 @@ Transform3DScale(const T &scaleX, const T &scaleY, const T &scaleZ)
 /// returns a transformation matrix for those scales.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,4,4> Transform3DScale(const vtkm::Vec<T,3> &scaleVec)
 {
   return vtkm::Transform3DScale(scaleVec[0], scaleVec[1], scaleVec[2]);
@@ -130,7 +130,7 @@ vtkm::Matrix<T,4,4> Transform3DScale(const vtkm::Vec<T,3> &scaleVec)
 /// scales.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,4,4> Transform3DScale(const T &scale)
 {
   return vtkm::Transform3DScale(scale, scale, scale);
@@ -139,7 +139,7 @@ vtkm::Matrix<T,4,4> Transform3DScale(const T &scale)
 /// \brief Returns a translation matrix.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,4,4> Transform3DTranslate(const T &x, const T &y, const T &z)
 {
   vtkm::Matrix<T,4,4> translateMatrix;
@@ -150,7 +150,7 @@ vtkm::Matrix<T,4,4> Transform3DTranslate(const T &x, const T &y, const T &z)
   return translateMatrix;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,4,4> Transform3DTranslate(const vtkm::Vec<T,3> &v)
 {
   return vtkm::Transform3DTranslate(v[0], v[1], v[2]);
@@ -164,7 +164,7 @@ vtkm::Matrix<T,4,4> Transform3DTranslate(const vtkm::Vec<T,3> &v)
 /// rotation will be counterclockwise.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,4,4> Transform3DRotate(T angleDegrees,
                                       const vtkm::Vec<T,3> &axisOfRotation)
 {
@@ -198,7 +198,7 @@ vtkm::Matrix<T,4,4> Transform3DRotate(T angleDegrees,
   return matrix;
 }
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,4,4> Transform3DRotate(T angleDegrees, T x, T y, T z)
 {
   return vtkm::Transform3DRotate(angleDegrees, vtkm::Vec<T,3>(x,y,z));
@@ -209,7 +209,7 @@ vtkm::Matrix<T,4,4> Transform3DRotate(T angleDegrees, T x, T y, T z)
 /// Returns a transformation matrix that rotates around the x axis.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,4,4> Transform3DRotateX(T angleDegrees)
 {
   return vtkm::Transform3DRotate(angleDegrees, T(1), T(0), T(0));
@@ -220,7 +220,7 @@ vtkm::Matrix<T,4,4> Transform3DRotateX(T angleDegrees)
 /// Returns a transformation matrix that rotates around the y axis.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,4,4> Transform3DRotateY(T angleDegrees)
 {
   return vtkm::Transform3DRotate(angleDegrees, T(0), T(1), T(0));
@@ -231,7 +231,7 @@ vtkm::Matrix<T,4,4> Transform3DRotateY(T angleDegrees)
 /// Returns a transformation matrix that rotates around the z axis.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 vtkm::Matrix<T,4,4> Transform3DRotateZ(T angleDegrees)
 {
   return vtkm::Transform3DRotate(angleDegrees, T(0), T(0), T(1));

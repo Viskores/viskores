@@ -38,7 +38,7 @@ struct TryExecuteRunIfValid;
 template<typename Functor, typename Device>
 struct TryExecuteRunIfValid<Functor, Device, false>
 {
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static bool Run(Functor &, vtkm::cont::internal::RuntimeDeviceTracker &) {
     return false;
   }
@@ -49,7 +49,7 @@ struct TryExecuteRunIfValid<Functor, Device, true>
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static bool Run(Functor &functor,
                   vtkm::cont::internal::RuntimeDeviceTracker &tracker)
   {
@@ -108,13 +108,13 @@ struct TryExecuteImpl
 
   bool Success;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TryExecuteImpl(FunctorType &functor,
                  vtkm::cont::internal::RuntimeDeviceTracker &tracker)
     : Functor(functor), Tracker(tracker), Success(false) {  }
 
   template<typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool operator()(Device)
   {
     if (!this->Success)
@@ -154,7 +154,7 @@ struct TryExecuteImpl
 /// is used.
 ///
 template<typename Functor, typename DeviceList>
-VTKM_CONT_EXPORT
+VTKM_CONT
 bool TryExecute(const Functor &functor,
                 vtkm::cont::internal::RuntimeDeviceTracker &tracker,
                 DeviceList)
@@ -164,7 +164,7 @@ bool TryExecute(const Functor &functor,
   return internals.Success;
 }
 template<typename Functor, typename DeviceList>
-VTKM_CONT_EXPORT
+VTKM_CONT
 bool TryExecute(Functor &functor,
                 vtkm::cont::internal::RuntimeDeviceTracker &tracker,
                 DeviceList)
@@ -174,28 +174,28 @@ bool TryExecute(Functor &functor,
   return internals.Success;
 }
 template<typename Functor, typename DeviceList>
-VTKM_CONT_EXPORT
+VTKM_CONT
 bool TryExecute(const Functor &functor, DeviceList)
 {
   vtkm::cont::internal::RuntimeDeviceTracker tracker;
   return vtkm::cont::TryExecute(functor, tracker, DeviceList());
 }
 template<typename Functor, typename DeviceList>
-VTKM_CONT_EXPORT
+VTKM_CONT
 bool TryExecute(Functor &functor, DeviceList)
 {
   vtkm::cont::internal::RuntimeDeviceTracker tracker;
   return vtkm::cont::TryExecute(functor, tracker, DeviceList());
 }
 template<typename Functor>
-VTKM_CONT_EXPORT
+VTKM_CONT
 bool TryExecute(const Functor &functor)
 {
   return vtkm::cont::TryExecute(functor,
                                 VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
 }
 template<typename Functor>
-VTKM_CONT_EXPORT
+VTKM_CONT
 bool TryExecute(Functor &functor)
 {
   return vtkm::cont::TryExecute(functor,

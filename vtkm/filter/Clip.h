@@ -30,17 +30,17 @@ namespace filter {
 class Clip : public vtkm::filter::FilterDataSetWithField<Clip>
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Clip();
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetClipValue(vtkm::Float64 value){ this->ClipValue = value; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Float64 GetClipValue() const    { return this->ClipValue; }
 
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
                                         const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                         const vtkm::filter::FieldMetadata& fieldMeta,
@@ -50,7 +50,7 @@ public:
   //Map a new field onto the resulting dataset after running the filter.
   //This call is only valid after Execute has been called.
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool DoMapField(vtkm::filter::ResultDataSet& result,
                   const vtkm::cont::ArrayHandle<T, StorageType>& input,
                   const vtkm::filter::FieldMetadata& fieldMeta,

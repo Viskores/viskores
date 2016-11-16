@@ -36,7 +36,7 @@ struct Actor::InternalsType
   vtkm::Range ScalarRange;
   vtkm::Bounds SpatialBounds;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   InternalsType(const vtkm::cont::DynamicCellSet &cells,
                 const vtkm::cont::CoordinateSystem &coordinates,
                 const vtkm::cont::Field &scalarField,
@@ -54,7 +54,7 @@ struct Actor::RangeFunctor
   const vtkm::cont::CoordinateSystem &Coordinates;
   const vtkm::cont::Field &ScalarField;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   RangeFunctor(vtkm::rendering::Actor *self,
                const vtkm::cont::CoordinateSystem &coordinates,
                const vtkm::cont::Field &scalarField)
@@ -64,7 +64,7 @@ struct Actor::RangeFunctor
   {  }
 
   template<typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool operator()(Device)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);

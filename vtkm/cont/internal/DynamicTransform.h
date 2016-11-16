@@ -86,7 +86,7 @@ struct DynamicTransform
   template<typename InputType,
            typename ContinueFunctor,
            vtkm::IdComponent Index>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(const InputType &input,
                   const ContinueFunctor &continueFunc,
                   vtkm::internal::IndexTag<Index>) const
@@ -99,7 +99,7 @@ struct DynamicTransform
 
 private:
   template<typename InputType, typename ContinueFunctor>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void DoTransform(const InputType &input,
                    const ContinueFunctor &continueFunc,
                    vtkm::cont::internal::DynamicTransformTagStatic) const
@@ -108,7 +108,7 @@ private:
   }
 
   template<typename InputType, typename ContinueFunctor>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void DoTransform(const InputType &dynamicInput,
                    const ContinueFunctor &continueFunc,
                    vtkm::cont::internal::DynamicTransformTagCastAndCall) const

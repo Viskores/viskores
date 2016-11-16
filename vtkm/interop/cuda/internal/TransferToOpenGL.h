@@ -137,7 +137,7 @@ class TransferToOpenGL<ValueType, vtkm::cont::DeviceAdapterTagCuda>
 {
   typedef vtkm::cont::DeviceAdapterTagCuda DeviceAdapterTag;
 public:
-  VTKM_CONT_EXPORT explicit TransferToOpenGL(BufferState& state):
+  VTKM_CONT explicit TransferToOpenGL(BufferState& state):
     State(state),
     Resource(nullptr)
   {
@@ -160,7 +160,7 @@ public:
   }
 
   template< typename StorageTag >
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Transfer (
     vtkm::cont::ArrayHandle<ValueType, StorageTag> &handle) const
   {

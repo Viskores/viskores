@@ -62,7 +62,7 @@ $# Ignore the following comment. It is meant for the generated file.
 
 $py(
 def unary_function(name, type, returntype, cuda_expression, std_expression):
-  return '''VTKM_EXEC_CONT_EXPORT
+  return '''static inline VTKM_EXEC_CONT
 {2} {0}({1} x) {{
 #ifdef VTKM_CUDA
   return {3};
@@ -74,7 +74,7 @@ def unary_function(name, type, returntype, cuda_expression, std_expression):
 
 def unary_Vec_function(vtkmname):
   return '''template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> {0}(const vtkm::Vec<T,N> &x) {{
   vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
@@ -84,7 +84,7 @@ vtkm::Vec<T,N> {0}(const vtkm::Vec<T,N> &x) {{
   return result;
 }}
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,4> {0}(const vtkm::Vec<T,4> &x) {{
   return vtkm::Vec<T,4>(vtkm::{0}(x[0]),
                         vtkm::{0}(x[1]),
@@ -92,14 +92,14 @@ vtkm::Vec<T,4> {0}(const vtkm::Vec<T,4> &x) {{
                         vtkm::{0}(x[3]));
 }}
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,3> {0}(const vtkm::Vec<T,3> &x) {{
   return vtkm::Vec<T,3>(vtkm::{0}(x[0]),
                         vtkm::{0}(x[1]),
                         vtkm::{0}(x[2]));
 }}
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,2> {0}(const vtkm::Vec<T,2> &x) {{
   return vtkm::Vec<T,2>(vtkm::{0}(x[0]),
                         vtkm::{0}(x[1]));
@@ -126,7 +126,7 @@ def unary_template_function_no_vec(vtkmname,
                                    expression,
                                    returntype = None,
                                    preexpression = ''):
-  return '''VTKM_EXEC_CONT_EXPORT
+  return '''static inline VTKM_EXEC_CONT
 {2} {0}(vtkm::Float32 x) {{
 {3}  return {1};
 }}
@@ -134,7 +134,7 @@ def unary_template_function_no_vec(vtkmname,
            expression,
            'vtkm::Float32' if returntype == None else returntype,
            preexpression) + \
-'''VTKM_EXEC_CONT_EXPORT
+'''static inline VTKM_EXEC_CONT
 {2} {0}(vtkm::Float64 x) {{
 {3}  return {1};
 }}
@@ -144,7 +144,7 @@ def unary_template_function_no_vec(vtkmname,
            preexpression)
 
 def binary_function(name, type, cuda_expression, std_expression):
-  return '''VTKM_EXEC_CONT_EXPORT
+  return '''static inline VTKM_EXEC_CONT
 {1} {0}({1} x, {1} y) {{
 #ifdef VTKM_CUDA
   return {2};
@@ -165,11 +165,11 @@ def binary_math_function(vtkmname, sysname):
                          'std::' + sysname + '(x,y)')
 
 def binary_template_function(vtkmname, expression):
-  return '''VTKM_EXEC_CONT_EXPORT
+  return '''static inline VTKM_EXEC_CONT
 vtkm::Float32 {0}(vtkm::Float32 x, vtkm::Float32 y) {{
   return {1};
 }}
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 {0}(vtkm::Float64 x, vtkm::Float64 y) {{
   return {1};
 }}
@@ -187,7 +187,7 @@ namespace vtkm {
 //-----------------------------------------------------------------------------
 /// Returns the constant 2 times Pi.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 TwoPi()
 {
   return 6.28318530717958647692528676655900576;
@@ -195,7 +195,7 @@ vtkm::Float64 TwoPi()
 
 /// Returns the constant Pi.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Pi()
 {
   return 3.14159265358979323846264338327950288;
@@ -203,14 +203,14 @@ vtkm::Float64 Pi()
 
 /// Returns the constant Pi halves.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Pi_2()
 {
   return 1.57079632679489661923132169163975144;
 }
 /// Returns the constant Pi thirds.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Pi_3()
 {
   return 1.04719755119659774615421446109316762;
@@ -218,7 +218,7 @@ vtkm::Float64 Pi_3()
 
 /// Returns the constant Pi fourths.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Pi_4()
 {
   return 0.78539816339744830961566084581987572;
@@ -298,20 +298,20 @@ $unary_math_function('Sqrt', 'sqrt')\
 /// should use this function whenever dividing by the square root.
 ///
 #ifdef VTKM_CUDA
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 RSqrt(vtkm::Float32 x) {
   return rsqrtf(x);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 RSqrt(vtkm::Float64 x) {
   return rsqrt(x);
 }
 #else // !VTKM_CUDA
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 RSqrt(vtkm::Float32 x) {
   return 1/vtkm::Sqrt(x);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 RSqrt(vtkm::Float64 x) {
   return 1/vtkm::Sqrt(x);
 }
@@ -331,20 +331,20 @@ $unary_Vec_function('Cbrt')\
 /// should use this function whenever dividing by the cube root.
 ///
 #ifdef VTKM_CUDA
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 RCbrt(vtkm::Float32 x) {
   return rcbrtf(x);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 RCbrt(vtkm::Float64 x) {
   return rcbrt(x);
 }
 #else // !VTKM_CUDA
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 RCbrt(vtkm::Float32 x) {
   return 1/vtkm::Cbrt(x);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 RCbrt(vtkm::Float64 x) {
   return 1/vtkm::Cbrt(x);
 }
@@ -372,20 +372,20 @@ $unary_Vec_function('ExpM1')\
 /// Computes 10**\p x, the base-10 exponential of \p x.
 ///
 #ifdef VTKM_CUDA
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Exp10(vtkm::Float32 x) {
   return exp10f(x);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Exp10(vtkm::Float64 x) {
   return exp10(x);
 }
 #else // !VTKM_CUDA
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 Exp10(vtkm::Float32 x) {
   return vtkm::Pow(10, x);;
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 Exp10(vtkm::Float64 x) {
   return vtkm::Pow(10, x);;
 }
@@ -417,7 +417,7 @@ $unary_Vec_function('Log1P')\
 /// Returns \p x or \p y, whichever is larger.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Max(const T &x, const T &y);
 #ifdef VTKM_USE_STL
 $binary_template_function('Max', '(std::max)(x, y)')\
@@ -430,7 +430,7 @@ $#
 /// Returns \p x or \p y, whichever is smaller.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Min(const T &x, const T &y);
 #ifdef VTKM_USE_STL
 $binary_template_function('Min', '(std::min)(x, y)')\
@@ -443,14 +443,14 @@ $#
 namespace detail {
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Max(T x, T y, vtkm::TypeTraitsScalarTag)
 {
   return (x < y) ? y : x;
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Max(const T &x, const T &y, vtkm::TypeTraitsVectorTag)
 {
   typedef vtkm::VecTraits<T> Traits;
@@ -466,14 +466,14 @@ T Max(const T &x, const T &y, vtkm::TypeTraitsVectorTag)
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Min(T x, T y, vtkm::TypeTraitsScalarTag)
 {
   return (x < y) ? x : y;
 }
 
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Min(const T &x, const T &y, vtkm::TypeTraitsVectorTag)
 {
   typedef vtkm::VecTraits<T> Traits;
@@ -493,7 +493,7 @@ T Min(const T &x, const T &y, vtkm::TypeTraitsVectorTag)
 /// Returns \p x or \p y, whichever is larger.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Max(const T &x, const T &y) {
   return detail::Max(x, y, typename vtkm::TypeTraits<T>::DimensionalityTag());
 }
@@ -501,7 +501,7 @@ T Max(const T &x, const T &y) {
 /// Returns \p x or \p y, whichever is smaller.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Min(const T &x, const T &y) {
   return detail::Min(x, y, typename vtkm::TypeTraits<T>::DimensionalityTag());
 }
@@ -542,25 +542,25 @@ struct FloatLimits<vtkm::Float32>
 {
   typedef vtkm::detail::IEEE754Bits32 BitsType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float32 Nan() {
     BitsType nan = {VTKM_NAN_BITS_32};
     return nan.scalar;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float32 Infinity() {
     BitsType inf = {VTKM_INF_BITS_32};
     return inf.scalar;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float32 NegativeInfinity() {
     BitsType neginf = {VTKM_NEG_INF_BITS_32};
     return neginf.scalar;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float32 Epsilon() {
     return VTKM_EPSILON_32;
   }
@@ -571,25 +571,25 @@ struct FloatLimits< vtkm::Vec<vtkm::Float32,N> >
 {
   typedef vtkm::detail::IEEE754Bits32 BitsType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float32,N> Nan() {
     BitsType nan = {VTKM_NAN_BITS_32};
     return vtkm::Vec<vtkm::Float32,N>(nan.scalar);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float32,N> Infinity() {
     BitsType inf = {VTKM_INF_BITS_32};
     return vtkm::Vec<vtkm::Float32,N>(inf.scalar);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float32,N> NegativeInfinity() {
     BitsType neginf = {VTKM_NEG_INF_BITS_32};
     return vtkm::Vec<vtkm::Float32,N>(neginf.scalar);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float32,N> Epsilon() {
     return vtkm::Vec<vtkm::Float32,N>(VTKM_EPSILON_32);
   }
@@ -600,25 +600,25 @@ struct FloatLimits<vtkm::Float64>
 {
   typedef vtkm::detail::IEEE754Bits64 BitsType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float64 Nan() {
     BitsType nan = {VTKM_NAN_BITS_64};
     return nan.scalar;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float64 Infinity() {
     BitsType inf = {VTKM_INF_BITS_64};
     return inf.scalar;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float64 NegativeInfinity() {
     BitsType neginf = {VTKM_NEG_INF_BITS_64};
     return neginf.scalar;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Float64 Epsilon() {
     return VTKM_EPSILON_64;
   }
@@ -629,25 +629,25 @@ struct FloatLimits< vtkm::Vec<vtkm::Float64,N> >
 {
   typedef vtkm::detail::IEEE754Bits64 BitsType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float64,N> Nan() {
     BitsType nan = {VTKM_NAN_BITS_64};
     return vtkm::Vec<vtkm::Float64,N>(nan.scalar);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float64,N> Infinity() {
     BitsType inf = {VTKM_INF_BITS_64};
     return vtkm::Vec<vtkm::Float64,N>(inf.scalar);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float64,N> NegativeInfinity() {
     BitsType neginf = {VTKM_NEG_INF_BITS_64};
     return vtkm::Vec<vtkm::Float64,N>(neginf.scalar);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float64,N> Epsilon() {
     return vtkm::Vec<vtkm::Float64,N>(VTKM_EPSILON_64);
   }
@@ -667,7 +667,7 @@ struct FloatLimits< vtkm::Vec<vtkm::Float64,N> >
 /// Returns the representation for not-a-number (NaN).
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Nan()
 {
   return detail::FloatLimits<T>::Nan();
@@ -676,7 +676,7 @@ T Nan()
 /// Returns the representation for infinity.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Infinity()
 {
   return detail::FloatLimits<T>::Infinity();
@@ -685,7 +685,7 @@ T Infinity()
 /// Returns the representation for negative infinity.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T NegativeInfinity()
 {
   return detail::FloatLimits<T>::NegativeInfinity();
@@ -695,7 +695,7 @@ T NegativeInfinity()
 /// that is representable.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Epsilon()
 {
   return detail::FloatLimits<T>::Epsilon();
@@ -706,7 +706,7 @@ T Epsilon()
 /// Returns the representation for not-a-number (NaN).
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Nan()
 {
   return std::numeric_limits<T>::quiet_NaN();
@@ -715,7 +715,7 @@ T Nan()
 /// Returns the representation for infinity.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Infinity()
 {
   return std::numeric_limits<T>::infinity();
@@ -724,7 +724,7 @@ T Infinity()
 /// Returns the representation for negative infinity.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T NegativeInfinity()
 {
   return -std::numeric_limits<T>::infinity();
@@ -734,7 +734,7 @@ T NegativeInfinity()
 /// that is representable.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Epsilon()
 {
   return std::numeric_limits<T>::epsilon();
@@ -743,39 +743,39 @@ T Epsilon()
 
 /// Returns the representation for not-a-number (NaN).
 ///
-VTKM_EXEC_CONT_EXPORT vtkm::Float32 Nan32() {
+static inline VTKM_EXEC_CONT vtkm::Float32 Nan32() {
   return vtkm::Nan<vtkm::Float32>();
 }
-VTKM_EXEC_CONT_EXPORT vtkm::Float64 Nan64() {
+static inline VTKM_EXEC_CONT vtkm::Float64 Nan64() {
   return vtkm::Nan<vtkm::Float64>();
 }
 
 /// Returns the representation for infinity.
 ///
-VTKM_EXEC_CONT_EXPORT vtkm::Float32 Infinity32() {
+static inline VTKM_EXEC_CONT vtkm::Float32 Infinity32() {
   return vtkm::Infinity<vtkm::Float32>();
 }
-VTKM_EXEC_CONT_EXPORT vtkm::Float64 Infinity64() {
+static inline VTKM_EXEC_CONT vtkm::Float64 Infinity64() {
   return vtkm::Infinity<vtkm::Float64>();
 }
 
 /// Returns the representation for negative infinity.
 ///
-VTKM_EXEC_CONT_EXPORT vtkm::Float32 NegativeInfinity32() {
+static inline VTKM_EXEC_CONT vtkm::Float32 NegativeInfinity32() {
   return vtkm::NegativeInfinity<vtkm::Float32>();
 }
-VTKM_EXEC_CONT_EXPORT vtkm::Float64 NegativeInfinity64() {
+static inline VTKM_EXEC_CONT vtkm::Float64 NegativeInfinity64() {
   return vtkm::NegativeInfinity<vtkm::Float64>();
 }
 
 /// Returns the difference between 1 and the least value greater than 1
 /// that is representable.
 ///
-VTKM_EXEC_CONT_EXPORT vtkm::Float32 Epsilon32()
+static inline VTKM_EXEC_CONT vtkm::Float32 Epsilon32()
 {
   return vtkm::Epsilon<vtkm::Float32>();
 }
-VTKM_EXEC_CONT_EXPORT vtkm::Float64 Epsilon64()
+static inline VTKM_EXEC_CONT vtkm::Float64 Epsilon64()
 {
   return vtkm::Epsilon<vtkm::Float64>();
 }
@@ -784,7 +784,7 @@ VTKM_EXEC_CONT_EXPORT vtkm::Float64 Epsilon64()
 /// Returns true if \p x is not a number.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 bool IsNan(T x)
 {
   using std::isnan;
@@ -794,7 +794,7 @@ bool IsNan(T x)
 /// Returns true if \p x is positive or negative infinity.
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 bool IsInf(T x)
 {
   using std::isinf;
@@ -804,7 +804,7 @@ bool IsInf(T x)
 /// Returns true if \p x is a normal number (not NaN or infinite).
 ///
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 bool IsFinite(T x)
 {
   using std::isfinite;
@@ -842,7 +842,7 @@ $binary_math_function('FMod', 'fmod')\
 ///
 #ifdef VTKM_MSVC
 template<typename T>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 T Remainder(T numerator, T denominator)
 {
   T quotient = vtkm::Round(numerator/denominator);
@@ -858,7 +858,7 @@ $#
 /// get that remainder.
 ///
 template<typename QType>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 RemainderQuotient(vtkm::Float32 numerator,
                                 vtkm::Float32 denominator,
                                 QType &quotient)
@@ -869,7 +869,7 @@ vtkm::Float32 RemainderQuotient(vtkm::Float32 numerator,
   return result;
 }
 template<typename QType>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 RemainderQuotient(vtkm::Float64 numerator,
                                 vtkm::Float64 denominator,
                                 QType &quotient)
@@ -883,12 +883,12 @@ vtkm::Float64 RemainderQuotient(vtkm::Float64 numerator,
 /// Gets the integral and fractional parts of \c x. The return value is the
 /// fractional part and \c integral is set to the integral part.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float32 ModF(vtkm::Float32 x, vtkm::Float32 &integral)
 {
   return std::modf(x, &integral);
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64 &integral)
 {
   return std::modf(x, &integral);
@@ -898,7 +898,7 @@ vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64 &integral)
 /// Return the absolute value of \p x. That is, return \p x if it is positive or
 /// \p -x if it is negative.
 ///
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Int32 Abs(vtkm::Int32 x)
 {
 #if VTKM_SIZE_INT == 4
@@ -907,7 +907,7 @@ vtkm::Int32 Abs(vtkm::Int32 x)
 #error Unknown size of Int32.
 #endif
 }
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Int64 Abs(vtkm::Int64 x)
 {
 #if VTKM_SIZE_LONG == 8
@@ -940,7 +940,7 @@ $binary_math_function('CopySign', 'copysign')\
 $#
 
 template<typename T, vtkm::IdComponent N>
-VTKM_EXEC_CONT_EXPORT
+static inline VTKM_EXEC_CONT
 vtkm::Vec<T,N> CopySign(const vtkm::Vec<T,N> &x, const vtkm::Vec<T,N> &y)
 {
   vtkm::Vec<T,N> result;

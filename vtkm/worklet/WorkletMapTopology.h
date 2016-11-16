@@ -126,7 +126,7 @@ public:
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename T, typename OutToInArrayType, typename VisitArrayType,
            typename InputDomainType, typename G>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>
   GetThreadIndices(const T& threadIndex,
                    const OutToInArrayType& outToIn,

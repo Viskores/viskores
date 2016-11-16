@@ -66,13 +66,13 @@ public:
   typedef typename ArrayManagerType::PortalType PortalExecution;
   typedef typename ArrayManagerType::PortalConstType PortalConstExecution;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayTransfer(StorageType *storage) : ArrayManager(storage) {  }
 
   /// Returns the number of values stored in the array.  Results are undefined
   /// if data has not been loaded or allocated.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return this->ArrayManager.GetNumberOfValues();
@@ -84,7 +84,7 @@ public:
   ///
   /// Returns a constant array portal valid in the execution environment.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstExecution PrepareForInput(bool updateData)
   {
     return this->ArrayManager.PrepareForInput(updateData);
@@ -97,7 +97,7 @@ public:
   ///
   /// Returns a read-write array portal valid in the execution environment.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForInPlace(bool updateData)
   {
     return this->ArrayManager.PrepareForInPlace(updateData);
@@ -110,7 +110,7 @@ public:
   ///
   /// Returns a writable array portal valid in the execution environment.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
     return this->ArrayManager.PrepareForOutput(numberOfValues);
@@ -123,7 +123,7 @@ public:
   /// operation. This method should only be called after PrepareForOutput is
   /// called.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType *storage) const
   {
     this->ArrayManager.RetrieveOutputData(storage);
@@ -136,7 +136,7 @@ public:
   /// and exeuction have seperate memory spaces).
   ///
   template <class IteratorTypeControl>
-  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
+  VTKM_CONT void CopyInto(IteratorTypeControl dest) const
   {
     this->ArrayManager.CopyInto(dest);
   }
@@ -150,7 +150,7 @@ public:
   /// (returned from GetNumberOfValues). That is, this method can only be used
   /// to shorten the array, not lengthen.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues)
   {
     this->ArrayManager.Shrink(numberOfValues);
@@ -159,7 +159,7 @@ public:
   /// Frees any resources (i.e. memory) allocated for the exeuction
   /// environment, if any.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources()
   {
     this->ArrayManager.ReleaseResources();

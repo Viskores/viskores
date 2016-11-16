@@ -36,7 +36,7 @@ struct TestKernel : public vtkm::exec::FunctorBase
 {
   PortalType Portal;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
     typedef typename PortalType::ValueType ValueType;

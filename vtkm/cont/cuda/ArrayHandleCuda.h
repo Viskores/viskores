@@ -59,35 +59,35 @@ public:
   typedef T ValueType;
   typedef thrust::system::cuda::pointer<ValueType> DevicePointer;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalCuda()
     : Data(), NumberOfValues(0)
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalCuda(ValueType* d, vtkm::Id numberOfValues)
     : Data(d), NumberOfValues(numberOfValues)
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalCuda(const DevicePointer& ptr, vtkm::Id numberOfValues)
     : Data(ptr), NumberOfValues(numberOfValues)
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return NumberOfValues;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ValueType Get(vtkm::Id index) const
   {
     throw vtkm::cont::ErrorControlBadType(
       "ArrayHandleCuda only provides access to the device pointer.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DevicePointer GetDevicePointer() const
   {
     return Data;
@@ -115,36 +115,36 @@ public:
   typedef vtkm::cont::cuda::internal::ArrayPortalCuda<ValueType> PortalType;
   typedef vtkm::cont::cuda::internal::ArrayPortalCuda<ValueType> PortalConstType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage():
     Data(), NumberOfValues(0), IsOwner(true)
   {
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage(ValueType* d, vtkm::Id numberOfValues):
     Data(d), NumberOfValues(numberOfValues), IsOwner(false)
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType GetPortal()
   {
     return PortalType(this->Data,this->NumberOfValues);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     return PortalConstType(this->Data,this->NumberOfValues);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return this->NumberOfValues;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(vtkm::Id size)
   {
     if (!this->OwnsResources())
@@ -157,7 +157,7 @@ public:
     this->NumberOfValues = size;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues)
   {
     VTKM_ASSERT(numberOfValues <= this->GetNumberOfValues());
@@ -167,7 +167,7 @@ public:
       this->ReleaseResources();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources()
   {
     if (!this->OwnsResources())
@@ -181,13 +181,13 @@ public:
       }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DevicePointer GetDevicePointer() const
   {
     return this->Data;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool OwnsResources() const
   {
     return this->IsOwner;
@@ -226,18 +226,18 @@ public:
   typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust< T > PortalType;
   typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< const T > PortalConstType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayManagerExecutionThrustDevice(StorageType *storage)
     : Storage(storage)
   { }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ~ArrayManagerExecutionThrustDevice()
   { }
 
   /// Returns the size of the array.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return this->Storage->GetNumberOfValues();
@@ -245,7 +245,7 @@ public:
 
   /// Since memory is already on the device, there is nothing to prepare
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType PrepareForInput(bool)
   {
     return PortalConstType(this->Storage->GetDevicePointer(),
@@ -255,7 +255,7 @@ public:
 
   /// Since memory is already on the device, there is nothing to prepare
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType PrepareForInPlace(bool)
   {
     return PortalType(this->Storage->GetDevicePointer(),
@@ -265,7 +265,7 @@ public:
 
   /// Allocates the array to the given size.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType PrepareForOutput(vtkm::Id numberOfValues)
   {
     if (this->Storage->GetNumberOfValues())
@@ -279,19 +279,19 @@ public:
 
   /// Since output data stays on the device, there is nothing to retrieve
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType*) const
   { }
 
   /// Resizes the device vector.
   ///
-  VTKM_CONT_EXPORT void Shrink(vtkm::Id numberOfValues)
+  VTKM_CONT void Shrink(vtkm::Id numberOfValues)
   {
     this->Storage->Shrink(static_cast<vtkm::UInt64>(numberOfValues));
   }
 
   /// Releases storage resources, if the storage owns them
-  VTKM_CONT_EXPORT void ReleaseResources()
+  VTKM_CONT void ReleaseResources()
   {
     if (this->Storage->OwnsResources())
       this->Storage->ReleaseResources();
@@ -334,7 +334,7 @@ public:
          vtkm::cont::cuda::StorageTagCuda
          >));
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleCuda(T *start,vtkm::Id length)
     :Superclass( vtkm::cont::internal::Storage<T, vtkm::cont::cuda::StorageTagCuda>(start, length))
   {
@@ -345,7 +345,7 @@ public:
 /// A convenience function for creating an ArrayHandle from a Cuda pointer.
 ///
 template<typename T>
-VTKM_CONT_EXPORT vtkm::cont::ArrayHandle<T,vtkm::cont::cuda::StorageTagCuda>
+VTKM_CONT vtkm::cont::ArrayHandle<T,vtkm::cont::cuda::StorageTagCuda>
 make_ArrayHandleCuda(T *array,vtkm::Id length)
 {
   typedef vtkm::cont::cuda::StorageTagCuda StorageTag;
@@ -354,7 +354,7 @@ make_ArrayHandleCuda(T *array,vtkm::Id length)
 }
 
 template<typename T>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void
 printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,
                          vtkm::cont::cuda::StorageTagCuda> &array,
@@ -376,7 +376,7 @@ template <typename T>
 class ArrayHandle : public vtkm::cont::ArrayHandleCuda<T>
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandle(T *start,vtkm::Id length)
     : vtkm::cont::ArrayHandleCuda<T>(start, length)
   {

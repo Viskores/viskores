@@ -61,7 +61,7 @@ private:
   typedef typename KeyArrayIn::ValueType KeyType;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   AverageByKeyDynamicValue(const KeyArrayIn &inputKeys,
                            KeyArrayOut &outputKeys,
                            vtkm::cont::DynamicArrayHandle &outputValues)
@@ -69,7 +69,7 @@ public:
   { }
 
   template <typename ValueArrayIn>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(const ValueArrayIn& coordinates) const
   {
     typedef typename ValueArrayIn::ValueType ValueType;
@@ -111,14 +111,14 @@ struct VertexClustering
     typedef void ControlSignature(FieldIn<Vec3> , FieldOut<IdType>);
     typedef void ExecutionSignature(_1, _2);
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     MapPointsWorklet(const GridInfo &grid)
       : Grid(grid)
     { }
 
     /// determine grid resolution for clustering
     template<typename PointType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     vtkm::Id GetClusterId(const PointType &p) const
     {
       typedef typename PointType::ComponentType ComponentType;
@@ -136,7 +136,7 @@ struct VertexClustering
     }
 
     template<typename PointType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const PointType &point, vtkm::Id &cid) const
     {
       cid = this->GetClusterId(point);
@@ -153,13 +153,13 @@ struct VertexClustering
                                   FieldOutCell<Id3Type> cellClusterIds);
     typedef void ExecutionSignature(_2, _3);
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     MapCellsWorklet()
     { }
 
     // TODO: Currently only works with Triangle cell types
     template<typename ClusterIdsVecType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const ClusterIdsVecType &pointClusterIds,
                     vtkm::Id3 &cellClusterId) const
     {
@@ -178,7 +178,7 @@ struct VertexClustering
       typedef void ExecutionSignature(WorkIndex, _1, _2);  // WorkIndex: use vtkm indexing
 
       template<typename OutPortalType>
-      VTKM_EXEC_EXPORT
+      VTKM_EXEC
       void operator()(const vtkm::Id &counter,
                       const vtkm::Id &cid,
                       const OutPortalType &outPortal) const
@@ -191,7 +191,7 @@ struct VertexClustering
   {
     vtkm::Id NPoints;
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void rotate(vtkm::Id3 &ids) const
     {
       vtkm::Id temp=ids[0]; ids[0] = ids[1]; ids[1] = ids[2]; ids[2] = temp;
@@ -203,13 +203,13 @@ struct VertexClustering
                                   WholeArrayIn<IdType>);
     typedef void ExecutionSignature(_1, _2, _3);
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     Cid2PointIdWorklet( vtkm::Id nPoints ):
       NPoints(nPoints)
     {}
 
     template<typename InPortalType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id3 &cid3,
                     vtkm::Id3 &pointId3,
                     const InPortalType& inPortal) const
@@ -250,12 +250,12 @@ struct VertexClustering
     typedef void ControlSignature(FieldIn<Id3Type> , FieldOut<TypeInt64>);
     typedef void ExecutionSignature(_1, _2);
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     Cid3HashWorklet(vtkm::Id nPoints)
       : NPoints(nPoints)
     { }
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id3 &cid, vtkm::Int64 &cidHash) const
     {
       cidHash = cid[0] + this->NPoints  * (cid[1] + this->NPoints * cid[2]);  // get a unique hash value
@@ -271,12 +271,12 @@ struct VertexClustering
     typedef void ControlSignature(FieldIn<TypeInt64> , FieldOut<Id3Type>);
     typedef void ExecutionSignature(_1, _2);
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     Cid3UnhashWorklet(vtkm::Id nPoints)
       : NPoints(nPoints)
     { }
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Int64 &cidHash, vtkm::Id3 &cid) const
     {
       cid[0] = static_cast<vtkm::Id>( cidHash % this->NPoints  );
@@ -289,7 +289,7 @@ struct VertexClustering
   class Id3Less
   {
   public:
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     bool operator() (const vtkm::Id3 & a, const vtkm::Id3 & b) const
     {
       if (a[0] < 0)

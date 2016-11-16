@@ -36,7 +36,7 @@ struct ExampleFieldWorklet : public vtkm::worklet::WorkletMapField
   typedef void ExecutionSignature( _1, _2, _3, _4, _5, _6 );
 
   template<typename T, typename U, typename V>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()( const vtkm::Vec< T, 3 > & vec,
                    const U & scalar1,
                    const V& scalar2,
@@ -51,7 +51,7 @@ struct ExampleFieldWorklet : public vtkm::worklet::WorkletMapField
   }
 
   template<typename T, typename U, typename V, typename W, typename X, typename Y>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()( const T &,
                    const U &,
                    const V&,

@@ -83,7 +83,7 @@ struct ScanInclusiveBody
   OutputPortalType OutputPortal;
   BinaryOperationType BinaryOperation;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ScanInclusiveBody(const InputPortalType &inputPortal,
                     const OutputPortalType &outputPortal,
                     BinaryOperationType binaryOperation)
@@ -94,7 +94,7 @@ struct ScanInclusiveBody
       BinaryOperation(binaryOperation)
   {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ScanInclusiveBody(const ScanInclusiveBody &body, ::tbb::split)
     : Sum( vtkm::TypeTraits<ValueType>::ZeroInitialization() ),
       FirstCall(true),
@@ -103,7 +103,7 @@ struct ScanInclusiveBody
       BinaryOperation(body.BinaryOperation) {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const ::tbb::blocked_range<vtkm::Id> &range, ::tbb::pre_scan_tag)
   {
     typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
@@ -125,7 +125,7 @@ struct ScanInclusiveBody
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const ::tbb::blocked_range<vtkm::Id> &range, ::tbb::final_scan_tag)
   {
     typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
@@ -154,14 +154,14 @@ struct ScanInclusiveBody
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void reverse_join(const ScanInclusiveBody &left)
   {
     this->Sum = this->BinaryOperation(left.Sum, this->Sum);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void assign(const ScanInclusiveBody &src)
   {
     this->Sum = src.Sum;
@@ -182,7 +182,7 @@ struct ScanExclusiveBody
   OutputPortalType OutputPortal;
   BinaryOperationType BinaryOperation;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ScanExclusiveBody(const InputPortalType &inputPortal,
                     const OutputPortalType &outputPortal,
                     BinaryOperationType binaryOperation,
@@ -194,7 +194,7 @@ struct ScanExclusiveBody
       BinaryOperation(binaryOperation)
   {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ScanExclusiveBody(const ScanExclusiveBody &body, ::tbb::split)
     : Sum(body.InitialValue),
       InitialValue(body.InitialValue),
@@ -204,7 +204,7 @@ struct ScanExclusiveBody
   {  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const ::tbb::blocked_range<vtkm::Id> &range, ::tbb::pre_scan_tag)
   {
     typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
@@ -223,7 +223,7 @@ struct ScanExclusiveBody
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const ::tbb::blocked_range<vtkm::Id> &range, ::tbb::final_scan_tag)
   {
     typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
@@ -253,14 +253,14 @@ struct ScanExclusiveBody
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void reverse_join(const ScanExclusiveBody &left)
   {
     this->Sum = this->BinaryOperation(left.Sum, this->Sum);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void assign(const ScanExclusiveBody &src)
   {
     this->Sum = src.Sum;
@@ -270,7 +270,7 @@ struct ScanExclusiveBody
 template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
 VTKM_SUPPRESS_EXEC_WARNINGS
-VTKM_CONT_EXPORT static
+VTKM_CONT static
 typename std::remove_reference<typename OutputPortalType::ValueType>::type
 ScanInclusivePortals(InputPortalType inputPortal,
                      OutputPortalType outputPortal,
@@ -295,7 +295,7 @@ ScanInclusivePortals(InputPortalType inputPortal,
 template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
 VTKM_SUPPRESS_EXEC_WARNINGS
-VTKM_CONT_EXPORT static
+VTKM_CONT static
 typename std::remove_reference<typename OutputPortalType::ValueType>::type
 ScanExclusivePortals(InputPortalType inputPortal,
                      OutputPortalType outputPortal,
@@ -326,18 +326,18 @@ template<class FunctorType>
 class ScheduleKernel
 {
 public:
-  VTKM_CONT_EXPORT ScheduleKernel(const FunctorType &functor)
+  VTKM_CONT ScheduleKernel(const FunctorType &functor)
     : Functor(functor)
   {  }
 
-  VTKM_CONT_EXPORT void SetErrorMessageBuffer(
+  VTKM_CONT void SetErrorMessageBuffer(
       const vtkm::exec::internal::ErrorMessageBuffer &errorMessage)
   {
     this->ErrorMessage = errorMessage;
     this->Functor.SetErrorMessageBuffer(errorMessage);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(const ::tbb::blocked_range<vtkm::Id> &range) const {
     // The TBB device adapter causes array classes to be shared between
     // control and execution environment. This means that it is possible for
@@ -376,20 +376,20 @@ template<class FunctorType>
 class ScheduleKernelId3
 {
 public:
-  VTKM_CONT_EXPORT ScheduleKernelId3(const FunctorType &functor,
+  VTKM_CONT ScheduleKernelId3(const FunctorType &functor,
                                     const vtkm::Id3& dims)
     : Functor(functor),
       Dims(dims)
     {  }
 
-  VTKM_CONT_EXPORT void SetErrorMessageBuffer(
+  VTKM_CONT void SetErrorMessageBuffer(
       const vtkm::exec::internal::ErrorMessageBuffer &errorMessage)
   {
     this->ErrorMessage = errorMessage;
     this->Functor.SetErrorMessageBuffer(errorMessage);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(const ::tbb::blocked_range3d<vtkm::Id> &range) const {
     try
       {
@@ -430,7 +430,7 @@ template<typename InputPortalType,
 class ScatterKernel
 {
 public:
-  VTKM_CONT_EXPORT ScatterKernel(InputPortalType  inputPortal,
+  VTKM_CONT ScatterKernel(InputPortalType  inputPortal,
                                  IndexPortalType  indexPortal,
                                  OutputPortalType outputPortal)
     : ValuesPortal(inputPortal),
@@ -438,7 +438,7 @@ public:
       OutputPortal(outputPortal)
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(const ::tbb::blocked_range<vtkm::Id> &range) const
   {
     // The TBB device adapter causes array classes to be shared between
@@ -477,7 +477,7 @@ template<typename InputPortalType,
          typename IndexPortalType,
          typename OutputPortalType>
 VTKM_SUPPRESS_EXEC_WARNINGS
-VTKM_CONT_EXPORT static void ScatterPortal(InputPortalType  inputPortal,
+VTKM_CONT static void ScatterPortal(InputPortalType  inputPortal,
                                            IndexPortalType  indexPortal,
                                            OutputPortalType outputPortal)
 {

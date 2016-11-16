@@ -43,7 +43,7 @@ public:
   const vtkm::rendering::ColorTable ColorTable;
   const vtkm::Float32 SMin, SDiff;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   MapColorAndVertices(const vtkm::rendering::ColorTable &colorTable,
                       vtkm::Float32 sMin, vtkm::Float32 sDiff)
     : ColorTable(colorTable),
@@ -62,7 +62,7 @@ public:
            typename InputArrayPortalType,
            typename InputArrayV3PortalType,
            typename OutputArrayPortalType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Id &i,
                   InputArrayIndexPortalType &indices,
                   const InputArrayPortalType &scalar,
@@ -128,7 +128,7 @@ struct MapColorAndVerticesInvokeFunctor
   vtkm::cont::ArrayHandle<vtkm::Float32> OutColor;
   vtkm::cont::ArrayHandle<vtkm::Float32> OutVertices;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   MapColorAndVerticesInvokeFunctor(
       const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > &indices,
       const vtkm::rendering::ColorTable &colorTable,
@@ -151,7 +151,7 @@ struct MapColorAndVerticesInvokeFunctor
   {}
 
   template<typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool operator()(Device) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
@@ -167,7 +167,7 @@ struct MapColorAndVerticesInvokeFunctor
 };
 
 template<typename PtType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void RenderTriangles(MapperGL &mapper,
                      vtkm::Id numTri, const PtType &verts,
                      const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > &indices,

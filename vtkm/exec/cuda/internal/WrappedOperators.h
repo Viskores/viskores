@@ -52,28 +52,28 @@ struct  WrappedUnaryPredicate
 
   Function m_f;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   WrappedUnaryPredicate()
     : m_f()
   {}
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   WrappedUnaryPredicate(const Function &f)
     : m_f(f)
   {}
 
-  VTKM_EXEC_EXPORT bool operator()(const T &x) const
+  VTKM_EXEC bool operator()(const T &x) const
   {
     return m_f(x);
   }
 
   template<typename U>
-  VTKM_EXEC_EXPORT bool operator()(const PortalValue<U> &x) const
+  VTKM_EXEC bool operator()(const PortalValue<U> &x) const
   {
     return m_f((T)x);
   }
 
-  VTKM_EXEC_EXPORT bool operator()(const thrust::system::cuda::pointer<T> x) const
+  VTKM_EXEC bool operator()(const thrust::system::cuda::pointer<T> x) const
   {
     return m_f(*x);
   }
@@ -96,62 +96,62 @@ struct WrappedBinaryOperator
 
   Function m_f;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   WrappedBinaryOperator()
     : m_f()
   {}
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   WrappedBinaryOperator(const Function &f)
     : m_f(f)
   {}
 
-  VTKM_EXEC_EXPORT T operator()(const T &x, const T &y) const
+  VTKM_EXEC T operator()(const T &x, const T &y) const
   {
     return m_f(x, y);
   }
 
 
   template<typename U>
-  VTKM_EXEC_EXPORT T operator()(const T &x,
+  VTKM_EXEC T operator()(const T &x,
                                 const PortalValue<U> &y) const
   {
     return m_f(x, (T)y);
   }
 
   template<typename U>
-  VTKM_EXEC_EXPORT T operator()(const PortalValue<U> &x,
+  VTKM_EXEC T operator()(const PortalValue<U> &x,
                                 const T &y) const
   {
     return m_f((T)x, y);
   }
 
   template<typename U, typename V>
-  VTKM_EXEC_EXPORT T operator()(const PortalValue<U> &x,
+  VTKM_EXEC T operator()(const PortalValue<U> &x,
                                 const PortalValue<V> &y) const
   {
     return m_f((T)x, (T)y);
   }
 
-  VTKM_EXEC_EXPORT T operator()(const thrust::system::cuda::pointer<T> x,
+  VTKM_EXEC T operator()(const thrust::system::cuda::pointer<T> x,
                                 const T* y) const
   {
     return m_f(*x, *y);
   }
 
-  VTKM_EXEC_EXPORT T operator()(const thrust::system::cuda::pointer<T> x,
+  VTKM_EXEC T operator()(const thrust::system::cuda::pointer<T> x,
                                 const T& y) const
   {
     return m_f(*x, y);
   }
 
-  VTKM_EXEC_EXPORT T operator()(const T& x,
+  VTKM_EXEC T operator()(const T& x,
                                 const thrust::system::cuda::pointer<T> y) const
   {
     return m_f(x, *y);
   }
 
-  VTKM_EXEC_EXPORT T operator()(const thrust::system::cuda::pointer<T> x,
+  VTKM_EXEC T operator()(const thrust::system::cuda::pointer<T> x,
                                 const thrust::system::cuda::pointer<T> y) const
   {
     return m_f(*x, *y);
@@ -171,62 +171,62 @@ struct WrappedBinaryPredicate
 
   Function m_f;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   WrappedBinaryPredicate()
     : m_f()
   {}
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   WrappedBinaryPredicate(const Function &f)
     : m_f(f)
   {}
 
-  VTKM_EXEC_EXPORT bool operator()(const T &x, const T &y) const
+  VTKM_EXEC bool operator()(const T &x, const T &y) const
   {
     return m_f(x, y);
   }
 
 
   template<typename U>
-  VTKM_EXEC_EXPORT bool operator()(const T &x,
+  VTKM_EXEC bool operator()(const T &x,
                                    const PortalValue<U> &y) const
   {
     return m_f(x, (T)y);
   }
 
   template<typename U>
-  VTKM_EXEC_EXPORT bool operator()(const PortalValue<U> &x,
+  VTKM_EXEC bool operator()(const PortalValue<U> &x,
                                    const T &y) const
   {
     return m_f((T)x, y);
   }
 
   template<typename U, typename V>
-  VTKM_EXEC_EXPORT bool operator()(const PortalValue<U> &x,
+  VTKM_EXEC bool operator()(const PortalValue<U> &x,
                                    const PortalValue<V> &y) const
   {
     return m_f((T)x, (T)y);
   }
 
-  VTKM_EXEC_EXPORT bool operator()(const thrust::system::cuda::pointer<T> x,
+  VTKM_EXEC bool operator()(const thrust::system::cuda::pointer<T> x,
                                    const T* y) const
   {
     return m_f(*x, *y);
   }
 
-  VTKM_EXEC_EXPORT bool operator()(const thrust::system::cuda::pointer<T> x,
+  VTKM_EXEC bool operator()(const thrust::system::cuda::pointer<T> x,
                                    const T& y) const
   {
     return m_f(*x, y);
   }
 
-  VTKM_EXEC_EXPORT bool operator()(const T& x,
+  VTKM_EXEC bool operator()(const T& x,
                                    const thrust::system::cuda::pointer<T> y) const
   {
     return m_f(x, *y);
   }
 
-  VTKM_EXEC_EXPORT bool operator()(const thrust::system::cuda::pointer<T> x,
+  VTKM_EXEC bool operator()(const thrust::system::cuda::pointer<T> x,
                                    const thrust::system::cuda::pointer<T> y) const
   {
     return m_f(*x, *y);

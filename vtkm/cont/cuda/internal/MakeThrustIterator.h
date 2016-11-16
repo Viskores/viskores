@@ -86,7 +86,7 @@ struct IteratorTraits
 };
 
 template<typename PortalType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 typename IteratorTraits<PortalType>::IteratorType
 MakeIteratorBegin(PortalType portal, detail::ThrustIteratorFromArrayPortalTag)
 {
@@ -94,7 +94,7 @@ MakeIteratorBegin(PortalType portal, detail::ThrustIteratorFromArrayPortalTag)
 }
 
 template<typename PortalType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 typename IteratorTraits<PortalType>::IteratorType
 MakeIteratorBegin(PortalType portal, detail::ThrustIteratorDevicePtrTag)
 {
@@ -103,7 +103,7 @@ MakeIteratorBegin(PortalType portal, detail::ThrustIteratorDevicePtrTag)
 }
 
 template<typename PortalType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 typename IteratorTraits<PortalType>::IteratorType
 MakeIteratorEnd(PortalType portal, detail::ThrustIteratorFromArrayPortalTag)
 {
@@ -115,7 +115,7 @@ MakeIteratorEnd(PortalType portal, detail::ThrustIteratorFromArrayPortalTag)
 }
 
 template<typename PortalType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 typename IteratorTraits<PortalType>::IteratorType
 MakeIteratorEnd(PortalType portal, detail::ThrustIteratorDevicePtrTag)
 {
@@ -128,7 +128,7 @@ MakeIteratorEnd(PortalType portal, detail::ThrustIteratorDevicePtrTag)
 
 
 template<typename PortalType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 typename detail::IteratorTraits<PortalType>::IteratorType
 IteratorBegin(PortalType portal)
 {
@@ -137,7 +137,7 @@ IteratorBegin(PortalType portal)
 }
 
 template<typename PortalType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 typename detail::IteratorTraits<PortalType>::IteratorType
 IteratorEnd(PortalType portal)
 {

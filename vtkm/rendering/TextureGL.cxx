@@ -35,12 +35,12 @@ struct TextureGL::InternalsType
   bool   Linear2D;
   bool   LinearMIP;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   InternalsType()
     : Id(0), Dimension(0), MIPMap(false), Linear2D(true), LinearMIP(true)
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ~InternalsType()
   {
     if (this->Id != 0)

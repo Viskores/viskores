@@ -94,7 +94,7 @@ public:
     (void)y5;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Translate2Dto1D( vtkm::Id  inX,  vtkm::Id  inY,         // 2D indices as input
                         vtkm::Id  &mat, vtkm::Id  &idx ) const // which matrix, and idx of that matrix
   {
@@ -205,7 +205,7 @@ public:
                             mode_lr(mode)  
   { (void)dimY2; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Translate2Dto1D( vtkm::Id  inX,  vtkm::Id  inY,         // 2D indices as input
                         vtkm::Id  &mat, vtkm::Id  &idx ) const // which matrix, and idx of that matrix
   {
@@ -274,7 +274,7 @@ public:
 
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ForwardTransform2D  ( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
                         const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
                         vtkm::Id filter_len, vtkm::Id approx_len, 
@@ -298,13 +298,13 @@ public:
                                     mode_lr )
   { this->SetStartPosition(); }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Output1Dto2D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y ) const     
   {
     x = idx % outDimX;
     y = idx / outDimX;
   }
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id Output2Dto1D( vtkm::Id x, vtkm::Id y ) const     
   {
     return y * outDimX + x;
@@ -314,7 +314,7 @@ public:
   #define VAL        vtkm::Float64
   #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InPortalType1, typename InPortalType2, typename InPortalType3 >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   VAL GetVal( const InPortalType1 &portal1, const InPortalType2 &portal2,
               const InPortalType3 &portal3, vtkm::Id inMatrix, vtkm::Id inIdx ) const
   {
@@ -333,7 +333,7 @@ public:
   
   template <typename InPortalType1, typename InPortalType2, 
             typename InPortalType3, typename OutputPortalType>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void operator()(const InPortalType1       &inPortal1, // left/top extension
                   const InPortalType2       &inPortal2, // signal
                   const InPortalType3       &inPortal3, // right/bottom extension
@@ -421,7 +421,7 @@ private:
   const IndexTranslator3Matrices  translator;
   vtkm::Id lstart, hstart;
   
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void SetStartPosition()
   {
     this->lstart = this->oddlow  ? 1 : 0;
@@ -442,7 +442,7 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT 
+  VTKM_EXEC_CONT
   ExtensionWorklet2D  ( vtkm::Id extdimX,     vtkm::Id extdimY, 
                         vtkm::Id sigdimX,     vtkm::Id sigdimY, 
                         vtkm::Id sigstartX,   vtkm::Id sigstartY,
@@ -457,7 +457,7 @@ public:
   { (void)sigDimY; }
 
   // Index translation helper
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Ext1Dto2D ( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y ) const
   {
     x = idx % extDimX;
@@ -465,21 +465,21 @@ public:
   }
 
   // Index translation helper
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id Sig2Dto1D( vtkm::Id x, vtkm::Id y ) const
   {
     return y * sigDimX + x;
   }
 
   // Index translation helper
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id SigPretend2Dto1D( vtkm::Id x, vtkm::Id y ) const
   {
     return (y + sigStartY) * sigDimX + x + sigStartX;
   }
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -553,7 +553,7 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ForwardTransform( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
                     const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
                     vtkm::Id filLen, vtkm::Id approx_len, vtkm::Id detail_len,
@@ -571,7 +571,7 @@ public:
   #define VAL        vtkm::Float64
   #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InputPortalType, typename OutputPortalType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const InputPortalType       &signalIn, 
                   OutputPortalType            &coeffOut,
                   const vtkm::Id &workIndex) const
@@ -609,7 +609,7 @@ private:
   bool oddlow, oddhigh;
   vtkm::Id xlstart, xhstart;
   
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void SetStartPosition()
   {
     this->xlstart = this->oddlow  ? 1 : 0;
@@ -646,7 +646,7 @@ public:
   typedef _6   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   InverseTransform2D( const vtkm::cont::ArrayHandle<vtkm::Float64> &lo_fil,
                       const vtkm::cont::ArrayHandle<vtkm::Float64> &hi_fil,
                       vtkm::Id fil_len, 
@@ -681,7 +681,7 @@ public:
     }
   }
                       
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Output1Dto2D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y ) const
   {
     x = idx % outputDimX;
@@ -693,7 +693,7 @@ public:
   #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
             typename InPortalType4, typename InPortalTypecAcD >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   VAL GetVal( const InPortalType1     &ext1, 
               const InPortalType2     &ext2,
               const InPortalType3     &ext3, 
@@ -721,7 +721,7 @@ public:
   template< typename InPortalType1, typename InPortalType2, typename InPortalType3,
             typename InPortalType4, typename InPortalTypecAcD,
             typename OutputValueType >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator() (const InPortalType1        &portal1,
                    const InPortalType2        &portal2,
                    const InPortalType3        &portal3,
@@ -901,7 +901,7 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   InverseTransformOdd( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
                        const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
                        vtkm::Id filLen, vtkm::Id ca_len, vtkm::Id ext_len )
@@ -914,7 +914,7 @@ public:
   #define VAL        vtkm::Float64
   #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InputPortalType, typename OutputPortalType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const InputPortalType       &coeffs,
                   OutputPortalType            &sigOut,
                   const vtkm::Id &workIndex) const
@@ -980,7 +980,7 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   InverseTransformEven( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
                         const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
                         vtkm::Id filtL, vtkm::Id cAL, vtkm::Id cALExt, bool m )
@@ -993,7 +993,7 @@ public:
   #define VAL        vtkm::Float64
   #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InputPortalType, typename OutputPortalType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const InputPortalType       &coeffs,
                   OutputPortalType            &sigOut,
                   const vtkm::Id &workIndex) const
@@ -1060,7 +1060,7 @@ public:
                                         neg_threshold( t*-1.0 )  {}
   
   template <typename ValueType >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()( ValueType    &coeffVal ) const
   {
     if( neg_threshold < coeffVal && coeffVal < threshold )
@@ -1084,14 +1084,14 @@ public:
 
   // Constructor
   template <typename ValueType>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   SquaredDeviation( ValueType t ) 
   {
     this->mean = static_cast<vtkm::Float64>(t);
   }
 
   template <typename ValueType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType operator()( const ValueType &num ) const
   {
     vtkm::Float64 num64 = static_cast<vtkm::Float64>( num );
@@ -1115,7 +1115,7 @@ public:
   typedef _1   InputDomain;
 
   template <typename ValueType1, typename ValueType2 >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType1 operator()( const ValueType1 &v1, const ValueType2 &v2 ) const
   {
     return v1 - static_cast<ValueType1>(v2);
@@ -1133,7 +1133,7 @@ public:
   typedef _1   InputDomain;
 
   template <typename ValueType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType operator()( const ValueType &v ) const
   {
     return (v * v);
@@ -1151,14 +1151,14 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   CopyWorklet( vtkm::Id idx ) 
   {
     this->startIdx = idx;
   }
 
   template< typename PortalInType, typename PortalOutType >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()( const PortalInType     &portalIn,
                          PortalOutType    &portalOut,
                    const vtkm::Id         &workIndex) const
@@ -1182,11 +1182,11 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   LeftSYMHExtentionWorklet( vtkm::Id len ) : addLen( len ) {}
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -1210,11 +1210,11 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   LeftSYMWExtentionWorklet( vtkm::Id len ) : addLen( len ) {}
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -1238,11 +1238,11 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   LeftASYMHExtentionWorklet( vtkm::Id len ) : addLen (len) {}
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -1266,11 +1266,11 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   LeftASYMWExtentionWorklet( vtkm::Id len ) : addLen (len) {}
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -1294,11 +1294,11 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   RightSYMHExtentionWorklet ( vtkm::Id sigInl ) : sigInLen( sigInl ) {}
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -1322,11 +1322,11 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   RightSYMWExtentionWorklet ( vtkm::Id sigInl ) : sigInLen( sigInl ) {}
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -1350,11 +1350,11 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   RightASYMHExtentionWorklet ( vtkm::Id sigInl ) : sigInLen( sigInl ) {}
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -1378,11 +1378,11 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   RightASYMWExtentionWorklet ( vtkm::Id sigInl ) : sigInLen( sigInl ) {}
 
   template< typename PortalOutType, typename PortalInType >
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void operator()(       PortalOutType       &portalOut,
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
@@ -1404,11 +1404,11 @@ public:
   typedef void ExecutionSignature( _1, WorkIndex );
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   AssignZeroWorklet( vtkm::Id idx ) : zeroIdx( idx )  { }
 
   template< typename PortalType >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(       PortalType   &array,
                    const vtkm::Id     &workIdx ) const
   {
@@ -1430,13 +1430,13 @@ public:
   typedef void ExecutionSignature( _1, WorkIndex );
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   AssignZero2DWorklet( vtkm::Id x, vtkm::Id y, vtkm::Id zero_x, vtkm::Id zero_y )
         : dimX( x ), dimY( y ), zeroX( zero_x ), zeroY( zero_y )  
   { (void)dimY; }
 
   // Index translation helper
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void GetLogicalDim( const Id &idx, Id &x, Id &y ) const
   {
     x = idx % dimX;
@@ -1444,7 +1444,7 @@ public:
   }
 
   template< typename PortalType >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(       PortalType   &array,
                    const vtkm::Id     &workIdx ) const
   {
@@ -1476,7 +1476,7 @@ public:
   typedef void ExecutionSignature( _1, _2, WorkIndex );
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   RectangleCopyTo( vtkm::Id inx,       vtkm::Id iny, 
                    vtkm::Id outx,      vtkm::Id outy,
                    vtkm::Id xStart,    vtkm::Id yStart )
@@ -1486,7 +1486,7 @@ public:
     this->outXStart = xStart;   this->outYStart = yStart;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void GetLogicalDimOfInputRect( const vtkm::Id    &idx,    
                                        vtkm::Id    &x,      
                                        vtkm::Id    &y ) const     
@@ -1495,7 +1495,7 @@ public:
     y = idx / inXLen;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id Get1DIdxOfOutputRect( vtkm::Id    x,      
                                  vtkm::Id    y ) const     
   {
@@ -1503,7 +1503,7 @@ public:
   }
 
   template< typename ValueInType, typename PortalOutType >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()( const ValueInType    &valueIn,
                          PortalOutType  &arrayOut,
                    const vtkm::Id       &workIdx ) const
@@ -1533,7 +1533,7 @@ public:
   typedef _1   InputDomain;
 
   // Constructor
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   RectangleCopyFrom( vtkm::Id smallx,    vtkm::Id smally, 
                      vtkm::Id bigx,      vtkm::Id bigy,
                      vtkm::Id xStart,    vtkm::Id yStart )
@@ -1543,7 +1543,7 @@ public:
     this->bigXStart = xStart;   this->bigYStart = yStart;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void GetLogicalDimOfSmallRect( const vtkm::Id    &idx,    
                                        vtkm::Id    &x,      
                                        vtkm::Id    &y ) const     
@@ -1552,7 +1552,7 @@ public:
     y = idx / smallXLen;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id Get1DIdxOfBigRect( vtkm::Id    x,      
                               vtkm::Id    y ) const     
   {
@@ -1560,7 +1560,7 @@ public:
   }
 
   template< typename ValueType, typename PortalType >
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(       ValueType      &value,        
                    const PortalType     &array,
                    const vtkm::Id       &workIdx ) const

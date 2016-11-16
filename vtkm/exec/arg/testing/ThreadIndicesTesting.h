@@ -31,33 +31,33 @@ namespace arg {
 class ThreadIndicesTesting
 {
 public:
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ThreadIndicesTesting(vtkm::Id index)
     : InputIndex(index), OutputIndex(index), VisitIndex(0) {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ThreadIndicesTesting(vtkm::Id inputIndex,
                        vtkm::Id outputIndex,
                        vtkm::IdComponent visitIndex)
     : InputIndex(inputIndex), OutputIndex(outputIndex), VisitIndex(visitIndex)
   {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetInputIndex() const { return this->InputIndex; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id3 GetInputIndex3D() const
   {
     return vtkm::Id3(this->GetInputIndex(), 0, 0);
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetOutputIndex() const { return this->OutputIndex; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::IdComponent GetVisitIndex() const { return this->VisitIndex; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetGlobalIndex() const { return this->OutputIndex; }
 
 private:

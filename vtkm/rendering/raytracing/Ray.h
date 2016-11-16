@@ -29,14 +29,14 @@ namespace raytracing {
 class RayBase
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   RayBase()
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   virtual ~RayBase(){}
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   virtual void resize(const vtkm::Int32 vtkmNotUsed(newSize)){}
 };
 template<typename DeviceAdapter>
@@ -87,7 +87,7 @@ public:
   vtkm::cont::ArrayHandle<vtkm::Id> HitIdx;
 
   vtkm::Int32 NumRays;
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Ray()
   {
     NumRays = 0;
@@ -111,7 +111,7 @@ public:
                                                         DirY, inComp[1],
                                                         DirZ, inComp[2]);
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Ray( const vtkm::Int32 size)
   {
     NumRays = size;
@@ -160,7 +160,7 @@ public:
                                                         DirY, inComp[1],
                                                         DirZ, inComp[2]);
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   virtual void resize( const vtkm::Int32 newSize)
   {
     if(newSize == NumRays) return; //nothing to do
@@ -209,7 +209,7 @@ public:
   vtkm::cont::ArrayHandle<vtkm::Float32> MaxDistance; //distance to hit
   vtkm::cont::ArrayHandle<vtkm::Id> HitIndex;
   vtkm::Int32 NumRays;
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   VolumeRay()
   {
     NumRays = 0;
@@ -222,7 +222,7 @@ public:
                                                         DirY, inComp[1],
                                                         DirZ, inComp[2]);
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   VolumeRay( const vtkm::Int32 size)
   {
     NumRays = size;
@@ -245,7 +245,7 @@ public:
                                                         DirY, inComp[1],
                                                         DirZ, inComp[2]);
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   virtual void resize( const vtkm::Int32 newSize)
   {
     if(newSize == NumRays) return; //nothing to do

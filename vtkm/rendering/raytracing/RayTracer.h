@@ -38,7 +38,7 @@ namespace raytracing {
 class IntersectionPoint : public vtkm::worklet::WorkletMapField
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   IntersectionPoint() {}
   typedef void ControlSignature(FieldIn<>,
                                 FieldIn<>,
@@ -54,7 +54,7 @@ public:
                                   _5,
                                   _6,
                                   _7);
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const vtkm::Id &hitIndex,
                   const vtkm::Float32 &distance,
                   const vtkm::Vec<vtkm::Float32,3> &rayDir,
@@ -85,7 +85,7 @@ public:
 
     IndicesArrayPortal IndicesPortal;
   public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     CalculateNormals(const Vec4IntArrayHandle &indices)
       : IndicesPortal( indices.PrepareForInput( DeviceAdapter() ) )
     {}
@@ -102,7 +102,7 @@ public:
                                     _5,
                                     _6);
     template<typename PointPortalType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id &hitIndex,
                     const vtkm::Vec<vtkm::Float32,3> &rayDir,
                     vtkm::Float32 &normalX,
@@ -138,7 +138,7 @@ public:
     vtkm::Float32 invDeltaScalar;
   public:
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     LerpScalar(const Vec4IntArrayHandle &indices,
                  const vtkm::Float32 &minScalar,
                  const vtkm::Float32 &maxScalar)
@@ -161,7 +161,7 @@ public:
                                     _4,
                                     _5);
     template<typename ScalarPortalType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id &hitIndex,
                     const vtkm::Float32 &u,
                     const vtkm::Float32 &v,
@@ -194,7 +194,7 @@ public:
     vtkm::Float32 invDeltaScalar;
   public:
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     NodalScalar(const Vec4IntArrayHandle &indices,
                 const vtkm::Float32 &minScalar,
                 const vtkm::Float32 &maxScalar)
@@ -213,7 +213,7 @@ public:
                                     _2,
                                     _3);
     template<typename ScalarPortalType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id &hitIndex,
                     vtkm::Float32 &scalar,
                     const ScalarPortalType &scalars) const
@@ -230,7 +230,7 @@ public:
     }
   }; //class LerpScalar
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void run(Ray<DeviceAdapter> &rays,
            LinearBVH &bvh,
            vtkm::cont::DynamicArrayHandleCoordinateSystem &coordsHandle,
@@ -295,7 +295,7 @@ public:
     vtkm::Vec<vtkm::Float32,4> BackgroundColor;
   public:
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     MapScalarToColor(const ColorArrayHandle &colorMap,
                      const vtkm::Int32 &colorMapSize,
                      const vtkm::Vec<vtkm::Float32,3> &lightPosition,
@@ -329,7 +329,7 @@ public:
                                     _3,
                                     _4,
                                     _5);
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const vtkm::Id &hitIdx,
                     const vtkm::Float32 &scalar,
                     const vtkm::Vec<vtkm::Float32,3> &normal,
@@ -369,7 +369,7 @@ public:
     }
   }; //class MapScalarToColor
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void run(Ray<DeviceAdapter> &rays,
            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > &colorMap,
            ColorBuffer4f &colorBuffer,
@@ -413,25 +413,25 @@ protected:
   vtkm::Bounds DataBounds;
   vtkm::Vec<vtkm::Float32,4> BackgroundColor;
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   RayTracer()
   {
     IsSceneDirty = true;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetBackgroundColor(const vtkm::Vec<vtkm::Float32,4> &backgroundColor)
   {
     BackgroundColor = backgroundColor;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Camera<DeviceAdapter>& GetCamera()
   {
     return camera;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetData(const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordsHandle,
                const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  &indices,
                const vtkm::cont::Field &scalarField,
@@ -448,13 +448,13 @@ public:
     DataBounds = dataBounds;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > &colorMap)
   {
     ColorMap = colorMap;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Init()
   {
     Builder.run(CoordsHandle, Indices, NumberOfTriangles, Bvh);
@@ -462,7 +462,7 @@ public:
     IsSceneDirty = false;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Render(CanvasRayTracer *canvas)
   {
     vtkm::cont::Timer<DeviceAdapter> renderTimer;

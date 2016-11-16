@@ -30,12 +30,12 @@ class DataSetBuilderUniform
 {
     typedef vtkm::Vec<vtkm::FloatDefault,3> VecType;
 public:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     DataSetBuilderUniform() {}
 
     //1D uniform grid
     template <typename T>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     vtkm::cont::DataSet
     Create(const vtkm::Id &dimension,
@@ -51,7 +51,7 @@ public:
                                                   coordNm, cellNm);
     }
     
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     vtkm::cont::DataSet
     Create(const vtkm::Id &dimension,
@@ -63,7 +63,7 @@ public:
 
     //2D uniform grids.
     template <typename T>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     vtkm::cont::DataSet
     Create(const vtkm::Id2 &dimensions,
@@ -81,7 +81,7 @@ public:
                                                   coordNm, cellNm);
     }
     
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     vtkm::cont::DataSet
     Create(const vtkm::Id2 &dimensions,
@@ -93,7 +93,7 @@ public:
 
     //3D uniform grids.
     template <typename T>    
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     vtkm::cont::DataSet
     Create(const vtkm::Id3 &dimensions,
@@ -111,7 +111,7 @@ public:
                                                   coordNm, cellNm);
     }
     
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     vtkm::cont::DataSet
     Create(const vtkm::Id3 &dimensions,
@@ -122,7 +122,7 @@ public:
     }    
 
 private:
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     static
     vtkm::cont::DataSet
     CreateDataSet(int dim, vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,

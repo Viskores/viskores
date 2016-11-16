@@ -32,7 +32,7 @@ namespace internal {
 template<typename FromType, typename ToType>
 struct Cast
 {
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ToType operator()(const FromType &val) const
   {
     return static_cast<ToType>(val);
@@ -75,7 +75,7 @@ public:
 /// ArrayHandleCast.
 ///
 template <typename T, typename HandleType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 ArrayHandleCast<T, HandleType> make_ArrayHandleCast(const HandleType &handle,
                                                     const T& = T())
 {

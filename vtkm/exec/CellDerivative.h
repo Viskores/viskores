@@ -49,7 +49,7 @@ namespace {
 // vector [ds/du, ds/dv, ds/dw].
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 ParametricDerivative(const FieldVecType &field,
                      const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -75,7 +75,7 @@ ParametricDerivative(const FieldVecType &field,
 
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 ParametricDerivative(const FieldVecType &field,
                      const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -102,7 +102,7 @@ ParametricDerivative(const FieldVecType &field,
 
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 ParametricDerivative(const FieldVecType &field,
                      const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -135,7 +135,7 @@ ParametricDerivative(const FieldVecType &field,
 
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,2>
 ParametricDerivative(const FieldVecType &field,
                      const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -163,7 +163,7 @@ ParametricDerivative(const FieldVecType &field,
 // implement it.
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,2>
 ParametricDerivative(const FieldVecType &field,
                      const vtkm::Vec<ParametricCoordType,3> &pcoords,
@@ -213,7 +213,7 @@ template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType,
          typename CellShapeTag>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivativeFor3DCell(const FieldVecType &field,
                         const WorldCoordType &wCoords,
@@ -258,7 +258,7 @@ template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType,
          typename CellShapeTag>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivativeFor2DCell(const FieldVecType &field,
                         const WorldCoordType &wCoords,
@@ -317,7 +317,7 @@ CellDerivativeFor2DCell(const FieldVecType &field,
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &pointFieldValues,
                const WorldCoordType &worldCoordinateValues,
@@ -345,7 +345,7 @@ CellDerivative(const FieldVecType &pointFieldValues,
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &,
                const WorldCoordType &,
@@ -361,7 +361,7 @@ CellDerivative(const FieldVecType &,
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &field,
                const WorldCoordType &wCoords,
@@ -382,7 +382,7 @@ CellDerivative(const FieldVecType &field,
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &field,
                const WorldCoordType &wCoords,
@@ -409,7 +409,7 @@ CellDerivative(const FieldVecType &field,
 
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &field,
                const vtkm::VecRectilinearPointCoordinates<1> &wCoords,
@@ -427,7 +427,7 @@ CellDerivative(const FieldVecType &field,
 //-----------------------------------------------------------------------------
 template<typename ValueType,
          typename WCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<ValueType,3>
 TriangleDerivative(const vtkm::Vec<ValueType, 3> &field,
                    const vtkm::Vec<WCoordType, 3> &wCoords)
@@ -489,7 +489,7 @@ TriangleDerivative(const vtkm::Vec<ValueType, 3> &field,
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &inputField,
                const WorldCoordType &wCoords,
@@ -509,7 +509,7 @@ CellDerivative(const FieldVecType &inputField,
 
 //-----------------------------------------------------------------------------
 template <typename ParametricCoordType>
-VTKM_EXEC_EXPORT void
+VTKM_EXEC void
 PolygonComputeIndices(const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::IdComponent numPoints, vtkm::IdComponent& firstPointIndex,
   vtkm::IdComponent& secondPointIndex)
@@ -543,7 +543,7 @@ PolygonComputeIndices(const vtkm::Vec<ParametricCoordType, 3>& pcoords,
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
          typename WorldCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 PolygonDerivative(const FieldVecType &field,
                   const WorldCoordType &wCoords,
@@ -594,7 +594,7 @@ PolygonDerivative(const FieldVecType &field,
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &field,
                const WorldCoordType &wCoords,
@@ -640,7 +640,7 @@ CellDerivative(const FieldVecType &field,
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &inputField,
                const WorldCoordType &wCoords,
@@ -662,7 +662,7 @@ CellDerivative(const FieldVecType &inputField,
 
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &field,
                const vtkm::VecRectilinearPointCoordinates<2> &wCoords,
@@ -692,7 +692,7 @@ CellDerivative(const FieldVecType &field,
 //-----------------------------------------------------------------------------
 template<typename ValueType,
          typename WorldCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<ValueType,3>
 TetraDerivative(const vtkm::Vec<ValueType,4> &field,
                 const vtkm::Vec<WorldCoordType,4> &wCoords)
@@ -753,7 +753,7 @@ TetraDerivative(const vtkm::Vec<ValueType,4> &field,
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &inputField,
                const WorldCoordType &wCoords,
@@ -775,7 +775,7 @@ CellDerivative(const FieldVecType &inputField,
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &inputField,
                const WorldCoordType &wCoords,
@@ -797,7 +797,7 @@ CellDerivative(const FieldVecType &inputField,
 
 template<typename FieldVecType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &field,
                const vtkm::VecRectilinearPointCoordinates<3> &wCoords,
@@ -832,7 +832,7 @@ CellDerivative(const FieldVecType &field,
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &inputField,
                const WorldCoordType &wCoords,
@@ -857,7 +857,7 @@ CellDerivative(const FieldVecType &inputField,
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 vtkm::Vec<typename FieldVecType::ComponentType,3>
 CellDerivative(const FieldVecType &inputField,
                const WorldCoordType &wCoords,

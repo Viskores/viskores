@@ -161,11 +161,11 @@ struct KernelSplatterFilterUniformGrid
         typedef void ControlSignature(FieldIn<>, FieldOut<>);
         typedef void ExecutionSignature(_1, WorkIndex, _2);
         //
-        VTKM_CONT_EXPORT
+        VTKM_CONT
         zero_voxel() {}
 
         template<typename T>
-        VTKM_EXEC_CONT_EXPORT
+        VTKM_EXEC_CONT
         void operator()(const vtkm::Id &, const vtkm::Id &vtkmNotUsed(index), T &voxel_value) const
         {
             voxel_value = T(0);
@@ -191,7 +191,7 @@ struct KernelSplatterFilterUniformGrid
                 FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
         typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
 
-        VTKM_CONT_EXPORT
+        VTKM_CONT
         GetFootprint(
                 const vtkm::Vec<vtkm::Float64, 3> &o,
                 const vtkm::Vec<vtkm::Float64, 3> &s,
@@ -201,7 +201,7 @@ struct KernelSplatterFilterUniformGrid
           VolumeDimensions(dim), kernel_(kernel) { }
 
         template<typename T, typename T2>
-        VTKM_EXEC_CONT_EXPORT
+        VTKM_EXEC_CONT
         void operator()(
                 const T &x,
                 const T &y,
@@ -247,11 +247,11 @@ struct KernelSplatterFilterUniformGrid
         typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
         typedef void ExecutionSignature(_1, _2, WorkIndex, _3);
 
-        VTKM_CONT_EXPORT
+        VTKM_CONT
         ComputeLocalNeighborId() {}
 
         template<typename T>
-        VTKM_EXEC_CONT_EXPORT
+        VTKM_EXEC_CONT
         void operator()(const T &modulus, const T &offset,
                 const vtkm::Id &index, T &localId) const
         {
@@ -281,7 +281,7 @@ struct KernelSplatterFilterUniformGrid
                 FieldOut<>);
         typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
 
-        VTKM_CONT_EXPORT
+        VTKM_CONT
         GetSplatValue(
                 const vtkm::Vec<vtkm::Float64, 3> &orig,
                 const vtkm::Vec<vtkm::Float64, 3> &s,
@@ -290,7 +290,7 @@ struct KernelSplatterFilterUniformGrid
         : spacing_(s), origin_(orig), VolumeDim(dim), kernel(k) {}
 
         template<typename T, typename T2, typename P>
-        VTKM_EXEC_CONT_EXPORT
+        VTKM_EXEC_CONT
         void operator()(
                 const vtkm::Vec<P, 3> &splatPoint,
                 const T &minBound,
@@ -338,10 +338,10 @@ struct KernelSplatterFilterUniformGrid
         typedef void ControlSignature(FieldIn<>, FieldIn<>, ExecObject);
         typedef void ExecutionSignature(_1, _2, _3);
 
-        VTKM_CONT_EXPORT
+        VTKM_CONT
         UpdateVoxelSplats() {}
 
-        VTKM_EXEC_CONT_EXPORT
+        VTKM_EXEC_CONT
         void operator()(const vtkm::Id &voxelIndex,
                 const vtkm::Float64 &splatValue,
                 vtkm::exec::ExecutionWholeArray<vtkm::Float32> &execArg) const

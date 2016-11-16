@@ -32,10 +32,10 @@ namespace detail {
 template<typename ValueType>
 struct ConstantFunctor
 {
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ConstantFunctor(const ValueType &value = ValueType()) : Value(value) {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType operator()(vtkm::Id vtkmNotUsed(index)) const
   {
     return this->Value;
@@ -65,7 +65,7 @@ public:
       (ArrayHandleConstant<T>),
       (vtkm::cont::ArrayHandleImplicit<T, detail::ConstantFunctor<T> >));
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleConstant(T value, vtkm::Id numberOfValues = 0)
     : Superclass(detail::ConstantFunctor<T>(value), numberOfValues) {  }
 };

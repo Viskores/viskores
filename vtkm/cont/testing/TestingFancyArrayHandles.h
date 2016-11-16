@@ -49,7 +49,7 @@ namespace fancy_array_detail
 template<typename ValueType>
 struct IndexSquared
 {
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType operator()(vtkm::Id index) const
   {
     typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
@@ -61,7 +61,7 @@ template<typename ValueType>
 struct ValueSquared
 {
   template<typename U>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType operator()(U u) const
     { return vtkm::dot(u, u); }
 };
@@ -75,7 +75,7 @@ struct ValueScale
   { }
 
   template<typename ValueType>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType operator()(const ValueType &v) const
   {
     typedef vtkm::VecTraits<ValueType> Traits;
@@ -118,7 +118,7 @@ public:
   typedef _2 ExecutionSignature(_1);
 
   template<class ValueType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType operator()(const ValueType &inValue) const
   { return inValue; }
 
@@ -130,7 +130,7 @@ private:
   struct TestCompositeAsInput
   {
     template< typename ValueType >
-    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
       //hard-coded to make a vtkm::Vec<ValueType,3> composite vector
       //for each ValueType.
@@ -175,7 +175,7 @@ private:
   struct TestConstantAsInput
   {
     template< typename ValueType >
-    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
       const ValueType value = TestValue(43, ValueType());
 
@@ -202,7 +202,7 @@ private:
   struct TestCountingAsInput
   {
     template< typename ValueType >
-    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
       typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
 
@@ -238,7 +238,7 @@ private:
   struct TestImplicitAsInput
   {
     template< typename ValueType>
-    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
       const vtkm::Id length = ARRAY_SIZE;
       typedef ::fancy_array_detail::IndexSquared<ValueType> FunctorType;
@@ -269,7 +269,7 @@ private:
   struct TestConcatenateAsInput
   {
     template< typename ValueType>
-    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
       const vtkm::Id length = ARRAY_SIZE;
 
@@ -333,7 +333,7 @@ private:
   struct TestPermutationAsInput
   {
     template< typename ValueType>
-    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
       const vtkm::Id length = ARRAY_SIZE;
 
@@ -390,7 +390,7 @@ private:
   struct TestTransformAsInput
   {
     template< typename ValueType>
-    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
       typedef fancy_array_detail::ValueScale FunctorType;
 
@@ -434,7 +434,7 @@ private:
   struct TestCountingTransformAsInput
   {
     template< typename ValueType>
-    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
       typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
       typedef ComponentType OutputValueType;
@@ -485,7 +485,7 @@ private:
   struct TestCastAsInput
   {
     template<typename CastToType>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     void operator()(CastToType vtkmNotUsed(type)) const
     {
       typedef vtkm::cont::ArrayHandleIndex InputArrayType;
@@ -515,7 +515,7 @@ private:
   struct TestGroupVecAsInput
   {
     template<typename ComponentType>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     void operator()(ComponentType) const
     {
       typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
@@ -566,7 +566,7 @@ private:
   struct TestGroupVecAsOutput
   {
     template<typename ComponentType>
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     void operator()(ComponentType) const
     {
       typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
@@ -618,7 +618,7 @@ private:
   struct TestZipAsInput
   {
     template< typename KeyType, typename ValueType >
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     void operator()(vtkm::Pair<KeyType,ValueType> vtkmNotUsed(pair)) const
     {
       typedef vtkm::Pair< KeyType, ValueType > PairType;
@@ -665,7 +665,7 @@ private:
   struct TestPermutationAsOutput
   {
     template< typename ValueType>
-    VTKM_CONT_EXPORT void operator()(const ValueType vtkmNotUsed(v)) const
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
       const vtkm::Id length = ARRAY_SIZE;
 
@@ -711,7 +711,7 @@ private:
   struct TestZipAsOutput
   {
     template< typename KeyType, typename ValueType >
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     void operator()(vtkm::Pair<KeyType,ValueType> vtkmNotUsed(pair)) const
     {
       typedef vtkm::Pair< KeyType, ValueType > PairType;
@@ -782,7 +782,7 @@ private:
 
   struct TestAll
   {
-    VTKM_CONT_EXPORT void operator()() const
+    VTKM_CONT void operator()() const
     {
       std::cout << "Doing FancyArrayHandle tests" << std::endl;
 
@@ -889,7 +889,7 @@ private:
   /// all the fancy array handles that vtkm supports. Returns an
   /// error code that can be returned from the main function of a test.
   ///
-  static VTKM_CONT_EXPORT int Run()
+  static VTKM_CONT int Run()
   {
     return vtkm::cont::testing::Testing::Run(TestAll());
   }

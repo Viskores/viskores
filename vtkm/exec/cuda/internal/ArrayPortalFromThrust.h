@@ -239,9 +239,9 @@ public:
   typedef T ValueType;
   typedef thrust::system::cuda::pointer< T > IteratorType;
 
-  VTKM_EXEC_CONT_EXPORT ArrayPortalFromThrust() {  }
+  VTKM_EXEC_CONT ArrayPortalFromThrust() {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalFromThrust(thrust::system::cuda::pointer< T > begin,
                         thrust::system::cuda::pointer< T > end)
     : BeginIterator( begin ),
@@ -253,13 +253,13 @@ public:
   /// type casting that the iterators do (like the non-const to const cast).
   ///
   template<typename OtherT>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalFromThrust(const ArrayPortalFromThrust<OtherT> &src)
     : BeginIterator(src.GetIteratorBegin()),
       EndIterator(src.GetIteratorEnd())
   {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const {
     // Not using std::distance because on CUDA it cannot be used on a device.
     return static_cast<vtkm::Id>( (this->EndIterator - this->BeginIterator) );
@@ -279,10 +279,10 @@ public:
     *(this->BeginIterator + static_cast<SizeType>(index)) = value;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorType GetIteratorBegin() const { return this->BeginIterator; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorType GetIteratorEnd() const { return this->EndIterator; }
 
 private:
@@ -298,9 +298,9 @@ public:
   typedef T ValueType;
   typedef thrust::system::cuda::pointer< const T > IteratorType;
 
-  VTKM_EXEC_CONT_EXPORT ConstArrayPortalFromThrust() {  }
+  VTKM_EXEC_CONT ConstArrayPortalFromThrust() {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ConstArrayPortalFromThrust(const thrust::system::cuda::pointer< const T > begin,
                              const thrust::system::cuda::pointer< const T > end)
     : BeginIterator( begin ),
@@ -314,14 +314,14 @@ public:
   /// type casting that the iterators do (like the non-const to const cast).
   ///
   // template<typename OtherT>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ConstArrayPortalFromThrust(const ArrayPortalFromThrust<T> &src)
     : BeginIterator(src.GetIteratorBegin()),
       EndIterator(src.GetIteratorEnd())
   {
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const {
     // Not using std::distance because on CUDA it cannot be used on a device.
     return static_cast<vtkm::Id>( (this->EndIterator - this->BeginIterator) );
@@ -350,10 +350,10 @@ public:
     *(this->BeginIterator + index) = value;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorType GetIteratorBegin() const { return this->BeginIterator; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   IteratorType GetIteratorEnd() const { return this->EndIterator; }
 
 private:
@@ -384,16 +384,16 @@ public:
 
   typedef typename PortalType::IteratorType IteratorType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalToIterators(const PortalType &portal)
     : BIterator(portal.GetIteratorBegin()),
       EIterator(portal.GetIteratorEnd())
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   IteratorType GetBegin() const { return this->BIterator; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   IteratorType GetEnd() const { return this->EIterator; }
 
 private:
@@ -416,16 +416,16 @@ public:
 
   typedef typename PortalType::IteratorType IteratorType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalToIterators(const PortalType &portal)
     : BIterator(portal.GetIteratorBegin()),
       EIterator(portal.GetIteratorEnd())
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   IteratorType GetBegin() const { return this->BIterator; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   IteratorType GetEnd() const { return this->EIterator; }
 
 private:

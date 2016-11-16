@@ -42,7 +42,7 @@ struct DivideWorklet: public vtkm::worklet::WorkletMapField
   typedef void ExecutionSignature(_1, _2, _3);
 
   template <class ValueType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const ValueType &v, const vtkm::Id &count, ValueType &vout) const
   {
     typedef typename VecTraits<ValueType>::ComponentType ComponentType;
@@ -50,7 +50,7 @@ struct DivideWorklet: public vtkm::worklet::WorkletMapField
   }
 
   template <class T1, class T2>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const T1&, const vtkm::Id &, T2 &) const
   {  }
 };

@@ -120,7 +120,7 @@ $for(num_params in xrange(0, max_parameters+1))\
 ///
 VTKM_SUPPRESS_EXEC_WARNINGS
 template<$template_params(num_params)>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 FunctionInterface<$signature(num_params)>
 make_FunctionInterface(
 $for(param_index in xrange(1,num_params+1))\

@@ -280,7 +280,7 @@ struct ParameterContainerAccess<1> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const typename AtType<1, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter1;
@@ -288,7 +288,7 @@ struct ParameterContainerAccess<1> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<1, FunctionSignature>::type &value) {
     parameters.Parameter1 = value;
@@ -300,7 +300,7 @@ struct ParameterContainerAccess<2> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const typename AtType<2, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter2;
@@ -308,7 +308,7 @@ struct ParameterContainerAccess<2> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<2, FunctionSignature>::type &value) {
     parameters.Parameter2 = value;
@@ -320,7 +320,7 @@ struct ParameterContainerAccess<3> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const typename AtType<3, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter3;
@@ -328,7 +328,7 @@ struct ParameterContainerAccess<3> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<3, FunctionSignature>::type &value) {
     parameters.Parameter3 = value;
@@ -340,7 +340,7 @@ struct ParameterContainerAccess<4> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const typename AtType<4, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter4;
@@ -348,7 +348,7 @@ struct ParameterContainerAccess<4> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<4, FunctionSignature>::type &value) {
     parameters.Parameter4 = value;
@@ -360,7 +360,7 @@ struct ParameterContainerAccess<5> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const typename AtType<5, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter5;
@@ -368,7 +368,7 @@ struct ParameterContainerAccess<5> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<5, FunctionSignature>::type &value) {
     parameters.Parameter5 = value;
@@ -380,7 +380,7 @@ struct ParameterContainerAccess<6> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const typename AtType<6, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter6;
@@ -388,7 +388,7 @@ struct ParameterContainerAccess<6> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<6, FunctionSignature>::type &value) {
     parameters.Parameter6 = value;
@@ -400,7 +400,7 @@ struct ParameterContainerAccess<7> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const typename AtType<7, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter7;
@@ -408,7 +408,7 @@ struct ParameterContainerAccess<7> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<7, FunctionSignature>::type &value) {
     parameters.Parameter7 = value;
@@ -420,7 +420,7 @@ struct ParameterContainerAccess<8> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const typename AtType<8, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter8;
@@ -428,7 +428,7 @@ struct ParameterContainerAccess<8> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<8, FunctionSignature>::type &value) {
     parameters.Parameter8 = value;
@@ -440,7 +440,7 @@ struct ParameterContainerAccess<9> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const typename AtType<9, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter9;
@@ -448,7 +448,7 @@ struct ParameterContainerAccess<9> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<9, FunctionSignature>::type &value) {
     parameters.Parameter9 = value;
@@ -460,7 +460,7 @@ struct ParameterContainerAccess<10> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const typename AtType<10, FunctionSignature>::type &
   Get(const ParameterContainer<FunctionSignature> &parameters) {
     return parameters.Parameter10;
@@ -468,7 +468,7 @@ struct ParameterContainerAccess<10> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename FunctionSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<10, FunctionSignature>::type &value) {
     parameters.Parameter10 = value;
@@ -486,7 +486,7 @@ struct CopyAllParameters<1> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
@@ -499,7 +499,7 @@ struct CopyAllParameters<2> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
@@ -513,7 +513,7 @@ struct CopyAllParameters<3> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
@@ -528,7 +528,7 @@ struct CopyAllParameters<4> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
@@ -544,7 +544,7 @@ struct CopyAllParameters<5> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
@@ -561,7 +561,7 @@ struct CopyAllParameters<6> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
@@ -579,7 +579,7 @@ struct CopyAllParameters<7> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
@@ -598,7 +598,7 @@ struct CopyAllParameters<8> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
@@ -618,7 +618,7 @@ struct CopyAllParameters<9> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
@@ -639,7 +639,7 @@ struct CopyAllParameters<10> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
@@ -662,7 +662,7 @@ struct CopyAllParameters<0> {
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &)
   {
@@ -677,7 +677,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<R()> &parameters,
@@ -692,7 +692,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor
          >
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<void()> &parameters,
@@ -708,7 +708,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<R()> &parameters,
@@ -723,7 +723,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor
          >
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<void()> &parameters,
@@ -739,7 +739,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<R()> &parameters,
@@ -754,7 +754,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor
          >
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<void()> &parameters,
@@ -770,7 +770,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename R>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<R()> &parameters,
@@ -785,7 +785,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor
          >
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<void()> &parameters,
@@ -802,7 +802,7 @@ template<typename Functor,
          typename TransformFunctor,
          typename R,
          typename P1>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<R(P1)> &parameters,
@@ -817,7 +817,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<void(P1)> &parameters,
@@ -833,7 +833,7 @@ template<typename Functor,
          typename TransformFunctor,
          typename R,
          typename P1>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<R(P1)> &parameters,
@@ -848,7 +848,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<void(P1)> &parameters,
@@ -864,7 +864,7 @@ template<typename Functor,
          typename TransformFunctor,
          typename R,
          typename P1>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<R(P1)> &parameters,
@@ -879,7 +879,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<void(P1)> &parameters,
@@ -895,7 +895,7 @@ template<typename Functor,
          typename TransformFunctor,
          typename R,
          typename P1>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<R(P1)> &parameters,
@@ -910,7 +910,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename TransformFunctor,
          typename P1>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<void(P1)> &parameters,
@@ -927,7 +927,7 @@ template<typename Functor,
          typename R,
          typename P1,
          typename P2>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<R(P1,P2)> &parameters,
@@ -944,7 +944,7 @@ template<typename Functor,
          typename TransformFunctor,
          typename P1,
          typename P2>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<void(P1,P2)> &parameters,
@@ -962,7 +962,7 @@ template<typename Functor,
          typename R,
          typename P1,
          typename P2>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<R(P1,P2)> &parameters,
@@ -979,7 +979,7 @@ template<typename Functor,
          typename TransformFunctor,
          typename P1,
          typename P2>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<void(P1,P2)> &parameters,
@@ -997,7 +997,7 @@ template<typename Functor,
          typename R,
          typename P1,
          typename P2>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<R(P1,P2)> &parameters,
@@ -1014,7 +1014,7 @@ template<typename Functor,
          typename TransformFunctor,
          typename P1,
          typename P2>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<void(P1,P2)> &parameters,
@@ -1032,7 +1032,7 @@ template<typename Functor,
          typename R,
          typename P1,
          typename P2>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<R(P1,P2)> &parameters,
@@ -1049,7 +1049,7 @@ template<typename Functor,
          typename TransformFunctor,
          typename P1,
          typename P2>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<void(P1,P2)> &parameters,
@@ -1068,7 +1068,7 @@ template<typename Functor,
          typename P1,
          typename P2,
          typename P3>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3)> &parameters,
@@ -1087,7 +1087,7 @@ template<typename Functor,
          typename P1,
          typename P2,
          typename P3>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3)> &parameters,
@@ -1107,7 +1107,7 @@ template<typename Functor,
          typename P1,
          typename P2,
          typename P3>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<R(P1,P2,P3)> &parameters,
@@ -1126,7 +1126,7 @@ template<typename Functor,
          typename P1,
          typename P2,
          typename P3>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<void(P1,P2,P3)> &parameters,
@@ -1146,7 +1146,7 @@ template<typename Functor,
          typename P1,
          typename P2,
          typename P3>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3)> &parameters,
@@ -1165,7 +1165,7 @@ template<typename Functor,
          typename P1,
          typename P2,
          typename P3>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3)> &parameters,
@@ -1185,7 +1185,7 @@ template<typename Functor,
          typename P1,
          typename P2,
          typename P3>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<R(P1,P2,P3)> &parameters,
@@ -1204,7 +1204,7 @@ template<typename Functor,
          typename P1,
          typename P2,
          typename P3>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<void(P1,P2,P3)> &parameters,
@@ -1225,7 +1225,7 @@ template<typename Functor,
          typename P2,
          typename P3,
          typename P4>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4)> &parameters,
@@ -1246,7 +1246,7 @@ template<typename Functor,
          typename P2,
          typename P3,
          typename P4>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4)> &parameters,
@@ -1268,7 +1268,7 @@ template<typename Functor,
          typename P2,
          typename P3,
          typename P4>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4)> &parameters,
@@ -1289,7 +1289,7 @@ template<typename Functor,
          typename P2,
          typename P3,
          typename P4>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4)> &parameters,
@@ -1311,7 +1311,7 @@ template<typename Functor,
          typename P2,
          typename P3,
          typename P4>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4)> &parameters,
@@ -1332,7 +1332,7 @@ template<typename Functor,
          typename P2,
          typename P3,
          typename P4>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4)> &parameters,
@@ -1354,7 +1354,7 @@ template<typename Functor,
          typename P2,
          typename P3,
          typename P4>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4)> &parameters,
@@ -1375,7 +1375,7 @@ template<typename Functor,
          typename P2,
          typename P3,
          typename P4>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4)> &parameters,
@@ -1398,7 +1398,7 @@ template<typename Functor,
          typename P3,
          typename P4,
          typename P5>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5)> &parameters,
@@ -1421,7 +1421,7 @@ template<typename Functor,
          typename P3,
          typename P4,
          typename P5>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5)> &parameters,
@@ -1445,7 +1445,7 @@ template<typename Functor,
          typename P3,
          typename P4,
          typename P5>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5)> &parameters,
@@ -1468,7 +1468,7 @@ template<typename Functor,
          typename P3,
          typename P4,
          typename P5>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5)> &parameters,
@@ -1492,7 +1492,7 @@ template<typename Functor,
          typename P3,
          typename P4,
          typename P5>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5)> &parameters,
@@ -1515,7 +1515,7 @@ template<typename Functor,
          typename P3,
          typename P4,
          typename P5>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5)> &parameters,
@@ -1539,7 +1539,7 @@ template<typename Functor,
          typename P3,
          typename P4,
          typename P5>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5)> &parameters,
@@ -1562,7 +1562,7 @@ template<typename Functor,
          typename P3,
          typename P4,
          typename P5>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5)> &parameters,
@@ -1587,7 +1587,7 @@ template<typename Functor,
          typename P4,
          typename P5,
          typename P6>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6)> &parameters,
@@ -1612,7 +1612,7 @@ template<typename Functor,
          typename P4,
          typename P5,
          typename P6>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6)> &parameters,
@@ -1638,7 +1638,7 @@ template<typename Functor,
          typename P4,
          typename P5,
          typename P6>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6)> &parameters,
@@ -1663,7 +1663,7 @@ template<typename Functor,
          typename P4,
          typename P5,
          typename P6>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6)> &parameters,
@@ -1689,7 +1689,7 @@ template<typename Functor,
          typename P4,
          typename P5,
          typename P6>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6)> &parameters,
@@ -1714,7 +1714,7 @@ template<typename Functor,
          typename P4,
          typename P5,
          typename P6>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6)> &parameters,
@@ -1740,7 +1740,7 @@ template<typename Functor,
          typename P4,
          typename P5,
          typename P6>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6)> &parameters,
@@ -1765,7 +1765,7 @@ template<typename Functor,
          typename P4,
          typename P5,
          typename P6>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6)> &parameters,
@@ -1792,7 +1792,7 @@ template<typename Functor,
          typename P5,
          typename P6,
          typename P7>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> &parameters,
@@ -1819,7 +1819,7 @@ template<typename Functor,
          typename P5,
          typename P6,
          typename P7>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7)> &parameters,
@@ -1847,7 +1847,7 @@ template<typename Functor,
          typename P5,
          typename P6,
          typename P7>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> &parameters,
@@ -1874,7 +1874,7 @@ template<typename Functor,
          typename P5,
          typename P6,
          typename P7>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7)> &parameters,
@@ -1902,7 +1902,7 @@ template<typename Functor,
          typename P5,
          typename P6,
          typename P7>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> &parameters,
@@ -1929,7 +1929,7 @@ template<typename Functor,
          typename P5,
          typename P6,
          typename P7>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7)> &parameters,
@@ -1957,7 +1957,7 @@ template<typename Functor,
          typename P5,
          typename P6,
          typename P7>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> &parameters,
@@ -1984,7 +1984,7 @@ template<typename Functor,
          typename P5,
          typename P6,
          typename P7>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7)> &parameters,
@@ -2013,7 +2013,7 @@ template<typename Functor,
          typename P6,
          typename P7,
          typename P8>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters,
@@ -2042,7 +2042,7 @@ template<typename Functor,
          typename P6,
          typename P7,
          typename P8>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters,
@@ -2072,7 +2072,7 @@ template<typename Functor,
          typename P6,
          typename P7,
          typename P8>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters,
@@ -2101,7 +2101,7 @@ template<typename Functor,
          typename P6,
          typename P7,
          typename P8>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters,
@@ -2131,7 +2131,7 @@ template<typename Functor,
          typename P6,
          typename P7,
          typename P8>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters,
@@ -2160,7 +2160,7 @@ template<typename Functor,
          typename P6,
          typename P7,
          typename P8>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters,
@@ -2190,7 +2190,7 @@ template<typename Functor,
          typename P6,
          typename P7,
          typename P8>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters,
@@ -2219,7 +2219,7 @@ template<typename Functor,
          typename P6,
          typename P7,
          typename P8>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters,
@@ -2250,7 +2250,7 @@ template<typename Functor,
          typename P7,
          typename P8,
          typename P9>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters,
@@ -2281,7 +2281,7 @@ template<typename Functor,
          typename P7,
          typename P8,
          typename P9>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters,
@@ -2313,7 +2313,7 @@ template<typename Functor,
          typename P7,
          typename P8,
          typename P9>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters,
@@ -2344,7 +2344,7 @@ template<typename Functor,
          typename P7,
          typename P8,
          typename P9>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters,
@@ -2376,7 +2376,7 @@ template<typename Functor,
          typename P7,
          typename P8,
          typename P9>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters,
@@ -2407,7 +2407,7 @@ template<typename Functor,
          typename P7,
          typename P8,
          typename P9>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters,
@@ -2439,7 +2439,7 @@ template<typename Functor,
          typename P7,
          typename P8,
          typename P9>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters,
@@ -2470,7 +2470,7 @@ template<typename Functor,
          typename P7,
          typename P8,
          typename P9>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters,
@@ -2503,7 +2503,7 @@ template<typename Functor,
          typename P8,
          typename P9,
          typename P10>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> &parameters,
@@ -2536,7 +2536,7 @@ template<typename Functor,
          typename P8,
          typename P9,
          typename P10>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> &parameters,
@@ -2570,7 +2570,7 @@ template<typename Functor,
          typename P8,
          typename P9,
          typename P10>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> &parameters,
@@ -2603,7 +2603,7 @@ template<typename Functor,
          typename P8,
          typename P9,
          typename P10>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoInvokeCont(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> &parameters,
@@ -2637,7 +2637,7 @@ template<typename Functor,
          typename P8,
          typename P9,
          typename P10>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> &parameters,
@@ -2670,7 +2670,7 @@ template<typename Functor,
          typename P8,
          typename P9,
          typename P10>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       const Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> &parameters,
@@ -2704,7 +2704,7 @@ template<typename Functor,
          typename P8,
          typename P9,
          typename P10>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> &parameters,
@@ -2737,7 +2737,7 @@ template<typename Functor,
          typename P8,
          typename P9,
          typename P10>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoInvokeExec(
       Functor &f,
       ParameterContainer<void(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> &parameters,
@@ -2767,7 +2767,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename TransformedR>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoStaticTransformCont(
       const Transform &transform,
       const ParameterContainer<OriginalR()> &originalParameters,
@@ -2782,7 +2782,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Transform,
          typename OriginalR,
          typename TransformedR>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoStaticTransformExec(
       const Transform &transform,
       const ParameterContainer<OriginalR()> &originalParameters,
@@ -2799,7 +2799,7 @@ template<typename Transform,
          typename OriginalP1,
          typename TransformedR,
          typename TransformedP1>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoStaticTransformCont(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1)> &originalParameters,
@@ -2815,7 +2815,7 @@ template<typename Transform,
          typename OriginalP1,
          typename TransformedR,
          typename TransformedP1>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoStaticTransformExec(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1)> &originalParameters,
@@ -2833,7 +2833,7 @@ template<typename Transform,
          typename TransformedR,
          typename TransformedP1,
          typename TransformedP2>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoStaticTransformCont(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2)> &originalParameters,
@@ -2853,7 +2853,7 @@ template<typename Transform,
          typename TransformedR,
          typename TransformedP1,
          typename TransformedP2>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoStaticTransformExec(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2)> &originalParameters,
@@ -2875,7 +2875,7 @@ template<typename Transform,
          typename TransformedP1,
          typename TransformedP2,
          typename TransformedP3>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoStaticTransformCont(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3)> &originalParameters,
@@ -2899,7 +2899,7 @@ template<typename Transform,
          typename TransformedP1,
          typename TransformedP2,
          typename TransformedP3>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoStaticTransformExec(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3)> &originalParameters,
@@ -2925,7 +2925,7 @@ template<typename Transform,
          typename TransformedP2,
          typename TransformedP3,
          typename TransformedP4>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoStaticTransformCont(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4)> &originalParameters,
@@ -2953,7 +2953,7 @@ template<typename Transform,
          typename TransformedP2,
          typename TransformedP3,
          typename TransformedP4>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoStaticTransformExec(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4)> &originalParameters,
@@ -2983,7 +2983,7 @@ template<typename Transform,
          typename TransformedP3,
          typename TransformedP4,
          typename TransformedP5>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoStaticTransformCont(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5)> &originalParameters,
@@ -3015,7 +3015,7 @@ template<typename Transform,
          typename TransformedP3,
          typename TransformedP4,
          typename TransformedP5>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoStaticTransformExec(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5)> &originalParameters,
@@ -3049,7 +3049,7 @@ template<typename Transform,
          typename TransformedP4,
          typename TransformedP5,
          typename TransformedP6>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoStaticTransformCont(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6)> &originalParameters,
@@ -3085,7 +3085,7 @@ template<typename Transform,
          typename TransformedP4,
          typename TransformedP5,
          typename TransformedP6>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoStaticTransformExec(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6)> &originalParameters,
@@ -3123,7 +3123,7 @@ template<typename Transform,
          typename TransformedP5,
          typename TransformedP6,
          typename TransformedP7>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoStaticTransformCont(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6,OriginalP7)> &originalParameters,
@@ -3163,7 +3163,7 @@ template<typename Transform,
          typename TransformedP5,
          typename TransformedP6,
          typename TransformedP7>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoStaticTransformExec(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6,OriginalP7)> &originalParameters,
@@ -3205,7 +3205,7 @@ template<typename Transform,
          typename TransformedP6,
          typename TransformedP7,
          typename TransformedP8>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoStaticTransformCont(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6,OriginalP7,OriginalP8)> &originalParameters,
@@ -3249,7 +3249,7 @@ template<typename Transform,
          typename TransformedP6,
          typename TransformedP7,
          typename TransformedP8>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoStaticTransformExec(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6,OriginalP7,OriginalP8)> &originalParameters,
@@ -3295,7 +3295,7 @@ template<typename Transform,
          typename TransformedP7,
          typename TransformedP8,
          typename TransformedP9>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoStaticTransformCont(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6,OriginalP7,OriginalP8,OriginalP9)> &originalParameters,
@@ -3343,7 +3343,7 @@ template<typename Transform,
          typename TransformedP7,
          typename TransformedP8,
          typename TransformedP9>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoStaticTransformExec(
       const Transform &transform,
       const ParameterContainer<OriginalR(OriginalP1,OriginalP2,OriginalP3,OriginalP4,OriginalP5,OriginalP6,OriginalP7,OriginalP8,OriginalP9)> &originalParameters,
@@ -3375,7 +3375,7 @@ void DoStaticTransformExec(
 VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R()> &parameters)
@@ -3387,7 +3387,7 @@ void DoForEachCont(
 VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       ParameterContainer<R()> &parameters)
@@ -3399,7 +3399,7 @@ void DoForEachCont(
 VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R()> &parameters)
@@ -3411,7 +3411,7 @@ void DoForEachExec(
 VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       ParameterContainer<R()> &parameters)
@@ -3424,7 +3424,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1)> &parameters)
@@ -3436,7 +3436,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1)> &parameters)
@@ -3448,7 +3448,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1)> &parameters)
@@ -3460,7 +3460,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename Functor,
          typename R,
          typename P1>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1)> &parameters)
@@ -3473,7 +3473,7 @@ template<typename Functor,
          typename R,
          typename P1,
          typename P2>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2)> &parameters)
@@ -3487,7 +3487,7 @@ template<typename Functor,
          typename R,
          typename P1,
          typename P2>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2)> &parameters)
@@ -3501,7 +3501,7 @@ template<typename Functor,
          typename R,
          typename P1,
          typename P2>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2)> &parameters)
@@ -3515,7 +3515,7 @@ template<typename Functor,
          typename R,
          typename P1,
          typename P2>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2)> &parameters)
@@ -3530,7 +3530,7 @@ template<typename Functor,
          typename P1,
          typename P2,
          typename P3>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3)> &parameters)
@@ -3546,7 +3546,7 @@ template<typename Functor,
          typename P1,
          typename P2,
          typename P3>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3)> &parameters)
@@ -3562,7 +3562,7 @@ template<typename Functor,
          typename P1,
          typename P2,
          typename P3>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3)> &parameters)
@@ -3578,7 +3578,7 @@ template<typename Functor,
          typename P1,
          typename P2,
          typename P3>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3)> &parameters)
@@ -3595,7 +3595,7 @@ template<typename Functor,
          typename P2,
          typename P3,
          typename P4>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4)> &parameters)
@@ -3613,7 +3613,7 @@ template<typename Functor,
          typename P2,
          typename P3,
          typename P4>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4)> &parameters)
@@ -3631,7 +3631,7 @@ template<typename Functor,
          typename P2,
          typename P3,
          typename P4>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4)> &parameters)
@@ -3649,7 +3649,7 @@ template<typename Functor,
          typename P2,
          typename P3,
          typename P4>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4)> &parameters)
@@ -3668,7 +3668,7 @@ template<typename Functor,
          typename P3,
          typename P4,
          typename P5>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5)> &parameters)
@@ -3688,7 +3688,7 @@ template<typename Functor,
          typename P3,
          typename P4,
          typename P5>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5)> &parameters)
@@ -3708,7 +3708,7 @@ template<typename Functor,
          typename P3,
          typename P4,
          typename P5>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5)> &parameters)
@@ -3728,7 +3728,7 @@ template<typename Functor,
          typename P3,
          typename P4,
          typename P5>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5)> &parameters)
@@ -3749,7 +3749,7 @@ template<typename Functor,
          typename P4,
          typename P5,
          typename P6>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6)> &parameters)
@@ -3771,7 +3771,7 @@ template<typename Functor,
          typename P4,
          typename P5,
          typename P6>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6)> &parameters)
@@ -3793,7 +3793,7 @@ template<typename Functor,
          typename P4,
          typename P5,
          typename P6>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6)> &parameters)
@@ -3815,7 +3815,7 @@ template<typename Functor,
          typename P4,
          typename P5,
          typename P6>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6)> &parameters)
@@ -3838,7 +3838,7 @@ template<typename Functor,
          typename P5,
          typename P6,
          typename P7>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> &parameters)
@@ -3862,7 +3862,7 @@ template<typename Functor,
          typename P5,
          typename P6,
          typename P7>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> &parameters)
@@ -3886,7 +3886,7 @@ template<typename Functor,
          typename P5,
          typename P6,
          typename P7>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> &parameters)
@@ -3910,7 +3910,7 @@ template<typename Functor,
          typename P5,
          typename P6,
          typename P7>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> &parameters)
@@ -3935,7 +3935,7 @@ template<typename Functor,
          typename P6,
          typename P7,
          typename P8>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters)
@@ -3961,7 +3961,7 @@ template<typename Functor,
          typename P6,
          typename P7,
          typename P8>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters)
@@ -3987,7 +3987,7 @@ template<typename Functor,
          typename P6,
          typename P7,
          typename P8>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters)
@@ -4013,7 +4013,7 @@ template<typename Functor,
          typename P6,
          typename P7,
          typename P8>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> &parameters)
@@ -4040,7 +4040,7 @@ template<typename Functor,
          typename P7,
          typename P8,
          typename P9>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters)
@@ -4068,7 +4068,7 @@ template<typename Functor,
          typename P7,
          typename P8,
          typename P9>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void DoForEachCont(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters)
@@ -4096,7 +4096,7 @@ template<typename Functor,
          typename P7,
          typename P8,
          typename P9>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       const ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters)
@@ -4124,7 +4124,7 @@ template<typename Functor,
          typename P7,
          typename P8,
          typename P9>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoForEachExec(
       const Functor &f,
       ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> &parameters)

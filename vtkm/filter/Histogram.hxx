@@ -26,6 +26,7 @@ namespace filter {
 
 
 //-----------------------------------------------------------------------------
+inline VTKM_CONT
 Histogram::Histogram():
   NumberOfBins(10),
   BinDelta(0),
@@ -39,6 +40,7 @@ template<typename T,
          typename StorageType,
          typename DerivedPolicy,
          typename DeviceAdapter>
+inline VTKM_CONT
 vtkm::filter::ResultField
 Histogram::DoExecute(const vtkm::cont::DataSet &inDataSet,
                           const vtkm::cont::ArrayHandle<T,StorageType> &field,

@@ -37,7 +37,7 @@ struct EvaluateFunctions
 {
   typedef vtkm::Vec<T,3> Vector3;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   Vector3 operator()(Vector3 x) const
   {
     Vector3 fx;
@@ -53,7 +53,7 @@ struct EvaluateJacobian
   typedef vtkm::Vec<T,3> Vector3;
   typedef vtkm::Matrix<T,3,3> Matrix3x3;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   Matrix3x3 operator()(Vector3 x) const {
     Matrix3x3 jacobian;
     jacobian(0,0) = 2*x[0];  jacobian(0,1) = 2*x[1];  jacobian(0,2) = 2*x[2];

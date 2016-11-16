@@ -37,10 +37,10 @@ namespace exec {
 class FunctorBase
 {
 public:
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   FunctorBase(): ErrorMessage() {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void RaiseError(const char *message) const
   {
     this->ErrorMessage.RaiseError(message);
@@ -50,7 +50,7 @@ public:
   /// errors. This is supposed to be set by the dispatcher. This method may be
   /// replaced as the execution semantics change.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetErrorMessageBuffer(
       const vtkm::exec::internal::ErrorMessageBuffer &buffer)
   {

@@ -31,21 +31,21 @@ namespace filter {
 class PointElevation : public vtkm::filter::FilterField<PointElevation>
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PointElevation();
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetLowPoint(vtkm::Float64 x, vtkm::Float64 y, vtkm::Float64 z);
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetHighPoint(vtkm::Float64 x, vtkm::Float64 y, vtkm::Float64 z);
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetRange(vtkm::Float64 low, vtkm::Float64 high);
 
 
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet &input,
                                       const vtkm::cont::ArrayHandle<T, StorageType> &field,
                                       const vtkm::filter::FieldMetadata& fieldMeta,

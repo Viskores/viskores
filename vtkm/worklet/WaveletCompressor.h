@@ -37,7 +37,7 @@ public:
 
   // Multi-level 1D wavelet decomposition
   template< typename SignalArrayType, typename CoeffArrayType, typename DeviceTag >
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id WaveDecompose( const SignalArrayType      &sigIn,   // Input
                                 vtkm::Id             nLevels,  // n levels of DWT
                                 CoeffArrayType       &coeffOut,
@@ -106,7 +106,7 @@ public:
 
   // Multi-level 1D wavelet reconstruction
   template< typename CoeffArrayType, typename SignalArrayType, typename DeviceTag >
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id WaveReconstruct( const CoeffArrayType     &coeffIn,   // Input
                                   vtkm::Id           nLevels,    // n levels of DWT
                                   std::vector<vtkm::Id> &L,
@@ -157,7 +157,7 @@ public:
 
   // Multi-level 2D wavelet decomposition
   template< typename InArrayType, typename OutArrayType, typename DeviceTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   FLOAT_64 WaveDecompose2D( const InArrayType           &sigIn,   // Input
                                   vtkm::Id              nLevels,  // n levels of DWT
                                   vtkm::Id              inX,      // Input X dim
@@ -229,7 +229,7 @@ public:
 
   // Multi-level 2D wavelet reconstruction
   template< typename InArrayType, typename OutArrayType, typename DeviceTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   FLOAT_64 WaveReconstruct2D( const InArrayType           &arrIn,   // Input
                                     vtkm::Id              nLevels,  // n levels of DWT
                                     vtkm::Id              inX,      // Input X dim

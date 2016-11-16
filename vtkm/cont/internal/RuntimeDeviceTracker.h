@@ -44,7 +44,7 @@ namespace internal {
 class RuntimeDeviceTracker
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   RuntimeDeviceTracker()
   {
     this->Reset();
@@ -54,7 +54,7 @@ public:
   /// machine.
   ///
   template<typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool CanRunOn(DeviceAdapterTag) const
   {
     typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> Traits;
@@ -65,7 +65,7 @@ public:
   ///as being unusable for all future invocations of the instance of the filter.
   ///
   template<typename DeviceAdapterTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReportAllocationFailure(DeviceAdapterTag,
                                const vtkm::cont::ErrorControlBadAllocation&)
   {
@@ -76,7 +76,7 @@ public:
   ///Reset the tracker to its default state.
   /// Will discard any updates caused by reported failures.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Reset()
   {
     std::memset(this->RuntimeValid, 0, sizeof(bool)*8 );

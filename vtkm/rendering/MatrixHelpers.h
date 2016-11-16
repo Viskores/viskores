@@ -28,7 +28,7 @@ namespace rendering {
 
 struct MatrixHelpers
 {
-  static VTKM_CONT_EXPORT
+  static VTKM_CONT
   void CreateOGLMatrix(const vtkm::Matrix<vtkm::Float32,4,4> &mtx,
                               vtkm::Float32 *oglM)
   {
@@ -50,7 +50,7 @@ struct MatrixHelpers
     oglM[15] = mtx[3][3];
   }
 
-  static VTKM_CONT_EXPORT
+  static VTKM_CONT
   vtkm::Matrix<vtkm::Float32,4,4> ViewMatrix(const vtkm::Vec<vtkm::Float32,3> &position,
                                              const vtkm::Vec<vtkm::Float32,3> &lookAt,
                                              const vtkm::Vec<vtkm::Float32,3> &up)
@@ -83,7 +83,7 @@ struct MatrixHelpers
     return matrix;
   }
 
-  static VTKM_CONT_EXPORT
+  static VTKM_CONT
   vtkm::Matrix<vtkm::Float32,4,4> WorldMatrix(const vtkm::Vec<vtkm::Float32,3> &neworigin,
                                               const vtkm::Vec<vtkm::Float32,3> &newx,
                                               const vtkm::Vec<vtkm::Float32,3> &newy,
@@ -109,7 +109,7 @@ struct MatrixHelpers
     return matrix;
   }
 
-  static VTKM_CONT_EXPORT
+  static VTKM_CONT
   vtkm::Matrix<vtkm::Float32,4,4> TrackballMatrix(vtkm::Float32 p1x,
                                                   vtkm::Float32 p1y,
                                                   vtkm::Float32 p2x,

@@ -52,19 +52,19 @@ class AtomicArray : public vtkm::exec::ExecutionObjectBase
 public:
   typedef T ValueType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   AtomicArray()
     : AtomicImplementation(vtkm::cont::make_ArrayHandle((T*)NULL, 0))
   {  }
 
   template<typename StorageType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   AtomicArray(vtkm::cont::ArrayHandle<T, StorageType> handle):
     AtomicImplementation( handle )
   {
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   T Add(vtkm::Id index, const T& value) const
   {
     return this->AtomicImplementation.Add(index,value);
@@ -75,7 +75,7 @@ public:
   // the index is equal to oldValue, then newValue is written to the index.
   // The operation was successful if return value is equal to oldValue
   //
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
   {
     return this->AtomicImplementation.CompareAndSwap(index,newValue, oldValue);

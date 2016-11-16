@@ -45,12 +45,12 @@ public:
   typedef PortalTypeThird_ PortalTypeThird;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalCartesianProduct()
   : PortalFirst(), PortalSecond(), PortalThird()
   {  } //needs to be host and device so that cuda can create lvalue of these
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalCartesianProduct(const PortalTypeFirst  &portalfirst,
                               const PortalTypeSecond &portalsecond,
                               const PortalTypeThird &portalthird)
@@ -63,7 +63,7 @@ public:
   ///
 
   template<class OtherV, class OtherP1, class OtherP2, class OtherP3>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayPortalCartesianProduct(const ArrayPortalCartesianProduct<OtherV,OtherP1,OtherP2,OtherP3> &src)
     : PortalFirst(src.GetPortalFirst()),
       PortalSecond(src.GetPortalSecond()),
@@ -72,7 +72,7 @@ public:
 
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return this->PortalFirst.GetNumberOfValues() *
@@ -81,7 +81,7 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
     VTKM_ASSERT(index >= 0);
@@ -101,7 +101,7 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType &value) const
   {
     VTKM_ASSERT(index >= 0);
@@ -122,15 +122,15 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const PortalTypeFirst &GetFirstPortal() const { return this->PortalFirst; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const PortalTypeSecond &GetSecondPortal() const { return this->PortalSecond; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   const PortalTypeThird &GetThirdPortal() const { return this->PortalThird; }
 
 
@@ -192,17 +192,17 @@ public:
                           typename ThirdHandleType::PortalConstControl>
                                                                PortalConstType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage() : FirstArray(), SecondArray(), ThirdArray() {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Storage(const FirstHandleType &array1, const SecondHandleType &array2, const ThirdHandleType &array3)
       : FirstArray(array1), SecondArray(array2), ThirdArray(array3)
   {
 
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType GetPortal()
   {
       return PortalType(this->FirstArray.GetPortalControl(),
@@ -210,7 +210,7 @@ public:
                         this->ThirdArray.GetPortalControl());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType GetPortalConst() const
   {
       return PortalConstType(this->FirstArray.GetPortalConstControl(),
@@ -218,7 +218,7 @@ public:
                              this->ThirdArray.GetPortalConstControl());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
       return this->FirstArray.GetNumberOfValues() *
@@ -226,38 +226,38 @@ public:
           this->ThirdArray.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(vtkm::Id /*numberOfValues*/)
   {
       throw vtkm::cont::ErrorControlBadAllocation("Does not make sense.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id /*numberOfValues*/)
   {
       throw vtkm::cont::ErrorControlBadAllocation("Does not make sense.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources()
   {
     // This request is ignored since it is asking to release the resources
     // of the arrays, which may be used elsewhere.
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const FirstHandleType &GetFirstArray() const
   {
       return this->FirstArray;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const SecondHandleType &GetSecondArray() const
   {
       return this->SecondArray;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const ThirdHandleType &GetThirdArray() const
   {
       return this->ThirdArray;
@@ -300,7 +300,7 @@ public:
       typename ThirdHandleType::template ExecutionTypes<Device>::PortalConst
       > PortalConstExecution;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayTransfer(StorageType *storage)
     :  FirstArray(storage->GetFirstArray()),
        SecondArray(storage->GetSecondArray()),
@@ -308,7 +308,7 @@ public:
     {  }
 
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return this->FirstArray.GetNumberOfValues() *
@@ -317,14 +317,14 @@ public:
 
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
     return PortalConstExecution(this->FirstArray.PrepareForInput(Device()),
                                 this->SecondArray.PrepareForInput(Device()),
                                 this->ThirdArray.PrepareForInput(Device()));
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
     throw vtkm::cont::ErrorControlBadAllocation(
@@ -332,7 +332,7 @@ public:
           "sense because there is overlap in the data.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorControlBadAllocation(
@@ -340,7 +340,7 @@ public:
         "sense because there is overlap in the data.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const
   {
     // Implementation of this method should be unnecessary. The internal
@@ -348,13 +348,13 @@ public:
     // output data as necessary.
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id /*numberOfValues*/)
   {
       throw vtkm::cont::ErrorControlBadAllocation("Does not make sense.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources()
   {
     this->FirstArray.ReleaseResourcesExecution();
@@ -397,7 +397,7 @@ private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleCartesianProduct(const FirstHandleType &firstArray,
                               const SecondHandleType &secondArray,
                               const ThirdHandleType &thirdArray)
@@ -408,7 +408,7 @@ public:
 /// arrays to be zipped together.
 ///
 template<typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::ArrayHandleCartesianProduct<FirstHandleType,SecondHandleType,ThirdHandleType>
 make_ArrayHandleCartesianProduct(const FirstHandleType &first,
                                  const SecondHandleType &second,

@@ -39,16 +39,16 @@ struct TestImplicitStorage
   ValueType Temp;
 
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   TestImplicitStorage(): Temp(1) {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const
   {
     return 1;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id vtkmNotUsed(index)) const
   {
     return Temp;

@@ -247,7 +247,7 @@ struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10), T
 ///
 VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 FunctionInterface<R()>
 make_FunctionInterface(
       )
@@ -271,7 +271,7 @@ make_FunctionInterface(
 VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R,
          typename P1>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 FunctionInterface<R(P1)>
 make_FunctionInterface(
       const P1& p1
@@ -298,7 +298,7 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename R,
          typename P1,
          typename P2>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2)>
 make_FunctionInterface(
       const P1& p1,
@@ -328,7 +328,7 @@ template<typename R,
          typename P1,
          typename P2,
          typename P3>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3)>
 make_FunctionInterface(
       const P1& p1,
@@ -361,7 +361,7 @@ template<typename R,
          typename P2,
          typename P3,
          typename P4>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4)>
 make_FunctionInterface(
       const P1& p1,
@@ -397,7 +397,7 @@ template<typename R,
          typename P3,
          typename P4,
          typename P5>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4,P5)>
 make_FunctionInterface(
       const P1& p1,
@@ -436,7 +436,7 @@ template<typename R,
          typename P4,
          typename P5,
          typename P6>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6)>
 make_FunctionInterface(
       const P1& p1,
@@ -478,7 +478,7 @@ template<typename R,
          typename P5,
          typename P6,
          typename P7>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7)>
 make_FunctionInterface(
       const P1& p1,
@@ -523,7 +523,7 @@ template<typename R,
          typename P6,
          typename P7,
          typename P8>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8)>
 make_FunctionInterface(
       const P1& p1,
@@ -571,7 +571,7 @@ template<typename R,
          typename P7,
          typename P8,
          typename P9>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)>
 make_FunctionInterface(
       const P1& p1,
@@ -622,7 +622,7 @@ template<typename R,
          typename P8,
          typename P9,
          typename P10>
-VTKM_EXEC_CONT_EXPORT
+VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)>
 make_FunctionInterface(
       const P1& p1,

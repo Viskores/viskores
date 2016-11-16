@@ -150,7 +150,7 @@ template<typename WorkletType,
          typename VisitArrayType,
          typename ThreadIndicesType,
          $template_params(num_params)>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<
@@ -211,7 +211,7 @@ template<typename WorkletType,
          typename VisitArrayType,
          typename ThreadIndicesType,
          $template_params(num_params, start=1)>
-VTKM_EXEC_EXPORT
+VTKM_EXEC
 void DoWorkletInvokeFunctor(
       const WorkletType &worklet,
       const vtkm::internal::Invocation<

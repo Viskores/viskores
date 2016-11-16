@@ -56,20 +56,20 @@ private:
 public:
 
   template<class Functor>
-  VTKM_CONT_EXPORT static void Schedule(Functor functor,
+  VTKM_CONT static void Schedule(Functor functor,
                                         vtkm::Id numInstances)
   {
     Algorithm::Schedule(functor, numInstances);
   }
 
   template<class Functor>
-  VTKM_CONT_EXPORT static void Schedule(Functor functor,
+  VTKM_CONT static void Schedule(Functor functor,
                                         vtkm::Id3 rangeMax)
   {
     Algorithm::Schedule(functor, rangeMax);
   }
 
-  VTKM_CONT_EXPORT static void Synchronize()
+  VTKM_CONT static void Synchronize()
   {
     Algorithm::Synchronize();
   }

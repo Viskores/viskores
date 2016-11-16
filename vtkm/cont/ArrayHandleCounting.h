@@ -40,14 +40,14 @@ class ArrayPortalCounting
 public:
   typedef CountingValueType ValueType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalCounting() :
     Start(0),
     Step(1),
     NumberOfValues(0)
   {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalCounting(ValueType start, ValueType step, vtkm::Id numValues) :
     Start(start),
     Step(step),
@@ -55,7 +55,7 @@ public:
   {  }
 
   template<typename OtherValueType>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalCounting(const ArrayPortalCounting<OtherValueType> &src)
     : Start(src.Start),
       Step(src.Step),
@@ -63,7 +63,7 @@ public:
   {  }
 
   template<typename OtherValueType>
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ArrayPortalCounting<ValueType> &operator=(
     const ArrayPortalCounting<OtherValueType> &src)
   {
@@ -73,10 +73,10 @@ public:
     return *this;
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const {
     return ValueType(this->Start +
                      this->Step*ValueType(static_cast<ComponentType>(index)));
@@ -118,7 +118,7 @@ public:
          typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag
          >));
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleCounting(CountingValueType start,
                       CountingValueType step,
                       vtkm::Id length)
@@ -130,7 +130,7 @@ public:
 /// A convenience function for creating an ArrayHandleCounting. It takes the
 /// value to start counting from and and the number of times to increment.
 template<typename CountingValueType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::ArrayHandleCounting<CountingValueType>
 make_ArrayHandleCounting(CountingValueType start,
                          CountingValueType step,

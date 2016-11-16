@@ -38,14 +38,14 @@ struct TryExecuteTestFunctor
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> InArray;
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> OutArray;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TryExecuteTestFunctor(vtkm::cont::ArrayHandle<vtkm::FloatDefault> inArray,
                         vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray)
     : NumCalls(0), InArray(inArray), OutArray(outArray)
   {  }
 
   template<typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool operator()(Device)
   {
     typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;

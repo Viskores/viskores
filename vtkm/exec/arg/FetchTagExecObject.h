@@ -58,14 +58,14 @@ struct Fetch<
   typedef ExecObjectType ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType Load(const ThreadIndicesType &vtkmNotUsed(indices),
                  const ExecObjectType &execObject) const
   {
     return execObject;
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Store(const ThreadIndicesType &,
              const ExecObjectType &,
              const ValueType &) const

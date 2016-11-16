@@ -60,13 +60,13 @@ struct Fetch<FetchTag,
 {
   typedef vtkm::Id ValueType;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::Id Load(const ThreadIndicesType &indices, const ExecObjectType &) const
   {
     return indices.GetGlobalIndex(); 
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Store(const ThreadIndicesType &,
              const ExecObjectType &,
              const ValueType &) const

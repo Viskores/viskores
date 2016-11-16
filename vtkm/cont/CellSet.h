@@ -34,19 +34,19 @@ namespace cont {
 class CellSet
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSet(const std::string &name)
     : Name(name), LogicalStructure()
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSet(const vtkm::cont::CellSet &src)
     : Name(src.Name),
       LogicalStructure(src.LogicalStructure)
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSet &operator=(const vtkm::cont::CellSet &src)
   {
     this->Name = src.Name;

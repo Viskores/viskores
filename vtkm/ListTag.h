@@ -68,7 +68,7 @@ struct ListTagJoin : detail::ListRoot {
 /// default instance of that type.
 ///
 template<typename Functor, typename ListTag>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void ListForEach(Functor &f, ListTag)
 {
   VTKM_IS_LIST_TAG(ListTag);
@@ -79,7 +79,7 @@ void ListForEach(Functor &f, ListTag)
 /// default instance of that type.
 ///
 template<typename Functor, typename ListTag>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void ListForEach(const Functor &f, ListTag)
 {
   VTKM_IS_LIST_TAG(ListTag);

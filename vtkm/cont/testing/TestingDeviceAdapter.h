@@ -62,7 +62,7 @@ namespace comparison {
 struct MaxValue
 {
   template<typename T>
-  VTKM_EXEC_CONT_EXPORT T operator()(const T& a,const T& b) const
+  VTKM_EXEC_CONT T operator()(const T& a,const T& b) const
   {
     return (a > b) ? a : b;
   }
@@ -110,19 +110,19 @@ public:
 
   struct CopyArrayKernel
   {
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     CopyArrayKernel(const IdPortalConstType &input,
                     const IdPortalType &output)
       : InputArray(input), OutputArray(output) {  }
 
-    VTKM_EXEC_EXPORT void operator()(
+    VTKM_EXEC void operator()(
         vtkm::Id index,
         const vtkm::exec::internal::ErrorMessageBuffer &) const
     {
       this->OutputArray.Set(index, this->InputArray.Get(index));
     }
 
-    VTKM_CONT_EXPORT void SetErrorMessageBuffer(
+    VTKM_CONT void SetErrorMessageBuffer(
         const vtkm::exec::internal::ErrorMessageBuffer &) {  }
 
     IdPortalConstType InputArray;
@@ -131,19 +131,19 @@ public:
 
   struct ClearArrayKernel
   {
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ClearArrayKernel(const IdPortalType &array) : Array(array), Dims() {  }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     ClearArrayKernel(const IdPortalType &array,
                      const vtkm::Id3& dims) : Array(array), Dims(dims) {  }
 
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id index) const
+    VTKM_EXEC void operator()(vtkm::Id index) const
     {
       this->Array.Set(index, OFFSET);
     }
 
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id3 index) const
+    VTKM_EXEC void operator()(vtkm::Id3 index) const
     {
       //convert from id3 to id
       vtkm::Id flatIndex =
@@ -151,7 +151,7 @@ public:
       this->operator()(flatIndex);
     }
 
-    VTKM_CONT_EXPORT void SetErrorMessageBuffer(
+    VTKM_CONT void SetErrorMessageBuffer(
         const vtkm::exec::internal::ErrorMessageBuffer &) {  }
 
     IdPortalType Array;
@@ -165,7 +165,7 @@ public:
     // typedef void ExecutionSignature(_1);
 
     template<typename T>
-    VTKM_EXEC_EXPORT void operator()(T& value) const
+    VTKM_EXEC void operator()(T& value) const
     {
       value = OFFSET;
     }
@@ -173,20 +173,20 @@ public:
 
   struct AddArrayKernel
   {
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     AddArrayKernel(const IdPortalType &array) : Array(array), Dims() {  }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     AddArrayKernel(const IdPortalType &array,
                      const vtkm::Id3& dims) : Array(array), Dims(dims) {  }
 
 
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id index) const
+    VTKM_EXEC void operator()(vtkm::Id index) const
     {
       this->Array.Set(index, this->Array.Get(index) + index);
     }
 
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id3 index) const
+    VTKM_EXEC void operator()(vtkm::Id3 index) const
     {
       //convert from id3 to id
       vtkm::Id flatIndex =
@@ -194,7 +194,7 @@ public:
       this->operator()(flatIndex);
     }
 
-    VTKM_CONT_EXPORT void SetErrorMessageBuffer(
+    VTKM_CONT void SetErrorMessageBuffer(
         const vtkm::exec::internal::ErrorMessageBuffer &) {  }
 
     IdPortalType Array;
@@ -203,7 +203,7 @@ public:
 
   struct OneErrorKernel
   {
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id index) const
+    VTKM_EXEC void operator()(vtkm::Id index) const
     {
       if (index == ARRAY_SIZE/2)
       {
@@ -211,7 +211,7 @@ public:
       }
     }
 
-    VTKM_CONT_EXPORT void SetErrorMessageBuffer(
+    VTKM_CONT void SetErrorMessageBuffer(
         const vtkm::exec::internal::ErrorMessageBuffer &errorMessage)
     {
       this->ErrorMessage = errorMessage;
@@ -222,12 +222,12 @@ public:
 
   struct AllErrorKernel
   {
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id vtkmNotUsed(index)) const
+    VTKM_EXEC void operator()(vtkm::Id vtkmNotUsed(index)) const
     {
       this->ErrorMessage.RaiseError(ERROR_MESSAGE);
     }
 
-    VTKM_CONT_EXPORT void SetErrorMessageBuffer(
+    VTKM_CONT void SetErrorMessageBuffer(
         const vtkm::exec::internal::ErrorMessageBuffer &errorMessage)
     {
       this->ErrorMessage = errorMessage;
@@ -238,15 +238,15 @@ public:
 
   struct OffsetPlusIndexKernel
   {
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     OffsetPlusIndexKernel(const IdPortalType &array) : Array(array) {  }
 
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id index) const
+    VTKM_EXEC void operator()(vtkm::Id index) const
     {
       this->Array.Set(index, OFFSET + index);
     }
 
-    VTKM_CONT_EXPORT void SetErrorMessageBuffer(
+    VTKM_CONT void SetErrorMessageBuffer(
         const vtkm::exec::internal::ErrorMessageBuffer &) {  }
 
     IdPortalType Array;
@@ -254,15 +254,15 @@ public:
 
   struct MarkOddNumbersKernel
   {
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     MarkOddNumbersKernel(const IdPortalType &array) : Array(array) {  }
 
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id index) const
+    VTKM_EXEC void operator()(vtkm::Id index) const
     {
       this->Array.Set(index, index%2);
     }
 
-    VTKM_CONT_EXPORT void SetErrorMessageBuffer(
+    VTKM_CONT void SetErrorMessageBuffer(
         const vtkm::exec::internal::ErrorMessageBuffer &) {  }
 
     IdPortalType Array;
@@ -271,7 +271,7 @@ public:
   struct FuseAll
   {
     template<typename T>
-    VTKM_EXEC_EXPORT bool operator()(const T&, const T&) const
+    VTKM_EXEC bool operator()(const T&, const T&) const
     {
       //binary predicates for unique return true if they are the same
       return true;
@@ -281,18 +281,18 @@ public:
   template<typename T>
   struct AtomicKernel
   {
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     AtomicKernel(const vtkm::exec::AtomicArray<T,DeviceAdapterTag> &array)
     : AArray(array)
     {  }
 
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id index) const
+    VTKM_EXEC void operator()(vtkm::Id index) const
     {
       T value = (T) index;
       this->AArray.Add(0, value);
     }
 
-    VTKM_CONT_EXPORT void SetErrorMessageBuffer(
+    VTKM_CONT void SetErrorMessageBuffer(
         const vtkm::exec::internal::ErrorMessageBuffer &) {  }
 
     vtkm::exec::AtomicArray<T,DeviceAdapterTag> AArray;
@@ -301,12 +301,12 @@ public:
   template<typename T>
   struct AtomicCASKernel
   {
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     AtomicCASKernel(const vtkm::exec::AtomicArray<T,DeviceAdapterTag> &array)
     : AArray(array)
     {  }
 
-    VTKM_EXEC_EXPORT void operator()(vtkm::Id index) const
+    VTKM_EXEC void operator()(vtkm::Id index) const
     {
       T value = (T) index;
       //Get the old value from the array with a no-op
@@ -322,7 +322,7 @@ public:
 
     }
 
-    VTKM_CONT_EXPORT void SetErrorMessageBuffer(
+    VTKM_CONT void SetErrorMessageBuffer(
         const vtkm::exec::internal::ErrorMessageBuffer &) {  }
 
     vtkm::exec::AtomicArray<T,DeviceAdapterTag> AArray;
@@ -331,7 +331,7 @@ public:
 
 private:
 
-  static VTKM_CONT_EXPORT void TestDeviceAdapterTag()
+  static VTKM_CONT void TestDeviceAdapterTag()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing device adapter tag" << std::endl;
@@ -355,7 +355,7 @@ private:
   // in the execution environment. It tests to make sure data gets to the array
   // and back, but it is possible that the data is not available in the
   // execution environment.
-  static VTKM_CONT_EXPORT void TestArrayManagerExecution()
+  static VTKM_CONT void TestArrayManagerExecution()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing ArrayManagerExecution" << std::endl;
@@ -415,7 +415,7 @@ private:
     }
   }
 
-  static VTKM_CONT_EXPORT void TestOutOfMemory()
+  static VTKM_CONT void TestOutOfMemory()
   {
     // Only test out of memory with 64 bit ids.  If there are 32 bit ids on
     // a 64 bit OS (common), it is simply too hard to get a reliable allocation
@@ -449,7 +449,7 @@ private:
 #endif
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static void TestTimer()
   {
     std::cout << "-------------------------------------------" << std::endl;
@@ -477,7 +477,7 @@ private:
                      "Timer counted too far or system really busy.");
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static void TestRuntime()
   {
     std::cout << "-------------------------------------------" << std::endl;
@@ -489,7 +489,7 @@ private:
     VTKM_TEST_ASSERT(valid_runtime, "runtime detection failed for device");
   }
 
-  static VTKM_CONT_EXPORT void TestAlgorithmSchedule()
+  static VTKM_CONT void TestAlgorithmSchedule()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing single value Scheduling with vtkm::Id" << std::endl;
@@ -607,7 +607,7 @@ private:
     } //release memory
   }
 
-  static VTKM_CONT_EXPORT void TestStreamCompact()
+  static VTKM_CONT void TestStreamCompact()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Stream Compact" << std::endl;
@@ -636,7 +636,7 @@ private:
     }
   }
 
-  static VTKM_CONT_EXPORT void TestStreamCompactWithStencil()
+  static VTKM_CONT void TestStreamCompactWithStencil()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Stream Compact with stencil" << std::endl;
@@ -667,7 +667,7 @@ private:
     }
   }
 
-  static VTKM_CONT_EXPORT void TestOrderedUniqueValues()
+  static VTKM_CONT void TestOrderedUniqueValues()
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing Sort, Unique, LowerBounds and UpperBounds" << std::endl;
@@ -768,7 +768,7 @@ private:
     VTKM_TEST_ASSERT(randomData[5] == 4, "Got bad value - UpperBound");
   }
 
-  static VTKM_CONT_EXPORT void TestSort()
+  static VTKM_CONT void TestSort()
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Sort" << std::endl;
@@ -793,7 +793,7 @@ private:
     }
   }
 
-  static VTKM_CONT_EXPORT void TestSortWithComparisonObject()
+  static VTKM_CONT void TestSortWithComparisonObject()
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Sort with comparison object" << std::endl;
@@ -833,7 +833,7 @@ private:
     }
   }
 
-  static VTKM_CONT_EXPORT void TestSortWithFancyArrays()
+  static VTKM_CONT void TestSortWithFancyArrays()
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Sort of a ArrayHandleZip" << std::endl;
@@ -889,7 +889,7 @@ private:
     }
   }
 
-  static VTKM_CONT_EXPORT void TestSortByKey()
+  static VTKM_CONT void TestSortByKey()
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Sort by keys" << std::endl;
@@ -956,7 +956,7 @@ private:
       }
   }
 
-  static VTKM_CONT_EXPORT void TestLowerBoundsWithComparisonObject()
+  static VTKM_CONT void TestLowerBoundsWithComparisonObject()
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing LowerBounds with comparison object" << std::endl;
@@ -994,7 +994,7 @@ private:
   }
 
 
-  static VTKM_CONT_EXPORT void TestUpperBoundsWithComparisonObject()
+  static VTKM_CONT void TestUpperBoundsWithComparisonObject()
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing UpperBounds with comparison object" << std::endl;
@@ -1031,7 +1031,7 @@ private:
     }
   }
 
-  static VTKM_CONT_EXPORT void TestUniqueWithComparisonObject()
+  static VTKM_CONT void TestUniqueWithComparisonObject()
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing Unique with comparison object" << std::endl;
@@ -1056,7 +1056,7 @@ private:
     VTKM_TEST_ASSERT(value == OFFSET, "Got bad unique value");
   }
 
-  static VTKM_CONT_EXPORT void TestReduce()
+  static VTKM_CONT void TestReduce()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce" << std::endl;
@@ -1083,7 +1083,7 @@ private:
                      "Got different sums from Reduce and ScanInclusive");
   }
 
-  static VTKM_CONT_EXPORT void TestReduceWithComparisonObject()
+  static VTKM_CONT void TestReduceWithComparisonObject()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce with comparison object " << std::endl;
@@ -1107,7 +1107,7 @@ private:
                     "Got bad value from Reduce with comparison object");
   }
 
-  static VTKM_CONT_EXPORT void TestReduceWithFancyArrays()
+  static VTKM_CONT void TestReduceWithFancyArrays()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce with ArrayHandleZip" << std::endl;
@@ -1167,7 +1167,7 @@ private:
 
   }
 
-  static VTKM_CONT_EXPORT void TestReduceByKey()
+  static VTKM_CONT void TestReduceByKey()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce By Key" << std::endl;
@@ -1258,7 +1258,7 @@ private:
       }
     }
 
-   static VTKM_CONT_EXPORT void TestReduceByKeyWithFancyArrays()
+   static VTKM_CONT void TestReduceByKeyWithFancyArrays()
     {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce By Key with Fancy Arrays" << std::endl;
@@ -1322,7 +1322,7 @@ private:
     }
   }
 
-  static VTKM_CONT_EXPORT void TestScanInclusive()
+  static VTKM_CONT void TestScanInclusive()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Inclusive Scan" << std::endl;
@@ -1413,7 +1413,7 @@ private:
 
   }
 
-  static VTKM_CONT_EXPORT void TestScanInclusiveWithComparisonObject()
+  static VTKM_CONT void TestScanInclusiveWithComparisonObject()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Inclusive Scan with comparison object " << std::endl;
@@ -1461,7 +1461,7 @@ private:
 
   }
 
-  static VTKM_CONT_EXPORT void TestScanExclusive()
+  static VTKM_CONT void TestScanExclusive()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Exclusive Scan" << std::endl;
@@ -1557,7 +1557,7 @@ private:
     }
   }
 
-  static VTKM_CONT_EXPORT void TestErrorExecution()
+  static VTKM_CONT void TestErrorExecution()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Exceptions in Execution Environment" << std::endl;
@@ -1611,7 +1611,7 @@ private:
   };
 
   template <typename T>
-  static VTKM_CONT_EXPORT void TestCopyArrays()
+  static VTKM_CONT void TestCopyArrays()
   {
     T testData[ARRAY_SIZE];
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
@@ -1733,7 +1733,7 @@ private:
 
   }
 
-  static VTKM_CONT_EXPORT void TestCopyArraysMany()
+  static VTKM_CONT void TestCopyArraysMany()
   {
       std::cout << "-------------------------------------------------" << std::endl;
       std::cout << "Testing Copy to same array type" << std::endl;
@@ -1761,7 +1761,7 @@ private:
       TestCopyArrays<vtkm::Id>();
   }
 
-  static VTKM_CONT_EXPORT void TestCopyArraysInDiffTypes()
+  static VTKM_CONT void TestCopyArraysInDiffTypes()
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing Copy to a different array type" << std::endl;
@@ -1785,7 +1785,7 @@ private:
 
   }
 
-  static VTKM_CONT_EXPORT void TestAtomicArray()
+  static VTKM_CONT void TestAtomicArray()
   {
     vtkm::Int32 atomicCount = 0;
     for(vtkm::Int32 i = 0; i < ARRAY_SIZE; i++) atomicCount += i;
@@ -1849,7 +1849,7 @@ private:
 
   struct TestAll
   {
-    VTKM_CONT_EXPORT void operator()() const
+    VTKM_CONT void operator()() const
     {
       std::cout << "Doing DeviceAdapter tests" << std::endl;
       TestArrayManagerExecution();
@@ -1900,7 +1900,7 @@ public:
   /// all members and classes required for driving vtkm algorithms. Returns an
   /// error code that can be returned from the main function of a test.
   ///
-  static VTKM_CONT_EXPORT int Run()
+  static VTKM_CONT int Run()
   {
     return vtkm::cont::testing::Testing::Run(TestAll());
   }

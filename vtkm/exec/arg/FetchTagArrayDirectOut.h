@@ -46,7 +46,7 @@ struct Fetch<
   typedef typename ExecObjectType::ValueType ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType Load(const ThreadIndicesType &, const ExecObjectType &) const
   {
     // Load is a no-op for this fetch.
@@ -54,7 +54,7 @@ struct Fetch<
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Store(const ThreadIndicesType &indices,
              const ExecObjectType &arrayPortal,
              const ValueType &value) const

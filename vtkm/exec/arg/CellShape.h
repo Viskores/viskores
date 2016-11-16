@@ -57,13 +57,13 @@ struct Fetch<FetchTag,
   typedef typename ThreadIndicesType::CellShapeTag ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType Load(const ThreadIndicesType &indices, const ExecObjectType &) const
   {
     return indices.GetCellShape();
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void Store(const ThreadIndicesType &,
              const ExecObjectType &,
              const ValueType &) const

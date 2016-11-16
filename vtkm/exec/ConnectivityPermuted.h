@@ -36,7 +36,7 @@ class ConnectivityPermuted
 public:
   typedef vtkm::Id SchedulingRangeType;
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ConnectivityPermuted():
     Portal(),
     Connectivity()
@@ -44,7 +44,7 @@ public:
 
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ConnectivityPermuted(const PermutationPortal& portal,
                        const OriginalConnectivity &src):
     Portal(portal),
@@ -52,14 +52,14 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ConnectivityPermuted(const ConnectivityPermuted &src):
     Portal(src.Portal),
     Connectivity(src.Connectivity)
   {
   }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const {
     return this->Connectivity.GetNumberOfIndices( this->Portal.Get(index) );
   }
@@ -67,7 +67,7 @@ public:
 
   typedef typename OriginalConnectivity::CellShapeTag CellShapeTag;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   CellShapeTag GetCellShape(vtkm::Id index) const {
     vtkm::Id pIndex = this->Portal.Get(index);
     return this->Connectivity.GetCellShape( pIndex );
@@ -75,7 +75,7 @@ public:
 
   typedef typename OriginalConnectivity::IndicesType IndicesType;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   IndicesType GetIndices(vtkm::Id index) const
   {
     return this->Connectivity.GetIndices( this->Portal.Get(index) );

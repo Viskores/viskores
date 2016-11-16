@@ -30,17 +30,17 @@ namespace filter {
 class VertexClustering : public vtkm::filter::FilterDataSet<VertexClustering>
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   VertexClustering();
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetNumberOfDivisions(const vtkm::Id3& num ) { this->NumberOfDivisions = num; }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   const vtkm::Id3& GetNumberOfDivisions() const { return this->NumberOfDivisions; }
 
   template<typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
                                         const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                                         const DeviceAdapter& tag);
@@ -48,7 +48,7 @@ public:
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool DoMapField(vtkm::filter::ResultDataSet& result,
                   const vtkm::cont::ArrayHandle<T, StorageType>& input,
                   const vtkm::filter::FieldMetadata& fieldMeta,

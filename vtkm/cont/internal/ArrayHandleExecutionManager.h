@@ -59,13 +59,13 @@ public:
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   virtual ~ArrayHandleExecutionManagerBase() {  }
 
   /// Returns the number of values stored in the array.  Results are undefined
   /// if data has not been loaded or allocated.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
     return this->GetNumberOfValuesImpl();
   }
@@ -77,7 +77,7 @@ public:
   /// Returns a constant array portal valid in the execution environment.
   ///
   template<typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ExecutionTypes<DeviceAdapter>::PortalConst
   PrepareForInput(bool updateData, DeviceAdapter) {
     this->VerifyDeviceAdapter(DeviceAdapter());
@@ -94,7 +94,7 @@ public:
   /// Returns a read-write array portal valid in the execution environment.
   ///
   template<typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ExecutionTypes<DeviceAdapter>::Portal
   PrepareForInPlace(bool updateData, DeviceAdapter) {
     this->VerifyDeviceAdapter(DeviceAdapter());
@@ -112,7 +112,7 @@ public:
   /// Returns a writable array portal valid in the execution environment.
   ///
   template<typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   typename ExecutionTypes<DeviceAdapter>::Portal
   PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapter) {
     this->VerifyDeviceAdapter(DeviceAdapter());
@@ -129,7 +129,7 @@ public:
   /// operation. This method should only be called after PrepareForOutput is
   /// called.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputData(StorageType *storage) const {
     this->RetrieveOutputDataImpl(storage);
   }
@@ -143,7 +143,7 @@ public:
   /// (returned from GetNumberOfValues). That is, this method can only be used
   /// to shorten the array, not lengthen.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues) {
     this->ShrinkImpl(numberOfValues);
   }
@@ -151,13 +151,13 @@ public:
   /// Frees any resources (i.e. memory) allocated for the exeuction
   /// environment, if any.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources() {
     this->ReleaseResourcesImpl();
   }
 
   template<typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool IsDeviceAdapter(DeviceAdapter) const
   {
     return this->IsDeviceAdapterImpl(
@@ -187,7 +187,7 @@ protected:
 
 private:
   template<typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void VerifyDeviceAdapter(DeviceAdapter device) const
   {
     if (!this->IsDeviceAdapter(device))
@@ -222,63 +222,63 @@ public:
   typedef typename ArrayTransferType::PortalExecution PortalExecution;
   typedef typename ArrayTransferType::PortalConstExecution PortalConstExecution;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ArrayHandleExecutionManager(StorageType *storage)
     : Transfer(storage) {  }
 
   template<class IteratorTypeControl>
-  VTKM_CONT_EXPORT void CopyInto(IteratorTypeControl dest) const
+  VTKM_CONT void CopyInto(IteratorTypeControl dest) const
   {
     this->Transfer.CopyInto(dest);
   }
 
 protected:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValuesImpl() const
   {
     return this->Transfer.GetNumberOfValues();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void PrepareForInputImpl(bool updateData, void *portalExecutionVoid)
   {
     PortalConstExecution portal = this->Transfer.PrepareForInput(updateData);
     *reinterpret_cast<PortalConstExecution *>(portalExecutionVoid) = portal;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void PrepareForInPlaceImpl(bool updateData, void *portalExecutionVoid)
   {
     PortalExecution portal = this->Transfer.PrepareForInPlace(updateData);
     *reinterpret_cast<PortalExecution *>(portalExecutionVoid) = portal;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void PrepareForOutputImpl(vtkm::Id numberOfValues, void *portalExecutionVoid)
   {
     PortalExecution portal = this->Transfer.PrepareForOutput(numberOfValues);
     *reinterpret_cast<PortalExecution *>(portalExecutionVoid) = portal;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void RetrieveOutputDataImpl(StorageType *storage) const
   {
     this->Transfer.RetrieveOutputData(storage);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ShrinkImpl(Id numberOfValues)
   {
     this->Transfer.Shrink(numberOfValues);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResourcesImpl()
   {
     this->Transfer.ReleaseResources();
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   bool IsDeviceAdapterImpl(const DeviceAdapterId &id) const
   {
     return id == vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();

@@ -40,14 +40,14 @@ public:
   /// When a timer is constructed, all threads are synchronized and the
   /// current time is marked so that GetElapsedTime returns the number of
   /// seconds elapsed since the construction.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Timer() : TimerImplementation() {  }
 
   /// Resets the timer. All further calls to GetElapsedTime will report the
   /// number of seconds elapsed since the call to this. This method
   /// synchronizes all asynchronous operations.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Reset()
   {
     this->TimerImplementation.Reset();
@@ -59,7 +59,7 @@ public:
   /// number of times to get the progressive time. This method synchronizes all
   /// asynchronous operations.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Float64 GetElapsedTime()
   {
     return this->TimerImplementation.GetElapsedTime();
@@ -67,8 +67,8 @@ public:
 
 private:
   /// Some timers are ill-defined when copied, so disallow that for all timers.
-  VTKM_CONT_EXPORT Timer(const Timer<Device> &);  // Not implemented.
-  VTKM_CONT_EXPORT void operator=(const Timer<Device> &); // Not implemented.
+  VTKM_CONT Timer(const Timer<Device> &);  // Not implemented.
+  VTKM_CONT void operator=(const Timer<Device> &); // Not implemented.
 
   vtkm::cont::DeviceAdapterTimerImplementation<Device>
       TimerImplementation;

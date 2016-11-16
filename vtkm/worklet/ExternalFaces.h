@@ -53,7 +53,7 @@ struct ExternalFaces
   struct IsUnity
   {
     template<typename T>
-    VTKM_EXEC_CONT_EXPORT bool operator()(const T &x) const
+    VTKM_EXEC_CONT bool operator()(const T &x) const
     {
         return x == T(1);
     }
@@ -69,17 +69,17 @@ struct ExternalFaces
 
   public:
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     GetConnIndex() {};
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     GetConnIndex(const vtkm::Id &f,
                  const vtkm::Id &p) :
       FacesPerCell(f),
       PointsPerCell(p)
     {};
 
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_CONT
     vtkm::Id operator()(vtkm::Id index) const
     {
       vtkm::Id divisor = FacesPerCell*PointsPerCell;
@@ -94,7 +94,7 @@ struct ExternalFaces
   struct Id3LessThan
   {
     template<typename T>
-    VTKM_EXEC_CONT_EXPORT bool operator()(const vtkm::Vec<T,3> &a,
+    VTKM_EXEC_CONT bool operator()(const vtkm::Vec<T,3> &a,
                                           const vtkm::Vec<T,3> &b) const
     {
     bool isLessThan = false;
@@ -131,11 +131,11 @@ struct ExternalFaces
     typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
     typedef _3 ExecutionSignature(_1, _2);
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     SubtractAndModulus(const vtkm::Id &c) : Modulus(c) { };
 
     template<typename T>
-    VTKM_EXEC_CONT_EXPORT
+    VTKM_EXEC_CONT
     T operator()(const T &a, const T &b) const
     {
       return (a - b) % Modulus;
@@ -151,7 +151,7 @@ struct ExternalFaces
     typedef _1 InputDomain;
 
     template<typename T>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     T operator()(const T &cellType) const
     {
       if (cellType == vtkm::CELL_SHAPE_TETRA) return 4;
@@ -174,14 +174,14 @@ struct ExternalFaces
     typedef void ExecutionSignature(_1, _3, CellShape, FromIndices);
     typedef _2 InputDomain;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     GetFace() { }
 
     template<typename T,
              typename FaceValueVecType,
              typename CellShapeTag,
              typename CellNodeVecType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const T &cellFaceId,
                     FaceValueVecType &faceVertices,
                     CellShapeTag shape,

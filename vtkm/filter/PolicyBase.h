@@ -40,7 +40,7 @@ class PolicyBase
 
 //-----------------------------------------------------------------------------
 template<typename DerivedPolicy>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::DynamicArrayHandleBase<
                                   typename DerivedPolicy::FieldTypeList,
                                   typename DerivedPolicy::FieldStorageList
@@ -55,7 +55,7 @@ ApplyPolicy(const vtkm::cont::Field& field,
 
 //-----------------------------------------------------------------------------
 template<typename DerivedPolicy, typename FilterType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::DynamicArrayHandleBase<
                                   typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList,
                                   typename DerivedPolicy::FieldStorageList
@@ -74,7 +74,7 @@ ApplyPolicy(const vtkm::cont::Field& field,
 
 //-----------------------------------------------------------------------------
 template<typename DerivedPolicy>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::DynamicArrayHandleBase<
                                   typename DerivedPolicy::CoordinateTypeList,
                                   typename DerivedPolicy::CoordinateStorageList
@@ -89,7 +89,7 @@ ApplyPolicy(const vtkm::cont::CoordinateSystem& coordinates,
 
 //-----------------------------------------------------------------------------
 template<typename DerivedPolicy, typename FilterType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::DynamicArrayHandleBase<
     typename DerivedPolicy::CoordinateTypeList,
     typename DerivedPolicy::CoordinateStorageList
@@ -107,7 +107,7 @@ ApplyPolicy(const vtkm::cont::CoordinateSystem& coordinates,
 
 //-----------------------------------------------------------------------------
 template<typename DerivedPolicy>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::DynamicCellSetBase< typename DerivedPolicy::AllCellSetList >
 ApplyPolicy(const vtkm::cont::DynamicCellSet& cellset,
             const vtkm::filter::PolicyBase<DerivedPolicy>&)
@@ -118,7 +118,7 @@ ApplyPolicy(const vtkm::cont::DynamicCellSet& cellset,
 
 //-----------------------------------------------------------------------------
 template<typename DerivedPolicy>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::DynamicCellSetBase< typename DerivedPolicy::StructuredCellSetList >
 ApplyPolicyStructured(const vtkm::cont::DynamicCellSet& cellset,
                       const vtkm::filter::PolicyBase<DerivedPolicy>&)
@@ -129,7 +129,7 @@ ApplyPolicyStructured(const vtkm::cont::DynamicCellSet& cellset,
 
 //-----------------------------------------------------------------------------
 template<typename DerivedPolicy>
-VTKM_CONT_EXPORT
+VTKM_CONT
 vtkm::cont::DynamicCellSetBase< typename DerivedPolicy::UnstructuredCellSetList >
 ApplyPolicyUnstructured(const vtkm::cont::DynamicCellSet& cellset,
                         const vtkm::filter::PolicyBase<DerivedPolicy>&)

@@ -34,7 +34,7 @@ namespace cont {
 class DataSetBuilderExplicit
 {
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   void CopyInto(const std::vector<T>& input,
                 vtkm::cont::ArrayHandle<T>& output )
@@ -44,7 +44,7 @@ class DataSetBuilderExplicit
                ArrayPortalToIteratorBegin(output.GetPortalControl()) );
   }
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DataSetBuilderExplicit() {}
 
   //Single cell explicits.
@@ -52,7 +52,7 @@ public:
 
   //Zoo explicit cell
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const std::vector<T> &xVals,
@@ -70,7 +70,7 @@ public:
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const std::vector<T> &xVals,
@@ -83,7 +83,7 @@ public:
          const std::string &cellNm="cells");
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const vtkm::cont::ArrayHandle<T> &xVals,
@@ -103,7 +103,7 @@ public:
 
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const std::vector<vtkm::Vec<T,3> > &coords,
@@ -114,7 +114,7 @@ public:
          const std::string &cellNm="cells");
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &coords,
@@ -133,7 +133,7 @@ public:
   }
 
   template<typename T, typename CellShapeTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const std::vector<vtkm::Vec<T,3> > &coords,
@@ -143,7 +143,7 @@ public:
          const std::string &cellNm="cells");
 
   template<typename T, typename CellShapeTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   Create(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &coords,
@@ -173,7 +173,7 @@ private:
                const std::string &cellNm);
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   BuildDataSet(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &coords,
@@ -184,7 +184,7 @@ private:
               const std::string &cellNm);
 
   template<typename T, typename CellShapeTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   static
   vtkm::cont::DataSet
   BuildDataSet(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &coords,
@@ -195,6 +195,7 @@ private:
 };
 
 template<typename T>
+inline VTKM_CONT
 vtkm::cont::DataSet
 DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
                                const std::vector<T> &yVals,
@@ -226,6 +227,7 @@ DataSetBuilderExplicit::Create(const std::vector<T> &xVals,
 }
 
 template<typename T>
+inline VTKM_CONT
 vtkm::cont::DataSet
 DataSetBuilderExplicit::BuildDataSet(
     const vtkm::cont::ArrayHandle<T> &X,
@@ -256,6 +258,7 @@ DataSetBuilderExplicit::BuildDataSet(
 }
 
 template<typename T>
+inline VTKM_CONT
 vtkm::cont::DataSet
 DataSetBuilderExplicit::Create(const std::vector<vtkm::Vec<T,3> > &coords,
                                const std::vector<vtkm::UInt8> &shapes,
@@ -279,7 +282,7 @@ DataSetBuilderExplicit::Create(const std::vector<vtkm::Vec<T,3> > &coords,
 }
 
 template<typename T>
-VTKM_CONT_EXPORT
+inline VTKM_CONT
 vtkm::cont::DataSet
 DataSetBuilderExplicit::BuildDataSet(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &coords,
                      const vtkm::cont::ArrayHandle<vtkm::UInt8> &shapes,
@@ -302,6 +305,7 @@ DataSetBuilderExplicit::BuildDataSet(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3
 }
 
 template<typename T, typename CellShapeTag>
+inline VTKM_CONT
 vtkm::cont::DataSet
 DataSetBuilderExplicit::Create(const std::vector<vtkm::Vec<T,3> > &coords,
                                CellShapeTag tag,
@@ -319,7 +323,7 @@ DataSetBuilderExplicit::Create(const std::vector<vtkm::Vec<T,3> > &coords,
 }
 
 template<typename T, typename CellShapeTag>
-VTKM_CONT_EXPORT
+inline VTKM_CONT
 vtkm::cont::DataSet
 DataSetBuilderExplicit::BuildDataSet(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &coords,
                                      CellShapeTag tag,
@@ -342,10 +346,10 @@ DataSetBuilderExplicit::BuildDataSet(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3
 class DataSetBuilderExplicitIterative
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   DataSetBuilderExplicitIterative() {}
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Begin(const std::string &coordName="coords",
              const std::string &cellName="cells")
   {
@@ -358,10 +362,10 @@ public:
   }
 
   //Define points.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::cont::DataSet Create();
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id AddPoint(const vtkm::Vec<vtkm::Float32, 3> &pt)
   {
     points.push_back(pt);
@@ -369,7 +373,7 @@ public:
     return id;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id AddPoint(const vtkm::Float32 &x,
         const vtkm::Float32 &y,
         const vtkm::Float32 &z=0)
@@ -380,7 +384,7 @@ public:
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id AddPoint(const T &x, const T &y, const T &z=0)
   {
     return AddPoint(static_cast<vtkm::Float32>(x),
@@ -389,21 +393,21 @@ public:
   }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id AddPoint(const vtkm::Vec<T,3> &pt)
   {
     return AddPoint(static_cast<vtkm::Vec<vtkm::Float32,3> >(pt));
   }
 
   //Define cells.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddCell(vtkm::UInt8 shape)
   {
     this->shapes.push_back(shape);
     this->numIdx.push_back(0);
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddCell(const vtkm::UInt8 &shape, const std::vector<vtkm::Id> &conn)
   {
     this->shapes.push_back(shape);
@@ -411,7 +415,7 @@ public:
     connectivity.insert(connectivity.end(), conn.begin(), conn.end());
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddCell(const vtkm::UInt8 &shape, const vtkm::Id *conn, const vtkm::IdComponent &n)
   {
     this->shapes.push_back(shape);
@@ -422,7 +426,7 @@ public:
       }
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddCellPoint(vtkm::Id pointIndex)
   {
     VTKM_ASSERT(this->numIdx.size() > 0);
@@ -439,6 +443,7 @@ private:
   std::vector<vtkm::Id> connectivity;
 };
 
+inline VTKM_CONT
 vtkm::cont::DataSet
 DataSetBuilderExplicitIterative::Create()
 {

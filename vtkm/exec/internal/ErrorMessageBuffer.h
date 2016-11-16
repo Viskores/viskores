@@ -40,14 +40,14 @@ namespace internal {
 class ErrorMessageBuffer
 {
 public:
-  VTKM_EXEC_CONT_EXPORT ErrorMessageBuffer()
+  VTKM_EXEC_CONT ErrorMessageBuffer()
     : MessageBuffer(NULL), MessageBufferSize(0) {  }
 
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   ErrorMessageBuffer(char *messageBuffer, vtkm::Id bufferSize)
     : MessageBuffer(messageBuffer), MessageBufferSize(bufferSize) { }
 
-  VTKM_EXEC_EXPORT void RaiseError(const char *message) const
+  VTKM_EXEC void RaiseError(const char *message) const
   {
     // Only raise the error if one has not been raised yet. This check is not
     // guaranteed to work across threads. However, chances are that if two or
@@ -69,7 +69,7 @@ public:
     this->MessageBuffer[this->MessageBufferSize-1] = '\0';
   }
 
-  VTKM_EXEC_CONT_EXPORT bool IsErrorRaised() const
+  VTKM_EXEC_CONT bool IsErrorRaised() const
   {
     if (this->MessageBufferSize > 0)
     {

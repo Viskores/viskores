@@ -42,7 +42,7 @@ struct TestOutKernel : public vtkm::exec::FunctorBase
 {
   PortalType Portal;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
     if (this->Portal.GetNumberOfValues() != ARRAY_SIZE)
@@ -59,7 +59,7 @@ struct TestInKernel : public vtkm::exec::FunctorBase
 {
   PortalType Portal;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
     if (this->Portal.GetNumberOfValues() != ARRAY_SIZE)
@@ -79,7 +79,7 @@ struct TestInOutKernel : public vtkm::exec::FunctorBase
 {
   PortalType Portal;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
     if (this->Portal.GetNumberOfValues() != ARRAY_SIZE)
@@ -94,13 +94,13 @@ struct TestInOutKernel : public vtkm::exec::FunctorBase
 template<typename AtomicType>
 struct TestAtomicKernel : public vtkm::exec::FunctorBase
 {
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TestAtomicKernel(const AtomicType &atomicArray)
     : AtomicArray(atomicArray) {  }
 
   AtomicType AtomicArray;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
     typedef typename AtomicType::ValueType ValueType;

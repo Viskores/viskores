@@ -30,11 +30,11 @@ namespace filter {
 class CellAverage : public vtkm::filter::FilterCell<CellAverage>
 {
 public:
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellAverage();
 
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet &input,
                                       const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                       const vtkm::filter::FieldMetadata& fieldMeta,

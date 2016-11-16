@@ -115,16 +115,16 @@ public:
 
   /// Returns a portal to the array.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalType GetPortal();
 
   /// Returns a portal to the array with immutable values.
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   PortalConstType GetPortalConst() const;
 
   /// Retuns the number of entries allocated in the array.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const;
 
   /// \brief Allocates an array large enough to hold the given number of values.
@@ -135,7 +135,7 @@ public:
   /// ErrorControlBadValue if the allocation is not feasible (for example, the
   /// array storage is read-only).
   ///
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Allocate(vtkm::Id numberOfValues);
 
   /// \brief Reduces the size of the array without changing its values.
@@ -146,7 +146,7 @@ public:
   /// \c numberOfValues must be equal or less than the preexisting size
   /// (returned from GetNumberOfValues). That is, this method can only be used
   /// to shorten the array, not lengthen.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues);
 
   /// \brief Frees any resources (i.e. memory) stored in this array.
@@ -154,7 +154,7 @@ public:
   /// After calling this method GetNumberOfValues will return 0. The
   /// resources should also be released when the Storage class is
   /// destroyed.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void ReleaseResources();
 };
 #endif // VTKM_DOXYGEN_ONLY

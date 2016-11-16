@@ -26,7 +26,7 @@ namespace exec {
 /// Base \c ExecutionObjectBase for execution objects to inherit from so that
 /// you can use an arbitrary object as a parameter in an execution environment
 /// function. Any method you want to use on the execution side must have the
-/// VTKM_EXEC_EXPORT modifier.
+/// VTKM_EXEC modifier.
 ///
 class ExecutionObjectBase
 {

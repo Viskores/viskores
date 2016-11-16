@@ -63,7 +63,7 @@ struct TestingImplicitFunctions
     { }
 
     template<typename VecType, typename ScalarType>
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     void operator()(const VecType &point, ScalarType &val) const
     {
       val = this->Function.Value(point);

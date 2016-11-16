@@ -279,7 +279,7 @@ private:
 
 
 public:
-  VTKM_CONT_EXPORT static int Run()
+  VTKM_CONT static int Run()
     {
     std::cout << "TestingOpenGLInterop Run() " << std::endl;
     

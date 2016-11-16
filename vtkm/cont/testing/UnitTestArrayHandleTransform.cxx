@@ -40,7 +40,7 @@ template<typename ValueType>
 struct MySquare
 {
   template<typename U>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   ValueType operator()(U u) const
     { return vtkm::dot(u, u); }
 };
@@ -51,7 +51,7 @@ struct CheckTransformFunctor : vtkm::exec::FunctorBase
   OriginalPortalType OriginalPortal;
   TransformedPortalType TransformedPortal;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id index) const {
     typedef typename TransformedPortalType::ValueType T;
     typename OriginalPortalType::ValueType original =
@@ -66,7 +66,7 @@ struct CheckTransformFunctor : vtkm::exec::FunctorBase
 template<typename OriginalArrayHandleType,
          typename TransformedArrayHandleType,
          typename Device>
-VTKM_CONT_EXPORT
+VTKM_CONT
 CheckTransformFunctor<
     typename OriginalArrayHandleType::template ExecutionTypes<Device>::PortalConst,
     typename TransformedArrayHandleType::template ExecutionTypes<Device>::PortalConst>
@@ -83,7 +83,7 @@ make_CheckTransformFunctor(const OriginalArrayHandleType &originalArray,
 }
 
 template<typename OriginalArrayHandleType, typename TransformedArrayHandleType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void CheckControlPortals(const OriginalArrayHandleType &originalArray,
                          const TransformedArrayHandleType &transformedArray)
 {

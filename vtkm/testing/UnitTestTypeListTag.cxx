@@ -75,7 +75,7 @@ struct TestFunctor
   TestFunctor(const TypeSet &expectedTypes) : ExpectedTypes(expectedTypes) {  }
 
   template<typename T>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void operator()(T) {
     this->ExpectedTypes.Found(T());
   }

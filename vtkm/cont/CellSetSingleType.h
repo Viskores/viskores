@@ -55,7 +55,7 @@ class CellSetSingleType  :
 public:
 
   template<typename CellShapeTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSetSingleType(CellShapeTag, vtkm::Id numpoints, const std::string &name = std::string())
     : Superclass(numpoints, name),
       CellTypeAsId(CellShapeTag::Id)
@@ -63,14 +63,14 @@ public:
   }
 
   template<typename CellShapeTag>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSetSingleType(CellShapeTag, const std::string &name = std::string())
     : Superclass(0, name),
       CellTypeAsId(CellShapeTag::Id)
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSetSingleType(vtkm::Id numpoints,
                     const std::string &name = std::string())
     : Superclass(numpoints, name),
@@ -78,19 +78,19 @@ public:
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSetSingleType(const std::string &name = std::string())
     : Superclass(0, name),
       CellTypeAsId(CellShapeTagEmpty::Id)
   {
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   CellSetSingleType(const Thisclass &src)
     : Superclass(src), CellTypeAsId(src.CellTypeAsId)
   {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Thisclass &operator=(const Thisclass &src)
   {
     this->Superclass::operator=(src);
@@ -101,7 +101,7 @@ public:
   virtual ~CellSetSingleType() {  }
 
   /// First method to add cells -- one at a time.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void PrepareToAddCells(vtkm::Id numShapes, vtkm::Id connectivityMaxLen)
   {
     vtkm::IdComponent numberOfPointsPerCell = this->DetermineNumberOfPoints();
@@ -124,7 +124,7 @@ public:
 
   /// Second method to add cells -- one at a time.
   template <vtkm::IdComponent ItemTupleLength>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void AddCell(vtkm::UInt8 vtkmNotUsed(cellType),
                vtkm::IdComponent numVertices,
                const vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
@@ -139,7 +139,7 @@ public:
   }
 
   /// Third and final method to add cells -- one at a time.
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void CompleteAddingCells()
   {
     this->PointToCell.Connectivity.Shrink(this->ConnectivityLength);
@@ -149,7 +149,7 @@ public:
   }
 
   //This is the way you can fill the memory from another system without copying
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void Fill(const vtkm::cont::ArrayHandle<vtkm::Id,
                                           ConnectivityStorageTag> &connectivity)
   {

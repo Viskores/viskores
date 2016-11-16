@@ -38,7 +38,7 @@ namespace {
 const vtkm::Id ARRAY_SIZE = 10;
 
 struct DoubleIndexFunctor {
-  VTKM_EXEC_CONT_EXPORT
+  VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id index) const {
     return 2*index;
   }
@@ -52,7 +52,7 @@ struct CheckPermutationFunctor : vtkm::exec::FunctorBase
 {
   PermutedPortalType PermutedPortal;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id index) const {
     typedef typename PermutedPortalType::ValueType T;
     T value = this->PermutedPortal.Get(index);
@@ -68,7 +68,7 @@ struct CheckPermutationFunctor : vtkm::exec::FunctorBase
 
 template<typename PermutedArrayHandleType,
          typename Device>
-VTKM_CONT_EXPORT
+VTKM_CONT
 CheckPermutationFunctor<
     typename PermutedArrayHandleType::template ExecutionTypes<Device>::PortalConst>
 make_CheckPermutationFunctor(const PermutedArrayHandleType &permutedArray,
@@ -85,7 +85,7 @@ struct InPlacePermutationFunctor : vtkm::exec::FunctorBase
 {
   PermutedPortalType PermutedPortal;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id index) const {
     typedef typename PermutedPortalType::ValueType T;
     T value = this->PermutedPortal.Get(index);
@@ -98,7 +98,7 @@ struct InPlacePermutationFunctor : vtkm::exec::FunctorBase
 
 template<typename PermutedArrayHandleType,
          typename Device>
-VTKM_CONT_EXPORT
+VTKM_CONT
 InPlacePermutationFunctor<
     typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal>
 make_InPlacePermutationFunctor(PermutedArrayHandleType &permutedArray,
@@ -111,7 +111,7 @@ make_InPlacePermutationFunctor(PermutedArrayHandleType &permutedArray,
 }
 
 template<typename PortalType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void CheckInPlaceResult(PortalType portal)
 {
   typedef typename PortalType::ValueType T;
@@ -143,7 +143,7 @@ struct OutputPermutationFunctor : vtkm::exec::FunctorBase
 {
   PermutedPortalType PermutedPortal;
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id index) const {
     typedef typename PermutedPortalType::ValueType T;
     this->PermutedPortal.Set(index, TestValue(static_cast<vtkm::Id>(index), T()));
@@ -152,7 +152,7 @@ struct OutputPermutationFunctor : vtkm::exec::FunctorBase
 
 template<typename PermutedArrayHandleType,
          typename Device>
-VTKM_CONT_EXPORT
+VTKM_CONT
 OutputPermutationFunctor<
     typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal>
 make_OutputPermutationFunctor(PermutedArrayHandleType &permutedArray,
@@ -165,7 +165,7 @@ make_OutputPermutationFunctor(PermutedArrayHandleType &permutedArray,
 }
 
 template<typename PortalType>
-VTKM_CONT_EXPORT
+VTKM_CONT
 void CheckOutputResult(PortalType portal)
 {
   typedef typename PortalType::ValueType T;

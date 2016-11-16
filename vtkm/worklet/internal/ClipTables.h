@@ -1650,7 +1650,7 @@ static vtkm::UInt8 CellEdges[CELL_EDGES_SIZE] = {
 };
 
 // index into ClipTablesIndices for each shape
-VTKM_EXEC_CONSTANT_EXPORT
+VTKM_EXEC_CONSTANT
 static vtkm::Int16 CellIndexLookup[vtkm::NUMBER_OF_CELL_SHAPES] = {
    -1, //  0 = vtkm::CELL_SHAPE_EMPTY_CELL
     0, //  1 = vtkm::CELL_SHAPE_VERTEX
@@ -1679,20 +1679,20 @@ public:
   class DevicePortal
   {
   public:
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     vtkm::Id GetCaseIndex(vtkm::Id shape, vtkm::Id caseId) const
     {
       vtkm::Id index = CellIndexLookup[shape];
       return this->ClipTablesIndicesPortal.Get(index + caseId);
     }
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     vtkm::UInt8 ValueAt(vtkm::Id idx) const
     {
       return this->ClipTablesDataPortal.Get(idx);
     }
 
-    VTKM_EXEC_EXPORT
+    VTKM_EXEC
     EdgeVec GetEdge(vtkm::Id shape, vtkm::Id edgeId) const
     {
       vtkm::Id index = ((shape * MAX_CELL_EDGES) + edgeId) * 2;

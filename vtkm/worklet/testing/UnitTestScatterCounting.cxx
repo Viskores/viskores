@@ -129,24 +129,24 @@ struct TestScatterCountingWorklet : public vtkm::worklet::WorkletMapField
 
   typedef vtkm::worklet::ScatterCounting ScatterType;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   ScatterType GetScatter() const { return this->Scatter; }
 
   template<typename CountArrayType>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TestScatterCountingWorklet(const CountArrayType &countArray)
     : Scatter(countArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG()) {  }
 
   template<typename CountArrayType, typename Device>
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TestScatterCountingWorklet(const CountArrayType &countArray, Device)
     : Scatter(countArray, Device()) {  }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   TestScatterCountingWorklet(const vtkm::worklet::ScatterCounting &scatter)
     : Scatter(scatter) {  }
 
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(vtkm::Id inputIndex,
                   vtkm::Id &indexCopy,
                   vtkm::IdComponent &writeVisit,

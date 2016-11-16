@@ -62,19 +62,19 @@ public:
 
   ~AxisAnnotation3D();
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetMoreOrLessTickAdjustment(int offset)
   {
     this->MoreOrLessTickAdjustment = offset;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetColor(vtkm::rendering::Color c)
   {
     this->Color = c;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetAxis(int a)
   {
     this->Axis = a;
@@ -85,20 +85,20 @@ public:
   /// offset of 0 means the tick is inside the frame
   /// offset of 1 means the tick is outside the frame
   /// offset of 0.5 means the tick is centered on the frame
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetMajorTickSize(vtkm::Float64 size, vtkm::Float64 offset)
   {
     this->TickMajorSize = size;
     this->TickMajorOffset = offset;
   }
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetMinorTickSize(vtkm::Float64 size, vtkm::Float64 offset)
   {
     this->TickMinorSize = size;
     this->TickMinorOffset = offset;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetWorldPosition(const vtkm::Vec<vtkm::Float64,3> &point0,
                         const vtkm::Vec<vtkm::Float64,3> &point1)
   {
@@ -106,7 +106,7 @@ public:
     this->Point1 = point1;
   }
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   void SetWorldPosition(vtkm::Float64 x0, vtkm::Float64 y0, vtkm::Float64 z0,
                         vtkm::Float64 x1, vtkm::Float64 y1, vtkm::Float64 z1)
   {

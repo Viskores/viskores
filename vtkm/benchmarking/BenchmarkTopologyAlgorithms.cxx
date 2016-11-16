@@ -60,7 +60,7 @@ public:
   typedef _2 InputDomain;
 
   template<typename PointValueVecType, typename OutType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const PointValueVecType &pointValues,
                   const vtkm::IdComponent &numPoints,
                   OutType &average) const
@@ -85,7 +85,7 @@ public:
   typedef _2 InputDomain;
 
   template<typename CellVecType, typename OutType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const CellVecType &cellValues,
                   OutType &avgVal,
                   const vtkm::IdComponent &numCellIDs) const
@@ -114,14 +114,14 @@ public:
 
   T IsoValue;
 
-  VTKM_CONT_EXPORT
+  VTKM_CONT
   Classification(T isovalue) :
     IsoValue(isovalue)
   {
   }
 
   template<typename FieldInType>
-  VTKM_EXEC_EXPORT
+  VTKM_EXEC
   void operator()(const FieldInType &fieldIn,
                   vtkm::IdComponent &caseNumber) const
   {
@@ -193,7 +193,7 @@ private:
     vtkm::cont::ArrayHandle< Value, StorageTag> InputHandle;
     std::size_t DomainSize;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchCellToPointAvg()
     {
       NumberGenerator<Value> generator(static_cast<Value>(1.0),
@@ -208,7 +208,7 @@ private:
       this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::CellSetStructured<3> cellSet;
@@ -227,7 +227,7 @@ private:
 
     virtual std::string Type() const { return std::string("Static"); }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
 
       std::stringstream description;
@@ -241,7 +241,7 @@ private:
   template<typename Value>
   struct BenchCellToPointAvgDynamic : public BenchCellToPointAvg<Value> {
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::CellSetStructured<3> cellSet;
@@ -273,7 +273,7 @@ private:
     vtkm::cont::ArrayHandle< Value, StorageTag> InputHandle;
     std::size_t DomainSize;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchPointToCellAvg()
     {
       NumberGenerator<Value> generator(static_cast<Value>(1.0),
@@ -288,7 +288,7 @@ private:
       this->InputHandle = vtkm::cont::make_ArrayHandle(this->input);
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::CellSetStructured<3> cellSet;
@@ -307,7 +307,7 @@ private:
 
     virtual std::string Type() const { return std::string("Static"); }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
 
       std::stringstream description;
@@ -321,7 +321,7 @@ private:
   template<typename Value>
   struct BenchPointToCellAvgDynamic : public BenchPointToCellAvg<Value> {
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::CellSetStructured<3> cellSet;
@@ -353,7 +353,7 @@ private:
     Value IsoValue;
     size_t DomainSize;
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     BenchClassification()
     {
       NumberGenerator<Value> generator(static_cast<Value>(1.0),
@@ -369,7 +369,7 @@ private:
       this->IsoValue = generator.next();
     }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::CellSetStructured<3> cellSet;
@@ -391,7 +391,7 @@ private:
 
     virtual std::string Type() const { return std::string("Static"); }
 
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     std::string Description() const {
 
       std::stringstream description;
@@ -404,7 +404,7 @@ private:
 
   template<typename Value>
   struct BenchClassificationDynamic : public BenchClassification<Value> {
-    VTKM_CONT_EXPORT
+    VTKM_CONT
     vtkm::Float64 operator()()
     {
       vtkm::cont::CellSetStructured<3> cellSet;
@@ -430,7 +430,7 @@ private:
 
 public:
 
-  static VTKM_CONT_EXPORT int Run(int benchmarks){
+  static VTKM_CONT int Run(int benchmarks){
     std::cout << DIVIDER << "\nRunning Topology Algorithm benchmarks\n";
 
     if (benchmarks & CELL_TO_POINT) {
