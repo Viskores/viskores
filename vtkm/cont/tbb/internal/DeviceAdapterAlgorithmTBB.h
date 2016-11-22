@@ -86,6 +86,25 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB> :
         vtkm::cont::DeviceAdapterTagTBB>
 {
 public:
+
+ template<typename T, class CIn>
+  VTKM_CONT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
+  {
+    return Reduce(input, initialValue,vtkm::Add());
+  }
+
+ template<typename T, class CIn, class BinaryFunctor>
+  VTKM_CONT static T Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input,
+      T initialValue,
+      BinaryFunctor binary_functor)
+  {
+    return tbb::ReducePortals(
+      input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()), initialValue,
+      binary_functor);
+  }
+
   template<typename T, class CIn, class COut>
   VTKM_CONT static T ScanInclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
