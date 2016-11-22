@@ -117,25 +117,29 @@ private:
 };
 
 
-template<typename PortalConstType, typename BinaryFunctor >
+template<typename PortalConstType, typename T, typename BinaryFunctor >
 struct ReduceKernel : vtkm::exec::FunctorBase
 {
-  typedef typename PortalConstType::ValueType T;
   PortalConstType Portal;
+  T InitialValue;
   BinaryFunctor BinaryOperator;
   vtkm::Id PortalLength;
 
   VTKM_CONT
   ReduceKernel()
   : Portal(),
+    InitialValue(),
     BinaryOperator(),
     PortalLength(0)
   {
   }
 
   VTKM_CONT
-  ReduceKernel(const PortalConstType &portal, BinaryFunctor binary_functor)
+  ReduceKernel(const PortalConstType &portal,
+               T initialValue,
+               BinaryFunctor binary_functor)
     : Portal(portal),
+      InitialValue(initialValue),
       BinaryOperator(binary_functor),
       PortalLength( portal.GetNumberOfValues() )
   {  }
@@ -147,31 +151,36 @@ struct ReduceKernel : vtkm::exec::FunctorBase
     const vtkm::Id reduceWidth = 16;
     const vtkm::Id offset = index * reduceWidth;
 
-    //at least the first value access to the portal will be valid
-    //only the rest could be invalid
-    T partialSum = this->Portal.Get( offset );
-
     if( offset + reduceWidth >= this->PortalLength )
       {
+      //This will only occur for a single index value, so this is the case
+      //that needs to handle the initialValue
+      T partialSum = BinaryOperator(this->InitialValue,
+                                    this->Portal.Get( offset )
+                                    );
       vtkm::Id currentIndex = offset + 1;
       while( currentIndex < this->PortalLength)
         {
         partialSum = BinaryOperator(partialSum, this->Portal.Get(currentIndex));
         ++currentIndex;
         }
+      return partialSum;
       }
     else
       {
       //optimize the usecase where all values are valid and we don't
       //need to check that we might go out of bounds
-      for(int i=1; i < reduceWidth; ++i)
+      T partialSum = BinaryOperator(this->Portal.Get( offset ),
+                                    this->Portal.Get( offset+1 )
+                                    );
+      for(int i=2; i < reduceWidth; ++i)
         {
         partialSum = BinaryOperator(partialSum,
                                     this->Portal.Get( offset + i )
                                     );
         }
+      return partialSum;
       }
-    return partialSum;
   }
 };
 

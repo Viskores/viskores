@@ -87,17 +87,17 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB> :
 {
 public:
 
- template<typename T, class CIn>
-  VTKM_CONT static T Reduce(
-      const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
+ template<typename T, typename U, class CIn>
+  VTKM_CONT static U Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input, U initialValue)
   {
     return Reduce(input, initialValue,vtkm::Add());
   }
 
- template<typename T, class CIn, class BinaryFunctor>
-  VTKM_CONT static T Reduce(
+ template<typename T, typename U, class CIn, class BinaryFunctor>
+  VTKM_CONT static U Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
-      T initialValue,
+      U initialValue,
       BinaryFunctor binary_functor)
   {
     return tbb::ReducePortals(

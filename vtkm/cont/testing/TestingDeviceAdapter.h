@@ -68,6 +68,39 @@ struct MaxValue
   }
 };
 
+template<typename T>
+struct MinMaxValue
+{
+  VTKM_EXEC_CONT
+  vtkm::Pair<T,T> operator()(const T& a, const T& b) const
+  {
+    return vtkm::make_Pair( vtkm::Min(a, b), vtkm::Max(a, b) );
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Pair<T,T> operator()(const vtkm::Pair<T,T>& a, const vtkm::Pair<T,T>& b) const
+  {
+    return vtkm::make_Pair( vtkm::Min(a.first, b.first),
+                            vtkm::Max(a.second, b.second) );
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Pair<T,T> operator()(const T& a, const vtkm::Pair<T,T>& b) const
+  {
+    return vtkm::make_Pair( vtkm::Min(a, b.first),
+                            vtkm::Max(a, b.second) );
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Pair<T,T> operator()(const vtkm::Pair<T,T>& a, const T& b) const
+  {
+    return vtkm::make_Pair( vtkm::Min(a.first, b),
+                            vtkm::Max(a.second, b) );
+  }
+};
+
+
+
 }
 
 
@@ -1099,11 +1132,14 @@ private:
     testData[ARRAY_SIZE/2] = maxValue;
 
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData, ARRAY_SIZE);
-    vtkm::Id largestValue = Algorithm::Reduce(input,
-                                              vtkm::Id(),
-                                              comparison::MaxValue());
+    vtkm::Pair<vtkm::Id,vtkm::Id> range = Algorithm::Reduce(input,
+                                              vtkm::Pair<vtkm::Id,vtkm::Id>(0,0),
+                                              comparison::MinMaxValue<vtkm::Id>());
 
-    VTKM_TEST_ASSERT(largestValue == maxValue,
+    VTKM_TEST_ASSERT(maxValue == range.second,
+                    "Got bad value from Reduce with comparison object");
+
+    VTKM_TEST_ASSERT(0 == range.first,
                     "Got bad value from Reduce with comparison object");
   }
 
