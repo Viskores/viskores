@@ -65,35 +65,6 @@ namespace worklet {
 class FieldHistogram
 {
 public:
-  template <typename T>
-  struct MinMaxValue
-  {
-    VTKM_EXEC_CONT
-    vtkm::Pair<T, T> operator()(const T& a, const T& b) const
-    {
-      return vtkm::make_Pair(vtkm::Min(a, b), vtkm::Max(a, b));
-    }
-
-    VTKM_EXEC_CONT
-    vtkm::Pair<T, T> operator()(
-      const vtkm::Pair<T, T>& a, const vtkm::Pair<T, T>& b) const
-    {
-      return vtkm::make_Pair(
-        vtkm::Min(a.first, b.first), vtkm::Max(a.second, b.second));
-    }
-
-    VTKM_EXEC_CONT
-    vtkm::Pair<T, T> operator()(const T& a, const vtkm::Pair<T, T>& b) const
-    {
-      return vtkm::make_Pair(vtkm::Min(a, b.first), vtkm::Max(a, b.second));
-    }
-
-    VTKM_EXEC_CONT
-    vtkm::Pair<T, T> operator()(const vtkm::Pair<T, T>& a, const T& b) const
-    {
-      return vtkm::make_Pair(vtkm::Min(a.first, b), vtkm::Max(a.second, b));
-    }
-  };
 
   // For each value set the bin it should be in
   template<typename FieldType>
@@ -181,7 +152,7 @@ public:
       fieldArray.GetPortalConstControl().Get(0));
 
     vtkm::Pair<FieldType,FieldType> result =
-          DeviceAlgorithms::Reduce(fieldArray, initValue, MinMaxValue<FieldType>());
+          DeviceAlgorithms::Reduce(fieldArray, initValue, vtkm::MinAndMax<FieldType>());
 
     const FieldType& fieldMinValue = result.first;
     const FieldType& fieldMaxValue = result.second;

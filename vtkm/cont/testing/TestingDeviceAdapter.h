@@ -22,6 +22,8 @@
 
 #include <vtkm/TypeTraits.h>
 #include <vtkm/BinaryPredicates.h>
+#include <vtkm/BinaryOperators.h>
+
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
@@ -57,48 +59,6 @@
 namespace vtkm {
 namespace cont {
 namespace testing {
-
-namespace comparison {
-struct MaxValue
-{
-  template<typename T>
-  VTKM_EXEC_CONT T operator()(const T& a,const T& b) const
-  {
-    return (a > b) ? a : b;
-  }
-};
-
-template <typename T>
-struct MinMaxValue
-{
-  VTKM_EXEC_CONT
-  vtkm::Pair<T, T> operator()(const T& a, const T& b) const
-  {
-    return vtkm::make_Pair(vtkm::Min(a, b), vtkm::Max(a, b));
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::Pair<T, T> operator()(
-    const vtkm::Pair<T, T>& a, const vtkm::Pair<T, T>& b) const
-  {
-    return vtkm::make_Pair(
-      vtkm::Min(a.first, b.first), vtkm::Max(a.second, b.second));
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::Pair<T, T> operator()(const T& a, const vtkm::Pair<T, T>& b) const
-  {
-    return vtkm::make_Pair(vtkm::Min(a, b.first), vtkm::Max(a, b.second));
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::Pair<T, T> operator()(const vtkm::Pair<T, T>& a, const T& b) const
-  {
-    return vtkm::make_Pair(vtkm::Min(a.first, b), vtkm::Max(a.second, b));
-  }
-};
-}
-
 
 #define ERROR_MESSAGE "Got an error."
 #define ARRAY_SIZE 1000
@@ -1130,7 +1090,7 @@ private:
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData, ARRAY_SIZE);
     vtkm::Pair<vtkm::Id,vtkm::Id> range = Algorithm::Reduce(input,
                                               vtkm::Pair<vtkm::Id,vtkm::Id>(0,0),
-                                              comparison::MinMaxValue<vtkm::Id>());
+                                              vtkm::MinAndMax<vtkm::Id>());
 
     VTKM_TEST_ASSERT(maxValue == range.second,
                     "Got bad value from Reduce with comparison object");
@@ -1466,7 +1426,7 @@ private:
     IdArrayHandle result;
     vtkm::Id sum = Algorithm::ScanInclusive(array,
                                             result,
-                                            comparison::MaxValue());
+                                            vtkm::Maximum());
     VTKM_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE-1),
                      "Got bad sum from Inclusive Scan with comparison object");
 
@@ -1480,7 +1440,7 @@ private:
     //now try it inline
     sum = Algorithm::ScanInclusive(array,
                                    array,
-                                   comparison::MaxValue());
+                                   vtkm::Maximum());
     VTKM_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE-1),
                      "Got bad sum from Inclusive Scan with comparison object");
 
