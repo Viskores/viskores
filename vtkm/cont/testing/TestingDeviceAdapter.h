@@ -68,39 +68,35 @@ struct MaxValue
   }
 };
 
-template<typename T>
+template <typename T>
 struct MinMaxValue
 {
   VTKM_EXEC_CONT
-  vtkm::Pair<T,T> operator()(const T& a, const T& b) const
+  vtkm::Pair<T, T> operator()(const T& a, const T& b) const
   {
-    return vtkm::make_Pair( vtkm::Min(a, b), vtkm::Max(a, b) );
+    return vtkm::make_Pair(vtkm::Min(a, b), vtkm::Max(a, b));
   }
 
   VTKM_EXEC_CONT
-  vtkm::Pair<T,T> operator()(const vtkm::Pair<T,T>& a, const vtkm::Pair<T,T>& b) const
+  vtkm::Pair<T, T> operator()(
+    const vtkm::Pair<T, T>& a, const vtkm::Pair<T, T>& b) const
   {
-    return vtkm::make_Pair( vtkm::Min(a.first, b.first),
-                            vtkm::Max(a.second, b.second) );
+    return vtkm::make_Pair(
+      vtkm::Min(a.first, b.first), vtkm::Max(a.second, b.second));
   }
 
   VTKM_EXEC_CONT
-  vtkm::Pair<T,T> operator()(const T& a, const vtkm::Pair<T,T>& b) const
+  vtkm::Pair<T, T> operator()(const T& a, const vtkm::Pair<T, T>& b) const
   {
-    return vtkm::make_Pair( vtkm::Min(a, b.first),
-                            vtkm::Max(a, b.second) );
+    return vtkm::make_Pair(vtkm::Min(a, b.first), vtkm::Max(a, b.second));
   }
 
   VTKM_EXEC_CONT
-  vtkm::Pair<T,T> operator()(const vtkm::Pair<T,T>& a, const T& b) const
+  vtkm::Pair<T, T> operator()(const vtkm::Pair<T, T>& a, const T& b) const
   {
-    return vtkm::make_Pair( vtkm::Min(a.first, b),
-                            vtkm::Max(a.second, b) );
+    return vtkm::make_Pair(vtkm::Min(a.first, b), vtkm::Max(a.second, b));
   }
 };
-
-
-
 }
 
 

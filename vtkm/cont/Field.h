@@ -38,20 +38,35 @@ namespace cont {
 
 namespace internal {
 
-struct RangeMin
+template <typename T>
+struct MinMaxValue
 {
-  template<typename T>
-  VTKM_EXEC
-  T operator()(const T& a, const T& b)const { return vtkm::Min(a,b); }
-};
+  VTKM_EXEC_CONT
+  vtkm::Pair<T, T> operator()(const T& a, const T& b) const
+  {
+    return vtkm::make_Pair(vtkm::Min(a, b), vtkm::Max(a, b));
+  }
 
-struct RangeMax
-{
-  template<typename T>
-  VTKM_EXEC
-  T operator()(const T& a, const T& b)const { return vtkm::Max(a,b); }
-};
+  VTKM_EXEC_CONT
+  vtkm::Pair<T, T> operator()(
+    const vtkm::Pair<T, T>& a, const vtkm::Pair<T, T>& b) const
+  {
+    return vtkm::make_Pair(
+      vtkm::Min(a.first, b.first), vtkm::Max(a.second, b.second));
+  }
 
+  VTKM_EXEC_CONT
+  vtkm::Pair<T, T> operator()(const T& a, const vtkm::Pair<T, T>& b) const
+  {
+    return vtkm::make_Pair(vtkm::Min(a, b.first), vtkm::Max(a, b.second));
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Pair<T, T> operator()(const vtkm::Pair<T, T>& a, const T& b) const
+  {
+    return vtkm::make_Pair(vtkm::Min(a.first, b), vtkm::Max(a.second, b));
+  }
+};
 
 template<typename DeviceAdapterTag>
 class ComputeRange
@@ -70,18 +85,19 @@ public:
 
     //not the greatest way of doing this for performance reasons. But
     //this implementation should generate the smallest amount of code
-    ValueType initialMin = input.GetPortalConstControl().Get(0);
-    ValueType initialMax = initialMin;
+    const vtkm::Pair<ValueType, ValueType> initial(
+      input.GetPortalConstControl().Get(0),
+      input.GetPortalConstControl().Get(0));
 
-    ValueType minResult = Algorithm::Reduce(input, initialMin, RangeMin());
-    ValueType maxResult = Algorithm::Reduce(input, initialMax, RangeMax());
+    vtkm::Pair<ValueType, ValueType> result =
+      Algorithm::Reduce(input, initial, MinMaxValue<ValueType>());
 
     this->Range->Allocate(NumberOfComponents);
     for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
       this->Range->GetPortalControl().Set(
-            i, vtkm::Range(VecType::GetComponent(minResult, i),
-                           VecType::GetComponent(maxResult, i)));
+            i, vtkm::Range(VecType::GetComponent(result.first, i),
+                           VecType::GetComponent(result.second, i)));
     }
   }
 

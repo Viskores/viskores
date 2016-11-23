@@ -65,22 +65,33 @@ namespace worklet {
 class FieldHistogram
 {
 public:
-
-  struct minFunctor
+  template <typename T>
+  struct MinMaxValue
   {
-    template< typename FieldType>
-    VTKM_EXEC
-    FieldType operator()(const FieldType &x, const FieldType &y) const {
-      return vtkm::Min(x, y);
+    VTKM_EXEC_CONT
+    vtkm::Pair<T, T> operator()(const T& a, const T& b) const
+    {
+      return vtkm::make_Pair(vtkm::Min(a, b), vtkm::Max(a, b));
     }
-  };
 
-  struct maxFunctor
-  {
-    template< typename FieldType>
-    VTKM_EXEC
-    FieldType operator()(const FieldType& x, const FieldType& y) const {
-      return vtkm::Max(x, y);
+    VTKM_EXEC_CONT
+    vtkm::Pair<T, T> operator()(
+      const vtkm::Pair<T, T>& a, const vtkm::Pair<T, T>& b) const
+    {
+      return vtkm::make_Pair(
+        vtkm::Min(a.first, b.first), vtkm::Max(a.second, b.second));
+    }
+
+    VTKM_EXEC_CONT
+    vtkm::Pair<T, T> operator()(const T& a, const vtkm::Pair<T, T>& b) const
+    {
+      return vtkm::make_Pair(vtkm::Min(a, b.first), vtkm::Max(a, b.second));
+    }
+
+    VTKM_EXEC_CONT
+    vtkm::Pair<T, T> operator()(const vtkm::Pair<T, T>& a, const T& b) const
+    {
+      return vtkm::make_Pair(vtkm::Min(a.first, b), vtkm::Max(a.second, b));
     }
   };
 
@@ -164,10 +175,18 @@ public:
     //leverage fields that have already computed there range
 
     const vtkm::Id numberOfValues = fieldArray.GetNumberOfValues();
-    const FieldType initValue = fieldArray.GetPortalConstControl().Get(0);
 
-    const FieldType fieldMinValue = DeviceAlgorithms::Reduce(fieldArray, initValue, minFunctor());
-    const FieldType fieldMaxValue = DeviceAlgorithms::Reduce(fieldArray, initValue, maxFunctor());
+    const vtkm::Pair<FieldType, FieldType> initValue(
+      fieldArray.GetPortalConstControl().Get(0),
+      fieldArray.GetPortalConstControl().Get(0));
+
+    vtkm::Pair<FieldType,FieldType> result =
+          DeviceAlgorithms::Reduce(fieldArray, initValue, MinMaxValue<FieldType>());
+
+    const FieldType& fieldMinValue = result.first;
+    const FieldType& fieldMaxValue = result.second;
+
+
     const FieldType fieldDelta = compute_delta(fieldMinValue, fieldMaxValue, numberOfBins);
 
     // Worklet fills in the bin belonging to each value
