@@ -26,6 +26,7 @@
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
 #include <vtkm/exec/arg/FetchTagExecObject.h>
+#include <vtkm/exec/arg/FetchTagWholeCellSetIn.h>
 #include <vtkm/exec/arg/ThreadIndices.h>
 #include <vtkm/exec/arg/ThreadIndicesBasic.h>
 #include <vtkm/exec/arg/VisitIndex.h>
@@ -295,7 +296,7 @@ public:
   struct WholeCellSetIn : vtkm::cont::arg::ControlSignatureTagBase {
     typedef vtkm::cont::arg::TypeCheckTagCellSet TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagCellSetIn<FromType,ToType> TransportTag;
-    typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
+    typedef vtkm::exec::arg::FetchTagWholeCellSetIn FetchTag;
   };
 
   /// \brief Creates a \c ThreadIndices object.
