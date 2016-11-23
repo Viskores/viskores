@@ -283,8 +283,9 @@ public:
       const FieldType fieldValue1 = fieldIn[edgeVertex1];
 
       //need to factor in outputCellId
-      MetaData.InterpIdPortal.Set(outputPointId+triVertex,
-              vtkm::make_Vec(indices[edgeVertex0], indices[edgeVertex1]));
+      MetaData.InterpIdPortal.Set(
+            outputPointId+triVertex,
+            vtkm::Id2(indices[edgeVertex0], indices[edgeVertex1]));
 
       vtkm::FloatDefault interpolant =
           static_cast<vtkm::FloatDefault>(iso - fieldValue0) /

@@ -20,6 +20,7 @@
 
 set(unit_tests
   UnitTestCellAverage.cxx
+  UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx
   UnitTestClipping.cxx
   UnitTestExternalFaces.cxx
@@ -27,6 +28,7 @@ set(unit_tests
   UnitTestFieldStatistics.cxx
   UnitTestMarchingCubes.cxx
   UnitTestPointElevation.cxx
+  UnitTestRemoveUnusedPoints.cxx
   UnitTestScatterCounting.cxx
   UnitTestSplatKernels.cxx
   UnitTestStreamingSine.cxx

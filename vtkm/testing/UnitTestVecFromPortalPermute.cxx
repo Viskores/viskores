@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/exec/internal/VecFromPortalPermute.h>
+#include <vtkm/VecFromPortalPermute.h>
 
 #include <vtkm/VecVariable.h>
 
@@ -54,7 +54,7 @@ struct VecFromPortalPermuteTestFunctor
   {
     typedef TestPortal<T> PortalType;
     typedef vtkm::VecVariable<vtkm::Id,ARRAY_SIZE> IndexVecType;
-    typedef vtkm::exec::internal::VecFromPortalPermute<IndexVecType,PortalType>
+    typedef vtkm::VecFromPortalPermute<IndexVecType,PortalType>
         VecType;
     typedef vtkm::TypeTraits<VecType> TTraits;
     typedef vtkm::VecTraits<VecType> VTraits;

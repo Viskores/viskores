@@ -92,7 +92,7 @@ struct CellShapeIdToTag {
 
 #define VTKM_DEFINE_CELL_TAG(name, idname) \
   struct CellShapeTag ## name { \
-    static const vtkm::IdComponent Id = vtkm::idname; \
+    static const vtkm::UInt8 Id = vtkm::idname; \
   }; \
   namespace internal { \
   template<> \
@@ -135,9 +135,9 @@ VTKM_DEFINE_CELL_TAG(Pyramid, CELL_SHAPE_PYRAMID);
 ///
 struct CellShapeTagGeneric {
   VTKM_EXEC_CONT
-  CellShapeTagGeneric(vtkm::IdComponent shape) : Id(shape) {  }
+  CellShapeTagGeneric(vtkm::UInt8 shape) : Id(shape) {  }
 
-  vtkm::IdComponent Id;
+  vtkm::UInt8 Id;
 };
 
 

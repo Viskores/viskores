@@ -37,6 +37,7 @@ namespace {
 struct TestScatterArrays
 {
   vtkm::cont::ArrayHandle<vtkm::IdComponent> CountArray;
+  vtkm::cont::ArrayHandle<vtkm::Id> InputToOutputMap;
   vtkm::cont::ArrayHandle<vtkm::Id> OutputToInputMap;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> VisitArray;
 };
@@ -46,6 +47,9 @@ TestScatterArrays MakeScatterArraysShort()
   const vtkm::Id countArraySize = 18;
   const vtkm::IdComponent countArray[countArraySize] = {
     1, 2, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0
+  };
+  const vtkm::Id inputToOutputMap[countArraySize] = {
+    0, 1, 3, 3, 3, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6
   };
   const vtkm::Id outputSize = 6;
   const vtkm::Id outputToInputMap[outputSize] = {
@@ -62,6 +66,8 @@ TestScatterArrays MakeScatterArraysShort()
   // Need to copy arrays so that the data does not go out of scope.
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(countArray, countArraySize),
                   arrays.CountArray);
+  Algorithm::Copy(vtkm::cont::make_ArrayHandle(inputToOutputMap, countArraySize),
+                  arrays.InputToOutputMap);
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(outputToInputMap, outputSize),
                   arrays.OutputToInputMap);
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(visitArray, outputSize),
@@ -75,6 +81,9 @@ TestScatterArrays MakeScatterArraysLong()
   const vtkm::Id countArraySize = 6;
   const vtkm::IdComponent countArray[countArraySize] = {
     0, 1, 2, 3, 4, 5
+  };
+  const vtkm::Id inputToOutputMap[countArraySize] = {
+    0, 0, 1, 3, 6, 10
   };
   const vtkm::Id outputSize = 15;
   const vtkm::Id outputToInputMap[outputSize] = {
@@ -91,6 +100,8 @@ TestScatterArrays MakeScatterArraysLong()
   // Need to copy arrays so that the data does not go out of scope.
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(countArray, countArraySize),
                   arrays.CountArray);
+  Algorithm::Copy(vtkm::cont::make_ArrayHandle(inputToOutputMap, countArraySize),
+                  arrays.InputToOutputMap);
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(outputToInputMap, outputSize),
                   arrays.OutputToInputMap);
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(visitArray, outputSize),
@@ -105,6 +116,9 @@ TestScatterArrays MakeScatterArraysZero()
   const vtkm::IdComponent countArray[countArraySize] = {
     0, 0, 0, 0, 0, 0
   };
+  const vtkm::Id inputToOutputMap[countArraySize] = {
+    0, 0, 0, 0, 0, 0
+  };
 
   TestScatterArrays arrays;
   typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
@@ -113,6 +127,8 @@ TestScatterArrays MakeScatterArraysZero()
   // Need to copy arrays so that the data does not go out of scope.
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(countArray, countArraySize),
                   arrays.CountArray);
+  Algorithm::Copy(vtkm::cont::make_ArrayHandle(inputToOutputMap, countArraySize),
+                  arrays.InputToOutputMap);
   arrays.OutputToInputMap.Allocate(0);
   arrays.VisitArray.Allocate(0);
 
@@ -189,9 +205,14 @@ void TestScatterArrayGeneration(const TestScatterArrays &arrays)
   std::cout << "  Testing array generation" << std::endl;
 
   vtkm::worklet::ScatterCounting scatter(arrays.CountArray,
-                                         VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+                                         VTKM_DEFAULT_DEVICE_ADAPTER_TAG(),
+                                         true);
 
   vtkm::Id inputSize = arrays.CountArray.GetNumberOfValues();
+
+  std::cout << "    Checking input to output map." << std::endl;
+  CompareArrays(arrays.InputToOutputMap,
+                scatter.GetInputToOutputMap());
 
   std::cout << "    Checking output to input map." << std::endl;
   CompareArrays(arrays.OutputToInputMap,

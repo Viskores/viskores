@@ -21,60 +21,12 @@
 #define vtk_m_cont_internal_IteratorFromArrayPortal_h
 
 #include <vtkm/Assert.h>
-
+#include <vtkm/internal/ArrayPortalValueReference.h>
 #include <vtkm/cont/ArrayPortal.h>
 
 namespace vtkm {
 namespace cont {
 namespace internal {
-namespace detail {
-
-template<class ArrayPortalType>
-struct IteratorFromArrayPortalValue
-{
-  typedef typename ArrayPortalType::ValueType ValueType;
-
-  VTKM_CONT
-  IteratorFromArrayPortalValue(const ArrayPortalType &portal, vtkm::Id index)
-    : Portal(portal), Index(index) {  }
-
-  VTKM_CONT
-  void Swap( IteratorFromArrayPortalValue<ArrayPortalType> &rhs ) throw()
-  {
-    //we need use the explicit type not a proxy temp object
-    //A proxy temp object would point to the same underlying data structure
-    //and would not hold the old value of *this once *this was set to rhs.
-    const ValueType aValue = *this;
-    *this = rhs;
-    rhs = aValue;
-  }
-
-  VTKM_CONT
-  IteratorFromArrayPortalValue<ArrayPortalType> &operator=(
-    const IteratorFromArrayPortalValue<ArrayPortalType> &rhs)
-  {
-    this->Portal.Set(this->Index, rhs.Portal.Get(rhs.Index));
-    return *this;
-  }
-
-  VTKM_CONT
-  ValueType operator=(const ValueType& value)
-  {
-    this->Portal.Set(this->Index, value);
-    return value;
-  }
-
-  VTKM_CONT
-  operator ValueType(void) const
-  {
-    return this->Portal.Get(this->Index);
-  }
-
-  const ArrayPortalType& Portal;
-  vtkm::Id Index;
-};
-
-} // namespace detail
 
 template<class ArrayPortalType>
 class IteratorFromArrayPortal
@@ -82,7 +34,7 @@ class IteratorFromArrayPortal
 public:
   using value_type =
     typename std::remove_const<typename ArrayPortalType::ValueType>::type;
-  using reference = detail::IteratorFromArrayPortalValue<ArrayPortalType>;
+  using reference = vtkm::internal::ArrayPortalValueReference<ArrayPortalType>;
   using pointer = typename std::add_pointer<value_type>::type;
 
   using difference_type = std::ptrdiff_t;
@@ -177,16 +129,6 @@ IteratorFromArrayPortal<ArrayPortalType> make_IteratorEnd(
 {
   return IteratorFromArrayPortal<ArrayPortalType>(portal,
          portal.GetNumberOfValues());
-}
-
-
-//implement a custom swap function, since the std::swap won't work
-//since we return RValues instead of Lvalues
-template<typename T>
-void swap( vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> a,
-           vtkm::cont::internal::detail::IteratorFromArrayPortalValue<T> b)
-{
-  a.Swap(b);
 }
 
 

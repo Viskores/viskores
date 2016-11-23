@@ -38,8 +38,10 @@ set(headers
   TypeListTag.h
   Types.h
   TypeTraits.h
-  VectorAnalysis.h
+  VecFromPortal.h
+  VecFromPortalPermute.h
   VecRectilinearPointCoordinates.h
+  VectorAnalysis.h
   VecTraits.h
   VecVariable.h
   UnaryPredicates.h

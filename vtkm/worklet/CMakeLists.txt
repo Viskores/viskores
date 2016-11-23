@@ -26,6 +26,7 @@ set(headers
   WorkletMapTopology.h
   AverageByKey.h
   CellAverage.h
+  CellDeepCopy.h
   Clip.h
   ExternalFaces.h
   FieldHistogram.h
@@ -36,6 +37,7 @@ set(headers
   MarchingCubes.h
   MarchingCubesDataTables.h
   PointElevation.h
+  RemoveUnusedPoints.h
   ScatterCounting.h
   ScatterIdentity.h
   ScatterUniform.h

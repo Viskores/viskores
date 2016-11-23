@@ -49,6 +49,7 @@ unset(VTKM_USE_DOUBLE_PRECISION)
 
 set(headers
   ArrayPortalUniformPointCoordinates.h
+  ArrayPortalValueReference.h
   Assume.h
   brigand.hpp
   ConfigureFor32.h

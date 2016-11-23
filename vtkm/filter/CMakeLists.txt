@@ -20,6 +20,7 @@
 
 set(headers
   CellAverage.h
+  CleanGrid.h
   Clip.h
   ExternalFaces.h
   FieldMetadata.h
@@ -42,6 +43,7 @@ set(headers
 
 set(header_template_sources
   CellAverage.hxx
+  CleanGrid.hxx
   Clip.hxx
   ExternalFaces.hxx
   FilterCell.hxx

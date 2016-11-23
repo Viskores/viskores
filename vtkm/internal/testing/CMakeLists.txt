@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestArrayPortalValueReference.cxx
   UnitTestConfigureFor32.cxx
   UnitTestConfigureFor64.cxx
   UnitTestFunctionInterface.cxx

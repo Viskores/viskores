@@ -55,34 +55,34 @@ struct WrappedBinaryOperator
 
   template<typename Argument1, typename Argument2>
    VTKM_CONT ResultType operator()(
-    const detail::IteratorFromArrayPortalValue<Argument1> &x,
-    const detail::IteratorFromArrayPortalValue<Argument2> &y) const
+    const vtkm::internal::ArrayPortalValueReference<Argument1> &x,
+    const vtkm::internal::ArrayPortalValueReference<Argument2> &y) const
   {
-    typedef typename detail::IteratorFromArrayPortalValue<Argument1>::ValueType
-                            ValueTypeX;
-    typedef typename detail::IteratorFromArrayPortalValue<Argument2>::ValueType
-                            ValueTypeY;
-    return m_f( (ValueTypeX)x, (ValueTypeY)y );
+     using ValueTypeX =
+       typename vtkm::internal::ArrayPortalValueReference<Argument1>::ValueType;
+     using ValueTypeY =
+       typename vtkm::internal::ArrayPortalValueReference<Argument2>::ValueType;
+     return m_f( (ValueTypeX)x, (ValueTypeY)y );
   }
 
   template<typename Argument1, typename Argument2>
    VTKM_CONT ResultType operator()(
     const Argument1 &x,
-    const detail::IteratorFromArrayPortalValue<Argument2> &y) const
+    const vtkm::internal::ArrayPortalValueReference<Argument2> &y) const
   {
-    typedef typename detail::IteratorFromArrayPortalValue<Argument2>::ValueType
-                            ValueTypeY;
-    return m_f( x, (ValueTypeY)y );
+     using ValueTypeY =
+       typename vtkm::internal::ArrayPortalValueReference<Argument2>::ValueType;
+     return m_f( x, (ValueTypeY)y );
   }
 
   template<typename Argument1, typename Argument2>
    VTKM_CONT ResultType operator()(
-    const detail::IteratorFromArrayPortalValue<Argument1> &x,
+    const vtkm::internal::ArrayPortalValueReference<Argument1> &x,
     const Argument2 &y) const
   {
-    typedef typename detail::IteratorFromArrayPortalValue<Argument1>::ValueType
-                            ValueTypeX;
-    return m_f( (ValueTypeX)x, y );
+     using ValueTypeX =
+       typename vtkm::internal::ArrayPortalValueReference<Argument1>::ValueType;
+     return m_f( (ValueTypeX)x, y );
   }
 
 };

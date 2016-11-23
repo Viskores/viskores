@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/exec/internal/VecFromPortal.h>
+#include <vtkm/VecFromPortal.h>
 
 #include <vtkm/testing/Testing.h>
 
@@ -51,7 +51,7 @@ struct VecFromPortalTestFunctor
   void operator()(T) const
   {
     typedef TestPortal<T> PortalType;
-    typedef vtkm::exec::internal::VecFromPortal<PortalType> VecType;
+    typedef vtkm::VecFromPortal<PortalType> VecType;
     typedef vtkm::TypeTraits<VecType> TTraits;
     typedef vtkm::VecTraits<VecType> VTraits;
 
