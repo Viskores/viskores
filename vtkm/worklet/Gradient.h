@@ -22,10 +22,10 @@
 #define vtk_m_worklet_Gradient_h
 
 #include <vtkm/exec/ExecutionWholeArray.h>
-#include <vtkm/exec/internal/VecFromPortalPermute.h>
 #include <vtkm/exec/CellDerivative.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 #include <vtkm/CellTraits.h>
+#include <vtkm/VecFromPortalPermute.h>
 #include <vtkm/VecTraits.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
