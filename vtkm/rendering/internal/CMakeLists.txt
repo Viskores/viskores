@@ -19,8 +19,15 @@
 ##============================================================================
 
 set(headers
-  OpenGLHeaders.h
   RunTriangulator.h
   )
+
+set(opengl_headers
+  OpenGLHeaders.h
+  )
+
+if(VTKm_OpenGL_FOUND)
+  list(APPEND headers ${opengl_headers})
+endif()
 
 vtkm_declare_headers(${headers})
