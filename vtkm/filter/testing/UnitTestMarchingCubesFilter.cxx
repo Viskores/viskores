@@ -200,17 +200,11 @@ public:
                       TransformHandleType::StorageTag> {};
 
   typedef TypeListTagRadiantTypes FieldStorageList;
-  typedef vtkm::filter::DefaultPolicy::FieldTypeList FieldTypeList;
 
   struct TypeListTagRadiantCellSetTypes : vtkm::ListTagBase<
                       MakeRadiantDataSet::CellSet > {};
 
   typedef TypeListTagRadiantCellSetTypes AllCellSetList;
-
-  typedef vtkm::filter::DefaultPolicy::CoordinateTypeList CoordinateTypeList;
-  typedef vtkm::filter::DefaultPolicy::CoordinateStorageList CoordinateStorageList;
-
-  typedef vtkm::filter::DefaultPolicy::DeviceAdapterList DeviceAdapterList;
 };
 
 inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComponent dim)
