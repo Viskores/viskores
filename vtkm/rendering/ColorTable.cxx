@@ -1200,5 +1200,14 @@ ColorTable::ColorTable(const std::string &name_)
   }
 }
 
+ColorTable::ColorTable(const vtkm::rendering::Color &color)
+{
+  this->Internals->UniqueName = "";
+  this->Internals->Smooth = false;
+  
+  AddControlPoint(0, color);
+  AddControlPoint(1, color);
+}
+
 }
 } // namespace vtkm::rendering

@@ -96,6 +96,7 @@ void CanvasGL::SetViewToWorldSpace(const vtkm::rendering::Camera &camera,
 void CanvasGL::SetViewToScreenSpace(const vtkm::rendering::Camera &camera,
                                     bool clip)
 {
+  std::cout<<"SetViewToScreenSpace"<<std::endl;    
   vtkm::Float32 oglP[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
   vtkm::Float32 oglM[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
 

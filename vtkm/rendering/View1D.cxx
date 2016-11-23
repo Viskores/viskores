@@ -109,4 +109,4 @@ void View1D::RenderWorldAnnotations()
 }    
 
 }
-} // namespace vtkm::rendering    
+} // namespace vtkm::rendering

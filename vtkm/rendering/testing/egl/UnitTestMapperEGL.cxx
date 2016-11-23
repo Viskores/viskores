@@ -25,6 +25,7 @@
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
+#include <vtkm/rendering/Color.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/testing/RenderTest.h>
@@ -41,6 +42,8 @@ void RenderTests()
 
     vtkm::cont::testing::MakeTestDataSet maker;
     vtkm::rendering::ColorTable colorTable("thermal");
+
+    /*
     vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRegularDataSet0(),
                                              "pointvar", colorTable, "reg3D.pnm");
     vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRectilinearDataSet0(),
@@ -49,6 +52,7 @@ void RenderTests()
                                              "pointvar", colorTable, "expl3D.pnm");
     vtkm::rendering::testing::Render<M,C,V2>(maker.Make2DRectilinearDataSet0(),
                                              "pointvar", colorTable, "rect2D.pnm");
+    */
     vtkm::rendering::testing::Render<M,C,V1>(maker.Make1DUniformDataSet0(),
                                              "pointvar", "uniform1D.pnm");
 }

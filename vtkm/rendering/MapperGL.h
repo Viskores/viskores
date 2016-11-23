@@ -48,6 +48,7 @@ public:
   void StartScene() VTKM_OVERRIDE;
   void EndScene() VTKM_OVERRIDE;
   void SetCanvas(vtkm::rendering::Canvas *canvas) VTKM_OVERRIDE;
+  virtual vtkm::rendering::Canvas* GetCanvas() {return this->Canvas;}
 
   vtkm::rendering::Mapper *NewCopy() const VTKM_OVERRIDE;
 

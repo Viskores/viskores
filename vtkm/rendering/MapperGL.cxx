@@ -168,16 +168,12 @@ struct MapColorAndVerticesInvokeFunctor
 
 template<typename PtType>
 VTKM_CONT
-void RenderLineSegments(MapperGL &mapper,
+void RenderLineSegments(MapperGL &vtkmNotUsed(mapper),
                         vtkm::Id numVerts, const PtType &verts,
                         const vtkm::cont::ArrayHandle<vtkm::Float32> &scalar,
-                        const vtkm::Range &scalarRange,
-                        const vtkm::rendering::Camera &camera)
+                        const vtkm::Range &vtkmNotUsed(scalarRange),
+                        const vtkm::rendering::Camera &vtkmNotUsed(camera))
 {
-  //DRP feed matrix into GL
-  vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
-  vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
-  
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glLineWidth(1);
@@ -189,7 +185,6 @@ void RenderLineSegments(MapperGL &mapper,
     vtkm::Vec<vtkm::Float32, 3> pt = verts.GetPortalConstControl().Get(i);
     vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
     glVertex3f(pt[0], s, 0.0f);
-    //std::cout<<i<<": ("<<pt[0]<<", "<<s<<", 0.0)"<<std::endl;
   }
   glEnd();
   glFlush();
@@ -366,8 +361,10 @@ void RenderTriangles(MapperGL &mapper,
 
   if (mapper.shader_programme > 0)
   {
+    vtkm::Id width = mapper.GetCanvas()->GetWidth();
+    vtkm::Id height = mapper.GetCanvas()->GetWidth();      
     vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
-    vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
+    vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(width,height);
 
     MatrixHelpers::CreateOGLMatrix(viewM, mapper.mvMat);
     MatrixHelpers::CreateOGLMatrix(projM, mapper.pMat);
@@ -385,11 +382,13 @@ void RenderTriangles(MapperGL &mapper,
     
 } // anonymous namespace
 
-MapperGL::MapperGL()
-{ this->loaded = false; }
+MapperGL::MapperGL() : Canvas(NULL), loaded(false)
+{
+}
 
 MapperGL::~MapperGL()
-{  }
+{
+}
 
 void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,

@@ -49,6 +49,7 @@ public:
   virtual void StartScene() = 0;
   virtual void EndScene() = 0;
   virtual void SetCanvas(vtkm::rendering::Canvas *canvas) = 0;
+  virtual vtkm::rendering::Canvas* GetCanvas() {return NULL;} //DRP fix this...
 
   virtual vtkm::rendering::Mapper *NewCopy() const = 0;
 
