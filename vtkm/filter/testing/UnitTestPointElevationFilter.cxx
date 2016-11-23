@@ -125,7 +125,7 @@ void TestPointElevationWithPolicy()
 
   vtkm::filter::ResultField result;
 
-  vtkm::filter::DefaultPolicy p;
+  vtkm::filter::PolicyDefault p;
   result = filter.Execute(inputData,
                           inputData.GetCoordinateSystem(),
                           p);
