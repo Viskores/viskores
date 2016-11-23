@@ -126,7 +126,9 @@ public:
   };
 
 
+#ifndef VTKM_CUDA
 private:
+#endif
 
   struct TestCompositeAsInput
   {
