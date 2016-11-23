@@ -168,6 +168,35 @@ struct MapColorAndVerticesInvokeFunctor
 
 template<typename PtType>
 VTKM_CONT
+void RenderLineSegments(MapperGL &mapper,
+                        vtkm::Id numVerts, const PtType &verts,
+                        const vtkm::cont::ArrayHandle<vtkm::Float32> &scalar,
+                        const vtkm::Range &scalarRange,
+                        const vtkm::rendering::Camera &camera)
+{
+  //DRP feed matrix into GL
+  vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
+  vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
+  
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+  glLineWidth(1);
+  glColor3f(1.0, 1.0, 1.0);
+  
+  glBegin(GL_LINE_STRIP);
+  for (int i = 0; i < numVerts; i++)
+  {
+    vtkm::Vec<vtkm::Float32, 3> pt = verts.GetPortalConstControl().Get(i);
+    vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
+    glVertex3f(pt[0], s, 0.0f);
+    //std::cout<<i<<": ("<<pt[0]<<", "<<s<<", 0.0)"<<std::endl;
+  }
+  glEnd();
+  glFlush();
+}
+
+template<typename PtType>
+VTKM_CONT
 void RenderTriangles(MapperGL &mapper,
                      vtkm::Id numTri, const PtType &verts,
                      const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > &indices,
@@ -183,6 +212,25 @@ void RenderTriangles(MapperGL &mapper,
         std::cout << "ERROR: " << glewGetErrorString(GlewInitResult) << std::endl;
     mapper.loaded = true;
 
+    //DRP
+    /*
+    for (int i = 0; i < numTri; i++)
+    {
+        vtkm::Vec<vtkm::Id, 4> idx = indices.GetPortalConstControl().Get(i);
+        vtkm::Id si = indices.GetPortalConstControl().Get(i)[0];
+        vtkm::Id i1 = indices.GetPortalConstControl().Get(i)[1];
+        vtkm::Id i2 = indices.GetPortalConstControl().Get(i)[2];
+        vtkm::Id i3 = indices.GetPortalConstControl().Get(i)[3];
+        
+        vtkm::Vec<vtkm::Float32, 3> p1 = verts.GetPortalConstControl().Get(i1);
+        vtkm::Vec<vtkm::Float32, 3> p2 = verts.GetPortalConstControl().Get(i2);
+        vtkm::Vec<vtkm::Float32, 3> p3 = verts.GetPortalConstControl().Get(i3);
+        std::cout<<i<<": <"<<p1[0]<<" "<<p1[1]<<" "<<p1[2]<<">"<<std::endl;
+        std::cout<<" : <"<<p2[0]<<" "<<p2[1]<<" "<<p2[2]<<">"<<std::endl;
+        std::cout<<" : <"<<p3[0]<<" "<<p3[1]<<" "<<p3[2]<<">"<<std::endl;
+    }
+    */
+    
     vtkm::Float32 sMin = vtkm::Float32(scalarRange.Min);
     vtkm::Float32 sMax = vtkm::Float32(scalarRange.Max);
     vtkm::cont::ArrayHandle<vtkm::Float32> out_vertices, out_color;
@@ -350,14 +398,25 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange)
 {
+  vtkm::cont::ArrayHandle<vtkm::Float32> sf;
+  sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32> >();      
+  vtkm::cont::DynamicArrayHandleCoordinateSystem dcoords = coords.GetData();
+    
+  if (cellset.IsSameType(vtkm::cont::CellSetStructured<1>()))
+  {
+      vtkm::cont::ArrayHandleUniformPointCoordinates verts;
+      verts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+      vtkm::Id numVerts = coords.GetData().GetNumberOfValues();
+      RenderLineSegments(*this, numVerts, verts, sf, scalarRange, camera);
+      glFinish();
+      glFlush();      
+      return;
+  }
+    
   vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;
   vtkm::Id numTri;
   vtkm::rendering::internal::RunTriangulator(cellset, indices, numTri);
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> sf;
-  sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32> >();
-
-  vtkm::cont::DynamicArrayHandleCoordinateSystem dcoords = coords.GetData();
   vtkm::cont::ArrayHandleUniformPointCoordinates uVerts;
   vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > eVerts;
 
@@ -400,9 +459,14 @@ void MapperGL::EndScene()
   // Nothing needs to be done.
 }
 
-void MapperGL::SetCanvas(vtkm::rendering::Canvas *)
+void MapperGL::SetCanvas(vtkm::rendering::Canvas *c)
 {
-  // Nothing needs to be done.
+  if (c != NULL)
+  {
+    this->Canvas = dynamic_cast<vtkm::rendering::CanvasGL*>(c);
+    if (this->Canvas == NULL)
+      throw vtkm::cont::ErrorControlBadValue("Bad canvas type for MapperGL. Must be CanvasGL");
+  }
 }
 
 vtkm::rendering::Mapper *MapperGL::NewCopy() const

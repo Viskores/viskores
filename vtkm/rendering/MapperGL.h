@@ -24,6 +24,7 @@
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
+#include <vtkm/rendering/CanvasGL.h>
 
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 
@@ -50,7 +51,7 @@ public:
 
   vtkm::rendering::Mapper *NewCopy() const VTKM_OVERRIDE;
 
-
+  vtkm::rendering::CanvasGL *Canvas;
   GLuint shader_programme;
   GLfloat mvMat[16], pMat[16];
   bool loaded;

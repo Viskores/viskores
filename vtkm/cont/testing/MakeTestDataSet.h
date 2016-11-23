@@ -37,7 +37,7 @@ class MakeTestDataSet
 public:
     // 1D uniform datasets.
     vtkm::cont::DataSet Make1DUniformDataSet0();
-
+    
     // 2D uniform datasets.
     vtkm::cont::DataSet Make2DUniformDataSet0();
 
@@ -73,7 +73,7 @@ MakeTestDataSet::Make1DUniformDataSet0()
 
     vtkm::cont::DataSetFieldAdd dsf;
     const vtkm::Id nVerts = 6;
-    vtkm::Float32 var[nVerts] = {10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f};
+    vtkm::Float32 var[nVerts] = {-1.0f, .5f, -.2f, 1.7f, -.1f, .8f};
 
     dsf.AddPointField(dataSet, "pointvar", var, nVerts);
 
@@ -82,7 +82,7 @@ MakeTestDataSet::Make1DUniformDataSet0()
     dsf.AddCellField(dataSet, "cellvar", cellvar, nCells, "cells");
 
     return dataSet;
-}
+}    
 
 
 //Make a simple 2D, 2 cell uniform dataset.
@@ -592,7 +592,6 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose()
     connectivity.GetPortalControl().Set(i, pointId[i]);
   }
   vtkm::cont::CellSetSingleType< > cellSet(vtkm::CellShapeTagTriangle(),
-                                           nPointIds,
                                            "cells");
   cellSet.Fill(connectivity);
   dataSet.AddCellSet(cellSet);
