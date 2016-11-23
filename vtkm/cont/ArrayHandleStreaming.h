@@ -34,69 +34,57 @@ public:
   typedef P PortalType;
   typedef typename PortalType::ValueType ValueType;
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArrayPortalStreaming() : InputPortal(), BlockIndex(0), BlockSize(0), CurBlockSize(0) {  }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArrayPortalStreaming(const PortalType &inputPortal, vtkm::Id blockIndex, 
                        vtkm::Id blockSize, vtkm::Id curBlockSize) : 
                        InputPortal(inputPortal), BlockIndex(blockIndex), 
                        BlockSize(blockSize), CurBlockSize(curBlockSize) {  }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename OtherP>
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArrayPortalStreaming(const ArrayPortalStreaming<OtherP> &src) : 
                        InputPortal(src.GetPortal()),
                        BlockIndex(src.GetBlockIndex()),
                        BlockSize(src.GetBlockSize()),
                        CurBlockSize(src.GetCurBlockSize()) {  }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
     return this->CurBlockSize; 
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ValueType Get(vtkm::Id index) const {
-    return this->InputPortal.Get(BlockIndex*BlockSize + index);
+    return this->InputPortal.Get(this->BlockIndex*this->BlockSize + index);
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   void Set(vtkm::Id index, const ValueType &value) const {
-    this->InputPortal.Set(BlockIndex*BlockSize + index, value);
+    this->InputPortal.Set(this->BlockIndex*this->BlockSize + index, value);
   }
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   const PortalType &GetPortal() const { return this->InputPortal; }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void SetBlockSize(vtkm::Id blockSize) { BlockSize = blockSize; }
+  VTKM_CONT
+  void SetBlockSize(vtkm::Id blockSize) { this->BlockSize = blockSize; }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void SetBlockIndex(vtkm::Id blockIndex) { BlockIndex = blockIndex; }
+  VTKM_CONT
+  void SetBlockIndex(vtkm::Id blockIndex) { this->BlockIndex = blockIndex; }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void SetCurBlockSize(vtkm::Id curBlockSize) { CurBlockSize = curBlockSize; }
+  VTKM_CONT
+  void SetCurBlockSize(vtkm::Id curBlockSize) { this->CurBlockSize = curBlockSize; }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   vtkm::Id GetBlockSize() { return this->BlockSize; }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   vtkm::Id GetBlockIndex() { return this->BlockIndex; }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   vtkm::Id GetCurBlockSize() { return this->CurBlockSize; }
 
 private:
