@@ -38,10 +38,11 @@ template<typename T,
          >
 class ExecutionWholeArray : public vtkm::exec::ExecutionObjectBase
 {
-  typedef vtkm::cont::ArrayHandle<T,StorageTag> HandleType;
-  typedef typename HandleType::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
-
 public:
+  using ValueType = T;
+  using HandleType = vtkm::cont::ArrayHandle<T,StorageTag>;
+  using PortalType = typename HandleType::template ExecutionTypes<DeviceAdapterTag>::Portal;
+
   VTKM_CONT
   ExecutionWholeArray( ):
     Portal( )
@@ -60,8 +61,6 @@ public:
     Portal( handle.PrepareForOutput( length, DeviceAdapterTag()) )
   {
   }
-
-  typedef typename PortalType::ValueType ValueType;
 
   VTKM_EXEC
   vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
@@ -87,10 +86,11 @@ template<typename T,
          >
 class ExecutionWholeArrayConst : public vtkm::exec::ExecutionObjectBase
 {
-  typedef vtkm::cont::ArrayHandle<T,StorageTag> HandleType;
-  typedef typename HandleType::template ExecutionTypes<DeviceAdapterTag>::PortalConst PortalType;
-
 public:
+  using ValueType = T;
+  using HandleType = vtkm::cont::ArrayHandle<T,StorageTag>;
+  using PortalType = typename HandleType::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
+
   VTKM_CONT
   ExecutionWholeArrayConst( ):
     Portal( )
@@ -102,8 +102,6 @@ public:
     Portal( handle.PrepareForInput( DeviceAdapterTag() ) )
   {
   }
-
-  typedef typename PortalType::ValueType ValueType;
 
   VTKM_EXEC
   vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
