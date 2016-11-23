@@ -17,37 +17,33 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#ifndef vtk_m_internal_Windows_h
+#define vtk_m_internal_Windows_h
 
-#include <vtkm/cont/Timer.h>
+#include <vtkm/internal/Configure.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#if  defined(VTKM_MSVC)
+// Use pragma push_macro to properly save the state of WIN32_LEAN_AND_MEAN
+// and NOMINMAX that the caller of vtkm has setup
 
-#include <vtkm/internal/Windows.h>
-namespace {
+VTKM_THIRDPARTY_PRE_INCLUDE
 
-void Time()
-{
-  vtkm::cont::Timer<> timer;
+#pragma push_macro("WIN32_LEAN_AND_MEAN")
+#pragma push_macro("NOMINMAX")
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 
-#ifndef _WIN32
-  sleep(1);
-#else
-  Sleep(1000);
+// windows.h, clobbers min and max functions so we
+// define NOMINMAX to fix that problem. We also include WIN32_LEAN_AND_MEAN
+// to reduce the number of macros and objects windows.h imports as those also
+// can cause conflicts
+#include <windows.h>
+
+#pragma pop_macro("WIN32_LEAN_AND_MEAN")
+#pragma pop_macro("NOMINMAX")
+
+VTKM_THIRDPARTY_POST_INCLUDE
+
 #endif
 
-  vtkm::Float64 elapsedTime = timer.GetElapsedTime();
-
-  std::cout << "Elapsed time: " << elapsedTime << std::endl;
-
-  VTKM_TEST_ASSERT(elapsedTime > 0.999,
-                   "Timer did not capture full second wait.");
-  VTKM_TEST_ASSERT(elapsedTime < 2.0,
-                   "Timer counted too far or system really busy.");
-}
-
-} // anonymous namespace
-
-int UnitTestTimer(int, char *[])
-{
-  return vtkm::cont::testing::Testing::Run(Time);
-}
+#endif //vtkm_internal_Windows_h

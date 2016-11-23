@@ -63,6 +63,7 @@ set(headers
   IntegerSequence.h
   Invocation.h
   ListTagDetail.h
+  Windows.h
   )
 
 vtkm_declare_headers(${headers})

@@ -21,10 +21,7 @@
 #ifndef vtk_m_rendering_internal_OpenGLHeaders_h
 #define vtk_m_rendering_internal_OpenGLHeaders_h
 
-#ifdef _WIN32
-// Need to include windows.h before gl.h on windows.
-#include <windows.h>
-#endif
+#include <vtkm/internal/Windows.h>
 
 #include <GL/glew.h>
 #if defined(__APPLE__)

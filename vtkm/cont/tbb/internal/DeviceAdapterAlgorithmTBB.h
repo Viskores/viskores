@@ -32,50 +32,6 @@
 #include <vtkm/cont/tbb/internal/FunctorsTBB.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-
-#if  defined(VTKM_MSVC)
-// TBB includes windows.h, which clobbers min and max functions so we
-// define NOMINMAX to fix that problem. We also include WIN32_LEAN_AND_MEAN
-// to reduce the number of macros and objects windows.h imports as those also
-// can cause conflicts
-// TBB's header include a #pragma comment(lib,"tbb.lib") line to make all
-// consuming
-
-#pragma push_macro("WIN32_LEAN_AND_MEAN")
-#pragma push_macro("NOMINMAX")
-#pragma push_macro("__TBB_NO_IMPLICITLINKAGE")
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#define __TBB_NO_IMPLICIT_LINKAGE
-#endif
-
-#include <tbb/tbb_stddef.h>
-#if (TBB_VERSION_MAJOR == 4) && (TBB_VERSION_MINOR == 2)
-//we provide an patched implementation of tbb parallel_sort
-//that fixes ADL for std::swap. This patch has been submitted to Intel
-//and is fixed in TBB 4.2 update 2.
-#include <vtkm/cont/tbb/internal/parallel_sort.h>
-#else
-#include <tbb/parallel_sort.h>
-#endif
-
-#include <tbb/blocked_range.h>
-#include <tbb/blocked_range3d.h>
-#include <tbb/parallel_for.h>
-#include <tbb/parallel_scan.h>
-#include <tbb/partitioner.h>
-#include <tbb/tick_count.h>
-
-#if defined(VTKM_MSVC)
-#include <Windows.h>
-#pragma pop_macro("WIN32_LEAN_AND_MEAN")
-#pragma pop_macro("NOMINMAX")
-#pragma pop_macro("__TBB_NO_IMPLICITLINKAGE")
-#endif
-
-VTKM_THIRDPARTY_POST_INCLUDE
-
 namespace vtkm {
 namespace cont {
 
