@@ -22,6 +22,7 @@
 #define vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmThrust_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
@@ -380,9 +381,21 @@ private:
 
   template<class InputPortal, typename T, class BinaryFunctor>
   VTKM_CONT static
-  T ReducePortal(const InputPortal &input, T initialValue,
+  T ReducePortal(const InputPortal &input,
+                 T initialValue,
                  BinaryFunctor binary_functor)
   {
+    using fast_path = std::is_same< typename InputPortal::ValueType, T>;
+    return ReducePortalImpl(input, initialValue, binary_functor, fast_path());
+  }
+
+  template<class InputPortal, typename T, class BinaryFunctor>
+  VTKM_CONT static
+  T ReducePortalImpl(const InputPortal &input, T initialValue,
+                     BinaryFunctor binary_functor, std::true_type)
+  {
+    //The portal type and the initial value are the same so we can use
+    //the thrust reduction algorithm
     vtkm::exec::cuda::internal::WrappedBinaryOperator<T,
                                                       BinaryFunctor> bop(binary_functor);
 
@@ -391,6 +404,41 @@ private:
       return ::thrust::reduce(thrust::cuda::par,
                               IteratorBegin(input),
                               IteratorEnd(input),
+                              initialValue,
+                              bop);
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
+
+    return initialValue;
+  }
+
+  template<class InputPortal, typename T, class BinaryFunctor>
+  VTKM_CONT static
+  T ReducePortalImpl(const InputPortal &input, T initialValue,
+                     BinaryFunctor binary_functor,
+                     std::false_type)
+  {
+    //The portal type and the initial value ARENT the same type so we have
+    //to a slower approach, where we wrap the input portal inside a cast
+    //portal
+    using CastFunctor = vtkm::cont::internal::Cast<typename InputPortal::ValueType,T>;
+
+    vtkm::exec::internal::ArrayPortalTransform< T, InputPortal, CastFunctor>
+      castPortal(input);
+
+
+
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<T,
+                                                      BinaryFunctor> bop(binary_functor);
+
+    try
+    {
+      return ::thrust::reduce(thrust::cuda::par,
+                              IteratorBegin(castPortal),
+                              IteratorEnd(castPortal),
                               initialValue,
                               bop);
     }
