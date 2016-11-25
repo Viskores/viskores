@@ -71,6 +71,9 @@ public:
   VTKM_EXEC
   void Set(vtkm::Id index, const T& t) const { this->Portal.Set(index, t); }
 
+  VTKM_EXEC
+  const PortalType& GetPortal() const { return this->Portal; }
+
 private:
   PortalType Portal;
 };
@@ -108,6 +111,9 @@ public:
 
   VTKM_EXEC
   T Get(vtkm::Id index) const { return this->Portal.Get(index); }
+
+  VTKM_EXEC
+  const PortalType& GetPortal() const { return this->Portal; }
 
 private:
   PortalType Portal;
