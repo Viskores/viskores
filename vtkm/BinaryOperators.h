@@ -22,7 +22,6 @@
 
 #include <vtkm/internal/ExportMacros.h>
 #include <vtkm/Math.h>
-#include <vtkm/Pair.h>
 
 namespace vtkm {
 
@@ -94,35 +93,35 @@ struct Minimum
 
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
-/// returns a vtkm::Pair<T,T> that represents the minimum and maximum values
+/// returns a vtkm::Vec<T,2> that represents the minimum and maximum values
 /// Note: Requires Type \p T implement the vtkm::Min and vtkm::Max functions.
 template <typename T>
 struct MinAndMax
 {
   VTKM_EXEC_CONT
-  vtkm::Pair<T, T> operator()(const T& a, const T& b) const
+  vtkm::Vec<T,2> operator()(const T& a, const T& b) const
   {
-    return vtkm::make_Pair(vtkm::Min(a, b), vtkm::Max(a, b));
+    return vtkm::make_Vec(vtkm::Min(a, b), vtkm::Max(a, b));
   }
 
   VTKM_EXEC_CONT
-  vtkm::Pair<T, T> operator()(
-    const vtkm::Pair<T, T>& a, const vtkm::Pair<T, T>& b) const
+  vtkm::Vec<T,2> operator()(
+    const vtkm::Vec<T,2>& a, const vtkm::Vec<T,2>& b) const
   {
-    return vtkm::make_Pair(
-      vtkm::Min(a.first, b.first), vtkm::Max(a.second, b.second));
+    return vtkm::make_Vec(
+      vtkm::Min(a[0], b[0]), vtkm::Max(a[1], b[1]));
   }
 
   VTKM_EXEC_CONT
-  vtkm::Pair<T, T> operator()(const T& a, const vtkm::Pair<T, T>& b) const
+  vtkm::Vec<T,2> operator()(const T& a, const vtkm::Vec<T,2>& b) const
   {
-    return vtkm::make_Pair(vtkm::Min(a, b.first), vtkm::Max(a, b.second));
+    return vtkm::make_Vec(vtkm::Min(a, b[0]), vtkm::Max(a, b[1]));
   }
 
   VTKM_EXEC_CONT
-  vtkm::Pair<T, T> operator()(const vtkm::Pair<T, T>& a, const T& b) const
+  vtkm::Vec<T,2> operator()(const vtkm::Vec<T,2>& a, const T& b) const
   {
-    return vtkm::make_Pair(vtkm::Min(a.first, b), vtkm::Max(a.second, b));
+    return vtkm::make_Vec(vtkm::Min(a[0], b), vtkm::Max(a[1], b));
   }
 };
 

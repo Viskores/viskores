@@ -1088,14 +1088,14 @@ private:
     testData[ARRAY_SIZE/2] = maxValue;
 
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData, ARRAY_SIZE);
-    vtkm::Pair<vtkm::Id,vtkm::Id> range = Algorithm::Reduce(input,
-                                              vtkm::Pair<vtkm::Id,vtkm::Id>(0,0),
+    vtkm::Vec<vtkm::Id,2> range = Algorithm::Reduce(input,
+                                              vtkm::Vec<vtkm::Id,2>(0,0),
                                               vtkm::MinAndMax<vtkm::Id>());
 
-    VTKM_TEST_ASSERT(maxValue == range.second,
+    VTKM_TEST_ASSERT(maxValue == range[1],
                     "Got bad value from Reduce with comparison object");
 
-    VTKM_TEST_ASSERT(0 == range.first,
+    VTKM_TEST_ASSERT(0 == range[0],
                     "Got bad value from Reduce with comparison object");
   }
 

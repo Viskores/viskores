@@ -137,12 +137,11 @@ public:
     statinfo.median = tempPortal.Get(dataSize / 2);
 
     // Minimum and maximum
-    const vtkm::Pair<FieldType,FieldType> initValue(tempPortal.Get(0),
-                                                    tempPortal.Get(0));
-    vtkm::Pair<FieldType,FieldType> result =
+    const vtkm::Vec<FieldType,2> initValue(tempPortal.Get(0));
+    vtkm::Vec<FieldType,2> result =
           DeviceAlgorithms::Reduce(fieldArray, initValue, vtkm::MinAndMax<FieldType>());
-    statinfo.minimum = result.first;
-    statinfo.maximum = result.second;
+    statinfo.minimum = result[0];
+    statinfo.maximum = result[1];
 
     // Mean
     FieldType sum = DeviceAlgorithms::ScanInclusive(fieldArray, tempArray);

@@ -56,19 +56,17 @@ public:
 
     //not the greatest way of doing this for performance reasons. But
     //this implementation should generate the smallest amount of code
-    const vtkm::Pair<ValueType, ValueType> initial(
-      input.GetPortalConstControl().Get(0),
-      input.GetPortalConstControl().Get(0));
+    vtkm::Vec<ValueType,2> initial(input.GetPortalConstControl().Get(0));
 
-    vtkm::Pair<ValueType, ValueType> result =
+    vtkm::Vec<ValueType, 2> result =
       Algorithm::Reduce(input, initial, vtkm::MinAndMax<ValueType>());
 
     this->Range->Allocate(NumberOfComponents);
     for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
       this->Range->GetPortalControl().Set(
-            i, vtkm::Range(VecType::GetComponent(result.first, i),
-                           VecType::GetComponent(result.second, i)));
+            i, vtkm::Range(VecType::GetComponent(result[0], i),
+                           VecType::GetComponent(result[1], i)));
     }
   }
 

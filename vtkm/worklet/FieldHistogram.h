@@ -147,15 +147,14 @@ public:
 
     const vtkm::Id numberOfValues = fieldArray.GetNumberOfValues();
 
-    const vtkm::Pair<FieldType, FieldType> initValue(
-      fieldArray.GetPortalConstControl().Get(0),
+    const vtkm::Vec<FieldType,2> initValue(
       fieldArray.GetPortalConstControl().Get(0));
 
-    vtkm::Pair<FieldType,FieldType> result =
+    vtkm::Vec<FieldType,2> result =
           DeviceAlgorithms::Reduce(fieldArray, initValue, vtkm::MinAndMax<FieldType>());
 
-    const FieldType& fieldMinValue = result.first;
-    const FieldType& fieldMaxValue = result.second;
+    const FieldType& fieldMinValue = result[0];
+    const FieldType& fieldMaxValue = result[1];
 
 
     const FieldType fieldDelta = compute_delta(fieldMinValue, fieldMaxValue, numberOfBins);
