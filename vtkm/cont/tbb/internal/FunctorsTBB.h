@@ -52,9 +52,11 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <tbb/blocked_range.h>
 #include <tbb/blocked_range3d.h>
 #include <tbb/parallel_for.h>
+#include <tbb/parallel_reduce.h>
 #include <tbb/parallel_scan.h>
 #include <tbb/partitioner.h>
 #include <tbb/tick_count.h>
+#include <numeric>
 
 #if defined(_WIN32)
 #undef WIN32_LEAN_AND_MEAN
@@ -70,6 +72,35 @@ namespace tbb {
 // The "grain size" of scheduling with TBB.  Not a lot of thought has gone
 // into picking this size.
 static const vtkm::Id TBB_GRAIN_SIZE = 4096;
+
+
+template<class InputPortalType, typename T, class BinaryOperationType>
+VTKM_SUPPRESS_EXEC_WARNINGS
+VTKM_CONT static
+T ReducePortals(InputPortalType inputPortal,
+                T initialValue,
+                BinaryOperationType binaryOperation)
+{
+  typedef internal::WrappedBinaryOperator<T, BinaryOperationType>
+      WrappedBinaryOp;
+
+  WrappedBinaryOp wrappedBinaryOp(binaryOperation);
+
+  using block_type =
+    ::tbb::blocked_range< typename vtkm::cont::ArrayPortalToIterators<InputPortalType>::IteratorType >;
+
+  block_type range(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
+                   vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
+                   TBB_GRAIN_SIZE);
+
+
+  return ::tbb::parallel_reduce(range, initialValue,
+    [&](block_type const& r, T init) -> T {
+      return std::accumulate(r.begin(), r.end(), init, wrappedBinaryOp);
+    },
+    wrappedBinaryOp);
+}
+
 
 template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
