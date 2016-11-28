@@ -439,11 +439,11 @@ public:
 
   virtual void PrintSummary(std::ostream &out) const
   {
-      out << "   ExplicitCellSet: " << this->Name << std::endl;
-      out << "   PointToCell: " << std::endl;
-      this->PointToCell.PrintSummary(out);
-      out << "   CellToPoint: " << std::endl;
-      this->CellToPoint.PrintSummary(out);
+    out << "   ExplicitCellSet: " << this->Name << std::endl;
+    out << "   PointToCell: " << std::endl;
+    this->PointToCell.PrintSummary(out);
+    out << "   CellToPoint: " << std::endl;
+    this->CellToPoint.PrintSummary(out);
   }
 
   template<typename FromTopology, typename ToTopology>

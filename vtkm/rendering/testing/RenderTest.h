@@ -68,7 +68,6 @@ SetCamera<vtkm::rendering::View2D>(vtkm::rendering::Camera &camera,
   camera.SetViewport(-0.7f, +0.7f, -0.7f, +0.7f);
 }
 
-//DRP
 template <>
 inline void
 SetCamera<vtkm::rendering::View1D>(vtkm::rendering::Camera &camera,
@@ -119,7 +118,6 @@ Render(const vtkm::cont::DataSet &ds,
     Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 
-//DRP
 template <typename MapperType,typename CanvasType, typename ViewType>
 void
 Render(const vtkm::cont::DataSet &ds,
@@ -140,7 +138,6 @@ Render(const vtkm::cont::DataSet &ds,
                         ds.GetField(fieldNm));
     ViewType view(scene, mapper, canvas, camera,
                   vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
-
     Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 

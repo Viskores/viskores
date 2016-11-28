@@ -37,6 +37,8 @@ class MakeTestDataSet
 public:
     // 1D uniform datasets.
     vtkm::cont::DataSet Make1DUniformDataSet0();
+    // 1D explicit datasets.
+    vtkm::cont::DataSet Make1DExplicitDataSet0();
     
     // 2D uniform datasets.
     vtkm::cont::DataSet Make2DUniformDataSet0();
@@ -63,27 +65,47 @@ public:
 };
 
 //Make a simple 1D dataset.
-
 inline vtkm::cont::DataSet
 MakeTestDataSet::Make1DUniformDataSet0()
 {
-    vtkm::cont::DataSetBuilderUniform dsb;
-    vtkm::Id dimension = 6;
-    vtkm::cont::DataSet dataSet = dsb.Create(dimension);
+  vtkm::cont::DataSetBuilderUniform dsb;
+  const vtkm::Id nVerts = 6;
+  vtkm::cont::DataSet dataSet = dsb.Create(nVerts);
 
-    vtkm::cont::DataSetFieldAdd dsf;
-    const vtkm::Id nVerts = 6;
-    vtkm::Float32 var[nVerts] = {-1.0f, .5f, -.2f, 1.7f, -.1f, .8f};
+  vtkm::cont::DataSetFieldAdd dsf;
+  vtkm::Float32 var[nVerts] = {-1.0f, .5f, -.2f, 1.7f, -.1f, .8f};
+  dsf.AddPointField(dataSet, "pointvar", var, nVerts);
+  
+  return dataSet;
+}
 
-    dsf.AddPointField(dataSet, "pointvar", var, nVerts);
+inline vtkm::cont::DataSet
+MakeTestDataSet::Make1DExplicitDataSet0()
+{
+  const int nVerts = 5;
+  typedef vtkm::Vec<vtkm::Float32,3> CoordType;
+  std::vector<CoordType> coords(nVerts);
+  coords[0] = CoordType(0,0,0);
+  coords[1] = CoordType(1,0,0);
+  coords[2] = CoordType(1.1,0,0);
+  coords[3] = CoordType(1.2,0,0);
+  coords[4] = CoordType(4,0,0);
 
-    const vtkm::Id nCells = 6;
-    vtkm::Float32 cellvar[nCells] = {100.1f, 200.1f, 300.1f, 400.1f, 500.1f};
-    dsf.AddCellField(dataSet, "cellvar", cellvar, nCells, "cells");
+  std::vector<vtkm::Id> conn;
+  for (int i = 0; i < nVerts; i++)
+      conn.push_back(i);
 
-    return dataSet;
-}    
+  vtkm::cont::DataSet dataSet;
+  vtkm::cont::DataSetBuilderExplicit dsb;
 
+  dataSet = dsb.Create(coords, vtkm::CellShapeTagLine(), conn, "coordinates", "cells");
+
+  vtkm::cont::DataSetFieldAdd dsf;  
+  vtkm::Float32 var[nVerts] = {-1.0f, .5f, -.2f, 1.7f, .8f};
+  dsf.AddPointField(dataSet, "pointvar", var, nVerts);
+
+  return dataSet;
+}
 
 //Make a simple 2D, 2 cell uniform dataset.
 
