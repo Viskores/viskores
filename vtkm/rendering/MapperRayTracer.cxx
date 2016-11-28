@@ -100,6 +100,12 @@ void MapperRayTracer::SetCanvas(vtkm::rendering::Canvas *canvas)
   }
 }
 
+vtkm::rendering::Canvas *
+MapperRayTracer::GetCanvas() const
+{
+  return this->Internals->Canvas;
+}
+
 struct MapperRayTracer::RenderFunctor
 {
   vtkm::rendering::MapperRayTracer *Self;

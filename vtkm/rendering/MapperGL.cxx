@@ -468,6 +468,12 @@ void MapperGL::SetCanvas(vtkm::rendering::Canvas *c)
   }
 }
 
+vtkm::rendering::Canvas *    
+MapperGL::GetCanvas() const
+{
+  return this->Canvas;
+}
+
 vtkm::rendering::Mapper *MapperGL::NewCopy() const
 {
   return new vtkm::rendering::MapperGL(*this);

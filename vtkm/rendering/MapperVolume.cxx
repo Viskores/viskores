@@ -106,6 +106,12 @@ void MapperVolume::SetCanvas(vtkm::rendering::Canvas *canvas)
   }
 }
 
+vtkm::rendering::Canvas *
+MapperVolume::GetCanvas() const
+{
+  return this->Internals->Canvas;
+}
+
 struct MapperVolume::RenderFunctor
 {
   vtkm::rendering::MapperVolume *Self;

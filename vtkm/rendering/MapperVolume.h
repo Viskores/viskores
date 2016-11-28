@@ -35,6 +35,7 @@ public:
   ~MapperVolume();
 
   void SetCanvas(vtkm::rendering::Canvas *canvas) VTKM_OVERRIDE;
+  virtual vtkm::rendering::Canvas* GetCanvas() const VTKM_OVERRIDE;  
 
   virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
