@@ -79,9 +79,28 @@ public:
                            const OutToInArrayType& inToOut,
                            const VisitArrayType& visit,
                            const ConnectivityType& connectivity,
-			   vtkm::Id globalThreadIndexOffset)
+			                     vtkm::Id globalThreadIndexOffset=0)
     : Superclass(threadIndex, inToOut.Get(threadIndex), visit.Get(threadIndex),
       globalThreadIndexOffset),
+      CellShape(detail::CellShapeInitializer<CellShapeTag>::GetDefault())
+  {
+    // The connectivity is stored in the invocation parameter at the given
+    // input domain index. If this class is being used correctly, the type
+    // of the domain will match the connectivity type used here. If there is
+    // a compile error here about a type mismatch, chances are a worklet has
+    // set its input domain incorrectly.
+    this->IndicesFrom = connectivity.GetIndices(this->GetInputIndex());
+    this->CellShape = connectivity.GetCellShape(this->GetInputIndex());
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
+                           vtkm::Id inIndex,
+                           vtkm::IdComponent visitIndex,
+                           const ConnectivityType& connectivity,
+                           vtkm::Id globalThreadIndexOffset=0)
+    : Superclass(threadIndex, inIndex, visitIndex, globalThreadIndexOffset),
       CellShape(detail::CellShapeInitializer<CellShapeTag>::GetDefault())
   {
     // The connectivity is stored in the invocation parameter at the given
@@ -193,7 +212,7 @@ public:
                            const OutToInArrayType& inToOut,
                            const VisitArrayType& visit,
                            const ConnectivityType& connectivity,
-			   vtkm::Id globalThreadIndexOffset=0)
+			                     vtkm::Id globalThreadIndexOffset=0)
   {
 
     this->InputIndex = inToOut.Get(threadIndex);
@@ -226,6 +245,23 @@ public:
     this->LogicalIndex = logicalIndex;
     this->IndicesFrom = connectivity.GetIndices(logicalIndex);
     this->CellShape = connectivity.GetCellShape(index);
+    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
+                           vtkm::Id inIndex,
+                           vtkm::IdComponent visitIndex,
+                           const ConnectivityType& connectivity,
+                           vtkm::Id globalThreadIndexOffset=0)
+  {
+    this->InputIndex = threadIndex;
+    this->OutputIndex = threadIndex;
+    this->VisitIndex = visitIndex;
+    this->LogicalIndex = connectivity.FlatToLogicalToIndex(this->InputIndex);
+    this->IndicesFrom = connectivity.GetIndices(this->LogicalIndex);
+    this->CellShape = connectivity.GetCellShape(this->InputIndex);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
