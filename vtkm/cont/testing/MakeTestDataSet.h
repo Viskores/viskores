@@ -85,11 +85,11 @@ MakeTestDataSet::Make1DExplicitDataSet0()
   const int nVerts = 5;
   typedef vtkm::Vec<vtkm::Float32,3> CoordType;
   std::vector<CoordType> coords(nVerts);
-  coords[0] = CoordType(0,0,0);
-  coords[1] = CoordType(1,0,0);
-  coords[2] = CoordType(1.1,0,0);
-  coords[3] = CoordType(1.2,0,0);
-  coords[4] = CoordType(4,0,0);
+  coords[0] = CoordType(0.0f,0.f,0.f);
+  coords[1] = CoordType(1.0f,0.f,0.f);
+  coords[2] = CoordType(1.1f,0.f,0.f);
+  coords[3] = CoordType(1.2f,0.f,0.f);
+  coords[4] = CoordType(4.0f,0.f,0.f);
 
   std::vector<vtkm::Id> conn;
   for (int i = 0; i < nVerts; i++)
@@ -157,11 +157,11 @@ MakeTestDataSet::Make2DRectilinearDataSet0()
     vtkm::cont::DataSetBuilderRectilinear dsb;
     std::vector<vtkm::Float32> X(3), Y(2);
 
-    X[0] = 0.0;
-    X[1] = 1.0;
-    X[2] = 2.0;
-    Y[0] = 0.0;
-    Y[1] = 1.0;
+    X[0] = 0.0f;
+    X[1] = 1.0f;
+    X[2] = 2.0f;
+    Y[0] = 0.0f;
+    Y[1] = 1.0f;
 
     vtkm::cont::DataSet dataSet = dsb.Create(X, Y);
 
@@ -246,14 +246,14 @@ MakeTestDataSet::Make3DRectilinearDataSet0()
     vtkm::cont::DataSetBuilderRectilinear dsb;
     std::vector<vtkm::Float32> X(3), Y(2), Z(3);
 
-    X[0] = 0.0;
-    X[1] = 1.0;
-    X[2] = 2.0;
-    Y[0] = 0.0;
-    Y[1] = 1.0;
-    Z[0] = 0.0;
-    Z[1] = 1.0;
-    Z[2] = 2.0;
+    X[0] = 0.0f;
+    X[1] = 1.0f;
+    X[2] = 2.0f;
+    Y[0] = 0.0f;
+    Y[1] = 1.0f;
+    Z[0] = 0.0f;
+    Z[1] = 1.0f;
+    Z[2] = 2.0f;
 
     vtkm::cont::DataSet dataSet = dsb.Create(X, Y, Z);
 
