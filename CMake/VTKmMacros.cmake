@@ -612,7 +612,12 @@ function(vtkm_library)
     # Cuda compiles do not respect target_include_directories
     cuda_include_directories(${VTKm_INCLUDE_DIRS})
 
-    cuda_add_library(${lib_name} ${VTKm_LIB_SOURCES} ${cuda_sources})
+    if(BUILD_SHARED_LIBS AND NOT WIN32)
+      set(compile_options -Xcompiler=${CMAKE_CXX_COMPILE_OPTIONS_VISIBILITY}hidden)
+    endif()
+
+    cuda_add_library(${lib_name} ${VTKm_LIB_SOURCES} ${cuda_sources}
+                     OPTIONS "${compile_options}")
 
     set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
     set(CMAKE_CXX_FLAGS ${old_cxx_flags})
