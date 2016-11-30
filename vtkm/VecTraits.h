@@ -196,6 +196,138 @@ struct VecTraits<vtkm::Vec<T,Size> >
   }
 };
 
+template<typename T>
+struct VecTraits<vtkm::VecC<T> >
+{
+  using VecType = vtkm::VecC<T>;
+
+  /// Type of the components in the vector.
+  ///
+  using ComponentType = typename VecType::ComponentType;
+
+  /// Number of components in the given vector.
+  ///
+  VTKM_EXEC_CONT
+  static vtkm::IdComponent GetNumberOfComponents(const VecType &vector)
+  {
+    return vector.GetNumberOfComponents();
+  }
+
+  /// A tag specifying whether this vector has multiple components (i.e. is a
+  /// "real" vector). This tag can be useful for creating specialized functions
+  /// when a vector is really just a scalar.
+  ///
+  /// The size of a \c VecC is not known until runtime and can always
+  /// potentially have multiple components, this is always set to \c
+  /// HasMultipleComponents.
+  ///
+  using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
+
+  /// A tag specifying whether the size of this vector is known at compile
+  /// time. If set to \c VecTraitsTagSizeStatic, then \c NUM_COMPONENTS is set.
+  /// If set to \c VecTraitsTagSizeVariable, then the number of components is
+  /// not known at compile time and must be queried with \c
+  /// GetNumberOfComponents.
+  ///
+  using IsSizeStatic = vtkm::VecTraitsTagSizeVariable;
+
+  /// Returns the value in a given component of the vector.
+  ///
+  VTKM_EXEC_CONT
+  static const ComponentType &GetComponent(const VecType &vector,
+                                           vtkm::IdComponent component)
+  {
+    return vector[component];
+  }
+  VTKM_EXEC_CONT
+  static ComponentType &GetComponent(VecType &vector, vtkm::IdComponent component) {
+    return vector[component];
+  }
+
+  /// Changes the value in a given component of the vector.
+  ///
+  VTKM_EXEC_CONT
+  static void SetComponent(VecType &vector,
+                           vtkm::IdComponent component,
+                           ComponentType value) {
+    vector[component] = value;
+  }
+
+  /// Converts whatever type this vector is into the standard VTKm Tuple.
+  ///
+  template<vtkm::IdComponent destSize>
+  VTKM_EXEC_CONT
+  static void
+  CopyInto(const VecType &src, vtkm::Vec<ComponentType,destSize> &dest)
+  {
+    src.CopyInto(dest);
+  }
+};
+
+template<typename T>
+struct VecTraits<vtkm::VecCConst<T> >
+{
+  using VecType = vtkm::VecCConst<T>;
+
+  /// Type of the components in the vector.
+  ///
+  using ComponentType = typename VecType::ComponentType;
+
+  /// Number of components in the given vector.
+  ///
+  VTKM_EXEC_CONT
+  static vtkm::IdComponent GetNumberOfComponents(const VecType &vector)
+  {
+    return vector.GetNumberOfComponents();
+  }
+
+  /// A tag specifying whether this vector has multiple components (i.e. is a
+  /// "real" vector). This tag can be useful for creating specialized functions
+  /// when a vector is really just a scalar.
+  ///
+  /// The size of a \c VecCConst is not known until runtime and can always
+  /// potentially have multiple components, this is always set to \c
+  /// HasMultipleComponents.
+  ///
+  using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
+
+  /// A tag specifying whether the size of this vector is known at compile
+  /// time. If set to \c VecTraitsTagSizeStatic, then \c NUM_COMPONENTS is set.
+  /// If set to \c VecTraitsTagSizeVariable, then the number of components is
+  /// not known at compile time and must be queried with \c
+  /// GetNumberOfComponents.
+  ///
+  using IsSizeStatic = vtkm::VecTraitsTagSizeVariable;
+
+  /// Returns the value in a given component of the vector.
+  ///
+  VTKM_EXEC_CONT
+  static const ComponentType &GetComponent(const VecType &vector,
+                                           vtkm::IdComponent component)
+  {
+    return vector[component];
+  }
+
+  /// Changes the value in a given component of the vector.
+  ///
+  VTKM_EXEC_CONT
+  static void SetComponent(VecType &vector,
+                           vtkm::IdComponent component,
+                           ComponentType value) {
+    vector[component] = value;
+  }
+
+  /// Converts whatever type this vector is into the standard VTKm Tuple.
+  ///
+  template<vtkm::IdComponent destSize>
+  VTKM_EXEC_CONT
+  static void
+  CopyInto(const VecType &src, vtkm::Vec<ComponentType,destSize> &dest)
+  {
+    src.CopyInto(dest);
+  }
+};
+
 namespace internal {
 /// Used for overriding VecTraits for basic scalar types.
 ///

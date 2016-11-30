@@ -24,6 +24,7 @@
 #include <vtkm/internal/ExportMacros.h>
 
 #include <vtkm/Assert.h>
+#include <vtkm/StaticAssert.h>
 
 #include <iostream>
 #include <type_traits>
@@ -343,9 +344,15 @@ struct Negate
 template <typename T, vtkm::IdComponent Size>
 class Vec;
 
+template<typename T>
+class VecC;
+
+template<typename T>
+class VecCConst;
+
 namespace detail {
 
-/// Base implementation of all Vec classes.
+/// Base implementation of all Vec and VecC classes.
 ///
 // Disable conversion warnings for Add, Subtract, Multiply, Divide on GCC only.
 // GCC creates false positive warnings for signed/unsigned char* operations.
@@ -363,8 +370,284 @@ namespace detail {
 #pragma GCC diagnostic ignored "-Wconversion"
 #endif    // gcc || clang
 #endif    // use cuda < 8
+template <typename T, typename DerivedClass>
+class VecBaseCommon
+{
+public:
+  typedef T ComponentType;
+
+protected:
+  VTKM_EXEC_CONT
+  VecBaseCommon()
+  {
+  }
+
+  VTKM_EXEC_CONT
+  const DerivedClass &Derived() const
+  {
+    return *static_cast<const DerivedClass *>(this);
+  }
+
+  VTKM_EXEC_CONT
+  DerivedClass &Derived()
+  {
+    return *static_cast<DerivedClass *>(this);
+  }
+
+private:
+  // Only for internal use
+  VTKM_EXEC_CONT
+  vtkm::IdComponent NumComponents() const
+  {
+    return this->Derived().GetNumberOfComponents();
+  }
+
+  // Only for internal use
+  VTKM_EXEC_CONT
+  const T &Component(vtkm::IdComponent index) const
+  {
+    return this->Derived()[index];
+  }
+
+  // Only for internal use
+  VTKM_EXEC_CONT
+  T &Component(vtkm::IdComponent index)
+  {
+    return this->Derived()[index];
+  }
+
+public:
+  template <vtkm::IdComponent OtherSize>
+  VTKM_EXEC_CONT void CopyInto(
+    vtkm::Vec<ComponentType, OtherSize>& dest) const
+  {
+    for (vtkm::IdComponent index = 0;
+         (index < this->NumComponents()) && (index < OtherSize);
+         index++)
+    {
+      dest[index] = this->Component(index);
+    }
+  }
+
+  template<typename OtherComponentType, typename OtherVecType>
+  VTKM_EXEC_CONT
+  DerivedClass&
+  operator=(
+      const vtkm::detail::VecBaseCommon<OtherComponentType,OtherVecType>& src)
+  {
+    const OtherVecType &srcDerived = static_cast<const OtherVecType &>(src);
+    VTKM_ASSERT(this->NumComponents() == srcDerived.GetNumberOfComponents());
+    for (vtkm::IdComponent i = 0; i < this->NumComponents(); ++i)
+    {
+      this->Component(i) = OtherComponentType(srcDerived[i]);
+    }
+    return this->Derived();
+  }
+
+  VTKM_EXEC_CONT
+  bool operator==(const DerivedClass& other) const
+  {
+    bool equal=true;
+    for(vtkm::IdComponent i=0; i < this->NumComponents() && equal; ++i)
+    {
+      equal = (this->Component(i) == other[i]);
+    }
+    return equal;
+  }
+
+  VTKM_EXEC_CONT
+  bool operator<(const DerivedClass& other) const
+  {
+    for (vtkm::IdComponent i = 0; i < this->NumComponents(); ++i)
+    {
+      // ignore equals as that represents check next value
+      if (this->Component(i) < other[i])
+      {
+        return true;
+      }
+      else if (other[i] < this->Component(i))
+      {
+        return false;
+      }
+    } // if all same we are not less
+
+    return false;
+  }
+
+  VTKM_EXEC_CONT
+  bool operator!=(const DerivedClass& other) const
+  {
+    return !(this->operator==(other));
+  }
+
+  VTKM_EXEC_CONT
+  ComponentType
+  Dot(const VecBaseCommon<ComponentType,DerivedClass>& other) const
+  {
+    // Why the static_cast here and below? Because * on small integers (char,
+    // short) promotes the result to a 32-bit int. After helpfully promoting
+    // the width of the result, some compilers then warn you about casting it
+    // back to the type you were expecting in the first place. The static_cast
+    // suppresses this warning.
+    ComponentType result =
+        static_cast<ComponentType>(this->Component(0) * other.Component(0));
+    for (vtkm::IdComponent i = 1; i < this->NumComponents(); ++i)
+    {
+      result = static_cast<ComponentType>(
+            result + this->Component(i) * other.Component(i));
+    }
+    return result;
+  }
+
+#if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif    // gcc || clang
+#endif    // not using cuda < 8
+
+  template<vtkm::IdComponent Size>
+  VTKM_EXEC_CONT
+  vtkm::Vec<ComponentType,Size>
+  operator+(const vtkm::Vec<ComponentType,Size> &other) const
+  {
+    VTKM_ASSERT(Size == this->NumComponents());
+    vtkm::Vec<ComponentType,Size> result;
+    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    {
+      result[i] = this->Component(i) + other[i];
+    }
+    return result;
+  }
+
+  template<typename OtherClass>
+  VTKM_EXEC_CONT
+  DerivedClass &
+  operator+=(const VecBaseCommon<ComponentType, OtherClass> &other)
+  {
+    const OtherClass &other_derived =
+        static_cast<const OtherClass &>(other);
+    VTKM_ASSERT(this->NumComponents() == other_derived.GetNumberOfComponents());
+    for (vtkm::IdComponent i = 0; i < this->NumComponents(); ++i)
+    {
+      this->Component(i) += other_derived[i];
+    }
+    return this->Derived();
+  }
+
+  template<vtkm::IdComponent Size>
+  VTKM_EXEC_CONT
+  vtkm::Vec<ComponentType,Size>
+  operator-(const vtkm::Vec<ComponentType,Size> &other) const
+  {
+    VTKM_ASSERT(Size == this->NumComponents());
+    vtkm::Vec<ComponentType,Size> result;
+    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    {
+      result[i] = this->Component(i) - other[i];
+    }
+    return result;
+  }
+
+  template<typename OtherClass>
+  VTKM_EXEC_CONT
+  DerivedClass &
+  operator-=(const VecBaseCommon<ComponentType, OtherClass> &other)
+  {
+    const OtherClass &other_derived =
+        static_cast<const OtherClass &>(other);
+    VTKM_ASSERT(this->NumComponents() == other_derived.GetNumberOfComponents());
+    for (vtkm::IdComponent i = 0; i < this->NumComponents(); ++i)
+    {
+      this->Component(i) -= other_derived[i];
+    }
+    return this->Derived();
+  }
+
+  template<vtkm::IdComponent Size>
+  VTKM_EXEC_CONT
+  vtkm::Vec<ComponentType,Size>
+  operator*(const vtkm::Vec<ComponentType,Size> &other) const
+  {
+    vtkm::Vec<ComponentType,Size> result;
+    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    {
+      result[i] = this->Component(i) * other[i];
+    }
+    return result;
+  }
+
+  template<typename OtherClass>
+  VTKM_EXEC_CONT
+  DerivedClass &
+  operator*=(const VecBaseCommon<ComponentType, OtherClass> &other)
+  {
+    const OtherClass &other_derived =
+        static_cast<const OtherClass &>(other);
+    VTKM_ASSERT(this->NumComponents() == other_derived.GetNumberOfComponents());
+    for (vtkm::IdComponent i = 0; i < this->NumComponents(); ++i)
+    {
+      this->Component(i) *= other_derived[i];
+    }
+    return this->Derived();
+  }
+
+  template<vtkm::IdComponent Size>
+  VTKM_EXEC_CONT
+  vtkm::Vec<ComponentType,Size>
+  operator/(const vtkm::Vec<ComponentType,Size> &other) const
+  {
+    vtkm::Vec<ComponentType,Size> result;
+    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    {
+      result[i] = this->Component(i) / other[i];
+    }
+    return result;
+  }
+
+  template<typename OtherClass>
+  VTKM_EXEC_CONT
+  DerivedClass &
+  operator/=(const VecBaseCommon<ComponentType, OtherClass> &other)
+  {
+    const OtherClass &other_derived =
+        static_cast<const OtherClass &>(other);
+    VTKM_ASSERT(this->NumComponents() == other_derived.GetNumberOfComponents());
+    for (vtkm::IdComponent i = 0; i < this->NumComponents(); ++i)
+    {
+      this->Component(i) /= other_derived[i];
+    }
+    return this->Derived();
+  }
+
+#if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif    // gcc || clang
+#endif    // not using cuda < 8
+
+  VTKM_EXEC_CONT
+  ComponentType* GetPointer()
+  {
+    return &this->Component(0);
+  }
+
+  VTKM_EXEC_CONT
+  const ComponentType* GetPointer() const
+  {
+    return &this->Component(0);
+  }
+};
+#if (defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8))
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif    // gcc || clang
+#endif    // use cuda < 8
+
+/// Base implementation of all Vec classes.
+///
 template <typename T, vtkm::IdComponent Size, typename DerivedClass>
-class VecBase
+class VecBase : public vtkm::detail::VecBaseCommon<T, DerivedClass>
 {
 public:
   typedef T ComponentType;
@@ -402,27 +685,6 @@ public:
     return NUM_COMPONENTS;
   }
 
-  template <vtkm::IdComponent OtherSize>
-  VTKM_EXEC_CONT void CopyInto(
-    vtkm::Vec<ComponentType, OtherSize>& dest) const
-  {
-    for (vtkm::IdComponent index = 0;
-         (index < NUM_COMPONENTS) && (index < OtherSize); index++)
-    {
-      dest[index] = (*this)[index];
-    }
-  }
-
-  VTKM_EXEC_CONT
-  DerivedClass& operator=(const DerivedClass& src)
-  {
-    for (vtkm::IdComponent i = 0; i < Size; ++i)
-    {
-      this->Components[i] = src[i];
-    }
-    return *static_cast<DerivedClass*>(this);
-  }
-
   VTKM_EXEC_CONT
   const ComponentType& operator[](vtkm::IdComponent idx) const
   {
@@ -438,53 +700,6 @@ public:
     return this->Components[idx];
   }
 
-  VTKM_EXEC_CONT
-  bool operator==(const DerivedClass& other) const
-  {
-    bool equal=true;
-    for(vtkm::IdComponent i=0; i < Size && equal; ++i)
-    {
-      equal = (this->Components[i] == other.Components[i]);
-    }
-    return equal;
-  }
-
-  VTKM_EXEC_CONT
-  bool operator<(const DerivedClass& other) const
-  {
-    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; ++i)
-    {
-      // ignore equals as that represents check next value
-      if (this->Components[i] < other[i])
-      {
-        return true;
-      }
-      else if (other[i] < this->Components[i])
-      {
-        return false;
-      }
-    } // if all same we are not less
-
-    return false;
-  }
-
-  VTKM_EXEC_CONT
-  bool operator!=(const DerivedClass& other) const
-  {
-    return !(this->operator==(other));
-  }
-
-  VTKM_EXEC_CONT
-  ComponentType Dot(const DerivedClass& other) const
-  {
-    ComponentType result = this->Components[0] * other[0];
-    for (vtkm::IdComponent i = 1; i < Size; ++i)
-    {
-      result += this->Components[i] * other[i];
-    }
-    return result;
-  }
-
 #if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
@@ -492,88 +707,76 @@ public:
 #endif    // gcc || clang
 #endif    // not using cuda < 8
 
+  template<typename OtherComponentType, typename OtherClass>
   VTKM_EXEC_CONT
-  DerivedClass operator+(const DerivedClass& other) const
+  DerivedClass
+  operator+(const VecBaseCommon<OtherComponentType, OtherClass> &other) const
   {
+    const OtherClass &other_derived =
+        static_cast<const OtherClass &>(other);
+    VTKM_ASSERT(NUM_COMPONENTS == other_derived.GetNumberOfComponents());
+
     DerivedClass result;
-    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; ++i)
     {
-      result[i] = this->Components[i] + other[i];
+      result[i] =
+          this->Components[i] + static_cast<ComponentType>(other_derived[i]);
     }
     return result;
   }
 
+  template<typename OtherComponentType, typename OtherClass>
   VTKM_EXEC_CONT
-  DerivedClass& operator+=(const DerivedClass& other)
+  DerivedClass
+  operator-(const VecBaseCommon<OtherComponentType, OtherClass> &other) const
   {
-    for (vtkm::IdComponent i = 0; i < Size; ++i)
-    {
-      this->Components[i] += other[i];
-    }
-    return *static_cast<DerivedClass*>(this);
-  }
+    const OtherClass &other_derived =
+        static_cast<const OtherClass &>(other);
+    VTKM_ASSERT(NUM_COMPONENTS == other_derived.GetNumberOfComponents());
 
-  VTKM_EXEC_CONT
-  DerivedClass operator-(const DerivedClass& other) const
-  {
     DerivedClass result;
-    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; ++i)
     {
-      result[i] = this->Components[i] - other[i];
+      result[i] =
+          this->Components[i] - static_cast<ComponentType>(other_derived[i]);
     }
     return result;
   }
 
+  template<typename OtherComponentType, typename OtherClass>
   VTKM_EXEC_CONT
-  DerivedClass& operator-=(const DerivedClass& other)
+  DerivedClass
+  operator*(const VecBaseCommon<OtherComponentType, OtherClass> &other) const
   {
-    for (vtkm::IdComponent i = 0; i < Size; ++i)
-    {
-      this->Components[i] -= other[i];
-    }
-    return *static_cast<DerivedClass*>(this);
-  }
+    const OtherClass &other_derived =
+        static_cast<const OtherClass &>(other);
+    VTKM_ASSERT(NUM_COMPONENTS == other_derived.GetNumberOfComponents());
 
-  VTKM_EXEC_CONT
-  DerivedClass operator*(const DerivedClass& other) const
-  {
     DerivedClass result;
-    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; ++i)
     {
-      result[i] = this->Components[i] * other[i];
+      result[i] =
+          this->Components[i] * static_cast<ComponentType>(other_derived[i]);
     }
     return result;
   }
 
+  template<typename OtherComponentType, typename OtherClass>
   VTKM_EXEC_CONT
-  DerivedClass& operator*=(const DerivedClass& other)
+  DerivedClass
+  operator/(const VecBaseCommon<OtherComponentType, OtherClass> &other) const
   {
-    for (vtkm::IdComponent i = 0; i < Size; ++i)
-    {
-      this->Components[i] *= other[i];
-    }
-    return *static_cast<DerivedClass*>(this);
-  }
+    const OtherClass &other_derived =
+        static_cast<const OtherClass &>(other);
+    VTKM_ASSERT(NUM_COMPONENTS == other_derived.GetNumberOfComponents());
 
-  VTKM_EXEC_CONT
-  DerivedClass operator/(const DerivedClass& other) const
-  {
     DerivedClass result;
-    for (vtkm::IdComponent i = 0; i < Size; ++i)
+    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; ++i)
     {
-      result[i] = this->Components[i] / other[i];
+      result[i] =
+          this->Components[i] / static_cast<ComponentType>(other_derived[i]);
     }
     return result;
-  }
-
-  VTKM_EXEC_CONT
-  DerivedClass& operator/=(const DerivedClass& other)
-  {
-    for (vtkm::IdComponent i = 0; i < Size; ++i)
-    {
-      this->Components[i] /= other[i];
-    }
-    return *static_cast<DerivedClass*>(this);
   }
 
 #if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
@@ -582,26 +785,21 @@ public:
 #endif    // gcc || clang
 #endif    // not using cuda < 8
 
-  VTKM_EXEC_CONT
-  ComponentType* GetPointer()
-  {
-    return this->Components;
-  }
-
-  VTKM_EXEC_CONT
-  const ComponentType* GetPointer() const
-  {
-    return this->Components;
-  }
-
 protected:
   ComponentType Components[NUM_COMPONENTS];
 };
-#if (defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8))
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-#pragma GCC diagnostic pop
-#endif    // gcc || clang
-#endif    // use cuda < 8
+
+/// Base of all VecC and VecCConst classes.
+///
+template <typename T, typename DerivedClass>
+class VecCBase : public vtkm::detail::VecBaseCommon<T, DerivedClass>
+{
+protected:
+  VTKM_EXEC_CONT
+  VecCBase()
+  {
+  }
+};
 
 } // namespace detail
 
@@ -823,6 +1021,202 @@ vtkm::Vec<T,4> make_Vec(const T &x, const T &y, const T &z, const T &w)
   return vtkm::Vec<T,4>(x, y, z, w);
 }
 
+/// \brief A Vec-like representation for short arrays.
+///
+/// The \c VecC class takes a short array of values and provides an interface
+/// that mimics \c Vec. This provides a mechanism to treat C arrays like a \c
+/// Vec. It is useful in situations where you want to use a \c Vec but the data
+/// must come from elsewhere or in certain situations where the size cannot be
+/// determined at compile time. In particular, \c Vec objects of different
+/// sizes can potentially all be converted to a \c VecC of the same type.
+///
+/// Note that \c VecC holds a reference to an outside array given to it. If
+/// that array gets destroyed (for example because the source goes out of
+/// scope), the behavior becomes undefined.
+///
+/// You cannot use \c VecC with a const type in its template argument. For
+/// example, you cannot declare <tt>VecC<const vtkm::Id></tt>. If you want a
+/// non-mutable \c VecC, the \c VecCConst class (e.g.
+/// <tt>VecCConst<vtkm::Id></tt>).
+///
+template<typename T>
+class VecC : public detail::VecCBase<T, VecC<T> >
+{
+  using Superclass = detail::VecCBase<T, VecC<T> >;
+
+  VTKM_STATIC_ASSERT_MSG(
+      std::is_const<T>::value == false,
+      "You cannot use VecC with a const type as its template argument. "
+      "Use either const VecC or VecCConst.");
+
+public:
+#ifdef VTKM_DOXYGEN_ONLY
+  using ComponentType = T;
+#endif
+
+  VTKM_EXEC_CONT
+  VecC()
+    : Components(NULL), NumberOfComponents(0)
+  {  }
+
+  VTKM_EXEC_CONT
+  VecC(T *array, vtkm::IdComponent size)
+    : Components(array), NumberOfComponents(size)
+  {  }
+
+  template<vtkm::IdComponent Size>
+  VTKM_EXEC_CONT
+  VecC(vtkm::Vec<T,Size> &src)
+    : Components(src.GetPointer()), NumberOfComponents(Size)
+  {  }
+
+  VTKM_EXEC_CONT
+  explicit VecC(T &src)
+    : Components(&src), NumberOfComponents(1)
+  {  }
+
+  VTKM_EXEC_CONT
+  VecC(const VecC<T> &src)
+    : Components(src.Components), NumberOfComponents(src.NumberOfComponents)
+  {  }
+
+  VTKM_EXEC_CONT
+  const T &operator[](vtkm::IdComponent index) const
+  {
+    VTKM_ASSERT(index >= 0);
+    VTKM_ASSERT(index < this->NumberOfComponents);
+    return this->Components[index];
+  }
+
+  VTKM_EXEC_CONT
+  T &operator[](vtkm::IdComponent index)
+  {
+    VTKM_ASSERT(index >= 0);
+    VTKM_ASSERT(index < this->NumberOfComponents);
+    return this->Components[index];
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::IdComponent GetNumberOfComponents() const
+  {
+    return this->NumberOfComponents;
+  }
+
+  VTKM_EXEC_CONT
+  VecC<T> &operator=(const VecC<T> &src)
+  {
+    VTKM_ASSERT(this->NumberOfComponents == src.GetNumberOfComponents());
+    for (vtkm::IdComponent index = 0; index < this->NumberOfComponents; index++)
+    {
+      (*this)[index] = src[index];
+    }
+
+    return *this;
+  }
+
+private:
+  T * const Components;
+  vtkm::IdComponent NumberOfComponents;
+};
+
+/// \brief A const version of VecC
+///
+/// \c VecCConst is a non-mutable form of \c VecC. It can be used in place of
+/// \c VecC when a constant array is available.
+///
+/// A \c VecC can be automatically converted to a \c VecCConst, but not vice
+/// versa, so function arguments should use \c VecCConst when the data do not
+/// need to be changed.
+///
+template<typename T>
+class VecCConst : public detail::VecCBase<T, VecCConst<T> >
+{
+  using Superclass = detail::VecCBase<T, VecCConst<T> >;
+
+  VTKM_STATIC_ASSERT_MSG(
+      std::is_const<T>::value == false,
+      "You cannot use VecCConst with a const type as its template argument. "
+      "Remove the const from the type.");
+
+public:
+#ifdef VTKM_DOXYGEN_ONLY
+  using ComponentType = T;
+#endif
+
+  VTKM_EXEC_CONT
+  VecCConst()
+    : Components(NULL), NumberOfComponents(0)
+  {  }
+
+  VTKM_EXEC_CONT
+  VecCConst(const T *array, vtkm::IdComponent size)
+    : Components(array), NumberOfComponents(size)
+  {  }
+
+  template<vtkm::IdComponent Size>
+  VTKM_EXEC_CONT
+  VecCConst(const vtkm::Vec<T,Size> &src)
+    : Components(src.GetPointer()), NumberOfComponents(Size)
+  {  }
+
+  VTKM_EXEC_CONT
+  explicit VecCConst(const T &src)
+    : Components(&src), NumberOfComponents(1)
+  {  }
+
+  VTKM_EXEC_CONT
+  VecCConst(const VecCConst<T> &src)
+    : Components(src.Components), NumberOfComponents(src.NumberOfComponents)
+  {  }
+
+  VTKM_EXEC_CONT
+  VecCConst(const VecC<T> &src)
+    : Components(src.Components), NumberOfComponents(src.NumberOfComponents)
+  {  }
+
+  VTKM_EXEC_CONT
+  const T &operator[](vtkm::IdComponent index) const
+  {
+    VTKM_ASSERT(index >= 0);
+    VTKM_ASSERT(index < this->NumberOfComponents);
+    return this->Components[index];
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::IdComponent GetNumberOfComponents() const
+  {
+    return this->NumberOfComponents;
+  }
+
+private:
+  const T * const Components;
+  vtkm::IdComponent NumberOfComponents;
+
+  // You are not allowed to assign to a VecCConst, so these operators are not
+  // implemented and are disallowed.
+  void operator=(const VecCConst<T> &);
+  void operator+=(const VecCConst<T> &);
+  void operator-=(const VecCConst<T> &);
+  void operator*=(const VecCConst<T> &);
+  void operator/=(const VecCConst<T> &);
+};
+
+/// Creates a \c VecC from an input array.
+///
+template<typename T>
+vtkm::VecC<T> make_VecC(T *array, vtkm::IdComponent size)
+{
+  return vtkm::VecC<T>(array, size);
+}
+
+/// Creates a \c VecCConst from a constant input array.
+///
+template<typename T>
+vtkm::VecCConst<T> make_VecC(const T *array, vtkm::IdComponent size)
+{
+  return vtkm::VecCConst<T>(array, size);
+}
+
 // A pre-declaration of vtkm::Pair so that classes templated on them can refer
 // to it. The actual implementation is in vtkm/Pair.h.
 template<typename U, typename V>
@@ -863,6 +1257,15 @@ VTKM_EXEC_CONT T
 dot(const vtkm::Vec<T, 4>& a, const vtkm::Vec<T, 4>& b)
 {
   return T((a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]) + (a[3] * b[3]));
+}
+
+template<typename T, typename VecType>
+static inline
+VTKM_EXEC_CONT T
+dot(const vtkm::detail::VecBaseCommon<T,VecType> &a,
+    const vtkm::detail::VecBaseCommon<T,VecType> &b)
+{
+  return a.Dot(b);
 }
 
 template <typename T, vtkm::IdComponent Size>
