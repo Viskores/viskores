@@ -114,6 +114,7 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     endforeach()
 
     cuda_add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
+    target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
   elseif (${cxxfiles_len} GREATER 0)
     add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
     target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
