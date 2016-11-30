@@ -29,14 +29,18 @@
 
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-// gcc || clang
-#if  defined(_WIN32)
-// TBB includes windows.h, which clobbers min and max functions so we
-// define NOMINMAX to fix that problem. We also include WIN32_LEAN_AND_MEAN
-// to reduce the number of macros and objects windows.h imports as those also
-// can cause conflicts
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
+
+#if  defined(VTKM_MSVC)
+
+// TBB's header include a #pragma comment(lib,"tbb.lib") line to make all
+// consuming libraries link to tbb, this is bad behavior in a header
+// based project
+#pragma push_macro("__TBB_NO_IMPLICITLINKAGE")
+#define __TBB_NO_IMPLICIT_LINKAGE 1
+
+// TBB includes windows.h, so instead we want include windows.h with the
+// correct settings so that we don't clobber any existing function
+#include <vtkm/internal/Windows.h>
 #endif
 
 #include <tbb/tbb_stddef.h>
@@ -58,9 +62,8 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <tbb/tick_count.h>
 #include <numeric>
 
-#if defined(_WIN32)
-#undef WIN32_LEAN_AND_MEAN
-#undef NOMINMAX
+#if defined(VTKM_MSVC)
+#pragma pop_macro("__TBB_NO_IMPLICITLINKAGE")
 #endif
 
 VTKM_THIRDPARTY_POST_INCLUDE

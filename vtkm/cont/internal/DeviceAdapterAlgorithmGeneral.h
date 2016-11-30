@@ -30,15 +30,7 @@
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
-VTKM_THIRDPARTY_PRE_INCLUDE
-#if  defined(VTKM_MSVC)
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
-#undef WIN32_LEAN_AND_MEAN
-#undef NOMINMAX
-#endif
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <vtkm/internal/Windows.h>
 
 namespace vtkm {
 namespace cont {
