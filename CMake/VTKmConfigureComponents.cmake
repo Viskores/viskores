@@ -351,7 +351,6 @@ macro(vtkm_configure_component_CUDA)
           #find the position of the "--generate-code" output. With some compilers such as
           #msvc we get compile output plus run output. So we need to strip out just the
           #run output
-          message(STATUS "run_output: ${run_output}")
           string(FIND "${run_output}" "--generate-code" position)
           string(SUBSTRING "${run_output}" ${position} -1 run_output)
 
