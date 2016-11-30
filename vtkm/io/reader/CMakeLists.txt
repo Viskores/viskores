@@ -22,6 +22,7 @@ set(headers
   VTKDataSetReaderBase.h
   VTKPolyDataReader.h
   VTKStructuredGridReader.h
+  VTKRectilinearGridReader.h
   VTKStructuredPointsReader.h
   VTKUnstructuredGridReader.h
   VTKDataSetReader.h
