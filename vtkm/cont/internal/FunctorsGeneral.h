@@ -180,6 +180,9 @@ struct ReduceKeySeriesStates
 {
   bool fStart;    // START of a segment
   bool fEnd;      // END of a segment
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
   ReduceKeySeriesStates(bool start=false, bool end=false) : fStart(start), fEnd(end) {}
 };
 
