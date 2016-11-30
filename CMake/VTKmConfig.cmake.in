@@ -33,7 +33,10 @@
 # @VTKm_AVAILABLE_COMPONENTS_LIST@
 #
 
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+
 @PACKAGE_INIT@
+
 
 # The VTKm version number
 set(VTKm_MAJOR_VERSION "@VTKm_MAJOR_VERSION@")
