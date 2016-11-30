@@ -925,8 +925,9 @@ $unary_math_function('Abs', 'fabs')\
 $unary_template_function_no_vec('SignBit',
                                 'static_cast<vtkm::Int32>(signbit(x))',
                                 'vtkm::Int32',
-'''
+'''#ifndef VTKM_CUDA
   using std::signbit;
+#endif
 ''')\
 
 /// Returns true if \p x is less than zero, false otherwise.

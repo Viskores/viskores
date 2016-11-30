@@ -2119,14 +2119,16 @@ vtkm::Vec<T,2> Abs(const vtkm::Vec<T,2> &x) {
 ///
 static inline VTKM_EXEC_CONT
 vtkm::Int32 SignBit(vtkm::Float32 x) {
-
+#ifndef VTKM_CUDA
   using std::signbit;
+#endif
   return static_cast<vtkm::Int32>(signbit(x));
 }
 static inline VTKM_EXEC_CONT
 vtkm::Int32 SignBit(vtkm::Float64 x) {
-
+#ifndef VTKM_CUDA
   using std::signbit;
+#endif
   return static_cast<vtkm::Int32>(signbit(x));
 }
 
