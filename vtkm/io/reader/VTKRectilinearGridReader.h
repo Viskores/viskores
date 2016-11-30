@@ -52,6 +52,8 @@ private:
       this->ReadFields(name);
       this->DataFile->Stream >> tag;
     }
+    if (tag != "DIMENSIONS")
+      throw vtkm::io::ErrorIO("DIMENSIONS tag not found");
 
     // Read structured grid specific meta-data
     vtkm::Id3 dim;
@@ -59,25 +61,25 @@ private:
 
     //Read the points.
     std::string dataType;
-    vtkm::Id3 numPoints;
+    std::size_t numPoints[3];
     vtkm::cont::DynamicArrayHandle X,Y,Z;
     
     this->DataFile->Stream >> tag >> numPoints[0] >> dataType >> std::ws;
     if (tag != "X_COORDINATES")
-      throw vtkm::io::ErrorIO("X_COORDINATES field not found");
+      throw vtkm::io::ErrorIO("X_COORDINATES tag not found");
     this->DoReadDynamicArray(dataType, numPoints[0], 1, X);
     
     this->DataFile->Stream >> tag >> numPoints[1] >> dataType >> std::ws;
     if (tag != "Y_COORDINATES")
-      throw vtkm::io::ErrorIO("Y_COORDINATES field not found");
+      throw vtkm::io::ErrorIO("Y_COORDINATES tag not found");
     this->DoReadDynamicArray(dataType, numPoints[1], 1, Y);
     
     this->DataFile->Stream >> tag >> numPoints[2] >> dataType >> std::ws;
     if (tag != "Z_COORDINATES")
-      throw vtkm::io::ErrorIO("Z_COORDINATES field not found");
+      throw vtkm::io::ErrorIO("Z_COORDINATES tag not found");
     this->DoReadDynamicArray(dataType, numPoints[2], 1, Z);
     
-    if (dim != numPoints)
+    if (dim[0] != numPoints[0] || dim[1] != numPoints[1] || dim[2] != numPoints[2])
       throw vtkm::io::ErrorIO("DIMENSIONS not equal to number of points");
     
     vtkm::cont::ArrayHandleCartesianProduct<
