@@ -341,7 +341,7 @@ template<typename VectorType1, typename VectorType2>
 static inline VTKM_EXEC_CONT
 bool test_equal(VectorType1 vector1,
                 VectorType2 vector2,
-                vtkm::Float64 tolerance = 0.0001)
+                vtkm::Float64 tolerance = 0.00001)
 {
   typedef typename vtkm::VecTraits<VectorType1> Traits1;
   typedef typename vtkm::VecTraits<VectorType2> Traits2;
@@ -360,11 +360,14 @@ bool test_equal(VectorType1 vector1,
         vtkm::Float64(Traits1::GetComponent(vector1, component));
     vtkm::Float64 value2 =
         vtkm::Float64(Traits2::GetComponent(vector2, component));
-    if ((vtkm::Abs(value1) <= 2*tolerance) && (vtkm::Abs(value2) <= 2*tolerance))
+    if (vtkm::Abs(value1-value2) <= tolerance)
     {
       continue;
     }
 
+    // We are using a ratio to compare the relative tolerance of two numbers.
+    // Using an ULP based comparison (comparing the bits as integers) might be
+    // a better way to go, but this has been working pretty well so far.
     vtkm::Float64 ratio;
     if ((vtkm::Abs(value2) > tolerance) && (value2 != 0))
     {
