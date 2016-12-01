@@ -22,6 +22,7 @@
 
 #include <vtkm/io/reader/VTKDataSetReaderBase.h>
 #include <vtkm/io/reader/VTKStructuredPointsReader.h>
+#include <vtkm/io/reader/VTKRectilinearGridReader.h>
 #include <vtkm/io/reader/VTKStructuredGridReader.h>
 #include <vtkm/io/reader/VTKPolyDataReader.h>
 #include <vtkm/io/reader/VTKUnstructuredGridReader.h>
@@ -74,6 +75,9 @@ private:
     case vtkm::io::internal::DATASET_STRUCTURED_GRID:
       this->Reader.reset(new VTKStructuredGridReader(""));
       break;
+    case vtkm::io::internal::DATASET_RECTILINEAR_GRID:
+      this->Reader.reset(new VTKRectilinearGridReader(""));
+      break;      
     case vtkm::io::internal::DATASET_POLYDATA:
       this->Reader.reset(new VTKPolyDataReader(""));
       break;

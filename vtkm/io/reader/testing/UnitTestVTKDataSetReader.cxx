@@ -281,6 +281,70 @@ const char unsturctureGridBin[] =
 "\x00\x00\x00\x00\x3f\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3f\x80\x00\x00"
 "\x00\x00\x00\x00\x00\x00\x00\x00\x3f\x80\x00\x00\n";
 
+const char rectilinearGrid1Ascii[] =
+"# vtk DataFile Version 3.0\n"
+"vtk output\n"
+"ASCII\n"
+"DATASET RECTILINEAR_GRID\n"
+"DIMENSIONS 5 5 5\n"
+"X_COORDINATES 5 float\n"
+"-10 -5 0 5 10 \n"
+"Y_COORDINATES 5 float\n"
+"-10 -5 0 5 10 \n"
+"Z_COORDINATES 5 float\n"
+"-10 -5 0 5 10 \n"
+"POINT_DATA 125\n"
+"SCALARS var float\n"
+"LOOKUP_TABLE default\n"
+"2.08534 2.23463 2.22555 2.18031 2.07345 2.60855 2.94387 2.77617 2.58245 \n"
+"2.40193 2.81444 4.07839 3.66217 2.93755 2.52435 2.47503 3.37804 2.94413 \n"
+"2.76693 2.51259 2.57481 3.09598 2.42487 2.33772 2.17323 2.44797 2.60943 \n"
+"2.25704 2.5559 2.47737 3.19836 3.39212 3.01456 3.56609 3.08355 3.14302 \n"
+"3.59813 3.56774 4.3679 3.30292 2.73969 2.31936 4.26606 4.35597 4.08261 \n"
+"2.505 2.85494 2.99157 2.99089 2.60786 3.0034 2.6469 2.30827 2.93406 \n"
+"2.65975 3.37307 2.8116 3.4624 3.76087 3.17927 3.04305 3.01835 3.37884 \n"
+"4.37283 3.78191 2.97252 2.58956 3.74759 4.44983 3.09236 2.54284 2.85325 \n"
+"3.18491 3.10996 2.4281 2.81014 2.93146 2.0504 2.35133 2.26906 3.002 \n"
+"3.09434 3.69065 3.45153 2.93912 2.59396 2.97304 3.48548 3.70642 3.23255\n" 
+"2.84452 3.28152 3.35428 3.85919 3.73977 2.74961 2.85595 2.97197 2.81465 \n"
+"2.3682 2.44328 2.52139 2.06677 2.12045 1.98058 2.94229 2.80975 3.07295 \n"
+"2.70744 2.4395 2.56197 3.56108 3.32331 3.29935 2.85451 2.6538 2.99515 \n"
+"3.15239 2.93688 2.75899 2.60132 2.58644 2.70063 2.45959 2.20553 \n"
+"CELL_DATA 64\n"
+"SCALARS cell_var float\n"
+"LOOKUP_TABLE default\n"
+"2.08534 2.23463 2.22555 2.18031 2.07345 2.60855 2.94387 2.77617 2.58245 \n"
+"2.08534 2.23463 2.22555 2.18031 2.07345 2.60855 2.94387 2.77617 2.58245 \n"
+"2.08534 2.23463 2.22555 2.18031 2.07345 2.60855 2.94387 2.77617 2.58245 \n"
+"2.08534 2.23463 2.22555 2.18031 2.07345 2.60855 2.94387 2.77617 2.58245 \n"
+"2.08534 2.23463 2.22555 2.18031 2.07345 2.60855 2.94387 2.77617 2.58245 \n"
+"2.08534 2.23463 2.22555 2.18031 2.07345 2.60855 2.94387 2.77617 2.58245 \n"
+"2.08534 2.23463 2.22555 2.18031 2.07345 2.60855 2.94387 2.77617 2.58245 \n"
+"0.0\n";
+
+
+const char rectilinearGrid2Ascii[] =    
+"# vtk DataFile Version 3.0\n"
+"vtk output\n"
+"ASCII\n"
+"DATASET RECTILINEAR_GRID\n"
+"DIMENSIONS 3 4 2\n"
+"X_COORDINATES 3 float\n"
+"0 2 4\n"
+"Y_COORDINATES 4 float\n"
+"1 2 3 4\n"
+"Z_COORDINATES 2 float\n"
+"0 1\n"
+"CELL_DATA 6\n"
+"SCALARS cellscalar float\n"
+"LOOKUP_TABLE default\n"    
+"1.1 7.5 1.2 1.5 2.6 8.1\n"
+"POINT_DATA 24\n"
+"SCALARS scalars float 1\n"
+"LOOKUP_TABLE default\n"
+"0   1   2   3   4   5   6   7   8   9   10  11\n"
+"12  13  14  15  16  17  18  19  20  21  22  23\n";
+
 inline void createFile(const char *buffer, std::size_t size, const char *fname)
 {
   std::ofstream fstr(fname, std::ios_base::out | std::ios_base::binary);
@@ -399,7 +463,6 @@ void TestReadingUnstructuredGridVisIt(Format format)
   if (format == FORMAT_ASCII)
   {
     createFile(unsturctureGridVisItAscii, sizeof(unsturctureGridVisItAscii), testFileName);
-
     vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
 
     VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
@@ -412,6 +475,44 @@ void TestReadingUnstructuredGridVisIt(Format format)
                      "Incorrect cellset type");
   }
 }
+
+void TestReadingRectilinearGrid1(Format format)
+{
+  if (format == FORMAT_ASCII)
+  {
+    createFile(rectilinearGrid1Ascii, sizeof(rectilinearGrid1Ascii), testFileName);
+
+    vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
+
+    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
+                     "Incorrect number of fields");
+    VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == 125,
+                     "Incorrect number of points");
+    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 64,
+                     "Incorrect number of cells");
+    VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3> >(),
+                     "Incorrect cellset type");
+  }
+}
+
+void TestReadingRectilinearGrid2(Format format)
+{
+  if (format == FORMAT_ASCII)
+  {
+    createFile(rectilinearGrid2Ascii, sizeof(rectilinearGrid2Ascii), testFileName);
+
+    vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
+
+    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
+                     "Incorrect number of fields");
+    VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == 24,
+                     "Incorrect number of points");
+    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 6,
+                     "Incorrect number of cells");
+    VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3> >(),
+                     "Incorrect cellset type");
+  }
+}    
 
 void TestReadingVTKDataSet()
 {
@@ -428,6 +529,10 @@ void TestReadingVTKDataSet()
   TestReadingUnstructuredGrid(FORMAT_ASCII);
   std::cout << "Test reading VTK UnstructuredGrid file in BINARY" << std::endl;
   TestReadingUnstructuredGrid(FORMAT_BINARY);
+
+  std::cout << "Test reading VTK RectilinearGrid file in ASCII" << std::endl;
+  TestReadingRectilinearGrid1(FORMAT_ASCII);
+  TestReadingRectilinearGrid2(FORMAT_ASCII);
 
   std::cout << "Test reading VTK/VisIt StructuredPoints file in ASCII" << std::endl;
   TestReadingStructuredPointsVisIt(FORMAT_ASCII);
