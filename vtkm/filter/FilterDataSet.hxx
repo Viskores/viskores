@@ -52,7 +52,7 @@ template<typename Derived>
 inline VTKM_CONT
 ResultDataSet FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet &input)
 {
-  return this->Execute(input, vtkm::filter::DefaultPolicy());
+  return this->Execute(input, vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------
@@ -118,7 +118,7 @@ inline VTKM_CONT
 bool FilterDataSet<Derived>::MapFieldOntoOutput(ResultDataSet& result,
                                                 const vtkm::cont::Field& field)
 {
-  return this->MapFieldOntoOutput(result, field, vtkm::filter::DefaultPolicy());
+  return this->MapFieldOntoOutput(result, field, vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------

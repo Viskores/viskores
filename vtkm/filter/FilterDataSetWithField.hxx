@@ -55,7 +55,7 @@ ResultDataSet FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet
 {
   return this->Execute(input,
                        input.GetField(inFieldName),
-                       vtkm::filter::DefaultPolicy());
+                       vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------
@@ -66,7 +66,7 @@ ResultDataSet FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet
 {
   return this->Execute(input,
                        field,
-                       vtkm::filter::DefaultPolicy());
+                       vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------
@@ -77,7 +77,7 @@ ResultDataSet FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet
 {
   return this->Execute(input,
                        field,
-                       vtkm::filter::DefaultPolicy());
+                       vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------
@@ -179,7 +179,7 @@ inline VTKM_CONT
 bool FilterDataSetWithField<Derived>::MapFieldOntoOutput(ResultDataSet& result,
                                                 const vtkm::cont::Field& field)
 {
-  return this->MapFieldOntoOutput(result, field, vtkm::filter::DefaultPolicy());
+  return this->MapFieldOntoOutput(result, field, vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------

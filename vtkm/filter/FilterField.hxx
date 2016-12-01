@@ -43,7 +43,7 @@ ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
 {
   return this->Execute(input,
                        input.GetField(inFieldName),
-                       vtkm::filter::DefaultPolicy());
+                       vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------
@@ -54,7 +54,7 @@ ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
 {
   return this->Execute(input,
                        field,
-                       vtkm::filter::DefaultPolicy());
+                       vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------
@@ -65,7 +65,7 @@ ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
 {
   return this->Execute(input,
                        field,
-                       vtkm::filter::DefaultPolicy());
+                       vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------

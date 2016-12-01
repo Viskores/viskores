@@ -183,7 +183,7 @@ public:
   vtkm::cont::DataSet Make3DRadiantDataSet(vtkm::IdComponent dim=5);
 };
 
-class RadiantDataSetPolicy : public vtkm::filter::PolicyBase< RadiantDataSetPolicy >
+class PolicyRadiantDataSet : public vtkm::filter::PolicyBase< PolicyRadiantDataSet >
 {
   typedef MakeRadiantDataSet::DataArrayHandle DataHandleType;
   typedef MakeRadiantDataSet::ConnectivityArrayHandle CountingHandleType;
@@ -200,17 +200,11 @@ public:
                       TransformHandleType::StorageTag> {};
 
   typedef TypeListTagRadiantTypes FieldStorageList;
-  typedef vtkm::filter::DefaultPolicy::FieldTypeList FieldTypeList;
 
   struct TypeListTagRadiantCellSetTypes : vtkm::ListTagBase<
                       MakeRadiantDataSet::CellSet > {};
 
   typedef TypeListTagRadiantCellSetTypes AllCellSetList;
-
-  typedef vtkm::filter::DefaultPolicy::CoordinateTypeList CoordinateTypeList;
-  typedef vtkm::filter::DefaultPolicy::CoordinateStorageList CoordinateStorageList;
-
-  typedef vtkm::filter::DefaultPolicy::DeviceAdapterList DeviceAdapterList;
 };
 
 inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComponent dim)
@@ -346,13 +340,13 @@ void TestMarchingCubesCustomPolicy()
 
   //We specify a custom execution policy here, since the contourField is a
   //custom field type
-  result = mc.Execute( dataSet, contourField, RadiantDataSetPolicy() );
+  result = mc.Execute( dataSet, contourField, PolicyRadiantDataSet() );
 
   //Map a field onto the resulting dataset
   vtkm::cont::Field projectedField = dataSet.GetField("distanceToOther");
 
-  mc.MapFieldOntoOutput(result, projectedField, RadiantDataSetPolicy());
-  mc.MapFieldOntoOutput(result, contourField, RadiantDataSetPolicy());
+  mc.MapFieldOntoOutput(result, projectedField, PolicyRadiantDataSet());
+  mc.MapFieldOntoOutput(result, contourField, PolicyRadiantDataSet());
 
   const vtkm::cont::DataSet& outputData = result.GetDataSet();
   VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
