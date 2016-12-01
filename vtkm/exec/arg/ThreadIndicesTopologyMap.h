@@ -79,7 +79,7 @@ public:
                            const OutToInArrayType& inToOut,
                            const VisitArrayType& visit,
                            const ConnectivityType& connectivity,
-			                     vtkm::Id globalThreadIndexOffset=0)
+                           vtkm::Id globalThreadIndexOffset=0)
     : Superclass(threadIndex, inToOut.Get(threadIndex), visit.Get(threadIndex),
       globalThreadIndexOffset),
       CellShape(detail::CellShapeInitializer<CellShapeTag>::GetDefault())
@@ -212,7 +212,7 @@ public:
                            const OutToInArrayType& inToOut,
                            const VisitArrayType& visit,
                            const ConnectivityType& connectivity,
-			                     vtkm::Id globalThreadIndexOffset=0)
+                           vtkm::Id globalThreadIndexOffset=0)
   {
 
     this->InputIndex = inToOut.Get(threadIndex);
@@ -251,7 +251,7 @@ public:
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                           vtkm::Id inIndex,
+                           vtkm::Id vtkmNotUsed(inIndex),
                            vtkm::IdComponent visitIndex,
                            const ConnectivityType& connectivity,
                            vtkm::Id globalThreadIndexOffset=0)
