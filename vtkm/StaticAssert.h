@@ -24,7 +24,7 @@
 #include <type_traits>
 
 #define VTKM_STATIC_ASSERT(condition) \
-  static_assert( (condition), __FILE__)
+  static_assert( (condition), "Failed static assert: " #condition)
 #define VTKM_STATIC_ASSERT_MSG(condition, message) \
   static_assert( (condition), message)
 
