@@ -67,22 +67,6 @@ public:
     FieldType centralMoment[4];
   };
 
-  struct minFunctor
-  {
-    VTKM_EXEC
-    FieldType operator()(const FieldType &x, const FieldType &y) const {
-      return Min(x, y);
-    }
-  };
-
-  struct maxFunctor
-  {
-    VTKM_EXEC
-    FieldType operator()(const FieldType& x, const FieldType& y) const {
-      return Max(x, y);
-    }
-  };
-
   class CalculatePowers : public vtkm::worklet::WorkletMapField
   {
   public:
@@ -93,14 +77,14 @@ public:
                                   FieldOut<> pow4Array);
     typedef void ExecutionSignature(_1,_2,_3,_4,_5);
     typedef _1 InputDomain;
-  
+
     vtkm::Id numPowers;
 
     VTKM_CONT
     CalculatePowers(vtkm::Id num) : numPowers(num) {}
-  
+
     VTKM_EXEC
-    void operator()(const FieldType& value, 
+    void operator()(const FieldType& value,
                     FieldType &pow1,
                     FieldType &pow2,
                     FieldType &pow3,
@@ -120,12 +104,12 @@ public:
                                   FieldOut<> diff);
     typedef _2 ExecutionSignature(_1);
     typedef _1 InputDomain;
-  
+
     FieldType constant;
-  
+
     VTKM_CONT
     SubtractConst(const FieldType& constant0) : constant(constant0) {}
-  
+
     VTKM_EXEC
     FieldType operator()(const FieldType& value) const
     {
@@ -133,18 +117,19 @@ public:
     }
   };
 
-  void Run(vtkm::cont::ArrayHandle<FieldType> fieldArray,
+  template<typename Storage>
+  void Run(vtkm::cont::ArrayHandle<FieldType,Storage> fieldArray,
            StatInfo& statinfo)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
-    typedef typename vtkm::cont::ArrayHandle<FieldType>::PortalControl FieldPortal;
+    typedef typename vtkm::cont::ArrayHandle<FieldType,Storage>::PortalConstControl FieldPortal;
 
     // Copy original data to array for sorting
     vtkm::cont::ArrayHandle<FieldType> tempArray;
     DeviceAlgorithms::Copy(fieldArray, tempArray);
     DeviceAlgorithms::Sort(tempArray);
 
-    FieldPortal tempPortal = tempArray.GetPortalControl();
+    FieldPortal tempPortal = tempArray.GetPortalConstControl();
     vtkm::Id dataSize = tempPortal.GetNumberOfValues();
     FieldType numValues = static_cast<FieldType>(dataSize);
 
@@ -152,9 +137,11 @@ public:
     statinfo.median = tempPortal.Get(dataSize / 2);
 
     // Minimum and maximum
-    FieldType initValue = tempPortal.Get(0);
-    statinfo.minimum = DeviceAlgorithms::Reduce(fieldArray, initValue, minFunctor());
-    statinfo.maximum = DeviceAlgorithms::Reduce(fieldArray, initValue, maxFunctor());
+    const vtkm::Vec<FieldType,2> initValue(tempPortal.Get(0));
+    vtkm::Vec<FieldType,2> result =
+          DeviceAlgorithms::Reduce(fieldArray, initValue, vtkm::MinAndMax<FieldType>());
+    statinfo.minimum = result[0];
+    statinfo.maximum = result[1];
 
     // Mean
     FieldType sum = DeviceAlgorithms::ScanInclusive(fieldArray, tempArray);
@@ -169,7 +156,7 @@ public:
     pow4Array.Allocate(dataSize);
 
     // Raw moments via Worklet
-    vtkm::worklet::DispatcherMapField<CalculatePowers> 
+    vtkm::worklet::DispatcherMapField<CalculatePowers>
             calculatePowersDispatcher(CalculatePowers(4));
     calculatePowersDispatcher.Invoke(fieldArray, pow1Array, pow2Array, pow3Array, pow4Array);
 

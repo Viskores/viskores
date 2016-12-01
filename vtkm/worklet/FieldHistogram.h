@@ -66,24 +66,6 @@ class FieldHistogram
 {
 public:
 
-  struct minFunctor
-  {
-    template< typename FieldType>
-    VTKM_EXEC
-    FieldType operator()(const FieldType &x, const FieldType &y) const {
-      return vtkm::Min(x, y);
-    }
-  };
-
-  struct maxFunctor
-  {
-    template< typename FieldType>
-    VTKM_EXEC
-    FieldType operator()(const FieldType& x, const FieldType& y) const {
-      return vtkm::Max(x, y);
-    }
-  };
-
   // For each value set the bin it should be in
   template<typename FieldType>
   class SetHistogramBin : public vtkm::worklet::WorkletMapField
@@ -164,10 +146,17 @@ public:
     //leverage fields that have already computed there range
 
     const vtkm::Id numberOfValues = fieldArray.GetNumberOfValues();
-    const FieldType initValue = fieldArray.GetPortalConstControl().Get(0);
 
-    const FieldType fieldMinValue = DeviceAlgorithms::Reduce(fieldArray, initValue, minFunctor());
-    const FieldType fieldMaxValue = DeviceAlgorithms::Reduce(fieldArray, initValue, maxFunctor());
+    const vtkm::Vec<FieldType,2> initValue(
+      fieldArray.GetPortalConstControl().Get(0));
+
+    vtkm::Vec<FieldType,2> result =
+          DeviceAlgorithms::Reduce(fieldArray, initValue, vtkm::MinAndMax<FieldType>());
+
+    const FieldType& fieldMinValue = result[0];
+    const FieldType& fieldMaxValue = result[1];
+
+
     const FieldType fieldDelta = compute_delta(fieldMinValue, fieldMaxValue, numberOfBins);
 
     // Worklet fills in the bin belonging to each value

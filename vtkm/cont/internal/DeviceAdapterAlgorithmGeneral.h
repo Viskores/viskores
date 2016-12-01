@@ -246,17 +246,17 @@ public:
 
   //--------------------------------------------------------------------------
   // Reduce
- template<typename T, class CIn>
-  VTKM_CONT static T Reduce(
-      const vtkm::cont::ArrayHandle<T,CIn> &input, T initialValue)
+ template<typename T, typename U, class CIn>
+  VTKM_CONT static U Reduce(
+      const vtkm::cont::ArrayHandle<T,CIn> &input, U initialValue)
   {
     return DerivedAlgorithm::Reduce(input, initialValue,vtkm::Add());
   }
 
- template<typename T, class CIn, class BinaryFunctor>
-  VTKM_CONT static T Reduce(
+ template<typename T, typename U, class CIn, class BinaryFunctor>
+  VTKM_CONT static U Reduce(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
-      T initialValue,
+      U initialValue,
       BinaryFunctor binary_functor)
   {
     //Crazy Idea:
@@ -273,54 +273,56 @@ public:
 
     typedef ReduceKernel<
             InputPortalType,
+            U,
             BinaryFunctor
             > ReduceKernelType;
 
     typedef vtkm::cont::ArrayHandleImplicit<
-                                            T,
+                                            U,
                                             ReduceKernelType > ReduceHandleType;
     typedef vtkm::cont::ArrayHandle<
-                                    T,
+                                    U,
                                     vtkm::cont::StorageTagBasic> TempArrayType;
 
     ReduceKernelType kernel(input.PrepareForInput( DeviceAdapterTag() ),
+                            initialValue,
                             binary_functor);
 
     vtkm::Id length = (input.GetNumberOfValues() / 16);
     length += (input.GetNumberOfValues() % 16 == 0) ? 0 : 1;
-    ReduceHandleType reduced = vtkm::cont::make_ArrayHandleImplicit<T>(kernel,
+    ReduceHandleType reduced = vtkm::cont::make_ArrayHandleImplicit<U>(kernel,
                                                                        length);
 
     TempArrayType inclusiveScanStorage;
-    T scanResult = DerivedAlgorithm::ScanInclusive(reduced,
+    const U scanResult = DerivedAlgorithm::ScanInclusive(reduced,
                                                    inclusiveScanStorage,
                                                    binary_functor);
-    return binary_functor(initialValue, scanResult);
+    return scanResult;
   }
 
   //--------------------------------------------------------------------------
   // Streaming Reduce
-  template<typename T, class CIn>
-  VTKM_CONT static T StreamingReduce(
+  template<typename T, typename U, class CIn>
+  VTKM_CONT static U StreamingReduce(
       const vtkm::Id numBlocks,
       const vtkm::cont::ArrayHandle<T,CIn>& input,
-      T initialValue)
+      U initialValue)
   {
     return DerivedAlgorithm::StreamingReduce(numBlocks, input, initialValue, vtkm::Add());
   }
 
-  template<typename T, class CIn, class BinaryFunctor>
-  VTKM_CONT static T StreamingReduce(
+  template<typename T, typename U, class CIn, class BinaryFunctor>
+  VTKM_CONT static U StreamingReduce(
       const vtkm::Id numBlocks,
       const vtkm::cont::ArrayHandle<T,CIn>& input,
-      T initialValue,
+      U initialValue,
       BinaryFunctor binary_functor)
   {
     vtkm::Id fullSize = input.GetNumberOfValues();
     vtkm::Id blockSize = fullSize / numBlocks;
     if (fullSize % numBlocks != 0) blockSize += 1;
 
-    T lastResult;
+    U lastResult;
     for (vtkm::Id block=0; block<numBlocks; block++)
     {
       vtkm::Id numberOfInstances = blockSize;

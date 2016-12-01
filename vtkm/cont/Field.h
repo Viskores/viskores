@@ -24,6 +24,7 @@
 #include <vtkm/Range.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/BinaryOperators.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
@@ -37,21 +38,6 @@ namespace vtkm {
 namespace cont {
 
 namespace internal {
-
-struct RangeMin
-{
-  template<typename T>
-  VTKM_EXEC
-  T operator()(const T& a, const T& b)const { return vtkm::Min(a,b); }
-};
-
-struct RangeMax
-{
-  template<typename T>
-  VTKM_EXEC
-  T operator()(const T& a, const T& b)const { return vtkm::Max(a,b); }
-};
-
 
 template<typename DeviceAdapterTag>
 class ComputeRange
@@ -70,18 +56,17 @@ public:
 
     //not the greatest way of doing this for performance reasons. But
     //this implementation should generate the smallest amount of code
-    ValueType initialMin = input.GetPortalConstControl().Get(0);
-    ValueType initialMax = initialMin;
+    vtkm::Vec<ValueType,2> initial(input.GetPortalConstControl().Get(0));
 
-    ValueType minResult = Algorithm::Reduce(input, initialMin, RangeMin());
-    ValueType maxResult = Algorithm::Reduce(input, initialMax, RangeMax());
+    vtkm::Vec<ValueType, 2> result =
+      Algorithm::Reduce(input, initial, vtkm::MinAndMax<ValueType>());
 
     this->Range->Allocate(NumberOfComponents);
     for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
       this->Range->GetPortalControl().Set(
-            i, vtkm::Range(VecType::GetComponent(minResult, i),
-                           VecType::GetComponent(maxResult, i)));
+            i, vtkm::Range(VecType::GetComponent(result[0], i),
+                           VecType::GetComponent(result[1], i)));
     }
   }
 

@@ -22,6 +22,7 @@
 #define vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmThrust_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
@@ -369,25 +370,33 @@ private:
     }
   }
 
-  template<class InputPortal>
+  template<class InputPortal, typename T>
   VTKM_CONT static
-  typename InputPortal::ValueType ReducePortal(const InputPortal &input,
-                            typename InputPortal::ValueType initialValue)
+  T ReducePortal(const InputPortal &input, T initialValue)
   {
-    typedef typename InputPortal::ValueType ValueType;
     return ReducePortal(input,
                         initialValue,
-                        ::thrust::plus<ValueType>());
+                        ::thrust::plus<T>());
   }
 
-  template<class InputPortal, class BinaryFunctor>
+  template<class InputPortal, typename T, class BinaryFunctor>
   VTKM_CONT static
-  typename InputPortal::ValueType ReducePortal(const InputPortal &input,
-                            typename InputPortal::ValueType initialValue,
-                            BinaryFunctor binary_functor)
+  T ReducePortal(const InputPortal &input,
+                 T initialValue,
+                 BinaryFunctor binary_functor)
   {
-    typedef typename InputPortal::ValueType ValueType;
-    vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
+    using fast_path = std::is_same< typename InputPortal::ValueType, T>;
+    return ReducePortalImpl(input, initialValue, binary_functor, fast_path());
+  }
+
+  template<class InputPortal, typename T, class BinaryFunctor>
+  VTKM_CONT static
+  T ReducePortalImpl(const InputPortal &input, T initialValue,
+                     BinaryFunctor binary_functor, std::true_type)
+  {
+    //The portal type and the initial value are the same so we can use
+    //the thrust reduction algorithm
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<T,
                                                       BinaryFunctor> bop(binary_functor);
 
     try
@@ -403,7 +412,42 @@ private:
       throwAsVTKmException();
     }
 
-    return typename InputPortal::ValueType();
+    return initialValue;
+  }
+
+  template<class InputPortal, typename T, class BinaryFunctor>
+  VTKM_CONT static
+  T ReducePortalImpl(const InputPortal &input, T initialValue,
+                     BinaryFunctor binary_functor,
+                     std::false_type)
+  {
+    //The portal type and the initial value ARENT the same type so we have
+    //to a slower approach, where we wrap the input portal inside a cast
+    //portal
+    using CastFunctor = vtkm::cont::internal::Cast<typename InputPortal::ValueType,T>;
+
+    vtkm::exec::internal::ArrayPortalTransform< T, InputPortal, CastFunctor>
+      castPortal(input);
+
+
+
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<T,
+                                                      BinaryFunctor> bop(binary_functor);
+
+    try
+    {
+      return ::thrust::reduce(thrust::cuda::par,
+                              IteratorBegin(castPortal),
+                              IteratorEnd(castPortal),
+                              initialValue,
+                              bop);
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+    }
+
+    return initialValue;
   }
 
   template<class KeysPortal, class ValuesPortal,
@@ -886,10 +930,10 @@ public:
                       values_output.PrepareForInPlace(DeviceAdapterTag()));
   }
 
- template<typename T, class SIn>
-  VTKM_CONT static T Reduce(
+ template<typename T, typename U, class SIn>
+  VTKM_CONT static U Reduce(
       const vtkm::cont::ArrayHandle<T,SIn> &input,
-      T initialValue)
+      U initialValue)
   {
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
@@ -900,10 +944,10 @@ public:
                         initialValue);
   }
 
- template<typename T, class SIn, class BinaryFunctor>
-  VTKM_CONT static T Reduce(
+ template<typename T, typename U, class SIn, class BinaryFunctor>
+  VTKM_CONT static U Reduce(
       const vtkm::cont::ArrayHandle<T,SIn> &input,
-      T initialValue,
+      U initialValue,
       BinaryFunctor binary_functor)
   {
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
@@ -1001,7 +1045,7 @@ public:
       output.PrepareForOutput(0, DeviceAdapterTag());
       return vtkm::TypeTraits<T>::ZeroInitialization();
       }
-    
+
     //We need call PrepareForInput on the input argument before invoking a
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
@@ -1023,7 +1067,7 @@ public:
       output.PrepareForOutput(0, DeviceAdapterTag());
       return vtkm::TypeTraits<T>::ZeroInitialization();
       }
-    
+
     //We need call PrepareForInput on the input argument before invoking a
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
