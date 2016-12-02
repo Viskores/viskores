@@ -75,7 +75,7 @@ void View1D::RenderScreenAnnotations()
   this->HorizontalAxisAnnotation.SetColor(vtkm::rendering::Color(1,1,1));
   this->HorizontalAxisAnnotation.SetScreenPosition(
         viewportLeft, viewportBottom, viewportRight, viewportBottom);
-  vtkm::Bounds viewRange = this->GetCamera().GetViewRange1D();
+  vtkm::Bounds viewRange = this->GetCamera().GetViewRange2D();
   
   this->HorizontalAxisAnnotation.SetRangeForAutoTicks(viewRange.X.Min,
                                                       viewRange.X.Max);

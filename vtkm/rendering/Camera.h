@@ -103,7 +103,7 @@ class VTKM_RENDERING_EXPORT Camera
   };
 
 public:
-  enum ModeEnum { MODE_1D, MODE_2D, MODE_3D };
+  enum ModeEnum {MODE_2D, MODE_3D };
   VTKM_CONT
   Camera(ModeEnum vtype=Camera::MODE_3D)
     : Mode(vtype),
@@ -151,11 +151,6 @@ public:
   {
     this->SetMode(vtkm::rendering::Camera::MODE_2D);
   }
-  VTKM_CONT
-  void SetModeTo1D()
-  {
-    this->SetMode(vtkm::rendering::Camera::MODE_1D);
-  }  
 
   /// \brief The clipping range of the camera.
   ///
@@ -566,58 +561,6 @@ public:
   }
 
   VTKM_CONT
-  vtkm::Bounds GetViewRange1D() const
-  {
-    return this->GetViewRange2D();
-  }
-  VTKM_CONT
-  void GetViewRange1D(vtkm::Float32 &left,
-                      vtkm::Float32 &right,
-                      vtkm::Float32 &bottom,
-                      vtkm::Float32 &top) const
-  {
-    this->GetViewRange2D(left,right,bottom,top);
-  }
-  VTKM_CONT
-  void SetViewRange1D(vtkm::Float32 left,
-                      vtkm::Float32 right,
-                      vtkm::Float32 bottom,
-                      vtkm::Float32 top)
-  {
-    this->SetModeTo1D();
-    this->Camera1D.Left = left;
-    this->Camera1D.Right = right;
-    this->Camera1D.Bottom = bottom;
-    this->Camera1D.Top = top;
-
-    this->Camera1D.XPan = 0;
-    this->Camera1D.YPan = 0;
-    this->Camera1D.Zoom = 1;
-  }
-  VTKM_CONT
-  void SetViewRange1D(vtkm::Float64 left,
-                      vtkm::Float64 right,
-                      vtkm::Float64 bottom,
-                      vtkm::Float64 top)
-  {
-    this->SetViewRange1D(static_cast<vtkm::Float32>(left),
-                         static_cast<vtkm::Float32>(right),
-                         static_cast<vtkm::Float32>(bottom),
-                         static_cast<vtkm::Float32>(top));
-  }
-  VTKM_CONT
-  void SetViewRange1D(const vtkm::Range &xRange,
-                      const vtkm::Range &yRange)
-  {
-    this->SetViewRange1D(xRange.Min, xRange.Max, yRange.Min, yRange.Max);
-  }
-  VTKM_CONT
-  void SetViewRange1D(const vtkm::Bounds &viewRange)
-  {
-    this->SetViewRange1D(viewRange.X, viewRange.Y);
-  }
-  
-  VTKM_CONT
   void Print()
   {
     if (Mode == MODE_3D)
@@ -649,32 +592,12 @@ public:
       std::cout<<vm[2][0]<<" "<<vm[2][1]<<" "<<vm[2][2]<<" "<<vm[2][3]<<std::endl;
       std::cout<<vm[3][0]<<" "<<vm[3][1]<<" "<<vm[3][2]<<" "<<vm[3][3]<<std::endl;                    
     }
-    else if (Mode == MODE_1D)
-    {
-      std::cout<<"Camera: 1D"<<std::endl;
-      std::cout<<"  LRBT: "<<Camera1D.Left<<" "<<Camera1D.Right<<" "<<Camera1D.Bottom<<" "<<Camera1D.Top<<std::endl;
-      std::cout<<"  XY  : "<<Camera1D.XPan<<" "<<Camera1D.YPan<<std::endl;
-      std::cout<<"  SZ  : "<<Camera1D.XScale<<" "<<Camera1D.Zoom<<std::endl;
-      vtkm::Matrix<vtkm::Float32,4,4> pm, vm;
-      pm = CreateProjectionMatrix(512,512);
-      vm = CreateViewMatrix();
-      std::cout<<" PM: "<<std::endl;
-      std::cout<<pm[0][0]<<" "<<pm[0][1]<<" "<<pm[0][2]<<" "<<pm[0][3]<<std::endl;
-      std::cout<<pm[1][0]<<" "<<pm[1][1]<<" "<<pm[1][2]<<" "<<pm[1][3]<<std::endl;
-      std::cout<<pm[2][0]<<" "<<pm[2][1]<<" "<<pm[2][2]<<" "<<pm[2][3]<<std::endl;
-      std::cout<<pm[3][0]<<" "<<pm[3][1]<<" "<<pm[3][2]<<" "<<pm[3][3]<<std::endl;
-      std::cout<<" VM: "<<std::endl;
-      std::cout<<vm[0][0]<<" "<<vm[0][1]<<" "<<vm[0][2]<<" "<<vm[0][3]<<std::endl;
-      std::cout<<vm[1][0]<<" "<<vm[1][1]<<" "<<vm[1][2]<<" "<<vm[1][3]<<std::endl;
-      std::cout<<vm[2][0]<<" "<<vm[2][1]<<" "<<vm[2][2]<<" "<<vm[2][3]<<std::endl;
-      std::cout<<vm[3][0]<<" "<<vm[3][1]<<" "<<vm[3][2]<<" "<<vm[3][3]<<std::endl;                    
-    }
   }
 
 private:
   ModeEnum Mode;
   Camera3DStruct Camera3D;
-  Camera2DStruct Camera2D, Camera1D;
+  Camera2DStruct Camera2D;
 
   vtkm::Float32 NearPlane;
   vtkm::Float32 FarPlane;

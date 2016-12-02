@@ -78,7 +78,7 @@ SetCamera<vtkm::rendering::View1D>(vtkm::rendering::Camera &camera,
   bounds.X = coordBounds.X;
   field.GetRange(&bounds.Y, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
     
-  camera = vtkm::rendering::Camera(vtkm::rendering::Camera::MODE_1D);
+  camera = vtkm::rendering::Camera(vtkm::rendering::Camera::MODE_2D);
   camera.ResetToBounds(bounds);
   camera.SetClippingRange(1.f, 100.f);
   camera.SetViewport(-0.7f, +0.7f, -0.7f, +0.7f);
