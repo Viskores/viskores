@@ -22,6 +22,7 @@
 
 set(unit_tests
   UnitTestCellDerivative.cxx
+  UnitTestCellFace.cxx
   UnitTestCellInterpolate.cxx
   UnitTestParametricCoordinates.cxx
   )
