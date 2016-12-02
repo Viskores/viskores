@@ -394,8 +394,8 @@ public:
     Algorithm::Copy(this->PointToCell.Connectivity, pointIndices);
 
     // PointToCell numIndices will be basis of CellToPoint connectivity
-    vtkm::cont::ArrayHandle<vtkm::Id> cellIndices;
-    cellIndices.Allocate(connectivityLength);
+
+    this->CellToPoint.Connectivity.Allocate(connectivityLength);
     vtkm::cont::ArrayHandleCounting<vtkm::Id> index(0, 1, numberOfCells);
 
     this->PointToCell.BuildIndexOffsets(Device());
@@ -403,10 +403,10 @@ public:
     expandDispatcher.Invoke(index,
                             this->PointToCell.IndexOffsets,
                             this->PointToCell.NumIndices,
-                            cellIndices);
+                            this->CellToPoint.Connectivity);
 
     // SortByKey where key is PointToCell connectivity and value is the expanded cellIndex
-    Algorithm::SortByKey(pointIndices, cellIndices);
+    Algorithm::SortByKey(pointIndices, this->CellToPoint.Connectivity);
 
     if(this->GetNumberOfPoints() <= 0)
     {
@@ -418,20 +418,17 @@ public:
     vtkm::cont::ArrayHandleConstant<vtkm::Id> numArray(1, connectivityLength);
     vtkm::cont::ArrayHandle<vtkm::Id> uniquePoints;
     vtkm::cont::ArrayHandle<vtkm::Id> numIndices;
-    vtkm::cont::ArrayHandle<vtkm::Id> shapes;
     uniquePoints.Allocate(numberOfPoints);
     numIndices.Allocate(numberOfPoints);
-    shapes.Allocate(numberOfPoints);
 
     Algorithm::ReduceByKey(pointIndices, numArray,
                            uniquePoints, numIndices,
-                          vtkm::Add());
+                           vtkm::Add());
 
     // Set the CellToPoint information
-    vtkm::cont::ArrayHandleConstant<vtkm::Id> shapeArray(CELL_SHAPE_VERTEX, numberOfPoints);
-    Algorithm::Copy(shapeArray, this->CellToPoint.Shapes);
+    this->CellToPoint.Shapes = vtkm::cont::make_ArrayHandleConstant(
+      static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);
     Algorithm::Copy(numIndices, this->CellToPoint.NumIndices);
-    Algorithm::Copy(cellIndices, this->CellToPoint.Connectivity);
 
     this->CellToPoint.ElementsValid = true;
     this->CellToPoint.IndexOffsetsValid = false;
@@ -536,6 +533,19 @@ struct CellSetExplicitConnectivityChooser<
 {
   typedef vtkm::cont::internal::ConnectivityExplicitInternals<
       Storage1,Storage2,Storage3,Storage4> ConnectivityType;
+};
+
+
+template<typename CellSetType>
+struct CellSetExplicitConnectivityChooser<
+    CellSetType,
+    vtkm::TopologyElementTagCell,
+    vtkm::TopologyElementTagPoint>
+{
+  //only specify the shape type as it will be constant as everything
+  //is a vertex. otherwise use the defaults.
+  typedef vtkm::cont::internal::ConnectivityExplicitInternals<
+      typename ArrayHandleConstant<vtkm::UInt8>::StorageTag > ConnectivityType;
 };
 
 } // namespace detail

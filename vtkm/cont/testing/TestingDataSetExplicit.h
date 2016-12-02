@@ -114,7 +114,7 @@ private:
     vtkm::IdComponent correctNumIndices[] = {1, 2, 2, 1, 1};
     vtkm::Id correctConnectivity[] = {0, 0, 1, 0, 1, 1, 1};
 
-    vtkm::cont::ArrayHandle<vtkm::UInt8> shapes = cellset.GetShapesArray(
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes = cellset.GetShapesArray(
       vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices = cellset.GetNumIndicesArray(
       vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());

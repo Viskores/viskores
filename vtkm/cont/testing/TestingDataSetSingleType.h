@@ -131,7 +131,7 @@ private:
 
     //verify that the cell to point connectivity types are correct
     //note the handle storage types differ compared to point to cell
-    vtkm::cont::ArrayHandle<vtkm::UInt8> shapesCellToPoint = cellset.GetShapesArray(
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesCellToPoint = cellset.GetShapesArray(
       vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndicesCellToPoint = cellset.GetNumIndicesArray(
       vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
