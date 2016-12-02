@@ -23,6 +23,8 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
 
+#include <vtkm/exec/CellFace.h>
+
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
@@ -152,13 +154,10 @@ struct ExternalFaces
 
     template<typename T>
     VTKM_EXEC
-    T operator()(const T &cellType) const
+    vtkm::IdComponent operator()(const T &cellType) const
     {
-      if (cellType == vtkm::CELL_SHAPE_TETRA) return 4;
-      else if (cellType == vtkm::CELL_SHAPE_PYRAMID) return 5;
-      else if (cellType == vtkm::CELL_SHAPE_WEDGE) return 5;
-      else if (cellType == vtkm::CELL_SHAPE_HEXAHEDRON) return 6;
-      else return CELL_SHAPE_EMPTY;
+      return vtkm::exec::CellFaceNumberOfFaces(
+            vtkm::CellShapeTagGeneric(cellType), *this);
     }
   };
 
@@ -187,14 +186,16 @@ struct ExternalFaces
                     CellShapeTag shape,
                     const CellNodeVecType &cellNodeIds) const
     {
-      if (shape.Id == vtkm::CELL_SHAPE_TETRA)
-      {
-        vtkm::IdComponent faceIdTable[12] = {0,1,2,0,1,3,0,2,3,1,2,3};
+      vtkm::VecCConst<vtkm::IdComponent> localFaceIndices =
+          vtkm::exec::CellFaceLocalIndices(
+            static_cast<vtkm::IdComponent>(cellFaceId), shape, *this);
 
+      if (localFaceIndices.GetNumberOfComponents() == 3)
+      {
         //Assign cell points/nodes to this face
-        vtkm::Id faceP1 = cellNodeIds[faceIdTable[cellFaceId*3]];
-        vtkm::Id faceP2 = cellNodeIds[faceIdTable[cellFaceId*3 + 1]];
-        vtkm::Id faceP3 = cellNodeIds[faceIdTable[cellFaceId*3 + 2]];
+        vtkm::Id faceP1 = cellNodeIds[localFaceIndices[0]];
+        vtkm::Id faceP2 = cellNodeIds[localFaceIndices[1]];
+        vtkm::Id faceP3 = cellNodeIds[localFaceIndices[2]];
 
         //Sort the face points/nodes in ascending order
         vtkm::Id sorted[3] = {faceP1, faceP2, faceP3};
@@ -221,6 +222,11 @@ struct ExternalFaces
         faceVertices[0] = static_cast<T>(sorted[0]);
         faceVertices[1] = static_cast<T>(sorted[1]);
         faceVertices[2] = static_cast<T>(sorted[2]);
+      }
+      else
+      {
+        // TODO: Support all face types.
+        this->RaiseError("Non-triangular faces not supported.");
       }
     }
   };
