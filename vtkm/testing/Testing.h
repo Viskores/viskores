@@ -23,6 +23,7 @@
 #include <vtkm/Bounds.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
+#include <vtkm/Matrix.h>
 #include <vtkm/Pair.h>
 #include <vtkm/Range.h>
 #include <vtkm/TypeListTag.h>
@@ -34,6 +35,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <type_traits>
 
 #include <math.h>
 
@@ -334,18 +336,34 @@ public:
 }
 } // namespace vtkm::internal
 
-/// Helper function to test two quanitites for equality accounting for slight
-/// variance due to floating point numerical inaccuracies.
-///
+// Prototype declaration
 template<typename VectorType1, typename VectorType2>
 static inline VTKM_EXEC_CONT
 bool test_equal(VectorType1 vector1,
                 VectorType2 vector2,
-                vtkm::Float64 tolerance = 0.00001)
-{
-  typedef typename vtkm::VecTraits<VectorType1> Traits1;
-  typedef typename vtkm::VecTraits<VectorType2> Traits2;
+                vtkm::Float64 tolerance = 0.00001);
 
+namespace detail {
+
+template<typename VectorType1, typename VectorType2>
+static inline VTKM_EXEC_CONT
+bool test_equal_impl(VectorType1 vector1,
+                     VectorType2 vector2,
+                     vtkm::Float64 tolerance,
+                     vtkm::TypeTraitsVectorTag)
+{
+  // If you get a compiler error here, it means you are comparing a vector to
+  // a scalar, in which case the types are non-comparable.
+  VTKM_STATIC_ASSERT_MSG(
+        (std::is_same<
+           typename vtkm::TypeTraits<VectorType2>::DimensionalityTag,
+           vtkm::TypeTraitsScalarTag>::type::value == false),
+        "Trying to compare a vector with a scalar.");
+
+  using Traits1 = vtkm::VecTraits<VectorType1>;
+  using Traits2 = vtkm::VecTraits<VectorType2>;
+
+  // If vectors have different number of components, then they cannot be equal.
   if (Traits1::GetNumberOfComponents(vector1) !=
       Traits2::GetNumberOfComponents(vector2))
   {
@@ -356,43 +374,121 @@ bool test_equal(VectorType1 vector1,
        component < Traits1::GetNumberOfComponents(vector1);
        component++)
   {
-    vtkm::Float64 value1 =
-        vtkm::Float64(Traits1::GetComponent(vector1, component));
-    vtkm::Float64 value2 =
-        vtkm::Float64(Traits2::GetComponent(vector2, component));
-    if (vtkm::Abs(value1-value2) <= tolerance)
-    {
-      continue;
-    }
-
-    // We are using a ratio to compare the relative tolerance of two numbers.
-    // Using an ULP based comparison (comparing the bits as integers) might be
-    // a better way to go, but this has been working pretty well so far.
-    vtkm::Float64 ratio;
-    if ((vtkm::Abs(value2) > tolerance) && (value2 != 0))
-    {
-      ratio = value1 / value2;
-    }
-    else
-    {
-      // If we are here, it means that value2 is close to 0 but value1 is not.
-      // These cannot be within tolerance, so just return false.
-      return false;
-    }
-    if ((ratio > vtkm::Float64(1.0) - tolerance)
-        && (ratio < vtkm::Float64(1.0) + tolerance))
-    {
-      // This component is OK. The condition is checked in this way to
-      // correctly handle non-finites that fail all comparisons. Thus, if a
-      // non-finite is encountered, this condition will fail and false will be
-      // returned.
-    }
-    else
+    bool componentEqual =
+        test_equal(Traits1::GetComponent(vector1, component),
+                   Traits2::GetComponent(vector2, component),
+                   tolerance);
+    if (!componentEqual)
     {
       return false;
     }
   }
+
   return true;
+}
+
+template<typename MatrixType1, typename MatrixType2>
+static inline VTKM_EXEC_CONT
+bool test_equal_impl(MatrixType1 matrix1,
+                     MatrixType2 matrix2,
+                     vtkm::Float64 tolerance,
+                     vtkm::TypeTraitsMatrixTag)
+{
+  // For the purposes of comparison, treat matrices the same as vectors.
+  return test_equal_impl(
+        matrix1, matrix2, tolerance, vtkm::TypeTraitsVectorTag());
+}
+
+template<typename ScalarType1, typename ScalarType2>
+static inline VTKM_EXEC_CONT
+bool test_equal_impl(ScalarType1 scalar1,
+                     ScalarType2 scalar2,
+                     vtkm::Float64 tolerance,
+                     vtkm::TypeTraitsScalarTag)
+{
+  // If you get a compiler error here, it means you are comparing a scalar to
+  // a vector, in which case the types are non-comparable.
+  VTKM_STATIC_ASSERT_MSG(
+        (std::is_same<
+           typename vtkm::TypeTraits<ScalarType2>::DimensionalityTag,
+           vtkm::TypeTraitsScalarTag>::type::value),
+        "Trying to compare a scalar with a vector.");
+
+  // Do all comparisions using 64-bit floats.
+  vtkm::Float64 value1 = vtkm::Float64(scalar1);
+  vtkm::Float64 value2 = vtkm::Float64(scalar2);
+
+  if (vtkm::Abs(value1-value2) <= tolerance)
+  {
+    return true;
+  }
+
+  // We are using a ratio to compare the relative tolerance of two numbers.
+  // Using an ULP based comparison (comparing the bits as integers) might be
+  // a better way to go, but this has been working pretty well so far.
+  vtkm::Float64 ratio;
+  if ((vtkm::Abs(value2) > tolerance) && (value2 != 0))
+  {
+    ratio = value1 / value2;
+  }
+  else
+  {
+    // If we are here, it means that value2 is close to 0 but value1 is not.
+    // These cannot be within tolerance, so just return false.
+    return false;
+  }
+  if ((ratio > vtkm::Float64(1.0) - tolerance)
+      && (ratio < vtkm::Float64(1.0) + tolerance))
+  {
+    // This component is OK. The condition is checked in this way to
+    // correctly handle non-finites that fail all comparisons. Thus, if a
+    // non-finite is encountered, this condition will fail and false will be
+    // returned.
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+// Special cases of test equal where a scalar is compared with a Vec of size 1,
+// which we will allow.
+template<typename T>
+static inline VTKM_EXEC_CONT
+bool test_equal_impl(vtkm::Vec<T,1> value1,
+                     T value2,
+                     vtkm::Float64 tolerance,
+                     vtkm::TypeTraitsVectorTag)
+{
+  return test_equal(value1[0], value2, tolerance);
+}
+template<typename T>
+static inline VTKM_EXEC_CONT
+bool test_equal_impl(T value1,
+                     vtkm::Vec<T,1> value2,
+                     vtkm::Float64 tolerance,
+                     vtkm::TypeTraitsScalarTag)
+{
+  return test_equal(value1, value2[0], tolerance);
+}
+
+} // namespace detail
+
+/// Helper function to test two quanitites for equality accounting for slight
+/// variance due to floating point numerical inaccuracies.
+///
+template<typename VectorType1, typename VectorType2>
+static inline VTKM_EXEC_CONT
+bool test_equal(VectorType1 vector1,
+                VectorType2 vector2,
+                vtkm::Float64 tolerance /*= 0.00001*/)
+{
+  return detail::test_equal_impl(
+        vector1,
+        vector2,
+        tolerance,
+        typename vtkm::TypeTraits<VectorType1>::DimensionalityTag());
 }
 
 /// Special implementation of test_equal for strings, which don't fit a model

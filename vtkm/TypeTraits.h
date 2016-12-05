@@ -131,7 +131,9 @@ struct TypeTraits<vtkm::Vec<T,Size> >
 
   VTKM_EXEC_CONT
   static vtkm::Vec<T,Size> ZeroInitialization()
-    { return vtkm::Vec<T,Size>( (T()) ); }
+  {
+    return vtkm::Vec<T,Size>(vtkm::TypeTraits<T>::ZeroInitialization());
+  }
 };
 
 /// \brief Traits for Pair types.
