@@ -34,6 +34,51 @@
 namespace vtkm {
 namespace exec {
 
+namespace detail {
+
+template<typename VecType, typename DimensionalityTag>
+struct BaseComponentOfImpl;
+
+template<typename VecType>
+struct BaseComponentOfImpl<VecType, vtkm::TypeTraitsVectorTag>
+{
+private:
+  using ComponentType = typename vtkm::VecTraits<VecType>::ComponentType;
+public:
+  using type =
+    typename BaseComponentOfImpl<
+      ComponentType,
+      typename vtkm::TypeTraits<ComponentType>::DimensionalityTag
+    >::type;
+};
+
+template<typename VecType>
+struct BaseComponentOfImpl<VecType, vtkm::TypeTraitsMatrixTag>
+    : BaseComponentOfImpl<VecType, vtkm::TypeTraitsVectorTag>
+{  };
+
+template<typename ScalarType>
+struct BaseComponentOfImpl<ScalarType, vtkm::TypeTraitsScalarTag>
+{
+  using type = ScalarType;
+};
+
+} // namespace detail
+
+/// Finds the base component type of a Vec. If you have a Vec of Vecs, it will
+/// descend all Vecs until you get to the scalar type.
+///
+// If this becomes useful outside of CellDerivative, then this should probably
+// be moved to a different header file.
+template<typename VecType>
+struct BaseComponentOf
+{
+  using type =
+    typename detail::BaseComponentOfImpl<
+      VecType,
+      typename vtkm::TypeTraits<VecType>::DimensionalityTag>::type;
+};
+
 // The derivative for a 2D polygon in 3D space is underdetermined since there
 // is no information in the direction perpendicular to the polygon. To compute
 // derivatives for general polygons, we build a 2D space for the polygon's
@@ -254,6 +299,105 @@ CellDerivativeFor3DCell(const FieldVecType &field,
                                  valid);
 }
 
+template<typename FieldType,
+         typename LUType,
+         typename ParametricCoordType,
+         typename CellShapeTag>
+VTKM_EXEC
+vtkm::Vec<FieldType,3>
+CellDerivativeFor2DCellFinish(
+    const vtkm::Vec<FieldType,4> &field,
+    const vtkm::Matrix<LUType,2,2> &LUFactorization,
+    const vtkm::Vec<vtkm::IdComponent,2> &LUPermutation,
+    const vtkm::Vec<ParametricCoordType,3> &pcoords,
+    const vtkm::exec::internal::Space2D<LUType> &space,
+    CellShapeTag,
+    vtkm::TypeTraitsScalarTag)
+{
+  // Finish solving linear equation. See CellDerivativeFor2DCell implementation
+  // for more detail.
+  vtkm::Vec<FieldType,2> parametricDerivative =
+      ParametricDerivative(field,pcoords,CellShapeTag());
+
+  vtkm::Vec<FieldType,2> gradient2D =
+      vtkm::detail::MatrixLUPSolve(
+        LUFactorization, LUPermutation, parametricDerivative);
+
+  return space.ConvertVecFromSpace(gradient2D);
+}
+
+template<typename FieldType,
+         typename LUType,
+         typename ParametricCoordType,
+         typename CellShapeTag>
+VTKM_EXEC
+vtkm::Vec<FieldType,3>
+CellDerivativeFor2DCellFinish(
+    const vtkm::Vec<FieldType,4> &field,
+    const vtkm::Matrix<LUType,2,2> &LUFactorization,
+    const vtkm::Vec<vtkm::IdComponent,2> &LUPermutation,
+    const vtkm::Vec<ParametricCoordType,3> &pcoords,
+    const vtkm::exec::internal::Space2D<LUType> &space,
+    CellShapeTag,
+    vtkm::TypeTraitsVectorTag)
+{
+  using FieldTraits = vtkm::VecTraits<FieldType>;
+  using FieldComponentType = typename FieldTraits::ComponentType;
+
+  vtkm::Vec<FieldType,3> gradient;
+
+  for (vtkm::IdComponent fieldComponent = 0;
+       fieldComponent < FieldTraits::GetNumberOfComponents(field[0]);
+       fieldComponent++)
+  {
+    vtkm::Vec<FieldComponentType,4> subField(
+          FieldTraits::GetComponent(field[0],fieldComponent),
+          FieldTraits::GetComponent(field[1],fieldComponent),
+          FieldTraits::GetComponent(field[2],fieldComponent),
+          FieldTraits::GetComponent(field[3],fieldComponent));
+
+    vtkm::Vec<FieldComponentType,3> subGradient =
+        CellDerivativeFor2DCellFinish(
+          subField,
+          LUFactorization,
+          LUPermutation,
+          pcoords,
+          space,
+          CellShapeTag(),
+          typename vtkm::TypeTraits<FieldComponentType>::DimensionalityTag());
+
+    FieldTraits::SetComponent(gradient[0], fieldComponent, subGradient[0]);
+    FieldTraits::SetComponent(gradient[1], fieldComponent, subGradient[1]);
+    FieldTraits::SetComponent(gradient[2], fieldComponent, subGradient[2]);
+  }
+
+  return gradient;
+}
+
+template<typename FieldType,
+         typename LUType,
+         typename ParametricCoordType,
+         typename CellShapeTag>
+VTKM_EXEC
+vtkm::Vec<FieldType,3>
+CellDerivativeFor2DCellFinish(
+    const vtkm::Vec<FieldType,4> &field,
+    const vtkm::Matrix<LUType,2,2> &LUFactorization,
+    const vtkm::Vec<vtkm::IdComponent,2> &LUPermutation,
+    const vtkm::Vec<ParametricCoordType,3> &pcoords,
+    const vtkm::exec::internal::Space2D<LUType> &space,
+    CellShapeTag,
+    vtkm::TypeTraitsMatrixTag)
+{
+  return CellDerivativeFor2DCellFinish(field,
+                                       LUFactorization,
+                                       LUPermutation,
+                                       pcoords,
+                                       space,
+                                       CellShapeTag(),
+                                       vtkm::TypeTraitsVectorTag());
+}
+
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType,
@@ -265,24 +409,27 @@ CellDerivativeFor2DCell(const FieldVecType &field,
                         const vtkm::Vec<ParametricCoordType,3> &pcoords,
                         CellShapeTag)
 {
-  typedef typename FieldVecType::ComponentType FieldType;
+  using FieldType = typename FieldVecType::ComponentType;
+  using BaseFieldType = typename BaseComponentOf<FieldType>::type;
 
   // We have an underdetermined system in 3D, so create a 2D space in the
   // plane that the polygon sits.
-  vtkm::exec::internal::Space2D<FieldType> space(
+  vtkm::exec::internal::Space2D<BaseFieldType> space(
         wCoords[0], wCoords[1], wCoords[wCoords.GetNumberOfComponents()-1]);
 
   // For reasons that should become apparent in a moment, we actually want
   // the transpose of the Jacobian.
-  vtkm::Matrix<FieldType,2,2> jacobianTranspose;
+  vtkm::Matrix<BaseFieldType,2,2> jacobianTranspose;
   vtkm::exec::JacobianFor2DCell(
         wCoords, pcoords, space, jacobianTranspose, CellShapeTag());
   jacobianTranspose = vtkm::MatrixTranspose(jacobianTranspose);
 
   // Find the derivative of the field in parametric coordinate space. That is,
   // find the vector [ds/du, ds/dv].
-  vtkm::Vec<FieldType,2> parametricDerivative =
-      ParametricDerivative(field,pcoords,CellShapeTag());
+  // Commented because this is actually done in CellDerivativeFor2DCellFinish
+  // to handle vector fields.
+//  vtkm::Vec<BaseFieldType,2> parametricDerivative =
+//      ParametricDerivative(field,pcoords,CellShapeTag());
 
   // If we write out the matrices below, it should become clear that the
   // Jacobian transpose times the field derivative in world space equals
@@ -298,10 +445,27 @@ CellDerivativeFor2DCell(const FieldVecType &field,
   // world space.
 
   bool valid;  // Ignored.
-  vtkm::Vec<FieldType,2> gradient2D =
-      vtkm::SolveLinearSystem(jacobianTranspose, parametricDerivative, valid);
-
-  return space.ConvertVecFromSpace(gradient2D);
+  // If you look at the implementation of vtkm::SolveLinearSystem, you will see
+  // that it is done in two parts. First, it does an LU factorization and then
+  // uses that result to complete the solve. The factorization part talkes the
+  // longest amount of time, and if we are performing the gradient on a vector
+  // field, the factorization can be reused for each component of the vector
+  // field. Thus, we are going to call the internals of SolveLinearSystem
+  // ourselves to do the factorization and then apply it to all components.
+  vtkm::Vec<vtkm::IdComponent,2> permutation;
+  BaseFieldType inversionParity; // Unused
+  vtkm::detail::MatrixLUPFactor(
+        jacobianTranspose, permutation, inversionParity, valid);
+  // MatrixLUPFactor does in place factorization. jacobianTranspose is now the
+  // LU factorization.
+  return CellDerivativeFor2DCellFinish(
+        field,
+        jacobianTranspose,
+        permutation,
+        pcoords,
+        space,
+        CellShapeTag(),
+        typename vtkm::TypeTraits<FieldType>::DimensionalityTag());
 }
 
 } // namespace detail
@@ -379,6 +543,65 @@ CellDerivative(const FieldVecType &field,
 }
 
 //-----------------------------------------------------------------------------
+namespace detail {
+
+template<typename FieldType,
+         typename WorldCoordType>
+VTKM_EXEC
+vtkm::Vec<FieldType,3>
+CellDerivativeLineImpl(
+    const FieldType &deltaField,
+    const WorldCoordType &vec, // direction of line
+    const typename WorldCoordType::ComponentType &vecMagSqr,
+    vtkm::TypeTraitsScalarTag)
+{
+  using GradientType = vtkm::Vec<FieldType,3>;
+
+  // The derivative of a line is in the direction of the line. Its length is
+  // equal to the difference of the scalar field divided by the length of the
+  // line segment. Thus, the derivative is characterized by
+  // (deltaField*vec)/mag(vec)^2.
+
+  return (deltaField/static_cast<FieldType>(vecMagSqr))*GradientType(vec);
+}
+
+template<typename FieldType,
+         typename WorldCoordType,
+         typename VectorTypeTraitsTag>
+VTKM_EXEC
+vtkm::Vec<FieldType,3>
+CellDerivativeLineImpl(
+    const FieldType &deltaField,
+    const WorldCoordType &vec, // direction of line
+    const typename WorldCoordType::ComponentType &vecMagSqr,
+    VectorTypeTraitsTag)
+{
+  using FieldTraits = vtkm::VecTraits<FieldType>;
+  using FieldComponentType = typename FieldTraits::ComponentType;
+  using GradientType = vtkm::Vec<FieldType,3>;
+
+  GradientType gradient;
+  for (vtkm::IdComponent fieldComponent= 0;
+       fieldComponent < FieldTraits::GetNumberOfComponents(deltaField);
+       fieldComponent++)
+  {
+    using SubGradientType = vtkm::Vec<FieldComponentType,3>;
+    SubGradientType subGradient =
+        CellDerivativeLineImpl(
+          FieldTraits::GetComponent(deltaField, fieldComponent),
+          vec,
+          vecMagSqr,
+          typename vtkm::TypeTraits<FieldComponentType>::DimensionalityTag());
+    FieldTraits::SetComponent(gradient[0], fieldComponent, subGradient[0]);
+    FieldTraits::SetComponent(gradient[1], fieldComponent, subGradient[1]);
+    FieldTraits::SetComponent(gradient[2], fieldComponent, subGradient[2]);
+  }
+
+  return gradient;
+}
+
+} // namespace detail
+
 template<typename FieldVecType,
          typename WorldCoordType,
          typename ParametricCoordType>
@@ -393,18 +616,17 @@ CellDerivative(const FieldVecType &field,
   VTKM_ASSERT(field.GetNumberOfComponents() == 2);
   VTKM_ASSERT(wCoords.GetNumberOfComponents() == 2);
 
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef vtkm::Vec<FieldType,3> GradientType;
+  using FieldType = typename FieldVecType::ComponentType;
+  using BaseComponentType = typename BaseComponentOf<FieldType>::type;
 
-  // The derivative of a line is in the direction of the line. Its length is
-  // equal to the difference of the scalar field divided by the length of the
-  // line segment. Thus, the derivative is characterized by
-  // (deltaField*vec)/mag(vec)^2.
+  FieldType deltaField(field[1] - field[0]);
+  vtkm::Vec<BaseComponentType,3> vec(wCoords[1] - wCoords[0]);
 
-  FieldType deltaField = field[1] - field[0];
-  GradientType vec = wCoords[1] - wCoords[0];
-
-  return (deltaField/vtkm::MagnitudeSquared(vec))*vec;
+  return detail::CellDerivativeLineImpl(
+        deltaField,
+        vec,
+        vtkm::MagnitudeSquared(vec),
+        typename vtkm::TypeTraits<FieldType>::DimensionalityTag());
 }
 
 template<typename FieldVecType,
@@ -421,10 +643,80 @@ CellDerivative(const FieldVecType &field,
 
   typedef typename FieldVecType::ComponentType T;
 
-  return vtkm::Vec<T,3>((field[1]-field[0])/wCoords.GetSpacing()[0], 0, 0);
+  return vtkm::Vec<T,3>(
+        (field[1]-field[0])/wCoords.GetSpacing()[0], T(0), T(0));
 }
 
 //-----------------------------------------------------------------------------
+namespace detail {
+
+template<typename ValueType,
+         typename LUType>
+VTKM_EXEC
+vtkm::Vec<ValueType,3>
+TriangleDerivativeFinish(const vtkm::Vec<ValueType,3> &field,
+                         const vtkm::Matrix<LUType,3,3> &LUFactorization,
+                         const vtkm::Vec<vtkm::IdComponent,3> &LUPermutation,
+                         vtkm::TypeTraitsScalarTag)
+{
+  // Finish solving linear equation. See TriangleDerivative implementation
+  // for more detail.
+  vtkm::Vec<LUType,3> b(field[1]-field[0], field[2]-field[0], 0);
+
+  return vtkm::detail::MatrixLUPSolve(LUFactorization, LUPermutation, b);
+}
+
+template<typename ValueType,
+         typename LUType>
+VTKM_EXEC
+vtkm::Vec<ValueType,3>
+TriangleDerivativeFinish(const vtkm::Vec<ValueType,3> &field,
+                         const vtkm::Matrix<LUType,3,3> &LUFactorization,
+                         const vtkm::Vec<vtkm::IdComponent,3> &LUPermutation,
+                         vtkm::TypeTraitsVectorTag)
+{
+  using FieldTraits = vtkm::VecTraits<ValueType>;
+  using FieldComponentType = typename FieldTraits::ComponentType;
+
+  vtkm::Vec<ValueType,3> gradient;
+
+  for (vtkm::IdComponent fieldComponent = 0;
+       fieldComponent < FieldTraits::GetNumberOfComponents(field[0]);
+       fieldComponent++)
+  {
+    vtkm::Vec<FieldComponentType,3> subField(
+          FieldTraits::GetComponent(field[0],fieldComponent),
+          FieldTraits::GetComponent(field[1],fieldComponent),
+          FieldTraits::GetComponent(field[2],fieldComponent));
+
+    vtkm::Vec<FieldComponentType,3> subGradient =
+        TriangleDerivativeFinish(
+          subField,
+          LUFactorization,
+          LUPermutation,
+          typename vtkm::TypeTraits<FieldComponentType>::DimensionalityTag());
+
+    FieldTraits::SetComponent(gradient[0], fieldComponent, subGradient[0]);
+    FieldTraits::SetComponent(gradient[1], fieldComponent, subGradient[1]);
+    FieldTraits::SetComponent(gradient[2], fieldComponent, subGradient[2]);
+  }
+
+  return gradient;
+}
+
+template<typename ValueType,
+         typename LUType>
+VTKM_EXEC
+vtkm::Vec<ValueType,3>
+TriangleDerivativeFinish(const vtkm::Vec<ValueType,3> &field,
+                         const vtkm::Matrix<LUType,3,3> &LUFactorization,
+                         const vtkm::Vec<vtkm::IdComponent,3> &LUPermutation,
+                         vtkm::TypeTraitsMatrixTag)
+{
+  return TriangleDerivativeFinish(
+        field, LUFactorization, LUPermutation, vtkm::TypeTraitsVectorTag());
+}
+
 template<typename ValueType,
          typename WCoordType>
 VTKM_EXEC
@@ -432,7 +724,7 @@ vtkm::Vec<ValueType,3>
 TriangleDerivative(const vtkm::Vec<ValueType, 3> &field,
                    const vtkm::Vec<WCoordType, 3> &wCoords)
 {
-  typedef vtkm::Vec<ValueType,3> GradientType;
+  using BaseComponentType = typename BaseComponentOf<ValueType>::type;
 
   // The scalar values of the three points in a triangle completely specify a
   // linear field (with constant gradient) assuming the field is constant in
@@ -458,23 +750,14 @@ TriangleDerivative(const vtkm::Vec<ValueType, 3> &field,
   // are the differences in points and normal, b has the scalar differences,
   // and x is really the gradient g.
 
-  GradientType v0 = wCoords[1] - wCoords[0];
-  GradientType v1 = wCoords[2] - wCoords[0];
-  GradientType n = vtkm::Cross(v0, v1);
+  vtkm::Vec<BaseComponentType,3> v0 = wCoords[1] - wCoords[0];
+  vtkm::Vec<BaseComponentType,3> v1 = wCoords[2] - wCoords[0];
+  vtkm::Vec<BaseComponentType,3> n = vtkm::Cross(v0, v1);
 
-  vtkm::Matrix<ValueType,3,3> A;
+  vtkm::Matrix<BaseComponentType,3,3> A;
   vtkm::MatrixSetRow(A, 0, v0);
   vtkm::MatrixSetRow(A, 1, v1);
   vtkm::MatrixSetRow(A, 2, n);
-
-  GradientType b(field[1] - field[0], field[2] - field[0], ValueType(0));
-
-  // If we want to later change this method to take the gradient of multiple
-  // values (for example, to find the Jacobian of a vector field), then there
-  // are more efficient ways to solve them all than independently solving this
-  // equation for each component of the field. You could find the inverse of
-  // matrix A. Or you could alter the functions in vtkm/Matrix.h to
-  // simultaneously solve multiple equations.
 
   // If the triangle is degenerate, then valid will be false. For now we are
   // ignoring it. We could detect it if we determine we need to although I have
@@ -482,8 +765,25 @@ TriangleDerivative(const vtkm::Vec<ValueType, 3> &field,
   //
   bool valid;
 
-  return vtkm::SolveLinearSystem(A, b, valid);
+  // If you look at the implementation of vtkm::SolveLinearSystem, you will see
+  // that it is done in two parts. First, it does an LU factorization and then
+  // uses that result to complete the solve. The factorization part talkes the
+  // longest amount of time, and if we are performing the gradient on a vector
+  // field, the factorization can be reused for each component of the vector
+  // field. Thus, we are going to call the internals of SolveLinearSystem
+  // ourselves to do the factorization and then apply it to all components.
+  vtkm::Vec<vtkm::IdComponent,3> permutation;
+  BaseComponentType inversionParity; // Unused
+  vtkm::detail::MatrixLUPFactor(A, permutation, inversionParity, valid);
+  // MatrixLUPFactor does in place factorization. A is now the LU factorization.
+  return TriangleDerivativeFinish(
+        field,
+        A,
+        permutation,
+        typename vtkm::TypeTraits<ValueType>::DimensionalityTag());
 }
+
+} // namespace detail
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
@@ -504,7 +804,7 @@ CellDerivative(const FieldVecType &inputField,
   using WCoordType = typename WorldCoordType::ComponentType;
   vtkm::Vec<ValueType, 3> field; inputField.CopyInto(field);
   vtkm::Vec<WCoordType, 3> wpoints; wCoords.CopyInto(wpoints);
-  return TriangleDerivative(field, wpoints);
+  return detail::TriangleDerivative(field, wpoints);
 }
 
 //-----------------------------------------------------------------------------
@@ -587,7 +887,7 @@ PolygonDerivative(const FieldVecType &field,
   // Now use the triangle derivative. pcoords is actually invalid for the
   // triangle, but that does not matter as the derivative for a triangle does
   // not depend on it.
-  return TriangleDerivative(triangleField, triangleWCoords);
+  return detail::TriangleDerivative(triangleField, triangleWCoords);
 }
 
 //-----------------------------------------------------------------------------
@@ -690,6 +990,76 @@ CellDerivative(const FieldVecType &field,
 }
 
 //-----------------------------------------------------------------------------
+namespace detail {
+
+template<typename ValueType,
+         typename LUType>
+VTKM_EXEC
+vtkm::Vec<ValueType,3>
+TetraDerivativeFinish(const vtkm::Vec<ValueType,4> &field,
+                      const vtkm::Matrix<LUType,3,3> &LUFactorization,
+                      const vtkm::Vec<vtkm::IdComponent,3> &LUPermutation,
+                      vtkm::TypeTraitsScalarTag)
+{
+  // Finish solving linear equation. See TriangleDerivative implementation
+  // for more detail.
+  vtkm::Vec<LUType,3> b(field[1]-field[0], field[2]-field[0], field[3]-field[0]);
+
+  return vtkm::detail::MatrixLUPSolve(LUFactorization, LUPermutation, b);
+}
+
+template<typename ValueType,
+         typename LUType>
+VTKM_EXEC
+vtkm::Vec<ValueType,3>
+TetraDerivativeFinish(const vtkm::Vec<ValueType,4> &field,
+                         const vtkm::Matrix<LUType,3,3> &LUFactorization,
+                         const vtkm::Vec<vtkm::IdComponent,3> &LUPermutation,
+                         vtkm::TypeTraitsVectorTag)
+{
+  using FieldTraits = vtkm::VecTraits<ValueType>;
+  using FieldComponentType = typename FieldTraits::ComponentType;
+
+  vtkm::Vec<ValueType,3> gradient;
+
+  for (vtkm::IdComponent fieldComponent = 0;
+       fieldComponent < FieldTraits::GetNumberOfComponents(field[0]);
+       fieldComponent++)
+  {
+    vtkm::Vec<FieldComponentType,4> subField(
+          FieldTraits::GetComponent(field[0],fieldComponent),
+          FieldTraits::GetComponent(field[1],fieldComponent),
+          FieldTraits::GetComponent(field[2],fieldComponent),
+          FieldTraits::GetComponent(field[3],fieldComponent));
+
+    vtkm::Vec<FieldComponentType,3> subGradient =
+        TetraDerivativeFinish(
+          subField,
+          LUFactorization,
+          LUPermutation,
+          typename vtkm::TypeTraits<FieldComponentType>::DimensionalityTag());
+
+    FieldTraits::SetComponent(gradient[0], fieldComponent, subGradient[0]);
+    FieldTraits::SetComponent(gradient[1], fieldComponent, subGradient[1]);
+    FieldTraits::SetComponent(gradient[2], fieldComponent, subGradient[2]);
+  }
+
+  return gradient;
+}
+
+template<typename ValueType,
+         typename LUType>
+VTKM_EXEC
+vtkm::Vec<ValueType,3>
+TetraDerivativeFinish(const vtkm::Vec<ValueType,4> &field,
+                         const vtkm::Matrix<LUType,3,3> &LUFactorization,
+                         const vtkm::Vec<vtkm::IdComponent,3> &LUPermutation,
+                         vtkm::TypeTraitsMatrixTag)
+{
+  return TetraDerivativeFinish(
+        field, LUFactorization, LUPermutation, vtkm::TypeTraitsVectorTag());
+}
+
 template<typename ValueType,
          typename WorldCoordType>
 VTKM_EXEC
@@ -697,7 +1067,7 @@ vtkm::Vec<ValueType,3>
 TetraDerivative(const vtkm::Vec<ValueType,4> &field,
                 const vtkm::Vec<WorldCoordType,4> &wCoords)
 {
-  typedef vtkm::Vec<ValueType,3> GradientType;
+  using BaseComponentType = typename BaseComponentOf<ValueType>::type;
 
   // The scalar values of the four points in a tetrahedron completely specify a
   // linear field (with constant gradient). The field, defined by the 3-vector
@@ -722,23 +1092,14 @@ TetraDerivative(const vtkm::Vec<ValueType,4> &field,
   // are the differences in points and normal, b has the scalar differences,
   // and x is really the gradient g.
 
-  GradientType v0 = wCoords[1] - wCoords[0];
-  GradientType v1 = wCoords[2] - wCoords[0];
-  GradientType v2 = wCoords[3] - wCoords[0];
+  vtkm::Vec<BaseComponentType,3> v0 = wCoords[1] - wCoords[0];
+  vtkm::Vec<BaseComponentType,3> v1 = wCoords[2] - wCoords[0];
+  vtkm::Vec<BaseComponentType,3> v2 = wCoords[3] - wCoords[0];
 
-  vtkm::Matrix<ValueType,3,3> A;
+  vtkm::Matrix<BaseComponentType,3,3> A;
   vtkm::MatrixSetRow(A, 0, v0);
   vtkm::MatrixSetRow(A, 1, v1);
   vtkm::MatrixSetRow(A, 2, v2);
-
-  GradientType b(field[1]-field[0], field[2]-field[0], field[3]-field[0]);
-
-  // If we want to later change this method to take the gradient of multiple
-  // values (for example, to find the Jacobian of a vector field), then there
-  // are more efficient ways to solve them all than independently solving this
-  // equation for each component of the field. You could find the inverse of
-  // matrix A. Or you could alter the functions in vtkm/Matrix.h to
-  // simultaneously solve multiple equations.
 
   // If the tetrahedron is degenerate, then valid will be false. For now we are
   // ignoring it. We could detect it if we determine we need to although I have
@@ -746,8 +1107,25 @@ TetraDerivative(const vtkm::Vec<ValueType,4> &field,
   //
   bool valid;
 
-  return vtkm::SolveLinearSystem(A, b, valid);
+  // If you look at the implementation of vtkm::SolveLinearSystem, you will see
+  // that it is done in two parts. First, it does an LU factorization and then
+  // uses that result to complete the solve. The factorization part talkes the
+  // longest amount of time, and if we are performing the gradient on a vector
+  // field, the factorization can be reused for each component of the vector
+  // field. Thus, we are going to call the internals of SolveLinearSystem
+  // ourselves to do the factorization and then apply it to all components.
+  vtkm::Vec<vtkm::IdComponent,3> permutation;
+  BaseComponentType inversionParity; // Unused
+  vtkm::detail::MatrixLUPFactor(A, permutation, inversionParity, valid);
+  // MatrixLUPFactor does in place factorization. A is now the LU factorization.
+  return TetraDerivativeFinish(
+        field,
+        A,
+        permutation,
+        typename vtkm::TypeTraits<ValueType>::DimensionalityTag());
 }
+
+} // namespace detail
 
 //-----------------------------------------------------------------------------
 template<typename FieldVecType,
@@ -768,7 +1146,7 @@ CellDerivative(const FieldVecType &inputField,
   using WCoordType = typename WorldCoordType::ComponentType;
   vtkm::Vec<ValueType, 4> field; inputField.CopyInto(field);
   vtkm::Vec<WCoordType, 4> wpoints; wCoords.CopyInto(wpoints);
-  return TetraDerivative(field, wpoints);
+  return detail::TetraDerivative(field, wpoints);
 }
 
 //-----------------------------------------------------------------------------
