@@ -27,6 +27,8 @@
 #include <vtkm/exec/arg/BasicArg.h>
 #include <vtkm/exec/arg/FetchTagExecObject.h>
 #include <vtkm/exec/arg/FetchTagWholeCellSetIn.h>
+#include <vtkm/exec/arg/InputIndex.h>
+#include <vtkm/exec/arg/OutputIndex.h>
 #include <vtkm/exec/arg/ThreadIndices.h>
 #include <vtkm/exec/arg/ThreadIndicesBasic.h>
 #include <vtkm/exec/arg/VisitIndex.h>
@@ -87,6 +89,14 @@ public:
   /// \c ExecutionSignature tag for getting the work index.
   ///
   typedef vtkm::exec::arg::WorkIndex WorkIndex;
+
+  /// \c ExecutionSignature tag for getting the input index.
+  ///
+  typedef vtkm::exec::arg::InputIndex InputIndex;
+
+  /// \c ExecutionSignature tag for getting the input index.
+  ///
+  typedef vtkm::exec::arg::OutputIndex OutputIndex;
 
   /// \c ExecutionSignature tag for getting the thread indices.
   ///

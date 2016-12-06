@@ -18,57 +18,45 @@
 //  this software.
 //============================================================================
 
-#include <iostream>
-#include <algorithm>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
+#include <vtkm/cont/internal/DeviceAdapterError.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/ExternalFaces.h>
 
+#include <iostream>
+#include <algorithm>
+
 namespace {
 
-vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
+// For this test, we want using the default device adapter to be an error
+// to make sure that all the code is using the device adapter we specify.
+using MyDeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+#undef VTKM_DEFAULT_DEVICE_ADAPTER_TAG
+#define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagError
+
+vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &inDataSet)
 {
 
-  vtkm::cont::CellSetExplicit<> cellset;
-  ds.GetCellSet(0).CopyTo(cellset);
+  vtkm::cont::CellSetExplicit<> inCellSet;
+  inDataSet.GetCellSet(0).CopyTo(inCellSet);
 
-  vtkm::cont::ArrayHandle<vtkm::UInt8> shapes = cellset.GetShapesArray(
-    vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices = cellset.GetNumIndicesArray(
-    vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
-  vtkm::cont::ArrayHandle<vtkm::Id> conn = cellset.GetConnectivityArray(
-    vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
-
-  vtkm::cont::ArrayHandle<vtkm::UInt8>       output_shapes;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> output_numIndices;
-  vtkm::cont::ArrayHandle<vtkm::Id>          output_conn;
+  vtkm::cont::CellSetExplicit<> outCellSet("cells");
 
   //Run the External Faces worklet
-  vtkm::worklet::ExternalFaces().run(
-        shapes,
-        numIndices,
-        conn,
-        output_shapes,
-        output_numIndices,
-        output_conn,
-        VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::worklet::ExternalFaces().Run(inCellSet,
+                                     outCellSet,
+                                     MyDeviceAdapter());
 
-  vtkm::cont::DataSet new_ds;
-  for(vtkm::IdComponent i=0; i < ds.GetNumberOfCoordinateSystems(); ++i)
+  vtkm::cont::DataSet outDataSet;
+  for(vtkm::IdComponent i=0; i < inDataSet.GetNumberOfCoordinateSystems(); ++i)
   {
-    new_ds.AddCoordinateSystem(ds.GetCoordinateSystem(i));
+    outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(i));
   }
 
+  outDataSet.AddCellSet(outCellSet);
 
-  vtkm::cont::CellSetExplicit<> new_cs("cells");
-  new_cs.Fill(cellset.GetNumberOfPoints(),
-              output_shapes,
-              output_numIndices,
-              output_conn);
-  new_ds.AddCellSet(new_cs);
-
-  return new_ds;
+  return outDataSet;
 }
 
 void TestExternalFaces()
