@@ -168,7 +168,8 @@ struct MapColorAndVerticesInvokeFunctor
 
 template<typename PtType>
 VTKM_CONT
-void RenderStructuredLineSegments(vtkm::Id numVerts, const PtType &verts,
+void RenderStructuredLineSegments(vtkm::Id numVerts,
+                                  const PtType &verts,
                                   const vtkm::cont::ArrayHandle<vtkm::Float32> &scalar)
 {
   glDisable(GL_DEPTH_TEST);
@@ -188,7 +189,8 @@ void RenderStructuredLineSegments(vtkm::Id numVerts, const PtType &verts,
 
 template<typename PtType>
 VTKM_CONT
-void RenderExplicitLineSegments(vtkm::Id numVerts, const PtType &verts,
+void RenderExplicitLineSegments(vtkm::Id numVerts,
+                                const PtType &verts,
                                 const vtkm::cont::ArrayHandle<vtkm::Float32> &scalar)
 {
   glDisable(GL_DEPTH_TEST);
@@ -220,7 +222,7 @@ void RenderTriangles(MapperGL &mapper,
   {
     GLenum GlewInitResult = glewInit();
     if (GlewInitResult)
-        std::cout << "ERROR: " << glewGetErrorString(GlewInitResult) << std::endl;
+        std::cerr << "ERROR: " << glewGetErrorString(GlewInitResult) << std::endl;
     mapper.loaded = true;
 
     vtkm::Float32 sMin = vtkm::Float32(scalarRange.Min);
