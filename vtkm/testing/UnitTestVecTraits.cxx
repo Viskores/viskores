@@ -34,12 +34,19 @@ struct TestVecTypeFunctor
     typedef typename Traits::ComponentType ComponentType;
     VTKM_TEST_ASSERT(Traits::NUM_COMPONENTS <= MAX_VECTOR_SIZE,
                      "Need to update test for larger vectors.");
-    T vector;
+    T inVector;
     for (vtkm::IdComponent index = 0; index < Traits::NUM_COMPONENTS; index++)
     {
-      Traits::SetComponent(vector, index, ComponentType(VecInit[index]));
+      Traits::SetComponent(inVector, index, ComponentType(VecInit[index]));
     }
-    vtkm::testing::TestVecType<Traits::NUM_COMPONENTS>(vector);
+    T outVector;
+    vtkm::testing::TestVecType<Traits::NUM_COMPONENTS>(inVector, outVector);
+    vtkm::VecC<ComponentType> outVecC(outVector);
+    vtkm::testing::TestVecType<Traits::NUM_COMPONENTS>(
+          vtkm::VecC<ComponentType>(inVector), outVecC);
+    vtkm::VecCConst<ComponentType> outVecCConst(outVector);
+    vtkm::testing::TestVecType<Traits::NUM_COMPONENTS>(
+          vtkm::VecCConst<ComponentType>(inVector), outVecCConst);
   }
 };
 
@@ -53,6 +60,8 @@ void TestVecTraits()
   vtkm::testing::TestVecComponentsTag<vtkm::Id3>();
   vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault,3> >();
   vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault,4> >();
+  vtkm::testing::TestVecComponentsTag<vtkm::VecC<vtkm::FloatDefault> >();
+  vtkm::testing::TestVecComponentsTag<vtkm::VecCConst<vtkm::Id> >();
   vtkm::testing::TestScalarComponentsTag<vtkm::Id>();
   vtkm::testing::TestScalarComponentsTag<vtkm::FloatDefault>();
 }
