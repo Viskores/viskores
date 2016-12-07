@@ -28,6 +28,8 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/UnaryPredicates.h>
 
+#include <vtkm/cont/cuda/ErrorControlCuda.h>
+
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 
@@ -171,8 +173,8 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
       for(vtkm::UInt32 k=0; k < 16; k++)
         {
         cudaEvent_t start, stop;
-        cudaEventCreate(&start);
-        cudaEventCreate(&stop);
+        VTKM_CUDA_CALL(cudaEventCreate(&start));
+        VTKM_CUDA_CALL(cudaEventCreate(&stop));
 
         dim3 blockSize3d(indexTable[i],indexTable[j],indexTable[k]);
         dim3 gridSize3d;
@@ -191,16 +193,16 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
           }
 
         compute_block_size(ranges, blockSize3d, gridSize3d);
-        cudaEventRecord(start, 0);
+        VTKM_CUDA_CALL(cudaEventRecord(start, 0));
         Schedule3DIndexKernel<Functor> <<<gridSize3d, blockSize3d>>> (functor, ranges);
-        cudaEventRecord(stop, 0);
+        VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
 
-        cudaEventSynchronize(stop);
+        VTKM_CUDA_CALL(cudaEventSynchronize(stop));
         float elapsedTimeMilliseconds;
-        cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop);
+        VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
 
-        cudaEventDestroy(start);
-        cudaEventDestroy(stop);
+        VTKM_CUDA_CALL(cudaEventDestroy(start));
+        VTKM_CUDA_CALL(cudaEventDestroy(stop));
 
         PerfRecord record(elapsedTimeMilliseconds, blockSize3d);
         results.push_back( record );
@@ -224,22 +226,22 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
   std::cout << "flat array performance " << std::endl;
   {
   cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
+  VTKM_CUDA_CALL(cudaEventCreate(&start));
+  VTKM_CUDA_CALL(cudaEventCreate(&stop));
 
-  cudaEventRecord(start, 0);
+  VTKM_CUDA_CALL(cudaEventRecord(start, 0));
   typedef
     vtkm::cont::cuda::internal::DeviceAdapterAlgorithmThrust<
           vtkm::cont::DeviceAdapterTagCuda > Algorithm;
   Algorithm::Schedule(functor, numInstances);
-  cudaEventRecord(stop, 0);
+  VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
 
-  cudaEventSynchronize(stop);
+  VTKM_CUDA_CALL(cudaEventSynchronize(stop));
   float elapsedTimeMilliseconds;
-  cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop);
+  VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
 
-  cudaEventDestroy(start);
-  cudaEventDestroy(stop);
+  VTKM_CUDA_CALL(cudaEventDestroy(start));
+  VTKM_CUDA_CALL(cudaEventDestroy(stop));
 
   std::cout << "Flat index required: " << elapsedTimeMilliseconds << std::endl;
   }
@@ -247,23 +249,23 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
   std::cout << "fixed 3d block size performance " << std::endl;
   {
   cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
+  VTKM_CUDA_CALL(cudaEventCreate(&start));
+  VTKM_CUDA_CALL(cudaEventCreate(&stop));
 
   dim3 blockSize3d(64,2,1);
   dim3 gridSize3d;
 
   compute_block_size(ranges, blockSize3d, gridSize3d);
-  cudaEventRecord(start, 0);
+  VTKM_CUDA_CALL(cudaEventRecord(start, 0));
   Schedule3DIndexKernel<Functor> <<<gridSize3d, blockSize3d>>> (functor, ranges);
-  cudaEventRecord(stop, 0);
+  VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
 
-  cudaEventSynchronize(stop);
+  VTKM_CUDA_CALL(cudaEventSynchronize(stop));
   float elapsedTimeMilliseconds;
-  cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop);
+  VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
 
-  cudaEventDestroy(start);
-  cudaEventDestroy(stop);
+  VTKM_CUDA_CALL(cudaEventDestroy(start));
+  VTKM_CUDA_CALL(cudaEventDestroy(stop));
 
   std::cout << "BlockSize of: " << blockSize3d.x << "," << blockSize3d.y << "," << blockSize3d.z << " required: " << elapsedTimeMilliseconds << std::endl;
   std::cout << "GridSize of: " << gridSize3d.x << "," << gridSize3d.y << "," << gridSize3d.z << " required: " << elapsedTimeMilliseconds << std::endl;
@@ -1094,8 +1096,10 @@ private:
     static char* devicePtr = nullptr;
     if( !errorArrayInit )
       {
-      cudaMallocHost( (void**)&hostPtr, ERROR_ARRAY_SIZE, cudaHostAllocMapped );
-      cudaHostGetDevicePointer(&devicePtr, hostPtr, 0);
+      VTKM_CUDA_CALL(cudaMallocHost( (void**)&hostPtr,
+                                     ERROR_ARRAY_SIZE,
+                                     cudaHostAllocMapped ));
+      VTKM_CUDA_CALL(cudaHostGetDevicePointer(&devicePtr, hostPtr, 0));
       errorArrayInit = true;
       }
     //set the size of the array
@@ -1117,10 +1121,11 @@ private:
     if( !gridQueryInit )
       {
       gridQueryInit = true;
-      int currDevice; cudaGetDevice(&currDevice); //get deviceid from cuda
+      int currDevice;
+      VTKM_CUDA_CALL(cudaGetDevice(&currDevice)); //get deviceid from cuda
 
       cudaDeviceProp properties;
-      cudaGetDeviceProperties(&properties, currDevice);
+      VTKM_CUDA_CALL(cudaGetDeviceProperties(&properties, currDevice));
       maxGridSize[0] = static_cast<vtkm::UInt32>(properties.maxGridSize[0]);
       maxGridSize[1] = static_cast<vtkm::UInt32>(properties.maxGridSize[1]);
       maxGridSize[2] = static_cast<vtkm::UInt32>(properties.maxGridSize[2]);
@@ -1134,14 +1139,16 @@ private:
       //what we are going to do next, and than we will store that result
 
       vtkm::UInt32 *dev_actual_size;
-      cudaMalloc( (void**)&dev_actual_size, sizeof(vtkm::UInt32) );
+      VTKM_CUDA_CALL(
+            cudaMalloc( (void**)&dev_actual_size, sizeof(vtkm::UInt32) )
+            );
       DetermineProperXGridSize <<<1,1>>> (maxGridSize[0], dev_actual_size);
-      cudaDeviceSynchronize();
-      cudaMemcpy( &maxGridSize[0],
-                  dev_actual_size,
-                  sizeof(vtkm::UInt32),
-                  cudaMemcpyDeviceToHost );
-      cudaFree(dev_actual_size);
+      VTKM_CUDA_CALL(cudaDeviceSynchronize());
+      VTKM_CUDA_CALL(cudaMemcpy( &maxGridSize[0],
+                                 dev_actual_size,
+                                 sizeof(vtkm::UInt32),
+                                 cudaMemcpyDeviceToHost ));
+      VTKM_CUDA_CALL(cudaFree(dev_actual_size));
       }
     return maxGridSize;
     }
@@ -1196,7 +1203,7 @@ public:
     //In the future I want move this before the schedule call, and throwing
     //an exception if the previous schedule wrote an error. This would help
     //cuda to run longer before we hard sync.
-    cudaDeviceSynchronize();
+    VTKM_CUDA_CALL(cudaDeviceSynchronize());
 
     //check what the value is
     if (hostErrorPtr[0] != '\0')
@@ -1255,7 +1262,7 @@ public:
     //In the future I want move this before the schedule call, and throwing
     //an exception if the previous schedule wrote an error. This would help
     //cuda to run longer before we hard sync.
-    cudaDeviceSynchronize();
+    VTKM_CUDA_CALL(cudaDeviceSynchronize());
 
     //check what the value is
     if (hostErrorPtr[0] != '\0')

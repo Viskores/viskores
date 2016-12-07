@@ -190,7 +190,7 @@ __host__ __device__
 
   //only sync if we are being invoked from the host
 #ifndef  __CUDA_ARCH__
-  cudaDeviceSynchronize();
+  VTKM_CUDA_CALL(cudaDeviceSynchronize());
 #endif
 
   return result;
