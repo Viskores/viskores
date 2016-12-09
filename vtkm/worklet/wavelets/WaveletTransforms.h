@@ -44,6 +44,133 @@ enum ExtensionDirection2D {  // which side of a matrix to extend
   BOTTOM
 };
 
+enum ExtensionDirection3D {  // which side of a cube to extend
+  LEFT,
+  RIGHT,
+  TOP,
+  BOTTOM,
+  FRONT,
+  BACK
+};
+
+
+// Worklet for 3D signal extension
+// It operates on a specified part of a big cube
+class ExtensionWorklet3D : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
+                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+  typedef _1   InputDomain;
+
+  // Constructor
+  VTKM_EXEC_CONT
+  ExtensionWorklet3D  ( vtkm::Id extdimX,     vtkm::Id extdimY,     vtkm::Id extdimZ,
+                        vtkm::Id sigdimX,     vtkm::Id sigdimY,     vtkm::Id sigdimZ,
+                        vtkm::Id sigstartX,   vtkm::Id sigstartY,   vtkm::Id sigstartZ,
+                        vtkm::Id sigpretendX, vtkm::Id sigpretendY, vtkm::Id sigpretendZ,
+                        DWTMode               m, 
+                        ExtensionDirection2D  dir, 
+                        bool                  pad_zero )
+                     : 
+                        extDimX( extdimX ),       extDimY( extdimY ),       extDimZ( extdimZ ),
+                        sigDimX( sigdimX ),       sigDimY( sigdimY ),       sigDimZ( sigdimZ ),
+                        sigStartX( sigstartX ),   sigStartY( sigstartY ),   sigStartZ( sigstartZ ),
+                        sigPretendDimX( sigpretendX ), 
+                        sigPretendDimY( sigpretendY ), 
+                        sigPretendDimZ( sigpretendZ ), 
+                        mode(m), 
+                        direction( dir ), 
+                        padZero( pad_zero )  
+  {}
+// TODO
+
+  // Index translation helper
+  VTKM_EXEC_CONT
+  void Ext1Dto2D ( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y ) const
+  {
+    x = idx % extDimX;
+    y = idx / extDimX;
+  }
+
+  // Index translation helper
+  VTKM_EXEC_CONT
+  vtkm::Id Sig2Dto1D( vtkm::Id x, vtkm::Id y ) const
+  {
+    return y * sigDimX + x;
+  }
+
+  // Index translation helper
+  VTKM_EXEC_CONT
+  vtkm::Id SigPretend2Dto1D( vtkm::Id x, vtkm::Id y ) const
+  {
+    return (y + sigStartY) * sigDimX + x + sigStartX;
+  }
+
+  template< typename PortalOutType, typename PortalInType >
+  VTKM_EXEC
+  void operator()(       PortalOutType       &portalOut,
+                   const PortalInType        &portalIn,
+                   const vtkm::Id            &workIndex) const
+  {
+    vtkm::Id extX, extY, sigPretendX, sigPretendY;
+    Ext1Dto2D( workIndex, extX, extY );
+    typename PortalOutType::ValueType sym = 1.0;
+    if( mode == ASYMH || mode == ASYMW )
+      sym = -1.0;
+    if( direction == LEFT )     
+    {
+      sigPretendY = extY;
+      if( mode == SYMH || mode == ASYMH )
+        sigPretendX = extDimX - extX - 1;
+      else    // mode == SYMW || mode == ASYMW
+        sigPretendX = extDimX - extX; 
+    }
+    else if( direction == TOP ) 
+    {
+      sigPretendX = extX;
+      if( mode == SYMH || mode == ASYMH )
+        sigPretendY = extDimY - extY - 1;
+      else    // mode == SYMW || mode == ASYMW
+        sigPretendY = extDimY - extY; 
+    }
+    else if( direction == RIGHT )
+    {
+      sigPretendY = extY;
+      if( mode == SYMH || mode == ASYMH )
+        sigPretendX = sigPretendDimX - extX - 1;
+      else
+        sigPretendX = sigPretendDimX - extX - 2;
+      if( padZero )
+        sigPretendX++;
+    }
+    else  // direction == BOTTOM 
+    {
+      sigPretendX = extX;
+      if( mode == SYMH || mode == ASYMH )
+        sigPretendY = sigPretendDimY - extY - 1;
+      else
+        sigPretendY = sigPretendDimY - extY - 2;
+      if( padZero )
+        sigPretendY++;
+    }
+    if( sigPretendX == sigPretendDimX || sigPretendY == sigPretendDimY )
+      portalOut.Set( workIndex, 0.0 );
+    else
+      portalOut.Set( workIndex, sym * 
+                     portalIn.Get( SigPretend2Dto1D(sigPretendX, sigPretendY) ));
+  }
+
+private:
+  const vtkm::Id              extDimX, extDimY, extDimZ, sigDimX, sigDimY, sigDimZ;
+  const vtkm::Id              sigStartX, sigStartY, sigStartZ;  // defines a small cube to work on
+  const vtkm::Id              sigPretendDimX, sigPretendDimY, sigPretendDimZ;   // small cube dims
+  const DWTMode               mode;
+  const ExtensionDirection3D  direction;
+  const bool                  padZero;  // treat sigIn as having a zero at the end
+};
+
 
 
 //  ---------------------------------------------------
