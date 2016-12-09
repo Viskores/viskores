@@ -56,6 +56,23 @@ public:
   static
   vtkm::cont::DataSet
   Create(const std::vector<T> &xVals,
+         const std::vector<vtkm::UInt8> &shapes,
+         const std::vector<vtkm::IdComponent> &numIndices,
+         const std::vector<vtkm::Id> &connectivity,
+         const std::string &coordsNm="coords",
+         const std::string &cellNm="cells")
+  {
+    std::vector<T> yVals(xVals.size(),0), zVals(xVals.size(),0);
+    return DataSetBuilderExplicit::Create(xVals,yVals,zVals,
+                                          shapes,numIndices,connectivity,
+                                          coordsNm,cellNm);
+  }
+    
+  template<typename T>
+  VTKM_CONT
+  static
+  vtkm::cont::DataSet
+  Create(const std::vector<T> &xVals,
          const std::vector<T> &yVals,
          const std::vector<vtkm::UInt8> &shapes,
          const std::vector<vtkm::IdComponent> &numIndices,
@@ -450,7 +467,6 @@ DataSetBuilderExplicitIterative::Create()
   DataSetBuilderExplicit dsb;
   return dsb.Create(points, shapes, numIdx, connectivity, coordNm, cellNm);
 }
-
 
 
 #if 0

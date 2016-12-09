@@ -133,6 +133,11 @@ class Color
       out << "["<<c.Components[0]<<","<<c.Components[1]<<","<<c.Components[2]<<","<<c.Components[3]<<"]";
       return out;
     }
+
+    static Color white, black;
+    static Color red, green, blue;
+    static Color cyan, magenta, yellow;
+    static Color gray10, gray20, gray30, gray40, gray50, gray60, gray70, gray80, gray90;
 };
 }}//namespace vtkm::rendering
 #endif //vtk_m_rendering_Color_h

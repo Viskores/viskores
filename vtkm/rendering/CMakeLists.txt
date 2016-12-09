@@ -43,6 +43,7 @@ set(headers
   TextAnnotationScreen.h
   Triangulator.h
   View.h
+  View1D.h
   View2D.h
   View3D.h
   WorldAnnotator.h
@@ -59,6 +60,7 @@ set(sources
   Camera.cxx
   Canvas.cxx
   CanvasRayTracer.cxx
+  Color.cxx
   ColorBarAnnotation.cxx
   ColorTable.cxx
   DecodePNG.cxx
@@ -70,6 +72,7 @@ set(sources
   TextAnnotationBillboard.cxx
   TextAnnotationScreen.cxx
   View.cxx
+  View1D.cxx
   View2D.cxx
   View3D.cxx
   WorldAnnotator.cxx

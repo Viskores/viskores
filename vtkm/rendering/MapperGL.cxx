@@ -168,6 +168,48 @@ struct MapColorAndVerticesInvokeFunctor
 
 template<typename PtType>
 VTKM_CONT
+void RenderStructuredLineSegments(vtkm::Id numVerts,
+                                  const PtType &verts,
+                                  const vtkm::cont::ArrayHandle<vtkm::Float32> &scalar)
+{
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+  glLineWidth(1);
+  glColor3f(1.0, 1.0, 1.0);
+  
+  glBegin(GL_LINE_STRIP);
+  for (int i = 0; i < numVerts; i++)
+  {
+    vtkm::Vec<vtkm::Float32, 3> pt = verts.GetPortalConstControl().Get(i);
+    vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
+    glVertex3f(pt[0], s, 0.0f);
+  }
+  glEnd();
+}
+
+template<typename PtType>
+VTKM_CONT
+void RenderExplicitLineSegments(vtkm::Id numVerts,
+                                const PtType &verts,
+                                const vtkm::cont::ArrayHandle<vtkm::Float32> &scalar)
+{
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+  glLineWidth(1);
+  glColor3f(1.0, 1.0, 1.0);
+  
+  glBegin(GL_LINE_STRIP);
+  for (int i = 0; i < numVerts; i++)
+  {
+    vtkm::Vec<vtkm::Float32, 3> pt = verts.GetPortalConstControl().Get(i);
+    vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
+    glVertex3f(pt[0], s, 0.0f);
+  }
+  glEnd();
+}
+
+template<typename PtType>
+VTKM_CONT
 void RenderTriangles(MapperGL &mapper,
                      vtkm::Id numTri, const PtType &verts,
                      const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > &indices,
@@ -180,7 +222,7 @@ void RenderTriangles(MapperGL &mapper,
   {
     GLenum GlewInitResult = glewInit();
     if (GlewInitResult)
-        std::cout << "ERROR: " << glewGetErrorString(GlewInitResult) << std::endl;
+        std::cerr << "ERROR: " << glewGetErrorString(GlewInitResult) << std::endl;
     mapper.loaded = true;
 
     vtkm::Float32 sMin = vtkm::Float32(scalarRange.Min);
@@ -318,8 +360,10 @@ void RenderTriangles(MapperGL &mapper,
 
   if (mapper.shader_programme > 0)
   {
+    vtkm::Id width = mapper.GetCanvas()->GetWidth();
+    vtkm::Id height = mapper.GetCanvas()->GetWidth();      
     vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
-    vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
+    vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(width,height);
 
     MatrixHelpers::CreateOGLMatrix(viewM, mapper.mvMat);
     MatrixHelpers::CreateOGLMatrix(projM, mapper.pMat);
@@ -337,11 +381,13 @@ void RenderTriangles(MapperGL &mapper,
     
 } // anonymous namespace
 
-MapperGL::MapperGL()
-{ this->loaded = false; }
+MapperGL::MapperGL() : Canvas(NULL), loaded(false)
+{
+}
 
 MapperGL::~MapperGL()
-{  }
+{
+}
 
 void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
@@ -350,41 +396,60 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange)
 {
-  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;
-  vtkm::Id numTri;
-  vtkm::rendering::internal::RunTriangulator(cellset, indices, numTri);
-
   vtkm::cont::ArrayHandle<vtkm::Float32> sf;
-  sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32> >();
-
+  sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32> >();      
   vtkm::cont::DynamicArrayHandleCoordinateSystem dcoords = coords.GetData();
-  vtkm::cont::ArrayHandleUniformPointCoordinates uVerts;
-  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > eVerts;
+  vtkm::Id numVerts = coords.GetData().GetNumberOfValues();        
 
-  if(dcoords.IsSameType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
+  //Handle 1D cases.
+  if (cellset.IsSameType(vtkm::cont::CellSetStructured<1>()))
   {
-    uVerts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-    RenderTriangles(*this, numTri, uVerts, indices, sf, colorTable, scalarRange, camera);
+    vtkm::cont::ArrayHandleUniformPointCoordinates verts;
+    verts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+    RenderStructuredLineSegments(numVerts, verts, sf);
   }
-  else if(dcoords.IsSameType(vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> >()))
+  else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()) &&
+           cellset.Cast<vtkm::cont::CellSetSingleType<> >().GetCellTypeAsId() ==
+                                          vtkm::CELL_SHAPE_LINE)
   {
-    eVerts = dcoords.Cast<vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > > ();
-    RenderTriangles(*this, numTri, eVerts, indices, sf, colorTable, scalarRange, camera);
+    vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > verts;
+    verts = dcoords.Cast<vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > > ();
+    RenderExplicitLineSegments(numVerts, verts, sf);
   }
-  else if(dcoords.IsSameType(vtkm::cont::ArrayHandleCartesianProduct<
-                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                             vtkm::cont::ArrayHandle<vtkm::FloatDefault> >()))
+  else
   {
-    vtkm::cont::ArrayHandleCartesianProduct<
+    vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;
+    vtkm::Id numTri;
+    vtkm::rendering::internal::RunTriangulator(cellset, indices, numTri);
+
+    vtkm::cont::ArrayHandleUniformPointCoordinates uVerts;
+    vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > eVerts;
+
+    if(dcoords.IsSameType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
+    {
+      uVerts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+      RenderTriangles(*this, numTri, uVerts, indices, sf, colorTable, scalarRange, camera);
+    }
+    else if(dcoords.IsSameType(vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> >()))
+    {
+      eVerts = dcoords.Cast<vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > > ();
+      RenderTriangles(*this, numTri, eVerts, indices, sf, colorTable, scalarRange, camera);
+    }
+    else if(dcoords.IsSameType(vtkm::cont::ArrayHandleCartesianProduct<
+                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                               vtkm::cont::ArrayHandle<vtkm::FloatDefault> >()))
+    {
+      vtkm::cont::ArrayHandleCartesianProduct<
         vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
         vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
         vtkm::cont::ArrayHandle<vtkm::FloatDefault> > rVerts;
-    rVerts = dcoords.Cast<vtkm::cont::ArrayHandleCartesianProduct<
+      rVerts = dcoords.Cast<vtkm::cont::ArrayHandleCartesianProduct<
                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                               vtkm::cont::ArrayHandle<vtkm::FloatDefault> > > ();
-    RenderTriangles(*this, numTri, rVerts, indices, sf, colorTable, scalarRange, camera);
+      RenderTriangles(*this, numTri, rVerts, indices, sf, colorTable, scalarRange, camera);
+    }
   }
   glFinish();
   glFlush();
@@ -400,9 +465,20 @@ void MapperGL::EndScene()
   // Nothing needs to be done.
 }
 
-void MapperGL::SetCanvas(vtkm::rendering::Canvas *)
+void MapperGL::SetCanvas(vtkm::rendering::Canvas *c)
 {
-  // Nothing needs to be done.
+  if (c != NULL)
+  {
+    this->Canvas = dynamic_cast<vtkm::rendering::CanvasGL*>(c);
+    if (this->Canvas == NULL)
+      throw vtkm::cont::ErrorControlBadValue("Bad canvas type for MapperGL. Must be CanvasGL");
+  }
+}
+
+vtkm::rendering::Canvas *    
+MapperGL::GetCanvas() const
+{
+  return this->Canvas;
 }
 
 vtkm::rendering::Mapper *MapperGL::NewCopy() const

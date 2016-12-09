@@ -52,6 +52,9 @@ public:
 
   /// Constructs a \c ColorTable using the name of a pre-defined color set.
   ColorTable(const std::string &name);
+  
+  // Make a single color ColorTable.
+  ColorTable(const vtkm::rendering::Color &color);
 
   const std::string &GetName() const;
 

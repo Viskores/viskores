@@ -171,6 +171,21 @@ public:
     this->PointToCell.IndexOffsetsValid = true;
   }
 
+  VTKM_CONT    
+  vtkm::Id GetCellTypeAsId() const
+  {
+    return this->CellTypeAsId;
+  }
+  
+  virtual void PrintSummary(std::ostream &out) const
+  {
+    out << "   ExplicitSingleCellSet: " << this->Name << " Type "<<this->CellTypeAsId<<std::endl;
+    out << "   PointToCell: " << std::endl;
+    this->PointToCell.PrintSummary(out);
+    out << "   CellToPoint: " << std::endl;
+    this->CellToPoint.PrintSummary(out);
+  }    
+
 private:
   template< typename CellShapeTag>
   void DetermineNumberOfPoints(CellShapeTag,

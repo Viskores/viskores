@@ -27,6 +27,7 @@
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/View1D.h>
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
 #include <vtkm/cont/DeviceAdapter.h>
@@ -39,14 +40,19 @@ template <typename ViewType>
 inline void
 SetCamera(vtkm::rendering::Camera &camera,
           const vtkm::Bounds &coordBounds);
+template <typename ViewType>
+inline void
+SetCamera(vtkm::rendering::Camera &camera,
+          const vtkm::Bounds &coordBounds,
+          const vtkm::cont::Field &field);
 
 template <>
 inline void
 SetCamera<vtkm::rendering::View3D>(vtkm::rendering::Camera &camera,
-                                   const vtkm::Bounds &coordsBounds)
+                                   const vtkm::Bounds &coordBounds)
 {
   camera = vtkm::rendering::Camera();
-  camera.ResetToBounds(coordsBounds);
+  camera.ResetToBounds(coordBounds);
   camera.Azimuth(static_cast<vtkm::Float32>(45.0));
   camera.Elevation(static_cast<vtkm::Float32>(45.0));
 }
@@ -54,24 +60,40 @@ SetCamera<vtkm::rendering::View3D>(vtkm::rendering::Camera &camera,
 template <>
 inline void
 SetCamera<vtkm::rendering::View2D>(vtkm::rendering::Camera &camera,
-                                   const vtkm::Bounds &coordsBounds)
+                                   const vtkm::Bounds &coordBounds)
 {
   camera = vtkm::rendering::Camera(vtkm::rendering::Camera::MODE_2D);
-  camera.SetViewRange2D(coordsBounds);
+  camera.ResetToBounds(coordBounds);
   camera.SetClippingRange(1.f, 100.f);
-  camera.SetViewport(-0.7f, +0.7f, -0.7f, +0.7f);            
+  camera.SetViewport(-0.7f, +0.7f, -0.7f, +0.7f);
 }
+
+template <>
+inline void
+SetCamera<vtkm::rendering::View1D>(vtkm::rendering::Camera &camera,
+                                   const vtkm::Bounds &coordBounds,                                   
+                                   const vtkm::cont::Field &field)
+{
+  vtkm::Bounds bounds;
+  bounds.X = coordBounds.X;
+  field.GetRange(&bounds.Y, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    
+  camera = vtkm::rendering::Camera(vtkm::rendering::Camera::MODE_2D);
+  camera.ResetToBounds(bounds);
+  camera.SetClippingRange(1.f, 100.f);
+  camera.SetViewport(-0.7f, +0.7f, -0.7f, +0.7f);
+}    
 
 template <typename MapperType,typename CanvasType, typename ViewType>
 void
-Render(
-       ViewType &view,
+Render(ViewType &view,
        const std::string &outputFile)
 {
     view.Initialize();
     view.Paint();
     view.SaveAs(outputFile);
 }
+
 template <typename MapperType,typename CanvasType, typename ViewType>
 void
 Render(const vtkm::cont::DataSet &ds,
@@ -90,10 +112,32 @@ Render(const vtkm::cont::DataSet &ds,
     vtkm::rendering::Camera camera;
     SetCamera<ViewType>(camera,
                         ds.GetCoordinateSystem().GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG()));
-
     ViewType view(scene, mapper, canvas, camera,
                   vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
 
+    Render<MapperType, CanvasType, ViewType>(view, outputFile);
+}
+
+template <typename MapperType,typename CanvasType, typename ViewType>
+void
+Render(const vtkm::cont::DataSet &ds,
+       const std::string &fieldNm,
+       const std::string &outputFile)
+{
+    MapperType mapper;
+    CanvasType canvas(512,512);
+    vtkm::rendering::Scene scene;
+
+    //DRP Actor? no field? no colortable (or a constant colortable) ??
+    scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
+                                          ds.GetCoordinateSystem(),
+                                          ds.GetField(fieldNm)));
+    vtkm::rendering::Camera camera;
+    SetCamera<ViewType>(camera,
+                        ds.GetCoordinateSystem().GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG()),
+                        ds.GetField(fieldNm));
+    ViewType view(scene, mapper, canvas, camera,
+                  vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
     Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 
