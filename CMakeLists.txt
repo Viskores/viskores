@@ -297,6 +297,7 @@ install(
     ${VTKm_SOURCE_DIR}/CMake/VTKmConfigureComponents.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmCompilerOptimizations.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cu
+    ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
 
