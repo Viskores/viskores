@@ -21,6 +21,8 @@
 set(headers
   AtomicArray.h
   CellDerivative.h
+  CellEdge.h
+  CellFace.h
   CellInterpolate.h
   ConnectivityExplicit.h
   ConnectivityPermuted.h

@@ -1204,6 +1204,8 @@ private:
 /// Creates a \c VecC from an input array.
 ///
 template<typename T>
+VTKM_EXEC_CONT
+static inline
 vtkm::VecC<T> make_VecC(T *array, vtkm::IdComponent size)
 {
   return vtkm::VecC<T>(array, size);
@@ -1212,6 +1214,8 @@ vtkm::VecC<T> make_VecC(T *array, vtkm::IdComponent size)
 /// Creates a \c VecCConst from a constant input array.
 ///
 template<typename T>
+VTKM_EXEC_CONT
+static inline
 vtkm::VecCConst<T> make_VecC(const T *array, vtkm::IdComponent size)
 {
   return vtkm::VecCConst<T>(array, size);
