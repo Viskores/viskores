@@ -43,7 +43,7 @@ class ThreadIndicesBasic
 {
 public:
   VTKM_EXEC
-  ThreadIndicesBasic(vtkm::Id threadIndex, vtkm::Id inIndex, 
+  ThreadIndicesBasic(vtkm::Id threadIndex, vtkm::Id inIndex,
                      vtkm::IdComponent visitIndex, vtkm::Id globalThreadIndexOffset=0)
     : InputIndex(inIndex),
       OutputIndex(threadIndex),

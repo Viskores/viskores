@@ -428,8 +428,8 @@ CellDerivativeFor2DCell(const FieldVecType &field,
   // find the vector [ds/du, ds/dv].
   // Commented because this is actually done in CellDerivativeFor2DCellFinish
   // to handle vector fields.
-//  vtkm::Vec<BaseFieldType,2> parametricDerivative =
-//      ParametricDerivative(field,pcoords,CellShapeTag());
+  //  vtkm::Vec<BaseFieldType,2> parametricDerivative =
+  //      ParametricDerivative(field,pcoords,CellShapeTag());
 
   // If we write out the matrices below, it should become clear that the
   // Jacobian transpose times the field derivative in world space equals

@@ -30,6 +30,7 @@ set(headers
   FetchTagArrayTopologyMapIn.h
   FetchTagExecObject.h
   FetchTagCellSetIn.h
+  FetchTagWholeCellSetIn.h
   FromCount.h
   FromIndices.h
   ThreadIndices.h

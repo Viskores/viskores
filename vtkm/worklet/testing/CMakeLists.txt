@@ -28,6 +28,7 @@ set(unit_tests
   UnitTestFieldStatistics.cxx
   UnitTestMarchingCubes.cxx
   UnitTestPointElevation.cxx
+  UnitTestPointGradient.cxx
   UnitTestRemoveUnusedPoints.cxx
   UnitTestScatterCounting.cxx
   UnitTestSplatKernels.cxx
