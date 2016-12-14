@@ -27,7 +27,8 @@ template<class Derived>
 inline VTKM_CONT
 FilterCell<Derived>::FilterCell():
   vtkm::filter::FilterField< Derived >(),
-  CellSetIndex(0)
+  CellSetIndex(0),
+  CoordinateSystemIndex(0)
 {
 
 }

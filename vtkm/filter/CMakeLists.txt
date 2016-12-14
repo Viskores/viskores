@@ -29,6 +29,7 @@ set(headers
   FilterDataSetWithField.h
   FilterField.h
   FilterTraits.h
+  Gradient.h
   Histogram.h
   MarchingCubes.h
   PointElevation.h
@@ -50,6 +51,7 @@ set(header_template_sources
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
   FilterField.hxx
+  Gradient.hxx
   Histogram.hxx
   MarchingCubes.hxx
   PointElevation.hxx
