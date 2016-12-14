@@ -27,6 +27,7 @@ set(unit_tests
   UnitTestGradient.cxx
   UnitTestHistogramFilter.cxx
   UnitTestMarchingCubesFilter.cxx
+  UnitTestPointAverageFilter.cxx
   UnitTestPointElevationFilter.cxx
   UnitTestThresholdFilter.cxx
   UnitTestVertexClusteringFilter.cxx
