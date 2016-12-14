@@ -254,37 +254,37 @@ public:
   }
 
   VTKM_CONT
-  virtual std::string GetName() const
+  std::string GetName() const
   {
     return this->CastToBase().GetName();
   }
 
   VTKM_CONT
-  virtual vtkm::Id GetNumberOfCells() const
+  vtkm::Id GetNumberOfCells() const
   {
     return this->CastToBase().GetNumberOfCells();
   }
 
   VTKM_CONT
-  virtual vtkm::Id GetNumberOfFaces() const
+  vtkm::Id GetNumberOfFaces() const
   {
     return this->CastToBase().GetNumberOfFaces();
   }
 
   VTKM_CONT
-  virtual vtkm::Id GetNumberOfEdges() const
+  vtkm::Id GetNumberOfEdges() const
   {
     return this->CastToBase().GetNumberOfEdges();
   }
 
   VTKM_CONT
-  virtual vtkm::Id GetNumberOfPoints() const
+  vtkm::Id GetNumberOfPoints() const
   {
     return this->CastToBase().GetNumberOfPoints();
   }
 
   VTKM_CONT
-  virtual void PrintSummary(std::ostream& stream) const
+  void PrintSummary(std::ostream& stream) const
   {
     return this->CastToBase().PrintSummary(stream);
   }

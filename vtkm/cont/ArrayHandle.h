@@ -141,9 +141,6 @@ struct GetTypeInParentheses<void(T)>
   classname(const vtkm::cont::ArrayHandle<typename__ Superclass::ValueType, typename__ Superclass::StorageTag> &src) : Superclass(src) {  } \
   \
   VTKM_CONT \
-  virtual ~classname() {  } \
-  \
-  VTKM_CONT \
   Thisclass &operator=(const Thisclass &src) \
   { \
     this->Superclass::operator=(src); \
@@ -284,7 +281,7 @@ public:
   /// with CUDA), then the automatically generated destructor could be
   /// created for all devices, and it would not be valid for all devices.
   ///
-  virtual ~ArrayHandle() {  }
+  ~ArrayHandle() {  }
 
   /// \brief Copies an ArrayHandle
   ///
