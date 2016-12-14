@@ -48,6 +48,11 @@ vtkm::filter::ResultField CellAverage::DoExecute(
     const vtkm::filter::PolicyBase<DerivedPolicy>&,
     const DeviceAdapter&)
 {
+  if(!fieldMetadata.IsPointField())
+  {
+    return vtkm::filter::ResultField();
+  }
+
   vtkm::cont::DynamicCellSet cellSet =
                   input.GetCellSet(this->GetActiveCellSetIndex());
 
