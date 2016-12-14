@@ -28,21 +28,21 @@
 namespace vtkm {
 namespace worklet {
 
-//simple functor that returns the average point value.
+//simple functor that returns the average point value as a cell field
 class CellAverage :
         public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(FieldInPoint<> inPoints,
-                                CellSetIn cellset,
+  typedef void ControlSignature(CellSetIn cellset,
+                                FieldInPoint<> inPoints,
                                 FieldOutCell<> outCells);
-  typedef void ExecutionSignature(_1, PointCount, _3);
-  typedef _2 InputDomain;
+  typedef void ExecutionSignature(PointCount, _2, _3);
+  typedef _1 InputDomain;
 
   template<typename PointValueVecType, typename OutType>
   VTKM_EXEC
-  void operator()(const PointValueVecType &pointValues,
-                  const vtkm::IdComponent &numPoints,
+  void operator()(const vtkm::IdComponent &numPoints,
+                  const PointValueVecType &pointValues,
                   OutType &average) const
   {
     using PointValueType = typename PointValueVecType::ComponentType;
@@ -55,8 +55,8 @@ public:
           vtkm::IdComponent,
           vtkm::VecTraits<OutType>::NUM_COMPONENTS>;
 
-    this->DoAverage(pointValues,
-                    numPoints,
+    this->DoAverage(numPoints,
+                    pointValues,
                     average,
                     PointVecSize(),
                     OutVecSize());
@@ -65,8 +65,8 @@ public:
 private:
   template<typename PointValueVecType, typename OutType>
   VTKM_EXEC
-  void DoAverage(const PointValueVecType &pointValues,
-                 const vtkm::IdComponent &numPoints,
+  void DoAverage(const vtkm::IdComponent &numPoints,
+                 const PointValueVecType &pointValues,
                  OutType &average,
                  std::integral_constant<vtkm::IdComponent,1>,
                  std::integral_constant<vtkm::IdComponent,1>) const
@@ -84,8 +84,8 @@ private:
            typename OutType,
            vtkm::IdComponent VecSize>
   VTKM_EXEC
-  void DoAverage(const PointValueVecType &pointValues,
-                 const vtkm::IdComponent &numPoints,
+  void DoAverage(const vtkm::IdComponent &numPoints,
+                 const PointValueVecType &pointValues,
                  OutType &average,
                  std::integral_constant<vtkm::IdComponent,VecSize>,
                  std::integral_constant<vtkm::IdComponent,VecSize>) const
@@ -105,8 +105,8 @@ private:
            vtkm::IdComponent InVecSize,
            vtkm::IdComponent OutVecSize>
   VTKM_EXEC
-  void DoAverage(const PointValueVecType &vtkmNotUsed(pointValues),
-                 const vtkm::IdComponent &vtkmNotUsed(numPoints),
+  void DoAverage(const vtkm::IdComponent &vtkmNotUsed(numPoints),
+                 const PointValueVecType &vtkmNotUsed(pointValues),
                  OutType &vtkmNotUsed(average),
                  std::integral_constant<vtkm::IdComponent,InVecSize>,
                  std::integral_constant<vtkm::IdComponent,OutVecSize>) const

@@ -60,7 +60,7 @@ vtkm::filter::ResultField CellAverage::DoExecute(
 
   //todo: we need to use the policy to determine the valid conversions
   //that the dispatcher should do, including the result from GetCellSet
-  dispatcher.Invoke(inField, cellSet, outArray);
+  dispatcher.Invoke(cellSet, inField, outArray);
 
   std::string outputName = this->GetOutputFieldName();
   if (outputName == "")
