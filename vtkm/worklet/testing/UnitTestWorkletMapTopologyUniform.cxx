@@ -21,6 +21,9 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+#include <vtkm/worklet/CellAverage.h>
+#include <vtkm/worklet/PointAverage.h>
+
 #include <vtkm/Math.h>
 
 #include <vtkm/cont/DataSet.h>
@@ -63,62 +66,6 @@ public:
       maxValue = vtkm::Max(maxValue,
                            static_cast<OutCellType>(pointValues[pointIndex]));
     }
-  }
-};
-
-class AveragePointToCellValue : public vtkm::worklet::WorkletMapPointToCell
-{
-public:
-  typedef void ControlSignature(FieldInPoint<Scalar> inPoints,
-                                CellSetIn topology,
-                                FieldOutCell<Scalar> outCells);
-  typedef void ExecutionSignature(_1, _3, PointCount);
-  typedef _2 InputDomain;
-
-  VTKM_CONT
-  AveragePointToCellValue() { }
-
-  template<typename PointVecType, typename OutType>
-  VTKM_EXEC
-  void operator()(const PointVecType &pointValues,
-                  OutType &avgVal,
-                  const vtkm::IdComponent &numPoints) const
-  {
-    //simple functor that returns the average pointValue.
-    avgVal = static_cast<OutType>(pointValues[0]);
-    for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
-    {
-      avgVal += static_cast<OutType>(pointValues[pointIndex]);
-    }
-    avgVal = avgVal / static_cast<OutType>(numPoints);
-  }
-};
-
-class AverageCellToPointValue : public vtkm::worklet::WorkletMapCellToPoint
-{
-public:
-  typedef void ControlSignature(FieldInCell<Scalar> inCells,
-                                CellSetIn topology,
-                                FieldOut<Scalar> outPoints);
-  typedef void ExecutionSignature(_1, _3, CellCount);
-  typedef _2 InputDomain;
-
-  VTKM_CONT
-  AverageCellToPointValue() { }
-
-  template<typename CellVecType, typename OutType>
-  VTKM_EXEC
-  void operator()(const CellVecType &cellValues,
-                  OutType &avgVal,
-                  const vtkm::IdComponent &numCellIDs) const
-  {
-    //simple functor that returns the average cell Value.
-    avgVal = static_cast<OutType>(cellValues[0]);
-    for (vtkm::IdComponent cellIndex = 1; cellIndex < numCellIDs; ++cellIndex)
-    {
-      avgVal += static_cast<OutType>(cellValues[cellIndex]);
-    }
-    avgVal = avgVal / static_cast<OutType>(numCellIDs);
   }
 };
 
@@ -208,14 +155,15 @@ TestAvgPointToCell()
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
-  vtkm::worklet::DispatcherMapTopology< ::test_uniform::AveragePointToCellValue > dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar"),
+  vtkm::worklet::DispatcherMapTopology< vtkm::worklet::CellAverage > dispatcher;
+  dispatcher.Invoke(
                     // We know that the cell set is a structured 2D grid and
                     // The worklet does not work with general types because
                     // of the way we get cell indices. We need to make that
                     // part more flexible.
                     dataSet.GetCellSet(0).ResetCellSetList(
                       vtkm::cont::CellSetListTagStructured2D()),
+                    dataSet.GetField("pointvar"),
                     result);
 
   //make sure we got the right answer.
@@ -235,14 +183,15 @@ TestAvgCellToPoint()
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
-  vtkm::worklet::DispatcherMapTopology< ::test_uniform::AverageCellToPointValue > dispatcher;
-  dispatcher.Invoke(dataSet.GetField("cellvar"),
+  vtkm::worklet::DispatcherMapTopology< vtkm::worklet::PointAverage > dispatcher;
+  dispatcher.Invoke(
                     // We know that the cell set is a structured 2D grid and
                     // The worklet does not work with general types because
                     // of the way we get cell indices. We need to make that
                     // part more flexible.
                     dataSet.GetCellSet(0).ResetCellSetList(
                       vtkm::cont::CellSetListTagStructured2D()),
+                    dataSet.GetField("cellvar"),
                     result);
 
   //make sure we got the right answer.
