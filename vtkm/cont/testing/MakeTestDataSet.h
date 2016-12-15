@@ -61,6 +61,7 @@ public:
     vtkm::cont::DataSet Make3DExplicitDataSet2();
     vtkm::cont::DataSet Make3DExplicitDataSet3();
     vtkm::cont::DataSet Make3DExplicitDataSet4();
+    vtkm::cont::DataSet Make3DExplicitDataSet5();
     vtkm::cont::DataSet Make3DExplicitDataSetCowNose();
 };
 
@@ -545,6 +546,90 @@ MakeTestDataSet::Make3DExplicitDataSet3()
 
   cellSet.PrepareToAddCells(1, 4);
   cellSet.AddCell(vtkm::CELL_SHAPE_TETRA, 4, ids);
+  cellSet.CompleteAddingCells();
+
+  //todo this need to be a reference/shared_ptr style class
+  dataSet.AddCellSet(cellSet);
+
+  return dataSet;
+}
+
+inline vtkm::cont::DataSet
+MakeTestDataSet::Make3DExplicitDataSet5()
+{
+  vtkm::cont::DataSet dataSet;
+
+  const int nVerts = 11;
+  typedef vtkm::Vec<vtkm::Float32,3> CoordType;
+  CoordType coordinates[nVerts] = {
+    CoordType(0, 0, 0), //0
+    CoordType(1, 0, 0), //1
+    CoordType(1, 0, 1), //2
+    CoordType(0, 0, 1), //3
+    CoordType(0, 1, 0), //4
+    CoordType(1, 1, 0), //5
+    CoordType(1, 1, 1), //6
+    CoordType(0, 1, 1), //7
+    CoordType(2, 0, 0), //8
+    CoordType(0, 2, 0), //9
+    CoordType(1, 2, 0)  //10
+  };
+  vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.2f, 70.2f, 80.3f, 90.f, 10.f, 11.f};
+
+  dataSet.AddCoordinateSystem(
+        vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
+
+  //Set point scalar
+  dataSet.AddField(Field("pointvar",
+                         vtkm::cont::Field::ASSOC_POINTS,
+                         vars,
+                         nVerts));
+
+  //Set cell scalar
+  const int nCells = 4;
+  vtkm::Float32 cellvar[nCells] = {100.1f, 110.f, 120.2f, 130.5f};
+  dataSet.AddField(Field("cellvar",
+                         vtkm::cont::Field::ASSOC_CELL_SET,
+                         "cells",
+                         cellvar,
+                         nCells));
+
+  vtkm::cont::CellSetExplicit<> cellSet(nVerts,"cells");
+  vtkm::Vec<vtkm::Id, 8> ids;
+
+  cellSet.PrepareToAddCells(nCells, 23);
+
+  ids[0] = 0;
+  ids[1] = 1;
+  ids[2] = 5;
+  ids[3] = 4;
+  ids[4] = 3;
+  ids[5] = 2;
+  ids[6] = 6;
+  ids[7] = 7;
+  cellSet.AddCell(vtkm::CELL_SHAPE_HEXAHEDRON, 8, ids);
+
+  ids[0] = 1;
+  ids[1] = 2;
+  ids[2] = 6;
+  ids[3] = 5;
+  ids[4] = 8;
+  cellSet.AddCell(vtkm::CELL_SHAPE_PYRAMID, 5, ids);
+
+  ids[0] = 5;
+  ids[1] = 10;
+  ids[2] = 8;
+  ids[3] = 6;
+  cellSet.AddCell(vtkm::CELL_SHAPE_TETRA, 4, ids);
+
+  ids[0] = 4;
+  ids[1] = 9;
+  ids[2] = 7;
+  ids[3] = 5;
+  ids[4] = 10;
+  ids[5] = 6;
+  cellSet.AddCell(vtkm::CELL_SHAPE_WEDGE, 6, ids);
+
   cellSet.CompleteAddingCells();
 
   //todo this need to be a reference/shared_ptr style class

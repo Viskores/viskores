@@ -132,7 +132,7 @@ void TestPointAverageExplicit2()
   std::cout << "Testing PointAverage Filter on Explicit data" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet4();
+  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet5();
 
   vtkm::filter::ResultField result;
   vtkm::filter::PointAverage pointAverage;
@@ -150,11 +150,11 @@ void TestPointAverageExplicit2()
 
   if(valid)
   {
-    vtkm::Float32 expected[12] = { 100.1f, 105.05f, 105.05f, 100.1f,
-                                   100.1f, 105.05f, 105.05f, 100.1f,
-                                   110.0f, 110.0f, 110.0f, 110.0f
+    vtkm::Float32 expected[11] = { 100.1f, 105.05f, 105.05f, 100.1f,
+                                   115.3f, 115.2f, 115.2f, 115.3f,
+                                   115.1f, 130.5f, 125.35f
                                  };
-    for (int i = 0; i < 12; ++i)
+    for (int i = 0; i < 11; ++i)
     {
       VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i),
           expected[i]), "Wrong result for PointAverage worklet on 3D regular data");
