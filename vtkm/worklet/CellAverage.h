@@ -46,49 +46,32 @@ public:
                   OutType &average) const
   {
     using PointValueType = typename PointValueVecType::ComponentType;
-    using PointVecSize =
-        std::integral_constant<
-          vtkm::IdComponent,
-          vtkm::VecTraits<PointValueType>::NUM_COMPONENTS>;
+
+    using InVecSize =
+      std::integral_constant<
+        vtkm::IdComponent,
+        vtkm::VecTraits<PointValueType>::NUM_COMPONENTS>;
     using OutVecSize =
-        std::integral_constant<
-          vtkm::IdComponent,
-          vtkm::VecTraits<OutType>::NUM_COMPONENTS>;
+      std::integral_constant<
+        vtkm::IdComponent,
+        vtkm::VecTraits<OutType>::NUM_COMPONENTS>;
+    using SameLengthVectors =
+      typename std::is_same<InVecSize, OutVecSize>::type;
 
     this->DoAverage(numPoints,
                     pointValues,
                     average,
-                    PointVecSize(),
-                    OutVecSize());
+                    SameLengthVectors());
   }
 
 private:
-  template<typename PointValueVecType, typename OutType>
-  VTKM_EXEC
-  void DoAverage(const vtkm::IdComponent &numPoints,
-                 const PointValueVecType &pointValues,
-                 OutType &average,
-                 std::integral_constant<vtkm::IdComponent,1>,
-                 std::integral_constant<vtkm::IdComponent,1>) const
-  {
-    OutType sum = static_cast<OutType>(pointValues[0]);
-    for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
-      {
-      sum = sum + static_cast<OutType>(pointValues[pointIndex]);
-      }
-
-    average = sum / static_cast<OutType>(numPoints);
-  }
-
   template<typename PointValueVecType,
-           typename OutType,
-           vtkm::IdComponent VecSize>
+           typename OutType>
   VTKM_EXEC
   void DoAverage(const vtkm::IdComponent &numPoints,
                  const PointValueVecType &pointValues,
                  OutType &average,
-                 std::integral_constant<vtkm::IdComponent,VecSize>,
-                 std::integral_constant<vtkm::IdComponent,VecSize>) const
+                 std::true_type) const
   {
     using OutComponentType = typename vtkm::VecTraits<OutType>::ComponentType;
     OutType sum = OutType(pointValues[0]);
@@ -101,15 +84,12 @@ private:
   }
 
   template<typename PointValueVecType,
-           typename OutType,
-           vtkm::IdComponent InVecSize,
-           vtkm::IdComponent OutVecSize>
+           typename OutType>
   VTKM_EXEC
   void DoAverage(const vtkm::IdComponent &vtkmNotUsed(numPoints),
                  const PointValueVecType &vtkmNotUsed(pointValues),
                  OutType &vtkmNotUsed(average),
-                 std::integral_constant<vtkm::IdComponent,InVecSize>,
-                 std::integral_constant<vtkm::IdComponent,OutVecSize>) const
+                  std::false_type) const
   {
     this->RaiseError(
           "CellAverage called with mismatched Vec sizes for CellAverage.");
