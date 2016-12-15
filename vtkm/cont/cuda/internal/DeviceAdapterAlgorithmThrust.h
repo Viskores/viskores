@@ -1157,6 +1157,13 @@ public:
   template<class Functor>
   VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
   {
+    VTKM_ASSERT(numInstances >= 0);
+    if (numInstances < 1)
+    {
+      // No instances means nothing to run. Just return.
+      return;
+    }
+
     //since the memory is pinned we can access it safely on the host
     //without a memcpy
     vtkm::Id errorArraySize = 0;
@@ -1216,6 +1223,13 @@ public:
   VTKM_CONT
   static void Schedule(Functor functor, const vtkm::Id3& rangeMax)
   {
+    VTKM_ASSERT((rangeMax[0]>=0) && (rangeMax[1]>=0) && (rangeMax[2]>=0));
+    if ((rangeMax[0]<1) || (rangeMax[1]<1) || (rangeMax[2]<1))
+    {
+      // No instances means nothing to run. Just return.
+      return;
+    }
+
     //since the memory is pinned we can access it safely on the host
     //without a memcpy
     vtkm::Id errorArraySize = 0;
