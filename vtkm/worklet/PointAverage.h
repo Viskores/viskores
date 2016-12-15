@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_CellAverage_h
-#define vtk_m_worklet_CellAverage_h
+#ifndef vtk_m_worklet_PointAverage_h
+#define vtk_m_worklet_PointAverage_h
 
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -28,95 +28,96 @@
 namespace vtkm {
 namespace worklet {
 
-//simple functor that returns the average point value as a cell field
-class CellAverage :
-        public vtkm::worklet::WorkletMapPointToCell
+//simple functor that returns the average point value of a given
+//cell based field.
+class PointAverage :
+        public vtkm::worklet::WorkletMapCellToPoint
 {
 public:
   typedef void ControlSignature(CellSetIn cellset,
-                                FieldInPoint<> inPoints,
-                                FieldOutCell<> outCells);
-  typedef void ExecutionSignature(PointCount, _2, _3);
+                                FieldInCell<> inCellField,
+                                FieldOutPoint<> outPointField);
+  typedef void ExecutionSignature(CellCount, _2, _3);
   typedef _1 InputDomain;
 
-  template<typename PointValueVecType, typename OutType>
+  template<typename CellValueVecType, typename OutType>
   VTKM_EXEC
-  void operator()(const vtkm::IdComponent &numPoints,
-                  const PointValueVecType &pointValues,
+  void operator()(const vtkm::IdComponent &numCells,
+                  const CellValueVecType &cellValues,
                   OutType &average) const
   {
-    using PointValueType = typename PointValueVecType::ComponentType;
-    using PointVecSize =
+    using CellValueType = typename CellValueVecType::ComponentType;
+    using InVecSize =
         std::integral_constant<
           vtkm::IdComponent,
-          vtkm::VecTraits<PointValueType>::NUM_COMPONENTS>;
+          vtkm::VecTraits<CellValueType>::NUM_COMPONENTS>;
     using OutVecSize =
         std::integral_constant<
           vtkm::IdComponent,
           vtkm::VecTraits<OutType>::NUM_COMPONENTS>;
 
-    this->DoAverage(numPoints,
-                    pointValues,
+    this->DoAverage(numCells,
+                    cellValues,
                     average,
-                    PointVecSize(),
+                    InVecSize(),
                     OutVecSize());
   }
 
 private:
-  template<typename PointValueVecType, typename OutType>
+  template<typename CellValueVecType, typename OutType>
   VTKM_EXEC
-  void DoAverage(const vtkm::IdComponent &numPoints,
-                 const PointValueVecType &pointValues,
+  void DoAverage(const vtkm::IdComponent &numCells,
+                 const CellValueVecType &cellValues,
                  OutType &average,
                  std::integral_constant<vtkm::IdComponent,1>,
                  std::integral_constant<vtkm::IdComponent,1>) const
   {
-    OutType sum = static_cast<OutType>(pointValues[0]);
-    for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
+    OutType sum = static_cast<OutType>(cellValues[0]);
+    for (vtkm::IdComponent cellIndex = 1; cellIndex < numCells; ++cellIndex)
       {
-      sum = sum + static_cast<OutType>(pointValues[pointIndex]);
+      sum = sum + static_cast<OutType>(cellValues[cellIndex]);
       }
 
-    average = sum / static_cast<OutType>(numPoints);
+    average = sum / static_cast<OutType>(numCells);
   }
 
-  template<typename PointValueVecType,
+  template<typename CellValueVecType,
            typename OutType,
            vtkm::IdComponent VecSize>
   VTKM_EXEC
-  void DoAverage(const vtkm::IdComponent &numPoints,
-                 const PointValueVecType &pointValues,
+  void DoAverage(const vtkm::IdComponent &numCells,
+                 const CellValueVecType &cellValues,
                  OutType &average,
                  std::integral_constant<vtkm::IdComponent,VecSize>,
                  std::integral_constant<vtkm::IdComponent,VecSize>) const
   {
     using OutComponentType = typename vtkm::VecTraits<OutType>::ComponentType;
-    OutType sum = OutType(pointValues[0]);
-    for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
+    OutType sum = OutType(cellValues[0]);
+    for (vtkm::IdComponent cellIndex = 1; cellIndex < numCells; ++cellIndex)
       {
-      sum = sum + OutType(pointValues[pointIndex]);
+      sum = sum + OutType(cellValues[cellIndex]);
       }
 
-    average = sum / OutType(static_cast<OutComponentType>(numPoints));
+    average = sum / OutType(static_cast<OutComponentType>(numCells));
   }
 
-  template<typename PointValueVecType,
+  template<typename CellValueVecType,
            typename OutType,
            vtkm::IdComponent InVecSize,
            vtkm::IdComponent OutVecSize>
   VTKM_EXEC
-  void DoAverage(const vtkm::IdComponent &vtkmNotUsed(numPoints),
-                 const PointValueVecType &vtkmNotUsed(pointValues),
+  void DoAverage(const vtkm::IdComponent &vtkmNotUsed(numCells),
+                 const CellValueVecType &vtkmNotUsed(cellValues),
                  OutType &vtkmNotUsed(average),
                  std::integral_constant<vtkm::IdComponent,InVecSize>,
                  std::integral_constant<vtkm::IdComponent,OutVecSize>) const
   {
     this->RaiseError(
-          "CellAverage called with mismatched Vec sizes for CellAverage.");
+          "PointAverage called with mismatched Vec sizes for PointAverage.");
   }
 };
 
 }
 } // namespace vtkm::worklet
 
-#endif // vtk_m_worklet_CellAverage_h
+#endif // vtk_m_worklet_PointAverage_h

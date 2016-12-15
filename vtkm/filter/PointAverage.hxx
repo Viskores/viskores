@@ -28,8 +28,8 @@ namespace filter {
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT
-CellAverage::CellAverage():
-  vtkm::filter::FilterCell<CellAverage>(),
+PointAverage::PointAverage():
+  vtkm::filter::FilterCell<PointAverage>(),
   Worklet()
 {
 
@@ -41,14 +41,14 @@ template<typename T,
          typename DerivedPolicy,
          typename DeviceAdapter>
 inline VTKM_CONT
-vtkm::filter::ResultField CellAverage::DoExecute(
+vtkm::filter::ResultField PointAverage::DoExecute(
     const vtkm::cont::DataSet &input,
     const vtkm::cont::ArrayHandle<T, StorageType> &inField,
     const vtkm::filter::FieldMetadata &fieldMetadata,
     const vtkm::filter::PolicyBase<DerivedPolicy>&,
     const DeviceAdapter&)
 {
-  if(!fieldMetadata.IsPointField())
+  if(!fieldMetadata.IsCellField())
   {
     return vtkm::filter::ResultField();
   }
@@ -60,7 +60,7 @@ vtkm::filter::ResultField CellAverage::DoExecute(
   //If the input is implicit, we should know what to fall back to
   vtkm::cont::ArrayHandle<T> outArray;
 
-  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage,
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointAverage,
                                        DeviceAdapter > dispatcher(this->Worklet);
 
   //todo: we need to use the policy to determine the valid conversions
@@ -68,7 +68,7 @@ vtkm::filter::ResultField CellAverage::DoExecute(
   dispatcher.Invoke(cellSet, inField, outArray);
 
   std::string outputName = this->GetOutputFieldName();
-  if (outputName == "")
+  if (outputName.empty())
   {
     // Default name is name of input.
     outputName = fieldMetadata.GetName();
@@ -77,7 +77,7 @@ vtkm::filter::ResultField CellAverage::DoExecute(
   return vtkm::filter::ResultField(input,
                                    outArray,
                                    outputName,
-                                   vtkm::cont::Field::ASSOC_CELL_SET,
+                                   vtkm::cont::Field::ASSOC_POINTS,
                                    cellSet.GetName());
 }
 
