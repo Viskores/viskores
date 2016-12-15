@@ -19,15 +19,13 @@
 ##============================================================================
 
 set(headers
-  DispatcherMapField.h
-  DispatcherStreamingMapField.h
-  WorkletMapField.h
-  DispatcherMapTopology.h
-  WorkletMapTopology.h
   AverageByKey.h
   CellAverage.h
   CellDeepCopy.h
   Clip.h
+  DispatcherMapField.h
+  DispatcherMapTopology.h
+  DispatcherStreamingMapField.h
   ExternalFaces.h
   FieldHistogram.h
   FieldStatistics.h
@@ -36,8 +34,8 @@ set(headers
   Magnitude.h
   MarchingCubes.h
   MarchingCubesDataTables.h
-  PointElevation.h
   PointAverage.h
+  PointElevation.h
   RemoveUnusedPoints.h
   ScatterCounting.h
   ScatterIdentity.h
@@ -45,11 +43,13 @@ set(headers
   StreamLineUniformGrid.h
   TetrahedralizeExplicitGrid.h
   TetrahedralizeUniformGrid.h
+  Threshold.h
   TriangulateExplicitGrid.h
   TriangulateUniformGrid.h
-  Threshold.h
   VertexClustering.h
   WaveletCompressor.h
+  WorkletMapField.h
+  WorkletMapTopology.h
   )
 
 #-----------------------------------------------------------------------------
