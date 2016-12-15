@@ -47,6 +47,7 @@ set(headers
   TriangulateExplicitGrid.h
   TriangulateUniformGrid.h
   VertexClustering.h
+  Vorticity.h
   WaveletCompressor.h
   WorkletMapField.h
   WorkletMapTopology.h

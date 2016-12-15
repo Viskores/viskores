@@ -22,8 +22,12 @@
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
+#include <vtkm/worklet/Gradient.h>
+#include <vtkm/worklet/Vorticity.h>
+
 namespace {
 
+//-----------------------------------------------------------------------------
 template<typename DerivedPolicy, typename T, typename S>
 struct PointGrad
 {
@@ -53,11 +57,82 @@ struct PointGrad
   vtkm::cont::ArrayHandle< vtkm::Vec<T,3> >* Result;
 };
 
-
+//-----------------------------------------------------------------------------
+template<typename HandleType>
+inline
+void add_field( vtkm::filter::ResultField& result,
+                const HandleType& handle,
+                const std::string name)
+{
+  const vtkm::cont::Field::AssociationEnum assoc = result.GetField().GetAssociation();
+  if ((assoc == vtkm::cont::Field::ASSOC_WHOLE_MESH) ||
+      (assoc == vtkm::cont::Field::ASSOC_POINTS))
+  {
+    vtkm::cont::Field field(name, assoc, handle);
+    result.GetDataSet().AddField(field);
+  }
+  else
+  {
+    vtkm::cont::Field field(name,
+                            assoc,
+                            result.GetField().GetAssocCellSet(),
+                            handle);
+    result.GetDataSet().AddField(field);
+  }
 }
+
+//-----------------------------------------------------------------------------
+template<typename T, typename S, typename DeviceAdapter>
+inline
+void add_extra_vec_fields( const vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::Vec<T,3>, 3>, S> &inField,
+                           const vtkm::filter::Gradient* const filter,
+                           vtkm::filter::ResultField& result,
+                           const DeviceAdapter&)
+{
+  if(filter->GetComputeVorticity())
+  {
+    vtkm::cont::ArrayHandle< vtkm::Vec<T,3> > vorticity;
+    vtkm::worklet::DispatcherMapField< vtkm::worklet::Vorticity, DeviceAdapter > dispatcher;
+    dispatcher.Invoke(inField, vorticity);
+
+    add_field(result, vorticity, filter->GetVorticityName());
+  }
+
+  if(filter->GetComputeQCriterion())
+  {
+    vtkm::cont::ArrayHandle< T > qc;
+    vtkm::worklet::DispatcherMapField< vtkm::worklet::QCriterion, DeviceAdapter > dispatcher;
+    dispatcher.Invoke(inField, qc);
+
+    add_field(result, qc, filter->GetQCriterionName());
+  }
+}
+
+template<typename T, typename S, typename DeviceAdapter>
+inline
+void add_extra_vec_fields( const vtkm::cont::ArrayHandle< T, S> &,
+                           const vtkm::filter::Gradient* const,
+                           vtkm::filter::ResultField&,
+                           const DeviceAdapter&)
+{
+  //not a vector array handle so add nothing
+}
+
+} //namespace
 
 namespace vtkm {
 namespace filter {
+
+//-----------------------------------------------------------------------------
+Gradient::Gradient():
+ ComputePointGradient(false),
+ ComputeVorticity(false),
+ ComputeQCriterion(false),
+ VorticityName("Vorticity"),
+ QCriterionName("QCriterion")
+ {
+
+ }
 
 //-----------------------------------------------------------------------------
 template<typename T,
@@ -70,7 +145,7 @@ vtkm::filter::ResultField Gradient::DoExecute(
     const vtkm::cont::ArrayHandle<T, StorageType> &inField,
     const vtkm::filter::FieldMetadata &fieldMetadata,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-    const DeviceAdapter&)
+    const DeviceAdapter& adapter)
 {
   if(!fieldMetadata.IsPointField())
   {
@@ -115,11 +190,16 @@ vtkm::filter::ResultField Gradient::DoExecute(
     fieldAssociation = vtkm::cont::Field::ASSOC_CELL_SET;
   }
 
-  return vtkm::filter::ResultField(input,
+  vtkm::filter::ResultField result(input,
                                    outArray,
                                    outputName,
                                    fieldAssociation,
                                    cells.GetName());
+
+  //Add the vorticity and qcriterion fields if they are enabled to the result
+  add_extra_vec_fields(outArray, this, result, adapter);
+
+  return result;
 
 
 }

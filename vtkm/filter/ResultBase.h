@@ -50,6 +50,10 @@ public:
   VTKM_CONT
   const vtkm::cont::DataSet &GetDataSet() const { return this->Data; }
 
+  /// Returns the results of the filter in terms of a writable \c DataSet.
+  VTKM_CONT
+  vtkm::cont::DataSet &GetDataSet() { return this->Data; }
+
 protected:
   VTKM_CONT
   ResultBase(): Valid(false) {  }
@@ -69,14 +73,6 @@ protected:
   {
     this->Data = dataSet;
     this->SetValid(true);
-  }
-
-  /// Returns a writable reference to the data set.
-  ///
-  VTKM_CONT
-  vtkm::cont::DataSet &GetDataSetReference()
-  {
-    return this->Data;
   }
 
 private:
