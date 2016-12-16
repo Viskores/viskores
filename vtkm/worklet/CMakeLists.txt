@@ -31,6 +31,7 @@ set(headers
   FieldStatistics.h
   Gradient.h
   KernelSplatter.h
+  Keys.h
   Magnitude.h
   MarchingCubes.h
   MarchingCubesDataTables.h
