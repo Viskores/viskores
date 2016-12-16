@@ -116,15 +116,6 @@ public:
   }
 
   VTKM_CONT
-  CellSetExplicit(vtkm::Id numpoints)
-    : CellSet(std::string()),
-      ConnectivityLength(-1),
-      NumberOfCells(-1),
-      NumberOfPoints(numpoints)
-  {
-  }
-
-  VTKM_CONT
   CellSetExplicit(const Thisclass &src)
     : CellSet(src),
       PointToCell(src.PointToCell),
