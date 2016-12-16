@@ -407,14 +407,14 @@ MakeTestDataSet::Make3DExplicitDataSet2()
   const int nVerts = 8;
   typedef vtkm::Vec<vtkm::Float32,3> CoordType;
   CoordType coordinates[nVerts] = {
-    CoordType(0, 0, 0),
-    CoordType(1, 0, 0),
-    CoordType(1, 0, 1),
-    CoordType(0, 0, 1),
-    CoordType(0, 1, 0),
-    CoordType(1, 1, 0),
-    CoordType(1, 1, 1),
-    CoordType(0, 1, 1)
+    CoordType(0, 0, 0), // 0
+    CoordType(1, 0, 0), // 1
+    CoordType(1, 0, 1), // 2
+    CoordType(0, 0, 1), // 3
+    CoordType(0, 1, 0), // 4
+    CoordType(1, 1, 0), // 5
+    CoordType(1, 1, 1), // 6
+    CoordType(0, 1, 1)  // 7
   };
   vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.2f, 70.2f, 80.3f};
 
@@ -485,24 +485,24 @@ MakeTestDataSet::Make3DExplicitDataSet4()
   vtkm::cont::CellSetExplicit<> cellSet(nVerts,"cells");
   vtkm::Vec<vtkm::Id, 8> ids;
   ids[0] = 0;
-  ids[1] = 1;
+  ids[1] = 4;
   ids[2] = 5;
-  ids[3] = 4;
+  ids[3] = 1;
   ids[4] = 3;
-  ids[5] = 2;
+  ids[5] = 7;
   ids[6] = 6;
-  ids[7] = 7;
+  ids[7] = 2;
 
   cellSet.PrepareToAddCells(2, 16);
   cellSet.AddCell(vtkm::CELL_SHAPE_HEXAHEDRON, 8, ids);
   ids[0] = 1;
-  ids[1] = 8;
+  ids[1] = 5;
   ids[2] = 11;
-  ids[3] = 5;
+  ids[3] = 8;
   ids[4] = 2;
-  ids[5] = 9;
+  ids[5] = 6;
   ids[6] = 10;
-  ids[7] = 6;
+  ids[7] = 9;
   cellSet.AddCell(vtkm::CELL_SHAPE_HEXAHEDRON, 8, ids);
   cellSet.CompleteAddingCells();
 
@@ -600,13 +600,13 @@ MakeTestDataSet::Make3DExplicitDataSet5()
   cellSet.PrepareToAddCells(nCells, 23);
 
   ids[0] = 0;
-  ids[1] = 1;
+  ids[1] = 4;
   ids[2] = 5;
-  ids[3] = 4;
+  ids[3] = 1;
   ids[4] = 3;
-  ids[5] = 2;
+  ids[5] = 7;
   ids[6] = 6;
-  ids[7] = 7;
+  ids[7] = 2;
   cellSet.AddCell(vtkm::CELL_SHAPE_HEXAHEDRON, 8, ids);
 
   ids[0] = 1;
