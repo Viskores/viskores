@@ -20,6 +20,8 @@
 #ifndef vtk_m_cont_DynamicArrayHandle_h
 #define vtk_m_cont_DynamicArrayHandle_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/TypeListTag.h>
 #include <vtkm/VecTraits.h>
 
@@ -40,10 +42,12 @@ namespace detail {
 
 /// \brief Base class for PolymorphicArrayHandleContainer
 ///
-struct PolymorphicArrayHandleContainerBase
+struct VTKM_CONT_EXPORT PolymorphicArrayHandleContainerBase
 {
+  PolymorphicArrayHandleContainerBase();
+
   // This must exist so that subclasses are destroyed correctly.
-  virtual ~PolymorphicArrayHandleContainerBase() {  }
+  virtual ~PolymorphicArrayHandleContainerBase();
 
   virtual vtkm::IdComponent GetNumberOfComponents() const = 0;
   virtual vtkm::Id GetNumberOfValues() const = 0;
@@ -135,6 +139,10 @@ DynamicArrayHandleTryCast(
   }
   else
   {
+    std::cout << "Failed to cast to: " << typeid(vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage>).name() << std::endl;
+    std::cout << "The current rtti info is: " << typeid(*arrayContainer).name() << std::endl;
+    std::cout << std::endl;
+
     return nullptr;
   }
 }
@@ -399,7 +407,7 @@ public:
   }
 
   VTKM_CONT
-  virtual void PrintSummary(std::ostream &out) const
+  void PrintSummary(std::ostream &out) const
   {
     this->ArrayContainer->PrintSummary(out);
   }

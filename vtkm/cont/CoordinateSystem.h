@@ -78,7 +78,7 @@ typedef vtkm::cont::DynamicArrayHandleBase<
     VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG>
   DynamicArrayHandleCoordinateSystem;
 
-class CoordinateSystem : public vtkm::cont::Field
+class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 {
   typedef vtkm::cont::Field Superclass;
 
@@ -249,13 +249,7 @@ public:
                         rangePortal.Get(2));
   }
 
-
-  VTKM_CONT
-  virtual void PrintSummary(std::ostream &out) const
-  {
-    out << "    Coordinate System ";
-    this->Superclass::PrintSummary(out);
-  }
+  virtual void PrintSummary(std::ostream &out) const;
 };
 
 template<typename Functor>

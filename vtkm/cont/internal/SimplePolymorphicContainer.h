@@ -31,9 +31,11 @@ namespace internal {
 
 /// \brief Base class for SimplePolymorphicContainer
 ///
-struct SimplePolymorphicContainerBase {
+struct VTKM_CONT_EXPORT SimplePolymorphicContainerBase {
+  SimplePolymorphicContainerBase();
+
   // This must exist so that subclasses are destroyed correctly.
-  virtual ~SimplePolymorphicContainerBase() {  }
+  virtual ~SimplePolymorphicContainerBase();
 
   virtual std::shared_ptr<SimplePolymorphicContainerBase>
   NewInstance() const = 0;

@@ -138,15 +138,19 @@ public:
 
   virtual ~CellSetExplicit() {  }
 
-  virtual vtkm::Id GetNumberOfCells() const
+  vtkm::Id GetNumberOfCells() const VTKM_OVERRIDE
   {
     return this->PointToCell.GetNumberOfElements();
   }
 
-  virtual vtkm::Id GetNumberOfPoints() const
+  vtkm::Id GetNumberOfPoints() const VTKM_OVERRIDE
   {
     return this->NumberOfPoints;
   }
+
+  vtkm::Id GetNumberOfFaces() const VTKM_OVERRIDE { return -1; }
+
+  vtkm::Id GetNumberOfEdges() const VTKM_OVERRIDE { return -1; }
 
   VTKM_CONT
   vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagCell) const
@@ -458,7 +462,7 @@ public:
     this->CellToPoint.IndexOffsetsValid = false;
   }
 
-  virtual void PrintSummary(std::ostream &out) const
+  void PrintSummary(std::ostream &out) const VTKM_OVERRIDE
   {
     out << "   ExplicitCellSet: " << this->Name << std::endl;
     out << "   PointToCell: " << std::endl;

@@ -28,8 +28,9 @@
 #define VTKM_STORAGE VTKM_STORAGE_BASIC
 #endif
 
-
 #include <vtkm/StaticAssert.h>
+
+#include <vtkm/cont/vtkm_cont_export.h>
 #include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm {

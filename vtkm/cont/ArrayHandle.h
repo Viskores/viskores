@@ -20,6 +20,8 @@
 #ifndef vtk_m_cont_ArrayHandle_h
 #define vtk_m_cont_ArrayHandle_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/Assert.h>
 #include <vtkm/Types.h>
 
@@ -35,7 +37,6 @@
 #include <memory>
 #include <vector>
 #include <iterator>
-
 
 namespace vtkm {
 namespace cont {
