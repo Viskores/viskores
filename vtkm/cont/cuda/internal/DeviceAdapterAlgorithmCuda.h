@@ -137,7 +137,7 @@ public:
       deviceQueryInit = true;
 
       //first query for the number of devices
-      cudaGetDeviceCount(&numDevices);
+      VTKM_CUDA_CALL(cudaGetDeviceCount(&numDevices));
 
       for (vtkm::Int32 i = 0; i < numDevices; i++)
       {

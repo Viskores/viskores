@@ -1771,7 +1771,9 @@ template<typename T>
 static inline VTKM_EXEC_CONT
 bool IsNan(T x)
 {
+#ifndef VTKM_CUDA
   using std::isnan;
+#endif
   return (isnan(x) != 0);
 }
 
@@ -1781,7 +1783,9 @@ template<typename T>
 static inline VTKM_EXEC_CONT
 bool IsInf(T x)
 {
+#ifndef VTKM_CUDA
   using std::isinf;
+#endif
   return (isinf(x) != 0);
 }
 
@@ -1791,7 +1795,9 @@ template<typename T>
 static inline VTKM_EXEC_CONT
 bool IsFinite(T x)
 {
+#ifndef VTKM_CUDA
   using std::isfinite;
+#endif
   return (isfinite(x) != 0);
 }
 
