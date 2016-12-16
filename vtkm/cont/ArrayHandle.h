@@ -294,135 +294,45 @@ public:
     return *this;
   }
 
-  /// Get the storage.
+  /// Like a pointer, two \c ArrayHandles are considered equal if they point
+  /// to the same location in memory.
   ///
-  VTKM_CONT StorageType& GetStorage()
+  VTKM_CONT
+  bool operator==(const ArrayHandle<ValueType,StorageTag> &rhs) const
   {
-    this->SyncControlArray();
-    if (this->Internals->ControlArrayValid)
-    {
-      return this->Internals->ControlArray;
-    }
-    else
-    {
-      throw vtkm::cont::ErrorControlInternal(
-        "ArrayHandle::SyncControlArray did not make control array valid.");
-    }
+    return (this->Internals == rhs.Internals);
+  }
+  VTKM_CONT
+  bool operator!=(const ArrayHandle<ValueType,StorageTag> &rhs) const
+  {
+    return (this->Internals != rhs.Internals);
   }
 
   /// Get the storage.
   ///
-  VTKM_CONT const StorageType& GetStorage() const
-  {
-    this->SyncControlArray();
-    if (this->Internals->ControlArrayValid)
-    {
-      return this->Internals->ControlArray;
-    }
-    else
-    {
-      throw vtkm::cont::ErrorControlInternal(
-        "ArrayHandle::SyncControlArray did not make control array valid.");
-    }
-  }
+  VTKM_CONT StorageType& GetStorage();
+
+  /// Get the storage.
+  ///
+  VTKM_CONT const StorageType& GetStorage() const;
 
   /// Get the array portal of the control array.
   ///
-  VTKM_CONT PortalControl GetPortalControl()
-  {
-    this->SyncControlArray();
-    if (this->Internals->ControlArrayValid)
-    {
-      // If the user writes into the iterator we return, then the execution
-      // array will become invalid. Play it safe and release the execution
-      // resources. (Use the const version to preserve the execution array.)
-      this->ReleaseResourcesExecutionInternal();
-      return this->Internals->ControlArray.GetPortal();
-    }
-    else
-    {
-      throw vtkm::cont::ErrorControlInternal(
-            "ArrayHandle::SyncControlArray did not make control array valid.");
-    }
-  }
+  VTKM_CONT PortalControl GetPortalControl();
 
   /// Get the array portal of the control array.
   ///
-  VTKM_CONT PortalConstControl GetPortalConstControl() const
-  {
-    this->SyncControlArray();
-    if (this->Internals->ControlArrayValid)
-    {
-      return this->Internals->ControlArray.GetPortalConst();
-    }
-    else
-    {
-      throw vtkm::cont::ErrorControlInternal(
-            "ArrayHandle::SyncControlArray did not make control array valid.");
-    }
-  }
+  VTKM_CONT PortalConstControl GetPortalConstControl() const;
 
   /// Returns the number of entries in the array.
   ///
-  VTKM_CONT vtkm::Id GetNumberOfValues() const
-  {
-    if (this->Internals->ControlArrayValid)
-    {
-      return this->Internals->ControlArray.GetNumberOfValues();
-    }
-    else if (this->Internals->ExecutionArrayValid)
-    {
-      return this->Internals->ExecutionArray->GetNumberOfValues();
-    }
-    else
-    {
-      return 0;
-    }
-  }
+  VTKM_CONT vtkm::Id GetNumberOfValues() const;
 
   /// Copies data into the given iterator for the control environment. This
   /// method can skip copying into an internally managed control array.
   ///
   template<typename IteratorType, typename DeviceAdapterTag>
-  VTKM_CONT void CopyInto(IteratorType dest, DeviceAdapterTag) const
-  {
-    using pointer_type = typename std::iterator_traits<IteratorType>::pointer;
-    using value_type = typename std::remove_pointer<pointer_type>::type;
-
-    static_assert( !std::is_const<value_type>::value,
-                   "CopyInto requires a non const iterator." );
-
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-
-    if (!this->Internals->ControlArrayValid &&
-        !this->Internals->ExecutionArrayValid)
-      {
-      throw vtkm::cont::ErrorControlBadValue(
-        "ArrayHandle has no data to copy into Iterator.");
-      }
-
-    if (!this->Internals->ControlArrayValid &&
-        this->Internals->ExecutionArray->IsDeviceAdapter(DeviceAdapterTag()))
-      {
-        /// Dynamically cast ArrayHandleExecutionManagerBase into a concrete
-        /// class and call CopyInto. The dynamic conversion will be sucessful
-        /// becuase the check to ensure the ExecutionArray is of the type
-        /// DeviceAdapterTag has already passed
-        typedef vtkm::cont::internal::ArrayHandleExecutionManager<
-                                T, StorageTag, DeviceAdapterTag> ConcreteType;
-        ConcreteType *ConcreteExecutionArray =
-                  dynamic_cast<ConcreteType*>(this->Internals->ExecutionArray.get());
-
-        ConcreteExecutionArray->CopyInto(dest);
-      }
-    else
-      {
-      PortalConstControl portal = this->GetPortalConstControl();
-      std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-                vtkm::cont::ArrayPortalToIteratorEnd(portal),
-                dest);
-      }
-  }
+  VTKM_CONT void CopyInto(IteratorType dest, DeviceAdapterTag) const;
 
   /// \brief Allocates an array large enough to hold the given number of values.
   ///
@@ -448,33 +358,7 @@ public:
   /// \c numberOfValues must be equal or less than the preexisting size
   /// (returned from GetNumberOfValues). That is, this method can only be used
   /// to shorten the array, not lengthen.
-  void Shrink(vtkm::Id numberOfValues)
-  {
-    vtkm::Id originalNumberOfValues = this->GetNumberOfValues();
-
-    if (numberOfValues < originalNumberOfValues)
-    {
-      if (this->Internals->ControlArrayValid)
-      {
-        this->Internals->ControlArray.Shrink(numberOfValues);
-      }
-      if (this->Internals->ExecutionArrayValid)
-      {
-        this->Internals->ExecutionArray->Shrink(numberOfValues);
-      }
-    }
-    else if (numberOfValues == originalNumberOfValues)
-    {
-      // Nothing to do.
-    }
-    else // numberOfValues > originalNumberOfValues
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-        "ArrayHandle::Shrink cannot be used to grow array.");
-    }
-
-    VTKM_ASSERT(this->GetNumberOfValues() == numberOfValues);
-  }
+  void Shrink(vtkm::Id numberOfValues);
 
   /// Releases any resources being used in the execution environment (that are
   /// not being shared by the control environment).
@@ -510,26 +394,7 @@ public:
   template<typename DeviceAdapterTag>
   VTKM_CONT
   typename ExecutionTypes<DeviceAdapterTag>::PortalConst
-  PrepareForInput(DeviceAdapterTag) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-
-    if (!this->Internals->ControlArrayValid
-        && !this->Internals->ExecutionArrayValid)
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-        "ArrayHandle has no data when PrepareForInput called.");
-    }
-
-    this->PrepareForDevice(DeviceAdapterTag());
-    typename ExecutionTypes<DeviceAdapterTag>::PortalConst portal =
-        this->Internals->ExecutionArray->PrepareForInput(
-          !this->Internals->ExecutionArrayValid, DeviceAdapterTag());
-
-    this->Internals->ExecutionArrayValid = true;
-
-    return portal;
-  }
+  PrepareForInput(DeviceAdapterTag) const;
 
   /// Prepares (allocates) this array to be used as an output from an operation
   /// in the execution environment. The internal state of this class is set to
@@ -541,33 +406,7 @@ public:
   template<typename DeviceAdapterTag>
   VTKM_CONT
   typename ExecutionTypes<DeviceAdapterTag>::Portal
-  PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-
-    // Invalidate any control arrays.
-    // Should the control array resource be released? Probably not a good
-    // idea when shared with execution.
-    this->Internals->ControlArrayValid = false;
-
-    this->PrepareForDevice(DeviceAdapterTag());
-    typename ExecutionTypes<DeviceAdapterTag>::Portal portal =
-        this->Internals->ExecutionArray->PrepareForOutput(numberOfValues,
-                                                          DeviceAdapterTag());
-
-    // We are assuming that the calling code will fill the array using the
-    // iterators we are returning, so go ahead and mark the execution array as
-    // having valid data. (A previous version of this class had a separate call
-    // to mark the array as filled, but that was onerous to call at the the
-    // right time and rather pointless since it is basically always the case
-    // that the array is going to be filled before anything else. In this
-    // implementation the only access to the array is through the iterators
-    // returned from this method, so you would have to work to invalidate this
-    // assumption anyway.)
-    this->Internals->ExecutionArrayValid = true;
-
-    return portal;
-  }
+  PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag);
 
   /// Prepares this array to be used in an in-place operation (both as input
   /// and output) in the execution environment. If necessary, copies data to
@@ -578,48 +417,36 @@ public:
   template<typename DeviceAdapterTag>
   VTKM_CONT
   typename ExecutionTypes<DeviceAdapterTag>::Portal
-  PrepareForInPlace(DeviceAdapterTag)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
+  PrepareForInPlace(DeviceAdapterTag);
 
-    if (!this->Internals->ControlArrayValid
-        && !this->Internals->ExecutionArrayValid)
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-        "ArrayHandle has no data when PrepareForInPlace called.");
-    }
-
-    this->PrepareForDevice(DeviceAdapterTag());
-    typename ExecutionTypes<DeviceAdapterTag>::Portal portal =
-        this->Internals->ExecutionArray->PrepareForInPlace(
-          !this->Internals->ExecutionArrayValid, DeviceAdapterTag());
-
-    this->Internals->ExecutionArrayValid = true;
-
-    // Invalidate any control arrays since their data will become invalid when
-    // the execution data is overwritten. Don't actually release the control
-    // array. It may be shared as the execution array.
-    this->Internals->ControlArrayValid = false;
-
-    return portal;
-  }
-
-  /// Like a pointer, two \c ArrayHandles are considered equal if they point
-  /// to the same location in memory.
+  /// Gets this array handle ready to interact with the given device. If the
+  /// array handle has already interacted with this device, then this method
+  /// does nothing. Although the internal state of this class can change, the
+  /// method is declared const because logically the data does not.
   ///
+  template<typename DeviceAdapterTag>
   VTKM_CONT
-  bool operator==(const ArrayHandle<ValueType,StorageTag> &rhs) const
-  {
-    return (this->Internals.get() == rhs.Internals.get());
-  }
+  void PrepareForDevice(DeviceAdapterTag) const;
+
+  /// Synchronizes the control array with the execution array. If either the
+  /// user array or control array is already valid, this method does nothing
+  /// (because the data is already available in the control environment).
+  /// Although the internal state of this class can change, the method is
+  /// declared const because logically the data does not.
+  ///
+  VTKM_CONT void SyncControlArray() const;
+
   VTKM_CONT
-  bool operator!=(const ArrayHandle<ValueType,StorageTag> &rhs) const
+  void ReleaseResourcesExecutionInternal()
   {
-    return (this->Internals.get() != rhs.Internals.get());
+    if (this->Internals->ExecutionArrayValid)
+    {
+      this->Internals->ExecutionArray->ReleaseResources();
+      this->Internals->ExecutionArrayValid = false;
+    }
   }
 
-// private:
-  struct InternalStruct
+  struct VTKM_ALWAYS_EXPORT InternalStruct
   {
     StorageType ControlArray;
     bool ControlArrayValid;
@@ -634,91 +461,6 @@ public:
   ArrayHandle(const std::shared_ptr<InternalStruct>& i)
     : Internals(i)
   { }
-
-  /// Gets this array handle ready to interact with the given device. If the
-  /// array handle has already interacted with this device, then this method
-  /// does nothing. Although the internal state of this class can change, the
-  /// method is declared const because logically the data does not.
-  ///
-  template<typename DeviceAdapterTag>
-  VTKM_CONT
-  void PrepareForDevice(DeviceAdapterTag) const
-  {
-    if (this->Internals->ExecutionArray != nullptr)
-    {
-      if (this->Internals->ExecutionArray->IsDeviceAdapter(DeviceAdapterTag()))
-      {
-        // Already have manager for correct device adapter. Nothing to do.
-        return;
-      }
-      else
-      {
-        // Have the wrong manager. Delete the old one and create a new one
-        // of the right type. (BTW, it would be possible for the array handle
-        // to hold references to execution arrays on multiple devices. However,
-        // there is not a clear use case for that yet and it is unclear what
-        // the behavior of "dirty" arrays should be, so it is not currently
-        // implemented.)
-        this->SyncControlArray();
-        // Need to change some state that does not change the logical state from
-        // an external point of view.
-        InternalStruct *internals
-            = const_cast<InternalStruct*>(this->Internals.get());
-        internals->ExecutionArray.reset();
-        internals->ExecutionArrayValid = false;
-        }
-      }
-
-    VTKM_ASSERT(this->Internals->ExecutionArray == nullptr);
-    VTKM_ASSERT(!this->Internals->ExecutionArrayValid);
-    // Need to change some state that does not change the logical state from
-    // an external point of view.
-    InternalStruct *internals
-        = const_cast<InternalStruct*>(this->Internals.get());
-    internals->ExecutionArray.reset(
-          new vtkm::cont::internal::ArrayHandleExecutionManager<
-            T, StorageTag, DeviceAdapterTag>(&internals->ControlArray));
-  }
-
-  /// Synchronizes the control array with the execution array. If either the
-  /// user array or control array is already valid, this method does nothing
-  /// (because the data is already available in the control environment).
-  /// Although the internal state of this class can change, the method is
-  /// declared const because logically the data does not.
-  ///
-  VTKM_CONT void SyncControlArray() const
-  {
-    if (!this->Internals->ControlArrayValid)
-    {
-      // Need to change some state that does not change the logical state from
-      // an external point of view.
-      InternalStruct *internals
-        = const_cast<InternalStruct*>(this->Internals.get());
-      if (this->Internals->ExecutionArrayValid)
-      {
-        internals->ExecutionArray->RetrieveOutputData(&internals->ControlArray);
-        internals->ControlArrayValid = true;
-      }
-      else
-      {
-        // This array is in the null state (there is nothing allocated), but
-        // the calling function wants to do something with the array. Put this
-        // class into a valid state by allocating an array of size 0.
-        internals->ControlArray.Allocate(0);
-        internals->ControlArrayValid = true;
-      }
-    }
-  }
-
-  VTKM_CONT
-  void ReleaseResourcesExecutionInternal()
-  {
-    if (this->Internals->ExecutionArrayValid)
-    {
-      this->Internals->ExecutionArray->ReleaseResources();
-      this->Internals->ExecutionArrayValid = false;
-    }
-  }
 
   std::shared_ptr<InternalStruct> Internals;
 };
@@ -804,6 +546,43 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<vtkm::UInt8,StorageT> &ar
 }
 
 }
+} //namespace vtkm::cont
+
+#ifndef vtkm_cont_ArrayHandle_cxx
+namespace vtkm {
+namespace cont {
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<char, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Int8, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::UInt8, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Int16, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::UInt16, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Int32, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::UInt32, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Int64, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::UInt64, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Float32, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Float64, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Int64,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Int32,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float32,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float64,2>, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Int64,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Int32,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float32,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float64,3>, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<char,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<Int8,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<UInt8,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float32,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float64,4>, StorageTagBasic>;
 }
+}
+#endif
+
+#include <vtkm/cont/ArrayHandle.hxx>
 
 #endif //vtk_m_cont_ArrayHandle_h
