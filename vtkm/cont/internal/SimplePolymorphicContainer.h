@@ -20,6 +20,8 @@
 #ifndef vtk_m_cont_internal_SimplePolymorphicContainer_h
 #define vtk_m_cont_internal_SimplePolymorphicContainer_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/Types.h>
 #include <memory>
 
@@ -49,7 +51,7 @@ struct SimplePolymorphicContainerBase {
 /// allows for safer dynamic downcasts.
 ///
 template<typename T>
-struct SimplePolymorphicContainer : public SimplePolymorphicContainerBase
+struct VTKM_ALWAYS_EXPORT SimplePolymorphicContainer : public SimplePolymorphicContainerBase
 {
   T Item;
 

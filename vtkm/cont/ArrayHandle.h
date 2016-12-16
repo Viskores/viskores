@@ -221,7 +221,7 @@ struct GetTypeInParentheses<void(T)>
 template<
     typename T,
     typename StorageTag_ = VTKM_DEFAULT_STORAGE_TAG>
-class ArrayHandle : public internal::ArrayHandleBase
+class VTKM_ALWAYS_EXPORT ArrayHandle : public internal::ArrayHandleBase
 {
 private:
   typedef vtkm::cont::internal::ArrayHandleExecutionManagerBase<T,StorageTag_>

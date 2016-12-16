@@ -155,7 +155,7 @@ namespace internal {
 
 template<typename ValueType, typename ArrayHandleType, typename FunctorType,
   typename InverseFunctorType=NullFunctorType>
-struct StorageTagTransform {};
+struct VTKM_ALWAYS_EXPORT StorageTagTransform {};
 
 template<typename T, typename ArrayHandleType, typename FunctorType>
 class Storage<T, StorageTagTransform<T, ArrayHandleType, FunctorType, NullFunctorType > >

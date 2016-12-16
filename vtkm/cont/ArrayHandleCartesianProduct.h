@@ -151,7 +151,7 @@ namespace cont {
 namespace internal {
 
 template<typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
-struct StorageTagCartesianProduct {  };
+struct VTKM_ALWAYS_EXPORT StorageTagCartesianProduct {  };
 
 /// This helper struct defines the value type for a zip container containing
 /// the given two array handles.

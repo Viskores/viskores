@@ -110,7 +110,7 @@ macro(vtkm_configure_component_Base)
 
   vtkm_finish_configure_component(Base
     DEPENDENT_VARIABLES VTKm_base_vtkm_target_FOUND
-    ADD_LIBRARIES vtkm
+    ADD_LIBRARIES vtkm vtkm_cont
     )
 endmacro()
 

@@ -630,7 +630,13 @@ function(vtkm_library)
   set_property(TARGET ${lib_name} APPEND PROPERTY
       INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
 
-  target_link_libraries(${lib_name} ${VTKm_LIBRARIES})
+  set(lib_subset)
+  foreach(lib ${VTKm_LIBRARIES})
+   if(NOT lib STREQUAL lib_name)
+     list(APPEND lib_subset ${lib})
+   endif()
+  endforeach()
+  target_link_libraries(${lib_name} ${lib_subset})
 
   set(cxx_args ${VTKm_COMPILE_OPTIONS})
   separate_arguments(cxx_args)
@@ -660,11 +666,17 @@ function(vtkm_library)
   #template classes. This
   string(TOUPPER ${lib_name} BASE_NAME_UPPER)
   set(EXPORT_MACRO_NAME "${BASE_NAME_UPPER}")
-  set(EXPORT_IS_BUILT_STATIC false)
+
+  set(EXPORT_IS_BUILT_STATIC 0)
+  get_target_property(is_static ${lib_name} TYPE)
+  if(${is_static} STREQUAL "STATIC_LIBRARY")
+    #If we are building statically set the define symbol
+    set(EXPORT_IS_BUILT_STATIC 1)
+  endif()
+  unset(is_static)
+
   get_target_property(EXPORT_IMPORT_CONDITION ${lib_name} DEFINE_SYMBOL)
   if(NOT EXPORT_IMPORT_CONDITION)
-    #If we are building statically set the define symbol
-    set(EXPORT_IS_BUILT_STATIC true)
     #set EXPORT_IMPORT_CONDITION to what the DEFINE_SYMBOL would be when
     #building shared
     set(EXPORT_IMPORT_CONDITION ${lib_name}_EXPORTS)
@@ -676,8 +688,8 @@ function(vtkm_library)
     @ONLY)
 
   unset(EXPORT_MACRO_NAME)
-  unset(EXPORT_IMPORT_CONDITION)
   unset(EXPORT_IS_BUILT_STATIC)
+  unset(EXPORT_IMPORT_CONDITION)
 
   install(TARGETS ${lib_name}
     EXPORT ${VTKm_EXPORT_NAME}

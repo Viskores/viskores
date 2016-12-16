@@ -180,7 +180,7 @@ namespace cont {
 namespace internal {
 
 template<typename SourceArrayHandleType, typename OffsetsArrayHandleType>
-struct StorageTagGroupVecVariable {  };
+struct VTKM_ALWAYS_EXPORT StorageTagGroupVecVariable {  };
 
 template<typename SourceArrayHandleType, typename OffsetsArrayHandleType>
 class Storage<

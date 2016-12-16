@@ -63,7 +63,7 @@ struct PolymorphicArrayHandleContainerBase
 /// simple questions about the object.
 ///
 template<typename T, typename Storage>
-struct PolymorphicArrayHandleContainer
+struct VTKM_ALWAYS_EXPORT PolymorphicArrayHandleContainer
     : public PolymorphicArrayHandleContainerBase
 {
   typedef vtkm::cont::ArrayHandle<T, Storage> ArrayHandleType;
@@ -184,7 +184,7 @@ DynamicArrayHandleTryCast(
 /// lists.
 ///
 template<typename TypeList, typename StorageList>
-class DynamicArrayHandleBase
+class VTKM_ALWAYS_EXPORT DynamicArrayHandleBase
 {
 public:
   VTKM_CONT

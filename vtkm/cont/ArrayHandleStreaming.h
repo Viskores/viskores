@@ -97,7 +97,7 @@ private:
 } // internal
 
 template<typename ArrayHandleInputType>
-struct StorageTagStreaming { };
+struct VTKM_ALWAYS_EXPORT StorageTagStreaming { };
 
 namespace internal {
 

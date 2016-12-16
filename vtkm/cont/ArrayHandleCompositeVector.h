@@ -219,7 +219,7 @@ private:
 };
 
 template<typename SignatureWithArrays>
-struct StorageTagCompositeVector {  };
+struct VTKM_ALWAYS_EXPORT StorageTagCompositeVector {  };
 
 /// A convenience class that provides a typedef to the appropriate tag for
 /// a composite storage.

@@ -55,11 +55,11 @@ namespace cont {
 /// StorageTagBasic.
 ///
 /// To implement your own StorageTag, you first must create a tag class (an
-/// empty struct) defining your tag (i.e. struct StorageTagMyAlloc { };). Then
+/// empty struct) defining your tag (i.e. struct VTKM_ALWAYS_EXPORT StorageTagMyAlloc { };). Then
 /// provide a partial template specialization of vtkm::cont::internal::Storage
 /// for your new tag.
 ///
-struct StorageTag___ {  };
+struct VTKM_ALWAYS_EXPORT StorageTag___ {  };
 #endif // VTKM_DOXYGEN_ONLY
 
 namespace internal {

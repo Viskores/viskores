@@ -115,7 +115,7 @@ namespace cont {
 namespace internal {
 
 template<typename SourceArrayHandleType, vtkm::IdComponent NUM_COMPONENTS>
-struct StorageTagGroupVec {  };
+struct VTKM_ALWAYS_EXPORT StorageTagGroupVec {  };
 
 template<typename SourceArrayHandleType,
          vtkm::IdComponent NUM_COMPONENTS>

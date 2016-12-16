@@ -58,7 +58,7 @@ namespace vtkm {
 namespace cont {
 
 /// A tag for the basic implementation of a Storage object.
-struct StorageTagBasic {  };
+struct VTKM_ALWAYS_EXPORT StorageTagBasic {  };
 
 namespace internal {
 

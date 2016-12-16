@@ -104,7 +104,7 @@ namespace cont {
 namespace internal {
 
 template<typename IndexArrayType, typename ValueArrayType>
-struct StorageTagPermutation {  };
+struct VTKM_ALWAYS_EXPORT StorageTagPermutation {  };
 
 template<typename IndexArrayType, typename ValueArrayType>
 class Storage<
