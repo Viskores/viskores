@@ -1505,18 +1505,18 @@ union IEEE754Bits32 {
   vtkm::UInt32 bits;
   vtkm::Float32 scalar;
 };
-#define VTKM_NAN_BITS_32      0x7FC00000
-#define VTKM_INF_BITS_32      0x7F800000
-#define VTKM_NEG_INF_BITS_32  0xFF800000
+#define VTKM_NAN_BITS_32      0x7FC00000U
+#define VTKM_INF_BITS_32      0x7F800000U
+#define VTKM_NEG_INF_BITS_32  0xFF800000U
 #define VTKM_EPSILON_32       1e-5f
 
 union IEEE754Bits64 {
   vtkm::UInt64 bits;
   vtkm::Float64 scalar;
 };
-#define VTKM_NAN_BITS_64      0x7FF8000000000000LL
-#define VTKM_INF_BITS_64      0x7FF0000000000000LL
-#define VTKM_NEG_INF_BITS_64  0xFFF0000000000000LL
+#define VTKM_NAN_BITS_64      0x7FF8000000000000ULL
+#define VTKM_INF_BITS_64      0x7FF0000000000000ULL
+#define VTKM_NEG_INF_BITS_64  0xFFF0000000000000ULL
 #define VTKM_EPSILON_64       1e-9
 
 template<typename T> struct FloatLimits;
