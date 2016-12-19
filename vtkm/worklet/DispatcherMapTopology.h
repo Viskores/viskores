@@ -36,13 +36,13 @@ class DispatcherMapTopology :
     public vtkm::worklet::internal::DispatcherBase<
       DispatcherMapTopology<WorkletType,Device>,
       WorkletType,
-      vtkm::worklet::WorkletMapTopologyBase
+      vtkm::worklet::detail::WorkletMapTopologyBase
       >
 {
   typedef vtkm::worklet::internal::DispatcherBase<
     DispatcherMapTopology<WorkletType,Device>,
     WorkletType,
-    vtkm::worklet::WorkletMapTopologyBase
+    vtkm::worklet::detail::WorkletMapTopologyBase
     > Superclass;
 
 public:

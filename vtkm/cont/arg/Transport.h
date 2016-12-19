@@ -62,11 +62,17 @@ struct Transport
   /// All \c Transport specializations are expected to have a constant
   /// parenthesis operator that takes the data in the control environment and
   /// returns an object that is accessible in the execution environment. The
-  /// operator also has a second argument that is the size of the dispatch that
-  /// can be used, for example, to allocate data for an output array.
+  /// second argument of the operator is a reference to the input domain
+  /// argument. This might be useful for checking the sizes of input data. The
+  /// third argument is the size of the output domain, which can be used, for
+  /// example, to allocate data for an output array. The transport might ignore
+  /// either or both of the second two arguments.
   ///
+  template<typename InputDomainType>
   VTKM_CONT
-  ExecObjectType operator()(const ContObjectType contData, vtkm::Id size) const;
+  ExecObjectType operator()(const ContObjectType contData,
+                            const InputDomainType &inputDomain
+                            vtkm::Id outputSize) const;
 };
 #else // VTKM_DOXYGEN_ONLY
     ;

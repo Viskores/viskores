@@ -27,6 +27,7 @@ set(headers
   TransportTagAtomicArray.h
   TransportTagCellSetIn.h
   TransportTagExecObject.h
+  TransportTagTopologyFieldIn.h
   TransportTagWholeArrayIn.h
   TransportTagWholeArrayInOut.h
   TransportTagWholeArrayOut.h
