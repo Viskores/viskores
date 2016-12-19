@@ -22,7 +22,6 @@
 #define vtk_m_filter_Gradient_h
 
 #include <vtkm/filter/FilterCell.h>
-#include <vtkm/worklet/Gradient.h>
 
 namespace vtkm {
 namespace filter {
@@ -38,13 +37,37 @@ namespace filter {
 class Gradient : public vtkm::filter::FilterCell<Gradient>
 {
 public:
-  Gradient(): ComputePointGradient(false) {}
+  Gradient();
 
   /// When this flag is on (default is off), the gradient filter will provide a
   /// point based gradients, which are significantly more costly since for each
   /// point we need to compute the gradient of each cell that uses it.
   void SetComputePointGradient(bool enable) { ComputePointGradient=enable; }
   bool GetComputePointGradient() const { return ComputePointGradient; }
+
+  /// Add voriticity/curl field to the output data.  The name of the array
+  /// will be Vorticity and will be a cell field unless \c ComputePointGradient
+  /// is enabled.  The input array must have 3 components in order to
+  /// compute this. The default is off.
+  void SetComputeVorticity(bool enable) { ComputeVorticity=enable; }
+  bool GetComputeVorticity() const { return ComputeVorticity; }
+
+  /// Add Q-criterion field to the output data.  The name of the array
+  /// will be QCriterion and will be a cell field unless \c ComputePointGradient
+  /// is enabled.  The input array must have 3 components in order to
+  /// compute this. The default is off.
+  void SetComputeQCriterion(bool enable) { ComputeQCriterion=enable; }
+  bool GetComputeQCriterion() const { return ComputeQCriterion; }
+
+  void SetVorticityName( const std::string& name )
+    { this->VorticityName = name; }
+  const std::string& GetVorticityName() const
+    { return this->VorticityName; }
+
+  void SetQCriterionName( const std::string& name )
+    { this->QCriterionName = name; }
+  const std::string& GetQCriterionName() const
+    { return this->QCriterionName; }
 
 
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
@@ -56,6 +79,11 @@ public:
 
 private:
   bool ComputePointGradient;
+  bool ComputeVorticity;
+  bool ComputeQCriterion;
+
+  std::string VorticityName;
+  std::string QCriterionName;
 };
 
 template<>

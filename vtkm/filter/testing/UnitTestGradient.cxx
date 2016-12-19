@@ -36,15 +36,25 @@ void TestCellGradientUniform3D()
 
   vtkm::filter::ResultField result;
   vtkm::filter::Gradient gradient;
-  gradient.SetOutputFieldName("gradient");
+  gradient.SetOutputFieldName("Gradient");
+
+  gradient.SetComputeVorticity(true); //this wont work as we have a scalar field
+  gradient.SetComputeQCriterion(true); //this wont work as we have a scalar field
 
   result = gradient.Execute( dataSet, dataSet.GetField("pointvar"));
 
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "gradient",
+  VTKM_TEST_ASSERT(result.GetField().GetName() == "Gradient",
                    "Field was given the wrong name.");
   VTKM_TEST_ASSERT(result.GetField().GetAssociation() ==
                    vtkm::cont::Field::ASSOC_CELL_SET,
                    "Field was given the wrong association.");
+
+  //verify that the vorticity and qcriterion fields don't exist
+  const vtkm::cont::DataSet& outputDS = result.GetDataSet();
+  VTKM_TEST_ASSERT(outputDS.HasField("Vorticity") == false,
+                   "scalar gradients can't generate vorticity");
+  VTKM_TEST_ASSERT(outputDS.HasField("QCriterion") == false,
+                   "scalar gradients can't generate qcriterion");
 
   vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > resultArrayHandle;
   const bool valid = result.FieldAs(resultArrayHandle);
@@ -89,6 +99,8 @@ void TestCellGradientUniform3DWithVectorField()
   vtkm::filter::ResultField result;
   vtkm::filter::Gradient gradient;
   gradient.SetOutputFieldName("vec_gradient");
+  gradient.SetComputeVorticity(true);
+  gradient.SetComputeQCriterion(true);
 
   result = gradient.Execute( dataSet, dataSet.GetField("vec_pointvar"));
 
@@ -98,6 +110,14 @@ void TestCellGradientUniform3DWithVectorField()
   VTKM_TEST_ASSERT(result.GetField().GetAssociation() ==
                    vtkm::cont::Field::ASSOC_CELL_SET,
                    "Field was given the wrong association.");
+
+  //verify that the vorticity and qcriterion fields DO exist
+  const vtkm::cont::DataSet& outputDS = result.GetDataSet();
+  VTKM_TEST_ASSERT(outputDS.HasField("Vorticity") == true,
+                   "vec gradients should generate vorticity");
+  VTKM_TEST_ASSERT(outputDS.HasField("QCriterion") == true,
+                   "vec gradients should generate qcriterion");
+
 
   vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3> > resultArrayHandle;
   const bool valid = result.FieldAs(resultArrayHandle);
