@@ -139,10 +139,6 @@ DynamicArrayHandleTryCast(
   }
   else
   {
-    std::cout << "Failed to cast to: " << typeid(vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage>).name() << std::endl;
-    std::cout << "The current rtti info is: " << typeid(*arrayContainer).name() << std::endl;
-    std::cout << std::endl;
-
     return nullptr;
   }
 }
@@ -519,7 +515,7 @@ void DynamicArrayHandleBase<TypeList,StorageList>::
   if (!tryType.FoundCast)
   {
     throw vtkm::cont::ErrorControlBadValue(
-          "Could not find appropriate cast for array in CastAndCall.");
+          "Could not find appropriate cast for array in CastAndCall1.");
   }
 }
 
@@ -543,7 +539,7 @@ void DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG,
   if (!tryType.FoundCast)
   {
     throw vtkm::cont::ErrorControlBadValue(
-          "Could not find appropriate cast for array in CastAndCall.");
+          "Could not find appropriate cast for array in CastAndCall2.");
   }
 }
 

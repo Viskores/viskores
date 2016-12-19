@@ -31,7 +31,7 @@ namespace exec {
 namespace internal {
 
 template<typename IndexPortalType, typename ValuePortalType>
-class ArrayPortalPermutation
+class VTKM_ALWAYS_EXPORT ArrayPortalPermutation
 {
 public:
   typedef typename ValuePortalType::ValueType ValueType;

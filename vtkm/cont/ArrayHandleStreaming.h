@@ -28,7 +28,7 @@ namespace cont {
 namespace internal {
 
 template<typename P>
-class ArrayPortalStreaming
+class VTKM_ALWAYS_EXPORT ArrayPortalStreaming
 {
 public:
   typedef P PortalType;

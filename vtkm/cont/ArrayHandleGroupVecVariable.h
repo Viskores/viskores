@@ -38,7 +38,7 @@ namespace exec {
 namespace internal {
 
 template<typename SourcePortalType, typename OffsetsPortalType>
-class ArrayPortalGroupVecVariable
+class VTKM_ALWAYS_EXPORT ArrayPortalGroupVecVariable
 {
 public:
   using ComponentType =

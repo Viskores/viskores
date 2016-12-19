@@ -29,7 +29,7 @@ namespace cont {
 
 namespace detail {
 
-struct IndexFunctor {
+struct VTKM_ALWAYS_EXPORT IndexFunctor {
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id index) const { return index; }
 };

@@ -40,7 +40,7 @@ namespace detail {
 /// \c StorageImplicit container.
 ///
 template <class ValueType_, class FunctorType_ >
-class ArrayPortalImplicit
+class VTKM_ALWAYS_EXPORT ArrayPortalImplicit
 {
 public:
   typedef ValueType_ ValueType;

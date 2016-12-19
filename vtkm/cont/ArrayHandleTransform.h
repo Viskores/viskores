@@ -47,10 +47,10 @@ typedef vtkm::cont::internal::NullFunctorType NullFunctorType;
 ///
 template<typename ValueType_, typename PortalType_, typename FunctorType_,
   typename InverseFunctorType_=NullFunctorType>
-class ArrayPortalTransform;
+class VTKM_ALWAYS_EXPORT ArrayPortalTransform;
 
 template<typename ValueType_, typename PortalType_, typename FunctorType_>
-class ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
+class VTKM_ALWAYS_EXPORT ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
 {
 public:
   typedef PortalType_ PortalType;
@@ -103,7 +103,7 @@ protected:
 
 template<typename ValueType_, typename PortalType_,
   typename FunctorType_, typename InverseFunctorType_>
-class ArrayPortalTransform : public ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
+class VTKM_ALWAYS_EXPORT ArrayPortalTransform : public ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
 {
 public:
   typedef ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType> Superclass;

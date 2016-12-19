@@ -35,7 +35,7 @@ template<typename ValueType_,
          typename PortalTypeFirst_,
          typename PortalTypeSecond_,
          typename PortalTypeThird_>
-class ArrayPortalCartesianProduct
+class VTKM_ALWAYS_EXPORT ArrayPortalCartesianProduct
 {
 public:
   typedef ValueType_ ValueType;
