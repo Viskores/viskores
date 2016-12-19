@@ -39,8 +39,8 @@ struct Vorticity : public vtkm::worklet::WorkletMapField
   typedef void ExecutionSignature(_1,_2);
   typedef _1 InputDomain;
 
-  VTKM_EXEC
   template<typename InputType, typename OutputType>
+  VTKM_EXEC
   void operator()(const InputType &input, OutputType &vorticity) const
   {
     vorticity[0] = input[2][1] - input[1][2];
@@ -56,8 +56,8 @@ struct QCriterion : public vtkm::worklet::WorkletMapField
   typedef void ExecutionSignature(_1,_2);
   typedef _1 InputDomain;
 
-  VTKM_EXEC
   template<typename InputType, typename OutputType>
+  VTKM_EXEC
   void operator()(const InputType &input, OutputType &qcriterion) const
   {
     OutputType t1 =
