@@ -348,13 +348,13 @@ struct Negate
 
 // Pre declaration
 template <typename T, vtkm::IdComponent Size>
-class Vec;
+class VTKM_ALWAYS_EXPORT Vec;
 
 template<typename T>
-class VecC;
+class VTKM_ALWAYS_EXPORTVecC;
 
 template<typename T>
-class VecCConst;
+class VTKM_ALWAYS_EXPORT VecCConst;
 
 namespace detail {
 
@@ -377,7 +377,7 @@ namespace detail {
 #endif    // gcc || clang
 #endif    // use cuda < 8
 template <typename T, typename DerivedClass>
-class VecBaseCommon
+class VTKM_ALWAYS_EXPORT VecBaseCommon
 {
 public:
   typedef T ComponentType;
@@ -653,7 +653,7 @@ public:
 /// Base implementation of all Vec classes.
 ///
 template <typename T, vtkm::IdComponent Size, typename DerivedClass>
-class VecBase : public vtkm::detail::VecBaseCommon<T, DerivedClass>
+class VTKM_ALWAYS_EXPORT VecBase : public vtkm::detail::VecBaseCommon<T, DerivedClass>
 {
 public:
   typedef T ComponentType;
@@ -798,7 +798,7 @@ protected:
 /// Base of all VecC and VecCConst classes.
 ///
 template <typename T, typename DerivedClass>
-class VecCBase : public vtkm::detail::VecBaseCommon<T, DerivedClass>
+class VTKM_ALWAYS_EXPORT VecCBase : public vtkm::detail::VecBaseCommon<T, DerivedClass>
 {
 protected:
   VTKM_EXEC_CONT
@@ -827,7 +827,7 @@ protected:
 /// designed for small sequences (seldom more than 10).
 ///
 template<typename T, vtkm::IdComponent Size>
-class Vec : public detail::VecBase<T, Size, Vec<T,Size> >
+class VTKM_ALWAYS_EXPORT Vec : public detail::VecBase<T, Size, Vec<T,Size> >
 {
   typedef detail::VecBase<T, Size, Vec<T,Size> > Superclass;
 public:
@@ -852,7 +852,7 @@ public:
 // zero length array which troubles compilers. Vecs of size 0 are a bit
 // pointless but might occur in some generic functions or classes.
 template<typename T>
-class Vec<T, 0>
+class VTKM_ALWAYS_EXPORT Vec<T, 0>
 {
 public:
   typedef T ComponentType;
@@ -892,7 +892,7 @@ public:
 // Vectors of size 1 should implicitly convert between the scalar and the
 // vector. Otherwise, it should behave the same.
 template<typename T>
-class Vec<T,1> : public detail::VecBase<T, 1, Vec<T,1> >
+class VTKM_ALWAYS_EXPORT Vec<T,1> : public detail::VecBase<T, 1, Vec<T,1> >
 {
   typedef detail::VecBase<T, 1, Vec<T,1> > Superclass;
 
@@ -916,7 +916,7 @@ public:
 // Specializations for common tuple sizes (with special names).
 
 template<typename T>
-class Vec<T,2> : public detail::VecBase<T, 2, Vec<T,2> >
+class VTKM_ALWAYS_EXPORT Vec<T,2> : public detail::VecBase<T, 2, Vec<T,2> >
 {
   typedef detail::VecBase<T, 2, Vec<T,2> > Superclass;
 
@@ -940,7 +940,7 @@ typedef vtkm::Vec<vtkm::Id,2> Id2;
 
 
 template<typename T>
-class Vec<T,3> : public detail::VecBase<T, 3, Vec<T,3> >
+class VTKM_ALWAYS_EXPORT Vec<T,3> : public detail::VecBase<T, 3, Vec<T,3> >
 {
   typedef detail::VecBase<T, 3, Vec<T,3> > Superclass;
 public:
@@ -965,7 +965,7 @@ typedef vtkm::Vec<vtkm::Id,3> Id3;
 
 
 template<typename T>
-class Vec<T,4> : public detail::VecBase<T, 4, Vec<T,4> >
+class VTKM_ALWAYS_EXPORT Vec<T,4> : public detail::VecBase<T, 4, Vec<T,4> >
 {
   typedef detail::VecBase<T, 4, Vec<T,4> > Superclass;
 public:
@@ -1046,7 +1046,7 @@ vtkm::Vec<T,4> make_Vec(const T &x, const T &y, const T &z, const T &w)
 /// <tt>VecCConst<vtkm::Id></tt>).
 ///
 template<typename T>
-class VecC : public detail::VecCBase<T, VecC<T> >
+class VTKM_ALWAYS_EXPORT VecC : public detail::VecCBase<T, VecC<T> >
 {
   using Superclass = detail::VecCBase<T, VecC<T> >;
 
@@ -1135,7 +1135,7 @@ private:
 /// need to be changed.
 ///
 template<typename T>
-class VecCConst : public detail::VecCBase<T, VecCConst<T> >
+class VTKM_ALWAYS_EXPORT VecCConst : public detail::VecCBase<T, VecCConst<T> >
 {
   using Superclass = detail::VecCBase<T, VecCConst<T> >;
 
