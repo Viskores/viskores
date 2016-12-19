@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2016 Sandia Corporation.
+//  Copyright 2016 UT-Battelle, LLC.
+//  Copyright 2016 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -18,53 +18,49 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/arg/TypeCheckTagCellSet.h>
+#include <vtkm/cont/arg/TypeCheckTagKeys.h>
+
+#include <vtkm/worklet/Keys.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/cont/CellSetStructured.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
 namespace {
 
-struct TestNotCellSet {  };
+struct TestNotKeys {  };
 
-void TestCheckCellSet()
+void TestCheckKeys()
 {
-  std::cout << "Checking reporting of type checking cell set." << std::endl;
+  std::cout << "Checking reporting of type checking keys." << std::endl;
 
   using vtkm::cont::arg::TypeCheck;
-  using vtkm::cont::arg::TypeCheckTagCellSet;
+  using vtkm::cont::arg::TypeCheckTagKeys;
 
   VTKM_TEST_ASSERT(
-        (TypeCheck<TypeCheckTagCellSet, vtkm::cont::CellSetExplicit<> >::value),
+        (TypeCheck<TypeCheckTagKeys, vtkm::worklet::Keys<vtkm::Id> >::value),
         "Type check failed.");
-
-    VTKM_TEST_ASSERT(
-        (TypeCheck<TypeCheckTagCellSet, vtkm::cont::CellSetStructured<2> >::value),
+  VTKM_TEST_ASSERT(
+        (TypeCheck<TypeCheckTagKeys, vtkm::worklet::Keys<vtkm::Float32> >::value),
         "Type check failed.");
-
-    VTKM_TEST_ASSERT(
-        (TypeCheck<TypeCheckTagCellSet, vtkm::cont::CellSetStructured<3> >::value),
+  VTKM_TEST_ASSERT(
+        (TypeCheck<TypeCheckTagKeys, vtkm::worklet::Keys<vtkm::Id3> >::value),
         "Type check failed.");
 
   VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagCellSet, TestNotCellSet>::value),
+        !(TypeCheck<TypeCheckTagKeys, TestNotKeys>::value),
         "Type check failed.");
-
   VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagCellSet, vtkm::Id>::value),
+        !(TypeCheck<TypeCheckTagKeys, vtkm::Id>::value),
         "Type check failed.");
-
   VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagCellSet, vtkm::cont::ArrayHandle<vtkm::Id> >::value),
+        !(TypeCheck<TypeCheckTagKeys, vtkm::cont::ArrayHandle<vtkm::Id> >::value),
         "Type check failed.");
 }
 
 } // anonymous namespace
 
-int UnitTestTypeCheckCellSet(int, char *[])
+int UnitTestTypeCheckKeys(int, char*[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCheckCellSet);
+  return vtkm::cont::testing::Testing::Run(TestCheckKeys);
 }

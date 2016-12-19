@@ -25,6 +25,7 @@ set(headers
   Clip.h
   DispatcherMapField.h
   DispatcherMapTopology.h
+  DispatcherReduceByKey.h
   DispatcherStreamingMapField.h
   ExternalFaces.h
   FieldHistogram.h
@@ -51,6 +52,7 @@ set(headers
   WaveletCompressor.h
   WorkletMapField.h
   WorkletMapTopology.h
+  WorkletReduceByKey.h
   )
 
 #-----------------------------------------------------------------------------
