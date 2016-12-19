@@ -34,7 +34,7 @@ namespace cont {
 
 /// The superclass of all exceptions thrown by any VTKm function or method.
 ///
-class Error : public std::exception
+class VTKM_ALWAYS_EXPORT Error : public std::exception
 {
 public:
 //See note about GetMessage macro below.

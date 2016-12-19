@@ -28,7 +28,7 @@ namespace cont {
 /// This class is thrown when VTK-m attempts to manipulate memory that it should
 /// not.
 ///
-class ErrorControlBadAllocation : public ErrorControl
+class VTKM_ALWAYS_EXPORT ErrorControlBadAllocation : public ErrorControl
 {
 public:
   ErrorControlBadAllocation(const std::string &message)

@@ -29,7 +29,7 @@ namespace cont {
 /// be reached. This error usually indicates a bug in vtkm or, at best, VTKm
 /// failed to detect an invalid input it should have.
 ///
-class ErrorControlInternal : public ErrorControl
+class VTKM_ALWAYS_EXPORT ErrorControlInternal : public ErrorControl
 {
 public:
   ErrorControlInternal(const std::string &message)
