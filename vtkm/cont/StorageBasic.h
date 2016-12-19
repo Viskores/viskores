@@ -28,31 +28,10 @@
 
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
-#if defined(VTKM_POSIX)
-#define VTKM_MEMALIGN_POSIX
-#elif defined(_WIN32)
-#define VTKM_MEMALIGN_WIN
-#elif defined(__SSE__)
-#define VTKM_MEMALIGN_SSE
-#else
-#define VTKM_MEMALIGN_NONE
-#endif
-
-#if defined(VTKM_MEMALIGN_POSIX)
-#include <stdlib.h>
-#elif defined(VTKM_MEMALIGN_WIN)
-#include <malloc.h>
-#elif defined(VTKM_MEMALIGN_SSE)
-#include <xmmintrin.h>
-#else
-#include <malloc.h>
-#endif
-
-#include <cstddef>
-#include <cstdlib>
-
 // Defines the cache line size in bytes to align allocations to
+#ifndef VTKM_CACHE_LINE_SIZE
 #define VTKM_CACHE_LINE_SIZE 64
+#endif
 
 namespace vtkm {
 namespace cont {
@@ -62,35 +41,11 @@ struct VTKM_ALWAYS_EXPORT StorageTagBasic {  };
 
 namespace internal {
 
-inline void* alloc_aligned(size_t size, size_t align){
-#if defined(VTKM_MEMALIGN_POSIX)
-  void *mem = nullptr;
-  if (posix_memalign(&mem, align, size) != 0){
-    mem = nullptr;
-  }
-#elif defined(VTKM_MEMALIGN_WIN)
-  void *mem = _aligned_malloc(size, align);
-#elif defined(VTKM_MEMALIGN_SSE)
-  void *mem = _mm_malloc(size, align);
-#else
-  void *mem = malloc(size);
-#endif
-  if (mem == nullptr){
-    throw std::bad_alloc();
-  }
-  return mem;
-}
-inline void free_aligned(void *mem){
-#if defined(VTKM_MEMALIGN_POSIX)
-  free(mem);
-#elif defined(VTKM_MEMALIGN_WIN)
-  _aligned_free(mem);
-#elif defined(VTKM_MEMALIGN_SSE)
-  _mm_free(mem);
-#else
-  free(mem);
-#endif
-}
+VTKM_CONT_EXPORT
+void* alloc_aligned(size_t size, size_t align);
+
+VTKM_CONT_EXPORT
+void free_aligned(void *mem);
 
 /// A simple aligned allocator type that will align allocations to `Alignment` bytes
 /// TODO: Once C++11 std::allocator_traits is better used by STL and we want to drop
@@ -158,7 +113,7 @@ bool operator!=(const AlignedAllocator<T, AlignA>&, const AlignedAllocator<U, Al
 /// time check to enforce this.
 ///
 template <typename ValueT>
-class Storage<ValueT, vtkm::cont::StorageTagBasic>
+class VTKM_ALWAYS_EXPORT Storage<ValueT, vtkm::cont::StorageTagBasic>
 {
 public:
   typedef ValueT ValueType;
@@ -177,123 +132,22 @@ public:
 public:
 
   VTKM_CONT
-  Storage(const ValueType *array = nullptr, vtkm::Id numberOfValues = 0)
-    : Array(const_cast<ValueType *>(array)),
-      NumberOfValues(numberOfValues),
-      AllocatedSize(numberOfValues),
-      DeallocateOnRelease(false),
-      UserProvidedMemory( array == nullptr ? false : true)
-  {
-  }
+  Storage(const ValueType *array = nullptr, vtkm::Id numberOfValues = 0);
 
   VTKM_CONT
-  ~Storage()
-  {
-    this->ReleaseResources();
-  }
+  ~Storage();
 
   VTKM_CONT
-  Storage(const Storage<ValueType, StorageTagBasic> &src)
-    : Array(src.Array),
-      NumberOfValues(src.NumberOfValues),
-      AllocatedSize(src.AllocatedSize),
-      DeallocateOnRelease(false),
-      UserProvidedMemory(src.UserProvidedMemory)
-  {
-    if (src.DeallocateOnRelease)
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-            "Attempted to copy a storage array that needs deallocation. "
-            "This is disallowed to prevent complications with deallocation.");
-    }
-  }
+  Storage(const Storage<ValueType, StorageTagBasic> &src);
 
   VTKM_CONT
-  Storage &operator=(const Storage<ValueType, StorageTagBasic> &src)
-  {
-    if (src.DeallocateOnRelease)
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-            "Attempted to copy a storage array that needs deallocation. "
-            "This is disallowed to prevent complications with deallocation.");
-    }
-
-    this->ReleaseResources();
-    this->Array = src.Array;
-    this->NumberOfValues = src.NumberOfValues;
-    this->AllocatedSize = src.AllocatedSize;
-    this->DeallocateOnRelease = src.DeallocateOnRelease;
-    this->UserProvidedMemory = src.UserProvidedMemory;
-
-    return *this;
-  }
+  Storage &operator=(const Storage<ValueType, StorageTagBasic> &src);
 
   VTKM_CONT
-  void ReleaseResources()
-  {
-    if (this->NumberOfValues > 0)
-    {
-      VTKM_ASSERT(this->Array != nullptr);
-      if (this->DeallocateOnRelease)
-      {
-        AllocatorType allocator;
-        allocator.deallocate(this->Array,
-                             static_cast<std::size_t>(this->AllocatedSize) );
-      }
-      this->Array = nullptr;
-      this->NumberOfValues = 0;
-      this->AllocatedSize = 0;
-    }
-    else
-    {
-      VTKM_ASSERT(this->Array == nullptr);
-    }
-  }
+  void ReleaseResources();
 
   VTKM_CONT
-  void Allocate(vtkm::Id numberOfValues)
-  {
-    if (numberOfValues <= this->AllocatedSize)
-    {
-      this->NumberOfValues = numberOfValues;
-      return;
-    }
-
-    if(this->UserProvidedMemory)
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-        "User allocated arrays cannot be reallocated.");
-    }
-
-    this->ReleaseResources();
-    try
-    {
-      if (numberOfValues > 0)
-      {
-        AllocatorType allocator;
-        this->Array = allocator.allocate(static_cast<std::size_t>(numberOfValues));
-        this->AllocatedSize  = numberOfValues;
-        this->NumberOfValues = numberOfValues;
-      }
-      else
-      {
-        // ReleaseResources should have already set AllocatedSize to 0.
-        VTKM_ASSERT(this->AllocatedSize == 0);
-      }
-    }
-    catch (std::bad_alloc err)
-    {
-      // Make sureour state is OK.
-      this->Array = nullptr;
-      this->NumberOfValues = 0;
-      this->AllocatedSize = 0;
-      throw vtkm::cont::ErrorControlBadAllocation(
-        "Could not allocate basic control array.");
-    }
-
-    this->DeallocateOnRelease = true;
-    this->UserProvidedMemory = false;
-  }
+  void Allocate(vtkm::Id numberOfValues);
 
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const
@@ -302,16 +156,7 @@ public:
   }
 
   VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues)
-  {
-    if (numberOfValues > this->GetNumberOfValues())
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-        "Shrink method cannot be used to grow array.");
-    }
-
-    this->NumberOfValues = numberOfValues;
-  }
+  void Shrink(vtkm::Id numberOfValues);
 
   VTKM_CONT
   PortalType GetPortal()
@@ -352,14 +197,7 @@ public:
   /// destroying the memory.
   ///
   VTKM_CONT
-  ValueType *StealArray()
-  {
-    ValueType *saveArray =  this->Array;
-    this->Array = nullptr;
-    this->NumberOfValues = 0;
-    this->AllocatedSize = 0;
-    return saveArray;
-  }
+  ValueType *StealArray();
 
 private:
   ValueType *Array;
@@ -370,8 +208,46 @@ private:
 };
 
 } // namespace internal
-
 }
 } // namespace vtkm::cont
+
+#ifndef vtkm_cont_StorageBasic_cxx
+namespace vtkm {
+namespace cont {
+namespace internal {
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<char, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Int8, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::UInt8, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Int16, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::UInt16, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Int32, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::UInt32, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Int64, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::UInt64, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Float32, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Float64, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Int64,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Int32,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Float32,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Float64,2>, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Int64,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Int32,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Float32,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Float64,3>, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<char,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<Int8,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<UInt8,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Float32,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Float64,4>, StorageTagBasic>;
+}
+}
+}
+#endif
+
+#include <vtkm/cont/StorageBasic.hxx>
 
 #endif //vtk_m_cont_StorageBasic_h

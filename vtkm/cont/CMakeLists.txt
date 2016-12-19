@@ -74,6 +74,7 @@ set(headers
 set(header_impls
   ArrayHandle.hxx
   CellSetStructured.hxx
+  StorageBasic.hxx
   )
 
 set(sources
@@ -84,6 +85,7 @@ set(sources
   DynamicArrayHandle.cxx
   Field.cxx
   internal/SimplePolymorphicContainer.cxx
+  StorageBasic.cxx
   )
 
 vtkm_library(SOURCES ${sources})
