@@ -699,6 +699,7 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose()
     connectivity.GetPortalControl().Set(i, pointId[i]);
   }
   vtkm::cont::CellSetSingleType< > cellSet(vtkm::CellShapeTagTriangle(),
+                                           nVerts,
                                            "cells");
   cellSet.Fill(connectivity);
   dataSet.AddCellSet(cellSet);
