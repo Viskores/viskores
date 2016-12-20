@@ -515,7 +515,10 @@ public:
 
 
     vtkm::cont::CellSetExplicit<> output;
-    output.Fill(shapes, numIndices, connectivity);
+    output.Fill(this->NewPointsOffset + uniqueNewPoints.GetNumberOfValues(),
+                shapes,
+                numIndices,
+                connectivity);
 
     return output;
   }

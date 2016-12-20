@@ -92,14 +92,18 @@ MakeTestDataSet::Make1DExplicitDataSet0()
   coords[3] = CoordType(1.2f,0.f,0.f);
   coords[4] = CoordType(4.0f,0.f,0.f);
 
+  // Each line connects two consecutive vertices
   std::vector<vtkm::Id> conn;
-  for (int i = 0; i < nVerts; i++)
-      conn.push_back(i);
+  for (int i = 0; i < nVerts-1; i++)
+  {
+    conn.push_back(i);
+    conn.push_back(i+1);
+  }
 
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetBuilderExplicit dsb;
 
-  dataSet = dsb.Create(coords, vtkm::CellShapeTagLine(), conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, vtkm::CellShapeTagLine(), 2, conn, "coordinates", "cells");
 
   vtkm::cont::DataSetFieldAdd dsf;  
   vtkm::Float32 var[nVerts] = {-1.0f, .5f, -.2f, 1.7f, .8f};
@@ -382,11 +386,11 @@ MakeTestDataSet::Make3DExplicitDataSet1()
 
   dataSet.AddCoordinateSystem(
         vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
-  vtkm::cont::CellSetExplicit<> cellSet(nVerts, "cells");
+  vtkm::cont::CellSetExplicit<> cellSet("cells");
   cellSet.PrepareToAddCells(2, 7);
   cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, make_Vec<vtkm::Id>(0,1,2));
   cellSet.AddCell(vtkm::CELL_SHAPE_QUAD, 4, make_Vec<vtkm::Id>(2,1,3,4));
-  cellSet.CompleteAddingCells();
+  cellSet.CompleteAddingCells(nVerts);
   dataSet.AddCellSet(cellSet);
 
   //Set point scalar
@@ -428,7 +432,7 @@ MakeTestDataSet::Make3DExplicitDataSet2()
   vtkm::Float32 cellvar[2] = {100.1f};
   dataSet.AddField(Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 1));
 
-  vtkm::cont::CellSetExplicit<> cellSet(nVerts,"cells");
+  vtkm::cont::CellSetExplicit<> cellSet("cells");
   vtkm::Vec<vtkm::Id, 8> ids;
   ids[0] = 0;
   ids[1] = 1;
@@ -441,7 +445,7 @@ MakeTestDataSet::Make3DExplicitDataSet2()
 
   cellSet.PrepareToAddCells(1, 8);
   cellSet.AddCell(vtkm::CELL_SHAPE_HEXAHEDRON, 8, ids);
-  cellSet.CompleteAddingCells();
+  cellSet.CompleteAddingCells(nVerts);
 
   //todo this need to be a reference/shared_ptr style class
   dataSet.AddCellSet(cellSet);
@@ -482,7 +486,7 @@ MakeTestDataSet::Make3DExplicitDataSet4()
   vtkm::Float32 cellvar[2] = {100.1f, 110.f};
   dataSet.AddField(Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
 
-  vtkm::cont::CellSetExplicit<> cellSet(nVerts,"cells");
+  vtkm::cont::CellSetExplicit<> cellSet("cells");
   vtkm::Vec<vtkm::Id, 8> ids;
   ids[0] = 0;
   ids[1] = 4;
@@ -504,7 +508,7 @@ MakeTestDataSet::Make3DExplicitDataSet4()
   ids[6] = 10;
   ids[7] = 9;
   cellSet.AddCell(vtkm::CELL_SHAPE_HEXAHEDRON, 8, ids);
-  cellSet.CompleteAddingCells();
+  cellSet.CompleteAddingCells(nVerts);
 
   //todo this need to be a reference/shared_ptr style class
   dataSet.AddCellSet(cellSet);
@@ -537,7 +541,7 @@ MakeTestDataSet::Make3DExplicitDataSet3()
   vtkm::Float32 cellvar[2] = {100.1f};
   dataSet.AddField(Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 1));
 
-  vtkm::cont::CellSetExplicit<> cellSet(nVerts,"cells");
+  vtkm::cont::CellSetExplicit<> cellSet("cells");
   vtkm::Vec<vtkm::Id, 4> ids;
   ids[0] = 0;
   ids[1] = 1;
@@ -546,7 +550,7 @@ MakeTestDataSet::Make3DExplicitDataSet3()
 
   cellSet.PrepareToAddCells(1, 4);
   cellSet.AddCell(vtkm::CELL_SHAPE_TETRA, 4, ids);
-  cellSet.CompleteAddingCells();
+  cellSet.CompleteAddingCells(nVerts);
 
   //todo this need to be a reference/shared_ptr style class
   dataSet.AddCellSet(cellSet);
@@ -594,7 +598,7 @@ MakeTestDataSet::Make3DExplicitDataSet5()
                          cellvar,
                          nCells));
 
-  vtkm::cont::CellSetExplicit<> cellSet(nVerts,"cells");
+  vtkm::cont::CellSetExplicit<> cellSet("cells");
   vtkm::Vec<vtkm::Id, 8> ids;
 
   cellSet.PrepareToAddCells(nCells, 23);
@@ -630,7 +634,7 @@ MakeTestDataSet::Make3DExplicitDataSet5()
   ids[5] = 6;
   cellSet.AddCell(vtkm::CELL_SHAPE_WEDGE, 6, ids);
 
-  cellSet.CompleteAddingCells();
+  cellSet.CompleteAddingCells(nVerts);
 
   //todo this need to be a reference/shared_ptr style class
   dataSet.AddCellSet(cellSet);
@@ -663,8 +667,8 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose()
     CoordType(0.0108188,0.152774,0.167914),
     CoordType(5.41687e-05,0.00137834,0.175119)
   };
-  const int nPointIds = 57;
-  vtkm::Id pointId[nPointIds] = {
+  const int connectivitySize = 57;
+  vtkm::Id pointId[connectivitySize] = {
     0, 1, 3,
     2, 3, 1,
     4, 5, 0,
@@ -692,16 +696,14 @@ MakeTestDataSet::Make3DExplicitDataSetCowNose()
         vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-  connectivity.Allocate(nPointIds);
+  connectivity.Allocate(connectivitySize);
 
-  for(vtkm::Id i=0; i < nPointIds; ++i)
+  for(vtkm::Id i=0; i < connectivitySize; ++i)
   {
     connectivity.GetPortalControl().Set(i, pointId[i]);
   }
-  vtkm::cont::CellSetSingleType< > cellSet(vtkm::CellShapeTagTriangle(),
-                                           nVerts,
-                                           "cells");
-  cellSet.Fill(connectivity);
+  vtkm::cont::CellSetSingleType< > cellSet("cells");
+  cellSet.Fill(nVerts, vtkm::CELL_SHAPE_TRIANGLE, 3, connectivity);
   dataSet.AddCellSet(cellSet);
 
   return dataSet;

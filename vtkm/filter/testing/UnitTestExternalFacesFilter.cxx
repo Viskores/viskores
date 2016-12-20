@@ -52,7 +52,7 @@ void TestExternalFacesExplicitGrid()
                                             {4,7,6,3}, {4,6,3,2}, {4,0,3,2},
                                             {4,6,5,2}, {4,5,0,2}, {1,0,5,2}
                                            };
-  vtkm::cont::CellSetExplicit<> cs(nVerts, "cells");
+  vtkm::cont::CellSetExplicit<> cellSet("cells");
 
   vtkm::cont::ArrayHandle<vtkm::UInt8>       shapes;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
@@ -70,10 +70,10 @@ void TestExternalFacesExplicitGrid()
       conn.GetPortalControl().Set(index++, cellVerts[j][k]);
   }
 
-  cs.Fill(shapes, numIndices, conn);
+  cellSet.Fill(nVerts, shapes, numIndices, conn);
 
   //Add the VTK-m cell set
-  ds.AddCellSet(cs);
+  ds.AddCellSet(cellSet);
 
   //Run the External Faces filter
   vtkm::filter::ExternalFaces externalFaces;
@@ -82,10 +82,10 @@ void TestExternalFacesExplicitGrid()
   //Validate the number of external faces (output) returned by the worklet
   VTKM_TEST_ASSERT(result.IsValid(), "Results should be valid");
 
-  vtkm::cont::CellSetExplicit<> &new_cs =
+  vtkm::cont::CellSetExplicit<> &new_cellSet =
       result.GetDataSet().GetCellSet(0).Cast<vtkm::cont::CellSetExplicit<> >();
 
-  const vtkm::Id numExtFaces_out = new_cs.GetNumberOfCells();
+  const vtkm::Id numExtFaces_out = new_cellSet.GetNumberOfCells();
   const vtkm::Id numExtFaces_actual = 12;
   VTKM_TEST_ASSERT(numExtFaces_out == numExtFaces_actual, "Number of External Faces mismatch");
 }

@@ -477,9 +477,11 @@ public:
 
     output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", repPointArray));
 
-    vtkm::cont::CellSetSingleType< > triangles(vtkm::CellShapeTagTriangle(),
-                                               0, "cells");
-    triangles.Fill( internal::copyFromVec(pointId3Array, DeviceAdapter()) );
+    vtkm::cont::CellSetSingleType< > triangles("cells");
+    triangles.Fill( repPointArray.GetNumberOfValues(),
+                    vtkm::CellShapeTagTriangle::Id,
+                    3,
+                    internal::copyFromVec(pointId3Array, DeviceAdapter()) );
     output.AddCellSet( triangles );
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
