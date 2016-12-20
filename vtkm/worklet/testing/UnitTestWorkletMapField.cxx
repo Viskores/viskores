@@ -116,6 +116,23 @@ struct DoStaticTestWorklet
     std::cout << "Check result." << std::endl;
     CheckPortal(outputHandle.GetPortalConstControl());
     CheckPortal(inoutHandle.GetPortalConstControl());
+
+    std::cout << "Try to invoke with an input array of the wrong size."
+              << std::endl;
+    inputHandle.Shrink(ARRAY_SIZE/2);
+    bool exceptionThrown = false;
+    try
+    {
+      dispatcher.Invoke(inputHandle, outputHandle, inoutHandle);
+    }
+    catch (vtkm::cont::ErrorControlBadValue error)
+    {
+      std::cout << "  Caught expected error: " << error.GetMessage()
+                << std::endl;
+      exceptionThrown = true;
+    }
+    VTKM_TEST_ASSERT(exceptionThrown,
+                     "Dispatcher did not throw expected exception.");
   }
 };
 

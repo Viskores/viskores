@@ -106,7 +106,7 @@ TestMaxPointOrCell()
                     dataSet.GetCellSet(0),
                     result);
 
-  //Make sure we got the right answer.
+  std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),
                    "Wrong result for PointToCellMax worklet");
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 100.2f),
@@ -128,11 +128,29 @@ TestAvgPointToCell()
                     dataSet.GetField("pointvar"),
                     result);
 
-  //make sure we got the right answer.
+  std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 20.1333f),
                    "Wrong result for PointToCellAverage worklet");
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 35.2f),
                    "Wrong result for PointToCellAverage worklet");
+
+  std::cout << "Try to invoke with an input array of the wrong size."
+            << std::endl;
+  bool exceptionThrown = false;
+  try
+  {
+    dispatcher.Invoke(dataSet.GetCellSet(),
+                      dataSet.GetField("cellvar"), // should be pointvar
+                      result);
+  }
+  catch (vtkm::cont::ErrorControlBadValue error)
+  {
+    std::cout << "  Caught expected error: " << error.GetMessage()
+              << std::endl;
+    exceptionThrown = true;
+  }
+  VTKM_TEST_ASSERT(exceptionThrown,
+                   "Dispatcher did not throw expected exception.");
 }
 
 static void
@@ -151,11 +169,29 @@ TestAvgCellToPoint()
                     dataSet.GetField("cellvar"),
                     result);
 
-  //make sure we got the right answer.
+  std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),
                    "Wrong result for CellToPointAverage worklet");
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 100.15f),
                    "Wrong result for CellToPointAverage worklet");
+
+  std::cout << "Try to invoke with an input array of the wrong size."
+            << std::endl;
+  bool exceptionThrown = false;
+  try
+  {
+    dispatcher.Invoke(dataSet.GetCellSet(),
+                      dataSet.GetField("pointvar"), // should be cellvar
+                      result);
+  }
+  catch (vtkm::cont::ErrorControlBadValue error)
+  {
+    std::cout << "  Caught expected error: " << error.GetMessage()
+              << std::endl;
+    exceptionThrown = true;
+  }
+  VTKM_TEST_ASSERT(exceptionThrown,
+                   "Dispatcher did not throw expected exception.");
 }
 
 } // anonymous namespace
