@@ -221,7 +221,7 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
   const vtkm::IdComponent nCells = dim*dim*dim;
 
-vtkm::Float32 spacing = vtkm::Float32(1./dim);
+  vtkm::Float32 spacing = vtkm::Float32(1./dim);
   CoordinateArrayHandle coordinates(vtkm::Id3(dim+1,dim+1,dim+1),
                                     CoordType(-.5,-.5,-.5),
                                     CoordType(spacing,spacing,spacing));
@@ -245,7 +245,7 @@ vtkm::Float32 spacing = vtkm::Float32(1./dim);
     vtkm::cont::Field("distanceToOther", vtkm::cont::Field::ASSOC_POINTS,
                       vtkm::cont::DynamicArrayHandle(distanceToOther)));
 
-  CellSet cellSet(HexTag(), "cells");
+  CellSet cellSet(HexTag(), coordinates.GetNumberOfValues(), "cells");
   cellSet.Fill(connectivity);
 
   dataSet.AddCellSet(cellSet);

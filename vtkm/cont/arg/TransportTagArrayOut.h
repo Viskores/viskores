@@ -47,8 +47,11 @@ struct Transport<vtkm::cont::arg::TransportTagArrayOut, ContObjectType, Device>
   typedef typename ContObjectType::template ExecutionTypes<Device>::Portal
       ExecObjectType;
 
+  template<typename InputDomainType>
   VTKM_CONT
-  ExecObjectType operator()(ContObjectType object, vtkm::Id size) const
+  ExecObjectType operator()(ContObjectType object,
+                            const InputDomainType &,
+                            vtkm::Id size) const
   {
     return object.PrepareForOutput(size, Device());
   }

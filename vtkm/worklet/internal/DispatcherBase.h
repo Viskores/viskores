@@ -215,29 +215,36 @@ struct DispatcherBaseTransportInvokeTypes
 
 // A functor used in a StaticCast of a FunctionInterface to transport arguments
 // from the control environment to the execution environment.
-template<typename ControlInterface, typename Device>
+template<typename ControlInterface, typename InputDomainType, typename Device>
 struct DispatcherBaseTransportFunctor
 {
-  vtkm::Id NumInstances;
+  const InputDomainType &InputDomain;   // Warning: this is a reference
+  vtkm::Id OutputSize;
 
   VTKM_CONT
-  DispatcherBaseTransportFunctor(vtkm::Id numInstances)
-    : NumInstances(numInstances) {  }
+  DispatcherBaseTransportFunctor(const InputDomainType &inputDomain,
+                                 vtkm::Id outputSize)
+    : InputDomain(inputDomain),
+      OutputSize(outputSize)
+  {  }
 
   // TODO: We need to think harder about how scheduling on 3D arrays works.
   // Chances are we need to allow the transport for each argument to manage
   // 3D indices (for example, allocate a 3D array instead of a 1D array).
   // But for now, just treat all transports as 1D arrays.
   VTKM_CONT
-  DispatcherBaseTransportFunctor(vtkm::Id3 dimensions)
-    : NumInstances(dimensions[0]*dimensions[1]*dimensions[2]) {  }
+  DispatcherBaseTransportFunctor(const InputDomainType &inputDomain,
+                                 vtkm::Id3 dimensions)
+    : InputDomain(inputDomain),
+      OutputSize(dimensions[0]*dimensions[1]*dimensions[2])
+  {  }
 
 
   template<typename ControlParameter, vtkm::IdComponent Index>
   struct ReturnType {
-    typedef typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag TransportTag;
-    typedef typename vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device> TransportType;
-    typedef typename TransportType::ExecObjectType type;
+    using TransportTag = typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
+    using TransportType = typename vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device>;
+    using type = typename TransportType::ExecObjectType;
   };
 
   template<typename ControlParameter, vtkm::IdComponent Index>
@@ -246,9 +253,9 @@ struct DispatcherBaseTransportFunctor
   operator()(const ControlParameter &invokeData,
              vtkm::internal::IndexTag<Index>) const
   {
-    typedef typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag TransportTag;
+    using TransportTag = typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
     vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device> transport;
-    return transport(invokeData, this->NumInstances);
+    return transport(invokeData, this->InputDomain, this->OutputSize);
   }
 };
 
@@ -470,12 +477,16 @@ private:
     const ParameterInterfaceType &parameters = invocation.Parameters;
 
     typedef detail::DispatcherBaseTransportFunctor<
-        typename Invocation::ControlInterface, DeviceAdapter> TransportFunctorType;
+        typename Invocation::ControlInterface,
+        typename Invocation::InputDomainType,
+        DeviceAdapter> TransportFunctorType;
     typedef typename ParameterInterfaceType::template StaticTransformType<
         TransportFunctorType>::type ExecObjectParameters;
 
     ExecObjectParameters execObjectParameters =
-        parameters.StaticTransformCont(TransportFunctorType(outputRange));
+        parameters.StaticTransformCont(TransportFunctorType(
+                                         invocation.GetInputDomain(),
+                                         outputRange));
 
     // Get the arrays used for scattering input to output.
     typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =

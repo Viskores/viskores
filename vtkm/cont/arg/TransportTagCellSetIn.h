@@ -40,7 +40,8 @@ struct TransportTagCellSetIn {  };
 
 template<typename FromTopology,
          typename ToTopology,
-         typename ContObjectType, typename Device>
+         typename ContObjectType,
+         typename Device>
 struct Transport<vtkm::cont::arg::TransportTagCellSetIn<FromTopology,ToTopology>, ContObjectType, Device>
 {
   VTKM_IS_CELL_SET(ContObjectType);
@@ -50,10 +51,12 @@ struct Transport<vtkm::cont::arg::TransportTagCellSetIn<FromTopology,ToTopology>
           Device,FromTopology,ToTopology>
       ::ExecObjectType ExecObjectType;
 
+  template<typename InputDomainType>
   VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
+  ExecObjectType operator()(const ContObjectType &object,
+                            const InputDomainType &,
+                            vtkm::Id) const
   {
-    //create CUDA version of connectivity array.
     return object.PrepareForInput(Device(),
                                   FromTopology(),
                                   ToTopology());

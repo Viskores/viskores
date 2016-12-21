@@ -23,6 +23,7 @@
 #include <vtkm/exec/FunctorBase.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -61,7 +62,9 @@ struct TryArrayOutType
         transport;
 
     TestKernel<PortalType> kernel;
-    kernel.Portal = transport(handle, ARRAY_SIZE);
+    kernel.Portal = transport(handle,
+                              vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
+                              ARRAY_SIZE);
 
     VTKM_TEST_ASSERT(handle.GetNumberOfValues() == ARRAY_SIZE,
                      "ArrayOut transport did not allocate array correctly.");
