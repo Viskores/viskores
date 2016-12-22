@@ -22,11 +22,18 @@
 
 #include <vtkm/worklet/internal/WorkletBase.h>
 
+#include <vtkm/cont/arg/TransportTagKeyedValuesIn.h>
+#include <vtkm/cont/arg/TransportTagKeyedValuesInOut.h>
+#include <vtkm/cont/arg/TransportTagKeyedValuesOut.h>
 #include <vtkm/cont/arg/TransportTagKeysIn.h>
+#include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagKeys.h>
 
 #include <vtkm/exec/internal/ReduceByKeyLookup.h>
 
+#include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
+#include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
+#include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 #include <vtkm/exec/arg/FetchTagKeysIn.h>
 #include <vtkm/exec/arg/ThreadIndicesReduceByKey.h>
 
@@ -38,7 +45,7 @@ class WorkletReduceByKey : public vtkm::worklet::internal::WorkletBase
 public:
   /// \brief A control signature tag for input keys.
   ///
-  /// A \c WorkletReduceByKey operates by collected all identical keys and
+  /// A \c WorkletReduceByKey operates by collecting all identical keys and
   /// then executing the worklet on each unique key. This tag specifies a
   /// \c Keys object that defines and manages these keys.
   ///
@@ -50,6 +57,51 @@ public:
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagKeys;
     using TransportTag = vtkm::cont::arg::TransportTagKeysIn;
     using FetchTag = vtkm::exec::arg::FetchTagKeysIn;
+  };
+
+  /// \brief A control signature tag for input values.
+  ///
+  /// A \c WorkletReduceByKey operates by collecting all values associated with
+  /// identical keys and then giving the worklet a Vec-like object containing
+  /// all values with a matching key. This tag specifies an \c ArrayHandle
+  /// object that holds the values.
+  ///
+  template<typename TypeList = AllTypes>
+  struct ValuesIn : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagKeyedValuesIn;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
+  };
+
+  /// \brief A control signature tag for input/output values.
+  ///
+  /// A \c WorkletReduceByKey operates by collecting all values associated with
+  /// identical keys and then giving the worklet a Vec-like object containing
+  /// all values with a matching key. This tag specifies an \c ArrayHandle
+  /// object that holds the values.
+  ///
+  template<typename TypeList = AllTypes>
+  struct ValuesInOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagKeyedValuesInOut;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
+  };
+
+  /// \brief A control signature tag for output values.
+  ///
+  /// A \c WorkletReduceByKey operates by collecting all values associated with
+  /// identical keys and then giving the worklet a Vec-like object containing
+  /// all values with a matching key. This tag specifies an \c ArrayHandle
+  /// object that holds the values.
+  ///
+  template<typename TypeList = AllTypes>
+  struct ValuesOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagKeyedValuesOut;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
 
   /// Reduce by key worklets use the related thread indices class.

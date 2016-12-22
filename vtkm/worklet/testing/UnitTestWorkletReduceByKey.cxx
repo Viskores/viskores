@@ -29,25 +29,69 @@
 
 namespace {
 
+#define STRINGIFY(x) STRINGIFY_IMPL(x)
+#define STRINGIFY_IMPL(x) #x
+
+#define IMPL_TEST_ASSERT_WORKLET(condition, file, line) \
+  this->RaiseError("Test assert failed: " #condition \
+                   "\n" #file ":" #line) \
+
+#define TEST_ASSERT_WORKLET(condition) \
+  do { \
+    if (!(condition)) \
+    { \
+      this->RaiseError("Test assert failed: " #condition \
+                       "\n" __FILE__ ":" STRINGIFY(__LINE__)); \
+    } \
+  } while (false)
+
 static const vtkm::Id ARRAY_SIZE = 1033;
-static const vtkm::Id NUM_UNIQUE = ARRAY_SIZE/10;
+static const vtkm::IdComponent GROUP_SIZE = 10;
+static const vtkm::Id NUM_UNIQUE = ARRAY_SIZE/GROUP_SIZE;
 
 struct CheckReduceByKeyWorklet : vtkm::worklet::WorkletReduceByKey
 {
-  typedef void ControlSignature(KeysIn);
-  typedef void ExecutionSignature(_1, WorkIndex);
+  typedef void ControlSignature(KeysIn keys,
+                                ValuesIn<> keyMirror,
+                                ValuesIn<> indexValues,
+                                ValuesInOut<> valuesToModify,
+                                ValuesOut<> writeKey);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex);
   typedef _1 InputDomain;
 
-  template<typename T>
+  template<typename T,
+           typename KeyMirrorVecType,
+           typename IndexValuesVecType,
+           typename ValuesToModifyVecType,
+           typename WriteKeysVecType>
   VTKM_EXEC
-  void operator()(const T &key, vtkm::Id workIndex) const
+  void operator()(const T &key,
+                  const KeyMirrorVecType &keyMirror,
+                  const IndexValuesVecType &valueIndices,
+                  ValuesToModifyVecType &valuesToModify,
+                  WriteKeysVecType &writeKey,
+                  vtkm::Id workIndex) const
   {
     // These tests only work if keys are in sorted order, which is how we group
     // them.
 
-    if (key != TestValue(workIndex, T()))
+    TEST_ASSERT_WORKLET(key == TestValue(workIndex, T()));
+
+    vtkm::IdComponent numValues = keyMirror.GetNumberOfComponents();
+    TEST_ASSERT_WORKLET(numValues >= GROUP_SIZE);
+    TEST_ASSERT_WORKLET(keyMirror.GetNumberOfComponents() ==
+                        valueIndices.GetNumberOfComponents());
+
+
+    for (vtkm::IdComponent iComponent = 0; iComponent < numValues; iComponent++)
     {
-      this->RaiseError("Unexpected key");
+      TEST_ASSERT_WORKLET(test_equal(keyMirror[iComponent], key));
+      TEST_ASSERT_WORKLET(valueIndices[iComponent]%NUM_UNIQUE == workIndex);
+
+      T value = valuesToModify[iComponent];
+      valuesToModify[iComponent] = static_cast<T>(key + value);
+
+      writeKey[iComponent] = key;
     }
   }
 };
@@ -67,8 +111,37 @@ void TryKeyType(KeyType)
   vtkm::worklet::Keys<KeyType> keys(keyArray,
                                     VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
+  vtkm::cont::ArrayHandle<KeyType> valuesToModify;
+  valuesToModify.Allocate(ARRAY_SIZE);
+  SetPortal(valuesToModify.GetPortalControl());
+
+  vtkm::cont::ArrayHandle<KeyType> writeKey;
+
   vtkm::worklet::DispatcherReduceByKey<CheckReduceByKeyWorklet> dispatcher;
-  dispatcher.Invoke(keys);
+  dispatcher.Invoke(keys,
+                    keyArray,
+                    vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
+                    valuesToModify,
+                    writeKey);
+
+  VTKM_TEST_ASSERT(valuesToModify.GetNumberOfValues() == ARRAY_SIZE,
+                   "Bad array size.");
+  VTKM_TEST_ASSERT(writeKey.GetNumberOfValues() == ARRAY_SIZE,
+                   "Bad array size.");
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  {
+    KeyType key = TestValue(index%NUM_UNIQUE, KeyType());
+    KeyType value = TestValue(index, KeyType());
+
+    VTKM_TEST_ASSERT(
+          test_equal(static_cast<KeyType>(key+value),
+                     valuesToModify.GetPortalConstControl().Get(index)),
+          "Bad in/out value.");
+
+    VTKM_TEST_ASSERT(
+          test_equal(key, writeKey.GetPortalConstControl().Get(index)),
+          "Bad out value.");
+  }
 }
 
 void TestReduceByKey()

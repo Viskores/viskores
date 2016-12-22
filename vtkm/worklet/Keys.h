@@ -23,11 +23,16 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/exec/internal/ReduceByKeyLookup.h>
 
+#include <vtkm/cont/arg/TransportTagKeyedValuesIn.h>
+#include <vtkm/cont/arg/TransportTagKeyedValuesInOut.h>
+#include <vtkm/cont/arg/TransportTagKeyedValuesOut.h>
 #include <vtkm/cont/arg/TransportTagKeysIn.h>
 #include <vtkm/cont/arg/TypeCheckTagKeys.h>
 
@@ -100,6 +105,12 @@ public:
   vtkm::cont::ArrayHandle<vtkm::IdComponent> GetCounts() const
   {
     return this->Counts;
+  }
+
+  VTKM_CONT
+  vtkm::Id GetNumberOfValues() const
+  {
+    return this->SortedValuesMap.GetNumberOfValues();
   }
 
   template<typename Device>
@@ -177,10 +188,10 @@ private:
 }
 } // namespace vtkm::worklet
 
-// Here we implement the type checks, transports, and fetches the rely on the
-// Keys class. We implement them here because the Keys class is not accessible
-// to the arg classes. (The worklet package depends on the cont and exec
-// packages, not the other way around.)
+// Here we implement the type checks and transports that rely on the Keys
+// class. We implement them here because the Keys class is not accessible to
+// the arg classes. (The worklet package depends on the cont and exec packages,
+// not the other way around.)
 
 namespace vtkm {
 namespace cont {
@@ -223,6 +234,117 @@ struct Transport<vtkm::cont::arg::TransportTagKeysIn,
     VTKM_STATIC_ASSERT_MSG(
           false, "A Keys class was used in a position that is not the input domain.");
     return ExecObjectType();
+  }
+};
+
+template<typename ArrayHandleType, typename Device>
+struct Transport<
+    vtkm::cont::arg::TransportTagKeyedValuesIn, ArrayHandleType, Device>
+{
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+
+  using ContObjectType = ArrayHandleType;
+
+  using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using PermutedArrayType =
+      vtkm::cont::ArrayHandlePermutation<IdArrayType,ContObjectType>;
+  using GroupedArrayType =
+      vtkm::cont::ArrayHandleGroupVecVariable<PermutedArrayType,IdArrayType>;
+
+  using ExecObjectType =
+      typename GroupedArrayType::template ExecutionTypes<Device>::PortalConst;
+
+  template<typename KeyType>
+  VTKM_CONT
+  ExecObjectType operator()(const ContObjectType &object,
+                            const vtkm::worklet::Keys<KeyType> &keys,
+                            vtkm::Id) const
+  {
+    VTKM_ASSERT(object.GetNumberOfValues() == keys.GetNumberOfValues());
+
+    PermutedArrayType permutedArray(keys.GetSortedValuesMap(), object);
+    GroupedArrayType groupedArray(permutedArray, keys.GetOffsets());
+    // There is a bit of an issue here where groupedArray goes out of scope,
+    // and array portals usually rely on the associated array handle
+    // maintaining the resources it points to. However, the entire state of the
+    // portal should be self contained except for the data managed by the
+    // object argument, which should stay in scope.
+    return groupedArray.PrepareForInput(Device());
+  }
+};
+
+template<typename ArrayHandleType, typename Device>
+struct Transport<
+    vtkm::cont::arg::TransportTagKeyedValuesInOut, ArrayHandleType, Device>
+{
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+
+  using ContObjectType = ArrayHandleType;
+
+  using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using PermutedArrayType =
+      vtkm::cont::ArrayHandlePermutation<IdArrayType,ContObjectType>;
+  using GroupedArrayType =
+      vtkm::cont::ArrayHandleGroupVecVariable<PermutedArrayType,IdArrayType>;
+
+  using ExecObjectType =
+      typename GroupedArrayType::template ExecutionTypes<Device>::Portal;
+
+  template<typename KeyType>
+  VTKM_CONT
+  ExecObjectType operator()(ContObjectType object,
+                            const vtkm::worklet::Keys<KeyType> &keys,
+                            vtkm::Id) const
+  {
+    VTKM_ASSERT(object.GetNumberOfValues() == keys.GetNumberOfValues());
+
+    PermutedArrayType permutedArray(keys.GetSortedValuesMap(), object);
+    GroupedArrayType groupedArray(permutedArray, keys.GetOffsets());
+    // There is a bit of an issue here where groupedArray goes out of scope,
+    // and array portals usually rely on the associated array handle
+    // maintaining the resources it points to. However, the entire state of the
+    // portal should be self contained except for the data managed by the
+    // object argument, which should stay in scope.
+    return groupedArray.PrepareForInPlace(Device());
+  }
+};
+
+template<typename ArrayHandleType, typename Device>
+struct Transport<
+    vtkm::cont::arg::TransportTagKeyedValuesOut, ArrayHandleType, Device>
+{
+  VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+
+  using ContObjectType = ArrayHandleType;
+
+  using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using PermutedArrayType =
+      vtkm::cont::ArrayHandlePermutation<IdArrayType,ContObjectType>;
+  using GroupedArrayType =
+      vtkm::cont::ArrayHandleGroupVecVariable<PermutedArrayType,IdArrayType>;
+
+  using ExecObjectType =
+      typename GroupedArrayType::template ExecutionTypes<Device>::Portal;
+
+  template<typename KeyType>
+  VTKM_CONT
+  ExecObjectType operator()(ContObjectType object,
+                            const vtkm::worklet::Keys<KeyType> &keys,
+                            vtkm::Id) const
+  {
+    // The PrepareForOutput for ArrayHandleGroupVecVariable and
+    // ArrayHandlePermutation cannot determine the actual size expected for the
+    // target array (object), so we have to make sure it gets allocated here.
+    object.PrepareForOutput(keys.GetNumberOfValues(), Device());
+
+    PermutedArrayType permutedArray(keys.GetSortedValuesMap(), object);
+    GroupedArrayType groupedArray(permutedArray, keys.GetOffsets());
+    // There is a bit of an issue here where groupedArray goes out of scope,
+    // and array portals usually rely on the associated array handle
+    // maintaining the resources it points to. However, the entire state of the
+    // portal should be self contained except for the data managed by the
+    // object argument, which should stay in scope.
+    return groupedArray.PrepareForOutput(keys.GetInputRange(), Device());
   }
 };
 
