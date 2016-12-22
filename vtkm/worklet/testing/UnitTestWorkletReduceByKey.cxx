@@ -49,7 +49,7 @@ static const vtkm::Id ARRAY_SIZE = 1033;
 static const vtkm::IdComponent GROUP_SIZE = 10;
 static const vtkm::Id NUM_UNIQUE = ARRAY_SIZE/GROUP_SIZE;
 
-struct CheckReduceByKeyWorklet : vtkm::worklet::WorkletReduceByKey
+struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {
   typedef void ControlSignature(KeysIn keys,
                                 ValuesIn<> keyMirror,
@@ -98,6 +98,35 @@ struct CheckReduceByKeyWorklet : vtkm::worklet::WorkletReduceByKey
   }
 };
 
+struct CheckReducedValuesWorklet : vtkm::worklet::WorkletReduceByKey
+{
+  typedef void ControlSignature(KeysIn,
+                                ReducedValuesOut<> extractKeys,
+                                ReducedValuesIn<> indexReference,
+                                ReducedValuesInOut<> copyKeyPair);
+  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+
+  template<typename T>
+  VTKM_EXEC
+  void operator()(const T &key,
+                  T &reducedValueOut,
+                  vtkm::Id indexReference,
+                  vtkm::Pair<T,T> &copyKeyPair,
+                  vtkm::Id workIndex) const
+  {
+    // This check only work if keys are in sorted order, which is how we group
+    // them.
+    TEST_ASSERT_WORKLET(key == TestValue(workIndex, T()));
+
+    reducedValueOut = key;
+
+    TEST_ASSERT_WORKLET(indexReference == workIndex);
+
+    TEST_ASSERT_WORKLET(copyKeyPair.first == key);
+    copyKeyPair.second = key;
+  }
+};
+
 template<typename KeyType>
 void TryKeyType(KeyType)
 {
@@ -119,12 +148,13 @@ void TryKeyType(KeyType)
 
   vtkm::cont::ArrayHandle<KeyType> writeKey;
 
-  vtkm::worklet::DispatcherReduceByKey<CheckReduceByKeyWorklet> dispatcher;
-  dispatcher.Invoke(keys,
-                    keyArray,
-                    vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
-                    valuesToModify,
-                    writeKey);
+  vtkm::worklet::DispatcherReduceByKey<CheckKeyValuesWorklet>
+      dispatcherCheckKeyValues;
+  dispatcherCheckKeyValues.Invoke(keys,
+                                  keyArray,
+                                  vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
+                                  valuesToModify,
+                                  writeKey);
 
   VTKM_TEST_ASSERT(valuesToModify.GetNumberOfValues() == ARRAY_SIZE,
                    "Bad array size.");
@@ -144,6 +174,27 @@ void TryKeyType(KeyType)
           test_equal(key, writeKey.GetPortalConstControl().Get(index)),
           "Bad out value.");
   }
+
+  vtkm::cont::ArrayHandle<KeyType> keyPairIn;
+  keyPairIn.Allocate(NUM_UNIQUE);
+  SetPortal(keyPairIn.GetPortalControl());
+
+  vtkm::cont::ArrayHandle<KeyType> keyPairOut;
+  keyPairOut.Allocate(NUM_UNIQUE);
+
+  vtkm::worklet::DispatcherReduceByKey<CheckReducedValuesWorklet>
+      dispatcherCheckReducedValues;
+  dispatcherCheckReducedValues.Invoke(
+        keys,
+        writeKey,
+        vtkm::cont::ArrayHandleIndex(NUM_UNIQUE),
+        vtkm::cont::make_ArrayHandleZip(keyPairIn, keyPairOut));
+
+  VTKM_TEST_ASSERT(writeKey.GetNumberOfValues() == NUM_UNIQUE,
+                   "Reduced values output not sized correctly.");
+  CheckPortal(writeKey.GetPortalConstControl());
+
+  CheckPortal(keyPairOut.GetPortalConstControl());
 }
 
 void TestReduceByKey()

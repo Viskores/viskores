@@ -31,6 +31,7 @@ set(headers
   TransportTagKeyedValuesInOut.h
   TransportTagKeyedValuesOut.h
   TransportTagKeysIn.h
+  TransportTagReducedValuesIn.h
   TransportTagTopologyFieldIn.h
   TransportTagWholeArrayIn.h
   TransportTagWholeArrayInOut.h
