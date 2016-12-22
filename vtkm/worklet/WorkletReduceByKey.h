@@ -36,6 +36,7 @@
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 #include <vtkm/exec/arg/FetchTagKeysIn.h>
 #include <vtkm/exec/arg/ThreadIndicesReduceByKey.h>
+#include <vtkm/exec/arg/ValueCount.h>
 
 namespace vtkm {
 namespace worklet {
@@ -81,6 +82,8 @@ public:
   /// all values with a matching key. This tag specifies an \c ArrayHandle
   /// object that holds the values.
   ///
+  /// This tag might not work with scatter operations.
+  ///
   template<typename TypeList = AllTypes>
   struct ValuesInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -96,6 +99,8 @@ public:
   /// all values with a matching key. This tag specifies an \c ArrayHandle
   /// object that holds the values.
   ///
+  /// This tag might not work with scatter operations.
+  ///
   template<typename TypeList = AllTypes>
   struct ValuesOut : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -103,6 +108,15 @@ public:
     using TransportTag = vtkm::cont::arg::TransportTagKeyedValuesOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
+
+  /// \brief The \c ExecutionSignature tag to get the number of values.
+  ///
+  /// A \c WorkletReduceByKey operates by collecting all values associated with
+  /// identical keys and then giving the worklet a Vec-like object containing all
+  /// values with a matching key. This \c ExecutionSignature tag provides the
+  /// number of values associated with the key and given in the Vec-like objects.
+  ///
+  struct ValueCount : vtkm::exec::arg::ValueCount {  };
 
   /// Reduce by key worklets use the related thread indices class.
   ///

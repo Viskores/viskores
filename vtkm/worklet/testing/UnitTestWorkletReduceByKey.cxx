@@ -56,7 +56,7 @@ struct CheckReduceByKeyWorklet : vtkm::worklet::WorkletReduceByKey
                                 ValuesIn<> indexValues,
                                 ValuesInOut<> valuesToModify,
                                 ValuesOut<> writeKey);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex, ValueCount);
   typedef _1 InputDomain;
 
   template<typename T,
@@ -70,17 +70,19 @@ struct CheckReduceByKeyWorklet : vtkm::worklet::WorkletReduceByKey
                   const IndexValuesVecType &valueIndices,
                   ValuesToModifyVecType &valuesToModify,
                   WriteKeysVecType &writeKey,
-                  vtkm::Id workIndex) const
+                  vtkm::Id workIndex,
+                  vtkm::IdComponent numValues) const
   {
     // These tests only work if keys are in sorted order, which is how we group
     // them.
 
     TEST_ASSERT_WORKLET(key == TestValue(workIndex, T()));
 
-    vtkm::IdComponent numValues = keyMirror.GetNumberOfComponents();
     TEST_ASSERT_WORKLET(numValues >= GROUP_SIZE);
-    TEST_ASSERT_WORKLET(keyMirror.GetNumberOfComponents() ==
-                        valueIndices.GetNumberOfComponents());
+    TEST_ASSERT_WORKLET(keyMirror.GetNumberOfComponents() == numValues);
+    TEST_ASSERT_WORKLET(valueIndices.GetNumberOfComponents() == numValues);
+    TEST_ASSERT_WORKLET(valuesToModify.GetNumberOfComponents() == numValues);
+    TEST_ASSERT_WORKLET(writeKey.GetNumberOfComponents() == numValues);
 
 
     for (vtkm::IdComponent iComponent = 0; iComponent < numValues; iComponent++)

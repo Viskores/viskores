@@ -38,6 +38,7 @@ set(headers
   ThreadIndicesBasic.h
   ThreadIndicesReduceByKey.h
   ThreadIndicesTopologyMap.h
+  ValueCount.h
   VisitIndex.h
   WorkIndex.h
   )
