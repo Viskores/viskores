@@ -23,7 +23,6 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
 #include <vtkm/worklet/Gradient.h>
-#include <vtkm/worklet/Vorticity.h>
 
 namespace {
 
@@ -89,6 +88,15 @@ void add_extra_vec_fields( const vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::Vec<T
                            vtkm::filter::ResultField& result,
                            const DeviceAdapter&)
 {
+  if(filter->GetComputeDivergence())
+  {
+    vtkm::cont::ArrayHandle< T > divergence;
+    vtkm::worklet::DispatcherMapField< vtkm::worklet::Divergence, DeviceAdapter > dispatcher;
+    dispatcher.Invoke(inField, divergence);
+
+    add_field(result, divergence, filter->GetDivergenceName());
+  }
+
   if(filter->GetComputeVorticity())
   {
     vtkm::cont::ArrayHandle< vtkm::Vec<T,3> > vorticity;
@@ -128,6 +136,7 @@ Gradient::Gradient():
  ComputePointGradient(false),
  ComputeVorticity(false),
  ComputeQCriterion(false),
+ DivergenceName("Divergence"),
  VorticityName("Vorticity"),
  QCriterionName("QCriterion")
  {
