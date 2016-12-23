@@ -36,23 +36,26 @@
 namespace vtkm {
 namespace worklet {
 
+struct GradientInTypes
+    : vtkm::ListTagBase<vtkm::Float32,
+                        vtkm::Float64,
+                        vtkm::Vec<vtkm::Float32,3>,
+                        vtkm::Vec<vtkm::Float64,3> >
+{  };
+
 struct GradientOutTypes
     : vtkm::ListTagBase<
                         vtkm::Vec<vtkm::Float32,3>,
                         vtkm::Vec<vtkm::Float64,3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float32,2>, 3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float64,2>, 3>,
                         vtkm::Vec< vtkm::Vec<vtkm::Float32,3>, 3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float32,4>, 3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float64,4>, 3>
+                        vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3>
                         >
 {  };
 struct CellGradient : vtkm::worklet::WorkletMapPointToCell
 {
   typedef void ControlSignature(CellSetIn,
                                 FieldInPoint<Vec3> pointCoordinates,
-                                FieldInPoint<FieldCommon> inputField,
+                                FieldInPoint<GradientInTypes> inputField,
                                 FieldOutCell<GradientOutTypes> outputField);
 
   typedef void ExecutionSignature(CellShape, PointCount, _2, _3, _4);
@@ -118,7 +121,7 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
   typedef void ControlSignature(CellSetIn,
                                 WholeCellSetIn<Point,Cell>,
                                 WholeArrayIn<Vec3> pointCoordinates,
-                                WholeArrayIn<FieldCommon> inputField,
+                                WholeArrayIn<GradientInTypes> inputField,
                                 FieldOutPoint<GradientOutTypes> outputField);
 
   typedef void ExecutionSignature(CellCount, CellIndices, WorkIndex, _2, _3, _4, _5);
