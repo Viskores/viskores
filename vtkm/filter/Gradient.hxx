@@ -27,7 +27,7 @@
 namespace {
 
 //-----------------------------------------------------------------------------
-template<typename DerivedPolicy, typename T, typename S>
+template<typename DerivedPolicy, typename Device, typename T, typename S>
 struct PointGrad
 {
   PointGrad(const vtkm::cont::CoordinateSystem& coords,
@@ -42,7 +42,7 @@ struct PointGrad
   template<typename CellSetType>
   void operator()(const CellSetType& cellset ) const
   {
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointGradient> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointGradient, Device> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       cellset, //whole cellset in
                       vtkm::filter::ApplyPolicy(*this->Points, this->Policy),
@@ -182,7 +182,7 @@ vtkm::filter::ResultField Gradient::DoExecute(
   vtkm::cont::ArrayHandle< vtkm::Vec<T,3> > outArray;
   if(this->ComputePointGradient)
   {
-    PointGrad<DerivedPolicy,T,StorageType> func(coords, inField, &outArray);
+    PointGrad<DerivedPolicy,DeviceAdapter,T,StorageType> func(coords, inField, &outArray);
     vtkm::cont::CastAndCall( vtkm::filter::ApplyPolicy(cells, policy),
                              func);
     fieldAssociation = vtkm::cont::Field::ASSOC_POINTS;
