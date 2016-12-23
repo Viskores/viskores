@@ -27,6 +27,7 @@
 #include <vtkm/CellTraits.h>
 #include <vtkm/VecFromPortal.h>
 #include <vtkm/VecFromPortalPermute.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 
@@ -51,6 +52,13 @@ struct GradientOutTypes
                         vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3>
                         >
 {  };
+
+struct GradientVecOutTypes
+    : vtkm::ListTagBase<
+                        vtkm::Vec< vtkm::Vec<vtkm::Float32,3>, 3>,
+                        vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3>
+                        > {  };
+
 struct CellGradient : vtkm::worklet::WorkletMapPointToCell
 {
   typedef void ControlSignature(CellSetIn,
@@ -285,6 +293,65 @@ private:
     return fetch.Load(indices,in.GetPortal());
   }
 
+};
+
+
+struct Divergence : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<GradientVecOutTypes> input,
+                                FieldOut<Scalar> output);
+  typedef void ExecutionSignature(_1,_2);
+  typedef _1 InputDomain;
+
+  template<typename InputType, typename OutputType>
+  VTKM_EXEC
+  void operator()(const InputType &input, OutputType &divergence) const
+  {
+    divergence = input[0][0]+input[1][1]+input[2][2];
+  }
+};
+
+struct Vorticity : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<GradientVecOutTypes> input,
+                                FieldOut<Vec3> output);
+  typedef void ExecutionSignature(_1,_2);
+  typedef _1 InputDomain;
+
+  template<typename InputType, typename OutputType>
+  VTKM_EXEC
+  void operator()(const InputType &input, OutputType &vorticity) const
+  {
+    vorticity[0] = input[2][1] - input[1][2];
+    vorticity[1] = input[0][2] - input[2][0];
+    vorticity[2] = input[1][0] - input[0][1];
+  }
+};
+
+struct QCriterion : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<GradientVecOutTypes> input,
+                                FieldOut<Scalar> output);
+  typedef void ExecutionSignature(_1,_2);
+  typedef _1 InputDomain;
+
+  template<typename InputType, typename OutputType>
+  VTKM_EXEC
+  void operator()(const InputType &input, OutputType &qcriterion) const
+  {
+    OutputType t1 =
+          ((input[2][1] - input[1][2]) * (input[2][1] - input[1][2]) +
+           (input[1][0] - input[0][1]) * (input[1][0] - input[0][1]) +
+           (input[0][2] - input[2][0]) * (input[0][2] - input[2][0])) / 2.0f;
+      OutputType t2 =
+          input[0][0] * input[0][0] + input[1][1] * input[1][1] +
+          input[2][2] * input[2][2] +
+          ((input[1][0] + input[0][1]) * (input[1][0] + input[0][1]) +
+           (input[2][0] + input[0][2]) * (input[2][0] + input[0][2]) +
+           (input[2][1] + input[1][2]) * (input[2][1] + input[1][2])) / 2.0f;
+
+    qcriterion = (t1 - t2) / 2.0f;
+  }
 };
 
 
