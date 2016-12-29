@@ -48,7 +48,6 @@ struct ListJoin
   using type = brigand::append< typename ListTag1::list, typename ListTag2::list>;
 };
 
-
 //-----------------------------------------------------------------------------
 template<typename Type, typename List> struct ListContainsImpl;
 
@@ -110,6 +109,34 @@ template<typename Type, typename List> struct ListContainsImpl
                                      std::is_same< brigand::_1, Type> >;
   using size = brigand::size<find_result>;
   static VTKM_CONSTEXPR bool value = (size::value != 0);
+};
+
+
+//-----------------------------------------------------------------------------
+template <class T, class U, class ListTag>
+struct intersect_tags
+{
+  using has_u = ListContainsImpl<U, ListTag>;
+  using type = typename std::conditional<has_u::value,
+                                         brigand::push_back<T,U>,
+                                         T>::type;
+};
+
+//-----------------------------------------------------------------------------
+template<typename ListTag1, typename ListTag2>
+struct ListIntersect
+{
+  using type =
+    brigand::fold< ListTag1,
+                   brigand::list<>,
+                   intersect_tags< brigand::_state, brigand::_element, brigand::pin<ListTag2> >
+                   >;
+};
+
+template<typename SameListTag>
+struct ListIntersect<SameListTag, SameListTag>
+{
+  using type = SameListTag;
 };
 
 //-----------------------------------------------------------------------------

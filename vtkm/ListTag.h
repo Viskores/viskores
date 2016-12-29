@@ -64,6 +64,15 @@ struct ListTagJoin : detail::ListRoot {
   using list = typename detail::ListJoin<ListTag1,ListTag2>::type;
 };
 
+/// A tag that consits of elements that are found in both tags. This struct
+/// can be subclassed and still behave like a list tag.
+template<typename ListTag1, typename ListTag2>
+struct ListTagIntersect : detail::ListRoot {
+  using list = typename detail::ListIntersect<
+                  typename ListTag1::list,
+                  typename ListTag2::list>::type;
+};
+
 /// For each typename represented by the list tag, call the functor with a
 /// default instance of that type.
 ///
@@ -97,7 +106,6 @@ struct ListContains
   static VTKM_CONSTEXPR bool value =
       detail::ListContainsImpl<Type,typename ListTag::list>::value;
 };
-
 
 } // namespace vtkm
 
