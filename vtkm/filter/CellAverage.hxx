@@ -45,7 +45,7 @@ vtkm::filter::ResultField CellAverage::DoExecute(
     const vtkm::cont::DataSet &input,
     const vtkm::cont::ArrayHandle<T, StorageType> &inField,
     const vtkm::filter::FieldMetadata &fieldMetadata,
-    const vtkm::filter::PolicyBase<DerivedPolicy>&,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
     const DeviceAdapter&)
 {
   if(!fieldMetadata.IsPointField())
@@ -63,9 +63,9 @@ vtkm::filter::ResultField CellAverage::DoExecute(
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage,
                                        DeviceAdapter > dispatcher(this->Worklet);
 
-  //todo: we need to use the policy to determine the valid conversions
-  //that the dispatcher should do, including the result from GetCellSet
-  dispatcher.Invoke(cellSet, inField, outArray);
+  dispatcher.Invoke(vtkm::filter::ApplyPolicy(cellSet, policy),
+                    inField,
+                    outArray);
 
   std::string outputName = this->GetOutputFieldName();
   if (outputName == "")
