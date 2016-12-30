@@ -51,6 +51,13 @@ struct ListTagCheck : std::is_base_of<vtkm::detail::ListRoot,ListTag>
     "Provided type is not a valid VTK-m list tag.")
 
 
+/// A special tag for a list that represents holding all potential values
+///
+/// Note: Can not be used with ForEach for obvious reasons.
+struct ListTagUniversal : detail::ListRoot {
+  using list = vtkm::detail::ListBase<vtkm::detail::UniversalTag>;
+};
+
 /// A special tag for an empty list.
 ///
 struct ListTagEmpty : detail::ListRoot {
@@ -61,7 +68,9 @@ struct ListTagEmpty : detail::ListRoot {
 /// can be subclassed and still behave like a list tag.
 template<typename ListTag1, typename ListTag2>
 struct ListTagJoin : detail::ListRoot {
-  using list = typename detail::ListJoin<ListTag1,ListTag2>::type;
+  using list = typename detail::ListJoin<
+                  typename ListTag1::list,
+                  typename ListTag2::list>::type;
 };
 
 /// A tag that consits of elements that are found in both tags. This struct

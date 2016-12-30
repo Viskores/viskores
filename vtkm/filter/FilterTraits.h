@@ -30,9 +30,9 @@ class FilterTraits
 {
 public:
   // A filter is able to state what subset of types it supports
-  // by default. By default we use the empty tag to represent that the
+  // by default. By default we use ListTagUniversal to represent that the
   // filter accepts all types specified by the users provided policy
-  typedef vtkm::ListTagEmpty InputFieldTypeList;
+  typedef vtkm::ListTagUniversal InputFieldTypeList;
 };
 
 template<typename DerivedPolicy, typename FilterType>
@@ -41,11 +41,7 @@ struct DeduceFilterFieldTypes
   using FList = typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList;
   using PList = typename DerivedPolicy::FieldTypeList;
 
-  using FListIsEmpty = std::is_same<vtkm::ListTagEmpty,FList>;
-  using TypeList = typename std::conditional<FListIsEmpty::value,
-                                PList, //filter list is empty
-                                vtkm::ListTagIntersect<FList, PList>
-                                >::type;
+  using TypeList = vtkm::ListTagIntersect<FList, PList>;
 };
 
 }

@@ -41,11 +41,32 @@ struct ListRoot {  };
 template <class... T>
 using ListBase = brigand::list<T...>;
 
+/// list value that is used to represent a list actually matches all values
+struct UniversalTag
+{
+  //We never want this tag constructed, and by deleting the constructor
+  //we get an error when trying to use this class with ForEach.
+  UniversalTag()=delete;
+};
+
+
 //-----------------------------------------------------------------------------
 template<typename ListTag1, typename ListTag2>
 struct ListJoin
 {
-  using type = brigand::append< typename ListTag1::list, typename ListTag2::list>;
+  using type = brigand::append<ListTag1,ListTag2>;
+};
+
+template<typename ListTag>
+struct ListJoin<vtkm::detail::ListBase<vtkm::detail::UniversalTag>, ListTag>
+{
+  using type = vtkm::detail::ListBase<vtkm::detail::UniversalTag>;
+};
+
+template<typename ListTag>
+struct ListJoin<ListTag, vtkm::detail::ListBase<vtkm::detail::UniversalTag> >
+{
+  using type = vtkm::detail::ListBase<vtkm::detail::UniversalTag>;
 };
 
 //-----------------------------------------------------------------------------
@@ -56,6 +77,13 @@ template<typename Type>
 struct ListContainsImpl<Type, brigand::empty_sequence >
 {
   static VTKM_CONSTEXPR bool value = false;
+};
+
+//-----------------------------------------------------------------------------
+template<typename Type>
+struct ListContainsImpl<Type, brigand::list<vtkm::detail::UniversalTag> >
+{
+  static VTKM_CONSTEXPR bool value = true;
 };
 
 //-----------------------------------------------------------------------------
@@ -131,6 +159,18 @@ struct ListIntersect
                    brigand::list<>,
                    intersect_tags< brigand::_state, brigand::_element, brigand::pin<ListTag2> >
                    >;
+};
+
+template<typename ListTag>
+struct ListIntersect<vtkm::detail::ListBase<vtkm::detail::UniversalTag>, ListTag>
+{
+  using type = ListTag;
+};
+
+template<typename ListTag>
+struct ListIntersect<ListTag, vtkm::detail::ListBase<vtkm::detail::UniversalTag> >
+{
+  using type = ListTag;
 };
 
 template<typename SameListTag>
