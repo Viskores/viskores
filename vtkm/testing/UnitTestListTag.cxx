@@ -164,7 +164,7 @@ void TryList(const vtkm::Vec<int,N> &expected, ListTag)
 }
 
 template<vtkm::IdComponent N>
-void TryList(const vtkm::Vec<int,N> &expected, TestListTagUniversal tag)
+void TryList(const vtkm::Vec<int,N> &, TestListTagUniversal tag)
 {
   VTKM_IS_LIST_TAG(TestListTagUniversal);
 
@@ -172,16 +172,16 @@ void TryList(const vtkm::Vec<int,N> &expected, TestListTagUniversal tag)
 
   std::vector<int> found;
   std::cout << "    Try checking contents" << std::endl;
-  CheckContains(TestClass<11>(), TestListTagUniversal(), found);
-  CheckContains(TestClass<21>(), TestListTagUniversal(), found);
-  CheckContains(TestClass<22>(), TestListTagUniversal(), found);
-  CheckContains(TestClass<31>(), TestListTagUniversal(), found);
-  CheckContains(TestClass<32>(), TestListTagUniversal(), found);
-  CheckContains(TestClass<33>(), TestListTagUniversal(), found);
-  CheckContains(TestClass<41>(), TestListTagUniversal(), found);
-  CheckContains(TestClass<42>(), TestListTagUniversal(), found);
-  CheckContains(TestClass<43>(), TestListTagUniversal(), found);
-  CheckContains(TestClass<44>(), TestListTagUniversal(), found);
+  CheckContains(TestClass<11>(), tag, found);
+  CheckContains(TestClass<21>(), tag, found);
+  CheckContains(TestClass<22>(), tag, found);
+  CheckContains(TestClass<31>(), tag, found);
+  CheckContains(TestClass<32>(), tag, found);
+  CheckContains(TestClass<33>(), tag, found);
+  CheckContains(TestClass<41>(), tag, found);
+  CheckContains(TestClass<42>(), tag, found);
+  CheckContains(TestClass<43>(), tag, found);
+  CheckContains(TestClass<44>(), tag, found);
 }
 
 void TestLists()
