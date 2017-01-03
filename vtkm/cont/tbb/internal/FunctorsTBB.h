@@ -97,13 +97,16 @@ T ReducePortals(InputPortalType inputPortal,
                    TBB_GRAIN_SIZE);
 
 
-  return ::tbb::parallel_reduce(range, initialValue,
-    [&](block_type const& r, T init) -> T {
+  T sum = ::tbb::parallel_reduce(
+    range,
+    vtkm::TypeTraits<T>::ZeroInitialization(),
+    [&, initialValue](block_type const& r, T init) -> T {
       return std::accumulate(r.begin(), r.end(), init, wrappedBinaryOp);
     },
     wrappedBinaryOp);
-}
 
+  return wrappedBinaryOp(sum,initialValue);
+}
 
 template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
