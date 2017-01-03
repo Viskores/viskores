@@ -281,7 +281,7 @@ struct ScanExclusiveBody
                         typename OutputPortalType::ValueType>::type;
 
   ValueType Sum;
-  ValueType InitialValue;
+  bool FirstCall;
   InputPortalType InputPortal;
   OutputPortalType OutputPortal;
   BinaryOperationType BinaryOperation;
@@ -292,7 +292,7 @@ struct ScanExclusiveBody
                     BinaryOperationType binaryOperation,
                     const ValueType& initialValue)
     : Sum(initialValue),
-      InitialValue(initialValue),
+      FirstCall(true),
       InputPortal(inputPortal),
       OutputPortal(outputPortal),
       BinaryOperation(binaryOperation)
@@ -300,8 +300,8 @@ struct ScanExclusiveBody
 
   VTKM_EXEC_CONT
   ScanExclusiveBody(const ScanExclusiveBody &body, ::tbb::split)
-    : Sum(body.InitialValue),
-      InitialValue(body.InitialValue),
+    : Sum(body.Sum),
+      FirstCall(true),
       InputPortal(body.InputPortal),
       OutputPortal(body.OutputPortal),
       BinaryOperation(body.BinaryOperation)
@@ -318,12 +318,17 @@ struct ScanExclusiveBody
     //move the iterator to the first item
     typename InputIteratorsType::IteratorType iter =
       inputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
-    ValueType temp = this->Sum;
-    for (vtkm::Id index = range.begin(); index != range.end(); ++index, ++iter)
+
+    ValueType temp = *iter;
+    ++iter;
+    if(! (this->FirstCall && range.begin() > 0) )
+      { temp = this->BinaryOperation(this->Sum, temp); }
+    for (vtkm::Id index = range.begin()+1; index != range.end(); ++index, ++iter)
       {
       temp = this->BinaryOperation(temp, *iter);
       }
     this->Sum = temp;
+    this->FirstCall = false;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -343,6 +348,7 @@ struct ScanExclusiveBody
       inputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
     typename OutputIteratorsType::IteratorType outIter =
       outputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
+
     ValueType temp = this->Sum;
     for (vtkm::Id index = range.begin(); index != range.end();
          ++index, ++inIter, ++outIter)
@@ -354,13 +360,21 @@ struct ScanExclusiveBody
       temp = this->BinaryOperation(temp, v);
       }
     this->Sum = temp;
+    this->FirstCall = false;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   void reverse_join(const ScanExclusiveBody &left)
   {
-    this->Sum = this->BinaryOperation(left.Sum, this->Sum);
+    //The contract we have with TBB is that they will only join
+    //two objects that have been scanned, or two objects which
+    //haven't been scanned
+    VTKM_ASSERT(left.FirstCall == this->FirstCall);
+    if(!left.FirstCall && !this->FirstCall)
+    {
+      this->Sum = this->BinaryOperation(left.Sum, this->Sum);
+    }
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
