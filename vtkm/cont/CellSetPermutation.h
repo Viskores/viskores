@@ -138,6 +138,7 @@ class CellSetPermutation : public vtkm::cont::internal::CellSetGeneralPermutatio
   typedef typename vtkm::cont::internal::CellSetGeneralPermutation<
       OriginalCellSet, PermutationArrayHandleType> ParentType;
 public:
+
   VTKM_CONT
   CellSetPermutation(const PermutationArrayHandleType& validCellIds,
                      const OriginalCellSet& cellset,
@@ -150,6 +151,14 @@ public:
   CellSetPermutation(const std::string &name = std::string())
     :  ParentType(name)
   {
+  }
+
+  VTKM_CONT
+  CellSetPermutation<OriginalCellSet,PermutationArrayHandleType>&
+  operator=(const CellSetPermutation<OriginalCellSet,PermutationArrayHandleType> &src)
+  {
+    ParentType::operator=(src);
+    return *this;
   }
 
 };

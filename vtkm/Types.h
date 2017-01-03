@@ -689,14 +689,14 @@ public:
   const ComponentType& operator[](vtkm::IdComponent idx) const
   {
     VTKM_ASSERT(idx >= 0);
-    VTKM_ASSERT(idx < this->NUM_COMPONENTS);
+    VTKM_ASSERT(idx < NUM_COMPONENTS);
     return this->Components[idx];
   }
   VTKM_EXEC_CONT
   ComponentType& operator[](vtkm::IdComponent idx)
   {
     VTKM_ASSERT(idx >= 0);
-    VTKM_ASSERT(idx < this->NUM_COMPONENTS);
+    VTKM_ASSERT(idx < NUM_COMPONENTS);
     return this->Components[idx];
   }
 
