@@ -24,14 +24,17 @@
 // templated.  If there is any reason to create a VTKm control library,
 // this class and its subclasses should probably go there.
 
+#include <exception>
 #include <string>
+
+#include <vtkm/internal/ExportMacros.h> // For VTKM_OVERRIDE
 
 namespace vtkm {
 namespace cont {
 
 /// The superclass of all exceptions thrown by any VTKm function or method.
 ///
-class Error
+class Error : public std::exception
 {
 public:
 //See note about GetMessage macro below.
@@ -46,6 +49,12 @@ public:
   const std::string &GetMessageA() const { return this->Message; }
   const std::string &GetMessageW() const { return this->Message; }
 #endif
+
+  // For std::exception compatibility:
+  const char* what() const VTKM_NOEXCEPT VTKM_OVERRIDE
+  {
+    return this->Message.c_str();
+  }
 
 protected:
   Error() { }
