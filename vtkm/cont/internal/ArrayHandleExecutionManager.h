@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_exec_ArrayHandleExecutionManager_h
 #define vtk_m_cont_exec_ArrayHandleExecutionManager_h
 
-#include <vtkm/cont/ErrorControlInternal.h>
+#include <vtkm/cont/ErrorInternal.h>
 #include <vtkm/cont/Storage.h>
 
 #include <vtkm/cont/internal/ArrayTransfer.h>
@@ -192,7 +192,7 @@ private:
   {
     if (!this->IsDeviceAdapter(device))
     {
-      throw vtkm::cont::ErrorControlInternal("Device Adapter Mismatch");
+      throw vtkm::cont::ErrorInternal("Device Adapter Mismatch");
     }
   }
 };

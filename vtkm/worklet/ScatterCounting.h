@@ -26,7 +26,7 @@
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorBadValue.h>
 
 #include <vtkm/exec/FunctorBase.h>
 
@@ -206,7 +206,7 @@ struct ScatterCounting
           << this->InputRange
           << " but used with a worklet invoke of size "
           << inputRange << std::endl;
-      throw vtkm::cont::ErrorControlBadValue(msg.str());
+      throw vtkm::cont::ErrorBadValue(msg.str());
     }
     return this->VisitArray.GetNumberOfValues();
   }

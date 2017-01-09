@@ -56,12 +56,11 @@ set(headers
   DynamicArrayHandle.h
   DynamicCellSet.h
   Error.h
-  ErrorControl.h
-  ErrorControlBadAllocation.h
-  ErrorControlBadType.h
-  ErrorControlBadValue.h
-  ErrorControlInternal.h
+  ErrorBadAllocation.h
+  ErrorBadType.h
+  ErrorBadValue.h
   ErrorExecution.h
+  ErrorInternal.h
   Field.h
   RuntimeDeviceInformation.h
   Storage.h

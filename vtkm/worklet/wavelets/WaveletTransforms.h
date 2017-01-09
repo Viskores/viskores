@@ -131,7 +131,7 @@ public:
         idx = inY * x4 + (inX - x1 - xa - x2 - x3 - xd);
       }
       else
-        vtkm::cont::ErrorControlInternal("Invalid index!");
+        vtkm::cont::ErrorInternal("Invalid index!");
     }
     else          // top-down mode
     {
@@ -166,7 +166,7 @@ public:
         idx = (inY - y1 - ya - y2 - y3 - yd) * x1 + inX;
       }
       else
-        vtkm::cont::ErrorControlInternal("Invalid index!");
+        vtkm::cont::ErrorInternal("Invalid index!");
     }
   }
 
@@ -227,7 +227,7 @@ public:
         idx = inY * dimX3 + (inX - dimX1 - pretendDimX2);
       }
       else
-        vtkm::cont::ErrorControlInternal("Invalid index!");
+        vtkm::cont::ErrorInternal("Invalid index!");
     }
     else          // top-down mode
     {
@@ -247,7 +247,7 @@ public:
         idx = (inY - dimY1 - pretendDimY2) * dimX3 + inX;
       }
       else
-        vtkm::cont::ErrorControlInternal("Invalid index!");
+        vtkm::cont::ErrorInternal("Invalid index!");
     }
   }
 
@@ -326,7 +326,7 @@ public:
       return MAKEVAL( portal3.Get(inIdx) );
     else
     {
-        vtkm::cont::ErrorControlInternal("Invalid matrix index!");
+        vtkm::cont::ErrorInternal("Invalid matrix index!");
         return -1;
     }
   }
@@ -713,7 +713,7 @@ public:
       return MAKEVAL( cAcD.Get(inIdx) );
     else
     {
-        vtkm::cont::ErrorControlInternal("Invalid matrix index!");
+        vtkm::cont::ErrorInternal("Invalid matrix index!");
         return -1;
     }
   }

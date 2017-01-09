@@ -23,7 +23,7 @@
 #include <vtkm/Assert.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
 
 namespace vtkm {
 namespace exec {
@@ -229,13 +229,13 @@ public:
   VTKM_CONT
   void Allocate(vtkm::Id /*numberOfValues*/)
   {
-      throw vtkm::cont::ErrorControlBadAllocation("Does not make sense.");
+      throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
   }
 
   VTKM_CONT
   void Shrink(vtkm::Id /*numberOfValues*/)
   {
-      throw vtkm::cont::ErrorControlBadAllocation("Does not make sense.");
+      throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
   }
 
   VTKM_CONT
@@ -327,7 +327,7 @@ public:
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
-    throw vtkm::cont::ErrorControlBadAllocation(
+    throw vtkm::cont::ErrorBadAllocation(
           "Cannot write to an ArrayHandleCartesianProduct. It does not make "
           "sense because there is overlap in the data.");
   }
@@ -335,7 +335,7 @@ public:
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    throw vtkm::cont::ErrorControlBadAllocation(
+    throw vtkm::cont::ErrorBadAllocation(
         "Cannot write to an ArrayHandleCartesianProduct. It does not make "
         "sense because there is overlap in the data.");
   }
@@ -351,7 +351,7 @@ public:
   VTKM_CONT
   void Shrink(vtkm::Id /*numberOfValues*/)
   {
-      throw vtkm::cont::ErrorControlBadAllocation("Does not make sense.");
+      throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
   }
 
   VTKM_CONT

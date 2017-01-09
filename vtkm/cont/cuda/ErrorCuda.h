@@ -17,18 +17,18 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_cuda_ErrorControlCuda_h
-#define vtk_m_cont_cuda_ErrorControlCuda_h
+#ifndef vtk_m_cont_cuda_ErrorCuda_h
+#define vtk_m_cont_cuda_ErrorCuda_h
 
 #include <vtkm/Types.h>
-#include <vtkm/cont/ErrorControl.h>
+#include <vtkm/cont/Error.h>
 
 #include <cuda.h>
 
 #include <sstream>
 
 /// A macro that can be used to check to see if there are any unchecked
-/// CUDA errors. Will throw an ErrorControlCuda if there are.
+/// CUDA errors. Will throw an ErrorCuda if there are.
 ///
 #define VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR() \
   VTKM_SWALLOW_SEMICOLON_PRE_BLOCK \
@@ -36,7 +36,7 @@
     const cudaError_t vtkm_cuda_check_async_error = cudaGetLastError(); \
     if (vtkm_cuda_check_async_error != cudaSuccess) \
     { \
-      throw ::vtkm::cont::cuda::ErrorControlCuda( \
+      throw ::vtkm::cont::cuda::ErrorCuda( \
         vtkm_cuda_check_async_error, \
         __FILE__, \
         __LINE__, \
@@ -46,7 +46,7 @@
   VTKM_SWALLOW_SEMICOLON_POST_BLOCK
 
 /// A macro that can be wrapped around a CUDA command and will throw an
-/// ErrorControlCuda exception if the CUDA command fails.
+/// ErrorCuda exception if the CUDA command fails.
 ///
 #define VTKM_CUDA_CALL(command) \
   VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR(); \
@@ -55,7 +55,7 @@
     const cudaError_t vtkm_cuda_call_error = command; \
     if (vtkm_cuda_call_error != cudaSuccess) \
     { \
-      throw ::vtkm::cont::cuda::ErrorControlCuda(vtkm_cuda_call_error, \
+      throw ::vtkm::cont::cuda::ErrorCuda(vtkm_cuda_call_error, \
                                                  __FILE__, \
                                                  __LINE__, \
                                                  #command); \
@@ -70,17 +70,17 @@ namespace cuda {
 /// This error is thrown whenever an unidentified CUDA runtime error is
 /// encountered.
 ///
-class VTKM_ALWAYS_EXPORT ErrorControlCuda : public vtkm::cont::ErrorControl
+class VTKM_ALWAYS_EXPORT ErrorCuda : public vtkm::cont::Error
 {
 public:
-  ErrorControlCuda(cudaError_t error)
+  ErrorCuda(cudaError_t error)
   {
     std::stringstream message;
     message << "CUDA Error: " << cudaGetErrorString(error);
     this->SetMessage(message.str());
   }
 
-  ErrorControlCuda(cudaError_t error,
+  ErrorCuda(cudaError_t error,
                    const std::string &file,
                    vtkm::Id line,
                    const std::string &description)
@@ -96,4 +96,4 @@ public:
 }
 } // namespace vtkm::cont:cuda
 
-#endif //vtk_m_cont_cuda_ErrorControlCuda_h
+#endif //vtk_m_cont_cuda_ErrorCuda_h

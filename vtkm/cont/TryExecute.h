@@ -21,9 +21,9 @@
 #define vtk_m_cont_TryExecute_h
 
 #include <vtkm/cont/DeviceAdapterListTag.h>
-#include <vtkm/cont/ErrorControlBadAllocation.h>
-#include <vtkm/cont/ErrorControlBadType.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
+#include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/ErrorBadValue.h>
 
 #include <vtkm/cont/internal/RuntimeDeviceTracker.h>
 
@@ -59,24 +59,24 @@ struct TryExecuteRunIfValid<Functor, Device, true>
       {
         return functor(Device());
       }
-      catch(vtkm::cont::ErrorControlBadAllocation e)
+      catch(vtkm::cont::ErrorBadAllocation e)
       {
-        std::cerr << "caught ErrorControlBadAllocation " << e.GetMessage() << std::endl;
+        std::cerr << "caught ErrorBadAllocation " << e.GetMessage() << std::endl;
         //currently we only consider OOM errors worth disabling a device for
         //than we fallback to another device
         tracker.ReportAllocationFailure(Device(), e);
       }
-      catch(vtkm::cont::ErrorControlBadType e)
+      catch(vtkm::cont::ErrorBadType e)
       {
         //should bad type errors should stop the execution, instead of
         //deferring to another device adapter?
-        std::cerr << "caught ErrorControlBadType : " << e.GetMessage() << std::endl;
+        std::cerr << "caught ErrorBadType : " << e.GetMessage() << std::endl;
       }
-      catch(vtkm::cont::ErrorControlBadValue e)
+      catch(vtkm::cont::ErrorBadValue e)
       {
         //should bad value errors should stop the filter, instead of deferring
         //to another device adapter?
-        std::cerr << "caught ErrorControlBadValue : " << e.GetMessage() << std::endl;
+        std::cerr << "caught ErrorBadValue : " << e.GetMessage() << std::endl;
       }
       catch(vtkm::cont::Error e)
       {

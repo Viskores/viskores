@@ -310,7 +310,7 @@ void RenderTriangles(MapperGL &mapper,
         msg = std::string(strInfoLog);
         delete [] strInfoLog;
       }
-      throw vtkm::cont::ErrorControlBadValue("Shader compile error:"+msg);
+      throw vtkm::cont::ErrorBadValue("Shader compile error:"+msg);
     }
 
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
@@ -333,7 +333,7 @@ void RenderTriangles(MapperGL &mapper,
         msg = std::string(strInfoLog);          
         delete [] strInfoLog;
       }
-      throw vtkm::cont::ErrorControlBadValue("Shader compile error:"+msg);
+      throw vtkm::cont::ErrorBadValue("Shader compile error:"+msg);
     }
 
     mapper.shader_programme = glCreateProgram();
@@ -353,7 +353,7 @@ void RenderTriangles(MapperGL &mapper,
         GLsizei len;
         glGetProgramInfoLog(mapper.shader_programme, 2048, &len, log);
         std::string msg = std::string("Shader program link failed: ")+std::string(log);
-        throw vtkm::cont::ErrorControlBadValue(msg);
+        throw vtkm::cont::ErrorBadValue(msg);
       }
     }
   }
@@ -471,7 +471,7 @@ void MapperGL::SetCanvas(vtkm::rendering::Canvas *c)
   {
     this->Canvas = dynamic_cast<vtkm::rendering::CanvasGL*>(c);
     if (this->Canvas == NULL)
-      throw vtkm::cont::ErrorControlBadValue("Bad canvas type for MapperGL. Must be CanvasGL");
+      throw vtkm::cont::ErrorBadValue("Bad canvas type for MapperGL. Must be CanvasGL");
   }
 }
 

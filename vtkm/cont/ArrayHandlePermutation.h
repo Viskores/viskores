@@ -23,8 +23,8 @@
 #define vtk_m_ArrayHandlePermutation_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ErrorControlBadType.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/ErrorBadValue.h>
 
 namespace vtkm {
 namespace exec {
@@ -153,13 +153,13 @@ public:
 
   VTKM_CONT
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandlePermutation cannot be allocated.");
   }
 
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandlePermutation cannot shrink.");
   }
 
@@ -234,7 +234,7 @@ public:
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
     if (numberOfValues != this->GetNumberOfValues()) {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "An ArrayHandlePermutation can be used as an output array, "
             "but it cannot be resized. Make sure the index array is sized "
             "to the appropriate length before trying to prepare for output.");
@@ -246,7 +246,7 @@ public:
     // we have to assume the allocation is correct.
     if ((numberOfValues > 0) && (this->ValueArray.GetNumberOfValues() < 1))
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "The value array must be pre-allocated before it is used for the "
             "output of ArrayHandlePermutation.");
     }
@@ -265,7 +265,7 @@ public:
 
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandlePermutation cannot shrink.");
   }
 

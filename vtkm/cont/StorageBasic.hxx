@@ -48,7 +48,7 @@ Storage<T, vtkm::cont::StorageTagBasic>::Storage(const Storage<T, StorageTagBasi
 {
   if (src.DeallocateOnRelease)
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Attempted to copy a storage array that needs deallocation. "
           "This is disallowed to prevent complications with deallocation.");
   }
@@ -60,7 +60,7 @@ Storage<T, vtkm::cont::StorageTagBasic>::operator=(const Storage<T, StorageTagBa
 {
   if (src.DeallocateOnRelease)
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Attempted to copy a storage array that needs deallocation. "
           "This is disallowed to prevent complications with deallocation.");
   }
@@ -108,7 +108,7 @@ void Storage<T, vtkm::cont::StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
 
   if(this->UserProvidedMemory)
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
       "User allocated arrays cannot be reallocated.");
   }
 
@@ -134,7 +134,7 @@ void Storage<T, vtkm::cont::StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
     this->Array = nullptr;
     this->NumberOfValues = 0;
     this->AllocatedSize = 0;
-    throw vtkm::cont::ErrorControlBadAllocation(
+    throw vtkm::cont::ErrorBadAllocation(
       "Could not allocate basic control array.");
   }
 
@@ -147,7 +147,7 @@ void Storage<T, vtkm::cont::StorageTagBasic>::Shrink(vtkm::Id numberOfValues)
 {
   if (numberOfValues > this->GetNumberOfValues())
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
       "Shrink method cannot be used to grow array.");
   }
 

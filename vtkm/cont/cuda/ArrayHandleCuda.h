@@ -23,8 +23,8 @@
 #define vtk_m_cont_cuda_ArrayHandleCuda_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ErrorControlBadType.h>
-#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/Storage.h>
 
 #ifdef VTKM_CUDA
@@ -83,14 +83,14 @@ public:
   VTKM_CONT
   ValueType Get(vtkm::Id index) const
   {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
       "ArrayHandleCuda only provides access to the device pointer.");
   }
 
   VTKM_CONT
   void Set(vtkm::Id vtkmNotUsed(index), T vtkmNotUsed(value)) const
   {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
       "ArrayHandleCuda only provides access to the device pointer.");
   }
 
@@ -155,7 +155,7 @@ public:
   void Allocate(vtkm::Id size)
   {
     if (!this->OwnsResources())
-      throw vtkm::cont::ErrorControlBadAllocation(
+      throw vtkm::cont::ErrorBadAllocation(
         "ArrayHandleCuda does not own its internal device memory.");
 
     if (NumberOfValues != 0)
@@ -178,7 +178,7 @@ public:
   void ReleaseResources()
   {
     if (!this->OwnsResources())
-      throw vtkm::cont::ErrorControlBadAllocation(
+      throw vtkm::cont::ErrorBadAllocation(
         "ArrayHandleCuda does not own its internal device memory.");
 
     if (this->NumberOfValues)

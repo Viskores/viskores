@@ -23,7 +23,7 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Storage.h>
 
 #include <vtkm/cont/internal/ArrayTransfer.h>
@@ -74,7 +74,7 @@ public:
   VTKM_CONT
   PortalType GetPortal()
   {
-    throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
+    throw vtkm::cont::ErrorBadValue("Implicit arrays are read-only.");
   }
   VTKM_CONT
   PortalConstType GetPortalConst() const
@@ -89,12 +89,12 @@ public:
   VTKM_CONT
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
+    throw vtkm::cont::ErrorBadValue("Implicit arrays are read-only.");
   }
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    throw vtkm::cont::ErrorControlBadValue("Implicit arrays are read-only.");
+    throw vtkm::cont::ErrorBadValue("Implicit arrays are read-only.");
   }
   VTKM_CONT
   void ReleaseResources()
@@ -138,20 +138,20 @@ public:
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Implicit arrays cannot be used for output or in place.");
   }
 
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Implicit arrays cannot be used for output.");
   }
   VTKM_CONT
   void RetrieveOutputData(StorageType *vtkmNotUsed(controlArray)) const
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Implicit arrays cannot be used for output.");
   }
 
@@ -169,7 +169,7 @@ public:
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    throw vtkm::cont::ErrorControlBadValue("Implicit arrays cannot be resized.");
+    throw vtkm::cont::ErrorBadValue("Implicit arrays cannot be resized.");
   }
 
   VTKM_CONT

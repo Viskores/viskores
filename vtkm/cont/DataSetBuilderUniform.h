@@ -161,7 +161,7 @@ private:
             dataSet.AddCellSet(cellSet);
         }
         else
-            throw vtkm::cont::ErrorControlBadValue("Invalid cell set dimension");
+            throw vtkm::cont::ErrorBadValue("Invalid cell set dimension");
 
         return dataSet;
     }

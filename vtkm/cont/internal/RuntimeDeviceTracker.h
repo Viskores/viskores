@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_internal_RuntimeDeviceTracker_h
 #define vtk_m_cont_internal_RuntimeDeviceTracker_h
 
-#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/DeviceAdapter.h>
 
@@ -67,7 +67,7 @@ public:
   template<typename DeviceAdapterTag>
   VTKM_CONT
   void ReportAllocationFailure(DeviceAdapterTag,
-                               const vtkm::cont::ErrorControlBadAllocation&)
+                               const vtkm::cont::ErrorBadAllocation&)
   {
     typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> Traits;
     this->RuntimeValid[ Traits::GetId() ] = false;

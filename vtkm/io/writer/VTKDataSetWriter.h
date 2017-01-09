@@ -26,8 +26,8 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/ErrorControlBadType.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/io/ErrorIO.h>
@@ -371,7 +371,7 @@ private:
       }
       else
       {
-        throw vtkm::cont::ErrorControlBadType(
+        throw vtkm::cont::ErrorBadType(
               "Could not determine type to write out.");
       }
 
@@ -399,14 +399,14 @@ public:
       }
       else
       {
-        throw vtkm::cont::ErrorControlBadValue(
+        throw vtkm::cont::ErrorBadValue(
               "Selected invalid cell set index.");
       }
     }
 
     if (dataSet.GetNumberOfCoordinateSystems() < 1)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "DataSet has no coordinate system, which is not supported by VTK file format.");
     }
 

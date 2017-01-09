@@ -96,7 +96,7 @@ void MapperVolume::SetCanvas(vtkm::rendering::Canvas *canvas)
     this->Internals->Canvas = dynamic_cast<CanvasRayTracer*>(canvas);
     if(this->Internals->Canvas == nullptr)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
         "Ray Tracer: bad canvas type. Must be CanvasRayTracer");
     }
   }
