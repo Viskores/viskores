@@ -1784,7 +1784,8 @@ private:
     for(vtkm::Id i=0; i < ARRAY_SIZE; ++i, ++c)
     {
       vtkm::Float64 value = temp.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(value == *c, "Got bad value (Copy)");
+      VTKM_TEST_ASSERT(value == static_cast<vtkm::Float64>(*c),
+                       "Got bad value (Copy)");
     }
 
   }

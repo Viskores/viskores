@@ -204,10 +204,14 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
       this->ComputeGradient(cellShape, pointIndexForCell, wCoords, field, gradient);
       }
 
+    using BaseGradientType = typename vtkm::exec::BaseComponentOf<ValueType>::type;
+    const BaseGradientType invNumCells =
+        static_cast<BaseGradientType>(1.) /
+        static_cast<BaseGradientType>(numCells);
     using OutValueType = typename FieldOutType::ComponentType;
-    outputField[0] = static_cast<OutValueType>(gradient[0] / numCells);
-    outputField[1] = static_cast<OutValueType>(gradient[1] / numCells);
-    outputField[2] = static_cast<OutValueType>(gradient[2] / numCells);
+    outputField[0] = static_cast<OutValueType>(gradient[0] * invNumCells);
+    outputField[1] = static_cast<OutValueType>(gradient[1] * invNumCells);
+    outputField[2] = static_cast<OutValueType>(gradient[2] * invNumCells);
   }
 
   template <typename FromIndexType,
