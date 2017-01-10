@@ -31,7 +31,8 @@
 /// CUDA errors. Will throw an ErrorControlCuda if there are.
 ///
 #define VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR() \
-  do { \
+  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK \
+  { \
     const cudaError_t vtkm_cuda_check_async_error = cudaGetLastError(); \
     if (vtkm_cuda_check_async_error != cudaSuccess) \
     { \
@@ -41,14 +42,16 @@
         __LINE__, \
         "Unchecked asycnronous error"); \
     } \
-  } while(false)
+  } \
+  VTKM_SWALLOW_SEMICOLON_POST_BLOCK
 
 /// A macro that can be wrapped around a CUDA command and will throw an
 /// ErrorControlCuda exception if the CUDA command fails.
 ///
 #define VTKM_CUDA_CALL(command) \
   VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR(); \
-  do { \
+  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK \
+  { \
     const cudaError_t vtkm_cuda_call_error = command; \
     if (vtkm_cuda_call_error != cudaSuccess) \
     { \
@@ -57,7 +60,8 @@
                                                  __LINE__, \
                                                  #command); \
     } \
-  } while(false)
+  } \
+  VTKM_SWALLOW_SEMICOLON_POST_BLOCK
 
 namespace vtkm {
 namespace cont {
