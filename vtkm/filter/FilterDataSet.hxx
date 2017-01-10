@@ -91,6 +91,9 @@ struct FilterDataSetPrepareForExecutionFunctor
     this->Result = this->Self->DoExecute(this->Input, this->Policy, Device());
     return this->Result.IsValid();
   }
+
+private:
+  void operator=(FilterDataSetPrepareForExecutionFunctor<Derived,DerivedPolicy> &); // Not implemented
 };
 } // namespace detail
 

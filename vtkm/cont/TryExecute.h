@@ -128,6 +128,9 @@ struct TryExecuteImpl
 
     return this->Success;
   }
+
+private:
+  void operator=(const TryExecuteImpl<FunctorType> &); // Not implemented
 };
 
 } // namespace detail

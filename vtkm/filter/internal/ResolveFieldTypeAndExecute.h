@@ -85,6 +85,10 @@ private:
                                                  tag );
       return this->Instance.Result.IsValid();
     }
+
+  private:
+    // Not implemented
+    void operator=(const ResolveFieldTypeAndExecuteForDevice<T,StorageTag>&);
   };
 
 public:
@@ -97,6 +101,10 @@ public:
                            this->Tracker,
                            typename DerivedPolicy::DeviceAdapterList());
   }
+
+private:
+  // Not implemented
+  void operator=(const ResolveFieldTypeAndExecute<Derived,DerivedPolicy,ResultType> &);
 };
 
 }
