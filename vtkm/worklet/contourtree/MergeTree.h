@@ -122,6 +122,8 @@
 //#define DEBUG_FUNCTION_ENTRY 1
 //#define DEBUG_TIMING 1
 
+using namespace std;
+
 namespace vtkm {
 namespace worklet {
 namespace contourtree {

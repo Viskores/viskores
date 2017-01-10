@@ -159,7 +159,7 @@ Mesh3D_DEM_Triangulation<T,StorageType,DeviceAdapter>::Mesh3D_DEM_Triangulation(
   
   // compute the number of log-jumping steps (i.e. lg_2 (nVertices))
   nLogSteps = 1;
-  for (signed long shifter = nVertices; shifter > 0; shifter >>= 1)
+  for (vtkm::Id shifter = nVertices; shifter > 0; shifter >>= 1)
     nLogSteps++;
 
   linkComponentCaseTable3D = 

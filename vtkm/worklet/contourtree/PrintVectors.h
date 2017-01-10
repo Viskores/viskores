@@ -72,7 +72,14 @@
 #include <string>
 #include <fstream>
 
+#include <vtkm/Types.h>
+#include <vtkm/cont/ArrayHandle.h>
+
 using namespace std;
+
+namespace vtkm {
+namespace worklet {
+namespace contourtree {
 
 // debug value for number of columns to print
 vtkm::Id printCols = 10;
@@ -226,5 +233,9 @@ void printLabelledBlock(string label, const vtkm::cont::ArrayHandle<T, StorageTy
 		} // per row
 	cout << endl;
 } // printLabelledBlock()
+
+}
+}
+}
 
 #endif

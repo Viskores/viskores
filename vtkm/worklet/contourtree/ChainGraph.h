@@ -92,7 +92,9 @@
 #include <vtkm/worklet/contourtree/SaddleAscentTransferrer.h>
 #include <vtkm/worklet/contourtree/TrunkBuilder.h>
 #include <vtkm/worklet/contourtree/JoinTreeTransferrer.h>
+
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 
 #define DEBUG_PRINT 1
 //#define DEBUG_FUNCTION_ENTRY 1
@@ -358,9 +360,6 @@ void ChainGraph<T,StorageType,DeviceAdapter>::TransferRegularPoints()
 		cout << "=======================" << endl;
 		cout << endl;
 #endif
-
-  vtkm::Id nActiveVertices = activeVertices.GetNumberOfValues();
-
   RegularPointTransferrer<T> regularPointTransferrer(isJoinGraph);
   vtkm::worklet::DispatcherMapField<RegularPointTransferrer<T> >
                  regularPointTransferrerDispatcher(regularPointTransferrer);
@@ -390,9 +389,6 @@ void ChainGraph<T,StorageType,DeviceAdapter>::CompactActiveVertices()
 #endif
   typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
   typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> PermuteIndexType;
-
-  // retrieve the logical number of vertices 
-  vtkm::Id nActiveVertices = activeVertices.GetNumberOfValues();
 
   // create a temporary array the same size
   vtkm::cont::ArrayHandle<vtkm::Id> newActiveVertices;

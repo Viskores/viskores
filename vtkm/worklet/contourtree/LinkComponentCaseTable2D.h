@@ -67,6 +67,7 @@
 #ifndef vtkm_worklet_contourtree_link_component_case_table_2d_h
 #define vtkm_worklet_contourtree_link_component_case_table_2d_h
 
+#include <vtkm/Types.h>
 #include <vtkm/worklet/contourtree/Mesh2D_DEM_Triangulation_Macros.h>
 
 namespace vtkm {

@@ -79,6 +79,9 @@
 #ifndef vtkm_worklet_contourtree_vertex_value_comparator_h
 #define vtkm_worklet_contourtree_vertex_value_comparator_h
 
+#include <vtkm/Types.h>
+#include <vtkm/internal/ExportMacros.h>
+
 namespace vtkm {
 namespace worklet {
 namespace contourtree {
@@ -89,10 +92,10 @@ class VertexValueComparator
 public:
   const InFieldPortalType& values;
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   VertexValueComparator(const InFieldPortalType& Values) : values(Values) {}
 
-  VTKM_EXEC_CONT
+  VTKM_EXEC
   bool operator () (const vtkm::Id &i, const vtkm::Id &j, bool ascending)
   {
     if (values.Get(i) < values.Get(j))

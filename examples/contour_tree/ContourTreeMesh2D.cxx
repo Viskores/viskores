@@ -64,8 +64,6 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization 
 //  (LDAV), October 2016, Baltimore, Maryland.
 
-// We first check if VTKM_DEVICE_ADAPTER is defined, so that when TBB and CUDA
-// includes this file we use the device adapter that they have set.
 #ifndef VTKM_DEVICE_ADAPTER
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif

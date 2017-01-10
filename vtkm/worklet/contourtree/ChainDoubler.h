@@ -83,6 +83,9 @@
 #ifndef vtkm_worklet_contourtree_chain_doubler_h
 #define vtkm_worklet_contourtree_chain_doubler_h
 
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/exec/ExecutionWholeArray.h>
+
 namespace vtkm {
 namespace worklet {
 namespace contourtree {

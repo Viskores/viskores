@@ -79,6 +79,8 @@
 #ifndef vtkm_worklet_contourtree_vertex_merge_comparator_h
 #define vtkm_worklet_contourtree_vertex_merge_comparator_h
 
+#include <vtkm/cont/ArrayHandle.h>
+
 namespace vtkm {
 namespace worklet {
 namespace contourtree {
@@ -103,14 +105,14 @@ public:
   IdPortalType extrema;
   bool isJoinTree;
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   VertexMergeComparator(ValuePortalType Values,
                         IdPortalType Extrema,
                         bool IsJoinTree)
 		: values(Values), extrema(Extrema), isJoinTree(IsJoinTree)
 		{}
 
-  VTKM_EXEC_CONT
+  VTKM_EXEC
   bool operator() (const vtkm::Id& i, const vtkm::Id& j) const
   {
     // retrieve the pseudo-extremum the vertex belongs to

@@ -82,6 +82,8 @@
 #ifndef vtkm_worklet_contourtree_edge_peak_comparator_h
 #define vtkm_worklet_contourtree_edge_peak_comparator_h
 
+#include <vtkm/cont/ArrayHandle.h>
+
 namespace vtkm {
 namespace worklet {
 namespace contourtree {
