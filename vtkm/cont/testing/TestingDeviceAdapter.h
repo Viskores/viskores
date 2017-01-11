@@ -657,7 +657,7 @@ private:
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
     for(std::size_t i=0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= OFFSET+(i % 50);
+      testData[i]= static_cast<vtkm::Id>(OFFSET+(i % 50));
     }
 
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(&(*testData.begin()), ARRAY_SIZE);
@@ -758,7 +758,7 @@ private:
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
     for(std::size_t i=0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= OFFSET+((ARRAY_SIZE-i) % 50);
+      testData[i]= static_cast<vtkm::Id>(OFFSET+((ARRAY_SIZE-i) % 50));
     }
 
     IdArrayHandle unsorted = vtkm::cont::make_ArrayHandle(testData);
@@ -783,7 +783,7 @@ private:
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
     for(std::size_t i=0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= OFFSET+((ARRAY_SIZE-i) % 50);
+      testData[i]= static_cast<vtkm::Id>(OFFSET+((ARRAY_SIZE-i) % 50));
     }
 
     //sort the users memory in-place
@@ -824,7 +824,7 @@ private:
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
     for(std::size_t i=0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= OFFSET+((ARRAY_SIZE-i) % 50);
+      testData[i]= static_cast<vtkm::Id>(OFFSET+((ARRAY_SIZE-i) % 50));
     }
 
     IdArrayHandle unsorted = vtkm::cont::make_ArrayHandle(testData);
@@ -947,7 +947,7 @@ private:
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
     for(std::size_t i=0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= OFFSET+(i % 50);
+      testData[i]= static_cast<vtkm::Id>(OFFSET+(i % 50));
     }
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
 
@@ -985,7 +985,7 @@ private:
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
     for(std::size_t i=0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= OFFSET+(i % 50);
+      testData[i]= static_cast<vtkm::Id>(OFFSET+(i % 50));
     }
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
 
@@ -1022,7 +1022,7 @@ private:
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
     for(std::size_t i=0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= OFFSET+(i % 50);
+      testData[i]= static_cast<vtkm::Id>(OFFSET+(i % 50));
     }
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
     Algorithm::Sort(input);
