@@ -48,8 +48,10 @@
 // sure when that we gracefully fall back to just const when using 2013
 #if defined(VTKM_MSVC) && _MSC_VER < 1900
 #define VTKM_CONSTEXPR const
+#define VTKM_NOEXCEPT
 #else
 #define VTKM_CONSTEXPR constexpr
+#define VTKM_NOEXCEPT noexcept
 #endif
 
 #define VTKM_OVERRIDE override
