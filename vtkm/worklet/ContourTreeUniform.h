@@ -111,17 +111,17 @@ public:
 
     // Build the mesh and fill in the values
     contourtree::Mesh2D_DEM_Triangulation<FieldType,StorageType,DeviceAdapter> 
-                                          mesh(fieldArray, device, nRows, nCols);
+                                          mesh(fieldArray, nRows, nCols, device);
 
     // Initialize the join tree so that all arcs point to maxima
     contourtree::MergeTree<FieldType,StorageType,DeviceAdapter> 
-                           joinTree(fieldArray, device, nRows, nCols, nSlices, JOIN);
+                           joinTree(fieldArray, nRows, nCols, nSlices, JOIN, device);
     mesh.SetStarts(joinTree.extrema, JOIN);
     joinTree.BuildRegularChains();
 
     // Create the active topology graph from the regular graph
     contourtree::ChainGraph<FieldType,StorageType,DeviceAdapter> 
-                           joinGraph(fieldArray, device, joinTree.extrema, JOIN);
+                           joinGraph(fieldArray, joinTree.extrema, JOIN, device);
     mesh.SetSaddleStarts(joinGraph, JOIN);
 
     // Call join graph to finish computation
@@ -129,13 +129,13 @@ public:
 
     // Initialize the split tree so that all arcs point to maxima
     contourtree::MergeTree<FieldType,StorageType,DeviceAdapter> 
-                           splitTree(fieldArray, device, nRows, nCols, nSlices, SPLIT);
+                           splitTree(fieldArray, nRows, nCols, nSlices, SPLIT, device);
     mesh.SetStarts(splitTree.extrema, SPLIT);
     splitTree.BuildRegularChains();
 
     // Create the active topology graph from the regular graph
     contourtree::ChainGraph<FieldType,StorageType,DeviceAdapter> 
-                           splitGraph(fieldArray, device, splitTree.extrema, SPLIT);
+                           splitGraph(fieldArray, splitTree.extrema, SPLIT, device);
     mesh.SetSaddleStarts(splitGraph, SPLIT);
 
     // Call split graph to finish computation
@@ -143,9 +143,10 @@ public:
 
     // Now compute the contour tree
     contourtree::ContourTree<FieldType,StorageType,DeviceAdapter> 
-                             contourTree(fieldArray, device,
+                             contourTree(fieldArray,
                                          joinTree, joinGraph,
-                                         splitTree, splitGraph);
+                                         splitTree, splitGraph,
+                                         device);
 
     contourTree.CollectSaddlePeak(saddlePeak);
   }
@@ -165,17 +166,17 @@ public:
   {
     // Build the mesh and fill in the values
     contourtree::Mesh3D_DEM_Triangulation<FieldType,StorageType,DeviceAdapter> 
-                                          mesh(fieldArray, device, nRows, nCols, nSlices);
+                                          mesh(fieldArray, nRows, nCols, nSlices, device);
 
     // Initialize the join tree so that all arcs point to maxima
     contourtree::MergeTree<FieldType,StorageType,DeviceAdapter> 
-                           joinTree(fieldArray, device, nRows, nCols, nSlices, JOIN_3D);
+                           joinTree(fieldArray, nRows, nCols, nSlices, JOIN_3D, device);
     mesh.SetStarts(joinTree.extrema, JOIN_3D);
     joinTree.BuildRegularChains();
 
     // Create the active topology graph from the regular graph
     contourtree::ChainGraph<FieldType,StorageType,DeviceAdapter> 
-                           joinGraph(fieldArray, device, joinTree.extrema, JOIN_3D);
+                           joinGraph(fieldArray, joinTree.extrema, JOIN_3D, device);
     mesh.SetSaddleStarts(joinGraph, JOIN_3D);
 
     // Call join graph to finish computation
@@ -183,13 +184,13 @@ public:
 
     // Initialize the split tree so that all arcs point to maxima
     contourtree::MergeTree<FieldType,StorageType,DeviceAdapter> 
-                           splitTree(fieldArray, device, nRows, nCols, nSlices, SPLIT_3D);
+                           splitTree(fieldArray, nRows, nCols, nSlices, SPLIT_3D, device);
     mesh.SetStarts(splitTree.extrema, SPLIT_3D);
     splitTree.BuildRegularChains();
 
     // Create the active topology graph from the regular graph
     contourtree::ChainGraph<FieldType,StorageType,DeviceAdapter> 
-                           splitGraph(fieldArray, device, splitTree.extrema, SPLIT_3D);
+                           splitGraph(fieldArray, splitTree.extrema, SPLIT_3D, device);
     mesh.SetSaddleStarts(splitGraph, SPLIT_3D);
 
     // Call split graph to finish computation
@@ -197,9 +198,10 @@ public:
 
     // Now compute the contour tree
     contourtree::ContourTree<FieldType,StorageType,DeviceAdapter> 
-                             contourTree(fieldArray, device,
+                             contourTree(fieldArray,
                                          joinTree, joinGraph,
-                                         splitTree, splitGraph);
+                                         splitTree, splitGraph,
+                                         device);
 
     contourTree.CollectSaddlePeak(saddlePeak);
   }

@@ -74,8 +74,13 @@ namespace vtkm {
 namespace worklet {
 namespace contourtree {
 
-const vtkm::IdComponent neighbourOffsets[N_INCIDENT_EDGES][2] = {
-    { 0, 1 }, { 1, 1 }, { 1, 0 }, { 0, -1 }, { -1, -1 }, { -1, 0 }
+const vtkm::IdComponent neighbourOffsets3D[N_INCIDENT_EDGES * 2] = {
+   0,  1,
+   1,  1,
+   1,  0,
+   0, -1,
+  -1, -1,
+  -1,  0
 };
 
 const vtkm::UInt8 linkComponentCaseTable[64] = {

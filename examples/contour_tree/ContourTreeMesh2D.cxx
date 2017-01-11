@@ -71,8 +71,9 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
-
 #include <vtkm/filter/ContourTreeUniform.h>
+
+#include <fstream>
 
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
@@ -87,7 +88,7 @@ int main(int argc, char* argv[])
   }
 
   // open input file
-  ifstream inFile(argv[1]);
+  std::ifstream inFile(argv[1]);
   if (inFile.bad()) return 0;
 
   // read size of mesh

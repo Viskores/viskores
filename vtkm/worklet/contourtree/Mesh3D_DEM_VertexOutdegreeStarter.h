@@ -105,18 +105,17 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4, _5);
   typedef _1   InputDomain;
 
-  typedef typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
+  typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template 
+    ExecutionTypes<DeviceAdapter>::PortalConst IdComponentPortalType;
+  typedef typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template 
+    ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
 
-  IdPortalType caseTable;    // (input) case table for neighbours
-  vtkm::Id nRows;            // (input) number of rows in 3D
-  vtkm::Id nCols;            // (input) number of cols in 3D
-  vtkm::Id nSlices;          // (input) number of cols in 3D
-  bool ascending;            // (input) ascending or descending (join or split tree)
-
-  const vtkm::IdComponent neighbourOffsets3D[N_INCIDENT_EDGES_3D][3] = {
-    { -1, -1, -1 }, { 0, -1, 0 }, { -1, -1, 0 }, { -1, 0, 0 }, { -1, 0, -1 }, { 0, 0, -1 }, { 0, -1, -1 },
-    { 0, 0, 1 }, { 0, 1, 0 }, { 0, 1, 1 }, { 1, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 }, { 1, 1, 1 }
-  };
+  IdComponentPortalType neighbourTable;    // (input) table for neighbour offsets
+  IdPortalType caseTable;                  // (input) case table for neighbours
+  vtkm::Id nRows;                          // (input) number of rows in 3D
+  vtkm::Id nCols;                          // (input) number of cols in 3D
+  vtkm::Id nSlices;                        // (input) number of cols in 3D
+  bool ascending;                          // (input) ascending or descending (join or split tree)
 
   // Constructor
   VTKM_EXEC_CONT
@@ -124,11 +123,13 @@ public:
                                     vtkm::Id NCols,
                                     vtkm::Id NSlices,
                                     bool Ascending,
+                                    IdComponentPortalType NeighbourTable, 
                                     IdPortalType CaseTable) : 
                                                       nRows(NRows),
                                                       nCols(NCols),
                                                       nSlices(NSlices),
                                                       ascending(Ascending),
+                                                      neighbourTable(NeighbourTable),
                                                       caseTable(CaseTable) {}
 
   //template<typename InFieldPortalType>
@@ -153,9 +154,10 @@ public:
     {
       if (caseTable.Get(nbrMask) & (1 << edgeNo))
       {
-        vtkm::Id nbrSlice = slice + neighbourOffsets3D[edgeNo][0];
-        vtkm::Id nbrRow   = row   + neighbourOffsets3D[edgeNo][1];
-        vtkm::Id nbrCol   = col   + neighbourOffsets3D[edgeNo][2];
+        vtkm::Id indx = edgeNo * 3;
+        vtkm::Id nbrSlice = slice + neighbourTable.Get(indx);
+        vtkm::Id nbrRow   = row   + neighbourTable.Get(indx + 1);
+        vtkm::Id nbrCol   = col   + neighbourTable.Get(indx + 2);
         vtkm::Id nbr = VERTEX_ID_3D(nbrSlice, nbrRow, nbrCol, nRows, nCols);
 
         farEnds[outDegree++] = arcArray.Get(nbr);

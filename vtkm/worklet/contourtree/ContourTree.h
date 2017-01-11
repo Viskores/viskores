@@ -177,9 +177,6 @@ public:
 	typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> PermuteIndexType;
 	typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, ValueArrayType> PermuteValueType;
 
-        // device
-        DeviceAdapter device;
-
 	// reference to the underlying data
 	const vtkm::cont::ArrayHandle<T,StorageType> values;
 
@@ -209,11 +206,11 @@ public:
 		
 	// contour tree constructor
 	ContourTree(const vtkm::cont::ArrayHandle<T,StorageType> &Values,
-                    DeviceAdapter Device,
                     MergeTree<T,StorageType,DeviceAdapter> &JoinTree,
                     ChainGraph<T,StorageType,DeviceAdapter> &JoinGraph,
                     MergeTree<T,StorageType,DeviceAdapter> &SplitTree,
-                    ChainGraph<T,StorageType,DeviceAdapter> &SplitGraph);
+                    ChainGraph<T,StorageType,DeviceAdapter> &SplitGraph,
+                    DeviceAdapter Device);
 
 	// routines for computing the contour tree
 	// combines the list of active vertices for join & split trees
@@ -283,13 +280,12 @@ public:
 template <typename T, typename StorageType, typename DeviceAdapter>
 ContourTree<T,StorageType,DeviceAdapter>::ContourTree(
                          const vtkm::cont::ArrayHandle<T,StorageType> &Values,
-                         DeviceAdapter Device,
                          MergeTree<T,StorageType,DeviceAdapter> &JoinTree,
                          ChainGraph<T,StorageType,DeviceAdapter> &JoinGraph,
                          MergeTree<T,StorageType,DeviceAdapter> &SplitTree,
-                         ChainGraph<T,StorageType,DeviceAdapter> &SplitGraph)
-	: 	values(Values),
-                device(Device),
+                         ChainGraph<T,StorageType,DeviceAdapter> &SplitGraph,
+                         DeviceAdapter Device)
+	:	values(Values),
 		joinTree(JoinTree), 
 		joinGraph(JoinGraph),
 		splitTree(SplitTree),
@@ -300,9 +296,6 @@ ContourTree<T,StorageType,DeviceAdapter>::ContourTree(
   // this will also set the degrees of the vertices initially
   FindSupernodes();
 
-  // set the active vertices to something greater than 0 for the loop
-  vtkm::Id nActiveVertices = supernodes.GetNumberOfValues();
-	
   // and track how many iterations it takes
   nIterations = 0;
 
@@ -912,8 +905,8 @@ void ContourTree<T,StorageType,DeviceAdapter>::CollectSaddlePeak(
 #ifdef DEBUG_PRINT
   for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
   {
-    std::cout << setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).first << " ";
-    std::cout << setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).second << std::endl;
+    std::cout << std::setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).first << " ";
+    std::cout << std::setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).second << std::endl;
   }
 #endif
 } // CollectSaddlePeak()
@@ -923,7 +916,7 @@ template <typename T, typename StorageType, typename DeviceAdapter>
 void ContourTree<T,StorageType,DeviceAdapter>::DebugPrint(const char *message)
 {
   std::cout << "---------------------------" << std::endl;
-  std::cout << string(message) << std::endl;
+  std::cout << std::string(message) << std::endl;
   std::cout << "---------------------------" << std::endl;
   std::cout << std::endl;
 

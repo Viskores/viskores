@@ -136,9 +136,6 @@ public:
 	// we will want a reference to the original data array
 	const vtkm::cont::ArrayHandle<T,StorageType> &values;
 
-        // device
-        DeviceAdapter device;
-	
 	// we will also want a reference to the arc array where we write the output
 	vtkm::cont::ArrayHandle<vtkm::Id> &arcArray;
 	
@@ -178,11 +175,10 @@ public:
 	
 	// constructor takes necessary references
 	ChainGraph(const vtkm::cont::ArrayHandle<T,StorageType> &Values,
-                   DeviceAdapter Device,
                    vtkm::cont::ArrayHandle<vtkm::Id> &ArcArray,
-                   bool IsJoinGraph) :
+                   bool IsJoinGraph,
+                   DeviceAdapter Device) :
                          values(Values),
-                         device(Device),
                          arcArray(ArcArray),
                          isJoinGraph(IsJoinGraph) {}
 
@@ -249,11 +245,11 @@ template<typename T, typename StorageType, typename DeviceAdapter>
 void ChainGraph<T,StorageType,DeviceAdapter>::Compute(vtkm::cont::ArrayHandle<vtkm::Id> &saddles)
 {
 #ifdef DEBUG_FUNCTION_ENTRY
-		cout << endl;
-		cout << "===================" << endl;
-		cout << "Compute Chain Graph" << endl;
-		cout << "===================" << endl;
-		cout << endl;
+		std::cout << std::endl;
+		std::cout << "===================" << std::endl;
+		std::cout << "Compute Chain Graph" << std::endl;
+		std::cout << "===================" << std::endl;
+		std::cout << std::endl;
 #endif
   DebugPrint("Chain Graph Computation Starting");
 
@@ -310,21 +306,21 @@ template<typename T, typename StorageType, typename DeviceAdapter>
 void ChainGraph<T,StorageType,DeviceAdapter>::FindGoverningSaddles()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
-		cout << endl;
-		cout << "======================" << endl;
-		cout << "Find Governing Saddles" << endl;
-		cout << "======================" << endl;
-		cout << endl;
+		std::cout << std::endl;
+		std::cout << "======================" << std::endl;
+		std::cout << "Find Governing Saddles" << std::endl;
+		std::cout << "======================" << std::endl;
+		std::cout << std::endl;
 #endif	
 
   // sort with the comparator
   DeviceAlgorithm::Sort(edgeSorter,
                         EdgePeakComparator<T,StorageType,DeviceAdapter>(
-                                           values.PrepareForInput(device),
-                                           valueIndex.PrepareForInput(device),
-                                           edgeFar.PrepareForInput(device),
-                                           edgeNear.PrepareForInput(device),
-                                           arcArray.PrepareForInput(device),
+                                           values.PrepareForInput(DeviceAdapter()),
+                                           valueIndex.PrepareForInput(DeviceAdapter()),
+                                           edgeFar.PrepareForInput(DeviceAdapter()),
+                                           edgeNear.PrepareForInput(DeviceAdapter()),
+                                           arcArray.PrepareForInput(DeviceAdapter()),
                                            isJoinGraph));
 
 #ifdef DEBUG_PRINT
@@ -354,11 +350,11 @@ template<typename T, typename StorageType, typename DeviceAdapter>
 void ChainGraph<T,StorageType,DeviceAdapter>::TransferRegularPoints()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
-		cout << endl;
-		cout << "=======================" << endl;
-		cout << "Transfer Regular Points" << endl;
-		cout << "=======================" << endl;
-		cout << endl;
+		std::cout << std::endl;
+		std::cout << "=======================" << std::endl;
+		std::cout << "Transfer Regular Points" << std::endl;
+		std::cout << "=======================" << std::endl;
+		std::cout << std::endl;
 #endif
   RegularPointTransferrer<T> regularPointTransferrer(isJoinGraph);
   vtkm::worklet::DispatcherMapField<RegularPointTransferrer<T> >
@@ -381,11 +377,11 @@ template<typename T, typename StorageType, typename DeviceAdapter>
 void ChainGraph<T,StorageType,DeviceAdapter>::CompactActiveVertices()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
-		cout << endl;
-		cout << "=======================" << endl;
-		cout << "Compact Active Vertices" << endl;
-		cout << "=======================" << endl;
-		cout << endl;
+		std::cout << std::endl;
+		std::cout << "=======================" << std::endl;
+		std::cout << "Compact Active Vertices" << std::endl;
+		std::cout << "=======================" << std::endl;
+		std::cout << std::endl;
 #endif
   typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
   typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> PermuteIndexType;
@@ -413,11 +409,11 @@ template<typename T, typename StorageType, typename DeviceAdapter>
 void ChainGraph<T,StorageType,DeviceAdapter>::CompactActiveEdges()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
-		cout << endl;
-		cout << "====================" << endl;
-		cout << "Compact Active Edges" << endl;
-		cout << "====================" << endl;
-		cout << endl;
+		std::cout << std::endl;
+		std::cout << "====================" << std::endl;
+		std::cout << "Compact Active Edges" << std::endl;
+		std::cout << "====================" << std::endl;
+		std::cout << std::endl;
 #endif
   // grab the size of the array for easier reference
   vtkm::Id nActiveVertices = activeVertices.GetNumberOfValues();
@@ -457,8 +453,8 @@ void ChainGraph<T,StorageType,DeviceAdapter>::CompactActiveEdges()
   // WARNING: Using chainMaximum, edgeHigh, firstEdge, updegree for I/O in parallel loop
   // See functor description for algorithmic justification of safety
   ActiveEdgeTransferrer<DeviceAdapter> activeEdgeTransferrer(
-                                       activeEdges.PrepareForInput(device),
-                                       prunesTo.PrepareForInput(device));
+                                       activeEdges.PrepareForInput(DeviceAdapter()),
+                                       prunesTo.PrepareForInput(DeviceAdapter()));
   vtkm::worklet::DispatcherMapField<ActiveEdgeTransferrer<DeviceAdapter> > 
                  activeEdgeTransferrerDispatcher(activeEdgeTransferrer);
 
@@ -484,11 +480,11 @@ template<typename T, typename StorageType, typename DeviceAdapter>
 void ChainGraph<T,StorageType,DeviceAdapter>::BuildChains()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
-		cout << endl;
-		cout << "============" << endl;
-		cout << "Build Chains" << endl;
-		cout << "============" << endl;
-		cout << endl;
+		std::cout << std::endl;
+		std::cout << "============" << std::endl;
+		std::cout << "Build Chains" << std::endl;
+		std::cout << "============" << std::endl;
+		std::cout << std::endl;
 #endif
   // a temporary array the full size of the graph
   vtkm::cont::ArrayHandle<vtkm::Id> tempChainExtremum;
@@ -522,11 +518,11 @@ template<typename T, typename StorageType, typename DeviceAdapter>
 void ChainGraph<T,StorageType,DeviceAdapter>::TransferSaddleStarts()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
-		cout << endl;
-		cout << "=======================" << endl;
-		cout << DEBUG_STRING_TRANSFER_SADDLE_STARTS << endl;
-		cout << "=======================" << endl;
-		cout << endl;
+		std::cout << std::endl;
+		std::cout << "=======================" << std::endl;
+		std::cout << DEBUG_STRING_TRANSFER_SADDLE_STARTS << std::endl;
+		std::cout << "=======================" << std::endl;
+		std::cout << std::endl;
 #endif
 
   // grab the size of the array for easier reference
@@ -584,11 +580,11 @@ template<typename T, typename StorageType, typename DeviceAdapter>
 void ChainGraph<T,StorageType,DeviceAdapter>::BuildTrunk()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
-		cout << endl;
-		cout << "===========" << endl;
-		cout << "Build Trunk" << endl;
-		cout << "============" << endl;
-		cout << endl;
+		std::cout << std::endl;
+		std::cout << "===========" << std::endl;
+		std::cout << "Build Trunk" << std::endl;
+		std::cout << "============" << std::endl;
+		std::cout << std::endl;
 #endif
 
   TrunkBuilder trunkBuilder;
@@ -608,11 +604,11 @@ template<typename T, typename StorageType, typename DeviceAdapter>
 void ChainGraph<T,StorageType,DeviceAdapter>::TransferToMergeTree(vtkm::cont::ArrayHandle<vtkm::Id> &saddles)
 {
 #ifdef DEBUG_FUNCTION_ENTRY
-		cout << endl;
-		cout << "=====================" << endl;
-		cout << DEBUG_STRING_TRANSFER_TO_MERGE_TREE << endl;
-		cout << "=====================" << endl;
-		cout << endl;
+		std::cout << std::endl;
+		std::cout << "=====================" << std::endl;
+		std::cout << DEBUG_STRING_TRANSFER_TO_MERGE_TREE << std::endl;
+		std::cout << "=====================" << std::endl;
+		std::cout << std::endl;
 #endif
 
   // first allocate memory for the target array
@@ -639,7 +635,7 @@ template<typename T, typename StorageType, typename DeviceAdapter>
 void ChainGraph<T,StorageType,DeviceAdapter>::DebugPrint(const char *message)
 {
   std::cout << "---------------------------" << std::endl;
-  std::cout << string(message) << std::endl;
+  std::cout << std::string(message) << std::endl;
   std::cout << "---------------------------" << std::endl;
   std::cout << std::endl;
 
@@ -661,7 +657,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::DebugPrint(const char *message)
   printIndices("Outdegree", outdegree);
   printIndices("Chain Ext", chainExtremum);
   printIndices("Prunes To", prunesTo);
-  std::cout << endl;
+  std::cout << std::endl;
 
   // Active Vertex Arrays
   vtkm::Id nActiveVertices = activeVertices.GetNumberOfValues();
@@ -684,7 +680,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::DebugPrint(const char *message)
     printIndices("Active Chain Ext", tempIndex);
     DeviceAlgorithm::Copy(PermuteIndexType(activeVertices, prunesTo), tempIndex);
     printIndices("Active Prunes To", tempIndex);
-    std::cout << endl;
+    std::cout << std::endl;
   }
 
   // Full Edge Arrays
@@ -730,7 +726,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::DebugPrint(const char *message)
     printIndices("Edge Near Index", activeNearLookup);
     DeviceAlgorithm::Copy(PermuteValueType(activeNearLookup, values), activeNearValues);
     printValues("Edge Near Value", activeNearValues);
-    std::cout << endl;
+    std::cout << std::endl;
   }
 
   // Edge Sorter Array
@@ -750,11 +746,11 @@ void ChainGraph<T,StorageType,DeviceAdapter>::DebugPrint(const char *message)
     printIndices("Sorted Far", tempSortIndex);
     DeviceAlgorithm::Copy(PermuteValueType(edgeSorter, nearValues), tempSortValue);
     printValues("Sorted Near Value", tempSortValue);
-    std::cout << endl;
+    std::cout << std::endl;
   }
 
   std::cout << "---------------------------" << std::endl;
-  std::cout << endl;
+  std::cout << std::endl;
 } // DebugPrint()
 
 }

@@ -75,8 +75,6 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 
-using namespace std;
-
 namespace vtkm {
 namespace worklet {
 namespace contourtree {
@@ -87,14 +85,11 @@ vtkm::Id printCols = 10;
 #define PRINT_WIDTH 12
 #define PREFIX_WIDTH 20
 
-// debug value for number of columns to print
-extern vtkm::Id printCols;
-
 // utility routine to convert number to a string
-string NumString(vtkm::Id number);
+std::string NumString(vtkm::Id number);
 
 // base routines for printing label & prefix bars
-void printLabel(string label);
+void printLabel(std::string label);
 void printSeparatingBar(vtkm::Id howMany);
 
 // routines to print out a single value
@@ -107,60 +102,60 @@ void printHeader(vtkm::Id howMany);
 
 // base routines for reading & writing host vectors
 template<typename T, typename StorageType>
-void printValues(string label, vtkm::cont::ArrayHandle<T,StorageType> &dVec, vtkm::Id nValues = -1);
-void printIndices(string label, vtkm::cont::ArrayHandle<vtkm::Id> &iVec, vtkm::Id nIndices = -1);
+void printValues(std::string label, vtkm::cont::ArrayHandle<T,StorageType> &dVec, vtkm::Id nValues = -1);
+void printIndices(std::string label, vtkm::cont::ArrayHandle<vtkm::Id> &iVec, vtkm::Id nIndices = -1);
 
 // routines for printing indices & data in blocks
 template<typename T, typename StorageType>
-void printLabelledBlock(string label, const vtkm::cont::ArrayHandle<T, StorageType> &dVec, vtkm::Id nRows, vtkm::Id nColumns);
+void printLabelledBlock(std::string label, const vtkm::cont::ArrayHandle<T, StorageType> &dVec, vtkm::Id nRows, vtkm::Id nColumns);
 
 // utility routine to convert number to a string
-string NumString(vtkm::Id number)
+std::string NumString(vtkm::Id number)
 	{ // NumString()
 	char strBuf[20];
 	sprintf(strBuf, "%1d", (int) number);
-	return string(strBuf);
+	return std::string(strBuf);
 	} // NumString()
 
 // base routines for printing label & prefix bars
-void printLabel(string label)
+void printLabel(std::string label)
 	{ // printLabel()
 	// print out the front end
-	cout << setw(PREFIX_WIDTH) << left << label;
+	std::cout << std::setw(PREFIX_WIDTH) << std::left << label;
 	// print out the vertical line
-	cout << right << "|";
+	std::cout << std::right << "|";
 	} // printLabel()
 	
 void printSeparatingBar(vtkm::Id howMany)
 	{ // printSeparatingBar()
 	// print out the front end
-	cout << setw(PREFIX_WIDTH) << setfill('-') << "";
+	std::cout << std::setw(PREFIX_WIDTH) << std::setfill('-') << "";
 	// now the + at the vertical line
-	cout << "+";
+	std::cout << "+";
 	// now print out the tail end - fixed number of spaces per entry
 	for (vtkm::Id block = 0; block < howMany; block++)
-		cout << setw(PRINT_WIDTH) << setfill('-') << "";
+		std::cout << std::setw(PRINT_WIDTH) << std::setfill('-') << "";
 	// now the endl, resetting the fill character
-	cout << setfill(' ') << endl;
+	std::cout << std::setfill(' ') << std::endl;
 	} // printSeparatingBar()
 
 // routine to print out a single value
 template<typename T>
 void printDataType(T value)
 	{ // printDataType
-	cout << setw(PRINT_WIDTH) << value;
+	std::cout << std::setw(PRINT_WIDTH) << value;
 	} // printDataType
 
 // routine to print out a single value
 void printIndexType(vtkm::Id value)
 	{ // printIndexType
-	cout << setw(PRINT_WIDTH) << value;
+	std::cout << std::setw(PRINT_WIDTH) << value;
 	} // printIndexType
 
 // header line 
 void printHeader(vtkm::Id howMany)
 	{ // printHeader()
-	if (howMany > 16) howMany = 16;
+	if (howMany > printCols) howMany = printCols;
 	// print out a separating bar
 	printSeparatingBar(howMany);
 	// print out a label
@@ -169,19 +164,19 @@ void printHeader(vtkm::Id howMany)
 	for (vtkm::Id entry = 0; entry < howMany; entry++)
 		printIndexType(entry);
 	// and an endl
-	cout << endl;
+	std::cout << std::endl;
 	// print out another separating bar
 	printSeparatingBar(howMany);
 	} // printHeader()
 
 // base routines for reading & writing host vectors
 template<typename T, typename StorageType>
-void printValues(string label, vtkm::cont::ArrayHandle<T,StorageType> &dVec, vtkm::Id nValues)
+void printValues(std::string label, vtkm::cont::ArrayHandle<T,StorageType> &dVec, vtkm::Id nValues)
 {
 	// -1 means full size
 	if (nValues == -1)
 		nValues = dVec.GetNumberOfValues();
-	if (nValues > 16) nValues = 16;
+	if (nValues > printCols) nValues = printCols;
 	
 	// print the label
 	printLabel(label);
@@ -195,13 +190,13 @@ void printValues(string label, vtkm::cont::ArrayHandle<T,StorageType> &dVec, vtk
 } // printValues()
 
 // base routines for reading & writing host vectors
-void printIndices(string label, vtkm::cont::ArrayHandle<vtkm::Id> &iVec, vtkm::Id nIndices)
+void printIndices(std::string label, vtkm::cont::ArrayHandle<vtkm::Id> &iVec, vtkm::Id nIndices)
 {
 	// -1 means full size
 	if (nIndices == -1)
 		nIndices = iVec.GetNumberOfValues();
 
-	if (nIndices > 16) nIndices = 16;
+	if (nIndices > printCols) nIndices = printCols;
 	
 	// print the label
 	printLabel(label);
@@ -215,8 +210,11 @@ void printIndices(string label, vtkm::cont::ArrayHandle<vtkm::Id> &iVec, vtkm::I
 } // printIndices()
 
 template<typename T, typename StorageType>
-void printLabelledBlock(string label, const vtkm::cont::ArrayHandle<T, StorageType> &dVec, vtkm::Id nRows, vtkm::Id nColumns)
+void printLabelledBlock(std::string label, const vtkm::cont::ArrayHandle<T, StorageType> &dVec, vtkm::Id nRows, vtkm::Id nColumns)
 {
+	if (nRows > printCols) nRows = printCols;
+	if (nColumns > printCols) nColumns = printCols;
+
 	// start with a header
 	printHeader(nColumns);	
 	// loop control variable
@@ -229,9 +227,9 @@ void printLabelledBlock(string label, const vtkm::cont::ArrayHandle<T, StorageTy
 		for (vtkm::Id col = 0; col < nColumns; col++, entry++) {
 			printDataType(dVec.GetPortalConstControl().Get(entry));
                 }
-		cout << endl;
+		std::cout << std::endl;
 		} // per row
-	cout << endl;
+	std::cout << std::endl;
 } // printLabelledBlock()
 
 }

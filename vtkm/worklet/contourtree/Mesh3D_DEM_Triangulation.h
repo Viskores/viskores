@@ -116,21 +116,19 @@ public:
   // original data array
   const vtkm::cont::ArrayHandle<T,StorageType> &values;
 
-  // device
-  DeviceAdapter device;
-
   // array with neighbourhood masks
   vtkm::cont::ArrayHandle<vtkm::Id> neighbourhoodMask;
 
   // case table information for finding neighbours
   vtkm::cont::ArrayHandle<vtkm::UInt16> linkComponentCaseTable3D;
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> neighbourOffsets3D;
 	
   // constructor
   Mesh3D_DEM_Triangulation(const vtkm::cont::ArrayHandle<T,StorageType> &Values,
-                           DeviceAdapter Device,
                            vtkm::Id NRows,
                            vtkm::Id NCols,
-                           vtkm::Id NSlices);
+                           vtkm::Id NSlices,
+                           DeviceAdapter Device);
 
   // sets all vertices to point along an outgoing edge (except extrema)
   void SetStarts(vtkm::cont::ArrayHandle<vtkm::Id> &chains,
@@ -144,15 +142,15 @@ public:
 template<typename T, typename StorageType, typename DeviceAdapter>
 Mesh3D_DEM_Triangulation<T,StorageType,DeviceAdapter>::Mesh3D_DEM_Triangulation(
                            const vtkm::cont::ArrayHandle<T,StorageType> &Values,
-                           DeviceAdapter Device,
                            vtkm::Id NRows,
                            vtkm::Id NCols,
-                           vtkm::Id NSlices) :
+                           vtkm::Id NSlices,
+                           DeviceAdapter Device) :
                                values(Values),
-                               device(Device),
                                nRows(NRows),
                                nCols(NCols),
                                nSlices(NSlices),
+                               neighbourOffsets3D(),
                                linkComponentCaseTable3D()
 {
   nVertices = nRows * nCols * nSlices;
@@ -162,6 +160,8 @@ Mesh3D_DEM_Triangulation<T,StorageType,DeviceAdapter>::Mesh3D_DEM_Triangulation(
   for (vtkm::Id shifter = nVertices; shifter > 0; shifter >>= 1)
     nLogSteps++;
 
+  neighbourOffsets3D = 
+       vtkm::cont::make_ArrayHandle(vtkm::worklet::contourtree::neighbourOffsets3D, 42);
   linkComponentCaseTable3D = 
        vtkm::cont::make_ArrayHandle(vtkm::worklet::contourtree::linkComponentCaseTable3D, 16384);
 }
@@ -199,7 +199,6 @@ void Mesh3D_DEM_Triangulation<T,StorageType,DeviceAdapter>::SetSaddleStarts(Chai
   inverseIndex.Allocate(nVertices);
   isCritical.Allocate(nVertices);
   outdegree.Allocate(nVertices);
-cout << "SetSaddleStarts nVertices " << nVertices << endl;
 
   vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
   Mesh3D_DEM_VertexOutdegreeStarter<DeviceAdapter> 
@@ -207,7 +206,8 @@ cout << "SetSaddleStarts nVertices " << nVertices << endl;
                                     nCols, 
                                     nSlices, 
                                     ascending,
-                                    linkComponentCaseTable3D.PrepareForInput(device));
+                                    neighbourOffsets3D.PrepareForInput(DeviceAdapter()),
+                                    linkComponentCaseTable3D.PrepareForInput(DeviceAdapter()));
   vtkm::worklet::DispatcherMapField<Mesh3D_DEM_VertexOutdegreeStarter<DeviceAdapter> > 
                  vertexOutdegreeStarterDispatcher(vertexOutdegreeStarter); 
 
@@ -222,9 +222,6 @@ cout << "SetSaddleStarts nVertices " << nVertices << endl;
   // now we can compute how many critical points we carry forward
   vtkm::Id nCriticalPoints = inverseIndex.GetPortalConstControl().Get(nVertices-1) +
                              isCritical.GetPortalConstControl().Get(nVertices-1);
-cout << "SetSaddleStarts inverseIndex last vert " << inverseIndex.GetPortalConstControl().Get(nVertices-1) << endl;
-cout << "SetSaddleStarts isCritical last vert " << isCritical.GetPortalConstControl().Get(nVertices-1) << endl;
-cout << "SetSaddleStarts nCriticalPoints " << nCriticalPoints << endl;
 
   // allocate space for the join graph vertex arrays
   mergeGraph.AllocateVertexArrays(nCriticalPoints);
@@ -269,7 +266,8 @@ cout << "SetSaddleStarts nCriticalPoints " << nCriticalPoints << endl;
                            nCols,                     // input
                            nSlices,                   // input
                            ascending,                 // input
-                           linkComponentCaseTable3D.PrepareForInput(device));
+                           neighbourOffsets3D.PrepareForInput(DeviceAdapter()),
+                           linkComponentCaseTable3D.PrepareForInput(DeviceAdapter()));
   vtkm::worklet::DispatcherMapField<Mesh3D_DEM_SaddleStarter<DeviceAdapter> > 
                  saddleStarterDispatcher(saddleStarter); 
 
