@@ -256,6 +256,9 @@ struct BindLeftBinaryOp
     return static_cast<ReturnT>(this->BinaryOp(this->LeftValue,
                                                static_cast<T>(rightValue)));
   }
+
+private:
+  void operator=(const BindLeftBinaryOp<T,BinaryOpType,ReturnT> &); // Not implemented
 };
 
 template<typename T, typename BinaryOpType, typename ReturnT = T>
@@ -275,6 +278,9 @@ struct BindRightBinaryOp
     return static_cast<ReturnT>(this->BinaryOp(static_cast<T>(leftValue),
                                                this->RightValue));
   }
+
+private:
+  void operator=(const BindRightBinaryOp<T,BinaryOpType,ReturnT> &); // Not implemented
 };
 
 } // namespace internal

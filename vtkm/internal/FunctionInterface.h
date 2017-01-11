@@ -848,6 +848,9 @@ private:
   vtkm::internal::FunctionInterface<NewFunction> &NewInterface;
   const TransformFunctor &Transform;
   const FinishFunctor &Finish;
+
+  // Not implemented
+  void operator=(const FunctionInterfaceDynamicTransformContContinue<OriginalFunction,NewFunction,TransformFunctor,FinishFunctor> &);
 };
 
 } // namespace detail

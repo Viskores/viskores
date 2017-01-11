@@ -326,6 +326,9 @@ private:
   const vtkm::Float64 Isovalue;
   const bool GenerateNormals;
   EdgeWeightGenerateMetaData<ScalarType, NormalStorageType, DeviceAdapter> MetaData;
+
+  // Not implemented
+  void operator=(const EdgeWeightGenerate<ScalarType,NormalStorageType,DeviceAdapter> &);
 };
 
 
