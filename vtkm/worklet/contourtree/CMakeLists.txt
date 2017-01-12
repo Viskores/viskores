@@ -48,7 +48,6 @@ set(headers
   Mesh3D_DEM_Triangulation_Macros.h
   Mesh3D_DEM_VertexOutdegreeStarter.h
   Mesh3D_DEM_VertexStarter.h
-  PrintVectors.h
   RegularPointTransferrer.h
   RegularToCandidate.h
   RegularToCriticalDown.h

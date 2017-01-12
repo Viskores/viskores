@@ -66,12 +66,12 @@
 
 #include <vtkm/filter/ContourTreeUniform.h>
 
-#include <vtkm/cont/testing/MakeFilterDataSet.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace {
 
-using vtkm::cont::testing::MakeFilterDataSet;
+using vtkm::cont::testing::MakeTestDataSet;
 
 class TestContourTreeUniform
 {
@@ -84,7 +84,7 @@ public:
     std::cout << "Testing ContourTree_Mesh2D Filter" << std::endl;
   
     // Create the input uniform cell set with values to contour
-    vtkm::cont::DataSet inDataSet = MakeFilterDataSet().Make2DUniformFilterDataSet();
+    vtkm::cont::DataSet inDataSet = MakeTestDataSet().Make2DUniformDataSet1();
   
     // Output data set is pairs of saddle and peak vertex IDs
     vtkm::filter::ResultField result;
@@ -123,7 +123,7 @@ public:
     std::cout << "Testing ContourTree_Mesh3D Filter" << std::endl;
   
     // Create the input uniform cell set with values to contour
-    vtkm::cont::DataSet inDataSet = MakeFilterDataSet().Make3DUniformFilterDataSet();
+    vtkm::cont::DataSet inDataSet = MakeTestDataSet().Make3DUniformDataSet1();
   
     // Output data set is pairs of saddle and peak vertex IDs
     vtkm::filter::ResultField result;

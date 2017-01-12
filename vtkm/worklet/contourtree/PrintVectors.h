@@ -64,8 +64,8 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization 
 //  (LDAV), October 2016, Baltimore, Maryland.
 
-#ifndef vtkm_filter_print_vector
-#define vtkm_filter_print_vector
+#ifndef vtkm_worklet_contourtree_print_vector_h
+#define vtkm_worklet_contourtree_print_vector_h
 
 #include <iostream>
 #include <iomanip>

@@ -20,7 +20,6 @@
 
 set(headers
   ExplicitTestData.h
-  MakeFilterDataSet.h
   MakeTestDataSet.h
   Testing.h
   TestingArrayHandles.h

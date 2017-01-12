@@ -66,12 +66,12 @@
 
 #include <vtkm/worklet/ContourTreeUniform.h>
 
-#include <vtkm/cont/testing/MakeFilterDataSet.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace {
 
-using vtkm::cont::testing::MakeFilterDataSet;
+using vtkm::cont::testing::MakeTestDataSet;
 
 template <typename DeviceAdapter>
 class TestContourTreeUniform
@@ -85,7 +85,7 @@ public:
     std::cout << "Testing ContourTree_Mesh2D Filter" << std::endl;
   
     // Create the input uniform cell set with values to contour
-    vtkm::cont::DataSet dataSet = MakeFilterDataSet().Make2DUniformFilterDataSet();
+    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
   
     vtkm::cont::CellSetStructured<2> cellSet;
     dataSet.GetCellSet().CopyTo(cellSet);
@@ -135,7 +135,7 @@ public:
     std::cout << "Testing ContourTree_Mesh3D Filter" << std::endl;
   
     // Create the input uniform cell set with values to contour
-    vtkm::cont::DataSet dataSet = MakeFilterDataSet().Make3DUniformFilterDataSet();
+    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
   
     vtkm::cont::CellSetStructured<3> cellSet;
     dataSet.GetCellSet().CopyTo(cellSet);

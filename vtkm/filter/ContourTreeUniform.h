@@ -78,6 +78,7 @@ public:
   VTKM_CONT
   ContourTreeMesh2D();
 
+  // Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT
   vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet &input,
@@ -100,6 +101,7 @@ public:
   VTKM_CONT
   ContourTreeMesh3D();
 
+  // Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT
   vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet &input,
