@@ -107,6 +107,9 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id> > &saddlePeak,
            const DeviceAdapter& device)
   {
+    // DeviceAdapter is passed only to be available in template but is not used
+    (void) device;
+
     vtkm::Id nSlices = 1;
 
     // Build the mesh and fill in the values
@@ -163,6 +166,9 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id> > &saddlePeak,
            const DeviceAdapter& device)
   {
+    // DeviceAdapter is passed only to be available in template but is not used
+    (void) device;
+
     // Build the mesh and fill in the values
     contourtree::Mesh3D_DEM_Triangulation<FieldType,StorageType,DeviceAdapter> 
                                           mesh(fieldArray, nRows, nCols, nSlices);
