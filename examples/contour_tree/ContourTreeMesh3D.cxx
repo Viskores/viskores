@@ -124,7 +124,3 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic pop
-#endif

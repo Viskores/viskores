@@ -80,8 +80,7 @@ namespace worklet {
 namespace contourtree {
 
 // debug value for number of columns to print
-vtkm::Id printCols = 10;
-
+#define PRINT_COLS 10
 #define PRINT_WIDTH 12
 #define PREFIX_WIDTH 20
 
@@ -155,7 +154,7 @@ inline void printIndexType(vtkm::Id value)
 // header line 
 inline void printHeader(vtkm::Id howMany)
 	{ // printHeader()
-	if (howMany > printCols) howMany = printCols;
+	if (howMany > PRINT_COLS) howMany = PRINT_COLS;
 	// print out a separating bar
 	printSeparatingBar(howMany);
 	// print out a label
@@ -176,7 +175,7 @@ void printValues(std::string label, vtkm::cont::ArrayHandle<T,StorageType> &dVec
 	// -1 means full size
 	if (nValues == -1)
 		nValues = dVec.GetNumberOfValues();
-	if (nValues > printCols) nValues = printCols;
+	if (nValues > PRINT_COLS) nValues = PRINT_COLS;
 	
 	// print the label
 	printLabel(label);
@@ -196,7 +195,7 @@ inline void printIndices(std::string label, vtkm::cont::ArrayHandle<vtkm::Id> &i
 	if (nIndices == -1)
 		nIndices = iVec.GetNumberOfValues();
 
-	if (nIndices > printCols) nIndices = printCols;
+	if (nIndices > PRINT_COLS) nIndices = PRINT_COLS;
 	
 	// print the label
 	printLabel(label);
@@ -212,8 +211,8 @@ inline void printIndices(std::string label, vtkm::cont::ArrayHandle<vtkm::Id> &i
 template<typename T, typename StorageType>
 void printLabelledBlock(std::string label, const vtkm::cont::ArrayHandle<T, StorageType> &dVec, vtkm::Id nRows, vtkm::Id nColumns)
 {
-	if (nRows > printCols) nRows = printCols;
-	if (nColumns > printCols) nColumns = printCols;
+	if (nRows > PRINT_COLS) nRows = PRINT_COLS;
+	if (nColumns > PRINT_COLS) nColumns = PRINT_COLS;
 
 	// start with a header
 	printHeader(nColumns);	

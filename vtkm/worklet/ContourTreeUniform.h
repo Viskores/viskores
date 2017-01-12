@@ -101,11 +101,11 @@ class ContourTreeMesh2D
 public:
 
   template<typename FieldType, typename StorageType, typename DeviceAdapter>
-  void Run(vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
-           vtkm::Id nRows,
-           vtkm::Id nCols,
+  void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
+           const vtkm::Id nRows,
+           const vtkm::Id nCols,
            vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id> > &saddlePeak,
-           DeviceAdapter device)
+           const DeviceAdapter& device)
   {
     vtkm::Id nSlices = 1;
 
@@ -156,12 +156,12 @@ class ContourTreeMesh3D
 public:
 
   template<typename FieldType, typename StorageType, typename DeviceAdapter>
-  void Run(vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
-           vtkm::Id nRows,
-           vtkm::Id nCols,
-           vtkm::Id nSlices,
+  void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
+           const vtkm::Id nRows,
+           const vtkm::Id nCols,
+           const vtkm::Id nSlices,
            vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id> > &saddlePeak,
-           DeviceAdapter device)
+           const DeviceAdapter& device)
   {
     // Build the mesh and fill in the values
     contourtree::Mesh3D_DEM_Triangulation<FieldType,StorageType,DeviceAdapter> 
