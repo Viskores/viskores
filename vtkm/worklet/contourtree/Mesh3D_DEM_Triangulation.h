@@ -110,25 +110,24 @@ class Mesh3D_DEM_Triangulation
 public:
   typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
-  // size of the mesh
-  vtkm::Id nRows, nCols, nSlices, nVertices, nLogSteps;
-
   // original data array
   const vtkm::cont::ArrayHandle<T,StorageType> &values;
+
+  // size of the mesh
+  vtkm::Id nRows, nCols, nSlices, nVertices, nLogSteps;
 
   // array with neighbourhood masks
   vtkm::cont::ArrayHandle<vtkm::Id> neighbourhoodMask;
 
   // case table information for finding neighbours
-  vtkm::cont::ArrayHandle<vtkm::UInt16> linkComponentCaseTable3D;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> neighbourOffsets3D;
+  vtkm::cont::ArrayHandle<vtkm::UInt16> linkComponentCaseTable3D;
 	
   // constructor
   Mesh3D_DEM_Triangulation(const vtkm::cont::ArrayHandle<T,StorageType> &Values,
                            vtkm::Id NRows,
                            vtkm::Id NCols,
-                           vtkm::Id NSlices,
-                           DeviceAdapter Device);
+                           vtkm::Id NSlices);
 
   // sets all vertices to point along an outgoing edge (except extrema)
   void SetStarts(vtkm::cont::ArrayHandle<vtkm::Id> &chains,
@@ -144,8 +143,7 @@ Mesh3D_DEM_Triangulation<T,StorageType,DeviceAdapter>::Mesh3D_DEM_Triangulation(
                            const vtkm::cont::ArrayHandle<T,StorageType> &Values,
                            vtkm::Id NRows,
                            vtkm::Id NCols,
-                           vtkm::Id NSlices,
-                           DeviceAdapter Device) :
+                           vtkm::Id NSlices) :
                                values(Values),
                                nRows(NRows),
                                nCols(NCols),

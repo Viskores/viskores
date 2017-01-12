@@ -110,12 +110,12 @@ public:
   typedef typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template 
     ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
 
-  IdComponentPortalType neighbourTable;    // (input) table for neighbour offsets
-  IdPortalType caseTable;                  // (input) case table for neighbours
   vtkm::Id nRows;                          // (input) number of rows in 3D
   vtkm::Id nCols;                          // (input) number of cols in 3D
   vtkm::Id nSlices;                        // (input) number of cols in 3D
   bool ascending;                          // (input) ascending or descending (join or split tree)
+  IdComponentPortalType neighbourTable;    // (input) table for neighbour offsets
+  IdPortalType caseTable;                  // (input) case table for neighbours
 
   // Constructor
   VTKM_EXEC_CONT

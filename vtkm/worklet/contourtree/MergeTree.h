@@ -133,10 +133,11 @@ class MergeTree
 public:	
         typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
-	vtkm::Id nRows, nCols, nSlices, nVertices, nLogSteps;
-
         // original data array
         const vtkm::cont::ArrayHandle<T,StorageType> &values;
+
+        // size of mesh
+	vtkm::Id nRows, nCols, nSlices, nVertices, nLogSteps;
 
 	// whether it is join or split tree
 	bool isJoinTree;
@@ -155,8 +156,7 @@ public:
                   vtkm::Id NRows, 
                   vtkm::Id NCols, 
                   vtkm::Id NSlices, 
-                  bool IsJoinTree,
-                  DeviceAdapter Device);
+                  bool IsJoinTree);
 
 	// routine that does pointer-doubling in the mergeArc array
 	void BuildRegularChains();
@@ -181,8 +181,7 @@ MergeTree<T,StorageType,DeviceAdapter>::MergeTree(
                   vtkm::Id NRows, 
                   vtkm::Id NCols, 
                   vtkm::Id NSlices, 
-                  bool IsJoinTree,
-                  DeviceAdapter Device) :
+                  bool IsJoinTree) :
                                      values(Values),
                                      nRows(NRows),
                                      nCols(NCols),

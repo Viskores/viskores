@@ -176,8 +176,7 @@ public:
 	// constructor takes necessary references
 	ChainGraph(const vtkm::cont::ArrayHandle<T,StorageType> &Values,
                    vtkm::cont::ArrayHandle<vtkm::Id> &ArcArray,
-                   bool IsJoinGraph,
-                   DeviceAdapter Device) :
+                   bool IsJoinGraph) :
                          values(Values),
                          arcArray(ArcArray),
                          isJoinGraph(IsJoinGraph) {}

@@ -207,10 +207,9 @@ public:
 	// contour tree constructor
 	ContourTree(const vtkm::cont::ArrayHandle<T,StorageType> &Values,
                     MergeTree<T,StorageType,DeviceAdapter> &JoinTree,
-                    ChainGraph<T,StorageType,DeviceAdapter> &JoinGraph,
                     MergeTree<T,StorageType,DeviceAdapter> &SplitTree,
-                    ChainGraph<T,StorageType,DeviceAdapter> &SplitGraph,
-                    DeviceAdapter Device);
+                    ChainGraph<T,StorageType,DeviceAdapter> &JoinGraph,
+                    ChainGraph<T,StorageType,DeviceAdapter> &SplitGraph);
 
 	// routines for computing the contour tree
 	// combines the list of active vertices for join & split trees
@@ -281,14 +280,13 @@ template <typename T, typename StorageType, typename DeviceAdapter>
 ContourTree<T,StorageType,DeviceAdapter>::ContourTree(
                          const vtkm::cont::ArrayHandle<T,StorageType> &Values,
                          MergeTree<T,StorageType,DeviceAdapter> &JoinTree,
-                         ChainGraph<T,StorageType,DeviceAdapter> &JoinGraph,
                          MergeTree<T,StorageType,DeviceAdapter> &SplitTree,
-                         ChainGraph<T,StorageType,DeviceAdapter> &SplitGraph,
-                         DeviceAdapter Device)
+                         ChainGraph<T,StorageType,DeviceAdapter> &JoinGraph,
+                         ChainGraph<T,StorageType,DeviceAdapter> &SplitGraph)
 	:	values(Values),
 		joinTree(JoinTree), 
-		joinGraph(JoinGraph),
 		splitTree(SplitTree),
+		joinGraph(JoinGraph),
 		splitGraph(SplitGraph)
 {
 	
@@ -895,7 +893,6 @@ void ContourTree<T,StorageType,DeviceAdapter>::CollectSaddlePeak(
   } // per vertex	
 
   // Setting saddlePeak reference to the make_ArrayHandle directly does not work
-  vtkm::Id nSuperarcs = superarcVector.size();
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id,vtkm::Id> > tempArray = vtkm::cont::make_ArrayHandle(superarcVector);
 
   // now sort it
@@ -903,7 +900,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::CollectSaddlePeak(
   DeviceAlgorithm::Copy(tempArray, saddlePeak);
 
 #ifdef DEBUG_PRINT
-  for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
+  for (vtkm::UInt32 superarc = 0; superarc < superarcVector.size(); superarc++)
   {
     std::cout << std::setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).first << " ";
     std::cout << std::setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).second << std::endl;

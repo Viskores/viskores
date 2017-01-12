@@ -108,11 +108,11 @@ class Mesh2D_DEM_Triangulation
 public:
   typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
-  // size of the mesh
-  vtkm::Id nRows, nCols, nVertices, nLogSteps;
-
   // original data array
   const vtkm::cont::ArrayHandle<T,StorageType> &values;
+
+  // size of the mesh
+  vtkm::Id nRows, nCols, nVertices, nLogSteps;
 
   // Array with neighbourhood masks
   vtkm::cont::ArrayHandle<vtkm::Id> neighbourhoodMask;
@@ -120,8 +120,7 @@ public:
   // constructor
   Mesh2D_DEM_Triangulation(const vtkm::cont::ArrayHandle<T,StorageType> &Values,
                            vtkm::Id NRows,
-                           vtkm::Id NCols,
-                           DeviceAdapter Device);
+                           vtkm::Id NCols);
 
   // sets all vertices to point along an outgoing edge (except extrema)
   void SetStarts(vtkm::cont::ArrayHandle<vtkm::Id> &chains,
@@ -157,8 +156,7 @@ template<typename T, typename StorageType, typename DeviceAdapter>
 Mesh2D_DEM_Triangulation<T,StorageType,DeviceAdapter>::Mesh2D_DEM_Triangulation(
                            const vtkm::cont::ArrayHandle<T,StorageType> &Values,
                            vtkm::Id NRows,
-                           vtkm::Id NCols,
-                           DeviceAdapter Device) :
+                           vtkm::Id NCols) :
                                values(Values),
                                nRows(NRows),
                                nCols(NCols)
