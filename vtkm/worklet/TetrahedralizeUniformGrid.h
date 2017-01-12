@@ -143,7 +143,11 @@ public:
                       vtkm::cont::make_ArrayHandleGroupVec<4>(connectivity));
 
     // Add cells to output cellset
-    cellSet.Fill(connectivity);
+    cellSet.Fill(
+          this->OutDataSet.GetCoordinateSystem().GetData().GetNumberOfValues(),
+          vtkm::CellShapeTagTetra::Id,
+          4,
+          connectivity);
   }
 };
 

@@ -191,8 +191,9 @@ public:
     vtkm::Id numberOfPoints =
         this->PointScatter->GetOutputToInputMap().GetNumberOfValues();
     vtkm::cont::CellSetExplicit<ShapeStorage,NumIndicesStorage,NewConnectivityStorage,OffsetsStorage>
-        outCellSet(numberOfPoints, inCellSet.GetName());
-    outCellSet.Fill(inCellSet.GetShapesArray(FromTopology(),ToTopology()),
+        outCellSet(inCellSet.GetName());
+    outCellSet.Fill(numberOfPoints,
+                    inCellSet.GetShapesArray(FromTopology(),ToTopology()),
                     inCellSet.GetNumIndicesArray(FromTopology(),ToTopology()),
                     newConnectivityArray,
                     inCellSet.GetIndexOffsetArray(FromTopology(),ToTopology()));

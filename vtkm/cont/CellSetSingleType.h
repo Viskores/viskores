@@ -54,47 +54,29 @@ class CellSetSingleType  :
 
 public:
 
-  template<typename CellShapeTag>
-  VTKM_CONT
-  CellSetSingleType(CellShapeTag, vtkm::Id numpoints, const std::string &name = std::string())
-    : Superclass(numpoints, name),
-      CellTypeAsId(CellShapeTag::Id)
-  {
-  }
-
-  template<typename CellShapeTag>
-  VTKM_CONT
-  CellSetSingleType(CellShapeTag, const std::string &name = std::string())
-    : Superclass(0, name),
-      CellTypeAsId(CellShapeTag::Id)
-  {
-  }
-
-  VTKM_CONT
-  CellSetSingleType(vtkm::Id numpoints,
-                    const std::string &name = std::string())
-    : Superclass(numpoints, name),
-      CellTypeAsId(CellShapeTagEmpty::Id)
-  {
-  }
-
   VTKM_CONT
   CellSetSingleType(const std::string &name = std::string())
-    : Superclass(0, name),
-      CellTypeAsId(CellShapeTagEmpty::Id)
+    : Superclass(name),
+      ExpectedNumberOfCellsAdded(-1),
+      CellShapeAsId(CellShapeTagEmpty::Id),
+      NumberOfPointsPerCell(0)
   {
   }
 
   VTKM_CONT
   CellSetSingleType(const Thisclass &src)
-    : Superclass(src), CellTypeAsId(src.CellTypeAsId)
+    : Superclass(src),
+      ExpectedNumberOfCellsAdded(-1),
+      CellShapeAsId(src.CellShapeAsId),
+      NumberOfPointsPerCell(src.NumberOfPointsPerCell)
   {  }
 
   VTKM_CONT
   Thisclass &operator=(const Thisclass &src)
   {
     this->Superclass::operator=(src);
-    this->CellTypeAsId = src.CellTypeAsId;
+    this->CellShapeAsId = src.CellShapeAsId;
+    this->NumberOfPointsPerCell = src.NumberOfPointsPerCell;
     return *this;
   }
 
@@ -102,69 +84,133 @@ public:
 
   /// First method to add cells -- one at a time.
   VTKM_CONT
-  void PrepareToAddCells(vtkm::Id numShapes, vtkm::Id connectivityMaxLen)
+  void PrepareToAddCells(vtkm::Id numCells,
+                         vtkm::Id connectivityMaxLen)
   {
-    vtkm::IdComponent numberOfPointsPerCell = this->DetermineNumberOfPoints();
-    const vtkm::UInt8 shapeTypeValue = static_cast<vtkm::UInt8>(this->CellTypeAsId);
-    this->PointToCell.Shapes =
-              vtkm::cont::make_ArrayHandleConstant(shapeTypeValue, numShapes);
-    this->PointToCell.NumIndices =
-              vtkm::cont::make_ArrayHandleConstant(numberOfPointsPerCell,
-                                                   numShapes);
-    this->PointToCell.IndexOffsets =
-              vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0),
-                                                   static_cast<vtkm::Id>(numberOfPointsPerCell),
-                                                   numShapes );
+    this->CellShapeAsId = vtkm::CELL_SHAPE_EMPTY;
 
     this->PointToCell.Connectivity.Allocate(connectivityMaxLen);
 
-    this->NumberOfCells = 0;
-    this->ConnectivityLength = 0;
+    this->NumberOfCellsAdded = 0;
+    this->ConnectivityAdded = 0;
+    this->ExpectedNumberOfCellsAdded = numCells;
   }
 
   /// Second method to add cells -- one at a time.
-  template <vtkm::IdComponent ItemTupleLength>
+  template <typename IdVecType>
   VTKM_CONT
-  void AddCell(vtkm::UInt8 vtkmNotUsed(cellType),
+  void AddCell(vtkm::UInt8 shapeId,
                vtkm::IdComponent numVertices,
-               const vtkm::Vec<vtkm::Id,ItemTupleLength> &ids)
+               const IdVecType &ids)
   {
-    for (vtkm::IdComponent i=0; i < numVertices; ++i)
+    using Traits = vtkm::VecTraits<IdVecType>;
+    VTKM_STATIC_ASSERT_MSG(
+          (std::is_same<typename Traits::ComponentType,vtkm::Id>::value),
+          "CellSetSingleType::AddCell requires vtkm::Id for indices.");
+
+    if (Traits::GetNumberOfComponents(ids) < numVertices)
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Not enough indices given to CellSetSingleType::AddCell.");
+    }
+
+    if (this->ConnectivityAdded+numVertices >
+        this->PointToCell.Connectivity.GetNumberOfValues())
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Connectivity increased passed estimated maximum connectivity.");
+    }
+
+    if (this->CellShapeAsId == vtkm::CELL_SHAPE_EMPTY)
+    {
+      if (shapeId == vtkm::CELL_SHAPE_EMPTY)
+      {
+        throw vtkm::cont::ErrorControlBadValue(
+              "Cannot create cells of type empty.");
+      }
+      this->CellShapeAsId = shapeId;
+      this->CheckNumberOfPointsPerCell(numVertices);
+      this->NumberOfPointsPerCell = numVertices;
+    }
+    else
+    {
+      if (shapeId != this->GetCellShape(0))
+      {
+        throw vtkm::cont::ErrorControlBadValue(
+              "Cannot have differing shapes in CellSetSingleType.");
+      }
+      if (numVertices != this->NumberOfPointsPerCell)
+      {
+        throw vtkm::cont::ErrorControlBadValue(
+              "Inconsistent number of points in cells for CellSetSingleType.");
+      }
+    }
+    for (vtkm::IdComponent iVert=0; iVert < numVertices; ++iVert)
     {
       this->PointToCell.Connectivity.GetPortalControl().Set(
-            this->ConnectivityLength+i,ids[i]);
+            this->ConnectivityAdded+iVert, Traits::GetComponent(ids,iVert));
     }
-    this->NumberOfCells++;
-    this->ConnectivityLength += numVertices;
+    this->NumberOfCellsAdded++;
+    this->ConnectivityAdded += numVertices;
   }
 
   /// Third and final method to add cells -- one at a time.
   VTKM_CONT
-  void CompleteAddingCells()
+  void CompleteAddingCells(vtkm::Id numPoints)
   {
-    this->PointToCell.Connectivity.Shrink(this->ConnectivityLength);
+    this->NumberOfPoints = numPoints;
+    this->PointToCell.Connectivity.Shrink(this->ConnectivityAdded);
+
+    vtkm::Id numCells = this->NumberOfCellsAdded;
+
+    this->PointToCell.Shapes =
+        vtkm::cont::make_ArrayHandleConstant(this->GetCellShape(0), numCells);
+    this->PointToCell.NumIndices =
+        vtkm::cont::make_ArrayHandleConstant(this->NumberOfPointsPerCell,
+                                             numCells);
+    this->PointToCell.IndexOffsets =
+        vtkm::cont::make_ArrayHandleCounting(
+          vtkm::Id(0),
+          static_cast<vtkm::Id>(this->NumberOfPointsPerCell),
+          numCells);
+
     this->PointToCell.ElementsValid = true;
     this->PointToCell.IndexOffsetsValid = true;
-    this->NumberOfCells = this->ConnectivityLength = -1;
+
+    if (this->ExpectedNumberOfCellsAdded != this->GetNumberOfCells())
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Did not add the expected number of cells.");
+    }
+
+    this->NumberOfCellsAdded = -1;
+    this->ConnectivityAdded = -1;
+    this->ExpectedNumberOfCellsAdded = -1;
   }
 
   //This is the way you can fill the memory from another system without copying
   VTKM_CONT
-  void Fill(const vtkm::cont::ArrayHandle<vtkm::Id,
-                                          ConnectivityStorageTag> &connectivity)
+  void Fill(vtkm::Id numPoints,
+            vtkm::UInt8 shapeId,
+            vtkm::IdComponent numberOfPointsPerCell,
+            const vtkm::cont::ArrayHandle<vtkm::Id,ConnectivityStorageTag>
+              &connectivity)
   {
-    vtkm::IdComponent numberOfPointsPerCell = this->DetermineNumberOfPoints();
-    const vtkm::Id length = connectivity.GetNumberOfValues() / numberOfPointsPerCell;
-    const vtkm::UInt8 shapeTypeValue = static_cast<vtkm::UInt8>(this->CellTypeAsId);
+    this->NumberOfPoints = numPoints;
+    this->CellShapeAsId = shapeId;
+    this->CheckNumberOfPointsPerCell(numberOfPointsPerCell);
+    const vtkm::Id numCells =
+        connectivity.GetNumberOfValues() / numberOfPointsPerCell;
+    VTKM_ASSERT((connectivity.GetNumberOfValues() % numberOfPointsPerCell) == 0);
     this->PointToCell.Shapes =
-              vtkm::cont::make_ArrayHandleConstant(shapeTypeValue, length);
+              vtkm::cont::make_ArrayHandleConstant(shapeId, numCells);
     this->PointToCell.NumIndices =
               vtkm::cont::make_ArrayHandleConstant(numberOfPointsPerCell,
-                                                   length);
+                                                   numCells);
     this->PointToCell.IndexOffsets =
               vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0),
                                                    static_cast<vtkm::Id>(numberOfPointsPerCell),
-                                                   length );
+                                                   numCells );
     this->PointToCell.Connectivity = connectivity;
 
     this->PointToCell.ElementsValid = true;
@@ -172,14 +218,20 @@ public:
   }
 
   VTKM_CONT    
-  vtkm::Id GetCellTypeAsId() const
+  vtkm::Id GetCellShapeAsId() const
   {
-    return this->CellTypeAsId;
+    return this->CellShapeAsId;
+  }
+
+  VTKM_CONT
+  vtkm::UInt8 GetCellShape(vtkm::Id vtkmNotUsed(cellIndex)) const
+  {
+    return static_cast<vtkm::UInt8>(this->CellShapeAsId);
   }
   
   virtual void PrintSummary(std::ostream &out) const
   {
-    out << "   ExplicitSingleCellSet: " << this->Name << " Type "<<this->CellTypeAsId<<std::endl;
+    out << "   ExplicitSingleCellSet: " << this->Name << " Type "<<this->CellShapeAsId<<std::endl;
     out << "   PointToCell: " << std::endl;
     this->PointToCell.PrintSummary(out);
     out << "   CellToPoint: " << std::endl;
@@ -188,38 +240,45 @@ public:
 
 private:
   template< typename CellShapeTag>
-  void DetermineNumberOfPoints(CellShapeTag,
-                               vtkm::CellTraitsTagSizeFixed,
-                               vtkm::IdComponent& numberOfPoints) const
+  void CheckNumberOfPointsPerCell(CellShapeTag,
+                                  vtkm::CellTraitsTagSizeFixed,
+                                  vtkm::IdComponent numVertices) const
   {
-    numberOfPoints = vtkm::CellTraits<CellShapeTag>::NUM_POINTS;
+    if (numVertices != vtkm::CellTraits<CellShapeTag>::NUM_POINTS)
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Passed invalid number of points for cell shape.");
+    }
   }
 
   template< typename CellShapeTag>
-  void DetermineNumberOfPoints(CellShapeTag,
-                               vtkm::CellTraitsTagSizeVariable,
-                               vtkm::IdComponent& numberOfPoints) const
-  { //variable length cells can't be used with this class
-    numberOfPoints = -1;
+  void CheckNumberOfPointsPerCell(CellShapeTag,
+                                  vtkm::CellTraitsTagSizeVariable,
+                                  vtkm::IdComponent vtkmNotUsed(numVertices)) const
+  {
+    // Technically, a shape with a variable number of points probably has a
+    // minimum number of points, but we are not being sophisticated enough to
+    // check that. Instead, just pass the check by returning without error.
   }
 
 
-  vtkm::IdComponent DetermineNumberOfPoints() const
+  void CheckNumberOfPointsPerCell(vtkm::IdComponent numVertices) const
   {
-    vtkm::IdComponent numberOfPointsPerCell = -1;
-    switch (this->CellTypeAsId)
+    switch (this->CellShapeAsId)
     {
-      vtkmGenericCellShapeMacro( this->DetermineNumberOfPoints(CellShapeTag(),
-                                                               vtkm::CellTraits<CellShapeTag>::IsSizeFixed(),
-                                                               numberOfPointsPerCell) );
+      vtkmGenericCellShapeMacro(
+            this->CheckNumberOfPointsPerCell(CellShapeTag(),
+                                             vtkm::CellTraits<CellShapeTag>::IsSizeFixed(),
+                                             numVertices) );
       default:
         throw vtkm::cont::ErrorControlBadValue(
           "CellSetSingleType unable to determine the cell type");
     }
-    return numberOfPointsPerCell;
   }
 
-  vtkm::Id CellTypeAsId;
+  vtkm::Id ExpectedNumberOfCellsAdded;
+  vtkm::Id CellShapeAsId;
+  vtkm::IdComponent NumberOfPointsPerCell;
 };
 
 }

@@ -63,9 +63,11 @@ public:
                 output_shapes, output_numIndices, output_conn,
                 DeviceAdapter());
 
-    vtkm::cont::CellSetExplicit<> output_cs(cellset.GetNumberOfPoints(),
-                                            cellset.GetName());
-    output_cs.Fill(output_shapes, output_numIndices, output_conn);
+    vtkm::cont::CellSetExplicit<> output_cs(cellset.GetName());
+    output_cs.Fill(cellset.GetNumberOfPoints(),
+                   output_shapes,
+                   output_numIndices,
+                   output_conn);
 
     this->Output->AddCellSet(output_cs);
     *this->Valid = true;

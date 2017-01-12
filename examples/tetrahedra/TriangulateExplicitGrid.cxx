@@ -226,7 +226,7 @@ int main(int argc, char* argv[])
   numberOfInPoints = inCellSet.GetNumberOfPoints();
 
   // Create the output dataset explicit cell set with same coordinate system
-  vtkm::cont::CellSetSingleType<> cellSet(vtkm::CellShapeTagTriangle(), "cells");;
+  vtkm::cont::CellSetSingleType<> cellSet("cells");;
   outDataSet.AddCellSet(cellSet);
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 

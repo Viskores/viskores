@@ -78,7 +78,7 @@ inline vtkm::cont::DataSet make_SingleTypeDataSet()
 
   vtkm::cont::DataSet ds;
   vtkm::cont::DataSetBuilderExplicit builder;
-  ds = builder.Create(coordinates, vtkm::CellShapeTagTriangle(), conn);
+  ds = builder.Create(coordinates, vtkm::CellShapeTagTriangle(), 3, conn);
 
   //Set point scalar
   const int nVerts = 5;

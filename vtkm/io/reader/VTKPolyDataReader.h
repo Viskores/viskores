@@ -98,6 +98,9 @@ private:
     // Read the points
     this->ReadPoints();
 
+    vtkm::Id numPoints =
+        this->DataSet.GetCoordinateSystem().GetData().GetNumberOfValues();
+
     // Read the cellset
     std::vector<vtkm::cont::ArrayHandle<vtkm::Id> > connectivityArrays;
     std::vector<vtkm::cont::ArrayHandle<vtkm::IdComponent> > numIndicesArrays;
@@ -155,22 +158,18 @@ private:
 
     if (vtkm::io::internal::IsSingleShape(shapes))
     {
-      vtkm::cont::CellSetSingleType<> cs;
-      switch(shapes.GetPortalConstControl().Get(0))
-      {
-      vtkmGenericCellShapeMacro(
-        (cs = vtkm::cont::CellSetSingleType<>(CellShapeTag(), 0, "cells")));
-      default:
-        break;
-      }
-      cs.Fill(connectivity);
-      this->DataSet.AddCellSet(cs);
+      vtkm::cont::CellSetSingleType<> cellSet("cells");
+      cellSet.Fill(numPoints,
+                   shapes.GetPortalConstControl().Get(0),
+                   numIndices.GetPortalConstControl().Get(0),
+                   connectivity);
+      this->DataSet.AddCellSet(cellSet);
     }
     else
     {
-      vtkm::cont::CellSetExplicit<> cs(0, "cells");
-      cs.Fill(shapes, numIndices, connectivity);
-      this->DataSet.AddCellSet(cs);
+      vtkm::cont::CellSetExplicit<> cellSet("cells");
+      cellSet.Fill(numPoints, shapes, numIndices, connectivity);
+      this->DataSet.AddCellSet(cellSet);
     }
 
     // Read points and cell attributes

@@ -106,12 +106,11 @@ public:
   typedef typename PointToCellConnectivityType::IndexOffsetArrayType IndexOffsetArrayType;
 
   VTKM_CONT
-  CellSetExplicit(vtkm::Id numpoints = 0,
-                  const std::string &name = std::string())
+  CellSetExplicit(const std::string &name = std::string())
     : CellSet(name),
-      ConnectivityLength(-1),
-      NumberOfCells(-1),
-      NumberOfPoints(numpoints)
+      ConnectivityAdded(-1),
+      NumberOfCellsAdded(-1),
+      NumberOfPoints(0)
   {
   }
 
@@ -120,8 +119,8 @@ public:
     : CellSet(src),
       PointToCell(src.PointToCell),
       CellToPoint(src.CellToPoint),
-      ConnectivityLength(src.ConnectivityLength),
-      NumberOfCells(src.NumberOfCells),
+      ConnectivityAdded(src.ConnectivityAdded),
+      NumberOfCellsAdded(src.NumberOfCellsAdded),
       NumberOfPoints(src.NumberOfPoints)
   {  }
 
@@ -131,8 +130,8 @@ public:
     this->CellSet::operator=(src);
     this->PointToCell = src.PointToCell;
     this->CellToPoint = src.CellToPoint;
-    this->ConnectivityLength = src.ConnectivityLength;
-    this->NumberOfCells = src.NumberOfCells;
+    this->ConnectivityAdded = src.ConnectivityAdded;
+    this->NumberOfCellsAdded = src.NumberOfCellsAdded;
     this->NumberOfPoints = src.NumberOfPoints;
     return *this;
   }
@@ -168,7 +167,7 @@ public:
   }
 
   VTKM_CONT
-  vtkm::Id GetCellShape(vtkm::Id cellIndex) const
+  vtkm::UInt8 GetCellShape(vtkm::Id cellIndex) const
   {
     return this->PointToCell.Shapes.GetPortalConstControl().Get(cellIndex);
   }
@@ -188,54 +187,88 @@ public:
 
   /// First method to add cells -- one at a time.
   VTKM_CONT
-  void PrepareToAddCells(vtkm::Id numShapes, vtkm::Id connectivityMaxLen)
+  void PrepareToAddCells(vtkm::Id numCells, vtkm::Id connectivityMaxLen)
   {
-    this->PointToCell.Shapes.Allocate(numShapes);
-    this->PointToCell.NumIndices.Allocate(numShapes);
+    this->PointToCell.Shapes.Allocate(numCells);
+    this->PointToCell.NumIndices.Allocate(numCells);
     this->PointToCell.Connectivity.Allocate(connectivityMaxLen);
-    this->PointToCell.IndexOffsets.Allocate(numShapes);
-    this->NumberOfCells = 0;
-    this->ConnectivityLength = 0;
+    this->PointToCell.IndexOffsets.Allocate(numCells);
+    this->NumberOfCellsAdded = 0;
+    this->ConnectivityAdded = 0;
   }
 
-  template <typename IndexableType>
+  template <typename IdVecType>
   VTKM_CONT
   void AddCell(vtkm::UInt8 cellType,
                vtkm::IdComponent numVertices,
-               const IndexableType &ids)
+               const IdVecType &ids)
   {
-    this->PointToCell.Shapes.GetPortalControl().Set(this->NumberOfCells, cellType);
-    this->PointToCell.NumIndices.GetPortalControl().Set(this->NumberOfCells, numVertices);
-    for (vtkm::IdComponent i=0; i < numVertices; ++i)
+    using Traits = vtkm::VecTraits<IdVecType>;
+    VTKM_STATIC_ASSERT_MSG(
+          (std::is_same<typename Traits::ComponentType,vtkm::Id>::value),
+          "CellSetSingleType::AddCell requires vtkm::Id for indices.");
+
+    if (Traits::GetNumberOfComponents(ids) < numVertices)
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Not enough indices given to CellSetSingleType::AddCell.");
+    }
+
+    if (this->NumberOfCellsAdded >= this->PointToCell.Shapes.GetNumberOfValues())
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Added more cells then expected.");
+    }
+    if (this->ConnectivityAdded+numVertices >
+        this->PointToCell.Connectivity.GetNumberOfValues())
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Connectivity increased passed estimated maximum connectivity.");
+    }
+
+    this->PointToCell.Shapes.GetPortalControl().Set(this->NumberOfCellsAdded, cellType);
+    this->PointToCell.NumIndices.GetPortalControl().Set(this->NumberOfCellsAdded, numVertices);
+    for (vtkm::IdComponent iVec=0; iVec < numVertices; ++iVec)
     {
       this->PointToCell.Connectivity.GetPortalControl().Set(
-            this->ConnectivityLength+i,ids[i]);
+            this->ConnectivityAdded+iVec, Traits::GetComponent(ids,iVec));
     }
     this->PointToCell.IndexOffsets.GetPortalControl().Set(
-          this->NumberOfCells, this->ConnectivityLength);
-    this->NumberOfCells++;
-    this->ConnectivityLength += numVertices;
+          this->NumberOfCellsAdded, this->ConnectivityAdded);
+    this->NumberOfCellsAdded++;
+    this->ConnectivityAdded += numVertices;
   }
 
   VTKM_CONT
-  void CompleteAddingCells()
+  void CompleteAddingCells(vtkm::Id numPoints)
   {
-    this->PointToCell.Connectivity.Shrink(ConnectivityLength);
+    this->NumberOfPoints = numPoints;
+    this->PointToCell.Connectivity.Shrink(ConnectivityAdded);
     this->PointToCell.ElementsValid = true;
     this->PointToCell.IndexOffsetsValid = true;
-    this->NumberOfCells = this->ConnectivityLength = -1;
+
+    if (this->NumberOfCellsAdded != this->GetNumberOfCells())
+    {
+      throw vtkm::cont::ErrorControlBadValue(
+            "Did not add as many cells as expected.");
+    }
+
+    this->NumberOfCellsAdded = -1;
+    this->ConnectivityAdded = -1;
   }
 
   /// Second method to add cells -- all at once.
   /// Assigns the array handles to the explicit connectivity. This is
   /// the way you can fill the memory from another system without copying
   VTKM_CONT
-  void Fill(const vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> &cellTypes,
+  void Fill(vtkm::Id numPoints,
+            const vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> &cellTypes,
             const vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> &numIndices,
             const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> &connectivity,
             const vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorageTag> &offsets
                   = vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorageTag>() )
   {
+    this->NumberOfPoints = numPoints;
     this->PointToCell.Shapes = cellTypes;
     this->PointToCell.NumIndices = numIndices;
     this->PointToCell.Connectivity = connectivity;
@@ -509,8 +542,8 @@ protected:
   // These are used in the AddCell and related methods to incrementally add
   // cells. They need to be protected as subclasses of CellSetExplicit
   // need to set these values when implementing Fill()
-  vtkm::Id ConnectivityLength;
-  vtkm::Id NumberOfCells;
+  vtkm::Id ConnectivityAdded;
+  vtkm::Id NumberOfCellsAdded;
   vtkm::Id NumberOfPoints;
 };
 
