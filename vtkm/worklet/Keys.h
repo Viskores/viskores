@@ -224,18 +224,13 @@ struct Transport<vtkm::cont::arg::TransportTagKeysIn,
     return object.PrepareForInput(Device());
   }
 
+  // If you get a compile error here, it means that you have used a KeysIn
+  // tag in your ControlSignature that was not marked as the InputDomain.
   template<typename InputDomainType>
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType &,
                             const InputDomainType &,
-                            vtkm::Id) const
-  {
-    // If you get a compile error here, it means that you have used a KeysIn
-    // tag in your ControlSignature that was not marked as the InputDomain.
-    VTKM_STATIC_ASSERT_MSG(
-          false, "A Keys class was used in a position that is not the input domain.");
-    return ExecObjectType();
-  }
+                            vtkm::Id) const = delete;
 };
 
 template<typename ArrayHandleType, typename Device>
