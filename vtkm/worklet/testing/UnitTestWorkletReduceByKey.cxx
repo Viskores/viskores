@@ -32,16 +32,13 @@ namespace {
 #define STRINGIFY(x) STRINGIFY_IMPL(x)
 #define STRINGIFY_IMPL(x) #x
 
-#define IMPL_TEST_ASSERT_WORKLET(condition, file, line) \
-  this->RaiseError("Test assert failed: " #condition \
-                   "\n" #file ":" #line) \
-
 #define TEST_ASSERT_WORKLET(condition) \
   do { \
     if (!(condition)) \
     { \
       this->RaiseError("Test assert failed: " #condition \
                        "\n" __FILE__ ":" STRINGIFY(__LINE__)); \
+      return; \
     } \
   } while (false)
 
