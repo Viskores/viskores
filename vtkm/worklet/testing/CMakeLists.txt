@@ -23,6 +23,7 @@ set(unit_tests
   UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx
   UnitTestClipping.cxx
+  UnitTestContourTreeUniform.cxx
   UnitTestExternalFaces.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx

@@ -23,6 +23,7 @@ set(headers
   CellAverage.h
   CellDeepCopy.h
   Clip.h
+  ContourTreeUniform.h
   DispatcherMapField.h
   DispatcherMapTopology.h
   DispatcherStreamingMapField.h
@@ -54,6 +55,7 @@ set(headers
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
+add_subdirectory(contourtree)
 add_subdirectory(splatkernels)
 add_subdirectory(wavelets)
 
