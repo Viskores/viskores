@@ -253,9 +253,8 @@ public:
 
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData)) {
-    const vtkm::Id numberOfValues = this->GetNumberOfValues();
-    return PortalExecution(this->FirstArray.PrepareForOutput(numberOfValues, Device()),
-                           this->SecondArray.PrepareForOutput(numberOfValues, Device()));
+    return PortalExecution(this->FirstArray.PrepareForInPlace(Device()),
+                           this->SecondArray.PrepareForInPlace(Device()));
   }
 
   VTKM_CONT
