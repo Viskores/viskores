@@ -336,6 +336,9 @@ public:
   }
 
   VTKM_CONT
+  Field &operator=(const vtkm::cont::Field &src) = default;
+
+  VTKM_CONT
   const std::string &GetName() const
   {
     return this->Name;

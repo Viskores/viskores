@@ -126,6 +126,9 @@ public:
   {  }
 
   VTKM_CONT
+  CoordinateSystem &operator=(const vtkm::cont::CoordinateSystem &src) = default;
+
+  VTKM_CONT
   vtkm::cont::DynamicArrayHandleCoordinateSystem GetData() const
   {
     return vtkm::cont::DynamicArrayHandleCoordinateSystem(
