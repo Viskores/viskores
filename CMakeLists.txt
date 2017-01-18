@@ -104,6 +104,18 @@ option(VTKm_USE_DOUBLE_PRECISION
   )
 option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
+if (VTKm_ENABLE_CUDA)
+  option(VTKm_USE_UNIFIED_MEMORY
+    "Use CUDA unified memory"
+    OFF
+    )
+endif (VTKm_ENABLE_CUDA)
+
+if (VTKm_USE_UNIFIED_MEMORY)
+  set(CMAKE_CXX_FLAGS "-DVTKM_USE_UNIFIED_MEMORY ${CMAKE_CXX_FLAGS}")
+endif()
+
+
 option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
