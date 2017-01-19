@@ -740,6 +740,18 @@ vtkm::Float64 Pow(vtkm::Float64 x, vtkm::Float64 y) {
 
 /// Compute the square root of \p x.
 ///
+template<typename T>
+static inline VTKM_EXEC_CONT
+vtkm::FloatDefault Sqrt(T x) {
+#ifdef VTKM_CUDA
+  if(std::is_same< vtkm::FloatDefault, vtkm::Float64 >::value)
+    return VTKM_CUDA_MATH_FUNCTION_64(sqrt)(static_cast<vtkm::FloatDefault>(x));
+  else
+    return VTKM_CUDA_MATH_FUNCTION_32(sqrt)(static_cast<vtkm::FloatDefault>(x));
+#else
+  return std::sqrt(static_cast<vtkm::FloatDefault>(x));
+#endif
+}
 static inline VTKM_EXEC_CONT
 vtkm::Float32 Sqrt(vtkm::Float32 x) {
 #ifdef VTKM_CUDA
@@ -758,8 +770,8 @@ vtkm::Float64 Sqrt(vtkm::Float64 x) {
 }
 template<typename T, vtkm::IdComponent N>
 static inline VTKM_EXEC_CONT
-vtkm::Vec<T,N> Sqrt(const vtkm::Vec<T,N> &x) {
-  vtkm::Vec<T,N> result;
+vtkm::Vec<vtkm::FloatDefault,N> Sqrt(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<vtkm::FloatDefault,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
   {
     result[index] = vtkm::Sqrt(x[index]);
@@ -768,24 +780,52 @@ vtkm::Vec<T,N> Sqrt(const vtkm::Vec<T,N> &x) {
 }
 template<typename T>
 static inline VTKM_EXEC_CONT
-vtkm::Vec<T,4> Sqrt(const vtkm::Vec<T,4> &x) {
-  return vtkm::Vec<T,4>(vtkm::Sqrt(x[0]),
-                        vtkm::Sqrt(x[1]),
-                        vtkm::Sqrt(x[2]),
-                        vtkm::Sqrt(x[3]));
+vtkm::Vec<vtkm::FloatDefault,4> Sqrt(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<vtkm::FloatDefault,4>(vtkm::Sqrt(x[0]),
+                                         vtkm::Sqrt(x[1]),
+                                         vtkm::Sqrt(x[2]),
+                                         vtkm::Sqrt(x[3]));
 }
 template<typename T>
 static inline VTKM_EXEC_CONT
-vtkm::Vec<T,3> Sqrt(const vtkm::Vec<T,3> &x) {
-  return vtkm::Vec<T,3>(vtkm::Sqrt(x[0]),
-                        vtkm::Sqrt(x[1]),
-                        vtkm::Sqrt(x[2]));
+vtkm::Vec<vtkm::FloatDefault,3> Sqrt(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<vtkm::FloatDefault,3>(vtkm::Sqrt(x[0]),
+                                         vtkm::Sqrt(x[1]),
+                                         vtkm::Sqrt(x[2]));
 }
 template<typename T>
 static inline VTKM_EXEC_CONT
-vtkm::Vec<T,2> Sqrt(const vtkm::Vec<T,2> &x) {
-  return vtkm::Vec<T,2>(vtkm::Sqrt(x[0]),
-                        vtkm::Sqrt(x[1]));
+vtkm::Vec<vtkm::FloatDefault,2> Sqrt(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<vtkm::FloatDefault,2>(vtkm::Sqrt(x[0]),
+                                         vtkm::Sqrt(x[1]));
+}
+template<vtkm::IdComponent N>
+static inline VTKM_EXEC_CONT
+vtkm::Vec<vtkm::Float64,N> Sqrt(const vtkm::Vec<vtkm::Float64,N> &x) {
+  vtkm::Vec<vtkm::Float64,N> result;
+  for (vtkm::IdComponent index = 0; index < N; index++)
+  {
+    result[index] = vtkm::Sqrt(x[index]);
+  }
+  return result;
+}
+static inline VTKM_EXEC_CONT
+vtkm::Vec<vtkm::Float64,4> Sqrt(const vtkm::Vec<vtkm::Float64,4> &x) {
+  return vtkm::Vec<vtkm::Float64,4>(vtkm::Sqrt(x[0]),
+                                    vtkm::Sqrt(x[1]),
+                                    vtkm::Sqrt(x[2]),
+                                    vtkm::Sqrt(x[3]));
+}
+static inline VTKM_EXEC_CONT
+vtkm::Vec<vtkm::Float64,3> Sqrt(const vtkm::Vec<vtkm::Float64,3> &x) {
+  return vtkm::Vec<vtkm::Float64,3>(vtkm::Sqrt(x[0]),
+                                    vtkm::Sqrt(x[1]),
+                                    vtkm::Sqrt(x[2]));
+}
+static inline VTKM_EXEC_CONT
+vtkm::Vec<vtkm::Float64,2> Sqrt(const vtkm::Vec<vtkm::Float64,2> &x) {
+  return vtkm::Vec<vtkm::Float64,2>(vtkm::Sqrt(x[0]),
+                                    vtkm::Sqrt(x[1]));
 }
 
 /// Compute the reciprocal square root of \p x. The result of this function is

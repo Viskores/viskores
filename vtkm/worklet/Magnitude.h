@@ -30,13 +30,13 @@ namespace worklet {
 class Magnitude : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<>);
+  typedef void ControlSignature(FieldIn<VecAll>, FieldOut<Scalar>);
   typedef void ExecutionSignature(_1, _2);
 
-  template<typename T>
+  template<typename T, typename T2>
   VTKM_EXEC
-  void operator()(const vtkm::Vec<T,3> &inValue,
-                    T &outValue) const
+  void operator()(const T &inValue,
+                  T2 &outValue) const
   {
     outValue = vtkm::Magnitude(inValue);
   }

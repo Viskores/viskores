@@ -40,6 +40,7 @@ set(headers
   ResultDataSet.h
   ResultField.h
   Threshold.h
+  VectorMagnitude.h
   VertexClustering.h
 )
 
@@ -58,6 +59,7 @@ set(header_template_sources
   PointAverage.hxx
   PointElevation.hxx
   Threshold.hxx
+  VectorMagnitude.hxx
   VertexClustering.hxx
 )
 

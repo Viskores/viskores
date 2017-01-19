@@ -26,6 +26,7 @@ set(unit_tests
   UnitTestExternalFaces.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
+  UnitTestMagnitude.cxx
   UnitTestMarchingCubes.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx

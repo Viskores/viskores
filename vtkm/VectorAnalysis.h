@@ -92,11 +92,18 @@ T MagnitudeTemplate(T x, vtkm::TypeTraitsScalarTag)
 
 template<typename T>
 VTKM_EXEC_CONT
-typename vtkm::VecTraits<T>::ComponentType
-MagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
+vtkm::FloatDefault MagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 {
   return vtkm::Sqrt(vtkm::MagnitudeSquared(x));
 }
+
+template<vtkm::IdComponent Size>
+VTKM_EXEC_CONT
+vtkm::Float64 MagnitudeTemplate(const vtkm::Vec<vtkm::Float64, Size> &x)
+{
+  return vtkm::Sqrt(vtkm::MagnitudeSquared(x));
+}
+
 } // namespace detail
 
 /// \brief Returns the magnitude of a vector.
@@ -109,11 +116,16 @@ MagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 ///
 template<typename T>
 VTKM_EXEC_CONT
-typename vtkm::VecTraits<T>::ComponentType
-Magnitude(const T &x)
+vtkm::FloatDefault Magnitude(const T &x)
 {
   return detail::MagnitudeTemplate(
         x, typename vtkm::TypeTraits<T>::DimensionalityTag());
+}
+template<vtkm::IdComponent Size>
+VTKM_EXEC_CONT
+vtkm::Float64 Magnitude(const vtkm::Vec<vtkm::Float64, Size> &x)
+{
+  return detail::MagnitudeTemplate(x);
 }
 
 // ----------------------------------------------------------------------------
