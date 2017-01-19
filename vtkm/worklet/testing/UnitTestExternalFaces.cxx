@@ -20,12 +20,17 @@
 
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
+
 #include <vtkm/cont/internal/DeviceAdapterError.h>
+
+#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+
 #include <vtkm/worklet/ExternalFaces.h>
 
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 
 namespace {
 
@@ -59,8 +64,10 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &inDataSet)
   return outDataSet;
 }
 
-void TestExternalFaces()
+void TestExternalFaces1()
 {
+  std::cout << "Test 1" << std::endl;
+
   //--------------Construct a VTK-m Test Dataset----------------
   const int nVerts = 8; //A cube that is tetrahedralized
   typedef vtkm::Vec<vtkm::Float32,3> CoordType;
@@ -112,11 +119,84 @@ void TestExternalFaces()
   const vtkm::Id numExtFaces_actual = 12;
   VTKM_TEST_ASSERT(numExtFaces_out == numExtFaces_actual, "Number of External Faces mismatch");
 
-} // TestExternalFaces
+} // TestExternalFaces1
+
+void TestExternalFaces2()
+{
+  std::cout << "Test 2" << std::endl;
+
+  vtkm::cont::testing::MakeTestDataSet dataSetMaker;
+  vtkm::cont::DataSet inDataSet = dataSetMaker.Make3DExplicitDataSet5();
+
+//  vtkm::io::writer::VTKDataSetWriter writer("vtkm_explicit_data_5.vtk");
+//  writer.WriteDataSet(inDataSet);
+
+  // Expected faces
+  const vtkm::IdComponent MAX_POINTS_PER_FACE = 4;
+  const vtkm::Id NUM_FACES = 12;
+  const vtkm::Id ExpectedExternalFaces[NUM_FACES][MAX_POINTS_PER_FACE] = {
+    { 0, 3, 7, 4 },
+    { 0, 1, 2, 3 },
+    { 0, 4, 5, 1 },
+    { 3, 2, 6, 7 },
+    { 1, 5, 8, -1 },
+    { 6, 2, 8, -1 },
+    { 2, 1, 8, -1 },
+    { 8, 10, 6, -1 },
+    { 5, 10, 8, -1 },
+    { 4, 7, 9, -1 },
+    { 7, 6, 10, 9 },
+    { 9, 10, 5, 4 }
+  };
+
+  vtkm::cont::DataSet outDataSet = RunExternalFaces(inDataSet);
+  vtkm::cont::CellSetExplicit<> outCellSet;
+  outDataSet.GetCellSet(0).CopyTo(outCellSet);
+
+  VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == NUM_FACES,
+                   "Got wrong number of faces.");
+
+  bool foundFaces[NUM_FACES];
+  for (vtkm::Id faceId = 0; faceId < NUM_FACES; faceId++)
+  {
+    foundFaces[faceId] = false;
+  }
+
+  for (vtkm::Id dataFaceId = 0; dataFaceId < NUM_FACES; dataFaceId++)
+  {
+    vtkm::Vec<vtkm::Id,MAX_POINTS_PER_FACE> dataIndices(-1);
+    outCellSet.GetIndices(dataFaceId, dataIndices);
+    std::cout << "Looking for face " << dataIndices << std::endl;
+    bool foundFace = false;
+    for (vtkm::Id expectedFaceId = 0;
+         expectedFaceId < NUM_FACES;
+         expectedFaceId++)
+    {
+      vtkm::Vec<vtkm::Id,MAX_POINTS_PER_FACE> expectedIndices;
+      vtkm::make_VecC(ExpectedExternalFaces[expectedFaceId], 4).
+          CopyInto(expectedIndices);
+      if (expectedIndices == dataIndices)
+      {
+        VTKM_TEST_ASSERT(!foundFaces[expectedFaceId], "Found face twice.");
+        std::cout << "  found" << std::endl;
+        foundFace = true;
+        foundFaces[expectedFaceId] = true;
+        break;
+      }
+    }
+    VTKM_TEST_ASSERT(foundFace, "Face not found.");
+  }
+}
+
+void TestExternalFaces()
+{
+  TestExternalFaces1();
+  TestExternalFaces2();
+}
 
 }
 
 int UnitTestExternalFaces(int, char *[])
 {
-      return vtkm::cont::testing::Testing::Run(TestExternalFaces);
+  return vtkm::cont::testing::Testing::Run(TestExternalFaces);
 }
