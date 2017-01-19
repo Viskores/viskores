@@ -74,6 +74,7 @@
 #include <vtkm/filter/ContourTreeUniform.h>
 
 #include <fstream>
+#include <vector>
 
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
@@ -95,12 +96,14 @@ int main(int argc, char* argv[])
   vtkm::Id2 vdims;
   inFile >> vdims[0];
   inFile >> vdims[1];
-  vtkm::Id nVertices = vdims[0] * vdims[1];
+  std::size_t nVertices = static_cast<std::size_t>(vdims[0] * vdims[1]);
 
   // read data
-  vtkm::Float32 values[nVertices];
-  for (int vertex = 0; vertex < nVertices; vertex++)
+  std::vector<vtkm::Float32> values(nVertices);
+  for (std::size_t vertex = 0; vertex < nVertices; vertex++)
+  {
     inFile >> values[vertex];
+  }
   inFile.close();
 
   // build the input dataset
@@ -108,7 +111,7 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSet inDataSet = dsb.Create(vdims);
 
   vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddPointField(inDataSet, "values", values, nVertices);
+  dsf.AddPointField(inDataSet, "values", values);
 
   // Output data set is pairs of saddle and peak vertex IDs
   vtkm::filter::ResultField result;
