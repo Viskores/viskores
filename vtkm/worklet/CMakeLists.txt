@@ -26,12 +26,14 @@ set(headers
   ContourTreeUniform.h
   DispatcherMapField.h
   DispatcherMapTopology.h
+  DispatcherReduceByKey.h
   DispatcherStreamingMapField.h
   ExternalFaces.h
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
   KernelSplatter.h
+  Keys.h
   Magnitude.h
   MarchingCubes.h
   MarchingCubesDataTables.h
@@ -51,6 +53,7 @@ set(headers
   WaveletCompressor.h
   WorkletMapField.h
   WorkletMapTopology.h
+  WorkletReduceByKey.h
   )
 
 #-----------------------------------------------------------------------------
