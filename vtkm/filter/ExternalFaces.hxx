@@ -48,8 +48,7 @@ public:
     *this->Valid = true;
   }
 
-  template<typename T>
-  void operator()(const T& ) const
+  void operator()(const vtkm::cont::CellSet& ) const
   {
     //don't support this cell type
     *this->Valid = false;
