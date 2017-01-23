@@ -30,7 +30,7 @@ namespace cont {
 namespace internal {
 
 template<typename FromType, typename ToType>
-struct Cast
+struct VTKM_ALWAYS_EXPORT Cast
 {
   VTKM_EXEC_CONT
   ToType operator()(const FromType &val) const

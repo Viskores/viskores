@@ -57,16 +57,20 @@ public:
   }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfCells() const
+  vtkm::Id GetNumberOfCells() const VTKM_OVERRIDE
   {
     return this->ValidCellIds.GetNumberOfValues();
   }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfPoints() const
+  vtkm::Id GetNumberOfPoints() const VTKM_OVERRIDE
   {
     return this->FullCellSet.GetNumberOfPoints();
   }
+
+  vtkm::Id GetNumberOfFaces() const VTKM_OVERRIDE { return -1; }
+
+  vtkm::Id GetNumberOfEdges() const VTKM_OVERRIDE { return -1; }
 
   //This is the way you can fill the memory from another system without copying
   VTKM_CONT
@@ -111,7 +115,7 @@ public:
                             this->FullCellSet.PrepareForInput(d,f,t) );
   }
 
-  virtual void PrintSummary(std::ostream &out) const
+  void PrintSummary(std::ostream &out) const VTKM_OVERRIDE
   {
     out << "   CellSetGeneralPermutation of: "<< std::endl;
     this->FullCellSet.PrintSummary(out);

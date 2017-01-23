@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 UT-Battelle, LLC.
+//  Copyright 2015 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -17,25 +17,16 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ErrorControl_h
-#define vtk_m_cont_ErrorControl_h
 
-#include <vtkm/cont/Error.h>
+#define vtkm_cont_CellSetStructured_cxx
+#include <vtkm/cont/CellSetStructured.h>
 
 namespace vtkm {
 namespace cont {
 
-/// The superclass of all exceptions thrown from within the VTKm control
-/// environment.
-///
-class VTKM_ALWAYS_EXPORT ErrorControl : public vtkm::cont::Error
-{
-protected:
-  ErrorControl() { }
-  ErrorControl(const std::string message) : Error(message) { }
-};
+template class VTKM_CONT_EXPORT CellSetStructured<1>;
+template class VTKM_CONT_EXPORT CellSetStructured<2>;
+template class VTKM_CONT_EXPORT CellSetStructured<3>;
 
 }
-} // namespace vtkm::cont
-
-#endif //vtk_m_cont_ErrorControl_h
+}

@@ -70,7 +70,7 @@ namespace cuda {
 /// This error is thrown whenever an unidentified CUDA runtime error is
 /// encountered.
 ///
-class ErrorControlCuda : public vtkm::cont::ErrorControl
+class VTKM_ALWAYS_EXPORT ErrorControlCuda : public vtkm::cont::ErrorControl
 {
 public:
   ErrorControlCuda(cudaError_t error)

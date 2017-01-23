@@ -30,7 +30,7 @@ namespace exec {
 namespace internal {
 
 template<typename _SourcePortalType, vtkm::IdComponent _NUM_COMPONENTS>
-class ArrayPortalGroupVec
+class VTKM_ALWAYS_EXPORT ArrayPortalGroupVec
 {
 public:
   static const vtkm::IdComponent NUM_COMPONENTS = _NUM_COMPONENTS;
@@ -115,7 +115,7 @@ namespace cont {
 namespace internal {
 
 template<typename SourceArrayHandleType, vtkm::IdComponent NUM_COMPONENTS>
-struct StorageTagGroupVec {  };
+struct VTKM_ALWAYS_EXPORT StorageTagGroupVec {  };
 
 template<typename SourceArrayHandleType,
          vtkm::IdComponent NUM_COMPONENTS>

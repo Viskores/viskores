@@ -28,7 +28,7 @@ namespace cont {
 /// This class is thrown in the control environment whenever an error occurs in
 /// the execution environment.
 ///
-class ErrorExecution : public vtkm::cont::Error
+class VTKM_ALWAYS_EXPORT ErrorExecution : public vtkm::cont::Error
 {
 public:
   ErrorExecution(const std::string message)

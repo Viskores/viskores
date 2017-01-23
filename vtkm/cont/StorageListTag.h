@@ -32,7 +32,7 @@
 namespace vtkm {
 namespace cont {
 
-struct StorageListTagBasic
+struct VTKM_ALWAYS_EXPORT StorageListTagBasic
     : vtkm::ListTagBase<vtkm::cont::StorageTagBasic> { };
 
 }

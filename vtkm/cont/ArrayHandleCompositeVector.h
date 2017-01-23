@@ -39,7 +39,7 @@ namespace internal {
 namespace detail {
 
 template<typename ValueType>
-struct CompositeVectorSwizzleFunctor
+struct VTKM_ALWAYS_EXPORT CompositeVectorSwizzleFunctor
 {
   static const vtkm::IdComponent NUM_COMPONENTS =
       vtkm::VecTraits<ValueType>::NUM_COMPONENTS;
@@ -92,7 +92,7 @@ struct CompositeVectorSwizzleFunctor
 };
 
 template<typename ReturnValueType>
-struct CompositeVectorPullValueFunctor
+struct VTKM_ALWAYS_EXPORT CompositeVectorPullValueFunctor
 {
   vtkm::Id Index;
 
@@ -170,7 +170,7 @@ struct CheckArraySizeFunctor {
 /// This is the portal used within ArrayHandleCompositeVector.
 ///
 template<typename SignatureWithPortals>
-class ArrayPortalCompositeVector
+class VTKM_ALWAYS_EXPORT ArrayPortalCompositeVector
 {
   typedef vtkm::internal::FunctionInterface<SignatureWithPortals> PortalTypes;
 
@@ -219,7 +219,7 @@ private:
 };
 
 template<typename SignatureWithArrays>
-struct StorageTagCompositeVector {  };
+struct VTKM_ALWAYS_EXPORT StorageTagCompositeVector {  };
 
 /// A convenience class that provides a typedef to the appropriate tag for
 /// a composite storage.

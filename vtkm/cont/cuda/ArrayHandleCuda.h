@@ -39,7 +39,7 @@ namespace vtkm {
 namespace cont {
 namespace cuda {
 
-struct StorageTagCuda { };
+struct VTKM_ALWAYS_EXPORT StorageTagCuda { };
 
 } // namespace cuda
 } // namespace cont

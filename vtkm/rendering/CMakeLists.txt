@@ -78,6 +78,7 @@ set(sources
   WorldAnnotator.cxx
 
   internal/RunTriangulator.cxx
+  raytracing/Ray.cxx
   )
 
 set(opengl_headers
@@ -121,7 +122,7 @@ vtkm_configure_component_OpenGL()
 if(VTKm_OpenGL_FOUND)
   list(APPEND headers ${opengl_headers})
   list(APPEND sources ${opengl_sources})
-  
+
   vtkm_configure_component_OSMesa()
   if(VTKm_OSMesa_FOUND)
     list(APPEND headers ${osmesa_headers})

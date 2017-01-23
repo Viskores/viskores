@@ -25,7 +25,7 @@
 namespace vtkm {
 namespace io {
 
-class ErrorIO : public vtkm::cont::Error
+class VTKM_ALWAYS_EXPORT ErrorIO : public vtkm::cont::Error
 {
 public:
   ErrorIO() { }

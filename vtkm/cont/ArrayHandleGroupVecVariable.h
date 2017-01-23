@@ -38,7 +38,7 @@ namespace exec {
 namespace internal {
 
 template<typename SourcePortalType, typename OffsetsPortalType>
-class ArrayPortalGroupVecVariable
+class VTKM_ALWAYS_EXPORT ArrayPortalGroupVecVariable
 {
 public:
   using ComponentType =
@@ -180,7 +180,7 @@ namespace cont {
 namespace internal {
 
 template<typename SourceArrayHandleType, typename OffsetsArrayHandleType>
-struct StorageTagGroupVecVariable {  };
+struct VTKM_ALWAYS_EXPORT StorageTagGroupVecVariable {  };
 
 template<typename SourceArrayHandleType, typename OffsetsArrayHandleType>
 class Storage<

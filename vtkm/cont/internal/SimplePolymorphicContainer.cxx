@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 UT-Battelle, LLC.
+//  Copyright 2015 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -17,25 +17,23 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ErrorControl_h
-#define vtk_m_cont_ErrorControl_h
 
-#include <vtkm/cont/Error.h>
+#include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 namespace vtkm {
 namespace cont {
+namespace internal {
 
-/// The superclass of all exceptions thrown from within the VTKm control
-/// environment.
-///
-class VTKM_ALWAYS_EXPORT ErrorControl : public vtkm::cont::Error
+SimplePolymorphicContainerBase::SimplePolymorphicContainerBase()
 {
-protected:
-  ErrorControl() { }
-  ErrorControl(const std::string message) : Error(message) { }
-};
 
 }
-} // namespace vtkm::cont
 
-#endif //vtk_m_cont_ErrorControl_h
+SimplePolymorphicContainerBase::~SimplePolymorphicContainerBase()
+{
+
+}
+
+}
+}
+} // namespace vtkm::cont::internal

@@ -31,7 +31,7 @@ namespace exec {
 namespace internal {
 
 template<typename IndexPortalType, typename ValuePortalType>
-class ArrayPortalPermutation
+class VTKM_ALWAYS_EXPORT ArrayPortalPermutation
 {
 public:
   typedef typename ValuePortalType::ValueType ValueType;
@@ -104,7 +104,7 @@ namespace cont {
 namespace internal {
 
 template<typename IndexArrayType, typename ValueArrayType>
-struct StorageTagPermutation {  };
+struct VTKM_ALWAYS_EXPORT StorageTagPermutation {  };
 
 template<typename IndexArrayType, typename ValueArrayType>
 class Storage<

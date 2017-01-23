@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 UT-Battelle, LLC.
+//  Copyright 2015 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -17,25 +17,38 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ErrorControl_h
-#define vtk_m_cont_ErrorControl_h
 
-#include <vtkm/cont/Error.h>
+#include <vtkm/cont/Field.h>
 
 namespace vtkm {
 namespace cont {
 
-/// The superclass of all exceptions thrown from within the VTKm control
-/// environment.
-///
-class VTKM_ALWAYS_EXPORT ErrorControl : public vtkm::cont::Error
+void Field::PrintSummary(std::ostream &out) const
 {
-protected:
-  ErrorControl() { }
-  ErrorControl(const std::string message) : Error(message) { }
-};
+    out<<"   "<<this->Name;
+    out<<" assoc= ";
+    switch (this->GetAssociation())
+    {
+    case ASSOC_ANY: out<<"Any "; break;
+    case ASSOC_WHOLE_MESH: out<<"Mesh "; break;
+    case ASSOC_POINTS: out<<"Points "; break;
+    case ASSOC_CELL_SET: out<<"Cells "; break;
+    case ASSOC_LOGICAL_DIM: out<<"LogicalDim "; break;
+    }
+    this->Data.PrintSummary(out);
+    out<<"\n";
+}
+
+const vtkm::cont::DynamicArrayHandle &Field::GetData() const
+{
+return this->Data;
+}
+
+vtkm::cont::DynamicArrayHandle &Field::GetData()
+{
+this->ModifiedFlag = true;
+return this->Data;
+}
 
 }
 } // namespace vtkm::cont
-
-#endif //vtk_m_cont_ErrorControl_h
