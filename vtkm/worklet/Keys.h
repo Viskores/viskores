@@ -70,10 +70,18 @@ public:
   Keys()
   {  }
 
-  template<typename OriginalKeyStorage, typename Device>
+  /// \b Construct a Keys class from an array of keys.
+  ///
+  /// Given an array of keys, construct a \c Keys class that will manage
+  /// using these keys to perform reduce-by-key operations.
+  ///
+  /// WARNING: This constructor will sort the keys array! If you need the
+  /// keys in the original order after calling this constructor, then make
+  /// a deep copy of the keys first.
+  ///
+  template<typename KeyStorage, typename Device>
   VTKM_CONT
-  Keys(const vtkm::cont::ArrayHandle<KeyType,OriginalKeyStorage> &keys,
-       Device)
+  Keys(vtkm::cont::ArrayHandle<KeyType,KeyStorage> keys, Device)
   {
     this->BuildArrays(keys, Device());
   }
@@ -150,28 +158,24 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id> Offsets;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> Counts;
 
-  template<typename OriginalKeyArrayType, typename Device>
+  template<typename KeyArrayType, typename Device>
   VTKM_CONT
-  void BuildArrays(const OriginalKeyArrayType &originalKeys, Device)
+  void BuildArrays(KeyArrayType &keys, Device)
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
-    vtkm::Id numOriginalKeys = originalKeys.GetNumberOfValues();
+    vtkm::Id numKeys = keys.GetNumberOfValues();
 
-    // Copy and sort the keys. (Copy is in place.)
-    KeyArrayHandleType sortedKeys;
-    Algorithm::Copy(originalKeys, sortedKeys);
-
-    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(numOriginalKeys),
+    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(numKeys),
                     this->SortedValuesMap);
 
     // TODO: Do we need the ability to specify a comparison functor for sort?
-    Algorithm::SortByKey(sortedKeys, this->SortedValuesMap);
+    Algorithm::SortByKey(keys, this->SortedValuesMap);
 
     // Find the unique keys and the number of values per key.
     Algorithm::ReduceByKey(
-          sortedKeys,
-          vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numOriginalKeys),
+          keys,
+          vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
           this->UniqueKeys,
           this->Counts,
           vtkm::Sum());
@@ -181,7 +185,7 @@ private:
         Algorithm::ScanExclusive(
           vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()),
           this->Offsets);
-    VTKM_ASSERT(offsetsTotal == numOriginalKeys); // Sanity check
+    VTKM_ASSERT(offsetsTotal == numKeys); // Sanity check
     (void)offsetsTotal; // Shut up, compiler
   }
 };
