@@ -27,11 +27,11 @@ namespace {
 vtkm::cont::CellSetExplicit<>
 CreateInputCellSet()
 {
-  vtkm::cont::CellSetExplicit<> cellSet(11, "cells");
+  vtkm::cont::CellSetExplicit<> cellSet("cells");
   cellSet.PrepareToAddCells(2, 7);
   cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE,3,vtkm::make_Vec<vtkm::Id>(0,2,4));
   cellSet.AddCell(vtkm::CELL_SHAPE_QUAD,4,vtkm::make_Vec<vtkm::Id>(4,2,6,8));
-  cellSet.CompleteAddingCells();
+  cellSet.CompleteAddingCells(11);
   return cellSet;
 }
 

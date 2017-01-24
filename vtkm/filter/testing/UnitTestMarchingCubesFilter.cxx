@@ -245,8 +245,11 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
     vtkm::cont::Field("distanceToOther", vtkm::cont::Field::ASSOC_POINTS,
                       vtkm::cont::DynamicArrayHandle(distanceToOther)));
 
-  CellSet cellSet(HexTag(), coordinates.GetNumberOfValues(), "cells");
-  cellSet.Fill(connectivity);
+  CellSet cellSet("cells");
+  cellSet.Fill(coordinates.GetNumberOfValues(),
+               HexTag::Id,
+               HexTraits::NUM_POINTS,
+               connectivity);
 
   dataSet.AddCellSet(cellSet);
 

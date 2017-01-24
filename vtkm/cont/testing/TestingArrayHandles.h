@@ -105,7 +105,7 @@ struct TestingArrayHandles
   {
     ExecutionPortalType Portal;
     VTKM_CONT
-    InplaceFunctor(ExecutionPortalType p): Portal(p) {}
+    InplaceFunctor(const ExecutionPortalType &p): Portal(p) {}
 
     VTKM_EXEC
     void operator()(vtkm::Id index) const

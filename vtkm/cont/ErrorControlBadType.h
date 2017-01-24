@@ -28,7 +28,7 @@ namespace cont {
 /// This class is thrown when VTK-m encounters data of a type that is
 /// incompatible with the current operation.
 ///
-class ErrorControlBadType : public ErrorControl
+class VTKM_ALWAYS_EXPORT ErrorControlBadType : public ErrorControl
 {
 public:
   ErrorControlBadType(const std::string &message)

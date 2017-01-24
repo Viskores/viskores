@@ -42,7 +42,7 @@ namespace cont {
 /// any operation that tries to modify it.
 ///
 template<class ArrayPortalType>
-struct StorageTagImplicit
+struct VTKM_ALWAYS_EXPORT StorageTagImplicit
 {
   typedef ArrayPortalType PortalType;
 };

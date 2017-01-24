@@ -409,7 +409,7 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet &cellset,
     RenderStructuredLineSegments(numVerts, verts, sf);
   }
   else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()) &&
-           cellset.Cast<vtkm::cont::CellSetSingleType<> >().GetCellTypeAsId() ==
+           cellset.Cast<vtkm::cont::CellSetSingleType<> >().GetCellShapeAsId() ==
                                           vtkm::CELL_SHAPE_LINE)
   {
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > verts;

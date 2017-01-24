@@ -19,7 +19,6 @@
 ##============================================================================
 
 include(CMakeParseArguments)
-include(GenerateExportHeader)
 
 # Utility to build a kit name from the current directory.
 function(vtkm_get_kit_name kitvar)
@@ -631,7 +630,13 @@ function(vtkm_library)
   set_property(TARGET ${lib_name} APPEND PROPERTY
       INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
 
-  target_link_libraries(${lib_name} ${VTKm_LIBRARIES})
+  set(lib_subset)
+  foreach(lib ${VTKm_LIBRARIES})
+   if(NOT lib STREQUAL lib_name)
+     list(APPEND lib_subset ${lib})
+   endif()
+  endforeach()
+  target_link_libraries(${lib_name} ${lib_subset})
 
   set(cxx_args ${VTKm_COMPILE_OPTIONS})
   separate_arguments(cxx_args)
@@ -657,15 +662,34 @@ function(vtkm_library)
       )
   endif(VTKm_EXTRA_COMPILER_WARNINGS)
 
-  generate_export_header(${lib_name})
+  #Now generate a header that holds the macros needed to easily export
+  #template classes. This
+  string(TOUPPER ${lib_name} BASE_NAME_UPPER)
+  set(EXPORT_MACRO_NAME "${BASE_NAME_UPPER}")
 
-  #generate_export_header creates the header in CMAKE_CURRENT_BINARY_DIR.
-  #The build expects it in the install directory.
-  file(COPY
-    ${CMAKE_CURRENT_BINARY_DIR}/${lib_name}_export.h
-    DESTINATION
-      ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
-    )
+  set(EXPORT_IS_BUILT_STATIC 0)
+  get_target_property(is_static ${lib_name} TYPE)
+  if(${is_static} STREQUAL "STATIC_LIBRARY")
+    #If we are building statically set the define symbol
+    set(EXPORT_IS_BUILT_STATIC 1)
+  endif()
+  unset(is_static)
+
+  get_target_property(EXPORT_IMPORT_CONDITION ${lib_name} DEFINE_SYMBOL)
+  if(NOT EXPORT_IMPORT_CONDITION)
+    #set EXPORT_IMPORT_CONDITION to what the DEFINE_SYMBOL would be when
+    #building shared
+    set(EXPORT_IMPORT_CONDITION ${lib_name}_EXPORTS)
+  endif()
+
+  configure_file(
+      ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
+      ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
+    @ONLY)
+
+  unset(EXPORT_MACRO_NAME)
+  unset(EXPORT_IS_BUILT_STATIC)
+  unset(EXPORT_IMPORT_CONDITION)
 
   install(TARGETS ${lib_name}
     EXPORT ${VTKm_EXPORT_NAME}

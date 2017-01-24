@@ -28,7 +28,7 @@ namespace cont {
 /// This class is thrown when a VTKm function or method encounters an invalid
 /// value that inhibits progress.
 ///
-class ErrorControlBadValue : public ErrorControl
+class VTKM_ALWAYS_EXPORT ErrorControlBadValue : public ErrorControl
 {
 public:
   ErrorControlBadValue(const std::string &message)

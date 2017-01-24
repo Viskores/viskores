@@ -20,6 +20,8 @@
 #ifndef vtk_m_cont_DynamicArrayHandle_h
 #define vtk_m_cont_DynamicArrayHandle_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/TypeListTag.h>
 #include <vtkm/VecTraits.h>
 
@@ -40,10 +42,12 @@ namespace detail {
 
 /// \brief Base class for PolymorphicArrayHandleContainer
 ///
-struct PolymorphicArrayHandleContainerBase
+struct VTKM_CONT_EXPORT PolymorphicArrayHandleContainerBase
 {
+  PolymorphicArrayHandleContainerBase();
+
   // This must exist so that subclasses are destroyed correctly.
-  virtual ~PolymorphicArrayHandleContainerBase() {  }
+  virtual ~PolymorphicArrayHandleContainerBase();
 
   virtual vtkm::IdComponent GetNumberOfComponents() const = 0;
   virtual vtkm::Id GetNumberOfValues() const = 0;
@@ -63,7 +67,7 @@ struct PolymorphicArrayHandleContainerBase
 /// simple questions about the object.
 ///
 template<typename T, typename Storage>
-struct PolymorphicArrayHandleContainer
+struct VTKM_ALWAYS_EXPORT PolymorphicArrayHandleContainer
     : public PolymorphicArrayHandleContainerBase
 {
   typedef vtkm::cont::ArrayHandle<T, Storage> ArrayHandleType;
@@ -184,7 +188,7 @@ DynamicArrayHandleTryCast(
 /// lists.
 ///
 template<typename TypeList, typename StorageList>
-class DynamicArrayHandleBase
+class VTKM_ALWAYS_EXPORT DynamicArrayHandleBase
 {
 public:
   VTKM_CONT
@@ -399,7 +403,7 @@ public:
   }
 
   VTKM_CONT
-  virtual void PrintSummary(std::ostream &out) const
+  void PrintSummary(std::ostream &out) const
   {
     this->ArrayContainer->PrintSummary(out);
   }
@@ -452,6 +456,8 @@ private:
   {
     // This type of array handle cannot exist, so do nothing.
   }
+
+  void operator=(const DynamicArrayHandleTryStorage<Functor,Type> &); // Not implemented
 };
 
 template<typename Functor, typename StorageList>
@@ -478,6 +484,9 @@ struct DynamicArrayHandleTryType {
       this->FoundCast = true;
     }
   }
+
+private:
+  void operator=(const DynamicArrayHandleTryType<Functor,StorageList> &); // Not implemented
 };
 
 } // namespace detail
@@ -506,7 +515,7 @@ void DynamicArrayHandleBase<TypeList,StorageList>::
   if (!tryType.FoundCast)
   {
     throw vtkm::cont::ErrorControlBadValue(
-          "Could not find appropriate cast for array in CastAndCall.");
+          "Could not find appropriate cast for array in CastAndCall1.");
   }
 }
 
@@ -530,7 +539,7 @@ void DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG,
   if (!tryType.FoundCast)
   {
     throw vtkm::cont::ErrorControlBadValue(
-          "Could not find appropriate cast for array in CastAndCall.");
+          "Could not find appropriate cast for array in CastAndCall2.");
   }
 }
 

@@ -20,6 +20,8 @@
 #ifndef vtk_m_cont_Field_h
 #define vtk_m_cont_Field_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/Math.h>
 #include <vtkm/Range.h>
 #include <vtkm/Types.h>
@@ -104,7 +106,7 @@ private:
 /// A \c Field encapsulates an array on some piece of the mesh, such as
 /// the points, a cell set, a point logical dimension, or the whole mesh.
 ///
-class Field
+class VTKM_CONT_EXPORT Field
 {
 public:
 
@@ -334,6 +336,9 @@ public:
   }
 
   VTKM_CONT
+  Field &operator=(const vtkm::cont::Field &src) = default;
+
+  VTKM_CONT
   const std::string &GetName() const
   {
     return this->Name;
@@ -428,18 +433,10 @@ public:
                    VTKM_DEFAULT_STORAGE_LIST_TAG());
   }
 
-  VTKM_CONT
-  const vtkm::cont::DynamicArrayHandle &GetData() const
-  {
-    return this->Data;
-  }
+  const vtkm::cont::DynamicArrayHandle &GetData() const;
 
-  VTKM_CONT
-  vtkm::cont::DynamicArrayHandle &GetData()
-  {
-    this->ModifiedFlag = true;
-    return this->Data;
-  }
+  vtkm::cont::DynamicArrayHandle &GetData();
+
 
   template <typename T>
   VTKM_CONT
@@ -475,21 +472,7 @@ public:
   }
 
   VTKM_CONT
-  virtual void PrintSummary(std::ostream &out) const
-  {
-      out<<"   "<<this->Name;
-      out<<" assoc= ";
-      switch (this->GetAssociation())
-      {
-      case ASSOC_ANY: out<<"Any "; break;
-      case ASSOC_WHOLE_MESH: out<<"Mesh "; break;
-      case ASSOC_POINTS: out<<"Points "; break;
-      case ASSOC_CELL_SET: out<<"Cells "; break;
-      case ASSOC_LOGICAL_DIM: out<<"LogicalDim "; break;
-      }
-      this->Data.PrintSummary(out);
-      out<<"\n";
-  }
+  virtual void PrintSummary(std::ostream &out) const;
 
 private:
   std::string       Name;  ///< name of field

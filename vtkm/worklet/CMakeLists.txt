@@ -23,14 +23,17 @@ set(headers
   CellAverage.h
   CellDeepCopy.h
   Clip.h
+  ContourTreeUniform.h
   DispatcherMapField.h
   DispatcherMapTopology.h
+  DispatcherReduceByKey.h
   DispatcherStreamingMapField.h
   ExternalFaces.h
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
   KernelSplatter.h
+  Keys.h
   Magnitude.h
   MarchingCubes.h
   MarchingCubesDataTables.h
@@ -50,10 +53,12 @@ set(headers
   WaveletCompressor.h
   WorkletMapField.h
   WorkletMapTopology.h
+  WorkletReduceByKey.h
   )
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
+add_subdirectory(contourtree)
 add_subdirectory(splatkernels)
 add_subdirectory(wavelets)
 

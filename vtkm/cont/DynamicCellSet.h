@@ -116,7 +116,7 @@ DynamicCellSetTryCast(
 /// with the default cell set list.
 ///
 template<typename CellSetList>
-class DynamicCellSetBase
+class VTKM_ALWAYS_EXPORT DynamicCellSetBase
 {
   VTKM_IS_LIST_TAG(CellSetList);
 public:
@@ -326,6 +326,9 @@ struct DynamicCellSetTryCellSet
       }
     }
   }
+
+private:
+  void operator=(const DynamicCellSetTryCellSet<Functor> &); // Not implemented
 };
 
 } // namespace detail

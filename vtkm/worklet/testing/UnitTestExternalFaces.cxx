@@ -61,8 +61,11 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet &ds)
   }
 
 
-  vtkm::cont::CellSetExplicit<> new_cs(cellset.GetNumberOfPoints(),"cells");
-  new_cs.Fill(output_shapes, output_numIndices, output_conn);
+  vtkm::cont::CellSetExplicit<> new_cs("cells");
+  new_cs.Fill(cellset.GetNumberOfPoints(),
+              output_shapes,
+              output_numIndices,
+              output_conn);
   new_ds.AddCellSet(new_cs);
 
   return new_ds;

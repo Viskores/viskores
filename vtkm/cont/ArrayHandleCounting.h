@@ -32,7 +32,7 @@ namespace internal {
 
 /// \brief An implicit array portal that returns an counting value.
 template <class CountingValueType>
-class ArrayPortalCounting
+class VTKM_ALWAYS_EXPORT ArrayPortalCounting
 {
   typedef typename vtkm::VecTraits<CountingValueType>::ComponentType
       ComponentType;

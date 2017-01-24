@@ -23,9 +23,11 @@ set(unit_tests
   UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx
   UnitTestClipping.cxx
+  UnitTestContourTreeUniform.cxx
   UnitTestExternalFaces.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
+  UnitTestKeys.cxx
   UnitTestMagnitude.cxx
   UnitTestMarchingCubes.cxx
   UnitTestPointElevation.cxx
@@ -43,6 +45,7 @@ set(unit_tests
   UnitTestWorkletMapFieldWholeArray.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyUniform.cxx
+  UnitTestWorkletReduceByKey.cxx
   UnitTestVertexClustering.cxx
   UnitTestWaveletCompressor.cxx
  )

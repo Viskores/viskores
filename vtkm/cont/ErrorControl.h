@@ -28,7 +28,7 @@ namespace cont {
 /// The superclass of all exceptions thrown from within the VTKm control
 /// environment.
 ///
-class ErrorControl : public vtkm::cont::Error
+class VTKM_ALWAYS_EXPORT ErrorControl : public vtkm::cont::Error
 {
 protected:
   ErrorControl() { }

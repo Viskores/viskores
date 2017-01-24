@@ -326,6 +326,9 @@ private:
   const vtkm::Float64 Isovalue;
   const bool GenerateNormals;
   EdgeWeightGenerateMetaData<ScalarType, NormalStorageType, DeviceAdapter> MetaData;
+
+  // Not implemented
+  void operator=(const EdgeWeightGenerate<ScalarType,NormalStorageType,DeviceAdapter> &);
 };
 
 
@@ -630,11 +633,6 @@ vtkm::cont::CellSetSingleType< >
     }
   }
 
-  //assign the connectivity to the cell set
-  CellShapeTagTriangle triangleTag;
-  vtkm::cont::CellSetSingleType< > outputCells( triangleTag );
-  outputCells.Fill( connectivity );
-
   //generate the vertices's
   ApplyToField applyToField;
   vtkm::worklet::DispatcherMapField<ApplyToField,
@@ -644,6 +642,13 @@ vtkm::cont::CellSetSingleType< >
                               this->InterpolationWeights,
                               coordinateSystem,
                               vertices);
+
+  //assign the connectivity to the cell set
+  vtkm::cont::CellSetSingleType< > outputCells("contour");
+  outputCells.Fill( vertices.GetNumberOfValues(),
+                    vtkm::CELL_SHAPE_TRIANGLE,
+                    3,
+                    connectivity );
 
   return outputCells;
 }

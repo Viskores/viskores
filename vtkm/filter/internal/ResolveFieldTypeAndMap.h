@@ -94,6 +94,10 @@ private:
 
       return this->Valid;
     }
+
+  private:
+    // Not implemented
+    void operator=(const ResolveFieldTypeAndMapForDevice<T,StorageTag>&);
   };
 
 public:
@@ -106,6 +110,10 @@ public:
                            typename DerivedPolicy::DeviceAdapterList());
     this->RanProperly = doResolve.Valid;
   }
+
+private:
+  // Not implemented
+  void operator=(const ResolveFieldTypeAndMap<Derived,DerivedPolicy> &);
 };
 
 }

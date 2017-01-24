@@ -111,8 +111,12 @@ struct CellDeepCopy
           vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
 
     vtkm::cont::CellSetExplicit<ShapeStorage,NumIndicesStorage,ConnectivityStorage,OffsetsStorage>
-        newCellSet(inCellSet.GetNumberOfPoints(), inCellSet.GetName());
-    newCellSet.Fill(shapes, numIndices, connectivity, offsets);
+        newCellSet(inCellSet.GetName());
+    newCellSet.Fill(inCellSet.GetNumberOfPoints(),
+                    shapes,
+                    numIndices,
+                    connectivity,
+                    offsets);
     outCellSet = newCellSet;
   }
 

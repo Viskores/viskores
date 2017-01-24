@@ -54,6 +54,9 @@ struct PointGrad
   const vtkm::cont::CoordinateSystem* const Points;
   const vtkm::cont::ArrayHandle<T,S>* const InField;
   vtkm::cont::ArrayHandle< vtkm::Vec<T,3> >* Result;
+
+private:
+  void operator=(const PointGrad<DerivedPolicy,Device,T,S> &); // Not implemented
 };
 
 //-----------------------------------------------------------------------------

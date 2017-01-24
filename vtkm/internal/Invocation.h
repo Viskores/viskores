@@ -259,6 +259,10 @@ struct Invocation
   const ParameterInterface Parameters;
   OutputToInputMapType OutputToInputMap;
   VisitArrayType VisitArray;
+
+private:
+  // Do not allow assignment of one Invocation to another. It is too expensive.
+  void operator=(const Invocation<ParameterInterface,ControlInterface,ExecutionInterface,InputDomainIndex,OutputToInputMapType,VisitArrayType> &);
 };
 
 /// Convenience function for creating an Invocation object.
