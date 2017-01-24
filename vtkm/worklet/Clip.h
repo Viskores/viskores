@@ -328,6 +328,9 @@ public:
           {
             internal::ClipTables::EdgeVec edge =
                 this->ClipTables.GetEdge(shape.Id, entry);
+            // Sanity check to make sure the edge is valid.
+            VTKM_ASSERT(edge[0] != 255);
+            VTKM_ASSERT(edge[1] != 255);
 
             EdgeInterpolation ei;
             ei.Vertex1 = indices[edge[0]];
