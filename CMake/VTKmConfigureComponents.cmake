@@ -258,6 +258,10 @@ macro(vtkm_configure_component_CUDA)
     vtkm_configure_component_Base()
 
     find_package(CUDA ${VTKm_FIND_PACKAGE_QUIETLY})
+
+    #Make cuda link privately to cuda libraries
+    set(CUDA_LIBRARIES PRIVATE ${CUDA_LIBRARIES})
+
     mark_as_advanced(
       CUDA_BUILD_CUBIN
       CUDA_BUILD_EMULATION

@@ -118,7 +118,7 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
     target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
   endif ()
-  target_link_libraries(TestBuild_${name} ${VTKm_LIBRARIES})
+  target_link_libraries(TestBuild_${name} PRIVATE ${VTKm_LIBRARIES})
   set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
@@ -278,7 +278,7 @@ function(vtkm_unit_tests)
     #for any other targets
     target_include_directories(${test_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
 
-    target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
+    target_link_libraries(${test_prog} PRIVATE ${VTKm_LIBRARIES})
 
     target_compile_options(${test_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
@@ -405,7 +405,7 @@ function(vtkm_worklet_unit_tests device_adapter)
       add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
     endif()
     target_include_directories(${test_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
+    target_link_libraries(${test_prog} PRIVATE ${VTKm_LIBRARIES})
 
     #add the specific compile options for this executable
     target_compile_options(${test_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
@@ -533,7 +533,7 @@ function(vtkm_benchmarks device_adapter)
         PROPERTIES HEADER_FILE_ONLY TRUE)
 
       target_include_directories(${benchmark_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
-      target_link_libraries(${benchmark_prog} ${VTKm_LIBRARIES})
+      target_link_libraries(${benchmark_prog} PRIVATE ${VTKm_LIBRARIES})
 
       if(MSVC)
         vtkm_setup_msvc_properties(${benchmark_prog})
@@ -636,7 +636,7 @@ function(vtkm_library)
      list(APPEND lib_subset ${lib})
    endif()
   endforeach()
-  target_link_libraries(${lib_name} ${lib_subset})
+  target_link_libraries(${lib_name} PUBLIC ${lib_subset})
 
   set(cxx_args ${VTKm_COMPILE_OPTIONS})
   separate_arguments(cxx_args)
