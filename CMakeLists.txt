@@ -46,11 +46,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 # include some vtkm-specific cmake code.
 include(VTKmMacros)
 
-set(VTKm_INCLUDE_DIRS
-  ${CMAKE_CURRENT_BINARY_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  )
-
 # Create an "interface" target library. This is not a real library but rather
 # holds CMake configuration that is required for CXX targets that use VTK-m
 # headers. In particular, it makes sure the appropriate C++11 version is being
@@ -60,6 +55,11 @@ set(VTKm_INCLUDE_DIRS
 # configuration.
 add_library(vtkm INTERFACE)
 target_compile_features(vtkm INTERFACE cxx_auto_type)
+target_include_directories(vtkm INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
 install(TARGETS vtkm EXPORT ${VTKm_EXPORT_NAME})
 
 # Load the base VTK-m configuration, which is required for some of the later
