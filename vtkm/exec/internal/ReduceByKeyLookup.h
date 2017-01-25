@@ -31,7 +31,7 @@ namespace vtkm {
 namespace exec {
 namespace internal {
 
-/// \breif Execution object holding lookup info for reduce by key.
+/// \brief Execution object holding lookup info for reduce by key.
 ///
 /// A WorkletReduceByKey needs several arrays to map the current output object
 /// to the respective key and group of values. This execution object holds that
