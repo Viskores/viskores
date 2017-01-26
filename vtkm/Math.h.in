@@ -61,41 +61,25 @@ $# Ignore the following comment. It is meant for the generated file.
 #define VTKM_CUDA_MATH_FUNCTION_64(func) func
 
 $py(
-def unary_function(name, type, returntype = None, cuda_expression = None, std_expression = None):
-  if returntype is not None:
-
-    return '''static inline VTKM_EXEC_CONT
-{2} {0}({1} x) {{
+def unary_function(name, type, returntype, cuda_expression, std_expression, template_header, static_keywords):
+  return '''{5}
+{6} VTKM_EXEC_CONT
+{2} 
+{0}({1} x) {{
 #ifdef VTKM_CUDA
   return {3};
 #else
   return {4};
 #endif
 }}
-'''.format(name, type, returntype, cuda_expression, std_expression)
-
-  else:
-
-    return '''template <typename T>
-static inline VTKM_EXEC_CONT
-vtkm::FloatDefault {0}(T x) {{
-#ifdef VTKM_CUDA
-  if(std::is_same< vtkm::FloatDefault, vtkm::Float64 >::value)
-    return VTKM_CUDA_MATH_FUNCTION_64({1})(static_cast<vtkm::FloatDefault>(x));
-  else
-    return VTKM_CUDA_MATH_FUNCTION_32({1})(static_cast<vtkm::FloatDefault>(x));
-#else
-  return std::{1}(static_cast<vtkm::FloatDefault>(x));
-#endif
-}}
-'''.format(name, type)
-
+'''.format(name, type, returntype, cuda_expression, std_expression, template_header, static_keywords)
 
 def unary_Vec_function(vtkmname):
   return '''template<typename T, vtkm::IdComponent N>
 static inline VTKM_EXEC_CONT
-vtkm::Vec<vtkm::FloatDefault,N> {0}(const vtkm::Vec<T,N> &x) {{
-  vtkm::Vec<vtkm::FloatDefault,N> result;
+vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,N>
+{0}(const vtkm::Vec<T,N> &x) {{
+  vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
   {{
     result[index] = vtkm::{0}(x[index]);
@@ -104,70 +88,52 @@ vtkm::Vec<vtkm::FloatDefault,N> {0}(const vtkm::Vec<T,N> &x) {{
 }}
 template<typename T>
 static inline VTKM_EXEC_CONT
-vtkm::Vec<vtkm::FloatDefault,4> {0}(const vtkm::Vec<T,4> &x) {{
-  return vtkm::Vec<vtkm::FloatDefault,4>(vtkm::{0}(x[0]),
-                                         vtkm::{0}(x[1]),
-                                         vtkm::{0}(x[2]),
-                                         vtkm::{0}(x[3]));
+vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,4>
+{0}(const vtkm::Vec<T,4> &x) {{
+  return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,4>(vtkm::{0}(x[0]),
+                                                                                      vtkm::{0}(x[1]),
+                                                                                      vtkm::{0}(x[2]),
+                                                                                      vtkm::{0}(x[3]));
 }}
 template<typename T>
 static inline VTKM_EXEC_CONT
-vtkm::Vec<vtkm::FloatDefault,3> {0}(const vtkm::Vec<T,3> &x) {{
-  return vtkm::Vec<vtkm::FloatDefault,3>(vtkm::{0}(x[0]),
-                                         vtkm::{0}(x[1]),
-                                         vtkm::{0}(x[2]));
+vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,3>
+{0}(const vtkm::Vec<T,3> &x) {{
+  return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,3>(vtkm::{0}(x[0]),
+                                                                                      vtkm::{0}(x[1]),
+                                                                                      vtkm::{0}(x[2]));
 }}
 template<typename T>
 static inline VTKM_EXEC_CONT
-vtkm::Vec<vtkm::FloatDefault,2> {0}(const vtkm::Vec<T,2> &x) {{
-  return vtkm::Vec<vtkm::FloatDefault,2>(vtkm::{0}(x[0]),
-                                         vtkm::{0}(x[1]));
-}}
-'''.format(vtkmname) + \
-'''template<vtkm::IdComponent N>
-static inline VTKM_EXEC_CONT
-vtkm::Vec<vtkm::Float64,N> {0}(const vtkm::Vec<vtkm::Float64,N> &x) {{
-  vtkm::Vec<vtkm::Float64,N> result;
-  for (vtkm::IdComponent index = 0; index < N; index++)
-  {{
-    result[index] = vtkm::{0}(x[index]);
-  }}
-  return result;
-}}
-static inline VTKM_EXEC_CONT
-vtkm::Vec<vtkm::Float64,4> {0}(const vtkm::Vec<vtkm::Float64,4> &x) {{
-  return vtkm::Vec<vtkm::Float64,4>(vtkm::{0}(x[0]),
-                                    vtkm::{0}(x[1]),
-                                    vtkm::{0}(x[2]),
-                                    vtkm::{0}(x[3]));
-}}
-static inline VTKM_EXEC_CONT
-vtkm::Vec<vtkm::Float64,3> {0}(const vtkm::Vec<vtkm::Float64,3> &x) {{
-  return vtkm::Vec<vtkm::Float64,3>(vtkm::{0}(x[0]),
-                                    vtkm::{0}(x[1]),
-                                    vtkm::{0}(x[2]));
-}}
-static inline VTKM_EXEC_CONT
-vtkm::Vec<vtkm::Float64,2> {0}(const vtkm::Vec<vtkm::Float64,2> &x) {{
-  return vtkm::Vec<vtkm::Float64,2>(vtkm::{0}(x[0]),
-                                   vtkm::{0}(x[1]));
+vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,2>
+{0}(const vtkm::Vec<T,2> &x) {{
+  return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,2>(vtkm::{0}(x[0]),
+                                                                                      vtkm::{0}(x[1]));
 }}
 '''.format(vtkmname)
 
-
-
 def unary_math_function_no_vec(vtkmname, sysname, returntype = None):
-  return unary_function(vtkmname, sysname) + \
+  return unary_function(vtkmname,
+                        'T',
+                        'typename detail::FloatingPointReturnType<T>::Type' if returntype == None else returntype,
+                        'VTKM_CUDA_MATH_FUNCTION_64(' + sysname + ')(static_cast<vtkm::Float64>(x))',
+                        'std::' + sysname + '(static_cast<vtkm::Float64>(x))',
+                        'template<typename T>',
+                        'static inline') + \
          unary_function(vtkmname,
                         'vtkm::Float32',
-                        'vtkm::Float32' if returntype == None else returntype,
+                        'detail::FloatingPointReturnType<vtkm::Float32>::Type' if returntype == None else returntype,
                         'VTKM_CUDA_MATH_FUNCTION_32(' + sysname + ')(x)',
-                        'std::' + sysname + '(x)') + \
+                        'std::' + sysname + '(x)',
+                        'template<>',
+                        'inline') + \
          unary_function(vtkmname,
                         'vtkm::Float64',
-                        'vtkm::Float64' if returntype == None else returntype,
+                        'detail::FloatingPointReturnType<vtkm::Float64>::Type' if returntype == None else returntype,
                         'VTKM_CUDA_MATH_FUNCTION_64(' + sysname + ')(x)',
-                        'std::' + sysname + '(x)')
+                        'std::' + sysname + '(x)',
+                        'template<>',
+                        'inline')
 
 def unary_math_function(vtkmname, sysname):
   return unary_math_function_no_vec(vtkmname, sysname) + \
@@ -275,6 +241,28 @@ vtkm::Float64 Pi_4()
   return 0.78539816339744830961566084581987572;
 }
 
+namespace detail {
+  
+  template<typename T>
+  struct FloatingPointReturnType
+  {
+    typedef vtkm::Float64 Type;
+  };
+
+  template<>
+  struct FloatingPointReturnType<vtkm::Float32>
+  {
+    typedef vtkm::Float32 Type;
+  };
+
+  template<vtkm::IdComponent N>
+  struct FloatingPointReturnType<Vec<vtkm::Float32,N> >
+  {
+    typedef vtkm::Float32 Type;
+  };
+
+}
+
 /// Compute the sine of \p x.
 ///
 $unary_math_function('Sin', 'sin')\
@@ -357,6 +345,11 @@ static inline VTKM_EXEC_CONT
 vtkm::Float64 RSqrt(vtkm::Float64 x) {
   return rsqrt(x);
 }
+template<typename T>
+static inline VTKM_EXEC_CONT
+vtkm::Float64 RSqrt(T x) {
+  return rsqrt(static_cast<vtkm::Float64>(x));
+}
 #else // !VTKM_CUDA
 static inline VTKM_EXEC_CONT
 vtkm::Float32 RSqrt(vtkm::Float32 x) {
@@ -365,6 +358,11 @@ vtkm::Float32 RSqrt(vtkm::Float32 x) {
 static inline VTKM_EXEC_CONT
 vtkm::Float64 RSqrt(vtkm::Float64 x) {
   return 1/vtkm::Sqrt(x);
+}
+template<typename T>
+static inline VTKM_EXEC_CONT
+vtkm::Float64 RSqrt(T x) {
+  return 1/static_cast<vtkm::Float64>(x);
 }
 #endif // !VTKM_CUDA
 
@@ -390,6 +388,11 @@ static inline VTKM_EXEC_CONT
 vtkm::Float64 RCbrt(vtkm::Float64 x) {
   return rcbrt(x);
 }
+template<typename T>
+static inline VTKM_EXEC_CONT
+vtkm::Float64 RCbrt(T x) {
+  return rcbrt(static_cast<vtkm::Float64>(x));
+}
 #else // !VTKM_CUDA
 static inline VTKM_EXEC_CONT
 vtkm::Float32 RCbrt(vtkm::Float32 x) {
@@ -398,6 +401,11 @@ vtkm::Float32 RCbrt(vtkm::Float32 x) {
 static inline VTKM_EXEC_CONT
 vtkm::Float64 RCbrt(vtkm::Float64 x) {
   return 1/vtkm::Cbrt(x);
+}
+template<typename T>
+static inline VTKM_EXEC_CONT
+vtkm::Float64 RCbrt(T x) {
+  return 1/vtkm::Cbrt(static_cast<vtkm::Float64>(x));
 }
 #endif // !VTKM_CUDA
 
@@ -431,6 +439,11 @@ static inline VTKM_EXEC_CONT
 vtkm::Float64 Exp10(vtkm::Float64 x) {
   return exp10(x);
 }
+template<typename T>
+static inline VTKM_EXEC_CONT
+vtkm::Float64 Exp10(T x) {
+  return exp10(static_cast<vtkm::Float64>(x));
+}
 #else // !VTKM_CUDA
 static inline VTKM_EXEC_CONT
 vtkm::Float32 Exp10(vtkm::Float32 x) {
@@ -439,6 +452,11 @@ vtkm::Float32 Exp10(vtkm::Float32 x) {
 static inline VTKM_EXEC_CONT
 vtkm::Float64 Exp10(vtkm::Float64 x) {
   return vtkm::Pow(10, x);;
+}
+template<typename T>
+static inline VTKM_EXEC_CONT
+vtkm::Float64 Exp10(T x) {
+  return vtkm::Pow(10, static_cast<vtkm::Float64>(x));;
 }
 #endif // !VTKM_CUDA
 

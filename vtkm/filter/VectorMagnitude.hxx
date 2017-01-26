@@ -46,8 +46,10 @@ VectorMagnitude::DoExecute(const vtkm::cont::DataSet &inDataSet,
                            const vtkm::filter::PolicyBase<DerivedPolicy>&,
                            const DeviceAdapter&)
 {
-  typedef typename vtkm::VecTraits<T>::ComponentType ComponentType;
-  vtkm::cont::ArrayHandle<ComponentType> outArray;
+  //typedef typename vtkm::VecTraits<T>::ComponentType ComponentType;
+  //vtkm::cont::ArrayHandle<ComponentType> outArray;
+  typedef typename detail::FloatingPointReturnType<T>::Type ReturnType;
+  vtkm::cont::ArrayHandle<ReturnType> outArray;
 
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Magnitude,
                                     DeviceAdapter > dispatcher(this->Worklet);

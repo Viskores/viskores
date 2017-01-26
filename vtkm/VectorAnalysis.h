@@ -85,21 +85,16 @@ MagnitudeSquared(const T &x)
 namespace detail {
 template<typename T>
 VTKM_EXEC_CONT
-T MagnitudeTemplate(T x, vtkm::TypeTraitsScalarTag)
+typename detail::FloatingPointReturnType<T>::Type
+MagnitudeTemplate(T &x, vtkm::TypeTraitsScalarTag)
 {
   return vtkm::Abs(x);
 }
 
 template<typename T>
 VTKM_EXEC_CONT
-vtkm::FloatDefault MagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
-{
-  return vtkm::Sqrt(vtkm::MagnitudeSquared(x));
-}
-
-template<vtkm::IdComponent Size>
-VTKM_EXEC_CONT
-vtkm::Float64 MagnitudeTemplate(const vtkm::Vec<vtkm::Float64, Size> &x)
+typename detail::FloatingPointReturnType<T>::Type
+MagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 {
   return vtkm::Sqrt(vtkm::MagnitudeSquared(x));
 }
@@ -116,30 +111,26 @@ vtkm::Float64 MagnitudeTemplate(const vtkm::Vec<vtkm::Float64, Size> &x)
 ///
 template<typename T>
 VTKM_EXEC_CONT
-vtkm::FloatDefault Magnitude(const T &x)
+typename detail::FloatingPointReturnType<T>::Type 
+Magnitude(const T &x)
 {
   return detail::MagnitudeTemplate(
         x, typename vtkm::TypeTraits<T>::DimensionalityTag());
-}
-template<vtkm::IdComponent Size>
-VTKM_EXEC_CONT
-vtkm::Float64 Magnitude(const vtkm::Vec<vtkm::Float64, Size> &x)
-{
-  return detail::MagnitudeTemplate(x);
 }
 
 // ----------------------------------------------------------------------------
 namespace detail {
 template<typename T>
 VTKM_EXEC_CONT
-T RMagnitudeTemplate(T x, vtkm::TypeTraitsScalarTag)
+typename detail::FloatingPointReturnType<T>::Type 
+RMagnitudeTemplate(T x, vtkm::TypeTraitsScalarTag)
 {
-  return T(1)/vtkm::Abs(x);
+  return 1.0/vtkm::Abs(x);
 }
 
 template<typename T>
 VTKM_EXEC_CONT
-typename vtkm::VecTraits<T>::ComponentType
+typename detail::FloatingPointReturnType<T>::Type
 RMagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 {
   return vtkm::RSqrt(vtkm::MagnitudeSquared(x));
@@ -153,7 +144,7 @@ RMagnitudeTemplate(const T &x, vtkm::TypeTraitsVectorTag)
 ///
 template<typename T>
 VTKM_EXEC_CONT
-typename vtkm::VecTraits<T>::ComponentType
+typename detail::FloatingPointReturnType<T>::Type
 RMagnitude(const T &x)
 {
   return detail::RMagnitudeTemplate(
@@ -206,11 +197,12 @@ void Normalize(T &x)
 ///
 template<typename T>
 VTKM_EXEC_CONT
-vtkm::Vec<T,3> Cross(const vtkm::Vec<T,3> &x, const vtkm::Vec<T,3> &y)
+vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,3>
+Cross(const vtkm::Vec<T,3> &x, const vtkm::Vec<T,3> &y)
 {
-  return vtkm::Vec<T,3>(x[1]*y[2] - x[2]*y[1],
-                        x[2]*y[0] - x[0]*y[2],
-                        x[0]*y[1] - x[1]*y[0]);
+  return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,3>(x[1]*y[2] - x[2]*y[1],
+                                                                        x[2]*y[0] - x[0]*y[2],
+                                                                        x[0]*y[1] - x[1]*y[0]);
 }
 
 //-----------------------------------------------------------------------------
@@ -222,9 +214,10 @@ vtkm::Vec<T,3> Cross(const vtkm::Vec<T,3> &x, const vtkm::Vec<T,3> &y)
 ///
 template<typename T>
 VTKM_EXEC_CONT
-vtkm::Vec<T,3> TriangleNormal(const vtkm::Vec<T,3> &a,
-                              const vtkm::Vec<T,3> &b,
-                              const vtkm::Vec<T,3> &c)
+vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,3>
+TriangleNormal(const vtkm::Vec<T,3> &a,
+               const vtkm::Vec<T,3> &b,
+               const vtkm::Vec<T,3> &c)
 {
   return vtkm::Cross(b-a, c-a);
 }

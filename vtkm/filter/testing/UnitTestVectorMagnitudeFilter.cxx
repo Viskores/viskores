@@ -18,6 +18,8 @@
 //  this software.
 //============================================================================
 
+#define VTKM_DEFAULT_TYPE_LIST_TAG ::vtkm::TypeListTagAll
+
 #include <vtkm/filter/VectorMagnitude.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -33,25 +35,36 @@ void TestVectorMagnitude()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  //Verify that we can compute the gradient of a 3 component vector
   const int nVerts = 18;
-  vtkm::Float64 vars[nVerts] = {10.1, 20.1, 30.1, 40.1, 50.2,
-                                60.2, 70.2, 80.2, 90.3, 100.3,
-                                110.3, 120.3, 130.4, 140.4,
-                                150.4, 160.4, 170.5, 180.5};
-  std::vector< vtkm::Vec<vtkm::Float64,3> > vec(nVerts);
-  for(std::size_t i=0; i < vec.size(); ++i)
+  vtkm::Float64 fvars[nVerts] = {10.1, 20.1, 30.1, 40.1, 50.2,
+                                 60.2, 70.2, 80.2, 90.3, 100.3,
+                                 110.3, 120.3, 130.4, 140.4,
+                                 150.4, 160.4, 170.5, 180.5};
+
+  vtkm::Int32 ivars[nVerts] = {10, 20, 30, 40, 50,
+                               60, 70, 80, 90, 100,
+                               110, 120, 130, 140,
+                               150, 160, 170, 180};
+
+  std::vector< vtkm::Vec<vtkm::Float64,3> > fvec(nVerts);
+  std::vector< vtkm::Vec<vtkm::Int32,3> > ivec(nVerts);
+  for(std::size_t i=0; i < fvec.size(); ++i)
   {
-    vec[i] = vtkm::make_Vec(vars[i],vars[i],vars[i]);
+    fvec[i] = vtkm::make_Vec(fvars[i],fvars[i],fvars[i]);
+    ivec[i] = vtkm::make_Vec(ivars[i],ivars[i],ivars[i]);
   }
-  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float64,3> > input =
-    vtkm::cont::make_ArrayHandle(vec);
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec_pointvar", input);
+  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float64,3> > finput =
+    vtkm::cont::make_ArrayHandle(fvec);
+  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Int32,3> > iinput =
+    vtkm::cont::make_ArrayHandle(ivec);
+
+  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "double_vec_pointvar", finput);
+  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "integer_vec_pointvar", iinput);
 
   vtkm::filter::ResultField result;
   vtkm::filter::VectorMagnitude vm;
 
-  result = vm.Execute(dataSet, dataSet.GetField("vec_pointvar"));
+  result = vm.Execute(dataSet, dataSet.GetField("double_vec_pointvar"));
 
   VTKM_TEST_ASSERT( result.IsValid(), "result should be valid" );
   VTKM_TEST_ASSERT(result.GetField().GetName() == "magnitude",
@@ -61,12 +74,32 @@ void TestVectorMagnitude()
                    "Output field has wrong association");
   
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  const bool valid = result.FieldAs(resultArrayHandle);
+  bool valid = result.FieldAs(resultArrayHandle);
   if(valid)
   { 
     for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
     {
-      VTKM_TEST_ASSERT(test_equal(std::sqrt(3*vars[i]*vars[i]),
+      VTKM_TEST_ASSERT(test_equal(std::sqrt(3*fvars[i]*fvars[i]),
+                                  resultArrayHandle.GetPortalConstControl().Get(i)),
+         "Wrong result for Magnitude worklet");
+    }
+  }
+
+  result = vm.Execute(dataSet, dataSet.GetField("integer_vec_pointvar"));
+
+  VTKM_TEST_ASSERT( result.IsValid(), "result should be valid" );
+  VTKM_TEST_ASSERT(result.GetField().GetName() == "magnitude",
+                   "Output field has wrong name.");
+  VTKM_TEST_ASSERT(result.GetField().GetAssociation() ==
+                   vtkm::cont::Field::ASSOC_POINTS,
+                   "Output field has wrong association");
+
+  valid = result.FieldAs(resultArrayHandle);
+  if(valid)
+  {
+    for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
+    {
+      VTKM_TEST_ASSERT(test_equal(std::sqrt(3*ivars[i]*ivars[i]),
                                   resultArrayHandle.GetPortalConstControl().Get(i)),
          "Wrong result for Magnitude worklet");
     }
