@@ -34,5 +34,5 @@ else()
 endif()
 
 target_include_directories(MultiBackend PRIVATE ${VTKm_INCLUDE_DIRS})
-target_link_libraries(MultiBackend ${VTKm_LIBRARIES})
+target_link_libraries(MultiBackend PRIVATE ${VTKm_LIBRARIES})
 target_compile_options(MultiBackend PRIVATE ${VTKm_COMPILE_OPTIONS})
