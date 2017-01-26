@@ -72,6 +72,7 @@ licenses.
 - - - - - - - - - - - - - - - - - - - - - - - - do not remove this line
 CMake/FindTBB.cmake
 CMake/FindGLEW.cmake
+Utilities
 vtkm/cont/tbb/internal/parallel_sort.h
 vtkm/testing/OptionParser.h
 vtkm/internal/brigand.hpp

@@ -27,11 +27,6 @@ cmake_minimum_required(VERSION 3.3)
 
 project (VTKm)
 
-set(VTKm_MAJOR_VERSION 1)
-set(VTKm_MINOR_VERSION 1)
-set(VTKm_PATCH_VERSION 0)
-set(VTKm_VERSION "${VTKm_MAJOR_VERSION}.${VTKm_MINOR_VERSION}.${VTKm_PATCH_VERSION}")
-
 set(VTKm_INSTALL_INCLUDE_DIR "include")
 set(VTKm_INSTALL_CONFIG_DIR "lib")
 set(VTKm_INSTALL_LIB_DIR "lib")
@@ -42,6 +37,15 @@ set(VTKm_EXPORT_NAME "VTKmTargets")
 
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
+
+# Determine VTK-m version
+include(Utilities/Git/Git.cmake)
+include(VTKmDetermineVersion)
+# Load hardcoded version in case this is not a Git repository
+file(STRINGS version.txt version_txt)
+extract_version_components("${version_txt}" "VTKm")
+# Get the version from git if we can
+determine_version(${VTKm_SOURCE_DIR} ${GIT_EXECUTABLE} "VTKm")
 
 # include some vtkm-specific cmake code.
 include(VTKmMacros)
@@ -314,9 +318,9 @@ install(EXPORT ${VTKm_EXPORT_NAME}
 set(CPACK_PACKAGE_DESCRIPTION_FILE ${VTKm_SOURCE_DIR}/README.md)
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The VTKm Toolkit")
 set(CPACK_PACKAGE_NAME "VTKm")
-set(CPACK_PACKAGE_VERSION_MAJOR ${VTKm_MAJOR_VERSION})
-set(CPACK_PACKAGE_VERSION_MINOR ${VTKm_MINOR_VERSION})
-set(CPACK_PACKAGE_VERSION_PATCH ${VTKm_PATCH_VERSION})
+set(CPACK_PACKAGE_VERSION_MAJOR ${VTKm_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${VTKm_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${VTKm_VERSION_PATCH})
 set(CPACK_PACKAGE_FILE_NAME "VTKm-${VTKm_VERSION}")
 set(CPACK_RESOURCE_FILE_LICENSE ${VTKm_SOURCE_DIR}/LICENSE.txt)
 set(CPACK_RESOURCE_FILE_README ${VTKm_SOURCE_DIR}/README.md)
