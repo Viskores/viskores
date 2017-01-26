@@ -76,3 +76,5 @@ Utilities
 vtkm/cont/tbb/internal/parallel_sort.h
 vtkm/testing/OptionParser.h
 vtkm/internal/brigand.hpp
+version.txt
+
