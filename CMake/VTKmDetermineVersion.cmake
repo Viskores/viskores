@@ -59,6 +59,10 @@ function(determine_version source_dir git_command var_prefix)
   extract_version_components("${output}" tmp)
   if(DEFINED tmp_VERSION)
     message(STATUS "Determined Source Version : ${tmp_VERSION_FULL}")
+    if (NOT "${tmp_VERSION}" STREQUAL "${${var_prefix}_VERSION}")
+      message(WARNING
+        "Version from git (${tmp_VERSION}) disagrees with hard coded version (${${var_prefix}_VERSION}). Either update the git tags or version.txt.")
+    endif()
     foreach(suffix VERSION VERSION_MAJOR VERSION_MINOR VERSION_PATCH
                    VERSION_PATCH_EXTRA VERSION_FULL VERSION_IS_RELEASE)
       set(${var_prefix}_${suffix} ${tmp_${suffix}} PARENT_SCOPE)
