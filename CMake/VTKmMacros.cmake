@@ -625,18 +625,8 @@ function(vtkm_library)
     add_library(${lib_name} ${VTKm_LIB_SOURCES})
   endif()
 
-  #do it as a property value so we don't pollute the include_directories
-  #for any other targets
-  set_property(TARGET ${lib_name} APPEND PROPERTY
-      INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
-
-  set(lib_subset)
-  foreach(lib ${VTKm_LIBRARIES})
-   if(NOT lib STREQUAL lib_name)
-     list(APPEND lib_subset ${lib})
-   endif()
-  endforeach()
-  target_link_libraries(${lib_name} PUBLIC ${lib_subset})
+  #need to link to the vtkm target as makes C++11 become enabled
+  target_link_libraries(${lib_name} PUBLIC vtkm)
 
   set(cxx_args ${VTKm_COMPILE_OPTIONS})
   separate_arguments(cxx_args)
