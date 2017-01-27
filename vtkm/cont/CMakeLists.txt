@@ -89,6 +89,7 @@ set(sources
   )
 
 vtkm_library(SOURCES ${sources})
+target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)

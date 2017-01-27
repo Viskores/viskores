@@ -28,6 +28,6 @@ find_package(VTKm REQUIRED QUIET
 if(VTKm_OpenGL_FOUND AND VTKm_Rendering_FOUND AND VTKm_GLUT_FOUND)
   add_executable(Rendering_SERIAL Rendering.cxx)
   target_include_directories(Rendering_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(Rendering_SERIAL ${VTKm_LIBRARIES})
+  target_link_libraries(Rendering_SERIAL PRIVATE ${VTKm_LIBRARIES})
   target_compile_options(Rendering_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 endif()
