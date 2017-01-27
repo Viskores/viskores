@@ -109,16 +109,21 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     # and we want system includes so we have to hijack cuda
     # to do it
     foreach(dir ${VTKm_INCLUDE_DIRS})
+      #this internal variable has changed names depending on the CMake ver
       list(APPEND CUDA_NVCC_INCLUDE_ARGS_USER -isystem ${dir})
+      list(APPEND CUDA_NVCC_INCLUDE_DIRS_USER -isystem ${dir})
     endforeach()
 
+    cuda_include_directories(${VTKm_SOURCE_DIR}
+                             ${VTKm_BINARY_DIR}/include
+                            )
+
     cuda_add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
-    target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
   elseif (${cxxfiles_len} GREATER 0)
     add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
-    target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
+    target_include_directories(TestBuild_${name} PRIVATE vtkm ${VTKm_INCLUDE_DIRS})
   endif ()
-  target_link_libraries(TestBuild_${name} PRIVATE ${VTKm_LIBRARIES})
+  target_link_libraries(TestBuild_${name} PRIVATE vtkm_cont ${VTKm_LIBRARIES})
   set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
@@ -263,7 +268,10 @@ function(vtkm_unit_tests)
       vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags )
 
       # Cuda compiles do not respect target_include_directories
-      cuda_include_directories(${VTKm_INCLUDE_DIRS})
+      cuda_include_directories(${VTKm_SOURCE_DIR}
+                               ${VTKm_BINARY_DIR}/include
+                               ${VTKm_INCLUDE_DIRS}
+                               )
 
       cuda_add_executable(${test_prog} ${TestSources})
 
@@ -278,7 +286,7 @@ function(vtkm_unit_tests)
     #for any other targets
     target_include_directories(${test_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
 
-    target_link_libraries(${test_prog} PRIVATE ${VTKm_LIBRARIES})
+    target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_LIBRARIES})
 
     target_compile_options(${test_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
@@ -395,7 +403,10 @@ function(vtkm_worklet_unit_tests device_adapter)
       vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags )
 
       # Cuda compiles do not respect target_include_directories
-      cuda_include_directories(${VTKm_INCLUDE_DIRS})
+      cuda_include_directories(${VTKm_SOURCE_DIR}
+                               ${VTKm_BINARY_DIR}/include
+                               ${VTKm_INCLUDE_DIRS}
+                               )
 
       cuda_add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
 
@@ -405,7 +416,7 @@ function(vtkm_worklet_unit_tests device_adapter)
       add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
     endif()
     target_include_directories(${test_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(${test_prog} PRIVATE ${VTKm_LIBRARIES})
+    target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_LIBRARIES})
 
     #add the specific compile options for this executable
     target_compile_options(${test_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
@@ -522,7 +533,11 @@ function(vtkm_benchmarks device_adapter)
 
       if(is_cuda)
         # Cuda compiles do not respect target_include_directories
-        cuda_include_directories(${VTKm_INCLUDE_DIRS})
+
+        cuda_include_directories(${VTKm_SOURCE_DIR}
+                                 ${VTKm_BINARY_DIR}/include
+                                 ${VTKm_BACKEND_INCLUDE_DIRS}
+                                 )
 
         cuda_add_executable(${benchmark_prog} ${file} ${benchmark_headers})
       else()
@@ -532,8 +547,8 @@ function(vtkm_benchmarks device_adapter)
       set_source_files_properties(${benchmark_headers}
         PROPERTIES HEADER_FILE_ONLY TRUE)
 
-      target_include_directories(${benchmark_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
-      target_link_libraries(${benchmark_prog} PRIVATE ${VTKm_LIBRARIES})
+      target_include_directories(${benchmark_prog} PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
+      target_link_libraries(${benchmark_prog} PRIVATE vtkm_cont ${VTKm_BACKEND_LIBRARIES})
 
       if(MSVC)
         vtkm_setup_msvc_properties(${benchmark_prog})
@@ -610,7 +625,10 @@ function(vtkm_library)
     vtkm_wrap_sources_for_cuda(cuda_sources ${VTKm_LIB_WRAP_FOR_CUDA})
 
     # Cuda compiles do not respect target_include_directories
-    cuda_include_directories(${VTKm_INCLUDE_DIRS})
+    cuda_include_directories(${VTKm_SOURCE_DIR}
+                             ${VTKm_BINARY_DIR}/include
+                             ${VTKm_BACKEND_INCLUDE_DIRS}
+                             )
 
     if(BUILD_SHARED_LIBS AND NOT WIN32)
       set(compile_options -Xcompiler=${CMAKE_CXX_COMPILE_OPTIONS_VISIBILITY}hidden)
