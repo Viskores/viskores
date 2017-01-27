@@ -189,8 +189,8 @@ macro(vtkm_configure_component_EGL)
 
   vtkm_finish_configure_component(EGL
     DEPENDENT_VARIABLES VTKm_OpenGL_FOUND EGL_FOUND
-    ADD_INCLUDES ${EGL_INCLUDE_DIR}
-    ADD_LIBRARIES ${EGL_LIBRARY}
+    ADD_INCLUDES ${EGL_INCLUDE_DIRS}
+    ADD_LIBRARIES ${EGL_LIBRARIES}
     )
 endmacro(vtkm_configure_component_EGL)
 
@@ -201,8 +201,8 @@ macro(vtkm_configure_component_GLFW)
 
   vtkm_finish_configure_component(GLFW
     DEPENDENT_VARIABLES VTKm_OpenGL_FOUND GLFW_FOUND
-    ADD_INCLUDES ${GLFW_INCLUDE_DIR}
-    ADD_LIBRARIES ${GLFW_LIBRARY}
+    ADD_INCLUDES ${GLFW_INCLUDE_DIRS}
+    ADD_LIBRARIES ${GLFW_LIBRARIES}
     )
 endmacro(vtkm_configure_component_GLFW)
 
