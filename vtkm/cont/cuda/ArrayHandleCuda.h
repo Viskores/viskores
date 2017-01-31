@@ -88,6 +88,13 @@ public:
   }
 
   VTKM_CONT
+  void Set(vtkm::Id vtkmNotUsed(index), T vtkmNotUsed(value)) const
+  {
+    throw vtkm::cont::ErrorControlBadType(
+      "ArrayHandleCuda only provides access to the device pointer.");
+  }
+
+  VTKM_CONT
   DevicePointer GetDevicePointer() const
   {
     return Data;

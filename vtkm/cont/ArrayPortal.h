@@ -72,8 +72,9 @@ public:
   VTKM_CONT
   ValueType Get(vtkm::Id index) const;
 
-  /// Sets a value in the array. This function may not exist for an ArrayPortal
-  /// pointing to a const array.
+  /// Sets a value in the array. If it is not possible to set a value in the
+  /// array, this method may error out (for example with a VTKM_ASSERT). In
+  /// this case the behavior is undefined.
   ///
   VTKM_CONT
   void Set(vtkm::Id index, const ValueType &value) const;

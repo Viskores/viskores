@@ -183,6 +183,13 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
+  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const
+  {
+    VTKM_ASSERT(false && "Attempted to write to constant array.");
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
   IteratorT GetIteratorBegin() const {
     return this->BeginIterator;
   }

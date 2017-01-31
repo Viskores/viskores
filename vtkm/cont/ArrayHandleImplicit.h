@@ -60,8 +60,16 @@ public:
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const { return this->Functor(index); }
+
+  VTKM_EXEC_CONT
+  void Set(vtkm::Id vtkmNotUsed(index),
+           const ValueType &vtkmNotUsed(value)) const
+  {
+    VTKM_ASSERT(false && "Cannot write to read-only implicit array.");
+  }
 
   typedef vtkm::cont::internal::IteratorFromArrayPortal<
       ArrayPortalImplicit<ValueType,FunctorType> > IteratorType;
