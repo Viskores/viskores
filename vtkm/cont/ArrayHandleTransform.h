@@ -90,6 +90,14 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
+  void Set(vtkm::Id vtkmNotUsed(index),
+           const ValueType &vtkmNotUsed(value)) const
+  {
+    VTKM_ASSERT(false && "Cannot write to read-only transform array. (No inverse transform given.)");
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
   const PortalType &GetPortal() const { return this->Portal; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS

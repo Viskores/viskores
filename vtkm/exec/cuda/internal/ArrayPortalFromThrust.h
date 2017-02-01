@@ -346,8 +346,8 @@ public:
 
 
   __host__ __device__
-  void Set(vtkm::Id index, ValueType value) const {
-    *(this->BeginIterator + index) = value;
+  void Set(vtkm::Id vtkmNotUsed(index), ValueType vtkmNotUsed(value)) const {
+     VTKM_ASSERT("Cannot set to const array.");
   }
 
   VTKM_EXEC_CONT

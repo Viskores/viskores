@@ -82,6 +82,13 @@ public:
                      this->Step*ValueType(static_cast<ComponentType>(index)));
   }
 
+  VTKM_EXEC_CONT
+  void Set(vtkm::Id vtkmNotUsed(index),
+           const ValueType &vtkmNotUsed(value)) const
+  {
+    VTKM_ASSERT(false && "Cannot write to read-only counting array.");
+  }
+
 private:
   ValueType Start;
   ValueType Step;

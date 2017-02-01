@@ -213,6 +213,17 @@ public:
     return localPortals.GetReturnValue();
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  void Set(vtkm::Id vtkmNotUsed(index),
+           const ValueType &vtkmNotUsed(value)) const
+  {
+    // There is no technical reason why this cannot be implemented. As of this
+    // writing no one has needed to write to a composite vector yet.
+    VTKM_ASSERT(false && "Set not yet implemented for composite vector. Do you volunteer to implement it?");
+  }
+
+
 private:
   PortalTypes Portals;
   ComponentMapType SourceComponents;

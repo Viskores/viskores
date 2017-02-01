@@ -303,7 +303,7 @@ private:
       {
         vtkm::Id implicitLen = length - start_pos;
         vtkm::Id basicLen    = start_pos;
-    
+
         // make an implicit array
         ValueHandleType implicit =
             vtkm::cont::make_ArrayHandleImplicit<ValueType>(functor,
