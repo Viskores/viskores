@@ -68,7 +68,9 @@ public:
   void Set(vtkm::Id vtkmNotUsed(index),
            const ValueType &vtkmNotUsed(value)) const
   {
+#if !(defined(VTKM_MSVC) && defined(VTKM_CUDA))
     VTKM_ASSERT(false && "Cannot write to read-only implicit array.");
+#endif
   }
 
   typedef vtkm::cont::internal::IteratorFromArrayPortal<
