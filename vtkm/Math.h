@@ -2570,9 +2570,25 @@ vtkm::Int64 Abs(vtkm::Int64 x)
 #error Unknown size of Int64.
 #endif
 }
+static inline VTKM_EXEC_CONT
+vtkm::Float32 Abs(vtkm::Float32 x) {
+#ifdef VTKM_CUDA
+  return VTKM_CUDA_MATH_FUNCTION_32(fabs)(x);
+#else
+  return std::fabs(x);
+#endif
+}
+static inline VTKM_EXEC_CONT
+vtkm::Float64 Abs(vtkm::Float64 x) {
+#ifdef VTKM_CUDA
+  return VTKM_CUDA_MATH_FUNCTION_64(fabs)(x);
+#else
+  return std::fabs(x);
+#endif
+}
 template<typename T>
 static inline VTKM_EXEC_CONT
-typename detail::FloatingPointReturnType<T>::Type 
+typename detail::FloatingPointReturnType<T>::Type
 Abs(T x) {
 #ifdef VTKM_CUDA
   return VTKM_CUDA_MATH_FUNCTION_64(fabs)(static_cast<vtkm::Float64>(x));
@@ -2580,31 +2596,10 @@ Abs(T x) {
   return std::fabs(static_cast<vtkm::Float64>(x));
 #endif
 }
-template<>
-inline VTKM_EXEC_CONT
-detail::FloatingPointReturnType<vtkm::Float32>::Type 
-Abs(vtkm::Float32 x) {
-#ifdef VTKM_CUDA
-  return VTKM_CUDA_MATH_FUNCTION_32(fabs)(x);
-#else
-  return std::fabs(x);
-#endif
-}
-template<>
-inline VTKM_EXEC_CONT
-detail::FloatingPointReturnType<vtkm::Float64>::Type 
-Abs(vtkm::Float64 x) {
-#ifdef VTKM_CUDA
-  return VTKM_CUDA_MATH_FUNCTION_64(fabs)(x);
-#else
-  return std::fabs(x);
-#endif
-}
 template<typename T, vtkm::IdComponent N>
 static inline VTKM_EXEC_CONT
-vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,N>
-Abs(const vtkm::Vec<T,N> &x) {
-  vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,N> result;
+vtkm::Vec<T,N> Abs(const vtkm::Vec<T,N> &x) {
+  vtkm::Vec<T,N> result;
   for (vtkm::IdComponent index = 0; index < N; index++)
   {
     result[index] = vtkm::Abs(x[index]);
@@ -2613,27 +2608,24 @@ Abs(const vtkm::Vec<T,N> &x) {
 }
 template<typename T>
 static inline VTKM_EXEC_CONT
-vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,4>
-Abs(const vtkm::Vec<T,4> &x) {
-  return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,4>(vtkm::Abs(x[0]),
-                                                                                      vtkm::Abs(x[1]),
-                                                                                      vtkm::Abs(x[2]),
-                                                                                      vtkm::Abs(x[3]));
+vtkm::Vec<T,4> Abs(const vtkm::Vec<T,4> &x) {
+  return vtkm::Vec<T,4>(vtkm::Abs(x[0]),
+                        vtkm::Abs(x[1]),
+                        vtkm::Abs(x[2]),
+                        vtkm::Abs(x[3]));
 }
 template<typename T>
 static inline VTKM_EXEC_CONT
-vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,3>
-Abs(const vtkm::Vec<T,3> &x) {
-  return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,3>(vtkm::Abs(x[0]),
-                                                                                      vtkm::Abs(x[1]),
-                                                                                      vtkm::Abs(x[2]));
+vtkm::Vec<T,3> Abs(const vtkm::Vec<T,3> &x) {
+  return vtkm::Vec<T,3>(vtkm::Abs(x[0]),
+                        vtkm::Abs(x[1]),
+                        vtkm::Abs(x[2]));
 }
 template<typename T>
 static inline VTKM_EXEC_CONT
-vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,2>
-Abs(const vtkm::Vec<T,2> &x) {
-  return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type,2>(vtkm::Abs(x[0]),
-                                                                                      vtkm::Abs(x[1]));
+vtkm::Vec<T,2> Abs(const vtkm::Vec<T,2> &x) {
+  return vtkm::Vec<T,2>(vtkm::Abs(x[0]),
+                        vtkm::Abs(x[1]));
 }
 
 /// Returns a nonzero value if \p x is negative.

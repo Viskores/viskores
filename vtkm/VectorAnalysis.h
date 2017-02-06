@@ -86,7 +86,7 @@ namespace detail {
 template<typename T>
 VTKM_EXEC_CONT
 typename detail::FloatingPointReturnType<T>::Type
-MagnitudeTemplate(T &x, vtkm::TypeTraitsScalarTag)
+MagnitudeTemplate(T x, vtkm::TypeTraitsScalarTag)
 {
   return vtkm::Abs(x);
 }
@@ -125,7 +125,7 @@ VTKM_EXEC_CONT
 typename detail::FloatingPointReturnType<T>::Type 
 RMagnitudeTemplate(T x, vtkm::TypeTraitsScalarTag)
 {
-  return 1.0/vtkm::Abs(x);
+  return T(1)/vtkm::Abs(x);
 }
 
 template<typename T>
