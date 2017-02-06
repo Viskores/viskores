@@ -242,21 +242,22 @@ vtkm::Float64 Pi_4()
 }
 
 namespace detail {
-  
+
   template<typename T>
+  struct FloatingPointReturnCondition :
+  std::enable_if<std::is_same<typename vtkm::VecTraits<T>::ComponentType, vtkm::Float32>::value ||
+                 std::is_same<typename vtkm::VecTraits<T>::ComponentType, const vtkm::Float32>::value>
+  {
+  };
+     
+  template<typename T, typename = void>
   struct FloatingPointReturnType
   {
     typedef vtkm::Float64 Type;
   };
 
-  template<>
-  struct FloatingPointReturnType<vtkm::Float32>
-  {
-    typedef vtkm::Float32 Type;
-  };
-
-  template<vtkm::IdComponent N>
-  struct FloatingPointReturnType<Vec<vtkm::Float32,N> >
+  template<typename T>
+  struct FloatingPointReturnType<T, typename FloatingPointReturnCondition<T>::type>
   {
     typedef vtkm::Float32 Type;
   };
