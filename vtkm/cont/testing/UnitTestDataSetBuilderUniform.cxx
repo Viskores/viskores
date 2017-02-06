@@ -25,7 +25,6 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
-
 #include <vtkm/cont/testing/Testing.h>
 
 #include <time.h>
@@ -47,7 +46,7 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
     //Verify basics..
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                      "Wrong number of cell sets.");
-    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 0,
+    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
                      "Wrong number of fields.");
     VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
                      "Wrong number of coordinate systems.");
@@ -56,11 +55,29 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
     VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells,
                      "Wrong number of cells.");
 
+    // test various field-getting methods and associations
+    try
+    {
+        ds.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+    }
+    catch (...)
+    {
+        VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+    }
+
+    try
+    {
+        ds.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
+    }
+    catch (...)
+    {
+        VTKM_TEST_FAIL("Failed to get field 'pointvar' with ASSOC_POINT_SET.");
+    }
+    
     //Make sure bounds are correct.
     vtkm::Bounds res = ds.GetCoordinateSystem().GetBounds(DeviceAdapter());
     VTKM_TEST_ASSERT(test_equal(bounds, res),
-                     "Bounds of coordinates do not match");
-
+                     "Bounds of coordinates do not match");    
     if (dim == 1)
     {
         vtkm::cont::CellSetStructured<1> cellSet;
@@ -130,6 +147,7 @@ UniformTests()
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
   vtkm::cont::DataSet dataSet;
+  vtkm::cont::DataSetFieldAdd dsf;
 
   std::uniform_int_distribution<vtkm::Id> randomDim(2, MAX_DIM_SIZE);
   std::uniform_int_distribution<vtkm::IdComponent> randomFill(0, NUM_FILL_METHODS-1);
@@ -166,20 +184,36 @@ UniformTests()
                           dimensions[2],
                           origin[2],
                           spacing[2]);
-
+       
     std::cout << "3D case" << std::endl;
     vtkm::Id numPoints = dimensions[0]*dimensions[1]*dimensions[2];
     vtkm::Id numCells = (dimensions[0]-1)*(dimensions[1]-1)*(dimensions[2]-1);
+    T varP3D[numPoints];
+    for (std::size_t i = 0; i < numPoints; i++)
+        varP3D[i] = static_cast<T>(i*1.1f);
+    T varC3D[numCells];
+    for (std::size_t i = 0; i < numCells; i++)
+        varC3D[i] = static_cast<T>(i*1.1f);
     dataSet = dataSetBuilder.Create(dimensions, origin, spacing);
+    dsf.AddPointField(dataSet, "pointvar", varP3D, numPoints);
+    dsf.AddCellField(dataSet, "cellvar", varC3D, numCells);
     ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
 
     std::cout << "2D case" << std::endl;
     numPoints = dimensions[0]*dimensions[1];
     numCells = (dimensions[0]-1)*(dimensions[1]-1);
     bounds.Z = vtkm::Range(0, 0);
+    T varP2D[numPoints];
+    for (std::size_t i = 0; i < numPoints; i++)
+        varP2D[i] = static_cast<T>(i*1.1f);
+    T varC2D[numCells];
+    for (std::size_t i = 0; i < numCells; i++)
+        varC2D[i] = static_cast<T>(i*1.1f);
     dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),
                                     vtkm::Vec<T,2>(origin[0], origin[1]),
                                     vtkm::Vec<T,2>(spacing[0], spacing[1]));
+    dsf.AddPointField(dataSet, "pointvar", varP2D, numPoints);
+    dsf.AddCellField(dataSet, "cellvar", varC2D, numCells);
     ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
 
     std::cout << "1D case" <<std::endl;
@@ -187,7 +221,15 @@ UniformTests()
     numCells = dimensions[0]-1;
     bounds.Y = vtkm::Range(0, 0);
     bounds.Z = vtkm::Range(0, 0);
+    T varP1D[numPoints];
+    for (std::size_t i = 0; i < numPoints; i++)
+        varP1D[i] = static_cast<T>(i*1.1f);
+    T varC1D[numCells];
+    for (std::size_t i = 0; i < numCells; i++)
+        varC1D[i] = static_cast<T>(i*1.1f);
     dataSet = dataSetBuilder.Create(dimensions[0], origin[0], spacing[0]);
+    dsf.AddPointField(dataSet, "pointvar", varP1D, numPoints);
+    dsf.AddCellField(dataSet, "cellvar", varC1D, numCells);
     ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
   }
 }

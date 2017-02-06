@@ -23,6 +23,7 @@
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/ExplicitTestData.h>
 
 #include <vector>
@@ -53,7 +54,7 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
     //Verify basics..
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                      "Wrong number of cell sets.");
-    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 0,
+    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
                      "Wrong number of fields.");
     VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
                      "Wrong number of coordinate systems.");
@@ -62,6 +63,26 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
     VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells,
                      "Wrong number of cells.");
 
+    // test various field-getting methods and associations
+    try
+    {
+        ds.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+    }
+    catch (...)
+    {
+        VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+    }
+
+    try
+    {
+        ds.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
+    }
+    catch (...)
+    {
+        VTKM_TEST_FAIL("Failed to get field 'pointvar' with ASSOC_POINT_SET.");
+    }    
+    
+    
     //Make sure bounds are correct.
     vtkm::Bounds computedBounds =
         ds.GetCoordinateSystem().GetBounds(DeviceAdapter());
@@ -97,41 +118,58 @@ CreateDataSetArr(bool useSeparatedCoords,
                  const vtkm::IdComponent *indices,
                  const vtkm::UInt8 *shape)
 {
+    vtkm::cont::DataSet dataSet;
+    vtkm::cont::DataSetFieldAdd dsf;
     vtkm::cont::DataSetBuilderExplicit dsb;
     if (useSeparatedCoords)
     {
         std::vector<T> xvals(numPoints), yvals(numPoints), zvals(numPoints);
+        std::vector<T>  varP(numPoints), varC(numCells);
         for (std::size_t i = 0; i < numPoints; i++)
         {
             xvals[i] = coords[i*3 + 0];
             yvals[i] = coords[i*3 + 1];
             zvals[i] = coords[i*3 + 2];
+            varP[i] = static_cast<T>(i*1.1f);
         }
-        vtkm::cont::ArrayHandle<T> X,Y,Z;
+        for (std::size_t i = 0; i < numCells; i++)
+            varC[i] = static_cast<T>(i*1.1f);
+        vtkm::cont::ArrayHandle<T> X,Y,Z,P,C;
         DFA::Copy(vtkm::cont::make_ArrayHandle(xvals), X);
         DFA::Copy(vtkm::cont::make_ArrayHandle(yvals), Y);
         DFA::Copy(vtkm::cont::make_ArrayHandle(zvals), Z);
-        return dsb.Create(X,Y,Z,
-                          createAH(numCells, shape),
-                          createAH(numCells, indices),
-                          createAH(numConn, conn));
+        DFA::Copy(vtkm::cont::make_ArrayHandle(varP), P);
+        DFA::Copy(vtkm::cont::make_ArrayHandle(varC), C);
+        dataSet = dsb.Create(X,Y,Z,
+                             createAH(numCells, shape),
+                             createAH(numCells, indices),
+                             createAH(numConn, conn));
+        dsf.AddPointField(dataSet, "pointvar", P);
+        dsf.AddCellField(dataSet, "cellvar", C);
+        return dataSet;
     }
     else
     {
         std::vector<vtkm::Vec<T,3> > tmp(numPoints);
+        std::vector<vtkm::Vec<T,1> > varP(numPoints), varC(numCells);
         for (std::size_t i = 0; i < numPoints; i++)
         {
             tmp[i][0] = coords[i*3 + 0];
             tmp[i][1] = coords[i*3 + 1];
             tmp[i][2] = coords[i*3 + 2];
+            varP[i][0] = static_cast<T>(i*1.1f);
         }
-
+        for (std::size_t i = 0; i < numCells; i++)
+            varC[i][0] = static_cast<T>(i*1.1f);
         vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > pts;
         DFA::Copy(vtkm::cont::make_ArrayHandle(tmp), pts);
-        return dsb.Create(pts,
-                          createAH(numCells, shape),
-                          createAH(numCells, indices),
-                          createAH(numConn, conn));
+        dataSet = dsb.Create(pts,
+                             createAH(numCells, shape),
+                             createAH(numCells, indices),
+                             createAH(numConn, conn));
+        dsf.AddPointField(dataSet, "pointvar", varP);
+        dsf.AddCellField(dataSet, "cellvar", varC);
+        return dataSet;
     }
 }
 
@@ -144,35 +182,50 @@ CreateDataSetVec(bool useSeparatedCoords,
                  const vtkm::IdComponent *indices,
                  const vtkm::UInt8 *shape)
 {
+    vtkm::cont::DataSet dataSet;
+    vtkm::cont::DataSetFieldAdd dsf;
     vtkm::cont::DataSetBuilderExplicit dsb;
 
     if (useSeparatedCoords)
     {
-        std::vector<T> X(numPoints), Y(numPoints), Z(numPoints);
+        std::vector<T> X(numPoints), Y(numPoints), Z(numPoints), varP(numPoints), varC(numCells);
         for (std::size_t i = 0; i < numPoints; i++)
         {
                 X[i] = coords[i*3 + 0];
                 Y[i] = coords[i*3 + 1];
                 Z[i] = coords[i*3 + 2];
+                varP[i] = static_cast<T>(i*1.1f);
         }
-        return dsb.Create(X,Y,Z,
-                          createVec(numCells, shape),
-                          createVec(numCells, indices),
-                          createVec(numConn, conn));
+        for (std::size_t i = 0; i < numCells; i++)
+            varC[i] = static_cast<T>(i*1.1f);
+        dataSet = dsb.Create(X,Y,Z,
+                             createVec(numCells, shape),
+                             createVec(numCells, indices),
+                             createVec(numConn, conn));
+        dsf.AddPointField(dataSet, "pointvar", varP);
+        dsf.AddCellField(dataSet, "cellvar", varC);
+        return dataSet;
     }
     else
     {
         std::vector<vtkm::Vec<T,3> > pts(numPoints);
+        std::vector<vtkm::Vec<T,1> > varP(numPoints), varC(numCells);
         for (std::size_t i = 0; i < numPoints; i++)
         {
             pts[i][0] = coords[i*3 + 0];
             pts[i][1] = coords[i*3 + 1];
             pts[i][2] = coords[i*3 + 2];
+            varP[i][0] = static_cast<T>(i*1.1f);
         }
-        return dsb.Create(pts,
-                          createVec(numCells, shape),
-                          createVec(numCells, indices),
-                          createVec(numConn, conn));
+        for (std::size_t i = 0; i < numCells; i++)
+            varC[i][0] = static_cast<T>(i*1.1f);
+        dataSet = dsb.Create(pts,
+                             createVec(numCells, shape),
+                             createVec(numCells, indices),
+                             createVec(numConn, conn));
+        dsf.AddPointField(dataSet, "pointvar", varP);
+        dsf.AddCellField(dataSet, "cellvar", varC);
+        return dataSet;
     }
 }
 

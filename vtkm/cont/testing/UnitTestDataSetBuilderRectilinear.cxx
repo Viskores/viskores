@@ -24,7 +24,7 @@
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicCellSet.h>
-
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <ctime>
@@ -46,7 +46,7 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
     //Verify basics..
     VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
                      "Wrong number of cell sets.");
-    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 0,
+    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
                      "Wrong number of fields.");
     VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
                      "Wrong number of coordinate systems.");
@@ -55,6 +55,25 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
     VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells,
                      "Wrong number of cells.");
 
+    // test various field-getting methods and associations
+    try
+    {
+        ds.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+    }
+    catch (...)
+    {
+        VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+    }
+
+    try
+    {
+        ds.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
+    }
+    catch (...)
+    {
+        VTKM_TEST_FAIL("Failed to get field 'pointvar' with ASSOC_POINT_SET.");
+    }    
+    
     //Make sure the bounds are correct.
     vtkm::Bounds res = ds.GetCoordinateSystem().GetBounds(DeviceAdapter());
     VTKM_TEST_ASSERT(test_equal(bounds, res),
@@ -108,6 +127,7 @@ RectilinearTests()
 
   vtkm::cont::DataSetBuilderRectilinear dataSetBuilder;
   vtkm::cont::DataSet dataSet;
+  vtkm::cont::DataSetFieldAdd dsf;
 
   std::uniform_int_distribution<vtkm::Id> randomDim(2,MAX_DIM_SIZE);
   std::uniform_int_distribution<vtkm::IdComponent> randomFill(0,NUM_FILL_METHODS-1);
@@ -142,18 +162,33 @@ RectilinearTests()
     std::cout << "1D cases" << std::endl;
     numPoints = dimensions[0];
     numCells = dimensions[0]-1;
+    std::vector<T> varP1D(numPoints);
+    for (std::size_t i = 0; i < numPoints; i++)
+        varP1D[i] = static_cast<T>(i*1.1f);
+    std::vector<T> varC1D(numCells);
+    for (std::size_t i = 0; i < numCells; i++)
+        varC1D[i] = static_cast<T>(i*1.1f);
     bounds.X = vtkm::Range(xCoordinates.front(), xCoordinates.back());
     std::cout << "  Create with std::vector" << std::endl;
     dataSet = dataSetBuilder.Create(xCoordinates);
+    dsf.AddPointField(dataSet, "pointvar", varP1D);
+    dsf.AddCellField(dataSet, "cellvar", varC1D);
     ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
-
+    
     std::cout << "2D cases" << std::endl;
     numPoints = dimensions[0]*dimensions[1];
     numCells = (dimensions[0]-1)*(dimensions[1]-1);
+    std::vector<T> varP2D(numPoints);
+    for (std::size_t i = 0; i < numPoints; i++)
+        varP2D[i] = static_cast<T>(i*1.1f);
+    std::vector<T> varC2D(numPoints);
+    for (std::size_t i = 0; i < numCells; i++)
+        varC2D[i] = static_cast<T>(i*1.1f);
     bounds.Y = vtkm::Range(yCoordinates.front(), yCoordinates.back());
-
     std::cout << "  Create with std::vector" << std::endl;
     dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates);
+    dsf.AddPointField(dataSet, "pointvar", varP2D);
+    dsf.AddCellField(dataSet, "cellvar", varC2D);
     ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
 
     std::cout << "  Create with C array" << std::endl;
@@ -161,20 +196,32 @@ RectilinearTests()
                                     dimensions[1],
                                     &xCoordinates.front(),
                                     &yCoordinates.front());
+    dsf.AddPointField(dataSet, "pointvar", &varP2D.front(), numPoints);
+    dsf.AddCellField(dataSet, "cellvar", &varC2D.front(), numCells);
     ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
 
     std::cout << "  Create with ArrayHandle" << std::endl;
     dataSet = dataSetBuilder.Create(vtkm::cont::make_ArrayHandle(xCoordinates),
                                     vtkm::cont::make_ArrayHandle(yCoordinates));
+    dsf.AddPointField(dataSet, "pointvar", vtkm::cont::make_ArrayHandle(varP2D));
+    dsf.AddCellField(dataSet, "cellvar", vtkm::cont::make_ArrayHandle(varC2D));
     ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
 
     std::cout << "3D cases" << std::endl;
     numPoints *= dimensions[2];
     numCells *= dimensions[2]-1;
+    std::vector<T> varP3D(numPoints);
+    for (std::size_t i = 0; i < numPoints; i++)
+        varP3D[i] = static_cast<T>(i*1.1f);;
+    std::vector<T> varC3D(numPoints);
+    for (std::size_t i = 0; i < numCells; i++)
+        varC3D[i] = static_cast<T>(i*1.1f);
     bounds.Z = vtkm::Range(zCoordinates.front(), zCoordinates.back());
 
     std::cout << "  Create with std::vector" << std::endl;
     dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates, zCoordinates);
+    dsf.AddPointField(dataSet, "pointvar", varP3D);
+    dsf.AddCellField(dataSet, "cellvar", varC3D);
     ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
 
     std::cout << "  Create with C array" << std::endl;
@@ -184,12 +231,16 @@ RectilinearTests()
                                     &xCoordinates.front(),
                                     &yCoordinates.front(),
                                     &zCoordinates.front());
+    dsf.AddPointField(dataSet, "pointvar", vtkm::cont::make_ArrayHandle(varP3D));
+    dsf.AddCellField(dataSet, "cellvar", vtkm::cont::make_ArrayHandle(varC3D));
     ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
 
     std::cout << "  Create with ArrayHandle" << std::endl;
     dataSet = dataSetBuilder.Create(vtkm::cont::make_ArrayHandle(xCoordinates),
                                     vtkm::cont::make_ArrayHandle(yCoordinates),
                                     vtkm::cont::make_ArrayHandle(zCoordinates));
+    dsf.AddPointField(dataSet, "pointvar", vtkm::cont::make_ArrayHandle(varP3D));
+    dsf.AddCellField(dataSet, "cellvar", vtkm::cont::make_ArrayHandle(varC3D));
     ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
   }
 }
