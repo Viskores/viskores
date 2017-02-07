@@ -82,7 +82,6 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
     VTKM_TEST_FAIL("Failed to get field 'pointvar' with ASSOC_POINT_SET.");
   }
 
-
   //Make sure bounds are correct.
   vtkm::Bounds computedBounds =
       ds.GetCoordinateSystem().GetBounds(DeviceAdapter());
