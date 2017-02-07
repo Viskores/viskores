@@ -163,12 +163,12 @@ RectilinearTests()
     numPoints = dimensions[0];
     numCells = dimensions[0]-1;
     std::vector<T> varP1D(static_cast<unsigned long>(numPoints));
-    for (vtkm::Id i = 0; i < numPoints; i++)
+    for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
     {
       varP1D[i] = static_cast<T>(i*1.1f);
     }
     std::vector<T> varC1D(static_cast<unsigned long>(numCells));
-    for (vtkm::Id i = 0; i < numCells; i++)
+    for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
     {
       varC1D[i] = static_cast<T>(i*1.1f);
     }
@@ -183,12 +183,12 @@ RectilinearTests()
     numPoints = dimensions[0]*dimensions[1];
     numCells = (dimensions[0]-1)*(dimensions[1]-1);
     std::vector<T> varP2D(static_cast<unsigned long>(numPoints));
-    for (vtkm::Id i = 0; i < numPoints; i++)
+    for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
     {
       varP2D[i] = static_cast<T>(i*1.1f);
     }
     std::vector<T> varC2D(static_cast<unsigned long>(numCells));
-    for (vtkm::Id i = 0; i < numCells; i++)
+    for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
     {
       varC2D[i] = static_cast<T>(i*1.1f);
     }
@@ -219,12 +219,12 @@ RectilinearTests()
     numPoints *= dimensions[2];
     numCells *= dimensions[2]-1;
     std::vector<T> varP3D(static_cast<unsigned long>(numPoints));
-    for (vtkm::Id i = 0; i < numPoints; i++)
+    for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
     {
       varP3D[i] = static_cast<T>(i*1.1f);;
     }
     std::vector<T> varC3D(static_cast<unsigned long>(numCells));
-    for (vtkm::Id i = 0; i < numCells; i++)
+    for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
     {
       varC3D[i] = static_cast<T>(i*1.1f);
     }
