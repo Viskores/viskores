@@ -88,7 +88,7 @@ VTKM_EXEC_CONT
 typename detail::FloatingPointReturnType<T>::Type
 MagnitudeTemplate(T x, vtkm::TypeTraitsScalarTag)
 {
-  return vtkm::Abs(x);
+  return static_cast<typename detail::FloatingPointReturnType<T>::Type>(vtkm::Abs(x));
 }
 
 template<typename T>
