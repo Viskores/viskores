@@ -45,22 +45,23 @@ enum ExtensionDirection2D {  // which side of a matrix to extend
 };
 
 enum ExtensionDirection3D {  // which side of a cube to extend
-  LEFT,
-  RIGHT,
-  TOP,
-  BOTTOM,
-  FRONT,
-  BACK
+  LEFT,       // X direction
+  RIGHT,      // X direction     Y
+  TOP,        // Y direction     |   Z
+  BOTTOM,     // Y direction     |  /
+  FRONT,      // Z direction     | /
+  BACK        // Z direction     |/________ X
 };
 
 
 // Worklet for 3D signal extension
 // It operates on a specified part of a big cube
+//
 class ExtensionWorklet3D : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension part
-                                 WholeArrayIn  < ScalarAll > ); // signal part
+  typedef void ControlSignature( WholeArrayOut < ScalarAll >,   // extension
+                                 WholeArrayIn  < ScalarAll > ); // signal
   typedef void ExecutionSignature( _1, _2, WorkIndex );
   typedef _1   InputDomain;
 
@@ -70,8 +71,8 @@ public:
                         vtkm::Id sigdimX,     vtkm::Id sigdimY,     vtkm::Id sigdimZ,
                         vtkm::Id sigstartX,   vtkm::Id sigstartY,   vtkm::Id sigstartZ,
                         vtkm::Id sigpretendX, vtkm::Id sigpretendY, vtkm::Id sigpretendZ,
-                        DWTMode               m, 
-                        ExtensionDirection2D  dir, 
+                        DWTMode               m,  // SYMH, SYMW, etc.
+                        ExtensionDirection3D  dir, 
                         bool                  pad_zero )
                      : 
                         extDimX( extdimX ),       extDimY( extdimY ),       extDimZ( extdimZ ),
@@ -84,28 +85,28 @@ public:
                         direction( dir ), 
                         padZero( pad_zero )  
   {}
-// TODO
 
   // Index translation helper
   VTKM_EXEC_CONT
-  void Ext1Dto2D ( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y ) const
+  void Ext1Dto3D ( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y, vtkm::Id &z ) const
   {
+    z = idx / (extDimX * extDimY);
+    y = (idx - z * extDimX * extDimY) / extDimX;
     x = idx % extDimX;
-    y = idx / extDimX;
   }
 
   // Index translation helper
   VTKM_EXEC_CONT
-  vtkm::Id Sig2Dto1D( vtkm::Id x, vtkm::Id y ) const
+  vtkm::Id Sig3Dto1D( vtkm::Id x, vtkm::Id y, vtkm::Id z) const
   {
-    return y * sigDimX + x;
+    return z * sigDimX * sigDimY + y * sigDimX + x;
   }
 
   // Index translation helper
   VTKM_EXEC_CONT
-  vtkm::Id SigPretend2Dto1D( vtkm::Id x, vtkm::Id y ) const
+  vtkm::Id SigPretend3Dto1D( vtkm::Id x, vtkm::Id y, vtkm::Id z ) const
   {
-    return (y + sigStartY) * sigDimX + x + sigStartX;
+    return (z + sigStartZ) * sigDimX * sigDimY + (y + sigStartY) * sigDimX + x + sigStartX;
   }
 
   template< typename PortalOutType, typename PortalInType >
@@ -114,13 +115,14 @@ public:
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
   {
-    vtkm::Id extX, extY, sigPretendX, sigPretendY;
-    Ext1Dto2D( workIndex, extX, extY );
+    vtkm::Id    extX, extY, extZ;
+    vtkm::Id    sigPretendX, sigPretendY, sigPretendZ;
+    Ext1Dto3D( workIndex, extX, extY, extZ );
     typename PortalOutType::ValueType sym = 1.0;
     if( mode == ASYMH || mode == ASYMW )
       sym = -1.0;
-    if( direction == LEFT )     
-    {
+    if( direction == LEFT )
+    {   // TODO
       sigPretendY = extY;
       if( mode == SYMH || mode == ASYMH )
         sigPretendX = extDimX - extX - 1;
