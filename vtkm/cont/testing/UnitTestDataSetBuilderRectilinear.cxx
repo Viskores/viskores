@@ -43,55 +43,55 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      vtkm::Id numPoints, vtkm::Id numCells,
                      const vtkm::Bounds &bounds)
 {
-    //Verify basics..
-    VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
-                     "Wrong number of cell sets.");
-    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
-                     "Wrong number of fields.");
-    VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                     "Wrong number of coordinate systems.");
-    VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == numPoints,
-                     "Wrong number of coordinates.");
-    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells,
-                     "Wrong number of cells.");
+  //Verify basics..
+  VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
+                   "Wrong number of cell sets.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
+                   "Wrong number of fields.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
+                   "Wrong number of coordinate systems.");
+  VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == numPoints,
+                   "Wrong number of coordinates.");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells,
+                   "Wrong number of cells.");
 
-    // test various field-getting methods and associations
-    try
-    {
-        ds.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
-    }
-    catch (...)
-    {
-        VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
-    }
+  // test various field-getting methods and associations
+  try
+  {
+    ds.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+  }
+  catch (...)
+  {
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+  }
 
-    try
-    {
-        ds.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
-    }
-    catch (...)
-    {
-        VTKM_TEST_FAIL("Failed to get field 'pointvar' with ASSOC_POINT_SET.");
-    }    
-    
-    //Make sure the bounds are correct.
-    vtkm::Bounds res = ds.GetCoordinateSystem().GetBounds(DeviceAdapter());
-    VTKM_TEST_ASSERT(test_equal(bounds, res),
-                     "Bounds of coordinates do not match");
-    if (dim == 2)
-    {
-        vtkm::cont::CellSetStructured<2> cellSet;
-        ds.GetCellSet(0).CopyTo(cellSet);
-        vtkm::IdComponent shape = cellSet.GetCellShape();
-        VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_QUAD, "Wrong element type");
-    }
-    else if (dim == 3)
-    {
-        vtkm::cont::CellSetStructured<3> cellSet;
-        ds.GetCellSet(0).CopyTo(cellSet);
-        vtkm::IdComponent shape = cellSet.GetCellShape();
-        VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_HEXAHEDRON, "Wrong element type");
-    }
+  try
+  {
+    ds.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
+  }
+  catch (...)
+  {
+    VTKM_TEST_FAIL("Failed to get field 'pointvar' with ASSOC_POINT_SET.");
+  }
+
+  //Make sure the bounds are correct.
+  vtkm::Bounds res = ds.GetCoordinateSystem().GetBounds(DeviceAdapter());
+  VTKM_TEST_ASSERT(test_equal(bounds, res),
+                   "Bounds of coordinates do not match");
+  if (dim == 2)
+  {
+    vtkm::cont::CellSetStructured<2> cellSet;
+    ds.GetCellSet(0).CopyTo(cellSet);
+    vtkm::IdComponent shape = cellSet.GetCellShape();
+    VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_QUAD, "Wrong element type");
+  }
+  else if (dim == 3)
+  {
+    vtkm::cont::CellSetStructured<3> cellSet;
+    ds.GetCellSet(0).CopyTo(cellSet);
+    vtkm::IdComponent shape = cellSet.GetCellShape();
+    VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_HEXAHEDRON, "Wrong element type");
+  }
 }
 
 template <typename T>
@@ -162,28 +162,36 @@ RectilinearTests()
     std::cout << "1D cases" << std::endl;
     numPoints = dimensions[0];
     numCells = dimensions[0]-1;
-    std::vector<T> varP1D(numPoints);
-    for (std::size_t i = 0; i < numPoints; i++)
-        varP1D[i] = static_cast<T>(i*1.1f);
-    std::vector<T> varC1D(numCells);
-    for (std::size_t i = 0; i < numCells; i++)
-        varC1D[i] = static_cast<T>(i*1.1f);
+    std::vector<T> varP1D(static_cast<T>(numPoints));
+    for (int i = 0; i < numPoints; i++)
+    {
+      varP1D[i] = static_cast<T>(i*1.1f);
+    }
+    std::vector<T> varC1D(static_cast<T>(numCells));
+    for (int i = 0; i < numCells; i++)
+    {
+      varC1D[i] = static_cast<T>(i*1.1f);
+    }
     bounds.X = vtkm::Range(xCoordinates.front(), xCoordinates.back());
     std::cout << "  Create with std::vector" << std::endl;
     dataSet = dataSetBuilder.Create(xCoordinates);
     dsf.AddPointField(dataSet, "pointvar", varP1D);
     dsf.AddCellField(dataSet, "cellvar", varC1D);
     ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
-    
+
     std::cout << "2D cases" << std::endl;
     numPoints = dimensions[0]*dimensions[1];
     numCells = (dimensions[0]-1)*(dimensions[1]-1);
-    std::vector<T> varP2D(numPoints);
-    for (std::size_t i = 0; i < numPoints; i++)
-        varP2D[i] = static_cast<T>(i*1.1f);
-    std::vector<T> varC2D(numPoints);
-    for (std::size_t i = 0; i < numCells; i++)
-        varC2D[i] = static_cast<T>(i*1.1f);
+    std::vector<T> varP2D(static_cast<T>(numPoints));
+    for (int i = 0; i < numPoints; i++)
+    {
+      varP2D[i] = static_cast<T>(i*1.1f);
+    }
+    std::vector<T> varC2D(static_cast<T>(numCells));
+    for (int i = 0; i < numCells; i++)
+    {
+      varC2D[i] = static_cast<T>(i*1.1f);
+    }
     bounds.Y = vtkm::Range(yCoordinates.front(), yCoordinates.back());
     std::cout << "  Create with std::vector" << std::endl;
     dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates);
@@ -210,12 +218,16 @@ RectilinearTests()
     std::cout << "3D cases" << std::endl;
     numPoints *= dimensions[2];
     numCells *= dimensions[2]-1;
-    std::vector<T> varP3D(numPoints);
-    for (std::size_t i = 0; i < numPoints; i++)
-        varP3D[i] = static_cast<T>(i*1.1f);;
-    std::vector<T> varC3D(numPoints);
-    for (std::size_t i = 0; i < numCells; i++)
-        varC3D[i] = static_cast<T>(i*1.1f);
+    std::vector<T> varP3D(static_cast<T>(numPoints));
+    for (int i = 0; i < numPoints; i++)
+    {
+      varP3D[i] = static_cast<T>(i*1.1f);;
+    }
+    std::vector<T> varC3D(static_cast<T>(numCells));
+    for (int i = 0; i < numCells; i++)
+    {
+      varC3D[i] = static_cast<T>(i*1.1f);
+    }
     bounds.Z = vtkm::Range(zCoordinates.front(), zCoordinates.back());
 
     std::cout << "  Create with std::vector" << std::endl;
