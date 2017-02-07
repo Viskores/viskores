@@ -39,7 +39,7 @@ namespace internal {
 namespace detail {
 
 template<typename ValueType>
-struct CompositeVectorSwizzleFunctor
+struct VTKM_ALWAYS_EXPORT CompositeVectorSwizzleFunctor
 {
   static const vtkm::IdComponent NUM_COMPONENTS =
       vtkm::VecTraits<ValueType>::NUM_COMPONENTS;
@@ -92,7 +92,7 @@ struct CompositeVectorSwizzleFunctor
 };
 
 template<typename ReturnValueType>
-struct CompositeVectorPullValueFunctor
+struct VTKM_ALWAYS_EXPORT CompositeVectorPullValueFunctor
 {
   vtkm::Id Index;
 
@@ -170,7 +170,7 @@ struct CheckArraySizeFunctor {
 /// This is the portal used within ArrayHandleCompositeVector.
 ///
 template<typename SignatureWithPortals>
-class ArrayPortalCompositeVector
+class VTKM_ALWAYS_EXPORT ArrayPortalCompositeVector
 {
   typedef vtkm::internal::FunctionInterface<SignatureWithPortals> PortalTypes;
 
@@ -213,13 +213,24 @@ public:
     return localPortals.GetReturnValue();
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  void Set(vtkm::Id vtkmNotUsed(index),
+           const ValueType &vtkmNotUsed(value)) const
+  {
+    // There is no technical reason why this cannot be implemented. As of this
+    // writing no one has needed to write to a composite vector yet.
+    VTKM_ASSERT(false && "Set not yet implemented for composite vector. Do you volunteer to implement it?");
+  }
+
+
 private:
   PortalTypes Portals;
   ComponentMapType SourceComponents;
 };
 
 template<typename SignatureWithArrays>
-struct StorageTagCompositeVector {  };
+struct VTKM_ALWAYS_EXPORT StorageTagCompositeVector {  };
 
 /// A convenience class that provides a typedef to the appropriate tag for
 /// a composite storage.

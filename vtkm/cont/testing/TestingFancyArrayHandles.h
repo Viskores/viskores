@@ -125,6 +125,19 @@ public:
 
   };
 
+  struct InplaceFunctorPair : public vtkm::worklet::WorkletMapField
+  {
+    typedef void ControlSignature(FieldInOut<>);
+    typedef void ExecutionSignature(_1);
+
+    template<typename T>
+    VTKM_EXEC
+    void operator()(vtkm::Pair<T,T> &value) const
+    {
+      value.second = value.first;
+    }
+  };
+
 
 #ifndef VTKM_CUDA
 private:
@@ -290,7 +303,7 @@ private:
       {
         vtkm::Id implicitLen = length - start_pos;
         vtkm::Id basicLen    = start_pos;
-    
+
         // make an implicit array
         ValueHandleType implicit =
             vtkm::cont::make_ArrayHandleImplicit<ValueType>(functor,
@@ -875,6 +888,26 @@ private:
     }
   };
 
+  struct TestZipAsInPlace
+  {
+    template<typename ValueType>
+    VTKM_CONT
+    void operator()(ValueType) const
+    {
+      vtkm::cont::ArrayHandle<ValueType> inputValues;
+      inputValues.Allocate(ARRAY_SIZE);
+      SetPortal(inputValues.GetPortalControl());
+
+      vtkm::cont::ArrayHandle<ValueType> outputValues;
+      outputValues.Allocate(ARRAY_SIZE);
+
+      vtkm::worklet::DispatcherMapField<InplaceFunctorPair,DeviceAdapterTag> dispatcher;
+      dispatcher.Invoke(vtkm::cont::make_ArrayHandleZip(inputValues,outputValues));
+
+      CheckPortal(outputValues.GetPortalConstControl());
+    }
+  };
+
   struct ScalarTypesToTest
       : vtkm::ListTagBase<vtkm::UInt8, vtkm::FloatDefault>
   {  };
@@ -1008,6 +1041,12 @@ private:
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestZipAsOutput(),
                               ZipTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleZip as In Place" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+                              TestingFancyArrayHandles<DeviceAdapterTag>::TestZipAsInPlace(),
+                              HandleTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleConcatenate as Input" << std::endl;

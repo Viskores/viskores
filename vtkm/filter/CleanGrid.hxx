@@ -128,11 +128,18 @@ CleanGrid::DoExecute(const vtkm::cont::DataSet &inData,
     vtkm::cont::CoordinateSystem coordSystem =
         inData.GetCoordinateSystem(coordSystemIndex);
 
-    vtkm::filter::ApplyPolicy(coordSystem,
-                              Policy(),
-                              vtkm::filter::FilterTraits<CleanGrid>())
-        .CastAndCall(detail::CleanCompactPointArrayFunctor<Device>(
-                       outData,coordSystem.GetName(),this));
+    if (this->GetCompactPointFields())
+    {
+      vtkm::filter::ApplyPolicy(coordSystem,
+                                Policy(),
+                                vtkm::filter::FilterTraits<CleanGrid>())
+          .CastAndCall(detail::CleanCompactPointArrayFunctor<Device>(
+                         outData,coordSystem.GetName(),this));
+    }
+    else
+    {
+      outData.AddCoordinateSystem(coordSystem);
+    }
   }
 
   return outData;

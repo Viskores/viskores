@@ -45,6 +45,13 @@ public:
   void SetComputePointGradient(bool enable) { ComputePointGradient=enable; }
   bool GetComputePointGradient() const { return ComputePointGradient; }
 
+  /// Add divergence field to the output data.  The name of the array
+  /// will be Divergence and will be a cell field unless \c ComputePointGradient
+  /// is enabled.  The input array must have 3 components in order to
+  /// compute this. The default is off.
+  void SetComputeDivergence(bool enable) { ComputeDivergence=enable; }
+  bool GetComputeDivergence() const { return ComputeDivergence; }
+
   /// Add voriticity/curl field to the output data.  The name of the array
   /// will be Vorticity and will be a cell field unless \c ComputePointGradient
   /// is enabled.  The input array must have 3 components in order to
@@ -58,6 +65,12 @@ public:
   /// compute this. The default is off.
   void SetComputeQCriterion(bool enable) { ComputeQCriterion=enable; }
   bool GetComputeQCriterion() const { return ComputeQCriterion; }
+
+
+  void SetDivergenceName( const std::string& name )
+    { this->DivergenceName = name; }
+  const std::string& GetDivergenceName() const
+    { return this->DivergenceName; }
 
   void SetVorticityName( const std::string& name )
     { this->VorticityName = name; }
@@ -79,9 +92,11 @@ public:
 
 private:
   bool ComputePointGradient;
+  bool ComputeDivergence;
   bool ComputeVorticity;
   bool ComputeQCriterion;
 
+  std::string DivergenceName;
   std::string VorticityName;
   std::string QCriterionName;
 };
@@ -93,8 +108,7 @@ public:
   struct TypeListTagGradientInputs
     : vtkm::ListTagBase<
         vtkm::Float32, vtkm::Float64,
-        vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>,
-        vtkm::Vec<vtkm::Float32, 4>, vtkm::Vec<vtkm::Float64, 4> > {};
+        vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3> > {};
 
   typedef TypeListTagGradientInputs InputFieldTypeList;
 };

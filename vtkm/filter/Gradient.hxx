@@ -23,12 +23,11 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
 #include <vtkm/worklet/Gradient.h>
-#include <vtkm/worklet/Vorticity.h>
 
 namespace {
 
 //-----------------------------------------------------------------------------
-template<typename DerivedPolicy, typename T, typename S>
+template<typename DerivedPolicy, typename Device, typename T, typename S>
 struct PointGrad
 {
   PointGrad(const vtkm::cont::CoordinateSystem& coords,
@@ -43,7 +42,7 @@ struct PointGrad
   template<typename CellSetType>
   void operator()(const CellSetType& cellset ) const
   {
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointGradient> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointGradient, Device> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       cellset, //whole cellset in
                       vtkm::filter::ApplyPolicy(*this->Points, this->Policy),
@@ -55,6 +54,9 @@ struct PointGrad
   const vtkm::cont::CoordinateSystem* const Points;
   const vtkm::cont::ArrayHandle<T,S>* const InField;
   vtkm::cont::ArrayHandle< vtkm::Vec<T,3> >* Result;
+
+private:
+  void operator=(const PointGrad<DerivedPolicy,Device,T,S> &); // Not implemented
 };
 
 //-----------------------------------------------------------------------------
@@ -89,6 +91,15 @@ void add_extra_vec_fields( const vtkm::cont::ArrayHandle< vtkm::Vec< vtkm::Vec<T
                            vtkm::filter::ResultField& result,
                            const DeviceAdapter&)
 {
+  if(filter->GetComputeDivergence())
+  {
+    vtkm::cont::ArrayHandle< T > divergence;
+    vtkm::worklet::DispatcherMapField< vtkm::worklet::Divergence, DeviceAdapter > dispatcher;
+    dispatcher.Invoke(inField, divergence);
+
+    add_field(result, divergence, filter->GetDivergenceName());
+  }
+
   if(filter->GetComputeVorticity())
   {
     vtkm::cont::ArrayHandle< vtkm::Vec<T,3> > vorticity;
@@ -128,6 +139,7 @@ Gradient::Gradient():
  ComputePointGradient(false),
  ComputeVorticity(false),
  ComputeQCriterion(false),
+ DivergenceName("Divergence"),
  VorticityName("Vorticity"),
  QCriterionName("QCriterion")
  {
@@ -173,7 +185,7 @@ vtkm::filter::ResultField Gradient::DoExecute(
   vtkm::cont::ArrayHandle< vtkm::Vec<T,3> > outArray;
   if(this->ComputePointGradient)
   {
-    PointGrad<DerivedPolicy,T,StorageType> func(coords, inField, &outArray);
+    PointGrad<DerivedPolicy,DeviceAdapter,T,StorageType> func(coords, inField, &outArray);
     vtkm::cont::CastAndCall( vtkm::filter::ApplyPolicy(cells, policy),
                              func);
     fieldAssociation = vtkm::cont::Field::ASSOC_POINTS;

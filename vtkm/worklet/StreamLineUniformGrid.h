@@ -252,9 +252,9 @@ public:
             pos[d] += (adata[d] + (2.0f * bdata[d]) + (2.0f * cdata[d]) + ddata[d]) / 6.0f;
           }
 
-          if (pos[0] < 0.0f || pos[0] > vdims[0] ||
-              pos[1] < 0.0f || pos[1] > vdims[1] ||
-              pos[2] < 0.0f || pos[2] > vdims[2])
+          if (pos[0] < 0.0f || pos[0] > static_cast<FieldType>(vdims[0]) ||
+              pos[1] < 0.0f || pos[1] > static_cast<FieldType>(vdims[1]) ||
+              pos[2] < 0.0f || pos[2] > static_cast<FieldType>(vdims[2]))
           {
             pos = pre_pos;
             done = true;
@@ -314,9 +314,9 @@ public:
             pos[d] += (adata[d] + (2.0f * bdata[d]) + (2.0f * cdata[d]) + ddata[d]) / 6.0f;
           }
 
-          if (pos[0] < 0.0f || pos[0] > vdims[0] ||
-              pos[1] < 0.0f || pos[1] > vdims[1] ||
-              pos[2] < 0.0f || pos[2] > vdims[2])
+          if (pos[0] < 0.0f || pos[0] > static_cast<FieldType>(vdims[0]) ||
+              pos[1] < 0.0f || pos[1] > static_cast<FieldType>(vdims[1]) ||
+              pos[2] < 0.0f || pos[2] > static_cast<FieldType>(vdims[2]))
           {
             pos = pre_pos;
             done = true;
@@ -425,7 +425,8 @@ public:
     vtkm::cont::DataSet OutDataSet;
     vtkm::cont::CellSetExplicit<> outCellSet;
 
-    outCellSet.Fill(cellTypes, numIndices, connectivity);
+    outCellSet.Fill(
+          coordinates.GetNumberOfValues(), cellTypes, numIndices, connectivity);
     OutDataSet.AddCellSet(outCellSet);
     OutDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 

@@ -39,7 +39,7 @@ namespace vtkm {
 namespace cont {
 namespace cuda {
 
-struct StorageTagCuda { };
+struct VTKM_ALWAYS_EXPORT StorageTagCuda { };
 
 } // namespace cuda
 } // namespace cont
@@ -82,6 +82,13 @@ public:
 
   VTKM_CONT
   ValueType Get(vtkm::Id index) const
+  {
+    throw vtkm::cont::ErrorControlBadType(
+      "ArrayHandleCuda only provides access to the device pointer.");
+  }
+
+  VTKM_CONT
+  void Set(vtkm::Id vtkmNotUsed(index), T vtkmNotUsed(value)) const
   {
     throw vtkm::cont::ErrorControlBadType(
       "ArrayHandleCuda only provides access to the device pointer.");

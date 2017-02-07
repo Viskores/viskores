@@ -28,7 +28,7 @@ namespace internal {
 
 /// \brief An implicit array port that computes point coordinates for a uniform grid.
 ///
-class ArrayPortalUniformPointCoordinates
+class VTKM_ALWAYS_EXPORT ArrayPortalUniformPointCoordinates
 {
 public:
   typedef vtkm::Vec<vtkm::FloatDefault,3> ValueType;

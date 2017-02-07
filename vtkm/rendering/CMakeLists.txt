@@ -78,6 +78,7 @@ set(sources
   WorldAnnotator.cxx
 
   internal/RunTriangulator.cxx
+  raytracing/Ray.cxx
   )
 
 set(opengl_headers
@@ -121,7 +122,7 @@ vtkm_configure_component_OpenGL()
 if(VTKm_OpenGL_FOUND)
   list(APPEND headers ${opengl_headers})
   list(APPEND sources ${opengl_sources})
-  
+
   vtkm_configure_component_OSMesa()
   if(VTKm_OSMesa_FOUND)
     list(APPEND headers ${osmesa_headers})
@@ -154,6 +155,16 @@ else()
     SOURCES ${sources}
     )
 endif()
+
+target_link_libraries(vtkm_rendering
+                      PUBLIC vtkm_cont
+                      PRIVATE ${VTKm_OPENGL_LIBRARIES}
+                              ${VTKm_BACKEND_LIBRARIES}
+                      )
+target_include_directories(vtkm_rendering
+                          PRIVATE ${VTKm_OPENGL_INCLUDE_DIRS}
+                                  ${VTKm_BACKEND_INCLUDE_DIRS}
+                          )
 
 # Subclasses need rendering library
 vtkm_configure_component_Rendering()

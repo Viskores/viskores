@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSet inDataSet = MakeTriangulateTestDataSet(dims);
 
   // Create the output dataset explicit cell set with same coordinate system
-  vtkm::cont::CellSetSingleType<> cellSet(vtkm::CellShapeTagTriangle(), "cells");
+  vtkm::cont::CellSetSingleType<> cellSet("cells");
   tetDataSet.AddCellSet(cellSet);
   tetDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 

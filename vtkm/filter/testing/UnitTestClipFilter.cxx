@@ -47,7 +47,7 @@ vtkm::cont::DataSet MakeTestDatasetExplicit()
 
   vtkm::cont::DataSet ds;
   vtkm::cont::DataSetBuilderExplicit builder;
-  ds = builder.Create(coords, vtkm::CellShapeTagTriangle(), connectivity, "coords");
+  ds = builder.Create(coords, vtkm::CellShapeTagTriangle(), 3, connectivity, "coords");
 
   std::vector<vtkm::Float32> values;
   values.push_back(1.0);

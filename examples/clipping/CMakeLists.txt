@@ -26,7 +26,7 @@ find_package(VTKm REQUIRED QUIET
 
 add_executable(Clipping_SERIAL Clipping.cxx)
 target_include_directories(Clipping_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-target_link_libraries(Clipping_SERIAL ${VTKm_LIBRARIES})
+target_link_libraries(Clipping_SERIAL PRIVATE ${VTKm_LIBRARIES})
 target_compile_options(Clipping_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 target_compile_definitions(Clipping_SERIAL PRIVATE
                            "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
@@ -45,7 +45,7 @@ if(VTKm_CUDA_FOUND)
 
   cuda_add_executable(Clipping_CUDA ${cudaSource})
   target_include_directories(Clipping_CUDA PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(Clipping_CUDA ${VTKm_LIBRARIES})
+  target_link_libraries(Clipping_CUDA PRIVATE ${VTKm_LIBRARIES})
   target_compile_options(Clipping_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
@@ -56,7 +56,7 @@ endif()
 if(VTKm_TBB_FOUND)
   add_executable(Clipping_TBB Clipping.cxx)
   target_include_directories(Clipping_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(Clipping_TBB ${VTKm_LIBRARIES})
+  target_link_libraries(Clipping_TBB PRIVATE ${VTKm_LIBRARIES})
   target_compile_options(Clipping_TBB PRIVATE PRIVATE ${VTKm_COMPILE_OPTIONS})
   target_compile_definitions(Clipping_TBB PRIVATE
                              "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")

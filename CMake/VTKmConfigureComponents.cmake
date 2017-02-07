@@ -71,7 +71,7 @@ macro(vtkm_finish_configure_component component)
   if(NOT VTKm_${component}_FOUND)
 
     cmake_parse_arguments(VTKm_FCC
-      ""
+      "IS_BACKEND"
       ""
       "DEPENDENT_VARIABLES;ADD_INCLUDES;ADD_LIBRARIES"
       ${ARGN}
@@ -89,6 +89,10 @@ macro(vtkm_finish_configure_component component)
     if (VTKm_${component}_FOUND)
       set(VTKm_INCLUDE_DIRS ${VTKm_INCLUDE_DIRS} ${VTKm_FCC_ADD_INCLUDES})
       set(VTKm_LIBRARIES ${VTKm_LIBRARIES} ${VTKm_FCC_ADD_LIBRARIES})
+      if(${VTKm_FCC_IS_BACKEND})
+        set(VTKm_BACKEND_INCLUDE_DIRS ${VTKm_BACKEND_INCLUDE_DIRS} ${VTKm_FCC_ADD_INCLUDES})
+        set(VTKm_BACKEND_LIBRARIES ${VTKm_BACKEND_LIBRARIES} ${VTKm_FCC_ADD_LIBRARIES})
+      endif()
     endif()
   endif()
 endmacro()
@@ -110,7 +114,7 @@ macro(vtkm_configure_component_Base)
 
   vtkm_finish_configure_component(Base
     DEPENDENT_VARIABLES VTKm_base_vtkm_target_FOUND
-    ADD_LIBRARIES vtkm
+    ADD_LIBRARIES vtkm vtkm_cont
     )
 endmacro()
 
@@ -118,6 +122,7 @@ macro(vtkm_configure_component_Serial)
   vtkm_configure_component_Base()
 
   vtkm_finish_configure_component(Serial
+    IS_BACKEND
     DEPENDENT_VARIABLES VTKm_Base_FOUND
     )
 endmacro(vtkm_configure_component_Serial)
@@ -151,8 +156,10 @@ macro(vtkm_configure_component_OpenGL)
   find_package(GLEW ${VTKm_FIND_PACKAGE_QUIETLY})
 
   list(APPEND vtkm_opengl_dependent_vars GLEW_FOUND)
-  list(APPEND vtkm_opengl_includes ${GLEW_INCLUDE_DIRS})
-  list(APPEND vtkm_opengl_libraries ${GLEW_LIBRARIES})
+  if(GLEW_FOUND)
+    list(APPEND vtkm_opengl_includes ${GLEW_INCLUDE_DIRS})
+    list(APPEND vtkm_opengl_libraries ${GLEW_LIBRARIES})
+  endif()
   #on unix/linux Glew uses pthreads, so we need to find that, and link to it
   #explicitly or else in release mode we get sigsegv on launch
   if(UNIX)
@@ -166,6 +173,10 @@ macro(vtkm_configure_component_OpenGL)
     ADD_INCLUDES ${vtkm_opengl_includes}
     ADD_LIBRARIES ${vtkm_opengl_libraries}
     )
+
+  set(VTKm_OPENGL_INCLUDE_DIRS ${vtkm_opengl_includes})
+  set(VTKm_OPENGL_LIBRARIES  ${vtkm_opengl_libraries})
+
 endmacro(vtkm_configure_component_OpenGL)
 
 macro(vtkm_configure_component_OSMesa)
@@ -189,8 +200,8 @@ macro(vtkm_configure_component_EGL)
 
   vtkm_finish_configure_component(EGL
     DEPENDENT_VARIABLES VTKm_OpenGL_FOUND EGL_FOUND
-    ADD_INCLUDES ${EGL_INCLUDE_DIR}
-    ADD_LIBRARIES ${EGL_LIBRARY}
+    ADD_INCLUDES ${EGL_INCLUDE_DIRS}
+    ADD_LIBRARIES ${EGL_LIBRARIES}
     )
 endmacro(vtkm_configure_component_EGL)
 
@@ -201,8 +212,8 @@ macro(vtkm_configure_component_GLFW)
 
   vtkm_finish_configure_component(GLFW
     DEPENDENT_VARIABLES VTKm_OpenGL_FOUND GLFW_FOUND
-    ADD_INCLUDES ${GLFW_INCLUDE_DIR}
-    ADD_LIBRARIES ${GLFW_LIBRARY}
+    ADD_INCLUDES ${GLFW_INCLUDE_DIRS}
+    ADD_LIBRARIES ${GLFW_LIBRARIES}
     )
 endmacro(vtkm_configure_component_GLFW)
 
@@ -247,6 +258,7 @@ macro(vtkm_configure_component_TBB)
   endif()
 
   vtkm_finish_configure_component(TBB
+    IS_BACKEND
     DEPENDENT_VARIABLES VTKm_ENABLE_TBB VTKm_Base_FOUND TBB_FOUND
     ADD_INCLUDES ${TBB_INCLUDE_DIRS}
     ADD_LIBRARIES ${TBB_LIBRARIES}
@@ -258,6 +270,10 @@ macro(vtkm_configure_component_CUDA)
     vtkm_configure_component_Base()
 
     find_package(CUDA ${VTKm_FIND_PACKAGE_QUIETLY})
+
+    #Make cuda link privately to cuda libraries
+    set(CUDA_LIBRARIES PRIVATE ${CUDA_LIBRARIES})
+
     mark_as_advanced(
       CUDA_BUILD_CUBIN
       CUDA_BUILD_EMULATION
@@ -272,6 +288,7 @@ macro(vtkm_configure_component_CUDA)
   endif()
 
   vtkm_finish_configure_component(CUDA
+    IS_BACKEND
     DEPENDENT_VARIABLES
       VTKm_ENABLE_CUDA
       VTKm_Base_FOUND

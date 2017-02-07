@@ -37,6 +37,7 @@ set(headers
   ArrayPortal.h
   ArrayPortalToIterators.h
   ArrayHandleConcatenate.h
+  ArrayRangeCompute.h
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h
@@ -62,7 +63,6 @@ set(headers
   ErrorControlInternal.h
   ErrorExecution.h
   Field.h
-  LogicalStructure.h
   RuntimeDeviceInformation.h
   Storage.h
   StorageBasic.h
@@ -72,11 +72,32 @@ set(headers
   TryExecute.h
   )
 
+set(header_impls
+  ArrayHandle.hxx
+  CellSetStructured.hxx
+  StorageBasic.hxx
+  )
+
+set(sources
+  ArrayHandle.cxx
+  CellSet.cxx
+  CellSetStructured.cxx
+  CoordinateSystem.cxx
+  DynamicArrayHandle.cxx
+  Field.cxx
+  internal/SimplePolymorphicContainer.cxx
+  StorageBasic.cxx
+  )
+
+vtkm_library(SOURCES ${sources})
+target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
+
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(arg)
 
-vtkm_declare_headers(${impl_headers} ${headers})
+vtkm_declare_headers(${headers})
+vtkm_install_headers(vtkm/cont ${header_impls})
 
 add_subdirectory(serial)
 add_subdirectory(cuda)

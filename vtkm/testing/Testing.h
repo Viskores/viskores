@@ -541,7 +541,14 @@ template<typename T>
 static inline VTKM_EXEC_CONT
 T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
 {
-  return T(index*100);
+  if (sizeof(T) > 2)
+  {
+    return T(index*100);
+  }
+  else
+  {
+    return T(index+100);
+  }
 }
 
 template<typename T>

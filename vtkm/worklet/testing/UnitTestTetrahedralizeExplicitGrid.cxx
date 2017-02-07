@@ -177,7 +177,7 @@ void TestExplicitGrid2D()
 
   // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::DataSet outDataSet;
-  vtkm::cont::CellSetSingleType<> outCellSet(vtkm::CellShapeTagTriangle(), "cells");
+  vtkm::cont::CellSetSingleType<> outCellSet("cells");
   outDataSet.AddCellSet(outCellSet);
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
@@ -215,7 +215,7 @@ void TestExplicitGrid3D()
 
   // Create the output dataset explicit cell set with same coordinate system
   vtkm::cont::DataSet outDataSet;
-  vtkm::cont::CellSetSingleType<> outCellSet(vtkm::CellShapeTagTetra(), "cells");
+  vtkm::cont::CellSetSingleType<> outCellSet("cells");
   outDataSet.AddCellSet(outCellSet);
   outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 

@@ -27,6 +27,7 @@
 #include <vtkm/CellTraits.h>
 #include <vtkm/VecFromPortal.h>
 #include <vtkm/VecFromPortalPermute.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 
@@ -36,23 +37,33 @@
 namespace vtkm {
 namespace worklet {
 
+struct GradientInTypes
+    : vtkm::ListTagBase<vtkm::Float32,
+                        vtkm::Float64,
+                        vtkm::Vec<vtkm::Float32,3>,
+                        vtkm::Vec<vtkm::Float64,3> >
+{  };
+
 struct GradientOutTypes
     : vtkm::ListTagBase<
                         vtkm::Vec<vtkm::Float32,3>,
                         vtkm::Vec<vtkm::Float64,3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float32,2>, 3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float64,2>, 3>,
                         vtkm::Vec< vtkm::Vec<vtkm::Float32,3>, 3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float32,4>, 3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float64,4>, 3>
+                        vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3>
                         >
 {  };
+
+struct GradientVecOutTypes
+    : vtkm::ListTagBase<
+                        vtkm::Vec< vtkm::Vec<vtkm::Float32,3>, 3>,
+                        vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3>
+                        > {  };
+
 struct CellGradient : vtkm::worklet::WorkletMapPointToCell
 {
   typedef void ControlSignature(CellSetIn,
                                 FieldInPoint<Vec3> pointCoordinates,
-                                FieldInPoint<FieldCommon> inputField,
+                                FieldInPoint<GradientInTypes> inputField,
                                 FieldOutCell<GradientOutTypes> outputField);
 
   typedef void ExecutionSignature(CellShape, PointCount, _2, _3, _4);
@@ -118,7 +129,7 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
   typedef void ControlSignature(CellSetIn,
                                 WholeCellSetIn<Point,Cell>,
                                 WholeArrayIn<Vec3> pointCoordinates,
-                                WholeArrayIn<FieldCommon> inputField,
+                                WholeArrayIn<GradientInTypes> inputField,
                                 FieldOutPoint<GradientOutTypes> outputField);
 
   typedef void ExecutionSignature(CellCount, CellIndices, WorkIndex, _2, _3, _4, _5);
@@ -193,10 +204,14 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
       this->ComputeGradient(cellShape, pointIndexForCell, wCoords, field, gradient);
       }
 
+    using BaseGradientType = typename vtkm::exec::BaseComponentOf<ValueType>::type;
+    const BaseGradientType invNumCells =
+        static_cast<BaseGradientType>(1.) /
+        static_cast<BaseGradientType>(numCells);
     using OutValueType = typename FieldOutType::ComponentType;
-    outputField[0] = static_cast<OutValueType>(gradient[0] / numCells);
-    outputField[1] = static_cast<OutValueType>(gradient[1] / numCells);
-    outputField[2] = static_cast<OutValueType>(gradient[2] / numCells);
+    outputField[0] = static_cast<OutValueType>(gradient[0] * invNumCells);
+    outputField[1] = static_cast<OutValueType>(gradient[1] * invNumCells);
+    outputField[2] = static_cast<OutValueType>(gradient[2] * invNumCells);
   }
 
   template <typename FromIndexType,
@@ -282,6 +297,65 @@ private:
     return fetch.Load(indices,in.GetPortal());
   }
 
+};
+
+
+struct Divergence : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<GradientVecOutTypes> input,
+                                FieldOut<Scalar> output);
+  typedef void ExecutionSignature(_1,_2);
+  typedef _1 InputDomain;
+
+  template<typename InputType, typename OutputType>
+  VTKM_EXEC
+  void operator()(const InputType &input, OutputType &divergence) const
+  {
+    divergence = input[0][0]+input[1][1]+input[2][2];
+  }
+};
+
+struct Vorticity : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<GradientVecOutTypes> input,
+                                FieldOut<Vec3> output);
+  typedef void ExecutionSignature(_1,_2);
+  typedef _1 InputDomain;
+
+  template<typename InputType, typename OutputType>
+  VTKM_EXEC
+  void operator()(const InputType &input, OutputType &vorticity) const
+  {
+    vorticity[0] = input[2][1] - input[1][2];
+    vorticity[1] = input[0][2] - input[2][0];
+    vorticity[2] = input[1][0] - input[0][1];
+  }
+};
+
+struct QCriterion : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<GradientVecOutTypes> input,
+                                FieldOut<Scalar> output);
+  typedef void ExecutionSignature(_1,_2);
+  typedef _1 InputDomain;
+
+  template<typename InputType, typename OutputType>
+  VTKM_EXEC
+  void operator()(const InputType &input, OutputType &qcriterion) const
+  {
+    OutputType t1 =
+          ((input[2][1] - input[1][2]) * (input[2][1] - input[1][2]) +
+           (input[1][0] - input[0][1]) * (input[1][0] - input[0][1]) +
+           (input[0][2] - input[2][0]) * (input[0][2] - input[2][0])) / 2.0f;
+      OutputType t2 =
+          input[0][0] * input[0][0] + input[1][1] * input[1][1] +
+          input[2][2] * input[2][2] +
+          ((input[1][0] + input[0][1]) * (input[1][0] + input[0][1]) +
+           (input[2][0] + input[0][2]) * (input[2][0] + input[0][2]) +
+           (input[2][1] + input[1][2]) * (input[2][1] + input[1][2])) / 2.0f;
+
+    qcriterion = (t1 - t2) / 2.0f;
+  }
 };
 
 

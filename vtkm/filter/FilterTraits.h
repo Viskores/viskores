@@ -29,9 +29,19 @@ template<typename Filter>
 class FilterTraits
 {
 public:
-  //A filter can specify a set of data type that it supports for
-  //the input array
-  typedef vtkm::TypeListTagCommon InputFieldTypeList;
+  // A filter is able to state what subset of types it supports
+  // by default. By default we use ListTagUniversal to represent that the
+  // filter accepts all types specified by the users provided policy
+  typedef vtkm::ListTagUniversal InputFieldTypeList;
+};
+
+template<typename DerivedPolicy, typename FilterType>
+struct DeduceFilterFieldTypes
+{
+  using FList = typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList;
+  using PList = typename DerivedPolicy::FieldTypeList;
+
+  using TypeList = vtkm::ListTagIntersect<FList, PList>;
 };
 
 }

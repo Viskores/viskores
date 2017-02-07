@@ -29,7 +29,7 @@
 #include <vtkm/rendering/testing/RenderTest.h>
 
 namespace {
-    
+
 void RenderTests()
 {
   typedef vtkm::rendering::MapperRayTracer M;
@@ -38,15 +38,15 @@ void RenderTests()
 
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::rendering::ColorTable colorTable("thermal");
-  
+
   vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRegularDataSet0(),
                                            "pointvar", colorTable, "reg3D.pnm");
-  vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRectilinearDataSet0(),
-                                           "pointvar", colorTable, "rect3D.pnm");
-  vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DExplicitDataSet4(),
-                                           "pointvar", colorTable, "expl3D.pnm");    
+  // vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRectilinearDataSet0(),
+  //                                          "pointvar", colorTable, "rect3D.pnm");
+  // vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DExplicitDataSet4(),
+  //                                          "pointvar", colorTable, "expl3D.pnm");
 }
-    
+
 } //namespace
 
 int UnitTestMapperRayTracer(int, char *[])

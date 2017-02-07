@@ -17,17 +17,23 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_LogicalStructure_h
-#define vtk_m_cont_LogicalStructure_h
+
+#include <vtkm/cont/DynamicArrayHandle.h>
 
 namespace vtkm {
 namespace cont {
+namespace detail {
 
-class LogicalStructure
+PolymorphicArrayHandleContainerBase::PolymorphicArrayHandleContainerBase()
 {
-};
 
-} // namespace cont
-} // namespace vtkm
+}
 
-#endif
+PolymorphicArrayHandleContainerBase::~PolymorphicArrayHandleContainerBase()
+{
+
+}
+
+}
+}
+} // namespace vtkm::cont::detail

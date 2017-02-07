@@ -88,7 +88,7 @@ private:
 
     vtkm::cont::DataSet ds;
     vtkm::cont::DataSetBuilderExplicit builder;
-    ds = builder.Create(coordinates, vtkm::CellShapeTagTriangle(), conn);
+    ds = builder.Create(coordinates, vtkm::CellShapeTagTriangle(), 3, conn);
 
 
     //Set point scalar

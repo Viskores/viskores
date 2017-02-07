@@ -77,6 +77,83 @@ namespace tbb {
 static const vtkm::Id TBB_GRAIN_SIZE = 4096;
 
 
+template<class InputPortalType, class T, class BinaryOperationType>
+struct ReduceBody
+{
+  T Sum;
+  T InitialValue;
+  bool FirstCall;
+  InputPortalType InputPortal;
+  BinaryOperationType BinaryOperation;
+
+  VTKM_CONT
+  ReduceBody(const InputPortalType &inputPortal,
+             T initialValue,
+             BinaryOperationType binaryOperation)
+    : Sum(vtkm::TypeTraits<T>::ZeroInitialization()),
+      InitialValue(initialValue),
+      FirstCall(true),
+      InputPortal(inputPortal),
+      BinaryOperation(binaryOperation)
+  {  }
+
+  VTKM_EXEC_CONT
+  ReduceBody(const ReduceBody &body, ::tbb::split)
+    : Sum(vtkm::TypeTraits<T>::ZeroInitialization()),
+      InitialValue(body.InitialValue),
+      FirstCall(true),
+      InputPortal(body.InputPortal),
+      BinaryOperation(body.BinaryOperation) {  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  void operator()(const ::tbb::blocked_range<vtkm::Id> &range)
+  {
+    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
+      InputIteratorsType;
+    InputIteratorsType inputIterators(this->InputPortal);
+
+    //use temp, and iterators instead of member variable to reduce false sharing
+    typename InputIteratorsType::IteratorType inIter =
+      inputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
+
+    T temp = this->BinaryOperation(*inIter, *(inIter+1));
+    ++inIter; ++inIter;
+    for (vtkm::Id index = range.begin()+2; index != range.end(); ++index, ++inIter)
+      {
+      temp = this->BinaryOperation(temp, *inIter);
+      }
+
+    //determine if we also have to add the initial value to temp
+    if(range.begin() == 0)
+    {
+      temp = this->BinaryOperation(temp,this->InitialValue);
+    }
+
+    //Now we can save temp back to sum, taking into account if
+    //this task has been called before, and the sum value needs
+    //to also be reduced.
+    if(this->FirstCall)
+    {
+      this->Sum = temp;
+    }
+    else
+    {
+      this->Sum = this->BinaryOperation(this->Sum,temp);
+    }
+
+    this->FirstCall = false;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  void join(const ReduceBody &left)
+  {
+    // std::cout << "join" << std::endl;
+    this->Sum = this->BinaryOperation(left.Sum, this->Sum);
+  }
+};
+
 template<class InputPortalType, typename T, class BinaryOperationType>
 VTKM_SUPPRESS_EXEC_WARNINGS
 VTKM_CONT static
@@ -88,22 +165,15 @@ T ReducePortals(InputPortalType inputPortal,
       WrappedBinaryOp;
 
   WrappedBinaryOp wrappedBinaryOp(binaryOperation);
+  ReduceBody<InputPortalType, T, WrappedBinaryOp>body(inputPortal,
+                                                      initialValue,
+                                                      wrappedBinaryOp);
+  vtkm::Id arrayLength = inputPortal.GetNumberOfValues();
 
-  using block_type =
-    ::tbb::blocked_range< typename vtkm::cont::ArrayPortalToIterators<InputPortalType>::IteratorType >;
-
-  block_type range(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
-                   vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
-                   TBB_GRAIN_SIZE);
-
-
-  return ::tbb::parallel_reduce(range, initialValue,
-    [&](block_type const& r, T init) -> T {
-      return std::accumulate(r.begin(), r.end(), init, wrappedBinaryOp);
-    },
-    wrappedBinaryOp);
+  ::tbb::blocked_range<vtkm::Id> range(0, arrayLength, TBB_GRAIN_SIZE);
+  ::tbb::parallel_reduce( range, body );
+  return body.Sum;
 }
-
 
 template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
@@ -211,7 +281,7 @@ struct ScanExclusiveBody
                         typename OutputPortalType::ValueType>::type;
 
   ValueType Sum;
-  ValueType InitialValue;
+  bool FirstCall;
   InputPortalType InputPortal;
   OutputPortalType OutputPortal;
   BinaryOperationType BinaryOperation;
@@ -222,7 +292,7 @@ struct ScanExclusiveBody
                     BinaryOperationType binaryOperation,
                     const ValueType& initialValue)
     : Sum(initialValue),
-      InitialValue(initialValue),
+      FirstCall(true),
       InputPortal(inputPortal),
       OutputPortal(outputPortal),
       BinaryOperation(binaryOperation)
@@ -230,8 +300,8 @@ struct ScanExclusiveBody
 
   VTKM_EXEC_CONT
   ScanExclusiveBody(const ScanExclusiveBody &body, ::tbb::split)
-    : Sum(body.InitialValue),
-      InitialValue(body.InitialValue),
+    : Sum(body.Sum),
+      FirstCall(true),
       InputPortal(body.InputPortal),
       OutputPortal(body.OutputPortal),
       BinaryOperation(body.BinaryOperation)
@@ -248,12 +318,17 @@ struct ScanExclusiveBody
     //move the iterator to the first item
     typename InputIteratorsType::IteratorType iter =
       inputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
-    ValueType temp = this->Sum;
-    for (vtkm::Id index = range.begin(); index != range.end(); ++index, ++iter)
+
+    ValueType temp = *iter;
+    ++iter;
+    if(! (this->FirstCall && range.begin() > 0) )
+      { temp = this->BinaryOperation(this->Sum, temp); }
+    for (vtkm::Id index = range.begin()+1; index != range.end(); ++index, ++iter)
       {
       temp = this->BinaryOperation(temp, *iter);
       }
     this->Sum = temp;
+    this->FirstCall = false;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -273,6 +348,7 @@ struct ScanExclusiveBody
       inputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
     typename OutputIteratorsType::IteratorType outIter =
       outputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
+
     ValueType temp = this->Sum;
     for (vtkm::Id index = range.begin(); index != range.end();
          ++index, ++inIter, ++outIter)
@@ -284,13 +360,21 @@ struct ScanExclusiveBody
       temp = this->BinaryOperation(temp, v);
       }
     this->Sum = temp;
+    this->FirstCall = false;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   void reverse_join(const ScanExclusiveBody &left)
   {
-    this->Sum = this->BinaryOperation(left.Sum, this->Sum);
+    //The contract we have with TBB is that they will only join
+    //two objects that have been scanned, or two objects which
+    //haven't been scanned
+    VTKM_ASSERT(left.FirstCall == this->FirstCall);
+    if(!left.FirstCall && !this->FirstCall)
+    {
+      this->Sum = this->BinaryOperation(left.Sum, this->Sum);
+    }
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS

@@ -155,6 +155,9 @@ private:
   VTKM_CONT
   void WillContinue(const T&, std::false_type) const
   { }
+
+  // Not implemented
+  void operator=(const DispatcherBaseTypeCheckFunctor<ContinueFunctor,TypeCheckTag,Index> &);
 };
 
 // Uses vtkm::cont::internal::DynamicTransform and the DynamicTransformCont
@@ -257,6 +260,9 @@ struct DispatcherBaseTransportFunctor
     vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device> transport;
     return transport(invokeData, this->InputDomain, this->OutputSize);
   }
+
+private:
+  void operator=(const DispatcherBaseTransportFunctor &); // Not implemented
 };
 
 } // namespace detail

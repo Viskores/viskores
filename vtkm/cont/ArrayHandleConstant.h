@@ -30,7 +30,7 @@ namespace cont {
 namespace detail {
 
 template<typename ValueType>
-struct ConstantFunctor
+struct VTKM_ALWAYS_EXPORT ConstantFunctor
 {
   VTKM_EXEC_CONT
   ConstantFunctor(const ValueType &value = ValueType()) : Value(value) {  }

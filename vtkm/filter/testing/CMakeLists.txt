@@ -22,6 +22,7 @@ set(unit_tests
   UnitTestCellAverageFilter.cxx
   UnitTestCleanGrid.cxx
   UnitTestClipFilter.cxx
+  UnitTestContourTreeUniformFilter.cxx
   UnitTestExternalFacesFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestGradient.cxx

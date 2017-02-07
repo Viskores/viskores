@@ -100,6 +100,18 @@ public:
   }
 
   VTKM_CONT
+  const vtkm::cont::Field &GetCellField(const std::string &name) const
+  {
+    return this->GetField(name, vtkm::cont::Field::ASSOC_CELL_SET);
+  }
+
+  VTKM_CONT
+  const vtkm::cont::Field &GetPointField(const std::string &name) const
+  {
+    return this->GetField(name, vtkm::cont::Field::ASSOC_POINTS);
+  }
+
+  VTKM_CONT
   void AddCoordinateSystem(vtkm::cont::CoordinateSystem cs)
   {
     this->CoordSystems.push_back(cs);

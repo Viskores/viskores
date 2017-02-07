@@ -337,7 +337,11 @@ public:
     IdPermutationHandleType faceConn(connIndices, conn);
 
     PermutedCellSetExplicit permutedCellSet;
-    permutedCellSet.Fill(pt1, pt2, faceConn);
+    // Warning: This cell set is created with 0 points, which simply means that
+    // if you call GetNumberOfPoints it will return 0, which is of course not
+    // consistent with the indices. We are getting away with this because this
+    // is a temporary cell set that is not scheduled on points.
+    permutedCellSet.Fill(0, pt1, pt2, faceConn);
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3> > faceVertices;
     vtkm::worklet::DispatcherMapTopology<GetFace> faceHashDispatcher;
 
