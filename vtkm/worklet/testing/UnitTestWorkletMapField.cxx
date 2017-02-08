@@ -125,7 +125,7 @@ struct DoStaticTestWorklet
     {
       dispatcher.Invoke(inputHandle, outputHandle, inoutHandle);
     }
-    catch (vtkm::cont::ErrorControlBadValue error)
+    catch (vtkm::cont::ErrorBadValue error)
     {
       std::cout << "  Caught expected error: " << error.GetMessage()
                 << std::endl;
@@ -210,7 +210,7 @@ void TestWorkletMapField()
     badWorkletTest( vtkm::Vec<vtkm::Float32,3>() );
     VTKM_TEST_FAIL("Did not throw expected error.");
   }
-  catch (vtkm::cont::ErrorControlBadType &error)
+  catch (vtkm::cont::ErrorBadType &error)
   {
     std::cout << "Got expected error: " << error.GetMessage() << std::endl;
   }

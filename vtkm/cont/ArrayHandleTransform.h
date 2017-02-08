@@ -23,8 +23,8 @@
 #define vtk_m_cont_ArrayHandleTransform_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ErrorControlBadType.h>
-#include <vtkm/cont/ErrorControlInternal.h>
+#include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/ErrorInternal.h>
 
 namespace vtkm {
 namespace cont {
@@ -215,13 +215,13 @@ public:
 
   VTKM_CONT
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandleTransform is read only. It cannot be allocated.");
   }
 
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandleTransform is read only. It cannot shrink.");
   }
 
@@ -374,20 +374,20 @@ public:
 
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool &vtkmNotUsed(updateData)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandleTransform read only. "
           "Cannot be used for in-place operations.");
   }
 
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandleTransform read only. Cannot be used as output.");
   }
 
   VTKM_CONT
   void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const {
-    throw vtkm::cont::ErrorControlInternal(
+    throw vtkm::cont::ErrorInternal(
           "ArrayHandleTransform read only. "
           "There should be no occurance of the ArrayHandle trying to pull "
           "data from the execution environment.");
@@ -395,7 +395,7 @@ public:
 
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandleTransform read only. Cannot shrink.");
   }
 

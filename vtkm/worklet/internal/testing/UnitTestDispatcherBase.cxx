@@ -318,7 +318,7 @@ void TestInvokeWithDynamicAndBadTypes()
     dispatcher.Invoke(nullptr, execObject, array);
     VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
   }
-  catch (vtkm::cont::ErrorControlBadType error)
+  catch (vtkm::cont::ErrorBadType error)
   {
     std::cout << "    Got expected exception." << std::endl;
     std::cout << "    " << error.GetMessage() << std::endl;
@@ -332,7 +332,7 @@ void TestInvokeWithDynamicAndBadTypes()
     dispatcher.Invoke(array, execObject, nullptr);
     VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
   }
-  catch (vtkm::cont::ErrorControlBadType error)
+  catch (vtkm::cont::ErrorBadType error)
   {
     std::cout << "    Got expected exception." << std::endl;
     std::cout << "    " << error.GetMessage() << std::endl;

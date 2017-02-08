@@ -22,8 +22,8 @@
 
 #include <vtkm/Assert.h>
 #include <vtkm/Types.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
-#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/Storage.h>
 
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>

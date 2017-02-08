@@ -26,7 +26,7 @@
 #include <vtkm/internal/Invocation.h>
 
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/ErrorControlBadType.h>
+#include <vtkm/cont/ErrorBadType.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/Transport.h>
@@ -62,7 +62,7 @@ inline void PrintFailureMessage(int index, std::false_type)
   message << "Encountered bad type for parameter "
           << index
           << " when calling Invoke on a dispatcher.";
-  throw vtkm::cont::ErrorControlBadType(message.str());
+  throw vtkm::cont::ErrorBadType(message.str());
 }
 
 // Is designed as a brigand fold operation.

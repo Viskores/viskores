@@ -93,7 +93,7 @@ struct Transport<
     if (object.GetNumberOfValues() !=
         detail::TopologyDomainSize(inputDomain, TopologyElementTag()))
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Input array to worklet invocation the wrong size.");
     }
 

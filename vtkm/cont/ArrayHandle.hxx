@@ -32,7 +32,7 @@ ArrayHandle<T,S>::GetStorage()
   }
   else
   {
-    throw vtkm::cont::ErrorControlInternal(
+    throw vtkm::cont::ErrorInternal(
       "ArrayHandle::SyncControlArray did not make control array valid.");
   }
 }
@@ -48,7 +48,7 @@ ArrayHandle<T,S>::GetStorage() const
   }
   else
   {
-    throw vtkm::cont::ErrorControlInternal(
+    throw vtkm::cont::ErrorInternal(
       "ArrayHandle::SyncControlArray did not make control array valid.");
   }
 }
@@ -68,7 +68,7 @@ ArrayHandle<T,S>::GetPortalControl()
   }
   else
   {
-    throw vtkm::cont::ErrorControlInternal(
+    throw vtkm::cont::ErrorInternal(
           "ArrayHandle::SyncControlArray did not make control array valid.");
   }
 }
@@ -84,7 +84,7 @@ ArrayHandle<T,S>::GetPortalConstControl() const
   }
   else
   {
-    throw vtkm::cont::ErrorControlInternal(
+    throw vtkm::cont::ErrorInternal(
           "ArrayHandle::SyncControlArray did not make control array valid.");
   }
 }
@@ -121,7 +121,7 @@ void ArrayHandle<T,S>::CopyInto(IteratorType dest, DeviceAdapterTag) const
   if (!this->Internals->ControlArrayValid &&
       !this->Internals->ExecutionArrayValid)
     {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
       "ArrayHandle has no data to copy into Iterator.");
     }
 
@@ -170,7 +170,7 @@ void ArrayHandle<T,S>::Shrink(vtkm::Id numberOfValues)
   }
   else // numberOfValues > originalNumberOfValues
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
       "ArrayHandle::Shrink cannot be used to grow array.");
   }
 
@@ -187,7 +187,7 @@ ArrayHandle<T,S>::PrepareForInput(DeviceAdapterTag) const
   if (!this->Internals->ControlArrayValid
       && !this->Internals->ExecutionArrayValid)
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
       "ArrayHandle has no data when PrepareForInput called.");
   }
 
@@ -242,7 +242,7 @@ ArrayHandle<T,S>::PrepareForInPlace(DeviceAdapterTag)
   if (!this->Internals->ControlArrayValid
       && !this->Internals->ExecutionArrayValid)
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
       "ArrayHandle has no data when PrepareForInPlace called.");
   }
 

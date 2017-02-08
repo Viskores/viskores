@@ -110,14 +110,14 @@ public:
 
     if (Traits::GetNumberOfComponents(ids) < numVertices)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Not enough indices given to CellSetSingleType::AddCell.");
     }
 
     if (this->ConnectivityAdded+numVertices >
         this->PointToCell.Connectivity.GetNumberOfValues())
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Connectivity increased passed estimated maximum connectivity.");
     }
 
@@ -125,7 +125,7 @@ public:
     {
       if (shapeId == vtkm::CELL_SHAPE_EMPTY)
       {
-        throw vtkm::cont::ErrorControlBadValue(
+        throw vtkm::cont::ErrorBadValue(
               "Cannot create cells of type empty.");
       }
       this->CellShapeAsId = shapeId;
@@ -136,12 +136,12 @@ public:
     {
       if (shapeId != this->GetCellShape(0))
       {
-        throw vtkm::cont::ErrorControlBadValue(
+        throw vtkm::cont::ErrorBadValue(
               "Cannot have differing shapes in CellSetSingleType.");
       }
       if (numVertices != this->NumberOfPointsPerCell)
       {
-        throw vtkm::cont::ErrorControlBadValue(
+        throw vtkm::cont::ErrorBadValue(
               "Inconsistent number of points in cells for CellSetSingleType.");
       }
     }
@@ -179,7 +179,7 @@ public:
 
     if (this->ExpectedNumberOfCellsAdded != this->GetNumberOfCells())
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Did not add the expected number of cells.");
     }
 
@@ -246,7 +246,7 @@ private:
   {
     if (numVertices != vtkm::CellTraits<CellShapeTag>::NUM_POINTS)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Passed invalid number of points for cell shape.");
     }
   }
@@ -271,7 +271,7 @@ private:
                                              vtkm::CellTraits<CellShapeTag>::IsSizeFixed(),
                                              numVertices) );
       default:
-        throw vtkm::cont::ErrorControlBadValue(
+        throw vtkm::cont::ErrorBadValue(
           "CellSetSingleType unable to determine the cell type");
     }
   }

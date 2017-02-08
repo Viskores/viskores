@@ -143,7 +143,7 @@ public:
   VTKM_CONT
   void Allocate( vtkm::Id vtkmNotUsed(numberOfValues) )
   {
-    throw vtkm::cont::ErrorControlInternal(
+    throw vtkm::cont::ErrorInternal(
           "ArrayHandleConcatenate should not be allocated explicitly. " );
   }
 
@@ -241,7 +241,7 @@ public:
   VTKM_CONT
   PortalExecution PrepareForOutput( vtkm::Id vtkmNotUsed(numberOfValues) )
   {
-    throw vtkm::cont::ErrorControlInternal(
+    throw vtkm::cont::ErrorInternal(
           "ArrayHandleConcatenate is derived and read-only. " );
   }
 

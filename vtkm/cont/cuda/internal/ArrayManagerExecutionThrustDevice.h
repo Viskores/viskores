@@ -21,7 +21,7 @@
 #define vtk_m_cont_cuda_internal_ArrayManagerExecutionThrustDevice_h
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/Storage.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
@@ -34,7 +34,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 
 VTKM_THIRDPARTY_POST_INCLUDE
 
-#include <vtkm/cont/cuda/ErrorControlCuda.h>
+#include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
 
@@ -164,7 +164,7 @@ public:
       std::ostringstream err;
       err << "Failed to allocate " << numberOfValues << " values on device: "
           << "Number of bytes is not representable by std::size_t.";
-      throw vtkm::cont::ErrorControlBadAllocation(err.str());
+      throw vtkm::cont::ErrorBadAllocation(err.str());
     }
 
     this->ReleaseResources();
@@ -183,7 +183,7 @@ public:
       std::ostringstream err;
       err << "Failed to allocate " << bufferSize << " bytes on device: "
           << error.what();
-      throw vtkm::cont::ErrorControlBadAllocation(err.str());
+      throw vtkm::cont::ErrorBadAllocation(err.str());
       }
 
     this->Capacity = PointerType(this->Begin.get() +

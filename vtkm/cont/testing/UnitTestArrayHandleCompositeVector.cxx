@@ -331,7 +331,7 @@ void TestBadArrayLengths() {
     vtkm::cont::make_ArrayHandleCompositeVector(longInArray,0, shortInArray,0);
     VTKM_TEST_FAIL("Did not get exception like expected.");
   }
-  catch (vtkm::cont::ErrorControlBadValue error)
+  catch (vtkm::cont::ErrorBadValue error)
   {
     std::cout << "Got expected error: " << std::endl
               << error.GetMessage() << std::endl;

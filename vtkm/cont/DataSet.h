@@ -25,7 +25,7 @@
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
 
 namespace vtkm {
@@ -86,7 +86,7 @@ public:
     }
     else
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "No field with requested name: " + name);
     }
   }
@@ -145,7 +145,7 @@ public:
     }
     else
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "No coordinate system with requested name");
     }
   }
@@ -198,7 +198,7 @@ public:
     }
     else
     {
-      throw vtkm::cont::ErrorControlBadValue("No cell set with requested name");
+      throw vtkm::cont::ErrorBadValue("No cell set with requested name");
     }
   }
 

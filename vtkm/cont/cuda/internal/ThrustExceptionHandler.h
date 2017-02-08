@@ -21,7 +21,7 @@
 #define vtk_m_cont_cuda_interal_ThrustExecptionHandler_h
 
 #include <vtkm/internal/ExportMacros.h>
-#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorExecution.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -43,7 +43,7 @@ static inline void throwAsVTKmException()
   }
   catch(std::bad_alloc &error)
   {
-    throw vtkm::cont::ErrorControlBadAllocation(error.what());
+    throw vtkm::cont::ErrorBadAllocation(error.what());
   }
   catch(thrust::system_error &error)
   {

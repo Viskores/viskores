@@ -239,7 +239,7 @@ public:
   {
     bool isSupportedField = (scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
                              scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET );
-    if(!isSupportedField) throw vtkm::cont::ErrorControlBadValue("Feild not accociated with cell set or points");
+    if(!isSupportedField) throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
     bool isAssocPoints = scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
 
     vtkm::worklet::DispatcherMapField< CalculateNormals >( CalculateNormals(bvh.LeafNodes) )

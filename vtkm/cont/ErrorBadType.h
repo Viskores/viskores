@@ -17,25 +17,25 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ErrorControl_h
-#define vtk_m_cont_ErrorControl_h
+#ifndef vtk_m_cont_ErrorBadType_h
+#define vtk_m_cont_ErrorBadType_h
 
 #include <vtkm/cont/Error.h>
 
 namespace vtkm {
 namespace cont {
 
-/// The superclass of all exceptions thrown from within the VTKm control
-/// environment.
+/// This class is thrown when VTK-m encounters data of a type that is
+/// incompatible with the current operation.
 ///
-class VTKM_ALWAYS_EXPORT ErrorControl : public vtkm::cont::Error
+class VTKM_ALWAYS_EXPORT ErrorBadType : public Error
 {
-protected:
-  ErrorControl() { }
-  ErrorControl(const std::string message) : Error(message) { }
+public:
+  ErrorBadType(const std::string &message)
+    : Error(message) { }
 };
 
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_cont_ErrorControl_h
+#endif //vtk_m_cont_ErrorBadType_h

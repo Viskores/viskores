@@ -24,7 +24,7 @@
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/Assert.h>
@@ -487,7 +487,7 @@ void DoConvertNumComponentsToOffsets(
   if (!success)
   {
     // Internal error? Maybe need to make a failed to execute error.
-    throw vtkm::cont::ErrorControlInternal(
+    throw vtkm::cont::ErrorInternal(
           "Failed to run ExclusiveScan on any device.");
   }
 

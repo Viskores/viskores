@@ -56,7 +56,7 @@ struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
 
     if (object.GetNumberOfValues() != inputDomain.GetNumberOfValues())
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Input array to worklet invocation the wrong size.");
     }
 

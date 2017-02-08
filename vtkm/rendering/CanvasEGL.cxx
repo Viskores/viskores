@@ -60,12 +60,12 @@ void CanvasEGL::Initialize()
   this->Internals->Display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   if (!(this->Internals->Display))
   {
-    throw vtkm::cont::ErrorControlBadValue("Failed to get EGL display");
+    throw vtkm::cont::ErrorBadValue("Failed to get EGL display");
   }
   EGLint major, minor;
   if (!(eglInitialize(this->Internals->Display, &major, &minor)))
   {
-    throw vtkm::cont::ErrorControlBadValue("Failed to initialize EGL display");
+    throw vtkm::cont::ErrorBadValue("Failed to initialize EGL display");
   }
 
   const EGLint cfgAttrs[] =
@@ -84,7 +84,7 @@ void CanvasEGL::Initialize()
   if (!(eglChooseConfig(this->Internals->Display, cfgAttrs, &cfg, 1, &nCfgs)) ||
       (nCfgs == 0))
   {
-    throw vtkm::cont::ErrorControlBadValue("Failed to get EGL config");
+    throw vtkm::cont::ErrorBadValue("Failed to get EGL config");
   }
 
   const EGLint pbAttrs[] =
@@ -98,21 +98,21 @@ void CanvasEGL::Initialize()
       eglCreatePbufferSurface(this->Internals->Display, cfg, pbAttrs);
   if (!this->Internals->Surface)
   {
-    throw vtkm::cont::ErrorControlBadValue("Failed to create EGL PBuffer surface");
+    throw vtkm::cont::ErrorBadValue("Failed to create EGL PBuffer surface");
   }
   eglBindAPI(EGL_OPENGL_API);
   this->Internals->Context =
       eglCreateContext(this->Internals->Display, cfg, EGL_NO_CONTEXT, NULL);
   if (!this->Internals->Context)
   {
-    throw vtkm::cont::ErrorControlBadValue("Failed to create EGL context");
+    throw vtkm::cont::ErrorBadValue("Failed to create EGL context");
   }
   if (!(eglMakeCurrent(this->Internals->Display,
                        this->Internals->Surface,
                        this->Internals->Surface,
                        this->Internals->Context)))
   {
-    throw vtkm::cont::ErrorControlBadValue("Failed to create EGL context current");
+    throw vtkm::cont::ErrorBadValue("Failed to create EGL context current");
   }
 }
 

@@ -26,7 +26,7 @@
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ErrorControlBadType.h>
+#include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/StorageListTag.h>
 
 #include <vtkm/cont/internal/DynamicTransform.h>
@@ -260,7 +260,7 @@ public:
   }
 
   /// Returns this array cast to an ArrayHandle object of the given type and
-  /// storage. Throws \c ErrorControlBadType if the cast does not work. Use
+  /// storage. Throws \c ErrorBadType if the cast does not work. Use
   /// \c IsTypeAndStorage to check if the cast can happen.
   ///
   ///
@@ -272,7 +272,7 @@ public:
         detail::DynamicArrayHandleTryCast<Type,Storage>(this->ArrayContainer);
     if (downcastArray == nullptr)
     {
-      throw vtkm::cont::ErrorControlBadType("Bad cast of dynamic array.");
+      throw vtkm::cont::ErrorBadType("Bad cast of dynamic array.");
     }
     // Technically, this method returns a copy of the \c ArrayHandle. But
     // because \c ArrayHandle acts like a shared pointer, it is valid to
@@ -281,7 +281,7 @@ public:
   }
 
   /// Returns this array cast to the given \c ArrayHandle type. Throws \c
-  /// ErrorControlBadType if the cast does not work. Use \c IsType
+  /// ErrorBadType if the cast does not work. Use \c IsType
   /// to check if the cast can happen.
   ///
   template<typename ArrayHandleType>
@@ -298,7 +298,7 @@ public:
 
   /// Given a refernce to an ArrayHandle object, casts this array to the
   /// ArrayHandle's type and sets the given ArrayHandle to this array. Throws
-  /// \c ErrorControlBadType if the cast does not work. Use \c
+  /// \c ErrorBadType if the cast does not work. Use \c
   /// ArrayHandleType to check if the cast can happen.
   ///
   /// Note that this is a shallow copy. The data are not copied and a change
@@ -514,7 +514,7 @@ void DynamicArrayHandleBase<TypeList,StorageList>::
   vtkm::ListForEach(tryType, TypeList());
   if (!tryType.FoundCast)
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Could not find appropriate cast for array in CastAndCall1.");
   }
 }
@@ -538,7 +538,7 @@ void DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG,
   vtkm::ListForEach(tryType, VTKM_DEFAULT_TYPE_LIST_TAG());
   if (!tryType.FoundCast)
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Could not find appropriate cast for array in CastAndCall2.");
   }
 }

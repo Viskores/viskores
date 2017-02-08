@@ -214,19 +214,19 @@ public:
 
     if (Traits::GetNumberOfComponents(ids) < numVertices)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Not enough indices given to CellSetSingleType::AddCell.");
     }
 
     if (this->NumberOfCellsAdded >= this->PointToCell.Shapes.GetNumberOfValues())
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Added more cells then expected.");
     }
     if (this->ConnectivityAdded+numVertices >
         this->PointToCell.Connectivity.GetNumberOfValues())
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Connectivity increased passed estimated maximum connectivity.");
     }
 
@@ -253,7 +253,7 @@ public:
 
     if (this->NumberOfCellsAdded != this->GetNumberOfCells())
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Did not add as many cells as expected.");
     }
 
@@ -289,7 +289,7 @@ public:
       this->PointToCell.IndexOffsetsValid = false;
       if (offsets.GetNumberOfValues() != 0)
       {
-        throw vtkm::cont::ErrorControlBadValue(
+        throw vtkm::cont::ErrorBadValue(
              "Explicit cell offsets array unexpected size. "
              "Use an empty array to automatically generate.");
       }

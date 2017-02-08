@@ -17,26 +17,25 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ErrorControlInternal_h
-#define vtk_m_cont_ErrorControlInternal_h
+#ifndef vtk_m_cont_ErrorBadValue_h
+#define vtk_m_cont_ErrorBadValue_h
 
-#include <vtkm/cont/ErrorControl.h>
+#include <vtkm/cont/Error.h>
 
 namespace vtkm {
 namespace cont {
 
-/// This class is thrown when VTKm detects an internal state that should never
-/// be reached. This error usually indicates a bug in vtkm or, at best, VTKm
-/// failed to detect an invalid input it should have.
+/// This class is thrown when a VTKm function or method encounters an invalid
+/// value that inhibits progress.
 ///
-class VTKM_ALWAYS_EXPORT ErrorControlInternal : public ErrorControl
+class VTKM_ALWAYS_EXPORT ErrorBadValue : public Error
 {
 public:
-  ErrorControlInternal(const std::string &message)
-    : ErrorControl(message) { }
+  ErrorBadValue(const std::string &message)
+    : Error(message) { }
 };
 
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_cont_ErrorControlInternal_h
+#endif //vtk_m_cont_ErrorBadValue_h

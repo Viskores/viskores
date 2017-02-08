@@ -21,7 +21,7 @@
 #define vtk_m_rendering_raytracing_Camera_h
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/raytracing/Ray.h>
@@ -259,7 +259,7 @@ public:
   {
     if(height <= 0)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Camera height must be greater than zero.");
     }
     if(Height != height)
@@ -281,7 +281,7 @@ public:
   {
     if(width <= 0)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Camera width must be greater than zero.");
     }
     if(this->Width != width)
@@ -303,7 +303,7 @@ public:
   {
     if(zoom <= 0)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Camera zoom must be greater than zero.");
     }
     if(this->Zoom != zoom)
@@ -324,12 +324,12 @@ public:
   {
     if(degrees <= 0)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Camera feild of view must be greater than zero.");
     }
     if(degrees > 180)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Camera feild of view must be less than 180.");
     }
     // fov is stored as a half angle
@@ -421,13 +421,13 @@ public:
   {
     if(canvas == nullptr)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Camera can not write to nullptr canvas");
     }
     if(this->Height != vtkm::Int32(canvas->GetHeight()) ||
        this->Width != vtkm::Int32(canvas->GetWidth()))
     {
-      throw vtkm::cont::ErrorControlBadValue("Camera: suface-view mismatched dims");
+      throw vtkm::cont::ErrorBadValue("Camera: suface-view mismatched dims");
     }
     vtkm::worklet::DispatcherMapField< SurfaceConverter >(
           SurfaceConverter( this->Width,

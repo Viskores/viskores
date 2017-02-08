@@ -28,7 +28,7 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/UnaryPredicates.h>
 
-#include <vtkm/cont/cuda/ErrorControlCuda.h>
+#include <vtkm/cont/cuda/ErrorCuda.h>
 
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>

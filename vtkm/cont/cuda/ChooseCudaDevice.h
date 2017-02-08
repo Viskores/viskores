@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/ErrorExecution.h>
 
-#include <vtkm/cont/cuda/ErrorControlCuda.h>
+#include <vtkm/cont/cuda/ErrorCuda.h>
 
 #include <cuda.h>
 #include <algorithm>
