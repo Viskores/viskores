@@ -25,6 +25,7 @@ set(headers
   ArrayHandleCompositeVector.h
   ArrayHandleConstant.h
   ArrayHandleCounting.h
+  ArrayHandleDiscard.h
   ArrayHandleGroupVec.h
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
@@ -37,6 +38,7 @@ set(headers
   ArrayPortal.h
   ArrayPortalToIterators.h
   ArrayHandleConcatenate.h
+  ArrayRangeCompute.h
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h
@@ -55,12 +57,11 @@ set(headers
   DynamicArrayHandle.h
   DynamicCellSet.h
   Error.h
-  ErrorControl.h
-  ErrorControlBadAllocation.h
-  ErrorControlBadType.h
-  ErrorControlBadValue.h
-  ErrorControlInternal.h
+  ErrorBadAllocation.h
+  ErrorBadType.h
+  ErrorBadValue.h
   ErrorExecution.h
+  ErrorInternal.h
   Field.h
   RuntimeDeviceInformation.h
   Storage.h
@@ -89,6 +90,7 @@ set(sources
   )
 
 vtkm_library(SOURCES ${sources})
+target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)

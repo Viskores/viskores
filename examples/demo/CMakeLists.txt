@@ -38,7 +38,7 @@ if(VTKm_OSMesa_FOUND AND VTKm_Rendering_FOUND)
 
   #need to setup the default device adapter.
   target_include_directories(Demo PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(Demo ${VTKm_LIBRARIES})
+  target_link_libraries(Demo PRIVATE ${VTKm_LIBRARIES})
   target_compile_options(Demo PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   #when we are using TBB pass in the default device adapter as

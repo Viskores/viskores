@@ -21,8 +21,8 @@
 #define vtk_m_ArrayHandleCompositeVector_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
-#include <vtkm/cont/ErrorControlInternal.h>
+#include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/ErrorInternal.h>
 
 #include <vtkm/StaticAssert.h>
 #include <vtkm/VecTraits.h>
@@ -158,7 +158,7 @@ struct CheckArraySizeFunctor {
       message << "All input arrays to ArrayHandleCompositeVector must be the same size.\n"
               << "Array " << Index-1 << " has " << a.GetNumberOfValues()
               << ". Expected " << this->ExpectedSize << ".";
-      throw vtkm::cont::ErrorControlBadValue(message.str().c_str());
+      throw vtkm::cont::ErrorBadValue(message.str().c_str());
     }
   }
 };
@@ -212,6 +212,17 @@ public:
           detail::CompositeVectorPullValueFunctor<ValueType>(index));
     return localPortals.GetReturnValue();
   }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  void Set(vtkm::Id vtkmNotUsed(index),
+           const ValueType &vtkmNotUsed(value)) const
+  {
+    // There is no technical reason why this cannot be implemented. As of this
+    // writing no one has needed to write to a composite vector yet.
+    VTKM_ASSERT(false && "Set not yet implemented for composite vector. Do you volunteer to implement it?");
+  }
+
 
 private:
   PortalTypes Portals;
@@ -271,7 +282,7 @@ public:
 
   VTKM_CONT
   PortalType GetPortal() {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Composite vector arrays are read only.");
   }
 
@@ -279,7 +290,7 @@ public:
   PortalConstType GetPortalConst() const {
     if (!this->Valid)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Tried to use an ArrayHandleCompositeHandle without dependent arrays.");
     }
     return PortalConstType(this->Arrays.StaticTransformCont(
@@ -291,7 +302,7 @@ public:
   vtkm::Id GetNumberOfValues() const {
     if (!this->Valid)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Tried to use an ArrayHandleCompositeHandle without dependent arrays.");
     }
     return this->Arrays.template GetParameter<1>().GetNumberOfValues();
@@ -299,7 +310,7 @@ public:
 
   VTKM_CONT
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlInternal(
+    throw vtkm::cont::ErrorInternal(
 
           "The allocate method for the composite vector storage should never "
           "have been called. The allocate is generally only called by the "
@@ -310,7 +321,7 @@ public:
 
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Composite vector arrays are read-only.");
   }
 
@@ -392,7 +403,7 @@ public:
   {
     // It may be the case a composite vector could be used for in place
     // operations, but this is not implemented currently.
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Composite vector arrays cannot be used for output or in place.");
   }
 
@@ -402,21 +413,21 @@ public:
     // It may be the case a composite vector could be used for output if you
     // want the delegate arrays to be resized, but this is not implemented
     // currently.
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Composite vector arrays cannot be used for output.");
   }
 
   VTKM_CONT
   void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Composite vector arrays cannot be used for output.");
   }
 
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Composite vector arrays cannot be resized.");
   }
 

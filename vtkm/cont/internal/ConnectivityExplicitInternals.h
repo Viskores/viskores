@@ -133,7 +133,7 @@ struct ConnectivityExplicitInternals
   {
     if (!this->IndexOffsetsValid)
     {
-      throw vtkm::cont::ErrorControlBadType(
+      throw vtkm::cont::ErrorBadType(
             "Cannot build indices using the error device. Must be created previously.");
     }
   }

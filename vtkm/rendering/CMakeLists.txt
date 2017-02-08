@@ -156,6 +156,16 @@ else()
     )
 endif()
 
+target_link_libraries(vtkm_rendering
+                      PUBLIC vtkm_cont
+                      PRIVATE ${VTKm_OPENGL_LIBRARIES}
+                              ${VTKm_BACKEND_LIBRARIES}
+                      )
+target_include_directories(vtkm_rendering
+                          PRIVATE ${VTKm_OPENGL_INCLUDE_DIRS}
+                                  ${VTKm_BACKEND_INCLUDE_DIRS}
+                          )
+
 # Subclasses need rendering library
 vtkm_configure_component_Rendering()
 

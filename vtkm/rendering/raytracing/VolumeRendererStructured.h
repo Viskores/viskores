@@ -26,7 +26,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/Camera.h>
@@ -1000,7 +1000,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
                Rays.MaxDistance);
     bool isSupportedField = (ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
                              ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET );
-    if(!isSupportedField) throw vtkm::cont::ErrorControlBadValue("Feild not accociated with cell set or points");
+    if(!isSupportedField) throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
     bool isAssocPoints = ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
     if(IsUniformDataSet)
     {
@@ -1086,7 +1086,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
   void SetSampleDistance(const vtkm::Float32 & distance)
   {
     if(distance <= 0.f)
-        throw vtkm::cont::ErrorControlBadValue("Sample distance must be positive.");
+        throw vtkm::cont::ErrorBadValue("Sample distance must be positive.");
     SampleDistance = distance;
   }
 

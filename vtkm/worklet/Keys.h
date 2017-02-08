@@ -365,7 +365,7 @@ struct Transport<
   {
     if (object.GetNumberOfValues() != inputDomain.GetInputRange())
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "Input array to worklet invocation the wrong size.");
     }
 

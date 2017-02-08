@@ -553,12 +553,12 @@ public:
       }
       else
       {
-        throw vtkm::cont::ErrorControlBadType("Unsupported cell type for trianglulation with CellSetSingleType");
+        throw vtkm::cont::ErrorBadType("Unsupported cell type for trianglulation with CellSetSingleType");
       }
     }
     else
     {
-      throw vtkm::cont::ErrorControlBadType("Unsupported cell set type for trianglulation");
+      throw vtkm::cont::ErrorBadType("Unsupported cell set type for trianglulation");
     }
 
     //get rid of any triagles we cannot see

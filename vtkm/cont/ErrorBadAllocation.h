@@ -17,25 +17,25 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ErrorControlBadValue_h
-#define vtk_m_cont_ErrorControlBadValue_h
+#ifndef vtk_m_cont_ErrorBadAllocation_h
+#define vtk_m_cont_ErrorBadAllocation_h
 
-#include <vtkm/cont/ErrorControl.h>
+#include <vtkm/cont/Error.h>
 
 namespace vtkm {
 namespace cont {
 
-/// This class is thrown when a VTKm function or method encounters an invalid
-/// value that inhibits progress.
+/// This class is thrown when VTK-m attempts to manipulate memory that it should
+/// not.
 ///
-class VTKM_ALWAYS_EXPORT ErrorControlBadValue : public ErrorControl
+class VTKM_ALWAYS_EXPORT ErrorBadAllocation : public Error
 {
 public:
-  ErrorControlBadValue(const std::string &message)
-    : ErrorControl(message) { }
+  ErrorBadAllocation(const std::string &message)
+    : Error(message) { }
 };
 
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_cont_ErrorControlBadValue_h
+#endif //vtk_m_cont_ErrorBadAllocation_h

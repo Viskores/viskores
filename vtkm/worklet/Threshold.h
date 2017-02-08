@@ -135,7 +135,7 @@ public:
       }
 
     default:
-      throw vtkm::cont::ErrorControlBadValue("Expecting point or cell field.");
+      throw vtkm::cont::ErrorBadValue("Expecting point or cell field.");
     }
 
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>
@@ -168,7 +168,7 @@ public:
   {
     if (field.GetAssociation() != vtkm::cont::Field::ASSOC_CELL_SET)
     {
-      throw vtkm::cont::ErrorControlBadValue("Expecting cell field.");
+      throw vtkm::cont::ErrorBadValue("Expecting cell field.");
     }
 
     vtkm::cont::DynamicArrayHandle data;

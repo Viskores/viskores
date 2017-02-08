@@ -185,7 +185,7 @@ TestAvgPointToCell()
                       dataSet.GetField("cellvar"), // should be pointvar
                       result);
   }
-  catch (vtkm::cont::ErrorControlBadValue error)
+  catch (vtkm::cont::ErrorBadValue error)
   {
     std::cout << "  Caught expected error: " << error.GetMessage()
               << std::endl;
@@ -236,7 +236,7 @@ TestAvgCellToPoint()
                       dataSet.GetField("pointvar"), // should be cellvar
                       result);
   }
-  catch (vtkm::cont::ErrorControlBadValue error)
+  catch (vtkm::cont::ErrorBadValue error)
   {
     std::cout << "  Caught expected error: " << error.GetMessage()
               << std::endl;

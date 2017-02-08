@@ -68,7 +68,7 @@ void CanvasOSMesa::Initialize()
 
   if (!this->Internals->Context)
   {
-    throw vtkm::cont::ErrorControlBadValue("OSMesa context creation failed.");
+    throw vtkm::cont::ErrorBadValue("OSMesa context creation failed.");
   }
   vtkm::Vec<vtkm::Float32,4> *colorBuffer =
       this->GetColorBuffer().GetStorage().GetArray();
@@ -78,7 +78,7 @@ void CanvasOSMesa::Initialize()
                          static_cast<GLsizei>(this->GetWidth()),
                          static_cast<GLsizei>(this->GetHeight())))
   {
-    throw vtkm::cont::ErrorControlBadValue("OSMesa context activation failed.");
+    throw vtkm::cont::ErrorBadValue("OSMesa context activation failed.");
   }
 
 
@@ -110,7 +110,7 @@ void CanvasOSMesa::Finish()
       static_cast<vtkm::Id>(w)!=this->GetWidth() ||
       static_cast<vtkm::Id>(h)!=this->GetHeight())
   {
-    throw vtkm::cont::ErrorControlBadValue("Wrong width/height in ZBuffer");
+    throw vtkm::cont::ErrorBadValue("Wrong width/height in ZBuffer");
   }
   vtkm::cont::ArrayHandle<vtkm::Float32>::PortalControl depthPortal =
       this->GetDepthBuffer().GetPortalControl();

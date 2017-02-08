@@ -26,7 +26,7 @@
 #include <vtkm/filter/internal/ResolveFieldTypeAndMap.h>
 
 #include <vtkm/cont/Error.h>
-#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorExecution.h>
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>

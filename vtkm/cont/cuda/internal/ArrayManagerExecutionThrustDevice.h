@@ -21,7 +21,7 @@
 #define vtk_m_cont_cuda_internal_ArrayManagerExecutionThrustDevice_h
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/Storage.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
@@ -34,42 +34,29 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 
 VTKM_THIRDPARTY_POST_INCLUDE
 
+#include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
+
+#include <limits>
 
 namespace vtkm {
 namespace cont {
 namespace cuda {
 namespace internal {
 
-// UninitializedAllocator is an allocator which
-// derives from device_allocator and which has a
-// no-op construct member function
-template<typename T>
-  struct UninitializedAllocator
-    : ::thrust::device_malloc_allocator<T>
-{
-  // note that construct is annotated as
-  // a __host__ __device__ function
-  __host__ __device__
-  void construct(T * vtkmNotUsed(p) )
-  {
-    // no-op
-  }
-};
-
 /// \c ArrayManagerExecutionThrustDevice provides an implementation for a \c
 /// ArrayManagerExecution class for a thrust device adapter that is designed
 /// for the cuda backend which has separate memory spaces for host and device.
-/// This implementation contains a thrust::system::cuda::vector to allocate
-/// and manage the array.
-///
+/// This implementation contains a thrust::system::cuda::pointer to contain the
+/// data.
 template<typename T, class StorageTag>
 class ArrayManagerExecutionThrustDevice
 {
 public:
   typedef T ValueType;
-  typedef typename thrust::system::cuda::pointer<T>::difference_type difference_type;
+  typedef typename thrust::system::cuda::pointer<ValueType> PointerType;
+  typedef typename PointerType::difference_type difference_type;
 
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
@@ -78,9 +65,11 @@ public:
 
   VTKM_CONT
   ArrayManagerExecutionThrustDevice(StorageType *storage)
-    : Storage(storage), Array()
+    : Storage(storage),
+      Begin(static_cast<ValueType*>(nullptr)),
+      End(static_cast<ValueType*>(nullptr)),
+      Capacity(static_cast<ValueType*>(nullptr))
   {
-
   }
 
   VTKM_CONT
@@ -93,7 +82,7 @@ public:
   ///
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
-    return static_cast<vtkm::Id>(this->Array.size());
+    return static_cast<vtkm::Id>(this->End.get() - this->Begin.get());
   }
 
   /// Allocates the appropriate size of the array and copies the given data
@@ -111,9 +100,7 @@ public:
       // The data in this->Array should already be valid.
     }
 
-
-    return PortalConstType(this->Array.data(),
-                           this->Array.data() + static_cast<difference_type>(this->Array.size()));
+    return PortalConstType(this->Begin, this->End);
   }
 
   /// Workaround for nvcc 7.5 compiler warning bug.
@@ -139,8 +126,7 @@ public:
       // The data in this->Array should already be valid.
     }
 
-    return PortalType(this->Array.data(),
-                      this->Array.data() + static_cast<difference_type>(this->Array.size()));
+    return PortalType(this->Begin, this->End);
   }
 
   /// Workaround for nvcc 7.5 compiler warning bug.
@@ -156,24 +142,55 @@ public:
   VTKM_CONT
   PortalType PrepareForOutput(vtkm::Id numberOfValues)
   {
-    if (numberOfValues > this->GetNumberOfValues())
+    // Can we reuse the existing buffer?
+    vtkm::Id curCapacity = this->Begin.get() != nullptr
+        ? static_cast<vtkm::Id>(this->Capacity.get() - this->Begin.get())
+        : 0;
+
+    // Just mark a new end if we don't need to increase the allocation:
+    if (curCapacity >= numberOfValues)
     {
-      // Resize to 0 first so that you don't have to copy data when resizing
-      // to a larger size.
-      this->Array.clear();
+      this->End = PointerType(this->Begin.get() +
+                              static_cast<difference_type>(numberOfValues));
+
+      return PortalType(this->Begin, this->End);
     }
 
+    const std::size_t maxNumVals = (std::numeric_limits<std::size_t>::max() /
+                                    sizeof(ValueType));
+
+    if (static_cast<size_t>(numberOfValues) > maxNumVals)
+    {
+      std::ostringstream err;
+      err << "Failed to allocate " << numberOfValues << " values on device: "
+          << "Number of bytes is not representable by std::size_t.";
+      throw vtkm::cont::ErrorBadAllocation(err.str());
+    }
+
+    this->ReleaseResources();
+
+    const std::size_t bufferSize = numberOfValues * sizeof(ValueType);
+
+    // Attempt to allocate:
     try
       {
-      this->Array.resize(static_cast<std::size_t>(numberOfValues));
+      ValueType *tmp;
+      VTKM_CUDA_CALL(cudaMalloc(&tmp, bufferSize));
+      this->Begin = PointerType(tmp);
       }
-    catch (std::bad_alloc error)
+    catch (const std::exception &error)
       {
-      throw vtkm::cont::ErrorControlBadAllocation(error.what());
+      std::ostringstream err;
+      err << "Failed to allocate " << bufferSize << " bytes on device: "
+          << error.what();
+      throw vtkm::cont::ErrorBadAllocation(err.str());
       }
 
-    return PortalType(this->Array.data(),
-                      this->Array.data() + static_cast<difference_type>(this->Array.size()));
+    this->Capacity = PointerType(this->Begin.get() +
+                                 static_cast<difference_type>(numberOfValues));
+    this->End = this->Capacity;
+
+    return PortalType(this->Begin, this->End);
   }
 
   /// Workaround for nvcc 7.5 compiler warning bug.
@@ -190,12 +207,10 @@ public:
   VTKM_CONT
   void RetrieveOutputData(StorageType *storage) const
   {
-    storage->Allocate(static_cast<vtkm::Id>(this->Array.size()));
+    storage->Allocate(this->GetNumberOfValues());
     try
       {
-      ::thrust::copy(
-          this->Array.data(),
-          this->Array.data() + static_cast<difference_type>(this->Array.size()),
+      ::thrust::copy(this->Begin, this->End,
           vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
       }
     catch (...)
@@ -211,10 +226,7 @@ public:
   template <class IteratorTypeControl>
   VTKM_CONT void CopyInto(IteratorTypeControl dest) const
   {
-    ::thrust::copy(
-          this->Array.data(),
-          this->Array.data() + static_cast<difference_type>(this->Array.size()),
-          dest);
+    ::thrust::copy(this->Begin, this->End, dest);
   }
 
   /// Resizes the device vector.
@@ -223,18 +235,24 @@ public:
   {
     // The operation will succeed even if this assertion fails, but this
     // is still supposed to be a precondition to Shrink.
-    VTKM_ASSERT(numberOfValues <= static_cast<vtkm::Id>(this->Array.size()));
+    VTKM_ASSERT(this->Begin.get() != nullptr &&
+                this->Begin.get() + numberOfValues <= this->End.get());
 
-    this->Array.resize(static_cast<std::size_t>(numberOfValues));
+    this->End = PointerType(this->Begin.get() +
+                            static_cast<difference_type>(numberOfValues));
   }
-
 
   /// Frees all memory.
   ///
   VTKM_CONT void ReleaseResources()
   {
-    this->Array.clear();
-    this->Array.shrink_to_fit();
+    if (this->Begin.get() != nullptr)
+    {
+      VTKM_CUDA_CALL(cudaFree(this->Begin.get()));
+      this->Begin = PointerType(static_cast<ValueType*>(nullptr));
+      this->End = PointerType(static_cast<ValueType*>(nullptr));
+      this->Capacity = PointerType(static_cast<ValueType*>(nullptr));
+    }
   }
 
 private:
@@ -246,17 +264,19 @@ private:
 
   StorageType *Storage;
 
-  ::thrust::system::cuda::vector<ValueType,
-                                 UninitializedAllocator<ValueType> > Array;
+  PointerType Begin;
+  PointerType End;
+  PointerType Capacity;
 
   VTKM_CONT
   void CopyToExecution()
   {
     try
     {
-      this->Array.assign(
-            vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst()),
-            vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()));
+      this->PrepareForOutput(this->Storage->GetNumberOfValues());
+      ::thrust::copy(vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst()),
+                     vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()),
+                     this->Begin);
     }
     catch (...)
     {

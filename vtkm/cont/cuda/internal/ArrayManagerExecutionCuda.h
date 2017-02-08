@@ -60,7 +60,7 @@ public:
       // with nvcc 7.5.
       return this->Superclass::template _PrepareForInput<void>(updateData);
     }
-    catch (vtkm::cont::ErrorControlBadAllocation error)
+    catch (vtkm::cont::ErrorBadAllocation error)
     {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -81,7 +81,7 @@ public:
       // with nvcc 7.5.
       return this->Superclass::template _PrepareForInPlace<void>(updateData);
     }
-    catch (vtkm::cont::ErrorControlBadAllocation error)
+    catch (vtkm::cont::ErrorBadAllocation error)
     {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -102,7 +102,7 @@ public:
       // with nvcc 7.5.
       return this->Superclass::template _PrepareForOutput<void>(numberOfValues);
     }
-    catch (vtkm::cont::ErrorControlBadAllocation error)
+    catch (vtkm::cont::ErrorBadAllocation error)
     {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();

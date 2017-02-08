@@ -85,7 +85,7 @@ struct TemplatedTests
       VTKM_TEST_ASSERT(false == true,
                        "Implicit Storage Allocate method didn't throw error.");
     }
-    catch(vtkm::cont::ErrorControlBadValue e) {}
+    catch(vtkm::cont::ErrorBadValue e) {}
 
     try
     {
@@ -93,7 +93,7 @@ struct TemplatedTests
       VTKM_TEST_ASSERT(true==false,
                        "Array shrink do a larger size was possible. This can't be allowed.");
     }
-    catch(vtkm::cont::ErrorControlBadValue) {}
+    catch(vtkm::cont::ErrorBadValue) {}
 
     //verify that calling ReleaseResources doesn't throw an exception
     arrayStorage.ReleaseResources();

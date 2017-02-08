@@ -23,8 +23,8 @@
 # Once done this will define
 #
 # GLFW_FOUND
-# GLFW_INCLUDE_DIR
-# GLFW_LIBRARY
+# GLFW_INCLUDE_DIRS
+# GLFW_LIBRARIES
 #
 
 include(FindPackageHandleStandardArgs)
@@ -94,9 +94,14 @@ if (${CMAKE_HOST_UNIX})
             DOC "The GLFW library")
 endif ()
 
-find_package_handle_standard_args(GLFW DEFAULT_MSG
-    GLFW_INCLUDE_DIR
-    GLFW_LIBRARY
+find_package_handle_standard_args(GLFW
+  FOUND_VAR GLFW_FOUND
+  REQUIRED_VARS GLFW_INCLUDE_DIR GLFW_LIBRARY
 )
+
+if(GLFW_FOUND)
+  set(GLFW_LIBRARIES ${GLFW_LIBRARY})
+  set(GLFW_INCLUDE_DIRS ${GLFW_INCLUDE_DIR})
+endif()
 
 mark_as_advanced( GLFW_INCLUDE_DIR GLFW_LIBRARY )
