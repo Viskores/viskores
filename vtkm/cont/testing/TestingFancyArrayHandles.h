@@ -28,6 +28,7 @@
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleDiscard.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
@@ -796,6 +797,37 @@ private:
     }
   };
 
+  struct TestDiscardAsOutput
+  {
+    template< typename ValueType>
+    VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
+    {
+      using DiscardHandleType = vtkm::cont::ArrayHandleDiscard<ValueType>;
+      using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
+
+      typedef typename vtkm::cont::ArrayHandle<ValueType>::PortalControl Portal;
+
+      const vtkm::Id length = ARRAY_SIZE;
+
+      vtkm::cont::ArrayHandle<ValueType> input;
+      input.Allocate(length);
+      Portal inputPortal = input.GetPortalControl();
+      for(vtkm::Id i=0; i < length; ++i)
+        {
+        inputPortal.Set(i,ValueType(ComponentType(i)));
+        }
+
+      DiscardHandleType discard;
+      discard.Allocate(length);
+
+      vtkm::worklet::DispatcherMapField< PassThrough, DeviceAdapterTag > dispatcher;
+      dispatcher.Invoke(input, discard);
+
+      // No output to verify since none is stored in memory. Just checking that
+      // this compiles/runs without errors.
+    }
+  };
+
   struct TestPermutationAsOutput
   {
     template< typename ValueType>
@@ -1035,6 +1067,12 @@ private:
       vtkm::testing::Testing::TryTypes(
                               TestingFancyArrayHandles<DeviceAdapterTag>::TestPermutationAsOutput(),
                               HandleTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleDiscard as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+            TestingFancyArrayHandles<DeviceAdapterTag>::TestDiscardAsOutput(),
+            HandleTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleZip as Output" << std::endl;
