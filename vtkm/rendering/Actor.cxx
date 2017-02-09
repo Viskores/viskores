@@ -107,7 +107,7 @@ const vtkm::cont::DynamicCellSet &Actor::GetCells() const
   return this->Internals->Cells;
 }
 
-const vtkm::cont::CoordinateSystem &Actor::GetCoordiantes() const
+const vtkm::cont::CoordinateSystem &Actor::GetCoordinates() const
 {
   return this->Internals->Coordinates;
 }

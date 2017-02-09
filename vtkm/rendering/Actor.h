@@ -46,7 +46,7 @@ public:
 
   const vtkm::cont::DynamicCellSet &GetCells() const;
 
-  const vtkm::cont::CoordinateSystem &GetCoordiantes() const;
+  const vtkm::cont::CoordinateSystem &GetCoordinates() const;
 
   const vtkm::cont::Field &GetScalarField() const;
 
