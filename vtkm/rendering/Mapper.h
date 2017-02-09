@@ -20,6 +20,9 @@
 #ifndef vtk_m_rendering_Mapper_h
 #define vtk_m_rendering_Mapper_h
 
+#include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/Field.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/ColorTable.h>

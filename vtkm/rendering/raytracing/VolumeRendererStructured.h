@@ -25,7 +25,10 @@
 #include <math.h>
 #include <iostream>
 #include <stdio.h>
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/raytracing/Ray.h>
@@ -43,7 +46,7 @@ class VolumeRendererStructured
 {
 public:
   typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
-  typedef typename vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle,DefaultHandle,DefaultHandle> CartesianArrayHandle;
+  typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle,DefaultHandle,DefaultHandle> CartesianArrayHandle;
 
   class Sampler : public vtkm::worklet::WorkletMapField
   {
