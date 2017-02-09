@@ -43,7 +43,7 @@ class VolumeRendererStructured
 {
 public:
   typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
-  typedef typename vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle,DefaultHandle,DefaultHandle> CartesianArrayHandle;
+  typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle,DefaultHandle,DefaultHandle> CartesianArrayHandle;
 
   class Sampler : public vtkm::worklet::WorkletMapField
   {
