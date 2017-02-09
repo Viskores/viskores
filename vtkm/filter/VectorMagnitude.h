@@ -46,6 +46,13 @@ private:
 
 };
 
+template<>
+class FilterTraits<VectorMagnitude>
+{ //currently the VectorMagnitude filter only works on vector data.
+public:
+  typedef TypeListTagVecCommon InputFieldTypeList;
+};
+
 }
 } // namespace vtkm::filter
 
