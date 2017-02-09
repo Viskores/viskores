@@ -169,7 +169,7 @@ public:
   VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Input access not supported: "
           "Cannot read from an ArrayHandleDiscard.");
   }
@@ -177,7 +177,7 @@ public:
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "InPlace access not supported: "
           "Cannot read from an ArrayHandleDiscard.");
   }

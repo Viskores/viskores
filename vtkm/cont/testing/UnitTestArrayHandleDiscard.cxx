@@ -99,7 +99,7 @@ struct Test
     {
       handle.PrepareForInput(DeviceTag());
     }
-    catch (vtkm::cont::ErrorControlBadValue exp)
+    catch (vtkm::cont::ErrorBadValue exp)
     {
       // Expected failure.
     }
@@ -108,7 +108,7 @@ struct Test
     {
       handle.PrepareForInPlace(DeviceTag());
     }
-    catch (vtkm::cont::ErrorControlBadValue exp)
+    catch (vtkm::cont::ErrorBadValue exp)
     {
       // Expected failure.
     }
