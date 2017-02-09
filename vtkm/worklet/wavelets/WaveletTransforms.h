@@ -216,6 +216,7 @@ private:
 //  | /
 //  |/------------- X
 // 
+// The following 3 classes have the same functionaliry in 3 directions
 class IndexTranslator3CubesLeftRight
 {
 public:
@@ -234,7 +235,7 @@ public:
   { (void)dimY2; }
 
   VTKM_EXEC_CONT
-  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::inZ,    // 2D indices as input
+  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 2D indices as input
                         vtkm::Id  &mat, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
     if ( 0 <= inX && inX < dimX1 )
@@ -244,13 +245,15 @@ public:
     } 
     else if ( dimX1 <= inX && inX < (dimX1 + pretendDimX2) )
     {
+      vtkm::Id inX_local = inX - dimX1;
       mat = 2;
-      idx = (inZ + startZ2) * dimX2 * dimY2 + (inY + startY2) * dimX2 + (inX + startX2 - dimX1);
+      idx = (inZ + startZ2) * dimX2 * dimY2 + (inY + startY2) * dimX2 + (inX_local + startX2);
     }
     else if ( (dimX1 + pretendDimX2) <= inX && inX < (dimX1 + pretendDimX2 + dimX3) )
     {
+      vtkm::Id inX_local = inX - dimX1 - pretendDimX2;
       mat = 3;  
-      idx = inZ * dimX3 * dimY3 + inY * dimX3 + (inX - dimX1 - pretendDimX2);
+      idx = inZ * dimX3 * dimY3 + inY * dimX3 + inX_local;
     }
     else
       vtkm::cont::ErrorControlInternal("Invalid index!");
@@ -263,7 +266,104 @@ private:
   const vtkm::Id      dimX3, dimY3, dimZ3;		// right extension
 };
 
-// TODO: translator for top-down and front-back
+class IndexTranslator3CubesTopDown
+{
+public:
+  IndexTranslator3CubesTopDown  ( 
+						vtkm::Id x_1,             vtkm::Id y_1,             vtkm::Id z_1,
+            vtkm::Id x_2,             vtkm::Id y_2,             vtkm::Id z_2,
+            vtkm::Id startx_2,        vtkm::Id starty_2,        vtkm::Id startz_2,
+            vtkm::Id pretendx_2,      vtkm::Id pretendy_2,      vtkm::Id pretendz_2,
+            vtkm::Id x_3,             vtkm::Id y_3,             vtkm::Id z_3 )
+          :  
+            dimX1(x_1),               dimY1(y_1),               dimZ1(z_1),
+            dimX2(x_2),               dimY2(y_2),               dimZ2(z_2),
+            startX2( startx_2 ),      startY2( starty_2 ),      startZ2(startz_2),
+            pretendDimX2(pretendx_2), pretendDimY2(pretendy_2), pretendDimZ2(pretendz_2),
+            dimX3(x_3),               dimY3(y_3),               dimZ3(z_3)
+  { }
+
+  VTKM_EXEC_CONT
+  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 2D indices as input
+                        vtkm::Id  &mat, vtkm::Id  &idx ) const // which cube, and idx of that cube
+  {
+    if ( 0 <= inY && inY < dimY1 )
+    {
+      mat = 1;
+      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
+    }
+    else if ( dimY1 <= inY && inY < (dimY1 + pretendDimY2) )
+    {
+      vtkm::Id inY_local = inY - dimY1;
+      mat = 2;
+      idx = (inZ + startZ2) * dimX2 * dimY2 + (inY_local + startY2) * dimX2 + inX + startX2;
+    }
+    else if ( (dimY1 + pretendDimY2) <= inY && inY < (dimY1 + pretendDimY2 + dimY3) )
+    {
+      vtkm::Id inY_local = inY - dimY1 - pretendDimY2;
+      mat = 3;
+      idx = inZ * dimX3 * dimY3 + inY_local * dimX3 + inX;
+    }
+    else
+      vtkm::cont::ErrorControlInternal("Invalid index!");
+  }
+
+private:
+  const vtkm::Id      dimX1, dimY1, dimZ1;		// left extension
+  const vtkm::Id      dimX2, dimY2, dimZ2;		// actual signal dims
+	const vtkm::Id			startX2, startY2, startZ2, pretendDimX2, pretendDimY2, pretendDimZ2;
+  const vtkm::Id      dimX3, dimY3, dimZ3;		// right extension
+};
+
+class IndexTranslator3CubesFrontBack
+{
+public:
+  IndexTranslator3CubesFrontBack  ( 
+						vtkm::Id x_1,             vtkm::Id y_1,             vtkm::Id z_1,
+            vtkm::Id x_2,             vtkm::Id y_2,             vtkm::Id z_2,
+            vtkm::Id startx_2,        vtkm::Id starty_2,        vtkm::Id startz_2,
+            vtkm::Id pretendx_2,      vtkm::Id pretendy_2,      vtkm::Id pretendz_2,
+            vtkm::Id x_3,             vtkm::Id y_3,             vtkm::Id z_3 )
+          :  
+            dimX1(x_1),               dimY1(y_1),               dimZ1(z_1),
+            dimX2(x_2),               dimY2(y_2),               dimZ2(z_2),
+            startX2( startx_2 ),      startY2( starty_2 ),      startZ2(startz_2),
+            pretendDimX2(pretendx_2), pretendDimY2(pretendy_2), pretendDimZ2(pretendz_2),
+            dimX3(x_3),               dimY3(y_3),               dimZ3(z_3)
+  { }
+
+  VTKM_EXEC_CONT
+  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 2D indices as input
+                        vtkm::Id  &mat, vtkm::Id  &idx ) const // which cube, and idx of that cube
+  {
+    if ( 0 <= inZ && inZ < dimZ1 )
+    {
+      mat = 1;
+      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
+    }
+    else if ( dimZ1 <= inZ && inZ < (dimZ1 + pretendDimZ2) )
+    {
+      vtkm::Id inZ_local = inZ - dimZ1;
+      mat = 2;
+      idx = (inZ_local + startZ2) * dimX2 * dimY2 + (inY + startY2) * dimX2 + inX + startX2;
+    }
+    else if ( (dimZ1 + pretendDimZ2) <= inZ && inZ < (dimZ1 + pretendDimZ2 + dimZ3) )
+    {
+      vtkm::Id inZ_local = inZ - dimZ1 - pretendDimZ2;
+      mat = 3;
+      idx = inZ_local * dimX3 * dimY3 + inY * dimX3 + inX;
+    }
+    else
+      vtkm::cont::ErrorControlInternal("Invalid index!");
+  }
+
+private:
+  const vtkm::Id      dimX1, dimY1, dimZ1;		// left extension
+  const vtkm::Id      dimX2, dimY2, dimZ2;		// actual signal dims
+	const vtkm::Id			startX2, startY2, startZ2, pretendDimX2, pretendDimY2, pretendDimZ2;
+  const vtkm::Id      dimX3, dimY3, dimZ3;		// right extension
+};
+
 
 
 //  ---------------------------------------------------
