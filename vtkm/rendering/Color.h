@@ -21,7 +21,7 @@
 #define vtk_m_rendering_Color_h
 
 #include <iostream>
-#include <vtkm/cont/DataSet.h>
+#include <vtkm/Types.h>
 namespace vtkm {
 namespace rendering {
 
