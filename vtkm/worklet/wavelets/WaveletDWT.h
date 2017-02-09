@@ -97,7 +97,7 @@ public:
     typedef typename vtkm::worklet::DispatcherMapField< ExtensionWorklet, DeviceTag >
                                                                DispatcherType;
     vtkm::Id extDimX, extDimY;
-    vtkm::worklet::wavelets::ExtensionDirection2D dir;
+    vtkm::worklet::wavelets::ExtensionDirection dir;
 
     // Work on left/top extension 
     {

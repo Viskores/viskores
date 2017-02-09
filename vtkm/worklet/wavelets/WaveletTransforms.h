@@ -37,14 +37,16 @@ enum DWTMode {    // boundary extension modes
   ASYMW
 };
 
+/*
 enum ExtensionDirection2D {  // which side of a matrix to extend
   LEFT,
   RIGHT,
   TOP,
   BOTTOM
 };
+*/
 
-enum ExtensionDirection3D {  // which side of a cube to extend
+enum ExtensionDirection {  // which side of a cube to extend
   LEFT,       // X direction
   RIGHT,      // X direction     Y
   TOP,        // Y direction     |   Z
@@ -72,7 +74,7 @@ public:
                         vtkm::Id sigstartX,   vtkm::Id sigstartY,   vtkm::Id sigstartZ,
                         vtkm::Id sigpretendX, vtkm::Id sigpretendY, vtkm::Id sigpretendZ,
                         DWTMode               m,  // SYMH, SYMW, etc.
-                        ExtensionDirection3D  dir, 
+                        ExtensionDirection    dir, 
                         bool                  pad_zero )
                      : 
                         extDimX( extdimX ),       extDimY( extdimY ),       extDimZ( extdimZ ),
@@ -115,31 +117,25 @@ public:
                    const PortalInType        &portalIn,
                    const vtkm::Id            &workIndex) const
   {
-    vtkm::Id    extX, extY, extZ;
+    vtkm::Id    extX, 			 extY, 				extZ;
     vtkm::Id    sigPretendX, sigPretendY, sigPretendZ;
     Ext1Dto3D( workIndex, extX, extY, extZ );
     typename PortalOutType::ValueType sym = 1.0;
     if( mode == ASYMH || mode == ASYMW )
       sym = -1.0;
     if( direction == LEFT )
-    {   // TODO
+    {
       sigPretendY = extY;
+      sigPretendZ = extZ;
       if( mode == SYMH || mode == ASYMH )
         sigPretendX = extDimX - extX - 1;
       else    // mode == SYMW || mode == ASYMW
         sigPretendX = extDimX - extX; 
     }
-    else if( direction == TOP ) 
-    {
-      sigPretendX = extX;
-      if( mode == SYMH || mode == ASYMH )
-        sigPretendY = extDimY - extY - 1;
-      else    // mode == SYMW || mode == ASYMW
-        sigPretendY = extDimY - extY; 
-    }
     else if( direction == RIGHT )
     {
       sigPretendY = extY;
+      sigPretendZ = extZ;
       if( mode == SYMH || mode == ASYMH )
         sigPretendX = sigPretendDimX - extX - 1;
       else
@@ -147,9 +143,19 @@ public:
       if( padZero )
         sigPretendX++;
     }
-    else  // direction == BOTTOM 
+    else if( direction == TOP ) 
     {
       sigPretendX = extX;
+      sigPretendZ = extZ;
+      if( mode == SYMH || mode == ASYMH )
+        sigPretendY = extDimY - extY - 1;
+      else    // mode == SYMW || mode == ASYMW
+        sigPretendY = extDimY - extY; 
+    }
+    else if( direction == BOTTOM )
+    {
+      sigPretendX = extX;
+      sigPretendZ = extZ;
       if( mode == SYMH || mode == ASYMH )
         sigPretendY = sigPretendDimY - extY - 1;
       else
@@ -157,11 +163,36 @@ public:
       if( padZero )
         sigPretendY++;
     }
-    if( sigPretendX == sigPretendDimX || sigPretendY == sigPretendDimY )
+    else if( direction == FRONT ) 
+    {
+      sigPretendX = extX;
+      sigPretendY = extY;
+      if( mode == SYMH || mode == ASYMH )
+        sigPretendZ = extDimZ - extZ - 1;
+      else    // mode == SYMW || mode == ASYMW
+        sigPretendZ = extDimZ - extZ; 
+    }
+    else if( direction == BACK )
+    {
+      sigPretendX = extX;
+      sigPretendY = extY;
+      if( mode == SYMH || mode == ASYMH )
+        sigPretendZ = sigPretendDimZ - extZ - 1;
+      else
+        sigPretendZ = sigPretendDimZ - extZ - 2;
+      if( padZero )
+        sigPretendZ++;
+    }
+		else
+      vtkm::cont::ErrorControlInternal("Invalid extension mode for cubes!");
+
+    if( sigPretendX == sigPretendDimX || 		// decides to pad a zero 
+				sigPretendY == sigPretendDimY ||
+				sigPretendZ == sigPretendDimZ  )
       portalOut.Set( workIndex, 0.0 );
     else
-      portalOut.Set( workIndex, sym * 
-                     portalIn.Get( SigPretend2Dto1D(sigPretendX, sigPretendY) ));
+      portalOut.Set( workIndex, sym * portalIn.Get( 
+										 SigPretend3Dto1D(sigPretendX, sigPretendY, sigPretendZ) ));
   }
 
 private:
@@ -169,10 +200,70 @@ private:
   const vtkm::Id              sigStartX, sigStartY, sigStartZ;  // defines a small cube to work on
   const vtkm::Id              sigPretendDimX, sigPretendDimY, sigPretendDimZ;   // small cube dims
   const DWTMode               mode;
-  const ExtensionDirection3D  direction;
+  const ExtensionDirection    direction;
   const bool                  padZero;  // treat sigIn as having a zero at the end
 };
 
+
+
+//  Y
+//
+//  |      Z
+//  |     /
+//  |    /
+//  |   /
+//  |  /
+//  | /
+//  |/------------- X
+// 
+class IndexTranslator3CubesLeftRight
+{
+public:
+  IndexTranslator3CubesLeftRight	( 
+						vtkm::Id x_1,             vtkm::Id y_1,             vtkm::Id z_1,
+            vtkm::Id x_2,             vtkm::Id y_2,             vtkm::Id z_2,
+            vtkm::Id startx_2,        vtkm::Id starty_2,        vtkm::Id startz_2,
+            vtkm::Id pretendx_2,      vtkm::Id pretendy_2,      vtkm::Id pretendz_2,
+            vtkm::Id x_3,             vtkm::Id y_3,             vtkm::Id z_3 )
+          :  
+            dimX1(x_1),               dimY1(y_1),               dimZ1(z_1),
+            dimX2(x_2),               dimY2(y_2),               dimZ2(z_2),
+            startX2( startx_2 ),      startY2( starty_2 ),      startZ2(startz_2),
+            pretendDimX2(pretendx_2), pretendDimY2(pretendy_2), pretendDimZ2(pretendz_2),
+            dimX3(x_3),               dimY3(y_3),               dimZ3(z_3)
+  { (void)dimY2; }
+
+  VTKM_EXEC_CONT
+  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::inZ,    // 2D indices as input
+                        vtkm::Id  &mat, vtkm::Id  &idx ) const // which cube, and idx of that cube
+  {
+    if ( 0 <= inX && inX < dimX1 )
+    {
+      mat = 1;
+      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
+    } 
+    else if ( dimX1 <= inX && inX < (dimX1 + pretendDimX2) )
+    {
+      mat = 2;
+      idx = (inZ + startZ2) * dimX2 * dimY2 + (inY + startY2) * dimX2 + (inX + startX2 - dimX1);
+    }
+    else if ( (dimX1 + pretendDimX2) <= inX && inX < (dimX1 + pretendDimX2 + dimX3) )
+    {
+      mat = 3;  
+      idx = inZ * dimX3 * dimY3 + inY * dimX3 + (inX - dimX1 - pretendDimX2);
+    }
+    else
+      vtkm::cont::ErrorControlInternal("Invalid index!");
+  }
+
+private:
+  const vtkm::Id      dimX1, dimY1, dimZ1;		// left extension
+  const vtkm::Id      dimX2, dimY2, dimZ2;		// actual signal dims
+	const vtkm::Id			startX2, startY2, startZ2, pretendDimX2, pretendDimY2, pretendDimZ2;
+  const vtkm::Id      dimX3, dimY3, dimZ3;		// right extension
+};
+
+// TODO: translator for top-down and front-back
 
 
 //  ---------------------------------------------------
@@ -324,7 +415,8 @@ public:
                             vtkm::Id x_2,               vtkm::Id y_2,       // actual dims of mat2
                             vtkm::Id startx_2,          vtkm::Id starty_2,  // start idx of pretend
                             vtkm::Id pretendx_2,        vtkm::Id pretendy_2,// pretend dims 
-                            vtkm::Id x_3, vtkm::Id y_3, bool mode )
+                            vtkm::Id x_3, 							vtkm::Id y_3, 
+														bool mode )
                          :  
                             dimX1(x_1),                 dimY1(y_1), 
                             dimX2(x_2),                 dimY2(y_2),
@@ -405,7 +497,7 @@ public:
                         vtkm::Id sigdimX,     vtkm::Id sigdimY, 
                         vtkm::Id sigstartX,   vtkm::Id sigstartY,
                         vtkm::Id sigpretendX, vtkm::Id sigpretendY,
-                        DWTMode m, ExtensionDirection2D dir, bool pad_zero)
+                        DWTMode m, ExtensionDirection dir, bool pad_zero)
                      : 
                         extDimX( extdimX ),           extDimY( extdimY ), 
                         sigDimX( sigdimX ),           sigDimY( sigdimY ), 
@@ -443,6 +535,7 @@ public:
                    const vtkm::Id            &workIndex) const
   {
     vtkm::Id extX, extY, sigPretendX, sigPretendY;
+		sigPretendX = sigPretendY = 0;
     Ext1Dto2D( workIndex, extX, extY );
     typename PortalOutType::ValueType sym = 1.0;
     if( mode == ASYMH || mode == ASYMW )
@@ -473,7 +566,7 @@ public:
       if( padZero )
         sigPretendX++;
     }
-    else  // direction == BOTTOM 
+    else if( direction == BOTTOM )
     {
       sigPretendX = extX;
       if( mode == SYMH || mode == ASYMH )
@@ -483,6 +576,9 @@ public:
       if( padZero )
         sigPretendY++;
     }
+		else
+      vtkm::cont::ErrorControlInternal("Invalid extension mode for matrices!");
+
     if( sigPretendX == sigPretendDimX || sigPretendY == sigPretendDimY )
       portalOut.Set( workIndex, 0.0 );
     else
@@ -494,7 +590,7 @@ private:
   const vtkm::Id              extDimX, extDimY, sigDimX, sigDimY;
   const vtkm::Id              sigStartX, sigStartY, sigPretendDimX, sigPretendDimY;
   const DWTMode               mode;
-  const ExtensionDirection2D  direction;
+  const ExtensionDirection    direction;
   const bool                  padZero;  // treat sigIn as having a column/row zeros
 };
 
