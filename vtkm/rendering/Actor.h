@@ -56,6 +56,8 @@ public:
 
   const vtkm::Bounds &GetSpatialBounds() const;
 
+  void SetScalarRange(const vtkm::Range &scalarRange);
+
 private:
   struct InternalsType;
   std::shared_ptr<InternalsType> Internals;

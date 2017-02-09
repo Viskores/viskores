@@ -132,5 +132,10 @@ const vtkm::Bounds &Actor::GetSpatialBounds() const
   return this->Internals->SpatialBounds;
 }
 
+void Actor::SetScalarRange(const vtkm::Range &scalarRange)
+{
+  this->Internals->ScalarRange = scalarRange;
+}
+
 }
 } // namespace vtkm::rendering
