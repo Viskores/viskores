@@ -943,6 +943,7 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
     IsSceneDirty = false;
     IsUniformDataSet = true;
     SampleDistance = -1.f;
+    DoCompositeBackground = false;
   }
 
   VTKM_CONT
@@ -1078,10 +1079,11 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
         }
      }
 
-
-    vtkm::worklet::DispatcherMapField< CompositeBackground >( CompositeBackground( BackgroundColor ) )
-      .Invoke( camera.FrameBuffer );
-
+    if(DoCompositeBackground)
+    {
+      vtkm::worklet::DispatcherMapField< CompositeBackground >( CompositeBackground( BackgroundColor ) )
+        .Invoke( camera.FrameBuffer );
+    }
     camera.WriteToSurface(canvas, Rays.MinDistance);
   } //Render
 
@@ -1099,9 +1101,15 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
     BackgroundColor = backgroundColor;
   }
 
+  void SetCompositeBackground(bool compositeBackground)
+  {
+    DoCompositeBackground = compositeBackground;
+  }
+  
 protected:
   bool IsSceneDirty;
   bool IsUniformDataSet;
+  bool DoCompositeBackground;
   VolumeRay<DeviceAdapter> Rays;
   Camera<DeviceAdapter> camera;
   vtkm::cont::DynamicArrayHandleCoordinateSystem Coordinates;
