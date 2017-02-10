@@ -221,7 +221,7 @@ class IndexTranslator3CubesLeftRight
 {
 public:
   IndexTranslator3CubesLeftRight	( 
-						vtkm::Id x_1,             vtkm::Id y_1,             vtkm::Id z_1,
+            vtkm::Id x_1,             vtkm::Id y_1,             vtkm::Id z_1,
             vtkm::Id x_2,             vtkm::Id y_2,             vtkm::Id z_2,
             vtkm::Id startx_2,        vtkm::Id starty_2,        vtkm::Id startz_2,
             vtkm::Id pretendx_2,      vtkm::Id pretendy_2,      vtkm::Id pretendz_2,
@@ -270,7 +270,7 @@ class IndexTranslator3CubesTopDown
 {
 public:
   IndexTranslator3CubesTopDown  ( 
-						vtkm::Id x_1,             vtkm::Id y_1,             vtkm::Id z_1,
+            vtkm::Id x_1,             vtkm::Id y_1,             vtkm::Id z_1,
             vtkm::Id x_2,             vtkm::Id y_2,             vtkm::Id z_2,
             vtkm::Id startx_2,        vtkm::Id starty_2,        vtkm::Id startz_2,
             vtkm::Id pretendx_2,      vtkm::Id pretendy_2,      vtkm::Id pretendz_2,
@@ -319,7 +319,7 @@ class IndexTranslator3CubesFrontBack
 {
 public:
   IndexTranslator3CubesFrontBack  ( 
-						vtkm::Id x_1,             vtkm::Id y_1,             vtkm::Id z_1,
+            vtkm::Id x_1,             vtkm::Id y_1,             vtkm::Id z_1,
             vtkm::Id x_2,             vtkm::Id y_2,             vtkm::Id z_2,
             vtkm::Id startx_2,        vtkm::Id starty_2,        vtkm::Id startz_2,
             vtkm::Id pretendx_2,      vtkm::Id pretendy_2,      vtkm::Id pretendz_2,
@@ -362,6 +362,127 @@ private:
   const vtkm::Id      dimX2, dimY2, dimZ2;		// actual signal dims
 	const vtkm::Id			startX2, startY2, startZ2, pretendDimX2, pretendDimY2, pretendDimZ2;
   const vtkm::Id      dimX3, dimY3, dimZ3;		// right extension
+};
+
+
+//
+//  ---------------------------------------------------
+//  |      |          |      |      |          |      |
+//  |cube1 |  cube5   |cube2 |cube3 |  cube5   |cube4 |
+//  | ext1 |    cA    | ext2 | ext3 |    cD    | ext4 |
+//  | (x1) |   (xa)   | (x2) | (x3) |   (xd)   | (x4) |
+//  |      |          |      |      |          |      |
+//  ----------------------------------------------------
+//  
+class IndexTranslator6CubesLeftRight
+{
+public:
+  IndexTranslator6MatricesLeftRight( 
+            vtkm::Id x_1,       vtkm::Id y_1,       vtkm::Id z_1,
+            vtkm::Id x_2,       vtkm::Id y_2,       vtkm::Id z_2,
+            vtkm::Id x_3,       vtkm::Id y_3,       vtkm::Id z_3,
+            vtkm::Id x_4,       vtkm::Id y_4,       vtkm::Id z_4,
+            vtkm::Id x_a,       vtkm::Id y_a,       vtkm::Id z_a,
+            vtkm::Id x_d,       vtkm::Id y_d,       vtkm::Id z_d,
+            vtkm::Id x_5,       vtkm::Id y_5,       vtkm::Id z_5,
+            vtkm::Id start_x5,  vtkm::Id start_y5,  vtkm::Id startz_5 )
+          :  
+            x1(x_1),            y1(y_1),            z1(z_1),
+            x2(x_2),            y2(y_2),            z2(z_2),
+            x3(x_3),            y3(y_3),            z3(z_3),
+            x4(x_4),            y4(y_4),            z4(z_4),
+            xa(x_a),            ya(y_a),            za(z_a),
+            xd(x_d),            yd(y_d),            zd(z_d),
+            x5(x_5),            y5(y_5),            z5(z_5),
+            startX5(start_x5),  startY5(start_y5),  startZ5(start_z5)
+  {
+    pretendX5 = xa + xd;
+    pretendY5 = ya;
+    pretendZ5 = za;
+  }
+
+  VTKM_EXEC_CONT
+  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id inZ,   // 3D indices as input
+                        vtkm::Id  &mat, vtkm::Id  &idx ) const // which matrix, and idx of that matrix
+  {
+// TODO 
+    if( modeLR )   // left-right mode
+    {
+      if ( 0 <= inX && inX < x1 )
+      {
+        mat = 1;  // ext1
+        idx = inY * x1 + inX;
+      } 
+      else if ( x1 <= inX && inX < (x1 + xa) )
+      {
+        mat = 5;  // cAcD
+        idx = (inY + startY5) * x5 + (inX - x1 + startX5 );
+      }
+      else if ( (x1 + xa) <= inX && inX < (x1 + xa + x2) )
+      {
+        mat = 2;  // ext2
+        idx = inY * x2 + (inX - x1 - xa);
+      }
+      else if ( (x1 + xa + x2) <= inX && inX < (x1 + xa + x2 + x3) )
+      {
+        mat = 3;  // ext3
+        idx = inY * x3 + (inX - x1 - xa - x2);
+      }
+      else if ( (x1 + xa + x2 + x3) <= inX && inX < (x1 + xa + x2 + x3 + xd) )
+      {
+        mat = 5;  // cAcD
+        idx = (inY + startY5) * x5 + (inX - x1 - x2 - x3 + startX5 );
+      }
+      else if ( (x1 + xa + x2 + x3 + xd) <= inX && inX < (x1 + xa + x2 + x3 + xd + x4) )
+      {
+        mat = 4;  // ext4
+        idx = inY * x4 + (inX - x1 - xa - x2 - x3 - xd);
+      }
+      else
+        vtkm::cont::ErrorControlInternal("Invalid index!");
+    }
+    /*else          // top-down mode
+    {
+      if ( 0 <= inY && inY < y1 )
+      {
+        mat = 1;  // ext1
+        idx = inY * x1 + inX;
+      }
+      else if ( y1 <= inY && inY < (y1 + ya) )
+      {
+        mat = 5;  // cAcD
+        idx = (inY - y1 + startY5 ) * x5 + inX + startX5;
+      }
+      else if ( (y1 + ya) <= inY && inY < (y1 + ya + y2) )
+      {
+        mat = 2;  // ext2
+        idx = (inY - y1 - ya) * x1 + inX;
+      }
+      else if ( (y1 + ya + y2) <= inY && inY < (y1 + ya + y2 + y3) )
+      {
+        mat = 3;  // ext3
+        idx = (inY - y1 - ya - y2) * x1 + inX;
+      }
+      else if ( (y1 + ya + y2 + y3) <= inY && inY < (y1 + ya + y2 + y3 + yd) )
+      {
+        mat = 5;  // cAcD
+        idx = (inY - y1 - y2 - y3 + startY5 ) * x5 + inX + startX5;
+      }
+      else if ( (y1 + ya + y2 + y3 + yd) <= inY && inY < (y1 + ya + y2 + y3 + yd + y4) )
+      {
+        mat = 4;  // ext4
+        idx = (inY - y1 - ya - y2 - y3 - yd) * x1 + inX;
+      }
+      else
+        vtkm::cont::ErrorControlInternal("Invalid index!");
+    }*/
+  }
+
+private:
+  const vtkm::Id      x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4;   // extension cube sizes
+  const vtkm::Id      xa, ya, za, xb, yb, zb;                           // signal cube sizes
+  const vtkm::Id      x5, y5, z5, startX5, startY5, startZ5;            // entire cube size
+        vtkm::Id      pretendX5, pretendY5, pretendZ5;
 };
 
 
