@@ -107,7 +107,7 @@ const vtkm::cont::DynamicCellSet &Actor::GetCells() const
   return this->Internals->Cells;
 }
 
-const vtkm::cont::CoordinateSystem &Actor::GetCoordiantes() const
+const vtkm::cont::CoordinateSystem &Actor::GetCoordinates() const
 {
   return this->Internals->Coordinates;
 }
@@ -130,6 +130,11 @@ const vtkm::Range &Actor::GetScalarRange() const
 const vtkm::Bounds &Actor::GetSpatialBounds() const
 {
   return this->Internals->SpatialBounds;
+}
+
+void Actor::SetScalarRange(const vtkm::Range &scalarRange)
+{
+  this->Internals->ScalarRange = scalarRange;
 }
 
 }
