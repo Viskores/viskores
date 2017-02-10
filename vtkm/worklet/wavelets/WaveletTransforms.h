@@ -216,7 +216,7 @@ private:
 //  | /
 //  |/------------- X
 // 
-// The following 3 classes have the same functionaliry in 3 directions
+// The following 3 classes perform the same functionaliry in 3 directions
 class IndexTranslator3CubesLeftRight
 {
 public:
@@ -236,23 +236,23 @@ public:
 
   VTKM_EXEC_CONT
   void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 2D indices as input
-                        vtkm::Id  &mat, vtkm::Id  &idx ) const // which cube, and idx of that cube
+                        vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
     if ( 0 <= inX && inX < dimX1 )
     {
-      mat = 1;
+      cube = 1;
       idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
     } 
     else if ( dimX1 <= inX && inX < (dimX1 + pretendDimX2) )
     {
       vtkm::Id inX_local = inX - dimX1;
-      mat = 2;
+      cube = 2;
       idx = (inZ + startZ2) * dimX2 * dimY2 + (inY + startY2) * dimX2 + (inX_local + startX2);
     }
     else if ( (dimX1 + pretendDimX2) <= inX && inX < (dimX1 + pretendDimX2 + dimX3) )
     {
       vtkm::Id inX_local = inX - dimX1 - pretendDimX2;
-      mat = 3;  
+      cube = 3;  
       idx = inZ * dimX3 * dimY3 + inY * dimX3 + inX_local;
     }
     else
@@ -285,23 +285,23 @@ public:
 
   VTKM_EXEC_CONT
   void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 2D indices as input
-                        vtkm::Id  &mat, vtkm::Id  &idx ) const // which cube, and idx of that cube
+                        vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
     if ( 0 <= inY && inY < dimY1 )
     {
-      mat = 1;
+      cube = 1;
       idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
     }
     else if ( dimY1 <= inY && inY < (dimY1 + pretendDimY2) )
     {
       vtkm::Id inY_local = inY - dimY1;
-      mat = 2;
+      cube = 2;
       idx = (inZ + startZ2) * dimX2 * dimY2 + (inY_local + startY2) * dimX2 + inX + startX2;
     }
     else if ( (dimY1 + pretendDimY2) <= inY && inY < (dimY1 + pretendDimY2 + dimY3) )
     {
       vtkm::Id inY_local = inY - dimY1 - pretendDimY2;
-      mat = 3;
+      cube = 3;
       idx = inZ * dimX3 * dimY3 + inY_local * dimX3 + inX;
     }
     else
@@ -334,23 +334,23 @@ public:
 
   VTKM_EXEC_CONT
   void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 2D indices as input
-                        vtkm::Id  &mat, vtkm::Id  &idx ) const // which cube, and idx of that cube
+                        vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
     if ( 0 <= inZ && inZ < dimZ1 )
     {
-      mat = 1;
+      cube = 1;
       idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
     }
     else if ( dimZ1 <= inZ && inZ < (dimZ1 + pretendDimZ2) )
     {
       vtkm::Id inZ_local = inZ - dimZ1;
-      mat = 2;
+      cube = 2;
       idx = (inZ_local + startZ2) * dimX2 * dimY2 + (inY + startY2) * dimX2 + inX + startX2;
     }
     else if ( (dimZ1 + pretendDimZ2) <= inZ && inZ < (dimZ1 + pretendDimZ2 + dimZ3) )
     {
       vtkm::Id inZ_local = inZ - dimZ1 - pretendDimZ2;
-      mat = 3;
+      cube = 3;
       idx = inZ_local * dimX3 * dimY3 + inY * dimX3 + inX;
     }
     else
@@ -373,11 +373,11 @@ private:
 //  | (x1) |   (xa)   | (x2) | (x3) |   (xd)   | (x4) |
 //  |      |          |      |      |          |      |
 //  ----------------------------------------------------
-//  
+// The following 3 classes perform the same functionaliry in 3 directions
 class IndexTranslator6CubesLeftRight
 {
 public:
-  IndexTranslator6MatricesLeftRight( 
+  IndexTranslator6CubesLeftRight( 
             vtkm::Id x_1,       vtkm::Id y_1,       vtkm::Id z_1,
             vtkm::Id x_2,       vtkm::Id y_2,       vtkm::Id z_2,
             vtkm::Id x_3,       vtkm::Id y_3,       vtkm::Id z_3,
@@ -385,105 +385,214 @@ public:
             vtkm::Id x_a,       vtkm::Id y_a,       vtkm::Id z_a,
             vtkm::Id x_d,       vtkm::Id y_d,       vtkm::Id z_d,
             vtkm::Id x_5,       vtkm::Id y_5,       vtkm::Id z_5,
-            vtkm::Id start_x5,  vtkm::Id start_y5,  vtkm::Id startz_5 )
+            vtkm::Id start_x5,  vtkm::Id start_y5,  vtkm::Id start_z5 )
           :  
-            x1(x_1),            y1(y_1),            z1(z_1),
-            x2(x_2),            y2(y_2),            z2(z_2),
-            x3(x_3),            y3(y_3),            z3(z_3),
-            x4(x_4),            y4(y_4),            z4(z_4),
-            xa(x_a),            ya(y_a),            za(z_a),
-            xd(x_d),            yd(y_d),            zd(z_d),
-            x5(x_5),            y5(y_5),            z5(z_5),
+            dimX1(x_1),         dimY1(y_1),         dimZ1(z_1),
+            dimX2(x_2),         dimY2(y_2),         dimZ2(z_2),
+            dimX3(x_3),         dimY3(y_3),         dimZ3(z_3),
+            dimX4(x_4),         dimY4(y_4),         dimZ4(z_4),
+            dimXa(x_a),         dimYa(y_a),         dimZa(z_a),
+            dimXd(x_d),         dimYd(y_d),         dimZd(z_d),
+            dimX5(x_5),         dimY5(y_5),         dimZ5(z_5),
             startX5(start_x5),  startY5(start_y5),  startZ5(start_z5)
-  {
-    pretendX5 = xa + xd;
-    pretendY5 = ya;
-    pretendZ5 = za;
-  }
+  { }
 
   VTKM_EXEC_CONT
-  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id inZ,   // 3D indices as input
-                        vtkm::Id  &mat, vtkm::Id  &idx ) const // which matrix, and idx of that matrix
+  void Translate3Dto1D( vtkm::Id  inX,   vtkm::Id  inY,  vtkm::Id  inZ,   // 3D indices as input
+                        vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
-// TODO 
-    if( modeLR )   // left-right mode
+    if ( 0 <= inX && inX < dimX1 )
     {
-      if ( 0 <= inX && inX < x1 )
-      {
-        mat = 1;  // ext1
-        idx = inY * x1 + inX;
-      } 
-      else if ( x1 <= inX && inX < (x1 + xa) )
-      {
-        mat = 5;  // cAcD
-        idx = (inY + startY5) * x5 + (inX - x1 + startX5 );
-      }
-      else if ( (x1 + xa) <= inX && inX < (x1 + xa + x2) )
-      {
-        mat = 2;  // ext2
-        idx = inY * x2 + (inX - x1 - xa);
-      }
-      else if ( (x1 + xa + x2) <= inX && inX < (x1 + xa + x2 + x3) )
-      {
-        mat = 3;  // ext3
-        idx = inY * x3 + (inX - x1 - xa - x2);
-      }
-      else if ( (x1 + xa + x2 + x3) <= inX && inX < (x1 + xa + x2 + x3 + xd) )
-      {
-        mat = 5;  // cAcD
-        idx = (inY + startY5) * x5 + (inX - x1 - x2 - x3 + startX5 );
-      }
-      else if ( (x1 + xa + x2 + x3 + xd) <= inX && inX < (x1 + xa + x2 + x3 + xd + x4) )
-      {
-        mat = 4;  // ext4
-        idx = inY * x4 + (inX - x1 - xa - x2 - x3 - xd);
-      }
-      else
-        vtkm::cont::ErrorControlInternal("Invalid index!");
+      cube = 1;  // ext1
+      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
+    } 
+    else if ( dimX1 <= inX && inX < (dimX1 + dimXa) )
+    {
+      vtkm::Id inX_local = inX - dimX1;
+      cube = 5;  // cAcD
+      idx = (inZ + startZ5) * dimX5 * dimY5 + (inY + startY5) * dimX5 + (inX_local + startX5 );
     }
-    /*else          // top-down mode
+    else if ( (dimX1 + dimXa) <= inX && inX < (dimX1 + dimXa + dimX2) )
     {
-      if ( 0 <= inY && inY < y1 )
-      {
-        mat = 1;  // ext1
-        idx = inY * x1 + inX;
-      }
-      else if ( y1 <= inY && inY < (y1 + ya) )
-      {
-        mat = 5;  // cAcD
-        idx = (inY - y1 + startY5 ) * x5 + inX + startX5;
-      }
-      else if ( (y1 + ya) <= inY && inY < (y1 + ya + y2) )
-      {
-        mat = 2;  // ext2
-        idx = (inY - y1 - ya) * x1 + inX;
-      }
-      else if ( (y1 + ya + y2) <= inY && inY < (y1 + ya + y2 + y3) )
-      {
-        mat = 3;  // ext3
-        idx = (inY - y1 - ya - y2) * x1 + inX;
-      }
-      else if ( (y1 + ya + y2 + y3) <= inY && inY < (y1 + ya + y2 + y3 + yd) )
-      {
-        mat = 5;  // cAcD
-        idx = (inY - y1 - y2 - y3 + startY5 ) * x5 + inX + startX5;
-      }
-      else if ( (y1 + ya + y2 + y3 + yd) <= inY && inY < (y1 + ya + y2 + y3 + yd + y4) )
-      {
-        mat = 4;  // ext4
-        idx = (inY - y1 - ya - y2 - y3 - yd) * x1 + inX;
-      }
-      else
-        vtkm::cont::ErrorControlInternal("Invalid index!");
-    }*/
+      vtkm::Id inX_local = inX - dimX1 - dimXa;
+      cube = 2;  // ext2
+      idx = inZ * dimX2 * dimY2 + inY * dimX2 + inX_local;
+    }
+    else if ( (dimX1 + dimXa + dimX2) <= inX && inX < (dimX1 + dimXa + dimX2 + dimX3) )
+    {
+      vtkm::Id inX_local = inX - dimX1 - dimXa - dimX2;
+      cube = 3;  // ext3
+      idx = inZ * dimX3 * dimY3 + inY * dimX3 + inX_local;
+    }
+    else if ( (dimX1 + dimXa + dimX2 + dimX3) <= inX && inX < (dimX1 + dimXa + dimX2 + dimX3 + dimXd) )
+    {
+      vtkm::Id inX_local = inX - dimX1 - dimX2 - dimX3;   // no -dimXa since this is on the same cube
+      cube = 5;  // cAcD
+      idx = (inZ + startZ5) * dimX5 * dimY5 + (inY + startY5) * dimX5 + (inX_local + startX5 );
+    }
+    else if ( (dimX1 + dimXa + dimX2 + dimX3 + dimXd) <= inX && 
+               inX < (dimX1 + dimXa + dimX2 + dimX3 + dimXd + dimX4) )
+    {
+      vtkm::Id inX_local = inX - dimX1 - dimXa - dimX2 - dimX3 - dimXd;
+      cube = 4;  // ext4
+      idx = inZ * dimX4 * dimY4 + inY * dimX4 + inX_local;
+    }
+    else
+      vtkm::cont::ErrorControlInternal("Invalid index!");
   }
 
 private:
-  const vtkm::Id      x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4;   // extension cube sizes
-  const vtkm::Id      xa, ya, za, xb, yb, zb;                           // signal cube sizes
-  const vtkm::Id      x5, y5, z5, startX5, startY5, startZ5;            // entire cube size
-        vtkm::Id      pretendX5, pretendY5, pretendZ5;
+  const vtkm::Id      dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2, dimX3, dimY3, dimZ3, dimX4, dimY4, dimZ4;   // extension cube sizes
+  const vtkm::Id      dimXa, dimYa, dimZa, dimXd, dimYd, dimZd;         // signal cube sizes
+  const vtkm::Id      dimX5, dimY5, dimZ5, startX5, startY5, startZ5;   // entire cube size
 };
+
+class IndexTranslator6CubesTopDown
+{
+public:
+  IndexTranslator6CubesTopDown( 
+            vtkm::Id x_1,       vtkm::Id y_1,       vtkm::Id z_1,
+            vtkm::Id x_2,       vtkm::Id y_2,       vtkm::Id z_2,
+            vtkm::Id x_3,       vtkm::Id y_3,       vtkm::Id z_3,
+            vtkm::Id x_4,       vtkm::Id y_4,       vtkm::Id z_4,
+            vtkm::Id x_a,       vtkm::Id y_a,       vtkm::Id z_a,
+            vtkm::Id x_d,       vtkm::Id y_d,       vtkm::Id z_d,
+            vtkm::Id x_5,       vtkm::Id y_5,       vtkm::Id z_5,
+            vtkm::Id start_x5,  vtkm::Id start_y5,  vtkm::Id start_z5 )
+          :  
+            dimX1(x_1),         dimY1(y_1),         dimZ1(z_1),
+            dimX2(x_2),         dimY2(y_2),         dimZ2(z_2),
+            dimX3(x_3),         dimY3(y_3),         dimZ3(z_3),
+            dimX4(x_4),         dimY4(y_4),         dimZ4(z_4),
+            dimXa(x_a),         dimYa(y_a),         dimZa(z_a),
+            dimXd(x_d),         dimYd(y_d),         dimZd(z_d),
+            dimX5(x_5),         dimY5(y_5),         dimZ5(z_5),
+            startX5(start_x5),  startY5(start_y5),  startZ5(start_z5)
+  { }
+
+  VTKM_EXEC_CONT
+  void Translate3Dto1D( vtkm::Id  inX,   vtkm::Id  inY,  vtkm::Id  inZ,   // 3D indices as input
+                        vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
+  {
+    if ( 0 <= inY && inY < dimY1 )
+    {
+      cube = 1;  // ext1
+      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
+    }
+    else if ( dimY1 <= inY && inY < (dimY1 + dimYa) )
+    {
+      vtkm::Id inY_local = inY - dimY1;
+      cube = 5;  // cAcD
+      idx = (inZ + startZ5) * dimX5 * dimY5 + (inY_local + startY5 ) * dimX5 + (inX + startX5);
+    }
+    else if ( (dimY1 + dimYa) <= inY && inY < (dimY1 + dimYa + dimY2) )
+    {
+      vtkm::Id inY_local = inY - dimY1 - dimYa;
+      cube = 2;  // ext2
+      idx = inZ * dimX2 * dimY2 + inY_local * dimX2 + inX;
+    }
+    else if ( (dimY1 + dimYa + dimY2) <= inY && inY < (dimY1 + dimYa + dimY2 + dimY3) )
+    {
+      vtkm::Id inY_local = inY - dimY1 - dimYa - dimY2;
+      cube = 3;  // ext3
+      idx = inZ * dimX3 * dimY3 + inY_local * dimX3 + inX;
+    }
+    else if ( (dimY1 + dimYa + dimY2 + dimY3) <= inY && inY < (dimY1 + dimYa + dimY2 + dimY3 + dimYd) )
+    {
+      vtkm::Id inY_local = inY - dimY1 - dimY2 - dimY3;
+      cube = 5;  // cAcD
+      idx = (inZ + startZ5) * dimX5 * dimY5 + (inY_local + startY5) * dimX5 + (inX + startX5);
+    }
+    else if ( (dimY1 + dimYa + dimY2 + dimY3 + dimYd) <= inY && 
+               inY < (dimY1 + dimYa + dimY2 + dimY3 + dimYd + dimY4) )
+    {
+      vtkm::Id inY_local = inY - dimY1 - dimYa - dimY2 - dimY3 - dimYd;
+      cube = 4;  // ext4
+      idx = inZ * dimX4 * dimY4 + inY_local * dimX4 + inX;
+    }
+    else
+      vtkm::cont::ErrorControlInternal("Invalid index!");
+  }
+
+private:
+  const vtkm::Id      dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2, dimX3, dimY3, dimZ3, dimX4, dimY4, dimZ4;   // extension cube sizes
+  const vtkm::Id      dimXa, dimYa, dimZa, dimXd, dimYd, dimZd;         // signal cube sizes
+  const vtkm::Id      dimX5, dimY5, dimZ5, startX5, startY5, startZ5;   // entire cube size
+};
+
+class IndexTranslator6CubesFrontBack
+{
+public:
+  IndexTranslator6CubesFrontBack( 
+            vtkm::Id x_1,       vtkm::Id y_1,       vtkm::Id z_1,
+            vtkm::Id x_2,       vtkm::Id y_2,       vtkm::Id z_2,
+            vtkm::Id x_3,       vtkm::Id y_3,       vtkm::Id z_3,
+            vtkm::Id x_4,       vtkm::Id y_4,       vtkm::Id z_4,
+            vtkm::Id x_a,       vtkm::Id y_a,       vtkm::Id z_a,
+            vtkm::Id x_d,       vtkm::Id y_d,       vtkm::Id z_d,
+            vtkm::Id x_5,       vtkm::Id y_5,       vtkm::Id z_5,
+            vtkm::Id start_x5,  vtkm::Id start_y5,  vtkm::Id start_z5 )
+          :  
+            dimX1(x_1),         dimY1(y_1),         dimZ1(z_1),
+            dimX2(x_2),         dimY2(y_2),         dimZ2(z_2),
+            dimX3(x_3),         dimY3(y_3),         dimZ3(z_3),
+            dimX4(x_4),         dimY4(y_4),         dimZ4(z_4),
+            dimXa(x_a),         dimYa(y_a),         dimZa(z_a),
+            dimXd(x_d),         dimYd(y_d),         dimZd(z_d),
+            dimX5(x_5),         dimY5(y_5),         dimZ5(z_5),
+            startX5(start_x5),  startY5(start_y5),  startZ5(start_z5)
+  { }
+
+  VTKM_EXEC_CONT
+  void Translate3Dto1D( vtkm::Id  inX,   vtkm::Id  inY,  vtkm::Id  inZ,   // 3D indices as input
+                        vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
+  {
+    if ( 0 <= inZ && inZ < dimZ1 )
+    {
+      cube = 1;  // ext1
+      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
+    }
+    else if ( dimZ1 <= inZ && inZ < (dimZ1 + dimZa) )
+    {
+      vtkm::Id inZ_local = inZ - dimZ1;
+      cube = 5;  // cAcD
+      idx = (inZ_local + startZ5) * dimX5 * dimY5 + (inY + startY5 ) * dimX5 + (inX + startX5);
+    }
+    else if ( (dimZ1 + dimZa) <= inZ && inZ < (dimZ1 + dimZa + dimZ2) )
+    {
+      vtkm::Id inZ_local = inZ - dimZ1 - dimZa;
+      cube = 2;  // ext2
+      idx = inZ_local * dimX2 * dimY2 + inY * dimX2 + inX;
+    }
+    else if ( (dimZ1 + dimZa + dimZ2) <= inZ && inZ < (dimZ1 + dimZa + dimZ2 + dimZ3) )
+    {
+      vtkm::Id inZ_local = inZ - dimZ1 - dimZa - dimZ2;
+      cube = 3;  // ext3
+      idx = inZ_local * dimX3 * dimY3 + inY * dimX3 + inX;
+    }
+    else if ( (dimZ1 + dimZa + dimZ2 + dimZ3) <= inZ && inZ < (dimZ1 + dimZa + dimZ2 + dimZ3 + dimZd) )
+    {
+      vtkm::Id inZ_local = inZ - dimZ1 - dimZ2 - dimZ3;
+      cube = 5;  // cAcD
+      idx = (inZ_local + startZ5) * dimX5 * dimY5 + (inY + startY5) * dimX5 + (inX + startX5);
+    }
+    else if ( (dimZ1 + dimZa + dimZ2 + dimZ3 + dimZd) <= inZ && 
+               inZ < (dimZ1 + dimZa + dimZ2 + dimZ3 + dimZd + dimZ4) )
+    {
+      vtkm::Id inZ_local = inZ - dimZ1 - dimZa - dimZ2 - dimZ3 - dimZd;
+      cube = 4;  // ext4
+      idx = inZ_local * dimX4 * dimY4 + inY * dimX4 + inX;
+    }
+    else
+      vtkm::cont::ErrorControlInternal("Invalid index!");
+  }
+
+private:
+  const vtkm::Id      dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2, dimX3, dimY3, dimZ3, dimX4, dimY4, dimZ4;   // extension cube sizes
+  const vtkm::Id      dimXa, dimYa, dimZa, dimXd, dimYd, dimZd;         // signal cube sizes
+  const vtkm::Id      dimX5, dimY5, dimZ5, startX5, startY5, startZ5;   // entire cube size
+};
+
 
 
 
@@ -589,12 +698,12 @@ public:
       else if ( (y1 + ya) <= inY && inY < (y1 + ya + y2) )
       {
         mat = 2;  // ext2
-        idx = (inY - y1 - ya) * x1 + inX;
+        idx = (inY - y1 - ya) * x2 + inX;
       }
       else if ( (y1 + ya + y2) <= inY && inY < (y1 + ya + y2 + y3) )
       {
         mat = 3;  // ext3
-        idx = (inY - y1 - ya - y2) * x1 + inX;
+        idx = (inY - y1 - ya - y2) * x3 + inX;
       }
       else if ( (y1 + ya + y2 + y3) <= inY && inY < (y1 + ya + y2 + y3 + yd) )
       {
@@ -604,7 +713,7 @@ public:
       else if ( (y1 + ya + y2 + y3 + yd) <= inY && inY < (y1 + ya + y2 + y3 + yd + y4) )
       {
         mat = 4;  // ext4
-        idx = (inY - y1 - ya - y2 - y3 - yd) * x1 + inX;
+        idx = (inY - y1 - ya - y2 - y3 - yd) * x4 + inX;
       }
       else
         vtkm::cont::ErrorControlInternal("Invalid index!");
