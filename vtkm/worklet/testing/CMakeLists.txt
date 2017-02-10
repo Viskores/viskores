@@ -28,6 +28,7 @@ set(unit_tests
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
   UnitTestKeys.cxx
+  UnitTestMagnitude.cxx
   UnitTestMarchingCubes.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx

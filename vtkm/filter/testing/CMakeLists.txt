@@ -31,6 +31,7 @@ set(unit_tests
   UnitTestPointAverageFilter.cxx
   UnitTestPointElevationFilter.cxx
   UnitTestThresholdFilter.cxx
+  UnitTestVectorMagnitudeFilter.cxx
   UnitTestVertexClusteringFilter.cxx
  )
 
