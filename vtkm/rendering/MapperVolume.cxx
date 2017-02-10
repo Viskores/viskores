@@ -39,13 +39,15 @@ namespace rendering {
 struct MapperVolume::InternalsType
 {
   vtkm::rendering::CanvasRayTracer *Canvas;
+  vtkm::Float32 SampleDistance;
   vtkm::cont::internal::RuntimeDeviceTracker DeviceTracker;
   std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
       RayTracerContainer;
 
   VTKM_CONT
   InternalsType()
-    : Canvas(nullptr)
+    : Canvas(nullptr),
+      SampleDistance(-1.f)
   {  }
 
   template<typename Device>
@@ -146,7 +148,7 @@ struct MapperVolume::RenderFunctor
 
     tracer->GetCamera().SetParameters(this->Camera,
                                       *this->Self->Internals->Canvas);
-
+    tracer->SetSampleDistance(this->Self->Internals->SampleDistance);
     vtkm::Bounds dataBounds = this->Coordinates.GetBounds(Device());
 
     tracer->SetData(this->Coordinates,
@@ -204,6 +206,11 @@ void MapperVolume::EndScene()
 vtkm::rendering::Mapper *MapperVolume::NewCopy() const
 {
   return new vtkm::rendering::MapperVolume(*this);
+}
+
+void MapperVolume::SetSampleDistance(const vtkm::Float32 sampleDistance)
+{
+  this->Internals->SampleDistance = sampleDistance;
 }
 
 }

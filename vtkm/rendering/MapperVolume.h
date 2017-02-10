@@ -48,7 +48,7 @@ public:
   virtual void EndScene() VTKM_OVERRIDE;
 
   vtkm::rendering::Mapper *NewCopy() const VTKM_OVERRIDE;
-
+  void SetSampleDistance(const vtkm::Float32 distance);
 private:
   struct InternalsType;
   std::shared_ptr<InternalsType> Internals;
