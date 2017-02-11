@@ -37,15 +37,6 @@ enum DWTMode {    // boundary extension modes
   ASYMW
 };
 
-/*
-enum ExtensionDirection2D {  // which side of a matrix to extend
-  LEFT,
-  RIGHT,
-  TOP,
-  BOTTOM
-};
-*/
-
 enum ExtensionDirection {  // which side of a cube to extend
   LEFT,       // X direction
   RIGHT,      // X direction     Y
@@ -58,7 +49,6 @@ enum ExtensionDirection {  // which side of a cube to extend
 
 // Worklet for 3D signal extension
 // It operates on a specified part of a big cube
-//
 class ExtensionWorklet3D : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -235,7 +225,7 @@ public:
   { (void)dimY2; }
 
   VTKM_EXEC_CONT
-  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 2D indices as input
+  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 3D indices as input
                         vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
     if ( 0 <= inX && inX < dimX1 )
@@ -284,7 +274,7 @@ public:
   { }
 
   VTKM_EXEC_CONT
-  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 2D indices as input
+  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 3D indices as input
                         vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
     if ( 0 <= inY && inY < dimY1 )
@@ -333,7 +323,7 @@ public:
   { }
 
   VTKM_EXEC_CONT
-  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 2D indices as input
+  void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 3D indices as input
                         vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
     if ( 0 <= inZ && inZ < dimZ1 )
@@ -591,6 +581,395 @@ private:
   const vtkm::Id      dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2, dimX3, dimY3, dimZ3, dimX4, dimY4, dimZ4;   // extension cube sizes
   const vtkm::Id      dimXa, dimYa, dimZa, dimXd, dimYd, dimZd;         // signal cube sizes
   const vtkm::Id      dimX5, dimY5, dimZ5, startX5, startY5, startZ5;   // entire cube size
+};
+
+
+
+// Worklet: 3D forward transform along X (left-right)
+template< typename DeviceTag >
+class ForwardTransform3DLeftRight: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // left extension
+                                WholeArrayIn<ScalarAll>,     // signal
+                                WholeArrayIn<ScalarAll>,     // right extension
+                                WholeArrayOut<ScalarAll>);   // cA followed by cD
+  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  typedef _4   InputDomain;
+
+  VTKM_EXEC_CONT
+  ForwardTransform3DLeftRight  ( 
+            const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
+            const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
+            vtkm::Id      filter_len, 
+            vtkm::Id      approx_len, 
+            bool          odd_low, 
+            vtkm::Id dimX1,     vtkm::Id dimY1,     vtkm::Id dimZ1,
+            vtkm::Id dimX2,     vtkm::Id dimY2,     vtkm::Id dimZ2,
+            vtkm::Id startX2,   vtkm::Id startY2,   vtkm::Id startZ2,
+            vtkm::Id pretendX2, vtkm::Id pretendY2, vtkm::Id pretendZ2,
+            vtkm::Id dimX3,     vtkm::Id dimY3,     vtkm::Id dimZ3 )  
+          :    
+            lowFilter(  loFilter.PrepareForInput( DeviceTag() ) ),
+            highFilter( hiFilter.PrepareForInput( DeviceTag() ) ),
+            filterLen(  filter_len ), 
+            approxLen(  approx_len ),
+            outDimX( pretendX2 ),   outDimY( pretendY2 ),   outDimZ( pretendZ2 ),
+            translator( dimX1,      dimY1,      dimZ1,
+                        dimX2,      dimY2,      dimZ2,
+                        startX2,    startY2,    startZ2,
+                        pretendX2,  pretendY2,  pretendZ2, 
+                        dimX3,      dimY3,      dimZ3 )
+  { 
+    this->lstart = odd_low ? 1 : 0;
+    this->hstart = 1;
+  }
+
+  VTKM_EXEC_CONT
+  void Output1Dto3D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y, vtkm::Id &z ) const     
+  {
+    z = idx / (outDimX * outDimY);
+    y = (idx - z * outDimX * outDimY) / outDimX;
+    x = idx % outDimX;
+  }
+  VTKM_EXEC_CONT
+  vtkm::Id Output3Dto1D( vtkm::Id x, vtkm::Id y, vtkm::Id z ) const     
+  {
+    return z * outDimX * outDimY + y * outDimX + x;
+  }
+
+  // Use 64-bit float for convolution calculation
+  #define VAL        vtkm::Float64
+  #define MAKEVAL(a) (static_cast<VAL>(a))
+  template <typename InPortalType1, typename InPortalType2, typename InPortalType3 >
+  VTKM_EXEC_CONT
+  VAL GetVal( const InPortalType1 &portal1, const InPortalType2 &portal2,
+              const InPortalType3 &portal3, vtkm::Id inCube, vtkm::Id inIdx ) const
+  {
+    if( inCube == 1 )
+      return MAKEVAL( portal1.Get(inIdx) );
+    else if( inCube == 2 )
+      return MAKEVAL( portal2.Get(inIdx) );
+    else if( inCube == 3 )
+      return MAKEVAL( portal3.Get(inIdx) );
+    else
+    {
+        vtkm::cont::ErrorControlInternal("Invalid cube index!");
+        return -1;
+    }
+  }
+ 
+  template <typename InPortalType1, typename InPortalType2, 
+            typename InPortalType3, typename OutputPortalType>
+  VTKM_EXEC_CONT
+  void operator()(const InPortalType1       &inPortal1, // left extension
+                  const InPortalType2       &inPortal2, // signal
+                  const InPortalType3       &inPortal3, // right extension
+                     OutputPortalType       &coeffOut,
+                  const vtkm::Id            &workIndex) const
+  {
+    vtkm::Id      workX, workY, workZ, output1D;
+    Output1Dto3D( workIndex, workX, workY, workZ );
+    vtkm::Id      inputCube, inputIdx;
+    typedef typename OutputPortalType::ValueType OutputValueType;
+
+    if( workX % 2 == 0 )  // calculate cA
+    {
+      vtkm::Id xl = lstart + workX;
+      VAL sum = MAKEVAL(0.0);
+      for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+      {
+        translator.Translate3Dto1D( xl, workY, workZ, inputCube, inputIdx );
+        sum += lowFilter.Get(k) * 
+               GetVal( inPortal1, inPortal2, inPortal3, inputCube, inputIdx );
+        xl++;
+      }
+      output1D = Output3Dto1D( workX/2, workY, workZ );
+      coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
+    }
+    else                      // calculate cD
+    {
+      vtkm::Id xh = hstart + workX - 1;
+      VAL sum=MAKEVAL(0.0);
+      for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+      {
+        translator.Translate3Dto1D( xh, workY, workZ, inputCube, inputIdx );
+        sum += highFilter.Get(k) * 
+               GetVal( inPortal1, inPortal2, inPortal3, inputCube, inputIdx );
+        xh++;
+      }
+      output1D = Output3Dto1D( (workX-1)/2 + approxLen, workY, workZ );
+      coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
+    }
+  }
+  #undef MAKEVAL
+  #undef VAL
+
+private:
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst 
+                      lowFilter,    highFilter;
+  const vtkm::Id      filterLen,    approxLen;
+  const vtkm::Id      outDimX,      outDimY,      outDimZ;
+  const IndexTranslator3CubesLeftRight      translator;
+        vtkm::Id      lstart,       hstart;
+};
+
+// Worklet: 3D forward transform along Y (Top-down)
+template< typename DeviceTag >
+class ForwardTransform3DTopDown: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // left extension
+                                WholeArrayIn<ScalarAll>,     // signal
+                                WholeArrayIn<ScalarAll>,     // right extension
+                                WholeArrayOut<ScalarAll>);   // cA followed by cD
+  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  typedef _4   InputDomain;
+
+  VTKM_EXEC_CONT
+  ForwardTransform3DTopDown ( 
+            const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
+            const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
+            vtkm::Id      filter_len, 
+            vtkm::Id      approx_len, 
+            bool          odd_low, 
+            vtkm::Id dimX1,     vtkm::Id dimY1,     vtkm::Id dimZ1,
+            vtkm::Id dimX2,     vtkm::Id dimY2,     vtkm::Id dimZ2,
+            vtkm::Id startX2,   vtkm::Id startY2,   vtkm::Id startZ2,
+            vtkm::Id pretendX2, vtkm::Id pretendY2, vtkm::Id pretendZ2,
+            vtkm::Id dimX3,     vtkm::Id dimY3,     vtkm::Id dimZ3 )  
+          :    
+            lowFilter(  loFilter.PrepareForInput( DeviceTag() ) ),
+            highFilter( hiFilter.PrepareForInput( DeviceTag() ) ),
+            filterLen(  filter_len ), 
+            approxLen(  approx_len ),
+            outDimX( pretendX2 ),   outDimY( pretendY2 ),   outDimZ( pretendZ2 ),
+            translator( dimX1,      dimY1,      dimZ1,
+                        dimX2,      dimY2,      dimZ2,
+                        startX2,    startY2,    startZ2,
+                        pretendX2,  pretendY2,  pretendZ2, 
+                        dimX3,      dimY3,      dimZ3 )
+  { 
+    this->lstart = odd_low ? 1 : 0;
+    this->hstart = 1;
+  }
+
+  VTKM_EXEC_CONT
+  void Output1Dto3D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y, vtkm::Id &z ) const     
+  {
+    z = idx / (outDimX * outDimY);
+    y = (idx - z * outDimX * outDimY) / outDimX;
+    x = idx % outDimX;
+  }
+  VTKM_EXEC_CONT
+  vtkm::Id Output3Dto1D( vtkm::Id x, vtkm::Id y, vtkm::Id z ) const     
+  {
+    return z * outDimX * outDimY + y * outDimX + x;
+  }
+
+  // Use 64-bit float for convolution calculation
+  #define VAL        vtkm::Float64
+  #define MAKEVAL(a) (static_cast<VAL>(a))
+  template <typename InPortalType1, typename InPortalType2, typename InPortalType3 >
+  VTKM_EXEC_CONT
+  VAL GetVal( const InPortalType1 &portal1, const InPortalType2 &portal2,
+              const InPortalType3 &portal3, vtkm::Id inCube, vtkm::Id inIdx ) const
+  {
+    if( inCube == 1 )
+      return MAKEVAL( portal1.Get(inIdx) );
+    else if( inCube == 2 )
+      return MAKEVAL( portal2.Get(inIdx) );
+    else if( inCube == 3 )
+      return MAKEVAL( portal3.Get(inIdx) );
+    else
+    {
+        vtkm::cont::ErrorControlInternal("Invalid cube index!");
+        return -1;
+    }
+  }
+ 
+  template <typename InPortalType1, typename InPortalType2, 
+            typename InPortalType3, typename OutputPortalType>
+  VTKM_EXEC_CONT
+  void operator()(const InPortalType1       &inPortal1, // top extension
+                  const InPortalType2       &inPortal2, // signal
+                  const InPortalType3       &inPortal3, // down extension
+                     OutputPortalType       &coeffOut,
+                  const vtkm::Id            &workIndex) const
+  {
+    vtkm::Id      workX, workY, workZ, output1D;
+    Output1Dto3D( workIndex, workX, workY, workZ );
+    vtkm::Id      inputCube, inputIdx;
+    typedef typename OutputPortalType::ValueType OutputValueType;
+
+    if( workY % 2 == 0 )  // calculate cA
+    {
+      vtkm::Id yl = lstart + workY;
+      VAL sum = MAKEVAL(0.0);
+      for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+      {
+        translator.Translate3Dto1D( workX, yl, workZ, inputCube, inputIdx );
+        sum += lowFilter.Get(k) * 
+               GetVal( inPortal1, inPortal2, inPortal3, inputCube, inputIdx );
+        yl++;
+      }
+      output1D = Output3Dto1D( workX, workY/2, workZ );
+      coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
+    }
+    else                      // calculate cD
+    {
+      vtkm::Id yh = hstart + workY - 1;
+      VAL sum=MAKEVAL(0.0);
+      for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+      {
+        translator.Translate3Dto1D( workX, yh, workZ, inputCube, inputIdx );
+        sum += highFilter.Get(k) * 
+               GetVal( inPortal1, inPortal2, inPortal3, inputCube, inputIdx );
+        yh++;
+      }
+      output1D = Output3Dto1D( workX, (workY-1)/2 + approxLen, workZ );
+      coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
+    }
+  }
+  #undef MAKEVAL
+  #undef VAL
+
+private:
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst 
+                      lowFilter,    highFilter;
+  const vtkm::Id      filterLen,    approxLen;
+  const vtkm::Id      outDimX,      outDimY,      outDimZ;
+  const IndexTranslator3CubesLeftRight      translator;
+        vtkm::Id      lstart,       hstart;
+};
+
+// Worklet: 3D forward transform along Z (Front-Back)
+template< typename DeviceTag >
+class ForwardTransform3DFrontBack: public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn<ScalarAll>,     // left extension
+                                WholeArrayIn<ScalarAll>,     // signal
+                                WholeArrayIn<ScalarAll>,     // right extension
+                                WholeArrayOut<ScalarAll>);   // cA followed by cD
+  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  typedef _4   InputDomain;
+
+  VTKM_EXEC_CONT
+  ForwardTransform3DFrontBack ( 
+            const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
+            const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
+            vtkm::Id      filter_len, 
+            vtkm::Id      approx_len, 
+            bool          odd_low, 
+            vtkm::Id dimX1,     vtkm::Id dimY1,     vtkm::Id dimZ1,
+            vtkm::Id dimX2,     vtkm::Id dimY2,     vtkm::Id dimZ2,
+            vtkm::Id startX2,   vtkm::Id startY2,   vtkm::Id startZ2,
+            vtkm::Id pretendX2, vtkm::Id pretendY2, vtkm::Id pretendZ2,
+            vtkm::Id dimX3,     vtkm::Id dimY3,     vtkm::Id dimZ3 )  
+          :    
+            lowFilter(  loFilter.PrepareForInput( DeviceTag() ) ),
+            highFilter( hiFilter.PrepareForInput( DeviceTag() ) ),
+            filterLen(  filter_len ), 
+            approxLen(  approx_len ),
+            outDimX( pretendX2 ),   outDimY( pretendY2 ),   outDimZ( pretendZ2 ),
+            translator( dimX1,      dimY1,      dimZ1,
+                        dimX2,      dimY2,      dimZ2,
+                        startX2,    startY2,    startZ2,
+                        pretendX2,  pretendY2,  pretendZ2, 
+                        dimX3,      dimY3,      dimZ3 )
+  { 
+    this->lstart = odd_low ? 1 : 0;
+    this->hstart = 1;
+  }
+
+  VTKM_EXEC_CONT
+  void Output1Dto3D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y, vtkm::Id &z ) const     
+  {
+    z = idx / (outDimX * outDimY);
+    y = (idx - z * outDimX * outDimY) / outDimX;
+    x = idx % outDimX;
+  }
+  VTKM_EXEC_CONT
+  vtkm::Id Output3Dto1D( vtkm::Id x, vtkm::Id y, vtkm::Id z ) const     
+  {
+    return z * outDimX * outDimY + y * outDimX + x;
+  }
+
+  // Use 64-bit float for convolution calculation
+  #define VAL        vtkm::Float64
+  #define MAKEVAL(a) (static_cast<VAL>(a))
+  template <typename InPortalType1, typename InPortalType2, typename InPortalType3 >
+  VTKM_EXEC_CONT
+  VAL GetVal( const InPortalType1 &portal1, const InPortalType2 &portal2,
+              const InPortalType3 &portal3, vtkm::Id inCube, vtkm::Id inIdx ) const
+  {
+    if( inCube == 1 )
+      return MAKEVAL( portal1.Get(inIdx) );
+    else if( inCube == 2 )
+      return MAKEVAL( portal2.Get(inIdx) );
+    else if( inCube == 3 )
+      return MAKEVAL( portal3.Get(inIdx) );
+    else
+    {
+        vtkm::cont::ErrorControlInternal("Invalid cube index!");
+        return -1;
+    }
+  }
+ 
+  template <typename InPortalType1, typename InPortalType2, 
+            typename InPortalType3, typename OutputPortalType>
+  VTKM_EXEC_CONT
+  void operator()(const InPortalType1       &inPortal1, // top extension
+                  const InPortalType2       &inPortal2, // signal
+                  const InPortalType3       &inPortal3, // down extension
+                     OutputPortalType       &coeffOut,
+                  const vtkm::Id            &workIndex) const
+  {
+    vtkm::Id      workX, workY, workZ, output1D;
+    Output1Dto3D( workIndex, workX, workY, workZ );
+    vtkm::Id      inputCube, inputIdx;
+    typedef typename OutputPortalType::ValueType OutputValueType;
+
+    if( workZ % 2 == 0 )  // calculate cA
+    {
+      vtkm::Id zl = lstart + workZ;
+      VAL sum = MAKEVAL(0.0);
+      for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+      {
+        translator.Translate3Dto1D( workX, workY, zl, inputCube, inputIdx );
+        sum += lowFilter.Get(k) * 
+               GetVal( inPortal1, inPortal2, inPortal3, inputCube, inputIdx );
+        zl++;
+      }
+      output1D = Output3Dto1D( workX, workY, workZ/2 );
+      coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
+    }
+    else                      // calculate cD
+    {
+      vtkm::Id zh = hstart + workZ - 1;
+      VAL sum=MAKEVAL(0.0);
+      for( vtkm::Id k = filterLen - 1; k > -1; k-- )
+      {
+        translator.Translate3Dto1D( workX, workY, zh, inputCube, inputIdx );
+        sum += highFilter.Get(k) * 
+               GetVal( inPortal1, inPortal2, inPortal3, inputCube, inputIdx );
+        zh++;
+      }
+      output1D = Output3Dto1D( workX, workY, (workZ-1)/2 + approxLen );
+      coeffOut.Set( output1D, static_cast<OutputValueType>(sum) );
+    }
+  }
+  #undef MAKEVAL
+  #undef VAL
+
+private:
+  const typename vtkm::cont::ArrayHandle<vtkm::Float64>::ExecutionTypes<DeviceTag>::PortalConst 
+                      lowFilter,    highFilter;
+  const vtkm::Id      filterLen,    approxLen;
+  const vtkm::Id      outDimX,      outDimY,      outDimZ;
+  const IndexTranslator3CubesLeftRight      translator;
+        vtkm::Id      lstart,       hstart;
 };
 
 
