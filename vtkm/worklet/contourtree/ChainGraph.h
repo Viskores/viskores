@@ -20,48 +20,48 @@
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
 //
-//  Copyright 2016. Los Alamos National Security, LLC. 
-//  This software was produced under U.S. Government contract DE-AC52-06NA25396 
-//  for Los Alamos National Laboratory (LANL), which is operated by 
-//  Los Alamos National Security, LLC for the U.S. Department of Energy. 
-//  The U.S. Government has rights to use, reproduce, and distribute this 
-//  software.  NEITHER THE GOVERNMENT NOR LOS ALAMOS NATIONAL SECURITY, LLC 
-//  MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LIABILITY FOR THE 
-//  USE OF THIS SOFTWARE.  If software is modified to produce derivative works, 
-//  such modified software should be clearly marked, so as not to confuse it 
+//  Copyright 2016. Los Alamos National Security, LLC.
+//  This software was produced under U.S. Government contract DE-AC52-06NA25396
+//  for Los Alamos National Laboratory (LANL), which is operated by
+//  Los Alamos National Security, LLC for the U.S. Department of Energy.
+//  The U.S. Government has rights to use, reproduce, and distribute this
+//  software.  NEITHER THE GOVERNMENT NOR LOS ALAMOS NATIONAL SECURITY, LLC
+//  MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LIABILITY FOR THE
+//  USE OF THIS SOFTWARE.  If software is modified to produce derivative works,
+//  such modified software should be clearly marked, so as not to confuse it
 //  with the version available from LANL.
 //
-//  Additionally, redistribution and use in source and binary forms, with or 
-//  without modification, are permitted provided that the following conditions 
+//  Additionally, redistribution and use in source and binary forms, with or
+//  without modification, are permitted provided that the following conditions
 //  are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
-//  3. Neither the name of Los Alamos National Security, LLC, Los Alamos 
-//     National Laboratory, LANL, the U.S. Government, nor the names of its 
-//     contributors may be used to endorse or promote products derived from 
+//  3. Neither the name of Los Alamos National Security, LLC, Los Alamos
+//     National Laboratory, LANL, the U.S. Government, nor the names of its
+//     contributors may be used to endorse or promote products derived from
 //     this software without specific prior written permission.
 //
-//  THIS SOFTWARE IS PROVIDED BY LOS ALAMOS NATIONAL SECURITY, LLC AND 
-//  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
-//  BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-//  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL LOS ALAMOS 
-//  NATIONAL SECURITY, LLC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-//  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF 
-//  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-//  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+//  THIS SOFTWARE IS PROVIDED BY LOS ALAMOS NATIONAL SECURITY, LLC AND
+//  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
+//  BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+//  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL LOS ALAMOS
+//  NATIONAL SECURITY, LLC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+//  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+//  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+//  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //============================================================================
 
-//  This code is based on the algorithm presented in the paper:  
-//  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.” 
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens. 
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization 
+//  This code is based on the algorithm presented in the paper:
+//  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
+//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
+//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
 //=======================================================================================
@@ -69,7 +69,7 @@
 // COMMENTS:
 //
 //  The old ChainGraph has been abstracted a little further - it still does the same job
-//  of carrying most of the intermediate stages.  However, since the chain building is 
+//  of carrying most of the intermediate stages.  However, since the chain building is
 //  also needed by the mesh to set up the initial graph input, it has been moved (for now
 //  to Types.h)
 //
@@ -138,7 +138,7 @@ public:
 
 	// we will also want a reference to the arc array where we write the output
 	vtkm::cont::ArrayHandle<vtkm::Id> &arcArray;
-	
+
 	// for each vertex, we need to know where it is in the original data array
 	vtkm::cont::ArrayHandle<vtkm::Id> valueIndex;
 
@@ -152,13 +152,13 @@ public:
 	// pseudo-extrema prune to pseudo-saddles
 	// all others prune to pseudo-extrema
 	vtkm::cont::ArrayHandle<vtkm::Id> prunesTo;
-	
+
 	// we also want to keep track of the first edge for each vertex
 	vtkm::cont::ArrayHandle<vtkm::Id> firstEdge;
-	
+
 	// and the outdegree for each vertex
 	vtkm::cont::ArrayHandle<vtkm::Id> outdegree;
-	
+
 	// finally, we need to keep track of the chain extremum for each vertex
 	vtkm::cont::ArrayHandle<vtkm::Id> chainExtremum;
 
@@ -172,7 +172,7 @@ public:
 
 	// and an array for sorting edges
 	vtkm::cont::ArrayHandle<vtkm::Id> edgeSorter;
-	
+
 	// constructor takes necessary references
 	ChainGraph(const vtkm::cont::ArrayHandle<T,StorageType> &Values,
                    vtkm::cont::ArrayHandle<vtkm::Id> &ArcArray,
@@ -183,7 +183,7 @@ public:
 
 	// sets initial size of vertex arrays
 	void AllocateVertexArrays(vtkm::Id Size);
-   
+
 	// sets initial size of edge arrays
 	void AllocateEdgeArrays(vtkm::Id Size);
 
@@ -194,14 +194,14 @@ public:
 	void FindGoverningSaddles();
 
 	// marks now regular points for removal
-	void TransferRegularPoints();	
-	
+	void TransferRegularPoints();
+
 	// compacts the active vertex list
 	void CompactActiveVertices();
 
 	// compacts the active edge list
 	void CompactActiveEdges();
-	
+
 	// builds the chains for the new active vertices
 	void BuildChains();
 
@@ -258,24 +258,24 @@ void ChainGraph<T,StorageType,DeviceAdapter>::Compute(vtkm::cont::ArrayHandle<vt
   {
     // find & label the extrema with their governing saddles
     FindGoverningSaddles();
-		
-    // label the regular points 
+
+    // label the regular points
     TransferRegularPoints();
-		
+
     // compact the active set of vertices & edges
     CompactActiveVertices();
     CompactActiveEdges();
-		
+
     // rebuild the chains
     BuildChains();
-		
+
     // choose the subset of edges for the governing saddles
     TransferSaddleStarts();
 
     // increment the iteration count
     nIterations++;
   } // main loop
-	
+
   // final pass to label the trunk vertices
   BuildTrunk();
 
@@ -290,11 +290,11 @@ void ChainGraph<T,StorageType,DeviceAdapter>::Compute(vtkm::cont::ArrayHandle<vt
 
   // and transfer results to mergearcs
   TransferToMergeTree(saddles);
-		
+
   // then release the remaining memory
   chainExtremum.ReleaseResources();
   prunesTo.ReleaseResources();
-		
+
 #ifdef DEBUG_PRINT
   DebugPrint("Chain Graph Computed");
 #endif
@@ -310,7 +310,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::FindGoverningSaddles()
 		std::cout << "Find Governing Saddles" << std::endl;
 		std::cout << "======================" << std::endl;
 		std::cout << std::endl;
-#endif	
+#endif
 
   // sort with the comparator
   DeviceAlgorithm::Sort(edgeSorter,
@@ -441,7 +441,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::CompactActiveEdges()
   // now we do a reduction to compute the offsets of each vertex
   vtkm::cont::ArrayHandle<vtkm::Id> newPosition;
   DeviceAlgorithm::ScanExclusive(newOutdegree, newPosition);
-  vtkm::Id nNewEdges = newPosition.GetPortalControl().Get(nActiveVertices-1) + 
+  vtkm::Id nNewEdges = newPosition.GetPortalControl().Get(nActiveVertices-1) +
                        newOutdegree.GetPortalControl().Get(nActiveVertices-1);
 
   // create a temporary vector for copying
@@ -454,7 +454,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::CompactActiveEdges()
   ActiveEdgeTransferrer<DeviceAdapter> activeEdgeTransferrer(
                                        activeEdges.PrepareForInput(DeviceAdapter()),
                                        prunesTo.PrepareForInput(DeviceAdapter()));
-  vtkm::worklet::DispatcherMapField<ActiveEdgeTransferrer<DeviceAdapter> > 
+  vtkm::worklet::DispatcherMapField<ActiveEdgeTransferrer<DeviceAdapter> >
                  activeEdgeTransferrerDispatcher(activeEdgeTransferrer);
 
   activeEdgeTransferrerDispatcher.Invoke(activeVertices,       // input
@@ -473,7 +473,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::CompactActiveEdges()
   DebugPrint("Active Edges Now Compacted");
 #endif
 } // CompactActiveEdges()
-	
+
 // builds the chains for the new active vertices
 template<typename T, typename StorageType, typename DeviceAdapter>
 void ChainGraph<T,StorageType,DeviceAdapter>::BuildChains()
@@ -488,7 +488,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::BuildChains()
   // a temporary array the full size of the graph
   vtkm::cont::ArrayHandle<vtkm::Id> tempChainExtremum;
   tempChainExtremum.Allocate(edgeNear.GetNumberOfValues());
-	
+
   // compute the number of log steps required in this pass
   vtkm::Id nActiveVertices = activeVertices.GetNumberOfValues();
   vtkm::Id nLogSteps = 1;
@@ -506,7 +506,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::BuildChains()
     chainDoublerDispatcher.Invoke(activeVertices,  // input
                                   chainExtremum);  // i/o (whole array)
   }
-		
+
 #ifdef DEBUG_PRINT
   DebugPrint("Chains Built");
 #endif
@@ -538,7 +538,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::TransferSaddleStarts()
 
   // 2. now test all active vertices to see if they have only one chain maximum
   SaddleAscentFunctor saddleAscentFunctor;
-  vtkm::worklet::DispatcherMapField<SaddleAscentFunctor> 
+  vtkm::worklet::DispatcherMapField<SaddleAscentFunctor>
                  saddleAscentFunctorDispatcher(saddleAscentFunctor);
 
   saddleAscentFunctorDispatcher.Invoke(activeVertices,           // input
@@ -548,10 +548,10 @@ void ChainGraph<T,StorageType,DeviceAdapter>::TransferSaddleStarts()
                                        chainExtremum,            // input (whole array)
                                        edgeFar,                  // input (whole array)
                                        newOutdegree);            // output
- 
+
   // 3. now compute the new offsets in the newFirstEdge array
   DeviceAlgorithm::ScanExclusive(newOutdegree, newFirstEdge);
-  nEdgesToSort = newFirstEdge.GetPortalControl().Get(nActiveVertices-1) + 
+  nEdgesToSort = newFirstEdge.GetPortalControl().Get(nActiveVertices-1) +
                  newOutdegree.GetPortalControl().Get(nActiveVertices-1);
 
 
@@ -559,7 +559,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::TransferSaddleStarts()
   edgeSorter.Allocate(nEdgesToSort);
 
   SaddleAscentTransferrer saddleAscentTransferrer;
-  vtkm::worklet::DispatcherMapField<SaddleAscentTransferrer> 
+  vtkm::worklet::DispatcherMapField<SaddleAscentTransferrer>
                  saddleAscentTransferrerDispatcher(saddleAscentTransferrer);
 
   saddleAscentTransferrerDispatcher.Invoke(activeVertices,       // input
@@ -587,7 +587,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::BuildTrunk()
 #endif
 
   TrunkBuilder trunkBuilder;
-  vtkm::worklet::DispatcherMapField<TrunkBuilder> 
+  vtkm::worklet::DispatcherMapField<TrunkBuilder>
                  trunkBuilderDispatcher(trunkBuilder);
 
   trunkBuilderDispatcher.Invoke(activeVertices,       // input
@@ -617,7 +617,7 @@ void ChainGraph<T,StorageType,DeviceAdapter>::TransferToMergeTree(vtkm::cont::Ar
   DeviceAlgorithm::Copy(arcArray, saddles);
 
   JoinTreeTransferrer joinTreeTransferrer;
-  vtkm::worklet::DispatcherMapField<JoinTreeTransferrer> 
+  vtkm::worklet::DispatcherMapField<JoinTreeTransferrer>
                  joinTreeTransferrerDispatcher(joinTreeTransferrer);
   vtkm::cont::ArrayHandleIndex valueIndexArray(valueIndex.GetNumberOfValues());
 
