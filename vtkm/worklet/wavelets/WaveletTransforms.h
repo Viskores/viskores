@@ -1021,6 +1021,8 @@ public:
             lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
             highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
             filterLen( fil_len ), 
+            outDimX(x_a + x_d), outDimY(y_a + y_d), outDimZ(z_a + z_d),
+            cALenExtended( x_1 + x_a + x_2 ),
             translator(x_1,     y_1,      z_1,
                        x_2,     y_2,      z_2,
                        x_3,     y_3,      z_3,
@@ -1029,12 +1031,7 @@ public:
                        x_d,     y_d,      z_d,
                        x_5,     y_5,      z_5,
                       startX5,  startY5,  startZ5 )
-  {
-    outDimX = x_a + x_d;
-    outDimY = y_a + y_d;
-    outDimY = z_a + z_d;
-    cALenExtended = x_1 + x_a + x_2;
-  }
+  { }
                       
   VTKM_EXEC_CONT
   void Output1Dto3D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y, vtkm::Id &z ) const
@@ -1087,7 +1084,7 @@ public:
                    const vtkm::Id             &workIdx ) const
   {
     vtkm::Id      workX,  workY,  workZ;
-    vtkm::Id      k1,     k2,     xi,   yi,   zi; 
+    vtkm::Id      k1,     k2,     xi;
     vtkm::Id      inputCube,      inputIdx; 
     Output1Dto3D( workIdx, workX, workY, workZ );
 
@@ -1199,6 +1196,8 @@ public:
             lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
             highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
             filterLen( fil_len ), 
+            outDimX(x_a + x_d), outDimY(y_a + y_d), outDimZ(z_a + z_d),
+            cALenExtended( y_1 + y_a + y_2 ),
             translator(x_1,     y_1,      z_1,
                        x_2,     y_2,      z_2,
                        x_3,     y_3,      z_3,
@@ -1207,12 +1206,7 @@ public:
                        x_d,     y_d,      z_d,
                        x_5,     y_5,      z_5,
                       startX5,  startY5,  startZ5 )
-  {
-    outDimX = x_a + x_d;
-    outDimY = y_a + y_d;
-    outDimY = z_a + z_d;
-    cALenExtended = y_1 + y_a + y_2;
-  }
+  { }
                       
   VTKM_EXEC_CONT
   void Output1Dto3D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y, vtkm::Id &z ) const
@@ -1265,7 +1259,7 @@ public:
                    const vtkm::Id             &workIdx ) const
   {
     vtkm::Id      workX,  workY,  workZ;
-    vtkm::Id      k1,     k2,     xi,   yi,   zi; 
+    vtkm::Id      k1,     k2,     yi;
     vtkm::Id      inputCube,      inputIdx; 
     Output1Dto3D( workIdx, workX, workY, workZ );
 
@@ -1346,7 +1340,6 @@ private:
   const IndexTranslator6CubesTopDown        translator;
 };
 
-// TODO
 template< typename DeviceTag >
 class InverseTransform3DFrontBack: public vtkm::worklet::WorkletMapField
 {
@@ -1362,7 +1355,7 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT
-  InverseTransform3DTopDown( 
+  InverseTransform3DFrontBack( 
             const vtkm::cont::ArrayHandle<vtkm::Float64> &lo_fil,
             const vtkm::cont::ArrayHandle<vtkm::Float64> &hi_fil,
             vtkm::Id fil_len, 
@@ -1378,6 +1371,8 @@ public:
             lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
             highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
             filterLen( fil_len ), 
+            outDimX(x_a + x_d), outDimY(y_a + y_d), outDimZ(z_a + z_d),
+            cALenExtended( z_1 + z_a + z_2 ),
             translator(x_1,     y_1,      z_1,
                        x_2,     y_2,      z_2,
                        x_3,     y_3,      z_3,
@@ -1386,12 +1381,7 @@ public:
                        x_d,     y_d,      z_d,
                        x_5,     y_5,      z_5,
                       startX5,  startY5,  startZ5 )
-  {
-    outDimX = x_a + x_d;
-    outDimY = y_a + y_d;
-    outDimY = z_a + z_d;
-    cALenExtended = y_1 + y_a + y_2;
-  }
+  { }
                       
   VTKM_EXEC_CONT
   void Output1Dto3D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y, vtkm::Id &z ) const
@@ -1444,13 +1434,13 @@ public:
                    const vtkm::Id             &workIdx ) const
   {
     vtkm::Id      workX,  workY,  workZ;
-    vtkm::Id      k1,     k2,     xi,   yi,   zi; 
+    vtkm::Id      k1,     k2,     zi; 
     vtkm::Id      inputCube,      inputIdx; 
     Output1Dto3D( workIdx, workX, workY, workZ );
 
     if( filterLen % 2 != 0 ) // odd filter
     {
-      if( workY % 2 != 0 )
+      if( workZ % 2 != 0 )
       {
         k1 = filterLen - 2;   k2 = filterLen - 1;
       }
@@ -1460,22 +1450,22 @@ public:
       }
 
       VAL sum = 0.0;
-      yi = (workY + 1) / 2;
+      zi = (workZ + 1) / 2;
       while( k1 > -1 )
       {
-        translator.Translate3Dto1D( workX, yi, workZ, inputCube, inputIdx );
+        translator.Translate3Dto1D( workX, workY, zi, inputCube, inputIdx );
         sum += lowFilter.Get(k1) * GetVal( portal1, portal2, portal3, portal4, portal5, 
                                            inputCube, inputIdx );
-        yi++;
+        zi++;
         k1 -= 2;
       }
-      yi = workY / 2;
+      zi = workZ / 2;
       while( k2 > -1 )
       {
-        translator.Translate3Dto1D( workX, yi + cALenExtended, workZ, inputCube, inputIdx );
+        translator.Translate3Dto1D( workX, workY, zi + cALenExtended, inputCube, inputIdx );
         sum += highFilter.Get(k2) * GetVal( portal1, portal2, portal3, portal4, portal5, 
                                             inputCube, inputIdx );
-        yi++;
+        zi++;
         k2 -= 2;
       }
       coeffOut = static_cast< OutputValueType >(sum);
@@ -1484,16 +1474,16 @@ public:
     {
       if( (filterLen/2) % 2 != 0 )
       {
-        yi = workY / 2;
-        if( workY % 2 != 0 )
+        zi = workZ / 2;
+        if( workZ % 2 != 0 )
           k1 = filterLen - 1;
         else
           k1 = filterLen - 2;
       }
       else
       {
-        yi = (workY + 1) / 2;
-        if( workY % 2 != 0 )
+        zi = (workZ + 1) / 2;
+        if( workZ % 2 != 0 )
           k1 = filterLen - 2;
         else
           k1 = filterLen - 1;
@@ -1502,12 +1492,12 @@ public:
       VAL sum = 0.0;
       while( k1 > -1 )
       {
-        translator.Translate3Dto1D( workX, yi, workZ, inputCube, inputIdx );
+        translator.Translate3Dto1D( workX, workY, zi, inputCube, inputIdx );
         cA = GetVal( portal1, portal2, portal3, portal4, portal5, inputCube, inputIdx );
-        translator.Translate3Dto1D( workX, yi + cALenExtended, workZ, inputCube, inputIdx );
+        translator.Translate3Dto1D( workX, workY, zi + cALenExtended, inputCube, inputIdx );
         cD = GetVal( portal1, portal2, portal3, portal4, portal5, inputCube, inputIdx );
         sum += lowFilter.Get(k1) * cA + highFilter.Get(k1) * cD;
-        yi++;
+        zi++;
         k1 -= 2;
       }
       coeffOut = static_cast< OutputValueType >(sum);
@@ -1522,7 +1512,7 @@ private:
   const vtkm::Id          filterLen;
         vtkm::Id          outDimX,          outDimY,    outDimZ;
         vtkm::Id          cALenExtended;    // Number of cA at the beginning of input, followed by cD
-  const IndexTranslator6CubesTopDown        translator;
+  const IndexTranslator6CubesFrontBack      translator;
 };
 
 
