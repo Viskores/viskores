@@ -56,6 +56,21 @@ template<typename T>
   {
     // no-op
   }
+
+#ifdef VTKM_USE_UNIFIED_MEMORY
+  thrust::device_ptr<T> allocate(std::size_t num)
+  {
+    T* temp;
+    cudaError_t r = cudaMallocManaged(&(temp), num*sizeof(T));
+    if (r == cudaErrorMemoryAllocation)
+      throw std::bad_alloc();
+    return thrust::device_ptr<T>(temp);
+  }
+  void deallocate(thrust::device_ptr<T> p, std::size_t vtkmNotUsed(num))
+  {
+    cudaFree(p.get());
+  }
+#endif
 };
 
 /// \c ArrayManagerExecutionThrustDevice provides an implementation for a \c
@@ -77,13 +92,9 @@ public:
   typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< T > PortalConstType;
 
   VTKM_CONT
-#ifdef VTKM_USE_UNIFIED_MEMORY
-  ArrayManagerExecutionThrustDevice(StorageType *storage)
-    : Storage(storage), Pointer(0), Length(0) 
-#else
   ArrayManagerExecutionThrustDevice(StorageType *storage)
     : Storage(storage), Array()
-#endif
+
   {
 
   }
@@ -98,11 +109,7 @@ public:
   ///
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const {
-#ifdef VTKM_USE_UNIFIED_MEMORY
-    return this->Length;
-#else
     return static_cast<vtkm::Id>(this->Array.size());
-#endif
   }
 
   /// Allocates the appropriate size of the array and copies the given data
@@ -119,15 +126,8 @@ public:
     {
       // The data in this->Array should already be valid.
     }
-
-#ifdef VTKM_USE_UNIFIED_MEMORY
-    ::thrust::cuda::pointer<ValueType> first(this->Pointer);
-    ::thrust::cuda::pointer<ValueType> last(this->Pointer + this->Length);
-    return PortalType(first, last);
-#else
     return PortalConstType(this->Array.data(),
                            this->Array.data() + static_cast<difference_type>(this->Array.size()));
-#endif
   }
 
   /// Workaround for nvcc 7.5 compiler warning bug.
@@ -152,15 +152,8 @@ public:
     {
       // The data in this->Array should already be valid.
     }
-
-#ifdef VTKM_USE_UNIFIED_MEMORY
-    ::thrust::cuda::pointer<ValueType> first(this->Pointer);
-    ::thrust::cuda::pointer<ValueType> last(this->Pointer + this->Length);
-    return PortalType(first, last);
-#else
     return PortalType(this->Array.data(),
                       this->Array.data() + static_cast<difference_type>(this->Array.size()));
-#endif
   }
 
   /// Workaround for nvcc 7.5 compiler warning bug.
@@ -180,43 +173,19 @@ public:
     {
       // Resize to 0 first so that you don't have to copy data when resizing
       // to a larger size.
-#ifdef VTKM_USE_UNIFIED_MEMORY
-      if (this->Pointer) { cudaFree(this->Pointer); this->Pointer = 0;  this->Length = 0; }
-#else
       this->Array.clear();
-#endif
     }
 
     try
       {
-#ifdef VTKM_USE_UNIFIED_MEMORY
-      if (numberOfValues != this->GetNumberOfValues())
-      {
-        ValueType* temp;
-        cudaError_t r = cudaMallocManaged(&(temp), numberOfValues*sizeof(ValueType));
-        if (r == cudaErrorMemoryAllocation) throw std::bad_alloc();
-        if (numberOfValues <= this->Length) ::thrust::copy(this->Pointer, this->Pointer + numberOfValues, temp);
-        if (this->Pointer) { cudaFree(this->Pointer);  this->Pointer = 0;  this->Length = 0; }
-        this->Pointer = temp;
-  
-        this->Length = numberOfValues;
-      }
-#else
       this->Array.resize(static_cast<std::size_t>(numberOfValues));
-#endif
       }
     catch (std::bad_alloc error)
       {
       throw vtkm::cont::ErrorControlBadAllocation(error.what());
       }
-#ifdef VTKM_USE_UNIFIED_MEMORY
-    ::thrust::cuda::pointer<ValueType> first(this->Pointer);
-    ::thrust::cuda::pointer<ValueType> last(this->Pointer + this->Length);
-    return PortalType(first, last);
-#else
     return PortalType(this->Array.data(),
                       this->Array.data() + static_cast<difference_type>(this->Array.size()));
-#endif
   }
 
   /// Workaround for nvcc 7.5 compiler warning bug.
@@ -233,22 +202,17 @@ public:
   VTKM_CONT
   void RetrieveOutputData(StorageType *storage) const
   {
-#ifdef VTKM_USE_UNIFIED_MEMORY
-    storage->Allocate(this->Length);
-#else
     storage->Allocate(static_cast<vtkm::Id>(this->Array.size()));
-#endif
     try
     {
 #ifdef VTKM_USE_UNIFIED_MEMORY
       cudaDeviceSynchronize();
-      ::thrust::copy(this->Pointer, this->Pointer + this->Length, vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
-#else
+#endif
       ::thrust::copy(
         this->Array.data(),
         this->Array.data() + static_cast<difference_type>(this->Array.size()),
         vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
-#endif
+
     }
     catch (...)
     {
@@ -263,14 +227,10 @@ public:
   template <class IteratorTypeControl>
   VTKM_CONT void CopyInto(IteratorTypeControl dest) const
   {
-#ifdef VTKM_USE_UNIFIED_MEMORY
-    ::thrust::copy(this->Pointer, this->Pointer + this->Length, dest);
-#else
     ::thrust::copy(
           this->Array.data(),
           this->Array.data() + static_cast<difference_type>(this->Array.size()),
           dest);
-#endif
   }
 
   /// Resizes the device vector.
@@ -279,27 +239,8 @@ public:
   {
     // The operation will succeed even if this assertion fails, but this
     // is still supposed to be a precondition to Shrink.
-#ifdef VTKM_USE_UNIFIED_MEMORY
-    VTKM_ASSERT(numberOfValues <= static_cast<vtkm::Id>(this->Length));
-
-    try
-    {
-      ValueType* temp;
-      cudaError_t r = cudaMallocManaged(&(temp), numberOfValues*sizeof(ValueType));
-      if (r == cudaErrorMemoryAllocation) throw std::bad_alloc();
-      if (this->Length > 0) ::thrust::copy(this->Pointer, this->Pointer + numberOfValues, temp);
-      if (this->Pointer) cudaFree(this->Pointer);
-      this->Pointer = temp;
-      this->Length = numberOfValues;
-    }
-    catch (std::bad_alloc error)
-    {
-      throw vtkm::cont::ErrorControlBadAllocation(error.what());
-    }
-#else
     VTKM_ASSERT(numberOfValues <= static_cast<vtkm::Id>(this->Array.size()));
     this->Array.resize(static_cast<std::size_t>(numberOfValues));
-#endif
   }
 
 
@@ -307,12 +248,8 @@ public:
   ///
   VTKM_CONT void ReleaseResources()
   {
-#ifdef VTKM_USE_UNIFIED_MEMORY
-    if (this->Pointer) { cudaFree(this->Pointer);  this->Pointer = 0;  this->Length = 0; }
-#else
     this->Array.clear();
     this->Array.shrink_to_fit();
-#endif
   }
 
 private:
@@ -324,31 +261,20 @@ private:
 
   StorageType *Storage;
 
-#ifdef VTKM_USE_UNIFIED_MEMORY
-  ValueType *Pointer;
-  vtkm::Id Length;
-#else
   ::thrust::system::cuda::vector<ValueType,
                                  UninitializedAllocator<ValueType> > Array;
-#endif
+
 
   VTKM_CONT
   void CopyToExecution()
   {
     try
     {
-#ifdef VTKM_USE_UNIFIED_MEMORY
-      cudaError_t r = cudaMallocManaged(&(this->Pointer), (this->Storage->GetNumberOfValues())*sizeof(ValueType));
-      if (r == cudaErrorMemoryAllocation) throw std::bad_alloc();
-      ::thrust::copy(vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst()),
-                     vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()),
-                     this->Pointer);  
-      this->Length = this->Storage->GetNumberOfValues();
-#else
+
       this->Array.assign(
             vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst()),
             vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()));
-#endif
+
     }
     catch (...)
     {
