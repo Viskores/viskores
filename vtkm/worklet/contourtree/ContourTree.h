@@ -20,48 +20,48 @@
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
 //
-//  Copyright 2016. Los Alamos National Security, LLC. 
-//  This software was produced under U.S. Government contract DE-AC52-06NA25396 
-//  for Los Alamos National Laboratory (LANL), which is operated by 
-//  Los Alamos National Security, LLC for the U.S. Department of Energy. 
-//  The U.S. Government has rights to use, reproduce, and distribute this 
-//  software.  NEITHER THE GOVERNMENT NOR LOS ALAMOS NATIONAL SECURITY, LLC 
-//  MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LIABILITY FOR THE 
-//  USE OF THIS SOFTWARE.  If software is modified to produce derivative works, 
-//  such modified software should be clearly marked, so as not to confuse it 
+//  Copyright 2016. Los Alamos National Security, LLC.
+//  This software was produced under U.S. Government contract DE-AC52-06NA25396
+//  for Los Alamos National Laboratory (LANL), which is operated by
+//  Los Alamos National Security, LLC for the U.S. Department of Energy.
+//  The U.S. Government has rights to use, reproduce, and distribute this
+//  software.  NEITHER THE GOVERNMENT NOR LOS ALAMOS NATIONAL SECURITY, LLC
+//  MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LIABILITY FOR THE
+//  USE OF THIS SOFTWARE.  If software is modified to produce derivative works,
+//  such modified software should be clearly marked, so as not to confuse it
 //  with the version available from LANL.
 //
-//  Additionally, redistribution and use in source and binary forms, with or 
-//  without modification, are permitted provided that the following conditions 
+//  Additionally, redistribution and use in source and binary forms, with or
+//  without modification, are permitted provided that the following conditions
 //  are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
-//  3. Neither the name of Los Alamos National Security, LLC, Los Alamos 
-//     National Laboratory, LANL, the U.S. Government, nor the names of its 
-//     contributors may be used to endorse or promote products derived from 
+//  3. Neither the name of Los Alamos National Security, LLC, Los Alamos
+//     National Laboratory, LANL, the U.S. Government, nor the names of its
+//     contributors may be used to endorse or promote products derived from
 //     this software without specific prior written permission.
 //
-//  THIS SOFTWARE IS PROVIDED BY LOS ALAMOS NATIONAL SECURITY, LLC AND 
-//  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
-//  BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-//  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL LOS ALAMOS 
-//  NATIONAL SECURITY, LLC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-//  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF 
-//  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-//  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+//  THIS SOFTWARE IS PROVIDED BY LOS ALAMOS NATIONAL SECURITY, LLC AND
+//  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
+//  BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+//  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL LOS ALAMOS
+//  NATIONAL SECURITY, LLC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+//  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+//  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+//  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //============================================================================
 
-//  This code is based on the algorithm presented in the paper:  
-//  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.” 
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens. 
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization 
+//  This code is based on the algorithm presented in the paper:
+//  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
+//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
+//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
 //=======================================================================================
@@ -76,7 +76,7 @@
 //
 // Most of these leaves are completely independent of each other, and can (on principle)
 // be processed simultaneously.  However, the interior of the tree is dependent on them
-// having been dealt with already. This version, therefore, will make multiple passes, 
+// having been dealt with already. This version, therefore, will make multiple passes,
 // in each pass pruning all maxima then all minima, interspersed with updating the merge
 // and split trees. To understand this, consider what happens in the merge algorithm when
 // a maximum is added:
@@ -113,14 +113,14 @@
 //			if v has no join neighbour (i.e. j == -1)
 //				skip (i.e. v is the root)
 //			else if j has a contour arc assigned
-//				set v's neighbour to j's neighbour 
+//				set v's neighbour to j's neighbour
 //			if v has no split neighbour (i.e. s == -1)
 //				skip (i.e. v is the root)
 //			else if s has a contour arc assigned
 //				set v's neighbour to s's neighbour
 //
 // Initially, we will do this with all vertices, regular or otherwise, then restrict to
-// the critical points. Number of iterations - regular vertices will slow this down, so 
+// the critical points. Number of iterations - regular vertices will slow this down, so
 // the worst case is O(n) passes.  Even if we restrict to critical points, W's in the tree
 // will serialise, so O(n) still applies. I believe that the W edges can be suppressed,
 // but let's leave that to optimisation for now.
@@ -169,7 +169,7 @@ namespace contourtree {
 template <typename T, typename StorageType, typename DeviceAdapter>
 class ContourTree
 {
-public:	
+public:
 	typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
 	typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
@@ -182,28 +182,28 @@ public:
 
 	// vector of superarcs in the contour tree (stored as inward-pointing)
 	vtkm::cont::ArrayHandle<vtkm::Id> superarcs;
-	
+
 	// vector of supernodes
 	vtkm::cont::ArrayHandle<vtkm::Id> supernodes;
-	
+
 	// vector of supernodes still unprocessed
 	vtkm::cont::ArrayHandle<vtkm::Id> activeSupernodes;
-	
+
 	// references to join & split trees
 	MergeTree<T,StorageType,DeviceAdapter> &joinTree, &splitTree;
 
 	// references to join & split graphs
 	ChainGraph<T,StorageType,DeviceAdapter> &joinGraph, &splitGraph;
-	
+
 	// vectors of up & down degree used during computation
 	vtkm::cont::ArrayHandle<vtkm::Id> updegree, downdegree;
-		
+
 	// vectors for tracking merge arcs
 	vtkm::cont::ArrayHandle<vtkm::Id> joinArcs, splitArcs;
 
 	// counter for how many iterations it took to compute
 	vtkm::Id nIterations;
-		
+
 	// contour tree constructor
 	ContourTree(const vtkm::cont::ArrayHandle<T,StorageType> &Values,
                     MergeTree<T,StorageType,DeviceAdapter> &JoinTree,
@@ -218,10 +218,10 @@ public:
 
 	// transfers leaves from join/split trees to contour tree
 	void TransferLeaves();
-	
+
 	// collapses regular edges along leaf superarcs
 	void CollapseRegular(bool isJoin);
-	
+
 	// compresses trees to remove transferred vertices
 	void CompressTrees();
 
@@ -252,7 +252,7 @@ public:
 
   VTKM_EXEC_CONT
   VertexAssigned(bool VertexIsAssigned) : vertexIsAssigned(VertexIsAssigned) {}
-	
+
   template <typename InPortalFieldType>
   VTKM_EXEC
   vtkm::Id operator()(const vtkm::Id supernode,
@@ -284,13 +284,13 @@ ContourTree<T,StorageType,DeviceAdapter>::ContourTree(
                          ChainGraph<T,StorageType,DeviceAdapter> &JoinGraph,
                          ChainGraph<T,StorageType,DeviceAdapter> &SplitGraph)
 	:	values(Values),
-		joinTree(JoinTree), 
+		joinTree(JoinTree),
 		splitTree(SplitTree),
 		joinGraph(JoinGraph),
 		splitGraph(SplitGraph)
 {
-	
-  // first we have to get the correct list of supernodes	
+
+  // first we have to get the correct list of supernodes
   // this will also set the degrees of the vertices initially
   FindSupernodes();
 
@@ -311,7 +311,7 @@ ContourTree<T,StorageType,DeviceAdapter>::ContourTree(
     std::cout << "                                        " << std::endl;
     std::cout << "========================================" << std::endl;
 #endif
-		
+
     // transfer all leaves to the contour tree
     TransferLeaves();
 
@@ -325,9 +325,9 @@ ContourTree<T,StorageType,DeviceAdapter>::ContourTree(
     // compress the active list of supernodes
     CompressActiveSupernodes();
 
-    // recompute the vertex degrees		
+    // recompute the vertex degrees
     FindDegrees();
-		
+
     nIterations++;
   }
 } // constructor
@@ -338,7 +338,7 @@ template <typename T, typename StorageType, typename DeviceAdapter>
 void ContourTree<T,StorageType,DeviceAdapter>::FindSupernodes()
 {
   // both trees may have non-connectivity critical points, so we first make a joint list
-  // here, we will explicitly assume that the active lists are in numerical order 
+  // here, we will explicitly assume that the active lists are in numerical order
   // which is how we are currently constructing them
   vtkm::Id nCandidates = joinGraph.valueIndex.GetNumberOfValues() +
                          splitGraph.valueIndex.GetNumberOfValues();
@@ -382,7 +382,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::FindSupernodes()
   vtkm::cont::ArrayHandle<vtkm::Id> downCandidate;
   DeviceAlgorithm::Copy(initCandidateArray, upCandidate);
   DeviceAlgorithm::Copy(initCandidateArray, downCandidate);
-	
+
   // This next chunk changes in parallel - it has to count the up & down degree for each
   // vertex. It's a simple loop in serial, but in parallel, what we have to do is:
   //	1. Copy the lower ends of the edges, converting from regular ID to candidate ID
@@ -407,7 +407,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::FindSupernodes()
   }
 
   // 2. Sort the lower ends of the edges
-  DeviceAlgorithm::Sort(sortVector);	
+  DeviceAlgorithm::Sort(sortVector);
 
   // 3. For each value, store the beginning & end of the range (in parallel)
   //	The 0th element is guaranteed to be NO_VERTEX_ASSIGNED, & can be skipped
@@ -449,7 +449,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::FindSupernodes()
   }
 
   // 2. Sort the lower ends of the edges
-  DeviceAlgorithm::Sort(sortVector);	
+  DeviceAlgorithm::Sort(sortVector);
 
   // 3. For each value, store the beginning & end of the range (in parallel)
   //	The 0th element is guaranteed to be NO_VERTEX_ASSIGNED, & can be skipped
@@ -497,7 +497,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::FindSupernodes()
   DeviceAlgorithm::ScanExclusive(isSupernode, supernodeID);
 
   // size is the position of the last element + the size of the last element (0/1)
-  vtkm::Id nSupernodes = supernodeID.GetPortalConstControl().Get(nCandidates-1) + 
+  vtkm::Id nSupernodes = supernodeID.GetPortalConstControl().Get(nCandidates-1) +
                          isSupernode.GetPortalConstControl().Get(nCandidates-1);
 
   // allocate memory for our arrays
@@ -583,7 +583,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::TransferLeaves()
   DebugPrint("Leaves Transferred");
 #endif
 } // TransferLeaves()
-	
+
 // collapses regular edges along leaf superarcs
 template <typename T, typename StorageType, typename DeviceAdapter>
 void ContourTree<T,StorageType,DeviceAdapter>::CollapseRegular(bool isJoin)
@@ -639,7 +639,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::CollapseRegular(bool isJoin)
                                     outbound);          // i/o (whole array)
   }
 
-  // at this point, the outbound vector chains everything outwards to the leaf 
+  // at this point, the outbound vector chains everything outwards to the leaf
   // any vertices on the last outbound leaf superarc point to the leaf
 
   // Now, any regular leaf vertex points out to a leaf, so the condition we test is
@@ -704,7 +704,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::CompressActiveSupernodes()
                  vertexAssignedDispatcher(vertexAssigned);
 
   vertexAssignedDispatcher.Invoke(activeSupernodes,
-                                  superarcs, 
+                                  superarcs,
                                   noSuperarcArray);
 
   vtkm::cont::ArrayHandle<vtkm::Id> compressSupernodes;
@@ -717,7 +717,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::CompressActiveSupernodes()
   DebugPrint("Active Supernodes Compressed");
 #endif
 } // CompressActiveSupernodes()
-	
+
 // recomputes the degree of each supernode from the join & split trees
 template <typename T, typename StorageType, typename DeviceAdapter>
 void ContourTree<T,StorageType,DeviceAdapter>::FindDegrees()
@@ -794,7 +794,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::FindDegrees()
   }
 
   // 2. Sort the neighbours
-  DeviceAlgorithm::Sort(sortVector);	
+  DeviceAlgorithm::Sort(sortVector);
 
   // 3. For each value, store the beginning & end of the range (in parallel)
   //	The 0th element is guaranteed to be NO_VERTEX_ASSIGNED, & can be skipped
@@ -870,18 +870,18 @@ void ContourTree<T,StorageType,DeviceAdapter>::CollectSaddlePeak(
   {
     // ID of regular node
     vtkm::Id regularID = supernodes.GetPortalConstControl().Get(supernode);
-		
+
     // retrieve ID of target supernode
     vtkm::Id superTo = superarcs.GetPortalConstControl().Get(supernode);
-		
+
     // if this is true, it is the last pruned vertex
     if (superTo == NO_VERTEX_ASSIGNED)
       continue;
-		
+
     // retrieve the regular ID for it
     vtkm::Id regularTo = supernodes.GetPortalConstControl().Get(superTo);
 
-    // how we print depends on which end has lower ID			
+    // how we print depends on which end has lower ID
     if (regularID < regularTo)
     { // from is lower
       // extra test to catch duplicate edge
@@ -890,7 +890,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::CollectSaddlePeak(
     } // from is lower
     else
       superarcVector.push_back(vtkm::make_Pair(regularTo, regularID));
-  } // per vertex	
+  } // per vertex
 
   // Setting saddlePeak reference to the make_ArrayHandle directly does not work
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id,vtkm::Id> > tempArray = vtkm::cont::make_ArrayHandle(superarcVector);
@@ -907,7 +907,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::CollectSaddlePeak(
   }
 #endif
 } // CollectSaddlePeak()
-	
+
 // debug routine
 template <typename T, typename StorageType, typename DeviceAdapter>
 void ContourTree<T,StorageType,DeviceAdapter>::DebugPrint(const char *message)
@@ -922,7 +922,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::DebugPrint(const char *message)
   printHeader(nSupernodes);
 
   printIndices("Supernodes", supernodes);
-        
+
   vtkm::cont::ArrayHandle<vtkm::Id> supervalues;
   DeviceAlgorithm::Copy(PermuteValueType(supernodes, values), supervalues);
   printValues("Value", supervalues);
