@@ -22,6 +22,54 @@ namespace vtkm {
 namespace cont {
 
 template<typename T, typename S>
+ArrayHandle<T,S>::ArrayHandle()
+  : Internals(new InternalStruct)
+{
+  this->Internals->ControlArrayValid = false;
+  this->Internals->ExecutionArrayValid = false;
+}
+
+template<typename T, typename S>
+ArrayHandle<T,S>::ArrayHandle(const ArrayHandle<T,S> &src)
+  : Internals(src.Internals)
+{  }
+
+template<typename T, typename S>
+ArrayHandle<T,S>::ArrayHandle(ArrayHandle<T,S> &&src)
+  : Internals(std::move(src.Internals))
+{  }
+
+template<typename T, typename S>
+ArrayHandle<T,S>::ArrayHandle(const typename ArrayHandle<T,S>::StorageType &storage)
+  : Internals(new InternalStruct)
+{
+  this->Internals->ControlArray = storage;
+  this->Internals->ControlArrayValid = true;
+  this->Internals->ExecutionArrayValid = false;
+}
+
+template<typename T, typename S>
+ArrayHandle<T,S>::~ArrayHandle()
+{
+}
+
+template<typename T, typename S>
+ArrayHandle<T,S>&
+ArrayHandle<T,S>::operator=(const ArrayHandle<T,S> &src)
+{
+  this->Internals = src.Internals;
+  return *this;
+}
+
+template<typename T, typename S>
+ArrayHandle<T,S>&
+ArrayHandle<T,S>::operator=(ArrayHandle<T,S> &&src)
+{
+  this->Internals = std::move(src.Internals);
+  return *this;
+}
+
+template<typename T, typename S>
 typename ArrayHandle<T,S>::StorageType&
 ArrayHandle<T,S>::GetStorage()
 {
