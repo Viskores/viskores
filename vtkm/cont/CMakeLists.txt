@@ -89,7 +89,9 @@ set(sources
   StorageBasic.cxx
   )
 
-vtkm_library(SOURCES ${sources})
+vtkm_library(
+  SOURCES ${sources}
+  HEADERS ${header_impls})
 target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
 
 #-----------------------------------------------------------------------------
@@ -97,7 +99,6 @@ add_subdirectory(internal)
 add_subdirectory(arg)
 
 vtkm_declare_headers(${headers})
-vtkm_install_headers(vtkm/cont ${header_impls})
 
 add_subdirectory(serial)
 add_subdirectory(cuda)
