@@ -48,12 +48,12 @@
 
 #include <vector>
 
-vtkm::Id3 dims(256, 256, 256);
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray, normalsArray;
-vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
-Quaternion qrot;
-int lastx, lasty;
-int mouse_state = 1;
+static vtkm::Id3 dims(256, 256, 256);
+static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray, normalsArray;
+static vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
+static Quaternion qrot;
+static int lastx, lasty;
+static int mouse_state = 1;
 
 namespace {
 
@@ -275,6 +275,9 @@ int main(int argc, char* argv[])
   glutMouseFunc(mouseCall);
   glutMainLoop();
 
+  verticesArray.ReleaseResources();
+  normalsArray.ReleaseResources();
+  scalarsArray.ReleaseResources();
   return 0;
 }
 

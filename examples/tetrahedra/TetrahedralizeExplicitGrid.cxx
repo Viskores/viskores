@@ -49,11 +49,11 @@ typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 namespace {
 
 // Takes input uniform grid and outputs unstructured grid of tets
-vtkm::cont::DataSet outDataSet;
+static vtkm::cont::DataSet outDataSet;
 vtkm::Id numberOfInPoints;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
 
 // OpenGL display variables
 Quaternion qrot;
@@ -330,6 +330,8 @@ int main(int argc, char* argv[])
   glutMouseFunc(mouseCall);
   glutMainLoop();
 
+  outDataSet.Clear();
+  vertexArray.ReleaseResources();
   return 0;
 }
 

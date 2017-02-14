@@ -46,21 +46,21 @@
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 // Default size of the example
-vtkm::Id3 dims(4,4,4);
-vtkm::Id cellsToDisplay = 64;
-vtkm::Id numberOfInPoints;
+static vtkm::Id3 dims(4,4,4);
+static vtkm::Id cellsToDisplay = 64;
+static vtkm::Id numberOfInPoints;
 
 // Takes input uniform grid and outputs unstructured grid of tets
-vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> *tetrahedralizeFilter;
-vtkm::cont::DataSet tetDataSet;
+static vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> *tetrahedralizeFilter;
+static vtkm::cont::DataSet tetDataSet;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
 
 // OpenGL display variables
-Quaternion qrot;
-int lastx, lasty;
-int mouse_state = 1;
+static Quaternion qrot;
+static int lastx, lasty;
+static int mouse_state = 1;
 
 //
 // Construct an input data set with uniform grid of indicated dimensions, origin and spacing
@@ -318,6 +318,9 @@ int main(int argc, char* argv[])
   glutMouseFunc(mouseCall);
   glutMainLoop();
 
+  delete tetrahedralizeFilter;
+  tetDataSet.Clear();
+  vertexArray.ReleaseResources();
   return 0;
 }
 
