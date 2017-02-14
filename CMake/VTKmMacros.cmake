@@ -518,7 +518,7 @@ function(vtkm_benchmarks device_adapter)
     set(is_cuda TRUE)
   endif()
 
-  if(VTKm_ENABLE_BENCHMARKS AND VTKm_ENABLE_TESTING)
+  if(VTKm_ENABLE_BENCHMARKS)
     string(REPLACE "VTKM_DEVICE_ADAPTER_" "" device_type ${device_adapter})
 
     if(is_cuda)
