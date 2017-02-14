@@ -40,7 +40,7 @@
         vtkm_cuda_check_async_error, \
         __FILE__, \
         __LINE__, \
-        "Unchecked asycnronous error"); \
+        "Unchecked asynchronous error"); \
     } \
   } \
   VTKM_SWALLOW_SEMICOLON_POST_BLOCK
