@@ -31,7 +31,7 @@ namespace cont {
 class VTKM_ALWAYS_EXPORT ErrorExecution : public vtkm::cont::Error
 {
 public:
-  ErrorExecution(const std::string message)
+  ErrorExecution(const std::string &message)
     : Error(message) { }
 };
 
