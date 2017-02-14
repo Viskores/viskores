@@ -49,23 +49,20 @@ public:
 
 
   template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
-  vtkm::Id Extend2D  (const SigInArrayType                     &sigIn,   // Input
-                            vtkm::Id                           sigDimX,             
-                            vtkm::Id                           sigDimY,
-                            vtkm::Id                           sigStartX,
-                            vtkm::Id                           sigStartY,
-                            vtkm::Id                           sigPretendDimX,             
-                            vtkm::Id                           sigPretendDimY,
-                            ExtensionArrayType                 &ext1,  // left/top extension
-                            ExtensionArrayType                 &ext2,  // right/bottom extension
-                            vtkm::Id                           addLen,
+  vtkm::Id Extend2D  (const SigInArrayType            &sigIn,     // Input
+                            vtkm::Id  sigDimX,        vtkm::Id   sigDimY,
+                            vtkm::Id  sigStartX,      vtkm::Id   sigStartY,
+                            vtkm::Id  sigPretendDimX, vtkm::Id   sigPretendDimY,
+                            ExtensionArrayType        &ext1,  // left/top extension
+                            ExtensionArrayType        &ext2,  // right/bottom extension
+                            vtkm::Id                  addLen,
                             vtkm::worklet::wavelets::DWTMode   ext1Method,
                             vtkm::worklet::wavelets::DWTMode   ext2Method, 
                             bool                               pretendSigPaddedZero, 
                             bool                               padZeroAtExt2,
                             bool                               modeLR,  // true = left-right
                                                                         // false = top-down
-                            DeviceTag                                                    )
+                            DeviceTag )
   {
     // pretendSigPaddedZero and padZeroAtExt2 cannot happen at the same time
     VTKM_ASSERT( !pretendSigPaddedZero || !padZeroAtExt2 );
@@ -91,16 +88,15 @@ public:
       return 0;
     }
 
-    typedef typename SigInArrayType::ValueType                 ValueType;
-    typedef vtkm::cont::ArrayHandle< ValueType >               ExtendArrayType; 
-    typedef vtkm::worklet::wavelets::ExtensionWorklet2D        ExtensionWorklet;
+    typedef typename SigInArrayType::ValueType                ValueType;
+    typedef vtkm::cont::ArrayHandle< ValueType >              ExtendArrayType; 
+    typedef vtkm::worklet::wavelets::ExtensionWorklet2D       ExtensionWorklet;
     typedef typename vtkm::worklet::DispatcherMapField< ExtensionWorklet, DeviceTag >
-                                                               DispatcherType;
-    vtkm::Id extDimX, extDimY;
-    vtkm::worklet::wavelets::ExtensionDirection dir;
+                                                              DispatcherType;
+    vtkm::Id                                                  extDimX, extDimY;
+    vtkm::worklet::wavelets::ExtensionDirection               dir;
 
-    // Work on left/top extension 
-    {
+    {   // Work on left/top extension 
     if( modeLR )
     {
       dir = LEFT;

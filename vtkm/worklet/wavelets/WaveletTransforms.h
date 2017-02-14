@@ -1747,17 +1747,21 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT
-  ExtensionWorklet2D  ( vtkm::Id extdimX,     vtkm::Id extdimY, 
-                        vtkm::Id sigdimX,     vtkm::Id sigdimY, 
-                        vtkm::Id sigstartX,   vtkm::Id sigstartY,
-                        vtkm::Id sigpretendX, vtkm::Id sigpretendY,
-                        DWTMode m, ExtensionDirection dir, bool pad_zero)
+  ExtensionWorklet2D  ( vtkm::Id  extdimX,      vtkm::Id  extdimY, 
+                        vtkm::Id  sigdimX,      vtkm::Id  sigdimY, 
+                        vtkm::Id  sigstartX,    vtkm::Id  sigstartY,
+                        vtkm::Id  sigpretendX,  vtkm::Id  sigpretendY,
+                        DWTMode                 m, 
+                        ExtensionDirection      dir, 
+                        bool                    pad_zero)
                      : 
-                        extDimX( extdimX ),           extDimY( extdimY ), 
-                        sigDimX( sigdimX ),           sigDimY( sigdimY ), 
-                        sigStartX( sigstartX ),       sigStartY( sigstartY ), 
-                        sigPretendDimX( sigpretendX ), sigPretendDimY( sigpretendY ), 
-                        mode(m), direction( dir ), padZero( pad_zero )  
+                        extDimX( extdimX ),             extDimY( extdimY ), 
+                        sigDimX( sigdimX ),             sigDimY( sigdimY ), 
+                        sigStartX( sigstartX ),         sigStartY( sigstartY ), 
+                        sigPretendDimX( sigpretendX ),  sigPretendDimY( sigpretendY ), 
+                        mode( m ), 
+                        direction( dir ), 
+                        padZero( pad_zero )  
   { (void)sigDimY; }
 
   // Index translation helper
@@ -2998,64 +3002,6 @@ private:
   vtkm::Id outXLen,   outYLen;
   vtkm::Id outXStart, outYStart;
 };
-
-
-
-// Worklet: Copys a part of a big rectangle to a small rectangle
-// WARNING: this worklet only supports basic ArrayHandle types.
-class RectangleCopyFrom : public vtkm::worklet::WorkletMapField
-{
-public:
-  typedef void ControlSignature( FieldInOut<   ScalarAll >,    // small rectangle to be filled
-                                 WholeArrayIn< ScalarAll > );  // big rectangle to read from
-  typedef void ExecutionSignature( _1, _2, WorkIndex );
-  typedef _1   InputDomain;
-
-  // Constructor
-  VTKM_EXEC_CONT
-  RectangleCopyFrom( vtkm::Id smallx,    vtkm::Id smally, 
-                     vtkm::Id bigx,      vtkm::Id bigy,
-                     vtkm::Id xStart,    vtkm::Id yStart )
-  {
-    this->smallXLen = smallx;   this->smallYLen = smally;
-    this->bigXLen   = bigx;     this->bigYLen   = bigy;
-    this->bigXStart = xStart;   this->bigYStart = yStart;
-  }
-
-  VTKM_EXEC_CONT
-  void GetLogicalDimOfSmallRect( const vtkm::Id    &idx,    
-                                       vtkm::Id    &x,      
-                                       vtkm::Id    &y ) const     
-  {
-    x = idx % smallXLen;
-    y = idx / smallXLen;
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::Id Get1DIdxOfBigRect( vtkm::Id    x,      
-                              vtkm::Id    y ) const     
-  {
-    return y * bigXLen + x;
-  }
-
-  template< typename ValueType, typename PortalType >
-  VTKM_EXEC
-  void operator()(       ValueType      &value,        
-                   const PortalType     &array,
-                   const vtkm::Id       &workIdx ) const
-  {
-    vtkm::Id xOfValue, yOfValue;
-    GetLogicalDimOfSmallRect( workIdx, xOfValue, yOfValue );
-    vtkm::Id bigRectIdx = Get1DIdxOfBigRect( xOfValue+bigXStart, yOfValue+bigYStart );
-    value = static_cast<ValueType>( array.Get( bigRectIdx ) );
-  }
-
-private:
-  vtkm::Id smallXLen,    smallYLen;
-  vtkm::Id bigXLen,      bigYLen;
-  vtkm::Id bigXStart,    bigYStart;
-};
-
 
 
 }     // namespace wavelets

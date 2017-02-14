@@ -287,26 +287,6 @@ public:
 
 
 
-  // Fill a small rectangle from a portion of a big rectangle
-  template< typename SmallArrayType, typename BigArrayType, typename DeviceTag >
-  void DeviceRectangleCopyFrom(       SmallArrayType    &smallRect,
-                                      vtkm::Id          smallX,
-                                      vtkm::Id          smallY,
-                                const BigArrayType      &bigRect,
-                                      vtkm::Id          bigX,
-                                      vtkm::Id          bigY,
-                                      vtkm::Id          startX,
-                                      vtkm::Id          startY,
-                                      DeviceTag                      )
-  {
-    smallRect.PrepareForOutput( smallX*smallY, DeviceTag() );
-    typedef vtkm::worklet::wavelets::RectangleCopyFrom  CopyFromWorklet;
-    CopyFromWorklet cpFrom( smallX, smallY, bigX, bigY, startX, startY );
-    vtkm::worklet::DispatcherMapField< CopyFromWorklet, DeviceTag > dispatcherFrom( cpFrom );
-    dispatcherFrom.Invoke( smallRect, bigRect );
-  }
-
-
 
   template< typename ArrayType >
   void Print2DArray( const std::string &str, const ArrayType &arr, vtkm::Id dimX  )
