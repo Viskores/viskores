@@ -438,7 +438,6 @@ private:
           FunctorType> transformed =
             vtkm::cont::make_ArrayHandleTransform<ValueType>(input, functor);
 
-      typedef typename vtkm::cont::ArrayHandle<ValueType>::PortalControl Portal;
       input.Allocate(length);
       SetPortal(input.GetPortalControl());
 
