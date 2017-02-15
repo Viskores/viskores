@@ -158,13 +158,13 @@ public:
   // Multi-level 2D wavelet decomposition
   template< typename InArrayType, typename OutArrayType, typename DeviceTag>
   VTKM_CONT
-  FLOAT_64 WaveDecompose2D( const InArrayType           &sigIn,   // Input
-                                  vtkm::Id              nLevels,  // n levels of DWT
-                                  vtkm::Id              inX,      // Input X dim
-                                  vtkm::Id              inY,      // Input Y dim
-                                  OutArrayType          &coeffOut,
-                                  std::vector<vtkm::Id> &L,
-                                  DeviceTag                       )
+  vtkm::Float64 WaveDecompose2D( const InArrayType           &sigIn,   // Input
+                                       vtkm::Id              nLevels,  // n levels of DWT
+                                       vtkm::Id              inX,      // Input X dim
+                                       vtkm::Id              inY,      // Input Y dim
+                                       OutArrayType          &coeffOut,
+                                       std::vector<vtkm::Id> &L,
+                                       DeviceTag                       )
   {
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     VTKM_ASSERT( inX * inY == sigInLen );
@@ -230,13 +230,13 @@ public:
   // Multi-level 2D wavelet reconstruction
   template< typename InArrayType, typename OutArrayType, typename DeviceTag>
   VTKM_CONT
-  FLOAT_64 WaveReconstruct2D( const InArrayType           &arrIn,   // Input
-                                    vtkm::Id              nLevels,  // n levels of DWT
-                                    vtkm::Id              inX,      // Input X dim
-                                    vtkm::Id              inY,      // Input Y dim
-                                    OutArrayType          &arrOut,
-                                    std::vector<vtkm::Id> &L,
-                                    DeviceTag                       )
+  vtkm::Float64 WaveReconstruct2D( const InArrayType           &arrIn,   // Input
+                                         vtkm::Id              nLevels,  // n levels of DWT
+                                         vtkm::Id              inX,      // Input X dim
+                                         vtkm::Id              inY,      // Input Y dim
+                                         OutArrayType          &arrOut,
+                                         std::vector<vtkm::Id> &L,
+                                         DeviceTag                       )
   {
     vtkm::Id arrInLen = arrIn.GetNumberOfValues();
     VTKM_ASSERT( inX * inY == arrInLen );

@@ -44,9 +44,6 @@ public:
   // Constructor
   WaveletDWT( WaveletName name ) : WaveletBase( name ) {} 
 
-  typedef vtkm::Float64 FLOAT_64;
-
-
 
   template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
   vtkm::Id Extend2D  (const SigInArrayType            &sigIn,     // Input
@@ -423,10 +420,10 @@ public:
   // Performs one level of 1D discrete wavelet transform 
   // It takes care of boundary conditions, etc.
   template< typename SignalArrayType, typename CoeffArrayType, typename DeviceTag>
-  FLOAT_64 DWT1D( const SignalArrayType &sigIn,     // Input
-                  CoeffArrayType        &coeffOut,  // Output: cA followed by cD
-                  std::vector<vtkm::Id> &L,         // Output: how many cA and cD.
-                  DeviceTag                       )
+  vtkm::Float64 DWT1D( const SignalArrayType        &sigIn,     // Input
+                             CoeffArrayType         &coeffOut,  // Output: cA followed by cD
+                             std::vector<vtkm::Id>  &L,         // Output: how many cA and cD.
+                             DeviceTag                       )
   {
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if( GetWaveletMaxLevel( sigInLen ) < 1 )
@@ -509,10 +506,10 @@ public:
   // Performs one level of inverse wavelet transform
   // It takes care of boundary conditions, etc.
   template< typename CoeffArrayType, typename SignalArrayType, typename DeviceTag >
-  FLOAT_64 IDWT1D( const CoeffArrayType  &coeffIn,     // Input, cA followed by cD
-                   std::vector<vtkm::Id> &L,           // Input, how many cA and cD
-                   SignalArrayType       &sigOut,      // Output
-                   DeviceTag                     )
+  vtkm::Float64 IDWT1D( const CoeffArrayType        &coeffIn,     // Input, cA followed by cD
+                              std::vector<vtkm::Id> &L,           // Input, how many cA and cD
+                              SignalArrayType       &sigOut,      // Output
+                              DeviceTag                     )
   {
     VTKM_ASSERT( L.size() == 3 );
     VTKM_ASSERT( L[2] == coeffIn.GetNumberOfValues() );
@@ -706,16 +703,16 @@ public:
   // Performs one level of 2D discrete wavelet transform on a small rectangle of input array
   // The output has the same size as the small rectangle
   template< typename ArrayInType, typename ArrayOutType, typename DeviceTag >
-  FLOAT_64 DWT2D  ( const ArrayInType                 &sigIn,
-                          vtkm::Id                    sigDimX,
-                          vtkm::Id                    sigDimY,
-                          vtkm::Id                    sigStartX,
-                          vtkm::Id                    sigStartY,
-                          vtkm::Id                    sigPretendDimX,
-                          vtkm::Id                    sigPretendDimY,
-                          ArrayOutType                &coeffOut,
-                          std::vector<vtkm::Id>       &L,
-                          DeviceTag                     )
+  vtkm::Float64 DWT2D  ( const ArrayInType                 &sigIn,
+                                  vtkm::Id                 sigDimX,
+                                  vtkm::Id                 sigDimY,
+                                  vtkm::Id                 sigStartX,
+                                  vtkm::Id                 sigStartY,
+                                  vtkm::Id                 sigPretendDimX,
+                                  vtkm::Id                 sigPretendDimY,
+                                  ArrayOutType             &coeffOut,
+                                  std::vector<vtkm::Id>    &L,
+                                  DeviceTag                     )
   {
     VTKM_ASSERT( sigDimX * sigDimY == sigIn.GetNumberOfValues() );
     
@@ -802,14 +799,14 @@ public:
   // Performs one level of IDWT. 
   // The output array has the same dimensions as the small rectangle.
   template< typename ArrayInType, typename ArrayOutType, typename DeviceTag >
-  FLOAT_64 IDWT2D  ( const ArrayInType                            &coeffIn,
-                           vtkm::Id                               inDimX,
-                           vtkm::Id                               inDimY,
-                           vtkm::Id                               inStartX,
-                           vtkm::Id                               inStartY,
-                     const std::vector<vtkm::Id>                  &L,
-                           ArrayOutType                           &sigOut,
-                           DeviceTag                                      )
+  vtkm::Float64 IDWT2D  ( const ArrayInType               &coeffIn,
+                                vtkm::Id                  inDimX,
+                                vtkm::Id                  inDimY,
+                                vtkm::Id                  inStartX,
+                                vtkm::Id                  inStartY,
+                          const std::vector<vtkm::Id>     &L,
+                                ArrayOutType              &sigOut,
+                                DeviceTag     )
   {
     VTKM_ASSERT( L.size() == 10 );
     VTKM_ASSERT( inDimX * inDimY == coeffIn.GetNumberOfValues() );
