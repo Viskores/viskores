@@ -293,6 +293,14 @@ struct ParameterContainerAccess<1> {
            const typename AtType<1, FunctionSignature>::type &value) {
     parameters.Parameter1 = value;
   }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT
+  void Move(ParameterContainer<FunctionSignatureDest> &dest,
+            const ParameterContainer<FunctionSignatureSrc> &src) {
+    dest.Parameter1 = std::move(src.Parameter1);
+  }
 };
 
 template<>
@@ -312,6 +320,14 @@ struct ParameterContainerAccess<2> {
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<2, FunctionSignature>::type &value) {
     parameters.Parameter2 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT
+  void Move(ParameterContainer<FunctionSignatureDest> &dest,
+            const ParameterContainer<FunctionSignatureSrc> &src) {
+    dest.Parameter2 = std::move(src.Parameter2);
   }
 };
 
@@ -333,6 +349,14 @@ struct ParameterContainerAccess<3> {
            const typename AtType<3, FunctionSignature>::type &value) {
     parameters.Parameter3 = value;
   }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT
+  void Move(ParameterContainer<FunctionSignatureDest> &dest,
+            const ParameterContainer<FunctionSignatureSrc> &src) {
+    dest.Parameter3 = std::move(src.Parameter3);
+  }
 };
 
 template<>
@@ -352,6 +376,14 @@ struct ParameterContainerAccess<4> {
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<4, FunctionSignature>::type &value) {
     parameters.Parameter4 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT
+  void Move(ParameterContainer<FunctionSignatureDest> &dest,
+            const ParameterContainer<FunctionSignatureSrc> &src) {
+    dest.Parameter4 = std::move(src.Parameter4);
   }
 };
 
@@ -373,6 +405,14 @@ struct ParameterContainerAccess<5> {
            const typename AtType<5, FunctionSignature>::type &value) {
     parameters.Parameter5 = value;
   }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT
+  void Move(ParameterContainer<FunctionSignatureDest> &dest,
+            const ParameterContainer<FunctionSignatureSrc> &src) {
+    dest.Parameter5 = std::move(src.Parameter5);
+  }
 };
 
 template<>
@@ -392,6 +432,14 @@ struct ParameterContainerAccess<6> {
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<6, FunctionSignature>::type &value) {
     parameters.Parameter6 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT
+  void Move(ParameterContainer<FunctionSignatureDest> &dest,
+            const ParameterContainer<FunctionSignatureSrc> &src) {
+    dest.Parameter6 = std::move(src.Parameter6);
   }
 };
 
@@ -413,6 +461,14 @@ struct ParameterContainerAccess<7> {
            const typename AtType<7, FunctionSignature>::type &value) {
     parameters.Parameter7 = value;
   }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT
+  void Move(ParameterContainer<FunctionSignatureDest> &dest,
+            const ParameterContainer<FunctionSignatureSrc> &src) {
+    dest.Parameter7 = std::move(src.Parameter7);
+  }
 };
 
 template<>
@@ -432,6 +488,14 @@ struct ParameterContainerAccess<8> {
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<8, FunctionSignature>::type &value) {
     parameters.Parameter8 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT
+  void Move(ParameterContainer<FunctionSignatureDest> &dest,
+            const ParameterContainer<FunctionSignatureSrc> &src) {
+    dest.Parameter8 = std::move(src.Parameter8);
   }
 };
 
@@ -453,6 +517,14 @@ struct ParameterContainerAccess<9> {
            const typename AtType<9, FunctionSignature>::type &value) {
     parameters.Parameter9 = value;
   }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT
+  void Move(ParameterContainer<FunctionSignatureDest> &dest,
+            const ParameterContainer<FunctionSignatureSrc> &src) {
+    dest.Parameter9 = std::move(src.Parameter9);
+  }
 };
 
 template<>
@@ -472,6 +544,14 @@ struct ParameterContainerAccess<10> {
   void Set(ParameterContainer<FunctionSignature> &parameters,
            const typename AtType<10, FunctionSignature>::type &value) {
     parameters.Parameter10 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT
+  void Move(ParameterContainer<FunctionSignatureDest> &dest,
+            const ParameterContainer<FunctionSignatureSrc> &src) {
+    dest.Parameter10 = std::move(src.Parameter10);
   }
 };
 

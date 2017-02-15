@@ -245,11 +245,7 @@ public:
   /// Constructs an empty ArrayHandle. Typically used for output or
   /// intermediate arrays that will be filled by a VTKm algorithm.
   ///
-  VTKM_CONT ArrayHandle() : Internals(new InternalStruct)
-  {
-    this->Internals->ControlArrayValid = false;
-    this->Internals->ExecutionArrayValid = false;
-  }
+  VTKM_CONT ArrayHandle();
 
   /// Copy constructor.
   ///
@@ -258,22 +254,23 @@ public:
   /// with CUDA), then the automatically generated copy constructor could be
   /// created for all devices, and it would not be valid for all devices.
   ///
-  VTKM_CONT
-  ArrayHandle(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
-    : Internals(src.Internals)
-  {  }
+  ArrayHandle(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src);
+
+  /// Move constructor.
+  ///
+  /// Implemented so that it is defined exclusively in the control environment.
+  /// If there is a separate device for the execution environment (for example,
+  /// with CUDA), then the automatically generated move constructor could be
+  /// created for all devices, and it would not be valid for all devices.
+  ///
+  ArrayHandle(vtkm::cont::ArrayHandle<ValueType,StorageTag> &&src);
+
 
   /// Special constructor for subclass specializations that need to set the
   /// initial state of the control array. When this constructor is used, it
   /// is assumed that the control array is valid.
   ///
-  ArrayHandle(const StorageType &storage)
-    : Internals(new InternalStruct)
-  {
-    this->Internals->ControlArray = storage;
-    this->Internals->ControlArrayValid = true;
-    this->Internals->ExecutionArrayValid = false;
-  }
+  ArrayHandle(const StorageType &storage);
 
   /// Destructs an empty ArrayHandle.
   ///
@@ -282,17 +279,19 @@ public:
   /// with CUDA), then the automatically generated destructor could be
   /// created for all devices, and it would not be valid for all devices.
   ///
-  ~ArrayHandle() {  }
+  ~ArrayHandle();
 
   /// \brief Copies an ArrayHandle
   ///
   VTKM_CONT
   vtkm::cont::ArrayHandle<ValueType,StorageTag> &
-  operator=(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
-  {
-    this->Internals = src.Internals;
-    return *this;
-  }
+  operator=(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src);
+
+  /// \brief Move and Assignment of an ArrayHandle
+  ///
+  VTKM_CONT
+  vtkm::cont::ArrayHandle<ValueType,StorageTag> &
+  operator=(vtkm::cont::ArrayHandle<ValueType,StorageTag> &&src);
 
   /// Like a pointer, two \c ArrayHandles are considered equal if they point
   /// to the same location in memory.
