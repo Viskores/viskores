@@ -235,8 +235,10 @@ ArrayHandle<T,S>::PrepareForInput(DeviceAdapterTag) const
   if (!this->Internals->ControlArrayValid
       && !this->Internals->ExecutionArrayValid)
   {
-    throw vtkm::cont::ErrorBadValue(
-      "ArrayHandle has no data when PrepareForInput called.");
+    // Want to use an empty array.
+    // Set up ArrayHandle state so this actually works.
+    this->Internals->ControlArray.Allocate(0);
+    this->Internals->ControlArrayValid = true;
   }
 
   this->PrepareForDevice(DeviceAdapterTag());
@@ -290,8 +292,10 @@ ArrayHandle<T,S>::PrepareForInPlace(DeviceAdapterTag)
   if (!this->Internals->ControlArrayValid
       && !this->Internals->ExecutionArrayValid)
   {
-    throw vtkm::cont::ErrorBadValue(
-      "ArrayHandle has no data when PrepareForInPlace called.");
+    // Want to use an empty array.
+    // Set up ArrayHandle state so this actually works.
+    this->Internals->ControlArray.Allocate(0);
+    this->Internals->ControlArrayValid = true;
   }
 
   this->PrepareForDevice(DeviceAdapterTag());

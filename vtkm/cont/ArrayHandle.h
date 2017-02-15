@@ -487,7 +487,16 @@ VTKM_CONT
 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
 make_ArrayHandle(const std::vector<T,Allocator> &array)
 {
-  return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()));
+  if (!array.empty())
+  {
+    return make_ArrayHandle(&array.front(),
+                            static_cast<vtkm::Id>(array.size()));
+  }
+  else
+  {
+    // Vector empty. Just return an empty array handle.
+    return vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>();
+  }
 }
 
 template<typename T, typename StorageT>

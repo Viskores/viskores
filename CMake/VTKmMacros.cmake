@@ -600,13 +600,14 @@ endfunction(vtkm_wrap_sources_for_cuda)
 # vtkm_library(
 #   [NAME <name>]
 #   SOURCES <source_list>
+#   [HEADERS <headers_list>]
 #   [CUDA]
 #   [WRAP_FOR_CUDA <source_list>]
 #   )
 function(vtkm_library)
   set(options CUDA)
   set(oneValueArgs NAME)
-  set(multiValueArgs SOURCES WRAP_FOR_CUDA)
+  set(multiValueArgs SOURCES HEADERS WRAP_FOR_CUDA)
   cmake_parse_arguments(VTKm_LIB
     "${options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
@@ -618,6 +619,11 @@ function(vtkm_library)
   else()
     set(lib_name ${kit})
   endif()
+
+  list(APPEND VTKm_LIB_SOURCES ${VTKm_LIB_HEADERS})
+  set_source_files_properties(${VTKm_LIB_HEADERS}
+    PROPERTIES HEADER_FILE_ONLY TRUE
+    )
 
   if(VTKm_LIB_CUDA)
     vtkm_setup_nvcc_flags(old_nvcc_flags old_cxx_flags)
@@ -707,6 +713,7 @@ function(vtkm_library)
     )
   vtkm_install_headers("${dir_prefix}"
     ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
+    ${VTKm_LIB_HEADERS}
     )
 endfunction(vtkm_library)
 

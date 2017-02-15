@@ -142,6 +142,10 @@ private:
       arrayHandle.ReleaseResourcesExecution();
       arrayHandle = vtkm::cont::ArrayHandle<T>();
       arrayHandle.ReleaseResources();
+      arrayHandle = vtkm::cont::make_ArrayHandle(std::vector<T>());
+      arrayHandle.PrepareForInput(DeviceAdapterTag());
+      arrayHandle = vtkm::cont::ArrayHandle<T>();
+      arrayHandle.PrepareForInPlace(DeviceAdapterTag());
       arrayHandle = vtkm::cont::ArrayHandle<T>();
       arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
     }
