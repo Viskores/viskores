@@ -44,15 +44,16 @@ public:
   // Constructor
   WaveletDWT( WaveletName name ) : WaveletBase( name ) {} 
 
-
+/*
+  // Function: extend a cube in X direction
   template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
   vtkm::Id Extend3DLeftRight( 
-              const SigInArrayType      &sigIn,
+              const SigInArrayType      &sigIn,                   // input
               vtkm::Id sigDimX,         vtkm::Id sigDimY,         vtkm::Id sigDimZ,
               vtkm::Id sigStartX,       vtkm::Id sigStarty,       vtkm::Id sigDimZ,
               vtkm::Id sigPretendDimX,  vtkm::Id sigPretendDimY,  vtkm::Id sigPretendDimZ,
-              ExtensionArrayType        &ext1,  
-              ExtensionArrayType        &ext2,  
+              ExtensionArrayType        &ext1,                    // output
+              ExtensionArrayType        &ext2,                    // output
               vtkm::Id                  addLen,
               vtkm::worklet::wavelets::DWTMode   ext1Method,
               vtkm::worklet::wavelets::DWTMode   ext2Method, 
@@ -60,9 +61,31 @@ public:
               bool                               padZeroAtExt2,
               DeviceTag  )
   {
-// TODO
-  }
+    // pretendSigPaddedZero and padZeroAtExt2 cannot happen at the same time
+    VTKM_ASSERT( !pretendSigPaddedZero || !padZeroAtExt2 );
 
+    if( addLen == 0 )     // Haar kernel
+    {
+      ext1.PrepareForOutput( 0, DeviceTag() );
+      if( pretendSigPaddedZero || padZeroAtExt2 )
+      {
+        if( modeLR )  // right extension
+        {
+          ext2.PrepareForOutput( sigPretendDimY, DeviceTag() );
+          WaveletBase::DeviceAssignZero2DColumn( ext2, 1, sigPretendDimY, 0, DeviceTag() );
+        }
+        else          // bottom extension
+        {
+          ext2.PrepareForOutput( sigPretendDimX, DeviceTag() );
+          WaveletBase::DeviceAssignZero2DRow( ext2, sigPretendDimX, 1, 0, DeviceTag() );
+        }
+      }
+      else
+        ext2.PrepareForOutput( 0, DeviceTag() );
+      return 0;
+    }
+  }
+*/
 
   template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
   vtkm::Id Extend2D  (const SigInArrayType            &sigIn,     // Input
@@ -85,7 +108,7 @@ public:
 
     if( addLen == 0 )     // Haar kernel
     {
-      ext1.PrepareForOutput( 0, DeviceTag() );
+      ext1.PrepareForOutput( 0, DeviceTag() );        // no need to extend on left/top
       if( pretendSigPaddedZero || padZeroAtExt2 )
       {
         if( modeLR )  // right extension

@@ -2905,7 +2905,8 @@ private:
 
 
 
-// Assign zero to a row, or a column, or a single element in a 2D array.
+// Assign zero to a row or a column in a 2D array.
+// Change row or column is controlled by negative indices.
 class AssignZero2DWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -2920,7 +2921,7 @@ public:
 
   // Index translation helper
   VTKM_EXEC_CONT
-  void GetLogicalDim( const Id &idx, Id &x, Id &y ) const
+  void GetLogicalDim( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y ) const
   {
     x = idx % dimX;
     y = idx / dimX;
@@ -2937,14 +2938,62 @@ public:
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
     else if( zeroX < 0 && y == zeroY )    // assign zero to a row
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
-    else if( x == zeroX && y == zeroY )   // assign zero to an element
-      array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+    // else if( x == zeroX && y == zeroY )   // assign zero to an element
+    //   array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
   }
 
 private:
   vtkm::Id dimX, dimY;
   vtkm::Id zeroX, zeroY;  // element at (zeroX, zeroY) will be assigned zero.
                           // each becomes a wild card if negative
+};
+
+
+
+// Assign zero to a plane (2D) in a 3D cube.
+// Which plane to assign zero is controlled by negative indices.
+class AssignZero3DWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( WholeArrayInOut< ScalarAll > );
+  typedef void ExecutionSignature( _1, WorkIndex );
+
+  // Constructor
+  VTKM_EXEC_CONT
+  AssignZero3DWorklet( vtkm::Id x,      vtkm::Id y,       vtkm::Id z,
+                       vtkm::Id zero_x, vtkm::Id zero_y,  vtkm::Id zero_z )
+                     : dimX( x ),       dimY( y ),        dimZ( z ),
+                       zeroX( zero_x ), zeroY( zero_y ),  zeroZ( zero_z )
+  { }
+
+  // Index translation helper
+  VTKM_EXEC_CONT
+  void GetLogicalDim( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y, vtkm::Id &z ) const
+  {
+    z = idx / (DimX * DimY);
+    y = (idx - z * DimX * DimY) / DimX;
+    x = idx % dimX;
+  }
+
+  template< typename PortalType >
+  VTKM_EXEC
+  void operator()(       PortalType   &array,
+                   const vtkm::Id     &workIdx ) const
+  {
+    vtkm::Id    x, y, z;
+    GetLogicalDim( workIdx, x, y, z );
+    if( zeroZ < 0 && zeroY < 0 && x == zeroX )         // plane perpendicular to X axis
+      array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+    else if( zeroZ < 0 && zeroX < 0 && y == zeroY )    // plane perpendicular to Y axis
+      array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+    else if( zeroY < 0 && zeroX < 0 && z == zeroZ )    // plane perpendicular to Z axis
+      array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+  }
+
+private:
+  vtkm::Id  dimX,   dimY,   dimZ;
+  vtkm::Id  zeroX,  zeroY,  zeroZ; // element at (zeroX, zeroY, zeroZ) will be assigned zero.
+                                   // each becomes a wild card if negative
 };
 
 
