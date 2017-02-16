@@ -778,7 +778,7 @@ MakeTestDataSet::Make3DExplicitDataSet5()
     CoordType(1, 1, 0), //5
     CoordType(1, 1, 1), //6
     CoordType(0, 1, 1), //7
-    CoordType(2, 0, 0), //8
+    CoordType(2, 0.5, 0.5), //8
     CoordType(0, 2, 0), //9
     CoordType(1, 2, 0)  //10
   };
@@ -808,34 +808,34 @@ MakeTestDataSet::Make3DExplicitDataSet5()
   cellSet.PrepareToAddCells(nCells, 23);
 
   ids[0] = 0;
-  ids[1] = 4;
+  ids[1] = 1;
   ids[2] = 5;
-  ids[3] = 1;
+  ids[3] = 4;
   ids[4] = 3;
-  ids[5] = 7;
+  ids[5] = 2;
   ids[6] = 6;
-  ids[7] = 2;
+  ids[7] = 7;
   cellSet.AddCell(vtkm::CELL_SHAPE_HEXAHEDRON, 8, ids);
 
   ids[0] = 1;
-  ids[1] = 2;
+  ids[1] = 5;
   ids[2] = 6;
-  ids[3] = 5;
+  ids[3] = 2;
   ids[4] = 8;
   cellSet.AddCell(vtkm::CELL_SHAPE_PYRAMID, 5, ids);
 
   ids[0] = 5;
-  ids[1] = 10;
-  ids[2] = 8;
+  ids[1] = 8;
+  ids[2] = 10;
   ids[3] = 6;
   cellSet.AddCell(vtkm::CELL_SHAPE_TETRA, 4, ids);
 
   ids[0] = 4;
-  ids[1] = 9;
-  ids[2] = 7;
+  ids[1] = 7;
+  ids[2] = 9;
   ids[3] = 5;
-  ids[4] = 10;
-  ids[5] = 6;
+  ids[4] = 6;
+  ids[5] = 10;
   cellSet.AddCell(vtkm::CELL_SHAPE_WEDGE, 6, ids);
 
   cellSet.CompleteAddingCells(nVerts);

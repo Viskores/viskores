@@ -34,6 +34,8 @@ set(headers
   FetchTagWholeCellSetIn.h
   FromCount.h
   FromIndices.h
+  InputIndex.h
+  OutputIndex.h
   ThreadIndices.h
   ThreadIndicesBasic.h
   ThreadIndicesReduceByKey.h

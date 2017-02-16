@@ -40,41 +40,15 @@ public:
   template<typename T, typename U, typename V, typename W>
   void operator()(const vtkm::cont::CellSetExplicit<T,U,V,W>& cellset ) const
   {
-    vtkm::cont::ArrayHandle<vtkm::UInt8>       shapes;
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
-    vtkm::cont::ArrayHandle<vtkm::Id>          conn;
-
-    vtkm::cont::ArrayHandle<vtkm::UInt8>       output_shapes;
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> output_numIndices;
-    vtkm::cont::ArrayHandle<vtkm::Id>          output_conn;
-
-    shapes = cellset.GetShapesArray(vtkm::TopologyElementTagPoint(),
-                                    vtkm::TopologyElementTagCell());
-
-    numIndices = cellset.GetNumIndicesArray(vtkm::TopologyElementTagPoint(),
-                                            vtkm::TopologyElementTagCell());
-
-    conn = cellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                        vtkm::TopologyElementTagCell());
-
-
-    vtkm::worklet::ExternalFaces exfaces;
-    exfaces.run(shapes, numIndices, conn,
-                output_shapes, output_numIndices, output_conn,
-                DeviceAdapter());
-
     vtkm::cont::CellSetExplicit<> output_cs(cellset.GetName());
-    output_cs.Fill(cellset.GetNumberOfPoints(),
-                   output_shapes,
-                   output_numIndices,
-                   output_conn);
+    vtkm::worklet::ExternalFaces exfaces;
+    exfaces.Run(cellset, output_cs, DeviceAdapter());
 
     this->Output->AddCellSet(output_cs);
     *this->Valid = true;
   }
 
-  template<typename T>
-  void operator()(const T& ) const
+  void operator()(const vtkm::cont::CellSet& ) const
   {
     //don't support this cell type
     *this->Valid = false;

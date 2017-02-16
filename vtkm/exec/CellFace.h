@@ -214,6 +214,23 @@ CellFaceNumberOfPoints(vtkm::IdComponent faceIndex,
 
 template<typename CellShapeTag>
 static inline VTKM_EXEC
+vtkm::UInt8
+CellFaceShape(vtkm::IdComponent faceIndex,
+              CellShapeTag shape,
+              const vtkm::exec::FunctorBase &worklet)
+{
+  VTKM_ASSUME(faceIndex >= 0);
+  VTKM_ASSUME(faceIndex < detail::MAX_NUM_FACES);
+  switch (CellFaceNumberOfPoints(faceIndex, shape, worklet))
+  {
+    case 3: return vtkm::CELL_SHAPE_TRIANGLE;
+    case 4: return vtkm::CELL_SHAPE_QUAD;
+    default: return vtkm::CELL_SHAPE_POLYGON;
+  }
+}
+
+template<typename CellShapeTag>
+static inline VTKM_EXEC
 vtkm::VecCConst<vtkm::IdComponent>
 CellFaceLocalIndices(vtkm::IdComponent faceIndex,
                      CellShapeTag shape,
