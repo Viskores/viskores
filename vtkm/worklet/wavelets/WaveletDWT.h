@@ -46,6 +46,25 @@ public:
 
 
   template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
+  vtkm::Id Extend3DLeftRight( 
+              const SigInArrayType      &sigIn,
+              vtkm::Id sigDimX,         vtkm::Id sigDimY,         vtkm::Id sigDimZ,
+              vtkm::Id sigStartX,       vtkm::Id sigStarty,       vtkm::Id sigDimZ,
+              vtkm::Id sigPretendDimX,  vtkm::Id sigPretendDimY,  vtkm::Id sigPretendDimZ,
+              ExtensionArrayType        &ext1,  
+              ExtensionArrayType        &ext2,  
+              vtkm::Id                  addLen,
+              vtkm::worklet::wavelets::DWTMode   ext1Method,
+              vtkm::worklet::wavelets::DWTMode   ext2Method, 
+              bool                               pretendSigPaddedZero, 
+              bool                               padZeroAtExt2,
+              DeviceTag  )
+  {
+// TODO
+  }
+
+
+  template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
   vtkm::Id Extend2D  (const SigInArrayType            &sigIn,     // Input
                             vtkm::Id  sigDimX,        vtkm::Id   sigDimY,
                             vtkm::Id  sigStartX,      vtkm::Id   sigStartY,
