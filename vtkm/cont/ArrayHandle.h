@@ -499,58 +499,119 @@ make_ArrayHandle(const std::vector<T,Allocator> &array)
   }
 }
 
-template<typename T, typename StorageT>
+namespace detail {
+
+template<typename T>
+VTKM_NEVER_EXPORT
 VTKM_CONT
-void
+inline void printSummary_ArrayHandle_Value(const T &value,
+                                           std::ostream &out,
+                                           vtkm::VecTraitsTagSingleComponent)
+{
+  out << value;
+}
+
+template<typename T>
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void printSummary_ArrayHandle_Value(const T &value,
+                                           std::ostream &out,
+                                           vtkm::VecTraitsTagMultipleComponents)
+{
+  using Traits = vtkm::VecTraits<T>;
+  using ComponentType = typename Traits::ComponentType;
+  using IsVecOfVec = typename vtkm::VecTraits<ComponentType>::HasMultipleComponents;
+  vtkm::IdComponent numComponents = Traits::GetNumberOfComponents(value);
+  out << "(";
+  printSummary_ArrayHandle_Value(Traits::GetComponent(value,0), out, IsVecOfVec());
+  for (vtkm::IdComponent index = 1; index < numComponents; ++index)
+  {
+    out << ",";
+    printSummary_ArrayHandle_Value(Traits::GetComponent(value,index), out, IsVecOfVec());
+  }
+  out << ")";
+}
+
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void printSummary_ArrayHandle_Value(UInt8 value,
+                                           std::ostream &out,
+                                           vtkm::VecTraitsTagSingleComponent)
+{
+  out << static_cast<int>(value);
+}
+
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void printSummary_ArrayHandle_Value(Int8 value,
+                                           std::ostream &out,
+                                           vtkm::VecTraitsTagSingleComponent)
+{
+  out << static_cast<int>(value);
+}
+
+template<typename T1, typename T2>
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void printSummary_ArrayHandle_Value(const vtkm::Pair<T1,T2> &value,
+                                           std::ostream &out,
+                                           vtkm::VecTraitsTagSingleComponent)
+{
+  out << "{";
+  printSummary_ArrayHandle_Value(
+        value.first,
+        out,
+        typename vtkm::VecTraits<T1>::HasMultipleComponents());
+  out << ",";
+  printSummary_ArrayHandle_Value(
+        value.second,
+        out,
+        typename vtkm::VecTraits<T2>::HasMultipleComponents());
+  out << "}";
+}
+
+} // namespace detail
+
+template<typename T, typename StorageT>
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void
 printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
                          std::ostream &out)
 {
-    vtkm::Id sz = array.GetNumberOfValues();
-    out<<"sz= "<<sz<<" [";
-    if (sz <= 7)
-        for (vtkm::Id i = 0 ; i < sz; i++)
-        {
-            out<<array.GetPortalConstControl().Get(i);
-            if (i != (sz-1)) out<<" ";
-        }
-    else
-    {
-        out<<array.GetPortalConstControl().Get(0)<<" ";
-        out<<array.GetPortalConstControl().Get(1)<<" ";
-        out<<array.GetPortalConstControl().Get(2);
-        out<<" ... ";
-        out<<array.GetPortalConstControl().Get(sz-3)<<" ";
-        out<<array.GetPortalConstControl().Get(sz-2)<<" ";
-        out<<array.GetPortalConstControl().Get(sz-1);
-    }
-    out<<"]";
-}
+  using ArrayType = vtkm::cont::ArrayHandle<T,StorageT>;
+  using PortalType = typename ArrayType::PortalConstControl;
+  using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;
 
-template<typename StorageT>
-VTKM_CONT
-void
-printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<vtkm::UInt8,StorageT> &array,
-                         std::ostream &out)
-{
-    vtkm::Id sz = array.GetNumberOfValues();
-    out<<"sz= "<<sz<<" [";
-    if (sz <= 7)
-        for (vtkm::Id i = 0 ; i < sz; i++)
-        {
-            out<<static_cast<int>(array.GetPortalConstControl().Get(i));
-            if (i != (sz-1)) out<<" ";
-        }
-    else
+  vtkm::Id sz = array.GetNumberOfValues();
+  out<<"sz= "<<sz<<" [";
+  PortalType portal = array.GetPortalConstControl();
+  if (sz <= 7)
+  {
+    for (vtkm::Id i = 0 ; i < sz; i++)
     {
-        out<<static_cast<int>(array.GetPortalConstControl().Get(0))<<" ";
-        out<<static_cast<int>(array.GetPortalConstControl().Get(1))<<" ";
-        out<<static_cast<int>(array.GetPortalConstControl().Get(2));
-        out<<" ... ";
-        out<<static_cast<int>(array.GetPortalConstControl().Get(sz-3))<<" ";
-        out<<static_cast<int>(array.GetPortalConstControl().Get(sz-2))<<" ";
-        out<<static_cast<int>(array.GetPortalConstControl().Get(sz-1));
+      detail::printSummary_ArrayHandle_Value(portal.Get(i), out, IsVec());
+      if (i != (sz-1))
+      {
+        out<<" ";
+      }
     }
-    out<<"]";
+  }
+  else
+  {
+    detail::printSummary_ArrayHandle_Value(portal.Get(0), out, IsVec());
+    out << " ";
+    detail::printSummary_ArrayHandle_Value(portal.Get(1), out, IsVec());
+    out << " ";
+    detail::printSummary_ArrayHandle_Value(portal.Get(2), out, IsVec());
+    out << " ... ";
+    detail::printSummary_ArrayHandle_Value(portal.Get(sz-3), out, IsVec());
+    out << " ";
+    detail::printSummary_ArrayHandle_Value(portal.Get(sz-2), out, IsVec());
+    out << " ";
+    detail::printSummary_ArrayHandle_Value(portal.Get(sz-1), out, IsVec());
+  }
+  out<<"]";
 }
 
 }

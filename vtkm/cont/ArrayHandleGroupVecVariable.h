@@ -212,6 +212,20 @@ public:
     : SourceArray(sourceArray), OffsetsArray(offsetsArray), Valid(true) {  }
 
   VTKM_CONT
+  PortalType GetPortal()
+  {
+    return PortalType(this->SourceArray.GetPortalControl(),
+                      this->OffsetsArray.GetPortalControl());
+  }
+
+  VTKM_CONT
+  PortalConstType GetPortalConst() const
+  {
+    return PortalConstType(this->SourceArray.GetPortalConstControl(),
+                           this->OffsetsArray.GetPortalConstControl());
+  }
+
+  VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     VTKM_ASSERT(this->Valid);

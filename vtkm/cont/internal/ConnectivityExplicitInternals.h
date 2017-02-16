@@ -102,6 +102,8 @@ struct ConnectivityExplicitInternals
 
   VTKM_CONT
   vtkm::Id GetNumberOfElements() const {
+    VTKM_ASSERT(this->ElementsValid);
+
     return this->Shapes.GetNumberOfValues();
   }
 
@@ -141,18 +143,32 @@ struct ConnectivityExplicitInternals
   VTKM_CONT
   void PrintSummary(std::ostream &out) const
   {
-    out <<"     Shapes: ";
-    vtkm::cont::printSummary_ArrayHandle(this->Shapes, out);
-    out << std::endl;
-    out << "     NumIndices: ";
-    vtkm::cont::printSummary_ArrayHandle(this->NumIndices, out);
-    out << std::endl;
-    out << "     Connectivity: ";
-    vtkm::cont::printSummary_ArrayHandle(this->Connectivity, out);
-    out << std::endl;
-    out << "     IndexOffsets: ";
-    vtkm::cont::printSummary_ArrayHandle(this->IndexOffsets, out);
-    out << std::endl;
+    if (this->ElementsValid)
+    {
+      out << "     Shapes: ";
+      vtkm::cont::printSummary_ArrayHandle(this->Shapes, out);
+      out << std::endl;
+      out << "     NumIndices: ";
+      vtkm::cont::printSummary_ArrayHandle(this->NumIndices, out);
+      out << std::endl;
+      out << "     Connectivity: ";
+      vtkm::cont::printSummary_ArrayHandle(this->Connectivity, out);
+      out << std::endl;
+      if (this->IndexOffsetsValid)
+      {
+        out << "     IndexOffsets: ";
+        vtkm::cont::printSummary_ArrayHandle(this->IndexOffsets, out);
+        out << std::endl;
+      }
+      else
+      {
+        out << "     IndexOffsets: Not Allocated" << std::endl;
+      }
+    }
+    else
+    {
+      out << "     Not Allocated" << std::endl;
+    }
   }
 };
 
