@@ -423,6 +423,207 @@ public:
   }
 
 
+
+	//                  L[3]        L[15]
+	//               -----------------------
+	//              /          /          /|
+	//        L[5] /          /          / |
+	//            /  LLH     /  HLH     /  |
+	//           /          /          /   | L[16]
+	//          -----------------------    |
+	//         /          /          /|    |
+	//   L[2] /          /          / |   /|
+	//       /          /          /  |  / |
+	//      /___L[0]___/___L[12]__/   | /  | L[22]
+	//      |          |          |   |/   | 
+	// L[1] |          |          |   /HHH /
+	//      |   LLL    |   HLL    |  /|   /
+	//      |          |          | / |  / L[23]
+	//      |---------------------|/  | /
+	//      |          |          |   |/
+	//      |          |          |   /
+	// L[7] |   LHL    |   HHL    |  /
+	//      |          |          | / L[20]
+	//      |__________|__________|/
+	//          L[6]       L[18]
+  //
+  // Performs one level of 3D discrete wavelet transform on a small cube of input array
+  // The output has the same size as the small cube
+  template< typename ArrayInType, typename ArrayOutType, typename DeviceTag >
+  vtkm::Float64 DWT3D  ( const ArrayInType                 &sigIn,
+                         vtkm::Id sigDimX,        vtkm::Id sigDimY,         vtkm::Id sigDimZ,
+                         vtkm::Id sigStartX,      vtkm::Id sigStartY,       vtkm::Id sigStartZ,
+                         vtkm::Id sigPretendDimX, vtkm::Id sigPretendDimY,  vtkm::Id sigPretendDimZ,
+                         ArrayOutType             &coeffOut,
+                         std::vector<vtkm::Id>    &L,
+                         DeviceTag   )
+  {
+    VTKM_ASSERT( L.size() == 27 );
+
+    // LLL
+    L[0]  = WaveletBase::GetApproxLength( sigPretendDimX );   
+    L[1]  = WaveletBase::GetApproxLength( sigPretendDimY );    
+    L[2]  = WaveletBase::GetApproxLength( sigPretendDimZ );    
+    // LLH
+    L[3]  = L[0];
+    L[4]  = L[1];
+    L[5]  = WaveletBase::GetDetailLength( sigPretendDimZ );    
+    // LHL
+    L[6]  = L[0];
+    L[7]  = WaveletBase::GetDetailLength( sigPretendDimY );
+    L[8]  = L[2];
+    // LHH
+    L[9]  = L[0];
+    L[10] = L[7];
+    L[11] = L[5];
+    // HLL
+    L[12] = WaveletBase::GetDetailLength( sigPretendDimX );
+    L[13] = L[1];
+    L[14] = L[2];
+    // HLH
+    L[15] = L[12];
+    L[16] = L[1];
+    L[17] = L[5];
+    // HHL
+    L[18] = L[12];
+    L[19] = L[7];
+    L[20] = L[2];
+    // HHH
+    L[21] = L[12];
+    L[22] = L[7];
+    L[23] = L[5];
+
+    L[24] = sigPretendDimX;
+    L[25] = sigPretendDimY;
+    L[26] = sigPretendDimZ;
+
+
+    vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
+    bool oddLow        = true;
+    if( filterLen % 2 != 0 )
+      oddLow = false;
+    vtkm::Id addLen    = filterLen / 2;
+
+    typedef typename ArrayInType::ValueType            ValueType;
+    typedef vtkm::cont::ArrayHandle<ValueType>         ArrayType;
+    typedef vtkm::worklet::wavelets::ForwardTransform3DLeftRight< DeviceTag >   
+                                                       LeftRightXFormType;
+    typedef vtkm::worklet::wavelets::ForwardTransform3DTopDown< DeviceTag >     
+                                                       TopDownXFormType;
+    typedef vtkm::worklet::wavelets::ForwardTransform3DFrontBack< DeviceTag >   
+                                                       FrontBackXFormType;
+    typedef typename vtkm::worklet::DispatcherMapField< LeftRightXFormType, DeviceTag > 
+                                                        LeftRightDispatcherType;
+    typedef typename vtkm::worklet::DispatcherMapField< TopDownXFormType, DeviceTag > 
+                                                        TopDownDispatcherType;
+    typedef typename vtkm::worklet::DispatcherMapField< FrontBackXFormType, DeviceTag > 
+                                                        FrontBackDispatcherType;
+
+    vtkm::cont::Timer<DeviceTag> timer;
+    vtkm::Float64 computationTime = 0.0;
+
+    // First transform in X direction
+    ArrayType           afterX;
+    afterX.PrepareForOutput( sigPretendDimX * sigPretendDimY * sigPretendDimZ, DeviceTag() );
+    {
+      ArrayType         leftExt, rightExt;
+      this->Extend3DLeftRight(  sigIn, 
+                                sigDimX,          sigDimY,        sigDimZ,
+                                sigStartX,        sigStartY,      sigStartZ,
+                                sigPretendDimX,   sigPretendDimY, sigPretendDimZ,
+                                leftExt, 
+                                rightExt, 
+                                addLen, 
+                                WaveletBase::wmode, 
+                                WaveletBase::wmode, 
+                                false, 
+                                false, 
+                                DeviceTag() );  
+      LeftRightXFormType   worklet( WaveletBase::filter.GetLowDecomposeFilter(),
+                                    WaveletBase::filter.GetHighDecomposeFilter(),
+                                    filterLen, 
+                                    L[0], 
+                                    oddLow, 
+                                    addLen,           sigPretendDimY,   sigPretendDimZ,
+                                    sigDimX,          sigDimY,          sigDimZ,
+                                    sigStartX,        sigStartY,        sigStartZ,
+                                    sigPretendDimX,   sigPretendDimY,   sigPretendDimZ,
+                                    addLen,           sigPretendDimY,   sigPretendDimZ  );
+      LeftRightDispatcherType dispatcher(worklet);
+      timer.Reset();
+      dispatcher.Invoke( leftExt, sigIn, rightExt, afterX );
+      computationTime += timer.GetElapsedTime();
+    }
+
+    // Then do transform in Y direction
+    ArrayType           afterY;
+    afterY.PrepareForOutput( sigPretendDimX * sigPretendDimY * sigPretendDimZ, DeviceTag() );
+    {
+      this->Extend3DTopDown(  afterX, 
+                              sigPretendDimX,   sigPretendDimY,    sigPretendDimZ,
+                              0,                0,                 0,
+                              sigPretendDimX,   sigPretendDimY,    sigPretendDimZ,
+                              topExt, 
+                              bottomExt, 
+                              addLen,
+                              WaveletBase::wmode, 
+                              WaveletBase::wmode, 
+                              false, 
+                              false, 
+                              DeviceTag() );
+      TopDownXFormType   worklet( WaveletBase::filter.GetLowDecomposeFilter(),
+                                  WaveletBase::filter.GetHighDecomposeFilter(),
+                                  filterLen, 
+                                  L[1], 
+                                  oddLow, 
+                                  sigPretendDimX,   addLen,           sigPretendDimZ,
+                                  sigPretendDimX,   sigPretendDimY,   sigPretendDimZ,
+                                  0,                0,                0,
+                                  sigPretendDimX,   sigPretendDimY,   sigPretendDimZ,
+                                  sigPretendDimX,   addLen,           sigPretendDimZ );
+      TopDownDispatcherType dispatcher( worklet );
+      timer.Reset();
+      dispatcher.Invoke( topExt, afterX, bottomExt, coeffOut );
+      computationTime += timer.GetElapsedTime();
+    }
+
+    // Then do transform in Z direction
+    afterX.ReleaseResources();  // release afterX
+    {
+      ArrayType         frontExt, backExt;
+      coeffOut.PrepareForOutput( sigPretendDimX * sigPretendDimY * sigPretendDimZ, DeviceTag() );
+      this->Extend3DFrontBack(  afterY, 
+                                sigPretendDimX,   sigPretendDimY,    sigPretendDimZ,
+                                0,                0,                 0,
+                                sigPretendDimX,   sigPretendDimY,    sigPretendDimZ,
+                                frontExt, 
+                                backExt, 
+                                addLen,
+                                WaveletBase::wmode, 
+                                WaveletBase::wmode, 
+                                false, 
+                                false, 
+                                DeviceTag() );
+      FrontBackXFormType   worklet( WaveletBase::filter.GetLowDecomposeFilter(),
+                                    WaveletBase::filter.GetHighDecomposeFilter(),
+                                    filterLen, 
+                                    L[1], 
+                                    oddLow, 
+                                    sigPretendDimX,   sigPretendDimY,   addLen,
+                                    sigPretendDimX,   sigPretendDimY,   sigPretendDimZ,
+                                    0,                0,                0,
+                                    sigPretendDimX,   sigPretendDimY,   sigPretendDimZ,
+                                    sigPretendDimX,   sigPretendDimY,   addLen  );
+      FrontBackDispatcherType dispatcher( worklet );
+      timer.Reset();
+      dispatcher.Invoke( frontExt, afterY, backExt, coeffOut );
+      computationTime += timer.GetElapsedTime();
+    }
+
+    return computationTime;
+  }
+
+
   template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
   vtkm::Id Extend2D  (const SigInArrayType            &sigIn,     // Input
                             vtkm::Id  sigDimX,        vtkm::Id   sigDimY,
