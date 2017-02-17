@@ -2970,8 +2970,8 @@ public:
   VTKM_EXEC_CONT
   void GetLogicalDim( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y, vtkm::Id &z ) const
   {
-    z = idx / (DimX * DimY);
-    y = (idx - z * DimX * DimY) / DimX;
+    z = idx / (dimX * dimY);
+    y = (idx - z * dimX * dimY) / dimX;
     x = idx % dimX;
   }
 
@@ -2998,8 +2998,7 @@ private:
 
 
 
-// Worklet: Copys a small rectangle to part of a big rectangle
-// WARNING: this worklet only supports basic ArrayHandle types.
+// Worklet: Copys a small rectangle to become a part of a big rectangle
 class RectangleCopyTo : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -3009,14 +3008,14 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT
-  RectangleCopyTo( vtkm::Id inx,       vtkm::Id iny, 
-                   vtkm::Id outx,      vtkm::Id outy,
-                   vtkm::Id xStart,    vtkm::Id yStart )
-  {
-    this->inXLen    = inx;      this->inYLen    = iny;
-    this->outXLen   = outx;     this->outYLen   = outy;
-    this->outXStart = xStart;   this->outYStart = yStart;
-  }
+  RectangleCopyTo( vtkm::Id inx,        vtkm::Id iny, 
+                   vtkm::Id outx,       vtkm::Id outy,
+                   vtkm::Id xStart,     vtkm::Id yStart )
+                :
+                   inXLen   (inx),      inYLen   ( iny ),
+                   outXLen  (outx),     outYLen  ( outy ),
+                   outXStart(xStart),   outYStart( yStart )
+  { }
 
   VTKM_EXEC_CONT
   void GetLogicalDimOfInputRect( const vtkm::Id    &idx,    
@@ -3050,6 +3049,60 @@ private:
   vtkm::Id inXLen,    inYLen;
   vtkm::Id outXLen,   outYLen;
   vtkm::Id outXStart, outYStart;
+};
+
+
+
+// Worklet: Copys a small cube to become a part of a big cube
+class CubeCopyTo : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature( FieldIn<       ScalarAll >,    // Input, small cube
+                                 WholeArrayOut< ScalarAll > );  // Output, big cube
+  typedef void ExecutionSignature( _1, _2, WorkIndex );
+
+  // Constructor
+  VTKM_EXEC_CONT
+  CubeCopyTo( vtkm::Id inx,       vtkm::Id iny,         vtkm::Id inz, 
+              vtkm::Id outx,      vtkm::Id outy,        vtkm::Id outz,
+              vtkm::Id xStart,    vtkm::Id yStart,      vtkm::Id zStart )
+            :
+              inDimX( inx ),      inDimY( iny ),        inDimZ( inz ),
+              outDimX( outx ),    outDimY( outy ),      outDimZ( outz ),
+              outStartX( xStart), outStartY( yStart ),  outStartZ( zStart ) 
+  { }
+
+  VTKM_EXEC_CONT
+  void GetLogicalDimOfInputCube( vtkm::Id idx,  
+                                 vtkm::Id  &x,   vtkm::Id   &y,   vtkm::Id &z ) const     
+  {
+    z = idx / (inDimX * inDimY);
+    y = (idx - z * inDimX * inDimY) / inDimX;
+    x = idx % inDimX;
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Id Get1DIdxOfOutputCube( vtkm::Id   x,  vtkm::Id  y,  vtkm::Id z ) const     
+  {
+    return z * outDimX * outDimZ + y * outDimX + x;
+  }
+
+  template< typename ValueInType, typename PortalOutType >
+  VTKM_EXEC
+  void operator()( const ValueInType    &valueIn,
+                         PortalOutType  &arrayOut,
+                   const vtkm::Id       &workIdx ) const
+  {
+    vtkm::Id  inX, inY, inZ;
+    GetLogicalDimOfInputCube( workIdx, inX, inY, inZ );
+    vtkm::Id outputIdx = Get1DIdxOfOutputCube( inX+outStartX, inY+outStartY, inZ+outStartZ );
+    arrayOut.Set( outputIdx, valueIn );
+  }
+
+private:
+  const vtkm::Id inDimX,      inDimY,       inDimZ;     // input small cube
+  const vtkm::Id outDimX,     outDimY,      outDimZ;    // output big cube
+  const vtkm::Id outStartX,   outStartY,    outStartZ;  // where to put
 };
 
 

@@ -158,6 +158,51 @@ public:
 
 
 
+  // Assign zeros to a plane that's perpendicular to the X axis (Left-Right direction)
+  template< typename ArrayType, typename DeviceTag >
+  void DeviceAssignZero3DPlaneX( ArrayType &array,                                // input array
+                                 vtkm::Id dimX,   vtkm::Id dimY,  vtkm::Id dimZ,  // dims of input
+                                 vtkm::Id zeroX,                                  // X idx to set zero
+                                 DeviceTag )
+  {
+    typedef vtkm::worklet::wavelets::AssignZero3DWorklet  AssignZero3DType;
+    AssignZero3DType  zeroWorklet( dimX, dimY, dimZ, zeroX, -1, -1 );
+    vtkm::worklet::DispatcherMapField< AssignZero3DType, DeviceTag > dispatcher( zeroWorklet );
+    dispatcher.Invoke( array );
+  }
+
+
+
+  // Assign zeros to a plane that's perpendicular to the Y axis (Top-Down direction)
+  template< typename ArrayType, typename DeviceTag >
+  void DeviceAssignZero3DPlaneY( ArrayType &array,                                // input array
+                                 vtkm::Id dimX,   vtkm::Id dimY,  vtkm::Id dimZ,  // dims of input
+                                 vtkm::Id zeroY,                                  // Y idx to set zero
+                                 DeviceTag )
+  {
+    typedef vtkm::worklet::wavelets::AssignZero3DWorklet  AssignZero3DType;
+    AssignZero3DType  zeroWorklet( dimX, dimY, dimZ, -1, zeroY, -1 );
+    vtkm::worklet::DispatcherMapField< AssignZero3DType, DeviceTag > dispatcher( zeroWorklet );
+    dispatcher.Invoke( array );
+  }
+
+
+
+  // Assign zeros to a plane that's perpendicular to the Z axis (Front-Back direction)
+  template< typename ArrayType, typename DeviceTag >
+  void DeviceAssignZero3DPlaneZ( ArrayType &array,                                // input array
+                                 vtkm::Id dimX,   vtkm::Id dimY,  vtkm::Id dimZ,  // dims of input
+                                 vtkm::Id zeroZ,                                  // Y idx to set zero
+                                 DeviceTag )
+  {
+    typedef vtkm::worklet::wavelets::AssignZero3DWorklet  AssignZero3DType;
+    AssignZero3DType  zeroWorklet( dimX, dimY, dimZ, -1, -1, zeroZ );
+    vtkm::worklet::DispatcherMapField< AssignZero3DType, DeviceTag > dispatcher( zeroWorklet );
+    dispatcher.Invoke( array );
+  }
+
+
+
   // Sort by the absolute value on device
   struct SortLessAbsFunctor
   { 
@@ -282,6 +327,23 @@ public:
     typedef vtkm::worklet::wavelets::RectangleCopyTo  CopyToWorklet;
     CopyToWorklet cp( smallX, smallY, bigX, bigY, startX, startY );
     vtkm::worklet::DispatcherMapField< CopyToWorklet, DeviceTag > dispatcher( cp  );
+    dispatcher.Invoke(smallRect, bigRect);
+  }
+
+
+
+  // Copy a small cube to a big cube
+  template< typename SmallArrayType, typename BigArrayType, typename DeviceTag>
+  void DeviceCubeCopyTo( const SmallArrayType   &smallRect,
+                         vtkm::Id     smallX,   vtkm::Id smallY,    vtkm::Id smallZ,
+                         BigArrayType           &bigRect,
+                         vtkm::Id     bigX,     vtkm::Id bigY,      vtkm::Id bigZ,
+                         vtkm::Id     startX,   vtkm::Id startY,    vtkm::Id startZ,
+                         DeviceTag   )
+  {
+    typedef vtkm::worklet::wavelets::CubeCopyTo  CopyToWorklet;
+    CopyToWorklet cp( smallX, smallY, smallZ, bigX, bigY, bigZ, startX, startY, startZ );
+    vtkm::worklet::DispatcherMapField< CopyToWorklet, DeviceTag > dispatcher( cp );
     dispatcher.Invoke(smallRect, bigRect);
   }
 

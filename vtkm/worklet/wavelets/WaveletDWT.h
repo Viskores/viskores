@@ -44,13 +44,13 @@ public:
   // Constructor
   WaveletDWT( WaveletName name ) : WaveletBase( name ) {} 
 
-/*
+
   // Function: extend a cube in X direction
   template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
   vtkm::Id Extend3DLeftRight( 
               const SigInArrayType      &sigIn,                   // input
               vtkm::Id sigDimX,         vtkm::Id sigDimY,         vtkm::Id sigDimZ,
-              vtkm::Id sigStartX,       vtkm::Id sigStarty,       vtkm::Id sigDimZ,
+              vtkm::Id sigStartX,       vtkm::Id sigStartY,       vtkm::Id sigStartZ,
               vtkm::Id sigPretendDimX,  vtkm::Id sigPretendDimY,  vtkm::Id sigPretendDimZ,
               ExtensionArrayType        &ext1,                    // output
               ExtensionArrayType        &ext2,                    // output
@@ -66,26 +66,362 @@ public:
 
     if( addLen == 0 )     // Haar kernel
     {
-      ext1.PrepareForOutput( 0, DeviceTag() );
-      if( pretendSigPaddedZero || padZeroAtExt2 )
+      ext1.PrepareForOutput( 0, DeviceTag() );      // No extension on the left side
+      if( pretendSigPaddedZero || padZeroAtExt2 )   // plane of size 1*dimY*dimZ
       {
-        if( modeLR )  // right extension
-        {
-          ext2.PrepareForOutput( sigPretendDimY, DeviceTag() );
-          WaveletBase::DeviceAssignZero2DColumn( ext2, 1, sigPretendDimY, 0, DeviceTag() );
-        }
-        else          // bottom extension
-        {
-          ext2.PrepareForOutput( sigPretendDimX, DeviceTag() );
-          WaveletBase::DeviceAssignZero2DRow( ext2, sigPretendDimX, 1, 0, DeviceTag() );
-        }
+        ext2.PrepareForOutput( sigPretendDimY * sigPretendDimZ, DeviceTag() );   
+        WaveletBase::DeviceAssignZero3DPlaneX( ext2, 
+                                               1, sigPretendDimY, sigPretendDimZ, 
+                                               0, 
+                                               DeviceTag() );
       }
       else
-        ext2.PrepareForOutput( 0, DeviceTag() );
+        ext2.PrepareForOutput( 0, DeviceTag() );    // No extension on the right side
       return 0;
     }
+
+    typedef typename SigInArrayType::ValueType                ValueType;
+    typedef vtkm::cont::ArrayHandle< ValueType >              ExtendArrayType; 
+    typedef vtkm::worklet::wavelets::ExtensionWorklet3D       ExtensionWorklet;
+    typedef typename vtkm::worklet::DispatcherMapField< ExtensionWorklet, DeviceTag >
+                                                              DispatcherType;
+    vtkm::Id                                                  extDimX, extDimY, extDimZ;
+    vtkm::worklet::wavelets::ExtensionDirection               dir;
+
+    {  // First work on left extension 
+    dir     = LEFT;
+    extDimX = addLen;
+    extDimY = sigPretendDimY; 
+    extDimZ = sigPretendDimZ; 
+    
+    ext1.PrepareForOutput( extDimX * extDimY * extDimZ, DeviceTag() );
+    ExtensionWorklet worklet( extDimX,          extDimY,          extDimZ,
+                              sigDimX,          sigDimY,          sigDimZ,
+                              sigStartX,        sigStartY,        sigStartZ,
+                              sigPretendDimX,   sigPretendDimY,   sigPretendDimZ,                                                       ext1Method, 
+                              dir, 
+                              false  );    // not treating input signal as having zeros
+    DispatcherType dispatcher( worklet );
+    dispatcher.Invoke( ext1, sigIn );
+    }
+
+    // Then work on right extension
+    dir     = RIGHT;
+    extDimY = sigPretendDimY;
+    extDimZ = sigPretendDimZ;
+    if( !pretendSigPaddedZero && !padZeroAtExt2 )
+    {
+      extDimX = addLen;
+      ext2.PrepareForOutput( extDimX * extDimY * extDimZ, DeviceTag() );
+      ExtensionWorklet worklet( extDimX,        extDimY,          extDimZ, 
+                                sigDimX,        sigDimY,          sigDimZ, 
+                                sigStartX,      sigStartY,        sigStartZ,
+                                sigPretendDimX, sigPretendDimY,   sigPretendDimZ,
+                                ext2Method, 
+                                dir, 
+                                false  );
+      DispatcherType dispatcher( worklet );
+      dispatcher.Invoke( ext2, sigIn );
+    }
+    else if( !pretendSigPaddedZero && padZeroAtExt2 )
+    {                   // This case is not exactly padding a zero at the end of Ext2.
+                        // Rather, it is to increase extension length by one and fill it
+                        //         to be whatever mirrorred. 
+      extDimX = addLen+1;
+      ext2.PrepareForOutput( extDimX * extDimY * extDimZ, DeviceTag() );
+      ExtensionWorklet worklet( extDimX,          extDimY,        extDimZ,
+                                sigDimX,          sigDimY,        sigDimZ, 
+                                sigStartX,        sigStartY,      sigStartZ,
+                                sigPretendDimX,   sigPretendDimY, sigPretendDimZ,
+                                ext2Method,     
+                                dir, 
+                                false );
+      DispatcherType dispatcher( worklet );
+      dispatcher.Invoke( ext2, sigIn );
+    }
+    else  // pretendSigPaddedZero
+    {
+      ExtendArrayType ext2Temp;
+      extDimX = addLen;
+      ext2Temp.PrepareForOutput( extDimX * extDimY * extDimZ, DeviceTag() );
+      ExtensionWorklet worklet( extDimX,          extDimY,        extDimZ,
+                                sigDimX,          sigDimY,        sigDimZ,
+                                sigStartX,        sigStartY,      sigStartZ,
+                                sigPretendDimX,   sigPretendDimY, sigPretendDimZ,
+                                ext2Method, 
+                                dir, 
+                                true );    // pretend sig is padded a zero
+      DispatcherType dispatcher( worklet );
+      dispatcher.Invoke( ext2Temp, sigIn );
+      
+      // Give ext2 one layer thicker to hold the pretend zeros from signal.
+      ext2.PrepareForOutput( (extDimX+1) * extDimY * extDimZ, DeviceTag() );
+      WaveletBase::DeviceCubeCopyTo( ext2Temp, 
+                                     extDimX,     extDimY,    extDimZ,
+                                     ext2, 
+                                     extDimX+1,   extDimY,    extDimZ,
+                                     1,           0,          0,
+                                     DeviceTag()  );
+      WaveletBase::DeviceAssignZero3DPlaneX( ext2, 
+                                             extDimX+1,   extDimY,  extDimZ,
+                                             0, 
+                                             DeviceTag() );
+    }
+    return 0;
   }
-*/
+
+
+  // Function: extend a cube in Y direction
+  template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
+  vtkm::Id Extend3DTopDown( 
+              const SigInArrayType      &sigIn,                   // input
+              vtkm::Id sigDimX,         vtkm::Id sigDimY,         vtkm::Id sigDimZ,
+              vtkm::Id sigStartX,       vtkm::Id sigStartY,       vtkm::Id sigStartZ,
+              vtkm::Id sigPretendDimX,  vtkm::Id sigPretendDimY,  vtkm::Id sigPretendDimZ,
+              ExtensionArrayType        &ext1,                    // output
+              ExtensionArrayType        &ext2,                    // output
+              vtkm::Id                  addLen,
+              vtkm::worklet::wavelets::DWTMode   ext1Method,
+              vtkm::worklet::wavelets::DWTMode   ext2Method, 
+              bool                               pretendSigPaddedZero, 
+              bool                               padZeroAtExt2,
+              DeviceTag  )
+  {
+    // pretendSigPaddedZero and padZeroAtExt2 cannot happen at the same time
+    VTKM_ASSERT( !pretendSigPaddedZero || !padZeroAtExt2 );
+
+    if( addLen == 0 )     // Haar kernel
+    {
+      ext1.PrepareForOutput( 0, DeviceTag() );      // No extension on the top side
+      if( pretendSigPaddedZero || padZeroAtExt2 )   // plane of size dimX*dimZ
+      {
+        ext2.PrepareForOutput( sigPretendDimX * 1 * sigPretendDimZ, DeviceTag() );   
+        WaveletBase::DeviceAssignZero3DPlaneY( ext2, 
+                                               sigPretendDimX, 1, sigPretendDimZ, 
+                                               0, 
+                                               DeviceTag() );
+      }
+      else
+        ext2.PrepareForOutput( 0, DeviceTag() );    // No extension on the right side
+      return 0;
+    }
+
+    typedef typename SigInArrayType::ValueType                ValueType;
+    typedef vtkm::cont::ArrayHandle< ValueType >              ExtendArrayType; 
+    typedef vtkm::worklet::wavelets::ExtensionWorklet3D       ExtensionWorklet;
+    typedef typename vtkm::worklet::DispatcherMapField< ExtensionWorklet, DeviceTag >
+                                                              DispatcherType;
+    vtkm::Id                                                  extDimX, extDimY, extDimZ;
+    vtkm::worklet::wavelets::ExtensionDirection               dir;
+
+    {  // First work on top extension 
+    dir     = TOP;
+    extDimX = sigPretendDimX; 
+    extDimY = addLen;
+    extDimZ = sigPretendDimZ; 
+    
+    ext1.PrepareForOutput( extDimX * extDimY * extDimZ, DeviceTag() );
+    ExtensionWorklet worklet( extDimX,          extDimY,          extDimZ,
+                              sigDimX,          sigDimY,          sigDimZ,
+                              sigStartX,        sigStartY,        sigStartZ,
+                              sigPretendDimX,   sigPretendDimY,   sigPretendDimZ,                                                       ext1Method, 
+                              dir, 
+                              false  );    // not treating input signal as having zeros
+    DispatcherType dispatcher( worklet );
+    dispatcher.Invoke( ext1, sigIn );
+    }
+
+    // Then work on bottom extension
+    dir     = BOTTOM;
+    extDimX = sigPretendDimX;
+    extDimZ = sigPretendDimZ;
+    if( !pretendSigPaddedZero && !padZeroAtExt2 )
+    {
+      extDimY = addLen;
+      ext2.PrepareForOutput( extDimX * extDimY * extDimZ, DeviceTag() );
+      ExtensionWorklet worklet( extDimX,        extDimY,          extDimZ, 
+                                sigDimX,        sigDimY,          sigDimZ, 
+                                sigStartX,      sigStartY,        sigStartZ,
+                                sigPretendDimX, sigPretendDimY,   sigPretendDimZ,
+                                ext2Method, 
+                                dir, 
+                                false  );
+      DispatcherType dispatcher( worklet );
+      dispatcher.Invoke( ext2, sigIn );
+    }
+    else if( !pretendSigPaddedZero && padZeroAtExt2 )
+    {                   // This case is not exactly padding a zero at the end of Ext2.
+                        // Rather, it is to increase extension length by one and fill it
+                        //         to be whatever mirrorred. 
+      extDimY = addLen + 1;
+      ext2.PrepareForOutput( extDimX * extDimY * extDimZ, DeviceTag() );
+      ExtensionWorklet worklet( extDimX,          extDimY,        extDimZ,
+                                sigDimX,          sigDimY,        sigDimZ, 
+                                sigStartX,        sigStartY,      sigStartZ,
+                                sigPretendDimX,   sigPretendDimY, sigPretendDimZ,
+                                ext2Method,     
+                                dir, 
+                                false );
+      DispatcherType dispatcher( worklet );
+      dispatcher.Invoke( ext2, sigIn );
+    }
+    else  // pretendSigPaddedZero
+    {
+      ExtendArrayType ext2Temp;
+      extDimY = addLen;
+      ext2Temp.PrepareForOutput( extDimX * extDimY * extDimZ, DeviceTag() );
+      ExtensionWorklet worklet( extDimX,          extDimY,        extDimZ,
+                                sigDimX,          sigDimY,        sigDimZ,
+                                sigStartX,        sigStartY,      sigStartZ,
+                                sigPretendDimX,   sigPretendDimY, sigPretendDimZ,
+                                ext2Method, 
+                                dir, 
+                                true );    // pretend sig is padded a zero
+      DispatcherType dispatcher( worklet );
+      dispatcher.Invoke( ext2Temp, sigIn );
+      
+      // Give ext2 one layer thicker to hold the pretend zeros from signal.
+      ext2.PrepareForOutput( extDimX * (extDimY+1) * extDimZ, DeviceTag() );
+      WaveletBase::DeviceCubeCopyTo( ext2Temp, 
+                                     extDimX,     extDimY,      extDimZ,
+                                     ext2, 
+                                     extDimX,     extDimY + 1,  extDimZ,
+                                     0,           1,          0,
+                                     DeviceTag()  );
+      WaveletBase::DeviceAssignZero3DPlaneY( ext2, 
+                                             extDimX,   extDimY + 1,  extDimZ,
+                                             0, 
+                                             DeviceTag() );
+    }
+    return 0;
+  }
+
+
+  // Function: extend a cube in Z direction
+  template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
+  vtkm::Id Extend3DFrontBack( 
+              const SigInArrayType      &sigIn,                   // input
+              vtkm::Id sigDimX,         vtkm::Id sigDimY,         vtkm::Id sigDimZ,
+              vtkm::Id sigStartX,       vtkm::Id sigStartY,       vtkm::Id sigStartZ,
+              vtkm::Id sigPretendDimX,  vtkm::Id sigPretendDimY,  vtkm::Id sigPretendDimZ,
+              ExtensionArrayType        &ext1,                    // output
+              ExtensionArrayType        &ext2,                    // output
+              vtkm::Id                  addLen,
+              vtkm::worklet::wavelets::DWTMode   ext1Method,
+              vtkm::worklet::wavelets::DWTMode   ext2Method, 
+              bool                               pretendSigPaddedZero, 
+              bool                               padZeroAtExt2,
+              DeviceTag  )
+  {
+    // pretendSigPaddedZero and padZeroAtExt2 cannot happen at the same time
+    VTKM_ASSERT( !pretendSigPaddedZero || !padZeroAtExt2 );
+
+    if( addLen == 0 )     // Haar kernel
+    {
+      ext1.PrepareForOutput( 0, DeviceTag() );      // No extension on the front side
+      if( pretendSigPaddedZero || padZeroAtExt2 )   // plane of size dimX * dimY
+      {
+        ext2.PrepareForOutput( sigPretendDimX * sigPretendDimY * 1, DeviceTag() );   
+        WaveletBase::DeviceAssignZero3DPlaneZ( ext2, 
+                                               sigPretendDimX, sigPretendDimY, 1,
+                                               0, 
+                                               DeviceTag() );
+      }
+      else
+        ext2.PrepareForOutput( 0, DeviceTag() );    // No extension on the right side
+      return 0;
+    }
+
+    typedef typename SigInArrayType::ValueType                ValueType;
+    typedef vtkm::cont::ArrayHandle< ValueType >              ExtendArrayType; 
+    typedef vtkm::worklet::wavelets::ExtensionWorklet3D       ExtensionWorklet;
+    typedef typename vtkm::worklet::DispatcherMapField< ExtensionWorklet, DeviceTag >
+                                                              DispatcherType;
+    vtkm::Id                                                  extDimX, extDimY, extDimZ;
+    vtkm::worklet::wavelets::ExtensionDirection               dir;
+
+    {  // First work on front extension 
+    dir     = FRONT;
+    extDimX = sigPretendDimX; 
+    extDimY = sigPretendDimY; 
+    extDimZ = addLen;
+    
+    ext1.PrepareForOutput( extDimX * extDimY * extDimZ, DeviceTag() );
+    ExtensionWorklet worklet( extDimX,          extDimY,          extDimZ,
+                              sigDimX,          sigDimY,          sigDimZ,
+                              sigStartX,        sigStartY,        sigStartZ,
+                              sigPretendDimX,   sigPretendDimY,   sigPretendDimZ,                                                       ext1Method, 
+                              dir, 
+                              false  );    // not treating input signal as having zeros
+    DispatcherType dispatcher( worklet );
+    dispatcher.Invoke( ext1, sigIn );
+    }
+
+    // Then work on back extension
+    dir     = BACK;
+    extDimX = sigPretendDimX;
+    extDimY = sigPretendDimY;
+    if( !pretendSigPaddedZero && !padZeroAtExt2 )
+    {
+      extDimZ = addLen;
+      ext2.PrepareForOutput( extDimX * extDimY * extDimZ, DeviceTag() );
+      ExtensionWorklet worklet( extDimX,        extDimY,          extDimZ, 
+                                sigDimX,        sigDimY,          sigDimZ, 
+                                sigStartX,      sigStartY,        sigStartZ,
+                                sigPretendDimX, sigPretendDimY,   sigPretendDimZ,
+                                ext2Method, 
+                                dir, 
+                                false  );
+      DispatcherType dispatcher( worklet );
+      dispatcher.Invoke( ext2, sigIn );
+    }
+    else if( !pretendSigPaddedZero && padZeroAtExt2 )
+    {                   // This case is not exactly padding a zero at the end of Ext2.
+                        // Rather, it is to increase extension length by one and fill it
+                        //         to be whatever mirrorred. 
+      extDimZ = addLen + 1;
+      ext2.PrepareForOutput( extDimX * extDimY * extDimZ, DeviceTag() );
+      ExtensionWorklet worklet( extDimX,          extDimY,        extDimZ,
+                                sigDimX,          sigDimY,        sigDimZ, 
+                                sigStartX,        sigStartY,      sigStartZ,
+                                sigPretendDimX,   sigPretendDimY, sigPretendDimZ,
+                                ext2Method,     
+                                dir, 
+                                false );
+      DispatcherType dispatcher( worklet );
+      dispatcher.Invoke( ext2, sigIn );
+    }
+    else  // pretendSigPaddedZero
+    {
+      ExtendArrayType ext2Temp;
+      extDimZ = addLen;
+      ext2Temp.PrepareForOutput( extDimX * extDimY * extDimZ, DeviceTag() );
+      ExtensionWorklet worklet( extDimX,          extDimY,        extDimZ,
+                                sigDimX,          sigDimY,        sigDimZ,
+                                sigStartX,        sigStartY,      sigStartZ,
+                                sigPretendDimX,   sigPretendDimY, sigPretendDimZ,
+                                ext2Method, 
+                                dir, 
+                                true );    // pretend sig is padded a zero
+      DispatcherType dispatcher( worklet );
+      dispatcher.Invoke( ext2Temp, sigIn );
+      
+      // Give ext2 one layer thicker to hold the pretend zeros from signal.
+      ext2.PrepareForOutput( extDimX * extDimY * (extDimZ+1), DeviceTag() );
+      WaveletBase::DeviceCubeCopyTo( ext2Temp, 
+                                     extDimX,     extDimY,      extDimZ,
+                                     ext2, 
+                                     extDimX,     extDimY,      extDimZ + 1,
+                                     0,           0,          1,
+                                     DeviceTag()  );
+      WaveletBase::DeviceAssignZero3DPlaneZ( ext2, 
+                                             extDimX,   extDimY,    extDimZ + 1,
+                                             0, 
+                                             DeviceTag() );
+    }
+    return 0;
+  }
+
 
   template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
   vtkm::Id Extend2D  (const SigInArrayType            &sigIn,     // Input
