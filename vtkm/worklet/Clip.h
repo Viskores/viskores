@@ -439,11 +439,14 @@ public:
   {
   }
 
-  template <typename ScalarsArrayHandle, typename DeviceAdapter>
-  vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSet &cellSet,
-                                    const ScalarsArrayHandle &scalars,
-                                    vtkm::Float64 value,
-                                    DeviceAdapter device)
+  template <typename CellSetList,
+            typename ScalarsArrayHandle,
+            typename DeviceAdapter>
+  vtkm::cont::CellSetExplicit<>
+  Run(const vtkm::cont::DynamicCellSetBase<CellSetList> &cellSet,
+      const ScalarsArrayHandle &scalars,
+      vtkm::Float64 value,
+      DeviceAdapter device)
   {
     typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
 
@@ -559,11 +562,14 @@ public:
     vtkm::cont::CellSetExplicit<> *Result;
   };
 
-  template <typename ImplicitFunction, typename DeviceAdapter>
-  vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSet &cellSet,
-                                    const ImplicitFunction &clipFunction,
-                                    const vtkm::cont::CoordinateSystem &coords,
-                                    DeviceAdapter device)
+  template <typename CellSetList,
+            typename ImplicitFunction,
+            typename DeviceAdapter>
+  vtkm::cont::CellSetExplicit<>
+  Run(const vtkm::cont::DynamicCellSetBase<CellSetList> &cellSet,
+      const ImplicitFunction &clipFunction,
+      const vtkm::cont::CoordinateSystem &coords,
+      DeviceAdapter device)
   {
     (void) device;
     vtkm::cont::CellSetExplicit<> output;
