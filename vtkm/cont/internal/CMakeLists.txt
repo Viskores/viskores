@@ -27,6 +27,7 @@ set(headers
   ArrayTransfer.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
+  DeviceAdapterDefaultSelection.h
   DeviceAdapterError.h
   DeviceAdapterTag.h
   DynamicTransform.h

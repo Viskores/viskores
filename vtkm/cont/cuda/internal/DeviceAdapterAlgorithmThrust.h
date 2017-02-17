@@ -30,6 +30,7 @@
 
 #include <vtkm/cont/cuda/ErrorCuda.h>
 
+#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 

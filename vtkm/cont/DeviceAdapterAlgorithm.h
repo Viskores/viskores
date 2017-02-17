@@ -584,20 +584,4 @@ class DeviceAdapterAtomicArrayImplementation;
 }
 } // namespace vtkm::cont
 
-
-//-----------------------------------------------------------------------------
-// These includes are intentionally placed here after the declaration of the
-// DeviceAdapterAlgorithm template prototype, which all the implementations
-// need.
-
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_SERIAL
-#include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
-#include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmCuda.h>
-// #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
-// #include <vtkm/openmp/cont/internal/DeviceAdapterAlgorithmOpenMP.h>
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
-#include <vtkm/cont/tbb/internal/DeviceAdapterAlgorithmTBB.h>
-#endif
-
 #endif //vtk_m_cont_DeviceAdapterAlgorithm_h
