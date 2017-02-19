@@ -170,7 +170,6 @@ public:
     return 0;
   }
 
-
   // Function: extend a cube in Y direction
   template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
   vtkm::Id Extend3DTopDown( 
@@ -295,7 +294,6 @@ public:
     }
     return 0;
   }
-
 
   // Function: extend a cube in Z direction
   template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
@@ -559,6 +557,7 @@ public:
     ArrayType           afterY;
     afterY.PrepareForOutput( sigPretendDimX * sigPretendDimY * sigPretendDimZ, DeviceTag() );
     {
+      ArrayType         topExt,   bottomExt;
       this->Extend3DTopDown(  afterX, 
                               sigPretendDimX,   sigPretendDimY,    sigPretendDimZ,
                               0,                0,                 0,
@@ -1405,10 +1404,18 @@ public:
     BasicArrayType        ext1, ext2, ext3, ext4;
     vtkm::Id              extDimX = inPretendDimX; 
     vtkm::Id              ext1DimY, ext2DimY, ext3DimY, ext4DimY;
-    this->IDWTHelperTD( coeffIn, inDimX, inDimY, inStartX, inStartY,
-                        inPretendDimX, inPretendDimY, L[1], L[3], 
-                        ext1, ext2, ext3, ext4, ext1DimY, ext2DimY, ext3DimY, ext4DimY,
-                        filterLen, wmode, DeviceTag() );
+    this->IDWTHelper2DTopDown(  coeffIn, 
+                                inDimX,         inDimY, 
+                                inStartX,       inStartY,
+                                inPretendDimX,  inPretendDimY, 
+                                L[1],           L[3], 
+                                ext1,           ext2,           
+                                ext3,           ext4, 
+                                ext1DimY,       ext2DimY,       
+                                ext3DimY,       ext4DimY,
+                                filterLen, 
+                                wmode, 
+                                DeviceTag() );
 
     afterY.PrepareForOutput( inPretendDimX * inPretendDimY, DeviceTag() );
     IDWT2DWorklet worklet( WaveletBase::filter.GetLowReconstructFilter(),
@@ -1434,10 +1441,18 @@ public:
     BasicArrayType     ext1, ext2, ext3, ext4;
     vtkm::Id extDimY = inPretendDimY;
     vtkm::Id ext1DimX, ext2DimX, ext3DimX, ext4DimX;
-    this->IDWTHelperLR( afterY, inPretendDimX, inPretendDimY, 0, 0, 
-                        inPretendDimX, inPretendDimY, L[0], L[4], 
-                        ext1, ext2, ext3, ext4, ext1DimX, ext2DimX, ext3DimX, ext4DimX,
-                        filterLen, wmode, DeviceTag() ); 
+    this->IDWTHelper2DLeftRight( afterY, 
+                                inPretendDimX,    inPretendDimY, 
+                                0,                0, 
+                                inPretendDimX,    inPretendDimY, 
+                                L[0],             L[4], 
+                                ext1,             ext2, 
+                                ext3,             ext4, 
+                                ext1DimX,         ext2DimX, 
+                                ext3DimX,         ext4DimX,
+                                filterLen, 
+                                wmode, 
+                                DeviceTag()   ); 
     sigOut.PrepareForOutput( inPretendDimX * inPretendDimY, DeviceTag() );
     IDWT2DWorklet worklet( WaveletBase::filter.GetLowReconstructFilter(),
                            WaveletBase::filter.GetHighReconstructFilter(),
@@ -1463,28 +1478,21 @@ public:
 
 
   // decides the correct extension modes for cA and cD separately,
-  // and fill the extensions.
+  // and fill the extensions (2D matrices)
   template< typename ArrayInType, typename ArrayOutType, typename DeviceTag >
-  void IDWTHelperLR( const ArrayInType             &coeffIn,
-                         vtkm::Id                  inDimX,
-                         vtkm::Id                  inDimY,
-                         vtkm::Id                  inStartX,
-                         vtkm::Id                  inStartY,
-                         vtkm::Id                  inPretendDimX,
-                         vtkm::Id                  inPretendDimY,
-                         vtkm::Id                  cADimX,     // of codffIn
-                         vtkm::Id                  cDDimX,     // of codffIn
-                         ArrayOutType              &ext1,      // output
-                         ArrayOutType              &ext2,      // output
-                         ArrayOutType              &ext3,      // output
-                         ArrayOutType              &ext4,      // output
-                         vtkm::Id                  &ext1DimX,  // output
-                         vtkm::Id                  &ext2DimX,  // output
-                         vtkm::Id                  &ext3DimX,  // output
-                         vtkm::Id                  &ext4DimX,  // output
-                         vtkm::Id                  filterLen, 
-                         DWTMode                   mode,  
-                         DeviceTag                            )
+  void IDWTHelper2DLeftRight( 
+            const ArrayInType   &coeffIn,
+                  vtkm::Id      inDimX,           vtkm::Id      inDimY,
+                  vtkm::Id      inStartX,         vtkm::Id      inStartY,
+                  vtkm::Id      inPretendDimX,    vtkm::Id      inPretendDimY,
+                  vtkm::Id      cADimX,           vtkm::Id      cDDimX,
+                  ArrayOutType  &ext1,            ArrayOutType  &ext2,      // output
+                  ArrayOutType  &ext3,            ArrayOutType  &ext4,      // output
+                  vtkm::Id      &ext1DimX,        vtkm::Id      &ext2DimX,  // output
+                  vtkm::Id      &ext3DimX,        vtkm::Id      &ext4DimX,  // output
+                  vtkm::Id      filterLen, 
+                  DWTMode       mode,  
+                  DeviceTag  )
   {
     VTKM_ASSERT( inPretendDimX = cADimX + cDDimX );
 
@@ -1566,28 +1574,21 @@ public:
 
 
   // decides the correct extension modes for cA and cD separately,
-  // and fill the extensions.
+  // and fill the extensions (2D matrices)
   template< typename ArrayInType, typename ArrayOutType, typename DeviceTag >
-  void IDWTHelperTD( const ArrayInType             &coeffIn,
-                         vtkm::Id                  inDimX,
-                         vtkm::Id                  inDimY,
-                         vtkm::Id                  inStartX,
-                         vtkm::Id                  inStartY,
-                         vtkm::Id                  inPretendDimX,
-                         vtkm::Id                  inPretendDimY,
-                         vtkm::Id                  cADimY,     // of codffIn
-                         vtkm::Id                  cDDimY,     // of codffIn
-                         ArrayOutType              &ext1,      // output
-                         ArrayOutType              &ext2,      // output
-                         ArrayOutType              &ext3,      // output
-                         ArrayOutType              &ext4,      // output
-                         vtkm::Id                  &ext1DimY,  // output
-                         vtkm::Id                  &ext2DimY,  // output
-                         vtkm::Id                  &ext3DimY,  // output
-                         vtkm::Id                  &ext4DimY,  // output
-                         vtkm::Id                  filterLen, 
-                         DWTMode                   mode,
-                         DeviceTag                            )
+  void IDWTHelper2DTopDown( 
+            const ArrayInType     &coeffIn,
+                  vtkm::Id        inDimX,         vtkm::Id      inDimY,
+                  vtkm::Id        inStartX,       vtkm::Id      inStartY,
+                  vtkm::Id        inPretendDimX,  vtkm::Id      inPretendDimY,
+                  vtkm::Id        cADimY,         vtkm::Id      cDDimY,
+                  ArrayOutType    &ext1,          ArrayOutType  &ext2,      // output
+                  ArrayOutType    &ext3,          ArrayOutType  &ext4,      // output
+                  vtkm::Id        &ext1DimY,      vtkm::Id      &ext2DimY,  // output
+                  vtkm::Id        &ext3DimY,      vtkm::Id      &ext4DimY,  // output
+                  vtkm::Id        filterLen, 
+                  DWTMode         mode,
+                  DeviceTag  )
   {
     VTKM_ASSERT( inPretendDimY = cADimY + cDDimY );
 
