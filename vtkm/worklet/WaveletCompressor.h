@@ -155,6 +155,167 @@ public:
 
 
 
+  // Multi-level 3D wavelet decomposition
+  template< typename InArrayType, typename OutArrayType, typename DeviceTag>
+  VTKM_CONT
+  vtkm::Float64 WaveDecompose3D( 
+            const InArrayType             &sigIn,     // Input
+                  vtkm::Id                nLevels,    // n levels of DWT
+                  vtkm::Id                inX,        vtkm::Id  inY,    vtkm::Id  inZ,
+                  OutArrayType            &coeffOut,
+                  std::vector<vtkm::Id>   &L,
+                  DeviceTag  )
+  {
+    vtkm::Id sigInLen = sigIn.GetNumberOfValues();
+    VTKM_ASSERT( inX * inY * inZ == sigInLen );
+    if( nLevels < 0 || nLevels > WaveletBase::GetWaveletMaxLevel( inX ) ||
+                       nLevels > WaveletBase::GetWaveletMaxLevel( inY ) || 
+                       nLevels > WaveletBase::GetWaveletMaxLevel( inZ )    )
+    {
+      throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
+    }
+    if( nLevels == 0 )  //  0 levels means no transform
+    {
+      vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( sigIn, coeffOut );
+      return 0;
+    }
+
+    this->ComputeL3( inX, inY, inZ, nLevels, L );
+
+    vtkm::Id currentLenX     = inX;
+    vtkm::Id currentLenY     = inY;
+    vtkm::Id currentLenZ     = inZ;
+    std::vector<vtkm::Id> L3d(27, 0);
+
+    typedef typename OutArrayType::ValueType          OutValueType;
+    typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
+
+    // First level transform operates writes to the output array
+    vtkm::Float64 computationTime = WaveletDWT::DWT3D( 
+                                    sigIn, 
+                                    currentLenX,       currentLenY,     currentLenZ,
+                                    0,                 0,               0,
+                                    currentLenX,       currentLenY,     currentLenZ,
+                                    coeffOut, 
+                                    L3d, 
+                                    DeviceTag() );
+    VTKM_ASSERT( coeffOut.GetNumberOfValues() == currentLenX * currentLenY * currentLenZ );
+    currentLenX = WaveletBase::GetApproxLength( currentLenX );
+    currentLenY = WaveletBase::GetApproxLength( currentLenY );
+    currentLenZ = WaveletBase::GetApproxLength( currentLenZ );
+
+    // Successor transforms writes to a temporary array
+    /* for( vtkm::Id i = nLevels-1; i > 0; i-- )
+    {
+      OutBasicArray tempOutput;
+
+      computationTime +=
+      WaveletDWT::DWT2D  (  coeffOut, 
+                            inX,              inY, 
+                            0,                0,
+                            currentLenX,      currentLenY, 
+                            tempOutput, L2d, DeviceTag() );
+
+      // copy results to coeffOut
+      WaveletBase::DeviceRectangleCopyTo( tempOutput, currentLenX, currentLenY,
+                                          coeffOut, inX, inY, 0, 0, DeviceTag() );
+
+      // update currentLen
+      currentLenX = WaveletBase::GetApproxLength( currentLenX );
+      currentLenY = WaveletBase::GetApproxLength( currentLenY );
+    } */
+
+    return computationTime;
+  }
+
+
+
+  // Multi-level 3D wavelet reconstruction
+  template< typename InArrayType, typename OutArrayType, typename DeviceTag>
+  VTKM_CONT
+  vtkm::Float64 WaveReconstruct3D( 
+            const InArrayType           &arrIn,     // Input
+                  vtkm::Id              nLevels,    // n levels of DWT
+                  vtkm::Id              inX,        vtkm::Id inY,       vtkm::Id inZ,
+                  OutArrayType          &arrOut,
+                  std::vector<vtkm::Id> &L,
+                  DeviceTag                       )
+  {
+    vtkm::Id arrInLen = arrIn.GetNumberOfValues();
+    VTKM_ASSERT( inX * inY * inZ == arrInLen );
+    VTKM_ASSERT( vtkm::Id(L.size()) == 21 * nLevels + 6 );
+    if( nLevels < 0 || nLevels > WaveletBase::GetWaveletMaxLevel( inX ) ||
+                       nLevels > WaveletBase::GetWaveletMaxLevel( inY ) ||
+                       nLevels > WaveletBase::GetWaveletMaxLevel( inZ )   )
+    {
+      throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
+    }
+    typedef typename OutArrayType::ValueType          OutValueType;
+    typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
+    //vtkm::Float64 computationTime = 0.0;
+  
+    OutBasicArray outBuffer;
+    if( nLevels == 0 )  //  0 levels means no transform
+    { 
+      vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( arrIn, arrOut );
+      return 0; 
+    }
+    else    
+      vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( arrIn, outBuffer );
+
+    std::vector<vtkm::Id> L3d(27, 0);
+    for( size_t i = 0; i < 27; i++ )
+      L3d[i] = L[i];
+
+std::cout << "1" << std::endl;
+    WaveletDWT::IDWT3D( outBuffer, 
+                        inX,  inY,  inZ,
+                        0,    0,    0,
+                        L3d,
+                        arrOut,
+                        DeviceTag() );
+std::cout << "2" << std::endl;
+                                    
+    
+    // All transforms but the last operate on temporary arrays
+    /*for( size_t i = 1; i < static_cast<size_t>(nLevels); i++ )
+    {
+      L2d[8] = L2d[0] + L2d[4];     // This is always true for Biorthogonal wavelets
+      L2d[9] = L2d[1] + L2d[3];     // (same above)
+
+      OutBasicArray  tempOutput;
+
+      // IDWT
+      computationTime +=
+      WaveletDWT::IDWT2D  ( outBuffer, inX, inY, 0, 0, L2d, tempOutput, DeviceTag() );
+
+      // copy back reconstructed block
+      WaveletBase::DeviceRectangleCopyTo( tempOutput, L2d[8], L2d[9],
+                                          outBuffer, inX, inY, 0, 0, DeviceTag() );
+    
+      // update L2d array
+      L2d[0] =  L2d[8];
+      L2d[1] =  L2d[9];
+      L2d[2] = L[6*i+2];
+      L2d[3] = L[6*i+3];
+      L2d[4] = L[6*i+4];
+      L2d[5] = L[6*i+5];
+      L2d[6] = L[6*i+6];
+      L2d[7] = L[6*i+7];
+
+    }
+
+    // The last transform outputs to the final output
+    L2d[8] = L2d[0] + L2d[4];
+    L2d[9] = L2d[1] + L2d[3];
+    computationTime += 
+    WaveletDWT::IDWT2D  ( outBuffer, inX, inY, 0, 0, L2d, arrOut, DeviceTag() );
+    */
+    return 0.0;    
+  }
+
+
+
   // Multi-level 2D wavelet decomposition
   template< typename InArrayType, typename OutArrayType, typename DeviceTag>
   VTKM_CONT
@@ -402,7 +563,7 @@ public:
 
 
                       
-  // Compute the book keeping array L for 1D wavelet decomposition
+  // Compute the book keeping array L for 1D DWT
   void ComputeL( vtkm::Id               sigInLen, 
                  vtkm::Id               nLev, 
                  std::vector<vtkm::Id>  &L )
@@ -420,7 +581,7 @@ public:
 
 
 
-  // Compute the book keeping array L for 2D wavelet decomposition
+  // Compute the book keeping array L for 2D DWT
   void ComputeL2( vtkm::Id               inX,
                   vtkm::Id               inY,
                   vtkm::Id               nLev, 
@@ -428,10 +589,10 @@ public:
   {
     size_t nLevels = static_cast<size_t>( nLev );    
     L.resize( nLevels*6 + 4 );
-    L[        nLevels*6 + 0 ] = inX;
-    L[        nLevels*6 + 1 ] = inY;
-    L[        nLevels*6 + 2 ] = inX;
-    L[        nLevels*6 + 3 ] = inY;
+    L[ nLevels*6     ] = inX;
+    L[ nLevels*6 + 1 ] = inY;
+    L[ nLevels*6 + 2 ] = inX;
+    L[ nLevels*6 + 3 ] = inY;
 
     for( size_t i = nLevels; i > 0; i-- )
     {
@@ -451,6 +612,69 @@ public:
       L[ i*6 - 0 ] = WaveletBase::GetDetailLength( L[ i*6 + 0 ]);
       L[ i*6 + 1 ] = WaveletBase::GetDetailLength( L[ i*6 + 1 ]);
     }
+  }
+
+
+
+  // Compute the bookkeeping array L for 3D DWT
+  void ComputeL3( vtkm::Id                inX,
+                  vtkm::Id                inY,
+                  vtkm::Id                inZ,
+                  vtkm::Id                nLev,
+                  std::vector<vtkm::Id>   &L )
+  {
+    size_t n = static_cast<size_t>( nLev );
+    L.resize( n * 21 + 6 );
+    L[ n * 21 + 0 ] = inX;
+    L[ n * 21 + 1 ] = inY;
+    L[ n * 21 + 2 ] = inZ;
+    L[ n * 21 + 3 ] = inX;
+    L[ n * 21 + 4 ] = inY;
+    L[ n * 21 + 5 ] = inZ;
+
+    for( size_t i = n; i > 0; i-- )
+    {
+      // cLLL
+      L[ i * 21 - 21 ] = WaveletBase::GetApproxLength( L[ i * 21 + 0 ] );
+      L[ i * 21 - 20 ] = WaveletBase::GetApproxLength( L[ i * 21 + 1 ] );
+      L[ i * 21 - 19 ] = WaveletBase::GetApproxLength( L[ i * 21 + 2 ] );
+
+      // cLLH
+      L[ i * 21 - 18 ] = L[ i * 21 - 21 ];
+      L[ i * 21 - 17 ] = L[ i * 21 - 20 ];
+      L[ i * 21 - 16 ] = WaveletBase::GetDetailLength( L[ i * 21 + 2 ] );
+    
+      // cLHL
+      L[ i * 21 - 15 ] = L[ i * 21 - 21 ];
+      L[ i * 21 - 14 ] = WaveletBase::GetDetailLength( L[ i * 21 + 1 ] );
+      L[ i * 21 - 13 ] = L[ i * 21 - 19 ];
+    
+      // cLHH
+      L[ i * 21 - 12 ] = L[ i * 21 - 21 ];
+      L[ i * 21 - 11 ] = L[ i * 21 - 14 ];
+      L[ i * 21 - 10 ] = L[ i * 21 - 16 ];
+    
+      // cHLL
+      L[ i * 21 - 9 ] = WaveletBase::GetDetailLength( L[ i * 21 + 0 ] );
+      L[ i * 21 - 8 ] = L[ i * 21 - 20 ];
+      L[ i * 21 - 7 ] = L[ i * 21 - 19 ];
+
+      // cHLH
+      L[ i * 21 - 6 ] = L[ i * 21 - 9 ];
+      L[ i * 21 - 5 ] = L[ i * 21 - 20 ];
+      L[ i * 21 - 3 ] = L[ i * 21 - 16 ];
+
+      // cHHL
+      L[ i * 21 - 3 ] = L[ i * 21 - 9 ];
+      L[ i * 21 - 2 ] = L[ i * 21 - 14 ];
+      L[ i * 21 - 1 ] = L[ i * 21 - 19 ];
+
+      // cHHH - overwrites previous value
+      L[ i * 21 + 0 ] = L[ i * 21 - 9 ];
+      L[ i * 21 + 1 ] = L[ i * 21 - 14 ];
+      L[ i * 21 + 2 ] = L[ i * 21 - 16 ];
+    }
+
   }
 
 

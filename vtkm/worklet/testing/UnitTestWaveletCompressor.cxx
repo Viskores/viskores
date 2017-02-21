@@ -97,6 +97,52 @@ private:  // see wikipedia page
         vtkm::Float64   sigmaX2, sigmaY2; // 2 * sigma * sigma
 };
 
+class GaussianWorklet3D : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldInOut<>);
+  typedef void ExecutionSignature(_1, WorkIndex);
+
+  VTKM_EXEC
+  GaussianWorklet3D( vtkm::Id dx,  vtkm::Id dy,  vtkm::Id dz )
+                  :  dimX( dx ),   dimY( dy ),   dimZ( dz )
+  {  }
+
+  VTKM_EXEC
+  void Sig1Dto3D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y, vtkm::Id &z ) const
+  {
+    z = idx / (dimX * dimY);
+    y = (idx - z * dimX * dimY) / dimX;
+    x = idx % dimX;
+  }
+  
+  VTKM_EXEC
+  vtkm::Float64 GetGaussian( vtkm::Float64 x, vtkm::Float64 y, vtkm::Float64 z ) const
+  {
+    return 0.0;   // need to be filled
+  }
+  
+  VTKM_EXEC
+  vtkm::Float64 GetToyVal( vtkm::Float64 x, vtkm::Float64 y, vtkm::Float64 z ) const
+  {
+    return x * 100 + y * 10 + z;  // 3-digit xyz when all x, y, z are between 0 and 9
+  }
+
+  template<typename T>
+  VTKM_EXEC
+  void operator()(T& val, const vtkm::Id& workIdx) const 
+  {
+    vtkm::Id x, y, z;
+    Sig1Dto3D( workIdx, x, y, z );
+    val = GetToyVal( static_cast<vtkm::Float64>(x), 
+                     static_cast<vtkm::Float64>(y),
+                     static_cast<vtkm::Float64>(z) );
+  }
+
+private:
+  const vtkm::Id        dimX, dimY, dimZ;
+};
+
 }
 }
 }
@@ -121,6 +167,94 @@ void FillArray2D( ArrayType& array, vtkm::Id dimX, vtkm::Id dimY )
                        static_cast<vtkm::Float64>(dimY)/4.0);// spread
   vtkm::worklet::DispatcherMapField< WorkletType > dispatcher( worklet );
   dispatcher.Invoke( array );
+}
+
+template< typename ArrayType >
+void FillArray3D( ArrayType& array, vtkm::Id dimX, vtkm::Id dimY, vtkm::Id dimZ )
+{
+  typedef vtkm::worklet::wavelets::GaussianWorklet3D WorkletType;
+  WorkletType worklet( dimX, dimY, dimZ );
+  vtkm::worklet::DispatcherMapField< WorkletType > dispatcher( worklet );
+  dispatcher.Invoke( array );
+}
+
+
+
+void TestDecomposeReconstruct3D()
+{
+  std::cout << "Testing 3D wavelet compressor on a 10x10x10 cube: " << std::endl;
+  vtkm::Id sigX   = 10;
+  vtkm::Id sigY   = 10;
+  vtkm::Id sigZ   = 10;
+  vtkm::Id sigLen = sigX * sigY * sigZ;
+
+  // make input data array handle
+  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray;
+  inputArray.PrepareForOutput( sigLen, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  FillArray3D( inputArray, sigX, sigY, sigZ );
+
+  vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
+
+  // Use a WaveletCompressor
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
+  std::cout << "Wavelet kernel         = CDF 9/7" << std::endl;
+  vtkm::worklet::WaveletCompressor compressor( wname );
+  std::vector<vtkm::Id> L;
+
+  vtkm::Id XMaxLevel = compressor.GetWaveletMaxLevel( sigX );
+  vtkm::Id YMaxLevel = compressor.GetWaveletMaxLevel( sigY );
+  vtkm::Id ZMaxLevel = compressor.GetWaveletMaxLevel( sigZ );
+  vtkm::Id nLevels   = vtkm::Min( vtkm::Min(XMaxLevel, YMaxLevel), ZMaxLevel );
+  nLevels = 1;
+  std::cout << "Decomposition levels   = " << nLevels << std::endl;
+  vtkm::Float64 computationTime = 0.0;
+  vtkm::Float64 elapsedTime1, elapsedTime2, elapsedTime3;
+
+  // Decompose
+  //vtkm::cont::Timer<> timer;
+  //computationTime = 
+  compressor.WaveDecompose3D( inputArray, nLevels, sigX, sigY, sigZ, outputArray, L, 
+                              VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  //elapsedTime1 = timer.GetElapsedTime();  
+  //std::cout << "Decompose time         = " << elapsedTime1 << std::endl;
+  //std::cout << "  ->computation time   = " << computationTime << std::endl;
+
+  std::cout << "finish decomposition" << std::endl;
+
+  // Squash small coefficients
+  //timer.Reset();
+  //vtkm::Float64 cratio = 1.0;   // X:1 compression, where X >= 1
+  //compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  //elapsedTime2 = timer.GetElapsedTime();  
+  //std::cout << "Squash time            = " << elapsedTime2 << std::endl;
+
+  // Reconstruct
+  vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
+  //timer.Reset();
+  //computationTime = 
+  compressor.WaveReconstruct3D( outputArray, nLevels, sigX, sigY, sigZ, reconstructArray, L,
+                                VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  //elapsedTime3 = timer.GetElapsedTime();  
+  //std::cout << "Reconstruction time    = " << elapsedTime3 << std::endl;
+  //std::cout << "  ->computation time   = " << computationTime << std::endl;
+  //std::cout << "Total time             = " 
+  //          << (elapsedTime1 + elapsedTime2 + elapsedTime3) << std::endl;
+  
+  std::cout << "finish reconstruction" << std::endl;
+
+  outputArray.ReleaseResources();
+
+  compressor.EvaluateReconstruction( inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+
+  //timer.Reset();
+  for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
+  {
+    VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i),
+                                  inputArray.GetPortalConstControl().Get(i) ),
+                      "WaveletCompressor 3D failed..." );
+  }
+  //elapsedTime1 = timer.GetElapsedTime();  
+  //std::cout << "Verification time      = " << elapsedTime1 << std::endl;
 }
 
 
@@ -254,9 +388,10 @@ void TestDecomposeReconstruct1D()
 
 void TestWaveletCompressor()
 {
-  TestDecomposeReconstruct1D();
-  std::cout << std::endl;
-  TestDecomposeReconstruct2D();
+  //TestDecomposeReconstruct1D();
+  //std::cout << std::endl;
+  //TestDecomposeReconstruct2D();
+  TestDecomposeReconstruct3D();
 }
 
 int UnitTestWaveletCompressor(int, char *[])
