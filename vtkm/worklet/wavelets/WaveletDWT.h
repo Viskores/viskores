@@ -680,10 +680,6 @@ public:
                     inStartX,        inStartY,      inStartZ );   // coeffIn
       FrontBackDispatcherType dispatcher( worklet );
       //timer.Reset();
-std::cout << "ext1 size: " << ext1.GetNumberOfValues() << std::endl;
-std::cout << "ext2 size: " << ext2.GetNumberOfValues() << std::endl;
-std::cout << "ext3 size: " << ext3.GetNumberOfValues() << std::endl;
-std::cout << "ext4 size: " << ext4.GetNumberOfValues() << std::endl;
       dispatcher.Invoke( ext1, ext2, ext3, ext4, coeffIn, afterZ );
       //computationTime += timer.GetElapsedTime();
     }

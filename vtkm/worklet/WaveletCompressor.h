@@ -267,14 +267,12 @@ public:
     for( size_t i = 0; i < 27; i++ )
       L3d[i] = L[i];
 
-std::cout << "1" << std::endl;
     WaveletDWT::IDWT3D( outBuffer, 
                         inX,  inY,  inZ,
                         0,    0,    0,
                         L3d,
                         arrOut,
                         DeviceTag() );
-std::cout << "2" << std::endl;
                                     
     
     // All transforms but the last operate on temporary arrays

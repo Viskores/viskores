@@ -516,6 +516,7 @@ private:
 class IndexTranslator6CubesFrontBack
 {
 public:
+  VTKM_EXEC_CONT
   IndexTranslator6CubesFrontBack( 
             vtkm::Id x_1,       vtkm::Id y_1,       vtkm::Id z_1,
             vtkm::Id x_2,       vtkm::Id y_2,       vtkm::Id z_2,
@@ -534,7 +535,17 @@ public:
             dimXd(x_d),         dimYd(y_d),         dimZd(z_d),
             dimX5(x_5),         dimY5(y_5),         dimZ5(z_5),
             startX5(start_x5),  startY5(start_y5),  startZ5(start_z5)
-  { }
+  {
+    printf("IndexTranslator6CubesFrontBack: \n" );
+    printf("  cube1 dims: (%lld, %lld, %lld)\n", dimX1, dimY1, dimZ1 );
+    printf("  cube2 dims: (%lld, %lld, %lld)\n", dimX2, dimY2, dimZ2 );
+    printf("  cube3 dims: (%lld, %lld, %lld)\n", dimX3, dimY3, dimZ3 );
+    printf("  cube4 dims: (%lld, %lld, %lld)\n", dimX4, dimY4, dimZ4 );
+    printf("  cube5 dims: (%lld, %lld, %lld)\n", dimX5, dimY5, dimZ5 );
+    printf("  cA    dims: (%lld, %lld, %lld)\n", dimXa, dimYa, dimZa );
+    printf("  cD    dims: (%lld, %lld, %lld)\n", dimXd, dimYd, dimZd );
+    printf("  start idx : (%lld, %lld, %lld)\n", startX5, startY5, startZ5 );
+  }
 
   VTKM_EXEC_CONT
   void Translate3Dto1D( vtkm::Id  inX,   vtkm::Id  inY,  vtkm::Id  inZ,   // 3D indices as input
@@ -1021,7 +1032,7 @@ public:
             lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
             highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
             filterLen( fil_len ), 
-            outDimX(x_a + x_d), outDimY(y_a + y_d), outDimZ(z_a + z_d),
+            outDimX(x_a + x_d), outDimY( y_a ),     outDimZ( z_a ),
             cALenExtended( x_1 + x_a + x_2 ),
             translator(x_1,     y_1,      z_1,
                        x_2,     y_2,      z_2,
@@ -1196,7 +1207,7 @@ public:
             lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
             highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
             filterLen( fil_len ), 
-            outDimX(x_a + x_d), outDimY(y_a + y_d), outDimZ(z_a + z_d),
+            outDimX( x_a ),     outDimY(y_a + y_d), outDimZ( z_a ),
             cALenExtended( y_1 + y_a + y_2 ),
             translator(x_1,     y_1,      z_1,
                        x_2,     y_2,      z_2,
@@ -1371,7 +1382,7 @@ public:
             lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
             highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
             filterLen( fil_len ), 
-            outDimX(x_a + x_d), outDimY(y_a + y_d), outDimZ(z_a + z_d),
+            outDimX( x_a ),     outDimY( y_a ),     outDimZ(z_a + z_d),
             cALenExtended( z_1 + z_a + z_2 ),
             translator(x_1,     y_1,      z_1,
                        x_2,     y_2,      z_2,
@@ -1380,8 +1391,11 @@ public:
                        x_a,     y_a,      z_a,
                        x_d,     y_d,      z_d,
                        x_5,     y_5,      z_5,
-                      startX5,  startY5,  startZ5 )
-  { }
+                       startX5, startY5,  startZ5 )
+  { 
+    printf("InverseTransform3DFrontBack: \n");
+    printf("  output dims: (%lld, %lld, %lld)\n", outDimX, outDimY, outDimZ );
+  }
                       
   VTKM_EXEC_CONT
   void Output1Dto3D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y, vtkm::Id &z ) const
@@ -1437,6 +1451,8 @@ public:
     vtkm::Id      k1,     k2,     zi; 
     vtkm::Id      inputCube,      inputIdx; 
     Output1Dto3D( workIdx, workX, workY, workZ );
+//printf("A new iteration: \n");
+//printf("  workIdx = %lld, workX = %lld, workY = %lld, workZ = %lld\n", workIdx, workX, workY, workZ );
 
     if( filterLen % 2 != 0 ) // odd filter
     {
