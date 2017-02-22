@@ -86,6 +86,7 @@ set(sources
   CoordinateSystem.cxx
   DynamicArrayHandle.cxx
   Field.cxx
+  RuntimeDeviceTracker.cxx
   internal/SimplePolymorphicContainer.cxx
   StorageBasic.cxx
   )

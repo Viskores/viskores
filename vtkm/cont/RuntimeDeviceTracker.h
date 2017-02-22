@@ -20,18 +20,18 @@
 #ifndef vtk_m_cont_RuntimeDeviceTracker_h
 #define vtk_m_cont_RuntimeDeviceTracker_h
 
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
-#include <vtkm/cont/DeviceAdapter.h>
-
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
-
-#include <cstring>
 
 namespace vtkm {
 namespace cont {
+
+namespace detail {
+
+struct RuntimeDeviceTrackerInternals;
+
+}
 
 /// A class that can be used to determine if a given device adapter
 /// is supported on the current machine at runtime. This is a more
@@ -40,14 +40,16 @@ namespace cont {
 /// of valid runtime devices based on that information.
 ///
 ///
-class RuntimeDeviceTracker
+class VTKM_ALWAYS_EXPORT RuntimeDeviceTracker
 {
 public:
+  VTKM_CONT_EXPORT
   VTKM_CONT
-  RuntimeDeviceTracker()
-  {
-    this->Reset();
-  }
+  RuntimeDeviceTracker();
+
+  VTKM_CONT_EXPORT
+  VTKM_CONT
+  ~RuntimeDeviceTracker();
 
   /// Returns true if the given device adapter is supported on the current
   /// machine.
@@ -56,63 +58,63 @@ public:
   VTKM_CONT
   bool CanRunOn(DeviceAdapterTag) const
   {
-    typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> Traits;
-    return this->RuntimeValid[ Traits::GetId() ];
+    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
+    return this->CanRunOnImpl(Traits::GetId(), Traits::GetName());
   }
 
-  ///Report a failure to allocate memory on a device, this will flag the device
-  ///as being unusable for all future invocations of the instance of the filter.
+  /// Report a failure to allocate memory on a device, this will flag the
+  /// device as being unusable for all future invocations of the instance of
+  /// the filter.
   ///
   template<typename DeviceAdapterTag>
   VTKM_CONT
   void ReportAllocationFailure(DeviceAdapterTag,
                                const vtkm::cont::ErrorBadAllocation&)
   {
-    typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> Traits;
-    this->RuntimeValid[ Traits::GetId() ] = false;
+    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
+    this->SetDeviceState(Traits::GetId(), Traits::GetName(), false);
   }
 
-  ///Reset the tracker to its default state.
+  /// Reset the tracker for the given device. This will discard any updates
+  /// caused by reported failures
+  ///
+  template<typename DeviceAdapterTag>
+  VTKM_CONT
+  void ResetDevice(DeviceAdapterTag)
+  {
+    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
+    vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtimeDevice;
+    this->SetDeviceState(Traits::GetId(),
+                         Traits::GetName(),
+                         runtimeDevice.Exists());
+  }
+
+  /// Reset the tracker to its default state for default devices.
   /// Will discard any updates caused by reported failures.
   ///
+  VTKM_CONT_EXPORT
   VTKM_CONT
-  void Reset()
-  {
-    std::memset(this->RuntimeValid, 0, sizeof(bool)*8 );
-
-    //for each device determine the current runtime status at mark it
-    //self in the validity array
-    {
-    typedef vtkm::cont::DeviceAdapterTagCuda CudaTag;
-    typedef vtkm::cont::DeviceAdapterTraits<CudaTag> CudaTraits;
-
-    vtkm::cont::RuntimeDeviceInformation<CudaTag> runtimeDevice;
-    this->RuntimeValid[ CudaTraits::GetId() ] = runtimeDevice.Exists();
-    }
-
-    {
-    typedef vtkm::cont::DeviceAdapterTagTBB TBBTag;
-    typedef vtkm::cont::DeviceAdapterTraits<TBBTag> TBBTraits;
-
-    vtkm::cont::RuntimeDeviceInformation<TBBTag> runtimeDevice;
-    this->RuntimeValid[ TBBTraits::GetId() ] = runtimeDevice.Exists();
-    }
-
-    {
-    typedef vtkm::cont::DeviceAdapterTagSerial SerialTag;
-    typedef vtkm::cont::DeviceAdapterTraits<SerialTag> SerialTraits;
-
-    vtkm::cont::RuntimeDeviceInformation<SerialTag> runtimeDevice;
-    this->RuntimeValid[ SerialTraits::GetId() ] = runtimeDevice.Exists();
-    }
-  }
-
+  void Reset();
 
 
 private:
-  //make the array size 8 so the sizeof the class doesn't change when
-  //we add more device adapters.
-  bool RuntimeValid[8];
+  std::shared_ptr<detail::RuntimeDeviceTrackerInternals> Internals;
+
+  VTKM_CONT_EXPORT
+  VTKM_CONT
+  void CheckDevice(vtkm::cont::DeviceAdapterId deviceId,
+                   const vtkm::cont::DeviceAdapterNameType &deviceName) const;
+
+  VTKM_CONT_EXPORT
+  VTKM_CONT
+  bool CanRunOnImpl(vtkm::cont::DeviceAdapterId deviceId,
+                    const vtkm::cont::DeviceAdapterNameType &deviceName) const;
+
+  VTKM_CONT_EXPORT
+  VTKM_CONT
+  void SetDeviceState(vtkm::cont::DeviceAdapterId deviceId,
+                      const vtkm::cont::DeviceAdapterNameType &deviceName,
+                      bool state);
 };
 
 }
