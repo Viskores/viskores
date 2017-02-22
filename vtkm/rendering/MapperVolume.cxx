@@ -153,7 +153,7 @@ struct MapperVolume::RenderFunctor
     tracer->GetCamera().SetParameters(this->Camera,
                                       *this->Self->Internals->Canvas);
     // Check to see of the sample distance was set
-    if(this->Self->Internals->SampleDistance == DEFAULT_SAMPLE_DISTANCE)
+    if(this->Self->Internals->SampleDistance != DEFAULT_SAMPLE_DISTANCE)
     {
       tracer->SetSampleDistance(this->Self->Internals->SampleDistance);
     } 
