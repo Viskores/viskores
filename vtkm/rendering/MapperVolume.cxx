@@ -33,6 +33,8 @@
 
 #include <typeinfo>
 
+#define DEFAULT_SAMPLE_DISTANCE -1.f
+
 namespace vtkm {
 namespace rendering {
 
@@ -48,7 +50,7 @@ struct MapperVolume::InternalsType
   VTKM_CONT
   InternalsType()
     : Canvas(nullptr),
-      SampleDistance(-1.f),
+      SampleDistance(DEFAULT_SAMPLE_DISTANCE),
       CompositeBackground(true)
   {  }
 
@@ -150,7 +152,12 @@ struct MapperVolume::RenderFunctor
 
     tracer->GetCamera().SetParameters(this->Camera,
                                       *this->Self->Internals->Canvas);
-    tracer->SetSampleDistance(this->Self->Internals->SampleDistance);
+    // Check to see of the sample distance was set
+    if(this->Self->Internals->SampleDistance != DEFAULT_SAMPLE_DISTANCE)
+    {
+      tracer->SetSampleDistance(this->Self->Internals->SampleDistance);
+    } 
+      
     tracer->SetCompositeBackground(this->Self->Internals->CompositeBackground);
     vtkm::Bounds dataBounds = this->Coordinates.GetBounds(Device());
 
