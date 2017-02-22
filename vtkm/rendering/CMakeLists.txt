@@ -144,17 +144,10 @@ endif()
 
 vtkm_declare_headers(${headers})
 
-if (VTKm_ENABLE_CUDA)
-  vtkm_library(
-    SOURCES ${sources}
-    CUDA
-    WRAP_FOR_CUDA ${device_sources}
-    )
-else()
-  vtkm_library(
-    SOURCES ${sources}
-    )
-endif()
+vtkm_library(
+  SOURCES ${sources}
+  WRAP_FOR_CUDA ${device_sources}
+  )
 
 target_link_libraries(vtkm_rendering
                       PUBLIC vtkm_cont
