@@ -55,7 +55,7 @@ struct TriangulatorFunctor
 void RunTriangulator(const vtkm::cont::DynamicCellSet &cellSet,
                      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > &indices,
                      vtkm::Id &numberOfTriangles,
-                     vtkm::cont::internal::RuntimeDeviceTracker &tracker)
+                     vtkm::cont::RuntimeDeviceTracker &tracker)
 {
   // TODO: Should the rendering library support policies or some other way to
   // configure with custom devices?
@@ -75,7 +75,7 @@ void RunTriangulator(const vtkm::cont::DynamicCellSet &cellSet,
                      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > &indices,
                      vtkm::Id &numberOfTriangles)
 {
-  vtkm::cont::internal::RuntimeDeviceTracker tracker;
+  vtkm::cont::RuntimeDeviceTracker tracker;
   vtkm::rendering::internal::RunTriangulator(
         cellSet, indices, numberOfTriangles, tracker);
 }

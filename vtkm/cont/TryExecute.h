@@ -25,7 +25,7 @@
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
 
-#include <vtkm/cont/internal/RuntimeDeviceTracker.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 
 namespace vtkm {
 namespace cont {
@@ -39,7 +39,7 @@ template<typename Functor, typename Device>
 struct TryExecuteRunIfValid<Functor, Device, false>
 {
   VTKM_CONT
-  static bool Run(Functor &, vtkm::cont::internal::RuntimeDeviceTracker &) {
+  static bool Run(Functor &, vtkm::cont::RuntimeDeviceTracker &) {
     return false;
   }
 };
@@ -51,7 +51,7 @@ struct TryExecuteRunIfValid<Functor, Device, true>
 
   VTKM_CONT
   static bool Run(Functor &functor,
-                  vtkm::cont::internal::RuntimeDeviceTracker &tracker)
+                  vtkm::cont::RuntimeDeviceTracker &tracker)
   {
     if (tracker.CanRunOn(Device()))
     {
@@ -104,13 +104,13 @@ struct TryExecuteImpl
   // Warning, these are a references. Make sure referenced objects do not go
   // out of scope.
   FunctorType &Functor;
-  vtkm::cont::internal::RuntimeDeviceTracker &Tracker;
+  vtkm::cont::RuntimeDeviceTracker &Tracker;
 
   bool Success;
 
   VTKM_CONT
   TryExecuteImpl(FunctorType &functor,
-                 vtkm::cont::internal::RuntimeDeviceTracker &tracker)
+                 vtkm::cont::RuntimeDeviceTracker &tracker)
     : Functor(functor), Tracker(tracker), Success(false) {  }
 
   template<typename Device>
@@ -159,7 +159,7 @@ private:
 template<typename Functor, typename DeviceList>
 VTKM_CONT
 bool TryExecute(const Functor &functor,
-                vtkm::cont::internal::RuntimeDeviceTracker &tracker,
+                vtkm::cont::RuntimeDeviceTracker &tracker,
                 DeviceList)
 {
   detail::TryExecuteImpl<const Functor> internals(functor, tracker);
@@ -169,7 +169,7 @@ bool TryExecute(const Functor &functor,
 template<typename Functor, typename DeviceList>
 VTKM_CONT
 bool TryExecute(Functor &functor,
-                vtkm::cont::internal::RuntimeDeviceTracker &tracker,
+                vtkm::cont::RuntimeDeviceTracker &tracker,
                 DeviceList)
 {
   detail::TryExecuteImpl<Functor> internals(functor, tracker);
@@ -180,14 +180,14 @@ template<typename Functor, typename DeviceList>
 VTKM_CONT
 bool TryExecute(const Functor &functor, DeviceList)
 {
-  vtkm::cont::internal::RuntimeDeviceTracker tracker;
+  vtkm::cont::RuntimeDeviceTracker tracker;
   return vtkm::cont::TryExecute(functor, tracker, DeviceList());
 }
 template<typename Functor, typename DeviceList>
 VTKM_CONT
 bool TryExecute(Functor &functor, DeviceList)
 {
-  vtkm::cont::internal::RuntimeDeviceTracker tracker;
+  vtkm::cont::RuntimeDeviceTracker tracker;
   return vtkm::cont::TryExecute(functor, tracker, DeviceList());
 }
 template<typename Functor>

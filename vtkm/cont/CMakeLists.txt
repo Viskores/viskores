@@ -64,6 +64,7 @@ set(headers
   ErrorInternal.h
   Field.h
   RuntimeDeviceInformation.h
+  RuntimeDeviceTracker.h
   Storage.h
   StorageBasic.h
   StorageImplicit.h

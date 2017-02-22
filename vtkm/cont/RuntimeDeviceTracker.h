@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_internal_RuntimeDeviceTracker_h
-#define vtk_m_cont_internal_RuntimeDeviceTracker_h
+#ifndef vtk_m_cont_RuntimeDeviceTracker_h
+#define vtk_m_cont_RuntimeDeviceTracker_h
 
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
@@ -32,7 +32,6 @@
 
 namespace vtkm {
 namespace cont {
-namespace internal {
 
 /// A class that can be used to determine if a given device adapter
 /// is supported on the current machine at runtime. This is a more
@@ -117,7 +116,6 @@ private:
 };
 
 }
-}
-}  // namespace vtkm::cont::internal
+}  // namespace vtkm::cont
 
-#endif //vtk_m_filter_internal_RuntimeDeviceTracker_h
+#endif //vtk_m_filter_RuntimeDeviceTracker_h

@@ -24,7 +24,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/internal/RuntimeDeviceTracker.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 
 namespace vtkm {
 namespace rendering {
@@ -43,7 +43,7 @@ VTKM_RENDERING_EXPORT
 void RunTriangulator(const vtkm::cont::DynamicCellSet &cellSet,
                      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > &indices,
                      vtkm::Id &numberOfTriangles,
-                     vtkm::cont::internal::RuntimeDeviceTracker &tracker);
+                     vtkm::cont::RuntimeDeviceTracker &tracker);
 
 }
 }

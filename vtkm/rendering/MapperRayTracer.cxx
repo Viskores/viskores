@@ -20,8 +20,8 @@
 
 #include <vtkm/rendering/MapperRayTracer.h>
 
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
@@ -35,7 +35,7 @@ namespace rendering {
 struct MapperRayTracer::InternalsType
 {
   vtkm::rendering::CanvasRayTracer *Canvas;
-  vtkm::cont::internal::RuntimeDeviceTracker DeviceTracker;
+  vtkm::cont::RuntimeDeviceTracker DeviceTracker;
   std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
       RayTracerContainer;
 
