@@ -99,12 +99,14 @@ ArrayRangeCompute(const ArrayHandleType &input, Device)
 
 // Special implementation for regular point coordinates, which are easy
 // to determine.
+template<typename Device>
 inline
 vtkm::cont::ArrayHandle<vtkm::Range>
 ArrayRangeCompute(const vtkm::cont::ArrayHandle<
                     vtkm::Vec<vtkm::FloatDefault,3>,
                     vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>
-                  &array)
+                  &array,
+                  Device)
 {
   vtkm::internal::ArrayPortalUniformPointCoordinates portal =
       array.GetPortalConstControl();
