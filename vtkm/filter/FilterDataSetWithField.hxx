@@ -203,8 +203,7 @@ bool FilterDataSetWithField<Derived>::MapFieldOntoOutput(ResultDataSet& result,
                         this->Tracker,
                         valid);
 
-    typedef vtkm::filter::FilterTraits< Derived > Traits;
-    vtkm::cont::CastAndCall( vtkm::filter::ApplyPolicy(field, policy, Traits()),
+    vtkm::cont::CastAndCall( vtkm::filter::ApplyPolicy(field, policy),
                              functor );
     }
 
