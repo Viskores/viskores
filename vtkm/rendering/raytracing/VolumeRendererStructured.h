@@ -998,7 +998,8 @@ class SamplerCellAssocRect : public vtkm::worklet::WorkletMapField
       extent[0] = static_cast<vtkm::Float32>(this->DataBounds.X.Length());
       extent[1] = static_cast<vtkm::Float32>(this->DataBounds.Y.Length());
       extent[2] = static_cast<vtkm::Float32>(this->DataBounds.Z.Length());
-      SampleDistance = vtkm::Magnitude(extent) / 1000.f;
+      const vtkm::Float32 defaultNumberOfSamples = 200.f;
+      SampleDistance = vtkm::Magnitude(extent) / defaultNumberOfSamples;
     }
 
     vtkm::worklet::DispatcherMapField< CalcRayStart >( CalcRayStart( camera.GetPosition(), this->DataBounds ))
