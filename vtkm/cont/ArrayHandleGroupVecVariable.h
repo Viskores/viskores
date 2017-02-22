@@ -305,7 +305,7 @@ public:
   using PortalExecution =
       vtkm::exec::internal::ArrayPortalGroupVecVariable<
         typename SourceArrayHandleType::template ExecutionTypes<Device>::Portal,
-        typename OffsetsArrayHandleType::template ExecutionTypes<Device>::Portal>;
+        typename OffsetsArrayHandleType::template ExecutionTypes<Device>::PortalConst>;
   using PortalConstExecution =
       vtkm::exec::internal::ArrayPortalGroupVecVariable<
         typename SourceArrayHandleType::template ExecutionTypes<Device>::PortalConst,
@@ -334,7 +334,7 @@ public:
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
     return PortalExecution(this->SourceArray.PrepareForInPlace(Device()),
-                           this->OffsetsArray.PrepareForInPlace(Device()));
+                           this->OffsetsArray.PrepareForInput(Device()));
   }
 
   VTKM_CONT
@@ -344,8 +344,7 @@ public:
     VTKM_ASSERT(numberOfValues == this->OffsetsArray.GetNumberOfValues());
     return PortalExecution(this->SourceArray.PrepareForOutput(
                              this->SourceArray.GetNumberOfValues(), Device()),
-                           this->OffsetsArray.PrepareForOutput(
-                             numberOfValues, Device()));
+                           this->OffsetsArray.PrepareForInput(Device()));
   }
 
   VTKM_CONT
