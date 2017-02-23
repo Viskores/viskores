@@ -79,6 +79,12 @@ void TestClipExplicit()
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
 
+  VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 0,
+                   "Wrong number of fields in the output dataset");
+
+  VTKM_TEST_ASSERT(clip.MapFieldOntoOutput(result, ds.GetPointField("scalars")),
+                   "MapFieldOntoOutput failed.");
+
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
                    "Wrong number of fields in the output dataset");
 
