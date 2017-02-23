@@ -28,7 +28,7 @@
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
-#include <cstring>
+#include <algorithm>
 #include <sstream>
 
 #define VTKM_MAX_DEVICE_ADAPTER_ID 8
@@ -113,10 +113,54 @@ struct VTKM_NEVER_EXPORT RuntimeDeviceTrackerResetFunctor
 VTKM_CONT
 void RuntimeDeviceTracker::Reset()
 {
-  std::memset(this->Internals->RuntimeValid, 0, VTKM_MAX_DEVICE_ADAPTER_ID);
+  std::fill_n(this->Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, false);
 
   RuntimeDeviceTrackerResetFunctor functor(*this);
   vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+}
+
+VTKM_CONT
+vtkm::cont::RuntimeDeviceTracker
+RuntimeDeviceTracker::DeepCopy() const
+{
+  vtkm::cont::RuntimeDeviceTracker dest;
+  dest.DeepCopy(*this);
+  return dest;
+}
+
+VTKM_CONT
+void RuntimeDeviceTracker::DeepCopy(const vtkm::cont::RuntimeDeviceTracker &src)
+{
+  std::copy_n(src.Internals->RuntimeValid,
+              VTKM_MAX_DEVICE_ADAPTER_ID,
+              this->Internals->RuntimeValid);
+}
+
+VTKM_CONT
+void RuntimeDeviceTracker::ForceDeviceImpl(
+    vtkm::cont::DeviceAdapterId deviceId,
+    const vtkm::cont::DeviceAdapterNameType &deviceName,
+    bool runtimeExists)
+{
+  if (!runtimeExists)
+  {
+    std::stringstream message;
+    message << "Cannot force to device '" << deviceName
+            << "' because that device is not available on this system";
+    throw vtkm::cont::ErrorBadValue(message.str());
+  }
+  this->CheckDevice(deviceId, deviceName);
+
+  std::fill_n(this->Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, false);
+
+  this->Internals->RuntimeValid[deviceId] = runtimeExists;
+}
+
+VTKM_CONT
+vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker()
+{
+  static vtkm::cont::RuntimeDeviceTracker globalTracker;
+  return globalTracker;
 }
 
 }

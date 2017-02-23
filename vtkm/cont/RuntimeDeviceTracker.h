@@ -96,6 +96,88 @@ public:
   VTKM_CONT
   void Reset();
 
+  /// \brief Perform a deep copy of the \c RuntimeDeviceTracker state.
+  ///
+  /// Normally when you assign or copy a \c RuntimeDeviceTracker, they share
+  /// state so that when you change the state of one (for example, find a
+  /// device that does not work), the other is also implicitly updated. This
+  /// important so that when you use the global runtime device tracker the
+  /// state is synchronized across all the units using it.
+  ///
+  /// If you want a \c RuntimeDeviceTracker with independent state, just create
+  /// one independently. If you want to start with the state of a source
+  /// \c RuntimeDeviceTracker but update the state indepenently, you can use
+  /// \c DeepCopy method to get the initial state. Further changes will
+  /// not be shared.
+  ///
+  /// This version of \c DeepCopy creates a whole new \c RuntimeDeviceTracker
+  /// with a state that is not shared with any other object.
+  ///
+  VTKM_CONT_EXPORT
+  VTKM_CONT
+  vtkm::cont::RuntimeDeviceTracker DeepCopy() const;
+
+  /// \brief Perform a deep copy of the \c RuntimeDeviceTracker state.
+  ///
+  /// Normally when you assign or copy a \c RuntimeDeviceTracker, they share
+  /// state so that when you change the state of one (for example, find a
+  /// device that does not work), the other is also implicitly updated. This
+  /// important so that when you use the global runtime device tracker the
+  /// state is synchronized across all the units using it.
+  ///
+  /// If you want a \c RuntimeDeviceTracker with independent state, just create
+  /// one independently. If you want to start with the state of a source
+  /// \c RuntimeDeviceTracker but update the state indepenently, you can use
+  /// \c DeepCopy method to get the initial state. Further changes will
+  /// not be shared.
+  ///
+  /// This version of \c DeepCopy sets the state of the current object to
+  /// the one given in the argument. Any other \c RuntimeDeviceTrackers sharing
+  /// state with this object will also get updated. This method is good for
+  /// restoring a state that was previously saved.
+  ///
+  VTKM_CONT_EXPORT
+  VTKM_CONT
+  void DeepCopy(const vtkm::cont::RuntimeDeviceTracker &src);
+
+  /// \brief Disable the given device
+  ///
+  /// The main intention of \c RuntimeDeviceTracker is to keep track of what
+  /// devices are working for VTK-m. However, it can also be used to turn
+  /// devices on and off. Use this method to disable (turn off) a given device.
+  /// Use \c ResetDevice to turn the device back on (if it is supported).
+  ///
+  template<typename DeviceAdapterTag>
+  VTKM_CONT
+  void DisableDevice(DeviceAdapterTag)
+  {
+    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
+    this->SetDeviceState(Traits::GetId(), Traits::GetName(), false);
+  }
+
+  /// \brief Disable all devices except the specified one.
+  ///
+  /// The main intention of \c RuntimeDeviceTracker is to keep track of what
+  /// devices are working for VTK-m. However, it can also be used to turn
+  /// devices on and off. Use this method to disable all devices except one
+  /// to effectively force VTK-m to use that device. Use \c Reset restore
+  /// all devices to their default values. You can also use the \c DeepCopy
+  /// methods to save and restore the state.
+  ///
+  /// This method will throw a \c ErrorBadValue if the given device does not
+  /// exist on the system.
+  ///
+  template<typename DeviceAdapterTag>
+  VTKM_CONT
+  void ForceDevice(DeviceAdapterTag)
+  {
+    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
+    vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtimeDevice;
+    this->ForceDeviceImpl(Traits::GetId(),
+                          Traits::GetName(),
+                          runtimeDevice.Exists());
+  }
+
 
 private:
   std::shared_ptr<detail::RuntimeDeviceTrackerInternals> Internals;
@@ -115,7 +197,25 @@ private:
   void SetDeviceState(vtkm::cont::DeviceAdapterId deviceId,
                       const vtkm::cont::DeviceAdapterNameType &deviceName,
                       bool state);
+
+  VTKM_CONT_EXPORT
+  VTKM_CONT
+  void ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId,
+                       const vtkm::cont::DeviceAdapterNameType &deviceName,
+                       bool runtimeExists);
 };
+
+/// \brief Get the global \c RuntimeDeviceTracker.
+///
+/// Many features in VTK-m will attempt to run algorithms on the "best
+/// available device." This often is determined at runtime as failures in
+/// one device are recorded and that device is disabled. To prevent having
+/// to check over and over again, VTK-m features generally use the global
+/// device adapter so that these choices are marked and shared.
+///
+VTKM_CONT_EXPORT
+VTKM_CONT
+vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker();
 
 }
 }  // namespace vtkm::cont
