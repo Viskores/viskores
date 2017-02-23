@@ -360,7 +360,7 @@ inline vtkm::cont::DataSet readVTKDataSet(const char *fname)
   {
     ds = reader.ReadDataSet();
   }
-  catch (vtkm::io::ErrorIO e)
+  catch (vtkm::io::ErrorIO &e)
   {
     std::string message("Error reading: ");
     message += fname;

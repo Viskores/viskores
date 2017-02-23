@@ -192,7 +192,7 @@ public:
         this->CloseFile();
         this->Loaded = true;
       }
-      catch (std::ifstream::failure e)
+      catch (std::ifstream::failure &e)
       {
         std::string message("IO Error: ");
         throw vtkm::io::ErrorIO(message + e.what());

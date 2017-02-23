@@ -125,7 +125,7 @@ struct DoStaticTestWorklet
     {
       dispatcher.Invoke(inputHandle, outputHandle, inoutHandle);
     }
-    catch (vtkm::cont::ErrorBadValue error)
+    catch (vtkm::cont::ErrorBadValue &error)
     {
       std::cout << "  Caught expected error: " << error.GetMessage()
                 << std::endl;

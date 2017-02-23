@@ -264,7 +264,7 @@ void TryUnusualType()
     CheckDynamicArray(array, 1);
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized type.");
   }
-  catch (vtkm::cont::ErrorBadValue)
+  catch (vtkm::cont::ErrorBadValue&)
   {
     std::cout << "  Caught exception for unrecognized type." << std::endl;
   }
@@ -286,7 +286,7 @@ void TryUnusualStorage()
     CheckDynamicArray(array, 1);
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized storage.");
   }
-  catch (vtkm::cont::ErrorBadValue)
+  catch (vtkm::cont::ErrorBadValue&)
   {
     std::cout << "  Caught exception for unrecognized storage." << std::endl;
   }
@@ -307,7 +307,7 @@ void TryUnusualTypeAndStorage()
     VTKM_TEST_FAIL(
           "CastAndCall failed to error for unrecognized type/storage.");
   }
-  catch (vtkm::cont::ErrorBadValue)
+  catch (vtkm::cont::ErrorBadValue&)
   {
     std::cout << "  Caught exception for unrecognized type/storage."
               << std::endl;
@@ -318,7 +318,7 @@ void TryUnusualTypeAndStorage()
     CheckDynamicArray(array.ResetTypeList(TypeListTagString()), 1);
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized storage.");
   }
-  catch (vtkm::cont::ErrorBadValue)
+  catch (vtkm::cont::ErrorBadValue&)
   {
     std::cout << "  Caught exception for unrecognized storage." << std::endl;
   }
@@ -328,7 +328,7 @@ void TryUnusualTypeAndStorage()
     CheckDynamicArray(array.ResetStorageList(StorageListTagUnusual()), 1);
     VTKM_TEST_FAIL("CastAndCall failed to error for unrecognized type.");
   }
-  catch (vtkm::cont::ErrorBadValue)
+  catch (vtkm::cont::ErrorBadValue&)
   {
     std::cout << "  Caught exception for unrecognized type." << std::endl;
   }
@@ -340,7 +340,7 @@ void TryUnusualTypeAndStorage()
                                                      StorageListTagUnusual()),
                       1);
   }
-  catch (vtkm::cont::ErrorBadValue)
+  catch (vtkm::cont::ErrorBadValue&)
   {
     VTKM_TEST_FAIL("ResetTypeAndStorageLists should have handled the custom type/storage.");
   }
