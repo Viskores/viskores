@@ -34,6 +34,9 @@ public:
   FilterCell();
 
   VTKM_CONT
+  ~FilterCell();
+
+  VTKM_CONT
   void SetActiveCellSet(vtkm::Id index)
     { this->CellSetIndex = index; }
 

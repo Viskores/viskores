@@ -33,6 +33,14 @@ FilterCell<Derived>::FilterCell():
 
 }
 
+//----------------------------------------------------------------------------
+template<class Derived>
+inline VTKM_CONT
+FilterCell<Derived>::~FilterCell()
+{
+
+}
+
 
 }
 }

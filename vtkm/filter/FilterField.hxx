@@ -35,6 +35,23 @@ namespace vtkm {
 namespace filter {
 
 
+//----------------------------------------------------------------------------
+template<class Derived>
+inline VTKM_CONT
+FilterField<Derived>::FilterField():
+  Tracker(vtkm::cont::GetGlobalRuntimeDeviceTracker())
+{
+
+}
+
+//----------------------------------------------------------------------------
+template<class Derived>
+inline VTKM_CONT
+FilterField<Derived>::~FilterField()
+{
+
+}
+
 //-----------------------------------------------------------------------------
 template<typename Derived>
 inline VTKM_CONT

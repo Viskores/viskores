@@ -48,7 +48,7 @@ struct ResolveFieldTypeAndMap
   vtkm::filter::ResultDataSet& InputResult;
   const vtkm::filter::FieldMetadata& Metadata;
   const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
-  vtkm::cont::RuntimeDeviceTracker& Tracker;
+  vtkm::cont::RuntimeDeviceTracker Tracker;
   bool& RanProperly;
 
 
@@ -56,7 +56,7 @@ struct ResolveFieldTypeAndMap
                          vtkm::filter::ResultDataSet& inResult,
                          const vtkm::filter::FieldMetadata& fieldMeta,
                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                         vtkm::cont::RuntimeDeviceTracker& tracker,
+                         const vtkm::cont::RuntimeDeviceTracker& tracker,
                          bool& ran):
     DerivedClass(derivedClass),
     InputResult(inResult),

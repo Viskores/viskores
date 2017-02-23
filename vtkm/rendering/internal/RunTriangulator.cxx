@@ -55,29 +55,18 @@ struct TriangulatorFunctor
 void RunTriangulator(const vtkm::cont::DynamicCellSet &cellSet,
                      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > &indices,
                      vtkm::Id &numberOfTriangles,
-                     vtkm::cont::RuntimeDeviceTracker &tracker)
+                     const vtkm::cont::RuntimeDeviceTracker &tracker)
 {
   // TODO: Should the rendering library support policies or some other way to
   // configure with custom devices?
   TriangulatorFunctor triangulatorFunctor(cellSet);
-  if (!vtkm::cont::TryExecute(triangulatorFunctor,
-                              tracker,
-                              VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG()))
+  if (!vtkm::cont::TryExecute(triangulatorFunctor, tracker))
   {
     throw vtkm::cont::ErrorExecution("Failed to execute triangulator.");
   }
 
   indices = triangulatorFunctor.Indices;
   numberOfTriangles = triangulatorFunctor.NumberOfTriangles;
-}
-
-void RunTriangulator(const vtkm::cont::DynamicCellSet &cellSet,
-                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > &indices,
-                     vtkm::Id &numberOfTriangles)
-{
-  vtkm::cont::RuntimeDeviceTracker tracker;
-  vtkm::rendering::internal::RunTriangulator(
-        cellSet, indices, numberOfTriangles, tracker);
 }
 
 }

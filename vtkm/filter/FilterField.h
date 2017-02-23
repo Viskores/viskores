@@ -37,12 +37,26 @@ class FilterField
 {
 public:
   VTKM_CONT
+  FilterField();
+
+  VTKM_CONT
+  ~FilterField();
+
+  VTKM_CONT
   void SetOutputFieldName( const std::string& name )
     { this->OutputFieldName = name; }
 
   VTKM_CONT
   const std::string& GetOutputFieldName() const
     { return this->OutputFieldName; }
+
+  VTKM_CONT
+  void SetRuntimeDeviceTracker(const vtkm::cont::RuntimeDeviceTracker &tracker)
+  { this->Tracker = tracker; }
+
+  VTKM_CONT
+  const vtkm::cont::RuntimeDeviceTracker &GetRuntimeDeviceTracker() const
+  { return this->Tracker; }
 
   VTKM_CONT
   ResultField Execute(const vtkm::cont::DataSet &input, const std::string &inFieldName);
