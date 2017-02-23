@@ -36,7 +36,6 @@ void Field::PrintSummary(std::ostream &out) const
     case ASSOC_LOGICAL_DIM: out<<"LogicalDim "; break;
     }
     this->Data.PrintSummary(out);
-    out<<"\n";
 }
 
 const vtkm::cont::DynamicArrayHandle &Field::GetData() const

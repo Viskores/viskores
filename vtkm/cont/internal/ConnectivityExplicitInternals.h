@@ -147,18 +147,14 @@ struct ConnectivityExplicitInternals
     {
       out << "     Shapes: ";
       vtkm::cont::printSummary_ArrayHandle(this->Shapes, out);
-      out << std::endl;
       out << "     NumIndices: ";
       vtkm::cont::printSummary_ArrayHandle(this->NumIndices, out);
-      out << std::endl;
       out << "     Connectivity: ";
       vtkm::cont::printSummary_ArrayHandle(this->Connectivity, out);
-      out << std::endl;
       if (this->IndexOffsetsValid)
       {
         out << "     IndexOffsets: ";
         vtkm::cont::printSummary_ArrayHandle(this->IndexOffsets, out);
-        out << std::endl;
       }
       else
       {

@@ -520,7 +520,7 @@ void DynamicArrayHandleBase<TypeList,StorageList>::
     out << "Could not find appropriate cast for array in CastAndCall1.\n"
            "Array: ";
     this->PrintSummary(out);
-    out << "\nTypeList: " << typeid(TypeList).name()
+    out << "TypeList: " << typeid(TypeList).name()
         << "\nStorageList: " << typeid(StorageList).name() << "\n";
     throw vtkm::cont::ErrorBadValue(out.str());
   }

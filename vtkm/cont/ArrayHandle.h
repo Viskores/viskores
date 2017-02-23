@@ -616,7 +616,7 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
     out << " ";
     detail::printSummary_ArrayHandle_Value(portal.Get(sz-1), out, IsVec());
   }
-  out<<"]";
+  out<<"]\n";
 }
 
 }
