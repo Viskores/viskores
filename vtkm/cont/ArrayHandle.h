@@ -584,7 +584,12 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
   using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;
 
   vtkm::Id sz = array.GetNumberOfValues();
-  out<<"sz= "<<sz<<" [";
+
+  out << "valueType=" << typeid(T).name()
+      << " storageType=" << typeid(StorageT).name()
+      << " numValues=" << sz
+      << " [";
+
   PortalType portal = array.GetPortalConstControl();
   if (sz <= 7)
   {
