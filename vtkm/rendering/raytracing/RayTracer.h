@@ -465,7 +465,6 @@ public:
   VTKM_CONT
   void Render(CanvasRayTracer *canvas)
   {
-    vtkm::cont::Timer<DeviceAdapter> renderTimer;
     if(IsSceneDirty)
     {
       Init();
