@@ -262,7 +262,7 @@ private:
   private:
     const FunctorType Functor;
 
-    void operator=(const ScheduleKernel<FunctorType> &); // Not implemented
+    void operator=(const ScheduleKernel<FunctorType> &) = delete;
   };
 
 public:

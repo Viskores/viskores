@@ -459,7 +459,7 @@ private:
     // This type of array handle cannot exist, so do nothing.
   }
 
-  void operator=(const DynamicArrayHandleTryStorage<Functor,Type> &); // Not implemented
+  void operator=(const DynamicArrayHandleTryStorage<Functor,Type> &) = delete;
 };
 
 template<typename Functor, typename StorageList>
@@ -488,7 +488,7 @@ struct DynamicArrayHandleTryType {
   }
 
 private:
-  void operator=(const DynamicArrayHandleTryType<Functor,StorageList> &); // Not implemented
+  void operator=(const DynamicArrayHandleTryType<Functor,StorageList> &) = delete;
 };
 
 } // namespace detail

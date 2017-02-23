@@ -156,8 +156,7 @@ private:
   void WillContinue(const T&, std::false_type) const
   { }
 
-  // Not implemented
-  void operator=(const DispatcherBaseTypeCheckFunctor<ContinueFunctor,TypeCheckTag,Index> &);
+  void operator=(const DispatcherBaseTypeCheckFunctor<ContinueFunctor,TypeCheckTag,Index> &) = delete;
 };
 
 // Uses vtkm::cont::internal::DynamicTransform and the DynamicTransformCont
@@ -262,7 +261,7 @@ struct DispatcherBaseTransportFunctor
   }
 
 private:
-  void operator=(const DispatcherBaseTransportFunctor &); // Not implemented
+  void operator=(const DispatcherBaseTransportFunctor &) = delete;
 };
 
 } // namespace detail
@@ -459,9 +458,9 @@ protected:
   WorkletType Worklet;
 
 private:
-  // These are not implemented. Dispatchers cannot be copied.
-  DispatcherBase(const MyType &);
-  void operator=(const MyType &);
+  // Dispatchers cannot be copied
+  DispatcherBase(const MyType &) = delete;
+  void operator=(const MyType &) = delete;
 
   template<typename Invocation, typename InputRangeType, typename OutputRangeType, typename DeviceAdapter>
   VTKM_CONT

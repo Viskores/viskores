@@ -169,9 +169,9 @@ public:
 
 
 private:
-  //explicitly state the BufferState doesn't support copy or move semantics
-  BufferState(const BufferState&);
-  void operator=(const BufferState&);
+  // BufferState doesn't support copy or move semantics
+  BufferState(const BufferState&) = delete;
+  void operator=(const BufferState&) = delete;
 
   GLuint* OpenGLHandle;
   GLenum BufferType;

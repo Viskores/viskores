@@ -130,7 +130,7 @@ struct TryExecuteImpl
   }
 
 private:
-  void operator=(const TryExecuteImpl<FunctorType> &); // Not implemented
+  void operator=(const TryExecuteImpl<FunctorType> &) = delete;
 };
 
 } // namespace detail

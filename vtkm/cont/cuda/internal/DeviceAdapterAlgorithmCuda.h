@@ -104,8 +104,8 @@ public:
 
 private:
   // Copying CUDA events is problematic.
-  DeviceAdapterTimerImplementation(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda> &);
-  void operator=(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda> &);
+  DeviceAdapterTimerImplementation(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda> &) = delete;
+  void operator=(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda> &) = delete;
 
   cudaEvent_t StartEvent;
   cudaEvent_t EndEvent;

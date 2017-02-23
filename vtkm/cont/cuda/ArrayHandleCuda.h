@@ -305,11 +305,10 @@ public:
   }
 
 private:
-  // Not implemented
   ArrayManagerExecutionThrustDevice(
-      ArrayManagerExecutionThrustDevice<T, StorageTag> &);
+      ArrayManagerExecutionThrustDevice<T, StorageTag> &) = delete;
   void operator=(
-      ArrayManagerExecutionThrustDevice<T, StorageTag> &);
+      ArrayManagerExecutionThrustDevice<T, StorageTag> &) = delete;
 
   StorageType *Storage;
 };

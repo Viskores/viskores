@@ -258,7 +258,7 @@ struct BindLeftBinaryOp
   }
 
 private:
-  void operator=(const BindLeftBinaryOp<T,BinaryOpType,ReturnT> &); // Not implemented
+  void operator=(const BindLeftBinaryOp<T,BinaryOpType,ReturnT> &) = delete;
 };
 
 template<typename T, typename BinaryOpType, typename ReturnT = T>
@@ -280,7 +280,7 @@ struct BindRightBinaryOp
   }
 
 private:
-  void operator=(const BindRightBinaryOp<T,BinaryOpType,ReturnT> &); // Not implemented
+  void operator=(const BindRightBinaryOp<T,BinaryOpType,ReturnT> &) = delete;
 };
 
 } // namespace internal
@@ -1200,11 +1200,11 @@ private:
 
   // You are not allowed to assign to a VecCConst, so these operators are not
   // implemented and are disallowed.
-  void operator=(const VecCConst<T> &);
-  void operator+=(const VecCConst<T> &);
-  void operator-=(const VecCConst<T> &);
-  void operator*=(const VecCConst<T> &);
-  void operator/=(const VecCConst<T> &);
+  void operator=(const VecCConst<T> &) = delete;
+  void operator+=(const VecCConst<T> &) = delete;
+  void operator-=(const VecCConst<T> &) = delete;
+  void operator*=(const VecCConst<T> &) = delete;
+  void operator/=(const VecCConst<T> &) = delete;
 };
 
 /// Creates a \c VecC from an input array.

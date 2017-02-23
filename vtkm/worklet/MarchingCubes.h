@@ -327,8 +327,7 @@ private:
   const bool GenerateNormals;
   EdgeWeightGenerateMetaData<ScalarType, NormalStorageType, DeviceAdapter> MetaData;
 
-  // Not implemented
-  void operator=(const EdgeWeightGenerate<ScalarType,NormalStorageType,DeviceAdapter> &);
+  void operator=(const EdgeWeightGenerate<ScalarType,NormalStorageType,DeviceAdapter> &) = delete;
 };
 
 
