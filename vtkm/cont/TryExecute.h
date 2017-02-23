@@ -59,31 +59,31 @@ struct TryExecuteRunIfValid<Functor, Device, true>
       {
         return functor(Device());
       }
-      catch(vtkm::cont::ErrorBadAllocation e)
+      catch(vtkm::cont::ErrorBadAllocation &e)
       {
         std::cerr << "caught ErrorBadAllocation " << e.GetMessage() << std::endl;
         //currently we only consider OOM errors worth disabling a device for
         //than we fallback to another device
         tracker.ReportAllocationFailure(Device(), e);
       }
-      catch(vtkm::cont::ErrorBadType e)
+      catch(vtkm::cont::ErrorBadType &e)
       {
         //should bad type errors should stop the execution, instead of
         //deferring to another device adapter?
         std::cerr << "caught ErrorBadType : " << e.GetMessage() << std::endl;
       }
-      catch(vtkm::cont::ErrorBadValue e)
+      catch(vtkm::cont::ErrorBadValue &e)
       {
         //should bad value errors should stop the filter, instead of deferring
         //to another device adapter?
         std::cerr << "caught ErrorBadValue : " << e.GetMessage() << std::endl;
       }
-      catch(vtkm::cont::Error e)
+      catch(vtkm::cont::Error &e)
       {
         //general errors should be caught and let us try the next device adapter.
         std::cerr << "exception is: " << e.GetMessage() << std::endl;
       }
-      catch (std::exception e)
+      catch (std::exception &e)
       {
         std::cerr << "caught standard exception: " << e.what() << std::endl;
       }

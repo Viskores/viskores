@@ -474,7 +474,7 @@ VTKM_VECTORIZATION_IN_LOOP
         this->Functor(index);
         }
       }
-    catch (vtkm::cont::Error error)
+    catch (vtkm::cont::Error &error)
       {
       this->ErrorMessage.RaiseError(error.GetMessage().c_str());
       }
@@ -526,7 +526,7 @@ VTKM_VECTORIZATION_IN_LOOP
           }
         }
       }
-    catch (vtkm::cont::Error error)
+    catch (vtkm::cont::Error &error)
       {
       this->ErrorMessage.RaiseError(error.GetMessage().c_str());
       }
@@ -574,7 +574,7 @@ VTKM_VECTORIZATION_IN_LOOP
         OutputPortal.Set( i, ValuesPortal.Get(IndexPortal.Get(i)) );
         }
       }
-    catch (vtkm::cont::Error error)
+    catch (vtkm::cont::Error &error)
       {
       this->ErrorMessage.RaiseError(error.GetMessage().c_str());
       }

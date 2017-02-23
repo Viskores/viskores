@@ -248,14 +248,14 @@ public:
     {
       function();
     }
-    catch (TestFailure error)
+    catch (TestFailure &error)
     {
       std::cout << "***** Test failed @ "
                 << error.GetFile() << ":" << error.GetLine() << std::endl
                 << error.GetMessage() << std::endl;
       return 1;
     }
-    catch (std::exception error)
+    catch (std::exception &error)
     {
       std::cout << "***** STL exception throw." << std::endl
                 << error.what() << std::endl;

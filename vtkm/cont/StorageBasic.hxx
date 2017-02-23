@@ -128,7 +128,7 @@ void Storage<T, vtkm::cont::StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
       VTKM_ASSERT(this->AllocatedSize == 0);
     }
   }
-  catch (std::bad_alloc err)
+  catch (std::bad_alloc&)
   {
     // Make sureour state is OK.
     this->Array = nullptr;

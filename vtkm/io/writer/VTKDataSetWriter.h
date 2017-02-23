@@ -416,7 +416,7 @@ public:
       this->Write(fileStream, dataSet, cellSetIndex);
       fileStream.close();
     }
-    catch (std::ofstream::failure error)
+    catch (std::ofstream::failure &error)
     {
       throw vtkm::io::ErrorIO(error.what());
     }

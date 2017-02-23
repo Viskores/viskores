@@ -423,7 +423,7 @@ private:
                      "or the width of vtkm::Id is not large enough to express all "
                      "array sizes.");
     }
-    catch (vtkm::cont::ErrorBadAllocation error)
+    catch (vtkm::cont::ErrorBadAllocation &error)
     {
       std::cout << "Got the expected error: " << error.GetMessage() << std::endl;
     }
@@ -1559,7 +1559,7 @@ private:
     {
       Algorithm::Schedule(OneErrorKernel(), ARRAY_SIZE);
     }
-    catch (vtkm::cont::ErrorExecution error)
+    catch (vtkm::cont::ErrorExecution &error)
     {
       std::cout << "Got expected error: " << error.GetMessage() << std::endl;
       message = error.GetMessage();
@@ -1573,7 +1573,7 @@ private:
     {
       Algorithm::Schedule(AllErrorKernel(), ARRAY_SIZE);
     }
-    catch (vtkm::cont::ErrorExecution error)
+    catch (vtkm::cont::ErrorExecution &error)
     {
       std::cout << "Got expected error: " << error.GetMessage() << std::endl;
       message = error.GetMessage();
