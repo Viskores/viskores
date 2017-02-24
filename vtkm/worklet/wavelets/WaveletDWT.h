@@ -45,6 +45,58 @@ public:
   WaveletDWT( WaveletName name ) : WaveletBase( name ) {} 
 
 
+  // Debug use only
+  template< typename ArrayType >
+  void printPlaneX( const ArrayType &arr,               // print a plane perpendicular to X axis
+                    vtkm::Id dimX, vtkm::Id dimY, vtkm::Id dimZ,  // dims of input array
+                    vtkm::Id x,                                   // x idx of the plane to print
+                    const char* msg )
+    
+  {
+    printf("%s:\n", msg );
+    for( vtkm::Id y = dimY - 1; y >= 0; y-- )
+    {
+      printf("y = %lld:    ", y );
+      for( vtkm::Id z = 0; z < dimZ; z++ )
+        printf("%f, ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
+      printf("\n");
+    }
+    printf("\n");
+  }
+  template< typename ArrayType >
+  void printPlaneY( const ArrayType &arr,               // print a plane perpendicular to Y axis
+                    vtkm::Id dimX, vtkm::Id dimY, vtkm::Id dimZ,  // dims of input array
+                    vtkm::Id y,                                   // y idx of the plane to print
+                    const char* msg )
+  {
+    printf("%s:\n", msg );
+    for( vtkm::Id z = dimZ - 1; z >= 0; z-- )
+    {
+      printf("z = %lld:    ", z );
+      for( vtkm::Id x = 0; x < dimX; x++ )
+        printf("%f, ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
+      printf("\n");
+    }
+    printf("\n");
+  }
+  template< typename ArrayType >
+  void printPlaneZ( const ArrayType &arr,               // print a plane perpendicular to Z axis
+                    vtkm::Id dimX, vtkm::Id dimY, vtkm::Id dimZ,  // dims of input array
+                    vtkm::Id z,                                   // z idx of the plane to print
+                    const char* msg )
+  {
+    printf("%s:\n", msg );
+    for( vtkm::Id y = dimY - 1; y >= 0; y-- )
+    {
+      printf("y = %lld:    ", y );
+      for( vtkm::Id x = 0; x < dimX; x++ )
+        printf("%10f, ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
+      printf("\n");
+    }
+    printf("\n");
+  }
+
+
   // Function: extend a cube in X direction
   template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
   vtkm::Id Extend3DLeftRight( 
@@ -576,7 +628,7 @@ public:
                                   sigPretendDimX,   addLen,           sigPretendDimZ );
       TopDownDispatcherType dispatcher( worklet );
       timer.Reset();
-      dispatcher.Invoke( topExt, afterX, bottomExt, coeffOut );
+      dispatcher.Invoke( topExt, afterX, bottomExt, afterY );
       computationTime += timer.GetElapsedTime();
     }
 
@@ -1907,7 +1959,10 @@ public:
         padZeroAtExt2        = true;
       }
       else
+      {
+        pretendSigPaddedZero = padZeroAtExt2 = false;   // so the compiler doesn't complain
         vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
+      }
     }
     this->Extend3DLeftRight(  coeffIn, 
                               inDimX,               inDimY,     inDimZ,
@@ -2014,7 +2069,10 @@ public:
         padZeroAtExt2        = true;
       }
       else
+      {
+        pretendSigPaddedZero = padZeroAtExt2 = false;   // so the compiler doesn't complain
         vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
+      }
     }
     this->Extend3DTopDown(  coeffIn, 
                             inDimX,               inDimY,             inDimZ,
@@ -2121,7 +2179,10 @@ public:
         padZeroAtExt2        = true;
       }
       else
+      {
+        pretendSigPaddedZero = padZeroAtExt2 = false;   // so the compiler doesn't complain
         vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
+      }
     }
     this->Extend3DFrontBack(  coeffIn, 
                               inDimX,               inDimY,         inDimZ,

@@ -174,7 +174,10 @@ public:
         sigPretendZ++;
     }
 		else
+    {
+      sigPretendX = sigPretendY = sigPretendZ = 0;    // so the compiler doesn't complain
       vtkm::cont::ErrorControlInternal("Invalid extension mode for cubes!");
+    }
 
     if( sigPretendX == sigPretendDimX || 		// decides to pad a zero 
 				sigPretendY == sigPretendDimY ||

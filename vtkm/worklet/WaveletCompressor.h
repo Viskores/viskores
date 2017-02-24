@@ -34,7 +34,6 @@ public:
   WaveletCompressor( wavelets::WaveletName name ) : WaveletDWT( name ) {} 
 
 
-
   // Multi-level 1D wavelet decomposition
   template< typename SignalArrayType, typename CoeffArrayType, typename DeviceTag >
   VTKM_CONT
@@ -190,7 +189,7 @@ public:
     typedef typename OutArrayType::ValueType          OutValueType;
     typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
 
-    // First level transform operates writes to the output array
+    // First level transform writes to the output array
     vtkm::Float64 computationTime = WaveletDWT::DWT3D( 
                                     sigIn, 
                                     currentLenX,       currentLenY,     currentLenZ,
@@ -199,10 +198,12 @@ public:
                                     coeffOut, 
                                     L3d, 
                                     DeviceTag() );
+
     VTKM_ASSERT( coeffOut.GetNumberOfValues() == currentLenX * currentLenY * currentLenZ );
     currentLenX = WaveletBase::GetApproxLength( currentLenX );
     currentLenY = WaveletBase::GetApproxLength( currentLenY );
     currentLenZ = WaveletBase::GetApproxLength( currentLenZ );
+
 
     // Successor transforms writes to a temporary array
     /* for( vtkm::Id i = nLevels-1; i > 0; i-- )
