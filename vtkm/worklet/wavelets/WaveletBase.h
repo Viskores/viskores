@@ -227,7 +227,7 @@ public:
   typename ArrayType::ValueType DeviceSum( const ArrayType &array, DeviceTag )
   {
     return vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Reduce
-              ( array, 0.0 );
+              ( array, static_cast<typename ArrayType::ValueType>(0.0) );
   }
 
 
