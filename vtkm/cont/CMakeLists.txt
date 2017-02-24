@@ -39,6 +39,7 @@ set(headers
   ArrayPortalToIterators.h
   ArrayHandleConcatenate.h
   ArrayRangeCompute.h
+  ArrayRangeCompute.hxx
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h
@@ -93,6 +94,7 @@ set(sources
 # This list of sources has code that uses devices and so might need to be
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
+  ArrayRangeCompute.cxx
   RuntimeDeviceTracker.cxx
   )
 

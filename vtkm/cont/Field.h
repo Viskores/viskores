@@ -51,7 +51,7 @@ public:
   template<typename ArrayHandleType>
   void operator()(const ArrayHandleType &input) const
   {
-    *this->Range = vtkm::cont::ArrayRangeCompute(input, DeviceAdapterTag());
+    *this->Range = vtkm::cont::ArrayRangeCompute(input);
   }
 
 private:

@@ -667,8 +667,9 @@ function(vtkm_library)
     add_library(${lib_name} ${VTKm_LIB_SOURCES})
   endif()
 
-  #need to link to the vtkm target as makes C++11 become enabled
-  target_link_libraries(${lib_name} PUBLIC vtkm)
+  set(libs ${VTKm_LIBRARIES})
+  list(REMOVE_ITEM libs ${lib_name})
+  target_link_libraries(${lib_name} PUBLIC ${libs})
 
   set(cxx_args ${VTKm_COMPILE_OPTIONS})
   separate_arguments(cxx_args)
