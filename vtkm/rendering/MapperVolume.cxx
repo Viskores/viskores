@@ -159,7 +159,7 @@ struct MapperVolume::RenderFunctor
     } 
       
     tracer->SetCompositeBackground(this->Self->Internals->CompositeBackground);
-    vtkm::Bounds dataBounds = this->Coordinates.GetBounds(Device());
+    vtkm::Bounds dataBounds = this->Coordinates.GetBounds();
 
     tracer->SetData(this->Coordinates,
                     this->ScalarField,

@@ -23,6 +23,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/testing/Testing.h>
 
 // Required for implementation of ArrayRangeCompute for "odd" arrays
@@ -45,7 +46,7 @@ struct CustomTypeList : vtkm::ListTagBase<vtkm::Vec<Int32, 3>,
                                           vtkm::Vec<Float64, 9> >
 {};
 
-template <typename DeviceAdapterTag>
+template<typename DeviceAdapterTag>
 class TestingComputeRange
 {
 private:
@@ -59,7 +60,7 @@ private:
                             nvals);
 
     vtkm::Range result;
-    field.GetRange(&result, DeviceAdapterTag());
+    field.GetRange(&result);
 
     std::cout << result << std::endl;
     VTKM_TEST_ASSERT(
@@ -86,7 +87,6 @@ private:
 
     vtkm::Range result[NumberOfComponents];
     field.GetRange(result,
-                   DeviceAdapterTag(),
                    CustomTypeList(),
                    VTKM_DEFAULT_STORAGE_LIST_TAG());
 
@@ -106,7 +106,7 @@ private:
           vtkm::Vec<vtkm::FloatDefault,3>(0.0f,-5.0f,4.0f),
           vtkm::Vec<vtkm::FloatDefault,3>(1.0f,0.5f,2.0f));
 
-    vtkm::Bounds result = field.GetBounds(DeviceAdapterTag());
+    vtkm::Bounds result = field.GetBounds();
 
     VTKM_TEST_ASSERT(test_equal(result.X.Min, 0.0), "Min x wrong.");
     VTKM_TEST_ASSERT(test_equal(result.X.Max, 9.0), "Max x wrong.");
@@ -155,6 +155,7 @@ private:
 public:
   static VTKM_CONT int Run()
   {
+    vtkm::cont::GetGlobalRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
     return vtkm::cont::testing::Testing::Run(TestAll());
   }
 };

@@ -31,7 +31,6 @@
 namespace DataSetBuilderExplicitNamespace {
 
 typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DFA;
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 template <typename T>
 vtkm::Bounds ComputeBounds(std::size_t numPoints, const T *coords)
@@ -83,8 +82,7 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
   }
 
   //Make sure bounds are correct.
-  vtkm::Bounds computedBounds =
-      ds.GetCoordinateSystem().GetBounds(DeviceAdapter());
+  vtkm::Bounds computedBounds = ds.GetCoordinateSystem().GetBounds();
   VTKM_TEST_ASSERT(test_equal(bounds, computedBounds),
                    "Bounds of coordinates do not match");
 }
