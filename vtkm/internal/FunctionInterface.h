@@ -855,8 +855,7 @@ private:
   const TransformFunctor &Transform;
   const FinishFunctor &Finish;
 
-  // Not implemented
-  void operator=(const FunctionInterfaceDynamicTransformContContinue<OriginalFunction,NewFunction,TransformFunctor,FinishFunctor> &);
+  void operator=(const FunctionInterfaceDynamicTransformContContinue<OriginalFunction,NewFunction,TransformFunctor,FinishFunctor> &) = delete;
 };
 
 } // namespace detail

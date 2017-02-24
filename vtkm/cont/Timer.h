@@ -67,8 +67,8 @@ public:
 
 private:
   /// Some timers are ill-defined when copied, so disallow that for all timers.
-  VTKM_CONT Timer(const Timer<Device> &);  // Not implemented.
-  VTKM_CONT void operator=(const Timer<Device> &); // Not implemented.
+  VTKM_CONT Timer(const Timer<Device> &) = delete;
+  VTKM_CONT void operator=(const Timer<Device> &) = delete;
 
   vtkm::cont::DeviceAdapterTimerImplementation<Device>
       TimerImplementation;

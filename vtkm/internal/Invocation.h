@@ -262,7 +262,7 @@ struct Invocation
 
 private:
   // Do not allow assignment of one Invocation to another. It is too expensive.
-  void operator=(const Invocation<ParameterInterface,ControlInterface,ExecutionInterface,InputDomainIndex,OutputToInputMapType,VisitArrayType> &);
+  void operator=(const Invocation<ParameterInterface,ControlInterface,ExecutionInterface,InputDomainIndex,OutputToInputMapType,VisitArrayType> &) = delete;
 };
 
 /// Convenience function for creating an Invocation object.

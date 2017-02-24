@@ -56,7 +56,7 @@ struct PointGrad
   vtkm::cont::ArrayHandle< vtkm::Vec<T,3> >* Result;
 
 private:
-  void operator=(const PointGrad<DerivedPolicy,Device,T,S> &); // Not implemented
+  void operator=(const PointGrad<DerivedPolicy,Device,T,S> &) = delete;
 };
 
 //-----------------------------------------------------------------------------

@@ -101,7 +101,7 @@ struct FilterDataSetPrepareForExecutionFunctor
   }
 
 private:
-  void operator=(FilterDataSetPrepareForExecutionFunctor<Derived,DerivedPolicy> &); // Not implemented
+  void operator=(FilterDataSetPrepareForExecutionFunctor<Derived,DerivedPolicy> &) = delete;
 };
 } // namespace detail
 

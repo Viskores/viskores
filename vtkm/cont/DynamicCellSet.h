@@ -328,7 +328,7 @@ struct DynamicCellSetTryCellSet
   }
 
 private:
-  void operator=(const DynamicCellSetTryCellSet<Functor> &); // Not implemented
+  void operator=(const DynamicCellSetTryCellSet<Functor> &) = delete;
 };
 
 } // namespace detail

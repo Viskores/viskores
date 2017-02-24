@@ -87,8 +87,7 @@ private:
     }
 
   private:
-    // Not implemented
-    void operator=(const ResolveFieldTypeAndExecuteForDevice<T,StorageTag>&);
+    void operator=(const ResolveFieldTypeAndExecuteForDevice<T,StorageTag>&) = delete;
   };
 
 public:
@@ -103,8 +102,7 @@ public:
   }
 
 private:
-  // Not implemented
-  void operator=(const ResolveFieldTypeAndExecute<Derived,DerivedPolicy,ResultType> &);
+  void operator=(const ResolveFieldTypeAndExecute<Derived,DerivedPolicy,ResultType> &) = delete;
 };
 
 }
