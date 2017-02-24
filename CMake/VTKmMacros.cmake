@@ -588,10 +588,13 @@ function(vtkm_wrap_sources_for_cuda cuda_source_list_var)
     list(APPEND cuda_sources ${wrapped_file})
   endforeach(source_file)
 
+  # Set original sources as header files (which they basically are) so that
+  # we can add them to the file list and they will show up in IDE but they will
+  # not be compiled separately.
   set_source_files_properties(${original_sources}
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
-  set(${cuda_source_list_var} ${cuda_sources} PARENT_SCOPE)
+  set(${cuda_source_list_var} ${cuda_sources} ${original_sources} PARENT_SCOPE)
 endfunction(vtkm_wrap_sources_for_cuda)
 
 # Add a VTK-m library. The name of the library will match the "kit" name
@@ -625,10 +628,25 @@ function(vtkm_library)
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
 
+  if(VTKm_LIB_WRAP_FOR_CUDA)
+    if(VTKm_ENABLE_CUDA)
+      # If we have some sources marked as WRAP_FOR_CUDA and we support CUDA,
+      # then we need to turn on CDUA, wrap those sources, and add the wrapped
+      # code to the sources list.
+      set(VTKm_LIB_CUDA TRUE)
+      vtkm_wrap_sources_for_cuda(cuda_sources ${VTKm_LIB_WRAP_FOR_CUDA})
+      list(APPEND VTKm_LIB_SOURCES ${cuda_sources})
+    else()
+      # If we have some sources marked as WRAP_FOR_CUDA but we do not support
+      # CUDA, then just compile these sources normally by adding them to the
+      # sources list.
+      list(APPEND VTKm_LIB_SOURCES ${VTKm_LIB_WRAP_FOR_CUDA})
+    endif()
+  endif()
+
   if(VTKm_LIB_CUDA)
     vtkm_setup_nvcc_flags(old_nvcc_flags old_cxx_flags)
 
-    vtkm_wrap_sources_for_cuda(cuda_sources ${VTKm_LIB_WRAP_FOR_CUDA})
 
     # Cuda compiles do not respect target_include_directories
     cuda_include_directories(${VTKm_SOURCE_DIR}
@@ -640,7 +658,7 @@ function(vtkm_library)
       set(compile_options -Xcompiler=${CMAKE_CXX_COMPILE_OPTIONS_VISIBILITY}hidden)
     endif()
 
-    cuda_add_library(${lib_name} ${VTKm_LIB_SOURCES} ${cuda_sources}
+    cuda_add_library(${lib_name} ${VTKm_LIB_SOURCES}
                      OPTIONS "${compile_options}")
 
     set(CUDA_NVCC_FLAGS ${old_nvcc_flags})

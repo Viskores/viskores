@@ -42,7 +42,15 @@ FilterDataSetWithField<Derived>::FilterDataSetWithField():
   OutputFieldName(),
   CellSetIndex(0),
   CoordinateSystemIndex(0),
-  Tracker()
+  Tracker(vtkm::cont::GetGlobalRuntimeDeviceTracker())
+{
+
+}
+
+//----------------------------------------------------------------------------
+template<class Derived>
+inline VTKM_CONT
+FilterDataSetWithField<Derived>::~FilterDataSetWithField()
 {
 
 }

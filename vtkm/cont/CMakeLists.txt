@@ -64,6 +64,7 @@ set(headers
   ErrorInternal.h
   Field.h
   RuntimeDeviceInformation.h
+  RuntimeDeviceTracker.h
   Storage.h
   StorageBasic.h
   StorageImplicit.h
@@ -89,8 +90,15 @@ set(sources
   StorageBasic.cxx
   )
 
+# This list of sources has code that uses devices and so might need to be
+# compiled with a device-specific compiler (like CUDA).
+set(device_sources
+  RuntimeDeviceTracker.cxx
+  )
+
 vtkm_library(
   SOURCES ${sources}
+  WRAP_FOR_CUDA ${device_sources}
   HEADERS ${header_impls})
 target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
 

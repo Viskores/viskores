@@ -21,7 +21,6 @@
 #include <vtkm/rendering/MapperRayTracer.h>
 
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
@@ -35,7 +34,6 @@ namespace rendering {
 struct MapperRayTracer::InternalsType
 {
   vtkm::rendering::CanvasRayTracer *Canvas;
-  vtkm::cont::internal::RuntimeDeviceTracker DeviceTracker;
   std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
       RayTracerContainer;
 
@@ -172,7 +170,7 @@ void MapperRayTracer::RenderCells(
   vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  indices;
   vtkm::Id numberOfTriangles;
   vtkm::rendering::internal::RunTriangulator(
-        cellset, indices, numberOfTriangles, this->Internals->DeviceTracker);
+        cellset, indices, numberOfTriangles);
 
   RenderFunctor functor(this,
                         indices,
@@ -181,9 +179,7 @@ void MapperRayTracer::RenderCells(
                         scalarField,
                         camera,
                         scalarRange);
-  vtkm::cont::TryExecute(functor,
-                         this->Internals->DeviceTracker,
-                         VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+  vtkm::cont::TryExecute(functor);
 }
 
 void MapperRayTracer::StartScene()
