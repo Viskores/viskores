@@ -31,6 +31,8 @@
 
 #include <vtkm/cont/internal/DynamicTransform.h>
 
+#include <sstream>
+
 namespace vtkm {
 namespace cont {
 
@@ -514,8 +516,13 @@ void DynamicArrayHandleBase<TypeList,StorageList>::
   vtkm::ListForEach(tryType, TypeList());
   if (!tryType.FoundCast)
   {
-    throw vtkm::cont::ErrorBadValue(
-          "Could not find appropriate cast for array in CastAndCall1.");
+    std::ostringstream out;
+    out << "Could not find appropriate cast for array in CastAndCall1.\n"
+           "Array: ";
+    this->PrintSummary(out);
+    out << "TypeList: " << typeid(TypeList).name()
+        << "\nStorageList: " << typeid(StorageList).name() << "\n";
+    throw vtkm::cont::ErrorBadValue(out.str());
   }
 }
 
