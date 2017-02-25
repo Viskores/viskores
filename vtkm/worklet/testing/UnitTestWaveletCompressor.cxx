@@ -181,9 +181,9 @@ void FillArray3D( ArrayType& array, vtkm::Id dimX, vtkm::Id dimY, vtkm::Id dimZ 
 void TestDecomposeReconstruct3D()
 {
   std::cout << "Testing 3D wavelet compressor on a 10x10x10 cube: " << std::endl;
-  vtkm::Id sigX   = 1024;
-  vtkm::Id sigY   = 1024;
-  vtkm::Id sigZ   = 1024;
+  vtkm::Id sigX   = 20;
+  vtkm::Id sigY   = 20;
+  vtkm::Id sigZ   = 20;
   vtkm::Id sigLen = sigX * sigY * sigZ;
 
   // make input data array handle
@@ -197,7 +197,6 @@ void TestDecomposeReconstruct3D()
   vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::CDF9_7;
   std::cout << "Wavelet kernel         = CDF 9/7" << std::endl;
   vtkm::worklet::WaveletCompressor compressor( wname );
-  std::vector<vtkm::Id> L;
 
   vtkm::Id XMaxLevel = compressor.GetWaveletMaxLevel( sigX );
   vtkm::Id YMaxLevel = compressor.GetWaveletMaxLevel( sigY );
@@ -211,7 +210,7 @@ void TestDecomposeReconstruct3D()
   // Decompose
   //vtkm::cont::Timer<> timer;
   //computationTime = 
-  compressor.WaveDecompose3D( inputArray, nLevels, sigX, sigY, sigZ, outputArray, L, 
+  compressor.WaveDecompose3D( inputArray, nLevels, sigX, sigY, sigZ, outputArray,
                               VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   //elapsedTime1 = timer.GetElapsedTime();  
   //std::cout << "Decompose time         = " << elapsedTime1 << std::endl;
@@ -221,8 +220,8 @@ void TestDecomposeReconstruct3D()
 
   // Squash small coefficients
   //timer.Reset();
-  vtkm::Float64 cratio = 2.0;   // X:1 compression, where X >= 1
-  compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  //vtkm::Float64 cratio = 2.0;   // X:1 compression, where X >= 1
+  //compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   //elapsedTime2 = timer.GetElapsedTime();  
   //std::cout << "Squash time            = " << elapsedTime2 << std::endl;
 
@@ -230,7 +229,7 @@ void TestDecomposeReconstruct3D()
   vtkm::cont::ArrayHandle<vtkm::Float32> reconstructArray;
   //timer.Reset();
   //computationTime = 
-  compressor.WaveReconstruct3D( outputArray, nLevels, sigX, sigY, sigZ, reconstructArray, L,
+  compressor.WaveReconstruct3D( outputArray, nLevels, sigX, sigY, sigZ, reconstructArray, 
                                 VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   //elapsedTime3 = timer.GetElapsedTime();  
   //std::cout << "Reconstruction time    = " << elapsedTime3 << std::endl;
