@@ -505,10 +505,9 @@ public:
                          vtkm::Id sigStartX,      vtkm::Id sigStartY,       vtkm::Id sigStartZ,
                          vtkm::Id sigPretendDimX, vtkm::Id sigPretendDimY,  vtkm::Id sigPretendDimZ,
                          ArrayOutType             &coeffOut,
-                         std::vector<vtkm::Id>    &L,
                          DeviceTag   )
   {
-    VTKM_ASSERT( L.size() == 27 );
+    std::vector<vtkm::Id> L(27, 0);
 
     // LLL
     L[0]  = WaveletBase::GetApproxLength( sigPretendDimX );   
@@ -673,7 +672,8 @@ public:
   // Performs one level of IDWT on a small cube of a big cube
   // The output array has the same dimensions as the small cube.
   template< typename ArrayInType, typename ArrayOutType, typename DeviceTag >
-  vtkm::Float64 IDWT3D( const ArrayInType   &coeffIn,
+  vtkm::Float64 IDWT3D( 
+            const ArrayInType   &coeffIn,
                   vtkm::Id      inDimX,   vtkm::Id inDimY,    vtkm::Id inDimZ,
                   vtkm::Id      inStartX, vtkm::Id inStartY,  vtkm::Id inStartZ,
             const std::vector<vtkm::Id>   &L,

@@ -539,7 +539,7 @@ public:
             dimX5(x_5),         dimY5(y_5),         dimZ5(z_5),
             startX5(start_x5),  startY5(start_y5),  startZ5(start_z5)
   {
-    printf("IndexTranslator6CubesFrontBack: \n" );
+  /*  printf("IndexTranslator6CubesFrontBack: \n" );
     printf("  cube1 dims: (%lld, %lld, %lld)\n", dimX1, dimY1, dimZ1 );
     printf("  cube2 dims: (%lld, %lld, %lld)\n", dimX2, dimY2, dimZ2 );
     printf("  cube3 dims: (%lld, %lld, %lld)\n", dimX3, dimY3, dimZ3 );
@@ -547,7 +547,7 @@ public:
     printf("  cube5 dims: (%lld, %lld, %lld)\n", dimX5, dimY5, dimZ5 );
     printf("  cA    dims: (%lld, %lld, %lld)\n", dimXa, dimYa, dimZa );
     printf("  cD    dims: (%lld, %lld, %lld)\n", dimXd, dimYd, dimZd );
-    printf("  start idx : (%lld, %lld, %lld)\n", startX5, startY5, startZ5 );
+    printf("  start idx : (%lld, %lld, %lld)\n", startX5, startY5, startZ5 ); */
   }
 
   VTKM_EXEC_CONT
@@ -1396,8 +1396,8 @@ public:
                        x_5,     y_5,      z_5,
                        startX5, startY5,  startZ5 )
   { 
-    printf("InverseTransform3DFrontBack: \n");
-    printf("  output dims: (%lld, %lld, %lld)\n", outDimX, outDimY, outDimZ );
+    /* printf("InverseTransform3DFrontBack: \n");
+    printf("  output dims: (%lld, %lld, %lld)\n", outDimX, outDimY, outDimZ ); */
   }
                       
   VTKM_EXEC_CONT
