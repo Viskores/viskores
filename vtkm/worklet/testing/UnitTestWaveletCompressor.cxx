@@ -107,7 +107,12 @@ public:
   VTKM_EXEC
   GaussianWorklet3D( vtkm::Id dx,  vtkm::Id dy,  vtkm::Id dz )
                   :  dimX( dx ),   dimY( dy ),   dimZ( dz )
-  {  }
+  {  
+    amp = 10.0;
+    sigmaX = (T)dimX / 4.0;   sigmaX2 = sigmaX * sigmaX * 2.0;
+    sigmaY = (T)dimY / 4.0;   sigmaY2 = sigmaY * sigmaY * 2.0;
+    sigmaZ = (T)dimZ / 4.0;   sigmaZ2 = sigmaZ * sigmaZ * 2.0;
+  }
 
   VTKM_EXEC
   void Sig1Dto3D( vtkm::Id idx, vtkm::Id &x, vtkm::Id &y, vtkm::Id &z ) const
@@ -120,13 +125,12 @@ public:
   VTKM_EXEC
   T GetGaussian( T x, T y, T z ) const
   {
-    return 0.0;   // need to be filled
-  }
-  
-  VTKM_EXEC
-  T GetToyVal( T x, T y, T z ) const
-  {
-    return x * 100 + y * 10 + z;  // 3-digit xyz when all x, y, z are between 0 and 9
+    x -= (T)dimX / 2.0;   // translate to center at (0, 0, 0)
+    y -= (T)dimY / 2.0;
+    z -= (T)dimZ / 2.0;
+    T power = x*x/sigmaX2 + y*y/sigmaY2 + z*z/sigmaZ2;
+
+    return vtkm::Exp( power * -1.0 ) * amp;
   }
 
   VTKM_EXEC
@@ -134,11 +138,14 @@ public:
   {
     vtkm::Id x, y, z;
     Sig1Dto3D( workIdx, x, y, z );
-    val = GetToyVal( x, y, z );
+    val = GetGaussian( (T)x, (T)y, (T)z );
   }
 
 private:
-  const vtkm::Id        dimX, dimY, dimZ;
+  const vtkm::Id        dimX,     dimY,     dimZ;     // extent
+        T               amp;                          // amplitude
+        T               sigmaX,   sigmaY,   sigmaZ;   // spread
+        T               sigmaX2,  sigmaY2,  sigmaZ2;  // sigma * sigma * 2
 };
 
 }
@@ -202,7 +209,7 @@ void TestDecomposeReconstruct3D()
   vtkm::Id YMaxLevel = compressor.GetWaveletMaxLevel( sigY );
   vtkm::Id ZMaxLevel = compressor.GetWaveletMaxLevel( sigZ );
   vtkm::Id nLevels   = vtkm::Min( vtkm::Min(XMaxLevel, YMaxLevel), ZMaxLevel );
-  nLevels = 1;
+  nLevels = 2;
   std::cout << "Decomposition levels   = " << nLevels << std::endl;
   vtkm::Float64 computationTime = 0.0;
   vtkm::Float64 elapsedTime1, elapsedTime2, elapsedTime3;
@@ -220,8 +227,8 @@ void TestDecomposeReconstruct3D()
 
   // Squash small coefficients
   //timer.Reset();
-  //vtkm::Float64 cratio = 2.0;   // X:1 compression, where X >= 1
-  //compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
+  vtkm::Float64 cratio = 4.0;   // X:1 compression, where X >= 1
+  compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
   //elapsedTime2 = timer.GetElapsedTime();  
   //std::cout << "Squash time            = " << elapsedTime2 << std::endl;
 
