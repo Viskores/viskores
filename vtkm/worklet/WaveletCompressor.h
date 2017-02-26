@@ -162,7 +162,6 @@ public:
                   vtkm::Id                nLevels,    // n levels of DWT
                   vtkm::Id                inX,        vtkm::Id  inY,    vtkm::Id  inZ,
                   OutArrayType            &coeffOut,
-                  //std::vector<vtkm::Id>   &L,
                   DeviceTag  )
   {
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
@@ -178,8 +177,6 @@ public:
       vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( sigIn, coeffOut );
       return 0;
     }
-
-    //this->ComputeL3( inX, inY, inZ, nLevels, L );
 
     vtkm::Id currentLenX     = inX;
     vtkm::Id currentLenY     = inY;
@@ -249,7 +246,7 @@ public:
     }
     typedef typename OutArrayType::ValueType          OutValueType;
     typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
-    //vtkm::Float64 computationTime = 0.0;
+    vtkm::Float64 computationTime = 0.0;
   
     OutBasicArray outBuffer;
     if( nLevels == 0 )  //  0 levels means no transform
@@ -276,13 +273,12 @@ public:
       OutBasicArray  tempOutput;
 
       // IDWT
-      //computationTime +=
-      WaveletDWT::IDWT3D( outBuffer, 
-                          inX,        inY,      inZ,
-                          0,          0,        0,
-                          L3d,    
-                          tempOutput, 
-                          DeviceTag() );
+      computationTime += WaveletDWT::IDWT3D( 	outBuffer, 
+																							inX,        inY,      inZ,
+																							0,          0,        0,
+																							L3d,    
+																							tempOutput, 
+																							DeviceTag() );
 
       // copy back reconstructed block
       WaveletBase::DeviceCubeCopyTo(  tempOutput, 
@@ -304,15 +300,14 @@ public:
     L3d[24] = L3d[0] + L3d[12];
     L3d[25] = L3d[1] + L3d[7];
     L3d[26] = L3d[2] + L3d[5]; 
-    //computationTime += 
-    WaveletDWT::IDWT3D( outBuffer, 
-                        inX,        inY,      inZ,
-                        0,          0,        0,
-                        L3d, 
-                        arrOut, 
-                        DeviceTag() );
+    computationTime += WaveletDWT::IDWT3D( 	outBuffer, 
+																						inX,        inY,      inZ,
+																						0,          0,        0,
+																						L3d, 
+																						arrOut, 
+																						DeviceTag() );
     
-    return 0.0;    
+    return computationTime;
   }
 
 

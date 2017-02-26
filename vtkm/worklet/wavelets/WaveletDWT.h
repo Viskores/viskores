@@ -695,8 +695,8 @@ public:
     typedef vtkm::worklet::DispatcherMapField<TopDownXFormType, DeviceTag>    TopDownDispatcherType;
     typedef vtkm::worklet::DispatcherMapField<FrontBackXFormType, DeviceTag>  FrontBackDispatcherType;
 
-    //vtkm::cont::Timer<DeviceTag> timer;
-    //vtkm::Float64 computationTime = 0.0;
+    vtkm::cont::Timer<DeviceTag> timer;
+    vtkm::Float64 computationTime = 0.0;
 
     // First inverse transform in Z direction
     BasicArrayType        afterZ;
@@ -731,9 +731,9 @@ public:
                     inDimX,          inDimY,        inDimZ,       // coeffIn
                     inStartX,        inStartY,      inStartZ );   // coeffIn
       FrontBackDispatcherType dispatcher( worklet );
-      //timer.Reset();
+      timer.Reset();
       dispatcher.Invoke( ext1, ext2, ext3, ext4, coeffIn, afterZ );
-      //computationTime += timer.GetElapsedTime();
+      computationTime += timer.GetElapsedTime();
     }
     
     // Second inverse transform in Y direction
@@ -769,9 +769,9 @@ public:
                     inPretendDimX,    inPretendDimY,    inPretendDimZ,    // actual signal
                     0,                0,                0 );
       TopDownDispatcherType dispatcher( worklet );
-      //timer.Reset();
+      timer.Reset();
       dispatcher.Invoke( ext1, ext2, ext3, ext4, afterZ, afterY );
-      //computationTime += timer.GetElapsedTime();
+      computationTime += timer.GetElapsedTime();
     } 
 
     // Lastly inverse transform in X direction
@@ -807,11 +807,12 @@ public:
                     inPretendDimX,    inPretendDimY,    inPretendDimZ,  // actual signal
                     0,                0,                0 );
       LeftRightDispatcherType dispatcher( worklet );
+			timer.Reset();
       dispatcher.Invoke( ext1, ext2, ext3, ext4, afterY, sigOut );
+			computationTime += timer.GetElapsedTime();
     }
 
-    //return computationTime;
-    return 0.0;
+    return computationTime;
   }
 
 
