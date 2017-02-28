@@ -232,17 +232,17 @@ public:
   void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 3D indices as input
                         vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
-    if ( 0 <= inX && inX < dimX1 )
-    {
-      cube = 1;
-      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
-    } 
-    else if ( dimX1 <= inX && inX < (dimX1 + pretendDimX2) )
+    if ( dimX1 <= inX && inX < (dimX1 + pretendDimX2) )
     {
       vtkm::Id inX_local = inX - dimX1;
       cube = 2;
       idx = (inZ + startZ2) * dimX2 * dimY2 + (inY + startY2) * dimX2 + (inX_local + startX2);
     }
+    else if ( 0 <= inX && inX < dimX1 )
+    {
+      cube = 1;
+      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
+    } 
     else if ( (dimX1 + pretendDimX2) <= inX && inX < (dimX1 + pretendDimX2 + dimX3) )
     {
       vtkm::Id inX_local = inX - dimX1 - pretendDimX2;
@@ -281,16 +281,16 @@ public:
   void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 3D indices as input
                         vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
-    if ( 0 <= inY && inY < dimY1 )
-    {
-      cube = 1;
-      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
-    }
-    else if ( dimY1 <= inY && inY < (dimY1 + pretendDimY2) )
+    if ( dimY1 <= inY && inY < (dimY1 + pretendDimY2) )
     {
       vtkm::Id inY_local = inY - dimY1;
       cube = 2;
       idx = (inZ + startZ2) * dimX2 * dimY2 + (inY_local + startY2) * dimX2 + inX + startX2;
+    }
+    else if ( 0 <= inY && inY < dimY1 )
+    {
+      cube = 1;
+      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
     }
     else if ( (dimY1 + pretendDimY2) <= inY && inY < (dimY1 + pretendDimY2 + dimY3) )
     {
@@ -330,16 +330,16 @@ public:
   void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 3D indices as input
                         vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
-    if ( 0 <= inZ && inZ < dimZ1 )
-    {
-      cube = 1;
-      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
-    }
-    else if ( dimZ1 <= inZ && inZ < (dimZ1 + pretendDimZ2) )
+    if ( dimZ1 <= inZ && inZ < (dimZ1 + pretendDimZ2) )
     {
       vtkm::Id inZ_local = inZ - dimZ1;
       cube = 2;
       idx = (inZ_local + startZ2) * dimX2 * dimY2 + (inY + startY2) * dimX2 + inX + startX2;
+    }
+    else if ( 0 <= inZ && inZ < dimZ1 )
+    {
+      cube = 1;
+      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
     }
     else if ( (dimZ1 + pretendDimZ2) <= inZ && inZ < (dimZ1 + pretendDimZ2 + dimZ3) )
     {
@@ -397,17 +397,23 @@ public:
   void Translate3Dto1D( vtkm::Id  inX,   vtkm::Id  inY,  vtkm::Id  inZ,   // 3D indices as input
                         vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
-    if ( 0 <= inX && inX < dimX1 )
-    {
-      cube = 1;  // ext1
-      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
-    } 
-    else if ( dimX1 <= inX && inX < (dimX1 + dimXa) )
+    if ( dimX1 <= inX && inX < (dimX1 + dimXa) )
     {
       vtkm::Id inX_local = inX - dimX1;
       cube = 5;  // cAcD
       idx = (inZ + startZ5) * dimX5 * dimY5 + (inY + startY5) * dimX5 + (inX_local + startX5 );
     }
+    else if ( (dimX1 + dimXa + dimX2 + dimX3) <= inX && inX < (dimX1 + dimXa + dimX2 + dimX3 + dimXd) )
+    {
+      vtkm::Id inX_local = inX - dimX1 - dimX2 - dimX3;   // no -dimXa since this is on the same cube
+      cube = 5;  // cAcD
+      idx = (inZ + startZ5) * dimX5 * dimY5 + (inY + startY5) * dimX5 + (inX_local + startX5 );
+    }
+    else if ( 0 <= inX && inX < dimX1 )
+    {
+      cube = 1;  // ext1
+      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
+    } 
     else if ( (dimX1 + dimXa) <= inX && inX < (dimX1 + dimXa + dimX2) )
     {
       vtkm::Id inX_local = inX - dimX1 - dimXa;
@@ -419,12 +425,6 @@ public:
       vtkm::Id inX_local = inX - dimX1 - dimXa - dimX2;
       cube = 3;  // ext3
       idx = inZ * dimX3 * dimY3 + inY * dimX3 + inX_local;
-    }
-    else if ( (dimX1 + dimXa + dimX2 + dimX3) <= inX && inX < (dimX1 + dimXa + dimX2 + dimX3 + dimXd) )
-    {
-      vtkm::Id inX_local = inX - dimX1 - dimX2 - dimX3;   // no -dimXa since this is on the same cube
-      cube = 5;  // cAcD
-      idx = (inZ + startZ5) * dimX5 * dimY5 + (inY + startY5) * dimX5 + (inX_local + startX5 );
     }
     else if ( (dimX1 + dimXa + dimX2 + dimX3 + dimXd) <= inX && 
                inX < (dimX1 + dimXa + dimX2 + dimX3 + dimXd + dimX4) )
@@ -470,16 +470,22 @@ public:
   void Translate3Dto1D( vtkm::Id  inX,   vtkm::Id  inY,  vtkm::Id  inZ,   // 3D indices as input
                         vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
-    if ( 0 <= inY && inY < dimY1 )
-    {
-      cube = 1;  // ext1
-      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
-    }
-    else if ( dimY1 <= inY && inY < (dimY1 + dimYa) )
+    if ( dimY1 <= inY && inY < (dimY1 + dimYa) )
     {
       vtkm::Id inY_local = inY - dimY1;
       cube = 5;  // cAcD
       idx = (inZ + startZ5) * dimX5 * dimY5 + (inY_local + startY5 ) * dimX5 + (inX + startX5);
+    }
+    else if ( (dimY1 + dimYa + dimY2 + dimY3) <= inY && inY < (dimY1 + dimYa + dimY2 + dimY3 + dimYd) )
+    {
+      vtkm::Id inY_local = inY - dimY1 - dimY2 - dimY3;
+      cube = 5;  // cAcD
+      idx = (inZ + startZ5) * dimX5 * dimY5 + (inY_local + startY5) * dimX5 + (inX + startX5);
+    }
+    else if ( 0 <= inY && inY < dimY1 )
+    {
+      cube = 1;  // ext1
+      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
     }
     else if ( (dimY1 + dimYa) <= inY && inY < (dimY1 + dimYa + dimY2) )
     {
@@ -492,12 +498,6 @@ public:
       vtkm::Id inY_local = inY - dimY1 - dimYa - dimY2;
       cube = 3;  // ext3
       idx = inZ * dimX3 * dimY3 + inY_local * dimX3 + inX;
-    }
-    else if ( (dimY1 + dimYa + dimY2 + dimY3) <= inY && inY < (dimY1 + dimYa + dimY2 + dimY3 + dimYd) )
-    {
-      vtkm::Id inY_local = inY - dimY1 - dimY2 - dimY3;
-      cube = 5;  // cAcD
-      idx = (inZ + startZ5) * dimX5 * dimY5 + (inY_local + startY5) * dimX5 + (inX + startX5);
     }
     else if ( (dimY1 + dimYa + dimY2 + dimY3 + dimYd) <= inY && 
                inY < (dimY1 + dimYa + dimY2 + dimY3 + dimYd + dimY4) )
@@ -554,16 +554,22 @@ public:
   void Translate3Dto1D( vtkm::Id  inX,   vtkm::Id  inY,  vtkm::Id  inZ,   // 3D indices as input
                         vtkm::Id  &cube, vtkm::Id  &idx ) const // which cube, and idx of that cube
   {
-    if ( 0 <= inZ && inZ < dimZ1 )
-    {
-      cube = 1;  // ext1
-      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
-    }
-    else if ( dimZ1 <= inZ && inZ < (dimZ1 + dimZa) )
+    if ( dimZ1 <= inZ && inZ < (dimZ1 + dimZa) )
     {
       vtkm::Id inZ_local = inZ - dimZ1;
       cube = 5;  // cAcD
       idx = (inZ_local + startZ5) * dimX5 * dimY5 + (inY + startY5 ) * dimX5 + (inX + startX5);
+    }
+    else if ( (dimZ1 + dimZa + dimZ2 + dimZ3) <= inZ && inZ < (dimZ1 + dimZa + dimZ2 + dimZ3 + dimZd) )
+    {
+      vtkm::Id inZ_local = inZ - dimZ1 - dimZ2 - dimZ3;
+      cube = 5;  // cAcD
+      idx = (inZ_local + startZ5) * dimX5 * dimY5 + (inY + startY5) * dimX5 + (inX + startX5);
+    }
+    else if ( 0 <= inZ && inZ < dimZ1 )
+    {
+      cube = 1;  // ext1
+      idx = inZ * dimX1 * dimY1 + inY * dimX1 + inX;
     }
     else if ( (dimZ1 + dimZa) <= inZ && inZ < (dimZ1 + dimZa + dimZ2) )
     {
@@ -576,12 +582,6 @@ public:
       vtkm::Id inZ_local = inZ - dimZ1 - dimZa - dimZ2;
       cube = 3;  // ext3
       idx = inZ_local * dimX3 * dimY3 + inY * dimX3 + inX;
-    }
-    else if ( (dimZ1 + dimZa + dimZ2 + dimZ3) <= inZ && inZ < (dimZ1 + dimZa + dimZ2 + dimZ3 + dimZd) )
-    {
-      vtkm::Id inZ_local = inZ - dimZ1 - dimZ2 - dimZ3;
-      cube = 5;  // cAcD
-      idx = (inZ_local + startZ5) * dimX5 * dimY5 + (inY + startY5) * dimX5 + (inX + startX5);
     }
     else if ( (dimZ1 + dimZa + dimZ2 + dimZ3 + dimZd) <= inZ && 
                inZ < (dimZ1 + dimZa + dimZ2 + dimZ3 + dimZd + dimZ4) )
@@ -665,10 +665,10 @@ public:
   VAL GetVal( const InPortalType1 &portal1, const InPortalType2 &portal2,
               const InPortalType3 &portal3, vtkm::Id inCube, vtkm::Id inIdx ) const
   {
-    if( inCube == 1 )
-      return MAKEVAL( portal1.Get(inIdx) );
-    else if( inCube == 2 )
+    if( inCube == 2 )
       return MAKEVAL( portal2.Get(inIdx) );
+    else if( inCube == 1 )
+      return MAKEVAL( portal1.Get(inIdx) );
     else if( inCube == 3 )
       return MAKEVAL( portal3.Get(inIdx) );
     else
@@ -793,10 +793,10 @@ public:
   VAL GetVal( const InPortalType1 &portal1, const InPortalType2 &portal2,
               const InPortalType3 &portal3, vtkm::Id inCube, vtkm::Id inIdx ) const
   {
-    if( inCube == 1 )
-      return MAKEVAL( portal1.Get(inIdx) );
-    else if( inCube == 2 )
+    if( inCube == 2 )
       return MAKEVAL( portal2.Get(inIdx) );
+    else if( inCube == 1 )
+      return MAKEVAL( portal1.Get(inIdx) );
     else if( inCube == 3 )
       return MAKEVAL( portal3.Get(inIdx) );
     else
@@ -921,10 +921,10 @@ public:
   VAL GetVal( const InPortalType1 &portal1, const InPortalType2 &portal2,
               const InPortalType3 &portal3, vtkm::Id inCube, vtkm::Id inIdx ) const
   {
-    if( inCube == 1 )
-      return MAKEVAL( portal1.Get(inIdx) );
-    else if( inCube == 2 )
+    if( inCube == 2 )
       return MAKEVAL( portal2.Get(inIdx) );
+    else if( inCube == 1 )
+      return MAKEVAL( portal1.Get(inIdx) );
     else if( inCube == 3 )
       return MAKEVAL( portal3.Get(inIdx) );
     else
@@ -1069,14 +1069,14 @@ public:
                     vtkm::Id          inCube, 
                     vtkm::Id          inIdx ) const
   {
-    if( inCube == 1 )
-      return MAKEVAL( ext1.Get(inIdx) );
-    else if( inCube == 2 )
+    if( inCube == 2 )
       return MAKEVAL( ext2.Get(inIdx) );
-    else if( inCube == 3 )
-      return MAKEVAL( ext3.Get(inIdx) );
     else if( inCube == 4 )
       return MAKEVAL( ext4.Get(inIdx) );
+    else if( inCube == 1 )
+      return MAKEVAL( ext1.Get(inIdx) );
+    else if( inCube == 3 )
+      return MAKEVAL( ext3.Get(inIdx) );
     else if( inCube == 5 )
       return MAKEVAL( sig5.Get(inIdx) );
     else
@@ -1244,14 +1244,14 @@ public:
                     vtkm::Id          inCube, 
                     vtkm::Id          inIdx ) const
   {
-    if( inCube == 1 )
-      return MAKEVAL( ext1.Get(inIdx) );
-    else if( inCube == 2 )
+    if( inCube == 2 )
       return MAKEVAL( ext2.Get(inIdx) );
-    else if( inCube == 3 )
-      return MAKEVAL( ext3.Get(inIdx) );
     else if( inCube == 4 )
       return MAKEVAL( ext4.Get(inIdx) );
+    else if( inCube == 1 )
+      return MAKEVAL( ext1.Get(inIdx) );
+    else if( inCube == 3 )
+      return MAKEVAL( ext3.Get(inIdx) );
     else if( inCube == 5 )
       return MAKEVAL( sig5.Get(inIdx) );
     else
@@ -1422,14 +1422,14 @@ public:
                     vtkm::Id          inCube, 
                     vtkm::Id          inIdx ) const
   {
-    if( inCube == 1 )
-      return MAKEVAL( ext1.Get(inIdx) );
-    else if( inCube == 2 )
+    if( inCube == 2 )
       return MAKEVAL( ext2.Get(inIdx) );
-    else if( inCube == 3 )
-      return MAKEVAL( ext3.Get(inIdx) );
     else if( inCube == 4 )
       return MAKEVAL( ext4.Get(inIdx) );
+    else if( inCube == 1 )
+      return MAKEVAL( ext1.Get(inIdx) );
+    else if( inCube == 3 )
+      return MAKEVAL( ext3.Get(inIdx) );
     else if( inCube == 5 )
       return MAKEVAL( sig5.Get(inIdx) );
     else
