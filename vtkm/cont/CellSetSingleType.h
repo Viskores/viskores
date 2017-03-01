@@ -37,7 +37,7 @@ namespace cont {
 //Only works with fixed sized cell sets
 
 template< typename ConnectivityStorageTag = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG >
-class CellSetSingleType  :
+class VTKM_ALWAYS_EXPORT CellSetSingleType  :
   public vtkm::cont::CellSetExplicit<
     typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag, //ShapeStorageTag
     typename vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag,  //NumIndicesStorageTag
@@ -217,7 +217,7 @@ public:
     this->PointToCell.IndexOffsetsValid = true;
   }
 
-  VTKM_CONT    
+  VTKM_CONT
   vtkm::Id GetCellShapeAsId() const
   {
     return this->CellShapeAsId;
@@ -228,7 +228,7 @@ public:
   {
     return static_cast<vtkm::UInt8>(this->CellShapeAsId);
   }
-  
+
   virtual void PrintSummary(std::ostream &out) const
   {
     out << "   ExplicitSingleCellSet: " << this->Name << " Type "<<this->CellShapeAsId<<std::endl;
@@ -236,7 +236,7 @@ public:
     this->PointToCell.PrintSummary(out);
     out << "   CellToPoint: " << std::endl;
     this->CellToPoint.PrintSummary(out);
-  }    
+  }
 
 private:
   template< typename CellShapeTag>
