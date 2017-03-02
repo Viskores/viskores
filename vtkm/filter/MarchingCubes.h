@@ -62,6 +62,12 @@ public:
   VTKM_CONT
   bool GetGenerateNormals() const  { return this->GenerateNormals; }
 
+  VTKM_CONT
+  void SetNormalArrayName(const std::string &name) { this->NormalArrayName = name; }
+
+  VTKM_CONT
+  const std::string& GetNormalArrayName() const { return this->NormalArrayName; }
+
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT
   vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
@@ -83,6 +89,7 @@ public:
 private:
   double IsoValue;
   bool GenerateNormals;
+  std::string NormalArrayName;
   vtkm::worklet::MarchingCubes Worklet;
 };
 
