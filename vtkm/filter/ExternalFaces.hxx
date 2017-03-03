@@ -63,13 +63,18 @@ template<typename T,
          typename DerivedPolicy,
          typename DeviceAdapter>
 inline VTKM_CONT
-bool ExternalFaces::DoMapField(vtkm::filter::ResultDataSet&,
-                               const vtkm::cont::ArrayHandle<T, StorageType>&,
-                               const vtkm::filter::FieldMetadata&,
+bool ExternalFaces::DoMapField(vtkm::filter::ResultDataSet &result,
+                               const vtkm::cont::ArrayHandle<T, StorageType> &input,
+                               const vtkm::filter::FieldMetadata &fieldMeta,
                                const vtkm::filter::PolicyBase<DerivedPolicy>&,
                                const DeviceAdapter&)
 {
-  return false;
+  if (fieldMeta.IsPointField())
+  {
+    result.GetDataSet().AddField(fieldMeta.AsField(input));
+  }
+
+  return true;
 }
 
 }
