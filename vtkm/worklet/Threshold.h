@@ -24,6 +24,7 @@
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -138,8 +139,10 @@ public:
       throw vtkm::cont::ErrorBadValue("Expecting point or cell field.");
     }
 
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
+      vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>
-        ::StreamCompact(passFlags, this->ValidCellIds);
+        ::CopyIf(indices, passFlags, this->ValidCellIds);
 
     return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
   }

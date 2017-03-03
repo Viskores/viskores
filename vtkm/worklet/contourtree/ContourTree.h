@@ -708,7 +708,7 @@ void ContourTree<T,StorageType,DeviceAdapter>::CompressActiveSupernodes()
                                   noSuperarcArray);
 
   vtkm::cont::ArrayHandle<vtkm::Id> compressSupernodes;
-  DeviceAlgorithm::StreamCompact(activeSupernodes, noSuperarcArray, compressSupernodes);
+  DeviceAlgorithm::CopyIf(activeSupernodes, noSuperarcArray, compressSupernodes);
 
   activeSupernodes.ReleaseResources();
   DeviceAlgorithm::Copy(compressSupernodes, activeSupernodes);

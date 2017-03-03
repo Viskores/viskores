@@ -307,6 +307,63 @@ private:
     }
   }
 
+  template<class ValueIterator,
+  class StencilPortal,
+  class OutputPortal,
+  class UnaryPredicate>
+  VTKM_CONT static
+  vtkm::Id CopyIfPortal(ValueIterator valuesBegin,
+                        ValueIterator valuesEnd,
+                        StencilPortal stencil,
+                        OutputPortal output,
+                        UnaryPredicate unary_predicate)
+  {
+    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
+    IteratorType;
+
+    IteratorType outputBegin = IteratorBegin(output);
+
+    typedef typename StencilPortal::ValueType ValueType;
+
+    vtkm::exec::cuda::internal::WrappedUnaryPredicate<ValueType,
+    UnaryPredicate> up(unary_predicate);
+
+    try
+    {
+      IteratorType newLast = ::thrust::copy_if(thrust::cuda::par,
+                                               valuesBegin,
+                                               valuesEnd,
+                                               IteratorBegin(stencil),
+                                               outputBegin,
+                                               up);
+      return static_cast<vtkm::Id>( ::thrust::distance(outputBegin, newLast) );
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+      return vtkm::Id(0);
+    }
+
+
+  }
+
+  template<class ValuePortal,
+  class StencilPortal,
+  class OutputPortal,
+  class UnaryPredicate>
+  VTKM_CONT static
+  vtkm::Id CopyIfPortal(ValuePortal values,
+                        StencilPortal stencil,
+                        OutputPortal output,
+                        UnaryPredicate unary_predicate)
+  {
+    return CopyIfPortal(IteratorBegin(values),
+                        IteratorEnd(values),
+                        stencil,
+                        output,
+                        unary_predicate);
+  }
+
   template<class InputPortal, class OutputPortal>
   VTKM_CONT static void CopySubRangePortal(const InputPortal &input,
                                                   vtkm::Id inputOffset,
@@ -665,63 +722,6 @@ private:
     }
   }
 
-  template<class ValueIterator,
-           class StencilPortal,
-           class OutputPortal,
-           class UnaryPredicate>
-  VTKM_CONT static
-  vtkm::Id CopyIfPortal(ValueIterator valuesBegin,
-                        ValueIterator valuesEnd,
-                        StencilPortal stencil,
-                        OutputPortal output,
-                        UnaryPredicate unary_predicate)
-  {
-    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
-                                                            IteratorType;
-
-    IteratorType outputBegin = IteratorBegin(output);
-
-    typedef typename StencilPortal::ValueType ValueType;
-
-    vtkm::exec::cuda::internal::WrappedUnaryPredicate<ValueType,
-                                                      UnaryPredicate> up(unary_predicate);
-
-    try
-    {
-      IteratorType newLast = ::thrust::copy_if(thrust::cuda::par,
-                                               valuesBegin,
-                                               valuesEnd,
-                                               IteratorBegin(stencil),
-                                               outputBegin,
-                                               up);
-      return static_cast<vtkm::Id>( ::thrust::distance(outputBegin, newLast) );
-    }
-    catch(...)
-    {
-      throwAsVTKmException();
-      return vtkm::Id(0);
-    }
-
-
-  }
-
-    template<class ValuePortal,
-             class StencilPortal,
-             class OutputPortal,
-             class UnaryPredicate>
-  VTKM_CONT static
-  vtkm::Id CopyIfPortal(ValuePortal values,
-                        StencilPortal stencil,
-                        OutputPortal output,
-                        UnaryPredicate unary_predicate)
-  {
-    return CopyIfPortal(IteratorBegin(values),
-                        IteratorEnd(values),
-                        stencil,
-                        output,
-                        unary_predicate);
-  }
-
   template<class ValuesPortal>
   VTKM_CONT static
   vtkm::Id UniquePortal(const ValuesPortal values)
@@ -848,6 +848,44 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
     CopyPortal(input.PrepareForInput(DeviceAdapterTag()),
                output.PrepareForOutput(inSize, DeviceAdapterTag()));
+  }
+
+  template<typename T,
+  typename U,
+  class SIn,
+  class SStencil,
+  class SOut>
+  VTKM_CONT static void CopyIf(
+    const vtkm::cont::ArrayHandle<U,SIn>& input,
+    const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
+    vtkm::cont::ArrayHandle<U,SOut>& output)
+  {
+    vtkm::Id size = stencil.GetNumberOfValues();
+    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTag()),
+                                    stencil.PrepareForInput(DeviceAdapterTag()),
+                                    output.PrepareForOutput(size, DeviceAdapterTag()),
+                                    ::vtkm::NotZeroInitialized()); //yes on the stencil
+    output.Shrink(newSize);
+  }
+
+  template<typename T,
+  typename U,
+  class SIn,
+  class SStencil,
+  class SOut,
+  class UnaryPredicate>
+  VTKM_CONT static void CopyIf(
+    const vtkm::cont::ArrayHandle<U,SIn>& input,
+    const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
+    vtkm::cont::ArrayHandle<U,SOut>& output,
+    UnaryPredicate unary_predicate)
+  {
+    vtkm::Id size = stencil.GetNumberOfValues();
+    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTag()),
+                                    stencil.PrepareForInput(DeviceAdapterTag()),
+                                    output.PrepareForOutput(size, DeviceAdapterTag()),
+                                    unary_predicate);
+    output.Shrink(newSize);
   }
 
   template<typename T, typename U, class SIn, class SOut>
@@ -1322,59 +1360,6 @@ public:
     SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTag()),
                     values.PrepareForInPlace(DeviceAdapterTag()),
                     binary_compare);
-  }
-
-
-  template<typename T, class SStencil, class SOut>
-  VTKM_CONT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
-      vtkm::cont::ArrayHandle<vtkm::Id,SOut>& output)
-  {
-    vtkm::Id size = stencil.GetNumberOfValues();
-    vtkm::Id newSize = CopyIfPortal(::thrust::make_counting_iterator<vtkm::Id>(0),
-                                    ::thrust::make_counting_iterator<vtkm::Id>(size),
-                                    stencil.PrepareForInput(DeviceAdapterTag()),
-                                    output.PrepareForOutput(size, DeviceAdapterTag()),
-                                    ::vtkm::NotZeroInitialized());
-    output.Shrink(newSize);
-  }
-
-  template<typename T,
-           typename U,
-           class SIn,
-           class SStencil,
-           class SOut>
-  VTKM_CONT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<U,SIn>& input,
-      const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
-      vtkm::cont::ArrayHandle<U,SOut>& output)
-  {
-    vtkm::Id size = stencil.GetNumberOfValues();
-    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTag()),
-                                    stencil.PrepareForInput(DeviceAdapterTag()),
-                                    output.PrepareForOutput(size, DeviceAdapterTag()),
-                                    ::vtkm::NotZeroInitialized()); //yes on the stencil
-    output.Shrink(newSize);
-  }
-
-  template<typename T,
-           typename U,
-           class SIn,
-           class SStencil,
-           class SOut,
-           class UnaryPredicate>
-  VTKM_CONT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<U,SIn>& input,
-      const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
-      vtkm::cont::ArrayHandle<U,SOut>& output,
-      UnaryPredicate unary_predicate)
-  {
-    vtkm::Id size = stencil.GetNumberOfValues();
-    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTag()),
-                                    stencil.PrepareForInput(DeviceAdapterTag()),
-                                    output.PrepareForOutput(size, DeviceAdapterTag()),
-                                    unary_predicate);
-    output.Shrink(newSize);
   }
 
   template<typename T, class Storage>

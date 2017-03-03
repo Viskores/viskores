@@ -388,12 +388,12 @@ void ChainGraph<T,StorageType,DeviceAdapter>::CompactActiveVertices()
   // create a temporary array the same size
   vtkm::cont::ArrayHandle<vtkm::Id> newActiveVertices;
 
-  // Use only the current activeVertices outdegree to match size on StreamCompact
+  // Use only the current activeVertices outdegree to match size on CopyIf
   vtkm::cont::ArrayHandle<vtkm::Id> outdegreeLookup;
   DeviceAlgorithm::Copy(PermuteIndexType(activeVertices, outdegree), outdegreeLookup);
 
   // compact the activeVertices array to keep only the ones of interest
-  DeviceAlgorithm::StreamCompact(activeVertices, outdegreeLookup, newActiveVertices);
+  DeviceAlgorithm::CopyIf(activeVertices, outdegreeLookup, newActiveVertices);
 
   activeVertices.ReleaseResources();
   DeviceAlgorithm::Copy(newActiveVertices, activeVertices);
