@@ -137,8 +137,8 @@ struct FetchArrayTopologyMapInTests
                           BaseFunctionInterface()
                           .Replace<InputDomainIndex>(connectivity)
                           .template Replace<ParamIndex>(TestPortal<T>()),
-                          vtkm::internal::NullType(),
-                          vtkm::internal::NullType(),
+                          BaseFunctionInterface(),
+                          BaseFunctionInterface(),
                           TestIndexPortal(),
                           TestZeroPortal()));
   }
@@ -218,8 +218,8 @@ void TryStructuredPointCoordinates(
           BaseFunctionInterface()
           .Replace<1>(connectivity)
           .template Replace<2>(coordinates),
-          vtkm::internal::NullType(),
-          vtkm::internal::NullType(),
+          BaseFunctionInterface(),
+          BaseFunctionInterface(),
           TestIndexPortal(),
           TestZeroPortal())
         );
@@ -229,8 +229,8 @@ void TryStructuredPointCoordinates(
           BaseFunctionInterface()
           .Replace<3>(connectivity)
           .template Replace<1>(coordinates),
-          vtkm::internal::NullType(),
-          vtkm::internal::NullType(),
+          BaseFunctionInterface(),
+          BaseFunctionInterface(),
           TestIndexPortal(),
           TestZeroPortal())
         );

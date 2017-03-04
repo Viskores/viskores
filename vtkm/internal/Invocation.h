@@ -237,8 +237,13 @@ struct Invocation
 
   /// A convenience typedef for the input domain type.
   ///
-  typedef typename ParameterInterface::
-      template ParameterType<InputDomainIndex>::type InputDomainType;
+  using InputDomainType =
+    typename ParameterInterface::template ParameterType<InputDomainIndex>::type;
+
+  /// A convenience typedef for the control signature tag of the input domain.
+  ///
+  using InputDomainTag =
+    typename ControlInterface::template ParameterType<InputDomainIndex>::type;
 
   /// A convenience method to get the input domain object.
   ///
