@@ -109,10 +109,15 @@ set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_serial>)
 
 add_subdirectory(cuda)
 if (VTKm_ENABLE_CUDA)
-  # Need to come back to this at some point, but can't make OBJECT libraries
-  # with cuda_add_library:
-  #
-  # set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_cuda>)
+  get_property(vtkm_cont_cuda_object_files GLOBAL
+               PROPERTY vtkm_cont_cuda_object_files )
+  # mark the file as generated, this needs to be done in this directory
+  # for 'reasons'.
+  set_source_files_properties(${vtkm_cont_cuda_object_files}
+                              PROPERTIES GENERATED TRUE)
+
+  set(sources ${sources} ${vtkm_cont_cuda_object_files})
+
 endif()
 
 add_subdirectory(tbb)
@@ -120,11 +125,16 @@ if (VTKm_ENABLE_TBB)
   set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_tbb>)
 endif()
 
+
 vtkm_library(
   SOURCES ${sources}
   WRAP_FOR_CUDA ${device_sources}
   HEADERS ${header_impls})
 target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
+
+if(VTKm_ENABLE_CUDA)
+  add_dependencies(vtkm_cont vtkm_cont_cuda)
+endif()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)

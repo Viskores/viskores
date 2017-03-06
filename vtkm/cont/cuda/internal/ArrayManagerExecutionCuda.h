@@ -22,7 +22,6 @@
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 
-#include <vtkm/cont/Storage.h>
 #include <vtkm/cont/internal/ArrayExportMacros.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionThrustDevice.h>
@@ -118,18 +117,16 @@ public:
 
 } // namespace internal
 
-// Disabled for now -- see comment in cont/cuda/internal/CMakeLists.txt about
-// cuda_add_library and OBJECT libraries.
 
-//#ifdef VTKM_BUILD_PREPARE_FOR_DEVICE
-//EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(char, DeviceAdapterTagCuda)
-//EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int8, DeviceAdapterTagCuda)
-//EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::UInt8, DeviceAdapterTagCuda)
-//EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int32, DeviceAdapterTagCuda)
-//EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int64, DeviceAdapterTagCuda)
-//EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float32, DeviceAdapterTagCuda)
-//EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float64, DeviceAdapterTagCuda)
-//#endif // VTKM_BUILD_PREPARE_FOR_DEVICE
+#ifdef VTKM_BUILD_PREPARE_FOR_DEVICE
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(char, DeviceAdapterTagCuda)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int8, DeviceAdapterTagCuda)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::UInt8, DeviceAdapterTagCuda)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int32, DeviceAdapterTagCuda)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int64, DeviceAdapterTagCuda)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float32, DeviceAdapterTagCuda)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float64, DeviceAdapterTagCuda)
+#endif // VTKM_BUILD_PREPARE_FOR_DEVICE
 
 }
 } // namespace vtkm::cont

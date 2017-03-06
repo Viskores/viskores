@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include "ArrayManagerExecutionCuda.h"
+#include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 
 namespace vtkm {
 namespace cont {
