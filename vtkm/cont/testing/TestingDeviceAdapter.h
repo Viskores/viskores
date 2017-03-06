@@ -590,39 +590,10 @@ private:
     } //release memory
   }
 
-  static VTKM_CONT void TestStreamCompact()
+  static VTKM_CONT void TestCopyIf()
   {
     std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing Stream Compact" << std::endl;
-
-    //test the version of compact that takes in input and uses it as a stencil
-    //and uses the index of each item as the value to place in the result vector
-    IdArrayHandle array;
-    IdArrayHandle result;
-
-    //construct the index array
-
-    Algorithm::Schedule(
-          MarkOddNumbersKernel(array.PrepareForOutput(ARRAY_SIZE,
-                                                      DeviceAdapterTag())),
-          ARRAY_SIZE);
-
-    Algorithm::StreamCompact(array, result);
-    VTKM_TEST_ASSERT(result.GetNumberOfValues() == array.GetNumberOfValues()/2,
-                     "result of compacation has an incorrect size");
-
-    for (vtkm::Id index = 0; index < result.GetNumberOfValues(); index++)
-    {
-      const vtkm::Id value = result.GetPortalConstControl().Get(index);
-      VTKM_TEST_ASSERT(value == (index*2)+1,
-                       "Incorrect value in compaction results.");
-    }
-  }
-
-  static VTKM_CONT void TestStreamCompactWithStencil()
-  {
-    std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing Stream Compact with stencil" << std::endl;
+    std::cout << "Testing CopyIf" << std::endl;
 
     IdArrayHandle array;
     IdArrayHandle stencil;
@@ -638,15 +609,15 @@ private:
                                                         DeviceAdapterTag())),
           ARRAY_SIZE);
 
-    Algorithm::StreamCompact(array,stencil,result);
+    Algorithm::CopyIf(array,stencil,result);
     VTKM_TEST_ASSERT(result.GetNumberOfValues() == array.GetNumberOfValues()/2,
-                     "result of compacation has an incorrect size");
+                     "result of CopyIf has an incorrect size");
 
     for (vtkm::Id index = 0; index < result.GetNumberOfValues(); index++)
     {
       const vtkm::Id value = result.GetPortalConstControl().Get(index);
       VTKM_TEST_ASSERT(value == (OFFSET + (index*2)+1),
-                       "Incorrect value in compaction result.");
+                       "Incorrect value in CopyIf result.");
     }
   }
 
@@ -1892,8 +1863,7 @@ private:
       TestUniqueWithComparisonObject();
 
       TestOrderedUniqueValues(); //tests Copy, LowerBounds, Sort, Unique
-      TestStreamCompactWithStencil();
-      TestStreamCompact();
+      TestCopyIf();
 
       TestCopyArraysMany();
       TestCopyArraysInDiffTypes();
