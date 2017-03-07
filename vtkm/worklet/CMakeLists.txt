@@ -47,6 +47,7 @@ set(headers
   TetrahedralizeExplicitGrid.h
   TetrahedralizeUniformGrid.h
   Threshold.h
+  ThresholdPoints.h
   TriangulateExplicitGrid.h
   TriangulateUniformGrid.h
   VertexClustering.h
