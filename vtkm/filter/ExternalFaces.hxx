@@ -24,10 +24,28 @@ namespace filter {
 //-----------------------------------------------------------------------------
 inline VTKM_CONT
 ExternalFaces::ExternalFaces():
-  vtkm::filter::FilterDataSet<ExternalFaces>()
+  vtkm::filter::FilterDataSet<ExternalFaces>(),
+  CompactPoints(false)
 {
-
 }
+
+namespace {
+
+template <typename BasePolicy>
+struct CellSetExplicitPolicy : public BasePolicy
+{
+  using AllCellSetList = vtkm::cont::CellSetListTagExplicitDefault;
+};
+
+template <typename DerivedPolicy>
+inline vtkm::filter::PolicyBase<CellSetExplicitPolicy<DerivedPolicy>>
+GetCellSetExplicitPolicy(const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  return vtkm::filter::PolicyBase<CellSetExplicitPolicy<DerivedPolicy>>();
+}
+
+} // anonymous namespace
+
 
 //-----------------------------------------------------------------------------
 template<typename DerivedPolicy,
@@ -54,7 +72,16 @@ vtkm::filter::ResultDataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& 
   output.AddCoordinateSystem(
           input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()) );
 
-  return vtkm::filter::ResultDataSet(output);
+  if (this->CompactPoints)
+  {
+    this->Compactor.SetCompactPointFields(true);
+    return this->Compactor.DoExecute(output, GetCellSetExplicitPolicy(policy),
+                                     DeviceAdapter());
+  }
+  else
+  {
+    return vtkm::filter::ResultDataSet(output);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -66,15 +93,23 @@ inline VTKM_CONT
 bool ExternalFaces::DoMapField(vtkm::filter::ResultDataSet &result,
                                const vtkm::cont::ArrayHandle<T, StorageType> &input,
                                const vtkm::filter::FieldMetadata &fieldMeta,
-                               const vtkm::filter::PolicyBase<DerivedPolicy>&,
+                               const vtkm::filter::PolicyBase<DerivedPolicy> &policy,
                                const DeviceAdapter&)
 {
   if (fieldMeta.IsPointField())
   {
-    result.GetDataSet().AddField(fieldMeta.AsField(input));
+    if (this->CompactPoints)
+    {
+      return this->Compactor.DoMapField(result, input, fieldMeta, policy, DeviceAdapter());
+    }
+    else
+    {
+      result.GetDataSet().AddField(fieldMeta.AsField(input));
+      return true;
+    }
   }
 
-  return true;
+  return false;
 }
 
 }
