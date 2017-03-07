@@ -70,7 +70,7 @@ template<typename ShapeStorageTag         = VTKM_DEFAULT_SHAPE_STORAGE_TAG,
          typename NumIndicesStorageTag    = VTKM_DEFAULT_NUM_INDICES_STORAGE_TAG,
          typename ConnectivityStorageTag  = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
          typename OffsetsStorageTag       = VTKM_DEFAULT_OFFSETS_STORAGE_TAG >
-class CellSetExplicit : public CellSet
+class VTKM_ALWAYS_EXPORT CellSetExplicit : public CellSet
 {
   typedef CellSetExplicit< ShapeStorageTag,
                            NumIndicesStorageTag,

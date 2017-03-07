@@ -416,10 +416,10 @@ public:
 
     // Compact the stream array so it only has valid points
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > coordinates;
-    DeviceAlgorithm::StreamCompact(streamArray,
-                                   validPoint,
-                                   coordinates,
-                                   IsUnity());
+    DeviceAlgorithm::CopyIf(streamArray,
+                            validPoint,
+                            coordinates,
+                            IsUnity());
 
     // Create the output data set
     vtkm::cont::DataSet OutDataSet;

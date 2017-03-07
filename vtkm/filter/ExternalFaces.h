@@ -22,6 +22,7 @@
 #define vtk_m_filter_ExternalFaces_h
 
 #include <vtkm/filter/FilterDataSet.h>
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/worklet/ExternalFaces.h>
 
 namespace vtkm {
@@ -32,6 +33,21 @@ class ExternalFaces : public vtkm::filter::FilterDataSet<ExternalFaces>
 public:
   VTKM_CONT
   ExternalFaces();
+
+
+  // When CompactPoints is set, instead of copying the points and point fields
+  // from the input, the filter will create new compact fields without the
+  // unused elements
+  VTKM_CONT
+  bool GetCompactPoints() const
+  {
+    return this->CompactPoints;
+  }
+  VTKM_CONT
+  void SetCompactPoints(bool value)
+  {
+    this->CompactPoints = value;
+  }
 
   template<typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT
@@ -48,6 +64,10 @@ public:
                   const vtkm::filter::FieldMetadata& fieldMeta,
                   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                   const DeviceAdapter& tag);
+
+public:
+  bool CompactPoints;
+  vtkm::filter::CleanGrid Compactor;
 };
 
 }

@@ -19,6 +19,7 @@
 //============================================================================
 
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
 
@@ -133,7 +134,9 @@ vtkm::filter::ResultDataSet Threshold::DoExecute(const vtkm::cont::DataSet& inpu
 
   typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
 
-  Algorithm::StreamCompact(passFlags, this->ValidCellIds);
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
+  vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());
+  Algorithm::CopyIf(indices, passFlags, this->ValidCellIds);
 
   vtkm::cont::DataSet output;
   output.AddCoordinateSystem(
