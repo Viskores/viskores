@@ -20,6 +20,7 @@
 #ifndef vtk_m_cont_ArrayRangeCompute_h
 #define vtk_m_cont_ArrayRangeCompute_h
 
+#include <vtkm/BinaryOperators.h>
 #include <vtkm/Range.h>
 #include <vtkm/VecTraits.h>
 
@@ -77,21 +78,18 @@ ArrayRangeCompute(const ArrayHandleType &input, Device)
 
   //not the greatest way of doing this for performance reasons. But
   //this implementation should generate the smallest amount of code
-  ValueType initialMin = input.GetPortalConstControl().Get(0);
-  ValueType initialMax = initialMin;
+  vtkm::Vec<ValueType,2> initial(input.GetPortalConstControl().Get(0));
 
-  ValueType minResult =
-      Algorithm::Reduce(input, initialMin, internal::RangeMin());
-  ValueType maxResult =
-      Algorithm::Reduce(input, initialMax, internal::RangeMax());
+  vtkm::Vec<ValueType, 2> result =
+      Algorithm::Reduce(input, initial, vtkm::MinAndMax<ValueType>());
 
   vtkm::cont::ArrayHandle<vtkm::Range> rangeArray;
   rangeArray.Allocate(NumberOfComponents);
   for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
   {
     rangeArray.GetPortalControl().Set(
-          i, vtkm::Range(VecType::GetComponent(minResult, i),
-                         VecType::GetComponent(maxResult, i)));
+          i, vtkm::Range(VecType::GetComponent(result[0], i),
+                         VecType::GetComponent(result[1], i)));
   }
 
   return rangeArray;
