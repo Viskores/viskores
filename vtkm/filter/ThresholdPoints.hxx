@@ -18,21 +18,29 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/DynamicCellSet.h>
-
-#include <vtkm/worklet/DispatcherMapTopology.h>
-
 namespace
 {
+
+// Needed to CompactPoints
+template <typename BasePolicy>
+struct CellSetSingleTypePolicy : public BasePolicy
+{
+  using AllCellSetList = vtkm::cont::CellSetListTagUnstructured;
+};
+
+template <typename DerivedPolicy>
+inline vtkm::filter::PolicyBase<CellSetSingleTypePolicy<DerivedPolicy>>
+GetCellSetSingleTypePolicy(const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  return vtkm::filter::PolicyBase<CellSetSingleTypePolicy<DerivedPolicy>>();
+}
 
 // Predicate for values less than minimum
 class ValuesBelow
 {
 public:
   VTKM_CONT
-  ValuesBelow(const vtkm::Float32& thresholdValue) :
-    ThresholdValue(thresholdValue)
-  { }
+  ValuesBelow(const vtkm::Float32& thresholdValue) : ThresholdValue(thresholdValue) {}
 
   template<typename T>
   VTKM_EXEC
@@ -50,9 +58,7 @@ class ValuesAbove
 {
 public:
   VTKM_CONT
-  ValuesAbove(const vtkm::Float32& thresholdValue) :
-    ThresholdValue(thresholdValue)
-  { }
+  ValuesAbove(const vtkm::Float32& thresholdValue) : ThresholdValue(thresholdValue) {}
 
   template<typename T>
   VTKM_EXEC
@@ -72,9 +78,7 @@ class ValuesBetween
 public:
   VTKM_CONT
   ValuesBetween(const vtkm::Float64& lower,
-                const vtkm::Float64& upper) :
-    Lower(lower),
-    Upper(upper)
+                const vtkm::Float64& upper) : Lower(lower), Upper(upper)
   { }
 
   template<typename T>
@@ -100,8 +104,44 @@ inline VTKM_CONT
 ThresholdPoints::ThresholdPoints():
   vtkm::filter::FilterDataSetWithField<ThresholdPoints>(),
   LowerValue(0),
-  UpperValue(0)
+  UpperValue(0),
+  Below(false),
+  Above(false),
+  Between(true),
+  CompactPoints(false)
 {
+}
+
+//-----------------------------------------------------------------------------
+inline VTKM_CONT
+void ThresholdPoints::SetThresholdBelow(const vtkm::Float64 value)
+{
+  this->SetLowerThreshold(value);
+  this->SetUpperThreshold(value);
+  this->Below = true;
+  this->Above = false;
+  this->Between = false;
+}
+
+inline VTKM_CONT
+void ThresholdPoints::SetThresholdAbove(const vtkm::Float64 value)
+{
+  this->SetLowerThreshold(value);
+  this->SetUpperThreshold(value);
+  this->Below = false;
+  this->Above = true;
+  this->Between = false;
+}
+
+inline VTKM_CONT
+void ThresholdPoints::SetThresholdBetween(const vtkm::Float64 value1,
+                                          const vtkm::Float64 value2)
+{
+  this->SetLowerThreshold(value1);
+  this->SetUpperThreshold(value2);
+  this->Below = false;
+  this->Above = false;
+  this->Between = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -117,35 +157,63 @@ vtkm::filter::ResultDataSet ThresholdPoints::DoExecute(
                                                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                                                  const DeviceAdapter& device)
 {
-  //get the cells and coordinates of the dataset
+  // extract the input cell set
   const vtkm::cont::DynamicCellSet& cells =
                   input.GetCellSet(this->GetActiveCellSetIndex());
 
+  // field to threshold on must be a point field
   if (fieldMeta.IsPointField() == false)
   {
     //todo: we need to mark this as a failure of input, not a failure of the algorithm
     return vtkm::filter::ResultDataSet();
   }
 
-  ValuesBetween predicate( this->GetLowerThreshold(), this->GetUpperThreshold() );
-
-  // output dataset
-  vtkm::cont::DataSet output;
+  // run the worklet on the cell set and input field
   vtkm::cont::CellSetSingleType<> outCellSet;
-
-  // output data set gets cell set from the worklet
   vtkm::worklet::ThresholdPoints worklet;
-  outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
-                           field,
-                           predicate,
-                           device);
+
+  if (this->Between)
+  {
+    outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
+                             field,
+                             ValuesBetween(this->GetLowerThreshold(), this->GetUpperThreshold()),
+                             device);
+  }
+  else if (this->Below)
+  {
+    outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
+                             field,
+                             ValuesBelow(this->GetLowerThreshold()),
+                             device);
+  }
+  else if (this->Above)
+  {
+    outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
+                             field,
+                             ValuesAbove(this->GetUpperThreshold()),
+                             device);
+  }
+
+
+  // create the output dataset
+  vtkm::cont::DataSet output;
   output.AddCellSet(outCellSet);
+  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()) );
 
-  // add input dataset coordinates to the output dataset
-  output.AddCoordinateSystem(
-          input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()) );
-
-  return vtkm::filter::ResultDataSet(output);
+  // compact the unused points in the output dataset
+  if (this->CompactPoints)
+  {
+    this->Compactor.SetCompactPointFields(true);
+    vtkm::filter::ResultDataSet result;
+    result = this->Compactor.DoExecute(output, 
+                                     GetCellSetSingleTypePolicy(policy),
+                                     DeviceAdapter());
+    return result;
+  }
+  else
+  {
+    return vtkm::filter::ResultDataSet(output);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -158,14 +226,21 @@ bool ThresholdPoints::DoMapField(
                            vtkm::filter::ResultDataSet& result,
                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
                            const vtkm::filter::FieldMetadata& fieldMeta,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>&,
+                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                            const DeviceAdapter&)
 {
   // point data is copied as is because it was not collapsed
   if(fieldMeta.IsPointField())
   {
-    result.GetDataSet().AddField(fieldMeta.AsField(input));
-    return true;
+    if (this->CompactPoints)
+    {
+      return this->Compactor.DoMapField(result, input, fieldMeta, policy, DeviceAdapter());
+    }
+    else
+    {
+      result.GetDataSet().AddField(fieldMeta.AsField(input));
+      return true;
+    }
   }
   
   // cell data does not apply

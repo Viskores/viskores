@@ -22,6 +22,7 @@
 #define vtk_m_filter_ThresholdPoints_h
 
 #include <vtkm/filter/FilterDataSetWithField.h>
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/worklet/ThresholdPoints.h>
 
 namespace vtkm {
@@ -33,15 +34,30 @@ public:
   VTKM_CONT
   ThresholdPoints();
 
+  // When CompactPoints is set, instead of copying the points and point fields
+  // from the input, the filter will create new compact fields without the unused elements
   VTKM_CONT
-  void SetLowerThreshold(vtkm::Float64 value){ this->LowerValue = value; }
+  bool GetCompactPoints() const     { return this->CompactPoints; }
   VTKM_CONT
-  void SetUpperThreshold(vtkm::Float64 value){ this->UpperValue = value; }
+  void SetCompactPoints(bool value) { this->CompactPoints = value; }
 
   VTKM_CONT
-  vtkm::Float64 GetLowerThreshold() const    { return this->LowerValue; }
+  vtkm::Float64 GetLowerThreshold() const     { return this->LowerValue; }
   VTKM_CONT
-  vtkm::Float64 GetUpperThreshold() const    { return this->UpperValue; }
+  void SetLowerThreshold(vtkm::Float64 value) { this->LowerValue = value; }
+
+  VTKM_CONT
+  vtkm::Float64 GetUpperThreshold() const     { return this->UpperValue; }
+  VTKM_CONT
+  void SetUpperThreshold(vtkm::Float64 value) { this->UpperValue = value; }
+
+  VTKM_CONT
+  void SetThresholdBelow(const vtkm::Float64 value);
+  VTKM_CONT
+  void SetThresholdAbove(const vtkm::Float64 value);
+  VTKM_CONT
+  void SetThresholdBetween(const vtkm::Float64 value1, const vtkm::Float64 value2);
+
 
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT
@@ -65,6 +81,11 @@ public:
 private:
   double LowerValue;
   double UpperValue;
+  bool Below;
+  bool Above;
+  bool Between;
+  bool CompactPoints;
+  vtkm::filter::CleanGrid Compactor;
 };
 
 template<>

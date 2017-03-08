@@ -66,7 +66,6 @@ public:
       vtkm::IdComponent mask = 0;
       if (pass == true)
         mask = 1;
-std::cout << "scalar " << scalar << " mask " << mask << std::endl;
       return mask;
     }
 
@@ -87,7 +86,8 @@ std::cout << "scalar " << scalar << " mask " << mask << std::endl;
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
     vtkm::cont::ArrayHandle<vtkm::IdComponent> MaskArray;
-    DeviceAlgorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(0, cellSet.GetNumberOfPoints()),
+    vtkm::Id numberOfInputPoints = cellSet.GetNumberOfPoints();
+    DeviceAlgorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(0, numberOfInputPoints),
                           MaskArray);
     
     // Worklet output will be a boolean passFlag array
@@ -98,18 +98,13 @@ std::cout << "scalar " << scalar << " mask " << mask << std::endl;
 
     vtkm::worklet::ScatterCounting PointScatter(MaskArray, DeviceAdapter(), true);
     vtkm::cont::ArrayHandle<vtkm::Id> pointIds = PointScatter.GetOutputToInputMap();
-std::cout << "Point ids that meet threshold" << std::endl;
-    printSummary_ArrayHandle(pointIds, std::cout);
 
     // Make CellSetSingleType with VERTEX at each point id
     vtkm::cont::CellSetSingleType< > outCellSet("cells");
-    vtkm::Id numberOfVertices = pointIds.GetNumberOfValues();
-std::cout << "Number of vertices in output " << numberOfVertices << std::endl;
-    outCellSet.Fill(numberOfVertices,
+    outCellSet.Fill(numberOfInputPoints,
                     vtkm::CellShapeTagVertex::Id,
                     1,
                     pointIds);
-std::cout << "Fill vertices with cell set" << std::endl;
 
     return outCellSet;
   }

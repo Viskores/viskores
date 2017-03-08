@@ -34,135 +34,110 @@ public:
   void TestRegular2D() const
   {
     std::cout << "Testing threshold on 2D regular dataset" << std::endl;
-
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
 
     vtkm::filter::ThresholdPoints thresholdPoints;
     vtkm::filter::ResultDataSet result;
 
-    thresholdPoints.SetLowerThreshold(40.0);
-    thresholdPoints.SetUpperThreshold(71.1);
+    thresholdPoints.SetThresholdBetween(40.0f, 71.0f);
+    thresholdPoints.SetCompactPoints(true);
     result = thresholdPoints.Execute(dataset, dataset.GetField("pointvar"));
 
     thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
 
     vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
-                   "Wrong number of fields in the output dataset");
+                     "Wrong number of fields in the output dataset");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 11), 
                      "Wrong result for ThresholdPoints");
 
     vtkm::cont::Field pointField = output.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
     pointField.GetData().CopyTo(pointFieldArray);
-    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(12) == 50.0f,
+    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(5) == 50.0f,
                      "Wrong point field data");
   }
 
-/*
   void TestRegular3D() const
   {
     std::cout << "Testing threshold on 3D regular dataset" << std::endl;
-    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet0();
+    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
-    vtkm::filter::Threshold threshold;
+    vtkm::filter::ThresholdPoints thresholdPoints;
     vtkm::filter::ResultDataSet result;
 
-    threshold.SetLowerThreshold(20.1);
-    threshold.SetUpperThreshold(20.1);
-    result = threshold.Execute(dataset, std::string("pointvar"));
+    thresholdPoints.SetThresholdAbove(1.0f);
+    result = thresholdPoints.Execute(dataset, std::string("pointvar"));
 
-    threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar") );
+    thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
 
     vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
-                   "Wrong number of fields in the output dataset");
+                     "Wrong number of fields in the output dataset");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 27), 
+                     "Wrong result for ThresholdPoints");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
-    output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
-
-    VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                     cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
-                     cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
-                     "Wrong cell field data");
+    vtkm::cont::Field pointField = output.GetField("pointvar");
+    vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
+    pointField.GetData().CopyTo(pointFieldArray);
+    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(31) == 99.0f,
+                     "Wrong point field data");
   }
-*/
 
-/*
   void TestExplicit3D() const
   {
     std::cout << "Testing threshold on 3D explicit dataset" << std::endl;
-    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
+    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 
-    vtkm::filter::Threshold threshold;
+    vtkm::filter::ThresholdPoints thresholdPoints;
     vtkm::filter::ResultDataSet result;
 
-    threshold.SetLowerThreshold(20.1);
-    threshold.SetUpperThreshold(20.1);
-    result = threshold.Execute(dataset, std::string("pointvar"));
+    thresholdPoints.SetThresholdBelow(50.0);
+    result = thresholdPoints.Execute(dataset, std::string("pointvar"));
 
-    threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar") );
+    thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
 
     vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
-                   "Wrong number of fields in the output dataset");
+                     "Wrong number of fields in the output dataset");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 6), 
+                     "Wrong result for ThresholdPoints");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
-    output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
-
-    VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                     cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
-                     cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
-                     "Wrong cell field data");
+    vtkm::cont::Field pointField = output.GetField("pointvar");
+    vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
+    pointField.GetData().CopyTo(pointFieldArray);
+    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(3) == 40.2f,
+                     "Wrong point field data");
   }
-*/
 
-/*
   void TestExplicit3DZeroResults() const
   {
     std::cout << "Testing threshold on 3D explicit dataset with empty results" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
 
-    vtkm::filter::Threshold threshold;
+    vtkm::filter::ThresholdPoints thresholdPoints;
     vtkm::filter::ResultDataSet result;
 
-    threshold.SetLowerThreshold(500.1);
-    threshold.SetUpperThreshold(500.1);
-    result = threshold.Execute(dataset, std::string("pointvar"));
+    thresholdPoints.SetThresholdBetween(500.0, 600.0);
+    result = thresholdPoints.Execute(dataset, std::string("pointvar"));
 
     VTKM_TEST_ASSERT(result.IsValid(), "threshold algorithm should return true");
 
-    threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar") );
+    thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
 
     vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
-                   "Wrong number of fields in the output dataset");
-
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
-    output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
-
-    VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 0, "field should be empty");
+                     "Wrong number of fields in the output dataset");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 0), 
+                     "Wrong result for ThresholdPoints");
   }
-*/
 
   void operator()() const
   {
     this->TestRegular2D();
-    //this->TestRegular3D();
-    //this->TestExplicit3D();
-    //this->TestExplicit3DZeroResults();
+    this->TestRegular3D();
+    this->TestExplicit3D();
+    this->TestExplicit3DZeroResults();
   }
 };
 
