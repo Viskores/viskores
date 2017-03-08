@@ -28,6 +28,7 @@ vtkm_install_headers(
 
 set(headers
   Assert.h
+  BaseComponent.h
   BinaryPredicates.h
   BinaryOperators.h
   Bounds.h

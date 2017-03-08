@@ -21,6 +21,7 @@
 #define vtk_m_exec_Derivative_h
 
 #include <vtkm/Assert.h>
+#include <vtkm/BaseComponent.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
@@ -33,51 +34,6 @@
 
 namespace vtkm {
 namespace exec {
-
-namespace detail {
-
-template<typename VecType, typename DimensionalityTag>
-struct BaseComponentOfImpl;
-
-template<typename VecType>
-struct BaseComponentOfImpl<VecType, vtkm::TypeTraitsVectorTag>
-{
-private:
-  using ComponentType = typename vtkm::VecTraits<VecType>::ComponentType;
-public:
-  using type =
-    typename BaseComponentOfImpl<
-      ComponentType,
-      typename vtkm::TypeTraits<ComponentType>::DimensionalityTag
-    >::type;
-};
-
-template<typename VecType>
-struct BaseComponentOfImpl<VecType, vtkm::TypeTraitsMatrixTag>
-    : BaseComponentOfImpl<VecType, vtkm::TypeTraitsVectorTag>
-{  };
-
-template<typename ScalarType>
-struct BaseComponentOfImpl<ScalarType, vtkm::TypeTraitsScalarTag>
-{
-  using type = ScalarType;
-};
-
-} // namespace detail
-
-/// Finds the base component type of a Vec. If you have a Vec of Vecs, it will
-/// descend all Vecs until you get to the scalar type.
-///
-// If this becomes useful outside of CellDerivative, then this should probably
-// be moved to a different header file.
-template<typename VecType>
-struct BaseComponentOf
-{
-  using type =
-    typename detail::BaseComponentOfImpl<
-      VecType,
-      typename vtkm::TypeTraits<VecType>::DimensionalityTag>::type;
-};
 
 // The derivative for a 2D polygon in 3D space is underdetermined since there
 // is no information in the direction perpendicular to the polygon. To compute
@@ -410,7 +366,7 @@ CellDerivativeFor2DCell(const FieldVecType &field,
                         CellShapeTag)
 {
   using FieldType = typename FieldVecType::ComponentType;
-  using BaseFieldType = typename BaseComponentOf<FieldType>::type;
+  using BaseFieldType = typename BaseComponent<FieldType>::Type;
 
   // We have an underdetermined system in 3D, so create a 2D space in the
   // plane that the polygon sits.
@@ -617,7 +573,7 @@ CellDerivative(const FieldVecType &field,
   VTKM_ASSERT(wCoords.GetNumberOfComponents() == 2);
 
   using FieldType = typename FieldVecType::ComponentType;
-  using BaseComponentType = typename BaseComponentOf<FieldType>::type;
+  using BaseComponentType = typename BaseComponent<FieldType>::Type;
 
   FieldType deltaField(field[1] - field[0]);
   vtkm::Vec<BaseComponentType,3> vec(wCoords[1] - wCoords[0]);
@@ -724,7 +680,7 @@ vtkm::Vec<ValueType,3>
 TriangleDerivative(const vtkm::Vec<ValueType, 3> &field,
                    const vtkm::Vec<WCoordType, 3> &wCoords)
 {
-  using BaseComponentType = typename BaseComponentOf<ValueType>::type;
+  using BaseComponentType = typename BaseComponent<ValueType>::Type;
 
   // The scalar values of the three points in a triangle completely specify a
   // linear field (with constant gradient) assuming the field is constant in
@@ -1067,7 +1023,7 @@ vtkm::Vec<ValueType,3>
 TetraDerivative(const vtkm::Vec<ValueType,4> &field,
                 const vtkm::Vec<WorldCoordType,4> &wCoords)
 {
-  using BaseComponentType = typename BaseComponentOf<ValueType>::type;
+  using BaseComponentType = typename BaseComponent<ValueType>::Type;
 
   // The scalar values of the four points in a tetrahedron completely specify a
   // linear field (with constant gradient). The field, defined by the 3-vector

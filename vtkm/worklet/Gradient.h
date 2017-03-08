@@ -204,7 +204,7 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
       this->ComputeGradient(cellShape, pointIndexForCell, wCoords, field, gradient);
       }
 
-    using BaseGradientType = typename vtkm::exec::BaseComponentOf<ValueType>::type;
+    using BaseGradientType = typename vtkm::BaseComponent<ValueType>::Type;
     const BaseGradientType invNumCells =
         static_cast<BaseGradientType>(1.) /
         static_cast<BaseGradientType>(numCells);
