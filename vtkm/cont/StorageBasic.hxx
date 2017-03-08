@@ -100,7 +100,10 @@ void Storage<T, vtkm::cont::StorageTagBasic>::ReleaseResources()
 template<typename T>
 void Storage<T, vtkm::cont::StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
 {
-  if (numberOfValues <= this->AllocatedSize)
+  // If we are allocating less data, just shrink the array.
+  // (If allocation empty, drop down so we can deallocate memory.)
+  if ((numberOfValues <= this->AllocatedSize) &&
+      (numberOfValues > 0))
   {
     this->NumberOfValues = numberOfValues;
     return;
