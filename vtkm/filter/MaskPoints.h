@@ -18,21 +18,21 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_filter_ThresholdPoints_h
-#define vtk_m_filter_ThresholdPoints_h
+#ifndef vtk_m_filter_MaskPoints_h
+#define vtk_m_filter_MaskPoints_h
 
-#include <vtkm/filter/FilterDataSetWithField.h>
+#include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/filter/CleanGrid.h>
-#include <vtkm/worklet/ThresholdPoints.h>
+#include <vtkm/worklet/MaskPoints.h>
 
 namespace vtkm {
 namespace filter {
 
-class ThresholdPoints : public vtkm::filter::FilterDataSetWithField<ThresholdPoints>
+class MaskPoints : public vtkm::filter::FilterDataSet<MaskPoints>
 {
 public:
   VTKM_CONT
-  ThresholdPoints();
+  MaskPoints();
 
   // When CompactPoints is set, instead of copying the points and point fields
   // from the input, the filter will create new compact fields without the unused elements
@@ -42,33 +42,17 @@ public:
   void SetCompactPoints(bool value) { this->CompactPoints = value; }
 
   VTKM_CONT
-  vtkm::Float64 GetLowerThreshold() const     { return this->LowerValue; }
+  vtkm::Id GetStride() const      { return this->Stride; }
   VTKM_CONT
-  void SetLowerThreshold(vtkm::Float64 value) { this->LowerValue = value; }
+  void SetStride(vtkm::Id stride) { this->Stride = stride; }
 
-  VTKM_CONT
-  vtkm::Float64 GetUpperThreshold() const     { return this->UpperValue; }
-  VTKM_CONT
-  void SetUpperThreshold(vtkm::Float64 value) { this->UpperValue = value; }
-
-  VTKM_CONT
-  void SetThresholdBelow(const vtkm::Float64 value);
-  VTKM_CONT
-  void SetThresholdAbove(const vtkm::Float64 value);
-  VTKM_CONT
-  void SetThresholdBetween(const vtkm::Float64 value1, const vtkm::Float64 value2);
-
-
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template<typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT
   vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
-                                        const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                        const vtkm::filter::FieldMetadata& fieldMeta,
                                         const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                                         const DeviceAdapter& tag);
 
   //Map a new field onto the resulting dataset after running the filter
-  //this call is only valid
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT
   bool DoMapField(vtkm::filter::ResultDataSet& result,
@@ -77,28 +61,15 @@ public:
                   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                   const DeviceAdapter& tag);
 
-
 private:
-  double LowerValue;
-  double UpperValue;
-  int ThresholdType;
-
+  vtkm::Id Stride;
   bool CompactPoints;
   vtkm::filter::CleanGrid Compactor;
 };
-
-template<>
-class FilterTraits<ThresholdPoints>
-{ //currently the threshold filter only works on scalar data.
-public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
-};
-
-
 }
 } // namespace vtkm::filter
 
 
-#include <vtkm/filter/ThresholdPoints.hxx>
+#include <vtkm/filter/MaskPoints.hxx>
 
-#endif // vtk_m_filter_ThresholdPoints_h
+#endif // vtk_m_filter_MaskPoints_h

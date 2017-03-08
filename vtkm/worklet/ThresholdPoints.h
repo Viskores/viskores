@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_m_worklet_Threshold_h
-#define vtkm_m_worklet_Threshold_h
+#ifndef vtkm_m_worklet_ThresholdPoints_h
+#define vtkm_m_worklet_ThresholdPoints_h
 
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -28,8 +28,6 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/cont/Field.h>
 
 namespace vtkm {
 namespace worklet {
@@ -85,18 +83,18 @@ public:
                           DeviceAdapter device)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> MaskArray;
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> maskArray;
     vtkm::Id numberOfInputPoints = cellSet.GetNumberOfPoints();
     DeviceAlgorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(0, numberOfInputPoints),
-                          MaskArray);
+                          maskArray);
     
     // Worklet output will be a boolean passFlag array
     typedef ThresholdPointField<UnaryPredicate> ThresholdWorklet;
     ThresholdWorklet worklet(predicate);
     DispatcherMapField<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-    dispatcher.Invoke(fieldArray, MaskArray);
+    dispatcher.Invoke(fieldArray, maskArray);
 
-    vtkm::worklet::ScatterCounting PointScatter(MaskArray, DeviceAdapter(), true);
+    vtkm::worklet::ScatterCounting PointScatter(maskArray, DeviceAdapter(), true);
     vtkm::cont::ArrayHandle<vtkm::Id> pointIds = PointScatter.GetOutputToInputMap();
 
     // Make CellSetSingleType with VERTEX at each point id

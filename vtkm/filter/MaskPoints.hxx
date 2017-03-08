@@ -34,122 +34,27 @@ GetCellSetSingleTypePolicy(const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   return vtkm::filter::PolicyBase<CellSetSingleTypePolicy<DerivedPolicy>>();
 }
-
-// Predicate for values less than minimum
-class ValuesBelow
-{
-public:
-  VTKM_CONT
-  ValuesBelow(const vtkm::Float32& thresholdValue) : ThresholdValue(thresholdValue) {}
-
-  template<typename T>
-  VTKM_EXEC
-  bool operator()(const T& value) const
-  {
-    return value <= static_cast<T>(this->ThresholdValue);
-  }
-
-private:
-  vtkm::Float32 ThresholdValue;
-};
-
-// Predicate for values greater than maximum
-class ValuesAbove
-{
-public:
-  VTKM_CONT
-  ValuesAbove(const vtkm::Float32& thresholdValue) : ThresholdValue(thresholdValue) {}
-
-  template<typename T>
-  VTKM_EXEC
-  bool operator()(const T& value) const
-  {
-    return value >= static_cast<T>(this->ThresholdValue);
-  }
-
-private:
-  vtkm::Float32 ThresholdValue;
-};
-
-// Predicate for values between minimum and maximum
-
-class ValuesBetween
-{
-public:
-  VTKM_CONT
-  ValuesBetween(const vtkm::Float64& lower,
-                const vtkm::Float64& upper) : Lower(lower), Upper(upper)
-  { }
-
-  template<typename T>
-  VTKM_EXEC
-  bool operator()(const T& value) const
-  {
-    return value >= static_cast<T>(this->Lower) &&
-           value <= static_cast<T>(this->Upper);
-  }
-
-private:
-  vtkm::Float64 Lower;
-  vtkm::Float64 Upper;
-};
 }
 
 
 namespace vtkm {
 namespace filter {
 
-const int THRESHOLD_BELOW   = 0;
-const int THRESHOLD_ABOVE   = 1;
-const int THRESHOLD_BETWEEN = 2;
-
 //-----------------------------------------------------------------------------
 inline VTKM_CONT
-ThresholdPoints::ThresholdPoints():
-  vtkm::filter::FilterDataSetWithField<ThresholdPoints>(),
-  LowerValue(0),
-  UpperValue(0),
-  ThresholdType(THRESHOLD_BETWEEN),
+MaskPoints::MaskPoints():
+  vtkm::filter::FilterDataSet<MaskPoints>(),
+  Stride(1),
   CompactPoints(false)
 {
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT
-void ThresholdPoints::SetThresholdBelow(const vtkm::Float64 value)
-{
-  this->SetLowerThreshold(value);
-  this->SetUpperThreshold(value);
-  this->ThresholdType = THRESHOLD_BELOW;
-}
-
-inline VTKM_CONT
-void ThresholdPoints::SetThresholdAbove(const vtkm::Float64 value)
-{
-  this->SetLowerThreshold(value);
-  this->SetUpperThreshold(value);
-  this->ThresholdType = THRESHOLD_ABOVE;
-}
-
-inline VTKM_CONT
-void ThresholdPoints::SetThresholdBetween(const vtkm::Float64 value1,
-                                          const vtkm::Float64 value2)
-{
-  this->SetLowerThreshold(value1);
-  this->SetUpperThreshold(value2);
-  this->ThresholdType = THRESHOLD_BETWEEN;
-}
-
-//-----------------------------------------------------------------------------
-template<typename T,
-         typename StorageType,
-         typename DerivedPolicy,
+template<typename DerivedPolicy,
          typename DeviceAdapter>
 inline VTKM_CONT
-vtkm::filter::ResultDataSet ThresholdPoints::DoExecute(
+vtkm::filter::ResultDataSet MaskPoints::DoExecute(
                                                  const vtkm::cont::DataSet& input,
-                                                 const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                                 const vtkm::filter::FieldMetadata& fieldMeta,
                                                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                                                  const DeviceAdapter& device)
 {
@@ -157,45 +62,13 @@ vtkm::filter::ResultDataSet ThresholdPoints::DoExecute(
   const vtkm::cont::DynamicCellSet& cells =
                   input.GetCellSet(this->GetActiveCellSetIndex());
 
-  // field to threshold on must be a point field
-  if (fieldMeta.IsPointField() == false)
-  {
-    //todo: we need to mark this as a failure of input, not a failure of the algorithm
-    return vtkm::filter::ResultDataSet();
-  }
-
   // run the worklet on the cell set and input field
   vtkm::cont::CellSetSingleType<> outCellSet;
-  vtkm::worklet::ThresholdPoints worklet;
+  vtkm::worklet::MaskPoints worklet;
 
-  switch (this->ThresholdType)
-  {
-  case THRESHOLD_BELOW:
-  {
-    outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
-                             field,
-                             ValuesBelow(this->GetLowerThreshold()),
-                             device);
-    break;
-  }
-  case THRESHOLD_ABOVE:
-  {
-    outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
-                             field,
-                             ValuesAbove(this->GetUpperThreshold()),
-                             device);
-    break;
-  }
-  case THRESHOLD_BETWEEN:
-  default:
-    {
-    outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
-                             field,
-                             ValuesBetween(this->GetLowerThreshold(), this->GetUpperThreshold()),
-                             device);
-    break;
-    }
-  }
+  outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
+                           this->Stride,
+                           device);
 
   // create the output dataset
   vtkm::cont::DataSet output;
@@ -224,7 +97,7 @@ template<typename T,
          typename DerivedPolicy,
          typename DeviceAdapter>
 inline VTKM_CONT
-bool ThresholdPoints::DoMapField(
+bool MaskPoints::DoMapField(
                            vtkm::filter::ResultDataSet& result,
                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
                            const vtkm::filter::FieldMetadata& fieldMeta,

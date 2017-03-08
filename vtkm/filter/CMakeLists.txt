@@ -33,6 +33,7 @@ set(headers
   Gradient.h
   Histogram.h
   MarchingCubes.h
+  MaskPoints.h
   PointAverage.h
   PointElevation.h
   PolicyBase.h
@@ -59,6 +60,7 @@ set(header_template_sources
   Gradient.hxx
   Histogram.hxx
   MarchingCubes.hxx
+  MaskPoints.hxx
   PointAverage.hxx
   PointElevation.hxx
   Threshold.hxx
