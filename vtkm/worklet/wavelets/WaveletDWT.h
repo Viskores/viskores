@@ -500,12 +500,14 @@ public:
   // Performs one level of 3D discrete wavelet transform on a small cube of input array
   // The output has the same size as the small cube
   template< typename ArrayInType, typename ArrayOutType, typename DeviceTag >
-  vtkm::Float64 DWT3D  ( const ArrayInType                 &sigIn,
-                         vtkm::Id sigDimX,        vtkm::Id sigDimY,         vtkm::Id sigDimZ,
-                         vtkm::Id sigStartX,      vtkm::Id sigStartY,       vtkm::Id sigStartZ,
-                         vtkm::Id sigPretendDimX, vtkm::Id sigPretendDimY,  vtkm::Id sigPretendDimZ,
-                         ArrayOutType             &coeffOut,
-                         DeviceTag   )
+  vtkm::Float64 DWT3D  (
+								ArrayInType               &sigIn,
+								vtkm::Id sigDimX,        	vtkm::Id sigDimY,       	vtkm::Id sigDimZ,
+								vtkm::Id sigStartX,      	vtkm::Id sigStartY,       vtkm::Id sigStartZ,
+								vtkm::Id sigPretendDimX, 	vtkm::Id sigPretendDimY,  vtkm::Id sigPretendDimZ,
+								ArrayOutType             	&coeffOut,
+								bool											discardSigIn,	// discard sigIn for more memory
+								DeviceTag   )
   {
     std::vector<vtkm::Id> L(27, 0);
 
@@ -598,6 +600,9 @@ public:
       computationTime += timer.GetElapsedTime();
     }
 
+		if( discardSigIn )
+			sigIn.ReleaseResources();
+
     // Then do transform in Y direction
     ArrayType           afterY;
     afterY.PrepareForOutput( sigPretendDimX * sigPretendDimY * sigPretendDimZ, DeviceTag() );
@@ -673,11 +678,12 @@ public:
   // The output array has the same dimensions as the small cube.
   template< typename ArrayInType, typename ArrayOutType, typename DeviceTag >
   vtkm::Float64 IDWT3D( 
-            const ArrayInType   &coeffIn,
+            			ArrayInType   &coeffIn,
                   vtkm::Id      inDimX,   vtkm::Id inDimY,    vtkm::Id inDimZ,
                   vtkm::Id      inStartX, vtkm::Id inStartY,  vtkm::Id inStartZ,
             const std::vector<vtkm::Id>   &L,
                   ArrayOutType  &sigOut,
+									bool					discardCoeffIn,		// can we discard coeffIn for more memory
                   DeviceTag  )
   {
     VTKM_ASSERT( L.size() == 27 );
@@ -735,6 +741,9 @@ public:
       dispatcher.Invoke( ext1, ext2, ext3, ext4, coeffIn, afterZ );
       computationTime += timer.GetElapsedTime();
     }
+
+		if( discardCoeffIn )
+			coeffIn.ReleaseResources();
     
     // Second inverse transform in Y direction
     BasicArrayType      afterY;

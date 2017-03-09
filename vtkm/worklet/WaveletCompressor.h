@@ -158,10 +158,11 @@ public:
   template< typename InArrayType, typename OutArrayType, typename DeviceTag>
   VTKM_CONT
   vtkm::Float64 WaveDecompose3D( 
-            const InArrayType             &sigIn,     // Input
+            			InArrayType             &sigIn,     // Input
                   vtkm::Id                nLevels,    // n levels of DWT
                   vtkm::Id                inX,        vtkm::Id  inY,    vtkm::Id  inZ,
                   OutArrayType            &coeffOut,
+                  bool										discardSigIn,	// can we discard sigIn for more memory?
                   DeviceTag  )
   {
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
@@ -193,6 +194,7 @@ public:
                                     0,                0,             0,
                                     currentLenX,      currentLenY,   currentLenZ,
                                     coeffOut, 
+                                    discardSigIn, 
                                     DeviceTag() );
 
     // Successor transforms writes to a temporary array
@@ -210,6 +212,7 @@ public:
                             0,                0,            0,
                             currentLenX,      currentLenY,  currentLenZ,
                             tempOutput, 
+                            false, 
                             DeviceTag() );
 
       // copy results to coeffOut
@@ -230,10 +233,11 @@ public:
   template< typename InArrayType, typename OutArrayType, typename DeviceTag>
   VTKM_CONT
   vtkm::Float64 WaveReconstruct3D( 
-            const InArrayType           &arrIn,     // Input
+            			InArrayType           &arrIn,     // Input
                   vtkm::Id              nLevels,    // n levels of DWT
                   vtkm::Id              inX,        vtkm::Id inY,       vtkm::Id inZ,
                   OutArrayType          &arrOut,
+                  bool									discardArrIn,	// can we discard input for more memory?
                   DeviceTag                       )
   {
     vtkm::Id arrInLen = arrIn.GetNumberOfValues();
@@ -254,7 +258,9 @@ public:
       vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( arrIn, arrOut );
       return 0; 
     }
-    else    
+    else if ( discardArrIn )
+			outBuffer = arrIn;
+		else
       vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( arrIn, outBuffer );
 
     std::vector<vtkm::Id> L;
@@ -278,6 +284,7 @@ public:
 																							0,          0,        0,
 																							L3d,    
 																							tempOutput, 
+																							false, 
 																							DeviceTag() );
 
       // copy back reconstructed block
@@ -305,6 +312,7 @@ public:
 																						0,          0,        0,
 																						L3d, 
 																						arrOut, 
+																						true, 
 																						DeviceTag() );
     
     return computationTime;
@@ -479,7 +487,13 @@ public:
       typedef vtkm::cont::ArrayHandle< ValueType > CoeffArrayBasic;
       CoeffArrayBasic sortedArray;
       vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( coeffIn, sortedArray );
+
+std::cerr << "squash: finish copy" << std::endl;
+coeffIn.ReleaseResources();
+
       WaveletBase::DeviceSort( sortedArray, DeviceTag() );
+
+std::cerr << "squash: finish sort" << std::endl;
       
       vtkm::Id n = coeffLen - 
                    static_cast<vtkm::Id>( static_cast<vtkm::Float64>(coeffLen)/ratio );
@@ -490,7 +504,7 @@ public:
       typedef vtkm::worklet::wavelets::ThresholdWorklet ThresholdType;
       ThresholdType tw( nthVal );
       vtkm::worklet::DispatcherMapField< ThresholdType, DeviceTag > dispatcher( tw );
-      dispatcher.Invoke( coeffIn );
+      dispatcher.Invoke( sortedArray );
     } 
 
     return 0;
