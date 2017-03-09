@@ -199,30 +199,42 @@ void ArrayHandle<T,S>::CopyInto(IteratorType dest, DeviceAdapterTag) const
 template<typename T, typename S>
 void ArrayHandle<T,S>::Shrink(vtkm::Id numberOfValues)
 {
-  vtkm::Id originalNumberOfValues = this->GetNumberOfValues();
+  VTKM_ASSERT(numberOfValues >= 0);
 
-  if (numberOfValues < originalNumberOfValues)
+  if (numberOfValues > 0)
   {
-    if (this->Internals->ControlArrayValid)
-    {
-      this->Internals->ControlArray.Shrink(numberOfValues);
-    }
-    if (this->Internals->ExecutionArrayValid)
-    {
-      this->Internals->ExecutionArray->Shrink(numberOfValues);
-    }
-  }
-  else if (numberOfValues == originalNumberOfValues)
-  {
-    // Nothing to do.
-  }
-  else // numberOfValues > originalNumberOfValues
-  {
-    throw vtkm::cont::ErrorBadValue(
-      "ArrayHandle::Shrink cannot be used to grow array.");
-  }
+    vtkm::Id originalNumberOfValues = this->GetNumberOfValues();
 
-  VTKM_ASSERT(this->GetNumberOfValues() == numberOfValues);
+    if (numberOfValues < originalNumberOfValues)
+    {
+      if (this->Internals->ControlArrayValid)
+      {
+        this->Internals->ControlArray.Shrink(numberOfValues);
+      }
+      if (this->Internals->ExecutionArrayValid)
+      {
+        this->Internals->ExecutionArray->Shrink(numberOfValues);
+      }
+    }
+    else if (numberOfValues == originalNumberOfValues)
+    {
+      // Nothing to do.
+    }
+    else // numberOfValues > originalNumberOfValues
+    {
+      throw vtkm::cont::ErrorBadValue(
+            "ArrayHandle::Shrink cannot be used to grow array.");
+    }
+
+    VTKM_ASSERT(this->GetNumberOfValues() == numberOfValues);
+  }
+  else // numberOfValues == 0
+  {
+    // If we are shrinking to 0, there is nothing to save and we might as well
+    // free up memory. Plus, some storage classes expect that data will be
+    // deallocated when the size goes to zero.
+    this->Allocate(0);
+  }
 }
 
 template<typename T, typename S>
