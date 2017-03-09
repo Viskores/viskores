@@ -175,7 +175,12 @@ public:
     try
       {
       ValueType *tmp;
+#ifdef VTKM_USE_UNIFIED_MEMORY
+      VTKM_CUDA_CALL(cudaMallocManaged(&tmp, bufferSize));
+      cudaMemAdvise(tmp, bufferSize, cudaMemAdviseSetPreferredLocation, 0);
+#else
       VTKM_CUDA_CALL(cudaMalloc(&tmp, bufferSize));
+#endif
       this->Begin = PointerType(tmp);
       }
     catch (const std::exception &error)
@@ -210,6 +215,9 @@ public:
     storage->Allocate(this->GetNumberOfValues());
     try
       {
+#ifdef VTKM_USE_UNIFIED_MEMORY
+      cudaDeviceSynchronize();
+#endif
       ::thrust::copy(this->Begin, this->End,
           vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
       }
@@ -266,6 +274,7 @@ private:
   PointerType Begin;
   PointerType End;
   PointerType Capacity;
+
 
   VTKM_CONT
   void CopyToExecution()
