@@ -142,7 +142,7 @@ struct MapperRayTracer::RenderFunctor
     tracer->GetCamera().SetParameters(this->Camera,
                                       *this->Self->Internals->Canvas);
 
-    vtkm::Bounds dataBounds = this->Coordinates.GetBounds(Device());
+    vtkm::Bounds dataBounds = this->Coordinates.GetBounds();
 
     tracer->SetData(this->Coordinates.GetData(),
                     this->TriangleIndices,

@@ -21,21 +21,6 @@
 namespace vtkm {
 namespace filter {
 
-namespace
-{
-  template<typename DerivedPolicy,
-           typename DeviceAdapter>
-  vtkm::Bounds compute_bounds(const vtkm::cont::CoordinateSystem& coords,
-                              const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                              const DeviceAdapter& tag)
-{
-  typedef typename DerivedPolicy::CoordinateTypeList TypeList;
-  typedef typename DerivedPolicy::CoordinateStorageList StorageList;
-  return coords.GetBounds(tag, TypeList(), StorageList());
-}
-
-}
-
 //-----------------------------------------------------------------------------
 inline VTKM_CONT
 VertexClustering::VertexClustering():
@@ -59,7 +44,9 @@ vtkm::filter::ResultDataSet VertexClustering::DoExecute(const vtkm::cont::DataSe
 
   //need to compute bounds first
   vtkm::Bounds bounds =
-      compute_bounds(input.GetCoordinateSystem(), policy, tag);
+      input.GetCoordinateSystem().GetBounds(
+        typename DerivedPolicy::CoordinateTypeList(),
+        typename DerivedPolicy::CoordinateStorageList());
 
   vtkm::cont::DataSet outDataSet = clustering.Run(vtkm::filter::ApplyPolicyUnstructured(input.GetCellSet(), policy),
                                                   vtkm::filter::ApplyPolicy(input.GetCoordinateSystem(), policy),

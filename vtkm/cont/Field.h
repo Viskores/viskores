@@ -22,27 +22,19 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
-#include <vtkm/Math.h>
 #include <vtkm/Range.h>
 #include <vtkm/Types.h>
-#include <vtkm/VecTraits.h>
-#include <vtkm/BinaryOperators.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
-
-#include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
 namespace vtkm {
 namespace cont {
 
 namespace internal {
 
-template<typename DeviceAdapterTag>
 class ComputeRange
 {
 public:
@@ -51,7 +43,7 @@ public:
   template<typename ArrayHandleType>
   void operator()(const ArrayHandleType &input) const
   {
-    *this->Range = vtkm::cont::ArrayRangeCompute(input, DeviceAdapterTag());
+    *this->Range = vtkm::cont::ArrayRangeCompute(input);
   }
 
 private:
@@ -320,30 +312,31 @@ public:
     return this->AssocLogicalDim;
   }
 
-  template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
+  template<typename TypeList, typename StorageList>
   VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag,
-                                                       TypeList,
-                                                       StorageList) const
+  const vtkm::cont::ArrayHandle<vtkm::Range>&
+  GetRange(TypeList, StorageList) const
   {
-    if (this->ModifiedFlag)
-    {
-      internal::ComputeRange<DeviceAdapterTag> computeRange(this->Range);
-      this->Data.ResetTypeAndStorageLists(TypeList(),StorageList()).CastAndCall(computeRange);
-      this->ModifiedFlag = false;
-    }
+    VTKM_IS_LIST_TAG(TypeList);
+    VTKM_IS_LIST_TAG(StorageList);
 
-    return this->Range;
+    return this->GetRangeImpl(TypeList(), StorageList());
   }
 
-  template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
+  VTKM_CONT
+  const vtkm::cont::ArrayHandle<vtkm::Range>&
+  GetRange(VTKM_DEFAULT_TYPE_LIST_TAG, VTKM_DEFAULT_STORAGE_LIST_TAG) const;
+
+  template<typename TypeList, typename StorageList>
   VTKM_CONT
   void GetRange(vtkm::Range *range,
-                DeviceAdapterTag,
                 TypeList,
                 StorageList) const
   {
-    this->GetRange(DeviceAdapterTag(), TypeList(), StorageList());
+    VTKM_IS_LIST_TAG(TypeList);
+    VTKM_IS_LIST_TAG(StorageList);
+
+    this->GetRange(TypeList(), StorageList());
 
     vtkm::Id length = this->Range.GetNumberOfValues();
     for (vtkm::Id i = 0; i < length; ++i)
@@ -352,44 +345,32 @@ public:
     }
   }
 
-  template<typename DeviceAdapterTag, typename TypeList>
+  template<typename TypeList>
   VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag,
-                                                       TypeList) const
+  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList) const
   {
-    return this->GetRange(DeviceAdapterTag(),
-                          TypeList(),
+    VTKM_IS_LIST_TAG(TypeList);
+
+    return this->GetRange(TypeList(),
                           VTKM_DEFAULT_STORAGE_LIST_TAG());
   }
 
-  template<typename DeviceAdapterTag, typename TypeList>
+  template<typename TypeList>
   VTKM_CONT
-  void GetRange(vtkm::Range *range, DeviceAdapterTag, TypeList) const
+  void GetRange(vtkm::Range *range, TypeList) const
   {
+    VTKM_IS_LIST_TAG(TypeList);
+
     this->GetRange(range,
-                   DeviceAdapterTag(),
                    TypeList(),
                    VTKM_DEFAULT_STORAGE_LIST_TAG());
   }
 
-  template<typename DeviceAdapterTag>
   VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag) const
-  {
-    return this->GetRange(DeviceAdapterTag(),
-                          VTKM_DEFAULT_TYPE_LIST_TAG(),
-                          VTKM_DEFAULT_STORAGE_LIST_TAG());
-  }
+  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
 
-  template<typename DeviceAdapterTag>
   VTKM_CONT
-  void GetRange(vtkm::Range *range, DeviceAdapterTag) const
-  {
-    this->GetRange(range,
-                   DeviceAdapterTag(),
-                   VTKM_DEFAULT_TYPE_LIST_TAG(),
-                   VTKM_DEFAULT_STORAGE_LIST_TAG());
-  }
+  void GetRange(vtkm::Range *range) const;
 
   const vtkm::cont::DynamicArrayHandle &GetData() const;
 
@@ -442,6 +423,24 @@ private:
   vtkm::cont::DynamicArrayHandle Data;
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
   mutable bool ModifiedFlag;
+
+  template<typename TypeList, typename StorageList>
+  VTKM_CONT
+  const vtkm::cont::ArrayHandle<vtkm::Range>&
+  GetRangeImpl(TypeList, StorageList) const
+  {
+    VTKM_IS_LIST_TAG(TypeList);
+    VTKM_IS_LIST_TAG(StorageList);
+
+    if (this->ModifiedFlag)
+    {
+      internal::ComputeRange computeRange(this->Range);
+      this->Data.ResetTypeAndStorageLists(TypeList(),StorageList()).CastAndCall(computeRange);
+      this->ModifiedFlag = false;
+    }
+
+    return this->Range;
+  }
 };
 
 template<typename Functor>

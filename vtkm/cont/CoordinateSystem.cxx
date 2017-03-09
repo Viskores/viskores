@@ -23,10 +23,36 @@
 namespace vtkm {
 namespace cont {
 
+VTKM_CONT
 void CoordinateSystem::PrintSummary(std::ostream &out) const
 {
   out << "    Coordinate System ";
   this->Superclass::PrintSummary(out);
+}
+
+VTKM_CONT
+void CoordinateSystem::GetRange(vtkm::Range *range) const
+{
+  this->Superclass::GetRange(
+        range,
+        VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG(),
+        VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
+}
+
+VTKM_CONT
+const vtkm::cont::ArrayHandle<vtkm::Range>&
+CoordinateSystem::GetRange() const
+{
+  return this->Superclass::GetRange(
+        VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG(),
+        VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
+}
+
+VTKM_CONT
+vtkm::Bounds CoordinateSystem::GetBounds() const
+{
+  return this->GetBounds(VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG(),
+                         VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
 }
 
 }

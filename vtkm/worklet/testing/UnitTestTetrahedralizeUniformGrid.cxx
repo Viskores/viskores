@@ -121,7 +121,7 @@ void TestUniformGrid2D()
   std::cout << "Number of output vertices " << coordArray.GetNumberOfValues() << std::endl;
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
 
-  vtkm::Bounds bounds = coordinates.GetBounds(DeviceAdapter());
+  vtkm::Bounds bounds = coordinates.GetBounds();
   std::cout << "Bounds " << bounds << std::endl;
 
   // Two triangles are created for every quad cell
@@ -169,7 +169,7 @@ void TestUniformGrid3D()
   std::cout << "Number of output vertices " << coordArray.GetNumberOfValues() << std::endl;
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
 
-  vtkm::Bounds bounds = coordinates.GetBounds(DeviceAdapter());
+  vtkm::Bounds bounds = coordinates.GetBounds();
   std::cout << "Bounds " << bounds << std::endl;
 
   // Five tets are created for every hex cell

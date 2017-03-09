@@ -90,7 +90,7 @@ void RenderTests()
                                               ds[i].GetField(fldNames[i].c_str()),
                                               colorTable));
         vtkm::rendering::testing::SetCamera<View3DType>(camera[i],
-                            ds[i].GetCoordinateSystem().GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG()));
+                            ds[i].GetCoordinateSystem().GetBounds());
 
     }
 
