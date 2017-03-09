@@ -38,10 +38,11 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #pragma push_macro("__TBB_NO_IMPLICITLINKAGE")
 #define __TBB_NO_IMPLICIT_LINKAGE 1
 
-// TBB includes windows.h, so instead we want include windows.h with the
+#endif // defined(VTKM_MSVC)
+
+// TBB includes windows.h, so instead we want to include windows.h with the
 // correct settings so that we don't clobber any existing function
 #include <vtkm/internal/Windows.h>
-#endif
 
 #include <tbb/tbb_stddef.h>
 #if (TBB_VERSION_MAJOR == 4) && (TBB_VERSION_MINOR == 2)
