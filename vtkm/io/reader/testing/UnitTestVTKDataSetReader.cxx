@@ -283,7 +283,7 @@ const char unsturctureGridBin[] =
 
 const char rectilinearGrid1Ascii[] =
 "# vtk DataFile Version 3.0\n"
-"vtk output\n"
+"\n" // empty title
 "ASCII\n"
 "DATASET RECTILINEAR_GRID\n"
 "DIMENSIONS 5 5 5\n"
@@ -325,7 +325,7 @@ const char rectilinearGrid1Ascii[] =
 
 const char rectilinearGrid2Ascii[] =    
 "# vtk DataFile Version 3.0\n"
-"vtk output\n"
+"\n" // empty title
 "ASCII\n"
 "DATASET RECTILINEAR_GRID\n"
 "DIMENSIONS 3 4 2\n"
