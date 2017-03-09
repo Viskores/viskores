@@ -33,34 +33,34 @@ class TestingThresholdPoints
 public:
   void TestRegular2D() const
   {
-    std::cout << "Testing threshold on 2D regular dataset" << std::endl;
+    std::cout << "Testing threshold points on 2D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
     vtkm::filter::ResultDataSet result;
 
     vtkm::filter::ThresholdPoints thresholdPoints;
     thresholdPoints.SetThresholdBetween(40.0f, 71.0f);
-    thresholdPoints.SetCompactPoints(true);
+    thresholdPoints.SetCompactPoints(false);
 
     result = thresholdPoints.Execute(dataset, dataset.GetField("pointvar"));
 
     thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
-                     "Wrong number of fields in the output dataset");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 11), 
                      "Wrong result for ThresholdPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 25),
+                     "Wrong number of points for ThresholdPoints");
 
     vtkm::cont::Field pointField = output.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
     pointField.GetData().CopyTo(pointFieldArray);
-    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(5) == 50.0f,
+    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(12) == 50.0f,
                      "Wrong point field data");
   }
 
   void TestRegular3D() const
   {
-    std::cout << "Testing threshold on 3D regular dataset" << std::endl;
+    std::cout << "Testing threshold points on 3D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::filter::ResultDataSet result;
 
@@ -71,21 +71,21 @@ public:
     thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
-                     "Wrong number of fields in the output dataset");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 27), 
                      "Wrong result for ThresholdPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 27),
+                     "Wrong number of points for ThresholdPoints");
 
     vtkm::cont::Field pointField = output.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
     pointField.GetData().CopyTo(pointFieldArray);
-    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(31) == 99.0f,
+    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(0) == 99.0f,
                      "Wrong point field data");
   }
 
   void TestExplicit3D() const
   {
-    std::cout << "Testing threshold on 3D explicit dataset" << std::endl;
+    std::cout << "Testing threshold points on 3D explicit dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
     vtkm::filter::ResultDataSet result;
 
@@ -96,15 +96,15 @@ public:
     thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
-                     "Wrong number of fields in the output dataset");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 6), 
                      "Wrong result for ThresholdPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 6),
+                     "Wrong number of points for ThresholdPoints");
 
     vtkm::cont::Field pointField = output.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
     pointField.GetData().CopyTo(pointFieldArray);
-    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(3) == 40.2f,
+    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(4) == 10.f,
                      "Wrong point field data");
   }
 

@@ -110,7 +110,7 @@ ThresholdPoints::ThresholdPoints():
   LowerValue(0),
   UpperValue(0),
   ThresholdType(THRESHOLD_BETWEEN),
-  CompactPoints(false)
+  CompactPoints(true)
 {
 }
 

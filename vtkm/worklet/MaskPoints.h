@@ -49,7 +49,6 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> pointIds;
     DeviceAlgorithm::Copy(strideArray, pointIds);
-    printSummary_ArrayHandle(pointIds, std::cout);
 
     // Make CellSetSingleType with VERTEX at each point id
     vtkm::cont::CellSetSingleType< > outCellSet("cells");

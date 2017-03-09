@@ -39,15 +39,15 @@ public:
 
     vtkm::filter::MaskPoints maskPoints;
     maskPoints.SetStride(2);
-    maskPoints.SetCompactPoints(true);
-
     result = maskPoints.Execute(dataset);
 
     maskPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
 
     vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 12), 
-                     "Wrong result for MaskPoints");
+                     "Wrong number of cells for MaskPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 12),
+                     "Wrong number of points for MaskPoints");
   }
 
   void TestRegular3D() const
@@ -64,7 +64,9 @@ public:
 
     vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 25), 
-                     "Wrong result for MaskPoints");
+                     "Wrong number of cells for MaskPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 25),
+                     "Wrong number of points for MaskPoints");
   }
 
   void TestExplicit3D() const
@@ -75,13 +77,16 @@ public:
 
     vtkm::filter::MaskPoints maskPoints;
     maskPoints.SetStride(3);
+    maskPoints.SetCompactPoints(false);
     result = maskPoints.Execute(dataset);
 
     maskPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
 
     vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 3), 
-                     "Wrong result for MaskPoints");
+                     "Wrong number of cells for MaskPoints");
+    VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 11),
+                     "Wrong number of points for MaskPoints");
   }
 
   void operator()() const

@@ -45,7 +45,7 @@ inline VTKM_CONT
 MaskPoints::MaskPoints():
   vtkm::filter::FilterDataSet<MaskPoints>(),
   Stride(1),
-  CompactPoints(false)
+  CompactPoints(true)
 {
 }
 
