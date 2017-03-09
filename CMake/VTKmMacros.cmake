@@ -606,6 +606,7 @@ endfunction(vtkm_wrap_sources_for_cuda)
 #   [HEADERS <headers_list>]
 #   [CUDA]
 #   [WRAP_FOR_CUDA <source_list>]
+#   [LIBRARIES <dependent_library_list>]
 #   )
 function(vtkm_library)
   set(options CUDA)
@@ -667,8 +668,11 @@ function(vtkm_library)
     add_library(${lib_name} ${VTKm_LIB_SOURCES})
   endif()
 
-  #need to link to the vtkm target as makes C++11 become enabled
   target_link_libraries(${lib_name} PUBLIC vtkm)
+  target_link_libraries(${lib_name} PRIVATE
+    ${VTKm_BACKEND_LIBRARIES}
+    ${VTKm_LIB_LIBRARIES}
+    )
 
   set(cxx_args ${VTKm_COMPILE_OPTIONS})
   separate_arguments(cxx_args)

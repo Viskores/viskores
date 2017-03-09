@@ -142,105 +142,83 @@ public:
           this->Superclass::GetData());
   }
 
-  template<typename DeviceAdapterTag>
   VTKM_CONT
-  void GetRange(vtkm::Range *range, DeviceAdapterTag) const
-  {
-    this->Superclass::GetRange(
-          range,
-          DeviceAdapterTag(),
-          VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG(),
-          VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-  }
+  void GetRange(vtkm::Range *range) const;
 
-  template<typename DeviceAdapterTag, typename TypeList>
+  template<typename TypeList>
   VTKM_CONT
-  void GetRange(vtkm::Range *range, DeviceAdapterTag, TypeList) const
+  void GetRange(vtkm::Range *range, TypeList) const
   {
-    this->Superclass::GetRange(
-          range,
-          DeviceAdapterTag(),
-          TypeList(),
-          VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-  }
-
-  template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
-  VTKM_CONT
-  void GetRange(vtkm::Range *range, DeviceAdapterTag, TypeList, StorageList) const
-  {
-    this->Superclass::GetRange(
-          range,
-          DeviceAdapterTag(),
-          TypeList(),
-          StorageList());
-  }
-
-  template<typename DeviceAdapterTag>
-  VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag) const
-  {
-    return this->Superclass::GetRange(
-          DeviceAdapterTag(),
-          VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG(),
-          VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-  }
-
-  template<typename DeviceAdapterTag, typename TypeList>
-  VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag,
-                                                       TypeList) const
-  {
-    return this->Superclass::GetRange(
-          DeviceAdapterTag(),
-          TypeList(),
-          VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-  }
-
-  template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
-  VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag,
-                                                       TypeList,
-                                                       StorageList) const
-  {
-    return this->Superclass::GetRange(
-          DeviceAdapterTag(),
-          TypeList(),
-          StorageList());
-  }
-
-  template<typename DeviceAdapterTag>
-  VTKM_CONT
-  vtkm::Bounds GetBounds(DeviceAdapterTag) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-
-    return this->GetBounds(DeviceAdapterTag(),
-                           VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG(),
-                           VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-  }
-
-  template<typename DeviceAdapterTag, typename TypeList>
-  VTKM_CONT
-  vtkm::Bounds GetBounds(DeviceAdapterTag, TypeList) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
     VTKM_IS_LIST_TAG(TypeList);
 
-    return this->GetBounds(DeviceAdapterTag(),
-                           TypeList(),
+    this->Superclass::GetRange(
+          range,
+          TypeList(),
+          VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
+  }
+
+  template<typename TypeList, typename StorageList>
+  VTKM_CONT
+  void GetRange(vtkm::Range *range, TypeList, StorageList) const
+  {
+    VTKM_IS_LIST_TAG(TypeList);
+    VTKM_IS_LIST_TAG(StorageList);
+
+    this->Superclass::GetRange(
+          range,
+          TypeList(),
+          StorageList());
+  }
+
+  VTKM_CONT
+  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
+
+  template<typename TypeList>
+  VTKM_CONT
+  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList) const
+  {
+    VTKM_IS_LIST_TAG(TypeList);
+
+    return this->Superclass::GetRange(
+          TypeList(),
+          VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
+  }
+
+  template<typename TypeList, typename StorageList>
+  VTKM_CONT
+  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList,
+                                                       StorageList) const
+  {
+    VTKM_IS_LIST_TAG(TypeList);
+    VTKM_IS_LIST_TAG(StorageList);
+
+    return this->Superclass::GetRange(
+          TypeList(),
+          StorageList());
+  }
+
+  VTKM_CONT
+  vtkm::Bounds GetBounds() const;
+
+  template<typename TypeList>
+  VTKM_CONT
+  vtkm::Bounds GetBounds(TypeList) const
+  {
+    VTKM_IS_LIST_TAG(TypeList);
+
+    return this->GetBounds(TypeList(),
                            VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
   }
 
-  template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
+  template<typename TypeList, typename StorageList>
   VTKM_CONT
-  vtkm::Bounds GetBounds(DeviceAdapterTag, TypeList, StorageList) const
+  vtkm::Bounds GetBounds(TypeList, StorageList) const
   {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
     VTKM_IS_LIST_TAG(TypeList);
     VTKM_IS_LIST_TAG(StorageList);
 
     vtkm::cont::ArrayHandle<vtkm::Range> ranges =
-        this->GetRange(DeviceAdapterTag(), TypeList(), StorageList());
+        this->GetRange(TypeList(), StorageList());
 
     VTKM_ASSERT(ranges.GetNumberOfValues() == 3);
 

@@ -194,7 +194,7 @@ void TestExplicitGrid2D()
   std::cout << "Number of output vertices " << coordArray.GetNumberOfValues() << std::endl;
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
 
-  vtkm::Bounds bounds = coordinates.GetBounds(DeviceAdapter());
+  vtkm::Bounds bounds = coordinates.GetBounds();
   std::cout << "Bounds " << bounds << std::endl;
 
   VTKM_TEST_ASSERT(test_equal(cellSet.GetNumberOfCells(), 14), "Wrong result for Triangulate filter");
@@ -232,7 +232,7 @@ void TestExplicitGrid3D()
   std::cout << "Number of output vertices " << coordArray.GetNumberOfValues() << std::endl;
   std::cout << "Number of output components " << coordArray.GetNumberOfComponents() << std::endl;
 
-  vtkm::Bounds bounds = coordinates.GetBounds(DeviceAdapter());
+  vtkm::Bounds bounds = coordinates.GetBounds();
   std::cout << "Bounds " << bounds << std::endl;
 
   VTKM_TEST_ASSERT(test_equal(cellSet.GetNumberOfCells(), 11), "Wrong result for Tetrahedralize filter");

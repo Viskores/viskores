@@ -225,7 +225,7 @@ void Mesh3D_DEM_Triangulation<T,StorageType,DeviceAdapter>::SetSaddleStarts(Chai
   mergeGraph.AllocateVertexArrays(nCriticalPoints);
 
   // compact the set of vertex indices to critical ones only
-  DeviceAlgorithm::StreamCompact(vertexIndexArray, isCritical, mergeGraph.valueIndex);
+  DeviceAlgorithm::CopyIf(vertexIndexArray, isCritical, mergeGraph.valueIndex);
 
   // we initialise the prunesTo array to "NONE"
   vtkm::cont::ArrayHandleConstant<vtkm::Id> notAssigned(NO_VERTEX_ASSIGNED, nCriticalPoints);
@@ -233,7 +233,7 @@ void Mesh3D_DEM_Triangulation<T,StorageType,DeviceAdapter>::SetSaddleStarts(Chai
 
   // copy the outdegree from our temporary array
   // : mergeGraph.outdegree[vID] <= outdegree[mergeGraph.valueIndex[vID]]
-  DeviceAlgorithm::StreamCompact(outdegree, isCritical, mergeGraph.outdegree);
+  DeviceAlgorithm::CopyIf(outdegree, isCritical, mergeGraph.outdegree);
 
   // copy the chain maximum from arcArray
   // : mergeGraph.chainExtremum[vID] = inverseIndex[mergeGraph.arcArray[mergeGraph.valueIndex[vID]]]
@@ -242,7 +242,7 @@ void Mesh3D_DEM_Triangulation<T,StorageType,DeviceAdapter>::SetSaddleStarts(Chai
 
   vtkm::cont::ArrayHandle<vtkm::Id> tArray;
   tArray.Allocate(nCriticalPoints);
-  DeviceAlgorithm::StreamCompact(mergeGraph.arcArray, isCritical, tArray);
+  DeviceAlgorithm::CopyIf(mergeGraph.arcArray, isCritical, tArray);
   DeviceAlgorithm::Copy(PermuteIndexType(tArray, inverseIndex), mergeGraph.chainExtremum);
 
   // and set up the active vertices - initially to identity

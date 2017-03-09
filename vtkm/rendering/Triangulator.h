@@ -449,9 +449,9 @@ public:
                vtkm::exec::ExecutionWholeArray< vtkm::UInt8 >(flags));
 
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > subset;
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::StreamCompact(outputIndices,
-                                                                     flags,
-                                                                     subset);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::CopyIf(outputIndices,
+                                                              flags,
+                                                              subset);
     outputIndices = subset;
     outputTriangles = subset.GetNumberOfValues();
   }

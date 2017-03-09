@@ -49,20 +49,19 @@ namespace benchmarking {
 const static std::string DIVIDER(40, '-');
 
 enum BenchmarkName {
-  LOWER_BOUNDS = 1,
-  REDUCE = 1 << 1,
-  REDUCE_BY_KEY = 1 << 2,
-  SCAN_INCLUSIVE = 1 << 3,
-  SCAN_EXCLUSIVE = 1 << 4,
-  SORT = 1 << 5,
-  SORT_BY_KEY = 1 << 6,
-  STREAM_COMPACT = 1 << 7,
-  UNIQUE = 1 << 8,
-  UPPER_BOUNDS = 1 << 9,
-  COPY = 1 << 10,
-  ALL = LOWER_BOUNDS | REDUCE | REDUCE_BY_KEY | SCAN_INCLUSIVE
-    | SCAN_EXCLUSIVE | SORT | SORT_BY_KEY | STREAM_COMPACT | UNIQUE
-    | UPPER_BOUNDS | COPY
+  COPY           = 1,
+  COPY_IF        = 1 << 1,
+  LOWER_BOUNDS   = 1 << 2,
+  REDUCE         = 1 << 3,
+  REDUCE_BY_KEY  = 1 << 4,
+  SCAN_INCLUSIVE = 1 << 5,
+  SCAN_EXCLUSIVE = 1 << 6,
+  SORT           = 1 << 7,
+  SORT_BY_KEY    = 1 << 8,
+  UNIQUE         = 1 << 9,
+  UPPER_BOUNDS   = 1 << 10,
+  ALL = COPY | COPY_IF | LOWER_BOUNDS | REDUCE | REDUCE_BY_KEY | SCAN_INCLUSIVE
+    | SCAN_EXCLUSIVE | SORT | SORT_BY_KEY | UNIQUE | UPPER_BOUNDS
 };
 
 /// This class runs a series of micro-benchmarks to measure
@@ -182,6 +181,47 @@ private:
     }
   };
   VTKM_MAKE_BENCHMARK(Copy,  BenchCopy);
+
+  template<typename Value>
+  struct BenchCopyIf {
+    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+
+    const vtkm::Id N_VALID;
+    ValueArrayHandle ValueHandle, OutHandle;
+    IdArrayHandle StencilHandle;
+
+    VTKM_CONT
+    BenchCopyIf(vtkm::Id percent_valid) : N_VALID((ARRAY_SIZE * percent_valid) / 100)
+    {
+      vtkm::Id modulo = ARRAY_SIZE / N_VALID;
+      Algorithm::Schedule(FillTestValueKernel<Value>(
+        ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
+      Algorithm::Schedule(FillBinaryTestValueKernel<vtkm::Id>(modulo,
+                                                              StencilHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
+    }
+
+    VTKM_CONT
+    vtkm::Float64 operator()() {
+      Timer timer;
+      Algorithm::CopyIf(ValueHandle, StencilHandle, OutHandle);
+      return timer.GetElapsedTime();
+    }
+
+    VTKM_CONT
+    std::string Description() const {
+      std::stringstream description;
+      description << "CopyIf on " << ARRAY_SIZE << " "
+      << " values with " << OutHandle.GetNumberOfValues()
+      << " valid values";
+      return description.str();
+    }
+  };
+  VTKM_MAKE_BENCHMARK(CopyIf5, BenchCopyIf, 5);
+  VTKM_MAKE_BENCHMARK(CopyIf10, BenchCopyIf, 10);
+  VTKM_MAKE_BENCHMARK(CopyIf15, BenchCopyIf, 15);
+  VTKM_MAKE_BENCHMARK(CopyIf20, BenchCopyIf, 20);
+  VTKM_MAKE_BENCHMARK(CopyIf25, BenchCopyIf, 25);
+  VTKM_MAKE_BENCHMARK(CopyIf30, BenchCopyIf, 30);
 
   template<typename Value>
   struct BenchLowerBounds {
@@ -419,86 +459,6 @@ private:
   VTKM_MAKE_BENCHMARK(SortByKey30, BenchSortByKey, 30);
 
   template<typename Value>
-  struct BenchStreamCompact {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
-
-    const vtkm::Id N_VALID;
-    ValueArrayHandle ValueHandle;
-    IdArrayHandle OutHandle;
-
-    VTKM_CONT
-    BenchStreamCompact(vtkm::Id percent_valid) : N_VALID((ARRAY_SIZE * percent_valid) / 100)
-    {
-      vtkm::Id modulo = ARRAY_SIZE / N_VALID;
-      Algorithm::Schedule(FillBinaryTestValueKernel<Value>(modulo,
-            ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()() {
-      Timer timer;
-      Algorithm::StreamCompact(ValueHandle, OutHandle);
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const {
-      std::stringstream description;
-      description << "StreamCompact on " << ARRAY_SIZE << " "
-          << " values with " << OutHandle.GetNumberOfValues()
-          << " valid values";
-      return description.str();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(StreamCompact5, BenchStreamCompact, 5);
-  VTKM_MAKE_BENCHMARK(StreamCompact10, BenchStreamCompact, 10);
-  VTKM_MAKE_BENCHMARK(StreamCompact15, BenchStreamCompact, 15);
-  VTKM_MAKE_BENCHMARK(StreamCompact20, BenchStreamCompact, 20);
-  VTKM_MAKE_BENCHMARK(StreamCompact25, BenchStreamCompact, 25);
-  VTKM_MAKE_BENCHMARK(StreamCompact30, BenchStreamCompact, 30);
-
-  template<typename Value>
-  struct BenchStreamCompactStencil {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
-
-    const vtkm::Id N_VALID;
-    ValueArrayHandle ValueHandle;
-    IdArrayHandle StencilHandle, OutHandle;
-
-    VTKM_CONT
-    BenchStreamCompactStencil(vtkm::Id percent_valid) : N_VALID((ARRAY_SIZE * percent_valid) / 100)
-    {
-      vtkm::Id modulo = ARRAY_SIZE / N_VALID;
-      Algorithm::Schedule(FillTestValueKernel<Value>(
-            ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
-      Algorithm::Schdule(FillBinaryTestValueKernel<vtkm::Id>(modulo,
-            StencilHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()() {
-      Timer timer;
-      Algorithm::StreamCompact(ValueHandle, StencilHandle, OutHandle);
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const {
-      std::stringstream description;
-      description << "StreamCompactStencil on " << ARRAY_SIZE << " "
-          << " values with " << OutHandle.GetNumberOfValues()
-          << " valid values";
-      return description.str();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(StreamCompactStencil5, BenchStreamCompactStencil, 5);
-  VTKM_MAKE_BENCHMARK(StreamCompactStencil10, BenchStreamCompactStencil, 10);
-  VTKM_MAKE_BENCHMARK(StreamCompactStencil15, BenchStreamCompactStencil, 15);
-  VTKM_MAKE_BENCHMARK(StreamCompactStencil20, BenchStreamCompactStencil, 20);
-  VTKM_MAKE_BENCHMARK(StreamCompactStencil25, BenchStreamCompactStencil, 25);
-  VTKM_MAKE_BENCHMARK(StreamCompactStencil30, BenchStreamCompactStencil, 30);
-
-  template<typename Value>
   struct BenchUnique {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
@@ -589,6 +549,16 @@ public:
       VTKM_RUN_BENCHMARK(Copy, ValueTypes());
     }
 
+    if (benchmarks & COPY_IF){
+      std::cout << "\n" << DIVIDER << "\nBenchmarking CopyIf\n";
+      VTKM_RUN_BENCHMARK(CopyIf5, ValueTypes());
+      VTKM_RUN_BENCHMARK(CopyIf10, ValueTypes());
+      VTKM_RUN_BENCHMARK(CopyIf15, ValueTypes());
+      VTKM_RUN_BENCHMARK(CopyIf20, ValueTypes());
+      VTKM_RUN_BENCHMARK(CopyIf25, ValueTypes());
+      VTKM_RUN_BENCHMARK(CopyIf30, ValueTypes());
+    }
+
     if (benchmarks & LOWER_BOUNDS){
       std::cout << DIVIDER << "\nBenchmarking LowerBounds\n";
       VTKM_RUN_BENCHMARK(LowerBounds5, ValueTypes());
@@ -639,16 +609,6 @@ public:
       VTKM_RUN_BENCHMARK(SortByKey30, ValueTypes());
     }
 
-    if (benchmarks & STREAM_COMPACT){
-      std::cout << "\n" << DIVIDER << "\nBenchmarking StreamCompact\n";
-      VTKM_RUN_BENCHMARK(StreamCompact5, ValueTypes());
-      VTKM_RUN_BENCHMARK(StreamCompact10, ValueTypes());
-      VTKM_RUN_BENCHMARK(StreamCompact15, ValueTypes());
-      VTKM_RUN_BENCHMARK(StreamCompact20, ValueTypes());
-      VTKM_RUN_BENCHMARK(StreamCompact25, ValueTypes());
-      VTKM_RUN_BENCHMARK(StreamCompact30, ValueTypes());
-    }
-
     if (benchmarks & UNIQUE){
       std::cout << "\n" << DIVIDER << "\nBenchmarking Unique\n";
       VTKM_RUN_BENCHMARK(Unique5, ValueTypes());
@@ -687,7 +647,13 @@ int main(int argc, char *argv[])
     for (int i = 1; i < argc; ++i){
       std::string arg = argv[i];
       std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
-      if (arg == "lowerbounds"){
+      if (arg == "copy"){
+        benchmarks |= vtkm::benchmarking::COPY;
+      }
+      else if (arg == "copyif"){
+        benchmarks |= vtkm::benchmarking::COPY_IF;
+      }
+      else if (arg == "lowerbounds"){
         benchmarks |= vtkm::benchmarking::LOWER_BOUNDS;
       }
       else if (arg == "reduce"){
@@ -708,17 +674,11 @@ int main(int argc, char *argv[])
       else if (arg == "sortbykey"){
         benchmarks |= vtkm::benchmarking::SORT_BY_KEY;
       }
-      else if (arg == "streamcompact"){
-        benchmarks |= vtkm::benchmarking::STREAM_COMPACT;
-      }
       else if (arg == "unique"){
         benchmarks |= vtkm::benchmarking::UNIQUE;
       }
       else if (arg == "upperbounds"){
         benchmarks |= vtkm::benchmarking::UPPER_BOUNDS;
-      }
-      else if (arg == "copy"){
-        benchmarks |= vtkm::benchmarking::COPY;
       }
       else {
         std::cout << "Unrecognized benchmark: " << argv[i] << std::endl;

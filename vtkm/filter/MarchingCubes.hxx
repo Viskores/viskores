@@ -34,6 +34,7 @@ MarchingCubes::MarchingCubes():
   vtkm::filter::FilterDataSetWithField<MarchingCubes>(),
   IsoValue(0),
   GenerateNormals(false),
+  NormalArrayName("normals"),
   Worklet()
 {
   // todo: keep an instance of marching cubes worklet as a member variable
@@ -103,7 +104,7 @@ vtkm::filter::ResultDataSet MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
 
   if(this->GenerateNormals)
   {
-    vtkm::cont::Field normalField(std::string("normals"),
+    vtkm::cont::Field normalField(this->NormalArrayName,
                                   vtkm::cont::Field::ASSOC_POINTS, normals);
     output.AddField( normalField );
   }

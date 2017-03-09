@@ -32,7 +32,7 @@ namespace vtkm {
 namespace cont {
 
 template<vtkm::IdComponent DIMENSION>
-class CellSetStructured : public CellSet
+class VTKM_ALWAYS_EXPORT CellSetStructured : public CellSet
 {
 private:
   typedef vtkm::cont::CellSetStructured<DIMENSION> Thisclass;

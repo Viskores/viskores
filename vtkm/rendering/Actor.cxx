@@ -48,34 +48,6 @@ struct Actor::InternalsType
   {  }
 };
 
-struct Actor::RangeFunctor
-{
-  vtkm::rendering::Actor::InternalsType *Internals;
-  const vtkm::cont::CoordinateSystem &Coordinates;
-  const vtkm::cont::Field &ScalarField;
-
-  VTKM_CONT
-  RangeFunctor(vtkm::rendering::Actor *self,
-               const vtkm::cont::CoordinateSystem &coordinates,
-               const vtkm::cont::Field &scalarField)
-    : Internals(self->Internals.get()),
-      Coordinates(coordinates),
-      ScalarField(scalarField)
-  {  }
-
-  template<typename Device>
-  VTKM_CONT
-  bool operator()(Device)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    this->ScalarField.GetRange(&this->Internals->ScalarRange, Device());
-    this->Internals->SpatialBounds = this->Coordinates.GetBounds(Device());
-
-    return true;
-  }
-};
-
 Actor::Actor(const vtkm::cont::DynamicCellSet &cells,
              const vtkm::cont::CoordinateSystem &coordinates,
              const vtkm::cont::Field &scalarField,
@@ -84,8 +56,8 @@ Actor::Actor(const vtkm::cont::DynamicCellSet &cells,
 {
   VTKM_ASSERT(scalarField.GetData().GetNumberOfComponents() == 1);
 
-  RangeFunctor functor(this, coordinates, scalarField);
-  vtkm::cont::TryExecute(functor);
+  scalarField.GetRange(&this->Internals->ScalarRange);
+  this->Internals->SpatialBounds = coordinates.GetBounds();
 }
 
 void Actor::Render(vtkm::rendering::Mapper &mapper,
