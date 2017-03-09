@@ -170,9 +170,22 @@ T ReducePortals(InputPortalType inputPortal,
                                                       wrappedBinaryOp);
   vtkm::Id arrayLength = inputPortal.GetNumberOfValues();
 
-  ::tbb::blocked_range<vtkm::Id> range(0, arrayLength, TBB_GRAIN_SIZE);
-  ::tbb::parallel_reduce( range, body );
-  return body.Sum;
+  if (arrayLength > 1)
+  {
+    ::tbb::blocked_range<vtkm::Id> range(0, arrayLength, TBB_GRAIN_SIZE);
+    ::tbb::parallel_reduce( range, body );
+    return body.Sum;
+  }
+  else if (arrayLength == 1)
+  {
+    //ReduceBody does not work with an array of size 1.
+    return binaryOperation(initialValue, inputPortal.Get(0));
+  }
+  else // arrayLength == 0
+  {
+    // ReduceBody does not work with an array of size 0.
+    return initialValue;
+  }
 }
 
 template<class InputPortalType, class OutputPortalType,

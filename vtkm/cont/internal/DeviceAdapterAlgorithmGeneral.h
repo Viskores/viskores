@@ -30,6 +30,8 @@
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
+#include <vtkm/TypeTraits.h>
+
 #include <vtkm/internal/Windows.h>
 
 namespace vtkm {
@@ -628,9 +630,9 @@ public:
 
     vtkm::Id numValues = output.GetNumberOfValues();
     if (numValues < 1)
-      {
-      return output.GetPortalConstControl().Get(0);
-      }
+    {
+      return vtkm::TypeTraits<T>::ZeroInitialization();
+    }
 
     PortalType portal = output.PrepareForInPlace(DeviceAdapterTag());
 
