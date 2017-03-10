@@ -405,7 +405,10 @@ private:
 
     char dot;
     this->DataFile->Stream >> this->DataFile->Version[0] >> dot
-                           >> this->DataFile->Version[1] >> std::ws;
+                           >> this->DataFile->Version[1];
+    // skip rest of the line
+    std::string skip;
+    std::getline(this->DataFile->Stream, skip);
 
     // Read title line
     std::getline(this->DataFile->Stream, this->DataFile->Title);
