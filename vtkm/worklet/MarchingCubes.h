@@ -94,7 +94,7 @@ public:
       CellSetIn cellset,
       FieldOutCell< IdComponentType > outNumTriangles,
       WholeArrayIn< IdComponentType > numTrianglesTable);
-  typedef void ExecutionSignature(_1, _3, _4);
+  typedef void ExecutionSignature(CellShape,_1, _3, _4);
   typedef _2 InputDomain;
 
   T Isovalue;
@@ -108,15 +108,54 @@ public:
   template<typename FieldInType,
            typename NumTrianglesTablePortalType>
   VTKM_EXEC
-  void operator()(const FieldInType &fieldIn,
+  void operator()(vtkm::CellShapeTagGeneric shape,
+                  const FieldInType &fieldIn,
+                  vtkm::IdComponent &numTriangles,
+                  const NumTrianglesTablePortalType &numTrianglesTable) const
+  {
+    if(shape.Id == CELL_SHAPE_HEXAHEDRON )
+      {
+      this->operator()(vtkm::CellShapeTagHexahedron(),
+                       fieldIn,
+                       numTriangles,
+                       numTrianglesTable);
+      }
+    else
+    {
+      numTriangles = 0;
+    }
+  }
+
+  template<typename FieldInType,
+           typename NumTrianglesTablePortalType>
+  VTKM_EXEC
+  void operator()(vtkm::CellShapeTagQuad vtkmNotUsed(shape),
+                  const FieldInType &vtkmNotUsed(fieldIn),
+                  vtkm::IdComponent &vtkmNotUsed(numTriangles),
+                  const NumTrianglesTablePortalType
+                        &vtkmNotUsed(numTrianglesTable)) const
+  {
+  }
+
+  template<typename FieldInType,
+           typename NumTrianglesTablePortalType>
+  VTKM_EXEC
+  void operator()(vtkm::CellShapeTagHexahedron vtkmNotUsed(shape),
+                  const FieldInType &fieldIn,
                   vtkm::IdComponent &numTriangles,
                   const NumTrianglesTablePortalType &numTrianglesTable) const
   {
     typedef typename vtkm::VecTraits<FieldInType>::ComponentType FieldType;
     const FieldType iso = static_cast<FieldType>(this->Isovalue);
 
-    const vtkm::IdComponent caseNumber =
-                            GetHexahedronClassification(fieldIn, iso);
+    const vtkm::IdComponent caseNumber = ((fieldIn[0] > iso)      |
+                                          (fieldIn[1] > iso) << 1 |
+                                          (fieldIn[2] > iso) << 2 |
+                                          (fieldIn[3] > iso) << 3 |
+                                          (fieldIn[4] > iso) << 4 |
+                                          (fieldIn[5] > iso) << 5 |
+                                          (fieldIn[6] > iso) << 6 |
+                                          (fieldIn[7] > iso) << 7);
     numTriangles = numTrianglesTable.Get(caseNumber);
   }
 };
@@ -267,8 +306,14 @@ public:
     const FieldType iso = static_cast<FieldType>(this->Isovalue);
 
     // Compute the Marching Cubes case number for this cell
-    const vtkm::IdComponent caseNumber =
-                            GetHexahedronClassification(fieldIn, iso);
+    const vtkm::IdComponent caseNumber = ((fieldIn[0] > iso)      |
+                                          (fieldIn[1] > iso) << 1 |
+                                          (fieldIn[2] > iso) << 2 |
+                                          (fieldIn[3] > iso) << 3 |
+                                          (fieldIn[4] > iso) << 4 |
+                                          (fieldIn[5] > iso) << 5 |
+                                          (fieldIn[6] > iso) << 6 |
+                                          (fieldIn[7] > iso) << 7);
 
     // Interpolate for vertex positions and associated scalar values
     const vtkm::Id triTableOffset =
