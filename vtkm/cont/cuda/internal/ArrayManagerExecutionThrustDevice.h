@@ -177,7 +177,10 @@ public:
       ValueType *tmp;
 #ifdef VTKM_USE_UNIFIED_MEMORY
       VTKM_CUDA_CALL(cudaMallocManaged(&tmp, bufferSize));
-      cudaMemAdvise(tmp, bufferSize, cudaMemAdviseSetPreferredLocation, 0);
+      VTKM_CUDA_CALL(cudaMemAdvise(tmp, bufferSize,
+                                   cudaMemAdviseSetPreferredLocation, 0));
+      VTKM_CUDA_CALL(cudaMemPrefetchAsync(tmp, bufferSize, 0, 0));
+      VTKM_CUDA_CALL(cudaStreamSynchronize(0));
 #else
       VTKM_CUDA_CALL(cudaMalloc(&tmp, bufferSize));
 #endif
