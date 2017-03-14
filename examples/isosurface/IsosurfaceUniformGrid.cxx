@@ -234,8 +234,8 @@ int main(int argc, char* argv[])
 
   vtkm::filter::MarchingCubes filter;
   filter.SetGenerateNormals(true);
-  filter.SetMergeDuplicatePoints( false );
-  filter.SetIsoValue( 0.5 );
+  filter.SetMergeDuplicatePoints(false);
+  filter.SetIsoValue(0, 0.5);
   vtkm::filter::ResultDataSet result =
       filter.Execute( dataSet, dataSet.GetField("nodevar") );
 

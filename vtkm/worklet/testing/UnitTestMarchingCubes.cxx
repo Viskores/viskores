@@ -251,10 +251,12 @@ void TestMarchingCubesUniformGrid()
   vtkm::worklet::MarchingCubes isosurfaceFilter;
   isosurfaceFilter.SetMergeDuplicatePoints(false);
 
+  vtkm::Float32 contourValue = 0.5f;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
-  isosurfaceFilter.Run(0.5f,
+  isosurfaceFilter.Run(&contourValue,
+                       1,
                        cellSet,
                        dataSet.GetCoordinateSystem(),
                        fieldArray,
@@ -309,7 +311,8 @@ void TestMarchingCubesExplicit()
   vtkm::worklet::MarchingCubes marchingCubes;
   marchingCubes.SetMergeDuplicatePoints(false);
 
-  marchingCubes.Run(contourValue,
+  marchingCubes.Run(&contourValue,
+                    1,
                     cellSet,
                     dataSet.GetCoordinateSystem(),
                     contourArray,

@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
   vtkm::filter::MarchingCubes filter;
   filter.SetGenerateNormals(false);
   filter.SetMergeDuplicatePoints(false);
-  filter.SetIsoValue(isovalue);
+  filter.SetIsoValue(0, isovalue);
   vtkm::filter::ResultDataSet result = filter.Execute( inputData,
                                                        inputData.GetField(fieldName) );
   filter.MapFieldOntoOutput(result, inputData.GetField(fieldName));

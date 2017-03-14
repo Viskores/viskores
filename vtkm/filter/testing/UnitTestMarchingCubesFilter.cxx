@@ -267,7 +267,7 @@ void TestMarchingCubesUniformGrid()
   vtkm::filter::MarchingCubes mc;
 
   mc.SetGenerateNormals(true);
-  mc.SetIsoValue( 0.5 );
+  mc.SetIsoValue(0, 0.5);
 
   result = mc.Execute( dataSet,
                        dataSet.GetField("nodevar") );
@@ -339,7 +339,10 @@ void TestMarchingCubesCustomPolicy()
   vtkm::filter::MarchingCubes mc;
 
   mc.SetGenerateNormals( false );
-  mc.SetIsoValue( 0.45 );
+  mc.SetIsoValue(0, 0.45);
+  mc.SetIsoValue(1, 0.45);
+  mc.SetIsoValue(2, 0.45);
+  mc.SetIsoValue(3, 0.45);
 
   //We specify a custom execution policy here, since the contourField is a
   //custom field type
