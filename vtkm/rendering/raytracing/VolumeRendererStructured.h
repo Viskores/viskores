@@ -429,7 +429,9 @@ public:
 
         vtkm::Id colorIndex = static_cast<vtkm::Id>(
               finalScalar * static_cast<vtkm::Float32>(ColorMapSize));
-        colorIndex = vtkm::Min(ColorMapSize, vtkm::Max(0,colorIndex));
+        if(colorIndex < 0) colorIndex = 0;
+        if(colorIndex > ColorMapSize) colorIndex = ColorMapSize;
+
         vtkm::Vec<vtkm::Float32,4> sampleColor = ColorMap.Get(colorIndex);
 
         //composite
@@ -543,7 +545,8 @@ public:
           vtkm::Float32 normalizedScalar = (scalar0 - MinScalar) * InverseDeltaScalar;
           vtkm::Id colorIndex = static_cast<vtkm::Id>(
                 normalizedScalar * static_cast<vtkm::Float32>(ColorMapSize));
-          colorIndex = vtkm::Min(ColorMapSize, vtkm::Max(0,colorIndex));
+          if(colorIndex < 0) colorIndex = 0;
+          if(colorIndex > ColorMapSize) colorIndex = ColorMapSize;
           sampleColor = ColorMap.Get(colorIndex);
           Locator.GetMinPoint(cell, bottomLeft);
           tx = (sampleLocation[0] - bottomLeft[0]) * invSpacing[0];
