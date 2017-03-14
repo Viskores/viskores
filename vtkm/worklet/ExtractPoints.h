@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
+//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_m_worklet_ThresholdPoints_h
-#define vtkm_m_worklet_ThresholdPoints_h
+#ifndef vtkm_m_worklet_ExtractPoints_h
+#define vtkm_m_worklet_ExtractPoints_h
 
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -27,71 +27,66 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/ImplicitFunctions.h>
 
 namespace vtkm {
 namespace worklet {
 
-// Threshold points on predicate producing CellSetSingleType<VERTEX> with
-// resulting subset of points
-class ThresholdPoints : public vtkm::worklet::WorkletMapPointToCell
+class ExtractPoints : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  struct BoolType : vtkm::ListTagBase<bool> { };
+  ExtractPoints() {}
 
-  template <typename UnaryPredicate>
-  class ThresholdPointField : public vtkm::worklet::WorkletMapField
+  template<typename ImplicitFunction>
+  class ExtractPointsWithImplicitFunction : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> scalars,
+    typedef void ControlSignature(FieldIn<Vec3> coordinates,
                                   FieldOut<IdComponentType> mask);
-    typedef _2 ExecutionSignature(_1);
+    typedef   _2 ExecutionSignature(_1);
 
     VTKM_CONT
-    ThresholdPointField() : Predicate() { }
+    ExtractPointsWithImplicitFunction(const ImplicitFunction &function) : 
+                                         Function(function) {}
 
     VTKM_CONT
-    explicit ThresholdPointField(const UnaryPredicate &predicate)
-      : Predicate(predicate)
-    { }
-
-    template<typename ScalarType>
-    VTKM_EXEC
-    vtkm::IdComponent operator()(const ScalarType &scalar) const
+    vtkm::IdComponent operator()(const vtkm::Vec<vtkm::Float64,3> &coordinate) const
     {
-      bool pass = this->Predicate(scalar);
+      vtkm::Float64 value = this->Function.Value(coordinate);
+      vtkm::Float64 gradient = this->Function.Value(coordinate);
       vtkm::IdComponent mask = 0;
-      if (pass == true)
+      if (value <= 0)
         mask = 1;
+std::cout << "Coord " << coordinate[0] << " , " << coordinate[1] << " , " << coordinate[2] << "  value " << value << " mask " << mask << "  GRADIENT " << gradient << std::endl;
       return mask;
     }
 
   private:
-    UnaryPredicate Predicate;
+    ImplicitFunction Function;
   };
 
-  template <typename CellSetType, 
-            typename UnaryPredicate, 
-            typename ValueType, 
-            typename StorageType, 
+  template <typename CellSetType,
+            typename ImplicitFunction,
             typename DeviceAdapter>
   vtkm::cont::CellSetSingleType<> Run(
-                          const CellSetType &cellSet,
-                          const vtkm::cont::ArrayHandle<ValueType, StorageType>& fieldArray,
-                          const UnaryPredicate &predicate,
-                          DeviceAdapter device)
+                                    const CellSetType &cellSet,
+                                    const ImplicitFunction &implicitFunction,
+                                    const vtkm::cont::CoordinateSystem &coordinates,
+                                    DeviceAdapter device)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
     vtkm::cont::ArrayHandle<vtkm::IdComponent> maskArray;
     vtkm::Id numberOfInputPoints = cellSet.GetNumberOfPoints();
     DeviceAlgorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(0, numberOfInputPoints),
                           maskArray);
-    
+
     // Worklet output will be a boolean passFlag array
-    typedef ThresholdPointField<UnaryPredicate> ThresholdWorklet;
-    ThresholdWorklet worklet(predicate);
-    DispatcherMapField<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-    dispatcher.Invoke(fieldArray, maskArray);
+    typedef ExtractPointsWithImplicitFunction<ImplicitFunction> ExtractPointsWorklet;
+    ExtractPointsWorklet worklet(implicitFunction);
+    DispatcherMapField<ExtractPointsWorklet, DeviceAdapter> dispatcher(worklet);
+    dispatcher.Invoke(coordinates, maskArray);
 
     vtkm::worklet::ScatterCounting PointScatter(maskArray, DeviceAdapter(), true);
     vtkm::cont::ArrayHandle<vtkm::Id> pointIds = PointScatter.GetOutputToInputMap();
@@ -110,4 +105,4 @@ public:
 }
 } // namespace vtkm::worklet
 
-#endif // vtkm_m_worklet_ThresholdPoints_h
+#endif // vtkm_m_worklet_ExtractPoints_h

@@ -29,6 +29,7 @@ set(headers
   DispatcherReduceByKey.h
   DispatcherStreamingMapField.h
   ExternalFaces.h
+  ExtractPoints.h
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
