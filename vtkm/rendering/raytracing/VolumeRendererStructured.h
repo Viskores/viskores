@@ -134,13 +134,9 @@ public:
         vtkm::Float32 minVal = static_cast<vtkm::Float32>(CoordPortals[dim].Get(cell[dim]));
         const vtkm::Id searchDir = (point[dim] - minVal >= 0.f) ? 1 : -1;
         vtkm::Float32 maxVal = static_cast<vtkm::Float32>(CoordPortals[dim].Get(cell[dim] + 1));
-      
+         
         while(!found)
         {
-          if(cell[dim] >= PointDimensions[dim] - 1)
-          {
-            int wtf= 0;
-          }
           if(point[dim] >= minVal && point[dim] < maxVal)
           {
             found = true;
@@ -148,8 +144,9 @@ public:
           }
         
           cell[dim] += searchDir; 
-          vtkm::Float32 next = static_cast<vtkm::Float32>(CoordPortals[dim].Get(cell[dim]+1));
-          if(searchDir == 1)
+          vtkm::Id nextCellId = searchDir == 1 ? cell[dim] + 1 : cell[dim];
+vtkm::Float32 next = static_cast<vtkm::Float32>(CoordPortals[dim].Get(nextCellId));
+                    if(searchDir == 1)
           {
             minVal = maxVal;
             maxVal = next;
@@ -159,6 +156,7 @@ public:
             maxVal = minVal;
             minVal = next;
           }
+
         }
         invSpacing[dim] = 1.f / (maxVal - minVal);
     }
@@ -327,7 +325,6 @@ public:
         Locator(locator)
     {
       ColorMapSize = colorMap.GetNumberOfValues() - 1;
-
       if((maxScalar - minScalar) != 0.f) InverseDeltaScalar = 1.f / (maxScalar - minScalar);
       else InverseDeltaScalar = minScalar;
     }
@@ -353,8 +350,8 @@ public:
       color[3] = 0.f;
       if(minDistance == -1.f) return; //TODO: Compact? or just image subset...
       //get the initial sample position;
-      vtkm::Float32 currentDistance = minDistance + SampleDistance; //Move the ray forward some epsilon
-      vtkm::Vec<vtkm::Float32,3> sampleLocation = CameraPosition + currentDistance * rayDir;
+      vtkm::Vec<vtkm::Float32,3> sampleLocation;
+      sampleLocation = CameraPosition + (0.0001f + minDistance) * rayDir;
       /*
               7----------6
              /|         /|
@@ -442,7 +439,6 @@ public:
         color[2] = color[2] + sampleColor[2] * sampleColor[3];
         color[3] = sampleColor[3] + color[3];
         //advance
-        currentDistance += SampleDistance;
         sampleLocation = sampleLocation + SampleDistance * rayDir;
 
         //this is linear could just do an addition
@@ -487,7 +483,6 @@ public:
         Locator(locator)
     {
       ColorMapSize = colorMap.GetNumberOfValues() - 1;
-
       if((maxScalar - minScalar) != 0.f) InverseDeltaScalar = 1.f / (maxScalar - minScalar);
       else InverseDeltaScalar = minScalar;
     }
@@ -513,8 +508,8 @@ public:
       color[3] = 0.f;
       if(minDistance == -1.f) return; //TODO: Compact? or just image subset...
       //get the initial sample position;
-      vtkm::Float32 currentDistance = minDistance + 0.001f; //Move the ray forward some epsilon
-      vtkm::Vec<vtkm::Float32,3> sampleLocation = CameraPosition + currentDistance * rayDir;
+      vtkm::Vec<vtkm::Float32,3> sampleLocation;
+      sampleLocation = CameraPosition + (0.0001f + minDistance) * rayDir;
 
       /*
               7----------6
@@ -539,7 +534,6 @@ public:
         vtkm::Float32 mint = vtkm::Min(tx, vtkm::Min(ty, tz));
         vtkm::Float32 maxt = vtkm::Max(tx, vtkm::Max(ty, tz));
         if( maxt > 1.f || mint < 0.f) newCell = true;
-
         if(newCell)
         {
           Locator.LocateCell(cell, sampleLocation, invSpacing);
@@ -565,13 +559,12 @@ public:
         color[2] = color[2] + sampleColor[2] * alpha;
         color[3] = alpha + color[3];
         //advance
-        currentDistance += SampleDistance;
+        sampleLocation = sampleLocation + SampleDistance * rayDir;
 
         if(color[3] >= 1.f) break;
         tx = (sampleLocation[0] - bottomLeft[0]) * invSpacing[0];
         ty = (sampleLocation[1] - bottomLeft[1]) * invSpacing[1];
         tz = (sampleLocation[2] - bottomLeft[2]) * invSpacing[2];
-
       }
 
       color[0] = vtkm::Min(color[0],1.f);
