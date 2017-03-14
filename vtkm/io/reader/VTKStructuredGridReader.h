@@ -46,8 +46,6 @@ private:
     //We need to be able to handle VisIt files which dump Field data
     //at the top of a VTK file
     this->DataFile->Stream >> tag;
-    internal::parseAssert(tag == "FIELD" || tag == "DIMENSIONS");
-
     if(tag == "FIELD")
     {
       std::string name;
@@ -56,15 +54,16 @@ private:
     }
 
     // Read structured grid specific meta-data
+    internal::parseAssert(tag == "DIMENSIONS");
     vtkm::Id3 dim;
     this->DataFile->Stream >> dim[0] >> dim[1] >> dim[2] >> std::ws;
 
 
-    vtkm::cont::CellSetStructured<3> cs("cells");
-    cs.SetPointDimensions(vtkm::make_Vec(dim[0], dim[1], dim[2]));
-    this->DataSet.AddCellSet(cs);
+    this->DataSet.AddCellSet(internal::CreateCellSetStructured(dim));
 
     // Read the points
+    this->DataFile->Stream >> tag;
+    internal::parseAssert(tag == "POINTS");
     this->ReadPoints();
 
     // Read points and cell attributes

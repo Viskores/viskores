@@ -165,6 +165,38 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T> &ve
   }
 }
 
+inline vtkm::cont::DynamicCellSet CreateCellSetStructured(const vtkm::Id3 &dim)
+{
+  if (dim[0] > 1 && dim[1] > 1 && dim[2] > 1)
+  {
+    vtkm::cont::CellSetStructured<3> cs("cells");
+    cs.SetPointDimensions(vtkm::make_Vec(dim[0], dim[1], dim[2]));
+    return cs;
+  }
+  else if (dim[0] > 1 && dim[1] > 1 && dim[2] <= 1)
+  {
+    vtkm::cont::CellSetStructured<2> cs("cells");
+    cs.SetPointDimensions(vtkm::make_Vec(dim[0], dim[1]));
+    return cs;
+  }
+  else if (dim[0] > 1 && dim[1] <= 1 && dim[2] <= 1)
+  {
+    vtkm::cont::CellSetStructured<1> cs("cells");
+    cs.SetPointDimensions(dim[0]);
+    return cs;
+  }
+  else
+  {
+    std::stringstream ss;
+    ss << "Unsupported dimensions: (" << dim[0] << ", " << dim[1] << ", " << dim[2]
+       << "), 2D structured datasets should be on X-Y plane and "
+       << "1D structured datasets should be along X axis";
+    throw vtkm::io::ErrorIO(ss.str());
+  }
+
+  return vtkm::cont::DynamicCellSet();
+}
+
 } // namespace internal
 
 
@@ -518,7 +550,8 @@ private:
 protected:
   //ReadFields needs to be protected so that derived readers can skip
   //VisIt header fields
-  void ReadFields(std::string &dataName)
+  void ReadFields(std::string &dataName,
+                  std::vector<vtkm::Float32> *visitBounds = nullptr)
   {
     std::cerr << "Support for FIELD is not implemented. Skipping."
               << std::endl;
@@ -532,7 +565,17 @@ protected:
       std::string arrayName, dataType;
       this->DataFile->Stream >> arrayName >> numComponents >> numTuples
                              >> dataType >> std::ws;
-      this->DoSkipDynamicArray(dataType, numTuples, numComponents);
+      if (arrayName == "avtOriginalBounds" && visitBounds)
+      {
+        visitBounds->resize(6);
+        internal::parseAssert(numComponents == 1 && numTuples == 6);
+        // parse the bounds and fill the bounds vector
+        this->ReadArray(*visitBounds);
+      }
+      else
+      {
+        this->DoSkipDynamicArray(dataType, numTuples, numComponents);
+      }
     }
   }
 
