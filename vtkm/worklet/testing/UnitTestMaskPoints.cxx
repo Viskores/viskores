@@ -42,30 +42,18 @@ public:
   {
     std::cout << "Testing mask points stride on 2D uniform dataset" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<2> CellSetType;
     typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
 
-    CellSetType cellset;
-    dataset.GetCellSet(0).CopyTo(cellset);
-
-    // Output dataset contains input coordinate system and point data
+    // Output dataset contains input coordinate system
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
-    for (vtkm::Id indx = 0; indx < dataset.GetNumberOfFields(); indx++)
-    {
-      vtkm::cont::Field field = dataset.GetField(indx);
-      if (field.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS)
-      {
-        outDataSet.AddField(field);
-      }
-    }
 
     // Output dataset gets new cell set of points that pass subsampling
     vtkm::worklet::MaskPoints maskPoints;
     OutCellSetType outCellSet;
-    outCellSet = maskPoints.Run(cellset,
+    outCellSet = maskPoints.Run(dataset.GetCellSet(0),
                                 2,
                                 DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
@@ -77,30 +65,18 @@ public:
   {
     std::cout << "Testing mask points stride on 3D uniform dataset" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
     typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
-    CellSetType cellset;
-    dataset.GetCellSet(0).CopyTo(cellset);
-
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
-    for (vtkm::Id indx = 0; indx < dataset.GetNumberOfFields(); indx++)
-    {
-      vtkm::cont::Field field = dataset.GetField(indx);
-      if (field.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS)
-      {
-        outDataSet.AddField(field);
-      }
-    }
 
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::MaskPoints maskPoints;
     OutCellSetType outCellSet;
-    outCellSet = maskPoints.Run(cellset,
+    outCellSet = maskPoints.Run(dataset.GetCellSet(0),
                                 5,
                                 DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
@@ -112,30 +88,18 @@ public:
   {
     std::cout << "Testing mask points stride on 3D explicit dataset" << std::endl;
 
-    typedef vtkm::cont::CellSetExplicit<> CellSetType;
     typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 
-    CellSetType cellset;
-    dataset.GetCellSet(0).CopyTo(cellset);
-
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
-    for (vtkm::Id indx = 0; indx < dataset.GetNumberOfFields(); indx++)
-    {
-      vtkm::cont::Field field = dataset.GetField(indx);
-      if (field.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS)
-      {
-        outDataSet.AddField(field);
-      }
-    }
 
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::MaskPoints maskPoints;
     OutCellSetType outCellSet;
-    outCellSet = maskPoints.Run(cellset,
+    outCellSet = maskPoints.Run(dataset.GetCellSet(0),
                                 3,
                                 DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);

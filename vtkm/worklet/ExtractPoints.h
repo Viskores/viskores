@@ -55,17 +55,33 @@ public:
     vtkm::IdComponent operator()(const vtkm::Vec<vtkm::Float64,3> &coordinate) const
     {
       vtkm::Float64 value = this->Function.Value(coordinate);
-      vtkm::Float64 gradient = this->Function.Value(coordinate);
       vtkm::IdComponent mask = 0;
       if (value <= 0)
         mask = 1;
-std::cout << "Coord " << coordinate[0] << " , " << coordinate[1] << " , " << coordinate[2] << "  value " << value << " mask " << mask << "  GRADIENT " << gradient << std::endl;
       return mask;
     }
 
   private:
     ImplicitFunction Function;
   };
+
+  template <typename CellSetType,
+            typename DeviceAdapter>
+  vtkm::cont::CellSetSingleType<> Run(
+                                    const CellSetType &cellSet,
+                                    const vtkm::cont::ArrayHandle<vtkm::Id> &pointIds,
+                                    const vtkm::cont::CoordinateSystem &coordinates,
+                                    DeviceAdapter device)
+  {
+    // Make CellSetSingleType with VERTEX at each point id
+    vtkm::cont::CellSetSingleType< > outCellSet("cells");
+    outCellSet.Fill(pointIds.GetNumberOfValues(),
+                    vtkm::CellShapeTagVertex::Id,
+                    1,
+                    pointIds);
+
+    return outCellSet;
+  }
 
   template <typename CellSetType,
             typename ImplicitFunction,

@@ -37,8 +37,6 @@ namespace worklet {
 class ThresholdPoints : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  struct BoolType : vtkm::ListTagBase<bool> { };
-
   template <typename UnaryPredicate>
   class ThresholdPointField : public vtkm::worklet::WorkletMapField
   {

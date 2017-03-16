@@ -36,17 +36,14 @@ template <typename DeviceAdapter>
 class TestingExtractPoints
 {
 public:
-  void TestExtractPointsWithSphere() const
+  void TestExtractPointsStructuredWithSphere() const
   {
     std::cout << "Testing extract points with implicit function (sphere):" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
     typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    CellSetType cellset;
-    dataset.GetCellSet(0).CopyTo(cellset);
   
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> center(2, 2, 2);
@@ -56,14 +53,6 @@ public:
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
-    for (vtkm::Id indx = 0; indx < dataset.GetNumberOfFields(); indx++)
-    {
-      vtkm::cont::Field field = dataset.GetField(indx);
-      if (field.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS)
-      {
-        outDataSet.AddField(field);
-      }
-    }
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
@@ -78,17 +67,14 @@ public:
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
   }
 
-  void TestExtractPointsWithBox() const
+  void TestExtractPointsStructuredWithBox() const
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
     typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    CellSetType cellset;
-    dataset.GetCellSet(0).CopyTo(cellset);
   
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.0, 1.0, 1.0);
@@ -98,14 +84,6 @@ public:
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
-    for (vtkm::Id indx = 0; indx < dataset.GetNumberOfFields(); indx++)
-    {
-      vtkm::cont::Field field = dataset.GetField(indx);
-      if (field.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS)
-      {
-        outDataSet.AddField(field);
-      }
-    }
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
@@ -119,10 +97,109 @@ public:
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
   }
+
+  void TestExtractPointsExplicitWithBox() const
+  {
+    std::cout << "Testing extract points with implicit function (box) on explicit:" << std::endl;
+
+    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+
+    // Input data set created
+    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
+  
+    // Implicit function
+    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.0, 0.0, 0.0);
+    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(1.0, 1.0, 1.0);
+    vtkm::Box box(minPoint, maxPoint);
+  
+    // Output dataset contains input coordinate system and point data
+    vtkm::cont::DataSet outDataSet;
+    outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
+
+    // Output data set with cell set containing extracted points
+    vtkm::worklet::ExtractPoints extractPoints;
+    OutCellSetType outCellSet;
+    vtkm::cont::CellSetSingleType<> outputCellSet =
+    outCellSet = extractPoints.Run(dataset.GetCellSet(0),
+                                   box,
+                                   dataset.GetCoordinateSystem("coordinates"),
+                                   DeviceAdapter());
+    outDataSet.AddCellSet(outCellSet);
+
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractPoints");
+  }
+
+  void TestExtractPointsStructuredById() const
+  {
+    std::cout << "Testing extract points structured by id:" << std::endl;
+
+    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+
+    // Input data set created
+    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
+  
+    // Points to extract
+    const int nPoints = 18;
+    vtkm::Id pointids[nPoints] = {0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 50, 75, 100};
+    vtkm::cont::ArrayHandle<vtkm::Id> pointIds =
+                            vtkm::cont::make_ArrayHandle(pointids, nPoints);
+
+    // Output dataset contains input coordinate system and point data
+    vtkm::cont::DataSet outDataSet;
+    outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
+
+    // Output data set with cell set containing extracted points
+    vtkm::worklet::ExtractPoints extractPoints;
+    OutCellSetType outCellSet;
+    vtkm::cont::CellSetSingleType<> outputCellSet =
+    outCellSet = extractPoints.Run(dataset.GetCellSet(0),
+                                   pointIds,
+                                   dataset.GetCoordinateSystem("coords"),
+                                   DeviceAdapter());
+    outDataSet.AddCellSet(outCellSet);
+
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints), "Wrong result for ExtractPoints");
+  }
+
+  void TestExtractPointsExplicitById() const
+  {
+    std::cout << "Testing extract points explicit by id:" << std::endl;
+
+    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+
+    // Input data set created
+    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
+
+    // Points to extract
+    const int nPoints = 6;
+    vtkm::Id pointids[nPoints] = {0, 4,5, 7, 9, 10};
+    vtkm::cont::ArrayHandle<vtkm::Id> pointIds =
+                            vtkm::cont::make_ArrayHandle(pointids, nPoints);
+  
+    // Output dataset contains input coordinate system and point data
+    vtkm::cont::DataSet outDataSet;
+    outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
+
+    // Output data set with cell set containing extracted points
+    vtkm::worklet::ExtractPoints extractPoints;
+    OutCellSetType outCellSet;
+    vtkm::cont::CellSetSingleType<> outputCellSet =
+    outCellSet = extractPoints.Run(dataset.GetCellSet(0),
+                                   pointIds,
+                                   dataset.GetCoordinateSystem("coordinates"),
+                                   DeviceAdapter());
+    outDataSet.AddCellSet(outCellSet);
+
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints), "Wrong result for ExtractPoints");
+  }
+
   void operator()() const
   {
-    this->TestExtractPointsWithSphere();
-    this->TestExtractPointsWithBox();
+    this->TestExtractPointsStructuredWithSphere();
+    this->TestExtractPointsStructuredWithBox();
+    this->TestExtractPointsExplicitWithBox();
+    this->TestExtractPointsStructuredById();
+    this->TestExtractPointsExplicitById();
   }
 };
 
