@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtkm_m_worklet_ExtractCells_h
-#define vtkm_m_worklet_ExtractCells_h
+#ifndef vtkm_m_worklet_ExtractCellsExplicit_h
+#define vtkm_m_worklet_ExtractCellsExplicit_h
 
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -36,10 +36,10 @@
 namespace vtkm {
 namespace worklet {
 
-class ExtractCells : public vtkm::worklet::WorkletMapPointToCell
+class ExtractCellsExplicit : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  ExtractCells() {}
+  ExtractCellsExplicit() {}
 
   // Set mask for any cell whose points are inside volume of interest
   template<typename ImplicitFunction>
@@ -228,4 +228,4 @@ public:
 }
 } // namespace vtkm::worklet
 
-#endif // vtkm_m_worklet_ExtractCells_h
+#endif // vtkm_m_worklet_ExtractCellsExplicit_h

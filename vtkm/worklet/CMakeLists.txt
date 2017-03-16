@@ -29,8 +29,7 @@ set(headers
   DispatcherReduceByKey.h
   DispatcherStreamingMapField.h
   ExternalFaces.h
-  ExtractCells.h
-  ExtractPoints.h
+  ExtractGeometry.h
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
@@ -63,6 +62,7 @@ set(headers
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(contourtree)
+add_subdirectory(extraction)
 add_subdirectory(splatkernels)
 add_subdirectory(wavelets)
 
