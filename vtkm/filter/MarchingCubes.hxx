@@ -32,12 +32,56 @@ namespace filter {
 inline VTKM_CONT
 MarchingCubes::MarchingCubes():
   vtkm::filter::FilterDataSetWithField<MarchingCubes>(),
-  IsoValue(0),
+  IsoValues(),
   GenerateNormals(false),
   NormalArrayName("normals"),
   Worklet()
 {
   // todo: keep an instance of marching cubes worklet as a member variable
+}
+
+
+//-----------------------------------------------------------------------------
+inline
+void MarchingCubes::SetNumberOfIsoValues(vtkm::Id num)
+{
+  if(num >= 0)
+  {
+    this->IsoValues.resize(static_cast<std::size_t>(num));
+  }
+}
+
+//-----------------------------------------------------------------------------
+inline
+vtkm::Id MarchingCubes::GetNumberOfIsoValues() const
+{
+  return static_cast<vtkm::Id>(this->IsoValues.size());
+}
+
+//-----------------------------------------------------------------------------
+inline
+void MarchingCubes::SetIsoValue(vtkm::Id index, vtkm::Float64 v)
+{
+  std::size_t i = static_cast<std::size_t>(index);
+  if(i >= this->IsoValues.size())
+  {
+    this->IsoValues.resize(i+1);
+  }
+  this->IsoValues[i] = v;
+}
+
+//-----------------------------------------------------------------------------
+inline
+void MarchingCubes::SetIsoValues(const std::vector<vtkm::Float64>& values)
+{
+  this->IsoValues = values;
+}
+
+//-----------------------------------------------------------------------------
+inline
+vtkm::Float64 MarchingCubes::GetIsoValue(vtkm::Id index) const
+{
+  return this->IsoValues[static_cast<std::size_t>(index)];
 }
 
 //-----------------------------------------------------------------------------
@@ -59,6 +103,11 @@ vtkm::filter::ResultDataSet MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
     return vtkm::filter::ResultDataSet();
   }
 
+  if(this->IsoValues.size() == 0)
+  {
+    return vtkm::filter::ResultDataSet();
+  }
+
   //get the cells and coordinates of the dataset
   const vtkm::cont::DynamicCellSet& cells =
                   input.GetCellSet(this->GetActiveCellSetIndex());
@@ -73,6 +122,12 @@ vtkm::filter::ResultDataSet MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
   vtkm::cont::DataSet output;
   vtkm::cont::CellSetSingleType< > outputCells;
 
+  std::vector<T> ivalues(this->IsoValues.size());
+  for(std::size_t i = 0; i < ivalues.size(); ++i)
+  {
+    ivalues[i] = static_cast<T>(this->IsoValues[i]);
+  }
+
   //not sold on this as we have to generate more signatures for the
   //worklet with the design
   //But I think we should get this to compile before we tinker with
@@ -80,7 +135,8 @@ vtkm::filter::ResultDataSet MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
   if(this->GenerateNormals)
   {
     outputCells =
-      this->Worklet.Run( static_cast<T>(this->IsoValue),
+      this->Worklet.Run( &ivalues[0],
+                         static_cast<vtkm::Id>(ivalues.size()),
                          vtkm::filter::ApplyPolicy(cells, policy),
                          vtkm::filter::ApplyPolicy(coords, policy),
                          field,
@@ -92,7 +148,8 @@ vtkm::filter::ResultDataSet MarchingCubes::DoExecute(const vtkm::cont::DataSet& 
   else
   {
     outputCells =
-      this->Worklet.Run( static_cast<T>(this->IsoValue),
+      this->Worklet.Run( &ivalues[0],
+                         static_cast<vtkm::Id>(ivalues.size()),
                          vtkm::filter::ApplyPolicy(cells, policy),
                          vtkm::filter::ApplyPolicy(coords, policy),
                          field,
