@@ -22,16 +22,12 @@
 
 #include <vtkm/worklet/extraction/ExtractPoints.h>
 #include <vtkm/worklet/extraction/ExtractCellsExplicit.h>
+#include <vtkm/worklet/extraction/ExtractCellsStructured.h>
 
-#include <vtkm/worklet/ScatterCounting.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
-#include <vtkm/worklet/WorkletMapField.h>
-
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/ImplicitFunctions.h>
 
 namespace vtkm {
@@ -75,7 +71,7 @@ public:
                              device);
   }
 
-  // Extract by cell ids
+  // Extract cells by cell ids from explicit dataset
   template <typename DeviceAdapter>
   vtkm::cont::CellSetExplicit<> RunExtractCellsExplicit(
                                     const vtkm::cont::CellSetExplicit<> &cellSet,
@@ -88,7 +84,7 @@ public:
                             device); 
   }
 
-  // Extract by ImplicitFunction volume of interest
+  // Extract cells by ImplicitFunction from explicit dataset
   template <typename ImplicitFunction,
             typename DeviceAdapter>
   vtkm::cont::CellSetExplicit<> RunExtractCellsExplicit(
@@ -98,6 +94,64 @@ public:
                                     DeviceAdapter device)
   {
     ExtractCellsExplicit extractCells;
+    return extractCells.Run(cellSet,
+                            implicitFunction,
+                            coordinates,
+                            device);
+  }
+
+  // Extract by cell ids from structured dataset
+  template <typename DeviceAdapter>
+  vtkm::cont::CellSetSingleType<> RunExtractCellsStructured(
+                                    const vtkm::cont::CellSetStructured<2> &cellSet,
+                                    const vtkm::cont::ArrayHandle<vtkm::Id> &cellIds,
+                                    DeviceAdapter device)
+  {
+    ExtractCellsStructured extractCells;
+    return extractCells.Run(cellSet, 
+                            cellIds, 
+                            device); 
+  }
+
+  // Extract by cell ids from structured dataset
+  template <typename DeviceAdapter>
+  vtkm::cont::CellSetSingleType<> RunExtractCellsStructured(
+                                    const vtkm::cont::CellSetStructured<3> &cellSet,
+                                    const vtkm::cont::ArrayHandle<vtkm::Id> &cellIds,
+                                    DeviceAdapter device)
+  {
+    ExtractCellsStructured extractCells;
+    return extractCells.Run(cellSet, 
+                            cellIds, 
+                            device); 
+  }
+
+  // Extract cells by ImplicitFunction from structured dataset
+  template <typename ImplicitFunction,
+            typename DeviceAdapter>
+  vtkm::cont::CellSetSingleType<> RunExtractCellsStructured(
+                                    const vtkm::cont::CellSetStructured<2> &cellSet,
+                                    const ImplicitFunction &implicitFunction,
+                                    const vtkm::cont::CoordinateSystem &coordinates,
+                                    DeviceAdapter device)
+  {
+    ExtractCellsStructured extractCells;
+    return extractCells.Run(cellSet,
+                            implicitFunction,
+                            coordinates,
+                            device);
+  }
+
+  // Extract cells by ImplicitFunction from structured dataset
+  template <typename ImplicitFunction,
+            typename DeviceAdapter>
+  vtkm::cont::CellSetSingleType<> RunExtractCellsStructured(
+                                    const vtkm::cont::CellSetStructured<3> &cellSet,
+                                    const ImplicitFunction &implicitFunction,
+                                    const vtkm::cont::CoordinateSystem &coordinates,
+                                    DeviceAdapter device)
+  {
+    ExtractCellsStructured extractCells;
     return extractCells.Run(cellSet,
                             implicitFunction,
                             coordinates,

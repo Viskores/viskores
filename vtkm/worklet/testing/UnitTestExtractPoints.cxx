@@ -56,13 +56,11 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet;
-    vtkm::cont::CellSetSingleType<> outputCellSet =
-    outCellSet = extractGeometry.RunExtractPoints(
-                                   dataset.GetCellSet(0),
-                                   sphere,
-                                   dataset.GetCoordinateSystem("coords"),
-                                   DeviceAdapter());
+    OutCellSetType outCellSet = 
+        extractGeometry.RunExtractPoints(dataset.GetCellSet(0),
+                                         sphere,
+                                         dataset.GetCoordinateSystem("coords"),
+                                         DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
@@ -88,13 +86,11 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet;
-    vtkm::cont::CellSetSingleType<> outputCellSet =
-    outCellSet = extractGeometry.RunExtractPoints(
-                                   dataset.GetCellSet(0),
-                                   box,
-                                   dataset.GetCoordinateSystem("coords"),
-                                   DeviceAdapter());
+    OutCellSetType outCellSet = 
+        extractGeometry.RunExtractPoints(dataset.GetCellSet(0),
+                                         box,
+                                         dataset.GetCoordinateSystem("coords"),
+                                         DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
@@ -120,13 +116,11 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet;
-    vtkm::cont::CellSetSingleType<> outputCellSet =
-    outCellSet = extractGeometry.RunExtractPoints(
-                                   dataset.GetCellSet(0),
-                                   box,
-                                   dataset.GetCoordinateSystem("coordinates"),
-                                   DeviceAdapter());
+    OutCellSetType outCellSet = 
+        extractGeometry.RunExtractPoints(dataset.GetCellSet(0),
+                                         box,
+                                         dataset.GetCoordinateSystem("coordinates"),
+                                         DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractPoints");
@@ -153,13 +147,11 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet;
-    vtkm::cont::CellSetSingleType<> outputCellSet =
-    outCellSet = extractGeometry.RunExtractPoints(
-                                   dataset.GetCellSet(0),
-                                   pointIds,
-                                   dataset.GetCoordinateSystem("coords"),
-                                   DeviceAdapter());
+    OutCellSetType outCellSet = 
+        extractGeometry.RunExtractPoints(dataset.GetCellSet(0),
+                                         pointIds,
+                                         dataset.GetCoordinateSystem("coords"),
+                                         DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints), "Wrong result for ExtractPoints");
@@ -186,13 +178,11 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet;
-    vtkm::cont::CellSetSingleType<> outputCellSet =
-    outCellSet = extractGeometry.RunExtractPoints(
-                                   dataset.GetCellSet(0),
-                                   pointIds,
-                                   dataset.GetCoordinateSystem("coordinates"),
-                                   DeviceAdapter());
+    OutCellSetType outCellSet = 
+        extractGeometry.RunExtractPoints(dataset.GetCellSet(0),
+                                         pointIds,
+                                         dataset.GetCoordinateSystem("coordinates"),
+                                         DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints), "Wrong result for ExtractPoints");

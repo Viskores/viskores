@@ -21,6 +21,7 @@
 set(headers
   ExtractPoints.h
   ExtractCellsExplicit.h
+  ExtractCellsStructured.h
   )
 
 #-----------------------------------------------------------------------------
