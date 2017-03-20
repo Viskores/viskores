@@ -62,7 +62,6 @@ set(headers
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(contourtree)
-add_subdirectory(extraction)
 add_subdirectory(splatkernels)
 add_subdirectory(wavelets)
 

@@ -20,12 +20,14 @@
 #ifndef vtkm_m_worklet_ExtractGeometry_h
 #define vtkm_m_worklet_ExtractGeometry_h
 
-#include <vtkm/worklet/extraction/ExtractPoints.h>
-#include <vtkm/worklet/extraction/ExtractCellsExplicit.h>
-#include <vtkm/worklet/extraction/ExtractCellsStructured.h>
-
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/DispatcherMapTopology.h>
+
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/CellSetSingleType.h>
+#include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/ImplicitFunctions.h>
@@ -33,12 +35,79 @@
 namespace vtkm {
 namespace worklet {
 
-class ExtractGeometry : public vtkm::worklet::WorkletMapPointToCell
+class ExtractGeometry
 {
 public:
-  ExtractGeometry() {}
+  struct BoolType : vtkm::ListTagBase<bool> {};
 
-  // Extract points by id
+  ////////////////////////////////////////////////////////////////////////////////////
+  // Worklet to identify points within volume of interest
+  template<typename ImplicitFunction>
+  class ExtractPointsByVOI : public vtkm::worklet::WorkletMapField
+  {
+  public:
+    typedef void ControlSignature(FieldIn<Vec3> coordinates,
+                                  FieldOut<BoolType> passFlags);
+    typedef   _2 ExecutionSignature(_1);
+
+    VTKM_CONT
+    ExtractPointsByVOI(const ImplicitFunction &function) :
+                                     Function(function) {}
+
+    VTKM_CONT
+    bool operator()(const vtkm::Vec<vtkm::Float64,3> &coordinate) const
+    {
+      bool pass = true;
+      vtkm::Float64 value = this->Function.Value(coordinate);
+      if (value > 0)
+        pass = false;
+      return pass;
+    }
+
+  private:
+    ImplicitFunction Function;
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////////
+  // Worklet to identify cells within volume of interest
+  template <typename ImplicitFunction>
+  class ExtractCellsByVOI : public vtkm::worklet::WorkletMapPointToCell
+  {
+  public:
+    typedef void ControlSignature(CellSetIn cellset,
+                                  WholeArrayIn<Vec3> coordinates,
+                                  FieldOut<BoolType> passFlags);
+    typedef   _3 ExecutionSignature(PointCount, PointIndices, _2);
+
+    VTKM_CONT
+    explicit ExtractCellsByVOI(const ImplicitFunction &function)
+                                           : Function(function) {}
+
+    template <typename ConnectivityInVec, typename InVecFieldPortalType>
+    VTKM_CONT
+    bool operator()(const vtkm::IdComponent &numIndices,
+                    const ConnectivityInVec &connectivityIn,
+                    const InVecFieldPortalType &coordinates) const
+    {
+      // If any point is outside volume of interest, cell is also
+      bool pass = true;
+      for (vtkm::Id indx = 0; indx < numIndices; indx++)
+      {
+        vtkm::Id ptId = connectivityIn[indx];
+        vtkm::Vec<FloatDefault,3> coordinate = coordinates.Get(ptId);
+        vtkm::FloatDefault value = this->Function.Value(coordinate);
+        if (value > 0)
+          pass = false;
+      }
+      return pass;
+    }
+
+  private:
+    ImplicitFunction Function;
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////////
+  // Extract points by id creates new cellset of vertex cells
   template <typename CellSetType,
             typename DeviceAdapter>
   vtkm::cont::CellSetSingleType<> RunExtractPoints(
@@ -47,13 +116,20 @@ public:
                                     const vtkm::cont::CoordinateSystem &coordinates,
                                     DeviceAdapter device)
   {
-    ExtractPoints extractPoints;
-    return extractPoints.Run(cellSet,
-                             pointIds,
-                             coordinates,
-                             device);
+    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    DeviceAlgorithm::Copy(pointIds, this->ValidPointIds);
+
+    // Make CellSetSingleType with VERTEX at each point id
+    vtkm::cont::CellSetSingleType< > outCellSet("cells");
+    outCellSet.Fill(this->ValidPointIds.GetNumberOfValues(),
+                    vtkm::CellShapeTagVertex::Id,
+                    1,
+                    this->ValidPointIds);
+
+    return outCellSet;
   }
 
+  ////////////////////////////////////////////////////////////////////////////////////
   // Extract points by implicit function
   template <typename CellSetType,
             typename ImplicitFunction,
@@ -64,99 +140,117 @@ public:
                                     const vtkm::cont::CoordinateSystem &coordinates,
                                     DeviceAdapter device)
   {
-    ExtractPoints extractPoints;
-    return extractPoints.Run(cellSet,
-                             implicitFunction,
-                             coordinates,
-                             device);
+    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+
+    vtkm::cont::ArrayHandle<bool> passFlags;
+
+    // Worklet output will be a boolean passFlag array
+    typedef ExtractPointsByVOI<ImplicitFunction> ExtractPointsWorklet;
+    ExtractPointsWorklet worklet(implicitFunction);
+    DispatcherMapField<ExtractPointsWorklet, DeviceAdapter> dispatcher(worklet);
+    dispatcher.Invoke(coordinates, passFlags);
+
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
+      vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());
+    DeviceAlgorithm::CopyIf(indices, passFlags, this->ValidPointIds);
+
+    // Make CellSetSingleType with VERTEX at each point id
+    vtkm::cont::CellSetSingleType< > outCellSet("cells");
+    outCellSet.Fill(this->ValidPointIds.GetNumberOfValues(),
+                    vtkm::CellShapeTagVertex::Id,
+                    1,
+                    this->ValidPointIds);
+
+    return outCellSet;
   }
 
-  // Extract cells by cell ids from explicit dataset
-  template <typename DeviceAdapter>
-  vtkm::cont::CellSetExplicit<> RunExtractCellsExplicit(
-                                    const vtkm::cont::CellSetExplicit<> &cellSet,
+  ////////////////////////////////////////////////////////////////////////////////////
+  // Extract cells by ids permutes input data
+  template <typename CellSetType,
+            typename DeviceAdapter>
+  vtkm::cont::CellSetPermutation<CellSetType> RunExtractCells(
+                                    CellSetType &cellSet,
                                     const vtkm::cont::ArrayHandle<vtkm::Id> &cellIds,
                                     DeviceAdapter device)
   {
-    ExtractCellsExplicit extractCells;
-    return extractCells.Run(cellSet, 
-                            cellIds, 
-                            device); 
+    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
+
+    DeviceAlgorithm::Copy(cellIds, this->ValidCellIds);
+
+    return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
   }
 
-  // Extract cells by ImplicitFunction from explicit dataset
-  template <typename ImplicitFunction,
+  ////////////////////////////////////////////////////////////////////////////////////
+  // Extract cells by implicit function permutes input data
+  template <typename CellSetType,
+            typename ImplicitFunction,
             typename DeviceAdapter>
-  vtkm::cont::CellSetExplicit<> RunExtractCellsExplicit(
-                                    const vtkm::cont::CellSetExplicit<> &cellSet,
+  vtkm::cont::CellSetPermutation<CellSetType> RunExtractCells(
+                                    CellSetType &cellSet,
                                     const ImplicitFunction &implicitFunction,
                                     const vtkm::cont::CoordinateSystem &coordinates,
                                     DeviceAdapter device)
   {
-    ExtractCellsExplicit extractCells;
-    return extractCells.Run(cellSet,
-                            implicitFunction,
-                            coordinates,
-                            device);
+    typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
+
+    vtkm::cont::ArrayHandle<bool> passFlags;
+
+    // Worklet output will be a boolean passFlag array
+    typedef ExtractCellsByVOI<ImplicitFunction> ExtractCellsWorklet;
+    ExtractCellsWorklet worklet(implicitFunction);
+    DispatcherMapTopology<ExtractCellsWorklet, DeviceAdapter> dispatcher(worklet);
+    dispatcher.Invoke(cellSet,
+                      coordinates,
+                      passFlags);
+
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
+      vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>
+        ::CopyIf(indices, passFlags, this->ValidCellIds);
+
+    return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
   }
 
-  // Extract by cell ids from structured dataset
-  template <typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> RunExtractCellsStructured(
-                                    const vtkm::cont::CellSetStructured<2> &cellSet,
-                                    const vtkm::cont::ArrayHandle<vtkm::Id> &cellIds,
-                                    DeviceAdapter device)
+  ////////////////////////////////////////////////////////////////////////////////////
+  // Permute cell data to match permuted cells
+  class PermuteCellData
   {
-    ExtractCellsStructured extractCells;
-    return extractCells.Run(cellSet, 
-                            cellIds, 
-                            device); 
+  public:
+    PermuteCellData(const vtkm::cont::ArrayHandle<vtkm::Id> validCellIds,
+                    vtkm::cont::DynamicArrayHandle &data)
+      : ValidCellIds(validCellIds), Data(&data)
+    { }
+
+    template <typename ArrayHandleType>
+    void operator()(const ArrayHandleType &input) const
+    {
+      *(this->Data) = vtkm::cont::DynamicArrayHandle(
+        vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, input));
+    }
+
+  private:
+    vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
+    vtkm::cont::DynamicArrayHandle *Data;
+  };
+
+  vtkm::cont::Field ProcessCellField(const vtkm::cont::Field field) const
+  {
+    if (field.GetAssociation() != vtkm::cont::Field::ASSOC_CELL_SET)
+    {
+      throw vtkm::cont::ErrorBadValue("Expecting cell field.");
+    }
+
+    vtkm::cont::DynamicArrayHandle data;
+    CastAndCall(field, PermuteCellData(this->ValidCellIds, data));
+
+    return vtkm::cont::Field(field.GetName(), field.GetAssociation(),
+                             field.GetAssocCellSet(), data);
   }
 
-  // Extract by cell ids from structured dataset
-  template <typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> RunExtractCellsStructured(
-                                    const vtkm::cont::CellSetStructured<3> &cellSet,
-                                    const vtkm::cont::ArrayHandle<vtkm::Id> &cellIds,
-                                    DeviceAdapter device)
-  {
-    ExtractCellsStructured extractCells;
-    return extractCells.Run(cellSet, 
-                            cellIds, 
-                            device); 
-  }
-
-  // Extract cells by ImplicitFunction from structured dataset
-  template <typename ImplicitFunction,
-            typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> RunExtractCellsStructured(
-                                    const vtkm::cont::CellSetStructured<2> &cellSet,
-                                    const ImplicitFunction &implicitFunction,
-                                    const vtkm::cont::CoordinateSystem &coordinates,
-                                    DeviceAdapter device)
-  {
-    ExtractCellsStructured extractCells;
-    return extractCells.Run(cellSet,
-                            implicitFunction,
-                            coordinates,
-                            device);
-  }
-
-  // Extract cells by ImplicitFunction from structured dataset
-  template <typename ImplicitFunction,
-            typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> RunExtractCellsStructured(
-                                    const vtkm::cont::CellSetStructured<3> &cellSet,
-                                    const ImplicitFunction &implicitFunction,
-                                    const vtkm::cont::CoordinateSystem &coordinates,
-                                    DeviceAdapter device)
-  {
-    ExtractCellsStructured extractCells;
-    return extractCells.Run(cellSet,
-                            implicitFunction,
-                            coordinates,
-                            device);
-  }
+private:
+  vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
+  vtkm::cont::ArrayHandle<vtkm::Id> ValidPointIds;
 };
 
 }

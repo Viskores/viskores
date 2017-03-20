@@ -36,97 +36,7 @@ template <typename DeviceAdapter>
 class TestingExtractPoints
 {
 public:
-  void TestExtractPointsStructuredWithSphere() const
-  {
-    std::cout << "Testing extract points with implicit function (sphere):" << std::endl;
-
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
-
-    // Input data set created
-    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-  
-    // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> center(2, 2, 2);
-    vtkm::FloatDefault radius(1.8);
-    vtkm::Sphere sphere(center, radius);
-  
-    // Output dataset contains input coordinate system and point data
-    vtkm::cont::DataSet outDataSet;
-    outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
-
-    // Output data set with cell set containing extracted points
-    vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet = 
-        extractGeometry.RunExtractPoints(dataset.GetCellSet(0),
-                                         sphere,
-                                         dataset.GetCoordinateSystem("coords"),
-                                         DeviceAdapter());
-    outDataSet.AddCellSet(outCellSet);
-
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
-  }
-
-  void TestExtractPointsStructuredWithBox() const
-  {
-    std::cout << "Testing extract points with implicit function (box):" << std::endl;
-
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
-
-    // Input data set created
-    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-  
-    // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.0, 1.0, 1.0);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.0, 3.0, 3.0);
-    vtkm::Box box(minPoint, maxPoint);
-  
-    // Output dataset contains input coordinate system and point data
-    vtkm::cont::DataSet outDataSet;
-    outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
-
-    // Output data set with cell set containing extracted points
-    vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet = 
-        extractGeometry.RunExtractPoints(dataset.GetCellSet(0),
-                                         box,
-                                         dataset.GetCoordinateSystem("coords"),
-                                         DeviceAdapter());
-    outDataSet.AddCellSet(outCellSet);
-
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
-  }
-
-  void TestExtractPointsExplicitWithBox() const
-  {
-    std::cout << "Testing extract points with implicit function (box) on explicit:" << std::endl;
-
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
-
-    // Input data set created
-    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-  
-    // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.0, 0.0, 0.0);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(1.0, 1.0, 1.0);
-    vtkm::Box box(minPoint, maxPoint);
-  
-    // Output dataset contains input coordinate system and point data
-    vtkm::cont::DataSet outDataSet;
-    outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
-
-    // Output data set with cell set containing extracted points
-    vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet = 
-        extractGeometry.RunExtractPoints(dataset.GetCellSet(0),
-                                         box,
-                                         dataset.GetCoordinateSystem("coordinates"),
-                                         DeviceAdapter());
-    outDataSet.AddCellSet(outCellSet);
-
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractPoints");
-  }
-
-  void TestExtractPointsStructuredById() const
+  void TestUniformById() const
   {
     std::cout << "Testing extract points structured by id:" << std::endl;
 
@@ -157,7 +67,98 @@ public:
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints), "Wrong result for ExtractPoints");
   }
 
-  void TestExtractPointsExplicitById() const
+  void TestUniformByBox() const
+  {
+    std::cout << "Testing extract points with implicit function (box):" << std::endl;
+
+    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+
+    // Input data set created
+    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
+  
+    // Implicit function
+    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.0, 1.0, 1.0);
+    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.0, 3.0, 3.0);
+    vtkm::Box box(minPoint, maxPoint);
+  
+    // Output dataset contains input coordinate system and point data
+    vtkm::cont::DataSet outDataSet;
+    outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
+
+    // Output data set with cell set containing extracted points
+    vtkm::worklet::ExtractGeometry extractGeometry;
+    OutCellSetType outCellSet = 
+        extractGeometry.RunExtractPoints(dataset.GetCellSet(0),
+                                         box,
+                                         dataset.GetCoordinateSystem("coords"),
+                                         DeviceAdapter());
+    outDataSet.AddCellSet(outCellSet);
+
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
+  }
+
+  void TestUniformBySphere() const
+  {
+    std::cout << "Testing extract points with implicit function (sphere):" << std::endl;
+
+    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+
+    // Input data set created
+    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
+  
+    // Implicit function
+    vtkm::Vec<vtkm::FloatDefault, 3> center(2, 2, 2);
+    vtkm::FloatDefault radius(1.8);
+    vtkm::Sphere sphere(center, radius);
+  
+    // Output dataset contains input coordinate system and point data
+    vtkm::cont::DataSet outDataSet;
+    outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
+
+    // Output data set with cell set containing extracted points
+    vtkm::worklet::ExtractGeometry extractGeometry;
+    OutCellSetType outCellSet = 
+        extractGeometry.RunExtractPoints(dataset.GetCellSet(0),
+                                         sphere,
+                                         dataset.GetCoordinateSystem("coords"),
+                                         DeviceAdapter());
+    outDataSet.AddCellSet(outCellSet);
+
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
+  }
+
+  void TestExplicitByBox() const
+  {
+    std::cout << "Testing extract points with implicit function (box) on explicit:" << std::endl;
+
+    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+
+    // Input data set created
+    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
+  
+    // Implicit function
+    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.0, 0.0, 0.0);
+    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(1.0, 1.0, 1.0);
+    vtkm::Box box(minPoint, maxPoint);
+  
+    // Output dataset contains input coordinate system and point data
+    vtkm::cont::DataSet outDataSet;
+    outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
+
+    // Output data set with cell set containing extracted points
+    vtkm::worklet::ExtractGeometry extractGeometry;
+    OutCellSetType outCellSet = 
+        extractGeometry.RunExtractPoints(dataset.GetCellSet(0),
+                                         box,
+                                         dataset.GetCoordinateSystem("coordinates"),
+                                         DeviceAdapter());
+    outDataSet.AddCellSet(outCellSet);
+
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractPoints");
+  }
+
+
+  void TestExplicitById() const
   {
     std::cout << "Testing extract points explicit by id:" << std::endl;
 
@@ -190,11 +191,11 @@ public:
 
   void operator()() const
   {
-    this->TestExtractPointsStructuredWithSphere();
-    this->TestExtractPointsStructuredWithBox();
-    this->TestExtractPointsExplicitWithBox();
-    this->TestExtractPointsStructuredById();
-    this->TestExtractPointsExplicitById();
+    this->TestUniformById();
+    this->TestUniformByBox();
+    this->TestUniformBySphere();
+    this->TestExplicitById();
+    this->TestExplicitByBox();
   }
 };
 
