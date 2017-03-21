@@ -25,13 +25,14 @@ set(unit_tests
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestExternalFaces.cxx
-  UnitTestExtractCells.cxx
+  UnitTestExtractGeometry.cxx
   UnitTestExtractPoints.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
   UnitTestMarchingCubes.cxx
+  UnitTestMask.cxx
   UnitTestMaskPoints.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx

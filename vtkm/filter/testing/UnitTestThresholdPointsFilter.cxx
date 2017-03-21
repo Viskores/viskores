@@ -39,7 +39,6 @@ public:
 
     vtkm::filter::ThresholdPoints thresholdPoints;
     thresholdPoints.SetThresholdBetween(40.0f, 71.0f);
-    thresholdPoints.SetCompactPoints(false);
 
     result = thresholdPoints.Execute(dataset, dataset.GetField("pointvar"));
 
@@ -66,6 +65,8 @@ public:
 
     vtkm::filter::ThresholdPoints thresholdPoints;
     thresholdPoints.SetThresholdAbove(1.0f);
+    thresholdPoints.SetCompactPoints(true);
+
     result = thresholdPoints.Execute(dataset, std::string("pointvar"));
 
     thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
@@ -91,6 +92,8 @@ public:
 
     vtkm::filter::ThresholdPoints thresholdPoints;
     thresholdPoints.SetThresholdBelow(50.0);
+    thresholdPoints.SetCompactPoints(true);
+
     result = thresholdPoints.Execute(dataset, std::string("pointvar"));
 
     thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );

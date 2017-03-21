@@ -30,6 +30,7 @@ set(headers
   DispatcherStreamingMapField.h
   ExternalFaces.h
   ExtractGeometry.h
+  ExtractPoints.h
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
@@ -38,6 +39,7 @@ set(headers
   Magnitude.h
   MarchingCubes.h
   MarchingCubesDataTables.h
+  Mask.h
   MaskPoints.h
   PointAverage.h
   PointElevation.h

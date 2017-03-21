@@ -95,7 +95,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> pointIds = PointScatter.GetOutputToInputMap();
 
     // Make CellSetSingleType with VERTEX at each point id
-    vtkm::cont::CellSetSingleType< > outCellSet("cells");
+    vtkm::cont::CellSetSingleType< > outCellSet(cellSet.GetName());
     outCellSet.Fill(numberOfInputPoints,
                     vtkm::CellShapeTagVertex::Id,
                     1,

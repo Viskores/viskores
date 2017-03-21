@@ -24,6 +24,8 @@ set(headers
   Clip.h
   ContourTreeUniform.h
   ExternalFaces.h
+  ExtractGeometry.h
+  ExtractPoints.h
   FieldMetadata.h
   FilterCell.h
   FilterDataSet.h
@@ -33,6 +35,7 @@ set(headers
   Gradient.h
   Histogram.h
   MarchingCubes.h
+  #Mask.h
   MaskPoints.h
   PointAverage.h
   PointElevation.h
@@ -53,6 +56,8 @@ set(header_template_sources
   Clip.hxx
   ContourTreeUniform.hxx
   ExternalFaces.hxx
+  ExtractGeometry.hxx
+  ExtractPoints.hxx
   FilterCell.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
@@ -60,6 +65,7 @@ set(header_template_sources
   Gradient.hxx
   Histogram.hxx
   MarchingCubes.hxx
+  #Mask.hxx
   MaskPoints.hxx
   PointAverage.hxx
   PointElevation.hxx

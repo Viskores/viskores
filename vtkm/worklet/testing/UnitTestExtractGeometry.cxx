@@ -33,7 +33,7 @@
 using vtkm::cont::testing::MakeTestDataSet;
 
 template <typename DeviceAdapter>
-class TestingExtractCells
+class TestingExtractGeometry
 {
 public:
   /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,9 +61,9 @@ public:
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = 
-        extractGeometry.RunExtractCells(cellSet,
-                                        cellIds,
-                                        DeviceAdapter());
+        extractGeometry.Run(cellSet,
+                            cellIds,
+                            DeviceAdapter());
 
     vtkm::cont::Field cellField =
         extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
@@ -100,10 +100,10 @@ public:
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = 
-        extractGeometry.RunExtractCells(cellSet,
-                                        box,
-                                        dataset.GetCoordinateSystem("coordinates"),
-                                        DeviceAdapter());
+        extractGeometry.Run(cellSet,
+                            box,
+                            dataset.GetCoordinateSystem("coordinates"),
+                            DeviceAdapter());
 
     vtkm::cont::Field cellField =
         extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
@@ -141,9 +141,9 @@ public:
     // Output data set permutation of with only extracted cells
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = 
-        extractGeometry.RunExtractCells(cellSet,
-                                        cellIds,
-                                        DeviceAdapter());
+        extractGeometry.Run(cellSet,
+                            cellIds,
+                            DeviceAdapter());
 
     vtkm::cont::Field cellField =
         extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
@@ -181,9 +181,9 @@ public:
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = 
-        extractGeometry.RunExtractCells(cellSet,
-                                        cellIds,
-                                        DeviceAdapter());
+        extractGeometry.Run(cellSet,
+                            cellIds,
+                            DeviceAdapter());
 
     vtkm::cont::Field cellField =
         extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
@@ -220,10 +220,10 @@ public:
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = 
-        extractGeometry.RunExtractCells(cellSet,
-                                        box,
-                                        dataset.GetCoordinateSystem("coords"),
-                                        DeviceAdapter());
+        extractGeometry.Run(cellSet,
+                            box,
+                            dataset.GetCoordinateSystem("coords"),
+                            DeviceAdapter());
 
     vtkm::cont::Field cellField =
         extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
@@ -260,10 +260,10 @@ public:
     // Output data set with cell set containing extracted cells
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = 
-        extractGeometry.RunExtractCells(cellSet,
-                                        sphere,
-                                        dataset.GetCoordinateSystem("coords"),
-                                        DeviceAdapter());
+        extractGeometry.Run(cellSet,
+                            sphere,
+                            dataset.GetCoordinateSystem("coords"),
+                            DeviceAdapter());
 
     vtkm::cont::Field cellField =
         extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
@@ -287,8 +287,8 @@ public:
   }
 };
 
-int UnitTestExtractCells(int, char *[])
+int UnitTestExtractGeometry(int, char *[])
 {
   return vtkm::cont::testing::Testing::Run(
-      TestingExtractCells<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+      TestingExtractGeometry<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
 }
