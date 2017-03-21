@@ -35,7 +35,7 @@ set(headers
   Gradient.h
   Histogram.h
   MarchingCubes.h
-  #Mask.h
+  Mask.h
   MaskPoints.h
   PointAverage.h
   PointElevation.h
@@ -65,7 +65,7 @@ set(header_template_sources
   Gradient.hxx
   Histogram.hxx
   MarchingCubes.hxx
-  #Mask.hxx
+  Mask.hxx
   MaskPoints.hxx
   PointAverage.hxx
   PointElevation.hxx
