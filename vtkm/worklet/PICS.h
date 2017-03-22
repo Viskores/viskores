@@ -1,0 +1,257 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//============================================================================
+
+#ifndef vtk_m_worklet_PICS_h
+#define vtk_m_worklet_PICS_h
+
+#include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/Field.h>
+
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/ScatterUniform.h>
+#include <vtkm/worklet/WorkletMapField.h>
+
+#include <vtkm/exec/ExecutionWholeArray.h>
+
+namespace vtkm {
+namespace worklet {
+
+template <typename PortalType, typename DeviceAdapter>
+class RegularGridEvaluate
+{
+public:
+    RegularGridEvaluate(const vtkm::cont::DataSet &ds)
+    {
+        bounds = ds.GetCoordinateSystem(0).GetBounds();
+        vtkm::cont::CellSetStructured<3> cells;
+        ds.GetCellSet(0).CopyTo(cells);
+        dims = cells.GetSchedulingRange(vtkm::TopologyElementTagPoint());
+        planeSize = dims[0]*dims[1];
+        rowSize = dims[0];
+        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
+        ds.GetField(0).GetData().CopyTo(fieldArray);
+        vecData = fieldArray.PrepareForInput(DeviceAdapter());
+    }
+
+    template<typename FieldType>
+    bool
+    Evaluate(const vtkm::Vec<FieldType, 3> &pos,
+             vtkm::Vec<FieldType,3> &out) const
+    {
+        if (!bounds.Contains(pos))
+        {
+            //std::cout<<pos<<" : "<<bounds<<" --> OOB"<<std::endl;
+            return false;
+        }
+        
+        //DRP:: This all assumes bounds of [0,n] in x,y,z. Need to fix this for the general case.
+        //Also, I don't think this interpolation is right. (0,0,0) doesn't give the right vector.
+        
+        // Set the eight corner indices with no wraparound
+        vtkm::Id3 idx000, idx001, idx010, idx011, idx100, idx101, idx110, idx111;
+        idx000[0] = static_cast<vtkm::Id>(floor(pos[0]));
+        idx000[1] = static_cast<vtkm::Id>(floor(pos[1]));
+        idx000[2] = static_cast<vtkm::Id>(floor(pos[2]));
+
+        idx001 = idx000; idx001[0] = (idx001[0] + 1) <= dims[0] - 1 ? idx001[0] + 1 : dims[0] - 1;
+        idx010 = idx000; idx010[1] = (idx010[1] + 1) <= dims[1] - 1 ? idx010[1] + 1 : dims[1] - 1;
+        idx011 = idx010; idx011[0] = (idx011[0] + 1) <= dims[0] - 1 ? idx011[0] + 1 : dims[0] - 1;
+        idx100 = idx000; idx100[2] = (idx100[2] + 1) <= dims[2] - 1 ? idx100[2] + 1 : dims[2] - 1;
+        idx101 = idx100; idx101[0] = (idx101[0] + 1) <= dims[0] - 1 ? idx101[0] + 1 : dims[0] - 1;
+        idx110 = idx100; idx110[1] = (idx110[1] + 1) <= dims[1] - 1 ? idx110[1] + 1 : dims[1] - 1;
+        idx111 = idx110; idx111[0] = (idx111[0] + 1) <= dims[0] - 1 ? idx111[0] + 1 : dims[0] - 1;
+
+        // Get the vecdata at the eight corners
+        vtkm::Vec<FieldType, 3> v000, v001, v010, v011, v100, v101, v110, v111;
+        v000 = vecData.Get(idx000[2] * planeSize + idx000[1] * rowSize + idx000[0]);
+        v001 = vecData.Get(idx001[2] * planeSize + idx001[1] * rowSize + idx001[0]);
+        v010 = vecData.Get(idx010[2] * planeSize + idx010[1] * rowSize + idx010[0]);
+        v011 = vecData.Get(idx011[2] * planeSize + idx011[1] * rowSize + idx011[0]);
+        v100 = vecData.Get(idx100[2] * planeSize + idx100[1] * rowSize + idx100[0]);
+        v101 = vecData.Get(idx101[2] * planeSize + idx101[1] * rowSize + idx101[0]);
+        v110 = vecData.Get(idx110[2] * planeSize + idx110[1] * rowSize + idx110[0]);
+        v111 = vecData.Get(idx111[2] * planeSize + idx111[1] * rowSize + idx111[0]);
+
+        //std::cout<<"idx000: "<<idx000<<std::endl;
+        //std::cout<<idx001<<idx010<<idx011<<idx100<<idx101<<idx110<<idx111<<std::endl;
+        //std::cout<<v000<<v001<<v010<<v011<<v100<<v101<<v110<<v111<<std::endl;
+        
+        // Interpolation in X
+        vtkm::Vec<FieldType, 3> v00, v01, v10, v11;
+        FieldType a = pos[0] - static_cast<FieldType>(floor(pos[0]));
+        //std::cout<<"Xa: "<<a<<std::endl;
+        v00[0] = (1.0f - a) * v000[0] + a * v001[0];
+        v00[1] = (1.0f - a) * v000[1] + a * v001[1];
+        v00[2] = (1.0f - a) * v000[2] + a * v001[2];
+
+        v01[0] = (1.0f - a) * v010[0] + a * v011[0];
+        v01[1] = (1.0f - a) * v010[1] + a * v011[1];
+        v01[2] = (1.0f - a) * v010[2] + a * v011[2];
+
+        v10[0] = (1.0f - a) * v100[0] + a * v101[0];
+        v10[1] = (1.0f - a) * v100[1] + a * v101[1];
+        v10[2] = (1.0f - a) * v100[2] + a * v101[2];
+
+        v11[0] = (1.0f - a) * v110[0] + a * v111[0];
+        v11[1] = (1.0f - a) * v110[1] + a * v111[1];
+        v11[2] = (1.0f - a) * v110[2] + a * v111[2];
+        //std::cout<<v00<<v01<<v10<<v11<<std::endl;
+
+        // Interpolation in Y
+        vtkm::Vec<FieldType, 3> v0, v1;
+        a = pos[1] - static_cast<FieldType>(floor(pos[1]));
+        //std::cout<<"Ya: "<<a<<std::endl;        
+        v0[0] = (1.0f - a) * v00[0] + a * v01[0];
+        v0[1] = (1.0f - a) * v00[1] + a * v01[1];
+        v0[2] = (1.0f - a) * v00[2] + a * v01[2];
+        
+        v1[0] = (1.0f - a) * v10[0] + a * v11[0];
+        v1[1] = (1.0f - a) * v10[1] + a * v11[1];
+        v1[2] = (1.0f - a) * v10[2] + a * v11[2];
+        //std::cout<<v0<<v1<<std::endl;
+
+        // Interpolation in Z
+        //vtkm::Vec<FieldType, 3> v;
+        a = pos[2] - static_cast<FieldType>(floor(pos[2]));
+        //std::cout<<"Za: "<<a<<std::endl;
+        out[0] = (1.0f - a) * v0[0] + v1[0];
+        out[1] = (1.0f - a) * v0[1] + v1[1];
+        out[2] = (1.0f - a) * v0[2] + v1[2];
+        //std::cout<<out<<std::endl;
+
+        //std::cout<<pos<<" : "<<bounds<<" --> "<<out<<std::endl;
+        return true;
+    }
+    
+private:
+    vtkm::Bounds bounds;
+    vtkm::Id3 dims;
+    vtkm::Id planeSize;
+    vtkm::Id rowSize;    
+    PortalType vecData;
+};
+
+template<typename FieldEvaluateType, typename FieldType>
+class RK4Integrator
+{
+public:
+    RK4Integrator(const FieldEvaluateType &field,
+                  FieldType _h) : f(field), h(_h), h_2(_h/2.f) {}
+
+    bool
+    Step(const vtkm::Vec<FieldType, 3> &pos,
+         vtkm::Vec<FieldType, 3> &out) const
+    {
+        vtkm::Vec<FieldType, 3> k1, k2, k3, k4, y;
+
+        if (f.Evaluate(pos, k1) &&
+            f.Evaluate(pos+h_2*k1, k2) &&
+            f.Evaluate(pos+h_2*k2, k3) &&
+            f.Evaluate(pos+h*k3, k4))
+        {
+            out = pos + h/6.0f*(k1+2*k2+2*k3+k4);
+            return true;
+        }
+        
+        return false;
+    }
+
+    FieldEvaluateType f;
+    FieldType h, h_2;
+};
+
+template <typename IntegratorType,
+          typename FieldType>
+class PICSFilter
+{
+public:
+    PICSFilter(const IntegratorType &it,
+               std::vector<vtkm::Vec<FieldType,3> > &pts,
+               const vtkm::Id &nSteps) : integrator(it), seeds(pts), maxSteps(nSteps)
+    {
+    }
+
+    class GoPIC : public vtkm::worklet::WorkletMapField
+    {
+    public:
+        typedef void ControlSignature(FieldIn<IdType> id,
+                                      FieldIn<> pos,
+                                      FieldIn<IdType> nSteps,                                      
+                                      FieldOut<> outPos);
+        typedef void ExecutionSignature(_1, _2, _3, _4);
+        typedef _1 InputDomain;
+
+        GoPIC(const IntegratorType &it) : integrator(it) {}
+
+        VTKM_EXEC
+        void operator()(const vtkm::Id &id,
+                        const vtkm::Vec<FieldType, 3> &pos,
+                        const vtkm::Id &numSteps,                        
+                        vtkm::Vec<FieldType, 3> &outPos) const
+        {
+            vtkm::Vec<FieldType, 3> p = pos;
+            outPos = pos;
+            
+            int s = 0;
+            while (s < numSteps && integrator.Step(p, outPos))
+            {
+                p = outPos;
+                s++;
+            }
+            
+            //std::cout<<"GoPIC: "<<id<<" : "<<pos<<" --> "<<outPos<<" ("<<s<<","<<numSteps<<")"<<std::endl;
+        }
+
+        IntegratorType integrator;
+    };
+    
+    void run()
+    {
+        vtkm::Id numSeeds = seeds.size();
+        std::vector<vtkm::Vec<FieldType,3> > out(numSeeds);
+        std::vector<vtkm::Id> steps(numSeeds, maxSteps);
+    
+        vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > posArray = vtkm::cont::make_ArrayHandle(&seeds[0], numSeeds);
+        vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > outArray = vtkm::cont::make_ArrayHandle(&out[0], numSeeds);
+        vtkm::cont::ArrayHandleCounting<vtkm::Id> idArray(0, 1, numSeeds);
+        vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], numSeeds);
+
+        GoPIC go(integrator);
+        typedef typename vtkm::worklet::DispatcherMapField<GoPIC> goPICDispatcher;
+        goPICDispatcher goPICD(go);
+
+        goPICD.Invoke(idArray, posArray, stepArray, outArray);
+    }
+
+private:
+    vtkm::Id maxSteps;
+    IntegratorType integrator;
+    std::vector<vtkm::Vec<FieldType,3> > seeds;
+};
+
+}
+}
+
+#endif // vtk_m_worklet_PICS_h
