@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_TriangulateExplicitGrid_h
-#define vtk_m_worklet_TriangulateExplicitGrid_h
+#ifndef vtk_m_worklet_TriangulateExplicit_h
+#define vtk_m_worklet_TriangulateExplicit_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
@@ -42,9 +42,10 @@ namespace worklet {
 
 /// \brief Compute the triangulate cells for an explicit grid data set
 template <typename DeviceAdapter>
-class TriangulateFilterExplicitGrid
+class TriangulateExplicit
 {
 public:
+  TriangulateExplicit() {}
 
   //
   // Worklet to count the number of triangles generated per cell
@@ -121,34 +122,18 @@ public:
     ScatterType Scatter;
   };
 
-  //
-  // Construct the filter to triangulate explicit grid
-  //
-  TriangulateFilterExplicitGrid(const vtkm::cont::DataSet &inDataSet,
-                                         vtkm::cont::DataSet &outDataSet) :
-    InDataSet(inDataSet),
-    OutDataSet(outDataSet)
-  {}
-
-  vtkm::cont::DataSet InDataSet;  // input dataset with structured cell set
-  vtkm::cont::DataSet OutDataSet; // output dataset with explicit cell set
-
-  //
-  // Populate the output dataset with triangles based on input explicit dataset
-  //
-  void Run()
+  template <typename CellSetType>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet)
   {
-    // Cell sets belonging to input and output datasets
-    vtkm::cont::CellSetExplicit<> inCellSet;
-    InDataSet.GetCellSet(0).CopyTo(inCellSet);
-    vtkm::cont::CellSetSingleType<> &cellSet =
-        this->OutDataSet.GetCellSet(0).template Cast<vtkm::cont::CellSetSingleType<> >();
+    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
 
     // Input topology
-    vtkm::cont::ArrayHandle<vtkm::UInt8> inShapes = inCellSet.GetShapesArray(
-      vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> inNumIndices = inCellSet.GetNumIndicesArray(
-      vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    vtkm::cont::ArrayHandle<vtkm::UInt8> inShapes = 
+        cellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), 
+                               vtkm::TopologyElementTagCell());
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> inNumIndices = 
+        cellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), 
+                                   vtkm::TopologyElementTagCell());
 
     // Output topology
     vtkm::cont::ArrayHandle<vtkm::Id> outConnectivity;
@@ -158,7 +143,7 @@ public:
     // Determine the number of output cells each input cell will generate
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutCellArray;
     vtkm::worklet::DispatcherMapField<TrianglesPerCell,DeviceAdapter>
-        triPerCellDispatcher;
+                   triPerCellDispatcher;
     triPerCellDispatcher.Invoke(inShapes,
                                 inNumIndices,
                                 tables.PrepareForInput(DeviceAdapter()),
@@ -167,22 +152,21 @@ public:
     // Build new cells
     TriangulateCell triangulateWorklet(numOutCellArray);
     vtkm::worklet::DispatcherMapTopology<TriangulateCell,DeviceAdapter>
-        triangulateDispatcher(triangulateWorklet);
-    triangulateDispatcher.Invoke(
-          inCellSet,
-          tables.PrepareForInput(DeviceAdapter()),
-          vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
+                   triangulateDispatcher(triangulateWorklet);
+    triangulateDispatcher.Invoke(cellSet,
+                                 tables.PrepareForInput(DeviceAdapter()),
+                                 vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
 
     // Add cells to output cellset
-    cellSet.Fill(
-          this->OutDataSet.GetCoordinateSystem().GetData().GetNumberOfValues(),
-          vtkm::CellShapeTagTriangle::Id,
-          3,
-          outConnectivity);
+    outCellSet.Fill(cellSet.GetNumberOfPoints(),
+                    vtkm::CellShapeTagTriangle::Id,
+                    3,
+                    outConnectivity);
+    return outCellSet;
   }
 };
 
 }
 } // namespace vtkm::worklet
 
-#endif // vtk_m_worklet_TriangulateExplicitGrid_h
+#endif // vtk_m_worklet_TriangulateExplicit_h

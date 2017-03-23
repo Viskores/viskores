@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_TetrahedralizeUniformGrid_h
-#define vtk_m_worklet_TetrahedralizeUniformGrid_h
+#ifndef vtk_m_worklet_TetrahedralizeStructured_h
+#define vtk_m_worklet_TetrahedralizeStructured_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
@@ -62,9 +62,10 @@ const static vtkm::IdComponent StructuredTetrahedronIndices[2][5][4] = {
 
 /// \brief Compute the tetrahedralize cells for a uniform grid data set
 template <typename DeviceAdapter>
-class TetrahedralizeFilterUniformGrid
+class TetrahedralizeStructured
 {
 public:
+  TetrahedralizeStructured() {}
 
   //
   // Worklet to turn hexahedra into tetrahedra
@@ -112,46 +113,27 @@ public:
     }
   };
 
-  //
-  // Construct the filter to tetrahedralize uniform grid
-  //
-  TetrahedralizeFilterUniformGrid(const vtkm::cont::DataSet &inDataSet,
-                                  vtkm::cont::DataSet &outDataSet) :
-    InDataSet(inDataSet),
-    OutDataSet(outDataSet)
+  template <typename CellSetType>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet)
   {
-  }
-
-  vtkm::cont::DataSet InDataSet;  // input dataset with structured cell set
-  vtkm::cont::DataSet OutDataSet; // output dataset with explicit cell set
-
-  //
-  // Populate the output dataset with tetrahedra based on input uniform dataset
-  //
-  void Run()
-  {
-    // Get the cell set from the output data set
-    vtkm::cont::CellSetSingleType<> &cellSet =
-        this->OutDataSet.GetCellSet(0).template Cast<vtkm::cont::CellSetSingleType<> >();
+    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
 
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
-    vtkm::cont::CellSetStructured<3> inCellSet;
-    InDataSet.GetCellSet(0).CopyTo(inCellSet);
     vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell,DeviceAdapter> dispatcher;
-    dispatcher.Invoke(inCellSet,
+    dispatcher.Invoke(cellSet,
                       vtkm::cont::make_ArrayHandleGroupVec<4>(connectivity));
 
     // Add cells to output cellset
-    cellSet.Fill(
-          this->OutDataSet.GetCoordinateSystem().GetData().GetNumberOfValues(),
-          vtkm::CellShapeTagTetra::Id,
-          4,
-          connectivity);
+    outCellSet.Fill(cellSet.GetNumberOfPoints(),
+                    vtkm::CellShapeTagTetra::Id,
+                    4,
+                    connectivity);
+    return outCellSet;
   }
 };
 
 }
 } // namespace vtkm::worklet
 
-#endif // vtk_m_worklet_TetrahedralizeUniformGrid_h
+#endif // vtk_m_worklet_TetrahedralizeStructured_h

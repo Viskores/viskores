@@ -40,7 +40,9 @@ set(headers
   ResultBase.h
   ResultDataSet.h
   ResultField.h
+  Tetrahedralize.h
   Threshold.h
+  Triangulate.h
   VectorMagnitude.h
   VertexClustering.h
 )
@@ -60,7 +62,9 @@ set(header_template_sources
   MarchingCubes.hxx
   PointAverage.hxx
   PointElevation.hxx
+  Tetrahedralize.hxx
   Threshold.hxx
+  Triangulate.hxx
   VectorMagnitude.hxx
   VertexClustering.hxx
 )

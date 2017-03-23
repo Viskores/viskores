@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_TetrahedralizeExplicitGrid_h
-#define vtk_m_worklet_TetrahedralizeExplicitGrid_h
+#ifndef vtk_m_worklet_TetrahedralizeExplicit_h
+#define vtk_m_worklet_TetrahedralizeExplicit_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
@@ -42,9 +42,10 @@ namespace worklet {
 
 /// \brief Compute the tetrahedralize cells for an explicit grid data set
 template <typename DeviceAdapter>
-class TetrahedralizeFilterExplicitGrid
+class TetrahedralizeExplicit
 {
 public:
+  TetrahedralizeExplicit() {}
 
   //
   // Worklet to count the number of tetrahedra generated per cell
@@ -119,34 +120,18 @@ public:
     ScatterType Scatter;
   };
 
-  //
-  // Construct the filter to tetrahedralize explicit grid
-  //
-  TetrahedralizeFilterExplicitGrid(const vtkm::cont::DataSet &inDataSet,
-                                         vtkm::cont::DataSet &outDataSet) :
-    InDataSet(inDataSet),
-    OutDataSet(outDataSet)
-  {}
-
-  vtkm::cont::DataSet InDataSet;  // input dataset with structured cell set
-  vtkm::cont::DataSet OutDataSet; // output dataset with explicit cell set
-
-  //
-  // Populate the output dataset with tetrahedra based on input explicit dataset
-  //
-  void Run()
+  template <typename CellSetType>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet)
   {
-    // Cell sets belonging to input and output datasets
-    vtkm::cont::CellSetExplicit<> inCellSet;
-    InDataSet.GetCellSet(0).CopyTo(inCellSet);
-    vtkm::cont::CellSetSingleType<> &cellSet =
-        this->OutDataSet.GetCellSet(0).template Cast<vtkm::cont::CellSetSingleType<> >();
+    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
 
     // Input topology
-    vtkm::cont::ArrayHandle<vtkm::UInt8> inShapes = inCellSet.GetShapesArray(
-      vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> inNumIndices = inCellSet.GetNumIndicesArray(
-      vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    vtkm::cont::ArrayHandle<vtkm::UInt8> inShapes = 
+        cellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), 
+                               vtkm::TopologyElementTagCell());
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> inNumIndices = 
+        cellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), 
+                                   vtkm::TopologyElementTagCell());
 
     // Output topology
     vtkm::cont::ArrayHandle<vtkm::Id> outConnectivity;
@@ -156,7 +141,7 @@ public:
     // Determine the number of output cells each input cell will generate
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutCellArray;
     vtkm::worklet::DispatcherMapField<TetrahedraPerCell,DeviceAdapter>
-        tetPerCellDispatcher;
+                   tetPerCellDispatcher;
     tetPerCellDispatcher.Invoke(inShapes,
                                 tables.PrepareForInput(DeviceAdapter()),
                                 numOutCellArray);
@@ -164,22 +149,21 @@ public:
     // Build new cells
     TetrahedralizeCell tetrahedralizeWorklet(numOutCellArray);
     vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell,DeviceAdapter>
-        tetrahedralizeDispatcher(tetrahedralizeWorklet);
-    tetrahedralizeDispatcher.Invoke(
-          inCellSet,
-          tables.PrepareForInput(DeviceAdapter()),
-          vtkm::cont::make_ArrayHandleGroupVec<4>(outConnectivity));
+                   tetrahedralizeDispatcher(tetrahedralizeWorklet);
+    tetrahedralizeDispatcher.Invoke(cellSet,
+                                    tables.PrepareForInput(DeviceAdapter()),
+                                    vtkm::cont::make_ArrayHandleGroupVec<4>(outConnectivity));
 
     // Add cells to output cellset
-    cellSet.Fill(
-          this->OutDataSet.GetCoordinateSystem().GetData().GetNumberOfValues(),
-          vtkm::CellShapeTagTetra::Id,
-          4,
-          outConnectivity);
+    outCellSet.Fill(cellSet.GetNumberOfPoints(),
+                    vtkm::CellShapeTagTetra::Id,
+                    4,
+                    outConnectivity);
+    return outCellSet;
   }
 };
 
 }
 } // namespace vtkm::worklet
 
-#endif // vtk_m_worklet_TetrahedralizeExplicitGrid_h
+#endif // vtk_m_worklet_TetrahedralizeExplicit_h

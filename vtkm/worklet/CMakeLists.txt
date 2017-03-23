@@ -44,11 +44,9 @@ set(headers
   ScatterIdentity.h
   ScatterUniform.h
   StreamLineUniformGrid.h
-  TetrahedralizeExplicitGrid.h
-  TetrahedralizeUniformGrid.h
+  Tetrahedralize.h
   Threshold.h
-  TriangulateExplicitGrid.h
-  TriangulateUniformGrid.h
+  Triangulate.h
   VertexClustering.h
   WaveletCompressor.h
   WorkletMapField.h
@@ -60,6 +58,8 @@ set(headers
 add_subdirectory(internal)
 add_subdirectory(contourtree)
 add_subdirectory(splatkernels)
+add_subdirectory(tetrahedralize)
+add_subdirectory(triangulate)
 add_subdirectory(wavelets)
 
 vtkm_declare_headers(${headers})
