@@ -121,7 +121,8 @@ public:
   };
 
   template <typename CellSetType>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet)
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet,
+                                      vtkm::cont::ArrayHandle<vtkm::IdComponent> &outCellsPerCell)
   {
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
 
@@ -139,15 +140,14 @@ public:
     vtkm::worklet::internal::TetrahedralizeTables tables;
 
     // Determine the number of output cells each input cell will generate
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutCellArray;
     vtkm::worklet::DispatcherMapField<TetrahedraPerCell,DeviceAdapter>
                    tetPerCellDispatcher;
     tetPerCellDispatcher.Invoke(inShapes,
                                 tables.PrepareForInput(DeviceAdapter()),
-                                numOutCellArray);
+                                outCellsPerCell);
 
     // Build new cells
-    TetrahedralizeCell tetrahedralizeWorklet(numOutCellArray);
+    TetrahedralizeCell tetrahedralizeWorklet(outCellsPerCell);
     vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell,DeviceAdapter>
                    tetrahedralizeDispatcher(tetrahedralizeWorklet);
     tetrahedralizeDispatcher.Invoke(cellSet,

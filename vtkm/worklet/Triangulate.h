@@ -32,10 +32,11 @@ class Triangulate
 public:
   Triangulate() {}
 
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetExplicit<> &cellSet)
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetExplicit<> &cellSet,
+                                      vtkm::cont::ArrayHandle<vtkm::IdComponent> &outCellsPerCell)
   {
     TriangulateExplicit<DeviceAdapter> worklet;
-    return worklet.Run(cellSet); 
+    return worklet.Run(cellSet, outCellsPerCell); 
   }
 
   vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2> &cellSet)

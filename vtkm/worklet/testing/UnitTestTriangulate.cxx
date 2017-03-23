@@ -67,10 +67,11 @@ public:
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DExplicitDataSet0();
     CellSetType cellSet;
     dataSet.GetCellSet(0).CopyTo(cellSet);
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
   
     // Convert explicit cells to triangles
     vtkm::worklet::Triangulate<DeviceAdapter> triangulate;
-    OutCellSetType outCellSet = triangulate.Run(cellSet);
+    OutCellSetType outCellSet = triangulate.Run(cellSet, outCellsPerCell);
 
     // Create the output dataset explicit cell set with same coordinate system
     vtkm::cont::DataSet outDataSet;

@@ -123,7 +123,8 @@ public:
   };
 
   template <typename CellSetType>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet)
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet,
+                                      vtkm::cont::ArrayHandle<vtkm::IdComponent> &outCellsPerCell)
   {
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
 
@@ -141,16 +142,15 @@ public:
     vtkm::worklet::internal::TriangulateTables tables;
 
     // Determine the number of output cells each input cell will generate
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutCellArray;
     vtkm::worklet::DispatcherMapField<TrianglesPerCell,DeviceAdapter>
                    triPerCellDispatcher;
     triPerCellDispatcher.Invoke(inShapes,
                                 inNumIndices,
                                 tables.PrepareForInput(DeviceAdapter()),
-                                numOutCellArray);
+                                outCellsPerCell);
 
     // Build new cells
-    TriangulateCell triangulateWorklet(numOutCellArray);
+    TriangulateCell triangulateWorklet(outCellsPerCell);
     vtkm::worklet::DispatcherMapTopology<TriangulateCell,DeviceAdapter>
                    triangulateDispatcher(triangulateWorklet);
     triangulateDispatcher.Invoke(cellSet,

@@ -47,6 +47,9 @@ public:
                   const vtkm::filter::FieldMetadata& fieldMeta,
                   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                   const DeviceAdapter& tag);
+
+private:
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> OutCellsPerCell;
 };
 
 }

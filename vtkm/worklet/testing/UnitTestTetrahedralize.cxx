@@ -75,10 +75,11 @@ public:
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DExplicitDataSet5();
     CellSetType cellSet;
     dataSet.GetCellSet(0).CopyTo(cellSet);
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
   
     // Convert explicit cells to tetrahedra
     vtkm::worklet::Tetrahedralize<DeviceAdapter> tetrahedralize;
-    OutCellSetType outCellSet = tetrahedralize.Run(cellSet);
+    OutCellSetType outCellSet = tetrahedralize.Run(cellSet, outCellsPerCell);
   
     // Create the output dataset explicit cell set with same coordinate system
     vtkm::cont::DataSet outDataSet;

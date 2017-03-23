@@ -32,10 +32,11 @@ class Tetrahedralize
 public:
   Tetrahedralize() {}
 
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetExplicit<> &cellSet)
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetExplicit<> &cellSet,
+                                      vtkm::cont::ArrayHandle<vtkm::IdComponent> &outCellsPerCell)
   {
     TetrahedralizeExplicit<DeviceAdapter> worklet;
-    return worklet.Run(cellSet); 
+    return worklet.Run(cellSet, outCellsPerCell); 
   }
 
   vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3> &cellSet)
