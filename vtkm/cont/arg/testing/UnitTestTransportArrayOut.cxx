@@ -64,6 +64,7 @@ struct TryArrayOutType
     TestKernel<PortalType> kernel;
     kernel.Portal = transport(handle,
                               vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
+                              ARRAY_SIZE,
                               ARRAY_SIZE);
 
     VTKM_TEST_ASSERT(handle.GetNumberOfValues() == ARRAY_SIZE,

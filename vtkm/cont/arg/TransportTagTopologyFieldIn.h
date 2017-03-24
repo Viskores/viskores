@@ -88,6 +88,7 @@ struct Transport<
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType &object,
                             const vtkm::cont::CellSet &inputDomain,
+                            vtkm::Id,
                             vtkm::Id) const
   {
     if (object.GetNumberOfValues() !=

@@ -48,13 +48,11 @@ struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
   template<typename InputDomainType>
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType &object,
-                            const InputDomainType &inputDomain,
-                            vtkm::Id) const
+                            const InputDomainType &vtkmNotUsed(inputDomain),
+                            vtkm::Id inputRange,
+                            vtkm::Id vtkmNotUsed(outputRange)) const
   {
-    // This transport expects the input domain to be an array handle.
-    VTKM_IS_ARRAY_HANDLE(InputDomainType);
-
-    if (object.GetNumberOfValues() != inputDomain.GetNumberOfValues())
+    if (object.GetNumberOfValues() != inputRange)
     {
       throw vtkm::cont::ErrorBadValue(
             "Input array to worklet invocation the wrong size.");

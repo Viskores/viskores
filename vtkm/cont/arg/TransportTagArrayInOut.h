@@ -51,13 +51,14 @@ struct Transport<vtkm::cont::arg::TransportTagArrayInOut, ContObjectType, Device
   template<typename InputDomainType>
   VTKM_CONT
   ExecObjectType operator()(ContObjectType object,
-                            const InputDomainType &,
-                            vtkm::Id size) const
+                            const InputDomainType &vtkmNotUsed(inputDomain),
+                            vtkm::Id vtkmNotUsed(inputRange),
+                            vtkm::Id outputRange) const
   {
-    if (object.GetNumberOfValues() != size)
+    if (object.GetNumberOfValues() != outputRange)
     {
       throw vtkm::cont::ErrorBadValue(
-            "Input array to worklet invocation the wrong size.");
+            "Input/output array to worklet invocation the wrong size.");
     }
 
     return object.PrepareForInPlace(Device());

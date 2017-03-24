@@ -152,6 +152,12 @@ public:
             (this->Counts == other.Counts));
   }
 
+  VTKM_CONT
+  bool operator!=(const vtkm::worklet::Keys<KeyType> &other) const
+  {
+    return !(*this == other);
+  }
+
 private:
   KeyArrayHandleType UniqueKeys;
   vtkm::cont::ArrayHandle<vtkm::Id> SortedValuesMap;
@@ -221,9 +227,14 @@ struct Transport<vtkm::cont::arg::TransportTagKeysIn,
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType &object,
                             const ContObjectType &inputDomain,
+                            vtkm::Id,
                             vtkm::Id) const
   {
-    VTKM_ASSERT(object == inputDomain);
+    if (object != inputDomain)
+    {
+      throw vtkm::cont::ErrorBadValue(
+            "A Keys object must be the input domain.");
+    }
 
     return object.PrepareForInput(Device());
   }
@@ -234,6 +245,7 @@ struct Transport<vtkm::cont::arg::TransportTagKeysIn,
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType &,
                             const InputDomainType &,
+                            vtkm::Id,
                             vtkm::Id) const = delete;
 };
 
@@ -258,9 +270,13 @@ struct Transport<
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType &object,
                             const vtkm::worklet::Keys<KeyType> &keys,
+                            vtkm::Id,
                             vtkm::Id) const
   {
-    VTKM_ASSERT(object.GetNumberOfValues() == keys.GetNumberOfValues());
+    if (object.GetNumberOfValues() != keys.GetNumberOfValues())
+    {
+      throw vtkm::cont::ErrorBadValue("Input values array is wrong size.");
+    }
 
     PermutedArrayType permutedArray(keys.GetSortedValuesMap(), object);
     GroupedArrayType groupedArray(permutedArray, keys.GetOffsets());
@@ -294,9 +310,14 @@ struct Transport<
   VTKM_CONT
   ExecObjectType operator()(ContObjectType object,
                             const vtkm::worklet::Keys<KeyType> &keys,
+                            vtkm::Id,
                             vtkm::Id) const
   {
-    VTKM_ASSERT(object.GetNumberOfValues() == keys.GetNumberOfValues());
+    if (object.GetNumberOfValues() != keys.GetNumberOfValues())
+    {
+      throw vtkm::cont::ErrorBadValue(
+            "Input/output values array is wrong size.");
+    }
 
     PermutedArrayType permutedArray(keys.GetSortedValuesMap(), object);
     GroupedArrayType groupedArray(permutedArray, keys.GetOffsets());
@@ -330,6 +351,7 @@ struct Transport<
   VTKM_CONT
   ExecObjectType operator()(ContObjectType object,
                             const vtkm::worklet::Keys<KeyType> &keys,
+                            vtkm::Id,
                             vtkm::Id) const
   {
     // The PrepareForOutput for ArrayHandleGroupVecVariable and
@@ -361,9 +383,13 @@ struct Transport<
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType &object,
                             const vtkm::worklet::Keys<KeyType> &inputDomain,
+                            vtkm::Id inputRange,
                             vtkm::Id) const
   {
-    if (object.GetNumberOfValues() != inputDomain.GetInputRange())
+    VTKM_ASSERT(inputDomain.GetInputRange() == inputRange);
+    (void)inputDomain; // Shut up compiler
+
+    if (object.GetNumberOfValues() != inputRange)
     {
       throw vtkm::cont::ErrorBadValue(
             "Input array to worklet invocation the wrong size.");

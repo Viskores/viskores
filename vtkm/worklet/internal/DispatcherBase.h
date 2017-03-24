@@ -215,30 +215,41 @@ struct DispatcherBaseTransportInvokeTypes
   typedef typename ControlSignatureTag::TransportTag TransportTag;
 };
 
+VTKM_CONT
+inline
+vtkm::Id FlatRange(vtkm::Id range)
+{
+  return range;
+}
+
+VTKM_CONT
+inline
+vtkm::Id FlatRange(const vtkm::Id3 &range)
+{
+  return range[0]*range[1]*range[2];
+}
+
 // A functor used in a StaticCast of a FunctionInterface to transport arguments
 // from the control environment to the execution environment.
 template<typename ControlInterface, typename InputDomainType, typename Device>
 struct DispatcherBaseTransportFunctor
 {
   const InputDomainType &InputDomain;   // Warning: this is a reference
-  vtkm::Id OutputSize;
-
-  VTKM_CONT
-  DispatcherBaseTransportFunctor(const InputDomainType &inputDomain,
-                                 vtkm::Id outputSize)
-    : InputDomain(inputDomain),
-      OutputSize(outputSize)
-  {  }
+  vtkm::Id InputRange;
+  vtkm::Id OutputRange;
 
   // TODO: We need to think harder about how scheduling on 3D arrays works.
   // Chances are we need to allow the transport for each argument to manage
   // 3D indices (for example, allocate a 3D array instead of a 1D array).
   // But for now, just treat all transports as 1D arrays.
+  template<typename InputRange, typename OutputRange>
   VTKM_CONT
   DispatcherBaseTransportFunctor(const InputDomainType &inputDomain,
-                                 vtkm::Id3 dimensions)
+                                 const InputRange &inputRange,
+                                 const OutputRange &outputRange)
     : InputDomain(inputDomain),
-      OutputSize(dimensions[0]*dimensions[1]*dimensions[2])
+      InputRange(FlatRange(inputRange)),
+      OutputRange(FlatRange(outputRange))
   {  }
 
 
@@ -257,7 +268,10 @@ struct DispatcherBaseTransportFunctor
   {
     using TransportTag = typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
     vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device> transport;
-    return transport(invokeData, this->InputDomain, this->OutputSize);
+    return transport(invokeData,
+                     this->InputDomain,
+                     this->InputRange,
+                     this->OutputRange);
   }
 
 private:
@@ -491,6 +505,7 @@ private:
     ExecObjectParameters execObjectParameters =
         parameters.StaticTransformCont(TransportFunctorType(
                                          invocation.GetInputDomain(),
+                                         inputRange,
                                          outputRange));
 
     // Get the arrays used for scattering input to output.
