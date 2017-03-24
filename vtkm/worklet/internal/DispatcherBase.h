@@ -242,11 +242,11 @@ struct DispatcherBaseTransportFunctor
   // Chances are we need to allow the transport for each argument to manage
   // 3D indices (for example, allocate a 3D array instead of a 1D array).
   // But for now, just treat all transports as 1D arrays.
-  template<typename InputRange, typename OutputRange>
+  template<typename InputRangeType, typename OutputRangeType>
   VTKM_CONT
   DispatcherBaseTransportFunctor(const InputDomainType &inputDomain,
-                                 const InputRange &inputRange,
-                                 const OutputRange &outputRange)
+                                 const InputRangeType &inputRange,
+                                 const OutputRangeType &outputRange)
     : InputDomain(inputDomain),
       InputRange(FlatRange(inputRange)),
       OutputRange(FlatRange(outputRange))
