@@ -34,7 +34,6 @@
 #include <vtkm/cont/arg/TransportTagKeyedValuesInOut.h>
 #include <vtkm/cont/arg/TransportTagKeyedValuesOut.h>
 #include <vtkm/cont/arg/TransportTagKeysIn.h>
-#include <vtkm/cont/arg/TransportTagReducedValuesIn.h>
 #include <vtkm/cont/arg/TypeCheckTagKeys.h>
 
 #include <vtkm/BinaryOperators.h>
@@ -367,35 +366,6 @@ struct Transport<
     // portal should be self contained except for the data managed by the
     // object argument, which should stay in scope.
     return groupedArray.PrepareForOutput(keys.GetInputRange(), Device());
-  }
-};
-
-template<typename ContObjectType, typename Device>
-struct Transport<
-    vtkm::cont::arg::TransportTagReducedValuesIn, ContObjectType, Device>
-{
-  VTKM_IS_ARRAY_HANDLE(ContObjectType);
-
-  typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst
-      ExecObjectType;
-
-  template<typename KeyType>
-  VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &object,
-                            const vtkm::worklet::Keys<KeyType> &inputDomain,
-                            vtkm::Id inputRange,
-                            vtkm::Id) const
-  {
-    VTKM_ASSERT(inputDomain.GetInputRange() == inputRange);
-    (void)inputDomain; // Shut up compiler
-
-    if (object.GetNumberOfValues() != inputRange)
-    {
-      throw vtkm::cont::ErrorBadValue(
-            "Input array to worklet invocation the wrong size.");
-    }
-
-    return object.PrepareForInput(Device());
   }
 };
 
