@@ -114,15 +114,22 @@ public:
   };
 
   template <typename CellSetType>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet)
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet,
+                                      vtkm::cont::ArrayHandle<vtkm::IdComponent> &outCellsPerCell)
   {
-    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
+    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
     vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell,DeviceAdapter> dispatcher;
     dispatcher.Invoke(cellSet,
                       vtkm::cont::make_ArrayHandleGroupVec<4>(connectivity));
+
+    // Fill in array of output cells per input cell
+    DeviceAlgorithm::Copy(
+        vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(5, cellSet.GetNumberOfCells()),
+        outCellsPerCell);
 
     // Add cells to output cellset
     outCellSet.Fill(cellSet.GetNumberOfPoints(),

@@ -49,7 +49,7 @@ public:
                   const DeviceAdapter& tag);
 
 private:
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> OutCellsPerCell;
+  vtkm::worklet::Triangulate Worklet;
 };
 
 }

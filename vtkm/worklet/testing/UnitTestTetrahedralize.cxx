@@ -49,8 +49,9 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
   
     // Convert uniform hexahedra to tetrahedra
-    vtkm::worklet::Tetrahedralize<DeviceAdapter> tetrahedralize;
-    OutCellSetType outCellSet = tetrahedralize.Run(cellSet);
+    vtkm::worklet::Tetrahedralize tetrahedralize;
+    OutCellSetType outCellSet = tetrahedralize.Run(cellSet,
+                                                   DeviceAdapter());
   
     // Create the output dataset with same coordinate system
     vtkm::cont::DataSet outDataSet;
@@ -78,8 +79,9 @@ public:
     vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
   
     // Convert explicit cells to tetrahedra
-    vtkm::worklet::Tetrahedralize<DeviceAdapter> tetrahedralize;
-    OutCellSetType outCellSet = tetrahedralize.Run(cellSet, outCellsPerCell);
+    vtkm::worklet::Tetrahedralize tetrahedralize;
+    OutCellSetType outCellSet = tetrahedralize.Run(cellSet,
+                                                   DeviceAdapter());
   
     // Create the output dataset explicit cell set with same coordinate system
     vtkm::cont::DataSet outDataSet;

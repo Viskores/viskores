@@ -26,24 +26,79 @@
 namespace vtkm {
 namespace worklet {
 
-template <typename DeviceAdapter>
+//
+// Distribute multiple copies of cell data depending on cells create from original
+//
+struct DistributeCellData : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<> inIndices,
+                                FieldOut<> outIndices);
+  typedef void ExecutionSignature(_1, _2);
+
+  typedef vtkm::worklet::ScatterCounting ScatterType;
+
+  VTKM_CONT
+  ScatterType GetScatter() const { return this->Scatter; }
+
+  template <typename CountArrayType, typename DeviceAdapter>
+  VTKM_CONT
+  DistributeCellData(const CountArrayType &countArray,
+                     DeviceAdapter device) :
+                         Scatter(countArray, device) {  }
+
+  template <typename T>
+  VTKM_EXEC
+  void operator()(T inputIndex,
+                  T &outputIndex) const
+  {
+    outputIndex = inputIndex;
+  }
+private:
+  ScatterType Scatter;
+};
+
 class Triangulate
 {
 public:
-  Triangulate() {}
+  Triangulate() : OutCellsPerCell() {}
 
+  // Triangulate explicit data set, save number of triangulated cells per input
+  template <typename DeviceAdapter>
   vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetExplicit<> &cellSet,
-                                      vtkm::cont::ArrayHandle<vtkm::IdComponent> &outCellsPerCell)
+                                      const DeviceAdapter&)
   {
     TriangulateExplicit<DeviceAdapter> worklet;
-    return worklet.Run(cellSet, outCellsPerCell); 
+    return worklet.Run(cellSet, this->OutCellsPerCell); 
   }
 
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2> &cellSet)
+  // Triangulate structured data set, save number of triangulated cells per input
+  template <typename DeviceAdapter>
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2> &cellSet,
+                                      const DeviceAdapter&)
   {
     TriangulateStructured<DeviceAdapter> worklet;
-    return worklet.Run(cellSet); 
+    return worklet.Run(cellSet, this->OutCellsPerCell); 
   }
+
+  // Using the saved input to output cells, expand cell data
+  template <typename T,
+            typename StorageType,
+            typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<T, StorageType> ProcessField(
+                                              const vtkm::cont::ArrayHandle<T, StorageType> &input,
+                                              const DeviceAdapter& device)
+  {
+    vtkm::cont::ArrayHandle<T, StorageType> output;
+
+    DistributeCellData distribute(this->OutCellsPerCell, device);
+    vtkm::worklet::DispatcherMapField<DistributeCellData, DeviceAdapter> dispatcher(distribute);
+    dispatcher.Invoke(input, output);
+
+    return output;
+  }
+
+private:
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> OutCellsPerCell;
 };
 
 }

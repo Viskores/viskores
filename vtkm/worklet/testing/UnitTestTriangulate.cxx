@@ -44,8 +44,9 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
     // Convert uniform quadrilaterals to triangles
-    vtkm::worklet::Triangulate<DeviceAdapter> triangulate;
-    OutCellSetType outCellSet = triangulate.Run(cellSet);
+    vtkm::worklet::Triangulate triangulate;
+    OutCellSetType outCellSet = triangulate.Run(cellSet, 
+                                                DeviceAdapter());
 
     // Create the output dataset and assign the input coordinate system
     vtkm::cont::DataSet outDataSet;
@@ -70,8 +71,9 @@ public:
     vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
   
     // Convert explicit cells to triangles
-    vtkm::worklet::Triangulate<DeviceAdapter> triangulate;
-    OutCellSetType outCellSet = triangulate.Run(cellSet, outCellsPerCell);
+    vtkm::worklet::Triangulate triangulate;
+    OutCellSetType outCellSet = triangulate.Run(cellSet, 
+                                                DeviceAdapter());
 
     // Create the output dataset explicit cell set with same coordinate system
     vtkm::cont::DataSet outDataSet;

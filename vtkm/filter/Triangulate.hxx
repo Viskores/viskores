@@ -24,39 +24,11 @@
 namespace vtkm {
 namespace filter {
 
-struct DistributeCellData : public vtkm::worklet::WorkletMapField
-{
-  typedef void ControlSignature(FieldIn<> inIndices,
-                                FieldOut<> outIndices);
-  typedef void ExecutionSignature(_1, _2);
-
-  typedef vtkm::worklet::ScatterCounting ScatterType;
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return this->Scatter; }
-
-  template <typename CountArrayType, typename DeviceAdapter>
-  VTKM_CONT
-  DistributeCellData(const CountArrayType &countArray, 
-                     DeviceAdapter device) :
-                         Scatter(countArray, device) {  }
-
-  template <typename T>
-  VTKM_EXEC
-  void operator()(T inputIndex,
-                  T &outputIndex) const
-  {
-    outputIndex = inputIndex;
-  }
-private:
-  ScatterType Scatter;
-};
-
 //-----------------------------------------------------------------------------
 inline VTKM_CONT
 Triangulate::Triangulate():
   vtkm::filter::FilterDataSet<Triangulate>(),
-  OutCellsPerCell()
+  Worklet()
 {
 }
 
@@ -66,29 +38,26 @@ template<typename DerivedPolicy,
 inline VTKM_CONT
 vtkm::filter::ResultDataSet Triangulate::DoExecute(
                                                  const vtkm::cont::DataSet& input,
-                                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                                 const vtkm::filter::PolicyBase<DerivedPolicy>&,
                                                  const DeviceAdapter& device)
 {
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
   typedef vtkm::cont::CellSetStructured<2> CellSetStructuredType;
   typedef vtkm::cont::CellSetExplicit<> CellSetExplicitType;
 
   const vtkm::cont::DynamicCellSet& cells =
                   input.GetCellSet(this->GetActiveCellSetIndex());
-  vtkm::Id numberOfCells = cells.GetNumberOfCells();
 
   vtkm::cont::CellSetSingleType<> outCellSet;
-  vtkm::worklet::Triangulate<DeviceAdapter> worklet;
 
   if (cells.IsType<CellSetStructuredType>())
   {
-    DeviceAlgorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(2, numberOfCells), 
-                          this->OutCellsPerCell);
-    outCellSet = worklet.Run(cells.Cast<CellSetStructuredType>());
+    outCellSet = this->Worklet.Run(cells.Cast<CellSetStructuredType>(),
+                                   device);
   }
   else
   {
-    outCellSet = worklet.Run(cells.Cast<CellSetExplicitType>(), this->OutCellsPerCell);
+    outCellSet = this->Worklet.Run(cells.Cast<CellSetExplicitType>(), 
+                                   device);
   }
 
   // create the output dataset
@@ -109,7 +78,7 @@ bool Triangulate::DoMapField(
                            vtkm::filter::ResultDataSet& result,
                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
                            const vtkm::filter::FieldMetadata& fieldMeta,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                           const vtkm::filter::PolicyBase<DerivedPolicy>&,
                            const DeviceAdapter& device)
 {
   // point data is copied as is because it was not collapsed
@@ -122,14 +91,12 @@ bool Triangulate::DoMapField(
   // cell data must be scattered to the cells created per input cell
   if(fieldMeta.IsCellField())
   {
-    vtkm::cont::ArrayHandle<T, StorageType> output;
-
-    DistributeCellData distribute(this->OutCellsPerCell, device);
-    vtkm::worklet::DispatcherMapField<DistributeCellData, DeviceAdapter> dispatcher(distribute);
-    dispatcher.Invoke(input, output);
+    vtkm::cont::ArrayHandle<T, StorageType> output = 
+        this->Worklet.ProcessField(input, device);
 
     result.GetDataSet().AddField(fieldMeta.AsField(output));
     return true;
+
   }
 
   return false;
