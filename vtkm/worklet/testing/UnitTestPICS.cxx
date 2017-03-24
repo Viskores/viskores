@@ -101,15 +101,17 @@ void TestPICSUniformGrid()
   std::cout<<"EVAL: "<<p<<" --> "<<o<<" : "<<val<<std::endl;
 
   vtkm::Float32 h = 0.01f;
-  vtkm::worklet::RK4Integrator<vtkm::worklet::RegularGridEvaluate<FieldPortalConstType, DeviceAdapter>,
-                               FieldType> rk4(eval, h);
+  typedef vtkm::worklet::RegularGridEvaluate<FieldPortalConstType, DeviceAdapter> RGEvalType;
+  typedef vtkm::worklet::RK4Integrator<RGEvalType,FieldType> RK4RGType;
+
+  RK4RGType rk4(eval, h);
 
   val = rk4.Step(p, o);
   std::cout<<"RK4: "<<p<<" --> "<<o<<" : "<<val<<std::endl;
 
   std::vector<vtkm::Vec<FieldType,3> > seeds;
   vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
-  for (int i = 0; i < 100000; i++)
+  for (int i = 0; i < 10; i++)
   {
       vtkm::Vec<FieldType, 3> p;
       vtkm::Float32 rx = (vtkm::Float32)rand()/(vtkm::Float32)RAND_MAX;
@@ -120,12 +122,10 @@ void TestPICSUniformGrid()
       p[2] = static_cast<FieldType>(bounds.Z.Min + rz*bounds.Z.Length());
       seeds.push_back(p);
   }
-
+  
   vtkm::Id nSteps = 1000;
-  vtkm::worklet::PICSFilter<vtkm::worklet::RK4Integrator<vtkm::worklet::RegularGridEvaluate<FieldPortalConstType,
-                                                                                            DeviceAdapter>,
-                                                         FieldType>,
-                            FieldType> pic(rk4, seeds, nSteps);
+  vtkm::worklet::PICSFilter<RK4RGType,FieldType,DeviceAdapter> pic(rk4,seeds,nSteps);
+  
   pic.run();
 }
 
