@@ -34,7 +34,6 @@
 #include <vtkm/cont/arg/TransportTagKeyedValuesInOut.h>
 #include <vtkm/cont/arg/TransportTagKeyedValuesOut.h>
 #include <vtkm/cont/arg/TransportTagKeysIn.h>
-#include <vtkm/cont/arg/TransportTagReducedValuesIn.h>
 #include <vtkm/cont/arg/TypeCheckTagKeys.h>
 
 #include <vtkm/BinaryOperators.h>
@@ -152,6 +151,12 @@ public:
             (this->Counts == other.Counts));
   }
 
+  VTKM_CONT
+  bool operator!=(const vtkm::worklet::Keys<KeyType> &other) const
+  {
+    return !(*this == other);
+  }
+
 private:
   KeyArrayHandleType UniqueKeys;
   vtkm::cont::ArrayHandle<vtkm::Id> SortedValuesMap;
@@ -221,9 +226,14 @@ struct Transport<vtkm::cont::arg::TransportTagKeysIn,
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType &object,
                             const ContObjectType &inputDomain,
+                            vtkm::Id,
                             vtkm::Id) const
   {
-    VTKM_ASSERT(object == inputDomain);
+    if (object != inputDomain)
+    {
+      throw vtkm::cont::ErrorBadValue(
+            "A Keys object must be the input domain.");
+    }
 
     return object.PrepareForInput(Device());
   }
@@ -234,6 +244,7 @@ struct Transport<vtkm::cont::arg::TransportTagKeysIn,
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType &,
                             const InputDomainType &,
+                            vtkm::Id,
                             vtkm::Id) const = delete;
 };
 
@@ -258,9 +269,13 @@ struct Transport<
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType &object,
                             const vtkm::worklet::Keys<KeyType> &keys,
+                            vtkm::Id,
                             vtkm::Id) const
   {
-    VTKM_ASSERT(object.GetNumberOfValues() == keys.GetNumberOfValues());
+    if (object.GetNumberOfValues() != keys.GetNumberOfValues())
+    {
+      throw vtkm::cont::ErrorBadValue("Input values array is wrong size.");
+    }
 
     PermutedArrayType permutedArray(keys.GetSortedValuesMap(), object);
     GroupedArrayType groupedArray(permutedArray, keys.GetOffsets());
@@ -294,9 +309,14 @@ struct Transport<
   VTKM_CONT
   ExecObjectType operator()(ContObjectType object,
                             const vtkm::worklet::Keys<KeyType> &keys,
+                            vtkm::Id,
                             vtkm::Id) const
   {
-    VTKM_ASSERT(object.GetNumberOfValues() == keys.GetNumberOfValues());
+    if (object.GetNumberOfValues() != keys.GetNumberOfValues())
+    {
+      throw vtkm::cont::ErrorBadValue(
+            "Input/output values array is wrong size.");
+    }
 
     PermutedArrayType permutedArray(keys.GetSortedValuesMap(), object);
     GroupedArrayType groupedArray(permutedArray, keys.GetOffsets());
@@ -330,6 +350,7 @@ struct Transport<
   VTKM_CONT
   ExecObjectType operator()(ContObjectType object,
                             const vtkm::worklet::Keys<KeyType> &keys,
+                            vtkm::Id,
                             vtkm::Id) const
   {
     // The PrepareForOutput for ArrayHandleGroupVecVariable and
@@ -345,31 +366,6 @@ struct Transport<
     // portal should be self contained except for the data managed by the
     // object argument, which should stay in scope.
     return groupedArray.PrepareForOutput(keys.GetInputRange(), Device());
-  }
-};
-
-template<typename ContObjectType, typename Device>
-struct Transport<
-    vtkm::cont::arg::TransportTagReducedValuesIn, ContObjectType, Device>
-{
-  VTKM_IS_ARRAY_HANDLE(ContObjectType);
-
-  typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst
-      ExecObjectType;
-
-  template<typename KeyType>
-  VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &object,
-                            const vtkm::worklet::Keys<KeyType> &inputDomain,
-                            vtkm::Id) const
-  {
-    if (object.GetNumberOfValues() != inputDomain.GetInputRange())
-    {
-      throw vtkm::cont::ErrorBadValue(
-            "Input array to worklet invocation the wrong size.");
-    }
-
-    return object.PrepareForInput(Device());
   }
 };
 

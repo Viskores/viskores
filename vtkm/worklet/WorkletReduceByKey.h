@@ -29,7 +29,6 @@
 #include <vtkm/cont/arg/TransportTagKeyedValuesInOut.h>
 #include <vtkm/cont/arg/TransportTagKeyedValuesOut.h>
 #include <vtkm/cont/arg/TransportTagKeysIn.h>
-#include <vtkm/cont/arg/TransportTagReducedValuesIn.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagKeys.h>
 
@@ -127,7 +126,7 @@ public:
   struct ReducedValuesIn : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
-    using TransportTag = vtkm::cont::arg::TransportTagReducedValuesIn;
+    using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
 

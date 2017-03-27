@@ -68,7 +68,7 @@ struct TryArrayInOutType
         transport;
 
     TestKernel<PortalType> kernel;
-    kernel.Portal = transport(handle, handle, ARRAY_SIZE);
+    kernel.Portal = transport(handle, handle, ARRAY_SIZE, ARRAY_SIZE);
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
 

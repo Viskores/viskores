@@ -62,6 +62,7 @@ struct Transport<
   VTKM_CONT
   ExecObjectType operator()(ContObjectType array,
                             const InputDomainType &,
+                            vtkm::Id,
                             vtkm::Id) const
   {
     // Note: we ignore the size of the domain because the randomly accessed
