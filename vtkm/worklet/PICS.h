@@ -183,79 +183,6 @@ public:
     FieldType h, h_2;
 };
 
-
-#if 0
-template<typename T,
-         typename DeviceAdapterTag>
-class IntegralCurve : public vtkm::exec::ExecutionObjectBase
-{
-private:
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Id>
-        ::template ExecutionTypes<DeviceAdapterTag>::PortalConst IdPortalConst;
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Id>
-        ::template ExecutionTypes<DeviceAdapterTag>::Portal IdPortal;    
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T,3> >
-        ::template ExecutionTypes<DeviceAdapterTag>::PortalConst PosPortalConst;
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T,3> >
-        ::template ExecutionTypes<DeviceAdapterTag>::Portal PosPortal;
-public:
-    VTKM_CONT
-    IntegralCurve() :ids(), pos(), steps(), out()
-    {
-        std::cout<<__LINE__<<std::endl;
-    }
-
-    VTKM_CONT
-    IntegralCurve(const PosPortalConst &_pos,
-                  const IdPortalConst &_ids,
-                  const IdPortalConst &_steps,
-                  const PosPortal &_out) : pos(_pos), ids(_ids), steps(_steps), out(_out)
-    {
-        std::cout<<__LINE__<<std::endl;        
-    }
-
-    VTKM_CONT    
-    IntegralCurve(const vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &posArray,
-                  const vtkm::cont::ArrayHandle<vtkm::Id> &idArray,
-                  const vtkm::cont::ArrayHandle<vtkm::Id> &stepArray,
-                  vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &outArray)
-    {
-        std::cout<<"Prepare for input"<<std::endl;
-        pos = posArray.PrepareForInput(DeviceAdapterTag());
-        ids = idArray.PrepareForInput(DeviceAdapterTag());
-        steps = stepArray.PrepareForInput(DeviceAdapterTag());
-        out = outArray.PrepareForOutput(10, DeviceAdapterTag());
-    }
-
-    VTKM_EXEC
-    void TakeStep(const vtkm::Id &idx,
-                  const vtkm::Vec<T,3> &pt)
-    {
-        out.Set(idx, pt);
-        //std::cout<<"TakeStep "<<pt<<std::endl;
-        //stepsTaken++;
-    }
-
-    VTKM_EXEC
-    bool Done(const vtkm::Id &idx)
-    {
-        std::cout<<"Done"<<std::endl;
-        return true;
-        //return stepsTaken == maxSteps;
-    }
-
-    vtkm::Id maxSteps;
-
-    IdPortalConst ids, steps;
-    PosPortalConst pos;
-    PosPortal out;
-private:    
-    
-//    vtkm::Id maxSteps, stepsTaken;
-//    vtkm::Vec<T, 3> pos;
-};
-#endif
-
 template<typename T,typename DeviceAdapterTag>
 class IntegralCurve : public vtkm::exec::ExecutionObjectBase
 {
@@ -279,16 +206,15 @@ public:
 
     VTKM_CONT    
     IntegralCurve(vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &posArray,
-                   const vtkm::Id &_maxSteps)
+                  const vtkm::Id &_maxSteps) :
+        maxSteps(_maxSteps)
     {
-        std::cout<<"Prepare for input"<<std::endl;
         pos = posArray.PrepareForInPlace(DeviceAdapterTag());
-
         vtkm::Id nPos = posArray.GetNumberOfValues();
-        std::vector<vtkm::Id> s(nPos, 0);
-        vtkm::cont::ArrayHandle<vtkm::Id> sa = vtkm::cont::make_ArrayHandle(&s[0], nPos);
+        
+        s.resize(nPos, 0);
+        sa = vtkm::cont::make_ArrayHandle(&s[0], nPos);
         steps = sa.PrepareForInPlace(DeviceAdapterTag());
-        maxSteps = _maxSteps;
     }
 
     VTKM_EXEC
@@ -302,7 +228,6 @@ public:
     VTKM_EXEC
     bool Done(const vtkm::Id &idx)
     {
-        //std::cout<<"Done? "<<steps.Get(idx)<<" ==?== "<<maxSteps<<std::endl;
         return steps.Get(idx) == maxSteps;
     }
 
@@ -312,11 +237,94 @@ public:
     vtkm::Id GetStep(const vtkm::Id &idx) const {return steps.Get(idx);}
 
 private:
+    std::vector<vtkm::Id> s;
+    vtkm::cont::ArrayHandle<vtkm::Id> sa;
     vtkm::Id maxSteps;
+    
     IdPortal steps;
     PosPortal pos;
-};    
+};
 
+
+template<typename T,typename DeviceAdapterTag>
+class StateRecordingIntegralCurve : public vtkm::exec::ExecutionObjectBase
+{
+private:
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Id>
+        ::template ExecutionTypes<DeviceAdapterTag>::Portal IdPortal;    
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T,3> >
+        ::template ExecutionTypes<DeviceAdapterTag>::Portal PosPortal;
+public:
+    VTKM_CONT
+    StateRecordingIntegralCurve() : pos(), steps(), maxSteps(0)
+    {
+    }
+
+    VTKM_CONT
+    StateRecordingIntegralCurve(const PosPortal &_pos,
+                                const IdPortal &_steps,
+                                const vtkm::Id &_maxSteps) :
+        pos(_pos), steps(_steps), maxSteps(_maxSteps)
+    {
+    }
+
+    VTKM_CONT    
+    StateRecordingIntegralCurve(vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &posArray,
+                                const vtkm::Id &_maxSteps) :
+        maxSteps(_maxSteps)
+    {
+        pos = posArray.PrepareForInPlace(DeviceAdapterTag());
+
+        numPos = posArray.GetNumberOfValues();
+        s.resize(numPos, 0);
+        sa = vtkm::cont::make_ArrayHandle(&s[0], numPos);
+        steps = sa.PrepareForInPlace(DeviceAdapterTag());
+
+        vtkm::Id nHist = numPos * maxSteps;
+        h.resize(nHist);
+        ha = vtkm::cont::make_ArrayHandle(&h[0], nHist);
+        history = ha.PrepareForOutput(nHist, DeviceAdapterTag());
+    }
+
+    VTKM_EXEC
+    void TakeStep(const vtkm::Id &idx,
+                  const vtkm::Vec<T,3> &pt)
+    {
+        vtkm::Id loc = idx*maxSteps + steps.Get(idx);
+        //std::cout<<"TakeStep("<<idx<<", "<<pt<<"); loc= "<<loc<<" "<<numPos*maxSteps<<std::endl;
+        history.Set(loc, pt);
+        steps.Set(idx, steps.Get(idx)+1);
+    }
+
+    VTKM_EXEC
+    bool Done(const vtkm::Id &idx)
+    {
+        vtkm::Id s = steps.Get(idx);
+        //std::cout<<idx<<" steps= "<<s<<std::endl;
+        return steps.Get(idx) >= maxSteps;
+    }
+
+    VTKM_EXEC
+    vtkm::Vec<T,3> GetPos(const vtkm::Id &idx) const {return pos.Get(idx);}
+    VTKM_EXEC
+    vtkm::Id GetStep(const vtkm::Id &idx) const {return steps.Get(idx);}
+    VTKM_EXEC
+    vtkm::Vec<T,3> GetHistory(const vtkm::Id &idx, const vtkm::Id &step) const
+    {
+        return history.Get(idx*maxSteps+step);
+    }    
+
+private:
+    vtkm::Id maxSteps, numPos;
+    IdPortal steps;
+    PosPortal pos, history;
+
+    std::vector<vtkm::Id> s;
+    vtkm::cont::ArrayHandle<vtkm::Id> sa;    
+    std::vector<vtkm::Vec<T,3> > h;
+    vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > ha;
+};
+    
 template <typename IntegratorType,
           typename FieldType,
           typename DeviceAdapterTag>
@@ -332,7 +340,6 @@ public:
     class GoPIC : public vtkm::worklet::WorkletMapField
     {
     public:
-#if 1
         typedef void ControlSignature(FieldIn<IdType> idx,
                                       ExecObject ic);
         typedef void ExecutionSignature(_1, _2);
@@ -349,7 +356,7 @@ public:
             {
                 if (integrator.Step(p, p2))
                 {
-                    ic.TakeStep(idx, p);
+                    ic.TakeStep(idx, p2);
                     p = p2;
                 }
                 else
@@ -357,37 +364,9 @@ public:
             }
 
             p2 = ic.GetPos(idx);
-            std::cout<<"PIC: "<<idx<<" "<<p0<<" --> "<<p2<<" #steps= "<<ic.GetStep(idx)<<std::endl;
+            //std::cout<<"PIC: "<<idx<<" "<<p0<<" --> "<<p2<<" #steps= "<<ic.GetStep(idx)<<std::endl;
         }
-#endif
-#if 0
-        typedef void ControlSignature(FieldIn<IdType> id,
-                                      FieldIn<> pos,
-                                      FieldIn<IdType> nSteps,                                      
-                                      FieldOut<> outPos);
-        typedef void ExecutionSignature(_1, _2, _3, _4);
-        typedef _1 InputDomain;
-
-        VTKM_EXEC
-        void operator()(const vtkm::Id &id,
-                        const vtkm::Vec<FieldType, 3> &pos,
-                        const vtkm::Id &numSteps,                        
-                        vtkm::Vec<FieldType, 3> &outPos) const
-        {
-            vtkm::Vec<FieldType, 3> p = pos;
-            outPos = pos;
-            
-            int s = 0;
-            while (s < numSteps && integrator.Step(p, outPos))
-            {
-                p = outPos;
-                s++;
-            }
-            
-            std::cout<<"GoPIC: "<<id<<" : "<<pos<<" --> "<<outPos<<" ("<<s<<","<<numSteps<<")"<<std::endl;
-        }
-#endif
-
+        
         GoPIC(const IntegratorType &it) : integrator(it) {}
         
         IntegratorType integrator;
@@ -398,7 +377,7 @@ public:
         vtkm::Id numSeeds = seeds.size();
         std::vector<vtkm::Vec<FieldType,3> > out(numSeeds);
         std::vector<vtkm::Id> steps(numSeeds, 0);
-    
+
         vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > posArray = vtkm::cont::make_ArrayHandle(&seeds[0], numSeeds);
         vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
         
@@ -407,8 +386,23 @@ public:
         goPICDispatcher goPICD(go);
 
         vtkm::Id maxSteps = 1000;
-        IntegralCurve<FieldType, DeviceAdapterTag> ic(posArray, maxSteps);
+        //IntegralCurve<FieldType, DeviceAdapterTag> ic(posArray, maxSteps);
+        StateRecordingIntegralCurve<FieldType, DeviceAdapterTag> ic(posArray, maxSteps);
         goPICD.Invoke(idxArray, ic);
+
+        if (true)
+        {
+            for (int i = 0; i < numSeeds; i++)
+            {
+                int ns = ic.GetStep(i);
+                for (int j = 0; j < ns; j++)
+                {
+                    vtkm::Vec<FieldType,3> p = ic.GetHistory(i, j);
+                    std::cout<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
+                    //std::cout<<"   "<<j<<" "<<p<<std::endl;
+                }
+            }
+        }
     }
 
 private:

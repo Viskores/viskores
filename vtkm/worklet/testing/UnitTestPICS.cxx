@@ -61,7 +61,7 @@ createDataSet()
       vtkm::Float32 x = data[i];
       vtkm::Float32 y = data[++i];
       vtkm::Float32 z = data[++i];
-      vtkm::Vec<vtkm::Float32, 3> vecData(x, y, z);
+      vtkm::Vec<vtkm::Float32, 3> vecData(-x, -y, -z);
       field->push_back(Normalize(vecData));
   }
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
@@ -83,7 +83,7 @@ void TestPICSUniformGrid()
 {
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
   
-  std::cout << "Testing PICS uniform grid" << std::endl;
+  //std::cout << "Testing PICS uniform grid" << std::endl;
 
   //Read in data file.
   
@@ -98,20 +98,20 @@ void TestPICSUniformGrid()
   
   vtkm::Vec<FieldType, 3> p(2,2,2), o;
   bool val = eval.Evaluate(p, o);
-  std::cout<<"EVAL: "<<p<<" --> "<<o<<" : "<<val<<std::endl;
+  //std::cout<<"EVAL: "<<p<<" --> "<<o<<" : "<<val<<std::endl;
 
-  vtkm::Float32 h = 0.01f;
+  vtkm::Float32 h = 0.1f;
   typedef vtkm::worklet::RegularGridEvaluate<FieldPortalConstType, DeviceAdapter> RGEvalType;
   typedef vtkm::worklet::RK4Integrator<RGEvalType,FieldType> RK4RGType;
 
   RK4RGType rk4(eval, h);
 
   val = rk4.Step(p, o);
-  std::cout<<"RK4: "<<p<<" --> "<<o<<" : "<<val<<std::endl;
+  //std::cout<<"RK4: "<<p<<" --> "<<o<<" : "<<val<<std::endl;
 
   std::vector<vtkm::Vec<FieldType,3> > seeds;
   vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 100; i++)
   {
       vtkm::Vec<FieldType, 3> p;
       vtkm::Float32 rx = (vtkm::Float32)rand()/(vtkm::Float32)RAND_MAX;
@@ -120,6 +120,11 @@ void TestPICSUniformGrid()
       p[0] = static_cast<FieldType>(bounds.X.Min + rx*bounds.X.Length());
       p[1] = static_cast<FieldType>(bounds.Y.Min + ry*bounds.Y.Length());
       p[2] = static_cast<FieldType>(bounds.Z.Min + rz*bounds.Z.Length());
+/*
+      p[0] = static_cast<FieldType>(15.0f + rx*(35.0f-15.0f));
+      p[1] = static_cast<FieldType>(5.0f + ry*(35.0f-5.0f));      
+      p[2] = static_cast<FieldType>(25.0f + rz*12.0f);
+*/
       seeds.push_back(p);
   }
   
