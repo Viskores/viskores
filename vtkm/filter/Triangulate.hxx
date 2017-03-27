@@ -18,8 +18,32 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/DispatcherMapField.h>
+
+namespace
+{
+
+template<typename DeviceAdapter>
+class DeduceCellSet
+{
+  mutable vtkm::worklet::Triangulate Worklet;
+  vtkm::cont::CellSetSingleType<> &OutCellSet;
+
+public:
+  DeduceCellSet(vtkm::worklet::Triangulate worklet,
+                vtkm::cont::CellSetSingleType<>& outCellSet) :
+    Worklet(worklet),
+    OutCellSet(outCellSet)
+  {}
+
+  template<typename CellSetType>
+  void operator()(const CellSetType& cellset ) const
+  {
+     this->OutCellSet = Worklet.Run(cellset, DeviceAdapter());
+  }
+};
+
+}
 
 namespace vtkm {
 namespace filter {
@@ -37,28 +61,19 @@ template<typename DerivedPolicy,
          typename DeviceAdapter>
 inline VTKM_CONT
 vtkm::filter::ResultDataSet Triangulate::DoExecute(
-                                                 const vtkm::cont::DataSet& input,
-                                                 const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                                 const DeviceAdapter& device)
+                                           const vtkm::cont::DataSet& input,
+                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                           const DeviceAdapter& device)
 {
-  typedef vtkm::cont::CellSetStructured<2> CellSetStructuredType;
-  typedef vtkm::cont::CellSetExplicit<> CellSetExplicitType;
-
   const vtkm::cont::DynamicCellSet& cells =
                   input.GetCellSet(this->GetActiveCellSetIndex());
 
   vtkm::cont::CellSetSingleType<> outCellSet;
+  DeduceCellSet<DeviceAdapter> triangulate(this->Worklet, outCellSet);
 
-  if (cells.IsType<CellSetStructuredType>())
-  {
-    outCellSet = this->Worklet.Run(cells.Cast<CellSetStructuredType>(),
-                                   device);
-  }
-  else
-  {
-    outCellSet = this->Worklet.Run(cells.Cast<CellSetExplicitType>(), 
-                                   device);
-  }
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(cells, policy),
+                          triangulate);
+
 
   // create the output dataset
   vtkm::cont::DataSet output;
