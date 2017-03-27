@@ -18,8 +18,32 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/DispatcherMapField.h>
+
+namespace
+{
+
+template<typename DeviceAdapter>
+class DeduceCellSet 
+{
+  vtkm::worklet::Tetrahedralize Worklet;
+  vtkm::cont::CellSetSingleType<> OutCellSet;
+
+public:
+  DeduceCellSet(vtkm::worklet::Tetrahedralize worklet,
+                vtkm::cont::CellSetSingleType<>& outCellSet) :
+    Worklet(worklet),
+    OutCellSet(outCellSet)
+  {}
+
+  template<typename CellSetType>
+  void operator()(const CellSetType& cellset ) const
+  {
+     this->OutCellSet = Worklet.Run(cellset, DeviceAdapter());
+  }
+};
+
+}
 
 namespace vtkm {
 namespace filter {
@@ -38,9 +62,22 @@ template<typename DerivedPolicy,
 inline VTKM_CONT
 vtkm::filter::ResultDataSet Tetrahedralize::DoExecute(
                                                  const vtkm::cont::DataSet& input,
-                                                 const vtkm::filter::PolicyBase<DerivedPolicy>&,
+                                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                                                  const DeviceAdapter& device)
 {
+  const vtkm::cont::DynamicCellSet& cells =
+                  input.GetCellSet(this->GetActiveCellSetIndex());
+
+  vtkm::cont::CellSetSingleType<> outCellSet;
+  DeduceCellSet<DeviceAdapter> tetrahedralize(this->Worklet, outCellSet);
+
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(cells, policy),
+                          tetrahedralize);
+
+
+
+
+/*
   typedef vtkm::cont::CellSetStructured<3> CellSetStructuredType;
   typedef vtkm::cont::CellSetExplicit<> CellSetExplicitType;
 
@@ -60,6 +97,7 @@ vtkm::filter::ResultDataSet Tetrahedralize::DoExecute(
                                    device);
   }
 
+*/
   // create the output dataset
   vtkm::cont::DataSet output;
   output.AddCellSet(outCellSet);
